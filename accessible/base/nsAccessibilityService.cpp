@@ -304,16 +304,16 @@ static int32_t sPlatformDisabledState = 0;
 // Markup maps array.
 
 #define Attr(name, value) \
-  { &nsGkAtoms::name, &nsGkAtoms::value }
+  { nsGkAtoms::name, nsGkAtoms::value }
 
 #define AttrFromDOM(name, DOMAttrName) \
-  { &nsGkAtoms::name, nullptr, &nsGkAtoms::DOMAttrName }
+  { nsGkAtoms::name, nullptr, nsGkAtoms::DOMAttrName }
 
 #define AttrFromDOMIf(name, DOMAttrName, DOMAttrValue) \
-  { &nsGkAtoms::name, nullptr,  &nsGkAtoms::DOMAttrName, &nsGkAtoms::DOMAttrValue }
+  { nsGkAtoms::name, nullptr,  nsGkAtoms::DOMAttrName, nsGkAtoms::DOMAttrValue }
 
 #define MARKUPMAP(atom, new_func, r, ... ) \
-  { &nsGkAtoms::atom, new_func, static_cast<a11y::role>(r), { __VA_ARGS__ } },
+  { nsGkAtoms::atom, new_func, static_cast<a11y::role>(r), { __VA_ARGS__ } },
 
 static const HTMLMarkupMapInfo sHTMLMarkupMapList[] = {
   #include "MarkupMap.h"
@@ -323,7 +323,7 @@ static const HTMLMarkupMapInfo sHTMLMarkupMapList[] = {
 
 #ifdef MOZ_XUL
 #define XULMAP(atom, ...) \
-  { &nsGkAtoms::atom, __VA_ARGS__ },
+  { nsGkAtoms::atom, __VA_ARGS__ },
 
 #define XULMAP_TYPE(atom, new_type) \
 XULMAP( \
@@ -1350,11 +1350,11 @@ nsAccessibilityService::Init()
   eventListenerService->AddListenerChangeListener(this);
 
   for (uint32_t i = 0; i < ArrayLength(sHTMLMarkupMapList); i++)
-    mHTMLMarkupMap.Put(*sHTMLMarkupMapList[i].tag, &sHTMLMarkupMapList[i]);
+    mHTMLMarkupMap.Put(sHTMLMarkupMapList[i].tag, &sHTMLMarkupMapList[i]);
 
 #ifdef MOZ_XUL
   for (uint32_t i = 0; i < ArrayLength(sXULMarkupMapList); i++)
-    mXULMarkupMap.Put(*sXULMarkupMapList[i].tag, &sXULMarkupMapList[i]);
+    mXULMarkupMap.Put(sXULMarkupMapList[i].tag, &sXULMarkupMapList[i]);
 #endif
 
 #ifdef A11Y_LOG
@@ -1616,10 +1616,10 @@ nsAccessibilityService::MarkupAttributes(const nsIContent* aContent,
       if (info->DOMAttrValue) {
         if (aContent->IsElement() &&
             aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                               *info->DOMAttrName,
-                                               *info->DOMAttrValue,
+                                               info->DOMAttrName,
+                                               info->DOMAttrValue,
                                                eCaseMatters)) {
-          nsAccUtils::SetAccAttr(aAttributes, *info->name, *info->DOMAttrValue);
+          nsAccUtils::SetAccAttr(aAttributes, info->name, info->DOMAttrValue);
         }
         continue;
       }
@@ -1627,16 +1627,16 @@ nsAccessibilityService::MarkupAttributes(const nsIContent* aContent,
       nsAutoString value;
 
       if (aContent->IsElement()) {
-        aContent->AsElement()->GetAttr(kNameSpaceID_None, *info->DOMAttrName, value);
+        aContent->AsElement()->GetAttr(kNameSpaceID_None, info->DOMAttrName, value);
       }
 
       if (!value.IsEmpty())
-        nsAccUtils::SetAccAttr(aAttributes, *info->name, value);
+        nsAccUtils::SetAccAttr(aAttributes, info->name, value);
 
       continue;
     }
 
-    nsAccUtils::SetAccAttr(aAttributes, *info->name, *info->value);
+    nsAccUtils::SetAccAttr(aAttributes, info->name, info->value);
   }
 }
 

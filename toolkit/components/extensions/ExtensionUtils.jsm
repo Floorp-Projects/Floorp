@@ -500,7 +500,7 @@ class MessageManagerProxy {
    *
    * @param {nsIMessageSender|MessageManagerProxy|Element} target
    *        The message manager, MessageManagerProxy, or <browser>
-   *        element agaisnt which to match.
+   *        element against which to match.
    * @param {nsIMessageSender} messageManager
    *        The message manager against which to match `target`.
    *

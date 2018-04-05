@@ -104,13 +104,13 @@ add_task(async function test_webnav_unresolved_uri_on_expected_URI_scheme() {
           failFilter: [{ports: [22, 23, [81, 100]]}],
         },
         // multiple criteria in a single filter:
-        // if one of the critera is not verified, the event should not be received.
+        // if one of the criteria is not verified, the event should not be received.
         {
           okFilter: [{schemes: ["http"], ports: [80, 22, 443]}],
           failFilter: [{schemes: ["http"], ports: [81, 82, 83]}],
         },
         // multiple urlFilters on the same listener
-        // if at least one of the critera is verified, the event should be received.
+        // if at least one of the criteria is verified, the event should be received.
         {
           okFilter: [{schemes: ["https"]}, {ports: [80, 22, 443]}],
           failFilter: [{schemes: ["https"]}, {ports: [81, 82, 83]}],

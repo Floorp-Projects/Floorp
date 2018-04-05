@@ -16,7 +16,6 @@ XPIDL_SOURCES += [
     'mozIDOMWindow.idl',
     'nsIContentPolicy.idl',
     'nsIDocumentEncoder.idl',
-    'nsIDOMDataChannel.idl',
     'nsIDOMDOMCursor.idl',
     'nsIDOMDOMRequest.idl',
     'nsIDOMParser.idl',

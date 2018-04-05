@@ -60,7 +60,7 @@ XULMenuitemAccessible::NativeState()
 
   // Checkable/checked?
   static Element::AttrValuesArray strings[] =
-    { &nsGkAtoms::radio, &nsGkAtoms::checkbox, nullptr };
+    { nsGkAtoms::radio, nsGkAtoms::checkbox, nullptr };
 
   if (mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
                                              strings, eCaseMatters) >= 0) {

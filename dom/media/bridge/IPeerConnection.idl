@@ -2,8 +2,6 @@
 #include "nsIDOMWindow.idl"
 #include "nsIPropertyBag2.idl"
 
-interface nsIDOMDataChannel;
-
 /* Do not confuse with nsIDOMRTCPeerConnection. This interface is purely for
  * communication between the PeerConnection JS DOM binding and the C++
  * implementation in SIPCC.

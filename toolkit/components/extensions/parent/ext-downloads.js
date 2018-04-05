@@ -148,7 +148,7 @@ class DownloadItem {
 }
 
 
-// DownloadMap maps back and forth betwen the numeric identifiers used in
+// DownloadMap maps back and forth between the numeric identifiers used in
 // the downloads WebExtension API and a Download object from the Downloads jsm.
 // TODO Bug 1247794: make id and extension info persistent
 const DownloadMap = new class extends EventEmitter {

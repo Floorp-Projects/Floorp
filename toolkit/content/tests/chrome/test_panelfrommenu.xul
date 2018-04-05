@@ -36,14 +36,14 @@
   <textbox/>
 </panel>
 
-<button id="button" type="panel" label="Button">
+<button id="button" type="menu" label="Button">
   <panel onpopupshown="panelOnButtonOpened(this)"
          onpopuphidden="$('tbutton').open = true;">
     <button label="OK" oncommand="this.parentNode.parentNode.open = false"/>
   </panel>
 </button>
 
-<toolbarbutton id="tbutton" type="panel" label="Toolbarbutton">
+<toolbarbutton id="tbutton" type="menu" label="Toolbarbutton">
   <panel onpopupshown="panelOnToolbarbuttonOpened(this)"
          onpopuphidden="SimpleTest.finish()">
     <textbox/>

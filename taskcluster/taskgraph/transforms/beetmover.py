@@ -12,7 +12,8 @@ from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
-                                         get_phase)
+                                         get_phase,
+                                         get_worker_type_for_scope)
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
 
@@ -380,7 +381,7 @@ def make_task_description(config, jobs):
         task = {
             'label': label,
             'description': description,
-            'worker-type': 'scriptworker-prov-v1/beetmoverworker-v1',
+            'worker-type': get_worker_type_for_scope(config, bucket_scope),
             'scopes': [bucket_scope, action_scope],
             'dependencies': dependencies,
             'attributes': attributes,
@@ -452,10 +453,16 @@ def craft_release_properties(config, job):
     else:
         build_platform = build_platform.replace('-source', '')
 
-    app_name = 'Fennec' if 'android' in job['label'] or 'fennec' in job['label'] else 'Firefox'
+    # XXX This should be explicitly set via build attributes or something
+    if 'android' in job['label'] or 'fennec' in job['label']:
+        app_name = 'Fennec'
+    elif config.graph_config['trust-domain'] == 'comm':
+        app_name = 'Thunderbird'
+    else:
+        # XXX Even DevEdition is called Firefox
+        app_name = 'Firefox'
 
     return {
-        # XXX Even DevEdition is called Firefox
         'app-name': app_name,
         'app-version': str(params['app_version']),
         'branch': params['project'],

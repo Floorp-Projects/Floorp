@@ -42,7 +42,7 @@ let testExtension = {
     function listener(name, details) {
       // If we get anything, we failed.  Removing the system principal check
       // in ext-webrequest triggers this failure.
-      browser.test.fail(`recieved ${name}`);
+      browser.test.fail(`received ${name}`);
     }
 
     for (let name of eventNames) {

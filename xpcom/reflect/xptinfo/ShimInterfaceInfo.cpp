@@ -7,9 +7,6 @@
 
 #include "ShimInterfaceInfo.h"
 
-#ifdef MOZ_WEBRTC
-#include "nsIDOMDataChannel.h"
-#endif
 #include "nsIDOMDOMCursor.h"
 #include "nsIDOMDOMException.h"
 #include "nsIDOMDOMRequest.h"
@@ -65,9 +62,6 @@
 #include "mozilla/dom/OfflineResourceListBinding.h"
 #include "mozilla/dom/PositionErrorBinding.h"
 #include "mozilla/dom/RangeBinding.h"
-#ifdef MOZ_WEBRTC
-#include "mozilla/dom/RTCDataChannelBinding.h"
-#endif
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StyleSheetBinding.h"
@@ -153,9 +147,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(OfflineResourceList),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMParser, DOMParser),
   DEFINE_SHIM(Range),
-#ifdef MOZ_WEBRTC
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMDataChannel, RTCDataChannel),
-#endif
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIWebBrowserPersistable, FrameLoader),

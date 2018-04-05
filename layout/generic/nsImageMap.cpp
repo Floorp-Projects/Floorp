@@ -793,10 +793,10 @@ void
 nsImageMap::AddArea(HTMLAreaElement* aArea)
 {
   static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::rect, &nsGkAtoms::rectangle,
-     &nsGkAtoms::circle, &nsGkAtoms::circ,
-     &nsGkAtoms::_default,
-     &nsGkAtoms::poly, &nsGkAtoms::polygon,
+    {nsGkAtoms::rect, nsGkAtoms::rectangle,
+     nsGkAtoms::circle, nsGkAtoms::circ,
+     nsGkAtoms::_default,
+     nsGkAtoms::poly, nsGkAtoms::polygon,
      nullptr};
 
   UniquePtr<Area> area;

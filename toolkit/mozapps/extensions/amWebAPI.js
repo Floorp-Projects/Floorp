@@ -243,7 +243,7 @@ class WebAPI extends APIObject {
     return WEBEXT_PERMISSION_PROMPTS;
   }
 
-  eventListenerWasAdded(type) {
+  eventListenerAdded(type) {
     if (this.listenerCount == 0) {
       this.broker.setAddonListener(data => {
         let event = new this.window.AddonEvent(data.event, data);
@@ -253,7 +253,7 @@ class WebAPI extends APIObject {
     this.listenerCount++;
   }
 
-  eventListenerWasRemoved(type) {
+  eventListenerRemoved(type) {
     this.listenerCount--;
     if (this.listenerCount == 0) {
       this.broker.setAddonListener(null);

@@ -68,7 +68,7 @@ NS_IMETHODIMP_(bool)
 HTMLTableCaptionElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsGkAtoms::align },
+    { nsGkAtoms::align },
     { nullptr }
   };
 
