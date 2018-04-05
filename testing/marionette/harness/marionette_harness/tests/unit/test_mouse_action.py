@@ -8,7 +8,7 @@ import urllib
 
 from marionette_driver import By, errors, Wait
 from marionette_driver.keys import Keys
-from marionette_driver.marionette import W3C_WEBELEMENT_KEY
+from marionette_driver.marionette import WEB_ELEMENT_KEY
 
 from marionette_harness import MarionetteTestCase
 
@@ -41,7 +41,7 @@ class Actions(object):
         self.action_chain.append({
             "duration": duration,
             "origin": {
-                W3C_WEBELEMENT_KEY: element.id
+                WEB_ELEMENT_KEY: element.id
             },
             "type": "pointerMove",
             "x": x,

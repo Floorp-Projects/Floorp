@@ -88,11 +88,6 @@ public:
   uint32_t GetLineNumber() const { return mLineNumber; }
   uint32_t GetColumnNumber() const { return mColumnNumber; }
 
-  /**
-   * Clones |this|. Never returns nullptr.
-   */
-  virtual already_AddRefed<Rule> Clone() const = 0;
-
   // This is pure virtual because all of Rule's data members are non-owning and
   // thus measured elsewhere.
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)

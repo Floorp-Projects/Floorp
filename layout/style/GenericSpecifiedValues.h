@@ -16,6 +16,7 @@
 #include "mozilla/ServoUtils.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
+#include "nsColor.h"
 
 class nsAttrValue;
 

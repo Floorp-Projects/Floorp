@@ -34,7 +34,6 @@ public:
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
-  already_AddRefed<mozilla::css::Rule> Clone() const final;
 
   // WebIDL interface
   uint16_t Type() const override;

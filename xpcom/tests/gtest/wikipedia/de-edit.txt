@@ -1,0 +1,487 @@
+gezählt, der vierte Planet im Sonnensystem und der äußere Nachbar der Erde. Er zählt zu den erdähnlichen (terrestrischen) Planeten.
+
+Sein Durchmesser ist mit knapp 6800 Kilometer etwa halb so groß wie der der Erde, sein Volumen beträgt gut ein Siebtel des Erdevolumens. Damit ist der Mars nach dem Merkur der zweitkleinste Planet des Sonnensystems, hat jedoch eine ausgeprägte Geologie und die höchsten Vulkane des Sonnensystems. Mit einer durchschnittlichen Entfernung von 228 Millionen Kilometern ist er rund 1,5-mal so weit von der Sonne entfernt wie die Erde.
+
+Die Masse des Mars beträgt etwa ein Zehntel der Erdmasse. Die Fallbeschleunigung auf seiner Oberfläche beträgt 3,69 m/s², dies entspricht etwa 38 % der irdischen. Mit einer Dichte von 3,9 g/cm³ weist der Mars den geringsten Wert der terrestrischen Planeten auf. Deshalb ist die Schwerkraft auf ihm sogar geringfügig niedriger als auf dem kleineren, jedoch dichteren Merkur.
+
+Der Mars wird oft auch als der Rote Planet bezeichnet. Diese Färbung geht auf Eisenoxid-Staub (Rost) zurück, der sich auf der Oberfläche und in der dünnen CO2-Atmosphäre verteilt hat. Seine orange- bis blutrote Farbe und seine Helligkeitsschwankungen sind auch verantwortlich für seine Namensgebung nach dem römischen Kriegsgott Mars.[3]
+
+In größeren Fernrohren deutlich sichtbar sind die zwei Polkappen und mehrere dunkle Ebenen, die sich im Frühjahr etwas verfärben. Fotos von Raumsonden zeigen eine teilweise mit Kratern bedeckte Oberfläche und starke Spuren früherer Tektonik (tiefe Canyons und fünf über 20 km hohe Vulkane). Marsroboter haben schon mehrere Gebiete geologisch untersucht.
+
+Der Mars besitzt zwei kleine, unregelmäßig geformte Monde, die 1877 entdeckt wurden: Phobos und Deimos (griechisch für Furcht und Schrecken).
+
+Das astronomische Symbol des Mars ist .
+
+Umlauf und Rotation
+Umlaufbahn
+
+Der Mars bewegt sich in einem Abstand von 206,62 bis 249,23 Millionen Kilometern (1,38 AE bis 1,67 AE) in knapp 687 Tagen (etwa 1,9 Jahre) auf einer elliptischen Umlaufbahn um die Sonne. Die Bahnebene ist 1,85° gegen die Erdbahnebene geneigt.
+
+Seine Bahngeschwindigkeit schwankt mit dem Sonnenabstand zwischen 26,50 km/s und 21,97 km/s und beträgt im Mittel 24,13 km/s. Die Bahnexzentrizität beträgt 0,0935. Nach der Umlaufbahn des Merkurs ist das die zweitgrößte Abweichung von der Kreisform unter allen Planetenbahnen des Sonnensystems.
+
+Jedoch hatte der Mars in der Vergangenheit eine weniger exzentrische Umlaufbahn. Vor 1,35 Millionen Jahren betrug die Exzentrizität nur etwa 0,002, weniger als die der Erde heute.[4] Die Periode der Exzentrizität des Mars beträgt etwa 96.000 Jahre, die der Erde etwa 100.000 Jahre.[5] Mars hat jedoch noch einen längeren Zyklus der Exzentrizität mit einer Periode von 2,2 Millionen Jahren, der den mit der Periode von 96.000 Jahren überlagert. In den letzten 35.000 Jahren wurde die Umlaufbahn aufgrund der gravitativen Kräfte der anderen Planeten geringfügig exzentrischer. Der minimale Abstand zwischen Erde und Mars wird in den nächsten 25.000 Jahren noch ein wenig geringer werden.[6]
+
+Es gibt vier bekannte Asteroiden, die sich mit dem Mars die gleiche Umlaufbahn teilen (Mars-Trojaner). Sie befinden sich auf den Lagrangepunkten L4 und L5, das heißt, sie eilen dem Planeten um 60° voraus oder folgen ihm um 60° nach.
+Rotation
+
+Der Mars rotiert in 24 Stunden und 37,4 Minuten um die eigene Achse (Siderischer Tag). In Bezug auf die Sonne ergibt sich daraus ein Marstag (auch Sol genannt) von 24:39:35. Die Äquatorebene des Planeten ist um 25,19° gegen seine Bahnebene geneigt (Erde 23,44°), somit gibt es Jahreszeiten ähnlich wie auf der Erde. Sie dauern jedoch fast doppelt so lang, weil das siderisches Marsjahr 687 Erdtage hat. Da die Bahn des Mars aber eine deutlich größere Exzentrizität aufweist, als die der Erde, und Mars-Nord tendenziell in Richtung der großen Bahn-Ellipsenachse weist, sind die Jahreszeiten unterschiedlich lang. In den letzten 300.000 Jahren variierte die Rotationsachse zwischen 22° und 26°. Zuvor lag sie mehrmals auch über 40°, wodurch starke Klimaschwankungen auftraten, es Vereisungen auch in der Äquatorregion gab und so die starken Bodenerosionen zu erklären sind.
+
+Der Nordpol des Mars weist zum nördlichen Teil des Sternbilds Schwan, womit sich die Richtung um etwa 40° von jener der Erdachse unterscheidet. Der marsianische Polarstern ist Deneb (mit leichter Abweichung der Achse Richtung Alpha Cephei).[7]
+
+Die Rotationsachse führt eine Präzessionsbewegung aus, deren Periode 170.000 Jahre beträgt (7× langsamer als die Erde). Aus diesem Wert, der mit Hilfe der Pathfinder-Mission festgestellt wurde, können die Wissenschaftler auf die Massenkonzentration im Inneren des Planeten schließen.[8]
+Atmosphäre und Klima
+Über dem Marshorizont ist die Atmosphäre als dunstiger Schleier erkennbar. Links ist der einem Smiley ähnelnde Krater Galle zu sehen. Viking, 1976
+
+Der Mars besitzt eine sehr dünne Atmosphäre. Dadurch ist der Atmosphärendruck sehr niedrig, und Wasser kann nicht in flüssiger Form auf der Marsoberfläche existieren, ausgenommen kurzzeitig in den tiefstgelegenen Gebieten.
+
+Da die dünne Marsatmosphäre nur wenig Sonnenwärme speichern kann, sind die Temperaturunterschiede auf der Oberfläche sehr groß. Die Temperaturen erreichen in Äquatornähe etwa 20 °C am Tag und sinken bis auf 85 °C in der Nacht. Die mittlere Temperatur des Planeten liegt bei etwa 55 °C.
+Atmosphäre
+ Hauptartikel: Atmosphäre des Mars
+
+Die Marsatmosphäre besteht zu 95,3 % aus Kohlenstoffdioxid. Dazu kommen noch 2,7 % Stickstoff, 1,6 % Argon, geringe Anteile an Sauerstoff (1300 ppm) und Kohlenstoffmonoxid (800 ppm) sowie Spuren von Wasserdampf (210 ppm) und anderen Verbindungen oder Elementen.
+
+Die Atmosphäre ist ziemlich staubig. Sie enthält Teilchen mit etwa 1,5 µm im Durchmesser, die den Himmel über dem Mars in einem blassen gelb- bis orange-braunen Farbton erscheinen lassen.
+
+Der atmosphärische Druck beträgt auf der Oberfläche des Mars im Schnitt nur 6,36 hPa (Hektopascal). Im Vergleich zu durchschnittlich 1013 hPa auf der Erde sind dies nur 0,63 %, was dem Luftdruck der Erdatmosphäre in 35 Kilometern Höhe entspricht. Die Atmosphäre wurde wahrscheinlich im Laufe der Zeit vom Sonnenwind abgetragen und in den Weltraum mitgerissen. Dies wurde durch die geringe Schwerkraft des Planeten und sein schwaches Magnetfeld begünstigt, das kaum Schutz vor den hochenergetischen Teilchen der Sonne bietet.
+Klima und Wetter
+Eiswolken über Mars, aufgenommen von Mars Pathfinder
+
+Abhängig von den Jahreszeiten und der Intensität der Sonneneinstrahlung finden in der Atmosphäre dynamische Vorgänge statt. Die vereisten Polkappen sublimieren im Sommer teilweise, und kondensierter Wasserdampf bildet ausgedehnte Zirruswolken. Die Polkappen selbst bestehen aus Kohlendioxideis und Wassereis.
+
+2008 entdeckte man mit Hilfe der Raumsonde Mars Express Wolken aus gefrorenem Kohlendioxid. Sie befinden sich in bis zu 80 Kilometern Höhe und haben eine horizontale Ausdehnung von bis zu 100 km. Sie absorbieren bis zu 40 % des einstrahlenden Sonnenlichts und können damit die Temperatur der Oberfläche um bis zu 10 °C verringern.[9]
+
+Mit Hilfe des Lasers LIDAR der Raumsonde Phoenix wurde 2009 entdeckt, dass in der zweiten Nachthälfte fünfzig Tage nach der Sonnenwende winzige Eiskristalle aus dünnen Zirruswolken auf den Marsboden fielen.[10]
+Jahreszeiten
+Staubsturm in der Syria-Region, fotografiert von Mars Global Surveyor im Mai 2003
+
+Hätte Mars eine erdähnliche Umlaufbahn, würden die Jahreszeiten aufgrund der Achsenneigung ähnlich denen der Erde sein. Jedoch führt die vergleichsweise große Exzentrizität seines Orbits zu einer beträchtlichen Auswirkung auf die Jahreszeiten. Der Mars befindet sich während des Sommers in der Südhalbkugel und des Winters in der nördlichen Hemisphäre nahe dem Perihel seiner Bahn. Nahe dem Aphel ist in der südlichen Hemisphäre Winter und in der nördlichen Sommer.
+
+Das hat zur Folge, dass die Jahreszeiten in der südlichen Hemisphäre viel deutlicher ausgeprägt sind als in der nördlichen, wo das Klima ausgeglichener ist, als es sonst der Fall wäre. Die Sommertemperaturen im Süden können bis zu 30 °C höher sein als die vergleichbaren Temperaturen im Sommer des Nordens.[11] Die Jahreszeiten sind aufgrund der Exzentrizität der Umlaufbahn des Mars unterschiedlich lang. Auf der Nordhalbkugel dauert der Frühling 199,6, der Sommer 181,7, der Herbst 145,6 und der Winter 160,1 irdische Tage.[12]
+Wind und Stürme
+
+Aufgrund der starken Tag-Nacht-Temperaturschwankungen der Oberfläche gibt es tägliche Morgen- und Abendwinde.[13]
+
+Während des Marsfrühjahrs können in den ausgedehnten flachen Ebenen heftige Staubstürme auftreten, die mitunter große Teile der Marsoberfläche verhüllen. Die Aufnahmen von Marssonden zeigen auch Windhosen, die über die Marsebenen ziehen und auf dem Boden dunkle Spuren hinterlassen. Stürme auf dem Mars haben wegen der sehr dünnen Atmosphäre eine wesentlich geringere Kraft als Stürme auf der Erde. Selbst bei hohen Windgeschwindigkeiten werden nur kleine Partikel (Staub) aufgeweht.[14] Allerdings verbleibt aufgewehter Staub auf dem Mars wesentlich länger in der Atmosphäre als auf der Erde, da es keine Niederschläge gibt, die die Luft reinigen, und zudem die Gravitation geringer ist.
+
+Staubstürme treten gewöhnlich während des Perihels auf, da der Planet zu diesem Zeitpunkt 40 Prozent mehr Sonnenlicht empfängt als während des Aphels. Während des Aphels bilden sich in der Atmosphäre Wolken aus Wassereis, die ihrerseits mit den Staubpartikeln interagieren und so die Temperatur auf dem Planeten beeinflussen.[15] Die Windgeschwindigkeiten in der oberen Atmosphäre können bis zu 650 km/h erreichen, auf dem Boden immerhin fast 400 km/h.[16]
+Gewitter
+
+Bei heftigen Staubstürmen scheint es auch zu Gewittern zu kommen. Im Juni 2006 untersuchten Forscher mit einem Radioteleskop den Mars und stellten im Mikrowellenbereich Strahlungsausbrüche fest, wie sie bei Blitzen auftreten. In der Region, in der man die Strahlungsimpulse beobachtet hat, herrschte zu der Zeit ein heftiger Staubsturm mit hohen Staubwolken. Sowohl der beobachtete Staubsturm wie auch das Spektrum der Strahlungsimpulse deuten auf ein Staubgewitter mit Blitzen bzw. großen Entladungen hin.[17][18]
+Oberfläche
+Typisches Felsengestein auf der Marsoberfläche (aufgenommen von Mars Pathfinder)
+
+Die Oberfläche des Mars beträgt etwa ein Viertel der Erdoberfläche. Sie entspricht mit 144 Mio. km2 ungefähr der Gesamtoberfläche aller Kontinente der Erde (149 Mio. km2).
+
+Die rote Färbung seiner Oberfläche verdankt der Planet dem Eisenoxid-Staub, der sich auf der Oberfläche und in der Atmosphäre verteilt hat. Somit ist der Rote Planet ein rostiger Planet.
+
+Seine beiden Hemisphären sind sehr verschieden. Die Südhalbkugel stellt ein riesiges Hochland dar, das durchschnittlich 23 km über dem globalen Nullniveau liegt und ausgedehnte Schildvulkane aufweist. Die vielen Einschlagkrater belegen sein hohes Alter von fast 4 Milliarden Jahren. Dem steht die geologisch junge, fast kraterlose nördliche Tiefebene gegenüber. Sie liegt 35 km unter dem Nullniveau und hat ihre ursprüngliche Struktur durch noch ungeklärte geologische Prozesse verloren. Auslöser war möglicherweise eine gewaltige Kollision in der Frühzeit des Planeten.
+Gesteine
+ Hauptartikel: Marsgestein
+
+An den Landestellen der Marssonden sind Gesteinsbrocken, sandige Böden und Dünen sichtbar. Die Marsgesteine weisen an der Oberfläche eine blasenartige Struktur auf und ähneln in ihrer Zusammensetzung irdischen Basalten, was bereits vor Jahrzehnten aus den auf der Erde (Antarktis) gefundenen Marsmeteoriten erschlossen wurde. Die roten Böden sind offensichtlich durch die Verwitterung von eisenhaltigen, vulkanischen Basalten entstanden.
+
+Die Pathfinder-Sonde fand 1997 außer verschiedensten Basalten auch quarzreichere Tiefengesteine ähnlich dem südamerikanischen Andesit, ferner das aus der Tiefe stammende Olivin und runde Kiesel aus Konglomeraten. Weitverbreitet ist metamorpher Regolith (ähnlich wie am Mond) und äolische Sedimente. Vereinzelt verwehter Sand aus schwefelhaltigen Staubteilchen.
+Areografie
+
+Die kartografische Darstellung und Beschreibung der Marsoberfläche ist die Areografie, von Ares (, griechisch für Mars) und grafein (, griechisch für beschreiben). Die Geologie des Mars wird mitunter dementsprechend als Areologie bezeichnet.
+
+Zur Festlegung von Positionen auf der Marsoberfläche dienen areografische Koordinaten, die definiert sind wie geografische Breite und Länge.
+Topografische Hemisphären
+Topografische Karte des Mars. Die blauen Regionen befinden sich unterhalb des festgelegten Nullniveaus, die roten oberhalb
+
+Auffallend ist die Dichotomie, die Zweiteilung, des Mars. Die nördliche und die südliche Hemisphäre unterscheiden sich deutlich, wobei man von den Tiefebenen des Nordens und den Hochländern des Südens sprechen kann. Der mittlere Großkreis, der die topografischen Hemisphären voneinander trennt, ist rund 40° gegen den Äquator geneigt. Der Massenmittelpunkt des Mars ist gegenüber dem geometrischen Mittelpunkt um etwa drei Kilometer in Richtung der nördlichen Tiefebenen versetzt.
+
+Auf der nördlichen Halbkugel sind flache sand- und staubbedeckte Ebenen vorherrschend, die Namen wie Utopia Planitia oder Amazonis Planitia erhielten. Dunkle Oberflächenmerkmale, die in Teleskopen sichtbar sind, wurden einst für Meere gehalten und erhielten Namen wie Mare Erythraeum, Mare Sirenum oder Aurorae Sinus. Diese Namen werden heute nicht mehr verwendet. Die ausgedehnteste dunkle Struktur, die von der Erde aus gesehen werden kann, ist Syrtis Major, die große Syrte.
+
+Die südliche Halbkugel ist durchschnittlich sechs Kilometer höher als die nördliche und besteht aus geologisch älteren Formationen. Die Südhalbkugel ist zudem stärker verkratert, wie zum Beispiel in der Hochlandregion Arabia Terra. Unter den zahlreichen Einschlagkratern der Südhalbkugel befindet sich auch der größte Marskrater, Hellas Planitia, die Hellas-Tiefebene. Das Becken misst im Durchmesser bis zu 2100 km. In seinem Innern maß Mars Global Surveyor 8180 m unter Nullniveau  unter dem Durchschnittsniveau des Mars  den tiefsten Punkt auf dem Planeten. Der zweitgrößte Einschlagkrater des Mars, Chryse Planitia, liegt im Randbereich der nördlichen Tiefländer.
+Übersichtskarte des Mars mit den größten Regionen
+
+Die deutlichen Unterschiede der Topografie können durch innere Prozesse oder aber ein Impaktereignis verursacht worden sein. In letzterem Fall könnte in der Frühzeit der Marsentstehung ein größerer Himmelskörper, etwa ein Asteroid, auf der Nordhalbkugel eingeschlagen sein und die silikatische Kruste durchschlagen haben. Aus dem Innern könnte Lava ausgetreten sein und das Einschlagbecken ausgefüllt haben.
+
+Wie sich gezeigt hat, hat die Marskruste unter den nördlichen Tiefebenen eine Dicke von etwa 40 km, die im Gegensatz zum stufenartigen Übergang an der Oberfläche nur langsam auf 70 km bis zum Südpol hin zunimmt. Dies könnte ein Indiz für innere Ursachen der Zweiteilung sein.
+Oberflächenstrukturen
+Gräben
+In der Bildmitte liegt das System der Mariner-Täler. Ganz links die Tharsis-Vulkane (Bildmosaik von Viking 1 Orbiter, 1980)
+
+Südlich am Äquator und fast parallel zu ihm verlaufen die Valles Marineris (die Mariner-Täler), das größte bekannte Grabensystem des Sonnensystems. Es erstreckt sich über 4000 km und ist bis zu 700 km breit und bis zu 7 km tief. Es handelt sich um einen gewaltigen tektonischen Bruch. In seinem westlichen Teil, dem Noctis Labyrinthus, verästelt er sich zu einem chaotisch anmutenden Gewirr zahlreicher Schluchten und Täler, die bis zu 20 km breit und bis zu 5 km tief sind.
+
+Noctis Labyrinthus liegt auf der östlichen Flanke des Tharsis-Rückens, einer gewaltigen Wulst der Mars-Lithosphäre quer über dem Äquator mit einer Ausdehnung von etwa 4000 mal 3000 Kilometern und einer Höhe von bis zu rund 10 Kilometern über dem nördlichen Tiefland. Die Aufwölbung ist entlang einer offenbar zentralen Bruchlinie von drei sehr hohen, erloschenen Schildvulkanen besetzt: Ascraeus Mons, Pavonis Mons und Arsia Mons. Der Tharsis-Rücken und die Mariner-Täler dürften in ursächlichem Zusammenhang stehen. Wahrscheinlich drückten vulkanische Kräfte die Oberfläche des Planeten in dieser Region empor, wobei die Kruste im Bereich des Grabensystems aufgerissen wurde. Eine Vermutung besagt, dass diese vulkanische Tätigkeit durch ein Impaktereignis ausgelöst wurde, dessen Einschlagstelle das Hellas-Becken auf der gegenüberliegenden Seite des Mars sei. 2007 wurden im Nordosten von Arsia Mons sieben tiefere Schächte mit 100 bis 250 Metern Durchmesser entdeckt.
+Vulkane
+Olympus Mons, der mit 26 km höchste Berg im Sonnensystem
+Die komplexe Caldera des Olympus Mons
+
+Dem Hellas-Becken exakt gegenüber befindet sich der Vulkanriese Alba Patera. Er ragt unmittelbar am Nordrand des Tharsis-Rückens rund 6 km über das umgebende Tiefland und ist mit einem Basisdurchmesser von über 1200 km der flächengrößte Vulkan im Sonnensystem. Patera ist die Bezeichnung für unregelmäßig begrenzte Vulkane mit flachem Relief. Alba Patera ist anscheinend einmal durch einen Kollaps in sich zusammengefallen.
+
+Unmittelbar westlich neben dem Tharsis-Rücken und südwestlich von Alba Patera ragt der höchste Vulkan, Olympus Mons, 26,4 km über die Umgebung des nördlichen Tieflands. Mit einer Gipfelhöhe von etwa 21,3 km über dem mittleren Null-Niveau ist er die höchste bekannte Erhebung im Sonnensystem.
+
+Ein weiteres, wenn auch weniger ausgedehntes vulkanisches Gebiet ist die Elysium-Region nördlich des Äquators mit den Schildvulkanen Elysium Mons, Hecates Tholus und Albor Tholus.
+Stromtäler
+Kasei Vallis, das größte Stromtal des Mars
+
+Auf der Marsoberfläche verlaufen Stromtäler, die mehrere hundert Kilometer lang und mehrere Kilometer breit sein können. Die heutigen Trockentäler beginnen ziemlich abrupt und haben keine Zuflüsse. Die meisten entspringen an den Enden der Mariner-Täler und laufen nördlich im Chryse-Becken zusammen. In den Tälern erheben sich mitunter stromlinienförmige Inseln. Sie weisen auf eine vergangene Flutperiode hin, bei der über einen geologisch relativ kurzen Zeitraum große Mengen Wasser geflossen sein müssen. Es könnte sich um Wassereis gehandelt haben, das sich unter der Marsoberfläche befand, danach durch vulkanische Prozesse geschmolzen wurde und dann abgeflossen ist.
+
+Darüber hinaus finden sich an Abhängen und Kraterrändern Spuren von Erosionen, die möglicherweise ebenfalls durch flüssiges Wasser verursacht wurden.
+
+2006 proklamierte die NASA einen einzigartigen Fund: Auf einigen NASA-Fotografien, die im Abstand von sieben Jahren vom Mars gemacht wurden, lassen sich Veränderungen auf der Marsoberfläche erkennen, die eine gewisse Ähnlichkeit mit Veränderungen durch fließendes Wasser haben. Innerhalb der NASA wird nun diskutiert, ob es neben Wassereis auch flüssiges Wasser geben könnte.[19]
+Delta-Strukturen
+
+In alten Marslandschaften, z. B. im Eberswalde-Krater auf der Südhalbkugel oder in der äquatornahen Hochebene Xanthe Terra, finden sich typische Ablagerungen einstiger Flussdeltas.
+Tharsis-Tholus-Streifen, aufgenommen mit der Hirise-Kamera des Mars Reconnaissance Orbiters. Der Streifen ist links in der Mitte zu sehen. Rechts sind die Ausläufer von Tharsis Tholus.
+
+Seit längerem vermutet man, dass die tief eingeschnittenen Täler in Xanthe Terra einst durch Flüsse geformt wurden. Wenn ein solcher Fluss in ein größeres Becken, beispielsweise einen Krater, mündete, lagerte er erodiertes Gesteinsmaterial als Sedimente ab. Die Art der Ablagerung hängt dabei von der Natur dieses Beckens ab: Ist es mit dem Wasser eines Sees gefüllt, so bildet sich ein Delta. Ist das Becken jedoch trocken, so verliert der Fluss an Geschwindigkeit und versickert langsam. Es bildet sich ein sogenannter Schwemmkegel, der sich deutlich vom Delta unterscheidet.
+
+Jüngste Analysen von Sedimentkörpern auf Basis von Orbiter-Fotos weisen an zahlreichen Stellen in Xanthe Terra auf Deltas hin  Flüsse und Seen waren in der Marsfrühzeit also recht verbreitet.[20]
+Dark Slope Streaks
+
+Dunkle Streifen an Hängen sind auf dem Mars häufig zu sehen. Sie treten an steilen Hängen von Kratern, Mulden und Tälern auf und werden mit zunehmendem Alter heller. Manchmal beginnen sie in einem kleinen punktförmigen Bereich und werden dann zunehmend breiter. Man beobachtete, dass sie sich um Hindernisse, wie Mulden, weiterbewegen.
+
+Es wird angenommen, dass die Farbe von dunklen darunterliegenden Schichten stammt, die durch Lawinen von hellem Staub freigelegt werden. Es wurden jedoch auch andere Hypothesen aufgestellt, wie Wasser oder sogar der Wuchs von Organismen. Das Interessanteste an diesen dunklen Streifen (engl. dark slope streaks) ist, dass sie sich auch heute noch bilden.[21]
+Chaotische Gebiete
+
+Auf dem Mars gibt es zahlreiche Regionen mit einer Häufung von unterschiedlich großen Gesteinsbrocken und tafelbergähnlichen Erhebungen. Sie werden auch chaotische Gebiete genannt. Ariadnes Colles ist mit einer Fläche von etwa 29.000 km² so ein Gebiet. Es liegt im Terra Sirenum, einem südlichen Hochland des Mars. Dabei haben die Blöcke Ausmaße von einem bis zu zehn Kilometern Ausdehnung. Die größeren Blöcke ähneln Tafelbergen mit Erhebungen von bis zu 300 Metern.
+
+Es treten hierbei riefenartige Strukturen und Runzelrücken (engl. wrinkle ridges) auf. Die Ursachen dafür sind vulkanisch-tektonische Bewegungen.[22]
+Gesteinsschichten und Ablagerungen
+Salzlager
+
+Mit Hilfe der Sonde Mars Odyssey wies die NASA ein umfangreiches Salzlager in den Hochebenen der Südhalbkugel des Mars nach. Vermutlich entstanden diese Ablagerungen durch Oberflächenwasser vor etwa 3,5 bis 3,9 Milliarden Jahren.[23]
+Carbonatvorkommen
+
+Mit Hilfe der Compact Reconnaissance Imaging Spectrometer for Mars (CRISM) an Bord der NASA-Sonde Mars Reconnaissance Orbiter konnten Wissenschaftler Carbonat-Verbindungen in Gesteinsschichten rund um das knapp 1500 Kilometer große Isidis-Einschlagbecken nachweisen. Demnach wäre das vor mehr als 3,6 Milliarden Jahren existierende Wasser hier nicht sauer, sondern eher alkalisch oder neutral gewesen.
+
+Carbonatgestein entsteht, wenn Wasser und Kohlendioxid mit Kalzium, Eisen oder Magnesium in vulkanischem Gestein reagiert. Bei diesem Vorgang wird Kohlendioxid aus der Atmosphäre in dem Gestein eingelagert. Dies könnte bedeuten, dass der Mars früher eine dichte kohlendioxidreiche Atmosphäre hatte, wodurch ein wärmeres Klima möglich wurde, in dem es auch flüssiges Wasser gab.[24]
+
+Mit Hilfe von Daten des MRO wurden 2010 Gesteine entdeckt, die durch kosmische Einschläge aus der Tiefe an die Oberfläche befördert worden waren. Anhand ihrer spezifischen spektroskopischen Fingerabdrücke konnte festgestellt werden, dass sie hydrothermal (unter Einwirkung von Wasser) verändert wurden. Neben diesen Karbonat-Mineralen wurden auch Silikate nachgewiesen, die vermutlich auf die gleiche Weise entstanden sind. Dieser neue Fund beweise, dass es sich dabei nicht um örtlich begrenzte Vorkommen handele, sondern dass Karbonate in einer sehr großen Region des frühen Mars entstanden seien.[25]
+Hämatitkügelchen
+Hämatitkügelchen auf dem Felsen Berry Bowl
+
+Die Marssonde Opportunity fand im Gebiet des Meridiani Planum millimetergroße Kügelchen des Eisenminerals Hämatit. Diese könnten sich vor Milliarden Jahren unter Einwirkung von Wasser abgelagert haben. Darüber hinaus wurden Minerale gefunden, die aus Schwefel-, Eisen- oder Bromverbindungen aufgebaut sind, wie zum Beispiel Jarosit. Auf der entgegengesetzten Hemisphäre[26] des Mars fand die Sonde Spirit in den Columbia Hills das Mineral Goethit, das ausschließlich unter dem Einfluss von Wasser gebildet werden kann.
+Kieselsäure
+
+Forscher entdeckten 2010 mit Hilfe von MRO Ablagerungen auf einem Vulkankegel, die von Wasser verursacht wurden. Sie konnten das Mineral als Kieselsäurehydrat identifizieren, das nur in Verbindung mit Wasser entstanden sein kann. Die Wissenschaftler nehmen an, dass, falls es auf dem Mars Leben gegeben hat, es sich dort in der hydrothermalen Umgebung am längsten hätte halten können.[27]
+Polkappen
+Die Nordpolregion, aufgenommen von Mars Global Surveyor
+ Hauptartikel: Polkappen des Mars
+
+Der Mars besitzt zwei auffällige Polkappen, die zum größten Teil aus gefrorenem Kohlendioxid (Trockeneis) sowie einem geringen Anteil an Wassereis zusammengesetzt sind. Die nördliche Polkappe hat während des nördlichen Marssommers einen Durchmesser von rund 1000 Kilometern. Ihre Dicke wird auf 5 km geschätzt. Die südliche Polkappe ist mit 350 km Durchmesser und einer Dicke von 1½ km weniger ausgedehnt. Die Polarkappen zeigen spiralförmige Einschnitte, deren Entstehung bislang nicht geklärt ist.
+
+Wenn im Sommer die jeweiligen Polkappen teilweise abschmelzen, werden darunter geschichtete Ablagerungen sichtbar, die möglicherweise abwechselnd aus Staub und Eis zusammengesetzt sind. Im Marswinter nimmt der Durchmesser der dann jeweils der Sonne abgewandten Polkappe durch ausfrierendes Kohlendioxid wieder zu.
+
+Da ein größerer, stabilisierender Mond fehlt, taumelt der Mars mit einer Periode von etwa 5 Millionen Jahren. Die Polarregionen werden daher immer wieder so stark erwärmt, dass das Wassereis schmilzt. Durch das abfließende Wasser entstehen die Riemen und Streifen an den Polkappen.
+Wasservorkommen
+
+Der Mars erscheint heute als trockener Wüstenplanet. Die bislang vorliegenden Ergebnisse der Marsmissionen lassen jedoch den Schluss zu, dass die Marsatmosphäre in der Vergangenheit (vor Milliarden Jahren) wesentlich dichter war und auf der Oberfläche des Planeten reichlich flüssiges Wasser vorhanden war.
+Eisvorkommen an den Polen
+Die Südpolregion, aufgenommen von Viking Orbiter
+
+Durch Radarmessungen mit der Sonde Mars Express wurden in der Südpolarregion, dem Planum Australe, Ablagerungsschichten mit eingelagertem Wassereis entdeckt, die weit größer und tiefreichender als die hauptsächlich aus Kohlendioxideis bestehende Südpolkappe sind. Die Wassereisschichten bedecken eine Fläche, die fast der Größe Europas entspricht, und reichen in eine Tiefe von bis zu 3,7 Kilometern. Das in ihnen gespeicherte Wasservolumen wird auf bis zu 1,6 Millionen Kubikkilometer geschätzt  circa zwei Drittel des irdischen Grönlandeispanzers  was laut der Europäischen Weltraumorganisation (ESA) ausreichen würde, die Marsoberfläche mit einer etwa 11 Meter dicken Wasserschicht zu bedecken.[28]
+Weitere Eisvorkommen
+Beobachtete Veränderungen könnten Anzeichen für fließendes Wasser innerhalb der letzten Jahre sein.[19]
+
+Die schon lange gehegte Vermutung, dass sich unter der Oberfläche des Mars Wassereis befinden könnte, erwies sich 2005 durch Entdeckungen der ESA-Sonde Mars Express als richtig.
+
+Geologen gehen von wiederkehrenden Vereisungsperioden auf dem Mars aus, ähnlich irdischen Eiszeiten. Dabei sollen Gletscher bis in subtropische Breiten vorgestoßen sein. Die Forscher schließen dies aus Orbiter-Fotos, die Spuren einstiger Gletscher in diesen äquatornahen Gebieten zeigen. Zusätzlich stützen auch Radarmessungen aus der Umlaufbahn die Existenz beträchtlicher Mengen an Bodeneis in ebendiesen Gebieten. Diese Bodeneisvorkommen werden als Reste solcher Mars-Eiszeiten gedeutet.[29]
+
+Auf der Europäischen Planetologenkonferenz EPSC im September 2008 in Münster wurden hochauflösende Bilder des Mars Reconnaissance Orbiters der NASA vorgestellt, die jüngste Einschlagkrater zeigen. Wegen der sehr dünnen Atmosphäre stürzen die Meteoriten praktisch ohne Verglühen auf die Marsoberfläche. Die fünf neuen Krater, die nur drei bis sechs Meter Durchmesser und eine Tiefe von 30 bis 60 cm aufweisen, wurden in mittleren nördlichen Breiten gefunden. Sie zeigen an ihrem Boden ein gleißend weißes Material. Wenige Monate später waren die weißen Flecken durch Sublimation verschwunden. Damit erhärten sich die Hinweise, dass auch weit außerhalb der Polgebiete Wassereis dicht unter der Marsoberfläche begraben ist.[30][31]
+Flüssiges Wasser
+
+Unter der Kryosphäre des Mars werden große Mengen flüssigen Wassers vermutet. Nahe oder an der Oberfläche ist es für flüssiges Wasser zu kalt, und Eis würde langsam verdunsten, da der Partialdruck von Wasser in der Marsatmosphäre zu gering ist.
+
+Es gibt jedoch Hinweise, dass die Raumsonde Phoenix Wassertropfen auf der Oberfläche entdeckt habe. Dabei könnten Perchlorate als Frostschutz wirken. Diese Salze haben die Eigenschaft, Wasser anzuziehen. Dies kann auch Wasserdampf aus der Atmosphäre sein. Bei ausreichender Konzentration der Salze könnte Wasser sogar bis 70 °C flüssig bleiben. Durch eine Durchmischung mit Perchloraten könnte Wasser auch unter der Oberfläche in flüssigem Zustand vorhanden sein.[32] 2010 fanden Forscher der Uni Münster Belege dafür, dass zumindest im Frühjahr und in Kratern wie dem Russell-Krater flüssiges Wasser auf der Marsoberfläche existiert. Auf Fotos, die vom Mars Reconnaissance Orbiter aufgenommen wurden, entdeckten sie an steilen Hängen Erosionsrinnen, die sich zwischen November 2006 und Mai 2009 verlängert hatten. Dass die Rinnen nach unten dünner werden, deuten die Forscher als Versickern,[33] andere als Verdunsten.[34]
+
+Eine alternative Erklärung für die Erosionsrinnen schlugen Wissenschaftler der NASA 2010 vor: Kohlendioxid, das sich im marsianischen Winter bei unter -100 °C aus der Atmosphäre an den Berghängen als Trockeneis ansammelt, bei Erwärmung des Planeten als sublimiertes Gas die Hänge hinab"fließt" und dabei Staub erodiert.[35][36]
+
+Mit dem abbildenden Spektrometer (CRISM) des Mars Reconnaissance Orbiters konnten Spektren von aktiven (jahreszeitlich dunkleren) Rinnen gewonnen werden, deren Auswertung, 2015 veröffentlicht,[37] Magnesiumperchlorat, Magnesiumchlorat und Natriumperchlorat ergaben.
+Siehe auch: Extraterrestrischer Ozean
+Innerer Aufbau
+Illustration des vermuteten Marsaufbaus
+
+Über den inneren Aufbau des Mars ist nur wenig bekannt, da bislang nur begrenzt seismische Messungen vorgenommen werden konnten.
+
+Sein Inneres gliedert sich ähnlich dem Schalenaufbau der Erde in eine Kruste, einen Gesteinsmantel und einen Kern, der überwiegend aus Eisen und zu etwa 14 bis 17 Prozent aus Schwefel besteht. Der Kern beinhaltet etwa doppelt so viele leichte Elemente wie der Erdkern. Deshalb ist die Dichte des Kerns niedriger, als es bei einem reinen Eisenkern der Fall wäre.[38]
+
+Laut neueren experimentellen Simulationen der Bedingungen in der Übergangszone zwischen Mantel und Kern (Messungen des Mars Global Surveyor ergaben eine Temperatur von 1500 Grad Celsius und einen Druck von 23 Gigapascal) hat der Kern des Mars im Unterschied zu dem der Erde keinen inneren festen Bereich, sondern ist vollständig flüssig.[39] Dies belegt auch die Analyse der Bahndaten des Mars Global Surveyor. Dabei konnte nachgewiesen werden, dass der Mars einen flüssigen Kern mit einem Radius zwischen 1520 und 1840 km besitzt und damit eine höhere Temperatur hat, als zuvor angenommen wurde.
+
+Der Kern ist von einem Mantel aus Silicaten umgeben, der viele der tektonischen und vulkanischen Merkmale des Planeten formte, nun aber inaktiv zu sein scheint. Die durchschnittliche Dicke der Planetenkruste beträgt etwa 50 km, mit einem Maximum von 125 km.[38] Im Vergleich dazu ist die Erdkruste mit einer Dicke von durchschnittlich 40 km nur etwa ein Drittel so dick, wenn man die relative Größe der beiden Planeten berücksichtigt.
+Magnetfeld
+Magnetisierung des Mars  Rot und Blau kennzeichnen entgegengesetzte Richtungen des Magnetfelds, ein Drittel der Südhalbkugel
+
+Anders als die Erde und der Merkur besitzt der Mars kein globales Magnetfeld mehr, seit er es ca. 500 Millionen Jahre nach seiner Entstehung verlor. Vermutlich erlosch es, als der Zerfall radioaktiver Elemente nicht mehr genügend Wärmeenergie produzierte, um im flüssigen Kern Konvektionsströmungen anzutreiben. Weil der Mars keinen festen inneren Kern besitzt, konnte er den Dynamo-Effekt nicht auf die gleiche Art aufbauen wie die Erde.
+
+Dennoch ergaben Messungen einzelne und sehr schwache lokale Magnetfelder. Die Messung des Magnetfeldes wird erschwert durch die Magnetisierung der Kruste mit Feldstärken von bis zu 220 Nanotesla und durch externe Magnetfelder mit Stärken zwischen wenigen Nanotesla und bis zu 100 Nanotesla, die durch die Wechselwirkung des Sonnenwindes mit der Marsatmosphäre entstehen und zeitlich sehr stark variieren. Nach den Analysen der Daten des Mars Global Surveyor konnte die Stärke des Magnetfeldes trotzdem sehr genau bestimmt werden  sie liegt bei weniger als 0,5 Nanotesla gegenüber 30 bis 60 Mikrotesla des Erdmagnetfeldes.
+
+Messungen von Magnetfeldlinien durch Mars Global Surveyor ergaben, dass Teile der planetaren Kruste durch das einstige Magnetfeld stark magnetisiert sind, aber mit unterschiedlicher Orientierung, wobei gleichgerichtete Bänder von etwa 1000 km Länge und 150 km Breite auftreten. Ihre Größe und Verteilung erinnert an die streifenförmigen Magnetanomalien auf den Ozeanböden der Erde. Durch sie wurde die Theorie der Plattentektonik gestützt, weshalb 1991 auch eine ähnliche Theorie für den Mars entwickelt wurde. Magnetische Beobachtungen auf dem Mars sind jedoch noch nicht detailliert genug, um sichere Schlussfolgerungen zu erlauben oder gar die Theorie zu bestätigen.
+
+Möglicherweise werden bei der mit der Zeit zwangsläufigen Abkühlung des Marskerns durch die damit einsetzende Auskristallisation des Eisens und die freigesetzte Kristallisationswärme wieder Konvektionen einsetzen, die ausreichen, dass der Planet in ein paar Milliarden Jahren wieder über ein globales Magnetfeld in alter Stärke verfügt.[39]
+Monde
+Die Umlaufbahnen von Phobos und Deimos
+Phobos (oben) und Deimos (unten) im Größenvergleich
+
+Zwei kleine Monde, Phobos und Deimos (griech. Furcht und Schrecken), umkreisen den Mars. Sie wurden 1877 von dem US-amerikanischen Astronomen Asaph Hall entdeckt und nach den in der Ilias überlieferten beiden Begleitern, die den Wagen des Kriegsgottes Ares (lat. Mars) ziehen, benannt.
+
+Phobos (Durchmesser 26,8 × 22,4 × 18,4 km) und Deimos (Durchmesser 15,0 × 12,2 × 10,4 km) sind zwei unregelmäßig geformte Felsbrocken. Möglicherweise handelt es sich um Asteroiden, die vom Mars eingefangen wurden. Phobos große Halbachse beträgt 9.376 km, diejenige von Deimos 23.459 km. Phobos ist damit kaum mehr als 6.000 km von der Oberfläche des Mars entfernt, der Abstand ist geringer als der Durchmesser des Planeten.
+
+Die periodischen Umlaufbewegungen der beiden Monde befinden sich mit der Größe von 0,31891 (Phobos) und 1,262 Tagen (Deimos) zueinander in einer 1:4-Bahnresonanz.
+
+Die Umlaufzeit von Phobos ist kürzer als die Rotationszeit von Mars. Der Mond kommt dem Planeten durch die Gezeitenwechselwirkung auf einer Spiralbahn langsam immer näher und wird schließlich auf diesen stürzen oder durch die Gezeitenkräfte auseinandergerissen werden, so dass er für kurze Zeit zu einem Marsring wird. Für ihn berechneten DLR-Forscher, basierend auf neueren Daten der europäischen Raumsonde Mars Express, dass dies in ca. 50 Millionen Jahren geschehen wird. Deimos wird dagegen in einer noch ferneren Zukunft dem Mars entfliehen. Er driftet durch die Gezeitenwechselwirkung langsam nach außen, wie alle Monde, die langsamer (und nicht retrograd) um einen Planeten kreisen, als dieser rotiert.
+
+Ihre Existenz war schon lange vorher mehrmals literarisch beschrieben worden, zuletzt von Voltaire, der in seiner 1750 erschienenen Geschichte Micromégas über zwei Marsmonde schreibt. Es ist wahrscheinlich, dass Voltaire diese Idee von Jonathan Swift übernahm, dessen Buch Gullivers Reisen 1726 erschienen war. Darin wird im dritten Teil beschrieben, die Astronomen des Landes Laputa hätten ebenfalls zwei kleinere Sterne oder Satelliten entdeckt, die um den Mars kreisen, wovon der innere vom Zentrum des Hauptplaneten genau drei seiner Durchmesser entfernt ist und der äußere fünf. Es wird vermutet, dass Swift von einer Fehlinterpretation Johannes Keplers gehört hatte. Der hatte das Anagramm, das Galileo Galilei 1609 an ihn schickte, um ihm die Entdeckung der Phasen der Venus mitzuteilen, als die Entdeckung zweier Marsmonde aufgefasst.
+Entstehungsgeschichte
+Datei:Mars.ogvMediendatei abspielen
+Animation, welche die Topographie des Mars zeigt. Olympus Mons  Mariner-Täler  Mars Südpol  Hellas-Becken  Mars Nordpol
+
+Anhand der astrogeologischen Formationenvielfalt und der Verteilung von Einschlagskratern kann ein Großteil der Geschichte des Planeten abgeleitet werden. Der Mars entstand, wie die übrigen Planeten des Sonnensystems, vor etwa 4,5 Milliarden Jahren durch Zusammenballung kleinerer Körper, sogenannter Planetesimale, innerhalb der protoplanetaren Scheibe zu einem Protoplaneten. Vor 4 Milliarden Jahren bildete der im Innern noch glutflüssige planetare Körper eine feste Gesteinskruste aus, die einem heftigen Bombardement von Asteroiden und Kometen ausgesetzt war.
+Noachische Periode
+
+Die ältesten der heute noch vorhandenen Formationen, wie das Hellas-Becken, und die verkraterten Hochländer, wie Noachis Terra, wurden vor 3,8 bis 3,5 Milliarden Jahren, in der so genannten Noachischen Periode, gebildet. In dieser Periode setzte die Zweiteilung der Marsoberfläche ein, wobei die nördlichen Tiefländer gebildet wurden. Durch starke vulkanische Eruptionen wurden weite Teile des Planeten von Ablagerungen aus vulkanischer Lava und Asche bedeckt. Diese wurden an vielen Stellen durch Wind und Wasser wieder abgetragen und ließen ein Netzwerk von Tälern zurück.
+Hesperianische Periode
+
+Das geologische Mittelalter des Mars wird als Hesperianische Periode bezeichnet. Sie umfasst den Zeitraum von vor 3,5 bis 1,8 Milliarden Jahren. In dieser Periode ergossen sich riesige Lavamengen aus ausgedehnten Spalten in der Marskruste und bildeten weite Ebenen, wie Hesperia Planum. Es entstanden auch die ältesten Vulkane der Tharsis- und der Elysium-Region, wobei die Gesteinskruste stark verformt wurde und sich das Grabensystem der Mariner-Täler öffnete. Es bildeten sich die gewaltigen Stromtäler, in denen große Wassermengen flossen und sich stellenweise aufstauten.
+
+Es entwickelte sich auf dem Mars ein Wasserkreislauf. Im Unterschied zur Erde gab es jedoch keinen Wetterzyklus mit Verdunstung, Wolkenbildung und anschließendem Niederschlag. Das Wasser versickerte im Untergrund und wurde später durch hydrothermale Prozesse wieder an die Oberfläche getrieben. Da jedoch der Planet immer weiter abkühlte, endete dieser Prozess vor etwa 1,5 Milliarden Jahren, und es hielten sich nur noch Gletscher an der Oberfläche. Zeichen dieser Aktivität sind vor kurzem entdeckte Moränen am Olympus Mons.[40]
+Amazonische Periode
+
+Das jüngste geologische Zeitalter des Mars wird als Amazonische Periode bezeichnet und begann vor 1,8 Milliarden Jahren. In dieser Phase entstanden die jüngeren Vulkane der Tharsis- und der Elysium-Region, aus denen große Lavamassen flossen. So bildeten sich weite Ebenen aus wie zum Beispiel Amazonis Planitia.
+
+2008 fanden Forscher Hinweise auf Geysire auf dem Mars, die vor einigen Millionen Jahren aktiv gewesen sein dürften. Dabei hätten sie Fontänen von kohlensäurehaltigem Wasser einige Kilometer weit in die Höhe geschossen. Darauf deuten auch die Formen von Ablagerungen hin, die britische Forscher in der Nähe zweier ausgedehnter Grabensysteme entdeckten. Wahrscheinlich wurden diese Eruptionen durch Blasen aus Kohlendioxid ausgelöst. Dadurch wurde das Wasser aus einer Tiefe von bis zu vier Kilometern durch Spalten im Marsboden an die Oberfläche gedrückt. Die Fontänen müssen dabei mit einem so großen Druck herausgepresst worden sein, dass das schlammige Wasser erst in einer Entfernung von mehreren Kilometern von der Austrittsstelle wieder auf den Boden regnete oder, bedingt durch die tiefen Temperaturen, als Hagel niederging.[41]
+
+Gegenwärtig wird die Oberfläche des Mars hauptsächlich durch Winderosion und Hangrutschung geformt.
+Erforschung
+
+Aufgrund seiner großen Helligkeit war der Mars schon im frühen Altertum als Planet bekannt. Wegen seiner langen Planetenschleifen (die alle 2 Jahre in der Opposition auftreten) galten seine Bewegungen den Ägyptern als unvorhersehbar. Den Babyloniern gelang es zwar, sie näherungsweise vorauszusagen, sie schrieben die Bahnanomalien aber den Launen und der Gewalttätigkeit des Gottes Nergal zu.
+Vor dem Raumfahrtzeitalter
+Marsoberfläche nach Schiaparelli (1888)
+Mars auf einer astronomischen Zeichnung des 19. Jahrhunderts (Trouvelot, 1881)
+
+    Tycho Brahe (15461601) vermaß die Planetenpositionen des Mars mit bis dahin nicht gekannter Genauigkeit und ermöglichte es so Johannes Kepler (15711630), die elliptische Bahn des Planeten zu berechnen und die drei Keplerschen Gesetze abzuleiten.
+    Christiaan Huygens entdeckte 1659 eine dunkle, dreieckige Zone (Syrtis Major) auf der Marsoberfläche. Aus deren Positionsveränderungen errechnete er die Eigenrotation des Mars zu 24,5 Stunden (heutiger Wert: 24,623 Stunden).
+    Giovanni Domenico Cassini beschrieb 1666 die weißen Polkappen des Mars.
+    Wilhelm Herschel bestimmte 1784 die Neigung der Rotationsachse gegenüber der Umlaufbahn mit 25° (heutiger Wert 25,19°).
+    Wilhelm Beer fertigte 1830 die erste Marskarte an, Angelo Secchi 1863 schon in Farbe.
+    Richard Proctor veröffentlichte 1869 eine detaillierte Marskarte, die er aus Zeichnungen von William Rutter Dawes erstellte.
+    Giovanni Schiaparelli nahm 1877 auf der Marsoberfläche zarte Linienstrukturen wahr, die er Canali (italienisch für Rinnen oder Gräben) nannte und in eine detaillierte Karte eintrug. Er machte zunächst keine Angaben über den Ursprung der Canali (die er für breiter als 100 km schätzte), doch wurden sie in englischen Medien fälschlich als Channel (Kanäle) übersetzt und bald als Werk intelligenter Marsbewohner interpretiert. Auf älteren Marskarten erhielten viele dieser Linien auch Namen. Während einige Astronomen Schiaparellis Beobachtungen bestätigten, wurde die Existenz der Canali von anderen angezweifelt und als Ergebnis optischer Täuschungen bezeichnet. Erst der Vorbeiflug der amerikanischen Mariner-Sonden beendete die Spekulationen, denn Fotos der Marsoberfläche zeigten keine so breiten Rinnen. Drei Canali entsprechen aber den riesigen Canyons Valles Marineris, andere zeichnen Geländestufen und Schattenlinien nach, einige auch längere Kraterketten.
+
+ Hauptartikel: Marskanäle
+
+    Asaph Hall entdeckt bei der günstigen Opposition 1877 die beiden Marsmonde Phobos und Deimos.
+    Percival Lowell gründet 1894 das Lowell-Observatorium in Arizona, um die Marskanäle, ihre jahreszeitlichen Verfärbungen und allfällige Lebensspuren zu erforschen. Spektroskopisch findet man biologische Moleküle, die sich allerdings später als terrestrisch erweisen. In der Atmosphäre werden Spektrallinien von Sauerstoff entdeckt, dessen Volumsanteil aber überschätzt wird.
+    Eugène Antoniadi bestätigte zunächst die Marskanäle, kam aber 1909 am Riesenteleskop Meudon zum Schluss, sie würden nur in kleineren Fernrohren als solche erscheinen. In seinen detaillierten Marskarten  die bis zu den ersten Marssonden kaum mehr übertroffen wurden  zeichnete er sie als Folge diffuser Flecken ein.
+    Gerard Kuiper wies in den 1950ern Kohlendioxid in der Marsatmosphäre nach und glaubte bis zu den ersten Marssonden an die mögliche Existenz von Moosen oder Flechten.
+
+Im Raumfahrtzeitalter
+Die erste Nahaufnahme vom Mars, aufgenommen von Mariner 4
+
+Viele unbemannte Raumsonden wurden schon zum Mars entsandt, von denen einige sehr erfolgreich waren. Etwa die Hälfte der Missionen endete in einem Misserfolg, die meisten davon waren sowjetische Sonden. Im Unterschied zur Erkundung des Erdmondes gibt es bis heute keine Gesteinsproben, die vom Mars geholt wurden, so dass Marsmeteoriten die einzige Möglichkeit sind, Material vom Mars in irdischen Laboratorien zu erforschen. Bislang hat es auch noch keine bemannte Marsmission gegeben  ein aktueller Ansatz dafür ist Mars One.
+ Hauptartikel: Chronologie der Marsmissionen
+1960er Jahre
+Darstellung auf einer ungarischen Sondermarke von 1964
+
+Die beiden sowjetischen Sonden Marsnik 1 und 2 wurden im Oktober 1960 gestartet, um am Mars vorbeizufliegen, erreichten aber noch nicht einmal die Erdumlaufbahn. 1962 versagten drei weitere sowjetische Sonden (Sputnik 22, Mars 1 und Sputnik 24), zwei von ihnen blieben im Erdorbit, die dritte verlor auf dem Weg zum Mars den Kontakt mit der Erde. Auch ein weiterer Versuch im Jahre 1964 schlug fehl.
+
+Zwischen 1962 und 1973 wurden zehn Mariner-Raumsonden vom Jet Propulsion Laboratory der NASA entwickelt und gebaut, um das innere Sonnensystem zu erforschen. Es waren relativ kleine Sonden, die meistens nicht einmal eine halbe Tonne wogen.
+
+Mariner 3 und Mariner 4 waren identische Raumsonden, die am Mars vorbeifliegen sollten. Mariner 3 wurde am 5. November 1964 gestartet, aber die Transportverkleidung löste sich nicht richtig, und die Sonde erreichte den Mars nicht.
+
+Drei Wochen später, am 28. November 1964, wurde Mariner 4 erfolgreich auf eine achtmonatige Reise zum Roten Planeten geschickt. Am 15. Juli 1965 flog die Sonde am Mars vorbei und lieferte die ersten Nahaufnahmen  insgesamt 22 Fotos  des Planeten. Die Bilder zeigten mondähnliche Krater, von denen einige mit Reif bedeckt zu sein scheinen.
+
+1969 folgten Mariner 6 und Mariner 7 und lieferten insgesamt 200 Fotos.
+1970er Jahre
+
+1971 missglückte der Start von Mariner 8, dafür erhielt die NASA im gleichen Jahr von Mariner 9 mehrere tausend Bilder.
+
+Ebenfalls 1971 landete mit der sowjetischen Mars 3 die erste Sonde weich auf dem Mars, nachdem Mars 2 wenige Tage zuvor gescheitert war. Der Funkkontakt brach jedoch 20 Sekunden nach der Landung ab. Mögliche Ursache war ein gerade tobender globaler Staubsturm, der den Lander umgeworfen haben könnte.
+Bild von Viking 1. Der große Felsen links von der Mitte ist etwa zwei Meter breit. Er wurde Big Joe getauft.
+
+In den 1970er-Jahren landeten die Viking-Sonden erfolgreich auf dem Mars und lieferten die ersten Farbbilder sowie Daten von Bodenproben: Viking 1 schaffte am 20. Juli 1976 als erste US-amerikanische Sonde eine weiche Landung. Die Sowjetunion versuchte noch weitere Landungen auf dem Mars, scheiterte jedoch.
+1980er Jahre
+
+Die einzigen Raumsonden, die in den 1980er Jahren zum Mars flogen, waren die beiden sowjetischen Fobos-Sonden. Sie wurden 1988 von Baikonur aus gestartet und sollten den Mars und seinen Mond Phobos untersuchen. Dafür waren sie im Rahmen einer internationalen Kooperation neben sowjetischen auch mit zahlreichen westlichen Instrumenten bestückt. Der Kontakt zu Fobos 1 brach jedoch schon auf dem Weg zum Mars wegen eines falschen Steuerbefehls ab. Fobos 2 erreichte eine Marsumlaufbahn und einige Daten und Bilder vom Mars wurden zur Erde übertragen. Danach wurde die Sonde zu Phobos gelenkt. Jedoch brach kurz vor dem Rendezvous auch der Kontakt zu Fobos 2 ab.
+1990er Jahre
+
+1992 wurde die US-Sonde Mars Observer gestartet. Sie ging 1993 kurz vor dem Einschwenken in die Umlaufbahn verloren.
+
+Am 16. November 1996 startete Mars 96, die erste russische Raumsonde seit dem Zusammenbruch der Sowjetunion. Doch versagte die Proton-Trägerrakete, so dass Mars 96 wieder in die Erdatmosphäre eintrat und verglühte.
+Der Marsrover Sojourner
+
+Besonderes Aufsehen erregte 1997 der Mars Pathfinder, bei dem zum ersten Mal ein kleines Marsmobil, der Rover Sojourner, eingesetzt wurde. Er landete publikumswirksam am 4. Juli, dem amerikanischen Unabhängigkeitstag, und lieferte viele Aufnahmen von der Umgebung der Landestelle, die von der NASA zum ersten Mal sofort im Internet veröffentlicht wurden.
+
+Eine weitere erfolgreiche Mission war 1997 die des Mars Global Surveyor, bei der die Marsoberfläche in einer hohen Auflösung kartografiert wurde. Am 2. November 2006  fünf Tage vor dem 10-jährigen Jubiläum seines Starts  brach der Kontakt mit dem Satelliten ab.
+
+Das Scheitern der Marssonden Mars Climate Orbiter, der wegen eines Programmierfehlers in der Navigation verlorenging, und Mars Polar Lander, der wahrscheinlich wegen eines fehlerhaften Sensors bei der Landung aus größerer Höhe abstürzte, stellte 1999 einen herben Rückschlag für die Marsforschung dar.
+
+Auch die 1998 gestartete japanische Raumsonde Nozomi konnte den Mars nicht erreichen.
+2000er Jahre
+
+Seit dem 24. Oktober 2001 umkreist außer dem Global Surveyor noch 2001 Mars Odyssey den roten Planeten, der spezielle Instrumente zur Fernerkundung von Wasservorkommen an Bord hat.
+
+Von den bis 2002 insgesamt 33 Missionen zum Mars waren nur acht erfolgreich, allesamt US-amerikanisch.
+
+Am 2. Juni 2003 startete im Rahmen der ersten europäischen Marsmission die ESA-Raumsonde Mars Express mit dem Landegerät Beagle 2 erfolgreich zum Mars. Zwar landete Beagle 2 am 25. Dezember 2003 auf der Marsoberfläche, allerdings konnte der Funkkontakt niemals aufgebaut werden. 2014 wurde er auf Bildern des MRO entdeckt. Der Orbiter Mars Express arbeitet jedoch erfolgreich in der Marsumlaufbahn und konnte unter anderem viele Aufnahmen von Formationen machen, von denen man annimmt, dass sie ausgetrocknete oder ausgefrorene Flusstäler seien. Er kartiert den Planeten u. a. mittels Radar und einer Stereokamera im sichtbaren Licht, sowie spektroskopisch auch in Infrarot. Am 30. November 2005 fand die Sonde unter der Ebene Chryse Planitia ein Eisfeld mit 250 km Durchmesser.
+Marsrover Opportunity (MER-B)
+
+Am 10. Juni 2003 wurde die US-amerikanische Marssonde Spirit (MER-A) zum Mars gestartet. An Bord befand sich ein Rover, der nach der Landung drei Monate lang Gesteinsproben entnehmen und nach Spuren von früher vorhandenem Wasser suchen sollte. Die Landung erfolgte am 4. Januar 2004 im Krater Gusev, in den das Ma'adim Vallis mündet. Im April 2009 fuhr sich der Rover in einer Sandanhäufung fest und konnte seit dem 22. März 2010 auch nicht mehr kontaktiert werden (Stand: März 2011).
+
+Am 8. Juli 2003 wurde die baugleiche Sonde Opportunity (MER-B) mit einer Delta-II-Rakete gestartet. Sie landete am 25. Januar 2004 in der Tiefebene Meridiani Planum nahe dem Marsäquator, fast genau gegenüber von Spirit.[26] Die vom Rover gesammelten Beweise, dass der Mars einst warm und feucht war, wurden im Jahresrückblick der Fachzeitschrift Science mit der Wahl zum Durchbruch des Jahres 2004 gewürdigt. Opportunity ist noch immer aktiv (Stand: April 2015).
+vergrößern und Informationen zum Bild anzeigen
+Das Panoramabild, von dem hier nur ein Ausschnitt zu sehen ist, wurde aus hunderten Einzelbildern montiert, die Opportunity vom 6. Oktober bis 6. November 2006 aufgenommen hat. Es zeigt annähernd in Echtfarben den Victoria-Krater vom Cap Verde
+
+Am 12. August 2005 wurde die US-Sonde Mars Reconnaissance Orbiter mit einer Atlas-V-Rakete auf die Reise geschickt und erreichte am 10. März 2006 den Mars. Sie soll ihn mit hochauflösenden Kameras kartografieren und auch nach geeigneten Landestellen für spätere Rover-Missionen suchen. Außerdem soll sie zur Hochgeschwindigkeits-Kommunikation zwischen zukünftigen Raumsonden auf der Marsoberfläche und der Erde dienen.
+Sonnenuntergang auf dem Mars beim Krater Gusev (Spirit am 19. Mai 2005)
+
+2007 fotografierte Mars Reconnaissance sieben fast kreisrunde schwarze und strukturlosen Flecken, die im Nordosten des Marsvulkans Arsia Mons liegen.[42] Der größte, genannt Jeanne, hat einen Durchmesser von etwa 150 Meter. Eine Schrägaufnahme der sonnenbeschienenen Seitenwand im August 2007 zeigte, dass es sich um einen mindestens 78 Meter tiefen senkrechten Schacht handeln muss. Diese Strukturen sind sehr wahrscheinlich vulkanischer Natur und durch den Einbruch einer nicht mehr tragfähigen Deckschicht entstanden.[43]
+
+Am 26. Dezember 2007 machte die High Resolution Stereo Camera des Mars Express Aufnahmen von Eumenides Dorsum, einem Bergrücken westlich der Tharsis-Region. Die Aufnahmen zeigen kilometerlange lineare Strukturen, die von Kanälen unterbrochen sind. Es handelt sich um durch Winderosion entstandene Yardangs (Windhöcker bzw. Sandwälle).
+
+Mit der Sonde Mars Odyssey wies die NASA im März 2008 eine umfangreiche Salzlagerstätte in den Hochebenen der Südhalbkugel nach. Die Wissenschaftler des JPL in Pasadena meinen, sie habe sich vor 3,5 bis 3,9 Milliarden Jahren gebildet. Vermutlich entstanden die Salze durch mineralienreiches Grundwasser, das an die Oberfläche gelangte und dort verdunstete. Die Bilder von Mars Odyssey zeigen kanalähnliche Strukturen, die in den Salzbecken enden.[23] Insgesamt wurden über 200 Gebiete mit Salzvorkommen ausgemacht, die zwischen 1 und 25 km² groß sind. Die Entdeckung deutet darauf hin, dass der Mars vor langer Zeit ein wärmeres und deutlich feuchteres Klima hatte.[44]. Solche Klimaschwankungen dürften durch aperiodische Änderungen der Rotationsachse entstehen, deren Neigung (derzeit 25°) zwischen 14 und 50° variiert.[45]
+Die Orte der sieben erfolgreichen Marslandungen
+
+Am 26. Mai 2008 landete die Sonde Phoenix im nördlichen Polargebiet des Planeten. Sie suchte dort bis November 2008 im Boden nach Wassereis und habitablen Zonen, also für primitive Organismen bewohnbare Umgebungen. Ihr Roboterarm konnte Proben aus etwa 50 cm Tiefe holen, um sie dann in einem Minilabor zu analysieren. Phoenix entdeckte bei einer Grabung weiße Klümpchen, die nach einigen Tagen verschwanden. Man vermutete, dass es sich dabei um Wassereis handelt,[46] was am 31. Juli bestätigt wurde  beim Erhitzen einer Gesteinsprobe trat Wasserdampf aus.[47] Mit dem nasschemischen Labor MECA, das die wasserlöslichen Ionen im Marsboden bestimmte, konnten erhebliche Mengen an Perchloraten detektiert werden. Auf der Erde kommen Perchlorate in den ariden Wüstengebieten vor. Natriumperchlorat wird durch Oxidation von Natriumchlorid in der Atmosphäre erzeugt und dann mit dem Staub abgelagert.
+
+
+2010er Jahre
+Curiosity auf dem Mars
+
+Am 26. November 2011 um 15:02 UTC startete die Rover-Mission Mars Science Laboratory (Curiosity) der NASA mit einer Atlas V(541) von Cape Canaveral und landete am 6. August 2012 auf dem Mars. Der Rover kann weite Strecken zurücklegen und umfassende Untersuchungen eines großen Umkreises durchführen. Wichtigstes Projektziel sind geologische Analysen des Marsbodens.
+
+Am 18. November 2013 startete eine weitere NASA-Sonde zum Mars. Die Mission mit dem Projektnamen Mars Atmosphere and Volatile Evolution (MAVEN) soll das Rätsel der verlorenen Atmosphäre aufklären.[48] Der Orbiter umkreist den Planeten seit dem 22. September 2014 und soll sich in fünf Tiefflügen annähern. Weiters wurde am 5. November 2013 eine indische Marsmission gestartet. Sie soll ebenfalls die Atmosphäre sowie verschiedene Oberflächenphänomene untersuchen.[49]
+
+ExoMars Rover ist ein europäischer Rover, dessen Start für 2020 geplant ist. Er soll speziell nach Spuren von Leben suchen. Die Finanzierung dieser Mission ist allerdings noch ungewiss.
+Geplante Missionen
+
+Weitere Pläne der NASA und ESA zur Marserforschung enthalten unter anderem das Aussetzen von kleineren Flugzeugen in der Atmosphäre und  nach 2020  die Rückführung von Marsproben zur Erde (Mission Mars Sample Return).
+vergrößern und Informationen zum Bild anzeigen
+Panoramabild der Marsoberfläche, aufgenommen von der Sonde Pathfinder
+
+Im Januar 2004 kündigte der US-amerikanische Präsident George W. Bush Anstrengungen der USA für eine bemannte Marsmission an. Im Rahmen des Raumfahrtprogramms Constellation plante die NASA diese Flüge für die Zeit nach 2020. Der ehemalige NASA-Direktor Michael Griffin nannte die Zeit bis 2037. Constellation wurde aber durch die Nachfolgeregierung unter Barack Obama aus Kostengründen gestrichen.[50]
+
+Auch das langfristig angelegte europäische Raumfahrtprogramm Aurora strebt insbesondere die Landung eines Menschen auf dem Mars an und plant sie für das Jahr 2033.
+
+Darüber hinaus existieren im Rahmen von Visionen einer Marskolonisation Vorstellungen, den Mars durch Terraforming in weiter Zukunft in einen für den Menschen lebensfreundlicheren Planeten umzuwandeln. Robert Zubrin, Edwin Aldrin und andere namhafte Stimmen in den Vereinigten Staaten von Amerika treten mittlerweile dafür ein, auf dem Mars unter dem Motto Mars to Stay schon in naher Zukunft die erste menschliche Siedlung zu begründen: Das sei möglich und sinnvoll, weil es wesentlich weniger Aufwand erfordere, die ersten Marsfahrer dauerhaft auf dem Planeten siedeln zu lassen, als sie sogleich wieder zur Erde zurückzuholen.
+Möglichkeit von Leben
+ Hauptartikel: Leben auf dem Mars
+
+Die Ökosphäre (oder habitable Zone) des Sonnensystems reicht von 0,95 bis 1,37 AE Abstand zur Sonne. Im Sonnensystem befindet sich nur die Erde innerhalb dieses Gürtels um die Sonne, der Mars liegt knapp außerhalb.
+
+Höheres oder gar intelligentes Leben gibt es auf dem Mars nicht, Wissenschaftler halten jedoch primitive Lebensformen (Mikroben) tiefer im Boden, um vor UV-Strahlen geschützt zu sein, für denkbar.[51] Tatsächlich haben die in der Antarktis im Inneren von Gesteinen lebenden Pilzarten Cryomyces antarcticus und Cryomyces minteri simulierte Mars-Umweltbedingungen relativ gut überstanden: Nach 18 Monaten auf der Internationalen Raumstation[52] enthielten knapp 10 % der Proben noch fortpflanzungsfähige Zellen.[53] Auch die Flechte Xanthoria elegans hat die simulierten Marsbedingungen während des Experiments überlebt.
+Vermutungen vor dem Raumzeitalter
+Marsoberfläche nach Oswald Lohse (1888). Auf der Karte ist das Kanalsystem Schiaparellis nicht eingezeichnet. Die von Lohse gewählten Namen für die Seen und Ozeane sind heute nicht mehr gebräuchlich
+
+Der Gedanke an die Möglichkeit von Leben auf dem Mars beflügelte oft die Fantasie der Menschen. Im 18. Jahrhundert beobachtete man, dass die dunklen Flecken auf der Marsoberfläche ihre Farbe änderten und wuchsen oder schrumpften. Man hielt sie für ausgedehnte Vegetationszonen, deren Ausdehnung sich mit den Jahreszeiten änderte.
+
+Durch Schiaparellis Entdeckung der Marskanäle wurden die Spekulationen um intelligentes Leben auf dem Mars angefacht.
+
+So entstanden zahlreiche Legenden um vermeintliche Zivilisationen auf dem Mars. Die Diskussionen um die Marsmenschen hielten etwa ein Jahrhundert an. Der US-Amerikaner Percival Lowell, einer der heftigsten Verfechter der Marskanäle-Theorie, gründete sogar eine eigene Sternwarte, um die Marsbewohner zu erforschen. Für ihn waren die Kanäle das Produkt außerirdischer Ingenieure, die geschaffen wurden, um die Marszivilisation vor einer großen Trockenheit zu retten. Lowell beschrieb seine Vorstellungen der Marswelt in zahlreichen Publikationen, die weite Verbreitung fanden.
+
+Obwohl nicht alle Astronomen die Kanäle sehen konnten und keine Fotos existierten, hielt sich die Theorie, begleitet von einer heftigen Debatte. Die Vorstellung von außerirdischem Leben übt bis heute eine Faszination auf die Menschen aus, die mit wissenschaftlichem Interesse alleine oft nicht erklärt werden kann. Erst die Ergebnisse der unbemannten Marsmissionen beendeten den Streit um die Kanäle.
+
+Untersuchungen durch Viking
+
+Als im Juli 1976 der Orbiter 1 der Viking-Mission Bilder der Cydonia-Region machte und diese zur Erde schickte, wurde der Mars in der Öffentlichkeit wieder zum Gesprächsthema. Eine der Aufnahmen zeigte eine Formation auf der Marsoberfläche, die einem menschlichen Gesicht ähnelte, das gen Himmel blickt. In der unmittelbaren Nähe wurden außerdem Strukturen entdeckt, die Pyramiden auf der Erde ähneln, sowie rechteckige Strukturen (von den Wissenschaftlern Inka-Stadt getauft). Erst die Mission Mars Global Surveyor der NASA brachte im April 1998 für viele die Ernüchterung: Alle entdeckten Strukturen waren das Ergebnis natürlicher Erosion. Durch neue Bilder mit wesentlich höherer Auflösung wurde deutlich, dass auf dem Mars keine künstlichen Strukturen außerirdischer Intelligenz ersichtlich sind.
+Das Marsgesicht in der Cydonia-Region; Aufnahme des Orbiters von Viking 1, 1976
+
+Viking 1 und 2 hatten unter anderem die Aufgabe, der Frage nach dem Leben auf dem Mars nachzugehen. Dabei wurden ein chemisches und drei biologische Experimente durchgeführt. In dem chemischen Experiment wurde versucht, organische Substanzen im Marsboden nachzuweisen. Dazu wurde eine am MIT entwickelte GC/MS-Einheit (Kopplung eines Gaschromatographen mit einem Massenspektrometer) benutzt. Es konnten allerdings keine auf Kohlenstoff aufbauenden organischen Substanzen nachgewiesen werden.
+
+Das erste biologische Experiment beruhte auf Stoffwechselaktivitäten von Organismen. Eine Bodenprobe wurde mit einer Nährlösung benetzt und entstehende Gase registriert. Der Marsboden reagierte auf das Experiment mit Abgabe großer Mengen Sauerstoff. Im zweiten Experiment wurde eine Nährlösung mit radioaktiven Kohlenstoffatomen versehen und auf eine Probe gegeben. Als Ergebnis eines Stoffwechsels hätten sie unter den ausgeschiedenen Gasen nachgewiesen werden müssen. Tatsächlich wurden radioaktive Kohlenstoffatome nachgewiesen. Das dritte Experiment war ein Photosynthese-Experiment. Radioaktiv markiertes Kohlendioxid wurde dem Marsboden zugesetzt. Dieses Kohlendioxid hätte assimiliert werden und später nachgewiesen werden müssen. Auch dieses Ergebnis war positiv. Obwohl die Ergebnisse der biologischen Experimente positiv waren, gaben sie aufgrund des negativen Ergebnisses des GC/MS-Versuchs keinen schlüssigen Beweis für die Existenz oder Nichtexistenz von Leben auf dem Mars.
+1990er und 2000er Jahre
+Marsgesicht, Aufnahme von Mars Global Surveyor, 2001
+
+Im Jahr 1996 fanden David S. McKay und seine Mitarbeiter Strukturen im Marsmeteoriten ALH 84001, die sie als Spuren von fossilen Bakterien deuteten. Das in diesem Meteoriten gefundene, kettenartig angeordnete Magnetit ähnelt morphologisch dem bakteriellen Magnetit aus Magnetospirillum magnetotacticum. Allerdings wird die Beweiskraft der gefundenen Strukturen von vielen Wissenschaftlern angezweifelt, da diese auch auf rein chemischem Wege entstehen konnten.
+
+Am 23. Januar 2004 entdeckte die europäische Marssonde Mars Express am Südpol des Mars große Mengen gefrorenen Wassers, Ende Juli 2005 auch in einem nahe dem Nordpol gelegenen Krater.
+
+Ende März 2004 wurde bekannt, dass Forscher der NASA und der ESA unabhängig voneinander Methan in der Marsatmosphäre nachgewiesen haben. Ob das Methan geologischen Ursprungs ist oder etwa durch den Stoffwechsel von Mikroorganismen gebildet wurde, sollen weitere Untersuchungen zeigen.
+
+Ebenfalls Anfang 2004 entdeckte die Marssonde Opportunity Gesteine, die in offenstehendem Wasser abgelagert worden sein müssen und viele regelmäßig verteilte kugelige, bis 1 cm große Hämatit-Konkretionen enthalten. Solche Konkretionen kommen auch auf der Erde vor. Unter irdischen Bedingungen ist es wahrscheinlich, dass bei ihrer Entstehung Bakterien beteiligt sind. Ob dies auch für den Mars gilt, könnten nur Laboruntersuchungen auf der Erde zeigen.
+
+Weitere Mikrostrukturen, welche die Rover Spirit und Opportunity 2004 entdeckt hatten und in denen ein Teil der interessierten Öffentlichkeit Hinweise auf Leben hatte sehen wollen, erwiesen sich bei näherer Untersuchung als abiotisch oder künstlich, so zum Beispiel Schleifspuren auf durch die Instrumente bearbeiteten Gesteinsoberflächen oder Filamente, die sich als Textilfasern der Lande-Airbags herausstellten.
+
+Forschungsergebnisse auf der Erde bestätigen, dass es Leben auch in extremen Bedingungen geben kann. Bei Bohrungen im grönländischen Eis entdeckten Forscher der University of California, Berkeley im Jahre 2005 in drei Kilometern Tiefe eine auffallende Menge Methan. Dieses Gas produzierten methanogene Bakterien, die trotz unwirtlicher Lebensbedingungen wie Kälte, Dunkelheit und Nährstoffmangel im Eis überleben. Dabei erhalten sie sich nur mühsam am Leben  sie reparieren Erbgutschäden, vermehren jedoch nicht nennenswert ihre Population. Methanogene Mikroben sind eine Untergruppe der Archaebakterien, die sich auf Extremstandorte spezialisiert haben. So fanden sich im Jahr 2002 Mikroben in einer 15.000 Jahre alten heißen Quelle in Idaho. Die Bakterien zählen, wie schon der Name besagt, zu den ältesten Mikroorganismen der Erde. Die Wissenschaftler schätzen das Alter der in Grönland entdeckten Bakterienkolonie auf 100.000 Jahre und vermuten, dass das in der Atmosphäre des Roten Planeten nachgewiesene Methan nicht nur von chemischen Prozessen, sondern auch von solchen Mikroben stammen könnte.
+Aktuelle Forschung
+
+Mit dem Mars Science Laboratory wird versucht, neue Aufschlüsse über mögliches Leben auf dem Mars zu liefern. Es ist fraglich, ob der Mars-Rover tief genug bohren kann, um Leben oder zumindest Lebensreste zu finden. Aber eine Isotopenanalyse des Methans kann bereits weitere Aufschlüsse geben. Leben, wie es auf der Erde bekannt ist, bevorzugt leichtere Wasserstoffisotope.
+Beobachtung
+Stellung zur Erde und Bahneigenschaften
+Planetenschleife des Mars im Sternbild Wassermann im Jahr 2003
+
+Aufgrund der Bahneigenschaften der Planeten überholt die Erde den Mars durchschnittlich alle 779 Tage auf ihrer inneren Bahn. Diesen Zeitraum, der zwischen 764 und 811 Tagen schwankt, nennt man synodische Periode. Befinden sich Sonne, Erde und Mars in dieser Anordnung auf einer Linie, so steht der Mars von der Erde aus gesehen in Opposition zur Sonne. Zu diesem Zeitpunkt ist Mars besonders gut zu beobachten, er steht dann als rötlicher Stern auffallend hell am Nachthimmel. Beobachtet man den Mars regelmäßig, kann man feststellen, dass er vor und nach einer Opposition am Himmel eine Schleifenbewegung vollführt. Diese Planetenschleife (Oppositionsschleife) ergibt sich aus den Sichtwinkeln, die Mars bietet, während er von der Erde überholt wird.
+Marsoppositionen von 2003 bis 2018, relative Bewegung des Mars zur Erde, mit der Erde im Zentrum; Ansicht auf die Ekliptikebene
+
+Da die Planeten sich nicht auf idealen Kreisbahnen, sondern auf mehr oder weniger stark ausgeprägten elliptischen Bahnen bewegen, haben Erde und Mars zum Zeitpunkt der Oppositionen unterschiedliche Entfernungen zueinander. Diese können zwischen 55,6 und 101,3 Millionen Kilometern bzw. 0,37 und 0,68 AE betragen. Bei einer geringen Oppositionsentfernung spricht man von einer Perihelopposition, bei einer großen von einer Aphelopposition.
+Schwankung des minimalen Abstands ErdeMars bei Oppositionen. Die tatsächlichen Werte sind an den einzelnen Punkten ablesbar. Die verbindende Kurve veranschaulicht die mathematische Gesetzmäßigkeit.
+
+Die alle 15 bis 17 Jahre stattfindenden Periheloppositionen bieten die besten Gelegenheiten, den Mars von der Erde aus mittels Teleskop zu beobachten. Der Planet hat dann einen scheinbaren Durchmesser von bis zu 25,8 Bogensekunden. Bei einer Aphelopposition ist er mit 14,1 Bogensekunden nur etwa halb so groß. Besonders erdnahe Oppositionen fanden im Abstand von jeweils 79 Jahren, zum Beispiel in den Jahren 1766, 1845, 1924 und 2003 statt. Am 28. August 2003 betrug der Abstand ErdeMars 55,76 Millionen Kilometer. Dies war die geringste Distanz seit etwa 60.000 Jahren.[54][55] Erst im Jahre 2287 wird der Mars der Erde noch näher kommen, der Abstand beträgt dann 55,69 Millionen Kilometer.
+
+Im Teleskop erscheint der Mars zunächst als rötliches Scheibchen. Bei stärkerer Vergrößerung können die Polkappen und dunkle Oberflächenmerkmale wie die Große Syrte ausgemacht werden. Treten auf dem Mars größere Staubstürme auf, verblassen die Merkmale, da die Oberfläche von einer rötlichen Dunstschicht eingehüllt wird, die sich mitunter über Wochen halten kann. Durch den Einsatz von CCD-Kameras sind mittlerweile auch Amateurastronomen in der Lage, detailreiche Aufnahmen der Marsoberfläche zu erzielen, wie sie vor etwa zehn Jahren nur von den leistungsfähigsten Großteleskopen erstellt werden konnten.
+
+Ereignisse (Jahreszeitenbeginn gilt für die Nordhalbkugel):[56][57][58]
+Ereignis    Frühlingsbeginn     Aphel   Sommerbeginn    Herbstbeginn    Perihel     Winterbeginn
+Datum   18. Juni 2015   20. November 2015   15. Februar 2014    17. August 2014     12. Dezember 2014   11. Januar 2015
+Nächste
+Termine     5. Mai 2017     7. Oktober 2017     3. Januar 2016  4. Juli 2016    29. Oktober 2016    28. November 2016
+Ereignis    Konjunktion     Opposition
+Datum   14. Juni 2015   8. April 2014
+Nächste
+Termine     27. Juli 2017   22. Mai 2016
+Sichtbarkeiten
+ Hauptartikel: Marspositionen
+
+Wegen der Exzentrizität der Marsbahn kann der erdnächste Punkt bis zu einer Woche vor oder nach der Opposition erreicht werden, und die scheinbare Helligkeit während der Opposition sowie der Erdabstand und der scheinbare Durchmesser während der Erdnähe können recht unterschiedlich ausfallen.
+
+Eine Opposition findet etwa alle zwei Jahre (779,94 Tage) statt. Dabei kann bei einer Perihelopposition die maximale scheinbare Helligkeit bis zu 2,91m erreichen. Zu diesem Zeitpunkt sind nur die Sonne, der Erdmond, die Venus und in seltenen Fällen Jupiter (bis zu 2,94m) noch heller. Bei Konjunktion hingegen erscheint Mars nur mehr mit einer Helligkeit von +1,8m.[1]
+Kulturgeschichte
+Beschäftigung mit dem Mars von der Antike bis in die Neuzeit
+Allegorische Darstellung des Mars als Herrscher der Tierkreiszeichen Widder und Skorpion, von Hans Sebald Beham, 16. Jahrhundert
+
+Der Mars bewegte die Menschheit von alters her besonders. Im alten Ägypten wurde Mars als Horus der Rote bezeichnet. Da der Planet sich während seiner Oppositionsschleife (Planetenschleife) zeitweise rückläufig bewegt, sprachen die Ägypter davon, dass Mars rückwärts wandere. Der Name der ägyptischen Hauptstadt Kairo leitet sich von Al Qahira ab, dem altarabischen Namen für den Planeten Mars.
+
+Im indischen Sanskrit wird der Mars als Mangal (verheißungsvoll), Angaraka (Glühende Kohle) und Kuja (der Blonde) bezeichnet. Er repräsentiert kraftvolle Aktion, Vertrauen und Zuversicht.
+
+Aufgrund seiner roten Färbung wurde der Mars in verschiedenen Kulturen mit den Gottheiten des Krieges in Verbindung gebracht. Die Babylonier sahen in ihm Nergal, den Gott der Unterwelt, des Todes und des Krieges. Für die Griechen und Römer der Antike repräsentierte er deren Kriegsgötter Ares beziehungsweise Mars. In der nordischen Mythologie steht er für Tyr, den Gott des Rechts und des Krieges. Die Azteken nannten ihn Huitzilopochtli, der Zerstörer von Menschen und Städten. Für die Chinesen war er Huoxing (chin. Huxng, ), Stern des Feuers.
+
+In der Astrologie ist Mars unter anderem das Symbol der Triebkraft. Es wird dem Element Feuer, dem Planetenmetall Eisen, den Tierkreiszeichen Widder und Skorpion sowie dem 1. Haus zugeordnet.
+Rezeption in Literatur, Film, Videospiele und Musik
+
+Der Mars und seine fiktiven Bewohner sind auch Thema zahlreicher Romane und Verfilmungen.
+
+Ein Beispiel des 18. Jahrhunderts ist Carl Ignaz Geigers Roman Reise eines Erdbewohners in den Mars von 1790.
+
+1880 veröffentlichte Percy Greg seinen Roman Across the Zodiac, in dem er eine Reise in einem Raumschiff namens Astronaut zum Mars beschrieb.
+
+Die klassische Figur des kleinen grünen Männchens mit Antennen auf dem Kopf erschien erstmals 1913 in einem Comic und ist seitdem Klischee.
+
+Als der Astronom Percival Lowell Ende des 19. Jahrhunderts die Vorstellung entwickelte, die mit dem Fernrohr wahrnehmbaren Marskanäle seien künstlich angelegte Wasserkanäle, wurde diese Idee in der Science-Fiction-Literatur aufgegriffen und weitergesponnen. Dort wurde der Mars häufig als eine sterbende Welt vorgestellt, in deren kalten Wüstenregionen alte und weit entwickelte Zivilisationen ums Überleben kämpften.
+
+Kurd Laßwitz brachte 1897 seinen sehr umfangreichen Roman Auf zwei Planeten über einen Besuch bei den Marsbewohnern heraus.
+Angriff der Marsianer in Krieg der Welten von H. G. Wells. Buchillustration der französischen Ausgabe von Alvim Corréa von 1906
+
+In H. G. Wells bekanntem Roman Krieg der Welten, der 1898 erschien, verlassen die Marsianer ihre Heimatwelt, um die lebensfreundlichere Erde zu erobern. Die Menschheit, die den hochtechnisierten kriegerischen Marsianern hoffnungslos unterlegen ist, entgeht ihrer Auslöschung nur dadurch, dass die Invasoren von für Menschen harmlosen, irdischen Mikroben dahingerafft werden. Orson Welles verwendete den Stoff im Jahre 1938 in einem Hörspiel, wobei er die Marsianer in New Jersey landen ließ. Das Hörspiel wurde im Stil einer realistischen Reportage ausgestrahlt. Hörer, die sich später einschalteten, hielten die Invasion der Marsianer für Realität.
+
+Wells Romanvorlage wurde 1952 verfilmt, wobei die Handlung wiederum in die USA der Gegenwart verlegt wurde. Der Film erhielt für die damals bahnbrechenden Spezialeffekte einen Oscar.
+
+1923 brachte Tolstoi seinen Roman Aelita heraus, der von der Liebe eines sowjetischen Ingenieurs zur Marsprinzessin und dem Untergang der Zivilisation auf dem Planeten handelt. Dieses Werk wurde 1924 verfilmt.
+
+Im Jahr 1978 entstand der Film Unternehmen Capricorn. Er griff das Thema der Verschwörungstheorien zur Mondlandung auf, indem er es in sehr zugespitzter Form auf eine im Filmstudio vorgetäuschte Marsexpedition übertrug.
+
+Der 1996 entstandene Film Mars Attacks! setzt sich ironisch mit dem Thema Marsinvasion auseinander, wobei den Marsianern amerikanische Schnulzenmusik aus den 1950er Jahren zum Verhängnis wird.
+
+Unter der Regie von Brian De Palma wurden im Jahr 2000 mit dem Film Mission to Mars die Spekulationen um das Marsgesicht der Cydonia-Region als hinterlassenes Bauwerk dramatisch weitgehend thematisiert.
+
+Steven Spielbergs 2005 entstandenes Remake von Krieg der Welten nahm noch einmal das Thema auf und zeigte die Invasion von Außerirdischen auf der Erde aus der Sicht eines Familienvaters aus den USA.
+
+Weitere bekannte Science-Fiction-Filme, die auf dem Mars handeln, sind Red Planet (2000) und Die totale Erinnerung  Total Recall (1990).
+
+Edgar Rice Burroughs, der Autor von Tarzan, schrieb von 1917 bis 1943 die elfbändige Saga John Carter vom Mars, in der sich der irdische Held in marsianische Prinzessinnen verliebt und gegen Luftpiraten, grünhäutige Unholde, weiße Riesenaffen und andere Untiere kämpft.
+
+Die Mars-Chroniken (1950), eine stimmungsvolle Sammlung von Erzählungen des Schriftstellers Ray Bradbury, sind ebenfalls auf dem Mars angesiedelt.
+
+Große Beachtung erhielt die Marstrilogie, eine von Kim Stanley Robinson von 1993 bis 1996 verfasste Romanserie über die Besiedelung des Mars. Der besondere Ansatz dieser Geschichten liegt in der vorwiegend technischen Schilderung unter vollständigem Verzicht phantastischer Elemente.
+Die Route von Mark Watney in einer nachgestellten topographischen Kartierung des DLR-Instituts für Planetenforschung
+
+Der wohl prominenteste Auftritt des Mars in der Musik dürfte der erste Satz von Gustav Holsts Orchestersuite Die Planeten (19141916) sein, deren erster Satz Mars, the Bringer of War mit seinem drohend-martialischen Charakter die mythologische Gestalt Mars eindrucksvoll porträtiert.
+
+Bestsellerautor Andreas Eschbach verfasste von 2001 bis 2008 die Pentalogie Das Marsprojekt.
+
+2011 veröffentlichte Andy Weir den Science-Fiction-Roman Der Marsianer, in dem ein Astronaut nach einem Unfall auf dem Mars zurückgelassen wird und fortan um sein Überleben kämpfen muss. Mit Der Marsianer  Rettet Mark Watney erschien 2015 eine Verfilmung dieses Bestsellers.
+
+Helga Abret und Lucian Boa geben in ihrem Buch Das Jahrhundert der Marsianer (1984) einen literarischen Überblick über Erzählungen und Romane über den Mars und seine fiktiven Bewohner. Von der Beschreibung einer ekstatischen Reise zum Mars (Itinerarium exstaticum coeleste, 1656) des Jesuitenpaters Athanasius Kircher bis hin zu Science-Fiction-Erzählungen des 20. Jahrhunderts reicht die Bandbreite der kommentierten Werke, mit denen die Autoren aufzuzeigen versuchen, dass sich aus dem Zusammenwirken von Naturwissenschaften, Astronomie und Literatur ein moderner Mythos[59] entwickelte.
+

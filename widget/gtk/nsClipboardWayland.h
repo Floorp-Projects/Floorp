@@ -9,11 +9,53 @@
 #define __nsClipboardWayland_h_
 
 #include "nsIClipboard.h"
+#include "wayland/gtk-primary-selection-client-protocol.h"
+
 #include <gtk/gtk.h>
 #include <gdk/gdkwayland.h>
 #include <nsTArray.h>
 
 struct FastTrackClipboard;
+
+class DataOffer
+{
+public:
+    void AddMIMEType(const char *aMimeType);
+
+    GdkAtom* GetTargets(int* aTargetNum);
+    char* GetData(wl_display* aDisplay, const char* aMimeType,
+                  uint32_t* aContentLength);
+
+    virtual ~DataOffer() {};
+private:
+    virtual bool RequestDataTransfer(const char* aMimeType, int fd) = 0;
+
+    nsTArray<GdkAtom> mTargetMIMETypes;
+};
+
+class WaylandDataOffer : public DataOffer
+{
+public:
+    WaylandDataOffer(wl_data_offer* aWaylandDataOffer);
+
+private:
+    virtual ~WaylandDataOffer();
+    bool RequestDataTransfer(const char* aMimeType, int fd) override;
+
+    wl_data_offer* mWaylandDataOffer;
+};
+
+class PrimaryDataOffer : public DataOffer
+{
+public:
+    PrimaryDataOffer(gtk_primary_selection_offer* aPrimaryDataOffer);
+
+private:
+    virtual ~PrimaryDataOffer();
+    bool RequestDataTransfer(const char* aMimeType, int fd) override;
+
+    gtk_primary_selection_offer* mPrimaryDataOffer;
+};
 
 class nsRetrievalContextWayland : public nsRetrievalContext
 {
@@ -27,15 +69,22 @@ public:
 
     virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
                                 int* aTargetNum) override;
+    virtual bool HasSelectionSupport(void) override;
 
-    void SetDataOffer(wl_data_offer *aDataOffer);
-    void AddMIMEType(const char *aMimeType);
-    void ResetMIMETypeList(void);
+    void RegisterDataOffer(wl_data_offer *aWaylandDataOffer);
+    void RegisterDataOffer(gtk_primary_selection_offer *aPrimaryDataOffer);
+
+    void SetClipboardDataOffer(wl_data_offer *aWaylandDataOffer);
+    void SetPrimaryDataOffer(gtk_primary_selection_offer *aPrimaryDataOffer);
+
+    void ClearDataOffers();
+
     void ConfigureKeyboard(wl_seat_capability caps);
     void TransferFastTrackClipboard(int aClipboardRequestNumber,
                                     GtkSelectionData *aSelectionData);
 
     void InitDataDeviceManager(wl_registry *registry, uint32_t id, uint32_t version);
+    void InitPrimarySelectionDataDeviceManager(wl_registry *registry, uint32_t id);
     void InitSeat(wl_registry *registry, uint32_t id, uint32_t version, void *data);
     virtual ~nsRetrievalContextWayland() override;
 
@@ -44,10 +93,13 @@ private:
     wl_display                 *mDisplay;
     wl_seat                    *mSeat;
     wl_data_device_manager     *mDataDeviceManager;
-    wl_data_offer              *mDataOffer;
+    gtk_primary_selection_device_manager *mPrimarySelectionDataDeviceManager;
     wl_keyboard                *mKeyboard;
-    nsTArray<GdkAtom>           mTargetMIMETypes;
-    gchar                      *mTextPlainLocale;
+
+    // Data offers provided by Wayland data device
+    GHashTable*                 mActiveOffers;
+    nsAutoPtr<DataOffer>        mClipboardOffer;
+    nsAutoPtr<DataOffer>        mPrimaryOffer;
 
     int                         mClipboardRequestNumber;
     char*                       mClipboardData;

@@ -289,7 +289,7 @@ var gSyncPane = {
     }
     fxaEmailAddressLabels.forEach((label) => {
       let l10nAttrs = document.l10n.getAttributes(label);
-      document.l10n.setAttributes(l10nAttrs.id, {email: state.email});
+      document.l10n.setAttributes(label, l10nAttrs.id, {email: state.email});
     });
     document.getElementById("fxaEmailAddress").textContent = state.email;
 

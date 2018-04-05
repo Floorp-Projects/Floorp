@@ -74,7 +74,6 @@ public:
   nsICSSDeclaration* Style();
 
   // Methods of mozilla::css::Rule
-  already_AddRefed<css::Rule> Clone() const final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const final;
 

@@ -836,9 +836,10 @@ SERVO_BINDING_FUNC(Servo_ComputeColor, bool,
                    nscolor* result_color,
                    bool* was_current_color,
                    mozilla::css::Loader* loader)
-SERVO_BINDING_FUNC(Servo_ParseIntersectionObserverRootMargin, bool,
-                   const nsAString* value,
-                   nsCSSRect* result);
+SERVO_BINDING_FUNC(Servo_IntersectionObserverRootMargin_Parse, bool,
+                   const nsAString* value, nsStyleSides* result)
+SERVO_BINDING_FUNC(Servo_IntersectionObserverRootMargin_ToString, void,
+                   const nsStyleSides* rect, nsAString* result)
 // Returning false means the parsed transform contains relative lengths or
 // percentage value, so we cannot compute the matrix. In this case, we keep
 // |result| and |contains_3d_transform| as-is.
