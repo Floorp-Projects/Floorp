@@ -112,7 +112,7 @@ public class ActivityStreamPanel extends FrameLayout {
         }
 
         // TODO: we should get the default values from resources for the other Top Sites sections above too.
-        if (isPocketRecommendingTopSites(getContext())) {
+        if (ActivityStreamConfiguration.isPocketRecommendingTopSites(getContext())) {
             lm.initLoader(LOADER_ID_POCKET, null, new PocketStoriesCallbacks());
         }
 
@@ -134,12 +134,6 @@ public class ActivityStreamPanel extends FrameLayout {
         lm.destroyLoader(LOADER_ID_POCKET);
 
         load(lm);
-    }
-
-    public static boolean isPocketRecommendingTopSites(final Context context) {
-        return ActivityStreamConfiguration.isPocketEnabledByLocale(context) &&
-                GeckoSharedPrefs.forProfile(context).getBoolean(ActivityStreamPanel.PREF_POCKET_ENABLED,
-                        context.getResources().getBoolean(R.bool.pref_activitystream_pocket_enabled_default));
     }
 
     @Override
