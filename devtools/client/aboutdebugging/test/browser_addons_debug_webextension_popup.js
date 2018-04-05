@@ -92,9 +92,21 @@ add_task(async function testWebExtensionsToolboxSwitchToPopup() {
 
     toolbox.selectTool("webconsole")
       .then(async (console) => {
-        dump(`Clicking the noautohide button\n`);
-        toolbox.doc.getElementById("command-button-noautohide").click();
-        dump(`Clicked the noautohide button\n`);
+        const clickNoAutoHideMenu = () => {
+          return new Promise(resolve => {
+            toolbox.doc.getElementById("toolbox-meatball-menu-button").click();
+            toolbox.doc.addEventListener("popupshown", () => {
+              const menuItem =
+                toolbox.doc.getElementById("toolbox-meatball-menu-noautohide");
+              menuItem.click();
+              resolve();
+            }, { once: true });
+          });
+        };
+
+        dump(`Clicking the menu button\n`);
+        await clickNoAutoHideMenu();
+        dump(`Clicked the menu button\n`);
 
         popupFramePromise = new Promise(resolve => {
           let listener = data => {
