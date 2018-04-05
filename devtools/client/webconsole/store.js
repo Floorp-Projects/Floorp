@@ -75,7 +75,8 @@ function configureStore(hud, options = {}) {
       applyMiddleware(thunk.bind(null, {prefsService})),
       enableActorReleaser(hud),
       enableBatching(),
-      enableNetProvider(hud)
+      enableNetProvider(hud),
+      enableMessagesCacheClearing(hud),
     )
   );
 }
@@ -252,6 +253,29 @@ function enableNetProvider(hud) {
     return next(netProviderEnhancer, initialState, enhancer);
   };
 }
+
+/**
+ * This enhancer is responsible for clearing the messages caches using the
+ * webconsoleClient when the user clear the messages (either by direct UI action, or via
+ * `console.clear()`).
+ */
+function enableMessagesCacheClearing(hud) {
+  return next => (reducer, initialState, enhancer) => {
+    function messagesCacheClearingEnhancer(state, action) {
+      state = reducer(state, action);
+
+      let webConsoleClient = hud && hud.proxy ? hud.proxy.webConsoleClient : null;
+      if (webConsoleClient && action.type === MESSAGES_CLEAR) {
+        webConsoleClient.clearNetworkRequests();
+        webConsoleClient.clearMessagesCache();
+      }
+      return state;
+    }
+
+    return next(messagesCacheClearingEnhancer, initialState, enhancer);
+  };
+}
+
 /**
  * Helper function for releasing backend actors.
  */
