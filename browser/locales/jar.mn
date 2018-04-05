@@ -61,7 +61,6 @@
     locale/browser/preferences/privacy.dtd            (%chrome/browser/preferences/privacy.dtd)
     locale/browser/preferences/security.dtd           (%chrome/browser/preferences/security.dtd)
     locale/browser/preferences/sync.dtd               (%chrome/browser/preferences/sync.dtd)
-    locale/browser/preferences/translation.dtd        (%chrome/browser/preferences/translation.dtd)
     locale/browser/syncBrand.dtd                (%chrome/browser/syncBrand.dtd)
     locale/browser/syncSetup.properties         (%chrome/browser/syncSetup.properties)
 #if BUILD_FASTER
