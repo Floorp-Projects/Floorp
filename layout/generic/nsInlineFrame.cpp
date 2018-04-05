@@ -16,7 +16,6 @@
 #include "nsPresContext.h"
 #include "nsCSSAnonBoxes.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "nsDisplayList.h"
 #include "mozilla/Likely.h"
 #include "SVGTextFrame.h"

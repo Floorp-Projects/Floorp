@@ -21,7 +21,6 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "mozilla/ServoBindings.h" // Servo_GetProperties_Overriding_Animation
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"

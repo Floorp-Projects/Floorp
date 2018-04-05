@@ -17,7 +17,6 @@
 #include "nsAttrValueInlines.h"
 #include "nsCSSPseudoElements.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
