@@ -12,7 +12,6 @@ splitter {
   cursor: ew-resize;
   min-width: 9px;
   min-height: 9px;
-  background: url("chrome://global/skin/splitter/dimple.png") transparent no-repeat center;
 }
 
 splitter[state="collapsed"][collapse="before"],
@@ -40,7 +39,6 @@ splitter[orient="vertical"] {
   min-width: 0px;
   min-height: 9px;
   min-width: 9px;
-  background: url("chrome://global/skin/splitter/dimple.png") transparent no-repeat center;
 }
 
 splitter[orient="vertical"][state="collapsed"][collapse="before"],
