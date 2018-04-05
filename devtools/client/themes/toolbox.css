@@ -159,6 +159,15 @@
 
 /* Toolbox controls */
 
+#toolbox-controls {
+  margin-right: 3px;
+}
+
+#toolbox-buttons-end > .devtools-separator {
+  margin-inline-start: 5px;
+  margin-inline-end: 5px;
+}
+
 #toolbox-close::before {
   fill: var(--theme-toolbar-photon-icon-color);
   background-image: var(--close-button-image);
