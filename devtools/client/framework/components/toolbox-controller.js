@@ -40,7 +40,6 @@ class ToolboxController extends Component {
     this.setCurrentToolId = this.setCurrentToolId.bind(this);
     this.highlightTool = this.highlightTool.bind(this);
     this.unhighlightTool = this.unhighlightTool.bind(this);
-    this.setOptionsPanel = this.setOptionsPanel.bind(this);
     this.setHostTypes = this.setHostTypes.bind(this);
     this.setDockOptionsEnabled = this.setDockOptionsEnabled.bind(this);
     this.setCanCloseToolbox = this.setCanCloseToolbox.bind(this);
@@ -68,7 +67,6 @@ class ToolboxController extends Component {
     const {
       toolboxButtons,
       panelDefinitions,
-      optionsPanel,
       canCloseToolbox,
     } = this.state;
 
@@ -78,7 +76,6 @@ class ToolboxController extends Component {
         ...toolboxButtons.filter(btn => btn.isInStartContainer).map(({id}) => id),
         ...panelDefinitions.map(({id}) => id),
         ...toolboxButtons.filter(btn => !btn.isInStartContainer).map(({id}) => id),
-        optionsPanel ? optionsPanel.id : null,
         canCloseToolbox ? "toolbox-close" : null
       ].filter(id => id)
     });
@@ -112,10 +109,6 @@ class ToolboxController extends Component {
 
   setCanRender() {
     this.setState({ canRender: true }, this.updateButtonIds);
-  }
-
-  setOptionsPanel(optionsPanel) {
-    this.setState({ optionsPanel }, this.updateButtonIds);
   }
 
   highlightTool(highlightedTool) {
