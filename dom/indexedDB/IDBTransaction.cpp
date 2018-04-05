@@ -823,7 +823,7 @@ IDBTransaction::FireCompleteOrAbortEvents(nsresult aResult)
   // Make sure we drop the WorkerHolder when this function completes.
   nsAutoPtr<WorkerHolder> workerHolder = Move(mWorkerHolder);
 
-  nsCOMPtr<nsIDOMEvent> event;
+  RefPtr<Event> event;
   if (NS_SUCCEEDED(aResult)) {
     event = CreateGenericEvent(this,
                                nsDependentString(kCompleteEventType),
@@ -861,8 +861,9 @@ IDBTransaction::FireCompleteOrAbortEvents(nsresult aResult)
                  mAbortCode);
   }
 
-  bool dummy;
-  if (NS_FAILED(DispatchEvent(event, &dummy))) {
+  IgnoredErrorResult rv;
+  DispatchEvent(*event, rv);
+  if (rv.Failed()) {
     NS_WARNING("DispatchEvent failed!");
   }
 

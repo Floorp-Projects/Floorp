@@ -86,7 +86,6 @@ MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
     return false;
   }
 
-  nsCOMPtr<nsIDOMEvent> domEvent;
   RefPtr<MessageEvent> event = new MessageEvent(aTarget, nullptr, nullptr);
   event->InitMessageEvent(nullptr,
                           NS_LITERAL_STRING("message"),
@@ -97,12 +96,10 @@ MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
                           EmptyString(),
                           nullptr,
                           ports);
-  domEvent = do_QueryObject(event);
 
-  domEvent->SetTrusted(true);
+  event->SetTrusted(true);
 
-  bool dummy;
-  aTarget->DispatchEvent(domEvent, &dummy);
+  aTarget->DispatchEvent(*event);
 
   return true;
 }
@@ -149,8 +146,7 @@ MessageEventRunnable::DispatchError(JSContext* aCx,
     MessageEvent::Constructor(aTarget, NS_LITERAL_STRING("messageerror"), init);
   event->SetTrusted(true);
 
-  bool dummy;
-  aTarget->DispatchEvent(event, &dummy);
+  aTarget->DispatchEvent(*event);
 }
 
 } // dom namespace
