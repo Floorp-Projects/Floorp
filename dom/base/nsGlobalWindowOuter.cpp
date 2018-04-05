@@ -6466,31 +6466,13 @@ nsGlobalWindowOuter::DispatchEvent(Event& aEvent,
   FORWARD_TO_INNER(DispatchEvent, (aEvent, aCallerType, aRv), false);
 }
 
-nsresult
-nsGlobalWindowOuter::AddEventListener(const nsAString& aType,
-                                      nsIDOMEventListener *aListener,
-                                      bool aUseCapture,
-                                      const Nullable<bool>& aWantsUntrusted)
+bool
+nsGlobalWindowOuter::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
 {
-  FORWARD_TO_INNER_CREATE(AddEventListener,
-                          (aType, aListener, aUseCapture, aWantsUntrusted),
-                          NS_ERROR_UNEXPECTED);
-}
-
-void
-nsGlobalWindowOuter::AddEventListener(const nsAString& aType,
-                                      EventListener* aListener,
-                                      const AddEventListenerOptionsOrBoolean& aOptions,
-                                      const Nullable<bool>& aWantsUntrusted,
-                                      ErrorResult& aRv)
-{
-  if (mInnerWindow && !nsContentUtils::CanCallerAccess(mInnerWindow)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
-  FORWARD_TO_INNER_CREATE(AddEventListener,
-                          (aType, aListener, aOptions, aWantsUntrusted, aRv),);
+  // It's OK that we just return false here on failure to create an
+  // inner.  GetOrCreateListenerManager() will likewise fail, and then
+  // we won't be adding any listeners anyway.
+  FORWARD_TO_INNER_CREATE(ComputeDefaultWantsUntrusted, (aRv), false);
 }
 
 NS_IMETHODIMP

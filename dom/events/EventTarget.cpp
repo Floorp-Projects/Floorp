@@ -27,6 +27,61 @@ EventTarget::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
   return target.forget();
 }
 
+bool
+EventTarget::ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted,
+                                   ErrorResult& aRv)
+{
+  if (!aWantsUntrusted.IsNull()) {
+    return aWantsUntrusted.Value();
+  }
+
+  bool defaultWantsUntrusted = ComputeDefaultWantsUntrusted(aRv);
+  if (aRv.Failed()) {
+    return false;
+  }
+
+  return defaultWantsUntrusted;
+}
+
+void
+EventTarget::AddEventListener(const nsAString& aType,
+                              EventListener* aCallback,
+                              const AddEventListenerOptionsOrBoolean& aOptions,
+                              const Nullable<bool>& aWantsUntrusted,
+                              ErrorResult& aRv)
+{
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  EventListenerManager* elm = GetOrCreateListenerManager();
+  if (!elm) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  elm->AddEventListener(aType, aCallback, aOptions, wantsUntrusted);
+}
+
+nsresult
+EventTarget::AddEventListener(const nsAString& aType,
+                              nsIDOMEventListener* aListener,
+                              bool aUseCapture,
+                              const Nullable<bool>& aWantsUntrusted)
+{
+  ErrorResult rv;
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+
+  EventListenerManager* elm = GetOrCreateListenerManager();
+  NS_ENSURE_STATE(elm);
+  elm->AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
+  return NS_OK;
+}
+
 void
 EventTarget::RemoveEventListener(const nsAString& aType,
                                  EventListener* aListener,

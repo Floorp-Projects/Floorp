@@ -4498,45 +4498,9 @@ nsGlobalWindowInner::DispatchEvent(Event& aEvent,
 }
 
 bool
-nsGlobalWindowInner::ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted)
+nsGlobalWindowInner::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
 {
-  if (!aWantsUntrusted.IsNull()) {
-    return aWantsUntrusted.Value();
-  }
-
   return !nsContentUtils::IsChromeDoc(mDoc);
-}
-
-nsresult
-nsGlobalWindowInner::AddEventListener(const nsAString& aType,
-                                      nsIDOMEventListener *aListener,
-                                      bool aUseCapture,
-                                      const Nullable<bool>& aWantsUntrusted)
-{
-  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
-
-  EventListenerManager* manager = GetOrCreateListenerManager();
-  NS_ENSURE_STATE(manager);
-  manager->AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
-  return NS_OK;
-}
-
-void
-nsGlobalWindowInner::AddEventListener(const nsAString& aType,
-                                      EventListener* aListener,
-                                      const AddEventListenerOptionsOrBoolean& aOptions,
-                                      const Nullable<bool>& aWantsUntrusted,
-                                      ErrorResult& aRv)
-{
-  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
-
-  EventListenerManager* manager = GetOrCreateListenerManager();
-  if (!manager) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  manager->AddEventListener(aType, aListener, aOptions, wantsUntrusted);
 }
 
 NS_IMETHODIMP
