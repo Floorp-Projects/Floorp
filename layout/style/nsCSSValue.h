@@ -501,7 +501,6 @@ enum nsCSSUnit {
   eCSSUnit_URL          = 40,     // (nsCSSValue::URL*) value
   eCSSUnit_Image        = 41,     // (nsCSSValue::Image*) value
   eCSSUnit_Gradient     = 42,     // (nsCSSValueGradient*) value
-  eCSSUnit_TokenStream  = 43,     // (nsCSSValueTokenStream*) value
   eCSSUnit_GridTemplateAreas   = 44,   // (GridTemplateAreasValue*)
                                        // for grid-template-areas
 
@@ -590,7 +589,6 @@ enum nsCSSUnit {
 struct nsCSSValueGradient;
 struct nsCSSValuePair;
 struct nsCSSValuePair_heap;
-struct nsCSSValueTokenStream;
 struct nsCSSRect;
 struct nsCSSRect_heap;
 struct nsCSSValueList;
@@ -625,7 +623,6 @@ public:
   explicit nsCSSValue(mozilla::css::URLValue* aValue);
   explicit nsCSSValue(mozilla::css::ImageValue* aValue);
   explicit nsCSSValue(nsCSSValueGradient* aValue);
-  explicit nsCSSValue(nsCSSValueTokenStream* aValue);
   explicit nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue);
   explicit nsCSSValue(mozilla::SharedFontList* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
@@ -814,12 +811,6 @@ public:
     return mValue.mGradient;
   }
 
-  nsCSSValueTokenStream* GetTokenStreamValue() const
-  {
-    MOZ_ASSERT(mUnit == eCSSUnit_TokenStream, "not a token stream value");
-    return mValue.mTokenStream;
-  }
-
   nsCSSValueSharedList* GetSharedListValue() const
   {
     MOZ_ASSERT(mUnit == eCSSUnit_SharedList, "not a shared list value");
@@ -942,7 +933,6 @@ public:
   void SetURLValue(mozilla::css::URLValue* aURI);
   void SetImageValue(mozilla::css::ImageValue* aImage);
   void SetGradientValue(nsCSSValueGradient* aGradient);
-  void SetTokenStreamValue(nsCSSValueTokenStream* aTokenStream);
   void SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue);
   void SetFontFamilyListValue(already_AddRefed<mozilla::SharedFontList> aFontListValue);
   void SetPairValue(const nsCSSValuePair* aPair);
@@ -1019,7 +1009,6 @@ protected:
     mozilla::css::ImageValue* MOZ_OWNING_REF mImage;
     mozilla::css::GridTemplateAreasValue* MOZ_OWNING_REF mGridTemplateAreas;
     nsCSSValueGradient* MOZ_OWNING_REF mGradient;
-    nsCSSValueTokenStream* MOZ_OWNING_REF mTokenStream;
     nsCSSValuePair_heap* MOZ_OWNING_REF mPair;
     nsCSSRect_heap* MOZ_OWNING_REF mRect;
     nsCSSValueTriplet_heap* MOZ_OWNING_REF mTriplet;
@@ -1711,94 +1700,6 @@ private:
 
   nsCSSValueGradient(const nsCSSValueGradient& aOther) = delete;
   nsCSSValueGradient& operator=(const nsCSSValueGradient& aOther) = delete;
-};
-
-// A string value used primarily to represent variable references.
-//
-// Animation code, specifically the KeyframeUtils class, also uses this
-// type as a container for various string values including:
-//
-// * Shorthand property values
-// * Shorthand sentinel values used for testing failure conditions
-// * Invalid longhand property values
-//
-// For the most part, the above values are not passed to functions that
-// manipulate nsCSSValue objects in a generic fashion. Instead KeyframeUtils
-// extracts the string from the nsCSSValueTokenStream and passes that around
-// instead. The single exception is nsCSSValue::AppendToString which we use
-// to serialize the string contained in the nsCSSValueTokenStream by ensuring
-// the mShorthandPropertyID is set to eCSSProperty_UNKNOWN.
-struct nsCSSValueTokenStream final {
-  nsCSSValueTokenStream();
-
-private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~nsCSSValueTokenStream();
-
-public:
-  bool operator==(const nsCSSValueTokenStream& aOther) const
-  {
-    // This is not safe to call OMT, due to the URI/Principal Equals calls.
-    MOZ_ASSERT(NS_IsMainThread());
-
-    bool eq;
-    return mPropertyID == aOther.mPropertyID &&
-           mShorthandPropertyID == aOther.mShorthandPropertyID &&
-           mTokenStream.Equals(aOther.mTokenStream) &&
-           mLevel == aOther.mLevel &&
-           (mBaseURI == aOther.mBaseURI ||
-            (mBaseURI && aOther.mBaseURI &&
-             NS_SUCCEEDED(mBaseURI->Equals(aOther.mBaseURI, &eq)) &&
-             eq)) &&
-           (mSheetURI == aOther.mSheetURI ||
-            (mSheetURI && aOther.mSheetURI &&
-             NS_SUCCEEDED(mSheetURI->Equals(aOther.mSheetURI, &eq)) &&
-             eq)) &&
-           (mSheetPrincipal == aOther.mSheetPrincipal ||
-            (mSheetPrincipal && aOther.mSheetPrincipal &&
-             NS_SUCCEEDED(mSheetPrincipal->Equals(aOther.mSheetPrincipal,
-                                                  &eq)) &&
-             eq));
-  }
-
-  bool operator!=(const nsCSSValueTokenStream& aOther) const
-  {
-    return !(*this == aOther);
-  }
-
-  NS_INLINE_DECL_REFCOUNTING(nsCSSValueTokenStream)
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  // The property that has mTokenStream as its unparsed specified value.
-  // When a variable reference is used in a shorthand property, a
-  // TokenStream value is stored as the specified value for each of its
-  // component longhand properties.
-  nsCSSPropertyID mPropertyID;
-
-  // The shorthand property that had a value with a variable reference,
-  // which caused the longhand property identified by mPropertyID to have
-  // a TokenStream value.
-  nsCSSPropertyID mShorthandPropertyID;
-
-  // The unparsed CSS corresponding to the specified value of the property.
-  // When the value of a shorthand property has a variable reference, the
-  // same mTokenStream value is used on each of the nsCSSValueTokenStream
-  // objects that will be set by parsing the shorthand.
-  nsString mTokenStream;
-
-  nsCOMPtr<nsIURI> mBaseURI;
-  nsCOMPtr<nsIURI> mSheetURI;
-  nsCOMPtr<nsIPrincipal> mSheetPrincipal;
-  // XXX Should store sheet here (see Bug 952338)
-  // mozilla::CSSStyleSheet* mSheet;
-  uint32_t mLineNumber;
-  uint32_t mLineOffset;
-  mozilla::SheetType mLevel;
-
-private:
-  nsCSSValueTokenStream(const nsCSSValueTokenStream& aOther) = delete;
-  nsCSSValueTokenStream& operator=(const nsCSSValueTokenStream& aOther) = delete;
 };
 
 class nsCSSValueFloatColor final {

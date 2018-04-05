@@ -117,13 +117,6 @@ nsCSSValue::nsCSSValue(nsCSSValueGradient* aValue)
   mValue.mGradient->AddRef();
 }
 
-nsCSSValue::nsCSSValue(nsCSSValueTokenStream* aValue)
-  : mUnit(eCSSUnit_TokenStream)
-{
-  mValue.mTokenStream = aValue;
-  mValue.mTokenStream->AddRef();
-}
-
 nsCSSValue::nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue)
   : mUnit(eCSSUnit_GridTemplateAreas)
 {
@@ -181,10 +174,6 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (eCSSUnit_Gradient == mUnit) {
     mValue.mGradient = aCopy.mValue.mGradient;
     mValue.mGradient->AddRef();
-  }
-  else if (eCSSUnit_TokenStream == mUnit) {
-    mValue.mTokenStream = aCopy.mValue.mTokenStream;
-    mValue.mTokenStream->AddRef();
   }
   else if (eCSSUnit_Pair == mUnit) {
     mValue.mPair = aCopy.mValue.mPair;
@@ -294,9 +283,6 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_Gradient == mUnit) {
       return *mValue.mGradient == *aOther.mValue.mGradient;
-    }
-    else if (eCSSUnit_TokenStream == mUnit) {
-      return *mValue.mTokenStream == *aOther.mValue.mTokenStream;
     }
     else if (eCSSUnit_Pair == mUnit) {
       return *mValue.mPair == *aOther.mValue.mPair;
@@ -432,8 +418,6 @@ void nsCSSValue::DoReset()
     DO_RELEASE(mImage);
   } else if (eCSSUnit_Gradient == mUnit) {
     DO_RELEASE(mGradient);
-  } else if (eCSSUnit_TokenStream == mUnit) {
-    DO_RELEASE(mTokenStream);
   } else if (eCSSUnit_Pair == mUnit) {
     DO_RELEASE(mPair);
   } else if (eCSSUnit_Triplet == mUnit) {
@@ -591,14 +575,6 @@ void nsCSSValue::SetGradientValue(nsCSSValueGradient* aValue)
   mUnit = eCSSUnit_Gradient;
   mValue.mGradient = aValue;
   mValue.mGradient->AddRef();
-}
-
-void nsCSSValue::SetTokenStreamValue(nsCSSValueTokenStream* aValue)
-{
-  Reset();
-  mUnit = eCSSUnit_TokenStream;
-  mValue.mTokenStream = aValue;
-  mValue.mTokenStream->AddRef();
 }
 
 void nsCSSValue::SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue)
@@ -1080,11 +1056,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     // Gradient
     case eCSSUnit_Gradient:
       n += mValue.mGradient->SizeOfIncludingThis(aMallocSizeOf);
-      break;
-
-    // TokenStream
-    case eCSSUnit_TokenStream:
-      n += mValue.mTokenStream->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
     // Pair
@@ -2005,29 +1976,6 @@ nsCSSValueGradient::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) con
     for (uint32_t i = 0; i < mStops.Length(); i++) {
       n += mStops[i].SizeOfExcludingThis(aMallocSizeOf);
     }
-  }
-  return n;
-}
-
-// --- nsCSSValueTokenStream ------------
-
-nsCSSValueTokenStream::nsCSSValueTokenStream()
-  : mPropertyID(eCSSProperty_UNKNOWN)
-  , mShorthandPropertyID(eCSSProperty_UNKNOWN)
-  , mLevel(SheetType::Count)
-{}
-
-nsCSSValueTokenStream::~nsCSSValueTokenStream()
-{}
-
-size_t
-nsCSSValueTokenStream::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
-  // Only measure it if it's unshared, to avoid double-counting.
-  size_t n = 0;
-  if (mRefCnt <= 1) {
-    n += aMallocSizeOf(this);
-    n += mTokenStream.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
   return n;
 }
