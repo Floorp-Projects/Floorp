@@ -1139,8 +1139,8 @@ nsINode::ConvertPointFromNode(const DOMPointInit& aPoint,
                                        aCallerType, aRv);
 }
 
-nsresult
-nsINode::DispatchEvent(nsIDOMEvent *aEvent, bool* aRetVal)
+bool
+nsINode::DispatchEvent(Event& aEvent, CallerType aCallerType, ErrorResult& aRv)
 {
   // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
   // if that's the XBL document?  Would we want its presshell?  Or what?
@@ -1148,8 +1148,7 @@ nsINode::DispatchEvent(nsIDOMEvent *aEvent, bool* aRetVal)
 
   // Do nothing if the element does not belong to a document
   if (!document) {
-    *aRetVal = true;
-    return NS_OK;
+    return true;
   }
 
   // Obtain a presentation shell
@@ -1157,9 +1156,12 @@ nsINode::DispatchEvent(nsIDOMEvent *aEvent, bool* aRetVal)
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
-    EventDispatcher::DispatchDOMEvent(this, nullptr, aEvent, context, &status);
-  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
-  return rv;
+    EventDispatcher::DispatchDOMEvent(this, nullptr, &aEvent, context, &status);
+  bool retval = !aEvent.DefaultPrevented(aCallerType);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+  return retval;
 }
 
 nsresult

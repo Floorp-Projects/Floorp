@@ -212,7 +212,7 @@ IDBFileHandle::FireCompleteOrAbortEvents(bool aAborted)
   mFiredCompleteOrAbort = true;
 #endif
 
-  nsCOMPtr<nsIDOMEvent> event;
+  RefPtr<Event> event;
   if (aAborted) {
     event = CreateGenericEvent(this, nsDependentString(kAbortEventType),
                                eDoesBubble, eNotCancelable);
@@ -224,8 +224,9 @@ IDBFileHandle::FireCompleteOrAbortEvents(bool aAborted)
     return;
   }
 
-  bool dummy;
-  if (NS_FAILED(DispatchEvent(event, &dummy))) {
+  IgnoredErrorResult rv;
+  DispatchEvent(*event, rv);
+  if (rv.Failed()) {
     NS_WARNING("DispatchEvent failed!");
   }
 }

@@ -663,8 +663,8 @@ nsFormFillController::OnTextEntered(nsIDOMEvent* aEvent,
   // code.
   event->SetTrusted(true);
 
-  bool defaultActionEnabled;
-  mFocusedInput->DispatchEvent(event, &defaultActionEnabled);
+  bool defaultActionEnabled =
+    mFocusedInput->DispatchEvent(*event, CallerType::System, IgnoreErrors());
   *aPrevent = !defaultActionEnabled;
   return NS_OK;
 }

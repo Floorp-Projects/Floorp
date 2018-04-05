@@ -246,15 +246,18 @@ DOMEventTargetHelper::AddSystemEventListener(const nsAString& aType,
                                    aWantsUntrusted);
 }
 
-NS_IMETHODIMP
-DOMEventTargetHelper::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
+bool
+DOMEventTargetHelper::DispatchEvent(Event& aEvent, CallerType aCallerType,
+                                    ErrorResult& aRv)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
-    EventDispatcher::DispatchDOMEvent(this, nullptr, aEvent, nullptr, &status);
-
-  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
-  return rv;
+    EventDispatcher::DispatchDOMEvent(this, nullptr, &aEvent, nullptr, &status);
+  bool retval = !aEvent.DefaultPrevented(aCallerType);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+  return retval;
 }
 
 nsresult
@@ -271,8 +274,9 @@ DOMEventTargetHelper::DispatchTrustedEvent(nsIDOMEvent* event)
 {
   event->SetTrusted(true);
 
-  bool dummy;
-  return DispatchEvent(event, &dummy);
+  ErrorResult rv;
+  DispatchEvent(*event->InternalDOMEvent(), rv);
+  return rv.StealNSResult();
 }
 
 nsresult

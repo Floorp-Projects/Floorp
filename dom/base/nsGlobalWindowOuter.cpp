@@ -3885,10 +3885,7 @@ nsGlobalWindowOuter::DispatchResizeEvent(const CSSIntSize& aSize)
   nsCOMPtr<EventTarget> target = do_QueryInterface(GetOuterWindow());
   domEvent->SetTarget(target);
 
-  bool defaultActionEnabled = true;
-  target->DispatchEvent(domEvent, &defaultActionEnabled);
-
-  return defaultActionEnabled;
+  return target->DispatchEvent(*domEvent, CallerType::System, IgnoreErrors());
 }
 
 static already_AddRefed<nsIDocShellTreeItem>
@@ -5429,8 +5426,7 @@ nsGlobalWindowOuter::FirePopupBlockedEvent(nsIDocument* aDoc,
 
   event->SetTrusted(true);
 
-  bool defaultActionEnabled;
-  aDoc->DispatchEvent(event, &defaultActionEnabled);
+  aDoc->DispatchEvent(*event);
 }
 
 // static
@@ -6220,8 +6216,7 @@ nsGlobalWindowOuter::LeaveModalState()
     event->InitEvent(NS_LITERAL_STRING("endmodalstate"), true, false);
     event->SetTrusted(true);
     event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-    bool dummy;
-    topWin->DispatchEvent(event, &dummy);
+    topWin->DispatchEvent(*event);
   }
 }
 
@@ -6469,10 +6464,12 @@ nsGlobalWindowOuter::GetOwnerGlobalForBindings()
   return this;
 }
 
-NS_IMETHODIMP
-nsGlobalWindowOuter::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
+bool
+nsGlobalWindowOuter::DispatchEvent(Event& aEvent,
+                                   CallerType aCallerType,
+                                   ErrorResult& aRv)
 {
-  FORWARD_TO_INNER(DispatchEvent, (aEvent, aRetVal), NS_OK);
+  FORWARD_TO_INNER(DispatchEvent, (aEvent, aCallerType, aRv), false);
 }
 
 NS_IMETHODIMP

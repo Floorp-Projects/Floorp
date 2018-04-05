@@ -96,8 +96,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
 
   event->SetTrusted(true);
 
-  bool status;
-  mBC->DispatchEvent(static_cast<Event*>(event.get()), &status);
+  mBC->DispatchEvent(*event);
 
   return IPC_OK();
 }
@@ -120,8 +119,7 @@ BroadcastChannelChild::DispatchError(JSContext* aCx)
     MessageEvent::Constructor(mBC, NS_LITERAL_STRING("messageerror"), init);
   event->SetTrusted(true);
 
-  bool dummy;
-  mBC->DispatchEvent(event, &dummy);
+  mBC->DispatchEvent(*event);
 }
 
 } // namespace dom
