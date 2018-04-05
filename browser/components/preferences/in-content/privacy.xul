@@ -33,7 +33,7 @@
                 class="accessory-button"
                 data-l10n-id="forms-exceptions"
                 preference="pref.privacy.disable_button.view_passwords_exceptions"
-                searchkeywords="&address2.label;"/>
+                search-l10n-ids="permissions-address"/>
       </hbox>
     </hbox>
     <hbox id="showPasswordBox" pack="end">
@@ -243,14 +243,15 @@
                 class="accessory-button"
                 data-l10n-id="sitedata-cookies-exceptions"
                 preference="pref.privacy.disable_button.cookie_exceptions"
-                searchkeywords="&address2.label;
-                                &block.label;
-                                &session.label;
-                                &allow.label;
-                                &removepermission2.label;
-                                &removeallpermissions2.label;
-                                &button.cancel.label;
-                                &button.ok.label;"/>
+                search-l10n-ids="
+                  permissions-address,
+                  permissions-block.label,
+                  permissions-allow.label,
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-button-cancel.label,
+                  permissions-button-ok.label
+                " />
       </hbox>
     </vbox>
   </hbox>
@@ -334,10 +335,12 @@
                   hidden="true"
                   data-l10n-id="tracking-exceptions"
                   preference="pref.privacy.disable_button.tracking_protection_exceptions"
-                  searchkeywords="&removepermission2.label;
-                                  &removeallpermissions2.label;
-                                  &button.cancel.label;
-                                  &button.ok.label;"/>
+                  search-l10n-ids="
+                    permissions-remove.label,
+                    permissions-remove-all.label,
+                    permissions-button-cancel.label,
+                    permissions-button-ok.label
+                  "/>
         </hbox>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
@@ -389,10 +392,12 @@
           <button id="locationSettingsButton"
                   class="accessory-button"
                   data-l10n-id="permissions-location-settings"
-                  searchkeywords="&removepermission2.label;
-                                  &removeallpermissions2.label;
-                                  &button.cancel.label;
-                                  &button.ok.label;"/>
+                  search-l10n-ids="
+                    permissions-remove.label,
+                    permissions-remove-all.label,
+                    permissions-button-cancel.label,
+                    permissions-button-ok.label,
+                  " />
         </hbox>
       </row>
 
@@ -406,10 +411,12 @@
           <button id="cameraSettingsButton"
                   class="accessory-button"
                   data-l10n-id="permissions-camera-settings"
-                  searchkeywords="&removepermission2.label;
-                                  &removeallpermissions2.label;
-                                  &button.cancel.label;
-                                  &button.ok.label;"/>
+                  search-l10n-ids="
+                    permissions-remove.label,
+                    permissions-remove-all.label,
+                    permissions-button-cancel.label,
+                    permissions-button-ok.label,
+                  " />
         </hbox>
       </row>
 
@@ -423,10 +430,12 @@
           <button id="microphoneSettingsButton"
                   class="accessory-button"
                   data-l10n-id="permissions-microphone-settings"
-                  searchkeywords="&removepermission2.label;
-                                  &removeallpermissions2.label;
-                                  &button.cancel.label;
-                                  &button.ok.label;"/>
+                  search-l10n-ids="
+                    permissions-remove.label,
+                    permissions-remove-all.label,
+                    permissions-button-cancel.label,
+                    permissions-button-ok.label,
+                  " />
         </hbox>
       </row>
 
@@ -445,10 +454,12 @@
           <button id="notificationSettingsButton"
                   class="accessory-button"
                   data-l10n-id="permissions-notification-settings"
-                  searchkeywords="&removepermission2.label;
-                                  &removeallpermissions2.label;
-                                  &button.cancel.label;
-                                  &button.ok.label;"/>
+                  search-l10n-ids="
+                    permissions-remove.label,
+                    permissions-remove-all.label,
+                    permissions-button-cancel.label,
+                    permissions-button-ok.label,
+                  " />
         </hbox>
       </row>
     </rows>
@@ -471,7 +482,11 @@
       <button id="popupPolicyButton"
               class="accessory-button"
               data-l10n-id="permissions-block-popups-exceptions"
-              searchkeywords="&address2.label; &button.cancel.label; &button.ok.label;"/>
+              search-l10n-ids="
+                permissions-address,
+                permissions-button-cancel.label,
+                permissions-button-ok.label
+              " />
     </hbox>
   </hbox>
 
@@ -486,12 +501,14 @@
       <button id="addonExceptions"
               class="accessory-button"
               data-l10n-id="permissions-addon-exceptions"
-              searchkeywords="&address2.label;
-                              &allow.label;
-                              &removepermission2.label;
-                              &removeallpermissions2.label;
-                              &button.cancel.label;
-                              &button.ok.label;"/>
+              search-l10n-ids="
+                permissions-address,
+                permissions-allow.label,
+                permissions-remove.label,
+                permissions-remove-all.label,
+                permissions-button-cancel.label,
+                permissions-button-ok.label,
+              " />
     </hbox>
   </hbox>
 

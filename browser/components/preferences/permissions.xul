@@ -7,17 +7,18 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/permissions.dtd" >
-
 <window id="PermissionsDialog" class="windowDialog"
         windowtype="Browser:Permissions"
-        title="&window.title;"
+        data-l10n-id="permissions-window"
+        data-l10n-attrs="title, style"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="width: &window.width;;"
         onload="gPermissionManager.onLoad();"
         onunload="gPermissionManager.uninit();"
         persist="screenX screenY width height"
         onkeypress="gPermissionManager.onWindowKeyPress(event);">
+
+  <link rel="localization" href="browser/preferences/permissions.ftl"/>
+  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
   <script src="chrome://global/content/treeUtils.js"/>
   <script src="chrome://browser/content/preferences/permissions.js"/>
@@ -26,24 +27,24 @@
                 src="chrome://browser/locale/preferences/preferences.properties"/>
 
   <keyset>
-    <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
+    <key data-l10n-id="permissions-close-key" modifiers="accel" oncommand="window.close();"/>
   </keyset>
 
   <vbox class="contentPane largeDialogContainer" flex="1">
     <description id="permissionsText" control="url"/>
     <separator class="thin"/>
-    <label id="urlLabel" control="url" accesskey="&address2.accesskey;">&address2.label;</label>
+    <label id="urlLabel" control="url" data-l10n-id="permissions-address"/>
     <hbox align="start">
       <textbox id="url" flex="1"
                oninput="gPermissionManager.onHostInput(event.target);"
                onkeypress="gPermissionManager.onHostKeyPress(event);"/>
     </hbox>
     <hbox pack="end">
-      <button id="btnBlock" disabled="true" label="&block.label;" accesskey="&block.accesskey;"
+      <button id="btnBlock" disabled="true" data-l10n-id="permissions-block"
               oncommand="gPermissionManager.addPermission(nsIPermissionManager.DENY_ACTION);"/>
-      <button id="btnSession" disabled="true" label="&session.label;" accesskey="&session.accesskey;"
+      <button id="btnSession" disabled="true" data-l10n-id="permissions-session"
               oncommand="gPermissionManager.addPermission(nsICookiePermission.ACCESS_SESSION);"/>
-      <button id="btnAllow" disabled="true" label="&allow.label;" default="true" accesskey="&allow.accesskey;"
+      <button id="btnAllow" disabled="true" data-l10n-id="permissions-allow" default="true"
               oncommand="gPermissionManager.addPermission(nsIPermissionManager.ALLOW_ACTION);"/>
     </hbox>
     <separator class="thin"/>
@@ -52,10 +53,10 @@
           onkeypress="gPermissionManager.onPermissionKeyPress(event)"
           onselect="gPermissionManager.onPermissionSelected();">
       <treecols>
-        <treecol id="siteCol" label="&treehead.sitename2.label;" flex="3"
+        <treecol id="siteCol" data-l10n-id="permissions-site-name" flex="3"
                  data-field-name="origin" persist="width"/>
         <splitter class="tree-splitter"/>
-        <treecol id="statusCol" label="&treehead.status.label;" flex="1"
+        <treecol id="statusCol" data-l10n-id="permissions-status" flex="1"
                  data-field-name="capability" persist="width"/>
       </treecols>
       <treechildren/>
@@ -64,20 +65,20 @@
   <vbox>
     <hbox class="actionButtons" align="left" flex="1">
       <button id="removePermission" disabled="true"
-              accesskey="&removepermission2.accesskey;"
-              icon="remove" label="&removepermission2.label;"
+              data-l10n-id="permissions-remove"
+              icon="remove"
               oncommand="gPermissionManager.onPermissionDeleted();"/>
       <button id="removeAllPermissions"
-              icon="clear" label="&removeallpermissions2.label;"
-              accesskey="&removeallpermissions2.accesskey;"
+              data-l10n-id="permissions-remove-all"
+              icon="clear"
               oncommand="gPermissionManager.onAllPermissionsDeleted();"/>
     </hbox>
     <spacer flex="1"/>
     <hbox class="actionButtons" align="right" flex="1">
       <button oncommand="close();" icon="close"
-              label="&button.cancel.label;" accesskey="&button.cancel.accesskey;" />
+              data-l10n-id="permissions-button-cancel" />
       <button id="btnApplyChanges" oncommand="gPermissionManager.onApplyChanges();" icon="save"
-              label="&button.ok.label;" accesskey="&button.ok.accesskey;"/>
+              data-l10n-id="permissions-button-ok" />
     </hbox>
   </vbox>
 </window>
