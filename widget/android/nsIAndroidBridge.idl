@@ -70,7 +70,6 @@ interface nsIAndroidView : nsIAndroidEventDispatcher
 [scriptable, uuid(1beb70d3-70f3-4742-98cc-a3d301b26c0c)]
 interface nsIAndroidBridge : nsIAndroidEventDispatcher
 {
-  [implicit_jscontext] void handleGeckoMessage(in jsval message);
   attribute nsIAndroidBrowserApp browserApp;
   void contentDocumentChanged(in mozIDOMWindowProxy window);
   boolean isContentDocumentDisplayed(in mozIDOMWindowProxy window);
