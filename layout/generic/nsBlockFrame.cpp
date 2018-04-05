@@ -7542,7 +7542,7 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
     // We also want to update the styles of the first-line's descendants.  We
     // don't need to compute a changehint for this, though, since any changes to
     // them are handled by the first-line anyway.
-    ServoRestyleManager* manager = PresContext()->RestyleManager()->AsServo();
+    RestyleManager* manager = PresContext()->RestyleManager();
     for (nsIFrame* kid : firstLineFrame->PrincipalChildList()) {
       manager->ReparentComputedStyle(kid);
     }

@@ -885,7 +885,7 @@ EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
       // ensure the final restyling for removed animations.
       // We can't call PostRestyleEvent directly here since we are still in the
       // middle of the servo traversal.
-      mPresContext->RestyleManager()->AsServo()->
+      mPresContext->RestyleManager()->
         PostRestyleEventForAnimations(target.mElement,
                                       target.mPseudoType,
                                       cascadeLevel == CascadeLevel::Transitions
@@ -967,7 +967,7 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
       continue;
     }
 
-    mPresContext->RestyleManager()->AsServo()->
+    mPresContext->RestyleManager()->
       PostRestyleEventForAnimations(aElement,
                                     aPseudoType,
                                     cascadeLevel == CascadeLevel::Transitions
