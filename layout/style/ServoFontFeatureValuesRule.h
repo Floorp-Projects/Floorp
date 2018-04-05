@@ -30,7 +30,6 @@ public:
   void SetValueText(const nsAString& aValueText, mozilla::ErrorResult& aRv) final;
 
   // Methods of mozilla::css::Rule
-  already_AddRefed<css::Rule> Clone() const final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const final;
 

@@ -25,7 +25,6 @@ public:
                                            dom::CSSKeyframesRule)
   bool IsCCLeaf() const final;
 
-  already_AddRefed<css::Rule> Clone() const final;
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
