@@ -38,6 +38,12 @@ interface nsIAndroidEventCallback : nsISupports
   void onError([optional] in jsval data);
 };
 
+[scriptable, function, uuid(819ee2db-d3b8-46dd-a476-40f89c49133c)]
+interface nsIAndroidEventFinalizer : nsISupports
+{
+  void onFinalize();
+};
+
 [scriptable, function, uuid(73569a75-78eb-4c7f-82b9-2d4f5ccf44c3)]
 interface nsIAndroidEventListener : nsISupports
 {
@@ -52,7 +58,8 @@ interface nsIAndroidEventDispatcher : nsISupports
   [implicit_jscontext]
   void dispatch(in jsval event,
                 [optional] in jsval data,
-                [optional] in nsIAndroidEventCallback callback);
+                [optional] in nsIAndroidEventCallback callback,
+                [optional] in nsIAndroidEventFinalizer finalizer);
   [implicit_jscontext]
   void registerListener(in nsIAndroidEventListener listener,
                         in jsval events);
