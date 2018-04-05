@@ -656,12 +656,6 @@ public:
     return !(*this == aOther);
   }
 
-  /**
-   * Serialize |this| as a specified value for |aProperty| and append
-   * it to |aResult|.
-   */
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
-
   nsCSSUnit GetUnit() const { return mUnit; }
   bool      IsLengthUnit() const
     { return eCSSUnit_ViewportWidth <= mUnit && mUnit <= eCSSUnit_Pixel; }
@@ -1003,14 +997,6 @@ public:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   static void
-  AppendSidesShorthandToString(const nsCSSPropertyID aProperties[],
-                               const nsCSSValue* aValues[],
-                               nsAString& aString);
-  static void
-  AppendBasicShapeRadiusToString(const nsCSSPropertyID aProperties[],
-                                 const nsCSSValue* aValues[],
-                                 nsAString& aResult);
-  static void
   AppendAlignJustifyValueToString(int32_t aValue, nsAString& aResult);
 
 private:
@@ -1018,16 +1004,6 @@ private:
     return static_cast<char16_t*>(aBuffer->Data());
   }
 
-  void AppendPolygonToString(nsCSSPropertyID aProperty,
-                             nsAString& aResult) const;
-  void AppendPositionCoordinateToString(const nsCSSValue& aValue,
-                                        nsCSSPropertyID aProperty,
-                                        nsAString& aResult) const;
-  void AppendCircleOrEllipseToString(
-           nsCSSKeyword aFunctionId,
-           nsCSSPropertyID aProperty, nsAString& aResult) const;
-  void AppendBasicShapePositionToString(nsAString& aResult) const;
-  void AppendInsetToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 protected:
   nsCSSUnit mUnit;
   union {
@@ -1151,7 +1127,6 @@ struct nsCSSValueList {
 
   nsCSSValueList* Clone() const;  // makes a deep copy. Infallible.
   void CloneInto(nsCSSValueList* aList) const; // makes a deep copy into aList
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 
   static bool Equal(const nsCSSValueList* aList1,
                     const nsCSSValueList* aList2);
@@ -1213,8 +1188,6 @@ private:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsCSSValueSharedList)
 
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
-
   bool operator==(nsCSSValueSharedList const& aOther) const;
   bool operator!=(const nsCSSValueSharedList& aOther) const
   { return !(*this == aOther); }
@@ -1252,8 +1225,6 @@ struct nsCSSRect {
   nsCSSRect(void);
   nsCSSRect(const nsCSSRect& aCopy);
   ~nsCSSRect();
-
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 
   bool operator==(const nsCSSRect& aOther) const {
     return mTop == aOther.mTop &&
@@ -1394,8 +1365,6 @@ struct nsCSSValuePair {
            mYValue.GetUnit() != eCSSUnit_Null;
   }
 
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
-
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   nsCSSValue mXValue;
@@ -1485,8 +1454,6 @@ struct nsCSSValueTriplet {
                mZValue.GetUnit() != eCSSUnit_Null;
     }
 
-    void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
-
     nsCSSValue mXValue;
     nsCSSValue mYValue;
     nsCSSValue mZValue;
@@ -1548,7 +1515,6 @@ struct nsCSSValuePairList {
   ~nsCSSValuePairList();
 
   nsCSSValuePairList* Clone() const; // makes a deep copy. Infallible.
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 
   static bool Equal(const nsCSSValuePairList* aList1,
                     const nsCSSValuePairList* aList2);
@@ -1868,8 +1834,6 @@ public:
   float Comp3() const { return mComponent3; }
   float Alpha() const { return mAlpha; }
   bool IsNonTransparentColor() const;
-
-  void AppendToString(nsCSSUnit aUnit, nsAString& aResult) const;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
