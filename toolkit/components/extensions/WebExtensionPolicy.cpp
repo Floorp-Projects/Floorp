@@ -681,8 +681,7 @@ DocInfo::Principal() const
 const URLInfo&
 DocInfo::PrincipalURL() const
 {
-  if (!URL().InheritsPrincipal() ||
-      !(Principal() && Principal()->GetIsCodebasePrincipal())) {
+  if (!(Principal() && Principal()->GetIsCodebasePrincipal())) {
     return URL();
   }
 
