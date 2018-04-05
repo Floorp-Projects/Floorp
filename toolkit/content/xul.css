@@ -658,7 +658,6 @@ treechildren::-moz-tree-cell(ltr) {
 
 deck {
   display: -moz-deck;
-  -moz-binding: url("chrome://global/content/bindings/general.xml#deck");
 }
 
 stack {
