@@ -21,6 +21,7 @@ add_task(async function() {
   let {
     getSelectedRequest,
     getSortedRequests,
+    getRequestById
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
@@ -28,18 +29,17 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 2);
 
+  let origItemId = getSortedRequests(store.getState()).get(0).id;
+
+  store.dispatch(Actions.selectRequest(origItemId));
+  await waitForRequestHeaders(origItemId);
+
   let origItem = getSortedRequests(store.getState()).get(0);
 
-  store.dispatch(Actions.selectRequest(origItem.id));
-
   // add a new custom request cloned from selected request
-
   store.dispatch(Actions.cloneSelectedRequest());
-  // FIXME: This used to be a generator function that nothing awaited on
-  // and therefore didn't run. It has been broken for some time.
-  if (false) {
-    testCustomForm(origItem);
-  }
+
+  await testCustomForm(origItem);
 
   let customItem = getSelectedRequest(store.getState());
   testCustomItem(customItem, origItem);
@@ -80,6 +80,13 @@ add_task(async function() {
   function testCustomItem(item, orig) {
     is(item.method, orig.method, "item is showing the same method as original request");
     is(item.url, orig.url, "item is showing the same URL as original request");
+  }
+
+  function waitForRequestHeaders(id) {
+    return waitUntil(() => {
+      const item = getRequestById(store.getState(), id);
+      return item.requestHeaders && item.requestPostData;
+    });
   }
 
   function testCustomItemChanged(item, orig) {
