@@ -47,7 +47,6 @@
 #include "nsLayoutUtils.h"
 #include "LayoutLogging.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "nsInlineFrame.h"
 #include "nsIDOMNode.h"
 #include "nsISelection.h"
@@ -10767,7 +10766,7 @@ nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
 
   // Assuming anon boxes don't have ::backdrop associated with them... if that
   // ever changes, we'd need to handle that here, like we do in
-  // ServoRestyleManager::ProcessPostTraversal
+  // RestyleManager::ProcessPostTraversal
 
   // We do need to handle block pseudo-elements here, though.  Especially list
   // bullets.

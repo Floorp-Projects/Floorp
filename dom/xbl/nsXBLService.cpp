@@ -54,7 +54,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ServoStyleSet.h"
-#include "mozilla/ServoRestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Element.h"
@@ -450,8 +450,8 @@ public:
   {
     MOZ_ASSERT(mResolveStyle);
     if (mHadData) {
-      ServoRestyleManager::ClearServoDataFromSubtree(
-        mElement, ServoRestyleManager::IncludeRoot::No);
+      RestyleManager::ClearServoDataFromSubtree(
+        mElement, RestyleManager::IncludeRoot::No);
     }
   }
 

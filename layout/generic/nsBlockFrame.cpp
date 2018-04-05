@@ -53,8 +53,7 @@
 #include "nsISelection.h"
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
-#include "mozilla/RestyleManagerInlines.h"
-#include "mozilla/ServoRestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/Telemetry.h"
 

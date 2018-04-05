@@ -12,9 +12,8 @@
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoRestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -84,7 +83,7 @@ class MOZ_RAII AutoPrepareTraversal
 public:
   explicit AutoPrepareTraversal(ServoStyleSet* aSet)
     // For markers for animations, we have already set the markers in
-    // ServoRestyleManager::PostRestyleEventForAnimations so that we don't need
+    // RestyleManager::PostRestyleEventForAnimations so that we don't need
     // to care about animation restyles here.
     : mTimelineMarker(aSet->mDocument->GetDocShell(), false)
     , mSetInServoTraversal(aSet)
