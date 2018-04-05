@@ -490,13 +490,6 @@ pref("browser.tabs.drawInTitlebar", true);
 // will only be shown if browser.tabs.drawInTitlebar is true.
 pref("browser.tabs.extraDragSpace", false);
 
-// 0 - Disable the tabbar session restore button.
-// 1 - Enable the tabbar session restore button.
-// 2 - Control group. The tabbar session restore button is disabled,
-// but we will record data on other session restore usage.
-// To be enabled with shield.
-pref("browser.tabs.restorebutton", 0);
-
 // When tabs opened by links in other tabs via a combination of
 // browser.link.open_newwindow being set to 3 and target="_blank" etc are
 // closed:
