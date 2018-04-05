@@ -251,8 +251,6 @@ public:
   virtual size_t
     SizeOfEventTargetIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(XMLHttpRequestEventTarget)
-
   // states
   virtual uint16_t ReadyState() const override;
 

@@ -24,7 +24,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsScreen, mozilla::DOMEventTargetHelper)
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(mozilla::DOMEventTargetHelper)
 
   nsPIDOMWindowInner* GetParentObject() const
   {
