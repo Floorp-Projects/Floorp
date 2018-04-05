@@ -3,10 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'App.css',
-    'App.js',
-    'Worker.css',
-    'Worker.js',
-    'WorkerList.css',
-    'WorkerList.js',
+    'index.js',
+    'workers.js',
 )

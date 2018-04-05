@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import "resource://devtools/client/application/src/components/App.css";
+@import "resource://devtools/client/application/src/components/Worker.css";
+@import "resource://devtools/client/application/src/components/WorkerList.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#mount {
+  height: 100%;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
