@@ -6408,7 +6408,7 @@
     "alert_emails": ["jaws@mozilla.com"],
     "expires_in_version": "66",
     "kind": "categorical",
-    "labels": ["unknown", "searchresults", "general", "home", "applications", "privacy", "sync", "advanced", "search"],
+    "labels": ["unknown", "searchresults", "general", "applications", "privacy", "sync", "advanced", "search"],
     "releaseChannelCollection": "opt-out",
     "description": "Count how often each preference category is opened."
   },
