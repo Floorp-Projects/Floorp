@@ -30,10 +30,10 @@ class Timeouts(object):
 
     def _set(self, name, sec):
         ms = sec * 1000
-        self._marionette._send_message("setTimeouts", {name: ms})
+        self._marionette._send_message("WebDriver:SetTimeouts", {name: ms})
 
     def _get(self, name):
-        ts = self._marionette._send_message("getTimeouts")
+        ts = self._marionette._send_message("WebDriver:GetTimeouts")
         if name not in ts:
             raise KeyError()
         ms = ts[name]
