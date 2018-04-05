@@ -118,6 +118,13 @@ types.getType = function(type) {
 };
 
 /**
+ * Helper function to identify iterators. This will return false for Arrays.
+ */
+function isIterator(v) {
+  return v && typeof v === "object" && Symbol.iterator in v && !Array.isArray(v);
+}
+
+/**
  * Don't allow undefined when writing primitive types to packets.  If
  * you want to allow undefined, use a nullable type.
  */
@@ -127,7 +134,7 @@ function identityWrite(v) {
   }
   // This has to handle iterator->array conversion because arrays of
   // primitive types pass through here.
-  if (v && typeof (v) === "object" && Symbol.iterator in v) {
+  if (isIterator(v)) {
     return [...v];
   }
   return v;
