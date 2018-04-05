@@ -27,7 +27,7 @@
 using mozilla::Maybe;
 
 using Tokenizer = js::frontend::BinTokenReaderTester;
-using Chars = Tokenizer::Chars;
+using Chars = js::frontend::BinTokenReaderTester::Chars;
 
 // Hack: These tests need access to resources, which are present in the source dir
 // but not copied by our build system. To simplify things, we chdir to the source
@@ -220,10 +220,9 @@ BEGIN_TEST(testBinTokenReaderTesterSimpleTaggedTuple)
         CHECK(fields[0] == js::frontend::BinField::Label);
         CHECK(fields[1] == js::frontend::BinField::Value);
         CHECK(tokenizer.readChars(found_id).isOk());
-        Maybe<double> found_value = tokenizer.readMaybeDouble().unwrap();
-        CHECK(found_value.isSome());
+        double found_value = tokenizer.readDouble().unwrap();
 
-        CHECK(EXPECTED_value == *found_value); // Apparently, CHECK_EQUAL doesn't work on `double`.
+        CHECK(EXPECTED_value == found_value); // Apparently, CHECK_EQUAL doesn't work on `double`.
         CHECK(Tokenizer::equals(found_id, "foo"));
         CHECK(guard.done().isOk());
     }
@@ -294,13 +293,13 @@ BEGIN_TEST(testBinTokenReaderTesterNestedList)
         uint32_t outerLength;
         Tokenizer::AutoList outerGuard(tokenizer);
         CHECK(tokenizer.enterList(outerLength, outerGuard).isOk());
-        CHECK(outerLength == 1);
+        CHECK_EQUAL(outerLength, (uint32_t)1);
 
         {
             uint32_t innerLength;
             Tokenizer::AutoList innerGuard(tokenizer);
             CHECK(tokenizer.enterList(innerLength, innerGuard).isOk());
-            CHECK(innerLength == 2);
+            CHECK_EQUAL(innerLength, (uint32_t)2);
 
             Chars found_0(cx);
             CHECK(tokenizer.readChars(found_0).isOk());
