@@ -1042,6 +1042,8 @@ public:
   virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override;
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
+  nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
+
   /**
    * Adds a mutation observer to be notified when this node, or any of its
    * descendants, are modified. The node will hold a weak reference to the

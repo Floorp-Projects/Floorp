@@ -467,7 +467,7 @@ HTMLFormElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
 }
 
-nsresult
+void
 HTMLFormElement::WillHandleEvent(EventChainPostVisitor& aVisitor)
 {
   // If this is the bubble stage and there is a nested form below us which
@@ -479,7 +479,6 @@ HTMLFormElement::WillHandleEvent(EventChainPostVisitor& aVisitor)
       aVisitor.mEvent->mOriginalTarget != static_cast<nsIContent*>(this)) {
     aVisitor.mEvent->StopPropagation();
   }
-  return NS_OK;
 }
 
 nsresult
