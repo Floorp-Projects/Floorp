@@ -1683,47 +1683,6 @@ css::ImageValue::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
-// --- nsCSSCornerSizes -----------------
-
-nsCSSCornerSizes::nsCSSCornerSizes(void)
-{
-  MOZ_COUNT_CTOR(nsCSSCornerSizes);
-}
-
-nsCSSCornerSizes::nsCSSCornerSizes(const nsCSSCornerSizes& aCopy)
-  : mTopLeft(aCopy.mTopLeft),
-    mTopRight(aCopy.mTopRight),
-    mBottomRight(aCopy.mBottomRight),
-    mBottomLeft(aCopy.mBottomLeft)
-{
-  MOZ_COUNT_CTOR(nsCSSCornerSizes);
-}
-
-nsCSSCornerSizes::~nsCSSCornerSizes()
-{
-  MOZ_COUNT_DTOR(nsCSSCornerSizes);
-}
-
-void
-nsCSSCornerSizes::Reset()
-{
-  NS_FOR_CSS_FULL_CORNERS(corner) {
-    this->GetCorner(corner).Reset();
-  }
-}
-
-static_assert(eCornerTopLeft == 0 && eCornerTopRight == 1 &&
-              eCornerBottomRight == 2 && eCornerBottomLeft == 3,
-              "box corner constants not tl/tr/br/bl == 0/1/2/3");
-
-/* static */ const nsCSSCornerSizes::corner_type
-nsCSSCornerSizes::corners[4] = {
-  &nsCSSCornerSizes::mTopLeft,
-  &nsCSSCornerSizes::mTopRight,
-  &nsCSSCornerSizes::mBottomRight,
-  &nsCSSCornerSizes::mBottomLeft,
-};
-
 size_t
 mozilla::css::GridTemplateAreasValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
