@@ -868,16 +868,13 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     if (!xpcscope)
         return false;
 
-    // First, see if this object supports the wrapper cache.
-    // Note: If |cache->IsDOMBinding()| is true, then it means that the object
-    // implementing it doesn't want a wrapped native as its JS Object, but
-    // instead it provides its own proxy object. In that case, the object
-    // to use is found as cache->GetWrapper(). If that is null, then the
-    // object will create (and fill the cache) from its WrapObject call.
+    // First, see if this object supports the wrapper cache. In that case, the object
+    // to use is found as cache->GetWrapper(). If that is null, then the object will
+    // create (and fill the cache) from its WrapObject call.
     nsWrapperCache* cache = aHelper.GetWrapperCache();
 
     RootedObject flat(cx, cache ? cache->GetWrapper() : nullptr);
-    if (!flat && cache && cache->IsDOMBinding()) {
+    if (!flat && cache) {
         RootedObject global(cx, xpcscope->GetGlobalJSObject());
         js::AssertSameCompartment(cx, global);
         flat = cache->WrapObject(cx, nullptr);

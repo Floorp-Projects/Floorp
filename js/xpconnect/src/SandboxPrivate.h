@@ -73,9 +73,7 @@ public:
 private:
     explicit SandboxPrivate(nsIPrincipal* principal)
         : mPrincipal(principal)
-    {
-        SetIsNotDOMBinding();
-    }
+    { }
 
     virtual ~SandboxPrivate()
     { }
