@@ -178,13 +178,7 @@ var GeckoViewUtils = {
       });
   },
 
-  /**
-   * Return the outermost chrome DOM window (the XUL window) for a given DOM
-   * window.
-   *
-   * @param aWin a DOM window.
-   */
-  getChromeWindow: function(aWin) {
+  _getRootDocShell: function(aWin) {
     if (!aWin) {
       return null;
     }
@@ -195,26 +189,51 @@ var GeckoViewUtils = {
       docShell = aWin.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDocShell);
     }
-    return docShell.QueryInterface(Ci.nsIDocShellTreeItem)
-                   .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindow);
+    return docShell.QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem
+                   .QueryInterface(Ci.nsIInterfaceRequestor);
   },
 
   /**
-   * Return the per-nsWindow EventDispatcher for a given DOM window.
+   * Return the outermost chrome DOM window (the XUL window) for a given DOM
+   * window, in the parent process.
+   *
+   * @param aWin a DOM window.
+   */
+  getChromeWindow: function(aWin) {
+    const docShell = this._getRootDocShell(aWin);
+    return docShell && docShell.getInterface(Ci.nsIDOMWindow);
+  },
+
+  /**
+   * Return the content frame message manager (aka the frame script global
+   * object) for a given DOM window, in a child process.
+   *
+   * @param aWin a DOM window.
+   */
+  getContentFrameMessageManager: function(aWin) {
+    const docShell = this._getRootDocShell(aWin);
+    return docShell && docShell.getInterface(Ci.nsITabChild).messageManager;
+  },
+
+  /**
+   * Return the per-nsWindow EventDispatcher for a given DOM window, in either
+   * the parent process or a child process.
    *
    * @param aWin a DOM window.
    */
   getDispatcherForWindow: function(aWin) {
     try {
-      let win = this.getChromeWindow(aWin.top || aWin);
-      let dispatcher = win.WindowEventDispatcher || EventDispatcher.for(win);
-      if (!win.closed && dispatcher) {
-        return dispatcher;
+      if (!this.IS_PARENT_PROCESS) {
+        const mm = this.getContentFrameMessageManager(aWin.top || aWin);
+        return mm && EventDispatcher.forMessageManager(mm);
+      }
+      const win = this.getChromeWindow(aWin.top || aWin);
+      if (!win.closed) {
+        return win.WindowEventDispatcher || EventDispatcher.for(win);
       }
     } catch (e) {
-      return null;
     }
+    return null;
   },
 
   getActiveDispatcher: function() {
@@ -234,3 +253,6 @@ var GeckoViewUtils = {
     return null;
   },
 };
+
+XPCOMUtils.defineLazyGetter(GeckoViewUtils, "IS_PARENT_PROCESS", _ =>
+    Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT);
