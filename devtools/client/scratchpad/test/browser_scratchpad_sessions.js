@@ -4,7 +4,6 @@
 
 const {Utils} = ChromeUtils.import("resource://gre/modules/sessionstore/Utils.jsm", {});
 const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
-const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
 const testState = {
   windows: [{
@@ -37,7 +36,7 @@ function test() {
 
   Services.ww.registerNotification(windowObserver);
 
-  ss.setBrowserState(JSON.stringify(testState));
+  SessionStore.setBrowserState(JSON.stringify(testState));
 }
 
 function windowObserver(subject, topic, data) {
