@@ -45,39 +45,6 @@ interface nsIDOMEvent;
 [uuid(9a78ac3c-9507-4d00-b2d6-10b508d2ec31)]
 interface nsIDOMEventTarget : nsISupports
 {
-  /**
-   * This method allows the registration of event listeners on the event target.
-   * If an EventListener is added to an EventTarget while it is processing an
-   * event, it will not be triggered by the current actions but may be 
-   * triggered during a later stage of event flow, such as the bubbling phase.
-   * 
-   * If multiple identical EventListeners are registered on the same 
-   * EventTarget with the same parameters the duplicate instances are 
-   * discarded. They do not cause the EventListener to be called twice 
-   * and since they are discarded they do not need to be removed with the 
-   * removeEventListener method.
-   *
-   * @param   type The event type for which the user is registering
-   * @param   listener The listener parameter takes an interface 
-   *                   implemented by the user which contains the methods 
-   *                   to be called when the event occurs.
-   * @param   useCapture If true, useCapture indicates that the user 
-   *                     wishes to initiate capture. After initiating 
-   *                     capture, all events of the specified type will be 
-   *                     dispatched to the registered EventListener before 
-   *                     being dispatched to any EventTargets beneath them 
-   *                     in the tree. Events which are bubbling upward 
-   *                     through the tree will not trigger an 
-   *                     EventListener designated to use capture.
-   * @param   wantsUntrusted If false, the listener will not receive any
-   *                         untrusted events (see above), if true, the
-   *                         listener will receive events whether or not
-   *                         they're trusted
-   */
-  [optional_argc] void addEventListener(in DOMString type,
-                                        in nsIDOMEventListener listener,
-                                        [optional] in boolean useCapture,
-                                        [optional] in boolean wantsUntrusted);
 
   /**
    * addSystemEventListener() adds an event listener of aType to the system
@@ -102,21 +69,6 @@ interface nsIDOMEventTarget : nsISupports
                                    [optional] in boolean aWantsUntrusted);
 
 %{C++
-  // non-virtual so it won't affect the vtable
-  nsresult AddEventListener(const nsAString& aType,
-                            nsIDOMEventListener* aListener,
-                            bool aUseCapture)
-  {
-    return AddEventListener(aType, aListener, aUseCapture, false, 1);
-  }
-  // non-virtual so it won't affect the vtable
-  nsresult AddEventListener(const nsAString& aType,
-                            nsIDOMEventListener* aListener,
-                            bool aUseCapture,
-                            bool aWantsUntrusted)
-  {
-    return AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted, 2);
-  }
   // non-virtual so it won't affect the vtable
   nsresult AddSystemEventListener(const nsAString& aType,
                                   nsIDOMEventListener* aListener,

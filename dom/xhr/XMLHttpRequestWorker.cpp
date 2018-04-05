@@ -461,7 +461,7 @@ public:
   {
     AssertIsOnMainThread();
 
-    if (NS_FAILED(mXHR->AddEventListener(mEventType, this, false, false, 2))) {
+    if (NS_FAILED(mXHR->AddEventListener(mEventType, this, false, false))) {
       NS_WARNING("Failed to add event listener!");
       return false;
     }

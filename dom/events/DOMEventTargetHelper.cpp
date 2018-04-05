@@ -173,26 +173,38 @@ DOMEventTargetHelper::GetDocumentIfCurrent() const
   return win->GetDoc();
 }
 
-NS_IMETHODIMP
+bool
+DOMEventTargetHelper::ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted,
+                                            ErrorResult& aRv)
+{
+  if (!aWantsUntrusted.IsNull()) {
+    return aWantsUntrusted.Value();
+  }
+  
+  bool wantsUntrusted;
+  nsresult rv = WantsUntrusted(&wantsUntrusted);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return false;
+  }
+  return wantsUntrusted;
+}
+
+nsresult
 DOMEventTargetHelper::AddEventListener(const nsAString& aType,
                                        nsIDOMEventListener* aListener,
                                        bool aUseCapture,
-                                       bool aWantsUntrusted,
-                                       uint8_t aOptionalArgc)
+                                       const Nullable<bool>& aWantsUntrusted)
 {
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making aOptionalArgc non-zero.");
-
-  if (aOptionalArgc < 2) {
-    nsresult rv = WantsUntrusted(&aWantsUntrusted);
-    NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult rv;
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
   }
 
   EventListenerManager* elm = GetOrCreateListenerManager();
   NS_ENSURE_STATE(elm);
-  elm->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
+  elm->AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
   return NS_OK;
 }
 
@@ -203,15 +215,9 @@ DOMEventTargetHelper::AddEventListener(const nsAString& aType,
                                        const Nullable<bool>& aWantsUntrusted,
                                        ErrorResult& aRv)
 {
-  bool wantsUntrusted;
-  if (aWantsUntrusted.IsNull()) {
-    nsresult rv = WantsUntrusted(&wantsUntrusted);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return;
-    }
-  } else {
-    wantsUntrusted = aWantsUntrusted.Value();
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, aRv);
+  if (aRv.Failed()) {
+    return;
   }
 
   EventListenerManager* elm = GetOrCreateListenerManager();

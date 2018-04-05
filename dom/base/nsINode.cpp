@@ -1016,28 +1016,28 @@ nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
   }
 }
 
-NS_IMETHODIMP
+bool
+nsINode::ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted)
+{
+  if (!aWantsUntrusted.IsNull()) {
+    return aWantsUntrusted.Value();
+  }
+
+  return !nsContentUtils::IsChromeDoc(OwnerDoc());
+}
+
+nsresult
 nsINode::AddEventListener(const nsAString& aType,
                           nsIDOMEventListener *aListener,
                           bool aUseCapture,
-                          bool aWantsUntrusted,
-                          uint8_t aOptionalArgc)
+                          const Nullable<bool>& aWantsUntrusted)
 {
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making aOptionalArgc non-zero.");
-
-  if (!aWantsUntrusted &&
-      (aOptionalArgc < 2 &&
-       !nsContentUtils::IsChromeDoc(OwnerDoc()))) {
-    aWantsUntrusted = true;
-  }
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
 
   EventListenerManager* listener_manager = GetOrCreateListenerManager();
   NS_ENSURE_STATE(listener_manager);
   listener_manager->AddEventListener(aType, aListener, aUseCapture,
-                                     aWantsUntrusted);
+                                     wantsUntrusted);
   return NS_OK;
 }
 
@@ -1048,12 +1048,7 @@ nsINode::AddEventListener(const nsAString& aType,
                           const Nullable<bool>& aWantsUntrusted,
                           ErrorResult& aRv)
 {
-  bool wantsUntrusted;
-  if (aWantsUntrusted.IsNull()) {
-    wantsUntrusted = !nsContentUtils::IsChromeDoc(OwnerDoc());
-  } else {
-    wantsUntrusted = aWantsUntrusted.Value();
-  }
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
 
   EventListenerManager* listener_manager = GetOrCreateListenerManager();
   if (!listener_manager) {
