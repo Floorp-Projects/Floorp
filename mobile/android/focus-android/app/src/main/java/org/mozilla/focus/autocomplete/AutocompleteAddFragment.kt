@@ -15,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_autocomplete_add_domain.*
 import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import mozilla.components.domains.CustomDomains
 import org.mozilla.focus.R
@@ -29,7 +30,6 @@ import org.mozilla.focus.utils.ViewUtils
 class AutocompleteAddFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setHasOptionsMenu(true)
     }
 
@@ -60,10 +60,17 @@ class AutocompleteAddFragment : Fragment() {
                     .toLowerCase()
                     .removePrefixesIgnoreCase("http://", "https://", "www.")
 
-            if (domain.isEmpty()) {
-                domainView.error = getString(R.string.preference_autocomplete_add_error)
-            } else {
-                saveDomainAndClose(activity.applicationContext, domain)
+            launch(UI) {
+                when {
+                    domain.isEmpty()
+                    -> domainView.error = getString(R.string.preference_autocomplete_add_error)
+                    CustomDomains
+                            .load(activity.applicationContext)
+                            .contains(domain)
+                    -> domainView.error = getString(R.string.preference_autocomplete_duplicate_url_error)
+                    else
+                    -> saveDomainAndClose(activity.applicationContext, domain)
+                }
             }
 
             return true

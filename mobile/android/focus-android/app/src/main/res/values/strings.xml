@@ -593,4 +593,5 @@ be temporary, and you can try again later.</li>
 
     <!-- Content Description of Security Icon in toolbar -->
     <string name="site_security_icon_content_description">Site Security</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL already exists</string>
 </resources>
