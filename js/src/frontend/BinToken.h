@@ -278,7 +278,6 @@ const size_t BINKIND_LIMIT = 183;
     F(Alternate, "alternate") \
     F(Arguments, "arguments") \
     F(Binding, "binding") \
-    F(BindingScope, "bindingScope") \
     F(Body, "body") \
     F(BodyScope, "bodyScope") \
     F(Callee, "callee") \
@@ -346,7 +345,7 @@ enum class BinField {
 };
 
 // The number of distinct values of BinField.
-const size_t BINFIELD_LIMIT = 64;
+const size_t BINFIELD_LIMIT = 63;
 
 
 
@@ -369,8 +368,6 @@ const size_t BINFIELD_LIMIT = 64;
     F(BinaryOperatorMod, "%") \
     F(BinaryOperatorMul, "*") \
     F(BinaryOperatorNeq, "!=") \
-    F(BinaryOperatorOrUnaryOperatorMinus, "-") \
-    F(BinaryOperatorOrUnaryOperatorPlus, "+") \
     F(BinaryOperatorPow, "**") \
     F(BinaryOperatorRsh, ">>") \
     F(BinaryOperatorStrictEq, "===") \
@@ -391,6 +388,8 @@ const size_t BINFIELD_LIMIT = 64;
     F(UnaryOperatorBitNot, "~") \
     F(UnaryOperatorDelete, "delete") \
     F(UnaryOperatorNot, "!") \
+    F(UnaryOperatorOrBinaryOperatorMinus, "-") \
+    F(UnaryOperatorOrBinaryOperatorPlus, "+") \
     F(UnaryOperatorTypeof, "typeof") \
     F(UnaryOperatorVoid, "void") \
     F(UpdateOperatorDecr, "--") \

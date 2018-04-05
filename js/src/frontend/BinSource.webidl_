@@ -190,6 +190,17 @@ typedef (ExportAllFrom or
 
 typedef (ImportNamespace or Import) ImportDeclaration;
 
+typedef (EagerFunctionDeclaration or SkippableFunctionDeclaration) FunctionDeclaration;
+
+typedef (EagerFunctionExpression or SkippableFunctionExpression) FunctionExpression;
+
+typedef (EagerMethod or SkippableMethod) Method;
+
+typedef (EagerGetter or SkippableGetter) Getter;
+
+typedef (EagerSetter or SkippableSetter) Setter;
+
+typedef (EagerArrowExpression or SkippableArrowExpression) ArrowExpression;
 
 // bindings
 
@@ -412,7 +423,7 @@ interface ExportLocalSpecifier : Node {
 // `MethodDefinition :: PropertyName ( UniqueFormalParameters ) { FunctionBody }`,
 // `GeneratorMethod :: * PropertyName ( UniqueFormalParameters ) { GeneratorBody }`,
 // `AsyncMethod :: async PropertyName ( UniqueFormalParameters ) { AsyncFunctionBody }`
-interface Method : Node {
+interface EagerMethod : Node {
   // True for `AsyncMethod`, false otherwise.
   attribute boolean isAsync;
   // True for `GeneratorMethod`, false otherwise.
@@ -425,21 +436,33 @@ interface Method : Node {
   attribute FunctionBody body;
 };
 
+[Skippable] interface SkippableMethod : Node {
+  attribute EagerMethod skipped;
+};
+
 // `get PropertyName ( ) { FunctionBody }`
-interface Getter : Node {
+interface EagerGetter : Node {
   attribute AssertedVarScope? bodyScope;
   attribute PropertyName name;
   attribute FunctionBody body;
 };
 
+[Skippable] interface SkippableGetter : Node {
+  attribute EagerGetter skipped;
+};
+
 // `set PropertyName ( PropertySetParameterList ) { FunctionBody }`
-interface Setter : Node {
+interface EagerSetter : Node {
   attribute AssertedParameterScope? parameterScope;
   attribute AssertedVarScope? bodyScope;
   attribute PropertyName name;
   // The `PropertySetParameterList`.
   attribute Parameter param;
   attribute FunctionBody body;
+};
+
+[Skippable] interface SkippableSetter : Node {
+  attribute EagerSetter skipped;
 };
 
 // `PropertyDefinition :: PropertyName : AssignmentExpression`
@@ -505,13 +528,17 @@ interface ArrayExpression : Node {
 
 // `ArrowFunction`,
 // `AsyncArrowFunction`
-interface ArrowExpression : Node {
+interface EagerArrowExpression : Node {
   // True for `AsyncArrowFunction`, false otherwise.
   attribute boolean isAsync;
   attribute AssertedParameterScope? parameterScope;
   attribute AssertedVarScope? bodyScope;
   attribute FormalParameters params;
   attribute (FunctionBody or Expression) body;
+};
+
+[Skippable] interface SkippableArrowExpression : Node {
+  attribute EagerArrowExpression skipped;
 };
 
 // `AssignmentExpression :: LeftHandSideExpression = AssignmentExpression`
@@ -575,7 +602,7 @@ interface ConditionalExpression : Node {
 // `FunctionExpression`,
 // `GeneratorExpression`,
 // `AsyncFunctionExpression`,
-interface FunctionExpression : Node {
+interface EagerFunctionExpression : Node {
   attribute boolean isAsync;
   attribute boolean isGenerator;
   attribute AssertedParameterScope? parameterScope;
@@ -583,6 +610,10 @@ interface FunctionExpression : Node {
   attribute BindingIdentifier? name;
   attribute FormalParameters params;
   attribute FunctionBody body;
+};
+
+[Skippable] interface SkippableFunctionExpression : Node {
+  attribute EagerFunctionExpression skipped;
 };
 
 // `IdentifierReference`
@@ -818,10 +849,12 @@ interface FunctionBody : Node {
   attribute FrozenArray<Statement> statements;
 };
 
+
+
 // `FunctionDeclaration`,
 // `GeneratorDeclaration`,
 // `AsyncFunctionDeclaration`
-interface FunctionDeclaration : Node {
+interface EagerFunctionDeclaration : Node {
   attribute boolean isAsync;
   attribute boolean isGenerator;
   attribute AssertedParameterScope? parameterScope;
@@ -829,6 +862,10 @@ interface FunctionDeclaration : Node {
   attribute BindingIdentifier name;
   attribute FormalParameters params;
   attribute FunctionBody body;
+};
+
+[Skippable] interface SkippableFunctionDeclaration : Node {
+  attribute EagerFunctionDeclaration skipped;
 };
 
 interface Script : Node {
