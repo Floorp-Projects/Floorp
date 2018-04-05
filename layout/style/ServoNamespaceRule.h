@@ -28,7 +28,6 @@ public:
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
-  already_AddRefed<Rule> Clone() const final;
 
   nsAtom* GetPrefix() const final;
   void GetURLSpec(nsString& aURLSpec) const final;

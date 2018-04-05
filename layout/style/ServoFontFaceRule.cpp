@@ -153,16 +153,6 @@ ServoFontFaceRuleDecl::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenPro
 // ServoFontFaceRule
 //
 
-/* virtual */ already_AddRefed<css::Rule>
-ServoFontFaceRule::Clone() const
-{
-  RefPtr<RawServoFontFaceRule> rule = Servo_FontFaceRule_Clone(Raw()).Consume();
-  RefPtr<css::Rule> clone = new ServoFontFaceRule(rule.forget(),
-                                                  GetLineNumber(),
-                                                  GetColumnNumber());
-  return clone.forget();
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(ServoFontFaceRule)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ServoFontFaceRule,

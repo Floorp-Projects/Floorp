@@ -5057,7 +5057,7 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
 
   const wr::LayoutRect rect = wr::ToRoundedLayoutRect(devRect);
 
-  aBuilder.PushRect(rect, rect, true, wr::ToColorF(gfx::Color()));
+  aBuilder.PushRect(rect, rect, !BackfaceIsHidden(), wr::ToColorF(gfx::Color()));
   aBuilder.ClearHitTestInfo();
 
   return true;

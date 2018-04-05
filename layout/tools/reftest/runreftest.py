@@ -239,7 +239,7 @@ class RefTest(object):
         self.outputHandler = None
         self.testDumpFile = os.path.join(tempfile.gettempdir(), 'reftests.json')
 
-        self.run_by_manifest = True
+        self.run_by_manifest = False
         if suite in ('crashtest', 'jstestbrowser'):
             self.run_by_manifest = False
 

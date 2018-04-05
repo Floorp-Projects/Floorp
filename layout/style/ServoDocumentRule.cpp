@@ -32,17 +32,6 @@ NS_IMPL_RELEASE_INHERITED(ServoDocumentRule, CSSMozDocumentRule)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServoDocumentRule)
 NS_INTERFACE_MAP_END_INHERITING(CSSMozDocumentRule)
 
-/* virtual */ already_AddRefed<css::Rule>
-ServoDocumentRule::Clone() const
-{
-  // Rule::Clone is only used when CSSStyleSheetInner is cloned in
-  // preparation of being mutated. However, ServoStyleSheet never clones
-  // anything, so this method should never be called.
-  MOZ_ASSERT_UNREACHABLE("Shouldn't be cloning ServoDocumentRule");
-  return nullptr;
-}
-
-
 #ifdef DEBUG
 /* virtual */ void
 ServoDocumentRule::List(FILE* out, int32_t aIndent) const
