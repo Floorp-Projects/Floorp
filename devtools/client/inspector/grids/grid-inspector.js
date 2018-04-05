@@ -83,7 +83,13 @@ class GridInspector {
       return;
     }
 
-    this.layoutInspector = await this.inspector.walker.getLayoutInspector();
+    try {
+      this.layoutInspector = await this.inspector.walker.getLayoutInspector();
+    } catch (e) {
+      // This call might fail if called asynchrously after the toolbox is finished
+      // closing.
+      return;
+    }
 
     this.loadHighlighterSettings();
 
