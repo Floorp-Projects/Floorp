@@ -58,9 +58,8 @@ public:
   typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
   typedef mozilla::dom::Element Element;
 
+  // FIXME(emilio): Is this really needed?
   friend class mozilla::RestyleManager;
-  friend class mozilla::GeckoRestyleManager;
-  friend class mozilla::ServoRestyleManager;
 
   nsCSSFrameConstructor(nsIDocument* aDocument, nsIPresShell* aPresShell);
   ~nsCSSFrameConstructor() {
