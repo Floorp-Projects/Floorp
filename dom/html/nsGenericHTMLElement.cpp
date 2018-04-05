@@ -315,7 +315,7 @@ nsGenericHTMLElement::Spellcheck()
   for (node = this; node; node = node->GetParent()) {
     if (node->IsHTMLElement()) {
       static Element::AttrValuesArray strings[] =
-        {&nsGkAtoms::_true, &nsGkAtoms::_false, nullptr};
+        {nsGkAtoms::_true, nsGkAtoms::_false, nullptr};
       switch (node->AsElement()->FindAttrValueIn(kNameSpaceID_None,
                                                  nsGkAtoms::spellcheck, strings,
                                                  eCaseMatters)) {
@@ -1222,49 +1222,49 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
 
 /* static */ const nsGenericHTMLElement::MappedAttributeEntry
 nsGenericHTMLElement::sCommonAttributeMap[] = {
-  { &nsGkAtoms::contenteditable },
-  { &nsGkAtoms::lang },
-  { &nsGkAtoms::hidden },
+  { nsGkAtoms::contenteditable },
+  { nsGkAtoms::lang },
+  { nsGkAtoms::hidden },
   { nullptr }
 };
 
 /* static */ const Element::MappedAttributeEntry
 nsGenericHTMLElement::sImageMarginSizeAttributeMap[] = {
-  { &nsGkAtoms::width },
-  { &nsGkAtoms::height },
-  { &nsGkAtoms::hspace },
-  { &nsGkAtoms::vspace },
+  { nsGkAtoms::width },
+  { nsGkAtoms::height },
+  { nsGkAtoms::hspace },
+  { nsGkAtoms::vspace },
   { nullptr }
 };
 
 /* static */ const Element::MappedAttributeEntry
 nsGenericHTMLElement::sImageAlignAttributeMap[] = {
-  { &nsGkAtoms::align },
+  { nsGkAtoms::align },
   { nullptr }
 };
 
 /* static */ const Element::MappedAttributeEntry
 nsGenericHTMLElement::sDivAlignAttributeMap[] = {
-  { &nsGkAtoms::align },
+  { nsGkAtoms::align },
   { nullptr }
 };
 
 /* static */ const Element::MappedAttributeEntry
 nsGenericHTMLElement::sImageBorderAttributeMap[] = {
-  { &nsGkAtoms::border },
+  { nsGkAtoms::border },
   { nullptr }
 };
 
 /* static */ const Element::MappedAttributeEntry
 nsGenericHTMLElement::sBackgroundAttributeMap[] = {
-  { &nsGkAtoms::background },
-  { &nsGkAtoms::bgcolor },
+  { nsGkAtoms::background },
+  { nsGkAtoms::bgcolor },
   { nullptr }
 };
 
 /* static */ const Element::MappedAttributeEntry
 nsGenericHTMLElement::sBackgroundColorAttributeMap[] = {
-  { &nsGkAtoms::bgcolor },
+  { nsGkAtoms::bgcolor },
   { nullptr }
 };
 

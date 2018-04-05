@@ -350,9 +350,9 @@ this.XPIDatabase = {
    * 1) Perfectly good, up to date database
    * 2) Out of date JSON database needs to be upgraded => upgrade
    * 3) JSON database exists but is mangled somehow => build new JSON
-   * 4) no JSON DB, but a useable SQLITE db we can upgrade from => upgrade
+   * 4) no JSON DB, but a usable SQLITE db we can upgrade from => upgrade
    * 5) useless SQLITE DB => build new JSON
-   * 6) useable RDF DB => upgrade
+   * 6) usable RDF DB => upgrade
    * 7) useless RDF DB => build new JSON
    * 8) Nothing at all => build new JSON
    * @param  aRebuildOnError
@@ -1525,7 +1525,7 @@ this.XPIDatabaseReconcile = {
     let previousVisible = this.getVisibleAddons(previousAddons);
     let currentVisible = this.flattenByID(currentAddons, hideLocation);
 
-    // Pass over the new set of visible add-ons, record any changes that occured
+    // Pass over the new set of visible add-ons, record any changes that occurred
     // during startup and call bootstrap install/uninstall scripts as necessary
     for (let [id, currentAddon] of currentVisible) {
       let previousAddon = previousVisible.get(id);

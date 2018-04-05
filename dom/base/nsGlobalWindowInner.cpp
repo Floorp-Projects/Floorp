@@ -2848,10 +2848,8 @@ const InterfaceShimEntry kInterfaceShimMap[] =
   { "nsIDOMMouseEvent", "MouseEvent" },
   { "nsIDOMMouseScrollEvent", "MouseScrollEvent" },
   { "nsIDOMMutationEvent", "MutationEvent" },
-  { "nsIDOMSimpleGestureEvent", "SimpleGestureEvent" },
   { "nsIDOMUIEvent", "UIEvent" },
   { "nsIDOMHTMLMediaElement", "HTMLMediaElement" },
-  { "nsIDOMOfflineResourceList", "OfflineResourceList" },
   { "nsIDOMRange", "Range" },
   { "nsIDOMSVGLength", "SVGLength" },
   // Think about whether Ci.nsINodeFilter can just go away for websites!

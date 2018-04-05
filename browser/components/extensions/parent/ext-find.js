@@ -98,7 +98,7 @@ this.find = class extends ExtensionAPI {
 
         /**
          * browser.find.removeHighlighting
-         * Removes all hightlighting from previous search.
+         * Removes all highlighting from previous search.
          *
          * @param {number} tabId optional
          *                 Tab to clear highlighting in.  Defaults to the active tab.

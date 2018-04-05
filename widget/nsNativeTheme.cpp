@@ -410,8 +410,8 @@ nsNativeTheme::GetScrollbarButtonType(nsIFrame* aFrame)
     return 0;
 
   static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::scrollbarDownBottom, &nsGkAtoms::scrollbarDownTop,
-     &nsGkAtoms::scrollbarUpBottom, &nsGkAtoms::scrollbarUpTop,
+    {nsGkAtoms::scrollbarDownBottom, nsGkAtoms::scrollbarDownTop,
+     nsGkAtoms::scrollbarUpBottom, nsGkAtoms::scrollbarUpTop,
      nullptr};
 
   nsIContent* content = aFrame->GetContent();
@@ -439,7 +439,7 @@ nsNativeTheme::GetTreeSortDirection(nsIFrame* aFrame)
     return eTreeSortDirection_Natural;
 
   static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::descending, &nsGkAtoms::ascending, nullptr};
+    {nsGkAtoms::descending, nsGkAtoms::ascending, nullptr};
 
   nsIContent* content = aFrame->GetContent();
   if (content->IsElement()) {

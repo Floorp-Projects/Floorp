@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Ensure APZ doesn't wait for passive listeners</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+var touchdownTime;
+
+function longPressLink() {
+  synthesizeNativeTouch(document.getElementById('b'), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
+    dump("Finished synthesizing touch-start, waiting for events...\n");
+  });
+}
+
+var touchstartReceived = false;
+function recordEvent(e) {
+  if (!touchstartReceived) {
+    touchstartReceived = true;
+    is(e.type, 'touchstart', 'Got a touchstart');
+    e.preventDefault(); // should be a no-op because it's a passive listener
+    return;
+  }
+
+  // If APZ decides to wait for the content response on a particular input block,
+  // it needs to wait until both the touchstart and touchmove event are handled
+  // by the main thread. In this case there is no touchmove at all, so APZ would
+  // end up waiting indefinitely and time out the test. The fact that we get this
+  // contextmenu event (mouselongtap on Windows) at all means that APZ decided
+  // not to wait for the content response, which is the desired behaviour, since
+  // the touchstart listener was registered as a passive listener.
+  if (getPlatform() == "windows") {
+    is(e.type, 'mouselongtap', 'Got a mouselongtap');
+  } else {
+    is(e.type, 'contextmenu', 'Got a contextmenu');
+  }
+  e.preventDefault();
+
+  synthesizeNativeTouch(document.getElementById('b'), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
+    dump("Finished synthesizing touch-end to clear state; finishing test...\n");
+    subtestDone();
+  });
+}
+
+// Note, not passing 'passive'.
+window.addEventListener('touchstart', recordEvent, { capture: true });
+if (getPlatform() == "windows") {
+  SpecialPowers.addChromeEventListener('mouselongtap', recordEvent, true);
+} else {
+  window.addEventListener('contextmenu', recordEvent, true);
+}
+
+waitUntilApzStable()
+.then(longPressLink);
+
+  </script>
+</head>
+<body>
+  <a id="b" href="#">Link to nowhere</a>
+  <script>
+    function preventDefaultListener(e) {
+      e.preventDefault();
+    }
+    document.addEventListener("touchstart", preventDefaultListener, { capture: true });
+    document.documentElement.addEventListener("touchstart", preventDefaultListener, { capture: true });
+    document.body.addEventListener("touchstart", preventDefaultListener, { capture: true });
+  </script>
+</body>
+</html>

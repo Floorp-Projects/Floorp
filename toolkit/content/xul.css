@@ -110,7 +110,7 @@ button[type="repeat"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#button-repeat");
 }
 
-button[type="menu"], button[type="panel"] {
+button[type="menu"] {
   -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
 }
 
@@ -134,13 +134,11 @@ toolbarbutton.badged-button {
   display: none;
 }
 
-toolbarbutton[type="menu"],
-toolbarbutton[type="panel"] {
+toolbarbutton[type="menu"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu");
 }
 
-toolbarbutton.badged-button[type="menu"],
-toolbarbutton.badged-button[type="panel"] {
+toolbarbutton.badged-button[type="menu"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-badged-menu");
 }
 

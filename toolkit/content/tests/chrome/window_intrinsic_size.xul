@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<window title="Window Open Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="300">
+<div xmlns="http://www.w3.org/1999/xhtml" style="height: 500px"></div>
+</window>

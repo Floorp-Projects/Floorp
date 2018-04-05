@@ -5,13 +5,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebIDLGlobalNameHash.h"
+#include "js/Class.h"
 #include "js/GCAPI.h"
+#include "js/Id.h"
 #include "js/Wrapper.h"
+#include "jsapi.h"
+#include "jsfriendapi.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
+#include "mozilla/dom/JSSlots.h"
 #include "mozilla/dom/PrototypeList.h"
 #include "mozilla/dom/RegisterBindings.h"
 #include "nsGlobalWindow.h"
@@ -65,14 +70,14 @@ struct WebIDLNameTableEntry : public PLDHashEntryHdr
     : mNameOffset(0),
       mNameLength(0),
       mConstructorId(constructors::id::_ID_Count),
-      mDefine(nullptr),
+      mCreate(nullptr),
       mEnabled(nullptr)
   {}
   WebIDLNameTableEntry(WebIDLNameTableEntry&& aEntry)
     : mNameOffset(aEntry.mNameOffset),
       mNameLength(aEntry.mNameLength),
       mConstructorId(aEntry.mConstructorId),
-      mDefine(aEntry.mDefine),
+      mCreate(aEntry.mCreate),
       mEnabled(aEntry.mEnabled)
   {}
   ~WebIDLNameTableEntry()
@@ -109,7 +114,7 @@ struct WebIDLNameTableEntry : public PLDHashEntryHdr
   uint16_t mNameOffset;
   uint16_t mNameLength;
   constructors::id::ID mConstructorId;
-  WebIDLGlobalNameHash::DefineGlobalName mDefine;
+  CreateInterfaceObjectsMethod mCreate;
   // May be null if enabled unconditionally
   WebIDLGlobalNameHash::ConstructorEnabled mEnabled;
 };
@@ -162,7 +167,7 @@ WebIDLGlobalNameHash::Shutdown()
 /* static */
 void
 WebIDLGlobalNameHash::Register(uint16_t aNameOffset, uint16_t aNameLength,
-                               DefineGlobalName aDefine,
+                               CreateInterfaceObjectsMethod aCreate,
                                ConstructorEnabled aEnabled,
                                constructors::id::ID aConstructorId)
 {
@@ -171,7 +176,7 @@ WebIDLGlobalNameHash::Register(uint16_t aNameOffset, uint16_t aNameLength,
   WebIDLNameTableEntry* entry = sWebIDLGlobalNames->PutEntry(key);
   entry->mNameOffset = aNameOffset;
   entry->mNameLength = aNameLength;
-  entry->mDefine = aDefine;
+  entry->mCreate = aCreate;
   entry->mEnabled = aEnabled;
   entry->mConstructorId = aConstructorId;
 }
@@ -182,6 +187,35 @@ WebIDLGlobalNameHash::Remove(const char* aName, uint32_t aLength)
 {
   WebIDLNameTableKey key(aName, aLength);
   sWebIDLGlobalNames->RemoveEntry(key);
+}
+
+static JSObject*
+FindNamedConstructorForXray(JSContext* aCx, JS::Handle<jsid> aId,
+                            const WebIDLNameTableEntry* aEntry)
+{
+  JSObject* interfaceObject =
+    GetPerInterfaceObjectHandle(aCx, aEntry->mConstructorId,
+                                aEntry->mCreate,
+                                /* aDefineOnGlobal = */ false);
+  if (!interfaceObject) {
+    return nullptr;
+  }
+
+  // This is a call over Xrays, so we will actually use the return value
+  // (instead of just having it defined on the global now).  Check for named
+  // constructors with this id, in case that's what the caller is asking for.
+  for (unsigned slot = DOM_INTERFACE_SLOTS_BASE;
+       slot < JSCLASS_RESERVED_SLOTS(js::GetObjectClass(interfaceObject));
+       ++slot) {
+    JSObject* constructor = &js::GetReservedSlot(interfaceObject, slot).toObject();
+    if (JS_GetFunctionId(JS_GetObjectFunction(constructor)) == JSID_TO_STRING(aId)) {
+      return constructor;
+    }
+  }
+
+  // None of the named constructors match, so the caller must want the
+  // interface object itself.
+  return interfaceObject;
 }
 
 /* static */
@@ -272,24 +306,26 @@ WebIDLGlobalNameHash::DefineIfEnabled(JSContext* aCx,
   // This all could use some grand refactoring, but for now we just limp
   // along.
   if (xpc::WrapperFactory::IsXrayWrapper(aObj)) {
-    JS::Rooted<JSObject*> interfaceObject(aCx);
+    JS::Rooted<JSObject*> constructor(aCx);
     {
       JSAutoCompartment ac(aCx, global);
-      interfaceObject = entry->mDefine(aCx, global, aId, false);
+      constructor = FindNamedConstructorForXray(aCx, aId, entry);
     }
-    if (NS_WARN_IF(!interfaceObject)) {
+    if (NS_WARN_IF(!constructor)) {
       return Throw(aCx, NS_ERROR_FAILURE);
     }
-    if (!JS_WrapObject(aCx, &interfaceObject)) {
+    if (!JS_WrapObject(aCx, &constructor)) {
       return Throw(aCx, NS_ERROR_FAILURE);
     }
 
-    FillPropertyDescriptor(aDesc, aObj, 0, JS::ObjectValue(*interfaceObject));
+    FillPropertyDescriptor(aDesc, aObj, 0, JS::ObjectValue(*constructor));
     return true;
   }
 
   JS::Rooted<JSObject*> interfaceObject(aCx,
-                                        entry->mDefine(aCx, aObj, aId, true));
+    GetPerInterfaceObjectHandle(aCx, entry->mConstructorId,
+                                entry->mCreate,
+                                /* aDefineOnGlobal = */ true));
   if (NS_WARN_IF(!interfaceObject)) {
     return Throw(aCx, NS_ERROR_FAILURE);
   }

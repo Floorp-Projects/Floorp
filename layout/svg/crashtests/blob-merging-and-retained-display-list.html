@@ -1,0 +1,62 @@
+<!doctype html>
+<html class="reftest-wait">
+<script>
+        var r = 40;
+        var xmlns = "http://www.w3.org/2000/svg";
+        const raf = f => requestAnimationFrame(f);
+        function rect(x, y) {
+            var r = document.createElementNS (xmlns, "rect");
+            r.setAttribute("x", x);
+            r.setAttribute("y", y);
+            r.setAttribute("width", "100");
+            r.setAttribute("height", "100");
+            r.setAttribute("fill", "blue");
+            return r;
+        }
+        function f1() {
+            svg = document.getElementById("cnvs");
+            svg.appendChild(rect(0, 0));
+            svg.appendChild(rect(600, 0));
+            svg.appendChild(rect(600, 400));
+            svg.appendChild(rect(0, 400));
+            let a = rect(110, 110);
+            let b = rect(120, 120);
+            let c = rect(130, 130);
+            let d = rect(140, 140);
+            let a2 = rect(310, 140);
+            let b2 = rect(320, 130);
+            let c2 = rect(330, 120);
+            let d2 = rect(340, 110);
+            raf(() => {
+                svg.appendChild(a);
+                svg.appendChild(b);
+                svg.appendChild(c);
+                svg.appendChild(d);
+                raf(() => {
+                    // the display list partial update will end up with these items before x,y,w,z
+                    svg.appendChild(d2);
+                    svg.appendChild(c2);
+                    svg.appendChild(b2);
+                    svg.appendChild(a2);
+                    raf(() => {
+                        // this forces all the items to be ordered and makes the new display list
+                        // contain reorded items outside of the invalid area
+                        let mix = rect(220, 220);
+                        svg.insertBefore(mix, d2);
+                        raf(() => { document.documentElement.className = "" });
+                    })
+                })
+            })
+        }
+
+        function f() {
+                requestAnimationFrame(f1);
+        }
+
+        onload = f;
+</script>
+
+<body>
+<svg width="700" height="600" id=cnvs>
+
+</svg>

@@ -1,4 +1,4 @@
-52568
+52579
 0/nm
 0th/pt
 1/n1
@@ -23075,6 +23075,7 @@ discourage/LGDS
 discouragement/SM
 discouraging/Y
 discover/ABSDG
+discoverability
 discovered/U
 discoverer/MS
 discovery/ASM
@@ -23494,6 +23495,8 @@ doorstepping
 doorstop/MS
 doorway/SM
 dooryard/MS
+doozie
+doozy
 dopa/M
 dopamine
 dope/MZGDRS
@@ -23900,7 +23903,7 @@ duper/M
 duple
 duplex/MS
 duplicate's
-duplicate/AGNDS
+duplicate/AGNDSV
 duplication/AM
 duplicator/MS
 duplicitous
@@ -27777,6 +27780,7 @@ germicide/MS
 germinal/M
 germinate/GNDS
 germination/M
+gerontocracy
 gerontological
 gerontologist/MS
 gerontology/M
@@ -32154,6 +32158,7 @@ kaffeeklatch/MS
 kaffeeklatsch/MS
 kahuna/S
 kaiser/MS
+kakistocracy
 kale/M
 kaleidoscope/MS
 kaleidoscopic
@@ -36962,6 +36967,7 @@ nympho/S
 nymphomania/M
 nymphomaniac/SM
 nymphs
+nystagmus
 née
 o
 o'clock
@@ -39636,7 +39642,7 @@ playtime/M
 playwright/SM
 plaza/MS
 plea/MS
-plead/DRZGSJ
+plead/DRZGSJA
 pleader/M
 pleading/MY
 pleasant/UTYP
@@ -40194,6 +40200,7 @@ practice/DSMGB
 practiced/U
 practicum/SM
 practitioner/SM
+praecipe
 praetor/SM
 praetorian
 pragmatic/MS
@@ -42086,6 +42093,7 @@ registrant/MS
 registrar/MS
 registration/SM
 registry/SM
+reglet
 regnant
 regress/MDSGV
 regression/MS
@@ -43585,7 +43593,7 @@ schedule's
 schedule/ADSG
 scheduled/U
 scheduler/S
-schema
+schema/S
 schemata
 schematic/SM
 schematically
@@ -46721,6 +46729,7 @@ stopper/GSMD
 stopping/U
 stopple/DSMG
 stopwatch/MS
+stopword/S
 storage/M
 store's
 store/ADSG
@@ -51814,6 +51823,7 @@ wickedness/M
 wicker/M
 wickerwork/M
 wicket/SM
+wicking/S
 wide/YTRP
 widemouthed
 widen/SDRZG
@@ -52299,6 +52309,7 @@ xcix
 xcvi
 xcvii
 xenon/M
+xenophile/S
 xenophobe/MS
 xenophobia/M
 xenophobic

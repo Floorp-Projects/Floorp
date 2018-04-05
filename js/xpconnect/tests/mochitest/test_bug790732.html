@@ -33,12 +33,8 @@ async function doTest() {
   is(Ci.nsIDOMMouseEvent, MouseEvent);
   is(Ci.nsIDOMMouseScrollEvent, MouseScrollEvent);
   is(Ci.nsIDOMMutationEvent, MutationEvent);
-  // XXX We can't test this here because it's only exposed to chrome
-  //is(Ci.nsIDOMSimpleGestureEvent, SimpleGestureEvent);
   is(Ci.nsIDOMUIEvent, UIEvent);
   is(Ci.nsIDOMHTMLMediaElement, HTMLMediaElement);
-  // We can't test this here as it's been restricted to secure contexts in non release
-  //is(Ci.nsIDOMOfflineResourceList, OfflineResourceList);
   is(Ci.nsIDOMRange, Range);
   is(Ci.nsIDOMNodeFilter, NodeFilter);
   is(Ci.nsIDOMXPathResult, XPathResult);

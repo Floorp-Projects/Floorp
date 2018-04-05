@@ -181,9 +181,9 @@ NS_IMETHODIMP_(bool)
 HTMLTableSectionElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsGkAtoms::align },
-    { &nsGkAtoms::valign },
-    { &nsGkAtoms::height },
+    { nsGkAtoms::align },
+    { nsGkAtoms::valign },
+    { nsGkAtoms::height },
     { nullptr }
   };
 

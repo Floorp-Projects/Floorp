@@ -505,7 +505,7 @@ this.devtools_panels = class extends ExtensionAPI {
     // (used by Sidebar.setExpression).
     let waitForInspectedWindowFront;
 
-    // TODO - Bug 1448878: retrive a more detailed callerInfo object,
+    // TODO - Bug 1448878: retrieve a more detailed callerInfo object,
     // like the filename and lineNumber of the actual extension called
     // in the child process.
     const callerInfo = {

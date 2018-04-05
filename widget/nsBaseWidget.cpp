@@ -1761,8 +1761,35 @@ nsBaseWidget::ResolveIconName(const nsAString &aIconName,
 void nsBaseWidget::SetSizeConstraints(const SizeConstraints& aConstraints)
 {
   mSizeConstraints = aConstraints;
-  // We can't ensure that the size is honored at this point because we're
-  // probably in the middle of a reflow.
+
+  // Popups are constrained during layout, and we don't want to synchronously
+  // paint from reflow, so bail out... This is not great, but it's no worse than
+  // what we used to do.
+  //
+  // The right fix here is probably making constraint changes go through the
+  // view manager and such.
+  if (mWindowType == eWindowType_popup) {
+    return;
+  }
+
+  // If the current size doesn't meet the new constraints, trigger a
+  // resize to apply it. Note that, we don't want to invoke Resize if
+  // the new constraints don't affect the current size, because Resize
+  // implementation on some platforms may touch other geometry even if
+  // the size don't need to change.
+  LayoutDeviceIntSize curSize = mBounds.Size();
+  LayoutDeviceIntSize clampedSize =
+    Max(aConstraints.mMinSize, Min(aConstraints.mMaxSize, curSize));
+  if (clampedSize != curSize) {
+    gfx::Size size;
+    if (BoundsUseDesktopPixels()) {
+      DesktopSize desktopSize = clampedSize / GetDesktopToDeviceScale();
+      size = desktopSize.ToUnknownSize();
+    } else {
+      size = gfx::Size(clampedSize.ToUnknownSize());
+    }
+    Resize(size.width, size.height, true);
+  }
 }
 
 const widget::SizeConstraints nsBaseWidget::GetSizeConstraints()

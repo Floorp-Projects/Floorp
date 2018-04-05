@@ -254,6 +254,10 @@
 
       "type": "object",
       "properties": {
+        "InvalidCertificate": {
+          "type": "boolean"
+        },
+
         "SafeBrowsing": {
           "type": "boolean"
         }
@@ -518,6 +522,13 @@
 
     "RememberPasswords": {
       "description": "Enforces the setting to allow Firefox to remember saved logins and passwords. Both true and false values are accepted.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
+    "SanitizeOnShutdown": {
+      "description": "Clears ALL browser data on shutdown.",
       "first_available": "60.0",
 
       "type": "boolean"

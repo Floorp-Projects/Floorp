@@ -262,7 +262,7 @@ this.ExtensionPreferencesManager = {
 
   /**
    * Enables all disabled settings for an extension. This can be called when
-   * an extension has finsihed updating or is being re-enabled, for example.
+   * an extension has finished updating or is being re-enabled, for example.
    *
    * @param {string} id
    *        The id of the extension for which all settings are being enabled.
