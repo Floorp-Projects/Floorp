@@ -271,32 +271,11 @@ MediaDevices::SetOndevicechange(mozilla::dom::EventHandlerNonNull* aCallback)
   MediaManager::Get()->AddDeviceChangeCallback(this);
 }
 
-nsresult
-MediaDevices::AddEventListener(const nsAString& aType,
-                               nsIDOMEventListener* aListener,
-                               bool aUseCapture,
-                               const Nullable<bool>& aWantsUntrusted)
-{
-  MediaManager::Get()->AddDeviceChangeCallback(this);
-
-  return DOMEventTargetHelper::AddEventListener(aType, aListener,
-                                                aUseCapture,
-                                                aWantsUntrusted);
-}
-
 void
-MediaDevices::AddEventListener(const nsAString& aType,
-                               EventListener* aListener,
-                               const AddEventListenerOptionsOrBoolean& aOptions,
-                               const Nullable<bool>& aWantsUntrusted,
-                               ErrorResult& aRv)
+MediaDevices::EventListenerAdded(nsAtom* aType)
 {
   MediaManager::Get()->AddDeviceChangeCallback(this);
-
-  return DOMEventTargetHelper::AddEventListener(aType, aListener,
-                                                aOptions,
-                                                aWantsUntrusted,
-                                                aRv);
+  DOMEventTargetHelper::EventListenerAdded(aType);
 }
 
 JSObject*

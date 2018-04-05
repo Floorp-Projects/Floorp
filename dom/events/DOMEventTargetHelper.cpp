@@ -174,13 +174,8 @@ DOMEventTargetHelper::GetDocumentIfCurrent() const
 }
 
 bool
-DOMEventTargetHelper::ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted,
-                                            ErrorResult& aRv)
+DOMEventTargetHelper::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
 {
-  if (!aWantsUntrusted.IsNull()) {
-    return aWantsUntrusted.Value();
-  }
-  
   bool wantsUntrusted;
   nsresult rv = WantsUntrusted(&wantsUntrusted);
   if (NS_FAILED(rv)) {
@@ -188,45 +183,6 @@ DOMEventTargetHelper::ComputeWantsUntrusted(const Nullable<bool>& aWantsUntruste
     return false;
   }
   return wantsUntrusted;
-}
-
-nsresult
-DOMEventTargetHelper::AddEventListener(const nsAString& aType,
-                                       nsIDOMEventListener* aListener,
-                                       bool aUseCapture,
-                                       const Nullable<bool>& aWantsUntrusted)
-{
-  ErrorResult rv;
-  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  EventListenerManager* elm = GetOrCreateListenerManager();
-  NS_ENSURE_STATE(elm);
-  elm->AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
-  return NS_OK;
-}
-
-void
-DOMEventTargetHelper::AddEventListener(const nsAString& aType,
-                                       EventListener* aListener,
-                                       const AddEventListenerOptionsOrBoolean& aOptions,
-                                       const Nullable<bool>& aWantsUntrusted,
-                                       ErrorResult& aRv)
-{
-  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  EventListenerManager* elm = GetOrCreateListenerManager();
-  if (!elm) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  elm->AddEventListener(aType, aListener, aOptions, wantsUntrusted);
 }
 
 NS_IMETHODIMP
