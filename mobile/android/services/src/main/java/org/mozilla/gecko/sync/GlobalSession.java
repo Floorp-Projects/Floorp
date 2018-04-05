@@ -283,6 +283,19 @@ public class GlobalSession implements HttpResponseObserver {
       return;
     }
 
+    // Bug 1442248. The right fix for this is to figure out why we're reaching
+    // `session.advance()` in `ServerSyncStage.onSynchronizeFailed(_, _, _)` after
+    // the session has been cleaned up. It might be that we're cleaning up/aborting when
+    // we shouldn't -- e.g., line 685 of `ServerSyncStage.java` is where we should bail
+    // out if we've aborted, and that's not the case.
+    //
+    // In the absence of someone with the time and tools to figure this out, let's just
+    // bail out here.
+    if (this.stages == null) {
+      Logger.info("Not advancing: stages cleaned up.");
+      return;
+    }
+
     this.callback.handleStageCompleted(this.currentState, this);
     Stage next = nextStage(this.currentState);
     GlobalSyncStage nextStage;
