@@ -47,6 +47,7 @@ public class MmaDelegate {
     public static final String SAVED_LOGIN_AND_PASSWORD = "E_Saved_Login_And_Password";
     public static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
     public static final String LAUNCH_BROWSER = "E_Launch_Browser";
+    public static final String RESUMED_FROM_BACKGROUND = "E_Resumed_From_Background";
     public static final String NEW_TAB = "E_Opened_New_Tab";
     public static final String DISMISS_ONBOARDING = "E_Dismiss_Onboarding";
 
