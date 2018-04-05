@@ -20,7 +20,6 @@
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 <!ENTITY % selectBookmarkDTD SYSTEM
   "chrome://browser/locale/preferences/selectBookmark.dtd">
-<!ENTITY % languagesDTD SYSTEM "chrome://browser/locale/preferences/languages.dtd">
 <!ENTITY % permissionsDTD SYSTEM "chrome://browser/locale/preferences/permissions.dtd">
 <!ENTITY % passwordManagerDTD SYSTEM "chrome://passwordmgr/locale/passwordManager.dtd">
 <!ENTITY % historyDTD SYSTEM "chrome://mozapps/locale/update/history.dtd">
@@ -38,7 +37,6 @@
 %aboutDialogDTD;
 %brandDTD;
 %selectBookmarkDTD;
-%languagesDTD;
 %permissionsDTD;
 %passwordManagerDTD;
 %historyDTD;
@@ -73,6 +71,7 @@
   <link rel="localization" href="browser/preferences/colors.ftl"/>
   <link rel="localization" href="browser/preferences/connection.ftl"/>
   <link rel="localization" href="browser/preferences/fonts.ftl"/>
+  <link rel="localization" href="browser/preferences/languages.ftl"/>
 
   <script type="text/javascript" src="chrome://global/content/l10n.js"></script>
 

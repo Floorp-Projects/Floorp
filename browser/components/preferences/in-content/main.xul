@@ -301,13 +301,15 @@
       <button id="chooseLanguage"
               class="accessory-button"
               data-l10n-id="choose-button"
-              searchkeywords="&languages.customize.Header;
-                              &languages.customize2.description;
-                              &languages.customize.moveUp.label;
-                              &languages.customize.moveDown.label;
-                              &languages.customize.deleteButton.label;
-                              &languages.customize.selectLanguage.label;
-                              &languages.customize.addButton.label;"/>
+              search-l10n-ids="
+                languages-window.title,
+                languages-description,
+                languages-customize-moveup.label,
+                languages-customize-movedown.label,
+                languages-customize-remove.label,
+                languages-customize-select-language.label,
+                languages-customize-add.label,
+              " />
     </hbox>
   </hbox>
 
