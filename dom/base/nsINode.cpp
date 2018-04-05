@@ -1089,18 +1089,6 @@ nsINode::AddSystemEventListener(const nsAString& aType,
                                    aWantsUntrusted);
 }
 
-NS_IMETHODIMP
-nsINode::RemoveEventListener(const nsAString& aType,
-                             nsIDOMEventListener* aListener,
-                             bool aUseCapture)
-{
-  EventListenerManager* elm = GetExistingListenerManager();
-  if (elm) {
-    elm->RemoveEventListener(aType, aListener, aUseCapture);
-  }
-  return NS_OK;
-}
-
 NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsINode)
 
 nsresult

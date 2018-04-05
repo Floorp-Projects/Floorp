@@ -39,6 +39,17 @@ EventTarget::RemoveEventListener(const nsAString& aType,
   }
 }
 
+void
+EventTarget::RemoveEventListener(const nsAString& aType,
+                                 nsIDOMEventListener* aListener,
+                                 bool aUseCapture)
+{
+  EventListenerManager* elm = GetExistingListenerManager();
+  if (elm) {
+    elm->RemoveEventListener(aType, aListener, aUseCapture);
+  }
+}
+
 EventHandlerNonNull*
 EventTarget::GetEventHandler(nsAtom* aType, const nsAString& aTypeString)
 {

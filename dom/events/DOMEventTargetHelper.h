@@ -73,7 +73,7 @@ public:
   virtual EventListenerManager* GetExistingListenerManager() const override;
   virtual EventListenerManager* GetOrCreateListenerManager() override;
 
-  using dom::EventTarget::RemoveEventListener;
+  using EventTarget::AddEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 dom::EventListener* aListener,
                                 const dom::AddEventListenerOptionsOrBoolean& aOptions,
@@ -239,9 +239,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DOMEventTargetHelper,
   NS_IMETHOD AddSystemEventListener(const nsAString & type, nsIDOMEventListener *listener, bool aUseCapture, bool aWantsUntrusted, uint8_t _argc) override { \
     return _to AddSystemEventListener(type, listener, aUseCapture, aWantsUntrusted, _argc); \
   } \
-  NS_IMETHOD RemoveEventListener(const nsAString & type, nsIDOMEventListener *listener, bool useCapture) override { \
-    return _to RemoveEventListener(type, listener, useCapture); \
-  } \
   NS_IMETHOD RemoveSystemEventListener(const nsAString & type, nsIDOMEventListener *listener, bool aUseCapture) override { \
     return _to RemoveSystemEventListener(type, listener, aUseCapture); \
   } \
@@ -277,7 +274,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DOMEventTargetHelper,
 
 #define NS_REALLY_FORWARD_NSIDOMEVENTTARGET(_class) \
   using _class::AddEventListener;                   \
-  using _class::RemoveEventListener;                \
   NS_FORWARD_NSIDOMEVENTTARGET(_class::)            \
   virtual mozilla::EventListenerManager*            \
   GetOrCreateListenerManager() override {           \

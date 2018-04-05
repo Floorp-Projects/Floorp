@@ -17,6 +17,7 @@
 #include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsAlgorithm.h"
@@ -29,7 +30,6 @@
 #include "nsROCSSPrimitiveValue.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMEventTarget.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsIDOMWindow.h"
 #include "nsIHTMLObjectResizer.h"
@@ -383,14 +383,12 @@ HTMLEditor::EndMoving()
 
     mPositioningShadow = nullptr;
   }
-  nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();
+  RefPtr<EventTarget> piTarget = GetDOMEventTarget();
 
   if (piTarget && mMouseMotionListenerP) {
-    DebugOnly<nsresult> rv =
-      piTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
-                                    mMouseMotionListenerP,
-                                    false);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove mouse motion listener");
+    piTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
+				  mMouseMotionListenerP,
+				  false);
   }
   mMouseMotionListenerP = nullptr;
 
