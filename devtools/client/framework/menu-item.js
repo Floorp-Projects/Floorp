@@ -23,6 +23,14 @@
  *
  * Implemented features:
  *  @param Object options
+ *    String accelerator
+ *      Text that appears beside the menu label to indicate the shortcut key
+ *      (accelerator key) to use to invoke the command.
+ *      Unlike the Electron API, this is a label only and does not actually
+ *      register a handler for the key.
+ *    String accesskey [non-standard]
+ *      A single character used as the shortcut key. This should be one of the
+ *      characters that appears in the label.
  *    Function click
  *      Will be called with click(menuItem, browserWindow) when the menu item
  *       is clicked
@@ -41,6 +49,7 @@
  *      If false, the menu item will be entirely hidden.
  */
 function MenuItem({
+    accelerator = null,
     accesskey = null,
     checked = false,
     click = () => {},
@@ -52,6 +61,7 @@ function MenuItem({
     type = "normal",
     visible = true,
 } = { }) {
+  this.accelerator = accelerator;
   this.accesskey = accesskey;
   this.checked = checked;
   this.click = click;
