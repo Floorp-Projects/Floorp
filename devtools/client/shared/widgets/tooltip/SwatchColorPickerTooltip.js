@@ -4,16 +4,12 @@
 
 "use strict";
 
-const Services = require("Services");
 const {colorUtils} = require("devtools/shared/css/color");
-const {ColorWidget} = require("devtools/client/shared/widgets/ColorWidget");
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
 const SwatchBasedEditorTooltip = require("devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/inspector.properties");
 
-const colorWidgetPref = "devtools.inspector.colorWidget.enabled";
-const NEW_COLOR_WIDGET = Services.prefs.getBoolPref(colorWidgetPref);
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -58,19 +54,14 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     container.id = "spectrum-tooltip";
 
     let widget;
-    let node = doc.createElementNS(XHTML_NS, "div");
 
-    if (NEW_COLOR_WIDGET) {
-      node.id = "colorwidget";
-      container.appendChild(node);
-      widget = new ColorWidget(node, color);
-      this.tooltip.setContent(container, { width: 218, height: 320 });
-    } else {
-      node.id = "spectrum";
-      container.appendChild(node);
-      widget = new Spectrum(node, color);
-      this.tooltip.setContent(container, { width: 218, height: 224 });
-    }
+    let node = doc.createElementNS(XHTML_NS, "div");
+    node.id = "spectrum";
+    container.appendChild(node);
+
+    widget = new Spectrum(node, color);
+    this.tooltip.setContent(container, { width: 218, height: 224 });
+
     widget.inspector = this.inspector;
 
     let eyedropper = doc.createElementNS(XHTML_NS, "button");

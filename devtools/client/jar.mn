@@ -97,7 +97,6 @@ devtools.jar:
     content/shared/widgets/graphs-frame.xhtml (shared/widgets/graphs-frame.xhtml)
     content/shared/widgets/cubic-bezier.css (shared/widgets/cubic-bezier.css)
     content/shared/widgets/filter-widget.css (shared/widgets/filter-widget.css)
-    content/shared/widgets/color-widget.css (shared/widgets/color-widget.css)
     content/shared/widgets/spectrum.css (shared/widgets/spectrum.css)
     content/aboutdebugging/aboutdebugging.xhtml (aboutdebugging/aboutdebugging.xhtml)
     content/aboutdebugging/aboutdebugging.css (aboutdebugging/aboutdebugging.css)
