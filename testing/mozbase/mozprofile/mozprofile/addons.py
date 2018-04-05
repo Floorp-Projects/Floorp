@@ -14,7 +14,6 @@ import hashlib
 from xml.dom import minidom
 
 from six import reraise, string_types
-from six.moves.urllib import request
 
 import mozfile
 from mozlog.unstructured import getLogger
@@ -56,9 +55,6 @@ class AddonManager(object):
         # Backup folder for already existing addons
         self.backup_dir = None
 
-        # Add-ons downloaded and which have to be removed from the file system
-        self.downloaded_addons = []
-
         # Information needed for profile reset (see http://bit.ly/17JesUf)
         self.installed_addons = []
 
@@ -81,10 +77,6 @@ class AddonManager(object):
             except IOError:
                 pass
 
-        # Remove all downloaded add-ons
-        for addon in self.downloaded_addons:
-            mozfile.remove(addon)
-
         # restore backups
         if self.backup_dir and os.path.isdir(self.backup_dir):
             extensions_path = os.path.join(self.profile, 'extensions')
@@ -98,36 +90,6 @@ class AddonManager(object):
 
         # reset instance variables to defaults
         self._internal_init()
-
-    @classmethod
-    def download(self, url, target_folder=None):
-        """
-        Downloads an add-on from the specified URL to the target folder
-
-        :param url: URL of the add-on (XPI file)
-        :param target_folder: Folder to store the XPI file in
-
-        """
-        response = request.urlopen(url)
-        fd, path = tempfile.mkstemp(suffix='.xpi')
-        os.write(fd, response.read())
-        os.close(fd)
-
-        if not self.is_addon(path):
-            mozfile.remove(path)
-            raise AddonFormatError('Not a valid add-on: %s' % url)
-
-        # Give the downloaded file a better name by using the add-on id
-        details = self.addon_details(path)
-        new_path = path.replace('.xpi', '_%s.xpi' % details.get('id'))
-
-        # Move the add-on to the target folder if requested
-        if target_folder:
-            new_path = os.path.join(target_folder, os.path.basename(new_path))
-
-        os.rename(path, new_path)
-
-        return new_path
 
     def get_addon_path(self, addon_id):
         """Returns the path to the installed add-on
@@ -296,17 +258,11 @@ class AddonManager(object):
 
     def install_from_path(self, path, unpack=False):
         """
-        Installs addon from a filepath, url or directory of addons in the profile.
+        Installs addon from a filepath or directory of addons in the profile.
 
-        :param path: url, path to .xpi, or directory of addons
+        :param path: path to .xpi or directory of addons
         :param unpack: whether to unpack unless specified otherwise in the install.rdf
         """
-        # if the addon is a URL, download it
-        # note that this won't work with protocols urllib2 doesn't support
-        if mozfile.is_url(path):
-            path = self.download(path)
-            self.downloaded_addons.append(path)
-
         addons = [path]
 
         # if path is not an add-on, try to install all contained add-ons
