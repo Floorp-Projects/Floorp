@@ -1133,22 +1133,16 @@ NS_IMETHODIMP
 ChromeTooltipListener::RemoveTooltipListener()
 {
   if (mEventTarget) {
-    nsresult rv = NS_OK;
 #ifndef XP_WIN
-    rv = mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"),
-                                                 this, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"),
+                                            this, false);
 #endif
-    rv = mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("mousedown"),
-                                                 this, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("mouseout"),
-                                                 this, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("mousemove"),
-                                                 this, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("mousedown"),
+                                            this, false);
+    mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("mouseout"),
+                                            this, false);
+    mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("mousemove"),
+                                            this, false);
     mTooltipListenerInstalled = false;
   }
 

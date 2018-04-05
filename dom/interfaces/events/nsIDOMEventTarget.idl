@@ -140,15 +140,6 @@ interface nsIDOMEventTarget : nsISupports
 %}
 
   /**
-   * removeSystemEventListener() should be used if you have used
-   * addSystemEventListener().
-   */
-  [noscript] void          removeSystemEventListener(
-                             in DOMString type,
-                             in nsIDOMEventListener listener,
-                             [optional] in boolean aUseCapture);
-
-  /**
    * This method allows the dispatch of events into the implementations 
    * event model. Events dispatched in this manner will have the same 
    * capturing and bubbling behavior as events dispatched directly by the 
@@ -248,23 +239,5 @@ interface nsIDOMEventTarget : nsISupports
 mozilla::dom::EventTarget* _class::GetTargetForDOMEvent() { return this; } \
 mozilla::dom::EventTarget* _class::GetTargetForEventTargetChain() { return this; } \
 nsresult _class::WillHandleEvent(mozilla::EventChainPostVisitor& aVisitor) { return NS_OK; }
-
-#define NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(aClass) \
-NS_IMETHODIMP \
-aClass::RemoveSystemEventListener(const nsAString& aType, \
-                                  nsIDOMEventListener *aListener, \
-                                  bool aUseCapture) \
-{ \
-  mozilla::EventListenerManager* listenerManager = \
-    GetExistingListenerManager(); \
-  if (!listenerManager) { \
-    return NS_OK; \
-  } \
-  mozilla::EventListenerFlags flags; \
-  flags.mInSystemGroup = true; \
-  flags.mCapture = aUseCapture; \
-  listenerManager->RemoveEventListenerByType(aListener, aType, flags); \
-  return NS_OK; \
-}
 
 %}
