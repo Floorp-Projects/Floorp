@@ -745,17 +745,14 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   }
 
 #ifdef DEBUG
-  if (aEvent->mMessage != eVoidEvent &&
+  if (NS_IsMainThread() &&
+      aEvent->mMessage != eVoidEvent &&
       !nsContentUtils::IsSafeToRunScript()) {
-    nsresult rv = NS_ERROR_FAILURE;
-    if (target->GetContextForEventHandlers(&rv) ||
-        NS_FAILED(rv)) {
-      nsCOMPtr<nsINode> node = do_QueryInterface(target);
-      if (node && nsContentUtils::IsChromeDoc(node->OwnerDoc())) {
-        NS_WARNING("Fix the caller!");
-      } else {
-        NS_ERROR("This is unsafe! Fix the caller!");
-      }
+    nsCOMPtr<nsINode> node = do_QueryInterface(target);
+    if (node && nsContentUtils::IsChromeDoc(node->OwnerDoc())) {
+      NS_WARNING("Fix the caller!");
+    } else {
+      NS_ERROR("This is unsafe! Fix the caller!");
     }
   }
 

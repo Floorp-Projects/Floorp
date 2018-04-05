@@ -1180,12 +1180,6 @@ nsINode::GetExistingListenerManager() const
   return nsContentUtils::GetExistingListenerManagerForNode(this);
 }
 
-nsIScriptContext*
-nsINode::GetContextForEventHandlers(nsresult* aRv)
-{
-  return nsContentUtils::GetContextForEventHandlers(this, aRv);
-}
-
 nsPIDOMWindowOuter*
 nsINode::GetOwnerGlobalForBindings()
 {

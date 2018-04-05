@@ -548,12 +548,7 @@ DataTransferItem::Data(nsIPrincipal* aPrincipal, ErrorResult& aRv)
   if (NS_SUCCEEDED(rv) && data) {
     nsCOMPtr<EventTarget> pt = do_QueryInterface(data);
     if (pt) {
-      nsIScriptContext* c = pt->GetContextForEventHandlers(&rv);
-      if (NS_WARN_IF(NS_FAILED(rv) || !c)) {
-        return nullptr;
-      }
-
-      nsIGlobalObject* go = c->GetGlobalObject();
+      nsIGlobalObject* go = pt->GetOwnerGlobal();
       if (NS_WARN_IF(!go)) {
         return nullptr;
       }
