@@ -947,12 +947,11 @@ Proxy::AddRemoveEventListeners(bool aUpload, bool aAdd)
                (!mUploadEventListenersAttached && aAdd),
                "Messed up logic for upload listeners!");
 
-  DOMEventTargetHelper* targetHelper =
+  RefPtr<DOMEventTargetHelper> targetHelper =
     aUpload ?
     static_cast<XMLHttpRequestUpload*>(mXHRUpload.get()) :
     static_cast<XMLHttpRequestEventTarget*>(mXHR.get());
   MOZ_ASSERT(targetHelper, "This should never fail!");
-  nsCOMPtr<nsIDOMEventTarget> target = targetHelper;
 
   uint32_t lastEventType = aUpload ? STRING_LAST_EVENTTARGET : STRING_LAST_XHR;
 
@@ -960,12 +959,12 @@ Proxy::AddRemoveEventListeners(bool aUpload, bool aAdd)
   for (uint32_t index = 0; index <= lastEventType; index++) {
     eventType = NS_ConvertASCIItoUTF16(sEventStrings[index]);
     if (aAdd) {
-      if (NS_FAILED(target->AddEventListener(eventType, this, false))) {
+      if (NS_FAILED(targetHelper->AddEventListener(eventType, this, false))) {
         return false;
       }
     }
-    else if (NS_FAILED(target->RemoveEventListener(eventType, this, false))) {
-      return false;
+    else {
+      targetHelper->RemoveEventListener(eventType, this, false);
     }
   }
 
@@ -1062,9 +1061,7 @@ LoadStartDetectionRunnable::Run()
 {
   AssertIsOnMainThread();
 
-  if (NS_FAILED(mXHR->RemoveEventListener(mEventType, this, false))) {
-    NS_WARNING("Failed to remove event listener!");
-  }
+  mXHR->RemoveEventListener(mEventType, this, false);
 
   if (!mReceivedLoadStart) {
     if (mProxy->mOutstandingSendCount > 1) {

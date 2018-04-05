@@ -175,19 +175,6 @@ DOMEventTargetHelper::GetDocumentIfCurrent() const
   return win->GetDoc();
 }
 
-NS_IMETHODIMP
-DOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
-                                          nsIDOMEventListener* aListener,
-                                          bool aUseCapture)
-{
-  EventListenerManager* elm = GetExistingListenerManager();
-  if (elm) {
-    elm->RemoveEventListener(aType, aListener, aUseCapture);
-  }
-
-  return NS_OK;
-}
-
 NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(DOMEventTargetHelper)
 
 NS_IMETHODIMP

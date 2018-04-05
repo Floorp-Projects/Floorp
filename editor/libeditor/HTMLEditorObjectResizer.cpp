@@ -14,6 +14,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/dom/MouseEvent.h"
+#include "mozilla/dom/EventTarget.h"
 #include "nsAString.h"
 #include "nsAlgorithm.h"
 #include "nsCOMPtr.h"
@@ -26,7 +27,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsISupportsUtils.h"
@@ -413,13 +413,12 @@ HTMLEditor::HideResizers()
 
   // don't forget to remove the listeners !
 
-  nsCOMPtr<nsIDOMEventTarget> target = GetDOMEventTarget();
+  // nsCOMPtr so we can do_QueryInterface into it.
+  nsCOMPtr<EventTarget> target = GetDOMEventTarget();
 
   if (target && mMouseMotionListenerP) {
-    DebugOnly<nsresult> rv =
-      target->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
-                                  mMouseMotionListenerP, true);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove mouse motion listener");
+    target->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
+                                mMouseMotionListenerP, true);
   }
   mMouseMotionListenerP = nullptr;
 
@@ -433,10 +432,8 @@ HTMLEditor::HideResizers()
   }
 
   if (mResizeEventListenerP) {
-    DebugOnly<nsresult> rv =
-      target->RemoveEventListener(NS_LITERAL_STRING("resize"),
-                                  mResizeEventListenerP, false);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove resize event listener");
+    target->RemoveEventListener(NS_LITERAL_STRING("resize"),
+                                mResizeEventListenerP, false);
   }
   mResizeEventListenerP = nullptr;
 

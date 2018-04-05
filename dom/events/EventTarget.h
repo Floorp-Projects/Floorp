@@ -47,17 +47,24 @@ public:
   static already_AddRefed<EventTarget> Constructor(const GlobalObject& aGlobal,
                                                    ErrorResult& aRv);
   using nsIDOMEventTarget::AddEventListener;
-  using nsIDOMEventTarget::RemoveEventListener;
   using nsIDOMEventTarget::DispatchEvent;
   virtual void AddEventListener(const nsAString& aType,
                                 EventListener* aCallback,
                                 const AddEventListenerOptionsOrBoolean& aOptions,
                                 const Nullable<bool>& aWantsUntrusted,
                                 ErrorResult& aRv) = 0;
-  virtual void RemoveEventListener(const nsAString& aType,
-                                   EventListener* aCallback,
-                                   const EventListenerOptionsOrBoolean& aOptions,
-                                   ErrorResult& aRv);
+  void RemoveEventListener(const nsAString& aType,
+                           EventListener* aCallback,
+                           const EventListenerOptionsOrBoolean& aOptions,
+                           ErrorResult& aRv);
+  /**
+   * This method allows the removal of event listeners represented by
+   * nsIDOMEventListener from the event target, with the same semantics as the
+   * standard RemoveEventListener.
+   */
+  void RemoveEventListener(const nsAString& aType,
+                           nsIDOMEventListener* aListener,
+                           bool aUseCapture);
   bool DispatchEvent(Event& aEvent, CallerType aCallerType, ErrorResult& aRv);
 
   nsIGlobalObject* GetParentObject() const

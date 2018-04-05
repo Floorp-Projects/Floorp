@@ -188,10 +188,9 @@ HTMLEditor::AddMouseClickListener(Element* aElement)
 void
 HTMLEditor::RemoveMouseClickListener(Element* aElement)
 {
-  nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aElement));
-  if (evtTarget) {
-    evtTarget->RemoveEventListener(NS_LITERAL_STRING("click"),
-                                   mEventListener, true);
+  if (aElement) {
+    aElement->RemoveEventListener(NS_LITERAL_STRING("click"),
+                                  mEventListener, true);
   }
 }
 

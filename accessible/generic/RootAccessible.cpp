@@ -208,8 +208,7 @@ RootAccessible::RemoveEventListeners()
     for (const char* const* e = kEventTypes,
                    * const* e_end = ArrayEnd(kEventTypes);
          e < e_end; ++e) {
-      nsresult rv = target->RemoveEventListener(NS_ConvertASCIItoUTF16(*e), this, true);
-      NS_ENSURE_SUCCESS(rv, rv);
+      target->RemoveEventListener(NS_ConvertASCIItoUTF16(*e), this, true);
     }
   }
 
