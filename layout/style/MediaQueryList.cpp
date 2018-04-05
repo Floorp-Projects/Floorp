@@ -91,20 +91,15 @@ MediaQueryList::AddListener(EventListener* aListener, ErrorResult& aRv)
 }
 
 void
-MediaQueryList::AddEventListener(const nsAString& aType,
-                                 EventListener* aCallback,
-                                 const AddEventListenerOptionsOrBoolean& aOptions,
-                                 const dom::Nullable<bool>& aWantsUntrusted,
-                                 ErrorResult& aRv)
+MediaQueryList::EventListenerAdded(nsAtom* aType)
 {
-  if (!mMatchesValid) {
-    MOZ_ASSERT(!HasListeners(),
-               "when listeners present, must keep mMatches current");
+  // HasListeners() might still be false if the added thing wasn't a
+  // listener we care about.
+  if (!mMatchesValid && HasListeners()) {
     RecomputeMatches();
   }
 
-  DOMEventTargetHelper::AddEventListener(aType, aCallback, aOptions,
-                                         aWantsUntrusted, aRv);
+  DOMEventTargetHelper::EventListenerAdded(aType);
 }
 
 void
