@@ -4588,13 +4588,6 @@ nsGlobalWindowInner::GetExistingListenerManager() const
   return mListenerManager;
 }
 
-nsIScriptContext*
-nsGlobalWindowInner::GetContextForEventHandlers(nsresult* aRv)
-{
-  *aRv = NS_ERROR_UNEXPECTED;
-  FORWARD_TO_OUTER(GetContextForEventHandlers, (aRv), nullptr);
-}
-
 //*****************************************************************************
 // nsGlobalWindowInner::nsPIDOMWindow
 //*****************************************************************************

@@ -223,14 +223,6 @@ interface nsIDOMEventTarget : nsISupports
    */
   [noscript, nostdcall]
   void PostHandleEvent(in EventChainPostVisitorRef aVisitor);
-
-  /**
-   * Get the script context in which the event handlers should be run.
-   * May return null.
-   * @note Caller *must* check the value of aRv.
-   */
-  [notxpcom, nostdcall]
-  nsIScriptContext GetContextForEventHandlers(out nsresult aRv);
 };
 
 %{C++

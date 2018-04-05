@@ -149,13 +149,6 @@ nsWindowRoot::GetExistingListenerManager() const
   return mListenerManager;
 }
 
-nsIScriptContext*
-nsWindowRoot::GetContextForEventHandlers(nsresult* aRv)
-{
-  *aRv = NS_OK;
-  return nullptr;
-}
-
 nsresult
 nsWindowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {

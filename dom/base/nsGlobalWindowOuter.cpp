@@ -6547,19 +6547,6 @@ nsGlobalWindowOuter::GetExistingListenerManager() const
   FORWARD_TO_INNER(GetExistingListenerManager, (), nullptr);
 }
 
-nsIScriptContext*
-nsGlobalWindowOuter::GetContextForEventHandlers(nsresult* aRv)
-{
-  *aRv = NS_ERROR_UNEXPECTED;
-
-  nsIScriptContext* scx;
-  if ((scx = GetContext())) {
-    *aRv = NS_OK;
-    return scx;
-  }
-  return nullptr;
-}
-
 //*****************************************************************************
 // nsGlobalWindowOuter::nsPIDOMWindow
 //*****************************************************************************
