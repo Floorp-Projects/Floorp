@@ -16,16 +16,6 @@ function playAndPostResult(muted, parent_window) {
     );
 }
 
-function nextEvent(eventTarget, eventName) {
-  return new Promise(function(resolve, reject) {
-    let f = function(event) {
-      eventTarget.removeEventListener(eventName, f, false);
-      resolve(event);
-    };
-    eventTarget.addEventListener(eventName, f, false);
-  });
-}
-
 function nextWindowMessage() {
   return nextEvent(window, "message");
 }
