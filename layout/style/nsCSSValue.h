@@ -407,7 +407,6 @@ enum nsCSSUnit {
                                        // for grid-template-areas
 
   eCSSUnit_Pair         = 50,     // (nsCSSValuePair*) pair of values
-  eCSSUnit_Rect         = 52,     // (nsCSSRect*) rectangle (four values)
   eCSSUnit_List         = 53,     // (nsCSSValueList*) list of values
   eCSSUnit_ListDep      = 54,     // (nsCSSValueList*) same as List
                                   //   but does not own the list
@@ -470,8 +469,6 @@ enum nsCSSUnit {
 
 struct nsCSSValuePair;
 struct nsCSSValuePair_heap;
-struct nsCSSRect;
-struct nsCSSRect_heap;
 struct nsCSSValueList;
 struct nsCSSValueList_heap;
 struct nsCSSValueSharedList;
@@ -661,9 +658,6 @@ public:
   inline nsCSSValuePair& GetPairValue();
   inline const nsCSSValuePair& GetPairValue() const;
 
-  inline nsCSSRect& GetRectValue();
-  inline const nsCSSRect& GetRectValue() const;
-
   inline nsCSSValueList* GetListValue();
   inline const nsCSSValueList* GetListValue() const;
 
@@ -769,7 +763,6 @@ public:
 
   // These are a little different - they allocate storage for you and
   // return a handle.
-  nsCSSRect& SetRectValue();
   nsCSSValueList* SetListValue();
   nsCSSValuePairList* SetPairListValue();
 
@@ -817,7 +810,6 @@ protected:
     mozilla::css::ImageValue* MOZ_OWNING_REF mImage;
     mozilla::css::GridTemplateAreasValue* MOZ_OWNING_REF mGridTemplateAreas;
     nsCSSValuePair_heap* MOZ_OWNING_REF mPair;
-    nsCSSRect_heap* MOZ_OWNING_REF mRect;
     nsCSSValueList_heap* MOZ_OWNING_REF mList;
     nsCSSValueList* mListDependent;
     nsCSSValueSharedList* MOZ_OWNING_REF mSharedList;
@@ -1012,89 +1004,6 @@ nsCSSValue::GetListValue() const
     MOZ_ASSERT(mUnit == eCSSUnit_ListDep, "not a list value");
     return mValue.mListDependent;
   }
-}
-
-struct nsCSSRect {
-  nsCSSRect(void);
-  nsCSSRect(const nsCSSRect& aCopy);
-  ~nsCSSRect();
-
-  bool operator==(const nsCSSRect& aOther) const {
-    return mTop == aOther.mTop &&
-           mRight == aOther.mRight &&
-           mBottom == aOther.mBottom &&
-           mLeft == aOther.mLeft;
-  }
-
-  bool operator!=(const nsCSSRect& aOther) const {
-    return mTop != aOther.mTop ||
-           mRight != aOther.mRight ||
-           mBottom != aOther.mBottom ||
-           mLeft != aOther.mLeft;
-  }
-
-  void SetAllSidesTo(const nsCSSValue& aValue);
-
-  bool AllSidesEqualTo(const nsCSSValue& aValue) const {
-    return mTop == aValue &&
-           mRight == aValue &&
-           mBottom == aValue &&
-           mLeft == aValue;
-  }
-
-  void Reset() {
-    mTop.Reset();
-    mRight.Reset();
-    mBottom.Reset();
-    mLeft.Reset();
-  }
-
-  bool HasValue() const {
-    return
-      mTop.GetUnit() != eCSSUnit_Null ||
-      mRight.GetUnit() != eCSSUnit_Null ||
-      mBottom.GetUnit() != eCSSUnit_Null ||
-      mLeft.GetUnit() != eCSSUnit_Null;
-  }
-
-  nsCSSValue mTop;
-  nsCSSValue mRight;
-  nsCSSValue mBottom;
-  nsCSSValue mLeft;
-
-  typedef nsCSSValue nsCSSRect::*side_type;
-  static const side_type sides[4];
-};
-
-// nsCSSRect_heap differs from nsCSSRect only in being
-// refcounted.  It should not be necessary to use this class directly;
-// it's an implementation detail of nsCSSValue.
-struct nsCSSRect_heap final : public nsCSSRect {
-  NS_INLINE_DECL_REFCOUNTING(nsCSSRect_heap)
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~nsCSSRect_heap()
-  {
-  }
-};
-
-// This has to be here so that the relationship between nsCSSRect
-// and nsCSSRect_heap is visible.
-inline nsCSSRect&
-nsCSSValue::GetRectValue()
-{
-  MOZ_ASSERT(mUnit == eCSSUnit_Rect, "not a rect value");
-  return *mValue.mRect;
-}
-
-inline const nsCSSRect&
-nsCSSValue::GetRectValue() const
-{
-  MOZ_ASSERT(mUnit == eCSSUnit_Rect, "not a rect value");
-  return *mValue.mRect;
 }
 
 struct nsCSSValuePair {
