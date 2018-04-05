@@ -104,9 +104,6 @@ function loadTabs(gBrowser, urls) {
  *        the remote browser.
  */
 function loadTPSContentScript(browser) {
-  if (!browser.isRemoteBrowser) {
-    throw new Error("loadTPSContentScript expects a remote browser.");
-  }
   return new Promise((resolve) => {
     // Here's our utility script. We'll serialize this and send it down
     // to run in the content process for this browser.
@@ -160,59 +157,21 @@ async function switchToTab(tab) {
   let gBrowser = tab.ownerGlobal.gBrowser;
   let window = tab.ownerGlobal;
 
-  // Single-process tab switching works quite differently from
-  // multi-process tab switching. In the single-process case, tab
-  // switching is synchronous, whereas in the multi-process case,
-  // it is not. The following two tab switching mechanisms encapsulate
-  // those two differences.
-
-  if (browser.isRemoteBrowser) {
-    // The multi-process case requires that we load our utility script
-    // inside the content, since it's the content that will hear a MozAfterPaint
-    // once the content is presented to the user.
-    await loadTPSContentScript(browser);
-    let start = Math.floor(window.performance.timing.navigationStart + window.performance.now());
-
-    // We need to wait for the TabSwitchDone event to make sure
-    // that the async tab switcher has shut itself down.
-    let switchDone = waitForTabSwitchDone(browser);
-    // Set up our promise that will wait for the content to be
-    // presented.
-    let finishPromise = waitForContentPresented(browser);
-    // Finally, do the tab switch.
-    gBrowser.selectedTab = tab;
-
-    await switchDone;
-    let finish = await finishPromise;
-    return finish - start;
-  }
-
-  let win = browser.ownerGlobal;
-  let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
-
+  await loadTPSContentScript(browser);
   let start = Math.floor(window.performance.timing.navigationStart + window.performance.now());
 
-  // There is no async tab switcher for the single-process case,
-  // but tabbrowser.xml will still fire this once the updateCurrentBrowser
-  // method runs.
+  // We need to wait for the TabSwitchDone event to make sure
+  // that the async tab switcher has shut itself down.
   let switchDone = waitForTabSwitchDone(browser);
-  // Do our tab switch
+  // Set up our promise that will wait for the content to be
+  // presented.
+  let finishPromise = waitForContentPresented(browser);
+  // Finally, do the tab switch.
   gBrowser.selectedTab = tab;
-  // Because the above tab switch is synchronous, we know that the
-  // we want a MozAfterPaint with a greater layer transaction id than
-  // what is currently the "last transaction id" for the window.
-  let lastTransactionId = winUtils.lastTransactionId;
 
   await switchDone;
-
-  // Now we'll wait for content to be presented. Because
-  // this is the single-process case, we pass the last transaction
-  // id that we got so that we don't get any intermediate MozAfterPaint's
-  // that might fire before web content is shown.
-  let finish = await waitForContentPresented(browser, lastTransactionId);
+  let finish = await finishPromise;
   return finish - start;
-
 }
 
 /**
@@ -241,47 +200,18 @@ function waitForTabSwitchDone(browser) {
  *
  * @param browser (<xul:browser>)
  *        The browser we expect to be presented.
- * @param lastTransactionId (int, optional)
- *        In the single-process case, we need to know the last layer
- *        transaction id that was used before the switch started. That
- *        way, when the MozAfterPaint fires, we can be sure that its
- *        transaction id is greater than the one that was last used,
- *        so we know that the content has definitely been presented.
- *
- *        This argument is ignored in the multi-process browser case.
  *
  * @returns Promise
  *        Resolves once the content has been presented. Resolves to
  *        the system time that the presentation occurred at, in
  *        milliseconds since midnight 01 January, 1970 UTC.
  */
-function waitForContentPresented(browser, lastTransactionId) {
-  // We treat multi-process browsers differently here - we expect the
-  // utility script we loaded to inform us once content has been presented.
-  if (browser.isRemoteBrowser) {
-    return new Promise((resolve) => {
-      let mm = browser.messageManager;
-      mm.addMessageListener("TPS:ContentSawPaint", function onContentPaint(msg) {
-        mm.removeMessageListener("TPS:ContentSawPaint", onContentPaint);
-        resolve(msg.data.time);
-      });
-    });
-  }
-
-  // Wait for the next MozAfterPaint for this browser's window that has
-  // a greater transaction id than lastTransactionId.
+function waitForContentPresented(browser) {
   return new Promise((resolve) => {
-    let win = browser.ownerGlobal;
-    win.addEventListener("MozAfterPaint", function onPaint(event) {
-      if (ChromeUtils.getClassName(event) === "NotifyPaintEvent") {
-        TalosParentProfiler.mark("Content saw transaction id: " + event.transactionId);
-        if (event.transactionId > lastTransactionId) {
-          win.removeEventListener("MozAfterPaint", onPaint);
-          TalosParentProfiler.mark("Content saw MozAfterPaint");
-          let time = Math.floor(win.performance.timing.navigationStart + win.performance.now());
-          resolve(time);
-        }
-      }
+    let mm = browser.messageManager;
+    mm.addMessageListener("TPS:ContentSawPaint", function onContentPaint(msg) {
+      mm.removeMessageListener("TPS:ContentSawPaint", onContentPaint);
+      resolve(msg.data.time);
     });
   });
 }
@@ -329,6 +259,12 @@ function forceGC(win, browser) {
  * @returns Promise
  */
 async function test(window) {
+  if (!window.gMultiProcessBrowser) {
+    dump("** The TPS Talos test does not support running in non-e10s mode " +
+         "anymore! Bailing out!\n");
+    return;
+  }
+
   Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosParentProfiler.js", context);
   TalosParentProfiler = context.TalosParentProfiler;
 
