@@ -458,61 +458,6 @@ private:
 
 /***************************************************************************/
 
-class IID2ThisTranslatorMap
-{
-public:
-    struct Entry : public PLDHashEntryHdr
-    {
-        nsIID                                  key;
-        nsCOMPtr<nsIXPCFunctionThisTranslator> value;
-
-        static bool
-        Match(const PLDHashEntryHdr* entry, const void* key);
-
-        static void
-        Clear(PLDHashTable* table, PLDHashEntryHdr* entry);
-
-        static const struct PLDHashTableOps sOps;
-    };
-
-    static IID2ThisTranslatorMap* newMap(int length);
-
-    inline nsIXPCFunctionThisTranslator* Find(REFNSIID iid)
-    {
-        auto entry = static_cast<Entry*>(mTable.Search(&iid));
-        if (!entry) {
-            return nullptr;
-        }
-        return entry->value;
-    }
-
-    inline nsIXPCFunctionThisTranslator* Add(REFNSIID iid,
-                                             nsIXPCFunctionThisTranslator* obj)
-    {
-        auto entry = static_cast<Entry*>(mTable.Add(&iid, mozilla::fallible));
-        if (!entry)
-            return nullptr;
-        entry->value = obj;
-        entry->key = iid;
-        return obj;
-    }
-
-    inline void Remove(REFNSIID iid)
-    {
-        mTable.Remove(&iid);
-    }
-
-    inline uint32_t Count() { return mTable.EntryCount(); }
-
-private:
-    IID2ThisTranslatorMap();    // no implementation
-    explicit IID2ThisTranslatorMap(int size);
-private:
-    PLDHashTable mTable;
-};
-
-/***************************************************************************/
-
 class XPCWrappedNativeProtoMap
 {
 public:

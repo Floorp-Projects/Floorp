@@ -24,29 +24,4 @@ protected:
   static bool sIsInitialized;
 };
 
-// Event handler 'this' translator class, this is called by XPConnect
-// when a "function interface" (nsIDOMEventListener) is called, this
-// class extracts 'this' fomr the first argument to the called
-// function (nsIDOMEventListener::HandleEvent(in nsIDOMEvent)), this
-// class will pass back nsIDOMEvent::currentTarget to be used as
-// 'this'.
-
-class nsEventListenerThisTranslator : public nsIXPCFunctionThisTranslator
-{
-  virtual ~nsEventListenerThisTranslator()
-  {
-  }
-
-public:
-  nsEventListenerThisTranslator()
-  {
-  }
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  // nsIXPCFunctionThisTranslator
-  NS_DECL_NSIXPCFUNCTIONTHISTRANSLATOR
-};
-
 #endif /* nsDOMClassInfo_h___ */

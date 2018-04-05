@@ -96,9 +96,6 @@ nsDOMClassInfo::Init()
 
   NS_ENSURE_TRUE(!sIsInitialized, NS_ERROR_ALREADY_INITIALIZED);
 
-  nsCOMPtr<nsIXPCFunctionThisTranslator> elt = new nsEventListenerThisTranslator();
-  nsContentUtils::XPConnect()->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener), elt);
-
   sIsInitialized = true;
 
   return NS_OK;
@@ -109,28 +106,4 @@ void
 nsDOMClassInfo::ShutDown()
 {
   sIsInitialized = false;
-}
-
-// nsIDOMEventListener::HandleEvent() 'this' converter helper
-
-NS_INTERFACE_MAP_BEGIN(nsEventListenerThisTranslator)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCFunctionThisTranslator)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-
-NS_IMPL_ADDREF(nsEventListenerThisTranslator)
-NS_IMPL_RELEASE(nsEventListenerThisTranslator)
-
-
-NS_IMETHODIMP
-nsEventListenerThisTranslator::TranslateThis(nsISupports *aInitialThis,
-                                             nsISupports **_retval)
-{
-  nsCOMPtr<nsIDOMEvent> event(do_QueryInterface(aInitialThis));
-  NS_ENSURE_TRUE(event, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<EventTarget> target = event->InternalDOMEvent()->GetCurrentTarget();
-  target.forget(_retval);
-  return NS_OK;
 }
