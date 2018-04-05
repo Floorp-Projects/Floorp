@@ -1167,7 +1167,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      */
                                     continue;
                             }
-                            // CPPONLY: MOZ_FALLTHROUGH_ASSERT();
                         default:
                             /*
                              * A character token that is not one of one of
