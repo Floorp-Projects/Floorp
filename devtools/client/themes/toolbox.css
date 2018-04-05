@@ -165,6 +165,7 @@
 }
 
 #toolbox-meatball-menu-button::before {
+  fill: var(--theme-toolbar-photon-icon-color);
   background-image: var(--more-button-image);
 }
 
