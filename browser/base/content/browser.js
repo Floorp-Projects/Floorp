@@ -8712,23 +8712,8 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams = {}) {
 
 var RestoreLastSessionObserver = {
   init() {
-    let browser_tabs_restorebutton_pref = Services.prefs.getIntPref("browser.tabs.restorebutton");
-    Services.telemetry.scalarSet("browser.session.restore.browser_tabs_restorebutton", browser_tabs_restorebutton_pref);
-    Services.telemetry.scalarSet("browser.session.restore.browser_startup_page", Services.prefs.getIntPref("browser.startup.page"));
     if (SessionStore.canRestoreLastSession &&
         !PrivateBrowsingUtils.isWindowPrivate(window)) {
-      if (browser_tabs_restorebutton_pref == 1) {
-        let {restoreTabsButton, restoreTabsButtonWrapperWidth} = gBrowser.tabContainer;
-        let restoreTabsButtonWrapper = restoreTabsButton.parentNode;
-        restoreTabsButtonWrapper.setAttribute("session-exists", "true");
-        gBrowser.tabContainer.updateSessionRestoreVisibility();
-        restoreTabsButton.style.maxWidth = `${restoreTabsButtonWrapperWidth}px`;
-        gBrowser.tabContainer.addEventListener("TabOpen", this);
-        Services.telemetry.scalarSet("browser.session.restore.tabbar_restore_available", true);
-        restoreTabsButton.addEventListener("click", () => {
-          Services.telemetry.scalarSet("browser.session.restore.tabbar_restore_clicked", true);
-        });
-      }
       Services.obs.addObserver(this, "sessionstore-last-session-cleared", true);
       goSetCommandEnabled("Browser:RestoreLastSession", true);
     } else if (SessionStartup.isAutomaticRestoreEnabled()) {
@@ -8736,34 +8721,11 @@ var RestoreLastSessionObserver = {
     }
   },
 
-  handleEvent(event) {
-    switch (event.type) {
-     case "TabOpen":
-        this.removeRestoreButton();
-        break;
-    }
-  },
-
-  removeRestoreButton() {
-    let {restoreTabsButton} = gBrowser.tabContainer;
-    let restoreTabsButtonWrapper = restoreTabsButton.parentNode;
-    gBrowser.tabContainer.addEventListener("transitionend", function maxWidthTransitionHandler(e) {
-      if (e.target == gBrowser.tabContainer && e.propertyName == "max-width") {
-        gBrowser.tabContainer.updateSessionRestoreVisibility();
-        gBrowser.tabContainer.removeEventListener("transitionend", maxWidthTransitionHandler);
-      }
-    });
-    restoreTabsButtonWrapper.removeAttribute("session-exists");
-    restoreTabsButton.style.maxWidth = 0;
-    gBrowser.tabContainer.removeEventListener("TabOpen", this);
-  },
-
   observe() {
     // The last session can only be restored once so there's
     // no way we need to re-enable our menu item.
     Services.obs.removeObserver(this, "sessionstore-last-session-cleared");
     goSetCommandEnabled("Browser:RestoreLastSession", false);
-    this.removeRestoreButton();
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
