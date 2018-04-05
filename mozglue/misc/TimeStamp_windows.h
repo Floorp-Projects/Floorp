@@ -17,6 +17,7 @@ class TimeStampValue
 {
   friend struct IPC::ParamTraits<mozilla::TimeStampValue>;
   friend class TimeStamp;
+  friend void StartupTimelineRecordExternal(int, uint64_t);
 
   // Both QPC and GTC are kept in [mt] units.
   uint64_t mGTC;

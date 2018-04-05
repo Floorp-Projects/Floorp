@@ -591,6 +591,7 @@ public:
 
 private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
+  friend void StartupTimelineRecordExternal(int, uint64_t);
 
   MOZ_IMPLICIT TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
 
