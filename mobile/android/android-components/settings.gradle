@@ -43,3 +43,11 @@ project(':support-ktx').projectDir = new File(rootDir, 'components/support/ktx')
 
 include ':support-utils'
 project(':support-utils').projectDir = new File(rootDir, 'components/support/utils')
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Samples
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+include ':samples-browser'
+project(':samples-browser').projectDir = new File(rootDir, 'samples/browser')
+
