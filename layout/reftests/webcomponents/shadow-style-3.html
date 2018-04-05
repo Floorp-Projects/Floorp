@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<body>
+<style>
+body { color: red; }
+</style>
+<script>
+var div = document.createElement("div");
+var shadow = div.attachShadow({ mode: "open" });
+var div2 = document.createElement("div");
+var shadow2 = div2.attachShadow({ mode: "open" });
+shadow2.innerHTML = '<style>p { color: green; }</style><p>This should be green.</p>';
+shadow.appendChild(div2);
+document.body.appendChild(div);
+</script>
