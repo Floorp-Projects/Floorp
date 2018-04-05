@@ -63,7 +63,6 @@ toolkit.jar:
   skin/classic/global/icons/blacklist_64.png                         (icons/blacklist_64.png)
   skin/classic/global/icons/glyph-dropdown.png                       (icons/glyph-dropdown.png)
   skin/classic/global/icons/glyph-dropdown@2x.png                    (icons/glyph-dropdown@2x.png)
-  skin/classic/global/icons/notfound.png                             (icons/notfound.png)
   skin/classic/global/icons/panel-dropmarker.png                     (icons/panel-dropmarker.png)
   skin/classic/global/icons/resizer.png                              (icons/resizer.png)
   skin/classic/global/icons/resizer@2x.png                           (icons/resizer@2x.png)
