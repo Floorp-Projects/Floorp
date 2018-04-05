@@ -33,13 +33,6 @@ ServoCSSParser::ComputeColor(ServoStyleSet* aStyleSet,
                             aWasCurrentColor, aLoader);
 }
 
-/* static */ bool
-ServoCSSParser::ParseIntersectionObserverRootMargin(const nsAString& aValue,
-                                                    nsCSSRect* aResult)
-{
-  return Servo_ParseIntersectionObserverRootMargin(&aValue, aResult);
-}
-
 /* static */ already_AddRefed<RawServoDeclarationBlock>
 ServoCSSParser::ParseProperty(nsCSSPropertyID aProperty,
                               const nsAString& aValue,
