@@ -48,11 +48,9 @@ static bool MightHaveRef(const T& aString)
 nsCSSValue::nsCSSValue(int32_t aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
-  MOZ_ASSERT(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
-             aUnit == eCSSUnit_EnumColor,
+  MOZ_ASSERT(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated,
              "not an int value");
-  if (aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
-      aUnit == eCSSUnit_EnumColor) {
+  if (aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated) {
     mValue.mInt = aValue;
   }
   else {
@@ -138,19 +136,8 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mString = aCopy.mValue.mString;
     mValue.mString->AddRef();
   }
-  else if (eCSSUnit_Integer <= mUnit && mUnit <= eCSSUnit_EnumColor) {
+  else if (eCSSUnit_Integer <= mUnit && mUnit <= eCSSUnit_Enumerated) {
     mValue.mInt = aCopy.mValue.mInt;
-  }
-  else if (IsIntegerColorUnit()) {
-    mValue.mColor = aCopy.mValue.mColor;
-  }
-  else if (IsFloatColorUnit()) {
-    mValue.mFloatColor = aCopy.mValue.mFloatColor;
-    mValue.mFloatColor->AddRef();
-  }
-  else if (eCSSUnit_ComplexColor == mUnit) {
-    mValue.mComplexColor = aCopy.mValue.mComplexColor;
-    mValue.mComplexColor->AddRef();
   }
   else if (UnitHasArrayValue()) {
     mValue.mArray = aCopy.mValue.mArray;
@@ -249,17 +236,8 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
       return (NS_strcmp(GetBufferValue(mValue.mString),
                         GetBufferValue(aOther.mValue.mString)) == 0);
     }
-    else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_EnumColor)) {
+    else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
       return mValue.mInt == aOther.mValue.mInt;
-    }
-    else if (IsIntegerColorUnit()) {
-      return mValue.mColor == aOther.mValue.mColor;
-    }
-    else if (IsFloatColorUnit()) {
-      return *mValue.mFloatColor == *aOther.mValue.mFloatColor;
-    }
-    else if (eCSSUnit_ComplexColor == mUnit) {
-      return *mValue.mComplexColor == *aOther.mValue.mComplexColor;
     }
     else if (UnitHasArrayValue()) {
       return *mValue.mArray == *aOther.mValue.mArray;
@@ -392,10 +370,6 @@ void nsCSSValue::DoReset()
 {
   if (UnitHasStringValue()) {
     mValue.mString->Release();
-  } else if (IsFloatColorUnit()) {
-    DO_RELEASE(mFloatColor);
-  } else if (eCSSUnit_ComplexColor == mUnit) {
-    DO_RELEASE(mComplexColor);
   } else if (UnitHasArrayValue()) {
     DO_RELEASE(mArray);
   } else if (eCSSUnit_URL == mUnit) {
@@ -428,12 +402,10 @@ void nsCSSValue::DoReset()
 
 void nsCSSValue::SetIntValue(int32_t aValue, nsCSSUnit aUnit)
 {
-  MOZ_ASSERT(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
-             aUnit == eCSSUnit_EnumColor,
+  MOZ_ASSERT(aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated,
              "not an int value");
   Reset();
-  if (aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated ||
-      aUnit == eCSSUnit_EnumColor) {
+  if (aUnit == eCSSUnit_Integer || aUnit == eCSSUnit_Enumerated) {
     mUnit = aUnit;
     mValue.mInt = aValue;
   }
@@ -478,54 +450,10 @@ nsCSSValue::SetAtomIdentValue(already_AddRefed<nsAtom> aValue)
   mValue.mAtom = aValue.take();
 }
 
-void nsCSSValue::SetColorValue(nscolor aValue)
-{
-  SetIntegerColorValue(aValue, eCSSUnit_RGBAColor);
-}
-
-
-
-void nsCSSValue::SetIntegerColorValue(nscolor aValue, nsCSSUnit aUnit)
-{
-  Reset();
-  mUnit = aUnit;
-  MOZ_ASSERT(IsIntegerColorUnit(), "bad unit");
-  mValue.mColor = aValue;
-}
-
 void nsCSSValue::SetIntegerCoordValue(nscoord aValue)
 {
   SetFloatValue(nsPresContext::AppUnitsToFloatCSSPixels(aValue),
                 eCSSUnit_Pixel);
-}
-
-void nsCSSValue::SetFloatColorValue(float aComponent1,
-                                    float aComponent2,
-                                    float aComponent3,
-                                    float aAlpha,
-                                    nsCSSUnit aUnit)
-{
-  Reset();
-  mUnit = aUnit;
-  MOZ_ASSERT(IsFloatColorUnit(), "bad unit");
-  mValue.mFloatColor =
-    new nsCSSValueFloatColor(aComponent1, aComponent2, aComponent3, aAlpha);
-  mValue.mFloatColor->AddRef();
-}
-
-void
-nsCSSValue::SetRGBAColorValue(const RGBAColorData& aValue)
-{
-  SetFloatColorValue(aValue.mR, aValue.mG, aValue.mB,
-                     aValue.mA, eCSSUnit_PercentageRGBAColor);
-}
-
-void
-nsCSSValue::SetComplexColorValue(already_AddRefed<ComplexColorValue> aValue)
-{
-  Reset();
-  mUnit = eCSSUnit_ComplexColor;
-  mValue.mComplexColor = aValue.take();
 }
 
 void nsCSSValue::SetArrayValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
@@ -857,29 +785,6 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument,
   writable->SetImageValue(image);
 }
 
-nscolor nsCSSValue::GetColorValue() const
-{
-  MOZ_ASSERT(IsNumericColorUnit(), "not a color value");
-  if (IsFloatColorUnit()) {
-    return mValue.mFloatColor->GetColorValue(mUnit);
-  }
-  return mValue.mColor;
-}
-
-bool nsCSSValue::IsNonTransparentColor() const
-{
-  // We have the value in the form it was specified in at this point, so we
-  // have to look for both the keyword 'transparent' and its equivalent in
-  // rgba notation.
-  nsDependentString buf;
-  return
-    (IsIntegerColorUnit() && NS_GET_A(GetColorValue()) > 0) ||
-    (IsFloatColorUnit() && mValue.mFloatColor->IsNonTransparentColor()) ||
-    (mUnit == eCSSUnit_Ident &&
-     !nsGkAtoms::transparent->Equals(GetStringValue(buf))) ||
-    (mUnit == eCSSUnit_EnumColor);
-}
-
 nsCSSValue::Array*
 nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, uint32_t aNumArgs)
 {
@@ -1087,29 +992,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     // Int: nothing extra to measure.
     case eCSSUnit_Integer:
     case eCSSUnit_Enumerated:
-    case eCSSUnit_EnumColor:
-      break;
-
-    // Integer Color: nothing extra to measure.
-    case eCSSUnit_RGBColor:
-    case eCSSUnit_RGBAColor:
-    case eCSSUnit_HexColor:
-    case eCSSUnit_ShortHexColor:
-    case eCSSUnit_HexColorAlpha:
-    case eCSSUnit_ShortHexColorAlpha:
-      break;
-
-    // Float Color
-    case eCSSUnit_PercentageRGBColor:
-    case eCSSUnit_PercentageRGBAColor:
-    case eCSSUnit_HSLColor:
-    case eCSSUnit_HSLAColor:
-      n += mValue.mFloatColor->SizeOfIncludingThis(aMallocSizeOf);
-      break;
-
-    // Complex Color
-    case eCSSUnit_ComplexColor:
-      n += mValue.mComplexColor->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
     // Float: nothing extra to measure.
@@ -1874,73 +1756,6 @@ css::ImageValue::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   size_t n = aMallocSizeOf(this);
   n += css::URLValueData::SizeOfExcludingThis(aMallocSizeOf);
   n += mRequests.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  return n;
-}
-
-size_t
-css::ComplexColorValue::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  // Only measure it if it's unshared, to avoid double-counting.
-  size_t n = 0;
-  if (mRefCnt <= 1) {
-    n += aMallocSizeOf(this);
-  }
-  return n;
-}
-
-// --- nsCSSValueFloatColor -------------
-
-bool
-nsCSSValueFloatColor::operator==(nsCSSValueFloatColor& aOther) const
-{
-  return mComponent1 == aOther.mComponent1 &&
-         mComponent2 == aOther.mComponent2 &&
-         mComponent3 == aOther.mComponent3 &&
-         mAlpha == aOther.mAlpha;
-}
-
-nscolor
-nsCSSValueFloatColor::GetColorValue(nsCSSUnit aUnit) const
-{
-  MOZ_ASSERT(nsCSSValue::IsFloatColorUnit(aUnit), "unexpected unit");
-
-  // We should clamp each component value since eCSSUnit_PercentageRGBColor
-  // and eCSSUnit_PercentageRGBAColor may store values greater than 1.0.
-  if (aUnit == eCSSUnit_PercentageRGBColor ||
-      aUnit == eCSSUnit_PercentageRGBAColor) {
-    return NS_RGBA(
-      // We need to clamp before multiplying by 255.0f to avoid overflow.
-      NSToIntRound(mozilla::clamped(mComponent1, 0.0f, 1.0f) * 255.0f),
-      NSToIntRound(mozilla::clamped(mComponent2, 0.0f, 1.0f) * 255.0f),
-      NSToIntRound(mozilla::clamped(mComponent3, 0.0f, 1.0f) * 255.0f),
-      NSToIntRound(mozilla::clamped(mAlpha, 0.0f, 1.0f) * 255.0f));
-  }
-
-  // HSL color
-  MOZ_ASSERT(aUnit == eCSSUnit_HSLColor ||
-             aUnit == eCSSUnit_HSLAColor);
-  nscolor hsl = NS_HSL2RGB(mComponent1, mComponent2, mComponent3);
-  return NS_RGBA(NS_GET_R(hsl),
-                 NS_GET_G(hsl),
-                 NS_GET_B(hsl),
-                 NSToIntRound(mAlpha * 255.0f));
-}
-
-bool
-nsCSSValueFloatColor::IsNonTransparentColor() const
-{
-  return mAlpha > 0.0f;
-}
-
-size_t
-nsCSSValueFloatColor::SizeOfIncludingThis(
-                                      mozilla::MallocSizeOf aMallocSizeOf) const
-{
-  // Only measure it if it's unshared, to avoid double-counting.
-  size_t n = 0;
-  if (mRefCnt <= 1) {
-    n += aMallocSizeOf(this);
-  }
   return n;
 }
 
