@@ -85,8 +85,6 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(DOMEventTargetHelper,
                                                    LastRelease())
 
-NS_IMPL_DOMTARGET_DEFAULTS(DOMEventTargetHelper)
-
 DOMEventTargetHelper::~DOMEventTargetHelper()
 {
   if (mParentObject) {

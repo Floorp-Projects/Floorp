@@ -526,7 +526,7 @@ WidgetEvent::IsBlockedForFingerprintingResistance() const
  ******************************************************************************/
 
 static dom::EventTarget*
-GetTargetForDOMEvent(nsIDOMEventTarget* aTarget)
+GetTargetForDOMEvent(dom::EventTarget* aTarget)
 {
   return aTarget ? aTarget->GetTargetForDOMEvent() : nullptr;
 }

@@ -138,22 +138,6 @@ interface nsIDOMEventTarget : nsISupports
 %}
 
   /**
-   * Returns the nsIDOMEventTarget object which should be used as the target
-   * of DOMEvents.
-   * Usually |this| is returned, but for example global object returns
-   * the outer object.
-   */
-   [notxpcom, nostdcall] EventTargetPtr GetTargetForDOMEvent();
-
-  /**
-   * Returns the nsIDOMEventTarget object which should be used as the target
-   * of the event and when constructing event target chain.
-   * Usually |this| is returned, but for example global object returns
-   * the inner object.
-   */
-   [notxpcom, nostdcall] EventTargetPtr GetTargetForEventTargetChain();
-
-  /**
    * Called before the capture phase of the event flow.
    * This is used to create the event target chain and implementations
    * should set the necessary members of EventChainPreVisitor.
@@ -171,11 +155,3 @@ interface nsIDOMEventTarget : nsISupports
   [noscript, nostdcall]
   void GetEventTargetParent(in EventChainPreVisitorRef aVisitor);
 };
-
-%{C++
-
-#define NS_IMPL_DOMTARGET_DEFAULTS(_class) \
-mozilla::dom::EventTarget* _class::GetTargetForDOMEvent() { return this; } \
-mozilla::dom::EventTarget* _class::GetTargetForEventTargetChain() { return this; }
-
-%}

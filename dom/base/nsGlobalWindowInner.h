@@ -333,6 +333,8 @@ public:
 
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
+  EventTarget* GetTargetForDOMEvent() override;
+  
   using mozilla::dom::EventTarget::DispatchEvent;
   bool DispatchEvent(mozilla::dom::Event& aEvent,
                      mozilla::dom::CallerType aCallerType,

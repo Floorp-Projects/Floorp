@@ -80,6 +80,28 @@ public:
                                  bool aUseCapture);
 
   /**
+   * Returns the EventTarget object which should be used as the target
+   * of DOMEvents.
+   * Usually |this| is returned, but for example Window (inner windw) returns
+   * the WindowProxy (outer window).
+   */
+  virtual EventTarget* GetTargetForDOMEvent()
+  {
+    return this;
+  };
+
+  /**
+   * Returns the EventTarget object which should be used as the target
+   * of the event and when constructing event target chain.
+   * Usually |this| is returned, but for example WindowProxy (outer window) returns
+   * the Window (inner window).
+   */
+  virtual EventTarget* GetTargetForEventTargetChain()
+  {
+    return this;
+  }
+
+  /**
    * The most general DispatchEvent method.  This is the one the bindings call.
    */
   virtual bool DispatchEvent(Event& aEvent, CallerType aCallerType,

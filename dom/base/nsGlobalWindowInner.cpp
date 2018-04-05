@@ -1947,12 +1947,6 @@ nsGlobalWindowInner::GetTargetForDOMEvent()
   return GetOuterWindowInternal();
 }
 
-EventTarget*
-nsGlobalWindowInner::GetTargetForEventTargetChain()
-{
-  return this;
-}
-
 nsresult
 nsGlobalWindowInner::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
