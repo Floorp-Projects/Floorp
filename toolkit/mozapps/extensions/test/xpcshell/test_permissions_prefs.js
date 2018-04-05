@@ -50,7 +50,7 @@ function run_test() {
   do_check_permission_prefs(preferences);
 
 
-  // Import can also be triggerred by an observer notification by any other area
+  // Import can also be triggered by an observer notification by any other area
   // of code, such as a permissions management UI.
 
   // First, request to flush all permissions

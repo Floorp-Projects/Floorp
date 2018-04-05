@@ -1,6 +1,6 @@
 "use strict";
 
-// Some test machines and android are not returing ipv6, turn it
+// Some test machines and android are not returning ipv6, turn it
 // off to get consistent test results.
 Services.prefs.setBoolPref("network.dns.disableIPv6", true);
 

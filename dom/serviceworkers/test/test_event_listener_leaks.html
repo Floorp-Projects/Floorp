@@ -8,25 +8,15 @@
   <title>Bug 1447871 - Test some service worker leak conditions</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="utils.js"></script>
+  <script type="text/javascript" src="/tests/dom/events/test/event_leak_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
-<div id="content" style="display: none"></div>
-<pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
 const scope = new URL("empty.html?leak_tests", location).href;
 const script = new URL("empty.js", location).href;
-
-// Utility function to create a loaded iframe.
-async function withFrame(doc, url) {
-  let frame = doc.createElement('iframe');
-  frame.src = url;
-  doc.body.appendChild(frame);
-  await new Promise(resolve => frame.onload = resolve);
-  return frame;
-}
 
 // Manipulate service worker DOM objects in the frame's context.
 // Its important here that we create a listener callback from
@@ -45,31 +35,6 @@ async function useServiceWorker(contentWindow) {
   };
 }
 
-// This function defines the basic form of the test cases.  We create an
-// iframe, manipulate some service worker DOM objects, remove the frame
-// from the DOM and then check to see if the frame was GC'd.  The caller
-// may optionally pass in a callback that will be executed with the
-// frame as an argument before removing it from the DOM.
-async function leakTest(name, callback) {
-  let frame = await withFrame(document, "empty.html");
-
-  await useServiceWorker(frame.contentWindow);
-
-  let weakRef = SpecialPowers.Cu.getWeakReference(frame.contentWindow);
-  ok(weakRef.get(), `should be able to create a weak reference - ${name}`);
-
-  if (callback) {
-    await callback(frame);
-  }
-
-  frame.remove();
-  frame = null;
-
-  await new Promise(resolve => SpecialPowers.exactGC(resolve));
-  await new Promise(resolve => SpecialPowers.exactGC(resolve));
-  ok(!weakRef.get(), `iframe content window should be garbage collected - ${name}`);
-}
-
 async function runTest() {
   await SpecialPowers.pushPrefEnv({"set": [
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
@@ -81,25 +46,7 @@ async function runTest() {
   await waitForState(reg.installing, "activated");
 
   try {
-    // Test if we leak in the case where we do nothing special to
-    // the frame before removing it from the DOM.
-    await leakTest("default");
-
-    // Test the case where we navigate the frame before removing it
-    // from the DOM so that the service worker using window ends up
-    // in bfcache.
-    await leakTest("bfcache", frame => {
-      frame.src = "about:blank";
-      return new Promise(resolve => frame.onload = resolve);
-    });
-
-    // Test the case where we document.open() the frame before removing
-    // it from the DOM so that the service worker using window ends
-    // up getting replaced.
-    await leakTest("document.open()", frame => {
-      frame.contentDocument.open();
-      frame.contentDocument.close();
-    });
+    await checkForEventListenerLeaks("ServiceWorker", useServiceWorker);
   } catch (e) {
     ok(false, e);
   } finally {

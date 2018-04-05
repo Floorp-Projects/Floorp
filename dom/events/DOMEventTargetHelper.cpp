@@ -347,30 +347,24 @@ DOMEventTargetHelper::WantsUntrusted(bool* aRetVal)
 void
 DOMEventTargetHelper::EventListenerAdded(nsAtom* aType)
 {
-  EventListenerWasAdded(Substring(nsDependentAtomString(aType), 2),
-                        IgnoreErrors());
   MaybeUpdateKeepAlive();
 }
 
 void
 DOMEventTargetHelper::EventListenerAdded(const nsAString& aType)
 {
-  EventListenerWasAdded(aType, IgnoreErrors());
   MaybeUpdateKeepAlive();
 }
 
 void
 DOMEventTargetHelper::EventListenerRemoved(nsAtom* aType)
 {
-  EventListenerWasRemoved(Substring(nsDependentAtomString(aType), 2),
-                          IgnoreErrors());
   MaybeUpdateKeepAlive();
 }
 
 void
 DOMEventTargetHelper::EventListenerRemoved(const nsAString& aType)
 {
-  EventListenerWasRemoved(aType, IgnoreErrors());
   MaybeUpdateKeepAlive();
 }
 

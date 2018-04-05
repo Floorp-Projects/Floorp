@@ -369,6 +369,9 @@
             // set the checkbox
             checkbox.checked = !!options.automatic;
           }
+          if (options && options.hideAddExceptionButton) {
+            document.querySelector(".exceptionDialogButtonContainer").hidden = true;
+          }
         }, true, true);
 
         let event = new CustomEvent("AboutNetErrorLoad", {bubbles: true});

@@ -43,10 +43,14 @@ const POLICIES_TESTS = [
   {
     policies: {
       "DisableSecurityBypass": {
+        "InvalidCertificate": true,
         "SafeBrowsing": true
       }
     },
-    lockedPrefs: { "browser.safebrowsing.allowOverride": false },
+    lockedPrefs: {
+      "security.certerror.hideAddException": true,
+      "browser.safebrowsing.allowOverride": false,
+    },
   },
 
 
@@ -124,6 +128,24 @@ const POLICIES_TESTS = [
     },
     lockedPrefs: {
       "xpinstall.enabled": false,
+    }
+  },
+
+  // POLICY: SanitizeOnShutdown
+  {
+    policies: {
+      "SanitizeOnShutdown": true,
+    },
+    lockedPrefs: {
+      "privacy.sanitize.sanitizeOnShutdown": true,
+      "privacy.clearOnShutdown.cache": true,
+      "privacy.clearOnShutdown.cookies": true,
+      "privacy.clearOnShutdown.downloads": true,
+      "privacy.clearOnShutdown.formdata": true,
+      "privacy.clearOnShutdown.history": true,
+      "privacy.clearOnShutdown.sessions": true,
+      "privacy.clearOnShutdown.siteSettings": true,
+      "privacy.clearOnShutdown.offlineApps": true,
     }
   },
 ];
