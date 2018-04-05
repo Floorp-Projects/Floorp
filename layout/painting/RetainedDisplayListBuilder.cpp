@@ -127,6 +127,7 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
 
   nsDisplayList saved;
   aList->mOldItems.SetCapacity(aList->Count());
+  MOZ_ASSERT(aList->mOldItems.IsEmpty());
   size_t i = 0;
   while (nsDisplayItem* item = aList->RemoveBottom()) {
     if (item->HasDeletedFrame() || !item->CanBeReused()) {
@@ -176,6 +177,7 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
     // display items.
     item->RestoreState();
   }
+  MOZ_ASSERT(aList->mOldItems.Length() == aList->mDAG.Length());
   aList->RestoreState();
   return true;
 }
@@ -257,12 +259,13 @@ public:
   MergedListIndex ProcessItemFromNewList(nsDisplayItem* aNewItem, const Maybe<MergedListIndex>& aPreviousItem) {
     OldListIndex oldIndex;
     if (mOldKeyLookup.Get({ aNewItem->Frame(), aNewItem->GetPerFrameKey() }, &oldIndex.val)) {
-      if (!IsChanged(aNewItem)) {
+      nsDisplayItem* oldItem = mOldItems[oldIndex.val].mItem;
+      if (oldItem && !IsChanged(oldItem)) {
         MOZ_ASSERT(!mOldItems[oldIndex.val].IsUsed());
         if (aNewItem->GetChildren()) {
           Maybe<const ActiveScrolledRoot*> containerASRForChildren;
           if (mBuilder->MergeDisplayLists(aNewItem->GetChildren(),
-                                          mOldItems[oldIndex.val].mItem->GetChildren(),
+                                          oldItem->GetChildren(),
                                           aNewItem->GetChildren(),
                                           containerASRForChildren)) {
             mResultIsModified = true;
