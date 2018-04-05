@@ -187,7 +187,7 @@ SharedWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return SharedWorkerBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsresult
+void
 SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   AssertIsOnMainThread();
@@ -204,8 +204,8 @@ SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 
     aVisitor.mCanHandle = false;
     aVisitor.SetParentTarget(nullptr, false);
-    return NS_OK;
+    return;
   }
 
-  return DOMEventTargetHelper::GetEventTargetParent(aVisitor);
+  DOMEventTargetHelper::GetEventTargetParent(aVisitor);
 }

@@ -20,6 +20,7 @@ namespace mozilla {
 class AsyncEventDispatcher;
 class ErrorResult;
 class EventChainPostVisitor;
+class EventChainPreVisitor;
 class EventChainVisitor;
 class EventListenerManager;
 
@@ -184,6 +185,23 @@ public:
   bool HasNonPassiveNonSystemGroupListenersForUntrustedKeyEvents() const;
 
   virtual bool IsApzAware() const;
+
+  /**
+   * Called before the capture phase of the event flow.
+   * This is used to create the event target chain and implementations
+   * should set the necessary members of EventChainPreVisitor.
+   * At least aVisitor.mCanHandle must be set,
+   * usually also aVisitor.mParentTarget if mCanHandle is true.
+   * mCanHandle says that this object can handle the aVisitor.mEvent event and
+   * the mParentTarget is the possible parent object for the event target chain.
+   * @see EventDispatcher.h for more documentation about aVisitor.
+   *
+   * @param aVisitor the visitor object which is used to create the
+   *                 event target chain for event dispatching.
+   *
+   * @note Only EventDispatcher should call this method.
+   */
+  virtual void GetEventTargetParent(EventChainPreVisitor& aVisitor) = 0;  
 
   /**
    * Called before the capture phase of the event flow and after event target

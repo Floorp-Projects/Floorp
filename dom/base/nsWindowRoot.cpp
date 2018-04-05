@@ -151,7 +151,7 @@ nsWindowRoot::GetExistingListenerManager() const
   return mListenerManager;
 }
 
-nsresult
+void
 nsWindowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
@@ -159,7 +159,6 @@ nsWindowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   // To keep mWindow alive
   aVisitor.mItemData = static_cast<nsISupports *>(mWindow);
   aVisitor.SetParentTarget(mParent, false);
-  return NS_OK;
 }
 
 nsresult

@@ -2337,7 +2337,7 @@ nsGlobalWindowOuter::GetTargetForEventTargetChain()
   return GetCurrentInnerWindowInternal();
 }
 
-nsresult
+void
 nsGlobalWindowOuter::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   MOZ_CRASH("The outer window should not be part of an event path");

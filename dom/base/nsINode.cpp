@@ -1087,14 +1087,6 @@ nsINode::AddSystemEventListener(const nsAString& aType,
                                    aWantsUntrusted);
 }
 
-nsresult
-nsINode::GetEventTargetParent(EventChainPreVisitor& aVisitor)
-{
-  MOZ_ASSERT_UNREACHABLE("GetEventTargetParent is only here so that we can "
-                         "use the NS_DECL_NSIDOMTARGET macro");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void
 nsINode::GetBoxQuads(const BoxQuadOptions& aOptions,
                      nsTArray<RefPtr<DOMQuad> >& aResult,
