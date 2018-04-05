@@ -3523,7 +3523,8 @@ GeckoDriver.prototype.commands = {
   "reftest:teardown": GeckoDriver.prototype.teardownReftest,
 
   // WebDriver service
-  "WebDriver:AcceptDialog": GeckoDriver.prototype.acceptDialog,
+  "WebDriver:AcceptAlert": GeckoDriver.prototype.acceptDialog,
+  "WebDriver:AcceptDialog": GeckoDriver.prototype.acceptDialog,  // deprecated, remove in Firefox 63
   "WebDriver:AddCookie": GeckoDriver.prototype.addCookie,
   "WebDriver:Back": GeckoDriver.prototype.goBack,
   "WebDriver:CloseChromeWindow": GeckoDriver.prototype.closeChromeWindow,
