@@ -771,8 +771,7 @@ public:
   already_AddRefed<mozilla::URLExtraData>
   GetURLDataForStyleAttr(nsIPrincipal* aSubjectPrincipal = nullptr) const;
 
-  virtual nsresult GetEventTargetParent(
-                     mozilla::EventChainPreVisitor& aVisitor) override;
+  void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
 
   bool IsPurple() const
   {

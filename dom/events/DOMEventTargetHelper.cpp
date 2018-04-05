@@ -277,12 +277,11 @@ DOMEventTargetHelper::DispatchTrustedEvent(nsIDOMEvent* event)
   return rv.StealNSResult();
 }
 
-nsresult
+void
 DOMEventTargetHelper::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
   aVisitor.SetParentTarget(nullptr, false);
-  return NS_OK;
 }
 
 nsresult

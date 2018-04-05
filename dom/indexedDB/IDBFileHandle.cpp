@@ -781,14 +781,13 @@ IDBFileHandle::Run()
   return NS_OK;
 }
 
-nsresult
+void
 IDBFileHandle::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   AssertIsOnOwningThread();
 
   aVisitor.mCanHandle = true;
   aVisitor.SetParentTarget(mMutableFile, false);
-  return NS_OK;
 }
 
 // virtual

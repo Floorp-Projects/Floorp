@@ -13,7 +13,6 @@
 using mozilla::dom::Nullable;
 
 namespace mozilla {
-class EventChainPreVisitor;
 class EventListenerManager;
 namespace dom {
 class EventTarget;
@@ -36,7 +35,6 @@ class nsPresContext;
 [ptr] native nsEventStatusPtr(nsEventStatus);
 [ptr] native JSContextPtr(JSContext);
 [ref] native EventChainPostVisitorRef(mozilla::EventChainPostVisitor);
-[ref] native EventChainPreVisitorRef(mozilla::EventChainPreVisitor);
 [ptr] native EventListenerManagerPtr(mozilla::EventListenerManager);
 [ptr] native EventTargetPtr(mozilla::dom::EventTarget);
 
@@ -137,21 +135,4 @@ interface nsIDOMEventTarget : nsISupports
   }
 %}
 
-  /**
-   * Called before the capture phase of the event flow.
-   * This is used to create the event target chain and implementations
-   * should set the necessary members of EventChainPreVisitor.
-   * At least aVisitor.mCanHandle must be set,
-   * usually also aVisitor.mParentTarget if mCanHandle is PR_TRUE.
-   * First one tells that this object can handle the aVisitor.mEvent event and
-   * the latter one is the possible parent object for the event target chain.
-   * @see EventDispatcher.h for more documentation about aVisitor.
-   *
-   * @param aVisitor the visitor object which is used to create the
-   *                 event target chain for event dispatching.
-   *
-   * @note Only EventDispatcher should call this method.
-   */
-  [noscript, nostdcall]
-  void GetEventTargetParent(in EventChainPreVisitorRef aVisitor);
 };

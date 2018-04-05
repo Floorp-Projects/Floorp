@@ -1333,7 +1333,7 @@ nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
     return NS_OK;
 }
 
-nsresult
+void
 nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
     aVisitor.mForceContentDispatch = true; //FIXME! Bug 329119
@@ -1341,7 +1341,7 @@ nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
         // Don't propagate these events from native anonymous scrollbar.
         aVisitor.mCanHandle = true;
         aVisitor.SetParentTarget(nullptr, false);
-        return NS_OK;
+        return;
     }
     if (aVisitor.mEvent->mMessage == eXULCommand &&
         aVisitor.mEvent->mClass == eInputEventClass &&
@@ -1364,11 +1364,11 @@ nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
             // target chain creation
             aVisitor.mWantsPreHandleEvent = true;
             aVisitor.mItemFlags |= NS_DISPATCH_XUL_COMMAND;
-            return NS_OK;
+            return;
         }
     }
 
-    return nsStyledElement::GetEventTargetParent(aVisitor);
+    nsStyledElement::GetEventTargetParent(aVisitor);
 }
 
 nsresult

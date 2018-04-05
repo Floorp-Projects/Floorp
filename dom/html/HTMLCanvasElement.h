@@ -299,8 +299,7 @@ public:
   nsresult CopyInnerTo(mozilla::dom::Element* aDest,
                        bool aPreallocateChildren);
 
-  virtual nsresult GetEventTargetParent(
-                     mozilla::EventChainPreVisitor& aVisitor) override;
+  void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
   /*
    * Helpers called by various users of Canvas

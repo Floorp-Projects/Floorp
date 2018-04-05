@@ -257,7 +257,7 @@ nsInProcessTabChildGlobal::GetOwnerContent()
   return mOwner;
 }
 
-nsresult
+void
 nsInProcessTabChildGlobal::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mForceContentDispatch = true;
@@ -278,7 +278,7 @@ nsInProcessTabChildGlobal::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 
   if (mPreventEventsEscaping) {
     aVisitor.SetParentTarget(nullptr, false);
-    return NS_OK;
+    return;
   }
 
   if (mIsBrowserFrame &&
@@ -293,8 +293,6 @@ nsInProcessTabChildGlobal::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   } else {
     aVisitor.SetParentTarget(mOwner, false);
   }
-
-  return NS_OK;
 }
 
 nsresult

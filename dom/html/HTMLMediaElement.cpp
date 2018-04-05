@@ -4213,11 +4213,12 @@ HTMLMediaElement::OutputMediaStream::~OutputMediaStream()
   }
 }
 
-nsresult
+void
 HTMLMediaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   if (!this->Controls() || !aVisitor.mEvent->mFlags.mIsTrusted) {
-    return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+    nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+    return;
   }
 
   HTMLInputElement* el = nullptr;
@@ -4239,7 +4240,7 @@ HTMLMediaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     case eMouseDown:
     case eMouseUp:
       aVisitor.mCanHandle = false;
-      return NS_OK;
+      return;
 
     // The *move events however are only comsumed when the range input is being
     // dragged.
@@ -4258,12 +4259,14 @@ HTMLMediaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
       }
       if (el && el->IsDraggingRange()) {
         aVisitor.mCanHandle = false;
-        return NS_OK;
+        return;
       }
-      return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+      nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+      return;
 
     default:
-      return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+      nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+      return;
   }
 }
 
