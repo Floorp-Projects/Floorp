@@ -23,7 +23,9 @@ package com.leanplum.utils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Point;
 import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.WindowManager;
 
 /**
@@ -126,5 +128,24 @@ public class SizeUtil {
     } catch (Throwable ignored) {
     }
     return result;
+  }
+
+  /**
+   * Gets the size of display in pixels.
+   *
+   * @param context Current activity.
+   * @return A Point object with display size information.
+   */
+  public static Point getDisplaySize(Activity context) {
+    Point size = new Point();
+    if (context == null) {
+      return size;
+    }
+    try {
+      Display display = context.getWindowManager().getDefaultDisplay();
+      display.getSize(size);
+    } catch (Throwable ignored) {
+    }
+    return size;
   }
 }

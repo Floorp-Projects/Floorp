@@ -21,15 +21,15 @@
 
 package com.leanplum.messagetemplates;
 
+import android.app.Activity;
+import android.graphics.Point;
 import android.text.TextUtils;
 import android.util.Log;
-
 import com.leanplum.ActionArgs;
 import com.leanplum.ActionContext;
 import com.leanplum.Leanplum;
-
+import com.leanplum.utils.SizeUtil;
 import org.json.JSONException;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +52,8 @@ class HTMLOptions {
   private ActionContext actionContext;
   private String htmlAlign;
   private int htmlHeight;
+  private Size htmlYOffset;
+  private boolean htmlTabOutsideToClose;
 
   HTMLOptions(ActionContext context) {
     this.setActionContext(context);
@@ -63,6 +65,9 @@ class HTMLOptions {
     this.setTrackActionUrl(context.stringNamed(MessageTemplates.Args.TRACK_ACTION_URL));
     this.setHtmlAlign(context.stringNamed(MessageTemplates.Args.HTML_ALIGN));
     this.setHtmlHeight(context.numberNamed(MessageTemplates.Args.HTML_HEIGHT).intValue());
+    this.setHtmlYOffset(context.stringNamed(MessageTemplates.Args.HTML_Y_OFFSET));
+    this.setHtmlTabOutsideToClose(context.booleanNamed(
+            MessageTemplates.Args.HTML_TAP_OUTSIDE_TO_CLOSE));
   }
 
   /**
@@ -143,6 +148,11 @@ class HTMLOptions {
     return map;
   }
 
+  static class Size {
+    int value;
+    String type;
+  }
+
   /**
    * Get HTML template file.
    *
@@ -197,6 +207,59 @@ class HTMLOptions {
 
   private void setHtmlAlign(String htmlAlign) {
     this.htmlAlign = htmlAlign;
+  }
+
+  //Gets html y offset in pixels.
+  int getHtmlYOffset(Activity context) {
+    int yOffset = 0;
+    if (context == null) {
+      return yOffset;
+    }
+
+    if (htmlYOffset != null && !TextUtils.isEmpty(htmlYOffset.type)) {
+      yOffset = htmlYOffset.value;
+      if ("%".equals(htmlYOffset.type)) {
+        Point size = SizeUtil.getDisplaySize(context);
+        yOffset = (size.y - SizeUtil.getStatusBarHeight(context)) * yOffset / 100;
+      } else {
+        yOffset = SizeUtil.dpToPx(context, yOffset);
+      }
+    }
+    return yOffset;
+  }
+
+  private void setHtmlYOffset(String htmlYOffset) {
+    this.htmlYOffset = getSizeValueAndType(htmlYOffset);
+  }
+
+  private Size getSizeValueAndType(String stringValue) {
+    if (TextUtils.isEmpty(stringValue)) {
+      return null;
+    }
+
+    Size out = new Size();
+    if (stringValue.contains("px")) {
+      String[] sizeValue = stringValue.split("px");
+      if (sizeValue.length != 0) {
+        out.value = Integer.parseInt(sizeValue[0]);
+      }
+      out.type = "px";
+    } else if (stringValue.contains("%")) {
+      String[] sizeValue = stringValue.split("%");
+      if (sizeValue.length != 0) {
+        out.value = Integer.parseInt(sizeValue[0]);
+      }
+      out.type = "%";
+    }
+    return out;
+  }
+
+  boolean isHtmlTabOutsideToClose() {
+    return htmlTabOutsideToClose;
+  }
+
+  private void setHtmlTabOutsideToClose(boolean htmlTabOutsideToClose) {
+    this.htmlTabOutsideToClose = htmlTabOutsideToClose;
   }
 
   ActionContext getActionContext() {
