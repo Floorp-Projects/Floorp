@@ -156,6 +156,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
   this._updatePickerButton = this._updatePickerButton.bind(this);
   this.selectTool = this.selectTool.bind(this);
+  this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
 
   this._target.on("close", this.destroy);
 
@@ -1112,6 +1113,7 @@ Toolbox.prototype = {
       L10N,
       currentToolId: this.currentToolId,
       selectTool: this.selectTool,
+      toggleSplitConsole: this.toggleSplitConsole,
       closeToolbox: this.destroy,
       focusButton: this._onToolbarFocus,
       toolbox: this
@@ -1908,6 +1910,7 @@ Toolbox.prototype = {
     }
 
     return this.loadTool("webconsole").then(() => {
+      this.component.setIsSplitConsoleActive(true);
       this.emit("split-console");
       this.focusConsoleInput();
     });
@@ -1923,6 +1926,7 @@ Toolbox.prototype = {
     this._splitConsole = false;
     Services.prefs.setBoolPref(SPLITCONSOLE_ENABLED_PREF, false);
     this._refreshConsoleDisplay();
+    this.component.setIsSplitConsoleActive(false);
     this.emit("split-console");
 
     if (this._lastFocusedElement) {

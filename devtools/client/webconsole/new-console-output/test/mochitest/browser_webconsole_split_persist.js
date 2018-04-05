@@ -7,17 +7,21 @@
 
 // Test that the split console state is persisted.
 
+let {LocalizationHelper} = require("devtools/shared/l10n");
+let L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+
 const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for splitting</p>";
 
 add_task(async function() {
   info("Opening a tab while there is no user setting on split console pref");
   let toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
   ok(!toolbox.splitConsole, "Split console is hidden by default");
-  ok(!isCommandButtonChecked(toolbox), "Split console button is unchecked by default.");
+  ok(!(await doesMenuSayHide(toolbox)),
+     "Split console menu item says split by default");
 
   await toggleSplitConsoleWithEscape(toolbox);
   ok(toolbox.splitConsole, "Split console is now visible.");
-  ok(isCommandButtonChecked(toolbox), "Split console button is now checked.");
+  ok(await doesMenuSayHide(toolbox), "Split console menu item now says hide");
   ok(getVisiblePrefValue(), "Visibility pref is true");
 
   is(getHeightPrefValue(), toolbox.webconsolePanel.height,
@@ -30,7 +34,8 @@ add_task(async function() {
   toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
   ok(toolbox.splitConsole, "Split console is visible by default.");
 
-  ok(isCommandButtonChecked(toolbox), "Split console button is checked by default.");
+  ok(await doesMenuSayHide(toolbox),
+     "Split console menu item initially says hide");
   is(getHeightPrefValue(), 200, "Height is set based on panel height after closing");
 
   let activeElement = getActiveElement(toolbox.doc);
@@ -47,7 +52,8 @@ add_task(async function() {
 
   await toggleSplitConsoleWithEscape(toolbox);
   ok(!toolbox.splitConsole, "Split console is now hidden.");
-  ok(!isCommandButtonChecked(toolbox), "Split console button is now unchecked.");
+  ok(!(await doesMenuSayHide(toolbox)),
+     "Split console menu item now says split");
   ok(!getVisiblePrefValue(), "Visibility pref is false");
 
   await toolbox.destroy();
@@ -80,9 +86,28 @@ function getHeightPrefValue() {
   return Services.prefs.getIntPref("devtools.toolbox.splitconsoleHeight");
 }
 
-function isCommandButtonChecked(toolbox) {
-  return toolbox.doc.querySelector("#command-button-splitconsole")
-    .classList.contains("checked");
+function doesMenuSayHide(toolbox) {
+  return new Promise(resolve => {
+    const button = toolbox.doc.getElementById("toolbox-meatball-menu-button");
+    EventUtils.sendMouseEvent({ type: "click" }, button);
+
+    toolbox.doc.addEventListener("popupshown", () => {
+      const menuItem =
+        toolbox.doc.getElementById("toolbox-meatball-menu-splitconsole");
+
+      const result =
+        menuItem &&
+        menuItem.label ===
+          L10N.getStr("toolbox.meatballMenu.hideconsole.label");
+
+      toolbox.doc.addEventListener("popuphidden", () => {
+        resolve(result);
+      },
+      { once: true });
+      EventUtils.synthesizeKey("KEY_Escape");
+    },
+    { once: true });
+  });
 }
 
 function toggleSplitConsoleWithEscape(toolbox) {
