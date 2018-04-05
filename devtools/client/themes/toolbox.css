@@ -59,7 +59,6 @@
    they don't overlap with the tab bar */
 #toolbox-buttons-start,
 #toolbox-buttons-end,
-#toolbox-option-container,
 #toolbox-controls {
   display: flex;
   align-items: stretch;
@@ -158,17 +157,6 @@
 
 .devtools-tab.highlighted > img {
   fill: var(--theme-toolbar-highlighted-color);
-}
-
-/* The options tab is special - it doesn't have the same parent
-   as the other tabs (toolbox-option-container vs toolbox-tabs) */
-#toolbox-option-container .devtools-tab {
-  border-color: transparent;
-  border-width: 0;
-  padding-inline-start: 1px;
-}
-#toolbox-option-container img {
-  margin: 0 3px;
 }
 
 /* Toolbox controls */

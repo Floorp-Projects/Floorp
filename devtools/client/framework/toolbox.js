@@ -1104,10 +1104,6 @@ Toolbox.prototype = {
     // Get the definitions that will only affect the main tab area.
     this.panelDefinitions = definitions.filter(definition =>
       definition.isTargetSupported(this._target) && definition.id !== "options");
-
-    this.optionsDefinition = definitions.find(({id}) => id === "options");
-    // The options tool is treated slightly differently, and is in a different area.
-    this.component.setOptionsPanel(definitions.find(({id}) => id === "options"));
   },
 
   _mountReactComponent: function() {
@@ -1965,10 +1961,9 @@ Toolbox.prototype = {
   selectNextTool: function() {
     let definitions = this.component.panelDefinitions;
     const index = definitions.findIndex(({id}) => id === this.currentToolId);
-    let definition = definitions[index + 1];
-    if (!definition) {
-      definition = index === -1 ? definitions[0] : this.optionsDefinition;
-    }
+    let definition = index === -1 || index >= definitions.length - 1
+                     ? definitions[0]
+                     : definitions[index + 1];
     return this.selectTool(definition.id);
   },
 
@@ -1978,12 +1973,9 @@ Toolbox.prototype = {
   selectPreviousTool: function() {
     let definitions = this.component.panelDefinitions;
     const index = definitions.findIndex(({id}) => id === this.currentToolId);
-    let definition = definitions[index - 1];
-    if (!definition) {
-      definition = index === -1
-        ? definitions[definitions.length - 1]
-        : this.optionsDefinition;
-    }
+    let definition = index === -1 || index < 1
+                     ? definitions[definitions.length - 1]
+                     : definitions[index - 1];
     return this.selectTool(definition.id);
   },
 
