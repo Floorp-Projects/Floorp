@@ -90,8 +90,7 @@ FetchObserver::SetState(FetchState aState)
     Event::Constructor(this, NS_LITERAL_STRING("statechange"), init);
   event->SetTrusted(true);
 
-  bool dummy;
-  DispatchEvent(event, &dummy);
+  DispatchEvent(*event);
 }
 
 } // dom namespace

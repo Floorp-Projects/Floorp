@@ -569,15 +569,16 @@ IDBOpenDBRequest::DispatchNonTransactionError(nsresult aErrorCode)
   SetError(aErrorCode);
 
   // Make an error event and fire it at the target.
-  nsCOMPtr<nsIDOMEvent> event =
+  RefPtr<Event> event =
     CreateGenericEvent(this,
                        nsDependentString(kErrorEventType),
                        eDoesBubble,
                        eCancelable);
   MOZ_ASSERT(event);
 
-  bool ignored;
-  if (NS_FAILED(DispatchEvent(event, &ignored))) {
+  IgnoredErrorResult rv;
+  DispatchEvent(*event, rv);
+  if (rv.Failed()) {
     NS_WARNING("Failed to dispatch event!");
   }
 }

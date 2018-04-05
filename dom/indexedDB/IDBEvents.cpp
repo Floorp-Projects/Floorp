@@ -28,7 +28,7 @@ const char16_t* kUpgradeNeededEventType = u"upgradeneeded";
 const char16_t* kVersionChangeEventType = u"versionchange";
 const char16_t* kCloseEventType = u"close";
 
-already_AddRefed<nsIDOMEvent>
+already_AddRefed<Event>
 CreateGenericEvent(EventTarget* aOwner,
                    const nsDependentString& aType,
                    Bubbles aBubbles,

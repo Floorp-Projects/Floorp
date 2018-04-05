@@ -47,7 +47,7 @@ extern const char16_t* kUpgradeNeededEventType;
 extern const char16_t* kVersionChangeEventType;
 extern const char16_t* kCloseEventType;
 
-already_AddRefed<nsIDOMEvent>
+already_AddRefed<Event>
 CreateGenericEvent(EventTarget* aOwner,
                    const nsDependentString& aType,
                    Bubbles aBubbles,

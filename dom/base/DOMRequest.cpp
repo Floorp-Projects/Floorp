@@ -196,8 +196,7 @@ DOMRequest::FireEvent(const nsAString& aType, bool aBubble, bool aCancelable)
   event->InitEvent(aType, aBubble, aCancelable);
   event->SetTrusted(true);
 
-  bool dummy;
-  DispatchEvent(event, &dummy);
+  DispatchEvent(*event);
 }
 
 void

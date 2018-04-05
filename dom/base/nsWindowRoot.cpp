@@ -72,14 +72,18 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsWindowRoot)
 
 NS_IMPL_DOMTARGET_DEFAULTS(nsWindowRoot)
 
-NS_IMETHODIMP
-nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, bool *aRetVal)
+bool
+nsWindowRoot::DispatchEvent(Event& aEvent, CallerType aCallerType,
+                            ErrorResult& aRv)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =  EventDispatcher::DispatchDOMEvent(
-    static_cast<EventTarget*>(this), nullptr, aEvt, nullptr, &status);
-  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
-  return rv;
+    static_cast<EventTarget*>(this), nullptr, &aEvent, nullptr, &status);
+  bool retval = !aEvent.DefaultPrevented(aCallerType);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+  return retval;
 }
 
 NS_IMETHODIMP

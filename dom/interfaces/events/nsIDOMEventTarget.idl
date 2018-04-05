@@ -138,27 +138,6 @@ interface nsIDOMEventTarget : nsISupports
 %}
 
   /**
-   * This method allows the dispatch of events into the implementations 
-   * event model. Events dispatched in this manner will have the same 
-   * capturing and bubbling behavior as events dispatched directly by the 
-   * implementation. The target of the event is the EventTarget on which 
-   * dispatchEvent is called.
-   *
-   * @param   evt Specifies the event type, behavior, and contextual 
-   *              information to be used in processing the event.
-   * @return  Indicates whether any of the listeners which handled the 
-   *          event called preventDefault. If preventDefault was called 
-   *          the value is false, else the value is true.
-   * @throws  INVALID_STATE_ERR: Raised if the Event's type was 
-   *              not specified by initializing the event before 
-   *              dispatchEvent was called. Specification of the Event's 
-   *              type as null or an empty string will also trigger this 
-   *              exception.
-   */
-  boolean                  dispatchEvent(in nsIDOMEvent evt)
-                                               raises(DOMException);
-
-  /**
    * Returns the nsIDOMEventTarget object which should be used as the target
    * of DOMEvents.
    * Usually |this| is returned, but for example global object returns

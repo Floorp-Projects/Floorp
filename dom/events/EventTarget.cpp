@@ -118,14 +118,20 @@ EventTarget::IsApzAware() const
   return elm && elm->HasApzAwareListeners();
 }
 
-bool
-EventTarget::DispatchEvent(Event& aEvent,
-                           CallerType aCallerType,
-                           ErrorResult& aRv)
+void
+EventTarget::DispatchEvent(Event& aEvent)
 {
-  bool result = false;
-  aRv = DispatchEvent(&aEvent, &result);
-  return !aEvent.DefaultPrevented(aCallerType);
+  // The caller type doesn't really matter if we don't care about the
+  // return value, but let's be safe and pass NonSystem.
+  Unused << DispatchEvent(aEvent, CallerType::NonSystem, IgnoreErrors());
+}
+
+void
+EventTarget::DispatchEvent(Event& aEvent, ErrorResult& aRv)
+{
+  // The caller type doesn't really matter if we don't care about the
+  // return value, but let's be safe and pass NonSystem.
+  Unused << DispatchEvent(aEvent, CallerType::NonSystem, IgnoreErrors());
 }
 
 } // namespace dom

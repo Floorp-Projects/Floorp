@@ -68,7 +68,7 @@ nsAutoWindowStateHelper::DispatchEventToChrome(const char* aEventName)
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
   nsCOMPtr<EventTarget> target = do_QueryInterface(mWindow);
-  bool defaultActionEnabled;
-  target->DispatchEvent(event, &defaultActionEnabled);
+  bool defaultActionEnabled =
+    target->DispatchEvent(*event, CallerType::System, IgnoreErrors());
   return defaultActionEnabled;
 }

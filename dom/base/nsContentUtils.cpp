@@ -4419,7 +4419,7 @@ static
 nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
                            const nsAString& aEventName,
                            bool aCanBubble, bool aCancelable,
-                           bool aTrusted, nsIDOMEvent** aEvent,
+                           bool aTrusted, Event** aEvent,
                            EventTarget** aTargetOut)
 {
   nsCOMPtr<EventTarget> target(do_QueryInterface(aTarget));
@@ -4473,7 +4473,7 @@ nsContentUtils::DispatchEvent(nsIDocument* aDoc, nsISupports* aTarget,
                               bool aTrusted, bool* aDefaultAction,
                               bool aOnlyChromeDispatch)
 {
-  nsCOMPtr<nsIDOMEvent> event;
+  RefPtr<Event> event;
   nsCOMPtr<EventTarget> target;
   nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
                                   aCancelable, aTrusted, getter_AddRefs(event),
@@ -4481,8 +4481,12 @@ nsContentUtils::DispatchEvent(nsIDocument* aDoc, nsISupports* aTarget,
   NS_ENSURE_SUCCESS(rv, rv);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = aOnlyChromeDispatch;
 
-  bool dummy;
-  return target->DispatchEvent(event, aDefaultAction ? aDefaultAction : &dummy);
+  ErrorResult err;
+  bool doDefault = target->DispatchEvent(*event, CallerType::System, err);
+  if (aDefaultAction) {
+    *aDefaultAction = doDefault;
+  }
+  return err.StealNSResult();
 }
 
 // static
@@ -4527,7 +4531,7 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
                                     bool* aDefaultAction)
 {
 
-  nsCOMPtr<nsIDOMEvent> event;
+  RefPtr<Event> event;
   nsCOMPtr<EventTarget> target;
   nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
                                   aCancelable, true, getter_AddRefs(event),
@@ -4542,12 +4546,13 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
   if (!piTarget)
     return NS_ERROR_INVALID_ARG;
 
-  bool defaultActionEnabled;
-  rv = piTarget->DispatchEvent(event, &defaultActionEnabled);
+  ErrorResult err;
+  bool defaultActionEnabled =
+    piTarget->DispatchEvent(*event, CallerType::System, err);
   if (aDefaultAction) {
     *aDefaultAction = defaultActionEnabled;
   }
-  return rv;
+  return err.StealNSResult();
 }
 
 /* static */
@@ -6585,10 +6590,9 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
     return aShell->HandleDOMEventWithTarget(aTarget, xulCommand, &status);
   }
 
-  nsCOMPtr<EventTarget> target = do_QueryInterface(aTarget);
-  NS_ENSURE_STATE(target);
-  bool dummy;
-  return target->DispatchEvent(xulCommand, &dummy);
+  ErrorResult rv;
+  aTarget->DispatchEvent(*xulCommand, rv);
+  return rv.StealNSResult();
 }
 
 // static
