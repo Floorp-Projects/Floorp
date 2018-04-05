@@ -58,7 +58,6 @@ toolkit.jar:
   skin/classic/global/icons/windowControls.png             (icons/windowControls.png)
 * skin/classic/global/in-content/common.css                (in-content/common.css)
 * skin/classic/global/in-content/info-pages.css            (in-content/info-pages.css)
-  skin/classic/global/toolbar/spring.png                   (toolbar/spring.png)
   skin/classic/global/tree/twisty.svg                      (tree/twisty.svg)
   skin/classic/global/tree/twisty-preWin10.svg             (tree/twisty-preWin10.svg)
 
