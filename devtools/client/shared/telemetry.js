@@ -13,10 +13,6 @@
 const Services = require("Services");
 const TOOLS_OPENED_PREF = "devtools.telemetry.tools.opened.version";
 
-// Object to be shared among all instances.
-const PENDING_EVENTS = new Map();
-const PENDING_EVENT_PROPERTIES = new Map();
-
 class Telemetry {
   constructor() {
     // Bind pretty much all functions so that callers do not need to.
@@ -26,10 +22,6 @@ class Telemetry {
     this.logScalar = this.logScalar.bind(this);
     this.logKeyedScalar = this.logKeyedScalar.bind(this);
     this.logOncePerBrowserVersion = this.logOncePerBrowserVersion.bind(this);
-    this.recordEvent = this.recordEvent.bind(this);
-    this.setEventRecordingEnabled = this.setEventRecordingEnabled.bind(this);
-    this.preparePendingEvent = this.preparePendingEvent.bind(this);
-    this.addEventProperty = this.addEventProperty.bind(this);
     this.destroy = this.destroy.bind(this);
 
     this._timers = new Map();
@@ -298,10 +290,10 @@ class Telemetry {
     }
 
     try {
-      if (isNaN(value) && typeof value !== "boolean") {
-        dump(`Warning: An attempt was made to write a non-numeric and ` +
-             `non-boolean value ${value} to the ${scalarId} scalar. Only ` +
-             `numeric and boolean values are allowed.`);
+      if (isNaN(value)) {
+        dump(`Warning: An attempt was made to write a non-numeric value ` +
+             `${value} to the ${scalarId} scalar. Only numeric values are ` +
+             `allowed.`);
 
         return;
       }
@@ -390,188 +382,6 @@ class Telemetry {
       Services.prefs.setCharPref(TOOLS_OPENED_PREF, latest);
       this.log(perUserHistogram, value);
     }
-  }
-
-  /**
-   * Event telemetry is disabled by default. Use this method to enable it for
-   * a particular category.
-   *
-   * @param {String} category
-   *        The telemetry event category e.g. "devtools.main"
-   * @param {Boolean} enabled
-   *        Enabled: true or false.
-   */
-  setEventRecordingEnabled(category, enabled) {
-    return Services.telemetry.setEventRecordingEnabled(category, enabled);
-  }
-
-  /**
-   * Telemetry events often need to make use of a number of properties from
-   * completely different codepaths. To make this possible we create a
-   * "pending event" along with an array of property names that we need to wait
-   * for before sending the event.
-   *
-   * As each property is received via addEventProperty() we check if all
-   * properties have been received. Once they have all been received we send the
-   * telemetry event.
-   *
-   * @param {String} category
-   *        The telemetry event category (a group name for events and helps to
-   *        avoid name conflicts) e.g. "devtools.main"
-   * @param {String} method
-   *        The telemetry event method (describes the type of event that
-   *        occurred e.g. "open")
-   * @param {String} object
-   *        The telemetry event object name (the name of the object the event
-   *        occurred on) e.g. "tools" or "setting"
-   * @param {String|null} value
-   *        The telemetry event value (a user defined value, providing context
-   *        for the event) e.g. "console"
-   * @param {Array} expected
-   *        An array of the properties needed before sending the telemetry
-   *        event e.g.
-   *        [
-   *          "host",
-   *          "width"
-   *        ]
-   */
-  preparePendingEvent(category, method, object, value, expected = []) {
-    const sig = `${category},${method},${object},${value}`;
-
-    if (expected.length === 0) {
-      throw new Error(`preparePendingEvent() was called without any expected ` +
-                      `properties.`);
-    }
-
-    PENDING_EVENTS.set(sig, {
-      extra: {},
-      expected: new Set(expected)
-    });
-
-    const props = PENDING_EVENT_PROPERTIES.get(sig);
-    if (props) {
-      for (let [name, val] of Object.entries(props)) {
-        this.addEventProperty(category, method, object, value, name, val);
-      }
-      PENDING_EVENT_PROPERTIES.delete(sig);
-    }
-  }
-
-  /**
-   * Adds an expected property for either a current or future pending event.
-   * This means that if preparePendingEvent() is called before or after sending
-   * the event properties they will automatically added to the event.
-   *
-   * @param {String} category
-   *        The telemetry event category (a group name for events and helps to
-   *        avoid name conflicts) e.g. "devtools.main"
-   * @param {String} method
-   *        The telemetry event method (describes the type of event that
-   *        occurred e.g. "open")
-   * @param {String} object
-   *        The telemetry event object name (the name of the object the event
-   *        occurred on) e.g. "tools" or "setting"
-   * @param {String|null} value
-   *        The telemetry event value (a user defined value, providing context
-   *        for the event) e.g. "console"
-   * @param {String} pendingPropName
-   *        The pending property name
-   * @param {String} pendingPropValue
-   *        The pending property value
-   */
-  addEventProperty(category, method, object, value, pendingPropName, pendingPropValue) {
-    const sig = `${category},${method},${object},${value}`;
-
-    // If the pending event has not been created add the property to the pending
-    // list.
-    if (!PENDING_EVENTS.has(sig)) {
-      PENDING_EVENT_PROPERTIES.set(sig, {
-        [pendingPropName]: pendingPropValue
-      });
-      return;
-    }
-
-    const { expected, extra } = PENDING_EVENTS.get(sig);
-
-    if (expected.has(pendingPropName)) {
-      extra[pendingPropName] = pendingPropValue;
-
-      if (expected.size === Object.keys(extra).length) {
-        this._sendPendingEvent(category, method, object, value);
-      }
-    } else {
-      // The property was not expected, warn and bail.
-      throw new Error(`An attempt was made to add the unexpected property ` +
-                      `"${pendingPropName}" to a telemetry event with the ` +
-                      `signature "${sig}"\n`);
-    }
-  }
-
-  /**
-   * Send a telemetry event.
-   *
-   * @param {String} category
-   *        The telemetry event category (a group name for events and helps to
-   *        avoid name conflicts) e.g. "devtools.main"
-   * @param {String} method
-   *        The telemetry event method (describes the type of event that
-   *        occurred e.g. "open")
-   * @param {String} object
-   *        The telemetry event object name (the name of the object the event
-   *        occurred on) e.g. "tools" or "setting"
-   * @param {String|null} value
-   *        The telemetry event value (a user defined value, providing context
-   *        for the event) e.g. "console"
-   * @param {Object} extra
-   *        The telemetry event extra object containing the properties that will
-   *        be sent with the event e.g.
-   *        {
-   *          host: "bottom",
-   *          width: "1024"
-   *        }
-   */
-  recordEvent(category, method, object, value, extra) {
-    // Only string values are allowed so cast all values to strings.
-    for (let [name, val] of Object.entries(extra)) {
-      extra[name] = val + "";
-
-      if (val.length > 80) {
-        const sig = `${category},${method},${object},${value}`;
-
-        throw new Error(`The property "${name}" was added to a telemetry ` +
-                        `event with the signature ${sig} but it's value ` +
-                        `"${val}" is longer than the maximum allowed length ` +
-                        `of 80 characters\n`);
-      }
-    }
-    Services.telemetry.recordEvent(category, method, object, value, extra);
-  }
-
-  /**
-   * A private method that is not to be used externally. This method is used to
-   * prepare a pending telemetry event for sending and then send it via
-   * recordEvent().
-   *
-   * @param {String} category
-   *        The telemetry event category (a group name for events and helps to
-   *        avoid name conflicts) e.g. "devtools.main"
-   * @param {String} method
-   *        The telemetry event method (describes the type of event that
-   *        occurred e.g. "open")
-   * @param {String} object
-   *        The telemetry event object name (the name of the object the event
-   *        occurred on) e.g. "tools" or "setting"
-   * @param {String|null} value
-   *        The telemetry event value (a user defined value, providing context
-   *        for the event) e.g. "console"
-   */
-  _sendPendingEvent(category, method, object, value) {
-    const sig = `${category},${method},${object},${value}`;
-    const { extra } = PENDING_EVENTS.get(sig);
-
-    PENDING_EVENTS.delete(sig);
-    PENDING_EVENT_PROPERTIES.delete(sig);
-    this.recordEvent(category, method, object, value, extra);
   }
 
   destroy() {
