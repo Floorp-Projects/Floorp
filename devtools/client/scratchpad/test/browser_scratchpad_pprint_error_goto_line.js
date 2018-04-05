@@ -5,12 +5,11 @@
 
 "use strict";
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(runTests);
   });
 
@@ -48,8 +47,7 @@ function testJumpToPrettyPrintError(sp, error, remark) {
   is(inputColumn, cursor.ch + 1, "jumpToLine goto error location (column)");
 }
 
-function runTests(sw, sp)
-{
+function runTests(sw, sp) {
   sp.setText([
     "// line 1",
     "// line 2",

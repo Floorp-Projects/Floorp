@@ -4,7 +4,6 @@
 // Test that inspecting primitive values uses the object inspector, not an
 // inline comment.
 
-
 function test() {
   const options = {
     tabContent: "test inspecting primitive values"
@@ -26,7 +25,7 @@ async function runTests([win, sp]) {
 }
 
 // Helper function that does the actual testing.
-var checkResults = async function (sp, value, isString = false) {
+var checkResults = async function(sp, value, isString = false) {
   let sourceValue = value;
   if (isString) {
     sourceValue = '"' + value + '"';

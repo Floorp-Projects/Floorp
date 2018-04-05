@@ -3,20 +3,18 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* Bug 714942 */
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(runTests);
   });
 
   gBrowser.loadURI("data:text/html,<p>test the 'Jump to line' feature in Scratchpad");
 }
 
-function runTests(aWindow, aScratchpad)
-{
+function runTests(aWindow, aScratchpad) {
   let editor = aScratchpad.editor;
   let text = "foobar bug650345\nBug650345 bazbaz\nfoobar omg\ntest";
   editor.setText(text);
@@ -25,7 +23,7 @@ function runTests(aWindow, aScratchpad)
   let oldPrompt = editor.openDialog;
   let desiredValue;
 
-  editor.openDialog = function (text, cb) {
+  editor.openDialog = function(text, cb) {
     cb(desiredValue);
   };
 
