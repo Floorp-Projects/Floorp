@@ -49,7 +49,8 @@ class Addons(object):
         """
         body = {"path": path, "temporary": temp}
         try:
-            return self._mn._send_message("addon:install", body, key="value")
+            return self._mn._send_message("Addon:Install",
+                                          body, key="value")
         except errors.UnknownException as e:
             raise AddonInstallException(e)
 
@@ -68,5 +69,5 @@ class Addons(object):
         :param addon_id: The addon ID string to uninstall.
 
         """
-        body = {"id": addon_id}
-        self._mn._send_message("addon:uninstall", body)
+        self._mn._send_message("Addon:Uninstall",
+                               {"id": addon_id})
