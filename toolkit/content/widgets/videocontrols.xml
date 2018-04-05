@@ -1951,20 +1951,9 @@
           return;
         }
         this.Utils.startFadeOut(this.Utils.controlBar);
-        if (this.firstShow) {
-          this.videocontrols.addEventListener("transitionend", this);
-        }
       },
 
       handleEvent(aEvent) {
-        if (aEvent.type == "transitionend") {
-          this.firstShow = false;
-          try {
-            this.videocontrols.removeEventListener("transitionend", this);
-          } catch (ex) {}
-          return;
-        }
-
         if (this.videocontrols.randomID != this.Utils.randomID) {
           this.terminateEventListeners();
         }
@@ -2002,6 +1991,7 @@
           if (event.originalTarget == self.Utils.controlsSpacer) {
             if (self.firstShow) {
               self.Utils.video.play();
+              self.firstShow = false;
             }
             self.toggleControls();
           }
