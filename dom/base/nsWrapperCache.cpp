@@ -38,7 +38,7 @@ void
 nsWrapperCache::SetWrapperJSObject(JSObject* aWrapper)
 {
   mWrapper = aWrapper;
-  UnsetWrapperFlags(kWrapperFlagsMask & ~WRAPPER_IS_NOT_DOM_BINDING);
+  UnsetWrapperFlags(kWrapperFlagsMask);
 
   if (aWrapper && !JS::ObjectIsTenured(aWrapper)) {
     CycleCollectedJSRuntime::Get()->NurseryWrapperAdded(this);
