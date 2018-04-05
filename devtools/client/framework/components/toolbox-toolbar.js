@@ -88,7 +88,6 @@ class ToolboxToolbar extends Component {
           renderToolboxButtonsStart(this.props),
           ToolboxTabs(this.props),
           renderToolboxButtonsEnd(this.props),
-          renderSeparator(),
           renderToolboxControls(this.props)
         )
       )
@@ -135,8 +134,17 @@ function renderToolboxButtons({focusedButton, toolboxButtons, focusButton}, isSt
     return null;
   }
 
-  return div({id: `toolbox-buttons-${isStart ? "start" : "end"}`},
-    ...visibleButtons.map(command => {
+  // The RDM button, if present, should always go last
+  const rdmIndex = visibleButtons.findIndex(
+    button => button.id === "command-button-responsive"
+  );
+  if (rdmIndex !== -1 && rdmIndex !== visibleButtons.length - 1) {
+    const rdm = visibleButtons.splice(rdmIndex, 1)[0];
+    visibleButtons.push(rdm);
+  }
+
+  const renderedButtons =
+    visibleButtons.map(command => {
       const {
         id,
         description,
@@ -164,9 +172,25 @@ function renderToolboxButtons({focusedButton, toolboxButtons, focusButton}, isSt
           onKeyDown(event);
         }
       });
-    }),
-    isStart ? div({className: "devtools-separator"}) : null
-  );
+    });
+
+  // Add the appropriate separator, if needed.
+  let children = renderedButtons;
+  if (renderedButtons.length) {
+    // For the end group we add a separator *before* the RDM button if it
+    // exists.
+    if (rdmIndex !== -1) {
+      children.splice(
+        children.length - 1,
+        0,
+        renderSeparator()
+      );
+    } else {
+      children.push(renderSeparator())
+    }
+  }
+
+  return div({id: `toolbox-buttons-${isStart ? "start" : "end"}`}, ...children);
 }
 
 /**
