@@ -292,7 +292,6 @@ whitelist-types = [
     "nsCSSValuePair_heap",
     "nsCSSValuePairList",
     "nsCSSValuePairList_heap",
-    "nsCSSValueTokenStream",
     "nsCSSValueTriplet_heap",
     "nsCursorImage",
     "nsFont",
