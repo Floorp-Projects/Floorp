@@ -47,7 +47,7 @@ static mozilla::LazyLogModule gResistFingerprintingLog("nsResistFingerprinting")
 #define RESIST_FINGERPRINTING_PREF "privacy.resistFingerprinting"
 #define RFP_TIMER_PREF "privacy.reduceTimerPrecision"
 #define RFP_TIMER_VALUE_PREF "privacy.resistFingerprinting.reduceTimerPrecision.microseconds"
-#define RFP_TIMER_VALUE_DEFAULT 100
+#define RFP_TIMER_VALUE_DEFAULT 1000
 #define RFP_JITTER_VALUE_PREF "privacy.resistFingerprinting.reduceTimerPrecision.jitter"
 #define RFP_JITTER_VALUE_DEFAULT true
 #define RFP_SPOOFED_FRAMES_PER_SEC_PREF "privacy.resistFingerprinting.video_frames_per_sec"
