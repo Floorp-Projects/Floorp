@@ -22,12 +22,10 @@ function reportErrorAndQuit(error) {
 function runTests(sw) {
   const sp = sw.Scratchpad;
 
-  let foo = "" + function main() {
-    console.log(1);
-  };
-  let bar = "var bar = " + (() => {
-    console.log(2);
-  });
+  /* eslint-disable brace-style */
+  let foo = "" + function main() { console.log(1); };
+  let bar = "var bar = " + (() => { console.log(2); });
+  /* eslint-enable brace-style */
 
   const fullText =
     foo + "\n" +
