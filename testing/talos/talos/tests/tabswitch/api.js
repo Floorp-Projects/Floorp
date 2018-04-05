@@ -4,7 +4,6 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Task.jsm");
 ChromeUtils.import("resource://gre/modules/RemotePageManager.jsm");
 
 let context = {};
@@ -156,7 +155,7 @@ function loadTPSContentScript(browser) {
  * to that tab. Returns a Promise that resolves ones the tab content
  * has been presented to the user.
  */
-function switchToTab(tab) {
+async function switchToTab(tab) {
   let browser = tab.linkedBrowser;
   let gBrowser = tab.ownerGlobal.gBrowser;
   let window = tab.ownerGlobal;
@@ -168,55 +167,52 @@ function switchToTab(tab) {
   // those two differences.
 
   if (browser.isRemoteBrowser) {
-    return Task.spawn(function* () {
-      // The multi-process case requires that we load our utility script
-      // inside the content, since it's the content that will hear a MozAfterPaint
-      // once the content is presented to the user.
-      yield loadTPSContentScript(browser);
-      let start = Math.floor(window.performance.timing.navigationStart + window.performance.now());
-
-      // We need to wait for the TabSwitchDone event to make sure
-      // that the async tab switcher has shut itself down.
-      let switchDone = waitForTabSwitchDone(browser);
-      // Set up our promise that will wait for the content to be
-      // presented.
-      let finishPromise = waitForContentPresented(browser);
-      // Finally, do the tab switch.
-      gBrowser.selectedTab = tab;
-
-      yield switchDone;
-      let finish = yield finishPromise;
-      return finish - start;
-    });
-  }
-
-  return Task.spawn(function* () {
-    let win = browser.ownerGlobal;
-    let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils);
-
+    // The multi-process case requires that we load our utility script
+    // inside the content, since it's the content that will hear a MozAfterPaint
+    // once the content is presented to the user.
+    await loadTPSContentScript(browser);
     let start = Math.floor(window.performance.timing.navigationStart + window.performance.now());
 
-    // There is no async tab switcher for the single-process case,
-    // but tabbrowser.xml will still fire this once the updateCurrentBrowser
-    // method runs.
+    // We need to wait for the TabSwitchDone event to make sure
+    // that the async tab switcher has shut itself down.
     let switchDone = waitForTabSwitchDone(browser);
-    // Do our tab switch
+    // Set up our promise that will wait for the content to be
+    // presented.
+    let finishPromise = waitForContentPresented(browser);
+    // Finally, do the tab switch.
     gBrowser.selectedTab = tab;
-    // Because the above tab switch is synchronous, we know that the
-    // we want a MozAfterPaint with a greater layer transaction id than
-    // what is currently the "last transaction id" for the window.
-    let lastTransactionId = winUtils.lastTransactionId;
 
-    yield switchDone;
-
-    // Now we'll wait for content to be presented. Because
-    // this is the single-process case, we pass the last transaction
-    // id that we got so that we don't get any intermediate MozAfterPaint's
-    // that might fire before web content is shown.
-    let finish = yield waitForContentPresented(browser, lastTransactionId);
+    await switchDone;
+    let finish = await finishPromise;
     return finish - start;
-  });
+  }
+
+  let win = browser.ownerGlobal;
+  let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils);
+
+  let start = Math.floor(window.performance.timing.navigationStart + window.performance.now());
+
+  // There is no async tab switcher for the single-process case,
+  // but tabbrowser.xml will still fire this once the updateCurrentBrowser
+  // method runs.
+  let switchDone = waitForTabSwitchDone(browser);
+  // Do our tab switch
+  gBrowser.selectedTab = tab;
+  // Because the above tab switch is synchronous, we know that the
+  // we want a MozAfterPaint with a greater layer transaction id than
+  // what is currently the "last transaction id" for the window.
+  let lastTransactionId = winUtils.lastTransactionId;
+
+  await switchDone;
+
+  // Now we'll wait for content to be presented. Because
+  // this is the single-process case, we pass the last transaction
+  // id that we got so that we don't get any intermediate MozAfterPaint's
+  // that might fire before web content is shown.
+  let finish = await waitForContentPresented(browser, lastTransactionId);
+  return finish - start;
+
 }
 
 /**
@@ -332,94 +328,92 @@ function forceGC(win, browser) {
  *        function defined in that window.
  * @returns Promise
  */
-function test(window) {
+async function test(window) {
   Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosParentProfiler.js", context);
   TalosParentProfiler = context.TalosParentProfiler;
 
-  return Task.spawn(function* () {
-    let testURLs = [];
+  let testURLs = [];
 
-    let win = window.OpenBrowserWindow();
-    try {
-      let prefFile = Services.prefs.getCharPref("addon.test.tabswitch.urlfile");
-      if (prefFile) {
-        testURLs = handleFile(win, prefFile);
-      }
-    } catch (ex) { /* error condition handled below */ }
-    if (!testURLs || testURLs.length == 0) {
-      dump("no tabs to test, 'addon.test.tabswitch.urlfile' pref isn't set to page set path\n");
-      return;
+  let win = window.OpenBrowserWindow();
+  try {
+    let prefFile = Services.prefs.getCharPref("addon.test.tabswitch.urlfile");
+    if (prefFile) {
+      testURLs = handleFile(win, prefFile);
     }
+  } catch (ex) { /* error condition handled below */ }
+  if (!testURLs || testURLs.length == 0) {
+    dump("no tabs to test, 'addon.test.tabswitch.urlfile' pref isn't set to page set path\n");
+    return;
+  }
 
-    yield waitForDelayedStartup(win);
+  await waitForDelayedStartup(win);
 
-    let gBrowser = win.gBrowser;
+  let gBrowser = win.gBrowser;
 
-    // We don't want to catch scrolling the tabstrip in our tests
-    gBrowser.tabContainer.style.visibility = "hidden";
+  // We don't want to catch scrolling the tabstrip in our tests
+  gBrowser.tabContainer.style.visibility = "hidden";
 
-    let initialTab = gBrowser.selectedTab;
-    yield loadTabs(gBrowser, testURLs);
+  let initialTab = gBrowser.selectedTab;
+  await loadTabs(gBrowser, testURLs);
 
-    // We'll switch back to about:blank after each tab switch
-    // in an attempt to put the graphics layer into a "steady"
-    // state before switching to the next tab.
-    initialTab.linkedBrowser.loadURI("about:blank", null, null);
+  // We'll switch back to about:blank after each tab switch
+  // in an attempt to put the graphics layer into a "steady"
+  // state before switching to the next tab.
+  initialTab.linkedBrowser.loadURI("about:blank", null, null);
 
-    let tabs = gBrowser.getTabsToTheEndFrom(initialTab);
-    let times = [];
+  let tabs = gBrowser.getTabsToTheEndFrom(initialTab);
+  let times = [];
 
-    for (let tab of tabs) {
-      // Let's do an initial run to warm up any paint related caches
-      // (like glyph caches for text). In the next loop we will start with
-      // a GC before each switch so we don't need here.
-      // Note: in case of multiple content processes, closing all the tabs
-      // would close the related content processes, and even if we kept them
-      // alive it would be unlikely that the same pages end up in the same
-      // content processes, so we cannot do this at the manifest level.
-      yield switchToTab(tab);
-      yield switchToTab(initialTab);
-    }
+  for (let tab of tabs) {
+    // Let's do an initial run to warm up any paint related caches
+    // (like glyph caches for text). In the next loop we will start with
+    // a GC before each switch so we don't need here.
+    // Note: in case of multiple content processes, closing all the tabs
+    // would close the related content processes, and even if we kept them
+    // alive it would be unlikely that the same pages end up in the same
+    // content processes, so we cannot do this at the manifest level.
+    await switchToTab(tab);
+    await switchToTab(initialTab);
+  }
 
-    for (let tab of tabs) {
-      gBrowser.moveTabTo(tab, 1);
-      yield forceGC(win, tab.linkedBrowser);
-      TalosParentProfiler.resume("start: " + tab.linkedBrowser.currentURI.spec);
-      let time = yield switchToTab(tab);
-      TalosParentProfiler.pause("finish: " + tab.linkedBrowser.currentURI.spec);
-      dump(`${tab.linkedBrowser.currentURI.spec}: ${time}ms\n`);
-      times.push(time);
-      yield switchToTab(initialTab);
-    }
+  for (let tab of tabs) {
+    gBrowser.moveTabTo(tab, 1);
+    await forceGC(win, tab.linkedBrowser);
+    TalosParentProfiler.resume("start: " + tab.linkedBrowser.currentURI.spec);
+    let time = await switchToTab(tab);
+    TalosParentProfiler.pause("finish: " + tab.linkedBrowser.currentURI.spec);
+    dump(`${tab.linkedBrowser.currentURI.spec}: ${time}ms\n`);
+    times.push(time);
+    await switchToTab(initialTab);
+  }
 
-    let output = "<!DOCTYPE html>" +
-                 '<html lang="en">' +
-                 "<head><title>Tab Switch Results</title></head>" +
-                 "<body><h1>Tab switch times</h1>" +
-                 "<table>";
-    let time = 0;
-    for (let i in times) {
-      time += times[i];
-      output += "<tr><td>" + testURLs[i] + "</td><td>" + times[i] + "ms</td></tr>";
-    }
-    output += "</table></body></html>";
-    dump("total tab switch time:" + time + "\n");
+  let output = "<!DOCTYPE html>" +
+               '<html lang="en">' +
+               "<head><title>Tab Switch Results</title></head>" +
+               "<body><h1>Tab switch times</h1>" +
+               "<table>";
+  let time = 0;
+  for (let i in times) {
+    time += times[i];
+    output += "<tr><td>" + testURLs[i] + "</td><td>" + times[i] + "ms</td></tr>";
+  }
+  output += "</table></body></html>";
+  dump("total tab switch time:" + time + "\n");
 
-    let resultsTab = win.gBrowser.loadOneTab(
-      "data:text/html;charset=utf-8," + encodeURIComponent(output), {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+  let resultsTab = win.gBrowser.loadOneTab(
+    "data:text/html;charset=utf-8," + encodeURIComponent(output), {
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  });
 
-    win.gBrowser.selectedTab = resultsTab;
+  win.gBrowser.selectedTab = resultsTab;
 
-    remotePage.sendAsyncMessage("tabswitch-test-results", {
-      times,
-      urls: testURLs,
-    });
+  remotePage.sendAsyncMessage("tabswitch-test-results", {
+    times,
+    urls: testURLs,
+  });
 
-    TalosParentProfiler.afterProfileGathered().then(() => {
-      win.close();
-    });
+  TalosParentProfiler.afterProfileGathered().then(() => {
+    win.close();
   });
 }
 
