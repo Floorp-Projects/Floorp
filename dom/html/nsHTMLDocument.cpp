@@ -106,7 +106,6 @@
 #include "mozilla/dom/Selection.h"
 #include "nsCharsetSource.h"
 #include "nsIStringBundle.h"
-#include "nsDOMClassInfo.h"
 #include "nsFocusManager.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"

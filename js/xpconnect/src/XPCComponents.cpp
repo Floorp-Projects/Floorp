@@ -32,7 +32,6 @@
 #include "mozilla/Scheduler.h"
 #include "nsZipArchive.h"
 #include "nsWindowMemoryReporter.h"
-#include "nsDOMClassInfo.h"
 #include "ShimInterfaceInfo.h"
 #include "nsIException.h"
 #include "nsIScriptError.h"

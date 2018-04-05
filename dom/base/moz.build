@@ -295,7 +295,6 @@ UNIFIED_SOURCES += [
     'nsDocumentEncoder.cpp',
     'nsDOMAttributeMap.cpp',
     'nsDOMCaretPosition.cpp',
-    'nsDOMClassInfo.cpp',
     'nsDOMMutationObserver.cpp',
     'nsDOMNavigationTiming.cpp',
     'nsDOMSerializer.cpp',
