@@ -113,9 +113,8 @@ HTMLEditor::CreateResizer(int16_t aLocation,
   }
 
   // add the mouse listener so we can detect a click on a resizer
-  nsCOMPtr<nsIDOMEventTarget> evtTarget = do_QueryInterface(ret);
-  evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), mEventListener,
-                              true);
+  ret->AddEventListener(NS_LITERAL_STRING("mousedown"), mEventListener,
+                        true);
 
   nsAutoString locationStr;
   switch (aLocation) {
@@ -341,7 +340,7 @@ HTMLEditor::ShowResizersInner(Element& aResizedElement)
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(doc->GetWindow());
+  nsCOMPtr<EventTarget> target = do_QueryInterface(doc->GetWindow());
   if (!target) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -508,7 +507,7 @@ HTMLEditor::StartResizing(nsIDOMElement* aHandle)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsIDOMEventTarget* target = GetDOMEventTarget();
+    EventTarget* target = GetDOMEventTarget();
     NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
 
     result = target->AddEventListener(NS_LITERAL_STRING("mousemove"),

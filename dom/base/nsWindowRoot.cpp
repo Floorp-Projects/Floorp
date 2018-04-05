@@ -84,20 +84,23 @@ nsWindowRoot::DispatchEvent(Event& aEvent, CallerType aCallerType,
   return retval;
 }
 
-NS_IMETHODIMP
+bool
+nsWindowRoot::ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted)
+{
+  return !aWantsUntrusted.IsNull() && aWantsUntrusted.Value();
+}
+
+nsresult
 nsWindowRoot::AddEventListener(const nsAString& aType,
                                nsIDOMEventListener *aListener,
-                               bool aUseCapture, bool aWantsUntrusted,
-                               uint8_t aOptionalArgc)
+                               bool aUseCapture,
+                               const Nullable<bool>& aWantsUntrusted)
 {
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
 
   EventListenerManager* elm = GetOrCreateListenerManager();
   NS_ENSURE_STATE(elm);
-  elm->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
+  elm->AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
   return NS_OK;
 }
 
@@ -108,7 +111,7 @@ nsWindowRoot::AddEventListener(const nsAString& aType,
                                 const Nullable<bool>& aWantsUntrusted,
                                 ErrorResult& aRv)
 {
-  bool wantsUntrusted = !aWantsUntrusted.IsNull() && aWantsUntrusted.Value();
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
   EventListenerManager* elm = GetOrCreateListenerManager();
   if (!elm) {
     aRv.Throw(NS_ERROR_UNEXPECTED);

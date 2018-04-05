@@ -51,15 +51,15 @@ public:
 
   void SetOndevicechange(mozilla::dom::EventHandlerNonNull* aCallback);
 
-  NS_IMETHOD AddEventListener(const nsAString& aType,
-    nsIDOMEventListener* aListener,
-    bool aUseCapture, bool aWantsUntrusted,
-    uint8_t optional_argc) override;
+  nsresult AddEventListener(const nsAString& aType,
+			    nsIDOMEventListener* aListener,
+			    bool aUseCapture,
+			    const Nullable<bool>& aWantsUntrusted) override;
 
   virtual void AddEventListener(const nsAString& aType,
                                 dom::EventListener* aListener,
-                                const dom::AddEventListenerOptionsOrBoolean& aOptions,
-                                const dom::Nullable<bool>& aWantsUntrusted,
+                                const AddEventListenerOptionsOrBoolean& aOptions,
+                                const Nullable<bool>& aWantsUntrusted,
                                 ErrorResult& aRv) override;
 
 private:

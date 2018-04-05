@@ -6466,14 +6466,14 @@ nsGlobalWindowOuter::DispatchEvent(Event& aEvent,
   FORWARD_TO_INNER(DispatchEvent, (aEvent, aCallerType, aRv), false);
 }
 
-NS_IMETHODIMP
+nsresult
 nsGlobalWindowOuter::AddEventListener(const nsAString& aType,
                                       nsIDOMEventListener *aListener,
-                                      bool aUseCapture, bool aWantsUntrusted,
-                                      uint8_t aOptionalArgc)
+                                      bool aUseCapture,
+                                      const Nullable<bool>& aWantsUntrusted)
 {
   FORWARD_TO_INNER_CREATE(AddEventListener,
-                          (aType, aListener, aUseCapture, aWantsUntrusted, aOptionalArgc),
+                          (aType, aListener, aUseCapture, aWantsUntrusted),
                           NS_ERROR_UNEXPECTED);
 }
 
