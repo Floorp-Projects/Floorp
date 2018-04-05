@@ -317,7 +317,9 @@ public:
   }
   void AddEventListenerByType(EventListenerHolder aListener,
                               const nsAString& type,
-                              const EventListenerFlags& aFlags);
+                              const EventListenerFlags& aFlags,
+                              const dom::Optional<bool>& aPassive =
+                                dom::Optional<bool>());
   void RemoveEventListenerByType(nsIDOMEventListener *aListener,
                                  const nsAString& type,
                                  const EventListenerFlags& aFlags)

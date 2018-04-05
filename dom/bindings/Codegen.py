@@ -23,7 +23,6 @@ FINALIZE_HOOK_NAME = '_finalize'
 OBJECT_MOVED_HOOK_NAME = '_objectMoved'
 CONSTRUCT_HOOK_NAME = '_constructor'
 LEGACYCALLER_HOOK_NAME = '_legacycaller'
-HASINSTANCE_HOOK_NAME = '_hasInstance'
 RESOLVE_HOOK_NAME = '_resolve'
 MAY_RESOLVE_HOOK_NAME = '_mayResolve'
 NEW_ENUMERATE_HOOK_NAME = '_newEnumerate'
@@ -686,11 +685,6 @@ class CGPrototypeJSClass(CGThing):
             protoGetter=protoGetter)
 
 
-def NeedsGeneratedHasInstance(descriptor):
-    assert descriptor.interface.hasInterfaceObject()
-    return descriptor.hasXPConnectImpls
-
-
 def InterfaceObjectProtoGetter(descriptor, forXrays=False):
     """
     Returns a tuple with two elements:
@@ -741,9 +735,7 @@ class CGInterfaceObjectJSClass(CGThing):
             ctorname = "nullptr"
         else:
             ctorname = "ThrowingConstructor"
-        needsHasInstance = (
-            not NeedsGeneratedHasInstance(self.descriptor) and
-            self.descriptor.interface.hasInterfacePrototypeObject())
+        needsHasInstance = self.descriptor.interface.hasInterfacePrototypeObject()
 
         prototypeID, depth = PrototypeIDAndDepth(self.descriptor)
         slotCount = "DOM_INTERFACE_SLOTS_BASE"
@@ -1106,15 +1098,6 @@ class CGHeaders(CGWrapper):
         implementationIncludes |= set(self.getDeclarationFilename(i) for i in
                                       interfacesImplementingSelf)
 
-        # Grab the includes for the things that involve XPCOM interfaces
-        hasInstanceIncludes = set(self.getDeclarationFilename(d.interface) for d
-                                  in descriptors if
-                                  d.interface.hasInterfaceObject() and
-                                  NeedsGeneratedHasInstance(d) and
-                                  d.interface.hasInterfacePrototypeObject())
-        if len(hasInstanceIncludes) > 0:
-            hasInstanceIncludes.add("nsContentUtils.h")
-
         # Now find all the things we'll need as arguments because we
         # need to wrap or unwrap them.
         bindingHeaders = set()
@@ -1298,7 +1281,6 @@ class CGHeaders(CGWrapper):
                            definePre=_includeString(sorted(set(defineIncludes) |
                                                            bindingIncludes |
                                                            bindingHeaders |
-                                                           hasInstanceIncludes |
                                                            implementationIncludes)))
 
     @staticmethod
@@ -1980,52 +1962,6 @@ class CGNamedConstructors(CGThing):
             namedConstructors=namedConstructors)
 
 
-class CGHasInstanceHook(CGAbstractStaticMethod):
-    def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
-        assert descriptor.interface.hasInterfaceObject()
-        assert NeedsGeneratedHasInstance(descriptor)
-        CGAbstractStaticMethod.__init__(self, descriptor, HASINSTANCE_HOOK_NAME,
-                                        'bool', args)
-
-    def define(self):
-        return CGAbstractStaticMethod.define(self)
-
-    def definition_body(self):
-        return self.generate_code()
-
-    def generate_code(self):
-        return fill(
-            """
-            JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-            if (!args.get(0).isObject()) {
-              args.rval().setBoolean(false);
-              return true;
-            }
-
-            JS::Rooted<JSObject*> instance(cx, &args[0].toObject());
-
-            static_assert(IsBaseOf<nsISupports, ${nativeType}>::value,
-                          "HasInstance only works for nsISupports-based classes.");
-
-            bool ok = InterfaceHasInstance(cx, argc, vp);
-            if (!ok || args.rval().toBoolean()) {
-              return ok;
-            }
-
-            // FIXME Limit this to chrome by checking xpc::AccessCheck::isChrome(obj).
-            nsCOMPtr<nsISupports> native =
-              xpc::UnwrapReflectorToISupports(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
-            nsCOMPtr<nsIDOM${name}> qiResult = do_QueryInterface(native);
-            args.rval().setBoolean(!!qiResult);
-            return true;
-            """,
-            nativeType=self.descriptor.nativeType,
-            name=self.descriptor.interface.identifier.name)
-
-
 def isChromeOnly(m):
     return m.getExtendedAttribute("ChromeOnly")
 
@@ -2439,20 +2375,6 @@ class MethodDefiner(PropertyDefiner):
                 "selfHostedName": "ArrayValues",
                 "length": 0,
                 "flags": "0", # Not enumerable, per spec.
-                "condition": MemberCondition()
-            })
-
-        if (static and
-            not unforgeable and
-            descriptor.interface.hasInterfaceObject() and
-            NeedsGeneratedHasInstance(descriptor)):
-            self.regular.append({
-                "name": "@@hasInstance",
-                "methodInfo": False,
-                "nativeName": HASINSTANCE_HOOK_NAME,
-                "length": 1,
-                # Flags match those of Function[Symbol.hasInstance]
-                "flags": "JSPROP_READONLY | JSPROP_PERMANENT",
                 "condition": MemberCondition()
             })
 
@@ -3474,38 +3396,6 @@ class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
             nativeType=self.descriptor.nativeType)
 
 
-class CGDefineDOMInterfaceMethod(CGAbstractMethod):
-    """
-    A method for resolve hooks to try to lazily define the interface object for
-    a given interface.
-    """
-    def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'aCx'),
-                Argument('JS::Handle<JSObject*>', 'aGlobal'),
-                Argument('JS::Handle<jsid>', 'id'),
-                Argument('bool', 'aDefineOnGlobal')]
-        CGAbstractMethod.__init__(self, descriptor, 'DefineDOMInterface', 'JSObject*', args)
-
-    def definition_body(self):
-        if len(self.descriptor.interface.namedConstructors) > 0:
-            getConstructor = dedent("""
-                JSObject* interfaceObject = GetConstructorObjectHandle(aCx, aDefineOnGlobal);
-                if (!interfaceObject) {
-                  return nullptr;
-                }
-                for (unsigned slot = DOM_INTERFACE_SLOTS_BASE; slot < JSCLASS_RESERVED_SLOTS(&sInterfaceObjectClass.mBase); ++slot) {
-                  JSObject* constructor = &js::GetReservedSlot(interfaceObject, slot).toObject();
-                  if (JS_GetFunctionId(JS_GetObjectFunction(constructor)) == JSID_TO_STRING(id)) {
-                    return constructor;
-                  }
-                }
-                return interfaceObject;
-                """)
-        else:
-            getConstructor = "return GetConstructorObjectHandle(aCx, aDefineOnGlobal);\n"
-        return getConstructor
-
-
 def getConditionList(idlobj, cxName, objName):
     """
     Get the list of conditions for idlobj (to be used in "is this enabled"
@@ -4340,14 +4230,6 @@ class CastableObjectUnwrapper():
             "target": target,
             "codeOnFailure": codeOnFailure,
         }
-        # Supporting both the "cross origin object" case and the "has
-        # XPConnect impls" case at the same time is a pain, so let's
-        # not do that.  That allows us to assume that our source is
-        # always a Handle or MutableHandle.
-        if allowCrossOriginObj and descriptor.hasXPConnectImpls:
-            raise TypeError("Interface %s both allows a cross-origin 'this' "
-                            "and has XPConnect impls.  We don't support that" %
-                            descriptor.name)
         if allowCrossOriginObj:
             self.substitution["uncheckedObjDecl"] = fill(
                 """
@@ -4368,30 +4250,14 @@ class CastableObjectUnwrapper():
                 codeOnFailure=(codeOnFailure % { 'securityError': 'true'}))
             self.substitution["source"] = "maybeUncheckedObj"
             self.substitution["mutableSource"] = "&maybeUncheckedObj"
-            # No need to set up xpconnectUnwrap, since it won't be
-            # used in the allowCrossOriginObj case.
         else:
             self.substitution["uncheckedObjDecl"] = ""
             self.substitution["uncheckedObjGet"] = ""
             self.substitution["source"] = source
             self.substitution["mutableSource"] = mutableSource
-            xpconnectUnwrap = (
-                "nsresult rv = UnwrapXPConnect<${type}>(cx, ${mutableSource}, getter_AddRefs(objPtr));\n")
 
-        if descriptor.hasXPConnectImpls:
-            self.substitution["codeOnFailure"] = string.Template(
-                "RefPtr<${type}> objPtr;\n" +
-                xpconnectUnwrap +
-                "if (NS_FAILED(rv)) {\n"
-                "${indentedCodeOnFailure}"
-                "}\n"
-                "// We should have an object\n"
-                "MOZ_ASSERT(objPtr);\n"
-                "${target} = objPtr;\n"
-            ).substitute(self.substitution,
-                         indentedCodeOnFailure=indent(codeOnFailure))
-        elif (isCallbackReturnValue == "JSImpl" and
-              descriptor.interface.isJSImplemented()):
+        if (isCallbackReturnValue == "JSImpl" and
+            descriptor.interface.isJSImplemented()):
             exceptionCode = exceptionCode or codeOnFailure
             self.substitution["codeOnFailure"] = fill(
                 """
@@ -6835,18 +6701,10 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             if isConstructorRetval:
                 wrapArgs += ", desiredProto"
             wrap = "%s(%s)" % (wrapMethod, wrapArgs)
-            if not descriptor.hasXPConnectImpls:
-                # Can only fail to wrap as a new-binding object
-                # if they already threw an exception.
-                failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
-                          exceptionCode)
-            else:
-                if descriptor.notflattened:
-                    raise TypeError("%s has XPConnect impls but not flattened; "
-                                    "fallback won't work correctly" %
-                                    descriptor.interface.identifier.name)
-                # Try old-style wrapping for bindings which might be XPConnect impls.
-                failed = wrapAndSetPtr("HandleNewBindingWrappingFailure(cx, ${obj}, %s, ${jsvalHandle})" % result)
+            # Can only fail to wrap as a new-binding object if they already
+            # threw an exception.
+            failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
+                      exceptionCode)
         else:
             if descriptor.notflattened:
                 getIID = "&NS_GET_IID(%s), " % descriptor.nativeType
@@ -9226,12 +9084,6 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
                                                         self.attr)
         if self.attr.slotIndices is not None:
-            if self.descriptor.hasXPConnectImpls:
-                raise TypeError("Interface '%s' has XPConnect impls, so we "
-                                "can't use our slot for property '%s'!" %
-                                (self.descriptor.interface.identifier.name,
-                                 self.attr.identifier.name))
-
             # We're going to store this return value in a slot on some object,
             # to cache it.  The question is, which object?  For dictionary and
             # sequence return values, we want to use a slot on the Xray expando
@@ -12863,12 +12715,6 @@ class CGDescriptor(CGThing):
             for m in clearableCachedAttrs(descriptor):
                 cgThings.append(CGJSImplClearCachedValueMethod(descriptor, m))
 
-        # Need to output our generated hasinstance bits before
-        # PropertyArrays tries to use them.
-        if (descriptor.interface.hasInterfaceObject() and
-            NeedsGeneratedHasInstance(descriptor)):
-            cgThings.append(CGHasInstanceHook(descriptor))
-
         properties = PropertyArrays(descriptor)
         cgThings.append(CGGeneric(define=str(properties)))
         cgThings.append(CGNativeProperties(descriptor, properties))
@@ -12895,9 +12741,6 @@ class CGDescriptor(CGThing):
             not descriptor.interface.isExternal() and
             descriptor.isExposedConditionally()):
             cgThings.append(CGConstructorEnabled(descriptor))
-
-        if descriptor.registersGlobalNamesOnWindow:
-            cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
 
         if (descriptor.interface.hasMembersInSlots() and
             descriptor.interface.hasChildInterfaces()):
@@ -14031,7 +13874,7 @@ class CGRegisterGlobalNames(CGAbstractMethod):
         currentOffset = 0
         for (name, desc) in getGlobalNames(self.config):
             length = len(name)
-            define += "WebIDLGlobalNameHash::Register(%i, %i, %sBinding::DefineDOMInterface, %s, constructors::id::%s);\n" % (
+            define += "WebIDLGlobalNameHash::Register(%i, %i, %sBinding::CreateInterfaceObjects, %s, constructors::id::%s);\n" % (
                 currentOffset, length, desc.name, getCheck(desc), desc.name)
             currentOffset += length + 1 # Add trailing null.
         return define
@@ -15423,13 +15266,6 @@ class CGJSImplMethod(CGJSImplMember):
     interface.
     """
     def __init__(self, descriptor, method, signature, isConstructor, breakAfter=True):
-        virtual = False
-        override = False
-        if (method.identifier.name == "eventListenerWasAdded" or
-            method.identifier.name == "eventListenerWasRemoved"):
-            virtual = True
-            override = True
-
         self.signature = signature
         self.descriptor = descriptor
         self.isConstructor = isConstructor
@@ -15440,9 +15276,7 @@ class CGJSImplMethod(CGJSImplMember):
                                 descriptor.getExtendedAttributes(method),
                                 breakAfter=breakAfter,
                                 variadicIsSequence=True,
-                                passJSBitsAsNeeded=False,
-                                virtual=virtual,
-                                override=override)
+                                passJSBitsAsNeeded=False)
 
     def getArgs(self, returnType, argList):
         if self.isConstructor:
@@ -15662,6 +15496,15 @@ class CGJSImplClass(CGBindingImplClass):
             ccDecl=ccDecl,
             jsImplName=jsImplName(descriptor.name))
 
+        if descriptor.interface.getExtendedAttribute("WantsEventListenerHooks"):
+            # No need to do too much sanity checking here; the
+            # generated code will fail to compile if the methods we
+            # try to overrid aren't on a superclass.
+            self.methodDecls.extend(
+                self.getEventHookMethod(parentClass, "EventListenerAdded"))
+            self.methodDecls.extend(
+                self.getEventHookMethod(parentClass, "EventListenerRemoved"))
+
         if descriptor.interface.hasChildInterfaces():
             decorators = ""
             # We need a protected virtual destructor our subclasses can use
@@ -15789,6 +15632,22 @@ class CGJSImplClass(CGBindingImplClass):
             """,
             ifaceName=self.descriptor.interface.identifier.name,
             implName=self.descriptor.name)
+
+    def getEventHookMethod(self, parentClass, methodName):
+        body = fill(
+            """
+            ${parentClass}::${methodName}(aType);
+            mImpl->${methodName}(Substring(nsDependentAtomString(aType), 2), IgnoreErrors());
+            """,
+            parentClass=parentClass,
+            methodName=methodName)
+        return [ClassMethod(methodName,
+                            "void",
+                            [Argument("nsAtom*", "aType")],
+                            virtual=True,
+                            override=True,
+                            body=body),
+                ClassUsingDeclaration(parentClass, methodName)]
 
 
 def isJSImplementedDescriptor(descriptorProvider):
@@ -16102,6 +15961,16 @@ class CGCallbackInterface(CGCallback):
             idlist.append("__init")
         if needOnGetId:
             idlist.append("__onget")
+
+        if (iface.isJSImplemented() and
+            iface.getExtendedAttribute("WantsEventListenerHooks")):
+            methods.append(CGJSImplEventHookOperation(descriptor,
+                                                      "eventListenerAdded"))
+            methods.append(CGJSImplEventHookOperation(descriptor,
+                                                      "eventListenerRemoved"))
+            idlist.append("eventListenerAdded")
+            idlist.append("eventListenerRemoved")
+
         if len(idlist) != 0:
             methods.append(initIdsClassMethod(idlist,
                                               iface.identifier.name + "Atoms"))
@@ -16647,6 +16516,27 @@ class CGJSImplOnGetOperation(CallbackOperationBase):
     def getPrettyName(self):
         return "__onget"
 
+class CGJSImplEventHookOperation(CallbackOperationBase):
+    """
+    Codegen the hooks on a JS impl for adding/removing event listeners.
+    """
+    def __init__(self, descriptor, name):
+        self.name = name
+
+        CallbackOperationBase.__init__(
+            self,
+            (BuiltinTypes[IDLBuiltinType.Types.void],
+             [FakeArgument(BuiltinTypes[IDLBuiltinType.Types.domstring],
+                           None,
+                           "aType")]),
+            name, MakeNativeName(name),
+            descriptor,
+            singleOperation=False,
+            rethrowContentException=False,
+            spiderMonkeyInterfacesAreStructs=True)
+
+    def getPrettyName(self):
+        return self.name
 
 def getMaplikeOrSetlikeErrorReturn(helperImpl):
     """
@@ -17249,6 +17139,10 @@ class GlobalGenRoots():
                 d.interface.maplikeOrSetlikeOrIterable.isMaplike()):
                 # We'll have an __onget() method.
                 members.append(FakeMember('__onget'))
+            if (d.interface.isJSImplemented() and
+                d.interface.getExtendedAttribute("WantsEventListenerHooks")):
+                members.append(FakeMember('eventListenerAdded'))
+                members.append(FakeMember('eventListenerRemoved'))
             if len(members) == 0:
                 continue
 

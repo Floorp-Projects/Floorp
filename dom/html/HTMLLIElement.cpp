@@ -83,7 +83,7 @@ NS_IMETHODIMP_(bool)
 HTMLLIElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsGkAtoms::type },
+    { nsGkAtoms::type },
     { nullptr },
   };
 

@@ -213,9 +213,6 @@ function openBrowserWindow(cmdLine, urlOrUrlList, postData = null,
       win.document.documentElement.removeAttribute("windowtype");
 
       if (forcePrivate) {
-        // This causes a "Only internal code is allowed to set the
-        // usePrivateBrowsing attribute" warning in the Browser Console.
-        // Still better than having a white window that flickers.
         win.QueryInterface(Ci.nsIInterfaceRequestor)
            .getInterface(Ci.nsIWebNavigation)
            .QueryInterface(Ci.nsILoadContext)
@@ -418,6 +415,15 @@ nsBrowserContentHandler.prototype = {
     // PB builds.
     if (cmdLine.handleFlag("private", false) && PrivateBrowsingUtils.enabled) {
       PrivateBrowsingUtils.enterTemporaryAutoStartMode();
+      if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
+        let win = Services.wm.getMostRecentWindow("navigator:blank");
+        if (win) {
+          win.QueryInterface(Ci.nsIInterfaceRequestor)
+             .getInterface(Ci.nsIWebNavigation)
+             .QueryInterface(Ci.nsILoadContext)
+             .usePrivateBrowsing = true;
+        }
+      }
     }
     if (cmdLine.handleFlag("setDefaultBrowser", false)) {
       ShellService.setDefaultBrowser(true, true);

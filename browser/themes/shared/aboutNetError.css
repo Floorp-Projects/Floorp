@@ -161,6 +161,10 @@ span#hostname {
   padding: 10px;
 }
 
+.exceptionDialogButtonContainer[hidden] {
+  display: none;
+}
+
 .illustrated #errorPageContainer {
   min-height: 300px;
   display: flex;

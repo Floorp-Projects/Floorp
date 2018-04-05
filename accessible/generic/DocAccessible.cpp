@@ -54,17 +54,17 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // Static member initialization
 
-static nsStaticAtom** kRelationAttrs[] =
+static nsStaticAtom* const kRelationAttrs[] =
 {
-  &nsGkAtoms::aria_labelledby,
-  &nsGkAtoms::aria_describedby,
-  &nsGkAtoms::aria_details,
-  &nsGkAtoms::aria_owns,
-  &nsGkAtoms::aria_controls,
-  &nsGkAtoms::aria_flowto,
-  &nsGkAtoms::aria_errormessage,
-  &nsGkAtoms::_for,
-  &nsGkAtoms::control
+  nsGkAtoms::aria_labelledby,
+  nsGkAtoms::aria_describedby,
+  nsGkAtoms::aria_details,
+  nsGkAtoms::aria_owns,
+  nsGkAtoms::aria_controls,
+  nsGkAtoms::aria_flowto,
+  nsGkAtoms::aria_errormessage,
+  nsGkAtoms::_for,
+  nsGkAtoms::control
 };
 
 static const uint32_t kRelationAttrsLen = ArrayLength(kRelationAttrs);
@@ -1557,7 +1557,7 @@ DocAccessible::AddDependentIDsFor(Accessible* aRelProvider, nsAtom* aRelAttr)
     return;
 
   for (uint32_t idx = 0; idx < kRelationAttrsLen; idx++) {
-    nsAtom* relAttr = *kRelationAttrs[idx];
+    nsStaticAtom* relAttr = kRelationAttrs[idx];
     if (aRelAttr && aRelAttr != relAttr)
       continue;
 
@@ -1629,8 +1629,8 @@ DocAccessible::RemoveDependentIDsFor(Accessible* aRelProvider,
     return;
 
   for (uint32_t idx = 0; idx < kRelationAttrsLen; idx++) {
-    nsAtom* relAttr = *kRelationAttrs[idx];
-    if (aRelAttr && aRelAttr != *kRelationAttrs[idx])
+    nsStaticAtom* relAttr = kRelationAttrs[idx];
+    if (aRelAttr && aRelAttr != kRelationAttrs[idx])
       continue;
 
     IDRefsIterator iter(this, relProviderElm, relAttr);

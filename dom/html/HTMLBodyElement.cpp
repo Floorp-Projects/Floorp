@@ -232,16 +232,16 @@ NS_IMETHODIMP_(bool)
 HTMLBodyElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsGkAtoms::link },
-    { &nsGkAtoms::vlink },
-    { &nsGkAtoms::alink },
-    { &nsGkAtoms::text },
-    { &nsGkAtoms::marginwidth },
-    { &nsGkAtoms::marginheight },
-    { &nsGkAtoms::topmargin },
-    { &nsGkAtoms::rightmargin },
-    { &nsGkAtoms::bottommargin },
-    { &nsGkAtoms::leftmargin },
+    { nsGkAtoms::link },
+    { nsGkAtoms::vlink },
+    { nsGkAtoms::alink },
+    { nsGkAtoms::text },
+    { nsGkAtoms::marginwidth },
+    { nsGkAtoms::marginheight },
+    { nsGkAtoms::topmargin },
+    { nsGkAtoms::rightmargin },
+    { nsGkAtoms::bottommargin },
+    { nsGkAtoms::leftmargin },
     { nullptr },
   };
 

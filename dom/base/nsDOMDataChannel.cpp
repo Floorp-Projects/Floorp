@@ -11,7 +11,6 @@
 
 #include "nsDOMDataChannelDeclarations.h"
 #include "nsDOMDataChannel.h"
-#include "nsIDOMDataChannel.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageEvent.h"
@@ -69,7 +68,6 @@ NS_IMPL_ADDREF_INHERITED(nsDOMDataChannel, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsDOMDataChannel, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMDataChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDataChannel)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 nsDOMDataChannel::nsDOMDataChannel(already_AddRefed<mozilla::DataChannel>& aDataChannel,
@@ -535,7 +533,7 @@ nsDOMDataChannel::EventListenerRemoved(nsAtom* aType)
 nsresult
 NS_NewDOMDataChannel(already_AddRefed<mozilla::DataChannel>&& aDataChannel,
                      nsPIDOMWindowInner* aWindow,
-                     nsIDOMDataChannel** aDomDataChannel)
+                     nsDOMDataChannel** aDomDataChannel)
 {
   RefPtr<nsDOMDataChannel> domdc =
     new nsDOMDataChannel(aDataChannel, aWindow);
@@ -543,12 +541,6 @@ NS_NewDOMDataChannel(already_AddRefed<mozilla::DataChannel>&& aDataChannel,
   nsresult rv = domdc->Init(aWindow);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  return CallQueryInterface(domdc, aDomDataChannel);
-}
-
-/* static */
-void
-NS_DataChannelAppReady(nsIDOMDataChannel* aDomDataChannel)
-{
-  ((nsDOMDataChannel *)aDomDataChannel)->AppReady();
+  domdc.forget(aDomDataChannel);
+  return NS_OK;
 }

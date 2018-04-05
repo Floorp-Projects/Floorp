@@ -2576,7 +2576,7 @@ class Namespace extends Map {
       type.type = "object";
     } else if (DEBUG) {
       if (!targetType) {
-        throw new Error(`Internal error: Attempt to extend a nonexistant type ${type.$extend}`);
+        throw new Error(`Internal error: Attempt to extend a nonexistent type ${type.$extend}`);
       } else if (!(targetType instanceof ChoiceType)) {
         throw new Error(`Internal error: Attempt to extend a non-extensible type ${type.$extend}`);
       }

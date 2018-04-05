@@ -804,7 +804,6 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
     id: "panic-button",
     type: "view",
     viewId: "PanelUI-panicView",
-    disabled: !Services.policies.isAllowed("panicButton"),
 
     forgetButtonCalled(aEvent) {
       let doc = aEvent.target.ownerDocument;
