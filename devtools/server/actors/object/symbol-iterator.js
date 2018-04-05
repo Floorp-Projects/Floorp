@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+
+const protocol = require("devtools/shared/protocol");
+const { symbolIteratorSpec } = require("devtools/shared/specs/symbol-iterator");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 /**
@@ -13,35 +16,35 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
  * @param objectActor ObjectActor
  *        The object actor.
  */
-function SymbolIteratorActor(objectActor) {
-  let symbols = [];
-  if (DevToolsUtils.isSafeDebuggerObject(objectActor.obj)) {
-    try {
-      symbols = objectActor.obj.getOwnPropertySymbols();
-    } catch (err) {
-      // The above can throw when the debuggee does not subsume the object's
-      // compartment, or for some WrappedNatives like Cu.Sandbox.
+const SymbolIteratorActor  = protocol.ActorClassWithSpec(symbolIteratorSpec, {
+  initialize(objectActor) {
+    protocol.Actor.prototype.initialize.call(this);
+
+    let symbols = [];
+    if (DevToolsUtils.isSafeDebuggerObject(objectActor.obj)) {
+      try {
+        symbols = objectActor.obj.getOwnPropertySymbols();
+      } catch (err) {
+        // The above can throw when the debuggee does not subsume the object's
+        // compartment, or for some WrappedNatives like Cu.Sandbox.
+      }
     }
-  }
 
-  this.iterator = {
-    size: symbols.length,
-    symbolDescription(index) {
-      const symbol = symbols[index];
-      return {
-        name: symbol.toString(),
-        descriptor: objectActor._propertyDescriptor(symbol)
-      };
-    }
-  };
-}
+    this.iterator = {
+      size: symbols.length,
+      symbolDescription(index) {
+        const symbol = symbols[index];
+        return {
+          name: symbol.toString(),
+          descriptor: objectActor._propertyDescriptor(symbol)
+        };
+      }
+    };
+  },
 
-SymbolIteratorActor.prototype = {
-  actorPrefix: "symbolIterator",
-
-  grip() {
+  form() {
     return {
-      type: this.actorPrefix,
+      type: this.typeName,
       actor: this.actorID,
       count: this.iterator.size
     };
@@ -60,11 +63,6 @@ SymbolIteratorActor.prototype = {
   all() {
     return this.slice({ start: 0, count: this.iterator.size });
   }
-};
-
-SymbolIteratorActor.prototype.requestTypes = {
-  "slice": SymbolIteratorActor.prototype.slice,
-  "all": SymbolIteratorActor.prototype.all,
-};
+});
 
 exports.SymbolIteratorActor = SymbolIteratorActor;

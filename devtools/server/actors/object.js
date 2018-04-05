@@ -284,7 +284,7 @@ ObjectActor.prototype = {
     let actor = new SymbolIteratorActor(this);
     this.registeredPool.addActor(actor);
     this.iterators.add(actor);
-    return { iterator: actor.grip() };
+    return { iterator: actor.form() };
   },
 
   /**
