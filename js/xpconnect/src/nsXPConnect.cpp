@@ -754,16 +754,6 @@ xpc::UnwrapReflectorToISupports(JSObject* reflector)
 }
 
 NS_IMETHODIMP
-nsXPConnect::SetFunctionThisTranslator(const nsIID & aIID,
-                                       nsIXPCFunctionThisTranslator* aTranslator)
-{
-    XPCJSRuntime* rt = GetRuntimeInstance();
-    IID2ThisTranslatorMap* map = rt->GetThisTranslatorMap();
-    map->Add(aIID, aTranslator);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPConnect::CreateSandbox(JSContext* cx, nsIPrincipal* principal,
                            JSObject** _retval)
 {
