@@ -162,11 +162,11 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
           localPreview.addCallback(this);
           if (localPreview.getSurface() != null &&
               localPreview.getSurface().isValid()) {
-	    try {
-	      camera.setPreviewDisplay(localPreview);
-	    } catch (IOException e) {
-	      throw new RuntimeException(e);
-	    }
+            try {
+              camera.setPreviewDisplay(localPreview);
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
           }
         } else {
           // No local renderer (we only care about onPreviewFrame() buffers, not a
