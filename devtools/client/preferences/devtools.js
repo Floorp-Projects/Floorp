@@ -49,7 +49,11 @@ pref("devtools.inspector.enabled", true);
 pref("devtools.inspector.activeSidebar", "ruleview");
 pref("devtools.inspector.remote", false);
 // Enable the 3 pane mode toggle in the inspector
+#if defined(NIGHTLY_BUILD)
+pref("devtools.inspector.three-pane-toggle", true);
+#else
 pref("devtools.inspector.three-pane-toggle", false);
+#endif
 // Enable the 3 pane mode in the inspector
 pref("devtools.inspector.three-pane-enabled", false);
 // Collapse pseudo-elements by default in the rule-view
