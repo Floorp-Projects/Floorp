@@ -51,3 +51,6 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
     '/netwerk/protocol/http',
 ]
+
+# Add libFuzzer configuration directives
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
