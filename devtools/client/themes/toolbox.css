@@ -14,7 +14,6 @@
   --command-pick-image: url(images/command-pick.svg);
   --command-pick-accessibility-image: url(images/command-pick-accessibility.svg);
   --command-frames-image: url(images/command-frames.svg);
-  --command-splitconsole-image: url(images/command-console.svg);
   --command-noautohide-image: url(images/command-noautohide.svg);
   --command-rulers-image: url(images/command-rulers.svg);
   --command-measure-image: url(images/command-measure.svg);
@@ -211,10 +210,6 @@
 
 #command-button-pick.accessibility::before {
   background-image: var(--command-pick-accessibility-image);
-}
-
-#command-button-splitconsole::before {
-  background-image: var(--command-splitconsole-image);
 }
 
 #command-button-noautohide::before {
