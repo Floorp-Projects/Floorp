@@ -1029,7 +1029,6 @@ public:
   virtual mozilla::EventListenerManager*
     GetOrCreateListenerManager() override;
 
-  using mozilla::dom::EventTarget::RemoveEventListener;
   using nsIDOMEventTarget::AddEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 mozilla::dom::EventListener* aListener,

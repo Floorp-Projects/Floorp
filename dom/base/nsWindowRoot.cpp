@@ -72,15 +72,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsWindowRoot)
 
 NS_IMPL_DOMTARGET_DEFAULTS(nsWindowRoot)
 
-NS_IMETHODIMP
-nsWindowRoot::RemoveEventListener(const nsAString& aType, nsIDOMEventListener* aListener, bool aUseCapture)
-{
-  if (RefPtr<EventListenerManager> elm = GetExistingListenerManager()) {
-    elm->RemoveEventListener(aType, aListener, aUseCapture);
-  }
-  return NS_OK;
-}
-
 NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsWindowRoot)
 
 NS_IMETHODIMP

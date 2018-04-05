@@ -140,30 +140,6 @@ interface nsIDOMEventTarget : nsISupports
 %}
 
   /**
-   * This method allows the removal of event listeners from the event 
-   * target. If an EventListener is removed from an EventTarget while it 
-   * is processing an event, it will not be triggered by the current actions. 
-   * EventListeners can never be invoked after being removed.
-   * Calling removeEventListener with arguments which do not identify any 
-   * currently registered EventListener on the EventTarget has no effect.
-   *
-   * @param   type Specifies the event type of the EventListener being 
-   *               removed.
-   * @param   listener The EventListener parameter indicates the 
-   *                   EventListener to be removed.
-   * @param   useCapture Specifies whether the EventListener being 
-   *                     removed was registered as a capturing listener or 
-   *                     not. If a listener was registered twice, one with 
-   *                     capture and one without, each must be removed 
-   *                     separately. Removal of a capturing listener does 
-   *                     not affect a non-capturing version of the same 
-   *                     listener, and vice versa.
-   */
-  void                     removeEventListener(in DOMString type,
-                                               in nsIDOMEventListener listener,
-                                               [optional] in boolean useCapture);
-
-  /**
    * removeSystemEventListener() should be used if you have used
    * addSystemEventListener().
    */

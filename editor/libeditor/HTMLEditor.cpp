@@ -27,7 +27,6 @@
 
 #include "nsIDOMDocument.h"
 #include "nsIDocumentInlines.h"
-#include "nsIDOMEventTarget.h"
 #include "nsISelectionController.h"
 #include "nsILinkHandler.h"
 #include "nsIInlineSpellChecker.h"
@@ -464,7 +463,7 @@ HTMLEditor::RemoveEventListeners()
     return;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target = GetDOMEventTarget();
+  RefPtr<EventTarget> target = GetDOMEventTarget();
 
   if (target) {
     // Both mMouseMotionListenerP and mResizeEventListenerP can be

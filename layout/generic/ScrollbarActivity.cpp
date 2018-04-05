@@ -191,8 +191,8 @@ ScrollbarActivity::StartListeningForScrollbarEvents()
   if (mListeningForScrollbarEvents)
     return;
 
-  mHorizontalScrollbar = do_QueryInterface(GetHorizontalScrollbar());
-  mVerticalScrollbar = do_QueryInterface(GetVerticalScrollbar());
+  mHorizontalScrollbar = GetHorizontalScrollbar();
+  mVerticalScrollbar = GetVerticalScrollbar();
 
   AddScrollbarEventListeners(mHorizontalScrollbar);
   AddScrollbarEventListeners(mVerticalScrollbar);
@@ -237,15 +237,12 @@ ScrollbarActivity::StopListeningForScrollAreaEvents()
     return;
 
   nsIFrame* scrollArea = do_QueryFrame(mScrollableFrame);
-  nsCOMPtr<nsIDOMEventTarget> scrollAreaTarget = do_QueryInterface(scrollArea->GetContent());
-  if (scrollAreaTarget) {
-    scrollAreaTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"), this, true);
-  }
+  scrollArea->GetContent()->RemoveEventListener(NS_LITERAL_STRING("mousemove"), this, true);
   mListeningForScrollAreaEvents = false;
 }
 
 void
-ScrollbarActivity::AddScrollbarEventListeners(nsIDOMEventTarget* aScrollbar)
+ScrollbarActivity::AddScrollbarEventListeners(dom::EventTarget* aScrollbar)
 {
   if (aScrollbar) {
     aScrollbar->AddEventListener(NS_LITERAL_STRING("mousedown"), this, true);
@@ -256,7 +253,7 @@ ScrollbarActivity::AddScrollbarEventListeners(nsIDOMEventTarget* aScrollbar)
 }
 
 void
-ScrollbarActivity::RemoveScrollbarEventListeners(nsIDOMEventTarget* aScrollbar)
+ScrollbarActivity::RemoveScrollbarEventListeners(dom::EventTarget* aScrollbar)
 {
   if (aScrollbar) {
     aScrollbar->RemoveEventListener(NS_LITERAL_STRING("mousedown"), this, true);

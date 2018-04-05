@@ -4481,17 +4481,6 @@ nsGlobalWindowInner::GetOwnerGlobalForBindings()
   return nsPIDOMWindowOuter::GetFromCurrentInner(this);
 }
 
-NS_IMETHODIMP
-nsGlobalWindowInner::RemoveEventListener(const nsAString& aType,
-                                         nsIDOMEventListener* aListener,
-                                         bool aUseCapture)
-{
-  if (RefPtr<EventListenerManager> elm = GetExistingListenerManager()) {
-    elm->RemoveEventListener(aType, aListener, aUseCapture);
-  }
-  return NS_OK;
-}
-
 NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsGlobalWindowInner)
 
 NS_IMETHODIMP
