@@ -930,9 +930,8 @@ TranslateStates(uint64_t aState, AtkStateSet* aStateSet)
     aState &= ~states::EDITABLE;
 
   // Convert every state to an entry in AtkStateMap
-  uint32_t stateIndex = 0;
   uint64_t bitMask = 1;
-  while (gAtkStateMap[stateIndex].stateMapEntryType != kNoSuchState) {
+  for (auto stateIndex = 0U; stateIndex < gAtkStateMapLen; stateIndex++) {
     if (gAtkStateMap[stateIndex].atkState) { // There's potentially an ATK state for this
       bool isStateOn = (aState & bitMask) != 0;
       if (gAtkStateMap[stateIndex].stateMapEntryType == kMapOpposite) {
@@ -943,7 +942,6 @@ TranslateStates(uint64_t aState, AtkStateSet* aStateSet)
       }
     }
     bitMask <<= 1;
-    ++ stateIndex;
   }
 }
 
@@ -1539,24 +1537,32 @@ a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
 void
 MaiAtkObject::FireStateChangeEvent(uint64_t aState, bool aEnabled)
 {
-    int32_t stateIndex = AtkStateMap::GetStateIndexFor(aState);
-    if (stateIndex >= 0) {
-        NS_ASSERTION(gAtkStateMap[stateIndex].stateMapEntryType != kNoSuchState,
-                     "No such state");
+  auto state = aState;
+  int32_t stateIndex = -1;
+  while (state > 0) {
+    ++stateIndex;
+    state >>= 1;
+  }
 
-        if (gAtkStateMap[stateIndex].atkState != kNone) {
-            NS_ASSERTION(gAtkStateMap[stateIndex].stateMapEntryType != kNoStateChange,
-                         "State changes should not fired for this state");
+  MOZ_ASSERT(stateIndex >= 0 && stateIndex < static_cast<int32_t>(gAtkStateMapLen),
+             "No ATK state for internal state was found");
+  if (stateIndex < 0 || stateIndex >= static_cast<int32_t>(gAtkStateMapLen)) {
+    return;
+  }
 
-            if (gAtkStateMap[stateIndex].stateMapEntryType == kMapOpposite)
-                aEnabled = !aEnabled;
+  if (gAtkStateMap[stateIndex].atkState != kNone) {
+    MOZ_ASSERT(gAtkStateMap[stateIndex].stateMapEntryType != kNoStateChange,
+                 "State changes should not fired for this state");
 
-            // Fire state change for first state if there is one to map
-            atk_object_notify_state_change(&parent,
-                                           gAtkStateMap[stateIndex].atkState,
-                                           aEnabled);
-        }
+    if (gAtkStateMap[stateIndex].stateMapEntryType == kMapOpposite) {
+      aEnabled = !aEnabled;
     }
+
+    // Fire state change for first state if there is one to map
+    atk_object_notify_state_change(&parent,
+                                   gAtkStateMap[stateIndex].atkState,
+                                   aEnabled);
+  }
 }
 
 void
