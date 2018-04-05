@@ -16,7 +16,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/ImageLoader.h"
-#include "CSSCalc.h"
 #include "gfxFontConstants.h"
 #include "imgIRequest.h"
 #include "imgRequestProxy.h"
