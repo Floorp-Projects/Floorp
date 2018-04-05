@@ -436,6 +436,38 @@ static uint32_t get32bit(unsigned char *aData, int index)
     (aData[index+2] << 8) | aData[index+3];
 }
 
+nsresult
+TRR::PassQName(unsigned int &index)
+{
+  uint8_t length;
+  do {
+    if (mBodySize < (index + 1)) {
+      LOG(("TRR: PassQName:%d fail at index %d\n", __LINE__, index));
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+    length = static_cast<uint8_t>(mResponse[index]);
+    if ((length & 0xc0) == 0xc0) {
+      // name pointer, advance over it and be done
+      if (mBodySize < (index + 2)) {
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+      index += 2;
+      break;
+    }
+    if (length & 0xc0) {
+      LOG(("TRR: illegal label length byte (%x) at index %d\n", length, index));
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+    // pass label
+    if (mBodySize < (index + 1 + length)) {
+      LOG(("TRR: PassQName:%d fail at index %d\n", __LINE__, index));
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+    index += 1 + length;
+  } while (length);
+  return NS_OK;
+}
+
 //
 // DohDecode() collects the TTL and the IP addresses in the response
 //
@@ -458,6 +490,7 @@ TRR::DohDecode()
   unsigned int index = 12;
   uint8_t length;
   nsAutoCString host;
+  nsresult rv;
 
   LOG(("doh decode %s %d bytes\n", mHost.get(), mBodySize));
 
@@ -506,34 +539,9 @@ TRR::DohDecode()
        answerRecords, mBodySize, host.get(), index));
 
   while (answerRecords) {
-    if (mBodySize < (index + 1)) {
-      LOG(("TRR: Dohdecode:%d fail at index %d\n", __LINE__, index));
-      return NS_ERROR_ILLEGAL_VALUE;
-    }
-    length = static_cast<uint8_t>(mResponse[index]);
-    if ((length & 0xc0) == 0xc0) {
-      // name pointer, advance over it
-      if (mBodySize < (index + 2)) {
-        return NS_ERROR_ILLEGAL_VALUE;
-      }
-      index += 2;
-    } else if (length & 0xc0) {
-      // illegal length, bail out
-      LOG(("TRR: illegal label length byte (%x)\n", length));
-      return NS_ERROR_ILLEGAL_VALUE;
-    } else {
-      // iterate over host name in answer
-      do {
-        if (mBodySize < (index + 1)) {
-          return NS_ERROR_ILLEGAL_VALUE;
-        }
-        length = static_cast<uint8_t>(mResponse[index]);
-        if (mBodySize < (index + 1 + length)) {
-          LOG(("TRR: Dohdecode:%d fail at index %d\n", __LINE__, index));
-          return NS_ERROR_ILLEGAL_VALUE;
-        }
-        index += 1 + length;
-      } while (length);
+    rv = PassQName(index);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
     // 16 bit TYPE
     if (mBodySize < (index + 2)) {
@@ -590,7 +598,6 @@ TRR::DohDecode()
     // - AAAA (TYPE 28): 16 bytes
     // - NS (TYPE 2): N bytes
 
-    nsresult rv;
     switch(TYPE) {
     case TRRTYPE_A:
       if (RDLENGTH != 4) {
@@ -686,33 +693,9 @@ TRR::DohDecode()
   uint16_t nsRecords = get16bit(mResponse, 8);
   LOG(("TRR Decode: %d ns records (%u bytes body)\n", nsRecords, mBodySize));
   while (nsRecords) {
-    if (mBodySize < (index + 1)) {
-      return NS_ERROR_ILLEGAL_VALUE;
-    }
-    length = static_cast<uint8_t>(mResponse[index]);
-    if ((length & 0xc0) == 0xc0) {
-      // name pointer, advance over it
-      if (mBodySize < (index + 2)) {
-        return NS_ERROR_ILLEGAL_VALUE;
-      }
-      index += 2;
-    } else if (length & 0xc0) {
-      // illegal length, bail out
-      LOG(("TRR: illegal label length byte (%x)\n", length));
-      return NS_ERROR_ILLEGAL_VALUE;
-    } else {
-      // iterate over host name in answer
-      do {
-        if (mBodySize < (index + 1)) {
-          return NS_ERROR_ILLEGAL_VALUE;
-        }
-        length = static_cast<uint8_t>(mResponse[index]);
-        if (mBodySize < (index + 1 + length)) {
-          return NS_ERROR_ILLEGAL_VALUE;
-        }
-        index += 1 + length;
-        LOG(("TRR: move over %d bytes\n", 1 + length));
-      } while (length);
+    rv = PassQName(index);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
     if (mBodySize < (index + 8)) {
@@ -741,33 +724,9 @@ TRR::DohDecode()
   LOG(("TRR Decode: %d additional resource records (%u bytes body)\n",
        arRecords, mBodySize));
   while (arRecords) {
-    if (mBodySize < (index + 1)) {
-      return NS_ERROR_ILLEGAL_VALUE;
-    }
-    length = static_cast<uint8_t>(mResponse[index]);
-    if ((length & 0xc0) == 0xc0) {
-      // name pointer, advance over it
-      if (mBodySize < (index + 2)) {
-        return NS_ERROR_ILLEGAL_VALUE;
-      }
-      index += 2;
-    } else if (length & 0xc0) {
-      // illegal length, bail out
-      LOG(("TRR: illegal label length byte (%x)\n", length));
-      return NS_ERROR_ILLEGAL_VALUE;
-    } else {
-      // iterate over host name in answer
-      do {
-        if (mBodySize < (index + 1)) {
-          return NS_ERROR_ILLEGAL_VALUE;
-        }
-        length = static_cast<uint8_t>(mResponse[index]);
-        if (mBodySize < (index + 1 + length)) {
-          return NS_ERROR_ILLEGAL_VALUE;
-        }
-        index += 1 + length;
-        LOG(("TRR: move over %d bytes\n", 1 + length));
-      } while (length);
+    rv = PassQName(index);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
 
     if (mBodySize < (index + 8)) {
