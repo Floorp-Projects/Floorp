@@ -404,11 +404,9 @@ ScreenOrientation::UnlockDeviceOrientation()
   // Remove event listener in case of fullscreen lock.
   nsCOMPtr<EventTarget> target = do_QueryInterface(GetOwner()->GetDoc());
   if (target) {
-    DebugOnly<nsresult> rv =
-      target->RemoveSystemEventListener(NS_LITERAL_STRING("fullscreenchange"),
-                                        mFullScreenListener,
-                                        /* useCapture */ true);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RemoveSystemEventListener failed");
+    target->RemoveSystemEventListener(NS_LITERAL_STRING("fullscreenchange"),
+                                      mFullScreenListener,
+                                      /* useCapture */ true);
   }
 
   mFullScreenListener = nullptr;
@@ -628,11 +626,8 @@ ScreenOrientation::VisibleEventListener::HandleEvent(nsIDOMEvent* aEvent)
   ScreenOrientation* orientation = screen->Orientation();
   MOZ_ASSERT(orientation);
 
-  rv = target->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
-                                         this, true);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
+  target->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
+                                    this, true);
 
   if (doc->CurrentOrientationType() != orientation->DeviceType(CallerType::System)) {
     doc->SetCurrentOrientation(orientation->DeviceType(CallerType::System),
@@ -684,9 +679,7 @@ ScreenOrientation::FullScreenEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   hal::UnlockScreenOrientation();
 
-  nsresult rv = target->RemoveSystemEventListener(NS_LITERAL_STRING("fullscreenchange"),
-                                                  this, true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  target->RemoveSystemEventListener(NS_LITERAL_STRING("fullscreenchange"),
+                                    this, true);
   return NS_OK;
 }

@@ -1089,8 +1089,6 @@ nsINode::AddSystemEventListener(const nsAString& aType,
                                    aWantsUntrusted);
 }
 
-NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsINode)
-
 nsresult
 nsINode::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
