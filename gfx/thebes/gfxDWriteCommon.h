@@ -7,6 +7,7 @@
 #define GFX_DWRITECOMMON_H
 
 // Mozilla includes
+#include "mozilla/MemoryReporting.h"
 #include "nscore.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
@@ -72,12 +73,6 @@ FontStretchFromDWriteStretch(DWRITE_FONT_STRETCH aStretch)
             return NS_FONT_STRETCH_NORMAL;
     }
 }
-
-struct ffReferenceKey
-{
-    FallibleTArray<uint8_t> *mArray;
-    nsID mGUID;
-};
 
 class gfxDWriteFontFileLoader : public IDWriteFontFileLoader
 {
@@ -148,6 +143,8 @@ public:
                                         uint32_t aLength,
                                         IDWriteFontFile** aFontFile,
                                         IDWriteFontFileStream** aFontFileStream);
+
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:
     static IDWriteFontFileLoader* mInstance;
