@@ -62,6 +62,12 @@ protected:
       return true;
     }
 
+    bool CheckVariationFontSupport() override {
+        // We build with in-tree FreeType, so we know it is a new enough
+        // version to support variations.
+        return true;
+    }
+
 private:
     gfxImageFormat mOffscreenFormat;
 };

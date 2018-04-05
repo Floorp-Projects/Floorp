@@ -128,6 +128,8 @@ public:
 #endif // MOZ_X11
 
 protected:
+    bool CheckVariationFontSupport() override;
+
     int8_t mMaxGenericSubstitutions;
 
 private:
