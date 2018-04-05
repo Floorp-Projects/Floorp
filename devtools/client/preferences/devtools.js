@@ -48,10 +48,10 @@ pref("devtools.inspector.enabled", true);
 // What was the last active sidebar in the inspector
 pref("devtools.inspector.activeSidebar", "ruleview");
 pref("devtools.inspector.remote", false);
-// Enable the split rule view sidebar toggle in the inspector
-pref("devtools.inspector.split-sidebar-toggle", false);
-// Enable the split rule view in the inspector
-pref("devtools.inspector.split-rule-enabled", false);
+// Enable the 3 pane mode toggle in the inspector
+pref("devtools.inspector.three-pane-toggle", false);
+// Enable the 3 pane mode in the inspector
+pref("devtools.inspector.three-pane-enabled", false);
 // Collapse pseudo-elements by default in the rule-view
 pref("devtools.inspector.show_pseudo_elements", false);
 // The default size for image preview tooltips in the rule-view/computed-view/markup-view
