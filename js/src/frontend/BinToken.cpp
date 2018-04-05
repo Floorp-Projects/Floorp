@@ -6,15 +6,16 @@
 
 #include "frontend/BinToken.h"
 
-#include "jsapi.h"
-
 #include "mozilla/Maybe.h"
+
+#include <sys/types.h>
+
+#include "jsapi.h"
 
 #include "frontend/BinSourceRuntimeSupport.h"
 #include "frontend/TokenStream.h"
 #include "gc/Zone.h"
 
-#include <sys/types.h>
 
 namespace js {
 namespace frontend {
