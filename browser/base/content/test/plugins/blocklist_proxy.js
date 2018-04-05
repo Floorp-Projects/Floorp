@@ -52,10 +52,6 @@ var BlocklistProxy = {
     return 0; // STATE_NOT_BLOCKED
   },
 
-  getAddonBlocklistURL(aAddon, aAppVersion, aToolkitVersion) {
-    return "";
-  },
-
   getPluginBlocklistURL(aPluginTag) {
     return "";
   },
