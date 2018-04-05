@@ -19,7 +19,6 @@ async function ifWebGLSupported() {
   let vsEditor = await ShadersEditorsView._getEditor("vs");
   let fsEditor = await ShadersEditorsView._getEditor("fs");
 
-
   is(vsEditor.getText().indexOf("gl_Position"), 170,
     "The vertex shader editor contains the correct text.");
   is(fsEditor.getText().indexOf("gl_FragColor"), 97,
