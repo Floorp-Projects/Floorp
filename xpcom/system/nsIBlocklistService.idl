@@ -64,16 +64,6 @@ interface nsIBlocklistService : nsISupports
                                         [optional] in AString toolkitVersion);
 
   /**
-   * Determine the blocklist web page of an add-on.
-   * @param   addon
-   *          The addon item whose url is required.
-   * @returns The URL of the description page.
-   */
-  AString getAddonBlocklistURL(in jsval addon,
-                              [optional] in AString appVersion,
-                              [optional] in AString toolkitVersion);
-
-  /**
    * Returns the blocklist entry, as an object with `state` and `url`
    * properties, if a blocklist entry for the add-on exists, or null
    * othereise.

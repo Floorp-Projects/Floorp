@@ -431,15 +431,6 @@ Blocklist.prototype = {
      return null;
   },
 
-  /* See nsIBlocklistService */
-  getAddonBlocklistURL(addon, appVersion, toolkitVersion) {
-    if (!this.isLoaded)
-      this._loadBlocklist();
-
-    let entry = this._getAddonBlocklistEntry(addon, this._addonEntries);
-    return entry && entry.url;
-  },
-
   _createBlocklistURL(id) {
     let url = Services.urlFormatter.formatURLPref(PREF_BLOCKLIST_ITEM_URL);
     url = url.replace(/%blockID%/g, id);
@@ -1292,6 +1283,7 @@ Blocklist.prototype = {
           continue;
         }
 
+        let entry = this._getAddonBlocklistEntry(addon, this._addonEntries);
         addonList.push({
           name: addon.name,
           version: addon.version,
@@ -1299,7 +1291,7 @@ Blocklist.prototype = {
           disable: false,
           blocked: state == Ci.nsIBlocklistService.STATE_BLOCKED,
           item: addon,
-          url: this.getAddonBlocklistURL(addon),
+          url: entry && entry.url,
         });
       }
 
