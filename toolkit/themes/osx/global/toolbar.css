@@ -25,7 +25,7 @@ menubar {
 toolbarseparator {
   -moz-appearance: none;
   margin: 3px 4px;
-  background: url("chrome://global/skin/toolbar/toolbar-separator.png") transparent repeat-y;
+  background-color: ThreeDShadow;
   padding: 0;
   width: 1px !important;
 }

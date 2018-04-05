@@ -81,7 +81,6 @@ toolkit.jar:
 * skin/classic/global/in-content/common.css                          (in-content/common.css)
 * skin/classic/global/in-content/info-pages.css                      (in-content/info-pages.css)
   skin/classic/global/toolbar/spring.png                             (toolbar/spring.png)
-  skin/classic/global/toolbar/toolbar-separator.png                  (toolbar/toolbar-separator.png)
   skin/classic/global/tree/arrow-disclosure.svg                      (tree/arrow-disclosure.svg)
   skin/classic/global/tree/columnpicker.gif                          (tree/columnpicker.gif)
   skin/classic/global/tree/folder.png                                (tree/folder.png)
