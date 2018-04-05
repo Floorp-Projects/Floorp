@@ -6,9 +6,9 @@ workdir="/tmp/catmanifest"
 
 rm -rf "$workdir"
 mkdir -p "$workdir"
-cp "$mar" "$workdir"
-cd "$workdir" || exit 1
-mar -x "$mar"
+cp "$1" "$workdir"
+cd "$workdir"
+mar -x "$1"
 mv updatev2.manifest updatev2.manifest.xz
 xz -d updatev2.manifest.xz
 cat updatev2.manifest

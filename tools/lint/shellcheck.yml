@@ -3,7 +3,6 @@ shellcheck:
     description: Shell script linter
     include:
         - taskcluster/docker/
-        - tools/update-packaging/
     exclude: []
     # 1090: https://github.com/koalaman/shellcheck/wiki/SC1090
     # 'Can't follow a non-constant source'
