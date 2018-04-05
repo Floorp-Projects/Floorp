@@ -51,15 +51,10 @@ public class UrlUtils {
             trimmedUrl = "http://" + trimmedUrl;
         }
 
-        if (!URLUtil.isNetworkUrl(trimmedUrl)) {
-            return false;
-        }
+        final boolean isNetworkUrl = URLUtil.isNetworkUrl(trimmedUrl);
+        final boolean containsToken = trimmedUrl.contains("%s");
 
-        if (!trimmedUrl.matches(".*%s$")) {
-            return false;
-        }
-
-        return true;
+        return isNetworkUrl && containsToken;
     }
 
     public static boolean isHttpOrHttps(String url) {
