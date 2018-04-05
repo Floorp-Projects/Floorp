@@ -155,10 +155,9 @@ function loadTPSContentScript(browser) {
 async function switchToTab(tab) {
   let browser = tab.linkedBrowser;
   let gBrowser = tab.ownerGlobal.gBrowser;
-  let window = tab.ownerGlobal;
 
   await loadTPSContentScript(browser);
-  let start = Math.floor(window.performance.timing.navigationStart + window.performance.now());
+  let start = Cu.now();
 
   // We need to wait for the TabSwitchDone event to make sure
   // that the async tab switcher has shut itself down.
@@ -208,11 +207,11 @@ function waitForTabSwitchDone(browser) {
  */
 function waitForContentPresented(browser) {
   return new Promise((resolve) => {
-    let mm = browser.messageManager;
-    mm.addMessageListener("TPS:ContentSawPaint", function onContentPaint(msg) {
-      mm.removeMessageListener("TPS:ContentSawPaint", onContentPaint);
-      resolve(msg.data.time);
-    });
+    browser.addEventListener("MozLayerTreeReady", function onLayersReady(event) {
+      let now = Cu.now();
+      TalosParentProfiler.mark("MozLayerTreeReady seen by tps");
+      resolve(now);
+    }, { once: true });
   });
 }
 
