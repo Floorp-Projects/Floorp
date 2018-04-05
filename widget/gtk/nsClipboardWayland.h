@@ -23,6 +23,8 @@ public:
     void AddMIMEType(const char *aMimeType);
 
     GdkAtom* GetTargets(int* aTargetNum);
+    bool  HasTarget(const char *aMimeType);
+
     char* GetData(wl_display* aDisplay, const char* aMimeType,
                   uint32_t* aContentLength);
 
@@ -65,6 +67,7 @@ public:
     virtual const char* GetClipboardData(const char* aMimeType,
                                          int32_t aWhichClipboard,
                                          uint32_t* aContentLength) override;
+    virtual const char* GetClipboardText(int32_t aWhichClipboard) override;
     virtual void ReleaseClipboardData(const char* aClipboardData) override;
 
     virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
@@ -104,6 +107,11 @@ private:
     int                         mClipboardRequestNumber;
     char*                       mClipboardData;
     uint32_t                    mClipboardDataLength;
+
+    // Mime types used for text data at Gtk+, see request_text_received_func()
+    // at gtkclipboard.c.
+    #define TEXT_MIME_TYPES_NUM 3
+    static const char* sTextMimeTypes[TEXT_MIME_TYPES_NUM];
 };
 
 #endif /* __nsClipboardWayland_h_ */
