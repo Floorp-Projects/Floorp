@@ -491,7 +491,7 @@ Toolbox.prototype = {
       this._componentMount = this.doc.getElementById("toolbox-toolbar-mount");
 
       this._mountReactComponent();
-      this._buildDockButtons();
+      this._buildDockOptions();
       this._buildOptions();
       this._buildTabs();
       this._applyCacheSettings();
@@ -1049,16 +1049,16 @@ Toolbox.prototype = {
   },
 
   /**
-   * Build the buttons for changing hosts. Called every time
+   * Build the options for changing hosts. Called every time
    * the host changes.
    */
-  _buildDockButtons: function() {
+  _buildDockOptions: function() {
     if (!this._target.isLocalTab) {
-      this.component.setDockButtonsEnabled(false);
+      this.component.setDockOptionsEnabled(false);
       return;
     }
 
-    this.component.setDockButtonsEnabled(true);
+    this.component.setDockOptionsEnabled(true);
     this.component.setCanCloseToolbox(this.hostType !== Toolbox.HostType.WINDOW);
 
     let sideEnabled = Services.prefs.getBoolPref(this._prefs.SIDE_ENABLED);
@@ -2355,7 +2355,7 @@ Toolbox.prototype = {
   _onSwitchedHost: function({ hostType }) {
     this._hostType = hostType;
 
-    this._buildDockButtons();
+    this._buildDockOptions();
     this._addKeysToWindow();
 
     // We blurred the tools at start of switchHost, but also when clicking on

@@ -8,6 +8,8 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {div, button} = dom;
 
+const Menu = require("devtools/client/framework/menu");
+const MenuItem = require("devtools/client/framework/menu-item");
 const ToolboxTab = createFactory(require("devtools/client/framework/components/toolbox-tab"));
 const ToolboxTabs = createFactory(require("devtools/client/framework/components/toolbox-tabs"));
 
@@ -75,7 +77,7 @@ class ToolboxToolbar extends Component {
           renderToolboxButtonsEnd(this.props),
           renderOptions(this.props),
           renderSeparator(),
-          renderDockButtons(this.props)
+          renderToolboxControls(this.props)
         )
       )
       : div(containerProps);
@@ -193,8 +195,7 @@ function renderSeparator() {
 }
 
 /**
- * Render the dock buttons, and handle all the cases for what type of host the toolbox
- * is attached to. The following props are expected.
+ * Render the toolbox control buttons. The following props are expected:
  *
  * @param {string} focusedButton
  *        The id of the focused button.
@@ -204,7 +205,7 @@ function renderSeparator() {
  *        Position name.
  * @param {Function} hostTypes[].switchHost
  *        Function to switch the host.
- * @param {boolean} areDockButtonsEnabled
+ * @param {boolean} areDockOptionsEnabled
  *        They are not enabled in certain situations like when they are in the
  *        WebIDE.
  * @param {boolean} canCloseToolbox
@@ -217,35 +218,32 @@ function renderSeparator() {
  * @param {Object} L10N
  *        Localization interface.
  */
-function renderDockButtons(props) {
+function renderToolboxControls(props) {
   const {
     focusedButton,
     closeToolbox,
     hostTypes,
     focusButton,
     L10N,
-    areDockButtonsEnabled,
+    areDockOptionsEnabled,
     canCloseToolbox,
   } = props;
 
-  let buttons = [];
+  const meatballMenuButtonId = "toolbox-meatball-menu-button";
 
-  if (areDockButtonsEnabled) {
-    hostTypes.forEach(hostType => {
-      const id = "toolbox-dock-" + hostType.position;
-      buttons.push(button({
-        id,
-        onFocus: () => focusButton(id),
-        className: "toolbox-dock-button devtools-button",
-        title: L10N.getStr(`toolboxDockButtons.${hostType.position}.tooltip`),
-        onClick: e => {
-          hostType.switchHost();
-          focusButton(id);
-        },
-        tabIndex: focusedButton === id ? "0" : "-1",
-      }));
-    });
-  }
+  const meatballMenuButton = button({
+    id: meatballMenuButtonId,
+    onFocus: () => focusButton(meatballMenuButtonId),
+    className: "devtools-button",
+    title: L10N.getStr("toolbox.meatballMenu.button.tooltip"),
+    onClick: evt => {
+      showMeatballMenu(evt.target, {
+        ...props,
+        hostTypes: areDockOptionsEnabled ? hostTypes : [],
+      });
+    },
+    tabIndex: focusedButton === meatballMenuButtonId ? "0" : "-1",
+  });
 
   const closeButtonId = "toolbox-close";
 
@@ -263,7 +261,53 @@ function renderDockButtons(props) {
     : null;
 
   return div({id: "toolbox-controls"},
-    div({id: "toolbox-dock-buttons"}, ...buttons),
+    meatballMenuButton,
     closeButton
   );
+}
+
+/**
+ * Display the "..." menu (affectionately known as the meatball menu).
+ *
+ * @param {Object} menuButton
+ *        The <button> element from which the menu should pop out. The geometry
+ *        of this element is used to position the menu.
+ * @param {Object} props
+ *        Properties as described below.
+ * @param {Object[]} props.hostTypes
+ *        Array of host type objects.
+ * @param {string} props.hostTypes[].position
+ *        Position name.
+ * @param {Function} props.hostTypes[].switchHost
+ *        Function to switch the host.
+ *        This array will be empty if we shouldn't shouldn't show any dock
+ *        options.
+ * @param {Object} props.L10N
+ *        Localization interface.
+ * @param {Object} props.toolbox
+ *        The devtools toolbox. Used by the Menu component to determine which
+ *        document to use.
+ */
+function showMeatballMenu(menuButton, {hostTypes, L10N, toolbox}) {
+  const menu = new Menu({ id: "toolbox-meatball-menu" });
+
+  for (const hostType of hostTypes) {
+    menu.append(new MenuItem({
+      id: `toolbox-meatball-menu-dock-${hostType.position}`,
+      label: L10N.getStr(
+        `toolbox.meatballMenu.dock.${hostType.position}.label`
+      ),
+      click: () => hostType.switchHost(),
+    }));
+  }
+
+  // (Yes, it's true we might end up with an empty menu here. Don't worry,
+  // by the end of this patch series that won't be the case.)
+
+  const rect = menuButton.getBoundingClientRect();
+  const screenX = menuButton.ownerDocument.defaultView.mozInnerScreenX;
+  const screenY = menuButton.ownerDocument.defaultView.mozInnerScreenY;
+
+  // Display the popup below the button.
+  menu.popup(rect.left + screenX, rect.bottom + screenY, toolbox);
 }
