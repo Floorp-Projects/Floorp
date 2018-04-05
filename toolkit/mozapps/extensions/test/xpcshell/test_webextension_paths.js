@@ -9,7 +9,7 @@ add_task(async function setup() {
 });
 
 // When installing an unpacked addon we derive the ID from the
-// directory name.  Make sure that if the directoy name is not a valid
+// directory name.  Make sure that if the directory name is not a valid
 // addon ID that we reject it.
 add_task(async function test_bad_unpacked_path() {
   let MANIFEST_ID = "webext_bad_path@tests.mozilla.org";

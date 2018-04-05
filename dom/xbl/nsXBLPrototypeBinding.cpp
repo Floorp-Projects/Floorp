@@ -1557,16 +1557,16 @@ nsXBLPrototypeBinding::WriteNamespace(nsIObjectOutputStream* aStream,
 bool CheckTagNameWhiteList(int32_t aNameSpaceID, nsAtom *aTagName)
 {
   static Element::AttrValuesArray kValidXULTagNames[] =  {
-    &nsGkAtoms::autorepeatbutton, &nsGkAtoms::box, &nsGkAtoms::browser,
-    &nsGkAtoms::button, &nsGkAtoms::hbox, &nsGkAtoms::image, &nsGkAtoms::menu,
-    &nsGkAtoms::menubar, &nsGkAtoms::menuitem, &nsGkAtoms::menupopup,
-    &nsGkAtoms::row, &nsGkAtoms::slider, &nsGkAtoms::spacer,
-    &nsGkAtoms::splitter, &nsGkAtoms::text, &nsGkAtoms::tree, nullptr};
+    nsGkAtoms::autorepeatbutton, nsGkAtoms::box, nsGkAtoms::browser,
+    nsGkAtoms::button, nsGkAtoms::hbox, nsGkAtoms::image, nsGkAtoms::menu,
+    nsGkAtoms::menubar, nsGkAtoms::menuitem, nsGkAtoms::menupopup,
+    nsGkAtoms::row, nsGkAtoms::slider, nsGkAtoms::spacer,
+    nsGkAtoms::splitter, nsGkAtoms::text, nsGkAtoms::tree, nullptr};
 
   uint32_t i;
   if (aNameSpaceID == kNameSpaceID_XUL) {
     for (i = 0; kValidXULTagNames[i]; ++i) {
-      if (aTagName == *(kValidXULTagNames[i])) {
+      if (aTagName == kValidXULTagNames[i]) {
         return true;
       }
     }

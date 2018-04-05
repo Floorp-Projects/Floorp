@@ -271,7 +271,7 @@ add_task(async function test_update_url_security() {
   equal(updates[1].updateURL, "http://example.com/update.xpi", "safe update URL was accepted");
 
   messages = messages.filter(msg => /http:\/\/localhost.*\/updates\/.*may not load or link to chrome:/.test(msg.message));
-  equal(messages.length, 1, "privileged upate URL generated the expected console message");
+  equal(messages.length, 1, "privileged update URL generated the expected console message");
 });
 
 

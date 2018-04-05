@@ -557,12 +557,70 @@ const PARAM_ADDONS = {
     },
     updateType: [AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED],
   },
+
+  "blocklist1@tests.mozilla.org": {
+    "install.rdf": {
+      id: "blocklist1@tests.mozilla.org",
+      version: "5.0",
+      bootstrap: true,
+      updateURL: "http://example.com/data/param_test.json" + PARAMS,
+      targetApplications: [{
+        id: appId,
+        minVersion: "1",
+        maxVersion: "2"
+      }],
+      name: "Test Addon 1",
+    },
+    params: {
+      item_version: "5.0",
+      item_maxappversion: "2",
+      item_status: "userDisabled,softblocked",
+      app_version: "1",
+      update_type: "97",
+    },
+    updateType: [AddonManager.UPDATE_WHEN_USER_REQUESTED],
+    blocklistState: "STATE_SOFTBLOCKED",
+  },
+
+  "blocklist2@tests.mozilla.org": {
+    "install.rdf": {
+      id: "blocklist2@tests.mozilla.org",
+      version: "5.0",
+      bootstrap: true,
+      updateURL: "http://example.com/data/param_test.json" + PARAMS,
+      targetApplications: [{
+        id: appId,
+        minVersion: "1",
+        maxVersion: "2"
+      }],
+      name: "Test Addon 1",
+    },
+    params: {
+      item_version: "5.0",
+      item_maxappversion: "2",
+      item_status: "userEnabled,blocklisted",
+      app_version: "1",
+      update_type: "97",
+    },
+    updateType: [AddonManager.UPDATE_WHEN_USER_REQUESTED],
+    blocklistState: "STATE_BLOCKED",
+  },
 };
 
 const PARAM_IDS = Object.keys(PARAM_ADDONS);
 
 // Verify the parameter escaping in update urls.
 add_task(async function test_8() {
+  let blocklistAddons = new Map();
+  for (let [id, options] of Object.entries(PARAM_ADDONS)) {
+    if (options.blocklistState) {
+      blocklistAddons.set(id, Ci.nsIBlocklistService[options.blocklistState]);
+    }
+  }
+  let mockBlocklist = await AddonTestUtils.overrideBlocklist(blocklistAddons);
+
+  await promiseRestartManager();
+
   for (let [id, options] of Object.entries(PARAM_ADDONS)) {
     await promiseInstallXPI(options["install.rdf"], profileDir);
 
@@ -623,6 +681,8 @@ add_task(async function test_8() {
   for (let [, addon] of await getAddons(PARAM_IDS)) {
     addon.uninstall();
   }
+
+  await mockBlocklist.unregister();
 });
 
 // Tests that if an install.rdf claims compatibility then the add-on will be

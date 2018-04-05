@@ -399,8 +399,6 @@ class Descriptor(DescriptorProvider):
         self.notflattened = desc.get('notflattened', False)
         self.register = desc.get('register', True)
 
-        self.hasXPConnectImpls = desc.get('hasXPConnectImpls', False)
-
         # If we're concrete, we need to crawl our ancestor interfaces and mark
         # them as having a concrete descendant.
         self.concrete = (not self.interface.isExternal() and
@@ -762,10 +760,10 @@ class Descriptor(DescriptorProvider):
         Returns true if this descriptor requires generic ops other than
         GenericBindingMethod/GenericBindingGetter/GenericBindingSetter.
 
-        In practice we need to do this if our this value might be an XPConnect
-        object or if we need to coerce null/undefined to the global.
+        In practice we need to do this if we need to coerce null/undefined
+        to the global.
         """
-        return self.hasXPConnectImpls or self.interface.isOnGlobalProtoChain()
+        return self.interface.isOnGlobalProtoChain()
 
     def isGlobal(self):
         """

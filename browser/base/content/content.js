@@ -653,8 +653,12 @@ var AboutNetAndCertErrorListener = {
     // Values for telemtery bins: see TLS_ERROR_REPORT_UI in Histograms.json
     const TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN = 0;
 
+    let hideAddExceptionButton = false;
+
     if (this.isAboutCertError(win.document)) {
       ClickEventHandler.onCertError(originalTarget, win);
+      hideAddExceptionButton =
+        Services.prefs.getBoolPref("security.certerror.hideAddException", false);
     }
     if (this.isAboutNetError(win.document)) {
       let docShell = win.document.docShell;
@@ -676,7 +680,8 @@ var AboutNetAndCertErrorListener = {
       detail: JSON.stringify({
         enabled: Services.prefs.getBoolPref("security.ssl.errorReporting.enabled"),
         changedCertPrefs: this.changedCertPrefs(),
-        automatic
+        automatic,
+        hideAddExceptionButton,
       })
     }));
 
@@ -1003,6 +1008,7 @@ var LightWeightThemeWebInstallListener = {
       case "InstallBrowserTheme": {
         sendAsyncMessage("LightWeightThemeWebInstaller:Install", {
           baseURI: event.target.baseURI,
+          principal: event.target.nodePrincipal,
           themeData: event.target.getAttribute("data-browsertheme"),
         });
         break;
@@ -1010,6 +1016,7 @@ var LightWeightThemeWebInstallListener = {
       case "PreviewBrowserTheme": {
         sendAsyncMessage("LightWeightThemeWebInstaller:Preview", {
           baseURI: event.target.baseURI,
+          principal: event.target.nodePrincipal,
           themeData: event.target.getAttribute("data-browsertheme"),
         });
         this._previewWindow = event.target.ownerGlobal;
@@ -1024,7 +1031,7 @@ var LightWeightThemeWebInstallListener = {
       case "ResetBrowserThemePreview": {
         if (this._previewWindow) {
           sendAsyncMessage("LightWeightThemeWebInstaller:ResetPreview",
-                           {baseURI: event.target.baseURI});
+                           {principal: event.target.nodePrincipal});
           this._resetPreviewWindow();
         }
         break;

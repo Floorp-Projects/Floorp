@@ -78,5 +78,5 @@ add_task(async function test_unresponsive_native_app() {
   await exitPromise;
 
   procCount = await getSubprocessCount();
-  equal(procCount, 0, "subprocess was succesfully killed");
+  equal(procCount, 0, "subprocess was successfully killed");
 });

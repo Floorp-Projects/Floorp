@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Window Open Test"
+        onload="runTest()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+<script class="testbody" type="application/javascript"><![CDATA[
+  SimpleTest.waitForExplicitFinish();
+
+  function openWindow(features = "") {
+    return window.openDialog("window_intrinsic_size.xul",
+                             null, "chrome,dialog=no,all," + features);
+  }
+
+  function checkWindowSize(win, width, height, msg) {
+    is(win.innerWidth, width, "width should match " + msg);
+    is(win.innerHeight, height, "height should match " + msg);
+  }
+
+  async function runTest() {
+    let win = openWindow();
+    await SimpleTest.promiseFocus(win);
+    checkWindowSize(win, 300, 500, "with width attribute specified");
+
+    win = openWindow("width=400");
+    await SimpleTest.promiseFocus(win);
+    checkWindowSize(win, 400, 500, "with width feature specified");
+
+    SimpleTest.finish();
+  }
+]]></script>
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</window>

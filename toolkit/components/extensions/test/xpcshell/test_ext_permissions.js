@@ -137,7 +137,7 @@ add_task(async function test_permissions() {
   }
   for (let origin of OPTIONAL_ORIGINS) {
     result = await call("contains", {origins: [origin]});
-    equal(result, false, `conains() returns false for origin ${origin}`);
+    equal(result, false, `contains() returns false for origin ${origin}`);
   }
 
   result = await call("contains", {
@@ -464,7 +464,7 @@ add_task(async function test_optional_all_urls() {
 
     equal(before, false, "captureVisibleTab() unavailable before optional permission request()");
     equal(granted, true, "request() for optional permissions granted");
-    equal(after, true, "captureVisibleTab() avaiable after optional permission request()");
+    equal(after, true, "captureVisibleTab() available after optional permission request()");
   });
 
   await extension.unload();

@@ -122,11 +122,21 @@ template <typename T>
 struct InternalGCPointerPolicy {
     using Type = typename mozilla::RemovePointer<T>::Type;
     static T initial() { return nullptr; }
-    static void preBarrier(T v) { Type::writeBarrierPre(v); }
-    static void postBarrier(T* vp, T prev, T next) { Type::writeBarrierPost(vp, prev, next); }
-    static void readBarrier(T v) { Type::readBarrier(v); }
+    static void preBarrier(T v) {
+        if (v)
+            Type::writeBarrierPre(v);
+    }
+    static void postBarrier(T* vp, T prev, T next) {
+        if (*vp)
+            Type::writeBarrierPost(vp, prev, next);
+    }
+    static void readBarrier(T v) {
+        if (v)
+            Type::readBarrier(v);
+    }
     static void trace(JSTracer* trc, T* vp, const char* name) {
-        TraceManuallyBarrieredEdge(trc, vp, name);
+        if (*vp)
+            TraceManuallyBarrieredEdge(trc, vp, name);
     }
     static bool isValid(T v) {
         return gc::IsCellPointerValidOrNull(v);

@@ -18,8 +18,7 @@
 </hbox>
 <hbox>
   <button id="four" type="menu" label="Four"/>
-  <button id="five" type="panel" label="Five"/>
-  <button id="six" label="Six"/>
+  <button id="five" label="Five"/>
 </hbox>
 
   <!-- test results are displayed in the html:body -->
@@ -48,9 +47,6 @@ function test_button()
     is(document.activeElement, $("four"), "key cursor right on button");
     synthesizeKey("KEY_ArrowDown");
     is(document.activeElement, $("four"), "key cursor down on menu button");
-    $("five").focus();
-    synthesizeKey("KEY_ArrowDown");
-    is(document.activeElement, $("five"), "key cursor down on panel button");
 
     $("three").focus();
     synthesizeKey("KEY_ArrowUp");

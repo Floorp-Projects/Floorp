@@ -2,12 +2,16 @@ use webrender::api::*;
 use bindings::{ByteSlice, MutByteSlice, wr_moz2d_render_cb, ArcVecU8};
 use rayon::ThreadPool;
 
-use std::collections::hash_map::{HashMap, Entry};
+use std::collections::hash_map::HashMap;
+use std::collections::hash_map;
+use std::collections::btree_map::BTreeMap;
+use std::collections::Bound::Included;
 use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::sync::Arc;
+use std;
 
 #[cfg(target_os = "windows")]
 use dwrote;
@@ -131,6 +135,13 @@ struct BlobReader<'a> {
     begin: usize,
 }
 
+struct Entry {
+    bounds: Box2d,
+    begin: usize,
+    end: usize,
+    extra_end: usize,
+}
+
 impl<'a> BlobReader<'a> {
     fn new(buf: &'a[u8]) -> BlobReader<'a> {
         // The offset of the index is at the end of the buffer.
@@ -140,11 +151,11 @@ impl<'a> BlobReader<'a> {
         BlobReader { reader: BufReader::new(&buf[index_offset..index_offset_pos]), begin: 0 }
     }
 
-    fn read_entry(&mut self) -> (usize, usize, usize, Box2d) {
+    fn read_entry(&mut self) -> Entry {
         let end = self.reader.read();
         let extra_end = self.reader.read();
         let bounds = self.reader.read();
-        let ret = (self.begin, end, extra_end, bounds);
+        let ret = Entry { begin: self.begin, end, extra_end, bounds };
         self.begin = extra_end;
         ret
     }
@@ -188,7 +199,7 @@ impl BlobWriter {
 
 
 // XXX: Do we want to allow negative values here or clamp to the image bounds?
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
 struct Box2d {
     x1: u32,
     y1: u32,
@@ -214,9 +225,9 @@ impl From<DeviceUintRect> for Box2d {
 fn dump_blob_index(blob: &[u8], dirty_rect: Box2d) {
     let mut index = BlobReader::new(blob);
     while index.reader.has_more() {
-        let (_, _, _, bounds) = index.read_entry();
-        dlog!("  {:?} {}", bounds,
-                 if bounds.contained_by(&dirty_rect) {
+        let e = index.read_entry();
+        dlog!("  {:?} {}", e.bounds,
+                 if e.bounds.contained_by(&dirty_rect) {
                     "*"
                  } else {
                     ""
@@ -229,8 +240,53 @@ fn check_result(result: &[u8]) -> () {
     let mut index = BlobReader::new(result);
     assert!(index.reader.has_more(), "Unexpectedly empty result. This blob should just have been deleted");
     while index.reader.has_more() {
-        let (_, end, extra, bounds) = index.read_entry();
-        dlog!("result bounds: {} {} {:?}", end, extra, bounds);
+        let e = index.read_entry();
+        dlog!("result bounds: {} {} {:?}", e.end, e.extra_end, e.bounds);
+    }
+}
+
+// We use a BTree as a kind of multi-map, by appending an integer "cache_order" to the key.
+// This lets us use multiple items with matching bounds in the map and allows
+// us to fetch and remove them while retaining the ordering of the original list.
+
+struct CachedReader<'a> {
+    reader: BlobReader<'a>,
+    cache: BTreeMap<(Box2d, u32), Entry>,
+    cache_index_counter: u32
+}
+
+impl<'a> CachedReader<'a> {
+    fn new(buf: &'a[u8]) -> CachedReader {
+        CachedReader{reader:BlobReader::new(buf), cache: BTreeMap::new(), cache_index_counter: 0 }
+    }
+
+    fn take_entry_with_bounds_from_cache(&mut self, bounds: &Box2d) -> Option<Entry> {
+        if self.cache.is_empty() {
+            return None;
+        }
+
+        let key_to_delete = match self.cache. range((Included((*bounds, 0u32)), Included((*bounds, std::u32::MAX)))).next() {
+            Some((&key, _)) => key,
+            None => return None,
+        };
+
+        Some(self.cache.remove(&key_to_delete).expect("We just got this key from range, it needs to be present"))
+    }
+
+    fn next_entry_with_bounds(&mut self, bounds: &Box2d, ignore_rect: &Box2d) -> Entry {
+        if let Some(entry) = self.take_entry_with_bounds_from_cache(bounds) {
+            return entry;
+        }
+
+        loop {
+            let old = self.reader.read_entry();
+            if old.bounds == *bounds {
+                return old;
+            } else if !old.bounds.contained_by(&ignore_rect) {
+                self.cache.insert((old.bounds, self.cache_index_counter), old);
+                self.cache_index_counter += 1;
+            }
+        }
     }
 }
 
@@ -241,50 +297,41 @@ fn check_result(result: &[u8]) -> () {
    Old items contained in the dirty_rect are dropped and new items
    are retained.
 */
-fn merge_blob_images(old: &[u8], new: &[u8], dirty_rect: Box2d) -> Vec<u8> {
+fn merge_blob_images(old_buf: &[u8], new_buf: &[u8], dirty_rect: Box2d) -> Vec<u8> {
 
     let mut result = BlobWriter::new();
     dlog!("dirty rect: {:?}", dirty_rect);
     dlog!("old:");
-    dump_blob_index(old, dirty_rect);
+    dump_blob_index(old_buf, dirty_rect);
     dlog!("new:");
-    dump_blob_index(new, dirty_rect);
+    dump_blob_index(new_buf, dirty_rect);
 
-    let mut old_reader = BlobReader::new(old);
-    let mut new_reader = BlobReader::new(new);
+    let mut old_reader = CachedReader::new(old_buf);
+    let mut new_reader = BlobReader::new(new_buf);
 
     // Loop over both new and old entries merging them.
     // Both new and old must have the same number of entries that
     // overlap but are not contained by the dirty rect, and they
     // must be in the same order.
     while new_reader.reader.has_more() {
-        let (new_begin, new_end, new_extra, new_bounds) = new_reader.read_entry();
-        dlog!("bounds: {} {} {:?}", new_end, new_extra, new_bounds);
-        if new_bounds.contained_by(&dirty_rect) {
-            result.new_entry(new_extra - new_end, new_bounds, &new[new_begin..new_extra]);
+        let new = new_reader.read_entry();
+        dlog!("bounds: {} {} {:?}", new.end, new.extra_end, new.bounds);
+        if new.bounds.contained_by(&dirty_rect) {
+            result.new_entry(new.extra_end - new.end, new.bounds, &new_buf[new.begin..new.extra_end]);
         } else {
-            loop {
-                assert!(old_reader.reader.has_more());
-                let (old_begin, old_end, old_extra, old_bounds) = old_reader.read_entry();
-                dlog!("new bounds: {} {} {:?}", old_end, old_extra, old_bounds);
-                if old_bounds.contained_by(&dirty_rect) {
-                    // fully contained items will be discarded or replaced
-                } else {
-                    assert_eq!(old_bounds, new_bounds);
-                    // we found a matching item use the old data
-                    result.new_entry(old_extra - old_end, old_bounds, &old[old_begin..old_extra]);
-                    break;
-                }
-            }
+            let old = old_reader.next_entry_with_bounds(&new.bounds, &dirty_rect);
+            result.new_entry(old.extra_end - old.end, new.bounds, &old_buf[old.begin..old.extra_end])
         }
     }
 
-    // Include any remaining old items.
-    while old_reader.reader.has_more() {
-        let (_, old_end, old_extra, old_bounds) = old_reader.read_entry();
-        dlog!("new bounds: {} {} {:?}", old_end, old_extra, old_bounds);
-        assert!(old_bounds.contained_by(&dirty_rect));
+    // Ensure all remaining items will be discarded
+    while old_reader.reader.reader.has_more() {
+        let old = old_reader.reader.read_entry();
+        dlog!("new bounds: {} {} {:?}", old.end, old.extra_end, old.bounds);
+        assert!(old.bounds.contained_by(&dirty_rect));
     }
+
+    assert!(old_reader.cache.is_empty());
 
     let result = result.finish();
     check_result(&result);
@@ -302,7 +349,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
 
     fn update(&mut self, key: ImageKey, data: BlobImageData, dirty_rect: Option<DeviceUintRect>) {
         match self.blob_commands.entry(key) {
-            Entry::Occupied(mut e) => {
+            hash_map::Entry::Occupied(mut e) => {
                 let old_data = &mut e.get_mut().0;
                 *old_data = Arc::new(merge_blob_images(&old_data, &data,
                                                        dirty_rect.unwrap().into()));
@@ -374,8 +421,8 @@ impl BlobImageRenderer for Moz2dImageRenderer {
             let mut index = BlobReader::new(&commands);
             assert!(index.reader.pos < index.reader.buf.len());
             while index.reader.pos < index.reader.buf.len() {
-                let (_, end, extra_end, _)  = index.read_entry();
-                process_fonts(BufReader::new(&commands[end..extra_end]), resources);
+                let e  = index.read_entry();
+                process_fonts(BufReader::new(&commands[e.end..e.extra_end]), resources);
             }
         }
 
@@ -413,10 +460,10 @@ impl BlobImageRenderer for Moz2dImageRenderer {
     fn resolve(&mut self, request: BlobImageRequest) -> BlobImageResult {
 
         match self.rendered_images.entry(request) {
-            Entry::Vacant(_) => {
+            hash_map::Entry::Vacant(_) => {
                 return Err(BlobImageError::InvalidKey);
             }
-            Entry::Occupied(entry) => {
+            hash_map::Entry::Occupied(entry) => {
                 // None means we haven't yet received the result.
                 if entry.get().is_some() {
                     let result = entry.remove();

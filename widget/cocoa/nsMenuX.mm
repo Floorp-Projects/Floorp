@@ -521,7 +521,7 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
     itemType = eSeparatorMenuItemType;
   } else if (inMenuItemContent->IsElement()) {
     static Element::AttrValuesArray strings[] =
-  {&nsGkAtoms::checkbox, &nsGkAtoms::radio, nullptr};
+  {nsGkAtoms::checkbox, nsGkAtoms::radio, nullptr};
     switch (inMenuItemContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
                                                             nsGkAtoms::type,
                                                             strings, eCaseMatters)) {
