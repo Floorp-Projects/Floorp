@@ -524,11 +524,13 @@ class Dumper:
 
         sourceFileStream = ''
         code_id, code_file = None, None
+        cmd = self.dump_syms_cmdline(file, arch, dsymbundle=dsymbundle)
+        print(' '.join(cmd), file=sys.stderr)
+
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+
         try:
-            cmd = self.dump_syms_cmdline(file, arch, dsymbundle=dsymbundle)
-            print(' '.join(cmd), file=sys.stderr)
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                    stderr=open(os.devnull, 'wb'))
             module_line = proc.stdout.next()
             if module_line.startswith("MODULE"):
                 # MODULE os cpu guid debug_file
@@ -585,7 +587,6 @@ class Dumper:
                         # pass through all other lines unchanged
                         f.write(line)
                 f.close()
-                proc.wait()
                 # we output relative paths so callers can get a list of what
                 # was generated
                 print(rel_path)
@@ -601,6 +602,13 @@ class Dumper:
         except Exception as e:
             print("Unexpected error: %s" % str(e), file=sys.stderr)
             raise
+        finally:
+            proc.wait()
+
+        if proc.returncode != 0:
+            # unit tests pass an iterator instead of a file so we can't use proc.stderr.read()
+            print("Unexpected error: %s" % ''.join(list(proc.stderr)), file=sys.stderr)
+            raise subprocess.CalledProcessError(proc.returncode, cmd, None)
 
         if dsymbundle:
             shutil.rmtree(dsymbundle)

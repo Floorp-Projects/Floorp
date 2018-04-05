@@ -121,6 +121,7 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
             m.wait.return_value = 0
             # communicate returns the full text of stdout and stderr.
             m.communicate.return_value = ('\n'.join(stdout_), '')
+            m.returncode = 0
             return m
         self.mock_popen.side_effect = next_popen
         shutil.rmtree = patch("shutil.rmtree").start()
@@ -301,6 +302,7 @@ if target_platform() == 'WINNT':
                     "FILE 0 %s" % sourcefile,
                     "PUBLIC xyz 123"
                     ])
+            mock_Popen.return_value.returncode = 0
             mock_communicate = mock_Popen.return_value.communicate
             mock_communicate.side_effect = [("abcd1234", ""),
                                             ("http://example.com/repo", ""),
@@ -441,6 +443,7 @@ class TestFileMapping(HelperMixin, unittest.TestCase):
                 ]
             )
         mock_Popen.return_value.stdout = mk_output(dumped_files)
+        mock_Popen.return_value.returncode = 0
 
         d = symbolstore.Dumper('dump_syms', self.symboldir,
                                file_mapping=file_mapping)
@@ -451,6 +454,31 @@ class TestFileMapping(HelperMixin, unittest.TestCase):
         symbol_file = os.path.join(self.symboldir,
                                    file_id[1], file_id[0], file_id[1] + '.sym')
         self.assertEqual(open(symbol_file, 'r').read(), expected_output)
+
+class TestReturnCode(HelperMixin, unittest.TestCase):
+    def setUp(self):
+        HelperMixin.setUp(self)
+        self.objdir = os.path.join(self.test_dir, 'obj')
+        os.mkdir(self.objdir)
+        self.symboldir = os.path.join(self.test_dir, 'symbols')
+        os.mkdir(self.symboldir)
+
+    @patch("subprocess.Popen")
+    def testReturnCode(self, mock_Popen):
+        # mock the dump_syms output
+        dump_syms_output = iter([''])
+        dump_syms_err = iter(['error'])
+        mock_Popen.return_value.returncode = 1
+        mock_Popen.return_value.stdout = dump_syms_output
+        mock_Popen.return_value.stderr = dump_syms_err
+
+        d = symbolstore.Dumper('dump_syms', self.symboldir)
+        f = os.path.join(self.objdir, 'somefile')
+
+        with self.assertRaises(subprocess.CalledProcessError) as e:
+            d.Process(f)
+            self.assertEqual(e.returncode, 1)
+            self.assertEqual(e.stderr, dump_syms_err)
 
 class TestFunctional(HelperMixin, unittest.TestCase):
     '''Functional tests of symbolstore.py, calling it with a real
