@@ -170,6 +170,8 @@ public:
     nsCycleCollector_shutdown();
   }
 
+  WorkletJSContext* GetAsWorkletJSContext() override { return this; }
+
   CycleCollectedJSRuntime* CreateRuntime(JSContext* aCx) override
   {
     return new WorkletJSRuntime(aCx);
@@ -426,8 +428,8 @@ WorkletThread::GetWorkletLoadInfo() const
 /* static */ bool
 WorkletThread::IsOnWorkletThread()
 {
-  const char* threadName = PR_GetThreadName(PR_GetCurrentThread());
-  return threadName && !strcmp(threadName, "worklet");
+  CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
+  return ccjscx && ccjscx->GetAsWorkletJSContext();
 }
 
 /* static */ void

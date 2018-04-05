@@ -32,6 +32,7 @@ class CycleCollectedJSRuntime;
 
 namespace dom {
 class Exception;
+class WorkletJSContext;
 } // namespace dom
 
 // Contains various stats about the cycle collection.
@@ -129,6 +130,8 @@ public:
     FinalizeIncrementally,
     FinalizeNow,
   };
+
+  virtual dom::WorkletJSContext* GetAsWorkletJSContext() { return nullptr; }
 
   CycleCollectedJSRuntime* Runtime() const
   {
