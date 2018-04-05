@@ -132,8 +132,8 @@ class Profile(object):
         self.set_preferences(user_js)
 
         # handle add-on installation
-        self.addon_manager = AddonManager(self.profile, restore=self.restore)
-        self.addon_manager.install_addons(self._addons)
+        self.addons = AddonManager(self.profile, restore=self.restore)
+        self.addons.install(self._addons)
 
     def __enter__(self):
         return self

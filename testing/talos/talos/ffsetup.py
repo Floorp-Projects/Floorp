@@ -125,7 +125,7 @@ class FFSetup(object):
         # installing addons
         LOG.info("Installing Add-ons:")
         LOG.info(extensions)
-        profile.addon_manager.install_addons(extensions)
+        profile.addons.install(extensions)
 
         # installing webextensions
         webextensions = self.test_config.get('webextensions', None)
@@ -143,7 +143,7 @@ class FFSetup(object):
                 if not os.path.exists(filename):
                     continue
                 LOG.info(filename)
-                profile.addon_manager.install_from_path(filename)
+                profile.addons.install(filename)
 
     def _run_profile(self):
         runner_cls = mozrunner.runners.get(
