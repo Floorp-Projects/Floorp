@@ -455,14 +455,6 @@ public:
     {
         SetXULAttr(nsGkAtoms::flex, aValue, rv);
     }
-    void GetFlexGroup(DOMString& aValue) const
-    {
-        GetXULAttr(nsGkAtoms::flexgroup, aValue);
-    }
-    void SetFlexGroup(const nsAString& aValue, mozilla::ErrorResult& rv)
-    {
-        SetXULAttr(nsGkAtoms::flexgroup, aValue, rv);
-    }
     void GetOrdinal(DOMString& aValue) const
     {
         GetXULAttr(nsGkAtoms::ordinal, aValue);
@@ -583,14 +575,6 @@ public:
     {
         SetXULAttr(nsGkAtoms::maxheight, aValue, rv);
     }
-    void GetPersist(DOMString& aValue) const
-    {
-        GetXULAttr(nsGkAtoms::persist, aValue);
-    }
-    void SetPersist(const nsAString& aValue, mozilla::ErrorResult& rv)
-    {
-        SetXULAttr(nsGkAtoms::persist, aValue, rv);
-    }
     void GetLeft(DOMString& aValue) const
     {
         GetXULAttr(nsGkAtoms::left, aValue);
@@ -614,14 +598,6 @@ public:
     void SetTooltipText(const nsAString& aValue, mozilla::ErrorResult& rv)
     {
         SetXULAttr(nsGkAtoms::tooltiptext, aValue, rv);
-    }
-    void GetStatusText(DOMString& aValue) const
-    {
-        GetXULAttr(nsGkAtoms::statustext, aValue);
-    }
-    void SetStatusText(const nsAString& aValue, mozilla::ErrorResult& rv)
-    {
-        SetXULAttr(nsGkAtoms::statustext, aValue, rv);
     }
     void GetSrc(DOMString& aValue) const
     {
