@@ -175,8 +175,6 @@ DOMEventTargetHelper::GetDocumentIfCurrent() const
   return win->GetDoc();
 }
 
-NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(DOMEventTargetHelper)
-
 NS_IMETHODIMP
 DOMEventTargetHelper::AddEventListener(const nsAString& aType,
                                        nsIDOMEventListener* aListener,
