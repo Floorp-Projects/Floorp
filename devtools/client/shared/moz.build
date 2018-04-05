@@ -36,6 +36,7 @@ DevToolsModules(
     'inplace-editor.js',
     'key-shortcuts.js',
     'keycodes.js',
+    'link.js',
     'natural-sort.js',
     'network-throttling-profiles.js',
     'node-attribute-parser.js',

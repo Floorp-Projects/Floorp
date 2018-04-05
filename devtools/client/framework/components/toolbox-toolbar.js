@@ -7,6 +7,7 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {div, button} = dom;
+const {openLink} = require("devtools/client/shared/link");
 
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
@@ -361,6 +362,28 @@ function showMeatballMenu(
     label: L10N.getStr("toolbox.meatballMenu.settings.label"),
     accelerator: L10N.getStr("toolbox.help.key"),
     click: () => selectTool("options"),
+  }));
+
+  if (menu.items.length) {
+    menu.append(new MenuItem({ type: "separator" }));
+  }
+
+  // Getting started
+  menu.append(new MenuItem({
+    id: "toolbox-meatball-menu-gettingstarted",
+    label: L10N.getStr("toolbox.meatballMenu.gettingStarted.label"),
+    click: () => {
+      openLink("https://developer.mozilla.org/docs/Tools", toolbox);
+    },
+  }));
+
+  // Give feedback
+  menu.append(new MenuItem({
+    id: "toolbox-meatball-menu-feedback",
+    label: L10N.getStr("toolbox.meatballMenu.giveFeedback.label"),
+    click: () => {
+      openLink("https://discourse.mozilla.org/c/devtools", toolbox);
+    },
   }));
 
   const rect = menuButton.getBoundingClientRect();
