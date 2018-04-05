@@ -4503,27 +4503,6 @@ nsGlobalWindowInner::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
   return !nsContentUtils::IsChromeDoc(mDoc);
 }
 
-NS_IMETHODIMP
-nsGlobalWindowInner::AddSystemEventListener(const nsAString& aType,
-                                            nsIDOMEventListener *aListener,
-                                            bool aUseCapture,
-                                            bool aWantsUntrusted,
-                                            uint8_t aOptionalArgc)
-{
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  if (!aWantsUntrusted &&
-      (aOptionalArgc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
-    aWantsUntrusted = true;
-  }
-
-  return NS_AddSystemEventListener(this, aType, aListener, aUseCapture,
-                                   aWantsUntrusted);
-}
-
 EventListenerManager*
 nsGlobalWindowInner::GetOrCreateListenerManager()
 {

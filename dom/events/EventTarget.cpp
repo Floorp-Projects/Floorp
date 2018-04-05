@@ -105,6 +105,29 @@ EventTarget::RemoveEventListener(const nsAString& aType,
   }
 }
 
+nsresult
+EventTarget::AddSystemEventListener(const nsAString& aType,
+                                    nsIDOMEventListener* aListener,
+                                    bool aUseCapture,
+                                    const Nullable<bool>& aWantsUntrusted)
+{
+  ErrorResult rv;
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+
+  EventListenerManager* elm = GetOrCreateListenerManager();
+  NS_ENSURE_STATE(elm);
+
+  EventListenerFlags flags;
+  flags.mInSystemGroup = true;
+  flags.mCapture = aUseCapture;
+  flags.mAllowUntrustedEvents = wantsUntrusted;
+  elm->AddEventListenerByType(aListener, aType, flags);
+  return NS_OK;
+}
+
 void
 EventTarget::RemoveSystemEventListener(const nsAString& aType,
                                        nsIDOMEventListener *aListener,
