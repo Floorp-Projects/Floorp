@@ -11,6 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Preferences.h"
 
 #include "mozilla/dom/AnalyserNode.h"
 #include "mozilla/dom/AnalyserNodeBinding.h"
@@ -206,18 +207,22 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  if (aOptions.mSampleRate > 0 &&
-      (aOptions.mSampleRate - WebAudioUtils::MinSampleRate < 0.0 ||
-      WebAudioUtils::MaxSampleRate - aOptions.mSampleRate < 0.0)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
+  float sampleRate = MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE;
+  if (Preferences::GetBool("media.webaudio.audiocontextoptions-samplerate.enabled")) {
+    if (aOptions.mSampleRate > 0 &&
+        (aOptions.mSampleRate - WebAudioUtils::MinSampleRate < 0.0 ||
+        WebAudioUtils::MaxSampleRate - aOptions.mSampleRate < 0.0)) {
+      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return nullptr;
+    }
+    sampleRate = aOptions.mSampleRate;
   }
 
   uint32_t maxChannelCount = std::min<uint32_t>(WebAudioUtils::MaxChannelCount,
       CubebUtils::MaxNumberOfChannels());
   RefPtr<AudioContext> object =
     new AudioContext(window, false, maxChannelCount,
-                     0, aOptions.mSampleRate);
+                     0, sampleRate);
   aRv = object->Init();
   if (NS_WARN_IF(aRv.Failed())) {
      return nullptr;
