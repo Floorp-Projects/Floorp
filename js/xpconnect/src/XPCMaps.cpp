@@ -339,43 +339,6 @@ NativeSetMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 }
 
 /***************************************************************************/
-// implement IID2ThisTranslatorMap...
-
-bool
-IID2ThisTranslatorMap::Entry::Match(const PLDHashEntryHdr* entry,
-                                    const void* key)
-{
-    return ((const nsID*)key)->Equals(((Entry*)entry)->key);
-}
-
-void
-IID2ThisTranslatorMap::Entry::Clear(PLDHashTable* table, PLDHashEntryHdr* entry)
-{
-    static_cast<Entry*>(entry)->value = nullptr;
-    memset(entry, 0, table->EntrySize());
-}
-
-const struct PLDHashTableOps IID2ThisTranslatorMap::Entry::sOps =
-{
-    HashIIDPtrKey,
-    Match,
-    PLDHashTable::MoveEntryStub,
-    Clear
-};
-
-// static
-IID2ThisTranslatorMap*
-IID2ThisTranslatorMap::newMap(int length)
-{
-    return new IID2ThisTranslatorMap(length);
-}
-
-IID2ThisTranslatorMap::IID2ThisTranslatorMap(int length)
-  : mTable(&Entry::sOps, sizeof(Entry), length)
-{
-}
-
-/***************************************************************************/
 // implement XPCWrappedNativeProtoMap...
 
 // static
