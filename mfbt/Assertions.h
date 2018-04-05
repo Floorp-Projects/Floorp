@@ -596,6 +596,7 @@ struct AssertionConditionType
  * }
  */
 #ifdef DEBUG
+#  define MOZ_FALLTHROUGH_ASSERT() MOZ_CRASH()
 #  define MOZ_FALLTHROUGH_ASSERT(reason) MOZ_CRASH("MOZ_FALLTHROUGH_ASSERT: " reason)
 #else
 #  define MOZ_FALLTHROUGH_ASSERT(...) MOZ_FALLTHROUGH
