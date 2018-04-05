@@ -21,33 +21,33 @@ class ToolboxController extends Component {
     // state, and for the definitions of the props that are expected to be passed in.
     this.state = {
       focusedButton: ELEMENT_PICKER_ID,
+      toolboxButtons: [],
       currentToolId: null,
-      canRender: false,
       highlightedTools: new Set(),
-      areDockButtonsEnabled: true,
       panelDefinitions: [],
       hostTypes: [],
+      areDockButtonsEnabled: true,
       canCloseToolbox: true,
-      toolboxButtons: [],
+      canRender: false,
       buttonIds: [],
       checkedButtonsUpdated: () => {
         this.forceUpdate();
       }
     };
 
-    this.updateButtonIds = this.updateButtonIds.bind(this);
-    this.updateFocusedButton = this.updateFocusedButton.bind(this);
     this.setFocusedButton = this.setFocusedButton.bind(this);
+    this.setToolboxButtons = this.setToolboxButtons.bind(this);
     this.setCurrentToolId = this.setCurrentToolId.bind(this);
-    this.setCanRender = this.setCanRender.bind(this);
-    this.setOptionsPanel = this.setOptionsPanel.bind(this);
     this.highlightTool = this.highlightTool.bind(this);
     this.unhighlightTool = this.unhighlightTool.bind(this);
-    this.setDockButtonsEnabled = this.setDockButtonsEnabled.bind(this);
+    this.setOptionsPanel = this.setOptionsPanel.bind(this);
     this.setHostTypes = this.setHostTypes.bind(this);
+    this.setDockButtonsEnabled = this.setDockButtonsEnabled.bind(this);
     this.setCanCloseToolbox = this.setCanCloseToolbox.bind(this);
+    this.setCanRender = this.setCanRender.bind(this);
     this.setPanelDefinitions = this.setPanelDefinitions.bind(this);
-    this.setToolboxButtons = this.setToolboxButtons.bind(this);
+    this.updateButtonIds = this.updateButtonIds.bind(this);
+    this.updateFocusedButton = this.updateFocusedButton.bind(this);
   }
 
   shouldComponentUpdate() {
@@ -65,8 +65,13 @@ class ToolboxController extends Component {
    * using the arrow keys.
    */
   updateButtonIds() {
-    const {panelDefinitions, toolboxButtons, optionsPanel, hostTypes,
-           canCloseToolbox} = this.state;
+    const {
+      toolboxButtons,
+      panelDefinitions,
+      optionsPanel,
+      hostTypes,
+      canCloseToolbox,
+    } = this.state;
 
     // This is a little gnarly, but go through all of the state and extract the IDs.
     this.setState({
