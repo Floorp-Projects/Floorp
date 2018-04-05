@@ -554,7 +554,7 @@ function handleRequest(req, res) {
     // asking for cname.example.com
     var content;
     // ... this always sends a CNAME back to pointing-elsewhere.example.com. Loop time!
-    content = new Buffer("00000100000100010000000005636E616D65076578616D706C6503636F6D0000050001C00C0005000100000037002012706F696E74696E672D656C73657768657265076578616D706C6503636F6D00", "hex");
+    content = new Buffer("00000100000100010000000005636E616D65076578616D706C6503636F6D0000050001C00C0005000100000037002012706F696E74696E672D656C73657768657265076578616D706C65C01A00", "hex");
     res.setHeader('Content-Type', 'application/dns-udpwireformat');
     res.setHeader('Content-Length', content.length);
     res.writeHead(200);
