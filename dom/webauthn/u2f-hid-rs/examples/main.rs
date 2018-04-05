@@ -40,7 +40,7 @@ fn u2f_get_key_handle_from_register_response(register_response: &Vec<u8>) -> io:
 }
 
 fn main() {
-    env_logger::init().expect("Cannot start logger");
+    env_logger::init();
 
     println!("Asking a security key to register now...");
     let challenge_str = format!("{}{}",

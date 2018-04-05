@@ -4,22 +4,14 @@
 
 extern crate bindgen;
 extern crate cmake;
-extern crate glob;
-
-extern crate log;
 extern crate env_logger;
+extern crate glob;
 
 use std::env;
 use std::path;
 
 fn main() {
-    log::set_logger(|max_log_level| {
-        use env_logger::Logger;
-        let env_logger = Logger::new();
-        max_log_level.set(env_logger.filter());
-        Box::new(env_logger)
-    }).expect("Failed to set logger.");
-
+    env_logger::init();
     build_jsapi_bindings();
     build_jsglue_cpp();
 }
