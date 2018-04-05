@@ -36,7 +36,7 @@ var place_content_test_cases = [
     },
     {
         justifyContent: "unsafe start",
-        shorthand: "normal start",
+        shorthand: ["normal start", "normal unsafe start"],
     },
     {
         justifyContent: "space-evenly start",
@@ -64,7 +64,7 @@ var place_items_test_cases = [
     },
     {
         justifyItems: "unsafe start",
-        shorthand: "normal start",
+        shorthand: ["normal start", "normal unsafe start"],
     },
     {
         justifyItems: "stretch",
@@ -88,7 +88,7 @@ var place_self_test_cases = [
     },
     {
         justifySelf: "unsafe start",
-        shorthand: "auto start",
+        shorthand: ["auto start", "auto unsafe start"],
     },
     {
         justifySelf: "last baseline start",
@@ -110,7 +110,11 @@ function run_tests(test_cases, shorthand, subproperties) {
                 element.style[longhand] = test_case[longhand] ||
                                           initial_values[longhand];
             });
-            assert_equals(element.style[shorthand], test_case.shorthand);
+            if (Array.isArray(test_case.shorthand)) {
+              assert_in_array(element.style[shorthand], test_case.shorthand);
+            } else {
+              assert_equals(element.style[shorthand], test_case.shorthand);
+            }
         }, "test shorthand serialization " + JSON.stringify(test_case));
     });
 }
