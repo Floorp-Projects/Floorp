@@ -18,6 +18,13 @@ const IS_PARENT_PROCESS = (Services.appinfo.processType ==
 function DispatcherDelegate(aDispatcher, aMessageManager) {
   this._dispatcher = aDispatcher;
   this._messageManager = aMessageManager;
+
+  if (!aDispatcher) {
+    // Child process.
+    this._replies = new Map();
+    (aMessageManager || Services.cpmm).addMessageListener(
+        "GeckoView:MessagingReply", this);
+  }
 }
 
 DispatcherDelegate.prototype = {
@@ -71,22 +78,12 @@ DispatcherDelegate.prototype = {
     };
 
     if (aCallback) {
-      forwardData.uuid = UUIDGen.generateUUID().toString();
-      mm.addMessageListener("GeckoView:MessagingReply", function listener(msg) {
-        if (msg.data.uuid !== forwardData.uuid) {
-          return;
-        }
-        if (msg.data.type === "success") {
-          aCallback.onSuccess(msg.data.response);
-        } else if (msg.data.type === "error") {
-          aCallback.onError(msg.data.response);
-        } else if (msg.data.type === "finalize") {
-          aFinalizer && aFinalizer.onFinalize();
-          mm.removeMessageListener(msg.name, listener);
-        } else {
-          throw new Error("invalid reply type");
-        }
+      const uuid = UUIDGen.generateUUID().toString();
+      this._replies.set(uuid, {
+        callback: aCallback,
+        finalizer: aFinalizer,
       });
+      forwardData.uuid = uuid;
     }
 
     mm.sendAsyncMessage("GeckoView:Messaging", forwardData);
@@ -120,6 +117,29 @@ DispatcherDelegate.prototype = {
         onError: reject,
       });
     });
+  },
+
+  receiveMessage: function(aMsg) {
+    const {uuid, type} = aMsg.data;
+    const reply = this._replies.get(uuid);
+    if (!reply) {
+      return;
+    }
+
+    if (type === "success") {
+      reply.callback.onSuccess(aMsg.data.response);
+    } else if (type === "error") {
+      reply.callback.onError(aMsg.data.response);
+    } else if (type === "finalize") {
+      if (typeof reply.finalizer === "function") {
+        reply.finalizer();
+      } else if (reply.finalizer) {
+        reply.finalizer.onFinalize();
+      }
+      this._replies.delete(uuid);
+    } else {
+      throw new Error("invalid reply type");
+    }
   },
 };
 
