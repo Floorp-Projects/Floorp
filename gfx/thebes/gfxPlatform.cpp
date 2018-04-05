@@ -427,6 +427,8 @@ NS_IMPL_ISUPPORTS(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
 
 #define GFX_PREF_CMS_FORCE_SRGB "gfx.color_management.force_srgb"
 
+#define FONT_VARIATIONS_PREF "layout.css.font-variations.enabled"
+
 NS_IMETHODIMP
 SRGBOverrideObserver::Observe(nsISupports *aSubject,
                               const char *aTopic,
@@ -850,6 +852,14 @@ gfxPlatform::Init()
 
     if (XRE_IsParentProcess()) {
       gfxVars::SetDXInterop2Blocked(IsDXInterop2Blocked());
+      Preferences::Unlock(FONT_VARIATIONS_PREF);
+      if (!gPlatform->CheckVariationFontSupport()) {
+        // Ensure variation fonts are disabled and the pref is locked.
+        Preferences::SetBool(FONT_VARIATIONS_PREF, false,
+                             PrefValueKind::Default);
+        Preferences::SetBool(FONT_VARIATIONS_PREF, false);
+        Preferences::Lock(FONT_VARIATIONS_PREF);
+      }
     }
 
     if (obs) {
