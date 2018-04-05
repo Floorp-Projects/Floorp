@@ -1954,12 +1954,6 @@ nsGlobalWindowInner::GetTargetForEventTargetChain()
 }
 
 nsresult
-nsGlobalWindowInner::WillHandleEvent(EventChainPostVisitor& aVisitor)
-{
-  return NS_OK;
-}
-
-nsresult
 nsGlobalWindowInner::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   EventMessage msg = aVisitor.mEvent->mMessage;

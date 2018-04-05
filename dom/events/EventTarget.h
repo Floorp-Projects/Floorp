@@ -19,6 +19,8 @@ namespace mozilla {
 
 class AsyncEventDispatcher;
 class ErrorResult;
+class EventChainPostVisitor;
+class EventChainVisitor;
 class EventListenerManager;
 
 namespace dom {
@@ -141,6 +143,34 @@ public:
 
   virtual bool IsApzAware() const;
 
+  /**
+   * Called before the capture phase of the event flow and after event target
+   * chain creation. This is used to handle things that must be executed before
+   * dispatching the event to DOM.
+   */
+  virtual nsresult PreHandleEvent(EventChainVisitor& aVisitor)
+  {
+    return NS_OK;
+  }
+
+  /**
+   * If EventChainPreVisitor.mWantsWillHandleEvent is set true,
+   * called just before possible event handlers on this object will be called.
+   */
+  virtual void WillHandleEvent(EventChainPostVisitor& aVisitor)
+  {
+  }
+
+  /**
+   * Called after the bubble phase of the system event group.
+   * The default handling of the event should happen here.
+   * @param aVisitor the visitor object which is used during post handling.
+   *
+   * @see EventDispatcher.h for documentation about aVisitor.
+   * @note Only EventDispatcher should call this method.
+   */
+  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) = 0;
+  
 protected:
   EventHandlerNonNull* GetEventHandler(nsAtom* aType,
                                        const nsAString& aTypeString);

@@ -2344,12 +2344,6 @@ nsGlobalWindowOuter::GetTargetForEventTargetChain()
 }
 
 nsresult
-nsGlobalWindowOuter::WillHandleEvent(EventChainPostVisitor& aVisitor)
-{
-  return NS_OK;
-}
-
-nsresult
 nsGlobalWindowOuter::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   MOZ_CRASH("The outer window should not be part of an event path");

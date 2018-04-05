@@ -333,6 +333,8 @@ public:
 
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
+  nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
+
   // nsPIDOMWindow
   virtual nsPIDOMWindowOuter* GetPrivateRoot() override;
 
