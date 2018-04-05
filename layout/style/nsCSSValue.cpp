@@ -155,10 +155,6 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mPair = aCopy.mValue.mPair;
     mValue.mPair->AddRef();
   }
-  else if (eCSSUnit_Triplet == mUnit) {
-    mValue.mTriplet = aCopy.mValue.mTriplet;
-    mValue.mTriplet->AddRef();
-  }
   else if (eCSSUnit_Rect == mUnit) {
     mValue.mRect = aCopy.mValue.mRect;
     mValue.mRect->AddRef();
@@ -250,9 +246,6 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_Pair == mUnit) {
       return *mValue.mPair == *aOther.mValue.mPair;
-    }
-    else if (eCSSUnit_Triplet == mUnit) {
-      return *mValue.mTriplet == *aOther.mValue.mTriplet;
     }
     else if (eCSSUnit_Rect == mUnit) {
       return *mValue.mRect == *aOther.mValue.mRect;
@@ -378,8 +371,6 @@ void nsCSSValue::DoReset()
     DO_RELEASE(mImage);
   } else if (eCSSUnit_Pair == mUnit) {
     DO_RELEASE(mPair);
-  } else if (eCSSUnit_Triplet == mUnit) {
-    DO_RELEASE(mTriplet);
   } else if (eCSSUnit_Rect == mUnit) {
     DO_RELEASE(mRect);
   } else if (eCSSUnit_List == mUnit) {
@@ -531,52 +522,6 @@ void nsCSSValue::SetPairValue(const nsCSSValue& xValue,
   mUnit = eCSSUnit_Pair;
   mValue.mPair = new nsCSSValuePair_heap(xValue, yValue);
   mValue.mPair->AddRef();
-}
-
-void nsCSSValue::SetTripletValue(const nsCSSValueTriplet* aValue)
-{
-  // triplet should not be used for null/inherit/initial values
-  MOZ_ASSERT(aValue &&
-             aValue->mXValue.GetUnit() != eCSSUnit_Null &&
-             aValue->mYValue.GetUnit() != eCSSUnit_Null &&
-             aValue->mZValue.GetUnit() != eCSSUnit_Null &&
-             aValue->mXValue.GetUnit() != eCSSUnit_Inherit &&
-             aValue->mYValue.GetUnit() != eCSSUnit_Inherit &&
-             aValue->mZValue.GetUnit() != eCSSUnit_Inherit &&
-             aValue->mXValue.GetUnit() != eCSSUnit_Initial &&
-             aValue->mYValue.GetUnit() != eCSSUnit_Initial &&
-             aValue->mZValue.GetUnit() != eCSSUnit_Initial &&
-             aValue->mXValue.GetUnit() != eCSSUnit_Unset &&
-             aValue->mYValue.GetUnit() != eCSSUnit_Unset &&
-             aValue->mZValue.GetUnit() != eCSSUnit_Unset,
-             "missing or inappropriate triplet value");
-  Reset();
-  mUnit = eCSSUnit_Triplet;
-  mValue.mTriplet = new nsCSSValueTriplet_heap(aValue->mXValue, aValue->mYValue, aValue->mZValue);
-  mValue.mTriplet->AddRef();
-}
-
-void nsCSSValue::SetTripletValue(const nsCSSValue& xValue,
-                                 const nsCSSValue& yValue,
-                                 const nsCSSValue& zValue)
-{
-  // Only allow Null for the z component
-  MOZ_ASSERT(xValue.GetUnit() != eCSSUnit_Null &&
-             yValue.GetUnit() != eCSSUnit_Null &&
-             xValue.GetUnit() != eCSSUnit_Inherit &&
-             yValue.GetUnit() != eCSSUnit_Inherit &&
-             zValue.GetUnit() != eCSSUnit_Inherit &&
-             xValue.GetUnit() != eCSSUnit_Initial &&
-             yValue.GetUnit() != eCSSUnit_Initial &&
-             zValue.GetUnit() != eCSSUnit_Initial &&
-             xValue.GetUnit() != eCSSUnit_Unset &&
-             yValue.GetUnit() != eCSSUnit_Unset &&
-             zValue.GetUnit() != eCSSUnit_Unset,
-             "inappropriate triplet value");
-  Reset();
-  mUnit = eCSSUnit_Triplet;
-  mValue.mTriplet = new nsCSSValueTriplet_heap(xValue, yValue, zValue);
-  mValue.mTriplet->AddRef();
 }
 
 nsCSSRect& nsCSSValue::SetRectValue()
@@ -939,11 +884,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
       n += mValue.mPair->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
-    // Triplet
-    case eCSSUnit_Triplet:
-      n += mValue.mTriplet->SizeOfIncludingThis(aMallocSizeOf);
-      break;
-
     // Rect
     case eCSSUnit_Rect:
       n += mValue.mRect->SizeOfIncludingThis(aMallocSizeOf);
@@ -1208,22 +1148,6 @@ nsCSSValuePair_heap::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
     n += aMallocSizeOf(this);
     n += mXValue.SizeOfExcludingThis(aMallocSizeOf);
     n += mYValue.SizeOfExcludingThis(aMallocSizeOf);
-  }
-  return n;
-}
-
-// --- nsCSSValueTriplet -----------------
-
-size_t
-nsCSSValueTriplet_heap::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
-  // Only measure it if it's unshared, to avoid double-counting.
-  size_t n = 0;
-  if (mRefCnt <= 1) {
-    n += aMallocSizeOf(this);
-    n += mXValue.SizeOfExcludingThis(aMallocSizeOf);
-    n += mYValue.SizeOfExcludingThis(aMallocSizeOf);
-    n += mZValue.SizeOfExcludingThis(aMallocSizeOf);
   }
   return n;
 }
