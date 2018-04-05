@@ -43,6 +43,28 @@ add_task(async function test_open_bookmark_from_sidebar() {
   await BrowserTestUtils.removeTab(tab);
 });
 
+add_task(async function test_open_bookmark_from_sidebar_keypress() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+
+  await withSidebarTree("bookmarks", async (tree) => {
+    tree.selectItems([gBms[1].guid]);
+
+    let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
+      false, gBms[1].url
+    );
+
+    tree.focus();
+    EventUtils.sendKey("return");
+
+    await loadedPromise;
+
+    // An assert to make the test happy.
+    Assert.ok(true, "The bookmark was loaded successfully.");
+  });
+
+  await BrowserTestUtils.removeTab(tab);
+});
+
 add_task(async function test_open_bookmark_folder_from_sidebar() {
   await withSidebarTree("bookmarks", async (tree) => {
     tree.selectItems([PlacesUtils.bookmarks.virtualUnfiledGuid]);
