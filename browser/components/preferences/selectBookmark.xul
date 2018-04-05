@@ -9,14 +9,16 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/selectBookmark.dtd">
-
 <dialog id="selectBookmarkDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&selectBookmark.title;" style="width: 32em;"
+        data-l10n-id="select-bookmark-window"
+        data-l10n-attrs="title, style"
         persist="screenX screenY width height" screenX="24" screenY="24"
         onload="SelectBookmarkDialog.init();"
         ondialogaccept="SelectBookmarkDialog.accept();">
+
+  <link rel="localization" href="browser/preferences/selectBookmark.ftl"/>
+  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
   <script type="application/javascript"
           src="chrome://browser/content/preferences/selectBookmark.js"/>
@@ -39,7 +41,7 @@
       ["PlacesInsertionPoint", "PlacesController", "PlacesControllerDragHelper"],
        "chrome://browser/content/places/controller.js");
   ]]></script>
-  <description>&selectBookmark.label;</description>
+  <description data-l10n-id="select-bookmark-desc"/>
 
   <separator class="thin"/>
 
