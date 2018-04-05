@@ -90,22 +90,6 @@ nsWindowRoot::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
   return false;
 }
 
-NS_IMETHODIMP
-nsWindowRoot::AddSystemEventListener(const nsAString& aType,
-                                     nsIDOMEventListener *aListener,
-                                     bool aUseCapture,
-                                     bool aWantsUntrusted,
-                                     uint8_t aOptionalArgc)
-{
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  return NS_AddSystemEventListener(this, aType, aListener, aUseCapture,
-                                   aWantsUntrusted);
-}
-
 EventListenerManager*
 nsWindowRoot::GetOrCreateListenerManager()
 {

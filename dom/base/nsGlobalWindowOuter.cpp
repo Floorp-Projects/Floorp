@@ -6475,33 +6475,6 @@ nsGlobalWindowOuter::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
   FORWARD_TO_INNER_CREATE(ComputeDefaultWantsUntrusted, (aRv), false);
 }
 
-NS_IMETHODIMP
-nsGlobalWindowOuter::AddSystemEventListener(const nsAString& aType,
-                                            nsIDOMEventListener *aListener,
-                                            bool aUseCapture,
-                                            bool aWantsUntrusted,
-                                            uint8_t aOptionalArgc)
-{
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  if (mInnerWindow &&
-      !nsContentUtils::LegacyIsCallerNativeCode() &&
-      !nsContentUtils::CanCallerAccess(mInnerWindow)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if (!aWantsUntrusted &&
-      (aOptionalArgc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
-    aWantsUntrusted = true;
-  }
-
-  return NS_AddSystemEventListener(this, aType, aListener, aUseCapture,
-                                   aWantsUntrusted);
-}
-
 EventListenerManager*
 nsGlobalWindowOuter::GetOrCreateListenerManager()
 {

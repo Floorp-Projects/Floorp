@@ -1030,7 +1030,6 @@ public:
     GetOrCreateListenerManager() override;
 
   bool ComputeDefaultWantsUntrusted(mozilla::ErrorResult& aRv) final;
-  using nsIDOMEventTarget::AddSystemEventListener;
 
   virtual bool IsApzAware() const override;
 

@@ -185,27 +185,6 @@ DOMEventTargetHelper::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
   return wantsUntrusted;
 }
 
-NS_IMETHODIMP
-DOMEventTargetHelper::AddSystemEventListener(const nsAString& aType,
-                                             nsIDOMEventListener* aListener,
-                                             bool aUseCapture,
-                                             bool aWantsUntrusted,
-                                             uint8_t aOptionalArgc)
-{
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making aOptionalArgc non-zero.");
-
-  if (aOptionalArgc < 2) {
-    nsresult rv = WantsUntrusted(&aWantsUntrusted);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_AddSystemEventListener(this, aType, aListener, aUseCapture,
-                                   aWantsUntrusted);
-}
-
 bool
 DOMEventTargetHelper::DispatchEvent(Event& aEvent, CallerType aCallerType,
                                     ErrorResult& aRv)
