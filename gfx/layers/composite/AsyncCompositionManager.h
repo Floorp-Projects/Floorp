@@ -15,7 +15,6 @@
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
-#include "mozilla/layers/AnimationMetricsTracker.h" // for AnimationMetricsTracker
 #include "mozilla/layers/FrameUniformityData.h" // For FrameUniformityData
 #include "mozilla/layers/LayersMessages.h"  // for TargetConfig
 #include "mozilla/RefPtr.h"                   // for nsRefPtr
@@ -222,7 +221,6 @@ private:
   LayerTransformRecorder mLayerTransformRecorder;
 
   TimeStamp mPreviousFrameTimeStamp;
-  AnimationMetricsTracker mAnimationMetricsTracker;
 
   MOZ_NON_OWNING_REF CompositorBridgeParent* mCompositorBridge;
 
