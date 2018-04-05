@@ -1113,9 +1113,9 @@ public:
    * Called when the document was decoded as UTF-8 and decoder encountered no
    * errors.
    */
-  void DisableEncodingMenu()
+  void EnableEncodingMenu()
   {
-    mEncodingMenuDisabled = true;
+    mEncodingMenuDisabled = false;
   }
 
   /**
