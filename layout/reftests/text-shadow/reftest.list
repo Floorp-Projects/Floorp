@@ -24,7 +24,7 @@ random-if(Android) == basic-negcoord.xul basic-negcoord-ref.xul
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref.html
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref2.html
 == overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
-== overflow-clip.html overflow-clip-ref.html
+fuzzy-if(cocoaWidget,24,1) fuzzy-if(winWidget,40,2) == overflow-clip.html overflow-clip-ref.html
 
 needs-focus != text-shadow-selected-1.html text-shadow-selected-1-notref.html
 fails-if(Android) fuzzy-if(skiaContent&&!Android,1,1000) needs-focus == text-shadow-selected-1.html text-shadow-selected-1-ref.html # different foreground selection color on Android
