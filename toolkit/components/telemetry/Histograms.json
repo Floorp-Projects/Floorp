@@ -7205,13 +7205,6 @@
     "n_buckets": 29,
     "description": "The size (MB) of the ping data submitted to Telemetry exceeding the maximum size"
   },
-  "TELEMETRY_DISCARDED_CONTENT_PINGS_COUNT": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "description": "Count of discarded content payloads."
-  },
   "TELEMETRY_COMPRESS": {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],

@@ -11,7 +11,7 @@ Content-Security-Policy-Report-Only: img-src http://*; default-src 'self'; scrip
 -->
 </head>
 <body>
-    <img src="ftp://blah.test" />
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEElEQVR42mNgaGD4D8YwBgAw9AX9Y9zBwwAAAABJRU5ErkJggg==" />
 
     <script async defer src='../support/checkReport.sub.js?reportField=violated-directive&reportValue=img-src%20http%3A%2F%2F%2A%20https%3A%2F%2F%2A&testName=1-Violation%20report%20status%20OK'></script>
     <script async defer src='../support/checkReport.sub.js?reportField=violated-directive&reportValue=img-src%20http%3A%2F%2F%2A&reportCookieName=multiple-report-policies-2&testName=2-Violation%20report%20status%20OK'></script>

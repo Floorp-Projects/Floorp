@@ -4,8 +4,6 @@ ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", this);
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
-const MESSAGE_TELEMETRY_PAYLOAD = "Telemetry:Payload";
-const MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD = "Telemetry:GetChildPayload";
 const MESSAGE_CHILD_TEST_DONE = "ChildTest:Done";
 
 const PLATFORM_VERSION = "1.9.2";

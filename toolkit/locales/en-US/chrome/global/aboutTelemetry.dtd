@@ -12,7 +12,6 @@
 <!ENTITY aboutTelemetry.optionGroupToday "Today">
 <!ENTITY aboutTelemetry.optionGroupYesterday "Yesterday">
 <!ENTITY aboutTelemetry.optionGroupOlder "Older">
-<!ENTITY aboutTelemetry.payloadChoiceHeader "Payload">
 <!-- LOCALIZATION NOTE(aboutTelemetry.previousPing, aboutTelemetry.nextPing):
 	These strings are displayed when selecting Archived pings, and they’re
 	used to move to the next or previous ping. -->
