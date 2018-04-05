@@ -197,8 +197,32 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         parameters.setFocusMode(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
       }
 
-      parameters.setPictureSize(width, height);
+      // (width,height) is a valid preview size. It might not be a valid picture
+      // size.
       parameters.setPreviewSize(width, height);
+
+      List<Camera.Size> supportedPictureSizes =
+        parameters.getSupportedPictureSizes();
+      Camera.Size pictureSize = supportedPictureSizes.get(0);
+      for (Camera.Size size : supportedPictureSizes) {
+        if (size.width < width || size.height < height) {
+          // We want a picture size larger than the preview size
+          continue;
+        }
+        if (pictureSize.width < width || pictureSize.height < height) {
+          // The so-far chosen pictureSize is smaller than the preview size.
+          // `size` is a better fit.
+          pictureSize = size;
+          continue;
+        }
+        if (size.width <= pictureSize.width &&
+            size.height <= pictureSize.height) {
+          // Both the so-far chosen pictureSize and `size` are larger than the
+          // preview size, but `size` is closest, so it's preferred.
+          pictureSize = size;
+        }
+      }
+      parameters.setPictureSize(pictureSize.width, pictureSize.height);
 
       // Check if requested fps range is supported by camera,
       // otherwise calculate frame drop ratio.
