@@ -287,7 +287,7 @@ async function test(window) {
   let gBrowser = win.gBrowser;
 
   // We don't want to catch scrolling the tabstrip in our tests
-  gBrowser.tabContainer.style.visibility = "hidden";
+  gBrowser.tabContainer.style.opacity = "0";
 
   let initialTab = gBrowser.selectedTab;
   await loadTabs(gBrowser, testURLs);
