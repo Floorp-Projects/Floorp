@@ -19,12 +19,8 @@ from six.moves.urllib import request
 import mozfile
 from mozlog.unstructured import getLogger
 
-# Needed for the AMO's rest API -
-# https://developer.mozilla.org/en/addons.mozilla.org_%28AMO%29_API_Developers%27_Guide/The_generic_AMO_API
-AMO_API_VERSION = "1.5"
 _SALT = os.urandom(32).encode('hex')
 _TEMPORARY_ADDON_SUFFIX = "@temporary-addon"
-
 
 # Logger for 'mozprofile.addons' module
 module_logger = getLogger(__name__)
@@ -65,7 +61,6 @@ class AddonManager(object):
 
         # Information needed for profile reset (see http://bit.ly/17JesUf)
         self.installed_addons = []
-        self.installed_manifests = []
 
     def __del__(self):
         # reset to pre-instance state
@@ -163,79 +158,20 @@ class AddonManager(object):
         except AddonFormatError:
             return False
 
-    def install_addons(self, addons=None, manifests=None):
+    def install_addons(self, addons):
         """
         Installs all types of addons
 
         :param addons: a list of addon paths to install
-        :param manifest: a list of addon manifests to install
         """
+        if not addons:
+            return
 
         # install addon paths
-        if addons:
-            if isinstance(addons, string_types):
-                addons = [addons]
-            for addon in set(addons):
-                self.install_from_path(addon)
-
-        # install addon manifests
-        if manifests:
-            if isinstance(manifests, string_types):
-                manifests = [manifests]
-            for manifest in manifests:
-                self.install_from_manifest(manifest)
-
-    def install_from_manifest(self, filepath):
-        """
-        Installs addons from a manifest
-        :param filepath: path to the manifest of addons to install
-        """
-        try:
-            from manifestparser import ManifestParser
-        except ImportError:
-            module_logger.critical(
-                "Installing addons from manifest requires the"
-                " manifestparser package to be installed.")
-            raise
-
-        manifest = ManifestParser()
-        manifest.read(filepath)
-        addons = manifest.get()
-
-        for addon in addons:
-            if '://' in addon['path'] or os.path.exists(addon['path']):
-                self.install_from_path(addon['path'])
-                continue
-
-            # No path specified, try to grab it off AMO
-            locale = addon.get('amo_locale', 'en_US')
-            query = 'https://services.addons.mozilla.org/' + locale + '/firefox/api/' \
-                    + AMO_API_VERSION + '/'
-            if 'amo_id' in addon:
-                # this query grabs information on the addon base on its id
-                query += 'addon/' + addon['amo_id']
-            else:
-                # this query grabs information on the first addon returned from a search
-                query += 'search/' + addon['name'] + '/default/1'
-            install_path = AddonManager.get_amo_install_path(query)
-            self.install_from_path(install_path)
-
-        self.installed_manifests.append(filepath)
-
-    @classmethod
-    def get_amo_install_path(self, query):
-        """
-        Get the addon xpi install path for the specified AMO query.
-
-        :param query: query-documentation_
-
-        .. _query-documentation: https://developer.mozilla.org/en/addons.mozilla.org_%28AMO%29_API_Developers%27_Guide/The_generic_AMO_API # noqa
-        """
-        response = request.urlopen(query)
-        dom = minidom.parseString(response.read())
-        for node in dom.getElementsByTagName('install')[0].childNodes:
-            if node.nodeType == node.TEXT_NODE:
-                return node.data
+        if isinstance(addons, string_types):
+            addons = [addons]
+        for addon in set(addons):
+            self.install_from_path(addon)
 
     @classmethod
     def _gen_iid(cls, addon_path):
