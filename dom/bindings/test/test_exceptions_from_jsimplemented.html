@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=923010
 
   conn.close();
   try {
-      conn.setIdentityProvider("example.com", "foo");
+      conn.setIdentityProvider("example.com", { protocol: "foo" });
       ok(false, "That call to setIdentityProvider should have thrown");
     } catch (e) {
       is(e.lineNumber, 36, "Exception should have been on line 36");
