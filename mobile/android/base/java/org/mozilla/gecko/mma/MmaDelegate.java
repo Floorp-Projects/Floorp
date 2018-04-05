@@ -23,7 +23,7 @@ import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.activitystream.homepanel.ActivityStreamPanel;
+import org.mozilla.gecko.activitystream.homepanel.ActivityStreamConfiguration;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.switchboard.SwitchBoard;
@@ -56,7 +56,7 @@ public class MmaDelegate {
     public static final String USER_ATT_POCKET_INSTALLED = "Pocket Installed";
     public static final String USER_ATT_DEFAULT_BROWSER = "Default Browser";
     public static final String USER_ATT_SIGNED_IN = "Signed In Sync";
-    public static final String USER_ATT_TOP_SITES_POCKET = "Top Sites by Pocket";
+    public static final String USER_ATT_POCKET_TOP_SITES = "Pocket in Top Sites";
 
     public static final String PACKAGE_NAME_KLAR = "org.mozilla.klar";
     public static final String PACKAGE_NAME_FOCUS = "org.mozilla.focus";
@@ -104,7 +104,7 @@ public class MmaDelegate {
         attributes.put(USER_ATT_POCKET_INSTALLED, ContextUtils.isPackageInstalled(context, PACKAGE_NAME_POCKET));
         attributes.put(USER_ATT_DEFAULT_BROWSER, isDefaultBrowser(context));
         attributes.put(USER_ATT_SIGNED_IN, FirefoxAccounts.firefoxAccountsExist(context));
-        attributes.put(USER_ATT_TOP_SITES_POCKET, ActivityStreamPanel.isPocketRecommendingTopSites(context));
+        attributes.put(USER_ATT_POCKET_TOP_SITES, ActivityStreamConfiguration.isPocketRecommendingTopSites(context));
 
         return attributes;
     }
