@@ -45,8 +45,12 @@ class ToolboxToolbar extends Component {
       // Do we need to add UI for closing the toolbox? We don't when the
       // toolbox is undocked, for example.
       canCloseToolbox: PropTypes.bool,
+      // Is the split console currently visible?
+      isSplitConsoleActive: PropTypes.bool,
       // Function to select a tool based on its id.
       selectTool: PropTypes.func,
+      // Function to turn the split console on / off.
+      toggleSplitConsole: PropTypes.func,
       // Function to completely close the toolbox.
       closeToolbox: PropTypes.func,
       // Keep a record of what button is focused.
@@ -179,8 +183,13 @@ function renderSeparator() {
  * @param {boolean} canCloseToolbox
  *        Do we need to add UI for closing the toolbox? We don't when the
  *        toolbox is undocked, for example.
+ * @param {boolean} isSplitConsoleActive
+ *         Is the split console currently visible?
+ *        toolbox is undocked, for example.
  * @param {Function} selectTool
  *        Function to select a tool based on its id.
+ * @param {Function} toggleSplitConsole
+ *        Function to turn the split console on / off.
  * @param {Function} closeToolbox
  *        Completely close the toolbox.
  * @param {Function} focusButton
@@ -244,6 +253,8 @@ function renderToolboxControls(props) {
  *        of this element is used to position the menu.
  * @param {Object} props
  *        Properties as described below.
+ * @param {string} props.currentToolId
+ *        The id of the currently selected tool.
  * @param {Object[]} props.hostTypes
  *        Array of host type objects.
  * @param {string} props.hostTypes[].position
@@ -252,15 +263,30 @@ function renderToolboxControls(props) {
  *        Function to switch the host.
  *        This array will be empty if we shouldn't shouldn't show any dock
  *        options.
+ * @param {boolean} isSplitConsoleActive
+ *        Is the split console currently visible?
  * @param {Function} props.selectTool
  *        Function to select a tool based on its id.
+ * @param {Function} toggleSplitConsole
+ *        Function to turn the split console on / off.
  * @param {Object} props.L10N
  *        Localization interface.
  * @param {Object} props.toolbox
  *        The devtools toolbox. Used by the Menu component to determine which
  *        document to use.
  */
-function showMeatballMenu(menuButton, {hostTypes, selectTool, L10N, toolbox}) {
+function showMeatballMenu(
+  menuButton,
+  {
+    currentToolId,
+    hostTypes,
+    isSplitConsoleActive,
+    selectTool,
+    toggleSplitConsole,
+    L10N,
+    toolbox,
+  }
+) {
   const menu = new Menu({ id: "toolbox-meatball-menu" });
 
   // Dock options
@@ -271,6 +297,20 @@ function showMeatballMenu(menuButton, {hostTypes, selectTool, L10N, toolbox}) {
         `toolbox.meatballMenu.dock.${hostType.position}.label`
       ),
       click: () => hostType.switchHost(),
+    }));
+  }
+
+  // Split console
+  if (currentToolId !== "webconsole") {
+    menu.append(new MenuItem({
+      id: "toolbox-meatball-menu-splitconsole",
+      label: L10N.getStr(
+        `toolbox.meatballMenu.${
+          isSplitConsoleActive ? "hideconsole" : "splitconsole"
+        }.label`
+      ),
+      accelerator: "Esc",
+      click: toggleSplitConsole,
     }));
   }
 

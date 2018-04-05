@@ -148,7 +148,6 @@ devtools.jar:
     skin/images/command-pick.svg (themes/images/command-pick.svg)
     skin/images/command-pick-accessibility.svg (themes/images/command-pick-accessibility.svg)
     skin/images/command-frames.svg (themes/images/command-frames.svg)
-    skin/images/command-console.svg (themes/images/command-console.svg)
     skin/images/command-eyedropper.svg (themes/images/command-eyedropper.svg)
     skin/images/command-rulers.svg (themes/images/command-rulers.svg)
     skin/images/command-measure.svg (themes/images/command-measure.svg)
