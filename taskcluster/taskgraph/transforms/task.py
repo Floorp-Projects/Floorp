@@ -921,9 +921,7 @@ def build_generic_worker_payload(config, task, task_def):
         a = {
             'path': artifact['path'],
             'type': artifact['type'],
-            # let's not explicitly set here, as this is the default anyway
-            # and the Task Creator will not refresh these timestamps
-            # 'expires': task_def['expires'],  # always expire with the task
+            # Use the default artifact expiration (the task's expiration time)
         }
         if 'name' in artifact:
             a['name'] = artifact['name']
