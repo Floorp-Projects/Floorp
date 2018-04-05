@@ -305,18 +305,6 @@ DOMEventTargetHelper::GetExistingListenerManager() const
   return mListenerManager;
 }
 
-nsIScriptContext*
-DOMEventTargetHelper::GetContextForEventHandlers(nsresult* aRv)
-{
-  *aRv = CheckInnerWindowCorrectness();
-  if (NS_FAILED(*aRv)) {
-    return nullptr;
-  }
-  nsPIDOMWindowInner* owner = GetOwner();
-  return owner ? nsGlobalWindowInner::Cast(owner)->GetContextInternal()
-               : nullptr;
-}
-
 nsresult
 DOMEventTargetHelper::WantsUntrusted(bool* aRetVal)
 {
