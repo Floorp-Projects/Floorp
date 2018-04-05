@@ -294,13 +294,13 @@ BEGIN_TEST(testBinTokenReaderTesterNestedList)
         uint32_t outerLength;
         Tokenizer::AutoList outerGuard(tokenizer);
         CHECK(tokenizer.enterList(outerLength, outerGuard).isOk());
-        CHECK(outerLength == 1);
+        CHECK_EQUAL(outerLength, (uint32_t)1);
 
         {
             uint32_t innerLength;
             Tokenizer::AutoList innerGuard(tokenizer);
             CHECK(tokenizer.enterList(innerLength, innerGuard).isOk());
-            CHECK(innerLength == 2);
+            CHECK_EQUAL(innerLength, (uint32_t)2);
 
             Chars found_0(cx);
             CHECK(tokenizer.readChars(found_0).isOk());
