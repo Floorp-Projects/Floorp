@@ -68,7 +68,8 @@ class HTMLElement(object):
         is set.
         """
         body = {"id": self.id, "name": name}
-        return self.marionette._send_message("getElementAttribute", body, key="value")
+        return self.marionette._send_message("WebDriver:GetElementAttribute",
+                                             body, key="value")
 
     def get_property(self, name):
         """Returns the requested property, or None if the property is
@@ -76,7 +77,8 @@ class HTMLElement(object):
         """
         try:
             body = {"id": self.id, "name": name}
-            return self.marionette._send_message("getElementProperty", body, key="value")
+            return self.marionette._send_message("WebDriver:GetElementProperty",
+                                                 body, key="value")
         except errors.UnknownCommandException:
             # Keep backward compatibility for code which uses get_attribute() to
             # also retrieve element properties.
@@ -85,7 +87,8 @@ class HTMLElement(object):
 
     def click(self):
         """Simulates a click on the element."""
-        self.marionette._send_message("clickElement", {"id": self.id})
+        self.marionette._send_message("WebDriver:ElementClick",
+                                      {"id": self.id})
 
     def tap(self, x=None, y=None):
         """Simulates a set of tap events on the element.
@@ -102,7 +105,8 @@ class HTMLElement(object):
     def text(self):
         """Returns the visible text of the element, and its child elements."""
         body = {"id": self.id}
-        return self.marionette._send_message("getElementText", body, key="value")
+        return self.marionette._send_message("WebDriver:GetElementText",
+                                             body, key="value")
 
     def send_keys(self, *strings):
         """Sends the string via synthesized keypresses to the element.
@@ -112,17 +116,19 @@ class HTMLElement(object):
            coerced into a string.
         """
         keys = Marionette.convert_keys(*strings)
-        body = {"id": self.id, "text": keys}
-        self.marionette._send_message("sendKeysToElement", body)
+        self.marionette._send_message("WebDriver:ElementSendKeys",
+                                      {"id": self.id, "text": keys})
 
     def clear(self):
         """Clears the input of the element."""
-        self.marionette._send_message("clearElement", {"id": self.id})
+        self.marionette._send_message("WebDriver:ElementClear",
+                                      {"id": self.id})
 
     def is_selected(self):
         """Returns True if the element is selected."""
         body = {"id": self.id}
-        return self.marionette._send_message("isElementSelected", body, key="value")
+        return self.marionette._send_message("WebDriver:IsElementSelected",
+                                             body, key="value")
 
     def is_enabled(self):
         """This command will return False if all the following criteria
@@ -132,12 +138,14 @@ class HTMLElement(object):
         * A ``HTMLElement`` has a disabled boolean attribute.
         """
         body = {"id": self.id}
-        return self.marionette._send_message("isElementEnabled", body, key="value")
+        return self.marionette._send_message("WebDriver:IsElementEnabled",
+                                             body, key="value")
 
     def is_displayed(self):
         """Returns True if the element is displayed, False otherwise."""
         body = {"id": self.id}
-        return self.marionette._send_message("isElementDisplayed", body, key="value")
+        return self.marionette._send_message("WebDriver:IsElementDisplayed",
+                                             body, key="value")
 
     @property
     def size(self):
@@ -151,7 +159,8 @@ class HTMLElement(object):
     def tag_name(self):
         """The tag name of the element."""
         body = {"id": self.id}
-        return self.marionette._send_message("getElementTagName", body, key="value")
+        return self.marionette._send_message("WebDriver:GetElementTagName",
+                                             body, key="value")
 
     @property
     def location(self):
@@ -179,8 +188,8 @@ class HTMLElement(object):
           * height and the width will contain the height and the width
             of the DOMRect of the ``HTMLElement``.
         """
-        body = {"id": self.id}
-        return self.marionette._send_message("getElementRect", body)
+        return self.marionette._send_message("WebDriver:GetElementRect",
+                                             {"id": self.id})
 
     def value_of_css_property(self, property_name):
         """Gets the value of the specified CSS property name.
@@ -188,8 +197,8 @@ class HTMLElement(object):
         :param property_name: Property name to get the value of.
         """
         body = {"id": self.id, "propertyName": property_name}
-        return self.marionette._send_message(
-            "getElementValueOfCssProperty", body, key="value")
+        return self.marionette._send_message("WebDriver:GetElementCSSValue",
+                                             body, key="value")
 
 
 class MouseButton(object):
@@ -532,22 +541,24 @@ class Alert(object):
 
     def accept(self):
         """Accept a currently displayed modal dialog."""
-        self.marionette._send_message("acceptDialog")
+        # TODO: Switch to "WebDriver:AcceptAlert" in Firefox 62
+        self.marionette._send_message("WebDriver:AcceptDialog")
 
     def dismiss(self):
         """Dismiss a currently displayed modal dialog."""
-        self.marionette._send_message("dismissDialog")
+        self.marionette._send_message("WebDriver:DismissAlert")
 
     @property
     def text(self):
         """Return the currently displayed text in a tab modal."""
-        return self.marionette._send_message("getTextFromDialog", key="value")
+        return self.marionette._send_message("WebDriver:GetAlertText",
+                                             key="value")
 
     def send_keys(self, *string):
         """Send keys to the currently displayed text input area in an open
         tab modal dialog."""
-        body = {"text": Marionette.convert_keys(*string)}
-        self.marionette._send_message("sendKeysToDialog", body)
+        self.marionette._send_message("WebDriver:SendAlertText",
+                                      {"text": Marionette.convert_keys(*string)})
 
 
 class Marionette(object):
@@ -730,7 +741,7 @@ class Marionette(object):
             the value of said key in the response.
         """
 
-        if not self.session_id and name != "newSession":
+        if not self.session_id and name != "WebDriver:NewSession":
             raise errors.MarionetteException("Please start a session")
 
         try:
@@ -996,7 +1007,8 @@ class Marionette(object):
                     break
 
         if not pref_exists:
-            context = self._send_message("getContext", key="value")
+            context = self._send_message("Marionette:GetContext",
+                                         key="value")
             self.delete_session()
             self.instance.restart(prefs)
             self.raise_for_port()
@@ -1057,7 +1069,8 @@ class Marionette(object):
         if len(flags) > 0:
             body = {"flags": list(flags)}
 
-        return self._send_message("quitApplication", body, key="cause")
+        return self._send_message("Marionette:Quit",
+                                  body, key="cause")
 
     @do_process_check
     def quit(self, clean=False, in_app=False, callback=None):
@@ -1086,7 +1099,8 @@ class Marionette(object):
                 if not callable(callback):
                     raise ValueError("Specified callback '{}' is not callable".format(callback))
 
-                self._send_message("acceptConnections", {"value": False})
+                self._send_message("Marionette:AcceptConnections",
+                                   {"value": False})
                 callback()
             else:
                 cause = self._request_in_app_shutdown()
@@ -1129,7 +1143,8 @@ class Marionette(object):
         if not self.instance:
             raise errors.MarionetteException("restart() can only be called "
                                              "on Gecko instances launched by Marionette")
-        context = self._send_message("getContext", key="value")
+        context = self._send_message("Marionette:GetContext",
+                                     key="value")
 
         cause = None
         if in_app:
@@ -1140,7 +1155,8 @@ class Marionette(object):
                 if not callable(callback):
                     raise ValueError("Specified callback '{}' is not callable".format(callback))
 
-                self._send_message("acceptConnections", {"value": False})
+                self._send_message("Marionette:AcceptConnections",
+                                   {"value": False})
                 callback()
             else:
                 cause = self._request_in_app_shutdown("eRestart")
@@ -1238,7 +1254,8 @@ class Marionette(object):
         if "capabilities" not in body and capabilities is not None:
             body["capabilities"] = dict(capabilities)
 
-        resp = self._send_message("newSession", body)
+        resp = self._send_message("WebDriver:NewSession",
+                                  body)
         self.session_id = resp["sessionId"]
         self.session = resp["capabilities"]
         # fallback to processId can be removed in Firefox 55
@@ -1264,7 +1281,7 @@ class Marionette(object):
         """
         try:
             if send_request:
-                self._send_message("deleteSession")
+                self._send_message("WebDriver:DeleteSession")
         finally:
             self.process_id = None
             self.profile = None
@@ -1353,7 +1370,8 @@ class Marionette(object):
         :returns: unique window handle
         :rtype: string
         """
-        self.window = self._send_message("getWindowHandle", key="value")
+        self.window = self._send_message("WebDriver:GetWindowHandle",
+                                         key="value")
         return self.window
 
     @property
@@ -1409,18 +1427,19 @@ class Marionette(object):
         if (x is None and y is None) and (height is None and width is None):
             raise errors.InvalidArgumentException("x and y or height and width need values")
 
-        return self._send_message("setWindowRect", {"x": x, "y": y,
-                                                    "height": height,
-                                                    "width": width})
+        body = {"x": x, "y": y, "height": height, "width": width}
+        return self._send_message("WebDriver:SetWindowRect",
+                                  body)
 
     @property
     def window_rect(self):
-        return self._send_message("getWindowRect")
+        return self._send_message("WebDriver:GetWindowRect")
 
     @property
     def title(self):
         """Current title of the active window."""
-        return self._send_message("getTitle", key="value")
+        return self._send_message("WebDriver:GetTitle",
+                                  key="value")
 
     @property
     def window_handles(self):
@@ -1436,7 +1455,7 @@ class Marionette(object):
 
         :returns: Unordered list of unique window handles as strings
         """
-        return self._send_message("getWindowHandles")
+        return self._send_message("WebDriver:GetWindowHandles")
 
     @property
     def chrome_window_handles(self):
@@ -1452,7 +1471,8 @@ class Marionette(object):
     @property
     def page_source(self):
         """A string representation of the DOM."""
-        return self._send_message("getPageSource", key="value")
+        return self._send_message("WebDriver:GetPageSource",
+                                  key="value")
 
     def close(self):
         """Close the current window, ending the session if it's the last
@@ -1460,7 +1480,7 @@ class Marionette(object):
 
         :returns: Unordered list of remaining unique window handles as strings
         """
-        return self._send_message("close")
+        return self._send_message("WebDriver:CloseWindow")
 
     def close_chrome_window(self):
         """Close the currently selected chrome window, ending the session
@@ -1482,7 +1502,9 @@ class Marionette(object):
         """
         if context not in [self.CONTEXT_CHROME, self.CONTEXT_CONTENT]:
             raise ValueError("Unknown context: {}".format(context))
-        self._send_message("setContext", {"value": context})
+
+        self._send_message("Marionette:SetContext",
+                           {"value": context})
 
     @contextmanager
     def using_context(self, context):
@@ -1499,7 +1521,8 @@ class Marionette(object):
                 # chrome scope
                 ... do stuff ...
         """
-        scope = self._send_message("getContext", key="value")
+        scope = self._send_message("Marionette:GetContext",
+                                   key="value")
         self.set_context(context)
         try:
             yield
@@ -1527,14 +1550,15 @@ class Marionette(object):
         :param focus: A boolean value which determins whether to focus
             the window that we just switched to.
         """
-        body = {"focus": focus, "name": window_id}
-        self._send_message("switchToWindow", body)
+        self._send_message("WebDriver:SwitchToWindow",
+                           {"focus": focus, "name": window_id})
         self.window = window_id
 
     def get_active_frame(self):
         """Returns an :class:`~marionette_driver.marionette.HTMLElement`
         representing the frame Marionette is currently acting on."""
-        return self._send_message("getActiveFrame", key="value")
+        return self._send_message("WebDriver:GetActiveFrame",
+                                  key="value")
 
     def switch_to_default_content(self):
         """Switch the current context to page's default content."""
@@ -1544,7 +1568,7 @@ class Marionette(object):
         """
            Switch to the Parent Frame
         """
-        self._send_message("switchToParentFrame")
+        self._send_message("WebDriver:SwitchToParentFrame")
 
     def switch_to_frame(self, frame=None, focus=True):
         """Switch the current context to the specified frame. Subsequent
@@ -1565,7 +1589,9 @@ class Marionette(object):
             body["element"] = frame.id
         elif frame is not None:
             body["id"] = frame
-        self._send_message("switchToFrame", body)
+
+        self._send_message("WebDriver:SwitchToFrame",
+                           body)
 
     def switch_to_shadow_root(self, host=None):
         """Switch the current context to the specified host's Shadow DOM.
@@ -1580,7 +1606,9 @@ class Marionette(object):
         body = {}
         if isinstance(host, HTMLElement):
             body["id"] = host.id
-        return self._send_message("switchToShadowRoot", body)
+
+        return self._send_message("WebDriver:SwitchToShadowRoot",
+                                  body)
 
     def get_url(self):
         """Get a string representing the current URL.
@@ -1594,7 +1622,8 @@ class Marionette(object):
 
         :returns: string representation of URL
         """
-        return self._send_message("getCurrentUrl", key="value")
+        return self._send_message("WebDriver:GetCurrentURL",
+                                  key="value")
 
     def get_window_type(self):
         """Gets the windowtype attribute of the window Marionette is
@@ -1628,19 +1657,20 @@ class Marionette(object):
 
         :param url: The URL to navigate to.
         """
-        self._send_message("get", {"url": url})
+        self._send_message("WebDriver:Navigate",
+                           {"url": url})
 
     def go_back(self):
         """Causes the browser to perform a back navigation."""
-        self._send_message("goBack")
+        self._send_message("WebDriver:Back")
 
     def go_forward(self):
         """Causes the browser to perform a forward navigation."""
-        self._send_message("goForward")
+        self._send_message("WebDriver:Forward")
 
     def refresh(self):
         """Causes the browser to perform to refresh the current page."""
-        self._send_message("refresh")
+        self._send_message("WebDriver:Refresh")
 
     def _to_json(self, args):
         if isinstance(args, list) or isinstance(args, tuple):
@@ -1768,7 +1798,9 @@ class Marionette(object):
                 "scriptTimeout": script_timeout,
                 "line": int(frame[1]),
                 "filename": os.path.basename(frame[0])}
-        rv = self._send_message("executeScript", body, key="value")
+
+        rv = self._send_message("WebDriver:ExecuteScript",
+                                body, key="value")
         return self._from_json(rv)
 
     def execute_async_script(self, script, script_args=(), new_sandbox=True,
@@ -1817,7 +1849,9 @@ class Marionette(object):
                 "line": int(frame[1]),
                 "filename": os.path.basename(frame[0]),
                 "debug_script": debug_script}
-        rv = self._send_message("executeAsyncScript", body, key="value")
+
+        rv = self._send_message("WebDriver:ExecuteAsyncScript",
+                                body, key="value")
         return self._from_json(rv)
 
     def find_element(self, method, target, id=None):
@@ -1848,7 +1882,9 @@ class Marionette(object):
         body = {"value": target, "using": method}
         if id:
             body["element"] = id
-        return self._send_message("findElement", body, key="value")
+
+        return self._send_message("WebDriver:FindElement",
+                                  body, key="value")
 
     def find_elements(self, method, target, id=None):
         """Returns a list of all
@@ -1876,10 +1912,13 @@ class Marionette(object):
         body = {"value": target, "using": method}
         if id:
             body["element"] = id
-        return self._send_message("findElements", body)
+
+        return self._send_message("WebDriver:FindElements",
+                                  body)
 
     def get_active_element(self):
-        el_or_ref = self._send_message("getActiveElement", key="value")
+        el_or_ref = self._send_message("WebDriver:GetActiveElement",
+                                       key="value")
         return el_or_ref
 
     def add_cookie(self, cookie):
@@ -1898,8 +1937,8 @@ class Marionette(object):
             driver.add_cookie({"name": "foo", "value": "bar", "path": "/",
                                "secure": True})
         """
-        body = {"cookie": cookie}
-        self._send_message("addCookie", body)
+        self._send_message("WebDriver:AddCookie",
+                           {"cookie": cookie})
 
     def delete_all_cookies(self):
         """Delete all cookies in the scope of the current session.
@@ -1910,7 +1949,7 @@ class Marionette(object):
 
             driver.delete_all_cookies()
         """
-        self._send_message("deleteAllCookies")
+        self._send_message("WebDriver:DeleteAllCookies")
 
     def delete_cookie(self, name):
         """Delete a cookie by its name.
@@ -1923,7 +1962,8 @@ class Marionette(object):
 
             driver.delete_cookie("foo")
         """
-        self._send_message("deleteCookie", {"name": name})
+        self._send_message("WebDriver:DeleteCookie",
+                           {"name": name})
 
     def get_cookie(self, name):
         """Get a single cookie by name. Returns the cookie if found,
@@ -1945,7 +1985,7 @@ class Marionette(object):
 
         :returns: A list of cookies for the current domain.
         """
-        return self._send_message("getCookies")
+        return self._send_message("WebDriver:GetCookies")
 
     def screenshot(self, element=None, highlights=None, format="base64",
                    full=True, scroll=True):
@@ -1991,7 +2031,9 @@ class Marionette(object):
                 "scroll": scroll}
         if format == "hash":
             body["hash"] = True
-        data = self._send_message("takeScreenshot", body, key="value")
+
+        data = self._send_message("WebDriver:TakeScreenshot",
+                                  body, key="value")
 
         if format == "base64" or format == "hash":
             return data
@@ -2084,7 +2126,7 @@ class Marionette(object):
 
         :returns: Window rect.
         """
-        return self._send_message("maximizeWindow")
+        return self._send_message("WebDriver:MaximizeWindow")
 
     def fullscreen(self):
         """Synchronously sets the user agent window to full screen as
@@ -2093,4 +2135,4 @@ class Marionette(object):
 
         :returns: Window rect.
         """
-        return self._send_message("fullscreen")
+        return self._send_message("WebDriver:FullscreenWindow")
