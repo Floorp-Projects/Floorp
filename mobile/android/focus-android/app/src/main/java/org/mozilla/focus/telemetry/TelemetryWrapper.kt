@@ -197,6 +197,7 @@ object TelemetryWrapper {
                             resources.getString(R.string.pref_key_privacy_block_social),
                             resources.getString(R.string.pref_key_privacy_block_other),
                             resources.getString(R.string.pref_key_performance_block_javascript),
+                            resources.getString(R.string.pref_key_performance_enable_cookies),
                             resources.getString(R.string.pref_key_performance_block_webfonts),
                             resources.getString(R.string.pref_key_locale),
                             resources.getString(R.string.pref_key_secure),

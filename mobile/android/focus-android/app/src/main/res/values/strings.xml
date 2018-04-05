@@ -192,6 +192,19 @@
     <string name="preference_privacy_block_social_summary">Embedded on sites to track your visits and to display functionality like share buttons</string>
     <string name="preference_privacy_block_content">Block other content trackers</string>
     <string name="preference_privacy_block_content_summary2">Enabling may cause some pages to behave unexpectedly</string>
+    <string name="preference_privacy_category_cookies">Block cookies</string>
+
+    <string-array name="preference_privacy_cookies_options">
+        <item>@string/preference_privacy_should_block_cookies_yes_option</item>
+        <item>@string/preference_privacy_should_block_cookies_third_party_only_option</item>
+        <item>@string/preference_privacy_should_block_cookies_no_option</item>
+    </string-array>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option">No</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Block 3rd-party cookies only</string>
+    <string name="preference_privacy_should_block_cookies_yes_option">Yes</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->

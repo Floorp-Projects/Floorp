@@ -62,6 +62,13 @@
             android:summary="@string/preference_privacy_stealth_summary"
             android:defaultValue="false" />
 
+        <ListPreference
+            android:title="@string/preference_privacy_category_cookies"
+            android:key="@string/pref_key_performance_enable_cookies"
+            android:entries="@array/preference_privacy_cookies_options"
+            android:entryValues="@array/preference_privacy_cookies_options"
+            android:defaultValue="@string/preference_privacy_should_block_cookies_no_option"/>
+
     </PreferenceCategory>
 
     <PreferenceCategory

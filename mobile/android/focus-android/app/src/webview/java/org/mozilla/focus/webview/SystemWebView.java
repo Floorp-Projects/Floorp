@@ -107,7 +107,7 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        WebViewProvider.applyAppSettings(getContext(), getSettings());
+        WebViewProvider.applyAppSettings(getContext(), getSettings(), this);
     }
 
     @Override
@@ -171,9 +171,9 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
     public void setBlockingEnabled(boolean enabled) {
         client.setBlockingEnabled(enabled);
         if (enabled) {
-            WebViewProvider.applyAppSettings(getContext(), getSettings());
+            WebViewProvider.applyAppSettings(getContext(), getSettings(), this);
         } else {
-            WebViewProvider.disableBlocking(getSettings());
+            WebViewProvider.disableBlocking(getSettings(), this);
         }
 
         if (callback != null) {
