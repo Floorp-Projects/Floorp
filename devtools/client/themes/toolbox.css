@@ -238,12 +238,22 @@
   min-width: 32px;
 }
 
+#command-button-frames::before {
+  /* The frames button has a drop-down arrow making it asymmetrical.
+   * Drop the margin on the non-arrow side to make it fit more symmetrical. */
+  margin-inline-start: 0px;
+  /* The direction of devtools-button is forced to 'ltr' for text-as-image
+   * buttons. We don't need that here (there's no text in this button) and we
+   * want the logical properties to reflect the text direction so unset it. */
+  direction: unset;
+}
+
 #command-button-frames:-moz-locale-dir(ltr) {
-  background-position: right;
+  background-position: right 2px top 14px;
 }
 
 #command-button-frames:-moz-locale-dir(rtl) {
-  background-position: left;
+  background-position: left 2px top 14px;
 }
 
 /* Toolbox panels */
