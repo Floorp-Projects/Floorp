@@ -9,11 +9,12 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { debugWorker } = require("../../modules/worker");
 const Services = require("Services");
 
 loader.lazyRequireGetter(this, "DebuggerClient",
   "devtools/shared/client/debugger-client", true);
+loader.lazyRequireGetter(this, "gDevToolsBrowser",
+  "devtools/client/framework/devtools-browser", true);
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
@@ -85,7 +86,7 @@ class ServiceWorkerTarget extends Component {
     }
 
     let { client, target } = this.props;
-    debugWorker(client, target.workerActor);
+    gDevToolsBrowser.openWorkerToolbox(client, target.workerActor);
   }
 
   push() {

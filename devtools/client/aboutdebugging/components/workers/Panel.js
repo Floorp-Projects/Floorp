@@ -11,7 +11,6 @@ const { Ci } = require("chrome");
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { getWorkerForms } = require("../../modules/worker");
 const Services = require("Services");
 
 const PanelHeader = createFactory(require("../PanelHeader"));
@@ -48,7 +47,6 @@ class WorkersPanel extends Component {
 
     this.updateMultiE10S = this.updateMultiE10S.bind(this);
     this.updateWorkers = this.updateWorkers.bind(this);
-    this.getRegistrationForWorker = this.getRegistrationForWorker.bind(this);
     this.isE10S = this.isE10S.bind(this);
     this.renderServiceWorkersError = this.renderServiceWorkersError.bind(this);
 
@@ -110,74 +108,31 @@ class WorkersPanel extends Component {
     this.setState({ processCount });
   }
 
-  updateWorkers() {
+  async updateWorkers() {
     let workers = this.initialState.workers;
 
-    getWorkerForms(this.props.client).then(forms => {
-      forms.registrations.forEach(form => {
-        workers.service.push({
-          icon: WorkerIcon,
-          name: form.url,
-          url: form.url,
-          scope: form.scope,
-          fetch: form.fetch,
-          registrationActor: form.actor,
-          active: form.active
-        });
-      });
+    let forms = await this.props.client.mainRoot.listAllWorkers();
 
-      forms.workers.forEach(form => {
-        let worker = {
-          icon: WorkerIcon,
-          name: form.url,
-          url: form.url,
-          workerActor: form.actor
-        };
-        switch (form.type) {
-          case Ci.nsIWorkerDebugger.TYPE_SERVICE:
-            let registration = this.getRegistrationForWorker(form, workers.service);
-            if (registration) {
-              // XXX: Race, sometimes a ServiceWorkerRegistrationInfo doesn't
-              // have a scriptSpec, but its associated WorkerDebugger does.
-              if (!registration.url) {
-                registration.name = registration.url = form.url;
-              }
-              registration.workerActor = form.actor;
-            } else {
-              worker.fetch = form.fetch;
+    workers.service = forms.serviceWorkers
+      .map(form => Object.assign({ icon: WorkerIcon, name: form.url }, form));
 
-              // If a service worker registration could not be found, this means we are in
-              // e10s, and registrations are not forwarded to other processes until they
-              // reach the activated state. Augment the worker as a registration worker to
-              // display it in aboutdebugging.
-              worker.scope = form.scope;
-              worker.active = false;
-              workers.service.push(worker);
-            }
-            break;
-          case Ci.nsIWorkerDebugger.TYPE_SHARED:
-            workers.shared.push(worker);
-            break;
-          default:
-            workers.other.push(worker);
-        }
-      });
+    // Lookup shared and regular workers in forms.workers.
+    forms.workers.forEach(form => {
+      let worker = {
+        icon: WorkerIcon,
+        name: form.url,
+        url: form.url,
+        workerActor: form.actor
+      };
 
-      // XXX: Filter out the service worker registrations for which we couldn't
-      // find the scriptSpec.
-      workers.service = workers.service.filter(reg => !!reg.url);
-
-      this.setState({ workers });
-    });
-  }
-
-  getRegistrationForWorker(form, registrations) {
-    for (let registration of registrations) {
-      if (registration.scope === form.scope) {
-        return registration;
+      if (form.type === Ci.nsIWorkerDebugger.TYPE_DEDICATED) {
+        workers.other.push(worker);
+      } else if (form.type === Ci.nsIWorkerDebugger.TYPE_SHARED) {
+        workers.shared.push(worker);
       }
-    }
-    return null;
+    });
+
+    this.setState({ workers });
   }
 
   isE10S() {
