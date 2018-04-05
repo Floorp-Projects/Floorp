@@ -479,7 +479,12 @@ class Actions(object):
         """Sends the action chain built so far to the server side for
         execution and clears the current chain of actions."""
         body = {"chain": self.action_chain, "nextId": self.current_id}
-        self.current_id = self.marionette._send_message("actionChain", body, key="value")
+        try:
+            self.current_id = self.marionette._send_message("Marionette:ActionChain",
+                                                            body, key="value")
+        except errors.UnknownCommandException:
+            self.current_id = self.marionette._send_message("actionChain",
+                                                            body, key="value")
         self.action_chain = []
         return self
 
@@ -524,7 +529,10 @@ class MultiActions(object):
     def perform(self):
         """Perform all the actions added to this object."""
         body = {"value": self.multi_actions, "max_length": self.max_length}
-        self.marionette._send_message("multiAction", body)
+        try:
+            self.marionette._send_message("Marionette:MultiAction", body)
+        except errors.UnknownCommandException:
+            self.marionette._send_message("multiAction", body)
 
 
 class Alert(object):
@@ -1387,8 +1395,9 @@ class Marionette(object):
         :returns: unique window handle
         :rtype: string
         """
-        self.chrome_window = self._send_message(
-            "getCurrentChromeWindowHandle", key="value")
+        self.chrome_window = self._send_message("WebDriver:GetChromeWindowHandle",
+                                                key="value")
+
         return self.chrome_window
 
     def get_window_position(self):
@@ -1466,7 +1475,7 @@ class Marionette(object):
 
         :returns: Unordered list of unique chrome window handles as strings
         """
-        return self._send_message("getChromeWindowHandles")
+        return self._send_message("WebDriver:GetChromeWindowHandles")
 
     @property
     def page_source(self):
@@ -1488,7 +1497,7 @@ class Marionette(object):
 
         :returns: Unordered list of remaining unique chrome window handles as strings
         """
-        return self._send_message("closeChromeWindow")
+        return self._send_message("WebDriver:CloseChromeWindow")
 
     def set_context(self, context):
         """Sets the context that Marionette commands are running in.
@@ -1632,7 +1641,11 @@ class Marionette(object):
         This command only makes sense in a chrome context. You might use this
         method to distinguish a browser window from an editor window.
         """
-        return self._send_message("getWindowType", key="value")
+        try:
+            return self._send_message("Marionette:GetWindowType",
+                                      key="value")
+        except errors.UnknownCommandException:
+            return self._send_message("getWindowType", key="value")
 
     def navigate(self, url):
         """Navigate to given `url`.
@@ -2051,7 +2064,11 @@ class Marionette(object):
         portrait-primary, landscape-primary, portrait-secondary, or
         landscape-secondary.
         """
-        return self._send_message("getScreenOrientation", key="value")
+        try:
+            return self._send_message("Marionette:GetScreenOrientation",
+                                      key="value")
+        except errors.UnknownCommandException:
+            return self._send_message("getScreenOrientation", key="value")
 
     def set_orientation(self, orientation):
         """Set the current browser orientation.
@@ -2068,7 +2085,10 @@ class Marionette(object):
         :param orientation: The orientation to lock the screen in.
         """
         body = {"orientation": orientation}
-        self._send_message("setScreenOrientation", body)
+        try:
+            self._send_message("Marionette:SetScreenOrientation", body)
+        except errors.UnknownCommandException:
+            self._send_message("setScreenOrientation", body)
 
     @property
     def window_size(self):
