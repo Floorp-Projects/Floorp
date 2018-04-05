@@ -1,12 +1,11 @@
 # enable variation font support
 default-preferences pref(layout.css.font-variations.enabled,true)
 
-# Currently, debug Linux builds hit a fatal assertion inside Skia, so skip until that is resolved (bug 1442669).
-skip-if(skiaContent&&isDebugBuild) == font-optical-sizing-1.html font-optical-sizing-1-ref.html
+== font-optical-sizing-1.html font-optical-sizing-1-ref.html
 
-# We're not running recent enough Windows or macOS versions in CI yet, so this will fail until they are updated.
+# We're not running recent enough Windows/macOS/Linux versions in CI yet, so this will fail until they are updated.
 # Also fails under webrender (bug 1441323, bug 1442693).
-skip-if(skiaContent&&isDebugBuild) fails-if(OSX<1012) fails-if(winWidget) fails-if(webrender&&gtkWidget) != font-optical-sizing-1.html font-optical-sizing-1-notref.html
+fails-if(OSX<1012) fails-if(winWidget) fails-if(gtkWidget) != font-optical-sizing-1.html font-optical-sizing-1-notref.html
 
 # reset the default preferences
 default-preferences
