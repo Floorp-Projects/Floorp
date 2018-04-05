@@ -14,7 +14,7 @@ let UCTObserver = {
   closed: PromiseUtils.defer(),
 
   observe(aSubject, aTopic, aData) {
-    let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+    let win = aSubject;
 
     switch (aTopic) {
       case "domwindowopened":

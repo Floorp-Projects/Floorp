@@ -426,7 +426,9 @@ class FilteringMessageManagerMap extends Map {
     broker = new this._constructor(this.messageName, this.callback, target);
     this.set(target, broker);
 
-    if (target instanceof Ci.nsIDOMEventTarget) {
+    // XXXbz if target is really known to be a MessageListenerManager,
+    // do we need this isInstance check?
+    if (EventTarget.isInstance(target)) {
       let onUnload = event => {
         target.removeEventListener("unload", onUnload);
         this.delete(target);
