@@ -125,6 +125,19 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         }
       });
     boolean startResult = exchange(result, false); // |false| is a dummy value.
+
+    if (!startResult) {
+      // Starting failed on the camera thread. The looper has now quit and the
+      // camera thread is dead.
+      try {
+        cameraThread.join();
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+      cameraThreadHandler = null;
+      cameraThread = null;
+    }
+
     return startResult;
   }
 
@@ -265,8 +278,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       }
       if (frameDropRatio == Integer.MAX_VALUE) {
         Log.e(TAG, "Can not find camera fps range");
-        error = new RuntimeException("Can not find camera fps range");
-        return false;
+        throw new RuntimeException("Can not find camera fps range");
       }
       if (frameDropRatio > 1) {
         Log.d(TAG, "Frame dropper is enabled. Ratio: " + frameDropRatio);
@@ -292,9 +304,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       error = e;
     }
     Log.e(TAG, "startCapture failed", error);
-    if (camera != null) {
-      stopCaptureOnCameraThread();
-    }
+    stopCaptureOnCameraThread();
     return false;
   }
 
@@ -322,12 +332,12 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
   }
 
   private boolean stopCaptureOnCameraThread() {
-    if (camera == null) {
-      Log.e(TAG, "Camera is already stopped!");
-      return true;
-    }
     Throwable error = null;
     try {
+      if (camera == null) {
+        Log.e(TAG, "Camera is already stopped!");
+        throw new RuntimeException("Camera is already stopped!");
+      }
       camera.stopPreview();
       camera.setPreviewCallbackWithBuffer(null);
       camera.setPreviewTexture(null);
