@@ -269,18 +269,20 @@
                 class="accessory-button"
                 icon="select-color"
                 data-l10n-id="colors-settings"
-                searchkeywords="&overrideDefaultPageColors2.label;
-                                &overrideDefaultPageColors.always.label;
-                                &overrideDefaultPageColors.auto.label;
-                                &overrideDefaultPageColors.never.label;
-                                &color;
-                                &textColor2.label;
-                                &backgroundColor2.label;
-                                &useSystemColors.label;
-                                &underlineLinks.label;
-                                &links;
-                                &linkColor2.label;
-                                &visitedLinkColor2.label;"/>
+                search-l10n-ids="
+                  colors-page-override,
+                  colors-page-override-option-always.label,
+                  colors-page-override-option-auto.label,
+                  colors-page-override-option-never.label,
+                  colors-text-and-background,
+                  colors-text-header,
+                  colors-background,
+                  colors-use-system,
+                  colors-underline-links,
+                  colors-links-header,
+                  colors-unvisited-links,
+                  colors-visited-links
+                "/>
       </hbox>
     </hbox>
   </vbox>

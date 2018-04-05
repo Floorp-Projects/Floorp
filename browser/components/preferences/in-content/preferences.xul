@@ -22,7 +22,6 @@
   "chrome://browser/locale/preferences/selectBookmark.dtd">
 <!ENTITY % languagesDTD SYSTEM "chrome://browser/locale/preferences/languages.dtd">
 <!ENTITY % fontDTD SYSTEM "chrome://browser/locale/preferences/fonts.dtd">
-<!ENTITY % colorsDTD SYSTEM "chrome://browser/locale/preferences/colors.dtd">
 <!ENTITY % permissionsDTD SYSTEM "chrome://browser/locale/preferences/permissions.dtd">
 <!ENTITY % passwordManagerDTD SYSTEM "chrome://passwordmgr/locale/passwordManager.dtd">
 <!ENTITY % historyDTD SYSTEM "chrome://mozapps/locale/update/history.dtd">
@@ -44,7 +43,6 @@
 %selectBookmarkDTD;
 %languagesDTD;
 %fontDTD;
-%colorsDTD;
 %permissionsDTD;
 %passwordManagerDTD;
 %historyDTD;
@@ -78,6 +76,7 @@
   <!-- Links below are only used for search-l10n-ids into subdialogs -->
   <link rel="localization" href="browser/preferences/blocklists.ftl"/>
   <link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
+  <link rel="localization" href="browser/preferences/colors.ftl"/>
 
   <script type="text/javascript" src="chrome://global/content/l10n.js"></script>
 
