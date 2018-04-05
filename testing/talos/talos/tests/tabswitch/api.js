@@ -1,46 +1,21 @@
 // -*- Mode: js; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 
-/* globals APP_SHUTDOWN, ExtensionAPI */
+/* globals ExtensionAPI */
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Promise.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Task.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/RemotePageManager.jsm");
 
-let aboutNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
-                           .getService(Ci.nsIAboutNewTabService);
-
-var aboutBlankTab = null;
 let context = {};
 let TalosParentProfiler;
 
-var windowListener = {
-  onOpenWindow(aWindow) {
-    // Ensure we don't get tiles which contact the network
-    aboutNewTabService.newTabURL = "about:blank";
-
-    // Wait for the window to finish loading
-    let window = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-    let cb = function() {
-      window.removeEventListener("load", cb);
-      loadIntoWindow(window);
-    };
-    window.addEventListener("load", cb);
-  },
-
-  onCloseWindow(aWindow) {
-    aboutNewTabService.resetNewTabURL();
-  },
-};
-
 function promiseOneEvent(target, eventName, capture) {
-  let deferred = Promise.defer();
-  target.addEventListener(eventName, function handler(event) {
-    deferred.resolve();
-  }, {capture, once: true});
-  return deferred.promise;
+  return new Promise(resolve => {
+    target.addEventListener(eventName, function handler(event) {
+      resolve();
+    }, {capture, once: true});
+  });
 }
 
 function executeSoon(callback) {
@@ -448,29 +423,6 @@ function test(window) {
   });
 }
 
-function unloadFromWindow(window) {
-  if (!window)
-    return;
-  let toolsMenu = window.document.getElementById("menu_ToolsPopup");
-  if (!toolsMenu)
-    return;
-  toolsMenu.removeChild(window.document.getElementById("start_test_item"));
-}
-
-function loadIntoWindow(window) {
-  if (!window)
-    return;
-  let item = window.document.createElement("menuitem");
-  item.setAttribute("label", "Start test");
-  item.id = "start_test_item";
-  window.tab_switch_test = test;
-  item.setAttribute("oncommand", "tab_switch_test(window)");
-  let toolsMenu = window.document.getElementById("menu_ToolsPopup");
-  if (!toolsMenu)
-    return;
-  toolsMenu.appendChild(item);
-}
-
 function handleFile(win, file) {
   let localFile = Cc["@mozilla.org/file/local;1"]
     .createInstance(Ci.nsIFile);
@@ -513,14 +465,11 @@ this.tps = class extends ExtensionAPI {
     return {
       tps: {
         setup({ frameScriptPath }) {
-          let list = Services.wm.getEnumerator("navigator:browser");
-          let window;
-          while (list.hasMoreElements()) {
-            window = list.getNext().QueryInterface(Ci.nsIDOMWindow);
-            loadIntoWindow(window);
-          }
+          const AboutNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
+                                       .getService(Ci.nsIAboutNewTabService);
+          AboutNewTabService.newTabURL = "about:blank";
+
           // Load into any new windows
-          Services.wm.addListener(windowListener);
           Services.obs.addObserver(observer, "tabswitch-urlfile");
 
           const frameScriptURL = context.extension.baseURI.resolve(frameScriptPath);
@@ -532,17 +481,9 @@ this.tps = class extends ExtensionAPI {
 
           return () => {
             Services.ppmm.sendAsyncMessage("TPS:Teardown");
-
-            Services.wm.removeListener(windowListener);
-
-            // Unload from any existing windows
-            let list = Services.wm.getEnumerator("navigator:browser");
-            while (list.hasMoreElements()) {
-              let window = list.getNext().QueryInterface(Ci.nsIDOMWindow);
-              unloadFromWindow(window);
-            }
             Services.obs.removeObserver(observer, "tabswitch-urlfile");
             remotePage.destroy();
+            AboutNewTabService.resetNewTabURL();
           };
         }
       }
