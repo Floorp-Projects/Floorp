@@ -1016,8 +1016,6 @@ nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
   }
 }
 
-NS_IMPL_DOMTARGET_DEFAULTS(nsINode)
-
 NS_IMETHODIMP
 nsINode::AddEventListener(const nsAString& aType,
                           nsIDOMEventListener *aListener,

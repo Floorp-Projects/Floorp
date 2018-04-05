@@ -2332,12 +2332,6 @@ nsGlobalWindowOuter::UpdateParentTarget()
 }
 
 EventTarget*
-nsGlobalWindowOuter::GetTargetForDOMEvent()
-{
-  return GetOuterWindowInternal();
-}
-
-EventTarget*
 nsGlobalWindowOuter::GetTargetForEventTargetChain()
 {
   return GetCurrentInnerWindowInternal();
