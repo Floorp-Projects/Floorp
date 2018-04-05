@@ -24,27 +24,27 @@ DispatcherDelegate.prototype = {
   /**
    * Register a listener to be notified of event(s).
    *
-   * @param listener Target listener implementing nsIAndroidEventListener.
-   * @param events   String or array of strings of events to listen to.
+   * @param aListener Target listener implementing nsIAndroidEventListener.
+   * @param aEvents   String or array of strings of events to listen to.
    */
-  registerListener: function(listener, events) {
+  registerListener: function(aListener, aEvents) {
     if (!this._dispatcher) {
       throw new Error("Can only listen in parent process");
     }
-    this._dispatcher.registerListener(listener, events);
+    this._dispatcher.registerListener(aListener, aEvents);
   },
 
   /**
    * Unregister a previously-registered listener.
    *
-   * @param listener Registered listener implementing nsIAndroidEventListener.
-   * @param events   String or array of strings of events to stop listening to.
+   * @param aListener Registered listener implementing nsIAndroidEventListener.
+   * @param aEvents   String or array of strings of events to stop listening to.
    */
-  unregisterListener: function(listener, events) {
+  unregisterListener: function(aListener, aEvents) {
     if (!this._dispatcher) {
       throw new Error("Can only listen in parent process");
     }
-    this._dispatcher.unregisterListener(listener, events);
+    this._dispatcher.unregisterListener(aListener, aEvents);
   },
 
   /**
@@ -52,35 +52,39 @@ DispatcherDelegate.prototype = {
    * optional data object and/or a optional callback interface to the
    * listeners.
    *
-   * @param event    Name of event to dispatch.
-   * @param data     Optional object containing data for the event.
-   * @param callback Optional callback implementing nsIAndroidEventCallback.
+   * @param aEvent     Name of event to dispatch.
+   * @param aData      Optional object containing data for the event.
+   * @param aCallback  Optional callback implementing nsIAndroidEventCallback.
+   * @param aFinalizer Optional finalizer implementing nsIAndroidEventFinalizer.
    */
-  dispatch: function(event, data, callback) {
+  dispatch: function(aEvent, aData, aCallback, aFinalizer) {
     if (this._dispatcher) {
-      this._dispatcher.dispatch(event, data, callback);
+      this._dispatcher.dispatch(aEvent, aData, aCallback, aFinalizer);
       return;
     }
 
     let mm = this._messageManager || Services.cpmm;
     let forwardData = {
       global: !this._messageManager,
-      event: event,
-      data: data,
+      event: aEvent,
+      data: aData,
     };
 
-    if (callback) {
+    if (aCallback) {
       forwardData.uuid = UUIDGen.generateUUID().toString();
       mm.addMessageListener("GeckoView:MessagingReply", function listener(msg) {
-        if (msg.data.uuid === forwardData.uuid) {
+        if (msg.data.uuid !== forwardData.uuid) {
+          return;
+        }
+        if (msg.data.type === "success") {
+          aCallback.onSuccess(msg.data.response);
+        } else if (msg.data.type === "error") {
+          aCallback.onError(msg.data.response);
+        } else if (msg.data.type === "finalize") {
+          aFinalizer && aFinalizer.onFinalize();
           mm.removeMessageListener(msg.name, listener);
-          if (msg.data.type === "success") {
-            callback.onSuccess(msg.data.response);
-          } else if (msg.data.type === "error") {
-            callback.onError(msg.data.response);
-          } else {
-            throw new Error("invalid reply type");
-          }
+        } else {
+          throw new Error("invalid reply type");
         }
       });
     }
@@ -91,26 +95,27 @@ DispatcherDelegate.prototype = {
   /**
    * Sends a request to Java.
    *
-   * @param msg Message to send; must be an object with a "type" property
+   * @param aMsg      Message to send; must be an object with a "type" property
+   * @param aCallback Optional callback implementing nsIAndroidEventCallback.
    */
-  sendRequest: function(msg, callback) {
-    let type = msg.type;
-    msg.type = undefined;
-    this.dispatch(type, msg, callback);
+  sendRequest: function(aMsg, aCallback) {
+    const type = aMsg.type;
+    aMsg.type = undefined;
+    this.dispatch(type, aMsg, aCallback);
   },
 
   /**
    * Sends a request to Java, returning a Promise that resolves to the response.
    *
-   * @param msg Message to send; must be an object with a "type" property
-   * @returns A Promise resolving to the response
+   * @param aMsg Message to send; must be an object with a "type" property
+   * @return A Promise resolving to the response
    */
-  sendRequestForResult: function(msg) {
+  sendRequestForResult: function(aMsg) {
     return new Promise((resolve, reject) => {
-      let type = msg.type;
-      msg.type = undefined;
+      const type = aMsg.type;
+      aMsg.type = undefined;
 
-      this.dispatch(type, msg, {
+      this.dispatch(type, aMsg, {
         onSuccess: resolve,
         onError: reject,
       });
@@ -172,17 +177,19 @@ var EventDispatcher = {
       callback = {
         onSuccess: response => reply("success", response),
         onError: error => reply("error", error),
+        onFinalize: () => reply("finalize"),
       };
     }
 
     if (aMsg.data.global) {
-      this.instance.dispatch(aMsg.data.event, aMsg.data.data.callback);
+      this.instance.dispatch(aMsg.data.event, aMsg.data.data,
+                             callback, callback);
       return;
     }
 
     let win = aMsg.target.ownerGlobal;
     let dispatcher = win.WindowEventDispatcher || this.for(win);
-    dispatcher.dispatch(aMsg.data.event, aMsg.data.data, callback);
+    dispatcher.dispatch(aMsg.data.event, aMsg.data.data, callback, callback);
   },
 };
 
