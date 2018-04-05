@@ -1773,7 +1773,7 @@ RuleViewTool.prototype = {
       return false;
     }
 
-    return this.inspector.isSplitRuleViewEnabled ?
+    return this.inspector.is3PaneModeEnabled ?
       true : this.inspector.sidebar.getCurrentTabID() == "ruleview";
   },
 
