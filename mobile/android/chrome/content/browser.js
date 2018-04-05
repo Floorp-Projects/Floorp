@@ -483,7 +483,14 @@ var BrowserApp = {
     }, NativeWindow, "contextmenus");
 
     if (AppConstants.ACCESSIBILITY) {
-      InitLater(() => AccessFu.attach(window), window, "AccessFu");
+      InitLater(() => GlobalEventDispatcher.dispatch("GeckoView:AccessibilityReady"));
+      GlobalEventDispatcher.registerListener((aEvent, aData, aCallback) => {
+        if (aData.enabled) {
+          AccessFu.attach(window);
+        } else {
+          AccessFu.detach();
+        }
+      }, "GeckoView:AccessibilitySettings");
     }
 
     InitLater(() => {

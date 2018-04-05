@@ -141,7 +141,8 @@ var Utils = { // jshint ignore:line
 
   get CurrentBrowser() {
     if (!this.BrowserApp) {
-      return null;
+      // Get the first content browser element when no 'BrowserApp' exists.
+      return this.win.document.querySelector("browser[type=content]");
     }
     if (this.MozBuildApp == "b2g") {
       return this.BrowserApp.contentBrowser;
