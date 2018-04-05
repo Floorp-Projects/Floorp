@@ -296,16 +296,25 @@ runTestFromPath(JSContext* cx, const char* path)
 #endif // defined(XP_WIN)
 }
 
-BEGIN_TEST(testBinASTReaderECMAScript2)
+BEGIN_TEST(testBinASTReaderSimpleECMAScript2)
 {
 #if defined(XP_WIN)
     runTestFromPath<js::frontend::BinTokenReaderTester>(cx, "jsapi-tests\\binast\\parser\\tester\\");
-    runTestFromPath<js::frontend::BinTokenReaderMultipart(cx, "jsapi-tests\\binast\\parser\\multipart\\");
 #else
     runTestFromPath<js::frontend::BinTokenReaderTester>(cx, "jsapi-tests/binast/parser/tester/");
+#endif // defined(XP_XIN)
+    return true;
+}
+END_TEST(testBinASTReaderSimpleECMAScript2)
+
+BEGIN_TEST(testBinASTReaderMultipartECMAScript2)
+{
+#if defined(XP_WIN)
+    runTestFromPath<js::frontend::BinTokenReaderMultipart(cx, "jsapi-tests\\binast\\parser\\multipart\\");
+#else
     runTestFromPath<js::frontend::BinTokenReaderMultipart>(cx, "jsapi-tests/binast/parser/multipart/");
 #endif // defined(XP_XIN)
     return true;
 }
-END_TEST(testBinASTReaderECMAScript2)
+END_TEST(testBinASTReaderMultipartECMAScript2)
 
