@@ -5,13 +5,18 @@
 "use strict";
 
 const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
-const require = window.windowRequire = BrowserLoader({
+const require = BrowserLoader({
   baseURI: "resource://devtools/client/application/",
   window,
 }).require;
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
+const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
+
+const { configureStore } = require("./src/create-store");
+const actions = require("./src/actions/index");
 
 const App = createFactory(require("./src/components/App"));
 
@@ -20,17 +25,50 @@ const App = createFactory(require("./src/components/App"));
  * called to start the UI for the panel.
  */
 window.Application = {
-  bootstrap({ toolbox, panel }) {
+  async bootstrap({ toolbox, panel }) {
+    this.updateWorkers = this.updateWorkers.bind(this);
+
     this.mount = document.querySelector("#mount");
+    this.toolbox = toolbox;
+    this.client = toolbox.target.client;
+
+    this.store = configureStore();
+    this.actions = bindActionCreators(actions, this.store.dispatch);
+
+    const serviceContainer = {
+      openAboutDebugging() {
+        let win = toolbox.doc.defaultView.top;
+        win.openUILinkIn("about:debugging#workers", "tab", { relatedToCurrent: true });
+      }
+    };
 
     // Render the root Application component.
-    const app = App();
+    const app = App({ client: this.client, serviceContainer });
+    render(Provider({ store: this.store }, app), this.mount);
 
-    render(app, this.mount);
+    this.client.addListener("workerListChanged", this.updateWorkers);
+    this.client.addListener("serviceWorkerRegistrationListChanged", this.updateWorkers);
+    this.client.addListener("registration-changed", this.updateWorkers);
+    this.client.addListener("processListChanged", this.updateWorkers);
+
+    await this.updateWorkers();
+  },
+
+  async updateWorkers() {
+    let { serviceWorkers } = await this.client.mainRoot.listAllWorkers();
+    this.actions.updateWorkers(serviceWorkers);
   },
 
   destroy() {
+    this.client.removeListener("workerListChanged", this.updateWorkers);
+    this.client.removeListener("serviceWorkerRegistrationListChanged",
+      this.updateWorkers);
+    this.client.removeListener("registration-changed", this.updateWorkers);
+    this.client.removeListener("processListChanged", this.updateWorkers);
+
     unmountComponentAtNode(this.mount);
     this.mount = null;
+    this.toolbox = null;
+    this.client = null;
   },
 };
