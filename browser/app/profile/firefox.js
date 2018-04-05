@@ -1075,7 +1075,9 @@ pref("security.sandbox.gpu.level", 0);
 
 // Controls whether we disable win32k for the GMP processes.
 // true means that win32k system calls are not permitted.
-pref("security.sandbox.gmp.win32k-disable", true);
+// Note: win32k is currently _not_ disabled due to intermittent test failures,
+// where the GMP process fails very early. See bug 1449348.
+pref("security.sandbox.gmp.win32k-disable", false);
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)

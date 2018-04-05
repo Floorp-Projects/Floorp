@@ -237,8 +237,9 @@ MacroAssemblerCompat::profilerEnterFrame(RegisterOrSP framePtr, Register scratch
 void
 MacroAssemblerCompat::breakpoint()
 {
-    static int code = 0xA77;
-    Brk((code++) & 0xffff);
+    // Note, other payloads are possible, but GDB is known to misinterpret them
+    // sometimes and iloop on the breakpoint instead of stopping properly.
+    Brk(0);
 }
 
 // Either `any` is valid or `sixtyfour` is valid.  Return a 32-bit ARMRegister
