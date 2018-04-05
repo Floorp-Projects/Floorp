@@ -29,12 +29,11 @@ class ToolboxToolbar extends Component {
       toolboxButtons: PropTypes.array,
       // The id of the currently selected tool, e.g. "inspector"
       currentToolId: PropTypes.string,
-      // An optionally highlighted tools, e.g. "inspector".
+      // An optionally highlighted tools, e.g. "inspector" (used by ToolboxTabs
+      // component).
       highlightedTools: PropTypes.instanceOf(Set),
       // List of tool panel definitions (used by ToolboxTabs component).
       panelDefinitions: PropTypes.array,
-      // The options panel definition.
-      optionsPanel: PropTypes.object,
       // List of possible docking options.
       hostTypes: PropTypes.arrayOf(PropTypes.shape({
         position: PropTypes.string.isRequired,
@@ -75,7 +74,6 @@ class ToolboxToolbar extends Component {
           renderToolboxButtonsStart(this.props),
           ToolboxTabs(this.props),
           renderToolboxButtonsEnd(this.props),
-          renderOptions(this.props),
           renderSeparator(),
           renderToolboxControls(this.props)
         )
@@ -158,36 +156,6 @@ function renderToolboxButtons({focusedButton, toolboxButtons, focusButton}, isSt
 }
 
 /**
- * The options button is a ToolboxTab just like in the ToolboxTabs component.
- * However it is separate from the normal tabs, so deal with it separately here.
- * The following props are expected.
- *
- * @param {string} focusedButton
- *        The id of the focused button.
- * @param {string} currentToolId
- *        The currently selected tool's id; e.g.  "inspector".
- * @param {Object} highlightedTools
- *        Optionally highlighted tools, e.g. "inspector".
- * @param {Object} optionsPanel
- *        A single panel definition for the options panel.
- * @param {Function} selectTool
- *        Function to select a tool in the toolbox.
- * @param {Function} focusButton
- *        Keep a record of the currently focused button.
- */
-function renderOptions({focusedButton, currentToolId, highlightedTools,
-                        optionsPanel, selectTool, focusButton}) {
-  return div({id: "toolbox-option-container"}, ToolboxTab({
-    panelDefinition: optionsPanel,
-    currentToolId,
-    selectTool,
-    highlightedTools,
-    focusedButton,
-    focusButton,
-  }));
-}
-
-/**
  * Render a separator.
  */
 function renderSeparator() {
@@ -211,6 +179,8 @@ function renderSeparator() {
  * @param {boolean} canCloseToolbox
  *        Do we need to add UI for closing the toolbox? We don't when the
  *        toolbox is undocked, for example.
+ * @param {Function} selectTool
+ *        Function to select a tool based on its id.
  * @param {Function} closeToolbox
  *        Completely close the toolbox.
  * @param {Function} focusButton
@@ -282,15 +252,18 @@ function renderToolboxControls(props) {
  *        Function to switch the host.
  *        This array will be empty if we shouldn't shouldn't show any dock
  *        options.
+ * @param {Function} props.selectTool
+ *        Function to select a tool based on its id.
  * @param {Object} props.L10N
  *        Localization interface.
  * @param {Object} props.toolbox
  *        The devtools toolbox. Used by the Menu component to determine which
  *        document to use.
  */
-function showMeatballMenu(menuButton, {hostTypes, L10N, toolbox}) {
+function showMeatballMenu(menuButton, {hostTypes, selectTool, L10N, toolbox}) {
   const menu = new Menu({ id: "toolbox-meatball-menu" });
 
+  // Dock options
   for (const hostType of hostTypes) {
     menu.append(new MenuItem({
       id: `toolbox-meatball-menu-dock-${hostType.position}`,
@@ -301,8 +274,17 @@ function showMeatballMenu(menuButton, {hostTypes, L10N, toolbox}) {
     }));
   }
 
-  // (Yes, it's true we might end up with an empty menu here. Don't worry,
-  // by the end of this patch series that won't be the case.)
+  if (menu.items.length) {
+    menu.append(new MenuItem({ type: "separator" }));
+  }
+
+  // Settings
+  menu.append(new MenuItem({
+    id: "toolbox-meatball-menu-settings",
+    label: L10N.getStr("toolbox.meatballMenu.settings.label"),
+    // TODO: Show "F1" acceltext once MenuItem supports it.
+    click: () => selectTool("options"),
+  }));
 
   const rect = menuButton.getBoundingClientRect();
   const screenX = menuButton.ownerDocument.defaultView.mozInnerScreenX;

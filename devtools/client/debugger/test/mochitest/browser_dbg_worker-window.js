@@ -51,7 +51,7 @@ add_task(function* () {
   let toolTabs = toolbox.doc.querySelectorAll(".devtools-tab");
   let activeTools = [...toolTabs].map(tab=>tab.getAttribute("data-id"));
 
-  is(activeTools.join(","), "webconsole,jsdebugger,scratchpad,options",
+  is(activeTools.join(","), "webconsole,jsdebugger,scratchpad",
     "Correct set of tools supported by worker");
 
   terminateWorkerInTab(tab, WORKER_URL);

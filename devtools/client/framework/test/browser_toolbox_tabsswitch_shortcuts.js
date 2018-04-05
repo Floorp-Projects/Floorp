@@ -18,7 +18,11 @@ add_task(async function() {
   await target.makeRemote();
 
   let toolIDs = gDevTools.getToolDefinitionArray()
-                         .filter(def => def.isTargetSupported(target))
+                         .filter(
+                           def =>
+                             def.isTargetSupported(target) &&
+                             def.id !== "options"
+                         )
                          .map(def => def.id);
 
   let toolbox = await gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.BOTTOM);
