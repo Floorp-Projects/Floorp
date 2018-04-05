@@ -57,7 +57,6 @@
     locale/browser/migration/migration.properties  (%chrome/browser/migration/migration.properties)
     locale/browser/preferences/clearSiteData.properties     (%chrome/browser/preferences/clearSiteData.properties)
     locale/browser/preferences/content.dtd            (%chrome/browser/preferences/content.dtd)
-    locale/browser/preferences/fonts.dtd              (%chrome/browser/preferences/fonts.dtd)
     locale/browser/preferences/languages.dtd          (%chrome/browser/preferences/languages.dtd)
     locale/browser/preferences/permissions.dtd        (%chrome/browser/preferences/permissions.dtd)
     locale/browser/preferences/preferences.properties     (%chrome/browser/preferences/preferences.properties)
