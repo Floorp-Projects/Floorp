@@ -676,14 +676,19 @@ Request.prototype = {
    * @returns a request packet.
    */
   write: function(fnArgs, ctx) {
-    let str = JSON.stringify(this.template, (key, value) => {
+    let ret = {};
+    for (let key in this.template) {
+      let value = this.template[key];
       if (value instanceof Arg) {
-        return value.write(value.index in fnArgs ? fnArgs[value.index] : undefined,
-                           ctx, key);
+        ret[key] = value.write(value.index in fnArgs ? fnArgs[value.index] : undefined,
+                               ctx, key);
+      } else if (key == "type") {
+        ret[key] = value;
+      } else {
+        throw new Error("Request can only an object with `Arg` or `Option` properties");
       }
-      return value;
-    });
-    return JSON.parse(str);
+    }
+    return ret;
   },
 
   /**
