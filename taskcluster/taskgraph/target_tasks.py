@@ -34,6 +34,12 @@ def filter_for_project(task, parameters):
     return match_run_on_projects(parameters['project'], run_on_projects)
 
 
+def filter_on_platforms(task, platforms):
+    """Filter tasks on the given platform"""
+    platform = task.attributes.get('build_platform')
+    return (platform in platforms)
+
+
 def filter_upload_symbols(task, parameters):
     # Filters out symbols when there are not part of a nightly or a release build
     # TODO Remove this too specific filter (bug 1353296)
@@ -246,36 +252,6 @@ def target_tasks_valgrind(full_task_graph, parameters, graph_config):
             return True
         return False
 
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
-
-
-@_target_task('nightly_fennec')
-def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required for a nightly build of fennec. The
-    nightly build process involves a pipeline of builds, signing,
-    and, eventually, uploading the tasks to balrog."""
-    def filter(task):
-        platform = task.attributes.get('build_platform')
-        if platform in ('android-aarch64-nightly',
-                        'android-api-16-nightly',
-                        'android-nightly',
-                        'android-x86-nightly',
-                        ):
-            if not task.attributes.get('nightly', False):
-                return False
-            return filter_for_project(task, parameters)
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
-
-
-@_target_task('nightly_linux')
-def target_tasks_nightly_linux(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required for a nightly build of linux. The
-    nightly build process involves a pipeline of builds, signing,
-    and, eventually, uploading the tasks to balrog."""
-    def filter(task):
-        platform = task.attributes.get('build_platform')
-        if platform in ('linux64-nightly', 'linux-nightly'):
-            return task.attributes.get('nightly', False)
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
@@ -537,16 +513,54 @@ def target_tasks_pine(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
+@_target_task('nightly_fennec')
+def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a nightly build of fennec. The
+    nightly build process involves a pipeline of builds, signing,
+    and, eventually, uploading the tasks to balrog."""
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+        if not filter_for_project(task, parameters):
+            return False
+        if platform in ('android-aarch64-nightly',
+                        'android-api-16-nightly',
+                        'android-nightly',
+                        'android-x86-nightly',
+                        ):
+            if not task.attributes.get('nightly', False):
+                return False
+            return filter_for_project(task, parameters)
+    filter
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+def make_nightly_filter(platforms):
+    """Returns a filter that gets all nightly tasks on the given platform."""
+    def filter(task, parameters):
+        return all([
+            filter_on_platforms(task, platforms),
+            filter_for_project(task, parameters),
+            task.attributes.get('nightly', False),
+        ])
+    return filter
+
+
+@_target_task('nightly_linux')
+def target_tasks_nightly_linux(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a nightly build of linux. The
+    nightly build process involves a pipeline of builds, signing,
+    and, eventually, uploading the tasks to balrog."""
+    filter = make_nightly_filter({'linux64-nightly', 'linux-nightly'})
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+
+
 @_target_task('nightly_macosx')
 def target_tasks_nightly_macosx(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of macosx. The
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    def filter(task):
-        platform = task.attributes.get('build_platform')
-        if platform in ('macosx64-nightly', ):
-            return task.attributes.get('nightly', False)
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+    filter = make_nightly_filter({'macosx64-nightly'})
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
 @_target_task('nightly_win32')
@@ -554,13 +568,8 @@ def target_tasks_nightly_win32(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of win32 and win64.
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    def filter(task):
-        platform = task.attributes.get('build_platform')
-        if not filter_for_project(task, parameters):
-            return False
-        if platform in ('win32-nightly', ):
-            return task.attributes.get('nightly', False)
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+    filter = make_nightly_filter({'win32-nightly'})
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
 @_target_task('nightly_win64')
@@ -568,13 +577,8 @@ def target_tasks_nightly_win64(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of win32 and win64.
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
-    def filter(task):
-        platform = task.attributes.get('build_platform')
-        if not filter_for_project(task, parameters):
-            return False
-        if platform in ('win64-nightly', ):
-            return task.attributes.get('nightly', False)
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+    filter = make_nightly_filter({'win64-nightly'})
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
 @_target_task('nightly_desktop')
