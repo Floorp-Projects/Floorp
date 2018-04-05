@@ -21,7 +21,7 @@ TelemetryScrollProbe::Create(TabChildGlobal* aWebFrame)
   nsWeakPtr webNav = do_GetWeakReference(aWebFrame->mTabChild->WebNavigation());
   RefPtr<TelemetryScrollProbe> probe = new TelemetryScrollProbe(webNav);
 
-  aWebFrame->AddEventListener(NS_LITERAL_STRING("pagehide"), probe, true, false, 0);
+  aWebFrame->AddEventListener(NS_LITERAL_STRING("pagehide"), probe, true);
 }
 
 already_AddRefed<nsIWebNavigation>

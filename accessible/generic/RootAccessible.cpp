@@ -192,7 +192,7 @@ RootAccessible::AddEventListeners()
                    * const* e_end = ArrayEnd(kEventTypes);
          e < e_end; ++e) {
       nsresult rv = nstarget->AddEventListener(NS_ConvertASCIItoUTF16(*e),
-                                               this, true, true, 2);
+                                               this, true, true);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

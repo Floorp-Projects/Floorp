@@ -221,12 +221,8 @@ ScrollbarActivity::StartListeningForScrollAreaEvents()
     return;
 
   nsIFrame* scrollArea = do_QueryFrame(mScrollableFrame);
-  nsCOMPtr<nsIDOMEventTarget> scrollAreaTarget
-    = do_QueryInterface(scrollArea->GetContent());
-  if (scrollAreaTarget) {
-    scrollAreaTarget->AddEventListener(NS_LITERAL_STRING("mousemove"), this,
-                                       true);
-  }
+  scrollArea->GetContent()->AddEventListener(NS_LITERAL_STRING("mousemove"),
+                                             this, true);
   mListeningForScrollAreaEvents = true;
 }
 

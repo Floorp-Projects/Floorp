@@ -4497,25 +4497,27 @@ nsGlobalWindowInner::DispatchEvent(Event& aEvent,
   return retval;
 }
 
-NS_IMETHODIMP
+bool
+nsGlobalWindowInner::ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted)
+{
+  if (!aWantsUntrusted.IsNull()) {
+    return aWantsUntrusted.Value();
+  }
+
+  return !nsContentUtils::IsChromeDoc(mDoc);
+}
+
+nsresult
 nsGlobalWindowInner::AddEventListener(const nsAString& aType,
                                       nsIDOMEventListener *aListener,
-                                      bool aUseCapture, bool aWantsUntrusted,
-                                      uint8_t aOptionalArgc)
+                                      bool aUseCapture,
+                                      const Nullable<bool>& aWantsUntrusted)
 {
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  if (!aWantsUntrusted &&
-      (aOptionalArgc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
-    aWantsUntrusted = true;
-  }
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
 
   EventListenerManager* manager = GetOrCreateListenerManager();
   NS_ENSURE_STATE(manager);
-  manager->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
+  manager->AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
   return NS_OK;
 }
 
@@ -4526,12 +4528,7 @@ nsGlobalWindowInner::AddEventListener(const nsAString& aType,
                                       const Nullable<bool>& aWantsUntrusted,
                                       ErrorResult& aRv)
 {
-  bool wantsUntrusted;
-  if (aWantsUntrusted.IsNull()) {
-    wantsUntrusted = !nsContentUtils::IsChromeDoc(mDoc);
-  } else {
-    wantsUntrusted = aWantsUntrusted.Value();
-  }
+  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
 
   EventListenerManager* manager = GetOrCreateListenerManager();
   if (!manager) {

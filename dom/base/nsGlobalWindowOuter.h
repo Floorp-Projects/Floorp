@@ -281,11 +281,16 @@ public:
   virtual mozilla::EventListenerManager*
     GetOrCreateListenerManager() override;
 
+  using mozilla::dom::EventTarget::AddEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 mozilla::dom::EventListener* aListener,
                                 const mozilla::dom::AddEventListenerOptionsOrBoolean& aOptions,
                                 const mozilla::dom::Nullable<bool>& aWantsUntrusted,
                                 mozilla::ErrorResult& aRv) override;
+  virtual nsresult AddEventListener(const nsAString& aType,
+                                    nsIDOMEventListener* aListener,
+                                    bool aUseCapture,
+                                    const Nullable<bool>& aWantsUntrusted) override;
   virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override;
 
   virtual nsIGlobalObject* GetOwnerGlobal() const override;

@@ -54,7 +54,6 @@ public:
   // WebIDL API
   static already_AddRefed<EventTarget> Constructor(const GlobalObject& aGlobal,
                                                    ErrorResult& aRv);
-  using nsIDOMEventTarget::AddEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 EventListener* aCallback,
                                 const AddEventListenerOptionsOrBoolean& aOptions,
@@ -64,6 +63,39 @@ public:
                            EventListener* aCallback,
                            const EventListenerOptionsOrBoolean& aOptions,
                            ErrorResult& aRv);
+
+protected:
+  /**
+   * This method allows addition of event listeners represented by
+   * nsIDOMEventListener, with almost the same semantics as the
+   * standard AddEventListener.  The one difference is that it just
+   * has a "use capture" boolean, not an EventListenerOptions.
+   */
+  virtual nsresult AddEventListener(const nsAString& aType,
+                                    nsIDOMEventListener* aListener,
+                                    bool aUseCapture,
+                                    const Nullable<bool>& aWantsUntrusted) = 0;
+
+public:
+  /**
+   * Helper methods to make the nsIDOMEventListener version of
+   * AddEventListener simpler to call for consumers.
+   */
+  nsresult AddEventListener(const nsAString& aType,
+                            nsIDOMEventListener* aListener,
+                            bool aUseCapture)
+  {
+    return AddEventListener(aType, aListener, aUseCapture, Nullable<bool>());
+  }
+  nsresult AddEventListener(const nsAString& aType,
+                            nsIDOMEventListener* aListener,
+                            bool aUseCapture,
+                            bool aWantsUntrusted)
+  {
+    return AddEventListener(aType, aListener, aUseCapture,
+                            Nullable<bool>(aWantsUntrusted));
+  }
+  
   /**
    * This method allows the removal of event listeners represented by
    * nsIDOMEventListener from the event target, with the same semantics as the

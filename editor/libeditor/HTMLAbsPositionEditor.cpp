@@ -219,9 +219,8 @@ HTMLEditor::CreateGrabber(nsIContent& aParentContent)
   }
 
   // add the mouse listener so we can detect a click on a resizer
-  nsCOMPtr<nsIDOMEventTarget> evtTarget = do_QueryInterface(ret);
-  evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"),
-                              mEventListener, false);
+  ret->AddEventListener(NS_LITERAL_STRING("mousedown"),
+			mEventListener, false);
 
   return ret;
 }
@@ -359,12 +358,12 @@ HTMLEditor::GrabberClicked()
     mMouseMotionListenerP = new ResizerMouseMotionListener(*this);
     if (!mMouseMotionListenerP) {return NS_ERROR_NULL_POINTER;}
 
-    nsIDOMEventTarget* piTarget = GetDOMEventTarget();
+    EventTarget* piTarget = GetDOMEventTarget();
     NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
     rv = piTarget->AddEventListener(NS_LITERAL_STRING("mousemove"),
-                                     mMouseMotionListenerP,
-                                     false, false);
+				    mMouseMotionListenerP,
+				    false, false);
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "failed to register mouse motion listener");
   }
