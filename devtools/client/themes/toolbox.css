@@ -159,8 +159,8 @@
 
 /* Toolbox controls */
 
-
 #toolbox-close::before {
+  fill: var(--theme-toolbar-photon-icon-color);
   background-image: var(--close-button-image);
 }
 
