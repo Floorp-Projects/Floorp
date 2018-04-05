@@ -119,9 +119,7 @@ nsSVGElement::DidAnimateClass()
   if (shell) {
     nsPresContext* presContext = shell->GetPresContext();
     if (presContext) {
-      presContext->RestyleManager()
-                 ->AsServo()
-                 ->ClassAttributeWillBeChangedBySMIL(this);
+      presContext->RestyleManager()->ClassAttributeWillBeChangedBySMIL(this);
     }
   }
 

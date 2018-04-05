@@ -151,8 +151,7 @@ DocumentNeedsRestyle(
   // For Servo, we need to process the restyle-hint-invalidations first, to
   // expand LaterSiblings hint, so that we can look whether ancestors need
   // restyling.
-  ServoRestyleManager* restyleManager =
-    presContext->RestyleManager()->AsServo();
+  RestyleManager* restyleManager = presContext->RestyleManager();
   restyleManager->ProcessAllPendingAttributeAndStateInvalidations();
 
   if (!presContext->EffectCompositor()->HasPendingStyleUpdates() &&

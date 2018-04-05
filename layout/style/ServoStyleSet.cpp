@@ -200,7 +200,7 @@ ServoStyleSet::InvalidateStyleForCSSRuleChanges()
 {
   MOZ_ASSERT(StylistNeedsUpdate());
   if (nsPresContext* pc = GetPresContext()) {
-    pc->RestyleManager()->AsServo()->PostRestyleEventForCSSRuleChanges();
+    pc->RestyleManager()->PostRestyleEventForCSSRuleChanges();
   }
 }
 
@@ -418,7 +418,7 @@ const ServoElementSnapshotTable&
 ServoStyleSet::Snapshots()
 {
   MOZ_ASSERT(GetPresContext(), "Styling a document without a shell?");
-  return GetPresContext()->RestyleManager()->AsServo()->Snapshots();
+  return GetPresContext()->RestyleManager()->Snapshots();
 }
 
 void
@@ -1120,7 +1120,7 @@ ServoStyleSet::SetStylistStyleSheetsDirty()
     // XBL sheets don't have a pres context, but invalidating the restyle
     // generation in that case is handled by SetXBLStyleSheetsDirty in the
     // "master" stylist.
-    presContext->RestyleManager()->AsServo()->IncrementUndisplayedRestyleGeneration();
+    presContext->RestyleManager()->IncrementUndisplayedRestyleGeneration();
   }
 }
 
@@ -1133,7 +1133,7 @@ ServoStyleSet::SetStylistXBLStyleSheetsDirty()
   // elements, since we don't know if any of the style sheet change that we
   // do would affect undisplayed elements.
   MOZ_ASSERT(GetPresContext());
-  GetPresContext()->RestyleManager()->AsServo()->IncrementUndisplayedRestyleGeneration();
+  GetPresContext()->RestyleManager()->IncrementUndisplayedRestyleGeneration();
 }
 
 void
@@ -1477,7 +1477,7 @@ ServoStyleSet::UpdateStylist()
     Element* root = mDocument->GetRootElement();
     const ServoElementSnapshotTable* snapshots = nullptr;
     if (nsPresContext* pc = GetPresContext()) {
-      snapshots = &pc->RestyleManager()->AsServo()->Snapshots();
+      snapshots = &pc->RestyleManager()->Snapshots();
     }
     Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root, snapshots);
   }

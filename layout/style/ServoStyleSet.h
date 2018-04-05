@@ -33,7 +33,6 @@ namespace dom {
 class Element;
 class ShadowRoot;
 } // namespace dom
-class ServoRestyleManager;
 class ServoStyleSheet;
 struct Keyframe;
 class ServoElementSnapshotTable;
@@ -83,7 +82,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(OriginFlags)
  */
 class ServoStyleSet
 {
-  friend class ServoRestyleManager;
+  friend class RestyleManager;
   typedef ServoElementSnapshotTable SnapshotTable;
 
 public:
