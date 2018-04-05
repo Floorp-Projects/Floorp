@@ -231,8 +231,6 @@ ContentClient::BeginPaint(PaintedLayer* aLayer,
     }
   }
 
-  MOZ_ASSERT(dest.mBufferRect.Contains(result.mRegionToDraw.GetBounds()));
-
   NS_ASSERTION(!(aFlags & PAINT_WILL_RESAMPLE) || dest.mBufferRect == dest.mNeededRegion.GetBounds(),
                "If we're resampling, we need to validate the entire buffer");
 
