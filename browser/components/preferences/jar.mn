@@ -12,7 +12,7 @@ browser.jar:
     content/browser/preferences/clearSiteData.xul
 *   content/browser/preferences/colors.xul
     content/browser/preferences/colors.js
-*   content/browser/preferences/connection.xul
+    content/browser/preferences/connection.xul
     content/browser/preferences/connection.js
     content/browser/preferences/fonts.xul
     content/browser/preferences/fonts.js

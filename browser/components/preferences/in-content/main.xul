@@ -676,25 +676,27 @@
               class="accessory-button"
               icon="network"
               data-l10n-id="network-proxy-connection-settings"
-              searchkeywords="&connectionsDialog.title;
-                              &noProxyTypeRadio.label;
-                              &WPADTypeRadio.label;
-                              &systemTypeRadio.label;
-                              &manualTypeRadio2.label;
-                              &http2.label;
-                              &ssl2.label;
-                              &ftp2.label;
-                              &port2.label;
-                              &socks2.label;
-                              &socks4.label;
-                              &socks5.label;
-                              &noproxy2.label;
-                              &noproxyExplain.label;
-                              &shareproxy.label;
-                              &autoTypeRadio2.label;
-                              &reload.label;
-                              &autologinproxy.label;
-                              &socksRemoteDNS.label2;"/>
+              search-l10n-ids="
+                connection-window.title,
+                connection-proxy-option-no.label,
+                connection-proxy-option-auto.label,
+                connection-proxy-option-system.label,
+                connection-proxy-option-manual.label,
+                connection-proxy-http,
+                connection-proxy-ssl,
+                connection-proxy-ftp,
+                connection-proxy-http-port,
+                connection-proxy-socks,
+                connection-proxy-socks4,
+                connection-proxy-socks5,
+                connection-proxy-noproxy,
+                connection-proxy-noproxy-desc,
+                connection-proxy-http-share.label,
+                connection-proxy-autotype.label,
+                connection-proxy-reload.label,
+                connection-proxy-autologin.label,
+                connection-proxy-socks-remote-dns.label
+            " />
     </hbox>
   </hbox>
 </groupbox>
