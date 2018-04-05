@@ -725,8 +725,10 @@ js::Nursery::collect(JS::gcreason::Reason reason)
 
     TenureCountCache tenureCounts;
     previousGC.reason = JS::gcreason::NO_REASON;
+    mozilla::Maybe<AutoTraceSession> session;
     if (!isEmpty()) {
-        doCollection(reason, tenureCounts);
+        session.emplace(rt, JS::HeapState::MinorCollecting);
+        doCollection(reason, session.ref(), tenureCounts);
     } else {
         previousGC.nurseryUsedBytes = 0;
         previousGC.nurseryCapacity = spaceToEnd(maxChunkCount());
@@ -763,6 +765,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     }
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         if (shouldPretenure && zone->allocNurseryStrings && zone->tenuredStrings >= 30 * 1000) {
+            MOZ_ASSERT(session.isSome(), "discarding JIT code must be in an AutoTraceSession");
             CancelOffThreadIonCompile(zone);
             bool preserving = zone->isPreservingCode();
             zone->setPreservingCode(false);
@@ -792,6 +795,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
         disable();
 
     endProfile(ProfileKey::Total);
+    session.reset(); // End the minor GC session, if running one.
     rt->gc.incMinorGcNumber();
 
     TimeDuration totalTime = profileDurations_[ProfileKey::Total];
@@ -828,10 +832,10 @@ js::Nursery::collect(JS::gcreason::Reason reason)
 
 void
 js::Nursery::doCollection(JS::gcreason::Reason reason,
+                          AutoTraceSession& session,
                           TenureCountCache& tenureCounts)
 {
     JSRuntime* rt = runtime();
-    AutoTraceSession session(rt, JS::HeapState::MinorCollecting);
     AutoSetThreadIsPerformingGC performingGC;
     AutoStopVerifyingBarriers av(rt, false);
     AutoDisableProxyCheck disableStrictProxyChecking;
