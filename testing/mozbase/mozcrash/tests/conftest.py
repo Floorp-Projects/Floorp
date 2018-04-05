@@ -17,8 +17,7 @@ def stackwalk(tmpdir_factory):
 
 
 @pytest.fixture
-def check_for_crashes(tmpdir, stackwalk, monkeypatch):
-    monkeypatch.delenv('MINIDUMP_SAVE_PATH', raising=False)
+def check_for_crashes(tmpdir, stackwalk):
 
     def wrapper(dump_directory=fspath(tmpdir),
                 symbols_path='symbols_path',
@@ -87,4 +86,3 @@ def mock_popen(monkeypatch):
             return self.returncode
 
     monkeypatch.setattr(mozcrash.mozcrash.subprocess, 'Popen', MockPopen)
-
