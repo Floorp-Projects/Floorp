@@ -14,22 +14,6 @@ function startTest(test) {
   });
 }
 
-/**
- * @param {HTMLMediaElement} video target of interest.
- * @param {string} eventName the event to wait on.
- * @returns {Promise} A promise that is resolved when event happens.
- */
-function nextEvent(video, eventName) {
-  return new Promise(function (resolve, reject) {
-    let f = function (event) {
-      ok(true, `${video.token} ${eventName}.`);
-      video.removeEventListener(eventName, f, false);
-      resolve(event);
-    };
-    video.addEventListener(eventName, f, false);
-  });
-}
-
 function nextVideoEnded(video) {
   return nextEvent(video, 'ended');
 }
