@@ -486,6 +486,10 @@ Inspector.prototype = {
    * @return {Boolean} true if the inspector should be in landscape mode.
    */
   useLandscapeMode: function() {
+    if (!this.panelDoc) {
+      return true;
+    }
+
     let { clientWidth } = this.panelDoc.getElementById("inspector-splitter-box");
     return this.is3PaneModeEnabled && this.toolbox.hostType == Toolbox.HostType.SIDE ?
       clientWidth > SIDE_PORTAIT_MODE_WIDTH_THRESHOLD :
@@ -552,8 +556,12 @@ Inspector.prototype = {
    * to `horizontal` to support portrait view.
    */
   onPanelWindowResize: function() {
-    this.splitBox.setState({
-      vert: this.useLandscapeMode(),
+    window.cancelIdleCallback(this._resizeTimerId);
+    this._resizeTimerId = window.requestIdleCallback(() => {
+      this.splitBox.setState({
+        vert: this.useLandscapeMode(),
+      });
+      this.emit("inspector-resize");
     });
   },
 
