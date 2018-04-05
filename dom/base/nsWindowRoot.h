@@ -38,6 +38,8 @@ public:
                                 const mozilla::dom::Nullable<bool>& aWantsUntrusted,
                                 mozilla::ErrorResult& aRv) override;
 
+  nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
+
   // nsPIWindowRoot
 
   virtual nsPIDOMWindowOuter* GetWindow() override;

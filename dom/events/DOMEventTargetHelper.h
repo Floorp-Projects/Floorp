@@ -80,6 +80,8 @@ public:
                                 const dom::Nullable<bool>& aWantsUntrusted,
                                 ErrorResult& aRv) override;
 
+  nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMEVENTTARGETHELPER_IID)
 
   void GetParentObject(nsIScriptGlobalObject **aParentObject)
