@@ -28,12 +28,24 @@ class ToolboxToolbar extends Component {
       // The id of the currently selected tool, e.g. "inspector"
       currentToolId: PropTypes.string,
       // An optionally highlighted tools, e.g. "inspector".
-      // Note: highlightedTools must be an instance of Set.
-      highlightedTools: PropTypes.object,
-      // List of tool panel definitions.
+      highlightedTools: PropTypes.instanceOf(Set),
+      // Should the docking options be enabled? They are disabled in some
+      // contexts such as WebIDE.
+      areDockButtonsEnabled: PropTypes.bool,
+      // Do we need to add UI for closing the toolbox? We don't when the
+      // toolbox is undocked, for example.
+      canCloseToolbox: PropTypes.bool,
+      // List of tool panel definitions (used by ToolboxTabs component).
       panelDefinitions: PropTypes.array,
+      // List of possible docking options.
+      hostTypes: PropTypes.arrayOf(PropTypes.shape({
+        position: PropTypes.string.isRequired,
+        switchHost: PropTypes.func.isRequired,
+      })),
       // Function to select a tool based on its id.
       selectTool: PropTypes.func,
+      // Function to completely close the toolbox.
+      closeToolbox: PropTypes.func,
       // Keep a record of what button is focused.
       focusButton: PropTypes.func,
       // The options button definition.
