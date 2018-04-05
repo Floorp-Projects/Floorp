@@ -27,7 +27,7 @@ class ApplicationPanel {
       await this.toolbox.target.makeRemote();
     }
 
-    this.panelWin.Application.bootstrap({
+    await this.panelWin.Application.bootstrap({
       toolbox: this.toolbox,
       panel: this,
     });
