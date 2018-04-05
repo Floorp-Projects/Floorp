@@ -3,6 +3,9 @@
 
 "use strict";
 
+// via xpcshell.ini
+/* import-globals-from ../../../shared/test/shared-redux-head.js */
+
 var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
 var Services = require("Services");

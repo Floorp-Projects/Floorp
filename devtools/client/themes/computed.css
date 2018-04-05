@@ -122,15 +122,6 @@
   padding-inline-start: 17px;
 }
 
-.theme-firebug .computed-property-view,
-.theme-firebug .computed-property-content {
-  font-family: var(--proportional-font-family);
-}
-
-.theme-firebug .computed-property-view {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
 /* Bug 1360238 - getSelection displays an extra "\n" on multiple sibling block elements.
    We rely on this behavior to add an extra "\n" between matched selectors (Bug 1222737).
    Therefore we use <div> elements around matched selectors and need this class

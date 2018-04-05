@@ -572,6 +572,10 @@ TextPropertyEditor.prototype = {
       this.enable.removeAttribute("checked");
     }
 
+    this.warning.title = !this.isNameValid()
+      ? l10n("rule.warningName.title")
+      : l10n("rule.warning.title");
+
     this.warning.hidden = this.editing || this.isValid();
     this.filterProperty.hidden = this.editing ||
                                  !this.isValid() ||
@@ -1008,10 +1012,18 @@ TextPropertyEditor.prototype = {
    * Validate this property. Does it make sense for this value to be assigned
    * to this property name? This does not apply the property value
    *
-   * @return {Boolean} true if the property value is valid, false otherwise.
+   * @return {Boolean} true if the property name + value pair is valid, false otherwise.
    */
   isValid: function() {
     return this.prop.isValid();
+  },
+
+  /**
+   * Validate the name of this property.
+   * @return {Boolean} true if the property name is valid, false otherwise.
+   */
+  isNameValid: function() {
+    return this.prop.isNameValid();
   },
 
   /**

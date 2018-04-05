@@ -58,7 +58,7 @@ float rounded_rect(vec2 pos,
     // Start with a negative value (means "inside") for all fragments that are not
     // in a corner. If the fragment is in a corner, one of the clip_against_ellipse_if_needed
     // calls below will update it.
-    float current_distance = -1.0;
+    float current_distance = -aa_range;
 
     // Clip against each ellipse.
     current_distance = clip_against_ellipse_if_needed(pos,

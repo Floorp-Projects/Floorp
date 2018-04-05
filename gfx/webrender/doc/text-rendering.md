@@ -138,7 +138,7 @@ Imagine for a second a world in which you have *three alpha values per pixel*, o
  - Old world: Each pixel has four values: `color.r`, `color.g`, `color.b`, and `color.a`.
  - New world: Each pixel has *six* values: `color.r`, `color.a_r`, `color.g`, `color.a_g`, `color.b`, and `color.a_b`.
 
-In such a world we can define a component-alpha-aware opererator "over":
+In such a world we can define a component-alpha-aware operator "over":
 
 ```glsl
 vec6 over_comp(vec6 src, vec6 dest) {

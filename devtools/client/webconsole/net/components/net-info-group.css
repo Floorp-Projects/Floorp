@@ -66,15 +66,3 @@
 .theme-dark .netInfoBody .netInfoGroup .netInfoGroupTwisty {
   filter: invert(1);
 }
-
-/* Twisties */
-.theme-firebug .netInfoBody .netInfoGroup .netInfoGroupTwisty {
-  background-image: url("chrome://devtools/skin/images/firebug/twisty-closed-firebug.svg");
-  background-position: 0 2px;
-  background-size: 11px 11px;
-  width: 15px;
-}
-
-.theme-firebug .netInfoBody .netInfoGroup.opened .netInfoGroupTwisty {
-  background-image: url("chrome://devtools/skin/images/firebug/twisty-open-firebug.svg");
-}

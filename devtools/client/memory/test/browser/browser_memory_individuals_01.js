@@ -9,7 +9,6 @@
 const {
   individualsState,
   viewState,
-  censusState,
 } = require("devtools/client/memory/constants");
 const { changeView } = require("devtools/client/memory/actions/view");
 

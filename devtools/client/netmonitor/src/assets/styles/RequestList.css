@@ -86,10 +86,6 @@
   display: inline-block;
 }
 
-.theme-firebug .requests-list-column {
-  padding: 1px;
-}
-
 /* Requests list headers */
 
 .requests-list-headers-wrapper {
@@ -98,10 +94,6 @@
   z-index: 1;
   width: 100%;
   padding: 0;
-}
-
-.theme-firebug .requests-list-headers-wrapper {
-  padding: 0 !important;
 }
 
 .requests-list-headers {
@@ -177,36 +169,6 @@
   border-image: linear-gradient(var(--theme-splitter-color), var(--theme-splitter-color)) 1 1;
 }
 
-.theme-firebug .requests-list-headers {
-  padding: 0 !important;
-  font-weight: bold;
-  background: linear-gradient(rgba(255, 255, 255, 0.05),
-                              rgba(0, 0, 0, 0.05)),
-                              #C8D2DC;
-}
-
-.theme-firebug .requests-list-header-button {
-  min-height: 17px;
-}
-
-.theme-firebug .requests-list-header-button > .button-icon {
-  height: 7px;
-}
-
-.theme-firebug .requests-list-header-button[data-sorted] {
-  background-color: #AAC3DC;
-}
-
-:root[platform="linux"].theme-firebug .requests-list-header-button[data-sorted] {
-  background-color: #FAC8AF !important;
-  color: inherit !important;
-}
-
-.theme-firebug .requests-list-header-button:hover:active {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.1),
-                                    transparent);
-}
-
 /* Requests list column */
 
 /* Status column */
@@ -215,10 +177,6 @@
   min-width: 70px;
    /* Don't ellipsize status codes */
   text-overflow: initial;
-}
-
-.theme-firebug .requests-list-status {
-  font-weight: bold;
 }
 
 .requests-list-status-code {
@@ -312,10 +270,6 @@
 
 .requests-list-method {
   min-width: 85px;
-}
-
-.theme-firebug .requests-list-method {
-  color: rgb(128, 128, 128);
 }
 
 /* File column */
@@ -473,11 +427,6 @@
   min-width: 80px;
 }
 
-.theme-firebug .requests-list-size {
-  justify-content: end;
-  padding-inline-end: 4px;
-}
-
 /* Waterfall column */
 
 .requests-list-waterfall {
@@ -562,11 +511,6 @@
   height: 9px;
 }
 
-.theme-firebug .requests-list-timings-box {
-  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0.2));
-  height: 16px;
-}
-
 .requests-list-timings-box.blocked {
   background-color: var(--timing-blocked-color);
 }
@@ -643,10 +587,6 @@
 
 .request-list-item.fromCache > .requests-list-column:not(.requests-list-waterfall) {
   opacity: 0.6;
-}
-
-.theme-firebug .request-list-item:not(.selected):hover {
-  background: #EFEFEF;
 }
 
 /* Responsive web design support */

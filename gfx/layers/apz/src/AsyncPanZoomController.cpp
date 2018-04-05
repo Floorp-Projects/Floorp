@@ -961,22 +961,23 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
     return nsEventStatus_eConsumeNoDefault;
   }
 
-  if (aEvent.mType == MouseInput::MouseType::MOUSE_DOWN) {
-    SetState(SCROLLBAR_DRAG);
-  }
-
   if (aEvent.mType == MouseInput::MouseType::MOUSE_UP) {
     SetState(NOTHING);
     ScrollSnap();
-  }
-
-  if (aEvent.mType != MouseInput::MouseType::MOUSE_MOVE) {
     return nsEventStatus_eConsumeNoDefault;
   }
 
   RefPtr<HitTestingTreeNode> node =
     GetApzcTreeManager()->FindScrollThumbNode(aDragMetrics);
   if (!node) {
+    return nsEventStatus_eConsumeNoDefault;
+  }
+
+  if (aEvent.mType == MouseInput::MouseType::MOUSE_DOWN) {
+    SetState(SCROLLBAR_DRAG);
+  }
+
+  if (aEvent.mType != MouseInput::MouseType::MOUSE_MOVE) {
     return nsEventStatus_eConsumeNoDefault;
   }
 

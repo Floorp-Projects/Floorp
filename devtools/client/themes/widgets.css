@@ -23,15 +23,6 @@
   --delete-icon-2x: url(chrome://devtools/skin/images/vview-delete@2x.png);
 }
 
-.theme-firebug {
-  --table-splitter-color: rgba(0,0,0,0.15);
-  --table-zebra-background: rgba(0,0,0,0.05);
-  --sidemenu-selected-arrow: url(images/item-arrow-ltr.svg);
-  --sidemenu-selected-arrow-rtl: url(images/item-arrow-rtl.svg);
-  --delete-icon: url(chrome://devtools/skin/images/firebug/close.svg);
-  --delete-icon-2x: url(chrome://devtools/skin/images/firebug/close.svg);
-}
-
 /* Generic pane helpers */
 
 .generic-toggled-pane {
@@ -309,10 +300,6 @@
 
 .variables-view-variable:not(:last-child) {
   border-bottom: 1px solid rgba(128, 128, 128, .15);
-}
-
-.theme-firebug .variables-view-variable {
-  border-bottom: 1px solid transparent;
 }
 
 .variables-view-variable > .title > .name {
@@ -868,51 +855,6 @@
 
 .table-widget-body .devtools-side-splitter:last-of-type {
   display: none;
-}
-
-/* Firebug theme support for table widget */
-
-.theme-firebug .devtools-toolbar.table-widget-column-header {
-  font-family: var(--proportional-font-family);
-  color: var(--theme-body-color);
-
-  /* Make sure to override the default Firebug devtools-toolbar height */
-  height: 19px !important;
-
-  /* Make sure to override the dafault .table-widget-column-header font-weight and background */
-  font-weight: bold !important;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.05));
-  background-color: #C8D2DC !important;
-
-  /* Vertically center header label */
-  padding-top: 2px !important;
-}
-
-.theme-firebug .devtools-toolbar.table-widget-column-header[sorted] {
-  background-color: #AAC3DC !important;
-}
-
-:root[platform="linux"].theme-firebug .devtools-toolbar.table-widget-column-header[sorted] {
-  background-color: #FAC8AF !important;
-  color: inherit !important;
-}
-
-.theme-firebug .devtools-toolbar.table-widget-column-header:hover:active {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.1),
-                                    transparent);
-}
-
-.theme-firebug .devtools-toolbar.table-widget-column-header[sorted=descending]:not(:active) {
-  background-image: url(chrome://devtools/skin/images/firebug/arrow-down.svg) !important;
-}
-
-.theme-firebug .devtools-toolbar.table-widget-column-header[sorted=ascending]:not(:active) {
-  background-image: url(chrome://devtools/skin/images/firebug/arrow-up.svg) !important;
-}
-
-.theme-firebug .devtools-toolbar.table-widget-column-header[sorted]:not(:active) {
-  background-position: right !important;
-  background-repeat: no-repeat !important;
 }
 
 /* Cells */

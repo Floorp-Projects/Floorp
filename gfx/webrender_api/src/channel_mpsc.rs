@@ -55,12 +55,12 @@ impl<T> MsgSender<T> {
 
 pub fn payload_channel() -> Result<(PayloadSender, PayloadReceiver), Error> {
     let (tx, rx) = mpsc::channel();
-    Ok((PayloadSender { tx: tx }, PayloadReceiver { rx: rx }))
+    Ok((PayloadSender { tx }, PayloadReceiver { rx }))
 }
 
 pub fn msg_channel<T>() -> Result<(MsgSender<T>, MsgReceiver<T>), Error> {
     let (tx, rx) = mpsc::channel();
-    Ok((MsgSender { tx: tx }, MsgReceiver { rx: rx }))
+    Ok((MsgSender { tx }, MsgReceiver { rx }))
 }
 
 ///

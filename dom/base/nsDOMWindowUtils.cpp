@@ -1727,6 +1727,18 @@ nsDOMWindowUtils::NeedsFlush(int32_t aFlushType, bool* aResult)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::FlushLayoutWithoutThrottledAnimations()
+{
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  if (doc) {
+    doc->FlushPendingNotifications(
+      ChangesToFlush(FlushType::Layout, false /* flush animations */));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetRootBounds(nsISupports** aResult)
 {
   nsIDocument* doc = GetDocument();

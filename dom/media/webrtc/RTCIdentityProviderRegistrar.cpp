@@ -63,13 +63,13 @@ RTCIdentityProviderRegistrar::HasIdp() const
 already_AddRefed<Promise>
 RTCIdentityProviderRegistrar::GenerateAssertion(
   const nsAString& aContents, const nsAString& aOrigin,
-  const Optional<nsAString>& aUsernameHint, ErrorResult& aRv)
+  const RTCIdentityProviderOptions& aOptions, ErrorResult& aRv)
 {
   if (!mGenerateAssertionCallback) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return nullptr;
   }
-  return mGenerateAssertionCallback->Call(aContents, aOrigin, aUsernameHint, aRv);
+  return mGenerateAssertionCallback->Call(aContents, aOrigin, aOptions, aRv);
 }
 already_AddRefed<Promise>
 RTCIdentityProviderRegistrar::ValidateAssertion(

@@ -195,7 +195,7 @@ impl<'a> BuiltDisplayListIter<'a> {
     pub fn new_with_list_and_data(list: &'a BuiltDisplayList, data: &'a [u8]) -> Self {
         BuiltDisplayListIter {
             list,
-            data: &data,
+            data,
             cur_item: DisplayItem {
                 // Dummy data, will be overwritten by `next`
                 item: SpecificDisplayItem::PopStackingContext,
@@ -236,7 +236,7 @@ impl<'a> BuiltDisplayListIter<'a> {
         self.cur_clip_chain_items = ItemRange::default();
 
         loop {
-            if self.data.len() == 0 {
+            if self.data.is_empty() {
                 return None;
             }
 
@@ -334,8 +334,8 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
     pub fn get_layer_primitive_info(&self, offset: &LayoutVector2D) -> LayerPrimitiveInfo {
         let info = self.iter.cur_item.info;
         LayerPrimitiveInfo {
-            rect: info.rect.translate(&offset),
-            clip_rect: info.clip_rect.translate(&offset),
+            rect: info.rect.translate(offset),
+            clip_rect: info.clip_rect.translate(offset),
             is_backface_visible: info.is_backface_visible,
             tag: info.tag,
         }
@@ -389,7 +389,7 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
 
 impl<'de, 'a, T: Deserialize<'de>> AuxIter<'a, T> {
     pub fn new(mut data: &'a [u8]) -> Self {
-        let size: usize = if data.len() == 0 {
+        let size: usize = if data.is_empty() {
             0 // Accept empty ItemRanges pointing anywhere
         } else {
             bincode::deserialize_from(&mut UnsafeReader::new(&mut data)).expect("MEH: malicious input?")
@@ -742,7 +742,7 @@ impl<'a, 'b> UnsafeReader<'a, 'b> {
         unsafe {
             let end = buf.as_ptr().offset(buf.len() as isize);
             let start = buf.as_ptr();
-            UnsafeReader { start: start, end, slice: buf }
+            UnsafeReader { start, end, slice: buf }
         }
     }
 
@@ -875,7 +875,7 @@ impl DisplayListBuilder {
         self.next_clip_chain_id = state.next_clip_chain_id;
     }
 
-    /// Discards the builder's save (indicating the attempted operation was sucessful).
+    /// Discards the builder's save (indicating the attempted operation was successful).
     pub fn clear_save(&mut self) {
         self.save_state.take().expect("No save to clear in DisplayListBuilder");
     }
@@ -1176,8 +1176,8 @@ impl DisplayListBuilder {
         RadialGradient {
             center,
             radius,
-            start_offset: start_offset,
-            end_offset: end_offset,
+            start_offset,
+            end_offset,
             extend_mode,
         }
     }
@@ -1223,7 +1223,7 @@ impl DisplayListBuilder {
     /// `gradient` parameter. It is drawn on
     /// a "tile" with the dimensions from `tile_size`.
     /// These tiles are now repeated to the right and
-    /// to the bottom infinitly. If `tile_spacing`
+    /// to the bottom infinitely. If `tile_spacing`
     /// is not zero spacers with the given dimensions
     /// are inserted between the tiles as seams.
     ///
@@ -1425,7 +1425,7 @@ impl DisplayListBuilder {
         let id = self.generate_clip_id();
         let item = SpecificDisplayItem::Clip(ClipDisplayItem {
             id,
-            image_mask: image_mask,
+            image_mask,
         });
 
         let info = LayoutPrimitiveInfo::new(clip_rect);
@@ -1473,7 +1473,7 @@ impl DisplayListBuilder {
             assert!(self.clip_stack.len() >= save_state.clip_stack_len,
                     "Cannot pop clips that were pushed before the DisplayListBuilder save.");
         }
-        assert!(self.clip_stack.len() > 0);
+        assert!(!self.clip_stack.is_empty());
     }
 
     pub fn push_iframe(&mut self, info: &LayoutPrimitiveInfo, pipeline_id: PipelineId) {

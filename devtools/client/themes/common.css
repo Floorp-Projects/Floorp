@@ -27,13 +27,8 @@
   --monospace-font-family: Consolas, monospace;
 }
 
-:root[platform="linux"],
-:root.theme-firebug {
+:root[platform="linux"] {
   --monospace-font-family: monospace;
-}
-
-:root.theme-firebug {
-  --proportional-font-family: Lucida Grande, Tahoma, sans-serif;
 }
 
 .devtools-monospace {
@@ -127,13 +122,6 @@ html|button, html|select {
 .theme-dark .CodeMirror-Tern-tooltip {
   border: 1px solid hsl(210,11%,10%);
   background-image: linear-gradient(to bottom, hsla(209,18%,18%,0.9), hsl(210,11%,16%));
-}
-
-.theme-firebug .devtools-autocomplete-popup {
-  border-color: var(--theme-splitter-color);
-  border-radius: 5px;
-  font-size: var(--theme-autompletion-font-size);
-  background: var(--theme-body-background);
 }
 
 .devtools-autocomplete-listbox .autocomplete-selected,
@@ -351,10 +339,7 @@ checkbox:-moz-focusring {
 
 .devtools-toolbarbutton:not([disabled])[label][checked=true],
 .devtools-toolbarbutton:not([disabled])[label][open],
-.devtools-button:not(:empty).checked,
-.theme-firebug .devtools-toolbarbutton[checked],
-.theme-firebug .devtools-toolbarbutton[open],
-.theme-firebug .devtools-button.checked:empty {
+.devtools-button:not(:empty).checked {
   background: var(--toolbarbutton-checked-background);
   border-color: var(--toolbarbutton-checked-border-color);
   color: var(--toolbarbutton-checked-color);
@@ -721,11 +706,6 @@ checkbox:-moz-focusring {
 .devtools-tab.selected .devtools-tab-line,
 .tabs-menu-item.is-active .devtools-tab-line {
   background: var(--tab-line-selected-color);
-}
-
-/* Hide the tab line in the firebug theme */
-.theme-firebug .devtools-tab-line {
-  background: transparent !important;
 }
 
 /* No result message styles */

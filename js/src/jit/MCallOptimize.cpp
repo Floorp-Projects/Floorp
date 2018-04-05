@@ -26,9 +26,11 @@
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/SelfHosting.h"
+#include "vm/SharedArrayObject.h"
 #include "vm/TypedArrayObject.h"
 
 #include "jit/shared/Lowering-shared-inl.h"
@@ -345,10 +347,16 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineGetNextEntryForIterator(callInfo, MGetNextEntryForIterator::Set);
 
       // ArrayBuffer intrinsics.
+      case InlinableNative::IntrinsicIsArrayBuffer:
+        return inlineHasClass(callInfo, &ArrayBufferObject::class_);
       case InlinableNative::IntrinsicArrayBufferByteLength:
         return inlineArrayBufferByteLength(callInfo);
       case InlinableNative::IntrinsicPossiblyWrappedArrayBufferByteLength:
         return inlinePossiblyWrappedArrayBufferByteLength(callInfo);
+
+      // SharedArrayBuffer intrinsics.
+      case InlinableNative::IntrinsicIsSharedArrayBuffer:
+        return inlineHasClass(callInfo, &SharedArrayBufferObject::class_);
 
       // TypedArray intrinsics.
       case InlinableNative::TypedArrayConstructor:

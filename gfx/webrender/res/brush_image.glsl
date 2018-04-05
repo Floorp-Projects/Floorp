@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 2
+#define VECS_PER_SPECIFIC_BRUSH 0
 
 #include shared,prim_shared,brush
 
@@ -29,21 +29,37 @@ flat varying vec4 vColor;
 
 struct ImageBrush {
     RectWithSize rendered_task_rect;
+    vec2 offset;
     vec4 color;
 };
 
 ImageBrush fetch_image_primitive(int address) {
-    vec4[2] data = fetch_from_resource_cache_2(address);
+    vec4[3] data = fetch_from_resource_cache_3(address);
     RectWithSize rendered_task_rect = RectWithSize(data[0].xy, data[0].zw);
-    ImageBrush brush = ImageBrush(rendered_task_rect, data[1]);
+    ImageBrush brush = ImageBrush(rendered_task_rect, data[1].xy, data[2]);
     return brush;
 }
+
+#ifdef WR_FEATURE_ALPHA_PASS
+vec2 transform_point_snapped(
+    vec2 local_pos,
+    RectWithSize local_rect,
+    mat4 transform
+) {
+    vec2 snap_offset = compute_snap_offset(local_pos, transform, local_rect);
+    vec4 world_pos = transform * vec4(local_pos, 0.0, 1.0);
+    vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
+
+    return device_pos + snap_offset;
+}
+#endif
 
 void brush_vs(
     VertexInfo vi,
     int prim_address,
     RectWithSize local_rect,
     ivec3 user_data,
+    mat4 transform,
     PictureTask pic_task
 ) {
     // If this is in WR_FEATURE_TEXTURE_RECT mode, the rect and size use
@@ -73,23 +89,51 @@ void brush_vs(
     vec2 f;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    ImageBrush image = fetch_image_primitive(prim_address);
-    vColor = image.color;
+    int image_source = user_data.y >> 16;
+    int raster_space = user_data.y & 0xffff;
 
     // Derive the texture coordinates for this image, based on
     // whether the source image is a local-space or screen-space
     // image.
-    switch (user_data.z) {
-        case RASTER_SCREEN:
-            f = (vi.snapped_device_pos - image.rendered_task_rect.p0) / image.rendered_task_rect.size;
+    switch (raster_space) {
+        case RASTER_SCREEN: {
+            ImageBrush image = fetch_image_primitive(user_data.z);
+            vColor = image.color;
+
+            vec2 snapped_device_pos;
+
+            // For drop-shadows, we need to apply a local offset
+            // in order to generate the correct screen-space UV.
+            // For other effects, we can use the 1:1 mapping of
+            // the vertex device position for the UV generation.
+            switch (image_source) {
+                case IMAGE_SOURCE_MASK_FROM_COLOR: {
+                    vec2 local_pos = vi.local_pos - image.offset;
+                    snapped_device_pos = transform_point_snapped(
+                        local_pos,
+                        local_rect,
+                        transform
+                    );
+                    break;
+                }
+                case IMAGE_SOURCE_COLOR:
+                case IMAGE_SOURCE_ALPHA:
+                default:
+                    snapped_device_pos = vi.snapped_device_pos;
+                    break;
+            }
+
+            f = (snapped_device_pos - image.rendered_task_rect.p0) / image.rendered_task_rect.size;
 
             vUvClipBounds = vec4(
                 min_uv,
                 max_uv
             ) / texture_size.xyxy;
             break;
+        }
         case RASTER_LOCAL:
         default: {
+            vColor = vec4(1.0);
             f = (vi.local_pos - local_rect.p0) / local_rect.size;
 
             // Set the clip bounds to a value that won't have any
@@ -110,15 +154,16 @@ void brush_vs(
     vUv.xy /= texture_size;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    switch (user_data.y) {
-        case IMAGE_SOURCE_COLOR:
-            vSelect = vec2(0.0, 0.0);
-            break;
+    switch (image_source) {
         case IMAGE_SOURCE_ALPHA:
             vSelect = vec2(0.0, 1.0);
             break;
         case IMAGE_SOURCE_MASK_FROM_COLOR:
             vSelect = vec2(1.0, 1.0);
+            break;
+        case IMAGE_SOURCE_COLOR:
+        default:
+            vSelect = vec2(0.0, 0.0);
             break;
     }
 

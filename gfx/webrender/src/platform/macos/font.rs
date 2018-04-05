@@ -11,18 +11,25 @@ use core_foundation::base::TCFType;
 use core_foundation::dictionary::CFDictionary;
 use core_foundation::number::{CFNumber, CFNumberRef};
 use core_foundation::string::{CFString, CFStringRef};
-use core_graphics::base::{kCGImageAlphaNoneSkipFirst, kCGImageAlphaPremultipliedFirst};
-use core_graphics::base::kCGBitmapByteOrder32Little;
+use core_graphics::base::{kCGImageAlphaNoneSkipFirst, kCGBitmapByteOrder32Little};
+#[cfg(not(feature = "pathfinder"))]
+use core_graphics::base::kCGImageAlphaPremultipliedFirst;
 use core_graphics::color_space::CGColorSpace;
-use core_graphics::context::{CGContext, CGTextDrawingMode};
+use core_graphics::context::CGContext;
+#[cfg(not(feature = "pathfinder"))]
+use core_graphics::context::CGTextDrawingMode;
 use core_graphics::data_provider::CGDataProvider;
 use core_graphics::font::{CGFont, CGGlyph};
-use core_graphics::geometry::{CGAffineTransform, CGPoint, CGRect, CGSize};
+use core_graphics::geometry::{CGAffineTransform, CGPoint, CGSize};
+#[cfg(not(feature = "pathfinder"))]
+use core_graphics::geometry::CGRect;
 use core_text;
 use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
 use gamma_lut::{ColorLut, GammaLut};
-use glyph_rasterizer::{FontInstance, FontTransform, GlyphFormat, RasterizedGlyph};
+use glyph_rasterizer::{FontInstance, FontTransform};
+#[cfg(not(feature = "pathfinder"))]
+use glyph_rasterizer::{GlyphFormat, GlyphRasterResult, RasterizedGlyph};
 use internal_types::{FastHashMap, ResourceCacheError};
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
@@ -30,6 +37,7 @@ use std::sync::Arc;
 pub struct FontContext {
     cg_fonts: FastHashMap<FontKey, CGFont>,
     ct_fonts: FastHashMap<(FontKey, Au, Vec<FontVariation>), CTFont>,
+    #[allow(dead_code)]
     gamma_lut: GammaLut,
 }
 
@@ -39,6 +47,7 @@ unsafe impl Send for FontContext {}
 
 struct GlyphMetrics {
     rasterized_left: i32,
+    #[allow(dead_code)]
     rasterized_descent: i32,
     rasterized_ascent: i32,
     rasterized_width: u32,
@@ -411,6 +420,7 @@ impl FontContext {
     }
 
     // Assumes the pixels here are linear values from CG
+    #[cfg(not(feature = "pathfinder"))]
     fn gamma_correct_pixels(
         &self,
         pixels: &mut Vec<u8>,
@@ -478,16 +488,13 @@ impl FontContext {
         }
     }
 
-    pub fn rasterize_glyph(
-        &mut self,
-        font: &FontInstance,
-        key: &GlyphKey,
-    ) -> Option<RasterizedGlyph> {
+    #[cfg(not(feature = "pathfinder"))]
+    pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
         let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
         let size = font.size.scale_by(y_scale as f32);
         let ct_font = match self.get_ct_font(font.font_key, size, &font.variations) {
             Some(font) => font,
-            None => return None,
+            None => return GlyphRasterResult::LoadFailed,
         };
 
         let bitmap = is_bitmap_font(&ct_font);
@@ -533,7 +540,7 @@ impl FontContext {
             extra_strikes as f64 * pixel_step,
         );
         if metrics.rasterized_width == 0 || metrics.rasterized_height == 0 {
-            return None;
+            return GlyphRasterResult::LoadFailed
         }
 
         // The result of this function, in all render modes, is going to be a
@@ -713,7 +720,7 @@ impl FontContext {
             }
         }
 
-        Some(RasterizedGlyph {
+        GlyphRasterResult::Bitmap(RasterizedGlyph {
             left: metrics.rasterized_left as f32,
             top: metrics.rasterized_ascent as f32,
             width: metrics.rasterized_width,
