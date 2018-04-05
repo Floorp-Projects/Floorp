@@ -100,6 +100,7 @@ toolkit.jar:
 *  content/global/bindings/tree.xml            (widgets/tree.xml)
    content/global/bindings/videocontrols.xml   (widgets/videocontrols.xml)
 *  content/global/bindings/wizard.xml          (widgets/wizard.xml)
+   content/global/elements/general.js           (widgets/general.js)
    content/global/elements/stringbundle.js     (widgets/stringbundle.js)
 #ifdef XP_MACOSX
    content/global/macWindowMenu.js
