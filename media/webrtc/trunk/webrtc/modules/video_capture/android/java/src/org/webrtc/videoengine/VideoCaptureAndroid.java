@@ -120,7 +120,9 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     final Exchanger<Boolean> result = new Exchanger<Boolean>();
     cameraThreadHandler.post(new Runnable() {
         @Override public void run() {
-          startCaptureOnCameraThread(width, height, min_mfps, max_mfps, result);
+          boolean startResult =
+            startCaptureOnCameraThread(width, height, min_mfps, max_mfps);
+          exchange(result, startResult);
         }
       });
     boolean startResult = exchange(result, false); // |false| is a dummy value.
@@ -136,9 +138,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     native_capturer = 0;
   }
 
-  private void startCaptureOnCameraThread(
-      int width, int height, int min_mfps, int max_mfps,
-      Exchanger<Boolean> result) {
+  private boolean startCaptureOnCameraThread(
+      int width, int height, int min_mfps, int max_mfps) {
     Throwable error = null;
     try {
       camera = Camera.open(id);
@@ -244,8 +245,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       if (frameDropRatio == Integer.MAX_VALUE) {
         Log.e(TAG, "Can not find camera fps range");
         error = new RuntimeException("Can not find camera fps range");
-        exchange(result, false);
-        return;
+        return false;
       }
       if (frameDropRatio > 1) {
         Log.d(TAG, "Frame dropper is enabled. Ratio: " + frameDropRatio);
@@ -266,19 +266,15 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       frameCount = 0;
       averageDurationMs = 1000000.0f / (max_mfps / frameDropRatio);
       camera.startPreview();
-      exchange(result, true);
-      return;
+      return true;
     } catch (RuntimeException e) {
       error = e;
     }
     Log.e(TAG, "startCapture failed", error);
     if (camera != null) {
-      Exchanger<Boolean> resultDropper = new Exchanger<Boolean>();
-      stopCaptureOnCameraThread(resultDropper);
-      exchange(resultDropper, false);
+      stopCaptureOnCameraThread();
     }
-    exchange(result, false);
-    return;
+    return false;
   }
 
   // Called by native code.  Returns true when camera is known to be stopped.
@@ -288,7 +284,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     final Exchanger<Boolean> result = new Exchanger<Boolean>();
     cameraThreadHandler.post(new Runnable() {
         @Override public void run() {
-          stopCaptureOnCameraThread(result);
+          boolean stopResult = stopCaptureOnCameraThread();
+          exchange(result, stopResult);
         }
       });
     boolean status = exchange(result, false);  // |false| is a dummy value here.
@@ -303,11 +300,10 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     return status;
   }
 
-  private void stopCaptureOnCameraThread(
-      Exchanger<Boolean> result) {
+  private boolean stopCaptureOnCameraThread() {
     if (camera == null) {
       Log.e(TAG, "Camera is already stopped!");
-      return;
+      return true;
     }
     Throwable error = null;
     try {
@@ -321,18 +317,16 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       }
       camera.release();
       camera = null;
-      exchange(result, true);
       Looper.myLooper().quit();
-      return;
+      return true;
     } catch (IOException e) {
       error = e;
     } catch (RuntimeException e) {
       error = e;
     }
     Log.e(TAG, "Failed to stop camera", error);
-    exchange(result, false);
     Looper.myLooper().quit();
-    return;
+    return false;
   }
 
   @WebRTCJNITarget
