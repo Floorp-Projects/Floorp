@@ -12,7 +12,6 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGAnimationElement.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
 #include "nsIDocument.h"
