@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 
 import os
 import tempfile
@@ -14,13 +14,10 @@ import zipfile
 import mozunit
 
 import mozfile
-import mozhttpd
 import mozlog.unstructured as mozlog
 import mozprofile
 
 from addon_stubs import generate_addon
-from six.moves.urllib import error
-
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -65,55 +62,6 @@ class TestAddonsManager(unittest.TestCase):
         self.assertIn(addon_xpi, self.am.installed_addons)
         self.am.clean()
 
-    def test_download(self):
-        server = mozhttpd.MozHttpd(docroot=os.path.join(here, 'addons'))
-        server.start()
-
-        # Download a valid add-on without a class instance to the general
-        # tmp folder and clean-up
-        try:
-            addon = server.get_url() + 'empty.xpi'
-            xpi_file = mozprofile.addons.AddonManager.download(addon)
-            self.assertTrue(os.path.isfile(xpi_file))
-            self.assertIn('test-empty@quality.mozilla.org.xpi',
-                          os.path.basename(xpi_file))
-            self.assertNotIn(self.tmpdir, os.path.dirname(xpi_file))
-        finally:
-            # Given that the file is stored outside of the created tmp dir
-            # we have to ensure to explicitely remove it
-            if os.path.isfile(xpi_file):
-                os.remove(xpi_file)
-
-        # Download an valid add-on to a special folder
-        addon = server.get_url() + 'empty.xpi'
-        xpi_file = self.am.download(addon, self.tmpdir)
-        self.assertTrue(os.path.isfile(xpi_file))
-        self.assertIn('test-empty@quality.mozilla.org.xpi',
-                      os.path.basename(xpi_file))
-        self.assertIn(self.tmpdir, os.path.dirname(xpi_file))
-        self.assertEqual(self.am.downloaded_addons, [])
-        os.remove(xpi_file)
-
-        # Download an invalid add-on to a special folder
-        addon = server.get_url() + 'invalid.xpi'
-        self.assertRaises(mozprofile.addons.AddonFormatError,
-                          self.am.download, addon, self.tmpdir)
-        self.assertEqual(os.listdir(self.tmpdir), [])
-
-        # Download from an invalid URL
-        addon = server.get_url() + 'not_existent.xpi'
-        self.assertRaises(error.HTTPError,
-                          self.am.download, addon, self.tmpdir)
-        self.assertEqual(os.listdir(self.tmpdir), [])
-
-        # Download from an invalid URL
-        addon = 'not_existent.xpi'
-        self.assertRaises(ValueError,
-                          self.am.download, addon, self.tmpdir)
-        self.assertEqual(os.listdir(self.tmpdir), [])
-
-        server.stop()
-
     def test_install_webextension_from_dir(self):
         addon = os.path.join(here, 'addons', 'apply-css.xpi')
         zipped = zipfile.ZipFile(addon)
@@ -126,32 +74,25 @@ class TestAddonsManager(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.am.installed_addons[0]))
 
     def test_install_webextension(self):
-        server = mozhttpd.MozHttpd(docroot=os.path.join(here, 'addons'))
-        server.start()
-        try:
-            addon = server.get_url() + 'apply-css.xpi'
-            self.am.install_from_path(addon)
-        finally:
-            server.stop()
+        addon = os.path.join(here, 'addons', 'apply-css.xpi')
+        self.am.install_from_path(addon)
+        self.assertEqual(len(self.am.installed_addons), 1)
+        self.assertTrue(os.path.isfile(self.am.installed_addons[0]))
+        self.assertEqual('apply-css.xpi', os.path.basename(self.am.installed_addons[0]))
 
-        self.assertEqual(len(self.am.downloaded_addons), 1)
-        self.assertTrue(os.path.isfile(self.am.downloaded_addons[0]))
-        self.assertIn('test-webext@quality.mozilla.org.xpi',
-                      os.path.basename(self.am.downloaded_addons[0]))
+        details = self.am.addon_details(self.am.installed_addons[0])
+        self.assertEqual('test-webext@quality.mozilla.org', details['id'])
 
     def test_install_webextension_sans_id(self):
-        server = mozhttpd.MozHttpd(docroot=os.path.join(here, 'addons'))
-        server.start()
-        try:
-            addon = server.get_url() + 'apply-css-sans-id.xpi'
-            self.am.install_from_path(addon)
-        finally:
-            server.stop()
+        addon = os.path.join(here, 'addons', 'apply-css-sans-id.xpi')
+        self.am.install_from_path(addon)
 
-        self.assertEqual(len(self.am.downloaded_addons), 1)
-        self.assertTrue(os.path.isfile(self.am.downloaded_addons[0]))
-        self.assertIn('temporary-addon.xpi',
-                      os.path.basename(self.am.downloaded_addons[0]))
+        self.assertEqual(len(self.am.installed_addons), 1)
+        self.assertTrue(os.path.isfile(self.am.installed_addons[0]))
+        self.assertEqual('apply-css-sans-id.xpi', os.path.basename(self.am.installed_addons[0]))
+
+        details = self.am.addon_details(self.am.installed_addons[0])
+        self.assertIn('@temporary-addon', details['id'])
 
     def test_install_from_path_xpi(self):
         addons_to_install = []
@@ -213,20 +154,6 @@ class TestAddonsManager(unittest.TestCase):
         self.am.install_from_path(addon_no_unpack, unpack=True)
         self.assertEqual(self.am.installed_addons, [addon_no_unpack])
         self.am.clean()
-
-    def test_install_from_path_url(self):
-        server = mozhttpd.MozHttpd(docroot=os.path.join(here, 'addons'))
-        server.start()
-
-        addon = server.get_url() + 'empty.xpi'
-        self.am.install_from_path(addon)
-
-        server.stop()
-
-        self.assertEqual(len(self.am.downloaded_addons), 1)
-        self.assertTrue(os.path.isfile(self.am.downloaded_addons[0]))
-        self.assertIn('test-empty@quality.mozilla.org.xpi',
-                      os.path.basename(self.am.downloaded_addons[0]))
 
     def test_install_from_path_after_reset(self):
         # Installing the same add-on after a reset should not cause a failure
@@ -367,10 +294,6 @@ class TestAddonsManager(unittest.TestCase):
 
     def test_noclean(self):
         """test `restore=True/False` functionality"""
-
-        server = mozhttpd.MozHttpd(docroot=os.path.join(here, 'addons'))
-        server.start()
-
         profile = tempfile.mkdtemp()
         tmpdir = tempfile.mkdtemp()
 
@@ -379,10 +302,10 @@ class TestAddonsManager(unittest.TestCase):
             self.assertFalse(bool(os.listdir(profile)))
 
             # make an addon
-            addons = []
-            addons.append(generate_addon('test-addon-1@mozilla.org',
-                                         path=tmpdir))
-            addons.append(server.get_url() + 'empty.xpi')
+            addons = [
+                generate_addon('test-addon-1@mozilla.org', path=tmpdir),
+                os.path.join(here, 'addons', 'empty.xpi'),
+            ]
 
             # install it with a restore=True AddonManager
             am = mozprofile.addons.AddonManager(profile, restore=True)
@@ -396,17 +319,11 @@ class TestAddonsManager(unittest.TestCase):
             self.assertTrue(os.path.exists(staging_folder))
             self.assertEqual(len(os.listdir(staging_folder)), 2)
 
-            # del addons; now its gone though the directory tree exists
-            downloaded_addons = am.downloaded_addons
             del am
 
             self.assertEqual(os.listdir(profile), ['extensions'])
             self.assertTrue(os.path.exists(staging_folder))
             self.assertEqual(os.listdir(staging_folder), [])
-
-            for addon in downloaded_addons:
-                self.assertFalse(os.path.isfile(addon))
-
         finally:
             mozfile.rmtree(tmpdir)
             mozfile.rmtree(profile)
