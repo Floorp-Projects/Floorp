@@ -143,19 +143,3 @@ telemetry.test.second:
     expiry_version: never
     extra_keys:
       key1: This is just a test description.
-
-devtools.main:
-  open:
-    objects: ["tools"]
-    bug_numbers: [1416024]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
-    record_in_processes: ["main"]
-    description: User opens devtools toolbox.
-    release_channel_collection: opt-out
-    expiry_version: never
-    extra_keys:
-      entrypoint: How was the toolbox opened? CommandLine, ContextMenu, DeveloperToolbar, HamburgerMenu, KeyShortcut, SessionRestore or SystemMenu
-      first_panel: The name of the first panel opened.
-      host: "Toolbox host (positioning): bottom, side, window or other."
-      splitconsole: Indicates whether the split console was open.
-      width: Toolbox width (px).

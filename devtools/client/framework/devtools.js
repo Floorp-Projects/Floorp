@@ -16,7 +16,6 @@ loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", t
 loader.lazyRequireGetter(this, "ToolboxHostManager", "devtools/client/framework/toolbox-host-manager", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
 loader.lazyRequireGetter(this, "HUDService", "devtools/client/webconsole/hudservice", true);
-loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 loader.lazyImporter(this, "BrowserToolboxProcess", "resource://devtools/client/framework/ToolboxProcess.jsm");
 
@@ -44,7 +43,6 @@ function DevTools() {
   this._creatingToolboxes = new Map(); // Map<target, toolbox Promise>
 
   EventEmitter.decorate(this);
-  this._telemetry = new Telemetry();
 
   // Listen for changes to the theme pref.
   this._onThemeChanged = this._onThemeChanged.bind(this);
@@ -483,10 +481,6 @@ DevTools.prototype = {
       }
       this._firstShowToolbox = false;
     }
-
-    this._telemetry.addEventProperty(
-      "devtools.main", "open", "tools", null, "width", toolbox.win.outerWidth);
-
     return toolbox;
   },
 
@@ -506,13 +500,10 @@ DevTools.prototype = {
   logToolboxOpenTime(toolId, startTime) {
     let { performance } = Services.appShell.hiddenDOMWindow;
     let delay = performance.now() - startTime;
-
     let telemetryKey = this._firstShowToolbox ?
       "DEVTOOLS_COLD_TOOLBOX_OPEN_DELAY_MS" : "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS";
-    this._telemetry.logKeyed(telemetryKey, toolId, delay);
-
-    this._telemetry.addEventProperty(
-      "devtools.main", "open", "tools", null, "first_panel", toolId);
+    let histogram = Services.telemetry.getKeyedHistogramById(telemetryKey);
+    histogram.add(toolId, delay);
   },
 
   async createToolbox(target, toolId, hostType, hostOptions) {

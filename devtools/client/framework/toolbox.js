@@ -541,11 +541,6 @@ Toolbox.prototype = {
       let splitConsolePromise = promise.resolve();
       if (Services.prefs.getBoolPref(SPLITCONSOLE_ENABLED_PREF)) {
         splitConsolePromise = this.openSplitConsole();
-        this._telemetry.addEventProperty(
-          "devtools.main", "open", "tools", null, "splitconsole", true);
-      } else {
-        this._telemetry.addEventProperty(
-          "devtools.main", "open", "tools", null, "splitconsole", false);
       }
 
       await promise.all([
@@ -701,17 +696,6 @@ Toolbox.prototype = {
     }
   },
 
-  // Return HostType string for telemetry
-  _getTelemetryHostString: function() {
-    switch (this.hostType) {
-      case Toolbox.HostType.BOTTOM: return "bottom";
-      case Toolbox.HostType.SIDE: return "side";
-      case Toolbox.HostType.WINDOW: return "window";
-      case Toolbox.HostType.CUSTOM: return "other";
-      default: return "bottom";
-    }
-  },
-
   _pingTelemetry: function() {
     this._telemetry.toolOpened("toolbox");
 
@@ -723,14 +707,6 @@ Toolbox.prototype = {
     // "What proportion of users use which themes?"
     let currentTheme = Services.prefs.getCharPref("devtools.theme");
     this._telemetry.logKeyedScalar(CURRENT_THEME_SCALAR, currentTheme, 1);
-
-    this._telemetry.preparePendingEvent(
-      "devtools.main", "open", "tools", null,
-      ["entrypoint", "first_panel", "host", "splitconsole", "width"]
-    );
-    this._telemetry.addEventProperty(
-      "devtools.main", "open", "tools", null, "host", this._getTelemetryHostString()
-    );
   },
 
   /**
