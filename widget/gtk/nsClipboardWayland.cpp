@@ -38,6 +38,14 @@
 
 #include "wayland/gtk-primary-selection-client-protocol.h"
 
+const char*
+nsRetrievalContextWayland::sTextMimeTypes[TEXT_MIME_TYPES_NUM] =
+{
+    "text/plain;charset=utf-8",
+    "UTF8_STRING",
+    "COMPOUND_TEXT"
+};
+
 void
 DataOffer::AddMIMEType(const char *aMimeType)
 {
@@ -62,6 +70,17 @@ DataOffer::GetTargets(int* aTargetNum)
 
     *aTargetNum = length;
     return targetList;
+}
+
+bool
+DataOffer::HasTarget(const char *aMimeType)
+{
+    int length = mTargetMIMETypes.Length();
+    for (int32_t j = 0; j < length; j++) {
+        if (mTargetMIMETypes[j] == gdk_atom_intern(aMimeType, FALSE))
+            return true;
+    }
+    return false;
 }
 
 char*
@@ -697,6 +716,25 @@ nsRetrievalContextWayland::GetClipboardData(const char* aMimeType,
 
     *aContentLength = mClipboardDataLength;
     return reinterpret_cast<const char*>(mClipboardData);
+}
+
+const char*
+nsRetrievalContextWayland::GetClipboardText(int32_t aWhichClipboard)
+{
+    GdkAtom selection = GetSelectionAtom(aWhichClipboard);
+    DataOffer* dataOffer = (selection == GDK_SELECTION_PRIMARY) ?
+                            mPrimaryOffer : mClipboardOffer;
+    if (!dataOffer)
+        return nullptr;
+
+    for (unsigned int i = 0; i < sizeof(sTextMimeTypes); i++) {
+        if (dataOffer->HasTarget(sTextMimeTypes[i])) {
+            uint32_t unused;
+            return GetClipboardData(sTextMimeTypes[i], aWhichClipboard,
+                                    &unused);
+        }
+    }
+    return nullptr;
 }
 
 void nsRetrievalContextWayland::ReleaseClipboardData(const char* aClipboardData)
