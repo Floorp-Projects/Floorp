@@ -1687,7 +1687,8 @@ function checkDomElementHighlightingForInputs(hud, inputs) {
 
     info("Unhighlight the node by moving away from the markup view");
     let onNodeUnhighlight = toolbox.once("node-unhighlight");
-    let btn = inspector.toolbox.doc.querySelector(".toolbox-dock-button");
+    let btn =
+      inspector.toolbox.doc.getElementById("toolbox-meatball-menu-button");
     EventUtils.synthesizeMouseAtCenter(btn, {type: "mousemove"},
       inspector.toolbox.win);
     yield onNodeUnhighlight;

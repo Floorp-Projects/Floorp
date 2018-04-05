@@ -26,7 +26,7 @@ class ToolboxController extends Component {
       highlightedTools: new Set(),
       panelDefinitions: [],
       hostTypes: [],
-      areDockButtonsEnabled: true,
+      areDockOptionsEnabled: true,
       canCloseToolbox: true,
       canRender: false,
       buttonIds: [],
@@ -42,7 +42,7 @@ class ToolboxController extends Component {
     this.unhighlightTool = this.unhighlightTool.bind(this);
     this.setOptionsPanel = this.setOptionsPanel.bind(this);
     this.setHostTypes = this.setHostTypes.bind(this);
-    this.setDockButtonsEnabled = this.setDockButtonsEnabled.bind(this);
+    this.setDockOptionsEnabled = this.setDockOptionsEnabled.bind(this);
     this.setCanCloseToolbox = this.setCanCloseToolbox.bind(this);
     this.setCanRender = this.setCanRender.bind(this);
     this.setPanelDefinitions = this.setPanelDefinitions.bind(this);
@@ -69,7 +69,6 @@ class ToolboxController extends Component {
       toolboxButtons,
       panelDefinitions,
       optionsPanel,
-      hostTypes,
       canCloseToolbox,
     } = this.state;
 
@@ -80,7 +79,6 @@ class ToolboxController extends Component {
         ...panelDefinitions.map(({id}) => id),
         ...toolboxButtons.filter(btn => !btn.isInStartContainer).map(({id}) => id),
         optionsPanel ? optionsPanel.id : null,
-        ...hostTypes.map(({position}) => "toolbox-dock-" + position),
         canCloseToolbox ? "toolbox-close" : null
       ].filter(id => id)
     });
@@ -134,12 +132,12 @@ class ToolboxController extends Component {
     }
   }
 
-  setDockButtonsEnabled(areDockButtonsEnabled) {
-    this.setState({ areDockButtonsEnabled }, this.updateButtonIds);
+  setDockOptionsEnabled(areDockOptionsEnabled) {
+    this.setState({ areDockOptionsEnabled });
   }
 
   setHostTypes(hostTypes) {
-    this.setState({ hostTypes }, this.updateButtonIds);
+    this.setState({ hostTypes });
   }
 
   setCanCloseToolbox(canCloseToolbox) {

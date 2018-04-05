@@ -5,9 +5,7 @@
 
 :root {
   --close-button-image: url(chrome://devtools/skin/images/close.svg);
-  --dock-bottom-image: url(chrome://devtools/skin/images/dock-bottom.svg);
-  --dock-side-image: url(chrome://devtools/skin/images/dock-side.svg);
-  --dock-undock-image: url(chrome://devtools/skin/images/dock-undock.svg);
+  --more-button-image: url(chrome://devtools/skin/images/more.svg);
 
   --command-paintflashing-image: url(images/command-paintflashing.svg);
   --command-screenshot-image: url(images/command-screenshot.svg);
@@ -62,8 +60,7 @@
 #toolbox-buttons-start,
 #toolbox-buttons-end,
 #toolbox-option-container,
-#toolbox-controls,
-#toolbox-dock-buttons {
+#toolbox-controls {
   display: flex;
   align-items: stretch;
 }
@@ -181,23 +178,14 @@
   background-image: var(--close-button-image);
 }
 
-#toolbox-dock-bottom::before {
-  background-image: var(--dock-bottom-image);
-}
-
-#toolbox-dock-side::before {
-  background-image: var(--dock-side-image);
-}
-
-#toolbox-dock-window::before {
-  background-image: var(--dock-undock-image);
+#toolbox-meatball-menu-button::before {
+  background-image: var(--more-button-image);
 }
 
 /* Command buttons */
 
 .command-button,
-#toolbox-controls > button,
-#toolbox-dock-buttons > button {
+#toolbox-controls > button {
   /* !important is needed to override .devtools-button rules in common.css */
   padding: 0 !important;
   margin: 0 !important;
