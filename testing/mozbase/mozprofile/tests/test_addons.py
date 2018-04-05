@@ -30,13 +30,13 @@ class TestAddonsManager(unittest.TestCase):
         self.logger.setLevel(mozlog.ERROR)
 
         self.profile = mozprofile.profile.Profile()
-        self.am = self.profile.addon_manager
+        self.am = self.profile.addons
 
         self.profile_path = self.profile.profile
         self.tmpdir = tempfile.mkdtemp()
         self.addCleanup(mozfile.remove, self.tmpdir)
 
-    def test_install_addons_multiple_same_source(self):
+    def test_install_multiple_same_source(self):
         # Generate installer stubs for all possible types of addons
         addon_xpi = generate_addon('test-addon-1@mozilla.org',
                                    path=self.tmpdir)
@@ -45,18 +45,18 @@ class TestAddonsManager(unittest.TestCase):
                                       xpi=False)
 
         # The same folder should not be installed twice
-        self.am.install_addons([addon_folder, addon_folder])
+        self.am.install([addon_folder, addon_folder])
         self.assertEqual(self.am.installed_addons, [addon_folder])
         self.am.clean()
 
         # The same XPI file should not be installed twice
-        self.am.install_addons([addon_xpi, addon_xpi])
+        self.am.install([addon_xpi, addon_xpi])
         self.assertEqual(self.am.installed_addons, [addon_xpi])
         self.am.clean()
 
         # Even if it is the same id the add-on should be installed twice, if
         # specified via XPI and folder
-        self.am.install_addons([addon_folder, addon_xpi])
+        self.am.install([addon_folder, addon_xpi])
         self.assertEqual(len(self.am.installed_addons), 2)
         self.assertIn(addon_folder, self.am.installed_addons)
         self.assertIn(addon_xpi, self.am.installed_addons)
@@ -69,13 +69,13 @@ class TestAddonsManager(unittest.TestCase):
             zipped.extractall(self.tmpdir)
         finally:
             zipped.close()
-        self.am.install_from_path(self.tmpdir)
+        self.am.install(self.tmpdir)
         self.assertEqual(len(self.am.installed_addons), 1)
         self.assertTrue(os.path.isdir(self.am.installed_addons[0]))
 
     def test_install_webextension(self):
         addon = os.path.join(here, 'addons', 'apply-css.xpi')
-        self.am.install_from_path(addon)
+        self.am.install(addon)
         self.assertEqual(len(self.am.installed_addons), 1)
         self.assertTrue(os.path.isfile(self.am.installed_addons[0]))
         self.assertEqual('apply-css.xpi', os.path.basename(self.am.installed_addons[0]))
@@ -85,7 +85,7 @@ class TestAddonsManager(unittest.TestCase):
 
     def test_install_webextension_sans_id(self):
         addon = os.path.join(here, 'addons', 'apply-css-sans-id.xpi')
-        self.am.install_from_path(addon)
+        self.am.install(addon)
 
         self.assertEqual(len(self.am.installed_addons), 1)
         self.assertTrue(os.path.isfile(self.am.installed_addons[0]))
@@ -94,7 +94,7 @@ class TestAddonsManager(unittest.TestCase):
         details = self.am.addon_details(self.am.installed_addons[0])
         self.assertIn('@temporary-addon', details['id'])
 
-    def test_install_from_path_xpi(self):
+    def test_install_xpi(self):
         addons_to_install = []
         addons_installed = []
 
@@ -102,14 +102,14 @@ class TestAddonsManager(unittest.TestCase):
         for ext in ['test-addon-1@mozilla.org', 'test-addon-2@mozilla.org']:
             temp_addon = generate_addon(ext, path=self.tmpdir)
             addons_to_install.append(self.am.addon_details(temp_addon)['id'])
-            self.am.install_from_path(temp_addon)
+            self.am.install(temp_addon)
 
         # Generate a list of addons installed in the profile
         addons_installed = [str(x[:-len('.xpi')]) for x in os.listdir(os.path.join(
                             self.profile.profile, 'extensions'))]
         self.assertEqual(addons_to_install.sort(), addons_installed.sort())
 
-    def test_install_from_path_folder(self):
+    def test_install_folder(self):
         # Generate installer stubs for all possible types of addons
         addons = []
         addons.append(generate_addon('test-addon-1@mozilla.org',
@@ -126,11 +126,11 @@ class TestAddonsManager(unittest.TestCase):
                                      xpi=False))
         addons.sort()
 
-        self.am.install_from_path(self.tmpdir)
+        self.am.install(self.tmpdir)
 
         self.assertEqual(self.am.installed_addons, addons)
 
-    def test_install_from_path_unpack(self):
+    def test_install_unpack(self):
         # Generate installer stubs for all possible types of addons
         addon_xpi = generate_addon('test-addon-unpack@mozilla.org',
                                    path=self.tmpdir)
@@ -141,34 +141,34 @@ class TestAddonsManager(unittest.TestCase):
                                          path=self.tmpdir)
 
         # Test unpack flag for add-on as XPI
-        self.am.install_from_path(addon_xpi)
+        self.am.install(addon_xpi)
         self.assertEqual(self.am.installed_addons, [addon_xpi])
         self.am.clean()
 
         # Test unpack flag for add-on as folder
-        self.am.install_from_path(addon_folder)
+        self.am.install(addon_folder)
         self.assertEqual(self.am.installed_addons, [addon_folder])
         self.am.clean()
 
         # Test forcing unpack an add-on
-        self.am.install_from_path(addon_no_unpack, unpack=True)
+        self.am.install(addon_no_unpack, unpack=True)
         self.assertEqual(self.am.installed_addons, [addon_no_unpack])
         self.am.clean()
 
-    def test_install_from_path_after_reset(self):
+    def test_install_after_reset(self):
         # Installing the same add-on after a reset should not cause a failure
         addon = generate_addon('test-addon-1@mozilla.org',
                                path=self.tmpdir, xpi=False)
 
         # We cannot use self.am because profile.reset() creates a new instance
-        self.profile.addon_manager.install_from_path(addon)
+        self.profile.addons.install(addon)
 
         self.profile.reset()
 
-        self.profile.addon_manager.install_from_path(addon)
-        self.assertEqual(self.profile.addon_manager.installed_addons, [addon])
+        self.profile.addons.install(addon)
+        self.assertEqual(self.profile.addons.installed_addons, [addon])
 
-    def test_install_from_path_backup(self):
+    def test_install_backup(self):
         staged_path = os.path.join(self.profile_path, 'extensions')
 
         # Generate installer stubs for all possible types of addons
@@ -182,10 +182,10 @@ class TestAddonsManager(unittest.TestCase):
                                     name='test-addon-1-dupe@mozilla.org')
 
         # Test backup of xpi files
-        self.am.install_from_path(addon_xpi)
+        self.am.install(addon_xpi)
         self.assertIsNone(self.am.backup_dir)
 
-        self.am.install_from_path(addon_xpi)
+        self.am.install(addon_xpi)
         self.assertIsNotNone(self.am.backup_dir)
         self.assertEqual(os.listdir(self.am.backup_dir),
                          ['test-addon-1@mozilla.org.xpi'])
@@ -196,10 +196,10 @@ class TestAddonsManager(unittest.TestCase):
         self.am.clean()
 
         # Test backup of folders
-        self.am.install_from_path(addon_folder)
+        self.am.install(addon_folder)
         self.assertIsNone(self.am.backup_dir)
 
-        self.am.install_from_path(addon_folder)
+        self.am.install(addon_folder)
         self.assertIsNotNone(self.am.backup_dir)
         self.assertEqual(os.listdir(self.am.backup_dir),
                          ['test-addon-1@mozilla.org'])
@@ -210,10 +210,10 @@ class TestAddonsManager(unittest.TestCase):
         self.am.clean()
 
         # Test backup of xpi files with another file name
-        self.am.install_from_path(addon_name)
+        self.am.install(addon_name)
         self.assertIsNone(self.am.backup_dir)
 
-        self.am.install_from_path(addon_xpi)
+        self.am.install(addon_xpi)
         self.assertIsNotNone(self.am.backup_dir)
         self.assertEqual(os.listdir(self.am.backup_dir),
                          ['test-addon-1@mozilla.org.xpi'])
@@ -223,7 +223,7 @@ class TestAddonsManager(unittest.TestCase):
                          ['test-addon-1@mozilla.org.xpi'])
         self.am.clean()
 
-    def test_install_from_path_invalid_addons(self):
+    def test_install_invalid_addons(self):
         # Generate installer stubs for all possible types of addons
         addons = []
         addons.append(generate_addon('test-addon-invalid-no-manifest@mozilla.org',
@@ -232,17 +232,17 @@ class TestAddonsManager(unittest.TestCase):
         addons.append(generate_addon('test-addon-invalid-no-id@mozilla.org',
                                      path=self.tmpdir))
 
-        self.am.install_from_path(self.tmpdir)
+        self.am.install(self.tmpdir)
 
         self.assertEqual(self.am.installed_addons, [])
 
     @unittest.skip("Feature not implemented as part of AddonManger")
-    def test_install_from_path_error(self):
-        """ Check install_from_path raises an error with an invalid addon"""
+    def test_install_error(self):
+        """ Check install raises an error with an invalid addon"""
 
         temp_addon = generate_addon('test-addon-invalid-version@mozilla.org')
         # This should raise an error here
-        self.am.install_from_path(temp_addon)
+        self.am.install(temp_addon)
 
     def test_addon_details(self):
         # Generate installer stubs for a valid and invalid add-on manifest
@@ -276,7 +276,7 @@ class TestAddonsManager(unittest.TestCase):
         addon_one = generate_addon('test-addon-1@mozilla.org')
         addon_two = generate_addon('test-addon-2@mozilla.org')
 
-        self.am.install_addons(addon_one)
+        self.am.install(addon_one)
         installed_addons = [str(x[:-len('.xpi')]) for x in os.listdir(os.path.join(
                             self.profile.profile, 'extensions'))]
 
@@ -285,7 +285,7 @@ class TestAddonsManager(unittest.TestCase):
         # Cleanup addons
         duplicate_profile = mozprofile.profile.Profile(profile=self.profile.profile,
                                                        addons=addon_two)
-        duplicate_profile.addon_manager.clean()
+        duplicate_profile.addons.clean()
 
         addons_after_cleanup = [str(x[:-len('.xpi')]) for x in os.listdir(os.path.join(
                                 duplicate_profile.profile, 'extensions'))]
@@ -311,7 +311,7 @@ class TestAddonsManager(unittest.TestCase):
             am = mozprofile.addons.AddonManager(profile, restore=True)
 
             for addon in addons:
-                am.install_from_path(addon)
+                am.install(addon)
 
             # now its there
             self.assertEqual(os.listdir(profile), ['extensions'])
@@ -335,7 +335,7 @@ class TestAddonsManager(unittest.TestCase):
         addons.append(generate_addon('test-addon-2@mozilla.org',
                                      path=self.tmpdir))
 
-        self.am.install_from_path(self.tmpdir)
+        self.am.install(self.tmpdir)
 
         extensions_path = os.path.join(self.profile_path, 'extensions')
         staging_path = os.path.join(extensions_path)

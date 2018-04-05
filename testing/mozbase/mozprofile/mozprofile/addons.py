@@ -120,11 +120,76 @@ class AddonManager(object):
         except AddonFormatError:
             return False
 
-    def install_addons(self, addons):
-        """
-        Installs all types of addons
+    def _install_addon(self, path, unpack=False):
+        addons = [path]
 
-        :param addons: a list of addon paths to install
+        # if path is not an add-on, try to install all contained add-ons
+        try:
+            self.addon_details(path)
+        except AddonFormatError as e:
+            module_logger.warning('Could not install %s: %s' % (path, str(e)))
+
+            # If the path doesn't exist, then we don't really care, just return
+            if not os.path.isdir(path):
+                return
+
+            addons = [os.path.join(path, x) for x in os.listdir(path) if
+                      self.is_addon(os.path.join(path, x))]
+            addons.sort()
+
+        # install each addon
+        for addon in addons:
+            # determine the addon id
+            addon_details = self.addon_details(addon)
+            addon_id = addon_details.get('id')
+
+            # if the add-on has to be unpacked force it now
+            # note: we might want to let Firefox do it in case of addon details
+            orig_path = None
+            if os.path.isfile(addon) and (unpack or addon_details['unpack']):
+                orig_path = addon
+                addon = tempfile.mkdtemp()
+                mozfile.extract(orig_path, addon)
+
+            # copy the addon to the profile
+            extensions_path = os.path.join(self.profile, 'extensions')
+            addon_path = os.path.join(extensions_path, addon_id)
+
+            if os.path.isfile(addon):
+                addon_path += '.xpi'
+
+                # move existing xpi file to backup location to restore later
+                if os.path.exists(addon_path):
+                    self.backup_dir = self.backup_dir or tempfile.mkdtemp()
+                    shutil.move(addon_path, self.backup_dir)
+
+                # copy new add-on to the extension folder
+                if not os.path.exists(extensions_path):
+                    os.makedirs(extensions_path)
+                shutil.copy(addon, addon_path)
+            else:
+                # move existing folder to backup location to restore later
+                if os.path.exists(addon_path):
+                    self.backup_dir = self.backup_dir or tempfile.mkdtemp()
+                    shutil.move(addon_path, self.backup_dir)
+
+                # copy new add-on to the extension folder
+                shutil.copytree(addon, addon_path, symlinks=True)
+
+            # if we had to extract the addon, remove the temporary directory
+            if orig_path:
+                mozfile.remove(addon)
+                addon = orig_path
+
+            self._addons.append(addon_id)
+            self.installed_addons.append(addon)
+
+    def install(self, addons, **kwargs):
+        """
+        Installs addons from a filepath or directory of addons in the profile.
+
+        :param addons: paths to .xpi or addon directories
+        :param unpack: whether to unpack unless specified otherwise in the install.rdf
         """
         if not addons:
             return
@@ -133,7 +198,7 @@ class AddonManager(object):
         if isinstance(addons, string_types):
             addons = [addons]
         for addon in set(addons):
-            self.install_from_path(addon)
+            self._install_addon(addon, **kwargs)
 
     @classmethod
     def _gen_iid(cls, addon_path):
@@ -255,76 +320,6 @@ class AddonManager(object):
             raise AddonFormatError('Add-on id could not be found.')
 
         return details
-
-    def install_from_path(self, path, unpack=False):
-        """
-        Installs addon from a filepath or directory of addons in the profile.
-
-        :param path: path to .xpi or directory of addons
-        :param unpack: whether to unpack unless specified otherwise in the install.rdf
-        """
-        addons = [path]
-
-        # if path is not an add-on, try to install all contained add-ons
-        try:
-            self.addon_details(path)
-        except AddonFormatError as e:
-            module_logger.warning('Could not install %s: %s' % (path, str(e)))
-
-            # If the path doesn't exist, then we don't really care, just return
-            if not os.path.isdir(path):
-                return
-
-            addons = [os.path.join(path, x) for x in os.listdir(path) if
-                      self.is_addon(os.path.join(path, x))]
-            addons.sort()
-
-        # install each addon
-        for addon in addons:
-            # determine the addon id
-            addon_details = self.addon_details(addon)
-            addon_id = addon_details.get('id')
-
-            # if the add-on has to be unpacked force it now
-            # note: we might want to let Firefox do it in case of addon details
-            orig_path = None
-            if os.path.isfile(addon) and (unpack or addon_details['unpack']):
-                orig_path = addon
-                addon = tempfile.mkdtemp()
-                mozfile.extract(orig_path, addon)
-
-            # copy the addon to the profile
-            extensions_path = os.path.join(self.profile, 'extensions')
-            addon_path = os.path.join(extensions_path, addon_id)
-
-            if os.path.isfile(addon):
-                addon_path += '.xpi'
-
-                # move existing xpi file to backup location to restore later
-                if os.path.exists(addon_path):
-                    self.backup_dir = self.backup_dir or tempfile.mkdtemp()
-                    shutil.move(addon_path, self.backup_dir)
-
-                # copy new add-on to the extension folder
-                if not os.path.exists(extensions_path):
-                    os.makedirs(extensions_path)
-                shutil.copy(addon, addon_path)
-            else:
-                # move existing folder to backup location to restore later
-                if os.path.exists(addon_path):
-                    self.backup_dir = self.backup_dir or tempfile.mkdtemp()
-                    shutil.move(addon_path, self.backup_dir)
-
-                # copy new add-on to the extension folder
-                shutil.copytree(addon, addon_path, symlinks=True)
-
-            # if we had to extract the addon, remove the temporary directory
-            if orig_path:
-                mozfile.remove(addon)
-                addon = orig_path
-
-            self._addons.append(addon_id)
-            self.installed_addons.append(addon)
 
     def remove_addon(self, addon_id):
         """Remove the add-on as specified by the id
