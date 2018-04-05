@@ -47,10 +47,19 @@ class ToolboxToolbar extends Component {
       canCloseToolbox: PropTypes.bool,
       // Is the split console currently visible?
       isSplitConsoleActive: PropTypes.bool,
+      // Are we disabling the behavior where pop-ups are automatically closed
+      // when clicking outside them?
+      //
+      // This is a tri-state value that may be true/false or undefined where
+      // undefined means that the option is not relevant in this context
+      // (i.e. we're not in a browser toolbox).
+      disableAutohide: PropTypes.bool,
       // Function to select a tool based on its id.
       selectTool: PropTypes.func,
       // Function to turn the split console on / off.
       toggleSplitConsole: PropTypes.func,
+      // Function to turn the disable pop-up autohide behavior on / off.
+      toggleNoAutohide: PropTypes.func,
       // Function to completely close the toolbox.
       closeToolbox: PropTypes.func,
       // Keep a record of what button is focused.
@@ -186,10 +195,16 @@ function renderSeparator() {
  * @param {boolean} isSplitConsoleActive
  *         Is the split console currently visible?
  *        toolbox is undocked, for example.
+ * @param {boolean|undefined} disableAutohide
+ *        Are we disabling the behavior where pop-ups are automatically
+ *        closed when clicking outside them?
+ *        (Only defined for the browser toolbox.)
  * @param {Function} selectTool
  *        Function to select a tool based on its id.
  * @param {Function} toggleSplitConsole
  *        Function to turn the split console on / off.
+ * @param {Function} toggleNoAutohide
+ *        Function to turn the disable pop-up autohide behavior on / off.
  * @param {Function} closeToolbox
  *        Completely close the toolbox.
  * @param {Function} focusButton
@@ -265,10 +280,16 @@ function renderToolboxControls(props) {
  *        options.
  * @param {boolean} isSplitConsoleActive
  *        Is the split console currently visible?
+ * @param {boolean|undefined} disableAutohide
+ *        Are we disabling the behavior where pop-ups are automatically
+ *        closed when clicking outside them.
+ *        (Only defined for the browser toolbox.)
  * @param {Function} props.selectTool
  *        Function to select a tool based on its id.
  * @param {Function} toggleSplitConsole
  *        Function to turn the split console on / off.
+ * @param {Function} toggleNoAutohide
+ *        Function to turn the disable pop-up autohide behavior on / off.
  * @param {Object} props.L10N
  *        Localization interface.
  * @param {Object} props.toolbox
@@ -281,8 +302,10 @@ function showMeatballMenu(
     currentToolId,
     hostTypes,
     isSplitConsoleActive,
+    disableAutohide,
     selectTool,
     toggleSplitConsole,
+    toggleNoAutohide,
     L10N,
     toolbox,
   }
@@ -311,6 +334,20 @@ function showMeatballMenu(
       ),
       accelerator: "Esc",
       click: toggleSplitConsole,
+    }));
+  }
+
+  // Disable pop-up autohide
+  //
+  // If |disableAutohide| is undefined, it means this feature is not available
+  // in this context.
+  if (typeof disableAutohide !== "undefined") {
+    menu.append(new MenuItem({
+      id: "toolbox-meatball-menu-noautohide",
+      label: L10N.getStr("toolbox.meatballMenu.noautohide.label"),
+      type: "checkbox",
+      checked: disableAutohide,
+      click: toggleNoAutohide,
     }));
   }
 

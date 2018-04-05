@@ -29,6 +29,7 @@ class ToolboxController extends Component {
       areDockOptionsEnabled: true,
       canCloseToolbox: true,
       isSplitConsoleActive: false,
+      disableAutohide: undefined,
       canRender: false,
       buttonIds: [],
       checkedButtonsUpdated: () => {
@@ -45,6 +46,7 @@ class ToolboxController extends Component {
     this.setDockOptionsEnabled = this.setDockOptionsEnabled.bind(this);
     this.setCanCloseToolbox = this.setCanCloseToolbox.bind(this);
     this.setIsSplitConsoleActive = this.setIsSplitConsoleActive.bind(this);
+    this.setDisableAutohide = this.setDisableAutohide.bind(this);
     this.setCanRender = this.setCanRender.bind(this);
     this.setPanelDefinitions = this.setPanelDefinitions.bind(this);
     this.updateButtonIds = this.updateButtonIds.bind(this);
@@ -141,6 +143,10 @@ class ToolboxController extends Component {
 
   setIsSplitConsoleActive(isSplitConsoleActive) {
     this.setState({ isSplitConsoleActive });
+  }
+
+  setDisableAutohide(disableAutohide) {
+    this.setState({ disableAutohide });
   }
 
   setPanelDefinitions(panelDefinitions) {

@@ -127,7 +127,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this._onWillNavigate = this._onWillNavigate.bind(this);
   this._refreshHostTitle = this._refreshHostTitle.bind(this);
-  this._toggleNoAutohide = this._toggleNoAutohide.bind(this);
+  this.toggleNoAutohide = this.toggleNoAutohide.bind(this);
   this.showFramesMenu = this.showFramesMenu.bind(this);
   this.handleKeyDownOnFramesButton = this.handleKeyDownOnFramesButton.bind(this);
   this.showFramesMenuOnKeyDown = this.showFramesMenuOnKeyDown.bind(this);
@@ -512,7 +512,7 @@ Toolbox.prototype = {
       this.webconsolePanel.height = Services.prefs.getIntPref(SPLITCONSOLE_HEIGHT_PREF);
       this.webconsolePanel.addEventListener("resize", this._saveSplitConsoleHeight);
 
-      let buttonsPromise = this._buildButtons();
+      this._buildButtons();
 
       this._pingTelemetry();
 
@@ -526,18 +526,16 @@ Toolbox.prototype = {
 
       // Start rendering the toolbox toolbar before selecting the tool, as the tools
       // can take a few hundred milliseconds seconds to start up.
-      // But wait for toolbar buttons to be set before updating this react component.
-      buttonsPromise.then(() => {
-        // Delay React rendering as Toolbox.open and buttonsPromise are synchronous.
-        // Even if this involve promises, this is synchronous. Toolbox.open already loads
-        // react modules and freeze the event loop for a significant time.
-        // requestIdleCallback allows releasing it to allow user events to be processed.
-        // Use 16ms maximum delay to allow one frame to be rendered at 60FPS
-        // (1000ms/60FPS=16ms)
-        this.win.requestIdleCallback(() => {
-          this.component.setCanRender();
-        }, {timeout: 16});
-      });
+      //
+      // Delay React rendering as Toolbox.open is synchronous.
+      // Even if this involve promises, it is synchronous. Toolbox.open already loads
+      // react modules and freeze the event loop for a significant time.
+      // requestIdleCallback allows releasing it to allow user events to be processed.
+      // Use 16ms maximum delay to allow one frame to be rendered at 60FPS
+      // (1000ms/60FPS=16ms)
+      this.win.requestIdleCallback(() => {
+        this.component.setCanRender();
+      }, {timeout: 16});
 
       await this.selectTool(this._defaultToolId);
 
@@ -550,7 +548,6 @@ Toolbox.prototype = {
 
       await promise.all([
         splitConsolePromise,
-        buttonsPromise,
         framesPromise
       ]);
 
@@ -1096,7 +1093,7 @@ Toolbox.prototype = {
   /**
    * Initiate ToolboxTabs React component and all it's properties. Do the initial render.
    */
-  _buildTabs: function() {
+  _buildTabs: async function() {
     // Get the initial list of tab definitions. This list can be amended at a later time
     // by tools registering themselves.
     const definitions = gDevTools.getToolDefinitionArray();
@@ -1105,6 +1102,12 @@ Toolbox.prototype = {
     // Get the definitions that will only affect the main tab area.
     this.panelDefinitions = definitions.filter(definition =>
       definition.isTargetSupported(this._target) && definition.id !== "options");
+
+    // Do async lookup of disable pop-up auto-hide state.
+    if (this.disableAutohideAvailable) {
+      let disable = await this._isDisableAutohideEnabled();
+      this.component.setDisableAutohide(disable);
+    }
   },
 
   _mountReactComponent: function() {
@@ -1114,6 +1117,7 @@ Toolbox.prototype = {
       currentToolId: this.currentToolId,
       selectTool: this.selectTool,
       toggleSplitConsole: this.toggleSplitConsole,
+      toggleNoAutohide: this.toggleNoAutohide,
       closeToolbox: this.destroy,
       focusButton: this._onToolbarFocus,
       toolbox: this
@@ -1185,12 +1189,11 @@ Toolbox.prototype = {
   /**
    * Add buttons to the UI as specified in devtools/client/definitions.js
    */
-  async _buildButtons() {
+  _buildButtons() {
     // Beyond the normal preference filtering
     this.toolbarButtons = [
       this._buildPickerButton(),
       this._buildFrameButton(),
-      await this._buildNoAutoHideButton()
     ];
 
     ToolboxButtons.forEach(definition => {
@@ -1216,25 +1219,6 @@ Toolbox.prototype = {
     });
 
     return this.frameButton;
-  },
-
-  /**
-   * Button that disables/enables auto-hiding XUL pop-ups. When enabled, XUL
-   * pop-ups will not automatically close when they lose focus.
-   */
-  async _buildNoAutoHideButton() {
-    this.autohideButton = this._createButtonState({
-      id: "command-button-noautohide",
-      description: L10N.getStr("toolbox.noautohide.tooltip"),
-      onClick: this._toggleNoAutohide,
-      isTargetSupported: target => target.chrome
-    });
-
-    this._isDisableAutohideEnabled().then(enabled => {
-      this.autohideButton.isChecked = enabled;
-    });
-
-    return this.autohideButton;
   },
 
   /**
@@ -2075,20 +2059,28 @@ Toolbox.prototype = {
     });
   },
 
-  async _toggleNoAutohide() {
+  // Is the disable auto-hide of pop-ups feature available in this context?
+  get disableAutohideAvailable() {
+    return this._target.chrome;
+  },
+
+  async toggleNoAutohide() {
     let front = await this.preferenceFront;
     let toggledValue = !(await this._isDisableAutohideEnabled());
 
     front.setBoolPref(DISABLE_AUTOHIDE_PREF, toggledValue);
 
-    this.autohideButton.isChecked = toggledValue;
+    if (this.disableAutohideAvailable) {
+      this.component.setDisableAutohide(toggledValue);
+    }
     this._autohideHasBeenToggled = true;
   },
 
   async _isDisableAutohideEnabled() {
-    // Ensure that the tools are open, and the button is visible.
+    // Ensure that the tools are open and the feature is available in this
+    // context.
     await this.isOpen;
-    if (!this.autohideButton.isVisible) {
+    if (!this.disableAutohideAvailable) {
       return false;
     }
 
