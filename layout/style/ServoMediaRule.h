@@ -25,7 +25,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoMediaRule, dom::CSSMediaRule)
 
-  already_AddRefed<css::Rule> Clone() const override;
   void SetStyleSheet(StyleSheet* aSheet) override;
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;

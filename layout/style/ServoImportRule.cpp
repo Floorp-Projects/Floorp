@@ -60,16 +60,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ServoImportRule)
   tmp->mRawRule = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(dom::CSSImportRule)
 
-/* virtual */ already_AddRefed<css::Rule>
-ServoImportRule::Clone() const
-{
-  // Rule::Clone is only used when CSSStyleSheetInner is cloned in
-  // preparation of being mutated. However, ServoStyleSheet never clones
-  // anything, so this method should never be called.
-  MOZ_ASSERT_UNREACHABLE("Shouldn't be cloning ServoImportRule");
-  return nullptr;
-}
-
 #ifdef DEBUG
 /* virtual */ void
 ServoImportRule::List(FILE* out, int32_t aIndent) const

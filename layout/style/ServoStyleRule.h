@@ -90,7 +90,6 @@ public:
   RawServoStyleRule* Raw() const { return mRawRule; }
 
   // Methods of mozilla::css::Rule
-  already_AddRefed<Rule> Clone() const final;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;

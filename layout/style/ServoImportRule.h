@@ -29,7 +29,6 @@ public:
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
-  already_AddRefed<css::Rule> Clone() const final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
   // WebIDL interface
