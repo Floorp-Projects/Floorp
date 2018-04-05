@@ -106,19 +106,33 @@
   <string name="context_menu_paste_go">ચોંટાડો અને જાઓ</string>
   <string name="your_rights">તમારા અધિકારો</string>
   <string name="external_app_prompt_title">અન્ય એપ્લિકેશનમાં લિંક ખોલો</string>
+  <string name="external_app_prompt_no_app_title">એક એપ્લિકેશન શોધો જે લિંક ખોલી શકે છે</string>
+  <string name="external_multiple_apps_matched_exit">ખાનગી બ્રાઉઝિંગ બહાર નીકળીએ?</string>
   <string name="download_snackbar_open">ખોલો</string>
   <string name="download_dialog_title">ફાઈલ ડાઉનલોડ</string>
   <string name="download_dialog_action_cancel">રદ કરો</string>
   <string name="download_dialog_action_download">ડાઉનલોડ</string>
   <string name="errorpage_title">પૃષ્ઠ લોડ કરવામાં સમસ્યા</string>
   <string name="errorpage_refresh">ફરી પ્રયત્ન કરો</string>
+  <string name="error_connectionfailure_title">જોડાવામાં અસમર્થ</string>
+  <string name="error_timeout_title">જોડાણ સમયસમાપ્તિ</string>
+  <string name="error_hostLookup_title">સર્વર મળ્યું નહિં</string>
   <string name="error_malformedURI_title">સરનામું માન્ય નથી</string>
+  <string name="error_redirectLoop_title">પૃષ્ઠ યોગ્ય રીતે પુનઃનિર્દેશિત નથી</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n   "<li>&#2693;&#2734;&#2753;&#2709; &#2741;&#2750;&#2736; &#2709;&#2753;&#2709;&#2752;&#2707; &#2744;&#2765;&#2741;&#2752;&#2709;&#2750;&#2736;&#2741;&#2750;&#2728;&#2753;&#2690; &#2728;&#2751;&#2743;&#2765;&#2709;&#2765;&#2736;&#2751;&#2735; &#2709;&#2736;&#2741;&#2750;&#2725;&#2752; &#2709;&#2759; &#2736;&#2726; &#2709;&#2736;&#2741;&#2750;&#2725;&#2752; &#2694; &#2744;&#2734;&#2744;&#2765;&#2735;&#2750; &#2744;&#2736;&#2765;&#2716;&#2750;&#2735; &#2715;&#2759;.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">સરનામું સમજાયું ન હતું</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n   "<li>&#2724;&#2734;&#2750;&#2736;&#2759; &#2694; &#2744;&#2736;&#2728;&#2750;&#2734;&#2750;&#2690;&#2728;&#2759; &#2710;&#2763;&#2738;&#2741;&#2750; &#2734;&#2750;&#2719;&#2759; &#2732;&#2752;&#2716;&#2750; &#2744;&#2763;&#2731;&#2765;&#2719;&#2741;&#2759;&#2736;&#2728;&#2759; &#2744;&#2765;&#2725;&#2750;&#2730;&#2751;&#2724; &#2709;&#2736;&#2741;&#2750;&#2728;&#2752; &#2716;&#2736;&#2754;&#2736; &#2730;&#2721;&#2752; &#2742;&#2709;&#2759; &#2715;&#2759;.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">સુરક્ષિત જોડાણ નિષ્ફળ</string>
+  <string name="error_generic_title">ઊફ્ફ</string>
+  <string name="contextmenu_link_share">લિંક વહેંચો</string>
   <string name="contextmenu_link_copy">લિંક સરનામાની નકલ કરો</string>
   <string name="contextmenu_image_share">છબી વહેંચો</string>
   <string name="contextmenu_image_copy">છબી સરનામાંની નકલ કરો</string>
   <string name="contextmenu_image_save">છબી સાચવો</string>
   <string name="contextmenu_open_in_new_tab">નવી ટેબમાં લિંક ખોલો</string>
+  <string name="firstrun_defaultbrowser_title">તમારી ગોપનીયતા વધારો</string>
   <string name="firstrun_search_title">તમારી શોધ, તમારી રીત</string>
+  <string name="firstrun_privacy_title">ગોપનીયતા એક આદત બનાવો</string>
   <string name="firstrun_close_button">OK, સમજાઇ ગયું!</string>
   <string name="firstrun_skip_button">છોડો</string>
   <string name="firstrun_next_button">આગળ</string>
