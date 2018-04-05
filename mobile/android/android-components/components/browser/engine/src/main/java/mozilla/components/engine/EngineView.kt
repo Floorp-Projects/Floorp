@@ -7,4 +7,4 @@ package mozilla.components.engine
 /**
  * View component that renders web content.
  */
-interface BrowserView
+interface EngineView

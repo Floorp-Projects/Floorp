@@ -7,4 +7,4 @@ package mozilla.components.engine
 /**
  * Entry point for interacting with the engine implementation (e.g. load a URL).
  */
-interface BrowserEngine
+interface Engine
