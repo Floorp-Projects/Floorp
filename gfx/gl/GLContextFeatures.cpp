@@ -322,6 +322,18 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "gpu_shader5",
+        GLVersion::GL4,
+        GLESVersion::NONE,
+        GLContext::Extension_None,
+        {
+            GLContext::ARB_gpu_shader5,
+            GLContext::EXT_gpu_shader5,
+            GLContext::NV_gpu_shader5,
+            GLContext::Extensions_End
+        }
+    },
+    {
         "instanced_arrays",
         GLVersion::GL3_3,
         GLESVersion::ES3,
