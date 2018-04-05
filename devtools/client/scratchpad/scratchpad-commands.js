@@ -15,7 +15,7 @@ exports.items = [{
   buttonClass: "command-button",
   tooltipText: l10n.lookup("scratchpadOpenTooltip"),
   hidden: true,
-  exec: function (args, context) {
+  exec: function(args, context) {
     const {ScratchpadManager} = require("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
     ScratchpadManager.openScratchpad();
   }

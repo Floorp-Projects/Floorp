@@ -43,7 +43,7 @@ function test() {
 function windowObserver(subject, topic, data) {
   if (topic == "domwindowopened") {
     let win = subject.QueryInterface(Ci.nsIDOMWindow);
-    win.addEventListener("load", function () {
+    win.addEventListener("load", function() {
       if (win.Scratchpad) {
         win.Scratchpad.addObserver({
           onReady() {
@@ -61,8 +61,8 @@ function windowObserver(subject, topic, data) {
 }
 
 function statesMatch(restored, states) {
-  return states.every(function (state) {
-    return restored.some(function (restoredState) {
+  return states.every(function(state) {
+    return restored.some(function(restoredState) {
       return state.filename == restoredState.filename &&
              state.text == restoredState.text &&
              state.executionContext == restoredState.executionContext;

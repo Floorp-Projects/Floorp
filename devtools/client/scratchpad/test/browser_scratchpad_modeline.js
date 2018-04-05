@@ -15,7 +15,7 @@ function test() {
 
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, false);
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(runTests);
   });
 
@@ -24,7 +24,9 @@ function test() {
 
 function runTests() {
   gScratchpad = gScratchpadWindow.Scratchpad;
-  function size(obj) { return Object.keys(obj).length; }
+  function size(obj) {
+    return Object.keys(obj).length;
+  }
 
   // Test Scratchpad._scanModeLine method.
   let obj = gScratchpad._scanModeLine();
@@ -48,11 +50,11 @@ function runTests() {
   obj = gScratchpad._scanModeLine("/* -sp-context:browser, other:true */");
   is(size(obj), 2, "Mode-line object has two properties");
   is(obj["-sp-context"], "browser");
-  is(obj["other"], "true");
+  is(obj.other, "true");
 
   // Test importing files with a mode-line in them.
   let content = "/* -sp-context:browser */\n" + gFileContent;
-  createTempFile("fileForBug644413.tmp", content, function (aStatus, aFile) {
+  createTempFile("fileForBug644413.tmp", content, function(aStatus, aFile) {
     ok(Components.isSuccessCode(aStatus), "File was saved successfully");
 
     gFile = aFile;
@@ -70,7 +72,7 @@ function fileImported(status, content) {
   // Set the pref and try again.
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, true);
 
-  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsIFile), true, function (status, content) {
+  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsIFile), true, function(status, content) {
     ok(Components.isSuccessCode(status), "File was imported successfully");
     is(gScratchpad.executionContext, gScratchpadWindow.SCRATCHPAD_CONTEXT_BROWSER);
 
@@ -81,6 +83,6 @@ function fileImported(status, content) {
   });
 }
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   Services.prefs.clearUserPref(DEVTOOLS_CHROME_ENABLED);
 });
