@@ -154,10 +154,6 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mPair = aCopy.mValue.mPair;
     mValue.mPair->AddRef();
   }
-  else if (eCSSUnit_Rect == mUnit) {
-    mValue.mRect = aCopy.mValue.mRect;
-    mValue.mRect->AddRef();
-  }
   else if (eCSSUnit_List == mUnit) {
     mValue.mList = aCopy.mValue.mList;
     mValue.mList->AddRef();
@@ -245,9 +241,6 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_Pair == mUnit) {
       return *mValue.mPair == *aOther.mValue.mPair;
-    }
-    else if (eCSSUnit_Rect == mUnit) {
-      return *mValue.mRect == *aOther.mValue.mRect;
     }
     else if (eCSSUnit_List == mUnit) {
       return nsCSSValueList::Equal(mValue.mList, aOther.mValue.mList);
@@ -370,8 +363,6 @@ void nsCSSValue::DoReset()
     DO_RELEASE(mImage);
   } else if (eCSSUnit_Pair == mUnit) {
     DO_RELEASE(mPair);
-  } else if (eCSSUnit_Rect == mUnit) {
-    DO_RELEASE(mRect);
   } else if (eCSSUnit_List == mUnit) {
     DO_RELEASE(mList);
   } else if (eCSSUnit_SharedList == mUnit) {
@@ -521,15 +512,6 @@ void nsCSSValue::SetPairValue(const nsCSSValue& xValue,
   mUnit = eCSSUnit_Pair;
   mValue.mPair = new nsCSSValuePair_heap(xValue, yValue);
   mValue.mPair->AddRef();
-}
-
-nsCSSRect& nsCSSValue::SetRectValue()
-{
-  Reset();
-  mUnit = eCSSUnit_Rect;
-  mValue.mRect = new nsCSSRect_heap;
-  mValue.mRect->AddRef();
-  return *mValue.mRect;
 }
 
 nsCSSValueList* nsCSSValue::SetListValue()
@@ -883,11 +865,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
       n += mValue.mPair->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
-    // Rect
-    case eCSSUnit_Rect:
-      n += mValue.mRect->SizeOfIncludingThis(aMallocSizeOf);
-      break;
-
     // List
     case eCSSUnit_List:
       n += mValue.mList->SizeOfIncludingThis(aMallocSizeOf);
@@ -1071,61 +1048,6 @@ nsCSSValueSharedList::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) c
   }
   return n;
 }
-
-// --- nsCSSRect -----------------
-
-nsCSSRect::nsCSSRect(void)
-{
-  MOZ_COUNT_CTOR(nsCSSRect);
-}
-
-nsCSSRect::nsCSSRect(const nsCSSRect& aCopy)
-  : mTop(aCopy.mTop),
-    mRight(aCopy.mRight),
-    mBottom(aCopy.mBottom),
-    mLeft(aCopy.mLeft)
-{
-  MOZ_COUNT_CTOR(nsCSSRect);
-}
-
-nsCSSRect::~nsCSSRect()
-{
-  MOZ_COUNT_DTOR(nsCSSRect);
-}
-
-void nsCSSRect::SetAllSidesTo(const nsCSSValue& aValue)
-{
-  mTop = aValue;
-  mRight = aValue;
-  mBottom = aValue;
-  mLeft = aValue;
-}
-
-size_t
-nsCSSRect_heap::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
-  // Only measure it if it's unshared, to avoid double-counting.
-  size_t n = 0;
-  if (mRefCnt <= 1) {
-    n += aMallocSizeOf(this);
-    n += mTop   .SizeOfExcludingThis(aMallocSizeOf);
-    n += mRight .SizeOfExcludingThis(aMallocSizeOf);
-    n += mBottom.SizeOfExcludingThis(aMallocSizeOf);
-    n += mLeft  .SizeOfExcludingThis(aMallocSizeOf);
-  }
-  return n;
-}
-
-static_assert(eSideTop == 0 && eSideRight == 1 &&
-              eSideBottom == 2 && eSideLeft == 3,
-              "box side constants not top/right/bottom/left == 0/1/2/3");
-
-/* static */ const nsCSSRect::side_type nsCSSRect::sides[4] = {
-  &nsCSSRect::mTop,
-  &nsCSSRect::mRight,
-  &nsCSSRect::mBottom,
-  &nsCSSRect::mLeft,
-};
 
 // --- nsCSSValuePair -----------------
 
