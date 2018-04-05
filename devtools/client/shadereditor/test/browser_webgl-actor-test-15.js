@@ -53,7 +53,7 @@ async function ifWebGLSupported() {
   finish();
 
   function checkFirstCachedPrograms(programActor) {
-    return (async function () {
+    return (async function() {
       let programs = await front.getPrograms();
 
       is(programs.length, 1,
@@ -64,7 +64,7 @@ async function ifWebGLSupported() {
   }
 
   function checkSecondCachedPrograms(oldProgramActor, newProgramActors) {
-    return (async function () {
+    return (async function() {
       let programs = await front.getPrograms();
 
       is(programs.length, 2,
@@ -82,7 +82,7 @@ async function ifWebGLSupported() {
   }
 
   function checkHighlightingInTheFirstPage(programActor) {
-    return (async function () {
+    return (async function() {
       await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
       await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
       ok(true, "The corner pixel colors are correct before highlighting.");
@@ -100,7 +100,7 @@ async function ifWebGLSupported() {
   }
 
   function checkHighlightingInTheSecondPage(firstProgramActor, secondProgramActor) {
-    return (async function () {
+    return (async function() {
       await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
       await ensurePixelIs(front, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
       await ensurePixelIs(front, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
