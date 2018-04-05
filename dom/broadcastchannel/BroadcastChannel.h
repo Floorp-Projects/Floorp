@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsAutoPtr.h"
-#include "nsIObserver.h"
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
 
@@ -30,11 +29,8 @@ class WorkerRef;
 
 class BroadcastChannel final
   : public DOMEventTargetHelper
-  , public nsIObserver
 {
   friend class BroadcastChannelChild;
-
-  NS_DECL_NSIOBSERVER
 
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
 
@@ -79,13 +75,13 @@ private:
 
   void RemoveDocFromBFCache();
 
+  void DisconnectFromOwner() override;
+
   RefPtr<BroadcastChannelChild> mActor;
 
   RefPtr<WorkerRef> mWorkerRef;
 
   nsString mChannel;
-
-  uint64_t mInnerID;
 
   enum {
     StateActive,
