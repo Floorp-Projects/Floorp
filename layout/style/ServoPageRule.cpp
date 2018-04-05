@@ -160,16 +160,6 @@ ServoPageRule::IsCCLeaf() const
   return !mDecls.PreservingWrapper();
 }
 
-already_AddRefed<css::Rule>
-ServoPageRule::Clone() const
-{
-  // Rule::Clone is only used when CSSStyleSheetInner is cloned in
-  // preparation of being mutated. However, ServoStyleSheet never clones
-  // anything, so this method should never be called.
-  MOZ_ASSERT_UNREACHABLE("Shouldn't be cloning ServoPageRule");
-  return nullptr;
-}
-
 size_t
 ServoPageRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {

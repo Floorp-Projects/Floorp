@@ -19,8 +19,6 @@ class CSSFontFeatureValuesRule : public css::Rule
 public:
   virtual bool IsCCLeaf() const override;
 
-  virtual already_AddRefed<mozilla::css::Rule> Clone() const override = 0;
-
   // WebIDL interfaces
   uint16_t Type() const final { return CSSRuleBinding::FONT_FEATURE_VALUES_RULE; }
   virtual void GetCssText(nsAString& aCssText) const override = 0;
