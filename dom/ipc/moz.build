@@ -183,3 +183,6 @@ if CONFIG['FUZZING'] and CONFIG['FUZZING_INTERFACES']:
     TEST_DIRS += [
         'fuzztest'
     ]
+
+# Add libFuzzer configuration directives
+include('/tools/fuzzing/libfuzzer-config.mozbuild')
