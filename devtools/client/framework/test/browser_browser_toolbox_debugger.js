@@ -115,7 +115,7 @@ add_task(async function runTest() {
         }, interval);
       });
     }
-  }).toSource().replace(/^\(function \(\) \{|\}\)$/g, "");
+  }).toSource().replace(/^\(function\(\) \{|\}\)$/g, "");
   // Stringify testHead's function and remove `(function {` prefix and `})` suffix
   // to ensure inner symbols gets exposed to next pieces of code
 

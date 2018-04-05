@@ -24,10 +24,12 @@ function test() {
 
       // Enable disabled tools
       let pref = definition.visibilityswitch;
-      let prefValue = Services.prefs.getBoolPref(pref, false);
-      if (!prefValue) {
-        modifiedPrefs.push(pref);
-        Services.prefs.setBoolPref(pref, true);
+      if (pref) {
+        let prefValue = Services.prefs.getBoolPref(pref, false);
+        if (!prefValue) {
+          modifiedPrefs.push(pref);
+          Services.prefs.setBoolPref(pref, true);
+        }
       }
     }
     let target = TargetFactory.forTab(gBrowser.selectedTab);
