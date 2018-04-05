@@ -34,7 +34,7 @@ add_task(async function test_unknownContentType_dialog_layout() {
       closed: PromiseUtils.defer(),
 
       observe(aSubject, aTopic, aData) {
-        let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+        let win = aSubject;
 
         switch (aTopic) {
           case "domwindowopened":

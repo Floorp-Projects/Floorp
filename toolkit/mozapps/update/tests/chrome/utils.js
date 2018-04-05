@@ -168,7 +168,7 @@ this.__defineGetter__("gCallback", function() {
  */
 const gWindowObserver = {
   observe: function WO_observe(aSubject, aTopic, aData) {
-    let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+    let win = aSubject;
 
     if (aTopic == "domwindowclosed") {
       if (win.location != URI_UPDATE_PROMPT_DIALOG) {

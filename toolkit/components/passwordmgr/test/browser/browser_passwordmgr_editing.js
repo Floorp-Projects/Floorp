@@ -89,7 +89,7 @@ add_task(async function test_setup() {
 
   Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened") {
-      let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+      let win = aSubject;
       SimpleTest.waitForFocus(function() {
         EventUtils.sendKey("RETURN", win);
       }, win);
