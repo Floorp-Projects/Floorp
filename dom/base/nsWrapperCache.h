@@ -63,13 +63,8 @@ static_assert(sizeof(void*) == 4, "Only support 32-bit and 64-bit");
  * collected and we want to preserve this state we actually store the state
  * object in the cache.
  *
- * The cache can store 2 types of objects:
- *
- *  If WRAPPER_IS_NOT_DOM_BINDING is set (IsDOMBinding() returns false):
- *    - the JSObject of an XPCWrappedNative wrapper
- *
- *  If WRAPPER_IS_NOT_DOM_BINDING is not set (IsDOMBinding() returns true):
- *    - a DOM binding object (regular JS object or proxy)
+ * The cache can store 3 types of objects: a DOM binding object (regular JS object or
+ * proxy), an nsOuterWindowProxy or an XPCWrappedNative wrapper.
  *
  * The finalizer for the wrapper clears the cache.
  *
@@ -195,11 +190,6 @@ public:
   bool PreservingWrapper() const
   {
     return HasWrapperFlag(WRAPPER_BIT_PRESERVED);
-  }
-
-  bool IsDOMBinding() const
-  {
-    return !HasWrapperFlag(WRAPPER_IS_NOT_DOM_BINDING);
   }
 
   /**
@@ -341,19 +331,6 @@ protected:
   }
 
 private:
-  // Friend declarations for things that need to be able to call
-  // SetIsNotDOMBinding().  The goal is to get rid of all of these, and
-  // SetIsNotDOMBinding() too.  Once that's done, we can remove the
-  // couldBeDOMBinding bits in DoGetOrCreateDOMReflector, as well as any other
-  // consumers of IsDOMBinding().
-  friend class SandboxPrivate;
-  void SetIsNotDOMBinding()
-  {
-    MOZ_ASSERT(!mWrapper && !(GetWrapperFlags() & ~WRAPPER_IS_NOT_DOM_BINDING),
-               "This flag should be set before creating any wrappers.");
-    SetWrapperFlags(WRAPPER_IS_NOT_DOM_BINDING);
-  }
-
   void SetWrapperJSObject(JSObject* aWrapper);
 
   FlagsType GetWrapperFlags() const
@@ -401,13 +378,7 @@ private:
    */
   enum { WRAPPER_BIT_PRESERVED = 1 << 0 };
 
-  /**
-   * If this bit is set then the wrapper for the native object is not a DOM
-   * binding.
-   */
-  enum { WRAPPER_IS_NOT_DOM_BINDING = 1 << 1 };
-
-  enum { kWrapperFlagsMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_NOT_DOM_BINDING) };
+  enum { kWrapperFlagsMask = WRAPPER_BIT_PRESERVED };
 
   JSObject* mWrapper;
   FlagsType mFlags;
@@ -417,7 +388,7 @@ protected:
 #endif
 };
 
-enum { WRAPPER_CACHE_FLAGS_BITS_USED = 2 };
+enum { WRAPPER_CACHE_FLAGS_BITS_USED = 1 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
 
