@@ -111,7 +111,7 @@ function getFilePath(name, allowMissing = false, usePlatformPathSeparator = fals
 
   path = path.slice(filePrePath.length);
 
-  if (sePlatformPathSeparator && path.match(/^\w:/)) {
+  if (usePlatformPathSeparator && path.match(/^\w:/)) {
     path = path.replace(/\//g, "\\");
   }
 
@@ -335,7 +335,7 @@ function assertLabelAndShallowSize(breakdown, givenDescription,
   dumpn("Given description: " + JSON.stringify(givenDescription, null, 4));
 
   const visitor = new LabelAndShallowSizeVisitor();
-  CensusUtils.walk(breakdown, description, visitor);
+  CensusUtils.walk(breakdown, givenDescription, visitor);
 
   dumpn("Expected shallow size: " + expectedShallowSize);
   dumpn("Actual shallow size: " + visitor.shallowSize());
@@ -435,7 +435,7 @@ function assertDeduplicatedPaths({ target, paths, expectedNodes, expectedEdges }
     }
     equal(count, 1,
       "should have exactly one matching edge for the expected edge = "
-      + JSON.stringify(edge));
+      + JSON.stringify(expectedEdge));
   }
 }
 

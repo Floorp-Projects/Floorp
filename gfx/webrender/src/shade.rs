@@ -23,7 +23,7 @@ use time::precise_time_ns;
 
 
 impl ImageBufferKind {
-    fn get_feature_string(&self) -> &'static str {
+    pub(crate) fn get_feature_string(&self) -> &'static str {
         match *self {
             ImageBufferKind::Texture2D => "TEXTURE_2D",
             ImageBufferKind::Texture2DArray => "",
@@ -54,12 +54,16 @@ const TRANSFORM_FEATURE: &str = "TRANSFORM";
 const ALPHA_FEATURE: &str = "ALPHA_PASS";
 const DITHERING_FEATURE: &str = "DITHERING";
 
-enum ShaderKind {
+pub(crate) enum ShaderKind {
     Primitive,
     Cache(VertexArrayKind),
     ClipCache,
     Brush,
     Text,
+    #[allow(dead_code)]
+    VectorStencil,
+    #[allow(dead_code)]
+    VectorCover,
 }
 
 pub struct LazilyCompiledShader {
@@ -70,7 +74,7 @@ pub struct LazilyCompiledShader {
 }
 
 impl LazilyCompiledShader {
-    fn new(
+    pub(crate) fn new(
         kind: ShaderKind,
         name: &'static str,
         features: &[&'static str],
@@ -133,6 +137,18 @@ impl LazilyCompiledShader {
                                        device,
                                        &self.features,
                                        format)
+                }
+                ShaderKind::VectorStencil => {
+                    create_prim_shader(self.name,
+                                       device,
+                                       &self.features,
+                                       VertexArrayKind::VectorStencil)
+                }
+                ShaderKind::VectorCover => {
+                    create_prim_shader(self.name,
+                                       device,
+                                       &self.features,
+                                       VertexArrayKind::VectorCover)
                 }
                 ShaderKind::ClipCache => {
                     create_clip_shader(self.name, device)
@@ -354,6 +370,8 @@ fn create_prim_shader(
         VertexArrayKind::Primitive => desc::PRIM_INSTANCES,
         VertexArrayKind::Blur => desc::BLUR,
         VertexArrayKind::Clip => desc::CLIP,
+        VertexArrayKind::VectorStencil => desc::VECTOR_STENCIL,
+        VertexArrayKind::VectorCover => desc::VECTOR_COVER,
     };
 
     let program = device.create_program(name, &prefix, &vertex_descriptor);
@@ -447,7 +465,6 @@ pub struct Shaders {
     ps_border_corner: PrimitiveShader,
     ps_border_edge: PrimitiveShader,
 
-    ps_hw_composite: LazilyCompiledShader,
     ps_split_composite: LazilyCompiledShader,
 }
 
@@ -657,14 +674,6 @@ impl Shaders {
              options.precache_shaders,
         )?;
 
-        let ps_hw_composite = LazilyCompiledShader::new(
-            ShaderKind::Primitive,
-            "ps_hardware_composite",
-            &[],
-            device,
-            options.precache_shaders,
-        )?;
-
         let ps_split_composite = LazilyCompiledShader::new(
             ShaderKind::Primitive,
             "ps_split_composite",
@@ -693,7 +702,6 @@ impl Shaders {
             ps_image,
             ps_border_corner,
             ps_border_edge,
-            ps_hw_composite,
             ps_split_composite,
         })
     }
@@ -709,9 +717,6 @@ impl Shaders {
 
     pub fn get(&mut self, key: &BatchKey) -> &mut LazilyCompiledShader {
         match key.kind {
-            BatchKind::HardwareComposite => {
-                &mut self.ps_hw_composite
-            }
             BatchKind::SplitComposite => {
                 &mut self.ps_split_composite
             }
@@ -801,7 +806,6 @@ impl Shaders {
         }
         self.ps_border_corner.deinit(device);
         self.ps_border_edge.deinit(device);
-        self.ps_hw_composite.deinit(device);
         self.ps_split_composite.deinit(device);
     }
 }

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 2
+#define VECS_PER_SPECIFIC_BRUSH 0
 #define FORCE_NO_PERSPECTIVE
 
 #include shared,prim_shared,brush
@@ -22,6 +22,7 @@ void brush_vs(
     int prim_address,
     RectWithSize local_rect,
     ivec3 user_data,
+    mat4 transform,
     PictureTask pic_task
 ) {
     PictureTask src_task = fetch_picture_task(user_data.x);

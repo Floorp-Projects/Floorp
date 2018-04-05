@@ -326,18 +326,6 @@ menuseparator {
   --reference-color: var(--theme-highlight-purple);
 }
 
-.theme-firebug {
-  --number-color: #000088;
-  --string-color: #ff0000;
-  --null-color: #787878;
-  --object-color: DarkGreen;
-  --caption-color: #444444;
-  --location-color: #555555;
-  --source-link-color: blue;
-  --node-color: rgb(0, 0, 136);
-  --reference-color: rgb(102, 102, 255);
-}
-
 /******************************************************************************/
 
 .objectLink:hover {
@@ -1924,18 +1912,6 @@ html .toggle-button.end.vertical svg {
   --stack-function-color: var(--theme-highlight-red);
 }
 
-.theme-firebug {
-  --number-color: #000088;
-  --string-color: #FF0000;
-  --null-color: #787878;
-  --object-color: DarkGreen;
-  --caption-color: #444444;
-  --location-color: #555555;
-  --source-link-color: blue;
-  --node-color: rgb(0, 0, 136);
-  --reference-color: rgb(102, 102, 255);
-}
-
 /******************************************************************************/
 
 .inline {
@@ -2846,8 +2822,7 @@ html .breakpoints-list .breakpoint.paused {
   order: 3;
 }
 
-:root.theme-light .breakpoint-snippet,
-:root.theme-firebug .breakpoint-snippet {
+:root.theme-light .breakpoint-snippet {
   color: var(--theme-comment);
 }
 
@@ -2955,10 +2930,6 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 :root.theme-dark .expression-container:hover {
-  background-color: var(--theme-selection-background-hover);
-}
-
-:root.theme-firebug .expression-container:hover {
   background-color: var(--theme-selection-background-hover);
 }
 
@@ -3107,8 +3078,7 @@ html .breakpoints-list .breakpoint.paused {
   flex-shrink: 0;
 }
 
-.theme-light .frames .location,
-.theme-firebug .frames .location {
+.theme-light .frames .location {
   color: var(--theme-comment);
 }
 
@@ -3143,7 +3113,6 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 :root.theme-light .frames ul li.selected .location,
-:root.theme-firebug .frames ul li.selected .location,
 :root.theme-dark .frames ul li.selected .location {
   color: white;
 }

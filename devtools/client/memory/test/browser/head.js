@@ -4,16 +4,18 @@
 "use strict";
 
 // Load the shared test helpers into this compartment.
+/* import-globals-from ../../../shared/test/shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
   this);
 
 // Load the shared Redux helpers into this compartment.
+/* import-globals-from ../../../shared/test/shared-redux-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-redux-head.js",
   this);
 
-var { censusDisplays, snapshotState: states } = require("devtools/client/memory/constants");
+var { censusDisplays, censusState, snapshotState: states } = require("devtools/client/memory/constants");
 var { L10N } = require("devtools/client/memory/utils");
 
 Services.prefs.setBoolPref("devtools.memory.enabled", true);

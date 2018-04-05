@@ -185,6 +185,8 @@ public:
     ENUM_MAX
   };
 
+  // Make sure that any additions done to ErrorType enum are also mirrored in
+  // XHR_ERROR_TYPE enum of TelemetrySend.jsm.
   enum class ErrorType : uint16_t {
     eOK,
     eRequest,

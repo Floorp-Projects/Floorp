@@ -1436,7 +1436,7 @@ ServoStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
   return true;
 }
 
-nsCSSCounterStyleRule*
+const RawServoCounterStyleRule*
 ServoStyleSet::CounterStyleRuleForName(nsAtom* aName)
 {
   MOZ_ASSERT(!StylistNeedsUpdate());

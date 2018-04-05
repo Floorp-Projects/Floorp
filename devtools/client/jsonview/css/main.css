@@ -47,12 +47,3 @@
 .panelContent .treeTable .treeLabelCell {
   padding-right: 17px;
 }
-
-/******************************************************************************/
-/* Theme Firebug */
-
-/* JSON View is using bigger font-size for the main tabs so,
-  let's overwrite the default value. */
-.theme-firebug .tabs .tabs-navigation {
-  font-size: 14px;
-}

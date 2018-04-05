@@ -5,6 +5,7 @@
 "use strict";
 
 const { StorageFront } = require("devtools/shared/fronts/storage");
+/* import-globals-from storage-helpers.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js",
   this);

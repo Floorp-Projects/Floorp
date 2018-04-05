@@ -1062,9 +1062,11 @@ class RTCPeerConnection {
     });
   }
 
-  setIdentityProvider(provider, protocol, username) {
+  setIdentityProvider(provider,
+                      {protocol, usernameHint, peerIdentity} = {}) {
     this._checkClosed();
-    this._localIdp.setIdentityProvider(provider, protocol, username);
+    this._localIdp.setIdentityProvider(provider,
+                                       protocol, usernameHint, peerIdentity);
   }
 
   async _getIdentityAssertion(origin) {

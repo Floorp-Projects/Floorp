@@ -104,7 +104,7 @@ fn next(cur: f32, prev: f32, dest: f32, stiffness: f32, damping: f32) -> f32 {
     next
 }
 
-/// Given numbers, calcluate if a spring is at rest.
+/// Given numbers, calculate if a spring is at rest.
 fn is_resting(cur: f32, prev: f32, dest: f32) -> bool {
     (cur - prev).abs() < EPSILON && (cur - dest).abs() < EPSILON
 }

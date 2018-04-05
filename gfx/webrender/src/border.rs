@@ -166,7 +166,7 @@ impl NormalBorderHelpers for NormalBorder {
                 }
             }
 
-            // Inset / outset borders just modtify the color of edges, so can be
+            // Inset / outset borders just modify the color of edges, so can be
             // drawn with the normal border corner shader.
             (BorderStyle::Outset, BorderStyle::Outset) |
             (BorderStyle::Inset, BorderStyle::Inset) |
@@ -445,7 +445,7 @@ impl<'a> DisplayListFlattener<'a> {
             let segment = |x0, y0, x1, y1| BrushSegment::new(
                 LayerPoint::new(x0, y0),
                 LayerSize::new(x1-x0, y1-y0),
-                false,
+                true,
                 EdgeAaSegmentMask::all() // Note: this doesn't seem right, needs revision
             );
 

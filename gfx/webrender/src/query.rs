@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use gleam::gl;
+#[cfg(feature = "debug_renderer")]
 use std::mem;
 use std::rc::Rc;
 
@@ -54,6 +55,7 @@ impl<T> QuerySet<T> {
         })
     }
 
+    #[cfg(feature = "debug_renderer")]
     fn take<F: Fn(&mut T, gl::GLuint)>(&mut self, fun: F) -> Vec<T> {
         let mut data = mem::replace(&mut self.data, Vec::new());
         for (value, &query) in data.iter_mut().zip(self.set.iter()) {
@@ -157,6 +159,7 @@ impl<T: NamedTag> GpuFrameProfile<T> {
         GpuSampleQuery
     }
 
+    #[cfg(feature = "debug_renderer")]
     fn build_samples(&mut self) -> (FrameId, Vec<GpuTimer<T>>, Vec<GpuSampler<T>>) {
         debug_assert!(!self.inside_frame);
         let gl = &self.gl;
@@ -233,6 +236,7 @@ impl<T> GpuProfiler<T> {
 }
 
 impl<T: NamedTag> GpuProfiler<T> {
+    #[cfg(feature = "debug_renderer")]
     pub fn build_samples(&mut self) -> (FrameId, Vec<GpuTimer<T>>, Vec<GpuSampler<T>>) {
         self.frames[self.next_frame].build_samples()
     }

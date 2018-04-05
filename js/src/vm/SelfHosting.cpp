@@ -2214,7 +2214,7 @@ intrinsic_CopyDataPropertiesOrGetOwnKeys(JSContext* cx, unsigned argc, Value* vp
 // self-hosting global.
 static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("std_Array",                 array_construct,              1,0, Array),
-    JS_FN("std_Array_join",                      array_join,                   1,0),
+    JS_INLINABLE_FN("std_Array_join",            array_join,                   1,0, ArrayJoin),
     JS_INLINABLE_FN("std_Array_push",            array_push,                   1,0, ArrayPush),
     JS_INLINABLE_FN("std_Array_pop",             array_pop,                    0,0, ArrayPop),
     JS_INLINABLE_FN("std_Array_shift",           array_shift,                  0,0, ArrayShift),
@@ -2259,8 +2259,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_String_indexOf",                  str_indexOf,                  1,0),
     JS_FN("std_String_lastIndexOf",              str_lastIndexOf,              1,0),
     JS_FN("std_String_startsWith",               str_startsWith,               1,0),
-    JS_FN("std_String_toLowerCase",              str_toLowerCase,              0,0),
-    JS_FN("std_String_toUpperCase",              str_toUpperCase,              0,0),
+    JS_INLINABLE_FN("std_String_toLowerCase",    str_toLowerCase,              0,0, StringToLowerCase),
+    JS_INLINABLE_FN("std_String_toUpperCase",    str_toUpperCase,              0,0, StringToUpperCase),
 
     JS_INLINABLE_FN("std_String_charAt",         str_charAt,                   1,0, StringCharAt),
     JS_FN("std_String_endsWith",                 str_endsWith,                 1,0),
@@ -2397,10 +2397,12 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GeneratorIsRunning",      intrinsic_GeneratorIsRunning,      1,0),
     JS_FN("GeneratorSetClosed",      intrinsic_GeneratorSetClosed,      1,0),
 
-    JS_FN("IsArrayBuffer",
-          intrinsic_IsInstanceOfBuiltin<ArrayBufferObject>,             1,0),
-    JS_FN("IsSharedArrayBuffer",
-          intrinsic_IsInstanceOfBuiltin<SharedArrayBufferObject>,       1,0),
+    JS_INLINABLE_FN("IsArrayBuffer",
+          intrinsic_IsInstanceOfBuiltin<ArrayBufferObject>,             1,0,
+          IntrinsicIsArrayBuffer),
+    JS_INLINABLE_FN("IsSharedArrayBuffer",
+          intrinsic_IsInstanceOfBuiltin<SharedArrayBufferObject>,       1,0,
+          IntrinsicIsSharedArrayBuffer),
     JS_FN("IsWrappedArrayBuffer",
           intrinsic_IsWrappedArrayBuffer<ArrayBufferObject>,            1,0),
     JS_FN("IsWrappedSharedArrayBuffer",
@@ -2472,9 +2474,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("IsSetObject", intrinsic_IsInstanceOfBuiltin<SetObject>, 1, 0,
                     IntrinsicIsSetObject),
     JS_FN("CallSetMethodIfWrapped", CallNonGenericSelfhostedMethod<Is<SetObject>>, 2, 0),
-
-    JS_FN("IsReadableStreamBYOBRequest",
-          intrinsic_IsInstanceOfBuiltin<ReadableStreamBYOBRequest>, 1, 0),
 
     // See builtin/TypedObject.h for descriptors of the typedobj functions.
     JS_FN("NewOpaqueTypedObject",           js::NewOpaqueTypedObject, 1, 0),
@@ -2621,8 +2620,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("AddModuleNamespaceBinding", intrinsic_AddModuleNamespaceBinding, 4, 0),
     JS_FN("ModuleNamespaceExports", intrinsic_ModuleNamespaceExports, 1, 0),
 
-    JS_FN("IsPromiseObject", intrinsic_IsInstanceOfBuiltin<PromiseObject>, 1, 0),
-    JS_FN("CallPromiseMethodIfWrapped", CallNonGenericSelfhostedMethod<Is<PromiseObject>>, 2, 0),
     JS_FN("PromiseResolve", intrinsic_PromiseResolve, 2, 0),
 
     JS_FS_END

@@ -22,24 +22,6 @@
   --command-measure-image: url(images/command-measure.svg);
 }
 
-.theme-firebug {
-  --close-button-image: url(chrome://devtools/skin/images/firebug/close.svg);
-  --dock-bottom-image: url(chrome://devtools/skin/images/firebug/dock-bottom.svg);
-  --dock-side-image: url(chrome://devtools/skin/images/firebug/dock-side.svg);
-  --dock-undock-image: url(chrome://devtools/skin/images/firebug/dock-undock.svg);
-
-  --command-paintflashing-image: url(images/firebug/command-paintflashing.svg);
-  --command-screenshot-image: url(images/firebug/command-screenshot.svg);
-  --command-responsive-image: url(images/firebug/command-responsivemode.svg);
-  --command-scratchpad-image: url(images/firebug/command-scratchpad.svg);
-  --command-pick-image: url(images/firebug/command-pick.svg);
-  --command-frames-image: url(images/firebug/command-frames.svg);
-  --command-splitconsole-image: url(images/firebug/command-console.svg);
-  --command-noautohide-image: url(images/firebug/command-noautohide.svg);
-  --command-rulers-image: url(images/firebug/command-rulers.svg);
-  --command-measure-image: url(images/firebug/command-measure.svg);
-}
-
 /* Toolbox tabbar */
 
 .devtools-tabbar {
@@ -136,11 +118,6 @@
   min-width: 24px;
 }
 
-/* Save space on the tab-strip in Firebug theme */
-.theme-firebug .devtools-tab {
-  -moz-box-flex: initial;
-}
-
 .devtools-tab {
   color: var(--theme-toolbar-color);
 }
@@ -155,16 +132,6 @@
 
 .devtools-tab.selected {
   color: var(--theme-toolbar-selected-color);
-}
-
-/* Display execution pointer in the Debugger tab to indicate
-   that the debugger is paused. */
-.theme-firebug #toolbox-tab-jsdebugger.devtools-tab:not(.selected).highlighted {
-  background-color: rgba(89, 178, 234, .2);
-  background-image: url(chrome://devtools/skin/images/firebug/tool-debugger-paused.svg);
-  background-repeat: no-repeat;
-  padding-left: 13px !important;
-  background-position: 3px 6px;
 }
 
 .devtools-tab > img {
@@ -209,12 +176,6 @@
 
 /* Toolbox controls */
 
-/* Save space in Firebug theme */
-.theme-firebug #toolbox-controls button {
-  margin-inline-start: 0 !important;
-  min-width: 12px;
-  margin: 0 1px;
-}
 
 #toolbox-close::before {
   background-image: var(--close-button-image);

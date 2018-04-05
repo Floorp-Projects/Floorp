@@ -89,12 +89,15 @@ const OVERDUE_PING_FILE_AGE = 7 * 24 * 60 * MS_IN_A_MINUTE; // 1 week
 
 // Strings to map from XHR.errorCode to TELEMETRY_SEND_FAILURE_TYPE.
 // Echoes XMLHttpRequestMainThread's ErrorType enum.
+// Make sure that any additions done to XHR_ERROR_TYPE enum are also mirrored in
+// TELEMETRY_SEND_FAILURE_TYPE's labels.
 const XHR_ERROR_TYPE = [
   "eOK",
   "eRequest",
   "eUnreachable",
   "eChannelOpen",
   "eRedirect",
+  "eTerminated",
 ];
 
 /**

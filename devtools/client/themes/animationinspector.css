@@ -33,16 +33,7 @@
   --close-button-image: url(chrome://devtools/skin/images/close.svg);
 }
 
-.theme-firebug {
-  --even-animation-timeline-background-color: rgba(128,128,128,0.03);
-  --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
-  --pause-image: url(chrome://devtools/skin/images/firebug/pause.svg);
-  --rewind-image: url(chrome://devtools/skin/images/firebug/rewind.svg);
-  --play-image: url(chrome://devtools/skin/images/firebug/play.svg);
-  --close-button-image: url(chrome://devtools/skin/images/firebug/close.svg);
-}
-
-.theme-light, .theme-firebug {
+.theme-light {
   /* The color for animation type 'opacity' */
   --opacity-border-color: var(--theme-highlight-pink);
   --opacity-background-color: #b82ee580;

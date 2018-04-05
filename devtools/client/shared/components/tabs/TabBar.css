@@ -27,11 +27,6 @@ div[hidetabs=true] .tabs .tabs-navigation {
   height: 23px;
 }
 
-/* Firebug theme is using slightly different height. */
-.theme-firebug .tabs .tabs-navigation {
-  height: 28px;
-}
-
 /* The tab takes entire horizontal space and individual tabs
   should stretch accordingly. Use flexbox for the behavior.
   Use also `overflow: hidden` so, 'overflow' and 'underflow'
@@ -47,10 +42,5 @@ div[hidetabs=true] .tabs .tabs-navigation {
 
 .tabs .tabs-navigation .tabs-menu-item a {
   text-align: center;
-}
-
-/* Firebug theme doesn't stretch the tabs. */
-.theme-firebug .tabs .tabs-navigation .tabs-menu-item {
-  flex-grow: 0;
 }
 
