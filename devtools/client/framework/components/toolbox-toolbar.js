@@ -29,27 +29,27 @@ class ToolboxToolbar extends Component {
       currentToolId: PropTypes.string,
       // An optionally highlighted tools, e.g. "inspector".
       highlightedTools: PropTypes.instanceOf(Set),
+      // List of tool panel definitions (used by ToolboxTabs component).
+      panelDefinitions: PropTypes.array,
+      // The options panel definition.
+      optionsPanel: PropTypes.object,
+      // List of possible docking options.
+      hostTypes: PropTypes.arrayOf(PropTypes.shape({
+        position: PropTypes.string.isRequired,
+        switchHost: PropTypes.func.isRequired,
+      })),
       // Should the docking options be enabled? They are disabled in some
       // contexts such as WebIDE.
       areDockButtonsEnabled: PropTypes.bool,
       // Do we need to add UI for closing the toolbox? We don't when the
       // toolbox is undocked, for example.
       canCloseToolbox: PropTypes.bool,
-      // List of tool panel definitions (used by ToolboxTabs component).
-      panelDefinitions: PropTypes.array,
-      // List of possible docking options.
-      hostTypes: PropTypes.arrayOf(PropTypes.shape({
-        position: PropTypes.string.isRequired,
-        switchHost: PropTypes.func.isRequired,
-      })),
       // Function to select a tool based on its id.
       selectTool: PropTypes.func,
       // Function to completely close the toolbox.
       closeToolbox: PropTypes.func,
       // Keep a record of what button is focused.
       focusButton: PropTypes.func,
-      // The options button definition.
-      optionsPanel: PropTypes.object,
       // Hold off displaying the toolbar until enough information is ready for
       // it to render nicely.
       canRender: PropTypes.bool,
@@ -106,12 +106,12 @@ function renderToolboxButtonsEnd(props) {
  * See Toolbox.prototype._createButtonState in devtools/client/framework/toolbox.js for
  * documentation on this object.
  *
- * @param {Array} toolboxButtons - Array of objects that define the command buttons.
  * @param {String} focusedButton - The id of the focused button.
+ * @param {Array} toolboxButtons - Array of objects that define the command buttons.
  * @param {Function} focusButton - Keep a record of the currently focused button.
  * @param {boolean} isStart - Render either the starting buttons, or ending buttons.
  */
-function renderToolboxButtons({toolboxButtons, focusedButton, focusButton}, isStart) {
+function renderToolboxButtons({focusedButton, toolboxButtons, focusButton}, isStart) {
   const visibleButtons = toolboxButtons.filter(command => {
     const {isVisible, isInStartContainer} = command;
     return isVisible && (isStart ? isInStartContainer : !isInStartContainer);
@@ -156,18 +156,25 @@ function renderToolboxButtons({toolboxButtons, focusedButton, focusButton}, isSt
 }
 
 /**
- * The options button is a ToolboxTab just like in the ToolboxTabs component. However
- * it is separate from the normal tabs, so deal with it separately here.
+ * The options button is a ToolboxTab just like in the ToolboxTabs component.
+ * However it is separate from the normal tabs, so deal with it separately here.
+ * The following props are expected.
  *
- * @param {Object}   optionsPanel - A single panel definition for the options panel.
- * @param {String}   currentToolId - The currently selected tool's id; e.g. "inspector".
- * @param {Function} selectTool - Function to select a tool in the toolbox.
- * @param {String}   focusedButton - The id of the focused button.
- * @param {Function} focusButton - Keep a record of the currently focused button.
- * @param {Object}   highlightedTools - Optionally highlighted tools, e.g. "inspector".
+ * @param {string} focusedButton
+ *        The id of the focused button.
+ * @param {string} currentToolId
+ *        The currently selected tool's id; e.g.  "inspector".
+ * @param {Object} highlightedTools
+ *        Optionally highlighted tools, e.g. "inspector".
+ * @param {Object} optionsPanel
+ *        A single panel definition for the options panel.
+ * @param {Function} selectTool
+ *        Function to select a tool in the toolbox.
+ * @param {Function} focusButton
+ *        Keep a record of the currently focused button.
  */
-function renderOptions({optionsPanel, currentToolId, selectTool, focusedButton,
-                        focusButton, highlightedTools}) {
+function renderOptions({focusedButton, currentToolId, highlightedTools,
+                        optionsPanel, selectTool, focusButton}) {
   return div({id: "toolbox-option-container"}, ToolboxTab({
     panelDefinition: optionsPanel,
     currentToolId,
@@ -189,18 +196,26 @@ function renderSeparator() {
  * Render the dock buttons, and handle all the cases for what type of host the toolbox
  * is attached to. The following props are expected.
  *
- * @property {String} focusedButton - The id of the focused button.
- * @property {Function} closeToolbox - Completely close the toolbox.
- * @property {Array} hostTypes - Array of host type objects, containing:
- *                   @property {String} position - Position name
- *                   @property {Function} switchHost - Function to switch the host.
- * @property {Function} focusButton - Keep a record of the currently focused button.
- * @property {Object} L10N - Localization interface.
- * @property {Boolean} areDockButtonsEnabled - They are not enabled in certain situations
- *                                             like when they are in the WebIDE.
- * @property {Boolean} canCloseToolbox - Are the tools in a context where they can be
- *                                       closed? This is not always the case, e.g. in the
- *                                       WebIDE.
+ * @param {string} focusedButton
+ *        The id of the focused button.
+ * @param {Object[]} hostTypes
+ *        Array of host type objects.
+ * @param {string} hostTypes[].position
+ *        Position name.
+ * @param {Function} hostTypes[].switchHost
+ *        Function to switch the host.
+ * @param {boolean} areDockButtonsEnabled
+ *        They are not enabled in certain situations like when they are in the
+ *        WebIDE.
+ * @param {boolean} canCloseToolbox
+ *        Do we need to add UI for closing the toolbox? We don't when the
+ *        toolbox is undocked, for example.
+ * @param {Function} closeToolbox
+ *        Completely close the toolbox.
+ * @param {Function} focusButton
+ *        Keep a record of the currently focused button.
+ * @param {Object} L10N
+ *        Localization interface.
  */
 function renderDockButtons(props) {
   const {
