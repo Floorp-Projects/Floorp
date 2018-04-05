@@ -8,6 +8,7 @@
 #define mozilla_dom_EventTarget_h_
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Nullable.h"
 #include "nsIDOMEventTarget.h"
 #include "nsWrapperCache.h"
 #include "nsAtom.h"
@@ -32,8 +33,6 @@ class EventListener;
 class EventListenerOptionsOrBoolean;
 class EventHandlerNonNull;
 class GlobalObject;
-
-template <class T> struct Nullable;
 
 // IID for the dom::EventTarget interface
 #define NS_EVENTTARGET_IID \
@@ -111,6 +110,28 @@ public:
   void RemoveSystemEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
                                  bool aUseCapture);
+
+  /**
+   * Add a system event listener with the default wantsUntrusted value.
+   */
+  nsresult AddSystemEventListener(const nsAString& aType,
+                                  nsIDOMEventListener* aListener,
+                                  bool aUseCapture)
+  {
+    return AddSystemEventListener(aType, aListener, aUseCapture, Nullable<bool>());
+  }
+
+  /**
+   * Add a system event listener with the given wantsUntrusted value.
+   */
+  nsresult AddSystemEventListener(const nsAString& aType,
+                                  nsIDOMEventListener* aListener,
+                                  bool aUseCapture,
+                                  bool aWantsUntrusted)
+  {
+    return AddSystemEventListener(aType, aListener, aUseCapture,
+                                  Nullable<bool>(aWantsUntrusted));
+  }
 
   /**
    * Returns the EventTarget object which should be used as the target
@@ -287,6 +308,27 @@ protected:
    */
   bool ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted,
                              ErrorResult& aRv);
+
+  /**
+   * addSystemEventListener() adds an event listener of aType to the system
+   * group.  Typically, core code should use the system group for listening to
+   * content (i.e., non-chrome) element's events.  If core code uses
+   * EventTarget::AddEventListener for a content node, it means
+   * that the listener cannot listen to the event when web content calls
+   * stopPropagation() of the event.
+   *
+   * @param aType            An event name you're going to handle.
+   * @param aListener        An event listener.
+   * @param aUseCapture      true if you want to listen the event in capturing
+   *                         phase.  Otherwise, false.
+   * @param aWantsUntrusted  true if you want to handle untrusted events.
+   *                         false if not.
+   *                         Null if you want the default behavior.
+   */
+  nsresult AddSystemEventListener(const nsAString& aType,
+                                  nsIDOMEventListener* aListener,
+                                  bool aUseCapture,
+                                  const Nullable<bool>& aWantsUntrusted);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(EventTarget, NS_EVENTTARGET_IID)

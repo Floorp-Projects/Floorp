@@ -6,85 +6,11 @@
 #include "domstubs.idl"
 
 %{C++
-#include "mozilla/EventForwards.h"
 #include "mozilla/dom/Nullable.h"
-#include "js/TypeDecls.h"
-
 using mozilla::dom::Nullable;
-
-namespace mozilla {
-class EventListenerManager;
-namespace dom {
-class EventTarget;
-} // namespace dom
-} // namespace mozilla
-
-class nsPresContext;
 %}
-
-/**
- * The nsIDOMEventTarget interface is the interface implemented by all
- * event targets in the Document Object Model.
- *
- * For more information on this interface please see 
- * http://www.w3.org/TR/DOM-Level-2-Events/
- */
-
-[ptr] native WidgetEventPtr(mozilla::WidgetEvent);
-[ptr] native nsPresContextPtr(nsPresContext);
-[ptr] native nsEventStatusPtr(nsEventStatus);
-[ptr] native JSContextPtr(JSContext);
-[ref] native EventChainPostVisitorRef(mozilla::EventChainPostVisitor);
-[ptr] native EventListenerManagerPtr(mozilla::EventListenerManager);
-[ptr] native EventTargetPtr(mozilla::dom::EventTarget);
-
-interface nsIScriptContext;
-interface nsIDOMEventListener;
-interface nsIDOMEvent;
 
 [uuid(9a78ac3c-9507-4d00-b2d6-10b508d2ec31)]
 interface nsIDOMEventTarget : nsISupports
 {
-
-  /**
-   * addSystemEventListener() adds an event listener of aType to the system
-   * group.  Typically, core code should use system group for listening to
-   * content (i.e., non-chrome) element's events.  If core code uses
-   * nsIDOMEventTarget::AddEventListener for a content node, it means
-   * that the listener cannot listen the event when web content calls
-   * stopPropagation() of the event.
-   *
-   * @param aType            An event name you're going to handle.
-   * @param aListener        An event listener.
-   * @param aUseCapture      TRUE if you want to listen the event in capturing
-   *                         phase.  Otherwise, FALSE.
-   * @param aWantsUntrusted  TRUE if you want to handle untrusted events.
-   *                         Otherwise, FALSE.
-   * @return                 NS_OK if succeed.  Otherwise, NS_ERROR_*.
-   */
-  [noscript, optional_argc] void addSystemEventListener(
-                                   in DOMString type,
-                                   in nsIDOMEventListener listener,
-                                   [optional] in boolean aUseCapture,
-                                   [optional] in boolean aWantsUntrusted);
-
-%{C++
-  // non-virtual so it won't affect the vtable
-  nsresult AddSystemEventListener(const nsAString& aType,
-                                  nsIDOMEventListener* aListener,
-                                  bool aUseCapture)
-  {
-    return AddSystemEventListener(aType, aListener, aUseCapture, false, 1);
-  }
-  // non-virtual so it won't affect the vtable
-  nsresult AddSystemEventListener(const nsAString& aType,
-                                  nsIDOMEventListener* aListener,
-                                  bool aUseCapture,
-                                  bool aWantsUntrusted)
-  {
-    return AddSystemEventListener(aType, aListener, aUseCapture,
-                                  aWantsUntrusted, 2);
-  }
-%}
-
 };
