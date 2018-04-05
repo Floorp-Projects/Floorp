@@ -7,6 +7,8 @@
 const { Ci } = require("chrome");
 const { arg, DebuggerClient } = require("devtools/shared/client/debugger-client");
 
+const TYPE_SERVICE = Ci.nsIWorkerDebugger.TYPE_SERVICE;
+
 /**
  * A RootClient object represents a root actor on the server. Each
  * DebuggerClient keeps a RootClient instance representing the root actor
@@ -157,6 +159,126 @@ RootClient.prototype = {
     };
 
     return this.request(packet);
+  },
+
+  /**
+   * Retrieve the service worker registrations currently available for the this client.
+   *
+   * @param  {Form} forms
+   *         All available worker forms
+   * @return {Array} array of form-like objects dedicated to service workers:
+   *         - {String} url: url of the worker
+   *         - {String} scope: scope controlled by this worker
+   *         - {String} fetch: fetch url if available
+   *         - {Boolean} active: is the service worker active
+   *         - {String} registrationActor: id of the registration actor, needed to start,
+   *           unregister and get push information for the registation. Available on
+   *           active service workers only in e10s.
+   *         - {String} workerActor: id of the worker actor, needed to debug and send push
+   *           notifications.
+   */
+  _mergeServiceWorkerForms: async function(workers) {
+    // List service worker registrations
+    let { registrations } = await this.listServiceWorkerRegistrations();
+
+    // registrations contain only service worker registrations, add each registration
+    // to the workers array.
+    let fromRegistrations = registrations.map(form => {
+      return {
+        url: form.url,
+        scope: form.scope,
+        fetch: form.fetch,
+        active: form.active,
+        registrationActor: form.actor,
+      };
+    });
+
+    // Loop on workers to retrieve the worker actor corresponding to the current
+    // instance of the service worker if available.
+    let fromWorkers = [];
+    workers
+      .filter(form => form.type === TYPE_SERVICE)
+      .forEach(form => {
+        let registration = fromRegistrations.find(w => w.scope === form.scope);
+        if (registration) {
+          if (!registration.url) {
+            // XXX: Race, sometimes a ServiceWorkerRegistrationInfo doesn't
+            // have a scriptSpec, but its associated WorkerDebugger does.
+            registration.url = form.url;
+          }
+          // Add the worker actor as "workerActor" on the registration.
+          registration.workerActor = form.actor;
+        } else {
+          // If a service worker registration could not be found, this means we are in
+          // e10s, and registrations are not forwarded to other processes until they
+          // reach the activated state.
+          fromWorkers.push({
+            url: form.url,
+            scope: form.scope,
+            fetch: form.fetch,
+            // Infer active=false since the service worker is not supposed to be
+            // registered yet in this edge case.
+            active: false,
+            workerActor: form.actor,
+          });
+        }
+      });
+
+    // Concatenate service workers found in forms.registrations and forms.workers.
+    let combined = [...fromRegistrations, ...fromWorkers];
+
+    // Filter out service workers missing a url.
+    return combined.filter(form => !!form.url);
+  },
+
+  /**
+   * Retrieve all service worker registrations as well as workers from the parent
+   * and child processes. Listing service workers involves merging information coming from
+   * registrations and workers, this method will combine this information to present a
+   * unified array of serviceWorkers. If you are only interested in other workers, use
+   * listWorkers.
+   *
+   * @return {Object}
+   *         - {Array} serviceWorkers
+   *           array of form-like objects for serviceworkers (cf _mergeServiceWorkerForms)
+   *         - {Array} workers
+   *           Array of WorkerActor forms, containing all possible workers.
+   */
+  listAllWorkers: async function() {
+    let workers = [], serviceWorkers = [];
+
+    try {
+      // List workers from the Parent process
+      ({ workers } = await this.listWorkers());
+
+      // And then from the Child processes
+      let { processes } = await this.listProcesses();
+      for (let process of processes) {
+        // Ignore parent process
+        if (process.parent) {
+          continue;
+        }
+        let { form } = await this._client.getProcess(process.id);
+        let processActor = form.actor;
+        let response = await this._client.request({
+          to: processActor,
+          type: "listWorkers"
+        });
+        workers = workers.concat(response.workers);
+      }
+
+      // Combine information from registrations and workers to create a usable list of
+      // workers for consumer code.
+      serviceWorkers = await this._mergeServiceWorkerForms(workers);
+    } catch (e) {
+      console.warn("Error while listing all workers, is the client disconnected?", e);
+    }
+
+
+    return {
+      serviceWorkers,
+      workers
+    };
   },
 
   /**
