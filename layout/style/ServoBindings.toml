@@ -285,8 +285,6 @@ whitelist-types = [
     "nsCSSShadowArray",
     "nsCSSValue",
     "nsCSSValueFloatColor",
-    "nsCSSValueGradient",
-    "nsCSSValueGradientStop",
     "nsCSSValueList",
     "nsCSSValueList_heap",
     "nsCSSValuePair_heap",

@@ -500,7 +500,6 @@ enum nsCSSUnit {
 
   eCSSUnit_URL          = 40,     // (nsCSSValue::URL*) value
   eCSSUnit_Image        = 41,     // (nsCSSValue::Image*) value
-  eCSSUnit_Gradient     = 42,     // (nsCSSValueGradient*) value
   eCSSUnit_GridTemplateAreas   = 44,   // (GridTemplateAreasValue*)
                                        // for grid-template-areas
 
@@ -586,7 +585,6 @@ enum nsCSSUnit {
   eCSSUnit_FlexFraction = 4000     // (float) Fraction of free space
 };
 
-struct nsCSSValueGradient;
 struct nsCSSValuePair;
 struct nsCSSValuePair_heap;
 struct nsCSSRect;
@@ -622,7 +620,6 @@ public:
   nsCSSValue(Array* aArray, nsCSSUnit aUnit);
   explicit nsCSSValue(mozilla::css::URLValue* aValue);
   explicit nsCSSValue(mozilla::css::ImageValue* aValue);
-  explicit nsCSSValue(nsCSSValueGradient* aValue);
   explicit nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue);
   explicit nsCSSValue(mozilla::SharedFontList* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
@@ -805,12 +802,6 @@ public:
       mValue.mURL->GetURI() : mValue.mImage->GetURI();
   }
 
-  nsCSSValueGradient* GetGradientValue() const
-  {
-    MOZ_ASSERT(mUnit == eCSSUnit_Gradient, "not a gradient value");
-    return mValue.mGradient;
-  }
-
   nsCSSValueSharedList* GetSharedListValue() const
   {
     MOZ_ASSERT(mUnit == eCSSUnit_SharedList, "not a shared list value");
@@ -932,7 +923,6 @@ public:
   void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
   void SetURLValue(mozilla::css::URLValue* aURI);
   void SetImageValue(mozilla::css::ImageValue* aImage);
-  void SetGradientValue(nsCSSValueGradient* aGradient);
   void SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue);
   void SetFontFamilyListValue(already_AddRefed<mozilla::SharedFontList> aFontListValue);
   void SetPairValue(const nsCSSValuePair* aPair);
@@ -1008,7 +998,6 @@ protected:
     mozilla::css::URLValue* MOZ_OWNING_REF mURL;
     mozilla::css::ImageValue* MOZ_OWNING_REF mImage;
     mozilla::css::GridTemplateAreasValue* MOZ_OWNING_REF mGridTemplateAreas;
-    nsCSSValueGradient* MOZ_OWNING_REF mGradient;
     nsCSSValuePair_heap* MOZ_OWNING_REF mPair;
     nsCSSRect_heap* MOZ_OWNING_REF mRect;
     nsCSSValueTriplet_heap* MOZ_OWNING_REF mTriplet;
@@ -1566,141 +1555,6 @@ nsCSSValue::GetPairListValue() const
     return mValue.mPairListDependent;
   }
 }
-
-struct nsCSSValueGradientStop {
-public:
-  nsCSSValueGradientStop();
-  // needed to keep bloat logs happy when we use the TArray
-  // in nsCSSValueGradient
-  nsCSSValueGradientStop(const nsCSSValueGradientStop& aOther);
-  ~nsCSSValueGradientStop();
-
-  nsCSSValue mLocation;
-  nsCSSValue mColor;
-  // If mIsInterpolationHint is true, there is no color, just
-  // a location.
-  bool mIsInterpolationHint;
-
-  bool operator==(const nsCSSValueGradientStop& aOther) const
-  {
-    return (mLocation == aOther.mLocation &&
-            mIsInterpolationHint == aOther.mIsInterpolationHint &&
-            (mIsInterpolationHint || mColor == aOther.mColor));
-  }
-
-  bool operator!=(const nsCSSValueGradientStop& aOther) const
-  {
-    return !(*this == aOther);
-  }
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-};
-
-struct nsCSSValueGradient final {
-  nsCSSValueGradient(bool aIsRadial, bool aIsRepeating);
-
-  // true if gradient is radial, false if it is linear
-  bool mIsRadial;
-  bool mIsRepeating;
-  bool mIsLegacySyntax; // If true, serialization should use a vendor prefix.
-  // XXXdholbert This will hopefully be going away soon, if bug 1337655 sticks:
-  bool mIsMozLegacySyntax; // (Only makes sense when mIsLegacySyntax is true.)
-                           // If true, serialization should use -moz prefix.
-                           // Else, serialization should use -webkit prefix.
-  bool mIsExplicitSize;
-  // line position and angle
-  nsCSSValuePair mBgPos;
-  nsCSSValue mAngle;
-
-  // Only meaningful if mIsRadial is true
-private:
-  nsCSSValue mRadialValues[2];
-public:
-  nsCSSValue& GetRadialShape()
-  {
-    MOZ_ASSERT(!mIsExplicitSize);
-    return mRadialValues[0];
-  }
-  const nsCSSValue& GetRadialShape() const
-  {
-    MOZ_ASSERT(!mIsExplicitSize);
-    return mRadialValues[0];
-  }
-  nsCSSValue& GetRadialSize()
-  {
-    MOZ_ASSERT(!mIsExplicitSize);
-    return mRadialValues[1];
-  }
-  const nsCSSValue& GetRadialSize() const
-  {
-    MOZ_ASSERT(!mIsExplicitSize);
-    return mRadialValues[1];
-  }
-  nsCSSValue& GetRadiusX()
-  {
-    MOZ_ASSERT(mIsExplicitSize);
-    return mRadialValues[0];
-  }
-  const nsCSSValue& GetRadiusX() const
-  {
-    MOZ_ASSERT(mIsExplicitSize);
-    return mRadialValues[0];
-  }
-  nsCSSValue& GetRadiusY()
-  {
-    MOZ_ASSERT(mIsExplicitSize);
-    return mRadialValues[1];
-  }
-  const nsCSSValue& GetRadiusY() const
-  {
-    MOZ_ASSERT(mIsExplicitSize);
-    return mRadialValues[1];
-  }
-
-  InfallibleTArray<nsCSSValueGradientStop> mStops;
-
-  bool operator==(const nsCSSValueGradient& aOther) const
-  {
-    if (mIsRadial != aOther.mIsRadial ||
-        mIsRepeating != aOther.mIsRepeating ||
-        mIsLegacySyntax != aOther.mIsLegacySyntax ||
-        mIsMozLegacySyntax != aOther.mIsMozLegacySyntax ||
-        mIsExplicitSize != aOther.mIsExplicitSize ||
-        mBgPos != aOther.mBgPos ||
-        mAngle != aOther.mAngle ||
-        mRadialValues[0] != aOther.mRadialValues[0] ||
-        mRadialValues[1] != aOther.mRadialValues[1])
-      return false;
-
-    if (mStops.Length() != aOther.mStops.Length())
-      return false;
-
-    for (uint32_t i = 0; i < mStops.Length(); i++) {
-      if (mStops[i] != aOther.mStops[i])
-        return false;
-    }
-
-    return true;
-  }
-
-  bool operator!=(const nsCSSValueGradient& aOther) const
-  {
-    return !(*this == aOther);
-  }
-
-  NS_INLINE_DECL_REFCOUNTING(nsCSSValueGradient)
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~nsCSSValueGradient()
-  {
-  }
-
-  nsCSSValueGradient(const nsCSSValueGradient& aOther) = delete;
-  nsCSSValueGradient& operator=(const nsCSSValueGradient& aOther) = delete;
-};
 
 class nsCSSValueFloatColor final {
 public:

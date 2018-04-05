@@ -110,13 +110,6 @@ nsCSSValue::nsCSSValue(mozilla::css::ImageValue* aValue)
   mValue.mImage->AddRef();
 }
 
-nsCSSValue::nsCSSValue(nsCSSValueGradient* aValue)
-  : mUnit(eCSSUnit_Gradient)
-{
-  mValue.mGradient = aValue;
-  mValue.mGradient->AddRef();
-}
-
 nsCSSValue::nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue)
   : mUnit(eCSSUnit_GridTemplateAreas)
 {
@@ -170,10 +163,6 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (eCSSUnit_Image == mUnit) {
     mValue.mImage = aCopy.mValue.mImage;
     mValue.mImage->AddRef();
-  }
-  else if (eCSSUnit_Gradient == mUnit) {
-    mValue.mGradient = aCopy.mValue.mGradient;
-    mValue.mGradient->AddRef();
   }
   else if (eCSSUnit_Pair == mUnit) {
     mValue.mPair = aCopy.mValue.mPair;
@@ -280,9 +269,6 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_Image == mUnit) {
       return mValue.mImage->Equals(*aOther.mValue.mImage);
-    }
-    else if (eCSSUnit_Gradient == mUnit) {
-      return *mValue.mGradient == *aOther.mValue.mGradient;
     }
     else if (eCSSUnit_Pair == mUnit) {
       return *mValue.mPair == *aOther.mValue.mPair;
@@ -416,8 +402,6 @@ void nsCSSValue::DoReset()
     DO_RELEASE(mURL);
   } else if (eCSSUnit_Image == mUnit) {
     DO_RELEASE(mImage);
-  } else if (eCSSUnit_Gradient == mUnit) {
-    DO_RELEASE(mGradient);
   } else if (eCSSUnit_Pair == mUnit) {
     DO_RELEASE(mPair);
   } else if (eCSSUnit_Triplet == mUnit) {
@@ -567,14 +551,6 @@ void nsCSSValue::SetImageValue(mozilla::css::ImageValue* aValue)
   mUnit = eCSSUnit_Image;
   mValue.mImage = aValue;
   mValue.mImage->AddRef();
-}
-
-void nsCSSValue::SetGradientValue(nsCSSValueGradient* aValue)
-{
-  Reset();
-  mUnit = eCSSUnit_Gradient;
-  mValue.mGradient = aValue;
-  mValue.mGradient->AddRef();
 }
 
 void nsCSSValue::SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue)
@@ -1051,11 +1027,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     // Image
     case eCSSUnit_Image:
       n += mValue.mImage->SizeOfIncludingThis(aMallocSizeOf);
-      break;
-
-    // Gradient
-    case eCSSUnit_Gradient:
-      n += mValue.mGradient->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
     // Pair
@@ -1913,69 +1884,6 @@ css::ComplexColorValue::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   size_t n = 0;
   if (mRefCnt <= 1) {
     n += aMallocSizeOf(this);
-  }
-  return n;
-}
-
-nsCSSValueGradientStop::nsCSSValueGradientStop()
-  : mLocation(eCSSUnit_None),
-    mColor(eCSSUnit_Null),
-    mIsInterpolationHint(false)
-{
-  MOZ_COUNT_CTOR(nsCSSValueGradientStop);
-}
-
-nsCSSValueGradientStop::nsCSSValueGradientStop(const nsCSSValueGradientStop& aOther)
-  : mLocation(aOther.mLocation),
-    mColor(aOther.mColor),
-    mIsInterpolationHint(aOther.mIsInterpolationHint)
-{
-  MOZ_COUNT_CTOR(nsCSSValueGradientStop);
-}
-
-nsCSSValueGradientStop::~nsCSSValueGradientStop()
-{
-  MOZ_COUNT_DTOR(nsCSSValueGradientStop);
-}
-
-size_t
-nsCSSValueGradientStop::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
-  size_t n = 0;
-  n += mLocation.SizeOfExcludingThis(aMallocSizeOf);
-  n += mColor   .SizeOfExcludingThis(aMallocSizeOf);
-  return n;
-}
-
-nsCSSValueGradient::nsCSSValueGradient(bool aIsRadial,
-                                       bool aIsRepeating)
-  : mIsRadial(aIsRadial),
-    mIsRepeating(aIsRepeating),
-    mIsLegacySyntax(false),
-    mIsMozLegacySyntax(false),
-    mIsExplicitSize(false),
-    mBgPos(eCSSUnit_None),
-    mAngle(eCSSUnit_None)
-{
-  mRadialValues[0].SetNoneValue();
-  mRadialValues[1].SetNoneValue();
-}
-
-size_t
-nsCSSValueGradient::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
-  // Only measure it if it's unshared, to avoid double-counting.
-  size_t n = 0;
-  if (mRefCnt <= 1) {
-    n += aMallocSizeOf(this);
-    n += mBgPos.SizeOfExcludingThis(aMallocSizeOf);
-    n += mAngle.SizeOfExcludingThis(aMallocSizeOf);
-    n += mRadialValues[0].SizeOfExcludingThis(aMallocSizeOf);
-    n += mRadialValues[1].SizeOfExcludingThis(aMallocSizeOf);
-    n += mStops.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    for (uint32_t i = 0; i < mStops.Length(); i++) {
-      n += mStops[i].SizeOfExcludingThis(aMallocSizeOf);
-    }
   }
   return n;
 }
