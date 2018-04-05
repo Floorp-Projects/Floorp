@@ -182,27 +182,12 @@ private:
   struct PushedLayer
   {
     PushedLayer(bool aOldPermitSubpixelAA,
-                bool aOpaque,
-                Float aOpacity,
-                CompositionOp aCompositionOp,
-                SourceSurface* aMask,
-                const Matrix& aMaskTransform,
-                SkBaseDevice* aPreviousDevice)
+                SourceSurface* aMask)
       : mOldPermitSubpixelAA(aOldPermitSubpixelAA),
-        mOpaque(aOpaque),
-        mOpacity(aOpacity),
-        mCompositionOp(aCompositionOp),
-        mMask(aMask),
-        mMaskTransform(aMaskTransform),
-        mPreviousDevice(aPreviousDevice)
+        mMask(aMask)
     {}
     bool mOldPermitSubpixelAA;
-    bool mOpaque;
-    Float mOpacity;
-    CompositionOp mCompositionOp;
     RefPtr<SourceSurface> mMask;
-    Matrix mMaskTransform;
-    SkBaseDevice* mPreviousDevice;
   };
   std::vector<PushedLayer> mPushedLayers;
 
