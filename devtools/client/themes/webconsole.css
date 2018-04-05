@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Webconsole specific theme variables */
-.theme-light,
-.theme-firebug {
+.theme-light {
   --error-color: #FF0000;
   --error-background-color: #FFEBEB;
   --warning-background-color: #FFFFC8;
@@ -52,21 +51,12 @@ a {
   align-self: flex-start;
 }
 
-.theme-firebug .message > .icon {
-  margin: 0;
-  margin-inline-end: 6px;
-}
-
-.theme-firebug .message[severity="error"],
-.theme-light .message.error,
-.theme-firebug .message.error {
+.theme-light .message.error {
   color: var(--error-color);
   background-color: var(--error-background-color);
 }
 
-.theme-firebug .message[severity="warn"],
-.theme-light .message.warn,
-.theme-firebug .message.warn {
+.theme-light .message.warn {
   background-color: var(--warning-background-color);
 }
 
@@ -399,10 +389,6 @@ html #webconsole-notificationbox {
   border-top-color: #e0e0e0;
 }
 
-.theme-firebug .jsterm-input-container {
-  border-top: 1px solid #ccc;
-}
-
 /*  styles for the new HTML frontend */
 
 html .jsterm-stack-node {
@@ -493,11 +479,6 @@ textbox.jsterm-input-node[focused="true"] {
 #webconsole-sidebar > tabs {
   height: 0;
   border: none;
-}
-
-/* Firebug theme has the tabs visible. */
-.theme-firebug #webconsole-sidebar > tabs {
-  height: 28px;
 }
 
 .devtools-side-splitter ~ #webconsole-sidebar[hidden] {
@@ -673,16 +654,6 @@ a.learn-more-link.webconsole-learn-more-link {
   width: 200px;
 }
 
-/* Firebug theme support for console.table() */
-
-.theme-firebug .consoletable .theme-body {
-  width: 100%;
-  border-top: 1px solid #D7D7D7;
-  border-bottom: 2px solid #D7D7D7;
-  border-left: 1px solid #D7D7D7;
-  border-right: 1px solid #D7D7D7;
-}
-
 
 /* NEW CONSOLE STYLES */
 
@@ -705,8 +676,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 /* Webconsole specific theme variables */
-.theme-light .webconsole-output-wrapper,
-.theme-firebug .webconsole-output-wrapper {
+.theme-light .webconsole-output-wrapper {
   --error-color: var(--red-70);
   --error-background-color: #FDF2F5;
   --warning-color: var(--yellow-80);

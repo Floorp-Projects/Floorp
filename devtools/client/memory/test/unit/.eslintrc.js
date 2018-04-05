@@ -6,7 +6,6 @@ module.exports = {
   "rules": {
     "no-unused-vars": ["error", {
       "vars": "local",
-      "varsIgnorePattern": "^run_test$"
     }]
   }
 };

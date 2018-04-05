@@ -36,7 +36,7 @@ pub enum SceneBuilderResult {
     },
 }
 
-/// Contains the the render backend data needed to build a scene.
+/// Contains the render backend data needed to build a scene.
 pub struct SceneRequest {
     pub scene: Scene,
     pub view: DocumentView,

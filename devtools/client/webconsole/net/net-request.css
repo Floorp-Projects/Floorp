@@ -29,7 +29,3 @@
 .theme-dark .netRequest.opened {
   background: transparent;
 }
-
-.theme-firebug .netRequest.message.opened:hover {
-  background-image: linear-gradient(rgba(214, 233, 246, 0.8), rgba(255, 255, 255, 1.6)) !important;
-}

@@ -13,6 +13,7 @@
     "use strict";
 
     var x = 1;
+    /* global test */
     window.test = function() {
       SpecialPowers.Cu.forceGC();
       document.body.style.borderTop = x + "px solid red";

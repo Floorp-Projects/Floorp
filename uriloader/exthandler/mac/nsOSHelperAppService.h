@@ -32,6 +32,10 @@ public:
                                           bool *found,
                                           nsIHandlerInfo **_retval) override;
 
+  // override so we can have a child process sandbox-friendly implementation
+  bool GetMIMETypeFromOSForExtension(const nsACString& aExtension,
+                                     nsACString& aMIMEType) override;
+
   // GetFileTokenForPath must be implemented by each platform. 
   // platformAppPath --> a platform specific path to an application that we got out of the 
   //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform

@@ -16,12 +16,8 @@ module.exports = {
     // XXX Bug 1230193. We're still working on enabling no-undef for these test
     // directories.
     "files": [
-      "client/memory/test/**",
-      "server/tests/browser/**",
       "server/tests/mochitest/**",
-      "shared/heapsnapshot/tests/unit/**",
       "shared/tests/unit/**",
-      "shared/webconsole/test/**",
     ],
     "rules": {
       "no-undef": "off",

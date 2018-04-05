@@ -110,7 +110,7 @@ subcommands:
         args:
           - api:
               long: api
-              help: Reissue Api messsages for each frame
+              help: Reissue Api messages for each frame
           - skip-uploads:
               long: skip-uploads
               help: Skip re-uploads while reissuing Api messages (BROKEN)

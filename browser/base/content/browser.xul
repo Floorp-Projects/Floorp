@@ -683,6 +683,11 @@
             <menupopup id="alltabs_containersMenuTab" />
           </menu>
           <menuseparator id="alltabs-popup-separator-2"/>
+          <menu id="alltabs_hiddenTabs"
+                label="&hiddenTabs.label;">
+            <menupopup id="alltabs_hiddenTabsMenu"/>
+          </menu>
+          <menuseparator id="alltabs-popup-separator-3"/>
         </menupopup>
       </toolbarbutton>
 

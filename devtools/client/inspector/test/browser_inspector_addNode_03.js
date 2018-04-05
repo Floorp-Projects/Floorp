@@ -50,6 +50,10 @@ async function testAddNode(parentNode, inspector) {
   let mutations = await onMutation;
   await onNewContainer;
 
+  // We are only interested in childList mutations here. Filter everything else out as
+  // there may be unrelated mutations (e.g. "events") grouped in.
+  mutations = mutations.filter(({ type }) => type === "childList");
+
   is(mutations.length, 1, "There is one mutation only");
   is(mutations[0].added.length, 1, "There is one new node only");
 
