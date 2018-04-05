@@ -25,6 +25,7 @@ add_task(async function() {
   let {inspector, view} = await openRuleView();
   let highlighters = view.highlighters;
 
+  info("Selecting the first shapes container.");
   await selectNode("#shape1", inspector);
   let clipPathContainer = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
   let clipPathShapeToggle = clipPathContainer.querySelector(".ruleview-shapeswatch");
@@ -63,16 +64,4 @@ add_task(async function() {
      "clip-path toggle button is not active.");
   ok(!shapeOutsideToggle.classList.contains("active"),
      "shape-outside toggle button is not active.");
-
-  info("Selecting the first shapes container.");
-  await selectNode("#shape1", inspector);
-  clipPathContainer = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
-  clipPathShapeToggle = clipPathContainer.querySelector(".ruleview-shapeswatch");
-  shapeOutsideContainer = getRuleViewProperty(view, ".shape",
-    "shape-outside").valueSpan;
-  shapeOutsideToggle = shapeOutsideContainer.querySelector(".ruleview-shapeswatch");
-  ok(!clipPathShapeToggle.classList.contains("active"),
-     "clip-path toggle button is not active.");
-  ok(shapeOutsideToggle.classList.contains("active"),
-     "shape-outside toggle button is active.");
 });
