@@ -43,9 +43,6 @@ class MozProfileCLI(object):
                           action="append", default=[],
                           help="Addon paths to install. Can be a filepath, "
                           "a directory containing addons, or a url")
-        parser.add_option("--addon-manifests", dest="addon_manifests",
-                          action="append",
-                          help="An addon manifest to install")
         parser.add_option("--pref", dest="prefs",
                           action='append', default=[],
                           help="A preference to set. "
@@ -60,7 +57,6 @@ class MozProfileCLI(object):
         """arguments to instantiate the profile class"""
         return dict(profile=self.options.profile,
                     addons=self.options.addons,
-                    addon_manifests=self.options.addon_manifests,
                     preferences=self.preferences())
 
     def preferences(self):

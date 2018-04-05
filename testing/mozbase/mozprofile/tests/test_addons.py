@@ -13,13 +13,12 @@ import zipfile
 
 import mozunit
 
-from manifestparser import ManifestParser
 import mozfile
 import mozhttpd
 import mozlog.unstructured as mozlog
 import mozprofile
 
-from addon_stubs import generate_addon, generate_manifest
+from addon_stubs import generate_addon
 from six.moves.urllib import error
 
 
@@ -317,25 +316,6 @@ class TestAddonsManager(unittest.TestCase):
         temp_addon = generate_addon('test-addon-invalid-version@mozilla.org')
         # This should raise an error here
         self.am.install_from_path(temp_addon)
-
-    def test_install_from_manifest(self):
-        temp_manifest = generate_manifest(['test-addon-1@mozilla.org',
-                                           'test-addon-2@mozilla.org'])
-        m = ManifestParser()
-        m.read(temp_manifest)
-        addons = m.get()
-
-        # Obtain details of addons to install from the manifest
-        addons_to_install = [self.am.addon_details(x['path']).get('id') for x in addons]
-
-        self.am.install_from_manifest(temp_manifest)
-        # Generate a list of addons installed in the profile
-        addons_installed = [str(x[:-len('.xpi')]) for x in os.listdir(os.path.join(
-                            self.profile.profile, 'extensions'))]
-        self.assertEqual(addons_installed.sort(), addons_to_install.sort())
-
-        # Cleanup the temporary addon and manifest directories
-        mozfile.rmtree(os.path.dirname(temp_manifest))
 
     def test_addon_details(self):
         # Generate installer stubs for a valid and invalid add-on manifest
