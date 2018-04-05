@@ -31,8 +31,6 @@
 <!ENTITY % connectionDTD SYSTEM "chrome://browser/locale/preferences/connection.dtd">
 <!ENTITY % siteDataSettingsDTD SYSTEM
   "chrome://browser/locale/preferences/siteDataSettings.dtd" >
-<!ENTITY % clearSiteDataDTD SYSTEM
-  "chrome://browser/locale/preferences/clearSiteData.dtd" >
 <!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences/privacy.dtd">
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 <!ENTITY % syncDTD SYSTEM "chrome://browser/locale/preferences/sync.dtd">
@@ -54,7 +52,6 @@
 %deviceManangerDTD;
 %connectionDTD;
 %siteDataSettingsDTD;
-%clearSiteDataDTD;
 %privacyDTD;
 %syncBrandDTD;
 %syncDTD;
@@ -77,7 +74,10 @@
   <link rel="localization" href="branding/brand.ftl"/>
   <link rel="localization" href="browser/branding/sync-brand.ftl"/>
   <link rel="localization" href="browser/preferences/preferences.ftl"/>
+
+  <!-- Links below are only used for search-l10n-ids into subdialogs -->
   <link rel="localization" href="browser/preferences/blocklists.ftl"/>
+  <link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
 
   <script type="text/javascript" src="chrome://global/content/l10n.js"></script>
 
