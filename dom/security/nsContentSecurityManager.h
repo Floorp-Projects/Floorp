@@ -36,6 +36,8 @@ public:
   static bool AllowTopLevelNavigationToDataURI(nsIChannel* aChannel);
   static bool AllowInsecureRedirectToDataURI(nsIChannel* aNewChannel);
 
+  static bool AllowFTPSubresourceLoad(nsIChannel* aChannel);
+
 private:
   static nsresult CheckChannel(nsIChannel* aChannel);
 
