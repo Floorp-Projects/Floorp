@@ -233,10 +233,12 @@
         <button id="siteDataSettings"
                 class="accessory-button"
                 data-l10n-id="sitedata-settings"
-                searchkeywords="&window2.title;
-                                &hostCol.label;
-                                &cookiesCol.label;
-                                &usageCol.label;"/>
+                search-l10n-ids="
+                  site-data-settings-window.title,
+                  site-data-column-host.label,
+                  site-data-column-cookies.label,
+                  site-data-column-storage.label,
+                "/>
       </hbox>
       <hbox>
         <button id="cookieExceptions"

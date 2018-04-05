@@ -22,8 +22,6 @@
 <!ENTITY % historyDTD SYSTEM "chrome://mozapps/locale/update/history.dtd">
 <!ENTITY % certManagerDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
 <!ENTITY % deviceManangerDTD SYSTEM "chrome://pippki/locale/deviceManager.dtd">
-<!ENTITY % siteDataSettingsDTD SYSTEM
-  "chrome://browser/locale/preferences/siteDataSettings.dtd" >
 <!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences/privacy.dtd">
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 <!ENTITY % syncDTD SYSTEM "chrome://browser/locale/preferences/sync.dtd">
@@ -37,7 +35,6 @@
 %historyDTD;
 %certManagerDTD;
 %deviceManangerDTD;
-%siteDataSettingsDTD;
 %privacyDTD;
 %syncBrandDTD;
 %syncDTD;
@@ -69,6 +66,7 @@
   <link rel="localization" href="browser/preferences/languages.ftl"/>
   <link rel="localization" href="browser/preferences/permissions.ftl"/>
   <link rel="localization" href="browser/preferences/selectBookmark.ftl"/>
+  <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
 
   <script type="text/javascript" src="chrome://global/content/l10n.js"></script>
 
