@@ -35,7 +35,7 @@ struct ComputedTiming
   // being sampled backwards, this will go from 1.0 to 0.0.
   // Will be null if the animation is neither animating nor
   // filling at the sampled time.
-  Nullable<double>    mProgress;
+  dom::Nullable<double>    mProgress;
   // Zero-based iteration index (meaningless if mProgress is null).
   uint64_t            mCurrentIteration = 0;
   // Unlike TimingParams::mIterations, this value is
