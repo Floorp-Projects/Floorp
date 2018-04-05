@@ -16,6 +16,7 @@ enum nsWindowType {
   eWindowType_toplevel,           // default top level window
   eWindowType_dialog,             // top level window but usually handled differently
                                   // by the OS
+  eWindowType_sheet,              // MacOSX sheet (special dialog class)
   eWindowType_popup,              // used for combo boxes, etc
   eWindowType_child,              // child windows (contained inside a window on the
                                   // desktop (has no border))
@@ -23,7 +24,6 @@ enum nsWindowType {
   eWindowType_plugin,             // plugin window
   eWindowType_plugin_ipc_chrome,  // chrome side native widget for plugins (e10s)
   eWindowType_plugin_ipc_content, // content side puppet widget for plugins (e10s)
-  eWindowType_sheet,              // MacOSX sheet (special dialog class)
 };
 
 /**

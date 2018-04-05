@@ -156,13 +156,6 @@ public:
   virtual void EventListenerRemoved(nsAtom* aType) override;
   virtual void EventListenerRemoved(const nsAString& aType) override;
 
-  virtual void EventListenerWasAdded(const nsAString& aType,
-                                     ErrorResult& aRv,
-                                     JSCompartment* aCompartment = nullptr) {}
-  virtual void EventListenerWasRemoved(const nsAString& aType,
-                                       ErrorResult& aRv,
-                                       JSCompartment* aCompartment = nullptr) {}
-
   // Dispatch a trusted, non-cancellable and non-bubbling event to |this|.
   nsresult DispatchTrustedEvent(const nsAString& aEventName);
 protected:

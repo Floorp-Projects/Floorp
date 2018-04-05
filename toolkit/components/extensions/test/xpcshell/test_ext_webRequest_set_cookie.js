@@ -126,7 +126,7 @@ add_task(async function test_modifying_cookies_from_onHeadersReceived() {
     // cookie jar.
     await testCookiesWithFile("data/file_sample.html", ["ext"]);
 
-    // Next, preform a request that will set on cookie (reqcookie=reqvalue)
+    // Next, perform a request that will set on cookie (reqcookie=reqvalue)
     // and check that two cookies wind up in the cookie jar (the request
     // set cookie, and the extension set cookie).
     await testCookiesWithFile("file_webrequestblocking_set_cookie.html", ["ext", "req"]);

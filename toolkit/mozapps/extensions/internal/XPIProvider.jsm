@@ -501,7 +501,7 @@ function isTheme(type) {
  * @param  aFile
  *         The file or directory to operate on.
  * @param  aPermissions
- *         The permisions to set
+ *         The permissions to set
  */
 function setFilePermissions(aFile, aPermissions) {
   try {
@@ -5780,7 +5780,7 @@ class MutableDirectoryInstallLocation extends DirectoryInstallLocation {
 
     if (action == "proxy") {
       // When permanently installing sideloaded addon, we just put a proxy file
-      // refering to the addon sources
+      // referring to the addon sources
       newFile.append(id);
 
       writeStringToFile(newFile, source.path);

@@ -9,6 +9,7 @@
 
 #include "js/RootingAPI.h"
 #include "nsTArray.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 namespace mozilla {
 namespace dom {
@@ -27,10 +28,6 @@ public:
   static void Init();
   static void Shutdown();
 
-  typedef JSObject*
-  (*DefineGlobalName)(JSContext* cx, JS::Handle<JSObject*> global,
-                      JS::Handle<jsid> id, bool defineOnGlobal);
-
   // Check whether a constructor should be enabled for the given object.
   // Note that the object should NOT be an Xray, since Xrays will end up
   // defining constructors on the underlying object.
@@ -41,7 +38,8 @@ public:
   (*ConstructorEnabled)(JSContext* cx, JS::Handle<JSObject*> obj);
 
   static void Register(uint16_t aNameOffset, uint16_t aNameLength,
-                       DefineGlobalName aDefine, ConstructorEnabled aEnabled,
+                       CreateInterfaceObjectsMethod aCreate,
+                       ConstructorEnabled aEnabled,
                        constructors::id::ID aConstructorId);
 
   static void Remove(const char* aName, uint32_t aLength);

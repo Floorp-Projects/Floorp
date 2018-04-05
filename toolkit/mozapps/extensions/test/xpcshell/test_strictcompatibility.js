@@ -106,7 +106,7 @@ const ADDONS = {
     compatible: [false, false, false, false],
   },
 
-  // Extremely old addon - maxVersion is less than the mimimum compat version
+  // Extremely old addon - maxVersion is less than the minimum compat version
   // set in extensions.minCompatibleVersion
   "addon6@tests.mozilla.org": {
     "install.rdf": {

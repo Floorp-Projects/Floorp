@@ -260,7 +260,7 @@ var Policies = {
   "DisableForgetButton": {
     onProfileAfterChange(manager, param) {
       if (param) {
-        manager.disallowFeature("panicButton");
+        setAndLockPref("privacy.panicButton.enabled", false);
       }
     }
   },
@@ -310,6 +310,10 @@ var Policies = {
 
   "DisableSecurityBypass": {
     onBeforeUIStartup(manager, param) {
+      if ("InvalidCertificate" in param) {
+        setAndLockPref("security.certerror.hideAddException", param.InvalidCertificate);
+      }
+
       if ("SafeBrowsing" in param) {
         setAndLockPref("browser.safebrowsing.allowOverride", !param.SafeBrowsing);
       }
@@ -519,6 +523,9 @@ var Policies = {
       }
       if ("Default" in param) {
         setAndLockPref("xpinstall.enabled", param.Default);
+        if (!param.Default) {
+          manager.disallowFeature("about:debugging");
+        }
       }
     }
   },
@@ -579,6 +586,22 @@ var Policies = {
   "RememberPasswords": {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("signon.rememberSignons", param);
+    }
+  },
+
+  "SanitizeOnShutdown": {
+    onBeforeUIStartup(manager, param) {
+      setAndLockPref("privacy.sanitize.sanitizeOnShutdown", param);
+      if (param) {
+        setAndLockPref("privacy.clearOnShutdown.cache", true);
+        setAndLockPref("privacy.clearOnShutdown.cookies", true);
+        setAndLockPref("privacy.clearOnShutdown.downloads", true);
+        setAndLockPref("privacy.clearOnShutdown.formdata", true);
+        setAndLockPref("privacy.clearOnShutdown.history", true);
+        setAndLockPref("privacy.clearOnShutdown.sessions", true);
+        setAndLockPref("privacy.clearOnShutdown.siteSettings", true);
+        setAndLockPref("privacy.clearOnShutdown.offlineApps", true);
+      }
     }
   },
 

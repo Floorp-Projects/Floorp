@@ -290,6 +290,9 @@ add_task(async function checkAdvancedDetails() {
       ok(shortDescText.textContent.includes("expired.example.com"),
          "Should list hostname in error message.");
 
+      let exceptionButton = doc.getElementById("exceptionDialogButton");
+      ok(!exceptionButton.disabled, "Exception button is not disabled by default.");
+
       let advancedButton = doc.getElementById("advancedButton");
       advancedButton.click();
       let el = doc.getElementById("errorCode");
@@ -332,6 +335,27 @@ add_task(async function checkAdvancedDetails() {
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
+});
+
+add_task(async function checkhideAddExceptionButton() {
+  info("Loading a bad cert page and verifying the pref security.certerror.hideAddException");
+  Services.prefs.setBoolPref("security.certerror.hideAddException", true);
+
+  for (let useFrame of [false, true]) {
+    let tab = await openErrorPage(BAD_CERT, useFrame);
+    let browser = tab.linkedBrowser;
+
+    await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
+      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+
+      let exceptionButton = doc.querySelector(".exceptionDialogButtonContainer");
+      ok(exceptionButton.hidden, "Exception button is hidden.");
+    });
+
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  }
+
+  Services.prefs.clearUserPref("security.certerror.hideAddException");
 });
 
 add_task(async function checkAdvancedDetailsForHSTS() {

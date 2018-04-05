@@ -101,7 +101,8 @@ public:
   /**
    * Return atomic value of ARIA attribute of boolean or NMTOKEN type.
    */
-  static nsAtom* GetARIAToken(mozilla::dom::Element* aElement, nsAtom* aAttr);
+  static nsStaticAtom* GetARIAToken(mozilla::dom::Element* aElement,
+                                    nsAtom* aAttr);
 
   /**
    * Return document accessible for the given DOM node.

@@ -80,29 +80,6 @@ UnwrapArg<nsPIDOMWindowOuter>(JSContext* cx, JS::Handle<JSObject*> src,
   return UnwrapWindowProxyImpl(cx, src, ppArg);
 }
 
-nsresult
-UnwrapXPConnectImpl(JSContext* cx, JS::MutableHandle<JS::Value> src,
-                    const nsIID& iid, void** ppArg);
-
-/*
- * Convert a jsval being used as a Web IDL interface implementation to an XPCOM
- * pointer; this is only used for Web IDL interfaces that specify
- * hasXPConnectImpls.  This is not the same as UnwrapArg because caller _can_
- * assume that if unwrapping succeeds "val" will be updated so it's rooting the
- * XPCOM pointer.  Also, UnwrapXPConnect doesn't need to worry about doing
- * XPCWrappedJS things.
- *
- * val must be an ObjectValue.
- */
-template<class Interface>
-inline nsresult
-UnwrapXPConnect(JSContext* cx, JS::MutableHandle<JS::Value> val,
-                Interface** ppThis)
-{
-  return UnwrapXPConnectImpl(cx, val, NS_GET_TEMPLATE_IID(Interface),
-                             reinterpret_cast<void**>(ppThis));
-}
-
 bool
 ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                  bool aSecurityError, const char* aInterfaceName);
@@ -1093,7 +1070,8 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
 {
   MOZ_ASSERT(value);
   MOZ_ASSERT_IF(givenProto, js::IsObjectInContextCompartment(givenProto, cx));
-  // We can get rid of this when we remove support for hasXPConnectImpls.
+  // We can get rid of this when we remove support for
+  // nsWrapperCache::SetIsNotDOMBinding.
   bool couldBeDOMBinding = CouldBeDOMBinding(value);
   JSObject* obj = value->GetWrapper();
   if (obj) {
@@ -3335,7 +3313,7 @@ template<class T, class S>
 inline RefPtr<T>
 StrongOrRawPtr(already_AddRefed<S>&& aPtr)
 {
-  return aPtr.template downcast<T>();
+  return Move(aPtr);
 }
 
 template<class T,

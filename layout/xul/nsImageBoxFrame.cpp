@@ -300,7 +300,7 @@ void
 nsImageBoxFrame::UpdateLoadFlags()
 {
   static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::always, &nsGkAtoms::never, nullptr};
+    {nsGkAtoms::always, nsGkAtoms::never, nullptr};
   switch (mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
                                                  nsGkAtoms::validate, strings,
                                                  eCaseMatters)) {

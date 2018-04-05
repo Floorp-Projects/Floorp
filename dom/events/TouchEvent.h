@@ -120,10 +120,10 @@ public:
   static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal);
   static bool PrefEnabled(nsIDocShell* aDocShell);
 
-  static already_AddRefed<Event> Constructor(const GlobalObject& aGlobal,
-                                             const nsAString& aType,
-                                             const TouchEventInit& aParam,
-                                             ErrorResult& aRv);
+  static already_AddRefed<TouchEvent> Constructor(const GlobalObject& aGlobal,
+                                                  const nsAString& aType,
+                                                  const TouchEventInit& aParam,
+                                                  ErrorResult& aRv);
 
 protected:
   ~TouchEvent() {}

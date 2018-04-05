@@ -226,7 +226,7 @@ nsMenuPopupFrame::PopupLevel(bool aIsNoAutoHide) const
 
   // If the level attribute has been set, use that.
   static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::top, &nsGkAtoms::parent, &nsGkAtoms::floating, nullptr};
+    {nsGkAtoms::top, nsGkAtoms::parent, nsGkAtoms::floating, nullptr};
   switch (mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
                                                  nsGkAtoms::level, strings,
                                                  eCaseMatters)) {

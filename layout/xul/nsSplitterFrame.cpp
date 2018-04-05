@@ -136,7 +136,7 @@ nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeBefore()
 {
   static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::farthest, &nsGkAtoms::flex, nullptr};
+    {nsGkAtoms::farthest, nsGkAtoms::flex, nullptr};
   switch (SplitterElement()->FindAttrValueIn(kNameSpaceID_None,
                                              nsGkAtoms::resizebefore,
                                              strings, eCaseMatters)) {
@@ -154,7 +154,7 @@ nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeAfter()
 {
   static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::farthest, &nsGkAtoms::flex, &nsGkAtoms::grow, nullptr};
+    {nsGkAtoms::farthest, nsGkAtoms::flex, nsGkAtoms::grow, nullptr};
   switch (SplitterElement()->FindAttrValueIn(kNameSpaceID_None,
                                              nsGkAtoms::resizeafter,
                                              strings, eCaseMatters)) {
@@ -169,9 +169,9 @@ nsSplitterFrameInner::State
 nsSplitterFrameInner::GetState()
 {
   static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::dragging, &nsGkAtoms::collapsed, nullptr};
+    {nsGkAtoms::dragging, nsGkAtoms::collapsed, nullptr};
   static Element::AttrValuesArray strings_substate[] =
-    {&nsGkAtoms::before, &nsGkAtoms::after, nullptr};
+    {nsGkAtoms::before, nsGkAtoms::after, nullptr};
   switch (SplitterElement()->FindAttrValueIn(kNameSpaceID_None,
                                              nsGkAtoms::state,
                                              strings, eCaseMatters)) {
@@ -799,7 +799,7 @@ nsSplitterFrameInner::SupportsCollapseDirection
 )
 {
   static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::before, &nsGkAtoms::after, &nsGkAtoms::both, nullptr};
+    {nsGkAtoms::before, nsGkAtoms::after, nsGkAtoms::both, nullptr};
 
   switch (SplitterElement()->FindAttrValueIn(kNameSpaceID_None,
                                              nsGkAtoms::collapse,

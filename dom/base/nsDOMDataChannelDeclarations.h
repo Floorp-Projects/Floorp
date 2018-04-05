@@ -11,20 +11,17 @@
 // gets used with MOZ_INTERNAL_API not set for media/webrtc/signaling/testing
 
 #include "nsCOMPtr.h"
-#include "nsIDOMDataChannel.h"
 
 namespace mozilla {
    class DataChannel;
 }
 
+class nsDOMDataChannel;
 class nsPIDOMWindowInner;
 
 nsresult
 NS_NewDOMDataChannel(already_AddRefed<mozilla::DataChannel>&& dataChannel,
                      nsPIDOMWindowInner* aWindow,
-                     nsIDOMDataChannel** domDataChannel);
-
-// Tell DataChannel it's ok to deliver open and message events
-void NS_DataChannelAppReady(nsIDOMDataChannel* domDataChannel);
+                     nsDOMDataChannel** domDataChannel);
 
 #endif // nsDOMDataChannelDeclarations_h

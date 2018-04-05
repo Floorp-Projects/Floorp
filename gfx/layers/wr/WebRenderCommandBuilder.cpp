@@ -1613,6 +1613,13 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
   scaledBounds.Scale(scale.width, scale.height);
   LayerIntSize dtSize = RoundedToInt(scaledBounds).Size();
 
+  // TODO Rounding a rect to integers and then taking the size gives a different behavior than
+  // just rounding the size of the rect to integers. This can cause a crash, but fixing the
+  // difference causes some test failures so this is a quick fix
+  if (dtSize.width <= 0 || dtSize.height <= 0) {
+    return nullptr;
+  }
+
   bool needPaint = true;
   LayoutDeviceIntPoint offset = RoundedToInt(bounds.TopLeft());
   aImageRect = LayoutDeviceRect(offset, LayoutDeviceSize(RoundedToInt(bounds).Size()));

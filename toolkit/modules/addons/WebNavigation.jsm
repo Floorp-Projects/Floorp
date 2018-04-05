@@ -157,7 +157,7 @@ var Manager = {
         let action = input._parseActionUrl(value);
 
         if (action) {
-          // Detect keywork and generated and more typed scenarios.
+          // Detect keyword and generated and more typed scenarios.
           switch (action.type) {
             case "keyword":
               tabTransistionData.keyword = true;

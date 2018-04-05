@@ -212,7 +212,7 @@ nsITextControlElement::GetWrapPropertyEnum(nsIContent* aContent,
   nsAutoString wrap;
   if (aContent->IsHTMLElement()) {
     static Element::AttrValuesArray strings[] =
-      {&nsGkAtoms::HARD, &nsGkAtoms::OFF, nullptr};
+      {nsGkAtoms::HARD, nsGkAtoms::OFF, nullptr};
 
     switch (aContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
                                                    nsGkAtoms::wrap, strings,

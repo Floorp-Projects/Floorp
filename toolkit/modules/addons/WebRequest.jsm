@@ -475,7 +475,7 @@ class AuthRequestor {
         } catch (e) {
           Cu.reportError(`webRequest onAuthAvailable failure ${e}`);
         }
-        // At least one addon has responded, so we wont forward to the regular
+        // At least one addon has responded, so we won't forward to the regular
         // prompt handlers.
         wrapper.authPromptForward = null;
         wrapper.authPromptCallback = null;
