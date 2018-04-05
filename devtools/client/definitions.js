@@ -450,9 +450,7 @@ Tools.accessibility = {
   label: l10n("accessibility.label"),
   panelLabel: l10n("accessibility.panelLabel"),
   get tooltip() {
-    return l10n("accessibility.tooltip",
-      (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
-      l10n("accessibility.commandkey"));
+    return l10n("accessibility.tooltip2");
   },
   inMenu: true,
 

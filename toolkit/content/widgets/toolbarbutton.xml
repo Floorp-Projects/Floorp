@@ -17,27 +17,19 @@
 
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
-      <xul:label class="toolbarbutton-text" crop="right" flex="1"
-                 xbl:inherits="value=label,accesskey,crop,wrap"/>
-      <xul:label class="toolbarbutton-multiline-text" flex="1"
-                 xbl:inherits="xbl:text=label,accesskey,wrap"/>
-      <children includes="box"/>
-    </content>
-  </binding>
-
-  <binding id="menu" display="xul:menu"
-           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
-    <content>
-      <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,type,consumeanchor"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
                  xbl:inherits="value=label,accesskey,crop,dragover-top,wrap"/>
       <xul:label class="toolbarbutton-multiline-text" flex="1"
                  xbl:inherits="xbl:text=label,accesskey,wrap"/>
+      <children includes="box"/>
       <xul:dropmarker anonid="dropmarker" type="menu"
                       class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
     </content>
+  </binding>
+
+  <binding id="menu" display="xul:menu"
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
   </binding>
 
   <binding id="toolbarbutton-badged"
@@ -53,23 +45,12 @@
                  xbl:inherits="value=label,accesskey,crop,wrap"/>
       <xul:label class="toolbarbutton-multiline-text" flex="1"
                  xbl:inherits="xbl:text=label,accesskey,wrap"/>
+      <xul:dropmarker anonid="dropmarker" type="menu"
+                      class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
     </content>
   </binding>
 
   <binding id="toolbarbutton-badged-menu" display="xul:menu"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
-    <content>
-      <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:stack class="toolbarbutton-badge-stack">
-        <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
-        <xul:label class="toolbarbutton-badge" xbl:inherits="value=badge" top="0" end="0" crop="none"/>
-      </xul:stack>
-      <xul:label class="toolbarbutton-text" crop="right" flex="1"
-                 xbl:inherits="value=label,accesskey,crop,dragover-top,wrap"/>
-      <xul:label class="toolbarbutton-multiline-text" flex="1"
-                 xbl:inherits="xbl:text=label,accesskey,wrap"/>
-      <xul:dropmarker anonid="dropmarker" type="menu"
-                      class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
-    </content>
   </binding>
 </bindings>

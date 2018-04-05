@@ -11,8 +11,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "UITelemetry",
-  "resource://gre/modules/UITelemetry.jsm");
 ChromeUtils.defineModuleGetter(this, "RecentWindow",
   "resource:///modules/RecentWindow.jsm");
 ChromeUtils.defineModuleGetter(this, "CustomizableUI",
@@ -166,18 +164,6 @@ const BUCKET_SEPARATOR = "|";
 
 var BrowserUITelemetry = {
   init() {
-    UITelemetry.addSimpleMeasureFunction("toolbars",
-                                         this.getToolbarMeasures.bind(this));
-    UITelemetry.addSimpleMeasureFunction("contextmenu",
-                                         this.getContextMenuInfo.bind(this));
-    // Ensure that UITour.jsm remains lazy-loaded, yet always registers its
-    // simple measure function with UITelemetry.
-    UITelemetry.addSimpleMeasureFunction("UITour",
-                                         () => UITour.getTelemetry());
-
-    UITelemetry.addSimpleMeasureFunction("syncstate",
-                                         this.getSyncState.bind(this));
-
     Services.obs.addObserver(this, "autocomplete-did-enter-text");
     CustomizableUI.addListener(this);
 
