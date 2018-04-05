@@ -9,18 +9,6 @@ ChromeUtils.import("resource://gre/modules/RemotePageManager.jsm");
 let context = {};
 let TalosParentProfiler;
 
-function promiseOneEvent(target, eventName, capture) {
-  return new Promise(resolve => {
-    target.addEventListener(eventName, function handler(event) {
-      resolve();
-    }, {capture, once: true});
-  });
-}
-
-function executeSoon(callback) {
-  Services.tm.dispatchToMainThread(callback);
-}
-
 /**
  * Returns a Promise that resolves when browser-delayed-startup-finished
  * fires for a given window
@@ -89,65 +77,6 @@ function loadTabs(gBrowser, urls) {
 }
 
 /**
- * Loads the utility content script for the tps for out-of-process
- * browsers into a browser. This should not be used for in-process
- * browsers.
- *
- * The utility script will send a "TPS:ContentSawPaint" message
- * through the browser's message manager when it sees that its
- * content has been presented to the user.
- *
- * @param browser (<xul:browser>)
- *        The remote browser to load the script in.
- * @returns Promise
- *        Resolves once the script has been loaded and executed in
- *        the remote browser.
- */
-function loadTPSContentScript(browser) {
-  return new Promise((resolve) => {
-    // Here's our utility script. We'll serialize this and send it down
-    // to run in the content process for this browser.
-    let script = function() {
-      ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-      /**
-       * In order to account for the fact that a MozAfterPaint might fire
-       * for a composite that's unrelated to this tab's content being
-       * painted, we'll get the last used layer transaction ID for
-       * this content's refresh driver, and make sure that the MozAfterPaint
-       * that we react to has a greater transaction id.
-       *
-       * Note also that this comment needs to stay inside this comment
-       * block. No // comments allowed when serializing JS to content
-       * scripts this way.
-       */
-      let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
-      let lastTransactionId = cwu.lastTransactionId;
-      Services.profiler.AddMarker("Content waiting for id > " + lastTransactionId);
-      addEventListener("MozAfterPaint", function onPaint(event) {
-        Services.profiler.AddMarker("Content saw transaction id: " + event.transactionId);
-        if (event.transactionId > lastTransactionId) {
-          Services.profiler.AddMarker("Content saw correct MozAfterPaint");
-          let time = Math.floor(content.performance.timing.navigationStart + content.performance.now());
-          sendAsyncMessage("TPS:ContentSawPaint", { time });
-          removeEventListener("MozAfterPaint", onPaint);
-        }
-      });
-
-      sendAsyncMessage("TPS:ContentReady");
-    };
-
-    let mm = browser.messageManager;
-    mm.loadFrameScript("data:,(" + script.toString() + ")();", true);
-    mm.addMessageListener("TPS:ContentReady", function onReady() {
-      mm.removeMessageListener("TPS:ContentReady", onReady);
-      resolve();
-    });
-  });
-}
-
-/**
  * For some <xul:tab> in a browser window, have that window switch
  * to that tab. Returns a Promise that resolves ones the tab content
  * has been presented to the user.
@@ -156,7 +85,6 @@ async function switchToTab(tab) {
   let browser = tab.linkedBrowser;
   let gBrowser = tab.ownerGlobal.gBrowser;
 
-  await loadTPSContentScript(browser);
   let start = Cu.now();
 
   // We need to wait for the TabSwitchDone event to make sure
@@ -379,14 +307,6 @@ function handleFile(win, file) {
   return testURLs;
 }
 
-var observer = {
-  observe(aSubject, aTopic, aData) {
-    if (aTopic == "tabswitch-urlfile") {
-      handleFile(aSubject, aData);
-    }
-  }
-};
-
 var remotePage;
 
 this.tps = class extends ExtensionAPI {
@@ -398,9 +318,6 @@ this.tps = class extends ExtensionAPI {
                                        .getService(Ci.nsIAboutNewTabService);
           AboutNewTabService.newTabURL = "about:blank";
 
-          // Load into any new windows
-          Services.obs.addObserver(observer, "tabswitch-urlfile");
-
           const frameScriptURL = context.extension.baseURI.resolve(frameScriptPath);
           Services.ppmm.loadFrameScript(frameScriptURL, true);
           remotePage = new RemotePages("about:tabswitch");
@@ -410,7 +327,6 @@ this.tps = class extends ExtensionAPI {
 
           return () => {
             Services.ppmm.sendAsyncMessage("TPS:Teardown");
-            Services.obs.removeObserver(observer, "tabswitch-urlfile");
             remotePage.destroy();
             AboutNewTabService.resetNewTabURL();
           };
