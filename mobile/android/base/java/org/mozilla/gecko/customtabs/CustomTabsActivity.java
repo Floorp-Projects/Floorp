@@ -37,7 +37,6 @@ import org.mozilla.gecko.Clipboard;
 import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.FormAssistPopup;
-import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.R;
@@ -123,8 +122,6 @@ public class CustomTabsActivity extends AppCompatActivity
         actionBarPresenter.setTextLongClickListener(new UrlCopyListener());
 
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
-
-        GeckoAccessibility.setDelegate(mGeckoView);
 
         final GeckoSessionSettings settings = new GeckoSessionSettings();
         settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
