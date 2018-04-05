@@ -42,6 +42,8 @@ public:
                      mozilla::dom::CallerType aCallerType,
                      mozilla::ErrorResult& aRv) override;
 
+  void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
+
   nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
 
   // nsPIWindowRoot

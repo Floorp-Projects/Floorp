@@ -1947,7 +1947,7 @@ nsGlobalWindowInner::GetTargetForDOMEvent()
   return GetOuterWindowInternal();
 }
 
-nsresult
+void
 nsGlobalWindowInner::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   EventMessage msg = aVisitor.mEvent->mMessage;
@@ -1986,8 +1986,6 @@ nsGlobalWindowInner::GetEventTargetParent(EventChainPreVisitor& aVisitor)
        aVisitor.mEvent->HasDragEventMessage())) {
     mAddActiveEventFuzzTime = false;
   }
-
-  return NS_OK;
 }
 
 bool

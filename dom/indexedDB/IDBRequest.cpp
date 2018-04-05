@@ -404,14 +404,13 @@ NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
 NS_IMPL_ADDREF_INHERITED(IDBRequest, IDBWrapperCache)
 NS_IMPL_RELEASE_INHERITED(IDBRequest, IDBWrapperCache)
 
-nsresult
+void
 IDBRequest::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   AssertIsOnOwningThread();
 
   aVisitor.mCanHandle = true;
   aVisitor.SetParentTarget(mTransaction, false);
-  return NS_OK;
 }
 
 class IDBOpenDBRequest::WorkerHolder final

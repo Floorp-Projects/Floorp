@@ -439,7 +439,7 @@ HTMLFormElement::UnbindFromTree(bool aDeep, bool aNullParent)
   ForgetCurrentSubmission();
 }
 
-nsresult
+void
 HTMLFormElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mWantsWillHandleEvent = true;
@@ -448,7 +448,7 @@ HTMLFormElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     if (msg == eFormSubmit) {
       if (mGeneratingSubmit) {
         aVisitor.mCanHandle = false;
-        return NS_OK;
+        return;
       }
       mGeneratingSubmit = true;
 
@@ -459,12 +459,12 @@ HTMLFormElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     } else if (msg == eFormReset) {
       if (mGeneratingReset) {
         aVisitor.mCanHandle = false;
-        return NS_OK;
+        return;
       }
       mGeneratingReset = true;
     }
   }
-  return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+  nsGenericHTMLElement::GetEventTargetParent(aVisitor);
 }
 
 void

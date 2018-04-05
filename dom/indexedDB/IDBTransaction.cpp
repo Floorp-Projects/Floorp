@@ -1043,14 +1043,13 @@ IDBTransaction::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return IDBTransactionBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsresult
+void
 IDBTransaction::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   AssertIsOnOwningThread();
 
   aVisitor.mCanHandle = true;
   aVisitor.SetParentTarget(mDatabase, false);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

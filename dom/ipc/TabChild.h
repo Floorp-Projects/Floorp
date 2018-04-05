@@ -109,11 +109,10 @@ public:
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
 
-  nsresult
+  void
   GetEventTargetParent(EventChainPreVisitor& aVisitor) override
   {
     aVisitor.mForceContentDispatch = true;
-    return NS_OK;
   }
 
   virtual nsIPrincipal* GetPrincipal() override;

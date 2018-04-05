@@ -511,19 +511,19 @@ HTMLTextAreaElement::IsDisabledForEvents(EventMessage aMessage)
   return IsElementDisabledForEvents(aMessage, formFrame);
 }
 
-nsresult
+void
 HTMLTextAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
   if (IsDisabledForEvents(aVisitor.mEvent->mMessage)) {
-    return NS_OK;
+    return;
   }
 
   // Don't dispatch a second select event if we are already handling
   // one.
   if (aVisitor.mEvent->mMessage == eFormSelect) {
     if (mHandlingSelect) {
-      return NS_OK;
+      return;
     }
     mHandlingSelect = true;
   }
@@ -546,7 +546,7 @@ HTMLTextAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     aVisitor.mWantsPreHandleEvent = true;
   }
 
-  return nsGenericHTMLFormElementWithState::GetEventTargetParent(aVisitor);
+  nsGenericHTMLFormElementWithState::GetEventTargetParent(aVisitor);
 }
 
 nsresult
