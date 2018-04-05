@@ -4,9 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
 #include "frontend/BinTokenReaderTester.h"
 
 #include "mozilla/EndianUtils.h"
+
+#include "frontend/BinSource-macros.h"
 #include "gc/Zone.h"
 
 namespace js {
@@ -18,156 +21,76 @@ using AutoTaggedTuple = BinTokenReaderTester::AutoTaggedTuple;
 using AutoTuple = BinTokenReaderTester::AutoTuple;
 
 BinTokenReaderTester::BinTokenReaderTester(JSContext* cx, const uint8_t* start, const size_t length)
-    : cx_(cx)
-    , start_(start)
-    , current_(start)
-    , stop_(start + length)
-    , latestKnownGoodPos_(0)
+    : BinTokenReaderBase(cx, start, length)
 { }
 
-BinTokenReaderTester::BinTokenReaderTester(JSContext* cx, const Vector<uint8_t>& chars)
-    : cx_(cx)
-    , start_(chars.begin())
-    , current_(chars.begin())
-    , stop_(chars.end())
-    , latestKnownGoodPos_(0)
+BinTokenReaderTester::BinTokenReaderTester(JSContext* cx, const Vector<uint8_t>& buf)
+    : BinTokenReaderBase(cx, buf.begin(), buf.length())
 { }
 
-bool
-BinTokenReaderTester::raiseError(const char* description)
+JS::Result<Ok>
+BinTokenReaderTester::readHeader()
 {
-    MOZ_ASSERT(!cx_->isExceptionPending());
-    TokenPos pos = this->pos();
-    JS_ReportErrorASCII(cx_, "BinAST parsing error: %s at offsets %u => %u",
-                        description, pos.begin, pos.end);
-    return false;
+    // This format does not have a header.
+    return Ok();
 }
 
-bool
-BinTokenReaderTester::readBuf(uint8_t* bytes, uint32_t len)
-{
-    MOZ_ASSERT(!cx_->isExceptionPending());
-    MOZ_ASSERT(len > 0);
-
-    if (stop_ < current_ + len)
-        return raiseError("Buffer exceeds length");
-
-    for (uint32_t i = 0; i < len; ++i)
-        *bytes++ = *current_++;
-
-    return true;
-}
-
-bool
-BinTokenReaderTester::readByte(uint8_t* byte)
-{
-    return readBuf(byte, 1);
-}
-
-
-// Nullable booleans:
-//
-// 0 => false
-// 1 => true
-// 2 => null
-bool
-BinTokenReaderTester::readMaybeBool(Maybe<bool>& result)
+JS::Result<bool>
+BinTokenReaderTester::readBool()
 {
     updateLatestKnownGood();
-    uint8_t byte;
-    if (!readByte(&byte))
-        return false;
+    BINJS_MOZ_TRY_DECL(byte, readByte());
 
     switch (byte) {
       case 0:
-        result = Some(false);
-        break;
+        return false;
       case 1:
-        result = Some(true);
-        break;
+        return true;
       case 2:
-        result = Nothing();
-        break;
+        return raiseError("Not implemented: null boolean value");
       default:
         return raiseError("Invalid boolean value");
     }
-    return true;
 }
 
-bool
-BinTokenReaderTester::readBool(bool& out)
-{
-    Maybe<bool> result;
-
-    if (!readMaybeBool(result))
-        return false;
-
-    if (result.isNothing())
-        return raiseError("Empty boolean value");
-
-    out = *result;
-    return true;
-}
 
 // Nullable doubles (little-endian)
 //
-// 0x7FF0000000000001 (signaling NaN) => null
+// NULL_FLOAT_REPRESENTATION (signaling NaN) => null
 // anything other 64 bit sequence => IEEE-764 64-bit floating point number
-bool
-BinTokenReaderTester::readMaybeDouble(Maybe<double>& result)
+JS::Result<double>
+BinTokenReaderTester::readDouble()
 {
     updateLatestKnownGood();
 
     uint8_t bytes[8];
     MOZ_ASSERT(sizeof(bytes) == sizeof(double));
-    if (!readBuf(reinterpret_cast<uint8_t*>(bytes), ArrayLength(bytes)))
-        return false;
+    MOZ_TRY(readBuf(reinterpret_cast<uint8_t*>(bytes), ArrayLength(bytes)));
 
     // Decode little-endian.
     const uint64_t asInt = LittleEndian::readUint64(bytes);
 
-    if (asInt == 0x7FF0000000000001) {
-        result = Nothing();
-    } else {
-        // Canonicalize NaN, just to make sure another form of signalling NaN
-        // doesn't slip past us.
-        const double asDouble = CanonicalizeNaN(BitwiseCast<double>(asInt));
-        result = Some(asDouble);
-    }
+    if (asInt == NULL_FLOAT_REPRESENTATION)
+        return raiseError("Not implemented: null double value");
 
-    return true;
-}
-
-bool
-BinTokenReaderTester::readDouble(double& out)
-{
-    Maybe<double> result;
-
-    if (!readMaybeDouble(result))
-        return false;
-
-    if (result.isNothing())
-        return raiseError("Empty double value");
-
-    out = *result;
-    return true;
+    // Canonicalize NaN, just to make sure another form of signalling NaN
+    // doesn't slip past us.
+    const double asDouble = CanonicalizeNaN(BitwiseCast<double>(asInt));
+    return asDouble;
 }
 
 // Internal uint32_t
 //
 // Encoded as 4 bytes, little-endian.
-bool
-BinTokenReaderTester::readInternalUint32(uint32_t* result)
+MOZ_MUST_USE JS::Result<uint32_t>
+BinTokenReaderTester::readInternalUint32()
 {
     uint8_t bytes[4];
     MOZ_ASSERT(sizeof(bytes) == sizeof(uint32_t));
-    if (!readBuf(bytes, 4))
-        return false;
+    MOZ_TRY(readBuf(bytes, 4));
 
     // Decode little-endian.
-    *result = LittleEndian::readUint32(bytes);
-
-    return true;
+    return LittleEndian::readUint32(bytes);
 }
 
 
@@ -180,18 +103,17 @@ BinTokenReaderTester::readInternalUint32(uint32_t* result)
 //
 // The special sequence of bytes `[255, 0]` (which is an invalid UTF-8 sequence)
 // is reserved to `null`.
-bool
-BinTokenReaderTester::readMaybeChars(Maybe<Chars>& out)
+JS::Result<JSAtom*>
+BinTokenReaderTester::readMaybeAtom()
 {
     updateLatestKnownGood();
 
-    if (!readConst("<string>"))
-        return false;
+    MOZ_TRY(readConst("<string>"));
+
+    RootedAtom result(cx_);
 
     // 1. Read byteLength
-    uint32_t byteLen;
-    if (!readInternalUint32(&byteLen))
-        return false;
+    BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
 
     // 2. Reject if we can't read
     if (current_ + byteLen < current_) // Check for overflows
@@ -202,111 +124,135 @@ BinTokenReaderTester::readMaybeChars(Maybe<Chars>& out)
 
     if (byteLen == 2 && *current_ == 255 && *(current_ + 1) == 0) {
         // 3. Special case: null string.
-        out = Nothing();
+        result = nullptr;
     } else {
         // 4. Other strings (bytes are copied)
-        out.emplace(cx_);
-        if (!out->resize(byteLen)) {
-            ReportOutOfMemory(cx_);
-            return false;
-        }
-        PodCopy(out->begin(), current_, byteLen);
+        BINJS_TRY_VAR(result, Atomize(cx_, (const char*)current_, byteLen));
     }
 
     current_ += byteLen;
-    if (!readConst("</string>"))
-        return false;
-
-    return true;
+    MOZ_TRY(readConst("</string>"));
+    return result.get();
 }
 
-bool
+
+// Nullable strings:
+// - "<string>" (not counted in byte length)
+// - byte length (not counted in byte length)
+// - bytes (UTF-8)
+// - "</string>" (not counted in byte length)
+//
+// The special sequence of bytes `[255, 0]` (which is an invalid UTF-8 sequence)
+// is reserved to `null`.
+JS::Result<Ok>
 BinTokenReaderTester::readChars(Chars& out)
 {
-    Maybe<Chars> result;
-
-    if (!readMaybeChars(result))
-        return false;
-
-    if (result.isNothing())
-        return raiseError("Empty string");
-
-    out = Move(*result);
-    return true;
-}
-
-template <size_t N>
-bool
-BinTokenReaderTester::matchConst(const char (&value)[N])
-{
-    MOZ_ASSERT(N > 0);
-    MOZ_ASSERT(value[N - 1] == 0);
-    MOZ_ASSERT(!cx_->isExceptionPending());
-
-    if (current_ + N - 1 > stop_)
-        return false;
-
-    // Perform lookup, without side-effects.
-    if (!std::equal(current_, current_ + N - 1 /*implicit NUL*/, value))
-        return false;
-
-    // Looks like we have a match. Now perform side-effects
-    current_ += N - 1;
     updateLatestKnownGood();
-    return true;
+
+    MOZ_TRY(readConst("<string>"));
+
+    // 1. Read byteLength
+    BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
+
+    // 2. Reject if we can't read
+    if (current_ + byteLen < current_) // Check for overflows
+        return raiseError("Arithmetics overflow: string is too long");
+
+    if (current_ + byteLen > stop_)
+        return raiseError("Not enough bytes to read chars");
+
+    if (byteLen == 2 && *current_ == 255 && *(current_ + 1) == 0) {
+        // 3. Special case: null string.
+        return raiseError("Empty string");
+    }
+
+    // 4. Other strings (bytes are copied)
+    if (!out.resize(byteLen))
+        return raiseOOM();
+
+    PodCopy(out.begin(), current_, byteLen);
+
+    current_ += byteLen;
+
+    MOZ_TRY(readConst("</string>"));
+    return Ok();
 }
 
+JS::Result<JSAtom*>
+BinTokenReaderTester::readAtom()
+{
+    RootedAtom atom(cx_);
+    MOZ_TRY_VAR(atom, readMaybeAtom());
+
+    if (!atom)
+        return raiseError("Empty string");
+    return atom.get();
+}
+
+JS::Result<BinVariant>
+BinTokenReaderTester::readVariant()
+{
+    MOZ_TRY(readConst("<string>"));
+    BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
+
+    // 2. Reject if we can't read
+    if (current_ + byteLen < current_) // Check for overflows
+        return raiseError("Arithmetics overflow: string is too long");
+
+    if (current_ + byteLen > stop_)
+        return raiseError("Not enough bytes to read chars");
+
+    if (byteLen == 2 && *current_ == 255 && *(current_ + 1) == 0) {
+        // 3. Special case: null string.
+        return raiseError("Empty variant");
+    }
+
+    BinaryASTSupport::CharSlice slice((const char*)current_, byteLen);
+    current_ += byteLen;
+
+    BINJS_MOZ_TRY_DECL(variant, cx_->runtime()->binast().binVariant(cx_, slice));
+    if (!variant)
+        return raiseError("Not a variant");
+
+    MOZ_TRY(readConst("</string>"));
+    return *variant;
+}
 
 // Untagged tuple:
 // - "<tuple>";
 // - contents (specified by the higher-level grammar);
 // - "</tuple>"
-bool
+JS::Result<Ok>
 BinTokenReaderTester::enterUntaggedTuple(AutoTuple& guard)
 {
-    if (!readConst("<tuple>"))
-        return false;
+    MOZ_TRY(readConst("<tuple>"));
 
     guard.init();
-    return true;
-}
-
-template <size_t N>
-bool
-BinTokenReaderTester::readConst(const char (&value)[N])
-{
-    updateLatestKnownGood();
-    if (!matchConst(value))
-        return raiseError("Could not find expected literal");
-
-    return true;
+    return Ok();
 }
 
 // Tagged tuples:
-// - "<tuple>"
-// - "<head>"
+// - "<tuple>";
+// - "<head>";
 // - non-null string `name`, followed by \0 (see `readString()`);
 // - uint32_t number of fields;
 // - array of `number of fields` non-null strings followed each by \0 (see `readString()`);
-// - "</head>"
+// - "</head>";
 // - content (specified by the higher-level grammar);
 // - "</tuple>"
-bool
+JS::Result<Ok>
 BinTokenReaderTester::enterTaggedTuple(BinKind& tag, BinFields& fields, AutoTaggedTuple& guard)
 {
     // Header
-    if (!readConst("<tuple>"))
-        return false;
-
-    if (!readConst("<head>"))
-        return false;
+    MOZ_TRY(readConst("<tuple>"));
+    MOZ_TRY(readConst("<head>"));
 
     // This would probably be much faster with a HashTable, but we don't
     // really care about the speed of BinTokenReaderTester.
     do {
 
 #define FIND_MATCH(CONSTRUCTOR, NAME) \
-        if (matchConst(#NAME "\0")) { \
+        if (matchConst(NAME, true)) { \
             tag = BinKind::CONSTRUCTOR; \
             break; \
         } // else
@@ -319,13 +265,11 @@ BinTokenReaderTester::enterTaggedTuple(BinKind& tag, BinFields& fields, AutoTagg
     } while(false);
 
     // Now fields.
-    uint32_t fieldNum;
-    if (!readInternalUint32(&fieldNum))
-        return false;
+    BINJS_MOZ_TRY_DECL(fieldNum, readInternalUint32());
 
     fields.clear();
     if (!fields.reserve(fieldNum))
-        return raiseError("Out of memory");
+        return raiseOOM();
 
     for (uint32_t i = 0; i < fieldNum; ++i) {
         // This would probably be much faster with a HashTable, but we don't
@@ -334,7 +278,7 @@ BinTokenReaderTester::enterTaggedTuple(BinKind& tag, BinFields& fields, AutoTagg
         do {
 
 #define FIND_MATCH(CONSTRUCTOR, NAME) \
-            if (matchConst(#NAME "\0")) { \
+            if (matchConst(NAME, true)) { \
                 field = BinField::CONSTRUCTOR; \
                 break; \
             } // else
@@ -359,13 +303,11 @@ BinTokenReaderTester::enterTaggedTuple(BinKind& tag, BinFields& fields, AutoTagg
     }
 
     // End of header
-
-    if (!readConst("</head>"))
-        return false;
+    MOZ_TRY(readConst("</head>"));
 
     // Enter the body.
     guard.init();
-    return true;
+    return Ok();
 }
 
 // List:
@@ -377,61 +319,14 @@ BinTokenReaderTester::enterTaggedTuple(BinKind& tag, BinFields& fields, AutoTagg
 // - "</list>" (not counted in byte length)
 //
 // The total byte length of `number of items` + `contents` must be `byte length`.
-bool
+JS::Result<Ok>
 BinTokenReaderTester::enterList(uint32_t& items, AutoList& guard)
 {
-    if (!readConst("<list>"))
-        return false;
+    MOZ_TRY(readConst("<list>"));
+    guard.init();
 
-    uint32_t byteLen;
-    if (!readInternalUint32(&byteLen))
-        return false;
-
-    const uint8_t* stop = current_ + byteLen;
-
-    if (stop < current_) // Check for overflows
-        return raiseError("Arithmetics overflow: list is too long");
-
-    if (stop > this->stop_)
-        return raiseError("Incorrect list length");
-
-    guard.init(stop);
-
-    if (!readInternalUint32(&items))
-        return false;
-
-    return true;
-}
-
-void
-BinTokenReaderTester::updateLatestKnownGood()
-{
-    MOZ_ASSERT(current_ >= start_);
-    const size_t update = current_ - start_;
-    MOZ_ASSERT(update >= latestKnownGoodPos_);
-    latestKnownGoodPos_ = update;
-}
-
-size_t
-BinTokenReaderTester::offset() const
-{
-    return latestKnownGoodPos_;
-}
-
-TokenPos
-BinTokenReaderTester::pos()
-{
-    return pos(latestKnownGoodPos_);
-}
-
-TokenPos
-BinTokenReaderTester::pos(size_t start)
-{
-    TokenPos pos;
-    pos.begin = start;
-    pos.end = current_ - start_;
-    MOZ_ASSERT(pos.end >= pos.begin);
-    return pos;
+    MOZ_TRY_VAR(items, readInternalUint32());
+    return Ok();
 }
 
 void
@@ -452,13 +347,13 @@ BinTokenReaderTester::AutoBase::~AutoBase()
     MOZ_ASSERT_IF(initialized_, reader_.cx_->isExceptionPending());
 }
 
-bool
+JS::Result<Ok>
 BinTokenReaderTester::AutoBase::checkPosition(const uint8_t* expectedEnd)
 {
     if (reader_.current_ != expectedEnd)
         return reader_.raiseError("Caller did not consume the expected set of bytes");
 
-    return true;
+    return Ok();
 }
 
 BinTokenReaderTester::AutoList::AutoList(BinTokenReaderTester& reader)
@@ -466,74 +361,67 @@ BinTokenReaderTester::AutoList::AutoList(BinTokenReaderTester& reader)
 { }
 
 void
-BinTokenReaderTester::AutoList::init(const uint8_t* expectedEnd)
+BinTokenReaderTester::AutoList::init()
 {
     AutoBase::init();
-    this->expectedEnd_ = expectedEnd;
 }
 
-bool
+JS::Result<Ok>
 BinTokenReaderTester::AutoList::done()
 {
     MOZ_ASSERT(initialized_);
     initialized_ = false;
     if (reader_.cx_->isExceptionPending()) {
         // Already errored, no need to check further.
-        return false;
+        return reader_.cx_->alreadyReportedError();
     }
 
-    // Check that we have consumed the exact number of bytes.
-    if (!checkPosition(expectedEnd_))
-        return false;
-
     // Check suffix.
-    if (!reader_.readConst("</list>"))
-        return false;
+    MOZ_TRY(reader_.readConst("</list>"));
 
-    return true;
+    return Ok();
 }
 
 BinTokenReaderTester::AutoTaggedTuple::AutoTaggedTuple(BinTokenReaderTester& reader)
     : AutoBase(reader)
 { }
 
-bool
+JS::Result<Ok>
 BinTokenReaderTester::AutoTaggedTuple::done()
 {
     MOZ_ASSERT(initialized_);
     initialized_ = false;
     if (reader_.cx_->isExceptionPending()) {
         // Already errored, no need to check further.
-        return false;
+        return reader_.cx_->alreadyReportedError();
     }
 
     // Check suffix.
-    if (!reader_.readConst("</tuple>"))
-        return false;
+    MOZ_TRY(reader_.readConst("</tuple>"));
 
-    return true;
+    return Ok();
 }
 
 BinTokenReaderTester::AutoTuple::AutoTuple(BinTokenReaderTester& reader)
     : AutoBase(reader)
 { }
 
-bool
+JS::Result<Ok>
 BinTokenReaderTester::AutoTuple::done()
 {
     MOZ_ASSERT(initialized_);
     initialized_ = false;
     if (reader_.cx_->isExceptionPending()) {
         // Already errored, no need to check further.
-        return false;
+        return reader_.cx_->alreadyReportedError();
     }
 
     // Check suffix.
-    if (!reader_.readConst("</tuple>"))
-        return false;
+    MOZ_TRY(reader_.readConst("</tuple>"));
 
-    return true;
+    return Ok();
 }
 
 } // namespace frontend
 } // namespace js
+

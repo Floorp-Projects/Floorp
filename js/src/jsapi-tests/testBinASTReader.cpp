@@ -310,7 +310,7 @@ END_TEST(testBinASTReaderSimpleECMAScript2)
 BEGIN_TEST(testBinASTReaderMultipartECMAScript2)
 {
 #if defined(XP_WIN)
-    runTestFromPath<js::frontend::BinTokenReaderMultipart(cx, "jsapi-tests\\binast\\parser\\multipart\\");
+    runTestFromPath<js::frontend::BinTokenReaderMultipart>(cx, "jsapi-tests\\binast\\parser\\multipart\\");
 #else
     runTestFromPath<js::frontend::BinTokenReaderMultipart>(cx, "jsapi-tests/binast/parser/multipart/");
 #endif // defined(XP_XIN)
