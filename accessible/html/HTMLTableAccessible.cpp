@@ -1063,6 +1063,11 @@ HTMLTableAccessible::IsProbablyLayoutTable()
     if (child->Role() == roles::ROW) {
       prevRowColor = rowColor;
       nsIFrame* rowFrame = child->GetFrame();
+      MOZ_ASSERT(rowFrame, "Table hierarchy got screwed up");
+      if (!rowFrame) {
+        RETURN_LAYOUT_ANSWER(false, "Unexpected table hierarchy");
+      }
+
       rowColor = rowFrame->StyleBackground()->BackgroundColor(rowFrame);
 
       if (childIdx > 0 && prevRowColor != rowColor)
