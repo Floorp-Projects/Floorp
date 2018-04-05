@@ -22,7 +22,7 @@ PromptFactory.prototype = {
   classID: Components.ID("{076ac188-23c1-4390-aa08-7ef1f78ca5d9}"),
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIPromptFactory, Ci.nsIPromptService]),
+    Ci.nsIDOMEventListener, Ci.nsIPromptFactory, Ci.nsIPromptService]),
 
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
@@ -273,20 +273,6 @@ PromptFactory.prototype = {
     aEvent.preventDefault();
   },
 
-  receiveMessage: function(aMsg) {
-    if (aMsg.name !== "GeckoView:Prompt") {
-      return;
-    }
-
-    let prompt = new PromptDelegate(aMsg.target.contentWindow || aMsg.target.ownerGlobal);
-    prompt.asyncShowPrompt(aMsg.data, result => {
-      aMsg.target.messageManager.sendAsyncMessage("GeckoView:PromptClose", {
-        uuid: aMsg.data.uuid,
-        result: result,
-      });
-    });
-  },
-
   /* ----------  nsIPromptFactory  ---------- */
   getPrompt: function(aDOMWin, aIID) {
     // Delegated to login manager here, which in turn calls back into us via nsIPromptService.
@@ -352,10 +338,6 @@ PromptFactory.prototype = {
 
 function PromptDelegate(aDomWin) {
   this._domWin = aDomWin;
-
-  if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
-    return;
-  }
 
   if (aDomWin) {
     this._dispatcher = GeckoViewUtils.getDispatcherForWindow(aDomWin);
@@ -425,29 +407,6 @@ PromptDelegate.prototype = {
   },
 
   asyncShowPrompt: function(aMsg, aCallback) {
-    if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
-      let docShell = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDocShell)
-                                 .QueryInterface(Ci.nsIDocShellTreeItem)
-                                 .rootTreeItem;
-      let messageManager = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsITabChild)
-                                   .messageManager;
-
-      let uuid = UUIDGen.generateUUID().toString();
-      aMsg.uuid = uuid;
-
-      messageManager.addMessageListener("GeckoView:PromptClose", function listener(msg) {
-        if (msg.data.uuid !== uuid) {
-          return;
-        }
-        messageManager.removeMessageListener(msg.name, listener);
-        aCallback(msg.data.result);
-      });
-      messageManager.sendAsyncMessage("GeckoView:Prompt", aMsg);
-      return;
-    }
-
     let handled = false;
     let onResponse = response => {
       if (handled) {
