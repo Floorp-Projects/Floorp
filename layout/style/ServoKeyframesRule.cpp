@@ -197,16 +197,6 @@ ServoKeyframesRule::IsCCLeaf() const
   return Rule::IsCCLeaf() && !mKeyframeList;
 }
 
-/* virtual */ already_AddRefed<css::Rule>
-ServoKeyframesRule::Clone() const
-{
-  // Rule::Clone is only used when CSSStyleSheetInner is cloned in
-  // preparation of being mutated. However, ServoStyleSheet never clones
-  // anything, so this method should never be called.
-  MOZ_ASSERT_UNREACHABLE("Shouldn't be cloning ServoKeyframesRule");
-  return nullptr;
-}
-
 #ifdef DEBUG
 /* virtual */ void
 ServoKeyframesRule::List(FILE* out, int32_t aIndent) const

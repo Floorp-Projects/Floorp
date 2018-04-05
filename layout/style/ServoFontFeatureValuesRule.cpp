@@ -26,16 +26,6 @@ ServoFontFeatureValuesRule::~ServoFontFeatureValuesRule()
 {
 }
 
-already_AddRefed<css::Rule>
-ServoFontFeatureValuesRule::Clone() const
-{
-  // Rule::Clone is only used when CSSStyleSheetInner is cloned in
-  // preparation of being mutated. However, ServoStyleSheet never clones
-  // anything, so this method should never be called.
-  MOZ_ASSERT_UNREACHABLE("Shouldn't be cloning ServoFontFeatureValuesRule");
-  return nullptr;
-}
-
 size_t
 ServoFontFeatureValuesRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
