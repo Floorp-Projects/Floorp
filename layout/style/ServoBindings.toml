@@ -284,7 +284,6 @@ whitelist-types = [
     "nsCSSProps",
     "nsCSSShadowArray",
     "nsCSSValue",
-    "nsCSSValueFloatColor",
     "nsCSSValueList",
     "nsCSSValueList_heap",
     "nsCSSValuePair_heap",
