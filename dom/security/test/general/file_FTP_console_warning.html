@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<head>
+  <meta charset="utf-8">
+  <title>FTP subresources</title>
+</head>
+<body>
+  <iframe src="ftp://blocked.test/a.html"></iframe>
+  <iframe srcdoc='<iframe src="ftp://blocked.test/b.html"></iframe>'></iframe>
+  <iframe src='data:text/html,<iframe src="ftp://blocked.test/c.html"></iframe>'></iframe>
+  <img src="ftp://blocked.test/d.png">
+</body>
+</html>

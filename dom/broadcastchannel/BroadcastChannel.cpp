@@ -285,7 +285,6 @@ BroadcastChannel::BroadcastChannel(nsPIDOMWindowInner* aWindow,
                                    const nsAString& aChannel)
   : DOMEventTargetHelper(aWindow)
   , mChannel(aChannel)
-  , mInnerID(0)
   , mState(StateActive)
 {
   // Window can be null in workers
@@ -387,17 +386,6 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
 
   bc->mActor->SetParent(bc);
 
-  if (!bc->mWorkerRef) {
-    MOZ_ASSERT(window);
-    bc->mInnerID = window->WindowID();
-
-    // Register as observer for inner-window-destroyed.
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->AddObserver(bc, "inner-window-destroyed", false);
-    }
-  }
-
   return bc.forget();
 }
 
@@ -490,34 +478,6 @@ BroadcastChannel::Shutdown()
   IgnoreKeepAliveIfHasListenersFor(NS_LITERAL_STRING("message"));
 }
 
-NS_IMETHODIMP
-BroadcastChannel::Observe(nsISupports* aSubject, const char* aTopic,
-                          const char16_t* aData)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aTopic, "inner-window-destroyed"));
-
-  // If the window is destroyed we have to release the reference that we are
-  // keeping.
-  nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
-
-  uint64_t innerID;
-  nsresult rv = wrapper->GetData(&innerID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (innerID == mInnerID) {
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->RemoveObserver(this, "inner-window-destroyed");
-    }
-
-    Shutdown();
-  }
-
-  return NS_OK;
-}
-
 void
 BroadcastChannel::RemoveDocFromBFCache()
 {
@@ -543,6 +503,13 @@ BroadcastChannel::RemoveDocFromBFCache()
   bfCacheEntry->RemoveFromBFCacheSync();
 }
 
+void
+BroadcastChannel::DisconnectFromOwner()
+{
+  Shutdown();
+  DOMEventTargetHelper::DisconnectFromOwner();
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(BroadcastChannel)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BroadcastChannel,
@@ -555,7 +522,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BroadcastChannel,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BroadcastChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(BroadcastChannel, DOMEventTargetHelper)
