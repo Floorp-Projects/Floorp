@@ -279,8 +279,6 @@ var PingPicker = {
         pingPicker.classList.add("hidden");
       }
     });
-    document.getElementById("choose-payload")
-            .addEventListener("change", () => displayPingData(gPingData));
     document.getElementById("processes")
             .addEventListener("change", () => displayPingData(gPingData));
     Array.from(document.querySelectorAll(".change-ping")).forEach(el => {
@@ -2372,38 +2370,6 @@ function renderProcessList(ping, selectEl) {
   }
 }
 
-function renderPayloadList(ping) {
-  // Rebuild the payload select with options:
-  //   Parent Payload (selected)
-  //   Child Payload 1..ping.payload.childPayloads.length
-  let listEl = document.getElementById("choose-payload");
-  removeAllChildNodes(listEl);
-
-  let option = document.createElement("option");
-  let text = bundle.GetStringFromName("parentPayload");
-  let content = document.createTextNode(text);
-  let payloadIndex = 0;
-  option.appendChild(content);
-  option.setAttribute("value", payloadIndex++);
-  option.selected = true;
-  listEl.appendChild(option);
-
-  if (!ping.payload.childPayloads) {
-    listEl.disabled = true;
-    return;
-  }
-  listEl.disabled = false;
-
-  for (; payloadIndex <= ping.payload.childPayloads.length; ++payloadIndex) {
-    option = document.createElement("option");
-    text = bundle.formatStringFromName("childPayloadN", [payloadIndex], 1);
-    content = document.createTextNode(text);
-    option.appendChild(content);
-    option.setAttribute("value", payloadIndex);
-    listEl.appendChild(option);
-  }
-}
-
 function togglePingSections(isMainPing) {
   // We always show the sections that are "common" to all pings.
   let commonSections = new Set(["heading",
@@ -2442,7 +2408,6 @@ function displayPingData(ping, updatePayloadList = false) {
 function displayRichPingData(ping, updatePayloadList) {
   // Update the payload list and process lists
   if (updatePayloadList) {
-    renderPayloadList(ping);
     renderProcessList(ping, document.getElementById("processes"));
   }
 
@@ -2490,15 +2455,6 @@ function displayRichPingData(ping, updatePayloadList) {
   CapturedStacks.render(payload);
 
   LateWritesSingleton.renderLateWrites(payload.lateWrites);
-
-  // Select payload to render
-  let payloadSelect = document.getElementById("choose-payload");
-  let payloadOption = payloadSelect.selectedOptions.item(0);
-  let payloadIndex = payloadOption.getAttribute("value");
-
-  if (payloadIndex > 0) {
-    payload = ping.payload.childPayloads[payloadIndex - 1];
-  }
 
   // Show chrome hang stacks
   ChromeHangs.render(payload.chromeHangs);
