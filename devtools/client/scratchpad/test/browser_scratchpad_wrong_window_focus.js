@@ -9,8 +9,7 @@ registerCleanupFunction(function* () {
   Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
 });
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   // To test for this bug we open a Scratchpad window, save its
@@ -26,13 +25,13 @@ function test()
   // is currently active (it should be the older one).
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
-    openScratchpad(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
+    openScratchpad(function() {
       let sw = gScratchpadWindow;
       let {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
       let {TargetFactory} = require("devtools/client/framework/target");
 
-      openScratchpad(function () {
+      openScratchpad(function() {
         let target = TargetFactory.forTab(gBrowser.selectedTab);
         gDevTools.showToolbox(target, "webconsole").then((toolbox) => {
           let hud = toolbox.getCurrentPanel().hud;
@@ -59,7 +58,7 @@ function testFocus(sw, hud) {
     is(loc.getAttribute("data-line"), "1", "line value is correct");
     is(loc.getAttribute("data-column"), "1", "column value is correct");
 
-    sw.addEventListener("focus", function () {
+    sw.addEventListener("focus", function() {
       let win = Services.wm.getMostRecentWindow("devtools:scratchpad");
 
       ok(win, "there are active Scratchpad windows");
@@ -81,7 +80,7 @@ function testFocus(sw, hud) {
   hud.ui.once("new-messages", onMessage);
 
   sp.setText("console.log('foo');");
-  sp.run().then(function ([selection, error, result]) {
+  sp.run().then(function([selection, error, result]) {
     is(selection, "console.log('foo');", "selection is correct");
     is(error, undefined, "error is correct");
     is(result.type, "undefined", "result is correct");

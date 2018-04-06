@@ -2,9 +2,9 @@
 
 info(`START: ${new Error().lineNumber}`);
 
-(async function () {
-  Services.prefs.clearUserPref("devtools.debugger.tabs")
-  Services.prefs.clearUserPref("devtools.debugger.pending-selected-location")
+(async function() {
+  Services.prefs.clearUserPref("devtools.debugger.tabs");
+  Services.prefs.clearUserPref("devtools.debugger.pending-selected-location");
 
   info("Waiting for debugger load");
   await toolbox.selectTool("jsdebugger");

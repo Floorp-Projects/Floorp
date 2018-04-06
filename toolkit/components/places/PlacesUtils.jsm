@@ -1756,7 +1756,7 @@ var PlacesUtils = {
       }
 
       switch (type) {
-        case Ci.nsINavBookmarksService.TYPE_BOOKMARK:
+        case PlacesUtils.bookmarks.TYPE_BOOKMARK:
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE;
           // If this throws due to an invalid url, the item will be skipped.
           item.uri = NetUtil.newURI(aRow.getResultByName("url")).spec;
@@ -1767,7 +1767,7 @@ var PlacesUtils = {
             item.postData = entry.postData;
           }
           break;
-        case Ci.nsINavBookmarksService.TYPE_FOLDER:
+        case PlacesUtils.bookmarks.TYPE_FOLDER:
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
           // Mark root folders.
           if (itemId == PlacesUtils.placesRootId)
@@ -1781,11 +1781,11 @@ var PlacesUtils = {
           else if (itemId == PlacesUtils.mobileFolderId)
             item.root = "mobileFolder";
           break;
-        case Ci.nsINavBookmarksService.TYPE_SEPARATOR:
+        case PlacesUtils.bookmarks.TYPE_SEPARATOR:
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR;
           break;
         default:
-          Cu.reportError("Unexpected bookmark type");
+          Cu.reportError(`Unexpected bookmark type ${type}`);
           break;
       }
       return item;

@@ -288,6 +288,10 @@ class DevToolsPageDefinition {
   }
 }
 
+// Get the devtools preference given the extension id.
+function getDevToolsPrefBranchName(extensionId) {
+  return `devtools.webextensions.${extensionId}`;
+}
 
 let devToolsInitialized = false;
 initDevTools = function() {
@@ -312,7 +316,19 @@ initDevTools = function() {
       return;
     }
 
-    for (let devtoolsPage of devtoolsPageDefinitionMap.values()) {
+    for (let [extension, devtoolsPage] of devtoolsPageDefinitionMap) {
+      // Ensure that the WebExtension is listed in the toolbox options.
+      toolbox.registerWebExtension(extension.uuid, {
+        name: extension.name,
+        pref: `${getDevToolsPrefBranchName(extension.id)}.enabled`,
+      });
+
+      // Do not build the devtools page if the extension has been disabled
+      // (e.g. based on the devtools preference).
+      if (!toolbox.isWebExtensionEnabled(extension.uuid)) {
+        continue;
+      }
+
       devtoolsPage.buildForToolbox(toolbox);
     }
   });
@@ -337,28 +353,164 @@ initDevTools = function() {
 
 this.devtools = class extends ExtensionAPI {
   onManifestEntry(entryName) {
-    let {extension} = this;
-    let {manifest} = extension;
-
-    // Create and register a new devtools_page definition as specified in the
-    // "devtools_page" property in the extension manifest.
-    let devtoolsPageDefinition = new DevToolsPageDefinition(extension, manifest.devtools_page);
-    devtoolsPageDefinitionMap.set(extension, devtoolsPageDefinition);
+    this.initDevToolsPref();
+    this.createDevToolsPageDefinition();
   }
 
   onShutdown(reason) {
-    let {extension} = this;
+    this.destroyDevToolsPageDefinition();
+    this.uninitDevToolsPref();
+  }
 
-    // Destroy the registered devtools_page definition on extension shutdown.
-    if (devtoolsPageDefinitionMap.has(extension)) {
-      devtoolsPageDefinitionMap.get(extension).shutdown();
-      devtoolsPageDefinitionMap.delete(extension);
-    }
+  static onUninstall(extensionId) {
+    // Remove the preference branch on uninstall.
+    const prefBranch = Services.prefs.getBranch(
+      `${getDevToolsPrefBranchName(extensionId)}.`);
+
+    prefBranch.deleteBranch("");
   }
 
   getAPI(context) {
     return {
       devtools: {},
     };
+  }
+
+  /**
+   * Initialize the DevTools preferences branch for the extension and
+   * start to observe it for changes on the "enabled" preference.
+   */
+  initDevToolsPref() {
+    const prefBranch = Services.prefs.getBranch(
+      `${getDevToolsPrefBranchName(this.extension.id)}.`);
+
+    // Initialize the devtools extension preference if it doesn't exist yet.
+    if (prefBranch.getPrefType("enabled") === prefBranch.PREF_INVALID) {
+      prefBranch.setBoolPref("enabled", true);
+    }
+
+    this.devtoolsPrefBranch = prefBranch;
+    this.devtoolsPrefBranch.addObserver("enabled", this);
+  }
+
+  /**
+   * Stop from observing the DevTools preferences branch for the extension.
+   */
+  uninitDevToolsPref() {
+    this.devtoolsPrefBranch.removeObserver("enabled", this);
+    this.devtoolsPrefBranch = null;
+  }
+
+  /**
+   * Test if the extension's devtools_page has been disabled using the
+   * DevTools preference.
+   *
+   * @returns {boolean}
+   *          true if the devtools_page for this extension is disabled.
+   */
+  isDevToolsPageDisabled() {
+    return !this.devtoolsPrefBranch.getBoolPref("enabled", false);
+  }
+
+  /**
+   * Observes the changed preferences on the DevTools preferences branch
+   * related to the extension.
+   *
+   * @param {nsIPrefBranch} subject  The observed preferences branch.
+   * @param {string}        topic    The notified topic.
+   * @param {string}        prefName The changed preference name.
+   */
+  observe(subject, topic, prefName) {
+    // We are currently interested only in the "enabled" preference from the
+    // WebExtension devtools preferences branch.
+    if (subject !== this.devtoolsPrefBranch || prefName !== "enabled") {
+      return;
+    }
+
+    if (this.isDevToolsPageDisabled()) {
+      this.shutdownDevToolsPages();
+    } else {
+      this.buildDevToolsPages();
+    }
+  }
+
+  /**
+   * Create the devtools_page definition for the extension and build the devtools_page
+   * for any existing toolbox that is supported as a target (currentl only toolbox with
+   * a local tab as a target).
+   */
+  createDevToolsPageDefinition() {
+    let {extension} = this;
+    let {manifest} = extension;
+
+    if (devtoolsPageDefinitionMap.has(extension)) {
+      throw new Error("Cannot create an extension devtools page multiple times");
+    }
+
+    // Create and register a new devtools_page definition as specified in the
+    // "devtools_page" property in the extension manifest.
+    let devtoolsPageDefinition = new DevToolsPageDefinition(extension, manifest.devtools_page);
+    devtoolsPageDefinitionMap.set(extension, devtoolsPageDefinition);
+
+    this.buildDevToolsPages();
+  }
+
+  /**
+   * Destroy the devtools_page definition for the extension, shutdown any built
+   * devtools_page from all the existing toolbox and ensure that the extension is unlisted
+   * from the toolbox options panel if the extension is being disabled or uninstalled.
+   *
+   */
+  destroyDevToolsPageDefinition() {
+    this.shutdownDevToolsPages();
+
+    // Destroy the registered devtools_page definition on extension shutdown.
+    devtoolsPageDefinitionMap.delete(this.extension);
+
+    // Iterate over the existing toolboxes and unlist the devtools webextension from them.
+    for (let toolbox of DevToolsShim.getToolboxes()) {
+      toolbox.unregisterWebExtension(this.extension.uuid);
+    }
+  }
+
+  /**
+   * Build the devtools_page instances for the existing toolboxes (if its definition has been
+   * created and the toolbox target is supported)/
+   */
+  buildDevToolsPages() {
+    const devtoolsPageDefinition = devtoolsPageDefinitionMap.get(this.extension);
+    if (!devtoolsPageDefinition) {
+      return;
+    }
+
+    // Iterate over the existing toolboxes and create the devtools page for them
+    // (if the toolbox target is supported).
+    for (let toolbox of DevToolsShim.getToolboxes()) {
+      if (!toolbox.target.isLocalTab) {
+        // Skip any non-local tab.
+        continue;
+      }
+
+      // Ensure that the WebExtension is listed in the toolbox options.
+      toolbox.registerWebExtension(this.extension.uuid, {
+        name: this.extension.name,
+        pref: `${getDevToolsPrefBranchName(this.extension.id)}.enabled`,
+      });
+
+      devtoolsPageDefinition.buildForToolbox(toolbox);
+    }
+  }
+
+  /**
+   * Shutdown any existing devtools_page instances from the existing toolboxes
+   * (without destroying its definition, so that the devtools_page can be rebuilt
+   * when it is re-enabled by toggling the related DevTools preference).
+   */
+  shutdownDevToolsPages() {
+    const devtoolsPageDefinition = devtoolsPageDefinitionMap.get(this.extension);
+
+    if (devtoolsPageDefinition) {
+      devtoolsPageDefinition.shutdown();
+    }
   }
 };

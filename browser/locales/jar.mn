@@ -65,7 +65,6 @@
     locale/browser/preferences/colors.dtd             (%chrome/browser/preferences/colors.dtd)
     locale/browser/preferences/connection.dtd         (%chrome/browser/preferences/connection.dtd)
     locale/browser/preferences/content.dtd            (%chrome/browser/preferences/content.dtd)
-    locale/browser/preferences/cookies.dtd            (%chrome/browser/preferences/cookies.dtd)
     locale/browser/preferences/fonts.dtd              (%chrome/browser/preferences/fonts.dtd)
     locale/browser/preferences/languages.dtd          (%chrome/browser/preferences/languages.dtd)
     locale/browser/preferences/main.dtd               (%chrome/browser/preferences/main.dtd)

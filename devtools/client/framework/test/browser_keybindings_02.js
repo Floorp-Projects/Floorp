@@ -18,7 +18,7 @@ function getZoomValue() {
   return parseFloat(Services.prefs.getCharPref("devtools.toolbox.zoomValue"));
 }
 
-add_task(async function () {
+add_task(async function() {
   info("Create a test tab and open the toolbox");
   let tab = await addTab(URL);
   let target = TargetFactory.forTab(tab);

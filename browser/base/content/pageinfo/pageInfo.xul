@@ -340,7 +340,7 @@
                   oncommand="security.viewCert();"/>
         </hbox>
       </groupbox>
-      
+
       <!-- Privacy & History section -->
       <groupbox id="security-privacy-groupbox" flex="1">
         <caption id="security-privacy" label="&securityView.privacy.header;" />
@@ -355,26 +355,24 @@
               <label id="security-privacy-history-label"
                            control="security-privacy-history-value"
                            class="fieldLabel">&securityView.privacy.history;</label>
-              <textbox id="security-privacy-history-value"
-                       class="fieldValue"
-                       value="&securityView.unknown;"
-                       readonly="true"/>
+              <label id="security-privacy-history-value"
+                     class="fieldValue"
+                     value="&securityView.unknown;"/>
             </row>
-            <!-- Cookies -->
-            <row id="security-privacy-cookies-row">
-              <label id="security-privacy-cookies-label"
-                           control="security-privacy-cookies-value"
-                           class="fieldLabel">&securityView.privacy.cookies;</label>
-              <hbox id="security-privacy-cookies-box" align="center">
-                <textbox id="security-privacy-cookies-value"
-                         class="fieldValue"
-                         value="&securityView.unknown;"
-                         flex="1"
-                         readonly="true"/>
-                <button id="security-view-cookies"
-                        label="&securityView.privacy.viewCookies;"
-                        accesskey="&securityView.privacy.viewCookies.accessKey;"
-                        oncommand="security.viewCookies();"/>
+            <!-- Site Data & Cookies -->
+            <row id="security-privacy-sitedata-row">
+              <label id="security-privacy-sitedata-label"
+                           control="security-privacy-sitedata-value"
+                           class="fieldLabel">&securityView.privacy.siteData;</label>
+              <hbox id="security-privacy-sitedata-box" align="center">
+                <label id="security-privacy-sitedata-value"
+                       class="fieldValue"
+                       flex="1">&securityView.unknown;</label>
+                <button id="security-clear-sitedata"
+                        disabled="true"
+                        label="&securityView.privacy.clearSiteData;"
+                        accesskey="&securityView.privacy.clearSiteData.accessKey;"
+                        oncommand="security.clearSiteData();"/>
               </hbox>
             </row>
             <!-- Passwords -->
@@ -383,11 +381,10 @@
                             control="security-privacy-passwords-value"
                             class="fieldLabel">&securityView.privacy.passwords;</label>
               <hbox id="security-privacy-passwords-box" align="center">
-                <textbox id="security-privacy-passwords-value"
-                         class="fieldValue"
-                         value="&securityView.unknown;"
-                         flex="1"
-                         readonly="true"/>
+                <label id="security-privacy-passwords-value"
+                       class="fieldValue"
+                       value="&securityView.unknown;"
+                       flex="1"/>
                 <button id="security-view-password"
                         label="&securityView.privacy.viewPasswords;"
                         accesskey="&securityView.privacy.viewPasswords.accessKey;"
@@ -397,7 +394,7 @@
           </rows>
         </grid>
       </groupbox>
-      
+
       <!-- Technical Details section -->
       <groupbox id="security-technical-groupbox" flex="1">
         <caption id="security-technical" label="&securityView.technical.header;" />

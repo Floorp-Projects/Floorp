@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({ title: "PeerConnection feed to a graph with non default rate", bug: "1387454" });
+  /**
+   * Run a test to verify that when we use the streem with nonDefault rate to/from a PC
+   * the connection fails. (PC is always on default rate).
+   */
+
+  let pc1;
+  let pc2;
+
+  let offerOptions = {
+    offerToReceiveAudio: 1,
+  };
+
+  function getName(pc) {
+    return (pc === pc1) ? 'pc1' : 'pc2';
+  }
+
+  function getOtherPc(pc) {
+    return (pc === pc1) ? pc2 : pc1;
+  }
+
+  function onAddIceCandidateSuccess(pc) {
+    ok(true, getName(pc) + ' addIceCandidate success');
+  }
+
+  function onAddIceCandidateError(pc, error) {
+    ok(false, getName(pc) + ' failed to add ICE Candidate: ' + error.toString());
+  }
+
+  function onIceCandidate(pc, event, done) {
+    if (!event.candidate) {
+      ok(pc.iceGatheringState === 'complete', getName(pc) + " ICE gathering state has reached complete");
+      done();
+      return;
+    }
+    getOtherPc(pc).addIceCandidate(event.candidate)
+    .then(() => {
+        onAddIceCandidateSuccess(pc);
+      },
+      (err) => {
+        onAddIceCandidateError(pc, err);
+      });
+    info(getName(pc) + ' ICE candidate: ' + event.candidate.candidate);
+  }
+
+  function onIceStateChange(pc, event) {
+    if (pc) {
+      info(getName(pc) + ' ICE state: ' + pc.iceConnectionState);
+      info('ICE state change event: ', event);
+    }
+  }
+
+  function onCreateOfferSuccess(desc) {
+    info('Offer from pc1\n' + desc.sdp);
+    info('pc1 setLocalDescription start');
+
+    pc1.setLocalDescription(desc)
+    .then(() => {
+      onSetLocalSuccess(pc1);
+    },
+    onSetSessionDescriptionError);
+
+    info('pc2 setRemoteDescription start');
+    pc2.setRemoteDescription(desc).then(() => {
+      onSetRemoteSuccess(pc2);
+    },
+    onSetSessionDescriptionError);
+
+    info('pc2 createAnswer start');
+
+    // Since the 'remote' side has no media stream we need
+    // to pass in the right constraints in order for it to
+    // accept the incoming offer of audio and video.
+    pc2.createAnswer()
+    .then(onCreateAnswerSuccess, onCreateSessionDescriptionError);
+  }
+
+  function onSetSessionDescriptionError(error) {
+    ok(false, 'Failed to set session description: ' + error.toString());
+  }
+
+  function onSetLocalSuccess(pc) {
+    ok(true, getName(pc) + ' setLocalDescription complete');
+  }
+
+  function onCreateSessionDescriptionError(error) {
+    ok(false, 'Failed to create session description: ' + error.toString());
+  }
+
+  function onSetRemoteSuccess(pc) {
+    ok(true, getName(pc) + ' setRemoteDescription complete');
+  }
+
+  function onCreateAnswerSuccess(desc) {
+    info('Answer from pc2:\n' + desc.sdp);
+    info('pc2 setLocalDescription start');
+    pc2.setLocalDescription(desc).then(() => {
+      onSetLocalSuccess(pc2);
+    },
+    onSetSessionDescriptionError);
+    info('pc1 setRemoteDescription start');
+    pc1.setRemoteDescription(desc).then(() => {
+        onSetRemoteSuccess(pc1);
+    },
+    onSetSessionDescriptionError);
+  }
+
+  async function getRemoteStream(localStream) {
+    info("got local stream")
+    let audioTracks = localStream.getAudioTracks();
+
+    let servers = null;
+
+    pc1 = new RTCPeerConnection(servers);
+    info('Created local peer connection object pc1');
+    let iceComplete1 = new Promise( (resolve, reject) => {
+	  pc1.onicecandidate = (e) => {
+	    onIceCandidate(pc1, e, resolve);
+	  };
+    });
+
+    pc2 = new RTCPeerConnection(servers);
+    info('Created remote peer connection object pc2');
+    let iceComplete2 = new Promise( (resolve, reject) => {
+      pc2.onicecandidate = (e) => {
+        onIceCandidate(pc2, e, resolve);
+      };
+    });
+
+    pc1.oniceconnectionstatechange = (e) => {
+      onIceStateChange(pc1, e);
+    };
+    pc2.oniceconnectionstatechange = (e) => {
+      onIceStateChange(pc2, e);
+    };
+
+    let remoteStreamPromise = new Promise((resolve, reject) => {
+      pc2.ontrack = (e) => {
+        info('pc2 received remote stream ' + e.streams[0]);
+        resolve(e.streams[0]);
+      };
+    });
+
+    localStream.getTracks().forEach((track) => {
+      pc1.addTrack(track, localStream);
+    });
+    info('Added local stream to pc1');
+
+    info('pc1 createOffer start');
+    pc1.createOffer(offerOptions)
+    .then(onCreateOfferSuccess,onCreateSessionDescriptionError);
+
+    let promise_arr = await Promise.all([remoteStreamPromise, iceComplete1, iceComplete2]);
+
+    return promise_arr[0];
+  }
+
+  runTest( async () => {
+    // Local stream operates at non default rate (32000)
+    const nonDefaultRate = 32000;
+    let nonDefault_ctx = new AudioContext({sampleRate: nonDefaultRate});
+    oscillator = nonDefault_ctx.createOscillator();
+    let dest = nonDefault_ctx.createMediaStreamDestination();
+    oscillator.connect(dest);
+    oscillator.start();
+
+    // Wait for remote stream
+    let remoteStream = await getRemoteStream(dest.stream)
+    ok(true, 'Got remote stream ' + remoteStream);
+
+    // remoteStream now comes from PC so operates at default
+    // rates. Verify that by adding to a default context
+    let ac = new AudioContext;
+    let source_default_rate = ac.createMediaStreamSource(remoteStream);
+
+    // Now try to add the remoteStream on a non default context
+    mustThrowWith("Connect stream with graph of different sample rate", "NotSupportedError", () => {
+      let source_non_default_rate = nonDefault_ctx.createMediaStreamSource(remoteStream);
+    });
+  })
+</script>
+</pre>
+</body>
+</html>

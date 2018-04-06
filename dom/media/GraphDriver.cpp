@@ -609,7 +609,7 @@ AudioCallbackDriver::Init()
   MOZ_ASSERT(!NS_IsMainThread(),
       "This is blocking and should never run on the main thread.");
 
-  mSampleRate = output.rate = CubebUtils::PreferredSampleRate();
+  mSampleRate = output.rate = mGraphImpl->GraphRate();
 
   if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
     output.format = CUBEB_SAMPLE_S16NE;

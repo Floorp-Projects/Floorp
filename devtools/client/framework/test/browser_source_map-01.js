@@ -20,7 +20,7 @@ const PAGE_URL = `${URL_ROOT}doc_empty-tab-01.html`;
 const JS_URL = `${URL_ROOT}code_binary_search.js`;
 const COFFEE_URL = `${URL_ROOT}code_binary_search.coffee`;
 
-add_task(async function () {
+add_task(async function() {
   await pushPref("devtools.debugger.new-debugger-frontend", true);
 
   const toolbox = await openNewTabAndToolbox(PAGE_URL, "jsdebugger");

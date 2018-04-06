@@ -84,7 +84,6 @@ class ParentDevToolsPanel {
       icon: icon,
       label: title,
       tooltip: `DevTools Panel added by "${extensionName}" add-on.`,
-      visibilityswitch:  `devtools.webext-${this.id}.enabled`,
       isTargetSupported: target => target.isLocalTab,
       build: (window, toolbox) => {
         if (toolbox !== this.toolbox) {
@@ -597,7 +596,7 @@ this.devtools_panels = class extends ExtensionAPI {
             icon = context.extension.baseURI.resolve(icon);
             url = context.extension.baseURI.resolve(url);
 
-            const id = `${makeWidgetId(newBasePanelId())}-devtools-panel`;
+            const id = `webext-devtools-panel-${makeWidgetId(newBasePanelId())}`;
 
             new ParentDevToolsPanel(context, {title, icon, url, id});
 

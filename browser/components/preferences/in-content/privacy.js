@@ -445,8 +445,7 @@ var gPrivacyPane = {
     ]);
     appendSearchKeywords("siteDataSettings", [
       bundlePrefs.getString("siteDataSettings3.description"),
-      bundlePrefs.getString("removeAllCookies.label"),
-      bundlePrefs.getString("removeSelectedCookies.label"),
+      bundlePrefs.getString("removeAllSiteData.label"),
     ]);
 
     if (!PrivateBrowsingUtils.enabled) {

@@ -24,14 +24,13 @@ const Promise = require("Promise");
 
 const CANVAS_ACTOR_RECORDING_ATTEMPT = flags.testing ? 500 : 5000;
 
-
 ChromeUtils.defineModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function () {
+XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function() {
   return require("devtools/shared/webconsole/network-helper");
 });
 
@@ -127,7 +126,7 @@ var EventsHandler = {
   /**
    * Listen for events emitted by the current tab target.
    */
-  initialize: function () {
+  initialize: function() {
     // Make sure the backend is prepared to handle <canvas> contexts.
     // Since actors are created lazily on the first request to them, we need to send an
     // early request to ensure the CallWatcherActor is running and watching for new window
@@ -141,14 +140,14 @@ var EventsHandler = {
   /**
    * Remove events emitted by the current tab target.
    */
-  destroy: function () {
+  destroy: function() {
     gTarget.off("will-navigate", this._onTabWillNavigate);
   },
 
   /**
    * Called for each location change in the debugged tab.
    */
-  _onTabWillNavigate: function () {
+  _onTabWillNavigate: function() {
     // Reset UI.
     SnapshotsListView.empty();
     CallsListView.empty();

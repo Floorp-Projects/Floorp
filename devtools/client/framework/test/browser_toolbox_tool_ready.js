@@ -8,7 +8,7 @@
 requestLongerTimeout(5);
 
 function performChecks(target) {
-  return (async function () {
+  return (async function() {
     let toolIds = gDevTools.getToolDefinitionArray()
                            .filter(def => def.isTargetSupported(target))
                            .map(def => def.id);
@@ -31,7 +31,7 @@ function performChecks(target) {
 }
 
 function test() {
-  Task.spawn(async function () {
+  Task.spawn(async function() {
     toggleAllTools(true);
     let tab = await addTab("about:blank");
     let target = TargetFactory.forTab(tab);

@@ -45,6 +45,7 @@
     "url": "chrome://browser/content/parent/ext-devtools.js",
     "schema": "chrome://browser/content/schemas/devtools.json",
     "scopes": ["devtools_parent"],
+    "events": ["uninstall"],
     "manifest": ["devtools_page"],
     "paths": [
       ["devtools"]

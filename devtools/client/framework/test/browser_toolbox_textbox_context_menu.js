@@ -63,7 +63,7 @@ add_task(async function automaticallyBindTexbox() {
     url: `data:text/html;charset=utf8,<input /><input type='text' />
             <input type='search' /><textarea></textarea><input type='radio' />`,
     label: "Context menu works without tool intervention",
-    build: function (iframeWindow, toolbox) {
+    build: function(iframeWindow, toolbox) {
       this.panel = createTestPanel(iframeWindow, toolbox);
       return this.panel.open();
     },

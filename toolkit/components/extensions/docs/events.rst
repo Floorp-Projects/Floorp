@@ -15,6 +15,7 @@ The definition for a simple event looks like this:
        "events": [
          {
            "name": "onSomething",
+           "type": "function",
            "description": "Description of the event",
            "parameters": [
              {
@@ -126,6 +127,7 @@ the ``extraParameters`` property.  For example:
        "events": [
          {
            "name": "onSomething",
+           "type": "function",
            "description": "Description of the event",
            "parameters": [
              {
@@ -186,6 +188,7 @@ This can be defined in the schema with the ``returns`` property:
        "events": [
          {
            "name": "onSomething",
+           "type": "function",
            "description": "Description of the event",
            "parameters": [
              {

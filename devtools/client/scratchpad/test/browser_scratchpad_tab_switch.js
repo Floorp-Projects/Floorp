@@ -6,16 +6,15 @@ var tab1;
 var tab2;
 var sp;
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   tab1 = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab1;
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     tab2 = BrowserTestUtils.addTab(gBrowser);
     gBrowser.selectedTab = tab2;
-    BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+    BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
       openScratchpad(runTests);
     });
     gBrowser.loadURI("data:text/html,test context switch in Scratchpad tab 2");
@@ -90,7 +89,7 @@ function runTests3() {
   // Check that the sandbox is not cached.
 
   sp.setText("typeof foosbug653108;");
-  sp.run().then(function ([, , result]) {
+  sp.run().then(function([, , result]) {
     is(result, "undefined", "global variable does not exist");
 
     tab1 = null;

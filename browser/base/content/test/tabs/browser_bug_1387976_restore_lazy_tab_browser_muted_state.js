@@ -23,8 +23,7 @@ const restartTab = async function(tab) {
 };
 
 function get_tab_state(tab) {
-  const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-  return JSON.parse(ss.getTabState(tab));
+  return JSON.parse(SessionStore.getTabState(tab));
 }
 
 add_task(async function() {

@@ -14,7 +14,6 @@ function test() {
     .then(finish, console.error);
 }
 
-
 async function runTests([win, sp]) {
   const {editor} = sp;
   const editorWin = editor.container.contentWindow;

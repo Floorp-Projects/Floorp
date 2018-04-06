@@ -23,7 +23,7 @@ function assertIsTabTarget(target, url, chrome = false) {
   is(target.isRemote, true);
 }
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(TEST_URI);
   let browser = tab.linkedBrowser;
   let target;

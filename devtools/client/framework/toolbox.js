@@ -104,6 +104,10 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._win = contentWindow;
   this.frameId = frameId;
 
+  // Map of the available DevTools WebExtensions:
+  //   Map<extensionUUID, extensionName>
+  this._webExtensions = new Map();
+
   this._toolPanels = new Map();
   this._inspectorExtensionSidebars = new Map();
   this._telemetry = new Telemetry();
@@ -3078,5 +3082,62 @@ Toolbox.prototype = {
     }
 
     return netPanel.panelWin.Netmonitor.fetchResponseContent(requestId);
-  }
+  },
+
+  // Support management of installed WebExtensions that provide a devtools_page.
+
+  /**
+   * List the subset of the active WebExtensions which have a devtools_page (used by
+   * toolbox-options.js to create the list of the tools provided by the enabled
+   * WebExtensions).
+   * @see devtools/client/framework/toolbox-options.js
+   */
+  listWebExtensions: function() {
+    // Return the array of the enabled webextensions (we can't use the prefs list here,
+    // because some of them may be disabled by the Addon Manager and still have a devtools
+    // preference).
+    return Array.from(this._webExtensions).map(([uuid, {name, pref}]) => {
+      return {uuid, name, pref};
+    });
+  },
+
+  /**
+   * Add a WebExtension to the list of the active extensions (given the extension UUID,
+   * a unique id assigned to an extension when it is installed, and its name),
+   * and emit a "webextension-registered" event to allow toolbox-options.js
+   * to refresh the listed tools accordingly.
+   * @see browser/components/extensions/ext-devtools.js
+   */
+  registerWebExtension: function(extensionUUID, {name, pref}) {
+    // Ensure that an installed extension (active in the AddonManager) which
+    // provides a devtools page is going to be listed in the toolbox options
+    // (and refresh its name if it was already listed).
+    this._webExtensions.set(extensionUUID, {name, pref});
+    this.emit("webextension-registered", extensionUUID);
+  },
+
+  /**
+   * Remove an active WebExtension from the list of the active extensions (given the
+   * extension UUID, a unique id assigned to an extension when it is installed, and its
+   * name), and emit a "webextension-unregistered" event to allow toolbox-options.js
+   * to refresh the listed tools accordingly.
+   * @see browser/components/extensions/ext-devtools.js
+   */
+  unregisterWebExtension: function(extensionUUID) {
+    // Ensure that an extension that has been disabled/uninstalled from the AddonManager
+    // is going to be removed from the toolbox options.
+    this._webExtensions.delete(extensionUUID);
+    this.emit("webextension-unregistered", extensionUUID);
+  },
+
+  /**
+   * A helper function which returns true if the extension with the given UUID is listed
+   * as active for the toolbox and has its related devtools about:config preference set
+   * to true.
+   * @see browser/components/extensions/ext-devtools.js
+   */
+  isWebExtensionEnabled: function(extensionUUID) {
+    let extInfo = this._webExtensions.get(extensionUUID);
+    return extInfo && Services.prefs.getBoolPref(extInfo.pref, false);
+  },
 };

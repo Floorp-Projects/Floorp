@@ -4,8 +4,7 @@
 /* Bug 1140839 */
 
 // Test that view menu items are remembered across scratchpad invocations.
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   // To test for this bug we open a Scratchpad window and change all
@@ -13,7 +12,7 @@ function test()
   // preference value with the expected value.
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(runTests);
   });
 
@@ -21,9 +20,7 @@ function test()
                    "<p>test Scratchpad should remember View options");
 }
 
-function runTests()
-{
-  let sp = gScratchpadWindow.Scratchpad;
+function runTests() {
   let doc = gScratchpadWindow.document;
 
   let testData = [
@@ -35,7 +32,7 @@ function runTests()
     {itemMenuId: "sp-menu-smaller-font", prefId: "devtools.scratchpad.editorFontSize", expectedVal: 11},
   ];
 
-  testData.forEach(function (data) {
+  testData.forEach(function(data) {
     let getPref = getPrefFunction(data.prefId);
 
     try {
@@ -44,8 +41,7 @@ function runTests()
       let newPreferenceValue = getPref(data.prefId);
       ok(newPreferenceValue === data.expectedVal, newPreferenceValue + " !== " + data.expectedVal);
       Services.prefs.clearUserPref(data.prefId);
-    }
-    catch (exception) {
+    } catch (exception) {
       ok(false, "Exception thrown while executing the command of menuitem #" + data.itemMenuId);
     }
   });
@@ -53,8 +49,7 @@ function runTests()
   finish();
 }
 
-function getPrefFunction(preferenceId)
-{
+function getPrefFunction(preferenceId) {
   let preferenceType = Services.prefs.getPrefType(preferenceId);
   if (preferenceType === Services.prefs.PREF_INT) {
     return Services.prefs.getIntPref;

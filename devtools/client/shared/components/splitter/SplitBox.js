@@ -171,9 +171,13 @@ class SplitBox extends Component {
     let { endPanelControl, vert } = this.state;
 
     if (vert) {
+      // Use the document owning the SplitBox to detect rtl. The global document might be
+      // the one bound to the toolbox shared BrowserRequire, which is irrelevant here.
+      const doc = node.ownerDocument;
+
       // Switch the control flag in case of RTL. Note that RTL
       // has impact on vertical splitter only.
-      if (document.dir === "rtl") {
+      if (doc.dir === "rtl") {
         endPanelControl = !endPanelControl;
       }
 

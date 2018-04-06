@@ -140,11 +140,6 @@ class MockBlocklist {
   getPluginBlocklistState(plugin, version, appVersion, toolkitVersion) {
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   }
-
-  isAddonBlocklisted(addon, appVersion, toolkitVersion) {
-    return this.getAddonBlocklistState(addon, appVersion, toolkitVersion) ==
-           Ci.nsIBlocklistService.STATE_BLOCKED;
-  }
 }
 
 MockBlocklist.prototype.QueryInterface = XPCOMUtils.generateQI(["nsIBlocklistService"]);

@@ -12,7 +12,7 @@ function getHostHistogram() {
   return Services.telemetry.getHistogramById("DEVTOOLS_TOOLBOX_HOST");
 }
 
-add_task(async function () {
+add_task(async function() {
   // Reset it to make counting easier
   getHostHistogram().clear();
 

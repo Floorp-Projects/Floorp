@@ -22,7 +22,7 @@ function runTests1(tab) {
     visibilityswitch: "devtools.test-tool.enabled",
     url: "about:blank",
     label: "someLabel",
-    build: function (iframeWindow, toolbox) {
+    build: function(iframeWindow, toolbox) {
       let panel = createTestPanel(iframeWindow, toolbox);
       return panel.open();
     },
@@ -59,7 +59,7 @@ function runTests1(tab) {
     });
   });
 
-  gDevTools.showToolbox(target, toolId1).then(function (toolbox) {
+  gDevTools.showToolbox(target, toolId1).then(function(toolbox) {
     is(toolbox.target, target, "toolbox target is correct");
     is(toolbox.target.tab, gBrowser.selectedTab, "targeted tab is correct");
 
@@ -83,7 +83,7 @@ function runTests2() {
     visibilityswitch: "devtools.test-tool.enabled",
     url: "about:blank",
     label: "someLabel",
-    build: function (iframeWindow, toolbox) {
+    build: function(iframeWindow, toolbox) {
       return createTestPanel(iframeWindow, toolbox);
     },
   };
@@ -127,7 +127,7 @@ function runTests2() {
     });
   });
 
-  gDevTools.showToolbox(target, toolId2).then(function (toolbox) {
+  gDevTools.showToolbox(target, toolId2).then(function(toolbox) {
     is(toolbox.target, target, "toolbox target is correct");
     is(toolbox.target.tab, gBrowser.selectedTab, "targeted tab is correct");
 
@@ -139,7 +139,7 @@ function runTests2() {
   });
 }
 
-var continueTests = async function (toolbox, panel) {
+var continueTests = async function(toolbox, panel) {
   ok(toolbox.getCurrentPanel(), "panel value is correct");
   is(toolbox.currentToolId, toolId2, "toolbox _currentToolId is correct");
 
@@ -183,7 +183,7 @@ var continueTests = async function (toolbox, panel) {
 };
 
 function destroyToolbox(toolbox) {
-  toolbox.destroy().then(function () {
+  toolbox.destroy().then(function() {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     ok(gDevTools._toolboxes.get(target) == null, "gDevTools doesn't know about target");
     ok(toolbox.target == null, "toolbox doesn't know about target.");

@@ -23,8 +23,7 @@ function toggleAllTools(state) {
   }
 }
 
-function getChromeActors(callback)
-{
+function getChromeActors(callback) {
   let { DebuggerServer } = require("devtools/server/main");
   let { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
@@ -62,7 +61,7 @@ async function openScratchpadWindow() {
   await once(win, "load");
 
   win.Scratchpad.addObserver({
-    onReady: function () {
+    onReady: function() {
       win.Scratchpad.removeObserver(this);
       resolve(win);
     }
@@ -109,9 +108,8 @@ function executeInContent(name, data = {}, objects = {}, expectResponse = true) 
   mm.sendAsyncMessage(name, data, objects);
   if (expectResponse) {
     return waitForContentMessage(name);
-  } else {
-    return promise.resolve();
   }
+  return promise.resolve();
 }
 
 /**
@@ -207,7 +205,7 @@ function DevToolPanel(iframeWindow, toolbox) {
 }
 
 DevToolPanel.prototype = {
-  open: function () {
+  open: function() {
     let deferred = defer();
 
     executeSoon(() => {
@@ -237,7 +235,7 @@ DevToolPanel.prototype = {
 
   _isReady: false,
 
-  destroy: function () {
+  destroy: function() {
     return defer(null);
   },
 };

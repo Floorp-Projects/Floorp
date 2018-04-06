@@ -21,14 +21,14 @@ function test() {
     url: CHROME_URL_ROOT + "browser_toolbox_sidebar_toolURL.xul",
     label: "FAKE TOOL!!!",
     isTargetSupported: () => true,
-    build: function (iframeWindow, toolbox) {
+    build: function(iframeWindow, toolbox) {
       let deferred = defer();
       executeSoon(() => {
         deferred.resolve({
           target: toolbox.target,
           toolbox: toolbox,
           isReady: true,
-          destroy: function () {},
+          destroy: function() {},
           panelDoc: iframeWindow.document,
         });
       });
@@ -38,9 +38,9 @@ function test() {
 
   gDevTools.registerTool(toolDefinition);
 
-  addTab("about:blank").then(function (aTab) {
+  addTab("about:blank").then(function(aTab) {
     let target = TargetFactory.forTab(aTab);
-    gDevTools.showToolbox(target, toolDefinition.id).then(function (toolbox) {
+    gDevTools.showToolbox(target, toolDefinition.id).then(function(toolbox) {
       let panel = toolbox.getPanel(toolDefinition.id);
       panel.toolbox = toolbox;
       ok(true, "Tool open");
@@ -48,29 +48,29 @@ function test() {
       let tabbox = panel.panelDoc.getElementById("sidebar");
       panel.sidebar = new ToolSidebar(tabbox, panel, "testbug865688", true);
 
-      panel.sidebar.on("new-tab-registered", function (id) {
+      panel.sidebar.on("new-tab-registered", function(id) {
         registeredTabs[id] = true;
       });
 
-      panel.sidebar.once("tab1-ready", function () {
+      panel.sidebar.once("tab1-ready", function() {
         info("tab1-ready");
         readyTabs.tab1 = true;
         allTabsReady(panel);
       });
 
-      panel.sidebar.once("tab2-ready", function () {
+      panel.sidebar.once("tab2-ready", function() {
         info("tab2-ready");
         readyTabs.tab2 = true;
         allTabsReady(panel);
       });
 
-      panel.sidebar.once("tab3-ready", function () {
+      panel.sidebar.once("tab3-ready", function() {
         info("tab3-ready");
         readyTabs.tab3 = true;
         allTabsReady(panel);
       });
 
-      panel.sidebar.once("tab1-selected", function () {
+      panel.sidebar.once("tab1-selected", function() {
         info("tab1-selected");
         tab1Selected = true;
         allTabsReady(panel);
@@ -107,9 +107,9 @@ function test() {
     is(panel.sidebar._tabbox.selectedPanel, panels[0], "First tab is selected");
     is(panel.sidebar.getCurrentTabID(), "tab1", "getCurrentTabID() is correct");
 
-    panel.sidebar.once("tab1-unselected", function () {
+    panel.sidebar.once("tab1-unselected", function() {
       ok(true, "received 'unselected' event");
-      panel.sidebar.once("tab2-selected", function () {
+      panel.sidebar.once("tab2-selected", function() {
         ok(true, "received 'selected' event");
         tabs[1].focus();
         is(panel.sidebar._panelDoc.activeElement, tabs[1],
@@ -127,7 +127,7 @@ function test() {
   }
 
   function testRemoval(panel) {
-    panel.sidebar.once("tab-unregistered", function (id) {
+    panel.sidebar.once("tab-unregistered", function(id) {
       info("tab-unregistered");
       registeredTabs[id] = false;
 
@@ -148,7 +148,7 @@ function test() {
   function testWidth(panel) {
     let tabbox = panel.panelDoc.getElementById("sidebar");
     tabbox.width = 420;
-    panel.sidebar.destroy().then(function () {
+    panel.sidebar.destroy().then(function() {
       tabbox.width = 0;
       panel.sidebar = new ToolSidebar(tabbox, panel, "testbug865688", true);
       panel.sidebar.show();
@@ -160,12 +160,12 @@ function test() {
 
   function finishUp(panel) {
     panel.sidebar.destroy();
-    panel.toolbox.destroy().then(function () {
+    panel.toolbox.destroy().then(function() {
       gDevTools.unregisterTool(toolDefinition.id);
 
       gBrowser.removeCurrentTab();
 
-      executeSoon(function () {
+      executeSoon(function() {
         finish();
       });
     });

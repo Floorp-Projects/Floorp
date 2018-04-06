@@ -666,6 +666,8 @@ pref("media.audioipc.stack_size", 65536);
 pref("media.cubeb.sandbox", false);
 #endif
 
+pref("media.webaudio.audiocontextoptions-samplerate.enabled", true);
+
 // Set to true to force demux/decode warnings to be treated as errors.
 pref("media.playback.warnings-as-errors", false);
 

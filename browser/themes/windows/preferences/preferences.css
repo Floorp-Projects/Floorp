@@ -58,32 +58,6 @@
   margin: 0 3px 6px !important;
 }
 
-/* Cookies Manager */
-#cookiesChildren::-moz-tree-image(domainCol) {
-  width: 16px;
-  height: 16px;
-  margin: 0 2px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-#cookiesChildren::-moz-tree-image(domainCol, container) {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-#cookiesChildren::-moz-tree-image(domainCol, container, open) {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
-}
-
-#cookieInfoBox {
-  border: 1px solid ThreeDShadow;
-  border-radius: 0;
-  margin: 4px;
-  padding: 0;
-}
-
 /* Advanced Pane */
 
 /* bottom-most box containing a groupbox in a prefpane. Prevents the bottom

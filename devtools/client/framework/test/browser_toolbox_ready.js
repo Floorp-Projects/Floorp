@@ -5,7 +5,7 @@
 
 const TEST_URL = "data:text/html,test for toolbox being ready";
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(TEST_URL);
   let target = TargetFactory.forTab(tab);
 

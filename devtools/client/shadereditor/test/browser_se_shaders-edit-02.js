@@ -19,7 +19,6 @@ async function ifWebGLSupported() {
   let vsEditor = await ShadersEditorsView._getEditor("vs");
   let fsEditor = await ShadersEditorsView._getEditor("fs");
 
-
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
   let error = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
 
@@ -40,7 +39,6 @@ async function ifWebGLSupported() {
   ok(infoLog.includes("ERROR: 0:8: 'assign'"),
     "An assignment error is contained in the info log.");
 
-
   fsEditor.replaceText("vec4", { line: 2, ch: 14 }, { line: 2, ch: 18 });
   error = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
 
@@ -55,7 +53,6 @@ async function ifWebGLSupported() {
     "The info log contains one error.");
   ok(infoLog.includes("ERROR: 0:6: 'constructor'"),
     "A constructor error is contained in the info log.");
-
 
   await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
   await ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);

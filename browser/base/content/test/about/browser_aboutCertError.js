@@ -12,7 +12,6 @@ const BAD_CERT = "https://expired.example.com/";
 const UNKNOWN_ISSUER = "https://self-signed.example.com ";
 const BAD_STS_CERT = "https://badchain.include-subdomains.pinning.example.com:443";
 const {TabStateFlusher} = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
-const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
 function injectErrorPageFrame(tab, src) {
   return ContentTask.spawn(tab.linkedBrowser, {frameSrc: src}, async function({frameSrc}) {
@@ -61,7 +60,7 @@ add_task(async function checkReturnToAboutHome() {
     // Populate the shistory entries manually, since it happens asynchronously
     // and the following tests will be too soon otherwise.
     await TabStateFlusher.flush(browser);
-    let {entries} = JSON.parse(ss.getTabState(tab));
+    let {entries} = JSON.parse(SessionStore.getTabState(tab));
     is(entries.length, 1, "there is one shistory entry");
 
     info("Clicking the go back button on about:certerror");
@@ -113,7 +112,7 @@ add_task(async function checkReturnToPreviousPage() {
     // Populate the shistory entries manually, since it happens asynchronously
     // and the following tests will be too soon otherwise.
     await TabStateFlusher.flush(browser);
-    let {entries} = JSON.parse(ss.getTabState(tab));
+    let {entries} = JSON.parse(SessionStore.getTabState(tab));
     is(entries.length, 2, "there are two shistory entries");
 
     info("Clicking the go back button on about:certerror");

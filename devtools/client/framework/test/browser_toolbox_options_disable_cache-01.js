@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 // are not toggled.
 loadHelperScript("helper_disable_cache.js");
 
-add_task(async function () {
+add_task(async function() {
   // Disable rcwn to make cache behavior deterministic.
   await pushPref("network.http.rcwn.enabled", false);
 

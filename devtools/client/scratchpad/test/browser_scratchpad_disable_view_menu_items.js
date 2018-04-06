@@ -4,7 +4,6 @@
 // Test if the view menu items "Larger Font" and "Smaller Font" are disabled
 // when the font size reaches the maximum/minimum values.
 
-
 function test() {
   const options = {
     tabContent: 'test if view menu items "Larger Font" and "Smaller Font" are enabled/disabled.'
@@ -24,7 +23,7 @@ const MAXIMUM_FONT_SIZE = 96;
 const MINIMUM_FONT_SIZE = 6;
 const NORMAL_FONT_SIZE = 12;
 
-var testMaximumFontSize = async function (win, sp) {
+var testMaximumFontSize = async function(win, sp) {
   let doc = win.document;
 
   Services.prefs.clearUserPref("devtools.scratchpad.editorFontSize");
@@ -44,7 +43,7 @@ var testMaximumFontSize = async function (win, sp) {
   ok(cmd.hasAttribute("disabled") === false, 'Command "sp-cmd-larger-font" is enabled.');
 };
 
-var testMinimumFontSize = async function (win, sp) {
+var testMinimumFontSize = async function(win, sp) {
   let doc = win.document;
 
   let menu = doc.getElementById("sp-menu-smaller-font");

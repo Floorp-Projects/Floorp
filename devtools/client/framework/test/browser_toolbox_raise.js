@@ -24,10 +24,10 @@ function testBottomHost(aToolbox) {
 
   // switch to another tab and test toolbox.raise()
   gBrowser.selectedTab = tab2;
-  executeSoon(function () {
+  executeSoon(function() {
     is(gBrowser.selectedTab, tab2, "Correct tab is selected before calling raise");
     toolbox.raise();
-    executeSoon(function () {
+    executeSoon(function() {
       is(gBrowser.selectedTab, tab1, "Correct tab was selected after calling raise");
 
       toolbox.switchHost(Toolbox.HostType.WINDOW).then(testWindowHost).catch(console.error);
@@ -69,7 +69,7 @@ function onFocus() {
 function cleanup() {
   Services.prefs.setCharPref("devtools.toolbox.host", Toolbox.HostType.BOTTOM);
 
-  toolbox.destroy().then(function () {
+  toolbox.destroy().then(function() {
     toolbox = null;
     gBrowser.removeCurrentTab();
     gBrowser.removeCurrentTab();

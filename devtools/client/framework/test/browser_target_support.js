@@ -21,7 +21,7 @@ async function testTarget(client, target) {
   let desc = await target.getActorDescription("webaudio");
   is(desc.typeName, "webaudio",
     "target.getActorDescription() returns definition data for corresponding actor");
-  is(desc.events["start-context"]["type"], "startContext",
+  is(desc.events["start-context"].type, "startContext",
     "target.getActorDescription() returns event data for corresponding actor");
 
   desc = await target.getActorDescription("nope");

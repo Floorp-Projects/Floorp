@@ -12,7 +12,7 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab("about:blank");
   let target = TargetFactory.forTab(tab);
   await target.makeRemote();

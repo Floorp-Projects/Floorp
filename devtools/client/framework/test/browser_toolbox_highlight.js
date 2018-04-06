@@ -10,7 +10,7 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 var toolbox = null;
 
 function test() {
-  (async function () {
+  (async function() {
     const URL = "data:text/plain;charset=UTF-8,Nothing to see here, move along";
 
     const TOOL_ID_1 = "jsdebugger";

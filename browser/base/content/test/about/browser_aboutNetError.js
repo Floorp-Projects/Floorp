@@ -8,8 +8,6 @@ Services.prefs.setIntPref("security.tls.version.max", 3);
 Services.prefs.setIntPref("security.tls.version.min", 3);
 
 const LOW_TLS_VERSION = "https://tls1.example.com/";
-const {TabStateFlusher} = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
-const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
 add_task(async function checkReturnToPreviousPage() {
   info("Loading a TLS page that isn't supported, ensure we have a fix button and clicking it then loads the page");
