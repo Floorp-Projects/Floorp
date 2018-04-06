@@ -19526,7 +19526,7 @@ UpgradeFileIdsFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
     return NS_ERROR_UNEXPECTED;
   }
 
-  StructuredCloneReadInfo cloneInfo;
+  StructuredCloneReadInfo cloneInfo(JS::StructuredCloneScope::DifferentProcess);
   DatabaseOperationBase::GetStructuredCloneReadInfoFromValueArray(aArguments,
                                                                   1,
                                                                   0,
@@ -25006,7 +25006,7 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
   }
 #endif
 
-  StructuredCloneReadInfo cloneInfo;
+  StructuredCloneReadInfo cloneInfo(JS::StructuredCloneScope::DifferentProcess);
   nsresult rv =
     GetStructuredCloneReadInfoFromValueArray(aValues,
                                              /* aDataIndex */ 3,
@@ -27704,7 +27704,7 @@ CursorOpBase::PopulateResponseFromStatement(
 
   switch (mCursor->mType) {
     case OpenCursorParams::TObjectStoreOpenCursorParams: {
-      StructuredCloneReadInfo cloneInfo;
+      StructuredCloneReadInfo cloneInfo(JS::StructuredCloneScope::DifferentProcess);
       rv = GetStructuredCloneReadInfoFromStatement(aStmt,
                                                    2,
                                                    1,
@@ -27752,7 +27752,7 @@ CursorOpBase::PopulateResponseFromStatement(
         return rv;
       }
 
-      StructuredCloneReadInfo cloneInfo;
+      StructuredCloneReadInfo cloneInfo(JS::StructuredCloneScope::DifferentProcess);
       rv = GetStructuredCloneReadInfoFromStatement(aStmt,
                                                    4,
                                                    3,
