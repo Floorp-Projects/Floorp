@@ -39,10 +39,9 @@ describe("User Domain Affinity Provider", () => {
     const testUrl = "www.somedomain.com";
     globals.sandbox.stub(global.Services.io, "newURI").returns({host: testUrl});
 
-    const history = global.Cc["@mozilla.org/browser/nav-history-service;1"];
-    globals.sandbox.stub(history, "executeQuery").returns({root: {childCount: 1, getChild: index => ({uri: testUrl, accessCount: 1})}});
-    globals.sandbox.stub(history, "getNewQuery").returns({"TIME_RELATIVE_NOW": 1});
-    globals.sandbox.stub(history, "getNewQueryOptions").returns({});
+    globals.sandbox.stub(global.PlacesUtils.history, "executeQuery").returns({root: {childCount: 1, getChild: index => ({uri: testUrl, accessCount: 1})}});
+    globals.sandbox.stub(global.PlacesUtils.history, "getNewQuery").returns({"TIME_RELATIVE_NOW": 1});
+    globals.sandbox.stub(global.PlacesUtils.history, "getNewQueryOptions").returns({});
 
     instance = new UserDomainAffinityProvider(TIME_SEGMENTS, PARAMETER_SETS);
   });
