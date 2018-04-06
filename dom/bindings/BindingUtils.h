@@ -3250,6 +3250,9 @@ struct NormalThisPolicy;
 // that are on some global's proto chain.
 struct MaybeGlobalThisPolicy;
 
+// A this-extraction policy for lenient getters/setters.
+struct LenientThisPolicy;
+
 // An exception-reporting policy for normal getters/setters/methods.
 struct ThrowExceptions;
 

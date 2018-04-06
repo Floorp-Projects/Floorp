@@ -2644,13 +2644,8 @@ class AttrDefiner(PropertyDefiner):
                     exceptionPolicy = "ThrowExceptions"
 
                 if attr.hasLenientThis():
-                    if attr.type.isPromise():
-                        raise TypeError("Don't know how to handle "
-                                        "[LenientThis] Promise-returning "
-                                        "attribute %s.%s" %
-                                        (self.descriptor.name,
-                                         attr.identifier.name))
-                    accessor = "genericLenientGetter"
+                    accessor = ("GenericGetter<LenientThisPolicy, %s>" %
+                                exceptionPolicy)
                 elif attr.getExtendedAttribute("CrossOriginReadable"):
                     if attr.type.isPromise():
                         raise TypeError("Don't know how to handle "
@@ -8974,30 +8969,18 @@ class CGStaticMethod(CGAbstractStaticBindingMethod):
         return "%s.%s" % (interface_name, method_name)
 
 
-class CGGenericGetter(CGAbstractBindingMethod):
+class CGGenericCrossOriginGetter(CGAbstractBindingMethod):
     """
     A class for generating the C++ code for an IDL attribute getter.
     """
-    def __init__(self, descriptor, lenientThis=False, allowCrossOriginThis=False):
-        if lenientThis:
-            name = "genericLenientGetter"
-            unwrapFailureCode = dedent("""
-                MOZ_ASSERT(!JS_IsExceptionPending(cx));
-                if (!ReportLenientThisUnwrappingFailure(cx, &args.callee())) {
-                  return false;
-                }
-                args.rval().set(JS::UndefinedValue());
-                return true;
-                """)
-        else:
-            assert allowCrossOriginThis
-            name = "genericCrossOriginGetter"
-            unwrapFailureCode = (
-                'return ThrowInvalidThis(cx, args, %%(securityError)s, "%s");\n' %
-                descriptor.interface.identifier.name)
+    def __init__(self, descriptor):
+        name = "genericCrossOriginGetter"
+        unwrapFailureCode = (
+            'return ThrowInvalidThis(cx, args, %%(securityError)s, "%s");\n' %
+            descriptor.interface.identifier.name)
         CGAbstractBindingMethod.__init__(self, descriptor, name, JSNativeArguments(),
                                          unwrapFailureCode,
-                                         allowCrossOriginThis=allowCrossOriginThis)
+                                         allowCrossOriginThis=True)
 
     def generate_code(self):
         return CGGeneric(dedent("""
@@ -12460,7 +12443,6 @@ class MemberProperties:
         self.isGenericMethod = False
         self.isCrossOriginMethod = False
         self.isPromiseReturningMethod = False
-        self.isLenientGetter = False
         self.isCrossOriginGetter = False
         self.isGenericSetter = False
         self.isLenientSetter = False
@@ -12485,9 +12467,7 @@ def memberProperties(m, descriptor):
                     props.isCrossOriginMethod = True
     elif m.isAttr():
         if not m.isStatic() and descriptor.interface.hasInterfacePrototypeObject():
-            if m.hasLenientThis():
-                props.isLenientGetter = True
-            elif m.getExtendedAttribute("CrossOriginReadable"):
+            if m.getExtendedAttribute("CrossOriginReadable"):
                 props.isCrossOriginGetter = True
         if not m.readonly:
             if not m.isStatic() and descriptor.interface.hasInterfacePrototypeObject():
@@ -12529,9 +12509,8 @@ class CGDescriptor(CGThing):
 
         # These are set to true if at least one non-static
         # method/getter/setter or jsonifier exist on the interface.
-        (hasMethod, hasLenientGetter, hasSetter, hasLenientSetter,
-            hasPromiseReturningMethod) = (
-                False, False, False, False, False)
+        (hasMethod, hasSetter, hasLenientSetter, hasPromiseReturningMethod) = (
+                False, False, False, False)
         jsonifierMethod = None
         crossOriginMethods, crossOriginGetters, crossOriginSetters = set(), set(), set()
         unscopableNames = list()
@@ -12616,7 +12595,6 @@ class CGDescriptor(CGThing):
             hasMethod = hasMethod or props.isGenericMethod
             hasPromiseReturningMethod = (hasPromiseReturningMethod or
                                          props.isPromiseReturningMethod)
-            hasLenientGetter = hasLenientGetter or props.isLenientGetter
             hasSetter = hasSetter or props.isGenericSetter
             hasLenientSetter = hasLenientSetter or props.isLenientSetter
 
@@ -12631,11 +12609,8 @@ class CGDescriptor(CGThing):
         if len(crossOriginMethods):
             cgThings.append(CGGenericMethod(descriptor,
                                             allowCrossOriginThis=True))
-        if hasLenientGetter:
-            cgThings.append(CGGenericGetter(descriptor, lenientThis=True))
         if len(crossOriginGetters):
-            cgThings.append(CGGenericGetter(descriptor,
-                                            allowCrossOriginThis=True))
+            cgThings.append(CGGenericCrossOriginGetter(descriptor))
         if hasSetter:
             cgThings.append(CGGenericSetter(descriptor))
         if hasLenientSetter:
