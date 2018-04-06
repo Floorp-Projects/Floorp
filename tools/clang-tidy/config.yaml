@@ -18,8 +18,6 @@ clang_checkers:
    publish: !!bool yes
  - name: clang-analyzer-security.insecureAPI.getpw
    publish: !!bool yes
- - name: clang-analyzer-security.insecureAPI.gets
-   publish: !!bool yes
  - name: clang-analyzer-security.insecureAPI.mkstemp
    publish: !!bool yes
  - name: clang-analyzer-security.insecureAPI.mktemp
