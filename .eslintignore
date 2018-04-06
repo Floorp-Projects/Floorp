@@ -153,6 +153,7 @@ devtools/client/debugger/new/**
 
 # Ignore devtools preferences files
 devtools/client/preferences/**
+devtools/shared/preferences/**
 devtools/startup/preferences/devtools-startup.js
 
 # Ignore devtools third-party libs
