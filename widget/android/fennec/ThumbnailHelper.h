@@ -240,16 +240,14 @@ public:
 
         // take a screenshot, as wide as possible, proportional to the destination size
         nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
-        nsCOMPtr<nsISupports> rectSupports;
+        RefPtr<DOMRect> rect;
         if (!utils ||
-                NS_FAILED(utils->GetRootBounds(getter_AddRefs(rectSupports))) ||
-                !rectSupports) {
+                NS_FAILED(utils->GetRootBounds(getter_AddRefs(rect))) ||
+                !rect) {
             java::ThumbnailHelper::NotifyThumbnail(
                     aData, aTab, /* success */ false, /* store */ false);
             return;
         }
-        // this is safe, as GetRootBounds returns a DOMRect instance.
-        DOMRect* rect = DOMRect::FromSupports(rectSupports);
         float pageLeft = rect->Left();
         float pageTop = rect->Top();
         float pageWidth = rect->Width();
