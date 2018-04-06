@@ -8,8 +8,9 @@ to learn all the features and how to use the tool.
 
 ## Old / New frontend
 
-The current console used in the toolbox is called the new frontend, and the code lives in
-the `new-console-output/` folder. The old console code is mainly located in `webconsole.js`.
+The current console used in the toolbox is called the new frontend, and the code lives at
+the root of the `devtools/client/webconsole/` folder.
+The old console code is located in the `devtools/client/webconsole/old` folder.
 Both frontends use the same code for the console input, also called JsTerm (see `jsterm.js`).
 The old frontend is still used for the Browser Console, but is planned to be removed in the
 near future (see Bug 1381834).
@@ -83,14 +84,13 @@ unsure about the release process.
 ## Code Structure
 
 Top level files are used to launch the WebConsole inside of the DevTools toolbox or run in
-the browser tab (experimental). The WebConsole source is mainly located in the
-`new-console-output/` folder, the same code base is used to run in both environments.
+the browser tab (experimental). The same code base is used to run in both environments.
 
 ### Run inside of the DevTools toolbox
 
 Files used to run the WebConsole inside of the DevTools toolbox.
 
-* `new-console-output/main.js` called by devtools toolbox to launch the WebConsole panel.
+* `main.js` called by devtools toolbox to launch the WebConsole panel.
 * `webconsole.html` panel UI and launch scripts.
 
 ### Run in the browser tab (experimental)
@@ -111,9 +111,9 @@ into actual modules used by the WebConsole and other Devtools.
 ### UI
 
 The WebConsole UI is built using [React](http://docs.firefox-dev.tools/frontend/react.html)
-components (in `new-console-output/components/`).
+components (in `components/`).
 
-The React application is rendered from `new-console-output/new-console-output-wrapper.js`.
+The React application is rendered from `new-console-output-wrapper.js`.
 It contains 3 top components:
 * **ConsoleOutput** (in `ConsoleOutput.js`) is the component where messages are rendered.
 * **FilterBar** (in `FilterBar.js`) is the component for the filter bars (filter input and toggle buttons).
@@ -148,4 +148,4 @@ The redux state is a plain javascript object with the following properties:
 
 ### Tests
 
-[See new-console-output/test/README.md](new-console-output/test/README.md)
+[See test/README.md](test/README.md)

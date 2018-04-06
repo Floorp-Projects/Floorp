@@ -5,15 +5,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'new-console-output',
+    'actions',
+    'components',
     'old',
+    'reducers',
+    'selectors',
+    'test',
+    'utils',
 ]
 DevToolsModules(
     'console-commands.js',
+    'constants.js',
     'hudservice.js',
     'jsterm.js',
+    'main.js',
+    'new-console-output-wrapper.js',
     'new-webconsole.js',
     'panel.js',
+    'store.js',
+    'types.js',
     'utils.js',
     'webconsole-connection-proxy.js',
     'webconsole-l10n.js',
