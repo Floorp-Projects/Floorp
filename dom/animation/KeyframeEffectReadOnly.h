@@ -166,7 +166,7 @@ public:
   void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
                     ErrorResult& aRv);
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
-                    const ComputedStyle* aComputedValues);
+                    const ComputedStyle* aStyle);
 
   // Returns true if the effect includes |aProperty| regardless of whether the
   // property is overridden by !important rule.
@@ -244,8 +244,7 @@ public:
 
   // Cumulative change hint on each segment for each property.
   // This is used for deciding the animation is paint-only.
-  template<typename StyleType>
-  void CalculateCumulativeChangeHint(StyleType* aComputedStyle);
+  void CalculateCumulativeChangeHint(const ComputedStyle* aStyle);
 
   // Returns true if all of animation properties' change hints
   // can ignore painting if the animation is not visible.
@@ -379,13 +378,6 @@ protected:
 private:
   nsChangeHint mCumulativeChangeHint;
 
-  template<typename StyleType>
-  void DoSetKeyframes(nsTArray<Keyframe>&& aKeyframes, StyleType* aStyle);
-
-  template<typename StyleType>
-  void DoUpdateProperties(StyleType* aStyle);
-
-
   void ComposeStyleRule(RawServoAnimationValueMap& aAnimationValues,
                         const AnimationProperty& aProperty,
                         const AnimationPropertySegment& aSegment,
@@ -395,6 +387,7 @@ private:
   already_AddRefed<ComputedStyle> CreateComputedStyleForAnimationValue(
     nsCSSPropertyID aProperty,
     const AnimationValue& aValue,
+    nsPresContext* aPresContext,
     const ComputedStyle* aBaseComputedStyle);
 
   nsIFrame* GetAnimationFrame() const;
