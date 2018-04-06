@@ -1895,6 +1895,9 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
         case nsXPTType::T_INTERFACE_IS:
             ((nsISupports*)param.val.p)->Release();
             break;
+        case nsXPTType::T_DOMOBJECT:
+            type.GetDOMObjectInfo().Cleanup(param.val.p);
+            break;
         case nsXPTType::T_ASTRING:
         case nsXPTType::T_DOMSTRING:
             mCallContext.GetContext()->mScratchStrings.Destroy((nsString*)param.val.p);
