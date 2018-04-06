@@ -1722,22 +1722,6 @@ class Marionette(object):
             unwrapped = value
         return unwrapped
 
-    def execute_js_script(self, script, script_args=(), async=True,
-                          new_sandbox=True, script_timeout=None,
-                          inactivity_timeout=None, filename=None,
-                          sandbox='default'):
-        args = self._to_json(script_args)
-        body = {"script": script,
-                "args": args,
-                "async": async,
-                "newSandbox": new_sandbox,
-                "scriptTimeout": script_timeout,
-                "inactivityTimeout": inactivity_timeout,
-                "filename": filename,
-                "line": None}
-        rv = self._send_message("executeJSScript", body, key="value")
-        return self._from_json(rv)
-
     def execute_script(self, script, script_args=(), new_sandbox=True,
                        sandbox="default", script_timeout=None):
         """Executes a synchronous JavaScript script, and returns the
