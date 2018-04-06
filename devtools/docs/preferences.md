@@ -70,11 +70,11 @@ These APIs are very similar for each preference type.
 
 To create a new preference, it should be assigned a default value. Default preferences are
 defined in preferences files such as:
-- devtools/client/preferences/devtools.js
+- devtools/client/preferences/devtools-client.js
 - devtools/client/preferences/debugger.js
 - devtools/startup/preferences/devtools-startup.js
 
-Most new preferences should go in devtools/client/preferences/devtools.js. Debugger
+Most new preferences should go in devtools/client/preferences/devtools-client.js. Debugger
 specific preferences should go in devtools/client/preferences/debugger.js. Finally if a
 preference needs to be available very early during the Firefox startup sequence, it should
 go in devtools/startup/preferences/devtools-startup.js.
