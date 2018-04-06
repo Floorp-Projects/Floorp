@@ -2644,16 +2644,16 @@ class AttrDefiner(PropertyDefiner):
                     exceptionPolicy = "ThrowExceptions"
 
                 if attr.hasLenientThis():
+                    if attr.getExtendedAttribute("CrossOriginReadable"):
+                        raise TypeError("Can't handle lenient cross-origin "
+                                        "readable attribute %s.%s" %
+                                        (self.descriptor.name,
+                                         attr.identifier.name))
                     accessor = ("GenericGetter<LenientThisPolicy, %s>" %
                                 exceptionPolicy)
                 elif attr.getExtendedAttribute("CrossOriginReadable"):
-                    if attr.type.isPromise():
-                        raise TypeError("Don't know how to handle "
-                                        "cross-origin Promise-returning "
-                                        "attribute %s.%s" %
-                                        (self.descriptor.name,
-                                         attr.identifier.name))
-                    accessor = "genericCrossOriginGetter"
+                    accessor = ("GenericGetter<CrossOriginThisPolicy, %s>" %
+                                exceptionPolicy)
                 elif self.descriptor.interface.isOnGlobalProtoChain():
                     accessor = ("GenericGetter<MaybeGlobalThisPolicy, %s>" %
                                 exceptionPolicy)
@@ -8969,34 +8969,6 @@ class CGStaticMethod(CGAbstractStaticBindingMethod):
         return "%s.%s" % (interface_name, method_name)
 
 
-class CGGenericCrossOriginGetter(CGAbstractBindingMethod):
-    """
-    A class for generating the C++ code for an IDL attribute getter.
-    """
-    def __init__(self, descriptor):
-        name = "genericCrossOriginGetter"
-        unwrapFailureCode = (
-            'return ThrowInvalidThis(cx, args, %%(securityError)s, "%s");\n' %
-            descriptor.interface.identifier.name)
-        CGAbstractBindingMethod.__init__(self, descriptor, name, JSNativeArguments(),
-                                         unwrapFailureCode,
-                                         allowCrossOriginThis=True)
-
-    def generate_code(self):
-        return CGGeneric(dedent("""
-            const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
-            MOZ_ASSERT(info->type() == JSJitInfo::Getter);
-            JSJitGetterOp getter = info->getter;
-            bool ok = getter(cx, obj, self, JSJitGetterCallArgs(args));
-            #ifdef DEBUG
-            if (ok) {
-              AssertReturnTypeMatchesJitinfo(info, args.rval());
-            }
-            #endif
-            return ok;
-            """))
-
-
 class CGSpecializedGetter(CGAbstractStaticMethod):
     """
     A class for generating the code for a specialized attribute getter
@@ -12609,8 +12581,6 @@ class CGDescriptor(CGThing):
         if len(crossOriginMethods):
             cgThings.append(CGGenericMethod(descriptor,
                                             allowCrossOriginThis=True))
-        if len(crossOriginGetters):
-            cgThings.append(CGGenericCrossOriginGetter(descriptor))
         if hasSetter:
             cgThings.append(CGGenericSetter(descriptor))
         if hasLenientSetter:

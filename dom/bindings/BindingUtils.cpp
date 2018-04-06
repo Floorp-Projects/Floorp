@@ -2883,6 +2883,11 @@ namespace binding_detail {
  * ExtractThisObject: Takes a CallArgs for which HasValidThisValue was true and
  *                    returns the JSObject* to use for getting |this|.
  *
+ * MaybeUnwrapThisObject: If our |this| is a JSObject* that this policy wants to
+ *                        allow unchecked access to for this
+ *                        getter/setter/method, unwrap it.  Otherwise just
+ *                        return the given object.
+ *
  * HandleInvalidThis: If the |this| is not valid (wrong type of value, wrong
  *                    object, etc), decide what to do about it.  Returns a
  *                    boolean to return from the JSNative (false for failure,
@@ -2908,6 +2913,11 @@ struct NormalThisPolicy
     return &aArgs.thisv().toObject();
   }
 
+  static MOZ_ALWAYS_INLINE JSObject* MaybeUnwrapThisObject(JSObject* aObj)
+  {
+    return aObj;
+  }
+
   static bool HandleInvalidThis(JSContext* aCx, JS::CallArgs& aArgs,
                                 bool aSecurityError,
                                 prototypes::ID aProtoId)
@@ -2931,6 +2941,8 @@ struct MaybeGlobalThisPolicy : public NormalThisPolicy
       js::GetGlobalForObjectCrossCompartment(&aArgs.callee());
   }
 
+  // We want the MaybeUnwrapThisObject of NormalThisPolicy.
+
   // We want the HandleInvalidThis of NormalThisPolicy.
 };
 
@@ -2941,6 +2953,8 @@ struct LenientThisPolicy : public MaybeGlobalThisPolicy
   // We want the HasValidThisValue of MaybeGlobalThisPolicy.
 
   // We want the ExtractThisObject of MaybeGlobalThisPolicy.
+
+  // We want the MaybeUnwrapThisObject of MaybeGlobalThisPolicy.
 
   static bool HandleInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                                 bool aSecurityError,
@@ -2953,6 +2967,28 @@ struct LenientThisPolicy : public MaybeGlobalThisPolicy
     aArgs.rval().set(JS::UndefinedValue());
     return true;
   }
+};
+
+// There are some cross-origin things on globals, so we inherit from
+// MaybeGlobalThisPolicy.
+struct CrossOriginThisPolicy : public MaybeGlobalThisPolicy
+{
+  // We want the HasValidThisValue of MaybeGlobalThisPolicy.
+
+  // We want the ExtractThisObject of MaybeGlobalThisPolicy.
+
+  static MOZ_ALWAYS_INLINE JSObject* MaybeUnwrapThisObject(JSObject* aObj)
+  {
+    if (xpc::WrapperFactory::IsXrayWrapper(aObj)) {
+      return js::UncheckedUnwrap(aObj);
+    }
+
+    // Else just return aObj; our UnwrapObjectInternal call will try to
+    // CheckedUnwrap it, and eitehr succeed or get a security error as needed.
+    return aObj;
+  }
+
+  // We want the HandleInvalidThis of MaybeGlobalThisPolicy.
 };
 
 /**
@@ -3008,8 +3044,9 @@ GenericGetter(JSContext* cx, unsigned argc, JS::Value* vp)
   JS::Rooted<JSObject*> obj(cx, ThisPolicy::ExtractThisObject(args));
 
   // NOTE: we want to leave obj in its initial compartment, so don't want to
-  // pass it to UnwrapObjectInternal.
-  JS::Rooted<JSObject*> rootSelf(cx, obj);
+  // pass it to UnwrapObjectInternal.  Also, the thing we pass to
+  // UnwrapObjectInternal may be affected by our ThisPolicy.
+  JS::Rooted<JSObject*> rootSelf(cx, ThisPolicy::MaybeUnwrapThisObject(obj));
   void* self;
   {
     binding_detail::MutableObjectHandleWrapper wrapper(&rootSelf);
@@ -3054,6 +3091,11 @@ template bool
 GenericGetter<LenientThisPolicy, ThrowExceptions>(
   JSContext* cx, unsigned argc, JS::Value* vp);
 // There aren't any [LenientThis] Promise-returning getters, so don't
+// bother instantiating that specialization.
+template bool
+GenericGetter<CrossOriginThisPolicy, ThrowExceptions>(
+  JSContext* cx, unsigned argc, JS::Value* vp);
+// There aren't any cross-origin Promise-returning getters, so don't
 // bother instantiating that specialization.
 
 } // namespace binding_detail
