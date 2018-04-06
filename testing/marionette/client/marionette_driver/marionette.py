@@ -25,8 +25,8 @@ from .geckoinstance import GeckoInstance
 from .keys import Keys
 from .timeout import Timeouts
 
-WEB_ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
-CHROME_ELEMENT_KEY = "chromeelement-9fc5-4b51-a3c8-01716eedeb04"
+WEBELEMENT_KEY = "ELEMENT"
+W3C_WEBELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
 
 
 class HTMLElement(object):
@@ -750,12 +750,12 @@ class Marionette(object):
             return self._unwrap_response(res)
 
     def _unwrap_response(self, value):
-        if isinstance(value, dict) and (WEB_ELEMENT_KEY in value or
-                                        CHROME_ELEMENT_KEY in value):
-            if value.get(WEB_ELEMENT_KEY):
-                return HTMLElement(self, value.get(WEB_ELEMENT_KEY))
+        if isinstance(value, dict) and (WEBELEMENT_KEY in value or
+                                        W3C_WEBELEMENT_KEY in value):
+            if value.get(WEBELEMENT_KEY):
+                return HTMLElement(self, value.get(WEBELEMENT_KEY))
             else:
-                return HTMLElement(self, value.get(CHROME_ELEMENT_KEY))
+                return HTMLElement(self, value.get(W3C_WEBELEMENT_KEY))
         elif isinstance(value, list):
             return list(self._unwrap_response(item) for item in value)
         else:
@@ -1652,8 +1652,8 @@ class Marionette(object):
             for arg in args:
                 wrapped[arg] = self._to_json(args[arg])
         elif type(args) == HTMLElement:
-            wrapped = {WEB_ELEMENT_KEY: args.id,
-                       CHROME_ELEMENT_KEY: args.id}
+            wrapped = {W3C_WEBELEMENT_KEY: args.id,
+                       WEBELEMENT_KEY: args.id}
         elif (isinstance(args, bool) or isinstance(args, basestring) or
               isinstance(args, int) or isinstance(args, float) or args is None):
             wrapped = args
@@ -1667,10 +1667,10 @@ class Marionette(object):
         elif isinstance(value, dict):
             unwrapped = {}
             for key in value:
-                if key == WEB_ELEMENT_KEY:
+                if key == W3C_WEBELEMENT_KEY:
                     unwrapped = HTMLElement(self, value[key])
                     break
-                elif key == CHROME_ELEMENT_KEY:
+                elif key == WEBELEMENT_KEY:
                     unwrapped = HTMLElement(self, value[key])
                     break
                 else:
