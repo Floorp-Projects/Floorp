@@ -8364,9 +8364,14 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   nsSize absoluteLimit(aFrame->PresContext()->DevPixelsToAppUnits(absoluteLimitX),
                        aFrame->PresContext()->DevPixelsToAppUnits(absoluteLimitY));
   nsSize maxSize = Min(relativeLimit, absoluteLimit);
-  gfxSize scale = nsLayoutUtils::GetTransformToAncestorScale(aFrame);
-  nsSize frameSize(overflow.Size().width * scale.width,
-                   overflow.Size().height * scale.height);
+
+  const auto transform = nsLayoutUtils::GetTransformToAncestor(aFrame,
+    nsLayoutUtils::GetDisplayRootFrame(aFrame));
+  const gfxRect transformedBounds = transform.TransformAndClipBounds(
+    gfxRect(overflow.x, overflow.y, overflow.width, overflow.height),
+    gfxRect::MaxIntRect());
+  const nsSize frameSize = nsSize(transformedBounds.width, transformedBounds.height);
+
   uint64_t maxLimitArea = uint64_t(maxSize.width) * maxSize.height;
   uint64_t frameArea = uint64_t(frameSize.width) * frameSize.height;
   if (frameArea <= maxLimitArea && frameSize <= absoluteLimit) {
