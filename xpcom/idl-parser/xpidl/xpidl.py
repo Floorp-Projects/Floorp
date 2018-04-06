@@ -565,6 +565,50 @@ class Native(object):
         return "native %s(%s)\n" % (self.name, self.nativename)
 
 
+class WebIDL(object):
+    kind = 'webidl'
+
+    def __init__(self, name, location):
+        self.name = name
+        self.location = location
+
+    def __eq__(self, other):
+        return other.kind == 'webidl' and self.name == other.name
+
+    def resolve(self, parent):
+        # XXX(nika): We don't handle _every_ kind of webidl object here (as that
+        # would be hard). For example, we don't support nsIDOM*-defaulting
+        # interfaces.
+        # TODO: More explicit compile-time checks?
+
+        assert parent.webidlconfig is not None, \
+            "WebIDL declarations require passing webidlconfig to resolve."
+
+        # Resolve our native name according to the WebIDL configs.
+        config = parent.webidlconfig.get(self.name, {})
+        self.native = config.get('nativeType')
+        if self.native is None:
+            self.native = "mozilla::dom::%s" % self.name
+        self.headerFile = config.get('headerFile')
+        if self.headerFile is None:
+            self.headerFile = self.native.replace('::', '/') + '.h'
+
+        parent.setName(self)
+
+    def isScriptable(self):
+        return True  # All DOM objects are script exposed.
+
+    def nativeType(self, calltype):
+        return "%s %s" % (self.native, calltype != 'in' and '* *' or '*')
+
+    def rustType(self, calltype):
+        # Just expose the type as a void* - we can't do any better.
+        return "%s*const libc::c_void" % (calltype != 'in' and '*mut ' or '')
+
+    def __str__(self):
+        return "webidl %s\n" % self.name
+
+
 class Interface(object):
     kind = 'interface'
 
@@ -1165,6 +1209,7 @@ class IDLParser(object):
         'readonly': 'READONLY',
         'native': 'NATIVE',
         'typedef': 'TYPEDEF',
+        'webidl': 'WEBIDL',
         }
 
     tokens = [
@@ -1279,7 +1324,8 @@ class IDLParser(object):
     def p_productions_interface(self, p):
         """productions : interface productions
                        | typedef productions
-                       | native productions"""
+                       | native productions
+                       | webidl productions"""
         p[0] = list(p[2])
         p[0].insert(0, p[1])
 
@@ -1302,6 +1348,10 @@ class IDLParser(object):
         # this is a place marker: we switch the lexer into literal identifier
         # mode here, to slurp up everything until the closeparen
         self.lexer.begin('nativeid')
+
+    def p_webidl(self, p):
+        """webidl : WEBIDL IDENTIFIER ';'"""
+        p[0] = WebIDL(name=p[2], location=self.getLocation(p, 2))
 
     def p_anyident(self, p):
         """anyident : IDENTIFIER
