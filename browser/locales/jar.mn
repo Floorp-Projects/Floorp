@@ -26,9 +26,7 @@
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
     locale/browser/customizableui/customizableWidgets.properties (%chrome/browser/customizableui/customizableWidgets.properties)
     locale/browser/lightweightThemes.properties    (%chrome/browser/lightweightThemes.properties)
-#ifdef XP_WIN
     locale/browser/uiDensity.properties            (%chrome/browser/uiDensity.properties)
-#endif
     locale/browser/pageInfo.dtd                    (%chrome/browser/pageInfo.dtd)
     locale/browser/pageInfo.properties             (%chrome/browser/pageInfo.properties)
     locale/browser/quitDialog.properties           (%chrome/browser/quitDialog.properties)
