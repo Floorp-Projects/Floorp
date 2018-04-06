@@ -177,6 +177,79 @@ let apiManager = new class extends SchemaAPIManager {
   }
 }();
 
+// A proxy for extension ports between two DISTINCT message managers.
+// This is used by ProxyMessenger, to ensure that a port always receives a
+// disconnection message when the other side closes, even if that other side
+// fails to send the message before the message manager disconnects.
+class ExtensionPortProxy {
+  /**
+   * @param {number} portId The ID of the port, chosen by the sender.
+   * @param {nsIMessageSender} senderMM
+   * @param {nsIMessageSender} receiverMM Must differ from senderMM.
+   */
+  constructor(portId, senderMM, receiverMM) {
+    this.portId = portId;
+    this.senderMM = senderMM;
+    this.receiverMM = receiverMM;
+  }
+
+  register() {
+    if (ProxyMessenger.portsById.has(this.portId)) {
+      throw new Error(`Extension port IDs may not be re-used: ${this.portId}`);
+    }
+    ProxyMessenger.portsById.set(this.portId, this);
+    ProxyMessenger.ports.get(this.senderMM).add(this);
+    ProxyMessenger.ports.get(this.receiverMM).add(this);
+  }
+
+  unregister() {
+    ProxyMessenger.portsById.delete(this.portId);
+    this._unregisterFromMessageManager(this.senderMM);
+    this._unregisterFromMessageManager(this.receiverMM);
+  }
+
+  _unregisterFromMessageManager(messageManager) {
+    let ports = ProxyMessenger.ports.get(messageManager);
+    ports.delete(this);
+    if (ports.size === 0) {
+      ProxyMessenger.ports.delete(messageManager);
+    }
+  }
+
+  /**
+   * Associate the port with `newMessageManager` instead of `messageManager`.
+   *
+   * @param {nsIMessageSender} messageManager The message manager to replace.
+   * @param {nsIMessageSender} newMessageManager
+   */
+  replaceMessageManager(messageManager, newMessageManager) {
+    if (this.senderMM === messageManager) {
+      this.senderMM = newMessageManager;
+    } else if (this.receiverMM === messageManager) {
+      this.receiverMM = newMessageManager;
+    } else {
+      throw new Error("This ExtensionPortProxy is not associated with the given message manager");
+    }
+
+    this._unregisterFromMessageManager(messageManager);
+
+    if (this.senderMM === this.receiverMM) {
+      this.unregister();
+    } else {
+      ProxyMessenger.ports.get(newMessageManager).add(this);
+    }
+  }
+
+  getOtherMessageManager(messageManager) {
+    if (this.senderMM === messageManager) {
+      return this.receiverMM;
+    } else if (this.receiverMM === messageManager) {
+      return this.senderMM;
+    }
+    throw new Error("This ExtensionPortProxy is not associated with the given message manager");
+  }
+}
+
 // Subscribes to messages related to the extension messaging API and forwards it
 // to the relevant message manager. The "sender" field for the `onMessage` and
 // `onConnect` events are updated if needed.
@@ -205,7 +278,12 @@ ProxyMessenger = {
 
     Services.obs.addObserver(this, "message-manager-disconnect");
 
-    this.ports = new DefaultMap(() => new Map());
+    // Data structures to look up proxied extension ports by message manager,
+    // and by (numeric) portId. These are maintained by ExtensionPortProxy.
+    // Map[nsIMessageSender -> Set(ExtensionPortProxy)]
+    this.ports = new DefaultMap(() => new Set());
+    // Map[portId -> ExtensionPortProxy]
+    this.portsById = new Map();
   },
 
   observe(subject, topic, data) {
@@ -213,14 +291,17 @@ ProxyMessenger = {
       if (this.ports.has(subject)) {
         let ports = this.ports.get(subject);
         this.ports.delete(subject);
-
-        for (let [portId, {sender, recipient, receiverMM}] of ports.entries()) {
-          recipient.portId = portId;
-          MessageChannel.sendMessage(receiverMM, "Extension:Port:Disconnect", null, {
-            sender,
-            recipient,
+        for (let port of ports) {
+          MessageChannel.sendMessage(port.getOtherMessageManager(subject), "Extension:Port:Disconnect", null, {
+            // Usually sender.contextId must be set to the sender's context ID
+            // to avoid dispatching the port.onDisconnect event at the sender.
+            // The sender is certainly unreachable because its message manager
+            // was disconnected, so the sender can be left empty.
+            sender: {},
+            recipient: {portId: port.portId},
             responseType: MessageChannel.RESPONSE_TYPE_NONE,
           }).catch(() => {});
+          port.unregister();
         }
       }
     }
@@ -230,7 +311,11 @@ ProxyMessenger = {
     if (event.type === "SwapDocShells") {
       let {messageManager} = event.originalTarget;
       if (this.ports.has(messageManager)) {
-        this.ports.set(event.detail.messageManager, this.ports.get(messageManager));
+        let ports = this.ports.get(messageManager);
+        let newMessageManager = event.detail.messageManager;
+        for (let port of ports) {
+          port.replaceMessageManager(messageManager, newMessageManager);
+        }
         this.ports.delete(messageManager);
         event.detail.addEventListener("SwapDocShells", this, {once: true});
       }
@@ -260,7 +345,10 @@ ProxyMessenger = {
     };
 
     let extension = GlobalManager.extensionMap.get(sender.extensionId);
-    let receiverMM = this.getMessageManagerForRecipient(recipient);
+    let {
+      messageManager: receiverMM,
+      xulBrowser: receiverBrowser,
+    } = this.getMessageManagerForRecipient(recipient);
     if (!extension || !receiverMM) {
       return Promise.reject(noHandlerError);
     }
@@ -279,15 +367,26 @@ ProxyMessenger = {
     });
 
     if (messageName === "Extension:Connect") {
-      target.addEventListener("SwapDocShells", this, {once: true});
-
-      this.ports.get(target.messageManager).set(data.portId, {receiverMM, sender, recipient});
-      promise1.catch(() => {
-        this.ports.get(target.messageManager).delete(data.portId);
-      });
+      // Register a proxy for the extension port if the message managers differ,
+      // so that a disconnect message can be sent to the other end when either
+      // message manager disconnects.
+      if (target.messageManager !== receiverMM) {
+        // The source of Extension:Connect is always inside a <browser>, whereas
+        // the recipient can be a process (and not be associated with a <browser>).
+        target.addEventListener("SwapDocShells", this, {once: true});
+        if (receiverBrowser) {
+          receiverBrowser.addEventListener("SwapDocShells", this, {once: true});
+        }
+        let port = new ExtensionPortProxy(data.portId, target.messageManager, receiverMM);
+        port.register();
+        promise1.catch(() => {
+          port.unregister();
+        });
+      }
     } else if (messageName === "Extension:Port:Disconnect") {
-      if (target.messageManager) {
-        this.ports.get(target.messageManager).delete(data.portId);
+      let port = this.portsById.get(data.portId);
+      if (port) {
+        port.unregister();
       }
     }
 
@@ -336,7 +435,9 @@ ProxyMessenger = {
    * @param {object} recipient An object that was passed to
    *     `MessageChannel.sendMessage`.
    * @param {Extension} extension
-   * @returns {object|null} The message manager matching the recipient if found.
+   * @returns {{messageManager: nsIMessageSender, xulBrowser: XULElement}}
+   *          The message manager matching the recipient, if found.
+   *          And the <browser> owning the message manager, if any.
    */
   getMessageManagerForRecipient(recipient) {
     // tabs.sendMessage / tabs.connect
@@ -345,14 +446,14 @@ ProxyMessenger = {
       // need to check whether `tabTracker` exists.
       let tab = apiManager.global.tabTracker.getTab(recipient.tabId, null);
       if (!tab) {
-        return null;
+        return {messageManager: null, xulBrowser: null};
       }
 
       // There can be no recipients in a tab pending restore,
       // So we bail early to avoid instantiating the lazy browser.
       let node = tab.browser || tab;
       if (node.getAttribute("pending") === "true") {
-        return null;
+        return {messageManager: null, xulBrowser: null};
       }
 
       let browser = tab.linkedBrowser || tab.browser;
@@ -369,16 +470,17 @@ ProxyMessenger = {
         }
       }
 
-      return browser.messageManager;
+      return {messageManager: browser.messageManager, xulBrowser: browser};
     }
 
     // runtime.sendMessage / runtime.connect
     let extension = GlobalManager.extensionMap.get(recipient.extensionId);
     if (extension) {
-      return extension.parentMessageManager;
+      // A process message manager
+      return {messageManager: extension.parentMessageManager, xulBrowser: null};
     }
 
-    return null;
+    return {messageManager: null, xulBrowser: null};
   },
 };
 
