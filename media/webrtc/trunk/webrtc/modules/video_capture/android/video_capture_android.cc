@@ -185,7 +185,7 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
 
 int32_t VideoCaptureAndroid::StartCapture(
     const VideoCaptureCapability& capability) {
-  CriticalSectionScoped cs(&_apiCs);
+  _apiCs.Enter();
   AttachThreadScoped ats(g_jvm_capture);
   JNIEnv* env = ats.env();
 
@@ -194,23 +194,32 @@ int32_t VideoCaptureAndroid::StartCapture(
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                  "%s: GetBestMatchedCapability failed: %dx%d",
                  __FUNCTION__, capability.width, capability.height);
+    // Manual exit of critical section
+    _apiCs.Leave();
     return -1;
   }
 
   _captureDelay = _captureCapability.expectedCaptureDelay;
 
-  jmethodID j_start =
-      env->GetMethodID(g_java_capturer_class, "startCapture", "(IIII)Z");
-  assert(j_start);
+  int width = _captureCapability.width;
+  int height = _captureCapability.height;
   int min_mfps = 0;
   int max_mfps = 0;
   _deviceInfo.GetMFpsRange(_deviceUniqueId, _captureCapability.maxFPS,
                            &min_mfps, &max_mfps);
+
+  // Exit critical section to avoid blocking camera thread inside
+  // onIncomingFrame() call.
+  _apiCs.Leave();
+
+  jmethodID j_start =
+      env->GetMethodID(g_java_capturer_class, "startCapture", "(IIII)Z");
+  assert(j_start);
   bool started = env->CallBooleanMethod(_jCapturer, j_start,
-                                        _captureCapability.width,
-                                        _captureCapability.height,
+                                        width, height,
                                         min_mfps, max_mfps);
   if (started) {
+    CriticalSectionScoped cs(&_apiCs);
     _requestedCapability = capability;
     _captureStarted = true;
   }
