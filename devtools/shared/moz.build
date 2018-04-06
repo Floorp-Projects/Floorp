@@ -22,6 +22,7 @@ DIRS += [
     'node-properties',
     'performance',
     'platform',
+    'preferences',
     'pretty-fast',
     'qrcode',
     'security',
