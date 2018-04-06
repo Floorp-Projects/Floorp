@@ -28,7 +28,6 @@ endif
 # corresponding the make target
 tier_MOZ_AUTOMATION_BUILD_SYMBOLS = buildsymbols
 tier_MOZ_AUTOMATION_L10N_CHECK = l10n-check
-tier_MOZ_AUTOMATION_INSTALLER = installer
 tier_MOZ_AUTOMATION_PACKAGE = package
 tier_MOZ_AUTOMATION_PACKAGE_TESTS = package-tests
 tier_MOZ_AUTOMATION_UPDATE_PACKAGING = update-packaging
@@ -45,7 +44,6 @@ moz_automation_symbols = \
   MOZ_AUTOMATION_BUILD_SYMBOLS \
   MOZ_AUTOMATION_UPLOAD_SYMBOLS \
   MOZ_AUTOMATION_PACKAGE \
-  MOZ_AUTOMATION_INSTALLER \
   MOZ_AUTOMATION_UPDATE_PACKAGING \
   MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES \
   MOZ_AUTOMATION_L10N_CHECK \
@@ -57,21 +55,14 @@ MOZ_AUTOMATION_TIERS := $(foreach sym,$(moz_automation_symbols),$(if $(filter 1,
 automation/uploadsymbols: automation/buildsymbols
 
 automation/update-packaging: automation/package
-automation/update-packaging: automation/installer
 
 automation/l10n-check: automation/package
-automation/l10n-check: automation/installer
 
-automation/upload: automation/installer
 automation/upload: automation/package
 automation/upload: automation/package-tests
 automation/upload: automation/buildsymbols
 automation/upload: automation/update-packaging
 automation/upload: automation/package-generated-sources
-
-# The installer and packager all run stage-package, and may conflict
-# with each other.
-automation/installer: automation/package
 
 automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
 	@echo Automation steps completed.
