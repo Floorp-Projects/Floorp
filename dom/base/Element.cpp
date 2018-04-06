@@ -1196,7 +1196,7 @@ Element::AttachShadow(const ShadowRootInit& aInit, ErrorResult& aError)
    *    then throw a "NotSupportedError" DOMException.
    */
   nsAtom* nameAtom = NodeInfo()->NameAtom();
-  if (!(nsContentUtils::IsCustomElementName(nameAtom, NodeInfo()->NamespaceID()) ||
+  if (!(nsContentUtils::IsCustomElementName(nameAtom) ||
         nameAtom == nsGkAtoms::article ||
         nameAtom == nsGkAtoms::aside ||
         nameAtom == nsGkAtoms::blockquote ||
@@ -4304,7 +4304,7 @@ Element::SetCustomElementData(CustomElementData* aData)
   #if DEBUG
     nsAtom* name = NodeInfo()->NameAtom();
     nsAtom* type = aData->GetCustomElementType();
-    if (nsContentUtils::IsCustomElementName(name, NodeInfo()->NamespaceID())) {
+    if (nsContentUtils::IsCustomElementName(name)) {
       MOZ_ASSERT(type == name);
     } else {
       MOZ_ASSERT(type != name);
