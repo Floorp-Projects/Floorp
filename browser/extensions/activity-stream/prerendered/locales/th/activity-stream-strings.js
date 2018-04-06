@@ -30,7 +30,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_linktext": "เรียนรู้วิธีการทำงาน",
   "section_disclaimer_topstories_buttontext": "ตกลง เข้าใจแล้ว",
   "prefs_home_header": "เนื้อหาหน้าแรก Firefox",
-  "prefs_home_description": "Choose what content you want on your Firefox Home screen.",
+  "prefs_home_description": "เลือกเนื้อหาที่คุณต้องการในหน้าจอหน้าแรก Firefox ของคุณ",
   "prefs_restore_defaults_button": "เรียกคืนค่าเริ่มต้น",
   "prefs_section_rows_option": "{num} แถว",
   "prefs_search_header": "การค้นหาเว็บ",
@@ -74,7 +74,7 @@ window.gActivityStreamStrings = {
   "topsites_form_image_validation": "ไม่สามารถโหลดภาพ ลอง URL อื่น",
   "pocket_read_more": "หัวข้อยอดนิยม:",
   "pocket_read_even_more": "ดูเรื่องราวเพิ่มเติม",
-  "pocket_description": "ค้นพบเนื้อหาคุณภาพสูงที่คุณอาจจะพลาดไปด้วยความช่วยเหลือจาก Pocket ซึ่งขณะนี้เป็นส่วนหนึ่งของ Mozilla",
+  "pocket_description": "ค้นพบเนื้อหาคุณภาพสูงที่คุณอาจพลาดไปด้วยความช่วยเหลือจาก Pocket ที่ตอนนี้เป็นส่วนหนึ่งของ Mozilla",
   "highlights_empty_state": "เริ่มการท่องเว็บและเราจะแสดงบทความ, วิดีโอ และหน้าอื่น ๆ บางส่วนที่ยอดเยี่ยมที่คุณได้เยี่ยมชมหรือเพิ่มที่คั่นหน้าไว้ล่าสุดที่นี่",
   "topstories_empty_state": "คุณได้อ่านเรื่องราวครบทั้งหมดแล้ว คุณสามารถกลับมาตรวจดูเรื่องราวเด่นจาก {provider} ได้ภายหลัง อดใจรอไม่ได้งั้นหรือ? เลือกหัวข้อยอดนิยมเพื่อค้นหาเรื่องราวที่ยอดเยี่ยมจากเว็บต่าง ๆ",
   "manual_migration_explanation2": "ลอง Firefox ด้วยที่คั่นหน้า, ประวัติ และรหัสผ่านจากเบราว์เซอร์อื่น",
@@ -89,5 +89,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "เพิ่มไซต์เด่น",
   "section_menu_action_move_up": "ย้ายขึ้น",
   "section_menu_action_move_down": "ย้ายลง",
-  "section_menu_action_privacy_notice": "ประกาศความเป็นส่วนตัว"
+  "section_menu_action_privacy_notice": "ประกาศความเป็นส่วนตัว",
+  "prefs_topstories_description": "เนื้อหาคุณภาพสูงที่คุณอาจพลาดไป"
 };
