@@ -207,6 +207,22 @@ intrinsic_IsInstanceOfBuiltin(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+template<typename T>
+static bool
+intrinsic_GuardToBuiltin(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+
+    if (args[0].toObject().is<T>()) {
+        args.rval().setObject(args[0].toObject());
+        return true;
+    }
+    args.rval().setNull();
+    return true;
+}
+
 /**
  * Self-hosting intrinsic returning the original constructor for a builtin
  * the name of which is the first and only argument.
@@ -2370,6 +2386,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("IsStringIterator",
                     intrinsic_IsInstanceOfBuiltin<StringIteratorObject>, 1,0,
                     IntrinsicIsStringIterator),
+    JS_INLINABLE_FN("GuardToStringIterator",
+                    intrinsic_GuardToBuiltin<StringIteratorObject>, 1,0,
+                    IntrinsicGuardToStringIterator),
 
     JS_FN("_CreateMapIterationResultPair", intrinsic_CreateMapIterationResultPair, 0, 0),
     JS_INLINABLE_FN("_GetNextMapEntryForIterator", intrinsic_GetNextMapEntryForIterator, 2,0,

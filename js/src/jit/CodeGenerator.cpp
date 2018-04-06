@@ -12586,6 +12586,33 @@ CodeGenerator::visitHasClass(LHasClass* ins)
     masm.cmpPtrSet(Assembler::Equal, output, ImmPtr(ins->mir()->getClass()), output);
 }
 
+void
+CodeGenerator::visitGuardToClass(LGuardToClass* ins)
+{
+    Register lhs = ToRegister(ins->lhs());
+    Register output = ToRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
+    Label notEqual;
+
+    masm.branchTestObjClass(Assembler::NotEqual, lhs, ins->mir()->getClass(), temp,
+                            output, &notEqual);
+    masm.mov(lhs, output);
+
+    if (ins->mir()->type() == MIRType::Object) {
+        // Can't return null-return here, so bail
+        bailoutFrom(&notEqual, ins->snapshot());
+    } else {
+        Label done;
+        masm.jump(&done);
+
+        masm.bind(&notEqual);
+        masm.mov(ImmPtr(0), output);
+
+        masm.bind(&done);
+    }
+}
+
 typedef JSString* (*ObjectClassToStringFn)(JSContext*, HandleObject);
 static const VMFunction ObjectClassToStringInfo =
     FunctionInfo<ObjectClassToStringFn>(js::ObjectClassToString, "ObjectClassToString");
