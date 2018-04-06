@@ -110,7 +110,7 @@ nsTextNode::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 bool
 nsTextNode::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~(eTEXT | eDATA_NODE));
+  return !(aFlags & ~eDATA_NODE);
 }
 
 already_AddRefed<CharacterData>

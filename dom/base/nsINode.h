@@ -415,8 +415,6 @@ public:
     eDOCUMENT            = 1 << 1,
     /** nsIAttribute nodes */
     eATTRIBUTE           = 1 << 2,
-    /** text nodes */
-    eTEXT                = 1 << 3,
     /** xml processing instructions */
     ePROCESSING_INSTRUCTION = 1 << 4,
     /** comment nodes */
