@@ -18,30 +18,43 @@ add_task(function* () {
 
   info("Create the test markup");
   let div = document.createElement("div");
-  div.unsafeSetInnerHTML(
-  `<div data-localization-bundle="devtools/client/locales/startup.properties">
-     <div id="d0" data-localization="content=inspector.someInvalidKey"></div>
-     <div id="d1" data-localization="content=inspector.label">Text will disappear</div>
-     <div id="d2" data-localization="content=inspector.label;title=inspector.accesskey">
-     </div>
-     <!-- keep the following data-localization on two separate lines -->
-     <div id="d3" data-localization="content=inspector.label;
-                                     title=inspector.accesskey"></div>
-     <div id="d4" data-localization="aria-label=inspector.label">Some content</div>
-     <div data-localization-bundle="devtools/client/locales/toolbox.properties">
-       <div id="d5" data-localization="content=toolbox.defaultTitle"></div>
-     </div>
-   </div>
-  `);
+  div.setAttribute("data-localization-bundle",
+                   "devtools/client/locales/startup.properties");
+  let div0 = document.createElement("div");
+  div0.setAttribute("id", "d0");
+  div0.setAttribute("data-localization", "content=inspector.someInvalidKey");
+  div.appendChild(div0);
+  let div1 = document.createElement("div");
+  div1.setAttribute("id", "d1");
+  div1.setAttribute("data-localization", "content=inspector.label");
+  div.appendChild(div1);
+  div1.append("Text will disappear");
+  let div2 = document.createElement("div");
+  div2.setAttribute("id", "d2");
+  div2.setAttribute("data-localization",
+                    "content=inspector.label;title=inspector.accesskey");
+  div.appendChild(div2);
+  let div3 = document.createElement("div");
+  div3.setAttribute("id", "d3");
+  div3.setAttribute("data-localization",
+                    "content=inspector.label;title=inspector.accesskey");
+  div.appendChild(div3);
+  let div4 = document.createElement("div");
+  div4.setAttribute("id", "d4");
+  div4.setAttribute("data-localization", "aria-label=inspector.label");
+  div.appendChild(div4);
+  div4.append("Some content");
+  let toolboxDiv = document.createElement("div");
+  toolboxDiv.setAttribute("data-localization-bundle",
+                          "devtools/client/locales/toolbox.properties");
+  div.appendChild(toolboxDiv);
+  let div5 = document.createElement("div");
+  div5.setAttribute("id", "d5");
+  div5.setAttribute("data-localization", "content=toolbox.defaultTitle");
+  toolboxDiv.appendChild(div5);
 
   info("Use localization helper to localize the test markup");
   localizeMarkup(div);
-
-  let div1 = div.querySelector("#d1");
-  let div2 = div.querySelector("#d2");
-  let div3 = div.querySelector("#d3");
-  let div4 = div.querySelector("#d4");
-  let div5 = div.querySelector("#d5");
 
   is(div1.innerHTML, str1, "The content of #d1 is localized");
   is(div2.innerHTML, str1, "The content of #d2 is localized");
