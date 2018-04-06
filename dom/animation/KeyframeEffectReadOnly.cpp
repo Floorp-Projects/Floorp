@@ -191,30 +191,15 @@ KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
   }
 
   RefPtr<ComputedStyle> style = GetTargetComputedStyle();
-  if (style) {
-    SetKeyframes(Move(keyframes), style);
-  } else {
-    // SetKeyframes has the same behavior for null StyleType* for
-    // both backends, just pick one and use it.
-    SetKeyframes(Move(keyframes), (ComputedStyle*) nullptr);
-  }
+  SetKeyframes(Move(keyframes), style);
 }
 
 
 void
 KeyframeEffectReadOnly::SetKeyframes(
   nsTArray<Keyframe>&& aKeyframes,
-  const ComputedStyle* aComputedValues)
+  const ComputedStyle* aStyle)
 {
-  DoSetKeyframes(Move(aKeyframes), aComputedValues);
-}
-
-template<typename StyleType>
-void
-KeyframeEffectReadOnly::DoSetKeyframes(nsTArray<Keyframe>&& aKeyframes,
-                                       StyleType* aStyle)
-{
-
   if (KeyframesEqualIgnoringComputedOffsets(aKeyframes, mKeyframes)) {
     return;
   }
@@ -293,14 +278,7 @@ SpecifiedKeyframeArraysAreEqual(const nsTArray<Keyframe>& aA,
 #endif
 
 void
-KeyframeEffectReadOnly::UpdateProperties(const ComputedStyle* aComputedStyle)
-{
-  DoUpdateProperties(aComputedStyle);
-}
-
-template<typename StyleType>
-void
-KeyframeEffectReadOnly::DoUpdateProperties(StyleType* aStyle)
+KeyframeEffectReadOnly::UpdateProperties(const ComputedStyle* aStyle)
 {
   MOZ_ASSERT(aStyle);
 
@@ -1478,13 +1456,14 @@ already_AddRefed<ComputedStyle>
 KeyframeEffectReadOnly::CreateComputedStyleForAnimationValue(
   nsCSSPropertyID aProperty,
   const AnimationValue& aValue,
+  nsPresContext* aPresContext,
   const ComputedStyle* aBaseComputedStyle)
 {
   MOZ_ASSERT(aBaseComputedStyle,
              "CreateComputedStyleForAnimationValue needs to be called "
              "with a valid ComputedStyle");
 
-  ServoStyleSet* styleSet = aBaseComputedStyle->PresContext()->StyleSet();
+  ServoStyleSet* styleSet = aPresContext->StyleSet();
   Element* elementForResolve =
     EffectCompositor::GetElementToRestyle(mTarget->mElement,
                                           mTarget->mPseudoType);
@@ -1494,11 +1473,19 @@ KeyframeEffectReadOnly::CreateComputedStyleForAnimationValue(
                                                       aValue.mServo);
 }
 
-template<typename StyleType>
 void
-KeyframeEffectReadOnly::CalculateCumulativeChangeHint(StyleType* aComputedStyle)
+KeyframeEffectReadOnly::CalculateCumulativeChangeHint(const ComputedStyle* aComputedStyle)
 {
   mCumulativeChangeHint = nsChangeHint(0);
+
+  nsPresContext* presContext =
+    nsContentUtils::GetContextForContent(mTarget->mElement);
+  if (!presContext) {
+    // Change hints make no sense if we're not rendered.
+    //
+    // Actually, we cannot even post them anywhere.
+    return;
+  }
 
   for (const AnimationProperty& property : mProperties) {
     // For opacity property we don't produce any change hints that are not
@@ -1521,8 +1508,9 @@ KeyframeEffectReadOnly::CalculateCumulativeChangeHint(StyleType* aComputedStyle)
       }
       RefPtr<ComputedStyle> fromContext =
         CreateComputedStyleForAnimationValue(property.mProperty,
-                                            segment.mFromValue,
-                                            aComputedStyle);
+                                             segment.mFromValue,
+                                             presContext,
+                                             aComputedStyle);
       if (!fromContext) {
         mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
         return;
@@ -1530,8 +1518,9 @@ KeyframeEffectReadOnly::CalculateCumulativeChangeHint(StyleType* aComputedStyle)
 
       RefPtr<ComputedStyle> toContext =
         CreateComputedStyleForAnimationValue(property.mProperty,
-                                            segment.mToValue,
-                                            aComputedStyle);
+                                             segment.mToValue,
+                                             presContext,
+                                             aComputedStyle);
       if (!toContext) {
         mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
         return;
