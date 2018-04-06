@@ -177,8 +177,8 @@ function requestsReducer(state = Requests(), action) {
         return nextState;
       }
 
-      if (!state.selectedId && state.requests.size > 0) {
-        nextState.selectedId = [...state.requests.values()][0].id;
+      if (!state.selectedId && action.defaultSelectedId) {
+        nextState.selectedId = action.defaultSelectedId;
         return nextState;
       }
 
