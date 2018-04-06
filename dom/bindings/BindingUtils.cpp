@@ -2880,6 +2880,9 @@ namespace binding_detail {
  *                    of Value.  It does not check whether it's the right sort
  *                    of object if the Value is a JSObject*.
  *
+ * ExtractThisObject: Takes a CallArgs for which HasValidThisValue was true and
+ *                    returns the JSObject* to use for getting |this|.
+ *
  * HandleInvalidThis: If the |this| is not valid (wrong type of value, wrong
  *                    object, etc), decide what to do about it.  Returns a
  *                    boolean to return from the JSNative (false for failure,
@@ -2900,12 +2903,35 @@ struct NormalThisPolicy
     return aArgs.thisv().isObject();
   }
 
+  static MOZ_ALWAYS_INLINE JSObject* ExtractThisObject(const JS::CallArgs& aArgs)
+  {
+    return &aArgs.thisv().toObject();
+  }
+
   static bool HandleInvalidThis(JSContext* aCx, JS::CallArgs& aArgs,
                                 bool aSecurityError,
                                 prototypes::ID aProtoId)
   {
     return ThrowInvalidThis(aCx, aArgs, aSecurityError, aProtoId);
   }
+};
+
+struct MaybeGlobalThisPolicy : public NormalThisPolicy
+{
+  static MOZ_ALWAYS_INLINE bool HasValidThisValue(const JS::CallArgs& aArgs)
+  {
+    // Here we have to allow null/undefined.
+    return aArgs.thisv().isObject() || aArgs.thisv().isNullOrUndefined();
+  }
+
+  static MOZ_ALWAYS_INLINE JSObject* ExtractThisObject(const JS::CallArgs& aArgs)
+  {
+    return aArgs.thisv().isObject() ?
+      &aArgs.thisv().toObject() :
+      js::GetGlobalForObjectCrossCompartment(&aArgs.callee());
+  }
+
+  // We want the HandleInvalidThis of NormalThisPolicy.
 };
 
 /**
@@ -2958,7 +2984,7 @@ GenericGetter(JSContext* cx, unsigned argc, JS::Value* vp)
     bool ok = ThisPolicy::HandleInvalidThis(cx, args, false, protoID);
     return ExceptionPolicy::HandleException(cx, args, info, ok);
   }
-  JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
+  JS::Rooted<JSObject*> obj(cx, ThisPolicy::ExtractThisObject(args));
 
   // NOTE: we want to leave obj in its initial compartment, so don't want to
   // pass it to UnwrapObjectInternal.
@@ -2996,6 +3022,12 @@ GenericGetter<NormalThisPolicy, ThrowExceptions>(
   JSContext* cx, unsigned argc, JS::Value* vp);
 template bool
 GenericGetter<NormalThisPolicy, ConvertExceptionsToPromises>(
+  JSContext* cx, unsigned argc, JS::Value* vp);
+template bool
+GenericGetter<MaybeGlobalThisPolicy, ThrowExceptions>(
+  JSContext* cx, unsigned argc, JS::Value* vp);
+template bool
+GenericGetter<MaybeGlobalThisPolicy, ConvertExceptionsToPromises>(
   JSContext* cx, unsigned argc, JS::Value* vp);
 
 } // namespace binding_detail
