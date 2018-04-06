@@ -1211,7 +1211,7 @@ class TypeCompilerConstraint : public TypeConstraint
     }
 
     bool sweep(TypeZone& zone, TypeConstraint** res) override {
-        if (data.shouldSweep() || compilation.shouldSweep())
+        if (data.shouldSweep() || compilation.shouldSweep(zone))
             return false;
         *res = zone.typeLifoAlloc().new_<TypeCompilerConstraint<T> >(compilation, data);
         return true;
@@ -1413,20 +1413,40 @@ class TypeConstraintFreezeStack : public TypeConstraint
 
 bool
 js::FinishCompilation(JSContext* cx, HandleScript script, CompilerConstraintList* constraints,
-                      IonCompilationId compilationId, bool* isValidOut)
+                      RecompileInfo* precompileInfo, bool* isValidOut)
 {
-    MOZ_ASSERT(*cx->runtime()->jitRuntime()->currentCompilationId() == compilationId);
-
     if (constraints->failed())
         return false;
 
-    RecompileInfo recompileInfo(script, compilationId);
+    CompilerOutput co(script);
+
+    TypeZone& types = cx->zone()->types;
+    if (!types.compilerOutputs) {
+        types.compilerOutputs = cx->new_<TypeZone::CompilerOutputVector>();
+        if (!types.compilerOutputs)
+            return false;
+    }
+
+#ifdef DEBUG
+    for (size_t i = 0; i < types.compilerOutputs->length(); i++) {
+        const CompilerOutput& co = (*types.compilerOutputs)[i];
+        MOZ_ASSERT_IF(co.isValid(), co.script() != script);
+    }
+#endif
+
+    uint32_t index = types.compilerOutputs->length();
+    if (!types.compilerOutputs->append(co)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    *precompileInfo = RecompileInfo(index, types.generation);
 
     bool succeeded = true;
 
     for (size_t i = 0; i < constraints->length(); i++) {
         CompilerConstraint* constraint = constraints->get(i);
-        if (!constraint->generateTypeConstraint(cx, recompileInfo))
+        if (!constraint->generateTypeConstraint(cx, *precompileInfo))
             succeeded = false;
     }
 
@@ -1462,7 +1482,7 @@ js::FinishCompilation(JSContext* cx, HandleScript script, CompilerConstraintList
         // Add this compilation to the inlinedCompilations list of each inlined
         // script, so we can invalidate it on changes to stack type sets.
         if (entry.script != script) {
-            if (!entry.script->types()->addInlinedCompilation(recompileInfo))
+            if (!entry.script->types()->addInlinedCompilation(*precompileInfo))
                 succeeded = false;
         }
 
@@ -1483,7 +1503,8 @@ js::FinishCompilation(JSContext* cx, HandleScript script, CompilerConstraintList
             entry.script->setHasFreezeConstraints();
     }
 
-    if (!succeeded) {
+    if (!succeeded || types.compilerOutputs->back().pendingInvalidation()) {
+        types.compilerOutputs->back().invalidate();
         script->resetWarmUpCounter();
         *isValidOut = false;
         return true;
@@ -2514,8 +2535,14 @@ TypeZone::processPendingRecompiles(FreeOp* fop, RecompileInfoVector& recompiles)
 void
 TypeZone::addPendingRecompile(JSContext* cx, const RecompileInfo& info)
 {
+    CompilerOutput* co = info.compilerOutput(cx);
+    if (!co || !co->isValid() || co->pendingInvalidation())
+        return;
+
     InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%zu",
-              info.script(), info.script()->filename(), info.script()->lineno());
+              co->script(), co->script()->filename(), co->script()->lineno());
+
+    co->setPendingInvalidation();
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!cx->zone()->types.activeAnalysis->pendingRecompiles.append(info))
@@ -2534,11 +2561,11 @@ TypeZone::addPendingRecompile(JSContext* cx, JSScript* script)
         script->resetWarmUpCounter();
 
     if (script->hasIonScript())
-        addPendingRecompile(cx, RecompileInfo(script, script->ionScript()->compilationId()));
+        addPendingRecompile(cx, script->ionScript()->recompileInfo());
 
     // Trigger recompilation of any callers inlining this script.
     if (TypeScript* types = script->types()) {
-        for (const RecompileInfo& info : types->inlinedCompilations())
+        for (RecompileInfo info : types->inlinedCompilations())
             addPendingRecompile(cx, info);
         types->inlinedCompilations().clearAndFree();
     }
@@ -4414,7 +4441,7 @@ JSScript::maybeSweepTypes(AutoClearTypeInferenceStateOnOOM* oom)
         RecompileInfoVector& inlinedCompilations = types_->inlinedCompilations();
         size_t dest = 0;
         for (size_t i = 0; i < inlinedCompilations.length(); i++) {
-            if (inlinedCompilations[i].shouldSweep())
+            if (inlinedCompilations[i].shouldSweep(types))
                 continue;
             inlinedCompilations[dest] = inlinedCompilations[i];
             dest++;
@@ -4452,6 +4479,10 @@ JSScript::maybeSweepTypes(AutoClearTypeInferenceStateOnOOM* oom)
         // need to be regenerated.
         hasFreezeConstraints_ = false;
     }
+
+    // Update the recompile indexes in any IonScripts still on the script.
+    if (hasIonScript())
+        ionScript()->recompileInfoRef().shouldSweep(types);
 }
 
 void
@@ -4485,7 +4516,9 @@ TypeZone::TypeZone(Zone* zone)
   : zone_(zone),
     typeLifoAlloc_(zone->group(), (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     generation(zone->group(), 0),
+    compilerOutputs(zone->group(), nullptr),
     sweepTypeLifoAlloc(zone->group(), (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    sweepCompilerOutputs(zone->group(), nullptr),
     sweepReleaseTypes(zone->group(), false),
     sweepingTypes(zone->group(), false),
     keepTypeScripts(zone->group(), false),
@@ -4495,14 +4528,17 @@ TypeZone::TypeZone(Zone* zone)
 
 TypeZone::~TypeZone()
 {
+    js_delete(compilerOutputs.ref());
+    js_delete(sweepCompilerOutputs.ref());
     MOZ_RELEASE_ASSERT(!sweepingTypes);
     MOZ_ASSERT(!keepTypeScripts);
 }
 
 void
-TypeZone::beginSweep(bool releaseTypes)
+TypeZone::beginSweep(bool releaseTypes, AutoClearTypeInferenceStateOnOOM& oom)
 {
     MOZ_ASSERT(zone()->isGCSweepingOrCompacting());
+    MOZ_ASSERT(!sweepCompilerOutputs);
     MOZ_ASSERT(!sweepReleaseTypes);
 
     sweepReleaseTypes = releaseTypes;
@@ -4511,12 +4547,50 @@ TypeZone::beginSweep(bool releaseTypes)
     // types any live data will be allocated into the pool.
     sweepTypeLifoAlloc.ref().steal(&typeLifoAlloc());
 
+    // Sweep any invalid or dead compiler outputs, and keep track of the new
+    // index for remaining live outputs.
+    if (compilerOutputs) {
+        CompilerOutputVector* newCompilerOutputs = nullptr;
+        for (size_t i = 0; i < compilerOutputs->length(); i++) {
+            CompilerOutput& output = (*compilerOutputs)[i];
+            if (output.isValid()) {
+                JSScript* script = output.script();
+                if (IsAboutToBeFinalizedUnbarriered(&script)) {
+                    if (script->hasIonScript())
+                        script->ionScript()->recompileInfoRef() = RecompileInfo();
+                    output.invalidate();
+                } else {
+                    CompilerOutput newOutput(script);
+
+                    if (!newCompilerOutputs)
+                        newCompilerOutputs = js_new<CompilerOutputVector>();
+                    if (newCompilerOutputs && newCompilerOutputs->append(newOutput)) {
+                        output.setSweepIndex(newCompilerOutputs->length() - 1);
+                    } else {
+                        oom.setOOM();
+                        script->ionScript()->recompileInfoRef() = RecompileInfo();
+                        output.invalidate();
+                    }
+                }
+            }
+        }
+        sweepCompilerOutputs = compilerOutputs;
+        compilerOutputs = newCompilerOutputs;
+    }
+
+    // All existing RecompileInfos are stale and will be updated to the new
+    // compiler outputs list later during the sweep. Since stale indexes only
+    // persist until the sweep finishes, we only need two different generation
+    // values.
     generation = !generation;
 }
 
 void
 TypeZone::endSweep(JSRuntime* rt)
 {
+    js_delete(sweepCompilerOutputs.ref());
+    sweepCompilerOutputs = nullptr;
+
     sweepReleaseTypes = false;
 
     rt->gc.freeAllLifoBlocksAfterSweeping(&sweepTypeLifoAlloc.ref());
