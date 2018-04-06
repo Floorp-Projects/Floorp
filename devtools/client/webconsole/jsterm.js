@@ -19,7 +19,7 @@ loader.lazyServiceGetter(this, "clipboardHelper",
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup");
 loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/framework/sidebar", true);
-loader.lazyRequireGetter(this, "Messages", "devtools/client/webconsole/console-output", true);
+loader.lazyRequireGetter(this, "Messages", "devtools/client/webconsole/old/console-output", true);
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/environment-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");

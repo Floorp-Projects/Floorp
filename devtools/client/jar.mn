@@ -10,7 +10,7 @@ devtools.jar:
     content/shared/widgets/VariablesView.xul (shared/widgets/VariablesView.xul)
     content/webconsole/webconsole.html (webconsole/webconsole.html)
     content/webconsole/browserconsole.xul (webconsole/browserconsole.xul)
-*   content/webconsole/webconsole.xul (webconsole/webconsole.xul)
+*   content/webconsole/old/webconsole.xul (webconsole/old/webconsole.xul)
 *   content/scratchpad/scratchpad.xul (scratchpad/scratchpad.xul)
     content/scratchpad/scratchpad.js (scratchpad/scratchpad.js)
     content/shared/splitview.css (shared/splitview.css)

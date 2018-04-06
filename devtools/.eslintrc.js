@@ -374,7 +374,7 @@ module.exports = {
     // Warn about invalid JSDoc comments.
     // Disabled for now because of https://github.com/eslint/eslint/issues/2270
     // The rule fails on some jsdoc comments like in:
-    // devtools/client/webconsole/console-output.js
+    // devtools/client/webconsole/old/console-output.js
     "valid-jsdoc": "off",
     // Allow vars to be declared anywhere in the scope.
     "vars-on-top": "off",

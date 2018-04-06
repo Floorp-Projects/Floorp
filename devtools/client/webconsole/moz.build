@@ -4,15 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-
 DIRS += [
-    'net',
     'new-console-output',
+    'old',
 ]
 DevToolsModules(
     'console-commands.js',
-    'console-output.js',
     'hudservice.js',
     'jsterm.js',
     'new-webconsole.js',
@@ -20,7 +17,6 @@ DevToolsModules(
     'utils.js',
     'webconsole-connection-proxy.js',
     'webconsole-l10n.js',
-    'webconsole.js',
 )
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')
