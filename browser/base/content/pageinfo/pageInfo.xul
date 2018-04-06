@@ -142,8 +142,8 @@
         </rows>
       </grid>
       <separator class="thin"/>
-      <groupbox id="metaTags" flex="1" class="collapsable treebox">
-        <caption id="metaTagsCaption" onclick="toggleGroupbox('metaTags');"/>
+      <vbox id="metaTags" flex="1">
+        <label control="metatree" id="metaTagsCaption" class="header"/>
         <tree id="metatree" flex="1" hidecolumnpicker="true" contextmenu="picontext">
           <treecols>
             <treecol id="meta-name"    label="&generalMetaName;"
@@ -156,7 +156,7 @@
           </treecols>
           <treechildren id="metatreechildren" flex="1"/>
         </tree>        
-      </groupbox>
+      </vbox>
       <hbox pack="end">
         <button command="cmd_help" label="&helpButton.label;" dlgtype="help"/>
       </hbox>
