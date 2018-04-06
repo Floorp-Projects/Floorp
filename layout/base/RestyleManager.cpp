@@ -2816,7 +2816,7 @@ RestyleManager::ProcessPostTraversal(
         static_cast<nsBlockFrame*>(styleFrame)->GetFirstLineFrame();
       if (firstLineFrame) {
         for (nsIFrame* kid : firstLineFrame->PrincipalChildList()) {
-          ReparentComputedStyle(kid);
+          ReparentComputedStyleForFirstLine(kid);
         }
       }
     }
@@ -3336,8 +3336,8 @@ RestyleManager::AttributeChanged(Element* aElement,
   }
 }
 
-nsresult
-RestyleManager::ReparentComputedStyle(nsIFrame* aFrame)
+void
+RestyleManager::ReparentComputedStyleForFirstLine(nsIFrame* aFrame)
 {
   // This is only called when moving frames in or out of the first-line
   // pseudo-element (or one of its descendants).  We can't say much about
@@ -3357,14 +3357,12 @@ RestyleManager::ReparentComputedStyle(nsIFrame* aFrame)
   }
 #endif
 
-  DoReparentComputedStyle(aFrame, *StyleSet());
-
-  return NS_OK;
+  DoReparentComputedStyleForFirstLine(aFrame, *StyleSet());
 }
 
 void
-RestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
-                                        ServoStyleSet& aStyleSet)
+RestyleManager::DoReparentComputedStyleForFirstLine(nsIFrame* aFrame,
+                                                    ServoStyleSet& aStyleSet)
 {
   if (aFrame->IsBackdropFrame()) {
     // Style context of backdrop frame has no parent style, and thus we do not
@@ -3398,7 +3396,7 @@ RestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
       nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
     MOZ_ASSERT(outOfFlow, "no out-of-flow frame");
     for (; outOfFlow; outOfFlow = outOfFlow->GetNextContinuation()) {
-      DoReparentComputedStyle(outOfFlow, aStyleSet);
+      DoReparentComputedStyleForFirstLine(outOfFlow, aStyleSet);
     }
   }
 
@@ -3412,7 +3410,7 @@ RestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
   bool isChild = providerFrame && providerFrame->GetParent() == aFrame;
   nsIFrame* providerChild = nullptr;
   if (isChild) {
-    DoReparentComputedStyle(providerFrame, aStyleSet);
+    DoReparentComputedStyleForFirstLine(providerFrame, aStyleSet);
     // Get the style again after ReparentComputedStyle() which might have
     // changed it.
     newParentStyle = providerFrame->Style();
@@ -3434,9 +3432,9 @@ RestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
 
   bool isElement = aFrame->GetContent()->IsElement();
 
-  // We probably don't want to initiate transitions from
-  // ReparentComputedStyle, since we call it during frame
-  // construction rather than in response to dynamic changes.
+  // We probably don't want to initiate transitions from ReparentComputedStyle,
+  // since we call it during frame construction rather than in response to
+  // dynamic changes.
   // Also see the comment at the start of
   // nsTransitionManager::ConsiderInitiatingTransition.
   //
@@ -3537,7 +3535,7 @@ RestyleManager::ReparentFrameDescendants(nsIFrame* aFrame,
       // only do frames that are in flow
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
           child != aProviderChild) {
-        DoReparentComputedStyle(child, aStyleSet);
+        DoReparentComputedStyleForFirstLine(child, aStyleSet);
       }
     }
   }
