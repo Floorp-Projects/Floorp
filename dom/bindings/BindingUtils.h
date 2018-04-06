@@ -3246,6 +3246,10 @@ GenericGetter(JSContext* cx, unsigned argc, JS::Value* vp);
 // A this-extraction policy for normal getters/setters/methods.
 struct NormalThisPolicy;
 
+// A this-extraction policy for getters/setters/methods on interfaces
+// that are on some global's proto chain.
+struct MaybeGlobalThisPolicy;
+
 // An exception-reporting policy for normal getters/setters/methods.
 struct ThrowExceptions;
 
