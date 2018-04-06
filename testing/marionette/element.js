@@ -1452,6 +1452,7 @@ class WebElement {
     for (let key of keys) {
       switch (key) {
         case ContentWebElement.Identifier:
+        case ContentWebElement.LegacyIdentifier:
           return ContentWebElement.fromJSON(json);
 
         case ContentWebWindow.Identifier:
@@ -1510,7 +1511,8 @@ class WebElement {
 
   /**
    * Checks if <var>ref<var> is a {@link WebElement} reference,
-   * i.e. if it has {@link ContentWebElement.Identifier}, or
+   * i.e. if it has {@link ContentWebElement.Identifier},
+   * {@link ContentWebElement.LegacyIdentifier}, or
    * {@link ChromeWebElement.Identifier} as properties.
    *
    * @param {Object.<string, string>} obj
@@ -1524,6 +1526,7 @@ class WebElement {
     }
 
     if ((ContentWebElement.Identifier in obj) ||
+        (ContentWebElement.LegacyIdentifier in obj) ||
         (ContentWebWindow.Identifier in obj) ||
         (ContentWebFrame.Identifier in obj) ||
         (ChromeWebElement.Identifier in obj)) {
@@ -1553,22 +1556,24 @@ class ContentWebElement extends WebElement {
   toJSON() {
     return {
       [ContentWebElement.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
     };
   }
 
   static fromJSON(json) {
-    const {Identifier} = ContentWebElement;
+    const {Identifier, LegacyIdentifier} = ContentWebElement;
 
-    if (!(Identifier in json)) {
+    if (!(Identifier in json) && !(LegacyIdentifier in json)) {
       throw new InvalidArgumentError(
           pprint`Expected web element reference, got: ${json}`);
     }
 
-    let uuid = json[Identifier];
+    let uuid = json[Identifier] || json[LegacyIdentifier];
     return new ContentWebElement(uuid);
   }
 }
 ContentWebElement.Identifier = "element-6066-11e4-a52e-4f735466cecf";
+ContentWebElement.LegacyIdentifier = "ELEMENT";
 this.ContentWebElement = ContentWebElement;
 
 /**
@@ -1580,6 +1585,7 @@ class ContentWebWindow extends WebElement {
   toJSON() {
     return {
       [ContentWebWindow.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
     };
   }
 
@@ -1604,6 +1610,7 @@ class ContentWebFrame extends WebElement {
   toJSON() {
     return {
       [ContentWebFrame.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
     };
   }
 
@@ -1627,6 +1634,7 @@ class ChromeWebElement extends WebElement {
   toJSON() {
     return {
       [ChromeWebElement.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
     };
   }
 
