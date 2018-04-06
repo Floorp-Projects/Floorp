@@ -2638,6 +2638,11 @@ class AttrDefiner(PropertyDefiner):
                 accessor = 'get_' + IDLToCIdentifier(attr.identifier.name)
                 jitinfo = "nullptr"
             else:
+                if attr.type.isPromise():
+                    exceptionPolicy = "ConvertExceptionsToPromises"
+                else:
+                    exceptionPolicy = "ThrowExceptions"
+
                 if attr.hasLenientThis():
                     if attr.type.isPromise():
                         raise TypeError("Don't know how to handle "
@@ -2659,10 +2664,9 @@ class AttrDefiner(PropertyDefiner):
                         accessor = "genericPromiseReturningGetter"
                     else:
                         accessor = "genericGetter"
-                elif attr.type.isPromise():
-                    accessor = "GenericPromiseReturningBindingGetter"
                 else:
-                    accessor = "GenericBindingGetter"
+                    accessor = ("GenericGetter<NormalThisPolicy, %s>" %
+                                exceptionPolicy)
                 jitinfo = ("&%s_getterinfo" %
                            IDLToCIdentifier(attr.identifier.name))
             return "%s, %s" % \

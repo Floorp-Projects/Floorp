@@ -3223,11 +3223,35 @@ class PinnedStringId
   }
 };
 
+namespace binding_detail {
+/**
+ * WebIDL getters have a "generic" JSNative that is responsible for the
+ * following things:
+ *
+ * 1) Determining the "this" pointer for the C++ call.
+ * 2) Extracting the "specialized" getter from the jitinfo on the JSFunction.
+ * 3) Calling the specialized getter.
+ * 4) Handling exceptions as needed.
+ *
+ * There are several variants of (1) depending on the interface involved and
+ * there are two variants of (4) depending on whether the return type is a
+ * Promise.  We handle this by templating our generic getter on a
+ * this-determination policy and an exception handling policy, then explicitly
+ * instantiating the relevant template specializations.
+ */
+template<typename ThisPolicy, typename ExceptionPolicy>
 bool
-GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp);
+GenericGetter(JSContext* cx, unsigned argc, JS::Value* vp);
 
-bool
-GenericPromiseReturningBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp);
+// A this-extraction policy for normal getters/setters/methods.
+struct NormalThisPolicy;
+
+// An exception-reporting policy for normal getters/setters/methods.
+struct ThrowExceptions;
+
+// An exception-handling policy for Promise-returning getters/methods.
+struct ConvertExceptionsToPromises;
+} // namespace binding_detail
 
 bool
 GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp);

@@ -2870,19 +2870,98 @@ IsNonExposedGlobal(JSContext* aCx, JSObject* aGlobal,
   return false;
 }
 
+namespace binding_detail {
+
+/**
+ * A ThisPolicy struct needs to provide the following methods:
+ *
+ * HasValidThisValue: Takes a CallArgs and returns a boolean indicating whether
+ *                    the thisv() is valid in the sense of being the right type
+ *                    of Value.  It does not check whether it's the right sort
+ *                    of object if the Value is a JSObject*.
+ *
+ * HandleInvalidThis: If the |this| is not valid (wrong type of value, wrong
+ *                    object, etc), decide what to do about it.  Returns a
+ *                    boolean to return from the JSNative (false for failure,
+ *                    true for succcess).
+ */
+struct NormalThisPolicy
+{
+  // This needs to be inlined because it's called on no-exceptions fast-paths.
+  static MOZ_ALWAYS_INLINE bool HasValidThisValue(const JS::CallArgs& aArgs)
+  {
+    // Per WebIDL spec, all getters/setters/methods allow null/undefined "this"
+    // and coerce it to the global.  Then the "is this the right interface?"
+    // check fails if the interface involved is not one that the global
+    // implements.
+    //
+    // As an optimization, we skip doing the null/undefined stuff if we know our
+    // interface is not implemented by the global.
+    return aArgs.thisv().isObject();
+  }
+
+  static bool HandleInvalidThis(JSContext* aCx, JS::CallArgs& aArgs,
+                                bool aSecurityError,
+                                prototypes::ID aProtoId)
+  {
+    return ThrowInvalidThis(aCx, aArgs, aSecurityError, aProtoId);
+  }
+};
+
+/**
+ * An ExceptionPolicy struct provides a single HandleException method which is
+ * used to handle an exception, if any.  The method is given the current
+ * success/failure boolean so it can decide whether there is in fact an
+ * exception involved.
+ */
+struct ThrowExceptions
+{
+  // This needs to be inlined because it's called even on no-exceptions
+  // fast-paths.
+  static MOZ_ALWAYS_INLINE bool HandleException(JSContext* aCx,
+                                                JS::CallArgs& aArgs,
+                                                const JSJitInfo* aInfo,
+                                                bool aOK)
+  {
+    return aOK;
+  }
+};
+
+struct ConvertExceptionsToPromises
+{
+  // This needs to be inlined because it's called even on no-exceptions
+  // fast-paths.
+  static MOZ_ALWAYS_INLINE bool HandleException(JSContext* aCx,
+                                                JS::CallArgs& aArgs,
+                                                const JSJitInfo* aInfo,
+                                                bool aOK)
+  {
+    // Promise-returning getters always return objects.
+    MOZ_ASSERT(aInfo->returnType() == JSVAL_TYPE_OBJECT);
+
+    if (aOK) {
+      return true;
+    }
+
+    return ConvertExceptionToPromise(aCx, aArgs.rval());
+  }
+};
+
+template<typename ThisPolicy, typename ExceptionPolicy>
 bool
-GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp)
+GenericGetter(JSContext* cx, unsigned argc, JS::Value* vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
   prototypes::ID protoID = static_cast<prototypes::ID>(info->protoID);
-  if (!args.thisv().isObject()) {
-    return ThrowInvalidThis(cx, args, false, protoID);
+  if (!ThisPolicy::HasValidThisValue(args)) {
+    bool ok = ThisPolicy::HandleInvalidThis(cx, args, false, protoID);
+    return ExceptionPolicy::HandleException(cx, args, info, ok);
   }
   JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
   // NOTE: we want to leave obj in its initial compartment, so don't want to
-  // pass it to UnwrapObject.
+  // pass it to UnwrapObjectInternal.
   JS::Rooted<JSObject*> rootSelf(cx, obj);
   void* self;
   {
@@ -2892,9 +2971,11 @@ GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp)
                                                                    protoID,
                                                                    info->depth);
     if (NS_FAILED(rv)) {
-      return ThrowInvalidThis(cx, args,
-                              rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
-                              protoID);
+      bool ok =
+        ThisPolicy::HandleInvalidThis(cx, args,
+                                      rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
+                                      protoID);
+      return ExceptionPolicy::HandleException(cx, args, info, ok);
     }
   }
 
@@ -2906,54 +2987,18 @@ GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp)
     AssertReturnTypeMatchesJitinfo(info, args.rval());
   }
 #endif
-  return ok;
+  return ExceptionPolicy::HandleException(cx, args, info, ok);
 }
 
-bool
-GenericPromiseReturningBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp)
-{
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+// Force instantiation of the specializations of GenericGetter we need here.
+template bool
+GenericGetter<NormalThisPolicy, ThrowExceptions>(
+  JSContext* cx, unsigned argc, JS::Value* vp);
+template bool
+GenericGetter<NormalThisPolicy, ConvertExceptionsToPromises>(
+  JSContext* cx, unsigned argc, JS::Value* vp);
 
-  // We could invoke GenericBindingGetter here, but that involves an
-  // extra call.  Manually inline it instead.
-  const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
-  prototypes::ID protoID = static_cast<prototypes::ID>(info->protoID);
-  if (!args.thisv().isObject()) {
-    ThrowInvalidThis(cx, args, false, protoID);
-    return ConvertExceptionToPromise(cx, args.rval());
-  }
-  JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
-
-  // NOTE: we want to leave obj in its initial compartment, so don't want to
-  // pass it to UnwrapObject.
-  JS::Rooted<JSObject*> rootSelf(cx, obj);
-  void* self;
-  {
-    binding_detail::MutableObjectHandleWrapper wrapper(&rootSelf);
-    nsresult rv = binding_detail::UnwrapObjectInternal<void, true>(wrapper,
-                                                                   self,
-                                                                   protoID,
-                                                                   info->depth);
-    if (NS_FAILED(rv)) {
-      ThrowInvalidThis(cx, args, rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
-                       protoID);
-      return ConvertExceptionToPromise(cx, args.rval());
-    }
-  }
-  MOZ_ASSERT(info->type() == JSJitInfo::Getter);
-  JSJitGetterOp getter = info->getter;
-  bool ok = getter(cx, obj, self, JSJitGetterCallArgs(args));
-  if (ok) {
-#ifdef DEBUG
-    AssertReturnTypeMatchesJitinfo(info, args.rval());
-#endif
-    return true;
-  }
-
-  // Promise-returning getters always return objects
-  MOZ_ASSERT(info->returnType() == JSVAL_TYPE_OBJECT);
-  return ConvertExceptionToPromise(cx, args.rval());
-}
+} // namespace binding_detail
 
 bool
 GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp)
