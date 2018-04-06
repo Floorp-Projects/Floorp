@@ -87,6 +87,11 @@ class JitRuntime
     // Executable allocator for Ion scripts with patchable backedges.
     ActiveThreadData<ExecutableAllocator> backedgeExecAlloc_;
 
+    ActiveThreadData<uint64_t> nextCompilationId_;
+#ifdef DEBUG
+    ActiveThreadData<mozilla::Maybe<IonCompilationId>> currentCompilationId_;
+#endif
+
     // Shared exception-handler tail.
     ExclusiveAccessLockWriteOnceData<uint32_t> exceptionTailOffset_;
 
@@ -211,6 +216,15 @@ class JitRuntime
     ExecutableAllocator& backedgeExecAlloc() {
         return backedgeExecAlloc_.ref();
     }
+
+    IonCompilationId nextCompilationId() {
+        return IonCompilationId(nextCompilationId_++);
+    }
+#ifdef DEBUG
+    mozilla::Maybe<IonCompilationId>& currentCompilationId() {
+        return currentCompilationId_.ref();
+    }
+#endif
 
     class AutoPreventBackedgePatching
     {
