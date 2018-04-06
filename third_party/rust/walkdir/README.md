@@ -22,7 +22,7 @@ To use this crate, add `walkdir` as a dependency to your project's
 
 ```
 [dependencies]
-walkdir = "1"
+walkdir = "2"
 ```
 
 ### Example
@@ -70,7 +70,7 @@ This uses the `filter_entry` iterator adapter to avoid yielding hidden files
 and directories efficiently:
 
 ```rust,no_run
-use walkdir::{DirEntry, WalkDir, WalkDirIterator};
+use walkdir::{DirEntry, WalkDir};
 
 fn is_hidden(entry: &DirEntry) -> bool {
     entry.file_name()
