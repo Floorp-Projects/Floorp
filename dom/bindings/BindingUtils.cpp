@@ -2934,6 +2934,27 @@ struct MaybeGlobalThisPolicy : public NormalThisPolicy
   // We want the HandleInvalidThis of NormalThisPolicy.
 };
 
+// There are some LenientThis things on globals, so we inherit from
+// MaybeGlobalThisPolicy.
+struct LenientThisPolicy : public MaybeGlobalThisPolicy
+{
+  // We want the HasValidThisValue of MaybeGlobalThisPolicy.
+
+  // We want the ExtractThisObject of MaybeGlobalThisPolicy.
+
+  static bool HandleInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
+                                bool aSecurityError,
+                                prototypes::ID aProtoId)
+  {
+    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+    if (!ReportLenientThisUnwrappingFailure(aCx, &aArgs.callee())) {
+      return false;
+    }
+    aArgs.rval().set(JS::UndefinedValue());
+    return true;
+  }
+};
+
 /**
  * An ExceptionPolicy struct provides a single HandleException method which is
  * used to handle an exception, if any.  The method is given the current
@@ -3029,6 +3050,11 @@ GenericGetter<MaybeGlobalThisPolicy, ThrowExceptions>(
 template bool
 GenericGetter<MaybeGlobalThisPolicy, ConvertExceptionsToPromises>(
   JSContext* cx, unsigned argc, JS::Value* vp);
+template bool
+GenericGetter<LenientThisPolicy, ThrowExceptions>(
+  JSContext* cx, unsigned argc, JS::Value* vp);
+// There aren't any [LenientThis] Promise-returning getters, so don't
+// bother instantiating that specialization.
 
 } // namespace binding_detail
 
