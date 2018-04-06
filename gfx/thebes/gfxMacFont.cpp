@@ -457,6 +457,16 @@ gfxMacFont::CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont,
 int32_t
 gfxMacFont::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
 {
+    if (mVariationFont) {
+        // Avoid a potential Core Text crash (bug 1450209) by using
+        // CoreGraphics glyph advance API. This is inferior for 'sbix'
+        // fonts, but those won't have variations, so it's OK.
+        int cgAdvance;
+        if (::CGFontGetGlyphAdvances(mCGFont, &aGID, 1, &cgAdvance)) {
+            return cgAdvance * mFUnitsConvFactor * 0x10000;
+        }
+    }
+
     if (!mCTFont) {
         mCTFont = CreateCTFontFromCGFontWithVariations(mCGFont, mAdjustedSize);
         if (!mCTFont) { // shouldn't happen, but let's be safe
