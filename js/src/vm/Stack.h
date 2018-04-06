@@ -1195,7 +1195,7 @@ struct DefaultHasher<AbstractFramePtr> {
 //   recently. When we find a cache hit, we check the entry's SavedFrame's
 //   compartment against the current compartment; if they do not match, we flush
 //   the entire cache. This means that it is not always true that, if a frame's
-//   bit it set, it must have an entry in the cache. But we can still assert
+//   bit is set, it must have an entry in the cache. But we can still assert
 //   that, if a frame's bit is set and the cache is not completely empty, the
 //   frame will have an entry. When the cache is flushed, it will be repopulated
 //   immediately with the new capture's frames.
