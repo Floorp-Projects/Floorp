@@ -184,7 +184,7 @@ Structure:
       // ...
     }
 
-As of Firefox 59 this section no longer contains any entries.
+As of Firefox 59 this section no longer contains any entries, as of Firefox 61 this section is removed.
 
 maximalNumberOfConcurrentThreads
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -697,4 +697,5 @@ Version History
 
   - Stopped reporting ``childPayloads`` (`bug 1443599 <https://bugzilla.mozilla.org/show_bug.cgi?id=1443599>`_).
   - Stopped reporting ``saved-session`` pings on Firefox Desktop (`bug 1443603 <https://bugzilla.mozilla.org/show_bug.cgi?id=1443603>`_).
+  - Stopped reporting ``simpleMeasurements.js`` (`bug 1278920 <https://bugzilla.mozilla.org/show_bug.cgi?id=1278920>`_).
   - Stopped reporting ``UITelemetry`` (`bug 1443605 <https://bugzilla.mozilla.org/show_bug.cgi?id=1443605>`_)
