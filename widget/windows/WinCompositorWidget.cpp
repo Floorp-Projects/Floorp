@@ -26,7 +26,7 @@ WinCompositorWidget::WinCompositorWidget(const WinCompositorWidgetInitData& aIni
  , mWidgetKey(aInitData.widgetKey()),
    mWnd(reinterpret_cast<HWND>(aInitData.hWnd())),
    mCompositorWnd(nullptr),
-   mTransparencyMode(static_cast<nsTransparencyMode>(aInitData.transparencyMode())),
+   mTransparencyMode(aInitData.transparencyMode()),
    mMemoryDC(nullptr),
    mCompositeDC(nullptr),
    mLockedBackBufferData(nullptr)

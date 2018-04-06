@@ -165,6 +165,7 @@ enum nsTransparencyMode {
   eTransparencyTransparent, // Parts of the window may be transparent
   eTransparencyGlass,       // Transparent parts of the window have Vista AeroGlass effect applied
   eTransparencyBorderlessGlass // As above, but without a border around the opaque areas when there would otherwise be one with eTransparencyGlass
+  // If you add to the end here, you must update the serialization code in WidgetMessageUtils.h
 };
 
 /**
