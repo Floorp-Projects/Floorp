@@ -127,10 +127,10 @@ devtools/client/storage/test/*.html
 !devtools/client/storage/test/storage-unsecured-iframe.html
 !devtools/client/storage/test/storage-unsecured-iframe-usercontextid.html
 devtools/client/webaudioeditor/**
-devtools/client/webconsole/net/**
+devtools/client/webconsole/old/net/**
 !devtools/client/webconsole/new-console-output/test/mochitest/**
-devtools/client/webconsole/test/**
-devtools/client/webconsole/webconsole.js
+devtools/client/webconsole/old/test/**
+devtools/client/webconsole/old/webconsole.js
 devtools/client/webide/**
 !devtools/client/webide/components/webideCli.js
 devtools/server/tests/browser/storage-*.html

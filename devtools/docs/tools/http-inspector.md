@@ -13,7 +13,7 @@ as well as in the Browser Console (for devtools and extension developers)._
 The current implementation is based on React (no XUL) and some of the existing
 components should also be used when porting the Network panel to HTML.
 
-The entire feature lives in `devtools/client/webconsole/net` directory.
+The entire feature lives in `devtools/client/webconsole/old/net` directory.
 
 ## General Description
 The entry point for HTTP log inspection is represented by an expand/toggle
@@ -23,7 +23,7 @@ button displayed in front a log in the Console panel:
 
 Clicking on the [+] button expands the log and shows a body with HTTP details
 right underneath. The info body is rendered by:
-`devtools/client/webconsole/net/components/net-info-body` component.
+`devtools/client/webconsole/old/net/components/net-info-body` component.
 
 HTTP info is divided into several tabs:
 
@@ -34,7 +34,7 @@ HTTP info is divided into several tabs:
 * Cookies: Sent and received cookies
 
 ### Headers Tab
-`devtools/client/webconsole/net/components/headers-tab`
+`devtools/client/webconsole/old/net/components/headers-tab`
 
 This is the default active tab and it's responsible for rendering
 HTTP headers. There are several header groups displayed:
@@ -49,7 +49,7 @@ Rendering of the groups is done by `NetInfoGroup` and `NetInfoGroupList`
 components.
 
 ### Params Tab
-`devtools/client/webconsole/net/components/params-tab`
+`devtools/client/webconsole/old/net/components/params-tab`
 
 This tab is responsible for rendering URL parameters (query string)
 and it's available only if the URL has any parameters. Individual
@@ -58,12 +58,12 @@ parameters are parsed and displayed as a list of name/value pairs.
 Rendering of the parameter list is done by `NetInfoParams` component.
 
 ### Post Tab
-`devtools/client/webconsole/net/components/post-tab`
+`devtools/client/webconsole/old/net/components/post-tab`
 
 This tab is responsible for rendering HTTP post body sent to the server.
 
 ### Response Tab
-`devtools/client/webconsole/net/components/response-tab`
+`devtools/client/webconsole/old/net/components/response-tab`
 
 This tab is responsible for rendering HTTP response body received from
 the server. There might be more than one section displaying the data
@@ -78,9 +78,9 @@ The response is decoded and displayed as an image.
 * XML: this section is available in case of HTML/XML responses [3]
 The response is parsed using DOM parser and displayed as an XML markup.
 
-[1] List of JSON mime-types: `devtools/client/webconsole/net/utils/json`
-[2] List of Image mime-types: `devtools/client/webconsole/net/utils/json`
-[3] List of XML/HTML mime-types: `devtools/client/webconsole/net/utils/net`
+[1] List of JSON mime-types: `devtools/client/webconsole/old/net/utils/json`
+[2] List of Image mime-types: `devtools/client/webconsole/old/net/utils/json`
+[3] List of XML/HTML mime-types: `devtools/client/webconsole/old/net/utils/net`
 
 Response data are fetched using `LongStringClient`, so if data are bigger
 than defined limit (see `devtools/server/main.js - LONG_STRING_LENGTH)
@@ -91,7 +91,7 @@ The raw section is collapsed by default if there is another presentation
 of the data.
 
 ### Cookies Tab
-`devtools/client/webconsole/net/components/cookies-tab`
+`devtools/client/webconsole/old/net/components/cookies-tab`
 
 This tab is responsible for displaying HTTP cookies.
 There are two groups:
@@ -106,7 +106,7 @@ components. The tab is not presented if there are no cookies.
 This sections describes internal architecture of HTTPi feature.
 
 ### Main
-`devtools/client/webconsole/net/main`
+`devtools/client/webconsole/old/net/main`
 
 This is the main module of HTTPi. It represents the root module
 of the feature.
@@ -116,7 +116,7 @@ from webconsole.js. This modules creates one instance of `NetRequest`
 object for every `NetworkEvent` (one object for every HTTP request).
 
 ### NetRequest
-`devtools/client/webconsole/net/net-request`
+`devtools/client/webconsole/old/net/net-request`
 
 This module represents `NetRequest` object. It's the internal representation
 of HTTP request and it keeps its state. All HTTP details fetched dynamically
@@ -133,12 +133,12 @@ requesting HTTP details. `DataProvider` is the connection between `NetRequest`
 and the backend.
 
 ### Data Provider
-`devtools/client/webconsole/net/data-provider`
+`devtools/client/webconsole/old/net/data-provider`
 
 This module is using webconsole client object to get data from the backend.
 
 ### Utils
-`devtools/client/webconsole/net/utils`
+`devtools/client/webconsole/old/net/utils`
 
 There are also some utility modules implementing helper functions.
 The important thing is that these modules doesn't require any chrome
