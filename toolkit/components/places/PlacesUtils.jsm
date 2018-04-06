@@ -783,14 +783,14 @@ var PlacesUtils = {
   nodeIsTagQuery: function PU_nodeIsTagQuery(aNode) {
     if (aNode.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
       return false;
-    // Direct child of RESULTS_AS_TAG_QUERY.
+    // Direct child of RESULTS_AS_TAGS_ROOT.
     let parent = aNode.parent;
     if (parent && PlacesUtils.asQuery(parent).queryOptions.resultType ==
-                    Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY)
+                    Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT)
       return true;
     // We must also support the right pane of the Library, when the tag query
     // is the root node. Unfortunately this is also valid for any tag query
-    // selected in the left pane that is not a direct child of RESULTS_AS_TAG_QUERY.
+    // selected in the left pane that is not a direct child of RESULTS_AS_TAGS_ROOT.
     if (!parent && aNode == aNode.parentResult.root &&
         PlacesUtils.asQuery(aNode).query.tags.length == 1)
       return true;

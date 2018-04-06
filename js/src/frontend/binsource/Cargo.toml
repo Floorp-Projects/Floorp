@@ -1,0 +1,13 @@
+[package]
+name = "binsource"
+version = "0.1.0"
+authors = ["David Teller <D.O.Teller@gmail.com>"]
+
+[dependencies]
+binjs_meta = "^0.3.6"
+clap = "^2"
+env_logger = "^0.5.6"
+itertools = "^0.7.6"
+log = "0.4.1"
+yaml-rust = "^0.4"
+webidl = "^0.6.0"

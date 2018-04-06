@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "TelemetryCommon.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
@@ -98,7 +99,8 @@ CheckNumberOfProperties(const char* aName, JSContext* aCx, JS::HandleValue aSnap
 }
 
 void
-GetScalarsSnapshot(bool aKeyed, JSContext* aCx, JS::MutableHandle<JS::Value> aResult)
+GetScalarsSnapshot(bool aKeyed, JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                   ProcessID aProcessType)
 {
   nsCOMPtr<nsITelemetry> telemetry = do_GetService("@mozilla.org/base/telemetry;1");
 
@@ -118,14 +120,16 @@ GetScalarsSnapshot(bool aKeyed, JSContext* aCx, JS::MutableHandle<JS::Value> aRe
   ASSERT_EQ(rv, NS_OK) << "Creating a snapshot of the data must not fail.";
   ASSERT_TRUE(scalarsSnapshot.isObject()) << "The snapshot must be an object.";
 
-  // We currently only support scalars from the parent process in the gtests.
-  JS::RootedValue parentScalars(aCx);
+  JS::RootedValue processScalars(aCx);
   JS::RootedObject scalarObj(aCx, &scalarsSnapshot.toObject());
-  // Don't complain if no scalars for the parent process can be found. Just
+  // Don't complain if no scalars for the process can be found. Just
   // return an empty object.
-  Unused << JS_GetProperty(aCx, scalarObj, "parent", &parentScalars);
+  Unused << JS_GetProperty(aCx,
+                           scalarObj,
+                           Telemetry::Common::GetNameForProcessID(aProcessType),
+                           &processScalars);
 
-  aResult.set(parentScalars);
+  aResult.set(processScalars);
 }
 
 void

@@ -3514,10 +3514,6 @@ var SessionStoreInternal = {
     arrowScrollbox.smoothScroll = smoothScroll;
 
     TelemetryStopwatch.finish("FX_SESSION_RESTORE_RESTORE_WINDOW_MS");
-    if (Services.prefs.getIntPref("browser.tabs.restorebutton") != 0 ) {
-      Services.telemetry.scalarAdd("browser.session.restore.number_of_tabs", winData.tabs.length);
-      Services.telemetry.scalarAdd("browser.session.restore.number_of_win", 1);
-    }
 
     this._setWindowStateReady(aWindow);
 

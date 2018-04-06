@@ -54,9 +54,8 @@ window._gBrowser = {
 
     // To correctly handle keypresses for potential FindAsYouType, while
     // the tab's find bar is not yet initialized.
-    this._findAsYouType = Services.prefs.getBoolPref("accessibility.typeaheadfind");
-    Services.prefs.addObserver("accessibility.typeaheadfind", this);
     messageManager.addMessageListener("Findbar:Keypress", this);
+    this._setFindbarData();
 
     XPCOMUtils.defineLazyPreferenceGetter(this, "animationsEnabled",
       "toolkit.cosmeticAnimations.enabled");
@@ -438,6 +437,27 @@ window._gBrowser = {
     return this.selectedBrowser.userTypedValue;
   },
 
+  _setFindbarData() {
+    // Ensure we know what the find bar key is in the content process:
+    let initialProcessData = Services.ppmm.initialProcessData;
+    if (!initialProcessData.findBarShortcutData) {
+      let keyEl = document.getElementById("key_find");
+      let mods = keyEl.getAttribute("modifiers")
+        .replace(/accel/i, AppConstants.platform == "macosx" ? "meta" : "control");
+      initialProcessData.findBarShortcutData = {
+        key: keyEl.getAttribute("key"),
+        modifiers: {
+          shiftKey: mods.includes("shift"),
+          ctrlKey: mods.includes("control"),
+          altKey: mods.includes("alt"),
+          metaKey: mods.includes("meta"),
+        },
+      };
+      Services.ppmm.broadcastAsyncMessage("Findbar:ShortcutData",
+        initialProcessData.findBarShortcutData);
+    }
+  },
+
   isFindBarInitialized(aTab) {
     return (aTab || this.selectedTab)._findBar != undefined;
   },
@@ -469,27 +489,19 @@ window._gBrowser = {
   /**
    * Create a findbar instance.
    * @param aTab the tab to create the find bar for.
-   * @param aForce Whether to force a sync flush to trigger XBL construction immediately.
    * @return the created findbar, or null if the window or tab is closed/closing.
    */
-  async _createFindBar(aTab, aForce = false) {
+  async _createFindBar(aTab) {
     let findBar = document.createElementNS(this._XUL_NS, "findbar");
     let browser = this.getBrowserForTab(aTab);
     let browserContainer = this.getBrowserContainer(browser);
     browserContainer.appendChild(findBar);
 
-    if (aForce) {
-      // Force a style flush to ensure that our binding is attached.
-      // Remove after bug 1371523 makes more of this async.
-      findBar.clientTop;
-    } else {
-      await new Promise(r => requestAnimationFrame(r));
-      if (window.closed || aTab.closing) {
-        delete aTab._pendingFindBar;
-        return null;
-      }
-    }
+    await new Promise(r => requestAnimationFrame(r));
     delete aTab._pendingFindBar;
+    if (window.closed || aTab.closing) {
+      return null;
+    }
 
     findBar.browser = browser;
     findBar._findField.value = this._lastFindValue;
@@ -3787,30 +3799,11 @@ window._gBrowser = {
       case "Findbar:Keypress":
       {
         let tab = this.getTabForBrowser(browser);
-        // If the find bar for this tab is not yet alive, only initialize
-        // it if there's a possibility FindAsYouType will be used.
-        // There's no point in doing it for most random keypresses.
-        if (!this.isFindBarInitialized(tab) &&
-            data.shouldFastFind) {
-          let shouldFastFind = this._findAsYouType;
-          if (!shouldFastFind) {
-            // Please keep in sync with toolkit/content/widgets/findbar.xml
-            const FAYT_LINKS_KEY = "'";
-            const FAYT_TEXT_KEY = "/";
-            let charCode = data.fakeEvent.charCode;
-            let key = charCode ? String.fromCharCode(charCode) : null;
-            shouldFastFind = key == FAYT_LINKS_KEY || key == FAYT_TEXT_KEY;
-          }
-          if (shouldFastFind) {
-            // Make sure we return the result.
-            // This needs sync initialization of the find bar, unfortunately.
-            // bug 1371523 tracks removing all of this.
-
-            // This returns a promise, so don't use the result...
-            this._createFindBar(tab, true);
-            // ... just grab the 'cached' version now we know it exists.
-            this.getCachedFindBar().receiveMessage(aMessage);
-          }
+        if (!this.isFindBarInitialized(tab)) {
+          let fakeEvent = data;
+          this.getFindBar(tab).then(findbar => {
+            findbar._onBrowserKeypress(fakeEvent);
+          });
         }
         break;
       }
@@ -3879,12 +3872,6 @@ window._gBrowser = {
         }
         break;
       }
-      case "nsPref:changed":
-      {
-        // This is the only pref observed.
-        this._findAsYouType = Services.prefs.getBoolPref("accessibility.typeaheadfind");
-        break;
-      }
     }
   },
 
@@ -3945,8 +3932,6 @@ window._gBrowser = {
         this._switcher.destroy();
       }
     }
-
-    Services.prefs.removeObserver("accessibility.typeaheadfind", this);
   },
 
   _setupEventListeners() {

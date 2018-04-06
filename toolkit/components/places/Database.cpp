@@ -1240,7 +1240,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 61 uses schema version 45.
+      if (currentSchemaVersion < 46) {
+        rv = MigrateV46Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 61 uses schema version 46.
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -1444,6 +1449,8 @@ Database::InitFunctions()
   rv = StoreLastInsertedIdFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = HashFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = GetQueryParamFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2081,7 +2088,7 @@ Database::MigrateV44Up() {
   ));
   if (NS_FAILED(rv)) return rv;
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -2094,6 +2101,44 @@ Database::MigrateV45Up() {
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_META);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV46Up() {
+  // Convert the existing queries. For simplicity we assume the user didn't
+  // edit these queries, and just do a 1:1 conversion.
+  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_places "
+       "SET url = 'place:tag=' || ( "
+          "SELECT title FROM moz_bookmarks "
+          "WHERE id = CAST(get_query_param(substr(url, 7), 'folder') AS INT) "
+       ") "
+    "WHERE url_hash BETWEEN hash('place', 'prefix_lo') AND "
+                           "hash('place', 'prefix_hi') "
+      "AND url LIKE '%type=7%' "
+  ));
+
+  // Recalculate hashes for all tag queries.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_places SET url_hash = hash(url) "
+    "WHERE url_hash BETWEEN hash('place', 'prefix_lo') AND "
+                           "hash('place', 'prefix_hi') "
+      "AND url LIKE '%tag=%' "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Update Sync fields for all tag queries.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_bookmarks SET syncChangeCounter = syncChangeCounter + 1 "
+    "WHERE fk IN ( "
+      "SELECT id FROM moz_places "
+      "WHERE url_hash BETWEEN hash('place', 'prefix_lo') AND "
+                             "hash('place', 'prefix_hi') "
+        "AND url LIKE '%tag=%' "
+    ") "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

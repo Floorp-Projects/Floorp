@@ -5,10 +5,13 @@
 #[macro_use] extern crate procedural_masquerade;
 extern crate phf_codegen;
 extern crate proc_macro;
+extern crate proc_macro2;
 #[macro_use] extern crate quote;
 extern crate syn;
 
-use std::ascii::AsciiExt;
+#[allow(unused_imports)] use std::ascii::AsciiExt;
+use quote::ToTokens;
+use proc_macro2::{TokenNode, TokenStream, TokenTree};
 
 define_proc_macros! {
     /// Input: the arms of a `match` expression.
@@ -19,22 +22,22 @@ define_proc_macros! {
     /// or string patterns that contains ASCII uppercase letters.
     #[allow(non_snake_case)]
     pub fn cssparser_internal__assert_ascii_lowercase__max_len(input: &str) -> String {
-        let expr = syn::parse_expr(&format!("match x {{ {} }}", input)).unwrap();
+        let expr = syn::parse_str(&format!("match x {{ {} }}", input)).unwrap();
         let arms = match expr {
-            syn::Expr { node: syn::ExprKind::Match(_, ref arms), .. } => arms,
+            syn::Expr::Match(syn::ExprMatch { ref arms, .. }) => arms,
             _ => panic!("expected a match expression, got {:?}", expr)
         };
         max_len(arms.iter().flat_map(|arm| &arm.pats).filter_map(|pattern| {
             let expr = match *pattern {
                 syn::Pat::Lit(ref expr) => expr,
-                syn::Pat::Wild => return None,
+                syn::Pat::Wild(_) => return None,
                 _ => panic!("expected string or wildcard pattern, got {:?}", pattern)
             };
-            match **expr {
-                syn::Expr { node: syn::ExprKind::Lit(syn::Lit::Str(ref string, _)), .. } => {
-                    assert_eq!(*string, string.to_ascii_lowercase(),
+            match *expr.expr {
+                syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(ref lit), .. }) => {
+                    assert_eq!(lit.value(), lit.value().to_ascii_lowercase(),
                                "string patterns must be given in ASCII lowercase");
-                    Some(string.len())
+                    Some(lit.value().len())
                 }
                 _ => panic!("expected string pattern, got {:?}", expr)
             }
@@ -46,7 +49,7 @@ define_proc_macros! {
     /// Output: a `MAX_LENGTH` constant with the length of the longest string.
     #[allow(non_snake_case)]
     pub fn cssparser_internal__max_len(input: &str) -> String {
-        max_len(syn::parse_token_trees(input).unwrap().iter().map(|tt| string_literal(tt).len()))
+        max_len(syn::parse_str::<TokenStream>(input).unwrap().into_iter().map(|tt| string_literal(&tt).len()))
     }
 
     /// Input: parsed as token trees. The first TT is a type. (Can be wrapped in parens.)
@@ -59,7 +62,7 @@ define_proc_macros! {
     /// ```
     #[allow(non_snake_case)]
     pub fn cssparser_internal__phf_map(input: &str) -> String {
-        let token_trees = syn::parse_token_trees(input).unwrap();
+        let token_trees: Vec<TokenTree> = syn::parse_str::<TokenStream>(input).unwrap().into_iter().collect();
         let value_type = &token_trees[0];
         let pairs: Vec<_> = token_trees[1..].chunks(2).map(|chunk| {
             let key = string_literal(&chunk[0]);
@@ -78,20 +81,18 @@ define_proc_macros! {
         };
         let mut initializer_bytes = Vec::new();
         map.build(&mut initializer_bytes).unwrap();
-        tokens.append(::std::str::from_utf8(&initializer_bytes).unwrap());
-        tokens.append(";");
-        tokens.into_string()
+        tokens.append_all(syn::parse_str::<syn::Expr>(::std::str::from_utf8(&initializer_bytes).unwrap()));
+        tokens.append_all(quote!(;));
+        tokens.to_string()
     }
 }
 
 fn max_len<I: Iterator<Item=usize>>(lengths: I) -> String {
     let max_length = lengths.max().expect("expected at least one string");
-    quote!( const MAX_LENGTH: usize = #max_length; ).into_string()
+    quote!( const MAX_LENGTH: usize = #max_length; ).to_string()
 }
 
-fn string_literal(token: &syn::TokenTree) -> &str {
-    match *token {
-        syn::TokenTree::Token(syn::Token::Literal(syn::Lit::Str(ref string, _))) => string,
-        _ => panic!("expected string literal, got {:?}", token)
-    }
+fn string_literal(token: &TokenTree) -> String {
+    let lit: syn::LitStr = syn::parse2(token.clone().into()).expect(&format!("expected string literal, got {:?}", token));
+    lit.value()
 }

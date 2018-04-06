@@ -1214,6 +1214,11 @@ class nsIWidget : public nsISupports
                                              nsIRunnable* aCallback) = 0;
 
     /**
+      * Perform any actions needed after the fullscreen transition has ended.
+      */
+    virtual void CleanupFullscreenTransition() = 0;
+
+    /**
      * Return the screen the widget is in, or null if we don't know.
      */
     virtual already_AddRefed<nsIScreen> GetWidgetScreen() = 0;

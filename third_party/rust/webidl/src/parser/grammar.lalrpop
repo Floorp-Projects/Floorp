@@ -1,0 +1,1583 @@
+use std::f64;
+
+use super::ast;
+use lexer::*;
+
+grammar;
+
+Argument: ast::Argument = {
+    <extended_attributes: ExtendedAttributeList> <argument_rest: ArgumentRest> => {
+        let mut argument_rest = argument_rest;
+        argument_rest.extended_attributes = extended_attributes;
+        argument_rest
+    }
+};
+
+ArgumentList: Vec<ast::Argument> = {
+    (<Argument> <Arguments>)? => {
+        match <> {
+            Some((argument, arguments)) => {
+                let mut arguments = arguments;
+                arguments.insert(0, argument);
+                arguments
+            }
+            None => vec![]
+        }
+    }
+};
+
+ArgumentName: ast::Identifier = {
+    ArgumentNameKeyword,
+    "Identifier"
+};
+
+ArgumentRest: ast::Argument = {
+    "optional" <type_: TypeWithExtendedAttributes> <name: ArgumentName> <default: Default> => {
+        ast::Argument {
+            extended_attributes: vec![],
+            default,
+            name,
+            optional: true,
+            type_,
+            variadic: false
+        }
+    },
+    <type_: Type> <variadic: Ellipsis> <name: ArgumentName> => {
+        ast::Argument {
+            extended_attributes: vec![],
+            default: None,
+            name,
+            optional: variadic,
+            type_,
+            variadic
+        }
+    }
+};
+
+Arguments: Vec<ast::Argument> = {
+    ("," <Argument> <Arguments>)? => {
+        match <> {
+            Some((argument, arguments)) => {
+                let mut arguments = arguments;
+                arguments.insert(0, argument);
+                arguments
+            }
+            None => vec![]
+        }
+    }
+};
+
+ArgumentNameKeyword: ast::Identifier = {
+    "attribute" => "attribute".to_string(),
+    "callback" => "callback".to_string(),
+    "const" => "const".to_string(),
+    "deleter" => "deleter".to_string(),
+    "dictionary" => "dictionary".to_string(),
+    "enum" => "enum".to_string(),
+    "getter" => "getter".to_string(),
+    "implements" => "implements".to_string(),
+    "includes" => "includes".to_string(),
+    "inherit" => "inherit".to_string(),
+    "interface" => "interface".to_string(),
+    "iterable" => "iterable".to_string(),
+    "legacycaller" => "legacycaller".to_string(),
+    "maplike" => "maplike".to_string(),
+    "namespace" => "namespace".to_string(),
+    "partial" => "partial".to_string(),
+    "required" => "required".to_string(),
+    "setlike" => "setlike".to_string(),
+    "setter" => "setter".to_string(),
+    "static" => "static".to_string(),
+    "stringifier" => "stringifier".to_string(),
+    "typedef" => "typedef".to_string(),
+    "unrestricted" => "unrestricted".to_string()
+};
+
+AttributeName: ast::Identifier = {
+    AttributeNameKeyword,
+    "Identifier"
+};
+
+AttributeNameKeyword: ast::Identifier = {
+    "required" => "required".to_string()
+};
+
+AttributeRest: (Box<ast::Type>, ast::Identifier) = {
+    "attribute" <type_: TypeWithExtendedAttributes> <name: AttributeName> ";" => (type_, name)
+};
+
+BooleanLiteral: bool = {
+    "true" => true,
+    "false" => false
+};
+
+BufferRelatedType: ast::BufferRelatedType = {
+    "ArrayBuffer" => ast::BufferRelatedType::ArrayBuffer,
+    "DataView" => ast::BufferRelatedType::DataView,
+    "Int8Array" => ast::BufferRelatedType::Int8Array,
+    "Int16Array" => ast::BufferRelatedType::Int16Array,
+    "Int32Array" => ast::BufferRelatedType::Int32Array,
+    "Uint8Array" => ast::BufferRelatedType::Uint8Array,
+    "Uint16Array" => ast::BufferRelatedType::Uint16Array,
+    "Uint32Array" => ast::BufferRelatedType::Uint32Array,
+    "Uint8ClampedArray" => ast::BufferRelatedType::Uint8ClampedArray,
+    "Float32Array" => ast::BufferRelatedType::Float32Array,
+    "Float64Array" => ast::BufferRelatedType::Float64Array,
+};
+
+CallbackOrInterfaceOrMixin: ast::Definition = {
+    "callback" <CallbackRestOrInterface>,
+    "interface" <InterfaceOrMixin>,
+};
+
+CallbackRest: ast::Callback = {
+    <name: "Identifier"> "=" <return_type: ReturnType> "(" <arguments: ArgumentList> ")" ";" => {
+        ast::Callback {
+            arguments,
+            extended_attributes: vec![],
+            name,
+            return_type
+        }
+    }
+};
+
+CallbackRestOrInterface: ast::Definition = {
+    CallbackRest => ast::Definition::Callback(<>),
+    "interface" <InterfaceRest> => {
+        ast::Definition::Interface(ast::Interface::Callback(ast::CallbackInterface {
+            extended_attributes: vec![],
+            inherits: <>.1,
+            members: <>.2,
+            name: <>.0
+        }))
+    }
+};
+
+Const: ast::Const = {
+    "const" <type_: ConstType> <name: "Identifier"> "=" <value: ConstValue> ";" => {
+        ast::Const {
+            extended_attributes: vec![],
+            name,
+            nullable: type_.1,
+            type_: type_.0,
+            value
+        }
+    }
+};
+
+ConstType: (ast::ConstType, bool) = {
+    <type_: PrimitiveType> <nullable: Null> => {
+        let type_ = match type_ {
+            ast::PrimitiveType::Boolean => ast::ConstType::Boolean,
+            ast::PrimitiveType::Byte => ast::ConstType::Byte,
+            ast::PrimitiveType::Octet => ast::ConstType::Octet,
+            ast::PrimitiveType::UnrestrictedFloat(unrestricted_float_type) => {
+                match unrestricted_float_type {
+                    ast::UnrestrictedFloatType::RestrictedDouble => {
+                        ast::ConstType::RestrictedDouble
+                    }
+                    ast::UnrestrictedFloatType::RestrictedFloat => ast::ConstType::RestrictedFloat,
+                    ast::UnrestrictedFloatType::UnrestrictedDouble => {
+                        ast::ConstType::UnrestrictedDouble
+                    }
+                    ast::UnrestrictedFloatType::UnrestrictedFloat => {
+                        ast::ConstType::UnrestrictedFloat
+                    }
+                }
+            }
+            ast::PrimitiveType::UnsignedInteger(unsigned_integer_type) => {
+                match unsigned_integer_type {
+                    ast::UnsignedIntegerType::SignedLong => ast::ConstType::SignedLong,
+                    ast::UnsignedIntegerType::SignedLongLong => ast::ConstType::SignedLongLong,
+                    ast::UnsignedIntegerType::SignedShort => ast::ConstType::SignedShort,
+                    ast::UnsignedIntegerType::UnsignedLong => ast::ConstType::UnsignedLong,
+                    ast::UnsignedIntegerType::UnsignedLongLong => ast::ConstType::UnsignedLongLong,
+                    ast::UnsignedIntegerType::UnsignedShort => ast::ConstType::UnsignedShort
+                }
+            }
+        };
+
+        (type_, nullable)
+    },
+    <type_: "Identifier"> <nullable: Null> => {
+        (ast::ConstType::Identifier(type_), nullable)
+    }
+};
+
+ConstValue: ast::ConstValue = {
+    BooleanLiteral => ast::ConstValue::BooleanLiteral(<>),
+    FloatLiteral => ast::ConstValue::FloatLiteral(<>),
+    "IntegerLiteral" => ast::ConstValue::IntegerLiteral(<>),
+    "null" => ast::ConstValue::Null
+};
+
+Default: Option<ast::DefaultValue> = {
+    ("=" <DefaultValue>)?
+};
+
+DefaultValue: ast::DefaultValue = {
+    ConstValue => ast::DefaultValue::ConstValue(<>),
+    "StringLiteral" => ast::DefaultValue::StringLiteral(<>),
+    "[" "]" => ast::DefaultValue::EmptySequence
+};
+
+Definition: ast::Definition = {
+    CallbackOrInterfaceOrMixin,
+    Namespace => {
+        ast::Definition::Namespace(ast::Namespace::NonPartial(ast::NonPartialNamespace {
+            extended_attributes: vec![],
+            members: <>.1,
+            name: <>.0
+        }))
+    },
+    Partial,
+    Dictionary => ast::Definition::Dictionary(<>),
+    Enum => ast::Definition::Enum(<>),
+    Typedef => ast::Definition::Typedef(<>),
+    IncludesStatement => ast::Definition::Includes(<>),
+    ImplementsStatement => ast::Definition::Implements(<>)
+};
+
+pub Definitions: Vec<ast::Definition> = {
+    (<ExtendedAttributeList> <Definition> <Definitions>)? => {
+        match <> {
+            Some((extended_attributes, definition, definitions)) => {
+                let mut definition = definition;
+
+                match definition {
+                    ast::Definition::Callback(ref mut callback) => {
+                        callback.extended_attributes = extended_attributes;
+                    }
+                    ast::Definition::Dictionary(ref mut dictionary) => {
+                        match *dictionary {
+                            ast::Dictionary::NonPartial(ref mut non_partial_dictionary) => {
+                                non_partial_dictionary.extended_attributes = extended_attributes;
+                            }
+                            ast::Dictionary::Partial(ref mut partial_dictionary) => {
+                                partial_dictionary.extended_attributes = extended_attributes;
+                            }
+                        }
+                    }
+                    ast::Definition::Enum(ref mut enum_definition) => {
+                        enum_definition.extended_attributes = extended_attributes;
+                    }
+                    ast::Definition::Implements(ref mut implements) => {
+                        implements.extended_attributes = extended_attributes;
+                    }
+                    ast::Definition::Includes(ref mut includes) => {
+                        includes.extended_attributes = extended_attributes;
+                    }
+                    ast::Definition::Interface(ref mut interface) => {
+                        match *interface {
+                            ast::Interface::Callback(ref mut callback_interface) => {
+                                callback_interface.extended_attributes = extended_attributes;
+                            }
+                            ast::Interface::NonPartial(ref mut non_partial_interface) => {
+                                non_partial_interface.extended_attributes = extended_attributes;
+                            }
+                            ast::Interface::Partial(ref mut partial_interface) => {
+                                partial_interface.extended_attributes = extended_attributes;
+                            }
+                        }
+                    }
+                    ast::Definition::Mixin(ref mut mixin) => {
+                        match *mixin {
+                            ast::Mixin::NonPartial(ref mut non_partial_mixin) => {
+                                non_partial_mixin.extended_attributes = extended_attributes;
+                            }
+                            ast::Mixin::Partial(ref mut partial_mixin) => {
+                                partial_mixin.extended_attributes = extended_attributes;
+                            }
+                        }
+                    }
+                    ast::Definition::Namespace(ref mut namespace) => {
+                        match *namespace {
+                            ast::Namespace::NonPartial(ref mut non_partial_namespace) => {
+                                non_partial_namespace.extended_attributes = extended_attributes;
+                            }
+                            ast::Namespace::Partial(ref mut partial_namespace) => {
+                                partial_namespace.extended_attributes = extended_attributes;
+                            }
+                        }
+                    }
+                    ast::Definition::Typedef(ref mut typedef) => {
+                        typedef.extended_attributes = extended_attributes;
+                    }
+                }
+
+                let mut definitions = definitions;
+                definitions.insert(0, definition);
+                definitions
+            }
+            None => vec![]
+        }
+    }
+};
+
+Dictionary: ast::Dictionary = {
+    "dictionary" <name: "Identifier"> <inherits: Inheritance>
+    "{" <members: DictionaryMembers> "}" ";" => {
+        ast::Dictionary::NonPartial(ast::NonPartialDictionary {
+            extended_attributes: vec![],
+            inherits,
+            members,
+            name
+        })
+    }
+};
+
+DictionaryMember: ast::DictionaryMember = {
+    <extended_attributes: ExtendedAttributeList> <dictionary_member_rest: DictionaryMemberRest> => {
+        let mut dictionary_member_rest = dictionary_member_rest;
+        dictionary_member_rest.extended_attributes = extended_attributes;
+        dictionary_member_rest
+    }
+};
+
+DictionaryMemberRest: ast::DictionaryMember = {
+    "required" <type_: TypeWithExtendedAttributes> <name: "Identifier"> <default: Default> ";" => {
+        ast::DictionaryMember {
+            default,
+            extended_attributes: vec![],
+            name,
+            required: true,
+            type_
+        }
+    },
+    <type_: Type> <name: "Identifier"> <default: Default> ";" => {
+        ast::DictionaryMember {
+            default,
+            extended_attributes: vec![],
+            name,
+            required: false,
+            type_
+        }
+    }
+};
+
+DictionaryMembers: Vec<ast::DictionaryMember> = {
+    (<DictionaryMember> <DictionaryMembers>)? => {
+        match <> {
+            Some((member, members)) => {
+                let mut members = members;
+                members.insert(0, member);
+                members
+            }
+            None => vec![]
+        }
+    }
+};
+
+Ellipsis: bool = {
+    "..."? => <>.is_some()
+};
+
+Enum: ast::Enum = {
+    "enum" <name: "Identifier"> "{" <variants: EnumValueList> "}" ";" => {
+        ast::Enum {
+            extended_attributes: vec![],
+            name,
+            variants
+        }
+    }
+};
+
+EnumValueList: Vec<String> = {
+    <variant: "StringLiteral"> <variants: EnumValueListComma> => {
+        let mut variants = variants;
+        variants.insert(0, variant);
+        variants
+    }
+};
+
+EnumValueListComma: Vec<String> = {
+    ("," <EnumValueListString>)? => {
+        match <> {
+            Some(variants) => variants,
+            None => vec![]
+        }
+    }
+};
+
+EnumValueListString: Vec<String> = {
+    (<"StringLiteral"> <EnumValueListComma>)? => {
+        match <> {
+            Some((variant, variants)) => {
+                let mut variants = variants;
+                variants.insert(0, variant);
+                variants
+            }
+            None => vec![]
+        }
+    }
+};
+
+ExtendedAttribute: Box<ast::ExtendedAttribute> = {
+    ExtendedAttributeArgList,
+    ExtendedAttributeIdent,
+    ExtendedAttributeIdentList,
+    ExtendedAttributeNamedArgList,
+    ExtendedAttributeNoArgs,
+    // ExtendedAttributeOther
+};
+
+ExtendedAttributeInner: Box<ast::ExtendedAttribute> = {
+    ExtendedAttributeArgList,
+    ExtendedAttributeIdent,
+    ExtendedAttributeIdentList,
+    ExtendedAttributeNamedArgList,
+    ExtendedAttributeNoArgs,
+    // ExtendedAttributeOtherInner
+};
+
+ExtendedAttributeArgList: Box<ast::ExtendedAttribute> = {
+    <name: "Identifier"> "(" <arguments: ArgumentList> ")" => {
+        Box::new(ast::ExtendedAttribute::ArgumentList(ast::ArgumentListExtendedAttribute {
+            arguments,
+            name
+        }))
+    }
+};
+
+ExtendedAttributeIdent: Box<ast::ExtendedAttribute> = {
+    <lhs: "Identifier"> "=" <rhs: Other> => {
+        Box::new(ast::ExtendedAttribute::Identifier(ast::IdentifierExtendedAttribute {
+            lhs,
+            rhs
+        }))
+    }
+};
+
+ExtendedAttributeIdentList: Box<ast::ExtendedAttribute> = {
+    <lhs: "Identifier"> "=" "(" <rhs: IdentifierList> ")" => {
+        Box::new(ast::ExtendedAttribute::IdentifierList(ast::IdentifierListExtendedAttribute {
+            lhs,
+            rhs
+        }))
+    }
+};
+
+ExtendedAttributeList: Vec<Box<ast::ExtendedAttribute>> = {
+    ("[" <ExtendedAttribute> <ExtendedAttributes> "]")? => {
+        match <> {
+            Some((extended_attribute, extended_attributes)) => {
+                let mut extended_attributes = extended_attributes;
+                extended_attributes.insert(0, extended_attribute);
+                extended_attributes
+            }
+            None => vec![]
+        }
+    }
+};
+
+ExtendedAttributeNamedArgList: Box<ast::ExtendedAttribute> = {
+    <lhs_name: "Identifier"> "=" <rhs_name: "Identifier">
+    "(" <rhs_arguments: ArgumentList> ")" => {
+        Box::new(ast::ExtendedAttribute::NamedArgumentList(ast::NamedArgumentListExtendedAttribute {
+            lhs_name,
+            rhs_name,
+            rhs_arguments
+        }))
+    }
+};
+
+ExtendedAttributeNoArgs: Box<ast::ExtendedAttribute> = {
+    Other => Box::new(ast::ExtendedAttribute::NoArguments(<>))
+};
+
+// ExtendedAttributeOther: Box<ast::ExtendedAttribute> = {
+//     "(" <inner: ExtendedAttributeInner?> ")" <rest: ExtendedAttribute?> => {
+//         Box::new(ast::ExtendedAttribute::Other(ast::OtherExtendedAttribute::Nested {
+//             group_type: ast::OtherExtendedAttributeGroupType::Parenthesis,
+//             inner: inner,
+//             rest: rest
+//         }))
+//     },
+//     "[" <inner: ExtendedAttributeInner?> "]" <rest: ExtendedAttribute?> => {
+//         Box::new(ast::ExtendedAttribute::Other(ast::OtherExtendedAttribute::Nested {
+//             group_type: ast::OtherExtendedAttributeGroupType::Bracket,
+//             inner: inner,
+//             rest: rest
+//         }))
+//     },
+//     "{" <inner: ExtendedAttributeInner?> "}" <rest: ExtendedAttribute?> => {
+//         Box::new(ast::ExtendedAttribute::Other(ast::OtherExtendedAttribute::Nested {
+//             group_type: ast::OtherExtendedAttributeGroupType::Brace,
+//             inner: inner,
+//             rest: rest
+//         }))
+//     },
+//     <other: Other> <rest: ExtendedAttribute?> => {
+//         Box::new(ast::ExtendedAttribute::Other(ast::OtherExtendedAttribute::Other {
+//             other: Some(other),
+//             rest: rest
+//         }))
+//     }
+// };
+//
+// ExtendedAttributeOtherInner: Box<ast::ExtendedAttribute> = {
+//     "(" <inner: ExtendedAttributeInner?> ")" <rest: ExtendedAttributeInner?> => {
+//         Box::new(ast::ExtendedAttribute::Other(ast::OtherExtendedAttribute::Nested {
+//             group_type: ast::OtherExtendedAttributeGroupType::Parenthesis,
+//             inner: inner,
+//             rest: rest
+//         }))
+//     },
+//     "[" <inner: ExtendedAttributeInner?> "]" <rest: ExtendedAttributeInner?> => {
+//         Box::new(ast::ExtendedAttribute::Other(ast::OtherExtendedAttribute::Nested {
+//             group_type: ast::OtherExtendedAttributeGroupType::Bracket,
+//             inner: inner,
+//             rest: rest
+//         }))
+//     },
+//     "{" <inner: ExtendedAttributeInner?> "}" <rest: ExtendedAttributeInner?> => {
+//         Box::new(ast::ExtendedAttribute::Other(ast::OtherExtendedAttribute::Nested {
+//             group_type: ast::OtherExtendedAttributeGroupType::Brace,
+//             inner: inner,
+//             rest: rest
+//         }))
+//     },
+//     <other: OtherOrComma> <rest: ExtendedAttributeInner?> => {
+//         Box::new(ast::ExtendedAttribute::Other(ast::OtherExtendedAttribute::Other {
+//             other: other,
+//             rest: rest
+//         }))
+//     }
+// };
+
+ExtendedAttributes: Vec<Box<ast::ExtendedAttribute>> = {
+    ("," <ExtendedAttribute> <ExtendedAttributes>)? => {
+        match <> {
+            Some((extended_attribute, extended_attributes)) => {
+                let mut extended_attributes = extended_attributes;
+                extended_attributes.insert(0, extended_attribute);
+                extended_attributes
+            }
+            None => vec![]
+        }
+    }
+};
+
+FloatLiteral: f64 = {
+    "FloatLiteral",
+    "-Infinity" => f64::NEG_INFINITY,
+    "Infinity" => f64::INFINITY,
+    "NaN" => f64::NAN
+};
+
+IdentifierList: Vec<ast::Identifier> = {
+    <identifier: "Identifier"> <identifiers: Identifiers> => {
+        let mut identifiers = identifiers;
+        identifiers.insert(0, identifier);
+        identifiers
+    }
+};
+
+Identifiers: Vec<ast::Identifier> = {
+    ("," <"Identifier"> <Identifiers>)? => {
+        match <> {
+            Some((identifier, identifiers)) => {
+                let mut identifiers = identifiers;
+                identifiers.insert(0, identifier);
+                identifiers
+            }
+            None => vec![]
+        }
+    }
+};
+
+ImplementsStatement: ast::Implements = {
+    <implementer: "Identifier"> "implements" <implementee: "Identifier"> ";" => {
+        ast::Implements {
+            extended_attributes: vec![],
+            implementee,
+            implementer
+        }
+    }
+};
+
+IncludesStatement: ast::Includes = {
+    <includer: "Identifier"> "includes" <includee: "Identifier"> ";" => {
+        ast::Includes {
+            extended_attributes: vec![],
+            includee,
+            includer
+        }
+    }
+};
+
+Inherit: bool = {
+    "inherit"? => <>.is_some()
+};
+
+Inheritance: Option<ast::Identifier> = {
+    (":" <"Identifier">)?
+};
+
+InterfaceOrMixin: ast::Definition = {
+    InterfaceRest => {
+        ast::Definition::Interface(ast::Interface::NonPartial(ast::NonPartialInterface {
+            extended_attributes: vec![],
+            inherits: <>.1,
+            members: <>.2,
+            name: <>.0
+        }))
+    },
+    MixinRest => {
+        ast::Definition::Mixin(ast::Mixin::NonPartial(ast::NonPartialMixin {
+            extended_attributes: vec![],
+            members: <>.1,
+            name: <>.0
+        }))
+    }
+};
+
+InterfaceMember: ast::InterfaceMember = {
+    Const => ast::InterfaceMember::Const(<>),
+    Operation => ast::InterfaceMember::Operation(<>),
+    Stringifier => {
+        match <> {
+            ast::Stringifier::Attribute(attribute) => ast::InterfaceMember::Attribute(attribute),
+            ast::Stringifier::Operation(operation) => ast::InterfaceMember::Operation(operation)
+        }
+    },
+    StaticMember,
+    Iterable => ast::InterfaceMember::Iterable(<>),
+    ReadOnlyMember,
+    ReadWriteAttribute => ast::InterfaceMember::Attribute(<>),
+    ReadWriteMaplike => {
+        ast::InterfaceMember::Maplike(ast::Maplike {
+            extended_attributes: vec![],
+            key_type: <>.0,
+            read_only: false,
+            value_type: <>.1
+        })
+    },
+    ReadWriteSetlike => {
+        ast::InterfaceMember::Setlike(ast::Setlike {
+            extended_attributes: vec![],
+            read_only: false,
+            type_: <>
+        })
+    }
+};
+
+InterfaceMembers: Vec<ast::InterfaceMember> = {
+    (<ExtendedAttributeList> <InterfaceMember> <InterfaceMembers>)? => {
+        match <> {
+            Some((extended_attributes, member, members)) => {
+                let mut member = member;
+
+                match member {
+                    ast::InterfaceMember::Attribute(ref mut attribute) => {
+                        match *attribute {
+                            ast::Attribute::Regular(ref mut regular_attribute) => {
+                                regular_attribute.extended_attributes = extended_attributes;
+                            }
+                            ast::Attribute::Static(ref mut static_attribute) => {
+                                static_attribute.extended_attributes = extended_attributes;
+                            }
+                            ast::Attribute::Stringifier(ref mut stringifier_attribute) => {
+                                stringifier_attribute.extended_attributes = extended_attributes;
+                            }
+                        }
+                    }
+                    ast::InterfaceMember::Const(ref mut const_) => {
+                        const_.extended_attributes = extended_attributes;
+                    }
+                    ast::InterfaceMember::Iterable(ref mut iterable) => {
+                        iterable.extended_attributes = extended_attributes;
+                    }
+                    ast::InterfaceMember::Maplike(ref mut maplike) => {
+                        maplike.extended_attributes = extended_attributes;
+                    }
+                    ast::InterfaceMember::Operation(ref mut operation) => {
+                        match *operation {
+                            ast::Operation::Regular(ref mut regular_operation) => {
+                                regular_operation.extended_attributes = extended_attributes;
+                            }
+                            ast::Operation::Special(ref mut special_operation) => {
+                                special_operation.extended_attributes = extended_attributes;
+                            }
+                            ast::Operation::Static(ref mut static_operation) => {
+                                static_operation.extended_attributes = extended_attributes;
+                            }
+                            ast::Operation::Stringifier(ref mut stringifier_operation) => {
+                                match *stringifier_operation {
+                                    ast::StringifierOperation::Explicit(ref mut explicit_stringifer_operation) => {
+                                        explicit_stringifer_operation.extended_attributes = extended_attributes;
+                                    }
+                                    ast::StringifierOperation::Implicit(ref mut implicit_stringifier_operation) => {
+                                        implicit_stringifier_operation.extended_attributes = extended_attributes;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    ast::InterfaceMember::Setlike(ref mut setlike) => {
+                        setlike.extended_attributes = extended_attributes;
+                    }
+                }
+
+                let mut members = members;
+                members.insert(0, member);
+                members
+            }
+            None => vec![]
+        }
+    }
+};
+
+InterfaceRest: (ast::Identifier, Option<ast::Identifier>, Vec<ast::InterfaceMember>) = {
+    <name: "Identifier"> <inherits: Inheritance> "{" <members: InterfaceMembers> "}" ";" => {
+        (name, inherits, members)
+    }
+};
+
+Iterable: ast::Iterable = {
+    "iterable" "<" <key_type: TypeWithExtendedAttributes> <value_type: OptionalType> ">" ";" => {
+        match value_type {
+            Some(value_type) => {
+                ast::Iterable {
+                    extended_attributes: vec![],
+                    key_type: Some(key_type),
+                    value_type
+                }
+            }
+            None => {
+                ast::Iterable {
+                    extended_attributes: vec![],
+                    key_type: None,
+                    value_type: key_type
+                }
+            }
+        }
+    }
+};
+
+MaplikeRest: (Box<ast::Type>, Box<ast::Type>) = {
+    "maplike" "<" <key_type: TypeWithExtendedAttributes> ","
+    <value_type: TypeWithExtendedAttributes> ">" ";" => {
+        (key_type, value_type)
+    }
+};
+
+MixinMember: ast::MixinMember = {
+    Const => ast::MixinMember::Const(<>),
+    RegularOperation => {
+        ast::MixinMember::Operation(ast::Operation::Regular(ast::RegularOperation {
+            arguments: <>.2,
+            extended_attributes: vec![],
+            name: <>.1,
+            return_type: <>.0
+        }))
+    },
+    Stringifier => {
+        match <> {
+            ast::Stringifier::Attribute(attribute) => ast::MixinMember::Attribute(attribute),
+            ast::Stringifier::Operation(operation) => ast::MixinMember::Operation(operation)
+        }
+    },
+    <read_only: ReadOnly> <attribute: AttributeRest> => {
+        ast::MixinMember::Attribute(ast::Attribute::Regular(ast::RegularAttribute {
+            extended_attributes: vec![],
+            inherits: false,
+            name: attribute.1,
+            read_only: read_only,
+            type_: attribute.0
+        }))
+    }
+};
+
+MixinMembers: Vec<ast::MixinMember> = {
+    (<ExtendedAttributeList> <MixinMember> <MixinMembers>)? => {
+        match <> {
+            Some((extended_attributes, member, members)) => {
+                let mut member = member;
+
+                match member {
+                    ast::MixinMember::Attribute(ref mut attribute) => {
+                        match *attribute {
+                            ast::Attribute::Regular(ref mut regular_attribute) => {
+                                regular_attribute.extended_attributes = extended_attributes;
+                            }
+                            ast::Attribute::Static(ref mut static_attribute) => {
+                                static_attribute.extended_attributes = extended_attributes;
+                            }
+                            ast::Attribute::Stringifier(ref mut stringifier_attribute) => {
+                                stringifier_attribute.extended_attributes = extended_attributes;
+                            }
+                        }
+                    }
+                    ast::MixinMember::Const(ref mut const_) => {
+                        const_.extended_attributes = extended_attributes;
+                    }
+                    ast::MixinMember::Operation(ref mut operation) => {
+                        match *operation {
+                            ast::Operation::Regular(ref mut regular_operation) => {
+                                regular_operation.extended_attributes = extended_attributes;
+                            }
+                            ast::Operation::Special(ref mut special_operation) => {
+                                special_operation.extended_attributes = extended_attributes;
+                            }
+                            ast::Operation::Static(ref mut static_operation) => {
+                                static_operation.extended_attributes = extended_attributes;
+                            }
+                            ast::Operation::Stringifier(ref mut stringifier_operation) => {
+                                match *stringifier_operation {
+                                    ast::StringifierOperation::Explicit(ref mut explicit_stringifer_operation) => {
+                                        explicit_stringifer_operation.extended_attributes = extended_attributes;
+                                    }
+                                    ast::StringifierOperation::Implicit(ref mut implicit_stringifier_operation) => {
+                                        implicit_stringifier_operation.extended_attributes = extended_attributes;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                let mut members = members;
+                members.insert(0, member);
+                members
+            }
+            None => vec![]
+        }
+    }
+};
+
+MixinRest: (ast::Identifier, Vec<ast::MixinMember>) = {
+    "mixin" <name: "Identifier"> "{" <members: MixinMembers> "}" ";" => {
+        (name, members)
+    }
+};
+
+Namespace: (ast::Identifier, Vec<ast::NamespaceMember>) = {
+    "namespace" <name: "Identifier"> "{" <members: NamespaceMembers> "}" ";" => {
+        (name, members)
+    }
+};
+
+NamespaceMember: ast::NamespaceMember = {
+    RegularOperation => {
+        ast::NamespaceMember::Operation(ast::Operation::Regular(ast::RegularOperation {
+            arguments: <>.2,
+            extended_attributes: vec![],
+            name: <>.1,
+            return_type: <>.0
+        }))
+    },
+    "readonly" <AttributeRest> => {
+        ast::NamespaceMember::Attribute(ast::Attribute::Regular(ast::RegularAttribute {
+            extended_attributes: vec![],
+            inherits: false,
+            name: <>.1,
+            read_only: true,
+            type_: <>.0
+        }))
+    }
+};
+
+NamespaceMembers: Vec<ast::NamespaceMember> = {
+    (<ExtendedAttributeList> <NamespaceMember> <NamespaceMembers>)? => {
+        match <> {
+            Some((extended_attributes, member, members)) => {
+                let mut member = member;
+
+                match member {
+                    ast::NamespaceMember::Attribute(ref mut attribute) => {
+                        match *attribute {
+                            ast::Attribute::Regular(ref mut regular_attribute) => {
+                                regular_attribute.extended_attributes = extended_attributes;
+                            }
+                            _ => panic!("Namespaces can only have regular attributes")
+                        }
+                    }
+                    ast::NamespaceMember::Operation(ref mut operation) => {
+                        match *operation {
+                            ast::Operation::Regular(ref mut regular_operation) => {
+                                regular_operation.extended_attributes = extended_attributes;
+                            }
+                            _ => panic!("Namespaces can only have regular operations")
+                        }
+                    }
+                }
+
+                let mut members = members;
+                members.insert(0, member);
+                members
+            }
+            None => vec![]
+        }
+    }
+};
+
+NonAnyType: Box<ast::Type> = {
+    PromiseType => {
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable: false,
+            kind: ast::TypeKind::Promise(<>)
+        })
+    },
+    <type_: PrimitiveType> <nullable: Null> => {
+        let type_ = match type_ {
+            ast::PrimitiveType::Boolean => ast::TypeKind::Boolean,
+            ast::PrimitiveType::Byte => ast::TypeKind::Byte,
+            ast::PrimitiveType::Octet => ast::TypeKind::Octet,
+            ast::PrimitiveType::UnrestrictedFloat(unrestricted_float_type) => {
+                match unrestricted_float_type {
+                    ast::UnrestrictedFloatType::RestrictedDouble => {
+                        ast::TypeKind::RestrictedDouble
+                    }
+                    ast::UnrestrictedFloatType::RestrictedFloat => ast::TypeKind::RestrictedFloat,
+                    ast::UnrestrictedFloatType::UnrestrictedDouble => {
+                        ast::TypeKind::UnrestrictedDouble
+                    }
+                    ast::UnrestrictedFloatType::UnrestrictedFloat => {
+                        ast::TypeKind::UnrestrictedFloat
+                    }
+                }
+            }
+            ast::PrimitiveType::UnsignedInteger(unsigned_integer_type) => {
+                match unsigned_integer_type {
+                    ast::UnsignedIntegerType::SignedLong => ast::TypeKind::SignedLong,
+                    ast::UnsignedIntegerType::SignedLongLong => ast::TypeKind::SignedLongLong,
+                    ast::UnsignedIntegerType::SignedShort => ast::TypeKind::SignedShort,
+                    ast::UnsignedIntegerType::UnsignedLong => ast::TypeKind::UnsignedLong,
+                    ast::UnsignedIntegerType::UnsignedLongLong => ast::TypeKind::UnsignedLongLong,
+                    ast::UnsignedIntegerType::UnsignedShort => ast::TypeKind::UnsignedShort
+                }
+            }
+        };
+
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable,
+            kind: type_
+        })
+    },
+    <type_: StringType> <nullable: Null> => {
+        let type_ = match type_ {
+            ast::StringType::ByteString => ast::TypeKind::ByteString,
+            ast::StringType::DOMString => ast::TypeKind::DOMString,
+            ast::StringType::USVString => ast::TypeKind::USVString
+        };
+
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable,
+            kind: type_
+        })
+    },
+    <type_: "Identifier"> <nullable: Null> => {
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable: nullable,
+            kind: ast::TypeKind::Identifier(type_)
+        })
+    },
+    "sequence" "<" <type_: TypeWithExtendedAttributes> ">" <nullable: Null> => {
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable,
+            kind: ast::TypeKind::Sequence(type_)
+        })
+    },
+    "object" <nullable: Null> => {
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable,
+            kind: ast::TypeKind::Object
+        })
+    },
+    "symbol" <nullable: Null> => {
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable,
+            kind: ast::TypeKind::Symbol
+        })
+    },
+    "Error" <nullable: Null> => {
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable,
+            kind: ast::TypeKind::Error
+        })
+    },
+    <type_: BufferRelatedType> <nullable: Null> => {
+        let type_ = match type_ {
+            ast::BufferRelatedType::ArrayBuffer => ast::TypeKind::ArrayBuffer,
+            ast::BufferRelatedType::DataView => ast::TypeKind::DataView,
+            ast::BufferRelatedType::Float32Array => ast::TypeKind::Float32Array,
+            ast::BufferRelatedType::Float64Array => ast::TypeKind::Float64Array,
+            ast::BufferRelatedType::Int16Array => ast::TypeKind::Int16Array,
+            ast::BufferRelatedType::Int32Array => ast::TypeKind::Int32Array,
+            ast::BufferRelatedType::Int8Array => ast::TypeKind::Int8Array,
+            ast::BufferRelatedType::Uint16Array => ast::TypeKind::Uint16Array,
+            ast::BufferRelatedType::Uint32Array => ast::TypeKind::Uint32Array,
+            ast::BufferRelatedType::Uint8Array => ast::TypeKind::Uint8Array,
+            ast::BufferRelatedType::Uint8ClampedArray => ast::TypeKind::Uint8ClampedArray
+        };
+
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable,
+            kind: type_
+        })
+    },
+    "FrozenArray" "<" <type_: TypeWithExtendedAttributes> ">" <nullable: Null> => {
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable,
+            kind: ast::TypeKind::FrozenArray(type_)
+        })
+    },
+    <type_: RecordType> <nullable: Null> => {
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable,
+            kind: ast::TypeKind::Record(type_.0, type_.1)
+        })
+    }
+};
+
+Null: bool = {
+    "?"? => <>.is_some()
+};
+
+Operation: ast::Operation = {
+    <return_type: ReturnType> <operation_rest: OperationRest> => {
+        ast::Operation::Regular(ast::RegularOperation {
+            arguments: operation_rest.1,
+            extended_attributes: vec![],
+            name: operation_rest.0,
+            return_type
+        })
+    },
+    SpecialOperation
+};
+
+OptionalIdentifier: Option<ast::Identifier> = {
+    "Identifier"?
+};
+
+OptionalType: Option<Box<ast::Type>> = {
+    ("," <TypeWithExtendedAttributes>)?
+};
+
+OperationRest: (Option<ast::Identifier>, Vec<ast::Argument>) = {
+    <name: OptionalIdentifier> "(" <arguments: ArgumentList> ")" ";" => {
+        (name, arguments)
+    }
+};
+
+Other: ast::Other = {
+    "any" => ast::Other::Any,
+    "ArrayBuffer" => ast::Other::ArrayBuffer,
+    "attribute" => ast::Other::Attribute,
+    "boolean" => ast::Other::Boolean,
+    "byte" => ast::Other::Byte,
+    "ByteString" => ast::Other::ByteString,
+    "callback" => ast::Other::Callback,
+    "const" => ast::Other::Const,
+    "DOMString" => ast::Other::DOMString,
+    "DataView" => ast::Other::DataView,
+    "deleter" => ast::Other::Deleter,
+    "dictionary" => ast::Other::Dictionary,
+    "double" => ast::Other::Double,
+    "enum" => ast::Other::Enum,
+    "false" => ast::Other::False,
+    "float" => ast::Other::Float,
+    "Float32Array" => ast::Other::Float32Array,
+    "Float64Array" => ast::Other::Float64Array,
+    "FrozenArray" => ast::Other::FrozenArray,
+    "getter" => ast::Other::Getter,
+    "implements" => ast::Other::Implements,
+    "includes" => ast::Other::Includes,
+    "inherit" => ast::Other::Inherit,
+    "Int16Array" => ast::Other::Int16Array,
+    "Int32Array" => ast::Other::Int32Array,
+    "Int8Array" => ast::Other::Int8Array,
+    "interface" => ast::Other::Interface,
+    "iterable" => ast::Other::Iterable,
+    "legacycaller" => ast::Other::LegacyCaller,
+    "long" => ast::Other::Long,
+    "maplike" => ast::Other::Maplike,
+    "namespace" => ast::Other::Namespace,
+    "-Infinity" => ast::Other::NegativeInfinity,
+    "NaN" => ast::Other::NaN,
+    "null" => ast::Other::Null,
+    "object" => ast::Other::Object,
+    "octet" => ast::Other::Octet,
+    "optional" => ast::Other::Optional,
+    "or" => ast::Other::Or,
+    "partial" => ast::Other::Partial,
+    "Infinity" => ast::Other::PositiveInfinity,
+    "required" => ast::Other::Required,
+    "sequence" => ast::Other::Sequence,
+    "setlike" => ast::Other::Setlike,
+    "setter" => ast::Other::Setter,
+    "short" => ast::Other::Short,
+    "static" => ast::Other::Static,
+    "stringifier" => ast::Other::Stringifier,
+    "true" => ast::Other::True,
+    "typedef" => ast::Other::Typedef,
+    "USVString" => ast::Other::USVString,
+    "Uint16Array" => ast::Other::Uint16Array,
+    "Uint32Array" => ast::Other::Uint32Array,
+    "Uint8Array" => ast::Other::Uint8Array,
+    "Uint8ClampedArray" => ast::Other::Uint8ClampedArray,
+    "unrestricted" => ast::Other::Unrestricted,
+    "unsigned" => ast::Other::Unsigned,
+    "void" => ast::Other::Void,
+
+    "FloatLiteral" => ast::Other::FloatLiteral(<>),
+    "Identifier" => ast::Other::Identifier(<>),
+    "IntegerLiteral" => ast::Other::IntegerLiteral(<>),
+    "OtherLiteral" => ast::Other::OtherLiteral(<>),
+    "StringLiteral" => ast::Other::StringLiteral(<>),
+
+    ":" => ast::Other::Colon,
+    "..." => ast::Other::Ellipsis,
+    "=" => ast::Other::Equals,
+    ">" => ast::Other::GreaterThan,
+    "-" => ast::Other::Hyphen,
+    "<" => ast::Other::LessThan,
+    "." => ast::Other::Period,
+    "?" => ast::Other::QuestionMark,
+    ";" => ast::Other::Semicolon
+};
+
+OtherOrComma: Option<ast::Other> = {
+    Other => Some(<>),
+    "," => None
+};
+
+Partial: ast::Definition = {
+    "partial" <PartialDefinition>
+};
+
+PartialDefinition: ast::Definition = {
+    "interface" <PartialInterfaceOrPartialMixin>,
+    PartialDictionary => ast::Definition::Dictionary(<>),
+    Namespace => {
+        ast::Definition::Namespace(ast::Namespace::Partial(ast::PartialNamespace {
+            extended_attributes: vec![],
+            members: <>.1,
+            name: <>.0
+        }))
+    }
+};
+
+PartialDictionary: ast::Dictionary = {
+    "dictionary" <name: "Identifier"> "{" <members: DictionaryMembers> "}" ";" => {
+        ast::Dictionary::Partial(ast::PartialDictionary {
+            extended_attributes: vec![],
+            members,
+            name
+        })
+    }
+};
+
+PartialInterfaceOrPartialMixin: ast::Definition = {
+    PartialInterfaceRest => ast::Definition::Interface(<>),
+    MixinRest => {
+        ast::Definition::Mixin(ast::Mixin::Partial(ast::PartialMixin {
+            extended_attributes: vec![],
+            members: <>.1,
+            name: <>.0
+        }))
+    }
+};
+
+PartialInterfaceRest: ast::Interface = {
+    <name: "Identifier"> "{" <members: InterfaceMembers> "}" ";" => {
+        ast::Interface::Partial(ast::PartialInterface {
+            extended_attributes: vec![],
+            members,
+            name
+        })
+    }
+};
+
+PrimitiveType: ast::PrimitiveType = {
+    UnsignedIntegerType => ast::PrimitiveType::UnsignedInteger(<>),
+    UnrestrictedFloatType => ast::PrimitiveType::UnrestrictedFloat(<>),
+    "boolean" => ast::PrimitiveType::Boolean,
+    "byte" => ast::PrimitiveType::Byte,
+    "octet" => ast::PrimitiveType::Octet
+};
+
+PromiseType: ast::ReturnType = {
+    "Promise" "<" <ReturnType> ">"
+};
+
+ReadOnly: bool = {
+    "readonly"? => <>.is_some()
+};
+
+ReadOnlyMember: ast::InterfaceMember = {
+    "readonly" <ReadOnlyMemberRest>
+};
+
+ReadOnlyMemberRest: ast::InterfaceMember = {
+    AttributeRest => {
+        ast::InterfaceMember::Attribute(ast::Attribute::Regular(ast::RegularAttribute {
+            extended_attributes: vec![],
+            inherits: false,
+            name: <>.1,
+            read_only: true,
+            type_: <>.0
+        }))
+    },
+    ReadWriteMaplike => {
+        ast::InterfaceMember::Maplike(ast::Maplike {
+            extended_attributes: vec![],
+            key_type: <>.0,
+            read_only: true,
+            value_type: <>.1
+        })
+    },
+    ReadWriteSetlike => {
+        ast::InterfaceMember::Setlike(ast::Setlike {
+            extended_attributes: vec![],
+            read_only: true,
+            type_: <>
+        })
+    }
+};
+
+ReadWriteAttribute: ast::Attribute = {
+    "inherit" <read_only: ReadOnly> <attribute_rest: AttributeRest> => {
+        ast::Attribute::Regular(ast::RegularAttribute {
+            extended_attributes: vec![],
+            inherits: true,
+            name: attribute_rest.1,
+            read_only,
+            type_: attribute_rest.0
+        })
+    },
+    AttributeRest => {
+        ast::Attribute::Regular(ast::RegularAttribute {
+            extended_attributes: vec![],
+            inherits: false,
+            name: <>.1,
+            read_only: false,
+            type_: <>.0
+        })
+    }
+};
+
+ReadWriteMaplike: (Box<ast::Type>, Box<ast::Type>) = {
+    MaplikeRest
+};
+
+ReadWriteSetlike: Box<ast::Type> = {
+    SetlikeRest
+};
+
+RecordType: (ast::StringType, Box<ast::Type>) = {
+    "record" "<" <key_type: StringType> "," <value_type: TypeWithExtendedAttributes> ">" => {
+        (key_type, value_type)
+    }
+};
+
+RegularOperation: (ast::ReturnType, Option<ast::Identifier>, Vec<ast::Argument>) = {
+    <return_type: ReturnType> <operation_rest: OperationRest> => {
+        (return_type, operation_rest.0, operation_rest.1)
+    }
+};
+
+ReturnType: ast::ReturnType = {
+    Type => ast::ReturnType::NonVoid(<>),
+    "void" => ast::ReturnType::Void
+};
+
+SetlikeRest: Box<ast::Type> = {
+    "setlike" "<" <TypeWithExtendedAttributes> ">" ";"
+};
+
+SingleType: Box<ast::Type> = {
+    NonAnyType,
+    "any" => {
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            kind: ast::TypeKind::Any,
+            nullable: false
+        })
+    }
+};
+
+SpecialOperation: ast::Operation = {
+    <special: Special> <specials: Specials> <operation: RegularOperation> => {
+        let mut specials = specials;
+        specials.insert(0, special);
+
+        ast::Operation::Special(ast::SpecialOperation {
+            arguments: operation.2,
+            extended_attributes: vec![],
+            name: operation.1,
+            return_type: operation.0,
+            special_keywords: specials
+        })
+    }
+};
+
+Special: ast::Special = {
+    "deleter" => ast::Special::Deleter,
+    "getter" => ast::Special::Getter,
+    "legacycaller" => ast::Special::LegacyCaller,
+    "setter" => ast::Special::Setter
+};
+
+Specials: Vec<ast::Special> = {
+    (<Special> <Specials>)? => {
+        match <> {
+            Some((special, specials)) => {
+                let mut specials = specials;
+                specials.insert(0, special);
+                specials
+            }
+            None => vec![]
+        }
+    }
+};
+
+StaticMember: ast::InterfaceMember = {
+    "static" <StaticMemberRest>
+};
+
+StaticMemberRest: ast::InterfaceMember = {
+    <read_only: ReadOnly> <attribute_rest: AttributeRest> => {
+        ast::InterfaceMember::Attribute(ast::Attribute::Static(ast::StaticAttribute {
+            extended_attributes: vec![],
+            name: attribute_rest.1,
+            read_only,
+            type_: attribute_rest.0
+        }))
+    },
+    RegularOperation => {
+        ast::InterfaceMember::Operation(ast::Operation::Static(ast::StaticOperation {
+            arguments: <>.2,
+            extended_attributes: vec![],
+            name: <>.1,
+            return_type: <>.0
+        }))
+    }
+};
+
+StringType: ast::StringType = {
+    "ByteString" => ast::StringType::ByteString,
+    "DOMString" => ast::StringType::DOMString,
+    "USVString" => ast::StringType::USVString
+};
+
+Stringifier: ast::Stringifier = {
+    "stringifier" <StringifierRest>
+};
+
+StringifierRest: ast::Stringifier = {
+    <read_only: ReadOnly> <attribute_rest: AttributeRest> => {
+        ast::Stringifier::Attribute(ast::Attribute::Stringifier(ast::StringifierAttribute {
+            extended_attributes: vec![],
+            name: attribute_rest.1,
+            read_only,
+            type_: attribute_rest.0
+        }))
+    },
+    RegularOperation => {
+        ast::Stringifier::Operation(ast::Operation::Stringifier(ast::StringifierOperation::Explicit(ast::ExplicitStringifierOperation {
+            arguments: <>.2,
+            extended_attributes: vec![],
+            name: <>.1,
+            return_type: <>.0
+        })))
+    },
+    ";" => {
+        ast::Stringifier::Operation(ast::Operation::Stringifier(ast::StringifierOperation::Implicit(ast::ImplicitStringifierOperation {
+            extended_attributes: vec![]
+        })))
+    }
+};
+
+Type: Box<ast::Type> = {
+    SingleType,
+    <type_: UnionType> <nullable: Null> => {
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            nullable,
+            kind: ast::TypeKind::Union(type_)
+        })
+    }
+};
+
+TypeWithExtendedAttributes: Box<ast::Type> = {
+    <extended_attributes: ExtendedAttributeList> <type_: Type> => {
+        let mut type_ = type_;
+        type_.extended_attributes = extended_attributes;
+        type_
+    }
+};
+
+Typedef: ast::Typedef = {
+    "typedef" <type_: TypeWithExtendedAttributes> <name: "Identifier"> ";" => {
+        ast::Typedef {
+            extended_attributes: vec![],
+            name: name,
+            type_: type_
+        }
+    }
+};
+
+UnionMemberType: Box<ast::Type> = {
+    <extended_attributes: ExtendedAttributeList> <type_: NonAnyType> => {
+        let mut type_ = type_;
+        type_.extended_attributes = extended_attributes;
+        type_
+    },
+    <type_: UnionType> <nullable: Null> => {
+        Box::new(ast::Type {
+            extended_attributes: vec![],
+            kind: ast::TypeKind::Union(type_),
+            nullable
+        })
+    }
+};
+
+UnionMemberTypes: Vec<Box<ast::Type>> = {
+    ("or" <UnionMemberType> <UnionMemberTypes>)? => {
+        match <> {
+            Some((member, members)) => {
+                let mut members = members;
+                members.insert(0, member);
+                members
+            }
+            None => vec![]
+        }
+    }
+};
+
+UnionType: Vec<Box<ast::Type>> = {
+    "(" <first_member: UnionMemberType> "or"
+    <second_member: UnionMemberType> <members: UnionMemberTypes> ")" => {
+        let mut members = members;
+        members.insert(0, second_member);
+        members.insert(0, first_member);
+        members
+    }
+};
+
+UnrestrictedFloatType: ast::UnrestrictedFloatType = {
+    "double" => ast::UnrestrictedFloatType::RestrictedDouble,
+    "float" => ast::UnrestrictedFloatType::RestrictedFloat,
+    "unrestricted" "double" => ast::UnrestrictedFloatType::UnrestrictedDouble,
+    "unrestricted" "float" => ast::UnrestrictedFloatType::UnrestrictedFloat,
+};
+
+UnsignedIntegerType: ast::UnsignedIntegerType = {
+    "short" => ast::UnsignedIntegerType::SignedShort,
+    "long" => ast::UnsignedIntegerType::SignedLong,
+    "long" "long" => ast::UnsignedIntegerType::SignedLongLong,
+    "unsigned" "short" => ast::UnsignedIntegerType::UnsignedShort,
+    "unsigned" "long" => ast::UnsignedIntegerType::UnsignedLong,
+    "unsigned" "long" "long" => ast::UnsignedIntegerType::UnsignedLongLong,
+};
+
+extern {
+    type Error = LexicalError;
+    type Location = usize;
+
+    enum Token {
+        // Keywords
+        "any" => Token::Any,
+        "ArrayBuffer" => Token::ArrayBuffer,
+        "attribute" => Token::Attribute,
+        "boolean" => Token::Boolean,
+        "byte" => Token::Byte,
+        "ByteString" => Token::ByteString,
+        "callback" => Token::Callback,
+        "const" => Token::Const,
+        "DataView" => Token::DataView,
+        "deleter" => Token::Deleter,
+        "dictionary" => Token::Dictionary,
+        "DOMString" => Token::DOMString,
+        "double" => Token::Double,
+        "enum" => Token::Enum,
+        "Error" => Token::Error,
+        "false" => Token::False,
+        "float" => Token::Float,
+        "Float32Array" => Token::Float32Array,
+        "Float64Array" => Token::Float64Array,
+        "FrozenArray" => Token::FrozenArray,
+        "getter" => Token::Getter,
+        "implements" => Token::Implements,
+        "includes" => Token::Includes,
+        "inherit" => Token::Inherit,
+        "Int16Array" => Token::Int16Array,
+        "Int32Array" => Token::Int32Array,
+        "Int8Array" => Token::Int8Array,
+        "interface" => Token::Interface,
+        "iterable" => Token::Iterable,
+        "legacycaller" => Token::LegacyCaller,
+        "long" => Token::Long,
+        "maplike" => Token::Maplike,
+        "mixin" => Token::Mixin,
+        "namespace" => Token::Namespace,
+        "NaN" => Token::NaN,
+        "-Infinity" => Token::NegativeInfinity,
+        "null" => Token::Null,
+        "object" => Token::Object,
+        "octet" => Token::Octet,
+        "optional" => Token::Optional,
+        "or" => Token::Or,
+        "partial" => Token::Partial,
+        "Infinity" => Token::PositiveInfinity,
+        "Promise" => Token::Promise,
+        "readonly" => Token::ReadOnly,
+        "record" => Token::Record,
+        "required" => Token::Required,
+        "sequence" => Token::Sequence,
+        "setlike" => Token::Setlike,
+        "setter" => Token::Setter,
+        "short" => Token::Short,
+        "static" => Token::Static,
+        "stringifier" => Token::Stringifier,
+        "symbol" => Token::Symbol,
+        "true" => Token::True,
+        "typedef" => Token::Typedef,
+        "USVString" => Token::USVString,
+        "Uint16Array" => Token::Uint16Array,
+        "Uint32Array" => Token::Uint32Array,
+        "Uint8Array" => Token::Uint8Array,
+        "Uint8ClampedArray" => Token::Uint8ClampedArray,
+        "unrestricted" => Token::Unrestricted,
+        "unsigned" => Token::Unsigned,
+        "void" => Token::Void,
+
+        // Regular expressions
+        "FloatLiteral" => Token::FloatLiteral(<f64>),
+        "Identifier" => Token::Identifier(<ast::Identifier>),
+        "IntegerLiteral" => Token::IntegerLiteral(<i64>),
+        "OtherLiteral" => Token::OtherLiteral(<char>),
+        "StringLiteral" => Token::StringLiteral(<String>),
+
+        // Symbols
+        ":" => Token::Colon,
+        "," => Token::Comma,
+        "..." => Token::Ellipsis,
+        "=" => Token::Equals,
+        ">" => Token::GreaterThan,
+        "-" => Token::Hyphen,
+        "{" => Token::LeftBrace,
+        "[" => Token::LeftBracket,
+        "(" => Token::LeftParenthesis,
+        "<" => Token::LessThan,
+        "." => Token::Period,
+        "?" => Token::QuestionMark,
+        "}" => Token::RightBrace,
+        "]" => Token::RightBracket,
+        ")" => Token::RightParenthesis,
+        ";" => Token::Semicolon,
+    }
+}
