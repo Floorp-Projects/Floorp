@@ -49,6 +49,8 @@ interface nsIContentPermissionRequest;
 interface nsIObserver;
 interface nsIDOMStorage;
 
+webidl DOMRect;
+
 [scriptable, uuid(4d6732ca-9da7-4176-b8a1-8dde15cd0bf9)]
 interface nsIDOMWindowUtils : nsISupports {
 
@@ -842,9 +844,8 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * Returns the given element's bounds without flushing pending layout changes.
-   * The returned object is a DOMRect (bug 1444991 may remove this walkaround).
    */
-  nsISupports getBoundsWithoutFlushing(in nsIDOMElement aElement);
+  DOMRect getBoundsWithoutFlushing(in nsIDOMElement aElement);
 
   const long FLUSH_NONE = -1;
   const long FLUSH_STYLE = 0;
@@ -866,9 +867,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * Returns the bounds of the window's currently loaded document. This will
    * generally be (0, 0, pageWidth, pageHeight) but in some cases (e.g. RTL
    * documents) may have a negative left value.
-   * The returned object is a DOMRect (bug 1444991 may remove this walkaround).
    */
-  nsISupports getRootBounds();
+  DOMRect getRootBounds();
 
   /**
    * Get IME open state. TRUE means 'Open', otherwise, 'Close'.

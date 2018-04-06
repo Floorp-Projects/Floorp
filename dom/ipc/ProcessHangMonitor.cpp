@@ -184,7 +184,7 @@ public:
   NS_IMETHOD TerminatePlugin() override;
   NS_IMETHOD UserCanceled() override;
 
-  NS_IMETHOD IsReportForBrowser(nsISupports* aFrameLoader, bool* aResult) override;
+  NS_IMETHOD IsReportForBrowser(nsFrameLoader* aFrameLoader, bool* aResult) override;
 
   // Called when a content process shuts down.
   void Clear() {
@@ -1124,7 +1124,7 @@ HangMonitoredProcess::TerminatePlugin()
 }
 
 NS_IMETHODIMP
-HangMonitoredProcess::IsReportForBrowser(nsISupports* aFrameLoader, bool* aResult)
+HangMonitoredProcess::IsReportForBrowser(nsFrameLoader* aFrameLoader, bool* aResult)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -1133,10 +1133,9 @@ HangMonitoredProcess::IsReportForBrowser(nsISupports* aFrameLoader, bool* aResul
     return NS_OK;
   }
 
-  RefPtr<nsFrameLoader> frameLoader = do_QueryObject(aFrameLoader);
-  NS_ENSURE_STATE(frameLoader);
+  NS_ENSURE_STATE(aFrameLoader);
 
-  TabParent* tp = TabParent::GetFrom(frameLoader);
+  TabParent* tp = TabParent::GetFrom(aFrameLoader);
   if (!tp) {
     *aResult = false;
     return NS_OK;

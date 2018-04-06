@@ -7,6 +7,9 @@
 
 interface nsIDOMEvent;
 
+webidl DragEvent;
+webidl DataTransfer;
+
 [scriptable, uuid(69E14F91-2E09-4CA6-A511-A715C99A2804)]
 interface nsIDroppedLinkItem : nsISupports
 {
@@ -37,10 +40,8 @@ interface nsIDroppedLinkHandler : nsISupports
    * of the source of the drag is different from the destination. This check
    * includes any parent, sibling and child frames in the same content tree.
    * If true, the source is not checked.
-   *
-   * aEvent should be a DragEvent.  See bug 1444991.
    */
-  boolean canDropLink(in nsIDOMEvent aEvent, in boolean aAllowSameDocument);
+  boolean canDropLink(in DragEvent aEvent, in boolean aAllowSameDocument);
 
   /**
    * Given a drop event aEvent, determines the link being dragged and returns
@@ -58,10 +59,8 @@ interface nsIDroppedLinkHandler : nsISupports
    *
    * aName is filled in with the link title if it exists, or an empty string
    * otherwise.
-   *
-   * aEvent should be a DragEvent.  See bug 1444991.
    */
-  AString dropLink(in nsIDOMEvent aEvent, out AString aName,
+  AString dropLink(in DragEvent aEvent, out AString aName,
                    [optional] in boolean aDisallowInherit);
 
   /**
@@ -77,10 +76,8 @@ interface nsIDroppedLinkHandler : nsISupports
    *    the user into a dragging a chrome url, for example.
    *  - aDisallowInherit is true, and the URI being dropped would inherit the
    *    current document's security context (URI_INHERITS_SECURITY_CONTEXT).
-   *
-   * aEvent should be a DragEvent.  See bug 1444991.
    */
-  void dropLinks(in nsIDOMEvent aEvent,
+  void dropLinks(in DragEvent aEvent,
                  [optional] in boolean aDisallowInherit,
                  [optional] out unsigned long aCount,
                  [retval, array, size_is(aCount)] out nsIDroppedLinkItem aLinks);
@@ -89,10 +86,8 @@ interface nsIDroppedLinkHandler : nsISupports
    * Given a drop event aEvent, validate the extra URIs for the event,
    * this is used when the caller extracts yet another URIs from the dropped
    * text, like home button that splits the text with "|".
-   *
-   * aEvent should be a DragEvent.  See bug 1444991.
    */
-  void validateURIsForDrop(in nsIDOMEvent aEvent,
+  void validateURIsForDrop(in DragEvent aEvent,
                            in unsigned long aURIsCount,
                            [array, size_is(aURIsCount)] in wstring aURIs,
                            [optional] in boolean aDisallowInherit);
@@ -102,18 +97,14 @@ interface nsIDroppedLinkHandler : nsISupports
    * dragged. Since drag/drop performs a roundtrip of parent, child, parent,
    * it allows the parent to verify that the child did not modify links
    * being dropped.
-   *
-   * @param dataTransfer is a DataTransfer.  See bug 1444991.
    */
-  void queryLinks(in nsISupports aDataTransfer,
+  void queryLinks(in DataTransfer aDataTransfer,
                   [optional] out unsigned long aCount,
                   [retval, array, size_is(aCount)] out nsIDroppedLinkItem aLinks);
 
   /**
    * Given a drop event aEvent, determines the triggering principal for the
    * event and returns it.
-   *
-   * aEvent should be a DragEvent.  See bug 1444991.
    */
-  nsIPrincipal getTriggeringPrincipal(in nsIDOMEvent aEvent);
+  nsIPrincipal getTriggeringPrincipal(in DragEvent aEvent);
 };

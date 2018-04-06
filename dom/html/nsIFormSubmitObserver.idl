@@ -10,14 +10,14 @@ interface mozIDOMWindow;
 interface nsIURI;
 interface nsIArray;
 
+webidl HTMLFormElement;
+
 [scriptable, uuid(867cb7e7-835d-408b-9788-d2834d284e03)]
 interface nsIFormSubmitObserver: nsISupports
 {
-  // formNode must be a HTMLFormElement (bug 1444991 can clean it up)
-  void notify(in nsISupports formNode, in mozIDOMWindow window, in nsIURI actionURL, out boolean cancelSubmit);
+  void notify(in HTMLFormElement formNode, in mozIDOMWindow window, in nsIURI actionURL, out boolean cancelSubmit);
 
-  // formNode must be a HTMLFormElement (bug 1444991 can clean it up)
-  void notifyInvalidSubmit(in nsISupports formNode,
+  void notifyInvalidSubmit(in HTMLFormElement formNode,
                            in nsIArray invalidElements);
 };
 
