@@ -10284,23 +10284,19 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     // will trickle to jit::Compile() and return Method_Skipped.
     uint32_t warmUpCount = script->getWarmUpCount();
 
-    JitRuntime* jrt = cx->runtime()->jitRuntime();
-    IonCompilationId compilationId = jrt->nextCompilationId();
-#ifdef DEBUG
-    jrt->currentCompilationId().emplace(compilationId);
-    auto resetCurrentId = mozilla::MakeScopeExit([jrt] {
-        jrt->currentCompilationId().reset();
-    });
-#endif
-
     // Record constraints. If an error occured, returns false and potentially
     // prevent future compilations. Otherwise, if an invalidation occured, then
     // skip the current compilation.
-    bool isValid = false;
-    if (!FinishCompilation(cx, script, constraints, compilationId, &isValid))
+    RecompileInfo recompileInfo;
+    bool validRecompiledInfo = false;
+    if (!FinishCompilation(cx, script, constraints, &recompileInfo, &validRecompiledInfo))
         return false;
-    if (!isValid)
+    if (!validRecompiledInfo)
         return true;
+    auto guardRecordedConstraints = mozilla::MakeScopeExit([&] {
+        // In case of error, invalidate the current recompileInfo.
+        recompileInfo.compilerOutput(cx->zone()->types)->invalidate();
+    });
 
     // IonMonkey could have inferred better type information during
     // compilation. Since adding the new information to the actual type
@@ -10319,7 +10315,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
         return false;
 
     IonScript* ionScript =
-        IonScript::New(cx, compilationId,
+        IonScript::New(cx, recompileInfo,
                        graph.totalSlotCount(), argumentSlots, scriptFrameSize,
                        snapshots_.listSize(), snapshots_.RVATableSize(),
                        recovers_.size(), bailouts_.length(), graph.numConstants(),
@@ -10551,6 +10547,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
         script->addIonCounts(counts);
 
     guardIonScript.release();
+    guardRecordedConstraints.release();
     return true;
 }
 

@@ -1102,46 +1102,93 @@ inline bool isInlinableCall(jsbytecode* pc);
 bool
 ClassCanHaveExtraProperties(const Class* clasp);
 
-// Each IonScript has a unique compilation id. This is used to sweep/ignore
-// constraints for IonScripts that have been invalidated/destroyed.
-class IonCompilationId
+/*
+ * Information about the result of the compilation of a script.  This structure
+ * stored in the TypeCompartment is indexed by the RecompileInfo. This
+ * indirection enables the invalidation of all constraints related to the same
+ * compilation.
+ */
+class CompilerOutput
 {
-    uint64_t id_;
+    // If this compilation has not been invalidated, the associated script and
+    // kind of compilation being performed.
+    JSScript* script_;
+
+    // Whether this compilation is about to be invalidated.
+    bool pendingInvalidation_ : 1;
+
+    // During sweeping, the list of compiler outputs is compacted and invalidated
+    // outputs are removed. This gives the new index for a valid compiler output.
+    uint32_t sweepIndex_ : 31;
 
   public:
-    explicit IonCompilationId(uint64_t id)
-      : id_(id)
+    static const uint32_t INVALID_SWEEP_INDEX = static_cast<uint32_t>(1 << 31) - 1;
+
+    CompilerOutput()
+      : script_(nullptr),
+        pendingInvalidation_(false), sweepIndex_(INVALID_SWEEP_INDEX)
     {}
-    bool operator==(const IonCompilationId& other) const {
-        return id_ == other.id_;
+
+    explicit CompilerOutput(JSScript* script)
+      : script_(script),
+        pendingInvalidation_(false), sweepIndex_(INVALID_SWEEP_INDEX)
+    {}
+
+    JSScript* script() const { return script_; }
+
+    inline jit::IonScript* ion() const;
+
+    bool isValid() const {
+        return script_ != nullptr;
     }
-    bool operator!=(const IonCompilationId& other) const {
-        return id_ != other.id_;
+    void invalidate() {
+        script_ = nullptr;
+    }
+
+    void setPendingInvalidation() {
+        pendingInvalidation_ = true;
+    }
+    bool pendingInvalidation() {
+        return pendingInvalidation_;
+    }
+
+    void setSweepIndex(uint32_t index) {
+        if (index >= INVALID_SWEEP_INDEX)
+            MOZ_CRASH();
+        sweepIndex_ = index;
+    }
+    uint32_t sweepIndex() {
+        MOZ_ASSERT(sweepIndex_ != INVALID_SWEEP_INDEX);
+        return sweepIndex_;
     }
 };
 
 class RecompileInfo
 {
-    JSScript* script_;
-    IonCompilationId id_;
+    // Index in the TypeZone's compilerOutputs or sweepCompilerOutputs arrays,
+    // depending on the generation value.
+    uint32_t outputIndex : 31;
+
+    // If out of sync with the TypeZone's generation, this index is for the
+    // zone's sweepCompilerOutputs rather than compilerOutputs.
+    uint32_t generation : 1;
 
   public:
-    RecompileInfo(JSScript* script, IonCompilationId id)
-      : script_(script),
-        id_(id)
+    RecompileInfo(uint32_t outputIndex, uint32_t generation)
+      : outputIndex(outputIndex), generation(generation)
     {}
 
-    JSScript* script() const {
-        return script_;
-    }
-
-    inline jit::IonScript* maybeIonScriptToInvalidate() const;
-
-    inline bool shouldSweep();
+    RecompileInfo()
+      : outputIndex(JS_BITMASK(31)), generation(0)
+    {}
 
     bool operator==(const RecompileInfo& other) const {
-        return script_== other.script_ && id_ == other.id_;
+        return outputIndex == other.outputIndex && generation == other.generation;
     }
+
+    CompilerOutput* compilerOutput(TypeZone& types) const;
+    CompilerOutput* compilerOutput(JSContext* cx) const;
+    bool shouldSweep(TypeZone& types);
 };
 
 // The RecompileInfoVector has a MinInlineCapacity of one so that invalidating a
@@ -1268,11 +1315,12 @@ FillBytecodeTypeMap(JSScript* script, uint32_t* bytecodeMap);
 
 class RecompileInfo;
 
-// Generate the type constraints for the compilation. Sets |isValidOut| based on
-// whether the type constraints still hold.
+// Allocate a CompilerOutput for a finished compilation and generate the type
+// constraints for the compilation. Sets |isValidOut| based on whether the type
+// constraints still hold.
 bool
 FinishCompilation(JSContext* cx, HandleScript script, CompilerConstraintList* constraints,
-                  IonCompilationId compilationId, bool* isValidOut);
+                  RecompileInfo* precompileInfo, bool* isValidOut);
 
 // Update the actual types in any scripts queried by constraints with any
 // speculative types added during the definite properties analysis.
@@ -1343,9 +1391,21 @@ class TypeZone
     // Current generation for sweeping.
     ZoneGroupOrGCTaskOrIonCompileData<uint32_t> generation;
 
+    /*
+     * All Ion compilations that have occured in this zone, for indexing via
+     * RecompileInfo. This includes both valid and invalid compilations, though
+     * invalidated compilations are swept on GC.
+     */
+    typedef Vector<CompilerOutput, 4, SystemAllocPolicy> CompilerOutputVector;
+    ZoneGroupData<CompilerOutputVector*> compilerOutputs;
+
     // During incremental sweeping, allocator holding the old type information
     // for the zone.
     ZoneGroupData<LifoAlloc> sweepTypeLifoAlloc;
+
+    // During incremental sweeping, the old compiler outputs for use by
+    // recompile indexes with a stale generation.
+    ZoneGroupData<CompilerOutputVector*> sweepCompilerOutputs;
 
     // During incremental sweeping, whether to try to destroy all type
     // information attached to scripts.
@@ -1370,7 +1430,7 @@ class TypeZone
         return typeLifoAlloc_.ref();
     }
 
-    void beginSweep(bool releaseTypes);
+    void beginSweep(bool releaseTypes, AutoClearTypeInferenceStateOnOOM& oom);
     void endSweep(JSRuntime* rt);
     void clearAllNewScriptsOnOOM();
 
