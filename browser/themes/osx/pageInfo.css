@@ -72,27 +72,6 @@ textbox[disabled] {
 }
 
 /* General Tab */
-groupbox.collapsable caption .caption-icon {
-  width: 11px;
-  height: 11px;
-  background-repeat: no-repeat;
-  background-position: center;
-  margin-inline-end: 2px;
-  background-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
-groupbox.collapsable[closed="true"] caption .caption-icon {
-  background-image: url("chrome://global/skin/arrow/arrow-rit.gif");
-}
-
-groupbox tree {
-  margin: 0;
-  border: none;
-}
-
-groupbox.treebox .groupbox-body {
-  padding: 0;
-}
 
 #securityBox description {
   margin-inline-start: 10px;
