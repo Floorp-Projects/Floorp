@@ -709,7 +709,7 @@ def InterfaceObjectProtoGetter(descriptor, forXrays=False):
             not descriptor.interface.getExtendedAttribute("ProtoObjectHack")):
             protoGetter = "JS::GetRealmObjectPrototype"
         else:
-            protoGetter = "binding_detail::GetHackedNamespaceProtoObject"
+            protoGetter = "GetHackedNamespaceProtoObject"
         protoHandleGetter = None
     else:
         protoGetter = "JS::GetRealmFunctionPrototype"
@@ -1820,10 +1820,10 @@ class CGClassConstructor(CGAbstractStaticMethod):
             # compartment.
             return fill(
                 """
-                return binding_detail::HTMLConstructor(cx, argc, vp,
-                                                       constructors::id::${name},
-                                                       prototypes::id::${name},
-                                                       CreateInterfaceObjects);
+                return HTMLConstructor(cx, argc, vp,
+                                       constructors::id::${name},
+                                       prototypes::id::${name},
+                                       CreateInterfaceObjects);
                 """,
                 name=self.descriptor.name)
 
@@ -3771,7 +3771,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             aReflector.set(aCache->GetWrapper());
             if (aReflector) {
             #ifdef DEBUG
-              binding_detail::AssertReflectorHasGivenProto(aCx, aReflector, aGivenProto);
+              AssertReflectorHasGivenProto(aCx, aReflector, aGivenProto);
             #endif // DEBUG
               return true;
             }
@@ -6351,7 +6351,7 @@ class CGArgumentConverter(CGThing):
             raise TypeError("Shouldn't need holders for variadics")
 
         replacer = dict(self.argcAndIndex, **self.replacementVariables)
-        replacer["seqType"] = CGTemplatedType("binding_detail::AutoSequence",
+        replacer["seqType"] = CGTemplatedType("AutoSequence",
                                               typeConversion.declType).define()
         if typeNeedsRooting(self.argument.type):
             rooterDecl = ("SequenceRooter<%s> ${holderName}(cx, &${declName});\n" %
@@ -7310,7 +7310,7 @@ class CGCallGenerator(CGThing):
 
         if isFallible or canOOM:
             if isFallible:
-                reporterClass = "binding_detail::FastErrorResult"
+                reporterClass = "FastErrorResult"
             else:
                 reporterClass = "binding_danger::OOMReporterInstantiator"
             self.cgRoot.prepend(CGGeneric("%s rv;\n" % reporterClass))
@@ -8904,7 +8904,7 @@ class CGEnumerateHook(CGAbstractBindingMethod):
 
     def generate_code(self):
         return CGGeneric(dedent("""
-            binding_detail::FastErrorResult rv;
+            FastErrorResult rv;
             self->GetOwnPropertyNames(cx, properties, enumerableOnly, rv);
             if (rv.MaybeSetPendingException(cx)) {
               return false;
@@ -11169,7 +11169,7 @@ class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
 
     def generate_code(self):
         return CGGeneric(dedent("""
-            binding_detail::FastErrorResult rv;
+            FastErrorResult rv;
             // This wants all own props, not just enumerable ones.
             self->GetOwnPropertyNames(cx, props, false, rv);
             if (rv.MaybeSetPendingException(cx)) {
@@ -11411,7 +11411,7 @@ class CGProxyNamedOperation(CGProxySpecialOperation):
             decls = ""
             idName = "id"
 
-        decls += "binding_detail::FakeString %s;\n" % argName
+        decls += "FakeString %s;\n" % argName
 
         main = fill(
             """
@@ -13082,7 +13082,7 @@ class CGDictionary(CGThing):
                 // side-effects, followed by a call to JS::ToJSONMaybeSafely,
                 // which likewise guarantees no side-effects for the sorts of
                 // things we will pass it.
-                JSAutoCompartment ac(cx, binding_detail::UnprivilegedJunkScopeOrWorkerGlobal());
+                JSAutoCompartment ac(cx, UnprivilegedJunkScopeOrWorkerGlobal());
                 JS::Rooted<JS::Value> val(cx);
                 if (!ToObjectInternal(cx, &val)) {
                   return false;
@@ -14224,9 +14224,16 @@ class CGBindingRoot(CGThing):
                        for m in descriptor.interface.members)
         bindingHeaders["nsJSUtils.h"] = any(descriptorClearsPropsInSlots(d) for d in descriptors)
 
+        # Make sure we can sanely use binding_detail in generated code.
+        cgthings = [CGGeneric(dedent(
+            """
+            namespace binding_detail {}; // Just to make sure it's known as a namespace
+            using namespace mozilla::dom::binding_detail;
+            """))]
+
         # Do codegen for all the enums
         enums = config.getEnums(webIDLFile)
-        cgthings = [CGEnum(e) for e in enums]
+        cgthings.extend(CGEnum(e) for e in enums)
 
         hasCode = (descriptors or callbackDescriptors or dictionaries or
                    callbacks)
@@ -16949,7 +16956,7 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             // It's safe to use UnprivilegedJunkScopeOrWorkerGlobal here because
             // all we want is to wrap into _some_ scope and then unwrap to find
             // the reflector, and wrapping has no side-effects.
-            JSAutoCompartment tempCompartment(cx, binding_detail::UnprivilegedJunkScopeOrWorkerGlobal());
+            JSAutoCompartment tempCompartment(cx, UnprivilegedJunkScopeOrWorkerGlobal());
             JS::Rooted<JS::Value> v(cx);
             if(!ToJSValue(cx, self, &v)) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
