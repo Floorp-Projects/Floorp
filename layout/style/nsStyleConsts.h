@@ -573,9 +573,6 @@ enum class StyleDisplay : uint8_t {
 #define NS_STYLE_FONT_STYLE_OBLIQUE             NS_FONT_STYLE_OBLIQUE
 
 // See nsStyleFont
-// We should eventually stop using the NS_STYLE_* variants here.
-#define NS_STYLE_FONT_WEIGHT_NORMAL             NS_FONT_WEIGHT_NORMAL
-#define NS_STYLE_FONT_WEIGHT_BOLD               NS_FONT_WEIGHT_BOLD
 // The constants below appear only in style sheets and not computed style.
 #define NS_STYLE_FONT_WEIGHT_BOLDER             (-1)
 #define NS_STYLE_FONT_WEIGHT_LIGHTER            (-2)
