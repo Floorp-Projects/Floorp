@@ -874,6 +874,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
       if (aRetVal) {
         StructuredCloneData* data = aRetVal->AppendElement();
+        data->InitScope(JS::StructuredCloneScope::DifferentProcess);
         data->Write(cx, rval, aError);
         if (NS_WARN_IF(aError.Failed())) {
           aRetVal->RemoveLastElement();
