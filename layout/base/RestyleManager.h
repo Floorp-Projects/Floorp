@@ -201,10 +201,6 @@ public:
     return mUndisplayedRestyleGeneration;
   }
 
-  // Get an integer that increments every time there is a style change
-  // as a result of a change to the :hover content state.
-  uint32_t GetHoverGeneration() const { return mHoverGeneration; }
-
   void Disconnect() { mPresContext = nullptr; }
 
   static nsCString RestyleHintToString(nsRestyleHint aHint);
@@ -469,10 +465,6 @@ protected:
 
   bool IsDisconnected() const { return !mPresContext; }
 
-  void IncrementHoverGeneration() {
-    ++mHoverGeneration;
-  }
-
   void IncrementRestyleGeneration() {
     if (++mRestyleGeneration == 0) {
       // Keep mRestyleGeneration from being 0, since that's what
@@ -504,7 +496,6 @@ private:
   nsPresContext* mPresContext; // weak, can be null after Disconnect().
   uint64_t mRestyleGeneration;
   uint64_t mUndisplayedRestyleGeneration;
-  uint32_t mHoverGeneration;
 
   // Used to keep track of frames that have been destroyed during
   // ProcessRestyledFrames, so we don't try to touch them again even if

@@ -244,8 +244,6 @@ public:
   void WillPaintWindow() override;
   void DidPaintWindow() override;
   void ScheduleViewManagerFlush(PaintType aType = PAINT_DEFAULT) override;
-  void DispatchSynthMouseMove(WidgetGUIEvent* aEvent,
-                              bool aFlushOnHoverChange) override;
   void ClearMouseCaptureOnView(nsView* aView) override;
   bool IsVisible() override;
 
