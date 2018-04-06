@@ -121,9 +121,19 @@ global.replaceUrlInTab = (gBrowser, tab, url) => {
   return loaded;
 };
 
-// Manages tab-specific context data, and dispatching tab select events
-// across all windows.
+/**
+ * Manages tab-specific and window-specific context data, and dispatches
+ * tab select events across all windows.
+ */
 global.TabContext = class extends EventEmitter {
+  /**
+   * @param {Function} getDefaults
+   *        Provides the context value for a tab or window when there is none.
+   *        Called with a XULElement or ChromeWindow argument.
+   *        The returned value is cached.
+   * @param {Object} extension
+   *        The extension object.
+   */
   constructor(getDefaults, extension) {
     super();
 
@@ -136,16 +146,29 @@ global.TabContext = class extends EventEmitter {
     windowTracker.addListener("TabSelect", this);
   }
 
-  get(nativeTab) {
-    if (!this.tabData.has(nativeTab)) {
-      this.tabData.set(nativeTab, this.getDefaults(nativeTab));
+  /**
+   * Returns the context data associated with `keyObject`.
+   *
+   * @param {XULElement|ChromeWindow} keyObject
+   *        Browser tab or browser chrome window.
+   * @returns {any}
+   */
+  get(keyObject) {
+    if (!this.tabData.has(keyObject)) {
+      this.tabData.set(keyObject, this.getDefaults(keyObject));
     }
 
-    return this.tabData.get(nativeTab);
+    return this.tabData.get(keyObject);
   }
 
-  clear(nativeTab) {
-    this.tabData.delete(nativeTab);
+  /**
+   * Clears the context data associated with `keyObject`.
+   *
+   * @param {XULElement|ChromeWindow} keyObject
+   *        Browser tab or browser chrome window.
+   */
+  clear(keyObject) {
+    this.tabData.delete(keyObject);
   }
 
   handleEvent(event) {
@@ -164,6 +187,9 @@ global.TabContext = class extends EventEmitter {
     this.emit("location-change", tab, fromBrowse);
   }
 
+  /**
+   * Makes the TabContext instance stop emitting events.
+   */
   shutdown() {
     windowTracker.removeListener("progress", this);
     windowTracker.removeListener("TabSelect", this);
