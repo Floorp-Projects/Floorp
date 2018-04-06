@@ -1140,6 +1140,11 @@ public:
     microTaskQueue->push(runnable.forget());
   }
 
+  bool IsSystemCaller() const override
+  {
+    return mWorkerPrivate->UsesSystemPrincipal();
+  }
+
 private:
   WorkerPrivate* mWorkerPrivate;
 };

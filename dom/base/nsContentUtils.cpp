@@ -63,7 +63,7 @@
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/XULCommandEvent.h"
-#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
@@ -2379,11 +2379,10 @@ nsContentUtils::IsSystemCaller(JSContext* aCx)
 bool
 nsContentUtils::ThreadsafeIsSystemCaller(JSContext* aCx)
 {
-  if (NS_IsMainThread()) {
-    return IsSystemCaller(aCx);
-  }
+  CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
+  MOZ_ASSERT(ccjscx->Context() == aCx);
 
-  return GetWorkerPrivateFromContext(aCx)->UsesSystemPrincipal();
+  return ccjscx->IsSystemCaller();
 }
 
 // static

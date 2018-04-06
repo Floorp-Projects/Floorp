@@ -230,6 +230,12 @@ public:
     GetMicroTaskQueue().push(runnable.forget());
   }
 
+  bool IsSystemCaller() const override
+  {
+    // Currently no support for special system worklet privileges.
+    return false;
+  }
+
 private:
   RefPtr<WorkletThread> mWorkletThread;
 };
