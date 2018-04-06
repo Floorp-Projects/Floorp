@@ -2521,24 +2521,23 @@ class MethodDefiner(PropertyDefiner):
                 methodName = m.get("methodName", m["name"])
                 accessor = m.get("nativeName", IDLToCIdentifier(methodName))
                 if m.get("methodInfo", True):
+                    if m.get("returnsPromise", False):
+                        exceptionPolicy = "ConvertExceptionsToPromises"
+                    else:
+                        exceptionPolicy = "ThrowExceptions"
+
                     # Cast this in case the methodInfo is a
                     # JSTypedMethodJitInfo.
                     jitinfo = ("reinterpret_cast<const JSJitInfo*>(&%s_methodinfo)" % accessor)
                     if m.get("allowCrossOriginThis", False):
-                        if m.get("returnsPromise", False):
-                            raise TypeError("%s returns a Promise but should "
-                                            "be allowed cross-origin?" %
-                                            accessor)
-                        accessor = "genericCrossOriginMethod"
-                    elif self.descriptor.needsSpecialGenericOps():
-                        if m.get("returnsPromise", False):
-                            accessor = "genericPromiseReturningMethod"
-                        else:
-                            accessor = "genericMethod"
-                    elif m.get("returnsPromise", False):
-                        accessor = "GenericPromiseReturningBindingMethod"
+                        accessor = ("(GenericMethod<CrossOriginThisPolicy, %s>)" %
+                                    exceptionPolicy)
+                    elif self.descriptor.interface.isOnGlobalProtoChain():
+                        accessor = ("(GenericMethod<MaybeGlobalThisPolicy, %s>)" %
+                                    exceptionPolicy)
                     else:
-                        accessor = "GenericBindingMethod"
+                        accessor = ("(GenericMethod<NormalThisPolicy, %s>)" %
+                                    exceptionPolicy)
                 else:
                     if m.get("returnsPromise", False):
                         jitinfo = "&%s_methodinfo" % accessor
@@ -8619,74 +8618,6 @@ def MakeNativeName(name):
     return name[0].upper() + IDLToCIdentifier(name[1:])
 
 
-class CGGenericMethod(CGAbstractBindingMethod):
-    """
-    A class for generating the C++ code for an IDL method.
-
-    If allowCrossOriginThis is true, then this-unwrapping will first do an
-    UncheckedUnwrap and after that operate on the result.
-    """
-    def __init__(self, descriptor, allowCrossOriginThis=False):
-        unwrapFailureCode = (
-            'return ThrowInvalidThis(cx, args, %%(securityError)s, "%s");\n' %
-            descriptor.interface.identifier.name)
-        name = "genericCrossOriginMethod" if allowCrossOriginThis else "genericMethod"
-        CGAbstractBindingMethod.__init__(self, descriptor, name,
-                                         JSNativeArguments(),
-                                         unwrapFailureCode=unwrapFailureCode,
-                                         allowCrossOriginThis=allowCrossOriginThis)
-
-    def generate_code(self):
-        return CGGeneric(dedent("""
-            const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
-            MOZ_ASSERT(info->type() == JSJitInfo::Method);
-            JSJitMethodOp method = info->method;
-            bool ok = method(cx, obj, self, JSJitMethodCallArgs(args));
-            #ifdef DEBUG
-            if (ok) {
-              AssertReturnTypeMatchesJitinfo(info, args.rval());
-            }
-            #endif
-            return ok;
-            """))
-
-
-class CGGenericPromiseReturningMethod(CGAbstractBindingMethod):
-    """
-    A class for generating the C++ code for an IDL method that returns a Promise.
-
-    Does not handle cross-origin this.
-    """
-    def __init__(self, descriptor):
-        unwrapFailureCode = dedent("""
-            ThrowInvalidThis(cx, args, %%(securityError)s, "%s");\n
-            return ConvertExceptionToPromise(cx, args.rval());\n""" %
-                                   descriptor.interface.identifier.name)
-
-        name = "genericPromiseReturningMethod"
-
-        CGAbstractBindingMethod.__init__(self, descriptor, name,
-                                         JSNativeArguments(),
-                                         unwrapFailureCode=unwrapFailureCode)
-
-    def generate_code(self):
-        return CGGeneric(dedent("""
-            const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
-            MOZ_ASSERT(info->type() == JSJitInfo::Method);
-            JSJitMethodOp method = info->method;
-            bool ok = method(cx, obj, self, JSJitMethodCallArgs(args));
-            if (ok) {
-            #ifdef DEBUG
-              AssertReturnTypeMatchesJitinfo(info, args.rval());
-            #endif
-              return true;
-            }
-
-            MOZ_ASSERT(info->returnType() == JSVAL_TYPE_OBJECT);
-            return ConvertExceptionToPromise(cx, args.rval());
-            """))
-
-
 class CGSpecializedMethod(CGAbstractStaticMethod):
     """
     A class for generating the C++ code for a specialized method that the JIT
@@ -12368,9 +12299,7 @@ def stripTrailingWhitespace(text):
 
 class MemberProperties:
     def __init__(self):
-        self.isGenericMethod = False
         self.isCrossOriginMethod = False
-        self.isPromiseReturningMethod = False
         self.isCrossOriginGetter = False
         self.isCrossOriginSetter = False
         self.isJsonifier = False
@@ -12380,15 +12309,9 @@ def memberProperties(m, descriptor):
     props = MemberProperties()
     if m.isMethod():
         if m == descriptor.operations['Jsonifier']:
-            props.isGenericMethod = descriptor.needsSpecialGenericOps()
             props.isJsonifier = True
         elif (not m.isIdentifierLess() or m == descriptor.operations['Stringifier']):
             if not m.isStatic() and descriptor.interface.hasInterfacePrototypeObject():
-                if descriptor.needsSpecialGenericOps():
-                    if m.returnsPromise():
-                        props.isPromiseReturningMethod = True
-                    else:
-                        props.isGenericMethod = True
                 if m.getExtendedAttribute("CrossOriginCallable"):
                     props.isCrossOriginMethod = True
     elif m.isAttr():
@@ -12427,9 +12350,6 @@ class CGDescriptor(CGThing):
                                       "              \"Can't inherit from an interface with a different ownership model.\");\n" %
                                       toBindingNamespace(descriptor.parentPrototypeName)))
 
-        # These are set to true if at least one non-static
-        # method/getter/setter or jsonifier exist on the interface.
-        (hasMethod, hasPromiseReturningMethod) = (False, False)
         jsonifierMethod = None
         crossOriginMethods, crossOriginGetters, crossOriginSetters = set(), set(), set()
         unscopableNames = list()
@@ -12511,21 +12431,10 @@ class CGDescriptor(CGThing):
             if m.isConst() and m.type.isPrimitive():
                 cgThings.append(CGConstDefinition(m))
 
-            hasMethod = hasMethod or props.isGenericMethod
-            hasPromiseReturningMethod = (hasPromiseReturningMethod or
-                                         props.isPromiseReturningMethod)
-
         if jsonifierMethod:
             cgThings.append(CGJsonifyAttributesMethod(descriptor))
             cgThings.append(CGJsonifierMethod(descriptor, jsonifierMethod))
             cgThings.append(CGMemberJITInfo(descriptor, jsonifierMethod))
-        if hasMethod:
-            cgThings.append(CGGenericMethod(descriptor))
-        if hasPromiseReturningMethod:
-            cgThings.append(CGGenericPromiseReturningMethod(descriptor))
-        if len(crossOriginMethods):
-            cgThings.append(CGGenericMethod(descriptor,
-                                            allowCrossOriginThis=True))
         if descriptor.interface.isNavigatorProperty():
             cgThings.append(CGConstructNavigatorObject(descriptor))
 
