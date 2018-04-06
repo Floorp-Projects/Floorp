@@ -710,7 +710,7 @@ public:
    * Returns true if |aName| is a valid name to be registered via
    * customElements.define.
    */
-  static bool IsCustomElementName(nsAtom* aName, uint32_t aNameSpaceID);
+  static bool IsCustomElementName(nsAtom* aName);
 
   static nsresult CheckQName(const nsAString& aQualifiedName,
                              bool aNamespaceAware = true,
