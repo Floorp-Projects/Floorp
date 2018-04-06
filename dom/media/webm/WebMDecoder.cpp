@@ -10,6 +10,7 @@
 #include "AOMDecoder.h"
 #endif
 #include "MediaContainerType.h"
+#include "MediaPrefs.h"
 #include "PDMFactory.h"
 #include "VideoUtils.h"
 
@@ -69,7 +70,8 @@ WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
       }
     }
 #ifdef MOZ_AV1
-    if (isVideo && AOMDecoder::IsSupportedCodec(codec)) {
+    if (isVideo && MediaPrefs::AV1Enabled() &&
+        AOMDecoder::IsSupportedCodec(codec)) {
       continue;
     }
 #endif
