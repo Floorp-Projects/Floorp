@@ -174,5 +174,24 @@ AnimationInfo::HasTransformAnimation() const
   return false;
 }
 
+/* static */ Maybe<uint64_t>
+AnimationInfo::GetGenerationFromFrame(nsIFrame* aFrame,
+                                      DisplayItemType aDisplayItemKey)
+{
+  layers::Layer* layer =
+    FrameLayerBuilder::GetDedicatedLayer(aFrame, aDisplayItemKey);
+  if (layer) {
+    return Some(layer->GetAnimationInfo().GetAnimationGeneration());
+  }
+
+  RefPtr<WebRenderAnimationData> animationData =
+      GetWebRenderUserData<WebRenderAnimationData>(aFrame, (uint32_t)aDisplayItemKey);
+  if (animationData) {
+    return Some(animationData->GetAnimationInfo().GetAnimationGeneration());
+  }
+
+  return Nothing();
+}
+
 } // namespace layers
 } // namespace mozilla
