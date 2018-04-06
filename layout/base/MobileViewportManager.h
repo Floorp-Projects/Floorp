@@ -13,10 +13,15 @@
 #include "nsIObserver.h"
 #include "Units.h"
 
-class nsIDOMEventTarget;
 class nsIDocument;
 class nsIPresShell;
 class nsViewportInfo;
+
+namespace mozilla {
+namespace dom {
+class EventTarget;
+} // namespace dom
+} // namespace mozilla
 
 class MobileViewportManager final : public nsIDOMEventListener
                                   , public nsIObserver
@@ -91,7 +96,7 @@ private:
 
   nsCOMPtr<nsIDocument> mDocument;
   nsIPresShell* MOZ_NON_OWNING_REF mPresShell; // raw ref since the presShell owns this
-  nsCOMPtr<nsIDOMEventTarget> mEventTarget;
+  nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
   bool mIsFirstPaint;
   bool mPainted;
   mozilla::LayoutDeviceIntSize mDisplaySize;

@@ -9,6 +9,7 @@
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for dom::FillMode
 #include "mozilla/dom/KeyframeEffectBinding.h" // for dom::IterationComposite
 #include "mozilla/dom/KeyframeEffectReadOnly.h" // for dom::KeyFrameEffectReadOnly
+#include "mozilla/dom/Nullable.h" // for dom::Nullable
 #include "mozilla/layers/CompositorThread.h" // for CompositorThreadHolder
 #include "mozilla/layers/LayerAnimationUtils.h" // for TimingFunctionToComputedTimingFunction
 #include "mozilla/StyleAnimationValue.h" // for StyleAnimationValue, etc
@@ -183,7 +184,7 @@ AnimationHelper::SampleAnimationForEachNode(
 
     ComputedTiming computedTiming =
       dom::AnimationEffectReadOnly::GetComputedTimingAt(
-        Nullable<TimeDuration>(elapsedDuration), timing,
+        dom::Nullable<TimeDuration>(elapsedDuration), timing,
         animation.playbackRate());
 
     if (computedTiming.mProgress.IsNull()) {

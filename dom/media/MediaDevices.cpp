@@ -180,7 +180,7 @@ NS_IMPL_ISUPPORTS(MediaDevices::GumRejecter, nsIDOMGetUserMediaErrorCallback)
 
 already_AddRefed<Promise>
 MediaDevices::GetUserMedia(const MediaStreamConstraints& aConstraints,
-			   CallerType aCallerType,
+                           CallerType aCallerType,
                            ErrorResult &aRv)
 {
   RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
@@ -191,7 +191,7 @@ MediaDevices::GetUserMedia(const MediaStreamConstraints& aConstraints,
 
   aRv = MediaManager::Get()->GetUserMedia(GetOwner(), aConstraints,
                                           resolver, rejecter,
-					  aCallerType);
+                                          aCallerType);
   return p.forget();
 }
 
@@ -271,33 +271,11 @@ MediaDevices::SetOndevicechange(mozilla::dom::EventHandlerNonNull* aCallback)
   MediaManager::Get()->AddDeviceChangeCallback(this);
 }
 
-nsresult
-MediaDevices::AddEventListener(const nsAString& aType,
-  nsIDOMEventListener* aListener,
-  bool aUseCapture, bool aWantsUntrusted,
-  uint8_t optional_argc)
-{
-  MediaManager::Get()->AddDeviceChangeCallback(this);
-
-  return mozilla::DOMEventTargetHelper::AddEventListener(aType, aListener,
-    aUseCapture,
-    aWantsUntrusted,
-    optional_argc);
-}
-
 void
-MediaDevices::AddEventListener(const nsAString& aType,
-  dom::EventListener* aListener,
-  const dom::AddEventListenerOptionsOrBoolean& aOptions,
-  const dom::Nullable<bool>& aWantsUntrusted,
-  ErrorResult& aRv)
+MediaDevices::EventListenerAdded(nsAtom* aType)
 {
   MediaManager::Get()->AddDeviceChangeCallback(this);
-
-  return mozilla::DOMEventTargetHelper::AddEventListener(aType, aListener,
-    aOptions,
-    aWantsUntrusted,
-    aRv);
+  DOMEventTargetHelper::EventListenerAdded(aType);
 }
 
 JSObject*

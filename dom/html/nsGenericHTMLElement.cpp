@@ -546,17 +546,16 @@ nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(
          IsHTMLElement(nsGkAtoms::area);
 }
 
-nsresult
+void 
 nsGenericHTMLElement::GetEventTargetParentForAnchors(EventChainPreVisitor& aVisitor)
 {
-  nsresult rv = nsGenericHTMLElementBase::GetEventTargetParent(aVisitor);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsGenericHTMLElementBase::GetEventTargetParent(aVisitor);
 
   if (!CheckHandleEventForAnchorsPreconditions(aVisitor)) {
-    return NS_OK;
+    return;
   }
 
-  return GetEventTargetParentForLinks(aVisitor);
+  GetEventTargetParentForLinks(aVisitor);
 }
 
 nsresult
@@ -1932,7 +1931,7 @@ nsGenericHTMLFormElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                             aNotify);
 }
 
-nsresult
+void
 nsGenericHTMLFormElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   if (aVisitor.mEvent->IsTrusted() && (aVisitor.mEvent->mMessage == eFocus ||
@@ -1941,7 +1940,7 @@ nsGenericHTMLFormElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     // PreHandleEvent to prevent it breaks event target chain creation.
     aVisitor.mWantsPreHandleEvent = true;
   }
-  return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+  nsGenericHTMLElement::GetEventTargetParent(aVisitor);
 }
 
 nsresult

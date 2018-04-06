@@ -63,6 +63,10 @@ window {
   visibility: collapse;
 }
 
+#inspector-splitter-box .sidebar-toggle::before {
+  transform: unset;
+}
+
 /* Use flex layout for the Inspector toolbar. For now, it's done
    specifically for the Inspector toolbar since general rule applied
    on .devtools-toolbar breaks breadcrumbs and also toolbars in other

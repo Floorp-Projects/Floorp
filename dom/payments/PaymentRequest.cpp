@@ -936,8 +936,9 @@ PaymentRequest::DispatchUpdateEvent(const nsAString& aType)
   event->SetTrusted(true);
   event->SetRequest(this);
 
-  bool dummy;
-  return DispatchEvent(event, &dummy);
+  ErrorResult rv;
+  DispatchEvent(*event, rv);
+  return rv.StealNSResult();
 }
 
 already_AddRefed<PaymentAddress>

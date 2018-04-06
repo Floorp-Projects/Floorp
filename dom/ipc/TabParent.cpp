@@ -581,8 +581,7 @@ TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
 
   event->SetOwner(target);
 
-  bool dummy;
-  target->DispatchEvent(event, &dummy);
+  target->DispatchEvent(*event->InternalDOMEvent());
   return IPC_OK();
 }
 
@@ -3068,8 +3067,7 @@ TabParent::LayerTreeUpdate(uint64_t aEpoch, bool aActive)
   }
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-  bool dummy;
-  mFrameElement->DispatchEvent(event, &dummy);
+  mFrameElement->DispatchEvent(*event);
 }
 
 mozilla::ipc::IPCResult
@@ -3095,8 +3093,7 @@ TabParent::RecvRemotePaintIsReady()
   event->InitEvent(NS_LITERAL_STRING("MozAfterRemotePaint"), false, false);
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-  bool dummy;
-  mFrameElement->DispatchEvent(event, &dummy);
+  mFrameElement->DispatchEvent(*event);
   return IPC_OK();
 }
 

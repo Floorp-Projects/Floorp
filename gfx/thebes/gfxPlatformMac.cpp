@@ -18,6 +18,7 @@
 #include "nsTArray.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/VsyncDispatcher.h"
+#include "nsCocoaFeatures.h"
 #include "nsUnicodeProperties.h"
 #include "qcms.h"
 #include "gfx2DGlue.h"
@@ -633,4 +634,13 @@ gfxPlatformMac::GetPlatformCMSOutputProfile(void* &mem, size_t &size)
     }
 
     ::CFRelease(iccp);
+}
+
+bool
+gfxPlatformMac::CheckVariationFontSupport()
+{
+    // We don't allow variation fonts to be enabled before 10.12,
+    // as although the Core Text APIs existed, they are known to be
+    // fairly buggy.
+    return nsCocoaFeatures::OnSierraOrLater();
 }

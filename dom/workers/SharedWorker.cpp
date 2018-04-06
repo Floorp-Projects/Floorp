@@ -10,13 +10,14 @@
 
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/SharedWorkerBinding.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIDOMEvent.h"
 
 #include "RuntimeService.h"
 #include "WorkerPrivate.h"
@@ -109,28 +110,25 @@ SharedWorker::Thaw()
   mFrozen = false;
 
   if (!mFrozenEvents.IsEmpty()) {
-    nsTArray<nsCOMPtr<nsIDOMEvent>> events;
+    nsTArray<RefPtr<Event>> events;
     mFrozenEvents.SwapElements(events);
 
     for (uint32_t index = 0; index < events.Length(); index++) {
-      nsCOMPtr<nsIDOMEvent>& event = events[index];
+      RefPtr<Event>& event = events[index];
       MOZ_ASSERT(event);
 
-      nsCOMPtr<nsIDOMEventTarget> target;
-      if (NS_SUCCEEDED(event->GetTarget(getter_AddRefs(target)))) {
-        bool ignored;
-        if (NS_FAILED(target->DispatchEvent(event, &ignored))) {
-          NS_WARNING("Failed to dispatch event!");
-        }
-      } else {
-        NS_WARNING("Failed to get target!");
+      RefPtr<EventTarget> target = event->GetTarget();
+      ErrorResult rv;
+      target->DispatchEvent(*event, rv);
+      if (rv.Failed()) {
+        NS_WARNING("Failed to dispatch event!");
       }
     }
   }
 }
 
 void
-SharedWorker::QueueEvent(nsIDOMEvent* aEvent)
+SharedWorker::QueueEvent(Event* aEvent)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aEvent);
@@ -189,7 +187,7 @@ SharedWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return SharedWorkerBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsresult
+void
 SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   AssertIsOnMainThread();
@@ -202,12 +200,12 @@ SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor)
                                            aVisitor.mEvent, EmptyString());
     }
 
-    QueueEvent(event);
+    QueueEvent(event->InternalDOMEvent());
 
     aVisitor.mCanHandle = false;
     aVisitor.SetParentTarget(nullptr, false);
-    return NS_OK;
+    return;
   }
 
-  return DOMEventTargetHelper::GetEventTargetParent(aVisitor);
+  DOMEventTargetHelper::GetEventTargetParent(aVisitor);
 }

@@ -70,77 +70,24 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsWindowRoot)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsWindowRoot)
 
-NS_IMPL_DOMTARGET_DEFAULTS(nsWindowRoot)
-
-NS_IMETHODIMP
-nsWindowRoot::RemoveEventListener(const nsAString& aType, nsIDOMEventListener* aListener, bool aUseCapture)
-{
-  if (RefPtr<EventListenerManager> elm = GetExistingListenerManager()) {
-    elm->RemoveEventListener(aType, aListener, aUseCapture);
-  }
-  return NS_OK;
-}
-
-NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsWindowRoot)
-
-NS_IMETHODIMP
-nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, bool *aRetVal)
+bool
+nsWindowRoot::DispatchEvent(Event& aEvent, CallerType aCallerType,
+                            ErrorResult& aRv)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =  EventDispatcher::DispatchDOMEvent(
-    static_cast<EventTarget*>(this), nullptr, aEvt, nullptr, &status);
-  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWindowRoot::AddEventListener(const nsAString& aType,
-                               nsIDOMEventListener *aListener,
-                               bool aUseCapture, bool aWantsUntrusted,
-                               uint8_t aOptionalArgc)
-{
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  EventListenerManager* elm = GetOrCreateListenerManager();
-  NS_ENSURE_STATE(elm);
-  elm->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
-  return NS_OK;
-}
-
-void
-nsWindowRoot::AddEventListener(const nsAString& aType,
-                                EventListener* aListener,
-                                const AddEventListenerOptionsOrBoolean& aOptions,
-                                const Nullable<bool>& aWantsUntrusted,
-                                ErrorResult& aRv)
-{
-  bool wantsUntrusted = !aWantsUntrusted.IsNull() && aWantsUntrusted.Value();
-  EventListenerManager* elm = GetOrCreateListenerManager();
-  if (!elm) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
+    static_cast<EventTarget*>(this), nullptr, &aEvent, nullptr, &status);
+  bool retval = !aEvent.DefaultPrevented(aCallerType);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
   }
-  elm->AddEventListener(aType, aListener, aOptions, wantsUntrusted);
+  return retval;
 }
 
-
-NS_IMETHODIMP
-nsWindowRoot::AddSystemEventListener(const nsAString& aType,
-                                     nsIDOMEventListener *aListener,
-                                     bool aUseCapture,
-                                     bool aWantsUntrusted,
-                                     uint8_t aOptionalArgc)
+bool
+nsWindowRoot::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
 {
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  return NS_AddSystemEventListener(this, aType, aListener, aUseCapture,
-                                   aWantsUntrusted);
+  return false;
 }
 
 EventListenerManager*
@@ -160,14 +107,7 @@ nsWindowRoot::GetExistingListenerManager() const
   return mListenerManager;
 }
 
-nsIScriptContext*
-nsWindowRoot::GetContextForEventHandlers(nsresult* aRv)
-{
-  *aRv = NS_OK;
-  return nullptr;
-}
-
-nsresult
+void
 nsWindowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
@@ -175,7 +115,6 @@ nsWindowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   // To keep mWindow alive
   aVisitor.mItemData = static_cast<nsISupports *>(mWindow);
   aVisitor.SetParentTarget(mParent, false);
-  return NS_OK;
 }
 
 nsresult

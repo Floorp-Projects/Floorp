@@ -641,26 +641,4 @@ protected:
 
 } // namespace mozilla
 
-/**
- * NS_AddSystemEventListener() is a helper function for implementing
- * EventTarget::AddSystemEventListener().
- */
-inline nsresult
-NS_AddSystemEventListener(mozilla::dom::EventTarget* aTarget,
-                          const nsAString& aType,
-                          nsIDOMEventListener *aListener,
-                          bool aUseCapture,
-                          bool aWantsUntrusted)
-{
-  mozilla::EventListenerManager* listenerManager =
-    aTarget->GetOrCreateListenerManager();
-  NS_ENSURE_STATE(listenerManager);
-  mozilla::EventListenerFlags flags;
-  flags.mInSystemGroup = true;
-  flags.mCapture = aUseCapture;
-  flags.mAllowUntrustedEvents = aWantsUntrusted;
-  listenerManager->AddEventListenerByType(aListener, aType, flags);
-  return NS_OK;
-}
-
 #endif // mozilla_EventListenerManager_h_

@@ -4414,7 +4414,7 @@ static
 nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
                            const nsAString& aEventName,
                            bool aCanBubble, bool aCancelable,
-                           bool aTrusted, nsIDOMEvent** aEvent,
+                           bool aTrusted, Event** aEvent,
                            EventTarget** aTargetOut)
 {
   nsCOMPtr<EventTarget> target(do_QueryInterface(aTarget));
@@ -4468,7 +4468,7 @@ nsContentUtils::DispatchEvent(nsIDocument* aDoc, nsISupports* aTarget,
                               bool aTrusted, bool* aDefaultAction,
                               bool aOnlyChromeDispatch)
 {
-  nsCOMPtr<nsIDOMEvent> event;
+  RefPtr<Event> event;
   nsCOMPtr<EventTarget> target;
   nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
                                   aCancelable, aTrusted, getter_AddRefs(event),
@@ -4476,8 +4476,12 @@ nsContentUtils::DispatchEvent(nsIDocument* aDoc, nsISupports* aTarget,
   NS_ENSURE_SUCCESS(rv, rv);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = aOnlyChromeDispatch;
 
-  bool dummy;
-  return target->DispatchEvent(event, aDefaultAction ? aDefaultAction : &dummy);
+  ErrorResult err;
+  bool doDefault = target->DispatchEvent(*event, CallerType::System, err);
+  if (aDefaultAction) {
+    *aDefaultAction = doDefault;
+  }
+  return err.StealNSResult();
 }
 
 // static
@@ -4522,7 +4526,7 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
                                     bool* aDefaultAction)
 {
 
-  nsCOMPtr<nsIDOMEvent> event;
+  RefPtr<Event> event;
   nsCOMPtr<EventTarget> target;
   nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
                                   aCancelable, true, getter_AddRefs(event),
@@ -4537,12 +4541,13 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
   if (!piTarget)
     return NS_ERROR_INVALID_ARG;
 
-  bool defaultActionEnabled;
-  rv = piTarget->DispatchEvent(event, &defaultActionEnabled);
+  ErrorResult err;
+  bool defaultActionEnabled =
+    piTarget->DispatchEvent(*event, CallerType::System, err);
   if (aDefaultAction) {
     *aDefaultAction = defaultActionEnabled;
   }
-  return rv;
+  return err.StealNSResult();
 }
 
 /* static */
@@ -6054,35 +6059,6 @@ nsContentUtils::URIIsLocalFile(nsIURI *aURI)
 }
 
 /* static */
-nsIScriptContext*
-nsContentUtils::GetContextForEventHandlers(nsINode* aNode,
-                                           nsresult* aRv)
-{
-  *aRv = NS_OK;
-  bool hasHadScriptObject = true;
-  nsIScriptGlobalObject* sgo =
-    aNode->OwnerDoc()->GetScriptHandlingObject(hasHadScriptObject);
-  // It is bad if the document doesn't have event handling context,
-  // but it used to have one.
-  if (!sgo && hasHadScriptObject) {
-    *aRv = NS_ERROR_UNEXPECTED;
-    return nullptr;
-  }
-
-  if (sgo) {
-    nsIScriptContext* scx = sgo->GetContext();
-    // Bad, no context from script global object!
-    if (!scx) {
-      *aRv = NS_ERROR_UNEXPECTED;
-      return nullptr;
-    }
-    return scx;
-  }
-
-  return nullptr;
-}
-
-/* static */
 JSContext *
 nsContentUtils::GetCurrentJSContext()
 {
@@ -6609,10 +6585,9 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
     return aShell->HandleDOMEventWithTarget(aTarget, xulCommand, &status);
   }
 
-  nsCOMPtr<EventTarget> target = do_QueryInterface(aTarget);
-  NS_ENSURE_STATE(target);
-  bool dummy;
-  return target->DispatchEvent(xulCommand, &dummy);
+  ErrorResult rv;
+  aTarget->DispatchEvent(*xulCommand, rv);
+  return rv.StealNSResult();
 }
 
 // static
