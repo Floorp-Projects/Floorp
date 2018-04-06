@@ -401,10 +401,10 @@ function checkAddon(id, addon, expected) {
   } else {
     ok(addon, `Addon ${id} should exist`);
     for (let [key, value] of Object.entries(expected)) {
-      if (value && typeof value === "object") {
-        deepEqual(addon[key], value, `Expected value of addon.${key}`);
+      if (value instanceof Ci.nsIURI) {
+        equal(addon[key] && addon[key].spec, value.spec, `Expected value of addon.${key}`);
       } else {
-        equal(addon[key], value, `Expected value of addon.${key}`);
+        deepEqual(addon[key], value, `Expected value of addon.${key}`);
       }
     }
   }
