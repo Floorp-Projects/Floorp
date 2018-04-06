@@ -629,81 +629,6 @@ ReadStructuredClone(JSContext* cx, JSStructuredCloneData& data,
     return r.read(vp);
 }
 
-// If the given buffer contains Transferables, free them. Note that custom
-// Transferables will use the JSStructuredCloneCallbacks::freeTransfer() to
-// delete their transferables.
-template<typename AllocPolicy>
-static void
-DiscardTransferables(mozilla::BufferList<AllocPolicy>& buffer,
-                     const JSStructuredCloneCallbacks* cb, void* cbClosure)
-{
-    auto point = BufferIterator<uint64_t, AllocPolicy>(buffer);
-    if (point.done())
-        return; // Empty buffer
-
-    uint32_t tag, data;
-    MOZ_RELEASE_ASSERT(point.canPeek());
-    SCInput::getPair(point.peek(), &tag, &data);
-    point.next();
-
-    if (tag == SCTAG_HEADER) {
-        if (point.done())
-            return;
-
-        MOZ_RELEASE_ASSERT(point.canPeek());
-        SCInput::getPair(point.peek(), &tag, &data);
-        point.next();
-    }
-
-    if (tag != SCTAG_TRANSFER_MAP_HEADER)
-        return;
-
-    if (TransferableMapHeader(data) == SCTAG_TM_TRANSFERRED)
-        return;
-
-    // freeTransfer should not GC
-    JS::AutoSuppressGCAnalysis nogc;
-
-    if (point.done())
-        return;
-
-    uint64_t numTransferables = NativeEndian::swapFromLittleEndian(point.peek());
-    point.next();
-    while (numTransferables--) {
-        if (!point.canPeek())
-            return;
-
-        uint32_t ownership;
-        SCInput::getPair(point.peek(), &tag, &ownership);
-        point.next();
-        MOZ_ASSERT(tag >= SCTAG_TRANSFER_MAP_PENDING_ENTRY);
-        if (!point.canPeek())
-            return;
-
-        void* content;
-        SCInput::getPtr(point.peek(), &content);
-        point.next();
-        if (!point.canPeek())
-            return;
-
-        uint64_t extraData = NativeEndian::swapFromLittleEndian(point.peek());
-        point.next();
-
-        if (ownership < JS::SCTAG_TMO_FIRST_OWNED)
-            continue;
-
-        if (ownership == JS::SCTAG_TMO_ALLOC_DATA) {
-            js_free(content);
-        } else if (ownership == JS::SCTAG_TMO_MAPPED_DATA) {
-            JS_ReleaseMappedArrayBufferContents(content, extraData);
-        } else if (cb && cb->freeTransfer) {
-            cb->freeTransfer(tag, JS::TransferableOwnership(ownership), content, extraData, cbClosure);
-        } else {
-            MOZ_ASSERT(false, "unknown ownership");
-        }
-    }
-}
-
 static bool
 StructuredCloneHasTransferObjects(const JSStructuredCloneData& data)
 {
@@ -1015,13 +940,87 @@ SCOutput::discardTransferables()
 } // namespace js
 
 
+// If the buffer contains Transferables, free them. Note that custom
+// Transferables will use the JSStructuredCloneCallbacks::freeTransfer() to
+// delete their transferables.
 void
 JSStructuredCloneData::discardTransferables()
 {
     if (!Size())
         return;
-    if (ownTransferables_ == OwnTransferablePolicy::OwnsTransferablesIfAny)
-        DiscardTransferables(bufList_, callbacks_, closure_);
+
+    if (ownTransferables_ != OwnTransferablePolicy::OwnsTransferablesIfAny)
+        return;
+
+    FreeTransferStructuredCloneOp freeTransfer = nullptr;
+    if (callbacks_)
+        freeTransfer = callbacks_->freeTransfer;
+
+    auto point = BufferIterator<uint64_t, SystemAllocPolicy>(*this);
+    if (point.done())
+        return; // Empty buffer
+
+    uint32_t tag, data;
+    MOZ_RELEASE_ASSERT(point.canPeek());
+    SCInput::getPair(point.peek(), &tag, &data);
+    point.next();
+
+    if (tag == SCTAG_HEADER) {
+        if (point.done())
+            return;
+
+        MOZ_RELEASE_ASSERT(point.canPeek());
+        SCInput::getPair(point.peek(), &tag, &data);
+        point.next();
+    }
+
+    if (tag != SCTAG_TRANSFER_MAP_HEADER)
+        return;
+
+    if (TransferableMapHeader(data) == SCTAG_TM_TRANSFERRED)
+        return;
+
+    // freeTransfer should not GC
+    JS::AutoSuppressGCAnalysis nogc;
+
+    if (point.done())
+        return;
+
+    uint64_t numTransferables = NativeEndian::swapFromLittleEndian(point.peek());
+    point.next();
+    while (numTransferables--) {
+        if (!point.canPeek())
+            return;
+
+        uint32_t ownership;
+        SCInput::getPair(point.peek(), &tag, &ownership);
+        point.next();
+        MOZ_ASSERT(tag >= SCTAG_TRANSFER_MAP_PENDING_ENTRY);
+        if (!point.canPeek())
+            return;
+
+        void* content;
+        SCInput::getPtr(point.peek(), &content);
+        point.next();
+        if (!point.canPeek())
+            return;
+
+        uint64_t extraData = NativeEndian::swapFromLittleEndian(point.peek());
+        point.next();
+
+        if (ownership < JS::SCTAG_TMO_FIRST_OWNED)
+            continue;
+
+        if (ownership == JS::SCTAG_TMO_ALLOC_DATA) {
+            js_free(content);
+        } else if (ownership == JS::SCTAG_TMO_MAPPED_DATA) {
+            JS_ReleaseMappedArrayBufferContents(content, extraData);
+        } else if (freeTransfer) {
+            freeTransfer(tag, JS::TransferableOwnership(ownership), content, extraData, closure_);
+        } else {
+            MOZ_ASSERT(false, "unknown ownership");
+        }
+    }
 }
 
 JS_STATIC_ASSERT(JSString::MAX_LENGTH < UINT32_MAX);
