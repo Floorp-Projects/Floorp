@@ -122,30 +122,6 @@ textbox[disabled] {
 }
 
 /* General Tab */
-groupbox.collapsable caption .caption-icon {
-  width: 9px;
-  height: 9px;
-  background-repeat: no-repeat;
-  background-position: center;
-  margin-inline-start: 2px;
-  margin-inline-end: 2px;
-  background-image: url("chrome://global/skin/tree/twisty.svg#open");
-}
-
-groupbox.collapsable[closed="true"] {
-  border: none;
-  margin-bottom: 9px;
-  -moz-appearance: none;
-}
-
-groupbox.collapsable[closed="true"] caption .caption-icon {
-  background-image: url("chrome://global/skin/tree/twisty.svg#clsd");
-}
-
-groupbox tree {
-  margin: 0 3px;
-  border: none;
-}
 
 #securityBox description {
   margin-inline-start: 10px;

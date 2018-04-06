@@ -54,40 +54,6 @@ toolbarpaletteitem {
   cursor: grab;
 }
 
-.toolbarpaletteitem-box[type="spacer"],
-.toolbarpaletteitem-box[type="spring"] {
-  border: 1px solid #808080;
-  background-color: #FFF !important;
-}
-
-toolbarpaletteitem[place="toolbar"] > toolbarspacer {
-  width: 11px;
-}
-
-.toolbarpaletteitem-box[type="spacer"][place="toolbar"],
-.toolbarpaletteitem-box[type="spring"][place="toolbar"] {
-  margin-top: 2px;
-  margin-bottom: 2px;
-  margin-inline-start: 0px;
-  margin-inline-end: 2px;
-}
-
-.toolbarpaletteitem-box[type="separator"][place="palette"] {
-  width: 2px;
-  height: 50px;
-}
-
-.toolbarpaletteitem-box[type="spacer"][place="palette"],
-.toolbarpaletteitem-box[type="spring"][place="palette"] {
-  margin-bottom: 2px;
-  width: 50px;
-  height: 50px;
-}
-
-.toolbarpaletteitem-box[type="spring"][place="palette"] {
-  background: url("chrome://global/skin/toolbar/spring.png") no-repeat center;
-}
-
 /* ..... drag and drop feedback ..... */
 
 toolbarpaletteitem[place="toolbar"] {

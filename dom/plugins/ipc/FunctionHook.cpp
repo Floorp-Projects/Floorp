@@ -296,16 +296,23 @@ CreateFileWHookFn(LPCWSTR aFname, DWORD aAccess, DWORD aShare,
 
 void FunctionHook::HookProtectedMode()
 {
+  // Make sure we only do this once.
+  static bool sRunOnce = false;
+  if (sRunOnce) {
+    return;
+  }
+  sRunOnce = true;
+
   // Legacy code.  Uses the nsWindowsDLLInterceptor directly instead of
   // using the FunctionHook
+  sKernel32Intercept.Init("kernel32.dll");
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Plugin);
-  WindowsDllInterceptor k32Intercept("kernel32.dll");
-  k32Intercept.AddHook("CreateFileW",
-                       reinterpret_cast<intptr_t>(CreateFileWHookFn),
-                       (void**) &sCreateFileWStub);
-  k32Intercept.AddHook("CreateFileA",
-                       reinterpret_cast<intptr_t>(CreateFileAHookFn),
-                       (void**) &sCreateFileAStub);
+  sKernel32Intercept.AddHook("CreateFileW",
+                             reinterpret_cast<intptr_t>(CreateFileWHookFn),
+                             (void**) &sCreateFileWStub);
+  sKernel32Intercept.AddHook("CreateFileA",
+                             reinterpret_cast<intptr_t>(CreateFileAHookFn),
+                             (void**) &sCreateFileAStub);
 }
 
 #endif // defined(XP_WIN)

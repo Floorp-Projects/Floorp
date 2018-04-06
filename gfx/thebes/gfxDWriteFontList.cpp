@@ -1450,6 +1450,12 @@ gfxDWriteFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
 {
     gfxPlatformFontList::AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
 
+    // We are a singleton, so include the font loader singleton's memory.
+    MOZ_ASSERT(static_cast<const gfxPlatformFontList*>(this) == gfxPlatformFontList::PlatformFontList());
+    gfxDWriteFontFileLoader* loader =
+      static_cast<gfxDWriteFontFileLoader*>(gfxDWriteFontFileLoader::Instance());
+    aSizes->mLoaderSize += loader->SizeOfIncludingThis(aMallocSizeOf);
+
     aSizes->mFontListSize +=
         SizeOfFontFamilyTableExcludingThis(mFontSubstitutes, aMallocSizeOf);
 

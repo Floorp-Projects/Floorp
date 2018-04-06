@@ -27,6 +27,23 @@ DataOffset(const IntPoint& aPoint, int32_t aStride, SurfaceFormat aFormat)
   return data;
 }
 
+static bool
+CheckUploadBounds(const IntSize& aDst, const IntSize& aSrc, const IntPoint& aOffset)
+{
+  if (aOffset.x < 0 || aOffset.y < 0 ||
+      aOffset.x >= aSrc.width ||
+      aOffset.y >= aSrc.height) {
+    MOZ_ASSERT_UNREACHABLE("Offset outside source bounds");
+    return false;
+  }
+  if (aDst.width > (aSrc.width - aOffset.x) ||
+      aDst.height > (aSrc.height - aOffset.y)) {
+    MOZ_ASSERT_UNREACHABLE("Source has insufficient data");
+    return false;
+  }
+  return true;
+}
+
 static GLint GetAddressAlignment(ptrdiff_t aAddress)
 {
     if (!(aAddress & 0x7)) {
@@ -375,6 +392,7 @@ TexImage2DHelper(GLContext* gl,
 SurfaceFormat
 UploadImageDataToTexture(GLContext* gl,
                          unsigned char* aData,
+                         const gfx::IntSize& aDataSize,
                          int32_t aStride,
                          SurfaceFormat aFormat,
                          const nsIntRegion& aDstRegion,
@@ -506,6 +524,10 @@ UploadImageDataToTexture(GLContext* gl,
         // Upload each rect in the region to the texture
         for (auto iter = aDstRegion.RectIter(); !iter.Done(); iter.Next()) {
             const IntRect& rect = iter.Get();
+            if (!CheckUploadBounds(rect.Size(), aDataSize, rect.TopLeft())) {
+                return SurfaceFormat::UNKNOWN;
+            }
+
             const unsigned char* rectData =
                 aData + DataOffset(rect.TopLeft(), aStride, aFormat);
 
@@ -542,10 +564,17 @@ UploadSurfaceToTexture(GLContext* gl,
     DataSourceSurface::ScopedMap map(aSurface, DataSourceSurface::READ);
     int32_t stride = map.GetStride();
     SurfaceFormat format = aSurface->GetFormat();
+    gfx::IntSize size = aSurface->GetSize();
+    if (!CheckUploadBounds(aSize, size, aSrcPoint)) {
+        return SurfaceFormat::UNKNOWN;
+    }
+
     unsigned char* data = map.GetData() +
         DataOffset(aSrcPoint, stride, format);
+    size.width -= aSrcPoint.x;
+    size.height -= aSrcPoint.y;
 
-    return UploadImageDataToTexture(gl, data, stride, format,
+    return UploadImageDataToTexture(gl, data, size, stride, format,
                                     aDstRegion, aTexture, aSize,
                                     aOutUploadSize, aNeedInit,
                                     aTextureUnit, aTextureTarget);

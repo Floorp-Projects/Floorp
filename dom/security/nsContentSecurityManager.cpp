@@ -159,8 +159,8 @@ nsContentSecurityManager::AllowInsecureRedirectToDataURI(nsIChannel* aNewChannel
   return false;
 }
 
-/* static */ bool
-nsContentSecurityManager::AllowFTPSubresourceLoad(nsIChannel* aChannel)
+/* static */ nsresult
+nsContentSecurityManager::CheckFTPSubresourceLoad(nsIChannel* aChannel)
 {
   // We dissallow using FTP resources as a subresource everywhere.
   // The only valid way to use FTP resources is loading it as
@@ -168,23 +168,24 @@ nsContentSecurityManager::AllowFTPSubresourceLoad(nsIChannel* aChannel)
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   if (!loadInfo) {
-    return true;
+    return NS_OK;
   }
 
   nsContentPolicyType type = loadInfo->GetExternalContentPolicyType();
   if (type == nsIContentPolicy::TYPE_DOCUMENT) {
-    return true;
+    return NS_OK;
   }
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
-  if (NS_FAILED(rv) || !uri) {
-    return true;
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!uri) {
+    return NS_OK;
   }
 
   bool isFtpURI = (NS_SUCCEEDED(uri->SchemeIs("ftp", &isFtpURI)) && isFtpURI);
   if (!isFtpURI) {
-    return true;
+    return NS_OK;
   }
 
   nsCOMPtr<nsIDocument> doc;
@@ -204,7 +205,7 @@ nsContentSecurityManager::AllowFTPSubresourceLoad(nsIChannel* aChannel)
                                   "BlockSubresourceFTP",
                                   params, ArrayLength(params));
 
-  return false;
+  return NS_ERROR_CONTENT_BLOCKED;
 }
 
 static nsresult
@@ -654,6 +655,10 @@ nsContentSecurityManager::doContentSecurityCheck(nsIChannel* aChannel,
   rv = DoContentSecurityChecks(aChannel, loadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Apply this after CSP to match Chrome.
+  rv = CheckFTPSubresourceLoad(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // now lets set the initalSecurityFlag for subsequent calls
   loadInfo->SetInitialSecurityCheckDone(true);
 
@@ -671,6 +676,9 @@ nsContentSecurityManager::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   // Are we enforcing security using LoadInfo?
   if (loadInfo && loadInfo->GetEnforceSecurity()) {
     nsresult rv = CheckChannel(aNewChannel);
+    if (NS_SUCCEEDED(rv)) {
+      rv = CheckFTPSubresourceLoad(aNewChannel);
+    }
     if (NS_FAILED(rv)) {
       aOldChannel->Cancel(rv);
       return rv;
@@ -804,10 +812,6 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
     NS_ENSURE_SUCCESS(rv, rv);
     // TODO: Bug 1371237
     // consider calling SetBlockedRequest in nsContentSecurityManager::CheckChannel
-  }
-
-  if (!AllowFTPSubresourceLoad(aChannel)) {
-    return NS_ERROR_CONTENT_BLOCKED;
   }
 
   return NS_OK;
