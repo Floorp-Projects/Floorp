@@ -239,6 +239,8 @@ public:
   JS::PersistentRooted<JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>> mConsumedRejections;
   nsTArray<nsCOMPtr<nsISupports /* UncaughtRejectionObserver */ >> mUncaughtRejectionObservers;
 
+  virtual bool IsSystemCaller() const = 0;
+
 private:
   // A primary context owns the mRuntime. Non-main-thread contexts should always
   // be primary. On the main thread, the primary context should be the first one

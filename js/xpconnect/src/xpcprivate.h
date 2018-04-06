@@ -413,6 +413,8 @@ public:
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
+    bool IsSystemCaller() const override;
+
     AutoMarkingPtr** GetAutoRootsAdr() {return &mAutoRoots;}
 
     nsresult GetPendingResult() { return mPendingResult; }
