@@ -78,6 +78,14 @@ def get_type(type, calltype, iid_is=None, size_is=None):
             'name': type.name,
         }
 
+    if isinstance(type, xpidl.WebIDL):
+        return {
+            'tag': 'TD_DOMOBJECT',
+            'name': type.name,
+            'native': type.native,
+            'headerFile': type.headerFile,
+        }
+
     if isinstance(type, xpidl.Native):
         if type.specialtype:
             return {
