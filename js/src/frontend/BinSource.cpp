@@ -189,7 +189,7 @@ BinASTParser::buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind fu
         functionAsyncKind));
 
     traceListHead_ = funbox;
-    FunctionSyntaxKind syntax = Expression; // FIXME - What if we're assigning?
+    FunctionSyntaxKind syntax = FunctionSyntaxKind::Expression; // FIXME - What if we're assigning?
     // FIXME: The only thing we need to know is whether this is a
     // ClassConstructor/DerivedClassConstructor
     funbox->initWithEnclosingParseContext(parseContext_, syntax);

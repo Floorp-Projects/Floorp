@@ -7207,14 +7207,16 @@ ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
                                                     FunctionAsyncKind::SyncFunction);
     if (!funbox)
         return false;
-    funbox->initWithEnclosingParseContext(outerpc, frontend::Statement);
+    funbox->initWithEnclosingParseContext(outerpc, FunctionSyntaxKind::Statement);
 
     Directives newDirectives = directives;
     SourceParseContext funpc(&m.parser(), funbox, &newDirectives);
     if (!funpc.init())
         return false;
 
-    if (!m.parser().functionFormalParametersAndBody(InAllowed, YieldIsName, &fn, Statement)) {
+    if (!m.parser().functionFormalParametersAndBody(InAllowed, YieldIsName, &fn,
+                                                    FunctionSyntaxKind::Statement))
+    {
         if (anyChars.hadError() || directives == newDirectives)
             return false;
 
