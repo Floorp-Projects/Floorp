@@ -53,11 +53,11 @@ add_task(async function test_policy_disable_masterpassword() {
 
   await setupPolicyEngineWithJson({
     "policies": {
-      "CreateMasterPassword": false
+      "DisableMasterPasswordCreation": true
     }
   });
 
-  // With the `CreateMasterPassword: false` policy active, the
+  // With the `DisableMasterPasswordCreation: true` policy active, the
   // UI entry points for creating a Master Password should be disabled.
   await checkDeviceManager({buttonIsDisabled: true});
   await checkAboutPreferences({checkboxIsDisabled: true});
