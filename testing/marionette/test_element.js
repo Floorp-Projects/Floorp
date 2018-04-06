@@ -358,15 +358,37 @@ add_test(function test_WebElement_from() {
 });
 
 add_test(function test_WebElement_fromJSON_ContentWebElement() {
-  const {Identifier} = ContentWebElement;
+  const {Identifier, LegacyIdentifier} = ContentWebElement;
 
-  let ref = {[Identifier]: "foo"};
-  let webEl = WebElement.fromJSON(ref);
-  ok(webEl instanceof ContentWebElement);
-  equal(webEl.uuid, "foo");
+  let refNew = {[Identifier]: "foo"};
+  let webElNew = WebElement.fromJSON(refNew);
+  ok(webElNew instanceof ContentWebElement);
+  equal(webElNew.uuid, "foo");
+
+  let refOld = {[LegacyIdentifier]: "foo"};
+  let webElOld = WebElement.fromJSON(refOld);
+  ok(webElOld instanceof ContentWebElement);
+  equal(webElOld.uuid, "foo");
+
+  ok(webElNew.is(webElOld));
+  ok(webElOld.is(webElNew));
+
+  let refBoth = {
+    [Identifier]: "foo",
+    [LegacyIdentifier]: "foo",
+  };
+  let webElBoth = WebElement.fromJSON(refBoth);
+  ok(webElBoth instanceof ContentWebElement);
+  equal(webElBoth.uuid, "foo");
+
+  ok(webElBoth.is(webElNew));
+  ok(webElBoth.is(webElOld));
+  ok(webElNew.is(webElBoth));
+  ok(webElOld.is(webElBoth));
 
   let identifierPrecedence = {
     [Identifier]: "identifier-uuid",
+    [LegacyIdentifier]: "legacyidentifier-uuid",
   };
   let precedenceEl = WebElement.fromJSON(identifierPrecedence);
   ok(precedenceEl instanceof ContentWebElement);
@@ -428,6 +450,7 @@ add_test(function test_WebElement_isReference() {
   }
 
   ok(WebElement.isReference({[ContentWebElement.Identifier]: "foo"}));
+  ok(WebElement.isReference({[ContentWebElement.LegacyIdentifier]: "foo"}));
   ok(WebElement.isReference({[ContentWebWindow.Identifier]: "foo"}));
   ok(WebElement.isReference({[ContentWebFrame.Identifier]: "foo"}));
   ok(WebElement.isReference({[ChromeWebElement.Identifier]: "foo"}));
@@ -441,23 +464,37 @@ add_test(function test_WebElement_generateUUID() {
 });
 
 add_test(function test_ContentWebElement_toJSON() {
-  const {Identifier} = ContentWebElement;
+  const {Identifier, LegacyIdentifier} = ContentWebElement;
 
   let el = new ContentWebElement("foo");
   let json = el.toJSON();
 
   ok(Identifier in json);
+  ok(LegacyIdentifier in json);
   equal(json[Identifier], "foo");
+  equal(json[LegacyIdentifier], "foo");
 
   run_next_test();
 });
 
 add_test(function test_ContentWebElement_fromJSON() {
-  const {Identifier} = ContentWebElement;
+  const {Identifier, LegacyIdentifier} = ContentWebElement;
 
-  let el = ContentWebElement.fromJSON({[Identifier]: "foo"});
-  ok(el instanceof ContentWebElement);
-  equal(el.uuid, "foo");
+  let newEl = ContentWebElement.fromJSON({[Identifier]: "foo"});
+  ok(newEl instanceof ContentWebElement);
+  equal(newEl.uuid, "foo");
+
+  let oldEl = ContentWebElement.fromJSON({[LegacyIdentifier]: "foo"});
+  ok(oldEl instanceof ContentWebElement);
+  equal(oldEl.uuid, "foo");
+
+  let bothRef = {
+    [Identifier]: "identifier-uuid",
+    [LegacyIdentifier]: "legacyidentifier-foo",
+  };
+  let bothEl = ContentWebElement.fromJSON(bothRef);
+  ok(bothEl instanceof ContentWebElement);
+  equal(bothEl.uuid, "identifier-uuid");
 
   Assert.throws(() => ContentWebElement.fromJSON({}), InvalidArgumentError);
 
