@@ -7,6 +7,7 @@ loader: taskgraph.loader.transform:loader
 kind-dependencies:
    - beetmover-source
    - post-beetmover-checksums-dummy
+   - release-beetmover-signed-langpacks
 
 transforms:
    - taskgraph.transforms.build:transforms

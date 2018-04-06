@@ -12,6 +12,7 @@ transforms:
 
 kind-dependencies:
    - post-beetmover-dummy
+   - release-beetmover-signed-langpacks
 
 job-defaults:
    description: Generates snap image
