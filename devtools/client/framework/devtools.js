@@ -705,15 +705,6 @@ DevTools.prototype = {
   getToolboxes() {
     return Array.from(this._toolboxes.values());
   },
-
-  /**
-   * Iterator that yields each of the toolboxes.
-   */
-  * [Symbol.iterator ]() {
-    for (let toolbox of this._toolboxes) {
-      yield toolbox;
-    }
-  }
 };
 
 const gDevTools = exports.gDevTools = new DevTools();
