@@ -12,6 +12,7 @@ import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import mozilla.components.domains.CustomDomains
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -34,7 +35,7 @@ class AutocompleteRemoveFragment : AutocompleteListFragment() {
         if (domains.isNotEmpty()) {
             launch(UI) {
                 async {
-                    CustomAutocomplete.removeDomains(context, domains)
+                    CustomDomains.remove(context, domains)
 
                     TelemetryWrapper.removeAutocompleteDomainsEvent(domains.size)
                 }.await()

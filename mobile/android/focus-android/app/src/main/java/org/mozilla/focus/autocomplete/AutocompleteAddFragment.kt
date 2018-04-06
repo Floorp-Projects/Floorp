@@ -16,6 +16,7 @@ import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_autocomplete_add_domain.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
+import mozilla.components.domains.CustomDomains
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.removePrefixesIgnoreCase
 import org.mozilla.focus.settings.BaseSettingsFragment
@@ -73,7 +74,7 @@ class AutocompleteAddFragment : Fragment() {
 
     private fun saveDomainAndClose(context: Context, domain: String) {
         launch(CommonPool) {
-            CustomAutocomplete.addDomain(context, domain)
+            CustomDomains.add(context, domain)
 
             TelemetryWrapper.saveAutocompleteDomainEvent()
         }

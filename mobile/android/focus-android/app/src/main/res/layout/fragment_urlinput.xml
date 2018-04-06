@@ -72,7 +72,7 @@
                 android:layout_height="match_parent"
                 android:orientation="horizontal">
 
-                <org.mozilla.focus.widget.InlineAutocompleteEditText
+                <mozilla.components.ui.autocomplete.InlineAutocompleteEditText
                     android:id="@+id/urlView"
                     android:layout_width="0dp"
                     android:layout_height="40dp"

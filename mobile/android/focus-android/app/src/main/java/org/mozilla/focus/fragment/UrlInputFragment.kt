@@ -17,9 +17,11 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import kotlinx.android.synthetic.main.fragment_urlinput.*
+import mozilla.components.domains.DomainAutoCompleteProvider
+import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
+import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
 import mozilla.components.utils.ThreadUtils
 import org.mozilla.focus.R
-import org.mozilla.focus.autocomplete.UrlAutoCompleteFilter
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.menu.home.HomeMenu
@@ -34,7 +36,6 @@ import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.whatsnew.WhatsNew
-import org.mozilla.focus.widget.InlineAutocompleteEditText
 
 /**
  * Fragment for displaying the URL input controls.
@@ -44,9 +45,7 @@ import org.mozilla.focus.widget.InlineAutocompleteEditText
 @Suppress("LargeClass", "TooManyFunctions")
 class UrlInputFragment :
         LocaleAwareFragment(),
-        View.OnClickListener,
-        InlineAutocompleteEditText.OnCommitListener,
-        InlineAutocompleteEditText.OnFilterListener {
+        View.OnClickListener {
     companion object {
         @JvmField
         val FRAGMENT_TAG = "url_input"
@@ -111,7 +110,7 @@ class UrlInputFragment :
         }
     }
 
-    private val urlAutoCompleteFilter: UrlAutoCompleteFilter = UrlAutoCompleteFilter()
+    private val autoCompleteProvider: DomainAutoCompleteProvider = DomainAutoCompleteProvider()
     private var displayedPopupMenu: HomeMenu? = null
 
     @Volatile
@@ -135,7 +134,10 @@ class UrlInputFragment :
         super.onResume()
 
         activity?.let {
-            urlAutoCompleteFilter.load(it.applicationContext)
+            val settings = Settings.getInstance(it.applicationContext)
+            val useCustomDomains = settings.shouldAutocompleteFromCustomDomainList()
+            val useShippedDomains = settings.shouldAutocompleteFromShippedDomainList()
+            autoCompleteProvider.initialize(it.applicationContext, useShippedDomains, useCustomDomains)
         }
 
         StatusBarUtils.getStatusBarHeight(keyboardLinearLayout, {
@@ -164,7 +166,7 @@ class UrlInputFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         listOf(dismissView, clearView, searchView).forEach { it.setOnClickListener(this) }
 
-        urlView.setOnFilterListener(this)
+        urlView.setOnFilterListener(::onFilter)
         urlView.imeOptions = urlView.imeOptions or ViewUtils.IME_FLAG_NO_PERSONALIZED_LEARNING
 
         urlInputContainerView.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
@@ -189,7 +191,7 @@ class UrlInputFragment :
             menuView.setOnClickListener(this)
         }
 
-        urlView.setOnCommitListener(this)
+        urlView.setOnCommitListener(::onCommit)
 
         session?.let {
             urlView.setText(if (it.isSearch && Features.SEARCH_TERMS_OR_URL) it.searchTerms else it.url.value)
@@ -462,7 +464,7 @@ class UrlInputFragment :
                 ?.commitAllowingStateLoss()
     }
 
-    override fun onCommit() {
+    private fun onCommit() {
         val input = urlView.text.toString()
 
         if (!input.trim { it <= ' ' }.isEmpty()) {
@@ -482,7 +484,7 @@ class UrlInputFragment :
 
             openUrl(url, searchTerms)
 
-            TelemetryWrapper.urlBarEvent(isUrl, urlView.lastAutocompleteResult)
+            TelemetryWrapper.urlBarEvent(isUrl, urlView.autocompleteResult)
         }
     }
 
@@ -524,7 +526,7 @@ class UrlInputFragment :
         }
     }
 
-    override fun onFilter(searchText: String, view: InlineAutocompleteEditText?) {
+    private fun onFilter(searchText: String, view: InlineAutocompleteEditText?) {
         // If the UrlInputFragment has already been hidden, don't bother with filtering. Because of the text
         // input architecture on Android it's possible for onFilter() to be called after we've already
         // hidden the Fragment, see the relevant bug for more background:
@@ -533,7 +535,11 @@ class UrlInputFragment :
             return
         }
 
-        urlAutoCompleteFilter.onFilter(searchText, view)
+        view?.let {
+            autoCompleteProvider.autocomplete(searchText, { result, source, size ->
+                view.onAutocomplete(AutocompleteResult(result, source, size))
+            })
+        }
 
         if (searchText.trim { it <= ' ' }.isEmpty()) {
             clearView.visibility = View.GONE

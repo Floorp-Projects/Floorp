@@ -21,7 +21,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
-import org.mozilla.focus.autocomplete.CustomAutocomplete;
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
 import org.mozilla.focus.helpers.TestHelper;
 
@@ -51,6 +50,7 @@ import static android.support.test.espresso.web.webdriver.DriverAtoms.webClick;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.endsWith;
+import mozilla.components.domains.CustomDomains;
 import static org.mozilla.focus.helpers.EspressoHelper.assertToolbarMatchesText;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 
@@ -69,7 +69,7 @@ public class SettingsScreenshots extends ScreenshotTest {
                 .edit()
                 .clear()
                 .apply();
-        CustomAutocomplete.INSTANCE.saveDomains(
+        CustomDomains.INSTANCE.save(
                 InstrumentationRegistry.getInstrumentation().getTargetContext(),
                 Collections.<String>emptyList());
     }

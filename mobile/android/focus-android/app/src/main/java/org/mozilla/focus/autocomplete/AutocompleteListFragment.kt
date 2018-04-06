@@ -27,6 +27,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import mozilla.components.domains.CustomDomains
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -169,7 +170,7 @@ open class AutocompleteListFragment : Fragment() {
 
         fun refresh(context: Context, body: (() -> Unit)? = null) {
             launch(UI) {
-                val updatedDomains = async { CustomAutocomplete.loadCustomAutoCompleteDomains(context) }.await()
+                val updatedDomains = async { CustomDomains.load(context) }.await()
 
                 domains.clear()
                 domains.addAll(updatedDomains)
@@ -224,7 +225,7 @@ open class AutocompleteListFragment : Fragment() {
             notifyItemMoved(from, to)
 
             launch(CommonPool) {
-                CustomAutocomplete.saveDomains(activity.applicationContext, domains)
+                CustomDomains.save(activity.applicationContext, domains)
 
                 TelemetryWrapper.reorderAutocompleteDomainEvent(from, to)
             }
