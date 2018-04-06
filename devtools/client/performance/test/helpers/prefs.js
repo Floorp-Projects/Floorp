@@ -6,7 +6,7 @@ const Services = require("Services");
 const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 
 // Prefs to revert to default once tests finish. Keep these in sync with
-// all the preferences defined in devtools/client/preferences/devtools.js.
+// all the preferences defined in devtools/client/preferences/devtools-client.js.
 exports.MEMORY_SAMPLE_PROB_PREF = "devtools.performance.memory.sample-probability";
 exports.MEMORY_MAX_LOG_LEN_PREF = "devtools.performance.memory.max-log-length";
 exports.PROFILER_BUFFER_SIZE_PREF = "devtools.performance.profiler.buffer-size";
