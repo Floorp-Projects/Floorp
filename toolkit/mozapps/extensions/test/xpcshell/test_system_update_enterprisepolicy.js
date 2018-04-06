@@ -3,7 +3,7 @@
 "use strict";
 
 // This test verifies that system addon updates are correctly blocked by the
-// DisableSysAddonUpdate enterprise policy.
+// DisableSystemAddonUpdate enterprise policy.
 
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm");
@@ -61,7 +61,7 @@ add_task(async function test_update_disabled_by_policy() {
 
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({
     "policies": {
-      "DisableSysAddonUpdate": true
+      "DisableSystemAddonUpdate": true
     }
   });
 
