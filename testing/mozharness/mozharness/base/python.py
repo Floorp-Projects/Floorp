@@ -59,18 +59,19 @@ virtualenv_config_options = [
     [["--find-links"], {
         "action": "extend",
         "dest": "find_links",
+        "default": ["http://pypi.pub.build.mozilla.org/pub"],
         "help": "URL to look for packages at"
     }],
     [["--pip-index"], {
         "action": "store_true",
-        "default": True,
+        "default": False,
         "dest": "pip_index",
-        "help": "Use pip indexes (default)"
+        "help": "Use pip indexes"
     }],
     [["--no-pip-index"], {
         "action": "store_false",
         "dest": "pip_index",
-        "help": "Don't use pip indexes"
+        "help": "Don't use pip indexes (default)"
     }],
 ]
 
