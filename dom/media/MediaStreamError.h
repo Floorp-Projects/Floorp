@@ -36,7 +36,6 @@ public:
   enum class Name
   {
     AbortError,
-    InternalError,
     InvalidStateError,
     NotAllowedError,
     NotFoundError,
