@@ -3812,42 +3812,15 @@ PresShell::ScheduleViewManagerFlush(PaintType aType)
   SetNeedLayoutFlush();
 }
 
-static bool
-FlushLayoutRecursive(nsIDocument* aDocument,
-                     void* aData = nullptr)
-{
-  MOZ_ASSERT(!aData);
-  nsCOMPtr<nsIDocument> kungFuDeathGrip(aDocument);
-  aDocument->EnumerateSubDocuments(FlushLayoutRecursive, nullptr);
-  aDocument->FlushPendingNotifications(FlushType::Layout);
-  return true;
-}
-
 void
-PresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent,
-                                  bool aFlushOnHoverChange)
+nsIPresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent)
 {
   AUTO_PROFILER_TRACING("Paint", "DispatchSynthMouseMove");
-  RestyleManager* restyleManager = mPresContext->RestyleManager();
-  uint32_t hoverGenerationBefore =
-    restyleManager->GetHoverGeneration();
   nsEventStatus status = nsEventStatus_eIgnore;
   nsView* targetView = nsView::GetViewFor(aEvent->mWidget);
   if (!targetView)
     return;
   targetView->GetViewManager()->DispatchEvent(aEvent, targetView, &status);
-  if (MOZ_UNLIKELY(mIsDestroying)) {
-    return;
-  }
-  if (aFlushOnHoverChange &&
-      hoverGenerationBefore != restyleManager->GetHoverGeneration()) {
-    // Flush so that the resulting reflow happens now so that our caller
-    // can suppress any synthesized mouse moves caused by that reflow.
-    // This code only ever runs for the root document, but :hover changes
-    // can happen in descendant documents too, so make sure we flush
-    // all of them.
-    FlushLayoutRecursive(mDocument);
-  }
 }
 
 void
@@ -5713,7 +5686,7 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
     // to 0 because this is a synthetic event which doesn't really belong to any
     // input block. Same for the APZ response field.
     InputAPZContext apzContext(mMouseEventTargetGuid, 0, nsEventStatus_eIgnore);
-    shell->DispatchSynthMouseMove(&event, !aFromScroll);
+    shell->DispatchSynthMouseMove(&event);
   }
 
   if (!aFromScroll) {
