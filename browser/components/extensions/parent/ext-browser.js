@@ -64,7 +64,7 @@ extensions.on("page-shutdown", (type, context) => {
       return;
     }
     let {gBrowser} = context.xulBrowser.ownerGlobal;
-    if (gBrowser) {
+    if (gBrowser && gBrowser.getTabForBrowser) {
       let nativeTab = gBrowser.getTabForBrowser(context.xulBrowser);
       if (nativeTab) {
         gBrowser.removeTab(nativeTab);
