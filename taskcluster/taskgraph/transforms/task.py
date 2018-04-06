@@ -456,7 +456,7 @@ task_description_schema = Schema({
         Required('implementation'): 'beetmover',
 
         # the maximum time to run, in seconds
-        Required('max-run-time'): int,
+        Required('max-run-time', default=600): int,
 
         # locale key, if this is a locale beetmover job
         Optional('locale'): basestring,
