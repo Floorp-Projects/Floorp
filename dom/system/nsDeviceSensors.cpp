@@ -418,8 +418,7 @@ nsDeviceSensors::FireDOMLightEvent(mozilla::dom::EventTarget* aTarget,
 
   event->SetTrusted(true);
 
-  bool defaultActionEnabled;
-  aTarget->DispatchEvent(event, &defaultActionEnabled);
+  aTarget->DispatchEvent(*event);
 }
 
 void
@@ -440,8 +439,7 @@ nsDeviceSensors::FireDOMProximityEvent(mozilla::dom::EventTarget* aTarget,
                                       init);
   event->SetTrusted(true);
 
-  bool defaultActionEnabled;
-  aTarget->DispatchEvent(event, &defaultActionEnabled);
+  aTarget->DispatchEvent(*event);
 
   // Some proximity sensors only support a binary near or
   // far measurement. In this case, the sensor should report
@@ -470,8 +468,7 @@ nsDeviceSensors::FireDOMUserProximityEvent(mozilla::dom::EventTarget* aTarget,
 
   event->SetTrusted(true);
 
-  bool defaultActionEnabled;
-  aTarget->DispatchEvent(event, &defaultActionEnabled);
+  aTarget->DispatchEvent(*event);
 }
 
 void
@@ -494,8 +491,7 @@ nsDeviceSensors::FireDOMOrientationEvent(EventTarget* aTarget,
     RefPtr<DeviceOrientationEvent> event =
       DeviceOrientationEvent::Constructor(aEventTarget, aType, init);
     event->SetTrusted(true);
-    bool dummy;
-    aEventTarget->DispatchEvent(event, &dummy);
+    aEventTarget->DispatchEvent(*event);
   };
 
   Dispatch(aTarget, aIsAbsolute ? NS_LITERAL_STRING("absolutedeviceorientation") :
@@ -597,8 +593,7 @@ nsDeviceSensors::FireDOMMotionEvent(nsIDocument *doc,
 
   event->SetTrusted(true);
 
-  bool defaultActionEnabled = true;
-  target->DispatchEvent(event, &defaultActionEnabled);
+  target->DispatchEvent(*event);
 
   mLastRotationRate.reset();
   mLastAccelerationIncludingGravity.reset();

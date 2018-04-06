@@ -119,13 +119,20 @@ DrawTargetD2D1::EnsureLuminanceEffect()
     return true;
   }
 
-  HRESULT hr = mDC->CreateEffect(CLSID_D2D1LuminanceToAlpha,
+  HRESULT hr = mDC->CreateEffect(CLSID_D2D1ColorMatrix,
                                  getter_AddRefs(mLuminanceEffect));
   if (FAILED(hr)) {
     gfxCriticalError() << "Failed to create luminance effect. Code: " << hexa(hr);
     return false;
   }
 
+  D2D1_MATRIX_5X4_F matrix = D2D1::Matrix5x4F(0, 0, 0, 0.2125f,
+                                              0, 0, 0, 0.7154f,
+                                              0, 0, 0, 0.0721f,
+                                              0, 0, 0, 0,
+                                              0, 0, 0, 0);
+  mLuminanceEffect->SetValue(D2D1_COLORMATRIX_PROP_COLOR_MATRIX, matrix);
+  mLuminanceEffect->SetValue(D2D1_COLORMATRIX_PROP_ALPHA_MODE, D2D1_COLORMATRIX_ALPHA_MODE_STRAIGHT);
   return true;
 }
 
@@ -149,7 +156,7 @@ DrawTargetD2D1::IntoLuminanceSource(LuminanceType aLuminanceType, float aOpacity
   RefPtr<ID2D1Image> luminanceOutput;
   mLuminanceEffect->GetOutput(getter_AddRefs(luminanceOutput));
 
- return MakeAndAddRef<SourceSurfaceD2D1>(luminanceOutput, mDC, SurfaceFormat::A8, mSize);
+ return MakeAndAddRef<SourceSurfaceD2D1>(luminanceOutput, mDC, SurfaceFormat::B8G8R8A8, mSize);
 }
 
 // Command lists are kept around by device contexts until EndDraw is called,

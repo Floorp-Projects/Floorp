@@ -178,20 +178,18 @@ HTMLEditor::DoInlineTableEditingAction(const Element& aElement)
 void
 HTMLEditor::AddMouseClickListener(Element* aElement)
 {
-  nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aElement));
-  if (evtTarget) {
-    evtTarget->AddEventListener(NS_LITERAL_STRING("click"),
-                                mEventListener, true);
+  if (aElement) {
+    aElement->AddEventListener(NS_LITERAL_STRING("click"),
+			       mEventListener, true);
   }
 }
 
 void
 HTMLEditor::RemoveMouseClickListener(Element* aElement)
 {
-  nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aElement));
-  if (evtTarget) {
-    evtTarget->RemoveEventListener(NS_LITERAL_STRING("click"),
-                                   mEventListener, true);
+  if (aElement) {
+    aElement->RemoveEventListener(NS_LITERAL_STRING("click"),
+                                  mEventListener, true);
   }
 }
 

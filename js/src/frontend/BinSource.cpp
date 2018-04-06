@@ -189,7 +189,7 @@ BinASTParser::buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind fu
         functionAsyncKind));
 
     traceListHead_ = funbox;
-    FunctionSyntaxKind syntax = PrimaryExpression; // FIXME - What if we're assigning?
+    FunctionSyntaxKind syntax = Expression; // FIXME - What if we're assigning?
     // FIXME: The only thing we need to know is whether this is a
     // ClassConstructor/DerivedClassConstructor
     funbox->initWithEnclosingParseContext(parseContext_, syntax);
@@ -336,9 +336,259 @@ BinASTParser::readString(MutableHandleAtom out)
 {
     MOZ_ASSERT(!out);
 
+<<<<<<< working copy
     Maybe<Chars> string;
     MOZ_TRY(readMaybeString(string));
     MOZ_ASSERT(string);
+=======
+    TokenPos pos = tokenizer_->pos(start);
+    ParseNode* result;
+    if (kind == BinKind::ContinueStatement) {
+#if 0 // FIXME: We probably need to fix the AST before making this check.
+        auto validity = parseContext_->checkContinueStatement(label ? label->name() : nullptr);
+        if (validity.isErr()) {
+            switch (validity.unwrapErr()) {
+              case ParseContext::ContinueStatementError::NotInALoop:
+                return raiseError(kind, "Not in a loop");
+              case ParseContext::ContinueStatementError::LabelNotFound:
+                return raiseError(kind, "Label not found");
+            }
+        }
+#endif // 0
+        // Ok, this is a valid continue statement.
+        TRY_VAR(result, factory_.newContinueStatement(label ? label->name() : nullptr, pos));
+    } else {
+#if 0 // FIXME: We probably need to fix the AST before making this check.
+        auto validity = parseContext_->checkBreakStatement(label ? label->name() : nullptr);
+        if (validity.isErr()) {
+            switch (validity.unwrapErr()) {
+              case ParseContext::BreakStatementError::ToughBreak:
+                 return raiseError(kind, "Not in a loop");
+              case ParseContext::BreakStatementError::LabelNotFound:
+                 return raiseError(kind, "Label not found");
+            }
+        }
+#endif // 0
+        // Ok, this is a valid break statement.
+        TRY_VAR(result, factory_.newBreakStatement(label ? label->name() : nullptr, pos));
+    }
+
+    MOZ_ASSERT(result);
+
+    return result;
+}
+
+JS::Result<ParseNode*>
+BinASTParser::parseForInit()
+{
+    // This can be either a VarDecl or an Expression.
+    BinFields fields(cx_);
+    AutoTaggedTuple guard(*tokenizer_);
+    BinKind kind;
+
+    TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    ParseNode* result(nullptr);
+
+    switch (kind) {
+      case BinKind::VariableDeclaration:
+        MOZ_TRY_VAR(result, parseVariableDeclarationAux(kind, fields));
+        break;
+      default:
+        // Parse as expression
+        MOZ_TRY_VAR(result, parseExpressionAux(kind, fields));
+        break;
+    }
+
+    TRY(guard.done());
+    return result;
+}
+
+JS::Result<ParseNode*>
+BinASTParser::parseForInInit()
+{
+    // This can be either a VarDecl or a Pattern.
+    BinFields fields(cx_);
+    AutoTaggedTuple guard(*tokenizer_);
+    BinKind kind;
+
+    TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    ParseNode* result(nullptr);
+
+    switch (kind) {
+      case BinKind::VariableDeclaration:
+        MOZ_TRY_VAR(result, parseVariableDeclarationAux(kind, fields));
+        break;
+      default:
+        // Parse as expression. Not a joke: http://www.ecma-international.org/ecma-262/5.1/index.html#sec-12.6.4 .
+        MOZ_TRY_VAR(result, parseExpressionAux(kind, fields));
+        break;
+    }
+
+    TRY(guard.done());
+    return result;
+}
+
+JS::Result<ParseNode*>
+BinASTParser::parseFunctionAux(const BinKind kind, const BinFields& fields)
+{
+    MOZ_ASSERT(isMethodOrFunction(kind));
+
+    const size_t start = tokenizer_->offset();
+
+    ParseNode* id(nullptr);
+    ParseNode* params(nullptr);
+    ParseNode* body(nullptr);
+    ParseNode* directives(nullptr); // Largely ignored for the moment.
+    ParseNode* key(nullptr);  // Methods only
+
+    // Allocate the function before walking down the tree.
+    RootedFunction fun(cx_);
+    TRY_VAR(fun, NewFunctionWithProto(cx_,
+            /*native*/nullptr,
+            /*nargs ?*/0,
+            /*flags */ JSFunction::INTERPRETED_NORMAL,
+            /*enclosing env*/nullptr,
+            /*name*/ nullptr, // Will be known later
+            /*proto*/ nullptr,
+            /*alloc*/gc::AllocKind::FUNCTION,
+            TenuredObject
+    ));
+    TRY_DECL(funbox, alloc_.new_<FunctionBox>(cx_,
+        traceListHead_,
+        fun,
+        /* toStringStart = */0,
+        /* directives = */Directives(parseContext_),
+        /* extraWarning = */false,
+        GeneratorKind::NotGenerator,
+        FunctionAsyncKind::SyncFunction
+    ));
+
+    traceListHead_ = funbox;
+
+    FunctionSyntaxKind syntax;
+    switch (kind) {
+      case BinKind::FunctionDeclaration:
+        syntax = Statement;
+        break;
+      case BinKind::FunctionExpression:
+        syntax = Expression; // FIXME: Probably doesn't work.
+        break;
+      case BinKind::ObjectMethod:
+        syntax = Method;
+        break;
+      case BinKind::ObjectGetter:
+        syntax = Getter;
+        break;
+      case BinKind::ObjectSetter:
+        syntax = Setter;
+        break;
+      default:
+        MOZ_CRASH("Invalid FunctionSyntaxKind"); // Checked above.
+    }
+    funbox->initWithEnclosingParseContext(parseContext_, syntax);
+
+    // Container scopes.
+    ParseContext::Scope& varScope = parseContext_->varScope();
+    ParseContext::Scope* letScope = parseContext_->innermostScope();
+
+    // Push a new ParseContext.
+    BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+    TRY(funpc.init());
+    parseContext_->functionScope().useAsVarScope(parseContext_);
+    MOZ_ASSERT(parseContext_->isFunctionBox());
+
+    for (auto field : fields) {
+        switch (field) {
+          case BinField::Id:
+            MOZ_TRY_VAR(id, parseIdentifier());
+            break;
+          case BinField::Params:
+            MOZ_TRY_VAR(params, parseArgumentList());
+            break;
+          case BinField::BINJS_Scope:
+            // This scope information affects the scopes contained in the function body. MUST appear before the `body`.
+            MOZ_TRY(parseAndUpdateScope(varScope, *letScope));
+            break;
+          case BinField::Directives:
+            MOZ_TRY_VAR(directives, parseDirectiveList());
+            break;
+          case BinField::Body:
+            MOZ_TRY_VAR(body, parseBlockStatement());
+            break;
+          case BinField::Key:
+            if (!isMethod(kind))
+                return raiseInvalidField("Functions (unless defined as methods)", field);
+
+            MOZ_TRY_VAR(key, parseObjectPropertyName());
+            break;
+          default:
+            return raiseInvalidField("Function", field);
+        }
+    }
+
+    // Inject default values for absent fields.
+    if (!params)
+        TRY_VAR(params, new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos()));
+
+    if (!body)
+        TRY_VAR(body, factory_.newStatementList(tokenizer_->pos()));
+
+    if (kind == BinKind::FunctionDeclaration && !id) {
+        // The name is compulsory only for function declarations.
+        return raiseMissingField("FunctionDeclaration", BinField::Id);
+    }
+
+    // Reject if required values are missing.
+    if (isMethod(kind) && !key)
+        return raiseMissingField("method", BinField::Key);
+
+    if (id)
+        fun->initAtom(id->pn_atom);
+
+    MOZ_ASSERT(params->isArity(PN_LIST));
+
+    if (!(body->isKind(ParseNodeKind::LexicalScope) &&
+          body->pn_u.scope.body->isKind(ParseNodeKind::StatementList)))
+    {
+        // Promote to lexical scope + statement list.
+        if (!body->isKind(ParseNodeKind::StatementList)) {
+            TRY_DECL(list, factory_.newStatementList(tokenizer_->pos(start)));
+
+            list->initList(body);
+            body = list;
+        }
+
+        // Promote to lexical scope.
+        TRY_VAR(body, factory_.newLexicalScope(nullptr, body));
+    }
+    MOZ_ASSERT(body->isKind(ParseNodeKind::LexicalScope));
+
+    MOZ_TRY_VAR(body, appendDirectivesToBody(body, directives));
+
+    params->appendWithoutOrderAssumption(body);
+
+    TokenPos pos = tokenizer_->pos(start);
+    TRY_DECL(function, kind == BinKind::FunctionDeclaration
+                       ? factory_.newFunctionStatement(pos)
+                       : factory_.newFunctionExpression(pos));
+
+    factory_.setFunctionBox(function, funbox);
+    factory_.setFunctionFormalParametersAndBody(function, params);
+
+    ParseNode* result;
+    if (kind == BinKind::ObjectMethod)
+        TRY_VAR(result, factory_.newObjectMethodOrPropertyDefinition(key, function, AccessorType::None));
+    else if (kind == BinKind::ObjectGetter)
+        TRY_VAR(result, factory_.newObjectMethodOrPropertyDefinition(key, function, AccessorType::Getter));
+    else if (kind == BinKind::ObjectSetter)
+        TRY_VAR(result, factory_.newObjectMethodOrPropertyDefinition(key, function, AccessorType::Setter));
+    else
+        result = function;
+
+    // Now handle bindings.
+    HandlePropertyName dotThis = cx_->names().dotThis;
+    const bool declareThis = hasUsedName(dotThis) || funbox->bindingsAccessedDynamically() || funbox->isDerivedClassConstructor();
+>>>>>>> merge rev
 
     RootedAtom atom(cx_);
     TRY_VAR(atom, AtomizeUTF8Chars(cx_, (const char*)string->begin(), string->length()));

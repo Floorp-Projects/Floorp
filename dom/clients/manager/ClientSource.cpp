@@ -598,10 +598,9 @@ ClientSource::PostMessage(const ClientPostMessageArgs& aArgs)
     MessageEvent::Constructor(target, NS_LITERAL_STRING("message"), init);
   event->SetTrusted(true);
 
-  bool preventDefaultCalled = false;
-  rv = target->DispatchEvent(static_cast<dom::Event*>(event.get()),
-                             &preventDefaultCalled);
-  if (NS_FAILED(rv)) {
+  target->DispatchEvent(*event, result);
+  if (result.Failed()) {
+    result.SuppressException();
     ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
     return ref.forget();
   }

@@ -798,6 +798,8 @@ protected:
 
     virtual bool CanUseHardwareVideoDecoding();
 
+    virtual bool CheckVariationFontSupport() = 0;
+
     int8_t  mAllowDownloadableFonts;
     int8_t  mGraphiteShapingEnabled;
     int8_t  mOpenTypeSVGEnabled;

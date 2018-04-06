@@ -3712,7 +3712,8 @@ nsDOMWindowUtils::DispatchEventToChromeOnly(nsIDOMEventTarget* aTarget,
   *aRetVal = false;
   NS_ENSURE_STATE(aTarget && aEvent);
   aEvent->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-  aTarget->DispatchEvent(aEvent, aRetVal);
+  *aRetVal = EventTarget::From(aTarget)->
+    DispatchEvent(*aEvent->InternalDOMEvent(), CallerType::System, IgnoreErrors());
   return NS_OK;
 }
 

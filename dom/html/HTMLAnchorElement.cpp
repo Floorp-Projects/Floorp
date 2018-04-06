@@ -219,10 +219,10 @@ HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
   return false;
 }
 
-nsresult
+void
 HTMLAnchorElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
-  return GetEventTargetParentForAnchors(aVisitor);
+  GetEventTargetParentForAnchors(aVisitor);
 }
 
 nsresult

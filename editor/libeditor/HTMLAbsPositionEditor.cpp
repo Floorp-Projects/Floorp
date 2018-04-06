@@ -17,6 +17,7 @@
 #include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsAlgorithm.h"
@@ -29,7 +30,6 @@
 #include "nsROCSSPrimitiveValue.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMEventTarget.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsIDOMWindow.h"
 #include "nsIHTMLObjectResizer.h"
@@ -219,9 +219,8 @@ HTMLEditor::CreateGrabber(nsIContent& aParentContent)
   }
 
   // add the mouse listener so we can detect a click on a resizer
-  nsCOMPtr<nsIDOMEventTarget> evtTarget = do_QueryInterface(ret);
-  evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"),
-                              mEventListener, false);
+  ret->AddEventListener(NS_LITERAL_STRING("mousedown"),
+			mEventListener, false);
 
   return ret;
 }
@@ -359,12 +358,12 @@ HTMLEditor::GrabberClicked()
     mMouseMotionListenerP = new ResizerMouseMotionListener(*this);
     if (!mMouseMotionListenerP) {return NS_ERROR_NULL_POINTER;}
 
-    nsIDOMEventTarget* piTarget = GetDOMEventTarget();
+    EventTarget* piTarget = GetDOMEventTarget();
     NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
     rv = piTarget->AddEventListener(NS_LITERAL_STRING("mousemove"),
-                                     mMouseMotionListenerP,
-                                     false, false);
+				    mMouseMotionListenerP,
+				    false, false);
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "failed to register mouse motion listener");
   }
@@ -383,14 +382,12 @@ HTMLEditor::EndMoving()
 
     mPositioningShadow = nullptr;
   }
-  nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();
+  RefPtr<EventTarget> piTarget = GetDOMEventTarget();
 
   if (piTarget && mMouseMotionListenerP) {
-    DebugOnly<nsresult> rv =
-      piTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
-                                    mMouseMotionListenerP,
-                                    false);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove mouse motion listener");
+    piTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
+				  mMouseMotionListenerP,
+				  false);
   }
   mMouseMotionListenerP = nullptr;
 

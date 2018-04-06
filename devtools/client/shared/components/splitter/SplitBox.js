@@ -70,14 +70,20 @@ class SplitBox extends Component {
     super(props);
 
     /**
-     * The state stores the current orientation (vertical or horizontal)
-     * and the current size (width/height). All these values can change
-     * during the component's life time.
+     * The state stores whether or not the end panel should be controlled, the current
+     * orientation (vertical or horizontal), the splitter size, and the current size
+     * (width/height). All these values can change during the component's life time.
      */
     this.state = {
+      // True if the right/bottom panel should be controlled.
+      endPanelControl: props.endPanelControl,
+      // True if the splitter bar is vertical (default is vertical).
       vert: props.vert,
+      // Size of the splitter handle bar.
       splitterSize: props.splitterSize,
+      // Width of controlled panel.
       width: props.initialWidth || props.initialSize,
+      // Height of controlled panel.
       height: props.initialHeight || props.initialSize
     };
 
@@ -87,7 +93,15 @@ class SplitBox extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let { splitterSize, vert } = nextProps;
+    let {
+      endPanelControl,
+      splitterSize,
+      vert,
+    } = nextProps;
+
+    if (endPanelControl != this.props.endPanelControl) {
+      this.setState({ endPanelControl });
+    }
 
     if (splitterSize != this.props.splitterSize) {
       this.setState({ splitterSize });
@@ -100,12 +114,12 @@ class SplitBox extends Component {
 
   shouldComponentUpdate(nextProps, nextState) {
     return nextState.width != this.state.width ||
+      nextState.endPanelControl != this.props.endPanelControl ||
       nextState.height != this.state.height ||
       nextState.vert != this.state.vert ||
       nextState.splitterSize != this.state.splitterSize ||
       nextProps.startPanel != this.props.startPanel ||
       nextProps.endPanel != this.props.endPanel ||
-      nextProps.endPanelControl != this.props.endPanelControl ||
       nextProps.minSize != this.props.minSize ||
       nextProps.maxSize != this.props.maxSize;
   }
@@ -154,9 +168,9 @@ class SplitBox extends Component {
     const node = ReactDOM.findDOMNode(this);
 
     let size;
-    let { endPanelControl } = this.props;
+    let { endPanelControl, vert } = this.state;
 
-    if (this.state.vert) {
+    if (vert) {
       // Use the document owning the SplitBox to detect rtl. The global document might be
       // the one bound to the toolbox shared BrowserRequire, which is irrelevant here.
       const doc = node.ownerDocument;
@@ -188,8 +202,8 @@ class SplitBox extends Component {
   // Rendering
 
   render() {
-    const { splitterSize, vert } = this.state;
-    const { startPanel, endPanel, endPanelControl, minSize, maxSize } = this.props;
+    const { endPanelControl, splitterSize, vert } = this.state;
+    const { startPanel, endPanel, minSize, maxSize } = this.props;
 
     let style = Object.assign({}, this.props.style);
 

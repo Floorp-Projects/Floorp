@@ -212,7 +212,7 @@ public:
   bool                  mOriginalTargetIsInAnon;
 
   /**
-   * Whether or not nsIDOMEventTarget::WillHandleEvent will be
+   * Whether or not EventTarget::WillHandleEvent will be
    * called. Default is false;
    */
   bool                  mWantsWillHandleEvent;
@@ -224,7 +224,7 @@ public:
   bool                  mMayHaveListenerManager;
 
   /**
-   * Whether or not nsIDOMEventTarget::PreHandleEvent will be called. Default is
+   * Whether or not EventTarget::PreHandleEvent will be called. Default is
    * false;
    */
   bool mWantsPreHandleEvent;
