@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1521539068414" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1522103097333" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2226,6 +2226,14 @@
     <emItem blockID="3d55fab0-ec1a-4bca-84c9-3b74f5d01509" id="/^.*extension.*@asdf\.pl$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="547037f2-97ae-435a-863c-efd7532668cd" id="{44685ba6-68b3-4895-879e-4efa29dfb578}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="baf7f735-d6b6-410a-8cc8-25c60f7c57e2" id="adbeaver@adbeaver.org">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
   </emItems>
   <pluginItems>
