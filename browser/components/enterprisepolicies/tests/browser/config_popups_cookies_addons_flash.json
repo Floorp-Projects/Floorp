@@ -19,7 +19,7 @@
       ]
     },
 
-    "InstallAddonsPermission": {
+    "InstallAddons": {
       "Allow": [
         "https://www.allow.com",
         "https://www.pre-existing-deny.com"
