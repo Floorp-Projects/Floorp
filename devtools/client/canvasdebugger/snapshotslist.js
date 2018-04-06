@@ -12,7 +12,7 @@ var SnapshotsListView = extend(WidgetMethods, {
   /**
    * Initialization function, called when the tool is started.
    */
-  initialize: function () {
+  initialize: function() {
     this.widget = new SideMenuWidget($("#snapshots-list"), {
       showArrows: true
     });
@@ -34,7 +34,7 @@ var SnapshotsListView = extend(WidgetMethods, {
   /**
    * Destruction function, called when the tool is closed.
    */
-  destroy: function () {
+  destroy: function() {
     clearNamedTimeout("canvas-actor-recording");
     window.off(EVENTS.SNAPSHOT_RECORDING_FINISHED, this._enableRecordButton);
     this.widget.removeEventListener("select", this._onSelect);
@@ -46,7 +46,7 @@ var SnapshotsListView = extend(WidgetMethods, {
    * @return object
    *         The newly inserted item.
    */
-  addSnapshot: function () {
+  addSnapshot: function() {
     let contents = document.createElement("hbox");
     contents.className = "snapshot-item";
 
@@ -102,7 +102,7 @@ var SnapshotsListView = extend(WidgetMethods, {
   /**
    * Removes the last snapshot added, in the event no requestAnimationFrame loop was found.
    */
-  removeLastSnapshot: function () {
+  removeLastSnapshot: function() {
     this.removeAt(this.itemCount - 1);
     // If this is the only item, revert back to the empty notice
     if (this.itemCount === 0) {
@@ -121,7 +121,7 @@ var SnapshotsListView = extend(WidgetMethods, {
    * @param object snapshotOverview
    *        Additional data about the snapshot received from the backend.
    */
-  customizeSnapshot: function (snapshotItem, snapshotActor, snapshotOverview) {
+  customizeSnapshot: function(snapshotItem, snapshotActor, snapshotOverview) {
     // Make sure the function call actors are stored on the item,
     // to be used when populating the CallsListView.
     snapshotItem.attachment.actor = snapshotActor;
@@ -163,7 +163,7 @@ var SnapshotsListView = extend(WidgetMethods, {
   /**
    * The select listener for this container.
    */
-  _onSelect: function ({ detail: snapshotItem }) {
+  _onSelect: function({ detail: snapshotItem }) {
     // Check to ensure the attachment has an actor, like
     // an in-progress recording.
     if (!snapshotItem || !snapshotItem.attachment.actor) {
@@ -179,7 +179,7 @@ var SnapshotsListView = extend(WidgetMethods, {
     $("#screenshot-container").hidden = true;
     $("#snapshot-filmstrip").hidden = true;
 
-    (async function () {
+    (async function() {
       // Wait for a few milliseconds between presenting the function calls,
       // screenshot and thumbnails, to allow each component being
       // sequentially drawn. This gives the illusion of snappiness.
@@ -204,8 +204,8 @@ var SnapshotsListView = extend(WidgetMethods, {
   /**
    * The click listener for the "clear" button in this container.
    */
-  _onClearButtonClick: function () {
-    (async function () {
+  _onClearButtonClick: function() {
+    (async function() {
       SnapshotsListView.empty();
       CallsListView.empty();
 
@@ -230,7 +230,7 @@ var SnapshotsListView = extend(WidgetMethods, {
   /**
    * The click listener for the "record" button in this container.
    */
-  _onRecordButtonClick: function () {
+  _onRecordButtonClick: function() {
     this._disableRecordButton();
 
     if (this._recording) {
@@ -256,14 +256,14 @@ var SnapshotsListView = extend(WidgetMethods, {
   /**
    * Makes the record button able to be clicked again.
    */
-  _enableRecordButton: function () {
+  _enableRecordButton: function() {
     $("#record-snapshot").removeAttribute("disabled");
   },
 
   /**
    * Makes the record button unable to be clicked.
    */
-  _disableRecordButton: function () {
+  _disableRecordButton: function() {
     $("#record-snapshot").setAttribute("disabled", true);
   },
 
@@ -306,12 +306,11 @@ var SnapshotsListView = extend(WidgetMethods, {
 
     if (actorCanStop) {
       await gFront.stopRecordingAnimationFrame();
-    }
-    // If actor does not have the method to stop recording (Fx39+),
-    // manually call the record failure method. This will call a connection failure
-    // on disconnect as a result of `gFront.recordAnimationFrame()` never resolving,
-    // but this is better than it hanging when there is no requestAnimationFrame anyway.
-    else {
+    } else {
+      // If actor does not have the method to stop recording (Fx39+),
+      // manually call the record failure method. This will call a connection failure
+      // on disconnect as a result of `gFront.recordAnimationFrame()` never resolving,
+      // but this is better than it hanging when there is no requestAnimationFrame anyway.
       this._onRecordFailure();
     }
 
@@ -340,7 +339,7 @@ var SnapshotsListView = extend(WidgetMethods, {
   /**
    * Called as a reject from the front's recordAnimationFrame.
    */
-  _onRecordFailure: function () {
+  _onRecordFailure: function() {
     clearNamedTimeout("canvas-actor-recording");
     showNotification(gToolbox, "canvas-debugger-timeout", L10N.getStr("recordingTimeoutFailure"));
     window.emit(EVENTS.SNAPSHOT_RECORDING_CANCELLED);
@@ -351,7 +350,7 @@ var SnapshotsListView = extend(WidgetMethods, {
   /**
    * The click listener for the "import" button in this container.
    */
-  _onImportButtonClick: function () {
+  _onImportButtonClick: function() {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, L10N.getStr("snapshotsList.saveDialogTitle"), Ci.nsIFilePicker.modeOpen);
     fp.appendFilter(L10N.getStr("snapshotsList.saveDialogJSONFilter"), "*.json");
@@ -371,9 +370,10 @@ var SnapshotsListView = extend(WidgetMethods, {
           console.error("Could not import recorded animation frame snapshot file.");
           return;
         }
+        var data;
         try {
           let string = NetUtil.readInputStreamToString(inputStream, inputStream.available());
-          var data = JSON.parse(string);
+          data = JSON.parse(string);
         } catch (e) {
           console.error("Could not read animation frame snapshot file.");
           return;
@@ -397,7 +397,7 @@ var SnapshotsListView = extend(WidgetMethods, {
   /**
    * The click listener for the "save" button of each item in this container.
    */
-  _onSaveButtonClick: function (e) {
+  _onSaveButtonClick: function(e) {
     let snapshotItem = this.getItemForElement(e.target);
 
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
@@ -408,7 +408,7 @@ var SnapshotsListView = extend(WidgetMethods, {
 
     // Start serializing all the function call actors for the specified snapshot,
     // while the nsIFilePicker dialog is being opened. Snappy.
-    let serialized = (async function () {
+    let serialized = (async function() {
       let data = {
         fileType: CALLS_LIST_SERIALIZER_IDENTIFIER,
         version: CALLS_LIST_SERIALIZER_VERSION,
@@ -448,8 +448,8 @@ var SnapshotsListView = extend(WidgetMethods, {
       data.screenshot = { index, width, height, flipped, pixels };
 
       let string = JSON.stringify(data);
-      let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-        createInstance(Ci.nsIScriptableUnicodeConverter);
+      let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+        .createInstance(Ci.nsIScriptableUnicodeConverter);
 
       converter.charset = "UTF-8";
       return converter.convertToInputStream(string);

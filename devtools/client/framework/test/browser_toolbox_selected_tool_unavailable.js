@@ -15,17 +15,17 @@ const testToolDefinition = {
   url: "about:blank",
   label: "someLabel",
   build: (iframeWindow, toolbox) => {
-      return {
+    return {
         target: toolbox.target,
         toolbox: toolbox,
         isReady: true,
         destroy: () => {},
         panelDoc: iframeWindow.document
-      };
-    }
+    };
+  }
 };
 
-add_task(async function () {
+add_task(async function() {
   gDevTools.registerTool(testToolDefinition);
   let tab = await addTab("about:blank");
   let target = TargetFactory.forTab(tab);

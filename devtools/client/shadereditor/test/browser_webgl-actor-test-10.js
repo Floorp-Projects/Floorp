@@ -25,7 +25,7 @@ async function ifWebGLSupported() {
   finish();
 
   function testHighlighting(programActor) {
-    return (async function () {
+    return (async function() {
       await ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
       await ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
       ok(true, "The corner pixel colors are correct before highlighting.");

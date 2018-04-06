@@ -17,7 +17,8 @@ def stackwalk(tmpdir_factory):
 
 
 @pytest.fixture
-def check_for_crashes(tmpdir, stackwalk):
+def check_for_crashes(tmpdir, stackwalk, monkeypatch):
+    monkeypatch.delenv('MINIDUMP_SAVE_PATH', raising=False)
 
     def wrapper(dump_directory=fspath(tmpdir),
                 symbols_path='symbols_path',

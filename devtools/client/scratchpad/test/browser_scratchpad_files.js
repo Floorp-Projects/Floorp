@@ -11,23 +11,21 @@ var gFile;
 // The temporary file content.
 var gFileContent = "hello.world('bug636725');";
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(runTests);
   });
 
   gBrowser.loadURI("data:text/html,<p>test file open and save in Scratchpad");
 }
 
-function runTests()
-{
+function runTests() {
   gScratchpad = gScratchpadWindow.Scratchpad;
 
-  createTempFile("fileForBug636725.tmp", gFileContent, function (aStatus, aFile) {
+  createTempFile("fileForBug636725.tmp", gFileContent, function(aStatus, aFile) {
     ok(Components.isSuccessCode(aStatus),
       "The temporary file was saved successfully");
 
@@ -37,8 +35,7 @@ function runTests()
   });
 }
 
-function fileImported(aStatus, aFileContent)
-{
+function fileImported(aStatus, aFileContent) {
   ok(Components.isSuccessCode(aStatus),
      "the temporary file was imported successfully with Scratchpad");
 
@@ -59,8 +56,7 @@ function fileImported(aStatus, aFileContent)
                           fileExported);
 }
 
-function fileExported(aStatus)
-{
+function fileExported(aStatus) {
   ok(Components.isSuccessCode(aStatus),
      "the temporary file was exported successfully with Scratchpad");
 
@@ -72,7 +68,7 @@ function fileExported(aStatus)
 
   let oldConfirm = gScratchpadWindow.confirm;
   let askedConfirmation = false;
-  gScratchpadWindow.confirm = function () {
+  gScratchpadWindow.confirm = function() {
     askedConfirmation = true;
     return false;
   };
@@ -95,13 +91,11 @@ function fileExported(aStatus)
   NetUtil.asyncFetch(channel, fileRead);
 }
 
-function fileExported2()
-{
+function fileExported2() {
   ok(false, "exportToFile() did not cancel file overwrite");
 }
 
-function fileRead(aInputStream, aStatus)
-{
+function fileRead(aInputStream, aStatus) {
   ok(Components.isSuccessCode(aStatus),
      "the temporary file was read back successfully");
 

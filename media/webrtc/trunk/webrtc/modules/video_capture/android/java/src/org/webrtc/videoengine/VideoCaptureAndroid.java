@@ -109,21 +109,35 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       final int min_mfps, final int max_mfps) {
     Log.d(TAG, "startCapture: " + width + "x" + height + "@" +
         min_mfps + ":" + max_mfps);
-    if (cameraThread != null || cameraThreadHandler != null) {
-      throw new RuntimeException("Camera thread already started!");
+    if (cameraThread == null && cameraThreadHandler == null) {
+      Exchanger<Handler> handlerExchanger = new Exchanger<Handler>();
+      cameraThread = new CameraThread(handlerExchanger);
+      cameraThread.start();
+      cameraThreadHandler = exchange(handlerExchanger, null);
     }
-    Exchanger<Handler> handlerExchanger = new Exchanger<Handler>();
-    cameraThread = new CameraThread(handlerExchanger);
-    cameraThread.start();
-    cameraThreadHandler = exchange(handlerExchanger, null);
 
     final Exchanger<Boolean> result = new Exchanger<Boolean>();
     cameraThreadHandler.post(new Runnable() {
         @Override public void run() {
-          startCaptureOnCameraThread(width, height, min_mfps, max_mfps, result);
+          boolean startResult =
+            startCaptureOnCameraThread(width, height, min_mfps, max_mfps);
+          exchange(result, startResult);
         }
       });
     boolean startResult = exchange(result, false); // |false| is a dummy value.
+
+    if (!startResult) {
+      // Starting failed on the camera thread. The looper has now quit and the
+      // camera thread is dead.
+      try {
+        cameraThread.join();
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+      cameraThreadHandler = null;
+      cameraThread = null;
+    }
+
     return startResult;
   }
 
@@ -136,55 +150,76 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     native_capturer = 0;
   }
 
-  private void startCaptureOnCameraThread(
-      int width, int height, int min_mfps, int max_mfps,
-      Exchanger<Boolean> result) {
+  private boolean startCaptureOnCameraThread(
+      int width, int height, int min_mfps, int max_mfps) {
     Throwable error = null;
     try {
-      camera = Camera.open(id);
+      boolean isRunning = camera != null;
+      if (!isRunning) {
+        camera = Camera.open(id);
 
-      if (localPreview != null) {
-        localPreview.addCallback(this);
-        if (localPreview.getSurface() != null &&
-            localPreview.getSurface().isValid()) {
-	  try {
-	    camera.setPreviewDisplay(localPreview);
-	  } catch (IOException e) {
-	    throw new RuntimeException(e);
-	  }
-        }
-      } else {
-        // No local renderer (we only care about onPreviewFrame() buffers, not a
-        // directly-displayed UI element).  Camera won't capture without
-        // setPreview{Texture,Display}, so we create a SurfaceTexture and hand
-        // it over to Camera, but never listen for frame-ready callbacks,
-        // and never call updateTexImage on it.
-        try {
-          cameraGlTextures = new int[1];
-          // Generate one texture pointer and bind it as an external texture.
-          GLES20.glGenTextures(1, cameraGlTextures, 0);
-          GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-              cameraGlTextures[0]);
-          GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-              GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
-          GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-              GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-          GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-              GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-          GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-              GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+        if (localPreview != null) {
+          localPreview.addCallback(this);
+          if (localPreview.getSurface() != null &&
+              localPreview.getSurface().isValid()) {
+            try {
+              camera.setPreviewDisplay(localPreview);
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
+          }
+        } else {
+          // No local renderer (we only care about onPreviewFrame() buffers, not a
+          // directly-displayed UI element).  Camera won't capture without
+          // setPreview{Texture,Display}, so we create a SurfaceTexture and hand
+          // it over to Camera, but never listen for frame-ready callbacks,
+          // and never call updateTexImage on it.
+          try {
+            cameraGlTextures = new int[1];
+            // Generate one texture pointer and bind it as an external texture.
+            GLES20.glGenTextures(1, cameraGlTextures, 0);
+            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                cameraGlTextures[0]);
+            GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
 
-          cameraSurfaceTexture = new SurfaceTexture(cameraGlTextures[0]);
-          cameraSurfaceTexture.setOnFrameAvailableListener(null);
-          camera.setPreviewTexture(cameraSurfaceTexture);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
+            cameraSurfaceTexture = new SurfaceTexture(cameraGlTextures[0]);
+            cameraSurfaceTexture.setOnFrameAvailableListener(null);
+            camera.setPreviewTexture(cameraSurfaceTexture);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
         }
       }
 
       Log.d(TAG, "Camera orientation: " + info.orientation +
           " .Device orientation: " + getDeviceOrientation());
       Camera.Parameters parameters = camera.getParameters();
+
+      if (isRunning) {
+        Camera.Size size = parameters.getPreviewSize();
+
+        int[] fpsRange = new int[2];
+        parameters.getPreviewFpsRange(fpsRange);
+        int minFps = fpsRange[Parameters.PREVIEW_FPS_MIN_INDEX] / frameDropRatio;
+        int maxFps = fpsRange[Parameters.PREVIEW_FPS_MAX_INDEX] / frameDropRatio;
+        if (size.width == width && size.height == height &&
+            minFps == min_mfps && maxFps == max_mfps) {
+          return true;
+        } else {
+          if (!stopCaptureOnCameraThread()) {
+            throw new RuntimeException("Stopping on reconfig failed");
+          }
+          return startCaptureOnCameraThread(width, height, min_mfps, max_mfps);
+        }
+      }
+
       Log.d(TAG, "isVideoStabilizationSupported: " +
           parameters.isVideoStabilizationSupported());
       if (parameters.isVideoStabilizationSupported()) {
@@ -197,8 +232,32 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         parameters.setFocusMode(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
       }
 
-      parameters.setPictureSize(width, height);
+      // (width,height) is a valid preview size. It might not be a valid picture
+      // size.
       parameters.setPreviewSize(width, height);
+
+      List<Camera.Size> supportedPictureSizes =
+        parameters.getSupportedPictureSizes();
+      Camera.Size pictureSize = supportedPictureSizes.get(0);
+      for (Camera.Size size : supportedPictureSizes) {
+        if (size.width < width || size.height < height) {
+          // We want a picture size larger than the preview size
+          continue;
+        }
+        if (pictureSize.width < width || pictureSize.height < height) {
+          // The so-far chosen pictureSize is smaller than the preview size.
+          // `size` is a better fit.
+          pictureSize = size;
+          continue;
+        }
+        if (size.width <= pictureSize.width &&
+            size.height <= pictureSize.height) {
+          // Both the so-far chosen pictureSize and `size` are larger than the
+          // preview size, but `size` is closest, so it's preferred.
+          pictureSize = size;
+        }
+      }
+      parameters.setPictureSize(pictureSize.width, pictureSize.height);
 
       // Check if requested fps range is supported by camera,
       // otherwise calculate frame drop ratio.
@@ -219,9 +278,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       }
       if (frameDropRatio == Integer.MAX_VALUE) {
         Log.e(TAG, "Can not find camera fps range");
-        error = new RuntimeException("Can not find camera fps range");
-        exchange(result, false);
-        return;
+        throw new RuntimeException("Can not find camera fps range");
       }
       if (frameDropRatio > 1) {
         Log.d(TAG, "Frame dropper is enabled. Ratio: " + frameDropRatio);
@@ -242,21 +299,13 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       frameCount = 0;
       averageDurationMs = 1000000.0f / (max_mfps / frameDropRatio);
       camera.startPreview();
-      exchange(result, true);
-      return;
+      return true;
     } catch (RuntimeException e) {
       error = e;
     }
     Log.e(TAG, "startCapture failed", error);
-    // For some devices, camera.setParameters(parameters) would throw
-    // an exception when a specific resolution is set. Originally,
-    // stopCaptureOnCameraThread() is called here to clear up the state.
-    // However, stopCaptureOnCameraThread(), which uses Exchanger to
-    // synchronize and swap data with MediaManager thread, is supposed to be
-    // called by MediaManager thread like we did at stopCapture(). Calling
-    // this function directly in CameraThread will cause deadlock.
-    exchange(result, false);
-    return;
+    stopCaptureOnCameraThread();
+    return false;
   }
 
   // Called by native code.  Returns true when camera is known to be stopped.
@@ -266,7 +315,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     final Exchanger<Boolean> result = new Exchanger<Boolean>();
     cameraThreadHandler.post(new Runnable() {
         @Override public void run() {
-          stopCaptureOnCameraThread(result);
+          boolean stopResult = stopCaptureOnCameraThread();
+          exchange(result, stopResult);
         }
       });
     boolean status = exchange(result, false);  // |false| is a dummy value here.
@@ -281,14 +331,13 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     return status;
   }
 
-  private void stopCaptureOnCameraThread(
-      Exchanger<Boolean> result) {
-    if (camera == null) {
-      Log.e(TAG, "Camera is already stopped!");
-      return;
-    }
+  private boolean stopCaptureOnCameraThread() {
     Throwable error = null;
     try {
+      if (camera == null) {
+        Log.e(TAG, "Camera is already stopped!");
+        throw new RuntimeException("Camera is already stopped!");
+      }
       camera.stopPreview();
       camera.setPreviewCallbackWithBuffer(null);
       camera.setPreviewTexture(null);
@@ -299,18 +348,16 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       }
       camera.release();
       camera = null;
-      exchange(result, true);
       Looper.myLooper().quit();
-      return;
+      return true;
     } catch (IOException e) {
       error = e;
     } catch (RuntimeException e) {
       error = e;
     }
     Log.e(TAG, "Failed to stop camera", error);
-    exchange(result, false);
     Looper.myLooper().quit();
-    return;
+    return false;
   }
 
   @WebRTCJNITarget

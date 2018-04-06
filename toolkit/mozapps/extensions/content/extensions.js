@@ -3188,6 +3188,10 @@ var gDetailView = {
     });
 
     let {optionsURL, optionsBrowserStyle} = this._addon;
+    if (this._addon.isWebExtension) {
+      let policy = ExtensionParent.WebExtensionPolicy.getByID(this._addon.id);
+      browser.sameProcessAsFrameLoader = policy.extension.groupFrameLoader;
+    }
     let remote = !E10SUtils.canLoadURIInProcess(optionsURL, Services.appinfo.PROCESS_TYPE_DEFAULT);
 
     let readyPromise;

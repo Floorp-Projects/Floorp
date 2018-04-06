@@ -7,16 +7,14 @@ const TEST_URL = "data:text/html,test for dynamically registering and unregister
 
 var toolbox;
 
-function test()
-{
+function test() {
   addTab(TEST_URL).then(tab => {
     let target = TargetFactory.forTab(tab);
     gDevTools.showToolbox(target).then(testRegister);
   });
 }
 
-function testRegister(aToolbox)
-{
+function testRegister(aToolbox) {
   toolbox = aToolbox;
   gDevTools.once("tool-registered", toolRegistered);
 
@@ -25,12 +23,11 @@ function testRegister(aToolbox)
     label: "Test Tool",
     inMenu: true,
     isTargetSupported: () => true,
-    build: function () {},
+    build: function() {},
   });
 }
 
-function toolRegistered(toolId)
-{
+function toolRegistered(toolId) {
   is(toolId, "test-tool", "tool-registered event handler sent tool id");
 
   ok(gDevTools.getToolDefinitionMap().has(toolId), "tool added to map");
@@ -61,15 +58,13 @@ function getAllBrowserWindows() {
   return wins;
 }
 
-function testUnregister()
-{
+function testUnregister() {
   gDevTools.once("tool-unregistered", toolUnregistered);
 
   gDevTools.unregisterTool("test-tool");
 }
 
-function toolUnregistered(toolId)
-{
+function toolUnregistered(toolId) {
   is(toolId, "test-tool", "tool-unregistered event handler sent tool id");
 
   ok(!gDevTools.getToolDefinitionMap().has(toolId), "tool removed from map");
@@ -90,11 +85,10 @@ function toolUnregistered(toolId)
   cleanup();
 }
 
-function cleanup()
-{
-  toolbox.destroy().then(() => {;
+function cleanup() {
+  toolbox.destroy().then(() => {
     toolbox = null;
     gBrowser.removeCurrentTab();
     finish();
-  })
+  });
 }

@@ -34,6 +34,11 @@ var WindowsGPOParser = {
     } finally {
       childWrk.close();
     }
+    // Need an extra check here so we don't
+    // JSON.stringify if we aren't in debug mode
+    if (log._maxLogLevel == "debug") {
+      log.debug(JSON.stringify(policies, null, 2));
+    }
     return policies;
   }
 };

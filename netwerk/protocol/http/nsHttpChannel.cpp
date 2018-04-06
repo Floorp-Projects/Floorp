@@ -6068,8 +6068,10 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     // The common case for HTTP channels is to begin proxy resolution and return
     // at this point. The only time we know mProxyInfo already is if we're
-    // proxying a non-http protocol like ftp.
-    if (!mProxyInfo && NS_SUCCEEDED(ResolveProxy())) {
+    // proxying a non-http protocol like ftp. We don't need to discover proxy
+    // settings if we are never going to make a network connection.
+    if (!mProxyInfo && !(mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_NO_NETWORK_IO)) &&
+        NS_SUCCEEDED(ResolveProxy())) {
         return NS_OK;
     }
 

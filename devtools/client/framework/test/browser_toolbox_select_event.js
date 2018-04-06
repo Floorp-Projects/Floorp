@@ -9,7 +9,7 @@ const PAGE_URL = "data:text/html;charset=utf-8,test select events";
 
 requestLongerTimeout(2);
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(PAGE_URL);
 
   let toolbox = await openToolboxForTab(tab, "webconsole", "bottom");
@@ -82,7 +82,7 @@ add_task(async function () {
       }
     };
     toolbox.once("select", onSelect);
-    let p1 = toolbox.selectTool("inspector")
+    let p1 = toolbox.selectTool("inspector");
     let p2 = toolbox.selectTool("inspector");
     // Check that both promises don't resolve too early
     let checkSelectToolResolution = panel => {

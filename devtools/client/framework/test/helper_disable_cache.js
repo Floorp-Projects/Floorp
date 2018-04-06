@@ -50,7 +50,7 @@ async function checkCacheEnabled(tabX, expected) {
 
   await reloadTab(tabX);
 
-  let oldGuid = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  let oldGuid = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     let doc = content.document;
     let h1 = doc.querySelector("h1");
     return h1.textContent;
@@ -58,7 +58,7 @@ async function checkCacheEnabled(tabX, expected) {
 
   await reloadTab(tabX);
 
-  let guid = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  let guid = await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     let doc = content.document;
     let h1 = doc.querySelector("h1");
     return h1.textContent;
@@ -91,7 +91,7 @@ function reloadTab(tabX) {
   let def = defer();
   let browser = gBrowser.selectedBrowser;
 
-  BrowserTestUtils.browserLoaded(browser).then(function () {
+  BrowserTestUtils.browserLoaded(browser).then(function() {
     info("Reloaded tab " + tabX.title);
     def.resolve();
   });

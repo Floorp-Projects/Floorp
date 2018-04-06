@@ -13,7 +13,7 @@ requestLongerTimeout(2);
 const URL = "data:text/html;charset=utf-8,Toggling devtools quickly";
 const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 
-add_task(async function () {
+add_task(async function() {
   // Make sure this test starts with the selectedTool pref cleared. Previous
   // tests select various tools, and that sets this pref.
   Services.prefs.clearUserPref("devtools.toolbox.selectedTool");

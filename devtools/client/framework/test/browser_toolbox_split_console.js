@@ -20,7 +20,7 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
 });
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(URL);
   let target = TargetFactory.forTab(tab);
   gToolbox = await gDevTools.showToolbox(target, "jsdebugger");

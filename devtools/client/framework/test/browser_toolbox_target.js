@@ -7,7 +7,7 @@
 // iframe while defining which document to debug by setting a `target`
 // attribute refering to the document to debug.
 
-add_task(async function () {
+add_task(async function() {
   // iframe loads the document to debug
   let iframe = document.createElement("browser");
   iframe.setAttribute("type", "content");

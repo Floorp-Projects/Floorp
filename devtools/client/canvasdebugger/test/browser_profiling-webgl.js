@@ -42,7 +42,9 @@ async function ifTestingSupported() {
   await removeTab(target.tab);
 
   info("Start to estimate WebGL drawElements function.");
-  var { target, front } = await initCanvasDebuggerBackend(WEBGL_DRAW_ELEMENTS);
+  let result = await initCanvasDebuggerBackend(WEBGL_DRAW_ELEMENTS);
+  target = result.target;
+  front = result.front;
 
   navigated = once(target, "navigate");
 
@@ -55,23 +57,23 @@ async function ifTestingSupported() {
   snapshotActor = await front.recordAnimationFrame();
   ok(snapshotActor,
     "A snapshot actor was sent after recording.");
-  
+
   animationOverview = await snapshotActor.getOverview();
   ok(animationOverview,
     "An animation overview could be retrieved after recording.");
-  
+
   functionCalls = animationOverview.calls;
   ok(functionCalls,
     "An array of function call actors was sent after recording.");
-  
+
   testFunctionCallTimestamp(functionCalls, currentTime);
-  
+
   info("Check triangle and vertex counts in drawElements()");
   is(animationOverview.primitive.tris, 5, "The count of triangles is correct.");
   is(animationOverview.primitive.vertices, 26, "The count of vertices is correct.");
   is(animationOverview.primitive.points, 4, "The count of points is correct.");
   is(animationOverview.primitive.lines, 8, "The count of lines is correct.");
-  
+
   await removeTab(target.tab);
   finish();
 }
@@ -79,9 +81,9 @@ async function ifTestingSupported() {
 function testFunctionCallTimestamp(functionCalls, currentTime) {
   info("Check the timestamps of function calls");
 
-  for ( let i = 0; i < functionCalls.length-1; i += 2 ) {
-    ok( functionCalls[i].timestamp > 0, "The timestamp of the called function is larger than 0." );
-    ok( functionCalls[i].timestamp < currentTime, "The timestamp has been minus the frame start time." );
-    ok( functionCalls[i+1].timestamp >= functionCalls[i].timestamp, "The timestamp of the called function is correct." );
+  for (let i = 0; i < functionCalls.length - 1; i += 2) {
+    ok(functionCalls[i].timestamp > 0, "The timestamp of the called function is larger than 0.");
+    ok(functionCalls[i].timestamp < currentTime, "The timestamp has been minus the frame start time.");
+    ok(functionCalls[i + 1].timestamp >= functionCalls[i].timestamp, "The timestamp of the called function is correct.");
   }
 }

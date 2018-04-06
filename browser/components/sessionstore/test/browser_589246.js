@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Mirrors WINDOW_ATTRIBUTES IN nsSessionStore.js
+// Mirrors WINDOW_ATTRIBUTES IN SessionStore.jsm
 const WINDOW_ATTRIBUTES = ["width", "height", "screenX", "screenY", "sizemode"];
 
 var stateBackup = ss.getBrowserState();
@@ -38,7 +38,7 @@ function checkOSX34Generator(num) {
     // should be in aCurState. So let's shape our expectations.
     let expectedState = JSON.parse(aPreviousState);
     expectedState[0].tabs.shift();
-    // size attributes are stripped out in _prepDataForDeferredRestore in nsSessionStore.
+    // size attributes are stripped out in _prepDataForDeferredRestore in SessionStore.jsm.
     // This isn't the best approach, but neither is comparing JSON strings
     WINDOW_ATTRIBUTES.forEach(attr => delete expectedState[0][attr]);
 

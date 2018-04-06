@@ -246,9 +246,8 @@
 @RESPATH@/components/ProcessSingleton.manifest
 @RESPATH@/components/MainProcessSingleton.js
 @RESPATH@/components/ContentProcessSingleton.js
-@RESPATH@/browser/components/nsSessionStore.manifest
+@RESPATH@/browser/components/nsSessionStartup.manifest
 @RESPATH@/browser/components/nsSessionStartup.js
-@RESPATH@/browser/components/nsSessionStore.js
 @RESPATH@/components/nsURLFormatter.manifest
 @RESPATH@/components/nsURLFormatter.js
 @RESPATH@/components/txEXSLTRegExFunctions.manifest

@@ -50,7 +50,7 @@
         initProgram();
         initBuffers();
         drawScene();
-      }
+      };
 
       function initProgram() {
         let vertexShader = getShader(gl, "shader-vs");
@@ -90,9 +90,9 @@
         gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesPositionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
            1.0,  1.0, 0.0,
-          -1.0,  1.0, 0.0,
+           -1.0,  1.0, 0.0,
            1.0, -1.0, 0.0,
-          -1.0, -1.0, 0.0
+           -1.0, -1.0, 0.0
         ]), gl.STATIC_DRAW);
 
         squareVerticesColorBuffer = gl.createBuffer();

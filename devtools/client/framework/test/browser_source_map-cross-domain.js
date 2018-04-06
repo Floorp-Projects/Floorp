@@ -28,7 +28,7 @@ const ORIGINAL_URL = "webpack:///code_cross_domain.js";
 const GENERATED_LINE = 82;
 const ORIGINAL_LINE = 12;
 
-add_task(async function () {
+add_task(async function() {
   const toolbox = await openNewTabAndToolbox(PAGE_URL, "webconsole");
   const service = toolbox.sourceMapURLService;
 

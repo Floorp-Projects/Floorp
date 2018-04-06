@@ -2,12 +2,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(runTests);
   });
 
@@ -16,8 +15,7 @@ function test()
 
 var gTabsize;
 
-function runTests(sw)
-{
+function runTests(sw) {
   gTabsize = Services.prefs.getIntPref("devtools.editor.tabsize");
   Services.prefs.setIntPref("devtools.editor.tabsize", 6);
   const space = " ".repeat(6);
@@ -33,7 +31,7 @@ function runTests(sw)
   });
 }
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   Services.prefs.setIntPref("devtools.editor.tabsize", gTabsize);
   gTabsize = null;
 });

@@ -161,6 +161,10 @@ WyciwygChannelParent::RecvAppData(const IPC::SerializedLoadContext& loadContext,
   if (!SetupAppData(loadContext, parent))
     return IPC_FAIL_NO_REASON(this);
 
+  if (!mChannel) {
+    return IPC_FAIL(this, "Should have a channel");
+  }
+
   mChannel->SetNotificationCallbacks(this);
   return IPC_OK();
 }

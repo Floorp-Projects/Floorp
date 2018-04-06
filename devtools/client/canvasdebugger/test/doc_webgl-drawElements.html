@@ -32,14 +32,14 @@
       let canvas, gl, shaderProgram;
       let triangleVertexPositionBuffer, squareVertexPositionBuffer;
       let triangleIndexBuffer;
-      let squareIndexBuffer, squareStripIndexBuffer, squareFanIndexBuffer
-     
+      let squareIndexBuffer, squareStripIndexBuffer, squareFanIndexBuffer;
+
       window.onload = function() {
         canvas = document.querySelector("canvas");
         gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
-       
+      
         initShaders();
         initBuffers();
 
@@ -47,38 +47,38 @@
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.disable(gl.DEPTH_TEST);
         drawScene();
-      }
+      };
 
       function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
         if (!shaderScript) {
-            return null;
+          return null;
         }
 
         var str = "";
         var k = shaderScript.firstChild;
         while (k) {
-            if (k.nodeType == 3) {
-                str += k.textContent;
-            }
-            k = k.nextSibling;
+          if (k.nodeType == 3) {
+            str += k.textContent;
+          }
+          k = k.nextSibling;
         }
 
         var shader;
         if (shaderScript.type == "x-shader/x-fragment") {
-            shader = gl.createShader(gl.FRAGMENT_SHADER);
+          shader = gl.createShader(gl.FRAGMENT_SHADER);
         } else if (shaderScript.type == "x-shader/x-vertex") {
-            shader = gl.createShader(gl.VERTEX_SHADER);
+          shader = gl.createShader(gl.VERTEX_SHADER);
         } else {
-            return null;
+          return null;
         }
 
         gl.shaderSource(shader, str);
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            alert(gl.getShaderInfoLog(shader));
-            return null;
+          alert(gl.getShaderInfoLog(shader));
+          return null;
         }
 
         return shader;
@@ -94,7 +94,7 @@
         gl.linkProgram(shaderProgram);
 
         if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            alert("Could not initialise shaders");
+          alert("Could not initialise shaders");
         }
 
         gl.useProgram(shaderProgram);
@@ -106,58 +106,57 @@
 
       function initBuffers() {
           // Create triangle vertex/index buffer
-          triangleVertexPositionBuffer = gl.createBuffer();
-          gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
-          var vertices = [
+        triangleVertexPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
+        var vertices = [
              0.0,  0.5,  0.0,
-            -0.5, -0.5,  0.0,
+             -0.5, -0.5,  0.0,
              0.5, -0.5,  0.0
-          ];
-          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-          triangleVertexPositionBuffer.itemSize = 3;
-          triangleVertexPositionBuffer.numItems = 3;
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        triangleVertexPositionBuffer.itemSize = 3;
+        triangleVertexPositionBuffer.numItems = 3;
 
-          triangleIndexBuffer = gl.createBuffer();
-          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleIndexBuffer);
-          var indices = [
+        triangleIndexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleIndexBuffer);
+        var indices = [
               0, 1, 2
-          ];
-          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-          triangleIndexBuffer.itemSize = 1;
-          triangleIndexBuffer.numItems = 3;
+        ];
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+        triangleIndexBuffer.itemSize = 1;
+        triangleIndexBuffer.numItems = 3;
 
           // Create square vertex/index buffer
-          squareVertexPositionBuffer = gl.createBuffer();
-          gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-          vertices = [
+        squareVertexPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+        vertices = [
              0.8,  0.8,  0.0,
-            -0.8,  0.8,  0.0,
+             -0.8,  0.8,  0.0,
              0.8, -0.8,  0.0,
-            -0.8, -0.8,  0.0
-          ];
-          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-          squareVertexPositionBuffer.itemSize = 3;
-          squareVertexPositionBuffer.numItems = 4;
+             -0.8, -0.8,  0.0
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        squareVertexPositionBuffer.itemSize = 3;
+        squareVertexPositionBuffer.numItems = 4;
 
-          squareIndexBuffer = gl.createBuffer();
-          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer);
-          indices = [ 
+        squareIndexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer);
+        indices = [
             0, 1, 2,
             1, 3, 2
-          ];
-          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-          squareIndexBuffer.itemSize = 1;
-          squareIndexBuffer.numItems = 6;
+        ];
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+        squareIndexBuffer.itemSize = 1;
+        squareIndexBuffer.numItems = 6;
 
-          squareStripIndexBuffer = gl.createBuffer();
-          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareStripIndexBuffer);
-          indices = [ 
+        squareStripIndexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareStripIndexBuffer);
+        indices = [
             0, 1, 2, 3
-          ];
-          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-          squareStripIndexBuffer.itemSize = 1;
-          squareStripIndexBuffer.numItems = 4;
-
+        ];
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+        squareStripIndexBuffer.itemSize = 1;
+        squareStripIndexBuffer.numItems = 4;
       }
 
       function drawScene() {

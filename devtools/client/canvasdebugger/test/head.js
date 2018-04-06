@@ -72,7 +72,7 @@ async function test() {
   let generator = isTestingSupported() ? ifTestingSupported : ifTestingUnsupported;
   try {
     await generator();
-  } catch(e) {
+  } catch (e) {
     handleError(e);
   }
 }
@@ -118,7 +118,7 @@ function initCallWatcherBackend(aUrl) {
   info("Initializing a call watcher front.");
   initServer();
 
-  return (async function () {
+  return (async function() {
     let tab = await addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
@@ -133,7 +133,7 @@ function initCanvasDebuggerBackend(aUrl) {
   info("Initializing a canvas debugger front.");
   initServer();
 
-  return (async function () {
+  return (async function() {
     let tab = await addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 
@@ -147,7 +147,7 @@ function initCanvasDebuggerBackend(aUrl) {
 function initCanvasDebuggerFrontend(aUrl) {
   info("Initializing a canvas debugger pane.");
 
-  return (async function () {
+  return (async function() {
     let tab = await addTab(aUrl);
     let target = TargetFactory.forTab(tab);
 

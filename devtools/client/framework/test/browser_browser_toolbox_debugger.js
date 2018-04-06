@@ -48,7 +48,7 @@ add_task(async function runTest() {
   // Debugger is going to fail and only display root folder (`/`) listing.
   // But it won't try to fetch this url and use sandbox content as expected.
   let testUrl = `http://mozilla.org/browser-toolbox-test-${id}.js`;
-  Cu.evalInSandbox("(" + function () {
+  Cu.evalInSandbox("(" + function() {
     this.plop = function plop() {
       return 1;
     };
@@ -63,7 +63,7 @@ add_task(async function runTest() {
               .getService(Ci.nsIEnvironment);
   // First inject a very minimal head, with simplest assertion methods
   // and very common globals
-  let testHead = (function () {
+  let testHead = (function() {
     const info = msg => dump(msg + "\n");
     const is = (a, b, description) => {
       let msg = "'" + JSON.stringify(a) + "' is equal to '" + JSON.stringify(b) + "'";
@@ -108,12 +108,14 @@ add_task(async function runTest() {
         return Promise.resolve(true);
       }
       return new Promise(resolve => {
-        setTimeout(function () {
+        // TODO: fixme.
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+        setTimeout(function() {
           waitUntil(predicate, interval).then(() => resolve(true));
         }, interval);
       });
     }
-  }).toSource().replace(/^\(function \(\) \{|\}\)$/g, "");
+  }).toSource().replace(/^\(function\(\) \{|\}\)$/g, "");
   // Stringify testHead's function and remove `(function {` prefix and `})` suffix
   // to ensure inner symbols gets exposed to next pieces of code
 
@@ -128,7 +130,7 @@ add_task(async function runTest() {
   // toolbox process
   let testScript = (await fetch(testScriptURL)).content;
   let source =
-    "try { let testUrl = \""+testUrl+"\";" + testHead + debuggerHead + testScript + "} catch (e) {" +
+    "try { let testUrl = \"" + testUrl + "\";" + testHead + debuggerHead + testScript + "} catch (e) {" +
     "  dump('Exception: '+ e + ' at ' + e.fileName + ':' + " +
     "       e.lineNumber + '\\nStack: ' + e.stack + '\\n');" +
     "}";

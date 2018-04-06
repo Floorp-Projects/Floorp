@@ -3240,9 +3240,7 @@ function getMeOutOfHere() {
  * that has certificate errors, we can get them somewhere safe.
  */
 function goBackFromErrorPage() {
-  const ss = Cc["@mozilla.org/browser/sessionstore;1"].
-             getService(Ci.nsISessionStore);
-  let state = JSON.parse(ss.getTabState(gBrowser.selectedTab));
+  let state = JSON.parse(SessionStore.getTabState(gBrowser.selectedTab));
   if (state.index == 1) {
     // If the unsafe page is the first or the only one in history, go to the
     // start page.

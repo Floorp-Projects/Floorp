@@ -3,14 +3,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from shared-head.js */
 "use strict";
 
 // Test that a button to access tools hidden by toolbar overflow is displayed when the
 // toolbar starts to present an overflow.
 let { Toolbox } = require("devtools/client/framework/toolbox");
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab("about:blank");
 
   info("Open devtools on the Inspector in a separate window");

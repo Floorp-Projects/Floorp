@@ -216,7 +216,7 @@ this.DevToolsShim = {
     if (!this.isInitialized()) {
       DevtoolsStartup.initDevTools(reason);
     }
-  }
+  },
 };
 
 /**
@@ -231,6 +231,7 @@ let webExtensionsMethods = [
   "getTargetForTab",
   "getTheme",
   "openBrowserConsole",
+  "getToolboxes",
 ];
 
 for (let method of webExtensionsMethods) {

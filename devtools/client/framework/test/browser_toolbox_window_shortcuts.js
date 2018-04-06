@@ -12,7 +12,7 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 var toolbox, toolIDs, toolShortcuts = [], idIndex, modifiedPrefs = [];
 
 function test() {
-  addTab("about:blank").then(function () {
+  addTab("about:blank").then(function() {
     toolIDs = [];
     for (let [id, definition] of gDevTools._tools) {
       let shortcut = Startup.KeyShortcuts.filter(s => s.toolId == id)[0];
@@ -23,15 +23,13 @@ function test() {
       toolShortcuts.push(shortcut);
 
       // Enable disabled tools
-      let pref = definition.visibilityswitch, prefValue;
-      try {
-        prefValue = Services.prefs.getBoolPref(pref);
-      } catch (e) {
-        continue;
-      }
-      if (!prefValue) {
-        modifiedPrefs.push(pref);
-        Services.prefs.setBoolPref(pref, true);
+      let pref = definition.visibilityswitch;
+      if (pref) {
+        let prefValue = Services.prefs.getBoolPref(pref, false);
+        if (!prefValue) {
+          modifiedPrefs.push(pref);
+          Services.prefs.setBoolPref(pref, true);
+        }
       }
     }
     let target = TargetFactory.forTab(gBrowser.selectedTab);
@@ -78,7 +76,7 @@ function selectCB(id) {
 }
 
 function tidyUp() {
-  toolbox.destroy().then(function () {
+  toolbox.destroy().then(function() {
     gBrowser.removeCurrentTab();
 
     for (let pref of modifiedPrefs) {

@@ -3,19 +3,17 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* Bug 650760 */
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.loadURI("data:text/html,Test keybindings for opening Scratchpad MDN Documentation, bug 650760");
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(runTest);
   });
 }
 
-function runTest()
-{
+function runTest() {
   let sp = gScratchpadWindow.Scratchpad;
   ok(sp, "Scratchpad object exists in new window");
   ok(sp.editor.hasFocus(), "the editor has focus");
@@ -24,11 +22,11 @@ function runTest()
   let modifiers = keyid.getAttribute("modifiers");
 
   let key = null;
-  if (keyid.getAttribute("keycode"))
+  if (keyid.getAttribute("keycode")) {
     key = keyid.getAttribute("keycode");
-
-  else if (keyid.getAttribute("key"))
+  } else if (keyid.getAttribute("key")) {
     key = keyid.getAttribute("key");
+  }
 
   isnot(key, null, "Successfully retrieved keycode/key");
 
@@ -42,7 +40,9 @@ function runTest()
 
   info("check that the MDN page is opened on \"F1\"");
   let linkClicked = false;
-  sp.openDocumentationPage = function (event) { linkClicked = true; };
+  sp.openDocumentationPage = function(event) {
+    linkClicked = true;
+  };
 
   EventUtils.synthesizeKey(key, aEvent, gScratchpadWindow);
 
@@ -50,8 +50,7 @@ function runTest()
   finishTest();
 }
 
-function finishTest()
-{
+function finishTest() {
   gScratchpadWindow.close();
   finish();
 }

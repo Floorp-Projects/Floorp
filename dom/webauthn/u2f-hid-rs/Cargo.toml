@@ -14,7 +14,7 @@ winapi = "0.2.8"
 
 [dependencies]
 rand = "0.3"
-log = "0.3"
+log = "0.4"
 libc = "^0.2"
 boxfnonce = "0.0.3"
 runloop = "0.1.0"
@@ -23,4 +23,4 @@ bitflags = "1.0"
 [dev-dependencies]
 rust-crypto = "^0.2"
 base64 = "^0.4"
-env_logger = "0.4.1"
+env_logger = "0.5"

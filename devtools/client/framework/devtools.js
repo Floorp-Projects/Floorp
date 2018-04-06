@@ -697,6 +697,16 @@ DevTools.prototype = {
   },
 
   /**
+   * Returns the array of the existing toolboxes.
+   *
+   * @return {Array<Toolbox>}
+   *   An array of toolboxes.
+   */
+  getToolboxes() {
+    return Array.from(this._toolboxes.values());
+  },
+
+  /**
    * Iterator that yields each of the toolboxes.
    */
   * [Symbol.iterator ]() {

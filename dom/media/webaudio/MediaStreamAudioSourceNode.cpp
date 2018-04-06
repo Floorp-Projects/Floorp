@@ -58,6 +58,18 @@ MediaStreamAudioSourceNode::Create(AudioContext& aAudioContext,
     return nullptr;
   }
 
+  if (aAudioContext.Graph() != aOptions.mMediaStream->GetPlaybackStream()->Graph()) {
+    nsCOMPtr<nsPIDOMWindowInner> pWindow = aAudioContext.GetParentObject();
+    nsIDocument* document = pWindow ? pWindow->GetExtantDoc() : nullptr;
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Web Audio"),
+                                    document,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "MediaStreamAudioSourceNodeDifferentRate");
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
   RefPtr<MediaStreamAudioSourceNode> node =
     new MediaStreamAudioSourceNode(&aAudioContext);
 

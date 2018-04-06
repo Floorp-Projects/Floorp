@@ -1027,7 +1027,7 @@ var PlacesUIUtils = {
   onSidebarTreeKeyPress(event) {
     let node = event.target.selectedNode;
     if (node) {
-      if (event.keyCode == KeyEvent.DOM_VK_RETURN)
+      if (event.keyCode == event.DOM_VK_RETURN)
         this.openNodeWithEvent(node, event);
     }
   },

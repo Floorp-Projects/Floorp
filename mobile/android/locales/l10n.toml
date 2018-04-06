@@ -110,14 +110,12 @@ locales = [
 [build]
 exclude-multi-locale = [
     "ach",
-    "bs",
     "ia",
     "km",
     "ltg",
     "meh",
     "oc",
     "tl",
-    "trs",
 ]
 
 [env]

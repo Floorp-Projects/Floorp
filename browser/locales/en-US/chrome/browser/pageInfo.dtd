@@ -66,9 +66,9 @@
 
 <!ENTITY  securityView.privacy.header                   "Privacy &amp; History">
 <!ENTITY  securityView.privacy.history                  "Have I visited this website prior to today?">
-<!ENTITY  securityView.privacy.cookies                  "Is this website storing information (cookies) on my computer?">
-<!ENTITY  securityView.privacy.viewCookies              "View Cookies">
-<!ENTITY  securityView.privacy.viewCookies.accessKey    "k">
+<!ENTITY  securityView.privacy.siteData                 "Is this website storing information on my computer?">
+<!ENTITY  securityView.privacy.clearSiteData            "Clear Cookies and Site Data">
+<!ENTITY  securityView.privacy.clearSiteData.accessKey  "C">
 <!ENTITY  securityView.privacy.passwords                "Have I saved any passwords for this website?">
 <!ENTITY  securityView.privacy.viewPasswords            "View Saved Passwords">
 <!ENTITY  securityView.privacy.viewPasswords.accessKey  "w">

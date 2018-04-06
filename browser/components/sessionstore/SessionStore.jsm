@@ -2334,6 +2334,9 @@ var SessionStoreInternal = {
   },
 
   getTabState: function ssi_getTabState(aTab) {
+    if (!aTab || !aTab.ownerGlobal) {
+      throw Components.Exception("Need a valid tab", Cr.NS_ERROR_INVALID_ARG);
+    }
     if (!aTab.ownerGlobal.__SSi) {
       throw Components.Exception("Default view is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
@@ -2360,7 +2363,7 @@ var SessionStoreInternal = {
     }
 
     let window = aTab.ownerGlobal;
-    if (!("__SSi" in window)) {
+    if (!window || !("__SSi" in window)) {
       throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
 
@@ -2375,6 +2378,9 @@ var SessionStoreInternal = {
   },
 
   duplicateTab: function ssi_duplicateTab(aWindow, aTab, aDelta = 0, aRestoreImmediately = true) {
+    if (!aTab || !aTab.ownerGlobal) {
+      throw Components.Exception("Need a valid tab", Cr.NS_ERROR_INVALID_ARG);
+    }
     if (!aTab.ownerGlobal.__SSi) {
       throw Components.Exception("Default view is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
