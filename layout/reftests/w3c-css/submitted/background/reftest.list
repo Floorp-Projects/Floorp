@@ -21,7 +21,7 @@
 == background-repeat-round-4.html background-repeat-round-4-ref.html
 
 #border-image test cases
-fuzzy-if(webrender,10-10,576-576) == border-image-repeat-round-1.html border-image-repeat-round-1-ref.html
+fuzzy-if(webrender,9-10,572-576) == border-image-repeat-round-1.html border-image-repeat-round-1-ref.html
 fuzzy-if(webrender,7-7,216-216) fails-if(webrender&&winWidget) == border-image-repeat-round-2.html border-image-repeat-round-2-ref.html
 == border-image-repeat-space-1.html border-image-repeat-space-1-ref.html
 == border-image-repeat-space-2.html border-image-repeat-space-2-ref.html

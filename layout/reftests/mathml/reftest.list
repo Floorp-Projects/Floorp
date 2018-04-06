@@ -374,7 +374,7 @@ test-pref(font.minimum-size.x-math,40) == default-font.html default-font-ref.htm
 != radicalbar-1a.html about:blank
 != radicalbar-1b.html about:blank
 != radicalbar-1c.html about:blank
-fails-if(webrender) != radicalbar-1d.html about:blank
+fails-if(webrender&&gtkWidget) != radicalbar-1d.html about:blank
 != radicalbar-2.html about:blank
 != radicalbar-2a.html about:blank
 != radicalbar-2b.html about:blank

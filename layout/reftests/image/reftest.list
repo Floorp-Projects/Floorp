@@ -1,5 +1,5 @@
 fuzzy-if(Android,8,30) == background-image-zoom-1.html background-image-zoom-1-ref.html
-fails-if(usesRepeatResampling) == background-image-zoom-2.html about:blank
+fails-if(usesRepeatResampling&&!(webrender&&winWidget)) == background-image-zoom-2.html about:blank
 == image-seam-1a.html image-seam-1-ref.html
 == image-seam-1b.html image-seam-1-ref.html
 fuzzy-if(Android,255,154) == image-seam-2.html  image-seam-2-ref.html  # Bug 1128229

@@ -9,12 +9,12 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureSkiaGL,2,89997) f
 fuzzy(1,800000) == linear-flipped-1.html linear-flipped-1-ref.html
 == linear-position-1a.html linear-position-1-ref.html
 == linear-repeat-1a.html linear-repeat-1-ref.html
-fails-if(d2d) == linear-repeat-1b.html linear-repeat-1-ref.html # bug 582236
+fails-if(d2d&&!webrender) == linear-repeat-1b.html linear-repeat-1-ref.html # bug 582236
 == linear-repeat-1c.html linear-repeat-1-ref.html
-fails-if(d2d) == linear-repeat-1d.html linear-repeat-1-ref.html # bug 582236
+fails-if(d2d&&!webrender) == linear-repeat-1d.html linear-repeat-1-ref.html # bug 582236
 == linear-repeat-1e.html linear-repeat-1-ref.html
-fails-if(d2d) == linear-repeat-1f.html linear-repeat-1-ref.html # bug 582236
-fails-if(d2d) == linear-repeat-1g.html linear-repeat-1-ref.html # bug 582236
+fails-if(d2d&&!webrender) == linear-repeat-1f.html linear-repeat-1-ref.html # bug 582236
+fails-if(d2d&&!webrender) == linear-repeat-1g.html linear-repeat-1-ref.html # bug 582236
 fuzzy-if(skiaContent,1,500) == linear-rotated-1.html linear-rotated-1-ref.html
 fuzzy-if(winWidget,1,37800) fuzzy-if(skiaContent,1,45000) == linear-size-1a.html linear-size-1-ref.html
 == linear-stops-1a.html linear-stops-1-ref.html
