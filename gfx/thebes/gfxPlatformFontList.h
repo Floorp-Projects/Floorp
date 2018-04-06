@@ -87,6 +87,7 @@ struct FontListSizes {
                             // including the font table cache and the cmaps
     uint32_t mFontTableCacheSize; // memory used for the gfxFontEntry table caches
     uint32_t mCharMapsSize; // memory used for cmap coverage info
+    uint32_t mLoaderSize;   // memory used for (platform-specific) loader
 };
 
 class gfxUserFontSet;

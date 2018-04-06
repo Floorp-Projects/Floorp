@@ -1388,10 +1388,10 @@ GfxInfo::GetGfxDriverInfo()
       DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_BUG_1359416");
 
     // bug 1419264
-    APPEND_TO_DRIVER_BLOCKLIST(OperatingSystem::Windows7,
+    APPEND_TO_DRIVER_BLOCKLIST_RANGE(OperatingSystem::Windows7,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorNVIDIA), GfxDriverInfo::allDevices,
       nsIGfxInfo::FEATURE_ADVANCED_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-      DRIVER_GREATER_THAN_OR_EQUAL, V(23,21,13,8813),
+      DRIVER_BETWEEN_INCLUSIVE, V(23,21,13,8569), V(23,21,13,9135),
       "FEATURE_FAILURE_BUG_1419264", "Windows 10");
   }
   return *mDriverInfo;

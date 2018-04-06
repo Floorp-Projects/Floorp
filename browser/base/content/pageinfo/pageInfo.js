@@ -471,21 +471,6 @@ function loadTab(args) {
   radioGroup.focus();
 }
 
-function toggleGroupbox(id) {
-  var elt = document.getElementById(id);
-  if (elt.hasAttribute("closed")) {
-    elt.removeAttribute("closed");
-    if (elt.flexWhenOpened)
-      elt.flex = elt.flexWhenOpened;
-  } else {
-    elt.setAttribute("closed", "true");
-    if (elt.flex) {
-      elt.flexWhenOpened = elt.flex;
-      elt.flex = 0;
-    }
-  }
-}
-
 function openCacheEntry(key, cb) {
   var checkCacheListener = {
     onCacheEntryCheck(entry, appCache) {
@@ -523,20 +508,20 @@ function makeGeneralTab(metaViewRows, docInfo) {
 
   var metaGroup = document.getElementById("metaTags");
   if (!length)
-    metaGroup.collapsed = true;
+    metaGroup.style.visibility = "hidden";
   else {
     var metaTagsCaption = document.getElementById("metaTagsCaption");
     if (length == 1)
-      metaTagsCaption.label = gBundle.getString("generalMetaTag");
+      metaTagsCaption.value = gBundle.getString("generalMetaTag");
     else
-      metaTagsCaption.label = gBundle.getFormattedString("generalMetaTags", [length]);
+      metaTagsCaption.value = gBundle.getFormattedString("generalMetaTags", [length]);
     var metaTree = document.getElementById("metatree");
     metaTree.view = gMetaView;
 
     // Add the metaViewRows onto the general tab's meta info tree.
     gMetaView.addRows(metaViewRows);
 
-    metaGroup.collapsed = false;
+    metaGroup.style.removeProperty("visibility");
   }
 
   // get the date of last modification

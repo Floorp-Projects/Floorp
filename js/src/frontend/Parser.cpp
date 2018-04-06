@@ -9992,14 +9992,6 @@ GeneralParser<ParseHandler, CharT>::exprInParens(InHandling inHandling,
     return expr(inHandling, yieldHandling, tripledotHandling, possibleError, PredictInvoked);
 }
 
-void
-ParserBase::addTelemetry(DeprecatedLanguageExtension e)
-{
-    if (context->helperThread())
-        return;
-    context->compartment()->addTelemetry(getFilename(), e);
-}
-
 template class PerHandlerParser<FullParseHandler>;
 template class PerHandlerParser<SyntaxParseHandler>;
 template class GeneralParser<FullParseHandler, char16_t>;

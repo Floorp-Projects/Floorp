@@ -119,6 +119,10 @@ TextureImageEGL::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& 
                              &uploadSize,
                              needInit,
                              aFrom);
+    if (mTextureFormat == SurfaceFormat::UNKNOWN) {
+        return false;
+    }
+
     if (uploadSize > 0) {
         UpdateUploadSize(uploadSize);
     }
