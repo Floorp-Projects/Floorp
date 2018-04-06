@@ -7,7 +7,9 @@ default-preferences pref(gfx.font_loader.delay,0)
 == CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family-ref.xhtml
 
 # tests for bug 1394311 (case-insensitive lang tag processing)
-pref(font.default.zh-CN,"serif") pref(font.default.zh-TW,"serif") pref(font.default.ja,"serif") pref(font.default.ko,"serif") == 1394311.htm 1394311-ref.htm
+# (First attempt is random-if(windows 7), due to intermittent failure with a
+# single missing character - see bug 1451723 & more generally bug 1392106.)
+pref(font.default.zh-CN,"serif") pref(font.default.zh-TW,"serif") pref(font.default.ja,"serif") pref(font.default.ko,"serif") random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1394311.htm 1394311-ref.htm
 pref(font.default.zh-CN,"sans-serif") pref(font.default.zh-TW,"sans-serif") pref(font.default.ja,"sans-serif") pref(font.default.ko,"sans-serif") == 1394311.htm 1394311-ref.htm
 
 # tests for bug 1367860 (correct default generic font based on language)
