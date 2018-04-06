@@ -27,13 +27,17 @@ from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
 
 
-def process(input_dir, inc_paths, cache_dir, header_dir, xpcrs_dir,
-            xpt_dir, deps_dir, module, stems):
+def process(input_dir, inc_paths, bindings_conf, cache_dir, header_dir,
+            xpcrs_dir, xpt_dir, deps_dir, module, stems):
     p = IDLParser(outputdir=cache_dir)
 
     xpts = []
     mk = Makefile()
     rule = mk.create_rule()
+
+    glbl = {}
+    execfile(bindings_conf, glbl)
+    webidlconfig = glbl['DOMInterfaces']
 
     # Write out dependencies for Python modules we import. If this list isn't
     # up to date, we will not re-process XPIDL files if the processor changes.
@@ -44,7 +48,7 @@ def process(input_dir, inc_paths, cache_dir, header_dir, xpcrs_dir,
         idl_data = open(path).read()
 
         idl = p.parse(idl_data, filename=path)
-        idl.resolve([input_dir] + inc_paths, p)
+        idl.resolve([input_dir] + inc_paths, p, webidlconfig)
 
         header_path = os.path.join(header_dir, '%s.h' % stem)
         rs_rt_path = os.path.join(xpcrs_dir, 'rt', '%s.rs' % stem)
@@ -80,6 +84,8 @@ def main(argv):
         help='Directory in which to find or write cached lexer data.')
     parser.add_argument('--depsdir',
         help='Directory in which to write dependency files.')
+    parser.add_argument('--bindings-conf',
+        help='Path to the WebIDL binding configuration file.')
     parser.add_argument('inputdir',
         help='Directory in which to find source .idl files.')
     parser.add_argument('headerdir',
@@ -96,8 +102,9 @@ def main(argv):
         help='Extra directories where to look for included .idl files.')
 
     args = parser.parse_args(argv)
-    process(args.inputdir, args.incpath, args.cache_dir, args.headerdir,
-        args.xpcrsdir, args.xptdir, args.depsdir, args.module, args.idls)
+    process(args.inputdir, args.incpath, args.bindings_conf, args.cache_dir,
+        args.headerdir, args.xpcrsdir, args.xptdir, args.depsdir, args.module,
+        args.idls)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
