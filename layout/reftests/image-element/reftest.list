@@ -18,7 +18,7 @@ fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),16,90) == element-paint-
 fuzzy-if(skiaContent,255,4) == element-paint-transform-repeated.html element-paint-transform-repeated-ref.html
 fuzzy-if(d2d,255,24) == element-paint-transform-03.html element-paint-transform-03-ref.html
 fuzzy-if(asyncPan,2,140) fuzzy-if(skiaContent,3,106) fails-if(webrender&&winWidget) == element-paint-native-widget.html element-paint-native-widget-ref.html   # in -ref the scrollframe is active and layerized differently with APZ
-fails-if(usesRepeatResampling) == element-paint-subimage-sampling-restriction.html about:blank
+fails-if(usesRepeatResampling&&!(webrender&&winWidget)) == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
 fuzzy-if(webrender,35-35,706-706) == element-paint-sharpness-01a.html element-paint-sharpness-01b.html
 fuzzy-if(skiaContent,1,326) == element-paint-sharpness-01b.html element-paint-sharpness-01c.html

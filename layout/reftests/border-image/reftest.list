@@ -42,7 +42,7 @@ fuzzy-if(asyncPan&&!layersGPUAccelerated,140,514) fuzzy-if(winWidget&&stylo,144,
 == border-image-style-none-auto.html border-image-style-none-auto-ref.html
 
 # border images with gradients
-fuzzy-if(webrender,1-1,1804-1804) == border-image-linear-gradient.html border-image-linear-gradient-ref.html
+fuzzy-if(webrender,1-1,1488-1804) == border-image-linear-gradient.html border-image-linear-gradient-ref.html
 fuzzy(1,98) fuzzy-if(skiaContent,1,350) fuzzy-if(webrender,1-1,37537-37537) fails-if(webrender&&winWidget) == border-image-linear-gradient-slice-1.html border-image-linear-gradient-slice-1-ref.html
 fuzzy(1,149) fuzzy-if(OSX,1,10595) fuzzy-if(webrender,1,25007) fails-if(webrender&&winWidget) == border-image-linear-gradient-slice-2.html border-image-linear-gradient-slice-2-ref.html
 fuzzy(1,433) fuzzy-if(skiaContent,1,2500) fuzzy-if(webrender,1,85584) fails-if(webrender&&winWidget) == border-image-linear-gradient-slice-fill-1.html border-image-linear-gradient-slice-fill-1-ref.html
