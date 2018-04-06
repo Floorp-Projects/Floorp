@@ -16,7 +16,6 @@
 #include "nscore.h"
 
 class nsIContent;
-class nsIDOMDocument;
 class nsIDOMEvent;
 class nsIDocumentEncoder;
 class nsIOutputStream;
@@ -149,7 +148,7 @@ public:
 
   virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
                                           int32_t aIndex,
-                                          nsIDOMDocument* aSourceDoc,
+                                          nsIDocument* aSourceDoc,
                                           nsINode* aDestinationNode,
                                           int32_t aDestOffset,
                                           bool aDoDeleteSelection) override;
@@ -169,7 +168,7 @@ public:
    * principals match, or we are in a editor context where this doesn't matter.
    * Otherwise, the data must be sanitized first.
    */
-  bool IsSafeToInsertData(nsIDOMDocument* aSourceDoc);
+  bool IsSafeToInsertData(nsIDocument* aSourceDoc);
 
   static void GetDefaultEditorPrefs(int32_t& aNewLineHandling,
                                     int32_t& aCaretStyle);

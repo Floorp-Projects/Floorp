@@ -12,7 +12,6 @@
 #include "nsError.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsIDOMDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIInterfaceRequestorUtils.h"
