@@ -34,6 +34,7 @@ const BadCertHost sBadCertHosts[] =
   { "unknownissuer.example.com", "unknownissuer" },
   { "mismatch.example.com", "mismatch" },
   { "mismatch-CN.example.com", "mismatchCN" },
+  { "mitm.example.com", "mitm" },
   { "expiredissuer.example.com", "expiredissuer" },
   { "notyetvalidissuer.example.com", "notYetValidIssuer" },
   { "before-epoch-issuer.example.com", "beforeEpochIssuer" },

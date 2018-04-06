@@ -161,6 +161,7 @@ gfxPlatformFontList::MemoryReporter::CollectReports(
     sizes.mFontListSize = 0;
     sizes.mFontTableCacheSize = 0;
     sizes.mCharMapsSize = 0;
+    sizes.mLoaderSize = 0;
 
     gfxPlatformFontList::PlatformFontList()->AddSizeOfIncludingThis(&FontListMallocSizeOf,
                                                                     &sizes);
@@ -180,6 +181,13 @@ gfxPlatformFontList::MemoryReporter::CollectReports(
             "explicit/gfx/font-tables", KIND_HEAP, UNITS_BYTES,
             sizes.mFontTableCacheSize,
             "Memory used for cached font metrics and layout tables.");
+    }
+
+    if (sizes.mLoaderSize) {
+        MOZ_COLLECT_REPORT(
+            "explicit/gfx/font-loader", KIND_HEAP, UNITS_BYTES,
+            sizes.mLoaderSize,
+            "Memory used for (platform-specific) font loader.");
     }
 
     return NS_OK;

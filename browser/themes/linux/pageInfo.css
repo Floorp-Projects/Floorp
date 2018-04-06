@@ -98,35 +98,6 @@ textbox[disabled] {
   margin-inline-start: 5px;
 }
 
-groupbox.collapsable caption .caption-icon {
-  width: 9px;
-  height: 9px;
-  background-repeat: no-repeat;
-  background-position: center;
-  margin-inline-start: 1px;
-  margin-inline-end: 3px;
-  background-image: url("chrome://global/skin/tree/twisty-open.png");
-}
-
-groupbox.collapsable[closed="true"] {
-  border: none;
-}
-
-groupbox.collapsable[closed="true"] caption .caption-icon {
-  background-image: url("chrome://global/skin/tree/twisty-clsd.png");
-}
-
-groupbox tree {
-  margin: 0;
-  border: none;
-}
-
-groupbox.treebox .groupbox-body {
-  margin-inline-start: 5px;
-  margin-inline-end: 1px;
-  padding-top: 0;
-}
-
 #securityBox description {
   margin-inline-start: 10px;
 }
