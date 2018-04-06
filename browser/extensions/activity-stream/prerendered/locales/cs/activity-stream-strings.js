@@ -65,7 +65,7 @@ window.gActivityStreamStrings = {
   "topsites_form_url_label": "URL",
   "topsites_form_image_url_label": "URL adresa vlastního obrázku",
   "topsites_form_url_placeholder": "Zadejte nebo vložte URL adresu",
-  "topsites_form_use_image_link": "Používejte vlastní obrázek…",
+  "topsites_form_use_image_link": "Použít vlastní obrázek…",
   "topsites_form_preview_button": "Náhled",
   "topsites_form_add_button": "Přidat",
   "topsites_form_save_button": "Uložit",

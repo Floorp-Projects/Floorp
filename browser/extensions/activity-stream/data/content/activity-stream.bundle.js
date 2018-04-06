@@ -1420,7 +1420,7 @@ class Disclaimer extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.PureCompo
 
   onAcknowledge() {
     this.props.dispatch(__WEBPACK_IMPORTED_MODULE_1_common_Actions_jsm__["a" /* actionCreators */].SetPref(this.props.disclaimerPref, false));
-    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_1_common_Actions_jsm__["a" /* actionCreators */].UserEvent({ event: "SECTION_DISCLAIMER_ACKNOWLEDGED", source: this.props.eventSource }));
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_1_common_Actions_jsm__["a" /* actionCreators */].UserEvent({ event: "DISCLAIMER_ACKED", source: this.props.eventSource }));
   }
 
   render() {
@@ -1661,7 +1661,7 @@ const SectionMenuOptions = {
       type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SECTION_MOVE,
       data: { id: section.id, direction: -1 }
     }),
-    userEvent: "SECTION_MENU_MOVE_UP",
+    userEvent: "MENU_MOVE_UP",
     disabled: !!section.isFirst
   }),
   MoveDown: section => ({
@@ -1671,38 +1671,38 @@ const SectionMenuOptions = {
       type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SECTION_MOVE,
       data: { id: section.id, direction: +1 }
     }),
-    userEvent: "SECTION_MENU_MOVE_DOWN",
+    userEvent: "MENU_MOVE_DOWN",
     disabled: !!section.isLast
   }),
   RemoveSection: section => ({
     id: "section_menu_action_remove_section",
     icon: "dismiss",
     action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SetPref(section.showPrefName, false),
-    userEvent: "SECTION_MENU_REMOVE"
+    userEvent: "MENU_REMOVE"
   }),
   CollapseSection: section => ({
     id: "section_menu_action_collapse_section",
     icon: "minimize",
     action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].UPDATE_SECTION_PREFS, data: { id: section.id, value: { collapsed: true } } }),
-    userEvent: "SECTION_MENU_COLLAPSE"
+    userEvent: "MENU_COLLAPSE"
   }),
   ExpandSection: section => ({
     id: "section_menu_action_expand_section",
     icon: "maximize",
     action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].UPDATE_SECTION_PREFS, data: { id: section.id, value: { collapsed: false } } }),
-    userEvent: "SECTION_MENU_EXPAND"
+    userEvent: "MENU_EXPAND"
   }),
   ManageSection: section => ({
     id: "section_menu_action_manage_section",
     icon: "settings",
     action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SETTINGS_OPEN }),
-    userEvent: "SECTION_MENU_MANAGE"
+    userEvent: "MENU_MANAGE"
   }),
   AddTopSite: section => ({
     id: "section_menu_action_add_topsite",
     icon: "add",
     action: { type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].TOP_SITES_EDIT, data: { index: -1 } },
-    userEvent: "SECTION_MENU_ADD_TOPSITE"
+    userEvent: "MENU_ADD_TOPSITE"
   }),
   PrivacyNotice: section => ({
     id: "section_menu_action_privacy_notice",
@@ -1711,7 +1711,7 @@ const SectionMenuOptions = {
       type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].OPEN_LINK,
       data: { url: section.privacyNoticeURL }
     }),
-    userEvent: "SECTION_MENU_PRIVACY_NOTICE"
+    userEvent: "MENU_PRIVACY_NOTICE"
   }),
   CheckCollapsed: section => section.collapsed ? SectionMenuOptions.ExpandSection(section) : SectionMenuOptions.CollapseSection(section)
 };
@@ -3364,7 +3364,7 @@ class MessageCenterAdmin_MessageCenterAdmin extends external__React__default.a.P
   render() {
     return external__React__default.a.createElement(
       "div",
-      { className: "messages-admin" },
+      { className: "messages-admin outer-wrapper" },
       external__React__default.a.createElement(
         "h1",
         null,
@@ -3690,7 +3690,7 @@ class Base_BaseContent extends external__React__default.a.PureComponent {
 
     const shouldBeFixedToTop = PrerenderData.arePrefsValid(name => prefs[name]);
 
-    const outerClassName = `outer-wrapper ${Theme.className}${shouldBeFixedToTop ? " fixed-to-top" : ""} ${prefs.enableWideLayout ? "wide-layout-enabled" : "wide-layout-disabled"}`;
+    const outerClassName = ["outer-wrapper", Theme.className, shouldBeFixedToTop && "fixed-to-top", prefs.enableWideLayout ? "wide-layout-enabled" : "wide-layout-disabled"].filter(v => v).join(" ");
 
     return external__React__default.a.createElement(
       "div",
@@ -4802,12 +4802,19 @@ class TopSiteForm_TopSiteForm extends external__React__default.a.PureComponent {
     return url;
   }
 
-  validateUrl(url) {
+  _tryParseUrl(url) {
     try {
-      return !!new URL(this.cleanUrl(url));
+      return new URL(url);
     } catch (e) {
-      return false;
+      return null;
     }
+  }
+
+  validateUrl(url) {
+    const validProtocols = ["http:", "https:"];
+    const urlObj = this._tryParseUrl(url) || this._tryParseUrl(this.cleanUrl(url));
+
+    return urlObj && validProtocols.includes(urlObj.protocol);
   }
 
   validateCustomScreenshotUrl() {
