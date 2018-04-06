@@ -3260,6 +3260,25 @@ template<typename ThisPolicy>
 bool
 GenericSetter(JSContext* cx, unsigned argc, JS::Value* vp);
 
+/**
+ * WebIDL methods have a "generic" JSNative that is responsible for the
+ * following things:
+ *
+ * 1) Determining the "this" pointer for the C++ call.
+ * 2) Extracting the "specialized" method from the jitinfo on the JSFunction.
+ * 3) Calling the specialized methodx.
+ * 4) Handling exceptions as needed.
+ *
+ * There are several variants of (1) depending on the interface involved and
+ * there are two variants of (4) depending on whether the return type is a
+ * Promise.  We handle this by templating our generic method on a
+ * this-determination policy and an exception handling policy, then explicitly
+ * instantiating the relevant template specializations.
+ */
+template<typename ThisPolicy, typename ExceptionPolicy>
+bool
+GenericMethod(JSContext* cx, unsigned argc, JS::Value* vp);
+
 // A this-extraction policy for normal getters/setters/methods.
 struct NormalThisPolicy;
 
@@ -3279,12 +3298,6 @@ struct ThrowExceptions;
 // An exception-handling policy for Promise-returning getters/methods.
 struct ConvertExceptionsToPromises;
 } // namespace binding_detail
-
-bool
-GenericBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp);
-
-bool
-GenericPromiseReturningBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
 StaticMethodPromiseWrapper(JSContext* cx, unsigned argc, JS::Value* vp);
