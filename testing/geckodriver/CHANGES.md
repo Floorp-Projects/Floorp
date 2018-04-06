@@ -3,6 +3,15 @@ Change log
 
 All notable changes to this program is documented in this file.
 
+
+Unreleased
+----------
+
+### Added
+
+- Support for the new chrome element identifier in Marionette.
+
+
 0.20.1 (2018-04-06)
 -------------------
 
