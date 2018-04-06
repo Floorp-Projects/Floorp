@@ -24,7 +24,6 @@
 #include "gfxRect.h"
 
 #include "nsIAndroidBridge.h"
-#include "nsIDOMDOMCursor.h"
 
 #include "mozilla/Likely.h"
 #include "mozilla/Mutex.h"
@@ -69,24 +68,6 @@ typedef struct AndroidSystemColors {
     nscolor panelColorForeground;
     nscolor panelColorBackground;
 } AndroidSystemColors;
-
-class MessageCursorContinueCallback : public nsICursorContinueCallback
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSICURSORCONTINUECALLBACK
-
-    explicit MessageCursorContinueCallback(int aRequestId)
-        : mRequestId(aRequestId)
-    {
-    }
-private:
-    virtual ~MessageCursorContinueCallback()
-    {
-    }
-
-    int mRequestId;
-};
 
 class AndroidBridge final
 {
