@@ -270,10 +270,16 @@ SVGContentUtils::GetStrokeWidth(nsSVGElement* aElement,
 }
 
 float
-SVGContentUtils::GetFontSize(Element *aElement)
+SVGContentUtils::GetFontSize(Element* aElement)
 {
-  if (!aElement)
+  if (!aElement) {
     return 1.0f;
+  }
+
+  nsPresContext* pc = nsContentUtils::GetContextForContent(aElement);
+  if (!pc) {
+    return 1.0f;
+  }
 
   RefPtr<ComputedStyle> computedStyle =
     nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
@@ -283,63 +289,66 @@ SVGContentUtils::GetFontSize(Element *aElement)
     return 1.0f;
   }
 
-  return GetFontSize(computedStyle);
+  return GetFontSize(computedStyle, pc);
 }
 
 float
-SVGContentUtils::GetFontSize(nsIFrame *aFrame)
+SVGContentUtils::GetFontSize(nsIFrame* aFrame)
 {
   MOZ_ASSERT(aFrame, "NULL frame in GetFontSize");
-  return GetFontSize(aFrame->Style());
+  return GetFontSize(aFrame->Style(), aFrame->PresContext());
 }
 
 float
-SVGContentUtils::GetFontSize(ComputedStyle *aComputedStyle)
+SVGContentUtils::GetFontSize(ComputedStyle* aComputedStyle,
+                             nsPresContext* aPresContext)
 {
-  MOZ_ASSERT(aComputedStyle, "NULL ComputedStyle in GetFontSize");
-
-  nsPresContext *presContext = aComputedStyle->PresContext();
-  MOZ_ASSERT(presContext, "NULL pres context in GetFontSize");
+  MOZ_ASSERT(aComputedStyle);
+  MOZ_ASSERT(aPresContext);
 
   nscoord fontSize = aComputedStyle->StyleFont()->mSize;
   return nsPresContext::AppUnitsToFloatCSSPixels(fontSize) /
-         presContext->EffectiveTextZoom();
+         aPresContext->EffectiveTextZoom();
 }
 
 float
-SVGContentUtils::GetFontXHeight(Element *aElement)
+SVGContentUtils::GetFontXHeight(Element* aElement)
 {
-  if (!aElement)
+  if (!aElement) {
     return 1.0f;
+  }
 
-  RefPtr<ComputedStyle> computedStyle =
+  nsPresContext* pc = nsContentUtils::GetContextForContent(aElement);
+  if (!pc) {
+    return 1.0f;
+  }
+
+  RefPtr<ComputedStyle> style =
     nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
-  if (!computedStyle) {
+  if (!style) {
     // ReportToConsole
     NS_WARNING("Couldn't get ComputedStyle for content in GetFontStyle");
     return 1.0f;
   }
 
-  return GetFontXHeight(computedStyle);
+  return GetFontXHeight(style, pc);
 }
 
 float
 SVGContentUtils::GetFontXHeight(nsIFrame *aFrame)
 {
   MOZ_ASSERT(aFrame, "NULL frame in GetFontXHeight");
-  return GetFontXHeight(aFrame->Style());
+  return GetFontXHeight(aFrame->Style(), aFrame->PresContext());
 }
 
 float
-SVGContentUtils::GetFontXHeight(ComputedStyle *aComputedStyle)
+SVGContentUtils::GetFontXHeight(ComputedStyle* aComputedStyle,
+                                nsPresContext* aPresContext)
 {
-  MOZ_ASSERT(aComputedStyle, "NULL ComputedStyle in GetFontXHeight");
-
-  nsPresContext *presContext = aComputedStyle->PresContext();
-  MOZ_ASSERT(presContext, "NULL pres context in GetFontXHeight");
+  MOZ_ASSERT(aComputedStyle && aPresContext);
 
   RefPtr<nsFontMetrics> fontMetrics =
-    nsLayoutUtils::GetFontMetricsForComputedStyle(aComputedStyle);
+    nsLayoutUtils::GetFontMetricsForComputedStyle(aComputedStyle, aPresContext);
 
   if (!fontMetrics) {
     // ReportToConsole
@@ -349,7 +358,7 @@ SVGContentUtils::GetFontXHeight(ComputedStyle *aComputedStyle)
 
   nscoord xHeight = fontMetrics->XHeight();
   return nsPresContext::AppUnitsToFloatCSSPixels(xHeight) /
-         presContext->EffectiveTextZoom();
+         aPresContext->EffectiveTextZoom();
 }
 nsresult
 SVGContentUtils::ReportToConsole(nsIDocument* doc,

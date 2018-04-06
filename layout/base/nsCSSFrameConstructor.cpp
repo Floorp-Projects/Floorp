@@ -4423,8 +4423,7 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULMenubarData(Element* aElement,
                                           ComputedStyle* aComputedStyle)
 {
-  nsCOMPtr<nsIDocShell> treeItem =
-    aComputedStyle->PresContext()->GetDocShell();
+  nsCOMPtr<nsIDocShell> treeItem = aElement->OwnerDoc()->GetDocShell();
   if (treeItem && nsIDocShellTreeItem::typeChrome == treeItem->ItemType()) {
     nsCOMPtr<nsIDocShellTreeItem> parent;
     treeItem->GetParent(getter_AddRefs(parent));

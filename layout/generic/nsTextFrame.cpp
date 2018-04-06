@@ -1897,6 +1897,9 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   if (sc1 == sc2)
     return true;
 
+  nsPresContext* pc = aFrame1->PresContext();
+  MOZ_ASSERT(pc == aFrame2->PresContext());
+
   const nsStyleFont* fontStyle1 = sc1->StyleFont();
   const nsStyleFont* fontStyle2 = sc2->StyleFont();
   nscoord letterSpacing1 = LetterSpacing(aFrame1);
@@ -1904,8 +1907,8 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   return fontStyle1->mFont == fontStyle2->mFont &&
     fontStyle1->mLanguage == fontStyle2->mLanguage &&
     textStyle1->mTextTransform == textStyle2->mTextTransform &&
-    nsLayoutUtils::GetTextRunFlagsForStyle(sc1, fontStyle1, textStyle1, letterSpacing1) ==
-      nsLayoutUtils::GetTextRunFlagsForStyle(sc2, fontStyle2, textStyle2, letterSpacing2);
+    nsLayoutUtils::GetTextRunFlagsForStyle(sc1, pc, fontStyle1, textStyle1, letterSpacing1) ==
+      nsLayoutUtils::GetTextRunFlagsForStyle(sc2, pc, fontStyle2, textStyle2, letterSpacing2);
 }
 
 void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
@@ -2300,7 +2303,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   // frame's style is used, so we use a mixture of the first frame and
   // last frame's style
   flags |= nsLayoutUtils::GetTextRunFlagsForStyle(lastComputedStyle,
-      fontStyle, textStyle, LetterSpacing(firstFrame, textStyle));
+      firstFrame->PresContext(), fontStyle, textStyle,
+      LetterSpacing(firstFrame, textStyle));
   // XXX this is a bit of a hack. For performance reasons, if we're favouring
   // performance over quality, don't try to get accurate glyph extents.
   if (!(flags & gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED)) {
@@ -2349,7 +2353,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         // want to create new nsTransformedCharStyle for them anyway.
         if (sc != f->Style() || sc->IsTextCombined()) {
           sc = f->Style();
-          charStyle = new nsTransformedCharStyle(sc);
+          charStyle = new nsTransformedCharStyle(sc, f->PresContext());
           if (sc->IsTextCombined() && f->CountGraphemeClusters() > 1) {
             charStyle->mForceNonFullWidth = true;
           }
@@ -5555,8 +5559,10 @@ nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
   if (isTextCombined) {
     computedStyle = GetParent()->Style();
   }
-  RefPtr<nsFontMetrics> fm = nsLayoutUtils::
-    GetFontMetricsOfEmphasisMarks(computedStyle, GetFontSizeInflation());
+  RefPtr<nsFontMetrics> fm =
+    nsLayoutUtils::GetFontMetricsOfEmphasisMarks(computedStyle,
+                                                 PresContext(),
+                                                 GetFontSizeInflation());
   EmphasisMarkInfo* info = new EmphasisMarkInfo;
   info->textRun =
     GenerateTextRunForEmphasisMarks(this, fm, computedStyle, styleText);
@@ -5787,8 +5793,10 @@ nsTextFrame::ComputeDescentLimitForSelectionUnderline(
   gfxFloat app = aPresContext->AppUnitsPerDevPixel();
   nscoord lineHeightApp =
     ReflowInput::CalcLineHeight(GetContent(),
-                                      Style(), NS_AUTOHEIGHT,
-                                      GetFontSizeInflation());
+                                Style(),
+                                PresContext(),
+                                NS_AUTOHEIGHT,
+                                GetFontSizeInflation());
   gfxFloat lineHeight = gfxFloat(lineHeightApp) / app;
   if (lineHeight <= aFontMetrics.maxHeight) {
     return aFontMetrics.maxDescent;
