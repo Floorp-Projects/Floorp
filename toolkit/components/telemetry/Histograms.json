@@ -2053,29 +2053,29 @@
   },
   "TLS_EARLY_DATA_NEGOTIATED": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "62",
+    "expires_in_version": "66",
     "kind": "enumerated",
     "n_values": 3,
     "description": "Sending TLS early data was possible: 0 - not possible, 1 - possible but not used, 2 - possible and used.",
-    "alert_emails": ["necko@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1296288]
   },
   "TLS_EARLY_DATA_ACCEPTED": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "62",
+    "expires_in_version": "66",
     "kind": "boolean",
     "description": "TLS early data was used and it was accepted (true) or rejected (false) by the remote host.",
-    "alert_emails": ["necko@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1296288]
   },
   "TLS_EARLY_DATA_BYTES_WRITTEN": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "62",
+    "expires_in_version": "66",
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
     "description": "Amount of bytes sent using TLS early data at the start of a TLS connection for a given channel.",
-    "alert_emails": ["necko@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1296288]
   },
   "SSL_HANDSHAKE_VERSION": {
