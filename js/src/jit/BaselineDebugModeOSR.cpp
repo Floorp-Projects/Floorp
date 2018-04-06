@@ -803,7 +803,7 @@ InvalidateScriptsInZone(JSContext* cx, Zone* zone, const Vector<DebugModeOSREntr
             continue;
 
         if (script->hasIonScript()) {
-            if (!invalid.append(script->ionScript()->recompileInfo())) {
+            if (!invalid.emplaceBack(script, script->ionScript()->compilationId())) {
                 ReportOutOfMemory(cx);
                 return false;
             }
