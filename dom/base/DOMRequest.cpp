@@ -8,7 +8,6 @@
 
 #include "DOMException.h"
 #include "nsThreadUtils.h"
-#include "DOMCursor.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Promise.h"
@@ -20,7 +19,6 @@ using mozilla::dom::AnyCallback;
 using mozilla::dom::DOMException;
 using mozilla::dom::DOMRequest;
 using mozilla::dom::DOMRequestService;
-using mozilla::dom::DOMCursor;
 using mozilla::dom::Promise;
 using mozilla::dom::AutoJSAPI;
 using mozilla::dom::RootingCx;
@@ -250,18 +248,6 @@ DOMRequestService::CreateRequest(mozIDOMWindow* aWindow,
 }
 
 NS_IMETHODIMP
-DOMRequestService::CreateCursor(mozIDOMWindow* aWindow,
-                                nsICursorContinueCallback* aCallback,
-                                nsIDOMDOMCursor** aCursor)
-{
-  NS_ENSURE_STATE(aWindow);
-  auto* win = nsPIDOMWindowInner::From(aWindow);
-  NS_ADDREF(*aCursor = new DOMCursor(win, aCallback));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 DOMRequestService::FireSuccess(nsIDOMDOMRequest* aRequest,
                                JS::Handle<JS::Value> aResult)
 {
@@ -355,13 +341,5 @@ DOMRequestService::FireErrorAsync(nsIDOMDOMRequest* aRequest,
   nsCOMPtr<nsIRunnable> asyncTask =
     new FireErrorAsyncTask(static_cast<DOMRequest*>(aRequest), aError);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(asyncTask));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMRequestService::FireDone(nsIDOMDOMCursor* aCursor) {
-  NS_ENSURE_STATE(aCursor);
-  static_cast<DOMCursor*>(aCursor)->FireDone();
-
   return NS_OK;
 }
