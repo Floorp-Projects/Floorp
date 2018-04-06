@@ -487,7 +487,7 @@ nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
     // text).
     useSizedBox = true;
   }
-  else if (aComputedStyle->PresContext()->CompatibilityMode() !=
+  else if (aElement->OwnerDoc()->GetCompatibilityMode() !=
            eCompatibility_NavQuirks) {
     useSizedBox = false;
   }

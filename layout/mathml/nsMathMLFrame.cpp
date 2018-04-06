@@ -231,7 +231,9 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
   else if (eCSSUnit_XHeight == unit) {
     aPresContext->SetUsesExChUnits(true);
     RefPtr<nsFontMetrics> fm = nsLayoutUtils::
-      GetFontMetricsForComputedStyle(aComputedStyle, aFontSizeInflation);
+      GetFontMetricsForComputedStyle(aComputedStyle,
+                                     aPresContext,
+                                     aFontSizeInflation);
     nscoord xHeight = fm->XHeight();
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }
