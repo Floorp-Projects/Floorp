@@ -526,27 +526,6 @@ function promiseNotificationShown(notification) {
   return panelPromise;
 }
 
-/**
- * Allows waiting for an observer notification once.
- *
- * @param aTopic
- *        Notification topic to observe.
- *
- * @return {Promise}
- * @resolves An object with subject and data properties from the observed
- *           notification.
- * @rejects Never.
- */
-function promiseTopicObserved(aTopic) {
-  return new Promise((resolve) => {
-    Services.obs.addObserver(
-      function PTO_observe(aSubject, aTopic2, aData) {
-        Services.obs.removeObserver(PTO_observe, aTopic2);
-        resolve({subject: aSubject, data: aData});
-      }, aTopic);
-  });
-}
-
 function promiseNewSearchEngine(basename) {
   return new Promise((resolve, reject) => {
     info("Waiting for engine to be added: " + basename);
