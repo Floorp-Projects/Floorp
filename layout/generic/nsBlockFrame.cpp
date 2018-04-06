@@ -7543,7 +7543,7 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
     // them are handled by the first-line anyway.
     RestyleManager* manager = PresContext()->RestyleManager();
     for (nsIFrame* kid : firstLineFrame->PrincipalChildList()) {
-      manager->ReparentComputedStyle(kid);
+      manager->ReparentComputedStyleForFirstLine(kid);
     }
   }
 }

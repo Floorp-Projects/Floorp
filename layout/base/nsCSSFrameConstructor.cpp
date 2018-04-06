@@ -485,7 +485,7 @@ ReparentFrame(RestyleManager* aRestyleManager,
   // We reparent frames for two reasons: to put them inside ::first-line, and to
   // put them inside some wrapper anonymous boxes.
   if (aForceStyleReparent) {
-    aRestyleManager->ReparentComputedStyle(aFrame);
+    aRestyleManager->ReparentComputedStyleForFirstLine(aFrame);
   }
 }
 
@@ -10562,7 +10562,7 @@ nsCSSFrameConstructor::CheckForFirstLineInsertion(nsIFrame* aParentFrame,
 
     // Fix up the styles of aFrameItems for ::first-line.
     for (nsIFrame* f : aFrameItems) {
-      restyleManager->ReparentComputedStyle(f);
+      restyleManager->ReparentComputedStyleForFirstLine(f);
     }
     return;
   }

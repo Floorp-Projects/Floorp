@@ -353,9 +353,8 @@ public:
                         const nsAttrValue* aOldValue);
 
   // This is only used to reparent things when moving them in/out of the
-  // ::first-line.  Once we get rid of the Gecko style system, we should rename
-  // this method accordingly (e.g. to ReparentComputedStyleForFirstLine).
-  nsresult ReparentComputedStyle(nsIFrame* aFrame);
+  // ::first-line.
+  void ReparentComputedStyleForFirstLine(nsIFrame*);
 
   bool HasPendingRestyleAncestor(dom::Element* aElement) const;
 
@@ -523,9 +522,10 @@ protected:
 
   void DoProcessPendingRestyles(ServoTraversalFlags aFlags);
 
-  // Function to do the actual (recursive) work of ReparentComputedStyle, once we
-  // have asserted the invariants that only hold on the initial call.
-  void DoReparentComputedStyle(nsIFrame* aFrame, ServoStyleSet& aStyleSet);
+  // Function to do the actual (recursive) work of
+  // ReparentComputedStyleForFirstLine, once we have asserted the invariants
+  // that only hold on the initial call.
+  void DoReparentComputedStyleForFirstLine(nsIFrame*, ServoStyleSet&);
 
   // We use a separate data structure from nsStyleChangeList because we need a
   // frame to create nsStyleChangeList entries, and the primary frame may not be
