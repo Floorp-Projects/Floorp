@@ -49,12 +49,7 @@
     <vbox flex="1">
       <label data-l10n-id="site-data-removing-table"/>
       <separator class="thin"/>
-      <tree id="sitesTree" flex="1" seltype="single" hidecolumnpicker="true">
-        <treecols>
-          <treecol primary="true" flex="1" hideheader="true"/>
-        </treecols>
-        <treechildren />
-      </tree>
+      <listbox id="removalList"/>
     </vbox>
   </vbox>
 
