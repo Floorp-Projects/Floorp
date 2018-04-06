@@ -560,7 +560,7 @@ nsButtonFrameRenderer::ReResolveStyles(nsPresContext* aPresContext)
   ComputedStyle* context = mFrame->Style();
   ServoStyleSet* styleSet = aPresContext->StyleSet();
 
-  // get styles assigned to -moz-inner-focus (ie dotted border on Windows)
+  // get styles assigned to -moz-focus-inner (ie dotted border on Windows)
   mInnerFocusStyle =
     styleSet->ProbePseudoElementStyle(mFrame->GetContent()->AsElement(),
                                       CSSPseudoElementType::mozFocusInner,
