@@ -73,10 +73,6 @@ jsreftest:
             linux32/debug: 5
             macosx.*: 2
             default: 3
-    e10s:
-        by-test-platform:
-            linux64-jsdcov/opt: false
-            default: true
     max-run-time:
         by-test-platform:
             android.*: 7200
@@ -169,10 +165,6 @@ reftest-no-accel:
             macosx.*: 1
             windows.*: 4
             default: 8
-    e10s:
-        by-test-platform:
-            linux64-jsdcov/opt: false
-            default: true
     mozharness:
         chunked:
             by-test-platform:

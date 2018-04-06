@@ -40,7 +40,7 @@ MakeBase64EncodedStringArray(nsCString (&aArray)[N])
 } // end of unnamed namespace.
 
 
-TEST(FindFullHash, Request)
+TEST(UrlClassifierFindFullHash, Request)
 {
   nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
     do_GetService("@mozilla.org/url-classifier/utils;1");
@@ -203,7 +203,7 @@ NS_IMPL_ISUPPORTS(MyParseCallback, nsIUrlClassifierParseFindFullHashCallback)
 
 } // end of unnamed namespace.
 
-TEST(FindFullHash, ParseRequest)
+TEST(UrlClassifierFindFullHash, ParseRequest)
 {
   // Build response.
   FindFullHashesResponse r;

@@ -1,9 +1,17 @@
+dist: trusty
 language: rust
-rust:
-  - 1.10.0
-  - stable
-  - beta
-  - nightly
+matrix:
+  include:
+    - os: linux
+      rust: 1.17.0
+    - os: linux
+      rust: stable
+    - os: linux
+      rust: beta
+    - os: linux
+      rust: nightly
+    - os: osx
+      rust: nightly
 script:
   - cargo build --verbose
   - cargo test --verbose

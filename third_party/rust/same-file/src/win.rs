@@ -1,4 +1,5 @@
 use std::fs::{File, OpenOptions};
+use std::hash::{Hash, Hasher};
 use std::io;
 use std::mem;
 use std::os::windows::fs::OpenOptionsExt;
@@ -7,10 +8,13 @@ use std::os::windows::io::{
 };
 use std::path::Path;
 
-use kernel32::{GetFileInformationByHandle, GetStdHandle};
-use winapi::fileapi::BY_HANDLE_FILE_INFORMATION;
-use winapi::minwindef::DWORD;
-use winapi::winbase::{
+use winapi::shared::minwindef::DWORD;
+use winapi::um::fileapi::{
+    BY_HANDLE_FILE_INFORMATION,
+    GetFileInformationByHandle,
+};
+use winapi::um::processenv::GetStdHandle;
+use winapi::um::winbase::{
     FILE_FLAG_BACKUP_SEMANTICS,
     STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE,
 };
@@ -24,7 +28,7 @@ use winapi::winbase::{
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa363788(v=vs.85).aspx
 //
 // It gets worse. It appears that the index numbers are not always
-// guaranteed to be unqiue. Namely, ReFS uses 128 bit numbers for unique
+// guaranteed to be unique. Namely, ReFS uses 128 bit numbers for unique
 // identifiers. This requires a distinct syscall to get `FILE_ID_INFO`
 // documented here:
 // https://msdn.microsoft.com/en-us/library/windows/desktop/hh802691(v=vs.85).aspx
@@ -65,7 +69,7 @@ pub struct Handle {
     key: Option<Key>,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 struct Key {
     volume: DWORD,
     idx_high: DWORD,
@@ -75,6 +79,8 @@ struct Key {
 impl Drop for Handle {
     fn drop(&mut self) {
         if self.is_std {
+            // unwrap() will not panic. Since we were able to open an
+            // std stream successfully, then `file` is guaranteed to be Some()
             self.file.take().unwrap().into_raw_handle();
         }
     }
@@ -84,7 +90,11 @@ impl Eq for Handle {}
 
 impl PartialEq for Handle {
     fn eq(&self, other: &Handle) -> bool {
-        if self.key.is_none() || other.key.is_none() {
+        // Need this branch to satisfy `Eq` since `Handle`s with `key.is_none()`
+        // wouldn't otherwise.
+        if self as *const Handle == other as *const Handle {
+            return true;
+        } else if self.key.is_none() || other.key.is_none() {
             return false;
         }
         self.key == other.key
@@ -93,23 +103,33 @@ impl PartialEq for Handle {
 
 impl AsRawHandle for ::Handle {
     fn as_raw_handle(&self) -> RawHandle {
+        // unwrap() will not panic. Since we were able to open the
+        // file successfully, then `file` is guaranteed to be Some()
         self.0.file.as_ref().take().unwrap().as_raw_handle()
     }
 }
 
 impl IntoRawHandle for ::Handle {
     fn into_raw_handle(mut self) -> RawHandle {
+        // unwrap() will not panic. Since we were able to open the
+        // file successfully, then `file` is guaranteed to be Some()
         self.0.file.take().unwrap().into_raw_handle()
+    }
+}
+
+impl Hash for Handle {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.key.hash(state);
     }
 }
 
 impl Handle {
     pub fn from_path<P: AsRef<Path>>(p: P) -> io::Result<Handle> {
-        let file = try!(OpenOptions::new()
+        let file = OpenOptions::new()
             .read(true)
             // Necessary in order to support opening directory paths.
             .custom_flags(FILE_FLAG_BACKUP_SEMANTICS)
-            .open(p));
+            .open(p)?;
         Handle::from_file(file)
     }
 
@@ -164,10 +184,14 @@ impl Handle {
     }
 
     pub fn as_file(&self) -> &File {
+        // unwrap() will not panic. Since we were able to open the
+        // file successfully, then `file` is guaranteed to be Some()
         self.file.as_ref().take().unwrap()
     }
 
     pub fn as_file_mut(&mut self) -> &mut File {
+        // unwrap() will not panic. Since we were able to open the
+        // file successfully, then `file` is guaranteed to be Some()
         self.file.as_mut().take().unwrap()
     }
 }

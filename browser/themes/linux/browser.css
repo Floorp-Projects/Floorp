@@ -628,11 +628,6 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   border-radius: inherit;
 }
 
-/* Prevent movement in the restore-tabs-button when it's clicked. */
-.restore-tabs-button:hover:active:not([disabled="true"]) {
-  padding: 3px;
-}
-
 /* Hide the titlebar explicitly on versions of GTK+ where
  * it's rendered by window manager. */
 @media (-moz-gtk-csd-available: 0) {
