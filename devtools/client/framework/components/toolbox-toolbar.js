@@ -186,7 +186,7 @@ function renderToolboxButtons({focusedButton, toolboxButtons, focusButton}, isSt
         renderSeparator()
       );
     } else {
-      children.push(renderSeparator())
+      children.push(renderSeparator());
     }
   }
 
