@@ -607,14 +607,16 @@ HTMLCanvasElement::CopyInnerTo(Element* aDest,
   return rv;
 }
 
-nsresult HTMLCanvasElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
+void
+HTMLCanvasElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   if (aVisitor.mEvent->mClass == eMouseEventClass) {
     WidgetMouseEventBase* evt = (WidgetMouseEventBase*)aVisitor.mEvent;
     if (mCurrentContext) {
       nsIFrame *frame = GetPrimaryFrame();
-      if (!frame)
-        return NS_OK;
+      if (!frame) {
+        return;
+      }
       nsPoint ptInRoot = nsLayoutUtils::GetEventCoordinatesRelativeTo(evt, frame);
       nsRect paddingRect = frame->GetContentRectRelativeToSelf();
       Point hitpoint;
@@ -625,7 +627,7 @@ nsresult HTMLCanvasElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
       aVisitor.mCanHandle = true;
     }
   }
-  return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+  nsGenericHTMLElement::GetEventTargetParent(aVisitor);
 }
 
 nsChangeHint

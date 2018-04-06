@@ -7,6 +7,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
@@ -18,7 +19,6 @@
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsID.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
@@ -243,9 +243,8 @@ HTMLEditor::RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                        ManualNACPtr aElement,
                                        nsIPresShell* aShell)
 {
-  nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aElement));
-  if (evtTarget) {
-    evtTarget->RemoveEventListener(aEvent, aListener, aUseCapture);
+  if (aElement) {
+    aElement->RemoveEventListener(aEvent, aListener, aUseCapture);
   }
   DeleteRefToAnonymousNode(Move(aElement), aShell);
 }

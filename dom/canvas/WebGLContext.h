@@ -14,6 +14,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/ErrorResult.h"
@@ -90,7 +91,6 @@ class Element;
 class ImageData;
 class OwningHTMLCanvasElementOrOffscreenCanvas;
 struct WebGLContextAttributes;
-template<typename> struct Nullable;
 } // namespace dom
 
 namespace gfx {
@@ -514,7 +514,7 @@ public:
 
     // WebIDL WebGLRenderingContext API
     void Commit();
-    void GetCanvas(Nullable<dom::OwningHTMLCanvasElementOrOffscreenCanvas>& retval);
+    void GetCanvas(dom::Nullable<dom::OwningHTMLCanvasElementOrOffscreenCanvas>& retval);
 private:
     gfx::IntSize DrawingBufferSize(const char* funcName);
 public:

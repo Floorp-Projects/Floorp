@@ -143,9 +143,8 @@ public:
                              IsAnyOfHTMLElements(nsGkAtoms::video,
                                                  nsGkAtoms::audio))
 
-  // nsIDOMEventTarget
-  virtual nsresult
-  GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
+  // EventTarget
+  void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsAtom* aAttribute,

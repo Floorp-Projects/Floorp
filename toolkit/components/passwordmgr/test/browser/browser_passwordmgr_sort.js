@@ -75,7 +75,7 @@ add_task(async function test() {
                     if (aTopic == "domwindowclosed")
                         Services.ww.unregisterNotification(notification);
                     else if (aTopic == "domwindowopened") {
-                        let targetWin = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+                        let targetWin = aSubject;
                         SimpleTest.waitForFocus(function() {
                             EventUtils.sendKey("RETURN", targetWin);
                         }, targetWin);

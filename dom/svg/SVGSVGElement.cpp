@@ -558,7 +558,7 @@ SVGSVGElement::GetAnimatedTransformList(uint32_t aFlags)
   return SVGGraphicsElement::GetAnimatedTransformList(aFlags);
 }
 
-nsresult
+void
 SVGSVGElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   if (aVisitor.mEvent->mMessage == eSVGLoad) {
@@ -570,7 +570,7 @@ SVGSVGElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
       AnimationNeedsResample();
     }
   }
-  return SVGSVGElementBase::GetEventTargetParent(aVisitor);
+  SVGSVGElementBase::GetEventTargetParent(aVisitor);
 }
 
 bool

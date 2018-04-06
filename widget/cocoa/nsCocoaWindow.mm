@@ -2286,6 +2286,12 @@ nsCocoaWindow::SetWindowTransform(const gfx::Matrix& aTransform)
     return;
   }
 
+  // Calling CGSSetWindowTransform when the window is not visible results in
+  // misplacing the window into doubled x,y coordinates (see bug 1448132).
+  if (![mWindow isVisible] || NSIsEmptyRect([mWindow frame])) {
+      return;
+  }
+
   if (gfxPrefs::WindowTransformsDisabled()) {
     // CGSSetWindowTransform is a private API. In case calling it causes
     // problems either now or in the future, we'll want to have an easy kill

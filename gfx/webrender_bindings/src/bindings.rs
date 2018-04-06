@@ -2177,6 +2177,7 @@ extern "C" {
                                format: ImageFormat,
                                tile_size: *const u16,
                                tile_offset: *const TileOffset,
+                               dirty_rect: *const DeviceUintRect,
                                output: MutByteSlice)
                                -> bool;
 }

@@ -40,25 +40,25 @@ HTMLOptGroupElement::~HTMLOptGroupElement()
 NS_IMPL_ELEMENT_CLONE(HTMLOptGroupElement)
 
 
-nsresult
+void
 HTMLOptGroupElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
   // Do not process any DOM events if the element is disabled
   // XXXsmaug This is not the right thing to do. But what is?
   if (IsDisabled()) {
-    return NS_OK;
+    return;
   }
 
   if (nsIFrame* frame = GetPrimaryFrame()) {
     // FIXME(emilio): This poking at the style of the frame is broken unless we
     // flush before every event handling, which we don't really want to.
     if (frame->StyleUserInterface()->mUserInput == StyleUserInput::None) {
-      return NS_OK;
+      return;
     }
   }
 
-  return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+  nsGenericHTMLElement::GetEventTargetParent(aVisitor);
 }
 
 Element*

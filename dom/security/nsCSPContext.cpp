@@ -1198,8 +1198,9 @@ nsCSPContext::FireViolationEvent(
       aViolationEventInit);
   event->SetTrusted(true);
 
-  bool rv;
-  return doc->DispatchEvent(event, &rv);
+  ErrorResult rv;
+  doc->DispatchEvent(*event, rv);
+  return rv.StealNSResult();
 }
 
 /**

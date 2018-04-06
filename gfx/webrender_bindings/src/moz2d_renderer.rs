@@ -366,7 +366,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
                resources: &BlobImageResources,
                request: BlobImageRequest,
                descriptor: &BlobImageDescriptor,
-               _dirty_rect: Option<DeviceUintRect>) {
+               dirty_rect: Option<DeviceUintRect>) {
         debug_assert!(!self.rendered_images.contains_key(&request), "{:?}", request);
         // TODO: implement tiling.
 
@@ -440,6 +440,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
                     descriptor.format,
                     option_to_nullable(&tile_size),
                     option_to_nullable(&request.tile),
+                    option_to_nullable(&dirty_rect),
                     MutByteSlice::new(output.as_mut_slice())
                 ) {
 

@@ -1029,19 +1029,19 @@ public:
   virtual mozilla::EventListenerManager*
     GetOrCreateListenerManager() override;
 
-  using mozilla::dom::EventTarget::RemoveEventListener;
-  using nsIDOMEventTarget::AddEventListener;
-  virtual void AddEventListener(const nsAString& aType,
-                                mozilla::dom::EventListener* aListener,
-                                const mozilla::dom::AddEventListenerOptionsOrBoolean& aOptions,
-                                const mozilla::dom::Nullable<bool>& aWantsUntrusted,
-                                mozilla::ErrorResult& aRv) override;
-  using nsIDOMEventTarget::AddSystemEventListener;
+  bool ComputeDefaultWantsUntrusted(mozilla::ErrorResult& aRv) final;
 
   virtual bool IsApzAware() const override;
 
   virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override;
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
+
+  using mozilla::dom::EventTarget::DispatchEvent;
+  bool DispatchEvent(mozilla::dom::Event& aEvent,
+                     mozilla::dom::CallerType aCallerType,
+                     mozilla::ErrorResult& aRv) override;
+
+  nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
 
   /**
    * Adds a mutation observer to be notified when this node, or any of its

@@ -1990,6 +1990,8 @@ public:
    * run anything else, when this function returns false, but this is ok.
    */
   static bool IsSafeToRunScript() {
+    MOZ_ASSERT(NS_IsMainThread(),
+               "This static variable only makes sense on the main thread!");
     return sScriptBlockerCount == 0;
   }
 
@@ -2043,9 +2045,6 @@ public:
    */
   static nsresult ProcessViewportInfo(nsIDocument *aDocument,
                                       const nsAString &viewportInfo);
-
-  static nsIScriptContext* GetContextForEventHandlers(nsINode* aNode,
-                                                      nsresult* aRv);
 
   static JSContext *GetCurrentJSContext();
   static JSContext *GetCurrentJSContextForThread();

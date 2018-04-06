@@ -103,8 +103,8 @@ add_task(async function test_new_window() {
     mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);
 
     // Click on the link in the browser, and wait for the new window.
-    let {subject: newWindow} =
-      await promiseTopicObserved("browser-delayed-startup-finished");
+    let [newWindow] =
+      await TestUtils.topicObserved("browser-delayed-startup-finished");
 
     is(PrivateBrowsingUtils.isWindowPrivate(testWindow),
        PrivateBrowsingUtils.isWindowPrivate(newWindow),

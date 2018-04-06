@@ -37,9 +37,8 @@ public:
   void LinkAdded();
   void LinkRemoved();
 
-  // nsIDOMEventTarget
-  virtual nsresult GetEventTargetParent(
-                     EventChainPreVisitor& aVisitor) override;
+  // EventTarget
+  void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   virtual nsresult PostHandleEvent(
                      EventChainPostVisitor& aVisitor) override;
 

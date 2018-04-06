@@ -393,8 +393,7 @@ private:
                          EventInit());
     event->SetTrusted(true);
 
-    bool dummy;
-    parentEventTarget->DispatchEvent(event, &dummy);
+    parentEventTarget->DispatchEvent(*event);
     return true;
   }
 };
@@ -2108,8 +2107,7 @@ WorkerPrivate::OfflineStatusChangeEventInternal(bool aIsOffline)
   event->InitEvent(eventType, false, false);
   event->SetTrusted(true);
 
-  bool dummy;
-  globalScope->DispatchEvent(event, &dummy);
+  globalScope->DispatchEvent(*event);
 }
 
 void
@@ -2208,10 +2206,11 @@ WorkerPrivate::BroadcastErrorToSharedWorkers(
 
     event->SetTrusted(true);
 
-    bool defaultActionEnabled;
-    nsresult rv = sharedWorker->DispatchEvent(event, &defaultActionEnabled);
-    if (NS_FAILED(rv)) {
-      ThrowAndReport(window, rv);
+    ErrorResult res;
+    bool defaultActionEnabled =
+      sharedWorker->DispatchEvent(*event, CallerType::System, res);
+    if (res.Failed()) {
+      ThrowAndReport(window, res.StealNSResult());
       continue;
     }
 
@@ -5096,10 +5095,7 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx,
 
   event->SetTrusted(true);
 
-  nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
-
-  bool dummy;
-  globalScope->DispatchEvent(domEvent, &dummy);
+  globalScope->DispatchEvent(*event);
 
   return true;
 }
