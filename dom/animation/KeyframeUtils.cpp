@@ -19,6 +19,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/KeyframeEffectReadOnly.h" // For PropertyValuesPair etc.
+#include "mozilla/dom/Nullable.h"
 #include "jsapi.h" // For ForOfIterator etc.
 #include "nsClassHashtable.h"
 #include "nsContentUtils.h" // For GetContextForContent, and
@@ -31,6 +32,8 @@
 #include "nsIScriptError.h"
 #include "nsTArray.h"
 #include <algorithm> // For std::stable_sort, std::min
+
+using mozilla::dom::Nullable;
 
 namespace mozilla {
 

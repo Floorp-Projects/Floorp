@@ -13,9 +13,14 @@
 #include "nsIObserver.h"
 #include "nsWeakPtr.h"
 
-class nsIDOMEventTarget;
 class nsIDocument;
 class nsIPresShell;
+
+namespace mozilla {
+namespace dom {
+class EventTarget;
+} // namespace dom
+} // namespace mozilla
 
 class ZoomConstraintsClient final : public nsIDOMEventListener,
                                     public nsIObserver
@@ -40,7 +45,7 @@ private:
 
   nsCOMPtr<nsIDocument> mDocument;
   nsIPresShell* MOZ_NON_OWNING_REF mPresShell; // raw ref since the presShell owns this
-  nsCOMPtr<nsIDOMEventTarget> mEventTarget;
+  nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
   mozilla::Maybe<mozilla::layers::ScrollableLayerGuid> mGuid;
 };
 

@@ -154,6 +154,12 @@ IsWin10CreatorsUpdateOrLater()
 }
 
 MOZ_ALWAYS_INLINE bool
+IsWin10FallCreatorsUpdateOrLater()
+{
+  return IsWindows10BuildOrLater(16299);
+}
+
+MOZ_ALWAYS_INLINE bool
 IsNotWin7PreRTM()
 {
   return IsWin7SP1OrLater() || IsWindowsBuildOrLater(7600);

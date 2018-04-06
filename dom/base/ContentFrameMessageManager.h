@@ -49,26 +49,6 @@ public:
     GetSystemBindingNames(aCx, thisObj, aNames, aEnumerableOnly, aRv);
   }
 
-  nsresult AddEventListener(const nsAString& aType,
-                            nsIDOMEventListener* aListener,
-                            bool aUseCapture)
-  {
-    // By default add listeners only for trusted events!
-    return DOMEventTargetHelper::AddEventListener(aType, aListener,
-                                                  aUseCapture, false, 2);
-  }
-  using DOMEventTargetHelper::AddEventListener;
-  NS_IMETHOD AddEventListener(const nsAString& aType,
-                              nsIDOMEventListener* aListener,
-                              bool aUseCapture, bool aWantsUntrusted,
-                              uint8_t optional_argc) override
-  {
-    return DOMEventTargetHelper::AddEventListener(aType, aListener,
-                                                  aUseCapture,
-                                                  aWantsUntrusted,
-                                                  optional_argc);
-  }
-
   virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(ErrorResult& aError) = 0;
   virtual already_AddRefed<nsIDocShell> GetDocShell(ErrorResult& aError) = 0;
   virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() = 0;

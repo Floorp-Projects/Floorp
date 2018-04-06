@@ -403,10 +403,12 @@ class MachCommands(MachCommandBase):
             app = kwargs.get('app')
             if not app:
                 app = self.substs["ANDROID_PACKAGE_NAME"]
+            device_serial = kwargs.get('deviceSerial')
 
             # verify installation
-            verify_android_device(self, install=True, xre=False, app=app)
-            grant_runtime_permissions(self, app)
+            verify_android_device(self, install=True, xre=False, app=app,
+                                  device_serial=device_serial)
+            grant_runtime_permissions(self, app, device_serial=device_serial)
             run_mochitest = mochitest.run_android_test
         else:
             run_mochitest = mochitest.run_desktop_test
@@ -481,8 +483,10 @@ class RobocopCommands(MachCommandBase):
         app = kwargs.get('app')
         if not app:
             app = self.substs["ANDROID_PACKAGE_NAME"]
-        verify_android_device(self, install=True, xre=False, app=app)
-        grant_runtime_permissions(self, app)
+        device_serial = kwargs.get('deviceSerial')
+        verify_android_device(self, install=True, xre=False, app=app,
+                              device_serial=device_serial)
+        grant_runtime_permissions(self, app, device_serial=device_serial)
 
         if not kwargs['adbPath']:
             kwargs['adbPath'] = get_adb_path(self)

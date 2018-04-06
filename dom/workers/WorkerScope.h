@@ -346,13 +346,11 @@ public:
   void
   SetOnfetch(mozilla::dom::EventHandlerNonNull* aCallback);
 
-  using DOMEventTargetHelper::AddEventListener;
-  virtual void
-  AddEventListener(const nsAString& aType,
-                   dom::EventListener* aListener,
-                   const dom::AddEventListenerOptionsOrBoolean& aOptions,
-                   const dom::Nullable<bool>& aWantsUntrusted,
-                   ErrorResult& aRv) override;
+  // We only need to override the string version of EventListenerAdded, because
+  // the atom version should never be called on workers.  Until bug 1450167 is
+  // fixed, at least.
+  using DOMEventTargetHelper::EventListenerAdded;
+  void EventListenerAdded(const nsAString& aType) override;
 };
 
 class WorkerDebuggerGlobalScope final : public DOMEventTargetHelper,

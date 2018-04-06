@@ -30,8 +30,6 @@ from taskgraph.util.schema import (
 )
 from taskgraph.util.scriptworker import (
     BALROG_ACTIONS,
-    get_balrog_action_scope,
-    get_balrog_server_scope,
     get_release_config,
 )
 from voluptuous import Any, Required, Optional, Extra
@@ -1040,10 +1038,6 @@ def build_beetmover_cdns_payload(config, task, task_def):
 def build_balrog_payload(config, task, task_def):
     worker = task['worker']
     release_config = get_release_config(config)
-
-    server_scope = get_balrog_server_scope(config)
-    action_scope = get_balrog_action_scope(config, action=worker['balrog-action'])
-    task_def['scopes'] = [server_scope, action_scope]
 
     if worker['balrog-action'] == 'submit-locale':
         task_def['payload'] = {

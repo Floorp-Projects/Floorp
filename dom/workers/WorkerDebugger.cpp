@@ -67,9 +67,7 @@ private:
                             Sequence<OwningNonNull<MessagePort>>());
     event->SetTrusted(true);
 
-    nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
-    bool dummy;
-    globalScope->DispatchEvent(domEvent, &dummy);
+    globalScope->DispatchEvent(*event);
     return true;
   }
 };

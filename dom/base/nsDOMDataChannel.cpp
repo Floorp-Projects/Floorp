@@ -334,12 +334,12 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
   event->SetTrusted(true);
 
   LOG(("%p(%p): %s - Dispatching\n",this,(void*)mDataChannel,__FUNCTION__));
-  bool dummy;
-  rv = DispatchEvent(static_cast<Event*>(event), &dummy);
-  if (NS_FAILED(rv)) {
+  ErrorResult err;
+  DispatchEvent(*event, err);
+  if (err.Failed()) {
     NS_WARNING("Failed to dispatch the message event!!!");
   }
-  return rv;
+  return err.StealNSResult();
 }
 
 nsresult
@@ -373,8 +373,9 @@ nsDOMDataChannel::OnSimpleEvent(nsISupports* aContext, const nsAString& aName)
   event->InitEvent(aName, false, false);
   event->SetTrusted(true);
 
-  bool dummy;
-  return DispatchEvent(event, &dummy);
+  ErrorResult err;
+  DispatchEvent(*event, err);
+  return err.StealNSResult();
 }
 
 nsresult

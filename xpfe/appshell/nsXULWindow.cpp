@@ -241,8 +241,7 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(uint32_t aLevel)
 
         event->SetTrusted(true);
 
-        bool defaultActionEnabled;
-        doc->DispatchEvent(event, &defaultActionEnabled);
+        doc->DispatchEvent(*event);
       }
     }
   }

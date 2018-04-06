@@ -389,8 +389,7 @@ Performance::TimingNotification(PerformanceEntry* aEntry,
 
   nsCOMPtr<EventTarget> et = do_QueryInterface(GetOwner());
   if (et) {
-    bool dummy = false;
-    et->DispatchEvent(perfEntryEvent, &dummy);
+    et->DispatchEvent(*perfEntryEvent);
   }
 }
 

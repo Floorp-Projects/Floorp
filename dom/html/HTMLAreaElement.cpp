@@ -53,10 +53,10 @@ HTMLAreaElement::GetTarget(DOMString& aValue)
   }
 }
 
-nsresult
+void
 HTMLAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
-  return GetEventTargetParentForAnchors(aVisitor);
+  GetEventTargetParentForAnchors(aVisitor);
 }
 
 nsresult

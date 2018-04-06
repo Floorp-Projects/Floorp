@@ -66,8 +66,7 @@ AsyncEventDispatcher::Run()
     MOZ_ASSERT(event->IsTrusted());
     event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
   }
-  bool dummy;
-  mTarget->DispatchEvent(event, &dummy);
+  mTarget->DispatchEvent(*event);
   return NS_OK;
 }
 

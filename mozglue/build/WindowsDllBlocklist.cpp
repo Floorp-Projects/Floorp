@@ -268,6 +268,10 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   // Old versions of G DATA, bug 1043775
   { "gdkbfltdll64.dll", MAKE_VERSION(1, 0, 14141, 240) },
 
+  // Dell Backup and Recovery tool causes crashes, bug 1433408
+  { "dbroverlayiconnotbackuped.dll", MAKE_VERSION(1, 8, 0, 9) },
+  { "dbroverlayiconbackuped.dll", MAKE_VERSION(1, 8, 0, 9) },
+
   { nullptr, 0 }
 };
 

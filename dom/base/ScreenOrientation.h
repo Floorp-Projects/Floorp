@@ -40,7 +40,6 @@ class ScreenOrientation final : public DOMEventTargetHelper,
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ScreenOrientation, mozilla::DOMEventTargetHelper)
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(mozilla::DOMEventTargetHelper)
 
   IMPL_EVENT_HANDLER(change)
 
