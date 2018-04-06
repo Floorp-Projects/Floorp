@@ -148,34 +148,11 @@ class HTMLElement(object):
                                              body, key="value")
 
     @property
-    def size(self):
-        """A dictionary with the size of the element."""
-        warnings.warn("The size property has been deprecated and will be removed in a future version. \
-            Please use HTMLElement#rect", DeprecationWarning)
-        rect = self.rect
-        return {"width": rect["width"], "height": rect["height"]}
-
-    @property
     def tag_name(self):
         """The tag name of the element."""
         body = {"id": self.id}
         return self.marionette._send_message("WebDriver:GetElementTagName",
                                              body, key="value")
-
-    @property
-    def location(self):
-        """Get an element's location on the page.
-
-        The returned point will contain the x and y coordinates of the
-        top left-hand corner of the given element.  The point (0,0)
-        refers to the upper-left corner of the document.
-
-        :returns: a dictionary containing x and y as entries
-        """
-        warnings.warn("The location property has been deprecated and will be removed in a future version. \
-            Please use HTMLElement#rect", DeprecationWarning)
-        rect = self.rect
-        return {"x": rect["x"], "y": rect["y"]}
 
     @property
     def rect(self):
@@ -1307,65 +1284,6 @@ class Marionette(object):
 
         """
         return self.session
-
-    def set_script_timeout(self, timeout):
-        """Sets the maximum number of ms that an asynchronous script is
-        allowed to run.
-
-        If a script does not return in the specified amount of time,
-        a ``ScriptTimeoutException`` is raised.
-
-        :param timeout: The maximum number of milliseconds an asynchronous
-            script can run without causing an ``ScriptTimeoutException`` to
-            be raised
-
-        .. note:: `set_script_timeout` is deprecated, please use
-            `timeout.script` setter.
-
-        """
-        warnings.warn(
-            "set_script_timeout is deprecated, please use timeout.script setter",
-            DeprecationWarning)
-        self.timeout.script = timeout / 1000
-
-    def set_search_timeout(self, timeout):
-        """Sets a timeout for the find methods.
-
-        When searching for an element using either :func:`find_element` or
-        :func:`find_elements`, the method will continue
-        trying to locate the element for up to timeout ms. This can be
-        useful if, for example, the element you're looking for might
-        not exist immediately, because it belongs to a page which is
-        currently being loaded.
-
-        :param timeout: Timeout in milliseconds.
-
-        .. note:: `set_search_timeout` is deprecated, please use
-            `timeout.implicit` setter.
-
-        """
-        warnings.warn(
-            "set_search_timeout is deprecated, please use timeout.implicit setter",
-            DeprecationWarning)
-        self.timeout.implicit = timeout / 1000
-
-    def set_page_load_timeout(self, timeout):
-        """Sets a timeout for loading pages.
-
-        A page load timeout specifies the amount of time the Marionette
-        instance should wait for a page load operation to complete. A
-        ``TimeoutException`` is returned if this limit is exceeded.
-
-        :param timeout: Timeout in milliseconds.
-
-        .. note:: `set_page_load_timeout` is deprecated, please use
-            `timeout.page_load` setter.
-
-        """
-        warnings.warn(
-            "set_page_load_timeout is deprecated, please use timeout.page_load setter",
-            DeprecationWarning)
-        self.timeout.page_load = timeout / 1000
 
     @property
     def current_window_handle(self):
