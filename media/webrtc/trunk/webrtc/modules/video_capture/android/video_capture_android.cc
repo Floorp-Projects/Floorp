@@ -116,7 +116,10 @@ int32_t VideoCaptureAndroid::OnIncomingFrame(uint8_t* videoFrame,
                                              size_t videoFrameLength,
                                              int32_t degrees,
                                              int64_t captureTime) {
-  if (!_captureStarted)
+  // _captureStarted is written on the controlling thread in
+  // StartCapture/StopCapture. This is the camera thread.
+  // CaptureStarted() will access it under a lock.
+  if (!CaptureStarted())
     return 0;
 
   VideoRotation current_rotation =
