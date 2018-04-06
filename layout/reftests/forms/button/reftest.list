@@ -41,3 +41,5 @@ fails-if(Android) == disabled-1.html disabled-1-ref.html
 == 1317351.html 1317351-ref.html
 
 == dynamic-text-indent.html dynamic-text-indent-ref.html
+
+== 1349646.html 1349646-ref.html
