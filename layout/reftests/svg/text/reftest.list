@@ -1,14 +1,14 @@
-== simple.svg simple-ref.html
+fails-if(webrender&&winWidget) == simple.svg simple-ref.html
 == simple-2.svg simple.svg
-== simple-underline.svg simple-underline-ref.html
+fails-if(webrender&&winWidget) == simple-underline.svg simple-underline-ref.html
 == simple-underline-scaled.svg simple-underline-scaled-ref.svg
-== simple-anchor-end-bidi.svg simple-anchor-end-bidi-ref.html
-== simple-anchor-end-rtl.svg simple-anchor-end-rtl-ref.html
-== simple-anchor-end.svg simple-anchor-end-ref.html
-fuzzy-if(skiaContent&&dwrite,104,131) == simple-anchor-middle-bidi.svg simple-anchor-middle-bidi-ref.html
-== simple-anchor-middle-rtl.svg simple-anchor-middle-rtl-ref.html
-fuzzy-if(skiaContent,111,81) == simple-anchor-middle.svg simple-anchor-middle-ref.html
-== simple-bidi.svg simple-bidi-ref.html
+fails-if(webrender&&winWidget) == simple-anchor-end-bidi.svg simple-anchor-end-bidi-ref.html
+fails-if(webrender&&winWidget) == simple-anchor-end-rtl.svg simple-anchor-end-rtl-ref.html
+fails-if(webrender&&winWidget) == simple-anchor-end.svg simple-anchor-end-ref.html
+fuzzy-if(skiaContent&&dwrite,104,131) fails-if(webrender&&winWidget) == simple-anchor-middle-bidi.svg simple-anchor-middle-bidi-ref.html
+fails-if(webrender&&winWidget) == simple-anchor-middle-rtl.svg simple-anchor-middle-rtl-ref.html
+fuzzy-if(skiaContent,111,81) fails-if(webrender&&winWidget) == simple-anchor-middle.svg simple-anchor-middle-ref.html
+fails-if(webrender&&winWidget) == simple-bidi.svg simple-bidi-ref.html
 == simple-bidi-2.svg simple-bidi.svg
 
 == simple-dx.svg simple.svg
@@ -25,12 +25,12 @@ fuzzy-if(skiaContent,111,81) == simple-anchor-middle.svg simple-anchor-middle-re
 == simple-dx-rtl-2.svg simple-dx-rtl-2-ref.svg
 
 == simple-fill-color-dynamic.svg simple-fill-color-dynamic-ref.svg
-== simple-fill-color.svg simple-fill-color-ref.html
+fails-if(webrender&&winWidget) == simple-fill-color.svg simple-fill-color-ref.html
 == simple-fill-gradient.svg simple-fill-gradient-ref.svg
 == simple-fill-none.svg simple.svg
 == simple-pointer-events.svg simple.svg
 
-== simple-multiple-dx.svg simple-multiple-dx-ref.html
+fails-if(webrender&&winWidget) == simple-multiple-dx.svg simple-multiple-dx-ref.html
 == simple-multiple-dx-2.svg simple-multiple-dx.svg
 == simple-multiple-dx-anchor-end-bidi.svg simple-multiple-dx-anchor-end-bidi-ref.svg
 == simple-multiple-dx-anchor-middle-bidi.svg simple-multiple-dx-anchor-middle-bidi-ref.svg
@@ -43,7 +43,7 @@ fuzzy-if(skiaContent,1,2) == simple-multiple-dx-anchor-middle-rtl.svg simple-mul
 == simple-multiple-dx-rtl.svg simple-multiple-dx-rtl-ref.svg
 == simple-multiple-dx-rtl-2.svg simple-multiple-dx-rtl.svg
 
-== simple-rtl.svg simple-rtl-ref.html
+fails-if(webrender&&winWidget) == simple-rtl.svg simple-rtl-ref.html
 == simple-rtl-2.svg simple-rtl.svg
 == simple-transform-rotate.svg simple-transform-rotate-ref.svg
 
@@ -196,10 +196,10 @@ needs-focus == deselectAll.svg deselectAll-ref.svg
 fuzzy-if(skiaContent,1,250) needs-focus == selectSubString.svg selectSubString-ref.svg
 fuzzy-if(skiaContent,1,600) needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
 fuzzy-if(skiaContent,1,250) needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
-fuzzy-if(webrender,1-1,237-237) needs-focus == simple-selection.svg simple-selection-ref.html
-fuzzy-if(skiaContent,1,100) fuzzy-if(webrender,1-1,575-575) needs-focus == simple-bidi-selection.svg simple-bidi-selection-ref.html
-fuzzy-if(skiaContent,1,50) fuzzy-if(webrender,1-1,237-237) needs-focus == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
-fuzzy-if(skiaContent,1,150) fuzzy-if(webrender,1-1,222-222) needs-focus == simple-underline-selection.svg simple-underline-selection-ref.html
-fuzzy-if(skiaContent,1,300) fuzzy-if(webrender,1-1,934-934) needs-focus == multiple-text-selection.svg multiple-text-selection-ref.html
+fuzzy-if(webrender,1-1,237-237) needs-focus fails-if(webrender&&winWidget) == simple-selection.svg simple-selection-ref.html
+fuzzy-if(skiaContent,1,100) fuzzy-if(webrender,1-1,575-575) needs-focus fails-if(webrender&&winWidget) == simple-bidi-selection.svg simple-bidi-selection-ref.html
+fuzzy-if(skiaContent,1,50) fuzzy-if(webrender,1-1,237-237) needs-focus fails-if(webrender&&winWidget) == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
+fuzzy-if(skiaContent,1,150) fuzzy-if(webrender,1-1,222-222) needs-focus fails-if(webrender&&winWidget) == simple-underline-selection.svg simple-underline-selection-ref.html
+fuzzy-if(skiaContent,1,300) fuzzy-if(webrender,1-1,934-934) needs-focus fails-if(webrender&&winWidget) == multiple-text-selection.svg multiple-text-selection-ref.html
 needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
 fuzzy-if(skiaContent,1,200) needs-focus == textpath-selection.svg textpath-selection-ref.svg

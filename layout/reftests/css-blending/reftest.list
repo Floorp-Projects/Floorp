@@ -2,7 +2,7 @@ pref(layout.css.mix-blend-mode.enabled,true) == blend-canvas.html blend-canvas-r
 pref(layout.css.mix-blend-mode.enabled,true) == blend-constant-background-color.html blend-constant-background-color-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) fuzzy-if(webrender,1-1,7875-7875) == blend-gradient-background-color.html blend-gradient-background-color-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == blend-image.html blend-image-ref.html
-pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender&&winWidget) == blend-difference-stacking.html blend-difference-stacking-ref.html
 
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,10000) fuzzy-if(skiaContent,1,30000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-alpha.html background-blending-alpha-ref.html
 pref(layout.css.background-blend-mode.enabled,true) fuzzy-if(webrender,1-1,7875-7875) == background-blending-gradient-color.html background-blending-gradient-color-ref.html

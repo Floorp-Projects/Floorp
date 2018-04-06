@@ -46,7 +46,7 @@ fuzzy(1,2) fuzzy-if(skiaContent,1,529) == canvas-drawImage-scale-2b.html canvas-
 
 fuzzy-if(winWidget&&!d2d,1,10000) fuzzy-if(azureSkia,1,10000) fuzzy-if(Android,1,10000) == canvas-drawImage-alpha-1.html canvas-drawImage-alpha-1-ref.html
 #Same as scale-2a but with globalAlpha:
-fuzzy(1,2) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,7018) fuzzy-if(azureSkia,1,40000) == canvas-drawImage-alpha-2.html canvas-drawImage-alpha-2-ref.html
+fuzzy(1,2) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,7018) fuzzy-if(azureSkia,1,40000) fails-if(webrender&&winWidget) == canvas-drawImage-alpha-2.html canvas-drawImage-alpha-2-ref.html
 
 == canvas-drawImage-slice-1a.html lime100x100-ref.html
 == canvas-drawImage-slice-1b.html lime100x100-ref.html

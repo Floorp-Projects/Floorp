@@ -11,8 +11,8 @@ fuzzy-if(winWidget,1,1) == multicolor-image-2.html multicolor-image-2-ref.html
 == multicolor-image-5.html multicolor-image-5-ref.html
 == transparent-image-1.html transparent-image-1-ref.html
 != repeat-image-1.html repeat-image-1-ref.html
-fuzzy-if(webrender,15-15,975-975) == 470250-1.html 470250-1-ref.html
-fuzzy-if(webrender,15-15,975-975) == 470250-2.html 470250-2-ref.html
+fuzzy-if(webrender,15-15,975-975) fails-if(webrender&&winWidget) == 470250-1.html 470250-1-ref.html
+fuzzy-if(webrender,15-15,975-975) fails-if(webrender&&winWidget) == 470250-2.html 470250-2-ref.html
 != different-h-v-1.html different-h-v-ref.html
 != different-h-v-2.html different-h-v-ref.html
 != different-h-v-1.html different-h-v-2.html
@@ -43,19 +43,19 @@ fuzzy-if(asyncPan&&!layersGPUAccelerated,140,514) fuzzy-if(winWidget&&stylo,144,
 
 # border images with gradients
 fuzzy-if(webrender,1-1,1804-1804) == border-image-linear-gradient.html border-image-linear-gradient-ref.html
-fuzzy(1,98) fuzzy-if(skiaContent,1,350) fuzzy-if(webrender,1-1,37537-37537) == border-image-linear-gradient-slice-1.html border-image-linear-gradient-slice-1-ref.html
-fuzzy(1,149) fuzzy-if(OSX,1,10595) fuzzy-if(webrender,1,25007) == border-image-linear-gradient-slice-2.html border-image-linear-gradient-slice-2-ref.html
-fuzzy(1,433) fuzzy-if(skiaContent,1,2500) fuzzy-if(webrender,1,85584) == border-image-linear-gradient-slice-fill-1.html border-image-linear-gradient-slice-fill-1-ref.html
-fuzzy(1,177) fuzzy-if(OSX,1,25771) fuzzy-if(skiaContent&&!Android,1,400) fuzzy-if(Android,1,6093) fuzzy-if(webrender,1,57412) == border-image-linear-gradient-slice-fill-2.html border-image-linear-gradient-slice-fill-2-ref.html
-fuzzy(1,48)  fuzzy-if(OSX,5,1676) fuzzy-if(webrender,1,4479) == border-image-linear-gradient-width.html border-image-linear-gradient-width-ref.html
+fuzzy(1,98) fuzzy-if(skiaContent,1,350) fuzzy-if(webrender,1-1,37537-37537) fails-if(webrender&&winWidget) == border-image-linear-gradient-slice-1.html border-image-linear-gradient-slice-1-ref.html
+fuzzy(1,149) fuzzy-if(OSX,1,10595) fuzzy-if(webrender,1,25007) fails-if(webrender&&winWidget) == border-image-linear-gradient-slice-2.html border-image-linear-gradient-slice-2-ref.html
+fuzzy(1,433) fuzzy-if(skiaContent,1,2500) fuzzy-if(webrender,1,85584) fails-if(webrender&&winWidget) == border-image-linear-gradient-slice-fill-1.html border-image-linear-gradient-slice-fill-1-ref.html
+fuzzy(1,177) fuzzy-if(OSX,1,25771) fuzzy-if(skiaContent&&!Android,1,400) fuzzy-if(Android,1,6093) fuzzy-if(webrender,1,57412) fails-if(webrender&&winWidget) == border-image-linear-gradient-slice-fill-2.html border-image-linear-gradient-slice-fill-2-ref.html
+fuzzy(1,48)  fuzzy-if(OSX,5,1676) fuzzy-if(webrender,1,4479) fails-if(webrender&&winWidget) == border-image-linear-gradient-width.html border-image-linear-gradient-width-ref.html
 fuzzy(1,5000) fuzzy-if(OSX,1,15000) fuzzy-if(webrender,2,58670) == border-image-linear-gradient-slice-width.html border-image-linear-gradient-slice-width-ref.html
-fuzzy(1,3000) fuzzy-if(OSX,1,6000) fuzzy-if(webrender,1,26302) == border-image-linear-gradient-outset.html border-image-linear-gradient-outset-ref.html
-fuzzy(1,12) fuzzy-if(skiaContent,1,400) fuzzy-if(webrender,1-1,26872-26872) == border-image-linear-gradient-repeat-repeat-1.html border-image-linear-gradient-repeat-repeat-1-ref.html
-fuzzy(1,13) fuzzy-if(skiaContent,1,300) fuzzy-if(webrender,1-1,27131-27131) == border-image-linear-gradient-repeat-round-1.html border-image-linear-gradient-repeat-round-1-ref.html
-fuzzy-if(webrender,1-1,65098-65098) == border-image-linear-gradient-repeat-repeat-2.html border-image-linear-gradient-repeat-repeat-2-ref.html
-fuzzy(1,576) fuzzy-if(skiaContent,1,2000) fuzzy-if(webrender,1-1,64806-64806) == border-image-linear-gradient-repeat-round-2.html border-image-linear-gradient-repeat-round-2-ref.html
-fuzzy(1,8533) fuzzy-if(webrender,1,85925) == border-image-linear-gradient-repeat-repeat-3.html border-image-linear-gradient-repeat-repeat-3-ref.html
-fuzzy(1,7161) fuzzy-if(webrender,2,107112) == border-image-linear-gradient-repeat-round-3.html border-image-linear-gradient-repeat-round-3-ref.html
+fuzzy(1,3000) fuzzy-if(OSX,1,6000) fuzzy-if(webrender,1,26302) fails-if(webrender&&winWidget) == border-image-linear-gradient-outset.html border-image-linear-gradient-outset-ref.html
+fuzzy(1,12) fuzzy-if(skiaContent,1,400) fuzzy-if(webrender,1-1,26872-26872) fails-if(webrender&&winWidget) == border-image-linear-gradient-repeat-repeat-1.html border-image-linear-gradient-repeat-repeat-1-ref.html
+fuzzy(1,13) fuzzy-if(skiaContent,1,300) fuzzy-if(webrender,1-1,27131-27131) fails-if(webrender&&winWidget) == border-image-linear-gradient-repeat-round-1.html border-image-linear-gradient-repeat-round-1-ref.html
+fuzzy-if(webrender,1-1,65098-65098) fails-if(webrender&&winWidget) == border-image-linear-gradient-repeat-repeat-2.html border-image-linear-gradient-repeat-repeat-2-ref.html
+fuzzy(1,576) fuzzy-if(skiaContent,1,2000) fuzzy-if(webrender,1-1,64806-64806) fails-if(webrender&&winWidget) == border-image-linear-gradient-repeat-round-2.html border-image-linear-gradient-repeat-round-2-ref.html
+fuzzy(1,8533) fuzzy-if(webrender,1,85925) fails-if(webrender&&winWidget) == border-image-linear-gradient-repeat-repeat-3.html border-image-linear-gradient-repeat-repeat-3-ref.html
+fuzzy(1,7161) fuzzy-if(webrender,2,107112) fails-if(webrender&&winWidget) == border-image-linear-gradient-repeat-round-3.html border-image-linear-gradient-repeat-round-3-ref.html
 
 fuzzy-if(webrender,1,2096) == border-image-radial-gradient.html border-image-radial-gradient-ref.html
 fuzzy(1,42) fuzzy-if(skiaContent,2,20) fuzzy-if(webrender,1,37818) == border-image-radial-gradient-slice-1.html border-image-radial-gradient-slice-1-ref.html
@@ -66,15 +66,15 @@ fuzzy-if(skiaContent,1,2) fuzzy-if(webrender,1,4894) == border-image-radial-grad
 fuzzy(1,9000) fuzzy-if(webrender,3,66698) == border-image-radial-gradient-slice-width.html border-image-radial-gradient-slice-width-ref.html
 
 # OS X failures tracked in bug 957025
-fuzzy-if(webrender,1-1,1766-1766) == border-image-repeating-linear-gradient.html border-image-repeating-linear-gradient-ref.html
+fuzzy-if(webrender,1-1,1766-1766) fails-if(webrender&&winWidget) == border-image-repeating-linear-gradient.html border-image-repeating-linear-gradient-ref.html
 fuzzy(1,5608) fails-if(OSX) fuzzy-if(skiaContent,1,6093) fuzzy-if(webrender,3,95449) == border-image-repeating-linear-gradient-slice-fill-2.html border-image-repeating-linear-gradient-slice-fill-2-ref.html
 fuzzy(1,19200) fails-if(OSX) fuzzy-if(skiaContent,3,20000) fuzzy-if(webrender,3-3,18896-18896) fuzzy-if(webrender,2,112082) == border-image-repeating-linear-gradient-repeat-round-2.html border-image-repeating-linear-gradient-repeat-round-2-ref.html
 
 fuzzy(1,657) fuzzy-if(webrender,3,3008) == border-image-repeating-radial-gradient.html border-image-repeating-radial-gradient-ref.html
 fuzzy(1,510) fuzzy-if(skiaContent,3,362) fuzzy-if(webrender,3,62078) == border-image-repeating-radial-gradient-slice-1.html border-image-repeating-radial-gradient-slice-1-ref.html
 fuzzy(1,438) fuzzy-if(skiaContent,3,437) fuzzy-if(webrender,3,40536) == border-image-repeating-radial-gradient-slice-2.html border-image-repeating-radial-gradient-slice-2-ref.html
-fuzzy(1,1357) fuzzy-if(skiaContent,3,964) fuzzy-if(webrender,3,143220) == border-image-repeating-radial-gradient-slice-fill-1.html border-image-repeating-radial-gradient-slice-fill-1-ref.html
-fuzzy(1,1058) fails-if(OSX) fuzzy-if(skiaContent,3,887) fuzzy-if(webrender,3,94677) == border-image-repeating-radial-gradient-slice-fill-2.html border-image-repeating-radial-gradient-slice-fill-2-ref.html
+fuzzy(1,1357) fuzzy-if(skiaContent,3,964) fuzzy-if(webrender,3,143220) fails-if(webrender&&winWidget) == border-image-repeating-radial-gradient-slice-fill-1.html border-image-repeating-radial-gradient-slice-fill-1-ref.html
+fuzzy(1,1058) fails-if(OSX) fuzzy-if(skiaContent,3,887) fuzzy-if(webrender,3,94677) fails-if(webrender&&winWidget) == border-image-repeating-radial-gradient-slice-fill-2.html border-image-repeating-radial-gradient-slice-fill-2-ref.html
 fuzzy(1,602) fuzzy-if(webrender,3,7441) == border-image-repeating-radial-gradient-width.html border-image-repeating-radial-gradient-width-ref.html
 fuzzy(3,18000) fails-if(OSX) fuzzy-if(skiaContent,4,16462) fuzzy-if(webrender,5,99728) == border-image-repeating-radial-gradient-slice-width.html border-image-repeating-radial-gradient-slice-width-ref.html
 fuzzy-if(webrender,3,117768) == border-image-repeating-radial-gradient-repeat-repeat-2.html border-image-repeating-radial-gradient-repeat-repeat-2-ref.html

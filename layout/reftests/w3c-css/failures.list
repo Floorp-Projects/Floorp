@@ -92,12 +92,12 @@ fuzzy-if(OSX,255,200)  css-writing-modes/box-offsets-rel-pos-vlr-005.xht
 fuzzy-if(OSX,255,200)  css-writing-modes/box-offsets-rel-pos-vrl-004.xht
 fuzzy-if(OSX||winWidget,93,300)   css-writing-modes/caption-side-v??-00?.xht
 fuzzy-if(OSX||winWidget,215,780)  css-writing-modes/central-baseline-alignment-00?.xht
-fuzzy-if(OSX||winWidget,75,404)   css-writing-modes/direction-v??-00?.xht
+fuzzy-if(OSX||winWidget,75,404) fails-if(webrender&&winWidget) css-writing-modes/direction-v??-00?.xht
 fuzzy-if(OSX||winWidget,135,902)  css-writing-modes/float-contiguous-v??-01?.xht
 fuzzy-if(OSX||winWidget,93,300)   css-writing-modes/float-shrink-to-fit-vlr-009.xht
 fuzzy-if(OSX||winWidget,93,300)   css-writing-modes/float-shrink-to-fit-vrl-008.xht
 fuzzy-if(OSX||winWidget,93,300)   css-writing-modes/float-v??-0??.xht
-fuzzy-if(OSX||winWidget,62,404)   css-writing-modes/height-width-inline-non-replaced-v??-00?.xht
+fuzzy-if(OSX||winWidget,62,404) fails-if(webrender&&winWidget) css-writing-modes/height-width-inline-non-replaced-v??-00?.xht
 fuzzy-if(OSX||winWidget,218,621)  css-writing-modes/inline-block-alignment-orthogonal-v??-00?.xht
 fuzzy-if(OSX||winWidget,135,1080) css-writing-modes/inline-block-alignment-slr-009.xht
 fuzzy-if(OSX||winWidget,111,960)  css-writing-modes/inline-block-alignment-srl-008.xht
@@ -106,7 +106,7 @@ fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/row-progression-???-0??.xht
 fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/table-column-order-00?.xht
 fuzzy-if(winWidget,110,1200) css-writing-modes/table-column-order-slr-007.xht
 fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/table-column-order-srl-006.xht
-fuzzy-if(OSX||winWidget,75,404)   css-writing-modes/text-align-v??-0??.xht
+fuzzy-if(OSX||winWidget,75,404) fails-if(webrender&&winWidget) css-writing-modes/text-align-v??-0??.xht
 fuzzy-if(OSX||winWidget,215,780)  css-writing-modes/text-baseline-???-00?.xht
 fuzzy-if(OSX,15,16) css-writing-modes/text-combine-upright-decorations-001.html
 fuzzy-if(OSX||winWidget,255,480)  css-writing-modes/text-indent-v??-0??.xht
