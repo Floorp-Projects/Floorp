@@ -1919,7 +1919,7 @@ protected:
   /**
    * Handle status bar updates before they can be cancelled.
    */
-  nsresult GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor);
+  void GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor);
 
   /**
    * Handle default actions for link event if the event isn't consumed yet.

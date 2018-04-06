@@ -200,8 +200,10 @@ default-preferences pref(layout.css.font-variations.enabled,false)
 == variation-format-hint-1c.html variation-format-hint-1A-ref.html
 == variation-format-hint-1d.html variation-format-hint-1A-ref.html
 default-preferences pref(layout.css.font-variations.enabled,true)
-== variation-format-hint-1a.html variation-format-hint-1B-ttf-ref.html
-== variation-format-hint-1b.html variation-format-hint-1B-otf-ref.html
-== variation-format-hint-1c.html variation-format-hint-1B-woff-ref.html
-== variation-format-hint-1d.html variation-format-hint-1B-woff2-ref.html
+# Currently Windows, Linux and macOS all fail on treeherder because our OS versions
+# are too old to support variation fonts
+fails-if(winWidget||gtkWidget||(cocoaWidget&&OSX<1012)) == variation-format-hint-1a.html variation-format-hint-1B-ttf-ref.html
+fails-if(winWidget||gtkWidget||(cocoaWidget&&OSX<1012)) == variation-format-hint-1b.html variation-format-hint-1B-otf-ref.html
+fails-if(winWidget||gtkWidget||(cocoaWidget&&OSX<1012)) == variation-format-hint-1c.html variation-format-hint-1B-woff-ref.html
+fails-if(winWidget||gtkWidget||(cocoaWidget&&OSX<1012)) == variation-format-hint-1d.html variation-format-hint-1B-woff2-ref.html
 default-preferences

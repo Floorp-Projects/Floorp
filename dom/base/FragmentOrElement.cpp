@@ -895,7 +895,7 @@ FindChromeAccessOnlySubtreeOwner(EventTarget* aTarget)
   return node.forget();
 }
 
-nsresult
+void
 nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   //FIXME! Document how this event retargeting works, Bug 329124.
@@ -975,7 +975,7 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
               aVisitor.SetParentTarget(nullptr, false);
               // Event should not propagate to non-anon content.
               aVisitor.mCanHandle = isAnonForEvents;
-              return NS_OK;
+              return;
             }
           }
         }
@@ -1079,7 +1079,7 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
             // being false, but in Shadow DOM case mTarget really should
             // point to a node in Shadow DOM.
             aVisitor.mEvent->mTarget = aVisitor.mTargetInKnownToBeHandledScope;
-            return NS_OK;
+            return;
           }
 
           // Part of step 5. Retargeting target has happened already higher
@@ -1123,7 +1123,7 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
             // being false, but in Shadow DOM case mTarget really should
             // point to a node in Shadow DOM.
             aVisitor.mEvent->mTarget = aVisitor.mTargetInKnownToBeHandledScope;
-            return NS_OK;
+            return;
           } else {
             // Step 11.6
             aVisitor.mRetargetedRelatedTarget = retargetedRelatedTarget;
@@ -1137,8 +1137,6 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     // Inform that we're about to exit the current scope.
     aVisitor.mRelatedTargetRetargetedInCurrentScope = false;
   }
-
-  return NS_OK;
 }
 
 bool

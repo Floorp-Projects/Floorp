@@ -20,7 +20,6 @@
 #include "skia/include/core/SkColorFilter.h"
 #include "skia/include/core/SkRegion.h"
 #include "skia/include/effects/SkBlurImageFilter.h"
-#include "skia/src/core/SkDevice.h"
 #include "Blur.h"
 #include "Logging.h"
 #include "Tools.h"
@@ -2123,18 +2122,13 @@ DrawTargetSkia::PushLayerWithBlend(bool aOpaque, Float aOpacity, SourceSurface* 
                                    const Matrix& aMaskTransform, const IntRect& aBounds,
                                    bool aCopyBackground, CompositionOp aCompositionOp)
 {
-  PushedLayer layer(GetPermitSubpixelAA(), aOpaque, aOpacity, aCompositionOp, aMask, aMaskTransform,
-                    mCanvas->getTopDevice());
+  PushedLayer layer(GetPermitSubpixelAA(), aMask);
   mPushedLayers.push_back(layer);
 
   SkPaint paint;
 
-  // If we have a mask, set the opacity to 0 so that SkCanvas::restore skips
-  // implicitly drawing the layer so that we can properly mask it in PopLayer.
-  paint.setAlpha(aMask ? 0 : ColorFloatToByte(aOpacity));
-  if (!aMask) {
-    paint.setBlendMode(GfxOpToSkiaOp(layer.mCompositionOp));
-  }
+  paint.setAlpha(ColorFloatToByte(aOpacity));
+  paint.setBlendMode(GfxOpToSkiaOp(aCompositionOp));
 
   // aBounds is supplied in device space, but SaveLayerRec wants local space.
   SkRect bounds = IntRectToSkRect(aBounds);
@@ -2147,8 +2141,14 @@ DrawTargetSkia::PushLayerWithBlend(bool aOpaque, Float aOpacity, SourceSurface* 
     }
   }
 
+  sk_sp<SkImage> clipImage = aMask ? GetSkImageForSurface(aMask) : nullptr;
+  SkMatrix clipMatrix;
+  GfxMatrixToSkiaMatrix(aMaskTransform, clipMatrix);
   SkCanvas::SaveLayerRec saveRec(aBounds.IsEmpty() ? nullptr : &bounds,
                                  &paint,
+                                 nullptr,
+                                 clipImage.get(),
+                                 &clipMatrix,
                                  SkCanvas::kPreserveLCDText_SaveLayerFlag |
                                    (aCopyBackground ? SkCanvas::kInitWithPrevious_SaveLayerFlag : 0));
 
@@ -2170,65 +2170,7 @@ DrawTargetSkia::PopLayer()
   MOZ_ASSERT(mPushedLayers.size());
   const PushedLayer& layer = mPushedLayers.back();
 
-  // Ensure that the top device has actually changed. If it hasn't, then there
-  // is no layer image to be masked.
-  if (layer.mMask &&
-      layer.mPreviousDevice != mCanvas->getTopDevice()) {
-    // If we have a mask, take a reference to the top layer's device so that
-    // we can mask it ourselves. This assumes we forced SkCanvas::restore to
-    // skip implicitly drawing the layer.
-    sk_sp<SkBaseDevice> layerDevice = sk_ref_sp(mCanvas->getTopDevice());
-    SkIRect layerBounds = layerDevice->getGlobalBounds();
-    sk_sp<SkImage> layerImage = layerDevice->snapshotImage();
-
-    // Restore the background with the layer's device left alive.
-    mCanvas->restore();
-
-    SkPaint paint;
-    paint.setAlpha(ColorFloatToByte(layer.mOpacity));
-    paint.setBlendMode(GfxOpToSkiaOp(layer.mCompositionOp));
-
-    SkMatrix maskMat, layerMat;
-    // Get the total transform affecting the mask, considering its pattern
-    // transform and the current canvas transform.
-    GfxMatrixToSkiaMatrix(layer.mMaskTransform, maskMat);
-    maskMat.postConcat(mCanvas->getTotalMatrix());
-    if (!maskMat.invert(&layerMat)) {
-      gfxDebug() << *this << ": PopLayer() failed to invert mask transform";
-    } else {
-      // The layer should not be affected by the current canvas transform,
-      // even though the mask is. So first we use the inverse of the transform
-      // affecting the mask, then add back on the layer's origin.
-      layerMat.preTranslate(layerBounds.x(), layerBounds.y());
-
-      if (layerImage) {
-        paint.setShader(layerImage->makeShader(SkShader::kClamp_TileMode, SkShader::kClamp_TileMode, &layerMat));
-      } else {
-        paint.setColor(SK_ColorTRANSPARENT);
-      }
-
-      maskMat.postTranslate(layer.mMask->GetRect().X(), layer.mMask->GetRect().Y());
-
-      sk_sp<SkImage> alphaMask = ExtractAlphaForSurface(layer.mMask);
-      if (!alphaMask) {
-        gfxDebug() << *this << ": PopLayer() failed to extract alpha for mask";
-      } else {
-        mCanvas->save();
-
-        // The layer may be smaller than the canvas size, so make sure drawing is
-        // clipped to within the bounds of the layer.
-        mCanvas->resetMatrix();
-        mCanvas->clipRect(SkRect::Make(layerBounds));
-
-        mCanvas->setMatrix(maskMat);
-        mCanvas->drawImage(alphaMask, 0, 0, &paint);
-
-        mCanvas->restore();
-      }
-    }
-  } else {
-    mCanvas->restore();
-  }
+  mCanvas->restore();
 
   SetTransform(GetTransform());
   SetPermitSubpixelAA(layer.mOldPermitSubpixelAA);

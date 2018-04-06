@@ -236,7 +236,7 @@ HTMLMenuItemElement::SetChecked(bool aChecked)
   }
 }
 
-nsresult
+void
 HTMLMenuItemElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   if (aVisitor.mEvent->mMessage == eMouseClick) {
@@ -269,7 +269,7 @@ HTMLMenuItemElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     aVisitor.mItemFlags |= mType;
   }
 
-  return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+  nsGenericHTMLElement::GetEventTargetParent(aVisitor);
 }
 
 nsresult

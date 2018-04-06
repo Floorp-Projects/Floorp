@@ -2332,24 +2332,12 @@ nsGlobalWindowOuter::UpdateParentTarget()
 }
 
 EventTarget*
-nsGlobalWindowOuter::GetTargetForDOMEvent()
-{
-  return GetOuterWindowInternal();
-}
-
-EventTarget*
 nsGlobalWindowOuter::GetTargetForEventTargetChain()
 {
   return GetCurrentInnerWindowInternal();
 }
 
-nsresult
-nsGlobalWindowOuter::WillHandleEvent(EventChainPostVisitor& aVisitor)
-{
-  return NS_OK;
-}
-
-nsresult
+void
 nsGlobalWindowOuter::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   MOZ_CRASH("The outer window should not be part of an event path");
@@ -3891,10 +3879,7 @@ nsGlobalWindowOuter::DispatchResizeEvent(const CSSIntSize& aSize)
   nsCOMPtr<EventTarget> target = do_QueryInterface(GetOuterWindow());
   domEvent->SetTarget(target);
 
-  bool defaultActionEnabled = true;
-  target->DispatchEvent(domEvent, &defaultActionEnabled);
-
-  return defaultActionEnabled;
+  return target->DispatchEvent(*domEvent, CallerType::System, IgnoreErrors());
 }
 
 static already_AddRefed<nsIDocShellTreeItem>
@@ -5436,8 +5421,7 @@ nsGlobalWindowOuter::FirePopupBlockedEvent(nsIDocument* aDoc,
 
   event->SetTrusted(true);
 
-  bool defaultActionEnabled;
-  aDoc->DispatchEvent(event, &defaultActionEnabled);
+  aDoc->DispatchEvent(*event);
 }
 
 // static
@@ -6227,8 +6211,7 @@ nsGlobalWindowOuter::LeaveModalState()
     event->InitEvent(NS_LITERAL_STRING("endmodalstate"), true, false);
     event->SetTrusted(true);
     event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-    bool dummy;
-    topWin->DispatchEvent(event, &dummy);
+    topWin->DispatchEvent(*event);
   }
 }
 
@@ -6476,74 +6459,21 @@ nsGlobalWindowOuter::GetOwnerGlobalForBindings()
   return this;
 }
 
-NS_IMETHODIMP
-nsGlobalWindowOuter::RemoveEventListener(const nsAString& aType,
-                                         nsIDOMEventListener* aListener,
-                                         bool aUseCapture)
+bool
+nsGlobalWindowOuter::DispatchEvent(Event& aEvent,
+                                   CallerType aCallerType,
+                                   ErrorResult& aRv)
 {
-  FORWARD_TO_INNER(RemoveEventListener, (aType, aListener, aUseCapture), NS_OK);
+  FORWARD_TO_INNER(DispatchEvent, (aEvent, aCallerType, aRv), false);
 }
 
-NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsGlobalWindowOuter)
-
-NS_IMETHODIMP
-nsGlobalWindowOuter::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
+bool
+nsGlobalWindowOuter::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
 {
-  FORWARD_TO_INNER(DispatchEvent, (aEvent, aRetVal), NS_OK);
-}
-
-NS_IMETHODIMP
-nsGlobalWindowOuter::AddEventListener(const nsAString& aType,
-                                      nsIDOMEventListener *aListener,
-                                      bool aUseCapture, bool aWantsUntrusted,
-                                      uint8_t aOptionalArgc)
-{
-  FORWARD_TO_INNER_CREATE(AddEventListener,
-                          (aType, aListener, aUseCapture, aWantsUntrusted, aOptionalArgc),
-                          NS_ERROR_UNEXPECTED);
-}
-
-void
-nsGlobalWindowOuter::AddEventListener(const nsAString& aType,
-                                      EventListener* aListener,
-                                      const AddEventListenerOptionsOrBoolean& aOptions,
-                                      const Nullable<bool>& aWantsUntrusted,
-                                      ErrorResult& aRv)
-{
-  if (mInnerWindow && !nsContentUtils::CanCallerAccess(mInnerWindow)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
-  FORWARD_TO_INNER_CREATE(AddEventListener,
-                          (aType, aListener, aOptions, aWantsUntrusted, aRv),);
-}
-
-NS_IMETHODIMP
-nsGlobalWindowOuter::AddSystemEventListener(const nsAString& aType,
-                                            nsIDOMEventListener *aListener,
-                                            bool aUseCapture,
-                                            bool aWantsUntrusted,
-                                            uint8_t aOptionalArgc)
-{
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  if (mInnerWindow &&
-      !nsContentUtils::LegacyIsCallerNativeCode() &&
-      !nsContentUtils::CanCallerAccess(mInnerWindow)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  if (!aWantsUntrusted &&
-      (aOptionalArgc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
-    aWantsUntrusted = true;
-  }
-
-  return NS_AddSystemEventListener(this, aType, aListener, aUseCapture,
-                                   aWantsUntrusted);
+  // It's OK that we just return false here on failure to create an
+  // inner.  GetOrCreateListenerManager() will likewise fail, and then
+  // we won't be adding any listeners anyway.
+  FORWARD_TO_INNER_CREATE(ComputeDefaultWantsUntrusted, (aRv), false);
 }
 
 EventListenerManager*
@@ -6556,19 +6486,6 @@ EventListenerManager*
 nsGlobalWindowOuter::GetExistingListenerManager() const
 {
   FORWARD_TO_INNER(GetExistingListenerManager, (), nullptr);
-}
-
-nsIScriptContext*
-nsGlobalWindowOuter::GetContextForEventHandlers(nsresult* aRv)
-{
-  *aRv = NS_ERROR_UNEXPECTED;
-
-  nsIScriptContext* scx;
-  if ((scx = GetContext())) {
-    *aRv = NS_OK;
-    return scx;
-  }
-  return nullptr;
 }
 
 //*****************************************************************************

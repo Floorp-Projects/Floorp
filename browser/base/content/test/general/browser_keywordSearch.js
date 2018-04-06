@@ -23,7 +23,7 @@ function test() {
     observe(aSubject, aTopic, aData) {
       if (aTopic == "domwindowopened") {
         ok(false, "Alert window opened");
-        let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+        let win = aSubject;
         win.addEventListener("load", function() {
           win.close();
         }, {once: true});

@@ -41,8 +41,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
     // pressed keys, but this is a big old edge case anyway. -dwh
     if (!rv.Failed()) {
       event->SetTrusted(true);
-      bool dummy;
-      aTargetContent->DispatchEvent(event, &dummy);
+      aTargetContent->DispatchEvent(*event);
     }
   }
 }

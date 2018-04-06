@@ -168,6 +168,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
                                 gfx::SurfaceFormat aFormat,
                                 const uint16_t *aTileSize,
                                 const mozilla::wr::TileOffset *aTileOffset,
+                                const mozilla::wr::DeviceUintRect *aDirtyRect,
                                 Range<uint8_t> aOutput)
 {
   MOZ_ASSERT(aSize.width > 0 && aSize.height > 0);
@@ -195,6 +196,11 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
 
   if (!dt) {
     return false;
+  }
+
+  if (aDirtyRect) {
+    Rect dirty(aDirtyRect->origin.x, aDirtyRect->origin.y, aDirtyRect->size.width, aDirtyRect->size.height);
+    dt->PushClipRect(dirty);
   }
 
   if (aTileOffset) {
@@ -263,6 +269,18 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   }
 
 #if 0
+  dt->SetTransform(gfx::Matrix());
+  float r = float(rand()) / RAND_MAX;
+  float g = float(rand()) / RAND_MAX;
+  float b = float(rand()) / RAND_MAX;
+  dt->FillRect(gfx::Rect(0, 0, aSize.width, aSize.height), gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
+#endif
+
+  if (aDirtyRect) {
+    dt->PopClip();
+  }
+
+#if 0
   static int i = 0;
   char filename[40];
   sprintf(filename, "out%d.png", i++);
@@ -282,6 +300,7 @@ bool wr_moz2d_render_cb(const mozilla::wr::ByteSlice blob,
                         mozilla::wr::ImageFormat aFormat,
                         const uint16_t *aTileSize,
                         const mozilla::wr::TileOffset *aTileOffset,
+                        const mozilla::wr::DeviceUintRect *aDirtyRect,
                         mozilla::wr::MutByteSlice output)
 {
   return mozilla::wr::Moz2DRenderCallback(mozilla::wr::ByteSliceToRange(blob),
@@ -289,6 +308,7 @@ bool wr_moz2d_render_cb(const mozilla::wr::ByteSlice blob,
                                           mozilla::wr::ImageFormatToSurfaceFormat(aFormat),
                                           aTileSize,
                                           aTileOffset,
+                                          aDirtyRect,
                                           mozilla::wr::MutByteSliceToRange(output));
 }
 

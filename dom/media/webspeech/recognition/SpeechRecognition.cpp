@@ -529,8 +529,7 @@ SpeechRecognition::NotifyFinalResult(SpeechEvent* aEvent)
     this, NS_LITERAL_STRING("result"), init);
   event->SetTrusted(true);
 
-  bool defaultActionEnabled;
-  this->DispatchEvent(event, &defaultActionEnabled);
+  DispatchEvent(*event);
 }
 
 void
@@ -564,8 +563,7 @@ SpeechRecognition::NotifyError(SpeechEvent* aEvent)
 {
   aEvent->mError->SetTrusted(true);
 
-  bool defaultActionEnabled;
-  this->DispatchEvent(aEvent->mError, &defaultActionEnabled);
+  DispatchEvent(*aEvent->mError);
 }
 
 /**************************************

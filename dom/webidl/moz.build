@@ -467,7 +467,6 @@ WEBIDL_FILES = [
     'DocumentOrShadowRoot.webidl',
     'DocumentTimeline.webidl',
     'DocumentType.webidl',
-    'DOMCursor.webidl',
     'DOMError.webidl',
     'DOMException.webidl',
     'DOMImplementation.webidl',

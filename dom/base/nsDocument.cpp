@@ -7466,7 +7466,7 @@ nsDocument::GetExistingListenerManager() const
   return mListenerManager;
 }
 
-nsresult
+void
 nsDocument::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   if (mDocGroup && aVisitor.mEvent->mMessage != eVoidEvent &&
@@ -7485,7 +7485,6 @@ nsDocument::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     aVisitor.SetParentTarget(
       window ? window->GetTargetForEventTargetChain() : nullptr, false);
   }
-  return NS_OK;
 }
 
 already_AddRefed<Event>

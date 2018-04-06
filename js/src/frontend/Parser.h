@@ -616,8 +616,6 @@ PerHandlerParser<FullParseHandler>::clearAbortedSyntaxParse()
 {
 }
 
-enum class ExpressionClosure { Allowed, Forbidden };
-
 template<class Parser>
 class ParserAnyCharsAccess
 {
@@ -974,8 +972,8 @@ class GeneralParser
     Node functionStmt(uint32_t toStringStart,
                       YieldHandling yieldHandling, DefaultHandling defaultHandling,
                       FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction);
-    Node functionExpr(uint32_t toStringStart, ExpressionClosure expressionClosureHandling,
-                      InvokedPrediction invoked, FunctionAsyncKind asyncKind);
+    Node functionExpr(uint32_t toStringStart, InvokedPrediction invoked,
+                      FunctionAsyncKind asyncKind);
 
     Node statement(YieldHandling yieldHandling);
     bool maybeParseDirective(Node list, Node pn, bool* cont);
@@ -1094,24 +1092,20 @@ class GeneralParser
     Node assignExprWithoutYieldOrAwait(YieldHandling yieldHandling);
     Node yieldExpression(InHandling inHandling);
     Node condExpr(InHandling inHandling, YieldHandling yieldHandling,
-                  TripledotHandling tripledotHandling, ExpressionClosure expressionClosureHandling,
-                  PossibleError* possibleError,
+                  TripledotHandling tripledotHandling, PossibleError* possibleError,
                   InvokedPrediction invoked = PredictUninvoked);
     Node orExpr(InHandling inHandling, YieldHandling yieldHandling,
-                TripledotHandling tripledotHandling, ExpressionClosure expressionClosureHandling,
-                PossibleError* possibleError,
+                TripledotHandling tripledotHandling, PossibleError* possibleError,
                 InvokedPrediction invoked = PredictUninvoked);
     Node unaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                   ExpressionClosure expressionClosureHandling,
                    PossibleError* possibleError = nullptr,
                    InvokedPrediction invoked = PredictUninvoked);
-    Node memberExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                    ExpressionClosure expressionClosureHandling, TokenKind tt,
+    Node memberExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling, TokenKind tt,
                     bool allowCallSyntax = true, PossibleError* possibleError = nullptr,
                     InvokedPrediction invoked = PredictUninvoked);
     Node primaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
-                     ExpressionClosure expressionClosureHandling, TokenKind tt,
-                     PossibleError* possibleError, InvokedPrediction invoked = PredictUninvoked);
+                     TokenKind tt, PossibleError* possibleError,
+                     InvokedPrediction invoked = PredictUninvoked);
     Node exprInParens(InHandling inHandling, YieldHandling yieldHandling,
                       TripledotHandling tripledotHandling, PossibleError* possibleError = nullptr);
 

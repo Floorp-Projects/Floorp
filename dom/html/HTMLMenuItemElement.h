@@ -32,8 +32,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLMenuItemElement,
                                        nsGenericHTMLElement)
 
-  virtual nsresult GetEventTargetParent(
-                     EventChainPreVisitor& aVisitor) override;
+  void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   virtual nsresult PostHandleEvent(
                      EventChainPostVisitor& aVisitor) override;
 

@@ -103,8 +103,7 @@ public:
   void SetCurrentScaleTranslate(float s, float x, float y);
 
   // nsIContent interface
-  virtual nsresult GetEventTargetParent(
-                     EventChainPreVisitor& aVisitor) override;
+  void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
   // nsINode methods:

@@ -31,16 +31,21 @@ class nsPresContext;
 class nsIPresShell;
 class nsIDocument;
 class imgIRequest;
-class nsIDOMEvent;
 class nsINode;
 class nsIRunnable;
 
 namespace mozilla {
 class RefreshDriverTimer;
 class Runnable;
+
 namespace layout {
 class VsyncChild;
 } // namespace layout
+
+namespace dom {
+class Event;
+} // namespace dom
+
 } // namespace mozilla
 
 /**
@@ -240,7 +245,7 @@ public:
   /**
    * Queue a new event to dispatch in next tick before the style flush
    */
-  void ScheduleEventDispatch(nsINode* aTarget, nsIDOMEvent* aEvent);
+  void ScheduleEventDispatch(nsINode* aTarget, mozilla::dom::Event* aEvent);
 
   /**
    * Cancel all pending events scheduled by ScheduleEventDispatch which
@@ -508,7 +513,7 @@ private:
 
   struct PendingEvent {
     nsCOMPtr<nsINode> mTarget;
-    nsCOMPtr<nsIDOMEvent> mEvent;
+    RefPtr<mozilla::dom::Event> mEvent;
   };
 
   AutoTArray<nsIPresShell*, 16> mResizeEventFlushObservers;

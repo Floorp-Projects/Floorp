@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!--
+checks that unblurred text-shadows are
+actually clipped by text-overflow: clip
+-->
+<html>
+<head></head>
+<body>
+  <div style="
+    width: 3em;
+    text-overflow: clip;
+    overflow: hidden;
+    text-shadow: 3em 0px black;
+    white-space: nowrap;
+    color: red;">MMMMMM
+  </div>
+</body>
+</html>
