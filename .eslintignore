@@ -153,7 +153,7 @@ devtools/client/debugger/new/**
 
 # Ignore devtools preferences files
 devtools/client/preferences/**
-devtools/startup/devtools-startup-prefs.js
+devtools/startup/preferences/devtools-startup.js
 
 # Ignore devtools third-party libs
 devtools/shared/jsbeautify/*
