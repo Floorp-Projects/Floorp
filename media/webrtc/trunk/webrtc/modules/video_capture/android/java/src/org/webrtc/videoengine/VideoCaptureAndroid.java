@@ -121,6 +121,9 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         @Override public void run() {
           boolean startResult =
             startCaptureOnCameraThread(width, height, min_mfps, max_mfps);
+          if (!startResult) {
+            Looper.myLooper().quit();
+          }
           exchange(result, startResult);
         }
       });
@@ -316,6 +319,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     cameraThreadHandler.post(new Runnable() {
         @Override public void run() {
           boolean stopResult = stopCaptureOnCameraThread();
+          Looper.myLooper().quit();
           exchange(result, stopResult);
         }
       });
@@ -348,7 +352,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       }
       camera.release();
       camera = null;
-      Looper.myLooper().quit();
       return true;
     } catch (IOException e) {
       error = e;
@@ -356,7 +359,6 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       error = e;
     }
     Log.e(TAG, "Failed to stop camera", error);
-    Looper.myLooper().quit();
     return false;
   }
 
