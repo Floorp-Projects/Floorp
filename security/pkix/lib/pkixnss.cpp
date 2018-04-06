@@ -216,6 +216,9 @@ RegisterErrorTable()
       "certificate." },
     { "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT",
       "The certificate is not trusted because it is self-signed." },
+    { "MOZILLA_PKIX_ERROR_MITM_DETECTED",
+      "Your connection is being intercepted by a TLS proxy. Uninstall it if "
+      "possible or configure Firefox to trust its root certificate." },
   };
   // Note that these error strings are not localizable.
   // When these strings change, update the localization information too.
