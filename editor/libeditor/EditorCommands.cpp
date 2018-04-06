@@ -17,7 +17,6 @@
 #include "nsIClipboard.h"
 #include "nsICommandParams.h"
 #include "nsID.h"
-#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIEditor.h"
 #include "nsIEditorMailSupport.h"
