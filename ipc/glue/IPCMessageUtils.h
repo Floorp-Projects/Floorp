@@ -68,8 +68,13 @@ struct null_t {
 
 struct SerializedStructuredCloneBuffer final
 {
-  SerializedStructuredCloneBuffer() {}
+  SerializedStructuredCloneBuffer()
+   : data(JS::StructuredCloneScope::Unassigned)
+  {
+  }
+
   SerializedStructuredCloneBuffer(const SerializedStructuredCloneBuffer& aOther)
+   : SerializedStructuredCloneBuffer()
   {
     *this = aOther;
   }
@@ -78,6 +83,7 @@ struct SerializedStructuredCloneBuffer final
   operator=(const SerializedStructuredCloneBuffer& aOther)
   {
     data.Clear();
+    data.initScope(aOther.data.scope());
     data.Append(aOther.data);
     return *this;
   }
@@ -876,7 +882,7 @@ struct ParamTraits<JSStructuredCloneData>
       return false;
     }
 
-    *aResult = JSStructuredCloneData(Move(out));
+    *aResult = JSStructuredCloneData(Move(out), JS::StructuredCloneScope::DifferentProcess);
 
     return true;
   }

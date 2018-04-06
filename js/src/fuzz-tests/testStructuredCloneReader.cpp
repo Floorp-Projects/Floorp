@@ -39,7 +39,9 @@ testStructuredCloneReaderFuzz(const uint8_t* buf, size_t size) {
     const size_t kSegmentAlignment = 8;
     size_t buf_size = JS_ROUNDUP(size, kSegmentAlignment);
 
-    auto clonebuf = MakeUnique<JSStructuredCloneData>();
+    JS::StructuredCloneScope scope = JS::StructuredCloneScope::DifferentProcess;
+
+    auto clonebuf = MakeUnique<JSStructuredCloneData>(scope);
     if (!clonebuf || !clonebuf->Init(buf_size)) {
         ReportOutOfMemory(gCx);
         return 0;
@@ -49,8 +51,6 @@ testStructuredCloneReaderFuzz(const uint8_t* buf, size_t size) {
     clonebuf->AppendBytes((const char*)buf, size);
     char padding[kSegmentAlignment] = {0};
     clonebuf->AppendBytes(padding, buf_size - size);
-
-    JS::StructuredCloneScope scope = JS::StructuredCloneScope::DifferentProcess;
 
     RootedValue deserialized(gCx);
     if (!JS_ReadStructuredClone(gCx, *clonebuf,
