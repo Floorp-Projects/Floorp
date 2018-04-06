@@ -49,7 +49,6 @@ mochitest:
             default: 5
     e10s:
         by-test-platform:
-            linux64-jsdcov/opt: false
             linux32/debug: both
             default: true
     max-run-time:
@@ -103,10 +102,6 @@ mochitest-browser-chrome:
             linux.*/debug: 16
             linux64-asan/opt: 16
             default: 7
-    e10s:
-        by-test-platform:
-            linux64-jsdcov/opt: false
-            default: true
     max-run-time:
         by-test-platform:
             linux64-.*cov/opt: 7200
@@ -243,10 +238,6 @@ mochitest-devtools-chrome:
         by-test-platform:
             windows10-64-ccov/debug: 10
             default: 8
-    e10s:
-        by-test-platform:
-            linux64-jsdcov/opt: false
-            default: true
     mozharness:
         mochitest-flavor: chrome
         chunked: true

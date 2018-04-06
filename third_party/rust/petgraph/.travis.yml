@@ -1,0 +1,25 @@
+language: rust
+sudo: false
+matrix:
+  include:
+    - rust: 1.12.0
+      env:
+      - ALL=' '
+    - rust: stable
+      env:
+      - FEATURES='unstable quickcheck'
+    - rust: beta
+    - rust: nightly
+    - rust: nightly
+      env:
+       - FEATURES='unstable quickcheck'
+       - BENCH=1
+branches:
+  only:
+    - master
+script:
+  - |
+      cargo build --verbose --no-default-features &&
+      cargo test --verbose --no-default-features &&
+      cargo build --verbose --features "$FEATURES" &&
+      cargo test ${ALL:---all} --verbose --features "$FEATURES"

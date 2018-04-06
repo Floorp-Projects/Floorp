@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<body>
+<style>
+body { color: red; }
+</style>
+<script>
+var div = document.createElement("div");
+var shadow = div.attachShadow({ mode: "open" });
+shadow.innerHTML = '<style>p { color: green; }</style><p>This should be green.</p>';
+document.body.appendChild(div);
+</script>

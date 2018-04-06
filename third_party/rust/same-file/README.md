@@ -19,7 +19,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-same-file = "0.1"
+same-file = "1"
 ```
 
 and this to your crate root:

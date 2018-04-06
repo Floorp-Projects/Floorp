@@ -21,3 +21,6 @@ pref(dom.webcomponents.shadowdom.enabled,true) == basic-slot-3.html basic-slot-3
 pref(dom.webcomponents.shadowdom.enabled,true) == basic-slot-4.html basic-slot-3-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == basic-slot-5.html basic-slot-5-ref.html
 pref(dom.webcomponents.shadowdom.enabled,true) == basic-slot-6.html basic-slot-6-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == shadow-style-1.html shadow-style-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == shadow-style-2.html shadow-style-2-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == shadow-style-3.html shadow-style-3-ref.html
