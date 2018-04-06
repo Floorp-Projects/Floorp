@@ -480,7 +480,7 @@ JSTerm.prototype = {
     }
 
     if (this.hud.NEW_CONSOLE_OUTPUT_ENABLED) {
-      const { ConsoleCommand } = require("devtools/client/webconsole/new-console-output/types");
+      const { ConsoleCommand } = require("devtools/client/webconsole/types");
       let message = new ConsoleCommand({
         messageText: executeString,
       });
