@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE window [
+<!ENTITY % webConsoleDTD SYSTEM "chrome://devtools/locale/webConsole.dtd">
+%webConsoleDTD;
+<!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuDTD;
+]>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/webconsole.css"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/components-frame.css"
+                 type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="devtools-webconsole"
+        macanimationtype="document"
+        fullscreenbutton="true"
+        title="&window.title;"
+        windowtype="devtools:webconsole"
+        width="900" height="350"
+        persist="screenX screenY width height sizemode">
+  <script type="application/javascript"
+          src="chrome://devtools/content/shared/theme-switching.js"/>
+  <script type="application/javascript"
+          src="resource://devtools/client/webconsole/new-console-output/main.js"/>
+  <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="text/javascript" src="resource://devtools/client/webconsole/old/net/main.js"/>
+  <script type="text/javascript"><![CDATA[
+function goUpdateConsoleCommands() {
+  goUpdateCommand("consoleCmd_openURL");
+  goUpdateCommand("consoleCmd_copyURL");
+}
+  // ]]></script>
+
+#include ../../../../toolkit/content/editMenuCommands.inc.xul
+
+  <commandset id="consoleCommands"
+              commandupdater="true"
+              events="focus,select"
+              oncommandupdate="goUpdateConsoleCommands();">
+    <command id="consoleCmd_openURL"
+             oncommand="goDoCommand('consoleCmd_openURL');"/>
+    <command id="consoleCmd_copyURL"
+             oncommand="goDoCommand('consoleCmd_copyURL');"/>
+  </commandset>
+  <keyset id="consoleKeys">
+  </keyset>
+#include ../../../../toolkit/content/editMenuKeys.inc.xul
+
+  <popupset id="mainPopupSet">
+    <menupopup id="output-contextmenu" onpopupshowing="goUpdateGlobalEditMenuItems()">
+      <menuitem id="menu_openURL" label="&openURL.label;"
+                accesskey="&openURL.accesskey;" command="consoleCmd_openURL"
+                selection="network" selectionType="single"/>
+      <menuitem id="menu_copyURL" label="&copyURLCmd.label;"
+                accesskey="&copyURLCmd.accesskey;" command="consoleCmd_copyURL"
+                selection="network" selectionType="single"/>
+      <menuitem id="menu_openInVarView" label="&openInVarViewCmd.label;"
+        accesskey="&openInVarViewCmd.accesskey;" disabled="true"/>
+      <menuitem id="menu_storeAsGlobal" label="&storeAsGlobalVar.label;"
+        accesskey="&storeAsGlobalVar.accesskey;"/>
+      <menuitem id="cMenu_copy" label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;" command="cmd_copy"/>
+      <menuitem id="cMenu_selectAll" label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"/>
+    </menupopup>
+  </popupset>
+
+  <tooltip id="aHTMLTooltip" page="true"/>
+
+  <box class="hud-outer-wrapper devtools-responsive-container theme-body" flex="1">
+    <vbox class="hud-console-wrapper devtools-main-content" flex="1">
+      <toolbar class="hud-console-filter-toolbar devtools-toolbar" mode="full">
+        <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton devtools-clear-icon"
+                       tooltiptext="&btnClear.tooltip;"
+                       accesskey="&btnClear.accesskey;"
+                       tabindex="3"/>
+        <hbox class="devtools-toolbarbutton-group">
+          <toolbarbutton label="&btnPageNet.label;" type="menu"
+                         category="net" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnPageNet.tooltip;"
+                         accesskeyMacOSX="&btnPageNet.accesskeyMacOSX;"
+                         accesskey="&btnPageNet.accesskey;"
+                         tabindex="4">
+            <menupopup id="net-contextmenu">
+              <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
+                        prefKey="network"/>
+              <menuitem label="&btnConsoleWarnings;" type="checkbox" autocheck="false"
+                        prefKey="netwarn"/>
+              <menuitem label="&btnConsoleXhr;" type="checkbox" autocheck="false"
+                        prefKey="netxhr"/>
+              <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
+                        prefKey="networkinfo"/>
+            </menupopup>
+          </toolbarbutton>
+          <toolbarbutton label="&btnPageCSS.label;" type="menu"
+                         category="css" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnPageCSS.tooltip2;"
+                         accesskey="&btnPageCSS.accesskey;"
+                         tabindex="5">
+            <menupopup id="css-contextmenu">
+              <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
+                        prefKey="csserror"/>
+              <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                        autocheck="false" prefKey="cssparser"/>
+              <menuitem label="&btnConsoleReflows;" type="checkbox"
+                        autocheck="false" prefKey="csslog"/>
+            </menupopup>
+          </toolbarbutton>
+          <toolbarbutton label="&btnPageJS.label;" type="menu"
+                         category="js" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnPageJS.tooltip;"
+                         accesskey="&btnPageJS.accesskey;"
+                         tabindex="6">
+            <menupopup id="js-contextmenu">
+              <menuitem label="&btnConsoleErrors;" type="checkbox"
+                        autocheck="false" prefKey="exception"/>
+              <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                        autocheck="false" prefKey="jswarn"/>
+              <menuitem label="&btnConsoleLog;" type="checkbox"
+                        autocheck="false" prefKey="jslog"/>
+            </menupopup>
+          </toolbarbutton>
+          <toolbarbutton label="&btnPageSecurity.label;" type="menu"
+                         category="security" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnPageSecurity.tooltip;"
+                         accesskey="&btnPageSecurity.accesskey;"
+                         tabindex="7">
+            <menupopup id="security-contextmenu">
+              <menuitem label="&btnConsoleErrors;" type="checkbox"
+                        autocheck="false" prefKey="secerror"/>
+              <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                        autocheck="false" prefKey="secwarn"/>
+            </menupopup>
+          </toolbarbutton>
+          <toolbarbutton label="&btnPageLogging.label;" type="menu"
+                         category="logging" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnPageLogging.tooltip;"
+                         accesskey="&btnPageLogging.accesskey3;"
+                         tabindex="8">
+            <menupopup id="logging-contextmenu">
+              <menuitem label="&btnConsoleErrors;" type="checkbox"
+                        autocheck="false" prefKey="error"/>
+              <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                        autocheck="false" prefKey="warn"/>
+              <menuitem label="&btnConsoleInfo;" type="checkbox" autocheck="false"
+                        prefKey="info"/>
+              <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
+                        prefKey="log"/>
+              <menuseparator />
+              <menuitem label="&btnConsoleSharedWorkers;" type="checkbox"
+                        autocheck="false" prefKey="sharedworkers"/>
+              <menuitem label="&btnConsoleServiceWorkers;" type="checkbox"
+                        autocheck="false" prefKey="serviceworkers"/>
+              <menuitem label="&btnConsoleWindowlessWorkers;" type="checkbox"
+                        autocheck="false" prefKey="windowlessworkers"/>
+            </menupopup>
+          </toolbarbutton>
+          <toolbarbutton label="&btnServerLogging.label;" type="menu"
+                         category="server" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnServerLogging.tooltip;"
+                         accesskey="&btnServerLogging.accesskey;"
+                         tabindex="9">
+            <menupopup id="server-logging-contextmenu">
+              <menuitem label="&btnServerErrors;" type="checkbox"
+                        autocheck="false" prefKey="servererror"/>
+              <menuitem label="&btnServerWarnings;" type="checkbox"
+                        autocheck="false" prefKey="serverwarn"/>
+              <menuitem label="&btnServerInfo;" type="checkbox" autocheck="false"
+                        prefKey="serverinfo"/>
+              <menuitem label="&btnServerLog;" type="checkbox" autocheck="false"
+                        prefKey="serverlog"/>
+            </menupopup>
+          </toolbarbutton>
+        </hbox>
+
+        <spacer flex="1"/>
+
+        <textbox class="compact hud-filter-box devtools-filterinput" type="search"
+                 placeholder="&filterOutput.placeholder;" tabindex="2"/>
+      </toolbar>
+
+      <hbox id="output-wrapper" flex="1" context="output-contextmenu" tooltip="aHTMLTooltip">
+        <!-- Wrapper element to make scrolling in output-container much faster.
+             See Bug 1237368 -->
+        <div xmlns="http://www.w3.org/1999/xhtml">
+          <div xmlns="http://www.w3.org/1999/xhtml" id="output-container"
+               tabindex="0" role="document" aria-live="polite" />
+        </div>
+      </hbox>
+      <notificationbox id="webconsole-notificationbox">
+        <hbox class="jsterm-input-container" style="direction:ltr">
+          <stack class="jsterm-stack-node" flex="1">
+            <textbox class="jsterm-complete-node devtools-monospace"
+                     multiline="true" rows="1" tabindex="-1"/>
+            <textbox class="jsterm-input-node devtools-monospace"
+                     multiline="true" rows="1" tabindex="0"
+                     aria-autocomplete="list"/>
+          </stack>
+        </hbox>
+      </notificationbox>
+    </vbox>
+
+    <splitter class="devtools-side-splitter"/>
+
+    <tabbox id="webconsole-sidebar" class="devtools-sidebar-tabs" hidden="true" width="300">
+      <tabs/>
+      <tabpanels flex="1"/>
+    </tabbox>
+  </box>
+</window>
