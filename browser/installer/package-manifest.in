@@ -425,7 +425,7 @@
 ; [DevTools Startup Files]
 @RESPATH@/browser/chrome/devtools-startup@JAREXT@
 @RESPATH@/browser/chrome/devtools-startup.manifest
-@RESPATH@/browser/@PREF_DIR@/devtools-startup-prefs.js
+@RESPATH@/browser/@PREF_DIR@/devtools-startup.js
 
 ; DevTools
 @RESPATH@/browser/chrome/devtools@JAREXT@
