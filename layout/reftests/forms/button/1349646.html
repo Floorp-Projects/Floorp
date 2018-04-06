@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+button {
+  padding: 0px;
+  border:none;
+  font-size: 64px;
+  background-color: green;
+}
+button::-moz-focus-inner {
+  padding-inline-start: 20px;
+  padding-inline-end: 20px;
+}
+button:-moz-focusring::-moz-focus-inner {
+  border: 4px solid;
+}
+</style>
+<div>
+  <button id="button1"><span>Menu1</span></button>
+</div>
+<script>
+window.onload = () => {
+  button1.focus();
+  document.documentElement.classList.remove('reftest-wait');
+}
+</script>
+</html>
