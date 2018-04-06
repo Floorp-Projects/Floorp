@@ -569,7 +569,9 @@ class ViewPopup extends BasePopup {
       this.tempPanel = null;
     }
     if (this.tempBrowser) {
-      this.tempBrowser.parentNode.remove();
+      if (this.tempBrowser.parentNode) {
+        this.tempBrowser.parentNode.remove();
+      }
       this.tempBrowser = null;
     }
   }
