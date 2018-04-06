@@ -771,6 +771,7 @@ public:
    */
   static nscoord CalcLineHeight(nsIContent* aContent,
                                 ComputedStyle* aComputedStyle,
+                                nsPresContext* aPresContext,
                                 nscoord aBlockBSize,
                                 float aFontSizeInflation);
 

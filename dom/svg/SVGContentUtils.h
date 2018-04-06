@@ -20,6 +20,7 @@
 class nsIContent;
 class nsIDocument;
 class nsIFrame;
+class nsPresContext;
 class nsStyleCoord;
 class nsSVGElement;
 
@@ -180,9 +181,9 @@ public:
    * XXX document the conditions under which these may fail, and what they
    * return in those cases.
    */
-  static float GetFontSize(mozilla::dom::Element *aElement);
-  static float GetFontSize(nsIFrame *aFrame);
-  static float GetFontSize(ComputedStyle *aComputedStyle);
+  static float GetFontSize(mozilla::dom::Element* aElement);
+  static float GetFontSize(nsIFrame* aFrame);
+  static float GetFontSize(ComputedStyle*, nsPresContext*);
   /*
    * Get the number of CSS px (user units) per ex (i.e. the x-height in user
    * units) for an nsIContent
@@ -190,9 +191,9 @@ public:
    * XXX document the conditions under which these may fail, and what they
    * return in those cases.
    */
-  static float GetFontXHeight(mozilla::dom::Element *aElement);
-  static float GetFontXHeight(nsIFrame *aFrame);
-  static float GetFontXHeight(ComputedStyle *aComputedStyle);
+  static float GetFontXHeight(mozilla::dom::Element* aElement);
+  static float GetFontXHeight(nsIFrame* aFrame);
+  static float GetFontXHeight(ComputedStyle*, nsPresContext*);
 
   /*
    * Report a localized error message to the error console.
