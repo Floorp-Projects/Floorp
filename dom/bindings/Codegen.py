@@ -4218,44 +4218,17 @@ class CastableObjectUnwrapper():
     If isCallbackReturnValue is "JSImpl" and our descriptor is also
     JS-implemented, fall back to just creating the right object if what we
     have isn't one already.
-
-    If allowCrossOriginObj is True, then we'll first do an
-    UncheckedUnwrap and then operate on the result.
     """
     def __init__(self, descriptor, source, mutableSource, target, codeOnFailure,
-                 exceptionCode=None, isCallbackReturnValue=False,
-                 allowCrossOriginObj=False):
+                 exceptionCode=None, isCallbackReturnValue=False):
         self.substitution = {
             "type": descriptor.nativeType,
             "protoID": "prototypes::id::" + descriptor.name,
             "target": target,
             "codeOnFailure": codeOnFailure,
+            "source": source,
+            "mutableSource": mutableSource,
         }
-        if allowCrossOriginObj:
-            self.substitution["uncheckedObjDecl"] = fill(
-                """
-                JS::Rooted<JSObject*> maybeUncheckedObj(cx, &${source}.toObject());
-                """,
-                source=source)
-            self.substitution["uncheckedObjGet"] = fill(
-                """
-                if (xpc::WrapperFactory::IsXrayWrapper(maybeUncheckedObj)) {
-                  maybeUncheckedObj = js::UncheckedUnwrap(maybeUncheckedObj);
-                } else {
-                  maybeUncheckedObj = js::CheckedUnwrap(maybeUncheckedObj);
-                  if (!maybeUncheckedObj) {
-                    $*{codeOnFailure}
-                  }
-                }
-                """,
-                codeOnFailure=(codeOnFailure % { 'securityError': 'true'}))
-            self.substitution["source"] = "maybeUncheckedObj"
-            self.substitution["mutableSource"] = "&maybeUncheckedObj"
-        else:
-            self.substitution["uncheckedObjDecl"] = ""
-            self.substitution["uncheckedObjGet"] = ""
-            self.substitution["source"] = source
-            self.substitution["mutableSource"] = mutableSource
 
         if (isCallbackReturnValue == "JSImpl" and
             descriptor.interface.isJSImplemented()):
@@ -4291,9 +4264,7 @@ class CastableObjectUnwrapper():
         }
         return fill(
             """
-            $*{uncheckedObjDecl}
             {
-              $*{uncheckedObjGet}
               nsresult rv = UnwrapObject<${protoID}, ${type}>(${mutableSource}, ${target});
               if (NS_FAILED(rv)) {
                 $*{codeOnFailure}
@@ -8515,14 +8486,10 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     callArgs should be code for getting a JS::CallArgs into a variable
     called 'args'.  This can be "" if there is already such a variable
     around.
-
-    If allowCrossOriginThis is true, then this-unwrapping will first do an
-    UncheckedUnwrap and after that operate on the result.
     """
     def __init__(self, descriptor, name, args, unwrapFailureCode=None,
                  getThisObj=None,
-                 callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);\n",
-                 allowCrossOriginThis=False):
+                 callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);\n"):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
 
         if unwrapFailureCode is None:
@@ -8550,7 +8517,6 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
                  CGGeneric("JS::Rooted<JSObject*> obj(cx, %s);\n" %
                            getThisObj)])
         self.callArgs = callArgs
-        self.allowCrossOriginThis = allowCrossOriginThis
 
     def definition_body(self):
         body = self.callArgs
@@ -8571,8 +8537,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
             "rootSelf",
             "&rootSelf",
             "self",
-            self.unwrapFailureCode,
-            allowCrossOriginObj=self.allowCrossOriginThis))
+            self.unwrapFailureCode))
 
         return body + self.generate_code().define()
 
