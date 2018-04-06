@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Autoplay policy test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+</head>
+
+<body>
+  <pre id="test">
+      <script>
+
+        window.is = SimpleTest.is;
+        window.info = SimpleTest.info;
+
+        // Tests that videos which have no audio track will play if play()
+        // is called before the video has reached readyState >= HAVE_METADATA.
+
+        gTestPrefs.push(["media.autoplay.enabled", false],
+          ["media.autoplay.enabled.user-gestures-needed", true]);
+
+        SpecialPowers.pushPrefEnv({ 'set': gTestPrefs }, () => {
+          runTest();
+        });
+
+        let testCases = [
+          {
+            resource: "320x240.ogv", // Only video track.
+            shouldPlay: true,
+          },
+          {
+            resource: "short.mp4", // Audio and video track.
+            shouldPlay: false,
+          },
+        ];
+
+        let child_url = "file_autoplay_policy_play_before_loadedmetadata.html";
+
+        async function runTest() {
+          for (testCase of testCases) {
+            // Run each test in a new window, to ensure its user gesture
+            // activation state isn't tainted by preceeding tests.
+            let child = window.open(child_url, "", "width=500,height=500");
+            await once(child, "load");
+            child.postMessage(testCase, window.origin);
+            let result = await nextWindowMessage();
+            child.close();
+          }
+          SimpleTest.finish();
+        }
+
+        SimpleTest.waitForExplicitFinish();
+
+      </script>
+    </pre>
+</body>
+
+</html>

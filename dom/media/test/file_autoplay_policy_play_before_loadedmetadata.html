@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Autoplay policy window</title>
+  <style>
+    video {
+      width: 50%;
+      height: 50%;
+    }
+  </style>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="AutoplayTestUtils.js"></script>
+</head>
+
+<body>
+  <pre id="test">
+      <script>
+
+        window.is = window.opener.is;
+        window.info = window.opener.info;
+
+        async function testPlayBeforeLoadedMetata(testCase, parent_window) {
+          info("testPlayBeforeLoadedMetata: " + testCase.resource);
+
+          let element = document.createElement("video");
+          element.preload = "auto";
+          element.src = testCase.resource;
+          document.body.appendChild(element);
+
+          let played = await element.play().then(() => true, () => false);
+          let msg = testCase.resource + " should " + (!testCase.shouldPlay ? "not " : "") + "play";
+          is(played, testCase.shouldPlay, msg);
+
+          removeNodeAndSource(element);
+        }
+
+        nextWindowMessage().then(
+          async (event) => {
+            await testPlayBeforeLoadedMetata(event.data, event.source);
+            event.source.postMessage("done", "*");
+          });
+
+      </script>
+    </pre>
+</body>
+
+</html>
