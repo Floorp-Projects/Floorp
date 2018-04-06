@@ -3098,22 +3098,22 @@ GenericGetter<CrossOriginThisPolicy, ThrowExceptions>(
 // There aren't any cross-origin Promise-returning getters, so don't
 // bother instantiating that specialization.
 
-} // namespace binding_detail
-
+template<typename ThisPolicy>
 bool
-GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp)
+GenericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
   prototypes::ID protoID = static_cast<prototypes::ID>(info->protoID);
-  if (!args.thisv().isObject()) {
-    return ThrowInvalidThis(cx, args, false, protoID);
+  if (!ThisPolicy::HasValidThisValue(args)) {
+    return ThisPolicy::HandleInvalidThis(cx, args, false, protoID);
   }
-  JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
+  JS::Rooted<JSObject*> obj(cx, ThisPolicy::ExtractThisObject(args));
 
   // NOTE: we want to leave obj in its initial compartment, so don't want to
-  // pass it to UnwrapObject.
-  JS::Rooted<JSObject*> rootSelf(cx, obj);
+  // pass it to UnwrapObject.  Also the thing we pass to UnwrapObjectInternal
+  // may be affected by our ThisPolicy.
+  JS::Rooted<JSObject*> rootSelf(cx, ThisPolicy::MaybeUnwrapThisObject(obj));
   void* self;
   {
     binding_detail::MutableObjectHandleWrapper wrapper(&rootSelf);
@@ -3122,9 +3122,10 @@ GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp)
                                                                    protoID,
                                                                    info->depth);
     if (NS_FAILED(rv)) {
-      return ThrowInvalidThis(cx, args,
-                              rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
-                              protoID);
+      return
+        ThisPolicy::HandleInvalidThis(cx, args,
+                                      rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
+                                      protoID);
     }
   }
   if (args.length() == 0) {
@@ -3141,6 +3142,20 @@ GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp)
 #endif
   return true;
 }
+
+// Force instantiation of the specializations of GenericSetter we need here.
+template bool
+GenericSetter<NormalThisPolicy>(JSContext* cx, unsigned argc, JS::Value* vp);
+template bool
+GenericSetter<MaybeGlobalThisPolicy>(JSContext* cx, unsigned argc,
+                                     JS::Value* vp);
+template bool
+GenericSetter<LenientThisPolicy>(JSContext* cx, unsigned argc, JS::Value* vp);
+template bool
+GenericSetter<CrossOriginThisPolicy>(JSContext* cx, unsigned argc,
+                                     JS::Value* vp);
+
+} // namespace binding_detail
 
 bool
 GenericBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp)

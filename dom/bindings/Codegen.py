@@ -2676,13 +2676,18 @@ class AttrDefiner(PropertyDefiner):
                 jitinfo = "nullptr"
             else:
                 if attr.hasLenientThis():
-                    accessor = "genericLenientSetter"
+                    if IsCrossOriginWritable(attr, self.descriptor):
+                        raise TypeError("Can't handle lenient cross-origin "
+                                        "writable attribute %s.%s" %
+                                        (self.descriptor.name,
+                                         attr.identifier.name))
+                    accessor = "GenericSetter<LenientThisPolicy>"
                 elif IsCrossOriginWritable(attr, self.descriptor):
-                    accessor = "genericCrossOriginSetter"
-                elif self.descriptor.needsSpecialGenericOps():
-                    accessor = "genericSetter"
+                    accessor = "GenericSetter<CrossOriginThisPolicy>"
+                elif self.descriptor.interface.isOnGlobalProtoChain():
+                    accessor = "GenericSetter<MaybeGlobalThisPolicy>"
                 else:
-                    accessor = "GenericBindingSetter"
+                    accessor = "GenericSetter<NormalThisPolicy>"
                 jitinfo = "&%s_setterinfo" % IDLToCIdentifier(attr.identifier.name)
             return "%s, %s" % \
                    (accessor, jitinfo)
@@ -9139,55 +9144,6 @@ class CGStaticGetter(CGAbstractStaticBindingMethod):
         return "get %s.%s" % (interface_name, attr_name)
 
 
-class CGGenericSetter(CGAbstractBindingMethod):
-    """
-    A class for generating the C++ code for an IDL attribute setter.
-    """
-    def __init__(self, descriptor, lenientThis=False, allowCrossOriginThis=False):
-        if lenientThis:
-            name = "genericLenientSetter"
-            unwrapFailureCode = dedent("""
-                MOZ_ASSERT(!JS_IsExceptionPending(cx));
-                if (!ReportLenientThisUnwrappingFailure(cx, &args.callee())) {
-                  return false;
-                }
-                args.rval().set(JS::UndefinedValue());
-                return true;
-                """)
-        else:
-            if allowCrossOriginThis:
-                name = "genericCrossOriginSetter"
-            else:
-                name = "genericSetter"
-            unwrapFailureCode = (
-                'return ThrowInvalidThis(cx, args, %%(securityError)s, "%s");\n' %
-                descriptor.interface.identifier.name)
-
-        CGAbstractBindingMethod.__init__(self, descriptor, name, JSNativeArguments(),
-                                         unwrapFailureCode,
-                                         allowCrossOriginThis=allowCrossOriginThis)
-
-    def generate_code(self):
-        return CGGeneric(fill(
-            """
-            if (args.length() == 0) {
-              return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "${name} attribute setter");
-            }
-            const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
-            MOZ_ASSERT(info->type() == JSJitInfo::Setter);
-            JSJitSetterOp setter = info->setter;
-            if (!setter(cx, obj, self, JSJitSetterCallArgs(args))) {
-              return false;
-            }
-            args.rval().setUndefined();
-            #ifdef DEBUG
-            AssertReturnTypeMatchesJitinfo(info, args.rval());
-            #endif
-            return true;
-            """,
-            name=self.descriptor.interface.identifier.name))
-
-
 class CGSpecializedSetter(CGAbstractStaticMethod):
     """
     A class for generating the code for a specialized attribute setter
@@ -12416,8 +12372,6 @@ class MemberProperties:
         self.isCrossOriginMethod = False
         self.isPromiseReturningMethod = False
         self.isCrossOriginGetter = False
-        self.isGenericSetter = False
-        self.isLenientSetter = False
         self.isCrossOriginSetter = False
         self.isJsonifier = False
 
@@ -12443,21 +12397,15 @@ def memberProperties(m, descriptor):
                 props.isCrossOriginGetter = True
         if not m.readonly:
             if not m.isStatic() and descriptor.interface.hasInterfacePrototypeObject():
-                if m.hasLenientThis():
-                    props.isLenientSetter = True
-                elif IsCrossOriginWritable(m, descriptor):
+                if IsCrossOriginWritable(m, descriptor):
                     props.isCrossOriginSetter = True
-                elif descriptor.needsSpecialGenericOps():
-                    props.isGenericSetter = True
         elif m.getExtendedAttribute("PutForwards"):
             if IsCrossOriginWritable(m, descriptor):
                 props.isCrossOriginSetter = True
-            elif descriptor.needsSpecialGenericOps():
-                props.isGenericSetter = True
         elif (m.getExtendedAttribute("Replaceable") or
               m.getExtendedAttribute("LenientSetter")):
-            if descriptor.needsSpecialGenericOps():
-                props.isGenericSetter = True
+            if IsCrossOriginWritable(m, descriptor):
+                props.isCrossOriginSetter = True
 
     return props
 
@@ -12481,8 +12429,7 @@ class CGDescriptor(CGThing):
 
         # These are set to true if at least one non-static
         # method/getter/setter or jsonifier exist on the interface.
-        (hasMethod, hasSetter, hasLenientSetter, hasPromiseReturningMethod) = (
-                False, False, False, False)
+        (hasMethod, hasPromiseReturningMethod) = (False, False)
         jsonifierMethod = None
         crossOriginMethods, crossOriginGetters, crossOriginSetters = set(), set(), set()
         unscopableNames = list()
@@ -12567,8 +12514,6 @@ class CGDescriptor(CGThing):
             hasMethod = hasMethod or props.isGenericMethod
             hasPromiseReturningMethod = (hasPromiseReturningMethod or
                                          props.isPromiseReturningMethod)
-            hasSetter = hasSetter or props.isGenericSetter
-            hasLenientSetter = hasLenientSetter or props.isLenientSetter
 
         if jsonifierMethod:
             cgThings.append(CGJsonifyAttributesMethod(descriptor))
@@ -12581,14 +12526,6 @@ class CGDescriptor(CGThing):
         if len(crossOriginMethods):
             cgThings.append(CGGenericMethod(descriptor,
                                             allowCrossOriginThis=True))
-        if hasSetter:
-            cgThings.append(CGGenericSetter(descriptor))
-        if hasLenientSetter:
-            cgThings.append(CGGenericSetter(descriptor, lenientThis=True))
-        if len(crossOriginSetters):
-            cgThings.append(CGGenericSetter(descriptor,
-                                            allowCrossOriginThis=True))
-
         if descriptor.interface.isNavigatorProperty():
             cgThings.append(CGConstructNavigatorObject(descriptor))
 
