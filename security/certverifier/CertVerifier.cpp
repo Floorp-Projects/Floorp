@@ -934,6 +934,24 @@ CertVerifier::VerifySSLServerCert(const UniqueCERTCertificate& peerCert,
       // certificate is self-signed.
       return Result::ERROR_SELF_SIGNED_CERT;
     }
+    if (rv == Result::ERROR_UNKNOWN_ISSUER) {
+      // In this case we didn't get any valid path for the cert. Let's see if
+      // the issuer is the same as the issuer for our canary probe. If yes, this
+      // connection is connecting via a misconfigured proxy.
+      // Note: The MitM canary might not be set. In this case we consider this
+      // an unknown issuer error.
+      nsCOMPtr<nsINSSComponent> component(
+        do_GetService(PSM_COMPONENT_CONTRACTID));
+      if (!component) {
+        return Result::FATAL_ERROR_LIBRARY_FAILURE;
+      }
+      // IssuerMatchesMitmCanary succeeds if the issuer matches the canary and
+      // the feature is enabled.
+      nsresult rv = component->IssuerMatchesMitmCanary(peerCert->issuerName);
+      if (NS_SUCCEEDED(rv)) {
+        return Result::ERROR_MITM_DETECTED;
+      }
+    }
     return rv;
   }
 

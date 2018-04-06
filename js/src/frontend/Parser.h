@@ -173,7 +173,6 @@
 #include "ds/Nestable.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FullParseHandler.h"
-#include "frontend/LanguageExtensions.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/NameCollections.h"
 #include "frontend/ParseContext.h"
@@ -333,8 +332,6 @@ class ParserBase
     void errorNoOffset(unsigned errorNumber, ...);
 
     bool isValidStrictBinding(PropertyName* name);
-
-    void addTelemetry(DeprecatedLanguageExtension e);
 
     bool hasValidSimpleStrictParameterNames();
 

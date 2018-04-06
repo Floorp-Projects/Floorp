@@ -18,7 +18,7 @@ function check_telemetry() {
                     .getHistogramById("SSL_CERT_ERROR_OVERRIDES")
                     .snapshot();
   equal(histogram.counts[0], 0, "Should have 0 unclassified counts");
-  equal(histogram.counts[2], 6,
+  equal(histogram.counts[2], 9,
         "Actual and expected SEC_ERROR_UNKNOWN_ISSUER counts should match");
   equal(histogram.counts[3], 1,
         "Actual and expected SEC_ERROR_CA_CERT_INVALID counts should match");
@@ -52,6 +52,8 @@ function check_telemetry() {
         "Actual and expected MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME counts should match");
   equal(histogram.counts[19], 3,
         "Actual and expected MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT counts should match");
+  equal(histogram.counts[20], 1,
+        "Actual and expected MOZILLA_PKIX_ERROR_MITM_DETECTED counts should match");
 
   let keySizeHistogram = Services.telemetry
                            .getHistogramById("CERT_CHAIN_KEY_SIZE_STATUS")
@@ -62,7 +64,7 @@ function check_telemetry() {
         "Actual and expected successful verifications of 2048-bit keys should match");
   equal(keySizeHistogram.counts[2], 0,
         "Actual and expected successful verifications of 1024-bit keys should match");
-  equal(keySizeHistogram.counts[3], 60,
+  equal(keySizeHistogram.counts[3], 68,
         "Actual and expected verification failures unrelated to key size should match");
 
   run_next_test();
@@ -175,6 +177,53 @@ function add_simple_tests() {
   add_prevented_cert_override_test("inadequatekeyusage.example.com",
                                    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                                    SEC_ERROR_INADEQUATE_KEY_USAGE);
+
+  // Test triggering the MitM detection. We don't set-up a proxy here. Just
+  // set the pref. Without the pref set we expect an unkown issuer error.
+  add_cert_override_test("mitm.example.com",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         SEC_ERROR_UNKNOWN_ISSUER);
+  add_test(function() {
+    Services.prefs.setStringPref("security.pki.mitm_canary_issuer",
+                                 "CN=Test MITM Root");
+    let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
+                                .getService(Ci.nsICertOverrideService);
+    certOverrideService.clearValidityOverride("mitm.example.com", 8443);
+    run_next_test();
+  });
+  add_cert_override_test("mitm.example.com",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         MOZILLA_PKIX_ERROR_MITM_DETECTED);
+  add_test(function() {
+    Services.prefs.setStringPref("security.pki.mitm_canary_issuer",
+                                 "CN=Other MITM Root");
+    let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
+                                .getService(Ci.nsICertOverrideService);
+    certOverrideService.clearValidityOverride("mitm.example.com", 8443);
+    run_next_test();
+  });
+  // If the canary issuer doesn't match the one we see, we exepct and unknown
+  // issuer error.
+  add_cert_override_test("mitm.example.com",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         SEC_ERROR_UNKNOWN_ISSUER);
+  // If security.pki.mitm_canary_issuer.enabled is false, there should always
+  // be an unknown issuer error.
+  add_test(function() {
+    Services.prefs.setBoolPref("security.pki.mitm_canary_issuer.enabled",
+                               false);
+    let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
+                                .getService(Ci.nsICertOverrideService);
+    certOverrideService.clearValidityOverride("mitm.example.com", 8443);
+    run_next_test();
+  });
+  add_cert_override_test("mitm.example.com",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         SEC_ERROR_UNKNOWN_ISSUER);
+  add_test(function() {
+    Services.prefs.clearUserPref("security.pki.mitm_canary_issuer");
+    run_next_test();
+  });
 
   // This is intended to test the case where a verification has failed for one
   // overridable reason (e.g. unknown issuer) but then, in the process of
