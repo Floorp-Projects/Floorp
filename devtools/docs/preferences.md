@@ -72,12 +72,15 @@ To create a new preference, it should be assigned a default value. Default prefe
 defined in preferences files such as:
 - devtools/client/preferences/devtools-client.js
 - devtools/client/preferences/debugger.js
+- devtools/shared/preferences/devtools-shared.js
 - devtools/startup/preferences/devtools-startup.js
 
 Most new preferences should go in devtools/client/preferences/devtools-client.js. Debugger
-specific preferences should go in devtools/client/preferences/debugger.js. Finally if a
-preference needs to be available very early during the Firefox startup sequence, it should
-go in devtools/startup/preferences/devtools-startup.js.
+specific preferences should go in devtools/client/preferences/debugger.js. If a preference
+should be available even when the client for DevTools is not shipped (for instance on
+Fennec) the preference should go to devtools/shared/preferences/devtools-shared.js.
+Finally if a preference needs to be available very early during the Firefox startup
+sequence, it should go in devtools/startup/preferences/devtools-startup.js.
 
 ### Projects using Launchpad
 
