@@ -746,8 +746,8 @@ Inspector.prototype = {
     if (this.show3PaneToggle) {
       options.sidebarToggleButton = {
         collapsed: !this.is3PaneModeEnabled,
-        collapsePaneTitle: INSPECTOR_L10N.getStr("inspector.hideSplitRulesView"),
-        expandPaneTitle: INSPECTOR_L10N.getStr("inspector.showSplitRulesView"),
+        collapsePaneTitle: INSPECTOR_L10N.getStr("inspector.hideThreePaneMode"),
+        expandPaneTitle: INSPECTOR_L10N.getStr("inspector.showThreePaneMode"),
         onClick: this.onSidebarToggle,
       };
     }
