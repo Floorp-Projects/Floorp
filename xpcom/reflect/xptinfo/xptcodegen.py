@@ -91,6 +91,15 @@ nsXPTMethodInfo = mkstruct(
 ##########################################################
 # Ensure these fields are in the same order as xptinfo.h #
 ##########################################################
+nsXPTDOMObjectInfo = mkstruct(
+    "mUnwrap",
+    "mWrap",
+    "mCleanup",
+)
+
+##########################################################
+# Ensure these fields are in the same order as xptinfo.h #
+##########################################################
 ConstInfo = mkstruct(
     "mName",
     "mSigned",
@@ -173,10 +182,31 @@ def link_to_cpp(interfaces, fd):
     methods = []
     consts = []
     prophooks = []
+    domobjects = []
+    domobject_cache = {}
     strings = OrderedDict()
 
     def lower_uuid(uuid):
         return "{0x%s, 0x%s, 0x%s, {0x%s, 0x%s, 0x%s, 0x%s, 0x%s, 0x%s, 0x%s, 0x%s}}" % split_iid(uuid)
+
+    def lower_domobject(do):
+        assert do['tag'] == 'TD_DOMOBJECT'
+
+        idx = domobject_cache.get(do['name'])
+        if idx is None:
+            idx = domobject_cache[do['name']] = len(domobjects)
+
+            includes.add(do['headerFile'])
+            domobjects.append(nsXPTDOMObjectInfo(
+                "%d = %s" % (idx, do['name']),
+                # These methods are defined at the top of the generated file.
+                mUnwrap="UnwrapDOMObject<mozilla::dom::prototypes::id::%s, %s>" %
+                    (do['name'], do['native']),
+                mWrap="WrapDOMObject<%s>" % do['native'],
+                mCleanup="CleanupDOMObject<%s>" % do['native'],
+            ))
+
+        return idx
 
     def lower_string(s):
         if s in strings:
@@ -195,7 +225,7 @@ def link_to_cpp(interfaces, fd):
         if tag == 'array':
             return '%s[size_is=%d]' % (
                 describe_type(type['element']), type['size_is'])
-        elif tag == 'interface_type':
+        elif tag == 'interface_type' or tag == 'domobject':
             return type['name']
         elif tag == 'interface_is_type':
             return 'iid_is(%d)' % type['iid_is']
@@ -222,6 +252,9 @@ def link_to_cpp(interfaces, fd):
 
         elif tag == 'TD_INTERFACE_IS_TYPE':
             d1 = type['iid_is']
+
+        elif tag == 'TD_DOMOBJECT':
+            d1, d2 = splitint(lower_domobject(type))
 
         elif tag.endswith('_SIZE_IS'):
             d1 = type['size_is']
@@ -393,6 +426,29 @@ def link_to_cpp(interfaces, fd):
     fd.write("""
 #include "xptinfo.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/dom/BindingUtils.h"
+
+// These template methods are specialized to be used in the sDOMObjects table.
+template<mozilla::dom::prototypes::ID PrototypeID, typename T>
+static nsresult UnwrapDOMObject(JS::HandleValue aHandle, void** aObj)
+{
+  RefPtr<T> p;
+  nsresult rv = mozilla::dom::UnwrapObject<PrototypeID, T>(aHandle, p);
+  p.forget(aObj);
+  return rv;
+}
+
+template<typename T>
+static bool WrapDOMObject(JSContext* aCx, void* aObj, JS::MutableHandleValue aHandle)
+{
+  return mozilla::dom::GetOrCreateDOMReflector(aCx, reinterpret_cast<T*>(aObj), aHandle);
+}
+
+template<typename T>
+static void CleanupDOMObject(void* aObj)
+{
+  RefPtr<T> p = already_AddRefed<T>(reinterpret_cast<T*>(aObj));
+}
 
 namespace xpt {
 namespace detail {
@@ -407,6 +463,7 @@ namespace detail {
     array("nsXPTType", "sTypes", types)
     array("nsXPTParamInfo", "sParams", params)
     array("nsXPTMethodInfo", "sMethods", methods)
+    array("nsXPTDOMObjectInfo", "sDOMObjects", domobjects)
     array("ConstInfo", "sConsts", consts)
     array("mozilla::dom::NativePropertyHooks*", "sPropHooks", prophooks)
 

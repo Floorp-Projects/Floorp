@@ -29,6 +29,7 @@ struct nsXPTInterfaceInfo;
 struct nsXPTType;
 struct nsXPTParamInfo;
 struct nsXPTMethodInfo;
+struct nsXPTDOMObjectInfo;
 
 // Internal helper methods.
 namespace xpt {
@@ -38,6 +39,7 @@ inline const nsXPTInterfaceInfo* GetInterface(uint16_t aIndex);
 inline const nsXPTType& GetType(uint16_t aIndex);
 inline const nsXPTParamInfo& GetParam(uint16_t aIndex);
 inline const nsXPTMethodInfo& GetMethod(uint16_t aIndex);
+inline const nsXPTDOMObjectInfo& GetDOMObjectInfo(uint16_t aIndex);
 inline const char* GetString(uint32_t aIndex);
 
 extern const uint16_t sInterfacesSize;
@@ -187,7 +189,8 @@ enum nsXPTTypeTag : uint8_t
   TD_UTF8STRING        = 23,
   TD_CSTRING           = 24,
   TD_ASTRING           = 25,
-  TD_JSVAL             = 26
+  TD_JSVAL             = 26,
+  TD_DOMOBJECT         = 27
 };
 
 
@@ -215,13 +218,21 @@ struct nsXPTType
     return xpt::detail::GetType(mData2);
   }
 
+private:
+  uint16_t Data16() const { return ((uint16_t)mData1 << 8) | mData2; }
+
+public:
   // We store the 16-bit iface value as two 8-bit values in order to
   // avoid 16-bit alignment requirements for XPTTypeDescriptor, which
   // reduces its size and also the size of XPTParamDescriptor.
   const nsXPTInterfaceInfo* GetInterface() const {
     MOZ_ASSERT(Tag() == TD_INTERFACE_TYPE);
-    uint16_t index = ((uint16_t)mData1 << 8) | mData2;
-    return xpt::detail::GetInterface(index);
+    return xpt::detail::GetInterface(Data16());
+  }
+
+  const nsXPTDOMObjectInfo& GetDOMObjectInfo() const {
+    MOZ_ASSERT(Tag() == TD_DOMOBJECT);
+    return xpt::detail::GetDOMObjectInfo(Data16());
   }
 
   // 'Arithmetic' here roughly means that the value is self-contained and
@@ -294,7 +305,8 @@ struct nsXPTType
     T_UTF8STRING        = TD_UTF8STRING       ,
     T_CSTRING           = TD_CSTRING          ,
     T_ASTRING           = TD_ASTRING          ,
-    T_JSVAL             = TD_JSVAL
+    T_JSVAL             = TD_JSVAL            ,
+    T_DOMOBJECT         = TD_DOMOBJECT
   };
 
   ////////////////////////////////////////////////////////////////
@@ -427,6 +439,34 @@ struct nsXPTMethodInfo
 // The fields in nsXPTMethodInfo were carefully ordered to minimize size.
 static_assert(sizeof(nsXPTMethodInfo) == 8, "wrong size");
 
+/**
+ * Object representing the information required to wrap and unwrap DOMObjects.
+ *
+ * This object will not live in rodata as it contains relocations.
+ */
+struct nsXPTDOMObjectInfo
+{
+  nsresult Unwrap(JS::HandleValue aHandle, void** aObj) const {
+    return mUnwrap(aHandle, aObj);
+  }
+
+  bool Wrap(JSContext* aCx, void* aObj, JS::MutableHandleValue aHandle) const {
+    return mWrap(aCx, aObj, aHandle);
+  }
+
+  void Cleanup(void* aObj) const {
+    return mCleanup(aObj);
+  }
+
+  ////////////////////////////////////////////////////////////////
+  // Ensure these fields are in the same order as xptcodegen.py //
+  ////////////////////////////////////////////////////////////////
+
+  nsresult (*mUnwrap) (JS::HandleValue aHandle, void** aObj);
+  bool (*mWrap) (JSContext* aCx, void* aObj, JS::MutableHandleValue aHandle);
+  void (*mCleanup) (void* aObj);
+};
+
 
 namespace xpt {
 namespace detail {
@@ -461,6 +501,7 @@ extern const nsXPTInterfaceInfo sInterfaces[];
 extern const nsXPTType sTypes[];
 extern const nsXPTParamInfo sParams[];
 extern const nsXPTMethodInfo sMethods[];
+extern const nsXPTDOMObjectInfo sDOMObjects[];
 
 extern const char sStrings[];
 extern const ConstInfo sConsts[];
@@ -504,6 +545,12 @@ inline const nsXPTMethodInfo&
 GetMethod(uint16_t aIndex)
 {
   return sMethods[aIndex];
+}
+
+inline const nsXPTDOMObjectInfo&
+GetDOMObjectInfo(uint16_t aIndex)
+{
+  return sDOMObjects[aIndex];
 }
 
 inline const char*
