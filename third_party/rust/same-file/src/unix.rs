@@ -1,4 +1,5 @@
 use std::fs::{File, OpenOptions};
+use std::hash::{Hash, Hasher};
 use std::io;
 use std::os::unix::fs::MetadataExt;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
@@ -17,6 +18,8 @@ pub struct Handle {
 impl Drop for Handle {
     fn drop(&mut self) {
         if self.is_std {
+            // unwrap() will not panic. Since we were able to open an
+            // std stream successfully, then `file` is guaranteed to be Some()
             self.file.take().unwrap().into_raw_fd();
         }
     }
@@ -32,23 +35,34 @@ impl PartialEq for Handle {
 
 impl AsRawFd for ::Handle {
     fn as_raw_fd(&self) -> RawFd {
+        // unwrap() will not panic. Since we were able to open the
+        // file successfully, then `file` is guaranteed to be Some()
         self.0.file.as_ref().take().unwrap().as_raw_fd()
     }
 }
 
 impl IntoRawFd for ::Handle {
     fn into_raw_fd(mut self) -> RawFd {
+        // unwrap() will not panic. Since we were able to open the
+        // file successfully, then `file` is guaranteed to be Some()
         self.0.file.take().unwrap().into_raw_fd()
+    }
+}
+
+impl Hash for Handle {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.dev.hash(state);
+        self.ino.hash(state);
     }
 }
 
 impl Handle {
     pub fn from_path<P: AsRef<Path>>(p: P) -> io::Result<Handle> {
-        Handle::from_file(try!(OpenOptions::new().read(true).open(p)))
+        Handle::from_file(OpenOptions::new().read(true).open(p)?)
     }
 
     pub fn from_file(file: File) -> io::Result<Handle> {
-        let md = try!(file.metadata());
+        let md = file.metadata()?;
         Ok(Handle {
             file: Some(file),
             is_std: false,
@@ -77,10 +91,14 @@ impl Handle {
     }
 
     pub fn as_file(&self) -> &File {
+        // unwrap() will not panic. Since we were able to open the
+        // file successfully, then `file` is guaranteed to be Some()
         self.file.as_ref().take().unwrap()
     }
 
     pub fn as_file_mut(&mut self) -> &mut File {
+        // unwrap() will not panic. Since we were able to open the
+        // file successfully, then `file` is guaranteed to be Some()
         self.file.as_mut().take().unwrap()
     }
 

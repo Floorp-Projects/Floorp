@@ -20,9 +20,9 @@ fn run() -> io::Result<()> {
         "examples/is_stderr.rs",
         "examples/stderr",
     ];
-    let stderr_handle = try!(Handle::stderr());
+    let stderr_handle = Handle::stderr()?;
     for candidate in candidates {
-        let handle = try!(Handle::from_path(candidate));
+        let handle = Handle::from_path(candidate)?;
         if stderr_handle == handle {
             println!("{:?} is stderr!", candidate);
         } else {
