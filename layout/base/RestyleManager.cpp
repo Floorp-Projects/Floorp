@@ -57,7 +57,6 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   : mPresContext(aPresContext)
   , mRestyleGeneration(1)
   , mUndisplayedRestyleGeneration(1)
-  , mHoverGeneration(0)
   , mInStyleRefresh(false)
   , mAnimationGeneration(0)
 {
