@@ -18,7 +18,7 @@ generate:
         using: run-task
         command: >
             cd /builds/worker/checkouts/gecko &&
-            ./mach doc --outdir docs-out --no-open --archive
+            ./mach doc --outdir docs-out --no-open --no-serve --archive
         sparse-profile: sphinx-docs
     optimization:
         skip-unless-schedules: [docs]
@@ -38,7 +38,7 @@ upload:
         taskcluster-proxy: true
     run:
         using: run-task
-        command: cd /builds/worker/checkouts/gecko && ./mach doc --upload --no-open
+        command: cd /builds/worker/checkouts/gecko && ./mach doc --upload --no-open --no-serve
         sparse-profile: sphinx-docs
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/gecko-docs-upload
