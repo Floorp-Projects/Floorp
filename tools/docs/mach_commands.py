@@ -27,8 +27,8 @@ class Documentation(MachCommandBase):
 
     @Command('doc', category='devenv',
              description='Generate and display documentation from the tree.')
-    @CommandArgument('what', nargs='*', metavar='DIRECTORY [, DIRECTORY]',
-                     help='Path(s) to documentation to build and display.')
+    @CommandArgument('path', default=None, metavar='DIRECTORY', nargs='?',
+                     help='Path to documentation to build and display.')
     @CommandArgument('--format', default='html',
                      help='Documentation format to write.')
     @CommandArgument('--outdir', default=None, metavar='DESTINATION',
@@ -43,7 +43,7 @@ class Documentation(MachCommandBase):
                           'e.g. ":6666".')
     @CommandArgument('--upload', action='store_true',
                      help='Upload generated files to S3')
-    def build_docs(self, what=None, format=None, outdir=None, auto_open=True,
+    def build_docs(self, path=None, format=None, outdir=None, auto_open=True,
                    http=None, archive=False, upload=False):
         try:
             which.which('jsdoc')
@@ -58,57 +58,45 @@ class Documentation(MachCommandBase):
         import webbrowser
         import moztreedocs
 
-        if not outdir:
-            outdir = os.path.join(self.topobjdir, 'docs')
-        if not what:
-            what = [os.path.join(self.topsrcdir, 'tools')]
-
+        outdir = outdir or os.path.join(self.topobjdir, 'docs')
         format_outdir = os.path.join(outdir, format)
 
-        generated = []
-        failed = []
-        for path in what:
-            path = os.path.normpath(os.path.abspath(path))
-            docdir = self._find_doc_dir(path)
+        path = path or os.path.join(self.topsrcdir, 'tools')
+        path = os.path.normpath(os.path.abspath(path))
 
-            if not docdir:
-                failed.append((path, 'could not find docs at this location'))
-                continue
+        docdir = self._find_doc_dir(path)
+        if not docdir:
+            return die('failed to generate documentation:\n'
+                       '%s: could not find docs at this location' % path)
 
-            props = self._project_properties(docdir)
-            savedir = os.path.join(format_outdir, props['project'])
+        props = self._project_properties(docdir)
+        savedir = os.path.join(format_outdir, props['project'])
 
-            args = [
-                'sphinx',
-                '-b', format,
-                docdir,
-                savedir,
-            ]
-            result = sphinx.build_main(args)
-            if result != 0:
-                failed.append((path, 'sphinx return code %d' % result))
-            else:
-                generated.append(savedir)
+        args = [
+            'sphinx',
+            '-b', format,
+            docdir,
+            savedir,
+        ]
+        result = sphinx.build_main(args)
+        if result != 0:
+            return die('failed to generate documentation:\n'
+                       '%s: sphinx return code %d' % (path, result))
+        else:
+            print('\nGenerated documentation:\n%s' % savedir)
 
-            if archive:
-                archive_path = os.path.join(outdir,
-                                            '%s.tar.gz' % props['project'])
-                moztreedocs.create_tarball(archive_path, savedir)
-                print('Archived to %s' % archive_path)
+        if archive:
+            archive_path = os.path.join(outdir,
+                                        '%s.tar.gz' % props['project'])
+            moztreedocs.create_tarball(archive_path, savedir)
+            print('Archived to %s' % archive_path)
 
-            if upload:
-                self._s3_upload(savedir, props['project'], props['version'])
+        if upload:
+            self._s3_upload(savedir, props['project'], props['version'])
 
-            index_path = os.path.join(savedir, 'index.html')
-            if not http and auto_open and os.path.isfile(index_path):
-                webbrowser.open(index_path)
-
-        if generated:
-            print('\nGenerated documentation:\n%s\n' % '\n'.join(generated))
-
-        if failed:
-            failed = ['%s: %s' % (f[0], f[1]) for f in failed]
-            return die('failed to generate documentation:\n%s' % '\n'.join(failed))
+        index_path = os.path.join(savedir, 'index.html')
+        if not http and auto_open and os.path.isfile(index_path):
+            webbrowser.open(index_path)
 
         if http is not None:
             host, port = http.split(':', 1)
