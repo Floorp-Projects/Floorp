@@ -526,11 +526,8 @@ Inspector.prototype = {
    * to `horizontal` to support portrait view.
    */
   onPanelWindowResize: function() {
-    this.panelWin.cancelIdleCallback(this._resizeTimerId);
-    this._resizeTimerId = this.panelWin.requestIdleCallback(() => {
-      this.splitBox.setState({
-        vert: this.useLandscapeMode(),
-      });
+    this.splitBox.setState({
+      vert: this.useLandscapeMode(),
     });
   },
 
