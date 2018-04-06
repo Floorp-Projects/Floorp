@@ -314,6 +314,10 @@ release-sign-and-push-langpacks
 -------------------------------
 Sign a langpack XPI and publishes it onto addons.mozilla.org.
 
+release-beetmover-signed-langpacks
+----------------------------------
+Publishes signed langpacks to archive.mozilla.org
+
 release-update-verify
 ---------------------
 Verifies the contents and package of release update MARs.
