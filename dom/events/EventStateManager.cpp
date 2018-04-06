@@ -722,7 +722,9 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     // that ClearFrameRefs() has been called and it cleared out
     // |mCurrentTarget|. As a result, we should pass |mCurrentTarget|
     // into UpdateCursor().
-    GenerateDragGesture(aPresContext, mouseEvent);
+    if (!mInTouchDrag) {
+      GenerateDragGesture(aPresContext, mouseEvent);
+    }
     UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
 
     UpdateLastRefPointOfMouseEvent(mouseEvent);

@@ -36,17 +36,17 @@ TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas, bool aExpectedCompl
 
 }
 
-TEST(LookupCacheV4, HasComplete)
+TEST(UrlClassifierLookupCacheV4, HasComplete)
 {
   TestHasPrefix(_Fragment("bravo.com/"), true, true);
 }
 
-TEST(LookupCacheV4, HasPrefix)
+TEST(UrlClassifierLookupCacheV4, HasPrefix)
 {
   TestHasPrefix(_Fragment("browsing.com/"), true, false);
 }
 
-TEST(LookupCacheV4, Nomatch)
+TEST(UrlClassifierLookupCacheV4, Nomatch)
 {
   TestHasPrefix(_Fragment("nomatch.com/"), false, false);
 }

@@ -118,7 +118,7 @@ getUpdateRequirements(const RefPtr<nsNavHistoryQuery>& aQuery,
     domainBasedItems = true;
 
   if (aOptions->ResultType() ==
-        nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
+        nsINavHistoryQueryOptions::RESULTS_AS_TAGS_ROOT)
       return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
 
   if (aOptions->ResultType() ==
@@ -1952,7 +1952,7 @@ nsNavHistoryQueryResultNode::IsContainersQuery()
   uint16_t resultType = Options()->ResultType();
   return resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY ||
-         resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY ||
+         resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAGS_ROOT ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_LEFT_PANE_QUERY;
@@ -2026,16 +2026,21 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
   uint16_t resultType = mOptions->ResultType();
 
   // Tags are always populated, otherwise they are removed.
-  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS ||
-      // AllBookmarks also always has children.
-      resultType == nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY ||
+  if (mQuery->Tags().Length() == 1 && mParent &&
+      mParent->mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAGS_ROOT) {
+    *aHasChildren = true;
+    return NS_OK;
+  }
+
+  // AllBookmarks and the left pane folder also always have children.
+  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY ||
       resultType == nsINavHistoryQueryOptions::RESULTS_AS_LEFT_PANE_QUERY) {
     *aHasChildren = true;
     return NS_OK;
   }
 
   // For tag containers query we must check if we have any tag
-  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY) {
+  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAGS_ROOT) {
     nsCOMPtr<nsITaggingService> tagging =
       do_GetService(NS_TAGGINGSERVICE_CONTRACTID);
     if (tagging) {
@@ -2278,7 +2283,7 @@ nsNavHistoryQueryResultNode::Refresh()
   // query could cause a major slowdown.  We should not refresh nested
   // queries, since we will already refresh the parent one.
   // The only exception to this, is if the parent query is of QUERYUPDATE_NONE,
-  // this can be the case for the RESULTS_AS_TAG_QUERY
+  // this can be the case for the RESULTS_AS_TAGS_ROOT
   // under RESULTS_AS_LEFT_PANE_QUERY.
   if (!mExpanded) {
     ClearChildren(true);
@@ -2590,8 +2595,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
   NS_ConvertUTF16toUTF8 newTitle(aPageTitle);
 
   bool onlyOneEntry =
-    mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI ||
-    mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS;
+    mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
 
   // See if our query has any search term matching.
   if (mHasSearchTerms) {
@@ -2685,10 +2689,9 @@ nsNavHistoryQueryResultNode::OnDeleteURI(nsIURI* aURI,
     return NS_OK;
   }
 
-  bool onlyOneEntry = (mOptions->ResultType() ==
-                         nsINavHistoryQueryOptions::RESULTS_AS_URI ||
-                       mOptions->ResultType() ==
-                         nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS);
+  bool onlyOneEntry =
+    mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
+
   nsAutoCString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2748,10 +2751,8 @@ nsNavHistoryQueryResultNode::OnPageChanged(nsIURI* aURI,
 
   switch (aChangedAttribute) {
     case nsINavHistoryObserver::ATTRIBUTE_FAVICON: {
-      bool onlyOneEntry = (mOptions->ResultType() ==
-                             nsINavHistoryQueryOptions::RESULTS_AS_URI ||
-                           mOptions->ResultType() ==
-                             nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS);
+      bool onlyOneEntry =
+        mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
       UpdateURIs(true, onlyOneEntry, false, spec, setFaviconCallback,
                  nullptr);
       break;
@@ -2800,11 +2801,8 @@ nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI)
   nsAutoCString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  bool onlyOneEntry = (mOptions->ResultType() ==
-                         nsINavHistoryQueryOptions::RESULTS_AS_URI ||
-                       mOptions->ResultType() ==
-                         nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS
-                         );
+  bool onlyOneEntry =
+    mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
 
   // Find matching URI nodes.
   RefPtr<nsNavHistoryResultNode> node;

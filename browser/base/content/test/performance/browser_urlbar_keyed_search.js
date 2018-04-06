@@ -83,6 +83,37 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
   },
 ];
 
+// These extra reflows happen on beta/release as one of the default bookmarks in
+// bookmarks.html.in has a long URL.
+if (AppConstants.RELEASE_OR_BETA) {
+  EXPECTED_REFLOWS_FIRST_OPEN.push({
+    stack: [
+      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
+      "_onUnderflow@chrome://global/content/bindings/autocomplete.xml",
+      "onunderflow@chrome://browser/content/browser.xul",
+    ],
+    maxCount: 6,
+  });
+  EXPECTED_REFLOWS_FIRST_OPEN.push({
+    stack: [
+      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
+      "_onOverflow@chrome://global/content/bindings/autocomplete.xml",
+      "onoverflow@chrome://browser/content/browser.xul",
+    ],
+    maxCount: 6,
+  });
+  EXPECTED_REFLOWS_FIRST_OPEN.push({
+    stack: [
+      "_handleOverflow@chrome://global/content/bindings/autocomplete.xml",
+      "_adjustAcItem@chrome://global/content/bindings/autocomplete.xml",
+      "_appendCurrentResult@chrome://global/content/bindings/autocomplete.xml",
+      "_invalidate@chrome://global/content/bindings/autocomplete.xml",
+      "invalidate@chrome://global/content/bindings/autocomplete.xml",
+    ],
+    maxCount: 12,
+  });
+}
+
 /**
  * Returns a Promise that resolves once the AwesomeBar popup for a particular
  * window has appeared after having done a search for its input text.

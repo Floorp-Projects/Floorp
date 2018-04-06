@@ -1523,46 +1523,6 @@ add_task(async function test_insert_annos() {
 });
 
 add_task(async function test_insert_tag_query() {
-  let tagFolder = -1;
-
-  info("Insert tag query for new tag");
-  {
-    deepEqual(PlacesUtils.tagging.allTags, [], "New tag should not exist yet");
-    let query = await PlacesSyncUtils.bookmarks.insert({
-      kind: "query",
-      recordId: makeGuid(),
-      parentRecordId: "toolbar",
-      url: "place:type=7&folder=90",
-      folder: "taggy",
-      title: "Tagged stuff",
-    });
-    notEqual(query.url.href, "place:type=7&folder=90",
-      "Tag query URL for new tag should differ");
-
-    [, tagFolder] = /\bfolder=(\d+)\b/.exec(query.url.pathname);
-    ok(tagFolder > 0, "New tag query URL should contain valid folder");
-    deepEqual(PlacesUtils.tagging.allTags, ["taggy"], "New tag should exist");
-  }
-
-  info("Insert tag query for existing tag");
-  {
-    let url = "place:type=7&folder=90&maxResults=15";
-    let query = await PlacesSyncUtils.bookmarks.insert({
-      kind: "query",
-      url,
-      folder: "taggy",
-      title: "Sorted and tagged",
-      recordId: makeGuid(),
-      parentRecordId: "menu",
-    });
-    notEqual(query.url.href, url, "Tag query URL for existing tag should differ");
-    let params = new URLSearchParams(query.url.pathname);
-    equal(params.get("type"), "7", "Should preserve query type");
-    equal(params.get("maxResults"), "15", "Should preserve additional params");
-    equal(params.get("folder"), tagFolder, "Should update tag folder");
-    deepEqual(PlacesUtils.tagging.allTags, ["taggy"], "Should not duplicate existing tags");
-  }
-
   info("Use the public tagging API to ensure we added the tag correctly");
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
@@ -1572,7 +1532,47 @@ add_task(async function test_insert_tag_query() {
   });
   PlacesUtils.tagging.tagURI(uri("https://mozilla.org"), ["taggy"]);
   assertURLHasTags("https://mozilla.org/", ["taggy"],
-    "Should set tags using the tagging API");
+                   "Should set tags using the tagging API");
+
+  info("Insert tag query for non existing tag");
+  {
+    let query = await PlacesSyncUtils.bookmarks.insert({
+      kind: "query",
+      recordId: makeGuid(),
+      parentRecordId: "toolbar",
+      url: "place:type=7&folder=90",
+      folder: "nonexisting",
+      title: "Tagged stuff",
+    });
+    let params = new URLSearchParams(query.url.pathname);
+    ok(!params.has("type"), "Should not preserve query type");
+    ok(!params.has("folder"), "Should not preserve folder");
+    equal(params.get("tag"), "nonexisting", "Should add tag");
+    deepEqual(PlacesUtils.tagging.allTags, ["taggy"],
+              "The nonexisting tag should not be added");
+  }
+
+  info("Insert tag query for existing tag");
+  {
+    let url = "place:type=7&folder=90&maxResults=15";
+    let query = await PlacesSyncUtils.bookmarks.insert({
+      kind: "query",
+      recordId: makeGuid(),
+      parentRecordId: "menu",
+      url,
+      folder: "taggy",
+      title: "Sorted and tagged",
+    });
+    let params = new URLSearchParams(query.url.pathname);
+    ok(!params.get("type"), "Should not preserve query type");
+    ok(!params.has("folder"), "Should not preserve folder");
+    equal(params.get("maxResults"), "15", "Should preserve additional params");
+    equal(params.get("tag"), "taggy", "Should add tag");
+    deepEqual(PlacesUtils.tagging.allTags, ["taggy"],
+              "Should not duplicate existing tags");
+  }
+
+
 
   info("Removing the tag should clean up the tag folder");
   PlacesUtils.tagging.untagURI(uri("https://mozilla.org"), null);
@@ -1835,11 +1835,10 @@ add_task(async function test_fetch() {
     kind: "query",
     recordId: makeGuid(),
     parentRecordId: "toolbar",
-    url: "place:type=7&folder=90",
+    url: "place:tag=taggy",
     folder: "taggy",
     title: "Tagged stuff",
   });
-  let [, tagFolderId] = /\bfolder=(\d+)\b/.exec(tagQuery.url.pathname);
   let smartBmk = await PlacesSyncUtils.bookmarks.insert({
     kind: "query",
     recordId: makeGuid(),
@@ -1905,7 +1904,7 @@ add_task(async function test_fetch() {
     deepEqual(Object.keys(item).sort(), ["recordId", "kind", "parentRecordId",
       "url", "title", "folder", "parentTitle", "dateAdded"].sort(),
       "Should include query-specific properties");
-    equal(item.url.href, `place:type=7&folder=${tagFolderId}`, "Should not rewrite outgoing tag queries");
+    equal(item.url.href, `place:tag=taggy`, "Should not rewrite outgoing tag queries");
     equal(item.folder, "taggy", "Should return tag name for tag queries");
   }
 

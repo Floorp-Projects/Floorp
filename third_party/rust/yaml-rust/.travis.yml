@@ -1,0 +1,20 @@
+language: rust
+rust:
+  - 1.11.0
+  - 1.16.0
+  - beta
+  - nightly
+matrix:
+  allow_failures:
+    - rust: nightly
+env:
+  global:
+    - secure: ZUcdcbS8xbpdII9FSPx7VtoVhEkJhWL2Hb75tDlKDHNhfXqmt1NyB9q/2qXJ5Ulp4MnYXwsI8LsDloR6gvdB4xElay3smuF/neGvMjrqcB15/2p0MSQ+kZjMsNB6mlb5kAlm8ahduXIscppmw/V+m5hn3Vo+RQz/Ng+pzv0nc8KEXPMYrfRFg+a7FaeIbRbb8ir9EfflUSqArLq2hbi2WdhM3hFMcCIAUt6DD4x5ubjEg60OnIof5FDu0mXMXzQvUfHWOeYnsNcD/DLyDnm6FuQEzk37M4EB8op2SdBUeQMQ5abR3i2rd//DZpbTTEjud0PseWohGAwTwL2aoFrqs7uYQMx+vcGlOzAyDUm4VemVUa3F2BECdzU5BiujcKOITJEVUYWongld93arQq34FuXG/TO/T1XrerxfG6LTkTkKS5Vz7W8z6Rloa99WrQLJg1ZJP6itEU7G7KsDFVgRhsg7rz4/dV/2+cV4UvIwd4HlGXKCFlH0SClqvM3/7i/qqCD0689SJW6Zip+ly38MXlGy2s/AmReEasXvFer9JkOEIuPa8QTBNAjDlw7bWXi6neQWBIZU1VhZcSssnrVmEFN8fNklShzpw5DyKCv8jPTx2O6Dw8B/LgIK8uo+eaTXiO6zz/T1c/qEdsYslvxPA2D3F+ONpPU7238ykT4eRog=
+script:
+  - cargo build --verbose
+  - |
+      if [ "$TRAVIS_RUST_VERSION" = nightly ]; then
+          cargo install clippy --debug
+          cargo clippy -- -Dclippy
+      fi
+  - cargo test --verbose

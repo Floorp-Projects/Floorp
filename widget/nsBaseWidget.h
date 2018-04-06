@@ -192,6 +192,7 @@ public:
                                            uint16_t aDuration,
                                            nsISupports* aData,
                                            nsIRunnable* aCallback) override;
+  virtual void CleanupFullscreenTransition() override {};
   virtual already_AddRefed<nsIScreen> GetWidgetScreen() override;
   virtual nsresult        MakeFullScreen(bool aFullScreen,
                                          nsIScreen* aScreen = nullptr) override;
