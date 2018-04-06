@@ -823,10 +823,7 @@ Toolbox.prototype = {
       } else {
         this.selectTool("options");
       }
-      // Prevent the opening of bookmarks window on toolbox.options.key
-      event.preventDefault();
     };
-    this.shortcuts.on(L10N.getStr("toolbox.options.key"), selectOptions);
     this.shortcuts.on(L10N.getStr("toolbox.help.key"), selectOptions);
   },
 

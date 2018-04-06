@@ -5184,8 +5184,9 @@ var gCSSProperties = {
     initial_values: [ "normal" ],
     other_values: [ "normal start", "baseline end", "end end",
                     "space-between flex-end", "last baseline start",
-                    "space-evenly", "flex-start", "end" ],
-    invalid_values: [ "none", "center safe", "unsafe start", "right / end" ]
+                    "space-evenly", "flex-start", "end", "unsafe start", "safe center",
+                    "baseline", "last baseline" ],
+    invalid_values: [ "none", "center safe", "right / end" ]
   },
   "place-items": {
     domProp: "placeItems",
@@ -5194,9 +5195,10 @@ var gCSSProperties = {
     subproperties: [ "align-items", "justify-items" ],
     initial_values: [ "normal" ],
     other_values: [ "normal center", "baseline end", "end auto",
-                    "end", "flex-end left", "last baseline start", "stretch" ],
+                    "end", "flex-end left", "last baseline start", "stretch",
+                    "safe center", "end legacy left" ],
     invalid_values: [ "space-between", "start space-evenly", "none", "end/end",
-                      "center safe", "auto start", "end legacy left" ]
+                      "center safe", "auto start" ]
   },
   "place-self": {
     domProp: "placeSelf",

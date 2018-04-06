@@ -12,7 +12,7 @@ const expectedRoots = [{
   guid: "downloads__v",
 }, {
   title: "TagsFolderTitle",
-  uri: `place:sort=${Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING}&type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY}`,
+  uri: `place:sort=${Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING}&type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT}`,
   guid: "tags_______v",
 }, {
   title: "OrganizerQueryAllBookmarks",
