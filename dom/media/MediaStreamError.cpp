@@ -26,7 +26,6 @@ BaseMediaMgrError::BaseMediaMgrError(Name aName,
     const char* mMessage;
   } map[] = {
     MAP_MEDIAERR(AbortError, "The operation was aborted."),
-    MAP_MEDIAERR(InternalError, "Internal error."),
     MAP_MEDIAERR(InvalidStateError, "The object is in an invalid state."),
     MAP_MEDIAERR(NotAllowedError, "The request is not allowed by the user agent "
                                   "or the platform in the current context."),

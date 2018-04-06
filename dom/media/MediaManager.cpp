@@ -1402,7 +1402,7 @@ public:
 
       if (auto* window = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID)) {
         RefPtr<MediaStreamError> error = new MediaStreamError(window->AsInner(),
-            MediaStreamError::Name::InternalError,
+            MediaStreamError::Name::AbortError,
             sHasShutdown ? NS_LITERAL_STRING("In shutdown") :
                            NS_LITERAL_STRING("No stream."));
         mOnFailure->OnError(error);
@@ -3678,7 +3678,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       // reserved for device startup errors later).
       errorName = (msgData.EqualsLiteral("NotFoundError"))
           ? MediaMgrError::Name::NotFoundError
-          : MediaMgrError::Name::InternalError;
+          : MediaMgrError::Name::AbortError;
     }
 
     nsString key(aData);
@@ -4037,7 +4037,7 @@ SourceListener::InitializeAsync()
           }
           log.AssignASCII("Starting audio failed");
           aHolder.Reject(MakeRefPtr<MediaMgrError>(
-                MediaMgrError::Name::InternalError, log), __func__);
+                MediaMgrError::Name::AbortError, log), __func__);
           return;
         }
       }
@@ -4055,7 +4055,7 @@ SourceListener::InitializeAsync()
           }
           nsString log;
           log.AssignASCII("Starting video failed");
-          aHolder.Reject(MakeRefPtr<MediaMgrError>(MediaMgrError::Name::InternalError, log), __func__);
+          aHolder.Reject(MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError, log), __func__);
           return;
         }
       }
