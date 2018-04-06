@@ -135,8 +135,8 @@ def run_info_extras(**kwargs):
 
 
 def update_properties():
-    return (["debug", "stylo", "webrender", "e10s", "os", "version", "processor", "bits"],
-            {"debug", "e10s", "stylo", "webrender"})
+    return (["debug", "webrender", "e10s", "os", "version", "processor", "bits"],
+            {"debug", "e10s", "webrender"})
 
 
 class FirefoxBrowser(Browser):
