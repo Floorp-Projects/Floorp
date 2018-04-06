@@ -300,7 +300,7 @@ class Include(object):
                 continue
 
             self.IDL = parent.parser.parse(open(file).read(), filename=file)
-            self.IDL.resolve(parent.incdirs, parent.parser)
+            self.IDL.resolve(parent.incdirs, parent.parser, parent.webidlconfig)
             for type in self.IDL.getNames():
                 parent.setName(type)
             parent.deps.extend(self.IDL.deps)
@@ -332,10 +332,11 @@ class IDL(object):
     def __str__(self):
         return "".join([str(p) for p in self.productions])
 
-    def resolve(self, incdirs, parser):
+    def resolve(self, incdirs, parser, webidlconfig):
         self.namemap = NameMap()
         self.incdirs = incdirs
         self.parser = parser
+        self.webidlconfig = webidlconfig
         for p in self.productions:
             p.resolve(self)
 
