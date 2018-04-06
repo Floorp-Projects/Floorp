@@ -12,7 +12,6 @@
 #include "nsDebug.h"                    // for NS_ENSURE_ARG_POINTER, etc
 #include "nsError.h"                    // for NS_ERROR_INVALID_ARG, etc
 #include "nsICommandParams.h"           // for nsICommandParams
-#include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDocShell.h"                // for nsIDocShell
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIEditingSession.h"          // for nsIEditingSession, etc
