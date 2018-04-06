@@ -434,7 +434,7 @@ ShadowRoot::RemoveFromIdTable(Element* aElement, nsAtom* aId)
   }
 }
 
-nsresult
+void
 ShadowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
@@ -456,7 +456,7 @@ ShadowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor)
         ? win->GetParentTarget() : nullptr;
 
       aVisitor.SetParentTarget(parentTarget, true);
-      return NS_OK;
+      return;
     }
   }
 
@@ -467,8 +467,6 @@ ShadowRoot::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   if (content && content->GetBindingParent() == shadowHost) {
     aVisitor.mEventTargetAtParent = shadowHost;
   }
-
-  return NS_OK;
 }
 
 ShadowRoot::SlotAssignment

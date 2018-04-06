@@ -19,7 +19,7 @@ import BaseHTTPServer
 import SimpleHTTPServer
 
 from mozbuild.virtualenv import VirtualenvManager
-from mozdevice import DeviceManagerADB
+from mozdevice import ADBHost, ADBAndroid
 from mozprocess import ProcessHandler
 
 
@@ -193,12 +193,13 @@ class AutophoneRunner(object):
                         "adb not found. Enter path to adb: ").strip()
             if self.verbose:
                 print("Using adb at %s" % adb_path)
-            dm = DeviceManagerADB(autoconnect=False, adbPath=adb_path, retryLimit=1)
+
+            adbhost = ADBHost(adb=adb_path, timeout=10)
             device_index = 1
             try:
                 with open(os.path.join(self.config['base-dir'], 'devices.ini'), 'w') as f:
-                    for device in dm.devices():
-                        serial = device[0]
+                    for device in adbhost.devices():
+                        serial = device['device_serial']
                         if self.verify_device(adb_path, serial):
                             f.write("[device-%d]\nserialno=%s\n" % (device_index, serial))
                             device_index += 1
@@ -444,8 +445,8 @@ time_out = 300""" % (xre_path, xre_path))
            Check that the specified device is available and rooted.
         """
         try:
-            dm = DeviceManagerADB(adbPath=adb_path, retryLimit=1, deviceSerial=device)
-            if dm._haveSu or dm._haveRootShell:
+            device = ADBAndroid(adb=adb_path, device=device, timeout=10)
+            if device._have_su or device._have_android_su or device._have_root_shell:
                 return True
         except Exception:
             self.build_obj.log(

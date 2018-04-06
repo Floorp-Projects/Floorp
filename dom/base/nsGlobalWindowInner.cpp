@@ -1947,19 +1947,7 @@ nsGlobalWindowInner::GetTargetForDOMEvent()
   return GetOuterWindowInternal();
 }
 
-EventTarget*
-nsGlobalWindowInner::GetTargetForEventTargetChain()
-{
-  return this;
-}
-
-nsresult
-nsGlobalWindowInner::WillHandleEvent(EventChainPostVisitor& aVisitor)
-{
-  return NS_OK;
-}
-
-nsresult
+void
 nsGlobalWindowInner::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   EventMessage msg = aVisitor.mEvent->mMessage;
@@ -1998,8 +1986,6 @@ nsGlobalWindowInner::GetEventTargetParent(EventChainPreVisitor& aVisitor)
        aVisitor.mEvent->HasDragEventMessage())) {
     mAddActiveEventFuzzTime = false;
   }
-
-  return NS_OK;
 }
 
 bool
@@ -4481,30 +4467,21 @@ nsGlobalWindowInner::GetOwnerGlobalForBindings()
   return nsPIDOMWindowOuter::GetFromCurrentInner(this);
 }
 
-NS_IMETHODIMP
-nsGlobalWindowInner::RemoveEventListener(const nsAString& aType,
-                                         nsIDOMEventListener* aListener,
-                                         bool aUseCapture)
-{
-  if (RefPtr<EventListenerManager> elm = GetExistingListenerManager()) {
-    elm->RemoveEventListener(aType, aListener, aUseCapture);
-  }
-  return NS_OK;
-}
-
-NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsGlobalWindowInner)
-
-NS_IMETHODIMP
-nsGlobalWindowInner::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
+bool
+nsGlobalWindowInner::DispatchEvent(Event& aEvent,
+                                   CallerType aCallerType,
+                                   ErrorResult& aRv)
 {
   if (!IsCurrentInnerWindow()) {
     NS_WARNING("DispatchEvent called on non-current inner window, dropping. "
                "Please check the window in the caller instead.");
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return false;
   }
 
   if (!mDoc) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return false;
   }
 
   // Obtain a presentation shell
@@ -4512,76 +4489,18 @@ nsGlobalWindowInner::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv = EventDispatcher::DispatchDOMEvent(ToSupports(this), nullptr,
-                                                  aEvent, presContext, &status);
-
-  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
-  return rv;
+                                                  &aEvent, presContext, &status);
+  bool retval = !aEvent.DefaultPrevented(aCallerType);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+  return retval;
 }
 
-NS_IMETHODIMP
-nsGlobalWindowInner::AddEventListener(const nsAString& aType,
-                                      nsIDOMEventListener *aListener,
-                                      bool aUseCapture, bool aWantsUntrusted,
-                                      uint8_t aOptionalArgc)
+bool
+nsGlobalWindowInner::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
 {
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  if (!aWantsUntrusted &&
-      (aOptionalArgc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
-    aWantsUntrusted = true;
-  }
-
-  EventListenerManager* manager = GetOrCreateListenerManager();
-  NS_ENSURE_STATE(manager);
-  manager->AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted);
-  return NS_OK;
-}
-
-void
-nsGlobalWindowInner::AddEventListener(const nsAString& aType,
-                                      EventListener* aListener,
-                                      const AddEventListenerOptionsOrBoolean& aOptions,
-                                      const Nullable<bool>& aWantsUntrusted,
-                                      ErrorResult& aRv)
-{
-  bool wantsUntrusted;
-  if (aWantsUntrusted.IsNull()) {
-    wantsUntrusted = !nsContentUtils::IsChromeDoc(mDoc);
-  } else {
-    wantsUntrusted = aWantsUntrusted.Value();
-  }
-
-  EventListenerManager* manager = GetOrCreateListenerManager();
-  if (!manager) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  manager->AddEventListener(aType, aListener, aOptions, wantsUntrusted);
-}
-
-NS_IMETHODIMP
-nsGlobalWindowInner::AddSystemEventListener(const nsAString& aType,
-                                            nsIDOMEventListener *aListener,
-                                            bool aUseCapture,
-                                            bool aWantsUntrusted,
-                                            uint8_t aOptionalArgc)
-{
-  NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to false or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
-  if (!aWantsUntrusted &&
-      (aOptionalArgc < 2 && !nsContentUtils::IsChromeDoc(mDoc))) {
-    aWantsUntrusted = true;
-  }
-
-  return NS_AddSystemEventListener(this, aType, aListener, aUseCapture,
-                                   aWantsUntrusted);
+  return !nsContentUtils::IsChromeDoc(mDoc);
 }
 
 EventListenerManager*
@@ -4599,13 +4518,6 @@ EventListenerManager*
 nsGlobalWindowInner::GetExistingListenerManager() const
 {
   return mListenerManager;
-}
-
-nsIScriptContext*
-nsGlobalWindowInner::GetContextForEventHandlers(nsresult* aRv)
-{
-  *aRv = NS_ERROR_UNEXPECTED;
-  FORWARD_TO_OUTER(GetContextForEventHandlers, (aRv), nullptr);
 }
 
 //*****************************************************************************
@@ -4910,8 +4822,9 @@ nsGlobalWindowInner::FireHashchange(const nsAString &aOldURL,
 
   event->SetTrusted(true);
 
-  bool dummy;
-  return DispatchEvent(event, &dummy);
+  ErrorResult rv;
+  DispatchEvent(*event, rv);
+  return rv.StealNSResult();
 }
 
 nsresult
@@ -4955,8 +4868,9 @@ nsGlobalWindowInner::DispatchSyncPopState()
   event->SetTrusted(true);
   event->SetTarget(this);
 
-  bool dummy; // default action
-  return DispatchEvent(event, &dummy);
+  ErrorResult err;
+  DispatchEvent(*event, err);
+  return err.StealNSResult();
 }
 
 // Find an nsICanvasFrame under aFrame.  Only search the principal
@@ -5990,8 +5904,9 @@ nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
     event->InitEvent(NS_LITERAL_STRING("languagechange"), false, false);
     event->SetTrusted(true);
 
-    bool dummy;
-    return DispatchEvent(event, &dummy);
+    ErrorResult rv;
+    DispatchEvent(*event, rv);
+    return rv.StealNSResult();
   }
 
   NS_WARNING("unrecognized topic in nsGlobalWindowInner::Observe");
@@ -6089,8 +6004,7 @@ nsGlobalWindowInner::ObserveStorageNotification(StorageEvent* aEvent,
     internalEvent->mFlags.mOnlyChromeDispatch = true;
   }
 
-  bool defaultActionEnabled;
-  DispatchEvent(clonedEvent, &defaultActionEnabled);
+  DispatchEvent(*clonedEvent);
 }
 
 already_AddRefed<StorageEvent>
@@ -7189,12 +7103,11 @@ nsGlobalWindowInner::DispatchVRDisplayActivate(uint32_t aDisplayID,
       // to be used in response to link traversal, user request (chrome UX), and
       // HMD mounting detection sensors.
       event->SetTrusted(true);
-      bool defaultActionEnabled;
       // VRDisplay.requestPresent normally requires a user gesture; however, an
       // exception is made to allow it to be called in response to vrdisplayactivate
       // during VR link traversal.
       display->StartHandlingVRNavigationEvent();
-      Unused << DispatchEvent(event, &defaultActionEnabled);
+      DispatchEvent(*event);
       display->StopHandlingVRNavigationEvent();
       // Once we dispatch the event, we must not access any members as an event
       // listener can do anything, including closing windows.
@@ -7228,8 +7141,7 @@ nsGlobalWindowInner::DispatchVRDisplayDeactivate(uint32_t aDisplayID,
                                     NS_LITERAL_STRING("vrdisplaydeactivate"),
                                     init);
       event->SetTrusted(true);
-      bool defaultActionEnabled;
-      Unused << DispatchEvent(event, &defaultActionEnabled);
+      DispatchEvent(*event);
       // Once we dispatch the event, we must not access any members as an event
       // listener can do anything, including closing windows.
       return;
@@ -7259,8 +7171,7 @@ nsGlobalWindowInner::DispatchVRDisplayConnect(uint32_t aDisplayID)
                                     NS_LITERAL_STRING("vrdisplayconnect"),
                                     init);
       event->SetTrusted(true);
-      bool defaultActionEnabled;
-      Unused << DispatchEvent(event, &defaultActionEnabled);
+      DispatchEvent(*event);
       // Once we dispatch the event, we must not access any members as an event
       // listener can do anything, including closing windows.
       return;
@@ -7290,8 +7201,7 @@ nsGlobalWindowInner::DispatchVRDisplayDisconnect(uint32_t aDisplayID)
                                     NS_LITERAL_STRING("vrdisplaydisconnect"),
                                     init);
       event->SetTrusted(true);
-      bool defaultActionEnabled;
-      Unused << DispatchEvent(event, &defaultActionEnabled);
+      DispatchEvent(*event);
       // Once we dispatch the event, we must not access any members as an event
       // listener can do anything, including closing windows.
       return;
@@ -7320,8 +7230,7 @@ nsGlobalWindowInner::DispatchVRDisplayPresentChange(uint32_t aDisplayID)
                                     NS_LITERAL_STRING("vrdisplaypresentchange"),
                                     init);
       event->SetTrusted(true);
-      bool defaultActionEnabled;
-      Unused << DispatchEvent(event, &defaultActionEnabled);
+      DispatchEvent(*event);
       // Once we dispatch the event, we must not access any members as an event
       // listener can do anything, including closing windows.
       return;

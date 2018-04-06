@@ -733,6 +733,8 @@ struct ByteSlice {
 
 using TileOffset = TypedPoint2D<uint16_t, Tiles>;
 
+using DeviceUintRect = TypedRect<uint32_t, DevicePixel>;
+
 struct MutByteSlice {
   uint8_t *buffer;
   uintptr_t len;
@@ -908,8 +910,6 @@ struct FontInstancePlatformOptions {
   }
 };
 #endif
-
-using DeviceUintRect = TypedRect<uint32_t, DevicePixel>;
 
 struct WrOpacityProperty {
   uint64_t id;
@@ -1344,6 +1344,7 @@ extern bool wr_moz2d_render_cb(ByteSlice aBlob,
                                ImageFormat aFormat,
                                const uint16_t *aTileSize,
                                const TileOffset *aTileOffset,
+                               const DeviceUintRect *aDirtyRect,
                                MutByteSlice aOutput);
 
 extern void wr_notifier_external_event(WrWindowId aWindowId,

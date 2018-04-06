@@ -755,16 +755,6 @@ class Descriptor(DescriptorProvider):
     def needsXrayNamedDeleterHook(self):
         return self.operations["NamedDeleter"] is not None
 
-    def needsSpecialGenericOps(self):
-        """
-        Returns true if this descriptor requires generic ops other than
-        GenericBindingMethod/GenericBindingGetter/GenericBindingSetter.
-
-        In practice we need to do this if we need to coerce null/undefined
-        to the global.
-        """
-        return self.interface.isOnGlobalProtoChain()
-
     def isGlobal(self):
         """
         Returns true if this is the primary interface for a global object

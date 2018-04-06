@@ -350,10 +350,10 @@ HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                             aOldValue, aSubjectPrincipal, aNotify);
 }
 
-nsresult
+void
 HTMLLinkElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
-  return GetEventTargetParentForAnchors(aVisitor);
+  GetEventTargetParentForAnchors(aVisitor);
 }
 
 nsresult

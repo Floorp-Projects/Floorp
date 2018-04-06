@@ -47,6 +47,7 @@
 #include "nsViewManager.h"
 #include "GeckoProfiler.h"
 #include "nsNPAPIPluginInstance.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/WindowBinding.h"
@@ -69,7 +70,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/TimelineConsumers.h"
 #include "nsAnimationManager.h"
-#include "nsIDOMEvent.h"
 #include "nsDisplayList.h"
 #include "nsTransitionManager.h"
 
@@ -1598,8 +1598,7 @@ nsRefreshDriver::DispatchPendingEvents()
   // Swap out the current pending events
   nsTArray<PendingEvent> pendingEvents(Move(mPendingEvents));
   for (PendingEvent& event : pendingEvents) {
-    bool dummy;
-    event.mTarget->DispatchEvent(event.mEvent, &dummy);
+    event.mTarget->DispatchEvent(*event.mEvent);
   }
 }
 
@@ -2374,7 +2373,7 @@ nsRefreshDriver::RevokeFrameRequestCallbacks(nsIDocument* aDocument)
 }
 
 void
-nsRefreshDriver::ScheduleEventDispatch(nsINode* aTarget, nsIDOMEvent* aEvent)
+nsRefreshDriver::ScheduleEventDispatch(nsINode* aTarget, dom::Event* aEvent)
 {
   mPendingEvents.AppendElement(PendingEvent{aTarget, aEvent});
   // make sure that the timer is running

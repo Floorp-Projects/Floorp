@@ -12,10 +12,10 @@ todir="$workdir/1"
 # the fromdir and todir due to them being extracted synchronously so use
 # time-style and exclude seconds from the creation time.
 lsargs="-algR"
-unamestr=$(uname)
+unamestr=`uname`
 if [ ! "$unamestr" = 'Darwin' ]; then
-  unamestr=$(uname -o)
-  if [ "$unamestr" = 'Msys' ] || [ "$unamestr" = "Cygwin" ]; then
+  unamestr=`uname -o`
+  if [ "$unamestr" = 'Msys' -o "$unamestr" = "Cygwin" ]; then
      lsargs="-algR --time-style=+%Y-%m-%d-%H:%M"
   fi
 fi
@@ -27,23 +27,23 @@ mkdir -p "$todir"
 cp "$1" "$fromdir"
 cp "$2" "$todir"
 
-cd "$fromdir" || exit 1
-mar -x "$marA"
-rm "$marA"
+cd "$fromdir"
+mar -x "$1"
+rm "$1"
 mv updatev2.manifest updatev2.manifest.xz
 xz -d updatev2.manifest.xz
 mv updatev3.manifest updatev3.manifest.xz
 xz -d updatev3.manifest.xz
-ls "$lsargs" > files.txt
+ls $lsargs > files.txt
 
-cd "$todir" || exit 1
-mar -x "$marB"
-rm "$marB"
+cd "$todir"
+mar -x "$2"
+rm "$2"
 mv updatev2.manifest updatev2.manifest.xz
 xz -d updatev2.manifest.xz
 mv updatev3.manifest updatev3.manifest.xz
 xz -d updatev3.manifest.xz
-ls "$lsargs" > files.txt
+ls $lsargs > files.txt
 
 echo "diffing $fromdir and $todir"
 echo "on linux shell sort and python sort return different results"

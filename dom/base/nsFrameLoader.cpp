@@ -379,8 +379,7 @@ nsFrameLoader::SwapBrowsersAndNotify(nsFrameLoader* aOther)
                                      NS_LITERAL_STRING("BrowserChangedProcess"),
                                      eventInit);
   event->SetTrusted(true);
-  bool dummy;
-  primaryContent->DispatchEvent(event, &dummy);
+  primaryContent->DispatchEvent(*event);
 
   return true;
 }
@@ -411,8 +410,7 @@ nsFrameLoader::FireWillChangeProcessEvent()
                                      NS_LITERAL_STRING("BrowserWillChangeProcess"),
                                      eventInit);
   event->SetTrusted(true);
-  bool dummy;
-  mOwnerContent->DispatchEvent(event, &dummy);
+  mOwnerContent->DispatchEvent(*event);
 
   mBrowserChangingProcessBlockers = nullptr;
 

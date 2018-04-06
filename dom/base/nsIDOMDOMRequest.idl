@@ -7,7 +7,6 @@
 #include "nsIDOMEventTarget.idl"
 
 interface mozIDOMWindow;
-interface nsIDOMDOMCursor;
 interface nsICursorContinueCallback;
 
 [builtinclass, uuid(e39da69e-2232-4e49-9856-b8a4a6210336)]
@@ -25,17 +24,9 @@ interface nsIDOMDOMRequest : nsIDOMEventTarget
 interface nsIDOMRequestService : nsISupports
 {
   nsIDOMDOMRequest createRequest(in mozIDOMWindow window);
-  /*
-   * @param aCallback
-   *        Called when `continue()' is called in the cursor, should be used to
-   *        notify the data provider that content wants the next result.
-   */
-  nsIDOMDOMCursor createCursor(in mozIDOMWindow window,
-                               in nsICursorContinueCallback aCallback);
 
   void fireSuccess(in nsIDOMDOMRequest request, in jsval result);
   void fireError(in nsIDOMDOMRequest request, in DOMString error);
   void fireSuccessAsync(in nsIDOMDOMRequest request, in jsval result);
   void fireErrorAsync(in nsIDOMDOMRequest request, in DOMString error);
-  void fireDone(in nsIDOMDOMCursor cursor);
 };

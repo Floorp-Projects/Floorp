@@ -37,9 +37,9 @@ CompositorWidgetParent::RecvLeavePresentLock()
 }
 
 mozilla::ipc::IPCResult
-CompositorWidgetParent::RecvUpdateTransparency(const int32_t& aMode)
+CompositorWidgetParent::RecvUpdateTransparency(const nsTransparencyMode& aMode)
 {
-  UpdateTransparency(static_cast<nsTransparencyMode>(aMode));
+  UpdateTransparency(aMode);
   return IPC_OK();
 }
 

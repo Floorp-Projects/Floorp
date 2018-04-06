@@ -194,10 +194,11 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, bool *preventD
   event->SetTrusted(true);
 
   // send DOM event
-  nsresult err = mContent->DispatchEvent(event, preventDefaultCalled);
-  if (NS_FAILED(err)) {
+  *preventDefaultCalled =
+    mContent->DispatchEvent(*event, CallerType::System, rv);
+  if (rv.Failed()) {
     NS_WARNING("Failed to send DOM event via EventTarget");
-    return err;
+    return rv.StealNSResult();
   }
 
   return NS_OK;
