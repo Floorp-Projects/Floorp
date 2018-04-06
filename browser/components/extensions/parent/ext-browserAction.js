@@ -15,6 +15,7 @@ ChromeUtils.defineModuleGetter(this, "ViewPopup",
 
 var {
   DefaultWeakMap,
+  ExtensionError,
 } = ExtensionUtils;
 
 ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
@@ -23,10 +24,6 @@ var {
   IconDetails,
   StartupCache,
 } = ExtensionParent;
-
-var {
-  ExtensionError,
-} = ExtensionUtils;
 
 Cu.importGlobalProperties(["InspectorUtils"]);
 
@@ -112,8 +109,13 @@ this.browserAction = class extends ExtensionAPI {
         extension, ["browserAction", "default_icon_data"],
         () => this.getIconData(this.defaults.icon)));
 
-    this.tabContext = new TabContext(tab => Object.create(this.globals),
-                                     extension);
+    this.tabContext = new TabContext(target => {
+      let window = target.ownerGlobal;
+      if (target === window) {
+        return Object.create(this.globals);
+      }
+      return Object.create(this.tabContext.get(window));
+    }, extension);
 
     // eslint-disable-next-line mozilla/balanced-listeners
     this.tabContext.on("location-change", this.handleLocationChange.bind(this));
@@ -520,7 +522,12 @@ this.browserAction = class extends ExtensionAPI {
     return {style, legacy};
   }
 
-  // Update the toolbar button for a given window.
+  /**
+   * Update the toolbar button for a given window.
+   *
+   * @param {ChromeWindow} window
+   *        Browser chrome window.
+   */
   updateWindow(window) {
     let widget = this.widget.forWindow(window);
     if (widget) {
@@ -529,13 +536,20 @@ this.browserAction = class extends ExtensionAPI {
     }
   }
 
-  // Update the toolbar button when the extension changes the icon,
-  // title, badge, etc. If it only changes a parameter for a single
-  // tab, |tab| will be that tab. Otherwise it will be null.
-  updateOnChange(tab) {
-    if (tab) {
-      if (tab.selected) {
-        this.updateWindow(tab.ownerGlobal);
+  /**
+   * Update the toolbar button when the extension changes the icon, title, url, etc.
+   * If it only changes a parameter for a single tab, `target` will be that tab.
+   * If it only changes a parameter for a single window, `target` will be that window.
+   * Otherwise `target` will be null.
+   *
+   * @param {XULElement|ChromeWindow|null} target
+   *        Browser tab or browser chrome window, may be null.
+   */
+  updateOnChange(target) {
+    if (target) {
+      let window = target.ownerGlobal;
+      if (target === window || target.selected) {
+        this.updateWindow(window);
       }
     } else {
       for (let window of windowTracker.browserWindows()) {
@@ -544,31 +558,74 @@ this.browserAction = class extends ExtensionAPI {
     }
   }
 
-  // tab is allowed to be null.
-  // prop should be one of "icon", "title", "badgeText", "popup", or "badgeBackgroundColor".
-  setProperty(tab, prop, value) {
-    let values;
-    if (tab == null) {
-      values = this.globals;
-    } else {
-      values = this.tabContext.get(tab);
+  /**
+   * Gets the target object and its associated values corresponding to
+   * the `details` parameter of the various get* and set* API methods.
+   *
+   * @param {Object} details
+   *        An object with optional `tabId` or `windowId` properties.
+   * @throws if both `tabId` and `windowId` are specified, or if they are invalid.
+   * @returns {Object}
+   *        An object with two properties: `target` and `values`.
+   *        - If a `tabId` was specified, `target` will be the corresponding
+   *          XULElement tab. If a `windowId` was specified, `target` will be
+   *          the corresponding ChromeWindow. Otherwise it will be `null`.
+   *        - `values` will contain the icon, title, badge, etc. associated with
+   *          the target.
+   */
+  getContextData({tabId, windowId}) {
+    if (tabId != null && windowId != null) {
+      throw new ExtensionError("Only one of tabId and windowId can be specified.");
     }
-    if (value == null) {
+    let target, values;
+    if (tabId != null) {
+      target = tabTracker.getTab(tabId);
+      values = this.tabContext.get(target);
+    } else if (windowId != null) {
+      target = windowTracker.getWindow(windowId);
+      values = this.tabContext.get(target);
+    } else {
+      target = null;
+      values = this.globals;
+    }
+    return {target, values};
+  }
+
+  /**
+   * Set a global, window specific or tab specific property.
+   *
+   * @param {Object} details
+   *        An object with optional `tabId` or `windowId` properties.
+   * @param {string} prop
+   *        String property to set. Should should be one of "icon", "title",
+   *        "badgeText", "popup", "badgeBackgroundColor" or "enabled".
+   * @param {string} value
+   *        Value for prop.
+   */
+  setProperty(details, prop, value) {
+    let {target, values} = this.getContextData(details);
+    if (value === null) {
       delete values[prop];
     } else {
       values[prop] = value;
     }
 
-    this.updateOnChange(tab);
+    this.updateOnChange(target);
   }
 
-  // tab is allowed to be null.
-  // prop should be one of "title", "badgeText", "popup", or "badgeBackgroundColor".
-  getProperty(tab, prop) {
-    if (tab == null) {
-      return this.globals[prop];
-    }
-    return this.tabContext.get(tab)[prop];
+  /**
+   * Retrieve the value of a global, window specific or tab specific property.
+   *
+   * @param {Object} details
+   *        An object with optional `tabId` or `windowId` properties.
+   * @param {string} prop
+   *        String property to retrieve. Should should be one of "icon", "title",
+   *        "badgeText", "popup", "badgeBackgroundColor" or "enabled".
+   * @returns {string} value
+   *          Value of prop.
+   */
+  getProperty(details, prop) {
+    return this.getContextData(details).values[prop];
   }
 
   getAPI(context) {
@@ -576,13 +633,6 @@ this.browserAction = class extends ExtensionAPI {
     let {tabManager} = extension;
 
     let browserAction = this;
-
-    function getTab(tabId) {
-      if (tabId !== null) {
-        return tabTracker.getTab(tabId);
-      }
-      return null;
-    }
 
     return {
       browserAction: {
@@ -603,61 +653,44 @@ this.browserAction = class extends ExtensionAPI {
         }).api(),
 
         enable: function(tabId) {
-          let tab = getTab(tabId);
-          browserAction.setProperty(tab, "enabled", true);
+          browserAction.setProperty({tabId}, "enabled", true);
         },
 
         disable: function(tabId) {
-          let tab = getTab(tabId);
-          browserAction.setProperty(tab, "enabled", false);
+          browserAction.setProperty({tabId}, "enabled", false);
         },
 
         isEnabled: function(details) {
-          let tab = getTab(details.tabId);
-          return browserAction.getProperty(tab, "enabled");
+          return browserAction.getProperty(details, "enabled");
         },
 
         setTitle: function(details) {
-          let tab = getTab(details.tabId);
-
-          browserAction.setProperty(tab, "title", details.title);
+          browserAction.setProperty(details, "title", details.title);
         },
 
         getTitle: function(details) {
-          let tab = getTab(details.tabId);
-
-          let title = browserAction.getProperty(tab, "title");
-          return Promise.resolve(title);
+          return browserAction.getProperty(details, "title");
         },
 
         setIcon: function(details) {
-          let tab = getTab(details.tabId);
-
           details.iconType = "browserAction";
 
           let icon = IconDetails.normalize(details, extension, context);
           if (!Object.keys(icon).length) {
             icon = null;
           }
-          browserAction.setProperty(tab, "icon", icon);
+          browserAction.setProperty(details, "icon", icon);
         },
 
         setBadgeText: function(details) {
-          let tab = getTab(details.tabId);
-
-          browserAction.setProperty(tab, "badgeText", details.text);
+          browserAction.setProperty(details, "badgeText", details.text);
         },
 
         getBadgeText: function(details) {
-          let tab = getTab(details.tabId);
-
-          let text = browserAction.getProperty(tab, "badgeText");
-          return Promise.resolve(text);
+          return browserAction.getProperty(details, "badgeText");
         },
 
         setPopup: function(details) {
-          let tab = getTab(details.tabId);
-
           // Note: Chrome resolves arguments to setIcon relative to the calling
           // context, but resolves arguments to setPopup relative to the extension
           // root.
@@ -667,18 +700,14 @@ this.browserAction = class extends ExtensionAPI {
           if (url && !context.checkLoadURL(url)) {
             return Promise.reject({message: `Access denied for URL ${url}`});
           }
-          browserAction.setProperty(tab, "popup", url);
+          browserAction.setProperty(details, "popup", url);
         },
 
         getPopup: function(details) {
-          let tab = getTab(details.tabId);
-
-          let popup = browserAction.getProperty(tab, "popup");
-          return Promise.resolve(popup);
+          return browserAction.getProperty(details, "popup");
         },
 
         setBadgeBackgroundColor: function(details) {
-          let tab = getTab(details.tabId);
           let color = details.color;
           if (typeof color == "string") {
             let col = InspectorUtils.colorToRGBA(color);
@@ -687,14 +716,12 @@ this.browserAction = class extends ExtensionAPI {
             }
             color = col && [col.r, col.g, col.b, Math.round(col.a * 255)];
           }
-          browserAction.setProperty(tab, "badgeBackgroundColor", color);
+          browserAction.setProperty(details, "badgeBackgroundColor", color);
         },
 
         getBadgeBackgroundColor: function(details, callback) {
-          let tab = getTab(details.tabId);
-
-          let color = browserAction.getProperty(tab, "badgeBackgroundColor");
-          return Promise.resolve(color || [0xd9, 0, 0, 255]);
+          let color = browserAction.getProperty(details, "badgeBackgroundColor");
+          return color || [0xd9, 0, 0, 255];
         },
 
         openPopup: function() {
