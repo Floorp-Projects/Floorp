@@ -7,7 +7,7 @@
 		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/react-redux"), require("devtools/client/shared/vendor/redux")) : factory(root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/lodash"], root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react"], root["devtools/client/shared/vendor/react-redux"], root["devtools/client/shared/vendor/redux"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_54__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_10__, __WEBPACK_EXTERNAL_MODULE_18__, __WEBPACK_EXTERNAL_MODULE_19__) {
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_54__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_10__, __WEBPACK_EXTERNAL_MODULE_17__, __WEBPACK_EXTERNAL_MODULE_18__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 23);
+/******/ 	return __webpack_require__(__webpack_require__.s = 22);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -547,40 +547,40 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__(24);
+__webpack_require__(23);
 
 // Load all existing rep templates
-const Undefined = __webpack_require__(25);
-const Null = __webpack_require__(26);
-const StringRep = __webpack_require__(5);
-const Number = __webpack_require__(27);
-const ArrayRep = __webpack_require__(6);
-const Obj = __webpack_require__(28);
-const SymbolRep = __webpack_require__(29);
-const InfinityRep = __webpack_require__(30);
-const NaNRep = __webpack_require__(31);
-const Accessor = __webpack_require__(32);
+const Undefined = __webpack_require__(24);
+const Null = __webpack_require__(25);
+const StringRep = __webpack_require__(7);
+const Number = __webpack_require__(26);
+const ArrayRep = __webpack_require__(5);
+const Obj = __webpack_require__(27);
+const SymbolRep = __webpack_require__(28);
+const InfinityRep = __webpack_require__(29);
+const NaNRep = __webpack_require__(30);
+const Accessor = __webpack_require__(31);
 
 // DOM types (grips)
-const Attribute = __webpack_require__(33);
-const DateTime = __webpack_require__(34);
-const Document = __webpack_require__(35);
-const DocumentType = __webpack_require__(36);
-const Event = __webpack_require__(37);
+const Attribute = __webpack_require__(32);
+const DateTime = __webpack_require__(33);
+const Document = __webpack_require__(34);
+const DocumentType = __webpack_require__(35);
+const Event = __webpack_require__(36);
 const Func = __webpack_require__(12);
-const PromiseRep = __webpack_require__(38);
-const RegExp = __webpack_require__(39);
-const StyleSheet = __webpack_require__(40);
-const CommentNode = __webpack_require__(41);
-const ElementNode = __webpack_require__(42);
-const TextNode = __webpack_require__(43);
-const ErrorRep = __webpack_require__(13);
+const PromiseRep = __webpack_require__(37);
+const RegExp = __webpack_require__(38);
+const StyleSheet = __webpack_require__(39);
+const CommentNode = __webpack_require__(40);
+const ElementNode = __webpack_require__(41);
+const TextNode = __webpack_require__(42);
+const ErrorRep = __webpack_require__(43);
 const Window = __webpack_require__(44);
 const ObjectWithText = __webpack_require__(45);
 const ObjectWithURL = __webpack_require__(46);
-const GripArray = __webpack_require__(14);
-const GripMap = __webpack_require__(16);
-const GripMapEntry = __webpack_require__(17);
+const GripArray = __webpack_require__(13);
+const GripMap = __webpack_require__(15);
+const GripMapEntry = __webpack_require__(16);
 const Grip = __webpack_require__(8);
 
 // List of all registered template.
@@ -677,6 +677,242 @@ module.exports = {
 
 /***/ }),
 /* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Dependencies
+const dom = __webpack_require__(1);
+const PropTypes = __webpack_require__(2);
+const {
+  wrapRender
+} = __webpack_require__(0);
+const { MODE } = __webpack_require__(3);
+const { span } = dom;
+
+const ModePropType = PropTypes.oneOf(
+// @TODO Change this to Object.values once it's supported in Node's version of V8
+Object.keys(MODE).map(key => MODE[key]));
+
+/**
+ * Renders an array. The array is enclosed by left and right bracket
+ * and the max number of rendered items depends on the current mode.
+ */
+ArrayRep.propTypes = {
+  mode: ModePropType,
+  object: PropTypes.array.isRequired
+};
+
+function ArrayRep(props) {
+  let {
+    object,
+    mode = MODE.SHORT
+  } = props;
+
+  let items;
+  let brackets;
+  let needSpace = function (space) {
+    return space ? { left: "[ ", right: " ]" } : { left: "[", right: "]" };
+  };
+
+  if (mode === MODE.TINY) {
+    let isEmpty = object.length === 0;
+    if (isEmpty) {
+      items = [];
+    } else {
+      items = [span({
+        className: "more-ellipsis",
+        title: "more…"
+      }, "…")];
+    }
+    brackets = needSpace(false);
+  } else {
+    items = arrayIterator(props, object, maxLengthMap.get(mode));
+    brackets = needSpace(items.length > 0);
+  }
+
+  return span({
+    className: "objectBox objectBox-array" }, span({
+    className: "arrayLeftBracket"
+  }, brackets.left), ...items, span({
+    className: "arrayRightBracket"
+  }, brackets.right));
+}
+
+function arrayIterator(props, array, max) {
+  let items = [];
+
+  for (let i = 0; i < array.length && i < max; i++) {
+    let config = {
+      mode: MODE.TINY,
+      delim: i == array.length - 1 ? "" : ", "
+    };
+    let item;
+
+    try {
+      item = ItemRep({
+        ...props,
+        ...config,
+        object: array[i]
+      });
+    } catch (exc) {
+      item = ItemRep({
+        ...props,
+        ...config,
+        object: exc
+      });
+    }
+    items.push(item);
+  }
+
+  if (array.length > max) {
+    items.push(span({
+      className: "more-ellipsis",
+      title: "more…"
+    }, "…"));
+  }
+
+  return items;
+}
+
+/**
+ * Renders array item. Individual values are separated by a comma.
+ */
+ItemRep.propTypes = {
+  object: PropTypes.any.isRequired,
+  delim: PropTypes.string.isRequired,
+  mode: ModePropType
+};
+
+function ItemRep(props) {
+  const { Rep } = __webpack_require__(4);
+
+  let {
+    object,
+    delim,
+    mode
+  } = props;
+  return span({}, Rep({
+    ...props,
+    object: object,
+    mode: mode
+  }), delim);
+}
+
+function getLength(object) {
+  return object.length;
+}
+
+function supportsObject(object) {
+  return Array.isArray(object) || Object.prototype.toString.call(object) === "[object Arguments]";
+}
+
+const maxLengthMap = new Map();
+maxLengthMap.set(MODE.SHORT, 3);
+maxLengthMap.set(MODE.LONG, 10);
+
+// Exports from this module
+module.exports = {
+  rep: wrapRender(ArrayRep),
+  supportsObject,
+  maxLengthMap,
+  getLength,
+  ModePropType
+};
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Dependencies
+const PropTypes = __webpack_require__(2);
+const {
+  maybeEscapePropertyName,
+  wrapRender
+} = __webpack_require__(0);
+const { MODE } = __webpack_require__(3);
+
+const { span } = __webpack_require__(1);
+
+/**
+ * Property for Obj (local JS objects), Grip (remote JS objects)
+ * and GripMap (remote JS maps and weakmaps) reps.
+ * It's used to render object properties.
+ */
+PropRep.propTypes = {
+  // Property name.
+  name: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
+  // Equal character rendered between property name and value.
+  equal: PropTypes.string,
+  // @TODO Change this to Object.values once it's supported in Node's version of V8
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func,
+  // Normally a PropRep will quote a property name that isn't valid
+  // when unquoted; but this flag can be used to suppress the
+  // quoting.
+  suppressQuotes: PropTypes.bool
+};
+
+/**
+ * Function that given a name, a delimiter and an object returns an array
+ * of React elements representing an object property (e.g. `name: value`)
+ *
+ * @param {Object} props
+ * @return {Array} Array of React elements.
+ */
+function PropRep(props) {
+  const Grip = __webpack_require__(8);
+  const { Rep } = __webpack_require__(4);
+
+  let {
+    name,
+    mode,
+    equal,
+    suppressQuotes
+  } = props;
+
+  let key;
+  // The key can be a simple string, for plain objects,
+  // or another object for maps and weakmaps.
+  if (typeof name === "string") {
+    if (!suppressQuotes) {
+      name = maybeEscapePropertyName(name);
+    }
+    key = span({ "className": "nodeName" }, name);
+  } else {
+    key = Rep({
+      ...props,
+      className: "nodeName",
+      object: name,
+      mode: mode || MODE.TINY,
+      defaultRep: Grip
+    });
+  }
+
+  return [key, span({
+    "className": "objectEqual"
+  }, equal), Rep({ ...props })];
+}
+
+// Exports from this module
+module.exports = wrapRender(PropRep);
+
+/***/ }),
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -955,245 +1191,8 @@ function supportsObject(object, noGrip = false) {
 
 module.exports = {
   rep: wrapRender(StringRep),
-  supportsObject,
-  isLongString
+  supportsObject
 };
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-// Dependencies
-const dom = __webpack_require__(1);
-const PropTypes = __webpack_require__(2);
-const {
-  wrapRender
-} = __webpack_require__(0);
-const { MODE } = __webpack_require__(3);
-const { span } = dom;
-
-const ModePropType = PropTypes.oneOf(
-// @TODO Change this to Object.values once it's supported in Node's version of V8
-Object.keys(MODE).map(key => MODE[key]));
-
-/**
- * Renders an array. The array is enclosed by left and right bracket
- * and the max number of rendered items depends on the current mode.
- */
-ArrayRep.propTypes = {
-  mode: ModePropType,
-  object: PropTypes.array.isRequired
-};
-
-function ArrayRep(props) {
-  let {
-    object,
-    mode = MODE.SHORT
-  } = props;
-
-  let items;
-  let brackets;
-  let needSpace = function (space) {
-    return space ? { left: "[ ", right: " ]" } : { left: "[", right: "]" };
-  };
-
-  if (mode === MODE.TINY) {
-    let isEmpty = object.length === 0;
-    if (isEmpty) {
-      items = [];
-    } else {
-      items = [span({
-        className: "more-ellipsis",
-        title: "more…"
-      }, "…")];
-    }
-    brackets = needSpace(false);
-  } else {
-    items = arrayIterator(props, object, maxLengthMap.get(mode));
-    brackets = needSpace(items.length > 0);
-  }
-
-  return span({
-    className: "objectBox objectBox-array" }, span({
-    className: "arrayLeftBracket"
-  }, brackets.left), ...items, span({
-    className: "arrayRightBracket"
-  }, brackets.right));
-}
-
-function arrayIterator(props, array, max) {
-  let items = [];
-
-  for (let i = 0; i < array.length && i < max; i++) {
-    let config = {
-      mode: MODE.TINY,
-      delim: i == array.length - 1 ? "" : ", "
-    };
-    let item;
-
-    try {
-      item = ItemRep({
-        ...props,
-        ...config,
-        object: array[i]
-      });
-    } catch (exc) {
-      item = ItemRep({
-        ...props,
-        ...config,
-        object: exc
-      });
-    }
-    items.push(item);
-  }
-
-  if (array.length > max) {
-    items.push(span({
-      className: "more-ellipsis",
-      title: "more…"
-    }, "…"));
-  }
-
-  return items;
-}
-
-/**
- * Renders array item. Individual values are separated by a comma.
- */
-ItemRep.propTypes = {
-  object: PropTypes.any.isRequired,
-  delim: PropTypes.string.isRequired,
-  mode: ModePropType
-};
-
-function ItemRep(props) {
-  const { Rep } = __webpack_require__(4);
-
-  let {
-    object,
-    delim,
-    mode
-  } = props;
-  return span({}, Rep({
-    ...props,
-    object: object,
-    mode: mode
-  }), delim);
-}
-
-function getLength(object) {
-  return object.length;
-}
-
-function supportsObject(object) {
-  return Array.isArray(object) || Object.prototype.toString.call(object) === "[object Arguments]";
-}
-
-const maxLengthMap = new Map();
-maxLengthMap.set(MODE.SHORT, 3);
-maxLengthMap.set(MODE.LONG, 10);
-
-// Exports from this module
-module.exports = {
-  rep: wrapRender(ArrayRep),
-  supportsObject,
-  maxLengthMap,
-  getLength,
-  ModePropType
-};
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-// Dependencies
-const PropTypes = __webpack_require__(2);
-const {
-  maybeEscapePropertyName,
-  wrapRender
-} = __webpack_require__(0);
-const { MODE } = __webpack_require__(3);
-
-const { span } = __webpack_require__(1);
-
-/**
- * Property for Obj (local JS objects), Grip (remote JS objects)
- * and GripMap (remote JS maps and weakmaps) reps.
- * It's used to render object properties.
- */
-PropRep.propTypes = {
-  // Property name.
-  name: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
-  // Equal character rendered between property name and value.
-  equal: PropTypes.string,
-  // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  onDOMNodeMouseOver: PropTypes.func,
-  onDOMNodeMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func,
-  // Normally a PropRep will quote a property name that isn't valid
-  // when unquoted; but this flag can be used to suppress the
-  // quoting.
-  suppressQuotes: PropTypes.bool
-};
-
-/**
- * Function that given a name, a delimiter and an object returns an array
- * of React elements representing an object property (e.g. `name: value`)
- *
- * @param {Object} props
- * @return {Array} Array of React elements.
- */
-function PropRep(props) {
-  const Grip = __webpack_require__(8);
-  const { Rep } = __webpack_require__(4);
-
-  let {
-    name,
-    mode,
-    equal,
-    suppressQuotes
-  } = props;
-
-  let key;
-  // The key can be a simple string, for plain objects,
-  // or another object for maps and weakmaps.
-  if (typeof name === "string") {
-    if (!suppressQuotes) {
-      name = maybeEscapePropertyName(name);
-    }
-    key = span({ "className": "nodeName" }, name);
-  } else {
-    key = Rep({
-      ...props,
-      className: "nodeName",
-      object: name,
-      mode: mode || MODE.TINY,
-      defaultRep: Grip
-    });
-  }
-
-  return [key, span({
-    "className": "objectEqual"
-  }, equal), Rep({ ...props })];
-}
-
-// Exports from this module
-module.exports = wrapRender(PropRep);
 
 /***/ }),
 /* 8 */
@@ -1215,7 +1214,7 @@ const {
   isGrip,
   wrapRender
 } = __webpack_require__(0);
-const PropRep = __webpack_require__(7);
+const PropRep = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
 
 const dom = __webpack_require__(1);
@@ -1556,47 +1555,658 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_10__;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const client = __webpack_require__(20);
-const loadProperties = __webpack_require__(21);
-const node = __webpack_require__(22);
-const { nodeIsError, nodeIsPrimitive } = node;
-const selection = __webpack_require__(55);
+const { get, has } = __webpack_require__(54);
+const { maybeEscapePropertyName } = __webpack_require__(0);
+const ArrayRep = __webpack_require__(5);
+const GripArrayRep = __webpack_require__(13);
+const GripMap = __webpack_require__(15);
+const GripMapEntryRep = __webpack_require__(16);
 
-const { MODE } = __webpack_require__(3);
-const {
-  REPS: {
-    Rep,
-    Grip
+const MAX_NUMERICAL_PROPERTIES = 100;
+
+const NODE_TYPES = {
+  BUCKET: Symbol("[n…n]"),
+  DEFAULT_PROPERTIES: Symbol("<default properties>"),
+  ENTRIES: Symbol("<entries>"),
+  GET: Symbol("<get>"),
+  GRIP: Symbol("GRIP"),
+  MAP_ENTRY_KEY: Symbol("<key>"),
+  MAP_ENTRY_VALUE: Symbol("<value>"),
+  PROMISE_REASON: Symbol("<reason>"),
+  PROMISE_STATE: Symbol("<state>"),
+  PROMISE_VALUE: Symbol("<value>"),
+  PROXY_HANDLER: Symbol("<handler>"),
+  PROXY_TARGET: Symbol("<target>"),
+  SET: Symbol("<set>"),
+  PROTOTYPE: Symbol("<prototype>"),
+  BLOCK: Symbol("☲")
+};
+
+let WINDOW_PROPERTIES = {};
+
+if (typeof window === "object") {
+  WINDOW_PROPERTIES = Object.getOwnPropertyNames(window);
+}
+
+const SAFE_PATH_PREFIX = "##-";
+
+function getType(item) {
+  return item.type;
+}
+
+function getValue(item) {
+  if (has(item, "contents.value")) {
+    return get(item, "contents.value");
   }
-} = __webpack_require__(4);
 
+  if (has(item, "contents.getterValue")) {
+    return get(item, "contents.getterValue", undefined);
+  }
 
-function shouldRenderRootsInReps(roots) {
-  if (roots.length > 1) {
+  if (nodeHasAccessors(item)) {
+    return item.contents;
+  }
+
+  return undefined;
+}
+
+function nodeIsBucket(item) {
+  return getType(item) === NODE_TYPES.BUCKET;
+}
+
+function nodeIsEntries(item) {
+  return getType(item) === NODE_TYPES.ENTRIES;
+}
+
+function nodeIsMapEntry(item) {
+  return GripMapEntryRep.supportsObject(getValue(item));
+}
+
+function nodeHasChildren(item) {
+  return Array.isArray(item.contents);
+}
+
+function nodeIsObject(item) {
+  const value = getValue(item);
+  return value && value.type === "object";
+}
+
+function nodeIsArrayLike(item) {
+  const value = getValue(item);
+  return GripArrayRep.supportsObject(value) || ArrayRep.supportsObject(value);
+}
+
+function nodeIsFunction(item) {
+  const value = getValue(item);
+  return value && value.class === "Function";
+}
+
+function nodeIsOptimizedOut(item) {
+  const value = getValue(item);
+  return !nodeHasChildren(item) && value && value.optimizedOut;
+}
+
+function nodeIsUninitializedBinding(item) {
+  const value = getValue(item);
+  return value && value.uninitialized;
+}
+
+// Used to check if an item represents a binding that exists in a sourcemap's
+// original file content, but does not match up with a binding found in the
+// generated code.
+function nodeIsUnmappedBinding(item) {
+  const value = getValue(item);
+  return value && value.unmapped;
+}
+
+// Used to check if an item represents a binding that exists in the debugger's
+// parser result, but does not match up with a binding returned by the
+// debugger server.
+function nodeIsUnscopedBinding(item) {
+  const value = getValue(item);
+  return value && value.unscoped;
+}
+
+function nodeIsMissingArguments(item) {
+  const value = getValue(item);
+  return !nodeHasChildren(item) && value && value.missingArguments;
+}
+
+function nodeHasProperties(item) {
+  return !nodeHasChildren(item) && nodeIsObject(item);
+}
+
+function nodeIsPrimitive(item) {
+  return !nodeHasChildren(item) && !nodeHasProperties(item) && !nodeIsEntries(item) && !nodeIsMapEntry(item) && !nodeHasAccessors(item) && !nodeIsBucket(item);
+}
+
+function nodeIsDefaultProperties(item) {
+  return getType(item) === NODE_TYPES.DEFAULT_PROPERTIES;
+}
+
+function isDefaultWindowProperty(name) {
+  return WINDOW_PROPERTIES.includes(name);
+}
+
+function nodeIsPromise(item) {
+  const value = getValue(item);
+  if (!value) {
     return false;
   }
 
-  const root = roots[0];
-  const name = root && root.name;
-  return (name === null || typeof name === "undefined") && (nodeIsPrimitive(root) || nodeIsError(root));
+  return value.class == "Promise";
 }
 
-function renderRep(item, props) {
-  return Rep({
-    ...props,
-    object: node.getValue(item),
-    mode: props.mode || MODE.TINY,
-    defaultRep: Grip
+function nodeIsProxy(item) {
+  const value = getValue(item);
+  if (!value) {
+    return false;
+  }
+
+  return value.class == "Proxy";
+}
+
+function nodeIsPrototype(item) {
+  return getType(item) === NODE_TYPES.PROTOTYPE;
+}
+
+function nodeIsWindow(item) {
+  const value = getValue(item);
+  if (!value) {
+    return false;
+  }
+
+  return value.class == "Window";
+}
+
+function nodeIsGetter(item) {
+  return getType(item) === NODE_TYPES.GET;
+}
+
+function nodeIsSetter(item) {
+  return getType(item) === NODE_TYPES.SET;
+}
+
+function nodeIsBlock(item) {
+  return getType(item) === NODE_TYPES.BLOCK;
+}
+
+function nodeHasAccessors(item) {
+  return !!getNodeGetter(item) || !!getNodeSetter(item);
+}
+
+function nodeSupportsNumericalBucketing(item) {
+  // We exclude elements with entries since it's the <entries> node
+  // itself that can have buckets.
+  return nodeIsArrayLike(item) && !nodeHasEntries(item) || nodeIsEntries(item) || nodeIsBucket(item);
+}
+
+function nodeHasEntries(item) {
+  const value = getValue(item);
+  if (!value) {
+    return false;
+  }
+
+  return value.class === "Map" || value.class === "Set" || value.class === "WeakMap" || value.class === "WeakSet";
+}
+
+function nodeHasAllEntriesInPreview(item) {
+  const { preview } = getValue(item) || {};
+  if (!preview) {
+    return false;
+  }
+
+  const {
+    entries,
+    items,
+    length,
+    size
+  } = preview;
+
+  if (!entries && !items) {
+    return false;
+  }
+
+  return entries ? entries.length === size : items.length === length;
+}
+
+function nodeNeedsNumericalBuckets(item) {
+  return nodeSupportsNumericalBucketing(item) && getNumericalPropertiesCount(item) > MAX_NUMERICAL_PROPERTIES;
+}
+
+function makeNodesForPromiseProperties(item) {
+  const { promiseState: { reason, value, state } } = getValue(item);
+
+  const properties = [];
+
+  if (state) {
+    properties.push(createNode(item, "<state>", `${item.path}/${SAFE_PATH_PREFIX}state`, { value: state }, NODE_TYPES.PROMISE_STATE));
+  }
+
+  if (reason) {
+    properties.push(createNode(item, "<reason>", `${item.path}/${SAFE_PATH_PREFIX}reason`, { value: reason }, NODE_TYPES.PROMISE_REASON));
+  }
+
+  if (value) {
+    properties.push(createNode(item, "<value>", `${item.path}/${SAFE_PATH_PREFIX}value`, { value: value }, NODE_TYPES.PROMISE_VALUE));
+  }
+
+  return properties;
+}
+
+function makeNodesForProxyProperties(item) {
+  const {
+    proxyHandler,
+    proxyTarget
+  } = getValue(item);
+
+  return [createNode(item, "<target>", `${item.path}/${SAFE_PATH_PREFIX}target`, { value: proxyTarget }, NODE_TYPES.PROXY_TARGET), createNode(item, "<handler>", `${item.path}/${SAFE_PATH_PREFIX}handler`, { value: proxyHandler }, NODE_TYPES.PROXY_HANDLER)];
+}
+
+function makeNodesForEntries(item) {
+  const { path } = item;
+  const nodeName = "<entries>";
+  const entriesPath = `${path}/${SAFE_PATH_PREFIX}entries`;
+
+  if (nodeHasAllEntriesInPreview(item)) {
+    let entriesNodes = [];
+    const { preview } = getValue(item);
+    if (preview.entries) {
+      entriesNodes = preview.entries.map(([key, value], index) => {
+        return createNode(item, index, `${entriesPath}/${index}`, {
+          value: GripMapEntryRep.createGripMapEntry(key, value)
+        });
+      });
+    } else if (preview.items) {
+      entriesNodes = preview.items.map((value, index) => {
+        return createNode(item, index, `${entriesPath}/${index}`, { value });
+      });
+    }
+    return createNode(item, nodeName, entriesPath, entriesNodes, NODE_TYPES.ENTRIES);
+  }
+  return createNode(item, nodeName, entriesPath, null, NODE_TYPES.ENTRIES);
+}
+
+function makeNodesForMapEntry(item) {
+  const nodeValue = getValue(item);
+  if (!nodeValue || !nodeValue.preview) {
+    return [];
+  }
+
+  const { key, value } = nodeValue.preview;
+  const path = item.path;
+
+  return [createNode(item, "<key>", `${path}/##key`, { value: key }, NODE_TYPES.MAP_ENTRY_KEY), createNode(item, "<value>", `${path}/##value`, { value }, NODE_TYPES.MAP_ENTRY_VALUE)];
+}
+
+function getNodeGetter(item) {
+  return get(item, "contents.get", undefined);
+}
+
+function getNodeSetter(item) {
+  return get(item, "contents.set", undefined);
+}
+
+function makeNodesForAccessors(item) {
+  const accessors = [];
+
+  const getter = getNodeGetter(item);
+  if (getter && getter.type !== "undefined") {
+    accessors.push(createNode(item, "<get>", `${item.path}/${SAFE_PATH_PREFIX}get`, { value: getter }, NODE_TYPES.GET));
+  }
+
+  const setter = getNodeSetter(item);
+  if (setter && setter.type !== "undefined") {
+    accessors.push(createNode(item, "<set>", `${item.path}/${SAFE_PATH_PREFIX}set`, { value: setter }, NODE_TYPES.SET));
+  }
+
+  return accessors;
+}
+
+function sortProperties(properties) {
+  return properties.sort((a, b) => {
+    // Sort numbers in ascending order and sort strings lexicographically
+    const aInt = parseInt(a, 10);
+    const bInt = parseInt(b, 10);
+
+    if (isNaN(aInt) || isNaN(bInt)) {
+      return a > b ? 1 : -1;
+    }
+
+    return aInt - bInt;
   });
 }
 
+function makeNumericalBuckets(parent) {
+  const parentPath = parent.path;
+  const numProperties = getNumericalPropertiesCount(parent);
+
+  // We want to have at most a hundred slices.
+  const bucketSize = 10 ** Math.max(2, Math.ceil(Math.log10(numProperties)) - 2);
+  const numBuckets = Math.ceil(numProperties / bucketSize);
+
+  let buckets = [];
+  for (let i = 1; i <= numBuckets; i++) {
+    const minKey = (i - 1) * bucketSize;
+    const maxKey = Math.min(i * bucketSize - 1, numProperties - 1);
+    const startIndex = nodeIsBucket(parent) ? parent.meta.startIndex : 0;
+    const minIndex = startIndex + minKey;
+    const maxIndex = startIndex + maxKey;
+    const bucketKey = `${SAFE_PATH_PREFIX}bucket_${minIndex}-${maxIndex}`;
+    const bucketName = `[${minIndex}…${maxIndex}]`;
+
+    buckets.push(createNode(parent, bucketName, `${parentPath}/${bucketKey}`, null, NODE_TYPES.BUCKET, {
+      startIndex: minIndex,
+      endIndex: maxIndex
+    }));
+  }
+  return buckets;
+}
+
+function makeDefaultPropsBucket(propertiesNames, parent, ownProperties) {
+  const parentPath = parent.path;
+
+  const userPropertiesNames = [];
+  const defaultProperties = [];
+
+  propertiesNames.forEach(name => {
+    if (isDefaultWindowProperty(name)) {
+      defaultProperties.push(name);
+    } else {
+      userPropertiesNames.push(name);
+    }
+  });
+
+  let nodes = makeNodesForOwnProps(userPropertiesNames, parent, ownProperties);
+
+  if (defaultProperties.length > 0) {
+    const defaultPropertiesNode = createNode(parent, "<default properties>", `${parentPath}/${SAFE_PATH_PREFIX}default`, null, NODE_TYPES.DEFAULT_PROPERTIES);
+
+    const defaultNodes = defaultProperties.map((name, index) => createNode(defaultPropertiesNode, maybeEscapePropertyName(name), `${parentPath}/${SAFE_PATH_PREFIX}bucket${index}/${name}`, ownProperties[name]));
+    nodes.push(setNodeChildren(defaultPropertiesNode, defaultNodes));
+  }
+  return nodes;
+}
+
+function makeNodesForOwnProps(propertiesNames, parent, ownProperties) {
+  const parentPath = parent.path;
+  return propertiesNames.map(name => createNode(parent, maybeEscapePropertyName(name), `${parentPath}/${name}`, ownProperties[name]));
+}
+
+function makeNodesForProperties(objProps, parent) {
+  const {
+    ownProperties = {},
+    ownSymbols,
+    prototype,
+    safeGetterValues
+  } = objProps;
+
+  const parentPath = parent.path;
+  const parentValue = getValue(parent);
+
+  let allProperties = { ...ownProperties, ...safeGetterValues };
+
+  // Ignore properties that are neither non-concrete nor getters/setters.
+  const propertiesNames = sortProperties(Object.keys(allProperties)).filter(name => {
+    if (!allProperties[name]) {
+      return false;
+    }
+
+    const properties = Object.getOwnPropertyNames(allProperties[name]);
+    return properties.some(property => ["value", "getterValue", "get", "set"].includes(property));
+  });
+
+  let nodes = [];
+  if (parentValue && parentValue.class == "Window") {
+    nodes = makeDefaultPropsBucket(propertiesNames, parent, allProperties);
+  } else {
+    nodes = makeNodesForOwnProps(propertiesNames, parent, allProperties);
+  }
+
+  if (Array.isArray(ownSymbols)) {
+    ownSymbols.forEach((ownSymbol, index) => {
+      nodes.push(createNode(parent, ownSymbol.name, `${parentPath}/${SAFE_PATH_PREFIX}symbol-${index}`, ownSymbol.descriptor || null));
+    }, this);
+  }
+
+  if (nodeIsPromise(parent)) {
+    nodes.push(...makeNodesForPromiseProperties(parent));
+  }
+
+  if (nodeHasEntries(parent)) {
+    nodes.push(makeNodesForEntries(parent));
+  }
+
+  // Add the prototype if it exists and is not null
+  if (prototype && prototype.type !== "null") {
+    nodes.push(makeNodeForPrototype(objProps, parent));
+  }
+
+  return nodes;
+}
+
+function makeNodeForPrototype(objProps, parent) {
+  const {
+    prototype
+  } = objProps || {};
+
+  // Add the prototype if it exists and is not null
+  if (prototype && prototype.type !== "null") {
+    return createNode(parent, "<prototype>", `${parent.path}/<prototype>`, { value: prototype }, NODE_TYPES.PROTOTYPE);
+  }
+
+  return null;
+}
+
+function createNode(parent, name, path, contents, type = NODE_TYPES.GRIP, meta) {
+  if (contents === undefined) {
+    return null;
+  }
+
+  // The path is important to uniquely identify the item in the entire
+  // tree. This helps debugging & optimizes React's rendering of large
+  // lists. The path will be separated by property name,
+  // i.e. `{ foo: { bar: { baz: 5 }}}` will have a path of `foo/bar/baz`
+  // for the inner object.
+  return {
+    parent,
+    name,
+    path,
+    contents,
+    type,
+    meta
+  };
+}
+
+function setNodeChildren(node, children) {
+  node.contents = children;
+  return node;
+}
+
+function getChildren(options) {
+  const {
+    cachedNodes,
+    loadedProperties = new Map(),
+    item
+  } = options;
+
+  const key = item.path;
+  if (cachedNodes && cachedNodes.has(key)) {
+    return cachedNodes.get(key);
+  }
+
+  const loadedProps = loadedProperties.get(key);
+  const {
+    ownProperties,
+    ownSymbols,
+    safeGetterValues,
+    prototype
+  } = loadedProps || {};
+  const hasLoadedProps = ownProperties || ownSymbols || safeGetterValues || prototype;
+
+  // Because we are dynamically creating the tree as the user
+  // expands it (not precalculated tree structure), we cache child
+  // arrays. This not only helps performance, but is necessary
+  // because the expanded state depends on instances of nodes
+  // being the same across renders. If we didn't do this, each
+  // node would be a new instance every render.
+  // If the node needs properties, we only add children to
+  // the cache if the properties are loaded.
+  const addToCache = children => {
+    if (cachedNodes) {
+      cachedNodes.set(item.path, children);
+    }
+    return children;
+  };
+
+  // Nodes can either have children already, or be an object with
+  // properties that we need to go and fetch.
+  if (nodeHasChildren(item)) {
+    return addToCache(item.contents);
+  }
+
+  if (nodeHasAccessors(item)) {
+    return addToCache(makeNodesForAccessors(item));
+  }
+
+  if (nodeIsMapEntry(item)) {
+    return addToCache(makeNodesForMapEntry(item));
+  }
+
+  if (nodeIsProxy(item)) {
+    const nodes = makeNodesForProxyProperties(item);
+    const protoNode = makeNodeForPrototype(loadedProps, item);
+    if (protoNode) {
+      return addToCache(nodes.concat(protoNode));
+    }
+    return nodes;
+  }
+
+  if (nodeNeedsNumericalBuckets(item)) {
+    const bucketNodes = makeNumericalBuckets(item);
+    // Even if we have numerical buckets, we might have loaded non indexed properties,
+    // like length for example.
+    if (hasLoadedProps) {
+      return addToCache(bucketNodes.concat(makeNodesForProperties(loadedProps, item)));
+    }
+
+    // We don't cache the result here so we can have the prototype, properties and symbols
+    // when they are loaded.
+    return bucketNodes;
+  }
+
+  if (!nodeIsEntries(item) && !nodeIsBucket(item) && !nodeHasProperties(item)) {
+    return [];
+  }
+
+  if (!hasLoadedProps) {
+    return [];
+  }
+
+  return addToCache(makeNodesForProperties(loadedProps, item));
+}
+
+function getParent(item) {
+  return item.parent;
+}
+
+function getNumericalPropertiesCount(item) {
+  if (nodeIsBucket(item)) {
+    return item.meta.endIndex - item.meta.startIndex + 1;
+  }
+
+  const value = getValue(getClosestGripNode(item));
+  if (!value) {
+    return 0;
+  }
+
+  if (GripArrayRep.supportsObject(value)) {
+    return GripArrayRep.getLength(value);
+  }
+
+  if (GripMap.supportsObject(value)) {
+    return GripMap.getLength(value);
+  }
+
+  // TODO: We can also have numerical properties on Objects, but at the
+  // moment we don't have a way to distinguish them from non-indexed properties,
+  // as they are all computed in a ownPropertiesLength property.
+
+  return 0;
+}
+
+function getClosestGripNode(item) {
+  const type = getType(item);
+  if (type !== NODE_TYPES.BUCKET && type !== NODE_TYPES.DEFAULT_PROPERTIES && type !== NODE_TYPES.ENTRIES) {
+    return item;
+  }
+
+  const parent = getParent(item);
+  if (!parent) {
+    return null;
+  }
+
+  return getClosestGripNode(parent);
+}
+
+function getClosestNonBucketNode(item) {
+  const type = getType(item);
+
+  if (type !== NODE_TYPES.BUCKET) {
+    return item;
+  }
+
+  const parent = getParent(item);
+  if (!parent) {
+    return null;
+  }
+
+  return getClosestNonBucketNode(parent);
+}
+
 module.exports = {
-  client,
-  loadProperties,
-  node,
-  renderRep,
-  selection,
-  shouldRenderRootsInReps
+  createNode,
+  getChildren,
+  getClosestGripNode,
+  getClosestNonBucketNode,
+  getParent,
+  getNumericalPropertiesCount,
+  getValue,
+  makeNodesForEntries,
+  makeNodesForPromiseProperties,
+  makeNodesForProperties,
+  makeNumericalBuckets,
+  nodeHasAccessors,
+  nodeHasAllEntriesInPreview,
+  nodeHasChildren,
+  nodeHasEntries,
+  nodeHasProperties,
+  nodeIsBlock,
+  nodeIsBucket,
+  nodeIsDefaultProperties,
+  nodeIsEntries,
+  nodeIsFunction,
+  nodeIsGetter,
+  nodeIsMapEntry,
+  nodeIsMissingArguments,
+  nodeIsObject,
+  nodeIsOptimizedOut,
+  nodeIsPrimitive,
+  nodeIsPromise,
+  nodeIsPrototype,
+  nodeIsProxy,
+  nodeIsSetter,
+  nodeIsUninitializedBinding,
+  nodeIsUnmappedBinding,
+  nodeIsUnscopedBinding,
+  nodeIsWindow,
+  nodeNeedsNumericalBuckets,
+  nodeSupportsNumericalBucketing,
+  setNodeChildren,
+  sortProperties,
+  NODE_TYPES,
+  // Export for testing purpose.
+  SAFE_PATH_PREFIX
 };
 
 /***/ }),
@@ -1782,191 +2392,10 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// ReactJS
-const PropTypes = __webpack_require__(2);
-// Utils
-const {
-  getGripType,
-  isGrip,
-  wrapRender
-} = __webpack_require__(0);
-const { cleanFunctionName } = __webpack_require__(12);
-const { isLongString } = __webpack_require__(5);
-const { MODE } = __webpack_require__(3);
-
-const dom = __webpack_require__(1);
-const { span } = dom;
-const IGNORED_SOURCE_URLS = ["debugger eval code"];
-
-/**
- * Renders Error objects.
- */
-ErrorRep.propTypes = {
-  object: PropTypes.object.isRequired,
-  // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key]))
-};
-
-function ErrorRep(props) {
-  let object = props.object;
-  let preview = object.preview;
-
-  let name;
-  if (preview && preview.name && preview.kind) {
-    switch (preview.kind) {
-      case "Error":
-        name = preview.name;
-        break;
-      case "DOMException":
-        name = preview.kind;
-        break;
-      default:
-        throw new Error("Unknown preview kind for the Error rep.");
-    }
-  } else {
-    name = "Error";
-  }
-
-  const content = [];
-
-  if (props.mode === MODE.TINY) {
-    content.push(name);
-  } else {
-    content.push(`${name}: "${preview.message}"`);
-  }
-
-  if (preview.stack && props.mode !== MODE.TINY) {
-    content.push("\n", getStacktraceElements(props, preview));
-  }
-
-  return span({
-    "data-link-actor-id": object.actor,
-    className: "objectBox-stackTrace"
-  }, content);
-}
-
-/**
- * Returns a React element reprensenting the Error stacktrace, i.e. transform error.stack
- * from:
- *
- * semicolon@debugger eval code:1:109
- * jkl@debugger eval code:1:63
- * asdf@debugger eval code:1:28
- * @debugger eval code:1:227
- *
- * Into a column layout:
- *
- * semicolon  (<anonymous>:8:10)
- * jkl        (<anonymous>:5:10)
- * asdf       (<anonymous>:2:10)
- *            (<anonymous>:11:1)
- */
-function getStacktraceElements(props, preview) {
-  const stack = [];
-  if (!preview.stack) {
-    return stack;
-  }
-
-  const isStacktraceALongString = isLongString(preview.stack);
-  const stackString = isStacktraceALongString ? preview.stack.initial : preview.stack;
-
-  stackString.split("\n").forEach((frame, index) => {
-    if (!frame) {
-      // Skip any blank lines
-      return;
-    }
-
-    let functionName;
-    let location;
-
-    // Given the input: "functionName@scriptLocation:2:100"
-    // Result:
-    // ["functionName@scriptLocation:2:100", "functionName", "scriptLocation:2:100"]
-    const result = frame.match(/^(.*)@(.*)$/);
-    if (result && result.length === 3) {
-      functionName = result[1];
-
-      // If the resource was loaded by base-loader.js, the location looks like:
-      // resource://devtools/shared/base-loader.js -> resource://path/to/file.js .
-      // What's needed is only the last part after " -> ".
-      location = result[2].split(" -> ").pop();
-    }
-
-    if (!functionName) {
-      functionName = "<anonymous>";
-    }
-
-    let onLocationClick;
-    // Given the input: "scriptLocation:2:100"
-    // Result:
-    // ["scriptLocation:2:100", "scriptLocation", "2", "100"]
-    const locationParts = location.match(/^(.*):(\d+):(\d+)$/);
-    if (props.onViewSourceInDebugger && location && !IGNORED_SOURCE_URLS.includes(locationParts[1]) && locationParts) {
-      let [, url, line, column] = locationParts;
-      onLocationClick = e => {
-        // Don't trigger ObjectInspector expand/collapse.
-        e.stopPropagation();
-        props.onViewSourceInDebugger({
-          url,
-          line: Number(line),
-          column: Number(column)
-        });
-      };
-    }
-
-    stack.push(span({
-      key: "fn" + index,
-      className: "objectBox-stackTrace-fn"
-    }, cleanFunctionName(functionName)), span({
-      key: "location" + index,
-      className: "objectBox-stackTrace-location",
-      onClick: onLocationClick,
-      title: onLocationClick ? "View source in debugger → " + location : undefined
-    }, location));
-  });
-
-  if (isStacktraceALongString) {
-    // Remove the last frame (i.e. 2 last elements in the array, the function name and the
-    // location) which is certainly incomplete.
-    // Can be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1448833 is fixed.
-    stack.splice(-2);
-  }
-
-  return span({
-    key: "stack",
-    className: "objectBox-stackTrace-grid"
-  }, stack);
-}
-
-// Registration
-function supportsObject(object, noGrip = false) {
-  if (noGrip === true || !isGrip(object)) {
-    return false;
-  }
-  return object.preview && getGripType(object, noGrip) === "Error" || object.class === "DOMException";
-}
-
-// Exports from this module
-module.exports = {
-  rep: wrapRender(ErrorRep),
-  supportsObject
-};
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 // Dependencies
 const PropTypes = __webpack_require__(2);
 
-const { lengthBubble } = __webpack_require__(15);
+const { lengthBubble } = __webpack_require__(14);
 const {
   interleave,
   getGripType,
@@ -1978,7 +2407,7 @@ const { MODE } = __webpack_require__(3);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
-const { ModePropType } = __webpack_require__(6);
+const { ModePropType } = __webpack_require__(5);
 const DEFAULT_TITLE = "Array";
 
 /**
@@ -2186,7 +2615,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2196,7 +2625,7 @@ const PropTypes = __webpack_require__(2);
 
 const { wrapRender } = __webpack_require__(0);
 const { MODE } = __webpack_require__(3);
-const { ModePropType } = __webpack_require__(6);
+const { ModePropType } = __webpack_require__(5);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -2236,7 +2665,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2248,7 +2677,7 @@ module.exports = {
 
 // Dependencies
 
-const { lengthBubble } = __webpack_require__(15);
+const { lengthBubble } = __webpack_require__(14);
 const PropTypes = __webpack_require__(2);
 const {
   interleave,
@@ -2256,9 +2685,9 @@ const {
   wrapRender,
   ellipsisElement
 } = __webpack_require__(0);
-const PropRep = __webpack_require__(7);
+const PropRep = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
-const { ModePropType } = __webpack_require__(6);
+const { ModePropType } = __webpack_require__(5);
 
 const { span } = __webpack_require__(1);
 
@@ -2436,7 +2865,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2454,7 +2883,7 @@ const { span } = dom;
 const {
   wrapRender
 } = __webpack_require__(0);
-const PropRep = __webpack_require__(7);
+const PropRep = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
 /**
  * Renders an map entry. A map entry is represented by its key, a column and its value.
@@ -2515,6 +2944,12 @@ module.exports = {
 };
 
 /***/ }),
+/* 17 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_17__;
+
+/***/ }),
 /* 18 */
 /***/ (function(module, exports) {
 
@@ -2522,9 +2957,26 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_18__;
 
 /***/ }),
 /* 19 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_19__;
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const client = __webpack_require__(20);
+const loadProperties = __webpack_require__(21);
+const node = __webpack_require__(11);
+const selection = __webpack_require__(55);
+
+module.exports = {
+  client,
+  loadProperties,
+  node,
+  selection
+};
 
 /***/ }),
 /* 20 */
@@ -2613,14 +3065,6 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {
-  enumEntries,
-  enumIndexedProperties,
-  enumNonIndexedProperties,
-  getPrototype,
-  enumSymbols
-} = __webpack_require__(20);
-
-const {
   getClosestGripNode,
   getClosestNonBucketNode,
   getValue,
@@ -2634,60 +3078,7 @@ const {
   nodeIsPrimitive,
   nodeIsProxy,
   nodeNeedsNumericalBuckets
-} = __webpack_require__(22);
-
-function loadItemProperties(item, createObjectClient, loadedProperties) {
-  const gripItem = getClosestGripNode(item);
-  const value = getValue(gripItem);
-
-  const [start, end] = item.meta ? [item.meta.startIndex, item.meta.endIndex] : [];
-
-  let promises = [];
-  let objectClient;
-  const getObjectClient = () => objectClient || createObjectClient(value);
-
-  if (shouldLoadItemIndexedProperties(item, loadedProperties)) {
-    promises.push(enumIndexedProperties(getObjectClient(), start, end));
-  }
-
-  if (shouldLoadItemNonIndexedProperties(item, loadedProperties)) {
-    promises.push(enumNonIndexedProperties(getObjectClient(), start, end));
-  }
-
-  if (shouldLoadItemEntries(item, loadedProperties)) {
-    promises.push(enumEntries(getObjectClient(), start, end));
-  }
-
-  if (shouldLoadItemPrototype(item, loadedProperties)) {
-    promises.push(getPrototype(getObjectClient()));
-  }
-
-  if (shouldLoadItemSymbols(item, loadedProperties)) {
-    promises.push(enumSymbols(getObjectClient(), start, end));
-  }
-
-  return Promise.all(promises).then(mergeResponses);
-}
-
-function mergeResponses(responses) {
-  const data = {};
-
-  for (const response of responses) {
-    if (response.hasOwnProperty("ownProperties")) {
-      data.ownProperties = { ...data.ownProperties, ...response.ownProperties };
-    }
-
-    if (response.ownSymbols && response.ownSymbols.length > 0) {
-      data.ownSymbols = response.ownSymbols;
-    }
-
-    if (response.prototype) {
-      data.prototype = response.prototype;
-    }
-  }
-
-  return data;
-}
+} = __webpack_require__(11);
 
 function shouldLoadItemIndexedProperties(item, loadedProperties = new Map()) {
   const gripItem = getClosestGripNode(item);
@@ -2727,8 +3118,6 @@ function shouldLoadItemSymbols(item, loadedProperties = new Map()) {
 }
 
 module.exports = {
-  loadItemProperties,
-  mergeResponses,
   shouldLoadItemEntries,
   shouldLoadItemIndexedProperties,
   shouldLoadItemNonIndexedProperties,
@@ -2747,759 +3136,10 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { get, has } = __webpack_require__(54);
-const { maybeEscapePropertyName } = __webpack_require__(0);
-const ArrayRep = __webpack_require__(6);
-const GripArrayRep = __webpack_require__(14);
-const GripMap = __webpack_require__(16);
-const GripMapEntryRep = __webpack_require__(17);
-const ErrorRep = __webpack_require__(13);
-
-const MAX_NUMERICAL_PROPERTIES = 100;
-
-const NODE_TYPES = {
-  BUCKET: Symbol("[n…m]"),
-  DEFAULT_PROPERTIES: Symbol("<default properties>"),
-  ENTRIES: Symbol("<entries>"),
-  GET: Symbol("<get>"),
-  GRIP: Symbol("GRIP"),
-  MAP_ENTRY_KEY: Symbol("<key>"),
-  MAP_ENTRY_VALUE: Symbol("<value>"),
-  PROMISE_REASON: Symbol("<reason>"),
-  PROMISE_STATE: Symbol("<state>"),
-  PROMISE_VALUE: Symbol("<value>"),
-  PROXY_HANDLER: Symbol("<handler>"),
-  PROXY_TARGET: Symbol("<target>"),
-  SET: Symbol("<set>"),
-  PROTOTYPE: Symbol("<prototype>"),
-  BLOCK: Symbol("☲")
-};
-
-let WINDOW_PROPERTIES = {};
-
-if (typeof window === "object") {
-  WINDOW_PROPERTIES = Object.getOwnPropertyNames(window);
-}
-
-function getType(item) {
-  return item.type;
-}
-
-function getValue(item) {
-  if (has(item, "contents.value")) {
-    return get(item, "contents.value");
-  }
-
-  if (has(item, "contents.getterValue")) {
-    return get(item, "contents.getterValue", undefined);
-  }
-
-  if (nodeHasAccessors(item)) {
-    return item.contents;
-  }
-
-  return undefined;
-}
-
-function nodeIsBucket(item) {
-  return getType(item) === NODE_TYPES.BUCKET;
-}
-
-function nodeIsEntries(item) {
-  return getType(item) === NODE_TYPES.ENTRIES;
-}
-
-function nodeIsMapEntry(item) {
-  return GripMapEntryRep.supportsObject(getValue(item));
-}
-
-function nodeHasChildren(item) {
-  return Array.isArray(item.contents);
-}
-
-function nodeIsObject(item) {
-  const value = getValue(item);
-  return value && value.type === "object";
-}
-
-function nodeIsArrayLike(item) {
-  const value = getValue(item);
-  return GripArrayRep.supportsObject(value) || ArrayRep.supportsObject(value);
-}
-
-function nodeIsFunction(item) {
-  const value = getValue(item);
-  return value && value.class === "Function";
-}
-
-function nodeIsOptimizedOut(item) {
-  const value = getValue(item);
-  return !nodeHasChildren(item) && value && value.optimizedOut;
-}
-
-function nodeIsUninitializedBinding(item) {
-  const value = getValue(item);
-  return value && value.uninitialized;
-}
-
-// Used to check if an item represents a binding that exists in a sourcemap's
-// original file content, but does not match up with a binding found in the
-// generated code.
-function nodeIsUnmappedBinding(item) {
-  const value = getValue(item);
-  return value && value.unmapped;
-}
-
-// Used to check if an item represents a binding that exists in the debugger's
-// parser result, but does not match up with a binding returned by the
-// debugger server.
-function nodeIsUnscopedBinding(item) {
-  const value = getValue(item);
-  return value && value.unscoped;
-}
-
-function nodeIsMissingArguments(item) {
-  const value = getValue(item);
-  return !nodeHasChildren(item) && value && value.missingArguments;
-}
-
-function nodeHasProperties(item) {
-  return !nodeHasChildren(item) && nodeIsObject(item);
-}
-
-function nodeIsPrimitive(item) {
-  return !nodeHasChildren(item) && !nodeHasProperties(item) && !nodeIsEntries(item) && !nodeIsMapEntry(item) && !nodeHasAccessors(item) && !nodeIsBucket(item);
-}
-
-function nodeIsDefaultProperties(item) {
-  return getType(item) === NODE_TYPES.DEFAULT_PROPERTIES;
-}
-
-function isDefaultWindowProperty(name) {
-  return WINDOW_PROPERTIES.includes(name);
-}
-
-function nodeIsPromise(item) {
-  const value = getValue(item);
-  if (!value) {
-    return false;
-  }
-
-  return value.class == "Promise";
-}
-
-function nodeIsProxy(item) {
-  const value = getValue(item);
-  if (!value) {
-    return false;
-  }
-
-  return value.class == "Proxy";
-}
-
-function nodeIsPrototype(item) {
-  return getType(item) === NODE_TYPES.PROTOTYPE;
-}
-
-function nodeIsWindow(item) {
-  const value = getValue(item);
-  if (!value) {
-    return false;
-  }
-
-  return value.class == "Window";
-}
-
-function nodeIsGetter(item) {
-  return getType(item) === NODE_TYPES.GET;
-}
-
-function nodeIsSetter(item) {
-  return getType(item) === NODE_TYPES.SET;
-}
-
-function nodeIsBlock(item) {
-  return getType(item) === NODE_TYPES.BLOCK;
-}
-
-function nodeIsError(item) {
-  return ErrorRep.supportsObject(getValue(item));
-}
-
-function nodeHasAccessors(item) {
-  return !!getNodeGetter(item) || !!getNodeSetter(item);
-}
-
-function nodeSupportsNumericalBucketing(item) {
-  // We exclude elements with entries since it's the <entries> node
-  // itself that can have buckets.
-  return nodeIsArrayLike(item) && !nodeHasEntries(item) || nodeIsEntries(item) || nodeIsBucket(item);
-}
-
-function nodeHasEntries(item) {
-  const value = getValue(item);
-  if (!value) {
-    return false;
-  }
-
-  return value.class === "Map" || value.class === "Set" || value.class === "WeakMap" || value.class === "WeakSet";
-}
-
-function nodeHasAllEntriesInPreview(item) {
-  const { preview } = getValue(item) || {};
-  if (!preview) {
-    return false;
-  }
-
-  const {
-    entries,
-    items,
-    length,
-    size
-  } = preview;
-
-  if (!entries && !items) {
-    return false;
-  }
-
-  return entries ? entries.length === size : items.length === length;
-}
-
-function nodeNeedsNumericalBuckets(item) {
-  return nodeSupportsNumericalBucketing(item) && getNumericalPropertiesCount(item) > MAX_NUMERICAL_PROPERTIES;
-}
-
-function makeNodesForPromiseProperties(item) {
-  const { promiseState: { reason, value, state } } = getValue(item);
-
-  const properties = [];
-
-  if (state) {
-    properties.push(createNode({
-      parent: item,
-      name: "<state>",
-      contents: { value: state },
-      type: NODE_TYPES.PROMISE_STATE
-    }));
-  }
-
-  if (reason) {
-    properties.push(createNode({
-      parent: item,
-      name: "<reason>",
-      contents: { value: reason },
-      type: NODE_TYPES.PROMISE_REASON
-    }));
-  }
-
-  if (value) {
-    properties.push(createNode({
-      parent: item,
-      name: "<value>",
-      contents: { value: value },
-      type: NODE_TYPES.PROMISE_VALUE
-    }));
-  }
-
-  return properties;
-}
-
-function makeNodesForProxyProperties(item) {
-  const {
-    proxyHandler,
-    proxyTarget
-  } = getValue(item);
-
-  return [createNode({
-    parent: item,
-    name: "<target>",
-    contents: { value: proxyTarget },
-    type: NODE_TYPES.PROXY_TARGET
-  }), createNode({
-    parent: item,
-    name: "<handler>",
-    contents: { value: proxyHandler },
-    type: NODE_TYPES.PROXY_HANDLER
-  })];
-}
-
-function makeNodesForEntries(item) {
-  const nodeName = "<entries>";
-  const entriesPath = "<entries>";
-
-  if (nodeHasAllEntriesInPreview(item)) {
-    let entriesNodes = [];
-    const { preview } = getValue(item);
-    if (preview.entries) {
-      entriesNodes = preview.entries.map(([key, value], index) => {
-        return createNode({
-          parent: item,
-          name: index,
-          path: `${entriesPath}/${index}`,
-          contents: { value: GripMapEntryRep.createGripMapEntry(key, value) }
-        });
-      });
-    } else if (preview.items) {
-      entriesNodes = preview.items.map((value, index) => {
-        return createNode({
-          parent: item,
-          name: index,
-          path: `${entriesPath}/${index}`,
-          contents: { value }
-        });
-      });
-    }
-    return createNode({
-      parent: item,
-      name: nodeName,
-      contents: entriesNodes,
-      type: NODE_TYPES.ENTRIES
-    });
-  }
-  return createNode({
-    parent: item,
-    name: nodeName,
-    contents: null,
-    type: NODE_TYPES.ENTRIES
-  });
-}
-
-function makeNodesForMapEntry(item) {
-  const nodeValue = getValue(item);
-  if (!nodeValue || !nodeValue.preview) {
-    return [];
-  }
-
-  const { key, value } = nodeValue.preview;
-
-  return [createNode({
-    parent: item,
-    name: "<key>",
-    contents: { value: key },
-    type: NODE_TYPES.MAP_ENTRY_KEY
-  }), createNode({
-    parent: item,
-    name: "<value>",
-    contents: { value },
-    type: NODE_TYPES.MAP_ENTRY_VALUE
-  })];
-}
-
-function getNodeGetter(item) {
-  return get(item, "contents.get", undefined);
-}
-
-function getNodeSetter(item) {
-  return get(item, "contents.set", undefined);
-}
-
-function makeNodesForAccessors(item) {
-  const accessors = [];
-
-  const getter = getNodeGetter(item);
-  if (getter && getter.type !== "undefined") {
-    accessors.push(createNode({
-      parent: item,
-      name: "<get>",
-      contents: { value: getter },
-      type: NODE_TYPES.GET
-    }));
-  }
-
-  const setter = getNodeSetter(item);
-  if (setter && setter.type !== "undefined") {
-    accessors.push(createNode({
-      parent: item,
-      name: "<set>",
-      contents: { value: setter },
-      type: NODE_TYPES.SET
-    }));
-  }
-
-  return accessors;
-}
-
-function sortProperties(properties) {
-  return properties.sort((a, b) => {
-    // Sort numbers in ascending order and sort strings lexicographically
-    const aInt = parseInt(a, 10);
-    const bInt = parseInt(b, 10);
-
-    if (isNaN(aInt) || isNaN(bInt)) {
-      return a > b ? 1 : -1;
-    }
-
-    return aInt - bInt;
-  });
-}
-
-function makeNumericalBuckets(parent) {
-  const numProperties = getNumericalPropertiesCount(parent);
-
-  // We want to have at most a hundred slices.
-  const bucketSize = 10 ** Math.max(2, Math.ceil(Math.log10(numProperties)) - 2);
-  const numBuckets = Math.ceil(numProperties / bucketSize);
-
-  let buckets = [];
-  for (let i = 1; i <= numBuckets; i++) {
-    const minKey = (i - 1) * bucketSize;
-    const maxKey = Math.min(i * bucketSize - 1, numProperties - 1);
-    const startIndex = nodeIsBucket(parent) ? parent.meta.startIndex : 0;
-    const minIndex = startIndex + minKey;
-    const maxIndex = startIndex + maxKey;
-    const bucketName = `[${minIndex}…${maxIndex}]`;
-
-    buckets.push(createNode({
-      parent,
-      name: bucketName,
-      contents: null,
-      type: NODE_TYPES.BUCKET,
-      meta: {
-        startIndex: minIndex,
-        endIndex: maxIndex
-      }
-    }));
-  }
-  return buckets;
-}
-
-function makeDefaultPropsBucket(propertiesNames, parent, ownProperties) {
-  const userPropertiesNames = [];
-  const defaultProperties = [];
-
-  propertiesNames.forEach(name => {
-    if (isDefaultWindowProperty(name)) {
-      defaultProperties.push(name);
-    } else {
-      userPropertiesNames.push(name);
-    }
-  });
-
-  let nodes = makeNodesForOwnProps(userPropertiesNames, parent, ownProperties);
-
-  if (defaultProperties.length > 0) {
-    const defaultPropertiesNode = createNode({
-      parent,
-      name: "<default properties>",
-      contents: null,
-      type: NODE_TYPES.DEFAULT_PROPERTIES
-    });
-
-    const defaultNodes = defaultProperties.map((name, index) => createNode({
-      parent: defaultPropertiesNode,
-      name: maybeEscapePropertyName(name),
-      path: `${index}/${name}`,
-      contents: ownProperties[name]
-    }));
-    nodes.push(setNodeChildren(defaultPropertiesNode, defaultNodes));
-  }
-  return nodes;
-}
-
-function makeNodesForOwnProps(propertiesNames, parent, ownProperties) {
-  return propertiesNames.map(name => createNode({
-    parent,
-    name: maybeEscapePropertyName(name),
-    contents: ownProperties[name]
-  }));
-}
-
-function makeNodesForProperties(objProps, parent) {
-  const {
-    ownProperties = {},
-    ownSymbols,
-    prototype,
-    safeGetterValues
-  } = objProps;
-
-  const parentValue = getValue(parent);
-
-  let allProperties = { ...ownProperties, ...safeGetterValues };
-
-  // Ignore properties that are neither non-concrete nor getters/setters.
-  const propertiesNames = sortProperties(Object.keys(allProperties)).filter(name => {
-    if (!allProperties[name]) {
-      return false;
-    }
-
-    const properties = Object.getOwnPropertyNames(allProperties[name]);
-    return properties.some(property => ["value", "getterValue", "get", "set"].includes(property));
-  });
-
-  let nodes = [];
-  if (parentValue && parentValue.class == "Window") {
-    nodes = makeDefaultPropsBucket(propertiesNames, parent, allProperties);
-  } else {
-    nodes = makeNodesForOwnProps(propertiesNames, parent, allProperties);
-  }
-
-  if (Array.isArray(ownSymbols)) {
-    ownSymbols.forEach((ownSymbol, index) => {
-      nodes.push(createNode({
-        parent,
-        name: ownSymbol.name,
-        path: `symbol-${index}`,
-        contents: ownSymbol.descriptor || null
-      }));
-    }, this);
-  }
-
-  if (nodeIsPromise(parent)) {
-    nodes.push(...makeNodesForPromiseProperties(parent));
-  }
-
-  if (nodeHasEntries(parent)) {
-    nodes.push(makeNodesForEntries(parent));
-  }
-
-  // Add the prototype if it exists and is not null
-  if (prototype && prototype.type !== "null") {
-    nodes.push(makeNodeForPrototype(objProps, parent));
-  }
-
-  return nodes;
-}
-
-function makeNodeForPrototype(objProps, parent) {
-  const {
-    prototype
-  } = objProps || {};
-
-  // Add the prototype if it exists and is not null
-  if (prototype && prototype.type !== "null") {
-    return createNode({
-      parent,
-      name: "<prototype>",
-      contents: { value: prototype },
-      type: NODE_TYPES.PROTOTYPE
-    });
-  }
-
-  return null;
-}
-
-function createNode(options) {
-  const {
-    parent,
-    name,
-    path,
-    contents,
-    type = NODE_TYPES.GRIP,
-    meta
-  } = options;
-
-  if (contents === undefined) {
-    return null;
-  }
-
-  // The path is important to uniquely identify the item in the entire
-  // tree. This helps debugging & optimizes React's rendering of large
-  // lists. The path will be separated by property name, wrapped in a Symbol to avoid
-  // name clashing,
-  // i.e. `{ foo: { bar: { baz: 5 }}}` will have a path of Symbol(`foo/bar/baz`)
-  // for the inner object.
-  return {
-    parent,
-    name,
-    path: parent ? Symbol(`${getSymbolDescriptor(parent.path)}/${path || name}`) : Symbol(path || name),
-    contents,
-    type,
-    meta
-  };
-}
-
-function getSymbolDescriptor(symbol) {
-  return symbol.toString().replace(/^(Symbol\()(.*)(\))$/, "$2");
-}
-
-function setNodeChildren(node, children) {
-  node.contents = children;
-  return node;
-}
-
-function getChildren(options) {
-  const {
-    cachedNodes,
-    loadedProperties = new Map(),
-    item
-  } = options;
-
-  const key = item.path;
-  if (cachedNodes && cachedNodes.has(key)) {
-    return cachedNodes.get(key);
-  }
-
-  const loadedProps = loadedProperties.get(key);
-  const hasLoadedProps = loadedProperties.has(key);
-
-  // Because we are dynamically creating the tree as the user
-  // expands it (not precalculated tree structure), we cache child
-  // arrays. This not only helps performance, but is necessary
-  // because the expanded state depends on instances of nodes
-  // being the same across renders. If we didn't do this, each
-  // node would be a new instance every render.
-  // If the node needs properties, we only add children to
-  // the cache if the properties are loaded.
-  const addToCache = children => {
-    if (cachedNodes) {
-      cachedNodes.set(item.path, children);
-    }
-    return children;
-  };
-
-  // Nodes can either have children already, or be an object with
-  // properties that we need to go and fetch.
-  if (nodeHasChildren(item)) {
-    return addToCache(item.contents);
-  }
-
-  if (nodeHasAccessors(item)) {
-    return addToCache(makeNodesForAccessors(item));
-  }
-
-  if (nodeIsMapEntry(item)) {
-    return addToCache(makeNodesForMapEntry(item));
-  }
-
-  if (nodeIsProxy(item)) {
-    return addToCache(makeNodesForProxyProperties(item));
-  }
-
-  if (nodeNeedsNumericalBuckets(item) && hasLoadedProps) {
-    // Even if we have numerical buckets, we should have loaded non indexed properties,
-    // like length for example.
-    const bucketNodes = makeNumericalBuckets(item);
-    return addToCache(bucketNodes.concat(makeNodesForProperties(loadedProps, item)));
-  }
-
-  if (!nodeIsEntries(item) && !nodeIsBucket(item) && !nodeHasProperties(item)) {
-    return [];
-  }
-
-  if (!hasLoadedProps) {
-    return [];
-  }
-
-  return addToCache(makeNodesForProperties(loadedProps, item));
-}
-
-function getParent(item) {
-  return item.parent;
-}
-
-function getNumericalPropertiesCount(item) {
-  if (nodeIsBucket(item)) {
-    return item.meta.endIndex - item.meta.startIndex + 1;
-  }
-
-  const value = getValue(getClosestGripNode(item));
-  if (!value) {
-    return 0;
-  }
-
-  if (GripArrayRep.supportsObject(value)) {
-    return GripArrayRep.getLength(value);
-  }
-
-  if (GripMap.supportsObject(value)) {
-    return GripMap.getLength(value);
-  }
-
-  // TODO: We can also have numerical properties on Objects, but at the
-  // moment we don't have a way to distinguish them from non-indexed properties,
-  // as they are all computed in a ownPropertiesLength property.
-
-  return 0;
-}
-
-function getClosestGripNode(item) {
-  const type = getType(item);
-  if (type !== NODE_TYPES.BUCKET && type !== NODE_TYPES.DEFAULT_PROPERTIES && type !== NODE_TYPES.ENTRIES) {
-    return item;
-  }
-
-  const parent = getParent(item);
-  if (!parent) {
-    return null;
-  }
-
-  return getClosestGripNode(parent);
-}
-
-function getClosestNonBucketNode(item) {
-  const type = getType(item);
-
-  if (type !== NODE_TYPES.BUCKET) {
-    return item;
-  }
-
-  const parent = getParent(item);
-  if (!parent) {
-    return null;
-  }
-
-  return getClosestNonBucketNode(parent);
-}
-
-module.exports = {
-  createNode,
-  getChildren,
-  getClosestGripNode,
-  getClosestNonBucketNode,
-  getParent,
-  getNumericalPropertiesCount,
-  getValue,
-  makeNodesForEntries,
-  makeNodesForPromiseProperties,
-  makeNodesForProperties,
-  makeNumericalBuckets,
-  nodeHasAccessors,
-  nodeHasAllEntriesInPreview,
-  nodeHasChildren,
-  nodeHasEntries,
-  nodeHasProperties,
-  nodeIsBlock,
-  nodeIsBucket,
-  nodeIsDefaultProperties,
-  nodeIsEntries,
-  nodeIsError,
-  nodeIsFunction,
-  nodeIsGetter,
-  nodeIsMapEntry,
-  nodeIsMissingArguments,
-  nodeIsObject,
-  nodeIsOptimizedOut,
-  nodeIsPrimitive,
-  nodeIsPromise,
-  nodeIsPrototype,
-  nodeIsProxy,
-  nodeIsSetter,
-  nodeIsUninitializedBinding,
-  nodeIsUnmappedBinding,
-  nodeIsUnscopedBinding,
-  nodeIsWindow,
-  nodeNeedsNumericalBuckets,
-  nodeSupportsNumericalBucketing,
-  setNodeChildren,
-  sortProperties,
-  NODE_TYPES
-};
-
-/***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 const { MODE } = __webpack_require__(3);
 const { REPS, getRep } = __webpack_require__(4);
 const ObjectInspector = __webpack_require__(47);
-const ObjectInspectorUtils = __webpack_require__(11);
+const ObjectInspectorUtils = __webpack_require__(19);
 
 const {
   parseURLEncodedText,
@@ -3521,13 +3161,13 @@ module.exports = {
 };
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3569,7 +3209,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3611,7 +3251,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3663,7 +3303,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3679,7 +3319,7 @@ const {
   wrapRender,
   ellipsisElement
 } = __webpack_require__(0);
-const PropRep = __webpack_require__(7);
+const PropRep = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
 
 const dom = __webpack_require__(1);
@@ -3835,7 +3475,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3887,7 +3527,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3935,7 +3575,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3972,7 +3612,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4040,7 +3680,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4061,7 +3701,7 @@ const {
   isGrip,
   wrapRender
 } = __webpack_require__(0);
-const { rep: StringRep } = __webpack_require__(5);
+const { rep: StringRep } = __webpack_require__(7);
 
 /**
  * Renders DOM attribute
@@ -4101,7 +3741,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4168,7 +3808,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4236,7 +3876,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 36 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4291,7 +3931,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 37 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4400,7 +4040,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 38 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4419,7 +4059,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 
-const PropRep = __webpack_require__(7);
+const PropRep = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
 
 const dom = __webpack_require__(1);
@@ -4511,7 +4151,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4570,7 +4210,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4638,7 +4278,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 41 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4704,7 +4344,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 42 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4722,7 +4362,7 @@ const {
   isGrip,
   wrapRender
 } = __webpack_require__(0);
-const { rep: StringRep } = __webpack_require__(5);
+const { rep: StringRep } = __webpack_require__(7);
 const { MODE } = __webpack_require__(3);
 const nodeConstants = __webpack_require__(9);
 
@@ -4834,7 +4474,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 43 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4942,6 +4582,151 @@ module.exports = {
 };
 
 /***/ }),
+/* 43 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// ReactJS
+const PropTypes = __webpack_require__(2);
+// Utils
+const {
+  getGripType,
+  isGrip,
+  wrapRender
+} = __webpack_require__(0);
+const { cleanFunctionName } = __webpack_require__(12);
+const { MODE } = __webpack_require__(3);
+
+const dom = __webpack_require__(1);
+const { span } = dom;
+
+/**
+ * Renders Error objects.
+ */
+ErrorRep.propTypes = {
+  object: PropTypes.object.isRequired,
+  // @TODO Change this to Object.values once it's supported in Node's version of V8
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key]))
+};
+
+function ErrorRep(props) {
+  let object = props.object;
+  let preview = object.preview;
+
+  let name;
+  if (preview && preview.name && preview.kind) {
+    switch (preview.kind) {
+      case "Error":
+        name = preview.name;
+        break;
+      case "DOMException":
+        name = preview.kind;
+        break;
+      default:
+        throw new Error("Unknown preview kind for the Error rep.");
+    }
+  } else {
+    name = "Error";
+  }
+
+  const content = [];
+
+  if (props.mode === MODE.TINY) {
+    content.push(name);
+  } else {
+    content.push(`${name}: "${preview.message}"`);
+  }
+
+  if (preview.stack && props.mode !== MODE.TINY) {
+    content.push("\n", getStacktraceElements(preview));
+  }
+
+  return span({
+    "data-link-actor-id": object.actor,
+    className: "objectBox-stackTrace"
+  }, content);
+}
+
+/**
+ * Returns a React element reprensenting the Error stacktrace, i.e. transform error.stack
+ * from:
+ *
+ * semicolon@debugger eval code:1:109
+ * jkl@debugger eval code:1:63
+ * asdf@debugger eval code:1:28
+ * @debugger eval code:1:227
+ *
+ * Into a column layout:
+ *
+ * semicolon  (<anonymous>:8:10)
+ * jkl        (<anonymous>:5:10)
+ * asdf       (<anonymous>:2:10)
+ *            (<anonymous>:11:1)
+ */
+function getStacktraceElements(preview) {
+  const stack = [];
+  preview.stack.split("\n").forEach((line, index) => {
+    if (!line) {
+      // Skip any blank lines
+      return;
+    }
+
+    let functionName;
+    let location;
+
+    // Given the input: "functionName@scriptLocation:2:100"
+    // Result:
+    // ["functionName@scriptLocation:2:100", "functionName", "scriptLocation:2:100"]
+    const result = line.match(/^(.*)@(.*)$/);
+    if (result && result.length === 3) {
+      functionName = result[1];
+
+      // If the resource was loaded by base-loader.js, the location looks like:
+      // resource://devtools/shared/base-loader.js -> resource://path/to/file.js .
+      // What's needed is only the last part after " -> ".
+      location = result[2].split(" -> ").pop();
+    }
+
+    if (!functionName) {
+      functionName = "<anonymous>";
+    }
+
+    stack.push(span({
+      key: "fn" + index,
+      className: "objectBox-stackTrace-fn"
+    }, cleanFunctionName(functionName)), span({
+      key: "location" + index,
+      className: "objectBox-stackTrace-location"
+    }, ` (${location})`));
+  });
+
+  return span({
+    key: "stack",
+    className: "objectBox-stackTrace-grid"
+  }, stack);
+}
+
+// Registration
+function supportsObject(object, noGrip = false) {
+  if (noGrip === true || !isGrip(object)) {
+    return false;
+  }
+  return object.preview && getGripType(object, noGrip) === "Error" || object.class === "DOMException";
+}
+
+// Exports from this module
+module.exports = {
+  rep: wrapRender(ErrorRep),
+  supportsObject
+};
+
+/***/ }),
 /* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -5042,7 +4827,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 
-const String = __webpack_require__(5).rep;
+const String = __webpack_require__(7).rep;
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -5165,14 +4950,9 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { createElement, createFactory, PureComponent } = __webpack_require__(10);
-const { Provider } = __webpack_require__(18);
+const { Provider } = __webpack_require__(17);
 const ObjectInspector = createFactory(__webpack_require__(48));
 const createStore = __webpack_require__(57);
-const Utils = __webpack_require__(11);
-const {
-  renderRep,
-  shouldRenderRootsInReps
-} = Utils;
 
 class OI extends PureComponent {
 
@@ -5190,13 +4970,7 @@ class OI extends PureComponent {
   }
 }
 
-module.exports = props => {
-  let { roots } = props;
-  if (shouldRenderRootsInReps(roots)) {
-    return renderRep(roots[0], props);
-  }
-  return new OI(props);
-};
+module.exports = OI;
 
 /***/ }),
 /* 48 */
@@ -5220,18 +4994,25 @@ const {
   createFactory
 } = __webpack_require__(10);
 const dom = __webpack_require__(1);
-const { connect } = __webpack_require__(18);
-const { bindActionCreators } = __webpack_require__(19);
+const { connect } = __webpack_require__(17);
+const { bindActionCreators } = __webpack_require__(18);
 
 const Tree = createFactory(_devtoolsComponents2.default.Tree);
 __webpack_require__(52);
 
 const classnames = __webpack_require__(53);
+
+const {
+  REPS: {
+    Rep,
+    Grip
+  }
+} = __webpack_require__(4);
 const {
   MODE
 } = __webpack_require__(3);
 
-const Utils = __webpack_require__(11);
+const Utils = __webpack_require__(19);
 
 const {
   getChildren,
@@ -5311,11 +5092,7 @@ class ObjectInspector extends Component {
       return true;
     }
 
-    // We should update if:
-    // - there are new loaded properties
-    // - OR the expanded paths number changed, and all of them have properties loaded
-    // - OR the expanded paths number did not changed, but old and new sets differ
-    return loadedProperties.size !== nextProps.loadedProperties.size || expandedPaths.size !== nextProps.expandedPaths.size && [...nextProps.expandedPaths].every(path => nextProps.loadedProperties.has(path)) || expandedPaths.size === nextProps.expandedPaths.size && [...nextProps.expandedPaths].some(key => !expandedPaths.has(key));
+    return expandedPaths.size !== nextProps.expandedPaths.size || loadedProperties.size !== nextProps.loadedProperties.size || [...expandedPaths].some(key => !nextProps.expandedPaths.has(key));
   }
 
   componentWillUnmount() {
@@ -5348,7 +5125,7 @@ class ObjectInspector extends Component {
   }
 
   getNodeKey(item) {
-    return item.path && typeof item.path.toString === "function" ? item.path.toString() : JSON.stringify(item);
+    return item.path || JSON.stringify(item);
   }
 
   setExpanded(item, expand) {
@@ -5440,7 +5217,7 @@ class ObjectInspector extends Component {
 
     if (nodeIsFunction(item) && !nodeIsGetter(item) && !nodeIsSetter(item) && (this.props.mode === MODE.TINY || !this.props.mode)) {
       return {
-        label: Utils.renderRep(item, {
+        label: this.renderGrip(item, {
           ...this.props,
           functionName: label
         })
@@ -5458,7 +5235,7 @@ class ObjectInspector extends Component {
 
       return {
         label,
-        value: Utils.renderRep(item, repsProp)
+        value: this.renderGrip(item, repsProp)
       };
     }
 
@@ -5542,6 +5319,16 @@ class ObjectInspector extends Component {
     return dom.div(this.getTreeTopElementProps(item, depth, focused, expanded), arrow, labelElement, delimiter, value);
   }
 
+  renderGrip(item, props) {
+    const object = getValue(item);
+    return Rep({
+      ...props,
+      object,
+      mode: props.mode || MODE.TINY,
+      defaultRep: Grip
+    });
+  }
+
   render() {
     const {
       autoExpandAll = true,
@@ -5553,6 +5340,15 @@ class ObjectInspector extends Component {
       inline
     } = this.props;
 
+    let roots = this.getRoots();
+    if (roots.length === 1) {
+      const root = roots[0];
+      const name = root && root.name;
+      if (nodeIsPrimitive(root) && (name === null || typeof name === "undefined")) {
+        return this.renderGrip(root, this.props);
+      }
+    }
+
     return Tree({
       className: classnames({
         inline,
@@ -5563,7 +5359,7 @@ class ObjectInspector extends Component {
       autoExpandDepth,
       disabledFocus,
 
-      isExpanded: item => expandedPaths && expandedPaths.has(item.path),
+      isExpanded: item => expandedPaths && expandedPaths.has(this.getNodeKey(item)),
       isExpandable: item => nodeIsPrimitive(item) === false,
       focused: focusedItem,
 
@@ -6519,10 +6315,27 @@ module.exports = {
 
 
 const {
-  loadItemProperties
-} = __webpack_require__(21); /* This Source Code Form is subject to the terms of the Mozilla Public
-                                         * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                         * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+  getClosestGripNode,
+  getValue
+} = __webpack_require__(11); /* This Source Code Form is subject to the terms of the Mozilla Public
+                              * License, v. 2.0. If a copy of the MPL was not distributed with this
+                              * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const {
+  shouldLoadItemEntries,
+  shouldLoadItemIndexedProperties,
+  shouldLoadItemNonIndexedProperties,
+  shouldLoadItemPrototype,
+  shouldLoadItemSymbols
+} = __webpack_require__(21);
+
+const {
+  enumEntries,
+  enumIndexedProperties,
+  enumNonIndexedProperties,
+  getPrototype,
+  enumSymbols
+} = __webpack_require__(20);
 
 /**
  * This action is responsible for expanding a given node,
@@ -6534,10 +6347,7 @@ function nodeExpand(node, actor, loadedProperties, createObjectClient) {
       type: "NODE_EXPAND",
       data: { node }
     });
-
-    if (!loadedProperties.has(node.path)) {
-      dispatch(nodeLoadProperties(node, actor, loadedProperties, createObjectClient));
-    }
+    dispatch(nodeLoadProperties(node, actor, loadedProperties, createObjectClient));
   };
 }
 
@@ -6561,18 +6371,49 @@ function nodeFocus(node) {
 function nodeLoadProperties(item, actor, loadedProperties, createObjectClient) {
   return async ({ dispatch }) => {
     try {
-      const properties = await loadItemProperties(item, createObjectClient, loadedProperties);
-      dispatch(nodePropertiesLoaded(item, actor, properties));
+      const gripItem = getClosestGripNode(item);
+      const value = getValue(gripItem);
+
+      const [start, end] = item.meta ? [item.meta.startIndex, item.meta.endIndex] : [];
+
+      let promises = [];
+      let objectClient;
+      const getObjectClient = () => objectClient || createObjectClient(value);
+
+      if (shouldLoadItemIndexedProperties(item, loadedProperties)) {
+        promises.push(enumIndexedProperties(getObjectClient(), start, end));
+      }
+
+      if (shouldLoadItemNonIndexedProperties(item, loadedProperties)) {
+        promises.push(enumNonIndexedProperties(getObjectClient(), start, end));
+      }
+
+      if (shouldLoadItemEntries(item, loadedProperties)) {
+        promises.push(enumEntries(getObjectClient(), start, end));
+      }
+
+      if (shouldLoadItemPrototype(item, loadedProperties)) {
+        promises.push(getPrototype(getObjectClient()));
+      }
+
+      if (shouldLoadItemSymbols(item, loadedProperties)) {
+        promises.push(enumSymbols(getObjectClient(), start, end));
+      }
+
+      if (promises.length > 0) {
+        const responses = await Promise.all(promises);
+        dispatch(nodePropertiesLoaded(item, actor, responses));
+      }
     } catch (e) {
       console.error(e);
     }
   };
 }
 
-function nodePropertiesLoaded(node, actor, properties) {
+function nodePropertiesLoaded(node, actor, responses) {
   return {
     type: "NODE_PROPERTIES_LOADED",
-    data: { node, actor, properties }
+    data: { node, actor, responses }
   };
 }
 
@@ -6595,7 +6436,7 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { applyMiddleware, createStore } = __webpack_require__(19);
+const { applyMiddleware, createStore } = __webpack_require__(18);
 const { thunk } = __webpack_require__(58);
 const { waitUntilService } = __webpack_require__(59);
 const reducer = __webpack_require__(60);
@@ -6745,9 +6586,12 @@ function reducer(state = {}, action) {
   }
 
   if (type === "NODE_PROPERTIES_LOADED") {
+    // Let's loop through the responses to build a single object.
+    const properties = mergeResponses(data.responses);
+
     return cloneState({
       actors: data.actor ? new Set(state.actors || []).add(data.actor) : state.actors,
-      loadedProperties: new Map(state.loadedProperties).set(data.node.path, action.data.properties)
+      loadedProperties: new Map(state.loadedProperties).set(data.node.path, properties)
     });
   }
 
@@ -6762,6 +6606,26 @@ function reducer(state = {}, action) {
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
+function mergeResponses(responses) {
+  const data = {};
+
+  for (const response of responses) {
+    if (response.hasOwnProperty("ownProperties")) {
+      data.ownProperties = { ...data.ownProperties, ...response.ownProperties };
+    }
+
+    if (response.ownSymbols && response.ownSymbols.length > 0) {
+      data.ownSymbols = response.ownSymbols;
+    }
+
+    if (response.prototype) {
+      data.prototype = response.prototype;
+    }
+  }
+
+  return data;
+}
 
 module.exports = reducer;
 
