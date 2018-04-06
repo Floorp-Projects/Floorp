@@ -142,6 +142,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   }
 
   // The dirty region relative to the top-left of the tile.
+  nsIntRegion tileVisibleRegion = aNewValidRegion.MovedBy(-mTilingOrigin);
   nsIntRegion tileDirtyRegion = paintRegion.MovedBy(-mTilingOrigin);
 
   std::vector<RefPtr<TextureClient>> paintClients;
@@ -153,6 +154,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   RefPtr<TextureClient> backBuffer =
     mTile.GetBackBuffer(mCompositableClient,
                         tileDirtyRegion,
+                        tileVisibleRegion,
                         content, mode,
                         extraPainted,
                         aFlags,
@@ -166,9 +168,14 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
   // Add backbuffer's invalid region to the dirty region to be painted.
   // This will be empty if we were able to copy from the front in to the back.
-  paintRegion.OrWith(mTile.mInvalidBack.MovedBy(mTilingOrigin));
-  tileDirtyRegion.OrWith(mTile.mInvalidBack);
+  nsIntRegion tileInvalidRegion = mTile.mInvalidBack;
+  tileInvalidRegion.AndWith(tileVisibleRegion);
 
+  paintRegion.OrWith(tileInvalidRegion.MovedBy(mTilingOrigin));
+  tileDirtyRegion.OrWith(tileInvalidRegion);
+
+  // Mark the region we will be painting and the region we copied from the front buffer as
+  // needing to be uploaded to the compositor
   mTile.mUpdateRect = tileDirtyRegion.GetBounds().Union(extraPainted.GetBounds());
 
   extraPainted.MoveBy(mTilingOrigin);
