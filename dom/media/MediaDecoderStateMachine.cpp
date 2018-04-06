@@ -4,12 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef XP_WIN
-// Include Windows headers required for enabling high precision timers.
-#include "windows.h"
-#include "mmsystem.h"
-#endif
-
 #include <algorithm>
 #include <stdint.h>
 
@@ -22,7 +16,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
@@ -2705,9 +2698,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_CANONICAL(mDuration, NullableTimeUnit()),
   INIT_CANONICAL(mCurrentPosition, TimeUnit::Zero()),
   INIT_CANONICAL(mIsAudioDataAudible, false)
-#ifdef XP_WIN
-  , mShouldUseHiResTimers(Preferences::GetBool("media.hi-res-timers.enabled", true))
-#endif
 {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -2725,10 +2715,6 @@ MediaDecoderStateMachine::~MediaDecoderStateMachine()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
   MOZ_COUNT_DTOR(MediaDecoderStateMachine);
-
-#ifdef XP_WIN
-  MOZ_ASSERT(!mHiResTimersRequested);
-#endif
 }
 
 void
@@ -2929,12 +2915,6 @@ MediaDecoderStateMachine::StopPlayback()
       MediaPlaybackEvent::PlaybackStopped, mPlaybackOffset });
     mMediaSink->SetPlaying(false);
     MOZ_ASSERT(!IsPlaying());
-#ifdef XP_WIN
-    if (mHiResTimersRequested) {
-      mHiResTimersRequested = false;
-      timeEndPeriod(1);
-    }
-#endif
   }
 }
 
@@ -2956,20 +2936,6 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
 
   LOG("MaybeStartPlayback() starting playback");
   StartMediaSink();
-
-#ifdef XP_WIN
-  if (!mHiResTimersRequested && mShouldUseHiResTimers) {
-    mHiResTimersRequested = true;
-    // Ensure high precision timers are enabled on Windows, otherwise the state
-    // machine isn't woken up at reliable intervals to set the next frame, and we
-    // drop frames while painting. Note that each call must be matched by a
-    // corresponding timeEndPeriod() call. Enabling high precision timers causes
-    // the CPU to wake up more frequently on Windows 7 and earlier, which causes
-    // more CPU load and battery use. So we only enable high precision timers
-    // when we're actually playing.
-    timeBeginPeriod(1);
-  }
-#endif
 
   if (!IsPlaying()) {
     mMediaSink->SetPlaying(true);
