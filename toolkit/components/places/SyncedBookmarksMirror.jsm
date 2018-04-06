@@ -1356,54 +1356,36 @@ class SyncedBookmarksMirror {
   }
 
   /**
-   * Creates local tag folders mentioned in remotely changed tag queries, then
-   * rewrites the query URLs in the mirror to point to the new local folders.
+   * Rewrites tag query URLs in the mirror to point to the tag.
    *
-   * For example, an incoming tag query of, say, "place:type=6&folder=3" means
-   * it is a query for whatever tag is defined by the local record with id=3
+   * For example, an incoming tag query of, say, "place:type=7&folder=3" means
+   * it is a query for whatever tag was defined by the local record with id=3
    * (and the incoming record has the actual tag in the folderName field).
-   * We need to ensure that the URL is adjusted so the folder ID refers to
-   * whatever local folder ID represents that tag.
-   *
-   * This can be removed once bug 1293445 lands.
    */
   async rewriteRemoteTagQueries() {
-    // Create local tag folders that don't already exist. This fires the
-    // `tagLocalPlace` trigger.
-    await this.db.execute(`
-      INSERT INTO localTags(tag)
-      SELECT v.tagFolderName FROM items v
-      JOIN mergeStates r ON r.mergedGuid = v.guid
-      WHERE r.valueState = :valueState AND
-            v.tagFolderName NOT NULL`,
-      { valueState: BookmarkMergeState.TYPE.REMOTE });
-
     let queryRows = await this.db.execute(`
-      SELECT u.id AS urlId, u.url, b.id AS newTagFolderId FROM urls u
+      SELECT u.id AS urlId, u.url, v.tagFolderName
+      FROM urls u
       JOIN items v ON v.urlId = u.id
       JOIN mergeStates r ON r.mergedGuid = v.guid
-      JOIN moz_bookmarks b ON b.title = v.tagFolderName
-      JOIN moz_bookmarks p ON p.id = b.parent
-      WHERE p.guid = :tagsGuid AND
-            r.valueState = :valueState AND
+      WHERE r.valueState = :valueState AND
             v.kind = :queryKind AND
-            v.tagFolderName NOT NULL`,
-      { tagsGuid: PlacesUtils.bookmarks.tagsGuid,
-        valueState: BookmarkMergeState.TYPE.REMOTE,
-        queryKind: SyncedBookmarksMirror.KIND.QUERY });
+            v.tagFolderName NOT NULL AND
+            CAST(get_query_param(substr(u.url, 7), "type") AS INT) = :tagContentsType
+      `, { valueState: BookmarkMergeState.TYPE.REMOTE,
+           queryKind: SyncedBookmarksMirror.KIND.QUERY,
+           tagContentsType: Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS });
 
     let urlsParams = [];
     for (let row of queryRows) {
       let url = new URL(row.getResultByName("url"));
       let tagQueryParams = new URLSearchParams(url.pathname);
-      let type = Number(tagQueryParams.get("type"));
-      if (type != Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
-        continue;
-      }
 
-      // Rewrite the query URL to point to the new folder.
-      let newTagFolderId = row.getResultByName("newTagFolderId");
-      tagQueryParams.set("folder", newTagFolderId);
+      // Rewrite the query to directly reference the tag.
+      tagQueryParams.delete("queryType");
+      tagQueryParams.delete("type");
+      tagQueryParams.delete("folder");
+      tagQueryParams.set("tag", row.getResultByName("tagFolderName"));
 
       let newURLHref = url.protocol + tagQueryParams;
       urlsParams.push({
@@ -1640,10 +1622,11 @@ class SyncedBookmarksMirror {
                                 parentTitle, dateAdded, type, title, isQuery,
                                 url, tags, description, loadInSidebar,
                                 smartBookmarkName, keyword, feedURL, siteURL,
-                                position)
+                                position, tagFolderName)
       SELECT b.id, b.guid, b.syncChangeCounter, p.guid, p.title,
              b.dateAdded / 1000, b.type, b.title,
-             IFNULL(SUBSTR(h.url, 1, 6) = 'place:', 0), h.url,
+             IFNULL(SUBSTR(h.url, 1, 6) = 'place:', 0) AS isQuery,
+             h.url,
              (SELECT GROUP_CONCAT(t.title, ',') FROM moz_bookmarks e
               JOIN moz_bookmarks t ON t.id = e.parent
               JOIN moz_bookmarks r ON r.id = t.parent
@@ -1674,7 +1657,9 @@ class SyncedBookmarksMirror {
               WHERE b.type = :folderType AND
                     a.item_id = b.id AND
                     n.name = :siteURLAnno),
-             b.position
+             b.position,
+             (SELECT get_query_param(substr(url, 7), 'tag')
+              WHERE substr(h.url, 1, 6) = 'place:')
       FROM moz_bookmarks b
       JOIN moz_bookmarks p ON p.id = b.parent
       JOIN syncedItems s ON s.id = b.id
@@ -1690,38 +1675,6 @@ class SyncedBookmarksMirror {
         folderType: PlacesUtils.bookmarks.TYPE_FOLDER,
         feedURLAnno: PlacesUtils.LMANNO_FEEDURI,
         siteURLAnno: PlacesUtils.LMANNO_SITEURI });
-
-    // Record tag folder names for tag queries. Parsing query URLs one by one
-    // is inefficient, but queries aren't common today, and we can remove this
-    // logic entirely once bug 1293445 lands.
-    let queryRows = await this.db.execute(`
-      SELECT id, url FROM itemsToUpload
-      WHERE isQuery`);
-
-    let tagFolderNameParams = [];
-    for (let row of queryRows) {
-      let url = new URL(row.getResultByName("url"));
-      let tagQueryParams = new URLSearchParams(url.pathname);
-      let type = Number(tagQueryParams.get("type"));
-      if (type == Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
-        continue;
-      }
-      let tagFolderId = Number(tagQueryParams.get("folder"));
-      tagFolderNameParams.push({
-        id: row.getResultByName("id"),
-        tagFolderId,
-        folderType: PlacesUtils.bookmarks.TYPE_FOLDER,
-      });
-    }
-
-    if (tagFolderNameParams.length) {
-      await this.db.execute(`
-        UPDATE itemsToUpload SET
-          tagFolderName = (SELECT b.title FROM moz_bookmarks b
-                           WHERE b.id = :tagFolderId AND
-                                 b.type = :folderType)
-        WHERE id = :id`, tagFolderNameParams);
-    }
 
     // Record the child GUIDs of locally changed folders, which we use to
     // populate the `children` array in the record.
@@ -2493,7 +2446,7 @@ async function initializeTempMirrorEntities(db) {
   // different because they're implemented as bookmarks under the hood. Each tag
   // is stored as a folder under the tags root, and tagged URLs are stored as
   // untitled bookmarks under these folders. This complexity, along with tag
-  // query rewriting, can be removed once bug 1293445 lands.
+  // query rewriting, can be removed once bug 424160 lands.
   await db.execute(`
     CREATE TEMP VIEW localTags(tagEntryId, tagEntryGuid, tagFolderId,
                                tagFolderGuid, tagEntryPosition, tagEntryType,

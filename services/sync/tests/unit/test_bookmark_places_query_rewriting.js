@@ -21,7 +21,6 @@ function makeTagRecord(id, uri) {
 }
 
 add_task(async function run_test() {
-
   let uri = "place:folder=499&type=7&queryType=1";
   let tagRecord = makeTagRecord("abcdefabcdef", uri);
 
@@ -29,20 +28,8 @@ add_task(async function run_test() {
   _("Folder name: " + tagRecord.folderName);
   await store.applyIncoming(tagRecord);
 
-  let tagID = -1;
-  let db = await PlacesUtils.promiseDBConnection();
-  let rows = await db.execute(`
-    SELECT id FROM moz_bookmarks
-    WHERE parent = :tagsFolderId AND
-          title = :title`,
-    { tagsFolderId: PlacesUtils.tagsFolderId,
-      title: "bar" });
-  equal(rows.length, 1);
-  tagID = rows[0].getResultByName("id");
-
-  _("Tag ID: " + tagID);
   let insertedRecord = await store.createRecord("abcdefabcdef", "bookmarks");
-  Assert.equal(insertedRecord.bmkUri, uri.replace("499", tagID));
+  Assert.equal(insertedRecord.bmkUri, "place:tag=bar");
 
   _("... but not if the type is wrong.");
   let wrongTypeURI = "place:folder=499&type=2&queryType=1";

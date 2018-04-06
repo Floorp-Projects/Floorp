@@ -139,12 +139,14 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         # It is insufficient to have additions to this whitelist reviewed
         # solely by a build peer; any additions must be checked by somebody
         # competent to review licensing minutiae.
-        LICENSE_WHITELIST = [
+
+        # Licenses for code used at runtime. Please see the above comment before
+        # adding anything to this list.
+        RUNTIME_LICENSE_WHITELIST = [
             'Apache-2.0',
             'Apache-2.0 / MIT',
             'Apache-2.0/MIT',
             'Apache-2 / MIT',
-            'BSD-3-Clause', # bindgen (only used at build time)
             'CC0-1.0',
             'ISC',
             'ISC/Apache-2.0',
@@ -156,6 +158,20 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             'Unlicense/MIT',
         ]
 
+        # Licenses for code used at build time (e.g. code generators). Please see the above
+        # comments before adding anything to this list.
+        BUILDTIME_LICENSE_WHITELIST = {
+            'BSD-2-Clause': [
+                'Inflector',
+            ],
+            'BSD-3-Clause': [
+                'adler32',
+                'bindgen',
+                'fuchsia-zircon',
+                'fuchsia-zircon-sys',
+            ]
+        }
+
         # This whitelist should only be used for packages that use a
         # license-file and for which the license-file entry has been
         # reviewed.  The table is keyed by package names and maps to the
@@ -164,7 +180,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         # As above, it is insufficient to have additions to this whitelist
         # reviewed solely by a build peer; any additions must be checked by
         # somebody competent to review licensing minutiae.
-        LICENSE_FILE_PACKAGE_WHITELIST = {
+        RUNTIME_LICENSE_FILE_PACKAGE_WHITELIST = {
             # MIT
             'deque': '6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb',
         }
@@ -207,20 +223,31 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
                     self.log(logging.DEBUG, 'package_license', {},
                              'has license {}'.format(license))
 
-                    if license not in LICENSE_WHITELIST:
-                        self.log(logging.ERROR, 'package_license_error', {},
+                    if license not in RUNTIME_LICENSE_WHITELIST:
+                        if license not in BUILDTIME_LICENSE_WHITELIST:
+                            self.log(logging.ERROR, 'package_license_error', {},
                                  '''Package {} has a non-approved license: {}.
 
 Please request license review on the package's license.  If the package's license
 is approved, please add it to the whitelist of suitable licenses.
 '''.format(package, license))
-                        return False
+                            return False
+                        elif package not in BUILDTIME_LICENSE_WHITELIST[license]:
+                            self.log(logging.ERROR, 'package_license_error', {},
+                                 '''Package {} has a license that is approved for build-time dependencies: {}
+but the package itself is not whitelisted as being a build-time only package.
+
+If your package is build-time only, please add it to the whitelist of build-time
+only packages. Otherwise, you need to request license review on the package's license.
+If the package's license is approved, please add it to the whitelist of suitable licenses.
+'''.format(package, license))
+                            return False
                 else:
                     license_file = license_file_matches[0].group(1)
                     self.log(logging.DEBUG, 'package_license_file', {},
                              'has license-file {}'.format(license_file))
 
-                    if package not in LICENSE_FILE_PACKAGE_WHITELIST:
+                    if package not in RUNTIME_LICENSE_FILE_PACKAGE_WHITELIST:
                         self.log(logging.ERROR, 'package_license_file_unknown', {},
                                  '''Package {} has an unreviewed license file: {}.
 

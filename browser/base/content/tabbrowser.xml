@@ -95,13 +95,6 @@
                            command="cmd_newNavigatorTab"
                            onclick="checkForMiddleClick(this, event);"
                            tooltip="dynamic-shortcut-tooltip"/>
-        <xul:hbox class="restore-tabs-button-wrapper"
-                  anonid="restore-tabs-button-wrapper">
-          <xul:toolbarbutton anonid="restore-tabs-button"
-                             class="restore-tabs-button"
-                             onclick="SessionStore.restoreLastSession();"/>
-        </xul:hbox>
-
         <xul:spacer class="closing-tabs-spacer" anonid="closing-tabs-spacer"
                     style="width: 0;"/>
       </xul:arrowscrollbox>
@@ -111,9 +104,6 @@
       <constructor>
         <![CDATA[
           this._tabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
-
-          let { restoreTabsButton } = this;
-          restoreTabsButton.setAttribute("label", gTabBrowserBundle.GetStringFromName("tabs.restoreLastTabs"));
 
           let strId = PrivateBrowsingUtils.isWindowPrivate(window) ?
               "emptyPrivateTabTitle" : "emptyTabTitle";
@@ -175,13 +165,6 @@
       <field name="_beforeHoveredTab">null</field>
       <field name="_afterHoveredTab">null</field>
       <field name="_hoveredTab">null</field>
-      <field name="restoreTabsButton">
-        document.getAnonymousElementByAttribute(this, "anonid", "restore-tabs-button");
-      </field>
-      <field name="_restoreTabsButtonWrapperWidth">0</field>
-      <field name="windowUtils">
-        window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      </field>
 
       <property name="_tabMinWidth">
         <setter>
@@ -189,51 +172,6 @@
           return val;
         </setter>
       </property>
-
-      <property name="restoreTabsButtonWrapperWidth" readonly="true">
-        <getter>
-          if (!this._restoreTabsButtonWrapperWidth) {
-            this._restoreTabsButtonWrapperWidth = this.windowUtils
-              .getBoundsWithoutFlushing(this.restoreTabsButton.parentNode)
-              .width;
-          }
-          return this._restoreTabsButtonWrapperWidth;
-        </getter>
-      </property>
-
-      <method name="updateSessionRestoreVisibility">
-        <body><![CDATA[
-          let {restoreTabsButton, restoreTabsButtonWrapperWidth, windowUtils} = this;
-          let restoreTabsButtonWrapper = restoreTabsButton.parentNode;
-
-          if (!restoreTabsButtonWrapper.getAttribute("session-exists")) {
-            restoreTabsButtonWrapper.removeAttribute("shown");
-            return;
-          }
-
-          let arrowScrollboxWidth = this.arrowScrollbox.clientWidth;
-
-          let newTabButton = document.getAnonymousElementByAttribute(
-            this, "anonid", "tabs-newtab-button");
-
-          // If there are no pinned tabs it will multiply by 0 and result in 0
-          let pinnedTabsWidth = windowUtils.getBoundsWithoutFlushing(this.firstChild).width * this._lastNumPinned;
-
-          let numUnpinnedTabs = this.childNodes.length - this._lastNumPinned;
-          let unpinnedTabsWidth = windowUtils.getBoundsWithoutFlushing(this.lastChild).width * numUnpinnedTabs;
-
-          let tabbarUsedSpace = pinnedTabsWidth + unpinnedTabsWidth
-            + windowUtils.getBoundsWithoutFlushing(newTabButton).width;
-
-          // Subtract the elements' widths from the available space to ensure
-          // that showing the restoreTabsButton won't cause any overflow.
-          if (arrowScrollboxWidth - tabbarUsedSpace > restoreTabsButtonWrapperWidth) {
-            restoreTabsButtonWrapper.setAttribute("shown", "true");
-          } else {
-            restoreTabsButtonWrapper.removeAttribute("shown");
-          }
-        ]]></body>
-      </method>
 
       <method name="observe">
         <parameter name="aSubject"/>
@@ -728,7 +666,6 @@
 
               this._updateCloseButtons();
               this._handleTabSelect(true);
-              this.updateSessionRestoreVisibility();
               break;
             case "mouseout":
               // If the "related target" (the node to which the pointer went) is not

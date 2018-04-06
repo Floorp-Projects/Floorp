@@ -1,14 +1,16 @@
 #![cfg_attr(windows, allow(dead_code, unused_imports))]
 
+use std::cmp;
 use std::env;
 use std::fs::{self, File};
 use std::io;
 use std::path::{Path, PathBuf};
+use std::collections::HashMap;
 
 use quickcheck::{Arbitrary, Gen, QuickCheck, StdGen};
 use rand::{self, Rng};
 
-use super::{DirEntry, WalkDir, WalkDirIterator, Iter, Error, ErrorInner};
+use super::{DirEntry, WalkDir, IntoIter, Error, ErrorInner};
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 enum Tree {
@@ -56,6 +58,41 @@ impl Tree {
         }
         assert_eq!(stack.len(), 1);
         Ok(stack.pop().unwrap())
+    }
+
+    fn from_walk_with_contents_first<P, F>(
+        p: P,
+        f: F,
+    ) -> io::Result<Tree>
+    where P: AsRef<Path>, F: FnOnce(WalkDir) -> WalkDir {
+        let mut contents_of_dir_at_depth = HashMap::new();
+        let mut min_depth = ::std::usize::MAX;
+        let top_level_path = p.as_ref().to_path_buf();
+        for result in f(WalkDir::new(p).contents_first(true)) {
+            let dentry = try!(result);
+
+            let tree =
+            if dentry.file_type().is_dir() {
+                let any_contents = contents_of_dir_at_depth.remove(
+                    &(dentry.depth+1));
+            Tree::Dir(pb(dentry.file_name()), any_contents.unwrap_or_default())
+            } else {
+                if dentry.file_type().is_symlink() {
+                    let src = try!(dentry.path().read_link());
+                    let dst = pb(dentry.file_name());
+                    let dir = dentry.path().is_dir();
+                    Tree::Symlink { src: src, dst: dst, dir: dir }
+                } else {
+                    Tree::File(pb(dentry.file_name()))
+                }
+            };
+            contents_of_dir_at_depth.entry(
+                    dentry.depth).or_insert(vec!()).push(tree);
+            min_depth = cmp::min(min_depth, dentry.depth);
+        }
+        Ok(Tree::Dir(top_level_path,
+                contents_of_dir_at_depth.remove(&min_depth)
+                .unwrap_or_default()))
     }
 
     fn name(&self) -> &Path {
@@ -235,7 +272,7 @@ enum WalkEvent {
 
 struct WalkEventIter {
     depth: usize,
-    it: Iter,
+    it: IntoIter,
     next: Option<Result<DirEntry, Error>>,
 }
 
@@ -299,10 +336,13 @@ fn tmpdir() -> TempDir {
 }
 
 fn dir_setup_with<F>(t: &Tree, f: F) -> (TempDir, Tree)
-        where F: FnOnce(WalkDir) -> WalkDir {
+        where F: Fn(WalkDir) -> WalkDir {
     let tmp = tmpdir();
     t.create_in(tmp.path()).unwrap();
-    let got = Tree::from_walk_with(tmp.path(), f).unwrap();
+    let got = Tree::from_walk_with(tmp.path(), &f).unwrap();
+    let got_cf = Tree::from_walk_with_contents_first(tmp.path(), &f).unwrap();
+    assert_eq!(got, got_cf);
+
     (tmp, got.unwrap_singleton().unwrap_singleton())
 }
 
@@ -556,6 +596,10 @@ fn walk_dir_min_depth_2() {
     exp.create_in(tmp.path()).unwrap();
     let got = Tree::from_walk_with(tmp.path(), |wd| wd.min_depth(2))
                    .unwrap().unwrap_dir();
+    let got_cf = Tree::from_walk_with_contents_first(
+                    tmp.path(), |wd| wd.min_depth(2))
+                   .unwrap().unwrap_dir();
+    assert_eq!(got, got_cf);
     assert_tree_eq!(exp, td("foo", got));
 }
 
@@ -571,6 +615,10 @@ fn walk_dir_min_depth_3() {
     let got = Tree::from_walk_with(tmp.path(), |wd| wd.min_depth(3))
                    .unwrap().unwrap_dir();
     assert_eq!(vec![tf("xyz")], got);
+    let got_cf = Tree::from_walk_with_contents_first(
+                    tmp.path(), |wd| wd.min_depth(3))
+                   .unwrap().unwrap_dir();
+    assert_eq!(got, got_cf);
 }
 
 #[test]
@@ -615,6 +663,10 @@ fn walk_dir_min_max_depth() {
     let got = Tree::from_walk_with(tmp.path(),
                                    |wd| wd.min_depth(2).max_depth(2))
                    .unwrap().unwrap_dir();
+    let got_cf = Tree::from_walk_with_contents_first(tmp.path(),
+                                   |wd| wd.min_depth(2).max_depth(2))
+                   .unwrap().unwrap_dir();
+    assert_eq!(got, got_cf);
     assert_tree_eq!(
         td("foo", vec![tf("bar"), td("abc", vec![]), tf("baz")]),
         td("foo", got));
@@ -709,13 +761,16 @@ fn walk_dir_sort() {
     let tmp_path = tmp.path();
     let tmp_len = tmp_path.to_str().unwrap().len();
     exp.create_in(tmp_path).unwrap();
-    let it = WalkDir::new(tmp_path).sort_by(|a,b| a.cmp(b)).into_iter();
+    let it = WalkDir::new(tmp_path)
+        .sort_by(|a,b| a.file_name().cmp(b.file_name()))
+        .into_iter();
     let got = it.map(|d| {
         let path = d.unwrap();
         let path = &path.path().to_str().unwrap()[tmp_len..];
         path.replace("\\", "/")
     }).collect::<Vec<String>>();
-    assert_eq!(got,
+    assert_eq!(
+        got,
         ["", "/foo", "/foo/abc", "/foo/abc/fit", "/foo/bar", "/foo/faz"]);
 }
 
@@ -730,13 +785,31 @@ fn walk_dir_sort_small_fd_max() {
     let tmp_path = tmp.path();
     let tmp_len = tmp_path.to_str().unwrap().len();
     exp.create_in(tmp_path).unwrap();
-    let it =
-        WalkDir::new(tmp_path).max_open(1).sort_by(|a,b| a.cmp(b)).into_iter();
+    let it = WalkDir::new(tmp_path)
+        .max_open(1)
+        .sort_by(|a,b| a.file_name().cmp(b.file_name()))
+        .into_iter();
     let got = it.map(|d| {
         let path = d.unwrap();
         let path = &path.path().to_str().unwrap()[tmp_len..];
         path.replace("\\", "/")
     }).collect::<Vec<String>>();
-    assert_eq!(got,
+    assert_eq!(
+        got,
         ["", "/foo", "/foo/abc", "/foo/abc/fit", "/foo/bar", "/foo/faz"]);
+}
+
+#[test]
+fn walk_dir_send_sync_traits() {
+    use FilterEntry;
+
+    fn assert_send<T: Send>() {}
+    fn assert_sync<T: Sync>() {}
+
+    assert_send::<WalkDir>();
+    assert_sync::<WalkDir>();
+    assert_send::<IntoIter>();
+    assert_sync::<IntoIter>();
+    assert_send::<FilterEntry<IntoIter, u8>>();
+    assert_sync::<FilterEntry<IntoIter, u8>>();
 }

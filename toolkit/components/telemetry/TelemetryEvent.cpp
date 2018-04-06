@@ -25,6 +25,7 @@
 #include "TelemetryCommon.h"
 #include "TelemetryEvent.h"
 #include "TelemetryEventData.h"
+#include "TelemetryScalar.h"
 #include "ipc/TelemetryIPCAccumulator.h"
 
 using mozilla::StaticMutex;
@@ -380,7 +381,7 @@ CanRecordEvent(const StaticMutexAutoLock& lock, const EventKey& eventKey,
     }
   }
 
-  return gEnabledCategories.GetEntry(GetCategory(lock, eventKey));
+  return true;
 }
 
 bool
@@ -469,14 +470,24 @@ RecordEvent(const StaticMutexAutoLock& lock, ProcessID processType,
     return RecordEventResult::ExpiredEvent;
   }
 
+  // Check whether the extra keys passed are valid.
+  if (!CheckExtraKeysValid(*eventKey, extra)) {
+    return RecordEventResult::InvalidExtraKey;
+  }
+
   // Check whether we can record this event.
   if (!CanRecordEvent(lock, *eventKey, processType)) {
     return RecordEventResult::Ok;
   }
 
-  // Check whether the extra keys passed are valid.
-  if (!CheckExtraKeysValid(*eventKey, extra)) {
-    return RecordEventResult::InvalidExtraKey;
+  // Count the number of times this event has been recorded, even if its
+  // category does not have recording enabled.
+  TelemetryScalar::SummarizeEvent(UniqueEventName(category, method, object),
+                                  processType, eventKey->dynamic);
+
+  // Check whether this event's category has recording enabled
+  if (!gEnabledCategories.GetEntry(GetCategory(lock, *eventKey))) {
+    return RecordEventResult::Ok;
   }
 
   // Add event record.

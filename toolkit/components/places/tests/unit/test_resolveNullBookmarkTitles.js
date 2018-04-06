@@ -27,24 +27,6 @@ add_task(async function() {
   PlacesUtils.tagging.tagURI(uri2, ["tag 2"]);
 });
 
-add_task(async function testAsTagQuery() {
-  let options = PlacesUtils.history.getNewQueryOptions();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  options.resultType = options.RESULTS_AS_TAG_CONTENTS;
-
-  let query = PlacesUtils.history.getNewQuery();
-  // if we don't set a tag folder, RESULTS_AS_TAG_CONTENTS will return all
-  // tagged URIs
-  let root = PlacesUtils.history.executeQuery(query, options).root;
-  root.containerOpen = true;
-  Assert.equal(root.childCount, 2);
-  // actually RESULTS_AS_TAG_CONTENTS return results ordered by place_id DESC
-  // so they are reversed
-  Assert.equal(root.getChild(0).title, "");
-  Assert.equal(root.getChild(1).title, "");
-  root.containerOpen = false;
-});
-
 add_task(async function testTagQuery() {
   let options = PlacesUtils.history.getNewQueryOptions();
   let query = PlacesUtils.history.getNewQuery();

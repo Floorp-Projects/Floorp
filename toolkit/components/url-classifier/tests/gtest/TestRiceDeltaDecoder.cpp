@@ -16,7 +16,7 @@ struct TestingData {
 
 static bool runOneTest(TestingData& aData);
 
-TEST(RiceDeltaDecoder, SingleEncodedValue) {
+TEST(UrlClassifierRiceDeltaDecoder, SingleEncodedValue) {
   TestingData td = { { 99 }, { 99 }, 0 };
 
   ASSERT_TRUE(runOneTest(td));
@@ -25,7 +25,7 @@ TEST(RiceDeltaDecoder, SingleEncodedValue) {
 // In this batch of tests, the encoded data would be like
 // what we originally receive from the network. See comment
 // in |runOneTest| for more detail.
-TEST(RiceDeltaDecoder, Empty) {
+TEST(UrlClassifierRiceDeltaDecoder, Empty) {
 
   // The following structure and testing data is copied from Chromium source code:
   //

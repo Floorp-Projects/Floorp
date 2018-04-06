@@ -33,7 +33,7 @@ void CheckFileExist(const char* table, const T (&files)[N], bool expectExists)
   }
 }
 
-TEST(FailUpdate, CheckTableReset)
+TEST(UrlClassifierFailUpdate, CheckTableReset)
 {
   const bool FULL_UPDATE = true;
   const bool PARTIAL_UPDATE = false;

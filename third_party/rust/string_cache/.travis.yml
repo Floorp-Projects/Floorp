@@ -1,0 +1,19 @@
+sudo: false
+language: rust
+rust:
+  - nightly
+  - beta
+  - stable
+os:
+  - linux
+script:
+  - cargo build
+  - cargo test
+  - cargo test --features log-events
+  - "if [ $TRAVIS_RUST_VERSION = nightly ]; then cargo test --features unstable; fi"
+  - cargo test
+  - "cd string-cache-codegen/ && cargo build && cd .."
+  - "cd examples/event-log/ && cargo build && cd ../.."
+  - "cd examples/summarize-events/ && cargo build && cd ../.."
+notifications:
+  webhooks: http://build.servo.org:54856/travis

@@ -73,7 +73,7 @@ add_task(async function() {
     let tagsQuery = await PlacesUtils.bookmarks.insert({
       parentGuid: root.guid,
       title: "",
-      url: "place:type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY,
+      url: "place:type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT,
     });
     tree.selectItems([tagsQuery.guid]);
     PlacesUtils.asQuery(tree.selectedNode).containerOpen = true;

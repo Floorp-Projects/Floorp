@@ -1,0 +1,21 @@
+base
+test unify::test::big_array_bench ... bench:   1,416,793 ns/iter (+/- 216,475)
+
+assert -> debug_assert
+test unify::test::big_array_bench ... bench:   1,420,368 ns/iter (+/- 144,433)
+test unify::test::big_array_bench ... bench:   1,414,448 ns/iter (+/- 219,137)
+
+don't copy for redirects
+test unify::test::big_array_bench ... bench:   1,349,796 ns/iter (+/- 233,931)
+test unify::test::big_array_bench ... bench:   1,367,082 ns/iter (+/- 301,644)
+test unify::test::big_array_bench ... bench:   1,358,154 ns/iter (+/- 348,796)
+
+copy less
+test unify::test::big_array_bench ... bench:     744,775 ns/iter (+/- 51,865)
+test unify::test::big_array_bench ... bench:     750,939 ns/iter (+/- 146,417)
+test unify::test::big_array_bench ... bench:     754,104 ns/iter (+/- 121,968)
+
+s/set-value/update-value/
+test unify::test::big_array_bench ... bench:     731,531 ns/iter (+/- 125,685)
+test unify::test::big_array_bench ... bench:     725,162 ns/iter (+/- 99,013)
+test unify::test::big_array_bench ... bench:     735,473 ns/iter (+/- 121,156)
