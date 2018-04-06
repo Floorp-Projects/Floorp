@@ -115,6 +115,16 @@ Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+function checkInstall(install, expected) {
+  for (let [key, value] of Object.entries(expected)) {
+    if (value instanceof Ci.nsIURI) {
+      equal(install[key] && install[key].spec, value.spec, `Expected value of install.${key}`);
+    } else {
+      deepEqual(install[key], value, `Expected value of install.${key}`);
+    }
+  }
+}
+
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -145,24 +155,27 @@ add_task(async function test_1() {
   let install = await AddonManager.getInstallForFile(XPIS.test_install1);
   ensure_test_completed();
 
-  notEqual(install, null);
-  equal(install.type, "extension");
-  equal(install.version, "1.0");
-  equal(install.name, "Test 1");
-  equal(install.state, AddonManager.STATE_DOWNLOADED);
-  ok(install.addon.hasResource("install.rdf"));
-  notEqual(install.addon.syncGUID, null);
-  equal(install.addon.install, install);
-  equal(install.addon.size, ADDON1_SIZE);
-  let file = XPIS.test_install1;
-  let uri = Services.io.newFileURI(file).spec;
-  equal(install.addon.getResourceURI("install.rdf").spec, "jar:" + uri + "!/install.rdf");
-  equal(install.addon.iconURL, "jar:" + uri + "!/icon.png");
-  equal(install.addon.icon64URL, "jar:" + uri + "!/icon64.png");
-  equal(install.iconURL, null);
+  let uri = Services.io.newFileURI(XPIS.test_install1);
+  checkInstall(install, {
+    type: "extension",
+    version: "1.0",
+    name: "Test 1",
+    state: AddonManager.STATE_DOWNLOADED,
+    iconURL: null,
+    sourceURI: uri,
+  });
 
-  equal(install.sourceURI.spec, uri);
-  equal(install.addon.sourceURI.spec, uri);
+  let {addon} = install;
+  checkAddon("addon1@tests.mozilla.org", addon, {
+    install,
+    size: ADDON1_SIZE,
+    iconURL: `jar:${uri.spec}!/icon.png`,
+    icon64URL: `jar:${uri.spec}!/icon64.png`,
+    sourceURI: uri,
+  });
+  notEqual(addon.syncGUID, null);
+  ok(addon.hasResource("install.rdf"));
+  equal(addon.getResourceURI("install.rdf").spec, `jar:${uri.spec}!/install.rdf`);
 
   let activeInstalls = await AddonManager.getAllInstalls();
   equal(activeInstalls.length, 1);
@@ -192,7 +205,7 @@ add_task(async function test_1() {
 
   ensure_test_completed();
 
-  let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   ok(addon);
 
   let pendingAddons = await AddonManager.getAddonsWithOperationsByTypes(null);
@@ -200,17 +213,16 @@ add_task(async function test_1() {
 
   uri = NetUtil.newURI(addon.iconURL);
   if (uri instanceof Ci.nsIJARURI) {
-    let archiveURI = uri.JARFile;
-    let archiveFile = archiveURI.QueryInterface(Ci.nsIFileURL).file;
-    let zipReader = new ZipReader(archiveFile);
+    let {file} = uri.JARFile.QueryInterface(Ci.nsIFileURL);
+    let zipReader = new ZipReader(file);
     try {
       ok(zipReader.hasEntry(uri.JAREntry));
     } finally {
       zipReader.close();
     }
   } else {
-    let iconFile = uri.QueryInterface(Ci.nsIFileURL).file;
-    ok(iconFile.exists());
+    let {file} = uri.QueryInterface(Ci.nsIFileURL);
+    ok(file.exists());
   }
 
   let updateDate = Date.now();
@@ -224,21 +236,27 @@ add_task(async function test_1() {
   equal(activeInstalls, 0);
 
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
-  notEqual(a1, null);
+  let uri2 = do_get_addon_root_uri(profileDir, "addon1@tests.mozilla.org");
+
+  checkAddon("addon1@tests.mozilla.org", a1, {
+    syncGUID: installSyncGUID,
+    type: "extension",
+    version: "1.0",
+    name: "Test 1",
+    foreignInstall: false,
+    size: ADDON1_SIZE,
+    iconURL: uri2 + "icon.png",
+    icon64URL: uri2 + "icon64.png",
+    sourceURI: Services.io.newFileURI(XPIS.test_install1),
+  });
+
   notEqual(a1.syncGUID, null);
   ok(a1.syncGUID.length >= 9);
-  equal(a1.syncGUID, installSyncGUID);
-  equal(a1.type, "extension");
-  equal(a1.version, "1.0");
-  equal(a1.name, "Test 1");
+
   ok(isExtensionInBootstrappedList(profileDir, a1.id));
   ok(XPIS.test_install1.exists());
   do_check_in_crash_annotation(a1.id, a1.version);
-  equal(a1.size, ADDON1_SIZE);
-  ok(!a1.foreignInstall);
 
-  equal(a1.sourceURI.spec,
-        Services.io.newFileURI(XPIS.test_install1).spec);
   let difference = a1.installDate.getTime() - updateDate;
   if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
     do_throw("Add-on install time was out by " + difference + "ms");
@@ -250,10 +268,7 @@ add_task(async function test_1() {
   ok(a1.hasResource("install.rdf"));
   ok(!a1.hasResource("foo.bar"));
 
-  let uri2 = do_get_addon_root_uri(profileDir, "addon1@tests.mozilla.org");
   equal(a1.getResourceURI("install.rdf").spec, uri2 + "install.rdf");
-  equal(a1.iconURL, uri2 + "icon.png");
-  equal(a1.icon64URL, uri2 + "icon64.png");
 
   // Ensure that extension bundle (or icon if unpacked) has updated
   // lastModifiedDate.
@@ -273,12 +288,13 @@ add_task(async function test_1() {
 add_task(async function test_2() {
   let url = "http://example.com/addons/test_install2_1.xpi";
   let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", null, "Test 2", null, "1.0");
-  notEqual(install, null);
-  equal(install.version, "1.0");
-  equal(install.name, "Test 2");
-  equal(install.state, AddonManager.STATE_AVAILABLE);
-  equal(install.iconURL, null);
-  equal(install.sourceURI.spec, url);
+  checkInstall(install, {
+    version: "1.0",
+    name: "Test 2",
+    state: AddonManager.STATE_AVAILABLE,
+    iconURL: null,
+    sourceURI: Services.io.newURI(url),
+  });
 
   let activeInstalls = await AddonManager.getAllInstalls();
   equal(activeInstalls.length, 1);
@@ -305,11 +321,13 @@ add_task(async function test_2() {
   });
 
   ensure_test_completed();
-  equal(install.version, "2.0");
-  equal(install.name, "Real Test 2");
-  equal(install.state, AddonManager.STATE_DOWNLOADED);
+  checkInstall(install, {
+    version: "2.0",
+    name: "Real Test 2",
+    state: AddonManager.STATE_DOWNLOADED,
+    iconURL: null,
+  });
   equal(install.addon.install, install);
-  equal(install.iconURL, null);
 
   install = await new Promise(resolve => {
     prepare_test({
@@ -327,8 +345,6 @@ add_task(async function test_2() {
   let updateDate = Date.now();
 
   ensure_test_completed();
-  let olda2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
-  ok(olda2);
 
   await promiseRestartManager();
 
@@ -336,16 +352,18 @@ add_task(async function test_2() {
   equal(installs, 0);
 
   let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
-  notEqual(a2, null);
+  checkAddon("addon2@tests.mozilla.org", a2, {
+    type: "extension",
+    version: "2.0",
+    name: "Real Test 2",
+    sourceURI: Services.io.newURI(url),
+  });
   notEqual(a2.syncGUID, null);
-  equal(a2.type, "extension");
-  equal(a2.version, "2.0");
-  equal(a2.name, "Real Test 2");
+
   ok(isExtensionInBootstrappedList(profileDir, a2.id));
   ok(XPIS.test_install2_1.exists());
+
   do_check_in_crash_annotation(a2.id, a2.version);
-  equal(a2.sourceURI.spec,
-        "http://example.com/addons/test_install2_1.xpi");
 
   let difference = a2.installDate.getTime() - updateDate;
   if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
@@ -355,7 +373,7 @@ add_task(async function test_2() {
   if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
     do_throw("Add-on update time was out by " + difference + "ms");
 
-  gInstallDate = a2.installDate.getTime();
+  gInstallDate = a2.installDate;
 });
 
 // Tests that installing a new version of an existing add-on works
@@ -368,15 +386,16 @@ add_task(async function test_4() {
   let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", null, "Test 3", null, "3.0");
   ensure_test_completed();
 
-  notEqual(install, null);
-  equal(install.version, "3.0");
-  equal(install.name, "Test 3");
-  equal(install.state, AddonManager.STATE_AVAILABLE);
+  checkInstall(install, {
+    version: "3.0",
+    name: "Test 3",
+    state: AddonManager.STATE_AVAILABLE,
+    existingAddon: null,
+  });
 
   let activeInstalls = await AddonManager.getAllInstalls();
   equal(activeInstalls.length, 1);
   equal(activeInstalls[0], install);
-  equal(install.existingAddon, null);
 
   install = await new Promise(resolve => {
     prepare_test({}, [
@@ -391,11 +410,13 @@ add_task(async function test_4() {
 
   ensure_test_completed();
 
-  equal(install.version, "3.0");
-  equal(install.name, "Real Test 3");
-  equal(install.state, AddonManager.STATE_DOWNLOADED);
-  ok(install.existingAddon);
-  equal(install.existingAddon.id, "addon2@tests.mozilla.org");
+  checkInstall(install, {
+    version: "3.0",
+    name: "Real Test 3",
+    state: AddonManager.STATE_DOWNLOADED,
+    existingAddon: await AddonManager.getAddonByID("addon2@tests.mozilla.org"),
+  });
+
   equal(install.addon.install, install);
 
   // Installation will continue when there is nothing returned.
@@ -420,19 +441,21 @@ add_task(async function test_4() {
   equal(installs2.length, 0);
 
   let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
-  notEqual(a2, null);
-  equal(a2.type, "extension");
-  equal(a2.version, "3.0");
-  equal(a2.name, "Real Test 3");
-  ok(a2.isActive);
+  checkAddon("addon2@tests.mozilla.org", a2, {
+    type: "extension",
+    version: "3.0",
+    name: "Real Test 3",
+    isActive: true,
+    foreignInstall: false,
+    sourceURI: Services.io.newURI(url),
+    installDate: gInstallDate,
+  });
+
   ok(isExtensionInBootstrappedList(profileDir, a2.id));
   ok(XPIS.test_install2_2.exists());
-  do_check_in_crash_annotation(a2.id, a2.version);
-  equal(a2.sourceURI.spec,
-        "http://example.com/addons/test_install2_2.xpi");
-  ok(!a2.foreignInstall);
 
-  equal(a2.installDate.getTime(), gInstallDate);
+  do_check_in_crash_annotation(a2.id, a2.version);
+
   // Update date should be later (or the same if this test is too fast)
   ok(a2.installDate <= a2.updateDate);
 
@@ -451,10 +474,11 @@ add_task(async function test_6() {
   let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", null, "Real Test 4", null, "1.0");
   ensure_test_completed();
 
-  notEqual(install, null);
-  equal(install.version, "1.0");
-  equal(install.name, "Real Test 4");
-  equal(install.state, AddonManager.STATE_AVAILABLE);
+  checkInstall(install, {
+    version: "1.0",
+    name: "Real Test 4",
+    state: AddonManager.STATE_AVAILABLE,
+  });
 
   let activeInstalls = await AddonManager.getInstallsByTypes(null);
   equal(activeInstalls.length, 1);
@@ -472,11 +496,15 @@ add_task(async function test_6() {
   });
 
   ensure_test_completed();
-  equal(install.version, "1.0");
-  equal(install.name, "Real Test 4");
-  equal(install.state, AddonManager.STATE_DOWNLOADED);
-  equal(install.existingAddon, null);
-  ok(!install.addon.appDisabled);
+  checkInstall(install, {
+    version: "1.0",
+    name: "Real Test 4",
+    state: AddonManager.STATE_DOWNLOADED,
+    existingAddon: null,
+  });
+  checkAddon("addon3@tests.mozilla.org", install.addon, {
+    appDisabled: false,
+  });
 
   // Continue the install
   await new Promise(resolve => {
@@ -500,14 +528,17 @@ add_task(async function test_6() {
   equal(installs, 0);
 
   let a3 = await AddonManager.getAddonByID("addon3@tests.mozilla.org");
-  notEqual(a3, null);
+  checkAddon("addon3@tests.mozilla.org", a3, {
+    type: "extension",
+    version: "1.0",
+    name: "Real Test 4",
+    isActive: true,
+    appDisabled: false,
+  });
   notEqual(a3.syncGUID, null);
-  equal(a3.type, "extension");
-  equal(a3.version, "1.0");
-  equal(a3.name, "Real Test 4");
-  ok(a3.isActive);
-  ok(!a3.appDisabled);
+
   ok(isExtensionInBootstrappedList(profileDir, a3.id));
+
   ok(XPIS.test_install3.exists());
   a3.uninstall();
 });
@@ -541,14 +572,17 @@ add_task(async function test_8() {
   await promiseRestartManager();
 
   let a3 = await AddonManager.getAddonByID("addon3@tests.mozilla.org");
-  notEqual(a3, null);
+  checkAddon("addon3@tests.mozilla.org", a3, {
+    type: "extension",
+    version: "1.0",
+    name: "Real Test 4",
+    isActive: true,
+    appDisabled: false,
+  });
   notEqual(a3.syncGUID, null);
-  equal(a3.type, "extension");
-  equal(a3.version, "1.0");
-  equal(a3.name, "Real Test 4");
-  ok(a3.isActive);
-  ok(!a3.appDisabled);
+
   ok(isExtensionInBootstrappedList(profileDir, a3.id));
+
   ok(XPIS.test_install3.exists());
   a3.uninstall();
 });
@@ -565,10 +599,11 @@ add_task(async function test_9() {
   let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", null, "Real Test 4", null, "1.0");
   ensure_test_completed();
 
-  notEqual(install, null);
-  equal(install.version, "1.0");
-  equal(install.name, "Real Test 4");
-  equal(install.state, AddonManager.STATE_AVAILABLE);
+  checkInstall(install, {
+    version: "1.0",
+    name: "Real Test 4",
+    state: AddonManager.STATE_AVAILABLE,
+  });
 
   let activeInstalls = await AddonManager.getInstallsByTypes(null);
   equal(activeInstalls.length, 1);
@@ -705,8 +740,10 @@ add_task(async function test_16() {
   await promiseRestartManager();
 
   let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
-  ok(a2.userDisabled);
-  ok(!a2.isActive);
+  checkAddon("addon2@tests.mozilla.org", a2, {
+    userDisabled: true,
+    isActive: false,
+  });
 
   let url_2 = "http://example.com/addons/test_install2_2.xpi";
   let aInstall_2 = await AddonManager.getInstallForURL(url_2, null, "application/x-xpinstall");
@@ -719,13 +756,18 @@ add_task(async function test_16() {
     aInstall_2.install();
   });
 
-  ok(aInstall_2.addon.userDisabled);
+  checkAddon("addon2@tests.mozilla.org", aInstall_2.addon, {
+    userDisabled: true,
+    isActive: false,
+  });
 
   await promiseRestartManager();
 
   let a2_2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
-  ok(a2_2.userDisabled);
-  ok(!a2_2.isActive);
+  checkAddon("addon2@tests.mozilla.org", a2_2, {
+    userDisabled: true,
+    isActive: false,
+  });
 
   a2_2.uninstall();
 });
@@ -750,8 +792,10 @@ add_task(async function test_17() {
   await promiseRestartManager();
 
   let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
-  ok(!a2.userDisabled);
-  ok(a2.isActive);
+  checkAddon("addon2@tests.mozilla.org", a2, {
+    userDisabled: false,
+    isActive: true,
+  });
 
   let url_2 = "http://example.com/addons/test_install2_2.xpi";
   let aInstall_2 = await AddonManager.getInstallForURL(url_2, null, "application/x-xpinstall");
@@ -772,8 +816,10 @@ add_task(async function test_17() {
   await promiseRestartManager();
 
   let a2_2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
-  ok(a2_2.userDisabled);
-  ok(!a2_2.isActive);
+  checkAddon("addon2@tests.mozilla.org", a2_2, {
+    userDisabled: true,
+    isActive: false,
+  });
 
   a2_2.uninstall();
 });
@@ -801,8 +847,10 @@ add_task(async function test_18() {
   await promiseRestartManager();
 
   let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
-  ok(a2.userDisabled);
-  ok(!a2.isActive);
+  checkAddon("addon2@tests.mozilla.org", a2, {
+    userDisabled: true,
+    isActive: false,
+  });
 
   let url_2 = "http://example.com/addons/test_install2_2.xpi";
   let aInstall_2 = await AddonManager.getInstallForURL(url_2, null, "application/x-xpinstall");
@@ -823,8 +871,10 @@ add_task(async function test_18() {
   await promiseRestartManager();
 
   let a2_2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
-  ok(!a2_2.userDisabled);
-  ok(a2_2.isActive);
+  checkAddon("addon2@tests.mozilla.org", a2_2, {
+    isActive: true,
+    userDisabled: false,
+  });
 
   a2_2.uninstall();
 });
@@ -928,8 +978,9 @@ add_task(async function test_22() {
   let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
   ensure_test_completed();
 
-  notEqual(aInstall, null);
-  equal(aInstall.state, AddonManager.STATE_AVAILABLE);
+  checkInstall(aInstall, {
+    state: AddonManager.STATE_AVAILABLE,
+  });
 
   let install = await new Promise(resolve => {
     prepare_test({}, [
@@ -981,8 +1032,9 @@ add_task(async function test_23() {
 
   ensure_test_completed();
 
-  notEqual(install, null);
-  equal(install.state, AddonManager.STATE_AVAILABLE);
+  checkInstall(install, {
+    state: AddonManager.STATE_AVAILABLE,
+  });
 
   await new Promise(resolve => {
     prepare_test({}, [
@@ -1034,8 +1086,9 @@ add_task(async function test_24() {
   let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", "sha1:foo");
   ensure_test_completed();
 
-  notEqual(aInstall, null);
-  equal(aInstall.state, AddonManager.STATE_AVAILABLE);
+  checkInstall(aInstall, {
+    state: AddonManager.STATE_AVAILABLE,
+  });
 
   let install = await new Promise(resolve => {
     prepare_test({}, [
@@ -1065,9 +1118,10 @@ add_task(async function test_25() {
   let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", do_get_file_hash(XPIS.test_install3));
   ensure_test_completed();
 
-  notEqual(aInstall, null);
-  equal(aInstall.state, AddonManager.STATE_DOWNLOADED);
-  equal(aInstall.error, 0);
+  checkInstall(aInstall, {
+    state: AddonManager.STATE_DOWNLOADED,
+    error: 0,
+  });
 
   prepare_test({ }, [
     "onDownloadCancelled"
@@ -1132,8 +1186,9 @@ add_task(async function test_27() {
   let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
   ensure_test_completed();
 
-  notEqual(aInstall, null);
-  equal(aInstall.state, AddonManager.STATE_AVAILABLE);
+  checkInstall(aInstall, {
+    state: AddonManager.STATE_AVAILABLE,
+  });
 
   aInstall.addListener({
     onDownloadProgress() {
@@ -1188,10 +1243,11 @@ add_task(async function test_29() {
   let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", null, "Addon Test 6", null, "1.0");
   ensure_test_completed();
 
-  notEqual(install, null);
-  equal(install.version, "1.0");
-  equal(install.name, "Addon Test 6");
-  equal(install.state, AddonManager.STATE_AVAILABLE);
+  checkInstall(install, {
+    version: "1.0",
+    name: "Addon Test 6",
+    state: AddonManager.STATE_AVAILABLE,
+  });
 
   let activeInstalls = await AddonManager.getInstallsByTypes(null);
   equal(activeInstalls.length, 1);
@@ -1209,10 +1265,13 @@ add_task(async function test_29() {
   });
 
   // ensure_test_completed();
-  equal(install.state, AddonManager.STATE_DOWNLOADED);
-  notEqual(install.addon, null);
-  ok(!install.addon.isCompatible);
-  ok(install.addon.appDisabled);
+  checkInstall(install, {
+    state: AddonManager.STATE_DOWNLOADED,
+  });
+  checkAddon("addon6@tests.mozilla.org", install.addon, {
+    isCompatible: false,
+    appDisabled: true,
+  });
 
   await new Promise(resolve => {
     prepare_test({}, [
@@ -1232,7 +1291,8 @@ add_task(async function test_30() {
   let install = await AddonManager.getInstallForFile(XPIS.test_install7);
   ensure_test_completed();
 
-  notEqual(install, null);
-  equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-  equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
+  checkInstall(install, {
+    state: AddonManager.STATE_DOWNLOAD_FAILED,
+    error: AddonManager.ERROR_CORRUPT_FILE,
+  });
 });
