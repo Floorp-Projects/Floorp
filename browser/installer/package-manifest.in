@@ -420,7 +420,7 @@
 ; [Webide Files]
 @RESPATH@/browser/chrome/webide@JAREXT@
 @RESPATH@/browser/chrome/webide.manifest
-@RESPATH@/browser/@PREF_DIR@/webide-prefs.js
+@RESPATH@/browser/@PREF_DIR@/webide.js
 
 ; [DevTools Startup Files]
 @RESPATH@/browser/chrome/devtools-startup@JAREXT@
