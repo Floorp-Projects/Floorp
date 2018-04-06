@@ -32,62 +32,28 @@
 namespace js {
 
 /////////////////////////////////////////////////////////////////////
-// CompilerOutput & RecompileInfo
+// RecompileInfo
 /////////////////////////////////////////////////////////////////////
 
-inline jit::IonScript*
-CompilerOutput::ion() const
+jit::IonScript*
+RecompileInfo::maybeIonScriptToInvalidate() const
 {
-    // Note: If type constraints are generated before compilation has finished
-    // (i.e. after IonBuilder but before CodeGenerator::link) then a valid
-    // CompilerOutput may not yet have an associated IonScript.
-    MOZ_ASSERT(isValid());
-    jit::IonScript* ion = script()->maybeIonScript();
-    MOZ_ASSERT(ion != ION_COMPILING_SCRIPT);
-    return ion;
-}
+    // Make sure this is not called under CodeGenerator::link (before the
+    // IonScript is created).
+    MOZ_ASSERT(!TlsContext.get()->runtime()->jitRuntime()->currentCompilationId().isSome());
 
-inline CompilerOutput*
-RecompileInfo::compilerOutput(TypeZone& types) const
-{
-    if (generation != types.generation) {
-        if (!types.sweepCompilerOutputs || outputIndex >= types.sweepCompilerOutputs->length())
-            return nullptr;
-        CompilerOutput* output = &(*types.sweepCompilerOutputs)[outputIndex];
-        if (!output->isValid())
-            return nullptr;
-        output = &(*types.compilerOutputs)[output->sweepIndex()];
-        return output->isValid() ? output : nullptr;
-    }
-
-    if (!types.compilerOutputs || outputIndex >= types.compilerOutputs->length())
+    if (!script_->hasIonScript() || script_->ionScript()->compilationId() != id_)
         return nullptr;
-    CompilerOutput* output = &(*types.compilerOutputs)[outputIndex];
-    return output->isValid() ? output : nullptr;
-}
 
-inline CompilerOutput*
-RecompileInfo::compilerOutput(JSContext* cx) const
-{
-    return compilerOutput(cx->zone()->types);
+    return script_->ionScript();
 }
 
 inline bool
-RecompileInfo::shouldSweep(TypeZone& types)
+RecompileInfo::shouldSweep()
 {
-    CompilerOutput* output = compilerOutput(types);
-    if (!output || !output->isValid())
+    if (IsAboutToBeFinalizedUnbarriered(&script_))
         return true;
-
-    // If this info is for a compilation that occurred after sweeping started,
-    // the index is already correct.
-    MOZ_ASSERT_IF(generation == types.generation,
-                  outputIndex == output - types.compilerOutputs->begin());
-
-    // Update this info for the output's index in the zone's compiler outputs.
-    outputIndex = output - types.compilerOutputs->begin();
-    generation = types.generation;
-    return false;
+    return maybeIonScriptToInvalidate() == nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////
