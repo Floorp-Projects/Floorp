@@ -21,6 +21,10 @@ MOCHITEST_CHROME_MANIFESTS += [
     'content/test/chrome/chrome.ini',
 ]
 
+TESTING_JS_MODULES += [
+    'content/test/sanitize/SiteDataTestUtils.jsm',
+]
+
 BROWSER_CHROME_MANIFESTS += [
     'content/test/about/browser.ini',
     'content/test/alerts/browser.ini',

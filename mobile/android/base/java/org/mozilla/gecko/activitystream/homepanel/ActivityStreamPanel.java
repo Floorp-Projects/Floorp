@@ -112,10 +112,7 @@ public class ActivityStreamPanel extends FrameLayout {
         }
 
         // TODO: we should get the default values from resources for the other Top Sites sections above too.
-        final Context context = getContext();
-        final Resources res = getContext().getResources();
-        if (ActivityStreamConfiguration.isPocketEnabledByLocale(context) &&
-                sharedPreferences.getBoolean(PREF_POCKET_ENABLED, res.getBoolean(R.bool.pref_activitystream_pocket_enabled_default))) {
+        if (ActivityStreamConfiguration.isPocketRecommendingTopSites(getContext())) {
             lm.initLoader(LOADER_ID_POCKET, null, new PocketStoriesCallbacks());
         }
 

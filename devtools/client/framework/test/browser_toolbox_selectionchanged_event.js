@@ -7,7 +7,7 @@
 
 const PAGE_URL = "data:text/html;charset=utf-8,<body><div></div></body>";
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab(PAGE_URL);
   let toolbox = await openToolboxForTab(tab, "inspector", "bottom");
   let inspector = toolbox.getCurrentPanel();

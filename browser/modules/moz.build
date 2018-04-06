@@ -82,6 +82,9 @@ with Files("ReaderParent.jsm"):
 with Files("Sanitizer.jsm"):
     BUG_COMPONENT = ("Firefox", "Preferences")
 
+with Files("SiteDataManager.jsm"):
+    BUG_COMPONENT = ("Firefox", "Preferences")
+
 with Files("SitePermissions.jsm"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
@@ -155,6 +158,7 @@ EXTRA_JS_MODULES += [
     'RemotePrompt.jsm',
     'Sanitizer.jsm',
     'SchedulePressure.jsm',
+    'SiteDataManager.jsm',
     'SitePermissions.jsm',
     'ThemeVariableMap.jsm',
     'TransientPrefs.jsm',

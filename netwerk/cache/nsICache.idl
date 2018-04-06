@@ -13,8 +13,8 @@ typedef long nsCacheAccessMode;
  * nsICache is a namespace for various cache constants.  It does not represent
  * an actual object.
  */
-[scriptable, uuid(d6c67f38-b39a-4582-8a48-4c4f8a56dfd0)]
-interface nsICache
+[builtinclass, uuid(d6c67f38-b39a-4582-8a48-4c4f8a56dfd0)]
+interface nsICache : nsISupports
 {
     /**
      * Access Modes

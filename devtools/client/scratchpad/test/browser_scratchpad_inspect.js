@@ -2,28 +2,25 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(runTests);
   });
 
   gBrowser.loadURI("data:text/html;charset=utf8,<p>test inspect() in Scratchpad</p>");
 }
 
-function runTests()
-{
+function runTests() {
   let sp = gScratchpadWindow.Scratchpad;
 
   sp.setText("({ a: 'foobarBug636725' })");
 
-  sp.inspect().then(function () {
+  sp.inspect().then(function() {
     let sidebar = sp.sidebar;
     ok(sidebar.visible, "sidebar is open");
-
 
     let found = false;
 
@@ -45,7 +42,7 @@ function runTests()
     ok(!tabbox.hasAttribute("hidden"), "Scratchpad sidebar visible");
     sidebar.hide();
     ok(tabbox.hasAttribute("hidden"), "Scratchpad sidebar hidden");
-    sp.inspect().then(function () {
+    sp.inspect().then(function() {
       is(tabbox.width, 300, "Scratchpad sidebar width is still correct");
       ok(!tabbox.hasAttribute("hidden"), "Scratchpad sidebar visible again");
       finish();

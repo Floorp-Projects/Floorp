@@ -2,26 +2,23 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(testThrowOutput);
   });
 
   gBrowser.loadURI("data:text/html;charset=utf8,<p>Test throw outputs in Scratchpad</p>");
 }
 
-function testThrowOutput()
-{
+function testThrowOutput() {
   let scratchpad = gScratchpadWindow.Scratchpad, tests = [];
 
   let falsyValues = ["false", "0", "-0", "null", "undefined", "Infinity",
-                      "-Infinity", "NaN"];
-  falsyValues.forEach(function (value) {
+                     "-Infinity", "NaN"];
+  falsyValues.forEach(function(value) {
     tests.push({
       method: "display",
       code: "throw " + value + ";",
@@ -45,7 +42,7 @@ function testThrowOutput()
     label: "Correct exception message for a longString is shown"
   });
 
-  runAsyncTests(scratchpad, tests).then(function () {
+  runAsyncTests(scratchpad, tests).then(function() {
     finish();
   });
 }

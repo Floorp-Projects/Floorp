@@ -170,8 +170,7 @@ async function test_mute_tab(tab, icon, expectMuted) {
 }
 
 function get_tab_state(tab) {
-  const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-  return JSON.parse(ss.getTabState(tab));
+  return JSON.parse(SessionStore.getTabState(tab));
 }
 
 async function test_muting_using_menu(tab, expectMuted) {

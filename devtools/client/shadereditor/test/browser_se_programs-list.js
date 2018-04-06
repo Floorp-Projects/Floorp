@@ -23,10 +23,12 @@ async function ifWebGLSupported() {
     getPrograms(gFront, 2, (actors) => {
       // Fired upon each actor addition, we want to check only
       // after the first actor has been added so we can test state
-      if (actors.length === 1)
+      if (actors.length === 1) {
         checkFirstProgram();
-      if (actors.length === 2)
+      }
+      if (actors.length === 2) {
         checkSecondProgram();
+      }
     }),
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]).then(([programs, ]) => programs);

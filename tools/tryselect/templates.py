@@ -12,7 +12,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import sys
 from abc import ABCMeta, abstractmethod
-from argparse import Action
+from argparse import Action, SUPPRESS
 
 import mozpack.path as mozpath
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
@@ -144,10 +144,26 @@ class ChemspillPrio(Template):
             }
 
 
+class TalosProfile(Template):
+
+    def add_arguments(self, parser):
+        parser.add_argument('--talos-profile', dest='profile', action='store_true', default=False,
+                            help='Create and upload a gecko profile during talos tasks.')
+        # This is added for consistency with the 'syntax' selector
+        parser.add_argument('--geckoProfile', dest='profile', action='store_true', default=False,
+                            help=SUPPRESS)
+
+    def context(self, profile, **kwargs):
+        if not profile:
+            return
+        return {'talos-profile': profile}
+
+
 all_templates = {
     'artifact': Artifact,
     'path': Path,
     'env': Environment,
     'rebuild': Rebuild,
     'chemspill-prio': ChemspillPrio,
+    'talos-profile': TalosProfile,
 }

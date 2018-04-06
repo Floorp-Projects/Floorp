@@ -21,7 +21,9 @@ async function ifTestingSupported() {
   // Wait until after the recording started to trigger the content.
   // Use the gFront method rather than the SNAPSHOT_RECORDING_STARTED event
   // which triggers before the underlying actor call
-  await waitUntil(async function () { return !(await gFront.isRecording()); });
+  await waitUntil(async function() {
+    return !(await gFront.isRecording());
+  });
 
   // Start animation in content
   evalInDebuggee("start();");

@@ -40,8 +40,12 @@ function getBrowser(sidebar) {
   browser.setAttribute("selectmenulist", "ContentSelectDropdown");
   browser.setAttribute("onclick", "window.parent.contentAreaClick(event, true);");
 
+  // Ensure that the browser is going to run in the same process of the other
+  // extension pages from the same addon.
+  browser.sameProcessAsFrameLoader = sidebar.extension.groupFrameLoader;
+
   let readyPromise;
-  if (sidebar.remote) {
+  if (sidebar.extension.remote) {
     browser.setAttribute("remote", "true");
     browser.setAttribute("remoteType",
                          E10SUtils.getRemoteTypeForURI(sidebar.uri, true,
@@ -102,7 +106,7 @@ function loadPanel(extensionId, extensionUrl, browserStyle) {
   let policy = WebExtensionPolicy.getByID(extensionId);
   let sidebar = {
     uri: extensionUrl,
-    remote: policy.extension.remote,
+    extension: policy.extension,
     browserStyle,
   };
   getBrowser(sidebar).then(browser => {

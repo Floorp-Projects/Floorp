@@ -1,22 +1,40 @@
 activity_stream:
   event:
     objects: [
-      "CLICK",
-      "SEARCH",
+      "ARCHIVE_FROM_POCKET",
       "BLOCK",
+      "BOOKMARK_ADD",
+      "BOOKMARK_DELETE",
+      "CLICK",
+      "CLOSE_NEWTAB_PREFS",
       "DELETE",
+      "DELETE_FROM_POCKET",
       "DELETE_CONFIRM",
       "DIALOG_CANCEL",
       "DIALOG_OPEN",
+      "DRAG",
+      "DROP",
+      "MIGRATION_CANCEL",
+      "MIGRATION_START",
+      "OPEN_NEWTAB_PREFS",
       "OPEN_NEW_WINDOW",
       "OPEN_PRIVATE_WINDOW",
-      "OPEN_NEWTAB_PREFS",
-      "CLOSE_NEWTAB_PREFS",
-      "BOOKMARK_DELETE",
-      "BOOKMARK_ADD",
       "PIN",
-      "UNPIN",
-      "SAVE_TO_POCKET"]
+      "PREVIEW_REQUEST",
+      "SAVE_TO_POCKET",
+      "SEARCH",
+      "DISCLAIMER_ACKED",
+      "MENU_ADD_TOPSITE",
+      "MENU_COLLAPSE",
+      "MENU_EXPAND",
+      "MENU_MANAGE",
+      "MENU_MOVE_DOWN",
+      "MENU_MOVE_UP",
+      "MENU_PRIVACY_NOTICE",
+      "MENU_REMOVE",
+      "TOP_SITES_EDIT",
+      "TOP_SITES_EDIT_CLOSE",
+      "UNPIN"]
     release_channel_collection: opt-out
     record_in_processes: ["main"]
     description: >

@@ -44,7 +44,7 @@ async function ifWebGLSupported() {
   ok(true, "The corner pixel colors are correct after unblackboxing.");
 
   function checkShaderSource(aMessage) {
-    return (async function () {
+    return (async function() {
       let newVertexShader = await programActor.getVertexShader();
       let newFragmentShader = await programActor.getFragmentShader();
       is(vertexShader, newVertexShader,

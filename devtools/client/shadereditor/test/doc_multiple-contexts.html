@@ -49,7 +49,7 @@
           initBuffers(i);
           drawScene(i);
         }
-      }
+      };
 
       function initProgram(i) {
         let vertexShader = getShader(gl[i], "shader-vs");
@@ -88,9 +88,9 @@
         gl[i].bindBuffer(gl[i].ARRAY_BUFFER, squareVerticesPositionBuffer[i]);
         gl[i].bufferData(gl[i].ARRAY_BUFFER, new Float32Array([
            1.0,  1.0, 0.0,
-          -1.0,  1.0, 0.0,
+           -1.0,  1.0, 0.0,
            1.0, -1.0, 0.0,
-          -1.0, -1.0, 0.0
+           -1.0, -1.0, 0.0
         ]), gl[i].STATIC_DRAW);
       }
 

@@ -64,6 +64,8 @@ function OptionsPanel(iframeWindow, toolbox) {
   this._prefChanged = this._prefChanged.bind(this);
   this._themeRegistered = this._themeRegistered.bind(this);
   this._themeUnregistered = this._themeUnregistered.bind(this);
+  this._webExtensionRegistered = this._webExtensionRegistered.bind(this);
+  this._webExtensionUnregistered = this._webExtensionUnregistered.bind(this);
   this._disableJSClicked = this._disableJSClicked.bind(this);
 
   this.disableJSNode = this.panelDoc.getElementById("devtools-disable-javascript");
@@ -103,6 +105,9 @@ OptionsPanel.prototype = {
                                this._prefChanged);
     gDevTools.on("theme-registered", this._themeRegistered);
     gDevTools.on("theme-unregistered", this._themeUnregistered);
+
+    this.toolbox.on("webextension-registered", this._webExtensionRegistered);
+    this.toolbox.on("webextension-unregistered", this._webExtensionUnregistered);
   },
 
   _removeListeners: function() {
@@ -110,6 +115,10 @@ OptionsPanel.prototype = {
     Services.prefs.removeObserver("devtools.theme", this._prefChanged);
     Services.prefs.removeObserver("devtools.source-map.client-service.enabled",
                                   this._prefChanged);
+
+    this.toolbox.off("webextension-registered", this._webExtensionRegistered);
+    this.toolbox.off("webextension-unregistered", this._webExtensionUnregistered);
+
     gDevTools.off("theme-registered", this._themeRegistered);
     gDevTools.off("theme-unregistered", this._themeUnregistered);
   },
@@ -137,6 +146,18 @@ OptionsPanel.prototype = {
     if (themeInput) {
       themeInput.parentNode.remove();
     }
+  },
+
+  _webExtensionRegistered: function(extensionUUID) {
+    // Refresh the tools list when a new webextension has been registered
+    // to the toolbox.
+    this.setupToolsList();
+  },
+
+  _webExtensionUnregistered: function(extensionUUID) {
+    // Refresh the tools list when a new webextension has been unregistered
+    // from the toolbox.
+    this.setupToolsList();
   },
 
   async setupToolbarButtonsList() {
@@ -200,14 +221,17 @@ OptionsPanel.prototype = {
 
     // Signal tool registering/unregistering globally (for the tools registered
     // globally) and per toolbox (for the tools registered to a single toolbox).
-    let onCheckboxClick = function(id) {
-      let toolDefinition = gDevTools._tools.get(id) || toolbox.getToolDefinition(id);
+    // This event handler expect this to be binded to the related checkbox element.
+    let onCheckboxClick = function(tool) {
       // Set the kill switch pref boolean to true
-      Services.prefs.setBoolPref(toolDefinition.visibilityswitch, this.checked);
-      gDevTools.emit(this.checked ? "tool-registered" : "tool-unregistered", id);
+      Services.prefs.setBoolPref(tool.visibilityswitch, this.checked);
+
+      if (!tool.isWebExtension) {
+        gDevTools.emit(this.checked ? "tool-registered" : "tool-unregistered", tool.id);
+      }
     };
 
-    let createToolCheckbox = tool => {
+    let createToolCheckbox = (tool) => {
       let checkboxLabel = this.panelDoc.createElement("label");
       let checkboxInput = this.panelDoc.createElement("input");
       checkboxInput.setAttribute("type", "checkbox");
@@ -229,13 +253,17 @@ OptionsPanel.prototype = {
         checkboxInput.setAttribute("checked", "true");
       }
 
-      checkboxInput.addEventListener("change",
-        onCheckboxClick.bind(checkboxInput, tool.id));
+      checkboxInput.addEventListener("change", onCheckboxClick.bind(checkboxInput, tool));
 
       checkboxLabel.appendChild(checkboxInput);
       checkboxLabel.appendChild(checkboxSpanLabel);
       return checkboxLabel;
     };
+
+    // Clean up any existent default tools content.
+    for (let label of defaultToolsBox.querySelectorAll("label")) {
+      label.remove();
+    }
 
     // Populating the default tools lists
     let toggleableTools = gDevTools.getDefaultTools().filter(tool => {
@@ -246,26 +274,52 @@ OptionsPanel.prototype = {
       defaultToolsBox.appendChild(createToolCheckbox(tool));
     }
 
-    // Populating the additional tools list that came from add-ons.
+    // Clean up any existent additional tools content.
+    for (let label of additionalToolsBox.querySelectorAll("label")) {
+      label.remove();
+    }
+
+    // Populating the additional tools list.
     let atleastOneAddon = false;
     for (let tool of gDevTools.getAdditionalTools()) {
       atleastOneAddon = true;
       additionalToolsBox.appendChild(createToolCheckbox(tool));
     }
 
-    // Populating the additional toolbox-specific tools list that came
-    // from WebExtension add-ons.
-    for (let tool of this.toolbox.getAdditionalTools()) {
+    // Populating the additional tools that came from the installed WebExtension add-ons.
+    for (let {uuid, name, pref} of toolbox.listWebExtensions()) {
       atleastOneAddon = true;
-      additionalToolsBox.appendChild(createToolCheckbox(tool));
+
+      additionalToolsBox.appendChild(createToolCheckbox({
+        isWebExtension: true,
+
+        // Use the preference as the unified webextensions tool id.
+        id: `webext-${uuid}`,
+        tooltip: name,
+        label: name,
+        // Disable the devtools extension using the given pref name:
+        // the toolbox options for the WebExtensions are not related to a single
+        // tool (e.g. a devtools panel created from the extension devtools_page)
+        // but to the entire devtools part of a webextension which is enabled
+        // by the Addon Manager (but it may be disabled by its related
+        // devtools about:config preference), and so the following
+        visibilityswitch: pref,
+
+        // Only local tabs are currently supported as targets.
+        isTargetSupported: target => target.isLocalTab,
+      }));
     }
 
     if (!atleastOneAddon) {
       additionalToolsBox.style.display = "none";
+    } else {
+      additionalToolsBox.style.display = "";
     }
 
     if (!atleastOneToolNotSupported) {
       toolsNotSupportedLabel.style.display = "none";
+    } else {
+      toolsNotSupportedLabel.style.display = "";
     }
 
     this.panelWin.focus();

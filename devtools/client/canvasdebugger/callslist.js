@@ -13,7 +13,7 @@ var CallsListView = extend(WidgetMethods, {
   /**
    * Initialization function, called when the tool is started.
    */
-  initialize: function () {
+  initialize: function() {
     this.widget = new SideMenuWidget($("#calls-list"));
     this._searchbox = $("#calls-searchbox");
     this._filmstrip = $("#snapshot-filmstrip");
@@ -33,7 +33,7 @@ var CallsListView = extend(WidgetMethods, {
   /**
    * Destruction function, called when the tool is closed.
    */
-  destroy: function () {
+  destroy: function() {
     this.widget.removeEventListener("select", this._onSelect);
     this._searchbox.removeEventListener("input", this._onSearch);
     this._filmstrip.removeEventListener("wheel", this._onScroll);
@@ -45,7 +45,7 @@ var CallsListView = extend(WidgetMethods, {
    * @param array functionCalls
    *        A list of function call actors received from the backend.
    */
-  showCalls: function (functionCalls) {
+  showCalls: function(functionCalls) {
     this.empty();
 
     for (let i = 0, len = functionCalls.length; i < len; i++) {
@@ -138,7 +138,7 @@ var CallsListView = extend(WidgetMethods, {
    * @param array screenshot
    *        A single "snapshot-image" instance received from the backend.
    */
-  showScreenshot: function (screenshot) {
+  showScreenshot: function(screenshot) {
     let { index, width, height, scaling, flipped, pixels } = screenshot;
 
     let screenshotNode = $("#screenshot-image");
@@ -161,7 +161,7 @@ var CallsListView = extend(WidgetMethods, {
    * @param array thumbnails
    *        An array of "snapshot-image" instances received from the backend.
    */
-  showThumbnails: function (thumbnails) {
+  showThumbnails: function(thumbnails) {
     while (this._filmstrip.hasChildNodes()) {
       this._filmstrip.firstChild.remove();
     }
@@ -179,7 +179,7 @@ var CallsListView = extend(WidgetMethods, {
    * @param array thumbnail
    *        A single "snapshot-image" instance received from the backend.
    */
-  appendThumbnail: function (thumbnail) {
+  appendThumbnail: function(thumbnail) {
     let { index, width, height, flipped, pixels } = thumbnail;
 
     let thumbnailNode = document.createElementNS(HTML_NS, "canvas");
@@ -230,7 +230,7 @@ var CallsListView = extend(WidgetMethods, {
   /**
    * The select listener for this container.
    */
-  _onSelect: function ({ detail: callItem }) {
+  _onSelect: function({ detail: callItem }) {
     if (!callItem) {
       return;
     }
@@ -271,7 +271,7 @@ var CallsListView = extend(WidgetMethods, {
   /**
    * The input listener for the calls searchbox.
    */
-  _onSearch: function (e) {
+  _onSearch: function(e) {
     let lowerCaseSearchToken = this._searchbox.value.toLowerCase();
 
     this.filterContents(e => {
@@ -291,7 +291,7 @@ var CallsListView = extend(WidgetMethods, {
   /**
    * The wheel listener for the filmstrip that contains all the thumbnails.
    */
-  _onScroll: function (e) {
+  _onScroll: function(e) {
     this._filmstrip.scrollLeft += e.deltaX;
   },
 
@@ -299,7 +299,7 @@ var CallsListView = extend(WidgetMethods, {
    * The click/dblclick listener for an item or location url in this container.
    * When expanding an item, it's corresponding call stack will be displayed.
    */
-  _onExpand: function (e) {
+  _onExpand: function(e) {
     let callItem = this.getItemForElement(e.target);
     let view = $(".call-item-view", callItem.target);
 
@@ -316,11 +316,10 @@ var CallsListView = extend(WidgetMethods, {
         return;
       }
       // Otherwise hide the call stack.
-      else {
-        view.setAttribute("call-stack-expanded", !isExpanded);
-        $(".call-item-stack", view).hidden = isExpanded;
-        return;
-      }
+
+      view.setAttribute("call-stack-expanded", !isExpanded);
+      $(".call-item-stack", view).hidden = isExpanded;
+      return;
     }
 
     let list = document.createElement("vbox");
@@ -368,9 +367,8 @@ var CallsListView = extend(WidgetMethods, {
     let functionCall = callItem.attachment.actor;
     if (functionCall.isLoadedFromDisk) {
       display(functionCall.stack);
-    }
-    // ..otherwise we need to request the function call stack from the backend.
-    else {
+    } else {
+      // ..otherwise we need to request the function call stack from the backend.
       callItem.attachment.actor.getDetails().then(fn => display(fn.stack));
     }
   },
@@ -383,7 +381,7 @@ var CallsListView = extend(WidgetMethods, {
    * @param number line
    *        The line of the respective function.
    */
-  _onStackFileClick: function (e, { file, line }) {
+  _onStackFileClick: function(e, { file, line }) {
     this._viewSourceInDebugger(file, line);
   },
 
@@ -393,14 +391,14 @@ var CallsListView = extend(WidgetMethods, {
    * @param number index
    *        The function index in the recorded animation frame snapshot.
    */
-  _onThumbnailClick: function (e, index) {
+  _onThumbnailClick: function(e, index) {
     this.selectedIndex = index;
   },
 
   /**
    * The click listener for the "resume" button in this container's toolbar.
    */
-  _onResume: function () {
+  _onResume: function() {
     // Jump to the next draw call in the recorded animation frame snapshot.
     let drawCall = getNextDrawCall(this.items, this.selectedItem);
     if (drawCall) {
@@ -415,14 +413,14 @@ var CallsListView = extend(WidgetMethods, {
   /**
    * The click listener for the "step over" button in this container's toolbar.
    */
-  _onStepOver: function () {
+  _onStepOver: function() {
     this.selectedIndex++;
   },
 
   /**
    * The click listener for the "step in" button in this container's toolbar.
    */
-  _onStepIn: function () {
+  _onStepIn: function() {
     if (this.selectedIndex == -1) {
       this._onResume();
       return;
@@ -435,14 +433,14 @@ var CallsListView = extend(WidgetMethods, {
   /**
    * The click listener for the "step out" button in this container's toolbar.
    */
-  _onStepOut: function () {
+  _onStepOut: function() {
     this.selectedIndex = this.itemCount - 1;
   },
 
   /**
    * Opens the specified file and line in the debugger. Falls back to Firefox's View Source.
    */
-  _viewSourceInDebugger: function (file, line) {
+  _viewSourceInDebugger: function(file, line) {
     gToolbox.viewSourceInDebugger(file, line).then(success => {
       if (success) {
         window.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);

@@ -1437,6 +1437,10 @@ different_rrset(AddrInfo *rrset1, AddrInfo *rrset2)
     nsTArray<NetAddr> orderedSet1;
     nsTArray<NetAddr> orderedSet2;
 
+    if (rrset1->IsTRR() != rrset2->IsTRR()) {
+        return true;
+    }
+
     for (NetAddrElement *element = rrset1->mAddresses.getFirst();
          element; element = element->getNext()) {
         if (LOG_ENABLED()) {

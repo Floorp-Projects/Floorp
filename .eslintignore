@@ -101,23 +101,11 @@ browser/extensions/mortar/**
 browser/extensions/formautofill/phonenumberutils/PhoneNumberMetaData.jsm
 
 # devtools/ exclusions
-devtools/client/canvasdebugger/**
-devtools/client/commandline/**
-devtools/client/debugger/**
-devtools/client/framework/**
-!devtools/client/framework/devtools.js
-!devtools/client/framework/devtools-browser.js
-!devtools/client/framework/selection.js
-!devtools/client/framework/target*
-!devtools/client/framework/toolbox*
 devtools/client/inspector/markup/test/doc_markup_events_*.html
 devtools/client/inspector/rules/test/doc_media_queries.html
 devtools/client/memory/test/chrome/*.html
 devtools/client/performance/components/test/test_jit_optimizations_01.html
-devtools/client/projecteditor/**
 devtools/client/responsive.html/test/browser/touch.html
-devtools/client/scratchpad/**
-devtools/client/shadereditor/**
 devtools/client/shared/*.jsm
 devtools/client/shared/components/reps/reps.js
 devtools/client/shared/components/reps/test/mochitest/*.html
@@ -154,6 +142,15 @@ devtools/shared/qrcode/tests/mochitest/test_decode.html
 devtools/shared/tests/mochitest/*.html
 devtools/shared/webconsole/test/test_*.html
 
+# Soon to be removed
+devtools/client/commandline/**
+# Soon to be removed, the new/ directory is explicitly excluded below due to
+# also being an imported repository.
+devtools/client/debugger/**
+
+# Ignore devtools imported repositories
+devtools/client/debugger/new/**
+
 # Ignore devtools preferences files
 devtools/client/preferences/**
 devtools/startup/devtools-startup-prefs.js
@@ -168,6 +165,8 @@ devtools/shared/sourcemap/*
 devtools/shared/sprintfjs/*
 devtools/shared/qrcode/decoder/*
 devtools/shared/qrcode/encoder/*
+devtools/client/inspector/markup/test/lib_*
+devtools/client/jsonview/lib/require.js
 devtools/client/shared/demangle.js
 devtools/client/shared/source-map/*
 devtools/client/shared/vendor/*
@@ -176,18 +175,11 @@ devtools/client/sourceeditor/codemirror/**/*.js
 devtools/client/sourceeditor/tern/*
 devtools/client/sourceeditor/test/cm_mode_ruby.js
 devtools/client/sourceeditor/test/codemirror/*
-devtools/client/inspector/markup/test/lib_*
-devtools/client/jsonview/lib/require.js
 devtools/server/actors/utils/automation-timeline.js
 
 # Ignore devtools files testing sourcemaps / code style
-devtools/client/debugger/test/mochitest/code_binary_search.js
-devtools/client/debugger/test/mochitest/code_binary_search_absolute.js
-devtools/client/debugger/test/mochitest/code_math.min.js
-devtools/client/debugger/test/mochitest/code_math_bogus_map.js
-devtools/client/debugger/test/mochitest/code_ugly*
-devtools/client/debugger/test/mochitest/code_worker-source-map.js
-devtools/client/framework/test/code_ugly*
+devtools/client/debugger/test/mochitest/code_*.js
+devtools/client/framework/test/code_*
 devtools/client/inspector/markup/test/events_bundle.js
 devtools/client/netmonitor/test/xhr_bundle.js
 devtools/client/webconsole/new-console-output/test/mochitest/code_bundle_nosource.js

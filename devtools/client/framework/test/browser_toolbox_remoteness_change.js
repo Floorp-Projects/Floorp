@@ -7,7 +7,7 @@ const URL_1 = "about:robots";
 const URL_2 = "data:text/html;charset=UTF-8," +
   encodeURIComponent("<div id=\"remote-page\">foo</div>");
 
-add_task(async function () {
+add_task(async function() {
   info("Open a tab on a URL supporting only running in parent process");
   let tab = await addTab(URL_1);
   is(tab.linkedBrowser.currentURI.spec, URL_1, "We really are on the expected document");

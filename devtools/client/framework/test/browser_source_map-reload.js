@@ -15,7 +15,7 @@ const ORIGINAL_URL_2 = "webpack:///code_reload_2.js";
 const GENERATED_LINE = 86;
 const ORIGINAL_LINE = 13;
 
-add_task(async function () {
+add_task(async function() {
   await pushPref("devtools.debugger.new-debugger-frontend", true);
 
   // Start with the empty page, then navigate, so that we can properly

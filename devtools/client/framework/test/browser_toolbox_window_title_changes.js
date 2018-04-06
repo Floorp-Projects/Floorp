@@ -21,10 +21,12 @@ function test() {
 
   let toolbox;
 
-  addTab(URL_1).then(function () {
+  addTab(URL_1).then(function() {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.showToolbox(target, null, Toolbox.HostType.BOTTOM)
-      .then(function (aToolbox) { toolbox = aToolbox; })
+      .then(function(aToolbox) {
+        toolbox = aToolbox;
+      })
       .then(() => toolbox.selectTool(TOOL_ID_1))
 
     // undock toolbox and check title
@@ -45,7 +47,7 @@ function test() {
       .then(checkTitle.bind(null, NAME_1, URL_1, "tool changed"))
 
     // navigate to different local url and check title
-      .then(function () {
+      .then(function() {
         let onTitleChanged = waitForTitleChange(toolbox);
         gBrowser.loadURI(URL_2);
         return onTitleChanged;
@@ -62,17 +64,19 @@ function test() {
 
     // destroy toolbox, create new one hosted in a window (with a
     // different tool id), and check title
-      .then(function () {
+      .then(function() {
         // Give the tools a chance to handle the navigation event before
         // destroying the toolbox.
-        executeSoon(function () {
+        executeSoon(function() {
           toolbox.destroy()
-            .then(function () {
+            .then(function() {
               // After destroying the toolbox, a fresh target is required.
               target = TargetFactory.forTab(gBrowser.selectedTab);
               return gDevTools.showToolbox(target, null, Toolbox.HostType.WINDOW);
             })
-            .then(function (aToolbox) { toolbox = aToolbox; })
+            .then(function(aToolbox) {
+              toolbox = aToolbox;
+            })
             .then(() => {
               let onTitleChanged = waitForTitleChange(toolbox);
               toolbox.selectTool(TOOL_ID_1);
@@ -83,7 +87,7 @@ function test() {
 
             // clean up
             .then(() => toolbox.destroy())
-            .then(function () {
+            .then(function() {
               toolbox = null;
               gBrowser.removeCurrentTab();
               Services.prefs.clearUserPref("devtools.toolbox.host");

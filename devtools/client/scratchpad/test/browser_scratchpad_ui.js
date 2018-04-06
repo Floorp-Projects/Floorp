@@ -2,12 +2,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
     openScratchpad(runTests);
   });
 
@@ -15,8 +14,7 @@ function test()
                    "<p>test inspect() in Scratchpad");
 }
 
-function runTests()
-{
+function runTests() {
   let sp = gScratchpadWindow.Scratchpad;
   let doc = gScratchpadWindow.document;
 
@@ -58,8 +56,7 @@ function runTests()
 
     try {
       menu.doCommand();
-    }
-    catch (ex) {
+    } catch (ex) {
       ok(false, "exception thrown while executing the command of menuitem #" + id);
     }
 

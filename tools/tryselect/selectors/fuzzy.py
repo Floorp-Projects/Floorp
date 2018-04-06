@@ -91,7 +91,7 @@ class FuzzyParser(BaseTryParser):
           }],
     ]
     common_groups = ['push', 'task', 'preset']
-    templates = ['artifact', 'path', 'env', 'rebuild', 'chemspill-prio']
+    templates = ['artifact', 'path', 'env', 'rebuild', 'chemspill-prio', 'talos-profile']
 
 
 def run(cmd, cwd=None):

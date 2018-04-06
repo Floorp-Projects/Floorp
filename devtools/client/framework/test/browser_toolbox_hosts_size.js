@@ -10,7 +10,7 @@ const URL = "data:text/html;charset=utf8,test for host sizes";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
-add_task(async function () {
+add_task(async function() {
   // Set size prefs to make the hosts way too big, so that the size has
   // to be clamped to fit into the browser window.
   Services.prefs.setIntPref("devtools.toolbox.footer.height", 10000);
@@ -35,7 +35,7 @@ add_task(async function () {
   await cleanup(toolbox);
 });
 
-add_task(async function () {
+add_task(async function() {
   // Set size prefs to something reasonable, so we can check to make sure
   // they are being set properly.
   Services.prefs.setIntPref("devtools.toolbox.footer.height", 100);

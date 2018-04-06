@@ -25,13 +25,11 @@ registerCleanupFunction(() => {
   }
 });
 
-const {SessionStore} = ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm", {});
 const {SessionSaver} = ChromeUtils.import("resource:///modules/sessionstore/SessionSaver.jsm", {});
 const {SessionFile} = ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm", {});
 const {TabState} = ChromeUtils.import("resource:///modules/sessionstore/TabState.jsm", {});
 const {TabStateFlusher} = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
-
-const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+const ss = SessionStore;
 
 // Some tests here assume that all restored tabs are loaded without waiting for
 // the user to bring them to the foreground. We ensure this by resetting the

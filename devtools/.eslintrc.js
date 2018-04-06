@@ -16,11 +16,121 @@ module.exports = {
     // XXX Bug 1230193. We're still working on enabling no-undef for these test
     // directories.
     "files": [
+      "client/framework/test/**",
+      "client/scratchpad/**",
       "server/tests/mochitest/**",
       "shared/tests/unit/**",
     ],
     "rules": {
       "no-undef": "off",
+    }
+  }, {
+    "files": [
+      "client/framework/**",
+    ],
+    "rules": {
+      "no-return-assign": "off",
+      "no-unused-vars": "off",
+    }
+  }, {
+    "files": [
+      "client/scratchpad/scratchpad-manager.jsm",
+      "client/scratchpad/scratchpad.js",
+    ],
+    "rules": {
+      "camelcase": "off",
+    }
+  }, {
+    "files": [
+      "client/framework/**",
+      "client/scratchpad/**",
+    ],
+    "rules": {
+      "consistent-return": "off",
+    }
+  }, {
+    "files": [
+      "client/framework/**",
+      "client/scratchpad/**",
+    ],
+    "rules": {
+      "max-nested-callbacks": "off",
+    }
+  }, {
+    "files": [
+      "client/framework/**",
+      "client/scratchpad/**",
+    ],
+    "rules": {
+      "max-len": "off",
+    }
+  }, {
+    "files": [
+      "client/scratchpad/test/browser_scratchpad_inspect.js",
+      "client/scratchpad/test/browser_scratchpad_inspect_primitives.js",
+    ],
+    "rules": {
+      "no-labels": "off",
+    }
+  }, {
+    "files": [
+      "client/framework/**",
+      "client/scratchpad/**",
+    ],
+    "rules": {
+      "mozilla/no-aArgs": "off",
+    }
+  }, {
+    "files": [
+      "client/framework/test/**",
+      "client/scratchpad/**",
+    ],
+    "rules": {
+      "mozilla/var-only-at-top-level": "off",
+    }
+  }, {
+    "files": [
+      "client/framework/**",
+      "client/scratchpad/**",
+    ],
+    "rules": {
+      "no-shadow": "off",
+    }
+  }, {
+    "files": [
+      "client/framework/**",
+      "client/scratchpad/**",
+    ],
+    "rules": {
+      "strict": "off",
+    }
+  }, {
+    "files": [
+      // Note: Bug 1403938 may be removing canvasdebugger, check before
+      // doing more work on enabling these rules.
+      "client/canvasdebugger/**",
+      // Note: Bug 1342237 may be removing shadereditor, check before
+      // doing more work on enabling these rules.
+      "client/shadereditor/**",
+    ],
+    "rules": {
+      "consistent-return": "off",
+      "max-len": "off",
+      "mozilla/no-aArgs": "off",
+      "mozilla/var-only-at-top-level": "off",
+      "no-return-assign": "off",
+      "no-shadow": "off",
+      "no-undef": "off",
+      "no-unused-vars": "off",
+      "strict": "off",
+    }
+  }, {
+    // For all head*.js files, turn off no-unused-vars at a global level
+    "files": [
+      "**/head*.js",
+    ],
+    "rules": {
+      "no-unused-vars": ["error", {"args": "none", "vars": "local"}],
     }
   }],
   "rules": {

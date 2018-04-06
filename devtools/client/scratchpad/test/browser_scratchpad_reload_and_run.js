@@ -30,8 +30,8 @@ async function runTests() {
   // Test that Reload And Run command is enabled in the content
   // context and disabled in the browser context.
 
-  let reloadAndRun = gScratchpadWindow.document.
-    getElementById("sp-cmd-reloadAndRun");
+  let reloadAndRun = gScratchpadWindow.document
+    .getElementById("sp-cmd-reloadAndRun");
   ok(reloadAndRun, "Reload And Run command exists");
   ok(!reloadAndRun.hasAttribute("disabled"),
       "Reload And Run command is enabled");

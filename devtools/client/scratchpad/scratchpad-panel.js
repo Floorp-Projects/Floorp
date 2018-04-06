@@ -5,11 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Cu} = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
-
 
 function ScratchpadPanel(iframeWindow, toolbox) {
   let { Scratchpad } = iframeWindow;
@@ -23,7 +21,7 @@ function ScratchpadPanel(iframeWindow, toolbox) {
   let deferred = defer();
   this._readyObserver = deferred.promise;
   Scratchpad.addObserver({
-    onReady: function () {
+    onReady: function() {
       Scratchpad.removeObserver(this);
       deferred.resolve();
     }
@@ -38,7 +36,7 @@ ScratchpadPanel.prototype = {
    * Open is effectively an asynchronous constructor. For the ScratchpadPanel,
    * by the time this is called, the Scratchpad will already be ready.
    */
-  open: function () {
+  open: function() {
     return this._readyObserver.then(() => {
       this.isReady = true;
       this.emit("ready");
@@ -50,7 +48,7 @@ ScratchpadPanel.prototype = {
     return this._toolbox.target;
   },
 
-  destroy: function () {
+  destroy: function() {
     this.emit("destroyed");
     return promise.resolve();
   }

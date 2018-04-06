@@ -18,7 +18,7 @@
           data-category="paneHome"
           hidden="true">
   <hbox>
-    <caption flex="1"><label data-l10n-id="home-new-windows-tabs-header" /></caption>
+    <caption flex="1" align="center"><label data-l10n-id="home-new-windows-tabs-header"/></caption>
     <button id="restoreDefaultHomePageBtn"
             class="homepage-button check-home-page-controlled"
             data-preference-related="browser.startup.homepage"

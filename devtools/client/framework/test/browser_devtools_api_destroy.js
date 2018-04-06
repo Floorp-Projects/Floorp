@@ -16,14 +16,14 @@ function runTests(aTab) {
     isTargetSupported: () => true,
     url: "about:blank",
     label: "someLabel",
-    build: function (iframeWindow, toolbox) {
+    build: function(iframeWindow, toolbox) {
       let deferred = defer();
       executeSoon(() => {
         deferred.resolve({
           target: toolbox.target,
           toolbox: toolbox,
           isReady: true,
-          destroy: function () {},
+          destroy: function() {},
         });
       });
       return deferred.promise;
@@ -35,7 +35,7 @@ function runTests(aTab) {
   let collectedEvents = [];
 
   let target = TargetFactory.forTab(aTab);
-  gDevTools.showToolbox(target, toolDefinition.id).then(function (toolbox) {
+  gDevTools.showToolbox(target, toolDefinition.id).then(function(toolbox) {
     let panel = toolbox.getPanel(toolDefinition.id);
     ok(panel, "Tool open");
 
@@ -55,7 +55,7 @@ function runTests(aTab) {
       collectedEvents.push("toolbox-" + toolDefinition.id + "-destroy");
     });
 
-    toolbox.destroy().then(function () {
+    toolbox.destroy().then(function() {
       is(collectedEvents.join(":"),
         "toolbox-destroy:destroy:gDevTools-testTool-destroy:toolbox-testTool-destroy",
         "Found the right amount of collected events.");
@@ -63,7 +63,7 @@ function runTests(aTab) {
       gDevTools.unregisterTool(toolDefinition.id);
       gBrowser.removeCurrentTab();
 
-      executeSoon(function () {
+      executeSoon(function() {
         finish();
       });
     });
