@@ -3253,6 +3253,9 @@ struct MaybeGlobalThisPolicy;
 // A this-extraction policy for lenient getters/setters.
 struct LenientThisPolicy;
 
+// A this-extraction policy for cross-origin getters/setters/methods.
+struct CrossOriginThisPolicy;
+
 // An exception-reporting policy for normal getters/setters/methods.
 struct ThrowExceptions;
 
