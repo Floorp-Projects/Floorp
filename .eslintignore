@@ -128,7 +128,7 @@ devtools/client/storage/test/*.html
 !devtools/client/storage/test/storage-unsecured-iframe-usercontextid.html
 devtools/client/webaudioeditor/**
 devtools/client/webconsole/old/net/**
-!devtools/client/webconsole/new-console-output/test/mochitest/**
+!devtools/client/webconsole/test/mochitest/**
 devtools/client/webconsole/old/test/**
 devtools/client/webconsole/old/webconsole.js
 devtools/client/webide/**
@@ -182,8 +182,8 @@ devtools/client/debugger/test/mochitest/code_*.js
 devtools/client/framework/test/code_*
 devtools/client/inspector/markup/test/events_bundle.js
 devtools/client/netmonitor/test/xhr_bundle.js
-devtools/client/webconsole/new-console-output/test/mochitest/code_bundle_nosource.js
-devtools/client/webconsole/new-console-output/test/mochitest/code_bundle_invalidmap.js
+devtools/client/webconsole/test/mochitest/code_bundle_nosource.js
+devtools/client/webconsole/test/mochitest/code_bundle_invalidmap.js
 devtools/server/tests/unit/babel_and_browserify_script_with_source_map.js
 devtools/server/tests/unit/setBreakpoint*
 devtools/server/tests/unit/sourcemapped.js
