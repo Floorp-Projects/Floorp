@@ -132,7 +132,7 @@ add_task(async function test_third_party_disabled() {
   await setupPolicyEngineWithJson({
     "policies": {
       "Cookies": {
-        "AcceptThirdParty": "never"
+        "AcceptThirdParty": "none"
       }
     }
   });
@@ -151,7 +151,7 @@ add_task(async function test_disabled_and_third_party_disabled() {
     "policies": {
       "Cookies": {
         "Default": false,
-        "AcceptThirdParty": "never"
+        "AcceptThirdParty": "none"
       }
     }
   });
@@ -170,7 +170,7 @@ add_task(async function test_disabled_and_third_party_disabled_locked() {
     "policies": {
       "Cookies": {
         "Default": false,
-        "AcceptThirdParty": "never",
+        "AcceptThirdParty": "none",
         "Locked": true
       }
     }
@@ -245,7 +245,7 @@ add_task(async function test_disabled_cookie_expire_locked() {
     "policies": {
       "Cookies": {
         "Default": false,
-        "AcceptThirdParty": "never",
+        "AcceptThirdParty": "none",
         "ExpireAtSessionEnd": true,
         "Locked": true
       }
