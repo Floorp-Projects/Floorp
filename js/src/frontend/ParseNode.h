@@ -1438,7 +1438,7 @@ AccessorTypeToJSOp(AccessorType atype)
     }
 }
 
-enum FunctionSyntaxKind
+enum class FunctionSyntaxKind
 {
     // A non-arrow function expression.
     Expression,
@@ -1457,14 +1457,17 @@ enum FunctionSyntaxKind
 static inline bool
 IsConstructorKind(FunctionSyntaxKind kind)
 {
-    return kind == ClassConstructor || kind == DerivedClassConstructor;
+    return kind == FunctionSyntaxKind::ClassConstructor ||
+           kind == FunctionSyntaxKind::DerivedClassConstructor;
 }
 
 static inline bool
 IsMethodDefinitionKind(FunctionSyntaxKind kind)
 {
-    return kind == Method || IsConstructorKind(kind) ||
-           kind == Getter || kind == Setter;
+    return IsConstructorKind(kind) ||
+           kind == FunctionSyntaxKind::Method ||
+           kind == FunctionSyntaxKind::Getter ||
+           kind == FunctionSyntaxKind::Setter;
 }
 
 static inline ParseNode*
