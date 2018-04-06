@@ -108,14 +108,6 @@ var Policies = {
     }
   },
 
-  "BlockSetDesktopBackground": {
-    onBeforeUIStartup(manager, param) {
-      if (param) {
-        manager.disallowFeature("setDesktopBackground", true);
-      }
-    }
-  },
-
   "Bookmarks": {
     onAllWindowsRestored(manager, param) {
       BookmarksPolicies.processBookmarks(param);
@@ -155,7 +147,7 @@ var Policies = {
         if (param.Default !== undefined && !param.Default) {
           newCookieBehavior = REJECT_ALL_COOKIES;
         } else if (param.AcceptThirdParty) {
-          if (param.AcceptThirdParty == "none") {
+          if (param.AcceptThirdParty == "never") {
             newCookieBehavior = REJECT_THIRD_PARTY_COOKIES;
           } else if (param.AcceptThirdParty == "from-visited") {
             newCookieBehavior = REJECT_UNVISITED_THIRD_PARTY;
@@ -183,14 +175,6 @@ var Policies = {
         } else {
           setDefaultPref("network.cookie.lifetimePolicy", newLifetimePolicy);
         }
-      }
-    }
-  },
-
-  "CreateMasterPassword": {
-    onBeforeUIStartup(manager, param) {
-      if (!param) {
-        manager.disallowFeature("createMasterPassword");
       }
     }
   },
@@ -273,6 +257,14 @@ var Policies = {
     }
   },
 
+  "DisableMasterPasswordCreation": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("createMasterPassword");
+      }
+    }
+  },
+
   "DisablePocket": {
     onBeforeAddons(manager, param) {
       if (param) {
@@ -329,7 +321,15 @@ var Policies = {
     }
   },
 
-  "DisableSysAddonUpdate": {
+  "DisableSetDesktopBackground": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("setDesktopBackground", true);
+      }
+    }
+  },
+
+  "DisableSystemAddonUpdate": {
     onBeforeAddons(manager, param) {
       if (param) {
         manager.disallowFeature("SysAddonUpdate");
@@ -342,6 +342,7 @@ var Policies = {
       if (param) {
         setAndLockPref("datareporting.healthreport.uploadEnabled", false);
         setAndLockPref("datareporting.policy.dataSubmissionEnabled", false);
+        manager.disallowFeature("about:telemetry");
       }
     }
   },
@@ -525,7 +526,7 @@ var Policies = {
     }
   },
 
-  "InstallAddons": {
+  "InstallAddonsPermission": {
     onBeforeUIStartup(manager, param) {
       if ("Allow" in param) {
         addAllowDenyPermissions("install", param.Allow, null);
@@ -544,6 +545,12 @@ var Policies = {
       if (param) {
         manager.disallowFeature("defaultBookmarks");
       }
+    }
+  },
+
+  "OfferToSaveLogins": {
+    onBeforeUIStartup(manager, param) {
+      setAndLockPref("signon.rememberSignons", param);
     }
   },
 
@@ -589,12 +596,6 @@ var Policies = {
       } else {
         ProxyPolicies.configureProxySettings(param, setDefaultPref);
       }
-    }
-  },
-
-  "RememberPasswords": {
-    onBeforeUIStartup(manager, param) {
-      setAndLockPref("signon.rememberSignons", param);
     }
   },
 
