@@ -423,7 +423,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "4595a9f27e32"
+        "revision": "4778b3be7e9d"
     }, 
     "ru": {
         "platforms": [
@@ -435,7 +435,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "c3eb6f4151cd"
+        "revision": "cd2f7f812acd"
     }, 
     "sl": {
         "platforms": [
