@@ -696,16 +696,23 @@ checkbox:-moz-focusring {
   width: 100%;
   height: 2px;
   background: transparent;
+  transition: transform 250ms var(--animation-easing-function), opacity 250ms var(--animation-easing-function);
+  opacity: 0;
+  transform: scaleX(0);
 }
 
 .devtools-tab:hover .devtools-tab-line,
 .tabs-menu-item:hover .devtools-tab-line {
   background: var(--tab-line-hover-color);
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .devtools-tab.selected .devtools-tab-line,
 .tabs-menu-item.is-active .devtools-tab-line {
   background: var(--tab-line-selected-color);
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 /* No result message styles */
