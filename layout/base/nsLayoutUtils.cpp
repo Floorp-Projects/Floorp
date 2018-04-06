@@ -4695,16 +4695,16 @@ nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame, float aInflation)
       variantWidth = NS_FONT_VARIANT_WIDTH_QUARTER;
     }
   }
-  return GetFontMetricsForComputedStyle(computedStyle, aInflation, variantWidth);
+  return GetFontMetricsForComputedStyle(computedStyle, aFrame->PresContext(),
+                                        aInflation, variantWidth);
 }
 
 already_AddRefed<nsFontMetrics>
 nsLayoutUtils::GetFontMetricsForComputedStyle(ComputedStyle* aComputedStyle,
-                                             float aInflation,
-                                             uint8_t aVariantWidth)
+                                              nsPresContext* aPresContext,
+                                              float aInflation,
+                                              uint8_t aVariantWidth)
 {
-  nsPresContext* pc = aComputedStyle->PresContext();
-
   WritingMode wm(aComputedStyle);
   const nsStyleFont* styleFont = aComputedStyle->StyleFont();
   nsFontMetrics::Params params;
@@ -4715,8 +4715,8 @@ nsLayoutUtils::GetFontMetricsForComputedStyle(ComputedStyle* aComputedStyle,
                                         : gfxFont::eHorizontal;
   // pass the user font set object into the device context to
   // pass along to CreateFontGroup
-  params.userFontSet = pc->GetUserFontSet();
-  params.textPerf = pc->GetTextPerfMetrics();
+  params.userFontSet = aPresContext->GetUserFontSet();
+  params.textPerf = aPresContext->GetTextPerfMetrics();
 
   // When aInflation is 1.0 and we don't require width variant, avoid
   // making a local copy of the nsFont.
@@ -4724,13 +4724,13 @@ nsLayoutUtils::GetFontMetricsForComputedStyle(ComputedStyle* aComputedStyle,
   // which would be lossy.  Fortunately, in such cases, aInflation is
   // guaranteed to be 1.0f.
   if (aInflation == 1.0f && aVariantWidth == NS_FONT_VARIANT_WIDTH_NORMAL) {
-    return pc->DeviceContext()->GetMetricsFor(styleFont->mFont, params);
+    return aPresContext->DeviceContext()->GetMetricsFor(styleFont->mFont, params);
   }
 
   nsFont font = styleFont->mFont;
   font.size = NSToCoordRound(font.size * aInflation);
   font.variantWidth = aVariantWidth;
-  return pc->DeviceContext()->GetMetricsFor(font, params);
+  return aPresContext->DeviceContext()->GetMetricsFor(font, params);
 }
 
 nsIFrame*
@@ -7521,6 +7521,7 @@ nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame)
 
 /* static */ gfx::ShapedTextFlags
 nsLayoutUtils::GetTextRunFlagsForStyle(ComputedStyle* aComputedStyle,
+                                       nsPresContext* aPresContext,
                                        const nsStyleFont* aStyleFont,
                                        const nsStyleText* aStyleText,
                                        nscoord aLetterSpacing)
@@ -7538,8 +7539,7 @@ nsLayoutUtils::GetTextRunFlagsForStyle(ComputedStyle* aComputedStyle,
     result |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
     break;
   case NS_STYLE_TEXT_RENDERING_AUTO:
-    if (aStyleFont->mFont.size <
-        aComputedStyle->PresContext()->GetAutoQualityMinFontSize()) {
+    if (aStyleFont->mFont.size < aPresContext->GetAutoQualityMinFontSize()) {
       result |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
     }
     break;
