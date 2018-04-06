@@ -28,6 +28,7 @@ class GLContext;
  * \param gl The GL Context to use.
  * \param aData Start of image data of surface to upload.
  *              Corresponds to the first pixel of the texture.
+ * \param aDataSize The image data's size.
  * \param aStride The image data's stride.
  * \param aFormat The image data's format.
  * \param aDstRegion Region of the texture to upload.
@@ -46,6 +47,7 @@ class GLContext;
 gfx::SurfaceFormat
 UploadImageDataToTexture(GLContext* gl,
                          unsigned char* aData,
+                         const gfx::IntSize& aDataSize,
                          int32_t aStride,
                          gfx::SurfaceFormat aFormat,
                          const nsIntRegion& aDstRegion,
