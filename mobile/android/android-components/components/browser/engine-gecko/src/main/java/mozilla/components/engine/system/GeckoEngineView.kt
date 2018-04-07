@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.engine.gecko
+package mozilla.components.engine.system
 
-import mozilla.components.engine.BrowserEngine
+import mozilla.components.engine.EngineView
 
-class GeckoBrowserEngine : BrowserEngine
+class GeckoEngineView : EngineView
