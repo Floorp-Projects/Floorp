@@ -789,6 +789,7 @@ public:
   ServiceWorkerRegistrarSaveDataRunnable()
     : Runnable("dom::ServiceWorkerRegistrarSaveDataRunnable")
     , mEventTarget(GetCurrentThreadEventTarget())
+    , mRetryCounter(0)
   {
     AssertIsOnBackgroundThread();
   }
@@ -799,12 +800,23 @@ public:
     RefPtr<ServiceWorkerRegistrar> service = ServiceWorkerRegistrar::Get();
     MOZ_ASSERT(service);
 
-    service->SaveData();
+    // If the save fails, try again once in case it was a temporary
+    // problem due to virus scanning, etc.
+    static const uint32_t kMaxSaveRetryCount = 1;
+
+    nsresult rv = service->SaveData();
+    if (NS_FAILED(rv) && mRetryCounter < kMaxSaveRetryCount) {
+      rv = GetCurrentThreadEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL);
+      if (NS_SUCCEEDED(rv)) {
+        mRetryCounter += 1;
+        return NS_OK;
+      }
+    }
 
     RefPtr<Runnable> runnable =
       NewRunnableMethod("ServiceWorkerRegistrar::DataSaved",
                         service, &ServiceWorkerRegistrar::DataSaved);
-    nsresult rv = mEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
+    rv = mEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -814,6 +826,7 @@ public:
 
 private:
   nsCOMPtr<nsIEventTarget> mEventTarget;
+  uint32_t mRetryCounter;
 };
 
 void
@@ -845,7 +858,7 @@ ServiceWorkerRegistrar::ShutdownCompleted()
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
-void
+nsresult
 ServiceWorkerRegistrar::SaveData()
 {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -853,8 +866,12 @@ ServiceWorkerRegistrar::SaveData()
   nsresult rv = WriteData();
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to write data for the ServiceWorker Registations.");
-    DeleteData();
+    // Don't touch the file or in-memory state.  Writing files can
+    // sometimes fail due to virus scanning, etc.  We should just leave
+    // things as is so the next save operation can pick up any changes
+    // without losing data.
   }
+  return rv;
 }
 
 void

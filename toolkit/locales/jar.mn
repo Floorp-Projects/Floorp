@@ -58,9 +58,7 @@
   locale/@AB_CD@/global/notification.dtd                (%chrome/global/notification.dtd)
   locale/@AB_CD@/global/preferences.dtd                 (%chrome/global/preferences.dtd)
 #ifndef MOZ_FENNEC
-#ifndef MOZ_GTK
   locale/@AB_CD@/global/printPageSetup.dtd              (%chrome/global/printPageSetup.dtd)
-#endif
   locale/@AB_CD@/global/printPreview.dtd                (%chrome/global/printPreview.dtd)
   locale/@AB_CD@/global/printPreviewProgress.dtd        (%chrome/global/printPreviewProgress.dtd)
   locale/@AB_CD@/global/printdialog.properties          (%chrome/global/printdialog.properties)
