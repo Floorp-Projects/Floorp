@@ -5,9 +5,7 @@
 
 :root {
   --close-button-image: url(chrome://devtools/skin/images/close.svg);
-  --dock-bottom-image: url(chrome://devtools/skin/images/dock-bottom.svg);
-  --dock-side-image: url(chrome://devtools/skin/images/dock-side.svg);
-  --dock-undock-image: url(chrome://devtools/skin/images/dock-undock.svg);
+  --more-button-image: url(chrome://devtools/skin/images/more.svg);
 
   --command-paintflashing-image: url(images/command-paintflashing.svg);
   --command-screenshot-image: url(images/command-screenshot.svg);
@@ -16,8 +14,6 @@
   --command-pick-image: url(images/command-pick.svg);
   --command-pick-accessibility-image: url(images/command-pick-accessibility.svg);
   --command-frames-image: url(images/command-frames.svg);
-  --command-splitconsole-image: url(images/command-console.svg);
-  --command-noautohide-image: url(images/command-noautohide.svg);
   --command-rulers-image: url(images/command-rulers.svg);
   --command-measure-image: url(images/command-measure.svg);
 }
@@ -61,9 +57,7 @@
    they don't overlap with the tab bar */
 #toolbox-buttons-start,
 #toolbox-buttons-end,
-#toolbox-option-container,
-#toolbox-controls,
-#toolbox-dock-buttons {
+#toolbox-controls {
   display: flex;
   align-items: stretch;
 }
@@ -163,41 +157,31 @@
   fill: var(--theme-toolbar-highlighted-color);
 }
 
-/* The options tab is special - it doesn't have the same parent
-   as the other tabs (toolbox-option-container vs toolbox-tabs) */
-#toolbox-option-container .devtools-tab {
-  border-color: transparent;
-  border-width: 0;
-  padding-inline-start: 1px;
-}
-#toolbox-option-container img {
-  margin: 0 3px;
-}
-
 /* Toolbox controls */
 
+#toolbox-controls {
+  margin-right: 3px;
+}
+
+#toolbox-buttons-end > .devtools-separator {
+  margin-inline-start: 5px;
+  margin-inline-end: 5px;
+}
 
 #toolbox-close::before {
+  fill: var(--theme-toolbar-photon-icon-color);
   background-image: var(--close-button-image);
 }
 
-#toolbox-dock-bottom::before {
-  background-image: var(--dock-bottom-image);
-}
-
-#toolbox-dock-side::before {
-  background-image: var(--dock-side-image);
-}
-
-#toolbox-dock-window::before {
-  background-image: var(--dock-undock-image);
+#toolbox-meatball-menu-button::before {
+  fill: var(--theme-toolbar-photon-icon-color);
+  background-image: var(--more-button-image);
 }
 
 /* Command buttons */
 
 .command-button,
-#toolbox-controls > button,
-#toolbox-dock-buttons > button {
+#toolbox-controls > button {
   /* !important is needed to override .devtools-button rules in common.css */
   padding: 0 !important;
   margin: 0 !important;
@@ -237,14 +221,6 @@
   background-image: var(--command-pick-accessibility-image);
 }
 
-#command-button-splitconsole::before {
-  background-image: var(--command-splitconsole-image);
-}
-
-#command-button-noautohide::before {
-  background-image: var(--command-noautohide-image);
-}
-
 #command-button-eyedropper::before {
   background-image: var(--command-eyedropper-image);
 }
@@ -271,12 +247,22 @@
   min-width: 32px;
 }
 
+#command-button-frames::before {
+  /* The frames button has a drop-down arrow making it asymmetrical.
+   * Drop the margin on the non-arrow side to make it fit more symmetrical. */
+  margin-inline-start: 0px;
+  /* The direction of devtools-button is forced to 'ltr' for text-as-image
+   * buttons. We don't need that here (there's no text in this button) and we
+   * want the logical properties to reflect the text direction so unset it. */
+  direction: unset;
+}
+
 #command-button-frames:-moz-locale-dir(ltr) {
-  background-position: right;
+  background-position: right 2px top 14px;
 }
 
 #command-button-frames:-moz-locale-dir(rtl) {
-  background-position: left;
+  background-position: left 2px top 14px;
 }
 
 /* Toolbox panels */

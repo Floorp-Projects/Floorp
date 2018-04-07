@@ -3888,6 +3888,7 @@ nsCookieService::ParseAttributes(nsDependentCString &aCookieHeader,
   static const char kHttpOnly[]  = "httponly";
   static const char kSameSite[]       = "samesite";
   static const char kSameSiteLax[]    = "lax";
+  static const char kSameSiteStrict[]    = "strict";
 
   nsACString::const_char_iterator tempBegin, tempEnd;
   nsACString::const_char_iterator cookieStart, cookieEnd;
@@ -3949,7 +3950,7 @@ nsCookieService::ParseAttributes(nsDependentCString &aCookieHeader,
     else if (tokenString.LowerCaseEqualsLiteral(kSameSite)) {
       if (tokenValue.LowerCaseEqualsLiteral(kSameSiteLax)) {
         aCookieAttributes.sameSite = nsICookie2::SAMESITE_LAX;
-      } else {
+      } else if (tokenValue.LowerCaseEqualsLiteral(kSameSiteStrict)) {
         aCookieAttributes.sameSite = nsICookie2::SAMESITE_STRICT;
       }
     }

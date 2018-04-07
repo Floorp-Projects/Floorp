@@ -26,13 +26,11 @@ py2:
         - netwerk
         - nsprpub
         - other-licenses
-        - probes/trace-gen.py
         - python/devtools
         - python/mach
         - python/mozbuild
         - python/mozversioncontrol
         - security
-        - services/common/tests/mach_commands.py
         - servo
         - taskcluster/docker/funsize-update-generator
         - testing/awsy
@@ -59,6 +57,8 @@ py2:
         - tools/update-packaging
         - xpcom
     extensions: ['py']
+    support-files:
+        - 'tools/lint/python/*compat*'
     type: external
     payload: python.compat:lintpy2
     setup: python.compat:setuppy2

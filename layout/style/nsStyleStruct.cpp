@@ -4143,8 +4143,12 @@ nsStyleContentData::~nsStyleContentData()
   } else if (mType == eStyleContentType_Counter ||
              mType == eStyleContentType_Counters) {
     mContent.mCounters->Release();
-  } else if (mContent.mString) {
+  } else if (mType == eStyleContentType_String) {
     free(mContent.mString);
+  } else if (mType == eStyleContentType_Attr) {
+    delete mContent.mAttr;
+  } else {
+    MOZ_ASSERT(mContent.mString == nullptr, "Leaking due to missing case");
   }
 }
 

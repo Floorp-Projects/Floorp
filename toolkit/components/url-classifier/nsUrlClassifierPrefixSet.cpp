@@ -89,6 +89,7 @@ nsUrlClassifierPrefixSet::SetPrefixes(const uint32_t* aArray, uint32_t aLength)
       Clear();
     }
   } else {
+    MOZ_ASSERT(aArray);
     rv = MakePrefixSet(aArray, aLength);
   }
 

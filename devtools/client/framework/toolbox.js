@@ -127,7 +127,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this._onWillNavigate = this._onWillNavigate.bind(this);
   this._refreshHostTitle = this._refreshHostTitle.bind(this);
-  this._toggleNoAutohide = this._toggleNoAutohide.bind(this);
+  this.toggleNoAutohide = this.toggleNoAutohide.bind(this);
   this.showFramesMenu = this.showFramesMenu.bind(this);
   this.handleKeyDownOnFramesButton = this.handleKeyDownOnFramesButton.bind(this);
   this.showFramesMenuOnKeyDown = this.showFramesMenuOnKeyDown.bind(this);
@@ -156,6 +156,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
   this._updatePickerButton = this._updatePickerButton.bind(this);
   this.selectTool = this.selectTool.bind(this);
+  this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
 
   this._target.on("close", this.destroy);
 
@@ -491,7 +492,7 @@ Toolbox.prototype = {
       this._componentMount = this.doc.getElementById("toolbox-toolbar-mount");
 
       this._mountReactComponent();
-      this._buildDockButtons();
+      this._buildDockOptions();
       this._buildOptions();
       this._buildTabs();
       this._applyCacheSettings();
@@ -511,7 +512,7 @@ Toolbox.prototype = {
       this.webconsolePanel.height = Services.prefs.getIntPref(SPLITCONSOLE_HEIGHT_PREF);
       this.webconsolePanel.addEventListener("resize", this._saveSplitConsoleHeight);
 
-      let buttonsPromise = this._buildButtons();
+      this._buildButtons();
 
       this._pingTelemetry();
 
@@ -525,18 +526,16 @@ Toolbox.prototype = {
 
       // Start rendering the toolbox toolbar before selecting the tool, as the tools
       // can take a few hundred milliseconds seconds to start up.
-      // But wait for toolbar buttons to be set before updating this react component.
-      buttonsPromise.then(() => {
-        // Delay React rendering as Toolbox.open and buttonsPromise are synchronous.
-        // Even if this involve promises, this is synchronous. Toolbox.open already loads
-        // react modules and freeze the event loop for a significant time.
-        // requestIdleCallback allows releasing it to allow user events to be processed.
-        // Use 16ms maximum delay to allow one frame to be rendered at 60FPS
-        // (1000ms/60FPS=16ms)
-        this.win.requestIdleCallback(() => {
-          this.component.setCanRender();
-        }, {timeout: 16});
-      });
+      //
+      // Delay React rendering as Toolbox.open is synchronous.
+      // Even if this involve promises, it is synchronous. Toolbox.open already loads
+      // react modules and freeze the event loop for a significant time.
+      // requestIdleCallback allows releasing it to allow user events to be processed.
+      // Use 16ms maximum delay to allow one frame to be rendered at 60FPS
+      // (1000ms/60FPS=16ms)
+      this.win.requestIdleCallback(() => {
+        this.component.setCanRender();
+      }, {timeout: 16});
 
       await this.selectTool(this._defaultToolId);
 
@@ -549,7 +548,6 @@ Toolbox.prototype = {
 
       await promise.all([
         splitConsolePromise,
-        buttonsPromise,
         framesPromise
       ]);
 
@@ -1049,16 +1047,16 @@ Toolbox.prototype = {
   },
 
   /**
-   * Build the buttons for changing hosts. Called every time
+   * Build the options for changing hosts. Called every time
    * the host changes.
    */
-  _buildDockButtons: function() {
+  _buildDockOptions: function() {
     if (!this._target.isLocalTab) {
-      this.component.setDockButtonsEnabled(false);
+      this.component.setDockOptionsEnabled(false);
       return;
     }
 
-    this.component.setDockButtonsEnabled(true);
+    this.component.setDockOptionsEnabled(true);
     this.component.setCanCloseToolbox(this.hostType !== Toolbox.HostType.WINDOW);
 
     let sideEnabled = Services.prefs.getBoolPref(this._prefs.SIDE_ENABLED);
@@ -1095,7 +1093,7 @@ Toolbox.prototype = {
   /**
    * Initiate ToolboxTabs React component and all it's properties. Do the initial render.
    */
-  _buildTabs: function() {
+  _buildTabs: async function() {
     // Get the initial list of tab definitions. This list can be amended at a later time
     // by tools registering themselves.
     const definitions = gDevTools.getToolDefinitionArray();
@@ -1105,9 +1103,11 @@ Toolbox.prototype = {
     this.panelDefinitions = definitions.filter(definition =>
       definition.isTargetSupported(this._target) && definition.id !== "options");
 
-    this.optionsDefinition = definitions.find(({id}) => id === "options");
-    // The options tool is treated slightly differently, and is in a different area.
-    this.component.setOptionsPanel(definitions.find(({id}) => id === "options"));
+    // Do async lookup of disable pop-up auto-hide state.
+    if (this.disableAutohideAvailable) {
+      let disable = await this._isDisableAutohideEnabled();
+      this.component.setDisableAutohide(disable);
+    }
   },
 
   _mountReactComponent: function() {
@@ -1116,6 +1116,8 @@ Toolbox.prototype = {
       L10N,
       currentToolId: this.currentToolId,
       selectTool: this.selectTool,
+      toggleSplitConsole: this.toggleSplitConsole,
+      toggleNoAutohide: this.toggleNoAutohide,
       closeToolbox: this.destroy,
       focusButton: this._onToolbarFocus,
       toolbox: this
@@ -1187,12 +1189,11 @@ Toolbox.prototype = {
   /**
    * Add buttons to the UI as specified in devtools/client/definitions.js
    */
-  async _buildButtons() {
+  _buildButtons() {
     // Beyond the normal preference filtering
     this.toolbarButtons = [
       this._buildPickerButton(),
       this._buildFrameButton(),
-      await this._buildNoAutoHideButton()
     ];
 
     ToolboxButtons.forEach(definition => {
@@ -1218,25 +1219,6 @@ Toolbox.prototype = {
     });
 
     return this.frameButton;
-  },
-
-  /**
-   * Button that disables/enables auto-hiding XUL pop-ups. When enabled, XUL
-   * pop-ups will not automatically close when they lose focus.
-   */
-  async _buildNoAutoHideButton() {
-    this.autohideButton = this._createButtonState({
-      id: "command-button-noautohide",
-      description: L10N.getStr("toolbox.noautohide.tooltip"),
-      onClick: this._toggleNoAutohide,
-      isTargetSupported: target => target.chrome
-    });
-
-    this._isDisableAutohideEnabled().then(enabled => {
-      this.autohideButton.isChecked = enabled;
-    });
-
-    return this.autohideButton;
   },
 
   /**
@@ -1912,6 +1894,7 @@ Toolbox.prototype = {
     }
 
     return this.loadTool("webconsole").then(() => {
+      this.component.setIsSplitConsoleActive(true);
       this.emit("split-console");
       this.focusConsoleInput();
     });
@@ -1927,6 +1910,7 @@ Toolbox.prototype = {
     this._splitConsole = false;
     Services.prefs.setBoolPref(SPLITCONSOLE_ENABLED_PREF, false);
     this._refreshConsoleDisplay();
+    this.component.setIsSplitConsoleActive(false);
     this.emit("split-console");
 
     if (this._lastFocusedElement) {
@@ -1965,10 +1949,9 @@ Toolbox.prototype = {
   selectNextTool: function() {
     let definitions = this.component.panelDefinitions;
     const index = definitions.findIndex(({id}) => id === this.currentToolId);
-    let definition = definitions[index + 1];
-    if (!definition) {
-      definition = index === -1 ? definitions[0] : this.optionsDefinition;
-    }
+    let definition = index === -1 || index >= definitions.length - 1
+                     ? definitions[0]
+                     : definitions[index + 1];
     return this.selectTool(definition.id);
   },
 
@@ -1978,12 +1961,9 @@ Toolbox.prototype = {
   selectPreviousTool: function() {
     let definitions = this.component.panelDefinitions;
     const index = definitions.findIndex(({id}) => id === this.currentToolId);
-    let definition = definitions[index - 1];
-    if (!definition) {
-      definition = index === -1
-        ? definitions[definitions.length - 1]
-        : this.optionsDefinition;
-    }
+    let definition = index === -1 || index < 1
+                     ? definitions[definitions.length - 1]
+                     : definitions[index - 1];
     return this.selectTool(definition.id);
   },
 
@@ -2079,20 +2059,28 @@ Toolbox.prototype = {
     });
   },
 
-  async _toggleNoAutohide() {
+  // Is the disable auto-hide of pop-ups feature available in this context?
+  get disableAutohideAvailable() {
+    return this._target.chrome;
+  },
+
+  async toggleNoAutohide() {
     let front = await this.preferenceFront;
     let toggledValue = !(await this._isDisableAutohideEnabled());
 
     front.setBoolPref(DISABLE_AUTOHIDE_PREF, toggledValue);
 
-    this.autohideButton.isChecked = toggledValue;
+    if (this.disableAutohideAvailable) {
+      this.component.setDisableAutohide(toggledValue);
+    }
     this._autohideHasBeenToggled = true;
   },
 
   async _isDisableAutohideEnabled() {
-    // Ensure that the tools are open, and the button is visible.
+    // Ensure that the tools are open and the feature is available in this
+    // context.
     await this.isOpen;
-    if (!this.autohideButton.isVisible) {
+    if (!this.disableAutohideAvailable) {
       return false;
     }
 
@@ -2355,7 +2343,7 @@ Toolbox.prototype = {
   _onSwitchedHost: function({ hostType }) {
     this._hostType = hostType;
 
-    this._buildDockButtons();
+    this._buildDockOptions();
     this._addKeysToWindow();
 
     // We blurred the tools at start of switchHost, but also when clicking on
