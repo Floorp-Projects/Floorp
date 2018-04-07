@@ -55,78 +55,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(SchedulerEventTarget, NS_DISPATCHEREVENTTARGET_IID
 
 static Atomic<uint64_t> gEarliestUnprocessedVsync(0);
 
-#ifdef EARLY_BETA_OR_EARLIER
-class MOZ_RAII AutoCollectVsyncTelemetry final
-{
-public:
-  explicit AutoCollectVsyncTelemetry(SchedulerGroup::Runnable* aRunnable
-                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mIsBackground(aRunnable->IsBackground())
-  {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    aRunnable->GetName(mKey);
-    mStart = TimeStamp::Now();
-  }
-  ~AutoCollectVsyncTelemetry()
-  {
-    if (Telemetry::CanRecordBase()) {
-      CollectTelemetry();
-    }
-  }
-
-private:
-  void CollectTelemetry();
-
-  bool mIsBackground;
-  nsCString mKey;
-  TimeStamp mStart;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-void
-AutoCollectVsyncTelemetry::CollectTelemetry()
-{
-  TimeStamp now = TimeStamp::Now();
-
-  mozilla::Telemetry::HistogramID eventsId =
-    mIsBackground ? Telemetry::CONTENT_JS_BACKGROUND_TICK_DELAY_EVENTS_MS
-                  : Telemetry::CONTENT_JS_FOREGROUND_TICK_DELAY_EVENTS_MS;
-  mozilla::Telemetry::HistogramID totalId =
-    mIsBackground ? Telemetry::CONTENT_JS_BACKGROUND_TICK_DELAY_TOTAL_MS
-                  : Telemetry::CONTENT_JS_FOREGROUND_TICK_DELAY_TOTAL_MS;
-
-  uint64_t lastSeenVsync = gEarliestUnprocessedVsync;
-  if (!lastSeenVsync) {
-    return;
-  }
-
-  bool inconsistent = false;
-  TimeStamp creation = TimeStamp::ProcessCreation(&inconsistent);
-  if (inconsistent) {
-    return;
-  }
-
-  TimeStamp pendingVsync =
-    creation + TimeDuration::FromMicroseconds(lastSeenVsync);
-
-  if (pendingVsync > now) {
-    return;
-  }
-
-  uint32_t duration =
-    static_cast<uint32_t>((now - pendingVsync).ToMilliseconds());
-
-  Telemetry::Accumulate(eventsId, mKey, duration);
-  Telemetry::Accumulate(totalId, duration);
-
-  if (pendingVsync > mStart) {
-    return;
-  }
-
-  Telemetry::Accumulate(Telemetry::CONTENT_JS_KNOWN_TICK_DELAY_MS, duration);
-}
-#endif
-
 } // namespace
 
 NS_IMPL_ISUPPORTS(SchedulerEventTarget,
@@ -406,14 +334,7 @@ SchedulerGroup::Runnable::Run()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  nsresult result;
-
-  {
-#ifdef EARLY_BETA_OR_EARLIER
-    AutoCollectVsyncTelemetry telemetry(this);
-#endif
-    result = mRunnable->Run();
-  }
+  nsresult result = mRunnable->Run();
 
   // The runnable's destructor can have side effects, so try to execute it in
   // the scope of the TabGroup.
