@@ -421,7 +421,8 @@ private:
 
   typedef nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, CustomElementDefinition>
     DefinitionMap;
-  typedef nsClassHashtable<nsRefPtrHashKey<nsAtom>, nsTArray<nsWeakPtr>>
+  typedef nsClassHashtable<nsRefPtrHashKey<nsAtom>,
+                           nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>>
     CandidateMap;
   typedef JS::GCHashMap<JS::Heap<JSObject*>,
                         RefPtr<nsAtom>,
