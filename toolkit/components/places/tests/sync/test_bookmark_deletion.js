@@ -28,7 +28,7 @@ add_task(async function test_complex_orphaning() {
       }],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "toolbar",
     type: "folder",
     children: ["folderAAAAAA"],
@@ -60,7 +60,7 @@ add_task(async function test_complex_orphaning() {
       }],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["folderGGGGGG"],
@@ -91,7 +91,7 @@ add_task(async function test_complex_orphaning() {
   });
 
   info("Make remote changes: delete B, add D > F");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "folderBBBBBB",
     deleted: true,
   }, {
@@ -228,7 +228,7 @@ add_task(async function test_locally_modified_remotely_deleted() {
       }],
     }],
   });
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["bookmarkAAAA", "folderBBBBBB"],
@@ -280,7 +280,7 @@ add_task(async function test_locally_modified_remotely_deleted() {
   });
 
   info("Make remote changes: delete A, B");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: [],
@@ -384,7 +384,7 @@ add_task(async function test_locally_deleted_remotely_modified() {
       }],
     }],
   });
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["bookmarkAAAA", "folderBBBBBB"],
@@ -421,7 +421,7 @@ add_task(async function test_locally_deleted_remotely_modified() {
   await PlacesUtils.bookmarks.remove("folderBBBBBB");
 
   info("Make remote changes: change A; B > ((D > F) G)");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "bookmarkAAAA",
     type: "bookmark",
     title: "A (remote)",
@@ -519,7 +519,7 @@ add_task(async function test_move_to_new_then_delete() {
       }],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA"],
@@ -562,7 +562,7 @@ add_task(async function test_move_to_new_then_delete() {
   await PlacesUtils.bookmarks.remove("folderEEEEEE");
 
   info("Make remote changes");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "bookmarkCCCC",
     type: "bookmark",
     title: "C (remote)",
@@ -641,7 +641,7 @@ add_task(async function test_nonexistent_on_one_side() {
   // B doesn't exist in Places, and we don't currently persist tombstones (bug
   // 1343103), so we should ignore it.
   info("Create remote tombstone for nonexistent local item B");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "bookmarkBBBB",
     deleted: true
   }]);
@@ -713,7 +713,7 @@ add_task(async function test_clear_folder_then_delete() {
       }],
     }],
   });
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA", "bookmarkDDDD"],
@@ -764,7 +764,7 @@ add_task(async function test_clear_folder_then_delete() {
   await PlacesUtils.bookmarks.remove("bookmarkDDDD");
 
   info("Make remote changes: Menu > D, Unfiled > C, delete A");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["bookmarkBBBB", "bookmarkDDDD"],
@@ -873,7 +873,7 @@ add_task(async function test_newer_move_to_deleted() {
       }],
     }],
   });
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA", "folderCCCCCC"],
@@ -926,7 +926,7 @@ add_task(async function test_newer_move_to_deleted() {
   // locally moving D to the toolbar. (Locally, D exists in C, but we
   // deleted the now-empty C locally).
   info("Make remote changes: C > F, Toolbar > B, delete A");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "folderCCCCCC",
     type: "folder",
     title: "C",
