@@ -430,6 +430,7 @@ function FakeRecord(constructor, r) {
   }
   // Borrow the constructor's conversion functions.
   this.toSyncBookmark = constructor.prototype.toSyncBookmark;
+  this.cleartextToString = constructor.prototype.cleartextToString;
 }
 
 // Bug 632287.

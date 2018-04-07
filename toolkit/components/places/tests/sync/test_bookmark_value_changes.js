@@ -14,7 +14,7 @@ add_task(async function test_value_combo() {
       tags: ["moz", "dot", "org"],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["mozBmk______"],
@@ -39,7 +39,7 @@ add_task(async function test_value_combo() {
   });
 
   info("Insert remote bookmarks and folder to apply");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "mozBmk______",
     type: "bookmark",
     title: "Mozilla home page",
@@ -245,7 +245,7 @@ add_task(async function test_value_only_changes() {
       }],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA", "folderFFFFFF"],
@@ -309,7 +309,7 @@ add_task(async function test_value_only_changes() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Make remote changes");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "bookmarkCCCC",
     type: "bookmark",
     title: "C (remote)",
@@ -468,7 +468,7 @@ add_task(async function test_keywords() {
       keyword: "three",
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD"],
@@ -499,7 +499,7 @@ add_task(async function test_keywords() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Change keywords remotely");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "bookmarkAAAA",
     type: "bookmark",
     title: "A",
@@ -573,7 +573,7 @@ add_task(async function test_keywords_complex() {
       keyword: "three",
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD", "bookmarkEEEE"],
@@ -604,7 +604,7 @@ add_task(async function test_keywords_complex() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Make remote changes");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkAAA1", "bookmarkBBBB", "bookmarkCCCC",
@@ -811,7 +811,7 @@ add_task(async function test_tags() {
       tags: ["seven", "eight", "nine"],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD"],
@@ -842,7 +842,7 @@ add_task(async function test_tags() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Change tags remotely");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "bookmarkAAAA",
     type: "bookmark",
     title: "A",
@@ -907,7 +907,7 @@ add_task(async function test_rewrite_tag_queries() {
       tags: ["kitty"],
     }],
   });
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkDDDD"],
@@ -926,7 +926,7 @@ add_task(async function test_rewrite_tag_queries() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Add tag queries for new and existing tags");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "toolbar",
     type: "folder",
     children: ["queryBBBBBBB", "queryCCCCCCC", "bookmarkEEEE"],
@@ -1015,7 +1015,7 @@ add_task(async function test_date_added() {
       url: "http://example.com/b",
     }],
   });
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkBBBB"],
@@ -1036,7 +1036,7 @@ add_task(async function test_date_added() {
 
   info("Make remote changes");
   let bNewDateAdded = new Date(bDateAdded.getTime() - 1 * 60 * 60 * 1000);
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "bookmarkAAAA",
     type: "bookmark",
     title: "A (remote)",

@@ -15,7 +15,7 @@ add_task(async function test_missing_children() {
 
   info("Make remote changes: A > ([B] C [D E])");
   {
-    await buf.store(shuffle([{
+    await storeRecords(buf, shuffle([{
       id: "menu",
       type: "folder",
       children: ["bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD",
@@ -54,7 +54,7 @@ add_task(async function test_missing_children() {
 
   info("Add (B E) to remote");
   {
-    await buf.store(shuffle([{
+    await storeRecords(buf, shuffle([{
       id: "bookmarkBBBB",
       type: "bookmark",
       title: "B",
@@ -105,7 +105,7 @@ add_task(async function test_missing_children() {
 
   info("Add D to remote");
   {
-    await buf.store([{
+    await storeRecords(buf, [{
       id: "bookmarkDDDD",
       type: "bookmark",
       title: "D",
@@ -169,7 +169,7 @@ add_task(async function test_new_orphan_without_local_parent() {
   // reuploading. When the partial uploader returns and uploads A, we'll
   // move the bookmarks to the correct folder.
   info("Make remote changes: [A] > (B C D)");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "bookmarkBBBB",
     type: "bookmark",
     title: "B (remote)",
@@ -226,7 +226,7 @@ add_task(async function test_new_orphan_without_local_parent() {
   // A is an orphan because we don't have E locally, but we should move
   // (B C D) into A.
   info("Add [E] > A to remote");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "folderAAAAAA",
     type: "folder",
     title: "A",
@@ -277,7 +277,7 @@ add_task(async function test_new_orphan_without_local_parent() {
   }, "Should move (D C B) into A");
 
   info("Add E to remote");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "folderEEEEEE",
     type: "folder",
     title: "E",
@@ -335,7 +335,7 @@ add_task(async function test_new_orphan_without_local_parent() {
   }, "Should move A into E");
 
   info("Add Menu > E to remote");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["folderEEEEEE"],
@@ -450,7 +450,7 @@ add_task(async function test_move_into_orphaned() {
       }],
     }],
   });
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkBBBB", "folderCCCCCC"],
@@ -498,7 +498,7 @@ add_task(async function test_move_into_orphaned() {
 
   // G doesn't exist on the server.
   info("Make remote changes: ([G] > A (C > (D H E))), (C > H)");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "bookmarkAAAA",
     type: "bookmark",
     title: "A",
@@ -627,7 +627,7 @@ add_task(async function test_new_orphan_with_local_parent() {
       }],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA"],
@@ -653,7 +653,7 @@ add_task(async function test_new_orphan_with_local_parent() {
   // exists locally, so we can move B and C into the correct folder, but not
   // the correct positions.
   info("Set up remote with orphans: [A] > (C D)");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "bookmarkDDDD",
     type: "bookmark",
     title: "D (remote)",
@@ -738,7 +738,7 @@ add_task(async function test_new_orphan_with_local_parent() {
 
   // The partial uploader returns and uploads A.
   info("Add A to remote");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "folderAAAAAA",
     type: "folder",
     title: "A",
@@ -799,7 +799,7 @@ add_task(async function test_tombstone_as_child() {
   let buf = await openMirror("tombstone_as_child");
   // Setup the mirror such that an incoming folder references a tombstone
   // as a child.
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA"],
@@ -901,7 +901,7 @@ add_task(async function test_left_pane_root() {
   // mirror, all correctly parented.
   // Because we can determine this is a complete tree that's outside our
   // syncable trees, we expect none of them to be applied.
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "folderLEFTPR",
     type: "folder",
     parentid: "places",
@@ -957,7 +957,7 @@ add_task(async function test_left_pane_query() {
   // Add the left pane root and left-pane folders to the mirror, correctly parented.
   // We should not apply it because we made a policy decision to not apply
   // orphaned queries (bug 1433182)
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "folderLEFTPQ",
     type: "query",
     parentid: "folderLEFTPR",
@@ -1000,7 +1000,7 @@ add_task(async function test_partial_cycle() {
       }],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA"],
@@ -1026,7 +1026,7 @@ add_task(async function test_partial_cycle() {
   // a record for the menu. B is still a child of A locally. Since we ignore the
   // `parentid`, we'll move (B A) into unfiled.
   info("Make remote changes: A > C");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "folderAAAAAA",
     type: "folder",
     title: "A (remote)",
@@ -1109,7 +1109,7 @@ add_task(async function test_complete_cycle() {
   // subtree because there's nothing linking it back to the rest of the
   // tree.
   info("Make remote changes: Menu > A > B > C > A");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA"],
