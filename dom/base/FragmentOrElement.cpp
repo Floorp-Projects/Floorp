@@ -24,7 +24,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
-#include "mozilla/ServoRestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/Attr.h"

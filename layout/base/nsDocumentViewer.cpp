@@ -7,7 +7,7 @@
 /* container for a document and its presentation */
 
 #include "gfxContext.h"
-#include "mozilla/ServoRestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsAutoPtr.h"
 #include "nscore.h"

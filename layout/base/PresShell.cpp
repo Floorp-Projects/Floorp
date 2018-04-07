@@ -172,7 +172,6 @@
 #include "nsTransitionManager.h"
 #include "ChildIterator.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "nsIDragSession.h"
 #include "nsIFrameInlines.h"
 #include "mozilla/gfx/2D.h"
@@ -1798,15 +1797,13 @@ PresShell::Initialize()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  Element *root = mDocument->GetRootElement();
-
-  if (root) {
+  if (Element* root = mDocument->GetRootElement()) {
     {
       nsAutoCauseReflowNotifier reflowNotifier(this);
       // Have the style sheet processor construct frame for the root
       // content object down
       mFrameConstructor->ContentInserted(
-          nullptr, root, nullptr, nsCSSFrameConstructor::InsertionKind::Sync);
+          root, nullptr, nsCSSFrameConstructor::InsertionKind::Sync);
 
       // Something in mFrameConstructor->ContentInserted may have caused
       // Destroy() to get called, bug 337586.
@@ -2927,11 +2924,11 @@ PresShell::CancelAllPendingReflows()
 static bool
 DestroyFramesAndStyleDataFor(Element* aElement,
                              nsPresContext& aPresContext,
-                             ServoRestyleManager::IncludeRoot aIncludeRoot)
+                             RestyleManager::IncludeRoot aIncludeRoot)
 {
   bool didReconstruct =
     aPresContext.FrameConstructor()->DestroyFramesFor(aElement);
-  ServoRestyleManager::ClearServoDataFromSubtree(aElement, aIncludeRoot);
+  RestyleManager::ClearServoDataFromSubtree(aElement, aIncludeRoot);
   return didReconstruct;
 }
 
@@ -2955,7 +2952,7 @@ nsIPresShell::SlotAssignmentWillChange(Element& aElement,
   // Ensure the new element starts off clean.
   DestroyFramesAndStyleDataFor(&aElement,
                                *mPresContext,
-                               ServoRestyleManager::IncludeRoot::Yes);
+                               RestyleManager::IncludeRoot::Yes);
 
   if (aNewSlot) {
     // If the new slot will stop showing fallback content, we need to reframe it
@@ -2977,9 +2974,44 @@ nsIPresShell::SlotAssignmentWillChange(Element& aElement,
   }
 }
 
+#ifdef DEBUG
+static void
+AssertNoFramesInSubtree(nsIContent* aContent)
+{
+  for (nsIContent* c = aContent; c; c = c->GetNextNode(aContent)) {
+    MOZ_ASSERT(!c->GetPrimaryFrame());
+    if (auto* shadowRoot = c->GetShadowRoot()) {
+      AssertNoFramesInSubtree(shadowRoot);
+    }
+    if (auto* binding = c->GetXBLBinding()) {
+      if (auto* bindingWithContent = binding->GetBindingWithContent()) {
+        nsIContent* anonContent = bindingWithContent->GetAnonymousContent();
+        MOZ_ASSERT(!anonContent->GetPrimaryFrame());
+
+        // Need to do this instead of just AssertNoFramesInSubtree(anonContent),
+        // because the parent of the children of the <content> element isn't the
+        // <content> element, but the bound element, and that confuses
+        // GetNextNode a lot.
+        for (nsIContent* child = anonContent->GetFirstChild();
+             child;
+             child = child->GetNextSibling()) {
+          AssertNoFramesInSubtree(child);
+        }
+      }
+    }
+  }
+}
+#endif
+
 void
 nsIPresShell::DestroyFramesForAndRestyle(Element* aElement)
 {
+#ifdef DEBUG
+  auto postCondition = mozilla::MakeScopeExit([&]() {
+    AssertNoFramesInSubtree(aElement);
+  });
+#endif
+
   MOZ_ASSERT(aElement);
   if (MOZ_UNLIKELY(!mDidInitialize)) {
     return;
@@ -2999,8 +3031,8 @@ nsIPresShell::DestroyFramesForAndRestyle(Element* aElement)
 
   // Clear the style data from all the flattened tree descendants, but _not_
   // from us, since otherwise we wouldn't see the reframe.
-  ServoRestyleManager::ClearServoDataFromSubtree(
-      aElement, ServoRestyleManager::IncludeRoot::No);
+  RestyleManager::ClearServoDataFromSubtree(
+      aElement, RestyleManager::IncludeRoot::No);
 
   auto changeHint = didReconstruct
     ? nsChangeHint(0)
@@ -3780,42 +3812,15 @@ PresShell::ScheduleViewManagerFlush(PaintType aType)
   SetNeedLayoutFlush();
 }
 
-static bool
-FlushLayoutRecursive(nsIDocument* aDocument,
-                     void* aData = nullptr)
-{
-  MOZ_ASSERT(!aData);
-  nsCOMPtr<nsIDocument> kungFuDeathGrip(aDocument);
-  aDocument->EnumerateSubDocuments(FlushLayoutRecursive, nullptr);
-  aDocument->FlushPendingNotifications(FlushType::Layout);
-  return true;
-}
-
 void
-PresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent,
-                                  bool aFlushOnHoverChange)
+nsIPresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent)
 {
   AUTO_PROFILER_TRACING("Paint", "DispatchSynthMouseMove");
-  RestyleManager* restyleManager = mPresContext->RestyleManager();
-  uint32_t hoverGenerationBefore =
-    restyleManager->GetHoverGeneration();
   nsEventStatus status = nsEventStatus_eIgnore;
   nsView* targetView = nsView::GetViewFor(aEvent->mWidget);
   if (!targetView)
     return;
   targetView->GetViewManager()->DispatchEvent(aEvent, targetView, &status);
-  if (MOZ_UNLIKELY(mIsDestroying)) {
-    return;
-  }
-  if (aFlushOnHoverChange &&
-      hoverGenerationBefore != restyleManager->GetHoverGeneration()) {
-    // Flush so that the resulting reflow happens now so that our caller
-    // can suppress any synthesized mouse moves caused by that reflow.
-    // This code only ever runs for the root document, but :hover changes
-    // can happen in descendant documents too, so make sure we flush
-    // all of them.
-    FlushLayoutRecursive(mDocument);
-  }
 }
 
 void
@@ -4453,10 +4458,11 @@ PresShell::ContentAppended(nsIContent* aFirstNewContent)
                   "Unexpected document");
 
   // We never call ContentAppended with a document as the container, so we can
-  // assert that we have an nsIContent container.
-  nsIContent* container = aFirstNewContent->GetParent();
-  MOZ_ASSERT(container);
-  MOZ_ASSERT(container->IsElement() || container->IsShadowRoot());
+  // assert that we have an nsIContent parent.
+  MOZ_ASSERT(aFirstNewContent->GetParent());
+  MOZ_ASSERT(aFirstNewContent->GetParent()->IsElement() ||
+             aFirstNewContent->GetParent()->IsShadowRoot());
+
   if (!mDidInitialize) {
     return;
   }
@@ -4466,10 +4472,9 @@ PresShell::ContentAppended(nsIContent* aFirstNewContent)
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  mPresContext->RestyleManager()->ContentAppended(container, aFirstNewContent);
+  mPresContext->RestyleManager()->ContentAppended(aFirstNewContent);
 
   mFrameConstructor->ContentAppended(
-      container,
       aFirstNewContent,
       nsCSSFrameConstructor::InsertionKind::Async);
 }
@@ -4479,7 +4484,6 @@ PresShell::ContentInserted(nsIContent* aChild)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentInserted");
   NS_PRECONDITION(aChild->OwnerDoc() == mDocument, "Unexpected document");
-  nsINode* container = aChild->GetParentNode();
 
   if (!mDidInitialize) {
     return;
@@ -4490,10 +4494,9 @@ PresShell::ContentInserted(nsIContent* aChild)
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  mPresContext->RestyleManager()->ContentInserted(container, aChild);
+  mPresContext->RestyleManager()->ContentInserted(aChild);
 
   mFrameConstructor->ContentInserted(
-      aChild->GetParent(),
       aChild,
       nullptr,
       nsCSSFrameConstructor::InsertionKind::Async);
@@ -4527,17 +4530,21 @@ PresShell::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
       : container->GetFirstChild();
   }
 
-  mPresContext->RestyleManager()->ContentRemoved(container, aChild, oldNextSibling);
-
   // After removing aChild from tree we should save information about live ancestor
   if (mPointerEventTarget &&
       nsContentUtils::ContentIsDescendantOf(mPointerEventTarget, aChild)) {
     mPointerEventTarget = aChild->GetParent();
   }
 
-  mFrameConstructor->ContentRemoved(
-      aChild->GetParent(), aChild, oldNextSibling,
-      nsCSSFrameConstructor::REMOVE_CONTENT);
+  mFrameConstructor->ContentRemoved(aChild,
+                                    oldNextSibling,
+                                    nsCSSFrameConstructor::REMOVE_CONTENT);
+
+  // NOTE(emilio): It's important that this goes after the frame constructor
+  // stuff, otherwise the frame constructor can't see elements which are
+  // display: contents / display: none, because we'd have cleared all the style
+  // data from there.
+  mPresContext->RestyleManager()->ContentRemoved(aChild, oldNextSibling);
 }
 
 void
@@ -5679,7 +5686,7 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
     // to 0 because this is a synthetic event which doesn't really belong to any
     // input block. Same for the APZ response field.
     InputAPZContext apzContext(mMouseEventTargetGuid, 0, nsEventStatus_eIgnore);
-    shell->DispatchSynthMouseMove(&event, !aFromScroll);
+    shell->DispatchSynthMouseMove(&event);
   }
 
   if (!aFromScroll) {

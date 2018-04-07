@@ -17,7 +17,6 @@
 #include "celldata.h"
 
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include <algorithm>
 
 #include "nsIScriptError.h"

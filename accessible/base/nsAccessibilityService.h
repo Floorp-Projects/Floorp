@@ -164,8 +164,9 @@ public:
    * Notification used to update the accessible tree when new content is
    * inserted.
    */
-  void ContentRangeInserted(nsIPresShell* aPresShell, nsIContent* aContainer,
-                            nsIContent* aStartChild, nsIContent* aEndChild);
+  void ContentRangeInserted(nsIPresShell* aPresShell,
+                            nsIContent* aStartChild,
+                            nsIContent* aEndChild);
 
   /**
    * Notification used to update the accessible tree when content is removed.

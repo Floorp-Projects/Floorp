@@ -270,7 +270,7 @@
 #include "nsIURIClassifier.h"
 #include "nsIURIMutator.h"
 #include "mozilla/DocumentStyleRootIterator.h"
-#include "mozilla/ServoRestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsHTMLTags.h"
 
@@ -13191,7 +13191,7 @@ nsIDocument::ClearStaleServoData()
 {
   DocumentStyleRootIterator iter(this);
   while (Element* root = iter.GetNextStyleRoot()) {
-    ServoRestyleManager::ClearServoDataFromSubtree(root);
+    RestyleManager::ClearServoDataFromSubtree(root);
   }
 }
 

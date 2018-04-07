@@ -11,6 +11,8 @@
 
 #include "nsStyleChangeList.h"
 
+#include "mozilla/dom/ElementInlines.h"
+
 #include "nsCSSFrameConstructor.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
@@ -29,9 +31,9 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
   // XXXbz we should make this take Element instead of nsIContent
   MOZ_ASSERT(!aContent || aContent->IsElement() ||
              // display:contents elements posts the changes for their children:
-             (aFrame && aContent->GetParent() &&
-             aFrame->PresContext()->FrameConstructor()->
-               GetDisplayContentsStyleFor(aContent->GetParent())) ||
+             (aFrame && aContent->GetFlattenedTreeParentElementForStyle() &&
+              Servo_Element_IsDisplayContents(
+                aContent->GetFlattenedTreeParentElementForStyle())) ||
              (aContent->IsNodeOfType(nsINode::eTEXT) &&
               aContent->HasFlag(NODE_NEEDS_FRAME) &&
               aHint & nsChangeHint_ReconstructFrame),

@@ -9,9 +9,9 @@
 #include <algorithm>
 
 #include "mozilla/AutoRestore.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGAnimationElement.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
 #include "nsIDocument.h"
@@ -734,7 +734,7 @@ nsSMILAnimationController::PreTraverseInSubtree(Element* aRoot)
       continue;
     }
 
-    context->RestyleManager()->AsServo()->
+    context->RestyleManager()->
       PostRestyleEventForAnimations(key.mElement,
                                     CSSPseudoElementType::NotPseudo,
                                     eRestyle_StyleAttribute_Animations);
