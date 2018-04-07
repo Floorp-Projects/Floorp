@@ -4627,22 +4627,16 @@ var StatusPanel = {
     }
 
     if (val) {
-      this._mouseTargetRect = null;
       this._labelElement.value = val;
+      this.panel.removeAttribute("inactive");
+      this._mouseTargetRect = null;
       MousePosTracker.addListener(this);
-      // The inactive state for the panel will be removed in onTrackingStarted,
-      // once the initial position of the mouse relative to the StatusPanel
-      // is figured out (to avoid both flicker and sync flushing).
     } else {
       this.panel.setAttribute("inactive", "true");
       MousePosTracker.removeListener(this);
     }
 
     return val;
-  },
-
-  onTrackingStarted() {
-    this.panel.removeAttribute("inactive");
   },
 
   getMouseTargetRect() {
