@@ -6,6 +6,8 @@
 
 const is_chrome_window = window.location.protocol === "chrome:";
 
+const HTML_NS = "http://www.w3.org/1999/xhtml";
+
 // Expected values. Format: [name, pref_off_value, pref_on_value]
 // If pref_*_value is an array with two values, then we will match
 // any value in between those two values. If a value is null, then
@@ -144,23 +146,37 @@ var testWindowsSpecific = function (resisting, queryName, possibleValues) {
 // `<div class='spoof' id='resolution'>resolution</div>`,
 // where each line corresponds to a different media query.
 var generateHtmlLines = function (resisting) {
-  let lines = "";
+  let fragment = document.createDocumentFragment();
   expected_values.forEach(
     function ([key, offVal, onVal]) {
       let val = resisting ? onVal : offVal;
       if (val) {
-        lines += "<div class='spoof' id='" + key + "'>" + key + "</div>\n";
+        let div = document.createElement("div");
+        div.setAttribute("class", "spoof");
+        div.setAttribute("id", key);
+        div.textContent = key;
+        fragment.appendChild(div);
       }
     });
   suppressed_toggles.forEach(
     function (key) {
-      lines += "<div class='suppress' id='" + key + "'>" + key + "</div>\n";
+      let div = document.createElement("div");
+      div.setAttribute("class", "suppress");
+      div.setAttribute("id", key);
+      div.textContent = key;
+      fragment.appendChild(div);
     });
   if (OS === "WINNT") {
-    lines += "<div class='windows' id='-moz-os-version'>-moz-os-version</div>";
-    lines += "<div class='windows' id='-moz-windows-theme'>-moz-windows-theme</div>";
+    let ids = ["-moz-os-version", "-moz-windows-theme"];
+    for (let id of ids) {
+      let div = document.createElement("div");
+      div.setAttribute("class", "windows");
+      div.setAttribute("id", id);
+      div.textContent = id;
+      fragment.appendChild(div);
+    }
   }
-  return lines;
+  return fragment;
 };
 
 // __cssLine__.
@@ -234,23 +250,13 @@ var green = (function () {
   return getComputedStyle(temp).backgroundColor;
 })();
 
-// Injected HTML will automatically be sanitized when we're in a chrome
-// document unless we use `unsafeSetInnerHTML`. That function doesn't
-// exist in non-chrome documents, so add a stub to allow the same code
-// to run in both.
-if (!Element.prototype.unsafeSetInnerHTML) {
-  Element.prototype.unsafeSetInnerHTML = html => {
-    this.innerHTML = html;
-  };
-}
-
 // __testCSS(resisting)__.
 // Creates a series of divs and CSS using media queries to set their
 // background color. If all media queries match as expected, then
 // all divs should have a green background color.
 var testCSS = function (resisting) {
-  document.getElementById("display").unsafeSetInnerHTML(generateHtmlLines(resisting));
-  document.getElementById("test-css").unsafeSetInnerHTML(generateCSSLines(resisting));
+  document.getElementById("display").appendChild(generateHtmlLines(resisting));
+  document.getElementById("test-css").textContent = generateCSSLines(resisting);
   let cssTestDivs = document.querySelectorAll(".spoof,.suppress");
   for (let div of cssTestDivs) {
     let color = window.getComputedStyle(div).backgroundColor;
@@ -283,18 +289,27 @@ var sleep = function (timeoutMs) {
 // when we are resisting fingerprinting. A generator function
 // to be used with SpawnTask.js.
 var testMediaQueriesInPictureElements = async function(resisting) {
-  let lines = "";
+  let picture = document.createElementNS(HTML_NS, "picture");
   for (let [key, offVal, onVal] of expected_values) {
     let expected = resisting ? onVal : offVal;
     if (expected) {
       let query = constructQuery(key, expected);
-      lines += "<picture>\n";
-      lines += " <source srcset='/tests/layout/style/test/chrome/match.png' media='" + query + "' />\n";
-      lines += " <img title='" + key + ":" + expected + "' class='testImage' src='/tests/layout/style/test/chrome/mismatch.png' alt='" + key + "' />\n";
-      lines += "</picture><br/>\n";
+
+      let source = document.createElementNS(HTML_NS, "source");
+      source.setAttribute("srcset", "/tests/layout/style/test/chrome/match.png");
+      source.setAttribute("media", query);
+
+      let image = document.createElementNS(HTML_NS, "img");
+      image.setAttribute("title", key + ":" + expected);
+      image.setAttribute("class", "testImage");
+      image.setAttribute("src", "/tests/layout/style/test/chrome/mismatch.png");
+      image.setAttribute("alt", key);
+
+      picture.appendChild(source);
+      picture.appendChild(image);
     }
   }
-  document.getElementById("pictures").unsafeSetInnerHTML(lines);
+  document.getElementById("pictures").appendChild(picture);
   var testImages = document.getElementsByClassName("testImage");
   await sleep(0);
   for (let testImage of testImages) {
