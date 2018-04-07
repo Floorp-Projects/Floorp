@@ -758,37 +758,3 @@ add_task(async function() {
 
   await promiseRestartManager();
 });
-
-// Check that WebExtensions experiments can only be installed temporarily
-// in builds that allow legacy extensions.
-add_task(async function() {
-  AddonTestUtils.usePrivilegedSignatures = false;
-
-  const API_ID = "apiexperiment@tests.mozilla.org";
-  let xpi = createTempXPIFile({
-    id: API_ID,
-    name: "WebExtension Experiment",
-    version: "1.0",
-    type: 256,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1"
-    }],
-  });
-
-  let addon = null;
-  try {
-    await AddonManager.installTemporaryAddon(xpi);
-    addon = await promiseAddonByID(API_ID);
-  } catch (err) {
-    // fall through, level addon null
-  }
-
-  if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    notEqual(addon, null, "Temporary install of WebExtension experiment succeeded");
-    addon.uninstall();
-  } else {
-    equal(addon, null, "Temporary install of WebExtension experiment was not allowed");
-  }
-});
