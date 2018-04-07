@@ -21,33 +21,34 @@
 #include "mozilla/ErrorResult.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 enum DOM4ErrorTypeCodeMap {
   /* DOM4 errors from http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#domexception */
-  IndexSizeError             = nsIDOMDOMException::INDEX_SIZE_ERR,
-  HierarchyRequestError      = nsIDOMDOMException::HIERARCHY_REQUEST_ERR,
-  WrongDocumentError         = nsIDOMDOMException::WRONG_DOCUMENT_ERR,
-  InvalidCharacterError      = nsIDOMDOMException::INVALID_CHARACTER_ERR,
-  NoModificationAllowedError = nsIDOMDOMException::NO_MODIFICATION_ALLOWED_ERR,
-  NotFoundError              = nsIDOMDOMException::NOT_FOUND_ERR,
-  NotSupportedError          = nsIDOMDOMException::NOT_SUPPORTED_ERR,
+  IndexSizeError             = DOMExceptionBinding::INDEX_SIZE_ERR,
+  HierarchyRequestError      = DOMExceptionBinding::HIERARCHY_REQUEST_ERR,
+  WrongDocumentError         = DOMExceptionBinding::WRONG_DOCUMENT_ERR,
+  InvalidCharacterError      = DOMExceptionBinding::INVALID_CHARACTER_ERR,
+  NoModificationAllowedError = DOMExceptionBinding::NO_MODIFICATION_ALLOWED_ERR,
+  NotFoundError              = DOMExceptionBinding::NOT_FOUND_ERR,
+  NotSupportedError          = DOMExceptionBinding::NOT_SUPPORTED_ERR,
   // Can't remove until setNamedItem is removed
-  InUseAttributeError        = nsIDOMDOMException::INUSE_ATTRIBUTE_ERR,
-  InvalidStateError          = nsIDOMDOMException::INVALID_STATE_ERR,
-  SyntaxError                = nsIDOMDOMException::SYNTAX_ERR,
-  InvalidModificationError   = nsIDOMDOMException::INVALID_MODIFICATION_ERR,
-  NamespaceError             = nsIDOMDOMException::NAMESPACE_ERR,
-  InvalidAccessError         = nsIDOMDOMException::INVALID_ACCESS_ERR,
-  TypeMismatchError          = nsIDOMDOMException::TYPE_MISMATCH_ERR,
-  SecurityError              = nsIDOMDOMException::SECURITY_ERR,
-  NetworkError               = nsIDOMDOMException::NETWORK_ERR,
-  AbortError                 = nsIDOMDOMException::ABORT_ERR,
-  URLMismatchError           = nsIDOMDOMException::URL_MISMATCH_ERR,
-  QuotaExceededError         = nsIDOMDOMException::QUOTA_EXCEEDED_ERR,
-  TimeoutError               = nsIDOMDOMException::TIMEOUT_ERR,
-  InvalidNodeTypeError       = nsIDOMDOMException::INVALID_NODE_TYPE_ERR,
-  DataCloneError             = nsIDOMDOMException::DATA_CLONE_ERR,
-  InvalidPointerId           = nsIDOMDOMException::INVALID_POINTER_ERR,
+  InUseAttributeError        = DOMExceptionBinding::INUSE_ATTRIBUTE_ERR,
+  InvalidStateError          = DOMExceptionBinding::INVALID_STATE_ERR,
+  SyntaxError                = DOMExceptionBinding::SYNTAX_ERR,
+  InvalidModificationError   = DOMExceptionBinding::INVALID_MODIFICATION_ERR,
+  NamespaceError             = DOMExceptionBinding::NAMESPACE_ERR,
+  InvalidAccessError         = DOMExceptionBinding::INVALID_ACCESS_ERR,
+  TypeMismatchError          = DOMExceptionBinding::TYPE_MISMATCH_ERR,
+  SecurityError              = DOMExceptionBinding::SECURITY_ERR,
+  NetworkError               = DOMExceptionBinding::NETWORK_ERR,
+  AbortError                 = DOMExceptionBinding::ABORT_ERR,
+  URLMismatchError           = DOMExceptionBinding::URL_MISMATCH_ERR,
+  QuotaExceededError         = DOMExceptionBinding::QUOTA_EXCEEDED_ERR,
+  TimeoutError               = DOMExceptionBinding::TIMEOUT_ERR,
+  InvalidNodeTypeError       = DOMExceptionBinding::INVALID_NODE_TYPE_ERR,
+  DataCloneError             = DOMExceptionBinding::DATA_CLONE_ERR,
+  InvalidPointerId           = 0,
   EncodingError              = 0,
 
   /* XXX Should be JavaScript native errors */
@@ -366,24 +367,6 @@ DOMException::DOMException(nsresult aRv, const nsACString& aMessage,
   : Exception(aMessage, aRv, aName, nullptr, nullptr),
     mCode(aCode)
 {
-}
-
-NS_IMETHODIMP
-DOMException::GetCode(uint16_t* aCode)
-{
-  NS_ENSURE_ARG_POINTER(aCode);
-  *aCode = mCode;
-
-  // Warn only when the code was changed (other than DOM Core)
-  // or the code is useless (zero)
-  if (NS_ERROR_GET_MODULE(mResult) != NS_ERROR_MODULE_DOM || !mCode) {
-    nsCOMPtr<nsIDocument> doc = nsContentUtils::GetDocumentFromCaller();
-    if (doc) {
-      doc->WarnOnceAbout(nsIDocument::eDOMExceptionCode);
-    }
-  }
-
-  return NS_OK;
 }
 
 void
