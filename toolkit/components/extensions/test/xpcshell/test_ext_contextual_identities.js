@@ -200,6 +200,18 @@ add_task(async function test_contextualIdentity_with_permissions() {
     browser.test.assertEq("red", ci.color, "identity.color is correct");
     browser.test.assertEq("gift", ci.icon, "identity.icon is correct");
 
+    browser.test.assertRejects(
+      browser.contextualIdentities.update(ci.cookieStoreId, {name: "foobar", color: "red", icon: "firefox"}),
+      "Invalid icon firefox for container",
+      "Create container called with an invalid icon"
+    );
+
+    browser.test.assertRejects(
+      browser.contextualIdentities.update(ci.cookieStoreId, {name: "foobar", color: "firefox-orange", icon: "gift"}),
+      "Invalid color name firefox-orange for container",
+      "Create container called with an invalid color"
+    );
+
     cis = await browser.contextualIdentities.query({});
     browser.test.assertEq(5, cis.length, "now we have 5 identities");
 
