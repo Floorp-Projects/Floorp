@@ -124,6 +124,9 @@ class BasePopup {
       }
 
       let {panel} = this;
+      if (panel) {
+        panel.removeEventListener("popuppositioned", this, {capture: true});
+      }
       if (panel && panel.id !== REMOTE_PANEL_ID) {
         panel.style.removeProperty("--arrowpanel-background");
         panel.removeAttribute("remote");
