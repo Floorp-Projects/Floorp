@@ -43,7 +43,7 @@ add_task(async function() {
 
   info("Unhighlight the node by moving away from the node");
   let onNodeUnhighlight = toolbox.once("node-unhighlight");
-  let btn = toolbox.doc.querySelector(".toolbox-dock-button");
+  let btn = toolbox.doc.getElementById("toolbox-meatball-menu-button");
   EventUtils.synthesizeMouseAtCenter(btn, {type: "mousemove"}, view);
 
   await onNodeUnhighlight;

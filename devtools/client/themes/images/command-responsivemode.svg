@@ -1,9 +1,12 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="context-fill #0b0b0b">
-  <path d="M12 8H5v1h7V8z"/>
-  <path d="M5 2.007v11.986C5 14 5 14 4.998 14h7.004C12 14 12 14 12 13.993V2.007C12 2 12 2 12.002 2H4.998C5 2 5 2 5 2.007zm-1 0C4 1.45 4.446 1 4.998 1h7.004c.55 0 .998.45.998 1.007v11.986c0 .556-.446 1.007-.998 1.007H4.998C4.448 15 4 14.55 4 13.993V2.007z"/>
-  <path d="M8.5 13c.828 0 1.5-.672 1.5-1.5S9.328 10 8.5 10 7 10.672 7 11.5 7.672 13 8.5 13zm0-1c.276 0 .5-.224.5-.5s-.224-.5-.5-.5-.5.224-.5.5.224.5.5.5z" fill-rule="evenodd"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
+  fill="context-fill #0b0b0b">
+  <path d="M3.5 8h9v1h-9z"/>
+  <path d="M4 2v12h8v-12h-8
+           m-1 0c0-.55 .45-1 1-1h8c.55 0 1 .45 1 1v12c0 .55-.45 1-1 1
+           h-8c-.55 0-1-.45-1-1z"/>
+  <circle cx="8" cy="11.5" r="1" fill="none" stroke="context-fill"
+    stroke-width="1"/>
 </svg>
-

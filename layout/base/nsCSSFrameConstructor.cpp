@@ -1698,33 +1698,17 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
                                   nullptr, nullptr);
 
     case eStyleContentType_Attr: {
-      RefPtr<nsAtom> attrName;
+      const nsStyleContentAttr* attr = data.GetAttr();
+      RefPtr<nsAtom> attrName = attr->mName;
       int32_t attrNameSpace = kNameSpaceID_None;
-      nsAutoString contentString(data.GetString());
-
-      int32_t barIndex = contentString.FindChar('|'); // CSS namespace delimiter
-      if (-1 != barIndex) {
-        nsAutoString  nameSpaceVal;
-        contentString.Left(nameSpaceVal, barIndex);
-        nsresult error;
-        attrNameSpace = nameSpaceVal.ToInteger(&error);
-        contentString.Cut(0, barIndex + 1);
-        if (contentString.Length()) {
-          if (mDocument->IsHTMLDocument() && aParentContent->IsHTMLElement()) {
-            ToLowerCase(contentString);
-          }
-          attrName = NS_Atomize(contentString);
-        }
-      }
-      else {
-        if (mDocument->IsHTMLDocument() && aParentContent->IsHTMLElement()) {
-          ToLowerCase(contentString);
-        }
-        attrName = NS_Atomize(contentString);
+      if (RefPtr<nsAtom> ns = attr->mNamespaceURL) {
+        nsresult rv =
+          nsContentUtils::NameSpaceManager()->RegisterNameSpace(ns.forget(), attrNameSpace);
+        NS_ENSURE_SUCCESS(rv, nullptr);
       }
 
-      if (!attrName) {
-        return nullptr;
+      if (mDocument->IsHTMLDocument() && aParentContent->IsHTMLElement()) {
+        ToLowerCaseASCII(attrName);
       }
 
       nsCOMPtr<nsIContent> content;

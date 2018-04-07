@@ -508,22 +508,6 @@ exports.defaultThemes = [
 // addons that have manually inserted toolbarbuttons into DOM.
 // (By default, supported target is only local tab)
 exports.ToolboxButtons = [
-  { id: "command-button-splitconsole",
-    description: l10n("toolbox.buttons.splitconsole", "Esc"),
-    isTargetSupported: target => !target.isAddon,
-    onClick(event, toolbox) {
-      toolbox.toggleSplitConsole();
-    },
-    isChecked(toolbox) {
-      return toolbox.splitConsole;
-    },
-    setup(toolbox, onChange) {
-      toolbox.on("split-console", onChange);
-    },
-    teardown(toolbox, onChange) {
-      toolbox.off("split-console", onChange);
-    }
-  },
   { id: "command-button-paintflashing",
     description: l10n("toolbox.buttons.paintflashing"),
     isTargetSupported: target => target.isLocalTab,

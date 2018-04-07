@@ -25,6 +25,7 @@
   --theme-tab-toolbar-background: var(--grey-10);
   --theme-toolbar-background: var(--grey-10);
   --theme-toolbar-color: var(--grey-90);
+  --theme-toolbar-photon-icon-color: var(--grey-90-alpha-80);
   --theme-toolbar-selected-color: var(--blue-60);
   --theme-toolbar-checked-color: var(--blue-60);
   --theme-toolbar-highlighted-color: var(--green-60);
@@ -110,6 +111,7 @@
   --theme-tab-toolbar-background: var(--grey-90);
   --theme-toolbar-background: #1B1B1D;
   --theme-toolbar-color: var(--grey-40);
+  --theme-toolbar-photon-icon-color: var(--grey-40);
   --theme-toolbar-selected-color: white;
   --theme-toolbar-checked-color: #75BFFF;
   --theme-toolbar-highlighted-color: var(--green-50);
@@ -234,4 +236,5 @@
   --grey-70: #38383d;
   --grey-80: #2a2a2e;
   --grey-90: #0c0c0d;
+  --grey-90-alpha-80: rgba(12, 12, 13, 0.8);
 }

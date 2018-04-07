@@ -56,6 +56,10 @@ def structured(files, config, logger, **kwargs):
                                       rule="no-foobar")
 
 
+def passes(files, config, **lintargs):
+    return []
+
+
 def setup(root):
     print('setup passed')
 

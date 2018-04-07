@@ -140,6 +140,7 @@ windows-qr-tests:
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgl
+    - reftest
 
 windows-qr-talos:
     - talos-chrome

@@ -989,11 +989,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     const char* name = info->GetName();
     bool foundDependentParam;
 
-    // Make sure not to set the callee on ccx until after we've gone through
-    // the whole nsIXPCFunctionThisTranslator bit.  That code uses ccx to
-    // convert natives to JSObjects, but we do NOT plan to pass those JSObjects
-    // to our real callee.
-    //
     // We're about to call into script via an XPCWrappedJS, so we need an
     // AutoEntryScript. This is probably Gecko-specific at this point, and
     // definitely will be when we turn off XPConnect for the web.
@@ -1075,49 +1070,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         // pass this along to the caller as an exception/result code.
 
         fval = ObjectValue(*obj);
-        if (isFunction &&
-            JS_TypeOfValue(ccx, fval) == JSTYPE_FUNCTION) {
-
-            // We may need to translate the 'this' for the function object.
-
-            if (paramCount) {
-                const nsXPTParamInfo& firstParam = info->GetParam(0);
-                if (firstParam.IsIn()) {
-                    const nsXPTType& firstType = firstParam.GetType();
-
-                    if (firstType.IsInterfacePointer()) {
-                        nsIXPCFunctionThisTranslator* translator;
-
-                        IID2ThisTranslatorMap* map =
-                            mRuntime->GetThisTranslatorMap();
-
-                        translator = map->Find(mIID);
-
-                        if (translator) {
-                            nsCOMPtr<nsISupports> newThis;
-                            if (NS_FAILED(translator->
-                                          TranslateThis((nsISupports*)nativeParams[0].val.p,
-                                                        getter_AddRefs(newThis)))) {
-                                goto pre_call_clean_up;
-                            }
-                            if (newThis) {
-                                RootedValue v(cx);
-                                xpcObjectHelper helper(newThis);
-                                bool ok =
-                                  XPCConvert::NativeInterface2JSObject(
-                                      &v, helper, nullptr, false, nullptr);
-                                if (!ok) {
-                                    goto pre_call_clean_up;
-                                }
-                                thisObj = v.toObjectOrNull();
-                                if (!JS_WrapObject(cx, &thisObj))
-                                    goto pre_call_clean_up;
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
+        if (!isFunction || JS_TypeOfValue(ccx, fval) != JSTYPE_FUNCTION) {
             if (!JS_GetProperty(cx, obj, name, &fval))
                 goto pre_call_clean_up;
             // XXX We really want to factor out the error reporting better and

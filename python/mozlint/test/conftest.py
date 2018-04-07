@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import os
 import sys
+from argparse import Namespace
 
 import pytest
 
@@ -18,7 +19,19 @@ here = os.path.abspath(os.path.dirname(__file__))
 @pytest.fixture
 def lint(request):
     lintargs = getattr(request.module, 'lintargs', {})
-    return LintRoller(root=here, **lintargs)
+    lint = LintRoller(root=here, **lintargs)
+
+    # Add a few super powers to our lint instance
+    def mock_vcs(files):
+        def _fake_vcs_files(*args, **kwargs):
+            return files
+
+        setattr(lint.vcs, 'get_changed_files', _fake_vcs_files)
+        setattr(lint.vcs, 'get_outgoing_files', _fake_vcs_files)
+
+    setattr(lint, 'vcs', Namespace())
+    setattr(lint, 'mock_vcs', mock_vcs)
+    return lint
 
 
 @pytest.fixture(scope='session')

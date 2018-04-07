@@ -18,10 +18,18 @@
 
 #define IS_ZERO_WIDTH_SPACE(u) ((u) == 0x200B)
 
+#define IS_ASCII(u)       ((u) < 0x80)
+#define IS_ASCII_UPPER(u) (('A' <= (u)) && ((u) <= 'Z'))
+#define IS_ASCII_LOWER(u) (('a' <= (u)) && ((u) <= 'z'))
+#define IS_ASCII_ALPHA(u) (IS_ASCII_UPPER(u) || IS_ASCII_LOWER(u))
+#define IS_ASCII_SPACE(u) (' ' == (u))
+
 void ToLowerCase(nsAString& aString);
+void ToLowerCaseASCII(nsAString& aString);
 void ToUpperCase(nsAString& aString);
 
 void ToLowerCase(const nsAString& aSource, nsAString& aDest);
+void ToLowerCaseASCII(const nsAString& aSource, nsAString& aDest);
 void ToUpperCase(const nsAString& aSource, nsAString& aDest);
 
 uint32_t ToLowerCase(uint32_t aChar);
@@ -29,6 +37,7 @@ uint32_t ToUpperCase(uint32_t aChar);
 uint32_t ToTitleCase(uint32_t aChar);
 
 void ToLowerCase(const char16_t *aIn, char16_t *aOut, uint32_t aLen);
+void ToLowerCaseASCII(const char16_t *aIn, char16_t *aOut, uint32_t aLen);
 void ToUpperCase(const char16_t *aIn, char16_t *aOut, uint32_t aLen);
 
 inline bool IsUpperCase(uint32_t c) {

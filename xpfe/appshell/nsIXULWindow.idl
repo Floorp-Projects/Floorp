@@ -26,7 +26,7 @@ interface mozIDOMWindowProxy;
 
 native LiveResizeListenerArray(nsTArray<RefPtr<mozilla::LiveResizeListener>>);
 
-[scriptable, uuid(d6d7a014-e28d-4c9d-8727-1cf6d870619b)]
+[builtinclass, scriptable, uuid(d6d7a014-e28d-4c9d-8727-1cf6d870619b)]
 interface nsIXULWindow : nsISupports
 {
   /**
@@ -70,8 +70,8 @@ interface nsIXULWindow : nsISupports
    * Returns the difference between the inner window size (client size) and the
    * outer window size, in CSS pixels.
    */
-  [noscript,notxpcom] uint32_t getOuterToInnerHeightDifferenceInCSSPixels();
-  [noscript,notxpcom] uint32_t getOuterToInnerWidthDifferenceInCSSPixels();
+  [infallible] readonly attribute unsigned long outerToInnerHeightDifferenceInCSSPixels;
+  [infallible] readonly attribute unsigned long outerToInnerWidthDifferenceInCSSPixels;
 
   /**
    * Tell this window that it has lost a child XUL window

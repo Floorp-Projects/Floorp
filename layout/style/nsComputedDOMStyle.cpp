@@ -1384,9 +1384,13 @@ nsComputedDOMStyle::DoGetContent()
         break;
       }
       case eStyleContentType_Attr: {
+        // XXXbholley: We don't correctly serialize namespaces here. Doing so
+        // would require either storing the prefix on the nsStyleContentAttr,
+        // or poking at the namespaces in the stylesheet to map from the
+        // namespace URL.
         nsAutoString str;
         nsStyleUtil::AppendEscapedCSSIdent(
-          nsDependentString(data.GetString()), str);
+          nsDependentString(data.GetAttr()->mName->GetUTF16String()), str);
         val->SetString(str, CSSPrimitiveValueBinding::CSS_ATTR);
         break;
       }

@@ -55,7 +55,6 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/XrayExpandoClass.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
-#include "nsDOMClassInfo.h"
 #include "ipc/ErrorIPCUtils.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/dom/DocGroup.h"
@@ -3281,25 +3280,17 @@ CreateGlobalOptionsWithXPConnect::PostCreateGlobal(JSContext* aCx,
 
 static bool sRegisteredDOMNames = false;
 
-nsresult
+static void
 RegisterDOMNames()
 {
   if (sRegisteredDOMNames) {
-    return NS_OK;
+    return;
   }
 
   // Register new DOM bindings
   WebIDLGlobalNameHash::Init();
 
-  nsresult rv = nsDOMClassInfo::Init();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsDOMClassInfo");
-    return rv;
-  }
-
   sRegisteredDOMNames = true;
-
-  return NS_OK;
 }
 
 /* static */
@@ -3307,10 +3298,7 @@ bool
 CreateGlobalOptions<nsGlobalWindowInner>::PostCreateGlobal(JSContext* aCx,
                                                            JS::Handle<JSObject*> aGlobal)
 {
-  nsresult rv = RegisterDOMNames();
-  if (NS_FAILED(rv)) {
-    return Throw(aCx, rv);
-  }
+  RegisterDOMNames();
 
   return CreateGlobalOptionsWithXPConnect::PostCreateGlobal(aCx, aGlobal);
 }

@@ -26,7 +26,6 @@ py3:
         - nsprpub
         - security/manager/ssl
         - security/nss
-        - services/common/tests/mach_commands.py
         - servo
         - testing/awsy
         - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
@@ -45,6 +44,8 @@ py3:
         - xpcom/idl-parser
         - xpcom/typelib
     extensions: ['py']
+    support-files:
+        - 'tools/lint/python/*compat*'
     type: external
     payload: python.compat:lintpy3
     setup: python.compat:setuppy3

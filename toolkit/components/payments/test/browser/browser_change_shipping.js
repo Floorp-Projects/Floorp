@@ -1,24 +1,12 @@
 "use strict";
 
-add_task(async function setup_profiles() {
-  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
-                                          (subject, data) => data == "add");
-  formAutofillStorage.addresses.add(PTU.Addresses.TimBL);
-  await onChanged;
-
-  onChanged = TestUtils.topicObserved("formautofill-storage-changed",
-                                      (subject, data) => data == "add");
-  formAutofillStorage.addresses.add(PTU.Addresses.TimBL2);
-  await onChanged;
-
-  onChanged = TestUtils.topicObserved("formautofill-storage-changed",
-                                      (subject, data) => data == "add");
-
-  formAutofillStorage.creditCards.add(PTU.BasicCards.JohnDoe);
-  await onChanged;
-});
+async function setup() {
+  await setupFormAutofillStorage();
+  await addSampleAddressesAndBasicCard();
+}
 
 add_task(async function test_change_shipping() {
+  await setup();
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: BLANK_PAGE_URL,
@@ -99,9 +87,11 @@ add_task(async function test_change_shipping() {
 
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
+  await cleanupFormAutofillStorage();
 });
 
 add_task(async function test_no_shippingchange_without_shipping() {
+  await setup();
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: BLANK_PAGE_URL,
@@ -139,4 +129,103 @@ add_task(async function test_no_shippingchange_without_shipping() {
 
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
+  await cleanupFormAutofillStorage();
+});
+
+add_task(async function test_address_edit() {
+  await setup();
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: PTU.Details.twoShippingOptions,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
+
+    let addressOptions =
+      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
+    info("initial addressOptions: " + JSON.stringify(addressOptions));
+    let selectedIndex = addressOptions.selectedOptionIndex;
+    let selectedAddressGuid = addressOptions.options[selectedIndex].guid;
+    let selectedAddress = formAutofillStorage.addresses.get(selectedAddressGuid);
+
+    is(selectedIndex, 0, "First address should be selected");
+    ok(selectedAddress, "Selected address does exist in the address collection");
+    is(selectedAddress.country, "US", "Expected initial country value");
+
+    info("Updating the address directly in the store");
+    await formAutofillStorage.addresses.update(selectedAddress.guid, {
+      country: "CA",
+    }, true);
+
+    await ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+    }, PTU.ContentTasks.promisePaymentRequestEvent);
+
+    addressOptions =
+      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
+    info("updated addressOptions: " + JSON.stringify(addressOptions));
+    selectedIndex = addressOptions.selectedOptionIndex;
+    let newSelectedAddressGuid = addressOptions.options[selectedIndex].guid;
+
+    is(newSelectedAddressGuid, selectedAddressGuid, "Selected guid hasnt changed");
+    selectedAddress = formAutofillStorage.addresses.get(selectedAddressGuid);
+
+    is(selectedIndex, 0, "First address should be selected");
+    is(selectedAddress.country, "CA", "Expected changed country value");
+
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+  });
+
+  await cleanupFormAutofillStorage();
+});
+
+add_task(async function test_address_removal() {
+  await setup();
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: PTU.Details.twoShippingOptions,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
+
+    let addressOptions =
+      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
+    info("initial addressOptions: " + JSON.stringify(addressOptions));
+    let selectedIndex = addressOptions.selectedOptionIndex;
+    let selectedAddressGuid = addressOptions.options[selectedIndex].guid;
+
+    is(selectedIndex, 0, "First address should be selected");
+    is(addressOptions.options.length, 2, "Should be 2 address options initially");
+
+    info("Remove the selected address from the store");
+    await formAutofillStorage.addresses.remove(selectedAddressGuid);
+
+    await ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+    }, PTU.ContentTasks.promisePaymentRequestEvent);
+
+    addressOptions =
+      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
+    info("updated addressOptions: " + JSON.stringify(addressOptions));
+    selectedIndex = addressOptions.selectedOptionIndex;
+
+    is(selectedIndex, 0, "First address should be selected");
+    is(addressOptions.options.length, 1, "Should now be 1 address option");
+
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+  });
+
+  await cleanupFormAutofillStorage();
 });

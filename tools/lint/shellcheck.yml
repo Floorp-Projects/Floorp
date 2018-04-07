@@ -7,6 +7,8 @@ shellcheck:
     # 1090: https://github.com/koalaman/shellcheck/wiki/SC1090
     # 'Can't follow a non-constant source'
     extensions: ['sh']
+    support-files:
+        - 'tools/lint/shell/**'
     excludecodes: ['1090', '1091']
     type: external
     payload: shell:lint

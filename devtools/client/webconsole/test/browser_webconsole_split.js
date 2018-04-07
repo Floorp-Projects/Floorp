@@ -13,6 +13,9 @@ function test() {
   requestLongerTimeout(2);
 
   let {Toolbox} = require("devtools/client/framework/toolbox");
+  let {LocalizationHelper} = require("devtools/shared/l10n");
+  let L10N =
+    new LocalizationHelper("devtools/client/locales/toolbox.properties");
   let toolbox;
 
   loadTab(TEST_URI).then(testConsoleLoadOnDifferentPanel);
@@ -21,14 +24,18 @@ function test() {
     info("About to check console loads even when non-webconsole panel is open");
 
     openPanel("inspector").then(() => {
+      let initialOpenComplete;
+
       toolbox.on("webconsole-ready", () => {
         ok(true, "Webconsole has been triggered as loaded while another tool " +
                  "is active");
-        testKeyboardShortcuts();
+        initialOpenComplete.then(() => {
+          testKeyboardShortcuts();
+        });
       });
 
       // Opens split console.
-      toolbox.toggleSplitConsole();
+      initialOpenComplete = toolbox.toggleSplitConsole();
     });
   }
 
@@ -59,7 +66,7 @@ function test() {
     });
   }
 
-  function getCurrentUIState() {
+  async function getCurrentUIState() {
     let win = toolbox.win;
     let deck = toolbox.doc.querySelector("#toolbox-deck");
     let webconsolePanel = toolbox.webconsolePanel;
@@ -73,7 +80,6 @@ function test() {
       .getPropertyValue("height"));
     let splitterVisibility = !splitter.getAttribute("hidden");
     let openedConsolePanel = toolbox.currentToolId === "webconsole";
-    let cmdButton = toolbox.doc.querySelector("#command-button-splitconsole");
 
     return {
       deckHeight: deckHeight,
@@ -81,8 +87,36 @@ function test() {
       webconsoleHeight: webconsoleHeight,
       splitterVisibility: splitterVisibility,
       openedConsolePanel: openedConsolePanel,
-      buttonSelected: cmdButton.classList.contains("checked")
+      menuLabel: await getMenuLabel(toolbox),
     };
+  }
+
+  function getMenuLabel(toolbox) {
+    return new Promise(resolve => {
+      const button = toolbox.doc.getElementById("toolbox-meatball-menu-button");
+      EventUtils.sendMouseEvent({ type: "click" }, button);
+
+      toolbox.doc.addEventListener("popupshown", () => {
+        const menuItem =
+          toolbox.doc.getElementById("toolbox-meatball-menu-splitconsole");
+
+        // Return undefined if the menu item is not available
+        let label;
+        if (menuItem) {
+          label =
+            menuItem.label ===
+            L10N.getStr("toolbox.meatballMenu.hideconsole.label")
+              ? "hide"
+              : "split";
+        }
+
+        // Wait for menu to close
+        toolbox.doc.addEventListener("popuphidden", () => {
+          resolve(label);
+        }, { once: true });
+        EventUtils.synthesizeKey("KEY_Escape");
+      }, { once: true });
+    });
   }
 
   const checkWebconsolePanelOpened = Task.async(function* () {
@@ -91,7 +125,7 @@ function test() {
     // Start with console split, so we can test for transition to main panel.
     yield toolbox.toggleSplitConsole();
 
-    let currentUIState = getCurrentUIState();
+    let currentUIState = yield getCurrentUIState();
 
     ok(currentUIState.splitterVisibility,
        "Splitter is visible when console is split");
@@ -101,10 +135,11 @@ function test() {
        "Web console has a height > 0 when console is split");
     ok(!currentUIState.openedConsolePanel,
        "The console panel is not the current tool");
-    ok(currentUIState.buttonSelected, "The command button is selected");
+    is(currentUIState.menuLabel, "hide",
+       "The menu item indicates the console is split");
 
     yield openPanel("webconsole");
-    currentUIState = getCurrentUIState();
+    currentUIState = yield getCurrentUIState();
 
     ok(!currentUIState.splitterVisibility,
        "Splitter is hidden when console is opened.");
@@ -114,13 +149,13 @@ function test() {
        "Web console is full height.");
     ok(currentUIState.openedConsolePanel,
        "The console panel is the current tool");
-    ok(currentUIState.buttonSelected,
-       "The command button is still selected.");
+    is(currentUIState.menuLabel, undefined,
+       "The menu item is hidden when console is opened");
 
     // Make sure splitting console does nothing while webconsole is opened
     yield toolbox.toggleSplitConsole();
 
-    currentUIState = getCurrentUIState();
+    currentUIState = yield getCurrentUIState();
 
     ok(!currentUIState.splitterVisibility,
        "Splitter is hidden when console is opened.");
@@ -130,12 +165,12 @@ function test() {
        "Web console is full height.");
     ok(currentUIState.openedConsolePanel,
        "The console panel is the current tool");
-    ok(currentUIState.buttonSelected,
-       "The command button is still selected.");
+    is(currentUIState.menuLabel, undefined,
+       "The menu item is hidden when console is opened");
 
     // Make sure that split state is saved after opening another panel
     yield openPanel("inspector");
-    currentUIState = getCurrentUIState();
+    currentUIState = yield getCurrentUIState();
     ok(currentUIState.splitterVisibility,
        "Splitter is visible when console is split");
     ok(currentUIState.deckHeight > 0,
@@ -144,14 +179,14 @@ function test() {
        "Web console has a height > 0 when console is split");
     ok(!currentUIState.openedConsolePanel,
        "The console panel is not the current tool");
-    ok(currentUIState.buttonSelected,
-       "The command button is still selected.");
+    is(currentUIState.menuLabel, "hide",
+       "The menu item still indicates the console is split");
 
     yield toolbox.toggleSplitConsole();
   });
 
   const checkToolboxUI = Task.async(function* () {
-    let currentUIState = getCurrentUIState();
+    let currentUIState = yield getCurrentUIState();
 
     ok(!currentUIState.splitterVisibility, "Splitter is hidden by default");
     is(currentUIState.deckHeight, currentUIState.containerHeight,
@@ -160,11 +195,12 @@ function test() {
        "Web console is collapsed by default");
     ok(!currentUIState.openedConsolePanel,
        "The console panel is not the current tool");
-    ok(!currentUIState.buttonSelected, "The command button is not selected.");
+    is(currentUIState.menuLabel, "split",
+       "The menu item indicates the console is not split");
 
     yield toolbox.toggleSplitConsole();
 
-    currentUIState = getCurrentUIState();
+    currentUIState = yield getCurrentUIState();
 
     ok(currentUIState.splitterVisibility,
        "Splitter is visible when console is split");
@@ -177,11 +213,12 @@ function test() {
        "Everything adds up to container height");
     ok(!currentUIState.openedConsolePanel,
        "The console panel is not the current tool");
-    ok(currentUIState.buttonSelected, "The command button is selected.");
+    is(currentUIState.menuLabel, "hide",
+       "The menu item indicates the console is split");
 
     yield toolbox.toggleSplitConsole();
 
-    currentUIState = getCurrentUIState();
+    currentUIState = yield getCurrentUIState();
 
     ok(!currentUIState.splitterVisibility, "Splitter is hidden after toggling");
     is(currentUIState.deckHeight, currentUIState.containerHeight,
@@ -190,7 +227,8 @@ function test() {
        "Web console is collapsed after toggling");
     ok(!currentUIState.openedConsolePanel,
        "The console panel is not the current tool");
-    ok(!currentUIState.buttonSelected, "The command button is not selected.");
+    is(currentUIState.menuLabel, "split",
+       "The menu item indicates the console is not split");
   });
 
   function openPanel(toolId) {

@@ -2616,6 +2616,11 @@ enum nsStyleContentType {
   eStyleContentType_Uninitialized
 };
 
+struct nsStyleContentAttr {
+  RefPtr<nsAtom> mName; // Non-null.
+  RefPtr<nsAtom> mNamespaceURL; // May be null.
+};
+
 class nsStyleContentData
 {
 public:
@@ -2639,10 +2644,15 @@ public:
 
   char16_t* GetString() const
   {
-    MOZ_ASSERT(mType == eStyleContentType_String ||
-               mType == eStyleContentType_Attr);
+    MOZ_ASSERT(mType == eStyleContentType_String);
     return mContent.mString;
   }
+
+  const nsStyleContentAttr* GetAttr() const {
+    MOZ_ASSERT(mType == eStyleContentType_Attr);
+    MOZ_ASSERT(mContent.mAttr);
+    return mContent.mAttr;
+   }
 
   struct CounterFunction
   {
@@ -2695,8 +2705,7 @@ public:
 
   void SetString(nsStyleContentType aType, const char16_t* aString)
   {
-    MOZ_ASSERT(aType == eStyleContentType_String ||
-               aType == eStyleContentType_Attr);
+    MOZ_ASSERT(aType == eStyleContentType_String);
     MOZ_ASSERT(aString);
     MOZ_ASSERT(mType == eStyleContentType_Uninitialized,
                "should only initialize nsStyleContentData once");
@@ -2731,6 +2740,7 @@ private:
   nsStyleContentType mType;
   union {
     char16_t *mString;
+    nsStyleContentAttr* mAttr;
     nsStyleImageRequest* mImage;
     CounterFunction* mCounters;
   } mContent;

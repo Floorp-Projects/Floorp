@@ -929,28 +929,27 @@ ProtocolParserProtobuf::ProcessRawAddition(TableUpdateV4& aTableUpdate,
     return NS_OK;
   }
 
-  auto prefixes = rawHashes.raw_hashes();
-  if (4 == rawHashes.prefix_size()) {
-    // Process fixed length prefixes separately.
-    uint32_t* fixedLengthPrefixes = (uint32_t*)prefixes.c_str();
-    size_t numOfFixedLengthPrefixes = prefixes.size() / 4;
-    PARSER_LOG(("* Raw addition (4 bytes)"));
-    PARSER_LOG(("  - # of prefixes: %zu", numOfFixedLengthPrefixes));
-    PARSER_LOG(("  - Memory address: 0x%p", fixedLengthPrefixes));
-  } else {
-    // TODO: Process variable length prefixes including full hashes.
-    // See Bug 1283009.
-    PARSER_LOG((" Raw addition (%d bytes)", rawHashes.prefix_size()));
+  uint32_t prefixSize = rawHashes.prefix_size();
+  MOZ_ASSERT(prefixSize >= PREFIX_SIZE && prefixSize <= COMPLETE_SIZE);
+
+  nsCString prefixes;
+  if (!prefixes.Assign(rawHashes.raw_hashes().c_str(),
+                       rawHashes.raw_hashes().size(), mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  MOZ_ASSERT(prefixes.Length() % prefixSize == 0,
+             "PrefixString length must be a multiple of the prefix size.");
+
+  if (LOG_ENABLED()) {
+    PARSER_LOG((" Raw addition (%d-byte prefixes)", prefixSize));
+    PARSER_LOG(("  - # of prefixes: %u", prefixes.Length() / prefixSize));
+    if (4 == prefixSize) {
+      uint32_t* fixedLengthPrefixes = (uint32_t*)prefixes.get();
+      PARSER_LOG(("  - Memory address: 0x%p", fixedLengthPrefixes));
+    }
   }
 
-  if (!rawHashes.mutable_raw_hashes()) {
-    PARSER_LOG(("Unable to get mutable raw hashes. Can't perform a string move."));
-    return NS_ERROR_FAILURE;
-  }
-
-  aTableUpdate.NewPrefixes(rawHashes.prefix_size(),
-                           *rawHashes.mutable_raw_hashes());
-
+  aTableUpdate.NewPrefixes(prefixSize, prefixes);
   return NS_OK;
 }
 
@@ -1078,17 +1077,19 @@ ProtocolParserProtobuf::ProcessEncodedAddition(TableUpdateV4& aTableUpdate,
   decoded.Sort(CompareBigEndian());
 
   // The encoded prefixes are always 4 bytes.
-  std::string prefixes;
+  nsCString prefixes;
+  if (!prefixes.SetCapacity(decoded.Length() * 4, mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   for (size_t i = 0; i < decoded.Length(); i++) {
     // Note that the third argument is the number of elements we want
     // to copy (and swap) but not the number of bytes we want to copy.
     char p[4];
     NativeEndian::copyAndSwapToLittleEndian(p, &decoded[i], 1);
-    prefixes.append(p, 4);
+    prefixes.Append(p, 4);
   }
 
   aTableUpdate.NewPrefixes(4, prefixes);
-
   return NS_OK;
 }
 

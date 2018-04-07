@@ -17,6 +17,8 @@ var path = require("path");
 var helpers = require("../helpers");
 var globals = require("../globals");
 
+// When updating this list, be sure to also update the 'support-files' config
+// in `tools/lint/eslint.yml`.
 const simpleTestFiles = [
   "ExtensionTestUtils.js",
   "EventUtils.js",
