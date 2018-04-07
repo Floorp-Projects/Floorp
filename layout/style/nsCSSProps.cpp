@@ -1375,8 +1375,8 @@ const KTableEntry nsCSSProps::kFontVariantPositionKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kFontWeightKTable[] = {
-  { eCSSKeyword_normal, NS_STYLE_FONT_WEIGHT_NORMAL },
-  { eCSSKeyword_bold, NS_STYLE_FONT_WEIGHT_BOLD },
+  { eCSSKeyword_normal, NS_FONT_WEIGHT_NORMAL },
+  { eCSSKeyword_bold, NS_FONT_WEIGHT_BOLD },
   { eCSSKeyword_bolder, NS_STYLE_FONT_WEIGHT_BOLDER },
   { eCSSKeyword_lighter, NS_STYLE_FONT_WEIGHT_LIGHTER },
   { eCSSKeyword_UNKNOWN, -1 }
