@@ -194,7 +194,6 @@ const BOOTSTRAP_REASONS = {
 // Some add-on types that we track internally are presented as other types
 // externally
 const TYPE_ALIASES = {
-  "apiextension": "extension",
   "webextension": "extension",
   "webextension-theme": "theme",
   "webextension-langpack": "locale",
@@ -206,7 +205,6 @@ const CHROME_TYPES = new Set([
 ]);
 
 const SIGNED_TYPES = new Set([
-  "apiextension",
   "extension",
   "experiment",
   "webextension",
@@ -215,7 +213,6 @@ const SIGNED_TYPES = new Set([
 ]);
 
 const LEGACY_TYPES = new Set([
-  "apiextension",
   "extension",
   "theme",
 ]);
@@ -3747,8 +3744,6 @@ var XPIProvider = {
       let uri = getURIForResourceInFile(aFile, "bootstrap.js").spec;
       if (aType == "dictionary")
         uri = "resource://gre/modules/addons/SpellCheckDictionaryBootstrap.js";
-      else if (aType == "apiextension")
-        uri = "resource://gre/modules/addons/APIExtensionBootstrap.js";
 
       activeAddon.bootstrapScope =
         new Cu.Sandbox(principal, { sandboxName: uri,
@@ -4716,10 +4711,6 @@ AddonWrapper.prototype = {
 
   get isWebExtension() {
     return isWebExtension(addonFor(this).type);
-  },
-
-  get isAPIExtension() {
-    return addonFor(this).type == "apiextension";
   },
 
   get temporarilyInstalled() {

@@ -160,12 +160,12 @@ const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
 // Retired values:
 // 32 = multipackage xpi file
 // 8 = locale
+// 256 = apiextension
 const TYPES = {
   extension: 2,
   theme: 4,
   dictionary: 64,
   experiment: 128,
-  apiextension: 256,
 };
 
 const COMPATIBLE_BY_DEFAULT_TYPES = {
@@ -174,7 +174,6 @@ const COMPATIBLE_BY_DEFAULT_TYPES = {
 };
 
 const RESTARTLESS_TYPES = new Set([
-  "apiextension",
   "dictionary",
   "experiment",
   "webextension",
