@@ -12,7 +12,6 @@
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
-#include "nsIDOMDOMException.h"
 #include "nsIException.h"
 #include "nsMemory.h"
 #include "xpcprivate.h"
@@ -355,12 +354,6 @@ Exception::Stringify(JSContext* aCx, nsString& retval)
   ToString(aCx, str);
   CopyUTF8toUTF16(str, retval);
 }
-
-NS_IMPL_ADDREF_INHERITED(DOMException, Exception)
-NS_IMPL_RELEASE_INHERITED(DOMException, Exception)
-NS_INTERFACE_MAP_BEGIN(DOMException)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMException)
-NS_INTERFACE_MAP_END_INHERITING(Exception)
 
 DOMException::DOMException(nsresult aRv, const nsACString& aMessage,
                            const nsACString& aName, uint16_t aCode)
