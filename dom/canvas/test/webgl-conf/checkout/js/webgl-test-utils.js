@@ -57,6 +57,10 @@ var loggingOff = function() {
  * @return {string} The enum as a string.
  */
 var glEnumToString = function(gl, value) {
+  // Avoid returning "NO_ERROR" if the arguments are totally wrong.
+  if (gl.NO_ERROR === undefined || value === undefined) {
+    return undefined;
+  }
   // Optimization for the most common enum:
   if (value === gl.NO_ERROR) {
     return "NO_ERROR";
@@ -188,6 +192,19 @@ var simpleColorFragmentShader = [
   'uniform vec4 u_color;',
   'void main() {',
   '    gl_FragData[0] = u_color;',
+  '}'].join('\n');
+
+/**
+ * A fragment shader for a uniform color.
+ * @type {string}
+ */
+var simpleColorFragmentShaderESSL300 = [
+  '#version 300 es',
+  'precision mediump float;',
+  'out vec4 out_color;',
+  'uniform vec4 u_color;',
+  'void main() {',
+  '    out_color = u_color;',
   '}'].join('\n');
 
 /**
@@ -441,16 +458,18 @@ var setupSimpleColorProgram = function(gl, opt_positionLocation) {
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
  * @param {number} opt_positionLocation The attrib location for position.
  * @param {number} opt_texcoordLocation The attrib location for texture coords.
+ * @param {!Object} various options. See setupQuad for details.
  * @return {!Array.<WebGLBuffer>} The buffer objects that were
  *      created.
  */
-var setupUnitQuad = function(gl, opt_positionLocation, opt_texcoordLocation) {
-  return setupUnitQuadWithTexCoords(gl, [ 0.0, 0.0 ], [ 1.0, 1.0 ],
-                                    opt_positionLocation, opt_texcoordLocation);
+var setupUnitQuad = function(gl, opt_positionLocation, opt_texcoordLocation, options) {
+  return setupQuadWithTexCoords(gl, [ 0.0, 0.0 ], [ 1.0, 1.0 ],
+                                opt_positionLocation, opt_texcoordLocation,
+                                options);
 };
 
 /**
- * Creates buffers for a textured unit quad with specified lower left
+ * Creates buffers for a textured quad with specified lower left
  * and upper right texture coordinates, and attaches them to vertex
  * attribs.
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
@@ -458,18 +477,25 @@ var setupUnitQuad = function(gl, opt_positionLocation, opt_texcoordLocation) {
  * @param {!Array.<number>} upperRightTexCoords The texture coordinates for the upper right corner.
  * @param {number} opt_positionLocation The attrib location for position.
  * @param {number} opt_texcoordLocation The attrib location for texture coords.
+ * @param {!Object} various options. See setupQuad for details.
  * @return {!Array.<WebGLBuffer>} The buffer objects that were
  *      created.
  */
-var setupUnitQuadWithTexCoords = function(
+var setupQuadWithTexCoords = function(
     gl, lowerLeftTexCoords, upperRightTexCoords,
-    opt_positionLocation, opt_texcoordLocation) {
-  return setupQuad(gl, {
+    opt_positionLocation, opt_texcoordLocation, options) {
+  var defaultOptions = {
     positionLocation: opt_positionLocation || 0,
     texcoordLocation: opt_texcoordLocation || 1,
     lowerLeftTexCoords: lowerLeftTexCoords,
     upperRightTexCoords: upperRightTexCoords
-  });
+  };
+  if (options) {
+    for (var prop in options) {
+      defaultOptions[prop] = options[prop]
+    }
+  }
+  return setupQuad(gl, defaultOptions);
 };
 
 /**
@@ -477,7 +503,7 @@ var setupUnitQuadWithTexCoords = function(
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
  * @param {!Object} options
  *
- * scale: scale to multiple unit quad values by. default 1.0.
+ * scale: scale to multiply unit quad values by. default 1.0.
  * positionLocation: attribute location for position.
  * texcoordLocation: attribute location for texcoords.
  *     If this does not exist no texture coords are created.
@@ -535,13 +561,14 @@ var setupQuad = function(gl, options) {
  *        position. Default = 0.
  * @param {number} opt_texcoordLocation The attrib location for
  *        texture coords. Default = 1.
+ * @param {!Object} various options. See setupQuad for details.
  * @return {!WebGLProgram}
  */
 var setupTexturedQuad = function(
-    gl, opt_positionLocation, opt_texcoordLocation) {
+    gl, opt_positionLocation, opt_texcoordLocation, options) {
   var program = setupSimpleTextureProgram(
       gl, opt_positionLocation, opt_texcoordLocation);
-  setupUnitQuad(gl, opt_positionLocation, opt_texcoordLocation);
+  setupUnitQuad(gl, opt_positionLocation, opt_texcoordLocation, options);
   return program;
 };
 
@@ -549,12 +576,13 @@ var setupTexturedQuad = function(
  * Creates a program and buffers for rendering a color quad.
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
  * @param {number} opt_positionLocation The attrib location for position.
+ * @param {!Object} various options. See setupQuad for details.
  * @return {!WebGLProgram}
  */
-var setupColorQuad = function(gl, opt_positionLocation) {
+var setupColorQuad = function(gl, opt_positionLocation, options) {
   opt_positionLocation = opt_positionLocation || 0;
   var program = setupSimpleColorProgram(gl, opt_positionLocation);
-  setupUnitQuad(gl, opt_positionLocation);
+  setupUnitQuad(gl, opt_positionLocation, 0, options);
   return program;
 };
 
@@ -573,8 +601,8 @@ var setupTexturedQuadWithTexCoords = function(
     opt_positionLocation, opt_texcoordLocation) {
   var program = setupSimpleTextureProgram(
       gl, opt_positionLocation, opt_texcoordLocation);
-  setupUnitQuadWithTexCoords(gl, lowerLeftTexCoords, upperRightTexCoords,
-                             opt_positionLocation, opt_texcoordLocation);
+  setupQuadWithTexCoords(gl, lowerLeftTexCoords, upperRightTexCoords,
+                         opt_positionLocation, opt_texcoordLocation);
   return program;
 };
 
@@ -592,7 +620,7 @@ var setupTexturedQuadWithCubeMap = function(
     gl, opt_positionLocation, opt_texcoordLocation) {
   var program = setupSimpleCubeMapTextureProgram(
       gl, opt_positionLocation, opt_texcoordLocation);
-  setupUnitQuad(gl, opt_positionLocation, opt_texcoordLocation);
+  setupUnitQuad(gl, opt_positionLocation, opt_texcoordLocation, undefined);
   return program;
 };
 
@@ -953,13 +981,16 @@ var drawUnitQuad = function(gl) {
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 };
 
-var noopProgram = null;
+var dummyProgram = null;
 var dummySetProgramAndDrawNothing = function(gl) {
-  if (!noopProgram) {
-    noopProgram = setupProgram(gl, ["void main() {}", "void main() {}"], [], []);
+  if (!dummyProgram) {
+    dummyProgram = setupProgram(gl, [
+      "void main() { gl_Position = vec4(0.0); }",
+      "void main() { gl_FragColor = vec4(0.0); }"
+    ], [], []);
   }
-  gl.useProgram(noopProgram);
-  gl.drawArrays(gl.TRIANGLES, 0, 0);
+  gl.useProgram(dummyProgram);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
 };
 
 /**
@@ -1891,11 +1922,6 @@ var loadShader = function(
 
   // Load the shader source
   gl.shaderSource(shader, shaderSource);
-  var err = gl.getError();
-  if (err != gl.NO_ERROR) {
-    errFn("*** Error loading shader '" + shader + "':" + glEnumToString(gl, err));
-    return null;
-  }
 
   // Compile the shader
   gl.compileShader(shader);
@@ -3176,6 +3202,7 @@ var API = {
   setupProgram: setupProgram,
   setupTransformFeedbackProgram: setupTransformFeedbackProgram,
   setupQuad: setupQuad,
+  setupQuadWithTexCoords: setupQuadWithTexCoords,
   setupIndexedQuad: setupIndexedQuad,
   setupIndexedQuadWithOptions: setupIndexedQuadWithOptions,
   setupSimpleColorProgram: setupSimpleColorProgram,
@@ -3187,7 +3214,6 @@ var API = {
   setupTexturedQuadWithTexCoords: setupTexturedQuadWithTexCoords,
   setupTexturedQuadWithCubeMap: setupTexturedQuadWithCubeMap,
   setupUnitQuad: setupUnitQuad,
-  setupUnitQuadWithTexCoords: setupUnitQuadWithTexCoords,
   setFloatDrawColor: setFloatDrawColor,
   setUByteDrawColor: setUByteDrawColor,
   startPlayingAndWaitForVideo: startPlayingAndWaitForVideo,
@@ -3221,6 +3247,7 @@ Object.defineProperties(API, {
   noTexCoordTextureVertexShader: { value: noTexCoordTextureVertexShader, writable: false },
   simpleTextureVertexShader: { value: simpleTextureVertexShader, writable: false },
   simpleColorFragmentShader: { value: simpleColorFragmentShader, writable: false },
+  simpleColorFragmentShaderESSL300: { value: simpleColorFragmentShaderESSL300, writable: false },
   simpleVertexShader: { value: simpleVertexShader, writable: false },
   simpleTextureFragmentShader: { value: simpleTextureFragmentShader, writable: false },
   simpleCubeMapTextureFragmentShader: { value: simpleCubeMapTextureFragmentShader, writable: false },

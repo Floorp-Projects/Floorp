@@ -111,7 +111,7 @@ function testStencilSettings(haveDepthBuffer, haveStencilBuffer, enableStencilTe
     debug("With depthbuffer=" + haveDepthBuffer +
             ", stencilbuffer=" + haveStencilBuffer +
             ", stencilTest=" + enableStencilTest +
-            ", expecting error=" + wtu.glEnumToString(errIfMismatch) +
+            ", expecting error=" + wtu.glEnumToString(gl, errIfMismatch) +
             " for mismatching mask or func settings.");
 
     let rbo = null;

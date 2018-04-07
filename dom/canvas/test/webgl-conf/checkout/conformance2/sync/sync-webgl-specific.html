@@ -48,6 +48,7 @@ debug("Canvas.getContext");
 var wtu = WebGLTestUtils;
 var gl = wtu.create3DContext("canvas", null, 2);
 var sync = null;
+var pixel = new Uint8Array(4);
 
 if (!gl) {
   testFailed("context does not exist");
@@ -82,7 +83,12 @@ if (!gl) {
   requestAnimationFrame(runGetSyncParameterTest);
 }
 
-var signaling_retry_ms = 1000;
+var numRetries = 20000;
+var iteration = 0;
+
+function syncWithGLServer() {
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+}
 
 function runGetSyncParameterTest() {
   debug("");
@@ -91,10 +97,9 @@ function runGetSyncParameterTest() {
   // Verify as best as possible that the implementation doesn't allow a sync
   // object to become signaled until returning control to the event loop, by
   // spin-looping for some time.
-  var startTime = Date.now();
-  while (Date.now() - startTime < signaling_retry_ms) {
-    gl.flush();
-    gl.finish();
+  var iter = numRetries;
+  while (--iter > 0) {
+    syncWithGLServer();
     if (gl.getSyncParameter(sync, gl.SYNC_STATUS) == gl.SYNC_SIGNALED) {
       testFailed("Sync object was signaled too early");
       finishTest();
@@ -102,18 +107,14 @@ function runGetSyncParameterTest() {
     }
   }
   testPassed("Sync object wasn't signaled too early");
-  startTimeOfFinish = Date.now();
+  iteration = numRetries;
   requestAnimationFrame(finishSyncParameterTest);
 }
 
-var startTimeOfFinish = 0;
 
 function finishSyncParameterTest() {
-  if (startTimeOfFinish == 0) {
-    startTimeOfFinish = Date.now();
-  }
-  if (Date.now() - startTimeOfFinish > signaling_retry_ms) {
-    testFailed("Sync object wasn't signaled in a reasonable timeframe (" + (Date.now() - startTimeOfFinish) + " ms)");
+  if (--iteration == 0) {
+    testFailed("Sync object wasn't signaled in a reasonable timeframe (" + numRetries + " iterations)");
     finishTest();
     return;
   }
@@ -124,6 +125,7 @@ function finishSyncParameterTest() {
     return;
   }
   // Try again.
+  syncWithGLServer();
   requestAnimationFrame(finishSyncParameterTest);
 }
 
@@ -135,10 +137,9 @@ function runClientWaitSyncTest() {
   // Verify as best as possible that the implementation doesn't allow
   // clientWaitSync to return CONDITION_SATISFIED or ALREADY_SIGNALED until
   // returning control to the event loop, by spin-looping for some time.
-  var startTime = Date.now();
-  while (Date.now() - startTime < signaling_retry_ms) {
-    gl.flush();
-    gl.finish();
+  var iter = numRetries;
+  while (--iter > 0) {
+    syncWithGLServer();
     var res = gl.clientWaitSync(sync, 0, 0);
     if (res == gl.CONDITION_SATISFIED || res == gl.ALREADY_SIGNALED) {
       testFailed("clientWaitSync completed successfully too early");
@@ -147,16 +148,13 @@ function runClientWaitSyncTest() {
     }
   }
   testPassed("clientWaitSync didn't complete successfully too early");
-  startTimeOfFinish = 0;
+  iteration = numRetries;
   requestAnimationFrame(finishClientWaitSyncTest);
 }
 
 function finishClientWaitSyncTest() {
-  if (startTimeOfFinish == 0) {
-    startTimeOfFinish = Date.now();
-  }
-  if (Date.now() - startTimeOfFinish > signaling_retry_ms) {
-    testFailed("clientWaitSync didn't complete in a reasonable timeframe");
+  if (--iteration == 0) {
+    testFailed("clientWaitSync didn't complete in a reasonable timeframe (" + numRetries + " iterations)");
     finishTest();
     return;
   }
@@ -168,6 +166,7 @@ function finishClientWaitSyncTest() {
     return;
   }
   // Try again.
+  syncWithGLServer();
   requestAnimationFrame(finishClientWaitSyncTest);
 }
 

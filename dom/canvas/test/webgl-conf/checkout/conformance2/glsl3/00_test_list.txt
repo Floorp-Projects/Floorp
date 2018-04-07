@@ -34,6 +34,7 @@ shader-with-invalid-characters.html
 shader-with-mis-matching-uniform-block.html
 short-circuiting-in-loop-condition.html
 --min-version 2.0.1 switch-case.html
+--min-version 2.0.1 texture-offset-non-constant-offset.html
 texture-offset-out-of-range.html
 --min-version 2.0.1 texture-offset-uniform-texture-coordinate.html
 --min-version 2.0.1 tricky-loop-conditions.html
