@@ -972,7 +972,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   nsCSSValue val;
   nsCSSUnit unit;
 
-  uint32_t weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+  uint32_t weight = NS_FONT_WEIGHT_NORMAL;
   int32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
   uint8_t italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
@@ -984,10 +984,10 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   if (unit == eCSSUnit_Integer || unit == eCSSUnit_Enumerated) {
     weight = val.GetIntValue();
     if (weight == 0) {
-      weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+      weight = NS_FONT_WEIGHT_NORMAL;
     }
   } else if (unit == eCSSUnit_Normal) {
-    weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+    weight = NS_FONT_WEIGHT_NORMAL;
   } else {
     NS_ASSERTION(unit == eCSSUnit_Null,
                  "@font-face weight has unexpected unit");
