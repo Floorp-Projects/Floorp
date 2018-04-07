@@ -1,6 +1,6 @@
 <!--
 /*
-** Copyright (c) 2014 The Khronos Group Inc.
+** Copyright (c) 2018 The Khronos Group Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and/or associated documentation files (the
@@ -30,29 +30,42 @@
 <script src="../../js/js-test-pre.js"></script>
 <script src="../../js/webgl-test-utils.js"></script>
 <script src="../../js/tests/gl-bindattriblocation-aliasing.js"></script>
-<title>bindAttribLocation with aliasing</title>
+<title>bindAttribLocation with aliasing - inactive attributes</title>
 </head>
 <body>
 <div id="description"></div>
 <div id="console"></div>
 <canvas id="canvas" width="8" height="8" style="width: 8px; height: 8px;"></canvas>
-<script id="vertexShader" type="text/something-not-javascript">
+<script id="vertexShaderStaticallyUsedButInactive" type="text/something-not-javascript">#version 300 es
 precision mediump float;
-attribute $(type_1) a_1;
-attribute $(type_2) a_2;
+in $(type_1) a_1;
+in $(type_2) a_2;
 void main() {
-    gl_Position = $(gl_Position_1) + $(gl_Position_2);
+    gl_Position = true ? $(gl_Position_1) : $(gl_Position_2);
+}
+</script>
+<script id="vertexShaderUnused" type="text/something-not-javascript">#version 300 es
+precision mediump float;
+in $(type_1) a_1;
+in $(type_2) a_2;
+void main() {
+    gl_Position = vec4(0.0);
 }
 </script>
 <script>
 "use strict";
-description("This test verifies combinations of valid, active attribute types cannot be bound to the same location with bindAttribLocation.");
+description("This test verifies combinations of valid inactive attributes cannot be bound to the same location with bindAttribLocation. GLSL ES 3.00.6 section 12.46.");
 var wtu = WebGLTestUtils;
 var canvas = document.getElementById("canvas");
-var gl = wtu.create3DContext(canvas, {antialias: false});
-var glFragmentShader = wtu.loadShader(gl, wtu.simpleColorFragmentShader, gl.FRAGMENT_SHADER);
+var gl = wtu.create3DContext(canvas, {antialias: false}, 2);
+var glFragmentShader = wtu.loadShader(gl, wtu.simpleColorFragmentShaderESSL300, gl.FRAGMENT_SHADER);
 
-runBindAttribLocationAliasingTest(wtu, gl, glFragmentShader, wtu.getScript('vertexShader'));
+debug("Testing with shader that has statically used but inactive attributes.");
+runBindAttribLocationAliasingTest(wtu, gl, glFragmentShader, wtu.getScript('vertexShaderStaticallyUsedButInactive'));
+
+debug("");
+debug("Testing with shader that has entirely unused attributes.");
+runBindAttribLocationAliasingTest(wtu, gl, glFragmentShader, wtu.getScript('vertexShaderUnused'));
 
 var successfullyParsed = true;
 </script>

@@ -202,6 +202,29 @@ void main()
     my_FragColor = vec4(0, 1, 0, 1);
 }
 </script>
+<script id="fshaderCaseInsideBlock" type="x-shader/x-fragment">#version 300 es
+
+precision highp float;
+
+out vec4 my_FragColor;
+
+uniform int u_zero;
+
+void main()
+{
+    // Case statements must not be nested in blocks.
+    // GLSL ES 3.00 spec is a bit vague on this but GLSL ES 3.10 section 6.2 is clearer.
+    switch(u_zero)
+    {
+        case 1:
+        {
+            case 0:
+                my_FragColor = vec4(1, 0, 0, 1);
+        }
+    }
+    my_FragColor = vec4(0, 1, 0, 1);
+}
+</script>
 <script type="application/javascript">
 "use strict";
 description();
@@ -262,6 +285,11 @@ GLSLConformanceTester.runTests([
   fShaderSuccess: true,
   linkSuccess: true,
   passMsg: 'Empty statement should count as a statement for the purposes of switch statement validation.'
+},
+{
+  fShaderId: 'fshaderCaseInsideBlock',
+  fShaderSuccess: false,
+  passMsg: 'Case statements must not be nested inside blocks.'
 }
 ], 2);
 </script>
