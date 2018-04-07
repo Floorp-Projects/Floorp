@@ -365,10 +365,22 @@ void
 CustomElementRegistry::UnregisterUnresolvedElement(Element* aElement,
                                                    nsAtom* aTypeName)
 {
+  nsIWeakReference* weak = aElement->GetExistingWeakReference();
+  if (!weak) {
+    return;
+  }
+
+#ifdef DEBUG
+  {
+    nsWeakPtr weakPtr = do_GetWeakReference(aElement);
+    MOZ_ASSERT(weak == weakPtr.get(),
+               "do_GetWeakReference should reuse the existing nsIWeakReference.");
+  }
+#endif
+
   nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>* candidates = nullptr;
   if (mCandidatesMap.Get(aTypeName, &candidates)) {
     MOZ_ASSERT(candidates);
-    nsWeakPtr weak = do_GetWeakReference(aElement);
     candidates->RemoveEntry(weak);
   }
 }
