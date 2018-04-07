@@ -733,7 +733,7 @@ previewers.Object = [
   },
 
   function DOMException({obj, hooks}, grip, rawObj) {
-    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMDOMException)) {
+    if (isWorker || !rawObj || obj.class !== "DOMException") {
       return false;
     }
 
