@@ -2822,6 +2822,22 @@ html .breakpoints-list .breakpoint.paused {
   order: 3;
 }
 
+:root.theme-light .breakpoint-snippet {
+  color: var(--theme-comment);
+}
+
+:root.theme-dark .breakpoint-snippet {
+  color: var(--theme-body-color);
+  opacity: 0.6;
+}
+
+.breakpoint-snippet {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-inline-start: 18px;
+  padding-inline-end: 18px;
+}
+
 .breakpoint .close-btn {
   position: absolute;
   offset-inline-end: 13px;
