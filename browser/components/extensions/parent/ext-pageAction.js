@@ -182,6 +182,12 @@ this.pageAction = class extends ExtensionAPI {
     let last = this.lastValues.get(window);
 
     window.requestAnimationFrame(() => {
+      // If we get called just before shutdown, we might have been destroyed by
+      // this point.
+      if (!this.browserPageAction) {
+        return;
+      }
+
       let title = tabData.title || this.extension.name;
       if (last.title !== title) {
         this.browserPageAction.setTitle(title, window);
