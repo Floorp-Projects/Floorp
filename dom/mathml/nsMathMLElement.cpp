@@ -726,10 +726,10 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       str.CompressWhitespace();
       if (str.EqualsASCII("normal")) {
         aData->SetKeywordValue(eCSSProperty_font_weight,
-                               NS_STYLE_FONT_WEIGHT_NORMAL);
+                               NS_FONT_WEIGHT_NORMAL);
       } else if (str.EqualsASCII("bold")) {
         aData->SetKeywordValue(eCSSProperty_font_weight,
-                               NS_STYLE_FONT_WEIGHT_BOLD);
+                               NS_FONT_WEIGHT_BOLD);
       }
     }
   }
