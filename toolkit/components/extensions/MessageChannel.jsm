@@ -948,6 +948,11 @@ this.MessageChannel = {
           value,
         };
 
+        if (target.isDisconnected) {
+          // Target is disconnected. We can't send an error response, so
+          // don't even try.
+          return;
+        }
         target.sendAsyncMessage(MESSAGE_RESPONSE, response);
       },
       error => {

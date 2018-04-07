@@ -278,7 +278,7 @@ struct IonScript
     uint32_t invalidationCount_;
 
     // Identifier of the compilation which produced this code.
-    RecompileInfo recompileInfo_;
+    IonCompilationId compilationId_;
 
     // The optimization level this script was compiled in.
     OptimizationLevel optimizationLevel_;
@@ -336,7 +336,7 @@ struct IonScript
 
   public:
     // Do not call directly, use IonScript::New. This is public for cx->new_.
-    IonScript();
+    explicit IonScript(IonCompilationId compilationId);
 
     ~IonScript() {
         // The contents of the fallback stub space are removed and freed
@@ -344,7 +344,7 @@ struct IonScript
         MOZ_ASSERT(fallbackStubSpace_.isEmpty());
     }
 
-    static IonScript* New(JSContext* cx, RecompileInfo recompileInfo,
+    static IonScript* New(JSContext* cx, IonCompilationId compilationId,
                           uint32_t frameSlots, uint32_t argumentSlots, uint32_t frameSize,
                           size_t snapshotsListSize, size_t snapshotsRVATableSize,
                           size_t recoversSize, size_t bailoutEntries,
@@ -536,7 +536,7 @@ struct IonScript
     }
 
     // Invalidate the current compilation.
-    void invalidate(JSContext* cx, bool resetUses, const char* reason);
+    void invalidate(JSContext* cx, JSScript* script, bool resetUses, const char* reason);
 
     size_t invalidationCount() const {
         return invalidationCount_;
@@ -550,11 +550,8 @@ struct IonScript
         if (!invalidationCount_)
             Destroy(fop, this);
     }
-    const RecompileInfo& recompileInfo() const {
-        return recompileInfo_;
-    }
-    RecompileInfo& recompileInfoRef() {
-        return recompileInfo_;
+    IonCompilationId compilationId() const {
+        return compilationId_;
     }
     OptimizationLevel optimizationLevel() const {
         return optimizationLevel_;

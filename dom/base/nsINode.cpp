@@ -2870,3 +2870,34 @@ nsINode::Localize(JSContext* aCx,
 
   return promise.forget();
 }
+
+NS_IMPL_ISUPPORTS(nsNodeWeakReference,
+                  nsIWeakReference)
+
+nsNodeWeakReference::nsNodeWeakReference(nsINode* aNode)
+  : nsIWeakReference(aNode)
+{
+}
+
+nsNodeWeakReference::~nsNodeWeakReference()
+{
+  nsINode* node = static_cast<nsINode*>(mObject);
+
+  if (node) {
+    NS_ASSERTION(node->Slots()->mWeakReference == this,
+                 "Weak reference has wrong value");
+    node->Slots()->mWeakReference = nullptr;
+  }
+}
+
+NS_IMETHODIMP
+nsNodeWeakReference::QueryReferentFromScript(const nsIID& aIID, void** aInstancePtr)
+{
+  return QueryReferent(aIID, aInstancePtr);
+}
+
+size_t
+nsNodeWeakReference::SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this);
+}

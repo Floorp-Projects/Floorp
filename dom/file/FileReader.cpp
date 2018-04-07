@@ -13,6 +13,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileReaderBinding.h"
 #include "mozilla/dom/ProgressEvent.h"
@@ -233,7 +234,7 @@ FileReader::OnLoadEndArrayBuffer()
   // XXX Code selected arbitrarily
   mError =
     new DOMException(NS_ERROR_DOM_INVALID_STATE_ERR, errorMsg,
-                     errorNameC, DOMException::INVALID_STATE_ERR);
+                     errorNameC, DOMExceptionBinding::INVALID_STATE_ERR);
 
   FreeDataAndDispatchError();
 }
