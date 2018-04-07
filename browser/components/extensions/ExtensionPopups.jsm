@@ -60,6 +60,8 @@ XPCOMUtils.defineLazyGetter(this, "standaloneStylesheets", () => {
   return stylesheets;
 });
 
+const REMOTE_PANEL_ID = "webextension-remote-preload-panel";
+
 class BasePopup {
   constructor(extension, viewNode, popupURL, browserStyle, fixedWidth = false, blockParser = false) {
     this.extension = extension;
@@ -110,7 +112,7 @@ class BasePopup {
     return this.browserReady.then(() => {
       if (this.browser) {
         this.destroyBrowser(this.browser, true);
-        this.browser.remove();
+        this.browser.parentNode.remove();
       }
       if (this.stack) {
         this.stack.remove();
@@ -123,6 +125,9 @@ class BasePopup {
 
       let {panel} = this;
       if (panel) {
+        panel.removeEventListener("popuppositioned", this, {capture: true});
+      }
+      if (panel && panel.id !== REMOTE_PANEL_ID) {
         panel.style.removeProperty("--arrowpanel-background");
         panel.removeAttribute("remote");
       }
@@ -414,15 +419,31 @@ class ViewPopup extends BasePopup {
   constructor(extension, window, popupURL, browserStyle, fixedWidth, blockParser) {
     let document = window.document;
 
+    let createPanel = remote => {
+      let panel = document.createElement("panel");
+      panel.setAttribute("type", "arrow");
+      if (remote) {
+        panel.setAttribute("remote", "true");
+      }
+
+      document.getElementById("mainPopupSet").appendChild(panel);
+      return panel;
+    };
+
     // Create a temporary panel to hold the browser while it pre-loads its
     // content. This panel will never be shown, but the browser's docShell will
-    // be swapped with the browser in the real panel when it's ready.
-    let panel = document.createElement("panel");
-    panel.setAttribute("type", "arrow");
+    // be swapped with the browser in the real panel when it's ready. For remote
+    // extensions, this popup is shared between all extensions.
+    let panel;
     if (extension.remote) {
-      panel.setAttribute("remote", "true");
+      panel = document.getElementById(REMOTE_PANEL_ID);
+      if (!panel) {
+        panel = createPanel(true);
+        panel.id = REMOTE_PANEL_ID;
+      }
+    } else {
+      panel = createPanel();
     }
-    document.getElementById("mainPopupSet").appendChild(panel);
 
     super(extension, panel, popupURL, browserStyle, fixedWidth, blockParser);
 
@@ -431,6 +452,7 @@ class ViewPopup extends BasePopup {
     this.attached = false;
     this.shown = false;
     this.tempPanel = panel;
+    this.tempBrowser = this.browser;
 
     this.browser.classList.add("webextension-preload-browser");
   }
@@ -523,8 +545,7 @@ class ViewPopup extends BasePopup {
       return {height: this.lastCalculatedInViewHeight || this.viewHeight};
     };
 
-    this.tempPanel.remove();
-    this.tempPanel = null;
+    this.removeTempPanel();
 
     this.shown = true;
 
@@ -543,12 +564,22 @@ class ViewPopup extends BasePopup {
     return true;
   }
 
+  removeTempPanel() {
+    if (this.tempPanel) {
+      if (this.tempPanel.id !== REMOTE_PANEL_ID) {
+        this.tempPanel.remove();
+      }
+      this.tempPanel = null;
+    }
+    if (this.tempBrowser) {
+      this.tempBrowser.parentNode.remove();
+      this.tempBrowser = null;
+    }
+  }
+
   destroy() {
     return super.destroy().then(() => {
-      if (this.tempPanel) {
-        this.tempPanel.remove();
-        this.tempPanel = null;
-      }
+      this.removeTempPanel();
     });
   }
 

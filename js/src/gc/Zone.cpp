@@ -116,8 +116,7 @@ Zone::setNeedsIncrementalBarrier(bool needs)
 void
 Zone::beginSweepTypes(bool releaseTypes)
 {
-    AutoClearTypeInferenceStateOnOOM oom(this);
-    types.beginSweep(releaseTypes, oom);
+    types.beginSweep(releaseTypes);
 }
 
 Zone::DebuggerVector*

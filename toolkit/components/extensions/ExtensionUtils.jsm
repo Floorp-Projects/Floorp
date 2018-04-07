@@ -470,12 +470,15 @@ function defineLazyGetter(object, prop, getter) {
 class MessageManagerProxy {
   constructor(target) {
     this.listeners = new DefaultMap(() => new Map());
+    this.closed = false;
 
     if (target instanceof Ci.nsIMessageSender) {
       this.messageManager = target;
     } else {
       this.addListeners(target);
     }
+
+    Services.obs.addObserver(this, "message-manager-close");
   }
 
   /**
@@ -492,6 +495,16 @@ class MessageManagerProxy {
       this.eventTarget = null;
     }
     this.messageManager = null;
+
+    Services.obs.removeObserver(this, "message-manager-close");
+  }
+
+  observe(subject, topic, data) {
+    if (topic === "message-manager-close") {
+      if (subject === this.messageManager) {
+        this.closed = true;
+      }
+    }
   }
 
   /**
@@ -537,7 +550,7 @@ class MessageManagerProxy {
   }
 
   get isDisconnected() {
-    return !this.messageManager;
+    return this.closed || !this.messageManager;
   }
 
   /**
