@@ -355,26 +355,21 @@ CustomElementRegistry::RegisterUnresolvedElement(Element* aElement, nsAtom* aTyp
     return;
   }
 
-  nsTArray<nsWeakPtr>* unresolved = mCandidatesMap.LookupOrAdd(typeName);
-  nsWeakPtr* elem = unresolved->AppendElement();
-  *elem = do_GetWeakReference(aElement);
+  nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>* unresolved =
+    mCandidatesMap.LookupOrAdd(typeName);
+  nsWeakPtr elem = do_GetWeakReference(aElement);
+  unresolved->PutEntry(elem);
 }
 
 void
 CustomElementRegistry::UnregisterUnresolvedElement(Element* aElement,
                                                    nsAtom* aTypeName)
 {
-  nsTArray<nsWeakPtr>* candidates;
+  nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>* candidates = nullptr;
   if (mCandidatesMap.Get(aTypeName, &candidates)) {
     MOZ_ASSERT(candidates);
-    // We don't need to iterate the candidates array and remove the element from
-    // the array for performance reason. It'll be handled by bug 1396620.
-    for (size_t i = 0; i < candidates->Length(); ++i) {
-      nsCOMPtr<Element> elem = do_QueryReferent(candidates->ElementAt(i));
-      if (elem && elem.get() == aElement) {
-        candidates->RemoveElementAt(i);
-      }
-    }
+    nsWeakPtr weak = do_GetWeakReference(aElement);
+    candidates->RemoveEntry(weak);
   }
 }
 
@@ -487,7 +482,8 @@ namespace {
 class CandidateFinder
 {
 public:
-  CandidateFinder(nsTArray<nsWeakPtr>&& aCandidates, nsIDocument* aDoc);
+  CandidateFinder(nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>& aCandidates,
+                  nsIDocument* aDoc);
   nsTArray<nsCOMPtr<Element>> OrderedCandidates();
 
 private:
@@ -497,14 +493,14 @@ private:
   nsInterfaceHashtable<nsPtrHashKey<Element>, Element> mCandidates;
 };
 
-CandidateFinder::CandidateFinder(nsTArray<nsWeakPtr>&& aCandidates,
+CandidateFinder::CandidateFinder(nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>& aCandidates,
                                  nsIDocument* aDoc)
   : mDoc(aDoc)
-  , mCandidates(aCandidates.Length())
+  , mCandidates(aCandidates.Count())
 {
   MOZ_ASSERT(mDoc);
-  for (auto& candidate : aCandidates) {
-    nsCOMPtr<Element> elem = do_QueryReferent(candidate);
+  for (auto iter = aCandidates.Iter(); !iter.Done(); iter.Next()) {
+    nsCOMPtr<Element> elem = do_QueryReferent(iter.Get()->GetKey());
     if (!elem) {
       continue;
     }
@@ -581,13 +577,13 @@ CustomElementRegistry::UpgradeCandidates(nsAtom* aKey,
     return;
   }
 
-  nsAutoPtr<nsTArray<nsWeakPtr>> candidates;
+  nsAutoPtr<nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>> candidates;
   if (mCandidatesMap.Remove(aKey, &candidates)) {
     MOZ_ASSERT(candidates);
     CustomElementReactionsStack* reactionsStack =
       docGroup->CustomElementReactionsStack();
 
-    CandidateFinder finder(Move(*candidates), mWindow->GetExtantDoc());
+    CandidateFinder finder(*candidates, mWindow->GetExtantDoc());
     for (auto& elem : finder.OrderedCandidates()) {
       reactionsStack->EnqueueUpgradeReaction(elem, aDefinition);
     }
