@@ -10,7 +10,6 @@
 // Keep others in (case-insensitive) order:
 #include "ImgDrawResult.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGElement.h"

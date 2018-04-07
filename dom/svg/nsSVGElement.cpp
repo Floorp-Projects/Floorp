@@ -57,7 +57,6 @@
 #include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/Unused.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -119,9 +118,7 @@ nsSVGElement::DidAnimateClass()
   if (shell) {
     nsPresContext* presContext = shell->GetPresContext();
     if (presContext) {
-      presContext->RestyleManager()
-                 ->AsServo()
-                 ->ClassAttributeWillBeChangedBySMIL(this);
+      presContext->RestyleManager()->ClassAttributeWillBeChangedBySMIL(this);
     }
   }
 

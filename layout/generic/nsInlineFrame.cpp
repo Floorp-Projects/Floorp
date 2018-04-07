@@ -16,7 +16,6 @@
 #include "nsPresContext.h"
 #include "nsCSSAnonBoxes.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "nsDisplayList.h"
 #include "mozilla/Likely.h"
 #include "SVGTextFrame.h"
@@ -302,7 +301,7 @@ ReparentChildListStyle(nsPresContext* aPresContext,
 
   for (nsFrameList::Enumerator e(aFrames); !e.AtEnd(); e.Next()) {
     NS_ASSERTION(e.get()->GetParent() == aParentFrame, "Bogus parentage");
-    restyleManager->ReparentComputedStyle(e.get());
+    restyleManager->ReparentComputedStyleForFirstLine(e.get());
     nsLayoutUtils::MarkDescendantsDirty(e.get());
   }
 }
@@ -451,7 +450,7 @@ nsInlineFrame::DrainSelfOverflowListInternal(DrainFlags aFlags)
       for (nsIFrame* f = firstChild; f; f = f->GetNextSibling()) {
         f->SetParent(this);
         if (doReparentSC) {
-          restyleManager->ReparentComputedStyle(f);
+          restyleManager->ReparentComputedStyleForFirstLine(f);
           nsLayoutUtils::MarkDescendantsDirty(f);
         }
       }
@@ -549,7 +548,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
       do {
         child->SetParent(this);
         if (inFirstLine) {
-          restyleManager->ReparentComputedStyle(child);
+          restyleManager->ReparentComputedStyleForFirstLine(child);
           nsLayoutUtils::MarkDescendantsDirty(child);
         }
         // We also need to do the same for |frame|'s next-in-flows that are in
@@ -582,7 +581,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
             if (mFrames.ContainsFrame(nextInFlow)) {
               nextInFlow->SetParent(this);
               if (inFirstLine) {
-                restyleManager->ReparentComputedStyle(nextInFlow);
+                restyleManager->ReparentComputedStyleForFirstLine(nextInFlow);
                 nsLayoutUtils::MarkDescendantsDirty(nextInFlow);
               }
             }
@@ -1061,7 +1060,7 @@ nsFirstLineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowInput& i
     // We are a first-line frame. Fixup the child frames
     // style-context that we just pulled.
     NS_ASSERTION(frame->GetParent() == this, "Incorrect parent?");
-    aPresContext->RestyleManager()->ReparentComputedStyle(frame);
+    aPresContext->RestyleManager()->ReparentComputedStyleForFirstLine(frame);
     nsLayoutUtils::MarkDescendantsDirty(frame);
   }
   return frame;

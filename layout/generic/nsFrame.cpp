@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/dom/ElementInlines.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Sprintf.h"
@@ -46,7 +47,6 @@
 #include "nsLayoutUtils.h"
 #include "LayoutLogging.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "nsInlineFrame.h"
 #include "nsIDOMNode.h"
 #include "nsISelection.h"
@@ -106,6 +106,8 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoStyleSetInlines.h"
+#include "mozilla/css/ImageLoader.h"
 #include "mozilla/gfx/Tools.h"
 #include "nsPrintfCString.h"
 #include "ActiveLayerTracker.h"
@@ -9901,8 +9903,8 @@ nsFrame::DoGetParentComputedStyle(nsIFrame** aProviderFrame) const
   // Handle display:contents and the root frame, when there's no parent frame
   // to inherit from.
   if (MOZ_LIKELY(mContent)) {
-    nsIContent* parentContent = mContent->GetFlattenedTreeParent();
-    if (MOZ_LIKELY(parentContent)) {
+    Element* parentElement = mContent->GetFlattenedTreeParentElement();
+    if (MOZ_LIKELY(parentElement)) {
       nsAtom* pseudo = Style()->GetPseudo();
       if (!pseudo || !mContent->IsElement() ||
           (!nsCSSAnonBoxes::IsAnonBox(pseudo) &&
@@ -9913,10 +9915,15 @@ nsFrame::DoGetParentComputedStyle(nsIFrame** aProviderFrame) const
           /* if next is true then it's really a request for the table frame's
              parent context, see nsTable[Outer]Frame::GetParentComputedStyle. */
           pseudo == nsCSSAnonBoxes::tableWrapper) {
-        nsCSSFrameConstructor* fm = PresContext()->FrameConstructor();
-        ComputedStyle* sc = fm->GetDisplayContentsStyleFor(parentContent);
-        if (MOZ_UNLIKELY(sc)) {
-          return sc;
+        if (Servo_Element_IsDisplayContents(parentElement)) {
+          RefPtr<ComputedStyle> style =
+            PresShell()->StyleSet()->ResolveServoStyle(parentElement);
+          // NOTE(emilio): we return a weak reference because the element also
+          // holds the style context alive. This is a bit silly (we could've
+          // returned a weak ref directly), but it's probably not worth
+          // optimizing, given this function has just one caller which is rare,
+          // and this path is rare itself.
+          return style;
         }
       }
     } else {
@@ -10759,7 +10766,7 @@ nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
 
   // Assuming anon boxes don't have ::backdrop associated with them... if that
   // ever changes, we'd need to handle that here, like we do in
-  // ServoRestyleManager::ProcessPostTraversal
+  // RestyleManager::ProcessPostTraversal
 
   // We do need to handle block pseudo-elements here, though.  Especially list
   // bullets.

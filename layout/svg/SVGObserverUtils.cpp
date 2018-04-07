@@ -9,7 +9,6 @@
 
 // Keep others in (case-insensitive) order:
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsISupportsImpl.h"
 #include "nsSVGClipPathFrame.h"

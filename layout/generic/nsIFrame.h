@@ -3373,7 +3373,7 @@ public:
   virtual ComputedStyle* GetParentComputedStyle(nsIFrame** aProviderFrame) const = 0;
 
   /**
-   * Called by ServoRestyleManager to update the style of anonymous boxes
+   * Called by RestyleManager to update the style of anonymous boxes
    * directly associated with this frame.
    *
    * The passed-in ServoRestyleState can be used to create new ComputedStyles as
@@ -3409,7 +3409,7 @@ protected:
 
 public:
   // A helper both for UpdateStyleOfChildAnonBox, and to update frame-backed
-  // pseudo-elements in ServoRestyleManager.
+  // pseudo-elements in RestyleManager.
   //
   // This gets a ComputedStyle that will be the new style for `aChildFrame`, and
   // takes care of updating it, calling CalcStyleDifference, and adding to the

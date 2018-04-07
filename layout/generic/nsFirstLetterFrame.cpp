@@ -15,7 +15,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "nsFrameManager.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "nsPlaceholderFrame.h"
 #include "nsCSSFrameConstructor.h"
 

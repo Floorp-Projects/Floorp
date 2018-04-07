@@ -39,7 +39,7 @@
 #include "nsError.h"
 #include "nsCSSFrameConstructor.h"
 #include "mozilla/Range.h"
-#include "mozilla/ServoRestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"

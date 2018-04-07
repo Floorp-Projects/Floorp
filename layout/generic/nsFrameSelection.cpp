@@ -1588,6 +1588,13 @@ nsFrameSelection::RepaintSelection(SelectionType aSelectionType)
   return mDomSelections[index]->Repaint(mShell->GetPresContext());
 }
 
+static bool
+IsDisplayContents(const nsIContent* aContent)
+{
+  return aContent->IsElement() && aContent->AsElement()->HasServoData() &&
+    Servo_Element_IsDisplayContents(aContent->AsElement());
+}
+
 nsIFrame*
 nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
                                         int32_t            aOffset,
@@ -1600,8 +1607,7 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
   if (aOffset < 0)
     return nullptr;
 
-  if (!aNode->GetPrimaryFrame() &&
-      !mShell->FrameConstructor()->GetDisplayContentsStyleFor(aNode)) {
+  if (!aNode->GetPrimaryFrame() && !IsDisplayContents(aNode)) {
     return nullptr;
   }
 

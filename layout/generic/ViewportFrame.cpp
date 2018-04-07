@@ -12,7 +12,7 @@
 #include "mozilla/ViewportFrame.h"
 
 #include "mozilla/ComputedStyleInlines.h"
-#include "mozilla/ServoRestyleManager.h"
+#include "mozilla/RestyleManager.h"
 #include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
 #include "nsSubDocumentFrame.h"
