@@ -63,7 +63,7 @@ protected:
   // These methods are protected because we test this class using gTest
   // subclassing it.
   void LoadData();
-  void SaveData();
+  nsresult SaveData();
 
   nsresult ReadData();
   nsresult WriteData();
