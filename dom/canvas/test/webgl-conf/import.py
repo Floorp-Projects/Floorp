@@ -10,26 +10,28 @@ from pathlib import *
 import subprocess
 import sys
 
+REL_PATH = '/dom/canvas/test/webgl-conf'
 REPO_DIR = Path.cwd()
 DIR_IN_GECKO = Path(__file__).parent
-assert not REPO_DIR.samefile(DIR_IN_GECKO), 'Run from the KhronosGroup/WebGL checkout.'
-assert DIR_IN_GECKO.as_posix().endswith('dom/canvas/test/webgl-conf')
+assert not REPO_DIR.samefile(DIR_IN_GECKO), 'Run this script from the source git checkout.'
+assert DIR_IN_GECKO.as_posix().endswith(REL_PATH) # Be paranoid with rm -rf.
 
-def print_now(*args):
-    print(*args)
-    sys.stdout.flush()
+gecko_base_dir = DIR_IN_GECKO.as_posix()[:-len(REL_PATH)]
+angle_dir = Path(gecko_base_dir, 'gfx/angle').as_posix()
+sys.path.append(angle_dir)
+from vendor_from_git import *
 
+# --
 
-def run_checked(*args, **kwargs):
-    print_now(' ', args)
-    return subprocess.run(args, check=True, shell=True, **kwargs)
+merge_base_from = sys.argv[1]
+record_cherry_picks(DIR_IN_GECKO, merge_base_from)
 
+# --
 
 src_dir = Path(REPO_DIR, 'sdk/tests').as_posix()
 dest_dir = Path(DIR_IN_GECKO, 'checkout').as_posix()
-assert dest_dir.endswith('dom/canvas/test/webgl-conf/checkout') # Be paranoid with rm -rf.
-run_checked("rm -rf '{}'".format(dest_dir))
-run_checked("mkdir '{}'".format(dest_dir));
-run_checked("cp -rT '{}' '{}'".format(src_dir, dest_dir));
+run_checked("rm -rI '{}'".format(dest_dir), shell=True)
+run_checked("mkdir '{}'".format(dest_dir), shell=True);
+run_checked("cp -rT '{}' '{}'".format(src_dir, dest_dir), shell=True);
 
 print_now('Done!')
