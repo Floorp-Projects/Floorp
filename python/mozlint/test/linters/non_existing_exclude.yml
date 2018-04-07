@@ -1,0 +1,7 @@
+---
+BadExcludeLinter:
+    description: Has an invalid exclude directive.
+    exclude:
+        - files/does_not_exist
+    type: string
+    payload: foobar

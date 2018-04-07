@@ -138,6 +138,44 @@ def test_keyboard_interrupt():
     assert 'Traceback' not in out
 
 
+def test_support_files(lint, lintdir, filedir, monkeypatch):
+    jobs = []
+
+    # Replace the original _generate_jobs with a new one that simply
+    # adds jobs to a list (and then doesn't return anything).
+    orig_generate_jobs = lint._generate_jobs
+
+    def fake_generate_jobs(*args, **kwargs):
+        jobs.extend([job[1] for job in orig_generate_jobs(*args, **kwargs)])
+        return []
+
+    monkeypatch.setattr(lint, '_generate_jobs', fake_generate_jobs)
+
+    linter_path = os.path.join(lintdir, 'support_files.yml')
+    lint.read(linter_path)
+
+    # Modified support files only lint entire root if --outgoing or --workdir
+    # are used.
+    path = os.path.join(filedir, 'foobar.js')
+    lint.mock_vcs([os.path.join(filedir, 'foobar.py')])
+    lint.roll(path)
+    assert jobs[0] == [path]
+
+    jobs = []
+    lint.roll(path, workdir=True)
+    assert jobs[0] == [lint.root]
+
+    jobs = []
+    lint.roll(path, outgoing=True)
+    assert jobs[0] == [lint.root]
+
+    # Lint config file is implicitly added as a support file
+    lint.mock_vcs([linter_path])
+    jobs = []
+    lint.roll(path, outgoing=True, workdir=True)
+    assert jobs[0] == [lint.root]
+
+
 linters = ('setup.yml', 'setupfailed.yml', 'setupraised.yml')
 
 

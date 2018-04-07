@@ -80,8 +80,8 @@ fuzzy(1,10000) == opacity-preserve3d-3.html opacity-preserve3d-3-ref.html
 fuzzy(1,10000) == opacity-preserve3d-4.html opacity-preserve3d-4-ref.html
 == opacity-preserve3d-5.html opacity-preserve3d-5-ref.html
 == snap-perspective-1.html snap-perspective-1-ref.html
-== mask-layer-1.html mask-layer-ref.html
-== mask-layer-2.html mask-layer-ref.html
+fails-if(webrender&&winWidget) == mask-layer-1.html mask-layer-ref.html
+fails-if(webrender&&winWidget) == mask-layer-2.html mask-layer-ref.html
 fails-if(webrender) == mask-layer-3.html mask-layer-ref.html
 == split-intersect1.html split-intersect1-ref.html
 fuzzy(255,150) == split-intersect2.html split-intersect2-ref.html

@@ -55,7 +55,7 @@ def config(request):
 
     name = request.module.LINTER
     config_path = os.path.join(lintdir, '{}.yml'.format(name))
-    parser = Parser()
+    parser = Parser(build.topsrcdir)
     # TODO Don't assume one linter per yaml file
     return parser.parse(config_path)[0]
 

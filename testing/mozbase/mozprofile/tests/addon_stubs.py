@@ -66,15 +66,3 @@ def generate_addon(addon_id, path=None, name=None, xpi=True):
     mozfile.rmtree(addon_dir)
 
     return xpi_file
-
-
-def generate_manifest(addon_list, path=None):
-    tmpdir = path or tempfile.mkdtemp()
-    addons = [generate_addon(addon, path=tmpdir) for addon in addon_list]
-
-    manifest = os.path.join(tmpdir, 'manifest.ini')
-    with open(manifest, 'w') as f:
-        for addon in addons:
-            f.write('[' + addon + ']\n')
-
-    return manifest

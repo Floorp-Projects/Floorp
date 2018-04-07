@@ -5,8 +5,8 @@
 from __future__ import absolute_import
 
 import os
-import sys
 
+import mozunit
 import pytest
 
 from mozlint import pathutils
@@ -90,4 +90,4 @@ def test_include_exclude(filterpaths):
 
 
 if __name__ == '__main__':
-    sys.exit(pytest.main(['--verbose', __file__]))
+    mozunit.main()

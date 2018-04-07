@@ -1,0 +1,7 @@
+---
+BadIncludeLinter:
+    description: Has an invalid include directive.
+    include:
+        - files/does_not_exist
+    type: string
+    payload: foobar

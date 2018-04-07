@@ -186,53 +186,6 @@ interface nsIXPCWrappedJSObjectGetter : nsISupports
 
 /***************************************************************************/
 
-/*
- * This interface is implemented by outside code and registered with xpconnect
- * via nsIXPConnect::setFunctionThisTranslator.
- *
- * The reason this exists is to support calls to JavaScript event callbacks
- * needed by the DOM via xpconnect from C++ code.
- *
- * We've added support for wrapping JS function objects as xpcom interfaces
- * by declaring the given interface as a [function] interface. However, to
- * support the requirements of JS event callbacks we need to call the JS
- * function with the 'this' set as the JSObject for which the event is being
- * fired; e.g. a form node.
- *
- * We've decided that for all cases we care about the appropriate 'this' object
- * can be derived from the first param in the call to the callback. In the
- * event handler case the first param is an event object.
- *
- * Though we can't change all the JS code so that it would setup its own 'this',
- * we can add plugin 'helper' support to xpconnect. And that is what we have
- * here.
- *
- * The idea is that at startup time some code that cares about this issue
- * (e.g. the DOM helper code) can register a nsIXPCFunctionThisTranslator
- * object with xpconnect to handle calls to [function] interfaces of a given
- * iid. When xpconnect goes to invoke a method on a wrapped JSObject for
- * an interface marked as [function], xpconnect will check if the first param
- * of the method is an xpcom object pointer and if so it will check to see if a
- * nsIXPCFunctionThisTranslator has been registered for the given iid of the
- * interface being called. If so it will call the translator and get an
- * interface pointer to use as the 'this' for the call. If the translator
- * returns a non-null interface pointer (which it should then have addref'd
- * since it is being returned as an out param), xpconnect will attempt to build
- * a wrapper around the pointer and get a JSObject from that wrapper to use
- * as the 'this' for the call.
- *
- * If a null interface pointer is returned then xpconnect will use the default
- * 'this' - the same JSObject as the function object it is calling.
- */
-
-[uuid(f5f84b70-92eb-41f1-a1dd-2eaac0ed564c)]
-interface nsIXPCFunctionThisTranslator : nsISupports
-{
-    nsISupports TranslateThis(in nsISupports aInitialThis);
-};
-
-/***************************************************************************/
-
 
 %{ C++
 // For use with the service manager
@@ -373,10 +326,6 @@ interface nsIXPConnect : nsISupports
                              [iid_is(aIID),retval] out nsQIResult result);
 
     // Methods added since mozilla 0.6....
-
-    void
-    setFunctionThisTranslator(in nsIIDRef aIID,
-                              in nsIXPCFunctionThisTranslator aTranslator);
 
     JSObjectPtr
     getWrappedNativePrototype(in JSContextPtr aJSContext,

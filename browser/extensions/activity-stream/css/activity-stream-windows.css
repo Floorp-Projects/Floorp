@@ -30,7 +30,7 @@ input {
   --newtab-border-secondary-color: #D7D7DB;
   --newtab-button-primary-color: #0060DF;
   --newtab-button-secondary-color: inherit;
-  --newtab-element-active-color: rgba(237, 237, 240, 0.6);
+  --newtab-element-active-color: #EDEDF0;
   --newtab-icon-primary-color: rgba(12, 12, 13, 0.8);
   --newtab-icon-secondary-color: rgba(12, 12, 13, 0.6);
   --newtab-icon-tertiary-color: #D7D7DB;
@@ -50,18 +50,17 @@ input {
   --newtab-section-active-contextmenu-color: #0C0C0D;
   --newtab-search-background-color: #FFF;
   --newtab-search-border-color: transparent;
-  --newtab-search-focus-border-color: #0A84FF;
   --newtab-search-icon-color: rgba(12, 12, 13, 0.4);
-  --newtab-search-text-color: inherit;
   --newtab-topsites-label-color: inherit;
   --newtab-card-background-color: #FFF;
-  --newtab-card-active-outline-color: #D7D7DB; }
+  --newtab-card-active-outline-color: #D7D7DB;
+  --newtab-card-hairline-color: rgba(0, 0, 0, 0.1); }
 
 .outer-wrapper.dark-theme {
   --newtab-background-color: #2A2A2E;
   --newtab-border-primary-color: rgba(249, 249, 250, 0.8);
   --newtab-border-secondary-color: rgba(249, 249, 250, 0.2);
-  --newtab-button-primary-color: #45A1FF;
+  --newtab-button-primary-color: #0060DF;
   --newtab-button-secondary-color: #38383D;
   --newtab-element-active-color: #4A4A4F;
   --newtab-icon-primary-color: rgba(249, 249, 250, 0.8);
@@ -82,13 +81,12 @@ input {
   --newtab-section-navigation-text-color: rgba(249, 249, 250, 0.8);
   --newtab-section-active-contextmenu-color: #FFF;
   --newtab-search-background-color: #4A4A4F;
-  --newtab-search-border-color: rgba(249, 249, 250, 0.4);
-  --newtab-search-focus-border-color: #45A1FF;
+  --newtab-search-border-color: rgba(249, 249, 250, 0.2);
   --newtab-search-icon-color: rgba(249, 249, 250, 0.6);
-  --newtab-search-text-color: rgba(249, 249, 250, 0.6);
   --newtab-topsites-label-color: rgba(249, 249, 250, 0.8);
   --newtab-card-background-color: #0C0C0D;
-  --newtab-card-active-outline-color: #4A4A4F; }
+  --newtab-card-active-outline-color: #4A4A4F;
+  --newtab-card-hairline-color: rgba(249, 249, 250, 0.2); }
 
 .icon {
   background-position: center center;
@@ -486,7 +484,7 @@ main {
     .top-site-outer .screenshot.active {
       opacity: 1; }
   .top-site-outer .top-site-icon {
-    background-color: var(--newtab-background-color);
+    background-color: #FFF;
     background-position: center center;
     background-repeat: no-repeat;
     border-radius: 6px;
@@ -840,7 +838,6 @@ main {
     border: solid 1px var(--newtab-search-border-color);
     border-radius: 3px;
     box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.15);
-    color: var(--newtab-search-text-color);
     font-size: 15px;
     padding: 0;
     padding-inline-end: 36px;
@@ -850,7 +847,7 @@ main {
     box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.25); }
   .search-wrapper:active input,
   .search-wrapper input:focus {
-    box-shadow: 0 0 0 1px var(--newtab-search-focus-border-color); }
+    box-shadow: 0 0 0 1px #0060DF; }
   .search-wrapper .search-label {
     background: url("chrome://browser/skin/search-glass.svg") no-repeat 12px center/16px;
     -moz-context-properties: fill;
@@ -879,15 +876,19 @@ main {
       transform: scaleX(-1); }
 
 .contentSearchSuggestionTable {
-  background-color: var(--newtab-search-background-color);
+  background-color: var(--newtab-modal-color);
   border: 0;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.2);
   transform: translateY(3px); }
   .contentSearchSuggestionTable .contentSearchHeader {
     background-color: var(--newtab-background-color);
     color: var(--newtab-text-secondary-color); }
-  .contentSearchSuggestionTable .contentSearchHeader, .contentSearchSuggestionTable .contentSearchSuggestionsList {
-    border-color: var(--newtab-border-primary-color); }
+  .contentSearchSuggestionTable .contentSearchHeader, .contentSearchSuggestionTable .contentSearchSuggestionsList, .contentSearchSuggestionTable .contentSearchSettingsButton {
+    border-color: var(--newtab-border-secondary-color); }
   .contentSearchSuggestionTable .contentSearchSearchWithHeaderSearchText {
+    color: var(--newtab-text-primary-color); }
+  .contentSearchSuggestionTable .contentSearchSettingsButton:hover {
+    background: var(--newtab-element-active-color);
     color: var(--newtab-text-primary-color); }
 
 .context-menu {
@@ -921,14 +922,7 @@ main {
         padding: 3px 12px;
         white-space: nowrap; }
         .context-menu > ul > li > a:-moz-any(:focus, :hover) {
-          background: var(--newtab-link-primary-color);
-          color: #FFF; }
-          .context-menu > ul > li > a:-moz-any(:focus, :hover) a {
-            color: #0C0C0D; }
-          .context-menu > ul > li > a:-moz-any(:focus, :hover) .icon {
-            fill: #FFF; }
-          .context-menu > ul > li > a:-moz-any(:focus, :hover):-moz-any(:focus, :hover) {
-            color: #FFF; }
+          background: var(--newtab-element-active-color); }
         .context-menu > ul > li > a.disabled {
           opacity: 0.4;
           pointer-events: none; }
@@ -1047,13 +1041,12 @@ main {
     .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .card-title {
       color: var(--newtab-link-primary-color); }
   .card-outer .card-preview-image-outer {
-    background-color: var(--newtab-background-color);
     border-radius: 3px 3px 0 0;
     height: 122px;
     overflow: hidden;
     position: relative; }
     .card-outer .card-preview-image-outer::after {
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid var(--newtab-card-hairline-color);
       bottom: 0;
       content: '';
       position: absolute;
@@ -1268,7 +1261,7 @@ main {
       font-weight: bold;
       padding-left: 3px; }
     .collapsible-section .section-disclaimer button {
-      background: transparent;
+      background: var(--newtab-button-secondary-color);
       border: 1px solid #B1B1B3;
       border-radius: 4px;
       cursor: pointer;
@@ -1301,7 +1294,9 @@ main {
 .messages-admin {
   max-width: 996px;
   margin: 0 auto;
-  font-size: 14px; }
+  font-size: 14px;
+  display: inherit;
+  padding: 0; }
   .messages-admin h1 {
     font-weight: 200;
     font-size: 32px; }

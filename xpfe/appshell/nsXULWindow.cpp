@@ -361,16 +361,18 @@ GetOuterToInnerSizeDifferenceInCSSPixels(nsIWidget* aWindow)
   return RoundedToInt(devPixelSize / aWindow->GetDefaultScale());
 }
 
-uint32_t
-nsXULWindow::GetOuterToInnerHeightDifferenceInCSSPixels()
+NS_IMETHODIMP
+nsXULWindow::GetOuterToInnerHeightDifferenceInCSSPixels(uint32_t* aResult)
 {
-  return GetOuterToInnerSizeDifferenceInCSSPixels(mWindow).height;
+  *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(mWindow).height;
+  return NS_OK;
 }
 
-uint32_t
-nsXULWindow::GetOuterToInnerWidthDifferenceInCSSPixels()
+NS_IMETHODIMP
+nsXULWindow::GetOuterToInnerWidthDifferenceInCSSPixels(uint32_t* aResult)
 {
-  return GetOuterToInnerSizeDifferenceInCSSPixels(mWindow).width;
+  *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(mWindow).width;
+  return NS_OK;
 }
 
 nsTArray<RefPtr<mozilla::LiveResizeListener>>

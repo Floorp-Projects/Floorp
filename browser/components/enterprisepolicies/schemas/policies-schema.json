@@ -58,13 +58,6 @@
       "type": "boolean"
     },
 
-    "BlockSetDesktopBackground": {
-      "description": "Prevents usage of the \"Set Image as Desktop Background\" feature.",
-      "first_available": "60.0",
-
-      "type": "boolean"
-    },
-
     "Bookmarks": {
       "description": "Allows the creation of bookmarks in the Bookmarks bar, Bookmarks menu, or a specified folder inside them.",
       "first_available": "60.0",
@@ -99,7 +92,7 @@
     },
 
     "Certificates": {
-      "description": "Whether or not to use built in certs.",
+      "description": "Whether or not to use built in certs. This policy is Windows only at this time.",
       "first_available": "60.0",
 
       "type": "object",
@@ -136,7 +129,7 @@
 
         "AcceptThirdParty": {
           "type": "string",
-          "enum": ["all", "none", "from-visited"]
+          "enum": ["always", "never", "from-visited"]
         },
 
         "ExpireAtSessionEnd": {
@@ -147,13 +140,6 @@
           "type": "boolean"
         }
       }
-    },
-
-    "CreateMasterPassword": {
-      "description": "If false, removes access to create a master password.",
-      "first_available": "60.0",
-
-      "type": "boolean"
     },
 
     "DisableAppUpdate": {
@@ -220,6 +206,13 @@
       "type": "boolean"
     },
 
+    "DisableMasterPasswordCreation": {
+      "description": "If true, removes access to create a master password.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisablePocket": {
       "description": "Prevents ability to save webpages to Pocket.",
       "first_available": "60.0",
@@ -249,7 +242,7 @@
     },
 
     "DisableSafeMode": {
-      "description": "Prevents ability to restart in safe mode.",
+      "description": "Prevents ability to restart in safe mode. You can only prevent the Shift key by using GPO on Windows.",
       "first_available": "60.0",
 
       "type": "boolean"
@@ -271,7 +264,14 @@
       }
     },
 
-    "DisableSysAddonUpdate": {
+    "DisableSetDesktopBackground": {
+      "description": "Prevents usage of the \"Set Image as Desktop Background\" feature.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
+    "DisableSystemAddonUpdate": {
       "description": "Prevent the browser from installing and updating system addons.",
       "first_available": "60.0",
       "enterprise_only": true,
@@ -405,8 +405,8 @@
       "required": ["URL"]
     },
 
-    "InstallAddons": {
-      "description": "Allow or deny popup websites to install webextensions.",
+    "InstallAddonsPermission": {
+      "description": "Allow webites to install add-ons.",
       "first_available": "60.0",
 
       "type": "object",
@@ -425,6 +425,13 @@
 
     "NoDefaultBookmarks": {
       "description": "Don't create the default bookmarks bundled with Firefox, nor the Smart Bookmarks (Most Visited, Recent Tags). Note: this policy is only effective if used before the first run of the profile.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
+    "OfferToSaveLogins": {
+      "description": "Enforces the setting to allow Firefox to offer to remember saved logins and passwords. Both true and false values are accepted.",
       "first_available": "60.0",
 
       "type": "boolean"
@@ -525,13 +532,6 @@
           "type": "boolean"
         }
       }
-    },
-
-    "RememberPasswords": {
-      "description": "Enforces the setting to allow Firefox to remember saved logins and passwords. Both true and false values are accepted.",
-      "first_available": "60.0",
-
-      "type": "boolean"
     },
 
     "SanitizeOnShutdown": {

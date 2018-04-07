@@ -5,5 +5,7 @@ wpt_manifest:
         - testing/web-platform/tests
         - testing/web-platform/mozilla/tests
     exclude: []
+    support-files:
+        - tools/lint/wpt/wpt_manifest.py
     type: structured_log
     payload: wpt.wpt_manifest:lint

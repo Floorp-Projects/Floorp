@@ -34,5 +34,7 @@ codespell:
         - py
         - properties
         - rst
+    support-files:
+        - 'tools/lint/spell/**'
     type: external
     payload: spell:lint
