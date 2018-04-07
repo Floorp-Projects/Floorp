@@ -12,6 +12,9 @@ project(':browser-engine').projectDir = new File(rootDir, 'components/browser/en
 include ':browser-engine-gecko'
 project(':browser-engine-gecko').projectDir = new File(rootDir, 'components/browser/engine-gecko')
 
+include ':browser-engine-system'
+project(':browser-engine-system').projectDir = new File(rootDir, 'components/browser/engine-system')
+
 include ':browser-errorpages'
 project(':browser-errorpages').projectDir = new File(rootDir, 'components/browser/errorpages')
 
