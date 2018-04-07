@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-dom"), require("Services"), require("devtools/shared/flags"), require("devtools/client/sourceeditor/editor"), require("devtools/client/shared/vendor/WasmParser"), require("devtools/client/shared/vendor/WasmDis"), require("devtools/client/shared/vendor/react-redux"), require("devtools/client/shared/vendor/redux"), require("devtools/client/shared/vendor/immutable"));
+		module.exports = factory(require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-dom"), require("Services"), require("devtools/shared/flags"), require("devtools/client/sourceeditor/editor"), require("devtools/client/shared/vendor/WasmParser"), require("devtools/client/shared/vendor/WasmDis"), require("devtools/client/shared/vendor/react-redux"), require("devtools/client/shared/vendor/redux"), require("devtools/client/shared/vendor/immutable"), require("devtools/shared/fronts/device"));
 	else if(typeof define === 'function' && define.amd)
-		define(["devtools/client/shared/vendor/react", "devtools/client/shared/vendor/lodash", "devtools/client/shared/vendor/react-dom", "Services", "devtools/shared/flags", "devtools/client/sourceeditor/editor", "devtools/client/shared/vendor/WasmParser", "devtools/client/shared/vendor/WasmDis", "devtools/client/shared/vendor/react-redux", "devtools/client/shared/vendor/redux", "devtools/client/shared/vendor/immutable"], factory);
+		define(["devtools/client/shared/vendor/react", "devtools/client/shared/vendor/lodash", "devtools/client/shared/vendor/react-dom", "Services", "devtools/shared/flags", "devtools/client/sourceeditor/editor", "devtools/client/shared/vendor/WasmParser", "devtools/client/shared/vendor/WasmDis", "devtools/client/shared/vendor/react-redux", "devtools/client/shared/vendor/redux", "devtools/client/shared/vendor/immutable", "devtools/shared/fronts/device"], factory);
 	else {
-		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-dom"), require("Services"), require("devtools/shared/flags"), require("devtools/client/sourceeditor/editor"), require("devtools/client/shared/vendor/WasmParser"), require("devtools/client/shared/vendor/WasmDis"), require("devtools/client/shared/vendor/react-redux"), require("devtools/client/shared/vendor/redux"), require("devtools/client/shared/vendor/immutable")) : factory(root["devtools/client/shared/vendor/react"], root["devtools/client/shared/vendor/lodash"], root["devtools/client/shared/vendor/react-dom"], root["Services"], root["devtools/shared/flags"], root["devtools/client/sourceeditor/editor"], root["devtools/client/shared/vendor/WasmParser"], root["devtools/client/shared/vendor/WasmDis"], root["devtools/client/shared/vendor/react-redux"], root["devtools/client/shared/vendor/redux"], root["devtools/client/shared/vendor/immutable"]);
+		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-dom"), require("Services"), require("devtools/shared/flags"), require("devtools/client/sourceeditor/editor"), require("devtools/client/shared/vendor/WasmParser"), require("devtools/client/shared/vendor/WasmDis"), require("devtools/client/shared/vendor/react-redux"), require("devtools/client/shared/vendor/redux"), require("devtools/client/shared/vendor/immutable"), require("devtools/shared/fronts/device")) : factory(root["devtools/client/shared/vendor/react"], root["devtools/client/shared/vendor/lodash"], root["devtools/client/shared/vendor/react-dom"], root["Services"], root["devtools/shared/flags"], root["devtools/client/sourceeditor/editor"], root["devtools/client/shared/vendor/WasmParser"], root["devtools/client/shared/vendor/WasmDis"], root["devtools/client/shared/vendor/react-redux"], root["devtools/client/shared/vendor/redux"], root["devtools/client/shared/vendor/immutable"], root["devtools/shared/fronts/device"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_4__, __WEBPACK_EXTERNAL_MODULE_22__, __WEBPACK_EXTERNAL_MODULE_52__, __WEBPACK_EXTERNAL_MODULE_197__, __WEBPACK_EXTERNAL_MODULE_677__, __WEBPACK_EXTERNAL_MODULE_678__, __WEBPACK_EXTERNAL_MODULE_3592__, __WEBPACK_EXTERNAL_MODULE_3593__, __WEBPACK_EXTERNAL_MODULE_3594__) {
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_4__, __WEBPACK_EXTERNAL_MODULE_22__, __WEBPACK_EXTERNAL_MODULE_52__, __WEBPACK_EXTERNAL_MODULE_197__, __WEBPACK_EXTERNAL_MODULE_677__, __WEBPACK_EXTERNAL_MODULE_678__, __WEBPACK_EXTERNAL_MODULE_3592__, __WEBPACK_EXTERNAL_MODULE_3593__, __WEBPACK_EXTERNAL_MODULE_3594__, __WEBPACK_EXTERNAL_MODULE_3626__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -2309,6 +2309,7 @@ exports.getSourceLineCount = getSourceLineCount;
 exports.getMode = getMode;
 exports.isLoaded = isLoaded;
 exports.isLoading = isLoading;
+exports.getTextAtPosition = getTextAtPosition;
 
 var _devtoolsSourceMap = __webpack_require__(1360);
 
@@ -2590,6 +2591,22 @@ function isLoaded(source) {
 
 function isLoading(source) {
   return source.get("loadedState") === "loading";
+}
+
+function getTextAtPosition(source, location) {
+  if (!source || !source.text) {
+    return "";
+  }
+
+  const line = location.line;
+  const column = location.column || 0;
+
+  const lineText = source.text.split("\n")[line - 1];
+  if (!lineText) {
+    return "";
+  }
+
+  return lineText.slice(column, column + 100).trim();
 }
 
 /***/ }),
@@ -3121,7 +3138,9 @@ function createBreakpoint(location, overrides = {}) {
     hidden,
     generatedLocation,
     astLocation,
-    id
+    id,
+    text,
+    originalText
   } = overrides;
 
   const defaultASTLocation = { name: undefined, offset: location };
@@ -3131,10 +3150,11 @@ function createBreakpoint(location, overrides = {}) {
     disabled: disabled || false,
     hidden: hidden || false,
     loading: false,
-    text: "",
     astLocation: astLocation || defaultASTLocation,
     generatedLocation: generatedLocation || location,
-    location
+    location,
+    text,
+    originalText
   };
 
   return properties;
@@ -4262,7 +4282,8 @@ function addBreakpoint(state, action) {
 
   // when the action completes, we can commit the breakpoint
   if (action.status === "done") {
-    return syncBreakpoint(state, action.value);
+    const { value } = action;
+    return syncBreakpoint(state, value);
   }
 
   // Remove the optimistic update
@@ -4833,7 +4854,9 @@ function update(state = initialASTState(), action) {
         if (action.status === "start") {
           return state.setIn(["symbols", source.id], { loading: true });
         }
-        return state.setIn(["symbols", source.id], action.value);
+
+        const value = action.value;
+        return state.setIn(["symbols", source.id], value);
       }
 
     case "SET_PAUSE_POINTS":
@@ -5887,9 +5910,11 @@ function syncBreakpoint(sourceId, pendingBreakpoint) {
 function addBreakpoint(location, { condition, hidden } = {}) {
   const breakpoint = (0, _breakpoint.createBreakpoint)(location, { condition, hidden });
   return ({ dispatch, getState, sourceMaps, client }) => {
-    const action = { type: "ADD_BREAKPOINT", breakpoint };
-    const promise = (0, _addBreakpoint2.default)(getState, client, sourceMaps, action);
-    return dispatch(_extends({}, action, { [_promise.PROMISE]: promise }));
+    return dispatch({
+      type: "ADD_BREAKPOINT",
+      breakpoint,
+      [_promise.PROMISE]: (0, _addBreakpoint2.default)(getState, client, sourceMaps, breakpoint)
+    });
   };
 }
 
@@ -5933,6 +5958,7 @@ function removeBreakpoint(location) {
     return dispatch({
       type: "REMOVE_BREAKPOINT",
       breakpoint: bp,
+      disabled: false,
       [_promise.PROMISE]: client.removeBreakpoint(bp.generatedLocation)
     });
   };
@@ -5953,13 +5979,13 @@ function enableBreakpoint(location) {
       return;
     }
 
-    const action = { type: "ENABLE_BREAKPOINT", breakpoint };
-    const promise = (0, _addBreakpoint2.default)(getState, client, sourceMaps, action);
-    return dispatch({
+    const action = {
       type: "ENABLE_BREAKPOINT",
       breakpoint,
-      [_promise.PROMISE]: promise
-    });
+      [_promise.PROMISE]: (0, _addBreakpoint2.default)(getState, client, sourceMaps, breakpoint)
+    };
+
+    return dispatch(action);
   };
 }
 
@@ -5980,10 +6006,12 @@ function disableBreakpoint(location) {
     await client.removeBreakpoint(bp.generatedLocation);
     const newBreakpoint = _extends({}, bp, { disabled: true });
 
-    return dispatch({
+    const action = {
       type: "DISABLE_BREAKPOINT",
       breakpoint: newBreakpoint
-    });
+    };
+
+    return dispatch(action);
   };
 }
 
@@ -6010,8 +6038,15 @@ function toggleAllBreakpoints(shouldDisableBreakpoints) {
       }
     }
 
+    if (shouldDisableBreakpoints) {
+      return dispatch({
+        type: "DISABLE_ALL_BREAKPOINTS",
+        breakpoints: modifiedBreakpoints
+      });
+    }
+
     return dispatch({
-      type: shouldDisableBreakpoints ? "DISABLE_ALL_BREAKPOINTS" : "ENABLE_ALL_BREAKPOINTS",
+      type: "ENABLE_ALL_BREAKPOINTS",
       breakpoints: modifiedBreakpoints
     });
   };
@@ -6432,6 +6467,7 @@ function setSourceMetaData(sourceId) {
     }
 
     const framework = await (0, _parser.getFramework)(source.id);
+
     dispatch({
       type: "SET_SOURCE_METADATA",
       sourceId: source.id,
@@ -6482,7 +6518,6 @@ function setOutOfScopeLocations() {
       type: "OUT_OF_SCOPE_LOCATIONS",
       locations
     });
-
     dispatch((0, _setInScopeLines.setInScopeLines)());
   };
 }
@@ -8081,7 +8116,7 @@ function addBreakpoint(state, action) {
     return state;
   }
   // when the action completes, we can commit the breakpoint
-  const { value: { breakpoint } } = action;
+  const { breakpoint } = action.value;
   const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
   const pendingBreakpoint = (0, _breakpoint.createPendingBreakpoint)(breakpoint);
 
@@ -8756,6 +8791,7 @@ function isVisible(breakpoint, selectedSource) {
   const location = getLocation(breakpoint, isGeneratedSource);
   return location.sourceId === sourceId;
 }
+
 /*
  * Finds the breakpoints, which appear in the selected source.
  *
@@ -12281,6 +12317,10 @@ var _breakpoint = __webpack_require__(1364);
 
 var _create = __webpack_require__(1428);
 
+var _frontsDevice = __webpack_require__(3626);
+
+var _devtoolsModules = __webpack_require__(1376);
+
 let bpClients; /* This Source Code Form is subject to the terms of the Mozilla Public
                 * License, v. 2.0. If a copy of the MPL was not distributed with this
                 * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -12531,12 +12571,43 @@ async function fetchSources() {
   return sources.map(source => (0, _create.createSource)(source, { supportsWasm }));
 }
 
+/**
+ * Temporary helper to check if the current server will support a call to
+ * listWorkers. On Fennec 60 or older, the call will silently crash and prevent
+ * the client from resuming.
+ * XXX: Remove when FF60 for Android is no longer used or available.
+ *
+ * See https://bugzilla.mozilla.org/show_bug.cgi?id=1443550 for more details.
+ */
+async function checkServerSupportsListWorkers() {
+  const root = await tabTarget.root;
+  const deviceFront = await (0, _frontsDevice.getDeviceFront)(debuggerClient, root);
+  const description = await deviceFront.getDescription();
+
+  const isFennec = description.apptype === "mobile/android";
+  if (!isFennec) {
+    // Explicitly return true early to avoid calling Services.vs.compare.
+    // This would force us to extent the Services shim provided by
+    // devtools-modules, used when this code runs in a tab.
+    return true;
+  }
+
+  // We are only interested in Fennec release versions here.
+  // We assume that the server fix for Bug 1443550 will land in FF61.
+  const version = description.platformversion;
+  return _devtoolsModules.Services.vc.compare(version, "61.0") >= 0;
+}
+
 async function fetchWorkers() {
+  // Temporary workaround for Bug 1443550
+  // XXX: Remove when FF60 for Android is no longer used or available.
+  const supportsListWorkers = await checkServerSupportsListWorkers();
+
   // NOTE: The Worker and Browser Content toolboxes do not have a parent
   // with a listWorkers function
   // TODO: there is a listWorkers property, but it is not a function on the
   // parent. Investigate what it is
-  if (!threadClient._parent || typeof threadClient._parent.listWorkers != "function") {
+  if (!threadClient._parent || typeof threadClient._parent.listWorkers != "function" || !supportsListWorkers) {
     return Promise.resolve({ workers: [] });
   }
 
@@ -13405,12 +13476,16 @@ var _selectors = __webpack_require__(3590);
 
 var _sourceMaps = __webpack_require__(1397);
 
-exports.default = async function addBreakpoint(getState, client, sourceMaps, { breakpoint }) {
-  const state = getState();
+var _source = __webpack_require__(1356);
 
+exports.default = async function addBreakpoint(getState, client, sourceMaps, breakpoint) {
+  const state = getState();
   const source = (0, _selectors.getSource)(state, breakpoint.location.sourceId);
+
   const location = _extends({}, breakpoint.location, { sourceUrl: source.url });
   const generatedLocation = await (0, _sourceMaps.getGeneratedLocation)(state, source.toJS(), location, sourceMaps);
+
+  const generatedSource = (0, _selectors.getSource)(state, generatedLocation.sourceId);
 
   (0, _breakpoint.assertLocation)(location);
   (0, _breakpoint.assertLocation)(generatedLocation);
@@ -13429,6 +13504,9 @@ exports.default = async function addBreakpoint(getState, client, sourceMaps, { b
   const symbols = (0, _selectors.getSymbols)(getState(), source);
   const astLocation = await (0, _breakpoint.getASTLocation)(source, symbols, newLocation);
 
+  const originalText = (0, _source.getTextAtPosition)(source, location);
+  const text = (0, _source.getTextAtPosition)(generatedSource, actualLocation);
+
   const newBreakpoint = {
     id,
     disabled: false,
@@ -13438,7 +13516,9 @@ exports.default = async function addBreakpoint(getState, client, sourceMaps, { b
     location: newLocation,
     astLocation,
     hitCount,
-    generatedLocation: newGeneratedLocation
+    generatedLocation: newGeneratedLocation,
+    text,
+    originalText
   };
 
   (0, _breakpoint.assertBreakpoint)(newBreakpoint);
@@ -13504,6 +13584,8 @@ var _breakpoint = __webpack_require__(1364);
 
 var _sourceMaps = __webpack_require__(1397);
 
+var _source = __webpack_require__(1356);
+
 var _devtoolsSourceMap = __webpack_require__(1360);
 
 var _selectors = __webpack_require__(3590);
@@ -13522,8 +13604,13 @@ async function makeScopedLocation({ name, offset }, location, source) {
   };
 }
 
-function createSyncData(id, pendingBreakpoint, location, generatedLocation, previousLocation) {
-  const overrides = _extends({}, pendingBreakpoint, { generatedLocation, id });
+function createSyncData(id, pendingBreakpoint, location, generatedLocation, previousLocation, text, originalText) {
+  const overrides = _extends({}, pendingBreakpoint, {
+    generatedLocation,
+    id,
+    text,
+    originalText
+  });
   const breakpoint = (0, _breakpoint.createBreakpoint)(location, overrides);
 
   (0, _breakpoint.assertBreakpoint)(breakpoint);
@@ -13536,7 +13623,10 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
   (0, _breakpoint.assertPendingBreakpoint)(pendingBreakpoint);
 
   const source = (0, _selectors.getSource)(getState(), sourceId);
+
   const generatedSourceId = sourceMaps.isOriginalId(sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(sourceId) : sourceId;
+
+  const generatedSource = (0, _selectors.getSource)(getState(), generatedSourceId);
 
   const { location, astLocation } = pendingBreakpoint;
   const previousLocation = _extends({}, location, { sourceId });
@@ -13560,7 +13650,10 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
   // send update only to redux
   if (pendingBreakpoint.disabled || existingClient && isSameLocation) {
     const id = pendingBreakpoint.disabled ? "" : existingClient.id;
-    return createSyncData(id, pendingBreakpoint, scopedLocation, scopedGeneratedLocation, previousLocation);
+    const originalText = (0, _source.getTextAtPosition)(source, previousLocation);
+    const text = (0, _source.getTextAtPosition)(generatedSource, generatedLocation);
+
+    return createSyncData(id, pendingBreakpoint, scopedLocation, scopedGeneratedLocation, previousLocation, text, originalText);
   }
 
   // clear server breakpoints if they exist and we have moved
@@ -13583,7 +13676,10 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
   const newGeneratedLocation = actualLocation;
   const newLocation = await sourceMaps.getOriginalLocation(newGeneratedLocation);
 
-  return createSyncData(id, pendingBreakpoint, newLocation, newGeneratedLocation, previousLocation);
+  const originalText = (0, _source.getTextAtPosition)(source, newLocation);
+  const text = (0, _source.getTextAtPosition)(generatedSource, newGeneratedLocation);
+
+  return createSyncData(id, pendingBreakpoint, newLocation, newGeneratedLocation, previousLocation, text, originalText);
 }
 
 /***/ }),
@@ -22900,7 +22996,6 @@ class Breakpoints extends _react.Component {
   }
 
   renderBreakpoint(breakpoint) {
-    const snippet = breakpoint.text || "";
     const locationId = breakpoint.locationId;
     const line = breakpoint.location.line;
     const column = breakpoint.location.column;
@@ -22937,11 +23032,6 @@ class Breakpoints extends _react.Component {
         "label",
         { className: "breakpoint-label", title: breakpoint.text },
         renderSourceLocation(breakpoint.location.source, line, column)
-      ),
-      _react2.default.createElement(
-        "div",
-        { className: "breakpoint-snippet" },
-        snippet
       ),
       _react2.default.createElement(_Close2.default, {
         handleClick: ev => this.removeBreakpoint(ev, breakpoint),
@@ -26084,6 +26174,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 exports.parseQuickOpenQuery = parseQuickOpenQuery;
 exports.parseLineColumn = parseLineColumn;
+exports.formatSourcesForList = formatSourcesForList;
 exports.formatSymbol = formatSymbol;
 exports.formatSymbols = formatSymbols;
 exports.formatShortcutResults = formatShortcutResults;
@@ -26129,6 +26220,19 @@ function parseLineColumn(query) {
   }
 }
 
+function formatSourcesForList(source) {
+  const title = (0, _source.getFilename)(source);
+  const subtitle = (0, _utils.endTruncateStr)(source.relativeUrl, 100);
+
+  return {
+    value: source.relativeUrl,
+    title,
+    subtitle,
+    id: source.id,
+    url: source.url
+  };
+}
+
 function formatSymbol(symbol) {
   return {
     id: `${symbol.name}:${symbol.location.start.line}`,
@@ -26169,16 +26273,7 @@ function formatShortcutResults() {
 }
 
 function formatSources(sources) {
-  return sources.valueSeq().filter(source => !(0, _source.isPretty)(source)).map(source => {
-    const sourcePath = (0, _source.getSourcePath)(source.url);
-    return {
-      value: sourcePath,
-      title: sourcePath.split("/").pop().split("?")[0],
-      subtitle: (0, _utils.endTruncateStr)(sourcePath, 100).replace(sourcePath.split("/").pop(), "").slice(1, -1),
-      id: source.id,
-      url: source.url
-    };
-  }).filter(({ value }) => value != "").toJS();
+  return sources.filter(source => !(0, _source.isPretty)(source)).map(source => formatSourcesForList(source)).filter(({ value }) => value != "");
 }
 
 /***/ }),
@@ -26418,10 +26513,13 @@ exports.findClosestFunction = findClosestFunction;
 var _lodash = __webpack_require__(2);
 
 function findBestMatchExpression(symbols, tokenPos) {
-  const { memberExpressions, identifiers } = symbols;
+  const { memberExpressions, identifiers, literals } = symbols;
   const { line, column } = tokenPos;
-  return identifiers.concat(memberExpressions).reduce((found, expression) => {
-    const overlaps = expression.location.start.line == line && expression.location.start.column <= column && expression.location.end.column >= column && !expression.computed;
+
+  const members = memberExpressions.filter(({ computed }) => !computed);
+
+  return [].concat(identifiers, members, literals).reduce((found, expression) => {
+    const overlaps = expression.location.start.line == line && expression.location.start.column <= column && expression.location.end.column >= column;
 
     if (overlaps) {
       return expression;
@@ -27565,7 +27663,7 @@ function mapStateToProps(state) {
 
   return {
     enabled: (0, _selectors.getQuickOpenEnabled)(state),
-    sources: (0, _quickOpen.formatSources)((0, _selectors.getSources)(state)),
+    sources: (0, _quickOpen.formatSources)((0, _selectors.getRelativeSources)(state)),
     selectedSource,
     symbols: (0, _quickOpen.formatSymbols)((0, _selectors.getSymbols)(state, selectedSource)),
     symbolsLoading: (0, _selectors.isSymbolsLoading)(state, selectedSource),
@@ -28154,7 +28252,7 @@ exports.log = log;
 
 var _devtoolsConfig = __webpack_require__(1355);
 
-const blacklist = ["SET_POPUP_OBJECT_PROPERTIES", "SET_PAUSE_POINTS", "SET_SYMBOLS", "OUT_OF_SCOPE_LOCATIONS", "MAP_SCOPES", "MAP_FRAMES", "ADD_SCOPES", "IN_SCOPE_LINES", "SET_EMPTY_LINES"];
+const blacklist = ["SET_POPUP_OBJECT_PROPERTIES", "SET_PAUSE_POINTS", "SET_SYMBOLS", "OUT_OF_SCOPE_LOCATIONS", "MAP_SCOPES", "MAP_FRAMES", "ADD_SCOPES", "IN_SCOPE_LINES"];
 
 function cloneAction(action) {
   action = action || {};
@@ -30309,15 +30407,15 @@ function isInvalidTarget(target) {
   const cursorPos = target.getBoundingClientRect();
 
   // exclude literal tokens where it does not make sense to show a preview
-  const invaildType = ["cm-string", "cm-number", "cm-atom"].includes(target.className);
+  const invalidType = ["cm-atom", ""].includes(target.className);
 
   // exclude syntax where the expression would be a syntax error
-  const invalidToken = tokenText === "" || tokenText.match(/[(){}\|&%,.;=<>\+-/\*\s]/);
+  const invalidToken = tokenText === "" || tokenText.match(/^[(){}\|&%,.;=<>\+-/\*\s](?=)/);
 
   // exclude codemirror elements that are not tokens
   const invalidTarget = target.parentElement && !target.parentElement.closest(".CodeMirror-line") || cursorPos.top == 0;
 
-  return invalidTarget || invalidToken || invaildType;
+  return invalidTarget || invalidToken || invalidType;
 }
 
 function getExtra(expression, result, selectedFrame) {
@@ -34118,7 +34216,7 @@ const pref = Services.pref;
 
 if (isDevelopment()) {
   pref("devtools.debugger.alphabetize-outline", false);
-  pref("devtools.debugger.auto-pretty-print", true);
+  pref("devtools.debugger.auto-pretty-print", false);
   pref("devtools.source-map.client-service.enabled", true);
   pref("devtools.debugger.pause-on-exceptions", false);
   pref("devtools.debugger.ignore-caught-exceptions", false);
@@ -34848,7 +34946,8 @@ function getExpressionFromCoords(cm, coord) {
 
     startHighlight = tokenBefore.startColumn;
   }
-  const expression = line.substring(startHighlight, endHighlight);
+
+  const expression = line.substring(startHighlight, endHighlight) || "";
 
   if (!expression) {
     return null;
@@ -37128,6 +37227,15 @@ Object.defineProperty(exports, "getVisibleSelectedFrame", {
   }
 });
 
+var _getRelativeSources = __webpack_require__(3625);
+
+Object.defineProperty(exports, "getRelativeSources", {
+  enumerable: true,
+  get: function () {
+    return _getRelativeSources.getRelativeSources;
+  }
+});
+
 /***/ }),
 
 /***/ 3592:
@@ -38618,6 +38726,58 @@ exports.default = (0, _reactRedux.connect)(state => {
     popupObjectProperties: (0, _selectors.getAllPopupObjectProperties)(state)
   };
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(FrameworkComponent);
+
+/***/ }),
+
+/***/ 3625:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.getRelativeSources = getRelativeSources;
+
+var _selectors = __webpack_require__(3590);
+
+var _source = __webpack_require__(1356);
+
+function getRelativeUrl(url, root) {
+  if (!root) {
+    return (0, _source.getSourcePath)(url);
+  }
+
+  // + 1 removes the leading "/"
+  return url.slice(url.indexOf(root) + root.length + 1);
+}
+
+function formatSource(source, root) {
+  return _extends({}, source, {
+    relativeUrl: getRelativeUrl(source.url, root)
+  });
+}
+
+/*
+ * Gets the sources that are below a project root
+ */
+function getRelativeSources(state) {
+  const sources = (0, _selectors.getSources)(state);
+  const root = (0, _selectors.getProjectDirectoryRoot)(state);
+
+  return sources.valueSeq().toJS().filter(({ url }) => url && url.includes(root)).map(source => formatSource(source, root));
+}
+
+/***/ }),
+
+/***/ 3626:
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_3626__;
 
 /***/ }),
 
