@@ -34,7 +34,6 @@
 #include "nsRFPService.h"
 #include "nsStyleChangeList.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "nsDOMMutationObserver.h"
 
 using mozilla::TimeStamp;

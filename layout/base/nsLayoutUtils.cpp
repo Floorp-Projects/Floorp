@@ -139,7 +139,6 @@
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "LayoutLogging.h"
 
 // Make sure getpid() works.

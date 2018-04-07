@@ -52,7 +52,6 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/RestyleManagerInlines.h"
 #include "Layers.h"
 #include "imgIContainer.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -1236,7 +1235,7 @@ TimeStamp
 nsRefreshDriver::MostRecentRefresh() const
 {
   // In case of stylo traversal, we have already activated the refresh driver in
-  // ServoRestyleManager::ProcessPendingRestyles().
+  // RestyleManager::ProcessPendingRestyles().
   if (!ServoStyleSet::IsInServoTraversal()) {
     const_cast<nsRefreshDriver*>(this)->EnsureTimerStarted();
   }

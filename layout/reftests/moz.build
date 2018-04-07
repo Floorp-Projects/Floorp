@@ -287,6 +287,8 @@ with Files('w3c-css/submitted/flexbox/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('w3c-css/submitted/fonts3/**'):
     BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('w3c-css/submitted/ib-split/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 with Files('w3c-css/submitted/images3/**'):
     BUG_COMPONENT = ('Core', 'Layout')
 with Files('w3c-css/submitted/lists-3/**'):
