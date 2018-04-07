@@ -14,7 +14,7 @@ add_task(async function test_duping_local_newer() {
   let localModified = new Date();
 
   info("Start with empty local and mirror with merged items");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["bookmarkAAA5"],
@@ -59,7 +59,7 @@ add_task(async function test_duping_local_newer() {
   });
 
   info("Add older remote dupes");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["bookmarkAAAA", "bookmarkAAA4", "bookmarkAAA5"],
@@ -220,7 +220,7 @@ add_task(async function test_duping_remote_newer() {
       }],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA"],
@@ -305,7 +305,7 @@ add_task(async function test_duping_remote_newer() {
   });
 
   info("Make remote changes");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA", "folderB11111", "folderA11111",
@@ -555,7 +555,7 @@ add_task(async function test_duping_both() {
   });
 
   info("Add remote dupes");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA", "folderDDDDDD", "folderFFFFFF"],
@@ -748,7 +748,7 @@ add_task(async function test_applying_two_empty_folders_doesnt_smush() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Make remote changes");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "mobile",
     type: "folder",
     children: ["emptyempty01", "emptyempty02"],
@@ -816,7 +816,7 @@ add_task(async function test_applying_two_empty_folders_matches_only_one() {
   });
 
   info("Make remote changes");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "mobile",
     type: "folder",
     children: ["emptyempty01", "emptyempty02", "emptyempty03"],
@@ -894,7 +894,7 @@ add_task(async function test_duping_mobile_bookmarks() {
   });
 
   info("Make remote changes");
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "mobile",
     type: "folder",
     children: ["bookmarkAAAA"],
