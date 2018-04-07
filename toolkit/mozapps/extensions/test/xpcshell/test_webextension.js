@@ -277,29 +277,6 @@ add_task(async function test_experiments_dependencies() {
   addon.uninstall();
 });
 
-// Test that experiments API extensions install correctly.
-add_task(async function test_experiments_api() {
-  const extensionId = "meh@experiments.addons.mozilla.org";
-
-  let addonFile = createTempXPIFile({
-    id: extensionId,
-    type: 256,
-    version: "0.1",
-    name: "Meh API",
-  });
-
-  await promiseInstallAllFiles([addonFile]);
-
-  let addons = await AddonManager.getAddonsByTypes(["extension"]);
-  let addon = addons.pop();
-  equal(addon.id, extensionId, "Add-on should be installed as an API extension");
-
-  addons = await AddonManager.getAddonsByTypes(["extension"]);
-  equal(addons.pop().id, extensionId, "Add-on type should be aliased to extension");
-
-  addon.uninstall();
-});
-
 add_task(async function developerShouldOverride() {
   let addon = await promiseInstallWebExtension({
     manifest: {
