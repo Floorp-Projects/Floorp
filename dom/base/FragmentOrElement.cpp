@@ -611,34 +611,6 @@ FragmentOrElement::Children()
 
 //----------------------------------------------------------------------
 
-
-NS_IMPL_ISUPPORTS(nsNodeWeakReference,
-                  nsIWeakReference)
-
-nsNodeWeakReference::~nsNodeWeakReference()
-{
-  nsINode* node = static_cast<nsINode*>(mObject);
-
-  if (node) {
-    NS_ASSERTION(node->Slots()->mWeakReference == this,
-                 "Weak reference has wrong value");
-    node->Slots()->mWeakReference = nullptr;
-  }
-}
-
-NS_IMETHODIMP
-nsNodeWeakReference::QueryReferentFromScript(const nsIID& aIID, void** aInstancePtr)
-{
-  return QueryReferent(aIID, aInstancePtr);
-}
-
-size_t
-nsNodeWeakReference::SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
-  return aMallocSizeOf(this);
-}
-
-
 NS_IMPL_CYCLE_COLLECTION(nsNodeSupportsWeakRefTearoff, mNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNodeSupportsWeakRefTearoff)

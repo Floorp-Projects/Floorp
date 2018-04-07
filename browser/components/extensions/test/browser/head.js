@@ -57,6 +57,17 @@ if (remote) {
   SpecialPowers.setIntPref("dom.ipc.keepProcessesAlive.extension", 1);
 }
 
+// Don't try to create screenshots of sites we load during tests.
+Services.prefs.getDefaultBranch("browser.newtabpage.activity-stream.")
+        .setBoolPref("feeds.topsites", false);
+
+{
+  // Touch the recipeParentPromise lazy getter so we don't get
+  // `this._recipeManager is undefined` errors during tests.
+  const {LoginManagerParent} = ChromeUtils.import("resource://gre/modules/LoginManagerParent.jsm", null);
+  void LoginManagerParent.recipeParentPromise;
+}
+
 // Bug 1239884: Our tests occasionally hit a long GC pause at unpredictable
 // times in debug builds, which results in intermittent timeouts. Until we have
 // a better solution, we force a GC after certain strategic tests, which tend to

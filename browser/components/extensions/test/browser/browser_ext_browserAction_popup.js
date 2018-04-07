@@ -2,11 +2,18 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+
 function getBrowserAction(extension) {
-  const {GlobalManager, Management: {global: {browserActionFor}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  const {global: {browserActionFor}} = Management;
 
   let ext = GlobalManager.extensionMap.get(extension.id);
   return browserActionFor(ext);
+}
+
+function assertViewCount(extension, count) {
+  let ext = GlobalManager.extensionMap.get(extension.id);
+  is(ext.views.size, count, "Should have the expected number of extension views");
 }
 
 let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head><body>${url}</body></html>`;
@@ -204,6 +211,8 @@ async function testInArea(area) {
         info("Popup is open. Waiting for close");
         await promisePopupHidden(panel);
       }
+
+      assertViewCount(extension, 1);
     } else if (expecting.closePopupUsingWindow) {
       let panel = getBrowserActionPopup(extension);
       ok(panel, "Expect panel to exist");
@@ -213,6 +222,8 @@ async function testInArea(area) {
 
       await promisePopupHidden(panel);
       ok(true, "Panel is closed");
+
+      assertViewCount(extension, 1);
     } else if (expecting.closePopup) {
       if (!getBrowserActionPopup(extension)) {
         info("Waiting for panel");
@@ -221,6 +232,7 @@ async function testInArea(area) {
 
       info("Closing for panel");
       await closeBrowserAction(extension);
+      assertViewCount(extension, 1);
     }
 
     if (area == getCustomizableUIPanelID() && expecting.containingPopupShouldClose) {

@@ -14,8 +14,6 @@ if (!("self" in this)) {
   this.self = this;
 }
 
-const DOMException = Ci.nsIDOMDOMException;
-
 var bufferCache = [];
 
 function is(a, b, msg) {

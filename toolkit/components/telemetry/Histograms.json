@@ -291,58 +291,6 @@
     "high": 1000,
     "n_buckets": 50
   },
-  "CONTENT_JS_FOREGROUND_TICK_DELAY_TOTAL_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["farre@mozilla.com"],
-    "expires_in_version": "61",
-    "kind": "exponential",
-    "high": 100,
-    "n_buckets": 10,
-    "bug_numbers": [1305153, 1296486],
-    "description": "Time (in ms) that a pending vsync gets delayed by a runnable associated with a TabGroup that is (partially) in the foreground. The time is measured from the vsync event's time stamp to when the runnable finishes execution."
-  },
-  "CONTENT_JS_FOREGROUND_TICK_DELAY_EVENTS_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["farre@mozilla.com"],
-    "expires_in_version": "61",
-    "keyed": true,
-    "kind": "exponential",
-    "high": 100,
-    "n_buckets": 10,
-    "bug_numbers": [1305153, 1296486],
-    "description": "Time (in ms) that a pending vsync gets delayed by a runnable associated with a TabGroup that is (partially) in the foreground. The time is measured from the vsync event's time stamp to when the runnable finishes execution. The histogram is keyed by the label of the runnable, indicating which type of task the runnable is performing."
-  },
-  "CONTENT_JS_BACKGROUND_TICK_DELAY_TOTAL_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["farre@mozilla.com"],
-    "expires_in_version": "61",
-    "kind": "exponential",
-    "high": 100,
-    "n_buckets": 10,
-    "bug_numbers": [1305153, 1296486],
-    "description": "Time (in ms) that a pending vsync gets delayed by a runnable associated with a TabGroup that is completely in the background. The time is measured from the vsync event's time stamp to when the runnable finishes execution."
-  },
-  "CONTENT_JS_BACKGROUND_TICK_DELAY_EVENTS_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["farre@mozilla.com"],
-    "expires_in_version": "61",
-    "keyed": true,
-    "kind": "exponential",
-    "high": 100,
-    "n_buckets": 10,
-    "bug_numbers": [1305153, 1296486],
-    "description" : "Time (in ms) that a pending vsync gets delayed by a runnable associated with a TabGroup that is completely in the background. The time is measured from the vsync event's time stamp to when the runnable finishes execution. The histogram is keyed by the label of the runnable, indicating which type of task the runnable is performing."
-  },
-  "CONTENT_JS_KNOWN_TICK_DELAY_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["farre@mozilla.com"],
-    "expires_in_version": "65",
-    "kind": "exponential",
-    "high": 100,
-    "n_buckets": 10,
-    "bug_numbers": [1305153, 1296486],
-    "description": "Time (in ms) that a pending vsync gets delayed by a runnable associated with a TabGroup when the vsync event's timestamp is before the starting time of the runnable. The time is measured from the vsync event's time stamp to when the runnable finishes execution."
-  },
   "CONTENT_PROCESS_LAUNCH_TIME_MS" : {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["bsmedberg@mozilla.com", "mconley@mozilla.com"],
