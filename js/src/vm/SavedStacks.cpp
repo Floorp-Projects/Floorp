@@ -149,11 +149,6 @@ LiveSavedFrameCache::find(JSContext* cx, FramePtr& framePtr, const jsbytecode* p
     // this frame for that to happen, but this frame's bit is set.
     if (pc != frames->back().pc) {
         frames->popBack();
-
-        // Since we've removed this entry from the cache, clear the bit on its
-        // frame. Usually we'll repopulate the cache anyway, but if there's an
-        // OOM that might not happen.
-        framePtr.clearHasCachedSavedFrame();
         frame.set(nullptr);
         return;
     }
