@@ -181,7 +181,7 @@ namespace js {
 namespace jit {
 
 static inline void
-PatchJump(CodeLocationJump jump, CodeLocationLabel label, ReprotectCode reprotect = DontReprotect)
+PatchJump(CodeLocationJump jump, CodeLocationLabel label)
 {
 #ifdef DEBUG
     // Assert that we're overwriting a jump instruction, either:
@@ -191,13 +191,7 @@ PatchJump(CodeLocationJump jump, CodeLocationLabel label, ReprotectCode reprotec
     MOZ_ASSERT(((*x >= 0x80 && *x <= 0x8F) && *(x - 1) == 0x0F) ||
                (*x == 0xE9));
 #endif
-    MaybeAutoWritableJitCode awjc(jump.raw() - 8, 8, reprotect);
     X86Encoding::SetRel32(jump.raw(), label.raw());
-}
-static inline void
-PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitZoneGroup::BackedgeTarget target)
-{
-    PatchJump(jump_, label);
 }
 
 static inline Operand

@@ -255,9 +255,7 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void Pop(T) { MOZ_CRASH(); }
     template <typename T> CodeOffset pushWithPatch(T) { MOZ_CRASH(); }
 
-    CodeOffsetJump jumpWithPatch(RepatchLabel*, Label* doc = nullptr) { MOZ_CRASH(); }
-    CodeOffsetJump jumpWithPatch(RepatchLabel*, Condition, Label* doc = nullptr) { MOZ_CRASH(); }
-    CodeOffsetJump backedgeJump(RepatchLabel* label, Label* doc = nullptr) { MOZ_CRASH(); }
+    CodeOffsetJump jumpWithPatch(RepatchLabel*) { MOZ_CRASH(); }
 
     void testNullSet(Condition, ValueOperand, Register) { MOZ_CRASH(); }
     void testObjectSet(Condition, ValueOperand, Register) { MOZ_CRASH(); }
@@ -404,18 +402,12 @@ class ABIArgGenerator
 };
 
 static inline void
-PatchJump(CodeLocationJump&, CodeLocationLabel, ReprotectCode reprotect = DontReprotect)
+PatchJump(CodeLocationJump&, CodeLocationLabel)
 {
     MOZ_CRASH();
 }
 
 static inline bool GetTempRegForIntArg(uint32_t, uint32_t, Register*) { MOZ_CRASH(); }
-
-static inline
-void PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitZoneGroup::BackedgeTarget target)
-{
-    MOZ_CRASH();
-}
 
 } // namespace jit
 } // namespace js

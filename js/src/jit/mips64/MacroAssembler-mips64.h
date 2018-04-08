@@ -502,8 +502,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         return value;
     }
 
-    CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation = nullptr);
-    CodeOffsetJump jumpWithPatch(RepatchLabel* label, Label* documentation = nullptr);
+    CodeOffsetJump jumpWithPatch(RepatchLabel* label);
 
     template <typename T>
     void loadUnboxedValue(const T& address, MIRType type, AnyRegister dest) {

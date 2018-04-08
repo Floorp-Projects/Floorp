@@ -76,26 +76,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     template <typename T>
     void branchToBlock(Register lhs, T rhs, MBasicBlock* mir, Assembler::Condition cond)
     {
-        mir = skipTrivialBlocks(mir);
-
-        Label* label = mir->lir()->label();
-        if (Label* oolEntry = labelForBackedgeWithImplicitCheck(mir)) {
-            // Note: the backedge is initially a jump to the next instruction.
-            // It will be patched to the target block's label during link().
-            RepatchLabel rejoin;
-            CodeOffsetJump backedge;
-            Label skip;
-
-            masm.ma_b(lhs, rhs, &skip, Assembler::InvertCondition(cond), ShortJump);
-            backedge = masm.backedgeJump(&rejoin);
-            masm.bind(&rejoin);
-            masm.bind(&skip);
-
-            if (!patchableBackedges_.append(PatchableBackedgeInfo(backedge, label, oolEntry)))
-                MOZ_CRASH();
-        } else {
-            masm.ma_b(lhs, rhs, label, cond);
-        }
+        masm.ma_b(lhs, rhs, skipTrivialBlocks(mir)->lir()->label(), cond);
     }
     void branchToBlock(Assembler::FloatFormat fmt, FloatRegister lhs, FloatRegister rhs,
                        MBasicBlock* mir, Assembler::DoubleCondition cond);

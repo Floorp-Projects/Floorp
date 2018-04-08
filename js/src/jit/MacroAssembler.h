@@ -998,11 +998,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     // chunk trailer, or nullptr if it is in the tenured heap.
     void loadStoreBuffer(Register ptr, Register buffer) PER_ARCH;
 
-    template <typename T>
-    inline CodeOffsetJump branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label) PER_SHARED_ARCH;
-    template <typename T>
-    inline CodeOffsetJump branchPtrWithPatch(Condition cond, Address lhs, T rhs, RepatchLabel* label) PER_SHARED_ARCH;
-
     void branchPtrInNurseryChunk(Condition cond, Register ptr, Register temp, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
     void branchPtrInNurseryChunk(Condition cond, const Address& address, Register temp, Label* label)

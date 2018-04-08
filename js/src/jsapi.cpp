@@ -7282,9 +7282,6 @@ JS_SetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t v
       case JSJITCOMPILER_WASM_DELAY_TIER2:
         jit::JitOptions.wasmDelayTier2 = !!value;
         break;
-      case JSJITCOMPILER_ION_INTERRUPT_WITHOUT_SIGNAL:
-        jit::JitOptions.ionInterruptWithoutSignals = !!value;
-        break;
 #ifdef DEBUG
       case JSJITCOMPILER_FULL_DEBUG_CHECKS:
         jit::JitOptions.fullDebugChecks = !!value;
@@ -7329,9 +7326,6 @@ JS_GetGlobalJitCompilerOption(JSContext* cx, JSJitCompilerOption opt, uint32_t* 
         break;
       case JSJITCOMPILER_WASM_FOLD_OFFSETS:
         *valueOut = jit::JitOptions.wasmFoldOffsets ? 1 : 0;
-        break;
-      case JSJITCOMPILER_ION_INTERRUPT_WITHOUT_SIGNAL:
-        *valueOut = jit::JitOptions.ionInterruptWithoutSignals ? 1 : 0;
         break;
 #ifdef DEBUG
       case JSJITCOMPILER_FULL_DEBUG_CHECKS:

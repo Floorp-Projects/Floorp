@@ -107,9 +107,6 @@ struct JSContext : public JS::RootingContext,
     js::UnprotectedData<JSRuntime*> runtime_;
     js::WriteOnceData<js::ContextKind> kind_;
 
-    // System handle for the thread this context is associated with.
-    js::WriteOnceData<size_t> threadNative_;
-
     // The thread on which this context is running if this is not the main thread.
     js::ThreadLocalData<js::HelperThread*> helperThread_;
 
@@ -126,7 +123,6 @@ struct JSContext : public JS::RootingContext,
     void setRuntime(JSRuntime* rt);
 
     bool isCooperativelyScheduled() const { return kind_ == js::ContextKind::Cooperative; }
-    size_t threadNative() const { return threadNative_; }
 
     inline js::gc::ArenaLists* arenas() const { return arenas_; }
 
@@ -841,25 +837,7 @@ struct JSContext : public JS::RootingContext,
         return interrupt_;
     }
 
-  private:
-    // Set when we're handling an interrupt of JIT/wasm code in
-    // InterruptRunningJitCode.
-    mozilla::Atomic<bool> handlingJitInterrupt_;
-
   public:
-    bool startHandlingJitInterrupt() {
-        // Return true if we changed handlingJitInterrupt_ from
-        // false to true.
-        return handlingJitInterrupt_.compareExchange(false, true);
-    }
-    void finishHandlingJitInterrupt() {
-        MOZ_ASSERT(handlingJitInterrupt_);
-        handlingJitInterrupt_ = false;
-    }
-    bool handlingJitInterrupt() const {
-        return handlingJitInterrupt_;
-    }
-
     void* addressOfInterrupt() {
         return &interrupt_;
     }

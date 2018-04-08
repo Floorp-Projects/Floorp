@@ -39,7 +39,7 @@ class Linker
     // macro assember buffer.
     //
     // This method cannot GC. Errors are reported to the context.
-    JitCode* newCode(JSContext* cx, CodeKind kind, bool hasPatchableBackedges = false);
+    JitCode* newCode(JSContext* cx, CodeKind kind);
 };
 
 } // namespace jit

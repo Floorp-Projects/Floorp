@@ -2111,6 +2111,57 @@ NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport)
 }
 
 bool
+NS_IsSafeTopLevelNav(nsIChannel* aChannel)
+{
+  if (!aChannel) {
+    return false;
+  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (!loadInfo) {
+    return false;
+  }
+  if (loadInfo->GetExternalContentPolicyType() != nsIContentPolicy::TYPE_DOCUMENT) {
+    return false;
+  }
+  RefPtr<HttpBaseChannel> baseChan = do_QueryObject(aChannel);
+  if (!baseChan) {
+    return false;
+  }
+  nsHttpRequestHead *requestHead = baseChan->GetRequestHead();
+  if (!requestHead) {
+    return false;
+  }
+  return requestHead->IsSafeMethod();
+}
+
+bool NS_IsTopLevelForeign(nsIChannel* aChannel)
+{
+  if (!aChannel) {
+    return false;
+  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (!loadInfo) {
+    return false;
+  }
+  if (loadInfo->GetExternalContentPolicyType() != nsIContentPolicy::TYPE_DOCUMENT) {
+    return false;
+  }
+
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+    do_GetService(THIRDPARTYUTIL_CONTRACTID);
+  if (!thirdPartyUtil) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  loadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(uri));
+
+  bool isForeign = false;
+  thirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
+  return isForeign;
+}
+
+bool
 NS_ShouldCheckAppCache(nsIPrincipal *aPrincipal)
 {
     uint32_t privateBrowsingId = 0;
