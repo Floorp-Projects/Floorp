@@ -1,8 +1,11 @@
 {
   "name": "mozilla-normandy-action-argument-schemas",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Schemas for Normandy action arguments",
   "main": "index.js",
   "author": "Michael Cooper <mcooper@mozilla.com>",
-  "license": "MPL-2.0"
+  "license": "MPL-2.0",
+  "scripts": {
+    "prepack": "node export_json.js"
+  }
 }
