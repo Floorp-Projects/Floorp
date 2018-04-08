@@ -37,6 +37,8 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvGetCookieString(const URIParams& aHost,
                                                       const bool& aIsForeign,
+                                                      const bool& aIsSafeTopLevelNav,
+                                                      const bool& aIsTopLevelForeign,
                                                       const OriginAttributes& aAttrs,
                                                       nsCString* aResult) override;
 
@@ -49,6 +51,8 @@ protected:
   virtual
   mozilla::ipc::IPCResult RecvPrepareCookieList(const URIParams &aHost,
                                                 const bool &aIsForeign,
+                                                const bool &aIsSafeTopLevelNav,
+                                                const bool &aIsTopLevelForeign,
                                                 const OriginAttributes &aAttrs) override;
 
   void
