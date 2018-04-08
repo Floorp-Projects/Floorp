@@ -2013,9 +2013,8 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
           nsContentUtils::EnqueueLifecycleCallback(nsIDocument::eDisconnected,
                                                    this);
         } else {
-          // Remove an unresolved custom element that is a candidate for
-          // upgrade when a custom element is disconnected.
-          // We will make sure it's shadow-including tree order in bug 1326028.
+          // Remove an unresolved custom element that is a candidate for upgrade
+          // when a custom element is disconnected.
           nsContentUtils::UnregisterUnresolvedElement(this);
         }
       }
