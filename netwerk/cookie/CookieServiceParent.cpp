@@ -155,6 +155,8 @@ CookieServiceParent::TrackCookieLoad(nsIChannel *aChannel)
   if (loadInfo) {
     attrs = loadInfo->GetOriginAttributes();
   }
+  bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
+  bool isTopLevelForeign = NS_IsTopLevelForeign(aChannel);
 
   // Send matching cookies to Child.
   nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil;
@@ -162,8 +164,8 @@ CookieServiceParent::TrackCookieLoad(nsIChannel *aChannel)
   bool isForeign = true;
   thirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
   nsTArray<nsCookie*> foundCookieList;
-  mCookieService->GetCookiesForURI(uri, isForeign, false,
-                                   attrs, foundCookieList);
+  mCookieService->GetCookiesForURI(uri, isForeign, isSafeTopLevelNav, isTopLevelForeign,
+                                   false, attrs, foundCookieList);
   nsTArray<CookieStruct> matchingCookiesList;
   SerialializeCookieList(foundCookieList, matchingCookiesList, uri);
   Unused << SendTrackCookiesLoad(matchingCookiesList, attrs);
@@ -193,14 +195,16 @@ CookieServiceParent::SerialializeCookieList(const nsTArray<nsCookie*> &aFoundCoo
 mozilla::ipc::IPCResult
 CookieServiceParent::RecvPrepareCookieList(const URIParams        &aHost,
                                            const bool             &aIsForeign,
+                                           const bool             &aIsSafeTopLevelNav,
+                                           const bool             &aIsTopLevelForeign,
                                            const OriginAttributes &aAttrs)
 {
   nsCOMPtr<nsIURI> hostURI = DeserializeURI(aHost);
 
   // Send matching cookies to Child.
   nsTArray<nsCookie*> foundCookieList;
-  mCookieService->GetCookiesForURI(hostURI, aIsForeign, false,
-                                   aAttrs, foundCookieList);
+  mCookieService->GetCookiesForURI(hostURI, aIsForeign, aIsSafeTopLevelNav, aIsTopLevelForeign,
+                                   false, aAttrs, foundCookieList);
   nsTArray<CookieStruct> matchingCookiesList;
   SerialializeCookieList(foundCookieList, matchingCookiesList, hostURI);
   Unused << SendTrackCookiesLoad(matchingCookiesList, aAttrs);
@@ -217,6 +221,8 @@ CookieServiceParent::ActorDestroy(ActorDestroyReason aWhy)
 mozilla::ipc::IPCResult
 CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
                                          const bool& aIsForeign,
+                                         const bool& aIsSafeTopLevelNav,
+                                         const bool& aIsToplevelForeign,
                                          const OriginAttributes& aAttrs,
                                          nsCString* aResult)
 {
@@ -228,8 +234,8 @@ CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
   nsCOMPtr<nsIURI> hostURI = DeserializeURI(aHost);
   if (!hostURI)
     return IPC_FAIL_NO_REASON(this);
-
-  mCookieService->GetCookieStringInternal(hostURI, aIsForeign, false, aAttrs, *aResult);
+  mCookieService->GetCookieStringInternal(hostURI, aIsForeign, aIsSafeTopLevelNav, aIsToplevelForeign,
+                                          false, aAttrs, *aResult);
   return IPC_OK();
 }
 
