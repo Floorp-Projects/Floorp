@@ -9898,9 +9898,8 @@ nsContentUtils::TryToUpgradeElement(Element* aElement)
   if (definition) {
     nsContentUtils::EnqueueUpgradeReaction(aElement, definition);
   } else {
-    // Add an unresolved custom element that is a candidate for
-    // upgrade when a custom element is connected to the document.
-    // We will make sure it's shadow-including tree order in bug 1326028.
+    // Add an unresolved custom element that is a candidate for upgrade when a
+    // custom element is connected to the document.
     nsContentUtils::RegisterUnresolvedElement(aElement, typeAtom);
   }
 }
