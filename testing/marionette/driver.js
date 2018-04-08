@@ -857,8 +857,6 @@ GeckoDriver.prototype.getContext = function() {
  * @param {boolean=} debug_script
  *     Attach an <code>onerror</code> event handler on the {@link Window}
  *     object.  It does not differentiate content errors from chrome errors.
- * @param {boolean=} directInject
- *     Evaluate the script without wrapping it in a function.
  *
  * @return {(string|boolean|number|object|WebElement)}
  *     Return value from the script, or null which signifies either the
@@ -931,8 +929,6 @@ GeckoDriver.prototype.executeScript = async function(cmd, resp) {
  * @param {boolean=} debug_script
  *     Attach an <code>onerror</code> event handler on the {@link Window}
  *     object.  It does not differentiate content errors from chrome errors.
- * @param {boolean=} directInject
- *     Evaluate the script without wrapping it in a function.
  *
  * @return {(string|boolean|number|object|WebElement)}
  *     Return value from the script, or null which signifies either the

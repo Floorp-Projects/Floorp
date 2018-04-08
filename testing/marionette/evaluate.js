@@ -36,37 +36,29 @@ this.evaluate = {};
 /**
  * Evaluate a script in given sandbox.
  *
- * If the option var>directInject</var> is not specified, the script
- * will be executed as a function with the <var>args</var> argument
- * applied.
+ * The the provided `script` will be wrapped in an anonymous function
+ * with the `args` argument applied.
  *
- * The arguments provided by the <var>args</var> argument are exposed
- * through the <code>arguments</code> object available in the script
- * context, and if the script is executed asynchronously with the
- * <var>async</var> option, an additional last argument that is synonymous
- * to the <code>marionetteScriptFinished</code> global is appended, and
- * can be accessed through <code>arguments[arguments.length - 1]</code>.
+ * The arguments provided by the `args<` argument are exposed
+ * through the `arguments` object available in the script context,
+ * and if the script is executed asynchronously with the `async`
+ * option, an additional last argument that is synonymous to the
+ * `marionetteScriptFinished` global is appended, and can be accessed
+ * through `arguments[arguments.length - 1]`.
  *
- * The <var>timeout</var> option specifies the duration for how long
- * the script should be allowed to run before it is interrupted and aborted.
+ * The `timeout` option specifies the duration for how long the
+ * script should be allowed to run before it is interrupted and aborted.
  * An interrupted script will cause a {@link ScriptTimeoutError} to occur.
  *
- * The <var>async</var> option indicates that the script will
- * not return until the <code>marionetteScriptFinished</code> global
- * callback is invoked, which is analogous to the last argument of the
- * <code>arguments</code> object.
+ * The `async` option indicates that the script will not return
+ * until the `marionetteScriptFinished` global callback is invoked,
+ * which is analogous to the last argument of the `arguments` object.
  *
- * The option <var>directInject</var> causes the script to be evaluated
- * without being wrapped in a function and the provided arguments will
- * be disregarded.  This will cause such things as root scope return
- * statements to throw errors because they are not used inside a function.
+ * The `file` option is used in error messages to provide information
+ * on the origin script file in the local end.
  *
- * The <var>file</var> option is used in error messages to provide
- * information on the origin script file in the local end.
- *
- * The <var>line</var> option is used in error messages, along with
- * <var>filename</var>, to provide the line number in the origin script
- * file on the local end.
+ * The `line` option is used in error messages, along with `filename`,
+ * to provide the line number in the origin script file on the local end.
  *
  * @param {nsISandbox} sb
  *     Sandbox the script will be evaluted in.
@@ -103,7 +95,6 @@ evaluate.sandbox = function(sb, script, args = [],
     {
       async = false,
       debug = false,
-      directInject = false,
       file = "dummy file",
       line = 0,
       sandboxName = null,
@@ -119,28 +110,25 @@ evaluate.sandbox = function(sb, script, args = [],
         () => reject(new JavaScriptError("Document was unloaded")),
         sb);
 
-    // wrap in function
-    if (!directInject) {
-      if (async) {
-        sb[CALLBACK] = sb[COMPLETE];
-      }
-      sb[ARGUMENTS] = sandbox.cloneInto(args, sb);
+    if (async) {
+      sb[CALLBACK] = sb[COMPLETE];
+    }
+    sb[ARGUMENTS] = sandbox.cloneInto(args, sb);
 
-      // callback function made private
-      // so that introspection is possible
-      // on the arguments object
-      if (async) {
-        sb[CALLBACK] = sb[COMPLETE];
-        src += `${ARGUMENTS}.push(rv => ${CALLBACK}(rv));`;
-      }
+    // callback function made private
+    // so that introspection is possible
+    // on the arguments object
+    if (async) {
+      sb[CALLBACK] = sb[COMPLETE];
+      src += `${ARGUMENTS}.push(rv => ${CALLBACK}(rv));`;
+    }
 
-      src += `(function() { ${script} }).apply(null, ${ARGUMENTS})`;
+    src += `(function() { ${script} }).apply(null, ${ARGUMENTS})`;
 
-      // marionetteScriptFinished is not WebDriver conformant,
-      // hence it is only exposed to immutable sandboxes
-      if (sandboxName) {
-        sb[MARIONETTE_SCRIPT_FINISHED] = sb[CALLBACK];
-      }
+    // marionetteScriptFinished is not WebDriver conformant,
+    // hence it is only exposed to immutable sandboxes
+    if (sandboxName) {
+      sb[MARIONETTE_SCRIPT_FINISHED] = sb[CALLBACK];
     }
 
     // onerror is not hooked on by default because of the inability to
