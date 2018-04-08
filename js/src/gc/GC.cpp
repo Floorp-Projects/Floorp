@@ -6540,10 +6540,8 @@ GCRuntime::endSweepPhase(bool destroyingRuntime)
         SweepScriptData(rt);
 
         /* Clear out any small pools that we're hanging on to. */
-        if (rt->hasJitRuntime()) {
+        if (rt->hasJitRuntime())
             rt->jitRuntime()->execAlloc().purge();
-            rt->jitRuntime()->backedgeExecAlloc().purge();
-        }
     }
 
     {
@@ -7870,11 +7868,6 @@ js::NewCompartment(JSContext* cx, JSPrincipals* principals,
             return nullptr;
 
         groupHolder.reset(group);
-
-        if (!group->init()) {
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
 
         if (cx->generationalDisabled)
             group->nursery().disable();

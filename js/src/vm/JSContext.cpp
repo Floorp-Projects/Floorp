@@ -101,20 +101,6 @@ JSContext::init(ContextKind kind)
 {
     // Skip most of the initialization if this thread will not be running JS.
     if (kind == ContextKind::Cooperative) {
-        // Get a platform-native handle for this thread, used by jit::InterruptRunningCode.
-#ifdef XP_WIN
-        size_t openFlags = THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME |
-                           THREAD_QUERY_INFORMATION;
-        HANDLE self = OpenThread(openFlags, false, GetCurrentThreadId());
-        if (!self)
-        return false;
-        static_assert(sizeof(HANDLE) <= sizeof(threadNative_), "need bigger field");
-        threadNative_ = (size_t)self;
-#else
-        static_assert(sizeof(pthread_t) <= sizeof(threadNative_), "need bigger field");
-        threadNative_ = (size_t)pthread_self();
-#endif
-
         if (!regexpStack.ref().init())
             return false;
 
@@ -127,7 +113,6 @@ JSContext::init(ContextKind kind)
             return false;
 #endif
 
-        jit::EnsureAsyncInterrupt(this);
         if (!wasm::EnsureSignalHandlers(this))
             return false;
     }
@@ -1238,7 +1223,6 @@ JSContext::alreadyReportedError()
 JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
   : runtime_(runtime),
     kind_(ContextKind::Background),
-    threadNative_(0),
     helperThread_(nullptr),
     options_(options),
     arenas_(nullptr),
@@ -1309,7 +1293,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     interruptCallbackDisabled(false),
     interrupt_(false),
     interruptRegExpJit_(false),
-    handlingJitInterrupt_(false),
     osrTempData_(nullptr),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     jitStackLimit(UINTPTR_MAX),
@@ -1338,11 +1321,6 @@ JSContext::~JSContext()
     // Clear the ContextKind first, so that ProtectedData checks will allow us to
     // destroy this context even if the runtime is already gone.
     kind_ = ContextKind::Background;
-
-#ifdef XP_WIN
-    if (threadNative_)
-        CloseHandle((HANDLE)threadNative_.ref());
-#endif
 
     /* Free the stuff hanging off of cx. */
     MOZ_ASSERT(!resolvingList);

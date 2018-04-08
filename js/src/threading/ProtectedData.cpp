@@ -52,17 +52,11 @@ template <AllowedHelperThread Helper>
 void
 CheckActiveThread<Helper>::check() const
 {
-    // When interrupting a thread on Windows, changes are made to the runtime
-    // and active thread's state from another thread while the active thread is
-    // suspended. We need a way to mark these accesses as being tantamount to
-    // accesses by the active thread. See bug 1323066.
-#ifndef XP_WIN
     if (OnHelperThread<Helper>())
         return;
 
     JSContext* cx = TlsContext.get();
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-#endif // XP_WIN
 }
 
 template class CheckActiveThread<AllowedHelperThread::None>;
@@ -81,9 +75,6 @@ CheckZoneGroup<Helper>::check() const
         if (group->usedByHelperThread()) {
             MOZ_ASSERT(group->ownedByCurrentHelperThread());
         } else {
-            // This check is disabled on windows for the same reason as in
-            // CheckActiveThread.
-#ifndef XP_WIN
             // In a cooperatively scheduled runtime the active thread is
             // permitted access to all zone groups --- even those it has not
             // entered --- for GC and similar purposes. Since all other
@@ -94,7 +85,6 @@ CheckZoneGroup<Helper>::check() const
             // not access anything in a zone group, even zone groups they own,
             // because they're not allowed to interact with the JS API.
             MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-#endif
         }
     } else {
         // |group| will be null for data in the atoms zone. This is protected

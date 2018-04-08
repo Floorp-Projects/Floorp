@@ -172,10 +172,9 @@ Assembler::PatchableJumpAddress(JitCode* code, size_t index)
 
 /* static */
 void
-Assembler::PatchJumpEntry(uint8_t* entry, uint8_t* target, ReprotectCode reprotect)
+Assembler::PatchJumpEntry(uint8_t* entry, uint8_t* target)
 {
     uint8_t** index = (uint8_t**) (entry + SizeOfExtendedJump - sizeof(void*));
-    MaybeAutoWritableJitCode awjc(index, sizeof(void*), reprotect);
     *index = target;
 }
 

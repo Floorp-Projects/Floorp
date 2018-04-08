@@ -14,10 +14,8 @@ namespace js {
 namespace jit {
 
 JitCode*
-Linker::newCode(JSContext* cx, CodeKind kind, bool hasPatchableBackedges /* = false */)
+Linker::newCode(JSContext* cx, CodeKind kind)
 {
-    MOZ_ASSERT_IF(hasPatchableBackedges, kind == CodeKind::Ion);
-
     JS::AutoAssertNoGC nogc(cx);
     if (masm.oom())
         return fail(cx);
@@ -38,12 +36,9 @@ Linker::newCode(JSContext* cx, CodeKind kind, bool hasPatchableBackedges /* = fa
     // ExecutableAllocator requires bytesNeeded to be aligned.
     bytesNeeded = AlignBytes(bytesNeeded, ExecutableAllocatorAlignment);
 
-    ExecutableAllocator& execAlloc = hasPatchableBackedges
-                                     ? cx->runtime()->jitRuntime()->backedgeExecAlloc()
-                                     : cx->runtime()->jitRuntime()->execAlloc();
-
     ExecutablePool* pool;
-    uint8_t* result = (uint8_t*)execAlloc.alloc(cx, bytesNeeded, &pool, kind);
+    uint8_t* result =
+        (uint8_t*)cx->runtime()->jitRuntime()->execAlloc().alloc(cx, bytesNeeded, &pool, kind);
     if (!result)
         return fail(cx);
 

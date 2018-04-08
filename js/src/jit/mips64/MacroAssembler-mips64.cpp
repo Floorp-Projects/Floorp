@@ -1580,64 +1580,8 @@ MacroAssemblerMIPS64Compat::extractTag(const BaseIndex& address, Register scratc
     return extractTag(Address(scratch, address.offset), scratch);
 }
 
-/* There are 3 paths trough backedge jump. They are listed here in the order
- * in which instructions are executed.
- *  - The short jump is simple:
- *     b offset            # Jumps directly to target.
- *     lui at, addr1_hl    # In delay slot. Don't care about 'at' here.
- *
- *  - The long jump to loop header:
- *      b label1
- *      lui at, addr1_hl   # In delay slot. We use the value in 'at' later.
- *    label1:
- *      ori at, addr1_lh
- *      drotr32 at, at, 48
- *      ori at, addr1_ll
- *      jr at
- *      lui at, addr2_hl   # In delay slot. Don't care about 'at' here.
- *
- *  - The long jump to interrupt loop:
- *      b label2
- *      ...
- *      jr at
- *    label2:
- *      lui at, addr2_hl   # In delay slot. Don't care about 'at' here.
- *      ori at, addr2_lh
- *      drotr32 at, at, 48
- *      ori at, addr2_ll
- *      jr at
- *      nop                # In delay slot.
- *
- * The backedge is done this way to avoid patching lui+ori pair while it is
- * being executed. Look also at jit::PatchBackedge().
- */
 CodeOffsetJump
-MacroAssemblerMIPS64Compat::backedgeJump(RepatchLabel* label, Label* documentation)
-{
-    // Only one branch per label.
-    MOZ_ASSERT(!label->used());
-
-    BufferOffset bo = nextOffset();
-    label->use(bo.getOffset());
-
-    // Backedges are short jumps when bound, but can become long when patched.
-    m_buffer.ensureSpace(16 * sizeof(uint32_t));
-    // Jump to "label1" by default to jump to the loop header.
-    as_b(BOffImm16(2 * sizeof(uint32_t)));
-    // No need for nop here. We can safely put next instruction in delay slot.
-    ma_liPatchable(ScratchRegister, ImmWord(LabelBase::INVALID_OFFSET));
-    MOZ_ASSERT(nextOffset().getOffset() - bo.getOffset() == 5 * sizeof(uint32_t));
-    as_jr(ScratchRegister);
-    // No need for nop here. We can safely put next instruction in delay slot.
-    ma_liPatchable(ScratchRegister, ImmWord(LabelBase::INVALID_OFFSET));
-    as_jr(ScratchRegister);
-    as_nop();
-    MOZ_ASSERT(nextOffset().getOffset() - bo.getOffset() == 12 * sizeof(uint32_t));
-    return CodeOffsetJump(bo.getOffset());
-}
-
-CodeOffsetJump
-MacroAssemblerMIPS64Compat::jumpWithPatch(RepatchLabel* label, Label* documentation)
+MacroAssemblerMIPS64Compat::jumpWithPatch(RepatchLabel* label)
 {
     // Only one branch per label.
     MOZ_ASSERT(!label->used());
