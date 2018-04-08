@@ -196,9 +196,8 @@ jit::InitializeIon()
     return true;
 }
 
-JitRuntime::JitRuntime(JSRuntime* rt)
-  : execAlloc_(rt),
-    backedgeExecAlloc_(rt),
+JitRuntime::JitRuntime()
+  : execAlloc_(),
     nextCompilationId_(0),
     exceptionTailOffset_(0),
     bailoutTailOffset_(0),
@@ -214,7 +213,6 @@ JitRuntime::JitRuntime(JSRuntime* rt)
     baselineDebugModeOSRHandler_(nullptr),
     trampolineCode_(nullptr),
     functionWrappers_(nullptr),
-    preventBackedgePatching_(false),
     jitcodeGlobalTable_(nullptr)
 {
 }
@@ -388,51 +386,6 @@ JSContext::freeOsrTempData()
     js_free(osrTempData_);
     osrTempData_ = nullptr;
 }
-
-void
-JitZoneGroup::patchIonBackedges(JSContext* cx, BackedgeTarget target)
-{
-    if (target == BackedgeLoopHeader) {
-        // We must be on the active thread. The caller must use
-        // AutoPreventBackedgePatching to ensure we don't reenter.
-        MOZ_ASSERT(cx->runtime()->jitRuntime()->preventBackedgePatching());
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-    } else {
-        // We must be called from jit::InterruptRunningCode, or a signal handler
-        // triggered there. rt->handlingJitInterrupt() ensures we can't reenter
-        // this code.
-        MOZ_ASSERT(!cx->runtime()->jitRuntime()->preventBackedgePatching());
-        MOZ_ASSERT(cx->handlingJitInterrupt());
-    }
-
-    // Do nothing if we know all backedges are already jumping to `target`.
-    if (backedgeTarget_ == target)
-        return;
-
-    backedgeTarget_ = target;
-
-    cx->runtime()->jitRuntime()->backedgeExecAlloc().makeAllWritable();
-
-    // Patch all loop backedges in Ion code so that they either jump to the
-    // normal loop header or to an interrupt handler each time they run.
-    for (InlineListIterator<PatchableBackedge> iter(backedgeList().begin());
-         iter != backedgeList().end();
-         iter++)
-    {
-        PatchableBackedge* patchableBackedge = *iter;
-        if (target == BackedgeLoopHeader)
-            PatchBackedge(patchableBackedge->backedge, patchableBackedge->loopHeader, target);
-        else
-            PatchBackedge(patchableBackedge->backedge, patchableBackedge->interruptCheck, target);
-    }
-
-    cx->runtime()->jitRuntime()->backedgeExecAlloc().makeAllExecutable();
-}
-
-JitZoneGroup::JitZoneGroup(ZoneGroup* group)
-  : backedgeTarget_(group, BackedgeLoopHeader),
-    backedgeList_(group)
-{}
 
 JitCompartment::JitCompartment()
   : stubCodes_(nullptr)
@@ -898,8 +851,6 @@ IonScript::IonScript(IonCompilationId compilationId)
     snapshotsRVATableSize_(0),
     constantTable_(0),
     constantEntries_(0),
-    backedgeList_(0),
-    backedgeEntries_(0),
     invalidationCount_(0),
     compilationId_(compilationId),
     osrPcMismatchCounter_(0),
@@ -915,8 +866,7 @@ IonScript::New(JSContext* cx, IonCompilationId compilationId,
                size_t constants, size_t safepointIndices,
                size_t osiIndices, size_t icEntries,
                size_t runtimeSize,  size_t safepointsSize,
-               size_t backedgeEntries, size_t sharedStubEntries,
-               OptimizationLevel optimizationLevel)
+               size_t sharedStubEntries, OptimizationLevel optimizationLevel)
 {
     constexpr size_t DataAlignment = sizeof(void*);
 
@@ -939,7 +889,6 @@ IonScript::New(JSContext* cx, IonCompilationId compilationId,
     size_t paddedICEntriesSize = AlignBytes(icEntries * sizeof(uint32_t), DataAlignment);
     size_t paddedRuntimeSize = AlignBytes(runtimeSize, DataAlignment);
     size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
-    size_t paddedBackedgeSize = AlignBytes(backedgeEntries * sizeof(PatchableBackedge), DataAlignment);
     size_t paddedSharedStubSize = AlignBytes(sharedStubEntries * sizeof(IonICEntry), DataAlignment);
 
     size_t bytes = paddedSnapshotsSize +
@@ -951,7 +900,6 @@ IonScript::New(JSContext* cx, IonCompilationId compilationId,
                    paddedICEntriesSize +
                    paddedRuntimeSize +
                    paddedSafepointSize +
-                   paddedBackedgeSize +
                    paddedSharedStubSize;
     IonScript* script = cx->zone()->pod_malloc_with_extra<IonScript, uint8_t>(bytes);
     if (!script)
@@ -996,10 +944,6 @@ IonScript::New(JSContext* cx, IonCompilationId compilationId,
     script->constantTable_ = offsetCursor;
     script->constantEntries_ = constants;
     offsetCursor += paddedConstantsSize;
-
-    script->backedgeList_ = offsetCursor;
-    script->backedgeEntries_ = backedgeEntries;
-    offsetCursor += paddedBackedgeSize;
 
     script->sharedStubList_ = offsetCursor;
     script->sharedStubEntries_ = sharedStubEntries;
@@ -1087,35 +1031,6 @@ IonScript::copyConstants(const Value* vp)
 {
     for (size_t i = 0; i < constantEntries_; i++)
         constants()[i].init(vp[i]);
-}
-
-void
-IonScript::copyPatchableBackedges(JSContext* cx, JitCode* code,
-                                  PatchableBackedgeInfo* backedges,
-                                  MacroAssembler& masm)
-{
-    JitZoneGroup* jzg = cx->zone()->group()->jitZoneGroup;
-    JitRuntime::AutoPreventBackedgePatching apbp(cx->runtime());
-
-    for (size_t i = 0; i < backedgeEntries_; i++) {
-        PatchableBackedgeInfo& info = backedges[i];
-        PatchableBackedge* patchableBackedge = &backedgeList()[i];
-
-        info.backedge.fixup(&masm);
-        CodeLocationJump backedge(code, info.backedge);
-        CodeLocationLabel loopHeader(code, CodeOffset(info.loopHeader->offset()));
-        CodeLocationLabel interruptCheck(code, CodeOffset(info.interruptCheck->offset()));
-        new(patchableBackedge) PatchableBackedge(backedge, loopHeader, interruptCheck);
-
-        // Point the backedge to either of its possible targets, matching the
-        // other backedges in the runtime.
-        if (jzg->backedgeTarget() == JitZoneGroup::BackedgeInterruptCheck)
-            PatchBackedge(backedge, interruptCheck, JitZoneGroup::BackedgeInterruptCheck);
-        else
-            PatchBackedge(backedge, loopHeader, JitZoneGroup::BackedgeLoopHeader);
-
-        jzg->addPatchableBackedge(cx->runtime()->jitRuntime(), patchableBackedge);
-    }
 }
 
 void
@@ -1234,8 +1149,6 @@ IonScript::Trace(JSTracer* trc, IonScript* script)
 void
 IonScript::Destroy(FreeOp* fop, IonScript* script)
 {
-    script->unlinkFromRuntime(fop);
-
     /*
      * When the script contains pointers to nursery things, the store buffer can
      * contain entries that point into the fallback stub space. Since we can
@@ -1316,23 +1229,6 @@ IonScript::purgeICs(Zone* zone)
 {
     for (size_t i = 0; i < numICs(); i++)
         getICFromIndex(i).reset(zone);
-}
-
-void
-IonScript::unlinkFromRuntime(FreeOp* fop)
-{
-    // The writes to the executable buffer below may clobber backedge jumps, so
-    // make sure that those backedges are unlinked from the runtime and not
-    // reclobbered with garbage if an interrupt is requested.
-    JitZoneGroup* jzg = method()->zone()->group()->jitZoneGroup;
-    JitRuntime::AutoPreventBackedgePatching apbp(fop->runtime());
-    for (size_t i = 0; i < backedgeEntries_; i++)
-        jzg->removePatchableBackedge(fop->runtime()->jitRuntime(), &backedgeList()[i]);
-
-    // Clear the list of backedges, so that this method is idempotent. It is
-    // called during destruction, and may be additionally called when the
-    // script is invalidated.
-    backedgeEntries_ = 0;
 }
 
 namespace js {
@@ -2866,10 +2762,6 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
         ionScript->purgeICs(script->zone());
         ionScript->purgeOptimizedStubs(script->zone());
 
-        // Clean up any pointers from elsewhere in the runtime to this IonScript
-        // which is about to become disconnected from its JSScript.
-        ionScript->unlinkFromRuntime(fop);
-
         // This frame needs to be invalidated. We do the following:
         //
         // 1. Increment the reference counter to keep the ionScript alive
@@ -3338,168 +3230,3 @@ jit::JitSupportsAtomics()
 // If you change these, please also change the comment in TempAllocator.
 /* static */ const size_t TempAllocator::BallastSize            = 16 * 1024;
 /* static */ const size_t TempAllocator::PreferredLifoChunkSize = 32 * 1024;
-
-static void
-RedirectIonBackedgesToInterruptCheck(JSContext* cx)
-{
-    // Jitcode may only be modified on the runtime's main thread.
-    MOZ_ASSERT(cx == cx->runtime()->mainContextFromAnyThread());
-
-    // The faulting thread is suspended so we can access cx fields that can
-    // normally only be accessed by the cx's active thread.
-    AutoNoteSingleThreadedRegion anstr;
-
-    Zone* zone = cx->zoneRaw();
-    if (zone && !zone->isAtomsZone()) {
-        jit::JitRuntime* jitRuntime = cx->runtime()->jitRuntime();
-        if (!jitRuntime)
-            return;
-
-        // If the backedge list is being mutated, the pc must be in C++ code and
-        // thus not in a JIT iloop. We assume that the interrupt flag will be
-        // checked at least once before entering JIT code (if not, no big deal;
-        // the browser will just request another interrupt in a second).
-        if (!jitRuntime->preventBackedgePatching()) {
-            jit::JitZoneGroup* jzg = zone->group()->jitZoneGroup;
-            jzg->patchIonBackedges(cx, jit::JitZoneGroup::BackedgeInterruptCheck);
-        }
-    }
-}
-
-#if !defined(XP_WIN)
-// For the interrupt signal, pick a signal number that:
-//  - is not otherwise used by mozilla or standard libraries
-//  - defaults to nostop and noprint on gdb/lldb so that noone is bothered
-// SIGVTALRM a relative of SIGALRM, so intended for user code, but, unlike
-// SIGALRM, not used anywhere else in Mozilla.
-static const int sJitAsyncInterruptSignal = SIGVTALRM;
-
-static void
-JitAsyncInterruptHandler(int signum, siginfo_t*, void*)
-{
-    MOZ_RELEASE_ASSERT(signum == sJitAsyncInterruptSignal);
-
-    JSContext* cx = TlsContext.get();
-    if (!cx)
-        return;
-
-#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
-    SimulatorProcess::ICacheCheckingDisableCount++;
-#endif
-
-    RedirectIonBackedgesToInterruptCheck(cx);
-
-#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
-    SimulatorProcess::cacheInvalidatedBySignalHandler_ = true;
-    SimulatorProcess::ICacheCheckingDisableCount--;
-#endif
-
-    cx->finishHandlingJitInterrupt();
-}
-#endif
-
-static bool sTriedInstallAsyncInterrupt = false;
-static bool sHaveAsyncInterrupt = false;
-
-void
-jit::EnsureAsyncInterrupt(JSContext* cx)
-{
-    // We assume that there are no races creating the first JSRuntime of the process.
-    if (sTriedInstallAsyncInterrupt)
-        return;
-    sTriedInstallAsyncInterrupt = true;
-
-#if defined(ANDROID) && !defined(__aarch64__)
-    // Before Android 4.4 (SDK version 19), there is a bug
-    //   https://android-review.googlesource.com/#/c/52333
-    // in Bionic's pthread_join which causes pthread_join to return early when
-    // pthread_kill is used (on any thread). Nobody expects the pthread_cond_wait
-    // EINTRquisition.
-    char version_string[PROP_VALUE_MAX];
-    mozilla::PodArrayZero(version_string);
-    if (__system_property_get("ro.build.version.sdk", version_string) > 0) {
-        if (atol(version_string) < 19)
-            return;
-    }
-#endif
-
-#if defined(XP_WIN)
-    // Windows uses SuspendThread to stop the active thread from another thread.
-#else
-    struct sigaction interruptHandler;
-    interruptHandler.sa_flags = SA_SIGINFO;
-    interruptHandler.sa_sigaction = &JitAsyncInterruptHandler;
-    sigemptyset(&interruptHandler.sa_mask);
-    struct sigaction prev;
-    if (sigaction(sJitAsyncInterruptSignal, &interruptHandler, &prev))
-        MOZ_CRASH("unable to install interrupt handler");
-
-    // There shouldn't be any other handlers installed for
-    // sJitAsyncInterruptSignal. If there are, we could always forward, but we
-    // need to understand what we're doing to avoid problematic interference.
-    if ((prev.sa_flags & SA_SIGINFO && prev.sa_sigaction) ||
-        (prev.sa_handler != SIG_DFL && prev.sa_handler != SIG_IGN))
-    {
-        MOZ_CRASH("contention for interrupt signal");
-    }
-#endif // defined(XP_WIN)
-
-    sHaveAsyncInterrupt = true;
-}
-
-bool
-jit::HaveAsyncInterrupt()
-{
-    MOZ_ASSERT(sTriedInstallAsyncInterrupt);
-    return sHaveAsyncInterrupt;
-}
-
-// JSRuntime::requestInterrupt sets interrupt_ (which is checked frequently by
-// C++ code at every Baseline JIT loop backedge) and jitStackLimit_ (which is
-// checked at every Baseline and Ion JIT function prologue). The remaining
-// sources of potential iloops (Ion loop backedges) are handled by this
-// function: Ion loop backedges are patched to instead point to a stub that
-// handles the interrupt;
-void
-jit::InterruptRunningCode(JSContext* cx)
-{
-    // If signal handlers weren't installed, then Ion emit normal interrupt
-    // checks and don't need asynchronous interruption.
-    MOZ_ASSERT(sTriedInstallAsyncInterrupt);
-    if (!sHaveAsyncInterrupt)
-        return;
-
-    // Do nothing if we're already handling an interrupt here, to avoid races
-    // below and in JitRuntime::patchIonBackedges.
-    if (!cx->startHandlingJitInterrupt())
-        return;
-
-    // If we are on context's thread, then we can patch Ion backedges without
-    // any special synchronization.
-    if (cx == TlsContext.get()) {
-        RedirectIonBackedgesToInterruptCheck(cx);
-        cx->finishHandlingJitInterrupt();
-        return;
-    }
-
-    // We are not on the runtime's active thread, so we need to halt the
-    // runtime's active thread first.
-#if defined(XP_WIN)
-    // On Windows, we can simply suspend the active thread. SuspendThread can
-    // sporadically fail if the thread is in the middle of a syscall. Rather
-    // than retrying in a loop, just wait for the next request for interrupt.
-    HANDLE thread = (HANDLE)cx->threadNative();
-    if (SuspendThread(thread) != (DWORD)-1) {
-        RedirectIonBackedgesToInterruptCheck(cx);
-        ResumeThread(thread);
-    }
-    cx->finishHandlingJitInterrupt();
-#else
-    // On Unix, we instead deliver an async signal to the active thread which
-    // halts the thread and callers our JitAsyncInterruptHandler (which has
-    // already been installed by EnsureSignalHandlersInstalled).
-    pthread_t thread = (pthread_t)cx->threadNative();
-    pthread_kill(thread, sJitAsyncInterruptSignal);
-#endif
-}
-

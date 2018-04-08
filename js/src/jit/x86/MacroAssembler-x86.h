@@ -579,20 +579,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    CodeOffsetJump jumpWithPatch(RepatchLabel* label, Label* documentation = nullptr) {
+    CodeOffsetJump jumpWithPatch(RepatchLabel* label) {
         jump(label);
         return CodeOffsetJump(size());
-    }
-
-    CodeOffsetJump jumpWithPatch(RepatchLabel* label, Assembler::Condition cond,
-                                 Label* documentation = nullptr)
-    {
-        j(cond, label);
-        return CodeOffsetJump(size());
-    }
-
-    CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation = nullptr) {
-        return jumpWithPatch(label);
     }
 
     void branchPtr(Condition cond, Register lhs, Register rhs, RepatchLabel* label) {

@@ -23,23 +23,10 @@ ZoneGroup::ZoneGroup(JSRuntime* runtime)
 #ifdef DEBUG
     ionBailAfter_(this, 0),
 #endif
-    jitZoneGroup(this, nullptr),
     debuggerList_(this),
     numFinishedBuilders(0),
     ionLazyLinkListSize_(0)
 {}
-
-bool
-ZoneGroup::init()
-{
-    AutoLockGC lock(runtime);
-
-    jitZoneGroup = js_new<jit::JitZoneGroup>(this);
-    if (!jitZoneGroup)
-        return false;
-
-    return true;
-}
 
 ZoneGroup::~ZoneGroup()
 {
@@ -51,8 +38,6 @@ ZoneGroup::~ZoneGroup()
         MOZ_ASSERT(ionLazyLinkList().isEmpty());
     }
 #endif
-
-    js_delete(jitZoneGroup.ref());
 
     if (this == runtime->gc.systemZoneGroup)
         runtime->gc.systemZoneGroup = nullptr;

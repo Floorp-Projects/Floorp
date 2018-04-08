@@ -258,10 +258,6 @@ DefaultJitOptions::DefaultJitOptions()
     // faster than Ion code so use scaled thresholds (see also bug 1320374).
     SET_DEFAULT(wasmBatchBaselineThreshold, 10000);
     SET_DEFAULT(wasmBatchIonThreshold, 1100);
-
-    // Determines whether we suppress using signal handlers
-    // for interrupting jit-ed code. This is used only for testing.
-    SET_DEFAULT(ionInterruptWithoutSignals, false);
 }
 
 bool

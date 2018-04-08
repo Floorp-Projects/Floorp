@@ -26,7 +26,6 @@ namespace js {
 namespace jit {
 
 class MacroAssembler;
-class PatchableBackedge;
 class IonBuilder;
 class IonICEntry;
 class JitCode;
@@ -133,8 +132,6 @@ class JitCode : public gc::TenuredCell
         hasBytecodeMap_ = true;
     }
 
-    void togglePreBarriers(bool enabled, ReprotectCode reprotect);
-
     // If this JitCode object has been, effectively, corrupted due to
     // invalidation patching, then we have to remember this so we don't try and
     // trace relocation entries that may now be corrupt.
@@ -179,7 +176,6 @@ class SafepointWriter;
 class SafepointIndex;
 class OsiIndex;
 class IonIC;
-struct PatchableBackedgeInfo;
 
 // An IonScript attaches Ion-generated information to a JSScript.
 struct IonScript
@@ -266,10 +262,6 @@ struct IonScript
     uint32_t constantTable_;
     uint32_t constantEntries_;
 
-    // List of patchable backedges which are threaded into the runtime's list.
-    uint32_t backedgeList_;
-    uint32_t backedgeEntries_;
-
     // List of entries to the shared stub.
     uint32_t sharedStubList_;
     uint32_t sharedStubEntries_;
@@ -327,9 +319,6 @@ struct IonScript
     uint8_t* runtimeData() {
         return  &bottomBuffer()[runtimeData_];
     }
-    PatchableBackedge* backedgeList() {
-        return (PatchableBackedge*) &bottomBuffer()[backedgeList_];
-    }
 
   private:
     void trace(JSTracer* trc);
@@ -351,8 +340,7 @@ struct IonScript
                           size_t constants, size_t safepointIndexEntries,
                           size_t osiIndexEntries, size_t icEntries,
                           size_t runtimeSize, size_t safepointsSize,
-                          size_t backedgeEntries, size_t sharedStubEntries,
-                          OptimizationLevel optimizationLevel);
+                          size_t sharedStubEntries, OptimizationLevel optimizationLevel);
     static void Trace(JSTracer* trc, IonScript* script);
     static void Destroy(FreeOp* fop, IonScript* script);
 
@@ -517,7 +505,6 @@ struct IonScript
         return runtimeSize_;
     }
     void purgeICs(Zone* zone);
-    void unlinkFromRuntime(FreeOp* fop);
     void copySnapshots(const SnapshotWriter* writer);
     void copyRecovers(const RecoverWriter* writer);
     void copyBailoutTable(const SnapshotOffset* table);
@@ -527,9 +514,6 @@ struct IonScript
     void copyRuntimeData(const uint8_t* data);
     void copyICEntries(const uint32_t* caches);
     void copySafepoints(const SafepointWriter* writer);
-    void copyPatchableBackedges(JSContext* cx, JitCode* code,
-                                PatchableBackedgeInfo* backedges,
-                                MacroAssembler& masm);
 
     bool invalidated() const {
         return invalidationCount_ != 0;

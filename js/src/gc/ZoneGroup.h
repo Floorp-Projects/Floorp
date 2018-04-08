@@ -82,8 +82,6 @@ class ZoneGroup
     explicit ZoneGroup(JSRuntime* runtime);
     ~ZoneGroup();
 
-    bool init();
-
     inline Nursery& nursery();
     inline gc::StoreBuffer& storeBuffer();
 
@@ -108,8 +106,6 @@ class ZoneGroup
         ionBailAfter_ = after;
     }
 #endif
-
-    ZoneGroupData<jit::JitZoneGroup*> jitZoneGroup;
 
   private:
     /* Linked list of all Debugger objects in the group. */

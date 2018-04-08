@@ -418,10 +418,8 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
             rtSizes->scriptData += mallocSizeOf(r.front());
     }
 
-    if (jitRuntime_) {
+    if (jitRuntime_)
         jitRuntime_->execAlloc().addSizeOfCode(&rtSizes->code);
-        jitRuntime_->backedgeExecAlloc().addSizeOfCode(&rtSizes->code);
-    }
 
     rtSizes->wasmRuntime += wasmInstances.lock()->sizeOfExcludingThis(mallocSizeOf);
 }
@@ -506,14 +504,12 @@ JSContext::requestInterrupt(InterruptMode mode)
     if (mode == JSContext::RequestInterruptUrgent) {
         // If this interrupt is urgent (slow script dialog for instance), take
         // additional steps to interrupt corner cases where the above fields are
-        // not regularly polled. Wake ilooping Ion code, irregexp JIT code and
-        // Atomics.wait()
+        // not regularly polled. Wake Atomics.wait() and irregexp JIT code.
         interruptRegExpJit_ = true;
         FutexThread::lock();
         if (fx.isWaiting())
             fx.wake(FutexThread::WakeForJSInterrupt);
         fx.unlock();
-        jit::InterruptRunningCode(this);
         wasm::InterruptRunningCode(this);
     }
 }

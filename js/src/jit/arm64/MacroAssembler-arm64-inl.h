@@ -1185,29 +1185,6 @@ MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs, ImmWord rhs, Lab
     branchPtr(cond, scratch, rhs, label);
 }
 
-template <typename T>
-CodeOffsetJump
-MacroAssembler::branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label)
-{
-    cmpPtr(lhs, rhs);
-    return jumpWithPatch(label, cond);
-}
-
-template <typename T>
-CodeOffsetJump
-MacroAssembler::branchPtrWithPatch(Condition cond, Address lhs, T rhs, RepatchLabel* label)
-{
-    // The scratch register is unused after the condition codes are set.
-    {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        MOZ_ASSERT(scratch != lhs.base);
-        loadPtr(lhs, scratch);
-        cmpPtr(scratch, rhs);
-    }
-    return jumpWithPatch(label, cond);
-}
-
 void
 MacroAssembler::branchPrivatePtr(Condition cond, const Address& lhs, Register rhs, Label* label)
 {

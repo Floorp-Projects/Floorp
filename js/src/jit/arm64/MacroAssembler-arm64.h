@@ -1275,16 +1275,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         addPendingJump(loc, ImmPtr(target->raw()), Relocation::JITCODE);
     }
 
-    CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always, Label* documentation = nullptr)
+    CodeOffsetJump jumpWithPatch(RepatchLabel* label)
     {
-#ifdef JS_DISASM_ARM64
-        LabelDoc doc = spew_.refLabel(documentation);
-#else
-        LabelDoc doc;
-#endif
         ARMBuffer::PoolEntry pe;
         BufferOffset load_bo;
-        BufferOffset branch_bo;
 
         // Does not overwrite condition codes from the caller.
         {
@@ -1294,20 +1288,12 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         }
 
         MOZ_ASSERT(!label->bound());
-        if (cond != Always) {
-            Label notTaken;
-            B(&notTaken, Assembler::InvertCondition(cond));
-            branch_bo = b(-1, doc);
-            bind(&notTaken);
-        } else {
-            nop();
-            branch_bo = b(-1, doc);
-        }
+
+        nop();
+        BufferOffset branch_bo = b(-1, LabelDoc());
         label->use(branch_bo.getOffset());
+
         return CodeOffsetJump(load_bo.getOffset(), pe.index());
-    }
-    CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation) {
-        return jumpWithPatch(label, Always, documentation);
     }
 
     void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {

@@ -1513,32 +1513,6 @@ CodeGeneratorShared::emitPreBarrier(Address address)
     masm.guardedCallPreBarrier(address, MIRType::Value);
 }
 
-Label*
-CodeGeneratorShared::labelForBackedgeWithImplicitCheck(MBasicBlock* mir)
-{
-    // If this is a loop backedge to a loop header with an implicit interrupt
-    // check, use a patchable jump. Skip this search if compiling without a
-    // script for wasm, as there will be no interrupt check instruction.
-    // Due to critical edge unsplitting there may no longer be unique loop
-    // backedges, so just look for any edge going to an earlier block in RPO.
-    if (!gen->compilingWasm() && mir->isLoopHeader() && mir->id() <= current->mir()->id()) {
-        for (LInstructionIterator iter = mir->lir()->begin(); iter != mir->lir()->end(); iter++) {
-            if (iter->isMoveGroup()) {
-                // Continue searching for an interrupt check.
-            } else {
-                // The interrupt check should be the first instruction in the
-                // loop header other than move groups.
-                MOZ_ASSERT(iter->isInterruptCheck());
-                if (iter->toInterruptCheck()->implicit())
-                    return iter->toInterruptCheck()->oolEntry();
-                return nullptr;
-            }
-        }
-    }
-
-    return nullptr;
-}
-
 void
 CodeGeneratorShared::jumpToBlock(MBasicBlock* mir)
 {
@@ -1549,40 +1523,14 @@ CodeGeneratorShared::jumpToBlock(MBasicBlock* mir)
     if (isNextBlock(mir->lir()))
         return;
 
-    if (Label* oolEntry = labelForBackedgeWithImplicitCheck(mir)) {
-        // Note: the backedge is initially a jump to the next instruction.
-        // It will be patched to the target block's label during link().
-        RepatchLabel rejoin;
-        CodeOffsetJump backedge = masm.backedgeJump(&rejoin, mir->lir()->label());
-        masm.bind(&rejoin);
-
-        masm.propagateOOM(patchableBackedges_.append(PatchableBackedgeInfo(backedge, mir->lir()->label(), oolEntry)));
-    } else {
-        masm.jump(mir->lir()->label());
-    }
+    masm.jump(mir->lir()->label());
 }
 
 Label*
 CodeGeneratorShared::getJumpLabelForBranch(MBasicBlock* block)
 {
     // Skip past trivial blocks.
-    block = skipTrivialBlocks(block);
-
-    if (!labelForBackedgeWithImplicitCheck(block))
-        return block->lir()->label();
-
-    // We need to use a patchable jump for this backedge, but want to treat
-    // this as a normal label target to simplify codegen. Efficiency isn't so
-    // important here as these tests are extremely unlikely to be used in loop
-    // backedges, so emit inline code for the patchable jump. Heap allocating
-    // the label allows it to be used by out of line blocks.
-    Label* res = alloc().lifoAlloc()->newInfallible<Label>();
-    Label after;
-    masm.jump(&after);
-    masm.bind(res);
-    jumpToBlock(block);
-    masm.bind(&after);
-    return res;
+    return skipTrivialBlocks(block)->lir()->label();
 }
 
 // This function is not used for MIPS/MIPS64. MIPS has branchToBlock.
@@ -1591,19 +1539,7 @@ void
 CodeGeneratorShared::jumpToBlock(MBasicBlock* mir, Assembler::Condition cond)
 {
     // Skip past trivial blocks.
-    mir = skipTrivialBlocks(mir);
-
-    if (Label* oolEntry = labelForBackedgeWithImplicitCheck(mir)) {
-        // Note: the backedge is initially a jump to the next instruction.
-        // It will be patched to the target block's label during link().
-        RepatchLabel rejoin;
-        CodeOffsetJump backedge = masm.jumpWithPatch(&rejoin, cond, mir->lir()->label());
-        masm.bind(&rejoin);
-
-        masm.propagateOOM(patchableBackedges_.append(PatchableBackedgeInfo(backedge, mir->lir()->label(), oolEntry)));
-    } else {
-        masm.j(cond, mir->lir()->label());
-    }
+    masm.j(cond, skipTrivialBlocks(mir)->lir()->label());
 }
 #endif
 
