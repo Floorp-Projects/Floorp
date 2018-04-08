@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1286861 - Test same site cookies on subrequests</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<img id="cookieImage">
+<iframe id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * 1) We load an image from http://mochi.test which sets a same site cookie
+ * 2) We load an iframe from:
+ *    * http://mochi.test which loads another image from http://mochi.test
+ *    * http://example.com which loads another image from http://mochi.test
+ * 3) We observe that the same site cookie is sent in the same origin case,
+ *    but not in the cross origin case.
+ *
+ * In detail:
+ * We perform an XHR request to the *.sjs file which is processed async on
+ * the server and waits till the image request has been processed by the server.
+ * Once the image requets was processed, the server responds to the initial
+ * XHR request with the expecuted result (the cookie value).
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const SAME_ORIGIN = "http://mochi.test:8888/";
+const CROSS_ORIGIN = "http://example.com/";
+const PATH = "tests/dom/security/test/general/file_same_site_cookies_subrequest.sjs";
+
+let curTest = 0;
+
+var tests = [
+  {
+    description: "same origin site using cookie policy 'samesite=strict'",
+    imgSRC: SAME_ORIGIN + PATH + "?setStrictSameSiteCookie",
+    frameSRC: SAME_ORIGIN + PATH + "?loadFrame",
+    result: "myKey=strictSameSiteCookie",
+  },
+  {
+    description: "cross origin site using cookie policy 'samesite=strict'",
+    imgSRC: SAME_ORIGIN + PATH + "?setStrictSameSiteCookie",
+    frameSRC: CROSS_ORIGIN + PATH + "?loadFrame",
+    result: "myKey=noCookie",
+  },
+  {
+    description: "same origin site using cookie policy 'samesite=lax'",
+    imgSRC: SAME_ORIGIN + PATH + "?setLaxSameSiteCookie",
+    frameSRC: SAME_ORIGIN + PATH + "?loadFrame",
+    result: "myKey=laxSameSiteCookie",
+  },
+  {
+    description: "cross origin site using cookie policy 'samesite=lax'",
+    imgSRC: SAME_ORIGIN + PATH + "?setLaxSameSiteCookie",
+    frameSRC: CROSS_ORIGIN + PATH + "?loadFrame",
+    result: "myKey=noCookie",
+  },
+];
+
+function checkResult(aCookieVal) {
+  is(aCookieVal, tests[curTest].result, tests[curTest].description);
+  curTest += 1;
+
+  // lets see if we ran all the tests
+  if (curTest == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+  // otherwise it's time to run the next test
+  setCookieAndInitTest();
+}
+
+function setupQueryResultAndRunTest() {
+  var myXHR = new XMLHttpRequest();
+  myXHR.open("GET", "file_same_site_cookies_subrequest.sjs?queryresult");
+  myXHR.onload = function(e) {
+    checkResult(myXHR.responseText);
+  }
+  myXHR.onerror = function(e) {
+    ok(false, "could not query results from server (" + e.message + ")");
+  }
+  myXHR.send();
+
+  // give it some time and load the test frame
+  SimpleTest.executeSoon(function() {
+    let testframe = document.getElementById("testframe");
+    testframe.src = tests[curTest].frameSRC;
+  });
+}
+
+function setCookieAndInitTest() {
+  var cookieImage = document.getElementById("cookieImage");
+  cookieImage.onload = function() {
+    ok(true, "set cookie for test (" + tests[curTest].description + ")");
+    setupQueryResultAndRunTest();
+  }
+  cookieImage.onerror = function() {
+    ok(false, "could not set cookie for test (" + tests[curTest].description + ")");
+  }
+  cookieImage.src = tests[curTest].imgSRC;
+}
+
+// fire up the test
+setCookieAndInitTest();
+
+</script>
+</body>
+</html>
