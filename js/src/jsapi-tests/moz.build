@@ -144,7 +144,7 @@ if CONFIG['NIGHTLY_BUILD']:
         'testErrorInterceptor.cpp',
     ]
 
-if CONFIG['JS_BUILD_BINAST'] and CONFIG['JS_STANDALONE']:
+if CONFIG['JS_BUILD_BINAST'] and CONFIG['JS_STANDALONE'] and CONFIG['OS_TARGET'] != 'WINNT':
     # Standalone builds leave the source directory untouched,
     # which lets us run tests with the data files intact.
     # Otherwise, in the current state of the build system,
