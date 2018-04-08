@@ -62,6 +62,8 @@ parent:
    */
   nested(inside_cpow) sync GetCookieString(URIParams host,
                                            bool isForeign,
+                                           bool isSafeTopLevelNav,
+                                           bool isTopLevelForeign,
                                            OriginAttributes attrs)
        returns (nsCString result);
 
@@ -103,6 +105,8 @@ parent:
 
   async PrepareCookieList(URIParams host,
                           bool isForeign,
+                          bool isSafeTopLevelNav,
+                          bool isTopLevelForeign,
                           OriginAttributes attrs);
 
   async __delete__();

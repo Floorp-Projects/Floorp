@@ -180,10 +180,8 @@ typedef Vector<JitPoisonRange, 0, SystemAllocPolicy> JitPoisonRangeVector;
 
 class ExecutableAllocator
 {
-    JSRuntime* rt_;
-
   public:
-    explicit ExecutableAllocator(JSRuntime* rt);
+    ExecutableAllocator() = default;
     ~ExecutableAllocator();
 
     void purge();
@@ -222,13 +220,6 @@ class ExecutableAllocator
     static bool makeExecutable(void* start, size_t size)
     {
         return ReprotectRegion(start, size, ProtectionSetting::Executable);
-    }
-
-    void makeAllWritable() {
-        reprotectAll(ProtectionSetting::Writable);
-    }
-    void makeAllExecutable() {
-        reprotectAll(ProtectionSetting::Executable);
     }
 
     static void poisonCode(JSRuntime* rt, JitPoisonRangeVector& ranges);
@@ -326,8 +317,6 @@ class ExecutableAllocator
   private:
     ExecutableAllocator(const ExecutableAllocator&) = delete;
     void operator=(const ExecutableAllocator&) = delete;
-
-    void reprotectAll(ProtectionSetting);
 
     // These are strong references;  they keep pools alive.
     static const size_t maxSmallPools = 4;

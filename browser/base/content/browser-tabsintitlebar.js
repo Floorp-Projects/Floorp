@@ -298,7 +298,6 @@ var TabsInTitlebar = {
   },
 
   uninit() {
-    removeEventListener("resolutionchange", this);
     Services.prefs.removeObserver(this._prefName, this);
     this._menuObserver.disconnect();
     CustomizableUI.removeListener(this);

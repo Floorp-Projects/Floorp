@@ -818,6 +818,21 @@ TEST(TestCookie,TestCookieMain)
 
     EXPECT_TRUE(i == 6);
 
+    // *** SameSite attribute
+    // Clear the cookies
+    EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->RemoveAll()));
+
+    // please note that the flag aForeign is always set to true using this test setup because no nsIChannel is
+    // passed to SetCookieString(). therefore we can only test that no cookies are sent for cross origin requests
+    // using same-site cookies.
+    SetACookie(cookieService, "http://www.samesite.com", nullptr, "test=sameSiteStrictVal; samesite=strict", nullptr);
+    GetACookie(cookieService, "http://www.notsamesite.com", nullptr, cookie);
+    EXPECT_TRUE(CheckResult(cookie.get(), MUST_BE_NULL));
+
+    SetACookie(cookieService, "http://www.samesite.test", nullptr, "test=sameSiteLaxVal; samesite=lax", nullptr);
+    GetACookie(cookieService, "http://www.notsamesite.com", nullptr, cookie);
+    EXPECT_TRUE(CheckResult(cookie.get(), MUST_BE_NULL));
+
     // XXX the following are placeholders: add these tests please!
     // *** "noncompliant cookie" tests
     // *** IP address tests

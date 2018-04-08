@@ -6,7 +6,7 @@
 
 FRAGMENT(ExecutableAllocator, empty) {
     using namespace js::jit;
-    ExecutableAllocator execAlloc(cx->runtime());
+    ExecutableAllocator execAlloc;
 
     breakpoint();
 
@@ -16,7 +16,7 @@ FRAGMENT(ExecutableAllocator, empty) {
 FRAGMENT(ExecutableAllocator, onepool) {
     using namespace js::jit;
     ExecutablePool* pool = nullptr;
-    ExecutableAllocator execAlloc(cx->runtime());
+    ExecutableAllocator execAlloc;
     execAlloc.alloc(cx, 16 * 1024, &pool, CodeKind::Baseline);
 
     breakpoint();
@@ -29,7 +29,7 @@ FRAGMENT(ExecutableAllocator, twopools) {
     using namespace js::jit;
     ExecutablePool* init = nullptr;
     ExecutablePool* pool = nullptr;
-    ExecutableAllocator execAlloc(cx->runtime());
+    ExecutableAllocator execAlloc;
 
     execAlloc.alloc(cx, 16 * 1024, &init, CodeKind::Baseline);
 
