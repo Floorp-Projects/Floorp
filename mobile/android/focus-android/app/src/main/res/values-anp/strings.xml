@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="action_cancel">मोज़िल्ला</string>
+  <string name="action_cancel">रद</string>
   <string name="action_ok">ठीक</string>
   <string name="action_save">सेव करियै</string>
   <string name="urlbar_hint">खोजियै अथवा पता भरियै</string>
@@ -64,6 +64,7 @@
   <string name="preference_privacy_notice">"गोपनीय सूचना "</string>
   <string name="preference_about">%1$s कऽ बारो मऽ</string>
   <string name="preference_search_installed_search_engines">खोजलो ईंजनों इंसटौल करऽ</string>
+  <string name="preference_search_add2">दोसरो खोजलो ईंजनों जोरऽ</string>
   <string name="preference_search_remove_title">खोजलो ईंजनों हटाभोऽ</string>
   <string name="preference_search_remove">हटाभोऽ</string>
 </resources>
