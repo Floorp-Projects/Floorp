@@ -515,14 +515,7 @@ Imm64::secondHalf() const
     return hi();
 }
 
-void PatchJump(CodeLocationJump& jump_, CodeLocationLabel label,
-               ReprotectCode reprotect = DontReprotect);
-
-static inline void
-PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitZoneGroup::BackedgeTarget target)
-{
-    PatchJump(jump_, label);
-}
+void PatchJump(CodeLocationJump& jump_, CodeLocationLabel label);
 
 // Forbids pool generation during a specified interval. Not nestable.
 class AutoForbidPools

@@ -34,17 +34,6 @@ class OutOfLineCallVM;
 
 class OutOfLineTruncateSlow;
 
-struct PatchableBackedgeInfo
-{
-    CodeOffsetJump backedge;
-    Label* loopHeader;
-    Label* interruptCheck;
-
-    PatchableBackedgeInfo(CodeOffsetJump backedge, Label* loopHeader, Label* interruptCheck)
-      : backedge(backedge), loopHeader(loopHeader), interruptCheck(interruptCheck)
-    {}
-};
-
 struct ReciprocalMulConstants {
     int64_t multiplier;
     int32_t shiftAmount;
@@ -109,9 +98,6 @@ class CodeGeneratorShared : public LElementVisitor
         CodeOffset icOffsetForPush;
     };
     js::Vector<CompileTimeICInfo, 0, SystemAllocPolicy> icInfo_;
-
-    // Patchable backedges generated for loops.
-    Vector<PatchableBackedgeInfo, 0, SystemAllocPolicy> patchableBackedges_;
 
 #ifdef JS_TRACE_LOGGING
     struct PatchableTLEvent {
@@ -484,15 +470,10 @@ class CodeGeneratorShared : public LElementVisitor
 
     Label* getJumpLabelForBranch(MBasicBlock* block);
 
-    // Generate a jump to the start of the specified block, adding information
-    // if this is a loop backedge. Use this in place of jumping directly to
-    // mir->lir()->label(), or use getJumpLabelForBranch() if a label to use
-    // directly is needed.
+    // Generate a jump to the start of the specified block. Use this in place of
+    // jumping directly to mir->lir()->label(), or use getJumpLabelForBranch()
+    // if a label to use directly is needed.
     void jumpToBlock(MBasicBlock* mir);
-
-    // Get a label for the start of block which can be used for jumping, in
-    // place of jumpToBlock.
-    Label* labelForBackedgeWithImplicitCheck(MBasicBlock* mir);
 
 // This function is not used for MIPS. MIPS has branchToBlock.
 #if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64)

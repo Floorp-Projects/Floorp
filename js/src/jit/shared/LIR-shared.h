@@ -1613,40 +1613,14 @@ class LRotateI64 : public details::RotateBase<INT64_PIECES, INT64_PIECES + 1, 1>
 
 class LInterruptCheck : public LInstructionHelper<0, 0, 0>
 {
-    Label* oolEntry_;
-
-    // Whether this is an implicit interrupt check. Implicit interrupt checks
-    // use a patchable backedge and signal handlers instead of an explicit
-    // cx->interrupt check.
-    bool implicit_;
-
   public:
     LIR_HEADER(InterruptCheck)
 
     LInterruptCheck()
-      : LInstructionHelper(classOpcode),
-        oolEntry_(nullptr),
-        implicit_(false)
+      : LInstructionHelper(classOpcode)
     {}
-
-    Label* oolEntry() {
-        MOZ_ASSERT(implicit_);
-        return oolEntry_;
-    }
-
-    void setOolEntry(Label* oolEntry) {
-        MOZ_ASSERT(implicit_);
-        oolEntry_ = oolEntry;
-    }
     MInterruptCheck* mir() const {
         return mir_->toInterruptCheck();
-    }
-
-    void setImplicit() {
-        implicit_ = true;
-    }
-    bool implicit() const {
-        return implicit_;
     }
 };
 

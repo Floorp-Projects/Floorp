@@ -359,7 +359,7 @@ Assembler::addPatchableJump(BufferOffset src, Relocation::Kind reloc)
 }
 
 void
-PatchJump(CodeLocationJump& jump_, CodeLocationLabel label, ReprotectCode reprotect)
+PatchJump(CodeLocationJump& jump_, CodeLocationLabel label)
 {
     MOZ_CRASH("PatchJump");
 }

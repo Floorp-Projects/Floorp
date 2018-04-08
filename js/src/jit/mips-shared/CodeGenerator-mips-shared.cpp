@@ -82,33 +82,11 @@ CodeGeneratorMIPSShared::branchToBlock(Assembler::FloatFormat fmt, FloatRegister
                                        MBasicBlock* mir, Assembler::DoubleCondition cond)
 {
     // Skip past trivial blocks.
-    mir = skipTrivialBlocks(mir);
-
-    Label* label = mir->lir()->label();
-    if (Label* oolEntry = labelForBackedgeWithImplicitCheck(mir)) {
-        // Note: the backedge is initially a jump to the next instruction.
-        // It will be patched to the target block's label during link().
-        RepatchLabel rejoin;
-
-        CodeOffsetJump backedge;
-        Label skip;
-        if (fmt == Assembler::DoubleFloat)
-            masm.ma_bc1d(lhs, rhs, &skip, Assembler::InvertCondition(cond), ShortJump);
-        else
-            masm.ma_bc1s(lhs, rhs, &skip, Assembler::InvertCondition(cond), ShortJump);
-
-        backedge = masm.backedgeJump(&rejoin);
-        masm.bind(&rejoin);
-        masm.bind(&skip);
-
-        if (!patchableBackedges_.append(PatchableBackedgeInfo(backedge, label, oolEntry)))
-            MOZ_CRASH();
-    } else {
-        if (fmt == Assembler::DoubleFloat)
-            masm.branchDouble(cond, lhs, rhs, mir->lir()->label());
-        else
-            masm.branchFloat(cond, lhs, rhs, mir->lir()->label());
-    }
+    Label* label = skipTrivialBlocks(mir)->lir()->label();
+    if (fmt == Assembler::DoubleFloat)
+        masm.branchDouble(cond, lhs, rhs, label);
+    else
+        masm.branchFloat(cond, lhs, rhs, label);
 }
 
 FrameSizeClass

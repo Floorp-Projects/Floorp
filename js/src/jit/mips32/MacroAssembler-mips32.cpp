@@ -1636,59 +1636,8 @@ MacroAssemblerMIPSCompat::moveData(const Value& val, Register data)
         ma_li(data, Imm32(val.toNunboxPayload()));
 }
 
-/* There are 3 paths trough backedge jump. They are listed here in the order
- * in which instructions are executed.
- *  - The short jump is simple:
- *     b offset            # Jumps directly to target.
- *     lui at, addr1_hi    # In delay slot. Don't care about 'at' here.
- *
- *  - The long jump to loop header:
- *      b label1
- *      lui at, addr1_hi   # In delay slot. We use the value in 'at' later.
- *    label1:
- *      ori at, addr1_lo
- *      jr at
- *      lui at, addr2_hi   # In delay slot. Don't care about 'at' here.
- *
- *  - The long jump to interrupt loop:
- *      b label2
- *      lui at, addr1_hi   # In delay slot. Don't care about 'at' here.
- *    label2:
- *      lui at, addr2_hi
- *      ori at, addr2_lo
- *      jr at
- *      nop                # In delay slot.
- *
- * The backedge is done this way to avoid patching lui+ori pair while it is
- * being executed. Look also at jit::PatchBackedge().
- */
 CodeOffsetJump
-MacroAssemblerMIPSCompat::backedgeJump(RepatchLabel* label, Label* documentation)
-{
-    // Only one branch per label.
-    MOZ_ASSERT(!label->used());
-
-    BufferOffset bo = nextOffset();
-    label->use(bo.getOffset());
-
-    // Backedges are short jumps when bound, but can become long when patched.
-    m_buffer.ensureSpace(8 * sizeof(uint32_t));
-    // Jump to "label1" by default to jump to the loop header.
-    as_b(BOffImm16(2 * sizeof(uint32_t)));
-    // No need for nop here. We can safely put next instruction in delay slot.
-    ma_liPatchable(ScratchRegister, Imm32(LabelBase::INVALID_OFFSET));
-    MOZ_ASSERT(nextOffset().getOffset() - bo.getOffset() == 3 * sizeof(uint32_t));
-    as_jr(ScratchRegister);
-    // No need for nop here. We can safely put next instruction in delay slot.
-    ma_liPatchable(ScratchRegister, Imm32(LabelBase::INVALID_OFFSET));
-    as_jr(ScratchRegister);
-    as_nop();
-    MOZ_ASSERT(nextOffset().getOffset() - bo.getOffset() == 8 * sizeof(uint32_t));
-    return CodeOffsetJump(bo.getOffset());
-}
-
-CodeOffsetJump
-MacroAssemblerMIPSCompat::jumpWithPatch(RepatchLabel* label, Label* documentation)
+MacroAssemblerMIPSCompat::jumpWithPatch(RepatchLabel* label)
 {
     // Only one branch per label.
     MOZ_ASSERT(!label->used());
