@@ -12,6 +12,8 @@ ChromeUtils.import('resource://gre/modules/ObjectUtils.jsm');
 
 ChromeUtils.defineModuleGetter(this, 'PlacesTestUtils',
                                'resource://testing-common/PlacesTestUtils.jsm');
+ChromeUtils.defineModuleGetter(this, 'pushBroadcastService',
+                               'resource://gre/modules/PushBroadcastService.jsm', {});
 XPCOMUtils.defineLazyServiceGetter(this, 'PushServiceComponent',
                                    '@mozilla.org/push/Service;1', 'nsIPushService');
 
