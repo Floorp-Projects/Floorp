@@ -15,7 +15,9 @@ ChromeUtils.defineModuleGetter(this, 'PlacesTestUtils',
 XPCOMUtils.defineLazyServiceGetter(this, 'PushServiceComponent',
                                    '@mozilla.org/push/Service;1', 'nsIPushService');
 
-const serviceExports = ChromeUtils.import('resource://gre/modules/PushService.jsm', {});
+const pushServiceExports = ChromeUtils.import('resource://gre/modules/PushService.jsm', {});
+const broadcastServiceExports = ChromeUtils.import('resource://gre/modules/PushBroadcastService.jsm', {});
+const serviceExports = {...pushServiceExports, ...broadcastServiceExports};
 const servicePrefs = new Preferences('dom.push.');
 
 const WEBSOCKET_CLOSE_GOING_AWAY = 1001;
