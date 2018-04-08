@@ -81,11 +81,17 @@ runTestFromPath(JSContext* cx, const char* path)
 #elif defined(XP_WIN)
     MOZ_ASSERT(path[pathlen - 1] == '\\');
 
-    const char PATTERN[] = "*";
+    Vector<char> pattern(cx);
+    if (!pattern.append(path, pathlen))
+        MOZ_CRASH();
+    if (!pattern.append('*'))
+        MOZ_CRASH();
+    if (!pattern.append('\0'))
+        MOZ_CRASH();
 
     WIN32_FIND_DATA FindFileData;
     enterJsDirectory();
-    HANDLE hFind = FindFirstFile(PATTERN, &FindFileData);
+    HANDLE hFind = FindFirstFile(pattern.begin(), &FindFileData);
     exitJsDirectory();
     for (bool found = (hFind != INVALID_HANDLE_VALUE);
             found;
