@@ -18,6 +18,7 @@ const ActionSchemas = {
   }
 };
 
-if (this.exports) {
-  this.exports = ActionSchemas;
+if (typeof module !== "undefined") {
+  /* globals module */
+  module.exports = ActionSchemas;
 }
