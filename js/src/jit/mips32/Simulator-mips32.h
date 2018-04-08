@@ -403,12 +403,6 @@ class SimulatorProcess
     static mozilla::Atomic<size_t, mozilla::ReleaseAcquire> ICacheCheckingDisableCount;
     static void FlushICache(void* start, size_t size);
 
-    // Jitcode may be rewritten from a signal handler, but is prevented from
-    // calling FlushICache() because the signal may arrive within the critical
-    // area of an AutoLockSimulatorCache. This flag instructs the Simulator
-    // to remove all cache entries the next time it checks, avoiding false negatives.
-    static mozilla::Atomic<bool, mozilla::ReleaseAcquire> cacheInvalidatedBySignalHandler_;
-
     static void checkICacheLocked(SimInstruction* instr);
 
     static bool initialize() {

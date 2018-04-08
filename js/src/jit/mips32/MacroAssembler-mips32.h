@@ -454,8 +454,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
   public:
     void moveValue(const Value& val, Register type, Register data);
 
-    CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation = nullptr);
-    CodeOffsetJump jumpWithPatch(RepatchLabel* label, Label* documentation = nullptr);
+    CodeOffsetJump jumpWithPatch(RepatchLabel* label);
 
     void loadUnboxedValue(Address address, MIRType type, AnyRegister dest) {
         if (dest.isFloat())

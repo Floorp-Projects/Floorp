@@ -56,36 +56,13 @@ typedef void (*EnterJitCode)(void* code, unsigned argc, Value* argv, Interpreter
 
 class JitcodeGlobalTable;
 
-// Information about a loop backedge in the runtime, which can be set to
-// point to either the loop header or to an OOL interrupt checking stub,
-// if signal handlers are being used to implement interrupts.
-class PatchableBackedge : public InlineListNode<PatchableBackedge>
-{
-    friend class JitZoneGroup;
-
-    CodeLocationJump backedge;
-    CodeLocationLabel loopHeader;
-    CodeLocationLabel interruptCheck;
-
-  public:
-    PatchableBackedge(CodeLocationJump backedge,
-                      CodeLocationLabel loopHeader,
-                      CodeLocationLabel interruptCheck)
-      : backedge(backedge), loopHeader(loopHeader), interruptCheck(interruptCheck)
-    {}
-};
-
 class JitRuntime
 {
   private:
     friend class JitCompartment;
 
-    // Executable allocator for all code except wasm code and Ion code with
-    // patchable backedges (see below).
+    // Executable allocator for all code except wasm code.
     ActiveThreadData<ExecutableAllocator> execAlloc_;
-
-    // Executable allocator for Ion scripts with patchable backedges.
-    ActiveThreadData<ExecutableAllocator> backedgeExecAlloc_;
 
     ActiveThreadData<uint64_t> nextCompilationId_;
 #ifdef DEBUG
@@ -158,10 +135,6 @@ class JitRuntime
     using VMWrapperMap = HashMap<const VMFunction*, uint32_t, VMFunction>;
     ExclusiveAccessLockWriteOnceData<VMWrapperMap*> functionWrappers_;
 
-    // If true, the signal handler to interrupt Ion code should not attempt to
-    // patch backedges, as some thread is busy modifying data structures.
-    mozilla::Atomic<bool> preventBackedgePatching_;
-
     // Global table of jitcode native address => bytecode address mappings.
     UnprotectedData<JitcodeGlobalTable*> jitcodeGlobalTable_;
 
@@ -201,7 +174,7 @@ class JitRuntime
     }
 
   public:
-    explicit JitRuntime(JSRuntime* rt);
+    JitRuntime();
     ~JitRuntime();
     MOZ_MUST_USE bool initialize(JSContext* cx, js::AutoLockForExclusiveAccess& lock);
 
@@ -213,9 +186,6 @@ class JitRuntime
     ExecutableAllocator& execAlloc() {
         return execAlloc_.ref();
     }
-    ExecutableAllocator& backedgeExecAlloc() {
-        return backedgeExecAlloc_.ref();
-    }
 
     IonCompilationId nextCompilationId() {
         return IonCompilationId(nextCompilationId_++);
@@ -225,41 +195,6 @@ class JitRuntime
         return currentCompilationId_.ref();
     }
 #endif
-
-    class AutoPreventBackedgePatching
-    {
-        mozilla::DebugOnly<JSRuntime*> rt_;
-        JitRuntime* jrt_;
-        bool prev_;
-
-      public:
-        // This two-arg constructor is provided for JSRuntime::createJitRuntime,
-        // where we have a JitRuntime but didn't set rt->jitRuntime_ yet.
-        AutoPreventBackedgePatching(JSRuntime* rt, JitRuntime* jrt)
-          : rt_(rt),
-            jrt_(jrt),
-            prev_(false)  // silence GCC warning
-        {
-            if (jrt_) {
-                prev_ = jrt_->preventBackedgePatching_;
-                jrt_->preventBackedgePatching_ = true;
-            }
-        }
-        explicit AutoPreventBackedgePatching(JSRuntime* rt)
-          : AutoPreventBackedgePatching(rt, rt->jitRuntime())
-        {}
-        ~AutoPreventBackedgePatching() {
-            MOZ_ASSERT(jrt_ == rt_->jitRuntime());
-            if (jrt_) {
-                MOZ_ASSERT(jrt_->preventBackedgePatching_);
-                jrt_->preventBackedgePatching_ = prev_;
-            }
-        }
-    };
-
-    bool preventBackedgePatching() const {
-        return preventBackedgePatching_;
-    }
 
     TrampolinePtr getVMWrapper(const VMFunction& f) const;
     JitCode* debugTrapHandler(JSContext* cx);
@@ -348,44 +283,6 @@ class JitRuntime
     bool isOptimizationTrackingEnabled(ZoneGroup* group) {
         return isProfilerInstrumentationEnabled(group->runtime);
     }
-};
-
-class JitZoneGroup
-{
-  public:
-    enum BackedgeTarget {
-        BackedgeLoopHeader,
-        BackedgeInterruptCheck
-    };
-
-  private:
-    // Whether patchable backedges currently jump to the loop header or the
-    // interrupt check.
-    ZoneGroupData<BackedgeTarget> backedgeTarget_;
-
-    // List of all backedges in all Ion code. The backedge edge list is accessed
-    // asynchronously when the active thread is paused and preventBackedgePatching_
-    // is false. Thus, the list must only be mutated while preventBackedgePatching_
-    // is true.
-    ZoneGroupData<InlineList<PatchableBackedge>> backedgeList_;
-    InlineList<PatchableBackedge>& backedgeList() { return backedgeList_.ref(); }
-
-  public:
-    explicit JitZoneGroup(ZoneGroup* group);
-
-    BackedgeTarget backedgeTarget() const {
-        return backedgeTarget_;
-    }
-    void addPatchableBackedge(JitRuntime* jrt, PatchableBackedge* backedge) {
-        MOZ_ASSERT(jrt->preventBackedgePatching());
-        backedgeList().pushFront(backedge);
-    }
-    void removePatchableBackedge(JitRuntime* jrt, PatchableBackedge* backedge) {
-        MOZ_ASSERT(jrt->preventBackedgePatching());
-        backedgeList().remove(backedge);
-    }
-
-    void patchIonBackedges(JSContext* cx, BackedgeTarget target);
 };
 
 enum class CacheKind : uint8_t;
@@ -707,16 +604,13 @@ const unsigned WINDOWS_BIG_FRAME_TOUCH_INCREMENT = 4096 - 1;
 // Otherwise it's a no-op.
 class MOZ_STACK_CLASS AutoWritableJitCode
 {
-    // Backedge patching from the signal handler will change memory protection
-    // flags, so don't allow it in a AutoWritableJitCode scope.
-    JitRuntime::AutoPreventBackedgePatching preventPatching_;
     JSRuntime* rt_;
     void* addr_;
     size_t size_;
 
   public:
     AutoWritableJitCode(JSRuntime* rt, void* addr, size_t size)
-      : preventPatching_(rt), rt_(rt), addr_(addr), size_(size)
+      : rt_(rt), addr_(addr), size_(size)
     {
         rt_->toggleAutoWritableJitCodeActive(true);
         if (!ExecutableAllocator::makeWritable(addr_, size_))
@@ -749,20 +643,6 @@ class MOZ_STACK_CLASS MaybeAutoWritableJitCode
             awjc_.emplace(code);
     }
 };
-
-// Ensure the given JSRuntime is set up to use async interrupts. Failure to
-// enable signal handlers indicates some catastrophic failure and creation of
-// the runtime must fail.
-void
-EnsureAsyncInterrupt(JSContext* cx);
-
-// Return whether the async interrupt can be used to interrupt Ion code.
-bool
-HaveAsyncInterrupt();
-
-// Force any currently-executing JIT code to call HandleExecutionInterrupt.
-extern void
-InterruptRunningCode(JSContext* cx);
 
 } // namespace jit
 } // namespace js

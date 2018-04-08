@@ -43,7 +43,6 @@ class OutOfLineTestObject;
 class OutOfLineNewArray;
 class OutOfLineNewObject;
 class CheckOverRecursedFailure;
-class OutOfLineInterruptCheckImplicit;
 class OutOfLineUnboxFloatingPoint;
 class OutOfLineStoreElementHole;
 class OutOfLineTypeOfV;
@@ -106,8 +105,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool);
 
     void visitOutOfLineICFallback(OutOfLineICFallback* ool);
-
-    void visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImplicit* ins);
 
     void visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier* ool);
     void visitOutOfLineCallPostWriteElementBarrier(OutOfLineCallPostWriteElementBarrier* ool);

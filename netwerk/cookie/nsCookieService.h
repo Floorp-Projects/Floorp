@@ -268,7 +268,7 @@ class nsCookieService final : public nsICookieService
   static bool CanSetCookie(nsIURI *aHostURI, const nsCookieKey& aKey, nsCookieAttributes &aCookieAttributes, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel, bool aLeaveSercureAlone, bool &aSetCookie, mozIThirdPartyUtil* aThirdPartyUtil);
   static CookieStatus CheckPrefs(nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior, bool aThirdPartySession, bool aThirdPartyNonsecureSession, nsIURI *aHostURI, bool aIsForeign, const char *aCookieHeader, const int aNumOfCookies, const OriginAttributes& aOriginAttrs);
   static int64_t ParseServerTime(const nsCString &aServerTime);
-  void GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsTArray<nsCookie*>& aCookieList);
+  void GetCookiesForURI(nsIURI *aHostURI, bool aIsForeign, bool aIsSafeTopLevelNav, bool aIsTopLevelForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsTArray<nsCookie*>& aCookieList);
 
   protected:
     virtual ~nsCookieService();
@@ -294,7 +294,7 @@ class nsCookieService final : public nsICookieService
     void                          EnsureReadComplete(bool aInitDBConn);
     nsresult                      NormalizeHost(nsCString &aHost);
     nsresult                      GetCookieStringCommon(nsIURI *aHostURI, nsIChannel *aChannel, bool aHttpBound, char** aCookie);
-    void                          GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsCString &aCookie);
+    void                          GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aIsSafeTopLevelNav, bool aIsTopLevelForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, nsCString &aCookie);
     nsresult                      SetCookieStringCommon(nsIURI *aHostURI, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, bool aFromHttp);
     void                          SetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, nsDependentCString &aCookieHeader, const nsCString &aServerTime, bool aFromHttp, bool aFromChild, const OriginAttributes &aOriginAttrs, nsIChannel* aChannel);
     bool                          SetCookieInternal(nsIURI *aHostURI, const nsCookieKey& aKey, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, bool aFromChild, nsIChannel* aChannel);
