@@ -135,17 +135,10 @@ add_test(function test_toJSON() {
   equal(e1s.message, e1.message);
   equal(e1s.stacktrace, e1.stack);
 
-  let e2 = new JavaScriptError("first", {
-    fnName: "second",
-    file: "third",
-    line: "fourth",
-  });
+  let e2 = new JavaScriptError("foo");
   let e2s = e2.toJSON();
   equal(e2.status, e2s.error);
   equal(e2.message, e2s.message);
-  ok(e2s.stacktrace.match(/second/));
-  ok(e2s.stacktrace.match(/third/));
-  ok(e2s.stacktrace.match(/fourth/));
 
   run_next_test();
 });
@@ -188,9 +181,11 @@ add_test(function test_fromJSON() {
   equal(e3r.stack, e3j.stacktrace);
 
   // parity with toJSON
-  let e4 = new JavaScriptError("first", "second", "third", "fourth");
-  let e4s = e4.toJSON();
-  deepEqual(e4, WebDriverError.fromJSON(e4s));
+  let e4j = new JavaScriptError("foo").toJSON();
+  let e4 = WebDriverError.fromJSON(e4j);
+  equal(e4j.error, e4.status);
+  equal(e4j.message, e4.message);
+  equal(e4j.stacktrace, e4.stack);
 
   run_next_test();
 });
@@ -322,13 +317,12 @@ add_test(function test_JavaScriptError() {
   equal("javascript error", err.status);
   ok(err instanceof WebDriverError);
 
-  equal("undefined", new JavaScriptError(undefined).message);
-  // TODO(ato): Bug 1240550
-  //equal("funcname @file", new JavaScriptError("message", {fnName: "funcname", file: "file"}).stack);
-  equal("funcname @file, line line",
-      new JavaScriptError("message", {fnName: "funcname", file: "file", line: "line"}).stack);
+  equal("", new JavaScriptError(undefined).message);
 
-  // TODO(ato): More exhaustive tests for JS stack computation
+  let superErr = new RangeError("foo");
+  let inheritedErr = new JavaScriptError(superErr);
+  equal("RangeError: foo", inheritedErr.message);
+  equal(superErr.stack, inheritedErr.stack);
 
   run_next_test();
 });
