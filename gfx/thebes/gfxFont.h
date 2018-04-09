@@ -189,8 +189,6 @@ struct gfxFontStyle {
             nsRefPtrHashKey<nsAtom>::HashKey(language);
     }
 
-    int8_t ComputeWeight() const;
-
     // Adjust this style to simulate sub/superscript (as requested in the
     // variantSubSuper field) using size and baselineOffset instead.
     void AdjustForSubSuperscript(int32_t aAppUnitsPerDevPixel);
