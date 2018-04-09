@@ -23,7 +23,6 @@ class nsCSSPropertyIDSet;
 namespace mozilla {
 class ComputedStyle;
 enum class CSSPseudoElementType : uint8_t;
-class GeckoComputedStyle;
 struct Keyframe;
 struct StyleTransition;
 } // namespace mozilla
