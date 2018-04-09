@@ -686,6 +686,21 @@ EventListenerManager::ListenerCanHandle(const Listener* aListener,
   return aListener->mEventMessage == aEventMessage;
 }
 
+static bool
+DefaultToPassiveTouchListeners()
+{
+  static bool sDefaultToPassiveTouchListeners = false;
+  static bool sIsPrefCached = false;
+
+  if (!sIsPrefCached) {
+    sIsPrefCached = true;
+    Preferences::AddBoolVarCache(&sDefaultToPassiveTouchListeners,
+                                 "dom.event.default_to_passive_touch_listeners");
+  }
+
+  return sDefaultToPassiveTouchListeners;
+}
+
 void
 EventListenerManager::AddEventListenerByType(
                         EventListenerHolder aListenerHolder,
@@ -702,7 +717,8 @@ EventListenerManager::AddEventListenerByType(
   EventListenerFlags flags = aFlags;
   if (aPassive.WasPassed()) {
     flags.mPassive = aPassive.Value();
-  } else if (message == eTouchStart || message == eTouchMove) {
+  } else if ((message == eTouchStart || message == eTouchMove) &&
+             mIsMainThreadELM && DefaultToPassiveTouchListeners()) {
     nsCOMPtr<nsINode> node;
     nsCOMPtr<nsPIDOMWindowInner> win;
     if ((win = GetTargetAsInnerWindow()) ||
