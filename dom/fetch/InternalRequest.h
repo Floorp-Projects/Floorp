@@ -31,36 +31,56 @@ class PrincipalInfo;
 namespace dom {
 
 /*
- * The mapping of RequestDestination and nsContentPolicyType is currently as the
+ * The mapping of RequestContext and nsContentPolicyType is currently as the
  * following.  Note that this mapping is not perfect yet (see the TODO comments
  * below for examples).
  *
- * RequestDestination| nsContentPolicyType
+ * RequestContext    | nsContentPolicyType
  * ------------------+--------------------
  * audio             | TYPE_INTERNAL_AUDIO
- * audioworklet      | TODO
- * document          | TYPE_DOCUMENT, TYPE_INTERNAL_IFRAME, TYPE_SUBDOCUMENT
+ * beacon            | TYPE_BEACON
+ * cspreport         | TYPE_CSP_REPORT
+ * download          |
  * embed             | TYPE_INTERNAL_EMBED
+ * eventsource       |
+ * favicon           |
+ * fetch             | TYPE_FETCH
  * font              | TYPE_FONT
- * image             | TYPE_INTERNAL_IMAGE, TYPE_INTERNAL_IMAGE_PRELOAD,
- *                   | TYPE_IMAGE, TYPE_INTERNAL_IMAGE_FAVICON, TYPE_IMAGESET
+ * form              |
+ * frame             | TYPE_INTERNAL_FRAME
+ * hyperlink         |
+ * iframe            | TYPE_INTERNAL_IFRAME
+ * image             | TYPE_INTERNAL_IMAGE, TYPE_INTERNAL_IMAGE_PRELOAD, TYPE_INTERNAL_IMAGE_FAVICON
+ * imageset          | TYPE_IMAGESET
+ * import            | Not supported by Gecko
+ * internal          | TYPE_DOCUMENT, TYPE_XBL, TYPE_OTHER, TYPE_SAVEAS_DOWNLOAD
+ * location          |
  * manifest          | TYPE_WEB_MANIFEST
- * object            | TYPE_INTERNAL_OBJECT, TYPE_OBJECT
- * "paintworklet"    | TODO
- * report"           | TODO
- * script            | TYPE_INTERNAL_SCRIPT, TYPE_INTERNAL_SCRIPT_PRELOAD, TYPE_SCRIPT
- *                   | TYPE_INTERNAL_SERVICE_WORKER, TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS
+ * object            | TYPE_INTERNAL_OBJECT
+ * ping              | TYPE_PING
+ * plugin            | TYPE_OBJECT_SUBREQUEST
+ * prefetch          |
+ * script            | TYPE_INTERNAL_SCRIPT, TYPE_INTERNAL_SCRIPT_PRELOAD
  * sharedworker      | TYPE_INTERNAL_SHARED_WORKER
- * serviceworker     | The spec lists this as a valid value for the enum,however it
- *                   | is impossible to observe a request with this destination value.
- * style             | TYPE_INTERNAL_STYLESHEET, TYPE_INTERNAL_STYLESHEET_PRELOAD,
- *                   | TYPE_STYLESHEET
+ * subresource       | Not supported by Gecko
+ * style             | TYPE_INTERNAL_STYLESHEET, TYPE_INTERNAL_STYLESHEET_PRELOAD
  * track             | TYPE_INTERNAL_TRACK
  * video             | TYPE_INTERNAL_VIDEO
  * worker            | TYPE_INTERNAL_WORKER
+ * xmlhttprequest    | TYPE_INTERNAL_XMLHTTPREQUEST
+ * eventsource       | TYPE_INTERNAL_EVENTSOURCE
  * xslt              | TYPE_XSLT
- * _empty            | Default for everything else.
  *
+ * TODO: Figure out if TYPE_REFRESH maps to anything useful
+ * TODO: Figure out if TYPE_DTD maps to anything useful
+ * TODO: Figure out if TYPE_WEBSOCKET maps to anything useful
+ * TODO: Add a content type for prefetch
+ * TODO: Use the content type for manifest when it becomes available
+ * TODO: Add a content type for location
+ * TODO: Add a content type for hyperlink
+ * TODO: Add a content type for form
+ * TODO: Add a content type for favicon
+ * TODO: Add a content type for download
  */
 
 class Request;
@@ -412,10 +432,10 @@ public:
   void
   OverrideContentPolicyType(nsContentPolicyType aContentPolicyType);
 
-  RequestDestination
-  Destination() const
+  RequestContext
+  Context() const
   {
-    return MapContentPolicyTypeToRequestDestination(mContentPolicyType);
+    return MapContentPolicyTypeToRequestContext(mContentPolicyType);
   }
 
   bool
@@ -550,15 +570,8 @@ private:
 
   ~InternalRequest();
 
-  // Map the content policy type to the associated fetch destination, as defined
-  // by the spec at https://fetch.spec.whatwg.org/#concept-request-destination.
-  // Note that while the HTML spec for the "Link" element and its "as" attribute
-  // (https://html.spec.whatwg.org/#attr-link-as) reuse fetch's definition of
-  // destination, and the Link class has an internal Link::AsDestination enum type,
-  // the latter is only a support type to map the string values via
-  // Link::ParseAsValue and Link::AsValueToContentPolicy to our canonical nsContentPolicyType.
-  static RequestDestination
-  MapContentPolicyTypeToRequestDestination(nsContentPolicyType aContentPolicyType);
+  static RequestContext
+  MapContentPolicyTypeToRequestContext(nsContentPolicyType aContentPolicyType);
 
   static bool
   IsNavigationContentPolicy(nsContentPolicyType aContentPolicyType);

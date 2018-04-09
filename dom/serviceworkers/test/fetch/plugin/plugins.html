@@ -25,11 +25,11 @@
   }
 
   navigator.serviceWorker.addEventListener("message", function onMessage(e) {
-    if (e.data.destination === "object") {
+    if (e.data.context === "object") {
       ok(false, "<object> should not be intercepted");
-    } else if (e.data.destination === "embed") {
+    } else if (e.data.context === "embed") {
       ok(false, "<embed> should not be intercepted");
-    } else if (e.data.destination === "" && e.data.resource === "foo.txt") {
+    } else if (e.data.context === "fetch" && e.data.resource === "foo.txt") {
       navigator.serviceWorker.removeEventListener("message", onMessage);
       finish();
     }
