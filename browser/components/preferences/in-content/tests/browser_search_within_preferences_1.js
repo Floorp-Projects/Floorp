@@ -213,49 +213,6 @@ add_task(async function exiting_search_reverts_to_general_pane() {
 });
 
 /**
- * Test for "Site Data" case, verifying elements with data-hidden-from-search = true
- * are hidden in search result.
- */
-add_task(async function verify_hidden_from_search_elements_dont_show_up() {
-  await SpecialPowers.pushPrefEnv({ "set": [["browser.storageManager.enabled", false]] });
-  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  let generalPane = gBrowser.contentDocument.getElementById("generalCategory");
-
-  is_element_hidden(generalPane, "Should not be in general");
-
-  // Performs search
-  let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-
-  is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
-    "Search input should be focused when visiting preferences");
-
-  let query = "site data";
-  let searchCompletedPromise = BrowserTestUtils.waitForEvent(
-    gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
-  EventUtils.sendString(query);
-  await searchCompletedPromise;
-
-  let mainPrefTag = gBrowser.contentDocument.getElementById("mainPrefPane");
-
-  let child = mainPrefTag.querySelector("#siteDataGroup");
-  is_element_hidden(child, "Should be hidden in search results");
-
-  // Takes search off
-  searchCompletedPromise = BrowserTestUtils.waitForEvent(
-    gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == "");
-  let count = query.length;
-  while (count--) {
-    EventUtils.sendKey("BACK_SPACE");
-  }
-  await searchCompletedPromise;
-
-  // Checks if back to normal
-  is_element_visible(generalPane, "Should be in generalPane");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
-
-/**
  * Test for if we go to another tab after searching
  */
 add_task(async function changing_tabs_after_searching() {
