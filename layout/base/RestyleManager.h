@@ -7,6 +7,7 @@
 #ifndef mozilla_RestyleManager_h
 #define mozilla_RestyleManager_h
 
+#include "mozilla/AutoRestore.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/OverflowChangedTracker.h"

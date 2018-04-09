@@ -116,7 +116,7 @@ add_task(async function() {
     let requestListItems = document.querySelectorAll(".request-list-item");
     for (let requestItem of requestListItems) {
       requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".requests-list-status");
+      let requestsListStatus = requestItem.querySelector(".status-code");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
     }
@@ -175,13 +175,16 @@ add_task(async function() {
     let panel = document.querySelector("#headers-panel");
     let summaryValues = panel.querySelectorAll(".tabpanel-summary-value.textbox-input");
     let { method, correctUri, details: { status, statusText } } = data;
+    let statusCode = panel.querySelector(".status-code");
+    EventUtils.sendMouseEvent({ type: "mouseover" }, statusCode);
+    await waitUntil(() => statusCode.title);
 
     is(summaryValues[0].value, correctUri,
       "The url summary value is incorrect.");
     is(summaryValues[1].value, method, "The method summary value is incorrect.");
-    is(panel.querySelector(".requests-list-status-icon").dataset.code, status,
+    is(statusCode.dataset.code, status,
       "The status summary code is incorrect.");
-    is(summaryValues[3].value, status + " " + statusText,
+    is(statusCode.getAttribute("title"), status + " " + statusText,
       "The status summary value is incorrect.");
   }
 

@@ -1037,6 +1037,16 @@ LiveSavedFrameCache::FramePtr::setHasCachedSavedFrame() {
     ptr.match(SetHasCachedMatcher());
 }
 
+struct LiveSavedFrameCache::FramePtr::ClearHasCachedMatcher {
+    template<typename Frame>
+    void match(Frame* f) { f->clearHasCachedSavedFrame(); }
+};
+
+inline void
+LiveSavedFrameCache::FramePtr::clearHasCachedSavedFrame() {
+    ptr.match(ClearHasCachedMatcher());
+}
+
 } /* namespace js */
 
 #endif /* vm_Stack_inl_h */

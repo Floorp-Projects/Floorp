@@ -98,7 +98,7 @@ add_task(async function() {
   for (let request of REQUEST_DATA) {
     let requestItem = document.querySelectorAll(".request-list-item")[index];
     requestItem.scrollIntoView();
-    let requestsListStatus = requestItem.querySelector(".requests-list-status");
+    let requestsListStatus = requestItem.querySelector(".status-code");
     EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
     await waitUntil(() => requestsListStatus.title);
 
