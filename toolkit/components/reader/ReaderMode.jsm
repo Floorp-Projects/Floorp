@@ -32,7 +32,7 @@ const CLASSES_TO_PRESERVE = [
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+Cu.importGlobalProperties(["XMLHttpRequest", "XMLSerializer"]);
 
 ChromeUtils.defineModuleGetter(this, "CommonUtils", "resource://services-common/utils.js");
 ChromeUtils.defineModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
@@ -471,8 +471,7 @@ var ReaderMode = {
       pathBase: Services.io.newURI(".", null, doc.baseURIObject).spec
     };
 
-    let serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
-                     createInstance(Ci.nsIDOMSerializer);
+    let serializer = new XMLSerializer();
     let serializedDoc = serializer.serializeToString(doc);
 
     let options = {
