@@ -12,8 +12,6 @@ addons:
     - www2.web-platform.test
     - xn--n8j6ds53lwwkrqhv28a.web-platform.test
     - xn--lve-6lad.web-platform.test
-  jwt:
-    secure: N9lvgkqUPtFlz6Vpa6qTPFhymEsDCsbaCsT64/hj3vlHRxK94r5+ugVJ3zm99zC0q2j1ish8yJC7mN/W4wRfBE4sAwmdxrlowxF1DDGCkaLE9i/GWW92s0fBVGJmXLh8kwNkQ31hMOsaGfHIMpeLFS7Se741te7YqsHIzmBCdQs=
 before_install:
   # This needs be sourced as it sets various env vars
   - . ./tools/ci/before_install.sh
