@@ -777,6 +777,7 @@
                      class="chromeclass-location" overflows="false">
             <textbox id="urlbar" flex="1"
                      placeholder="&urlbar.placeholder2;"
+                     defaultPlaceholder="&urlbar.placeholder2;"
                      focused="true"
                      type="autocomplete"
                      autocompletesearch="unifiedcomplete"
