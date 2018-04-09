@@ -1139,9 +1139,9 @@ class RecompileInfo
         return script_;
     }
 
-    inline jit::IonScript* maybeIonScriptToInvalidate() const;
+    inline jit::IonScript* maybeIonScriptToInvalidate(const TypeZone& zone) const;
 
-    inline bool shouldSweep();
+    inline bool shouldSweep(const TypeZone& zone);
 
     bool operator==(const RecompileInfo& other) const {
         return script_== other.script_ && id_ == other.id_;
@@ -1340,6 +1340,9 @@ class TypeZone
     static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 8 * 1024;
     ZoneGroupData<LifoAlloc> typeLifoAlloc_;
 
+    // Under CodeGenerator::link, the id of the current compilation.
+    ZoneGroupData<mozilla::Maybe<IonCompilationId>> currentCompilationId_;
+
     TypeZone(const TypeZone&) = delete;
     void operator=(const TypeZone&) = delete;
 
@@ -1387,6 +1390,13 @@ class TypeZone
     void setSweepingTypes(bool sweeping) {
         MOZ_RELEASE_ASSERT(sweepingTypes != sweeping);
         sweepingTypes = sweeping;
+    }
+
+    mozilla::Maybe<IonCompilationId> currentCompilationId() const {
+        return currentCompilationId_.ref();
+    }
+    mozilla::Maybe<IonCompilationId>& currentCompilationIdRef() {
+        return currentCompilationId_.ref();
     }
 };
 
