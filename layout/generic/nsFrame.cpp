@@ -5487,7 +5487,7 @@ nsIFrame::InlinePrefISizeData::ForceBreak(StyleClear aBreakType)
 static void
 AddCoord(const nsStyleCoord& aStyle,
          nsIFrame* aFrame,
-         nscoord* aCoord, float* aPercent,
+         nscoord* aCoord,
          bool aClampNegativeToZero)
 {
   switch (aStyle.GetUnit()) {
@@ -5500,18 +5500,14 @@ AddCoord(const nsStyleCoord& aStyle,
     case eStyleUnit_Percent: {
       NS_ASSERTION(!aClampNegativeToZero || aStyle.GetPercentValue() >= 0.0f,
                    "unexpected negative value");
-      *aPercent += aStyle.GetPercentValue();
       return;
     }
     case eStyleUnit_Calc: {
       const nsStyleCoord::Calc *calc = aStyle.GetCalcValue();
       if (aClampNegativeToZero) {
-        // This is far from ideal when one is negative and one is positive.
         *aCoord += std::max(calc->mLength, 0);
-        *aPercent += std::max(calc->mPercent, 0.0f);
       } else {
         *aCoord += calc->mLength;
-        *aPercent += calc->mPercent;
       }
       return;
     }
@@ -5530,22 +5526,18 @@ IntrinsicSizeOffsets(nsIFrame* aFrame, bool aForISize)
   bool verticalAxis = aForISize == wm.IsVertical();
   AddCoord(verticalAxis ? styleMargin->mMargin.GetTop()
                         : styleMargin->mMargin.GetLeft(),
-           aFrame, &result.hMargin, &result.hPctMargin,
-           false);
+           aFrame, &result.hMargin, false);
   AddCoord(verticalAxis ? styleMargin->mMargin.GetBottom()
                         : styleMargin->mMargin.GetRight(),
-           aFrame, &result.hMargin, &result.hPctMargin,
-           false);
+           aFrame, &result.hMargin, false);
 
   const nsStylePadding* stylePadding = aFrame->StylePadding();
   AddCoord(verticalAxis ? stylePadding->mPadding.GetTop()
                         : stylePadding->mPadding.GetLeft(),
-           aFrame, &result.hPadding, &result.hPctPadding,
-           true);
+           aFrame, &result.hPadding, true);
   AddCoord(verticalAxis ? stylePadding->mPadding.GetBottom()
                         : stylePadding->mPadding.GetRight(),
-           aFrame, &result.hPadding, &result.hPctPadding,
-           true);
+           aFrame, &result.hPadding, true);
 
   const nsStyleBorder* styleBorder = aFrame->StyleBorder();
   if (verticalAxis) {
@@ -5575,7 +5567,6 @@ IntrinsicSizeOffsets(nsIFrame* aFrame, bool aForISize)
       result.hPadding =
         presContext->DevPixelsToAppUnits(verticalAxis ? padding.TopBottom()
                                                       : padding.LeftRight());
-      result.hPctPadding = 0;
     }
   }
   return result;

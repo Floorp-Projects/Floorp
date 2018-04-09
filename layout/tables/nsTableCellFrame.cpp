@@ -782,7 +782,6 @@ nsTableCellFrame::IntrinsicISizeOffsets()
   IntrinsicISizeOffsetData result = nsContainerFrame::IntrinsicISizeOffsets();
 
   result.hMargin = 0;
-  result.hPctMargin = 0;
 
   WritingMode wm = GetWritingMode();
   result.hBorder = GetBorderWidth(wm).IStartEnd(wm);
