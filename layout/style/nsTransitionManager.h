@@ -322,8 +322,8 @@ public:
   bool UpdateTransitions(
     mozilla::dom::Element *aElement,
     mozilla::CSSPseudoElementType aPseudoType,
-    const mozilla::ComputedStyle* aOldStyle,
-    const mozilla::ComputedStyle* aNewStyle);
+    const mozilla::ComputedStyle& aOldStyle,
+    const mozilla::ComputedStyle& aNewStyle);
 
 
 protected:
@@ -337,25 +337,23 @@ protected:
   // as needed. aDisp and aElement must be non-null.
   // aElementTransitions is the collection of current transitions, and it
   // could be a nullptr if we don't have any transitions.
-  template<typename StyleType> bool
-  DoUpdateTransitions(const nsStyleDisplay& aDisp,
-                      mozilla::dom::Element* aElement,
-                      mozilla::CSSPseudoElementType aPseudoType,
-                      CSSTransitionCollection*& aElementTransitions,
-                      StyleType aOldStyle,
-                      StyleType aNewStyle);
+  bool DoUpdateTransitions(const nsStyleDisplay& aDisp,
+                           mozilla::dom::Element* aElement,
+                           mozilla::CSSPseudoElementType aPseudoType,
+                           CSSTransitionCollection*& aElementTransitions,
+                           const mozilla::ComputedStyle& aOldStyle,
+                           const mozilla::ComputedStyle& aNewStyle);
 
-  template<typename StyleType> void
-  ConsiderInitiatingTransition(nsCSSPropertyID aProperty,
-                               const nsStyleDisplay& aStyleDisplay,
-                               uint32_t transitionIdx,
-                               mozilla::dom::Element* aElement,
-                               mozilla::CSSPseudoElementType aPseudoType,
-                               CSSTransitionCollection*& aElementTransitions,
-                               StyleType aOldStyle,
-                               StyleType aNewStyle,
-                               bool* aStartedAny,
-                               nsCSSPropertyIDSet* aWhichStarted);
+  void ConsiderInitiatingTransition(nsCSSPropertyID aProperty,
+                                    const nsStyleDisplay& aStyleDisplay,
+                                    uint32_t transitionIdx,
+                                    mozilla::dom::Element* aElement,
+                                    mozilla::CSSPseudoElementType aPseudoType,
+                                    CSSTransitionCollection*& aElementTransitions,
+                                    const mozilla::ComputedStyle& aOldStyle,
+                                    const mozilla::ComputedStyle& aNewStyle,
+                                    bool* aStartedAny,
+                                    nsCSSPropertyIDSet* aWhichStarted);
 
 };
 
