@@ -30,11 +30,11 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
 
     this._actions = [{
       id: "org.mozilla.geckoview.CUT",
-      predicate: e => !e.collapsed && e.selectionEditable,
+      predicate: e => !e.collapsed && e.selectionEditable && !this._isPasswordField(e),
       perform: _ => this._domWindowUtils.sendContentCommandEvent("cut"),
     }, {
       id: "org.mozilla.geckoview.COPY",
-      predicate: e => !e.collapsed,
+      predicate: e => !e.collapsed && !this._isPasswordField(e),
       perform: _ => this._domWindowUtils.sendContentCommandEvent("copy"),
     }, {
       id: "org.mozilla.geckoview.PASTE",
@@ -68,6 +68,18 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
   get _domWindowUtils() {
     return content.QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIDOMWindowUtils);
+  }
+
+  _isPasswordField(aEvent) {
+    if (!aEvent.selectionEditable) {
+      return false;
+    }
+
+    const win = aEvent.target.defaultView;
+    const focus = aEvent.target.activeElement;
+    return win && win.HTMLInputElement &&
+           focus instanceof win.HTMLInputElement &&
+           !focus.mozIsTextField(/* excludePassword */ true);
   }
 
   _getSelectionController(aEvent) {
@@ -136,8 +148,7 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
     if (this._isActive && !aEvent.caretVisible) {
       // For mozcaretstatechanged, "visibilitychange" means the caret is hidden.
       reason = "visibilitychange";
-    } else if (this._isActive &&
-               !aEvent.collapsed &&
+    } else if (!aEvent.collapsed &&
                !aEvent.selectionVisible) {
       reason = "invisibleselection";
     } else if (aEvent.selectionEditable &&
@@ -161,13 +172,15 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
           action => action.predicate.call(this, aEvent));
 
       const offset = this._getFrameOffset(aEvent);
+      const password = this._isPasswordField(aEvent);
 
       const msg = {
         type: "GeckoView:ShowSelectionAction",
         seqNo: this._seqNo,
         collapsed: aEvent.collapsed,
         editable: aEvent.selectionEditable,
-        selection: aEvent.selectedTextContent,
+        password,
+        selection: password ? "" : aEvent.selectedTextContent,
         clientRect: !aEvent.boundingClientRect ? null : {
           left: aEvent.boundingClientRect.left + offset.left,
           top: aEvent.boundingClientRect.top + offset.top,

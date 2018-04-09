@@ -1812,6 +1812,10 @@ public class GeckoSession extends LayerSession
          * contentEditable node.
          */
         final int FLAG_IS_EDITABLE = 2;
+        /**
+         * The selection is inside a password field.
+         */
+        final int FLAG_IS_PASSWORD = 4;
 
         @StringDef({ACTION_CUT,
                     ACTION_COPY,
@@ -1887,7 +1891,9 @@ public class GeckoSession extends LayerSession
                 flags = (bundle.getBoolean("collapsed") ?
                          SelectionActionDelegate.FLAG_IS_COLLAPSED : 0) |
                         (bundle.getBoolean("editable") ?
-                         SelectionActionDelegate.FLAG_IS_EDITABLE : 0);
+                         SelectionActionDelegate.FLAG_IS_EDITABLE : 0) |
+                        (bundle.getBoolean("password") ?
+                         SelectionActionDelegate.FLAG_IS_PASSWORD : 0);
                 text = bundle.getString("selection");
 
                 final GeckoBundle rectBundle = bundle.getBundle("clientRect");
