@@ -118,8 +118,7 @@ public:
   // have changed so that any context-sensitive values stored within
   // animation effects (e.g. em-based endpoints used in keyframe effects)
   // can be re-resolved to computed values.
-  template<typename StyleType>
-  void UpdateEffectProperties(StyleType* aStyleType,
+  void UpdateEffectProperties(const ComputedStyle* aStyle,
                               dom::Element* aElement,
                               CSSPseudoElementType aPseudoType);
 
