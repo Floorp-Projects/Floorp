@@ -909,11 +909,11 @@ function getAllAliasesForTypes(aTypes) {
  * A synchronous method for loading an add-on's manifest. This should only ever
  * be used during startup or a sync load of the add-ons DB
  */
-function syncLoadManifestFromFile(aFile, aInstallLocation) {
+function syncLoadManifestFromFile(aFile, aInstallLocation, aOldAddon) {
   let success = undefined;
   let result = null;
 
-  loadManifestFromFile(aFile, aInstallLocation).then(val => {
+  loadManifestFromFile(aFile, aInstallLocation, aOldAddon).then(val => {
     success = true;
     result = val;
   }, val => {
@@ -4493,7 +4493,7 @@ AddonInternal.prototype = {
     return app;
   },
 
-  findBlocklistEntry() {
+  async findBlocklistEntry() {
     let staticItem = findMatchingStaticBlocklistItem(this);
     if (staticItem) {
       let url = Services.urlFormatter.formatURLPref(PREF_BLOCKLIST_ITEM_URL);
@@ -4506,7 +4506,7 @@ AddonInternal.prototype = {
     return Blocklist.getAddonBlocklistEntry(this.wrapper);
   },
 
-  updateBlocklistState(options = {}) {
+  async updateBlocklistState(options = {}) {
     let {applySoftBlock = true, oldAddon = null, updateDatabase = true} = options;
 
     if (oldAddon) {
@@ -4516,7 +4516,7 @@ AddonInternal.prototype = {
     }
     let oldState = this.blocklistState;
 
-    let entry = this.findBlocklistEntry();
+    let entry = await this.findBlocklistEntry();
     let newState = entry ? entry.state : Blocklist.STATE_NOT_BLOCKED;
 
     this.blocklistState = newState;
@@ -4937,7 +4937,7 @@ AddonWrapper.prototype = {
   },
 
   updateBlocklistState(applySoftBlock = true) {
-    addonFor(this).updateBlocklistState({applySoftBlock});
+    return addonFor(this).updateBlocklistState({applySoftBlock});
   },
 
   get userDisabled() {
