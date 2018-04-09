@@ -438,7 +438,7 @@ protected:
   nsresult MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
 
   /**
-   * MaybeSplitAncestorsForInsert() does nothing if container of
+   * MaybeSplitAncestorsForInsertWithTransaction() does nothing if container of
    * aStartOfDeepestRightNode can have an element whose tag name is aTag.
    * Otherwise, looks for an ancestor node which is or is in active editing
    * host and can have an element whose name is aTag.  If there is such
@@ -455,7 +455,7 @@ protected:
    *                                    the point to insert the element.
    */
   template<typename PT, typename CT>
-  SplitNodeResult MaybeSplitAncestorsForInsert(
+  SplitNodeResult MaybeSplitAncestorsForInsertWithTransaction(
                     nsAtom& aTag,
                     const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode);
 

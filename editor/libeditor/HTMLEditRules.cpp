@@ -1884,8 +1884,9 @@ HTMLEditRules::InsertBRElement(Selection& aSelection,
         return NS_ERROR_FAILURE;
       }
       SplitNodeResult splitLinkNodeResult =
-        htmlEditor->SplitNodeDeep(*linkNode, pointToBreak,
-                                  SplitAtEdges::eDoNotCreateEmptyContainer);
+        htmlEditor->SplitNodeDeepWithTransaction(
+                      *linkNode, pointToBreak,
+                      SplitAtEdges::eDoNotCreateEmptyContainer);
       if (NS_WARN_IF(splitLinkNodeResult.Failed())) {
         return splitLinkNodeResult.Rv();
       }
@@ -2027,8 +2028,9 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
   }
 
   SplitNodeResult splitCiteNodeResult =
-    htmlEditor->SplitNodeDeep(*citeNode, pointToSplit,
-                              SplitAtEdges::eDoNotCreateEmptyContainer);
+    htmlEditor->SplitNodeDeepWithTransaction(
+                  *citeNode, pointToSplit,
+                  SplitAtEdges::eDoNotCreateEmptyContainer);
   if (NS_WARN_IF(splitCiteNodeResult.Failed())) {
     return splitCiteNodeResult.Rv();
   }
@@ -3586,7 +3588,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
     }
 
     SplitNodeResult splitAtSelectionStartResult =
-      MaybeSplitAncestorsForInsert(listType, atStartOfSelection);
+      MaybeSplitAncestorsForInsertWithTransaction(listType, atStartOfSelection);
     if (NS_WARN_IF(splitAtSelectionStartResult.Failed())) {
       return splitAtSelectionStartResult.Rv();
     }
@@ -3697,7 +3699,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
           }
           ErrorResult error;
           nsCOMPtr<nsIContent> newLeftNode =
-            htmlEditor->SplitNode(atCurNode, error);
+            htmlEditor->SplitNodeWithTransaction(atCurNode, error);
           if (NS_WARN_IF(error.Failed())) {
             return error.StealNSResult();
           }
@@ -3765,7 +3767,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
     // need to make a list to put things in if we haven't already,
     if (!curList) {
       SplitNodeResult splitCurNodeResult =
-        MaybeSplitAncestorsForInsert(listType, atCurNode);
+        MaybeSplitAncestorsForInsertWithTransaction(listType, atCurNode);
       if (NS_WARN_IF(splitCurNodeResult.Failed())) {
         return splitCurNodeResult.Rv();
       }
@@ -3961,8 +3963,9 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsAtom& blockType)
       }
       // Do the splits!
       SplitNodeResult splitNodeResult =
-        htmlEditor->SplitNodeDeep(*curBlock, pointToInsertBlock,
-                                  SplitAtEdges::eDoNotCreateEmptyContainer);
+        htmlEditor->SplitNodeDeepWithTransaction(
+                      *curBlock, pointToInsertBlock,
+                      SplitAtEdges::eDoNotCreateEmptyContainer);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -3994,7 +3997,8 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsAtom& blockType)
     }
     // Make sure we can put a block here.
     SplitNodeResult splitNodeResult =
-      MaybeSplitAncestorsForInsert(blockType, pointToInsertBlock);
+      MaybeSplitAncestorsForInsertWithTransaction(blockType,
+                                                  pointToInsertBlock);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
@@ -4146,7 +4150,8 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
 
     // make sure we can put a block here
     SplitNodeResult splitNodeResult =
-      MaybeSplitAncestorsForInsert(*nsGkAtoms::div, atStartOfSelection);
+      MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
+                                                  atStartOfSelection);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
@@ -4237,7 +4242,8 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
           atCurNode.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsert(*containerName, atCurNode);
+          MaybeSplitAncestorsForInsertWithTransaction(*containerName,
+                                                      atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -4275,7 +4281,7 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
       }
 
       SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsert(*nsGkAtoms::div, atCurNode);
+        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div, atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -4352,8 +4358,8 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
 
     // Make sure we can put a block here.
     SplitNodeResult splitNodeResult =
-      MaybeSplitAncestorsForInsert(*nsGkAtoms::blockquote,
-                                   atStartOfSelection);
+      MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
+                                                  atStartOfSelection);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
@@ -4443,7 +4449,8 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
           atCurNode.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsert(*containerName, atCurNode);
+          MaybeSplitAncestorsForInsertWithTransaction(*containerName,
+                                                      atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -4495,7 +4502,8 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
           atListItem.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsert(*containerName, atListItem);
+          MaybeSplitAncestorsForInsertWithTransaction(*containerName,
+                                                      atListItem);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -4532,7 +4540,8 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
       }
 
       SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsert(*nsGkAtoms::blockquote, atCurNode);
+        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
+                                                    atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -4841,8 +4850,9 @@ HTMLEditRules::SplitBlock(Element& aBlock,
 
   // Split at the start.
   SplitNodeResult splitAtStartResult =
-    htmlEditor->SplitNodeDeep(aBlock, EditorRawDOMPoint(&aStartChild),
-                              SplitAtEdges::eDoNotCreateEmptyContainer);
+    htmlEditor->SplitNodeDeepWithTransaction(
+                  aBlock, EditorRawDOMPoint(&aStartChild),
+                  SplitAtEdges::eDoNotCreateEmptyContainer);
   NS_WARNING_ASSERTION(splitAtStartResult.Succeeded(),
     "Failed to split aBlock at start");
 
@@ -4852,8 +4862,9 @@ HTMLEditRules::SplitBlock(Element& aBlock,
   NS_WARNING_ASSERTION(advanced,
     "Failed to advance offset after the end node");
   SplitNodeResult splitAtEndResult =
-    htmlEditor->SplitNodeDeep(aBlock, atAfterEnd,
-                              SplitAtEdges::eDoNotCreateEmptyContainer);
+    htmlEditor->SplitNodeDeepWithTransaction(
+                  aBlock, atAfterEnd,
+                  SplitAtEdges::eDoNotCreateEmptyContainer);
   NS_WARNING_ASSERTION(splitAtEndResult.Succeeded(),
     "Failed to split aBlock at after end");
 
@@ -4998,8 +5009,9 @@ HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
     if (RefPtr<Text> text = node->GetAsText()) {
       // if we are in a text node, split it
       SplitNodeResult splitTextNodeResult =
-        htmlEditor->SplitNodeDeep(*text, EditorRawDOMPoint(text, offset),
-                                   SplitAtEdges::eAllowToCreateEmptyContainer);
+        htmlEditor->SplitNodeDeepWithTransaction(
+                       *text, EditorRawDOMPoint(text, offset),
+                       SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitTextNodeResult.Failed())) {
         return splitTextNodeResult.Rv();
       }
@@ -5145,7 +5157,8 @@ HTMLEditRules::WillAlign(Selection& aSelection,
     }
 
     SplitNodeResult splitNodeResult =
-      MaybeSplitAncestorsForInsert(*nsGkAtoms::div, atStartOfSelection);
+      MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
+                                                  atStartOfSelection);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
@@ -5281,7 +5294,7 @@ HTMLEditRules::WillAlign(Selection& aSelection,
       }
 
       SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsert(*nsGkAtoms::div, atCurNode);
+        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div, atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -6209,6 +6222,9 @@ private:
 /**
  * GetNodesForOperation() runs through the ranges in the array and construct a
  * new array of nodes to be acted on.
+ *
+ * XXX This name stats with "Get" but actually this modifies the DOM tree with
+ *     transaction.  We should rename this to making clearer what this does.
  */
 nsresult
 HTMLEditRules::GetNodesForOperation(
@@ -6234,7 +6250,7 @@ HTMLEditRules::GetNodesForOperation(
         // Split the text node.
         ErrorResult error;
         nsCOMPtr<nsIContent> newLeftNode =
-          htmlEditor->SplitNode(atEnd, error);
+          htmlEditor->SplitNodeWithTransaction(atEnd, error);
         if (NS_WARN_IF(error.Failed())) {
           return error.StealNSResult();
         }
@@ -6585,10 +6601,10 @@ HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& item)
   if (endInline && !isCollapsed) {
     RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
     SplitNodeResult splitEndInlineResult =
-      htmlEditor->SplitNodeDeep(*endInline,
-                                EditorRawDOMPoint(item.mEndContainer,
-                                                  item.mEndOffset),
-                                SplitAtEdges::eDoNotCreateEmptyContainer);
+      htmlEditor->SplitNodeDeepWithTransaction(
+                    *endInline,
+                    EditorRawDOMPoint(item.mEndContainer, item.mEndOffset),
+                    SplitAtEdges::eDoNotCreateEmptyContainer);
     if (NS_WARN_IF(splitEndInlineResult.Failed())) {
       return splitEndInlineResult.Rv();
     }
@@ -6609,10 +6625,10 @@ HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& item)
   if (startInline) {
     RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
     SplitNodeResult splitStartInlineResult =
-      htmlEditor->SplitNodeDeep(*startInline,
-                                EditorRawDOMPoint(item.mStartContainer,
-                                                  item.mStartOffset),
-                                SplitAtEdges::eDoNotCreateEmptyContainer);
+      htmlEditor->SplitNodeDeepWithTransaction(
+                    *startInline,
+                    EditorRawDOMPoint(item.mStartContainer, item.mStartOffset),
+                    SplitAtEdges::eDoNotCreateEmptyContainer);
     if (NS_WARN_IF(splitStartInlineResult.Failed())) {
       return splitStartInlineResult.Rv();
     }
@@ -6655,8 +6671,9 @@ HTMLEditRules::BustUpInlinesAtBRs(
       return NS_ERROR_FAILURE;
     }
     SplitNodeResult splitNodeResult =
-      htmlEditor->SplitNodeDeep(*nextNode, atBrNode,
-                                SplitAtEdges::eAllowToCreateEmptyContainer);
+      htmlEditor->SplitNodeDeepWithTransaction(
+                    *nextNode, atBrNode,
+                    SplitAtEdges::eAllowToCreateEmptyContainer);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
@@ -6664,8 +6681,8 @@ HTMLEditRules::BustUpInlinesAtBRs(
     // Put previous node at the split point.
     if (splitNodeResult.GetPreviousNode()) {
       // Might not be a left node.  A break might have been at the very
-      // beginning of inline container, in which case SplitNodeDeep would not
-      // actually split anything
+      // beginning of inline container, in which case
+      // SplitNodeDeepWithTransaction() would not actually split anything.
       aOutArrayOfNodes.AppendElement(*splitNodeResult.GetPreviousNode());
     }
 
@@ -6876,8 +6893,9 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
   // Split the header
   ErrorResult error;
   SplitNodeResult splitHeaderResult =
-    htmlEditor->SplitNodeDeep(aHeader, EditorRawDOMPoint(node, aOffset),
-                              SplitAtEdges::eAllowToCreateEmptyContainer);
+    htmlEditor->SplitNodeDeepWithTransaction(
+                  aHeader, EditorRawDOMPoint(node, aOffset),
+                  SplitAtEdges::eAllowToCreateEmptyContainer);
   NS_WARNING_ASSERTION(splitHeaderResult.Succeeded(),
     "Failed to split aHeader");
 
@@ -7081,7 +7099,7 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
       if (doesCRCreateNewP) {
         ErrorResult error;
         nsCOMPtr<nsIContent> newLeftDivOrP =
-          htmlEditor->SplitNode(pointToSplitParentDivOrP, error);
+          htmlEditor->SplitNodeWithTransaction(pointToSplitParentDivOrP, error);
         if (NS_WARN_IF(error.Failed())) {
           return EditActionResult(error.StealNSResult());
         }
@@ -7174,9 +7192,10 @@ HTMLEditRules::SplitParagraph(
 
   // Split the paragraph.
   SplitNodeResult splitDivOrPResult =
-    htmlEditor->SplitNodeDeep(aParentDivOrP,
-                              EditorRawDOMPoint(selNode, selOffset),
-                              SplitAtEdges::eAllowToCreateEmptyContainer);
+    htmlEditor->SplitNodeDeepWithTransaction(
+                  aParentDivOrP,
+                  EditorRawDOMPoint(selNode, selOffset),
+                  SplitAtEdges::eAllowToCreateEmptyContainer);
   if (NS_WARN_IF(splitDivOrPResult.Failed())) {
     return splitDivOrPResult.Rv();
   }
@@ -7256,7 +7275,7 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
       // We need to split the list!
       EditorRawDOMPoint atListItem(&aListItem);
       ErrorResult error;
-      leftListNode = htmlEditor->SplitNode(atListItem, error);
+      leftListNode = htmlEditor->SplitNodeWithTransaction(atListItem, error);
       if (NS_WARN_IF(error.Failed())) {
         return error.StealNSResult();
       }
@@ -7322,8 +7341,9 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
 
   // Now split the list item.
   SplitNodeResult splitListItemResult =
-    htmlEditor->SplitNodeDeep(aListItem, EditorRawDOMPoint(selNode, aOffset),
-                              SplitAtEdges::eAllowToCreateEmptyContainer);
+    htmlEditor->SplitNodeDeepWithTransaction(
+                  aListItem, EditorRawDOMPoint(selNode, aOffset),
+                  SplitAtEdges::eAllowToCreateEmptyContainer);
   NS_WARNING_ASSERTION(splitListItemResult.Succeeded(),
     "Failed to split the list item");
 
@@ -7470,7 +7490,8 @@ HTMLEditRules::MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
     if (!curBlock) {
       EditorDOMPoint atCurNode(curNode);
       SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsert(*nsGkAtoms::blockquote, atCurNode);
+        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
+                                                    atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -7650,7 +7671,7 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
 
       // Make sure we can put a block here
       SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsert(aBlockTag, atCurNode);
+        MaybeSplitAncestorsForInsertWithTransaction(aBlockTag, atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -7679,7 +7700,7 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       // The break is the first (or even only) node we encountered.  Create a
       // block for it.
       SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsert(aBlockTag, atCurNode);
+        MaybeSplitAncestorsForInsertWithTransaction(aBlockTag, atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -7715,7 +7736,7 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
         AutoEditorDOMPointOffsetInvalidator lockChild(atCurNode);
 
         SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsert(aBlockTag, atCurNode);
+          MaybeSplitAncestorsForInsertWithTransaction(aBlockTag, atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -7748,7 +7769,7 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
 
 template<typename PT, typename CT>
 SplitNodeResult
-HTMLEditRules::MaybeSplitAncestorsForInsert(
+HTMLEditRules::MaybeSplitAncestorsForInsertWithTransaction(
                  nsAtom& aTag,
                  const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode)
 {
@@ -7800,9 +7821,10 @@ HTMLEditRules::MaybeSplitAncestorsForInsert(
   }
 
   SplitNodeResult splitNodeResult =
-    htmlEditor->SplitNodeDeep(*pointToInsert.GetChild(),
-                              aStartOfDeepestRightNode,
-                              SplitAtEdges::eAllowToCreateEmptyContainer);
+    htmlEditor->SplitNodeDeepWithTransaction(
+                  *pointToInsert.GetChild(),
+                  aStartOfDeepestRightNode,
+                  SplitAtEdges::eAllowToCreateEmptyContainer);
   NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
     "Failed to split the node for insert the element");
   return splitNodeResult;
@@ -8718,7 +8740,7 @@ HTMLEditRules::PopListItem(nsIContent& aListItem,
 
     // split the list
     ErrorResult error;
-    leftListNode = mHTMLEditor->SplitNode(atListItem, error);
+    leftListNode = mHTMLEditor->SplitNodeWithTransaction(atListItem, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -9395,7 +9417,8 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
 
     // Make sure we can put a block here.
     SplitNodeResult splitNodeResult =
-      MaybeSplitAncestorsForInsert(*nsGkAtoms::div, atStartOfSelection);
+      MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
+                                                  atStartOfSelection);
     if (NS_WARN_IF(splitNodeResult.Failed())) {
       return splitNodeResult.Rv();
     }
@@ -9453,7 +9476,8 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
           atCurNode.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
         SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsert(*containerName, atCurNode);
+          MaybeSplitAncestorsForInsertWithTransaction(*containerName,
+                                                      atCurNode);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -9509,7 +9533,8 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
           atListItem.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type
         SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsert(*containerName, atListItem);
+          MaybeSplitAncestorsForInsertWithTransaction(*containerName,
+                                                      atListItem);
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
@@ -9547,7 +9572,8 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
         continue;
       }
       SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsert(*nsGkAtoms::div, atCurNode);
+        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
+                                                    atCurNode);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }

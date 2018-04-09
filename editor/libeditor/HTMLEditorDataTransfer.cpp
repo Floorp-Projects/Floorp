@@ -366,8 +366,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     // Are we in a text node? If so, split it.
     if (pointToInsert.IsInTextNode()) {
       SplitNodeResult splitNodeResult =
-        SplitNodeDeep(*pointToInsert.GetContainerAsContent(), pointToInsert,
-                      SplitAtEdges::eAllowToCreateEmptyContainer);
+        SplitNodeDeepWithTransaction(
+          *pointToInsert.GetContainerAsContent(), pointToInsert,
+          SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -669,8 +670,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
         nsCOMPtr<nsIContent> linkContent = do_QueryInterface(link);
         NS_ENSURE_STATE(linkContent || !link);
         SplitNodeResult splitLinkResult =
-          SplitNodeDeep(*linkContent, EditorRawDOMPoint(selNode, selOffset),
-                        SplitAtEdges::eDoNotCreateEmptyContainer);
+          SplitNodeDeepWithTransaction(
+            *linkContent, EditorRawDOMPoint(selNode, selOffset),
+            SplitAtEdges::eDoNotCreateEmptyContainer);
         NS_WARNING_ASSERTION(splitLinkResult.Succeeded(),
           "Failed to split the link");
         if (splitLinkResult.GetPreviousNode()) {

@@ -140,7 +140,8 @@ EditActionCanceled(nsresult aRv = NS_OK)
 }
 
 /***************************************************************************
- * SplitNodeResult is a simple class for EditorBase::SplitNodeDeep().
+ * SplitNodeResult is a simple class for
+ * EditorBase::SplitNodeDeepWithTransaction().
  * This makes the callers' code easier to read.
  */
 class MOZ_STACK_CLASS SplitNodeResult final
