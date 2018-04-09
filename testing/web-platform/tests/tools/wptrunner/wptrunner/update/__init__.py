@@ -42,5 +42,11 @@ def main():
     args = wptcommandline.parse_args_update()
     logger = setup_logging(args, {"mach": sys.stdout})
     assert structuredlog.get_default_logger() is not None
-    success = run_update(logger, **args)
-    sys.exit(0 if success else 1)
+    try:
+        success = run_update(logger, **args)
+    except Exception as e:
+        logger.error(e)
+        raise
+    finally:
+        logger.shutdown()
+        sys.exit(0 if success else 1)
