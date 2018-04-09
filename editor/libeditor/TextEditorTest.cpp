@@ -13,7 +13,6 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsINodeList.h"
@@ -129,11 +128,7 @@ nsresult TextEditorTest::TestInsertBreak()
 
 nsresult TextEditorTest::TestTextProperties()
 {
-  nsCOMPtr<nsIDOMDocument>domDoc;
-  nsresult rv = mEditor->GetDocument(getter_AddRefs(domDoc));
-  TEST_RESULT(rv);
-  TEST_POINTER(domDoc.get());
-  nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc = mEditor->AsEditorBase()->GetDocument();
   TEST_POINTER(doc.get());
   // XXX This is broken, text nodes are not elements.
   nsAutoString textTag(NS_LITERAL_STRING("#text"));
@@ -147,7 +142,7 @@ nsresult TextEditorTest::TestTextProperties()
   // set the whole text node to bold
   printf("set the whole first text node to bold\n");
   nsCOMPtr<nsISelection>selection;
-  rv = mEditor->GetSelection(getter_AddRefs(selection));
+  nsresult rv = mEditor->GetSelection(getter_AddRefs(selection));
   TEST_RESULT(rv);
   TEST_POINTER(selection.get());
   uint32_t length = textNode->Length();

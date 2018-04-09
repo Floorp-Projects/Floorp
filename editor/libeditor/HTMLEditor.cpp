@@ -25,6 +25,7 @@
 #include "TextEditUtils.h"
 #include "TypeInState.h"
 
+#include "nsHTMLDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocumentInlines.h"
 #include "nsISelectionController.h"
@@ -4975,6 +4976,16 @@ Element*
 HTMLEditor::GetEditorRoot()
 {
   return GetActiveEditingHost();
+}
+
+nsHTMLDocument*
+HTMLEditor::GetHTMLDocument() const
+{
+  nsIDocument* doc = GetDocument();
+  if (NS_WARN_IF(!doc)) {
+    return nullptr;
+  }
+  return doc->AsHTMLDocument();
 }
 
 } // namespace mozilla

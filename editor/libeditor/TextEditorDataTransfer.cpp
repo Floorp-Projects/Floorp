@@ -20,7 +20,6 @@
 #include "nsError.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDocument.h"
 #include "nsIDragService.h"
@@ -135,7 +134,7 @@ TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable)
 nsresult
 TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
                                    int32_t aIndex,
-                                   nsIDOMDocument* aSourceDoc,
+                                   nsIDocument* aSourceDoc,
                                    nsINode* aDestinationNode,
                                    int32_t aDestOffset,
                                    bool aDoDeleteSelection)
@@ -170,23 +169,25 @@ TextEditor::InsertFromDrop(DragEvent* aDropEvent)
 
   nsCOMPtr<nsINode> sourceNode = dataTransfer->GetMozSourceNode();
 
-  nsCOMPtr<nsIDOMDocument> srcdomdoc;
+  nsCOMPtr<nsIDocument> srcdoc;
   if (sourceNode) {
-    srcdomdoc = do_QueryInterface(sourceNode->OwnerDoc());
+    srcdoc = sourceNode->OwnerDoc();
   }
 
   if (nsContentUtils::CheckForSubFrameDrop(dragSession,
         aDropEvent->WidgetEventPtr()->AsDragEvent())) {
     // Don't allow drags from subframe documents with different origins than
     // the drop destination.
-    if (srcdomdoc && !IsSafeToInsertData(srcdomdoc)) {
+    if (srcdoc && !IsSafeToInsertData(srcdoc)) {
       return NS_OK;
     }
   }
 
   // Current doc is destination
-  nsCOMPtr<nsIDOMDocument> destdomdoc = GetDOMDocument();
-  NS_ENSURE_TRUE(destdomdoc, NS_ERROR_NOT_INITIALIZED);
+  nsIDocument* destdoc = GetDocument();
+  if (NS_WARN_IF(!destdoc)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   uint32_t numItems = dataTransfer->MozItemCount();
   if (numItems < 1) {
@@ -240,7 +241,7 @@ TextEditor::InsertFromDrop(DragEvent* aDropEvent)
 
     if (cursorIsInSelection) {
       // Dragging within same doc can't drop on itself -- leave!
-      if (srcdomdoc == destdomdoc) {
+      if (srcdoc == destdoc) {
         return NS_OK;
       }
 
@@ -250,7 +251,7 @@ TextEditor::InsertFromDrop(DragEvent* aDropEvent)
       //deleteSelection = true;
     } else {
       // We are NOT over the selection
-      if (srcdomdoc == destdomdoc) {
+      if (srcdoc == destdoc) {
         // Within the same doc: delete if user doesn't want to copy
         uint32_t dropEffect = dataTransfer->DropEffectInt();
         deleteSelection = !(dropEffect & nsIDragService::DRAGDROP_ACTION_COPY);
@@ -275,7 +276,7 @@ TextEditor::InsertFromDrop(DragEvent* aDropEvent)
   }
 
   for (uint32_t i = 0; i < numItems; ++i) {
-    InsertFromDataTransfer(dataTransfer, i, srcdomdoc,
+    InsertFromDataTransfer(dataTransfer, i, srcdoc,
                            newSelectionParent,
                            newSelectionOffset, deleteSelection);
   }
@@ -399,7 +400,7 @@ TextEditor::CanPasteTransferable(nsITransferable* aTransferable,
 }
 
 bool
-TextEditor::IsSafeToInsertData(nsIDOMDocument* aSourceDoc)
+TextEditor::IsSafeToInsertData(nsIDocument* aSourceDoc)
 {
   // Try to determine whether we should use a sanitizing fragment sink
   bool isSafe = false;
@@ -417,10 +418,7 @@ TextEditor::IsSafeToInsertData(nsIDOMDocument* aSourceDoc)
     isSafe = appType == nsIDocShell::APP_TYPE_EDITOR;
   }
   if (!isSafe && aSourceDoc) {
-    nsCOMPtr<nsIDocument> srcdoc = do_QueryInterface(aSourceDoc);
-    NS_ASSERTION(srcdoc, "Where is our source doc?");
-
-    nsIPrincipal* srcPrincipal = srcdoc->NodePrincipal();
+    nsIPrincipal* srcPrincipal = aSourceDoc->NodePrincipal();
     nsIPrincipal* destPrincipal = destdoc->NodePrincipal();
     NS_ASSERTION(srcPrincipal && destPrincipal, "How come we don't have a principal?");
     srcPrincipal->Subsumes(destPrincipal, &isSafe);

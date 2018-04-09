@@ -37,14 +37,13 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsAtom.h"
+#include "nsHTMLDocument.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsID.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIFrame.h"
 #include "nsIHTMLAbsPosEditor.h"
-#include "nsIHTMLDocument.h"
 #include "nsINode.h"
 #include "nsLiteralString.h"
 #include "nsRange.h"
@@ -373,10 +372,10 @@ HTMLEditRules::BeforeEdit(EditAction aAction,
     }
 
     // Stabilize the document against contenteditable count changes
-    nsCOMPtr<nsIDOMDocument> doc = htmlEditor->GetDOMDocument();
-    NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
-    NS_ENSURE_TRUE(htmlDoc, NS_ERROR_FAILURE);
+    nsHTMLDocument* htmlDoc = htmlEditor->GetHTMLDocument();
+    if (NS_WARN_IF(!htmlDoc)) {
+      return NS_ERROR_FAILURE;
+    }
     if (htmlDoc->GetEditingState() == nsIHTMLDocument::eContentEditable) {
       htmlDoc->ChangeContentEditableCount(nullptr, +1);
       mRestoreContentEditableCount = true;
@@ -416,10 +415,10 @@ HTMLEditRules::AfterEdit(EditAction aAction,
 
     // Reset the contenteditable count to its previous value
     if (mRestoreContentEditableCount) {
-      nsCOMPtr<nsIDOMDocument> doc = htmlEditor->GetDOMDocument();
-      NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
-      nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
-      NS_ENSURE_TRUE(htmlDoc, NS_ERROR_FAILURE);
+      nsHTMLDocument* htmlDoc = htmlEditor->GetHTMLDocument();
+      if (NS_WARN_IF(!htmlDoc)) {
+        return NS_ERROR_FAILURE;
+      }
       if (htmlDoc->GetEditingState() == nsIHTMLDocument::eContentEditable) {
         htmlDoc->ChangeContentEditableCount(nullptr, -1);
       }

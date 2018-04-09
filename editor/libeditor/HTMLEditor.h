@@ -35,6 +35,7 @@
 #include "nsTArray.h"
 
 class nsDocumentFragment;
+class nsHTMLDocument;
 class nsITransferable;
 class nsIClipboard;
 class nsIDOMDocument;
@@ -566,12 +567,14 @@ public:
   MaybeCollapseSelectionAtFirstEditableNode(
     bool aIgnoreIfSelectionInEditingHost);
 
+  nsHTMLDocument* GetHTMLDocument() const;
+
 protected:
   class BlobReader final : public nsIEditorBlobListener
   {
   public:
     BlobReader(dom::BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
-               bool aIsSafe, nsIDOMDocument* aSourceDoc,
+               bool aIsSafe, nsIDocument* aSourceDoc,
                nsINode* aDestinationNode, int32_t aDestOffset,
                bool aDoDeleteSelection);
 
@@ -586,7 +589,7 @@ protected:
     RefPtr<dom::BlobImpl> mBlob;
     RefPtr<HTMLEditor> mHTMLEditor;
     bool mIsSafe;
-    nsCOMPtr<nsIDOMDocument> mSourceDoc;
+    nsCOMPtr<nsIDocument> mSourceDoc;
     nsCOMPtr<nsINode> mDestinationNode;
     int32_t mDestOffset;
     bool mDoDeleteSelection;
@@ -769,7 +772,7 @@ protected:
 
   nsresult InsertObject(const nsACString& aType, nsISupports* aObject,
                         bool aIsSafe,
-                        nsIDOMDocument* aSourceDoc,
+                        nsIDocument* aSourceDoc,
                         nsINode* aDestinationNode,
                         int32_t aDestOffset,
                         bool aDoDeleteSelection);
@@ -779,14 +782,14 @@ protected:
   NS_IMETHOD PrepareTransferable(nsITransferable** transferable) override;
   nsresult PrepareHTMLTransferable(nsITransferable** transferable);
   nsresult InsertFromTransferable(nsITransferable* transferable,
-                                    nsIDOMDocument* aSourceDoc,
+                                    nsIDocument* aSourceDoc,
                                     const nsAString& aContextStr,
                                     const nsAString& aInfoStr,
                                     bool havePrivateHTMLFlavor,
                                     bool aDoDeleteSelection);
   virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
                                           int32_t aIndex,
-                                          nsIDOMDocument* aSourceDoc,
+                                          nsIDocument* aSourceDoc,
                                           nsINode* aDestinationNode,
                                           int32_t aDestOffset,
                                           bool aDoDeleteSelection) override;
@@ -1111,7 +1114,7 @@ protected:
                                    const nsAString& aContextStr,
                                    const nsAString& aInfoStr,
                                    const nsAString& aFlavor,
-                                   nsIDOMDocument* aSourceDoc,
+                                   nsIDocument* aSourceDoc,
                                    nsINode* aDestNode,
                                    int32_t aDestOffset,
                                    bool aDeleteSelection,
