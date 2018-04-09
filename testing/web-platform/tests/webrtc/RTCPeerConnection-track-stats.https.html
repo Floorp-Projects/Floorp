@@ -483,13 +483,14 @@
     let senderReport = await sender.getStats();
     let trackReport = await caller.getStats(sender.track);
 
+    // Verify the same stats objects are returned but don't compare each
+    // individual metric because timestamps and counters could have gone up
+    // between the two getStats() calls.
     senderReport.forEach(senderReportStat => {
-      let trackReportStat = trackReport.get(senderReportStat.id);
-      assert_object_equals(trackReportStat, senderReportStat);
+      assert_true(trackReport.has(senderReportStat.id));
     });
     trackReport.forEach(trackReportStat => {
-      let senderReportStat = senderReport.get(trackReportStat.id);
-      assert_object_equals(senderReportStat, trackReportStat);
+      assert_true(senderReport.has(trackReportStat.id));
     });
   }, 'RTCPeerConnection.getStats(sendingTrack) is the same as ' +
      'RTCRtpSender.getStats()');
@@ -508,13 +509,14 @@
     let receiverReport = await receiver.getStats();
     let trackReport = await caller.getStats(receiver.track);
 
+    // Verify the same stats objects are returned but don't compare each
+    // individual metric because timestamps and counters could have gone up
+    // between the two getStats() calls.
     receiverReport.forEach(receiverReportStat => {
-      let trackReportStat = trackReport.get(receiverReportStat.id);
-      assert_object_equals(trackReportStat, receiverReportStat);
+      assert_true(trackReport.has(receiverReportStat.id));
     });
     trackReport.forEach(trackReportStat => {
-      let receiverReportStat = receiverReport.get(trackReportStat.id);
-      assert_object_equals(receiverReportStat, trackReportStat);
+      assert_true(receiverReport.has(trackReportStat.id));
     });
   }, 'RTCPeerConnection.getStats(receivingTrack) is the same as ' +
      'RTCRtpReceiver.getStats()');
