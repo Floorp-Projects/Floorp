@@ -2068,6 +2068,7 @@ IdlInterface.prototype.add_iterable_members = function(member)
 };
 
 IdlInterface.prototype.test_to_json_operation = function(memberHolderObject, member) {
+    var instanceName = memberHolderObject.constructor.name;
     if (member.has_extended_attribute("Default")) {
         var map = this.default_to_json_operation();
         test(function() {
@@ -2081,12 +2082,12 @@ IdlInterface.prototype.test_to_json_operation = function(memberHolderObject, mem
                 this.array.assert_type_is(json[k], type);
                 delete json[k];
             }, this);
-        }.bind(this), "Test default toJSON operation of " + this.name);
+        }.bind(this), "Test default toJSON operation of " + instanceName);
     } else {
         test(function() {
-            assert_true(this.array.is_json_type(member.idlType), JSON.stringify(member.idlType) + " is not an appropriate return value for the toJSON operation of " + this.name);
+            assert_true(this.array.is_json_type(member.idlType), JSON.stringify(member.idlType) + " is not an appropriate return value for the toJSON operation of " + instanceName);
             this.array.assert_type_is(memberHolderObject.toJSON(), member.idlType);
-        }.bind(this), "Test toJSON operation of " + this.name);
+        }.bind(this), "Test toJSON operation of " + instanceName);
     }
 };
 
