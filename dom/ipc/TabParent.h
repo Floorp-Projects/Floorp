@@ -272,8 +272,8 @@ public:
                             nsTArray<nsCString>&& aEnabledCommands,
                             nsTArray<nsCString>&& aDisabledCommands) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvSetCursor(const uint32_t& aValue, const bool& aForce) override;
+  virtual mozilla::ipc::IPCResult RecvSetCursor(const nsCursor& aValue,
+                                                const bool& aForce) override;
 
   virtual mozilla::ipc::IPCResult RecvSetCustomCursor(const nsCString& aUri,
                                                       const uint32_t& aWidth,
