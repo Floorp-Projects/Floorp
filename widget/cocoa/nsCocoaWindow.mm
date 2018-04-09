@@ -1706,6 +1706,10 @@ nsCocoaWindow::UpdateBounds()
   }
   mBounds =
     nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, BackingScaleFactor());
+
+  if (mPopupContentView) {
+    mPopupContentView->UpdateBoundsFromView();
+  }
 }
 
 LayoutDeviceIntRect
