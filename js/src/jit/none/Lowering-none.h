@@ -79,7 +79,6 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void visitWasmUnsignedToFloat32(MWasmUnsignedToFloat32* ins) override { MOZ_CRASH(); }
     void visitAsmJSLoadHeap(MAsmJSLoadHeap* ins) override { MOZ_CRASH(); }
     void visitAsmJSStoreHeap(MAsmJSStoreHeap* ins) override { MOZ_CRASH(); }
-    void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins) override { MOZ_CRASH(); }
     void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins) override { MOZ_CRASH(); }
     void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins) override { MOZ_CRASH(); }
     void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins) override { MOZ_CRASH(); }
