@@ -1472,6 +1472,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_stacking_context(&prim_info,
+                                None,
                                 ScrollPolicy::Scrollable,
                                 transform_binding,
                                 transform_style,
