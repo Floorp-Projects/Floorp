@@ -173,7 +173,6 @@ SideMenuWidget.prototype = {
    * Removes all of the child nodes from this container.
    */
   removeAllItems: function() {
-    let parent = this._parent;
     let list = this._list;
 
     while (list.hasChildNodes()) {
@@ -486,9 +485,8 @@ function SideMenuGroup(aWidget, aName, aOptions = {}) {
     title.appendChild(name);
     target.appendChild(title);
     target.appendChild(list);
-  }
-  // Skip a few redundant nodes when no title is shown.
-  else {
+  } else {
+    // Skip a few redundant nodes when no title is shown.
     let target = this._target = this._list = this.document.createElement("vbox");
     target.className = "side-menu-widget-group side-menu-widget-group-list";
     target.setAttribute("merged-group-contents", "");
@@ -596,9 +594,8 @@ function SideMenuItem(aGroup, aContents, aAttachment = {}, aOptions = {}) {
       arrow.className = "side-menu-widget-item-arrow";
       container.appendChild(arrow);
     }
-  }
-  // Skip a few redundant nodes when no horizontal arrow or checkbox is shown.
-  else {
+  } else {
+    // Skip a few redundant nodes when no horizontal arrow or checkbox is shown.
     let target = this._target = this._container = this.document.createElement("hbox");
     target.className = "side-menu-widget-item side-menu-widget-item-contents";
     target.setAttribute("merged-item-contents", "");

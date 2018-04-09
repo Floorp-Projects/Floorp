@@ -1163,13 +1163,11 @@ VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString, aPrefix 
         // standard function definition syntax
         if (aCurrentString.includes("return ")) {
           body = "{" + aCurrentString + "}";
-        }
-        // If block syntax is used, use the whole string as the function body.
-        else if (aCurrentString.startsWith("{")) {
+        } else if (aCurrentString.startsWith("{")) {
+          // If block syntax is used, use the whole string as the function body.
           body = aCurrentString;
-        }
-        // Prefer an expression closure.
-        else {
+        } else {
+          // Prefer an expression closure.
           body = "(" + aCurrentString + ")";
         }
         aCurrentString = header + body;
@@ -1915,9 +1913,8 @@ Scope.prototype = {
       if (!lowerCaseName.includes(aLowerCaseQuery) &&
           !lowerCaseValue.includes(aLowerCaseQuery)) {
         variable._matched = false;
-      }
-      // Variable or property is matched.
-      else {
+      } else {
+        // Variable or property is matched.
         variable._matched = true;
 
         // If the variable was ever expanded, there's a possibility it may
@@ -2569,10 +2566,9 @@ Variable.prototype = extend(Scope.prototype, {
       if (this.ownerView.eval) {
         this.delete = VariablesView.getterOrSetterDeleteCallback;
         this.evaluationMacro = VariablesView.overrideValueEvalMacro;
-      }
-      // Deleting getters and setters individually is not allowed if no
-      // evaluation method is provided.
-      else {
+      } else {
+        // Deleting getters and setters individually is not allowed if no
+        // evaluation method is provided.
         this.delete = null;
         this.evaluationMacro = null;
       }
@@ -3339,10 +3335,12 @@ VariablesView.getGrip = function(aValue) {
       if (aValue === undefined) {
         return { type: "undefined" };
       }
+      // fall through
     case "object":
       if (aValue === null) {
         return { type: "null" };
       }
+      // fall through
     case "function":
       return { type: "object",
                class: WebConsoleUtils.getObjectClassName(aValue) };
@@ -3407,6 +3405,7 @@ VariablesView.getString = function(aGrip, aOptions = {}) {
       if (!aGrip && 1 / aGrip === -Infinity) {
         return "-0";
       }
+      // fall through
     default:
       return aGrip + "";
   }

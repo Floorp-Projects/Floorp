@@ -6,7 +6,6 @@
 "use strict";
 
 const { require, loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 
@@ -376,11 +375,10 @@ AbstractTreeItem.prototype = {
     // it is safe to append everything at once.
     if (this == this._rootItem && this.autoExpandDepth == 0) {
       this._appendChildrenBatch();
-    }
-    // Otherwise, append the child items and their descendants successively;
-    // if not, the tree will become garbled and nodes will intertwine,
-    // since all the tree items are sharing a single container node.
-    else {
+    } else {
+      // Otherwise, append the child items and their descendants successively;
+      // if not, the tree will become garbled and nodes will intertwine,
+      // since all the tree items are sharing a single container node.
       this._appendChildrenSuccessive();
     }
   },
