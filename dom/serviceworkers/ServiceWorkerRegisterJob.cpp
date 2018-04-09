@@ -40,13 +40,8 @@ ServiceWorkerRegisterJob::AsyncExecute()
     bool sameUVC = GetUpdateViaCache() == registration->GetUpdateViaCache();
     registration->SetUpdateViaCache(GetUpdateViaCache());
 
-    // If we are resurrecting an uninstalling registration, then persist
-    // it to disk again.  We preemptively removed it earlier during
-    // unregister so that closing the window by shutting down the browser
-    // results in the registration being gone on restart.
     if (registration->IsPendingUninstall()) {
       registration->ClearPendingUninstall();
-      swm->StoreRegistration(mPrincipal, registration);
       // Its possible that a ready promise is created between when the
       // uninstalling flag is set and when we resurrect the registration
       // here.  In that case we might need to fire the ready promise
