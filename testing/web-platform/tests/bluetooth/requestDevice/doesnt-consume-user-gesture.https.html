@@ -6,10 +6,7 @@
 <script src="/bluetooth/resources/bluetooth-helpers.js"></script>
 <script>
 'use strict';
-const test_desc = 'Consumes a user gesture.';
-const expected = new DOMException(
-    'Must be handling a user gesture to show a permission request.',
-    'SecurityError');
+const test_desc = 'requestDevice calls do not consume user gestures.';
 
 bluetooth_test(() => setUpHealthThermometerAndHeartRateDevices()
     .then(() => callWithTrustedClick(() => {
@@ -20,8 +17,8 @@ bluetooth_test(() => setUpHealthThermometerAndHeartRateDevices()
       return Promise.all([
         first.then(device => assert_equals(
           device.constructor.name, 'BluetoothDevice')),
-        assert_promise_rejects_with_message(second,
-          expected, 'A request should consume a user gesture')
+        second.then(device => assert_equals(
+          device.constructor.name, 'BluetoothDevice')),
       ]);
     })), test_desc);
 </script>
