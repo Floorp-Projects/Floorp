@@ -13850,5 +13850,65 @@
     "kind": "boolean",
     "keyed": true,
     "description": "Permission requests (showing a permission prompt) by whether they were requested from code handling a user input event."
+  },
+  "HTMLEDITORS_WITH_RESIZERS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["mnakano@mozilla.com"],
+    "bug_numbers": [1452538,1449564],
+    "expires_in_version": "65",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of HTML editors which has shown object resizers."
+  },
+  "HTMLEDITORS_WHOSE_RESIZERS_USED_BY_USER": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["mnakano@mozilla.com"],
+    "bug_numbers": [1452538,1449564],
+    "expires_in_version": "65",
+    "kind": "linear",
+    "high": 50,
+    "n_buckets": 20,
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of HTML editors whose object resizers are actually used by users."
+  },
+  "HTMLEDITORS_WITH_ABSOLUTE_POSITIONER": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["mnakano@mozilla.com"],
+    "bug_numbers": [1452538,1449564],
+    "expires_in_version": "65",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of HTML editors which has shown grabber to move absolute positioned elements."
+  },
+  "HTMLEDITORS_WHOSE_ABSOLUTE_POSITIONER_USED_BY_USER": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["mnakano@mozilla.com"],
+    "bug_numbers": [1452538,1449564],
+    "expires_in_version": "65",
+    "kind": "linear",
+    "high": 50,
+    "n_buckets": 20,
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of HTML editors whose grabber to move absolute positioned elements is actually used by users."
+  },
+  "HTMLEDITORS_WITH_INLINE_TABLE_EDITOR": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["mnakano@mozilla.com"],
+    "bug_numbers": [1452538,1449564],
+    "expires_in_version": "65",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of HTML editors which has shown inline table editing UI."
+  },
+  "HTMLEDITORS_WHOSE_INLINE_TABLE_EDITOR_USED_BY_USER": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["mnakano@mozilla.com"],
+    "bug_numbers": [1452538,1449564],
+    "expires_in_version": "65",
+    "kind": "linear",
+    "high": 50,
+    "n_buckets": 20,
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of HTML editors whose inline table editing UI is actually used by users."
   }
 }
