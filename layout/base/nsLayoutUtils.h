@@ -1423,7 +1423,6 @@ public:
     IGNORE_PADDING = 0x01,
     BAIL_IF_REFLOW_NEEDED = 0x02, // returns NS_INTRINSIC_WIDTH_UNKNOWN if so
     MIN_INTRINSIC_ISIZE = 0x04, // use min-width/height instead of width/height
-    ADD_PERCENTS = 0x08, // apply AddPercents also for MIN_ISIZE
   };
   static nscoord
   IntrinsicForAxis(mozilla::PhysicalAxis aAxis,
@@ -1463,23 +1462,6 @@ public:
                                             nsIFrame*             aFrame,
                                             IntrinsicISizeType    aType,
                                             uint32_t              aFlags = 0);
-
-  /**
-   * This function increases an initial intrinsic size, 'aCurrent', according
-   * to the given 'aPercent', such that the size-increase makes up exactly
-   * 'aPercent' percent of the returned value.  If 'aPercent' or 'aCurrent' are
-   * less than or equal to zero the original 'aCurrent' value is returned.
-   * If 'aPercent' is greater than or equal to 1.0 the value nscoord_MAX is
-   * returned.
-   */
-  static nscoord AddPercents(nscoord aCurrent, float aPercent)
-  {
-    if (aPercent > 0.0f && aCurrent > 0) {
-      return MOZ_UNLIKELY(aPercent >= 1.0f) ? nscoord_MAX
-        : NSToCoordRound(float(aCurrent) / (1.0f - aPercent));
-    }
-    return aCurrent;
-  }
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the
