@@ -1,6 +1,7 @@
 "use strict";
 
 module.exports = {
+  "env": { "browser": true },
   "globals": {
     "define": true,
   },

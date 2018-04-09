@@ -162,6 +162,8 @@ void DownmixStereoToMono(mozilla::AudioDataValue* aBuffer,
 // given AudioInfo and the prefs that are being set.
 uint32_t DecideAudioPlaybackChannels(const AudioInfo& info);
 
+bool IsDefaultPlaybackDeviceMono();
+
 bool IsVideoContentType(const nsCString& aContentType);
 
 // Returns true if it's safe to use aPicture as the picture to be

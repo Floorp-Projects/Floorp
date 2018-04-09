@@ -112,6 +112,7 @@ impl Example for App {
 
             builder.push_stacking_context(
                 &LayoutPrimitiveInfo::new(doc.content_rect),
+                None,
                 ScrollPolicy::Fixed,
                 None,
                 TransformStyle::Flat,

@@ -33,6 +33,5 @@
 
 #ifdef WR_FRAGMENT_SHADER
     precision highp float;
-
     #define varying in
 #endif

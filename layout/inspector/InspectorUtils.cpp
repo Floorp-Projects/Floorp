@@ -354,22 +354,8 @@ InspectorUtils::SelectorMatchesElement(GlobalObject& aGlobalObject,
 InspectorUtils::IsInheritedProperty(GlobalObject& aGlobalObject,
                                     const nsAString& aPropertyName)
 {
-  nsCSSPropertyID prop = nsCSSProps::
-    LookupProperty(aPropertyName, CSSEnabledState::eIgnoreEnabledState);
-  if (prop == eCSSProperty_UNKNOWN) {
-    return false;
-  }
-
-  if (prop == eCSSPropertyExtra_variable) {
-    return true;
-  }
-
-  if (nsCSSProps::IsShorthand(prop)) {
-    prop = nsCSSProps::SubpropertyEntryFor(prop)[0];
-  }
-
-  nsStyleStructID sid = nsCSSProps::kSIDTable[prop];
-  return !ComputedStyle::IsReset(sid);
+  NS_ConvertUTF16toUTF8 propName(aPropertyName);
+  return Servo_Property_IsInherited(&propName);
 }
 
 /* static */ void

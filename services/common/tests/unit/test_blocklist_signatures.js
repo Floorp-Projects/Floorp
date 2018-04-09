@@ -51,11 +51,9 @@ function getCertChain() {
 }
 
 async function checkRecordCount(client, count) {
-  await client.openCollection(async (collection) => {
-    // Check we have the expected number of records
-    const records = await collection.list();
-    Assert.equal(count, records.data.length);
-  });
+  // Check we have the expected number of records
+  const records = await client.get();
+  Assert.equal(count, records.length);
 }
 
 // Check to ensure maybeSync is called with correct values when a changes

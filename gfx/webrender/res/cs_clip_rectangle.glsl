@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include shared,prim_shared,clip_shared,ellipse
+#include shared,clip_shared,ellipse
 
 varying vec3 vPos;
 flat varying float vClipMode;
@@ -19,7 +19,8 @@ struct ClipRect {
 
 ClipRect fetch_clip_rect(ivec2 address) {
     vec4 data[2] = fetch_from_resource_cache_2_direct(address);
-    return ClipRect(RectWithSize(data[0].xy, data[0].zw), data[1]);
+    ClipRect rect = ClipRect(RectWithSize(data[0].xy, data[0].zw), data[1]);
+    return rect;
 }
 
 struct ClipCorner {
@@ -32,7 +33,8 @@ struct ClipCorner {
 ClipCorner fetch_clip_corner(ivec2 address, float index) {
     address += ivec2(2 + 2 * int(index), 0);
     vec4 data[2] = fetch_from_resource_cache_2_direct(address);
-    return ClipCorner(RectWithSize(data[0].xy, data[0].zw), data[1]);
+    ClipCorner corner = ClipCorner(RectWithSize(data[0].xy, data[0].zw), data[1]);
+    return corner;
 }
 
 struct ClipData {

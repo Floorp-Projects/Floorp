@@ -1,0 +1,238 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for getRepeatId()</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for render perf</p>
+<div id="output"></div>
+
+<script type="text/javascript">
+"use strict";
+
+// To analyze the profile results:
+// > ./mach mochitest test_render_perf.html
+// Then open https://perf-html.io and drag the json file printed at the end of this test
+
+const NUM_MESSAGES = 4000;
+const NUM_STREAMING = 100;
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const Services = browserRequire("Services");
+Services.prefs.setIntPref("devtools.hud.loglimit", NUM_MESSAGES);
+const NewConsoleOutputWrapper = browserRequire(
+  "devtools/client/webconsole/new-console-output-wrapper");
+const actions =
+  browserRequire("devtools/client/webconsole/actions/index");
+const EventEmitter = browserRequire("devtools/shared/event-emitter");
+const testPackets = Array.from({length: NUM_MESSAGES}).map((el, id) => ({
+  "from": "server1.conn4.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "arguments": [
+      "foobar",
+      `${id % 2 === 0 ? "Even" : "Odd"} text`,
+      id
+    ],
+    "columnNumber": 1,
+    "counter": null,
+    "filename": "file:///test.html",
+    "functionName": "",
+    "groupName": "",
+    "level": "log",
+    "lineNumber": 1,
+    "private": false,
+    "styles": [],
+    "timeStamp": 1455064271115 + id,
+    "timer": null,
+    "workerType": "none",
+    "category": "webdev"
+  }
+}));
+const lastPacket = testPackets.pop();
+
+function startMeasure(label) {
+  const startLabel = label + "start";
+  performance.mark(startLabel);
+  return {
+    stop: (clear = true) => {
+      performance.measure(label, startLabel);
+      const entries = performance.getEntriesByName(label);
+      if (clear) {
+        performance.clearMeasures(label);
+      }
+      return entries[entries.length - 1];
+    }
+  };
+}
+
+function wait(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
+
+async function addAllMessages(wrapper) {
+  testPackets.forEach((packet) => wrapper.dispatchMessageAdd(packet));
+  // Only wait for the last packet to minimize work.
+  await wrapper.dispatchMessageAdd(lastPacket, true);
+  await new Promise(resolve => requestAnimationFrame(resolve));
+}
+
+async function addMessage(wrapper, message) {
+  await wrapper.dispatchMessageAdd(message, true);
+}
+
+function getTimes(times) {
+  times = times.sort();
+  let totalTime = times.reduce((sum, t) => sum + t);
+  let avg = totalTime / times.length;
+  let median = times.length % 2 !== 0
+    ? times[Math.floor(times.length / 2)]
+    : (times[(times.length / 2) - 1] + times[times.length / 2]) / 2;
+  return {avg, median};
+}
+
+async function clearMessages(wrapper) {
+  wrapper.dispatchMessagesClear();
+  await new Promise(resolve => requestAnimationFrame(resolve));
+}
+
+async function testBulkLogging(wrapper) {
+  await clearMessages(wrapper);
+  let bulkTimes = [];
+  const iterations = 5;
+  for (let i = 0; i < iterations; i++) {
+    const measure = startMeasure("bulk log");
+    await addAllMessages(wrapper);
+    const {duration} = measure.stop();
+
+    info(`took ${duration} ms to render bulk messages (iteration ${i})`);
+    bulkTimes.push(duration);
+
+    // Do not clear the store on last iteration so the next test can use the messages.
+    if (i !== iterations - 1) {
+      // Wait before clearing messages so those events are more spotable on the profile.
+      await wait(500);
+      await clearMessages(wrapper);
+      await wait(500);
+    }
+  }
+  let {avg, median} = getTimes(bulkTimes);
+
+  info(`BULK: On average, it took ${avg} ms (median ${median} ms) ` +
+       `to render ${NUM_MESSAGES} messages`);
+}
+
+async function testFiltering(wrapper) {
+  const measureFilter = startMeasure("filtering");
+
+  const measureFilterOff = startMeasure("filtering off");
+  await wrapper.getStore().dispatch(actions.filterToggle("log"));
+  const measureFilterOffEntry = measureFilterOff.stop();
+  info(`Filter toggle time (off): ${measureFilterOffEntry.duration}`);
+
+  const measureFilterOn = startMeasure("filtering on");
+  await wrapper.getStore().dispatch(actions.filterToggle("log"));
+  const measureFilterOnEntry = measureFilterOn.stop();
+  info(`Filter toggle time (on): ${measureFilterOnEntry.duration}`);
+  measureFilter.stop();
+}
+
+async function testStreamLogging(wrapper, clear = true) {
+  const streamMeasureLabel = "stream" + (clear === false ? " and prune" : "");
+  const streamMeasure = startMeasure(streamMeasureLabel);
+  if (clear === true) {
+    await clearMessages(wrapper);
+  }
+
+  const measureLabel = "stream - add single message";
+  for (let i = 0; i < NUM_STREAMING; i++) {
+    const measure = startMeasure(measureLabel);
+    await addMessage(wrapper, testPackets[i]);
+    measure.stop(false);
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  let streamTimes = performance.getEntriesByName(measureLabel)
+    .map(entry => entry.duration);
+  performance.clearMeasures(measureLabel);
+  let { avg, median } = getTimes(streamTimes);
+  info(`STREAMING${clear === false ? " AND PRUNING" : ""}: On average, ` +
+    `it took ${avg} ms (median ${median} ms) for each message`);
+  streamMeasure.stop();
+}
+
+window.onload = async function() {
+  // This test does costly work multiple times to have better performance data.
+  // It doesn't run in automation
+  SimpleTest.requestLongerTimeout(3);
+
+  const wrapper = new NewConsoleOutputWrapper(
+    document.getElementById("output"),
+    {hud: EventEmitter.decorate({proxy: {}}), focus: () => {}},
+    {},
+    null,
+    document,
+  );
+  wrapper.init();
+
+  // From https://github.com/devtools-html/perf.html/blob/b73eb73df04c7df51464fa50eeadef3dc7f5d4e2/docs/gecko-profile-format.md#L21
+  const settings = {
+    entries: 100000000,
+    interval: 1,
+    features: ["js"],
+    threads: ["GeckoMain"]
+  };
+  Services.profiler.StartProfiler(
+    settings.entries,
+    settings.interval,
+    settings.features,
+    settings.features.length,
+    settings.threads,
+    settings.threads.length
+  );
+  info("Profiler has started");
+
+  await wait(500);
+
+  await testBulkLogging(wrapper);
+
+  await wait(500);
+
+  await testFiltering(wrapper);
+
+  await wait(500);
+
+  // first pass, without clearing the store.
+  await testStreamLogging(wrapper, false);
+
+  await wait(500);
+  // second pass, with an empty store.
+  await testStreamLogging(wrapper, true);
+
+  ok(true, "Tests finished");
+
+  let file = FileUtils.getFile("TmpD", [`test_render_perf_${Date.now()}.json`]);
+  Services.profiler.dumpProfileToFile(file.path);
+  Services.profiler.StopProfiler();
+
+  info(`
+
+SAVING PROFILE: ${file.path}
+
+To upload the profile, run the following commands:
+
+  gzip ${file.path}
+  curl 'https://profile-store.appspot.com/compressed-store' --compressed --data-binary @${file.path}.gz | awk '{print "Hosted at: https://perf-html.io/public/"$1}'
+
+
+`);
+
+  SimpleTest.finish();
+};
+</script>
+</body>
+</html>

@@ -99,7 +99,7 @@ Tools.webConsole = {
   id: "webconsole",
   accesskey: l10n("webConsoleCmd.accesskey"),
   ordinal: 2,
-  oldWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.xul",
+  oldWebConsoleURL: "chrome://devtools/content/webconsole/old/webconsole.xul",
   newWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.html",
   get browserConsoleURL() {
     if (Services.prefs.getBoolPref("devtools.browserconsole.new-frontend-enabled")) {

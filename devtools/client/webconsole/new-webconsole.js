@@ -15,7 +15,7 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 const { JSTerm } = require("devtools/client/webconsole/jsterm");
 const { WebConsoleConnectionProxy } = require("devtools/client/webconsole/webconsole-connection-proxy");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
+const { l10n } = require("devtools/client/webconsole/utils/messages");
 
 loader.lazyRequireGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm", true);
 
