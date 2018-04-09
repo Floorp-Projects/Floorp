@@ -9,7 +9,6 @@ ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
-ChromeUtils.import("resource://gre/modules/TelemetryLog.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -687,59 +686,6 @@ var EnvironmentData = {
     this.appendColumn(row, "td", value);
     table.appendChild(row);
   },
-  /**
-   * Helper function for appending a column to the data table.
-   *
-   * @param aRowElement Parent row element
-   * @param aColType Column's tag name
-   * @param aColText Column contents
-   */
-  appendColumn(aRowElement, aColType, aColText) {
-    let colElement = document.createElement(aColType);
-    let colTextElement = document.createTextNode(aColText);
-    colElement.appendChild(colTextElement);
-    aRowElement.appendChild(colElement);
-  },
-};
-
-var TelLog = {
-  /**
-   * Renders the telemetry log
-   */
-  render(payload) {
-    let entries = payload.log;
-    const hasData = entries && entries.length > 0;
-    setHasData("telemetry-log-section", hasData);
-    if (!hasData) {
-      return;
-    }
-
-    let table = document.createElement("table");
-
-    let caption = document.createElement("caption");
-    let captionString = bundle.GetStringFromName("telemetryLogTitle");
-    caption.appendChild(document.createTextNode(captionString + "\n"));
-    table.appendChild(caption);
-
-    let headings = document.createElement("tr");
-    this.appendColumn(headings, "th", bundle.GetStringFromName("telemetryLogHeadingId") + "\t");
-    this.appendColumn(headings, "th", bundle.GetStringFromName("telemetryLogHeadingTimestamp") + "\t");
-    this.appendColumn(headings, "th", bundle.GetStringFromName("telemetryLogHeadingData") + "\t");
-    table.appendChild(headings);
-
-    for (let entry of entries) {
-        let row = document.createElement("tr");
-        for (let elem of entry) {
-            this.appendColumn(row, "td", elem + "\t");
-        }
-        table.appendChild(row);
-    }
-
-    let dataDiv = document.getElementById("telemetry-log");
-    removeAllChildNodes(dataDiv);
-    dataDiv.appendChild(table);
-  },
-
   /**
    * Helper function for appending a column to the data table.
    *
@@ -2458,9 +2404,6 @@ function displayRichPingData(ping, updatePayloadList) {
 
   // Show chrome hang stacks
   ChromeHangs.render(payload.chromeHangs);
-
-  // Show telemetry log.
-  TelLog.render(payload);
 
   // Show simple measurements
   SimpleMeasurements.render(payload);
