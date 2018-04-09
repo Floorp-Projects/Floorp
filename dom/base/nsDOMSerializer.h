@@ -41,7 +41,8 @@ public:
 
   void
   SerializeToStream(nsINode& aRoot, nsIOutputStream* aStream,
-                    const nsAString& aCharset, mozilla::ErrorResult& rv);
+                    const nsAString& aCharset,
+                    mozilla::ErrorResult& aRv);
 
   nsISupports* GetParentObject() const
   {

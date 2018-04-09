@@ -117,30 +117,29 @@ nsDOMSerializer::SerializeToString(nsIDOMNode *aRoot, nsAString& _retval)
 
 void
 nsDOMSerializer::SerializeToStream(nsINode& aRoot, nsIOutputStream* aStream,
-                                   const nsAString& aCharset, ErrorResult& rv)
+                                   const nsAString& aCharset,
+                                   ErrorResult& aRv)
 {
-  rv = nsDOMSerializer::SerializeToStream(aRoot.AsDOMNode(), aStream,
-                                          NS_ConvertUTF16toUTF8(aCharset));
-}
+  if (NS_WARN_IF(!aStream)) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
 
-NS_IMETHODIMP
-nsDOMSerializer::SerializeToStream(nsIDOMNode *aRoot,
-                                   nsIOutputStream *aStream,
-                                   const nsACString& aCharset)
-{
-  NS_ENSURE_ARG_POINTER(aRoot);
-  NS_ENSURE_ARG_POINTER(aStream);
   // The charset arg can be empty, in which case we get the document's
   // charset and use that when serializing.
 
-  if (!nsContentUtils::CanCallerAccess(aRoot)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+  // No point doing a CanCallerAccess check, because we can only be
+  // called by system JS or C++.
+  nsCOMPtr<nsIDocumentEncoder> encoder;
+  nsresult rv = SetUpEncoder(aRoot.AsDOMNode(), NS_ConvertUTF16toUTF8(aCharset),
+                             getter_AddRefs(encoder));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
   }
 
-  nsCOMPtr<nsIDocumentEncoder> encoder;
-  nsresult rv = SetUpEncoder(aRoot, aCharset, getter_AddRefs(encoder));
-  if (NS_FAILED(rv))
-    return rv;
-
-  return encoder->EncodeToStream(aStream);
+  rv = encoder->EncodeToStream(aStream);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
 }
