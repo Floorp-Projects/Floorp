@@ -444,6 +444,14 @@ class FakeRemoteGATTDescriptor {
 
     if (!success) throw 'setNextReadDescriptorResponse failed';
   }
+
+  // Removes the fake GATT Descriptor from its fake characteristic.
+  async remove() {
+    let {success} =
+        await this.fake_central_ptr_.removeFakeDescriptor(...this.ids_);
+
+    if (!success) throw 'remove failed';
+  }
 }
 
 // FakeChooser allows clients to simulate events that a user would trigger when
