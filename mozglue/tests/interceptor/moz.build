@@ -4,22 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SimplePrograms([
-    'TestXREMakeCommandLineWin',
+CppUnitTests([
+    'TestDllInterceptor',
 ])
 
 DEFINES['NS_NO_XPCOM'] = True
 
-LOCAL_INCLUDES += [
-    '/config',
-    '/toolkit/xre',
-]
-
 DisableStlWrapping()
-USE_STATIC_LIBS = True
 
 OS_LIBS += [
-    'comctl32',
-    'shell32',
-    'ws2_32',
+    'ole32',
+]
+
+USE_LIBS += [
+    'mfbt',
 ]
