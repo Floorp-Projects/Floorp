@@ -8,10 +8,6 @@
 
 #include "OMX_VideoExt.h" // For VP8.
 
-#ifdef MOZ_OMX
-#include "PureOmxPlatformLayer.h"
-#endif
-
 #include "VPXDecoder.h"
 
 #ifdef LOG
@@ -286,27 +282,7 @@ OmxPlatformLayer::CompressionFormat()
   }
 }
 
-// Implementations for different platforms will be defined in their own files.
-#if defined(MOZ_OMX)
-
-bool
-OmxPlatformLayer::SupportsMimeType(const nsACString& aMimeType)
-{
-  return PureOmxPlatformLayer::SupportsMimeType(aMimeType);
-}
-
-OmxPlatformLayer*
-OmxPlatformLayer::Create(OmxDataDecoder* aDataDecoder,
-                         OmxPromiseLayer* aPromiseLayer,
-                         TaskQueue* aTaskQueue,
-                         layers::ImageContainer* aImageContainer)
-{
-  return new PureOmxPlatformLayer(aDataDecoder, aPromiseLayer,
-                                  aTaskQueue, aImageContainer);
-}
-
-#else // For platforms without OMX IL support.
-
+// For platforms without OMX IL support.
 bool
 OmxPlatformLayer::SupportsMimeType(const nsACString& aMimeType)
 {
@@ -322,5 +298,4 @@ OmxPlatformLayer::Create(OmxDataDecoder* aDataDecoder,
   return nullptr;
 }
 
-#endif
 }

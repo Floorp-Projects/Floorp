@@ -67,7 +67,6 @@ protected:
 
 public:
   OmxDataDecoder(const TrackInfo& aTrackInfo,
-                 TaskQueue* aTaskQueue,
                  layers::ImageContainer* aImageContainer);
 
   RefPtr<InitPromise> Init() override;
@@ -160,8 +159,6 @@ protected:
 
   // The Omx TaskQueue.
   RefPtr<TaskQueue> mOmxTaskQueue;
-
-  RefPtr<TaskQueue> mTaskQueue;
 
   RefPtr<layers::ImageContainer> mImageContainer;
 

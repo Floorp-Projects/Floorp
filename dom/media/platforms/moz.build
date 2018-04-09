@@ -70,14 +70,6 @@ if CONFIG['MOZ_AV1']:
         'agnostic/AOMDecoder.cpp',
     ]
 
-if CONFIG['MOZ_OMX']:
-    EXPORTS += [
-        'omx/OmxCoreLibLinker.h',
-    ]
-    UNIFIED_SOURCES += [
-        'omx/OmxCoreLibLinker.cpp',
-    ]
-
 if CONFIG['MOZ_APPLEMEDIA']:
   EXPORTS += [
       'apple/AppleDecoderModule.h',
