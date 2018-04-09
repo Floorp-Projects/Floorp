@@ -1106,17 +1106,21 @@ ClassCanHaveExtraProperties(const Class* clasp);
 // constraints for IonScripts that have been invalidated/destroyed.
 class IonCompilationId
 {
-    uint64_t id_;
+    // Use two 32-bit integers instead of uint64_t to avoid 8-byte alignment on
+    // some 32-bit platforms.
+    uint32_t idLo_;
+    uint32_t idHi_;
 
   public:
     explicit IonCompilationId(uint64_t id)
-      : id_(id)
+      : idLo_(id & UINT32_MAX),
+        idHi_(id >> 32)
     {}
     bool operator==(const IonCompilationId& other) const {
-        return id_ == other.id_;
+        return idLo_ == other.idLo_ && idHi_ == other.idHi_;
     }
     bool operator!=(const IonCompilationId& other) const {
-        return id_ != other.id_;
+        return !operator==(other);
     }
 };
 
