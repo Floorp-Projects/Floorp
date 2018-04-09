@@ -259,9 +259,11 @@ ServoStyleSet::InvalidateStyleForDocumentStateChanges(EventStates aStatesChanged
     nonDocumentStyles.AppendElement(aShadowRoot.ServoStyles());
   });
 
-  mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
-    [&](nsXBLPrototypeBinding* aProto) {
-      if (auto* authorStyles = aProto->GetServoStyles()) {
+  // FIXME(emilio): When bug 1425759 is fixed we need to enumerate ShadowRoots
+  // too.
+  mDocument->BindingManager()->EnumerateBoundContentBindings(
+    [&](nsXBLBinding* aBinding) {
+      if (auto* authorStyles = aBinding->PrototypeBinding()->GetServoStyles()) {
         nonDocumentStyles.AppendElement(authorStyles);
       }
       return true;
@@ -293,9 +295,9 @@ ServoStyleSet::MediumFeaturesChanged(MediaFeatureChangeReason aReason)
   });
 
   // FIXME(emilio): This is broken for XBL. See bug 1406875.
-  mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
-    [&](nsXBLPrototypeBinding* aProto) {
-      if (auto* authorStyles = aProto->GetServoStyles()) {
+  mDocument->BindingManager()->EnumerateBoundContentBindings(
+    [&](nsXBLBinding* aBinding) {
+      if (auto* authorStyles = aBinding->PrototypeBinding()->GetServoStyles()) {
         nonDocumentStyles.AppendElement(authorStyles);
       }
       return true;
@@ -1313,12 +1315,12 @@ ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
     }
   });
 
-  mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
-      [&](nsXBLPrototypeBinding* aProto) {
+  mDocument->BindingManager()->EnumerateBoundContentBindings(
+      [&](nsXBLBinding* aBinding) {
         AutoTArray<StyleSheet*, 3> sheets;
-        aProto->AppendStyleSheetsTo(sheets);
+        aBinding->PrototypeBinding()->AppendStyleSheetsTo(sheets);
         for (auto* sheet : sheets) {
-          queue.AppendElement(MakePair(sheet, SheetOwner { aProto }));
+          queue.AppendElement(MakePair(sheet, SheetOwner { aBinding->PrototypeBinding() }));
         }
         return true;
       });
@@ -1527,9 +1529,9 @@ ServoStyleSet::UpdateStylist()
       Servo_AuthorStyles_Flush(aShadowRoot.ServoStyles(), mRawSet.get());
     });
 
-    mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
-      [&](nsXBLPrototypeBinding* aProto) {
-        if (auto* authorStyles = aProto->GetServoStyles()) {
+    mDocument->BindingManager()->EnumerateBoundContentBindings(
+      [&](nsXBLBinding* aBinding) {
+        if (auto* authorStyles = aBinding->PrototypeBinding()->GetServoStyles()) {
           Servo_AuthorStyles_Flush(authorStyles, mRawSet.get());
         }
         return true;
