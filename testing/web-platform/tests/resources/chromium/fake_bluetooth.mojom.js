@@ -2270,6 +2270,155 @@
     encoder.writeUint32(0);
     encoder.encodeStruct(codec.NullableString, val.descriptorId);
   };
+  function FakeCentral_RemoveFakeDescriptor_Params(values) {
+    this.initDefaults_();
+    this.initFields_(values);
+  }
+
+
+  FakeCentral_RemoveFakeDescriptor_Params.prototype.initDefaults_ = function() {
+    this.identifier = null;
+    this.characteristicId = null;
+    this.serviceId = null;
+    this.peripheralAddress = null;
+  };
+  FakeCentral_RemoveFakeDescriptor_Params.prototype.initFields_ = function(fields) {
+    for(var field in fields) {
+        if (this.hasOwnProperty(field))
+          this[field] = fields[field];
+    }
+  };
+
+  FakeCentral_RemoveFakeDescriptor_Params.validate = function(messageValidator, offset) {
+    var err;
+    err = messageValidator.validateStructHeader(offset, codec.kStructHeaderSize);
+    if (err !== validator.validationError.NONE)
+        return err;
+
+    var kVersionSizes = [
+      {version: 0, numBytes: 40}
+    ];
+    err = messageValidator.validateStructVersion(offset, kVersionSizes);
+    if (err !== validator.validationError.NONE)
+        return err;
+
+
+    // validate FakeCentral_RemoveFakeDescriptor_Params.identifier
+    err = messageValidator.validateStringPointer(offset + codec.kStructHeaderSize + 0, false)
+    if (err !== validator.validationError.NONE)
+        return err;
+
+
+    // validate FakeCentral_RemoveFakeDescriptor_Params.characteristicId
+    err = messageValidator.validateStringPointer(offset + codec.kStructHeaderSize + 8, false)
+    if (err !== validator.validationError.NONE)
+        return err;
+
+
+    // validate FakeCentral_RemoveFakeDescriptor_Params.serviceId
+    err = messageValidator.validateStringPointer(offset + codec.kStructHeaderSize + 16, false)
+    if (err !== validator.validationError.NONE)
+        return err;
+
+
+    // validate FakeCentral_RemoveFakeDescriptor_Params.peripheralAddress
+    err = messageValidator.validateStringPointer(offset + codec.kStructHeaderSize + 24, false)
+    if (err !== validator.validationError.NONE)
+        return err;
+
+    return validator.validationError.NONE;
+  };
+
+  FakeCentral_RemoveFakeDescriptor_Params.encodedSize = codec.kStructHeaderSize + 32;
+
+  FakeCentral_RemoveFakeDescriptor_Params.decode = function(decoder) {
+    var packed;
+    var val = new FakeCentral_RemoveFakeDescriptor_Params();
+    var numberOfBytes = decoder.readUint32();
+    var version = decoder.readUint32();
+    val.identifier = decoder.decodeStruct(codec.String);
+    val.characteristicId = decoder.decodeStruct(codec.String);
+    val.serviceId = decoder.decodeStruct(codec.String);
+    val.peripheralAddress = decoder.decodeStruct(codec.String);
+    return val;
+  };
+
+  FakeCentral_RemoveFakeDescriptor_Params.encode = function(encoder, val) {
+    var packed;
+    encoder.writeUint32(FakeCentral_RemoveFakeDescriptor_Params.encodedSize);
+    encoder.writeUint32(0);
+    encoder.encodeStruct(codec.String, val.identifier);
+    encoder.encodeStruct(codec.String, val.characteristicId);
+    encoder.encodeStruct(codec.String, val.serviceId);
+    encoder.encodeStruct(codec.String, val.peripheralAddress);
+  };
+  function FakeCentral_RemoveFakeDescriptor_ResponseParams(values) {
+    this.initDefaults_();
+    this.initFields_(values);
+  }
+
+
+  FakeCentral_RemoveFakeDescriptor_ResponseParams.prototype.initDefaults_ = function() {
+    this.success = false;
+  };
+  FakeCentral_RemoveFakeDescriptor_ResponseParams.prototype.initFields_ = function(fields) {
+    for(var field in fields) {
+        if (this.hasOwnProperty(field))
+          this[field] = fields[field];
+    }
+  };
+
+  FakeCentral_RemoveFakeDescriptor_ResponseParams.validate = function(messageValidator, offset) {
+    var err;
+    err = messageValidator.validateStructHeader(offset, codec.kStructHeaderSize);
+    if (err !== validator.validationError.NONE)
+        return err;
+
+    var kVersionSizes = [
+      {version: 0, numBytes: 16}
+    ];
+    err = messageValidator.validateStructVersion(offset, kVersionSizes);
+    if (err !== validator.validationError.NONE)
+        return err;
+
+
+    return validator.validationError.NONE;
+  };
+
+  FakeCentral_RemoveFakeDescriptor_ResponseParams.encodedSize = codec.kStructHeaderSize + 8;
+
+  FakeCentral_RemoveFakeDescriptor_ResponseParams.decode = function(decoder) {
+    var packed;
+    var val = new FakeCentral_RemoveFakeDescriptor_ResponseParams();
+    var numberOfBytes = decoder.readUint32();
+    var version = decoder.readUint32();
+    packed = decoder.readUint8();
+    val.success = (packed >> 0) & 1 ? true : false;
+    decoder.skip(1);
+    decoder.skip(1);
+    decoder.skip(1);
+    decoder.skip(1);
+    decoder.skip(1);
+    decoder.skip(1);
+    decoder.skip(1);
+    return val;
+  };
+
+  FakeCentral_RemoveFakeDescriptor_ResponseParams.encode = function(encoder, val) {
+    var packed;
+    encoder.writeUint32(FakeCentral_RemoveFakeDescriptor_ResponseParams.encodedSize);
+    encoder.writeUint32(0);
+    packed = 0;
+    packed |= (val.success & 1) << 0
+    encoder.writeUint8(packed);
+    encoder.skip(1);
+    encoder.skip(1);
+    encoder.skip(1);
+    encoder.skip(1);
+    encoder.skip(1);
+    encoder.skip(1);
+    encoder.skip(1);
+  };
   function FakeCentral_SetNextReadCharacteristicResponse_Params(values) {
     this.initDefaults_();
     this.initFields_(values);
@@ -3310,11 +3459,12 @@
   var kFakeCentral_AddFakeCharacteristic_Name = 8;
   var kFakeCentral_RemoveFakeCharacteristic_Name = 9;
   var kFakeCentral_AddFakeDescriptor_Name = 10;
-  var kFakeCentral_SetNextReadCharacteristicResponse_Name = 11;
-  var kFakeCentral_SetNextWriteCharacteristicResponse_Name = 12;
-  var kFakeCentral_SetNextSubscribeToNotificationsResponse_Name = 13;
-  var kFakeCentral_GetLastWrittenValue_Name = 14;
-  var kFakeCentral_SetNextReadDescriptorResponse_Name = 15;
+  var kFakeCentral_RemoveFakeDescriptor_Name = 11;
+  var kFakeCentral_SetNextReadCharacteristicResponse_Name = 12;
+  var kFakeCentral_SetNextWriteCharacteristicResponse_Name = 13;
+  var kFakeCentral_SetNextSubscribeToNotificationsResponse_Name = 14;
+  var kFakeCentral_GetLastWrittenValue_Name = 15;
+  var kFakeCentral_SetNextReadDescriptorResponse_Name = 16;
 
   function FakeCentralPtr(handleOrPtrInfo) {
     this.ptr = new bindings.InterfacePtrController(FakeCentral,
@@ -3623,6 +3773,34 @@
       });
     }.bind(this));
   };
+  FakeCentralPtr.prototype.removeFakeDescriptor = function() {
+    return FakeCentralProxy.prototype.removeFakeDescriptor
+        .apply(this.ptr.getProxy(), arguments);
+  };
+
+  FakeCentralProxy.prototype.removeFakeDescriptor = function(identifier, characteristicId, serviceId, peripheralAddress) {
+    var params = new FakeCentral_RemoveFakeDescriptor_Params();
+    params.identifier = identifier;
+    params.characteristicId = characteristicId;
+    params.serviceId = serviceId;
+    params.peripheralAddress = peripheralAddress;
+    return new Promise(function(resolve, reject) {
+      var builder = new codec.MessageV1Builder(
+          kFakeCentral_RemoveFakeDescriptor_Name,
+          codec.align(FakeCentral_RemoveFakeDescriptor_Params.encodedSize),
+          codec.kMessageExpectsResponse, 0);
+      builder.encodeStruct(FakeCentral_RemoveFakeDescriptor_Params, params);
+      var message = builder.finish();
+      this.receiver_.acceptAndExpectResponse(message).then(function(message) {
+        var reader = new codec.MessageReader(message);
+        var responseParams =
+            reader.decodeStruct(FakeCentral_RemoveFakeDescriptor_ResponseParams);
+        resolve(responseParams);
+      }).catch(function(result) {
+        reject(Error("Connection error: " + result));
+      });
+    }.bind(this));
+  };
   FakeCentralPtr.prototype.setNextReadCharacteristicResponse = function() {
     return FakeCentralProxy.prototype.setNextReadCharacteristicResponse
         .apply(this.ptr.getProxy(), arguments);
@@ -3801,6 +3979,9 @@
   }
   FakeCentralStub.prototype.addFakeDescriptor = function(descriptorUuid, characteristicId, serviceId, peripheralAddress) {
     return this.delegate_ && this.delegate_.addFakeDescriptor && this.delegate_.addFakeDescriptor(descriptorUuid, characteristicId, serviceId, peripheralAddress);
+  }
+  FakeCentralStub.prototype.removeFakeDescriptor = function(identifier, characteristicId, serviceId, peripheralAddress) {
+    return this.delegate_ && this.delegate_.removeFakeDescriptor && this.delegate_.removeFakeDescriptor(identifier, characteristicId, serviceId, peripheralAddress);
   }
   FakeCentralStub.prototype.setNextReadCharacteristicResponse = function(gattCode, value, characteristicId, serviceId, peripheralAddress) {
     return this.delegate_ && this.delegate_.setNextReadCharacteristicResponse && this.delegate_.setNextReadCharacteristicResponse(gattCode, value, characteristicId, serviceId, peripheralAddress);
@@ -4004,6 +4185,22 @@
         responder.accept(message);
       });
       return true;
+    case kFakeCentral_RemoveFakeDescriptor_Name:
+      var params = reader.decodeStruct(FakeCentral_RemoveFakeDescriptor_Params);
+      this.removeFakeDescriptor(params.identifier, params.characteristicId, params.serviceId, params.peripheralAddress).then(function(response) {
+        var responseParams =
+            new FakeCentral_RemoveFakeDescriptor_ResponseParams();
+        responseParams.success = response.success;
+        var builder = new codec.MessageV1Builder(
+            kFakeCentral_RemoveFakeDescriptor_Name,
+            codec.align(FakeCentral_RemoveFakeDescriptor_ResponseParams.encodedSize),
+            codec.kMessageIsResponse, reader.requestID);
+        builder.encodeStruct(FakeCentral_RemoveFakeDescriptor_ResponseParams,
+                             responseParams);
+        var message = builder.finish();
+        responder.accept(message);
+      });
+      return true;
     case kFakeCentral_SetNextReadCharacteristicResponse_Name:
       var params = reader.decodeStruct(FakeCentral_SetNextReadCharacteristicResponse_Params);
       this.setNextReadCharacteristicResponse(params.gattCode, params.value, params.characteristicId, params.serviceId, params.peripheralAddress).then(function(response) {
@@ -4138,6 +4335,10 @@
         if (message.expectsResponse())
           paramsClass = FakeCentral_AddFakeDescriptor_Params;
       break;
+      case kFakeCentral_RemoveFakeDescriptor_Name:
+        if (message.expectsResponse())
+          paramsClass = FakeCentral_RemoveFakeDescriptor_Params;
+      break;
       case kFakeCentral_SetNextReadCharacteristicResponse_Name:
         if (message.expectsResponse())
           paramsClass = FakeCentral_SetNextReadCharacteristicResponse_Params;
@@ -4211,6 +4412,10 @@
       case kFakeCentral_AddFakeDescriptor_Name:
         if (message.isResponse())
           paramsClass = FakeCentral_AddFakeDescriptor_ResponseParams;
+        break;
+      case kFakeCentral_RemoveFakeDescriptor_Name:
+        if (message.isResponse())
+          paramsClass = FakeCentral_RemoveFakeDescriptor_ResponseParams;
         break;
       case kFakeCentral_SetNextReadCharacteristicResponse_Name:
         if (message.isResponse())
