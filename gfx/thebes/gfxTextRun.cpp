@@ -3444,7 +3444,7 @@ gfxFontGroup::WhichSystemFontSupportsChar(uint32_t aCh, uint32_t aNextCh,
         gfxPlatformFontList::PlatformFontList()->
             SystemFindFontForChar(aCh, aNextCh, aRunScript, &mStyle);
     if (fe) {
-        bool wantBold = mStyle.ComputeWeight() >= 6;
+        bool wantBold = mStyle.weight >= 600;
         return fe->FindOrMakeFont(&mStyle, wantBold && !fe->IsBold());
     }
 

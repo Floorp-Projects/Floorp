@@ -1307,8 +1307,7 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
 
     aNeedsSyntheticBold = false;
 
-    int8_t baseWeight = aFontStyle.ComputeWeight();
-    bool wantBold = baseWeight >= 6;
+    bool wantBold = aFontStyle.weight >= 600;
     gfxFontEntry *fe = nullptr;
 
     // If the family has only one face, we simply return it; no further
@@ -1502,7 +1501,7 @@ CalcStyleMatch(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle)
          }
 
         // measure of closeness of weight to the desired value
-        rank += 9 - DeprecatedAbs(aFontEntry->Weight() / 100 - aStyle->ComputeWeight());
+        rank += 9 - Abs((aFontEntry->Weight() - aStyle->weight) / 100);
     } else {
         // if no font to match, prefer non-bold, non-italic fonts
         if (aFontEntry->IsUpright()) {

@@ -7,6 +7,7 @@
 #include "WebRenderCommandBuilder.h"
 
 #include "BasicLayers.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/DrawEventRecorder.h"

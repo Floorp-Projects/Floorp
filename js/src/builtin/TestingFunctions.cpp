@@ -1242,6 +1242,23 @@ GetSavedFrameCount(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+ClearSavedFrames(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    js::SavedStacks& savedStacks = cx->compartment()->savedStacks();
+    if (savedStacks.initialized())
+        savedStacks.clear();
+
+    for (ActivationIterator iter(cx); !iter.done(); ++iter) {
+        iter->clearLiveSavedFrameCache();
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 SaveStack(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -5169,6 +5186,12 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "getSavedFrameCount()",
 "  Return the number of SavedFrame instances stored in this compartment's\n"
 "  SavedStacks cache."),
+
+    JS_FN_HELP("clearSavedFrames", ClearSavedFrames, 0, 0,
+"clearSavedFrames()",
+"  Empty the current compartment's cache of SavedFrame objects, so that\n"
+"  subsequent stack captures allocate fresh objects to represent frames.\n"
+"  Clear the current stack's LiveSavedFrameCaches."),
 
     JS_FN_HELP("saveStack", SaveStack, 0, 0,
 "saveStack([maxDepth [, compartment]])",

@@ -27,11 +27,11 @@ const {
 
 // Components
 const PropertiesView = createFactory(require("./PropertiesView"));
+const StatusCode = createFactory(require("./StatusCode"));
 
 loader.lazyGetter(this, "MDNLink", function() {
   return createFactory(require("./MdnLink"));
 });
-
 loader.lazyGetter(this, "Rep", function() {
   return require("devtools/client/shared/components/reps/reps").REPS.Rep;
 });
@@ -180,6 +180,7 @@ class HeadersPanel extends Component {
         urlDetails,
       },
     } = this.props;
+    let item = { fromCache, fromServiceWorker, status, statusText };
 
     if ((!requestHeaders || !requestHeaders.headers.length) &&
         (!uploadHeaders || !uploadHeaders.headers.length) &&
@@ -209,38 +210,17 @@ class HeadersPanel extends Component {
     let summaryStatus;
 
     if (status) {
-      let code;
-      if (fromCache) {
-        code = "cached";
-      } else if (fromServiceWorker) {
-        code = "service worker";
-      } else {
-        code = status;
-      }
-
       let statusCodeDocURL = getHTTPStatusCodeURL(status.toString());
-      let inputWidth = status.toString().length + statusText.length + 1;
       let toggleRawHeadersClassList = ["devtools-button", "raw-headers-button"];
       if (this.state.rawHeadersOpened) {
         toggleRawHeadersClassList.push("checked");
       }
-
       summaryStatus = (
         div({ className: "tabpanel-summary-container headers-summary" },
           div({
             className: "tabpanel-summary-label headers-summary-label",
           }, SUMMARY_STATUS),
-          div({
-            className: "requests-list-status-icon",
-            "data-code": code,
-          }),
-          input({
-            className: "tabpanel-summary-value textbox-input devtools-monospace"
-              + " status-text",
-            readOnly: true,
-            value: `${status} ${statusText}`,
-            size: `${inputWidth}`,
-          }),
+          StatusCode({ item }),
           statusCodeDocURL ? MDNLink({
             url: statusCodeDocURL,
           }) : span({
