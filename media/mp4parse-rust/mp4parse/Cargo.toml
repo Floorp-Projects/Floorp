@@ -1,6 +1,6 @@
 [package]
 name = "mp4parse"
-version = "0.10.0"
+version = "0.10.1"
 authors = [
   "Ralph Giles <giles@mozilla.com>",
   "Matthew Gregan <kinetik@flim.org>",
