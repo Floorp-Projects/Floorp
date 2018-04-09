@@ -672,9 +672,6 @@ impl ThreadListener for GeckoProfilerThreadListener {
             gecko_profiler_unregister_thread();
         }
     }
-
-    fn new_render_backend_thread(&self, _renderer_id: Option<u64>) {
-    }
 }
 
 pub struct WrThreadPool(Arc<rayon::ThreadPool>);
