@@ -7,12 +7,8 @@
 <meta assert="assert" content="Check if the key events received by document are targeted at the element when no element is focused">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<h2>Steps:</h2>
-<ol>
-  <li>Press any key in [0-9a-zA-Z].</li>
-</ol>
-<h2>Expect results:</h2>
-<p>PASS</p>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
 <div id="log"></div>
 <script>
 
@@ -33,6 +29,10 @@ document.onkeypress = t2.step_func_done(function(evt){
 
 document.onkeyup = t3.step_func_done(function(evt){
   assert_equals(evt.target, document.body, "The keyup events must be targeted at the document's body.");
+});
+
+t1.step(function() {
+  test_driver.send_keys(document.body, "a");
 });
 
 </script>
