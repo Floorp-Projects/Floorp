@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=485118
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -54,7 +54,9 @@ function runTest() {
   ["horizontal", "vertical"].forEach(function (orient) {
     ["", "Small"].forEach(function (size) {
       var elem = document.getElementById(orient + size);
-      var thumbRect = document.getAnonymousElementByAttribute(elem, 'sbattr', 'scrollbar-thumb').getBoundingClientRect();
+      var thumbRect = SpecialPowers.unwrap(
+        SpecialPowers.InspectorUtils.getChildrenForNode(elem, true)[2])
+        .childNodes[0].getBoundingClientRect();
       var sizeToCheck = orient == "horizontal" ? "width" : "height";
       // var expectedSize = size == "Small" ? 19 : 26;
       var expectedSize = 26;
