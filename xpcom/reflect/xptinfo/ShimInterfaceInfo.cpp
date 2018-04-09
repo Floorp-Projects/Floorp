@@ -20,7 +20,6 @@
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMParser.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMXMLDocument.h"
 #include "nsIListBoxObject.h"
 #include "nsIMessageManager.h"
 #include "nsISelection.h"
@@ -61,7 +60,6 @@
 #include "mozilla/dom/SVGElementBinding.h"
 #include "mozilla/dom/TimeEventBinding.h"
 #include "mozilla/dom/TreeBoxObjectBinding.h"
-#include "mozilla/dom/XMLDocumentBinding.h"
 #include "mozilla/dom/XULDocumentBinding.h"
 
 using namespace mozilla;
@@ -136,7 +134,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMParser, DOMParser),
   DEFINE_SHIM(Range),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
-  DEFINE_SHIM(XMLDocument),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsISelection, Selection),
 };
 
