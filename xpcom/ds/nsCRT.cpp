@@ -111,31 +111,6 @@ nsCRT::strcmp(const char16_t* aStr1, const char16_t* aStr2)
   return 0;
 }
 
-const char*
-nsCRT::memmem(const char* aHaystack, uint32_t aHaystackLen,
-              const char* aNeedle, uint32_t aNeedleLen)
-{
-  // Sanity checking
-  if (!(aHaystack && aNeedle && aHaystackLen && aNeedleLen &&
-        aNeedleLen <= aHaystackLen)) {
-    return nullptr;
-  }
-
-#ifdef HAVE_MEMMEM
-  return (const char*)::memmem(aHaystack, aHaystackLen, aNeedle, aNeedleLen);
-#else
-  // No memmem means we need to roll our own.  This isn't really optimized
-  // for performance ... if that becomes an issue we can take some inspiration
-  // from the js string compare code in jsstr.cpp
-  for (uint32_t i = 0; i < aHaystackLen - aNeedleLen; i++) {
-    if (!memcmp(aHaystack + i, aNeedle, aNeedleLen)) {
-      return aHaystack + i;
-    }
-  }
-#endif
-  return nullptr;
-}
-
 // This should use NSPR but NSPR isn't exporting its PR_strtoll function
 // Until then...
 int64_t
