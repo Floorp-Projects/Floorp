@@ -435,12 +435,6 @@ HangMonitorChild::RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObse
 
   {
     MonitorAutoLock lock(mMonitor);
-    // If we lose our race, and the main thread has already painted,
-    // the NotifyActivity call below would result in an indefinite
-    // hang, since it wouldn't have a matching NotifyWait()
-    if (mForcePaintEpoch >= aLayerObserverEpoch) {
-      return IPC_OK();
-    }
     MaybeStartForcePaint();
     mForcePaint = true;
     mForcePaintTab = aTabId;
@@ -455,37 +449,22 @@ HangMonitorChild::RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObse
 void
 HangMonitorChild::MaybeStartForcePaint()
 {
+  // See Bug 1449662. The body of this function other than assertions
+  // has been temporarily removed to diagnose a tab switch spinner
+  // problem.
   if (!NS_IsMainThread()) {
     mMonitor.AssertCurrentThreadOwns();
-  }
-
-  if (!mBHRMonitorActive.exchange(true)) {
-    mForcePaintMonitor->NotifyActivity();
   }
 }
 
 void
 HangMonitorChild::ClearForcePaint(uint64_t aLayerObserverEpoch)
 {
+  // See Bug 1449662. The body of this function other than assertions
+  // has been temporarily removed to diagnose a tab switch spinner
+  // problem.
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
-
-  {
-    MonitorAutoLock lock(mMonitor);
-    // Set the epoch, so that if the forcepaint loses its race, it
-    // knows it and can exit appropriately. However, ensure we don't
-    // overwrite an even newer mForcePaintEpoch which could have
-    // come in in a ForcePaint notification while we were painting.
-    if (aLayerObserverEpoch > mForcePaintEpoch) {
-      mForcePaintEpoch = aLayerObserverEpoch;
-    }
-    mForcePaintMonitor->NotifyWait();
-
-    // ClearForcePaint must be called on the main thread, and the
-    // hang monitor thread only sets this with mMonitor held, so there
-    // should be no risk of missing NotifyActivity calls here.
-    mBHRMonitorActive = false;
-  }
 }
 
 void
