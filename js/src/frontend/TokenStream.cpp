@@ -12,6 +12,7 @@
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/TextUtils.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -34,6 +35,7 @@
 #include "vm/JSContext.h"
 
 using mozilla::ArrayLength;
+using mozilla::IsAsciiAlpha;
 using mozilla::MakeScopeExit;
 using mozilla::PodArrayZero;
 using mozilla::PodCopy;
@@ -2045,7 +2047,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
 
             if (!peekChar(&c))
                 goto error;
-            if (JS7_ISLET(c)) {
+            if (IsAsciiAlpha(c)) {
                 char buf[2] = { '\0', '\0' };
                 tp->pos.begin += length + 1;
                 buf[0] = char(c);

@@ -36,7 +36,6 @@ class JSLinearString;
 #define JS7_UNOCT(c)    (JS7_UNDEC(c))
 #define JS7_ISHEX(c)    ((c) < 128 && (JS7_ISDEC(c) || JS7_ISA2F(c)))
 #define JS7_UNHEX(c)    (unsigned)(JS7_ISDEC(c) ? (c) - '0' : 10 + tolower(c) - 'a')
-#define JS7_ISLET(c)    ((c) < 128 && isalpha(c))
 
 static MOZ_ALWAYS_INLINE size_t
 js_strlen(const char16_t* s)
