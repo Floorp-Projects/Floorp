@@ -77,6 +77,7 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/dom/base',
+    '/dom/html',
     '/extensions/spellcheck/src',
     '/layout/generic',
     '/layout/style',

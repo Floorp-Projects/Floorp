@@ -26,7 +26,6 @@
 #endif
 
 class nsAtom;
-class nsIDOMDocument;
 
 namespace mozilla {
 

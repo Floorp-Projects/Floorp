@@ -83,18 +83,19 @@ var gTests = [
     is(webrtcUI.getActiveStreams(true, true, true).length, 2, "2 active streams");
 
     info("removing the second tab");
-    // FIXME: This should wait for indicator update instead (bug 1444007).
-    let sessionStorePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
+
     BrowserTestUtils.removeTab(tab);
-    await sessionStorePromise;
 
     // Check that we still show the sharing indicators for the first tab's stream.
-    await TestUtils.waitForCondition(() => !webrtcUI.showCameraIndicator);
+    await Promise.all([
+      TestUtils.waitForCondition(() => !webrtcUI.showCameraIndicator),
+      TestUtils.waitForCondition(() => webrtcUI.getActiveStreams(true, true, true).length == 1),
+    ]);
+
     ok(webrtcUI.showGlobalIndicator, "webrtcUI wants the global indicator shown");
     ok(!webrtcUI.showCameraIndicator, "webrtcUI wants the camera indicator hidden");
     ok(webrtcUI.showMicrophoneIndicator, "webrtcUI wants the mic indicator shown");
     is(webrtcUI.getActiveStreams(false, true).length, 1, "1 active audio stream");
-    is(webrtcUI.getActiveStreams(true, true, true).length, 1, "1 active stream");
 
     await checkSharingUI({audio: true});
 
@@ -306,7 +307,10 @@ var gTests = [
     // first tab receives observer notifications for things happening in the
     // second tab, so let's clear the observer call counts before we cleanup
     // in the first tab.
-    await ignoreObserversCalled();
+    await Promise.all([
+      TestUtils.waitForCondition(() => webrtcUI.getActiveStreams(true, true, true).length == 1),
+      ignoreObserversCalled(),
+    ]);
 
     // Close the first tab's stream and verify that all indicators are removed.
     await closeStream();

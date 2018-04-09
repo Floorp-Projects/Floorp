@@ -22,7 +22,6 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIContent.h"
-#include "nsIDOMDocument.h"
 #include "nsISupportsImpl.h"
 #include "nsRange.h"
 #include "nsString.h"

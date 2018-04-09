@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"         // for final
 #include "mozilla/EditorBase.h"         // for EditorBase
+#include "mozilla/HTMLEditor.h"         // for HTMLEditor
 #include "mozilla/dom/Element.h"        // for Element
 #include "mozilla/dom/Selection.h"
 #include "mozilla/intl/LocaleService.h" // for retrieving app locale
@@ -22,10 +23,8 @@
 #include "nsError.h"                    // for NS_ERROR_NOT_INITIALIZED, etc
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIContentPrefService2.h"     // for nsIContentPrefService2, etc
-#include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIEditor.h"                  // for nsIEditor
-#include "nsIHTMLEditor.h"              // for nsIHTMLEditor
 #include "nsILoadContext.h"
 #include "nsISelection.h"               // for nsISelection
 #include "nsISupportsBase.h"            // for nsISupports
@@ -76,39 +75,28 @@ public:
 /**
  * Gets the URI of aEditor's document.
  */
-static nsresult
-GetDocumentURI(nsIEditor* aEditor, nsIURI * *aURI)
+static nsIURI*
+GetDocumentURI(EditorBase* aEditor)
 {
-  NS_ENSURE_ARG_POINTER(aEditor);
-  NS_ENSURE_ARG_POINTER(aURI);
+  MOZ_ASSERT(aEditor);
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aEditor->GetDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
+  nsIDocument* doc = aEditor->AsEditorBase()->GetDocument();
+  if (NS_WARN_IF(!doc)) {
+    return nullptr;
+  }
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIURI> docUri = doc->GetDocumentURI();
-  NS_ENSURE_TRUE(docUri, NS_ERROR_FAILURE);
-
-  *aURI = docUri;
-  NS_ADDREF(*aURI);
-  return NS_OK;
+  return doc->GetDocumentURI();
 }
 
-static already_AddRefed<nsILoadContext>
+static nsILoadContext*
 GetLoadContext(nsIEditor* aEditor)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aEditor->GetDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_TRUE(domDoc, nullptr);
+  nsIDocument* doc = aEditor->AsEditorBase()->GetDocument();
+  if (NS_WARN_IF(!doc)) {
+    return nullptr;
+  }
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  NS_ENSURE_TRUE(doc, nullptr);
-
-  nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
-  return loadContext.forget();
+  return doc->GetLoadContext();
 }
 
 /**
@@ -171,14 +159,14 @@ public:
   ContentPrefInitializerRunnable(nsIEditor* aEditor,
                                  nsIContentPrefCallback2* aCallback)
     : Runnable("ContentPrefInitializerRunnable")
-    , mEditor(aEditor)
+    , mEditorBase(aEditor->AsEditorBase())
     , mCallback(aCallback)
   {
   }
 
   NS_IMETHOD Run() override
   {
-    if (mEditor->AsEditorBase()->Destroyed()) {
+    if (mEditorBase->Destroyed()) {
       mCallback->HandleError(NS_ERROR_NOT_AVAILABLE);
       return NS_OK;
     }
@@ -190,24 +178,23 @@ public:
       return NS_OK;
     }
 
-    nsCOMPtr<nsIURI> docUri;
-    nsresult rv = GetDocumentURI(mEditor, getter_AddRefs(docUri));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mCallback->HandleError(rv);
+    nsCOMPtr<nsIURI> docUri = GetDocumentURI(mEditorBase);
+    if (NS_WARN_IF(!docUri)) {
+      mCallback->HandleError(NS_ERROR_FAILURE);
       return NS_OK;
     }
 
     nsAutoCString docUriSpec;
-    rv = docUri->GetSpec(docUriSpec);
+    nsresult rv = docUri->GetSpec(docUriSpec);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mCallback->HandleError(rv);
       return NS_OK;
     }
 
-    nsCOMPtr<nsILoadContext> loadContext = GetLoadContext(mEditor);
     rv = contentPrefService->GetByDomainAndName(
                                NS_ConvertUTF8toUTF16(docUriSpec),
-                               CPS_PREF_NAME, loadContext,
+                               CPS_PREF_NAME,
+                               GetLoadContext(mEditorBase),
                                mCallback);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mCallback->HandleError(rv);
@@ -217,7 +204,7 @@ public:
   }
 
 private:
-  nsCOMPtr<nsIEditor> mEditor;
+  RefPtr<EditorBase> mEditorBase;
   nsCOMPtr<nsIContentPrefCallback2> mCallback;
 };
 
@@ -237,15 +224,16 @@ DictionaryFetcher::Fetch(nsIEditor* aEditor)
  * Stores the current dictionary for aEditor's document URL.
  */
 static nsresult
-StoreCurrentDictionary(nsIEditor* aEditor, const nsAString& aDictionary)
+StoreCurrentDictionary(EditorBase* aEditorBase, const nsAString& aDictionary)
 {
-  NS_ENSURE_ARG_POINTER(aEditor);
+  NS_ENSURE_ARG_POINTER(aEditorBase);
 
   nsresult rv;
 
-  nsCOMPtr<nsIURI> docUri;
-  rv = GetDocumentURI(aEditor, getter_AddRefs(docUri));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIURI> docUri = GetDocumentURI(aEditorBase);
+  if (NS_WARN_IF(!docUri)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsAutoCString docUriSpec;
   rv = docUri->GetSpec(docUriSpec);
@@ -258,9 +246,9 @@ StoreCurrentDictionary(nsIEditor* aEditor, const nsAString& aDictionary)
     do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(contentPrefService, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsILoadContext> loadContext = GetLoadContext(aEditor);
   return contentPrefService->Set(NS_ConvertUTF8toUTF16(docUriSpec),
-                                 CPS_PREF_NAME, prefValue, loadContext,
+                                 CPS_PREF_NAME, prefValue,
+                                 GetLoadContext(aEditorBase),
                                  nullptr);
 }
 
@@ -268,15 +256,16 @@ StoreCurrentDictionary(nsIEditor* aEditor, const nsAString& aDictionary)
  * Forgets the current dictionary stored for aEditor's document URL.
  */
 static nsresult
-ClearCurrentDictionary(nsIEditor* aEditor)
+ClearCurrentDictionary(EditorBase* aEditorBase)
 {
-  NS_ENSURE_ARG_POINTER(aEditor);
+  NS_ENSURE_ARG_POINTER(aEditorBase);
 
   nsresult rv;
 
-  nsCOMPtr<nsIURI> docUri;
-  rv = GetDocumentURI(aEditor, getter_AddRefs(docUri));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIURI> docUri = GetDocumentURI(aEditorBase);
+  if (NS_WARN_IF(!docUri)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsAutoCString docUriSpec;
   rv = docUri->GetSpec(docUriSpec);
@@ -286,9 +275,9 @@ ClearCurrentDictionary(nsIEditor* aEditor)
     do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(contentPrefService, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsILoadContext> loadContext = GetLoadContext(aEditor);
   return contentPrefService->RemoveByDomainAndName(
-    NS_ConvertUTF8toUTF16(docUriSpec), CPS_PREF_NAME, loadContext, nullptr);
+                               NS_ConvertUTF8toUTF16(docUriSpec), CPS_PREF_NAME,
+                               GetLoadContext(aEditorBase), nullptr);
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(EditorSpellCheck)
@@ -384,12 +373,12 @@ EditorSpellCheck::InitSpellChecker(nsIEditor* aEditor,
                                    nsIEditorSpellCheckCallback* aCallback)
 {
   NS_ENSURE_TRUE(aEditor, NS_ERROR_NULL_POINTER);
-  mEditor = aEditor;
+  mEditor = aEditor->AsEditorBase();
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mEditor->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  NS_ENSURE_STATE(doc);
+  nsCOMPtr<nsIDocument> doc = mEditor->GetDocument();
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsresult rv;
 
@@ -733,11 +722,11 @@ EditorSpellCheck::UpdateCurrentDictionary(
 
   // Get language with html5 algorithm
   nsCOMPtr<nsIContent> rootContent;
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+  HTMLEditor* htmlEditor = mEditor->AsHTMLEditor();
   if (htmlEditor) {
     rootContent = htmlEditor->GetActiveEditingHost();
   } else {
-    rootContent = mEditor->AsEditorBase()->GetRoot();
+    rootContent = mEditor->GetRoot();
   }
 
   // Try to get topmost document's document element for embedded mail editor.
