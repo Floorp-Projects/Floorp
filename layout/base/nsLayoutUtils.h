@@ -176,6 +176,7 @@ public:
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
   typedef mozilla::StyleGeometryBox StyleGeometryBox;
   typedef mozilla::SVGImageContext SVGImageContext;
+  typedef mozilla::LogicalSize LogicalSize;
 
   /**
    * Finds previously assigned ViewID for the given content element, if any.
@@ -1410,7 +1411,8 @@ public:
    * variations if that's what matches aAxis) and its padding, border and margin
    * in the corresponding dimension.
    * @param aPercentageBasis an optional percentage basis (in aFrame's WM).
-   *   Pass NS_UNCONSTRAINEDSIZE if the basis is indefinite in either/both axes.
+   *   If the basis is indefinite in a given axis, pass a size with
+   *   NS_UNCONSTRAINEDSIZE in that component.
    *   If you pass Nothing() a percentage basis will be calculated from aFrame's
    *   ancestors' computed size in the relevant axis, if needed.
    * @param aMarginBoxMinSizeClamp make the result fit within this margin-box
@@ -1430,7 +1432,7 @@ public:
                    gfxContext*           aRenderingContext,
                    nsIFrame*             aFrame,
                    IntrinsicISizeType    aType,
-                   const mozilla::Maybe<mozilla::LogicalSize>& aPercentageBasis = mozilla::Nothing(),
+                   const mozilla::Maybe<LogicalSize>& aPercentageBasis = mozilla::Nothing(),
                    uint32_t              aFlags = 0,
                    nscoord               aMarginBoxMinSizeClamp = NS_MAXSIZE);
   /**
@@ -1455,14 +1457,18 @@ public:
    * calculates the result as if the 'min-' computed value is zero.
    * Otherwise, return NS_UNCONSTRAINEDSIZE.
    *
+   * @param aPercentageBasis the percentage basis (in aFrame's WM).
+   *   Pass NS_UNCONSTRAINEDSIZE if the basis is indefinite in either/both axes.
    * @note this behavior is specific to Grid/Flexbox (currently) so aFrame
    * should be a grid/flex item.
    */
-  static nscoord MinSizeContributionForAxis(mozilla::PhysicalAxis aAxis,
-                                            gfxContext*           aRC,
-                                            nsIFrame*             aFrame,
-                                            IntrinsicISizeType    aType,
-                                            uint32_t              aFlags = 0);
+  static nscoord
+  MinSizeContributionForAxis(mozilla::PhysicalAxis aAxis,
+                            gfxContext*            aRC,
+                            nsIFrame*              aFrame,
+                            IntrinsicISizeType     aType,
+                            const LogicalSize&     aPercentageBasis,
+                            uint32_t               aFlags = 0);
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the

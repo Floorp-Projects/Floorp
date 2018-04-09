@@ -3724,6 +3724,10 @@ MinSize(const GridItemInfo&    aGridItem,
     return s;
   }
 
+  if (aCache->mPercentageBasis.isNothing()) {
+    aCache->mPercentageBasis.emplace(aState.PercentageBasisFor(aAxis, aGridItem));
+  }
+
   // https://drafts.csswg.org/css-grid/#min-size-auto
   // This calculates the min-content contribution from either a definite
   // min-width (or min-height depending on aAxis), or the "specified /
@@ -3737,7 +3741,8 @@ MinSize(const GridItemInfo&    aGridItem,
              "baseline offset should be zero when not baseline-aligned");
   nscoord sz = aGridItem.mBaselineOffset[aAxis] +
     nsLayoutUtils::MinSizeContributionForAxis(axis, aRC, child,
-                                              nsLayoutUtils::MIN_ISIZE);
+                                              nsLayoutUtils::MIN_ISIZE,
+                                              *aCache->mPercentageBasis);
   const nsStyleCoord& style = axis == eAxisHorizontal ? stylePos->mMinWidth
                                                       : stylePos->mMinHeight;
   auto unit = style.GetUnit();
@@ -3746,9 +3751,6 @@ MinSize(const GridItemInfo&    aGridItem,
        child->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE)) {
     // Now calculate the "content size" part and return whichever is smaller.
     MOZ_ASSERT(unit != eStyleUnit_Enumerated || sz == NS_UNCONSTRAINEDSIZE);
-    if (aCache->mPercentageBasis.isNothing()) {
-      aCache->mPercentageBasis.emplace(aState.PercentageBasisFor(aAxis, aGridItem));
-    }
     sz = std::min(sz, ContentContribution(aGridItem, aState, aRC, aCBWM, aAxis,
                                           aCache->mPercentageBasis,
                                           nsLayoutUtils::MIN_ISIZE,
