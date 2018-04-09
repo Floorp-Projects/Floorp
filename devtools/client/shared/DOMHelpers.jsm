@@ -86,8 +86,8 @@ DOMHelpers.prototype = {
     }
 
     let child = null;
-    if (previousSibling) // then we are walking
-      {
+    if (previousSibling) {
+      // then we are walking
       child = this.getNextSibling(previousSibling);
     } else {
       child = this.getFirstChild(node);
