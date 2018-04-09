@@ -7982,7 +7982,7 @@
   "PLUGINS_NOTIFICATION_SHOWN": {
     "record_in_processes": ["main", "content"],
     "releaseChannelCollection": "opt-out",
-    "expires_in_version": "60",
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "The number of times the click-to-activate notification was shown: false: shown by in-content activation true: shown by location bar activation",
     "bug_numbers": [902075, 1345894],
@@ -7991,7 +7991,7 @@
   "PLUGINS_NOTIFICATION_PLUGIN_COUNT": {
     "record_in_processes": ["main", "content"],
     "releaseChannelCollection": "opt-out",
-    "expires_in_version": "60",
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 5,
     "description": "The number of plugins present in the click-to-activate notification, minus one (1, 2, 3, 4, more than 4)",
@@ -8001,7 +8001,7 @@
   "PLUGINS_NOTIFICATION_USER_ACTION_2": {
     "record_in_processes": ["main", "content"],
     "releaseChannelCollection": "opt-out",
-    "expires_in_version": "60",
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 8,
     "description": "User actions taken in the plugin notification: 0: allownow 1: allowalways 2: block 3: blockalways",
@@ -8011,7 +8011,7 @@
   "PLUGINS_INFOBAR_SHOWN": {
     "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
-    "expires_in_version": "60",
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "Count of when the hidden-plugin infobar was displayed.",
     "bug_numbers": [902075, 1345894],
@@ -8020,7 +8020,7 @@
   "PLUGINS_INFOBAR_BLOCK": {
     "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
-    "expires_in_version": "60",
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "Count the number of times the user clicked 'block' on the hidden-plugin infobar.",
     "bug_numbers": [902075, 1345894],
@@ -8029,7 +8029,7 @@
   "PLUGINS_INFOBAR_ALLOW": {
     "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
-    "expires_in_version": "60",
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "Count the number of times the user clicked 'allow' on the hidden-plugin infobar.",
     "bug_numbers": [902075, 1345894],
@@ -8038,7 +8038,7 @@
   "PLUGINS_INFOBAR_DISMISSED": {
     "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
-    "expires_in_version": "60",
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "Count the number of times the user explicitly dismisses the hidden-plugin infobar without choosing allow or continue-blocking.",
     "bug_numbers": [1368060],
