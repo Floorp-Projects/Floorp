@@ -867,7 +867,7 @@ function generateTemporaryInstallID(aFile) {
   return id;
 }
 
-var loadManifest = async function(aPackage, aInstallLocation) {
+var loadManifest = async function(aPackage, aInstallLocation, aOldAddon) {
   async function loadFromRDF(aUri) {
     let manifest = await aPackage.readString("install.rdf");
     let addon = await loadManifestFromRDF(aUri, manifest);
@@ -920,7 +920,7 @@ var loadManifest = async function(aPackage, aInstallLocation) {
     }
   }
 
-  addon.updateBlocklistState();
+  await addon.updateBlocklistState({oldAddon: aOldAddon});
   addon.appDisabled = !isUsableAddon(addon);
 
   defineSyncGUID(addon);
@@ -928,10 +928,10 @@ var loadManifest = async function(aPackage, aInstallLocation) {
   return addon;
 };
 
-var loadManifestFromFile = async function(aFile, aInstallLocation) {
+var loadManifestFromFile = async function(aFile, aInstallLocation, aOldAddon) {
   let pkg = Package.get(aFile);
   try {
-    let addon = await loadManifest(pkg, aInstallLocation);
+    let addon = await loadManifest(pkg, aInstallLocation, aOldAddon);
     return addon;
   } finally {
     pkg.close();
@@ -1441,7 +1441,7 @@ class AddonInstall {
 
     try {
       try {
-        this.addon = await loadManifest(pkg, this.installLocation);
+        this.addon = await loadManifest(pkg, this.installLocation, this.existingAddon);
       } catch (e) {
         return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, e]);
       }
@@ -1909,7 +1909,7 @@ var LocalAddonInstall = class extends AddonInstall {
     });
 
     this.existingAddon = addon;
-    this.addon.updateBlocklistState({oldAddon: this.existingAddon});
+    await this.addon.updateBlocklistState({oldAddon: this.existingAddon});
     this.addon.updateDate = Date.now();
     this.addon.installDate = addon ? addon.installDate : this.addon.updateDate;
 
@@ -2302,7 +2302,7 @@ var DownloadAddonInstall = class extends AddonInstall {
    * Notify listeners that the download completed.
    */
   downloadCompleted() {
-    XPIDatabase.getVisibleAddonForID(this.addon.id, aAddon => {
+    XPIDatabase.getVisibleAddonForID(this.addon.id, async aAddon => {
       if (aAddon)
         this.existingAddon = aAddon;
 
@@ -2315,7 +2315,7 @@ var DownloadAddonInstall = class extends AddonInstall {
       } else {
         this.addon.installDate = this.addon.updateDate;
       }
-      this.addon.updateBlocklistState({oldAddon: this.existingAddon});
+      await this.addon.updateBlocklistState({oldAddon: this.existingAddon});
 
       if (AddonManagerPrivate.callInstallListeners("onDownloadEnded",
                                                    this.listeners,
