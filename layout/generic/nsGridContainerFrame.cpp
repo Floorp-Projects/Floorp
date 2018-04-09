@@ -3582,8 +3582,7 @@ ContentContribution(const GridItemInfo&       aGridItem,
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
   nscoord size = nsLayoutUtils::IntrinsicForAxis(axis, aRC, child, aConstraint,
                    aPercentageBasis,
-                   aFlags | nsLayoutUtils::BAIL_IF_REFLOW_NEEDED |
-                            nsLayoutUtils::ADD_PERCENTS,
+                   aFlags | nsLayoutUtils::BAIL_IF_REFLOW_NEEDED,
                    aMinSizeClamp);
   if (size == NS_INTRINSIC_WIDTH_UNKNOWN) {
     // We need to reflow the child to find its BSize contribution.
@@ -3620,15 +3619,7 @@ ContentContribution(const GridItemInfo&       aGridItem,
     LogicalSize availableSize(childWM, availISize, availBSize);
     size = ::MeasuringReflow(child, aState.mReflowInput, aRC, availableSize,
                              cbSize, iMinSizeClamp, bMinSizeClamp);
-    nsIFrame::IntrinsicISizeOffsetData offsets = child->IntrinsicBSizeOffsets();
-    size += offsets.hMargin;
-    auto percent = offsets.hPctMargin;
-    if (availBSize == NS_UNCONSTRAINEDSIZE) {
-      // We always want to add in percent padding too, unless we already did so
-      // using a resolved column size above.
-      percent += offsets.hPctPadding;
-    }
-    size = nsLayoutUtils::AddPercents(size, percent);
+    size += child->GetLogicalUsedMargin(childWM).BStartEnd(childWM);
     nscoord overflow = size - aMinSizeClamp;
     if (MOZ_UNLIKELY(overflow > 0)) {
       nscoord contentSize = child->ContentBSize(childWM);
