@@ -6,13 +6,13 @@
 
 #include <algorithm>
 #include <stdint.h>
+#include <utility>
 
 #include "mediasink/AudioSink.h"
 #include "mediasink/AudioSinkWrapper.h"
 #include "mediasink/DecodedStream.h"
 #include "mediasink/OutputStreamManager.h"
 #include "mediasink/VideoSink.h"
-#include "mozilla/IndexSequence.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/NotNull.h"
@@ -257,7 +257,7 @@ protected:
   auto
   CallEnterMemberFunction(S* aS,
                           Tuple<Args...>& aTuple,
-                          IndexSequence<Indexes...>)
+                          std::index_sequence<Indexes...>)
     -> decltype(ReturnTypeHelper(&S::Enter))
   {
     return aS->Enter(Move(Get<Indexes>(aTuple))...);
@@ -299,7 +299,7 @@ protected:
 
     master->mStateObj.reset(s);
     return CallEnterMemberFunction(s, copiedArgs,
-                                   typename IndexSequenceFor<Ts...>::Type());
+                                   std::index_sequence_for<Ts...>{});
   }
 
   RefPtr<MediaDecoder::SeekPromise>

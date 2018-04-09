@@ -9,7 +9,6 @@
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/IndexSequence.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
