@@ -44,6 +44,8 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         }
     }
 
+    fun <T> forEachCall(vararg values: T): T = sessionRule.forEachCall(*values)
+
     fun GeckoSession.getTestBytes(path: String) =
             InstrumentationRegistry.getTargetContext().resources.assets
                     .open(path.removePrefix("/assets/")).readBytes()
