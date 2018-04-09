@@ -1377,6 +1377,12 @@ fn find_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
         let mut end: u32 = 0;   // It's u8 without declaration type that is incorrect.
         // MSB of extend_or_len indicates more bytes, up to 4 bytes.
         for _ in 0..4 {
+            if (des.position() as usize) == remains.len() {
+                // There's nothing more to read, the 0x80 was actually part of
+                // the content, and not an extension size.
+                end = des.position() as u32;
+                break;
+            }
             let extend_or_len = des.read_u8()?;
             end = (end << 7) + (extend_or_len & 0x7F) as u32;
             if (extend_or_len & 0x80) == 0 {

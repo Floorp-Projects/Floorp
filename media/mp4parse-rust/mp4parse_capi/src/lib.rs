@@ -826,23 +826,7 @@ impl<'a> Iterator for SampleToChunkIterator<'a> {
     fn next(&mut self) -> Option<(u32, u32)> {
         let has_chunk = self.chunks.next()
             .or_else(|| {
-                self.chunks = match (self.stsc_peek_iter.next(), self.stsc_peek_iter.peek()) {
-                    (Some(next), Some(peek)) if next.first_chunk > 0 && peek.first_chunk > 0 => {
-                        self.sample_count = next.samples_per_chunk;
-                        ((next.first_chunk - 1) .. (peek.first_chunk - 1))
-                    },
-                    (Some(next), None) if next.first_chunk > 0 => {
-                        self.sample_count = next.samples_per_chunk;
-                        // Total chunk number in 'stsc' could be different to 'stco',
-                        // there could be more chunks at the last 'stsc' record.
-                        match next.first_chunk.checked_add(self.remain_chunk_count) {
-                            Some(r) => ((next.first_chunk - 1) .. r - 1),
-                            _ => (0 .. 0),
-                        }
-                    },
-                    _ => (0 .. 0),
-                };
-
+                self.chunks = self.locate();
                 self.remain_chunk_count.checked_sub(self.chunks.len() as u32).and_then(|res| {
                     self.remain_chunk_count = res;
                     self.chunks.next()
@@ -850,6 +834,34 @@ impl<'a> Iterator for SampleToChunkIterator<'a> {
             });
 
         has_chunk.map_or(None, |id| { Some((id, self.sample_count)) })
+    }
+}
+
+impl<'a> SampleToChunkIterator<'a> {
+    fn locate(&mut self) -> std::ops::Range<u32> {
+        loop {
+            return match (self.stsc_peek_iter.next(), self.stsc_peek_iter.peek()) {
+                (Some(next), Some(peek)) if next.first_chunk == peek.first_chunk => {
+                    // Invalid entry, skip it and will continue searching at
+                    // next loop iteration.
+                    continue
+                },
+                (Some(next), Some(peek)) if next.first_chunk > 0 && peek.first_chunk > 0 => {
+                    self.sample_count = next.samples_per_chunk;
+                    (next.first_chunk - 1) .. (peek.first_chunk - 1)
+                },
+                (Some(next), None) if next.first_chunk > 0 => {
+                    self.sample_count = next.samples_per_chunk;
+                    // Total chunk number in 'stsc' could be different to 'stco',
+                    // there could be more chunks at the last 'stsc' record.
+                    match next.first_chunk.checked_add(self.remain_chunk_count) {
+                        Some(r) => (next.first_chunk - 1) .. r - 1,
+                        _ => 0 .. 0,
+                    }
+                },
+                _ => 0 .. 0
+            };
+        };
     }
 }
 

@@ -898,6 +898,34 @@ fn read_qt_wave_atom() {
 }
 
 #[test]
+fn read_descriptor_80() {
+    let aac_esds =
+        vec![
+            0x03, 0x80, 0x80, 0x80, 0x22, 0x00, 0x02, 0x00,
+            0x04, 0x80, 0x80, 0x80, 0x17, 0x40, 0x15, 0x00,
+            0x00, 0x00, 0x00, 0x03, 0x22, 0xBC, 0x00, 0x01,
+            0xF5, 0x83, 0x05, 0x80, 0x80, 0x80, 0x02, 0x11,
+            0x90, 0x06, 0x80, 0x80, 0x80, 0x01, 0x02
+        ];
+    let aac_dc_descriptor = &aac_esds[31 .. 33];
+    let mut stream = make_box(BoxSize::Auto, b"esds", |s| {
+        s.B32(0) // reserved
+         .append_bytes(aac_esds.as_slice())
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+
+    let es = super::read_esds(&mut stream).unwrap();
+
+    assert_eq!(es.audio_codec, super::CodecType::AAC);
+    assert_eq!(es.audio_object_type, Some(2));
+    assert_eq!(es.audio_sample_rate, Some(48000));
+    assert_eq!(es.audio_channel_count, Some(2));
+    assert_eq!(es.codec_esds, aac_esds);
+    assert_eq!(es.decoder_specific_data, aac_dc_descriptor);
+}
+
+#[test]
 fn read_esds() {
     let aac_esds =
         vec![
