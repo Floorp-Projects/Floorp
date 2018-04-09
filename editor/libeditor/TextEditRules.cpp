@@ -882,7 +882,8 @@ TextEditRules::WillSetText(Selection& aSelection,
       return NS_OK;
     }
     nsresult rv =
-      textEditor->InsertNode(*newNode, EditorRawDOMPoint(rootElement, 0));
+      textEditor->InsertNodeWithTransaction(*newNode,
+                                            EditorRawDOMPoint(rootElement, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1458,7 +1459,8 @@ TextEditRules::CreateBogusNodeIfNeeded(Selection* aSelection)
 
   // Put the node in the document.
   nsresult rv =
-    mTextEditor->InsertNode(*mBogusNode, EditorRawDOMPoint(body, 0));
+    mTextEditor->InsertNodeWithTransaction(*mBogusNode,
+                                           EditorRawDOMPoint(body, 0));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
