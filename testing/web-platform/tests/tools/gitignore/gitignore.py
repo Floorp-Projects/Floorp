@@ -90,7 +90,7 @@ def parse_line(line):
     if dir_only:
         line = line[:-1]
 
-    return invert, dir_only, fnmatch_translate(line, "/" in line)
+    return invert, dir_only, fnmatch_translate(line, dir_only)
 
 
 class PathFilter(object):
