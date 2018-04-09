@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include rect,clip_scroll,render_task,resource_cache,snap,transform
+
 #ifdef WR_VERTEX_SHADER
 
 #define SEGMENT_ALL         0
@@ -51,7 +53,25 @@ RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
 ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
                                       ClipScrollNode scroll_node,
                                       ClipArea area) {
-    vec2 actual_pos = area.screen_origin + aPosition.xy * area.common_data.task_rect.size;
+    vec2 device_pos = area.screen_origin + aPosition.xy * area.common_data.task_rect.size;
+    vec2 actual_pos = device_pos;
+
+    if (scroll_node.is_axis_aligned) {
+        vec4 snap_positions = compute_snap_positions(
+            scroll_node.transform,
+            local_clip_rect
+        );
+
+        vec2 snap_offsets = compute_snap_offset_impl(
+            device_pos,
+            scroll_node.transform,
+            local_clip_rect,
+            RectWithSize(snap_positions.xy, snap_positions.zw - snap_positions.xy),
+            snap_positions
+        );
+
+        actual_pos -= snap_offsets;
+    }
 
     vec4 node_pos;
 
@@ -64,16 +84,26 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
     }
 
     // compute the point position inside the scroll node, in CSS space
-    vec2 vertex_pos = actual_pos +
+    vec2 vertex_pos = device_pos +
                       area.common_data.task_rect.p0 -
                       area.screen_origin;
 
     gl_Position = uTransform * vec4(vertex_pos, 0.0, 1);
 
-    vLocalBounds = vec4(local_clip_rect.p0, local_clip_rect.p0 + local_clip_rect.size);
+    init_transform_vs(vec4(local_clip_rect.p0, local_clip_rect.p0 + local_clip_rect.size));
 
     ClipVertexInfo vi = ClipVertexInfo(node_pos.xyw, actual_pos, local_clip_rect);
     return vi;
 }
 
 #endif //WR_VERTEX_SHADER
+
+#ifdef WR_FRAGMENT_SHADER
+
+//Note: identical to prim_shared
+float distance_to_line(vec2 p0, vec2 perp_dir, vec2 p) {
+    vec2 dir_to_p0 = p0 - p;
+    return dot(normalize(perp_dir), dir_to_p0);
+}
+
+#endif //WR_FRAGMENT_SHADER

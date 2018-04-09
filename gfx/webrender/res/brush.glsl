@@ -103,14 +103,14 @@ void main(void) {
             brush_prim.local_rect
         );
 
-        // TODO(gw): vLocalBounds may be referenced by
+        // TODO(gw): transform bounds may be referenced by
         //           the fragment shader when running in
         //           the alpha pass, even on non-transformed
         //           items. For now, just ensure it has no
         //           effect. We can tidy this up as we move
         //           more items to be brush shaders.
 #ifdef WR_FEATURE_ALPHA_PASS
-        vLocalBounds = vec4(vec2(-1000000.0), vec2(1000000.0));
+        init_transform_vs(vec4(vec2(-1000000.0), vec2(1000000.0)));
 #endif
     } else {
         bvec4 edge_mask = notEqual(brush.edge_mask & ivec4(1, 2, 4, 8), ivec4(0));

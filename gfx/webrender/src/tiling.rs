@@ -590,7 +590,7 @@ impl RenderTarget for AlphaRenderTarget {
                     task_address,
                     &task_info.clips,
                     task_info.coordinate_system_id,
-                    &ctx.resource_cache,
+                    ctx.resource_cache,
                     gpu_cache,
                     clip_store,
                 );

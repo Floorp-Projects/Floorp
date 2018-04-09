@@ -213,6 +213,10 @@ pub enum BrushKind {
         request: ImageRequest,
         current_epoch: Epoch,
         alpha_type: AlphaType,
+        stretch_size: LayerSize,
+        tile_spacing: LayerSize,
+        source: ImageSource,
+        sub_rect: Option<DeviceIntRect>,
     },
     YuvImage {
         yuv_key: [ImageKey; 3],
@@ -633,7 +637,6 @@ pub struct TextRunPrimitiveCpu {
     pub font: FontInstance,
     pub offset: LayerVector2D,
     pub glyph_range: ItemRange<GlyphInstance>,
-    pub glyph_count: usize,
     pub glyph_keys: Vec<GlyphKey>,
     pub glyph_gpu_blocks: Vec<GpuBlockData>,
     pub shadow: bool,
@@ -972,7 +975,6 @@ impl PrimitiveContainer {
                     },
                     offset: info.offset + shadow.offset,
                     glyph_range: info.glyph_range,
-                    glyph_count: info.glyph_count,
                     glyph_keys: info.glyph_keys.clone(),
                     glyph_gpu_blocks: Vec::new(),
                     shadow: true,
@@ -1051,7 +1053,7 @@ impl PrimitiveStore {
         frame_output_pipeline_id: Option<PipelineId>,
         apply_local_clip_rect: bool,
     ) -> PictureIndex {
-        let pic = PicturePrimitive::new_image(
+        let picture = PicturePrimitive::new_image(
             composite_mode,
             is_in_3d_context,
             pipeline_id,
@@ -1060,10 +1062,9 @@ impl PrimitiveStore {
             apply_local_clip_rect,
         );
 
-        let pic_index = PictureIndex(self.pictures.len());
-        self.pictures.push(pic);
-
-        pic_index
+        let picture_index = PictureIndex(self.pictures.len());
+        self.pictures.push(picture);
+        picture_index
     }
 
     pub fn add_primitive(
@@ -1301,11 +1302,12 @@ impl PrimitiveStore {
                 let brush = &mut self.cpu_brushes[metadata.cpu_prim_index.0];
 
                 match brush.kind {
-                    BrushKind::Image { request, ref mut current_epoch, .. } => {
+                    BrushKind::Image { request, sub_rect, ref mut current_epoch, ref mut source, .. } => {
                         let image_properties = frame_state
                             .resource_cache
                             .get_image_properties(request.key);
 
+                        // Set if we need to request the source image from the cache this frame.
                         if let Some(image_properties) = image_properties {
                             // See if this image has been updated since we last hit this code path.
                             // If so, we need to update the opacity.
@@ -1313,12 +1315,88 @@ impl PrimitiveStore {
                                 *current_epoch = image_properties.epoch;
                                 metadata.opacity.is_opaque = image_properties.descriptor.is_opaque;
                             }
+
+                            // Work out whether this image is a normal / simple type, or if
+                            // we need to pre-render it to the render task cache.
+                            if let Some(rect) = sub_rect {
+                                *source = ImageSource::Cache {
+                                    // Size in device-pixels we need to allocate in render task cache.
+                                    size: rect.size,
+                                    item: CacheItem::invalid(),
+                                };
+                            }
+
+                            let mut request_source_image = false;
+
+                            // Every frame, for cached items, we need to request the render
+                            // task cache item. The closure will be invoked on the first
+                            // time through, and any time the render task output has been
+                            // evicted from the texture cache.
+                            match *source {
+                                ImageSource::Cache { size, ref mut item } => {
+                                    let image_cache_key = ImageCacheKey {
+                                        request,
+                                        texel_rect: sub_rect,
+                                    };
+
+                                    // Request a pre-rendered image task.
+                                    *item = frame_state.resource_cache.request_render_task(
+                                        RenderTaskCacheKey {
+                                            size,
+                                            kind: RenderTaskCacheKeyKind::Image(image_cache_key),
+                                        },
+                                        frame_state.gpu_cache,
+                                        frame_state.render_tasks,
+                                        None,
+                                        |render_tasks| {
+                                            // We need to render the image cache this frame,
+                                            // so will need access to the source texture.
+                                            request_source_image = true;
+
+                                            // Create a task to blit from the texture cache to
+                                            // a normal transient render task surface. This will
+                                            // copy only the sub-rect, if specified.
+                                            let cache_to_target_task = RenderTask::new_blit(
+                                                size,
+                                                BlitSource::Image { key: image_cache_key },
+                                            );
+                                            let cache_to_target_task_id = render_tasks.add(cache_to_target_task);
+
+                                            // Create a task to blit the rect from the child render
+                                            // task above back into the right spot in the persistent
+                                            // render target cache.
+                                            let target_to_cache_task = RenderTask::new_blit(
+                                                size,
+                                                BlitSource::RenderTask {
+                                                    task_id: cache_to_target_task_id,
+                                                },
+                                            );
+                                            let target_to_cache_task_id = render_tasks.add(target_to_cache_task);
+
+                                            // Hook this into the render task tree at the right spot.
+                                            pic_state.tasks.push(target_to_cache_task_id);
+
+                                            // Pass the image opacity, so that the cached render task
+                                            // item inherits the same opacity properties.
+                                            (target_to_cache_task_id, image_properties.descriptor.is_opaque)
+                                        }
+                                    );
+
+                                }
+                                ImageSource::Default => {
+                                    // Normal images just reference the source texture each frame.
+                                    request_source_image = true;
+                                }
+                            }
+
+                            if request_source_image {
+                                frame_state.resource_cache.request_image(
+                                    request,
+                                    frame_state.gpu_cache,
+                                );
+                            }
                         }
 
-                        frame_state.resource_cache.request_image(
-                            request,
-                            frame_state.gpu_cache,
-                        );
                     }
                     BrushKind::YuvImage { format, yuv_key, image_rendering, .. } => {
                         let channel_num = format.get_plane_num();
@@ -1464,11 +1542,20 @@ impl PrimitiveStore {
                 if !brush.kind.supports_segments() {
                     return;
                 }
-                if metadata.local_rect.size.area() <= MIN_BRUSH_SPLIT_AREA {
-                    return;
-                }
             }
         }
+
+        // If the brush is small, we generally want to skip building segments
+        // and just draw it as a single primitive with clip mask. However,
+        // if the clips are purely rectangles that have no per-fragment
+        // clip masks, we will segment anyway. This allows us to completely
+        // skip allocating a clip mask in these cases.
+        let is_large = metadata.local_rect.size.area() > MIN_BRUSH_SPLIT_AREA;
+
+        // TODO(gw): We should probably detect and store this on each
+        //           ClipSources instance, to avoid having to iterate
+        //           the clip sources here.
+        let mut rect_clips_only = true;
 
         let mut segment_builder = SegmentBuilder::new(
             metadata.local_rect,
@@ -1478,9 +1565,10 @@ impl PrimitiveStore {
 
         // If this primitive is clipped by clips from a different coordinate system, then we
         // need to apply a clip mask for the entire primitive.
-        let mut clip_mask_kind = match has_clips_from_other_coordinate_systems {
-            true => BrushClipMaskKind::Global,
-            false => BrushClipMaskKind::Individual,
+        let mut clip_mask_kind = if has_clips_from_other_coordinate_systems {
+            BrushClipMaskKind::Global
+        } else {
+            BrushClipMaskKind::Individual
         };
 
         // Segment the primitive on all the local-space clip sources that we can.
@@ -1493,12 +1581,16 @@ impl PrimitiveStore {
             for &(ref clip, _) in &local_clips.clips {
                 let (local_clip_rect, radius, mode) = match *clip {
                     ClipSource::RoundedRectangle(rect, radii, clip_mode) => {
+                        rect_clips_only = false;
+
                         (rect, Some(radii), clip_mode)
                     }
-                    ClipSource::Rectangle(rect) => {
-                        (rect, None, ClipMode::Clip)
+                    ClipSource::Rectangle(rect, mode) => {
+                        (rect, None, mode)
                     }
                     ClipSource::BoxShadow(ref info) => {
+                        rect_clips_only = false;
+
                         // For inset box shadows, we can clip out any
                         // pixels that are inside the shadow region
                         // and are beyond the inner rect, as they can't
@@ -1526,6 +1618,8 @@ impl PrimitiveStore {
                     ClipSource::BorderCorner(..) |
                     ClipSource::LineDecoration(..) |
                     ClipSource::Image(..) => {
+                        rect_clips_only = false;
+
                         // TODO(gw): We can easily extend the segment builder
                         //           to support these clip sources in the
                         //           future, but they are rarely used.
@@ -1557,32 +1651,34 @@ impl PrimitiveStore {
             }
         }
 
-        match brush.segment_desc {
-            Some(ref mut segment_desc) => {
-                segment_desc.clip_mask_kind = clip_mask_kind;
-            }
-            None => {
-                // TODO(gw): We can probably make the allocation
-                //           patterns of this and the segment
-                //           builder significantly better, by
-                //           retaining it across primitives.
-                let mut segments = Vec::new();
+        if is_large || rect_clips_only {
+            match brush.segment_desc {
+                Some(ref mut segment_desc) => {
+                    segment_desc.clip_mask_kind = clip_mask_kind;
+                }
+                None => {
+                    // TODO(gw): We can probably make the allocation
+                    //           patterns of this and the segment
+                    //           builder significantly better, by
+                    //           retaining it across primitives.
+                    let mut segments = Vec::new();
 
-                segment_builder.build(|segment| {
-                    segments.push(
-                        BrushSegment::new(
-                            segment.rect.origin,
-                            segment.rect.size,
-                            segment.has_mask,
-                            segment.edge_flags,
-                        ),
-                    );
-                });
+                    segment_builder.build(|segment| {
+                        segments.push(
+                            BrushSegment::new(
+                                segment.rect.origin,
+                                segment.rect.size,
+                                segment.has_mask,
+                                segment.edge_flags,
+                            ),
+                        );
+                    });
 
-                brush.segment_desc = Some(BrushSegmentDescriptor {
-                    segments,
-                    clip_mask_kind,
-                });
+                    brush.segment_desc = Some(BrushSegmentDescriptor {
+                        segments,
+                        clip_mask_kind,
+                    });
+                }
             }
         }
     }
@@ -1698,7 +1794,7 @@ impl PrimitiveStore {
         let transform = &prim_run_context.scroll_node.world_content_transform;
         let extra_clip =  {
             let metadata = &self.cpu_metadata[prim_index.0];
-            metadata.clip_sources.as_ref().map(|ref clip_sources| {
+            metadata.clip_sources.as_ref().map(|clip_sources| {
                 let prim_clips = frame_state.clip_store.get_mut(clip_sources);
                 prim_clips.update(
                     frame_state.gpu_cache,
@@ -2123,7 +2219,7 @@ fn convert_clip_chain_to_clip_vector(
             *combined_inner_rect = if !node.screen_inner_rect.is_empty() {
                 // If this clip's inner area contains the area of the primitive clipped
                 // by previous clips, then it's not going to affect rendering in any way.
-                if node.screen_inner_rect.contains_rect(&combined_outer_rect) {
+                if node.screen_inner_rect.contains_rect(combined_outer_rect) {
                     return None;
                 }
                 combined_inner_rect.intersection(&node.screen_inner_rect)

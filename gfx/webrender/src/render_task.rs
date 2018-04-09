@@ -508,7 +508,7 @@ impl RenderTask {
 
         let blur_task_v_id = render_tasks.add(blur_task_v);
 
-        let blur_task_h = RenderTask {
+        RenderTask {
             children: vec![blur_task_v_id],
             location: RenderTaskLocation::Dynamic(None, adjusted_blur_target_size),
             kind: RenderTaskKind::HorizontalBlur(BlurTask {
@@ -518,9 +518,7 @@ impl RenderTask {
             }),
             clear_mode,
             saved_index: None,
-        };
-
-        blur_task_h
+        }
     }
 
     pub fn new_scaling(
@@ -932,7 +930,7 @@ impl RenderTaskCache {
                               });
 
         // Check if this texture cache handle is valid.
-        if texture_cache.request(&mut cache_entry.handle, gpu_cache) {
+        if texture_cache.request(&cache_entry.handle, gpu_cache) {
             // Invoke user closure to get render task chain
             // to draw this into the texture cache.
             let (render_task_id, is_opaque) = try!(f(render_tasks));
