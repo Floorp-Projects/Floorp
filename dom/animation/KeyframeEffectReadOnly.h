@@ -204,8 +204,7 @@ public:
   // Updates |aComposeResult| with the animation values produced by this
   // AnimationEffect for the current time except any properties contained
   // in |aPropertiesToSkip|.
-  template<typename ComposeAnimationResult>
-  void ComposeStyle(ComposeAnimationResult&& aRestultContainer,
+  void ComposeStyle(RawServoAnimationValueMap& aComposeResult,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
 

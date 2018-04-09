@@ -1026,9 +1026,8 @@ Animation::WillComposeStyle()
   }
 }
 
-template<typename ComposeAnimationResult>
 void
-Animation::ComposeStyle(ComposeAnimationResult&& aComposeResult,
+Animation::ComposeStyle(RawServoAnimationValueMap& aComposeResult,
                         const nsCSSPropertyIDSet& aPropertiesToSkip)
 {
   if (!mEffect) {
@@ -1088,8 +1087,7 @@ Animation::ComposeStyle(ComposeAnimationResult&& aComposeResult,
 
     KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
     if (keyframeEffect) {
-      keyframeEffect->ComposeStyle(Forward<ComposeAnimationResult>(aComposeResult),
-                                   aPropertiesToSkip);
+      keyframeEffect->ComposeStyle(aComposeResult, aPropertiesToSkip);
     }
   }
 
@@ -1657,12 +1655,6 @@ Animation::IsRunningOnCompositor() const
          mEffect->AsKeyframeEffect()->IsRunningOnCompositor();
 }
 
-
-template
-void
-Animation::ComposeStyle<RawServoAnimationValueMap&>(
-  RawServoAnimationValueMap& aAnimationValues,
-  const nsCSSPropertyIDSet& aPropertiesToSkip);
 
 } // namespace dom
 } // namespace mozilla
