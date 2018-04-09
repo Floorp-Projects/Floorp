@@ -339,8 +339,8 @@ public:
   nsresult DeleteNode(nsINode* aNode);
 
   /**
-   * InsertNode() inserts aContentToInsert before the child specified by
-   * aPointToInsert.
+   * InsertNodeWithTransaction() inserts aContentToInsert before the child
+   * specified by aPointToInsert.
    *
    * @param aContentToInsert    The node to be inserted.
    * @param aPointToInsert      The insertion point of aContentToInsert.
@@ -350,8 +350,9 @@ public:
    *                            before child node referred by this.
    */
   template<typename PT, typename CT>
-  nsresult InsertNode(nsIContent& aContentToInsert,
-                      const EditorDOMPointBase<PT, CT>& aPointToInsert);
+  nsresult
+  InsertNodeWithTransaction(nsIContent& aContentToInsert,
+                            const EditorDOMPointBase<PT, CT>& aPointToInsert);
 
   enum ECloneAttributes { eDontCloneAttributes, eCloneAttributes };
   already_AddRefed<Element> ReplaceContainer(Element* aOldContainer,
