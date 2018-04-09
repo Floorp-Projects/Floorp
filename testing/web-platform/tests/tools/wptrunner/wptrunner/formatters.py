@@ -10,9 +10,6 @@ class WptreportFormatter(BaseFormatter):
         self.raw_results = {}
 
     def suite_end(self, data):
-        return
-
-    def shutdown(self, data):
         results = {}
         results["results"] = []
         for test_name in self.raw_results:
