@@ -7,14 +7,15 @@
 #ifndef nsDOMSerializer_h_
 #define nsDOMSerializer_h_
 
-#include "nsIDOMSerializer.h"
+#include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/XMLSerializerBinding.h"
 
 class nsINode;
+class nsIOutputStream;
 
-class nsDOMSerializer final : public nsIDOMSerializer,
+class nsDOMSerializer final : public nsISupports,
                               public nsWrapperCache
 {
 public:
@@ -22,9 +23,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMSerializer)
-
-  // nsIDOMSerializer
-  NS_DECL_NSIDOMSERIALIZER
 
   // WebIDL API
   static already_AddRefed<nsDOMSerializer>
