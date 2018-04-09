@@ -2870,7 +2870,7 @@ jit::Invalidate(TypeZone& types, FreeOp* fop,
         if (cancelOffThread)
             CancelOffThreadIonCompile(info.script());
 
-        IonScript* ionScript = info.maybeIonScriptToInvalidate();
+        IonScript* ionScript = info.maybeIonScriptToInvalidate(types);
         if (!ionScript)
             continue;
 
@@ -2897,7 +2897,7 @@ jit::Invalidate(TypeZone& types, FreeOp* fop,
     // IonScript will be immediately destroyed. Otherwise, it will be held live
     // until its last invalidated frame is destroyed.
     for (const RecompileInfo& info : invalid) {
-        IonScript* ionScript = info.maybeIonScriptToInvalidate();
+        IonScript* ionScript = info.maybeIonScriptToInvalidate(types);
         if (!ionScript)
             continue;
 
@@ -2919,7 +2919,7 @@ jit::Invalidate(TypeZone& types, FreeOp* fop,
 
     // Finally, null out script->ion for IonScripts that are still on the stack.
     for (const RecompileInfo& info : invalid) {
-        if (info.maybeIonScriptToInvalidate())
+        if (info.maybeIonScriptToInvalidate(types))
             ClearIonScriptAfterInvalidation(cx, info.script(), resetUses);
     }
 }
