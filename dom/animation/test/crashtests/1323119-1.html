@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body>
+<script>
+addEventListener("DOMContentLoaded", function() {
+  let a = document.createElement("th");
+  document.documentElement.appendChild(a);
+  a.animate([{"mask": "repeat-y "}], 484);
+  document.documentElement.classList.remove("reftest-wait");
+});
+</script>
+</body>
+</html>
