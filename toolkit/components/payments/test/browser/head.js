@@ -239,6 +239,29 @@ async function spawnInDialogForMerchantTask(merchantTaskFn, dialogTaskFn, taskAr
   });
 }
 
+async function spawnInDialogForPrivateMerchantTask(merchantTaskFn, dialogTaskFn, taskArgs, {
+  origin = "https://example.com",
+} = {
+  origin: "https://example.com",
+}) {
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+
+  await withMerchantTab({
+    url: origin + BLANK_PAGE_PATH,
+    browser: privateWin.gBrowser,
+  }, async merchBrowser => {
+    await ContentTask.spawn(merchBrowser, taskArgs, merchantTaskFn);
+
+    const requests = getPaymentRequests();
+    is(requests.length, 1, "Should have one payment request");
+    let request = requests[0];
+    ok(!!request.requestId, "Got a payment request with an ID");
+
+    await spawnTaskInNewDialog(request.requestId, dialogTaskFn, taskArgs);
+  });
+  await BrowserTestUtils.closeWindow(privateWin);
+}
+
 async function setupFormAutofillStorage() {
   await formAutofillStorage.initialize();
 }
