@@ -93,8 +93,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 2, order = intArrayOf(1, 3))
             override fun onPageStart(session: GeckoSession, url: String) {
                 assertThat("URL should match", url,
-                           endsWith(if (sessionRule.currentCall.counter == 1)
-                                        INVALID_URI else HELLO_HTML_PATH))
+                           endsWith(forEachCall(INVALID_URI, HELLO_HTML_PATH)))
             }
 
             @AssertCalled(count = 2, order = intArrayOf(2, 4))
@@ -102,7 +101,7 @@ class ProgressDelegateTest : BaseSessionTest() {
                 // The first load is certain to fail because of interruption by the second load
                 // or by invalid domain name, whereas the second load is certain to succeed.
                 assertThat("Success flag should match", success,
-                           equalTo(sessionRule.currentCall.counter != 1))
+                           equalTo(forEachCall(false, true)))
             };
         })
     }
