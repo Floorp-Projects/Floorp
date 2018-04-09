@@ -3190,6 +3190,10 @@ ContentParent::KillHard(const char* aReason)
     RefPtr<ContentParent> self = this;
     std::function<void(bool)> callback = [self](bool aResult) {
       self->OnGenerateMinidumpComplete(aResult);
+      MessageChannel* channel = self->GetIPCChannel();
+      if (channel) {
+        channel->Close();
+      }
     };
     // Generate the report and insert into the queue for submittal.
     mCrashReporter->GenerateMinidumpAndPair(Process(),
@@ -3201,6 +3205,11 @@ ContentParent::KillHard(const char* aReason)
   }
 
   OnGenerateMinidumpComplete(false);
+
+  MessageChannel* channel = GetIPCChannel();
+  if (channel) {
+    channel->Close();
+  }
 }
 
 void
