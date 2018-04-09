@@ -136,7 +136,7 @@ macro_rules! token_punct {
 
         impl ::std::default::Default for $name {
             fn default() -> Self {
-                $name([Span::def_site(); $len])
+                $name([Span::call_site(); $len])
             }
         }
 
@@ -203,7 +203,7 @@ macro_rules! token_keyword {
 
         impl ::std::default::Default for $name {
             fn default() -> Self {
-                $name(Span::def_site())
+                $name(Span::call_site())
             }
         }
 
@@ -265,7 +265,7 @@ macro_rules! token_delimiter {
 
         impl ::std::default::Default for $name {
             fn default() -> Self {
-                $name(Span::def_site())
+                $name(Span::call_site())
             }
         }
 
@@ -356,7 +356,7 @@ tokens! {
         "<-"       pub struct LArrow/2     /// `<-`
         "%"        pub struct Rem/1        /// `%`
         "%="       pub struct RemEq/2      /// `%=`
-        "=>"       pub struct Rocket/2     /// `=>`
+        "=>"       pub struct FatArrow/2   /// `=>`
         ";"        pub struct Semi/1       /// `;`
         "<<"       pub struct Shl/2        /// `<<`
         "<<="      pub struct ShlEq/3      /// `<<=`
@@ -464,7 +464,7 @@ macro_rules! Token {
     (<-)       => { $crate::token::LArrow };
     (%)        => { $crate::token::Rem };
     (%=)       => { $crate::token::RemEq };
-    (=>)       => { $crate::token::Rocket };
+    (=>)       => { $crate::token::FatArrow };
     (;)        => { $crate::token::Semi };
     (<<)       => { $crate::token::Shl };
     (<<=)      => { $crate::token::ShlEq };
@@ -563,7 +563,7 @@ macro_rules! punct {
     ($i:expr, <-)  => { call!($i, <$crate::token::LArrow as $crate::synom::Synom>::parse) };
     ($i:expr, %)   => { call!($i, <$crate::token::Rem as $crate::synom::Synom>::parse) };
     ($i:expr, %=)  => { call!($i, <$crate::token::RemEq as $crate::synom::Synom>::parse) };
-    ($i:expr, =>)  => { call!($i, <$crate::token::Rocket as $crate::synom::Synom>::parse) };
+    ($i:expr, =>)  => { call!($i, <$crate::token::FatArrow as $crate::synom::Synom>::parse) };
     ($i:expr, ;)   => { call!($i, <$crate::token::Semi as $crate::synom::Synom>::parse) };
     ($i:expr, <<)  => { call!($i, <$crate::token::Shl as $crate::synom::Synom>::parse) };
     ($i:expr, <<=) => { call!($i, <$crate::token::ShlEq as $crate::synom::Synom>::parse) };
@@ -663,20 +663,20 @@ mod parsing {
     where
         T: FromSpans,
     {
-        let mut spans = [Span::def_site(); 3];
+        let mut spans = [Span::call_site(); 3];
         assert!(s.len() <= spans.len());
         let chars = s.chars();
 
         for (i, (ch, slot)) in chars.zip(&mut spans).enumerate() {
             match tokens.op() {
-                Some((span, op, kind, rest)) if op == ch => {
+                Some((op, rest)) if op.op() == ch => {
                     if i != s.len() - 1 {
-                        match kind {
+                        match op.spacing() {
                             Spacing::Joint => {}
                             _ => return parse_error(),
                         }
                     }
-                    *slot = span;
+                    *slot = op.span();
                     tokens = rest;
                 }
                 _ => return parse_error(),
@@ -686,9 +686,9 @@ mod parsing {
     }
 
     pub fn keyword<'a, T>(keyword: &str, tokens: Cursor<'a>, new: fn(Span) -> T) -> PResult<'a, T> {
-        if let Some((span, term, rest)) = tokens.term() {
+        if let Some((term, rest)) = tokens.term() {
             if term.as_str() == keyword {
-                return Ok((new(span), rest));
+                return Ok((new(term.span()), rest));
             }
         }
         parse_error()
@@ -728,7 +728,7 @@ mod parsing {
 
 #[cfg(feature = "printing")]
 mod printing {
-    use proc_macro2::{Delimiter, Spacing, Span, Term, TokenNode, TokenTree};
+    use proc_macro2::{Delimiter, Spacing, Span, Term, Op, Group};
     use quote::Tokens;
 
     pub fn punct(s: &str, spans: &[Span], tokens: &mut Tokens) {
@@ -739,23 +739,18 @@ mod printing {
         let ch = chars.next_back().unwrap();
         let span = spans.next_back().unwrap();
         for (ch, span) in chars.zip(spans) {
-            tokens.append(TokenTree {
-                span: *span,
-                kind: TokenNode::Op(ch, Spacing::Joint),
-            });
+            let mut op = Op::new(ch, Spacing::Joint);
+            op.set_span(*span);
+            tokens.append(op);
         }
 
-        tokens.append(TokenTree {
-            span: *span,
-            kind: TokenNode::Op(ch, Spacing::Alone),
-        });
+        let mut op = Op::new(ch, Spacing::Alone);
+        op.set_span(*span);
+        tokens.append(op);
     }
 
     pub fn keyword(s: &str, span: &Span, tokens: &mut Tokens) {
-        tokens.append(TokenTree {
-            span: *span,
-            kind: TokenNode::Term(Term::intern(s)),
-        });
+        tokens.append(Term::new(s, *span));
     }
 
     pub fn delim<F>(s: &str, span: &Span, tokens: &mut Tokens, f: F)
@@ -771,9 +766,8 @@ mod printing {
         };
         let mut inner = Tokens::new();
         f(&mut inner);
-        tokens.append(TokenTree {
-            span: *span,
-            kind: TokenNode::Group(delim, inner.into()),
-        });
+        let mut g = Group::new(delim, inner.into());
+        g.set_span(*span);
+        tokens.append(g);
     }
 }

@@ -68,8 +68,8 @@
 //!
 //! ```toml
 //! [dependencies]
-//! syn = "0.12"
-//! quote = "0.4"
+//! syn = "0.13"
+//! quote = "0.5"
 //!
 //! [lib]
 //! proc-macro = true
@@ -256,12 +256,13 @@
 //!   types.
 
 // Syn types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/syn/0.12.12")]
+#![doc(html_root_url = "https://docs.rs/syn/0.13.1")]
 #![cfg_attr(feature = "cargo-clippy",
             allow(const_static_lifetime, doc_markdown, large_enum_variant, match_bool,
-                  redundant_closure, needless_pass_by_value))]
+                  redundant_closure, needless_pass_by_value, redundant_field_names))]
 
 extern crate proc_macro2;
+#[cfg(feature = "proc-macro")]
 extern crate proc_macro;
 extern crate unicode_xid;
 
@@ -293,7 +294,7 @@ pub use data::{Field, Fields, FieldsNamed, FieldsUnnamed, Variant, VisCrate, Vis
 #[cfg(any(feature = "full", feature = "derive"))]
 mod expr;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use expr::{Expr, ExprAddrOf, ExprArray, ExprAssign, ExprAssignOp, ExprBinary, ExprBlock,
+pub use expr::{Expr, ExprReference, ExprArray, ExprAssign, ExprAssignOp, ExprBinary, ExprBlock,
                ExprBox, ExprBreak, ExprCall, ExprCast, ExprCatch, ExprClosure, ExprContinue,
                ExprField, ExprForLoop, ExprGroup, ExprIf, ExprIfLet, ExprInPlace, ExprIndex,
                ExprLit, ExprLoop, ExprMacro, ExprMatch, ExprMethodCall, ExprParen, ExprPath,
@@ -328,8 +329,8 @@ pub use item::{ArgCaptured, ArgSelf, ArgSelfRef, FnArg, FnDecl, ForeignItem, For
                ItemEnum, ItemExternCrate, ItemFn, ItemForeignMod, ItemImpl, ItemMacro, ItemMacro2,
                ItemMod, ItemStatic, ItemStruct, ItemTrait, ItemType, ItemUnion, ItemUse,
                ItemVerbatim, MethodSig, TraitItem, TraitItemConst, TraitItemMacro,
-               TraitItemMethod, TraitItemType, TraitItemVerbatim, UseGlob, UseList, UsePath,
-               UseTree};
+               TraitItemMethod, TraitItemType, TraitItemVerbatim, UseGlob, UseGroup, UseName,
+               UsePath, UseRename, UseTree};
 
 #[cfg(feature = "full")]
 mod file;
@@ -572,7 +573,7 @@ pub use error::parse_error;
 /// #
 /// # fn main() {}
 /// ```
-#[cfg(feature = "parsing")]
+#[cfg(all(feature = "parsing", feature = "proc-macro"))]
 pub fn parse<T>(tokens: proc_macro::TokenStream) -> Result<T, ParseError>
 where
     T: Synom,

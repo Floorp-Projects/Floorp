@@ -1,27 +1,89 @@
 extern crate proc_macro2;
 
-use std::str;
+use std::str::{self, FromStr};
 
-use proc_macro2::{Term, Literal, TokenStream};
-
-#[cfg(procmacro2_semver_exempt)]
-use proc_macro2::TokenNode;
-
-#[cfg(procmacro2_semver_exempt)]
-#[cfg(not(feature = "nightly"))]
-use proc_macro2::Span;
+use proc_macro2::{Literal, Span, Term, TokenStream, TokenTree};
 
 #[test]
-fn symbols() {
-    assert_eq!(Term::intern("foo").as_str(), "foo");
-    assert_eq!(Term::intern("bar").as_str(), "bar");
+fn terms() {
+    assert_eq!(Term::new("String", Span::call_site()).as_str(), "String");
+    assert_eq!(Term::new("fn", Span::call_site()).as_str(), "fn");
+    assert_eq!(Term::new("_", Span::call_site()).as_str(), "_");
+}
+
+#[test]
+fn raw_terms() {
+    assert_eq!(Term::new("r#String", Span::call_site()).as_str(), "r#String");
+    assert_eq!(Term::new("r#fn", Span::call_site()).as_str(), "r#fn");
+    assert_eq!(Term::new("r#_", Span::call_site()).as_str(), "r#_");
+}
+
+#[test]
+fn lifetimes() {
+    assert_eq!(Term::new("'a", Span::call_site()).as_str(), "'a");
+    assert_eq!(Term::new("'static", Span::call_site()).as_str(), "'static");
+    assert_eq!(Term::new("'_", Span::call_site()).as_str(), "'_");
+}
+
+#[test]
+#[should_panic(expected = "Term is not allowed to be empty; use Option<Term>")]
+fn term_empty() {
+    Term::new("", Span::call_site());
+}
+
+#[test]
+#[should_panic(expected = "Term cannot be a number; use Literal instead")]
+fn term_number() {
+    Term::new("255", Span::call_site());
+}
+
+#[test]
+#[should_panic(expected = "\"a#\" is not a valid Term")]
+fn term_invalid() {
+    Term::new("a#", Span::call_site());
+}
+
+#[test]
+#[should_panic(expected = "Term is not allowed to be empty; use Option<Term>")]
+fn raw_term_empty() {
+    Term::new("r#", Span::call_site());
+}
+
+#[test]
+#[should_panic(expected = "Term cannot be a number; use Literal instead")]
+fn raw_term_number() {
+    Term::new("r#255", Span::call_site());
+}
+
+#[test]
+#[should_panic(expected = "\"r#a#\" is not a valid Term")]
+fn raw_term_invalid() {
+    Term::new("r#a#", Span::call_site());
+}
+
+#[test]
+#[should_panic(expected = "Term is not allowed to be empty; use Option<Term>")]
+fn lifetime_empty() {
+    Term::new("'", Span::call_site());
+}
+
+#[test]
+#[should_panic(expected = "Term cannot be a number; use Literal instead")]
+fn lifetime_number() {
+    Term::new("'255", Span::call_site());
+}
+
+#[test]
+#[should_panic(expected = r#""\'a#" is not a valid Term"#)]
+fn lifetime_invalid() {
+    Term::new("'a#", Span::call_site());
 }
 
 #[test]
 fn literals() {
     assert_eq!(Literal::string("foo").to_string(), "\"foo\"");
     assert_eq!(Literal::string("\"").to_string(), "\"\\\"\"");
-    assert_eq!(Literal::float(10.0).to_string(), "10.0");
+    assert_eq!(Literal::f32_unsuffixed(10.0).to_string(), "10.0");
 }
 
 #[test]
@@ -36,11 +98,8 @@ fn roundtrip() {
     roundtrip("a");
     roundtrip("<<");
     roundtrip("<<=");
-    roundtrip("
-        /// a
-        wut
-    ");
-    roundtrip("
+    roundtrip(
+        "
         1
         1.0
         1f32
@@ -54,7 +113,8 @@ fn roundtrip() {
         9
         0
         0xffffffffffffffffffffffffffffffff
-    ");
+    ",
+    );
     roundtrip("'a");
     roundtrip("'static");
     roundtrip("'\\u{10__FFFF}'");
@@ -73,54 +133,63 @@ fn fail() {
     fail("1f320");
     fail("' static");
     fail("'mut");
+    fail("r#1");
+    fail("r#_");
 }
 
 #[cfg(procmacro2_semver_exempt)]
 #[test]
 fn span_test() {
+    use proc_macro2::TokenTree;
+
     fn check_spans(p: &str, mut lines: &[(usize, usize, usize, usize)]) {
         let ts = p.parse::<TokenStream>().unwrap();
         check_spans_internal(ts, &mut lines);
     }
 
-    fn check_spans_internal(
-        ts: TokenStream,
-        lines: &mut &[(usize, usize, usize, usize)],
-    ) {
+    fn check_spans_internal(ts: TokenStream, lines: &mut &[(usize, usize, usize, usize)]) {
         for i in ts {
             if let Some((&(sline, scol, eline, ecol), rest)) = lines.split_first() {
                 *lines = rest;
 
-                let start = i.span.start();
+                let start = i.span().start();
                 assert_eq!(start.line, sline, "sline did not match for {}", i);
                 assert_eq!(start.column, scol, "scol did not match for {}", i);
 
-                let end = i.span.end();
+                let end = i.span().end();
                 assert_eq!(end.line, eline, "eline did not match for {}", i);
                 assert_eq!(end.column, ecol, "ecol did not match for {}", i);
 
-                match i.kind {
-                    TokenNode::Group(_, stream) =>
-                        check_spans_internal(stream, lines),
+                match i {
+                    TokenTree::Group(ref g) => {
+                        check_spans_internal(g.stream().clone(), lines);
+                    }
                     _ => {}
                 }
             }
         }
     }
 
-    check_spans("\
+    check_spans(
+        "\
 /// This is a document comment
 testing 123
 {
   testing 234
-}", &[
-    (1, 0, 1, 30),
-    (2, 0, 2, 7),
-    (2, 8, 2, 11),
-    (3, 0, 5, 1),
-    (4, 2, 4, 9),
-    (4, 10, 4, 13),
-]);
+}",
+        &[
+            (1, 0, 1, 30),  // #
+            (1, 0, 1, 30),  // [ ... ]
+            (1, 0, 1, 30),  // doc
+            (1, 0, 1, 30),  // =
+            (1, 0, 1, 30),  // "This is..."
+            (2, 0, 2, 7),   // testing
+            (2, 8, 2, 11),  // 123
+            (3, 0, 5, 1),   // { ... }
+            (4, 2, 4, 9),   // testing
+            (4, 10, 4, 13), // 234
+        ],
+    );
 }
 
 #[cfg(procmacro2_semver_exempt)]
@@ -141,16 +210,25 @@ fn default_span() {
 #[cfg(procmacro2_semver_exempt)]
 #[test]
 fn span_join() {
-    let source1 =
-        "aaa\nbbb".parse::<TokenStream>().unwrap().into_iter().collect::<Vec<_>>();
-    let source2 =
-        "ccc\nddd".parse::<TokenStream>().unwrap().into_iter().collect::<Vec<_>>();
+    let source1 = "aaa\nbbb"
+        .parse::<TokenStream>()
+        .unwrap()
+        .into_iter()
+        .collect::<Vec<_>>();
+    let source2 = "ccc\nddd"
+        .parse::<TokenStream>()
+        .unwrap()
+        .into_iter()
+        .collect::<Vec<_>>();
 
-    assert!(source1[0].span.source_file() != source2[0].span.source_file());
-    assert_eq!(source1[0].span.source_file(), source1[1].span.source_file());
+    assert!(source1[0].span().source_file() != source2[0].span().source_file());
+    assert_eq!(
+        source1[0].span().source_file(),
+        source1[1].span().source_file()
+    );
 
-    let joined1 = source1[0].span.join(source1[1].span);
-    let joined2 = source1[0].span.join(source2[0].span);
+    let joined1 = source1[0].span().join(source1[1].span());
+    let joined2 = source1[0].span().join(source2[0].span());
     assert!(joined1.is_some());
     assert!(joined2.is_none());
 
@@ -161,7 +239,10 @@ fn span_join() {
     assert_eq!(end.line, 2);
     assert_eq!(end.column, 3);
 
-    assert_eq!(joined1.unwrap().source_file(), source1[0].span.source_file());
+    assert_eq!(
+        joined1.unwrap().source_file(),
+        source1[0].span().source_file()
+    );
 }
 
 #[test]
@@ -171,9 +252,53 @@ fn no_panic() {
 }
 
 #[test]
-fn tricky_doc_commaent() {
+fn tricky_doc_comment() {
     let stream = "/**/".parse::<proc_macro2::TokenStream>().unwrap();
     let tokens = stream.into_iter().collect::<Vec<_>>();
     assert!(tokens.is_empty(), "not empty -- {:?}", tokens);
+
+    let stream = "/// doc".parse::<proc_macro2::TokenStream>().unwrap();
+    let tokens = stream.into_iter().collect::<Vec<_>>();
+    assert!(tokens.len() == 2, "not length 2 -- {:?}", tokens);
+    match tokens[0] {
+        proc_macro2::TokenTree::Op(ref tt) => assert_eq!(tt.op(), '#'),
+        _ => panic!("wrong token {:?}", tokens[0]),
+    }
+    let mut tokens = match tokens[1] {
+        proc_macro2::TokenTree::Group(ref tt) => {
+            assert_eq!(tt.delimiter(), proc_macro2::Delimiter::Bracket);
+            tt.stream().into_iter()
+        }
+        _ => panic!("wrong token {:?}", tokens[0]),
+    };
+
+    match tokens.next().unwrap() {
+        proc_macro2::TokenTree::Term(ref tt) => assert_eq!(tt.as_str(), "doc"),
+        t => panic!("wrong token {:?}", t),
+    }
+    match tokens.next().unwrap() {
+        proc_macro2::TokenTree::Op(ref tt) => assert_eq!(tt.op(), '='),
+        t => panic!("wrong token {:?}", t),
+    }
+    match tokens.next().unwrap() {
+        proc_macro2::TokenTree::Literal(ref tt) => {
+            assert_eq!(tt.to_string(), "\" doc\"");
+        }
+        t => panic!("wrong token {:?}", t),
+    }
+    assert!(tokens.next().is_none());
+
+    let stream = "//! doc".parse::<proc_macro2::TokenStream>().unwrap();
+    let tokens = stream.into_iter().collect::<Vec<_>>();
+    assert!(tokens.len() == 3, "not length 3 -- {:?}", tokens);
 }
 
+#[test]
+fn raw_identifier() {
+    let mut tts = TokenStream::from_str("r#dyn").unwrap().into_iter();
+    match tts.next().unwrap() {
+        TokenTree::Term(raw) => assert_eq!("r#dyn", raw.as_str()),
+        wrong => panic!("wrong token {:?}", wrong),
+    }
+    assert!(tts.next().is_none());
+}

@@ -11,7 +11,7 @@ use punctuated::Punctuated;
 
 use std::iter;
 
-use proc_macro2::{Delimiter, Spacing, TokenNode, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Spacing, TokenStream, TokenTree};
 
 #[cfg(feature = "extra-traits")]
 use std::hash::{Hash, Hasher};
@@ -113,104 +113,104 @@ impl Attribute {
         let tts = self.tts.clone().into_iter().collect::<Vec<_>>();
 
         if tts.len() == 1 {
-            if let TokenNode::Group(Delimiter::Parenthesis, ref ts) = tts[0].kind {
-                let tokens = ts.clone().into_iter().collect::<Vec<_>>();
-                if let Some(nested_meta_items) = list_of_nested_meta_items_from_tokens(&tokens) {
-                    return Some(Meta::List(MetaList {
-                        paren_token: token::Paren(tts[0].span),
-                        ident: *name,
-                        nested: nested_meta_items,
-                    }));
-                }
+            if let Some(meta) = Attribute::extract_meta_list(*name, &tts[0]) {
+                return Some(meta);
             }
         }
 
         if tts.len() == 2 {
-            if let TokenNode::Op('=', Spacing::Alone) = tts[0].kind {
-                if let TokenNode::Literal(ref lit) = tts[1].kind {
-                    if !lit.to_string().starts_with('/') {
-                        return Some(Meta::NameValue(MetaNameValue {
-                            ident: *name,
-                            eq_token: Token![=]([tts[0].span]),
-                            lit: Lit::new(lit.clone(), tts[1].span),
-                        }));
-                    }
-                } else if let TokenNode::Term(ref term) = tts[1].kind {
-                    match term.as_str() {
-                        v @ "true" | v @ "false" => {
-                            return Some(Meta::NameValue(MetaNameValue {
-                                ident: *name,
-                                eq_token: Token![=]([tts[0].span]),
-                                lit: Lit::Bool(LitBool { value: v == "true", span: tts[1].span }),
-                            }));
-                        },
-                        _ => {}
-                    }
-                }
+            if let Some(meta) = Attribute::extract_name_value(*name, &tts[0], &tts[1]) {
+                return Some(meta);
             }
         }
 
         None
+    }
+
+    fn extract_meta_list(ident: Ident, tt: &TokenTree) -> Option<Meta> {
+        let g = match *tt {
+            TokenTree::Group(ref g) => g,
+            _ => return None,
+        };
+        if g.delimiter() != Delimiter::Parenthesis {
+            return None
+        }
+        let tokens = g.stream().clone().into_iter().collect::<Vec<_>>();
+        let nested = match list_of_nested_meta_items_from_tokens(&tokens) {
+            Some(n) => n,
+            None => return None,
+        };
+        Some(Meta::List(MetaList {
+            paren_token: token::Paren(g.span()),
+            ident: ident,
+            nested: nested,
+        }))
+    }
+
+    fn extract_name_value(ident: Ident, a: &TokenTree, b: &TokenTree) -> Option<Meta> {
+        let a = match *a {
+            TokenTree::Op(ref o) => o,
+            _ => return None,
+        };
+        if a.spacing() != Spacing::Alone {
+            return None
+        }
+        if a.op() != '=' {
+            return None
+        }
+
+        match *b {
+            TokenTree::Literal(ref l) if !l.to_string().starts_with('/') => {
+                Some(Meta::NameValue(MetaNameValue {
+                    ident: ident,
+                    eq_token: Token![=]([a.span()]),
+                    lit: Lit::new(l.clone()),
+                }))
+            }
+            TokenTree::Term(ref term) => {
+                match term.as_str() {
+                    v @ "true" | v @ "false" => {
+                        Some(Meta::NameValue(MetaNameValue {
+                            ident: ident,
+                            eq_token: Token![=]([a.span()]),
+                            lit: Lit::Bool(LitBool {
+                                value: v == "true",
+                                span: b.span(),
+                            }),
+                        }))
+                    },
+                    _ => None ,
+                }
+            }
+            _ => None,
+        }
     }
 }
 
 fn nested_meta_item_from_tokens(tts: &[TokenTree]) -> Option<(NestedMeta, &[TokenTree])> {
     assert!(!tts.is_empty());
 
-    match tts[0].kind {
-        TokenNode::Literal(ref lit) => {
+    match tts[0] {
+        TokenTree::Literal(ref lit) => {
             if lit.to_string().starts_with('/') {
                 None
             } else {
-                let lit = Lit::new(lit.clone(), tts[0].span);
+                let lit = Lit::new(lit.clone());
                 Some((NestedMeta::Literal(lit), &tts[1..]))
             }
         }
 
-        TokenNode::Term(sym) => {
-            let ident = Ident::new(sym.as_str(), tts[0].span);
+        TokenTree::Term(sym) => {
+            let ident = Ident::new(sym.as_str(), sym.span());
             if tts.len() >= 3 {
-                if let TokenNode::Op('=', Spacing::Alone) = tts[1].kind {
-                    if let TokenNode::Literal(ref lit) = tts[2].kind {
-                        if !lit.to_string().starts_with('/') {
-                            let pair = MetaNameValue {
-                                ident: Ident::new(sym.as_str(), tts[0].span),
-                                eq_token: Token![=]([tts[1].span]),
-                                lit: Lit::new(lit.clone(), tts[2].span),
-                            };
-                            return Some((Meta::NameValue(pair).into(), &tts[3..]));
-                        }
-                    } else if let TokenNode::Term(ref term) = tts[2].kind {
-                        match term.as_str() {
-                            v @ "true" | v @ "false" => {
-                                let pair = MetaNameValue {
-                                    ident: Ident::new(sym.as_str(), tts[0].span),
-                                    eq_token: Token![=]([tts[1].span]),
-                                    lit: Lit::Bool(LitBool { value: v == "true", span: tts[2].span }),
-                                };
-                                return Some((Meta::NameValue(pair).into(), &tts[3..]));
-                            },
-                            _ => {}
-                        }
-                    }
+                if let Some(meta) = Attribute::extract_name_value(ident, &tts[1], &tts[2]) {
+                    return Some((NestedMeta::Meta(meta), &tts[3..]))
                 }
             }
 
             if tts.len() >= 2 {
-                if let TokenNode::Group(Delimiter::Parenthesis, ref inner_tts) = tts[1].kind {
-                    let inner_tts = inner_tts.clone().into_iter().collect::<Vec<_>>();
-                    return match list_of_nested_meta_items_from_tokens(&inner_tts) {
-                        Some(nested_meta_items) => {
-                            let list = MetaList {
-                                ident: ident,
-                                paren_token: token::Paren(tts[1].span),
-                                nested: nested_meta_items,
-                            };
-                            Some((Meta::List(list).into(), &tts[2..]))
-                        }
-
-                        None => None,
-                    };
+                if let Some(meta) = Attribute::extract_meta_list(ident, &tts[1]) {
+                    return Some((NestedMeta::Meta(meta), &tts[2..]))
                 }
             }
 
@@ -231,8 +231,14 @@ fn list_of_nested_meta_items_from_tokens(
         let prev_comma = if first {
             first = false;
             None
-        } else if let TokenNode::Op(',', Spacing::Alone) = tts[0].kind {
-            let tok = Token![,]([tts[0].span]);
+        } else if let TokenTree::Op(ref op) = tts[0] {
+            if op.spacing() != Spacing::Alone {
+                return None
+            }
+            if op.op() != ',' {
+                return None
+            }
+            let tok = Token![,]([op.span()]);
             tts = &tts[1..];
             if tts.is_empty() {
                 break;
@@ -396,13 +402,12 @@ pub mod parsing {
     use buffer::Cursor;
     use parse_error;
     use synom::PResult;
-    use proc_macro2::{Literal, Spacing, Span, TokenNode, TokenTree};
+    use proc_macro2::{Literal, Spacing, Span, TokenTree, Op};
 
     fn eq(span: Span) -> TokenTree {
-        TokenTree {
-            span: span,
-            kind: TokenNode::Op('=', Spacing::Alone),
-        }
+        let mut op = Op::new('=', Spacing::Alone);
+        op.set_span(span);
+        op.into()
     }
 
     impl Attribute {
@@ -431,7 +436,7 @@ pub mod parsing {
             map!(
                 call!(lit_doc_comment, Comment::Inner),
                 |lit| {
-                    let span = lit.span;
+                    let span = lit.span();
                     Attribute {
                         style: AttrStyle::Inner(<Token![!]>::new(span)),
                         path: Ident::new("doc", span).into(),
@@ -471,7 +476,7 @@ pub mod parsing {
             map!(
                 call!(lit_doc_comment, Comment::Outer),
                 |lit| {
-                    let span = lit.span;
+                    let span = lit.span();
                     Attribute {
                         style: AttrStyle::Outer,
                         path: Ident::new("doc", span).into(),
@@ -495,20 +500,16 @@ pub mod parsing {
 
     fn lit_doc_comment(input: Cursor, style: Comment) -> PResult<TokenTree> {
         match input.literal() {
-            Some((span, lit, rest)) => {
+            Some((lit, rest)) => {
                 let string = lit.to_string();
                 let ok = match style {
                     Comment::Inner => string.starts_with("//!") || string.starts_with("/*!"),
                     Comment::Outer => string.starts_with("///") || string.starts_with("/**"),
                 };
                 if ok {
-                    Ok((
-                        TokenTree {
-                            span: span,
-                            kind: TokenNode::Literal(Literal::string(&string)),
-                        },
-                        rest,
-                    ))
+                    let mut new = Literal::string(&string);
+                    new.set_span(lit.span());
+                    Ok((new.into(), rest))
                 } else {
                     parse_error()
                 }
@@ -522,25 +523,9 @@ pub mod parsing {
 mod printing {
     use super::*;
     use quote::{ToTokens, Tokens};
-    use proc_macro2::Literal;
 
     impl ToTokens for Attribute {
         fn to_tokens(&self, tokens: &mut Tokens) {
-            // If this was a sugared doc, emit it in its original form instead of `#[doc = "..."]`
-            if self.is_sugared_doc {
-                if let Some(Meta::NameValue(ref pair)) = self.interpret_meta() {
-                    if pair.ident == "doc" {
-                        if let Lit::Str(ref comment) = pair.lit {
-                            tokens.append(TokenTree {
-                                span: comment.span,
-                                kind: TokenNode::Literal(Literal::doccomment(&comment.value())),
-                            });
-                            return;
-                        }
-                    }
-                }
-            }
-
             self.pound_token.to_tokens(tokens);
             if let AttrStyle::Inner(ref b) = self.style {
                 b.to_tokens(tokens);

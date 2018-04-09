@@ -49,7 +49,6 @@ ast_enum_of_structs! {
             pub vis: Visibility,
             pub use_token: Token![use],
             pub leading_colon: Option<Token![::]>,
-            pub prefix: Punctuated<Ident, Token![::]>,
             pub tree: UseTree,
             pub semi_token: Token![;],
         }),
@@ -338,12 +337,29 @@ ast_enum_of_structs! {
     ///
     /// [syntax tree enum]: enum.Expr.html#syntax-tree-enums
     pub enum UseTree {
-        /// An identifier imported by a `use` item: `Type` or `Type as Renamed`.
+        /// A path prefix of imports in a `use` item: `std::...`.
         ///
         /// *This type is available if Syn is built with the `"full"` feature.*
         pub Path(UsePath {
             pub ident: Ident,
-            pub rename: Option<(Token![as], Ident)>,
+            pub colon2_token: Token![::],
+            pub tree: Box<UseTree>,
+        }),
+
+        /// An identifier imported by a `use` item: `HashMap`.
+        ///
+        /// *This type is available if Syn is built with the `"full"` feature.*
+        pub Name(UseName {
+            pub ident: Ident,
+        }),
+
+        /// An renamed identifier imported by a `use` item: `HashMap as Map`.
+        ///
+        /// *This type is available if Syn is built with the `"full"` feature.*
+        pub Rename(UseRename {
+            pub ident: Ident,
+            pub as_token: Token![as],
+            pub rename: Ident,
         }),
 
         /// A glob import in a `use` item: `*`.
@@ -353,10 +369,10 @@ ast_enum_of_structs! {
             pub star_token: Token![*],
         }),
 
-        /// A braced list of imports in a `use` item: `{A, B, C}`.
+        /// A braced group of imports in a `use` item: `{A, B, C}`.
         ///
         /// *This type is available if Syn is built with the `"full"` feature.*
-        pub List(UseList {
+        pub Group(UseGroup {
             pub brace_token: token::Brace,
             pub items: Punctuated<UseTree, Token![,]>,
         }),
@@ -793,39 +809,19 @@ pub mod parsing {
         vis: syn!(Visibility) >>
         use_: keyword!(use) >>
         leading_colon: option!(punct!(::)) >>
-        mut prefix: call!(Punctuated::parse_terminated_with, use_prefix) >>
-        tree: switch!(value!(prefix.empty_or_trailing()),
-            true => syn!(UseTree)
-            |
-            false => alt!(
-                tuple!(keyword!(as), syn!(Ident)) => {
-                    |rename| UseTree::Path(UsePath {
-                        ident: prefix.pop().unwrap().into_value(),
-                        rename: Some(rename),
-                    })
-                }
-                |
-                epsilon!() => {
-                    |_| UseTree::Path(UsePath {
-                        ident: prefix.pop().unwrap().into_value(),
-                        rename: None,
-                    })
-                }
-            )
-        ) >>
+        tree: syn!(UseTree) >>
         semi: punct!(;) >>
         (ItemUse {
             attrs: attrs,
             vis: vis,
             use_token: use_,
             leading_colon: leading_colon,
-            prefix: prefix,
             tree: tree,
             semi_token: semi,
         })
     ));
 
-    named!(use_prefix -> Ident, alt!(
+    named!(use_element -> Ident, alt!(
         syn!(Ident)
         |
         keyword!(self) => { Into::into }
@@ -836,22 +832,42 @@ pub mod parsing {
     ));
 
     impl_synom!(UseTree "use tree" alt!(
+        syn!(UseRename) => { UseTree::Rename }
+        |
         syn!(UsePath) => { UseTree::Path }
+        |
+        syn!(UseName) => { UseTree::Name }
         |
         syn!(UseGlob) => { UseTree::Glob }
         |
-        syn!(UseList) => { UseTree::List }
+        syn!(UseGroup) => { UseTree::Group }
     ));
 
     impl_synom!(UsePath "use path" do_parse!(
-        ident: alt!(
-            syn!(Ident)
-            |
-            keyword!(self) => { Into::into }
-        ) >>
-        rename: option!(tuple!(keyword!(as), syn!(Ident))) >>
+        ident: call!(use_element) >>
+        colon2_token: punct!(::) >>
+        tree: syn!(UseTree) >>
         (UsePath {
             ident: ident,
+            colon2_token: colon2_token,
+            tree: Box::new(tree),
+        })
+    ));
+
+    impl_synom!(UseName "use name" do_parse!(
+        ident: call!(use_element) >>
+        (UseName {
+            ident: ident,
+        })
+    ));
+
+    impl_synom!(UseRename "use rename" do_parse!(
+        ident: call!(use_element) >>
+        as_token: keyword!(as) >>
+        rename: syn!(Ident) >>
+        (UseRename {
+            ident: ident,
+            as_token: as_token,
             rename: rename,
         })
     ));
@@ -863,9 +879,9 @@ pub mod parsing {
         })
     ));
 
-    impl_synom!(UseList "use list" do_parse!(
+    impl_synom!(UseGroup "use group" do_parse!(
         list: braces!(Punctuated::parse_terminated) >>
-        (UseList {
+        (UseGroup {
             brace_token: list.0,
             items: list.1,
         })
@@ -1349,7 +1365,7 @@ pub mod parsing {
     ));
 
     impl_synom!(ItemImpl "impl item" do_parse!(
-        attrs: many0!(Attribute::parse_outer) >>
+        outer_attrs: many0!(Attribute::parse_outer) >>
         defaultness: option!(keyword!(default)) >>
         unsafety: option!(keyword!(unsafe)) >>
         impl_: keyword!(impl) >>
@@ -1366,9 +1382,16 @@ pub mod parsing {
         ) >>
         self_ty: syn!(Type) >>
         where_clause: option!(syn!(WhereClause)) >>
-        body: braces!(many0!(ImplItem::parse)) >>
+        inner: braces!(tuple!(
+            many0!(Attribute::parse_inner),
+            many0!(ImplItem::parse)
+        )) >>
         (ItemImpl {
-            attrs: attrs,
+            attrs: {
+                let mut attrs = outer_attrs;
+                attrs.extend((inner.1).0);
+                attrs
+            },
             defaultness: defaultness,
             unsafety: unsafety,
             impl_token: impl_,
@@ -1378,8 +1401,8 @@ pub mod parsing {
             },
             trait_: polarity_path,
             self_ty: Box::new(self_ty),
-            brace_token: body.0,
-            items: body.1,
+            brace_token: inner.0,
+            items: (inner.1).1,
         })
     ));
 
@@ -1536,7 +1559,6 @@ mod printing {
             self.vis.to_tokens(tokens);
             self.use_token.to_tokens(tokens);
             self.leading_colon.to_tokens(tokens);
-            self.prefix.to_tokens(tokens);
             self.tree.to_tokens(tokens);
             self.semi_token.to_tokens(tokens);
         }
@@ -1713,6 +1735,7 @@ mod printing {
             self.self_ty.to_tokens(tokens);
             self.generics.where_clause.to_tokens(tokens);
             self.brace_token.surround(tokens, |tokens| {
+                tokens.append_all(self.attrs.inner());
                 tokens.append_all(&self.items);
             });
         }
@@ -1763,10 +1786,22 @@ mod printing {
     impl ToTokens for UsePath {
         fn to_tokens(&self, tokens: &mut Tokens) {
             self.ident.to_tokens(tokens);
-            if let Some((ref as_token, ref rename)) = self.rename {
-                as_token.to_tokens(tokens);
-                rename.to_tokens(tokens);
-            }
+            self.colon2_token.to_tokens(tokens);
+            self.tree.to_tokens(tokens);
+        }
+    }
+
+    impl ToTokens for UseName {
+        fn to_tokens(&self, tokens: &mut Tokens) {
+            self.ident.to_tokens(tokens);
+        }
+    }
+
+    impl ToTokens for UseRename {
+        fn to_tokens(&self, tokens: &mut Tokens) {
+            self.ident.to_tokens(tokens);
+            self.as_token.to_tokens(tokens);
+            self.rename.to_tokens(tokens);
         }
     }
 
@@ -1776,7 +1811,7 @@ mod printing {
         }
     }
 
-    impl ToTokens for UseList {
+    impl ToTokens for UseGroup {
         fn to_tokens(&self, tokens: &mut Tokens) {
             self.brace_token.surround(tokens, |tokens| {
                 self.items.to_tokens(tokens);
