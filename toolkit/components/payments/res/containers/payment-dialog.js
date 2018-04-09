@@ -124,7 +124,6 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     let {
       request: {paymentOptions: {requestShipping: requestShipping}},
       savedAddresses,
-      savedBasicCards,
       selectedPayerAddress,
       selectedPaymentCard,
       selectedShippingAddress,
@@ -160,9 +159,11 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
 
     // Ensure `selectedPaymentCard` never refers to a deleted payment card and refers
     // to a payment card if one exists.
-    if (!savedBasicCards[selectedPaymentCard]) {
+    let basicCards = paymentRequest.getBasicCards(state);
+    if (!basicCards[selectedPaymentCard]) {
+      // Determining the initial selection is tracked in bug 1455789
       this.requestStore.setState({
-        selectedPaymentCard: Object.keys(savedBasicCards)[0] || null,
+        selectedPaymentCard: Object.keys(basicCards)[0] || null,
         selectedPaymentCardSecurityCode: null,
       });
     }
