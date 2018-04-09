@@ -122,9 +122,11 @@ using namespace widget;
  *****************************************************************************/
 
 template already_AddRefed<Element>
-EditorBase::CreateNode(nsAtom* aTag, const EditorDOMPoint& aPointToInsert);
+EditorBase::CreateNodeWithTransaction(nsAtom& aTag,
+                                      const EditorDOMPoint& aPointToInsert);
 template already_AddRefed<Element>
-EditorBase::CreateNode(nsAtom* aTag, const EditorRawDOMPoint& aPointToInsert);
+EditorBase::CreateNodeWithTransaction(nsAtom& aTag,
+                                      const EditorRawDOMPoint& aPointToInsert);
 template nsresult
 EditorBase::InsertNode(nsIContent& aContentToInsert,
                        const EditorDOMPoint& aPointToInsert);
@@ -1346,10 +1348,10 @@ EditorBase::SetSpellcheckUserOverride(bool enable)
 
 template<typename PT, typename CT>
 already_AddRefed<Element>
-EditorBase::CreateNode(nsAtom* aTag,
-                       const EditorDOMPointBase<PT, CT>& aPointToInsert)
+EditorBase::CreateNodeWithTransaction(
+              nsAtom& aTagName,
+              const EditorDOMPointBase<PT, CT>& aPointToInsert)
 {
-  MOZ_ASSERT(aTag);
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   // XXX We need offset at new node for mRangeUpdater.  Therefore, we need
@@ -1362,7 +1364,7 @@ EditorBase::CreateNode(nsAtom* aTag,
   RefPtr<Element> newElement;
 
   RefPtr<CreateElementTransaction> transaction =
-    CreateElementTransaction::Create(*this, *aTag, aPointToInsert);
+    CreateElementTransaction::Create(*this, aTagName, aPointToInsert);
   nsresult rv = DoTransaction(transaction);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // XXX Why do we do this even when DoTransaction() returned error?
@@ -1390,7 +1392,7 @@ EditorBase::CreateNode(nsAtom* aTag,
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidCreateNode(nsDependentAtomString(aTag),
+      listener->DidCreateNode(nsDependentAtomString(&aTagName),
                               GetAsDOMNode(newElement), rv);
     }
   }
@@ -4343,7 +4345,7 @@ EditorBase::DeleteSelectionAndCreateElement(nsAtom& aTag)
   if (!pointToInsert.IsSet()) {
     return nullptr;
   }
-  RefPtr<Element> newElement = CreateNode(&aTag, pointToInsert);
+  RefPtr<Element> newElement = CreateNodeWithTransaction(aTag, pointToInsert);
 
   // We want the selection to be just after the new node
   EditorRawDOMPoint afterNewElement(newElement);

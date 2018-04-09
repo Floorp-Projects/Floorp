@@ -3591,14 +3591,20 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
       return splitAtSelectionStartResult.Rv();
     }
     RefPtr<Element> theList =
-      htmlEditor->CreateNode(listType,
-                             splitAtSelectionStartResult.SplitPoint());
-    NS_ENSURE_STATE(theList);
+      htmlEditor->CreateNodeWithTransaction(
+                    *listType,
+                    splitAtSelectionStartResult.SplitPoint());
+    if (NS_WARN_IF(!theList)) {
+      return NS_ERROR_FAILURE;
+    }
 
     EditorRawDOMPoint atFirstListItemToInsertBefore(theList, 0);
     RefPtr<Element> theListItem =
-      htmlEditor->CreateNode(itemType, atFirstListItemToInsertBefore);
-    NS_ENSURE_STATE(theListItem);
+      htmlEditor->CreateNodeWithTransaction(*itemType,
+                                            atFirstListItemToInsertBefore);
+    if (NS_WARN_IF(!theListItem)) {
+      return NS_ERROR_FAILURE;
+    }
 
     // remember our new block for postprocessing
     mNewBlock = theListItem;
@@ -3697,8 +3703,11 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
           }
           newBlock = newLeftNode ? newLeftNode->AsElement() : nullptr;
           EditorRawDOMPoint atParentOfCurNode(atCurNode.GetContainer());
-          curList = htmlEditor->CreateNode(listType, atParentOfCurNode);
-          NS_ENSURE_STATE(curList);
+          curList = htmlEditor->CreateNodeWithTransaction(*listType,
+                                                          atParentOfCurNode);
+          if (NS_WARN_IF(!curList)) {
+            return NS_ERROR_FAILURE;
+          }
         }
         // move list item to new list
         rv = htmlEditor->MoveNode(curNode, curList, -1);
@@ -3761,7 +3770,8 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
         return splitCurNodeResult.Rv();
       }
       curList =
-        htmlEditor->CreateNode(listType, splitCurNodeResult.SplitPoint());
+        htmlEditor->CreateNodeWithTransaction(*listType,
+                                              splitCurNodeResult.SplitPoint());
       if (NS_WARN_IF(!curList)) {
         return NS_ERROR_FAILURE;
       }
@@ -3989,8 +3999,11 @@ HTMLEditRules::MakeBasicBlock(Selection& aSelection, nsAtom& blockType)
       return splitNodeResult.Rv();
     }
     RefPtr<Element> block =
-      htmlEditor->CreateNode(&blockType, splitNodeResult.SplitPoint());
-    NS_ENSURE_STATE(block);
+      htmlEditor->CreateNodeWithTransaction(blockType,
+                                            splitNodeResult.SplitPoint());
+    if (NS_WARN_IF(!block)) {
+      return NS_ERROR_FAILURE;
+    }
     // Remember our new block for postprocessing
     mNewBlock = block;
     // Delete anything that was in the list of nodes
@@ -4138,8 +4151,11 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
       return splitNodeResult.Rv();
     }
     RefPtr<Element> theBlock =
-      htmlEditor->CreateNode(nsGkAtoms::div, splitNodeResult.SplitPoint());
-    NS_ENSURE_STATE(theBlock);
+      htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::div,
+                                            splitNodeResult.SplitPoint());
+    if (NS_WARN_IF(!theBlock)) {
+      return NS_ERROR_FAILURE;
+    }
     // remember our new block for postprocessing
     mNewBlock = theBlock;
     ChangeIndentation(*theBlock, Change::plus);
@@ -4225,9 +4241,12 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
-        curList = htmlEditor->CreateNode(containerName,
-                                         splitNodeResult.SplitPoint());
-        NS_ENSURE_STATE(curList);
+        curList =
+          htmlEditor->CreateNodeWithTransaction(*containerName,
+                                                splitNodeResult.SplitPoint());
+        if (NS_WARN_IF(!curList)) {
+          return NS_ERROR_FAILURE;
+        }
         // curList is now the correct thing to put curNode in
         // remember our new block for postprocessing
         mNewBlock = curList;
@@ -4261,8 +4280,11 @@ HTMLEditRules::WillCSSIndent(Selection* aSelection,
         return splitNodeResult.Rv();
       }
       curQuote =
-        htmlEditor->CreateNode(nsGkAtoms::div, splitNodeResult.SplitPoint());
-      NS_ENSURE_STATE(curQuote);
+        htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::div,
+                                              splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!curQuote)) {
+        return NS_ERROR_FAILURE;
+      }
       ChangeIndentation(*curQuote, Change::plus);
       // remember our new block for postprocessing
       mNewBlock = curQuote;
@@ -4336,9 +4358,11 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
       return splitNodeResult.Rv();
     }
     RefPtr<Element> theBlock =
-      htmlEditor->CreateNode(nsGkAtoms::blockquote,
-                             splitNodeResult.SplitPoint());
-    NS_ENSURE_STATE(theBlock);
+      htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::blockquote,
+                                            splitNodeResult.SplitPoint());
+    if (NS_WARN_IF(!theBlock)) {
+      return NS_ERROR_FAILURE;
+    }
     // remember our new block for postprocessing
     mNewBlock = theBlock;
     // delete anything that was in the list of nodes
@@ -4424,8 +4448,11 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
           return splitNodeResult.Rv();
         }
         curList =
-          htmlEditor->CreateNode(containerName, splitNodeResult.SplitPoint());
-        NS_ENSURE_STATE(curList);
+          htmlEditor->CreateNodeWithTransaction(*containerName,
+                                                splitNodeResult.SplitPoint());
+        if (NS_WARN_IF(!curList)) {
+          return NS_ERROR_FAILURE;
+        }
         // curList is now the correct thing to put curNode in
         // remember our new block for postprocessing
         mNewBlock = curList;
@@ -4472,9 +4499,12 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
         if (NS_WARN_IF(splitNodeResult.Failed())) {
           return splitNodeResult.Rv();
         }
-        curList = htmlEditor->CreateNode(containerName,
-                                         splitNodeResult.SplitPoint());
-        NS_ENSURE_STATE(curList);
+        curList =
+          htmlEditor->CreateNodeWithTransaction(*containerName,
+                                                splitNodeResult.SplitPoint());
+        if (NS_WARN_IF(!curList)) {
+          return NS_ERROR_FAILURE;
+        }
       }
 
       rv = htmlEditor->MoveNode(listItem, curList, -1);
@@ -4507,9 +4537,11 @@ HTMLEditRules::WillHTMLIndent(Selection* aSelection,
         return splitNodeResult.Rv();
       }
       curQuote =
-        htmlEditor->CreateNode(nsGkAtoms::blockquote,
-                               splitNodeResult.SplitPoint());
-      NS_ENSURE_STATE(curQuote);
+        htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::blockquote,
+                                              splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!curQuote)) {
+        return NS_ERROR_FAILURE;
+      }
       // remember our new block for postprocessing
       mNewBlock = curQuote;
       // curQuote is now the correct thing to put curNode in
@@ -5135,8 +5167,10 @@ HTMLEditRules::WillAlign(Selection& aSelection,
       }
     }
     RefPtr<Element> div =
-      htmlEditor->CreateNode(nsGkAtoms::div, pointToInsertDiv);
-    NS_ENSURE_STATE(div);
+      htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::div, pointToInsertDiv);
+    if (NS_WARN_IF(!div)) {
+      return NS_ERROR_FAILURE;
+    }
     // Remember our new block for postprocessing
     mNewBlock = div;
     // Set up the alignment on the div, using HTML or CSS
@@ -5249,8 +5283,11 @@ HTMLEditRules::WillAlign(Selection& aSelection,
         return splitNodeResult.Rv();
       }
       curDiv =
-        htmlEditor->CreateNode(nsGkAtoms::div, splitNodeResult.SplitPoint());
-      NS_ENSURE_STATE(curDiv);
+        htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::div,
+                                              splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!curDiv)) {
+        return NS_ERROR_FAILURE;
+      }
       // Remember our new block for postprocessing
       mNewBlock = curDiv;
       // Set up the alignment on the div
@@ -5322,7 +5359,7 @@ HTMLEditRules::AlignBlockContents(nsINode& aNode,
   // children
   EditorRawDOMPoint atStartOfNode(&aNode, 0);
   RefPtr<Element> divElem =
-    htmlEditor->CreateNode(nsGkAtoms::div, atStartOfNode);
+    htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::div, atStartOfNode);
   if (NS_WARN_IF(!divElem)) {
     return NS_ERROR_FAILURE;
   }
@@ -6876,10 +6913,12 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
       // We want a wrapper element even if we separate with <br>
       EditorRawDOMPoint nextToHeader(headerParent, offset + 1);
       RefPtr<Element> pNode =
-        htmlEditor->CreateNode(&paraAtom == nsGkAtoms::br ?
-                                 nsGkAtoms::p : &paraAtom,
-                               nextToHeader);
-      NS_ENSURE_STATE(pNode);
+        htmlEditor->CreateNodeWithTransaction(&paraAtom == nsGkAtoms::br ?
+                                                *nsGkAtoms::p : paraAtom,
+                                              nextToHeader);
+      if (NS_WARN_IF(!pNode)) {
+        return NS_ERROR_FAILURE;
+      }
 
       // Append a <br> to it
       RefPtr<Element> brNode =
@@ -7243,10 +7282,12 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
       nsAtom& paraAtom = DefaultParagraphSeparator();
       // We want a wrapper even if we separate with <br>
       RefPtr<Element> pNode =
-        htmlEditor->CreateNode(&paraAtom == nsGkAtoms::br ?
-                                 nsGkAtoms::p : &paraAtom,
-                               atNextSiblingOfLeftList);
-      NS_ENSURE_STATE(pNode);
+        htmlEditor->CreateNodeWithTransaction(&paraAtom == nsGkAtoms::br ?
+                                                *nsGkAtoms::p : paraAtom,
+                                              atNextSiblingOfLeftList);
+      if (NS_WARN_IF(!pNode)) {
+        return NS_ERROR_FAILURE;
+      }
 
       // Append a <br> to it
       RefPtr<Element> brNode =
@@ -7311,8 +7352,10 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
           EditorRawDOMPoint atNextListItem(list, aListItem.GetNextSibling(),
                                            itemOffset + 1);
           RefPtr<Element> newListItem =
-            htmlEditor->CreateNode(listAtom, atNextListItem);
-          NS_ENSURE_STATE(newListItem);
+            htmlEditor->CreateNodeWithTransaction(*listAtom, atNextListItem);
+          if (NS_WARN_IF(!newListItem)) {
+            return NS_ERROR_FAILURE;
+          }
           rv = htmlEditor->DeleteNode(&aListItem);
           NS_ENSURE_SUCCESS(rv, rv);
           rv = aSelection.Collapse(newListItem, 0);
@@ -7428,9 +7471,12 @@ HTMLEditRules::MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
-      curBlock = htmlEditor->CreateNode(nsGkAtoms::blockquote,
-                                        splitNodeResult.SplitPoint());
-      NS_ENSURE_STATE(curBlock);
+      curBlock =
+        htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::blockquote,
+                                              splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!curBlock)) {
+        return NS_ERROR_FAILURE;
+      }
       // remember our new block for postprocessing
       mNewBlock = curBlock;
       // note: doesn't matter if we set mNewBlock multiple times.
@@ -7606,8 +7652,11 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
         return splitNodeResult.Rv();
       }
       RefPtr<Element> theBlock =
-        htmlEditor->CreateNode(&aBlockTag, splitNodeResult.SplitPoint());
-      NS_ENSURE_STATE(theBlock);
+        htmlEditor->CreateNodeWithTransaction(aBlockTag,
+                                              splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!theBlock)) {
+        return NS_ERROR_FAILURE;
+      }
       // Remember our new block for postprocessing
       mNewBlock = theBlock;
       continue;
@@ -7632,8 +7681,11 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
         return splitNodeResult.Rv();
       }
       curBlock =
-        htmlEditor->CreateNode(&aBlockTag, splitNodeResult.SplitPoint());
-      NS_ENSURE_STATE(curBlock);
+        htmlEditor->CreateNodeWithTransaction(aBlockTag,
+                                              splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!curBlock)) {
+        return NS_ERROR_FAILURE;
+      }
       // Remember our new block for postprocessing
       mNewBlock = curBlock;
       // Note: doesn't matter if we set mNewBlock multiple times.
@@ -7665,8 +7717,11 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
           return splitNodeResult.Rv();
         }
         curBlock =
-          htmlEditor->CreateNode(&aBlockTag, splitNodeResult.SplitPoint());
-        NS_ENSURE_STATE(curBlock);
+          htmlEditor->CreateNodeWithTransaction(aBlockTag,
+                                                splitNodeResult.SplitPoint());
+        if (NS_WARN_IF(!curBlock)) {
+          return NS_ERROR_FAILURE;
+        }
         // Remember our new block for postprocessing
         mNewBlock = curBlock;
         // Note: doesn't matter if we set mNewBlock multiple times.
@@ -9342,8 +9397,11 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
       return splitNodeResult.Rv();
     }
     RefPtr<Element> positionedDiv =
-      htmlEditor->CreateNode(nsGkAtoms::div, splitNodeResult.SplitPoint());
-    NS_ENSURE_STATE(positionedDiv);
+      htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::div,
+                                            splitNodeResult.SplitPoint());
+    if (NS_WARN_IF(!positionedDiv)) {
+      return NS_ERROR_FAILURE;
+    }
     // Remember our new block for postprocessing
     mNewBlock = positionedDiv;
     // Delete anything that was in the list of nodes
@@ -9398,15 +9456,20 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
         }
         if (!curPositionedDiv) {
           curPositionedDiv =
-            htmlEditor->CreateNode(nsGkAtoms::div,
-                                   splitNodeResult.SplitPoint());
+            htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::div,
+                                                  splitNodeResult.SplitPoint());
+          NS_WARNING_ASSERTION(curPositionedDiv,
+            "Failed to create current positioned div element");
           mNewBlock = curPositionedDiv;
         }
         EditorRawDOMPoint atEndOfCurPositionedDiv;
         atEndOfCurPositionedDiv.SetToEndOf(curPositionedDiv);
         curList =
-          htmlEditor->CreateNode(containerName, atEndOfCurPositionedDiv);
-        NS_ENSURE_STATE(curList);
+          htmlEditor->CreateNodeWithTransaction(*containerName,
+                                                atEndOfCurPositionedDiv);
+        if (NS_WARN_IF(!curList)) {
+          return NS_ERROR_FAILURE;
+        }
         // curList is now the correct thing to put curNode in.  Remember our
         // new block for postprocessing.
       }
@@ -9450,14 +9513,20 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
         if (!curPositionedDiv) {
           EditorRawDOMPoint atListItemParent(atListItem.GetContainer());
           curPositionedDiv =
-            htmlEditor->CreateNode(nsGkAtoms::div, atListItemParent);
+            htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::div,
+                                                  atListItemParent);
+          NS_WARNING_ASSERTION(curPositionedDiv,
+            "Failed to create current positioned div element");
           mNewBlock = curPositionedDiv;
         }
         EditorRawDOMPoint atEndOfCurPositionedDiv;
         atEndOfCurPositionedDiv.SetToEndOf(curPositionedDiv);
         curList =
-          htmlEditor->CreateNode(containerName, atEndOfCurPositionedDiv);
-        NS_ENSURE_STATE(curList);
+          htmlEditor->CreateNodeWithTransaction(*containerName,
+                                                atEndOfCurPositionedDiv);
+        if (NS_WARN_IF(!curList)) {
+          return NS_ERROR_FAILURE;
+        }
       }
       rv = htmlEditor->MoveNode(listItem, curList, -1);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -9480,8 +9549,11 @@ HTMLEditRules::WillAbsolutePosition(Selection& aSelection,
         return splitNodeResult.Rv();
       }
       curPositionedDiv =
-        htmlEditor->CreateNode(nsGkAtoms::div, splitNodeResult.SplitPoint());
-      NS_ENSURE_STATE(curPositionedDiv);
+        htmlEditor->CreateNodeWithTransaction(*nsGkAtoms::div,
+                                              splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!curPositionedDiv)) {
+        return NS_ERROR_FAILURE;
+      }
       // Remember our new block for postprocessing
       mNewBlock = curPositionedDiv;
       // curPositionedDiv is now the correct thing to put curNode in

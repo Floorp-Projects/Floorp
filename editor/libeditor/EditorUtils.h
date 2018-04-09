@@ -206,7 +206,7 @@ public:
   /**
    * SplitPoint() returns the split point in the container.
    * This is useful when callers insert an element at split point with
-   * EditorBase::CreateNode() or something similar methods.
+   * EditorBase::CreateNodeWithTransaction() or something similar methods.
    *
    * Note that the result is EditorRawDOMPoint but the nodes are grabbed
    * by this instance.  Therefore, the life time of both container node

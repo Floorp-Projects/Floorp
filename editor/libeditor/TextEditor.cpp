@@ -244,7 +244,8 @@ TextEditor::SetDocumentCharacterSet(const nsACString& characterSet)
 
   // Create a new meta charset tag
   EditorRawDOMPoint atStartOfHeadNode(headNode, 0);
-  RefPtr<Element> metaElement = CreateNode(nsGkAtoms::meta, atStartOfHeadNode);
+  RefPtr<Element> metaElement =
+    CreateNodeWithTransaction(*nsGkAtoms::meta, atStartOfHeadNode);
   if (NS_WARN_IF(!metaElement)) {
     return NS_OK;
   }
@@ -254,7 +255,7 @@ TextEditor::SetDocumentCharacterSet(const nsACString& characterSet)
     return NS_OK;
   }
 
-  // not undoable, undo should undo CreateNode
+  // not undoable, undo should undo CreateNodeWithTransaction().
   metaElement->SetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
                        NS_LITERAL_STRING("Content-Type"), true);
   metaElement->SetAttr(kNameSpaceID_None, nsGkAtoms::content,
@@ -469,12 +470,12 @@ TextEditor::CreateBRImpl(Selection& aSelection,
       pointInContainer.Set(aPointToInsert.GetContainer());
     }
     // Create a <br> node.
-    newBRElement = CreateNode(nsGkAtoms::br, pointInContainer);
+    newBRElement = CreateNodeWithTransaction(*nsGkAtoms::br, pointInContainer);
     if (NS_WARN_IF(!newBRElement)) {
       return nullptr;
     }
   } else {
-    newBRElement = CreateNode(nsGkAtoms::br, aPointToInsert);
+    newBRElement = CreateNodeWithTransaction(*nsGkAtoms::br, aPointToInsert);
     if (NS_WARN_IF(!newBRElement)) {
       return nullptr;
     }

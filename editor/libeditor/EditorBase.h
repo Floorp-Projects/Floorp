@@ -523,8 +523,8 @@ protected:
    */
   template<typename PT, typename CT>
   already_AddRefed<Element>
-  CreateNode(nsAtom* aTag,
-             const EditorDOMPointBase<PT, CT>& aPointToInsert);
+  CreateNodeWithTransaction(nsAtom& aTag,
+                            const EditorDOMPointBase<PT, CT>& aPointToInsert);
 
   /**
    * Create an aggregate transaction for delete selection.  The result may

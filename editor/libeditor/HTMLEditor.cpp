@@ -2042,14 +2042,23 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
     // Create a list and insert it before the right node if we split some
     // parents of start of selection above, or just start of selection
     // otherwise.
-    RefPtr<Element> newList = CreateNode(listAtom, pointToInsertList);
-    NS_ENSURE_STATE(newList);
+    RefPtr<Element> newList =
+      CreateNodeWithTransaction(*listAtom, pointToInsertList);
+    if (NS_WARN_IF(!newList)) {
+      return NS_ERROR_FAILURE;
+    }
     // make a list item
     EditorRawDOMPoint atStartOfNewList(newList, 0);
-    RefPtr<Element> newItem = CreateNode(nsGkAtoms::li, atStartOfNewList);
-    NS_ENSURE_STATE(newItem);
-    rv = selection->Collapse(newItem, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
+    RefPtr<Element> newItem =
+      CreateNodeWithTransaction(*nsGkAtoms::li, atStartOfNewList);
+    if (NS_WARN_IF(!newItem)) {
+      return NS_ERROR_FAILURE;
+    }
+    ErrorResult error;
+    selection->Collapse(RawRangeBoundary(newItem, 0), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
   }
 
   return rules->DidDoAction(selection, &ruleInfo, rv);
@@ -2192,12 +2201,18 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
     // Create a block and insert it before the right node if we split some
     // parents of start of selection above, or just start of selection
     // otherwise.
-    RefPtr<Element> newBlock = CreateNode(blockAtom, pointToInsertBlock);
-    NS_ENSURE_STATE(newBlock);
+    RefPtr<Element> newBlock =
+      CreateNodeWithTransaction(*blockAtom, pointToInsertBlock);
+    if (NS_WARN_IF(!newBlock)) {
+      return NS_ERROR_FAILURE;
+    }
 
     // reposition selection to inside the block
-    rv = selection->Collapse(newBlock, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    selection->Collapse(RawRangeBoundary(newBlock, 0), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
   }
 
   return rules->DidDoAction(selection, &ruleInfo, rv);
@@ -2275,11 +2290,17 @@ HTMLEditor::Indent(const nsAString& aIndent)
     // parents of start of selection above, or just start of selection
     // otherwise.
     RefPtr<Element> newBQ =
-      CreateNode(nsGkAtoms::blockquote, pointToInsertBlockquote);
-    NS_ENSURE_STATE(newBQ);
+      CreateNodeWithTransaction(*nsGkAtoms::blockquote,
+                                pointToInsertBlockquote);
+    if (NS_WARN_IF(!newBQ)) {
+      return NS_ERROR_FAILURE;
+    }
     // put a space in it so layout will draw the list item
-    rv = selection->Collapse(newBQ, 0);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult error;
+    selection->Collapse(RawRangeBoundary(newBQ, 0), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
     rv = InsertText(NS_LITERAL_STRING(" "));
     NS_ENSURE_SUCCESS(rv, rv);
     // reposition selection to before the space character
@@ -4476,8 +4497,11 @@ HTMLEditor::CopyLastEditableChildStyles(nsINode* aPreviousBlock,
       } else {
         EditorRawDOMPoint atStartOfNewBlock(newBlock, 0);
         deepestStyle = newStyles =
-          CreateNode(childElement->NodeInfo()->NameAtom(), atStartOfNewBlock);
-        NS_ENSURE_STATE(newStyles);
+          CreateNodeWithTransaction(*childElement->NodeInfo()->NameAtom(),
+                                    atStartOfNewBlock);
+        if (NS_WARN_IF(!newStyles)) {
+          return NS_ERROR_FAILURE;
+        }
       }
       CloneAttributes(newStyles, childElement);
     }
