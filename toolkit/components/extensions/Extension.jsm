@@ -1163,6 +1163,7 @@ class Extension extends ExtensionData {
     }
 
     this.addonData = addonData;
+    this.startupData = addonData.startupData || {};
     this.startupReason = startupReason;
 
     if (["ADDON_UPGRADE", "ADDON_DOWNGRADE"].includes(startupReason)) {
@@ -1355,6 +1356,10 @@ class Extension extends ExtensionData {
   get experimentsAllowed() {
     return (AddonSettings.ALLOW_LEGACY_EXTENSIONS ||
             this.isPrivileged);
+  }
+
+  saveStartupData() {
+    AddonManagerPrivate.setStartupData(this.id, this.startupData);
   }
 
   async _parseManifest() {

@@ -142,6 +142,7 @@ private:
   ~TRR() = default;
   nsresult SendHTTPRequest();
   nsresult DohEncode(nsCString &target);
+  nsresult PassQName(unsigned int &index);
   nsresult DohDecode();
   nsresult ReturnData();
   nsresult FailData();
