@@ -108,7 +108,7 @@ class TestRunner(object):
             raise
 
     def wait(self):
-        self.executor.protocol.wait()
+        self.executor.wait()
         self.send_message("wait_finished")
 
     def send_message(self, command, *args):
