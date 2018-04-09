@@ -118,12 +118,12 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
 
   register() {
     debug("register");
-    addEventListener("mozcaretstatechanged", this);
+    addEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
   }
 
   unregister() {
     debug("unregister");
-    removeEventListener("mozcaretstatechanged", this);
+    removeEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
   }
 
   /**
