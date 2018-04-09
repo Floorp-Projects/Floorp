@@ -54,7 +54,7 @@ const nsStyle##name_ * ComputedStyle::DoGetStyle##name_() {                 \
   if (needToCompute) {                                                      \
     MOZ_ASSERT(NS_IsMainThread());                                          \
     MOZ_ASSERT(!mozilla::ServoStyleSet::IsInServoTraversal());              \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext(), nullptr); \
+    const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext, nullptr);  \
     /* the ComputedStyle owns the struct */                                 \
     AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                               \
   }                                                                         \
@@ -71,7 +71,7 @@ const nsStyle##name_ * ComputedStyle::DoGetStyle##name_() {                 \
   const nsStyle##name_* data = ComputedData()->GetStyle##name_();           \
   /* perform any remaining main thread work on the struct */                \
   if (needToCompute) {                                                      \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext(), nullptr); \
+    const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext, nullptr);  \
     /* the ComputedStyle owns the struct */                                 \
     AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                               \
   }                                                                         \

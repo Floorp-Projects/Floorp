@@ -2,7 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include shared,prim_shared,clip_shared
+#include shared,clip_shared
+
+#define LINE_STYLE_SOLID        0
+#define LINE_STYLE_DOTTED       1
+#define LINE_STYLE_DASHED       2
+#define LINE_STYLE_WAVY         3
 
 varying vec3 vLocalPos;
 

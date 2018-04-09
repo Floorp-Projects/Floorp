@@ -1,6 +1,6 @@
 ChromeUtils.import("resource://testing-common/httpd.js");
 const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
-const RemoteSettings = ChromeUtils.import("resource://services-common/remote-settings.js", {});
+const { RemoteSettings } = ChromeUtils.import("resource://services-common/remote-settings.js", {});
 
 var server;
 
@@ -60,7 +60,7 @@ add_task(async function test_check_maybeSync() {
   // ensure we get the maybeSync call
   // add a test kinto client that will respond to lastModified information
   // for a collection called 'test-collection'
-  const c = RemoteSettings.RemoteSettings("test-collection", {
+  const c = RemoteSettings("test-collection", {
     bucketName: "test-bucket",
   });
   c.maybeSync = () => {};

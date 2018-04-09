@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include shared,prim_shared,clip_shared
+#include shared,clip_shared
 
 varying vec3 vPos;
+varying vec3 vClipMaskImageUv;
+
 flat varying vec4 vClipMaskUvRect;
 flat varying vec4 vClipMaskUvInnerRect;
 flat varying float vLayer;
@@ -36,7 +38,7 @@ void main(void) {
     vPos = vi.local_pos;
     vLayer = res.layer;
 
-    vClipMaskUv = vec3((vPos.xy / vPos.z - local_rect.p0) / local_rect.size, 0.0);
+    vClipMaskImageUv = vec3((vPos.xy / vPos.z - local_rect.p0) / local_rect.size, 0.0);
     vec2 texture_size = vec2(textureSize(sColor0, 0));
     vClipMaskUvRect = vec4(res.uv_rect.p0, res.uv_rect.p1 - res.uv_rect.p0) / texture_size.xyxy;
     // applying a half-texel offset to the UV boundaries to prevent linear samples from the outside
@@ -50,8 +52,8 @@ void main(void) {
     float alpha = init_transform_fs(vPos.xy / vPos.z);
 
     bool repeat_mask = false; //TODO
-    vec2 clamped_mask_uv = repeat_mask ? fract(vClipMaskUv.xy) :
-        clamp(vClipMaskUv.xy, vec2(0.0, 0.0), vec2(1.0, 1.0));
+    vec2 clamped_mask_uv = repeat_mask ? fract(vClipMaskImageUv.xy) :
+        clamp(vClipMaskImageUv.xy, vec2(0.0, 0.0), vec2(1.0, 1.0));
     vec2 source_uv = clamp(clamped_mask_uv * vClipMaskUvRect.zw + vClipMaskUvRect.xy,
         vClipMaskUvInnerRect.xy, vClipMaskUvInnerRect.zw);
     float clip_alpha = texture(sColor0, vec3(source_uv, vLayer)).r; //careful: texture has type A8

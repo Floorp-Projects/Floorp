@@ -11,7 +11,7 @@ loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/targe
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
-loader.lazyRequireGetter(this, "WebConsoleFrame", "devtools/client/webconsole/webconsole", true);
+loader.lazyRequireGetter(this, "WebConsoleFrame", "devtools/client/webconsole/old/webconsole", true);
 loader.lazyRequireGetter(this, "NewWebConsoleFrame", "devtools/client/webconsole/new-webconsole", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);

@@ -294,7 +294,7 @@ impl FrameBuilder {
 
         let mut node_data = Vec::with_capacity(clip_scroll_tree.nodes.len());
         let total_prim_runs =
-            self.prim_store.pictures.iter().fold(1, |count, ref pic| count + pic.runs.len());
+            self.prim_store.pictures.iter().fold(1, |count, pic| count + pic.runs.len());
         let mut clip_chain_local_clip_rects = Vec::with_capacity(total_prim_runs);
         clip_chain_local_clip_rects.push(LayerRect::max_rect());
 
@@ -414,7 +414,7 @@ impl FrameBuilder {
     pub fn create_hit_tester(&mut self, clip_scroll_tree: &ClipScrollTree) -> HitTester {
         HitTester::new(
             &self.hit_testing_runs,
-            &clip_scroll_tree,
+            clip_scroll_tree,
             &self.clip_store
         )
     }

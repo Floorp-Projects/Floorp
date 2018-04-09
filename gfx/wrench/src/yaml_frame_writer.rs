@@ -178,12 +178,22 @@ fn maybe_radius_yaml(radius: &BorderRadius) -> Option<Yaml> {
     }
 }
 
-fn write_sc(parent: &mut Table, sc: &StackingContext, properties: &SceneProperties, filter_iter: AuxIter<FilterOp>) {
+fn write_stacking_context(
+    parent: &mut Table,
+    sc: &StackingContext,
+    properties: &SceneProperties,
+    filter_iter: AuxIter<FilterOp>,
+    clip_id_mapper: &ClipIdMapper,
+) {
     enum_node(parent, "scroll-policy", sc.scroll_policy);
 
     matrix4d_node(parent, "transform", &properties.resolve_layout_transform(&sc.transform));
 
     enum_node(parent, "transform-style", sc.transform_style);
+
+    if let Some(clip_node_id) = sc.clip_node_id {
+        yaml_node(parent, "clip-node", Yaml::Integer(clip_id_mapper.map_id(&clip_node_id) as i64));
+    }
 
     if let Some(perspective) = sc.perspective {
         matrix4d_node(parent, "perspective", &perspective);
@@ -999,7 +1009,13 @@ impl YamlFrameWriter {
                 PushStackingContext(item) => {
                     str_node(&mut v, "type", "stacking-context");
                     let filters = display_list.get(base.filters());
-                    write_sc(&mut v, &item.stacking_context, &scene.properties, filters);
+                    write_stacking_context(
+                        &mut v,
+                        &item.stacking_context,
+                        &scene.properties,
+                        filters,
+                        clip_id_mapper,
+                    );
 
                     let mut sub_iter = base.sub_iter();
                     self.write_display_list(&mut v, display_list, scene, &mut sub_iter, clip_id_mapper);

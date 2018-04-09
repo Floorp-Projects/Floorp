@@ -672,9 +672,6 @@ impl ThreadListener for GeckoProfilerThreadListener {
             gecko_profiler_unregister_thread();
         }
     }
-
-    fn new_render_backend_thread(&self, _renderer_id: Option<u64>) {
-    }
 }
 
 pub struct WrThreadPool(Arc<rayon::ThreadPool>);
@@ -1472,6 +1469,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_stacking_context(&prim_info,
+                                None,
                                 ScrollPolicy::Scrollable,
                                 transform_binding,
                                 transform_style,

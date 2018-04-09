@@ -114,7 +114,9 @@ public:
                 CSSPseudoElementType aPseudoType,
                 ServoComputedDataForgotten aComputedValues);
 
-  nsPresContext* PresContext() const { return mPresContext; }
+  // FIXME(emilio, bug 548397): This will need to go away. Don't add new callers
+  // of this methed.
+  nsPresContext* PresContextForFrame() const { return mPresContext; }
   const ServoComputedData* ComputedData() const { return &mSource; }
 
   // These two methods are for use by ArenaRefPtr.
@@ -382,12 +384,6 @@ public:
    */
   inline void StartBackgroundImageLoads();
 
-  static bool IsReset(const nsStyleStructID aSID) {
-    MOZ_ASSERT(0 <= aSID && aSID < nsStyleStructID_Length,
-               "must be an inherited or reset SID");
-    return nsStyleStructID_Reset_Start <= aSID;
-  }
-  static bool IsInherited(const nsStyleStructID aSID) { return !IsReset(aSID); }
   static uint32_t GetBitForSID(const nsStyleStructID aSID) { return 1 << aSID; }
 
 #ifdef DEBUG
