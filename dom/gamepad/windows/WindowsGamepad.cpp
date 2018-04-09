@@ -249,16 +249,16 @@ UnpackDpad(LONG dpad_value, const Gamepad* gamepad, nsTArray<bool>& buttons)
   // Value will be in the range 0-7. The value represents the
   // position of the d-pad around a circle, with 0 being straight up,
   // 2 being right, 4 being straight down, and 6 being left.
-  if (value < 2 || value > 6) {
+  if ((value < 2 || value > 6) && buttons.Length() > kUp) {
     buttons[kUp] = true;
   }
-  if (value > 2 && value < 6) {
+  if ((value > 2 && value < 6) && buttons.Length() > kDown) {
     buttons[kDown] = true;
   }
-  if (value > 4) {
+  if (value > 4 && buttons.Length() > kLeft) {
     buttons[kLeft] = true;
   }
-  if (value > 0 && value < 4) {
+  if ((value > 0 && value < 4) && buttons.Length() > kRight) {
     buttons[kRight] = true;
   }
 }
