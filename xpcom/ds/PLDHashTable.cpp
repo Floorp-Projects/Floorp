@@ -224,16 +224,16 @@ PLDHashTable::operator=(PLDHashTable&& aOther)
     return *this;
   }
 
-  // Destruct |this|.
-  this->~PLDHashTable();
-
-  // |mOps| and |mEntrySize| are const so we can't assign them. Instead, we
-  // require that they are equal. The justification for this is that they're
+  // |mOps| and |mEntrySize| are required to stay the same, they're
   // conceptually part of the type -- indeed, if PLDHashTable was a templated
   // type like nsTHashtable, they *would* be part of the type -- so it only
   // makes sense to assign in cases where they match.
   MOZ_RELEASE_ASSERT(mOps == aOther.mOps);
   MOZ_RELEASE_ASSERT(mEntrySize == aOther.mEntrySize);
+
+  // Reconstruct |this|.
+  this->~PLDHashTable();
+  new (KnownNotNull, this) PLDHashTable(aOther.mOps, aOther.mEntrySize, 0);
 
   // Move non-const pieces over.
   mHashShift = Move(aOther.mHashShift);
