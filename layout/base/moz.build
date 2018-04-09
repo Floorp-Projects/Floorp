@@ -35,6 +35,7 @@ XPIDL_MODULE = 'layout_base'
 EXPORTS += [
     'CaretAssociationHint.h',
     'FrameProperties.h',
+    'LayoutConstants.h',
     'LayoutLogging.h',
     'MobileViewportManager.h',
     'nsAutoLayoutPhase.h',
