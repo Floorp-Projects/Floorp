@@ -10,11 +10,11 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/HashFunctions.h"
-#include "mozilla/IndexSequence.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
 
 #include <stdint.h>
+#include <utility>
 
 #include "jsutil.h"
 
@@ -232,13 +232,13 @@ public:
 
   static THREAD_RETURN_TYPE THREAD_CALL_API Start(void* aPack) {
     auto* pack = static_cast<ThreadTrampoline<F, Args...>*>(aPack);
-    pack->callMain(typename mozilla::IndexSequenceFor<Args...>::Type());
+    pack->callMain(std::index_sequence_for<Args...>{});
     js_delete(pack);
     return 0;
   }
 
   template<size_t ...Indices>
-  void callMain(mozilla::IndexSequence<Indices...>) {
+  void callMain(std::index_sequence<Indices...>) {
     f(mozilla::Get<Indices>(args)...);
   }
 };

@@ -7,7 +7,6 @@
 #if !defined(MozPromise_h_)
 #define MozPromise_h_
 
-#include "mozilla/IndexSequence.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
