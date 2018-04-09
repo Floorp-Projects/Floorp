@@ -499,8 +499,7 @@ const gStoragePressureObserver = {
   _lastNotificationTime: -1,
 
   observe(subject, topic, data) {
-    if (topic != "QuotaManager::StoragePressure" ||
-        !Services.prefs.getBoolPref("browser.storageManager.enabled")) {
+    if (topic != "QuotaManager::StoragePressure") {
       return;
     }
 

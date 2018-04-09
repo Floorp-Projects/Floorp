@@ -2767,9 +2767,7 @@ const ContentPermissionIntegration = {
         return new PermissionUI.DesktopNotificationPermissionPrompt(request);
       }
       case "persistent-storage": {
-        if (Services.prefs.getBoolPref("browser.storageManager.enabled")) {
-          return new PermissionUI.PersistentStoragePermissionPrompt(request);
-        }
+        return new PermissionUI.PersistentStoragePermissionPrompt(request);
       }
       case "midi": {
         return new PermissionUI.MIDIPermissionPrompt(request);
