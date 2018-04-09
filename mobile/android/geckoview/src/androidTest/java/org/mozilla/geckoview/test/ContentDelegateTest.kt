@@ -22,12 +22,11 @@ class ContentDelegateTest : BaseSessionTest() {
     @Test fun titleChange() {
         sessionRule.session.loadTestPath(TITLE_CHANGE_HTML_PATH)
 
-        val titles = mutableListOf("Title1", "Title2")
         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 2)
             override fun onTitleChange(session: GeckoSession, title: String) {
                 assertThat("Title should match", title,
-                           equalTo(titles.removeAt(0)))
+                           equalTo(forEachCall("Title1", "Title2")))
             }
         })
     }

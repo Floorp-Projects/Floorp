@@ -70,15 +70,19 @@ this.idle = class extends ExtensionAPI {
         setDetectionInterval: function(detectionIntervalInSeconds) {
           setDetectionInterval(extension, context, detectionIntervalInSeconds);
         },
-        onStateChanged: new EventManager(context, "idle.onStateChanged", fire => {
-          let listener = (event, data) => {
-            fire.sync(data);
-          };
+        onStateChanged: new EventManager({
+          context,
+          name: "idle.onStateChanged",
+          register: fire => {
+            let listener = (event, data) => {
+              fire.sync(data);
+            };
 
-          getIdleObserver(extension, context).on("stateChanged", listener);
-          return () => {
-            getIdleObserver(extension, context).off("stateChanged", listener);
-          };
+            getIdleObserver(extension, context).on("stateChanged", listener);
+            return () => {
+              getIdleObserver(extension, context).off("stateChanged", listener);
+            };
+          },
         }).api(),
       },
     };

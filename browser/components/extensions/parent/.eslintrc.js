@@ -7,7 +7,6 @@ module.exports = {
     "Tab": true,
     "TabContext": true,
     "Window": true,
-    "WindowEventManager": true,
     "actionContextMenu": true,
     "browserActionFor": true,
     "getContainerForCookieStoreId": true,

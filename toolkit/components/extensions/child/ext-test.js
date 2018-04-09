@@ -177,15 +177,19 @@ this.test = class extends ExtensionAPI {
           }
         },
 
-        onMessage: new TestEventManager(context, "test.onMessage", fire => {
-          let handler = (event, ...args) => {
-            fire.async(...args);
-          };
+        onMessage: new TestEventManager({
+          context,
+          name: "test.onMessage",
+          register: fire => {
+            let handler = (event, ...args) => {
+              fire.async(...args);
+            };
 
-          extension.on("test-harness-message", handler);
-          return () => {
-            extension.off("test-harness-message", handler);
-          };
+            extension.on("test-harness-message", handler);
+            return () => {
+              extension.off("test-harness-message", handler);
+            };
+          },
         }).api(),
       },
     };

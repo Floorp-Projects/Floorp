@@ -129,6 +129,7 @@ class BasePopup {
       }
       if (panel && panel.id !== REMOTE_PANEL_ID) {
         panel.style.removeProperty("--arrowpanel-background");
+        panel.style.removeProperty("--arrowpanel-border-color");
         panel.removeAttribute("remote");
       }
 
@@ -355,9 +356,19 @@ class BasePopup {
     this.browser.dispatchEvent(event);
   }
 
-  setBackground(background = "") {
-    if (background) {
-      this.panel.style.setProperty("--arrowpanel-background", background);
+  setBackground(background) {
+    // Panels inherit the applied theme (light, dark, etc) and there is a high
+    // likelihood that most extension authors will not have tested with a dark theme.
+    // If they have not set a background-color, we force it to white to ensure visibility
+    // of the extension content. Passing `null` should be treated the same as no argument,
+    // which is why we can't use default parameters here.
+    if (!background) {
+      background = "#fff";
+    }
+    this.panel.style.setProperty("--arrowpanel-background", background);
+    if (background == "#fff") {
+      // Set a usable default color that work with the default background-color.
+      this.panel.style.setProperty("--arrowpanel-border-color", "hsla(210,4%,10%,.05)");
     }
     this.background = background;
   }

@@ -710,9 +710,9 @@ BrowserGlue.prototype = {
       iconURL: "resource:///chrome/browser/content/browser/defaultthemes/dark.icon.svg",
       textcolor: "white",
       accentcolor: "black",
-      popup: "hsl(240, 5%, 5%)",
-      popup_text: "rgb(249, 249, 250)",
-      popup_border: "rgba(24, 26, 27, 0.14)",
+      popup: "#4a4a4f",
+      popup_text: "rgba(249, 249, 250, 0.8)",
+      popup_border: "#27272b",
       author: vendorShortName,
     });
 

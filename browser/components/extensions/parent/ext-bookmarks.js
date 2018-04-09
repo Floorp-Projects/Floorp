@@ -329,56 +329,72 @@ this.bookmarks = class extends ExtensionAPI {
           }
         },
 
-        onCreated: new EventManager(context, "bookmarks.onCreated", fire => {
-          let listener = (event, bookmark) => {
-            fire.sync(bookmark.id, bookmark);
-          };
+        onCreated: new EventManager({
+          context,
+          name: "bookmarks.onCreated",
+          register: fire => {
+            let listener = (event, bookmark) => {
+              fire.sync(bookmark.id, bookmark);
+            };
 
-          observer.on("created", listener);
-          incrementListeners();
-          return () => {
-            observer.off("created", listener);
-            decrementListeners();
-          };
+            observer.on("created", listener);
+            incrementListeners();
+            return () => {
+              observer.off("created", listener);
+              decrementListeners();
+            };
+          },
         }).api(),
 
-        onRemoved: new EventManager(context, "bookmarks.onRemoved", fire => {
-          let listener = (event, data) => {
-            fire.sync(data.guid, data.info);
-          };
+        onRemoved: new EventManager({
+          context,
+          name: "bookmarks.onRemoved",
+          register: fire => {
+            let listener = (event, data) => {
+              fire.sync(data.guid, data.info);
+            };
 
-          observer.on("removed", listener);
-          incrementListeners();
-          return () => {
-            observer.off("removed", listener);
-            decrementListeners();
-          };
+            observer.on("removed", listener);
+            incrementListeners();
+            return () => {
+              observer.off("removed", listener);
+              decrementListeners();
+            };
+          },
         }).api(),
 
-        onChanged: new EventManager(context, "bookmarks.onChanged", fire => {
-          let listener = (event, data) => {
-            fire.sync(data.guid, data.info);
-          };
+        onChanged: new EventManager({
+          context,
+          name: "bookmarks.onChanged",
+          register: fire => {
+            let listener = (event, data) => {
+              fire.sync(data.guid, data.info);
+            };
 
-          observer.on("changed", listener);
-          incrementListeners();
-          return () => {
-            observer.off("changed", listener);
-            decrementListeners();
-          };
+            observer.on("changed", listener);
+            incrementListeners();
+            return () => {
+              observer.off("changed", listener);
+              decrementListeners();
+            };
+          },
         }).api(),
 
-        onMoved: new EventManager(context, "bookmarks.onMoved", fire => {
-          let listener = (event, data) => {
-            fire.sync(data.guid, data.info);
-          };
+        onMoved: new EventManager({
+          context,
+          name: "bookmarks.onMoved",
+          register: fire => {
+            let listener = (event, data) => {
+              fire.sync(data.guid, data.info);
+            };
 
-          observer.on("moved", listener);
-          incrementListeners();
-          return () => {
-            observer.off("moved", listener);
-            decrementListeners();
-          };
+            observer.on("moved", listener);
+            incrementListeners();
+            return () => {
+              observer.off("moved", listener);
+              decrementListeners();
+            };
+          },
         }).api(),
       },
     };

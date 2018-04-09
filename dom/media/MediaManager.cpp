@@ -4288,6 +4288,16 @@ SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable)
            aTrackID == kAudioTrack ? "audio" : "video",
            aTrackID));
 
+      if (mRemoved) {
+        // Listener was removed between timer resolving and this runnable.
+        return DeviceOperationPromise::CreateAndResolve(NS_ERROR_ABORT, __func__);
+      }
+
+      if (state.mStopped) {
+        // Source was stopped between timer resolving and this runnable.
+        return DeviceOperationPromise::CreateAndResolve(NS_ERROR_ABORT, __func__);
+      }
+
       state.mDeviceEnabled = aEnable;
 
       if (mWindowListener) {
