@@ -339,7 +339,6 @@ public:
     return ValueToKeyword(static_cast<int16_t>(aValue), aTable);
   }
 
-  static const nsStyleStructID kSIDTable[eCSSProperty_COUNT_no_shorthands];
   static const KTableEntry* const kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
   static const nsStyleAnimType kAnimTypeTable[eCSSProperty_COUNT_no_shorthands];
 
