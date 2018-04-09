@@ -1,12 +1,12 @@
 function toggleBreakpoint(dbg, index) {
-  const bp = findElement(dbg, "breakpointItem", index);
+  const bp = findAllElements(dbg, "breakpointItems")[index];
   const input = bp.querySelector("input");
   input.click();
 }
 
 async function removeBreakpoint(dbg, index) {
   const removed = waitForDispatch(dbg, "REMOVE_BREAKPOINT");
-  const bp = findElement(dbg, "breakpointItem", index);
+  const bp = findAllElements(dbg, "breakpointItems")[index];
   bp.querySelector(".close-btn").click();
   await removed;
 }
@@ -80,8 +80,8 @@ add_task(async function() {
   is(bp2.disabled, false, "second breakpoint is enabled");
 
   // Remove the breakpoints
-  await removeBreakpoint(dbg, 1);
-  await removeBreakpoint(dbg, 1);
+  await removeBreakpoint(dbg, 0);
+  await removeBreakpoint(dbg, 0);
 
   const bps = findBreakpoints(dbg);
 
