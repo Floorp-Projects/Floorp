@@ -243,7 +243,7 @@ add_task(async function() {
     let requestItems = document.querySelectorAll(".request-list-item");
     for (let requestItem of requestItems) {
       requestItem.scrollIntoView();
-      let requestsListStatus = requestItem.querySelector(".requests-list-status");
+      let requestsListStatus = requestItem.querySelector(".status-code");
       EventUtils.sendMouseEvent({ type: "mouseover" }, requestsListStatus);
       await waitUntil(() => requestsListStatus.title);
     }

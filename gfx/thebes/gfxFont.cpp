@@ -4166,19 +4166,6 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     }
 }
 
-int8_t
-gfxFontStyle::ComputeWeight() const
-{
-    int8_t baseWeight = (weight + 50) / 100;
-
-    if (baseWeight < 0)
-        baseWeight = 0;
-    if (baseWeight > 9)
-        baseWeight = 9;
-
-    return baseWeight;
-}
-
 void
 gfxFontStyle::AdjustForSubSuperscript(int32_t aAppUnitsPerDevPixel)
 {
