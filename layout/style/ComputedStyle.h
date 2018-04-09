@@ -13,7 +13,6 @@
 #include <algorithm>
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/RestyleLogging.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleComplexColor.h"
