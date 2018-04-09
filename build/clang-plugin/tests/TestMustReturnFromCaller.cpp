@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <utility>
 
 #define MOZ_MUST_RETURN_FROM_CALLER __attribute__((annotate("moz_must_return_from_caller")))
 #define MOZ_MAY_CALL_AFTER_MUST_RETURN __attribute__((annotate("moz_may_call_after_must_return")))
@@ -8,6 +9,37 @@ void DoAnythingElse();
 int MakeAnInt();
 int MOZ_MAY_CALL_AFTER_MUST_RETURN SafeMakeInt();
 bool Condition();
+
+// It might be nicer to #include "mozilla/ScopeExit.h" and use that here -- but
+// doing so also will #define the two attribute-macros defined above, running a
+// risk of redefinition errors.  Just stick to the normal clang-plugin test
+// style and use as little external code as possible.
+
+template<typename Func>
+class ScopeExit {
+  Func exitFunction;
+  bool callOnDestruction;
+public:
+  explicit ScopeExit(Func&& func)
+    : exitFunction(std::move(func))
+    , callOnDestruction(true)
+  {}
+
+  ~ScopeExit() {
+    if (callOnDestruction) {
+      exitFunction();
+    }
+  }
+
+  void release() { callOnDestruction = false; }
+};
+
+template<typename ExitFunction>
+ScopeExit<ExitFunction>
+MakeScopeExit(ExitFunction&& func)
+{
+  return ScopeExit<ExitFunction>(std::move(func));
+}
 
 class Foo {
 public:
@@ -25,6 +57,8 @@ int a2() {
 }
 
 int a3() {
+  // RAII operations happening after a must-immediately-return are fine.
+  auto atExit = MakeScopeExit([] { DoAnythingElse(); });
   Throw();
   return 5;
 }
@@ -61,6 +95,19 @@ int a9() {
     Throw();
   }
   return SafeMakeInt();
+}
+
+int a10() {
+  auto atExit = MakeScopeExit([] { DoAnythingElse(); });
+
+  if (Condition()) {
+    Throw();
+    return SafeMakeInt();
+  }
+
+  atExit.release();
+  DoAnythingElse();
+  return 5;
 }
 
 void b1() {
