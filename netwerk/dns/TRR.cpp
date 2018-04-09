@@ -187,7 +187,8 @@ TRR::SendHTTPRequest()
                      nullptr,   // PerformanceStorage
                      nullptr, // aLoadGroup
                      this,
-                     nsIRequest::LOAD_ANONYMOUS, ios);
+                     nsIRequest::LOAD_ANONYMOUS |
+                     (mPB ? nsIRequest::INHIBIT_CACHING: 0), ios);
   if (NS_FAILED(rv)) {
     LOG(("TRR:SendHTTPRequest: NewChannel failed!\n"));
     return rv;

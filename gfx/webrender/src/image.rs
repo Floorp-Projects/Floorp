@@ -89,7 +89,7 @@ fn decompose_row(item_rect: &LayerRect, info: &TiledImageInfo, callback: &mut Fn
             item_rect.origin.y,
             info.stretch_size.width,
             item_rect.size.height,
-        ).intersection(&item_rect);
+        ).intersection(item_rect);
 
         if let Some(decomposed_rect) = decomposed_rect {
             decompose_cache_tiles(&decomposed_rect, info, callback);
@@ -270,7 +270,7 @@ fn add_device_tile(
     }
 
     // Fix up the primitive's rect if it overflows the original item rect.
-    if let Some(rect) = prim_rect.intersection(&item_rect) {
+    if let Some(rect) = prim_rect.intersection(item_rect) {
         callback(&DecomposedTile {
             tile_offset,
             rect,

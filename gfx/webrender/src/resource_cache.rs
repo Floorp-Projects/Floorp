@@ -597,7 +597,7 @@ impl ResourceCache {
         };
 
         let needs_upload = self.texture_cache
-            .request(&mut entry.as_mut().unwrap().texture_cache_handle, gpu_cache);
+            .request(&entry.as_ref().unwrap().texture_cache_handle, gpu_cache);
 
         if !needs_upload && !needs_update {
             return;
@@ -858,7 +858,7 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
         self.texture_cache.begin_frame(frame_id);
-        self.cached_glyphs.begin_frame(&mut self.texture_cache, &self.cached_render_tasks);
+        self.cached_glyphs.begin_frame(&self.texture_cache, &self.cached_render_tasks);
         self.cached_render_tasks.begin_frame(&mut self.texture_cache);
         self.current_frame_id = frame_id;
     }

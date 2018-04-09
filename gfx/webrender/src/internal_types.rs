@@ -4,7 +4,6 @@
 
 use api::{DebugCommand, DeviceUintRect, DocumentId, ExternalImageData, ExternalImageId};
 use api::ImageFormat;
-use clip_scroll_tree::ClipScrollNodeIndex;
 use device::TextureFilter;
 use renderer::PipelineInfo;
 use gpu_cache::GpuCacheUpdateList;
@@ -138,8 +137,6 @@ pub struct RenderedDocument {
     /// been rendered, which is necessary for reftests.
     /// - Pipelines that were removed from the scene.
     pub pipeline_info: PipelineInfo,
-    /// The layers that are currently affected by the over-scrolling animation.
-    pub layers_bouncing_back: FastHashSet<ClipScrollNodeIndex>,
 
     pub frame: tiling::Frame,
 }
@@ -147,12 +144,10 @@ pub struct RenderedDocument {
 impl RenderedDocument {
     pub fn new(
         pipeline_info: PipelineInfo,
-        layers_bouncing_back: FastHashSet<ClipScrollNodeIndex>,
         frame: tiling::Frame,
     ) -> Self {
         RenderedDocument {
             pipeline_info,
-            layers_bouncing_back,
             frame,
         }
     }

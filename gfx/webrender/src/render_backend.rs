@@ -8,7 +8,7 @@ use api::{BuiltDisplayListIter, SpecificDisplayItem};
 use api::{DeviceIntPoint, DevicePixelScale, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestResult};
 use api::{IdNamespace, LayerPoint, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
-use api::{ScrollEventPhase, ScrollLocation, ScrollNodeState, TransactionMsg, WorldPoint};
+use api::{ScrollLocation, ScrollNodeState, TransactionMsg, WorldPoint};
 use api::channel::{MsgReceiver, Payload};
 #[cfg(feature = "capture")]
 use api::CaptureBits;
@@ -264,6 +264,7 @@ impl Document {
             frame_ops: transaction_msg.frame_ops,
             render: transaction_msg.generate_frame,
             document_id,
+            current_epochs: self.current.scene.pipeline_epochs.clone(),
         }).unwrap();
     }
 
@@ -300,13 +301,11 @@ impl Document {
     }
 
     pub fn make_rendered_document(&mut self, frame: Frame, removed_pipelines: Vec<PipelineId>) -> RenderedDocument {
-        let nodes_bouncing_back = self.clip_scroll_tree.collect_nodes_bouncing_back();
         RenderedDocument::new(
             PipelineInfo {
                 epochs: self.current.scene.pipeline_epochs.clone(),
                 removed_pipelines,
             },
-            nodes_bouncing_back,
             frame
         )
     }
@@ -321,9 +320,8 @@ impl Document {
         &mut self,
         scroll_location: ScrollLocation,
         cursor: WorldPoint,
-        phase: ScrollEventPhase,
     ) -> bool {
-        self.clip_scroll_tree.scroll(scroll_location, cursor, phase)
+        self.clip_scroll_tree.scroll(scroll_location, cursor)
     }
 
     /// Returns true if the node actually changed position or false otherwise.
@@ -334,10 +332,6 @@ impl Document {
         clamp: ScrollClamping
     ) -> bool {
         self.clip_scroll_tree.scroll_node(origin, id, clamp)
-    }
-
-    pub fn tick_scrolling_bounce_animations(&mut self) {
-        self.clip_scroll_tree.tick_scrolling_bounce_animations();
     }
 
     pub fn get_scroll_node_state(&self) -> Vec<ScrollNodeState> {
@@ -621,10 +615,10 @@ impl RenderBackend {
                 }
                 DocumentOps::nop()
             }
-            FrameMsg::Scroll(delta, cursor, move_phase) => {
+            FrameMsg::Scroll(delta, cursor) => {
                 profile_scope!("Scroll");
 
-                let should_render = doc.scroll(delta, cursor, move_phase)
+                let should_render = doc.scroll(delta, cursor)
                     && doc.render_on_scroll == Some(true);
 
                 DocumentOps {
@@ -655,20 +649,6 @@ impl RenderBackend {
 
                 let should_render = doc.scroll_node(origin, id, clamp)
                     && doc.render_on_scroll == Some(true);
-
-                DocumentOps {
-                    scroll: true,
-                    render: should_render,
-                    composite: should_render,
-                    ..DocumentOps::nop()
-                }
-            }
-            FrameMsg::TickScrollingBounce => {
-                profile_scope!("TickScrollingBounce");
-
-                doc.tick_scrolling_bounce_animations();
-
-                let should_render = doc.render_on_scroll == Some(true);
 
                 DocumentOps {
                     scroll: true,
@@ -708,16 +688,19 @@ impl RenderBackend {
                         resource_updates,
                         frame_ops,
                         render,
+                        result_tx,
                     } => {
                         if let Some(doc) = self.documents.get_mut(&document_id) {
                             if let Some(mut built_scene) = built_scene.take() {
                                 doc.new_async_scene_ready(built_scene);
                                 doc.render_on_hittest = true;
                             }
+                            result_tx.send(SceneSwapResult::Complete).unwrap();
                         } else {
                             // The document was removed while we were building it, skip it.
                             // TODO: we might want to just ensure that removed documents are
                             // always forwarded to the scene builder thread to avoid this case.
+                            result_tx.send(SceneSwapResult::Aborted).unwrap();
                             continue;
                         }
 
@@ -764,6 +747,9 @@ impl RenderBackend {
     ) -> bool {
         match msg {
             ApiMsg::WakeUp => {}
+            ApiMsg::WakeSceneBuilder => {
+                self.scene_tx.send(SceneBuilderRequest::WakeUp).unwrap();
+            }
             ApiMsg::UpdateResources(updates) => {
                 self.resource_cache
                     .update_resources(updates, &mut profile_counters.resources);
@@ -929,7 +915,7 @@ impl RenderBackend {
             );
         }
 
-        if transaction_msg.use_scene_builder_thread && !transaction_msg.is_empty() {
+        if transaction_msg.use_scene_builder_thread {
             let doc = self.documents.get_mut(&document_id).unwrap();
             doc.forward_transaction_to_scene_builder(
                 transaction_msg,
@@ -1181,7 +1167,7 @@ impl RenderBackend {
                     &mut profile_counters.resources,
                 );
                 //TODO: write down full `RenderedDocument`?
-                // it has `pipeline_epoch_map` and `layers_bouncing_back`,
+                // it has `pipeline_epoch_map`,
                 // which may capture necessary details for some cases.
                 let file_name = format!("frame-{}-{}", (id.0).0, id.1);
                 config.serialize(&rendered_document.frame, file_name);

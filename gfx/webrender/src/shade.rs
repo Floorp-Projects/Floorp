@@ -624,20 +624,19 @@ impl Shaders {
         for _ in 0 .. yuv_shader_num {
             brush_yuv_image.push(None);
         }
-        for buffer_kind in 0 .. IMAGE_BUFFER_KINDS.len() {
-            if IMAGE_BUFFER_KINDS[buffer_kind].has_platform_support(&gl_type) {
-                for format_kind in 0 .. YUV_FORMATS.len() {
-                    for color_space_kind in 0 .. YUV_COLOR_SPACES.len() {
-                        let feature_string = IMAGE_BUFFER_KINDS[buffer_kind].get_feature_string();
+        for image_buffer_kind in &IMAGE_BUFFER_KINDS {
+            if image_buffer_kind.has_platform_support(&gl_type) {
+                for format_kind in &YUV_FORMATS {
+                    for color_space_kind in &YUV_COLOR_SPACES {
+                        let feature_string = image_buffer_kind.get_feature_string();
                         if feature_string != "" {
                             yuv_features.push(feature_string);
                         }
-                        let feature_string = YUV_FORMATS[format_kind].get_feature_string();
+                        let feature_string = format_kind.get_feature_string();
                         if feature_string != "" {
                             yuv_features.push(feature_string);
                         }
-                        let feature_string =
-                            YUV_COLOR_SPACES[color_space_kind].get_feature_string();
+                        let feature_string = color_space_kind.get_feature_string();
                         if feature_string != "" {
                             yuv_features.push(feature_string);
                         }
@@ -649,9 +648,9 @@ impl Shaders {
                             options.precache_shaders,
                         )?;
                         let index = Self::get_yuv_shader_index(
-                            IMAGE_BUFFER_KINDS[buffer_kind],
-                            YUV_FORMATS[format_kind],
-                            YUV_COLOR_SPACES[color_space_kind],
+                            *image_buffer_kind,
+                            *format_kind,
+                            *color_space_kind,
                         );
                         brush_yuv_image[index] = Some(shader);
                         yuv_features.clear();

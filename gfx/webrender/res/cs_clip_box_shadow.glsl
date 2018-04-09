@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include shared,prim_shared,clip_shared
+#include shared,clip_shared
 
 varying vec3 vPos;
 varying vec2 vUv;
@@ -103,11 +103,7 @@ void main(void) {
     uv = mix(vUvBounds_NoClamp.xy, vUvBounds_NoClamp.zw, uv);
     uv = clamp(uv, vUvBounds.xy, vUvBounds.zw);
 
-    float in_shadow_rect = point_inside_rect(
-        local_pos,
-        vLocalBounds.xy,
-        vLocalBounds.zw
-    );
+    float in_shadow_rect = init_transform_rough_fs(local_pos);
 
     float texel = TEX_SAMPLE(sColor0, vec3(uv, vLayer)).r;
 

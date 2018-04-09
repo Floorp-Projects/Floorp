@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html dir="ltr" xml:lang="en-US" lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <title>Console HTTP test page</title>
+    <script type="text/javascript"><!--
+      function makeXhr(aMethod, aUrl, aRequestBody, aCallback) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open(aMethod, aUrl, true);
+        xmlhttp.onreadystatechange = function() {
+          if (aCallback && xmlhttp.readyState == 4) {
+            aCallback();
+          }
+        };
+        xmlhttp.send(aRequestBody);
+      }
+
+      function testXhrGet(aCallback) {
+        makeXhr('get', 'test-data.json', null, aCallback);
+      }
+
+      function testXhrWarn(aCallback) {
+        makeXhr('get', 'http://example.com/browser/devtools/client/netmonitor/test/sjs_cors-test-server.sjs', null, aCallback);
+      }
+
+      function testXhrPost(aCallback) {
+        makeXhr('post', 'test-data.json', "Hello world!", aCallback);
+      }
+    // --></script>
+  </head>
+  <body>
+    <h1>Heads Up Display HTTP Logging Testpage</h1>
+    <h2>This page is used to test the HTTP logging.</h2>
+
+    <form action="https://example.com/browser/devtools/client/old/est/test-network-request.html" method="post">
+      <input name="name" type="text" value="foo bar"><br>
+      <input name="age" type="text" value="144"><br>
+    </form>
+  </body>
+</html>

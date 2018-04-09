@@ -243,11 +243,9 @@ ServoStyleSet::InvalidateStyleForDocumentStateChanges(EventStates aStatesChanged
     nonDocumentStyles.AppendElement(aShadowRoot.ServoStyles());
   });
 
-  // FIXME(emilio): When bug 1425759 is fixed we need to enumerate ShadowRoots
-  // too.
-  mDocument->BindingManager()->EnumerateBoundContentBindings(
-    [&](nsXBLBinding* aBinding) {
-      if (auto* authorStyles = aBinding->PrototypeBinding()->GetServoStyles()) {
+  mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
+    [&](nsXBLPrototypeBinding* aProto) {
+      if (auto* authorStyles = aProto->GetServoStyles()) {
         nonDocumentStyles.AppendElement(authorStyles);
       }
       return true;
@@ -279,9 +277,9 @@ ServoStyleSet::MediumFeaturesChanged(MediaFeatureChangeReason aReason)
   });
 
   // FIXME(emilio): This is broken for XBL. See bug 1406875.
-  mDocument->BindingManager()->EnumerateBoundContentBindings(
-    [&](nsXBLBinding* aBinding) {
-      if (auto* authorStyles = aBinding->PrototypeBinding()->GetServoStyles()) {
+  mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
+    [&](nsXBLPrototypeBinding* aProto) {
+      if (auto* authorStyles = aProto->GetServoStyles()) {
         nonDocumentStyles.AppendElement(authorStyles);
       }
       return true;
@@ -1282,12 +1280,12 @@ ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
     }
   });
 
-  mDocument->BindingManager()->EnumerateBoundContentBindings(
-      [&](nsXBLBinding* aBinding) {
+  mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
+      [&](nsXBLPrototypeBinding* aProto) {
         AutoTArray<StyleSheet*, 3> sheets;
-        aBinding->PrototypeBinding()->AppendStyleSheetsTo(sheets);
+        aProto->AppendStyleSheetsTo(sheets);
         for (auto* sheet : sheets) {
-          queue.AppendElement(MakePair(sheet, SheetOwner { aBinding->PrototypeBinding() }));
+          queue.AppendElement(MakePair(sheet, SheetOwner { aProto }));
         }
         return true;
       });
@@ -1421,7 +1419,7 @@ ServoStyleSet::ResolveStyleLazilyInternal(Element* aElement,
                                mRawSet.get()).Consume();
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(computedValues->PresContext() == GetPresContext() ||
+  MOZ_DIAGNOSTIC_ASSERT(computedValues->PresContextForFrame() == GetPresContext() ||
                         aElement->OwnerDoc()->GetBFCacheEntry());
 
   return computedValues.forget();
@@ -1488,9 +1486,9 @@ ServoStyleSet::UpdateStylist()
       Servo_AuthorStyles_Flush(aShadowRoot.ServoStyles(), mRawSet.get());
     });
 
-    mDocument->BindingManager()->EnumerateBoundContentBindings(
-      [&](nsXBLBinding* aBinding) {
-        if (auto* authorStyles = aBinding->PrototypeBinding()->GetServoStyles()) {
+    mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
+      [&](nsXBLPrototypeBinding* aProto) {
+        if (auto* authorStyles = aProto->GetServoStyles()) {
           Servo_AuthorStyles_Flush(authorStyles, mRawSet.get());
         }
         return true;

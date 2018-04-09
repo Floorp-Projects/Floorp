@@ -66,9 +66,9 @@ impl ClipRegion {
         local_clip: &LocalClip,
         reference_frame_relative_offset: &LayoutVector2D
     ) -> ClipRegion {
-        let complex_clips = match local_clip {
-            &LocalClip::Rect(_) => Vec::new(),
-            &LocalClip::RoundedRect(_, ref region) => vec![region.clone()],
+        let complex_clips = match *local_clip {
+            LocalClip::Rect(_) => Vec::new(),
+            LocalClip::RoundedRect(_, ref region) => vec![region.clone()],
         };
         ClipRegion::create_for_clip_node(
             *local_clip.clip_rect(),
@@ -81,7 +81,7 @@ impl ClipRegion {
 
 #[derive(Debug)]
 pub enum ClipSource {
-    Rectangle(LayerRect),
+    Rectangle(LayerRect, ClipMode),
     RoundedRectangle(LayerRect, BorderRadius, ClipMode),
     Image(ImageMask),
     /// TODO(gw): This currently only handles dashed style
@@ -101,7 +101,7 @@ impl From<ClipRegion> for ClipSources {
             clips.push(ClipSource::Image(info));
         }
 
-        clips.push(ClipSource::Rectangle(region.main));
+        clips.push(ClipSource::Rectangle(region.main, ClipMode::Clip));
 
         for complex in region.complex_clips {
             clips.push(ClipSource::new_rounded_rect(
@@ -121,12 +121,16 @@ impl ClipSource {
         mut radii: BorderRadius,
         clip_mode: ClipMode
     ) -> ClipSource {
-        ensure_no_corner_overlap(&mut radii, &rect);
-        ClipSource::RoundedRectangle(
-            rect,
-            radii,
-            clip_mode,
-        )
+        if radii.is_zero() {
+            ClipSource::Rectangle(rect, clip_mode)
+        } else {
+            ensure_no_corner_overlap(&mut radii, &rect);
+            ClipSource::RoundedRectangle(
+                rect,
+                radii,
+                clip_mode,
+            )
+        }
     }
 
     pub fn new_line_decoration(
@@ -306,7 +310,14 @@ impl ClipSources {
                     }
                     local_inner = None;
                 }
-                ClipSource::Rectangle(rect) => {
+                ClipSource::Rectangle(rect, mode) => {
+                    // Once we encounter a clip-out, we just assume the worst
+                    // case clip mask size, for now.
+                    if mode == ClipMode::ClipOut {
+                        can_calculate_inner_rect = false;
+                        break;
+                    }
+
                     can_calculate_outer_rect = true;
                     local_outer = local_outer.and_then(|r| r.intersection(&rect));
                     local_inner = local_inner.and_then(|r| r.intersection(&rect));
@@ -335,14 +346,16 @@ impl ClipSources {
             }
         }
 
-        let outer = match can_calculate_outer_rect {
-            true => Some(local_outer.unwrap_or_else(LayerRect::zero)),
-            false => None,
+        let outer = if can_calculate_outer_rect {
+            Some(local_outer.unwrap_or_else(LayerRect::zero))
+        } else {
+            None
         };
 
-        let inner = match can_calculate_inner_rect {
-            true => local_inner.unwrap_or_else(LayerRect::zero),
-            false => LayerRect::zero(),
+        let inner = if can_calculate_inner_rect {
+            local_inner.unwrap_or_else(LayerRect::zero)
+        } else {
+            LayerRect::zero()
         };
 
         (inner, outer)
@@ -376,8 +389,8 @@ impl ClipSources {
                         ]);
                         request.push(info.prim_shadow_rect);
                     }
-                    ClipSource::Rectangle(rect) => {
-                        let data = ClipData::uniform(rect, 0.0, ClipMode::Clip);
+                    ClipSource::Rectangle(rect, mode) => {
+                        let data = ClipData::uniform(rect, 0.0, mode);
                         data.write(&mut request);
                     }
                     ClipSource::RoundedRectangle(ref rect, ref radius, mode) => {

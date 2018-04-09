@@ -100,6 +100,7 @@ impl App {
 
         builder.push_stacking_context(
             &info,
+            None,
             ScrollPolicy::Scrollable,
             None,
             TransformStyle::Flat,
@@ -147,6 +148,7 @@ impl Example for App {
         let info = LayoutPrimitiveInfo::new((100, 100).to(200, 200));
         builder.push_stacking_context(
             &info,
+            None,
             ScrollPolicy::Scrollable,
             None,
             TransformStyle::Flat,

@@ -143,18 +143,21 @@ function initialize() {
   AddonBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS,
+    signerName: "",  // disabled
   });
   AddonBlocklistClient.on("change", updateJSONBlocklist.bind(null, AddonBlocklistClient));
 
   PluginBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS,
+    signerName: "",  // disabled
   });
   PluginBlocklistClient.on("change", updateJSONBlocklist.bind(null, PluginBlocklistClient));
 
   GfxBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
+    signerName: "",  // disabled
   });
   GfxBlocklistClient.on("change", updateJSONBlocklist.bind(null, GfxBlocklistClient));
 

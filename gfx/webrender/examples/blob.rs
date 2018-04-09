@@ -249,6 +249,7 @@ impl Example for App {
         let info = api::LayoutPrimitiveInfo::new(bounds);
         builder.push_stacking_context(
             &info,
+            None,
             api::ScrollPolicy::Scrollable,
             None,
             api::TransformStyle::Flat,

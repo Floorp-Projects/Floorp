@@ -2272,22 +2272,10 @@ bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
   return rv;
 }
 
-const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
-                     kwtable_, stylestruct_, ...) \
-        eStyleStruct_##stylestruct_,
-    #define CSS_PROP_LIST_INCLUDE_LOGICAL
-
-    #include "nsCSSPropList.h"
-
-    #undef CSS_PROP_LIST_INCLUDE_LOGICAL
-    #undef CSS_PROP
-};
-
 const nsStyleAnimType
 nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
-                 kwtable_, stylestruct_, animtype_)                 \
+#define CSS_PROP(name_, id_, method_, flags_, pref_, \
+                 parsevariant_, kwtable_, animtype_) \
   animtype_,
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
