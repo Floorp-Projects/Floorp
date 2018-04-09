@@ -280,7 +280,6 @@ GENERATE_TESTS: dom/ranges/Range-collapse.html
 GENERATE_TESTS: dom/ranges/Range-mutations.js
 GENERATE_TESTS: dom/ranges/Range-selectNode.html
 GENERATE_TESTS: dom/ranges/Range-set.html
-GENERATE_TESTS: dom/traversal/NodeIterator.html
 GENERATE_TESTS: dom/traversal/TreeWalker.html
 GENERATE_TESTS: domparsing/createContextualFragment.html
 GENERATE_TESTS: domxpath/001.html
