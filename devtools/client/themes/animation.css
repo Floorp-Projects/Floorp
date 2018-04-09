@@ -349,6 +349,8 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 .animation-detail-title {
   flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
