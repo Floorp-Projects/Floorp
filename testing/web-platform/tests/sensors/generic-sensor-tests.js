@@ -251,6 +251,14 @@ function runGenericSensorTests(sensorType) {
   }, `${sensorType.name}: sensor receives suspend / resume notifications when\
   cross-origin subframe is focused`);
 
+  test(() => {
+     assert_throws("NotSupportedError", () => { new sensorType({invalid: 1}) });
+     assert_throws("NotSupportedError", () => { new sensorType({frequency: 60, invalid: 1}) });
+     if (spatialSensors.indexOf(sensorType.name) == -1) {
+       assert_throws("NotSupportedError", () => { new sensorType({referenceFrame: "screen"}) });
+     }
+  }, `${sensorType.name}: throw 'NotSupportedError' for an unsupported sensor option`);
+
   if (spatialSensors.indexOf(sensorType.name) == -1) {
     // The sensorType does not represent a spatial sensor.
     return;
