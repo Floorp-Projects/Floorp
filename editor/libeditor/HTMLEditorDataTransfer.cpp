@@ -39,7 +39,6 @@
 #include "nsIClipboard.h"
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentFragment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
@@ -182,9 +181,10 @@ HTMLEditor::InsertHTMLWithContext(const nsAString& aInputString,
                                   int32_t aDestOffset,
                                   bool aDeleteSelection)
 {
+  nsCOMPtr<nsIDocument> sourceDoc = do_QueryInterface(aSourceDoc);
   nsCOMPtr<nsINode> destNode = do_QueryInterface(aDestNode);
   return DoInsertHTMLWithContext(aInputString, aContextStr, aInfoStr,
-                                 aFlavor, aSourceDoc, destNode, aDestOffset,
+                                 aFlavor, sourceDoc, destNode, aDestOffset,
                                  aDeleteSelection,
                                  /* trusted input */ true,
                                  /* clear style */ false);
@@ -195,7 +195,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                                     const nsAString& aContextStr,
                                     const nsAString& aInfoStr,
                                     const nsAString& aFlavor,
-                                    nsIDOMDocument* aSourceDoc,
+                                    nsIDocument* aSourceDoc,
                                     nsINode* aDestNode,
                                     int32_t aDestOffset,
                                     bool aDeleteSelection,
@@ -960,7 +960,7 @@ NS_IMPL_ISUPPORTS(HTMLEditor::BlobReader, nsIEditorBlobListener)
 HTMLEditor::BlobReader::BlobReader(BlobImpl* aBlob,
                                    HTMLEditor* aHTMLEditor,
                                    bool aIsSafe,
-                                   nsIDOMDocument* aSourceDoc,
+                                   nsIDocument* aSourceDoc,
                                    nsINode* aDestinationNode,
                                    int32_t aDestOffset,
                                    bool aDoDeleteSelection)
@@ -1017,7 +1017,7 @@ nsresult
 HTMLEditor::InsertObject(const nsACString& aType,
                          nsISupports* aObject,
                          bool aIsSafe,
-                         nsIDOMDocument* aSourceDoc,
+                         nsIDocument* aSourceDoc,
                          nsINode* aDestinationNode,
                          int32_t aDestOffset,
                          bool aDoDeleteSelection)
@@ -1097,7 +1097,7 @@ HTMLEditor::InsertObject(const nsACString& aType,
 
 nsresult
 HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
-                                   nsIDOMDocument* aSourceDoc,
+                                   nsIDocument* aSourceDoc,
                                    const nsAString& aContextStr,
                                    const nsAString& aInfoStr,
                                    bool havePrivateHTMLFlavor,
@@ -1223,7 +1223,7 @@ GetStringFromDataTransfer(DataTransfer* aDataTransfer,
 nsresult
 HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
                                    int32_t aIndex,
-                                   nsIDOMDocument* aSourceDoc,
+                                   nsIDocument* aSourceDoc,
                                    nsINode* aDestinationNode,
                                    int32_t aDestOffset,
                                    bool aDoDeleteSelection)
