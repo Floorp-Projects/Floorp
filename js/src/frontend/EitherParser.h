@@ -13,11 +13,12 @@
 #define frontend_EitherParser_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/IndexSequence.h"
 #include "mozilla/Move.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Variant.h"
+
+#include <utility>
 
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
@@ -35,7 +36,7 @@ struct InvokeMemberFunction
 
     template<class This, size_t... Indices>
     auto
-    matchInternal(This* obj, mozilla::IndexSequence<Indices...>)
+    matchInternal(This* obj, std::index_sequence<Indices...>)
       -> decltype(((*obj).*(MemberFunction<This>::get()))(mozilla::Get<Indices>(args)...))
     {
         return ((*obj).*(MemberFunction<This>::get()))(mozilla::Get<Indices>(args)...);
@@ -51,10 +52,10 @@ struct InvokeMemberFunction
     auto
     match(Parser* parser)
       -> decltype(this->matchInternal(GetThis<Parser>::get(parser),
-                                      typename mozilla::IndexSequenceFor<Args...>::Type()))
+                                      std::index_sequence_for<Args...>{}))
     {
         return this->matchInternal(GetThis<Parser>::get(parser),
-                                   typename mozilla::IndexSequenceFor<Args...>::Type());
+                                   std::index_sequence_for<Args...>{});
     }
 };
 

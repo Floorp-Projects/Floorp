@@ -10,10 +10,11 @@
 #define runnable_utils_h__
 
 #include "nsThreadUtils.h"
-#include "mozilla/IndexSequence.h"
 #include "mozilla/Move.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
+
+#include <utility>
 
 // Abstract base class for all of our templates
 namespace mozilla {
@@ -44,7 +45,7 @@ template<typename R>
 struct RunnableFunctionCallHelper
 {
   template<typename FunType, typename... Args, size_t... Indices>
-  static R apply(FunType func, Tuple<Args...>& args, IndexSequence<Indices...>)
+  static R apply(FunType func, Tuple<Args...>& args, std::index_sequence<Indices...>)
   {
     return func(Get<Indices>(args)...);
   }
@@ -57,7 +58,7 @@ template<>
 struct RunnableFunctionCallHelper<void>
 {
   template<typename FunType, typename... Args, size_t... Indices>
-  static void apply(FunType func, Tuple<Args...>& args, IndexSequence<Indices...>)
+  static void apply(FunType func, Tuple<Args...>& args, std::index_sequence<Indices...>)
   {
     func(Get<Indices>(args)...);
   }
@@ -67,7 +68,7 @@ template<typename R>
 struct RunnableMethodCallHelper
 {
   template<typename Class, typename M, typename... Args, size_t... Indices>
-  static R apply(Class obj, M method, Tuple<Args...>& args, IndexSequence<Indices...>)
+  static R apply(Class obj, M method, Tuple<Args...>& args, std::index_sequence<Indices...>)
   {
     return ((*obj).*method)(Get<Indices>(args)...);
   }
@@ -80,7 +81,7 @@ template<>
 struct RunnableMethodCallHelper<void>
 {
   template<typename Class, typename M, typename... Args, size_t... Indices>
-  static void apply(Class obj, M method, Tuple<Args...>& args, IndexSequence<Indices...>)
+  static void apply(Class obj, M method, Tuple<Args...>& args, std::index_sequence<Indices...>)
   {
     ((*obj).*method)(Get<Indices>(args)...);
   }
@@ -99,7 +100,7 @@ public:
   {}
 
   NS_IMETHOD Run() override {
-    detail::RunnableFunctionCallHelper<void>::apply(mFunc, mArgs, typename IndexSequenceFor<Args...>::Type());
+    detail::RunnableFunctionCallHelper<void>::apply(mFunc, mArgs, std::index_sequence_for<Args...>{});
     return NS_OK;
   }
 
@@ -125,7 +126,7 @@ public:
   {}
 
   NS_IMETHOD Run() override {
-    *mReturn = detail::RunnableFunctionCallHelper<Ret>::apply(mFunc, mArgs, typename IndexSequenceFor<Args...>::Type());
+    *mReturn = detail::RunnableFunctionCallHelper<Ret>::apply(mFunc, mArgs, std::index_sequence_for<Args...>{});
     return NS_OK;
   }
 
@@ -152,7 +153,7 @@ public:
   {}
 
   NS_IMETHOD Run() override {
-    detail::RunnableMethodCallHelper<void>::apply(mObj, mMethod, mArgs, typename IndexSequenceFor<Args...>::Type());
+    detail::RunnableMethodCallHelper<void>::apply(mObj, mMethod, mArgs, std::index_sequence_for<Args...>{});
     return NS_OK;
   }
 
@@ -179,7 +180,7 @@ public:
   {}
 
   NS_IMETHOD Run() override {
-    *mReturn = detail::RunnableMethodCallHelper<Ret>::apply(mObj, mMethod, mArgs, typename IndexSequenceFor<Args...>::Type());
+    *mReturn = detail::RunnableMethodCallHelper<Ret>::apply(mObj, mMethod, mArgs, std::index_sequence_for<Args...>{});
     return NS_OK;
   }
 

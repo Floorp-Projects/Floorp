@@ -2,10 +2,10 @@
 #define mozilla_jni_Natives_h__
 
 #include <jni.h>
+#include <utility>
 
 #include "nsThreadUtils.h"
 
-#include "mozilla/IndexSequence.h"
 #include "mozilla/Move.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
@@ -405,7 +405,7 @@ class ProxyNativeCall
     template<bool Static, bool ThisArg, size_t... Indices>
     typename mozilla::EnableIf<Static && ThisArg, void>::Type
     Call(const Class::LocalRef& cls,
-         mozilla::IndexSequence<Indices...>) const
+         std::index_sequence<Indices...>) const
     {
         (*mNativeCall)(cls, mozilla::Get<Indices>(mArgs)...);
     }
@@ -413,7 +413,7 @@ class ProxyNativeCall
     template<bool Static, bool ThisArg, size_t... Indices>
     typename mozilla::EnableIf<Static && !ThisArg, void>::Type
     Call(const Class::LocalRef& cls,
-         mozilla::IndexSequence<Indices...>) const
+         std::index_sequence<Indices...>) const
     {
         (*mNativeCall)(mozilla::Get<Indices>(mArgs)...);
     }
@@ -421,7 +421,7 @@ class ProxyNativeCall
     template<bool Static, bool ThisArg, size_t... Indices>
     typename mozilla::EnableIf<!Static && ThisArg, void>::Type
     Call(const typename Owner::LocalRef& inst,
-         mozilla::IndexSequence<Indices...>) const
+         std::index_sequence<Indices...>) const
     {
         Impl* const impl = NativePtr<Impl>::Get(inst);
         MOZ_CATCH_JNI_EXCEPTION(inst.Env());
@@ -431,7 +431,7 @@ class ProxyNativeCall
     template<bool Static, bool ThisArg, size_t... Indices>
     typename mozilla::EnableIf<!Static && !ThisArg, void>::Type
     Call(const typename Owner::LocalRef& inst,
-         mozilla::IndexSequence<Indices...>) const
+         std::index_sequence<Indices...>) const
     {
         Impl* const impl = NativePtr<Impl>::Get(inst);
         MOZ_CATCH_JNI_EXCEPTION(inst.Env());
@@ -439,7 +439,7 @@ class ProxyNativeCall
     }
 
     template<size_t... Indices>
-    void Clear(JNIEnv* env, mozilla::IndexSequence<Indices...>)
+    void Clear(JNIEnv* env, std::index_sequence<Indices...>)
     {
         int dummy[] = {
             (ProxyArg<Args>::Clear(env, Get<Indices>(mArgs)), 0)...
@@ -497,13 +497,13 @@ public:
         JNIEnv* const env = GetEnvForThread();
         typename ThisArgClass::LocalRef thisArg(env, mThisArg);
         Call<IsStatic, HasThisArg>(
-                thisArg, typename IndexSequenceFor<Args...>::Type());
+                thisArg, std::index_sequence_for<Args...>{});
 
         // Clear all saved global refs. We do this after the call is invoked,
         // and not inside the destructor because we already have a JNIEnv here,
         // so it's more efficient to clear out the saved args here. The
         // downside is that the call can only be invoked once.
-        Clear(env, typename IndexSequenceFor<Args...>::Type());
+        Clear(env, std::index_sequence_for<Args...>{});
         mThisArg.Clear(env);
     }
 };

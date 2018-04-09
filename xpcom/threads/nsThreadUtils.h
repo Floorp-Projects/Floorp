@@ -22,12 +22,13 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/IndexSequence.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Move.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
+
+#include <utility>
 
 //-----------------------------------------------------------------------------
 // These methods are alternatives to the methods on nsIThreadManager, provided
@@ -1158,17 +1159,17 @@ struct RunnableMethodArguments final
   {}
   template<typename C, typename M, typename... Args, size_t... Indices>
   static auto
-  applyImpl(C* o, M m, Tuple<Args...>& args, IndexSequence<Indices...>)
+  applyImpl(C* o, M m, Tuple<Args...>& args, std::index_sequence<Indices...>)
       -> decltype(((*o).*m)(Get<Indices>(args).PassAsParameter()...))
   {
     return ((*o).*m)(Get<Indices>(args).PassAsParameter()...);
   }
   template<class C, typename M> auto apply(C* o, M m)
       -> decltype(applyImpl(o, m, mArguments,
-                  typename IndexSequenceFor<Ts...>::Type()))
+                  std::index_sequence_for<Ts...>{}))
   {
     return applyImpl(o, m, mArguments,
-        typename IndexSequenceFor<Ts...>::Type());
+        std::index_sequence_for<Ts...>{});
   }
 };
 
