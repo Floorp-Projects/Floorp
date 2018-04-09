@@ -601,7 +601,7 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
             // TODO(https://bugzil.la/1443922):
             // Use toolkit.asyncshutdown.crash_timout pref
             match runner.wait(time::Duration::from_secs(70)) {
-                Ok(x) => debug!("Browser process stopped with exit status {}", x),
+                Ok(x) => debug!("Browser process stopped: {}", x),
                 Err(e) => error!("Failed to stop browser process: {}", e),
             }
         }

@@ -114,7 +114,7 @@ evaluate.sandbox = function(sb, script, args = [],
   let promise = new Promise((resolve, reject) => {
     let src = "";
     sb[COMPLETE] = resolve;
-    timeoutHandler = () => reject(new ScriptTimeoutError("Timed out"));
+    timeoutHandler = () => reject(new ScriptTimeoutError(`Timed out after ${timeout} ms`));
     unloadHandler = sandbox.cloneInto(
         () => reject(new JavaScriptError("Document was unloaded")),
         sb);

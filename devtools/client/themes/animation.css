@@ -32,6 +32,7 @@
 
 /* Root element of animation inspector */
 #animation-container {
+  cursor: default;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -200,12 +201,9 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   width: var(--sidebar-width);
 }
 
-.animation-target .tag-name {
-  cursor: default;
-}
-
 /* Summary Graph */
 .animation-summary-graph {
+  cursor: pointer;
   height: 100%;
   padding-top: 5px;
   position: relative;
