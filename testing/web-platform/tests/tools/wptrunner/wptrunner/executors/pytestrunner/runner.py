@@ -110,9 +110,9 @@ class SubtestResultRecorder(object):
         #  > E       AssertionError: assert 'fuu' in 'foobar'
         message = ""
         for line in report.longreprtext.splitlines():
-           if line.startswith("E   "):
-               message = line[1:].strip()
-               break
+            if line.startswith("E   "):
+                message = line[1:].strip()
+                break
 
         self.record(report.nodeid, "FAIL", message=message, stack=report.longrepr)
 
