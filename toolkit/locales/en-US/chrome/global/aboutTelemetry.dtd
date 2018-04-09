@@ -36,6 +36,7 @@
 <!ENTITY aboutTelemetry.keyedHistogramsSection "Keyed Histograms">
 <!ENTITY aboutTelemetry.eventsSection "Events">
 <!ENTITY aboutTelemetry.simpleMeasurementsSection "Simple Measurements">
+<!ENTITY aboutTelemetry.telemetryLogSection "Telemetry Log">
 <!ENTITY aboutTelemetry.slowSqlSection "Slow SQL Statements">
 <!ENTITY aboutTelemetry.chromeHangsSection "Browser Hangs">
 <!ENTITY aboutTelemetry.addonDetailsSection "Add-on Details">
