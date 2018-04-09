@@ -110,6 +110,25 @@ HistoryEngine.prototype = {
     await super._syncStartup();
   },
 
+  async _processIncoming(newitems) {
+    // We want to notify history observers that a batch operation is underway
+    // so they don't do lots of work for each incoming record.
+    let observers = PlacesUtils.history.getObservers();
+    function notifyHistoryObservers(notification) {
+      for (let observer of observers) {
+        try {
+          observer[notification]();
+        } catch (ex) { }
+      }
+    }
+    notifyHistoryObservers("onBeginUpdateBatch");
+    try {
+      await SyncEngine.prototype._processIncoming.call(this, newitems);
+    } finally {
+      notifyHistoryObservers("onEndUpdateBatch");
+    }
+  },
+
   shouldSyncURL(url) {
     return !url.startsWith("file:");
   },
@@ -205,81 +224,55 @@ HistoryStore.prototype = {
   },
 
   async applyIncomingBatch(records) {
-    // Convert incoming records to mozIPlaceInfo objects which are applied as
-    // either history additions or removals.
     let failed = [];
-    let toAdd = [];
-    let toRemove = [];
-    for await (let record of Async.yieldingIterator(records)) {
-      if (record.deleted) {
-        toRemove.push(record)
-      } else {
-        try {
-          if (await this._recordToPlaceInfo(record)) {
-            toAdd.push(record);
-          }
-        } catch (ex) {
-          if (Async.isShutdownException(ex)) {
-            throw ex;
-          }
-          this._log.error("Failed to create a place info", ex);
-          this._log.trace("The record that failed", record);
-          failed.push(record.id);
+
+    // Convert incoming records to mozIPlaceInfo objects. Some records can be
+    // ignored or handled directly, so we're rewriting the array in-place.
+    let i, k;
+    let maybeYield = Async.jankYielder();
+    for (i = 0, k = 0; i < records.length; i++) {
+      await maybeYield();
+      let record = records[k] = records[i];
+      let shouldApply;
+
+      try {
+        if (record.deleted) {
+          await this.remove(record);
+
+          // No further processing needed. Remove it from the list.
+          shouldApply = false;
+        } else {
+          shouldApply = await this._recordToPlaceInfo(record);
         }
+      } catch (ex) {
+        if (Async.isShutdownException(ex)) {
+          throw ex;
+        }
+        failed.push(record.id);
+        shouldApply = false;
+      }
+
+      if (shouldApply) {
+        k += 1;
       }
     }
-    if (toAdd.length || toRemove.length) {
-      // We want to notify history observers that a batch operation is underway
-      // so they don't do lots of work for each incoming record.
-      let observers = PlacesUtils.history.getObservers();
-      function notifyHistoryObservers(notification) {
-        for (let observer of observers) {
-          try {
-            observer[notification]();
-          } catch (ex) {
-            // don't log an error - it's not our code that failed and we don't
-            // want an error log written just for this.
-            this._log.info("history observer failed", ex);
-          }
+    records.length = k; // truncate array
+
+    if (records.length) {
+      for (let chunk of this._generateChunks(records)) {
+        // Per bug 1415560, we ignore any exceptions returned by insertMany
+        // as they are likely to be spurious. We do supply an onError handler
+        // and log the exceptions seen there as they are likely to be
+        // informative, but we still never abort the sync based on them.
+        try {
+          await PlacesUtils.history.insertMany(chunk, null, failedVisit => {
+            this._log.info("Failed to insert a history record", failedVisit.guid);
+            this._log.trace("The record that failed", failedVisit);
+            failed.push(failedVisit.guid);
+          });
+        } catch (ex) {
+          this._log.info("Failed to insert history records", ex);
         }
-      }
-      notifyHistoryObservers("onBeginUpdateBatch");
-      try {
-        if (toRemove.length) {
-          // PlacesUtils.history.remove takes an array of visits to remove,
-          // but the error semantics are tricky - a single "bad" entry will cause
-          // an exception before anything is removed. So we do remove them one at
-          // a time.
-          for await (let record of Async.yieldingIterator(toRemove)) {
-            try {
-              await this.remove(record);
-            } catch (ex) {
-              if (Async.isShutdownException(ex)) {
-                throw ex;
-              }
-              this._log.error("Failed to delete a place info", ex);
-              this._log.trace("The record that failed", record);
-              failed.push(record.id);
-            }
-          }
-        }
-        for (let chunk of this._generateChunks(toAdd)) {
-          // Per bug 1415560, we ignore any exceptions returned by insertMany
-          // as they are likely to be spurious. We do supply an onError handler
-          // and log the exceptions seen there as they are likely to be
-          // informative, but we still never abort the sync based on them.
-          try {
-            await PlacesUtils.history.insertMany(chunk, null, failedVisit => {
-              this._log.info("Failed to insert a history record", failedVisit.guid);
-              this._log.trace("The record that failed", failedVisit);
-              failed.push(failedVisit.guid);
-            });
-          } catch (ex) {
-            this._log.info("Failed to insert history records", ex);
-          }
-        }
-      } finally {
-        notifyHistoryObservers("onEndUpdateBatch");
       }
     }
 

@@ -225,15 +225,6 @@ add_task(async function test_invalid_records() {
   ]);
   Assert.equal(failed.length, 0);
 
-  // Make sure we can apply tombstones (both valid and invalid)
-  failed = await store.applyIncomingBatch([
-    {id: no_date_visit_guid,
-     deleted: true},
-    {id: "not-a-valid-guid",
-     deleted: true},
-  ]);
-  Assert.deepEqual(failed, ["not-a-valid-guid"]);
-
   _("Make sure we handle records with javascript: URLs gracefully.");
   await applyEnsureNoFailures([
     {id: Utils.makeGUID(),
