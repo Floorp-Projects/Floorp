@@ -134,19 +134,21 @@ template nsresult
 EditorBase::InsertNodeWithTransaction(nsIContent& aContentToInsert,
                                       const EditorRawDOMPoint& aPointToInsert);
 template already_AddRefed<nsIContent>
-EditorBase::SplitNode(const EditorDOMPoint& aStartOfRightNode,
-                      ErrorResult& aError);
+EditorBase::SplitNodeWithTransaction(const EditorDOMPoint& aStartOfRightNode,
+                                     ErrorResult& aError);
 template already_AddRefed<nsIContent>
-EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
-                      ErrorResult& aError);
+EditorBase::SplitNodeWithTransaction(const EditorRawDOMPoint& aStartOfRightNode,
+                                     ErrorResult& aError);
 template SplitNodeResult
-EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
-                          const EditorDOMPoint& aStartOfDeepestRightNode,
-                          SplitAtEdges aSplitAtEdges);
+EditorBase::SplitNodeDeepWithTransaction(
+              nsIContent& aMostAncestorToSplit,
+              const EditorDOMPoint& aStartOfDeepestRightNode,
+              SplitAtEdges aSplitAtEdges);
 template SplitNodeResult
-EditorBase::SplitNodeDeep(nsIContent& aMostAncestorToSplit,
-                          const EditorRawDOMPoint& aStartOfDeepestRightNode,
-                          SplitAtEdges aSplitAtEdges);
+EditorBase::SplitNodeDeepWithTransaction(
+              nsIContent& aMostAncestorToSplit,
+              const EditorRawDOMPoint& aStartOfDeepestRightNode,
+              SplitAtEdges aSplitAtEdges);
 
 EditorBase::EditorBase()
   : mPlaceholderName(nullptr)
@@ -1468,7 +1470,7 @@ EditorBase::SplitNode(nsIDOMNode* aNode,
                             static_cast<int32_t>(node->Length()));
   ErrorResult error;
   nsCOMPtr<nsIContent> newNode =
-    SplitNode(EditorRawDOMPoint(node, offset), error);
+    SplitNodeWithTransaction(EditorRawDOMPoint(node, offset), error);
   *aNewLeftNode = GetAsDOMNode(newNode.forget().take());
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
@@ -1478,8 +1480,9 @@ EditorBase::SplitNode(nsIDOMNode* aNode,
 
 template<typename PT, typename CT>
 already_AddRefed<nsIContent>
-EditorBase::SplitNode(const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
-                      ErrorResult& aError)
+EditorBase::SplitNodeWithTransaction(
+              const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
+              ErrorResult& aError)
 {
   if (NS_WARN_IF(!aStartOfRightNode.IsSet()) ||
       NS_WARN_IF(!aStartOfRightNode.GetContainerAsContent())) {
@@ -4059,7 +4062,7 @@ EditorBase::IsPreformatted(nsINode* aNode)
 
 template<typename PT, typename CT>
 SplitNodeResult
-EditorBase::SplitNodeDeep(
+EditorBase::SplitNodeDeepWithTransaction(
               nsIContent& aMostAncestorToSplit,
               const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode,
               SplitAtEdges aSplitAtEdges)
@@ -4101,7 +4104,8 @@ EditorBase::SplitNodeDeep(
         (!atStartOfRightNode.IsStartOfContainer() &&
          !atStartOfRightNode.IsEndOfContainer())) {
       ErrorResult error;
-      nsCOMPtr<nsIContent> newLeftNode = SplitNode(atStartOfRightNode, error);
+      nsCOMPtr<nsIContent> newLeftNode =
+        SplitNodeWithTransaction(atStartOfRightNode, error);
       if (NS_WARN_IF(error.Failed())) {
         return SplitNodeResult(error.StealNSResult());
       }
@@ -4450,7 +4454,7 @@ EditorBase::DeleteSelectionAndPrepareToCreateNode()
   }
 
   ErrorResult error;
-  nsCOMPtr<nsIContent> newLeftNode = SplitNode(atAnchor, error);
+  nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atAnchor, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }

@@ -460,7 +460,8 @@ TextEditor::CreateBRImpl(Selection& aSelection,
       MOZ_DIAGNOSTIC_ASSERT(aPointToInsert.IsSetAndValid());
       // Unfortunately, we need to split the text node at the offset.
       ErrorResult error;
-      nsCOMPtr<nsIContent> newLeftNode = SplitNode(aPointToInsert, error);
+      nsCOMPtr<nsIContent> newLeftNode =
+        SplitNodeWithTransaction(aPointToInsert, error);
       if (NS_WARN_IF(error.Failed())) {
         error.SuppressException();
         return nullptr;
