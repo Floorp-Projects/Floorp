@@ -9,7 +9,7 @@ promise_test(async function() {
 
   var idlArray = new IdlArray();
   idlArray.add_untested_idls('interface ServiceWorkerRegistration {};');
-  idlArray.add_untested_idls('[Exposed=ServiceWorker] interface ServiceWorkerGlobalScope {};');
+  idlArray.add_untested_idls('[SecureContext, Exposed = (Window, Worker)] interface ServiceWorkerGlobalScope {};');
   idlArray.add_untested_idls('interface ExtendableEvent{};');
   idlArray.add_untested_idls('dictionary ExtendableEventInit{};');
   idlArray.add_untested_idls(dom, { only: ['EventTarget'] });
