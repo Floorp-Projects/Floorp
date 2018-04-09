@@ -143,7 +143,7 @@ exports.viewSourceInScratchpad = async function(sourceURL, sourceLine) {
   }
 
   // For scratchpads within toolbox
-  for (let [, toolbox] of gDevTools) {
+  for (let toolbox of gDevTools.getToolboxes()) {
     let scratchpadPanel = toolbox.getPanel("scratchpad");
     if (scratchpadPanel) {
       let { scratchpad } = scratchpadPanel;

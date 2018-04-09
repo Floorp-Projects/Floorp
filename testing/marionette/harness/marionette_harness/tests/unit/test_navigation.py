@@ -119,14 +119,20 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
 class TestNavigate(BaseNavigationTestCase):
 
     def test_set_location_through_execute_script(self):
+        test_element_locator = (By.ID, "testh1")
+
         self.marionette.execute_script(
             "window.location.href = arguments[0];",
             script_args=(self.test_page_remote,), sandbox=None)
 
+        # We cannot use get_url() to wait until the target page has been loaded,
+        # because it will return the URL of the top browsing context and doesn't
+        # wait for the page load to be complete.
         Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
-            lambda mn: self.test_page_remote == mn.get_url(),
-            message="'{}' hasn't been loaded".format(self.test_page_remote))
-        self.assertEqual("Marionette Test", self.marionette.title)
+            expected.element_present(*test_element_locator),
+            message="Target element 'testh1' has not been found")
+
+        self.assertEqual(self.test_page_remote, self.marionette.get_url())
 
     def test_navigate_chrome_unsupported_error(self):
         with self.marionette.using_context("chrome"):

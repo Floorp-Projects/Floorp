@@ -230,48 +230,64 @@ this.management = class extends ExtensionAPI {
           addon.userDisabled = !enabled;
         },
 
-        onDisabled: new EventManager(context, "management.onDisabled", fire => {
-          let listener = (event, data) => {
-            fire.async(data);
-          };
+        onDisabled: new EventManager({
+          context,
+          name: "management.onDisabled",
+          register: fire => {
+            let listener = (event, data) => {
+              fire.async(data);
+            };
 
-          getManagementListener(extension, context).on("onDisabled", listener);
-          return () => {
-            getManagementListener(extension, context).off("onDisabled", listener);
-          };
+            getManagementListener(extension, context).on("onDisabled", listener);
+            return () => {
+              getManagementListener(extension, context).off("onDisabled", listener);
+            };
+          },
         }).api(),
 
-        onEnabled: new EventManager(context, "management.onEnabled", fire => {
-          let listener = (event, data) => {
-            fire.async(data);
-          };
+        onEnabled: new EventManager({
+          context,
+          name: "management.onEnabled",
+          register: fire => {
+            let listener = (event, data) => {
+              fire.async(data);
+            };
 
-          getManagementListener(extension, context).on("onEnabled", listener);
-          return () => {
-            getManagementListener(extension, context).off("onEnabled", listener);
-          };
+            getManagementListener(extension, context).on("onEnabled", listener);
+            return () => {
+              getManagementListener(extension, context).off("onEnabled", listener);
+            };
+          },
         }).api(),
 
-        onInstalled: new EventManager(context, "management.onInstalled", fire => {
-          let listener = (event, data) => {
-            fire.async(data);
-          };
+        onInstalled: new EventManager({
+          context,
+          name: "management.onInstalled",
+          register: fire => {
+            let listener = (event, data) => {
+              fire.async(data);
+            };
 
-          getManagementListener(extension, context).on("onInstalled", listener);
-          return () => {
-            getManagementListener(extension, context).off("onInstalled", listener);
-          };
+            getManagementListener(extension, context).on("onInstalled", listener);
+            return () => {
+              getManagementListener(extension, context).off("onInstalled", listener);
+            };
+          },
         }).api(),
 
-        onUninstalled: new EventManager(context, "management.onUninstalled", fire => {
-          let listener = (event, data) => {
-            fire.async(data);
-          };
+        onUninstalled: new EventManager({
+          context,
+          name: "management.onUninstalled",
+          register: fire => {
+            let listener = (event, data) => {
+              fire.async(data);
+            };
 
-          getManagementListener(extension, context).on("onUninstalled", listener);
-          return () => {
-            getManagementListener(extension, context).off("onUninstalled", listener);
-          };
+            getManagementListener(extension, context).on("onUninstalled", listener);
+            return () => {
+              getManagementListener(extension, context).off("onUninstalled", listener);
+            };
+          },
         }).api(),
 
       },

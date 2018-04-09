@@ -224,46 +224,58 @@ this.contextualIdentities = class extends ExtensionAPI {
           return convertedIdentity;
         },
 
-        onCreated: new EventManager(context, "contextualIdentities.onCreated", fire => {
-          let observer = (subject, topic) => {
-            let convertedIdentity = convertIdentityFromObserver(subject);
-            if (convertedIdentity) {
-              fire.async({contextualIdentity: convertedIdentity});
-            }
-          };
+        onCreated: new EventManager({
+          context,
+          name: "contextualIdentities.onCreated",
+          register: fire => {
+            let observer = (subject, topic) => {
+              let convertedIdentity = convertIdentityFromObserver(subject);
+              if (convertedIdentity) {
+                fire.async({contextualIdentity: convertedIdentity});
+              }
+            };
 
-          Services.obs.addObserver(observer, "contextual-identity-created");
-          return () => {
-            Services.obs.removeObserver(observer, "contextual-identity-created");
-          };
+            Services.obs.addObserver(observer, "contextual-identity-created");
+            return () => {
+              Services.obs.removeObserver(observer, "contextual-identity-created");
+            };
+          },
         }).api(),
 
-        onUpdated: new EventManager(context, "contextualIdentities.onUpdated", fire => {
-          let observer = (subject, topic) => {
-            let convertedIdentity = convertIdentityFromObserver(subject);
-            if (convertedIdentity) {
-              fire.async({contextualIdentity: convertedIdentity});
-            }
-          };
+        onUpdated: new EventManager({
+          context,
+          name: "contextualIdentities.onUpdated",
+          register: fire => {
+            let observer = (subject, topic) => {
+              let convertedIdentity = convertIdentityFromObserver(subject);
+              if (convertedIdentity) {
+                fire.async({contextualIdentity: convertedIdentity});
+              }
+            };
 
-          Services.obs.addObserver(observer, "contextual-identity-updated");
-          return () => {
-            Services.obs.removeObserver(observer, "contextual-identity-updated");
-          };
+            Services.obs.addObserver(observer, "contextual-identity-updated");
+            return () => {
+              Services.obs.removeObserver(observer, "contextual-identity-updated");
+            };
+          },
         }).api(),
 
-        onRemoved: new EventManager(context, "contextualIdentities.onRemoved", fire => {
-          let observer = (subject, topic) => {
-            let convertedIdentity = convertIdentityFromObserver(subject);
-            if (convertedIdentity) {
-              fire.async({contextualIdentity: convertedIdentity});
-            }
-          };
+        onRemoved: new EventManager({
+          context,
+          name: "contextualIdentities.onRemoved",
+          register: fire => {
+            let observer = (subject, topic) => {
+              let convertedIdentity = convertIdentityFromObserver(subject);
+              if (convertedIdentity) {
+                fire.async({contextualIdentity: convertedIdentity});
+              }
+            };
 
-          Services.obs.addObserver(observer, "contextual-identity-deleted");
-          return () => {
-            Services.obs.removeObserver(observer, "contextual-identity-deleted");
-          };
+            Services.obs.addObserver(observer, "contextual-identity-deleted");
+            return () => {
+              Services.obs.removeObserver(observer, "contextual-identity-deleted");
+            };
+          },
         }).api(),
 
       },

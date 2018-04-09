@@ -89,20 +89,24 @@ this.storage = class extends ExtensionAPI {
           },
         },
 
-        onChanged: new EventManager(context, "storage.onChanged", fire => {
-          let listenerLocal = changes => {
-            fire.raw(changes, "local");
-          };
-          let listenerSync = changes => {
-            fire.async(changes, "sync");
-          };
+        onChanged: new EventManager({
+          context,
+          name: "storage.onChanged",
+          register: fire => {
+            let listenerLocal = changes => {
+              fire.raw(changes, "local");
+            };
+            let listenerSync = changes => {
+              fire.async(changes, "sync");
+            };
 
-          ExtensionStorage.addOnChangedListener(extension.id, listenerLocal);
-          extensionStorageSync.addOnChangedListener(extension, listenerSync, context);
-          return () => {
-            ExtensionStorage.removeOnChangedListener(extension.id, listenerLocal);
-            extensionStorageSync.removeOnChangedListener(extension, listenerSync);
-          };
+            ExtensionStorage.addOnChangedListener(extension.id, listenerLocal);
+            extensionStorageSync.addOnChangedListener(extension, listenerSync, context);
+            return () => {
+              ExtensionStorage.removeOnChangedListener(extension.id, listenerLocal);
+              extensionStorageSync.removeOnChangedListener(extension, listenerSync);
+            };
+          },
         }).api(),
       },
     };

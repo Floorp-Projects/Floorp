@@ -158,7 +158,7 @@ ifdef MOZ_ARTIFACT_BUILDS
 	$(call BUILDSTATUS,TIER_FINISH artifact)
 endif
 	$(call BUILDSTATUS,TIER_START tup)
-	@$(TUP) $(if $(MOZ_AUTOMATION),--quiet) $(if $(findstring s,$(filter-out --%,$(MAKEFLAGS))),,--verbose)
+	@$(TUP) $(if $(MOZ_AUTOMATION),--quiet) $(if $(findstring s,$(filter-out --%,$(MAKEFLAGS))),,--verbose) $(topobjdir)
 	$(call BUILDSTATUS,TIER_FINISH tup)
 
 .PHONY: $(addprefix install-,$(install_manifests))

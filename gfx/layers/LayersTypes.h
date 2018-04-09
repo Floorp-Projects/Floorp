@@ -77,19 +77,13 @@ struct LayersId {
     return !(*this == aOther);
   }
 
-  // Helper operators that allow this class to be used as a key in
+  // Helper struct that allow this class to be used as a key in
   // std::unordered_map like so:
-  //   std::unordered_map<LayersId, ValueType, LayersId::HashFn, LayersId::EqualFn> myMap;
+  //   std::unordered_map<LayersId, ValueType, LayersId::HashFn> myMap;
   struct HashFn {
     std::size_t operator()(const LayersId& aKey) const
     {
       return std::hash<uint64_t>{}(aKey.mId);
-    }
-  };
-  struct EqualFn {
-    bool operator()(const LayersId& lhs, const LayersId& rhs) const
-    {
-      return lhs.mId == rhs.mId;
     }
   };
 };

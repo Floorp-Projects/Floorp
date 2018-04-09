@@ -765,60 +765,72 @@ this.downloads = class extends ExtensionAPI {
         //   ...
         // }
 
-        onChanged: new EventManager(context, "downloads.onChanged", fire => {
-          const handler = (what, item) => {
-            let changes = {};
-            const noundef = val => (val === undefined) ? null : val;
-            DOWNLOAD_ITEM_CHANGE_FIELDS.forEach(fld => {
-              if (item[fld] != item.prechange[fld]) {
-                changes[fld] = {
-                  previous: noundef(item.prechange[fld]),
-                  current: noundef(item[fld]),
-                };
+        onChanged: new EventManager({
+          context,
+          name: "downloads.onChanged",
+          register: fire => {
+            const handler = (what, item) => {
+              let changes = {};
+              const noundef = val => (val === undefined) ? null : val;
+              DOWNLOAD_ITEM_CHANGE_FIELDS.forEach(fld => {
+                if (item[fld] != item.prechange[fld]) {
+                  changes[fld] = {
+                    previous: noundef(item.prechange[fld]),
+                    current: noundef(item[fld]),
+                  };
+                }
+              });
+              if (Object.keys(changes).length > 0) {
+                changes.id = item.id;
+                fire.async(changes);
               }
-            });
-            if (Object.keys(changes).length > 0) {
-              changes.id = item.id;
-              fire.async(changes);
-            }
-          };
+            };
 
-          let registerPromise = DownloadMap.getDownloadList().then(() => {
-            DownloadMap.on("change", handler);
-          });
-          return () => {
-            registerPromise.then(() => {
-              DownloadMap.off("change", handler);
+            let registerPromise = DownloadMap.getDownloadList().then(() => {
+              DownloadMap.on("change", handler);
             });
-          };
+            return () => {
+              registerPromise.then(() => {
+                DownloadMap.off("change", handler);
+              });
+            };
+          },
         }).api(),
 
-        onCreated: new EventManager(context, "downloads.onCreated", fire => {
-          const handler = (what, item) => {
-            fire.async(item.serialize());
-          };
-          let registerPromise = DownloadMap.getDownloadList().then(() => {
-            DownloadMap.on("create", handler);
-          });
-          return () => {
-            registerPromise.then(() => {
-              DownloadMap.off("create", handler);
+        onCreated: new EventManager({
+          context,
+          name: "downloads.onCreated",
+          register: fire => {
+            const handler = (what, item) => {
+              fire.async(item.serialize());
+            };
+            let registerPromise = DownloadMap.getDownloadList().then(() => {
+              DownloadMap.on("create", handler);
             });
-          };
+            return () => {
+              registerPromise.then(() => {
+                DownloadMap.off("create", handler);
+              });
+            };
+          },
         }).api(),
 
-        onErased: new EventManager(context, "downloads.onErased", fire => {
-          const handler = (what, item) => {
-            fire.async(item.id);
-          };
-          let registerPromise = DownloadMap.getDownloadList().then(() => {
-            DownloadMap.on("erase", handler);
-          });
-          return () => {
-            registerPromise.then(() => {
-              DownloadMap.off("erase", handler);
+        onErased: new EventManager({
+          context,
+          name: "downloads.onErased",
+          register: fire => {
+            const handler = (what, item) => {
+              fire.async(item.id);
+            };
+            let registerPromise = DownloadMap.getDownloadList().then(() => {
+              DownloadMap.on("erase", handler);
             });
-          };
+            return () => {
+              registerPromise.then(() => {
+                DownloadMap.off("erase", handler);
+              });
+            };
+          },
         }).api(),
 
         onDeterminingFilename: ignoreEvent(context, "downloads.onDeterminingFilename"),

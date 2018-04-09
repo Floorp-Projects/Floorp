@@ -179,19 +179,27 @@ class Port {
         this.postMessage(json);
       },
 
-      onDisconnect: new EventManager(this.context, "Port.onDisconnect", fire => {
-        return this.registerOnDisconnect(holder => {
-          let error = holder && holder.deserialize(this.context.cloneScope);
-          portError = error && this.context.normalizeError(error);
-          fire.asyncWithoutClone(portObj);
-        });
+      onDisconnect: new EventManager({
+        context: this.context,
+        name: "Port.onDisconnect",
+        register: fire => {
+          return this.registerOnDisconnect(holder => {
+            let error = holder && holder.deserialize(this.context.cloneScope);
+            portError = error && this.context.normalizeError(error);
+            fire.asyncWithoutClone(portObj);
+          });
+        },
       }).api(),
 
-      onMessage: new EventManager(this.context, "Port.onMessage", fire => {
-        return this.registerOnMessage(holder => {
-          let msg = holder.deserialize(this.context.cloneScope);
-          fire.asyncWithoutClone(msg, portObj);
-        });
+      onMessage: new EventManager({
+        context: this.context,
+        name: "Port.onMessage",
+        register: fire => {
+          return this.registerOnMessage(holder => {
+            let msg = holder.deserialize(this.context.cloneScope);
+            fire.asyncWithoutClone(msg, portObj);
+          });
+        },
       }).api(),
 
       get error() {
@@ -403,63 +411,67 @@ class Messenger {
   }
 
   _onMessage(name, filter) {
-    return new EventManager(this.context, name, fire => {
-      const caller = this.context.getCaller();
+    return new EventManager({
+      context: this.context,
+      name,
+      register: fire => {
+        const caller = this.context.getCaller();
 
-      let listener = {
-        messageFilterPermissive: this.optionalFilter,
-        messageFilterStrict: this.filter,
+        let listener = {
+          messageFilterPermissive: this.optionalFilter,
+          messageFilterStrict: this.filter,
 
-        filterMessage: (sender, recipient) => {
-          // Exclude messages coming from content scripts for the devtools extension contexts
-          // (See Bug 1383310).
-          if (this.excludeContentScriptSender && sender.envType === "content_child") {
-            return false;
-          }
+          filterMessage: (sender, recipient) => {
+            // Exclude messages coming from content scripts for the devtools extension contexts
+            // (See Bug 1383310).
+            if (this.excludeContentScriptSender && sender.envType === "content_child") {
+              return false;
+            }
 
-          // Ignore the message if it was sent by this Messenger.
-          return (sender.contextId !== this.context.contextId &&
-                  filter(sender, recipient));
-        },
+            // Ignore the message if it was sent by this Messenger.
+            return (sender.contextId !== this.context.contextId &&
+                    filter(sender, recipient));
+          },
 
-        receiveMessage: ({target, data: holder, sender, recipient, channelId}) => {
-          if (!this.context.active) {
-            return;
-          }
+          receiveMessage: ({target, data: holder, sender, recipient, channelId}) => {
+            if (!this.context.active) {
+              return;
+            }
 
-          let sendResponse;
-          let response = undefined;
-          let promise = new Promise(resolve => {
-            sendResponse = value => {
-              resolve(value);
-              response = promise;
-            };
-          });
+            let sendResponse;
+            let response = undefined;
+            let promise = new Promise(resolve => {
+              sendResponse = value => {
+                resolve(value);
+                response = promise;
+              };
+            });
 
-          let message = holder.deserialize(this.context.cloneScope);
-          holder = null;
+            let message = holder.deserialize(this.context.cloneScope);
+            holder = null;
 
-          sender = Cu.cloneInto(sender, this.context.cloneScope);
-          sendResponse = Cu.exportFunction(sendResponse, this.context.cloneScope);
+            sender = Cu.cloneInto(sender, this.context.cloneScope);
+            sendResponse = Cu.exportFunction(sendResponse, this.context.cloneScope);
 
-          // Note: We intentionally do not use runSafe here so that any
-          // errors are propagated to the message sender.
-          let result = fire.raw(message, sender, sendResponse);
-          message = null;
+            // Note: We intentionally do not use runSafe here so that any
+            // errors are propagated to the message sender.
+            let result = fire.raw(message, sender, sendResponse);
+            message = null;
 
-          if (result instanceof this.context.cloneScope.Promise) {
-            return StrongPromise.wrap(result, channelId, caller);
-          } else if (result === true) {
-            return StrongPromise.wrap(promise, channelId, caller);
-          }
-          return response;
-        },
-      };
+            if (result instanceof this.context.cloneScope.Promise) {
+              return StrongPromise.wrap(result, channelId, caller);
+            } else if (result === true) {
+              return StrongPromise.wrap(promise, channelId, caller);
+            }
+            return response;
+          },
+        };
 
-      MessageChannel.addListener(this.messageManagers, "Extension:Message", listener);
-      return () => {
-        MessageChannel.removeListener(this.messageManagers, "Extension:Message", listener);
-      };
+        MessageChannel.addListener(this.messageManagers, "Extension:Message", listener);
+        return () => {
+          MessageChannel.removeListener(this.messageManagers, "Extension:Message", listener);
+        };
+      },
     }).api();
   }
 
@@ -506,41 +518,45 @@ class Messenger {
   }
 
   _onConnect(name, filter) {
-    return new EventManager(this.context, name, fire => {
-      let listener = {
-        messageFilterPermissive: this.optionalFilter,
-        messageFilterStrict: this.filter,
+    return new EventManager({
+      context: this.context,
+      name,
+      register: fire => {
+        let listener = {
+          messageFilterPermissive: this.optionalFilter,
+          messageFilterStrict: this.filter,
 
-        filterMessage: (sender, recipient) => {
-          // Exclude messages coming from content scripts for the devtools extension contexts
-          // (See Bug 1383310).
-          if (this.excludeContentScriptSender && sender.envType === "content_child") {
-            return false;
-          }
+          filterMessage: (sender, recipient) => {
+            // Exclude messages coming from content scripts for the devtools extension contexts
+            // (See Bug 1383310).
+            if (this.excludeContentScriptSender && sender.envType === "content_child") {
+              return false;
+            }
 
-          // Ignore the port if it was created by this Messenger.
-          return (sender.contextId !== this.context.contextId &&
-                  filter(sender, recipient));
-        },
+            // Ignore the port if it was created by this Messenger.
+            return (sender.contextId !== this.context.contextId &&
+                    filter(sender, recipient));
+          },
 
-        receiveMessage: ({target, data: message, sender}) => {
-          let {name, portId} = message;
-          let mm = getMessageManager(target);
-          let recipient = Object.assign({}, sender);
-          if (recipient.tab) {
-            recipient.tabId = recipient.tab.id;
-            delete recipient.tab;
-          }
-          let port = new Port(this.context, mm, this.messageManagers, name, portId, sender, recipient);
-          fire.asyncWithoutClone(port.api());
-          return true;
-        },
-      };
+          receiveMessage: ({target, data: message, sender}) => {
+            let {name, portId} = message;
+            let mm = getMessageManager(target);
+            let recipient = Object.assign({}, sender);
+            if (recipient.tab) {
+              recipient.tabId = recipient.tab.id;
+              delete recipient.tab;
+            }
+            let port = new Port(this.context, mm, this.messageManagers, name, portId, sender, recipient);
+            fire.asyncWithoutClone(port.api());
+            return true;
+          },
+        };
 
-      MessageChannel.addListener(this.messageManagers, "Extension:Connect", listener);
-      return () => {
-        MessageChannel.removeListener(this.messageManagers, "Extension:Connect", listener);
-      };
+        MessageChannel.addListener(this.messageManagers, "Extension:Connect", listener);
+        return () => {
+          MessageChannel.removeListener(this.messageManagers, "Extension:Connect", listener);
+        };
+      },
     }).api();
   }
 

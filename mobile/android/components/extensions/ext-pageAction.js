@@ -232,14 +232,18 @@ this.pageAction = class extends ExtensionAPI {
 
     return {
       pageAction: {
-        onClicked: new EventManager(context, "pageAction.onClicked", fire => {
-          let listener = (event, tab) => {
-            fire.async(tabManager.convert(tab));
-          };
-          pageActionMap.get(extension).on("click", listener);
-          return () => {
-            pageActionMap.get(extension).off("click", listener);
-          };
+        onClicked: new EventManager({
+          context,
+          name: "pageAction.onClicked",
+          register: fire => {
+            let listener = (event, tab) => {
+              fire.async(tabManager.convert(tab));
+            };
+            pageActionMap.get(extension).on("click", listener);
+            return () => {
+              pageActionMap.get(extension).off("click", listener);
+            };
+          },
         }).api(),
 
         show(tabId) {
