@@ -200,8 +200,12 @@ public class GeckoSession extends LayerSession
                                     throw new IllegalArgumentException("Must use an unopened GeckoSession instance");
                                 }
 
-                                session.open(null);
-                                callback.sendSuccess(session.getId());
+                                if (GeckoSession.this.mWindow == null) {
+                                    callback.sendError("Session is not attached to a window");
+                                } else {
+                                    session.open(GeckoSession.this.mWindow.runtime);
+                                    callback.sendSuccess(session.getId());
+                                }
                             }
                         });
                 }
@@ -467,10 +471,13 @@ public class GeckoSession extends LayerSession
     private final Listener mListener = new Listener();
 
     /* package */ static final class Window extends JNIObject implements IInterface {
+        public final GeckoRuntime runtime;
         private NativeQueue mNativeQueue;
         private Binder mBinder;
 
-        public Window(final NativeQueue nativeQueue) {
+        public Window(final @NonNull GeckoRuntime runtime,
+                      final @NonNull NativeQueue nativeQueue) {
+            this.runtime = runtime;
             mNativeQueue = nativeQueue;
         }
 
@@ -618,7 +625,7 @@ public class GeckoSession extends LayerSession
         this(null);
     }
 
-    public GeckoSession(final GeckoSessionSettings settings) {
+    public GeckoSession(final @Nullable GeckoSessionSettings settings) {
         mSettings = new GeckoSessionSettings(settings, this);
         mListener.registerListeners();
 
@@ -627,7 +634,15 @@ public class GeckoSession extends LayerSession
         }
     }
 
-    private void transferFrom(final Window window, final GeckoSessionSettings settings,
+    /* package */ @Nullable GeckoRuntime getRuntime() {
+        if (mWindow == null) {
+            return null;
+        }
+        return mWindow.runtime;
+    }
+
+    private void transferFrom(final Window window,
+                              final GeckoSessionSettings settings,
                               final String id) {
         if (isOpen()) {
             throw new IllegalStateException("Session is open");
@@ -701,43 +716,6 @@ public class GeckoSession extends LayerSession
         }
     };
 
-    /**
-     * Preload GeckoSession by starting Gecko in the background, if Gecko is not already running.
-     *
-     * @param context Activity or Application Context for starting GeckoSession.
-     */
-    public static void preload(final @NonNull Context context) {
-        preload(context, /* geckoArgs */ null,
-                /* extras */ null, /* multiprocess */ false);
-    }
-
-    /**
-     * Preload GeckoSession by starting Gecko with the specified arguments in the background,
-     * if Gecko is not already running.
-     *
-     * @param context Activity or Application Context for starting GeckoSession.
-     * @param geckoArgs Arguments to be passed to Gecko, if Gecko is not already running.
-     * @param multiprocess True if child process in multiprocess mode should be preloaded.
-     */
-    public static void preload(final @NonNull Context context,
-                               final @Nullable String[] geckoArgs,
-                               final @Nullable Bundle extras,
-                               final boolean multiprocess) {
-        final Context appContext = context.getApplicationContext();
-        if (!appContext.equals(GeckoAppShell.getApplicationContext())) {
-            GeckoAppShell.setApplicationContext(appContext);
-        }
-
-        if (GeckoThread.isLaunched()) {
-            return;
-        }
-
-        final int flags = multiprocess ? GeckoThread.FLAG_PRELOAD_CHILD : 0;
-        if (GeckoThread.initMainProcess(/* profile */ null, geckoArgs, extras, flags)) {
-            GeckoThread.launch();
-        }
-    }
-
     public boolean isOpen() {
         return mWindow != null;
     }
@@ -757,30 +735,24 @@ public class GeckoSession extends LayerSession
      *
      * Call this when you are ready to use a GeckoSession instance.
      *
-     * @param appContext An application context
+     * @param runtime The Gecko runtime to attach this session to.
      */
-    public void open(final @Nullable Context appContext) {
+    public void open(final @NonNull GeckoRuntime runtime) {
         ThreadUtils.assertOnUiThread();
 
         if (isOpen()) {
             throw new IllegalStateException("Session is open");
         }
 
-        if (appContext != null) {
-            final boolean multiprocess =
-                    mSettings.getBoolean(GeckoSessionSettings.USE_MULTIPROCESS);
-            preload(appContext, /* geckoArgs */ null, /* extras */ null, multiprocess);
-        }
-
-        openWindow();
+        openWindow(runtime);
     }
 
-    private void openWindow() {
+    private void openWindow(final @NonNull GeckoRuntime runtime) {
         final String chromeUri = mSettings.getString(GeckoSessionSettings.CHROME_URI);
         final int screenId = mSettings.getInt(GeckoSessionSettings.SCREEN_ID);
         final boolean isPrivate = mSettings.getBoolean(GeckoSessionSettings.USE_PRIVATE_MODE);
 
-        mWindow = new Window(mNativeQueue);
+        mWindow = new Window(runtime, mNativeQueue);
 
         onWindowChanged(WINDOW_OPEN, /* inProgress */ true);
 

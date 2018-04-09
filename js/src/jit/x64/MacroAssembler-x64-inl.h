@@ -856,7 +856,6 @@ void
 MacroAssembler::spectreBoundsCheck32(Register index, Register length, Register maybeScratch,
                                      Label* failure)
 {
-    MOZ_ASSERT(index != length);
     MOZ_ASSERT(length != maybeScratch);
     MOZ_ASSERT(index != maybeScratch);
 
