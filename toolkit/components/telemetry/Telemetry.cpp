@@ -1815,7 +1815,15 @@ TelemetryImpl::RegisterEvents(const nsACString& aCategory,
                               JS::Handle<JS::Value> aEventData,
                               JSContext* cx)
 {
-  return TelemetryEvent::RegisterEvents(aCategory, aEventData, cx);
+  return TelemetryEvent::RegisterEvents(aCategory, aEventData, false, cx);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::RegisterBuiltinEvents(const nsACString& aCategory,
+                              JS::Handle<JS::Value> aEventData,
+                              JSContext* cx)
+{
+  return TelemetryEvent::RegisterEvents(aCategory, aEventData, true, cx);
 }
 
 NS_IMETHODIMP
