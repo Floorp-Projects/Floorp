@@ -2850,7 +2850,6 @@ GetNormalLineHeight(nsFontMetrics* aFontMetrics)
 
 static inline nscoord
 ComputeLineHeight(ComputedStyle* aComputedStyle,
-                  nsPresContext* aPresContext,
                   nscoord aBlockBSize,
                   float aFontSizeInflation)
 {
@@ -2884,7 +2883,7 @@ ComputeLineHeight(ComputedStyle* aComputedStyle,
   }
 
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::
-    GetFontMetricsForComputedStyle(aComputedStyle, aPresContext, aFontSizeInflation);
+    GetFontMetricsForComputedStyle(aComputedStyle, aFontSizeInflation);
   return GetNormalLineHeight(fm);
 }
 
@@ -2895,27 +2894,20 @@ ReflowInput::CalcLineHeight() const
     nsLayoutUtils::IsNonWrapperBlock(mFrame) ? ComputedBSize() :
     (mCBReflowInput ? mCBReflowInput->ComputedBSize() : NS_AUTOHEIGHT);
 
-  return CalcLineHeight(mFrame->GetContent(),
-                        mFrame->Style(),
-                        mFrame->PresContext(),
-                        blockBSize,
+  return CalcLineHeight(mFrame->GetContent(), mFrame->Style(), blockBSize,
                         nsLayoutUtils::FontSizeInflationFor(mFrame));
 }
 
 /* static */ nscoord
 ReflowInput::CalcLineHeight(nsIContent* aContent,
-                            ComputedStyle* aComputedStyle,
-                            nsPresContext* aPresContext,
-                            nscoord aBlockBSize,
-                            float aFontSizeInflation)
+                                  ComputedStyle* aComputedStyle,
+                                  nscoord aBlockBSize,
+                                  float aFontSizeInflation)
 {
   NS_PRECONDITION(aComputedStyle, "Must have a ComputedStyle");
 
   nscoord lineHeight =
-    ComputeLineHeight(aComputedStyle,
-                      aPresContext,
-                      aBlockBSize,
-                      aFontSizeInflation);
+    ComputeLineHeight(aComputedStyle, aBlockBSize, aFontSizeInflation);
 
   NS_ASSERTION(lineHeight >= 0, "ComputeLineHeight screwed up");
 

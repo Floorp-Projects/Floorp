@@ -318,7 +318,7 @@ void ComputedStyle::List(FILE* out, int32_t aIndent)
 nsIPresShell*
 ComputedStyle::Arena()
 {
-  return mPresContext->PresShell();
+  return PresContext()->PresShell();
 }
 
 template<typename Func>
