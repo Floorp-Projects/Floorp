@@ -74,8 +74,6 @@ fn visit_derive_input(&mut self, i: &'ast DeriveInput) { visit_derive_input(self
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 fn visit_expr(&mut self, i: &'ast Expr) { visit_expr(self, i) }
 # [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
-fn visit_expr_addr_of(&mut self, i: &'ast ExprAddrOf) { visit_expr_addr_of(self, i) }
-# [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 fn visit_expr_array(&mut self, i: &'ast ExprArray) { visit_expr_array(self, i) }
 # [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 fn visit_expr_assign(&mut self, i: &'ast ExprAssign) { visit_expr_assign(self, i) }
@@ -129,6 +127,8 @@ fn visit_expr_paren(&mut self, i: &'ast ExprParen) { visit_expr_paren(self, i) }
 fn visit_expr_path(&mut self, i: &'ast ExprPath) { visit_expr_path(self, i) }
 # [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 fn visit_expr_range(&mut self, i: &'ast ExprRange) { visit_expr_range(self, i) }
+# [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
+fn visit_expr_reference(&mut self, i: &'ast ExprReference) { visit_expr_reference(self, i) }
 # [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 fn visit_expr_repeat(&mut self, i: &'ast ExprRepeat) { visit_expr_repeat(self, i) }
 # [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
@@ -392,9 +392,13 @@ fn visit_un_op(&mut self, i: &'ast UnOp) { visit_un_op(self, i) }
 # [ cfg ( feature = "full" ) ]
 fn visit_use_glob(&mut self, i: &'ast UseGlob) { visit_use_glob(self, i) }
 # [ cfg ( feature = "full" ) ]
-fn visit_use_list(&mut self, i: &'ast UseList) { visit_use_list(self, i) }
+fn visit_use_group(&mut self, i: &'ast UseGroup) { visit_use_group(self, i) }
+# [ cfg ( feature = "full" ) ]
+fn visit_use_name(&mut self, i: &'ast UseName) { visit_use_name(self, i) }
 # [ cfg ( feature = "full" ) ]
 fn visit_use_path(&mut self, i: &'ast UsePath) { visit_use_path(self, i) }
+# [ cfg ( feature = "full" ) ]
+fn visit_use_rename(&mut self, i: &'ast UseRename) { visit_use_rename(self, i) }
 # [ cfg ( feature = "full" ) ]
 fn visit_use_tree(&mut self, i: &'ast UseTree) { visit_use_tree(self, i) }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
@@ -447,12 +451,13 @@ pub fn visit_arg_self_ref<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ] # [ cfg ( feature = "full" ) ]
 pub fn visit_arm<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast Arm) {
     for it in & _i . attrs { _visitor.visit_attribute(it) };
+    if let Some(ref it) = _i . leading_vert { tokens_helper(_visitor, &(it).0) };
     for el in Punctuated::pairs(& _i . pats) { let it = el.value(); _visitor.visit_pat(it) };
     if let Some(ref it) = _i . guard { 
             tokens_helper(_visitor, &(& ( it ) . 0).0);
             _visitor.visit_expr(& * ( it ) . 1);
          };
-    tokens_helper(_visitor, &(& _i . rocket_token).0);
+    tokens_helper(_visitor, &(& _i . fat_arrow_token).0);
     _visitor.visit_expr(& * _i . body);
     if let Some(ref it) = _i . comma { tokens_helper(_visitor, &(it).0) };
 }
@@ -733,8 +738,8 @@ pub fn visit_expr<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast Exp
         Expr::Path(ref _binding_0, ) => {
             _visitor.visit_expr_path(_binding_0);
         }
-        Expr::AddrOf(ref _binding_0, ) => {
-            full!(_visitor.visit_expr_addr_of(_binding_0));
+        Expr::Reference(ref _binding_0, ) => {
+            full!(_visitor.visit_expr_reference(_binding_0));
         }
         Expr::Break(ref _binding_0, ) => {
             full!(_visitor.visit_expr_break(_binding_0));
@@ -773,13 +778,6 @@ pub fn visit_expr<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast Exp
             _visitor.visit_expr_verbatim(_binding_0);
         }
     }
-}
-# [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
-pub fn visit_expr_addr_of<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast ExprAddrOf) {
-    for it in & _i . attrs { _visitor.visit_attribute(it) };
-    tokens_helper(_visitor, &(& _i . and_token).0);
-    if let Some(ref it) = _i . mutability { tokens_helper(_visitor, &(it).0) };
-    _visitor.visit_expr(& * _i . expr);
 }
 # [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_expr_array<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast ExprArray) {
@@ -850,6 +848,7 @@ pub fn visit_expr_catch<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'a
 # [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_expr_closure<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast ExprClosure) {
     for it in & _i . attrs { _visitor.visit_attribute(it) };
+    if let Some(ref it) = _i . movability { tokens_helper(_visitor, &(it).0) };
     if let Some(ref it) = _i . capture { tokens_helper(_visitor, &(it).0) };
     tokens_helper(_visitor, &(& _i . or1_token).0);
     for el in Punctuated::pairs(& _i . inputs) { let it = el.value(); _visitor.visit_fn_arg(it) };
@@ -902,7 +901,7 @@ pub fn visit_expr_if_let<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'
     for it in & _i . attrs { _visitor.visit_attribute(it) };
     tokens_helper(_visitor, &(& _i . if_token).0);
     tokens_helper(_visitor, &(& _i . let_token).0);
-    _visitor.visit_pat(& * _i . pat);
+    for el in Punctuated::pairs(& _i . pats) { let it = el.value(); _visitor.visit_pat(it) };
     tokens_helper(_visitor, &(& _i . eq_token).0);
     _visitor.visit_expr(& * _i . expr);
     _visitor.visit_block(& _i . then_branch);
@@ -980,6 +979,13 @@ pub fn visit_expr_range<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'a
     if let Some(ref it) = _i . to { _visitor.visit_expr(& * * it) };
 }
 # [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
+pub fn visit_expr_reference<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast ExprReference) {
+    for it in & _i . attrs { _visitor.visit_attribute(it) };
+    tokens_helper(_visitor, &(& _i . and_token).0);
+    if let Some(ref it) = _i . mutability { tokens_helper(_visitor, &(it).0) };
+    _visitor.visit_expr(& * _i . expr);
+}
+# [ cfg ( feature = "full" ) ] # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_expr_repeat<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast ExprRepeat) {
     for it in & _i . attrs { _visitor.visit_attribute(it) };
     tokens_helper(_visitor, &(& _i . bracket_token).0);
@@ -1051,7 +1057,7 @@ pub fn visit_expr_while_let<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i:
     if let Some(ref it) = _i . label { _visitor.visit_label(it) };
     tokens_helper(_visitor, &(& _i . while_token).0);
     tokens_helper(_visitor, &(& _i . let_token).0);
-    _visitor.visit_pat(& * _i . pat);
+    for el in Punctuated::pairs(& _i . pats) { let it = el.value(); _visitor.visit_pat(it) };
     tokens_helper(_visitor, &(& _i . eq_token).0);
     _visitor.visit_expr(& * _i . expr);
     _visitor.visit_block(& _i . body);
@@ -1241,7 +1247,6 @@ pub fn visit_generics<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast
 
 pub fn visit_ident<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast Ident) {
     // Skipped field _i . term;
-    _visitor.visit_span(& _i . span);
 }
 # [ cfg ( feature = "full" ) ]
 pub fn visit_impl_item<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast ImplItem) {
@@ -1526,7 +1531,6 @@ pub fn visit_item_use<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast
     _visitor.visit_visibility(& _i . vis);
     tokens_helper(_visitor, &(& _i . use_token).0);
     if let Some(ref it) = _i . leading_colon { tokens_helper(_visitor, &(it).0) };
-    for el in Punctuated::pairs(& _i . prefix) { let it = el.value(); _visitor.visit_ident(it) };
     _visitor.visit_use_tree(& _i . tree);
     tokens_helper(_visitor, &(& _i . semi_token).0);
 }
@@ -1542,7 +1546,6 @@ pub fn visit_label<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast La
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_lifetime<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast Lifetime) {
     // Skipped field _i . term;
-    _visitor.visit_span(& _i . span);
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_lifetime_def<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast LifetimeDef) {
@@ -1588,43 +1591,36 @@ pub fn visit_lit_bool<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_lit_byte<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast LitByte) {
     // Skipped field _i . token;
-    _visitor.visit_span(& _i . span);
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_lit_byte_str<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast LitByteStr) {
     // Skipped field _i . token;
-    _visitor.visit_span(& _i . span);
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_lit_char<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast LitChar) {
     // Skipped field _i . token;
-    _visitor.visit_span(& _i . span);
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_lit_float<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast LitFloat) {
     // Skipped field _i . token;
-    _visitor.visit_span(& _i . span);
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_lit_int<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast LitInt) {
     // Skipped field _i . token;
-    _visitor.visit_span(& _i . span);
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_lit_str<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast LitStr) {
     // Skipped field _i . token;
-    _visitor.visit_span(& _i . span);
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_lit_verbatim<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast LitVerbatim) {
     // Skipped field _i . token;
-    _visitor.visit_span(& _i . span);
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ] # [ cfg ( feature = "full" ) ]
 pub fn visit_local<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast Local) {
     for it in & _i . attrs { _visitor.visit_attribute(it) };
     tokens_helper(_visitor, &(& _i . let_token).0);
-    _visitor.visit_pat(& * _i . pat);
+    for el in Punctuated::pairs(& _i . pats) { let it = el.value(); _visitor.visit_pat(it) };
     if let Some(ref it) = _i . ty { 
             tokens_helper(_visitor, &(& ( it ) . 0).0);
             _visitor.visit_type(& * ( it ) . 1);
@@ -1939,6 +1935,7 @@ pub fn visit_stmt<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast Stm
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_trait_bound<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast TraitBound) {
+    if let Some(ref it) = _i . paren_token { tokens_helper(_visitor, &(it).0) };
     _visitor.visit_trait_bound_modifier(& _i . modifier);
     if let Some(ref it) = _i . lifetimes { _visitor.visit_bound_lifetimes(it) };
     _visitor.visit_path(& _i . path);
@@ -2188,17 +2185,25 @@ pub fn visit_use_glob<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast
     tokens_helper(_visitor, &(& _i . star_token).0);
 }
 # [ cfg ( feature = "full" ) ]
-pub fn visit_use_list<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast UseList) {
+pub fn visit_use_group<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast UseGroup) {
     tokens_helper(_visitor, &(& _i . brace_token).0);
     for el in Punctuated::pairs(& _i . items) { let it = el.value(); _visitor.visit_use_tree(it) };
 }
 # [ cfg ( feature = "full" ) ]
+pub fn visit_use_name<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast UseName) {
+    _visitor.visit_ident(& _i . ident);
+}
+# [ cfg ( feature = "full" ) ]
 pub fn visit_use_path<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast UsePath) {
     _visitor.visit_ident(& _i . ident);
-    if let Some(ref it) = _i . rename { 
-            tokens_helper(_visitor, &(& ( it ) . 0).0);
-            _visitor.visit_ident(& ( it ) . 1);
-         };
+    tokens_helper(_visitor, &(& _i . colon2_token).0);
+    _visitor.visit_use_tree(& * _i . tree);
+}
+# [ cfg ( feature = "full" ) ]
+pub fn visit_use_rename<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast UseRename) {
+    _visitor.visit_ident(& _i . ident);
+    tokens_helper(_visitor, &(& _i . as_token).0);
+    _visitor.visit_ident(& _i . rename);
 }
 # [ cfg ( feature = "full" ) ]
 pub fn visit_use_tree<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast UseTree) {
@@ -2206,11 +2211,17 @@ pub fn visit_use_tree<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast
         UseTree::Path(ref _binding_0, ) => {
             _visitor.visit_use_path(_binding_0);
         }
+        UseTree::Name(ref _binding_0, ) => {
+            _visitor.visit_use_name(_binding_0);
+        }
+        UseTree::Rename(ref _binding_0, ) => {
+            _visitor.visit_use_rename(_binding_0);
+        }
         UseTree::Glob(ref _binding_0, ) => {
             _visitor.visit_use_glob(_binding_0);
         }
-        UseTree::List(ref _binding_0, ) => {
-            _visitor.visit_use_list(_binding_0);
+        UseTree::Group(ref _binding_0, ) => {
+            _visitor.visit_use_group(_binding_0);
         }
     }
 }
@@ -2226,8 +2237,6 @@ pub fn visit_variant<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast 
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
 pub fn visit_vis_crate<'ast, V: Visit<'ast> + ?Sized>(_visitor: &mut V, _i: &'ast VisCrate) {
-    tokens_helper(_visitor, &(& _i . pub_token).0);
-    tokens_helper(_visitor, &(& _i . paren_token).0);
     tokens_helper(_visitor, &(& _i . crate_token).0);
 }
 # [ cfg ( any ( feature = "full" , feature = "derive" ) ) ]
