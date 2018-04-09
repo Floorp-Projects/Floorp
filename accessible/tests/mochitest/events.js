@@ -1069,7 +1069,7 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs) {
     // Scroll the node into view, otherwise synth click may fail.
     if (isHTMLElement(targetNode)) {
       targetNode.scrollIntoView(true);
-    } else if (targetNode instanceof nsIDOMXULElement) {
+    } else if (ChromeUtils.getClassName(targetNode) == "XULElement") {
       var targetAcc = getAccessible(targetNode);
       targetAcc.scrollTo(SCROLL_TYPE_ANYWHERE);
     }
@@ -1078,7 +1078,7 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs) {
     if (aArgs && ("where" in aArgs) && aArgs.where == "right") {
       if (isHTMLElement(targetNode))
         x = targetNode.offsetWidth - 1;
-      else if (targetNode instanceof nsIDOMXULElement)
+    else if (ChromeUtils.getClassName(targetNode) == "XULElement")
         x = targetNode.boxObject.width - 1;
     }
     synthesizeMouse(targetNode, x, y, aArgs ? aArgs : {});
