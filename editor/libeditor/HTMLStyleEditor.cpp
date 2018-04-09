@@ -366,8 +366,10 @@ HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
     nsresult rv = MoveNode(&aNode, previousSibling, -1);
     NS_ENSURE_SUCCESS(rv, rv);
     if (IsSimpleModifiableNode(nextSibling, &aProperty, aAttribute, &aValue)) {
-      rv = JoinNodes(*previousSibling, *nextSibling);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = JoinNodesWithTransaction(*previousSibling, *nextSibling);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
     return NS_OK;
   }

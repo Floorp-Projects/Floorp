@@ -1543,12 +1543,12 @@ EditorBase::JoinNodes(nsIDOMNode* aLeftNode,
   nsCOMPtr<nsINode> leftNode = do_QueryInterface(aLeftNode);
   nsCOMPtr<nsINode> rightNode = do_QueryInterface(aRightNode);
   NS_ENSURE_STATE(leftNode && rightNode && leftNode->GetParentNode());
-  return JoinNodes(*leftNode, *rightNode);
+  return JoinNodesWithTransaction(*leftNode, *rightNode);
 }
 
 nsresult
-EditorBase::JoinNodes(nsINode& aLeftNode,
-                      nsINode& aRightNode)
+EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
+                                     nsINode& aRightNode)
 {
   nsCOMPtr<nsINode> parent = aLeftNode.GetParentNode();
   MOZ_ASSERT(parent);
@@ -4146,13 +4146,9 @@ EditorBase::SplitNodeDeepWithTransaction(
   return SplitNodeResult(NS_ERROR_FAILURE);
 }
 
-/**
- * This joins two like nodes "deeply", joining children as appropriate.
- * Returns the point of the join, or (nullptr, -1) in case of error.
- */
 EditorDOMPoint
-EditorBase::JoinNodeDeep(nsIContent& aLeftNode,
-                         nsIContent& aRightNode)
+EditorBase::JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
+                                         nsIContent& aRightNode)
 {
   // While the rightmost children and their descendants of the left node match
   // the leftmost children and their descendants of the right node, join them
@@ -4168,7 +4164,7 @@ EditorBase::JoinNodeDeep(nsIContent& aLeftNode,
     uint32_t length = leftNodeToJoin->Length();
 
     // Do the join
-    nsresult rv = JoinNodes(*leftNodeToJoin, *rightNodeToJoin);
+    nsresult rv = JoinNodesWithTransaction(*leftNodeToJoin, *rightNodeToJoin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditorDOMPoint();
     }

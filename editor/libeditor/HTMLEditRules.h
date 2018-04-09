@@ -186,12 +186,13 @@ protected:
                                         nsIEditor::EDirection aAction);
 
   /**
-   * TryToJoinBlocks() tries to join two block elements.  The right element is
-   * always joined to the left element.  If the elements are the same type and
-   * not nested within each other, JoinNodesSmart() is called (example, joining
-   * two list items together into one).  If the elements are not the same type,
-   * or one is a descendant of the other, we instead destroy the right block
-   * placing its children into leftblock.  DTD containment rules are followed
+   * TryToJoinBlocksWithTransaction() tries to join two block elements.  The
+   * right element is always joined to the left element.  If the elements are
+   * the same type and not nested within each other,
+   * JoinEditableNodesWithTransaction() is called (example, joining two list
+   * items together into one).  If the elements are not the same type, or one
+   * is a descendant of the other, we instead destroy the right block placing
+   * its children into leftblock.  DTD containment rules are followed
    * throughout.
    *
    * @return            Sets canceled to true if the operation should do
@@ -202,8 +203,8 @@ protected:
    *                    be joined or it's impossible to join them but it's not
    *                    unexpected case, this returns true with this.
    */
-  EditActionResult TryToJoinBlocks(nsIContent& aLeftNode,
-                                   nsIContent& aRightNode);
+  EditActionResult TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
+                                                  nsIContent& aRightNode);
 
   /**
    * MoveBlock() moves the content from aRightBlock starting from aRightOffset
@@ -459,8 +460,30 @@ protected:
                     nsAtom& aTag,
                     const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode);
 
-  EditorDOMPoint JoinNodesSmart(nsIContent& aNodeLeft,
-                                nsIContent& aNodeRight);
+  /**
+   * JoinNearestEditableNodesWithTransaction() joins two editable nodes which
+   * are themselves or the nearest editable node of aLeftNode and aRightNode.
+   * XXX This method's behavior is odd.  For example, if user types Backspace
+   *     key at the second editable paragraph in this case:
+   *     <div contenteditable>
+   *       <p>first editable paragraph</p>
+   *       <p contenteditable="false">non-editable paragraph</p>
+   *       <p>second editable paragraph</p>
+   *     </div>
+   *     The first editable paragraph's content will be moved into the second
+   *     editable paragraph and the non-editable paragraph becomes the first
+   *     paragraph of the editor.  I don't think that it's expected behavior of
+   *     any users...
+   *
+   * @param aLeftNode   The node which will be removed.
+   * @param aRightNode  The node which will be inserted the content of
+   *                    aLeftNode.
+   * @return            The point at the first child of aRightNode.
+   */
+  EditorDOMPoint
+  JoinNearestEditableNodesWithTransaction(nsIContent& aLeftNode,
+                                          nsIContent& aRightNode);
+
   Element* GetTopEnclosingMailCite(nsINode& aNode);
   nsresult PopListItem(nsIContent& aListItem, bool* aOutOfList = nullptr);
   nsresult RemoveListStructure(Element& aList);
