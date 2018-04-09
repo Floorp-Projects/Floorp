@@ -120,6 +120,14 @@ class WebNavigationEventManager extends EventManager {
           data2.sourceFrameId = data.sourceFrameId;
         }
 
+        // Do not send a webNavigation event when the data.browser is related to a tab from a
+        // new window opened to adopt an existent tab (See Bug 1443221 for a rationale).
+        const chromeWin = data.browser.ownerGlobal;
+        if (chromeWin && chromeWin.arguments && chromeWin.arguments[0] instanceof chromeWin.XULElement &&
+            chromeWin.gBrowser.selectedBrowser === data.browser) {
+          return;
+        }
+
         // Fills in tabId typically.
         Object.assign(data2, tabTracker.getBrowserData(data.browser));
         if (data2.tabId < 0) {
