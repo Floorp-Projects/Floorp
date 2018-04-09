@@ -55,7 +55,6 @@
 #include "nsThreadUtils.h"
 #include "nsIUploadChannel.h"
 #include "nsIUploadChannel2.h"
-#include "nsIDOMSerializer.h"
 #include "nsXPCOM.h"
 #include "nsIDOMEventListener.h"
 #include "nsIScriptSecurityManager.h"
