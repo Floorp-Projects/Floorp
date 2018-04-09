@@ -211,7 +211,8 @@ KeyframeEffectReadOnly::SetKeyframes(
     nsNodeUtils::AnimationChanged(mAnimation);
   }
 
-  // We need to call UpdateProperties() if the StyleType is not nullptr.
+  // We need to call UpdateProperties() unless the target element doesn't have
+  // style (e.g. the target element is not associated with any document).
   if (aStyle) {
     UpdateProperties(aStyle);
     MaybeUpdateFrameForCompositor();
