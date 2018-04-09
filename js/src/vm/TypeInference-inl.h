@@ -36,11 +36,13 @@ namespace js {
 /////////////////////////////////////////////////////////////////////
 
 jit::IonScript*
-RecompileInfo::maybeIonScriptToInvalidate() const
+RecompileInfo::maybeIonScriptToInvalidate(const TypeZone& zone) const
 {
+    MOZ_ASSERT(script_->zone() == zone.zone());
+
     // Make sure this is not called under CodeGenerator::link (before the
     // IonScript is created).
-    MOZ_ASSERT(!TlsContext.get()->runtime()->jitRuntime()->currentCompilationId().isSome());
+    MOZ_ASSERT_IF(zone.currentCompilationId(), zone.currentCompilationId().ref() != id_);
 
     if (!script_->hasIonScript() || script_->ionScript()->compilationId() != id_)
         return nullptr;
@@ -49,11 +51,19 @@ RecompileInfo::maybeIonScriptToInvalidate() const
 }
 
 inline bool
-RecompileInfo::shouldSweep()
+RecompileInfo::shouldSweep(const TypeZone& zone)
 {
     if (IsAboutToBeFinalizedUnbarriered(&script_))
         return true;
-    return maybeIonScriptToInvalidate() == nullptr;
+
+    MOZ_ASSERT(script_->zone() == zone.zone());
+
+    // Don't sweep if we're called under CodeGenerator::link, before the
+    // IonScript is created.
+    if (zone.currentCompilationId() && zone.currentCompilationId().ref() == id_)
+        return false;
+
+    return maybeIonScriptToInvalidate(zone) == nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////

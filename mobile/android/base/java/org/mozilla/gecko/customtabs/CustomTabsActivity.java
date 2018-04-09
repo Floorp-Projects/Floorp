@@ -58,6 +58,7 @@ import org.mozilla.gecko.util.PackageUtil;
 import org.mozilla.gecko.webapps.WebApps;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
+import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
@@ -125,12 +126,18 @@ public class CustomTabsActivity extends AppCompatActivity
 
         GeckoAccessibility.setDelegate(mGeckoView);
 
-        mGeckoSession = new GeckoSession();
-        mGeckoView.setSession(mGeckoSession);
-
+        final GeckoSessionSettings settings = new GeckoSessionSettings();
+        settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
+        settings.setBoolean(
+            GeckoSessionSettings.USE_REMOTE_DEBUGGER,
+            GeckoSharedPrefs.forApp(this).getBoolean(
+                GeckoPreferences.PREFS_DEVTOOLS_REMOTE_USB_ENABLED, false));
+        mGeckoSession = new GeckoSession(settings);
         mGeckoSession.setNavigationDelegate(this);
         mGeckoSession.setProgressDelegate(this);
         mGeckoSession.setContentDelegate(this);
+
+        mGeckoView.setSession(mGeckoSession, GeckoRuntime.getDefault(this));
 
         mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
         mDoorHangerPopup = new DoorHangerPopup(this, mGeckoView.getEventDispatcher());
@@ -140,13 +147,6 @@ public class CustomTabsActivity extends AppCompatActivity
 
         mTextSelection = TextSelection.Factory.create(mGeckoView, this);
         mTextSelection.create();
-
-        final GeckoSessionSettings settings = mGeckoView.getSettings();
-        settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
-        settings.setBoolean(
-            GeckoSessionSettings.USE_REMOTE_DEBUGGER,
-            GeckoSharedPrefs.forApp(this).getBoolean(
-                GeckoPreferences.PREFS_DEVTOOLS_REMOTE_USB_ENABLED, false));
 
         if (intent != null && !TextUtils.isEmpty(intent.getDataString())) {
             mGeckoSession.loadUri(intent.getDataString());

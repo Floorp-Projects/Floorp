@@ -87,6 +87,7 @@
 #include "ServiceWorkerUnregisterJob.h"
 #include "ServiceWorkerUpdateJob.h"
 #include "ServiceWorkerUpdaterChild.h"
+#include "ServiceWorkerUtils.h"
 
 #ifdef PostMessage
 #undef PostMessage
@@ -196,26 +197,27 @@ PopulateRegistrationData(nsIPrincipal* aPrincipal,
 
   aData.scope() = aRegistration->Scope();
 
-  RefPtr<ServiceWorkerInfo> newest = aRegistration->Newest();
-  if (NS_WARN_IF(!newest)) {
+  // TODO: When bug 1426401 is implemented we will need to handle more
+  //       than just the active worker here.
+  RefPtr<ServiceWorkerInfo> active = aRegistration->GetActive();
+  MOZ_ASSERT(active);
+  if (NS_WARN_IF(!active)) {
     return NS_ERROR_FAILURE;
   }
 
-  if (aRegistration->GetActive()) {
-    aData.currentWorkerURL() = aRegistration->GetActive()->ScriptSpec();
-    aData.cacheName() = aRegistration->GetActive()->CacheName();
-    aData.currentWorkerHandlesFetch() = aRegistration->GetActive()->HandlesFetch();
+  aData.currentWorkerURL() = active->ScriptSpec();
+  aData.cacheName() = active->CacheName();
+  aData.currentWorkerHandlesFetch() = active->HandlesFetch();
 
-    aData.currentWorkerInstalledTime() =
-      aRegistration->GetActive()->GetInstalledTime();
-    aData.currentWorkerActivatedTime() =
-      aRegistration->GetActive()->GetActivatedTime();
-  }
+  aData.currentWorkerInstalledTime() = active->GetInstalledTime();
+  aData.currentWorkerActivatedTime() = active->GetActivatedTime();
 
   aData.updateViaCache() =
     static_cast<uint32_t>(aRegistration->GetUpdateViaCache());
 
   aData.lastUpdateTime() = aRegistration->GetLastUpdateTime();
+
+  MOZ_ASSERT(ServiceWorkerRegistrationDataIsValid(aData));
 
   return NS_OK;
 }

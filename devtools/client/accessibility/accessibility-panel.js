@@ -141,6 +141,10 @@ AccessibilityPanel.prototype = {
     this.postContentMessage("selectAccessible", this._walker, accessibleFront);
   },
 
+  selectAccessibleForNode(nodeFront) {
+    this.postContentMessage("selectNodeAccessible", this._walker, nodeFront);
+  },
+
   highlightAccessible(accessibleFront) {
     this.postContentMessage("highlightAccessible", this._walker, accessibleFront);
   },

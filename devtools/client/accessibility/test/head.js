@@ -99,6 +99,7 @@ async function addTestTab(url) {
     browser: tab.linkedBrowser,
     panel,
     win,
+    toolbox: panel._toolbox,
     doc,
     store
   };
@@ -108,10 +109,14 @@ async function addTestTab(url) {
  * Turn off accessibility features from within the panel. We call it before the
  * cleanup function to make sure that the panel is still present.
  */
-function disableAccessibilityInspector(env) {
-  let { doc, win } = env;
+async function disableAccessibilityInspector(env) {
+  let { doc, win, panel } = env;
+  // Disable accessibility service through the panel and wait for the shutdown
+  // event.
+  let shutdown = panel._front.once("shutdown");
   EventUtils.sendMouseEvent({ type: "click" },
     doc.getElementById("accessibility-disable-button"), win);
+  await shutdown;
 }
 
 /**
@@ -242,7 +247,7 @@ async function runA11yPanelTests(tests, env) {
  * @return {String}     built URL
  */
 function buildURL(uri) {
-  return `data:text/html,${encodeURIComponent(uri)}`;
+  return `data:text/html;charset=UTF-8,${encodeURIComponent(uri)}`;
 }
 
 /**
@@ -260,15 +265,22 @@ function buildURL(uri) {
  * @param {String}  msg    a message that is printed for the test
  */
 function addA11yPanelTestsTask(tests, uri, msg) {
-  tests.push({
-    desc: "Disable accessibility inspector.",
-    action: env => disableAccessibilityInspector(env),
-    expected: {}
-  });
-  add_task(async function a11yPanelTests() {
+  addA11YPanelTask(msg, uri, env => runA11yPanelTests(tests, env));
+}
+
+/**
+ * A wrapper function around add_task that sets up the test environment, runs
+ * the test and then disables accessibility tools.
+ * @param {String}   msg    a message that is printed for the test
+ * @param {String}   uri    test URL
+ * @param {Function} task   task function containing the tests.
+ */
+function addA11YPanelTask(msg, uri, task) {
+  add_task(async function a11YPanelTask() {
     info(msg);
     let env = await addTestTab(buildURL(uri));
-    await runA11yPanelTests(tests, env);
+    await task(env);
+    await disableAccessibilityInspector(env);
   });
 }
 

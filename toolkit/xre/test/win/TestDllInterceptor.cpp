@@ -436,6 +436,20 @@ bool TestTlsFree(void* aFunc)
   return sTlsIndex != 0 && patchedTlsFree(sTlsIndex);
 }
 
+bool TestCloseHandle(void* aFunc)
+{
+  auto patchedCloseHandle =
+    reinterpret_cast<decltype(&CloseHandle)>(aFunc);
+  return patchedCloseHandle(0) == FALSE;
+}
+
+bool TestDuplicateHandle(void* aFunc)
+{
+  auto patchedDuplicateHandle =
+    reinterpret_cast<decltype(&DuplicateHandle)>(aFunc);
+  return patchedDuplicateHandle(0, 0, 0, 0, 0, 0, 0) == FALSE;
+}
+
 bool TestPrintDlgW(void* aFunc)
 {
   auto patchedPrintDlgW =
@@ -694,6 +708,8 @@ int main()
       TestHook(TestSetCursorPos, "user32.dll", "SetCursorPos") &&
       TestHook(TestTlsAlloc, "kernel32.dll", "TlsAlloc") &&
       TestHook(TestTlsFree, "kernel32.dll", "TlsFree") &&
+      TestHook(TestCloseHandle, "kernel32.dll", "CloseHandle") &&
+      TestHook(TestDuplicateHandle, "kernel32.dll", "DuplicateHandle") &&
 
       TestHook(TestInternetOpenA, "wininet.dll", "InternetOpenA") &&
       TestHook(TestInternetCloseHandle, "wininet.dll", "InternetCloseHandle") &&

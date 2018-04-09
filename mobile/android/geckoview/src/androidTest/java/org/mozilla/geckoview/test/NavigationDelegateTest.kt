@@ -356,7 +356,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onNewSession(session: GeckoSession, uri: String, response: GeckoSession.Response<GeckoSession>) {
-                var newSession = GeckoSession(session.settings)
+                val newSession = sessionRule.createClosedSession(session.settings)
                 newSession.open()
                 response.respond(newSession)
             }

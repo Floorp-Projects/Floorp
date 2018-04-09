@@ -10140,7 +10140,7 @@ nsContentUtils::UnregisterUnresolvedElement(Element* aElement)
 {
   MOZ_ASSERT(aElement);
 
-  RefPtr<nsAtom> typeAtom =
+  nsAtom* typeAtom =
     aElement->GetCustomElementData()->GetCustomElementType();
   nsIDocument* doc = aElement->OwnerDoc();
   nsPIDOMWindowInner* window(doc->GetInnerWindow());
@@ -10148,7 +10148,7 @@ nsContentUtils::UnregisterUnresolvedElement(Element* aElement)
     return;
   }
 
-  RefPtr<CustomElementRegistry> registry(window->CustomElements());
+  CustomElementRegistry* registry = window->CustomElements();
   if (!registry) {
     return;
   }
