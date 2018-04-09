@@ -531,8 +531,7 @@ def GetFilePathListForDir(baseDir):
 
 if __name__ == '__main__':
     file_dir = Path(__file__).parent
-    cwd = Path.cwd()
-    assert cwd.samefile(file_dir), 'Run this file from its directory.'
+    os.chdir(file_dir)
 
     testEntryList = GetTestList()
     wrapperPathStrList = WriteWrappers(testEntryList)
