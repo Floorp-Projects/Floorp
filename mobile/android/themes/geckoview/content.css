@@ -21,7 +21,6 @@ xul|scrollbar[root="true"] {
 
 xul|scrollbar {
   -moz-appearance: none !important;
-  -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbar");
   background-color: transparent !important;
   background-image: none !important;
   border: 0px solid transparent !important;

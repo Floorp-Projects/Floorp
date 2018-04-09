@@ -89,7 +89,6 @@ toolkit.jar:
    content/global/bindings/resizer.xml         (widgets/resizer.xml)
    content/global/bindings/richlistbox.xml     (widgets/richlistbox.xml)
    content/global/bindings/scale.xml           (widgets/scale.xml)
-   content/global/bindings/scrollbar.xml       (widgets/scrollbar.xml)
    content/global/bindings/scrollbox.xml       (widgets/scrollbox.xml)
    content/global/bindings/spinner.js          (widgets/spinner.js)
    content/global/bindings/stringbundle.xml    (widgets/stringbundle.xml)
