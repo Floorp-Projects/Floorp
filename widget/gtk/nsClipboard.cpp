@@ -396,6 +396,8 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
 
   int targetNums;
   GdkAtom* targets = mContext->GetTargets(aWhichClipboard, &targetNums);
+  if (!targets)
+      return NS_OK;
 
   // Walk through the provided types and try to match it to a
   // provided type.
