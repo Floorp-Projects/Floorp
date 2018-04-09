@@ -7,6 +7,7 @@
 #include <functional>
 #include <stdint.h>
 
+#include "CubebUtils.h"
 #include "ImageContainer.h"
 #include "MediaContainerType.h"
 #include "MediaPrefs.h"
@@ -167,7 +168,8 @@ void DownmixStereoToMono(mozilla::AudioDataValue* aBuffer,
   }
 }
 
-uint32_t DecideAudioPlaybackChannels(const AudioInfo& info)
+uint32_t
+DecideAudioPlaybackChannels(const AudioInfo& info)
 {
   if (MediaPrefs::MonoAudio()) {
     return 1;
@@ -178,6 +180,12 @@ uint32_t DecideAudioPlaybackChannels(const AudioInfo& info)
   }
 
   return info.mChannels;
+}
+
+bool
+IsDefaultPlaybackDeviceMono()
+{
+  return CubebUtils::MaxNumberOfChannels() == 1;
 }
 
 bool
