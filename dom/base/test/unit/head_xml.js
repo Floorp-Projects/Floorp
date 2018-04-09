@@ -13,11 +13,12 @@ const nsIFileInputStream   = I.nsIFileInputStream;
 const nsIInputStream       = I.nsIInputStream;
 
 const nsIDOMParser         = I.nsIDOMParser;
-const nsIDOMSerializer     = I.nsIDOMSerializer;
 const nsIDOMDocument       = I.nsIDOMDocument;
 const nsIDOMElement        = I.nsIDOMElement;
 const nsIDOMNode           = I.nsIDOMNode;
 const nsIDOMNodeList       = I.nsIDOMNodeList;
+
+Cu.importGlobalProperties(["XMLSerializer"]);
 
 function DOMParser() {
   var parser = C["@mozilla.org/xmlextras/domparser;1"].createInstance(nsIDOMParser);
@@ -58,8 +59,7 @@ function ParseXML(data) {
 }
 
 function DOMSerializer() {
-  return C["@mozilla.org/xmlextras/xmlserializer;1"]
-          .createInstance(nsIDOMSerializer);
+  return new XMLSerializer();
 }
 
 function SerializeXML(node) {
