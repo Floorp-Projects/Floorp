@@ -969,6 +969,102 @@ devtools.responsive:
       - main
     release_channel_collection: opt-out
 
+devtools.tool:
+  registered:
+    bug_numbers:
+      - 1447302
+    description: >
+      Recorded on enable tool checkbox check/uncheck in Developer Tools options
+      panel. Boolean stating if the tool was enabled or disabled by the user.
+      Keyed by tool id. Current default tools with their id's are defined in
+      https://dxr.mozilla.org/mozilla-central/source/devtools/client/definitions.js
+    expires: "65"
+    kind: boolean
+    keyed: true
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - yzenevich@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.accessibility:
+  node_inspected_count:
+    bug_numbers:
+      - 1447302
+    description: >
+      Number of times a DOM node was inspected from within the Accessibility
+      tool.
+    expires: "65"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - yzenevich@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  opened_count:
+    bug_numbers:
+      - 1447302
+    description: >
+      Number of times the DevTools Accessibility tool has been opened.
+    expires: "65"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - yzenevich@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  picker_used_count:
+    bug_numbers:
+      - 1447302
+    description: >
+      Number of times the picker tool has been used in DevTools Accessibility
+      panel.
+    expires: "65"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - yzenevich@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  select_accessible_for_node:
+    bug_numbers:
+      - 1447302
+    description: >
+      Number of times an accessible object was inspected from outside the
+      Accessibility tool (navigation to Accessibility panel). Keyed by the
+      source of user action (inspector context menu, browser context menu, etc).
+    expires: "65"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - yzenevich@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  service_enabled_count:
+    bug_numbers:
+      - 1447302
+    description: >
+      Number of times platform accessibility has been enabled in DevTools
+      Accessibility panel.
+    expires: "65"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - yzenevich@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 navigator.storage:
   estimate_count:
     bug_numbers:

@@ -223,6 +223,10 @@ OptionsPanel.prototype = {
 
       if (!tool.isWebExtension) {
         gDevTools.emit(this.checked ? "tool-registered" : "tool-unregistered", tool.id);
+        // Record which tools were registered and unregistered.
+        Services.telemetry.keyedScalarSet("devtools.tool.registered",
+                                          tool.id,
+                                          this.checked);
       }
     };
 

@@ -30,6 +30,10 @@ class Picker {
     return this.toolbox.pickerButton;
   }
 
+  get _telemetry() {
+    return this._panel._telemetry;
+  }
+
   release() {
     this._panel = null;
   }
@@ -136,6 +140,9 @@ class Picker {
     this.pickerButton.isChecked = false;
 
     await this.walker.cancelPick();
+
+    this._telemetry.toolClosed("accessibilityPickerUsed");
+
     this.walker.off("picker-accessible-hovered", this.onPickerAccessibleHovered);
     this.walker.off("picker-accessible-picked", this.onPickerAccessiblePicked);
     this.walker.off("picker-accessible-previewed", this.onPickerAccessiblePreviewed);
@@ -164,6 +171,7 @@ class Picker {
     this.walker.on("picker-accessible-canceled", this.onPickerAccessibleCanceled);
 
     await this.walker.pick(doFocus);
+    this._telemetry.toolOpened("accessibilityPickerUsed");
     this.emit("picker-started");
   }
 

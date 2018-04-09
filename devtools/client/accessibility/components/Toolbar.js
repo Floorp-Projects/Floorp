@@ -50,6 +50,7 @@ class Toolbar extends Component {
   onDisable() {
     let { accessibility, dispatch } = this.props;
     this.setState({ disabling: true });
+
     dispatch(disable(accessibility))
       .then(() => this.setState({ disabling: false }))
       .catch(() => this.setState({ disabling: false }));
