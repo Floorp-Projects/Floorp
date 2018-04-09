@@ -14,7 +14,6 @@ XPIDL_SOURCES += [
     'nsIDOMNode.idl',
     'nsIDOMNodeList.idl',
     'nsIDOMNSEditableElement.idl',
-    'nsIDOMXMLDocument.idl',
 ]
 
 XPIDL_MODULE = 'dom_core'
