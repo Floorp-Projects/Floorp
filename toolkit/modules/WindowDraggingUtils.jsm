@@ -52,7 +52,7 @@ WindowDraggingElement.prototype = {
     return true;
   },
   isPanel() {
-    return this._elem instanceof Ci.nsIDOMXULElement &&
+    return ChromeUtils.getClassName(this._elem) == "XULElement" &&
            this._elem.localName == "panel";
   },
   handleEvent(aEvent) {

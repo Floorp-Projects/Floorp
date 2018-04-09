@@ -175,7 +175,7 @@ function test_getElementsByAttribute()
   // Sadly, DOMParser can't create XULDocument objects.  But at least we have a
   // XULElement!
 
-  Assert.ok(root instanceof nsIDOMXULElement);
+  Assert.equal(ChromeUtils.getClassName(root), "XULElement");
 
   Assert.ok(root.getElementsByAttribute("foo", "foo") instanceof
             nsIDOMNodeList);
@@ -185,10 +185,10 @@ function test_getElementsByAttribute()
   var master3 = doc.getElementById("master3");
   var external = doc.getElementById("external");
 
-  Assert.ok(master1 instanceof nsIDOMXULElement);
-  Assert.ok(master2 instanceof nsIDOMXULElement);
-  Assert.ok(master3 instanceof nsIDOMXULElement);
-  Assert.ok(external instanceof nsIDOMXULElement);
+  Assert.equal(ChromeUtils.getClassName(master1), "XULElement");
+  Assert.equal(ChromeUtils.getClassName(master2), "XULElement");
+  Assert.equal(ChromeUtils.getClassName(master3), "XULElement");
+  Assert.equal(ChromeUtils.getClassName(external), "XULElement");
 
   // Basic tests
   Assert.equal(root.getElementsByAttribute("foo", "foo").length,
@@ -292,7 +292,7 @@ function test_getElementsByAttributeNS()
   // Sadly, DOMParser can't create XULDocument objects.  But at least we have a
   // XULElement!
 
-  Assert.ok(root instanceof nsIDOMXULElement);
+  Assert.equal(ChromeUtils.getClassName(root), "XULElement");
 
   // Check that getElementsByAttributeNS returns a nodelist.
   Assert.ok(root.getElementsByAttributeNS("*", "*", "*") instanceof
@@ -303,10 +303,10 @@ function test_getElementsByAttributeNS()
   var master3 = doc.getElementById("master3");
   var external = doc.getElementById("external");
 
-  Assert.ok(master1 instanceof nsIDOMXULElement);
-  Assert.ok(master2 instanceof nsIDOMXULElement);
-  Assert.ok(master3 instanceof nsIDOMXULElement);
-  Assert.ok(external instanceof nsIDOMXULElement);
+  Assert.equal(ChromeUtils.getClassName(master1), "XULElement");
+  Assert.equal(ChromeUtils.getClassName(master2), "XULElement");
+  Assert.equal(ChromeUtils.getClassName(master3), "XULElement");
+  Assert.equal(ChromeUtils.getClassName(external), "XULElement");
   
   // Test wildcard namespace
   Assert.equal(root.getElementsByAttributeNS("*", "foo", "foo").length,
