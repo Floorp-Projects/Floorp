@@ -18,15 +18,6 @@ interface nsIDOMNode;
 [uuid(9fd4ba15-e67c-4c98-b52c-7715f62c9196)]
 interface nsIDOMSerializer : nsISupports
 {
-  /**
-   * The subtree rooted by the specified element is serialized to
-   * a string.
-   * 
-   * @param root The root of the subtree to be serialized. This could
-   *             be any node, including a Document.
-   * @returns The serialized subtree in the form of a Unicode string
-   */
-  AString serializeToString(in nsIDOMNode root);
 };
 
 %{ C++
