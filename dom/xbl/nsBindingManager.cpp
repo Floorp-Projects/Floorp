@@ -722,27 +722,26 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
 #endif
 
 bool
-nsBindingManager::EnumerateBoundContentProtoBindings(
-  const BoundContentProtoBindingCallback& aCallback) const
+nsBindingManager::EnumerateBoundContentBindings(
+  const BoundContentBindingCallback& aCallback) const
 {
   if (!mBoundContentSet) {
     return true;
   }
 
-  nsTHashtable<nsPtrHashKey<nsXBLPrototypeBinding>> bindings;
+  nsTHashtable<nsPtrHashKey<nsXBLBinding>> bindings;
   for (auto iter = mBoundContentSet->Iter(); !iter.Done(); iter.Next()) {
     nsIContent* boundContent = iter.Get()->GetKey();
     for (nsXBLBinding* binding = boundContent->GetXBLBinding();
          binding;
          binding = binding->GetBaseBinding()) {
-      nsXBLPrototypeBinding* proto = binding->PrototypeBinding();
       // If we have already invoked the callback with a binding, we
       // should have also invoked it for all its base bindings, so we
       // don't need to continue this loop anymore.
-      if (!bindings.EnsureInserted(proto)) {
+      if (!bindings.EnsureInserted(binding)) {
         break;
       }
-      if (!aCallback(proto)) {
+      if (!aCallback(binding)) {
         return false;
       }
     }
@@ -794,8 +793,8 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
 void
 nsBindingManager::AppendAllSheets(nsTArray<StyleSheet*>& aArray)
 {
-  EnumerateBoundContentProtoBindings([&aArray](nsXBLPrototypeBinding* aProto) {
-    aProto->AppendStyleSheetsTo(aArray);
+  EnumerateBoundContentBindings([&aArray](nsXBLBinding* aBinding) {
+    aBinding->PrototypeBinding()->AppendStyleSheetsTo(aArray);
     return true;
   });
 }
