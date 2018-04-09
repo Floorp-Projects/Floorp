@@ -115,9 +115,7 @@ public:
                 CSSPseudoElementType aPseudoType,
                 ServoComputedDataForgotten aComputedValues);
 
-  // FIXME(emilio, bug 548397): This will need to go away. Don't add new callers
-  // of this methed.
-  nsPresContext* PresContextForFrame() const { return mPresContext; }
+  nsPresContext* PresContext() const { return mPresContext; }
   const ServoComputedData* ComputedData() const { return &mSource; }
 
   // These two methods are for use by ArenaRefPtr.

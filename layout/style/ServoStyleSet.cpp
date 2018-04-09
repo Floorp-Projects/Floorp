@@ -1421,7 +1421,7 @@ ServoStyleSet::ResolveStyleLazilyInternal(Element* aElement,
                                mRawSet.get()).Consume();
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(computedValues->PresContextForFrame() == GetPresContext() ||
+  MOZ_DIAGNOSTIC_ASSERT(computedValues->PresContext() == GetPresContext() ||
                         aElement->OwnerDoc()->GetBFCacheEntry());
 
   return computedValues.forget();
