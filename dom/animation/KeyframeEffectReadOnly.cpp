@@ -283,15 +283,6 @@ KeyframeEffectReadOnly::UpdateProperties(const ComputedStyle* aStyle)
 {
   MOZ_ASSERT(aStyle);
 
-  // Skip updating properties when we are composing style.
-  // FIXME: Bug 1324966. Drop this check once we have a function to get
-  // ComputedStyle without resolving animating style.
-  MOZ_DIAGNOSTIC_ASSERT(!mIsComposingStyle,
-                        "Should not be called while processing ComposeStyle()");
-  if (mIsComposingStyle) {
-    return;
-  }
-
   nsTArray<AnimationProperty> properties = BuildProperties(aStyle);
 
   // We need to update base styles even if any properties are not changed at all
@@ -426,15 +417,6 @@ KeyframeEffectReadOnly::ComposeStyle(
   RawServoAnimationValueMap& aComposeResult,
   const nsCSSPropertyIDSet& aPropertiesToSkip)
 {
-  MOZ_DIAGNOSTIC_ASSERT(!mIsComposingStyle,
-                        "Should not be called recursively");
-  if (mIsComposingStyle) {
-    return;
-  }
-
-  AutoRestore<bool> isComposingStyle(mIsComposingStyle);
-  mIsComposingStyle = true;
-
   ComputedTiming computedTiming = GetComputedTiming();
 
   // If the progress is null, we don't have fill data for the current
