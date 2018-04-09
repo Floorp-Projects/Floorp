@@ -8,9 +8,11 @@ function wasmEvalText(str, imports) {
     return new WebAssembly.Instance(m, imports);
 }
 assertEq(wasmEvalText(`(module
-    (global (import "a" "b") (mut i32))
-    (func (export "get") (result i32) get_global 0)
-)`, {  a: { b: 42 }}).exports.get(), 42);
+                        (global (import "a" "b") i32)
+                        (export "g" (global 0))
+                        (func (export "get") (result i32) get_global 0))`,
+                      { a: { b: 42 }}).exports.get(),
+         42);
 for (let v of []) {}
 function testInitExpr(type, initialValue, nextValue, coercion, assertFunc = assertEq) {
     var module = wasmEvalText(`(module
