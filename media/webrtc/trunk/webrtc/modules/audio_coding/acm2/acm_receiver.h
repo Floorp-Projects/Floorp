@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include "webrtc/base/array_view.h"
 #include "webrtc/base/criticalsection.h"
@@ -209,6 +210,7 @@ class AcmReceiver {
   int LastAudioCodec(CodecInst* codec) const;
 
   rtc::Optional<SdpAudioFormat> LastAudioFormat() const;
+  int LastAudioSampleRate() const;
 
   //
   // Get a decoder given its registered payload-type.
@@ -282,6 +284,7 @@ class AcmReceiver {
   Clock* clock_;  // TODO(henrik.lundin) Make const if possible.
   bool resampled_last_output_frame_ GUARDED_BY(crit_sect_);
   rtc::Optional<int> last_packet_sample_rate_hz_ GUARDED_BY(crit_sect_);
+  std::atomic<int> last_audio_format_clockrate_hz_;
 };
 
 }  // namespace acm2
