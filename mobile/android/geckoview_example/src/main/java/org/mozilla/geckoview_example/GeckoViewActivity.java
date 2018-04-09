@@ -17,12 +17,13 @@ import android.view.WindowManager;
 
 import java.util.Locale;
 
-import org.mozilla.gecko.GeckoThread;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoSession.Response;
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.GeckoRuntime;
+import org.mozilla.geckoview.GeckoRuntimeSettings;
 
 public class GeckoViewActivity extends Activity {
     private static final String LOGTAG = "GeckoViewActivity";
@@ -36,6 +37,7 @@ public class GeckoViewActivity extends Activity {
     /* package */ static final int REQUEST_FILE_PICKER = 1;
     private static final int REQUEST_PERMISSIONS = 2;
 
+    private static GeckoRuntime sGeckoRuntime;
     private GeckoSession mGeckoSession;
     private GeckoView mGeckoView;
 
@@ -45,24 +47,32 @@ public class GeckoViewActivity extends Activity {
         Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
               " - application start");
 
-        final String[] geckoArgs;
+        setContentView(R.layout.geckoview_activity);
+        mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
 
-        if (BuildConfig.DEBUG) {
-            // In debug builds, we want to load JavaScript resources fresh with each build.
-            geckoArgs = new String[] { "-purgecaches" };
-        } else {
-            geckoArgs = null;
+        final boolean useMultiprocess =
+            getIntent().getBooleanExtra(USE_MULTIPROCESS_EXTRA, true);
+
+        if (sGeckoRuntime == null) {
+            final GeckoRuntimeSettings geckoSettings = new GeckoRuntimeSettings();
+
+            if (BuildConfig.DEBUG) {
+                // In debug builds, we want to load JavaScript resources fresh with
+                // each build.
+                geckoSettings.setArguments(new String[] { "-purgecaches" });
+            }
+
+            geckoSettings.setUseContentProcessHint(useMultiprocess);
+            geckoSettings.setExtras(getIntent().getExtras());
+            sGeckoRuntime = GeckoRuntime.create(this, geckoSettings);
         }
 
-        final boolean useMultiprocess = getIntent().getBooleanExtra(USE_MULTIPROCESS_EXTRA,
-                                                                    true);
-        GeckoSession.preload(this, geckoArgs, getIntent().getExtras(), useMultiprocess);
+        final GeckoSessionSettings sessionSettings = new GeckoSessionSettings();
+        sessionSettings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS,
+                                   useMultiprocess);
+        mGeckoSession = new GeckoSession(sessionSettings);
 
-        setContentView(R.layout.geckoview_activity);
-
-        mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
-        mGeckoSession = new GeckoSession();
-        mGeckoView.setSession(mGeckoSession);
+        mGeckoView.setSession(mGeckoSession, sGeckoRuntime);
 
         mGeckoSession.setContentDelegate(new MyGeckoViewContent());
         final MyTrackingProtection tp = new MyTrackingProtection();
@@ -77,9 +87,6 @@ public class GeckoViewActivity extends Activity {
         final MyGeckoViewPermission permission = new MyGeckoViewPermission();
         permission.androidPermissionRequestCode = REQUEST_PERMISSIONS;
         mGeckoSession.setPermissionDelegate(permission);
-
-        mGeckoSession.getSettings().setBoolean(GeckoSessionSettings.USE_MULTIPROCESS,
-                                               useMultiprocess);
 
         mGeckoSession.enableTrackingProtection(
               TrackingProtectionDelegate.CATEGORY_AD |
@@ -106,7 +113,9 @@ public class GeckoViewActivity extends Activity {
 
         if (ACTION_SHUTDOWN.equals(intent.getAction())) {
             mKillProcessOnDestroy = true;
-            GeckoThread.forceQuit();
+            if (sGeckoRuntime != null) {
+                sGeckoRuntime.shutdown();
+            }
             finish();
             return;
         }
@@ -125,7 +134,7 @@ public class GeckoViewActivity extends Activity {
     }
 
     private void loadSettings(final Intent intent) {
-        final GeckoSessionSettings settings = mGeckoView.getSettings();
+        final GeckoSessionSettings settings = mGeckoSession.getSettings();
         settings.setBoolean(
             GeckoSessionSettings.USE_REMOTE_DEBUGGER,
             intent.getBooleanExtra(USE_REMOTE_DEBUGGER_EXTRA, false));

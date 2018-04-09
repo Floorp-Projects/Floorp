@@ -358,7 +358,12 @@ nsBrowserContentHandler.prototype = {
         if (isLocal(resolvedURI)) {
           // If the URI is local, we are sure it won't wrongly inherit chrome privs
           let features = "chrome,dialog=no,all" + this.getFeatures(cmdLine);
-          Services.ww.openWindow(null, resolvedURI.spec, "_blank", features, null);
+          // Provide 1 null argument, as openWindow has a different behavior
+          // when the arg count is 0.
+          let argArray = Cc["@mozilla.org/array;1"]
+                           .createInstance(Ci.nsIMutableArray);
+          argArray.appendElement(null);
+          Services.ww.openWindow(null, resolvedURI.spec, "_blank", features, argArray);
           cmdLine.preventDefault = true;
         } else {
           dump("*** Preventing load of web URI as chrome\n");

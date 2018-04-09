@@ -689,6 +689,12 @@ ServiceWorkerRegistrar::ReadData()
 
   // Copy data over to mData.
   for (uint32_t i = 0; i < tmpData.Length(); ++i) {
+    // Older versions could sometimes write out empty, useless entries.
+    // Prune those here.
+    if (!ServiceWorkerRegistrationDataIsValid(tmpData[i])) {
+      continue;
+    }
+
     bool match = false;
     if (dedupe) {
       MOZ_ASSERT(overwrite);
@@ -779,6 +785,7 @@ ServiceWorkerRegistrar::RegisterServiceWorkerInternal(const ServiceWorkerRegistr
   }
 
   if (!found) {
+    MOZ_ASSERT(ServiceWorkerRegistrationDataIsValid(aData));
     mData.AppendElement(aData);
   }
 }
@@ -956,6 +963,12 @@ ServiceWorkerRegistrar::WriteData()
   }
 
   for (uint32_t i = 0, len = data.Length(); i < len; ++i) {
+    // We have an assertion further up the stack, but as a last
+    // resort avoid writing out broken entries here.
+    if (!ServiceWorkerRegistrationDataIsValid(data[i])) {
+      continue;
+    }
+
     const mozilla::ipc::PrincipalInfo& info = data[i].principal();
 
     MOZ_ASSERT(info.type() == mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);

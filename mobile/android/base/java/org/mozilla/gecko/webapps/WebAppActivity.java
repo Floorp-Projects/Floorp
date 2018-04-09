@@ -38,6 +38,7 @@ import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.widget.ActionModePresenter;
+import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
@@ -91,8 +92,14 @@ public class WebAppActivity extends AppCompatActivity
         setContentView(R.layout.webapp_activity);
         mGeckoView = (GeckoView) findViewById(R.id.pwa_gecko_view);
 
-        mGeckoSession = new GeckoSession();
-        mGeckoView.setSession(mGeckoSession);
+        final GeckoSessionSettings settings = new GeckoSessionSettings();
+        settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
+        settings.setBoolean(
+            GeckoSessionSettings.USE_REMOTE_DEBUGGER,
+            GeckoSharedPrefs.forApp(this).getBoolean(
+                GeckoPreferences.PREFS_DEVTOOLS_REMOTE_USB_ENABLED, false));
+        mGeckoSession = new GeckoSession(settings);
+        mGeckoView.setSession(mGeckoSession, GeckoRuntime.getDefault(this));
 
         mGeckoSession.setNavigationDelegate(this);
         mGeckoSession.setContentDelegate(this);
@@ -146,13 +153,6 @@ public class WebAppActivity extends AppCompatActivity
 
         mTextSelection = TextSelection.Factory.create(mGeckoView, this);
         mTextSelection.create();
-
-        final GeckoSessionSettings settings = mGeckoView.getSettings();
-        settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
-        settings.setBoolean(
-            GeckoSessionSettings.USE_REMOTE_DEBUGGER,
-            GeckoSharedPrefs.forApp(this).getBoolean(
-                GeckoPreferences.PREFS_DEVTOOLS_REMOTE_USB_ENABLED, false));
 
         try {
             mManifest = WebAppManifest.fromFile(getIntent().getStringExtra(MANIFEST_URL),
@@ -320,7 +320,7 @@ public class WebAppActivity extends AppCompatActivity
                 break;
         }
 
-        mGeckoView.getSettings().setInt(GeckoSessionSettings.DISPLAY_MODE, mode);
+        mGeckoSession.getSettings().setInt(GeckoSessionSettings.DISPLAY_MODE, mode);
     }
 
     @Override // GeckoSession.NavigationDelegate

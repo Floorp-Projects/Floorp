@@ -1566,6 +1566,8 @@ Inspector.prototype = {
       click: () => this.showDOMProperties(),
     }));
 
+    this.buildA11YMenuItem(menu);
+
     let nodeLinkMenuItems = this._getNodeLinkMenuItems();
     if (nodeLinkMenuItems.filter(item => item.visible).length > 0) {
       menu.append(new MenuItem({
@@ -1580,6 +1582,38 @@ Inspector.prototype = {
 
     menu.popup(screenX, screenY, this._toolbox);
     return menu;
+  },
+
+  buildA11YMenuItem: function(menu) {
+    if (!this.selection.isElementNode() ||
+        !Services.prefs.getBoolPref("devtools.accessibility.enabled")) {
+      return;
+    }
+
+    const showA11YPropsItem = new MenuItem({
+      id: "node-menu-showaccessibilityproperties",
+      label: INSPECTOR_L10N.getStr("inspectorShowAccessibilityProperties.label"),
+      click: () => this.showAccessibilityProperties(),
+      disabled: true
+    });
+    this._updateA11YMenuItem(showA11YPropsItem);
+    menu.append(showA11YPropsItem);
+  },
+
+  _updateA11YMenuItem: async function(menuItem) {
+    const hasMethod = await this.target.actorHasMethod("domwalker",
+                                                       "hasAccessibilityProperties");
+    if (!hasMethod) {
+      return;
+    }
+
+    const hasA11YProps = await this.walker.hasAccessibilityProperties(
+      this.selection.nodeFront);
+    if (hasA11YProps) {
+      this._toolbox.doc.getElementById(menuItem.id).disabled = menuItem.disabled = false;
+    }
+
+    this.emit("node-menu-updated");
   },
 
   _getCopySubmenu: function(markupContainer, isSelectionElement) {
@@ -1951,6 +1985,18 @@ Inspector.prototype = {
       jsterm.execute("inspect($0)");
       jsterm.focus();
     });
+  },
+
+  /**
+   * Show Accessibility properties for currently selected node
+   */
+  async showAccessibilityProperties() {
+    let a11yPanel = await this._toolbox.selectTool("accessibility");
+    // Select the accessible object in the panel and wait for the event that
+    // tells us it has been done.
+    let onSelected = a11yPanel.once("new-accessible-front-selected");
+    a11yPanel.selectAccessibleForNode(this.selection.nodeFront);
+    await onSelected;
   },
 
   /**

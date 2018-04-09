@@ -3000,26 +3000,62 @@ MacroAssemblerARMCompat::testGCThing(Condition cond, const BaseIndex& address)
 
 // Unboxing code.
 void
-MacroAssemblerARMCompat::unboxNonDouble(const ValueOperand& operand, Register dest, JSValueType)
+MacroAssemblerARMCompat::unboxNonDouble(const ValueOperand& operand, Register dest, JSValueType type)
 {
-    if (operand.payloadReg() != dest)
-        ma_mov(operand.payloadReg(), dest);
+    auto movPayloadToDest = [&]() {
+        if (operand.payloadReg() != dest)
+            ma_mov(operand.payloadReg(), dest, LeaveCC);
+    };
+    if (!JitOptions.spectreValueMasking) {
+        movPayloadToDest();
+        return;
+    }
+
+    // Spectre mitigation: We zero the payload if the tag does not match the
+    // expected type and if this is a pointer type.
+    if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
+        movPayloadToDest();
+        return;
+    }
+
+    // We zero the destination register and move the payload into it if
+    // the tag corresponds to the given type.
+    ma_cmp(operand.typeReg(), ImmType(type));
+    movPayloadToDest();
+    ma_mov(Imm32(0), dest, NotEqual);
 }
 
 void
-MacroAssemblerARMCompat::unboxNonDouble(const Address& src, Register dest, JSValueType)
+MacroAssemblerARMCompat::unboxNonDouble(const Address& src, Register dest, JSValueType type)
 {
     ScratchRegisterScope scratch(asMasm());
-    ma_ldr(ToPayload(src), dest, scratch);
+    if (!JitOptions.spectreValueMasking) {
+        ma_ldr(ToPayload(src), dest, scratch);
+        return;
+    }
+
+    // Spectre mitigation: We zero the payload if the tag does not match the
+    // expected type and if this is a pointer type.
+    if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
+        ma_ldr(ToPayload(src), dest, scratch);
+        return;
+    }
+
+    // We zero the destination register and move the payload into it if
+    // the tag corresponds to the given type.
+    ma_ldr(ToType(src), scratch, scratch);
+    ma_cmp(scratch, ImmType(type));
+    ma_ldr(ToPayload(src), dest, scratch, Offset, Equal);
+    ma_mov(Imm32(0), dest, NotEqual);
 }
 
 void
-MacroAssemblerARMCompat::unboxNonDouble(const BaseIndex& src, Register dest, JSValueType)
+MacroAssemblerARMCompat::unboxNonDouble(const BaseIndex& src, Register dest, JSValueType type)
 {
-    ScratchRegisterScope scratch(asMasm());
     SecondScratchRegisterScope scratch2(asMasm());
-    ma_alu(src.base, lsl(src.index, src.scale), scratch, OpAdd);
-    ma_ldr(Address(scratch, src.offset), dest, scratch2);
+    ma_alu(src.base, lsl(src.index, src.scale), scratch2, OpAdd);
+    Address value(scratch2, src.offset);
+    unboxNonDouble(value, dest, type);
 }
 
 void
@@ -3048,8 +3084,8 @@ MacroAssemblerARMCompat::unboxValue(const ValueOperand& src, AnyRegister dest, J
         bind(&notInt32);
         unboxDouble(src, dest.fpu());
         bind(&end);
-    } else if (src.payloadReg() != dest.gpr()) {
-        as_mov(dest.gpr(), O2Reg(src.payloadReg()));
+    } else {
+        unboxNonDouble(src, dest.gpr(), type);
     }
 }
 

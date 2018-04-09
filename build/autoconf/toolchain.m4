@@ -98,7 +98,7 @@ if test "$GNU_CXX"; then
         dnl x86 with clang is a little peculiar.  std::atomic does not require
         dnl linking with libatomic, but using atomic intrinsics does, so we
         dnl force the setting on for such systems.
-        if test "$CC_TYPE" = "clang" -a "$CPU_ARCH" = "x86"; then
+        if test "$CC_TYPE" = "clang" -a "$CPU_ARCH" = "x86" -a "$OS_ARCH" = "Linux"; then
             ac_cv_needs_atomic=yes
         else
             AC_TRY_LINK(

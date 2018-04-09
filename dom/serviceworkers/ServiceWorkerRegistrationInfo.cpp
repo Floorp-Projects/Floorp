@@ -141,6 +141,16 @@ ServiceWorkerRegistrationInfo::SetPendingUninstall()
 void
 ServiceWorkerRegistrationInfo::ClearPendingUninstall()
 {
+  // If we are resurrecting an uninstalling registration, then persist
+  // it to disk again.  We preemptively removed it earlier during
+  // unregister so that closing the window by shutting down the browser
+  // results in the registration being gone on restart.
+  if (mPendingUninstall && mActiveWorker) {
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (swm) {
+      swm->StoreRegistration(mPrincipal, this);
+    }
+  }
   mPendingUninstall = false;
 }
 
@@ -607,12 +617,8 @@ ServiceWorkerRegistrationInfo::TransitionInstallingToWaiting()
 
   NotifyChromeRegistrationListeners();
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm) {
-    // browser shutdown began
-    return;
-  }
-  swm->StoreRegistration(mPrincipal, this);
+  // TODO: When bug 1426401 is implemented we will need to call
+  //       StoreRegistration() here to persist the waiting worker.
 }
 
 void
