@@ -265,9 +265,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mQuirkSheetAdded(false),
     mNeedsPrefUpdate(false),
     mHadNonBlankPaint(false)
-#ifdef RESTYLE_LOGGING
-    , mRestyleLoggingEnabled(false)
-#endif
 #ifdef DEBUG
     , mInitialized(false)
 #endif
@@ -943,10 +940,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   NS_ENSURE_SUCCESS(rv, rv);
 
   mEventManager->SetPresContext(this);
-
-#ifdef RESTYLE_LOGGING
-  mRestyleLoggingEnabled = GeckoRestyleManager::RestyleLoggingInitiallyEnabled();
-#endif
 
 #ifdef DEBUG
   mInitialized = true;

@@ -43,7 +43,6 @@
 #include "nsThreadUtils.h"
 #include "ScrollbarStyles.h"
 #include "nsIMessageManager.h"
-#include "mozilla/RestyleLogging.h"
 #include "Units.h"
 #include "prenv.h"
 #include "mozilla/StaticPresData.h"
@@ -1259,14 +1258,6 @@ public:
    */
   bool MayHavePaintEventListenerInSubDocument();
 
-#ifdef RESTYLE_LOGGING
-  // Controls for whether debug information about restyling in this
-  // document should be output.
-  bool RestyleLoggingEnabled() const { return mRestyleLoggingEnabled; }
-  void StartRestyleLogging() { mRestyleLoggingEnabled = true; }
-  void StopRestyleLogging() { mRestyleLoggingEnabled = false; }
-#endif
-
   void InvalidatePaintedLayers();
 
 protected:
@@ -1503,11 +1494,6 @@ protected:
 
   // Has NotifyNonBlankPaint been called on this PresContext?
   unsigned              mHadNonBlankPaint : 1;
-
-#ifdef RESTYLE_LOGGING
-  // Should we output debug information about restyling for this document?
-  unsigned mRestyleLoggingEnabled : 1;
-#endif
 
 #ifdef DEBUG
   unsigned mInitialized : 1;
