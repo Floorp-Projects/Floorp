@@ -10,6 +10,14 @@ interface OutputStream;
 
 [Constructor]
 interface XMLSerializer {
+  /**
+   * The subtree rooted by the specified element is serialized to
+   * a string.
+   *
+   * @param root The root of the subtree to be serialized. This could
+   *             be any node, including a Document.
+   * @returns The serialized subtree in the form of a Unicode string
+   */
   [Throws]
   DOMString serializeToString(Node root);
 
