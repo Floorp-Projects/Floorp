@@ -16,7 +16,7 @@ test_infrastructure() {
 }
 
 main() {
-    PRODUCTS=( "firefox" "chrome" )
+    PRODUCTS=( "firefox" )
     for PRODUCT in "${PRODUCTS[@]}"; do
         if [ "$PRODUCT" != "firefox" ]; then
             # Firefox is expected to work using pref settings for DNS
