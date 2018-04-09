@@ -1,6 +1,7 @@
 # Tests for absolutely-positioned children of a flex container
 == flexbox-abspos-child-001a.html flexbox-abspos-child-001-ref.html
 == flexbox-abspos-child-001b.html flexbox-abspos-child-001-ref.html
+== flexbox-abspos-child-002.html flexbox-abspos-child-002-ref.html
 
 # Tests for handling anonymous flex items
 == flexbox-anonymous-items-001.html flexbox-anonymous-items-001-ref.html
