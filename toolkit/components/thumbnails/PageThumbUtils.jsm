@@ -300,7 +300,7 @@ var PageThumbUtils = {
 
     // FIXME Bug 720575 - Don't capture thumbnails for SVG or XML documents as
     //       that currently regresses Talos SVG tests.
-    if (aDocument instanceof Ci.nsIDOMXMLDocument) {
+    if (ChromeUtils.getClassName(aDocument) === "XMLDocument") {
       return false;
     }
 
