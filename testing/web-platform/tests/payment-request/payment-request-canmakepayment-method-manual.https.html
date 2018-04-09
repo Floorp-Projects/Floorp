@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<!-- Copyright © 2017 Chromium authors and World Wide Web Consortium, (Massachusetts Institute of Technology, ERCIM, Keio University, Beihang). -->
 <meta charset="utf-8">
 <title>Tests for PaymentRequest.canMakePayment() method</title>
 <link rel="help" href="https://w3c.github.io/browser-payment-api/#show-method">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script>
+setup({
+  explicit_done: true,
+  explicit_timeout: true,
+});
+
 const basicCard = Object.freeze({ supportedMethods: "basic-card" });
 const defaultMethods = Object.freeze([basicCard]);
 const defaultDetails = Object.freeze({
@@ -37,47 +41,6 @@ promise_test(async t => {
     );
   }
 }, `If request.[[state]] is "created", then return a promise that resolves to true for known method.`);
-
-promise_test(async t => {
-  const request = new PaymentRequest(defaultMethods, defaultDetails);
-  const acceptPromise = request.show(); // Sets state to "interactive"
-  const canMakePaymentPromise = request.canMakePayment();
-  try {
-    const result = await canMakePaymentPromise;
-    assert_true(
-      false,
-      `canMakePaymentPromise should have thrown InvalidStateError`
-    );
-  } catch (err) {
-    await promise_rejects(t, "InvalidStateError", canMakePaymentPromise);
-  } finally {
-    await request.abort();
-    await promise_rejects(t, "AbortError", acceptPromise);
-  }
-  // The state should be "closed"
-  await promise_rejects(t, "InvalidStateError", request.canMakePayment());
-}, `If request.[[state]] is "interactive", then return a promise rejected with an "InvalidStateError" DOMException.`);
-
-promise_test(async t => {
-  const request = new PaymentRequest(defaultMethods, defaultDetails);
-  const acceptPromise = request.show(); // The state is now "interactive"
-  acceptPromise.catch(() => {}); // no-op, just to silence unhandled rejection in devtools.
-  await request.abort(); // The state is now "closed"
-  await promise_rejects(t, "InvalidStateError", request.canMakePayment());
-  try {
-    const result = await request.canMakePayment();
-    assert_true(
-      false,
-      `should have thrown InvalidStateError, but instead returned "${result}"`
-    );
-  } catch (err) {
-    assert_equals(
-      err.name,
-      "InvalidStateError",
-      "must be an InvalidStateError."
-    );
-  }
-}, `If request.[[state]] is "closed", then return a promise rejected with an "InvalidStateError" DOMException.`);
 
 promise_test(async t => {
   const request = new PaymentRequest(defaultMethods, defaultDetails);
@@ -160,4 +123,74 @@ promise_test(async t => {
     }
   }
 }, `Optionally, at the user agent's discretion, return a promise rejected with a "NotAllowedError" DOMException.`);
+
+function manualTest1(elem){
+  elem.disabled = true;
+  promise_test(async t => {
+    const request = new PaymentRequest(defaultMethods, defaultDetails);
+    const acceptPromise = request.show(); // Sets state to "interactive"
+    const canMakePaymentPromise = request.canMakePayment();
+    try {
+      const result = await canMakePaymentPromise;
+      assert_true(
+        false,
+        `canMakePaymentPromise should have thrown InvalidStateError`
+      );
+    } catch (err) {
+      await promise_rejects(t, "InvalidStateError", canMakePaymentPromise);
+    } finally {
+      await request.abort();
+      await promise_rejects(t, "AbortError", acceptPromise);
+    }
+    // The state should be "closed"
+    await promise_rejects(t, "InvalidStateError", request.canMakePayment());
+  }, elem.textContent.trim());
+}
+
+function manualTest2(elem){
+ elem.disabled = true;
+  promise_test(async t => {
+    const request = new PaymentRequest(defaultMethods, defaultDetails);
+    const acceptPromise = request.show(); // The state is now "interactive"
+    acceptPromise.catch(() => {}); // no-op, just to silence unhandled rejection in devtools.
+    await request.abort(); // The state is now "closed"
+    await promise_rejects(t, "InvalidStateError", request.canMakePayment());
+    try {
+      const result = await request.canMakePayment();
+      assert_true(
+        false,
+        `should have thrown InvalidStateError, but instead returned "${result}"`
+      );
+    } catch (err) {
+      assert_equals(
+        err.name,
+        "InvalidStateError",
+        "must be an InvalidStateError."
+      );
+    }
+  }, elem.textContent.trim());
+  done();
+}
 </script>
+
+<h2>Tests for PaymentRequest.canMakePayment() method</h2>
+<p>
+  Click on each button in sequence from top to bottom without refreshing the page.
+  No payment sheet will be shown, but the tests will run in the background.
+</p>
+<ol>
+  <li>
+    <button onclick="manualTest1(this)">
+      If request.[[state]] is "interactive", then return a promise rejected with an "InvalidStateError" DOMException.
+    </button>
+  </li>
+  <li>
+    <button onclick="manualTest2(this)">
+      If request.[[state]] is "closed", then return a promise rejected with an "InvalidStateError" DOMException.
+    </button>
+  </li>
+</ol>
+<small>
+  If you find a buggy test, please <a href="https://github.com/w3c/web-platform-tests/issues">file a bug</a>
+  and tag one of the <a href="https://github.com/w3c/web-platform-tests/blob/master/payment-request/OWNERS">owners</a>.
+</small>
