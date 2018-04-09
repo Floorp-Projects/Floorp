@@ -839,30 +839,23 @@ var gPrivacyPane = {
 
   /**
    * Reads the network.cookie.cookieBehavior preference value and
-   * disables parts of the cookie UI if appropriate.
-   *
-   * Returns "0" if cookies are accepted and "2" if they are entirely disabled.
+   * enables/disables the rest of the cookie UI accordingly, returning true
+   * if cookies are enabled.
    */
   readAcceptCookies() {
-    let pref = Preferences.get("network.cookie.cookieBehavior");
-    let acceptThirdPartyLabel = document.getElementById("acceptThirdPartyLabel");
-    let acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
-    let keepUntilLabel = document.getElementById("keepUntil");
-    let keepUntilMenu = document.getElementById("keepCookiesUntil");
+    var pref = Preferences.get("network.cookie.cookieBehavior");
+    var acceptThirdPartyLabel = document.getElementById("acceptThirdPartyLabel");
+    var acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
+    var keepUntil = document.getElementById("keepUntil");
+    var menu = document.getElementById("keepCookiesUntil");
 
     // enable the rest of the UI for anything other than "disable all cookies"
-    let acceptCookies = (pref.value != 2);
+    var acceptCookies = (pref.value != 2);
 
-    if (!acceptThirdPartyMenu.disabled) {
-      acceptThirdPartyMenu.disabled = !acceptCookies;
-    }
-    acceptThirdPartyLabel.disabled = acceptThirdPartyMenu.disabled;
+    acceptThirdPartyLabel.disabled = acceptThirdPartyMenu.disabled = !acceptCookies;
 
     let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart").value;
-    if (!keepUntilMenu.disabled) {
-      keepUntilMenu.disabled = privateBrowsing || !acceptCookies;
-    }
-    keepUntilLabel.disabled = keepUntilMenu.disabled;
+    keepUntil.disabled = menu.disabled = privateBrowsing || !acceptCookies;
 
     // Our top-level setting is a radiogroup that only sets "enable all"
     // and "disable all", so convert the pref value accordingly.
