@@ -20,6 +20,7 @@ pref(dom.animations-api.core.enabled,true) load 1322291-1.html
 pref(dom.animations-api.core.enabled,true) load 1322291-2.html
 pref(dom.animations-api.core.enabled,true) load 1323114-1.html
 pref(dom.animations-api.core.enabled,true) load 1323114-2.html
+pref(dom.animations-api.core.enabled,true) load 1323119-1.html
 pref(dom.animations-api.core.enabled,true) load 1324554-1.html
 pref(dom.animations-api.core.enabled,true) load 1325193-1.html
 pref(dom.animations-api.core.enabled,true) load 1330190-1.html
