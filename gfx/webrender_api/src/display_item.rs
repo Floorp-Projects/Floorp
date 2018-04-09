@@ -451,6 +451,7 @@ pub struct StackingContext {
     pub perspective: Option<LayoutTransform>,
     pub mix_blend_mode: MixBlendMode,
     pub reference_frame_id: Option<ClipId>,
+    pub clip_node_id: Option<ClipId>,
 } // IMPLICIT: filters: Vec<FilterOp>
 
 #[repr(u32)]

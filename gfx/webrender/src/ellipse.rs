@@ -122,7 +122,7 @@ impl Ellipse {
 
         let si = (1.0 - co * co).sqrt();
         let r = LayerVector2D::new(ab.x * co, ab.y * si);
-        return (r - p).length() * (p.y - r.y).signum();
+        (r - p).length() * (p.y - r.y).signum()
     }
 }
 
