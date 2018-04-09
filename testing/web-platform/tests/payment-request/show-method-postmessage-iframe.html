@@ -23,10 +23,8 @@ window.onmessage = async event => {
   const { source, data: { id, request } } = event;
   switch (request) {
     case "show-payment-request": {
-      const request = new PaymentRequest(defaultMethods, {
-        ...defaultDetails,
-        id,
-      });
+      const details = Object.assign({}, defaultDetails, { id });
+      const request = new PaymentRequest(defaultMethods, details);
       try {
         const response = await request.show();
         source.postMessage(response.toJSON(), window.location.origin);
