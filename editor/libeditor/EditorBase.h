@@ -166,19 +166,20 @@ private:
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
 
 /**
- * SplitAtEdges is for EditorBase::SplitNodeDeep(),
+ * SplitAtEdges is for EditorBase::SplitNodeDeepWithTransaction(),
  * HTMLEditor::InsertNodeAtPoint()
  */
 enum class SplitAtEdges
 {
-  // EditorBase::SplitNodeDeep() won't split container element nodes at
-  // their edges.  I.e., when split point is start or end of container,
-  // it won't be split.
+  // EditorBase::SplitNodeDeepWithTransaction() won't split container element
+  // nodes at their edges.  I.e., when split point is start or end of
+  // container, it won't be split.
   eDoNotCreateEmptyContainer,
-  // EditorBase::SplitNodeDeep() always splits containers even if the split
-  // point is at edge of a container.  E.g., if split point is start of an
-  // inline element, empty inline element is created as a new left node.
-  eAllowToCreateEmptyContainer
+  // EditorBase::SplitNodeDeepWithTransaction() always splits containers even
+  // if the split point is at edge of a container.  E.g., if split point is
+  // start of an inline element, empty inline element is created as a new left
+  // node.
+  eAllowToCreateEmptyContainer,
 };
 
 /**
@@ -371,9 +372,10 @@ public:
                                                  nullptr);
 
   /**
-   * SplitNode() creates a transaction to create a new node (left node)
-   * identical to an existing node (right node), and split the contents
-   * between the same point in both nodes, then, execute the transaction.
+   * SplitNodeWithTransaction() creates a transaction to create a new node
+   * (left node) identical to an existing node (right node), and split the
+   * contents between the same point in both nodes, then, execute the
+   * transaction.
    *
    * @param aStartOfRightNode   The point to split.  Its container will be
    *                            the right node, i.e., become the new node's
@@ -384,8 +386,8 @@ public:
    */
   template<typename PT, typename CT>
   already_AddRefed<nsIContent>
-  SplitNode(const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
-            ErrorResult& aResult);
+  SplitNodeWithTransaction(const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
+                           ErrorResult& aResult);
 
   nsresult JoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
   nsresult MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset);
@@ -1250,7 +1252,7 @@ public:
   static bool IsPreformatted(nsINode* aNode);
 
   /**
-   * SplitNodeDeep() splits aMostAncestorToSplit deeply.
+   * SplitNodeDeepWithTransaction() splits aMostAncestorToSplit deeply.
    *
    * @param aMostAncestorToSplit        The most ancestor node which should be
    *                                    split.
@@ -1268,9 +1270,10 @@ public:
    */
   template<typename PT, typename CT>
   SplitNodeResult
-  SplitNodeDeep(nsIContent& aMostAncestorToSplit,
-                const EditorDOMPointBase<PT, CT>& aDeepestStartOfRightNode,
-                SplitAtEdges aSplitAtEdges);
+  SplitNodeDeepWithTransaction(
+    nsIContent& aMostAncestorToSplit,
+    const EditorDOMPointBase<PT, CT>& aDeepestStartOfRightNode,
+    SplitAtEdges aSplitAtEdges);
 
   EditorDOMPoint JoinNodeDeep(nsIContent& aLeftNode,
                               nsIContent& aRightNode);

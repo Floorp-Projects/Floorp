@@ -291,7 +291,7 @@ HTMLEditor::SetInlinePropertyOnTextNode(Text& aText,
   if (!atEnd.IsEndOfContainer()) {
     // We need to split off back of text node
     ErrorResult error;
-    textNodeForTheRange = SplitNode(atEnd, error);
+    textNodeForTheRange = SplitNodeWithTransaction(atEnd, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -302,7 +302,7 @@ HTMLEditor::SetInlinePropertyOnTextNode(Text& aText,
   if (!atStart.IsStartOfContainer()) {
     // We need to split off front of text node
     ErrorResult error;
-    nsCOMPtr<nsIContent> newLeftNode = SplitNode(atStart, error);
+    nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atStart, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -556,8 +556,8 @@ HTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
         isSet) {
       // Found a style node we need to split
       SplitNodeResult splitNodeResult =
-        SplitNodeDeep(*node, EditorRawDOMPoint(*aNode, *aOffset),
-                      SplitAtEdges::eAllowToCreateEmptyContainer);
+        SplitNodeDeepWithTransaction(*node, EditorRawDOMPoint(*aNode, *aOffset),
+                                     SplitAtEdges::eAllowToCreateEmptyContainer);
       NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
         "Failed to split the node");
 
@@ -1463,7 +1463,7 @@ HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   if (!atEnd.IsEndOfContainer()) {
     // We need to split off back of text node
     ErrorResult error;
-    textNodeForTheRange = SplitNode(atEnd, error);
+    textNodeForTheRange = SplitNodeWithTransaction(atEnd, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -1474,7 +1474,7 @@ HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   if (!atStart.IsStartOfContainer()) {
     // We need to split off front of text node
     ErrorResult error;
-    nsCOMPtr<nsIContent> newLeftNode = SplitNode(atStart, error);
+    nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atStart, error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
