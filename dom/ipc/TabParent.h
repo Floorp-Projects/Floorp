@@ -27,7 +27,6 @@
 #include "nsIKeyEventInPluginCallback.h"
 #include "nsISecureBrowserUI.h"
 #include "nsITabParent.h"
-#include "nsIWebBrowserPersistable.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsRefreshDriver.h"
 #include "nsWeakReference.h"
@@ -40,6 +39,7 @@ class nsIPrincipal;
 class nsIURI;
 class nsILoadContext;
 class nsIDocShell;
+class nsIWebBrowserPersistDocumentReceiver;
 
 namespace mozilla {
 
@@ -87,7 +87,6 @@ class TabParent final : public PBrowserParent
                       , public nsIKeyEventInPluginCallback
                       , public nsSupportsWeakReference
                       , public TabContext
-                      , public nsIWebBrowserPersistable
                       , public LiveResizeListener
 {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
@@ -490,7 +489,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUTHPROMPTPROVIDER
   NS_DECL_NSISECUREBROWSERUI
-  NS_DECL_NSIWEBBROWSERPERSISTABLE
+
+  void StartPersistence(uint64_t aOuterWindowID,
+                        nsIWebBrowserPersistDocumentReceiver* aRecv,
+                        ErrorResult& aRv);
 
   bool HandleQueryContentEvent(mozilla::WidgetQueryContentEvent& aEvent);
 
