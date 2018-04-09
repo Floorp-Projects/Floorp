@@ -65,8 +65,10 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool createScript();
     bool createScript(uint32_t toStringStart, uint32_t toStringEnd);
 
+    using TokenStreamPosition = frontend::TokenStreamPosition<char16_t>;
+
     bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext* sharedContext);
-    bool handleParseFailure(const Directives& newDirectives, TokenStream::Position& startPosition);
+    bool handleParseFailure(const Directives& newDirectives, TokenStreamPosition& startPosition);
     bool deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
 
     AutoKeepAtoms keepAtoms;
@@ -264,7 +266,7 @@ BytecodeCompiler::emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext*
 
 bool
 BytecodeCompiler::handleParseFailure(const Directives& newDirectives,
-                                     TokenStream::Position& startPosition)
+                                     TokenStreamPosition& startPosition)
 {
     if (parser->hadAbortedSyntaxParse()) {
         // Hit some unrecoverable ambiguity during an inner syntax parse.
@@ -311,8 +313,7 @@ BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
     if (!createSourceAndParser())
         return nullptr;
 
-    TokenStream::Position startPosition(keepAtoms);
-    parser->tokenStream.tell(&startPosition);
+    TokenStreamPosition startPosition(keepAtoms, parser->tokenStream);
 
     if (!createScript())
         return nullptr;
@@ -450,8 +451,7 @@ BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
     if (!createSourceAndParser(parameterListEnd))
         return false;
 
-    TokenStream::Position startPosition(keepAtoms);
-    parser->tokenStream.tell(&startPosition);
+    TokenStreamPosition startPosition(keepAtoms, parser->tokenStream);
 
     // Speculatively parse using the default directives implied by the context.
     // If a directive is encountered (e.g., "use strict") that changes how the
