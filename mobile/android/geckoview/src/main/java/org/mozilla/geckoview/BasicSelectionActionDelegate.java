@@ -133,6 +133,9 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
      * @return True if the action was performed.
      */
     protected boolean performAction(final String id) {
+        if (mResponse == null) {
+            return false;
+        }
         mResponse.respond(id);
 
         // Android behavior is to clear selection on copy.
