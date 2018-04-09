@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      var blob = new Blob(["foo"], { type: "text/plain" });
+      var url = URL.createObjectURL(blob);
+      var ifr = document.createElement("iframe");
+      ifr.src = url;
+      document.body.appendChild(ifr);
+
+      onload = function() {
+        try { window.find('foo',false,true,true,true,true) } catch(e) { }
+      }
+    </script>
+  </body>
+</html>
