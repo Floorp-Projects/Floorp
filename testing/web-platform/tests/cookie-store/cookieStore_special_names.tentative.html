@@ -23,7 +23,7 @@
       testCase, new TypeError(),
       cookieStore.set(
         `${prefix}cookie-name`, `secure-cookie-value`, {
-          expires: Date.now()
+          expires: Date.now() - (24 * 60 * 60 * 1000)
         }),
       `Setting expired ${prefix} cookies should fail in non-secure contexts`);
 
