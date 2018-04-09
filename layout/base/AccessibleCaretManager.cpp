@@ -10,6 +10,7 @@
 #include "AccessibleCaretEventHub.h"
 #include "AccessibleCaretLogger.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/NodeFilterBinding.h"

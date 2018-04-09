@@ -7,6 +7,7 @@
 #include "EditorEventListener.h"
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
+#include "mozilla/AutoRestore.h"
 #include "mozilla/ContentEvents.h"      // for InternalFocusEvent
 #include "mozilla/EditorBase.h"         // for EditorBase, etc.
 #include "mozilla/EventListenerManager.h" // for EventListenerManager
