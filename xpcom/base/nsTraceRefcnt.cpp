@@ -143,7 +143,7 @@ struct SerialNumberRecord
       return;
     }
 
-    JSContext* cx = nsContentUtils::GetCurrentJSContextForThread();
+    JSContext* cx = nsContentUtils::GetCurrentJSContext();
     if (!cx) {
       return;
     }
