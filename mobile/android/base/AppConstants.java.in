@@ -146,8 +146,6 @@ public class AppConstants {
         AppConstants.MOZ_APP_VERSION + " Firefox/" +
         AppConstants.MOZ_APP_VERSION;
 
-    public static final int MOZ_MIN_CPU_VERSION = @MOZ_MIN_CPU_VERSION@;
-
     public static final boolean MOZ_ANDROID_ANR_REPORTER =
 //#ifdef MOZ_ANDROID_ANR_REPORTER
     true;
