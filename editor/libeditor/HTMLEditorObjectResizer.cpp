@@ -350,6 +350,8 @@ HTMLEditor::ShowResizersInner(Element& aResizedElement)
 
   MOZ_ASSERT(mResizedObject == &aResizedElement);
 
+  mHasShownResizers = true;
+
   return NS_OK;
 }
 
@@ -525,7 +527,7 @@ HTMLEditor::OnMouseDown(int32_t aClientX,
     // If we have an anonymous element and that element is a resizer,
     // let's start resizing!
     aEvent->PreventDefault();
-
+    mResizerUsedCount++;
     mOriginalX = aClientX;
     mOriginalY = aClientY;
     return StartResizing(aTarget);
@@ -534,6 +536,7 @@ HTMLEditor::OnMouseDown(int32_t aClientX,
   if (anonclass.EqualsLiteral("mozGrabber")) {
     // If we have an anonymous element and that element is a grabber,
     // let's start moving the element!
+    mGrabberUsedCount++;
     mOriginalX = aClientX;
     mOriginalY = aClientY;
     return GrabberClicked();

@@ -305,6 +305,8 @@ HTMLEditor::ShowGrabber(Element& aElement)
   mGrabber = CreateGrabber(*parentContent);
   NS_ENSURE_TRUE(mGrabber, NS_ERROR_FAILURE);
 
+  mHasShownGrabber = true;
+
   // and set its position
   return RefreshGrabber();
 }
