@@ -69,8 +69,6 @@ this.evaluate = {};
  * @param {boolean=} [async=false] async
  *     Indicates if the script should return immediately or wait for
  *     the callback to be invoked before returning.
- * @param {boolean=} [debug=false] debug
- *     Attaches an <code>onerror</code> event listener.
  * @param {string=} [file="dummy file"] file
  *     File location of the program in the client.
  * @param {number=} [line=0] line
@@ -94,7 +92,6 @@ this.evaluate = {};
 evaluate.sandbox = function(sb, script, args = [],
     {
       async = false,
-      debug = false,
       file = "dummy file",
       line = 0,
       sandboxName = null,
@@ -129,17 +126,6 @@ evaluate.sandbox = function(sb, script, args = [],
     // hence it is only exposed to immutable sandboxes
     if (sandboxName) {
       sb[MARIONETTE_SCRIPT_FINISHED] = sb[CALLBACK];
-    }
-
-    // onerror is not hooked on by default because of the inability to
-    // differentiate content errors from chrome errors.
-    //
-    // see bug 1128760 for more details
-    if (debug) {
-      sb.window.onerror = (msg, url, line) => {
-        let err = new JavaScriptError(`${msg} at ${url}:${line}`);
-        reject(err);
-      };
     }
 
     // timeout and unload handlers
