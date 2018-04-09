@@ -1706,7 +1706,7 @@ class Marionette(object):
         args = self._to_json(script_args)
         stack = traceback.extract_stack()
         frame = stack[-2:-1][0]  # grab the second-to-last frame
-        body = {"script": script,
+        body = {"script": script.strip(),
                 "args": args,
                 "newSandbox": new_sandbox,
                 "sandbox": sandbox,
@@ -1756,7 +1756,7 @@ class Marionette(object):
         args = self._to_json(script_args)
         stack = traceback.extract_stack()
         frame = stack[-2:-1][0]  # grab the second-to-last frame
-        body = {"script": script,
+        body = {"script": script.strip(),
                 "args": args,
                 "newSandbox": new_sandbox,
                 "sandbox": sandbox,
