@@ -10,6 +10,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/XMLHttpRequest.h"
+#include "mozilla/UniquePtr.h"
 #include "nsContentUtils.h"
 #include "nsDOMSerializer.h"
 #include "nsIGlobalObject.h"
@@ -105,7 +106,7 @@ BodyExtractor<nsIDocument>::GetAsStream(nsIInputStream** aResult,
   } else {
     aContentTypeWithCharset.AssignLiteral("application/xml;charset=UTF-8");
 
-    RefPtr<nsDOMSerializer> serializer = new nsDOMSerializer();
+    auto serializer = MakeUnique<nsDOMSerializer>();
 
     // Make sure to use the encoding we'll send
     ErrorResult res;

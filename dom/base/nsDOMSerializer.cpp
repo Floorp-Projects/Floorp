@@ -22,22 +22,6 @@ nsDOMSerializer::nsDOMSerializer()
 {
 }
 
-nsDOMSerializer::~nsDOMSerializer()
-{
-}
-
-// QueryInterface implementation for nsDOMSerializer
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMSerializer)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMSerializer, mOwner)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMSerializer)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMSerializer)
-
-
 static already_AddRefed<nsIDocumentEncoder>
 SetUpEncoder(nsINode& aRoot, const nsAString& aCharset, ErrorResult& aRv)
 {
