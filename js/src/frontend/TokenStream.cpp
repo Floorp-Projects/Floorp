@@ -12,6 +12,7 @@
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/TextUtils.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -34,6 +35,7 @@
 #include "vm/JSContext.h"
 
 using mozilla::ArrayLength;
+using mozilla::IsAsciiAlpha;
 using mozilla::MakeScopeExit;
 using mozilla::PodArrayZero;
 using mozilla::PodCopy;
@@ -2012,7 +2014,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                     flag = StickyFlag;
                 else if (c == 'u')
                     flag = UnicodeFlag;
-                else if (JS7_ISLET(c))
+                else if (IsAsciiAlpha(c))
                     flag = NoFlags;
                 else
                     break;
