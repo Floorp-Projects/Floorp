@@ -829,15 +829,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // and returns that.
     Register extractObject(const Address& address, Register scratch);
     Register extractObject(const ValueOperand& value, Register scratch) {
-        unboxNonDouble(value, value.payloadReg(), JSVAL_TYPE_OBJECT);
         return value.payloadReg();
     }
     Register extractString(const ValueOperand& value, Register scratch) {
-        unboxNonDouble(value, value.payloadReg(), JSVAL_TYPE_STRING);
         return value.payloadReg();
     }
     Register extractSymbol(const ValueOperand& value, Register scratch) {
-        unboxNonDouble(value, value.payloadReg(), JSVAL_TYPE_SYMBOL);
         return value.payloadReg();
     }
     Register extractInt32(const ValueOperand& value, Register scratch) {
