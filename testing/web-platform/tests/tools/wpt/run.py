@@ -450,8 +450,13 @@ def run(venv, **kwargs):
             log("All tests stable")
         rv = len(inconsistent) > 0
     else:
-        rv = run_single(venv, **kwargs) > 0
-
+        try:
+            rv = run_single(venv, **kwargs) > 0
+        except Exception as e:
+            logger.error(e)
+            raise
+        finally:
+            logger.shutdown()
     return rv
 
 
@@ -473,7 +478,6 @@ def main():
         return run(venv, vars(args))
     except WptrunError as e:
         exit(e.message)
-
 
 if __name__ == "__main__":
     import pdb
