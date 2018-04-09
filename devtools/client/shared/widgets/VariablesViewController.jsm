@@ -509,6 +509,7 @@ VariablesViewController.prototype = {
     let objGrip = grip.obj;
     let objectClient = this._getObjectClient(objGrip);
 
+    // eslint-disable-next-line new-cap
     return new promise((resolve, reject) => {
       objectClient.enumEntries((response) => {
         if (response.error) {
@@ -827,9 +828,8 @@ var StackFrameUtils = this.StackFrameUtils = {
     // Name the outermost scope Global.
     if (!aEnv.parent) {
       name = L10N.getStr("globalScopeLabel");
-    }
-    // Otherwise construct the scope name.
-    else {
+    } else {
+      // Otherwise construct the scope name.
       name = aEnv.type.charAt(0).toUpperCase() + aEnv.type.slice(1);
     }
 

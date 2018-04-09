@@ -31,7 +31,6 @@ var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}
 
 var { gDevTools } = require("devtools/client/framework/devtools");
 var Services = require("Services");
-var promise = require("promise");
 
 this.EXPORTED_SYMBOLS = ["AppCacheUtils"];
 
@@ -184,7 +183,7 @@ AppCacheUtils.prototype = {
       let inputStream = Cc["@mozilla.org/scriptableinputstream;1"]
                           .createInstance(Ci.nsIScriptableInputStream);
       let buffer = "";
-      var channel = NetUtil.newChannel({
+      let channel = NetUtil.newChannel({
         uri: uri,
         loadUsingSystemPrincipal: true,
         securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
@@ -288,9 +287,7 @@ AppCacheUtils.prototype = {
   },
 
   viewEntry: function ACU_viewEntry(key) {
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-               .getService(Ci.nsIWindowMediator);
-    let win = wm.getMostRecentWindow(gDevTools.chromeWindowType);
+    let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     let url = "about:cache-entry?storage=appcache&context=&eid=&uri=" + key;
     win.openUILinkIn(url, "tab");
   },
