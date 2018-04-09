@@ -554,8 +554,9 @@ IdlArray.prototype.is_json_type = function(type)
 
 function exposure_set(object, default_set) {
     var exposed = object.extAttrs.filter(function(a) { return a.name == "Exposed" });
-    if (exposed.length > 1 || exposed.length < 0) {
-        throw new IdlHarnessError("Unexpected Exposed extended attributes on " + memberName + ": " + exposed);
+    if (exposed.length > 1) {
+        throw new IdlHarnessError(
+            `Multiple 'Exposed' extended attributes on ${object.name}`);
     }
 
     if (exposed.length === 0) {
