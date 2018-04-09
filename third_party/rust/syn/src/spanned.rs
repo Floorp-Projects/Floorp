@@ -48,9 +48,7 @@
 //!     # let ty = get_a_type();
 //!     /* ... */
 //!
-//!     let def_site = Span::def_site();
-//!     let ty_span = ty.span().resolved_at(def_site);
-//!     let assert_sync = quote_spanned! {ty_span=>
+//!     let assert_sync = quote_spanned! {ty.span()=>
 //!         struct _AssertSync where #ty: Sync;
 //!     };
 //!
@@ -78,13 +76,7 @@
 //! ```
 //!
 //! In this technique, using the `Type`'s span for the error message makes the
-//! error appear in the correct place underlining the right type. But it is
-//! **incredibly important** that the span for the assertion is **resolved** at
-//! the procedural macro definition site rather than at the `Type`'s span. This
-//! way we guarantee that it refers to the `Sync` trait that we expect. If the
-//! assertion were **resolved** at the same place that `ty` is resolved, the
-//! user could circumvent the check by defining their own `Sync` trait that is
-//! implemented for their type.
+//! error appear in the correct place underlining the right type.
 
 use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, Tokens};
@@ -122,13 +114,13 @@ where
         let token_stream = TokenStream::from(tokens);
         let mut iter = token_stream.into_iter();
         let mut span = match iter.next() {
-            Some(tt) => tt.span,
+            Some(tt) => tt.span(),
             None => {
                 return Span::call_site();
             }
         };
         for tt in iter {
-            if let Some(joined) = span.join(tt.span) {
+            if let Some(joined) = span.join(tt.span()) {
                 span = joined;
             }
         }
@@ -145,7 +137,7 @@ where
         // We can't join spans without procmacro2_semver_exempt so just grab the
         // first one.
         match iter.next() {
-            Some(tt) => tt.span,
+            Some(tt) => tt.span(),
             None => Span::call_site(),
         }
     }

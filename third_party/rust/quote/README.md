@@ -8,7 +8,7 @@ Rust Quasi-Quoting
 This crate provides the [`quote!`] macro for turning Rust syntax tree data
 structures into tokens of source code.
 
-[`quote!`]: https://docs.rs/quote/0.4/quote/macro.quote.html
+[`quote!`]: https://docs.rs/quote/0.5/quote/macro.quote.html
 
 Procedural macros in Rust receive a stream of tokens as input, execute arbitrary
 Rust code to determine how to manipulate those tokens, and produce a stream of
@@ -33,7 +33,7 @@ first support for procedural macros in Rust 1.15.0.*
 
 ```toml
 [dependencies]
-quote = "0.4"
+quote = "0.5"
 ```
 
 ```rust
@@ -50,13 +50,13 @@ should think of `Tokens` as representing a fragment of Rust source code. Call
 or call `into()` to stream them as a `TokenStream` back to the compiler in a
 procedural macro.
 
-[`quote::Tokens`]: https://docs.rs/quote/0.4/quote/struct.Tokens.html
+[`quote::Tokens`]: https://docs.rs/quote/0.5/quote/struct.Tokens.html
 
 Within the `quote!` macro, interpolation is done with `#var`. Any type
 implementing the [`quote::ToTokens`] trait can be interpolated. This includes
 most Rust primitive types as well as most of the syntax tree types from [`syn`].
 
-[`quote::ToTokens`]: https://docs.rs/quote/0.4/quote/trait.ToTokens.html
+[`quote::ToTokens`]: https://docs.rs/quote/0.5/quote/trait.ToTokens.html
 [`syn`]: https://github.com/dtolnay/syn
 
 ```rust
@@ -109,7 +109,7 @@ are spanned with [`Span::def_site()`].
 A different span can be provided explicitly through the [`quote_spanned!`]
 macro.
 
-[`quote_spanned!`]: https://docs.rs/quote/0.4/quote/macro.quote_spanned.html
+[`quote_spanned!`]: https://docs.rs/quote/0.5/quote/macro.quote_spanned.html
 
 ### Recursion limit
 
