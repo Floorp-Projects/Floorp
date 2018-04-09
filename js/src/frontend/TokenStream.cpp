@@ -671,23 +671,6 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::advance(size_t position)
 
 template<typename CharT, class AnyCharsAccess>
 void
-TokenStreamSpecific<CharT, AnyCharsAccess>::tell(Position* pos)
-{
-    TokenStreamAnyChars& anyChars = anyCharsAccess();
-
-    pos->buf = userbuf.addressOfNextRawChar(/* allowPoisoned = */ true);
-    pos->flags = anyChars.flags;
-    pos->lineno = anyChars.lineno;
-    pos->linebase = anyChars.linebase;
-    pos->prevLinebase = anyChars.prevLinebase;
-    pos->lookahead = anyChars.lookahead;
-    pos->currentToken = anyChars.currentToken();
-    for (unsigned i = 0; i < anyChars.lookahead; i++)
-        pos->lookaheadTokens[i] = anyChars.tokens[(anyChars.cursor + 1 + i) & ntokensMask];
-}
-
-template<typename CharT, class AnyCharsAccess>
-void
 TokenStreamSpecific<CharT, AnyCharsAccess>::seek(const Position& pos)
 {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
