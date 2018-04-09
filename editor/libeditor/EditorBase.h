@@ -780,7 +780,7 @@ public:
   void StopPreservingSelection();
 
   /**
-   * SplitNodeImpl() creates a new node (left node) identical to an existing
+   * DoSplitNode() creates a new node (left node) identical to an existing
    * node (right node), and split the contents between the same point in both
    * nodes.
    *
@@ -798,9 +798,9 @@ public:
    *                            node if necessary), returns no error.
    *                            Otherwise, an error.
    */
-  void SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
-                     nsIContent& aNewLeftNode,
-                     ErrorResult& aError);
+  void DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
+                   nsIContent& aNewLeftNode,
+                   ErrorResult& aError);
 
   /**
    * JoinNodes() takes 2 nodes and merge their content|children.

@@ -94,9 +94,9 @@ SplitNodeTransaction::DoTransaction()
   }
 
   // Insert the new node
-  mEditorBase->SplitNodeImpl(EditorDOMPoint(mStartOfRightNode),
-                             *mNewLeftNode, error);
-  // XXX Really odd.  The result of SplitNodeImpl() is respected only when
+  mEditorBase->DoSplitNode(EditorDOMPoint(mStartOfRightNode),
+                           *mNewLeftNode, error);
+  // XXX Really odd.  The result of DoSplitNode() is respected only when
   //     we shouldn't set selection.  Otherwise, it's overridden by the
   //     result of Selection.Collapse().
   if (mEditorBase->GetShouldTxnSetSelection()) {
