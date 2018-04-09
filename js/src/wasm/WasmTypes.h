@@ -2011,6 +2011,7 @@ class DebugFrame
 
     bool hasCachedSavedFrame() const { return hasCachedSavedFrame_; }
     void setHasCachedSavedFrame() { hasCachedSavedFrame_ = true; }
+    void clearHasCachedSavedFrame() { hasCachedSavedFrame_ = false; }
 
     // DebugFrame is accessed directly by JIT code.
 

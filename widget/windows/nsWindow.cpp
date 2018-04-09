@@ -58,6 +58,7 @@
 #include "gfxEnv.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MiscEvents.h"

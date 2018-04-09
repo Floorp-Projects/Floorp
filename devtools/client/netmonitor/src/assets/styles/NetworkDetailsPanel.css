@@ -210,10 +210,6 @@
   margin-inline-end: 6px;
 }
 
-.network-monitor .headers-summary .requests-list-status-icon {
-  min-width: 10px;
-}
-
 .network-monitor .headers-summary .raw-headers-container {
   display: flex;
   width: 100%;
