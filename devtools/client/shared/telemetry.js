@@ -24,6 +24,7 @@ class Telemetry {
     this.toolClosed = this.toolClosed.bind(this);
     this.log = this.log.bind(this);
     this.logScalar = this.logScalar.bind(this);
+    this.logCountScalar = this.logCountScalar.bind(this);
     this.logKeyedScalar = this.logKeyedScalar.bind(this);
     this.logOncePerBrowserVersion = this.logOncePerBrowserVersion.bind(this);
     this.recordEvent = this.recordEvent.bind(this);
@@ -187,6 +188,17 @@ class Telemetry {
       },
       gridInspectorShowInfiniteLinesChecked: {
         scalar: "devtools.grid.showInfiniteLines.checked",
+      },
+      accessibility: {
+        countScalar: "devtools.accessibility.opened_count",
+        timerHistogram: "DEVTOOLS_ACCESSIBILITY_TIME_ACTIVE_SECONDS"
+      },
+      accessibilityNodeInspected: {
+        countScalar: "devtools.accessibility.node_inspected_count"
+      },
+      accessibilityPickerUsed: {
+        countScalar: "devtools.accessibility.picker_used_count",
+        timerHistogram: "DEVTOOLS_ACCESSIBILITY_PICKER_TIME_ACTIVE_SECONDS"
       }
     };
   }
@@ -209,6 +221,9 @@ class Telemetry {
     }
     if (charts.scalar) {
       this.logScalar(charts.scalar, 1);
+    }
+    if (charts.countScalar) {
+      this.logCountScalar(charts.countScalar, 1);
     }
   }
 
@@ -301,11 +316,39 @@ class Telemetry {
       if (isNaN(value) && typeof value !== "boolean") {
         dump(`Warning: An attempt was made to write a non-numeric and ` +
              `non-boolean value ${value} to the ${scalarId} scalar. Only ` +
-             `numeric and boolean values are allowed.`);
+             `numeric and boolean values are allowed.\n`);
 
         return;
       }
       Services.telemetry.scalarSet(scalarId, value);
+    } catch (e) {
+      dump(`Warning: An attempt was made to write to the ${scalarId} ` +
+           `scalar, which is not defined in Scalars.yaml\n`);
+    }
+  }
+
+  /**
+   * Log a value to a count scalar.
+   *
+   * @param  {String} scalarId
+   *         Scalar in which the data is to be stored.
+   * @param  value
+   *         Value to store.
+   */
+  logCountScalar(scalarId, value) {
+    if (!scalarId) {
+      return;
+    }
+
+    try {
+      if (isNaN(value)) {
+        dump(`Warning: An attempt was made to write a non-numeric value ` +
+             `${value} to the ${scalarId} scalar. Only numeric values are ` +
+             `allowed.\n`);
+
+        return;
+      }
+      Services.telemetry.scalarAdd(scalarId, value);
     } catch (e) {
       dump(`Warning: An attempt was made to write to the ${scalarId} ` +
            `scalar, which is not defined in Scalars.yaml\n`);
@@ -331,7 +374,7 @@ class Telemetry {
       if (isNaN(value)) {
         dump(`Warning: An attempt was made to write a non-numeric value ` +
              `${value} to the ${scalarId} scalar. Only numeric values are ` +
-             `allowed.`);
+             `allowed.\n`);
 
         return;
       }

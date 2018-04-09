@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* global EVENTS, gToolbox */
+/* global EVENTS, gTelemetry, gToolbox */
 
 // React & Redux
 const { createFactory, Component } = require("devtools/client/shared/vendor/react");
@@ -160,6 +160,10 @@ class Accessible extends Component {
   }
 
   selectNode(nodeFront, reason = "accessibility") {
+    if (gTelemetry) {
+      gTelemetry.actionOccurred("accessibilityNodeInspected");
+    }
+
     if (!gToolbox) {
       return;
     }
