@@ -54,9 +54,50 @@ struct FontTemplate {
 StaticMutex sFontDataTableLock;
 std::unordered_map<FontKey, FontTemplate> sFontDataTable;
 
+// Fixed-size ring buffer logging font deletion events to aid debugging.
+static struct FontDeleteLog {
+  static const size_t MAX_ENTRIES = 256;
+
+  uint64_t mEntries[MAX_ENTRIES] = { 0 };
+  size_t mNextEntry = 0;
+
+  void AddEntry(uint64_t aEntry) {
+    mEntries[mNextEntry] = aEntry;
+    mNextEntry = (mNextEntry + 1) % MAX_ENTRIES;
+  }
+
+  void Add(WrFontKey aKey) {
+    AddEntry(AsUint64(aKey));
+  }
+
+  // Store namespace clears as font id 0, since this will never be allocated.
+  void Add(WrIdNamespace aNamespace) {
+    AddEntry(AsUint64(WrFontKey { aNamespace, 0 }));
+  }
+
+  // Find a matching entry in the log, searching backwards starting at the newest
+  // entry and finishing with the oldest entry. Returns a brief description of why
+  // the font was deleted, if known.
+  const char* Find(WrFontKey aKey) {
+    uint64_t keyEntry = AsUint64(aKey);
+    uint64_t namespaceEntry = AsUint64(WrFontKey { aKey.mNamespace, 0 });
+    size_t offset = mNextEntry;
+    do {
+      offset = (offset + MAX_ENTRIES - 1) % MAX_ENTRIES;
+      if (mEntries[offset] == keyEntry) {
+        return "deleted font";
+      } else if (mEntries[offset] == namespaceEntry) {
+        return "cleared namespace";
+      }
+    } while (offset != mNextEntry);
+    return "unknown font";
+  }
+} sFontDeleteLog;
+
 void
 ClearBlobImageResources(WrIdNamespace aNamespace) {
   StaticMutexAutoLock lock(sFontDataTableLock);
+  sFontDeleteLog.Add(aNamespace);
   for (auto i = sFontDataTable.begin(); i != sFontDataTable.end();) {
     if (i->first.mNamespace == aNamespace) {
       if (i->second.mVec) {
@@ -110,6 +151,7 @@ AddNativeFontHandle(WrFontKey aKey, void* aHandle, uint32_t aIndex) {
 void
 DeleteFontData(WrFontKey aKey) {
   StaticMutexAutoLock lock(sFontDataTableLock);
+  sFontDeleteLog.Add(aKey);
   auto i = sFontDataTable.find(aKey);
   if (i != sFontDataTable.end()) {
     if (i->second.mVec) {
@@ -125,7 +167,8 @@ GetUnscaledFont(Translator *aTranslator, wr::FontKey key) {
   StaticMutexAutoLock lock(sFontDataTableLock);
   auto i = sFontDataTable.find(key);
   if (i == sFontDataTable.end()) {
-    gfxDevCrash(LogReason::UnscaledFontNotFound) << "Failed to get UnscaledFont entry for FontKey " << key.mHandle;
+    gfxDevCrash(LogReason::UnscaledFontNotFound) << "Failed to get UnscaledFont entry for FontKey " << key.mHandle
+                                                 << " because " << sFontDeleteLog.Find(key);
     return nullptr;
   }
   auto &data = i->second;
