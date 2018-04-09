@@ -8,6 +8,7 @@
 
 #include "base/process_util.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/CrashReporterClient.h"
