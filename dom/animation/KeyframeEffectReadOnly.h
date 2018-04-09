@@ -46,7 +46,6 @@ struct AnimationRule;
 struct TimingParams;
 class EffectSet;
 class ComputedStyle;
-class GeckoComputedStyle;
 
 namespace dom {
 class ElementOrCSSPseudoElement;

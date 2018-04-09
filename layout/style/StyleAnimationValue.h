@@ -28,7 +28,6 @@ class gfx3DMatrix;
 namespace mozilla {
 
 class ComputedStyle;
-class GeckoComputedStyle;
 
 namespace css {
 class StyleRule;
