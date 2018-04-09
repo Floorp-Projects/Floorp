@@ -6,8 +6,8 @@
 
 JAR_MANIFESTS += ['jar.mn']
 
-DIRS += [
-    'preferences',
+JS_PREFERENCE_PP_FILES += [
+    'devtools-startup-prefs.js',
 ]
 
 # Register the startup components only for 'all' builds.

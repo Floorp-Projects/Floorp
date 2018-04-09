@@ -7,7 +7,6 @@
 DIRS += [
     'content',
     'modules',
-    'preferences',
     'themes',
 ]
 
@@ -16,6 +15,10 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 MOCHITEST_CHROME_MANIFESTS += [
     'test/chrome.ini'
+]
+
+JS_PREFERENCE_FILES += [
+    'webide-prefs.js',
 ]
 
 with Files('**'):
