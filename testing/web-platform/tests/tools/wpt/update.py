@@ -28,5 +28,11 @@ def update_expectations(venv, **kwargs):
 
     logger = setup_logging(kwargs, {"mach": sys.stdout})
 
-    updater = WPTUpdate(logger, **kwargs)
-    updater.run()
+    try:
+        updater = WPTUpdate(logger, **kwargs)
+        updater.run()
+    except Exception as e:
+        logger.error(e)
+        raise
+    finally:
+        logger.shutdown()

@@ -126,21 +126,24 @@ class Reducer(object):
         sys.stdout = StringIO()
         sys.stderr = StringIO()
 
-        with tempfile.NamedTemporaryFile() as f:
-            args = self.kwargs.copy()
-            args["log_raw"] = [f]
-            args["capture_stdio"] = False
-            wptrunner.setup_logging(args, {})
-            wptrunner.run_tests(test_loader=self.test_loader, **args)
-            wptrunner.logger.remove_handler(wptrunner.logger.handlers[0])
-            is_unstable = self.log_is_unstable(f)
+        try:
+            with tempfile.NamedTemporaryFile() as f:
+                args = self.kwargs.copy()
+                args["log_raw"] = [f]
+                args["capture_stdio"] = False
+                wptrunner.setup_logging(args, {})
+                wptrunner.run_tests(test_loader=self.test_loader, **args)
+                wptrunner.logger.remove_handler(wptrunner.logger.handlers[0])
+                is_unstable = self.log_is_unstable(f)
 
-            sys.stdout, sys.stderr = stdout, stderr
-
-        logger.debug("Result was unstable with chunk removed"
-                     if is_unstable else "stable")
-
-        return is_unstable
+                sys.stdout, sys.stderr = stdout, stderr
+        except Exception as e:
+            logger.error(e)
+        finally:
+            logger.debug("Result was unstable with chunk removed"
+                        if is_unstable else "stable")
+            logger.shutdown()
+            return is_unstable
 
     def log_is_unstable(self, log_f):
         log_f.seek(0)
