@@ -108,7 +108,7 @@ fuzzy-if(winWidget,9,98) fuzzy-if(webrender,64,100) == clip-path-geometryBox-2.h
 == clip-path-localRef-1.html clip-path-localRef-1-ref.html
 
 # mask with opacity test cases
-fuzzy(1,5000) fails-if(webrender) == mask-opacity-1a.html mask-opacity-1-ref.html
+fuzzy(1,5000) == mask-opacity-1a.html mask-opacity-1-ref.html
 fuzzy(1,5000) == mask-opacity-1b.html mask-opacity-1-ref.html
 fuzzy(1,5000) == mask-opacity-1c.html mask-opacity-1-ref.html
 fuzzy(1,5000) == mask-opacity-1d.html mask-opacity-1-ref.html
