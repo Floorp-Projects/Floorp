@@ -61,7 +61,8 @@ bool CheckHook(HookTestFunc aHookTestFunc, void* aOrigFunc,
   return false;
 }
 
-bool TestHook(HookTestFunc funcTester, const char *dll, const char *func)
+template <size_t N>
+bool TestHook(HookTestFunc funcTester, const char (&dll)[N], const char *func)
 {
   void *orig_func;
   bool successful = false;
@@ -80,7 +81,8 @@ bool TestHook(HookTestFunc funcTester, const char *dll, const char *func)
   }
 }
 
-bool TestDetour(const char *dll, const char *func)
+template <size_t N>
+bool TestDetour(const char (&dll)[N], const char *func)
 {
   void *orig_func;
   bool successful = false;
@@ -99,7 +101,8 @@ bool TestDetour(const char *dll, const char *func)
   }
 }
 
-bool MaybeTestHook(const bool cond, HookTestFunc funcTester, const char* dll, const char* func)
+template <size_t N>
+bool MaybeTestHook(const bool cond, HookTestFunc funcTester, const char (&dll)[N], const char* func)
 {
   if (!cond) {
     printf("TEST-SKIPPED | WindowsDllInterceptor | Skipped hook test for %s from %s\n", func, dll);
@@ -595,6 +598,9 @@ bool TestFreeCredentialsHandle(void* aFunc)
 
 int main()
 {
+  LARGE_INTEGER start;
+  QueryPerformanceCounter(&start);
+
   // We disable this part of the test because the code coverage instrumentation
   // injects code in rotatePayload in a way that WindowsDllInterceptor doesn't
   // understand.
@@ -733,6 +739,19 @@ int main()
       TestDetour("kernel32.dll", "BaseThreadInitThunk") &&
       TestDetour("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
+
+    LARGE_INTEGER end, freq;
+    QueryPerformanceCounter(&end);
+
+    QueryPerformanceFrequency(&freq);
+
+    LARGE_INTEGER result;
+    result.QuadPart = end.QuadPart - start.QuadPart;
+    result.QuadPart *= 1000000;
+    result.QuadPart /= freq.QuadPart;
+
+    printf("Elapsed time: %lld microseconds\n", result.QuadPart);
+
     return 0;
   }
 
