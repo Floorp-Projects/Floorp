@@ -22,9 +22,6 @@
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidDecoderModule.h"
 #endif
-#ifdef MOZ_OMX
-#include "OmxDecoderModule.h"
-#endif
 #include "GMPDecoderModule.h"
 
 #include "mozilla/CDMProxy.h"
@@ -65,9 +62,6 @@ public:
 #endif
 #ifdef MOZ_APPLEMEDIA
     AppleDecoderModule::Init();
-#endif
-#ifdef MOZ_OMX
-    OmxDecoderModule::Init();
 #endif
 #ifdef MOZ_FFVPX
     FFVPXRuntimeLinker::Init();
@@ -356,12 +350,6 @@ PDMFactory::CreatePDMs()
     mWMFFailedToLoad = !StartupPDM(m);
   } else {
     mWMFFailedToLoad = MediaPrefs::DecoderDoctorWMFDisabledIsFailure();
-  }
-#endif
-#ifdef MOZ_OMX
-  if (MediaPrefs::PDMOmxEnabled()) {
-    m = OmxDecoderModule::Create();
-    StartupPDM(m);
   }
 #endif
 #ifdef MOZ_FFVPX

@@ -100,10 +100,8 @@ protected:
 };
 
 OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
-                               TaskQueue* aTaskQueue,
                                layers::ImageContainer* aImageContainer)
   : mOmxTaskQueue(CreateMediaDecodeTaskQueue("OmxDataDecoder::mOmxTaskQueue"))
-  , mTaskQueue(aTaskQueue)
   , mImageContainer(aImageContainer)
   , mWatchManager(this, mOmxTaskQueue)
   , mOmxState(OMX_STATETYPE::OMX_StateInvalid, "OmxDataDecoder::mOmxState")
@@ -273,29 +271,25 @@ OmxDataDecoder::DoAsyncShutdown()
              return OmxCommandPromise::CreateAndReject(aError, __func__);
            })
     ->Then(mOmxTaskQueue, __func__,
-           [self] () -> RefPtr<ShutdownPromise> {
+           [self] () {
              LOGL("DoAsyncShutdown: OMX_StateLoaded, it is safe to shutdown omx");
              self->mOmxLayer->Shutdown();
              self->mWatchManager.Shutdown();
              self->mOmxLayer = nullptr;
              self->mMediaDataHelper = nullptr;
+
              self->mShuttingDown = false;
-             return ShutdownPromise::CreateAndResolve(true, __func__);
-           },
-           [self] () -> RefPtr<ShutdownPromise> {
-             self->mOmxLayer->Shutdown();
-             self->mWatchManager.Shutdown();
-             self->mOmxLayer = nullptr;
-             self->mMediaDataHelper = nullptr;
-             return ShutdownPromise::CreateAndReject(false, __func__);
-           })
-    ->Then(mTaskQueue, __func__,
-           [self] () {
              self->mOmxTaskQueue->BeginShutdown();
              self->mOmxTaskQueue->AwaitShutdownAndIdle();
              self->mShutdownPromise.Resolve(true, __func__);
            },
            [self] () {
+             self->mOmxLayer->Shutdown();
+             self->mWatchManager.Shutdown();
+             self->mOmxLayer = nullptr;
+             self->mMediaDataHelper = nullptr;
+
+             self->mShuttingDown = false;
              self->mOmxTaskQueue->BeginShutdown();
              self->mOmxTaskQueue->AwaitShutdownAndIdle();
              self->mShutdownPromise.Resolve(true, __func__);
