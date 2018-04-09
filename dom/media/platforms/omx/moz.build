@@ -21,11 +21,6 @@ LOCAL_INCLUDES += [
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-if CONFIG['MOZ_OMX']:
-    UNIFIED_SOURCES += [
-        'PureOmxPlatformLayer.cpp',
-    ]
-
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
