@@ -32,5 +32,13 @@ ServiceWorkerParentInterceptEnabled()
   return sEnabled;
 }
 
+bool
+ServiceWorkerRegistrationDataIsValid(const ServiceWorkerRegistrationData& aData)
+{
+  return !aData.scope().IsEmpty() &&
+         !aData.currentWorkerURL().IsEmpty() &&
+         !aData.cacheName().IsEmpty();
+}
+
 } // namespace dom
 } // namespace mozilla
