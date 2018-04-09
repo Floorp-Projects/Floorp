@@ -11,8 +11,7 @@ function one_test(delay, continuation) {
   BrowserTestUtils.openNewForegroundTab(gBrowser, testPageURL).then((tab) => {
     browser = tab.linkedBrowser;
     let persistable = browser.QueryInterface(Ci.nsIFrameLoaderOwner)
-                             .frameLoader
-                             .QueryInterface(Ci.nsIWebBrowserPersistable);
+                             .frameLoader;
     persistable.startPersistence(/* outer window ID: */ 0, {
       onDocumentReady,
       onError(status) {
