@@ -14,18 +14,13 @@ DIRS += [
     'pocket',
     'screenshots',
     'webcompat',
+    'webcompat-reporter'
 ]
 
 # Only include the following system add-ons if building Aurora or Nightly
 if not CONFIG['RELEASE_OR_BETA']:
     DIRS += [
         'presentation',
-    ]
-
-# Only include the following system add-ons if building DevEdition or Nightly
-if CONFIG['MOZ_DEV_EDITION'] or CONFIG['NIGHTLY_BUILD']:
-    DIRS += [
-        'webcompat-reporter',
     ]
 
 # Only include mortar system add-ons if we locally enable it
