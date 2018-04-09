@@ -635,8 +635,8 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
     MOZ_ASSERT(aOldComputedData);
     presContext->TransitionManager()->
       UpdateTransitions(const_cast<dom::Element*>(aElement), pseudoType,
-                        aOldComputedData,
-                        aComputedData);
+                        *aOldComputedData,
+                        *aComputedData);
   }
 
   if (aTasks & UpdateAnimationsTasks::EffectProperties) {
