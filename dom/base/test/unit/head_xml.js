@@ -18,7 +18,6 @@ const nsIDOMDocument       = I.nsIDOMDocument;
 const nsIDOMElement        = I.nsIDOMElement;
 const nsIDOMNode           = I.nsIDOMNode;
 const nsIDOMNodeList       = I.nsIDOMNodeList;
-const nsIDOMXULElement     = I.nsIDOMXULElement;
 
 function DOMParser() {
   var parser = C["@mozilla.org/xmlextras/domparser;1"].createInstance(nsIDOMParser);
