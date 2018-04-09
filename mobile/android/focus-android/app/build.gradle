@@ -29,6 +29,10 @@ android {
         preDexLibraries true
     }
 
+    lintOptions {
+        lintConfig file("lint.xml")
+    }
+
     // We have a three dimensional build configuration:
     // BUILD TYPE (debug, beta, release) X PRODUCT FLAVOR (focus, klar) X ENGINE FLAVOR (webview, gecko)
 
@@ -334,6 +338,7 @@ dependencies {
     implementation "com.android.support:design:$support_libraries_version"
     implementation "com.android.support:cardview-v7:$support_libraries_version"
     implementation "com.android.support:recyclerview-v7:$support_libraries_version"
+    implementation 'io.sentry:sentry-android:1.7.3'
 
     implementation "android.arch.lifecycle:extensions:$architecture_components_version"
 
@@ -472,6 +477,22 @@ android.applicationVariants.all { variant ->
     } else {
         buildConfigField 'String', 'ADJUST_TOKEN', 'null'
         println("--")
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// Sentry: Read token from locale file if it exists (Only release builds)
+// -------------------------------------------------------------------------------------------------
+
+android.applicationVariants.all {
+    print("Sentry token: ")
+    try {
+        def token = new File("${rootDir}/.sentry_token").text.trim()
+        buildConfigField 'String', 'SENTRY_TOKEN', '"' + token + '"'
+        println "(Added from .sentry_token file)"
+    } catch (java.io.FileNotFoundException e) {
+        buildConfigField 'String', 'SENTRY_TOKEN', 'null'
+        println("X_X")
     }
 }
 

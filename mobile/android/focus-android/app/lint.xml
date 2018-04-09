@@ -20,4 +20,11 @@
     <issue id="IconLauncherFormat">
         <ignore path="**/res/mipmap-anydpi-v26/ic_launcher.xml" />
     </issue>
+
+    <issue id="InvalidPackage">
+        <!-- Sentry: it uses one SDK for desktop apps and Android apps so I assume it's
+        calling functions from desktop apps and silently ignoring those calls when
+        the functions are not available on Android. -->
+        <ignore path="**/sentry*.jar" />
+    </issue>
 </lint>
