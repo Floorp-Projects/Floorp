@@ -13,7 +13,6 @@
 
 scrollbar {
   -moz-appearance: scrollbar-horizontal;
-  -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbar");
   cursor: default;
 }
 
