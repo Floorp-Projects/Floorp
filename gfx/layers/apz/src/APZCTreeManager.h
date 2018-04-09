@@ -779,8 +779,7 @@ private:
   // protected by the mTestDataLock.
   std::unordered_map<LayersId,
                      UniquePtr<APZTestData>,
-                     LayersId::HashFn,
-                     LayersId::EqualFn> mTestData;
+                     LayersId::HashFn> mTestData;
   mutable mozilla::Mutex mTestDataLock;
 
   // This must only be touched on the controller thread.
