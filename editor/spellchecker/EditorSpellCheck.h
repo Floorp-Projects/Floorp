@@ -29,6 +29,7 @@ class nsITextServicesFilter;
 namespace mozilla {
 
 class DictionaryFetcher;
+class EditorBase;
 
 enum dictCompare
 {
@@ -57,7 +58,7 @@ protected:
 
   RefPtr<mozSpellChecker> mSpellChecker;
   nsCOMPtr<nsITextServicesFilter> mTxtSrvFilter;
-  nsCOMPtr<nsIEditor> mEditor;
+  RefPtr<EditorBase> mEditor;
 
   nsTArray<nsString> mSuggestedWordList;
 

@@ -19,7 +19,6 @@
 
 class nsAtom;
 class nsIContentIterator;
-class nsIDOMDocument;
 class nsIDOMEvent;
 class nsISimpleEnumerator;
 class nsITransferable;
