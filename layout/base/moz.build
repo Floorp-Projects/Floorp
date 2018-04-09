@@ -79,7 +79,6 @@ EXPORTS.mozilla += [
     'GeometryUtils.h',
     'OverflowChangedTracker.h',
     'PresShell.h',
-    'RestyleLogging.h',
     'RestyleManager.h',
     'ShapeUtils.h',
     'StaticPresData.h',
