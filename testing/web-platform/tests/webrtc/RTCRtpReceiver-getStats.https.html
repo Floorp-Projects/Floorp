@@ -3,6 +3,7 @@
 <title>RTCRtpReceiver.prototype.getStats</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="RTCPeerConnection-helper.js"></script>
 <script src="dictionary-helper.js"></script>
 <script src="RTCStats-helper.js"></script>
 <script>
@@ -11,6 +12,9 @@
   // Test is based on the following editor draft:
   // https://w3c.github.io/webrtc-pc/archives/20170605/webrtc.html
   // https://w3c.github.io/webrtc-stats/archives/20170614/webrtc-stats.html
+
+  // The following helper functions are called from RTCPeerConnection-helper.js:
+  //   doSignalingHandshake
 
   // The following helper function is called from RTCStats-helper.js
   //   validateStatsReport
@@ -40,15 +44,29 @@
           added.
    */
 
-  promise_test(() => {
-    const pc = new RTCPeerConnection();
-    const { receiver } = pc.addTransceiver('audio');
+  promise_test(async () => {
+    const caller = new RTCPeerConnection();
+    const callee = new RTCPeerConnection();
+    const { receiver } = caller.addTransceiver('audio');
 
-    return receiver.getStats()
-    .then(statsReport => {
-      validateStatsReport(statsReport);
-      assert_stats_report_has_stats(statsReport, ['inbound-rtp']);
-    });
-  }, 'receiver.getStats() should return stats report containing inbound-rtp stats');
+    await doSignalingHandshake(caller, callee);
+    const statsReport = await receiver.getStats();
+    validateStatsReport(statsReport);
+    assert_stats_report_has_stats(statsReport, ['inbound-rtp']);
+  }, 'receiver.getStats() via addTransceiver should return stats report containing inbound-rtp stats');
+
+  promise_test(async () => {
+    const caller = new RTCPeerConnection();
+    const callee = new RTCPeerConnection();
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const [track] = stream.getTracks();
+    caller.addTrack(track, stream);
+
+    await doSignalingHandshake(caller, callee);
+    const receiver = callee.getReceivers()[0];
+    const statsReport = await receiver.getStats();
+    validateStatsReport(statsReport);
+    assert_stats_report_has_stats(statsReport, ['inbound-rtp']);
+  }, 'receiver.getStats() via addTrack should return stats report containing inbound-rtp stats');
 
 </script>
