@@ -389,7 +389,17 @@ public:
   SplitNodeWithTransaction(const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
                            ErrorResult& aResult);
 
-  nsresult JoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
+  /**
+   * JoinNodesWithTransaction() joins aLeftNode and aRightNode.  Content of
+   * aLeftNode will be merged into aRightNode.  Actual implemenation of this
+   * method is JoinNodesImpl().  So, see its explanation for the detail.
+   *
+   * @param aLeftNode   Will be removed from the DOM tree.
+   * @param aRightNode  The node which will be new container of the content of
+   *                    aLeftNode.
+   */
+  nsresult JoinNodesWithTransaction(nsINode& aLeftNode, nsINode& aRightNode);
+
   nsresult MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset);
 
   /**
@@ -803,7 +813,11 @@ public:
                    ErrorResult& aError);
 
   /**
-   * JoinNodes() takes 2 nodes and merge their content|children.
+   * JoinNodesImpl() merges contents in aNodeToJoin to aNodeToKeep and remove
+   * aNodeToJoin from the DOM tree.  aNodeToJoin and aNodeToKeep must have
+   * same parent, aParent.  Additionally, if one of aNodeToJoin or aNodeToKeep
+   * is a text node, the other must be a text node.
+   *
    * @param aNodeToKeep   The node that will remain after the join.
    * @param aNodeToJoin   The node that will be joined with aNodeToKeep.
    *                      There is no requirement that the two nodes be of the
@@ -1275,8 +1289,20 @@ public:
     const EditorDOMPointBase<PT, CT>& aDeepestStartOfRightNode,
     SplitAtEdges aSplitAtEdges);
 
-  EditorDOMPoint JoinNodeDeep(nsIContent& aLeftNode,
-                              nsIContent& aRightNode);
+  /**
+   * JoinNodesDeepWithTransaction() joins aLeftNode and aRightNode "deeply".
+   * First, they are joined simply, then, new right node is assumed as the
+   * child at length of the left node before joined and new left node is
+   * assumed as its previous sibling.  Then, they will be joined again.
+   * And then, these steps are repeated.
+   *
+   * @param aLeftNode   The node which will be removed form the tree.
+   * @param aRightNode  The node which will be inserted the contents of
+   *                    aLeftNode.
+   * @return            The point of the first child of the last right node.
+   */
+  EditorDOMPoint JoinNodesDeepWithTransaction(nsIContent& aLeftNode,
+                                              nsIContent& aRightNode);
 
   nsresult GetString(const nsAString& name, nsAString& value);
 

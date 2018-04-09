@@ -3625,7 +3625,7 @@ HTMLEditor::GetEnclosingTable(nsIDOMNode* aNode)
  * This method scans the selection for adjacent text nodes
  * and collapses them into a single text node.
  * "adjacent" means literally adjacent siblings of the same parent.
- * Uses EditorBase::JoinNodes so action is undoable.
+ * Uses EditorBase::JoinNodesWithTransaction() so action is undoable.
  * Should be called within the context of a batch transaction.
  */
 nsresult
@@ -3668,8 +3668,10 @@ HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange)
     // get the prev sibling of the right node, and see if its leftTextNode
     nsCOMPtr<nsINode> prevSibOfRightNode = rightTextNode->GetPreviousSibling();
     if (prevSibOfRightNode && prevSibOfRightNode == leftTextNode) {
-      rv = JoinNodes(*leftTextNode, *rightTextNode);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = JoinNodesWithTransaction(*leftTextNode, *rightTextNode);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
     textNodes.RemoveElementAt(0); // remove the leftmost text node from the list
