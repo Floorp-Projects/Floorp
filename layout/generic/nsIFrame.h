@@ -635,7 +635,7 @@ public:
   }
 
   nsPresContext* PresContext() const {
-    return Style()->PresContextForFrame();
+    return Style()->PresContext();
   }
 
   nsIPresShell* PresShell() const {

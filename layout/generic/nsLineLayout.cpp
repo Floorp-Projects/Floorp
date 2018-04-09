@@ -1662,10 +1662,8 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
 static nscoord
 GetBSizeOfEmphasisMarks(nsIFrame* aSpanFrame, float aInflation)
 {
-  RefPtr<nsFontMetrics> fm =
-    nsLayoutUtils::GetFontMetricsOfEmphasisMarks(aSpanFrame->Style(),
-                                                 aSpanFrame->PresContext(),
-                                                 aInflation);
+  RefPtr<nsFontMetrics> fm = nsLayoutUtils::
+    GetFontMetricsOfEmphasisMarks(aSpanFrame->Style(), aInflation);
   return fm->MaxHeight();
 }
 
@@ -1886,12 +1884,10 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // compute the top leading.
     float inflation =
       GetInflationForBlockDirAlignment(spanFrame, mInflationMinFontSize);
-    nscoord logicalBSize =
-      ReflowInput::CalcLineHeight(spanFrame->GetContent(),
-                                  spanFrame->Style(),
-                                  spanFrame->PresContext(),
-                                  mBlockReflowInput->ComputedHeight(),
-                                  inflation);
+    nscoord logicalBSize = ReflowInput::
+      CalcLineHeight(spanFrame->GetContent(), spanFrame->Style(),
+                     mBlockReflowInput->ComputedHeight(),
+                     inflation);
     nscoord contentBSize = spanFramePFD->mBounds.BSize(lineWM) -
       spanFramePFD->mBorderPadding.BStartEnd(lineWM);
 
@@ -2177,11 +2173,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         // of the elements line block size value.
         float inflation =
           GetInflationForBlockDirAlignment(frame, mInflationMinFontSize);
-        pctBasis = ReflowInput::CalcLineHeight(
-          frame->GetContent(),
-          frame->Style(),
-          frame->PresContext(),
-          mBlockReflowInput->ComputedBSize(),
+        pctBasis = ReflowInput::CalcLineHeight(frame->GetContent(),
+          frame->Style(), mBlockReflowInput->ComputedBSize(),
           inflation);
       }
       nscoord offset = verticalAlign.ComputeCoordPercentCalc(pctBasis);

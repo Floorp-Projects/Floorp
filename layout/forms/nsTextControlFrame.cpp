@@ -175,11 +175,8 @@ nsTextControlFrame::CalcIntrinsicSize(gfxContext* aRenderingContext,
     nsLayoutUtils::GetFontMetricsForFrame(this, aFontSizeInflation);
 
   lineHeight =
-    ReflowInput::CalcLineHeight(GetContent(),
-                                Style(),
-                                PresContext(),
-                                NS_AUTOHEIGHT,
-                                aFontSizeInflation);
+    ReflowInput::CalcLineHeight(GetContent(), Style(),
+                                      NS_AUTOHEIGHT, aFontSizeInflation);
   charWidth = fontMet->AveCharWidth();
   charMaxAdvance = fontMet->MaxAdvance();
 
@@ -636,11 +633,8 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
   nscoord lineHeight = aReflowInput.ComputedBSize();
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   if (!IsSingleLineTextControl()) {
-    lineHeight = ReflowInput::CalcLineHeight(GetContent(),
-                                             Style(),
-                                             PresContext(),
-                                             NS_AUTOHEIGHT,
-                                             inflation);
+    lineHeight = ReflowInput::CalcLineHeight(GetContent(), Style(),
+                                             NS_AUTOHEIGHT, inflation);
   }
   RefPtr<nsFontMetrics> fontMet =
     nsLayoutUtils::GetFontMetricsForFrame(this, inflation);
