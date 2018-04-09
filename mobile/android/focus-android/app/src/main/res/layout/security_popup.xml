@@ -60,7 +60,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/doorhanger_section_padding_medium"
-                android:maxLines="1"
                 android:textAppearance="@style/DoorHanger.Medium.Light" />
         </LinearLayout>
     </LinearLayout>
