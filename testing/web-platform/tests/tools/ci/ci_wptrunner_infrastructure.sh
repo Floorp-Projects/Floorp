@@ -11,12 +11,14 @@ test_infrastructure() {
     local ARGS="";
     if [ $PRODUCT == "firefox" ]; then
         ARGS="--install-browser"
+    else
+        ARGS=$1
     fi
     ./wpt run --yes --manifest ~/meta/MANIFEST.json --metadata infrastructure/metadata/ --install-fonts $ARGS $PRODUCT infrastructure/
 }
 
 main() {
-    PRODUCTS=( "firefox" )
+    PRODUCTS=( "firefox" "chrome" )
     for PRODUCT in "${PRODUCTS[@]}"; do
         if [ "$PRODUCT" != "firefox" ]; then
             # Firefox is expected to work using pref settings for DNS
@@ -24,9 +26,11 @@ main() {
             hosts_fixup
         fi
         if [ "$PRODUCT" == "chrome" ]; then
-            install_chrome dev
+            install_chrome unstable
+            test_infrastructure "--binary=$(which google-chrome-unstable)"
+        else
+            test_infrastructure
         fi
-        test_infrastructure
     done
 }
 

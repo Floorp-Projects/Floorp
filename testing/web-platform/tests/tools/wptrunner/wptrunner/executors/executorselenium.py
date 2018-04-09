@@ -88,7 +88,7 @@ class SeleniumTestharnessProtocolPart(TestharnessProtocolPart):
         for handle in handles:
             try:
                 self.webdriver.switch_to_window(handle)
-                self.webdriver.close_window()
+                self.webdriver.close()
             except exceptions.NoSuchWindowException:
                 pass
         self.webdriver.switch_to_window(exclude)
