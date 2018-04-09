@@ -421,10 +421,9 @@ KeyframeEffectReadOnly::ComposeStyleRule(
                          mEffectOptions.mIterationComposite);
 }
 
-template<typename ComposeAnimationResult>
 void
 KeyframeEffectReadOnly::ComposeStyle(
-  ComposeAnimationResult&& aComposeResult,
+  RawServoAnimationValueMap& aComposeResult,
   const nsCSSPropertyIDSet& aPropertiesToSkip)
 {
   MOZ_DIAGNOSTIC_ASSERT(!mIsComposingStyle,
@@ -477,10 +476,7 @@ KeyframeEffectReadOnly::ComposeStyle(
                  prop.mSegments.Length(),
                "out of array bounds");
 
-    ComposeStyleRule(Forward<ComposeAnimationResult>(aComposeResult),
-                     prop,
-                     *segment,
-                     computedTiming);
+    ComposeStyleRule(aComposeResult, prop, *segment, computedTiming);
   }
 
   // If the animation produces a transform change hint that affects the overflow
@@ -1699,12 +1695,6 @@ KeyframeEffectReadOnly::UpdateEffectSet(EffectSet* aEffectSet) const
   }
 }
 
-
-template
-void
-KeyframeEffectReadOnly::ComposeStyle<RawServoAnimationValueMap&>(
-  RawServoAnimationValueMap& aAnimationValues,
-  const nsCSSPropertyIDSet& aPropertiesToSkip);
 
 } // namespace dom
 } // namespace mozilla
