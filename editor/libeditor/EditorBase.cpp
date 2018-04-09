@@ -3085,9 +3085,9 @@ struct SavedRange final
 };
 
 void
-EditorBase::SplitNodeImpl(const EditorDOMPoint& aStartOfRightNode,
-                          nsIContent& aNewLeftNode,
-                          ErrorResult& aError)
+EditorBase::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
+                        nsIContent& aNewLeftNode,
+                        ErrorResult& aError)
 {
   if (NS_WARN_IF(aError.Failed())) {
     return;
