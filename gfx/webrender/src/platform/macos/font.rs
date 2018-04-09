@@ -147,16 +147,14 @@ fn get_glyph_metrics(
     let width = right - left;
     let height = top - bottom;
 
-    let metrics = GlyphMetrics {
+    GlyphMetrics {
         rasterized_left: left,
         rasterized_width: width as u32,
         rasterized_height: height as u32,
         rasterized_ascent: top,
         rasterized_descent: -bottom,
         advance: advance.width as f32,
-    };
-
-    metrics
+    }
 }
 
 #[link(name = "ApplicationServices", kind = "framework")]
@@ -453,7 +451,7 @@ impl FontContext {
                 let a = pixel[3];
                 print!("({}, {}, {}, {}) ", r, g, b, a);
             }
-            println!("");
+            println!();
         }
     }
 

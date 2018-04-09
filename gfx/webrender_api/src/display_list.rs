@@ -1269,6 +1269,7 @@ impl DisplayListBuilder {
     pub fn push_stacking_context(
         &mut self,
         info: &LayoutPrimitiveInfo,
+        clip_node_id: Option<ClipId>,
         scroll_policy: ScrollPolicy,
         transform: Option<PropertyBinding<LayoutTransform>>,
         transform_style: TransformStyle,
@@ -1290,6 +1291,7 @@ impl DisplayListBuilder {
                 perspective,
                 mix_blend_mode,
                 reference_frame_id,
+                clip_node_id,
             },
         });
 

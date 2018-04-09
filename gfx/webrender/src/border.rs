@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, BorderSide, BorderStyle, BorderWidths, ColorF, LayerPoint};
+use api::{BorderRadius, BorderSide, BorderStyle, BorderWidths, ClipMode, ColorF, LayerPoint};
 use api::{LayerPrimitiveInfo, LayerRect, LayerSize, NormalBorder, RepeatMode, TexelRect};
 use clip::ClipSource;
 use ellipse::Ellipse;
@@ -373,6 +373,63 @@ impl<'a> DisplayListFlattener<'a> {
         let top = &border.top;
         let bottom = &border.bottom;
 
+        let constant_color = left.color;
+        let is_simple_border = [left, top, right, bottom].iter().all(|edge| {
+            edge.style == BorderStyle::Solid &&
+            edge.color == constant_color
+        });
+
+        if is_simple_border {
+            let extra_clips = vec![
+                ClipSource::new_rounded_rect(
+                    info.rect,
+                    border.radius,
+                    ClipMode::Clip,
+                ),
+                ClipSource::new_rounded_rect(
+                    LayerRect::new(
+                        LayerPoint::new(
+                            info.rect.origin.x + widths.left,
+                            info.rect.origin.y + widths.top,
+                        ),
+                        LayerSize::new(
+                            info.rect.size.width - widths.left - widths.right,
+                            info.rect.size.height - widths.top - widths.bottom,
+                        ),
+                    ),
+                    BorderRadius {
+                        top_left: LayerSize::new(
+                            (border.radius.top_left.width - widths.left).max(0.0),
+                            (border.radius.top_left.height - widths.top).max(0.0),
+                        ),
+                        top_right: LayerSize::new(
+                            (border.radius.top_right.width - widths.right).max(0.0),
+                            (border.radius.top_right.height - widths.top).max(0.0),
+                        ),
+                        bottom_left: LayerSize::new(
+                            (border.radius.bottom_left.width - widths.left).max(0.0),
+                            (border.radius.bottom_left.height - widths.bottom).max(0.0),
+                        ),
+                        bottom_right: LayerSize::new(
+                            (border.radius.bottom_right.width - widths.right).max(0.0),
+                            (border.radius.bottom_right.height - widths.bottom).max(0.0),
+                        ),
+                    },
+                    ClipMode::ClipOut,
+                ),
+            ];
+
+            self.add_solid_rectangle(
+                clip_and_scroll,
+                info,
+                border.top.color,
+                None,
+                extra_clips,
+            );
+
+            return;
+        }
+
         let corners = [
             border.get_corner(
                 left,
@@ -462,9 +519,10 @@ impl<'a> DisplayListFlattener<'a> {
 
                 self.add_solid_rectangle(
                     clip_and_scroll,
-                    &info,
+                    info,
                     border.top.color,
                     Some(descriptor),
+                    Vec::new(),
                 );
             }
 
@@ -478,9 +536,10 @@ impl<'a> DisplayListFlattener<'a> {
 
                 self.add_solid_rectangle(
                     clip_and_scroll,
-                    &info,
+                    info,
                     border.left.color,
                     Some(descriptor),
+                    Vec::new(),
                 );
             }
 
@@ -494,9 +553,10 @@ impl<'a> DisplayListFlattener<'a> {
 
                 self.add_solid_rectangle(
                     clip_and_scroll,
-                    &info,
+                    info,
                     border.right.color,
                     Some(descriptor),
+                    Vec::new(),
                 );
             }
 
@@ -512,9 +572,10 @@ impl<'a> DisplayListFlattener<'a> {
 
                 self.add_solid_rectangle(
                     clip_and_scroll,
-                    &info,
+                    info,
                     border.bottom.color,
                     Some(descriptor),
+                    Vec::new(),
                 );
             }
         } else {

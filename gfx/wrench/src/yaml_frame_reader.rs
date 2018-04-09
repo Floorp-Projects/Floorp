@@ -1514,6 +1514,9 @@ impl YamlFrameReader {
             .as_transform(&transform_origin)
             .map(|transform| transform.into());
 
+        let clip_node_id =
+            yaml["clip-node"].as_i64().map(|id| self.to_clip_id(id as u64, dl.pipeline_id));
+
         let perspective = match yaml["perspective"].as_f32() {
             Some(value) if value != 0.0 => {
                 Some(make_perspective(perspective_origin, value as f32))
@@ -1545,6 +1548,7 @@ impl YamlFrameReader {
 
         dl.push_stacking_context(
             &info,
+            clip_node_id,
             scroll_policy,
             transform.into(),
             transform_style,

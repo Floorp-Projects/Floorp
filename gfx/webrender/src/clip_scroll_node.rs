@@ -4,7 +4,7 @@
 
 use api::{DevicePixelScale, ExternalScrollId, LayerPixel, LayerPoint, LayerRect, LayerSize};
 use api::{LayerVector2D, LayoutTransform, LayoutVector2D, PipelineId, PropertyBinding};
-use api::{ScrollClamping, ScrollEventPhase, ScrollLocation, ScrollSensitivity, StickyOffsetBounds};
+use api::{ScrollClamping, ScrollLocation, ScrollSensitivity, StickyOffsetBounds};
 use api::WorldPoint;
 use clip::{ClipChain, ClipChainNode, ClipSourcesHandle, ClipStore, ClipWorkItem};
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, CoordinateSystemId};
@@ -15,15 +15,8 @@ use gpu_cache::GpuCache;
 use gpu_types::{ClipScrollNodeIndex as GPUClipScrollNodeIndex, ClipScrollNodeData};
 use resource_cache::ResourceCache;
 use scene::SceneProperties;
-use spring::{DAMPING, STIFFNESS, Spring};
 use util::{LayerToWorldFastTransform, LayerFastTransform, LayoutFastTransform};
 use util::{TransformedRectKind};
-
-#[cfg(target_os = "macos")]
-const CAN_OVERSCROLL: bool = true;
-
-#[cfg(not(target_os = "macos"))]
-const CAN_OVERSCROLL: bool = false;
 
 #[derive(Debug)]
 pub struct StickyFrameInfo {
@@ -269,8 +262,6 @@ impl ClipScrollNode {
         }
 
         scrolling.offset = new_offset;
-        scrolling.bouncing_back = false;
-        scrolling.started_bouncing_back = false;
         true
     }
 
@@ -666,17 +657,13 @@ impl ClipScrollNode {
     }
 
 
-    pub fn scroll(&mut self, scroll_location: ScrollLocation, phase: ScrollEventPhase) -> bool {
+    pub fn scroll(&mut self, scroll_location: ScrollLocation) -> bool {
         let scrolling = match self.node_type {
             NodeType::ScrollFrame(ref mut scrolling) => scrolling,
             _ => return false,
         };
 
-        if scrolling.started_bouncing_back && phase == ScrollEventPhase::Move(false) {
-            return false;
-        }
-
-        let mut delta = match scroll_location {
+        let delta = match scroll_location {
             ScrollLocation::Delta(delta) => delta,
             ScrollLocation::Start => {
                 if scrolling.offset.y.round() >= 0.0 {
@@ -699,56 +686,25 @@ impl ClipScrollNode {
             }
         };
 
-        let overscroll_amount = scrolling.overscroll_amount();
-        let overscrolling = CAN_OVERSCROLL && (overscroll_amount != LayerVector2D::zero());
-        if overscrolling {
-            if overscroll_amount.x != 0.0 {
-                delta.x /= overscroll_amount.x.abs()
-            }
-            if overscroll_amount.y != 0.0 {
-                delta.y /= overscroll_amount.y.abs()
-            }
-        }
-
         let scrollable_width = scrolling.scrollable_size.width;
         let scrollable_height = scrolling.scrollable_size.height;
-        let is_unscrollable = scrollable_width <= 0. && scrollable_height <= 0.;
         let original_layer_scroll_offset = scrolling.offset;
 
         if scrollable_width > 0. {
-            scrolling.offset.x = scrolling.offset.x + delta.x;
-            if is_unscrollable || !CAN_OVERSCROLL {
-                scrolling.offset.x = scrolling.offset.x.min(0.0).max(-scrollable_width).round();
-            }
+            scrolling.offset.x = (scrolling.offset.x + delta.x)
+                .min(0.0)
+                .max(-scrollable_width)
+                .round();
         }
 
         if scrollable_height > 0. {
-            scrolling.offset.y = scrolling.offset.y + delta.y;
-            if is_unscrollable || !CAN_OVERSCROLL {
-                scrolling.offset.y = scrolling.offset.y.min(0.0).max(-scrollable_height).round();
-            }
+            scrolling.offset.y = (scrolling.offset.y + delta.y)
+                .min(0.0)
+                .max(-scrollable_height)
+                .round();
         }
 
-        if phase == ScrollEventPhase::Start || phase == ScrollEventPhase::Move(true) {
-            scrolling.started_bouncing_back = false
-        } else if overscrolling &&
-            ((delta.x < 1.0 && delta.y < 1.0) || phase == ScrollEventPhase::End)
-        {
-            scrolling.started_bouncing_back = true;
-            scrolling.bouncing_back = true
-        }
-
-        if CAN_OVERSCROLL {
-            scrolling.stretch_overscroll_spring(overscroll_amount);
-        }
-
-        scrolling.offset != original_layer_scroll_offset || scrolling.started_bouncing_back
-    }
-
-    pub fn tick_scrolling_bounce_animation(&mut self) {
-        if let NodeType::ScrollFrame(ref mut scrolling) = self.node_type {
-            scrolling.tick_scrolling_bounce_animation();
-        }
+        scrolling.offset != original_layer_scroll_offset
     }
 
     pub fn ray_intersects_node(&self, cursor: &WorldPoint) -> bool {
@@ -781,13 +737,6 @@ impl ClipScrollNode {
         }
     }
 
-    pub fn is_overscrolling(&self) -> bool {
-        match self.node_type {
-            NodeType::ScrollFrame(ref state) => state.overscroll_amount() != LayerVector2D::zero(),
-            _ => false,
-        }
-    }
-
     pub fn matches_external_id(&self, external_id: ExternalScrollId) -> bool {
         match self.node_type {
             NodeType::ScrollFrame(info) if info.external_id == Some(external_id) => true,
@@ -799,10 +748,6 @@ impl ClipScrollNode {
 #[derive(Copy, Clone, Debug)]
 pub struct ScrollFrameInfo {
     pub offset: LayerVector2D,
-    pub spring: Spring,
-    pub started_bouncing_back: bool,
-    pub bouncing_back: bool,
-    pub should_handoff_scroll: bool,
     pub scroll_sensitivity: ScrollSensitivity,
 
     /// Amount that this ScrollFrame can scroll in both directions.
@@ -815,7 +760,7 @@ pub struct ScrollFrameInfo {
 
 }
 
-/// Manages scrolling offset, overscroll state, etc.
+/// Manages scrolling offset.
 impl ScrollFrameInfo {
     pub fn new(
         scroll_sensitivity: ScrollSensitivity,
@@ -824,10 +769,6 @@ impl ScrollFrameInfo {
     ) -> ScrollFrameInfo {
         ScrollFrameInfo {
             offset: LayerVector2D::zero(),
-            spring: Spring::at(LayerPoint::zero(), STIFFNESS, DAMPING),
-            started_bouncing_back: false,
-            bouncing_back: false,
-            should_handoff_scroll: false,
             scroll_sensitivity,
             scrollable_size,
             external_id,
@@ -839,40 +780,6 @@ impl ScrollFrameInfo {
             ScrollSensitivity::ScriptAndInputEvents => true,
             ScrollSensitivity::Script => false,
         }
-    }
-
-    pub fn stretch_overscroll_spring(&mut self, overscroll_amount: LayerVector2D) {
-        let offset = self.offset.to_point();
-        self.spring
-            .coords(offset, offset, offset + overscroll_amount);
-    }
-
-    pub fn tick_scrolling_bounce_animation(&mut self) {
-        let finished = self.spring.animate();
-        self.offset = self.spring.current().to_vector();
-        if finished {
-            self.bouncing_back = false
-        }
-    }
-
-    pub fn overscroll_amount(&self) -> LayerVector2D {
-        let overscroll_x = if self.offset.x > 0.0 {
-            -self.offset.x
-        } else if self.offset.x < -self.scrollable_size.width {
-            -self.scrollable_size.width - self.offset.x
-        } else {
-            0.0
-        };
-
-        let overscroll_y = if self.offset.y > 0.0 {
-            -self.offset.y
-        } else if self.offset.y < -self.scrollable_size.height {
-            -self.scrollable_size.height - self.offset.y
-        } else {
-            0.0
-        };
-
-        LayerVector2D::new(overscroll_x, overscroll_y)
     }
 }
 
