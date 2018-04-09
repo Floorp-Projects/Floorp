@@ -150,13 +150,7 @@ evaluate.sandbox = function(sb, script, args = [],
     try {
       res = Cu.evalInSandbox(src, sb, "1.8", file, line);
     } catch (e) {
-      let err = new JavaScriptError(e, {
-        fnName: "execute_script",
-        file,
-        line,
-        script,
-      });
-      reject(err);
+      reject(new JavaScriptError(e));
     }
 
     if (!async) {
