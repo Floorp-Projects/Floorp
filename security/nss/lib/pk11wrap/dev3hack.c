@@ -122,7 +122,7 @@ nssSlot_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     rvSlot->lock = (nss3slot->isThreadSafe) ? NULL : nss3slot->sessionLock;
     rvSlot->isPresentLock = PZ_NewLock(nssiLockOther);
     rvSlot->isPresentCondition = PR_NewCondVar(rvSlot->isPresentLock);
-    rvSlot->inIsPresent = PR_FALSE;
+    rvSlot->isPresentThread = NULL;
     rvSlot->lastTokenPingState = nssSlotLastPingState_Reset;
     return rvSlot;
 }
