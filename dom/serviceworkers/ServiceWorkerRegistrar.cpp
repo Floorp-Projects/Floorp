@@ -789,7 +789,6 @@ public:
   ServiceWorkerRegistrarSaveDataRunnable()
     : Runnable("dom::ServiceWorkerRegistrarSaveDataRunnable")
     , mEventTarget(GetCurrentThreadEventTarget())
-    , mRetryCounter(0)
   {
     AssertIsOnBackgroundThread();
   }
@@ -800,33 +799,21 @@ public:
     RefPtr<ServiceWorkerRegistrar> service = ServiceWorkerRegistrar::Get();
     MOZ_ASSERT(service);
 
-    // If the save fails, try again once in case it was a temporary
-    // problem due to virus scanning, etc.
-    static const uint32_t kMaxSaveRetryCount = 1;
-
-    nsresult rv = service->SaveData();
-    if (NS_FAILED(rv) && mRetryCounter < kMaxSaveRetryCount) {
-      rv = GetCurrentThreadEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL);
-      if (NS_SUCCEEDED(rv)) {
-        mRetryCounter += 1;
-        return NS_OK;
-      }
-    }
+    // If the save fails do nothing for now.
+    // Consider adding a retry mechanism again in bug 1452373.
+    Unused << service->SaveData();
 
     RefPtr<Runnable> runnable =
       NewRunnableMethod("ServiceWorkerRegistrar::DataSaved",
                         service, &ServiceWorkerRegistrar::DataSaved);
-    rv = mEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    nsresult rv = mEventTarget->Dispatch(runnable, NS_DISPATCH_NORMAL);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
 
 private:
   nsCOMPtr<nsIEventTarget> mEventTarget;
-  uint32_t mRetryCounter;
 };
 
 void
