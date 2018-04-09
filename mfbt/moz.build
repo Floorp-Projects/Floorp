@@ -89,6 +89,7 @@ EXPORTS.mozilla = [
     'StaticAnalysisFunctions.h',
     'TaggedAnonymousMemory.h',
     'TemplateLib.h',
+    'TextUtils.h',
     'ThreadLocal.h',
     'ThreadSafeWeakPtr.h',
     'ToString.h',
