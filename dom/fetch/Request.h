@@ -91,10 +91,10 @@ public:
     return mRequest->MozErrors();
   }
 
-  RequestDestination
-  Destination() const
+  RequestContext
+  Context() const
   {
-    return mRequest->Destination();
+    return mRequest->Context();
   }
 
   void

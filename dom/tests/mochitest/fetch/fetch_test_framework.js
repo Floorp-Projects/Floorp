@@ -14,7 +14,8 @@ function testScript(script) {
   function setupPrefs() {
     return new Promise(function(resolve, reject) {
       SpecialPowers.pushPrefEnv({
-        "set": [["dom.serviceWorkers.enabled", true],
+        "set": [["dom.requestcontext.enabled", true],
+                ["dom.serviceWorkers.enabled", true],
                 ["dom.serviceWorkers.testing.enabled", true],
                 ["dom.serviceWorkers.idle_timeout", 0],
                 ["dom.serviceWorkers.exemptFromPerDomainMax", true]]

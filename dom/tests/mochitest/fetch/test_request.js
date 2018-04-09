@@ -3,7 +3,7 @@ function testDefaultCtor() {
   is(req.method, "GET", "Default Request method is GET");
   ok(req.headers instanceof Headers, "Request should have non-null Headers object");
   is(req.url, self.location.href, "URL should be resolved with entry settings object's API base URL");
-  is(req.destination, "", "Default destination is the empty string.");
+  is(req.context, "fetch", "Default context is fetch.");
   is(req.referrer, "about:client", "Default referrer is `client` which serializes to about:client.");
   is(req.mode, "cors", "Request mode for string input is cors");
   is(req.credentials, "omit", "Default Request credentials is omit");
@@ -13,7 +13,7 @@ function testDefaultCtor() {
   is(req.method, "GET", "Default Request method is GET");
   ok(req.headers instanceof Headers, "Request should have non-null Headers object");
   is(req.url, self.location.href, "URL should be resolved with entry settings object's API base URL");
-  is(req.destination, "", "Default destination is the empty string.");
+  is(req.context, "fetch", "Default context is fetch.");
   is(req.referrer, "about:client", "Default referrer is `client` which serializes to about:client.");
   is(req.mode, "cors", "Request mode string input is cors");
   is(req.credentials, "omit", "Default Request credentials is omit");

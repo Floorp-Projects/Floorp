@@ -65,6 +65,7 @@
 
   SimpleTest.waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({"set": [
+    ["dom.requestcontext.enabled", true],
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
