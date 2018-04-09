@@ -306,7 +306,10 @@ var gTests = [
     // first tab receives observer notifications for things happening in the
     // second tab, so let's clear the observer call counts before we cleanup
     // in the first tab.
-    await ignoreObserversCalled();
+    await Promise.all([
+      TestUtils.waitForCondition(() => webrtcUI.getActiveStreams(true, true, true).length == 1),
+      ignoreObserversCalled(),
+    ]);
 
     // Close the first tab's stream and verify that all indicators are removed.
     await closeStream();
