@@ -136,8 +136,8 @@ SplitNodeTransaction::UndoTransaction()
   // This assumes Do inserted the new node in front of the prior existing node
   // XXX Perhaps, we should reset mStartOfRightNode with current first child
   //     of the right node.
-  return mEditorBase->JoinNodesImpl(mStartOfRightNode.GetContainer(),
-                                    mNewLeftNode, mParent);
+  return mEditorBase->DoJoinNodes(mStartOfRightNode.GetContainer(),
+                                  mNewLeftNode, mParent);
 }
 
 /* Redo cannot simply resplit the right node, because subsequent transactions

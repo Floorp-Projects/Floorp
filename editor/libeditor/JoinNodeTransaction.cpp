@@ -89,7 +89,7 @@ JoinNodeTransaction::DoTransaction()
   mParent = leftParent;
   mOffset = mLeftNode->Length();
 
-  return mEditorBase->JoinNodesImpl(mRightNode, mLeftNode, mParent);
+  return mEditorBase->DoJoinNodes(mRightNode, mLeftNode, mParent);
 }
 
 //XXX: What if instead of split, we just deleted the unneeded children of

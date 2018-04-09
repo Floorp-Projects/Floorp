@@ -3258,9 +3258,9 @@ EditorBase::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
 }
 
 nsresult
-EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
-                          nsINode* aNodeToJoin,
-                          nsINode* aParent)
+EditorBase::DoJoinNodes(nsINode* aNodeToKeep,
+                        nsINode* aNodeToJoin,
+                        nsINode* aParent)
 {
   MOZ_ASSERT(aNodeToKeep);
   MOZ_ASSERT(aNodeToJoin);

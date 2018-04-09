@@ -813,7 +813,7 @@ public:
                    ErrorResult& aError);
 
   /**
-   * JoinNodesImpl() merges contents in aNodeToJoin to aNodeToKeep and remove
+   * DoJoinNodes() merges contents in aNodeToJoin to aNodeToKeep and remove
    * aNodeToJoin from the DOM tree.  aNodeToJoin and aNodeToKeep must have
    * same parent, aParent.  Additionally, if one of aNodeToJoin or aNodeToKeep
    * is a text node, the other must be a text node.
@@ -824,9 +824,9 @@ public:
    *                      same type.
    * @param aParent       The parent of aNodeToKeep
    */
-  nsresult JoinNodesImpl(nsINode* aNodeToKeep,
-                         nsINode* aNodeToJoin,
-                         nsINode* aParent);
+  nsresult DoJoinNodes(nsINode* aNodeToKeep,
+                       nsINode* aNodeToJoin,
+                       nsINode* aParent);
 
   /**
    * Return the offset of aChild in aParent.  Asserts fatally if parent or
