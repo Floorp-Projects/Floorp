@@ -722,26 +722,27 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
 #endif
 
 bool
-nsBindingManager::EnumerateBoundContentBindings(
-  const BoundContentBindingCallback& aCallback) const
+nsBindingManager::EnumerateBoundContentProtoBindings(
+  const BoundContentProtoBindingCallback& aCallback) const
 {
   if (!mBoundContentSet) {
     return true;
   }
 
-  nsTHashtable<nsPtrHashKey<nsXBLBinding>> bindings;
+  nsTHashtable<nsPtrHashKey<nsXBLPrototypeBinding>> bindings;
   for (auto iter = mBoundContentSet->Iter(); !iter.Done(); iter.Next()) {
     nsIContent* boundContent = iter.Get()->GetKey();
     for (nsXBLBinding* binding = boundContent->GetXBLBinding();
          binding;
          binding = binding->GetBaseBinding()) {
+      nsXBLPrototypeBinding* proto = binding->PrototypeBinding();
       // If we have already invoked the callback with a binding, we
       // should have also invoked it for all its base bindings, so we
       // don't need to continue this loop anymore.
-      if (!bindings.EnsureInserted(binding)) {
+      if (!bindings.EnsureInserted(proto)) {
         break;
       }
-      if (!aCallback(binding)) {
+      if (!aCallback(proto)) {
         return false;
       }
     }
@@ -755,9 +756,8 @@ void
 nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
                                ElementDependentRuleProcessorData* aData)
 {
-  EnumerateBoundContentBindings([=](nsXBLBinding* aBinding) {
-    nsIStyleRuleProcessor* ruleProcessor =
-      aBinding->PrototypeBinding()->GetRuleProcessor();
+  EnumerateBoundContentProtoBindings([=](nsXBLPrototypeBinding* aProto) {
+    nsIStyleRuleProcessor* ruleProcessor = aProto->GetRuleProcessor();
     if (ruleProcessor) {
       (*(aFunc))(ruleProcessor, aData);
     }
@@ -774,9 +774,8 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
 #ifdef MOZ_OLD_STYLE
   bool rulesChanged = false;
   RefPtr<nsPresContext> presContext = aPresContext;
-  EnumerateBoundContentBindings([=, &rulesChanged](nsXBLBinding* aBinding) {
-    nsIStyleRuleProcessor* ruleProcessor =
-      aBinding->PrototypeBinding()->GetRuleProcessor();
+  EnumerateBoundContentProtoBindings([=, &rulesChanged](nsXBLPrototypeBinding* aProto) {
+    nsIStyleRuleProcessor* ruleProcessor = aProto->GetRuleProcessor();
     if (ruleProcessor) {
       bool thisChanged = ruleProcessor->MediumFeaturesChanged(presContext);
       rulesChanged = rulesChanged || thisChanged;
@@ -793,8 +792,8 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
 void
 nsBindingManager::AppendAllSheets(nsTArray<StyleSheet*>& aArray)
 {
-  EnumerateBoundContentBindings([&aArray](nsXBLBinding* aBinding) {
-    aBinding->PrototypeBinding()->AppendStyleSheetsTo(aArray);
+  EnumerateBoundContentProtoBindings([&aArray](nsXBLPrototypeBinding* aProto) {
+    aProto->AppendStyleSheetsTo(aArray);
     return true;
   });
 }
