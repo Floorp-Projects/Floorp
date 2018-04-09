@@ -17,6 +17,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "MasterPassword",
                                "resource://formautofill/MasterPassword.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "formAutofillStorage", () => {
   let formAutofillStorage;
@@ -383,10 +385,14 @@ var paymentDialogWrapper = {
 
   initializeFrame() {
     let requestSerialized = this._serializeRequest(this.request);
+    let chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    let isPrivate = PrivateBrowsingUtils.isWindowPrivate(chromeWindow);
+
     this.sendMessageToContent("showPaymentRequest", {
       request: requestSerialized,
       savedAddresses: this.fetchSavedAddresses(),
       savedBasicCards: this.fetchSavedPaymentCards(),
+      isPrivate,
     });
 
     Services.obs.addObserver(this, "formautofill-storage-changed", true);
