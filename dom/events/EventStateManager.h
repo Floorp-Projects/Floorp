@@ -92,12 +92,17 @@ public:
    * be conditional based on either DOM or frame processing should occur in
    * PostHandleEvent.  Any centralized event processing which must occur before
    * DOM or frame event handling should occur here as well.
+   *
+   * aOverrideClickTarget can be used to indicate which element should be
+   * used as the *up target when deciding whether to send click event.
+   * This is used when releasing pointer capture. Otherwise null.
    */
   nsresult PreHandleEvent(nsPresContext* aPresContext,
                           WidgetEvent* aEvent,
                           nsIFrame* aTargetFrame,
                           nsIContent* aTargetContent,
-                          nsEventStatus* aStatus);
+                          nsEventStatus* aStatus,
+                          nsIContent* aOverrideClickTarget);
 
   /* The PostHandleEvent method should contain all system processing which
    * should occur conditionally based on DOM or frame processing.  It should
@@ -107,7 +112,8 @@ public:
   nsresult PostHandleEvent(nsPresContext* aPresContext,
                            WidgetEvent* aEvent,
                            nsIFrame* aTargetFrame,
-                           nsEventStatus* aStatus);
+                           nsEventStatus* aStatus,
+                           nsIContent* aOverrideClickTarget);
 
   void PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
                                nsIFrame* aTargetFrame, nsEventStatus& aStatus);
@@ -442,10 +448,13 @@ protected:
                                             nsIPresShell* aPresShell,
                                             nsIContent* aMouseTarget,
                                             AutoWeakFrame aCurrentTarget,
-                                            bool aNoContentDispatch);
-  nsresult SetClickCount(WidgetMouseEvent* aEvent, nsEventStatus* aStatus);
+                                            bool aNoContentDispatch,
+                                            nsIContent* aOverrideClickTarget);
+  nsresult SetClickCount(WidgetMouseEvent* aEvent, nsEventStatus* aStatus,
+                         nsIContent* aOverrideClickTarget = nullptr);
   nsresult CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
-                                    nsEventStatus* aStatus);
+                                    nsEventStatus* aStatus,
+                                    nsIContent* aOverrideClickTarget);
   void EnsureDocument(nsPresContext* aPresContext);
   void FlushPendingEvents(nsPresContext* aPresContext);
 
@@ -1022,6 +1031,8 @@ private:
    */
   void NotifyTargetUserActivation(WidgetEvent* aEvent,
                                   nsIContent* aTargetContent);
+
+  already_AddRefed<EventStateManager> ESMFromContentOrThis(nsIContent* aContent);
 
   int32_t     mLockCursor;
   bool mLastFrameConsumedSetCursor;
