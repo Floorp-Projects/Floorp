@@ -16,6 +16,10 @@ function assert_is_equal_with_range_handling(input, result) {
     assert_style_value_equals(result, input);
 }
 
+function assert_is_unsupported(result) {
+  assert_class_string(result, 'CSSStyleValue');
+}
+
 const gCssWideKeywordsExamples = [
   {
     description: 'initial keyword',
