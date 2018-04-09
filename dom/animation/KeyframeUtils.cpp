@@ -481,12 +481,11 @@ KeyframeUtils::DistributeKeyframes(nsTArray<Keyframe>& aKeyframes)
   }
 }
 
-template<typename StyleType>
 /* static */ nsTArray<AnimationProperty>
 KeyframeUtils::GetAnimationPropertiesFromKeyframes(
   const nsTArray<Keyframe>& aKeyframes,
   dom::Element* aElement,
-  StyleType* aStyle,
+  const ComputedStyle* aStyle,
   dom::CompositeOperation aEffectComposite)
 {
   nsTArray<AnimationProperty> result;
@@ -1491,13 +1490,5 @@ DistributeRange(const Range<Keyframe>& aRange)
   }
 }
 
-
-template
-nsTArray<AnimationProperty>
-KeyframeUtils::GetAnimationPropertiesFromKeyframes(
-  const nsTArray<Keyframe>& aKeyframes,
-  dom::Element* aElement,
-  const ComputedStyle* aStyle,
-  dom::CompositeOperation aEffectComposite);
 
 } // namespace mozilla

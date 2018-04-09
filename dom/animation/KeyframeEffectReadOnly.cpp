@@ -665,9 +665,8 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
   return effect.forget();
 }
 
-template<typename StyleType>
 nsTArray<AnimationProperty>
-KeyframeEffectReadOnly::BuildProperties(StyleType* aStyle)
+KeyframeEffectReadOnly::BuildProperties(const ComputedStyle* aStyle)
 {
 
   MOZ_ASSERT(aStyle);
