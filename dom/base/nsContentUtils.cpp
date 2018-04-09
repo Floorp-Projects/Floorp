@@ -64,7 +64,6 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/XULCommandEvent.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/WorkletThread.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
@@ -6068,28 +6067,11 @@ nsContentUtils::URIIsLocalFile(nsIURI *aURI)
 JSContext *
 nsContentUtils::GetCurrentJSContext()
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsInitialized());
   if (!IsJSAPIActive()) {
     return nullptr;
   }
   return danger::GetJSContext();
-}
-
-/* static */
-JSContext *
-nsContentUtils::GetCurrentJSContextForThread()
-{
-  MOZ_ASSERT(IsInitialized());
-  if (MOZ_LIKELY(NS_IsMainThread())) {
-    return GetCurrentJSContext();
-  }
-
-  if (WorkletThread::IsOnWorkletThread()) {
-    return WorkletThread::Get()->GetJSContext();
-  }
-
-  return GetCurrentWorkerThreadJSContext();
 }
 
 template<typename StringType, typename CharType>

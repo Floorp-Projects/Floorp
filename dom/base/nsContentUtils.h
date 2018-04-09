@@ -2047,7 +2047,6 @@ public:
                                       const nsAString &viewportInfo);
 
   static JSContext *GetCurrentJSContext();
-  static JSContext *GetCurrentJSContextForThread();
 
   /**
    * Case insensitive comparison between two strings. However it only ignores
