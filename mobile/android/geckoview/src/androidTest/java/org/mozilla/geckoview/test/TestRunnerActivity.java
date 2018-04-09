@@ -8,6 +8,8 @@ package org.mozilla.geckoview.test;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.GeckoRuntime;
+import org.mozilla.geckoview.GeckoRuntimeSettings;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -16,6 +18,8 @@ import android.os.Bundle;
 
 public class TestRunnerActivity extends Activity {
     private static final String LOGTAG = "TestRunnerActivity";
+
+    static GeckoRuntime sRuntime;
 
     GeckoSession mSession;
     GeckoView mView;
@@ -37,8 +41,8 @@ public class TestRunnerActivity extends Activity {
         }
 
         @Override
-        public void onLoadRequest(GeckoSession session, String uri,
-                                  int target, GeckoSession.Response<Boolean> response) {
+        public void onLoadRequest(GeckoSession session, String uri, int target,
+                                  GeckoSession.Response<Boolean> response) {
             // Allow Gecko to load all URIs
             response.respond(false);
         }
@@ -103,13 +107,16 @@ public class TestRunnerActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         final Intent intent = getIntent();
-        GeckoSession.preload(this, new String[] { "-purgecaches" },
-                             intent.getExtras(), false /* no multiprocess, see below */);
 
-        // We can't use e10s because we get deadlocked when quickly creating and
-        // destroying sessions. Bug 1348361.
+        if (sRuntime == null) {
+            final GeckoRuntimeSettings geckoSettings = new GeckoRuntimeSettings();
+            geckoSettings.setArguments(new String[] { "-purgecaches" });
+            geckoSettings.setExtras(intent.getExtras());
+            sRuntime = GeckoRuntime.create(this, geckoSettings);
+        }
+
         mSession = createSession();
-        mSession.open(this);
+        mSession.open(sRuntime);
 
         // If we were passed a URI in the Intent, open it
         final Uri uri = intent.getData();

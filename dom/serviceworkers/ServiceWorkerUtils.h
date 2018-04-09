@@ -12,6 +12,7 @@
 namespace mozilla {
 namespace dom {
 
+class ServiceWorkerRegistrationData;
 class ServiceWorkerRegistrationDescriptor;
 
 typedef MozPromise<ServiceWorkerRegistrationDescriptor, nsresult, false>
@@ -19,6 +20,9 @@ typedef MozPromise<ServiceWorkerRegistrationDescriptor, nsresult, false>
 
 bool
 ServiceWorkerParentInterceptEnabled();
+
+bool
+ServiceWorkerRegistrationDataIsValid(const ServiceWorkerRegistrationData& aData);
 
 } // namespace dom
 } // namespace mozilla

@@ -348,9 +348,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    *        Hook to modify the packet before it is sent. Feel free to return a
    *        promise.
    */
-  _pauseAndRespond: function(frame, reason, onPacket = function(k) {
-    return k;
-  }) {
+  _pauseAndRespond: async function(frame, reason, onPacket = k => k) {
     try {
       let packet = this._paused(frame);
       if (!packet) {
@@ -359,28 +357,27 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       packet.why = reason;
 
       let generatedLocation = this.sources.getFrameLocation(frame);
-      this.sources.getOriginalLocation(generatedLocation)
-                  .then((originalLocation) => {
-                    if (!originalLocation.originalSourceActor) {
+      this.sources.getOriginalLocation(generatedLocation).then((originalLocation) => {
+        if (!originalLocation.originalSourceActor) {
           // The only time the source actor will be null is if there
           // was a sourcemap and it tried to look up the original
           // location but there was no original URL. This is a strange
           // scenario so we simply don't pause.
-                      DevToolsUtils.reportException(
+          DevToolsUtils.reportException(
             "ThreadActor",
             new Error("Attempted to pause in a script with a sourcemap but " +
                       "could not find original location.")
           );
+          return undefined;
+        }
 
-                      return undefined;
-                    }
+        packet.frame.where = {
+          source: originalLocation.originalSourceActor.form(),
+          line: originalLocation.originalLine,
+          column: originalLocation.originalColumn
+        };
 
-                    packet.frame.where = {
-                      source: originalLocation.originalSourceActor.form(),
-                      line: originalLocation.originalLine,
-                      column: originalLocation.originalColumn
-                    };
-                    Promise.resolve(onPacket(packet))
+        Promise.resolve(onPacket(packet))
           .catch(error => {
             reportError(error);
             return {
@@ -392,8 +389,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
             this.conn.send(pkt);
           });
 
-                    return undefined;
-                  });
+        return undefined;
+      });
 
       this._pushThreadPause();
     } catch (e) {
@@ -410,12 +407,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return frame => {
       const generatedLocation = this.sources.getFrameLocation(frame);
       let { originalSourceActor } = this.unsafeSynchronize(
-        this.sources.getOriginalLocation(generatedLocation));
+        this.sources.getOriginalLocation(generatedLocation)
+      );
+
       let url = originalSourceActor.url;
 
-      return this.sources.isBlackBoxed(url)
-        ? undefined
-        : pauseAndRespond(frame);
+      if (this.sources.isBlackBoxed(url)) {
+        return undefined;
+      }
+
+      return pauseAndRespond(frame);
     };
   },
 
@@ -423,10 +424,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
                           startLocation }) {
     const result = function(completion) {
       // onPop is called with 'this' set to the current frame.
-
       const generatedLocation = thread.sources.getFrameLocation(this);
       const { originalSourceActor } = thread.unsafeSynchronize(
-        thread.sources.getOriginalLocation(generatedLocation));
+        thread.sources.getOriginalLocation(generatedLocation)
+      );
+
       const url = originalSourceActor.url;
 
       if (thread.sources.isBlackBoxed(url)) {
@@ -465,12 +467,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   _makeOnStep: function({ thread, pauseAndRespond, startFrame,
-                           startLocation, steppingType }) {
+                          startLocation, steppingType }) {
     // Breaking in place: we should always pause.
     if (steppingType === "break") {
-      return function() {
-        return pauseAndRespond(this);
-      };
+      return () => pauseAndRespond(this);
     }
 
     // Otherwise take what a "step" means into consideration.
@@ -489,8 +489,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       }
 
       const generatedLocation = thread.sources.getFrameLocation(this);
-      const newLocation = thread.unsafeSynchronize(thread.sources.getOriginalLocation(
-        generatedLocation));
+      const newLocation = thread.unsafeSynchronize(
+        thread.sources.getOriginalLocation(generatedLocation)
+      );
 
       // Cases when we should pause because we have executed enough to consider
       // a "step" to have occured:
@@ -559,11 +560,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // binding in each _makeOnX method, just do it once here and pass it
     // in to each function.
     const steppingHookState = {
-      pauseAndRespond: (frame, onPacket = k=>k) => {
-        return this._pauseAndRespond(frame, { type: "resumeLimit" }, onPacket);
-      },
-      createValueGrip: v => createValueGrip(v, this._pausePool,
-        this.objectGrip),
+      pauseAndRespond: (frame, onPacket = k=>k) => this._pauseAndRespond(
+        frame,
+        { type: "resumeLimit" },
+        onPacket
+      ),
+      createValueGrip: v => createValueGrip(v, this._pausePool, this.objectGrip),
       thread: this,
       startFrame: this.youngestFrame,
       startLocation: startLocation,
@@ -586,41 +588,42 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * @returns A promise that resolves to true once the hooks are attached, or is
    *          rejected with an error packet.
    */
-  _handleResumeLimit: function(request) {
+  _handleResumeLimit: async function(request) {
     let steppingType = request.resumeLimit.type;
     if (!["break", "step", "next", "finish"].includes(steppingType)) {
-      return Promise.reject({ error: "badParameterType",
-                              message: "Unknown resumeLimit type" });
+      return Promise.reject({
+        error: "badParameterType",
+        message: "Unknown resumeLimit type"
+      });
     }
 
     const generatedLocation = this.sources.getFrameLocation(this.youngestFrame);
-    return this.sources.getOriginalLocation(generatedLocation)
-      .then(originalLocation => {
-        const { onEnterFrame, onPop, onStep } = this._makeSteppingHooks(originalLocation,
-                                                                        steppingType);
+    const originalLocation = await this.sources.getOriginalLocation(generatedLocation);
+    const { onEnterFrame, onPop, onStep } = this._makeSteppingHooks(
+      originalLocation,
+      steppingType
+    );
 
-        // Make sure there is still a frame on the stack if we are to continue
-        // stepping.
-        let stepFrame = this._getNextStepFrame(this.youngestFrame);
-        if (stepFrame) {
-          switch (steppingType) {
-            case "step":
-              this.dbg.onEnterFrame = onEnterFrame;
-              // Fall through.
-            case "break":
-            case "next":
-              if (stepFrame.script) {
-                stepFrame.onStep = onStep;
-              }
-              stepFrame.onPop = onPop;
-              break;
-            case "finish":
-              stepFrame.onPop = onPop;
+    // Make sure there is still a frame on the stack if we are to continue stepping.
+    let stepFrame = this._getNextStepFrame(this.youngestFrame);
+    if (stepFrame) {
+      switch (steppingType) {
+        case "step":
+          this.dbg.onEnterFrame = onEnterFrame;
+          // Fall through.
+        case "break":
+        case "next":
+          if (stepFrame.script) {
+            stepFrame.onStep = onStep;
           }
-        }
+          stepFrame.onPop = onPop;
+          break;
+        case "finish":
+          stepFrame.onPop = onPop;
+      }
+    }
 
-        return true;
-      });
+    return true;
   },
 
   /**
@@ -1345,14 +1348,23 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (completion == null) {
       protoValue.terminated = true;
     } else if ("return" in completion) {
-      protoValue.return = createValueGrip(completion.return,
-        this._pausePool, this.objectGrip);
+      protoValue.return = createValueGrip(
+        completion.return,
+        this._pausePool,
+        this.objectGrip
+      );
     } else if ("throw" in completion) {
-      protoValue.throw = createValueGrip(completion.throw,
-        this._pausePool, this.objectGrip);
+      protoValue.throw = createValueGrip(
+        completion.throw,
+        this._pausePool,
+        this.objectGrip
+      );
     } else {
-      protoValue.return = createValueGrip(completion.yield,
-        this._pausePool, this.objectGrip);
+      protoValue.return = createValueGrip(
+        completion.yield,
+        this._pausePool,
+        this.objectGrip
+      );
     }
     return protoValue;
   },
