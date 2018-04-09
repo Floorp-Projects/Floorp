@@ -35,7 +35,7 @@
       <xul:toolbarbutton anonid="navigatePrevious" class="navigate-button tabbable"
         oncommand="parentNode.navigate(-1, 0, 0);" tooltiptext="&previousarrow.tooltip;"/>
       <xul:hbox align="center" pack="center">
-        <xul:textbox id="pageNumber" value="1" min="1" type="number"
+        <xul:textbox id="pageNumber" size="3" value="1" min="1" type="number"
           hidespinbuttons="true" onchange="navigate(0, this.valueNumber, 0);"/>
         <xul:label value="&of.label;"/>
         <xul:label value="1"/>

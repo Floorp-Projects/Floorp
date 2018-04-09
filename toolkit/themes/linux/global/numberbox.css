@@ -2,4 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../shared/numberbox.inc.css
+/* ===== numberbox.css ==================================================
+  == Styles used by the XUL textbox type="number" element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+html|*.numberbox-input {
+  text-align: right;
+}
+
+textbox[type="number"][hidespinbuttons="true"] html|*.numberbox-input {
+  -moz-appearance: textfield !important;
+}

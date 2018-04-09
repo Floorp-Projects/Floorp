@@ -77,7 +77,7 @@
                 <textbox id="networkProxyHTTP" flex="1"
                          preference="network.proxy.http" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyServer();"/>
                 <label accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port">&port2.label;</label>
-                <textbox id="networkProxyHTTP_Port" class="proxy-port-input" type="number" max="65535" hidespinbuttons="true"
+                <textbox id="networkProxyHTTP_Port" type="number" max="65535" size="5"
                          preference="network.proxy.http_port" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyPort();"/>
               </hbox>
             </row>
@@ -97,8 +97,8 @@
                 <textbox id="networkProxySSL" flex="1" preference="network.proxy.ssl"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', false);"/>
                 <label accesskey="&SSLport.accesskey;" control="networkProxySSL_Port">&port2.label;</label>
-                <textbox id="networkProxySSL_Port" class="proxy-port-input" type="number" max="65535" size="5" preference="network.proxy.ssl_port"
-                         hidespinbuttons="true" onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', true);"/>
+                <textbox id="networkProxySSL_Port" type="number" max="65535" size="5" preference="network.proxy.ssl_port"
+                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', true);"/>
               </hbox>
             </row>
             <row align="center">
@@ -109,8 +109,8 @@
                 <textbox id="networkProxyFTP" flex="1" preference="network.proxy.ftp"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', false);"/>
                 <label accesskey="&FTPport.accesskey;" control="networkProxyFTP_Port">&port2.label;</label>
-                <textbox id="networkProxyFTP_Port" class="proxy-port-input" type="number" max="65535" size="5" preference="network.proxy.ftp_port"
-                         hidespinbuttons="true" onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', true);"/>
+                <textbox id="networkProxyFTP_Port" type="number" max="65535" size="5" preference="network.proxy.ftp_port"
+                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', true);"/>
               </hbox>
             </row>
             <row align="center">
@@ -121,8 +121,8 @@
                 <textbox id="networkProxySOCKS" flex="1" preference="network.proxy.socks"
                          onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', false);"/>
                 <label accesskey="&SOCKSport.accesskey;" control="networkProxySOCKS_Port">&port2.label;</label>
-                <textbox id="networkProxySOCKS_Port" class="proxy-port-input" type="number" max="65535" size="5" preference="network.proxy.socks_port"
-                         hidespinbuttons="true" onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', true);"/>
+                <textbox id="networkProxySOCKS_Port" type="number" max="65535" size="5" preference="network.proxy.socks_port"
+                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', true);"/>
               </hbox>
             </row>
             <row>
