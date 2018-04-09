@@ -32,7 +32,6 @@
 
 #include "nsIDOMElement.h"
 #include "nsIDOMXULButtonElement.h"
-#include "nsIDOMXULElement.h"
 #include "nsIDOMXULLabelElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
