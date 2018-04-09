@@ -68,7 +68,7 @@ AppCacheUtils.prototype = {
         this._getURIInfo(this.manifestURI).then(uriInfo => {
           this._parseManifest(uriInfo).then(() => {
             // Sort errors by line number.
-            this.errors.sort(function (a, b) {
+            this.errors.sort(function(a, b) {
               return a.line - b.line;
             });
             resolve(this.errors);
@@ -195,12 +195,12 @@ AppCacheUtils.prototype = {
       channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
 
       channel.asyncOpen2({
-        onStartRequest: function (request, context) {
+        onStartRequest: function(request, context) {
           // This empty method is needed in order for onDataAvailable to be
           // called.
         },
 
-        onDataAvailable: function (request, context, stream, offset, count) {
+        onDataAvailable: function(request, context, stream, offset, count) {
           request.QueryInterface(Ci.nsIHttpChannel);
           inputStream.init(stream);
           buffer = buffer.concat(inputStream.read(count));
@@ -223,12 +223,12 @@ AppCacheUtils.prototype = {
             };
 
             result.requestHeaders = {};
-            request.visitRequestHeaders(function (header, value) {
+            request.visitRequestHeaders(function(header, value) {
               result.requestHeaders[header.toLowerCase()] = value;
             });
 
             result.responseHeaders = {};
-            request.visitResponseHeaders(function (header, value) {
+            request.visitResponseHeaders(function(header, value) {
               result.responseHeaders[header.toLowerCase()] = value;
             });
 
@@ -253,9 +253,9 @@ AppCacheUtils.prototype = {
 
     let appCacheStorage = Services.cache2.appCacheStorage(Services.loadContextInfo.default, null);
     appCacheStorage.asyncVisitStorage({
-      onCacheStorageInfo: function () {},
+      onCacheStorageInfo: function() {},
 
-      onCacheEntryInfo: function (aURI, aIdEnhance, aDataSize, aFetchCount, aLastModifiedTime, aExpirationTime) {
+      onCacheEntryInfo: function(aURI, aIdEnhance, aDataSize, aFetchCount, aLastModifiedTime, aExpirationTime) {
         let lowerKey = aURI.asciiSpec.toLowerCase();
 
         if (searchTerm && !lowerKey.includes(searchTerm.toLowerCase())) {
@@ -302,7 +302,7 @@ AppCacheUtils.prototype = {
 
     let appCacheStorage = Services.cache2.appCacheStorage(Services.loadContextInfo.default, null);
     appCacheStorage.asyncEvictStorage({
-      onCacheEntryDoomed: function (result) {}
+      onCacheEntryDoomed: function(result) {}
     });
   },
 
@@ -328,22 +328,21 @@ AppCacheUtils.prototype = {
       if (this.doc) {
         let uri = getURI();
         return resolve(uri);
-      } else {
-        this._getURIInfo(this.uri).then(uriInfo => {
-          if (uriInfo.success) {
-            let html = uriInfo.text;
-            let parser = _DOMParser;
-            this.doc = parser.parseFromString(html, "text/html");
-            let uri = getURI();
-            resolve(uri);
-          } else {
-            this.errors.push({
+      }
+      this._getURIInfo(this.uri).then(uriInfo => {
+        if (uriInfo.success) {
+          let html = uriInfo.text;
+          let parser = _DOMParser;
+          this.doc = parser.parseFromString(html, "text/html");
+          let uri = getURI();
+          resolve(uri);
+        } else {
+          this.errors.push({
               line: 0,
               msg: l10n.GetStringFromName("invalidURI")
-            });
-          }
-        });
-      }
+          });
+        }
+      });
     });
   },
 
@@ -615,12 +614,11 @@ ManifestParser.prototype = {
 XPCOMUtils.defineLazyGetter(this, "l10n", () => Services.strings
   .createBundle("chrome://devtools/locale/appcacheutils.properties"));
 
-XPCOMUtils.defineLazyGetter(this, "appcacheservice", function () {
+XPCOMUtils.defineLazyGetter(this, "appcacheservice", function() {
   return Cc["@mozilla.org/network/application-cache-service;1"]
            .getService(Ci.nsIApplicationCacheService);
-
 });
 
-XPCOMUtils.defineLazyGetter(this, "_DOMParser", function () {
+XPCOMUtils.defineLazyGetter(this, "_DOMParser", function() {
   return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
 });
