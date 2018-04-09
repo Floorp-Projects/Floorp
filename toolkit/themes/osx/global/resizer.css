@@ -9,9 +9,7 @@ resizer {
   background: url("chrome://global/skin/icons/resizer.png") no-repeat;
   background-size: 100% 100%;
   cursor: se-resize;
-  min-width: 15px;
   width: 15px;
-  min-height: 15px;
   height: 15px;
 }
 @media (min-resolution: 2dppx) {
@@ -19,10 +17,6 @@ resizer {
     background-image: url("chrome://global/skin/icons/resizer@2x.png");
     background-size: 100% 100%;
   }
-}
-
-resizer[type="window"] {
-  display: none;
 }
 
 resizer:-moz-locale-dir(rtl) {
@@ -34,7 +28,6 @@ resizer:-moz-locale-dir(rtl) {
     background-size: 100% 100%;
   }
 }
-
 
 resizer[dir="left"],
 resizer[dir="bottomleft"],
