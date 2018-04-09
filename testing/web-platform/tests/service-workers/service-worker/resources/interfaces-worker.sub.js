@@ -7,9 +7,11 @@ importScripts('/resources/idlharness.js');
 
 promise_test(async (t) => {
   var idlArray = new IdlArray();
-  let serviceWorkerIdl = await fetch('/interfaces/ServiceWorker.idl').then(r => r.text());
+  const dom = await fetch('/interfaces/dom.idl').then(r => r.text());
+  const serviceWorkerIdl = await fetch('/interfaces/ServiceWorker.idl').then(r => r.text());
 
   idlArray.add_untested_idls(idls.untested);
+  idlArray.add_untested_idls(dom, { only: ['EventTarget'] });
   idlArray.add_idls(serviceWorkerIdl, { only: [
     'ServiceWorkerGlobalScope',
     'Client',

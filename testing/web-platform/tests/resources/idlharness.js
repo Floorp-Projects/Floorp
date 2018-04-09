@@ -683,6 +683,19 @@ IdlArray.prototype.test = function()
     }
     this["includes"] = {};
 
+    // Assert B defined for A : B
+    for (const member of Object.values(this.members).filter(m => m.base)) {
+        const lhs = member.name;
+        const rhs = member.base;
+        if (!(rhs in this.members)) throw new IdlHarnessError(`${lhs} inherits ${rhs}, but ${rhs} is undefined.`);
+        const lhs_is_interface = this.members[lhs] instanceof IdlInterface;
+        const rhs_is_interface = this.members[rhs] instanceof IdlInterface;
+        if (rhs_is_interface != lhs_is_interface) {
+            if (!lhs_is_interface) throw new IdlHarnessError(`${lhs} inherits ${rhs}, but ${lhs} is not an interface.`);
+            if (!rhs_is_interface) throw new IdlHarnessError(`${lhs} inherits ${rhs}, but ${rhs} is not an interface.`);
+        }
+    }
+
     Object.getOwnPropertyNames(this.members).forEach(function(memberName) {
         var member = this.members[memberName];
         if (!(member instanceof IdlInterface)) {
