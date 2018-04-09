@@ -245,7 +245,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                 val info = sessionRule.currentCall
                 assertThat("Method info should be valid", info, notNullValue())
                 assertThat("Counter should be correct",
-                           info.counter, isOneOf(1, 2))
+                           info.counter, equalTo(forEachCall(1, 2)))
                 assertThat("Order should equal counter",
                            info.order, equalTo(info.counter))
                 counter++

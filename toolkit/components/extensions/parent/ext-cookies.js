@@ -412,48 +412,52 @@ this.cookies = class extends ExtensionAPI {
           return Promise.resolve(result);
         },
 
-        onChanged: new EventManager(context, "cookies.onChanged", fire => {
-          let observer = (subject, topic, data) => {
-            let notify = (removed, cookie, cause) => {
-              cookie.QueryInterface(Ci.nsICookie2);
+        onChanged: new EventManager({
+          context,
+          name: "cookies.onChanged",
+          register: fire => {
+            let observer = (subject, topic, data) => {
+              let notify = (removed, cookie, cause) => {
+                cookie.QueryInterface(Ci.nsICookie2);
 
-              if (extension.whiteListedHosts.matchesCookie(cookie)) {
-                fire.async({removed, cookie: convertCookie({cookie, isPrivate: topic == "private-cookie-changed"}), cause});
+                if (extension.whiteListedHosts.matchesCookie(cookie)) {
+                  fire.async({removed, cookie: convertCookie({cookie, isPrivate: topic == "private-cookie-changed"}), cause});
+                }
+              };
+
+              // We do our best effort here to map the incompatible states.
+              switch (data) {
+                case "deleted":
+                  notify(true, subject, "explicit");
+                  break;
+                case "added":
+                  notify(false, subject, "explicit");
+                  break;
+                case "changed":
+                  notify(true, subject, "overwrite");
+                  notify(false, subject, "explicit");
+                  break;
+                case "batch-deleted":
+                  subject.QueryInterface(Ci.nsIArray);
+                  for (let i = 0; i < subject.length; i++) {
+                    let cookie = subject.queryElementAt(i, Ci.nsICookie2);
+                    if (!cookie.isSession && cookie.expiry * 1000 <= Date.now()) {
+                      notify(true, cookie, "expired");
+                    } else {
+                      notify(true, cookie, "evicted");
+                    }
+                  }
+                  break;
               }
             };
 
-            // We do our best effort here to map the incompatible states.
-            switch (data) {
-              case "deleted":
-                notify(true, subject, "explicit");
-                break;
-              case "added":
-                notify(false, subject, "explicit");
-                break;
-              case "changed":
-                notify(true, subject, "overwrite");
-                notify(false, subject, "explicit");
-                break;
-              case "batch-deleted":
-                subject.QueryInterface(Ci.nsIArray);
-                for (let i = 0; i < subject.length; i++) {
-                  let cookie = subject.queryElementAt(i, Ci.nsICookie2);
-                  if (!cookie.isSession && cookie.expiry * 1000 <= Date.now()) {
-                    notify(true, cookie, "expired");
-                  } else {
-                    notify(true, cookie, "evicted");
-                  }
-                }
-                break;
-            }
-          };
-
-          Services.obs.addObserver(observer, "cookie-changed");
-          Services.obs.addObserver(observer, "private-cookie-changed");
-          return () => {
-            Services.obs.removeObserver(observer, "cookie-changed");
-            Services.obs.removeObserver(observer, "private-cookie-changed");
-          };
+            Services.obs.addObserver(observer, "cookie-changed");
+            Services.obs.addObserver(observer, "private-cookie-changed");
+            return () => {
+              Services.obs.removeObserver(observer, "cookie-changed");
+              Services.obs.removeObserver(observer, "private-cookie-changed");
+            };
+          },
         }).api(),
       },
     };

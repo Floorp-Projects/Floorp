@@ -106,7 +106,14 @@ async function waitForEvent(...eventTypes) {
 }
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]});
+  await SpecialPowers.pushPrefEnv({
+      "set": [
+        ["media.cache_size", 40000],
+        ["full-screen-api.enabled", true],
+        ["full-screen-api.allow-trusted-requests-only", false],
+        ["full-screen-api.transition-duration.enter", "0 0"],
+        ["full-screen-api.transition-duration.leave", "0 0"]
+      ]});
   await new Promise(resolve => {
     video.addEventListener("canplaythrough", resolve, {once: true});
     video.src = "seek_with_sound.ogg";
@@ -376,6 +383,28 @@ add_task(async function ensure_video_pause() {
     video.pause();
     await waitForEvent("pause");
   }
+});
+
+// Bug 1452342: Make sure the cursor hides and shows on full screen mode.
+add_task(async function ensure_fullscreen_cursor() {
+  video.removeAttribute("mozNoDynamicControls");
+  video.play();
+  await waitForEvent("play");
+
+  video.mozRequestFullScreen();
+  await waitForEvent("mozfullscreenchange");
+
+  const controlsSpacer = getAnonElementWithinVideoByAttribute(video, "anonid", "controlsSpacer");
+  is(controlsSpacer.hasAttribute("hideCursor"), true, "Cursor is hidden");
+
+  // Wiggle the mouse a bit
+  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { type: "mousemove" });
+
+  is(controlsSpacer.hasAttribute("hideCursor"), false, "Cursor is shown");
+
+  // Restore
+  video.setAttribute("mozNoDynamicControls", "");
+  document.mozCancelFullScreen();
 });
 
 </script>
