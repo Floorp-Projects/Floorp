@@ -2338,6 +2338,8 @@ public:
   /**
    * Return the horizontal components of padding, border, and margin
    * that contribute to the intrinsic width that applies to the parent.
+   * @param aPercentageBasis the percentage basis to use for padding/margin -
+   *   i.e. the Containing Block's inline-size
    */
   struct IntrinsicISizeOffsetData {
     nscoord hPadding, hBorder, hMargin;
@@ -2346,13 +2348,17 @@ public:
       : hPadding(0), hBorder(0), hMargin(0)
     {}
   };
-  virtual IntrinsicISizeOffsetData IntrinsicISizeOffsets() = 0;
+  virtual IntrinsicISizeOffsetData
+  IntrinsicISizeOffsets(nscoord aPercentageBasis = NS_UNCONSTRAINEDSIZE) = 0;
 
   /**
    * Return the bsize components of padding, border, and margin
    * that contribute to the intrinsic width that applies to the parent.
+   * @param aPercentageBasis the percentage basis to use for padding/margin -
+   *   i.e. the Containing Block's inline-size
    */
-  IntrinsicISizeOffsetData IntrinsicBSizeOffsets();
+  IntrinsicISizeOffsetData
+  IntrinsicBSizeOffsets(nscoord aPercentageBasis = NS_UNCONSTRAINEDSIZE);
 
   virtual mozilla::IntrinsicSize GetIntrinsicSize() = 0;
 
