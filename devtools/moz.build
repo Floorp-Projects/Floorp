@@ -14,10 +14,10 @@ if CONFIG['MOZ_DEVTOOLS'] == 'all':
 
 # `platform` contains all native components
 DIRS += [
-    'platform',
     'server',
     'shared',
     'startup',
+    'platform',
 ]
 
 # /browser uses DIST_SUBDIR.  We opt-in to this treatment when building
