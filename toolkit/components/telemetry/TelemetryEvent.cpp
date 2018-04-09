@@ -1135,26 +1135,38 @@ TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear, JSContext* cx,
       return NS_ERROR_FAILURE;
     }
 
-    for (auto iter = gEventRecords.Iter(); !iter.Done(); iter.Next()) {
-      const EventRecordArray* eventStorage = static_cast<EventRecordArray*>(iter.Data());
-      EventRecordArray events;
+    // The snapshotting function is the same for both static and dynamic builtin events.
+    // We can use the same function and store the events in the same output storage.
+    auto snapshotter = [aDataset, &locker, &processEvents]
+                       (EventRecordsMapType& aProcessStorage)
+    {
 
-      const uint32_t len = eventStorage->Length();
-      for (uint32_t i = 0; i < len; ++i) {
-        const EventRecord& record = (*eventStorage)[i];
-        if (IsInDataset(GetDataset(locker, record.GetEventKey()), aDataset)) {
-          events.AppendElement(record);
+      for (auto iter = aProcessStorage.Iter(); !iter.Done(); iter.Next()) {
+        const EventRecordArray* eventStorage = static_cast<EventRecordArray*>(iter.Data());
+        EventRecordArray events;
+
+        const uint32_t len = eventStorage->Length();
+        for (uint32_t i = 0; i < len; ++i) {
+          const EventRecord& record = (*eventStorage)[i];
+          if (IsInDataset(GetDataset(locker, record.GetEventKey()), aDataset)) {
+            events.AppendElement(record);
+          }
+        }
+
+        if (events.Length()) {
+          const char* processName = GetNameForProcessID(ProcessID(iter.Key()));
+          processEvents.AppendElement(mozilla::MakePair(processName, Move(events)));
         }
       }
+    };
 
-      if (events.Length()) {
-        const char* processName = GetNameForProcessID(ProcessID(iter.Key()));
-        processEvents.AppendElement(mozilla::MakePair(processName, Move(events)));
-      }
-    }
+    // Take a snapshot of the plain and dynamic builtin events.
+    snapshotter(gEventRecords);
+    snapshotter(gBuiltinEventRecords);
 
     if (aClear) {
       gEventRecords.Clear();
+      gBuiltinEventRecords.Clear();
     }
   }
 
@@ -1194,6 +1206,7 @@ TelemetryEvent::ClearEvents()
   }
 
   gEventRecords.Clear();
+  gBuiltinEventRecords.Clear();
 }
 
 void
@@ -1221,17 +1234,23 @@ TelemetryEvent::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   StaticMutexAutoLock locker(gTelemetryEventsMutex);
   size_t n = 0;
 
+  auto getSizeOfRecords = [aMallocSizeOf](auto &storageMap)
+  {
+    size_t partial = storageMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (auto iter = storageMap.Iter(); !iter.Done(); iter.Next()) {
+      EventRecordArray* eventRecords = static_cast<EventRecordArray*>(iter.Data());
+      partial += eventRecords->ShallowSizeOfIncludingThis(aMallocSizeOf);
 
-  n += gEventRecords.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = gEventRecords.Iter(); !iter.Done(); iter.Next()) {
-    EventRecordArray* eventRecords = static_cast<EventRecordArray*>(iter.Data());
-    n += eventRecords->ShallowSizeOfIncludingThis(aMallocSizeOf);
-
-    const uint32_t len = eventRecords->Length();
-    for (uint32_t i = 0; i < len; ++i) {
-      n += (*eventRecords)[i].SizeOfExcludingThis(aMallocSizeOf);
+      const uint32_t len = eventRecords->Length();
+      for (uint32_t i = 0; i < len; ++i) {
+        partial += (*eventRecords)[i].SizeOfExcludingThis(aMallocSizeOf);
+      }
     }
-  }
+    return partial;
+  };
+
+  n += getSizeOfRecords(gEventRecords);
+  n += getSizeOfRecords(gBuiltinEventRecords);
 
   n += gEventNameIDMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = gEventNameIDMap.ConstIter(); !iter.Done(); iter.Next()) {
