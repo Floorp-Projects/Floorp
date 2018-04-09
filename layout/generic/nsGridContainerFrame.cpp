@@ -12,6 +12,7 @@
 #include <functional>
 #include <limits>
 #include "gfxContext.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSAlignUtils.h"
 #include "mozilla/CSSOrderAwareFrameIterator.h"
