@@ -146,7 +146,6 @@ function serializeNode(aNode, aIsLivemark) {
   data.instanceId = PlacesUtils.instanceId;
 
   let guid = aNode.bookmarkGuid;
-  let grandParentId;
 
   // Some nodes, e.g. the unfiled/menu/toolbar ones can have a virtual guid, so
   // we ignore any that are a folder shortcut. These will be handled below.
@@ -155,11 +154,6 @@ function serializeNode(aNode, aIsLivemark) {
     if (aNode.parent) {
       data.parent = aNode.parent.itemId;
       data.parentGuid = aNode.parent.bookmarkGuid;
-    }
-
-    let grandParent = aNode.parent && aNode.parent.parent;
-    if (grandParent) {
-      grandParentId = grandParent.itemId;
     }
 
     data.dateAdded = aNode.dateAdded;
@@ -172,46 +166,24 @@ function serializeNode(aNode, aIsLivemark) {
 
   if (PlacesUtils.nodeIsURI(aNode)) {
     // Check for url validity.
-    NetUtil.newURI(aNode.uri);
-
-    // Tag root accepts only folder nodes, not URIs.
-    if (data.parent == PlacesUtils.tagsFolderId)
-      throw new Error("Unexpected node type");
-
+    new URL(aNode.uri);
     data.type = PlacesUtils.TYPE_X_MOZ_PLACE;
     data.uri = aNode.uri;
-
     if (aNode.tags)
       data.tags = aNode.tags;
-  } else if (PlacesUtils.nodeIsContainer(aNode)) {
-    // Tag containers accept only uri nodes.
-    if (grandParentId == PlacesUtils.tagsFolderId)
-      throw new Error("Unexpected node type");
-
-    let concreteId = PlacesUtils.getConcreteItemId(aNode);
-    if (concreteId != -1) {
-      // This is a bookmark or a tag container.
-      if (PlacesUtils.nodeIsQuery(aNode) || concreteId != aNode.itemId) {
-        // This is a folder shortcut.
-        data.type = PlacesUtils.TYPE_X_MOZ_PLACE;
-        data.uri = aNode.uri;
-        data.concreteId = concreteId;
-        data.concreteGuid = PlacesUtils.getConcreteItemGuid(aNode);
-      } else {
-        // This is a bookmark folder.
-        data.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
-      }
-    } else {
-      // This is a grouped container query, dynamically generated.
+  } else if (PlacesUtils.nodeIsFolder(aNode)) {
+    if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
       data.type = PlacesUtils.TYPE_X_MOZ_PLACE;
       data.uri = aNode.uri;
+      data.concreteId = PlacesUtils.getConcreteItemId(aNode);
+      data.concreteGuid = PlacesUtils.getConcreteItemGuid(aNode);
+    } else {
+      data.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
     }
+  } else if (PlacesUtils.nodeIsQuery(aNode)) {
+    data.type = PlacesUtils.TYPE_X_MOZ_PLACE;
+    data.uri = aNode.uri;
   } else if (PlacesUtils.nodeIsSeparator(aNode)) {
-    // Tag containers don't accept separators.
-    if (data.parent == PlacesUtils.tagsFolderId ||
-        grandParentId == PlacesUtils.tagsFolderId)
-      throw new Error("Unexpected node type");
-
     data.type = PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR;
   }
 
@@ -844,8 +816,6 @@ var PlacesUtils = {
    * @param aNode
    *        a result node.
    * @return the concrete item-guid for aNode.
-   * @note unlike getConcreteItemId, this doesn't allow retrieving the guid of a
-   *       ta container.
    */
   getConcreteItemGuid(aNode) {
     if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT)
