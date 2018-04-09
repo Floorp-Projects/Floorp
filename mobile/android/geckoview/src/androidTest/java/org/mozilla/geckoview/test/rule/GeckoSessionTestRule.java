@@ -1248,8 +1248,9 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     }
 
     /**
-     * Get information about the current call. Only valid during a {@link #forCallbacksDuringWait}
-     * callback.
+     * Get information about the current call. Only valid during a {@link
+     * #forCallbacksDuringWait}, {@link #delegateDuringNextWait}, or {@link
+     * #delegateUntilTestEnd} callback.
      *
      * @return Call information
      */
@@ -1392,5 +1393,23 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      */
     public GeckoSession createClosedSession(final GeckoSessionSettings settings) {
         return createSession(settings, /* open */ false);
+    }
+
+    /**
+     * Return a value from the given array indexed by the current call counter. Only valid
+     * during a {@link #forCallbacksDuringWait}, {@link #delegateDuringNextWait}, or
+     * {@link #delegateUntilTestEnd} callback.
+     * <p><p>
+     * Asserts that {@code foo} is equal to {@code "bar"} during the first call and {@code
+     * "baz"} during the second call:
+     * <pre>{@code assertThat("Foo should match", foo, equalTo(forEachCall("bar",
+     * "baz")));}</pre>
+     *
+     * @param values Input array
+     * @return Value from input array indexed by the current call counter.
+     */
+    public <T> T forEachCall(T... values) {
+        assertThat("Should be in a method call", mCurrentMethodCall, notNullValue());
+        return values[Math.min(mCurrentMethodCall.getCurrentCount(), values.length) - 1];
     }
 }

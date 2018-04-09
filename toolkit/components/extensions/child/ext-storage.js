@@ -148,20 +148,24 @@ this.storage = class extends ExtensionAPI {
           },
         },
 
-        onChanged: new EventManager(context, "storage.onChanged", fire => {
-          let onChanged = (data, area) => {
-            let changes = new context.cloneScope.Object();
-            for (let [key, value] of Object.entries(data)) {
-              changes[key] = deserialize(value);
-            }
-            fire.raw(changes, area);
-          };
+        onChanged: new EventManager({
+          context,
+          name: "storage.onChanged",
+          register: fire => {
+            let onChanged = (data, area) => {
+              let changes = new context.cloneScope.Object();
+              for (let [key, value] of Object.entries(data)) {
+                changes[key] = deserialize(value);
+              }
+              fire.raw(changes, area);
+            };
 
-          let parent = context.childManager.getParentEvent("storage.onChanged");
-          parent.addListener(onChanged);
-          return () => {
-            parent.removeListener(onChanged);
-          };
+            let parent = context.childManager.getParentEvent("storage.onChanged");
+            parent.addListener(onChanged);
+            return () => {
+              parent.removeListener(onChanged);
+            };
+          },
         }).api(),
       },
     };

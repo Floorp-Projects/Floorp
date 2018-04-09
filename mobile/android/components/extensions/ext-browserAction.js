@@ -156,14 +156,18 @@ this.browserAction = class extends ExtensionAPI {
 
     return {
       browserAction: {
-        onClicked: new EventManager(context, "browserAction.onClicked", fire => {
-          let listener = (event, tab) => {
-            fire.async(tabManager.convert(tab));
-          };
-          browserActionMap.get(extension).on("click", listener);
-          return () => {
-            browserActionMap.get(extension).off("click", listener);
-          };
+        onClicked: new EventManager({
+          context,
+          name: "browserAction.onClicked",
+          register: fire => {
+            let listener = (event, tab) => {
+              fire.async(tabManager.convert(tab));
+            };
+            browserActionMap.get(extension).on("click", listener);
+            return () => {
+              browserActionMap.get(extension).off("click", listener);
+            };
+          },
         }).api(),
 
         setTitle: function(details) {
