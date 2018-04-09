@@ -141,7 +141,7 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
            documentFragment->GetFirstChild();
          contentToInsert;
          contentToInsert = documentFragment->GetFirstChild()) {
-      rv = InsertNode(*contentToInsert, pointToInsert);
+      rv = InsertNodeWithTransaction(*contentToInsert, pointToInsert);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }

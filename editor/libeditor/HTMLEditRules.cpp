@@ -5013,8 +5013,11 @@ HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
     OwningNonNull<Text> newNode =
       EditorBase::CreateTextNode(aDoc, EmptyString());
     nsresult rv =
-      htmlEditor->InsertNode(*newNode, EditorRawDOMPoint(node, offset));
-    NS_ENSURE_SUCCESS(rv, rv);
+      htmlEditor->InsertNodeWithTransaction(*newNode,
+                                            EditorRawDOMPoint(node, offset));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     node = newNode;
     offset = 0;
     weDidSomething = true;

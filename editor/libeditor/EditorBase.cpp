@@ -128,11 +128,11 @@ template already_AddRefed<Element>
 EditorBase::CreateNodeWithTransaction(nsAtom& aTag,
                                       const EditorRawDOMPoint& aPointToInsert);
 template nsresult
-EditorBase::InsertNode(nsIContent& aContentToInsert,
-                       const EditorDOMPoint& aPointToInsert);
+EditorBase::InsertNodeWithTransaction(nsIContent& aContentToInsert,
+                                      const EditorDOMPoint& aPointToInsert);
 template nsresult
-EditorBase::InsertNode(nsIContent& aContentToInsert,
-                       const EditorRawDOMPoint& aPointToInsert);
+EditorBase::InsertNodeWithTransaction(nsIContent& aContentToInsert,
+                                      const EditorRawDOMPoint& aPointToInsert);
 template already_AddRefed<nsIContent>
 EditorBase::SplitNode(const EditorDOMPoint& aStartOfRightNode,
                       ErrorResult& aError);
@@ -1416,13 +1416,15 @@ EditorBase::InsertNode(nsIDOMNode* aNodeToInsert,
   int32_t offset =
     aOffset < 0 ? static_cast<int32_t>(container->Length()) :
                   std::min(aOffset, static_cast<int32_t>(container->Length()));
-  return InsertNode(*contentToInsert, EditorRawDOMPoint(container, offset));
+  return InsertNodeWithTransaction(*contentToInsert,
+                                   EditorRawDOMPoint(container, offset));
 }
 
 template<typename PT, typename CT>
 nsresult
-EditorBase::InsertNode(nsIContent& aContentToInsert,
-                       const EditorDOMPointBase<PT, CT>& aPointToInsert)
+EditorBase::InsertNodeWithTransaction(
+              nsIContent& aContentToInsert,
+              const EditorDOMPointBase<PT, CT>& aPointToInsert)
 {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return NS_ERROR_INVALID_ARG;
@@ -1696,8 +1698,9 @@ EditorBase::ReplaceContainer(Element* aOldContainer,
         return nullptr;
       }
 
-      rv = InsertNode(*child, EditorRawDOMPoint(newContainer,
-                                                newContainer->Length()));
+      rv = InsertNodeWithTransaction(*child,
+                                     EditorRawDOMPoint(newContainer,
+                                                       newContainer->Length()));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;
       }
@@ -1707,7 +1710,7 @@ EditorBase::ReplaceContainer(Element* aOldContainer,
   // Insert new container into tree.
   NS_WARNING_ASSERTION(atOldContainer.IsSetAndValid(),
     "The old container might be moved by mutation observer");
-  nsresult rv = InsertNode(*newContainer, atOldContainer);
+  nsresult rv = InsertNodeWithTransaction(*newContainer, atOldContainer);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -1752,9 +1755,10 @@ EditorBase::RemoveContainer(nsIContent* aNode)
     // Insert the last child before the previous last child.  So, we need to
     // use offset here because previous child might have been moved to
     // container.
-    rv = InsertNode(*child,
-                    EditorRawDOMPoint(pointToInsertChildren.GetContainer(),
-                                      pointToInsertChildren.Offset()));
+    rv = InsertNodeWithTransaction(*child,
+                                   EditorRawDOMPoint(
+                                     pointToInsertChildren.GetContainer(),
+                                     pointToInsertChildren.Offset()));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1814,14 +1818,14 @@ EditorBase::InsertContainerAbove(nsIContent* aNode,
 
   {
     AutoTransactionsConserveSelection conserveSelection(this);
-    rv = InsertNode(*aNode, EditorRawDOMPoint(newContainer, 0));
+    rv = InsertNodeWithTransaction(*aNode, EditorRawDOMPoint(newContainer, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
   }
 
   // Put the new container where aNode was.
-  rv = InsertNode(*newContainer, pointToInsertNewContainer);
+  rv = InsertNodeWithTransaction(*newContainer, pointToInsertNewContainer);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -1877,7 +1881,7 @@ EditorBase::MoveNode(nsIContent* aNode,
     return rv;
   }
 
-  rv = InsertNode(*aNode, EditorRawDOMPoint(aParent, aOffset));
+  rv = InsertNodeWithTransaction(*aNode, EditorRawDOMPoint(aParent, aOffset));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2751,8 +2755,10 @@ EditorBase::InsertTextImpl(nsIDocument& aDocument,
       RefPtr<nsTextNode> newNode =
         EditorBase::CreateTextNode(aDocument, EmptyString());
       // then we insert it into the dom tree
-      nsresult rv = InsertNode(*newNode, pointToInsert);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = InsertNodeWithTransaction(*newNode, pointToInsert);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       pointToInsert.Set(newNode, 0);
       newOffset = lengthToInsert;
     } else {
@@ -2792,8 +2798,10 @@ EditorBase::InsertTextImpl(nsIDocument& aDocument,
   RefPtr<nsTextNode> newNode =
     EditorBase::CreateTextNode(aDocument, aStringToInsert);
   // then we insert it into the dom tree
-  nsresult rv = InsertNode(*newNode, pointToInsert);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = InsertNodeWithTransaction(*newNode, pointToInsert);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   if (aPointAfterInsertedString) {
     aPointAfterInsertedString->Set(newNode, lengthToInsert.value());
   }
