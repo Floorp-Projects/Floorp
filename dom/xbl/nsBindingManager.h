@@ -159,9 +159,11 @@ public:
 
   // Enumerate each bound content's bindings (including its base bindings)
   // in mBoundContentSet. Return false from the callback to stop enumeration.
-  using BoundContentBindingCallback = std::function<bool (nsXBLBinding*)>;
-  bool EnumerateBoundContentBindings(
-    const BoundContentBindingCallback& aCallback) const;
+  using BoundContentProtoBindingCallback =
+    std::function<bool (nsXBLPrototypeBinding*)>;
+
+  bool EnumerateBoundContentProtoBindings(
+      const BoundContentProtoBindingCallback&) const;
 
 protected:
   nsIXPConnectWrappedJS* GetWrappedJS(nsIContent* aContent);
