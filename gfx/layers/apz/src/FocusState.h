@@ -144,8 +144,7 @@ private:
   // The set of focus targets received indexed by their layer tree ID
   std::unordered_map<LayersId,
                      FocusTarget,
-                     LayersId::HashFn,
-                     LayersId::EqualFn> mFocusTree;
+                     LayersId::HashFn> mFocusTree;
 
   // The focus sequence number of the last potentially focus changing event
   // processed by APZ. This number starts at one and increases monotonically.

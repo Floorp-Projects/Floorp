@@ -93,11 +93,6 @@ this.gDevTools = {
   get _tools() {
     return devtools._tools;
   },
-  * [Symbol.iterator ]() {
-    for (let toolbox of this._toolboxes) {
-      yield toolbox;
-    }
-  }
 };
 gDevToolsMethods.forEach(name => {
   this.gDevTools[name] = (...args) => {

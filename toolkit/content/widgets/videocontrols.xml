@@ -1193,6 +1193,10 @@
             return;
           }
 
+          if (element == this.controlBar) {
+            this.controlsSpacer.removeAttribute("hideCursor");
+          }
+
           // Unhide
           element.hidden = false;
         } else {

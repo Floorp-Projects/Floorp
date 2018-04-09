@@ -346,16 +346,21 @@ this.pageAction = class extends ExtensionAPI {
 
     return {
       pageAction: {
-        onClicked: new InputEventManager(context, "pageAction.onClicked", fire => {
-          let listener = (evt, tab) => {
-            context.withPendingBrowser(tab.linkedBrowser, () =>
-              fire.sync(tabManager.convert(tab)));
-          };
+        onClicked: new EventManager({
+          context,
+          name: "pageAction.onClicked",
+          inputHandling: true,
+          register: fire => {
+            let listener = (evt, tab) => {
+              context.withPendingBrowser(tab.linkedBrowser, () =>
+                fire.sync(tabManager.convert(tab)));
+            };
 
-          pageAction.on("click", listener);
-          return () => {
-            pageAction.off("click", listener);
-          };
+            pageAction.on("click", listener);
+            return () => {
+              pageAction.off("click", listener);
+            };
+          },
         }).api(),
 
         show(tabId) {

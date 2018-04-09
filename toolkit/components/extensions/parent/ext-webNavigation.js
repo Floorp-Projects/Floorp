@@ -90,60 +90,60 @@ const fillTransitionProperties = (eventName, src, dst) => {
 };
 
 // Similar to WebRequestEventManager but for WebNavigation.
-function WebNavigationEventManager(context, eventName) {
-  let name = `webNavigation.${eventName}`;
-  let register = (fire, urlFilters) => {
-    // Don't create a MatchURLFilters instance if the listener does not include any filter.
-    let filters = urlFilters ? new MatchURLFilters(urlFilters.url) : null;
+class WebNavigationEventManager extends EventManager {
+  constructor(context, eventName) {
+    let name = `webNavigation.${eventName}`;
+    let register = (fire, urlFilters) => {
+      // Don't create a MatchURLFilters instance if the listener does not include any filter.
+      let filters = urlFilters ? new MatchURLFilters(urlFilters.url) : null;
 
-    let listener = data => {
-      if (!data.browser) {
-        return;
-      }
+      let listener = data => {
+        if (!data.browser) {
+          return;
+        }
 
-      let data2 = {
-        url: data.url,
-        timeStamp: Date.now(),
+        let data2 = {
+          url: data.url,
+          timeStamp: Date.now(),
+        };
+
+        if (eventName == "onErrorOccurred") {
+          data2.error = data.error;
+        }
+
+        if (data.frameId != undefined) {
+          data2.frameId = data.frameId;
+          data2.parentFrameId = data.parentFrameId;
+        }
+
+        if (data.sourceFrameId != undefined) {
+          data2.sourceFrameId = data.sourceFrameId;
+        }
+
+        // Fills in tabId typically.
+        Object.assign(data2, tabTracker.getBrowserData(data.browser));
+        if (data2.tabId < 0) {
+          return;
+        }
+
+        if (data.sourceTabBrowser) {
+          data2.sourceTabId = tabTracker.getBrowserData(data.sourceTabBrowser).tabId;
+        }
+
+        fillTransitionProperties(eventName, data, data2);
+
+        fire.async(data2);
       };
 
-      if (eventName == "onErrorOccurred") {
-        data2.error = data.error;
-      }
-
-      if (data.frameId != undefined) {
-        data2.frameId = data.frameId;
-        data2.parentFrameId = data.parentFrameId;
-      }
-
-      if (data.sourceFrameId != undefined) {
-        data2.sourceFrameId = data.sourceFrameId;
-      }
-
-      // Fills in tabId typically.
-      Object.assign(data2, tabTracker.getBrowserData(data.browser));
-      if (data2.tabId < 0) {
-        return;
-      }
-
-      if (data.sourceTabBrowser) {
-        data2.sourceTabId = tabTracker.getBrowserData(data.sourceTabBrowser).tabId;
-      }
-
-      fillTransitionProperties(eventName, data, data2);
-
-      fire.async(data2);
+      WebNavigation[eventName].addListener(listener, filters);
+      return () => {
+        WebNavigation[eventName].removeListener(listener);
+      };
     };
 
-    WebNavigation[eventName].addListener(listener, filters);
-    return () => {
-      WebNavigation[eventName].removeListener(listener);
-    };
-  };
-
-  return EventManager.call(this, context, name, register);
+    super({context, name, register});
+  }
 }
-
-WebNavigationEventManager.prototype = Object.create(EventManager.prototype);
 
 const convertGetFrameResult = (tabId, data) => {
   return {
@@ -161,8 +161,12 @@ this.webNavigation = class extends ExtensionAPI {
 
     return {
       webNavigation: {
-        onTabReplaced: new EventManager(context, "webNavigation.onTabReplaced", fire => {
-          return () => {};
+        onTabReplaced: new EventManager({
+          context,
+          name: "webNavigation.onTabReplaced",
+          register: fire => {
+            return () => {};
+          },
         }).api(),
         onBeforeNavigate: new WebNavigationEventManager(context, "onBeforeNavigate").api(),
         onCommitted: new WebNavigationEventManager(context, "onCommitted").api(),

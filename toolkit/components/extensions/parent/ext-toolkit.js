@@ -21,12 +21,6 @@ ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 
 global.EventEmitter = ExtensionUtils.EventEmitter;
 global.EventManager = ExtensionCommon.EventManager;
-global.InputEventManager = class extends EventManager {
-  constructor(...args) {
-    super(...args);
-    this.inputHandling = true;
-  }
-};
 
 /* globals DEFAULT_STORE, PRIVATE_STORE, CONTAINER_STORE */
 
@@ -80,3 +74,24 @@ global.isValidCookieStoreId = function(storeId) {
          isPrivateCookieStoreId(storeId) ||
          isContainerCookieStoreId(storeId);
 };
+
+function makeEventPromise(name, event) {
+  Object.defineProperty(global, name, {
+    get() {
+      let promise = ExtensionUtils.promiseObserved(event);
+      Object.defineProperty(global, name, {value: promise});
+      return promise;
+    },
+    configurable: true,
+    enumerable: true,
+  });
+}
+
+// browserPaintedPromise and browserStartupPromise are promises that
+// resolve after the first browser window is painted and after browser
+// windows have been restored, respectively.
+// These promises must be referenced during startup to be valid -- if the
+// first reference happens after the corresponding event has occurred,
+// the Promise will never resolve.
+makeEventPromise("browserPaintedPromise", "browser-delayed-startup-finished");
+makeEventPromise("browserStartupPromise", "sessionstore-windows-restored");

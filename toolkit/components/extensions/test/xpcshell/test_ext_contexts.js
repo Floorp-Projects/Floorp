@@ -65,11 +65,15 @@ add_task(async function test_post_unload_listeners() {
   let context = new StubContext();
 
   let fire;
-  let manager = new EventManager(context, "EventManager", _fire => {
-    fire = () => {
-      _fire.async();
-    };
-    return () => {};
+  let manager = new EventManager({
+    context,
+    name: "EventManager",
+    register: _fire => {
+      fire = () => {
+        _fire.async();
+      };
+      return () => {};
+    },
   });
 
   let fail = event => {
