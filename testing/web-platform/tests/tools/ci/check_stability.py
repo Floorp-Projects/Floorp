@@ -307,81 +307,76 @@ def run(venv, wpt_args, **kwargs):
 
     pr_number = pr()
 
-    try:
-        with TravisFold("browser_setup"):
-            logger.info(markdown.format_comment_title(wpt_args.product))
+    with TravisFold("browser_setup"):
+        logger.info(markdown.format_comment_title(wpt_args.product))
 
-            if pr is not None:
-                deepen_checkout(kwargs["user"])
+        if pr is not None:
+            deepen_checkout(kwargs["user"])
 
-            # Ensure we have a branch called "master"
-            fetch_wpt(kwargs["user"], "master:master")
+        # Ensure we have a branch called "master"
+        fetch_wpt(kwargs["user"], "master:master")
 
-            head_sha1 = get_sha1()
-            logger.info("Testing web-platform-tests at revision %s" % head_sha1)
+        head_sha1 = get_sha1()
+        logger.info("Testing web-platform-tests at revision %s" % head_sha1)
 
-            wpt_kwargs = Kwargs(vars(wpt_args))
+        wpt_kwargs = Kwargs(vars(wpt_args))
 
-            if not wpt_kwargs["test_list"]:
-                manifest_path = os.path.join(wpt_kwargs["metadata_root"], "MANIFEST.json")
-                tests_changed, files_affected = get_changed_files(manifest_path, kwargs["rev"],
-                                                                  ignore_changes, skip_tests)
+        if not wpt_kwargs["test_list"]:
+            manifest_path = os.path.join(wpt_kwargs["metadata_root"], "MANIFEST.json")
+            tests_changed, files_affected = get_changed_files(manifest_path, kwargs["rev"],
+                                                              ignore_changes, skip_tests)
 
-                if not (tests_changed or files_affected):
-                    logger.info("No tests changed")
-                    return 0
+            if not (tests_changed or files_affected):
+                logger.info("No tests changed")
+                return 0
 
-                if tests_changed:
-                    logger.debug("Tests changed:\n%s" % "".join(" * %s\n" % item for item in tests_changed))
+            if tests_changed:
+                logger.debug("Tests changed:\n%s" % "".join(" * %s\n" % item for item in tests_changed))
 
-                if files_affected:
-                    logger.debug("Affected tests:\n%s" % "".join(" * %s\n" % item for item in files_affected))
+            if files_affected:
+                logger.debug("Affected tests:\n%s" % "".join(" * %s\n" % item for item in files_affected))
 
-                wpt_kwargs["test_list"] = list(tests_changed | files_affected)
+            wpt_kwargs["test_list"] = list(tests_changed | files_affected)
 
-            set_default_args(wpt_kwargs)
+        set_default_args(wpt_kwargs)
 
-            do_delayed_imports()
+        do_delayed_imports()
 
-            wpt_kwargs["stability"] = True
-            wpt_kwargs["prompt"] = False
-            wpt_kwargs["install_browser"] = True
-            wpt_kwargs["install"] = wpt_kwargs["product"].split(":")[0] == "firefox"
+        wpt_kwargs["stability"] = True
+        wpt_kwargs["prompt"] = False
+        wpt_kwargs["install_browser"] = True
+        wpt_kwargs["install"] = wpt_kwargs["product"].split(":")[0] == "firefox"
 
-            wpt_kwargs = setup_wptrunner(venv, **wpt_kwargs)
+        wpt_kwargs = setup_wptrunner(venv, **wpt_kwargs)
 
-            logger.info("Using binary %s" % wpt_kwargs["binary"])
-
-
-        with TravisFold("running_tests"):
-            logger.info("Starting tests")
+        logger.info("Using binary %s" % wpt_kwargs["binary"])
 
 
-            wpt_logger = wptrunner.logger
-            iterations, results, inconsistent = run(venv, wpt_logger, **wpt_kwargs)
+    with TravisFold("running_tests"):
+        logger.info("Starting tests")
 
-        if results:
-            if inconsistent:
-                write_inconsistent(logger.error, inconsistent, iterations)
-                retcode = 2
-            else:
-                logger.info("All results were stable\n")
-            with TravisFold("full_results"):
-                write_results(logger.info, results, iterations,
-                              pr_number=pr_number,
-                              use_details=True)
-                if pr_number:
-                    post_results(results, iterations=iterations, url=results_url,
-                                 product=wpt_args.product, pr_number=pr_number,
-                                 status="failed" if inconsistent else "passed")
+
+        wpt_logger = wptrunner.logger
+        iterations, results, inconsistent = run(venv, wpt_logger, **wpt_kwargs)
+
+    if results:
+        if inconsistent:
+            write_inconsistent(logger.error, inconsistent, iterations)
+            retcode = 2
         else:
-            logger.info("No tests run.")
-    except Exception as e:
-        logger.error(e)
-        raise
-    finally:
-        logger.shutdown()
-        return retcode
+            logger.info("All results were stable\n")
+        with TravisFold("full_results"):
+            write_results(logger.info, results, iterations,
+                          pr_number=pr_number,
+                          use_details=True)
+            if pr_number:
+                post_results(results, iterations=iterations, url=results_url,
+                             product=wpt_args.product, pr_number=pr_number,
+                             status="failed" if inconsistent else "passed")
+    else:
+        logger.info("No tests run.")
+
+    return retcode
 
 
 if __name__ == "__main__":
