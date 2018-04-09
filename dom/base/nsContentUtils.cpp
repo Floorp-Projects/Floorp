@@ -10103,12 +10103,12 @@ nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> window(aDoc->GetInnerWindow());
+  nsPIDOMWindowInner* window = aDoc->GetInnerWindow();
   if (!window) {
     return nullptr;
   }
 
-  RefPtr<CustomElementRegistry> registry(window->CustomElements());
+  CustomElementRegistry* registry = window->CustomElements();
   if (!registry) {
     return nullptr;
   }
