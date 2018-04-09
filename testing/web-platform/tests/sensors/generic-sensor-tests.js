@@ -259,6 +259,22 @@ function runGenericSensorTests(sensorType) {
      }
   }, `${sensorType.name}: throw 'NotSupportedError' for an unsupported sensor option`);
 
+  test(() => {
+    const invalidFreqs = [
+      "invalid",
+      NaN,
+      Infinity,
+      -Infinity,
+      {},
+      undefined
+    ];
+    invalidFreqs.map(freq => {
+      assert_throws(new TypeError(),
+                    () => { new sensorType({frequency: freq}) },
+                    `when freq is ${freq}`);
+    });
+  }, `${sensorType.name}: throw 'TypeError' if frequency is invalid`);
+
   if (spatialSensors.indexOf(sensorType.name) == -1) {
     // The sensorType does not represent a spatial sensor.
     return;
@@ -276,6 +292,23 @@ function runGenericSensorTests(sensorType) {
 
     sensor.stop();
   }, `${sensorType.name}: sensor reading is correct when options.referenceFrame is 'screen'`);
+
+  test(() => {
+    const invalidRefFrames = [
+      "invalid",
+      null,
+      123,
+      {},
+      "",
+      true,
+      undefined
+    ];
+    invalidRefFrames.map(refFrame => {
+      assert_throws(new TypeError(),
+                    () => { new sensorType({referenceFrame: refFrame}) },
+                    `when refFrame is ${refFrame}`);
+    });
+  }, `${sensorType.name}: throw 'TypeError' if referenceFrame is not one of enumeration values`);
 }
 
 function runGenericSensorInsecureContext(sensorType) {
