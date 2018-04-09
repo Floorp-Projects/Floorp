@@ -469,6 +469,15 @@ function generateRequestDeviceArgsWithServices(services = ['heart_rate']) {
   }];
 }
 
+// Causes |fake_peripheral| to disconnect and returns a promise that resolves
+// once `gattserverdisconnected` has been fired on |device|.
+function simulateGATTDisconnectionAndWait(device, fake_peripheral) {
+  return Promise.all([
+    eventPromise(device, 'gattserverdisconnected'),
+    fake_peripheral.simulateGATTDisconnection(),
+  ]);
+}
+
 // Simulates a pre-connected device with |address|, |name| and
 // |knownServiceUUIDs|.
 function setUpPreconnectedDevice({
