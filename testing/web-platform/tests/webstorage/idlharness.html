@@ -58,11 +58,7 @@ dictionary StorageEventInit : EventInit {
 </pre>
 
 <script>
-
-promise_test(async function() {
-  const dom = await fetch('/interfaces/dom.idl').then(r => r.text());
-  const html = await fetch('/interfaces/html.idl').then(r => r.text());
-
+function do_test([html, dom]) {
   var idl_array = new IdlArray();
 
   idl_array.add_untested_idls(dom, { only: ['Event', 'EventInit'] });
@@ -73,8 +69,15 @@ promise_test(async function() {
   idl_array.add_objects({Storage: ["window.localStorage"]});
 
   idl_array.test();
-}, 'webstorage interfaces');
+}
 
+function fetch_text(url) {
+  return fetch(url).then(response => response.text());
+}
+
+promise_test(function () {
+  return Promise.all(['/interfaces/html.idl', '/interfaces/dom.idl'].map(fetch_text)).then(do_test);
+}, 'webstorage interfaces');
 </script>
 </body>
 </html>
