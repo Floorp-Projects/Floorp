@@ -18,51 +18,5 @@ interface nsIDOMXULContainerItemElement : nsISupports
 [scriptable, uuid(b2bc96b8-31fc-42f4-937a-bd27291af40b)]
 interface nsIDOMXULContainerElement : nsIDOMXULContainerItemElement
 {
-  /**
-   * Creates an item for the given label and value and appends it to the
-   * container.
-   *
-   * @param aLabel - the label for the new item
-   * @param aValue - the value of the new item
-   */
-  nsIDOMXULElement appendItem(in DOMString aLabel, in DOMString aValue);
-
-  /**
-   * Creates an item for the given label and value and inserts it into the
-   * container at the specified position.
-   *
-   * @param aIndex - the index where the new item will be inserted
-   * @param aLabel - the label for the new item
-   * @param aValue - the value of the new item
-   */
-  nsIDOMXULElement insertItemAt(in long aIndex, in DOMString aLabel,
-                                in DOMString aValue);
-
-  /**
-   * Removes an item from the container.
-   *
-   * @param aIndex - index of the item to remove
-   */
-  nsIDOMXULElement removeItemAt(in long aIndex);
-
-  /**
-   * Returns a count of items in the container.
-   */
-  readonly attribute unsigned long itemCount;
-
-  /**
-   * Returns the index of an item or -1 if the item is not in the container.
-   *
-   * @param aItem - the item to determine the index of
-   */
-  long getIndexOfItem(in nsIDOMXULElement aItem);
-
-  /**
-   * Returns the item at a given index or null if the item is not is the
-   * container.
-   *
-   * @param aIndex - the index of the item to return
-   */
-  nsIDOMXULElement getItemAtIndex(in long aIndex);
 };
 
