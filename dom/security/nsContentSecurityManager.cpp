@@ -165,6 +165,9 @@ nsContentSecurityManager::CheckFTPSubresourceLoad(nsIChannel* aChannel)
   // We dissallow using FTP resources as a subresource everywhere.
   // The only valid way to use FTP resources is loading it as
   // a top level document.
+  if (!mozilla::net::nsIOService::BlockFTPSubresources()) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   if (!loadInfo) {
