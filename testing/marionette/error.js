@@ -349,57 +349,11 @@ class InvalidSessionIDError extends WebDriverError {
   }
 }
 
-/**
- * An error occurred while executing JavaScript supplied by the user.
- *
- * Creates a richly annotated error for an error situation that occurred
- * whilst evaluating injected scripts.
- */
+/** An error occurred whilst executing JavaScript supplied by the user. */
 class JavaScriptError extends WebDriverError {
-  /**
-   * @param {(string|Error)} x
-   *     An Error object instance or a string describing the error
-   *     situation.
-   * @param {string=} fnName
-   *     Name of the function to use in the stack trace message.
-   * @param {string=} file
-   *     Filename of the test file on the client.
-   * @param {number=} line
-   *     Line number of |file|.
-   * @param {string=} script
-   *     Script being executed, in text form.
-   */
-  constructor(x,
-      {fnName = null, file = null, line = null, script = null} = {}) {
-    let msg = String(x);
-    let trace = "";
-
-    if (fnName !== null) {
-      trace += fnName;
-      if (file !== null) {
-        trace += ` @${file}`;
-        if (line !== null) {
-          trace += `, line ${line}`;
-        }
-      }
-    }
-
-    if (error.isError(x)) {
-      let jsStack = x.stack.split("\n");
-      let match = jsStack[0].match(/:(\d+):\d+$/);
-      let jsLine = match ? parseInt(match[1]) : 0;
-      if (script !== null) {
-        let src = script.split("\n")[jsLine];
-        trace += "\n" +
-          `inline javascript, line ${jsLine}\n` +
-          `src: "${src}"`;
-      }
-      trace += "\nStack:\n" + x.stack;
-    }
-
-    super(msg);
+  constructor(x) {
+    super(x);
     this.status = "javascript error";
-    this.stack = trace;
   }
 }
 
