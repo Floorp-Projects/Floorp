@@ -1,3 +1,7 @@
+// GENERATED CONTENT - DO NOT EDIT
+// Content of this file was automatically extracted from the Web Audio API spec.
+// See https://webaudio.github.io/web-audio-api/
+
 enum AudioContextState {
   "suspended",
   "running",
