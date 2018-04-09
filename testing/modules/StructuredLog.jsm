@@ -88,10 +88,10 @@ StructuredLogger.prototype = {
   },
 
   assertionCount(test, count, minExpected = 0, maxExpected = 0) {
-      var data = {test,
-                  min_expected: minExpected,
-                  max_expected: maxExpected,
-                  count};
+    var data = {test: this._testId(test),
+                min_expected: minExpected,
+                max_expected: maxExpected,
+                count};
 
     this._logData("assertion_count", data);
   },
