@@ -36,16 +36,10 @@ WindowSurfaceX11::GetVisualFormat(const Visual* aVisual, unsigned int aDepth)
     }
     break;
   case 24:
-    // Only support the BGRX layout, and report it as BGRA to the compositor.
-    // The alpha channel will be discarded when we put the image.
-    // Cairo/pixman lacks some fast paths for compositing BGRX onto BGRA, so
-    // just report it as BGRX directly in that case.
     if (aVisual->red_mask == 0xff0000 &&
         aVisual->green_mask == 0xff00 &&
         aVisual->blue_mask == 0xff) {
-      gfx::BackendType backend = gfxPlatform::GetPlatform()->GetDefaultContentBackend();
-      return backend == gfx::BackendType::CAIRO ? gfx::SurfaceFormat::B8G8R8X8
-                                                : gfx::SurfaceFormat::B8G8R8A8;
+      return gfx::SurfaceFormat::B8G8R8X8;
     }
     break;
   case 16:
