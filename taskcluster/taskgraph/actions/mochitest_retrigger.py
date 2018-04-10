@@ -79,8 +79,9 @@ logger = logging.getLogger(__name__)
         'required': ['path']
     }
 )
-def mochitest_retrigger_action(parameters, input, task_group_id, task_id, task):
-    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(parameters)
+def mochitest_retrigger_action(parameters, graph_config, input, task_group_id, task_id, task):
+    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+        parameters, graph_config)
 
     pre_task = full_task_graph.tasks[task['metadata']['name']]
 

@@ -290,7 +290,7 @@ def trigger_action_callback(task_group_id, task_id, task, input, callback, param
         create.testing = True
         taskcluster.testing = True
 
-    cb(Parameters(**parameters), input, task_group_id, task_id, task)
+    cb(Parameters(**parameters), graph_config, input, task_group_id, task_id, task)
 
 
 def _load(graph_config):

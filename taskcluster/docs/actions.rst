@@ -52,7 +52,7 @@ To create a new callback action you must create a file
       description="Simple **proof-of-concept** callback action",
       order=10000,  # Order in which it should appear relative to other actions
   )
-  def hello_world_action(parameters, input, task_group_id, task_id, task):
+  def hello_world_action(parameters, graph_config, input, task_group_id, task_id, task):
       # parameters is an instance of taskgraph.parameters.Parameters
       # it carries decision task parameters from the original decision task.
       # input, task_id, and task should all be None
@@ -112,7 +112,7 @@ The example action below will be shown in the context-menu for tasks with
       order=1,
       context=[{'platform': 'linux'}]
   )
-  def retrigger_action(parameters, input, task_group_id, task_id, task):
+  def retrigger_action(parameters, graph_config, input, task_group_id, task_id, task):
       # input will be None
       print "Retriggering: {}".format(task_id)
       print "task definition: {}".format(task)
@@ -175,7 +175,7 @@ both ``input`` and ``context``::
           'additionalProperties': False,
       },
   )
-  def retrigger_action(parameters, input, task_group_id, task_id, task):
+  def retrigger_action(parameters, graph_config, input, task_group_id, task_id, task):
       print "Create all pruned tasks with priority: {}".format(input['priority'])
       if input['runTalos']:
           print "Also running talos jobs..."
@@ -211,7 +211,7 @@ The feature is illustrated below::
       # Define an action that is only included if this is a push to try
       available=lambda parameters: parameters.get('project', None) == 'try',
   )
-  def try_only_action(parameters, input, task_group_id, task_id, task):
+  def try_only_action(parameters, graph_config, input, task_group_id, task_id, task):
       print "My try-only action"
 
 Properties of ``parameters``  are documented in the
