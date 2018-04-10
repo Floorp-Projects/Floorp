@@ -2183,25 +2183,6 @@ DrawTargetSkia::PopLayer()
 #endif
 }
 
-void
-DrawTargetSkia::Blur(const AlphaBoxBlur& aBlur)
-{
-  MarkChanged();
-  Flush();
-
-  SkPixmap pixmap;
-  if (!mCanvas->peekPixels(&pixmap)) {
-    gfxWarning() << "Cannot perform in-place blur on non-raster Skia surface";
-    return;
-  }
-
-  // Sanity check that the blur size matches the draw target.
-  MOZ_ASSERT(pixmap.width() == aBlur.GetSize().width);
-  MOZ_ASSERT(pixmap.height() == aBlur.GetSize().height);
-  MOZ_ASSERT(size_t(aBlur.GetStride()) == pixmap.rowBytes());
-  aBlur.Blur(static_cast<uint8_t*>(pixmap.writable_addr()));
-}
-
 already_AddRefed<GradientStops>
 DrawTargetSkia::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, ExtendMode aExtendMode) const
 {

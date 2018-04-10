@@ -116,7 +116,6 @@ public:
                                   bool aCopyBackground = false,
                                   CompositionOp aCompositionOp = CompositionOp::OP_OVER) override;
   virtual void PopLayer() override;
-  virtual void Blur(const AlphaBoxBlur& aBlur) override;
   virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                             const IntSize &aSize,
                                                             int32_t aStride,
