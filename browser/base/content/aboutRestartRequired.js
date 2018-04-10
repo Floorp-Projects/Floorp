@@ -21,8 +21,7 @@ var AboutRestartRequired = {
       parent.insertAdjacentElement("afterbegin", button);
     }
   },
-  restart()
-  {
+  restart() {
     Services.startup.quit(Ci.nsIAppStartup.eRestart |
                           Ci.nsIAppStartup.eAttemptQuit);
   },
