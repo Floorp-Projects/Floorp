@@ -216,7 +216,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,1,800000) == fi
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
-fuzzy-if(webrender,190,229) fails-if(webrender&&winWidget) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html # Bug 1439980
+fuzzy-if(webrender,190-255,229-1552) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html # Bug 1439980
 == foreignObject-img.html foreignObject-img-ref.html
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
 == foreignObject-move-repaint-01.svg pass.svg

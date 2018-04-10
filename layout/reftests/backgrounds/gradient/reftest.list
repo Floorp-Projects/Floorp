@@ -1,3 +1,3 @@
 == scaled-color-stop-position.html scaled-color-stop-position-ref.html
 == color-stop-clamp-interpolation.html color-stop-clamp-interpolation-ref.html
-fails-if(webrender&&winWidget) == linear-gradient-repeated.html linear-gradient-repeated-ref.html
+fuzzy-if(webrender&&winWidget,2-2,72-72) == linear-gradient-repeated.html linear-gradient-repeated-ref.html
