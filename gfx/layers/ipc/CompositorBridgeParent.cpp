@@ -1828,18 +1828,22 @@ CompositorBridgeParent::GetTestingTimeStamp() const
 void
 EraseLayerState(LayersId aId)
 {
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  RefPtr<APZUpdater> apz;
 
-  auto iter = sIndirectLayerTrees.find(aId);
-  if (iter != sIndirectLayerTrees.end()) {
-    CompositorBridgeParent* parent = iter->second.mParent;
-    if (parent) {
-      if (RefPtr<APZUpdater> apz = parent->GetAPZUpdater()) {
-        apz->NotifyLayerTreeRemoved(aId);
+  { // scope lock
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    auto iter = sIndirectLayerTrees.find(aId);
+    if (iter != sIndirectLayerTrees.end()) {
+      CompositorBridgeParent* parent = iter->second.mParent;
+      if (parent) {
+        apz = parent->GetAPZUpdater();
       }
+      sIndirectLayerTrees.erase(iter);
     }
+  }
 
-    sIndirectLayerTrees.erase(iter);
+  if (apz) {
+    apz->NotifyLayerTreeRemoved(aId);
   }
 }
 
