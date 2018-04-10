@@ -294,8 +294,6 @@ whitelist-types = [
     "nsFont",
     "nsAtom",
     "nsDynamicAtom",
-    "nsMainThreadPtrHandle",
-    "nsMainThreadPtrHolder",
     "nsMargin",
     "nsMediaFeature",
     "nsMediaFeatures",

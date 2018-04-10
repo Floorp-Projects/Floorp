@@ -1152,7 +1152,7 @@ nsCSSValue::Array::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
   return n;
 }
 
-css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
+css::URLValueData::URLValueData(already_AddRefed<nsIURI> aURI,
                                 const nsAString& aString,
                                 already_AddRefed<URLExtraData> aExtraData)
   : mURI(Move(aURI))
@@ -1165,7 +1165,7 @@ css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
   MOZ_ASSERT(mExtraData->GetPrincipal());
 }
 
-css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
+css::URLValueData::URLValueData(already_AddRefed<nsIURI> aURI,
                                 ServoRawOffsetArc<RustString> aString,
                                 already_AddRefed<URLExtraData> aExtraData)
   : mURI(Move(aURI))
@@ -1316,7 +1316,7 @@ css::URLValueData::GetURI() const
                 GetRustString(),
                 nullptr, mExtraData->BaseURI());
     }
-    mURI = new PtrHolder<nsIURI>("URLValueData::mURI", newURI.forget());
+    mURI = newURI.forget();
     mURIResolved = true;
   }
 
@@ -1470,7 +1470,7 @@ URLValue::URLValue(const nsAString& aString, nsIURI* aBaseURI, nsIURI* aReferrer
 
 URLValue::URLValue(nsIURI* aURI, const nsAString& aString, nsIURI* aBaseURI,
                    nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal)
-  : URLValueData(do_AddRef(new PtrHolder<nsIURI>("URLValueData::mURI", aURI)),
+  : URLValueData(do_AddRef(aURI),
                  aString,
                  do_AddRef(new URLExtraData(aBaseURI, aReferrer,
                                             aOriginPrincipal)))
@@ -1494,8 +1494,7 @@ css::ImageValue::ImageValue(nsIURI* aURI, const nsAString& aString,
                             already_AddRefed<URLExtraData> aExtraData,
                             nsIDocument* aDocument,
                             CORSMode aCORSMode)
-  : URLValueData(do_AddRef(new PtrHolder<nsIURI>("URLValueData::mURI", aURI)),
-                 aString, Move(aExtraData))
+  : URLValueData(do_AddRef(aURI), aString, Move(aExtraData))
 {
   mCORSMode = aCORSMode;
   Initialize(aDocument);
@@ -1505,8 +1504,7 @@ css::ImageValue::ImageValue(nsIURI* aURI, ServoRawOffsetArc<RustString> aString,
                             already_AddRefed<URLExtraData> aExtraData,
                             nsIDocument* aDocument,
                             CORSMode aCORSMode)
-  : URLValueData(do_AddRef(new PtrHolder<nsIURI>("URLValueData::mURI", aURI)),
-                 aString, Move(aExtraData))
+  : URLValueData(do_AddRef(aURI), aString, Move(aExtraData))
 {
   mCORSMode = aCORSMode;
   Initialize(aDocument);
