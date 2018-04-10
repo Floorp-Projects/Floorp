@@ -8,11 +8,14 @@ var EXPORTED_SYMBOLS = [
   "DownloadAddonInstall",
   "LocalAddonInstall",
   "UpdateChecker",
+  "XPIInstall",
   "loadManifestFromFile",
   "verifyBundleSignedState",
 ];
 
 /* globals DownloadAddonInstall, LocalAddonInstall */
+
+Cu.importGlobalProperties(["TextDecoder", "TextEncoder", "fetch"]);
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -46,13 +49,20 @@ const {nsIBlocklistService} = Ci;
 
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
                                        "initWithPath");
+const CryptoHash = Components.Constructor("@mozilla.org/security/hash;1",
+                                          "nsICryptoHash", "initWithString");
+const ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1",
+                                         "nsIZipReader", "open");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gCertDB",
-                                   "@mozilla.org/security/x509certdb;1",
-                                   "nsIX509CertDB");
-XPCOMUtils.defineLazyServiceGetter(this, "gRDF", "@mozilla.org/rdf/rdf-service;1",
-                                   Ci.nsIRDFService);
+const RDFDataSource = Components.Constructor(
+  "@mozilla.org/rdf/datasource;1?name=in-memory-datasource", "nsIRDFDataSource");
+const parseRDFString = Components.Constructor(
+  "@mozilla.org/rdf/xml-parser;1", "nsIRDFXMLParser", "parseString");
 
+XPCOMUtils.defineLazyServiceGetters(this, {
+  gCertDB: ["@mozilla.org/security/x509certdb;1", "nsIX509CertDB"],
+  gRDF: ["@mozilla.org/rdf/rdf-service;1", "nsIRDFService"],
+});
 
 ChromeUtils.defineModuleGetter(this, "XPIInternal",
                                "resource://gre/modules/addons/XPIProvider.jsm");
@@ -120,7 +130,6 @@ const PREF_EM_UPDATE_BACKGROUND_URL   = "extensions.update.background.url";
 const PREF_EM_UPDATE_URL              = "extensions.update.url";
 const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
-const FILE_RDF_MANIFEST               = "install.rdf";
 const FILE_WEB_MANIFEST               = "manifest.json";
 
 const KEY_TEMPDIR                     = "TmpD";
@@ -184,6 +193,183 @@ const LOGGER_ID = "addons.xpi";
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
 
+function getJarURI(file, path = "") {
+  if (file instanceof Ci.nsIFile) {
+    file = Services.io.newFileURI(file);
+  }
+  if (file instanceof Ci.nsIURI) {
+    file = file.spec;
+  }
+  return Services.io.newURI(`jar:${file}!/${path}`);
+}
+
+let DirPackage;
+let XPIPackage;
+class Package {
+  static get(file) {
+    if (file.isFile()) {
+      return new XPIPackage(file);
+    }
+    return new DirPackage(file);
+  }
+
+  constructor(file, rootURI) {
+    this.file = file;
+    this.filePath = file.path;
+    this.rootURI = rootURI;
+  }
+
+  close() {}
+
+  getURI(...path) {
+    return Services.io.newURI(path.join("/"), null, this.rootURI);
+  }
+
+  async getManifestFile() {
+    if (await this.hasResource("manifest.json")) {
+      return "manifest.json";
+    }
+    if (await this.hasResource("install.rdf")) {
+      return "install.rdf";
+    }
+    return null;
+  }
+
+  async readString(...path) {
+    let buffer = await this.readBinary(...path);
+    return new TextDecoder().decode(buffer);
+  }
+
+  async verifySignedState(addon) {
+    if (!shouldVerifySignedState(addon)) {
+      return {
+        signedState: AddonManager.SIGNEDSTATE_NOT_REQUIRED,
+        cert: null
+      };
+    }
+
+    let root = Ci.nsIX509CertDB.AddonsPublicRoot;
+    if (!AppConstants.MOZ_REQUIRE_SIGNING &&
+        Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false)) {
+      root = Ci.nsIX509CertDB.AddonsStageRoot;
+    }
+
+    return this.verifySignedStateForRoot(addon, root);
+  }
+}
+
+DirPackage = class DirPackage extends Package {
+  constructor(file) {
+    super(file, Services.io.newFileURI(file));
+  }
+
+  hasResource(...path) {
+    return OS.File.exists(OS.Path.join(this.filePath, ...path));
+  }
+
+  async iterDirectory(path, callback) {
+    let fullPath = OS.Path.join(this.filePath, ...path);
+
+    let iter = new OS.File.DirectoryIterator(fullPath);
+    await iter.forEach(callback);
+    iter.close();
+  }
+
+  iterFiles(callback, path = []) {
+    return this.iterDirectory(path, async entry => {
+      let entryPath = [...path, entry.name];
+      if (entry.isDir) {
+        callback({
+          path: entryPath.join("/"),
+          isDir: true,
+        });
+        await this.iterFiles(callback, entryPath);
+      } else {
+        let stat = await OS.File.stat(OS.Path.join(this.filePath, ...entryPath));
+        callback({
+          path: entryPath.join("/"),
+          isDir: false,
+          size: stat.size,
+        });
+      }
+    });
+  }
+
+  readBinary(...path) {
+    return OS.File.read(OS.Path.join(this.filePath, ...path));
+  }
+
+  verifySignedStateForRoot(addon, root) {
+    return new Promise(resolve => {
+      let callback = {
+        verifySignedDirectoryFinished(aRv, aCert) {
+          resolve({
+            signedState: getSignedStatus(aRv, aCert, addon.id),
+            cert: aCert,
+          });
+        }
+      };
+      // This allows the certificate DB to get the raw JS callback object so the
+      // test code can pass through objects that XPConnect would reject.
+      callback.wrappedJSObject = callback;
+
+      gCertDB.verifySignedDirectoryAsync(root, this.file, callback);
+    });
+  }
+};
+
+XPIPackage = class XPIPackage extends Package {
+  constructor(file) {
+    super(file, getJarURI(file));
+
+    this.zipReader = new ZipReader(file);
+  }
+
+  close() {
+    this.zipReader.close();
+    this.zipReader = null;
+  }
+
+  async hasResource(...path) {
+    return this.zipReader.hasEntry(path.join("/"));
+  }
+
+  async iterFiles(callback) {
+    for (let path of XPCOMUtils.IterStringEnumerator(this.zipReader.findEntries("*"))) {
+      let entry = this.zipReader.getEntry(path);
+      callback({
+        path,
+        isDir: entry.isDirectory,
+        size: entry.realSize,
+      });
+    }
+  }
+
+  async readBinary(...path) {
+    let response = await fetch(this.rootURI.resolve(path.join("/")));
+    return response.arrayBuffer();
+  }
+
+  verifySignedStateForRoot(addon, root) {
+    return new Promise(resolve => {
+      let callback = {
+        openSignedAppFileFinished(aRv, aZipReader, aCert) {
+          if (aZipReader)
+            aZipReader.close();
+          resolve({
+            signedState: getSignedStatus(aRv, aCert, addon.id),
+            cert: aCert
+          });
+        }
+      };
+      // This allows the certificate DB to get the raw JS callback object so the
+      // test code can pass through objects that XPConnect would reject.
+      callback.wrappedJSObject = callback;
+
+      gCertDB.openSignedAppFileAsync(root, this.file, callback);
+    });
+  }
+};
 
 /**
  * Sets permissions on a file
@@ -204,24 +390,6 @@ function setFilePermissions(aFile, aPermissions) {
 
 function EM_R(aProperty) {
   return gRDF.GetResource(PREFIX_NS_EM + aProperty);
-}
-
-function getManifestFileForDir(aDir) {
-  let file = getFile(FILE_RDF_MANIFEST, aDir);
-  if (file.exists() && file.isFile())
-    return file;
-  file.leafName = FILE_WEB_MANIFEST;
-  if (file.exists() && file.isFile())
-    return file;
-  return null;
-}
-
-function getManifestEntryForZipReader(aZipReader) {
-  if (aZipReader.hasEntry(FILE_RDF_MANIFEST))
-    return FILE_RDF_MANIFEST;
-  if (aZipReader.hasEntry(FILE_WEB_MANIFEST))
-    return FILE_WEB_MANIFEST;
-  return null;
 }
 
 /**
@@ -391,13 +559,13 @@ async function loadManifestFromWebManifest(aUri) {
  *
  * @param  aUri
  *         The URI that the manifest is being read from
- * @param  aStream
- *         An open stream to read the RDF from
+ * @param  aData
+ *         The manifest text
  * @return an AddonInternal object
  * @throws if the install manifest in the RDF stream is corrupt or could not
  *         be read
  */
-async function loadManifestFromRDF(aUri, aStream) {
+async function loadManifestFromRDF(aUri, aData) {
   function getPropertyArray(aDs, aSource, aProperty) {
     let values = [];
     let targets = aDs.GetTargets(aSource, EM_R(aProperty), true);
@@ -464,33 +632,8 @@ async function loadManifestFromRDF(aUri, aStream) {
     return locale;
   }
 
-  let rdfParser = Cc["@mozilla.org/rdf/xml-parser;1"].
-                  createInstance(Ci.nsIRDFXMLParser);
-  let ds = Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
-           createInstance(Ci.nsIRDFDataSource);
-  let listener = rdfParser.parseAsync(ds, aUri);
-  let channel = Cc["@mozilla.org/network/input-stream-channel;1"].
-                createInstance(Ci.nsIInputStreamChannel);
-  channel.setURI(aUri);
-  channel.contentStream = aStream;
-  channel.QueryInterface(Ci.nsIChannel);
-  channel.contentType = "text/xml";
-
-  listener.onStartRequest(channel, null);
-
-  try {
-    let pos = 0;
-    let count = aStream.available();
-    while (count > 0) {
-      listener.onDataAvailable(channel, null, aStream, pos, count);
-      pos += count;
-      count = aStream.available();
-    }
-    listener.onStopRequest(channel, null, Cr.NS_OK);
-  } catch (e) {
-    listener.onStopRequest(channel, null, e.result);
-    throw e;
-  }
+  let ds = new RDFDataSource();
+  parseRDFString(ds, aUri, aData);
 
   let root = gRDF.GetResource(RDFURI_INSTALL_MANIFEST_ROOT);
   let addon = new AddonInternal();
@@ -690,9 +833,7 @@ function defineSyncGUID(aAddon) {
 
 // Generate a unique ID based on the path to this temporary add-on location.
 function generateTemporaryInstallID(aFile) {
-  const hasher = Cc["@mozilla.org/security/hash;1"]
-        .createInstance(Ci.nsICryptoHash);
-  hasher.init(hasher.SHA1);
+  const hasher = CryptoHash("sha1");
   const data = new TextEncoder().encode(aFile.path);
   // Make it so this ID cannot be guessed.
   const sess = TEMP_INSTALL_ID_GEN_SESSION;
@@ -703,152 +844,47 @@ function generateTemporaryInstallID(aFile) {
   return id;
 }
 
-/**
- * Loads an AddonInternal object from an add-on extracted in a directory.
- *
- * @param  aDir
- *         The nsIFile directory holding the add-on
- * @return an AddonInternal object
- * @throws if the directory does not contain a valid install manifest
- */
-var loadManifestFromDir = async function(aDir, aInstallLocation) {
-  function getFileSize(aFile) {
-    if (aFile.isSymlink())
-      return 0;
-
-    if (!aFile.isDirectory())
-      return aFile.fileSize;
-
-    let size = 0;
-    let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
-    let entry;
-    while ((entry = entries.nextFile))
-      size += getFileSize(entry);
-    entries.close();
-    return size;
-  }
-
+var loadManifest = async function(aPackage, aInstallLocation) {
   async function loadFromRDF(aUri) {
-    let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-              createInstance(Ci.nsIFileInputStream);
-    fis.init(aUri.file, -1, -1, false);
-    let bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
-              createInstance(Ci.nsIBufferedInputStream);
-    bis.init(fis, 4096);
-    try {
-      var addon = await loadManifestFromRDF(aUri, bis);
-    } finally {
-      bis.close();
-      fis.close();
-    }
+    let manifest = await aPackage.readString("install.rdf");
+    let addon = await loadManifestFromRDF(aUri, manifest);
 
-    let iconFile = getFile("icon.png", aDir);
-
-    if (iconFile.exists()) {
+    if (await aPackage.hasResource("icon.png")) {
       addon.icons[32] = "icon.png";
       addon.icons[48] = "icon.png";
     }
 
-    let icon64File = getFile("icon64.png", aDir);
-
-    if (icon64File.exists()) {
-      addon.icons[64] = "icon64.png";
-    }
-    return addon;
-  }
-
-  let file = getManifestFileForDir(aDir);
-  if (!file) {
-    throw new Error("Directory " + aDir.path + " does not contain a valid " +
-                    "install manifest");
-  }
-
-  let uri = Services.io.newFileURI(file).QueryInterface(Ci.nsIFileURL);
-
-  let addon;
-  if (file.leafName == FILE_WEB_MANIFEST) {
-    addon = await loadManifestFromWebManifest(uri);
-    if (!addon.id) {
-      if (aInstallLocation.name == KEY_APP_TEMPORARY) {
-        addon.id = generateTemporaryInstallID(aDir);
-      } else {
-        addon.id = aDir.leafName;
-      }
-    }
-  } else {
-    addon = await loadFromRDF(uri);
-  }
-
-  addon._sourceBundle = aDir.clone();
-  addon._installLocation = aInstallLocation;
-  addon.size = getFileSize(aDir);
-  addon.signedState = await verifyDirSignedState(aDir, addon)
-    .then(({signedState}) => signedState);
-  addon.updateBlocklistState();
-  addon.appDisabled = !isUsableAddon(addon);
-
-  defineSyncGUID(addon);
-
-  return addon;
-};
-
-/**
- * Loads an AddonInternal object from an nsIZipReader for an add-on.
- *
- * @param  aZipReader
- *         An open nsIZipReader for the add-on's files
- * @return an AddonInternal object
- * @throws if the XPI file does not contain a valid install manifest
- */
-var loadManifestFromZipReader = async function(aZipReader, aInstallLocation) {
-  async function loadFromRDF(aUri) {
-    let zis = aZipReader.getInputStream(entry);
-    let bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
-              createInstance(Ci.nsIBufferedInputStream);
-    bis.init(zis, 4096);
-    try {
-      var addon = await loadManifestFromRDF(aUri, bis);
-    } finally {
-      bis.close();
-      zis.close();
-    }
-
-    if (aZipReader.hasEntry("icon.png")) {
-      addon.icons[32] = "icon.png";
-      addon.icons[48] = "icon.png";
-    }
-
-    if (aZipReader.hasEntry("icon64.png")) {
+    if (await aPackage.hasResource("icon64.png")) {
       addon.icons[64] = "icon64.png";
     }
 
     return addon;
   }
 
-  let entry = getManifestEntryForZipReader(aZipReader);
+  let entry = await aPackage.getManifestFile();
   if (!entry) {
-    throw new Error("File " + aZipReader.file.path + " does not contain a valid " +
+    throw new Error("File " + aPackage.filePath + " does not contain a valid " +
                     "install manifest");
   }
 
-  let uri = buildJarURI(aZipReader.file, entry);
-
-  let isWebExtension = (entry == FILE_WEB_MANIFEST);
-
+  let isWebExtension = entry == FILE_WEB_MANIFEST;
   let addon = isWebExtension ?
-              await loadManifestFromWebManifest(uri) :
-              await loadFromRDF(uri);
+              await loadManifestFromWebManifest(aPackage.rootURI) :
+              await loadFromRDF(aPackage.getURI("install.rdf"));
 
-  addon._sourceBundle = aZipReader.file;
+  addon._sourceBundle = aPackage.file;
   addon._installLocation = aInstallLocation;
 
   addon.size = 0;
-  let entries = aZipReader.findEntries(null);
-  while (entries.hasMore())
-    addon.size += aZipReader.getEntry(entries.getNext()).realSize;
+  await aPackage.iterFiles(entry => {
+    if (!entry.isDir) {
+      addon.size += entry.size;
+    }
+  });
 
-  let {signedState, cert} = await verifyZipSignedState(aZipReader.file, addon);
+  let {signedState, cert} = await aPackage.verifySignedState(addon);
   addon.signedState = signedState;
+
   if (isWebExtension && !addon.id) {
     if (cert) {
       addon.id = cert.commonName;
@@ -857,9 +893,10 @@ var loadManifestFromZipReader = async function(aZipReader, aInstallLocation) {
       }
     }
     if (!addon.id && aInstallLocation.name == KEY_APP_TEMPORARY) {
-      addon.id = generateTemporaryInstallID(aZipReader.file);
+      addon.id = generateTemporaryInstallID(aPackage.file);
     }
   }
+
   addon.updateBlocklistState();
   addon.appDisabled = !isUsableAddon(addon);
 
@@ -868,50 +905,15 @@ var loadManifestFromZipReader = async function(aZipReader, aInstallLocation) {
   return addon;
 };
 
-/**
- * Loads an AddonInternal object from an add-on in an XPI file.
- *
- * @param  aXPIFile
- *         An nsIFile pointing to the add-on's XPI file
- * @return an AddonInternal object
- * @throws if the XPI file does not contain a valid install manifest
- */
-var loadManifestFromZipFile = async function(aXPIFile, aInstallLocation) {
-  let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                  createInstance(Ci.nsIZipReader);
+var loadManifestFromFile = async function(aFile, aInstallLocation) {
+  let pkg = Package.get(aFile);
   try {
-    zipReader.open(aXPIFile);
-
-    // Can't return this promise because that will make us close the zip reader
-    // before it has finished loading the manifest. Wait for the result and then
-    // return.
-    let manifest = await loadManifestFromZipReader(zipReader, aInstallLocation);
-    return manifest;
+    let addon = await loadManifest(pkg, aInstallLocation);
+    return addon;
   } finally {
-    zipReader.close();
+    pkg.close();
   }
 };
-
-var loadManifestFromFile = function(aFile, aInstallLocation) {
-  if (aFile.isFile())
-    return loadManifestFromZipFile(aFile, aInstallLocation);
-  return loadManifestFromDir(aFile, aInstallLocation);
-};
-
-/**
- * Creates a jar: URI for a file inside a ZIP file.
- *
- * @param  aJarfile
- *         The ZIP file as an nsIFile
- * @param  aPath
- *         The path inside the ZIP file
- * @return an nsIURI for the file
- */
-function buildJarURI(aJarfile, aPath) {
-  let uri = Services.io.newFileURI(aJarfile);
-  uri = "jar:" + uri.spec + "!/" + aPath;
-  return Services.io.newURI(uri);
-}
 
 /**
  * Sends local and remote notifications to flush a JAR file cache entry
@@ -956,14 +958,9 @@ function getTemporaryFile() {
 function getSignedStatus(aRv, aCert, aAddonID) {
   let expectedCommonName = aAddonID;
   if (aAddonID && aAddonID.length > 64) {
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    let data = converter.convertToByteArray(aAddonID, {});
+    let data = new Uint8Array(new TextEncoder().encode(aAddonID));
 
-    let crypto = Cc["@mozilla.org/security/hash;1"].
-                 createInstance(Ci.nsICryptoHash);
-    crypto.init(Ci.nsICryptoHash.SHA256);
+    let crypto = CryptoHash("sha256");
     crypto.update(data, data.length);
     expectedCommonName = getHashStringForCrypto(crypto);
   }
@@ -1015,88 +1012,6 @@ function shouldVerifySignedState(aAddon) {
 }
 
 /**
- * Verifies that a zip file's contents are all correctly signed by an
- * AMO-issued certificate
- *
- * @param  aFile
- *         the xpi file to check
- * @param  aAddon
- *         the add-on object to verify
- * @return a Promise that resolves to an object with properties:
- *         signedState: an AddonManager.SIGNEDSTATE_* constant
- *         cert: an nsIX509Cert
- */
-function verifyZipSignedState(aFile, aAddon) {
-  if (!shouldVerifySignedState(aAddon))
-    return Promise.resolve({
-      signedState: AddonManager.SIGNEDSTATE_NOT_REQUIRED,
-      cert: null
-    });
-
-  let root = Ci.nsIX509CertDB.AddonsPublicRoot;
-  if (!AppConstants.MOZ_REQUIRE_SIGNING && Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false))
-    root = Ci.nsIX509CertDB.AddonsStageRoot;
-
-  return new Promise(resolve => {
-    let callback = {
-      openSignedAppFileFinished(aRv, aZipReader, aCert) {
-        if (aZipReader)
-          aZipReader.close();
-        resolve({
-          signedState: getSignedStatus(aRv, aCert, aAddon.id),
-          cert: aCert
-        });
-      }
-    };
-    // This allows the certificate DB to get the raw JS callback object so the
-    // test code can pass through objects that XPConnect would reject.
-    callback.wrappedJSObject = callback;
-
-    gCertDB.openSignedAppFileAsync(root, aFile, callback);
-  });
-}
-
-/**
- * Verifies that a directory's contents are all correctly signed by an
- * AMO-issued certificate
- *
- * @param  aDir
- *         the directory to check
- * @param  aAddon
- *         the add-on object to verify
- * @return a Promise that resolves to an object with properties:
- *         signedState: an AddonManager.SIGNEDSTATE_* constant
- *         cert: an nsIX509Cert
- */
-function verifyDirSignedState(aDir, aAddon) {
-  if (!shouldVerifySignedState(aAddon))
-    return Promise.resolve({
-      signedState: AddonManager.SIGNEDSTATE_NOT_REQUIRED,
-      cert: null,
-    });
-
-  let root = Ci.nsIX509CertDB.AddonsPublicRoot;
-  if (!AppConstants.MOZ_REQUIRE_SIGNING && Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false))
-    root = Ci.nsIX509CertDB.AddonsStageRoot;
-
-  return new Promise(resolve => {
-    let callback = {
-      verifySignedDirectoryFinished(aRv, aCert) {
-        resolve({
-          signedState: getSignedStatus(aRv, aCert, aAddon.id),
-          cert: null,
-        });
-      }
-    };
-    // This allows the certificate DB to get the raw JS callback object so the
-    // test code can pass through objects that XPConnect would reject.
-    callback.wrappedJSObject = callback;
-
-    gCertDB.verifySignedDirectoryAsync(root, aDir, callback);
-  });
-}
-
-/**
  * Verifies that a bundle's contents are all correctly signed by an
  * AMO-issued certificate
  *
@@ -1106,10 +1021,14 @@ function verifyDirSignedState(aDir, aAddon) {
  *         the add-on object to verify
  * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
-var verifyBundleSignedState = function(aBundle, aAddon) {
-  let promise = aBundle.isFile() ? verifyZipSignedState(aBundle, aAddon)
-      : verifyDirSignedState(aBundle, aAddon);
-  return promise.then(({signedState}) => signedState);
+var verifyBundleSignedState = async function(aBundle, aAddon) {
+  let pkg = Package.get(aBundle);
+  try {
+    let {signedState} = await pkg.verifySignedState(aAddon);
+    return signedState;
+  } finally {
+    pkg.close();
+  }
 };
 
 /**
@@ -1502,61 +1421,56 @@ class AddonInstall {
    *         XPI is incorrectly signed
    */
   async loadManifest(file) {
-    let zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
-        createInstance(Ci.nsIZipReader);
+    let pkg;
     try {
-      zipreader.open(file);
+      pkg = Package.get(file);
     } catch (e) {
-      zipreader.close();
       return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, e]);
     }
 
     try {
-      // loadManifestFromZipReader performs the certificate verification for us
-      this.addon = await loadManifestFromZipReader(zipreader, this.installLocation);
-    } catch (e) {
-      zipreader.close();
-      return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, e]);
-    }
-
-    if (!this.addon.id) {
-      let err = new Error(`Cannot find id for addon ${file.path}`);
-      return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, err]);
-    }
-
-    if (this.existingAddon) {
-      // Check various conditions related to upgrades
-      if (this.addon.id != this.existingAddon.id) {
-        zipreader.close();
-        return Promise.reject([AddonManager.ERROR_INCORRECT_ID,
-                               `Refusing to upgrade addon ${this.existingAddon.id} to different ID ${this.addon.id}`]);
+      try {
+        this.addon = await loadManifest(pkg, this.installLocation);
+      } catch (e) {
+        return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, e]);
       }
 
-      if (isWebExtension(this.existingAddon.type) && !isWebExtension(this.addon.type)) {
-        zipreader.close();
-        return Promise.reject([AddonManager.ERROR_UNEXPECTED_ADDON_TYPE,
-                               "WebExtensions may not be updated to other extension types"]);
+      if (!this.addon.id) {
+        let err = new Error(`Cannot find id for addon ${file.path}`);
+        return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, err]);
       }
-    }
 
-    if (mustSign(this.addon.type)) {
-      if (this.addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
-        // This add-on isn't properly signed by a signature that chains to the
-        // trusted root.
-        let state = this.addon.signedState;
-        this.addon = null;
-        zipreader.close();
+      if (this.existingAddon) {
+        // Check various conditions related to upgrades
+        if (this.addon.id != this.existingAddon.id) {
+          return Promise.reject([AddonManager.ERROR_INCORRECT_ID,
+                                 `Refusing to upgrade addon ${this.existingAddon.id} to different ID ${this.addon.id}`]);
+        }
 
-        if (state == AddonManager.SIGNEDSTATE_MISSING)
-          return Promise.reject([AddonManager.ERROR_SIGNEDSTATE_REQUIRED,
-                                 "signature is required but missing"]);
-
-        return Promise.reject([AddonManager.ERROR_CORRUPT_FILE,
-                               "signature verification failed"]);
+        if (isWebExtension(this.existingAddon.type) && !isWebExtension(this.addon.type)) {
+          return Promise.reject([AddonManager.ERROR_UNEXPECTED_ADDON_TYPE,
+                                 "WebExtensions may not be updated to other extension types"]);
+        }
       }
-    }
 
-    zipreader.close();
+      if (mustSign(this.addon.type)) {
+        if (this.addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
+          // This add-on isn't properly signed by a signature that chains to the
+          // trusted root.
+          let state = this.addon.signedState;
+          this.addon = null;
+
+          if (state == AddonManager.SIGNEDSTATE_MISSING)
+            return Promise.reject([AddonManager.ERROR_SIGNEDSTATE_REQUIRED,
+                                   "signature is required but missing"]);
+
+          return Promise.reject([AddonManager.ERROR_CORRUPT_FILE,
+                                 "signature verification failed"]);
+        }
+      }
+    } finally {
+      pkg.close();
+    }
 
     this.updateAddonURIs();
 
@@ -1595,7 +1509,7 @@ class AddonInstall {
     if (icon.startsWith("chrome://")) {
       return icon;
     }
-    return buildJarURI(this.file, icon).spec;
+    return getJarURI(this.file, icon).spec;
   }
 
   /**
@@ -1939,10 +1853,9 @@ var LocalAddonInstall = class extends AddonInstall {
     this.maxProgress = this.file.fileSize;
 
     if (this.hash) {
-      let crypto = Cc["@mozilla.org/security/hash;1"].
-          createInstance(Ci.nsICryptoHash);
+      let crypto;
       try {
-        crypto.initWithString(this.hash.algorithm);
+        crypto = CryptoHash(this.hash.algorithm);
       } catch (e) {
         logger.warn("Unknown hash algorithm '" + this.hash.algorithm + "' for addon " + this.sourceURI.spec, e);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
@@ -2237,11 +2150,9 @@ var DownloadAddonInstall = class extends AddonInstall {
    * @see nsIStreamListener
    */
   onStartRequest(aRequest, aContext) {
-    this.crypto = Cc["@mozilla.org/security/hash;1"].
-                  createInstance(Ci.nsICryptoHash);
     if (this.hash) {
       try {
-        this.crypto.initWithString(this.hash.algorithm);
+        this.crypto = CryptoHash(this.hash.algorithm);
       } catch (e) {
         logger.warn("Unknown hash algorithm '" + this.hash.algorithm + "' for addon " + this.sourceURI.spec, e);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
@@ -2255,7 +2166,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     } else {
       // We always need something to consume data from the inputstream passed
       // to onDataAvailable so just create a dummy cryptohasher to do that.
-      this.crypto.initWithString("sha1");
+      this.crypto = CryptoHash("sha1");
     }
 
     this.progress = 0;
@@ -2743,4 +2654,10 @@ UpdateChecker.prototype = {
       parser.cancel();
     }
   }
+};
+
+var XPIInstall = {
+  flushChromeCaches,
+  flushJarCache,
+  recursiveRemove,
 };
