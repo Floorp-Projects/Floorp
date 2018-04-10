@@ -170,8 +170,8 @@ public:
     return mIdNamespace;
   }
 
-  void UpdateAPZ(bool aUpdateHitTestingTree);
-  const WebRenderScrollData& GetScrollData() const;
+  void UpdateAPZFocusState(const FocusTarget& aFocus);
+  void UpdateAPZScrollData(WebRenderScrollData&& aData);
 
   void FlushRendering();
   void FlushRenderingAsync();
@@ -271,9 +271,6 @@ private:
   bool mDestroyed;
   bool mForceRendering;
   bool mReceivedDisplayList;
-
-  // Can only be accessed on the compositor thread.
-  WebRenderScrollData mScrollData;
 };
 
 } // namespace layers
