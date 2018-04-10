@@ -18,6 +18,8 @@ import android.support.test.espresso.Espresso;
 import android.support.test.espresso.web.webdriver.Locator;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
+import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiSelector;
 
 import org.junit.After;
 import org.junit.Rule;
@@ -42,8 +44,10 @@ import static android.support.test.espresso.web.assertion.WebViewAssertions.webM
 import static android.support.test.espresso.web.sugar.Web.onWebView;
 import static android.support.test.espresso.web.webdriver.DriverAtoms.findElement;
 import static android.support.test.espresso.web.webdriver.DriverAtoms.getText;
+import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
+import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 @RunWith(AndroidJUnit4.class)
 public class CustomTabTest {
@@ -101,6 +105,16 @@ public class CustomTabTest {
                     .perform(click());
         } finally {
             stopWebServer();
+            // Open recent apps list, then close focus from there
+            TestHelper.pressRecentAppsKey();
+            UiObject dismissFocusBtn = TestHelper.mDevice.findObject(new UiSelector()
+                    .resourceId("com.android.systemui:id/dismiss_task")
+                    .descriptionContains("Dismiss Firefox Focus")
+                    .enabled(true));
+            dismissFocusBtn.click();
+            dismissFocusBtn.waitUntilGone(waitingTime);
+            assertTrue(!dismissFocusBtn.exists());
+            TestHelper.pressHomeKey();
         }
     }
 

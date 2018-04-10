@@ -8,7 +8,6 @@ package org.mozilla.focus.activity;
 import android.content.Context;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.web.webdriver.Locator;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiObjectNotFoundException;
@@ -19,7 +18,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.helpers.TestHelper;
-import org.mozilla.focus.utils.AppConstants;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
@@ -31,10 +29,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.isClickable;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static android.support.test.espresso.web.assertion.WebViewAssertions.webMatches;
-import static android.support.test.espresso.web.sugar.Web.onWebView;
-import static android.support.test.espresso.web.webdriver.DriverAtoms.findElement;
-import static android.support.test.espresso.web.webdriver.DriverAtoms.getText;
 import static org.hamcrest.Matchers.containsString;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime;
@@ -97,14 +91,10 @@ public class URLMismatchTest {
                 .perform(click(), replaceText("mozilla"))
                 .check(matches(withText("mozilla.org")))
                 .perform(pressImeActionButton());
-        if (!AppConstants.isGeckoBuild()) {
-            onWebView()
-                    .withElement(findElement(Locator.CSS_SELECTOR, MOZILLA_WEBSITE_SLOGAN_SELECTOR))
-                    .check(webMatches(getText(), containsString(MOZILLA_WEBSITE_SLOGAN_TEXT)));
-        } else {
-            TestHelper.progressBar.waitForExists(webPageLoadwaitingTime);
-            TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime);
-        }
+
+        // Wait until site is loaded
+        TestHelper.progressBar.waitForExists(webPageLoadwaitingTime);
+        TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime);
 
         // The displayed URL contains www.mozilla.org
         onView(withId(R.id.display_url))

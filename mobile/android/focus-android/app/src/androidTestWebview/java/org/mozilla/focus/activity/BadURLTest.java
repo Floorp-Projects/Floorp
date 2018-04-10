@@ -75,9 +75,7 @@ public class BadURLTest {
         assertTrue(TestHelper.tryAgainBtn.exists());
         TestHelper.floatingEraseButton.perform(click());
 
-
         /* provide market URL that is handled by Google Play app */
-        TestHelper.floatingEraseButton.perform(click());
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
         TestHelper.inlineAutocompleteEditText.setText("market://details?id=org.mozilla.firefox&referrer=" +

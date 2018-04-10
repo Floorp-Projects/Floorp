@@ -4,10 +4,10 @@
 
 package org.mozilla.focus.screenshots;
 
+import android.content.Context;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
-import android.support.test.espresso.web.webdriver.Locator;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiObject;
@@ -26,6 +26,7 @@ import org.mozilla.focus.helpers.TestHelper;
 
 import java.util.Collections;
 
+import mozilla.components.browser.domains.CustomDomains;
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.locale.LocaleTestRule;
 
@@ -42,15 +43,10 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isEnabled;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static android.support.test.espresso.web.sugar.Web.onWebView;
-import static android.support.test.espresso.web.webdriver.DriverAtoms.findElement;
-import static android.support.test.espresso.web.webdriver.DriverAtoms.webClick;
 import static junit.framework.Assert.assertTrue;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.endsWith;
-import mozilla.components.browser.domains.CustomDomains;
+import static org.hamcrest.Matchers.containsString;
+import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.assertToolbarMatchesText;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 
@@ -72,6 +68,14 @@ public class SettingsScreenshots extends ScreenshotTest {
         CustomDomains.INSTANCE.save(
                 InstrumentationRegistry.getInstrumentation().getTargetContext(),
                 Collections.<String>emptyList());
+
+        final Context appContext = InstrumentationRegistry.getInstrumentation()
+                .getTargetContext()
+                .getApplicationContext();
+        PreferenceManager.getDefaultSharedPreferences(appContext)
+                .edit()
+                .putBoolean(FIRSTRUN_PREF, true)
+                .apply();
     }
 
     @Test
@@ -121,14 +125,24 @@ public class SettingsScreenshots extends ScreenshotTest {
         /* Manual Search Engine page */
         final String addEngineLabel = getString(R.string.preference_search_add2);
         onData(withTitleText(addEngineLabel))
+                .check(matches(isEnabled()))
                 .perform(click());
         onView(withId(R.id.edit_engine_name))
                 .check(matches(isEnabled()));
-
         Screengrab.screenshot("SearchEngine_Add_Search_Engine");
+        onView(withId(R.id.menu_save_search_engine))
+                .check(matches(isEnabled()))
+                .perform(click());
+        Screengrab.screenshot("SearchEngine_Add_Search_Engine_Warning");
+        onView(withClassName(containsString("ImageButton")))
+                .check(matches(isEnabled()))
+                .perform(click());
+
+        device.waitForIdle();
         Espresso.pressBack();
-        Espresso.pressBack();
-        Espresso.pressBack();
+        device.waitForIdle();
+        onView(withText(R.string.preference_search_engine_default))
+                .check(matches(isDisplayed()));
 
         /* Tap autocomplete menu */
         final String urlAutocompletemenu = getString(R.string.preference_subitem_autocomplete);
@@ -200,33 +214,25 @@ public class SettingsScreenshots extends ScreenshotTest {
                 .check(matches(isDisplayed()))
                 .perform(click());
 
-        onView(allOf(withClassName(endsWith("TextView")), withParent(withId(R.id.toolbar))))
+        onView(withId(R.id.display_url))
                 .check(matches(isDisplayed()))
-                .check(matches(withText(R.string.menu_about)));
-
-        onWebView()
-                .withElement(findElement(Locator.ID, "wordmark"))
-                .perform(webClick());
+                .check(matches(withText("focus:about")));
 
         Screengrab.screenshot("About_Page");
 
-        device.pressBack(); // Leave about page
+        // leave about page, tap menu and go to settings again
+        openSettings();
 
         // "Your rights" screen
-
         final String yourRightsLabel = getString(R.string.menu_rights);
 
         onData(withTitleText(yourRightsLabel))
                 .check(matches(isDisplayed()))
                 .perform(click());
 
-        onView(allOf(withClassName(endsWith("TextView")), withParent(withId(R.id.toolbar))))
+        onView(withId(R.id.display_url))
                 .check(matches(isDisplayed()))
-                .check(matches(withText(yourRightsLabel)));
-
-        onWebView()
-                .withElement(findElement(Locator.ID, "first"))
-                .perform(webClick());
+                .check(matches(withText("focus:rights")));
 
         Screengrab.screenshot("YourRights_Page");
     }
