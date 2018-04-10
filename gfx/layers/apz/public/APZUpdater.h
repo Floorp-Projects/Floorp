@@ -60,7 +60,7 @@ public:
                                 wr::WrPipelineInfo* aInfo);
   static void ProcessPendingTasks(const wr::WrWindowId& aWindowId);
 
-  void ClearTree();
+  void ClearTree(LayersId aRootLayersId);
   void UpdateFocusState(LayersId aRootLayerTreeId,
                         LayersId aOriginatingLayersId,
                         const FocusTarget& aFocusTarget);
@@ -109,8 +109,12 @@ public:
    * Runs the given task on the APZ "updater thread" for this APZUpdater. If
    * this function is called from the updater thread itself then the task is
    * run immediately without getting queued.
+   * The layers id argument should be the id of the layer tree that is
+   * requesting this task to be run. Conceptually each layer tree has a separate
+   * task queue, so that if one layer tree is blocked waiting for a scene build
+   * then tasks for the other layer trees can still be processed.
    */
-  void RunOnUpdaterThread(already_AddRefed<Runnable> aTask);
+  void RunOnUpdaterThread(LayersId aLayersId, already_AddRefed<Runnable> aTask);
 
   /**
    * Returns true if currently on the APZUpdater's "updater thread".
@@ -124,8 +128,11 @@ public:
    * When the updater thread runs it (or if this is called directly on the updater
    * thread), that is when the task gets dispatched to the controller thread.
    * The controller thread then actually runs the task.
+   * The layers id argument should be the id of the layer tree that is
+   * requesting this task to be run; in most cases this will probably just be
+   * the root layers id of the compositor.
    */
-  void RunOnControllerThread(already_AddRefed<Runnable> aTask);
+  void RunOnControllerThread(LayersId aLayersId, already_AddRefed<Runnable> aTask);
 
 protected:
   virtual ~APZUpdater();
@@ -133,7 +140,6 @@ protected:
   bool UsingWebRenderUpdaterThread() const;
   static already_AddRefed<APZUpdater> GetUpdater(const wr::WrWindowId& aWindowId);
 
-  bool IsQueueBlocked() const;
   void ProcessQueue();
 
 private:
@@ -158,22 +164,19 @@ private:
     EpochState();
 
     // Whether or not the state for this layers id is such that it blocks
-    // processing of queued tasks. This happens if the root layers id or any
-    // "visible" layers id has scroll data for an epoch newer than what has
-    // been built. A "visible" layers id is one that is attached to the full
+    // processing of tasks for the layer tree. This happens if the root layers
+    // id or a "visible" layers id has scroll data for an epoch newer than what
+    // has been built. A "visible" layers id is one that is attached to the full
     // layer tree (i.e. there is a chain of reflayer items from the root layer
     // tree to the relevant layer subtree. This is not always the case; for
     // instance a content process may send the compositor layers for a document
     // before the chrome has attached the remote iframe to the root document.
     // Since WR only builds pipelines for "visible" layers ids, |mBuilt| being
     // populated means that the layers id is "visible".
-    bool IsBlockingQueue() const;
+    bool IsBlocked() const;
   };
 
-  // Map from layers id to epoch state. If any of the epoch states returns true
-  // for IsBlockingQueue(), that means we cannot yet process content-side data
-  // still in the task queue, because otherwise we would apply it before the
-  // scene swap for that scene has occurred.
+  // Map from layers id to epoch state.
   // This data structure can only be touched on the updater thread.
   std::unordered_map<LayersId,
                      EpochState,
@@ -201,12 +204,23 @@ private:
   mutable bool mUpdaterThreadQueried;
 #endif
 
+  // Helper struct that pairs each queued runnable with the layers id that it
+  // is associated with. This allows us to easily implement the conceptual
+  // separation of mUpdaterQueue into independent queues per layers id.
+  struct QueuedTask {
+    LayersId mLayersId;
+    RefPtr<Runnable> mRunnable;
+  };
+
   // Lock used to protect mUpdaterQueue
   Mutex mQueueLock;
-  // Holds a FIFO queue of tasks to be run on the updater thread,
+  // Holds a queue of tasks to be run on the updater thread,
   // when the updater thread is a WebRender thread, since it won't have a
-  // message loop we can dispatch to.
-  std::deque<RefPtr<Runnable>> mUpdaterQueue;
+  // message loop we can dispatch to. Note that although this is a single queue
+  // it is conceptually separated into multiple ones, one per layers id. Tasks
+  // for a given layers id will always run in FIFO order, but there is no
+  // guaranteed ordering for tasks with different layers ids.
+  std::deque<QueuedTask> mUpdaterQueue;
 };
 
 } // namespace layers

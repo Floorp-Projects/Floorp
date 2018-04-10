@@ -640,7 +640,7 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
   MOZ_ASSERT((mApzUpdater != nullptr) == (mApzcTreeManager != nullptr));
   if (mApzUpdater) {
     mApzSampler = nullptr;
-    mApzUpdater->ClearTree();
+    mApzUpdater->ClearTree(mRootLayerTreeID);
     mApzUpdater = nullptr;
     mApzcTreeManager = nullptr;
   }
