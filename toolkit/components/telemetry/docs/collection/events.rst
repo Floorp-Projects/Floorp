@@ -6,6 +6,7 @@ Events
 
 Across the different Firefox initiatives, there is a common need for a mechanism for recording, storing, sending & analysing application usage in an event-oriented format.
 *Event Telemetry* specifies a common events data format, which allows for broader, shared usage of data processing tools.
+Adding events is supported in artifact builds and build faster workflows.
 
 For events recorded into Firefox Telemetry we also provide an API that opaquely handles storage and submission to our servers.
 
@@ -233,3 +234,4 @@ Version History
 
    - Ignore re-registering existing events for a category instead of failing (`bug 1408975 <https://bugzilla.mozilla.org/show_bug.cgi?id=1408975>`_).
    - Removed support for the ``expiry_date`` property, as it was unused (`bug 1414638 <https://bugzilla.mozilla.org/show_bug.cgi?id=1414638>`_).
+- Firefox 61: Enabled support for adding events in artifact builds and build-faster workflows (`bug 1448945 <https://bugzilla.mozilla.org/show_bug.cgi?id=1448945>`_).
