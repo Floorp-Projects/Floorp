@@ -325,6 +325,11 @@ class FileSource {
   }
 
   getPath(locale, path) {
+    // This is a special case for the only not BCP47-conformant locale
+    // code we have resources for.
+    if (locale === "ja-JP-macos") {
+      locale = "ja-JP-mac";
+    }
     return (this.prePath + path).replace(/\{locale\}/g, locale);
   }
 
