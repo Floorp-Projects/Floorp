@@ -11,6 +11,9 @@ registerCleanupFunction(async function cleanup() {
 
 let originalEngine;
 add_task(async function test_setup() {
+  // This test opens multiple tabs and some confirm dialogs, that takes long.
+  requestLongerTimeout(2);
+
   // Stop search-engine loads from hitting the network
   Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
                                        "http://example.com/?q={searchTerms}");
