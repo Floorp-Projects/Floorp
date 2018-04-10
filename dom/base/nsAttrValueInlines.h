@@ -42,8 +42,7 @@ struct MiscContainer final
         uint32_t mEnumValue;
         int32_t mPercent;
         mozilla::DeclarationBlock* mCSSDeclaration;
-        mozilla::css::URLValue* mURL;
-        mozilla::css::ImageValue* mImage;
+        nsIURI* mURL;
         mozilla::AtomArray* mAtomArray;
         nsIntMargin* mIntMargin;
         const nsSVGAngle* mSVGAngle;
@@ -172,18 +171,11 @@ nsAttrValue::GetCSSDeclarationValue() const
   return GetMiscContainer()->mValue.mCSSDeclaration;
 }
 
-inline mozilla::css::URLValue*
+inline nsIURI*
 nsAttrValue::GetURLValue() const
 {
   NS_PRECONDITION(Type() == eURL, "wrong type");
   return GetMiscContainer()->mValue.mURL;
-}
-
-inline mozilla::css::ImageValue*
-nsAttrValue::GetImageValue() const
-{
-  NS_PRECONDITION(Type() == eImage, "wrong type");
-  return GetMiscContainer()->mValue.mImage;
 }
 
 inline double
