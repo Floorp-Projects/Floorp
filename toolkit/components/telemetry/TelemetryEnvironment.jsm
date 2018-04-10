@@ -1344,6 +1344,7 @@ EnvironmentCache.prototype = {
       buildId: Services.appinfo.appBuildID || null,
       version: Services.appinfo.version || null,
       vendor: Services.appinfo.vendor || null,
+      displayVersion: AppConstants.MOZ_APP_VERSION_DISPLAY || null,
       platformVersion: Services.appinfo.platformVersion || null,
       xpcomAbi: Services.appinfo.XPCOMABI,
       updaterAvailable: AppConstants.MOZ_UPDATER,
