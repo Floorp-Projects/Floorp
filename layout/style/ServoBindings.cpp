@@ -2681,7 +2681,11 @@ Gecko_ReportUnexpectedCSSError(ErrorReporter* reporter,
                                uint32_t lineNumber,
                                uint32_t colNumber)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  if (!reporter->ShouldReportErrors()) {
+    return;
+  }
+
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   if (prefix) {
     if (prefixParam) {
