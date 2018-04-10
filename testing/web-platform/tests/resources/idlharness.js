@@ -695,6 +695,8 @@ IdlArray.prototype.test = function()
             if (!lhs_is_interface) throw new IdlHarnessError(`${lhs} inherits ${rhs}, but ${lhs} is not an interface.`);
             if (!rhs_is_interface) throw new IdlHarnessError(`${lhs} inherits ${rhs}, but ${rhs} is not an interface.`);
         }
+        // Check for circular dependencies.
+        member.get_inheritance_stack();
     }
 
     Object.getOwnPropertyNames(this.members).forEach(function(memberName) {
@@ -1125,6 +1127,10 @@ IdlInterface.prototype.get_inheritance_stack = function() {
         var base = this.array.members[idl_interface.base];
         if (!base) {
             throw new Error(idl_interface.type + " " + idl_interface.base + " not found (inherited by " + idl_interface.name + ")");
+        } else if (stack.indexOf(base) > -1) {
+            stack.push(base);
+            let dep_chain = stack.map(i => i.name).join(',');
+            throw new IdlHarnessError(`${this.name} has a circular dependency: ${dep_chain}`);
         }
         idl_interface = base;
         stack.push(idl_interface);
@@ -1682,7 +1688,6 @@ IdlInterface.prototype.test_self = function()
             // unscopable things that really do exist.
         }
     }.bind(this), this.name + ' interface: existence and properties of interface prototype object\'s @@unscopables property');
-
 };
 
 //@}
