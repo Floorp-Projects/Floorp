@@ -1,0 +1,9 @@
+.under-construction {
+    background-image: url("chrome://browser/content/illustrations/under-construction.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    min-height: 300px;
+    min-width: 300px;
+    /* Move the image down a bit - should be slightly higher than halfway down the page */
+    margin-top: -10%;
+}

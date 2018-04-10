@@ -85,6 +85,9 @@ static const RedirEntry kRedirMap[] = {
     nsIAboutModule::ALLOW_SCRIPT |
     nsIAboutModule::MAKE_LINKABLE |
     nsIAboutModule::ENABLE_INDEXED_DB },
+  { "library", "chrome://browser/content/aboutLibrary.xhtml",
+    nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },
   { "newtab", "about:blank",
     nsIAboutModule::ENABLE_INDEXED_DB |
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
