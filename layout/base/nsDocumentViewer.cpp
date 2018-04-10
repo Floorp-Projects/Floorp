@@ -2350,52 +2350,9 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
   }
 
   // Append chrome sheets (scrollbars + forms).
-  bool shouldOverride = false;
-  // We don't want a docshell here for external resource docs, so just
-  // look at mContainer.
-  nsCOMPtr<nsIDocShell> ds(mContainer);
-  nsCOMPtr<nsIDOMEventTarget> chromeHandler;
-  nsCOMPtr<nsIURI> uri;
-  RefPtr<StyleSheet> chromeSheet;
-
-  if (ds) {
-    ds->GetChromeEventHandler(getter_AddRefs(chromeHandler));
-  }
-  if (chromeHandler) {
-    nsCOMPtr<Element> elt(do_QueryInterface(chromeHandler));
-    if (elt) {
-      nsCOMPtr<nsIURI> baseURI = elt->GetBaseURI();
-
-      nsAutoString sheets;
-      elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);
-      if (!sheets.IsEmpty() && baseURI) {
-        RefPtr<css::Loader> cssLoader =
-          new css::Loader(aDocument->GetDocGroup());
-
-        char *str = ToNewCString(sheets);
-        char *newStr = str;
-        char *token;
-        while ( (token = nsCRT::strtok(newStr, ", ", &newStr)) ) {
-          NS_NewURI(getter_AddRefs(uri), nsDependentCString(token), nullptr,
-                    baseURI);
-          if (!uri) continue;
-
-          cssLoader->LoadSheetSync(uri, &chromeSheet);
-          if (!chromeSheet) continue;
-
-          styleSet->PrependStyleSheet(SheetType::Agent, chromeSheet->AsServo());
-          shouldOverride = true;
-        }
-        free(str);
-      }
-    }
-  }
-
-  if (!shouldOverride) {
-    sheet = cache->ScrollbarsSheet();
-    if (sheet) {
-      styleSet->PrependStyleSheet(SheetType::Agent, sheet->AsServo());
-    }
+  sheet = cache->ScrollbarsSheet();
+  if (sheet) {
+    styleSet->PrependStyleSheet(SheetType::Agent, sheet->AsServo());
   }
 
   if (!aDocument->IsSVGDocument()) {
