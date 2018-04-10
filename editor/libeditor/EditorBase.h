@@ -580,8 +580,15 @@ protected:
                             int32_t* aOffset,
                             int32_t* aLength);
 
-  nsresult DeleteText(dom::CharacterData& aElement,
-                      uint32_t aOffset, uint32_t aLength);
+  /**
+   * DeleteTextWithTransaction() removes text in the range from aCharData.
+   *
+   * @param aCharData           The data node which should be modified.
+   * @param aOffset             Start offset of removing text in aCharData.
+   * @param aLength             Length of removing text.
+   */
+  nsresult DeleteTextWithTransaction(dom::CharacterData& aCharacterData,
+                                     uint32_t aOffset, uint32_t aLength);
 
   /**
    * This method first deletes the selection, if it's not collapsed.  Then if

@@ -3225,16 +3225,16 @@ HTMLEditor::DeleteNode(nsIDOMNode* aDOMNode)
 }
 
 nsresult
-HTMLEditor::DeleteText(CharacterData& aCharData,
-                       uint32_t aOffset,
-                       uint32_t aLength)
+HTMLEditor::DeleteTextWithTransaction(CharacterData& aCharData,
+                                      uint32_t aOffset,
+                                      uint32_t aLength)
 {
   // Do nothing if the node is read-only
   if (!IsModifiableNode(&aCharData)) {
     return NS_ERROR_FAILURE;
   }
 
-  return EditorBase::DeleteText(aCharData, aOffset, aLength);
+  return EditorBase::DeleteTextWithTransaction(aCharData, aOffset, aLength);
 }
 
 nsresult
