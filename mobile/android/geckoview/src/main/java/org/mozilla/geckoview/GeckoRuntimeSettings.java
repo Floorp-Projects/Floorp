@@ -13,26 +13,73 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 public final class GeckoRuntimeSettings implements Parcelable {
-    private boolean mUseContentProcess;
-    private String[] mArgs;
-    private Bundle mExtras;
-
     /**
-     * Initialize default settings.
+     * Settings builder used to construct the settings object.
      */
-    public  GeckoRuntimeSettings() {
-        this(null);
+    public static final class Builder {
+        private final GeckoRuntimeSettings mSettings;
+
+        public Builder() {
+            mSettings = new GeckoRuntimeSettings();
+        }
+
+        public Builder(final GeckoRuntimeSettings settings) {
+            mSettings = new GeckoRuntimeSettings(settings);
+        }
+
+        /**
+         * Finalize and return the settings.
+         *
+         * @return The constructed settings.
+         */
+        public @NonNull GeckoRuntimeSettings build() {
+            return new GeckoRuntimeSettings(mSettings);
+        }
+
+        /**
+         * Set the content process hint flag.
+         *
+         * @param use If true, this will reload the content process for future use.
+         */
+        public @NonNull Builder useContentProcessHint(final boolean use) {
+            mSettings.mUseContentProcess = use;
+            return this;
+        }
+
+        /**
+         * Set the custom Gecko process arguments.
+         *
+         * @param args The Gecko process arguments.
+         */
+        public @NonNull Builder arguments(final @NonNull String[] args) {
+            mSettings.mArgs = args;
+            return this;
+        }
+
+        /**
+         * Set the custom Gecko intent extras.
+         *
+         * @param extras The Gecko intent extras.
+         */
+        public @NonNull Builder extras(final @NonNull Bundle extras) {
+            mSettings.mExtras = extras;
+            return this;
+        }
     }
 
-    /* package */ GeckoRuntimeSettings(final @Nullable GeckoRuntimeSettings settings) {
-        if (settings != null) {
-            mUseContentProcess = settings.mUseContentProcess;
-            mArgs = settings.mArgs.clone();
-            mExtras = new Bundle(settings.mExtras);
-        } else {
-            mArgs = new String[0];
-            mExtras = new Bundle();
-        }
+    /* package */ boolean mUseContentProcess;
+    /* package */ String[] mArgs;
+    /* package */ Bundle mExtras;
+
+    /* package */ GeckoRuntimeSettings() {
+        mArgs = new String[0];
+        mExtras = new Bundle();
+    }
+
+    /* package */ GeckoRuntimeSettings(final @NonNull GeckoRuntimeSettings settings) {
+        mUseContentProcess = settings.getUseContentProcessHint();
+        mArgs = settings.getArguments().clone();
+        mExtras = new Bundle(settings.getExtras());
     }
 
     /**
@@ -60,33 +107,6 @@ public final class GeckoRuntimeSettings implements Parcelable {
      */
     public Bundle getExtras() {
         return mExtras;
-    }
-
-    /**
-     * Set the content process hint flag.
-     *
-     * @param use If true, this will reload the content process for future use.
-     */
-    public void setUseContentProcessHint(boolean use) {
-        mUseContentProcess = use;
-    }
-
-    /**
-     * Set the custom Gecko process arguments.
-     *
-     * @param args The Gecko process arguments.
-     */
-    public void setArguments(final @NonNull String[] args) {
-        mArgs = args;
-    }
-
-    /**
-     * Set the custom Gecko intent extras.
-     *
-     * @param extras The Gecko intent extras.
-     */
-    public void setExtras(final @NonNull Bundle extras) {
-        mExtras = extras;
     }
 
     @Override // Parcelable
