@@ -24,6 +24,7 @@ const {
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_LOCATION_TYPE,
   VIEW_NODE_SHAPE_POINT_TYPE,
+  VIEW_NODE_SHAPE_SWATCH,
   VIEW_NODE_VARIABLE_TYPE,
   VIEW_NODE_FONT_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
@@ -360,6 +361,13 @@ CssRuleView.prototype = {
         textProperty: prop,
         toggleActive: getShapeToggleActive(node),
         point: getShapePoint(node)
+      };
+    } else if (classes.contains("ruleview-shapeswatch") && prop) {
+      type = VIEW_NODE_SHAPE_SWATCH;
+      value = {
+        enabled: prop.enabled,
+        overridden: prop.overridden,
+        textProperty: prop,
       };
     } else if ((classes.contains("ruleview-variable") ||
                 classes.contains("ruleview-unmatched-variable")) && prop) {

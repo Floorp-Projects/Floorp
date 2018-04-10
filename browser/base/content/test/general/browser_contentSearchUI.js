@@ -716,7 +716,7 @@ async function promiseTab() {
       deferred.resolve(msg("init"));
     });
   }, true, true);
-  openUILinkIn(pageURL, "current");
+  openTrustedLinkIn(pageURL, "current");
   return deferred.promise;
 }
 

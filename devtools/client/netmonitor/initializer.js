@@ -65,7 +65,7 @@ window.Netmonitor = {
       let parentDoc = toolbox.doc;
       let iframe = parentDoc.getElementById("toolbox-panel-iframe-netmonitor");
       let top = iframe.ownerDocument.defaultView.top;
-      top.openUILinkIn(link, "tab");
+      top.openWebLinkIn(link, "tab");
     };
 
     const openSplitConsole = (err) => {

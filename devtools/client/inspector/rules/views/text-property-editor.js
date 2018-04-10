@@ -27,7 +27,6 @@ const COLOR_SWATCH_CLASS = "ruleview-colorswatch";
 const BEZIER_SWATCH_CLASS = "ruleview-bezierswatch";
 const FILTER_SWATCH_CLASS = "ruleview-filterswatch";
 const ANGLE_SWATCH_CLASS = "ruleview-angleswatch";
-const INSET_POINT_TYPES = ["top", "right", "bottom", "left"];
 const FONT_FAMILY_CLASS = "ruleview-font-family";
 const SHAPE_SWATCH_CLASS = "ruleview-shapeswatch";
 
@@ -96,7 +95,6 @@ function TextPropertyEditor(ruleEditor, property) {
   this._onValidate = this.ruleView.debounce(this._previewValue, 10, this);
   this.update = this.update.bind(this);
   this.updatePropertyState = this.updatePropertyState.bind(this);
-  this._onHoverShapePoint = this._onHoverShapePoint.bind(this);
 
   this._create();
   this.update();
@@ -299,7 +297,7 @@ TextPropertyEditor.prototype = {
           event.stopPropagation();
           event.preventDefault();
           let browserWin = this.ruleView.inspector.target.tab.ownerDocument.defaultView;
-          browserWin.openUILinkIn(target.href, "tab");
+          browserWin.openTrustedLinkIn(target.href, "tab");
         }
       });
 
@@ -319,8 +317,6 @@ TextPropertyEditor.prototype = {
         cssProperties: this.cssProperties,
         cssVariables: this.rule.elementStyle.variables,
       });
-
-      this.ruleView.highlighters.on("hover-shape-point", this._onHoverShapePoint);
     }
   },
 
@@ -515,13 +511,6 @@ TextPropertyEditor.prototype = {
         return s[0].toUpperCase() + s.slice(1);
       }).join("");
       shapeToggle.setAttribute("data-mode", mode);
-
-      let { highlighters, inspector } = this.ruleView;
-      if (highlighters.shapesHighlighterShown === inspector.selection.nodeFront &&
-          highlighters.state.shapes.options.mode === mode) {
-        shapeToggle.classList.add("active");
-        highlighters.highlightRuleViewShapePoint(highlighters.state.shapes.hoverPoint);
-      }
     }
 
     // Now that we have updated the property's value, we might have a pending
@@ -1044,67 +1033,6 @@ TextPropertyEditor.prototype = {
   isDisplayGrid: function() {
     return this.prop.name === "display" &&
       (this.prop.value === "grid" || this.prop.value === "inline-grid");
-  },
-
-  /**
-   * Highlight the given shape point in the rule view. Called when "hover-shape-point"
-   * event is emitted.
-   *
-   * @param {Event} event
-   *        The "hover-shape-point" event.
-   * @param {String} point
-   *        The point to highlight.
-   */
-  _onHoverShapePoint: function(point) {
-    // If there is no shape toggle, or it is not active, return.
-    let shapeToggle = this.valueSpan.querySelector(".ruleview-shapeswatch.active");
-    if (!shapeToggle) {
-      return;
-    }
-
-    let view = this.ruleView;
-    let { highlighters } = view;
-    let ruleViewEl = view.element;
-    let selector = `.ruleview-shape-point.active`;
-    for (let pointNode of ruleViewEl.querySelectorAll(selector)) {
-      this._toggleShapePointActive(pointNode, false);
-    }
-
-    if (typeof point === "string") {
-      if (point.includes(",")) {
-        point = point.split(",")[0];
-      }
-      // Because one inset value can represent multiple points, inset points use classes
-      // instead of data.
-      selector = (INSET_POINT_TYPES.includes(point)) ?
-                 `.ruleview-shape-point.${point}` :
-                 `.ruleview-shape-point[data-point='${point}']`;
-      for (let pointNode of this.valueSpan.querySelectorAll(selector)) {
-        let nodeInfo = view.getNodeInfo(pointNode);
-        if (highlighters.isRuleViewShapePoint(nodeInfo)) {
-          this._toggleShapePointActive(pointNode, true);
-        }
-      }
-    }
-  },
-
-  /**
-   * Toggle the class "active" on the given shape point in the rule view if the current
-   * inspector selection is highlighted by the shapes highlighter.
-   *
-   * @param {NodeFront} node
-   *        The NodeFront of the shape point to toggle
-   * @param {Boolean} active
-   *        Whether the shape point should be active
-   */
-  _toggleShapePointActive: function(node, active) {
-    let { highlighters } = this.ruleView;
-    if (highlighters.inspector.selection.nodeFront !=
-        highlighters.shapesHighlighterShown) {
-      return;
-    }
-
-    node.classList.toggle("active", active);
   },
 };
 

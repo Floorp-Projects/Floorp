@@ -310,7 +310,7 @@ var gSync = {
 
   async openConnectAnotherDevice(entryPoint) {
     const url = await FxAccounts.config.promiseConnectDeviceURI(entryPoint);
-    openUILinkIn(url, "tab");
+    openTrustedLinkIn(url, "tab");
   },
 
   openSendToDevicePromo() {

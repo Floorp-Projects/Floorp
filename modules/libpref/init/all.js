@@ -5754,6 +5754,9 @@ pref("security.data_uri.unique_opaque_origin", true);
 // URL-Bar will not be blocked when flipping this pref.
 pref("security.data_uri.block_toplevel_data_uri_navigations", true);
 
+// If true, all FTP subresource loads will be blocked.
+pref("security.block_ftp_subresources", true);
+
 // Enable Storage API for all platforms except Android.
 #if !defined(MOZ_WIDGET_ANDROID)
 pref("dom.storageManager.enabled", true);

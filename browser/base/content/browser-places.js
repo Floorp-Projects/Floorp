@@ -723,7 +723,10 @@ HistoryMenu.prototype = {
     if (placesNode) {
       if (!PrivateBrowsingUtils.isWindowPrivate(window))
         PlacesUIUtils.markPageAsTyped(placesNode.uri);
-      openUILink(placesNode.uri, aEvent, { ignoreAlt: true });
+      openUILink(placesNode.uri, aEvent, {
+        ignoreAlt: true,
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
     }
   }
 };

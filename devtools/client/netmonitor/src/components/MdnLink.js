@@ -37,11 +37,11 @@ function onLearnMoreClick(e, url) {
   let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
   let { button, ctrlKey, metaKey } = e;
   let isOSX = Services.appinfo.OS == "Darwin";
+  let where = "tab";
   if (button === 1 || (button === 0 && (isOSX ? metaKey : ctrlKey))) {
-    win.openUILinkIn(url, "tabshifted");
-  } else {
-    win.openUILinkIn(url, "tab");
+    where = "tabshifted";
   }
+  win.openWebLinkIn(url, where, {triggeringPrincipal: win.document.nodePrincipal});
 }
 
 module.exports = MDNLink;
