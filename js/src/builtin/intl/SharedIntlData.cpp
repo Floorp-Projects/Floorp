@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/TextUtils.h"
 
 #include <stdint.h>
 
@@ -21,6 +22,8 @@
 #include "js/Utility.h"
 #include "vm/JSAtom.h"
 
+using mozilla::IsAsciiLowercaseAlpha;
+
 using js::HashNumber;
 using js::intl::StringsAreEqual;
 
@@ -28,7 +31,7 @@ template<typename Char>
 static constexpr Char
 ToUpperASCII(Char c)
 {
-    return ('a' <= c && c <= 'z')
+    return IsAsciiLowercaseAlpha(c)
            ? (c & ~0x20)
            : c;
 }
