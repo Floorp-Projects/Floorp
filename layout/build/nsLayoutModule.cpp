@@ -57,7 +57,6 @@
 #include "mozilla/dom/XPathEvaluator.h"
 
 #include "mozilla/dom/DOMParser.h"
-#include "nsDOMSerializer.h"
 
 // view stuff
 #include "nsContentCreatorFunctions.h"
@@ -199,7 +198,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(HTMLEditor)
 already_AddRefed<nsIPresentationService> NS_CreatePresentationService();
 
 // Factory Constructor
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 typedef nsHostObjectURI::Mutator nsHostObjectURIMutator;
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHostObjectURIMutator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DOMParser)
@@ -550,7 +548,6 @@ NS_DEFINE_NAMED_CID(NS_PLUGINDOCLOADERFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_PLUGINDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_VIDEODOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_STYLESHEETSERVICE_CID);
-NS_DEFINE_NAMED_CID(NS_XMLSERIALIZER_CID);
 NS_DEFINE_NAMED_CID(NS_HOSTOBJECTURI_CID);
 NS_DEFINE_NAMED_CID(NS_HOSTOBJECTURIMUTATOR_CID);
 NS_DEFINE_NAMED_CID(NS_DOMPARSER_CID);
@@ -793,7 +790,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_PLUGINDOCUMENT_CID, false, nullptr, CreatePluginDocument },
   { &kNS_VIDEODOCUMENT_CID, false, nullptr, CreateVideoDocument },
   { &kNS_STYLESHEETSERVICE_CID, false, nullptr, nsStyleSheetServiceConstructor },
-  { &kNS_XMLSERIALIZER_CID, false, nullptr, nsDOMSerializerConstructor },
   { &kNS_HOSTOBJECTURI_CID, false, nullptr, nsHostObjectURIMutatorConstructor }, // do_CreateInstance returns mutator
   { &kNS_HOSTOBJECTURIMUTATOR_CID, false, nullptr, nsHostObjectURIMutatorConstructor },
   { &kNS_DOMPARSER_CID, false, nullptr, DOMParserConstructor },
@@ -901,7 +897,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_WINDOWCONTROLLER_CONTRACTID, &kNS_WINDOWCONTROLLER_CID },
   { PLUGIN_DLF_CONTRACTID, &kNS_PLUGINDOCLOADERFACTORY_CID },
   { NS_STYLESHEETSERVICE_CONTRACTID, &kNS_STYLESHEETSERVICE_CID },
-  { NS_XMLSERIALIZER_CONTRACTID, &kNS_XMLSERIALIZER_CID },
   { NS_DOMPARSER_CONTRACTID, &kNS_DOMPARSER_CID },
   { "@mozilla.org/dom/localStorage-manager;1", &kNS_DOMLOCALSTORAGEMANAGER_CID },
   // Keeping the old ContractID for backward compatibility

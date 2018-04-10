@@ -31,39 +31,85 @@ add_task(async function test_setup() {
 });
 
 // New Window Button opens any link.
-add_task(async function() { await dropText("mochi.test/first", 1); });
-add_task(async function() { await dropText("javascript:'bad'", 1); });
-add_task(async function() { await dropText("jAvascript:'bad'", 1); });
-add_task(async function() { await dropText("mochi.test/second", 1); });
-add_task(async function() { await dropText("data:text/html,bad", 1); });
-add_task(async function() { await dropText("mochi.test/third", 1); });
+add_task(async function single_url() {
+  await dropText("mochi.test/first",
+                 ["http://www.mochi.test/first"]);
+});
+add_task(async function single_javascript() {
+  await dropText("javascript:'bad'",
+                 ["about:blank"]);
+});
+add_task(async function single_javascript_capital() {
+  await dropText("jAvascript:'bad'",
+                 ["about:blank"]);
+});
+add_task(async function single_url2() {
+  await dropText("mochi.test/second",
+                 ["http://www.mochi.test/second"]);
+});
+add_task(async function single_data_url() {
+  await dropText("data:text/html,bad",
+                 ["data:text/html,bad"]);
+});
+add_task(async function single_url3() {
+  await dropText("mochi.test/third",
+                 ["http://www.mochi.test/third"]);
+});
 
 // Single text/plain item, with multiple links.
-add_task(async function() { await dropText("mochi.test/1\nmochi.test/2", 2); });
-add_task(async function() { await dropText("javascript:'bad1'\nmochi.test/3", 2); });
-add_task(async function() { await dropText("mochi.test/4\ndata:text/html,bad1", 2); });
+add_task(async function multiple_urls() {
+  await dropText("mochi.test/1\nmochi.test/2",
+                 [
+                   "http://www.mochi.test/1",
+                   "http://www.mochi.test/2",
+                 ]);
+});
+add_task(async function multiple_urls_javascript() {
+  await dropText("javascript:'bad1'\nmochi.test/3",
+                 [
+                   "javascript:'bad1'",
+                   "http://www.mochi.test/3",
+                 ]);
+});
+add_task(async function multiple_urls_data() {
+  await dropText("mochi.test/4\ndata:text/html,bad1",
+                 [
+                   "http://www.mochi.test/4",
+                   "data:text/html,bad1",
+                 ]);
+});
 
 // Multiple text/plain items, with single and multiple links.
-add_task(async function() {
+add_task(async function multiple_items_single_and_multiple_links() {
   await drop([[{type: "text/plain",
                 data: "mochi.test/5"}],
               [{type: "text/plain",
-                data: "mochi.test/6\nmochi.test/7"}]], 3);
+                data: "mochi.test/6\nmochi.test/7"}]],
+             [
+               "http://www.mochi.test/5",
+               "http://www.mochi.test/6",
+               "http://www.mochi.test/7",
+             ]);
 });
 
 // Single text/x-moz-url item, with multiple links.
 // "text/x-moz-url" has titles in even-numbered lines.
-add_task(async function() {
+add_task(async function single_moz_url_multiple_links() {
   await drop([[{type: "text/x-moz-url",
-                data: "mochi.test/8\nTITLE8\nmochi.test/9\nTITLE9"}]], 2);
+                data: "mochi.test/8\nTITLE8\nmochi.test/9\nTITLE9"}]],
+             [
+               "http://www.mochi.test/8",
+               "http://www.mochi.test/9",
+             ]);
 });
 
 // Single item with multiple types.
-add_task(async function() {
+add_task(async function single_item_multiple_types() {
   await drop([[{type: "text/plain",
                 data: "mochi.test/10"},
                {type: "text/x-moz-url",
-                data: "mochi.test/11\nTITLE11"}]], 1);
+                data: "mochi.test/11\nTITLE11"}]],
+             ["http://www.mochi.test/11"]);
 });
 
 // Warn when too many URLs are dropped.
@@ -72,7 +118,14 @@ add_task(async function multiple_tabs_under_max() {
   for (let i = 0; i < 5; i++) {
     urls.push("mochi.test/multi" + i);
   }
-  await dropText(urls.join("\n"), 5);
+  await dropText(urls.join("\n"),
+                 [
+                   "http://www.mochi.test/multi0",
+                   "http://www.mochi.test/multi1",
+                   "http://www.mochi.test/multi2",
+                   "http://www.mochi.test/multi3",
+                   "http://www.mochi.test/multi4",
+                 ]);
 });
 add_task(async function multiple_tabs_over_max_accept() {
   await pushPrefs(["browser.tabs.maxOpenBeforeWarn", 4]);
@@ -83,7 +136,15 @@ add_task(async function multiple_tabs_over_max_accept() {
   for (let i = 0; i < 5; i++) {
     urls.push("mochi.test/accept" + i);
   }
-  await dropText(urls.join("\n"), 5, true);
+  await dropText(urls.join("\n"),
+                 [
+                   "http://www.mochi.test/accept0",
+                   "http://www.mochi.test/accept1",
+                   "http://www.mochi.test/accept2",
+                   "http://www.mochi.test/accept3",
+                   "http://www.mochi.test/accept4",
+                 ],
+                 true);
 
   await confirmPromise;
 
@@ -98,23 +159,23 @@ add_task(async function multiple_tabs_over_max_cancel() {
   for (let i = 0; i < 5; i++) {
     urls.push("mochi.test/cancel" + i);
   }
-  await dropText(urls.join("\n"), 0, true);
+  await dropText(urls.join("\n"), [], true);
 
   await confirmPromise;
 
   await popPrefs();
 });
 
-function dropText(text, expectedWindowOpenCount = 0,
+function dropText(text, expectedURLs,
                   ignoreFirstWindow = false) {
-  return drop([[{type: "text/plain", data: text}]], expectedWindowOpenCount,
+  return drop([[{type: "text/plain", data: text}]], expectedURLs,
               ignoreFirstWindow);
 }
 
-async function drop(dragData, expectedWindowOpenCount = 0,
+async function drop(dragData, expectedURLs,
                     ignoreFirstWindow = false) {
   let dragDataString = JSON.stringify(dragData);
-  info(`Starting test for datagData:${dragDataString}; expectedWindowOpenCount:${expectedWindowOpenCount}`);
+  info(`Starting test for dragData:${dragDataString}; expectedURLs.length:${expectedURLs.length}`);
   let EventUtils = {};
   Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
@@ -128,40 +189,20 @@ async function drop(dragData, expectedWindowOpenCount = 0,
   ChromeUtils.import("resource://testing-common/TestUtils.jsm", tmp);
 
   let awaitDrop = BrowserTestUtils.waitForEvent(newWindowButton, "drop");
-  let actualWindowOpenCount = 0;
-  let openedWindows = [];
-  let checkCount = function(window) {
-    if (ignoreFirstWindow) {
-      // When dropping too many dialog, the confirm dialog is opened and
-      // domwindowopened notification is dispatched for it, before opening
-      // windows for dropped items.  Ignore it.
-      ignoreFirstWindow = false;
-      return false;
-    }
 
-    // Add observer as soon as domWindow is opened to avoid missing the topic.
-    let awaitStartup = tmp.TestUtils.topicObserved("browser-delayed-startup-finished",
-                                                   subject => subject == window);
-    openedWindows.push([window, awaitStartup]);
-    actualWindowOpenCount++;
-    return actualWindowOpenCount == expectedWindowOpenCount;
-  };
-  let awaitWindowOpen = expectedWindowOpenCount && BrowserTestUtils.domWindowOpened(null, checkCount);
+  let loadedPromises = expectedURLs.map(
+    url => BrowserTestUtils.waitForNewWindow({
+      url,
+      anyWindow: true,
+      maybeErrorPage: true,
+    }));
 
   EventUtils.synthesizeDrop(dragSrcElement, newWindowButton, dragData, "link", window);
 
-  let windowsOpened = false;
-  if (awaitWindowOpen) {
-    await awaitWindowOpen;
-    info("Got Window opened");
-    windowsOpened = true;
-    for (let [window, awaitStartup] of openedWindows.reverse()) {
-      // Wait for startup before closing, to properly close the browser window.
-      await awaitStartup;
-      await BrowserTestUtils.closeWindow(window);
-    }
+  let windows = await Promise.all(loadedPromises);
+  for (let window of windows) {
+    await BrowserTestUtils.closeWindow(window);
   }
-  is(windowsOpened, !!expectedWindowOpenCount, `Windows for ${dragDataString} should only open if any of dropped items are valid`);
 
   await awaitDrop;
   ok(true, "Got drop event");

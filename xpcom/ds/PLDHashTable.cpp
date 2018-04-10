@@ -476,7 +476,7 @@ PLDHashTable::ChangeTable(int32_t aDeltaLog2)
     return false;   // overflowed
   }
 
-  char* newEntryStore = (char*)malloc(nbytes);
+  char* newEntryStore = (char*)calloc(1, nbytes);
   if (!newEntryStore) {
     return false;
   }
@@ -486,7 +486,6 @@ PLDHashTable::ChangeTable(int32_t aDeltaLog2)
   mRemovedCount = 0;
 
   // Assign the new entry store to table.
-  memset(newEntryStore, 0, nbytes);
   char* oldEntryStore;
   char* oldEntryAddr;
   oldEntryAddr = oldEntryStore = mEntryStore.Get();
@@ -555,11 +554,10 @@ PLDHashTable::Add(const void* aKey, const mozilla::fallible_t&)
     // We already checked this in the constructor, so it must still be true.
     MOZ_RELEASE_ASSERT(SizeOfEntryStore(CapacityFromHashShift(), mEntrySize,
                                         &nbytes));
-    mEntryStore.Set((char*)malloc(nbytes), &mGeneration);
+    mEntryStore.Set((char*)calloc(1, nbytes), &mGeneration);
     if (!mEntryStore.Get()) {
       return nullptr;
     }
-    memset(mEntryStore.Get(), 0, nbytes);
   }
 
   // If alpha is >= .75, grow or compress the table. If aKey is already in the

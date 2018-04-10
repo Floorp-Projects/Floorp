@@ -227,7 +227,7 @@ var ContentPolicyManager = {
   },
 
   receiveMessage(msg) {
-    let browser = msg.target instanceof Ci.nsIDOMXULElement ? msg.target : null;
+    let browser = ChromeUtils.getClassName(msg.target) == "XULElement" ? msg.target : null;
 
     let requestId = `fakeRequest-${++nextFakeRequestId}`;
     for (let id of msg.data.ids) {

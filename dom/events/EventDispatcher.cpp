@@ -749,10 +749,29 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
       aEvent->mMessage != eVoidEvent &&
       !nsContentUtils::IsSafeToRunScript()) {
     nsCOMPtr<nsINode> node = do_QueryInterface(target);
-    if (node && nsContentUtils::IsChromeDoc(node->OwnerDoc())) {
-      NS_WARNING("Fix the caller!");
-    } else {
+    if (!node) {
+      // If the target is not a node, just go ahead and assert that this is
+      // unsafe.  There really shouldn't be any other event targets in documents
+      // that are not being rendered or scripted.
       NS_ERROR("This is unsafe! Fix the caller!");
+    } else {
+      // If this is a node, it's possible that this is some sort of DOM tree
+      // that is never accessed by script (for example an SVG image or XBL
+      // binding document or whatnot).  We really only want to warn/assert here
+      // if there might be actual scripted listeners for this event, so restrict
+      // the warnings/asserts to the case when script can or once could touch
+      // this node's document.
+      nsIDocument* doc = node->OwnerDoc();
+      bool hasHadScriptHandlingObject;
+      nsIGlobalObject* global =
+        doc->GetScriptHandlingObject(hasHadScriptHandlingObject);
+      if (global || hasHadScriptHandlingObject) {
+        if (nsContentUtils::IsChromeDoc(doc)) {
+          NS_WARNING("Fix the caller!");
+        } else {
+          NS_ERROR("This is unsafe! Fix the caller!");
+        }
+      }
     }
   }
 

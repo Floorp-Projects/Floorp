@@ -1591,6 +1591,21 @@ function once(target, name, cb) {
   return p;
 }
 
+/**
+ * @param {HTMLMediaElement} video target of interest.
+ * @param {string} eventName the event to wait on.
+ * @returns {Promise} A promise that is resolved when event happens.
+ */
+function nextEvent(video, eventName) {
+  return new Promise(function (resolve, reject) {
+    let f = function (event) {
+      video.removeEventListener(eventName, f, false);
+      resolve(event);
+    };
+    video.addEventListener(eventName, f, false);
+  });
+}
+
 function TimeStamp(token) {
   function pad(x) {
     return (x < 10) ? "0" + x : x;

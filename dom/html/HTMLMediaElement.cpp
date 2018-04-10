@@ -1808,6 +1808,7 @@ void HTMLMediaElement::AbortExistingLoads()
   mPendingEncryptedInitData.Reset();
   mWaitingForKey = NOT_WAITING_FOR_KEY;
   mSourcePointer = nullptr;
+  mAttemptPlayUponLoadedMetadata = false;
 
   mTags = nullptr;
 
@@ -3956,7 +3957,7 @@ HTMLMediaElement::NotifyXPCOMShutdown()
 already_AddRefed<Promise>
 HTMLMediaElement::Play(ErrorResult& aRv)
 {
-  LOG(LogLevel::Debug, ("%p Play() called by JS", this));
+  LOG(LogLevel::Debug, ("%p Play() called by JS readyState=%d", this, mReadyState));
 
   if (mAudioChannelWrapper && mAudioChannelWrapper->IsPlaybackBlocked()) {
     MaybeDoLoad();
@@ -3995,7 +3996,12 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
   // 4.8.12.8 - Step 1:
   // If the media element is not allowed to play, return a promise rejected
   // with a "NotAllowedError" DOMException and abort these steps.
-  if (!IsAllowedToPlay()) {
+  // Note: IsAllowedToPlay() needs to know whether there is an audio track
+  // in the resource, and for that we need to be at readyState HAVE_METADATA
+  // or above. So only reject here if we're at readyState HAVE_METADATA. If
+  // we're below that, we'll we delay fulfilling the play promise until we've
+  // reached readyState >= HAVE_METADATA below.
+  if (mReadyState >= HAVE_METADATA && !IsAllowedToPlay()) {
     // NOTE: for promise-based-play, will return a rejected promise here.
     LOG(LogLevel::Debug,
         ("%p Play() promise rejected because not allowed to play.", this));
@@ -4053,21 +4059,30 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
       SetCurrentTime(0);
     }
     if (!mPausedForInactiveDocumentOrChannel) {
-      nsresult rv = mDecoder->Play();
-      if (NS_FAILED(rv)) {
-        // We don't need to remove the _promise_ from _mPendingPlayPromises_ here.
-        // If something wrong between |mPendingPlayPromises.AppendElement(promise);|
-        // and here, the _promise_ should already have been rejected. Otherwise,
-        // the _promise_ won't be returned to JS at all, so just leave it in the
-        // _mPendingPlayPromises_ and let it be resolved/rejected with the
-        // following actions and the promise-resolution won't be observed at all.
-        LOG(LogLevel::Debug,
-            ("%p Play() promise rejected because failed to play MediaDecoder.",
-             this));
-        aRv.Throw(rv);
-        return nullptr;
+      if (mReadyState < HAVE_METADATA) {
+        // We don't know whether the autoplay policy will allow us to play yet,
+        // as we don't yet know whether the media has audio tracks. So delay
+        // starting playback until we've loaded metadata.
+        mAttemptPlayUponLoadedMetadata = true;
+      } else {
+        nsresult rv = mDecoder->Play();
+        if (NS_FAILED(rv)) {
+          // We don't need to remove the _promise_ from _mPendingPlayPromises_ here.
+          // If something wrong between |mPendingPlayPromises.AppendElement(promise);|
+          // and here, the _promise_ should already have been rejected. Otherwise,
+          // the _promise_ won't be returned to JS at all, so just leave it in the
+          // _mPendingPlayPromises_ and let it be resolved/rejected with the
+          // following actions and the promise-resolution won't be observed at all.
+          LOG(LogLevel::Debug,
+              ("%p Play() promise rejected because failed to play MediaDecoder.",
+              this));
+          aRv.Throw(rv);
+          return nullptr;
+        }
       }
     }
+  } else if (mReadyState < HAVE_METADATA) {
+    mAttemptPlayUponLoadedMetadata = true;
   }
 
   if (mCurrentPlayRangeStart == -1.0) {
@@ -4926,7 +4941,7 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
   }
 
   nsresult rv = NS_OK;
-  if (!mPaused) {
+  if (!mPaused && !mAttemptPlayUponLoadedMetadata) {
     SetPlayedOrSeeked(true);
     if (!mPausedForInactiveDocumentOrChannel) {
       rv = mDecoder->Play();
@@ -5930,6 +5945,15 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
       mReadyState >= HAVE_FUTURE_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
     if (!mPaused) {
+      if (mAttemptPlayUponLoadedMetadata && mDecoder) {
+        mAttemptPlayUponLoadedMetadata = false;
+        if (IsAllowedToPlay()) {
+          mDecoder->Play();
+        } else {
+          AsyncRejectPendingPlayPromises(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
+          mPaused = true;
+        }
+      }
       NotifyAboutPlaying();
     }
   }
@@ -6050,6 +6074,7 @@ void HTMLMediaElement::CheckAutoplayDataReady()
     if (mCurrentPlayRangeStart == -1.0) {
       mCurrentPlayRangeStart = CurrentTime();
     }
+    MOZ_ASSERT(!mAttemptPlayUponLoadedMetadata);
     mDecoder->Play();
   } else if (mSrcStream) {
     SetPlayedOrSeeked(true);
@@ -6387,6 +6412,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
       if (mDecoder) {
         mDecoder->Resume();
         if (!mPaused && !mDecoder->IsEnded()) {
+          MOZ_ASSERT(!mAttemptPlayUponLoadedMetadata);
           mDecoder->Play();
         }
       }

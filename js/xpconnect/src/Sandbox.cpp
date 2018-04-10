@@ -56,6 +56,7 @@
 #include "mozilla/dom/URLBinding.h"
 #include "mozilla/dom/URLSearchParamsBinding.h"
 #include "mozilla/dom/XMLHttpRequest.h"
+#include "mozilla/dom/XMLSerializerBinding.h"
 #include "mozilla/dom/FormDataBinding.h"
 #include "mozilla/DeferredFinalize.h"
 
@@ -832,6 +833,8 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             URLSearchParams = true;
         } else if (!strcmp(name.ptr(), "XMLHttpRequest")) {
             XMLHttpRequest = true;
+        } else if (!strcmp(name.ptr(), "XMLSerializer")) {
+            XMLSerializer = true;
         } else if (!strcmp(name.ptr(), "atob")) {
             atob = true;
         } else if (!strcmp(name.ptr(), "btoa")) {
@@ -923,6 +926,10 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
 
     if (XMLHttpRequest &&
         !dom::XMLHttpRequestBinding::GetConstructorObject(cx))
+        return false;
+
+    if (XMLSerializer &&
+        !dom::XMLSerializerBinding::GetConstructorObject(cx))
         return false;
 
     if (atob &&

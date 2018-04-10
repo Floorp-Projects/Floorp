@@ -2623,6 +2623,7 @@ struct GlobalProperties {
     bool URL : 1;
     bool URLSearchParams : 1;
     bool XMLHttpRequest : 1;
+    bool XMLSerializer : 1;
 
     // Ad-hoc property names we implement.
     bool atob : 1;

@@ -634,7 +634,7 @@ APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
                     scrollTargetNode->GetTransform().ToUnknownMatrix(),
                     scrollTargetApzc,
                     aMetrics,
-                    aNode->GetScrollThumbData(),
+                    aNode->GetScrollbarData(),
                     scrollTargetNode->IsAncestorOf(aNode),
                     nullptr);
             });
@@ -865,8 +865,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
         aLayer.IsBackfaceHidden());
     node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                            aLayer.GetScrollbarAnimationId(),
-                           aLayer.GetScrollThumbData(),
-                           aLayer.GetScrollbarContainerDirection());
+                           aLayer.GetScrollbarData());
     node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId());
     return node;
   }
@@ -1086,8 +1085,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
   // when those properties change.
   node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                          aLayer.GetScrollbarAnimationId(),
-                         aLayer.GetScrollThumbData(),
-                         aLayer.GetScrollbarContainerDirection());
+                         aLayer.GetScrollbarData());
   node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId());
   return node;
 }
@@ -1213,7 +1211,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         // If we're starting an async scrollbar drag
         if (apzDragEnabled && startsDrag && hitScrollbarNode &&
             hitScrollbarNode->IsScrollThumbNode() &&
-            hitScrollbarNode->GetScrollThumbData().mIsAsyncDraggable) {
+            hitScrollbarNode->GetScrollbarData().mThumbIsAsyncDraggable) {
           SetupScrollbarDrag(mouseInput, hitScrollbarNode.get(), apzc.get());
         }
 
@@ -1593,7 +1591,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     mInScrollbarTouchDrag = gfxPrefs::APZDragEnabled() &&
                             gfxPrefs::APZTouchDragEnabled() && hitScrollbarNode &&
                             hitScrollbarNode->IsScrollThumbNode() &&
-                            hitScrollbarNode->GetScrollThumbData().mIsAsyncDraggable;
+                            hitScrollbarNode->GetScrollbarData().mThumbIsAsyncDraggable;
 
     MOZ_ASSERT(touchBehaviors.Length() == aInput.mTouches.Length());
     for (size_t i = 0; i < touchBehaviors.Length(); i++) {
@@ -1768,7 +1766,7 @@ APZCTreeManager::SetupScrollbarDrag(MouseInput& aMouseInput,
     return;
   }
 
-  const ScrollThumbData& thumbData = aScrollThumbNode->GetScrollThumbData();
+  const ScrollbarData& thumbData = aScrollThumbNode->GetScrollbarData();
   MOZ_ASSERT(thumbData.mDirection.isSome());
 
   // Record the thumb's position at the start of the drag.
@@ -3006,7 +3004,7 @@ APZCTreeManager::ComputeTransformForNode(const HitTestingTreeNode* aNode) const
               scrollTargetNode->GetTransform().ToUnknownMatrix(),
               scrollTargetApzc,
               aMetrics,
-              aNode->GetScrollThumbData(),
+              aNode->GetScrollbarData(),
               scrollTargetNode->IsAncestorOf(aNode),
               nullptr);
         });
@@ -3060,7 +3058,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
     const Matrix4x4& aScrollableContentTransform,
     AsyncPanZoomController* aApzc,
     const FrameMetrics& aMetrics,
-    const ScrollThumbData& aThumbData,
+    const ScrollbarData& aScrollbarData,
     bool aScrollbarIsDescendant,
     AsyncTransformComponentMatrix* aOutClipTransform)
 {
@@ -3083,7 +3081,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
   // on the painted content, we need to adjust it based on asyncTransform so that
   // it reflects what the user is actually seeing now.
   AsyncTransformComponentMatrix scrollbarTransform;
-  if (*aThumbData.mDirection == ScrollDirection::eVertical) {
+  if (*aScrollbarData.mDirection == ScrollDirection::eVertical) {
     const ParentLayerCoord asyncScrollY = asyncTransform._42;
     const float asyncZoomY = asyncTransform._22;
 
@@ -3098,7 +3096,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
     // Here we convert the scrollbar thumb ratio into a true unitless ratio by
     // dividing out the conversion factor from the scrollframe's parent's space
     // to the scrollframe's space.
-    const float ratio = aThumbData.mThumbRatio /
+    const float ratio = aScrollbarData.mThumbRatio /
         (aMetrics.GetPresShellResolution() * asyncZoomY);
     // The scroll thumb needs to be translated in opposite direction of the
     // async scroll. This is because scrolling down, which translates the layer
@@ -3135,7 +3133,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
     scrollbarTransform.PostScale(1.f, yScale, 1.f);
     scrollbarTransform.PostTranslate(0, yTranslation, 0);
   }
-  if (*aThumbData.mDirection == ScrollDirection::eHorizontal) {
+  if (*aScrollbarData.mDirection == ScrollDirection::eHorizontal) {
     // See detailed comments under the VERTICAL case.
 
     const ParentLayerCoord asyncScrollX = asyncTransform._41;
@@ -3145,7 +3143,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
 
     const CSSToParentLayerScale effectiveZoom(aMetrics.GetZoom().xScale * asyncZoomX);
 
-    const float ratio = aThumbData.mThumbRatio /
+    const float ratio = aScrollbarData.mThumbRatio /
         (aMetrics.GetPresShellResolution() * asyncZoomX);
     ParentLayerCoord xTranslation = -asyncScrollX * ratio;
 

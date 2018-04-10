@@ -20,14 +20,10 @@
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMParser.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMSerializer.h"
-#include "nsIDOMXMLDocument.h"
-#include "nsIDOMXULElement.h"
 #include "nsIListBoxObject.h"
 #include "nsIMessageManager.h"
 #include "nsISelection.h"
 #include "nsITreeBoxObject.h"
-#include "nsIWebBrowserPersistable.h"
 
 #include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
@@ -41,7 +37,6 @@
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/EventTargetBinding.h"
-#include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/HTMLAnchorElementBinding.h"
 #include "mozilla/dom/HTMLAreaElementBinding.h"
 #include "mozilla/dom/HTMLButtonElementBinding.h"
@@ -65,10 +60,7 @@
 #include "mozilla/dom/SVGElementBinding.h"
 #include "mozilla/dom/TimeEventBinding.h"
 #include "mozilla/dom/TreeBoxObjectBinding.h"
-#include "mozilla/dom/XMLDocumentBinding.h"
-#include "mozilla/dom/XMLSerializerBinding.h"
 #include "mozilla/dom/XULDocumentBinding.h"
-#include "mozilla/dom/XULElementBinding.h"
 
 using namespace mozilla;
 
@@ -141,11 +133,7 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(OfflineResourceList),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMParser, DOMParser),
   DEFINE_SHIM(Range),
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIWebBrowserPersistable, FrameLoader),
-  DEFINE_SHIM(XMLDocument),
-  DEFINE_SHIM(XULElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsISelection, Selection),
 };
 
