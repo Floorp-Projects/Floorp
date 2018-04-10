@@ -841,7 +841,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
       return `${newX}${unitX} ${newY}${unitY}`;
     }).join(", ");
-    polygonDef = `polygon(${polygonDef}) ${this.geometryBox}`.trim();
+    polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
+                                      `polygon(${polygonDef})`;
 
     this.currentNode.style.setProperty(this.property, polygonDef, "important");
   }
@@ -864,9 +865,11 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       radius = `${Math.abs((newCx - transX) * ratioRad)}${unitRad}`;
     }
 
-    let circleDef = `circle(${radius} at ${newCx * ratioX}${unitX} ` +
-        `${newCy * ratioY}${unitY}) ${this.geometryBox}`.trim();
-    this.emit("highlighter-event", { type: "shape-change", value: circleDef });
+    let circleDef = (this.geometryBox) ?
+      `circle(${radius} at ${newCx * ratioX}${unitX} ` +
+        `${newCy * ratioY}${unitY} ${this.geometryBox}` :
+      `circle(${radius} at ${newCx * ratioX}${unitX} ${newCy * ratioY}${unitY}`;
+    this.currentNode.style.setProperty(this.property, circleDef, "important");
   }
 
   /**
@@ -890,9 +893,12 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       ry = `${Math.abs((newCy - transY) * ratioRY)}${unitRY}`;
     }
 
-    let ellipseDef = `ellipse(${rx} ${ry} at ${newCx * ratioX}${unitX} ` +
-          `${newCy * ratioY}${unitY}) ${this.geometryBox}`.trim();
-    this.emit("highlighter-event", { type: "shape-change", value: ellipseDef });
+    let ellipseDef = (this.geometryBox) ?
+        `ellipse(${rx} ${ry} at ${newCx * ratioX}${unitX} ` +
+          `${newCy * ratioY}${unitY}) ${this.geometryBox}` :
+        `ellipse(${rx} ${ry} at ${newCx * ratioX}${unitX} ` +
+          `${newCy * ratioY}${unitY})`;
+    this.currentNode.style.setProperty(this.property, ellipseDef, "important");
   }
 
   /**
@@ -974,7 +980,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       return (i === point) ?
         `${newX}${unitX} ${newY}${unitY}` : `${coords[0]} ${coords[1]}`;
     }).join(", ");
-    polygonDef = `polygon(${polygonDef}) ${this.geometryBox}`.trim();
+    polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
+                                      `polygon(${polygonDef})`;
 
     this.currentNode.style.setProperty(this.property, polygonDef, "important");
   }
@@ -994,7 +1001,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       return (i === after) ? `${coords[0]} ${coords[1]}, ${x}% ${y}%` :
                              `${coords[0]} ${coords[1]}`;
     }).join(", ");
-    polygonDef = `polygon(${polygonDef}) ${this.geometryBox}`.trim();
+    polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
+                                      `polygon(${polygonDef})`;
 
     this.hoveredPoint = after + 1;
     this._emitHoverEvent(this.hoveredPoint);
@@ -1012,7 +1020,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     polygonDef += coordinates.map((coords, i) => {
       return `${coords[0]} ${coords[1]}`;
     }).join(", ");
-    polygonDef = `polygon(${polygonDef}) ${this.geometryBox}`.trim();
+    polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
+                                      `polygon(${polygonDef})`;
 
     this.hoveredPoint = null;
     this._emitHoverEvent(this.hoveredPoint);
@@ -1077,8 +1086,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let deltaY = (pageY - y) * ratioY;
       let newCx = `${valueX + deltaX}${unitX}`;
       let newCy = `${valueY + deltaY}${unitY}`;
-      // if not defined by the user, geometryBox will be an empty string; trim() cleans up
-      let circleDef = `circle(${radius} at ${newCx} ${newCy}) ${this.geometryBox}`.trim();
+      let circleDef = (this.geometryBox) ?
+            `circle(${radius} at ${newCx} ${newCy}) ${this.geometryBox}` :
+            `circle(${radius} at ${newCx} ${newCy})`;
 
       this.currentNode.style.setProperty(this.property, circleDef, "important");
     } else if (point === "radius") {
@@ -1091,7 +1101,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let delta = (newRadiusPx - origRadius) * ratio;
       let newRadius = `${value + delta}${unit}`;
 
-      let circleDef = `circle(${newRadius} at ${cx} ${cy}) ${this.geometryBox}`.trim();
+      let circleDef = (this.geometryBox) ?
+                      `circle(${newRadius} at ${cx} ${cy} ${this.geometryBox}` :
+                      `circle(${newRadius} at ${cx} ${cy}`;
 
       this.currentNode.style.setProperty(this.property, circleDef, "important");
     }
@@ -1165,8 +1177,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let deltaY = (pageY - y) * ratioY;
       let newCx = `${valueX + deltaX}${unitX}`;
       let newCy = `${valueY + deltaY}${unitY}`;
-      let ellipseDef =
-        `ellipse(${rx} ${ry} at ${newCx} ${newCy}) ${this.geometryBox}`.trim();
+      let ellipseDef = (this.geometryBox) ?
+        `ellipse(${rx} ${ry} at ${newCx} ${newCy}) ${this.geometryBox}` :
+        `ellipse(${rx} ${ry} at ${newCx} ${newCy})`;
 
       this.currentNode.style.setProperty(this.property, ellipseDef, "important");
     } else if (point === "rx") {
@@ -1176,8 +1189,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let delta = ((newRadiusPercent / 100 * width) - origRadius) * ratio;
       let newRadius = `${value + delta}${unit}`;
 
-      let ellipseDef =
-        `ellipse(${newRadius} ${ry} at ${cx} ${cy}) ${this.geometryBox}`.trim();
+      let ellipseDef = (this.geometryBox) ?
+        `ellipse(${newRadius} ${ry} at ${cx} ${cy}) ${this.geometryBox}` :
+        `ellipse(${newRadius} ${ry} at ${cx} ${cy})`;
 
       this.currentNode.style.setProperty(this.property, ellipseDef, "important");
     } else if (point === "ry") {
@@ -1187,8 +1201,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       let delta = ((newRadiusPercent / 100 * height) - origRadius) * ratio;
       let newRadius = `${value + delta}${unit}`;
 
-      let ellipseDef =
-        `ellipse(${rx} ${newRadius} at ${cx} ${cy}) ${this.geometryBox}`.trim();
+      let ellipseDef = (this.geometryBox) ?
+        `ellipse(${rx} ${newRadius} at ${cx} ${cy}) ${this.geometryBox}` :
+        `ellipse(${rx} ${newRadius} at ${cx} ${cy})`;
 
       this.currentNode.style.setProperty(this.property, ellipseDef, "important");
     }

@@ -9,7 +9,7 @@
  * @returns {Number} the distance between the two points
  */
 const getDistance = (x1, y1, x2, y2) => {
-  return Math.round(Math.hypot(x2 - x1, y2 - y1));
+  return Math.hypot(x2 - x1, y2 - y1);
 };
 
 /**
