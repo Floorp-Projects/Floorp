@@ -2730,7 +2730,14 @@ gfxPlatform::UsesOffMainThreadCompositing()
 bool
 gfxPlatform::UsesTiling() const
 {
-  return gfxPrefs::LayersTilesEnabled();
+  bool isSkiaPOMTP = XRE_IsContentProcess() &&
+      GetDefaultContentBackend() == BackendType::SKIA &&
+      gfxVars::UseOMTP() &&
+      (gfxPrefs::LayersOMTPPaintWorkers() == -1 ||
+      gfxPrefs::LayersOMTPPaintWorkers() > 1);
+
+  return gfxPrefs::LayersTilesEnabled() ||
+    (gfxPrefs::LayersTilesEnabledIfSkiaPOMTP() && isSkiaPOMTP);
 }
 
 /***
