@@ -2745,8 +2745,14 @@ window._gBrowser = {
 
     // swapBrowsersAndCloseOther will take care of closing the window without animation.
     if (closeWindow && aAdoptedByTab) {
-      // Remove the tab's filter to avoid leaking.
+      // Remove the tab's filter and progress listener to avoid leaking.
       if (aTab.linkedPanel) {
+        const filter = this._tabFilters.get(aTab);
+        browser.webProgress.removeProgressListener(filter);
+        const listener = this._tabListeners.get(aTab);
+        filter.removeProgressListener(listener);
+        listener.destroy();
+        this._tabListeners.delete(aTab);
         this._tabFilters.delete(aTab);
       }
       return true;
