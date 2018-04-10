@@ -2758,6 +2758,12 @@ nsChildView::SwipeFinished()
   mSwipeTracker = nullptr;
 }
 
+void
+nsChildView::UpdateBoundsFromView()
+{
+  mBounds = CocoaPointsToDevPixels([mView frame]);
+}
+
 already_AddRefed<gfx::DrawTarget>
 nsChildView::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
                                         BufferMode* aBufferMode)

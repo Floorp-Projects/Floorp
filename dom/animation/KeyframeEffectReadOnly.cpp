@@ -211,7 +211,8 @@ KeyframeEffectReadOnly::SetKeyframes(
     nsNodeUtils::AnimationChanged(mAnimation);
   }
 
-  // We need to call UpdateProperties() if the StyleType is not nullptr.
+  // We need to call UpdateProperties() unless the target element doesn't have
+  // style (e.g. the target element is not associated with any document).
   if (aStyle) {
     UpdateProperties(aStyle);
     MaybeUpdateFrameForCompositor();
@@ -281,15 +282,6 @@ void
 KeyframeEffectReadOnly::UpdateProperties(const ComputedStyle* aStyle)
 {
   MOZ_ASSERT(aStyle);
-
-  // Skip updating properties when we are composing style.
-  // FIXME: Bug 1324966. Drop this check once we have a function to get
-  // ComputedStyle without resolving animating style.
-  MOZ_DIAGNOSTIC_ASSERT(!mIsComposingStyle,
-                        "Should not be called while processing ComposeStyle()");
-  if (mIsComposingStyle) {
-    return;
-  }
 
   nsTArray<AnimationProperty> properties = BuildProperties(aStyle);
 
@@ -420,21 +412,11 @@ KeyframeEffectReadOnly::ComposeStyleRule(
                          mEffectOptions.mIterationComposite);
 }
 
-template<typename ComposeAnimationResult>
 void
 KeyframeEffectReadOnly::ComposeStyle(
-  ComposeAnimationResult&& aComposeResult,
+  RawServoAnimationValueMap& aComposeResult,
   const nsCSSPropertyIDSet& aPropertiesToSkip)
 {
-  MOZ_DIAGNOSTIC_ASSERT(!mIsComposingStyle,
-                        "Should not be called recursively");
-  if (mIsComposingStyle) {
-    return;
-  }
-
-  AutoRestore<bool> isComposingStyle(mIsComposingStyle);
-  mIsComposingStyle = true;
-
   ComputedTiming computedTiming = GetComputedTiming();
 
   // If the progress is null, we don't have fill data for the current
@@ -476,10 +458,7 @@ KeyframeEffectReadOnly::ComposeStyle(
                  prop.mSegments.Length(),
                "out of array bounds");
 
-    ComposeStyleRule(Forward<ComposeAnimationResult>(aComposeResult),
-                     prop,
-                     *segment,
-                     computedTiming);
+    ComposeStyleRule(aComposeResult, prop, *segment, computedTiming);
   }
 
   // If the animation produces a transform change hint that affects the overflow
@@ -686,9 +665,8 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
   return effect.forget();
 }
 
-template<typename StyleType>
 nsTArray<AnimationProperty>
-KeyframeEffectReadOnly::BuildProperties(StyleType* aStyle)
+KeyframeEffectReadOnly::BuildProperties(const ComputedStyle* aStyle)
 {
 
   MOZ_ASSERT(aStyle);
@@ -1698,12 +1676,6 @@ KeyframeEffectReadOnly::UpdateEffectSet(EffectSet* aEffectSet) const
   }
 }
 
-
-template
-void
-KeyframeEffectReadOnly::ComposeStyle<RawServoAnimationValueMap&>(
-  RawServoAnimationValueMap& aAnimationValues,
-  const nsCSSPropertyIDSet& aPropertiesToSkip);
 
 } // namespace dom
 } // namespace mozilla

@@ -1,0 +1,23 @@
+[
+  {
+    "namespace": "tps",
+    "description": "Special powers for the TPS Talos test",
+    "functions": [
+      {
+        "name": "setup",
+        "type": "function",
+        "description": "Prepares the TPS test to be run by the Talos framework.",
+        "parameters": [{
+          "type": "object",
+          "name": "setupArgs",
+          "properties": {
+            "frameScriptPath": {
+              "type": "string",
+              "description": "Relative path for the frame script to load for the test in the initial tab."
+            }
+          }
+        }]
+      }
+    ]
+  }
+]
