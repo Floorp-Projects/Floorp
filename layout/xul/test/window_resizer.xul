@@ -81,7 +81,7 @@ function doTest() {
 
   // now check the cursors in rtl. The bottomend resizer
   // should be reversed
-  document.getElementById("bottomend").setAttribute("rtl", "true");
+  document.documentElement.setAttribute("localedir", "rtl");
   Array.forEach(resizers, function (element) {
     is(getComputedStyle(element, "").cursor,
        element.dir == "bottomend" ? "sw-resize" :
