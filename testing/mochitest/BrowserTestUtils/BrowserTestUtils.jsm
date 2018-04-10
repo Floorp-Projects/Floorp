@@ -486,44 +486,69 @@ var BrowserTestUtils = {
    *               browser in the new window has loaded a particular page.
    *               If unset, the initial browser may or may not have finished
    *               loading its first page when the resulting Promise resolves.
+   *          anyWindow: True to wait for the url to be loaded in any new
+   *                     window, not just the next one opened.
    *        }
    * @return {Promise}
    *         A Promise which resolves the next time that a DOM window
    *         opens and the delayed startup observer notification fires.
    */
-  async waitForNewWindow(aParams = {}) {
+  waitForNewWindow(aParams = {}) {
     let {
       url = null,
+      anyWindow = false,
     } = aParams;
 
-    let win = await this.domWindowOpened();
-
-    let promises = [
-      TestUtils.topicObserved("browser-delayed-startup-finished",
-                              subject => subject == win),
-    ];
-
-    if (url) {
-      await this.waitForEvent(win, "DOMContentLoaded");
-
-      let browser = win.gBrowser.selectedBrowser;
-
-      // Retrieve the given browser's current process type.
-      let process =
-        browser.isRemoteBrowser ? Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
-                                : Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-      if (win.gMultiProcessBrowser &&
-          !E10SUtils.canLoadURIInProcess(url, process)) {
-        await this.waitForEvent(browser, "XULFrameLoaderCreated");
-      }
-
-      let loadPromise = this.browserLoaded(browser, false, url);
-      promises.push(loadPromise);
+    if (anyWindow && !url) {
+      throw new Error("url should be specified if anyWindow is true");
     }
 
-    await Promise.all(promises);
+    return new Promise(resolve => {
+      let observe = async (win, topic, data) => {
+        if (topic != "domwindowopened") {
+          return;
+        }
 
-    return win;
+        if (!anyWindow) {
+          Services.ww.unregisterNotification(observe);
+        }
+
+        let promises = [
+          TestUtils.topicObserved("browser-delayed-startup-finished",
+                                  subject => subject == win),
+        ];
+
+        if (url) {
+          await this.waitForEvent(win, "DOMContentLoaded");
+
+          if (win.document.documentURI != "chrome://browser/content/browser.xul") {
+            return;
+          }
+
+          let browser = win.gBrowser.selectedBrowser;
+
+          // Retrieve the given browser's current process type.
+          let process =
+              browser.isRemoteBrowser ? Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
+              : Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+          if (win.gMultiProcessBrowser &&
+              !E10SUtils.canLoadURIInProcess(url, process)) {
+            await this.waitForEvent(browser, "XULFrameLoaderCreated");
+          }
+
+          let loadPromise = this.browserLoaded(browser, false, url);
+          promises.push(loadPromise);
+        }
+
+        await Promise.all(promises);
+
+        if (anyWindow) {
+          Services.ww.unregisterNotification(observe);
+        }
+        resolve(win);
+      };
+      Services.ww.registerNotification(observe);
+    });
   },
 
   /**
