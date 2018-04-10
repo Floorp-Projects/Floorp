@@ -19,6 +19,7 @@
 #include "nsIPrefService.h"
 #include "mozilla/Unused.h"
 #include "nsIURI.h"
+#include "nsContentUtils.h"
 
 using mozilla::Unused;
 
@@ -72,6 +73,33 @@ SetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSp
         NS_NewURI(getter_AddRefs(uri2), aSpec2);
 
     nsresult rv = aCookieService->SetCookieStringFromHttp(uri1, uri2, nullptr, (char *)aCookieString, aServerTime, nullptr);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+}
+
+// Custom Cookie Generator specifically for the needs of same-site cookies!
+// Hands off unless you know exactly what you are doing!
+void
+SetASameSiteCookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSpec2, const char* aCookieString, const char *aServerTime)
+{
+    nsCOMPtr<nsIURI> uri1, uri2;
+    NS_NewURI(getter_AddRefs(uri1), aSpec1);
+    if (aSpec2)
+        NS_NewURI(getter_AddRefs(uri2), aSpec2);
+
+    // We create a dummy channel using the aSpec1 to simulate same-siteness
+    nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
+    nsCOMPtr<nsIPrincipal> spec1Principal;
+    nsCString tmpString(aSpec1);
+    ssm->CreateCodebasePrincipalFromOrigin(tmpString, getter_AddRefs(spec1Principal));
+
+    nsCOMPtr<nsIChannel> dummyChannel;
+    NS_NewChannel(getter_AddRefs(dummyChannel),
+                  uri1,
+                  spec1Principal,
+                  nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                  nsIContentPolicy::TYPE_OTHER);
+
+    nsresult rv = aCookieService->SetCookieStringFromHttp(uri1, uri2, nullptr, (char *)aCookieString, aServerTime, dummyChannel);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
 }
 
@@ -773,17 +801,17 @@ TEST(TestCookie,TestCookieMain)
 
     // Set cookies with various incantations of the samesite attribute:
     // No same site attribute present
-    SetACookie(cookieService, "http://samesite.test", nullptr, "unset=yes", nullptr);
+    SetASameSiteCookie(cookieService, "http://samesite.test", nullptr, "unset=yes", nullptr);
     // samesite attribute present but with no value
-    SetACookie(cookieService, "http://samesite.test", nullptr, "unspecified=yes; samesite", nullptr);
+    SetASameSiteCookie(cookieService, "http://samesite.test", nullptr, "unspecified=yes; samesite", nullptr);
     // samesite attribute present but with an empty value
-    SetACookie(cookieService, "http://samesite.test", nullptr, "empty=yes; samesite=", nullptr);
+    SetASameSiteCookie(cookieService, "http://samesite.test", nullptr, "empty=yes; samesite=", nullptr);
     // samesite attribute present but with an invalid value
-    SetACookie(cookieService, "http://samesite.test", nullptr, "bogus=yes; samesite=bogus", nullptr);
+    SetASameSiteCookie(cookieService, "http://samesite.test", nullptr, "bogus=yes; samesite=bogus", nullptr);
     // samesite=strict
-    SetACookie(cookieService, "http://samesite.test", nullptr, "strict=yes; samesite=strict", nullptr);
+    SetASameSiteCookie(cookieService, "http://samesite.test", nullptr, "strict=yes; samesite=strict", nullptr);
     // samesite=lax
-    SetACookie(cookieService, "http://samesite.test", nullptr, "lax=yes; samesite=lax", nullptr);
+    SetASameSiteCookie(cookieService, "http://samesite.test", nullptr, "lax=yes; samesite=lax", nullptr);
 
     EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))));
     i = 0;
