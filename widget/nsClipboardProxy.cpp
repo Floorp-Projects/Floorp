@@ -81,7 +81,7 @@ nsClipboardProxy::GetData(nsITransferable *aTransferable, int32_t aWhichClipboar
         do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsString data = item.data().get_nsString();
+      const nsString& data = item.data().get_nsString();
       rv = dataWrapper->SetData(data);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -90,7 +90,7 @@ nsClipboardProxy::GetData(nsITransferable *aTransferable, int32_t aWhichClipboar
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (item.data().type() == IPCDataTransferData::TShmem) {
       // If this is an image, convert it into an nsIInputStream.
-      nsCString flavor = item.flavor();
+      const nsCString& flavor = item.flavor();
       mozilla::ipc::Shmem data = item.data().get_Shmem();
       if (flavor.EqualsLiteral(kJPEGImageMime) ||
           flavor.EqualsLiteral(kJPGImageMime) ||
