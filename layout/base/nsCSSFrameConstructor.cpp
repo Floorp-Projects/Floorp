@@ -7073,18 +7073,17 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
     return;
   }
 
-  if (aInsertionKind == InsertionKind::Async &&
-      MaybeConstructLazily(CONTENTAPPEND, aFirstNewContent)) {
-    LazilyStyleNewChildRange(aFirstNewContent, nullptr);
-    return;
-  }
-
-  // We couldn't construct lazily. Make Servo eagerly traverse the new content
-  // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
-  // styles are up-to-date already).
   if (aInsertionKind == InsertionKind::Async) {
+    if (MaybeConstructLazily(CONTENTAPPEND, aFirstNewContent)) {
+      LazilyStyleNewChildRange(aFirstNewContent, nullptr);
+      return;
+    }
+    // We couldn't construct lazily. Make Servo eagerly traverse the new content
+    // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
+    // styles are up-to-date already).
     StyleNewChildRange(aFirstNewContent, nullptr);
   }
+
 
   LAYOUT_PHASE_TEMP_EXIT();
   if (MaybeRecreateForFrameset(parentFrame, aFirstNewContent, nullptr)) {
@@ -7423,14 +7422,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   }
 #endif
 
-  auto styleNewChildRangeEagerly =
-    [this, aInsertionKind, aStartChild, aEndChild]() {
-      // When aInsertionKind == InsertionKind::Sync, we know that the
-      // styles are up-to-date already.
-      if (aInsertionKind == InsertionKind::Async) {
-        StyleNewChildRange(aStartChild, aEndChild);
-      }
-    };
 
   bool isSingleInsert = (aStartChild->GetNextSibling() == aEndChild);
   NS_ASSERTION(isSingleInsert ||
@@ -7441,8 +7432,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 
 #ifdef MOZ_XUL
   if (aStartChild->GetParent() && IsXULListBox(aStartChild->GetParent())) {
-    // For XUL list box, we need to style the new children eagerly.
-    styleNewChildRangeEagerly();
     if (isSingleInsert) {
       // The insert case in NotifyListBoxBody doesn't use "old next sibling".
       if (NotifyListBoxBody(mPresShell->GetPresContext(),
@@ -7528,15 +7517,16 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
     return;
   }
 
-  if (aInsertionKind == InsertionKind::Async &&
-      MaybeConstructLazily(CONTENTINSERT, aStartChild)) {
-    LazilyStyleNewChildRange(aStartChild, aEndChild);
-    return;
+  if (aInsertionKind == InsertionKind::Async) {
+    if (MaybeConstructLazily(CONTENTINSERT, aStartChild)) {
+      LazilyStyleNewChildRange(aStartChild, aEndChild);
+      return;
+    }
+    // We couldn't construct lazily. Make Servo eagerly traverse the new content
+    // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
+    // styles are up-to-date already).
+    StyleNewChildRange(aStartChild, aEndChild);
   }
-
-  // We couldn't construct lazily. Make Servo eagerly traverse the new content
-  // if needed.
-  styleNewChildRangeEagerly();
 
   bool isAppend, isRangeInsertSafe;
   nsIFrame* prevSibling = GetInsertionPrevSibling(&insertion, aStartChild,
@@ -11117,6 +11107,10 @@ nsCSSFrameConstructor::CreateListBoxContent(nsContainerFrame*      aParentFrame,
                                   GetAbsoluteContainingBlock(aParentFrame, ABS_POS),
                                   GetFloatContainingBlock(aParentFrame),
                                   do_AddRef(mTempFrameTreeState));
+
+    if (aChild->IsElement() && !aChild->AsElement()->HasServoData()) {
+      mPresShell->StyleSet()->StyleNewSubtree(aChild->AsElement());
+    }
 
     RefPtr<ComputedStyle> computedStyle = ResolveComputedStyle(aChild);
 
