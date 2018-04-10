@@ -31,7 +31,6 @@
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsIContentViewer.h"
-#include "nsIDOMXULElement.h"
 #include "nsIStreamListener.h"
 #include "nsITimer.h"
 #include "nsDocShell.h"

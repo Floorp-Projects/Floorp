@@ -157,8 +157,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
       // from nsISupports* to nsFrameLoader* and end up with |this|.
       foundInterface = reinterpret_cast<nsISupports*>(this);
   } else
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserPersistable)
-  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersistable)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener,
@@ -3230,22 +3230,11 @@ nsFrameLoader::StartPersistence(uint64_t aOuterWindowID,
                                 nsIWebBrowserPersistDocumentReceiver* aRecv,
                                 ErrorResult& aRv)
 {
-  nsresult rv = StartPersistence(aOuterWindowID, aRecv);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
-nsFrameLoader::StartPersistence(uint64_t aOuterWindowID,
-                                nsIWebBrowserPersistDocumentReceiver* aRecv)
-{
-  if (!aRecv) {
-    return NS_ERROR_INVALID_POINTER;
-  }
+  MOZ_ASSERT(aRecv);
 
   if (mRemoteBrowser) {
-    return mRemoteBrowser->StartPersistence(aOuterWindowID, aRecv);
+    mRemoteBrowser->StartPersistence(aOuterWindowID, aRecv, aRv);
+    return;
   }
 
   nsCOMPtr<nsIDocument> rootDoc =
@@ -3264,7 +3253,6 @@ nsFrameLoader::StartPersistence(uint64_t aOuterWindowID,
       new mozilla::WebBrowserPersistLocalDocument(foundDoc);
     aRecv->OnDocumentReady(pdoc);
   }
-  return NS_OK;
 }
 
 void

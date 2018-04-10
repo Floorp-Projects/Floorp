@@ -1025,7 +1025,7 @@ public:
 
   bool GetForceIsolatedGroup() const
   {
-    return mSimpleAttrs.ForceIsolatedGroup();
+    return mSimpleAttrs.GetForceIsolatedGroup();
   }
 
   /**
@@ -1263,9 +1263,9 @@ public:
    * of the scroll frame scrolled by the thumb, and other data related to the
    * thumb.
    */
-  void SetScrollThumbData(FrameMetrics::ViewID aScrollId, const ScrollThumbData& aThumbData)
+  void SetScrollbarData(const ScrollbarData& aThumbData)
   {
-    if (mSimpleAttrs.SetScrollThumbData(aScrollId, aThumbData)) {
+    if (mSimpleAttrs.SetScrollbarData(aThumbData)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrollbarData", this));
       MutatedSimple();
     }
@@ -1291,12 +1291,12 @@ public:
   }
 
   // These getters can be used anytime.
-  float GetOpacity() { return mSimpleAttrs.Opacity(); }
-  gfx::CompositionOp GetMixBlendMode() const { return mSimpleAttrs.MixBlendMode(); }
+  float GetOpacity() { return mSimpleAttrs.GetOpacity(); }
+  gfx::CompositionOp GetMixBlendMode() const { return mSimpleAttrs.GetMixBlendMode(); }
   const Maybe<ParentLayerIntRect>& GetClipRect() const { return mClipRect; }
-  const Maybe<LayerClip>& GetScrolledClip() const { return mSimpleAttrs.ScrolledClip(); }
+  const Maybe<LayerClip>& GetScrolledClip() const { return mSimpleAttrs.GetScrolledClip(); }
   Maybe<ParentLayerIntRect> GetScrolledClipRect() const;
-  uint32_t GetContentFlags() { return mSimpleAttrs.ContentFlags(); }
+  uint32_t GetContentFlags() { return mSimpleAttrs.GetContentFlags(); }
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   const ScrollMetadata& GetScrollMetadata(uint32_t aIndex) const;
   const FrameMetrics& GetFrameMetrics(uint32_t aIndex) const;
@@ -1326,21 +1326,21 @@ public:
   // Same as GetTransform(), but returns the transform as a strongly-typed
   // matrix. Eventually this will replace GetTransform().
   const CSSTransformMatrix GetTransformTyped() const;
-  const gfx::Matrix4x4& GetBaseTransform() const { return mSimpleAttrs.Transform(); }
+  const gfx::Matrix4x4& GetBaseTransform() const { return mSimpleAttrs.GetTransform(); }
   // Note: these are virtual because ContainerLayerComposite overrides them.
-  virtual float GetPostXScale() const { return mSimpleAttrs.PostXScale(); }
-  virtual float GetPostYScale() const { return mSimpleAttrs.PostYScale(); }
+  virtual float GetPostXScale() const { return mSimpleAttrs.GetPostXScale(); }
+  virtual float GetPostYScale() const { return mSimpleAttrs.GetPostYScale(); }
   bool GetIsFixedPosition() { return mSimpleAttrs.IsFixedPosition(); }
-  bool GetTransformIsPerspective() const { return mSimpleAttrs.TransformIsPerspective(); }
+  bool GetTransformIsPerspective() const { return mSimpleAttrs.GetTransformIsPerspective(); }
   bool GetIsStickyPosition() { return mSimpleAttrs.IsStickyPosition(); }
-  FrameMetrics::ViewID GetFixedPositionScrollContainerId() { return mSimpleAttrs.FixedPositionScrollContainerId(); }
-  LayerPoint GetFixedPositionAnchor() { return mSimpleAttrs.FixedPositionAnchor(); }
-  int32_t GetFixedPositionSides() { return mSimpleAttrs.FixedPositionSides(); }
-  FrameMetrics::ViewID GetStickyScrollContainerId() { return mSimpleAttrs.StickyScrollContainerId(); }
-  const LayerRectAbsolute& GetStickyScrollRangeOuter() { return mSimpleAttrs.StickyScrollRangeOuter(); }
-  const LayerRectAbsolute& GetStickyScrollRangeInner() { return mSimpleAttrs.StickyScrollRangeInner(); }
-  FrameMetrics::ViewID GetScrollbarTargetContainerId() { return mSimpleAttrs.ScrollbarTargetContainerId(); }
-  const ScrollThumbData& GetScrollThumbData() const { return mSimpleAttrs.ThumbData(); }
+  FrameMetrics::ViewID GetFixedPositionScrollContainerId() { return mSimpleAttrs.GetFixedPositionScrollContainerId(); }
+  LayerPoint GetFixedPositionAnchor() { return mSimpleAttrs.GetFixedPositionAnchor(); }
+  int32_t GetFixedPositionSides() { return mSimpleAttrs.GetFixedPositionSides(); }
+  FrameMetrics::ViewID GetStickyScrollContainerId() { return mSimpleAttrs.GetStickyScrollContainerId(); }
+  const LayerRectAbsolute& GetStickyScrollRangeOuter() { return mSimpleAttrs.GetStickyScrollRangeOuter(); }
+  const LayerRectAbsolute& GetStickyScrollRangeInner() { return mSimpleAttrs.GetStickyScrollRangeInner(); }
+  FrameMetrics::ViewID GetScrollbarTargetViewId() { return mSimpleAttrs.GetScrollbarTargetViewId(); }
+  const ScrollbarData& GetScrollbarData() const { return mSimpleAttrs.GetScrollbarData(); }
   bool IsScrollbarContainer() { return mSimpleAttrs.GetScrollbarContainerDirection().isSome(); }
   Maybe<ScrollDirection> GetScrollbarContainerDirection() { return mSimpleAttrs.GetScrollbarContainerDirection(); }
   Layer* GetMaskLayer() const { return mMaskLayer; }

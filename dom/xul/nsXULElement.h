@@ -20,7 +20,6 @@
 #include "mozilla/dom/NodeInfo.h"
 #include "nsIControllers.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMXULElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIURI.h"
 #include "nsLayoutCID.h"
@@ -335,7 +334,7 @@ ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2);
 #undef XUL_ELEMENT_FLAG_BIT
 
 class nsXULElement final : public nsStyledElement,
-                           public nsIDOMXULElement
+                           public nsIDOMElement
 {
 public:
     using Element::Blur;
@@ -387,9 +386,6 @@ public:
     virtual nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                                 int32_t aModType) const override;
     NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-
-    // nsIDOMXULElement
-    NS_DECL_NSIDOMXULELEMENT
 
     virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                            bool aPreallocateChildren) const override;

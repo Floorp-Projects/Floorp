@@ -2,7 +2,7 @@ function test() {
   waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({ set: [[ "dom.disable_open_during_load", false ]] });
 
-  let popupOpened = BrowserTestUtils.waitForNewWindow("about:blank");
+  let popupOpened = BrowserTestUtils.waitForNewWindow({url: "about:blank"});
   BrowserTestUtils.openNewForegroundTab(gBrowser,
     "data:text/html,<html><script>popup=open('about:blank','','width=300,height=200')</script>"
   );

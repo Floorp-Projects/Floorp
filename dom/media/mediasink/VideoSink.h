@@ -79,6 +79,8 @@ private:
   void ConnectListener();
   void DisconnectListener();
 
+  void EnsureHighResTimersOnOnlyIfPlaying();
+
   // Sets VideoQueue images into the VideoFrameContainer. Called on the shared
   // state machine thread. The first aMaxFrames (at most) are set.
   // aClockTime and aClockTimeStamp are used as the baseline for deriving
@@ -151,6 +153,15 @@ private:
   // otherwise A/V sync will be ruined! *Only* make this non-zero for
   // testing purposes.
   const uint32_t mMinVideoQueueSize;
+
+#ifdef XP_WIN
+  // Whether we've called timeBeginPeriod(1) to request high resolution
+  // timers. We request high resolution timers when playback starts, and
+  // turn them off when playback is paused. Enabling high resolution
+  // timers can cause higher CPU usage and battery drain on Windows 7,
+  // but reduces our frame drop rate.
+  bool mHiResTimersRequested;
+#endif
 };
 
 } // namespace media

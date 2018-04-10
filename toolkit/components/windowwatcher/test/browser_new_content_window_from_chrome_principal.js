@@ -13,7 +13,7 @@ add_task(async function test_chrome_opens_window() {
     ["browser.link.open_newwindow", 2],
   ]});
 
-  let newWinPromise = BrowserTestUtils.waitForNewWindow("http://example.com/");
+  let newWinPromise = BrowserTestUtils.waitForNewWindow({url: "http://example.com/"});
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     content.open("http://example.com/", "_blank");

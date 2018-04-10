@@ -14,7 +14,6 @@
 #include "XULFormControlAccessible.h"
 
 #include "nsIDOMElement.h"
-#include "nsIDOMXULElement.h"
 #include "nsIMutableArray.h"
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"

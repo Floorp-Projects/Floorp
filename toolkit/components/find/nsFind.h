@@ -50,8 +50,8 @@ protected:
   nsCOMPtr<nsINode> mIterNode;
 
   // Last block parent, so that we will notice crossing block boundaries:
-  nsCOMPtr<nsIDOMNode> mLastBlockParent;
-  nsresult GetBlockParent(nsIDOMNode* aNode, nsIDOMNode** aParent);
+  nsCOMPtr<nsINode> mLastBlockParent;
+  nsresult GetBlockParent(nsINode* aNode, nsINode** aParent);
 
   // Utility routines:
   bool IsBlockNode(nsIContent* aNode);
