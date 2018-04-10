@@ -300,7 +300,7 @@ public:
     // Get the default content backend that will be used with the default
     // compositor. If the compositor is known when calling this function,
     // GetContentBackendFor() should be called instead.
-    mozilla::gfx::BackendType GetDefaultContentBackend() {
+    mozilla::gfx::BackendType GetDefaultContentBackend() const {
       return mContentBackend;
     }
 
