@@ -13,6 +13,7 @@
 #include "base/platform_thread.h"   // for PlatformThreadId
 #include "LayersTypes.h"
 #include "mozilla/layers/APZTestData.h"
+#include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/StaticMutex.h"
 #include "nsThreadUtils.h"
 #include "Units.h"
@@ -64,11 +65,15 @@ public:
                             bool aIsFirstPaint,
                             LayersId aOriginatingLayersId,
                             uint32_t aPaintSequenceNumber);
-  void UpdateHitTestingTree(LayersId aRootLayerTreeId,
-                            const WebRenderScrollData& aScrollData,
-                            bool aIsFirstPaint,
-                            LayersId aOriginatingLayersId,
-                            uint32_t aPaintSequenceNumber);
+  /**
+   * This should be called (in the WR-enabled case) when the compositor receives
+   * a new WebRenderScrollData for a layers id. The |aScrollData| parameter is
+   * the scroll data for |aOriginatingLayersId|. This function will store
+   * the new scroll data and update the focus state and hit-testing tree.
+   */
+  void UpdateScrollDataAndTreeState(LayersId aRootLayerTreeId,
+                                    LayersId aOriginatingLayersId,
+                                    WebRenderScrollData&& aScrollData);
 
   void NotifyLayerTreeAdopted(LayersId aLayersId,
                               const RefPtr<APZUpdater>& aOldUpdater);
@@ -83,12 +88,15 @@ public:
                         const FrameMetrics::ViewID& aScrollId,
                         const LayerToParentLayerScale& aZoom);
 
+  // This can only be called on the updater thread.
+  const WebRenderScrollData* GetScrollData(LayersId aLayersId) const;
+
   /**
    * This can be used to assert that the current thread is the
    * updater thread (which samples the async transform).
    * This does nothing if thread assertions are disabled.
    */
-  void AssertOnUpdaterThread();
+  void AssertOnUpdaterThread() const;
 
   /**
    * Runs the given task on the APZ "updater thread" for this APZUpdater. If
@@ -100,7 +108,7 @@ public:
   /**
    * Returns true if currently on the APZUpdater's "updater thread".
    */
-  bool IsUpdaterThread();
+  bool IsUpdaterThread() const;
 
   /**
    * Dispatches the given task to the APZ "controller thread", but does it *from*
@@ -120,6 +128,12 @@ protected:
 
 private:
   RefPtr<APZCTreeManager> mApz;
+
+  // Map from layers id to WebRenderScrollData. This can only be touched on
+  // the updater thread.
+  std::unordered_map<LayersId,
+                     WebRenderScrollData,
+                     LayersId::HashFn> mScrollData;
 
   // Used to manage the mapping from a WR window id to APZUpdater. These are only
   // used if WebRender is enabled. Both sWindowIdMap and mWindowId should only

@@ -506,25 +506,28 @@ WebRenderBridgeParent::GetRootCompositorBridgeParent() const
 }
 
 void
-WebRenderBridgeParent::UpdateAPZ(bool aUpdateHitTestingTree)
+WebRenderBridgeParent::UpdateAPZFocusState(const FocusTarget& aFocus)
 {
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (!cbp) {
     return;
   }
   LayersId rootLayersId = cbp->RootLayerTreeId();
-  RefPtr<WebRenderBridgeParent> rootWrbp = cbp->GetWebRenderBridgeParent();
-  if (!rootWrbp) {
+  if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
+    apz->UpdateFocusState(rootLayersId, GetLayersId(), aFocus);
+  }
+}
+
+void
+WebRenderBridgeParent::UpdateAPZScrollData(WebRenderScrollData&& aData)
+{
+  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
+  if (!cbp) {
     return;
   }
+  LayersId rootLayersId = cbp->RootLayerTreeId();
   if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
-    apz->UpdateFocusState(rootLayersId, GetLayersId(),
-                          mScrollData.GetFocusTarget());
-    if (aUpdateHitTestingTree) {
-      apz->UpdateHitTestingTree(rootLayersId, rootWrbp->GetScrollData(),
-          mScrollData.IsFirstPaint(), GetLayersId(),
-          mScrollData.GetPaintSequenceNumber());
-    }
+    apz->UpdateScrollDataAndTreeState(rootLayersId, GetLayersId(), Move(aData));
   }
 }
 
@@ -548,13 +551,6 @@ WebRenderBridgeParent::PushAPZStateToWR(wr::TransactionBuilder& aTxn,
     return apz->PushStateToWR(aTxn, animationTime, aTransformArray);
   }
   return false;
-}
-
-const WebRenderScrollData&
-WebRenderBridgeParent::GetScrollData() const
-{
-  MOZ_ASSERT(mozilla::layers::CompositorThreadHolder::IsInCompositorThread());
-  return mScrollData;
 }
 
 mozilla::ipc::IPCResult
@@ -628,8 +624,11 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
 
   HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
 
-  mScrollData = aScrollData;
-  UpdateAPZ(true);
+  // aScrollData is moved into this function but that is not reflected by the
+  // function signature due to the way the IPDL generator works. We remove the
+  // const so that we can move this structure all the way to the desired
+  // destination.
+  UpdateAPZScrollData(Move(const_cast<WebRenderScrollData&>(aScrollData)));
 
   if (mIdNamespace != aIdNamespace) {
     // Pretend we composited since someone is wating for this event,
@@ -673,8 +672,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     ScheduleGenerateFrame();
   }
 
-  mScrollData.SetFocusTarget(aFocusTarget);
-  UpdateAPZ(false);
+  UpdateAPZFocusState(aFocusTarget);
 
   if (!aCommands.IsEmpty()) {
     wr::TransactionBuilder txn;
@@ -703,8 +701,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvSetFocusTarget(const FocusTarget& aFocusTarget)
 {
-  mScrollData.SetFocusTarget(aFocusTarget);
-  UpdateAPZ(false);
+  UpdateAPZFocusState(aFocusTarget);
   return IPC_OK();
 }
 

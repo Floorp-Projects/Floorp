@@ -57,7 +57,7 @@ class LayerMetricsWrapper;
 class InputQueue;
 class GeckoContentController;
 class HitTestingTreeNode;
-class WebRenderScrollData;
+class WebRenderScrollDataWrapper;
 struct AncestorTransform;
 struct ScrollThumbData;
 
@@ -189,7 +189,7 @@ public:
    * shadow layers in that scenario.
    */
   void UpdateHitTestingTree(LayersId aRootLayerTreeId,
-                            const WebRenderScrollData& aScrollData,
+                            const WebRenderScrollDataWrapper& aScrollWrapper,
                             bool aIsFirstPaint,
                             LayersId aOriginatingLayersId,
                             uint32_t aPaintSequenceNumber);
