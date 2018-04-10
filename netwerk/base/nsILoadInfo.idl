@@ -205,7 +205,7 @@ interface nsILoadInfo : nsISupports
 
   /**
    * Load an error page, it should be one of following : about:neterror,
-   * about:certerror, about:blocked, about:tabcrashed or about:restartrequired.
+   * about:certerror, about:blocked, or about:tabcrashed.
    */
   const unsigned long SEC_LOAD_ERROR_PAGE = (1<<13);
 
