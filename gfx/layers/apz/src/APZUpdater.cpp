@@ -24,6 +24,9 @@ std::unordered_map<uint64_t, APZUpdater*> APZUpdater::sWindowIdMap;
 
 APZUpdater::APZUpdater(const RefPtr<APZCTreeManager>& aApz)
   : mApz(aApz)
+#ifdef DEBUG
+  , mUpdaterThreadQueried(false)
+#endif
 {
   MOZ_ASSERT(aApz);
   mApz->SetUpdater(this);
@@ -53,6 +56,16 @@ APZUpdater::SetWebRenderWindowId(const wr::WindowId& aWindowId)
   MOZ_ASSERT(!mWindowId);
   mWindowId = Some(aWindowId);
   sWindowIdMap[wr::AsUint64(aWindowId)] = this;
+}
+
+/*static*/ void
+APZUpdater::SetUpdaterThread(const wr::WrWindowId& aWindowId)
+{
+  if (RefPtr<APZUpdater> updater = GetUpdater(aWindowId)) {
+    // Ensure nobody tried to use the updater thread before this point.
+    MOZ_ASSERT(!updater->mUpdaterThreadQueried);
+    updater->mUpdaterThreadId = Some(PlatformThread::CurrentId());
+  }
 }
 
 void
@@ -235,23 +248,31 @@ APZUpdater::RunOnUpdaterThread(already_AddRefed<Runnable> aTask)
 {
   RefPtr<Runnable> task = aTask;
 
-  MessageLoop* loop = CompositorThreadHolder::Loop();
-  if (!loop) {
-    // Could happen during startup
+  if (IsUpdaterThread()) {
+    task->Run();
+    return;
+  }
+
+  if (UsingWebRenderUpdaterThread()) {
+    // TODO
     NS_WARNING("Dropping task posted to updater thread");
     return;
   }
 
-  if (IsUpdaterThread()) {
-    task->Run();
-  } else {
+  if (MessageLoop* loop = CompositorThreadHolder::Loop()) {
     loop->PostTask(task.forget());
+  } else {
+    // Could happen during startup
+    NS_WARNING("Dropping task posted to updater thread");
   }
 }
 
 bool
 APZUpdater::IsUpdaterThread()
 {
+  if (UsingWebRenderUpdaterThread()) {
+    return PlatformThread::CurrentId() == *mUpdaterThreadId;
+  }
   return CompositorThreadHolder::IsInCompositorThread();
 }
 
@@ -266,6 +287,38 @@ APZUpdater::RunOnControllerThread(already_AddRefed<Runnable> aTask)
       Move(aTask)));
 }
 
+bool
+APZUpdater::UsingWebRenderUpdaterThread() const
+{
+  if (!gfxPrefs::WebRenderAsyncSceneBuild()) {
+    return false;
+  }
+  // If mUpdaterThreadId is not set at the point that this is called, then
+  // that means that either (a) WebRender is not enabled for the compositor
+  // to which this APZUpdater is attached or (b) we are attempting to do
+  // something updater-related before WebRender is up and running. In case
+  // (a) falling back to the compositor thread is correct, and in case (b)
+  // we should stop doing the updater-related thing so early. We catch this
+  // case by setting the mUpdaterThreadQueried flag and asserting on WR
+  // initialization.
+#ifdef DEBUG
+  mUpdaterThreadQueried = true;
+#endif
+  return mUpdaterThreadId.isSome();
+}
+
+/*static*/ already_AddRefed<APZUpdater>
+APZUpdater::GetUpdater(const wr::WrWindowId& aWindowId)
+{
+  RefPtr<APZUpdater> updater;
+  StaticMutexAutoLock lock(sWindowIdLock);
+  auto it = sWindowIdMap.find(wr::AsUint64(aWindowId));
+  if (it != sWindowIdMap.end()) {
+    updater = it->second;
+  }
+  return updater.forget();
+}
+
 } // namespace layers
 } // namespace mozilla
 
@@ -274,6 +327,7 @@ APZUpdater::RunOnControllerThread(already_AddRefed<Runnable> aTask)
 void
 apz_register_updater(mozilla::wr::WrWindowId aWindowId)
 {
+  mozilla::layers::APZUpdater::SetUpdaterThread(aWindowId);
 }
 
 void
