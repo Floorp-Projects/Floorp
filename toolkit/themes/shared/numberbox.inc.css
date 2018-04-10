@@ -30,8 +30,13 @@ html|*.numberbox-input::-moz-number-spin-box {
   -moz-box-orient: vertical;
 }
 
+html|*.numberbox-input::-moz-number-wrapper,
 html|*.numberbox-input::-moz-number-spin-up,
 html|*.numberbox-input::-moz-number-spin-down,
 html|*.numberbox-input::-moz-number-text {
   -moz-box-flex: 1;
+}
+
+html|*.numberbox-input::-moz-number-wrapper {
+  width: 100%;
 }
