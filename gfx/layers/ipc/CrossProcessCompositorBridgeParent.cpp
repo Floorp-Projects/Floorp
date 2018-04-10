@@ -133,9 +133,10 @@ CrossProcessCompositorBridgeParent::AllocPAPZCTreeManagerParent(const LayersId& 
   if (!state.mParent) {
     // Note: we immediately call ClearTree since otherwise the APZCTM will
     // retain a reference to itself, through the checkerboard observer.
-    RefPtr<APZCTreeManager> temp = new APZCTreeManager(LayersId{0});
+    LayersId dummyId{0};
+    RefPtr<APZCTreeManager> temp = new APZCTreeManager(dummyId);
     RefPtr<APZUpdater> tempUpdater = new APZUpdater(temp);
-    tempUpdater->ClearTree();
+    tempUpdater->ClearTree(dummyId);
     return new APZCTreeManagerParent(aLayersId, temp, tempUpdater);
   }
 

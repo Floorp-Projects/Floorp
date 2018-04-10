@@ -149,6 +149,7 @@
 //!
 //! *This module is available if Syn is built with the `"parsing"` feature.*
 
+#[cfg(feature = "proc-macro")]
 use proc_macro;
 use proc_macro2;
 
@@ -167,6 +168,35 @@ use buffer::{Cursor, TokenBuffer};
 pub trait Synom: Sized {
     fn parse(input: Cursor) -> PResult<Self>;
 
+    /// A short name of the type being parsed.
+    ///
+    /// The description should only be used for a simple name.  It should not
+    /// contain newlines or sentence-ending punctuation, to facilitate embedding in
+    /// larger user-facing strings.  Syn will use this description when building
+    /// error messages about parse failures.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use syn::buffer::Cursor;
+    /// # use syn::synom::{Synom, PResult};
+    /// #
+    /// struct ExprMacro {
+    ///     // ...
+    /// }
+    ///
+    /// impl Synom for ExprMacro {
+    /// #   fn parse(input: Cursor) -> PResult<Self> { unimplemented!() }
+    ///     // fn parse(...) -> ... { ... }
+    ///
+    ///     fn description() -> Option<&'static str> {
+    ///         // Will result in messages like
+    ///         //
+    ///         //     "failed to parse macro invocation expression: $reason"
+    ///         Some("macro invocation expression")
+    ///     }
+    /// }
+    /// ```
     fn description() -> Option<&'static str> {
         None
     }
@@ -196,6 +226,7 @@ pub trait Parser: Sized {
     fn parse2(self, tokens: proc_macro2::TokenStream) -> Result<Self::Output, ParseError>;
 
     /// Parse tokens of source code into the chosen syntax tree node.
+    #[cfg(feature = "proc-macro")]
     fn parse(self, tokens: proc_macro::TokenStream) -> Result<Self::Output, ParseError> {
         self.parse2(tokens.into())
     }

@@ -1479,6 +1479,13 @@ window._gBrowser = {
     var firstTabAdded = null;
     var targetTabIndex = -1;
 
+    // When bulk opening tabs, such as from a bookmark folder, we want to insertAfterCurrent
+    // if necessary, but we also will set the bulkOrderedOpen flag so that the bookmarks
+    // open in the same order they are in the folder.
+    if (multiple && aNewIndex < 0 && Services.prefs.getBoolPref("browser.tabs.insertAfterCurrent")) {
+      aNewIndex = this.selectedTab._tPos + 1;
+    }
+
     if (aReplace) {
       let browser;
       if (aTargetTab) {
@@ -1511,6 +1518,7 @@ window._gBrowser = {
         postData: aPostDatas[0],
         userContextId: aUserContextId,
         triggeringPrincipal: aTriggeringPrincipal,
+        bulkOrderedOpen: multiple,
       });
       if (aNewIndex !== -1) {
         this.moveTabTo(firstTabAdded, aNewIndex);
@@ -1526,6 +1534,7 @@ window._gBrowser = {
         postData: aPostDatas[i],
         userContextId: aUserContextId,
         triggeringPrincipal: aTriggeringPrincipal,
+        bulkOrderedOpen: true,
       });
       if (targetTabIndex !== -1)
         this.moveTabTo(tab, ++tabNum);
