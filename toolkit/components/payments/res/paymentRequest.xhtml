@@ -13,8 +13,12 @@
   <!ENTITY pickupAddressLabel         "Pickup Address">
   <!ENTITY shippingOptionsLabel       "Shipping Options">
   <!ENTITY paymentMethodsLabel        "Payment Method">
+  <!ENTITY address.addLink.label      "Add">
+  <!ENTITY address.editLink.label     "Edit">
   <!ENTITY basicCard.addLink.label    "Add">
   <!ENTITY basicCard.editLink.label   "Edit">
+  <!ENTITY payer.addLink.label        "Add">
+  <!ENTITY payer.editLink.label       "Edit">
   <!ENTITY payerLabel                 "Contact Information">
   <!ENTITY cancelPaymentButton.label   "Cancel">
   <!ENTITY approvePaymentButton.label  "Pay">
@@ -28,6 +32,9 @@
   <!ENTITY basicCardPage.backButton.label     "Back">
   <!ENTITY basicCardPage.saveButton.label     "Save">
   <!ENTITY basicCardPage.persistCheckbox.label     "Save credit card to Firefox (Security code will not be saved)">
+  <!ENTITY addressPage.error.genericSave      "There was an error saving the address.">
+  <!ENTITY addressPage.backButton.label       "Back">
+  <!ENTITY addressPage.saveButton.label       "Save">
 ]>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -75,7 +82,10 @@
                data-shipping-address-label="&shippingAddressLabel;"
                data-delivery-address-label="&deliveryAddressLabel;"
                data-pickup-address-label="&pickupAddressLabel;"><label></label></div>
-          <address-picker class="shipping-related" selected-state-key="selectedShippingAddress"></address-picker>
+          <address-picker class="shipping-related"
+                          data-add-link-label="&address.addLink.label;"
+                          data-edit-link-label="&address.editLink.label;"
+                          selected-state-key="selectedShippingAddress"></address-picker>
 
           <div class="shipping-related"><label>&shippingOptionsLabel;</label></div>
           <shipping-option-picker class="shipping-related"></shipping-option-picker>
@@ -88,6 +98,8 @@
 
           <div class="payer-related"><label>&payerLabel;</label></div>
           <address-picker class="payer-related"
+                          data-add-link-label="&payer.addLink.label;"
+                          data-edit-link-label="&payer.editLink.label;"
                           selected-state-key="selectedPayerAddress"></address-picker>
           <div id="error-text"></div>
         </section>
@@ -114,6 +126,13 @@
                        data-save-button-label="&basicCardPage.saveButton.label;"
                        data-persist-checkbox-label="&basicCardPage.persistCheckbox.label;"
                        hidden="hidden"></basic-card-form>
+
+      <address-form id="address-page"
+                    class="page"
+                    data-error-generic-save="&addressPage.error.genericSave;"
+                    data-back-button-label="&addressPage.backButton.label;"
+                    data-save-button-label="&addressPage.saveButton.label;"
+                    hidden="hidden"></address-form>
     </div>
 
     <div id="disabled-overlay" hidden="hidden">
