@@ -59,6 +59,8 @@ const COOKIE_KEY_MAP = {
   lastAccessed: "LastAccessed"
 };
 
+const SAFE_HOSTS_PREFIXES_REGEX = /^(about:|https?:|file:|moz-extension:)/;
+
 // Maximum length of item name to show in context menu label - will be
 // trimmed with ellipsis if it's longer.
 const ITEM_NAME_MAX_LENGTH = 32;
@@ -129,6 +131,26 @@ class StorageUI {
     });
 
     this.front.listStores().then(storageTypes => {
+      // When we are in the browser console we list indexedDBs internal to
+      // Firefox e.g. defined inside a .jsm. Because there is no way before this
+      // point to know whether or not we are inside the browser toolbox we have
+      // already fetched the hostnames of these databases.
+      //
+      // If we are not inside the browser toolbox we need to delete these
+      // hostnames.
+      if (!this._target.chrome && storageTypes.indexedDB) {
+        let hosts = storageTypes.indexedDB.hosts;
+        let newHosts = {};
+
+        for (let [host, dbs] of Object.entries(hosts)) {
+          if (SAFE_HOSTS_PREFIXES_REGEX.test(host)) {
+            newHosts[host] = dbs;
+          }
+        }
+
+        storageTypes.indexedDB.hosts = newHosts;
+      }
+
       this.populateStorageTree(storageTypes);
     }).catch(e => {
       if (!this._toolbox || this._toolbox._destroyer) {

@@ -80,7 +80,7 @@ function testTree(tests) {
   let doc = gPanelWindow.document;
   for (let [item] of tests) {
     ok(doc.querySelector("[data-id='" + JSON.stringify(item) + "']"),
-       "Tree item " + item[0] + " should be present in the storage tree");
+      `Tree item ${item.toSource()} should be present in the storage tree`);
   }
 }
 

@@ -153,8 +153,8 @@ class Profile(object):
             # If copies of those class instances exist ensure we correctly
             # reset them all (see bug 934484)
             self.clean_preferences()
-            if getattr(self, 'addon_manager', None) is not None:
-                self.addon_manager.clean()
+            if getattr(self, 'addons', None) is not None:
+                self.addons.clean()
             if getattr(self, 'permissions', None) is not None:
                 self.permissions.clean_db()
 
