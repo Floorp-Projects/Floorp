@@ -5861,6 +5861,7 @@ pref("layers.omtp.paint-workers", -1);
 #else
 pref("layers.omtp.paint-workers", 1);
 #endif
+pref("layers.enable-tiles-if-skia-pomtp", false);
 pref("layers.omtp.release-capture-on-main-thread", false);
 pref("layers.omtp.dump-capture", false);
 
