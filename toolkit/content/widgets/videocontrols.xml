@@ -1102,6 +1102,7 @@
             { transform: "scale(1)", opacity: 0.55 }
           ],
           options: {
+            easing: "ease",
             duration: 400
           }
         },
@@ -1111,6 +1112,7 @@
             { opacity: 1 }
           ],
           options: {
+            easing: "ease",
             duration: 200
           }
         },
