@@ -8183,7 +8183,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
     // being suppressed due to us anyway.
     if (aOldNextSibling && aFlags == REMOVE_CONTENT &&
         GetParentType(parentType) == eTypeBlock) {
-      MOZ_ASSERT(aChild->GetParent(),
+      MOZ_ASSERT(aChild->GetParentNode(),
                  "How did we have a sibling without a parent?");
       // Adjacent whitespace-only text nodes might have been suppressed if
       // this node does not have inline ends. Create frames for them now
