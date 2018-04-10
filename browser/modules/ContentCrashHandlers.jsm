@@ -329,6 +329,12 @@ var TabCrashHandler = {
 
     browser.docShell.displayLoadError(Cr.NS_ERROR_BUILDID_MISMATCH, uri, null);
     tab.setAttribute("crashed", true);
+
+    // Make sure to only count once even if there are multiple windows
+    // that will all show about:restartrequired.
+    if (this._crashedTabCount == 1) {
+      Services.telemetry.getHistogramById("FX_CONTENT_BUILDID_MISMATCH").add(1);
+    }
   },
 
   /**
