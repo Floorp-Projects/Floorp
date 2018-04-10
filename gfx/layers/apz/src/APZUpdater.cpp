@@ -12,7 +12,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/SynchronousTask.h"
-#include "mozilla/layers/WebRenderScrollData.h"
+#include "mozilla/layers/WebRenderScrollDataWrapper.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
@@ -133,33 +133,29 @@ APZUpdater::UpdateHitTestingTree(LayersId aRootLayerTreeId,
 }
 
 void
-APZUpdater::UpdateHitTestingTree(LayersId aRootLayerTreeId,
-                                 const WebRenderScrollData& aScrollData,
-                                 bool aIsFirstPaint,
-                                 LayersId aOriginatingLayersId,
-                                 uint32_t aPaintSequenceNumber)
+APZUpdater::UpdateScrollDataAndTreeState(LayersId aRootLayerTreeId,
+                                         LayersId aOriginatingLayersId,
+                                         WebRenderScrollData&& aScrollData)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  // use the local variable to resolve the function overload.
-  auto func = static_cast<void (APZCTreeManager::*)(LayersId,
-                                                    const WebRenderScrollData&,
-                                                    bool,
-                                                    LayersId,
-                                                    uint32_t)>
-      (&APZCTreeManager::UpdateHitTestingTree);
-  RunOnUpdaterThread(NewRunnableMethod<LayersId,
-                                       WebRenderScrollData,
-                                       bool,
-                                       LayersId,
-                                       uint32_t>(
-      "APZUpdater::UpdateHitTestingTree",
-      mApz,
-      func,
-      aRootLayerTreeId,
-      aScrollData,
-      aIsFirstPaint,
-      aOriginatingLayersId,
-      aPaintSequenceNumber));
+  RefPtr<APZUpdater> self = this;
+  RunOnUpdaterThread(NS_NewRunnableFunction(
+    "APZUpdater::UpdateHitTestingTree",
+    [=,aScrollData=Move(aScrollData)]() {
+      self->mApz->UpdateFocusState(aRootLayerTreeId,
+          aOriginatingLayersId, aScrollData.GetFocusTarget());
+
+      self->mScrollData[aOriginatingLayersId] = aScrollData;
+      auto root = self->mScrollData.find(aRootLayerTreeId);
+      if (root == self->mScrollData.end()) {
+        return;
+      }
+      self->mApz->UpdateHitTestingTree(aRootLayerTreeId,
+          WebRenderScrollDataWrapper(*self, &(root->second)),
+          aScrollData.IsFirstPaint(), aOriginatingLayersId,
+          aScrollData.GetPaintSequenceNumber());
+    }
+  ));
 }
 
 void
@@ -179,11 +175,14 @@ void
 APZUpdater::NotifyLayerTreeRemoved(LayersId aLayersId)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  RunOnUpdaterThread(NewRunnableMethod<LayersId>(
-      "APZUpdater::NotifyLayerTreeRemoved",
-      mApz,
-      &APZCTreeManager::NotifyLayerTreeRemoved,
-      aLayersId));
+  RefPtr<APZUpdater> self = this;
+  RunOnUpdaterThread(NS_NewRunnableFunction(
+    "APZUpdater::NotifyLayerTreeRemoved",
+    [=]() {
+      self->mScrollData.erase(aLayersId);
+      self->mApz->NotifyLayerTreeRemoved(aLayersId);
+    }
+  ));
 }
 
 bool
@@ -249,8 +248,16 @@ APZUpdater::SetTestAsyncZoom(LayersId aLayersId,
   ));
 }
 
+const WebRenderScrollData*
+APZUpdater::GetScrollData(LayersId aLayersId) const
+{
+  AssertOnUpdaterThread();
+  auto it = mScrollData.find(aLayersId);
+  return (it == mScrollData.end() ? nullptr : &(it->second));
+}
+
 void
-APZUpdater::AssertOnUpdaterThread()
+APZUpdater::AssertOnUpdaterThread() const
 {
   if (APZThreadUtils::GetThreadAssertionsEnabled()) {
     MOZ_ASSERT(IsUpdaterThread());
@@ -300,7 +307,7 @@ APZUpdater::RunOnUpdaterThread(already_AddRefed<Runnable> aTask)
 }
 
 bool
-APZUpdater::IsUpdaterThread()
+APZUpdater::IsUpdaterThread() const
 {
   if (UsingWebRenderUpdaterThread()) {
     return PlatformThread::CurrentId() == *mUpdaterThreadId;
