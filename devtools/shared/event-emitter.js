@@ -262,7 +262,7 @@ const isEventHandler = (listener) =>
   listener && handler in listener && typeof listener[handler] === "function";
 
 const Services = require("Services");
-const { describeNthCaller } = require("devtools/shared/platform/stack");
+const { getNthPathExcluding } = require("devtools/shared/platform/stack");
 let loggingEnabled = false;
 
 if (!isWorker) {
@@ -275,20 +275,80 @@ if (!isWorker) {
 }
 
 function serialize(target) {
-  let out = String(target);
+  const MAXLEN = 60;
 
-  if (target && target.nodeName) {
-    out += " (" + target.nodeName;
+  // Undefined
+  if (typeof target === "undefined") {
+    return "undefined";
+  }
+
+  if (target === null) {
+    return "null";
+  }
+
+  // Number / String
+  if (typeof target === "string" ||
+      typeof target === "number") {
+    return truncate(target, MAXLEN);
+  }
+
+  // HTML Node
+  if (target.nodeName) {
+    let out = target.nodeName;
+
     if (target.id) {
       out += "#" + target.id;
     }
     if (target.className) {
       out += "." + target.className;
     }
-    out += ")";
+
+    return out;
   }
 
-  return out;
+  // Array
+  if (Array.isArray(target)) {
+    return truncate(target.toSource(), MAXLEN);
+  }
+
+  // Function
+  if (typeof target === "function") {
+    return `function ${target.name ? target.name : "anonymous"}()`;
+  }
+
+  // Window
+  if (target.constructor &&
+      target.constructor.name &&
+      target.constructor.name === "Window") {
+    return `window (${target.location.origin})`;
+  }
+
+  // Object
+  if (typeof target === "object") {
+    let out = "{";
+
+    let entries = Object.entries(target);
+    for (let i = 0; i < Math.min(10, entries.length); i++) {
+      let [name, value] = entries[i];
+
+      if (i > 0) {
+        out += ", ";
+      }
+
+      out += `${name}: ${truncate(value, MAXLEN)}`;
+    }
+
+    return out + "}";
+  }
+
+  // Other
+  return truncate(target.toSource(), MAXLEN);
+}
+
+function truncate(value, maxLen) {
+  // We don't use value.toString() because it can throw.
+  let str = String(value);
+  return str.length > maxLen ? str.substring(0, maxLen) + "..." : str;
 }
 
 function logEvent(type, args) {
@@ -297,15 +357,20 @@ function logEvent(type, args) {
   }
 
   let argsOut = "";
-  let description = describeNthCaller(2);
 
   // We need this try / catch to prevent any dead object errors.
   try {
-    argsOut = args.map(serialize).join(", ");
+    argsOut = `${args.map(serialize).join(", ")}`;
   } catch (e) {
     // Object is dead so the toolbox is most likely shutting down,
     // do nothing.
   }
 
-  dump(`EMITTING: emit(${type}${argsOut}) from ${description}\n`);
+  const path = getNthPathExcluding(0, "devtools/shared/event-emitter.js");
+
+  if (args.length > 0) {
+    dump(`EMITTING: emit(${type}, ${argsOut}) from ${path}\n`);
+  } else {
+    dump(`EMITTING: emit(${type}) from ${path}\n`);
+  }
 }
