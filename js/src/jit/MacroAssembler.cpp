@@ -2677,6 +2677,12 @@ MacroAssembler::finish()
     }
 
     MacroAssemblerSpecific::finish();
+
+    MOZ_RELEASE_ASSERT(size() <= MaxCodeBytesPerProcess,
+                       "AssemblerBuffer should ensure we don't exceed MaxCodeBytesPerProcess");
+
+    if (bytesNeeded() > MaxCodeBytesPerProcess)
+        setOOM();
 }
 
 void
