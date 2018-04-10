@@ -1745,7 +1745,7 @@ TabParent::RecvSetCustomCursor(const nsCString& aCursorData,
                                const uint32_t& aWidth,
                                const uint32_t& aHeight,
                                const uint32_t& aStride,
-                               const uint8_t& aFormat,
+                               const gfx::SurfaceFormat& aFormat,
                                const uint32_t& aHotspotX,
                                const uint32_t& aHotspotY,
                                const bool& aForce)
@@ -1763,7 +1763,7 @@ TabParent::RecvSetCustomCursor(const nsCString& aCursorData,
 
       RefPtr<gfx::DataSourceSurface> customCursor =
           gfx::CreateDataSourceSurfaceFromData(size,
-                                               static_cast<gfx::SurfaceFormat>(aFormat),
+                                               aFormat,
                                                reinterpret_cast<const uint8_t*>(aCursorData.BeginReading()),
                                                aStride);
 
@@ -3297,7 +3297,7 @@ mozilla::ipc::IPCResult
 TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
                                  const uint32_t& aAction,
                                  const OptionalShmem& aVisualDnDData,
-                                 const uint32_t& aStride, const uint8_t& aFormat,
+                                 const uint32_t& aStride, const gfx::SurfaceFormat& aFormat,
                                  const LayoutDeviceIntRect& aDragRect,
                                  const nsCString& aPrincipalURISpec)
 {
@@ -3334,7 +3334,7 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
   } else {
     mDnDVisualization =
         gfx::CreateDataSourceSurfaceFromData(gfx::IntSize(aDragRect.width, aDragRect.height),
-                                             static_cast<gfx::SurfaceFormat>(aFormat),
+                                             aFormat,
                                              aVisualDnDData.get_Shmem().get<uint8_t>(),
                                              aStride);
   }
