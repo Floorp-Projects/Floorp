@@ -3408,11 +3408,15 @@ PPrintingParent*
 ContentParent::AllocPPrintingParent()
 {
 #ifdef NS_PRINTING
-  MOZ_ASSERT(!mPrintingParent,
-             "Only one PrintingParent should be created per process.");
+  MOZ_RELEASE_ASSERT(!mPrintingParent,
+                     "Only one PrintingParent should be created per process.");
 
   // Create the printing singleton for this process.
   mPrintingParent = new PrintingParent();
+
+  // Take another reference for IPDL code.
+  mPrintingParent.get()->AddRef();
+
   return mPrintingParent.get();
 #else
   MOZ_ASSERT_UNREACHABLE("Should never be created if no printing.");
@@ -3424,8 +3428,11 @@ bool
 ContentParent::DeallocPPrintingParent(PPrintingParent* printing)
 {
 #ifdef NS_PRINTING
-  MOZ_ASSERT(mPrintingParent == printing,
-             "Only one PrintingParent should have been created per process.");
+  MOZ_RELEASE_ASSERT(mPrintingParent == printing,
+    "Only one PrintingParent should have been created per process.");
+
+  // Release reference taken for IPDL code.
+  static_cast<PrintingParent*>(printing)->Release();
 
   mPrintingParent = nullptr;
 #else
