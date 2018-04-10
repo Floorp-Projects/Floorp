@@ -687,9 +687,15 @@ TileClient::GetBackBuffer(CompositableClient& aCompositable,
       !mFrontBuffer->IsReadLocked() &&
       (aMode != SurfaceMode::SURFACE_COMPONENT_ALPHA || (
         mFrontBufferOnWhite && !mFrontBufferOnWhite->IsReadLocked()))) {
-    // If we had a backbuffer we no longer care about it since we'll
-    // re-use the front buffer.
-    DiscardBackBuffer();
+    // If we had a backbuffer we no longer need it since we can re-use the
+    // front buffer here. It can be worth it to hold on to the back buffer
+    // so we don't need to pay the cost of initializing a new back buffer
+    // later (copying pixels and texture upload). But this could increase
+    // our memory usage and lead to OOM more frequently from spikes in usage,
+    // so we have this behavior behind a pref.
+    if (!gfxPrefs::LayersTileRetainBackBuffer()) {
+      DiscardBackBuffer();
+    }
     Flip();
   } else {
     if (!mBackBuffer || mBackBuffer->IsReadLocked()) {
