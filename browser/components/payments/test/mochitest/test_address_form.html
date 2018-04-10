@@ -1,0 +1,231 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the address-form element
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the address-form element</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <script src="sinon-2.3.2.js"></script>
+  <script src="payments_common.js"></script>
+  <script src="../../res/vendor/custom-elements.min.js"></script>
+  <script src="../../res/unprivileged-fallbacks.js"></script>
+  <script src="autofillEditForms.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/paymentRequest.css"/>
+</head>
+<body>
+  <p id="display">
+  </p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script type="module">
+/** Test the address-form element **/
+
+/* global sinon */
+/* import-globals-from payments_common.js */
+
+import AddressForm from "../../res/containers/address-form.js";
+
+let display = document.getElementById("display");
+
+function checkAddressForm(customEl, expectedAddress) {
+  const ADDRESS_PROPERTY_NAMES = [
+    "given-name",
+    "family-name",
+    "organization",
+    "street-address",
+    "address-level2",
+    "address-level1",
+    "postal-code",
+    "country",
+    "email",
+    "tel",
+  ];
+  for (let propName of ADDRESS_PROPERTY_NAMES) {
+    let expectedVal = expectedAddress[propName] || "";
+    is(document.getElementById(propName).value,
+       expectedVal.toString(),
+       `Check ${propName}`);
+  }
+}
+
+add_task(async function test_initialState() {
+  let form = new AddressForm();
+  let {page} = form.requestStore.getState();
+  is(page.id, "payment-summary", "Check initial page");
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+  is(page.id, "payment-summary", "Check initial page after appending");
+  form.remove();
+});
+
+add_task(async function test_backButton() {
+  let form = new AddressForm();
+  form.dataset.backButtonLabel = "Back";
+  await form.requestStore.setState({
+    page: {
+      id: "test-page",
+    },
+  });
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  let stateChangePromise = promiseStateChange(form.requestStore);
+  is(form.backButton.textContent, "Back", "Check label");
+  form.backButton.scrollIntoView();
+  synthesizeMouseAtCenter(form.backButton, {});
+
+  let {page} = await stateChangePromise;
+  is(page.id, "payment-summary", "Check initial page after appending");
+
+  form.remove();
+});
+
+add_task(async function test_saveButton() {
+  let form = new AddressForm();
+  form.dataset.saveButtonLabel = "Save";
+  form.dataset.errorGenericSave = "Generic error";
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  form.form.querySelector("#given-name").focus();
+  sendString("Jaws");
+  form.form.querySelector("#family-name").focus();
+  sendString("Swaj");
+  form.form.querySelector("#organization").focus();
+  sendString("Allizom");
+  form.form.querySelector("#street-address").focus();
+  sendString("404 Internet Super Highway");
+  form.form.querySelector("#address-level2").focus();
+  sendString("Firefoxity City");
+  form.form.querySelector("#address-level1").focus();
+  sendString("CA");
+  form.form.querySelector("#postal-code").focus();
+  sendString("00001");
+  form.form.querySelector("#country option[value='US']").selected = true;
+  form.form.querySelector("#email").focus();
+  sendString("test@example.com");
+  form.form.querySelector("#tel").focus();
+  sendString("+15555551212");
+
+  let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
+  is(form.saveButton.textContent, "Save", "Check label");
+  form.saveButton.scrollIntoView();
+  synthesizeMouseAtCenter(form.saveButton, {});
+
+  let details = await messagePromise;
+  is(details.collectionName, "addresses", "Check collectionName");
+  isDeeply(details, {
+    collectionName: "addresses",
+    errorStateChange: {
+      page: {
+        id: "address-page",
+        error: "Generic error",
+      },
+    },
+    guid: undefined,
+    messageType: "updateAutofillRecord",
+    preserveOldProperties: true,
+    record: {
+      "given-name": "Jaws",
+      "family-name": "Swaj",
+      "organization": "Allizom",
+      "street-address": "404 Internet Super Highway",
+      "address-level2": "Firefoxity City",
+      "address-level1": "CA",
+      "postal-code": "00001",
+      "country": "US",
+      "email": "test@example.com",
+      "tel": "+15555551212",
+    },
+    selectedStateKey: undefined,
+    successStateChange: {
+      page: {
+        id: "payment-summary",
+      },
+    },
+  }, "Check event details for the message to chrome");
+  form.remove();
+});
+
+add_task(async function test_genericError() {
+  let form = new AddressForm();
+  await form.requestStore.setState({
+    page: {
+      id: "test-page",
+      error: "Generic Error",
+    },
+  });
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  ok(!isHidden(form.genericErrorText), "Error message should be visible");
+  is(form.genericErrorText.textContent, "Generic Error", "Check error message");
+  form.remove();
+});
+
+add_task(async function test_edit() {
+  let form = new AddressForm();
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  let address1 = deepClone(PTU.Addresses.TimBL);
+  address1.guid = "9864798564";
+
+  await form.requestStore.setState({
+    page: {
+      id: "address-page",
+      guid: address1.guid,
+    },
+    savedAddresses: {
+      [address1.guid]: deepClone(address1),
+    },
+  });
+  await asyncElementRendered();
+  checkAddressForm(form, address1);
+
+  info("test change to minimal record");
+  let minimalAddress = {
+    "given-name": address1["given-name"],
+    guid: "9gnjdhen46",
+  };
+  await form.requestStore.setState({
+    page: {
+      id: "address-page",
+      guid: minimalAddress.guid,
+    },
+    savedAddresses: {
+      [minimalAddress.guid]: deepClone(minimalAddress),
+    },
+  });
+  await asyncElementRendered();
+  checkAddressForm(form, minimalAddress);
+
+  info("change to no selected address");
+  await form.requestStore.setState({
+    page: {
+      id: "address-page",
+    },
+  });
+  await asyncElementRendered();
+  checkAddressForm(form, {});
+
+  form.remove();
+});
+</script>
+
+</body>
+</html>
