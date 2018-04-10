@@ -11,11 +11,11 @@ const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}
 const {
   callFunctionWithAsyncStack,
   getStack,
-  describeNthCaller
+  getNthPathExcluding
 } = require("devtools/client/shared/webpack/shims/platform-stack-stub");
 
 function f3() {
-  return describeNthCaller(2);
+  return getNthPathExcluding(2);
 }
 
 function f2() {

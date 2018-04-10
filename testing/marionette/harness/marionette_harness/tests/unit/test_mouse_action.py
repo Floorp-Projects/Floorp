@@ -87,8 +87,8 @@ class BaseMouseAction(MarionetteTestCase):
 
     def get_element_center_point(self, elem):
         return {
-            "x": elem.location["x"] + elem.size["width"] / 2,
-            "y": elem.location["y"] + elem.size["height"] / 2
+            "x": elem.rect["x"] + elem.rect["width"] / 2,
+            "y": elem.rect["y"] + elem.rect["height"] / 2
         }
 
 
