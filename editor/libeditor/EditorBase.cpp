@@ -3045,9 +3045,9 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
 }
 
 nsresult
-EditorBase::DeleteText(CharacterData& aCharData,
-                       uint32_t aOffset,
-                       uint32_t aLength)
+EditorBase::DeleteTextWithTransaction(CharacterData& aCharData,
+                                      uint32_t aOffset,
+                                      uint32_t aLength)
 {
   RefPtr<DeleteTextTransaction> transaction =
     DeleteTextTransaction::MaybeCreate(*this, aCharData, aOffset, aLength);
