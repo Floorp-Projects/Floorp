@@ -259,11 +259,16 @@ var BrowserTestUtils = {
    *        If a function, takes a URL and returns true if that's the load we're
    *        interested in. If a string, gives the URL of the load we're interested
    *        in. If not present, the first load resolves the promise.
+   * @param {optional boolean} maybeErrorPage
+   *        If true, this uses DOMContentLoaded event instead of load event.
+   *        Also wantLoad will be called with visible URL, instead of
+   *        'about:neterror?...' for error page.
    *
    * @return {Promise}
    * @resolves When a load event is triggered for the browser.
    */
-  browserLoaded(browser, includeSubFrames=false, wantLoad=null) {
+  browserLoaded(browser, includeSubFrames=false, wantLoad=null,
+                maybeErrorPage=false) {
     // Passing a url as second argument is a common mistake we should prevent.
     if (includeSubFrames && typeof includeSubFrames != "boolean") {
       throw("The second argument to browserLoaded should be a boolean.");
@@ -289,11 +294,17 @@ var BrowserTestUtils = {
 
     return new Promise(resolve => {
       let mm = browser.ownerGlobal.messageManager;
-      mm.addMessageListener("browser-test-utils:loadEvent", function onLoad(msg) {
+      let eventName = maybeErrorPage
+          ? "browser-test-utils:DOMContentLoadedEvent"
+          : "browser-test-utils:loadEvent";
+      mm.addMessageListener(eventName, function onLoad(msg) {
+        // See testing/mochitest/BrowserTestUtils/content/content-utils.js for
+        // the difference between visibleURL and internalURL.
         if (msg.target == browser && (!msg.data.subframe || includeSubFrames) &&
-            isWanted(msg.data.url)) {
-          mm.removeMessageListener("browser-test-utils:loadEvent", onLoad);
-          resolve(msg.data.url);
+            isWanted(maybeErrorPage
+                     ? msg.data.visibleURL : msg.data.internalURL)) {
+          mm.removeMessageListener(eventName, onLoad);
+          resolve(msg.data.internalURL);
         }
       });
     });
@@ -488,6 +499,7 @@ var BrowserTestUtils = {
    *               loading its first page when the resulting Promise resolves.
    *          anyWindow: True to wait for the url to be loaded in any new
    *                     window, not just the next one opened.
+   *          maybeErrorPage: See browserLoaded function.
    *        }
    * @return {Promise}
    *         A Promise which resolves the next time that a DOM window
@@ -497,6 +509,7 @@ var BrowserTestUtils = {
     let {
       url = null,
       anyWindow = false,
+      maybeErrorPage = false,
     } = aParams;
 
     if (anyWindow && !url) {
@@ -536,7 +549,7 @@ var BrowserTestUtils = {
             await this.waitForEvent(browser, "XULFrameLoaderCreated");
           }
 
-          let loadPromise = this.browserLoaded(browser, false, url);
+          let loadPromise = this.browserLoaded(browser, false, url, maybeErrorPage);
           promises.push(loadPromise);
         }
 
