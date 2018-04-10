@@ -1,4 +1,4 @@
- /* This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -124,6 +124,17 @@ function getFile(path, base = null) {
   let file = base.clone();
   file.appendRelativePath(path);
   return file;
+}
+
+/**
+ * Sends local and remote notifications to flush a JAR file cache entry
+ *
+ * @param aJarFile
+ *        The ZIP/XPI/JAR file as a nsIFile
+ */
+function flushJarCache(aJarFile) {
+  Services.obs.notifyObservers(aJarFile, "flush-cache-entry");
+  Services.mm.broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
 }
 
 const PREF_EM_UPDATE_BACKGROUND_URL   = "extensions.update.background.url";
@@ -256,6 +267,8 @@ class Package {
 
     return this.verifySignedStateForRoot(addon, root);
   }
+
+  flushCache() {}
 }
 
 DirPackage = class DirPackage extends Package {
@@ -323,11 +336,16 @@ XPIPackage = class XPIPackage extends Package {
     super(file, getJarURI(file));
 
     this.zipReader = new ZipReader(file);
+    this.needFlush = false;
   }
 
   close() {
     this.zipReader.close();
     this.zipReader = null;
+
+    if (this.needFlush) {
+      this.flushCache();
+    }
   }
 
   async hasResource(...path) {
@@ -346,6 +364,7 @@ XPIPackage = class XPIPackage extends Package {
   }
 
   async readBinary(...path) {
+    this.needFlush = true;
     let response = await fetch(this.rootURI.resolve(path.join("/")));
     return response.arrayBuffer();
   }
@@ -368,6 +387,11 @@ XPIPackage = class XPIPackage extends Package {
 
       gCertDB.openSignedAppFileAsync(root, this.file, callback);
     });
+  }
+
+  flushCache() {
+    flushJarCache(this.file);
+    this.needFlush = false;
   }
 };
 
@@ -915,17 +939,6 @@ var loadManifestFromFile = async function(aFile, aInstallLocation) {
   }
 };
 
-/**
- * Sends local and remote notifications to flush a JAR file cache entry
- *
- * @param aJarFile
- *        The ZIP/XPI/JAR file as a nsIFile
- */
-function flushJarCache(aJarFile) {
-  Services.obs.notifyObservers(aJarFile, "flush-cache-entry");
-  Services.mm.broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
-}
-
 function flushChromeCaches() {
   // Init this, so it will get the notification.
   Services.obs.notifyObservers(null, "startupcache-invalidate");
@@ -944,10 +957,9 @@ function flushChromeCaches() {
  */
 function getTemporaryFile() {
   let file = FileUtils.getDir(KEY_TEMPDIR, []);
-  let random = Math.random().toString(36).replace(/0./, "").substr(-3);
+  let random = Math.round(Math.random() * 36 ** 3).toString(36);
   file.append("tmp-" + random + ".xpi");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-
   return file;
 }
 
