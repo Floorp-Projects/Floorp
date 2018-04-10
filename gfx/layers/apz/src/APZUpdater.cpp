@@ -13,6 +13,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/layers/WebRenderScrollData.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
@@ -27,6 +28,7 @@ APZUpdater::APZUpdater(const RefPtr<APZCTreeManager>& aApz)
 #ifdef DEBUG
   , mUpdaterThreadQueried(false)
 #endif
+  , mQueueLock("APZUpdater::QueueLock")
 {
   MOZ_ASSERT(aApz);
   mApz->SetUpdater(this);
@@ -65,6 +67,18 @@ APZUpdater::SetUpdaterThread(const wr::WrWindowId& aWindowId)
     // Ensure nobody tried to use the updater thread before this point.
     MOZ_ASSERT(!updater->mUpdaterThreadQueried);
     updater->mUpdaterThreadId = Some(PlatformThread::CurrentId());
+  }
+}
+
+/*static*/ void
+APZUpdater::ProcessPendingTasks(const wr::WrWindowId& aWindowId)
+{
+  if (RefPtr<APZUpdater> updater = GetUpdater(aWindowId)) {
+    MutexAutoLock lock(updater->mQueueLock);
+    for (auto task : updater->mUpdaterQueue) {
+      task->Run();
+    }
+    updater->mUpdaterQueue.clear();
   }
 }
 
@@ -254,8 +268,26 @@ APZUpdater::RunOnUpdaterThread(already_AddRefed<Runnable> aTask)
   }
 
   if (UsingWebRenderUpdaterThread()) {
-    // TODO
-    NS_WARNING("Dropping task posted to updater thread");
+    // If the updater thread is a WebRender thread, and we're not on it
+    // right now, save the task in the queue. We will run tasks from the queue
+    // during the callback from the updater thread, which we trigger by the
+    // call to WakeSceneBuilder.
+
+    { // scope lock
+      MutexAutoLock lock(mQueueLock);
+      mUpdaterQueue.push_back(task);
+    }
+    RefPtr<wr::WebRenderAPI> api = mApz->GetWebRenderAPI();
+    if (api) {
+      api->WakeSceneBuilder();
+    } else {
+      // Not sure if this can happen, but it might be possible. If it does,
+      // the task is in the queue, but if we didn't get a WebRenderAPI it
+      // might never run, or it might run later if we manage to get a
+      // WebRenderAPI later. For now let's just emit a warning, this can
+      // probably be upgraded to an assert later.
+      NS_WARNING("Possibly dropping task posted to updater thread");
+    }
     return;
   }
 
@@ -344,9 +376,19 @@ apz_post_scene_swap(mozilla::wr::WrWindowId aWindowId,
 void
 apz_run_updater(mozilla::wr::WrWindowId aWindowId)
 {
+  // This should never get called unless async scene building is enabled.
+  MOZ_ASSERT(gfxPrefs::WebRenderAsyncSceneBuild());
+  mozilla::layers::APZUpdater::ProcessPendingTasks(aWindowId);
 }
 
 void
 apz_deregister_updater(mozilla::wr::WrWindowId aWindowId)
 {
+  // Run anything that's still left. Note that this function gets called even
+  // if async scene building is off, but in that case we don't want to do
+  // anything (because the updater thread will be the compositor thread, and
+  // this will be called on the scene builder thread).
+  if (gfxPrefs::WebRenderAsyncSceneBuild()) {
+    mozilla::layers::APZUpdater::ProcessPendingTasks(aWindowId);
+  }
 }
