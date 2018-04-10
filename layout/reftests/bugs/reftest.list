@@ -412,7 +412,7 @@ fuzzy-if(Android,2,18) == 315920-17.html 315920-17-ref.html
 == 320979-1.html 320979-1-ref.html
 != 321402-1.html about:blank
 != 321402-2.html about:blank
-fails-if(webrender&&winWidget) == 321402-3.xul 321402-3-ref.xul
+fuzzy-if(webrender&&winWidget,35-35,1-1) == 321402-3.xul 321402-3-ref.xul
 == 321402-4.xul 321402-4-ref.xul
 == 321402-5.xul 321402-5-ref.xul
 == 321402-6.xul 321402-6-ref.xul
@@ -556,9 +556,9 @@ fuzzy-if(skiaContent||Android,4,11) == 363858-1.html 363858-1-ref.html
 == 363858-2.html 363858-2-ref.html
 == 363858-3.html 363858-3-ref.html
 == 363858-4.html 363858-4-ref.html
-# fuzzy-if(OSX,45,2) fuzzy-if(winWidget,114,1) fails-if(webrender&&winWidget) == 363858-5a.html 363858-5-ref.html # bug 1452797
+# fuzzy-if(OSX,45,2) fuzzy-if(winWidget,116,1) == 363858-5a.html 363858-5-ref.html # bug 1452797
 == 363858-5b.html 363858-5-ref.html
-# fuzzy-if(OSX,45,2) fuzzy-if(winWidget,114,1) fails-if(webrender&&winWidget) == 363858-6a.html 363858-6-ref.html # bug 1452797
+# fuzzy-if(OSX,45,2) fuzzy-if(winWidget,116,1) == 363858-6a.html 363858-6-ref.html # bug 1452797
 == 363858-6b.html 363858-6-ref.html
 == 363874.html 363874-ref.html
 == 363874-max-width.html 363874-max-width-ref.html
@@ -654,7 +654,7 @@ fails-if(Android&&!asyncPan) == 371561-1.html 371561-1-ref.html
 == 372553-1.html 372553-1-ref.html
 == 372632-1.html 372632-1-ref.html
 == 372768-1.html 372768-1-ref.html
-fails-if(webrender&&winWidget) == 373295-1.html 373295-1-ref.html
+fuzzy-if(webrender&&winWidget,83-83,2-2) == 373295-1.html 373295-1-ref.html
 == 373298-1.html 373298-1-ref.html
 == 373381-1.html 373381-1-ref.html
 fuzzy-if(skiaContent&&!Android,2,40) == 373381-2.html 373381-2-ref.html
@@ -728,8 +728,8 @@ fuzzy-if(skiaContent,2,5) == 381507-1.html 381507-1-ref.html
 == 384762-1.html about:blank
 == 384876-1.html 384876-1-ref.html
 == 385533-1.html about:blank # assertion test
-fails-if(webrender&&winWidget) == 385569-1a.html 385569-1-ref.html
-fails-if(webrender&&winWidget) == 385569-1b.html 385569-1-ref.html
+fuzzy-if(webrender&&winWidget,137-137,303-303) == 385569-1a.html 385569-1-ref.html
+fuzzy-if(webrender&&winWidget,137-137,303-303) == 385569-1b.html 385569-1-ref.html
 == 385607-1.html 385607-1-ref.html
 == 385823-1.html 385823-1-ref.html
 fuzzy-if(webrender,0-1,0-600) == 385823-2a.html 385823-2-ref.html
@@ -941,7 +941,7 @@ fuzzy-if(winWidget,123,1600) == 409659-1a.html 409659-1-ref.html  # Bug 1128229
 fuzzy-if(winWidget,123,1900) == 409659-1d.html 409659-1-ref.html  # Bug 1128229
 == 410621-1.html 410621-1-ref.html
 == 411059-1.html 411059-1-ref.html
-fails-if(webrender&&winWidget) == 411334-1.xml 411334-1-ref.xml
+fuzzy-if(webrender&&winWidget,129-129,770-770) == 411334-1.xml 411334-1-ref.xml
 == 411367-1.html 411367-1-ref.html
 == 411367-2.html 411367-2-ref.html
 == 411367-3.html 411367-3-ref.html
@@ -1002,7 +1002,7 @@ asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 421069-ref.html 421069-ref2.html
 == 421203-1.xul 421203-1-ref.html
 == 421203-2.xul 421203-1-ref.html
-fails-if(webrender&&winWidget) == 421203-3.xul 321402-3-ref.xul
+fuzzy-if(webrender&&winWidget,35-35,1-1) == 421203-3.xul 321402-3-ref.xul
 == 421203-4.xul 321402-4-ref.xul
 == 421203-5.xul 321402-5-ref.xul
 == 421203-6.xul 321402-6-ref.xul
@@ -1195,7 +1195,7 @@ fuzzy-if(webrender,4,361) == 449519-1.html 449519-1-ref.html
 == 455171-5.html 455171-5-ref.html
 == 455280-1.xhtml 455280-1-ref.xhtml
 == 455826-1.html 455826-1-ref.html
-fails-if(Android||cocoaWidget) fails-if(webrender&&winWidget) == 456147.xul 456147-ref.html # bug 458047
+fails-if(Android||cocoaWidget) fuzzy-if(webrender&&winWidget,222-222,2806-2806) == 456147.xul 456147-ref.html # bug 458047
 fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,15,69) fuzzy-if(skiaContent,42,150) == 456219-1a.html 456219-1-ref.html # bug 1128229
 fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,15,69) fuzzy-if(skiaContent,42,150) == 456219-1b.html 456219-1-ref.html # bug 1128229
 fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,15,69) fuzzy-if(skiaContent,42,150) == 456219-1c.html 456219-1-ref.html # bug 1128229
@@ -1233,7 +1233,7 @@ fuzzy-if(skiaContent,1,12000) fails-if(webrender) == 461512-1.html 461512-1-ref.
 == 462844-3.html 462844-ref.html
 == 462844-4.html 462844-ref.html
 == 463204-1.html 463204-1-ref.html
-fuzzy-if(webrender,16-16,3425-3425) fails-if(webrender&&winWidget) == 463217-1.xul 463217-1-ref.xul
+fuzzy-if(webrender,16-16,3425-3483) == 463217-1.xul 463217-1-ref.xul
 == 463952-1.html 463952-1-ref.html
 == 464811-1.html 464811-1-ref.html
 == 465574-1.html 465574-1-ref.html # bug 421436
@@ -1687,7 +1687,7 @@ fuzzy-if(skiaContent,1,4500) == 654950-1.html 654950-1-ref.html # Quartz alpha b
 == 655836-1.html 655836-1-ref.html
 != 656875.html about:blank
 == 658952.html 658952-ref.html
-fuzzy-if(skiaContent,7,3500) fails-if(webrender&&winWidget) == 660682-1.html 660682-1-ref.html
+fuzzy-if(skiaContent,7,3500) fuzzy-if(webrender&&winWidget,37-37,777-777) == 660682-1.html 660682-1-ref.html
 fuzzy-if(d2d,1,256) skip-if(Android) fuzzy-if(skiaContent,1,68000) == 664127-1.xul 664127-1-ref.xul # Android: Intermittent failures - bug 1019131
 == 665597-1.html 665597-1-ref.html
 == 665597-2.html 665597-2-ref.html
