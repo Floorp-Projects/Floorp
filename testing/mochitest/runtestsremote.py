@@ -271,11 +271,8 @@ class MochiRemote(MochitestDesktop):
             if printLogcat:
                 logcat = self.device.get_logcat(
                     filter_out_regexps=fennecLogcatFilters)
-                self.log.info(
-                    '\n' +
-                    ''.join(logcat).decode(
-                        'utf-8',
-                        'replace'))
+                for l in logcat:
+                    self.log.info(l.decode('utf-8', 'replace'))
             self.log.info("Device info:")
             devinfo = self.device.get_info()
             for category in devinfo:

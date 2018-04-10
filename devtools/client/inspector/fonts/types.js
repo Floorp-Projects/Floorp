@@ -80,11 +80,17 @@ exports.fontOptions = {
 };
 
 exports.fontEditor = {
-  // Font currently being edited
-  font: PropTypes.shape(font),
+  // Variable font axes and their values
+  axes: PropTypes.object,
+
+  // Fonts applicable to selected element
+  fonts: PropTypes.arrayOf(PropTypes.shape(font)),
 
   // Whether or not the font editor is visible
   isVisible: PropTypes.bool,
+
+  // CSS font properties defined on the element
+  properties: PropTypes.object,
 
   // Selector text of the rule where font properties will be written
   selector: PropTypes.string,

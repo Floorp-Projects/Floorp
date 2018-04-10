@@ -89,7 +89,7 @@ private:
   void
   RegistrationRemovedInternal();
 
-  RefPtr<ServiceWorkerRegistration> mOuter;
+  ServiceWorkerRegistration* mOuter;
   const nsString mScope;
   bool mListeningForEvents;
 };
@@ -153,12 +153,7 @@ private:
   WorkerPrivate*
   GetWorkerPrivate(const MutexAutoLock& aProofOfLock);
 
-  // Store a strong reference to the outer binding object.  This will create
-  // a ref-cycle.  We must hold it alive in case any events need to be fired
-  // on it.  The cycle is broken when the global becomes detached or the
-  // registration is removed in the ServiceWorkerManager.
-  RefPtr<ServiceWorkerRegistration> mOuter;
-
+  ServiceWorkerRegistration* mOuter;
   const nsString mScope;
   RefPtr<WorkerListener> mListener;
   RefPtr<WeakWorkerRef> mWorkerRef;

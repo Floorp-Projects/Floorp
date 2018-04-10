@@ -21,6 +21,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "mozilla/Move.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 
 using namespace mozilla::ipc;
@@ -67,6 +68,9 @@ private:
     nsCOMPtr<nsIInputStream> mStream;
     bool mStartedReading;
 
+    mozilla::Mutex mMutex;
+
+    // This is protected by mutex.
     nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
 };
 
@@ -96,7 +100,9 @@ NS_IMPL_CI_INTERFACE_GETTER(nsMIMEInputStream,
                             nsIInputStream,
                             nsISeekableStream)
 
-nsMIMEInputStream::nsMIMEInputStream() : mStartedReading(false)
+nsMIMEInputStream::nsMIMEInputStream()
+  : mStartedReading(false)
+  , mMutex("nsMIMEInputStream::mMutex")
 {
 }
 
@@ -252,13 +258,18 @@ nsMIMEInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
       return NS_ERROR_FAILURE;
     }
 
-    if (mAsyncWaitCallback && aCallback) {
-      return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIInputStreamCallback> callback = aCallback ? this : nullptr;
+    {
+        MutexAutoLock lock(mMutex);
+        if (mAsyncWaitCallback && aCallback) {
+            return NS_ERROR_FAILURE;
+        }
+
+        mAsyncWaitCallback = aCallback;
     }
 
-    mAsyncWaitCallback = aCallback;
-
-    return asyncStream->AsyncWait(this, aFlags, aRequestedCount, aEventTarget);
+    return asyncStream->AsyncWait(callback, aFlags, aRequestedCount,
+                                  aEventTarget);
 }
 
 // nsIInputStreamCallback
@@ -266,13 +277,20 @@ nsMIMEInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 NS_IMETHODIMP
 nsMIMEInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
 {
-  // We have been canceled in the meanwhile.
-  if (!mAsyncWaitCallback) {
-    return NS_OK;
+    nsCOMPtr<nsIInputStreamCallback> callback;
+
+    {
+        MutexAutoLock lock(mMutex);
+
+        // We have been canceled in the meanwhile.
+        if (!mAsyncWaitCallback) {
+            return NS_OK;
+        }
+
+        callback.swap(mAsyncWaitCallback);
   }
 
-  nsCOMPtr<nsIInputStreamCallback> callback = mAsyncWaitCallback;
-  mAsyncWaitCallback = nullptr;
+  MOZ_ASSERT(callback);
   return callback->OnInputStreamReady(this);
 }
 
