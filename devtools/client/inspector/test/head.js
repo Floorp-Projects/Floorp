@@ -795,26 +795,34 @@ async function getDisplayedNodeTextContent(selector, inspector) {
  *
  * @param {CssRuleView} view
  *        The instance of the rule-view panel
- * @param {Object} highlighters
- *        The highlighters instance of the rule-view panel
  * @param {String} selector
  *        The selector in the rule-view to look for the property in
  * @param {String} property
  *        The name of the property
  * @param {Boolean} show
  *        If true, the shapes highlighter is being shown. If false, it is being hidden
+ * @param {Options} options
+ *        Config option for the shapes highlighter. Contains:
+ *        - {Boolean} transformMode: wether to show the highlighter in transforms mode
  */
-async function toggleShapesHighlighter(view, highlighters, selector, property, show) {
-  info("Toggle shapes highlighter");
-  let container = getRuleViewProperty(view, selector, property).valueSpan;
-  let shapesToggle = container.querySelector(".ruleview-shapeswatch");
+async function toggleShapesHighlighter(view, selector, property, show, options = {}) {
+  info(`Toggle shapes highlighter ${show ? "on" : "off"} for ${property} on ${selector}`);
+  const highlighters = view.highlighters;
+  const container = getRuleViewProperty(view, selector, property).valueSpan;
+  const shapesToggle = container.querySelector(".ruleview-shapeswatch");
+
+  let metaKey = options.transformMode;
+  let ctrlKey = options.transformMode;
+
   if (show) {
     let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
-    shapesToggle.click();
+    EventUtils.sendMouseEvent({type: "click", metaKey, ctrlKey },
+      shapesToggle, view.styleWindow);
     await onHighlighterShown;
   } else {
     let onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
-    shapesToggle.click();
+    EventUtils.sendMouseEvent({type: "click", metaKey, ctrlKey },
+      shapesToggle, view.styleWindow);
     await onHighlighterHidden;
   }
 }

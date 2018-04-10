@@ -412,7 +412,7 @@ function push_repo {
   # Clean up older review requests
   # Turn  Needs Review D624: No bug, Automated HSTS ...
   # into D624
-  for diff in $($ARC list | grep "Needs Review" | grep -E "Automated HSTS|Automated HPKP|Automated blocklist" | awk 'match($0, /D[0-9]+[^: ]/, arr) { print arr[0] }')
+  for diff in $($ARC list | grep "Needs Review" | grep -E "Automated HSTS|Automated HPKP|Automated blocklist" | awk 'match($0, /D[0-9]+[^: ]/) { print substr($0, RSTART, RLENGTH)  }')
   do
     echo "Removing old request $diff"
     # There is no 'arc abandon', see bug 1452082

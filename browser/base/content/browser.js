@@ -914,7 +914,7 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
             let pref = "browser.fixup.domainwhitelist." + asciiHost;
             Services.prefs.setBoolPref(pref, true);
           }
-          openUILinkIn(alternativeURI.spec, "current");
+          openTrustedLinkIn(alternativeURI.spec, "current");
         }
       },
       {
@@ -2221,7 +2221,7 @@ function BrowserGoHome(aEvent) {
       gBrowser.selectedTab.pinned)
     where = "tab";
 
-  // openUILinkIn in utilityOverlay.js doesn't handle loading multiple pages
+  // openTrustedLinkIn in utilityOverlay.js doesn't handle loading multiple pages
   switch (where) {
   case "current":
     loadOneOrMoreURIs(homePage, Services.scriptSecurityManager.getSystemPrincipal());
@@ -2344,7 +2344,9 @@ function BrowserOpenTab(event) {
     }
   }
 
-  openUILinkIn(BROWSER_NEW_TAB_URL, where, { relatedToCurrent });
+  openTrustedLinkIn(BROWSER_NEW_TAB_URL, where, {
+    relatedToCurrent,
+  });
 }
 
 var gLastOpenDirectory = {
@@ -2393,7 +2395,7 @@ function BrowserOpenFileWindow() {
           }
         } catch (ex) {
         }
-        openUILinkIn(fp.fileURL.spec, "current");
+        openTrustedLinkIn(fp.fileURL.spec, "current");
       }
     };
 
@@ -3188,7 +3190,7 @@ var BrowserOnClick = {
           label: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.label"),
           accessKey: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.accessKey"),
           callback() {
-            openUILinkIn(reportUrl, "tab");
+            openTrustedLinkIn(reportUrl, "tab");
           }
         };
       }
@@ -3202,7 +3204,7 @@ var BrowserOnClick = {
           label: gNavigatorBundle.getString("safebrowsing.notADeceptiveSiteButton.label"),
           accessKey: gNavigatorBundle.getString("safebrowsing.notADeceptiveSiteButton.accessKey"),
           callback() {
-            openUILinkIn(reportUrl, "tab");
+            openTrustedLinkIn(reportUrl, "tab");
           }
         };
       }
@@ -4026,7 +4028,7 @@ const BrowserSearch = {
   loadAddEngines: function BrowserSearch_loadAddEngines() {
     var newWindowPref = Services.prefs.getIntPref("browser.link.open_newwindow");
     var where = newWindowPref == 3 ? "tab" : "window";
-    openUILinkIn(this.searchEnginesURL, where);
+    openTrustedLinkIn(this.searchEnginesURL, where);
   },
 
   _getSearchEngineId(engine) {
@@ -4224,7 +4226,7 @@ function addToUrlbarHistory(aUrlToAdd) {
 
 function BrowserDownloadsUI() {
   if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-    openUILinkIn("about:downloads", "tab");
+    openTrustedLinkIn("about:downloads", "tab");
   } else {
     PlacesCommandHook.showPlacesOrganizer("Downloads");
   }
@@ -4394,7 +4396,7 @@ function updateEditUIVisibility() {
  *        A click event on a userContext File Menu option
  */
 function openNewUserContextTab(event) {
-  openUILinkIn(BROWSER_NEW_TAB_URL, "tab", {
+  openTrustedLinkIn(BROWSER_NEW_TAB_URL, "tab", {
     userContextId: parseInt(event.target.getAttribute("data-usercontextid")),
   });
 }
@@ -6164,7 +6166,9 @@ function middleMousePaste(event) {
         lastLocationChange == gBrowser.selectedBrowser.lastLocationChange) {
       openUILink(data.url, event,
                  { ignoreButton: true,
-                   disallowInheritPrincipal: !data.mayInheritPrincipal });
+                   disallowInheritPrincipal: !data.mayInheritPrincipal,
+                   triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
+                 });
     }
   });
 
@@ -7100,7 +7104,7 @@ function BrowserOpenAddonsMgr(aView) {
     let whereToOpen = (window.gBrowser && isTabEmpty(gBrowser.selectedTab)) ?
                       "current" :
                       "tab";
-    openUILinkIn("about:addons", whereToOpen);
+    openTrustedLinkIn("about:addons", whereToOpen);
 
     Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
       Services.obs.removeObserver(observer, aTopic);
@@ -7276,7 +7280,7 @@ function ReportFalseDeceptiveSite() {
       mm.removeMessageListener("DeceptiveBlockedDetails:Result", onMessage);
       let reportUrl = gSafeBrowsing.getReportURL("PhishMistake", message.data.blockedInfo);
       if (reportUrl) {
-        openUILinkIn(reportUrl, "tab");
+        openTrustedLinkIn(reportUrl, "tab");
       } else {
         let bundle =
           Services.strings.createBundle("chrome://browser/locale/safebrowsing/safebrowsing.properties");
@@ -8575,8 +8579,8 @@ var gPrivateBrowsingUI = {
  *        If no suitable window is found, a new one will be opened.
  * @param aOpenParams
  *        If switching to this URI results in us opening a tab, aOpenParams
- *        will be the parameter object that gets passed to openUILinkIn. Please
- *        see the documentation for openUILinkIn to see what parameters can be
+ *        will be the parameter object that gets passed to openTrustedLinkIn. Please
+ *        see the documentation for openTrustedLinkIn to see what parameters can be
  *        passed via this object.
  *        This object also allows:
  *        - 'ignoreFragment' property to be set to true to exclude fragment-portion
@@ -8702,9 +8706,9 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams = {}) {
   // No opened tab has that url.
   if (aOpenNew) {
     if (isBrowserWindow && isTabEmpty(gBrowser.selectedTab))
-      openUILinkIn(aURI.spec, "current", aOpenParams);
+      openTrustedLinkIn(aURI.spec, "current", aOpenParams);
     else
-      openUILinkIn(aURI.spec, "tab", aOpenParams);
+      openTrustedLinkIn(aURI.spec, "tab", aOpenParams);
   }
 
   return false;

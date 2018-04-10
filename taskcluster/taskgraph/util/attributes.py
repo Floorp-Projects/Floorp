@@ -12,12 +12,14 @@ INTEGRATION_PROJECTS = {
     'autoland',
 }
 
-TRUNK_PROJECTS = INTEGRATION_PROJECTS | {'mozilla-central', }
+TRUNK_PROJECTS = INTEGRATION_PROJECTS | {'mozilla-central', 'comm-central'}
 
 RELEASE_PROJECTS = {
     'mozilla-central',
     'mozilla-beta',
     'mozilla-release',
+    'comm-central',
+    'comm-beta',
 }
 
 RELEASE_PROMOTION_PROJECTS = {
