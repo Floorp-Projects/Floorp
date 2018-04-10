@@ -305,6 +305,7 @@ body {
 
 .accessible .tree .objectBox-node .open-inspector{
   width: 17px;
+  cursor: pointer;
 }
 
 .accessible .tree .objectBox-object,
