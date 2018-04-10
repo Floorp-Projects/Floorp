@@ -191,6 +191,9 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
     return false;
   }
 
+  // Since we don't do repeat transactions right now, just set the time
+  mAnimationReadyTime = TimeStamp::Now();
+
   // With the WebRenderLayerManager we reject attempts to set most kind of
   // "pending data" for empty transactions. Any place that attempts to update
   // transforms or scroll offset, for example, will get failure return values
