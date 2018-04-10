@@ -51,7 +51,7 @@ function addRow(name, type, url) {
   const subscribeButton = document.createElement("button");
   subscribeButton.className = "feed-subscribe";
   subscribeButton.addEventListener("click",
-    () => openUILinkIn(url, "current", { ignoreAlt: true }));
+    () => openWebLinkIn(url, "current", { ignoreAlt: true }));
   subscribeButton.setAttribute("label", gBundle.getString("feedSubscribe"));
   subscribeButton.setAttribute("accesskey", gBundle.getString("feedSubscribe.accesskey"));
   bottom.appendChild(subscribeButton);

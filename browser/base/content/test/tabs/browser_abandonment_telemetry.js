@@ -186,7 +186,7 @@ const PROBE_TESTS = [
     prepare(browser) {},
 
     async doAction(browser) {
-      openUILinkIn(PAGE_2, "current");
+      openTrustedLinkIn(PAGE_2, "current");
       await BrowserTestUtils.browserLoaded(browser);
     },
   },

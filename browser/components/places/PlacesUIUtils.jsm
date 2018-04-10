@@ -753,7 +753,7 @@ var PlacesUIUtils = {
         }
       }
 
-      aWindow.openUILinkIn(aNode.uri, aWhere, {
+      aWindow.openTrustedLinkIn(aNode.uri, aWhere, {
         allowPopups: aNode.uri.startsWith("javascript:"),
         inBackground: this.loadBookmarksInBackground,
         private: aPrivate,

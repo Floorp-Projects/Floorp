@@ -21,11 +21,11 @@ add_task(async function() {
     "simple.css";
   is(ui._contextMenuStyleSheet.href, url, "Correct URL for sheet");
 
-  let originalOpenUILinkIn = ui._window.openUILinkIn;
+  let originalOpenWebLinkIn = ui._window.openWebLinkIn;
   let tabOpenedDefer = new Promise(resolve => {
-    ui._window.openUILinkIn = newUrl => {
-      // Reset the actual openUILinkIn function before proceeding.
-      ui._window.openUILinkIn = originalOpenUILinkIn;
+    ui._window.openWebLinkIn = newUrl => {
+      // Reset the actual openWebLinkIn function before proceeding.
+      ui._window.openWebLinkIn = originalOpenWebLinkIn;
 
       is(newUrl, url, "The correct tab has been opened");
       resolve();

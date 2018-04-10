@@ -345,7 +345,7 @@ var gSyncPane = {
   openContentInBrowser(url, options) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     if (!win) {
-      openUILinkIn(url, "tab");
+      openTrustedLinkIn(url, "tab");
       return;
     }
     win.switchToTabHavingURI(url, true, options);

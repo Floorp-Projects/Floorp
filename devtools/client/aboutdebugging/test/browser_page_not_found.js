@@ -20,7 +20,7 @@ add_task(async function() {
   is(element.textContent, "Add-ons", "Show Addons");
 
   info("Opening about:debugging#invalid-hash");
-  window.openUILinkIn("about:debugging#invalid-hash", "current");
+  window.openTrustedLinkIn("about:debugging#invalid-hash", "current");
   await waitUntilElement(".error-page", document);
 
   element = document.querySelector(".header-name");

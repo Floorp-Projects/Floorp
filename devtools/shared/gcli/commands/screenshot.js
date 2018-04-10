@@ -160,7 +160,9 @@ exports.items = [
         root.addEventListener("click", () => {
           if (imageSummary.href) {
             let mainWindow = context.environment.chromeWindow;
-            mainWindow.openUILinkIn(imageSummary.href, "tab");
+            mainWindow.openWebLinkIn(imageSummary.href, "tab", {
+              triggeringPrincipal: document.nodePrincipal,
+            });
           } else if (imageSummary.filename) {
             const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
             file.initWithPath(imageSummary.filename);
