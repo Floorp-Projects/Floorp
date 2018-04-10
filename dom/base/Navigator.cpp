@@ -102,52 +102,6 @@ static uint32_t sMaxVibrateMS  = 0;
 static uint32_t sMaxVibrateListLen = 0;
 static const char* kVibrationPermissionType = "vibration";
 
-static void
-AddPermission(nsIPrincipal* aPrincipal, const char* aType, uint32_t aPermission,
-              uint32_t aExpireType, int64_t aExpireTime)
-{
-  MOZ_ASSERT(aType);
-  MOZ_ASSERT(aPrincipal);
-
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  if (!permMgr) {
-    return;
-  }
-  permMgr->AddFromPrincipal(aPrincipal, aType, aPermission, aExpireType,
-                            aExpireTime);
-}
-
-static uint32_t
-GetPermission(nsPIDOMWindowInner* aWindow, const char* aType)
-{
-  MOZ_ASSERT(aType);
-
-  uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
-
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  if (!permMgr) {
-    return permission;
-  }
-  permMgr->TestPermissionFromWindow(aWindow, aType, &permission);
-  return permission;
-}
-
-static uint32_t
-GetPermission(nsIPrincipal* aPrincipal, const char* aType)
-{
-  MOZ_ASSERT(aType);
-  MOZ_ASSERT(aPrincipal);
-
-  uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
-
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  if (!permMgr) {
-    return permission;
-  }
-  permMgr->TestPermissionFromPrincipal(aPrincipal, aType, &permission);
-  return permission;
-}
-
 /* static */
 void
 Navigator::Init()
@@ -844,10 +798,14 @@ Navigator::SetVibrationPermission(bool aPermitted, bool aPersistent)
   }
 
   if (aPersistent) {
-    AddPermission(doc->NodePrincipal(), kVibrationPermissionType,
-                  aPermitted ? nsIPermissionManager::ALLOW_ACTION :
-                               nsIPermissionManager::DENY_ACTION,
-                  nsIPermissionManager::EXPIRE_SESSION, 0);
+    nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+    if (!permMgr) {
+      return;
+    }
+    permMgr->AddFromPrincipal(doc->NodePrincipal(), kVibrationPermissionType,
+                              aPermitted ? nsIPermissionManager::ALLOW_ACTION :
+                                           nsIPermissionManager::DENY_ACTION,
+                              nsIPermissionManager::EXPIRE_SESSION, 0);
   }
 }
 
@@ -891,7 +849,15 @@ Navigator::Vibrate(const nsTArray<uint32_t>& aPattern)
   }
 
   mRequestedVibrationPattern.SwapElements(pattern);
-  uint32_t permission = GetPermission(mWindow, kVibrationPermissionType);
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  if (!permMgr) {
+    return false;
+  }
+
+  uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
+
+  permMgr->TestPermissionFromPrincipal(doc->NodePrincipal(), kVibrationPermissionType,
+                                       &permission);
 
   if (permission == nsIPermissionManager::ALLOW_ACTION ||
       mRequestedVibrationPattern.IsEmpty() ||
