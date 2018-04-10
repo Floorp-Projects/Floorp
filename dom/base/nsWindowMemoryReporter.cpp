@@ -491,10 +491,8 @@ CollectWindowReports(nsGlobalWindowInner *aWindow,
     } \
     aWindowTotalSizes->mStyleSizes.NS_STYLE_SIZES_FIELD(name_) += size; \
   }
-#define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
   if (styleSundriesSize > 0) {
     REPORT_SUM_SIZE(
@@ -690,10 +688,8 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 #define STYLE_STRUCT(name_) \
   styleTotal += \
     windowTotalSizes.mStyleSizes.NS_STYLE_SIZES_FIELD(name_);
-#define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
   REPORT("window-objects/layout/style-structs", styleTotal,
          "Memory used for style structs within windows. This is the sum of "
