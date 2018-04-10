@@ -7,44 +7,26 @@
 // Test hovering over shape points in the rule-view and shapes highlighter.
 
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes.html";
+
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
+const CSS_SHAPES_ENABLED_PREF = "devtools.inspector.shapesHighlighter.enabled";
 
 add_task(async function() {
+  await pushPref(CSS_SHAPES_ENABLED_PREF, true);
   let env = await openInspectorForURL(TEST_URL);
   let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
   let { testActor, inspector } = env;
   let view = selectRuleView(inspector);
   let highlighters = view.highlighters;
-  let config = { inspector, view, highlighters, testActor, helper };
 
-  await highlightFromRuleView(config);
-  await highlightFromHighlighter(config);
+  await highlightFromRuleView(inspector, view, highlighters, testActor);
+  await highlightFromHighlighter(view, highlighters, testActor, helper);
 });
 
-async function setup(config) {
-  const { view, selector, property, inspector } = config;
-  info(`Turn on shapes highlighter for ${selector}`);
-  await selectNode(selector, inspector);
-  await toggleShapesHighlighter(view, selector, property, true);
-}
-
-async function teardown(config) {
-  const { view, selector, property } = config;
-  info(`Turn off shapes highlighter for ${selector}`);
-  await toggleShapesHighlighter(view, selector, property, false);
-}
-/*
-* Test that points hovered in the rule view will highlight corresponding points
-* in the shapes highlighter on the page.
-*/
-async function highlightFromRuleView(config) {
-  const { view, highlighters, testActor } = config;
-  const selector = "#polygon";
-  const property = "clip-path";
-
-  await setup({ selector, property, ...config });
-
-  let container = getRuleViewProperty(view, selector, property).valueSpan;
+async function highlightFromRuleView(inspector, view, highlighters, testActor) {
+  await selectNode("#polygon", inspector);
+  await toggleShapesHighlighter(view, highlighters, "#polygon", "clip-path", true);
+  let container = getRuleViewProperty(view, "#polygon", "clip-path").valueSpan;
   let shapesToggle = container.querySelector(".ruleview-shapeswatch");
 
   let highlighterFront = highlighters.highlighters[HIGHLIGHTER_TYPE];
@@ -58,7 +40,10 @@ async function highlightFromRuleView(config) {
   EventUtils.synthesizeMouseAtCenter(pointSpan, {type: "mousemove"}, view.styleWindow);
   await onHighlighterShown;
 
-  info("Point in shapes highlighter is marked when same point in rule view is hovered");
+  ok(pointSpan.classList.contains("active"), "Hovered span is active");
+  is(highlighters.state.shapes.options.hoverPoint, "0",
+     "Hovered point is saved to state");
+
   markerHidden = await testActor.getHighlighterNodeAttribute(
     "shapes-marker-hover", "hidden", highlighterFront);
   ok(!markerHidden, "Marker on highlighter is visible");
@@ -68,27 +53,23 @@ async function highlightFromRuleView(config) {
   EventUtils.synthesizeMouseAtCenter(shapesToggle, {type: "mousemove"}, view.styleWindow);
   await onHighlighterShown;
 
+  ok(!pointSpan.classList.contains("active"), "Hovered span is no longer active");
+  is(highlighters.state.shapes.options.hoverPoint, null, "Hovered point is null");
+
   markerHidden = await testActor.getHighlighterNodeAttribute(
     "shapes-marker-hover", "hidden", highlighterFront);
   ok(markerHidden, "Marker on highlighter is not visible");
 
-  await teardown({selector, property, ...config});
+  info("Hide shapes highlighter");
+  await toggleShapesHighlighter(view, highlighters, "#polygon", "clip-path", false);
 }
 
-/*
-* Test that points hovered in the shapes highlighter on the page will highlight
-* corresponding points in the rule view.
-*/
-async function highlightFromHighlighter(config) {
-  const { view, highlighters, testActor, helper } = config;
-  const selector = "#polygon";
-  const property = "clip-path";
-
-  await setup({ selector, property, ...config });
-
+async function highlightFromHighlighter(view, highlighters, testActor, helper) {
   let highlighterFront = highlighters.highlighters[HIGHLIGHTER_TYPE];
   let { mouse } = helper;
-  let container = getRuleViewProperty(view, selector, property).valueSpan;
+
+  await toggleShapesHighlighter(view, highlighters, "#polygon", "clip-path", true);
+  let container = getRuleViewProperty(view, "#polygon", "clip-path").valueSpan;
 
   info("Hover over first point in highlighter");
   let onEventHandled = highlighters.once("highlighter-event-handled");
@@ -98,9 +79,24 @@ async function highlightFromHighlighter(config) {
     "shapes-marker-hover", "hidden", highlighterFront);
   ok(!markerHidden, "Marker on highlighter is visible");
 
-  info("Point in rule view is marked when same point in shapes highlighter is hovered");
   let pointSpan = container.querySelector(".ruleview-shape-point[data-point='0']");
   ok(pointSpan.classList.contains("active"), "Span for point 0 is active");
+  is(highlighters.state.shapes.hoverPoint, "0", "Hovered point is saved to state");
+
+  info("Check that point is still highlighted after moving it");
+  await mouse.down(0, 0);
+  await mouse.move(10, 10);
+  await mouse.up(10, 10);
+  markerHidden = await testActor.getHighlighterNodeAttribute(
+    "shapes-marker-hover", "hidden", highlighterFront);
+  ok(!markerHidden, "Marker on highlighter is visible after moving point");
+
+  container = getRuleViewProperty(view, "element", "clip-path").valueSpan;
+  pointSpan = container.querySelector(".ruleview-shape-point[data-point='0']");
+  ok(pointSpan.classList.contains("active"),
+     "Span for point 0 is active after moving point");
+  is(highlighters.state.shapes.hoverPoint, "0",
+     "Hovered point is saved to state after moving point");
 
   info("Move mouse off point");
   onEventHandled = highlighters.once("highlighter-event-handled");
@@ -110,6 +106,5 @@ async function highlightFromHighlighter(config) {
     "shapes-marker-hover", "hidden", highlighterFront);
   ok(markerHidden, "Marker on highlighter is no longer visible");
   ok(!pointSpan.classList.contains("active"), "Span for point 0 is no longer active");
-
-  await teardown({ selector, property, ...config });
+  is(highlighters.state.shapes.hoverPoint, null, "Hovered point is null");
 }

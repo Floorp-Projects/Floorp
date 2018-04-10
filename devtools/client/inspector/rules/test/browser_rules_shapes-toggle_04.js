@@ -23,7 +23,6 @@ add_task(async function() {
   let {inspector, view} = await openRuleView();
   let highlighters = view.highlighters;
 
-  info("Select a node with a shape value");
   await selectNode("#shape", inspector);
   let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
   let shapeToggle = container.querySelector(".ruleview-shapeswatch");
