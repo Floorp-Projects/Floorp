@@ -77,7 +77,7 @@ function checkIndividualResults(testname, expected) {
 /**
  * Grabs the results via XHR and checks them
  */
-function checkExpectedGlobalResults() {
+function checkExpectedGlobalResults(testName) {
   var url = 'bug704320.sjs?action=get-test-results';
   doXHR(url,
 	function(xhr) {
@@ -93,7 +93,7 @@ function checkExpectedGlobalResults() {
 		  }
 		}
 	      }
-		advance();
+		advance(testName);
 	},
 	function(xhr) {
           	ok(false, "Can't get results from the counter server.");
