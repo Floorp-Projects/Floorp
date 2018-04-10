@@ -23,7 +23,10 @@ public:
   GamepadHapticActuator(nsISupports* aParent, uint32_t aGamepadId,
                         uint32_t aIndex);
   explicit GamepadHapticActuator(nsISupports* aParent)
-    : mParent(aParent), mType(GamepadHapticActuatorType::Vibration)
+    : mParent(aParent)
+    , mGamepadId{}
+    , mType(GamepadHapticActuatorType::Vibration)
+    , mIndex{}
   {
   }
 

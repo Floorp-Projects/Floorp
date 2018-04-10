@@ -970,7 +970,15 @@ class HashTable : private AllocPolicy
         {}
 
       public:
-        AddPtr() : keyHash(0) {}
+        AddPtr()
+          : keyHash(0)
+#ifdef JS_DEBUG
+          , mutationCount
+        {
+        }
+#endif
+        {
+        }
     };
 
     // A collection of hash table entries. The collection is enumerated by
@@ -1265,6 +1273,9 @@ class HashTable : private AllocPolicy
 #ifdef JS_DEBUG
       , mutationCount(0)
       , mEntered(false)
+      , stats
+    {
+    }
 #endif
     {}
 

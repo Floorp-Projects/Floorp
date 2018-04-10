@@ -33,17 +33,19 @@ static PRDescIdentity sLayerIdentity;
 static PRIOMethods sLayerMethods;
 static PRIOMethods *sLayerMethodsPtr = nullptr;
 
-TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction *aWrapped,
-                                           const char *aTLSHost,
+TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction* aWrapped,
+                                           const char* aTLSHost,
                                            int32_t aTLSPort,
-                                           nsAHttpSegmentReader *aReader,
-                                           nsAHttpSegmentWriter *aWriter)
+                                           nsAHttpSegmentReader* aReader,
+                                           nsAHttpSegmentWriter* aWriter)
   : mTransaction(aWrapped)
   , mEncryptedTextUsed(0)
   , mEncryptedTextSize(0)
   , mSegmentReader(aReader)
   , mSegmentWriter(aWriter)
+  , mFilterReadCode{ NS_ERROR_NOT_INITIALIZED }
   , mForce(false)
+  , mReadSegmentBlocked{ false }
   , mNudgeCounter(0)
 {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");

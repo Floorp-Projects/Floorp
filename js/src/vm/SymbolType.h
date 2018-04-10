@@ -46,7 +46,10 @@ class Symbol : public js::gc::TenuredCell
     size_t unused_;
 
     Symbol(SymbolCode code, js::HashNumber hash, JSAtom* desc)
-        : code_(code), hash_(hash), description_(desc)
+      : code_(code)
+      , hash_(hash)
+      , description_(desc)
+      , unused_{}
     {
         // Silence warnings about unused_ being... unused.
         (void)unused_;

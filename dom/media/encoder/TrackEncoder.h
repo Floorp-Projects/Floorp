@@ -223,7 +223,9 @@ public:
     , mChannels(0)
     , mSamplingRate(0)
     , mAudioBitrate(0)
-  {}
+    , mDirectConnected{ false }
+  {
+  }
 
   /**
    * Suspends encoding from mCurrentTime, i.e., all audio data until the next

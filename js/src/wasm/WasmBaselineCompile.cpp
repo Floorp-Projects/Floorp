@@ -953,14 +953,16 @@ using ScratchI8 = ScratchI32;
 // But it is also exposed for eg the debugger to use.
 
 BaseLocalIter::BaseLocalIter(const ValTypeVector& locals, size_t argsLength, bool debugEnabled)
-  : locals_(locals),
-    argsLength_(argsLength),
-    argsRange_(locals.begin(), argsLength),
-    argsIter_(argsRange_),
-    index_(0),
-    localSize_(debugEnabled ? DebugFrame::offsetOfFrame() : 0),
-    reservedSize_(localSize_),
-    done_(false)
+  : locals_(locals)
+  , argsLength_(argsLength)
+  , argsRange_(locals.begin(), argsLength)
+  , argsIter_(argsRange_)
+  , index_(0)
+  , localSize_(debugEnabled ? DebugFrame::offsetOfFrame() : 0)
+  , reservedSize_(localSize_)
+  , frameOffset_{}
+  , mirType_{ MIRType::Undefined }
+  , done_(false)
 {
     MOZ_ASSERT(argsLength <= locals.length());
     settle();

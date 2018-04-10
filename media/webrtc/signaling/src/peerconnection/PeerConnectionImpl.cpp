@@ -232,10 +232,12 @@ const nsIID nsISupportsWeakReference::COMTypeInfo<nsSupportsWeakReference, void>
 
 namespace mozilla {
 
-RTCStatsQuery::RTCStatsQuery(bool internal) :
-  failed(false),
-  internalStats(internal),
-  grabAllLevels(false) {
+RTCStatsQuery::RTCStatsQuery(bool internal)
+  : failed(false)
+  , internalStats(internal)
+  , grabAllLevels(false)
+  , now{ 0.0 }
+{
 }
 
 RTCStatsQuery::~RTCStatsQuery() {
@@ -313,8 +315,8 @@ bool IsPrivateBrowsing(nsPIDOMWindowInner* aWindow)
 }
 
 PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
-: mTimeCard(MOZ_LOG_TEST(logModuleInfo,LogLevel::Error) ?
-            create_timecard() : nullptr)
+  : mTimeCard(MOZ_LOG_TEST(logModuleInfo, LogLevel::Error) ? create_timecard()
+                                                           : nullptr)
   , mSignalingState(PCImplSignalingState::SignalingStable)
   , mIceConnectionState(PCImplIceConnectionState::New)
   , mIceGatheringState(PCImplIceGatheringState::New)
@@ -338,6 +340,9 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mActiveOnWindow(false)
   , mPacketDumpEnabled(false)
   , mPacketDumpFlagsMutex("Packet dump flags mutex")
+  , listenPort{}
+  , connectPort{}
+  , connectStr{ nullptr }
 {
   MOZ_ASSERT(NS_IsMainThread());
   auto log = RLogConnector::CreateInstance();

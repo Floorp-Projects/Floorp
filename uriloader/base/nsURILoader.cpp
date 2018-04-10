@@ -187,6 +187,8 @@ NS_INTERFACE_MAP_BEGIN(nsDocumentOpenInfo)
 NS_INTERFACE_MAP_END
 
 nsDocumentOpenInfo::nsDocumentOpenInfo()
+  : mFlags{}
+  , mDataConversionDepthLimit{}
 {
   NS_NOTREACHED("This should never be called\n");
 }

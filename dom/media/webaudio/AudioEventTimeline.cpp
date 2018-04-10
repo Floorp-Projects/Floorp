@@ -78,6 +78,7 @@ AudioTimelineEvent::AudioTimelineEvent(Type aType,
 
 AudioTimelineEvent::AudioTimelineEvent(MediaStream* aStream)
   : mType(Stream)
+  , mValue{ 0.0 }
   , mCurve(nullptr)
   , mStream(aStream)
   , mTimeConstant(0.0)

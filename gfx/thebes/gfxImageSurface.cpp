@@ -20,10 +20,11 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 gfxImageSurface::gfxImageSurface()
-  : mSize(0, 0),
-    mOwnsData(false),
-    mFormat(SurfaceFormat::UNKNOWN),
-    mStride(0)
+  : mSize(0, 0)
+  , mOwnsData(false)
+  , mData{ nullptr }
+  , mFormat(SurfaceFormat::UNKNOWN)
+  , mStride(0)
 {
 }
 

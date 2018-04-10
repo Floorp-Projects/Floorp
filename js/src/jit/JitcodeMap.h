@@ -568,6 +568,7 @@ class JitcodeGlobalEntry
   public:
     JitcodeGlobalEntry()
       : tower_(nullptr)
+      , base_{}
     {
         base_.init();
     }

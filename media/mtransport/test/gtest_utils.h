@@ -105,6 +105,7 @@ public:
   MtransportTest()
     : test_utils_(nullptr)
     , dumper_(nullptr)
+    , webrtc_enabled_{ false }
   {
   }
 

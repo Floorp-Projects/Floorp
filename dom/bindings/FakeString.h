@@ -18,9 +18,11 @@ namespace binding_detail {
 // constructor and destructor behavior. FakeString uses inline storage
 // for small strings and a nsStringBuffer for longer strings.
 struct FakeString {
-  FakeString() :
-    mDataFlags(nsString::DataFlags::TERMINATED),
-    mClassFlags(nsString::ClassFlags(0))
+  FakeString()
+    : mData{ nullptr }
+    , mLength{}
+    , mDataFlags(nsString::DataFlags::TERMINATED)
+    , mClassFlags(nsString::ClassFlags(0))
   {
   }
 

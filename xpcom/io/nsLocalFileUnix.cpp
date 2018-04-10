@@ -225,10 +225,30 @@ nsDirEnumeratorUnix::Close()
 
 nsLocalFile::nsLocalFile()
 {
+  this->mCachedStat.st_dev = {};
+  this->mCachedStat.st_mode = {};
+  this->mCachedStat.st_nlink = {};
+  this->mCachedStat.st_ino = {};
+  this->mCachedStat.st_uid = {};
+  this->mCachedStat.st_gid = {};
+  this->mCachedStat.st_rdev = {};
+  this->mCachedStat.st_size = {};
+  this->mCachedStat.st_blocks = {};
+  this->mCachedStat.st_blksize = {};
 }
 
 nsLocalFile::nsLocalFile(const nsACString& aFilePath)
 {
+  this->mCachedStat.st_dev = {};
+  this->mCachedStat.st_mode = {};
+  this->mCachedStat.st_nlink = {};
+  this->mCachedStat.st_ino = {};
+  this->mCachedStat.st_uid = {};
+  this->mCachedStat.st_gid = {};
+  this->mCachedStat.st_rdev = {};
+  this->mCachedStat.st_size = {};
+  this->mCachedStat.st_blocks = {};
+  this->mCachedStat.st_blksize = {};
   InitWithNativePath(aFilePath);
 }
 

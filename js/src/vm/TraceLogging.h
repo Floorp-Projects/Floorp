@@ -571,9 +571,10 @@ class MOZ_RAII AutoTraceLog
   public:
     AutoTraceLog(TraceLoggerThread* logger,
                  const TraceLoggerEvent& event MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : logger(logger),
-        isEvent(true),
-        executed(false)
+      : logger(logger)
+      , isEvent(true)
+      , executed(false)
+      , prev{ nullptr }
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         payload.event = &event;
@@ -586,9 +587,10 @@ class MOZ_RAII AutoTraceLog
     }
 
     AutoTraceLog(TraceLoggerThread* logger, TraceLoggerTextId id MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : logger(logger),
-        isEvent(false),
-        executed(false)
+      : logger(logger)
+      , isEvent(false)
+      , executed(false)
+      , prev{ nullptr }
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         payload.id = id;

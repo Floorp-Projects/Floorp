@@ -455,6 +455,7 @@ public:
                                NS_LITERAL_CSTRING("EventSource :: Init"))
     , mImpl(aEventSourceImpl)
     , mURL(aURL)
+    , mRv{ NS_ERROR_NOT_INITIALIZED }
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -1928,6 +1929,7 @@ EventSourceImpl::CheckListenerChain()
 EventSource::EventSource(nsPIDOMWindowInner* aOwnerWindow,
                          bool aWithCredentials)
   : DOMEventTargetHelper(aOwnerWindow)
+  , mReadyState{}
   , mWithCredentials(aWithCredentials)
   , mIsMainThread(true)
   , mKeepingAlive(false)

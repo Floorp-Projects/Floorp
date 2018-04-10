@@ -270,7 +270,6 @@ const int32_t nsNavHistory::kGetInfoIndex_VisitType = 17;
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
 
-
 nsNavHistory::nsNavHistory()
   : mBatchLevel(0)
   , mBatchDBTransaction(nullptr)
@@ -281,6 +280,28 @@ nsNavHistory::nsNavHistory()
   , mEmbedVisits(EMBED_VISITS_INITIAL_CACHE_LENGTH)
   , mHistoryEnabled(true)
   , mNumVisitsForFrecency(10)
+  , mFirstBucketCutoffInDays{}
+  , mSecondBucketCutoffInDays{}
+  , mThirdBucketCutoffInDays{}
+  , mFourthBucketCutoffInDays{}
+  , mFirstBucketWeight{}
+  , mSecondBucketWeight{}
+  , mThirdBucketWeight{}
+  , mFourthBucketWeight{}
+  , mDefaultWeight{}
+  , mEmbedVisitBonus{}
+  , mFramedLinkVisitBonus{}
+  , mLinkVisitBonus{}
+  , mTypedVisitBonus{}
+  , mBookmarkVisitBonus{}
+  , mDownloadVisitBonus{}
+  , mPermRedirectVisitBonus{}
+  , mTempRedirectVisitBonus{}
+  , mRedirectSourceVisitBonus{}
+  , mDefaultVisitBonus{}
+  , mUnvisitedBookmarkBonus{}
+  , mUnvisitedTypedBonus{}
+  , mReloadVisitBonus{}
   , mTagsFolder(-1)
   , mDaysOfHistory(-1)
   , mLastCachedStartOfDay(INT64_MAX)

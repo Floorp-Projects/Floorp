@@ -100,6 +100,11 @@ class Http2Decompressor final : public Http2BaseCompressor
 {
 public:
   Http2Decompressor()
+    : mOffset{}
+    , mData{ nullptr }
+    , mDataLen{}
+    , mSeenNonColonHeader{ false }
+    , mIsPush{ false }
   {
     mPeakSizeID = Telemetry::HPACK_PEAK_SIZE_DECOMPRESSOR;
     mPeakCountID = Telemetry::HPACK_PEAK_COUNT_DECOMPRESSOR;

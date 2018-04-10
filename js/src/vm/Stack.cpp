@@ -1514,15 +1514,20 @@ ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, jit::CalleeToken e
 /*****************************************************************************/
 
 jit::JitActivation::JitActivation(JSContext* cx)
-  : Activation(cx, Jit),
-    packedExitFP_(nullptr),
-    encodedWasmExitReason_(0),
-    prevJitActivation_(cx->jitActivation),
-    rematerializedFrames_(nullptr),
-    ionRecovery_(cx),
-    bailoutData_(nullptr),
-    lastProfilingFrame_(nullptr),
-    lastProfilingCallSite_(nullptr)
+  : Activation(cx, Jit)
+  , packedExitFP_(nullptr)
+  , encodedWasmExitReason_(0)
+  , prevJitActivation_(cx->jitActivation)
+  , rematerializedFrames_(nullptr)
+  , ionRecovery_(cx)
+  , bailoutData_(nullptr)
+  , lastProfilingFrame_(nullptr)
+  , lastProfilingCallSite_(nullptr)
+#ifdef CHECK_OSIPOINT_REGISTERS
+  , checkRegs_
+{
+}
+#endif
 {
     cx->jitActivation = this;
     registerProfiling();

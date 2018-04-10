@@ -1094,26 +1094,28 @@ NS_IMPL_ISUPPORTS(nsCacheService, nsICacheService, nsICacheServiceInternal,
                   nsIMemoryReporter)
 
 nsCacheService::nsCacheService()
-    : mObserver(nullptr),
-      mLock("nsCacheService.mLock"),
-      mCondVar(mLock, "nsCacheService.mCondVar"),
-      mNotified(false),
-      mTimeStampLock("nsCacheService.mTimeStampLock"),
-      mInitialized(false),
-      mClearingEntries(false),
-      mEnableMemoryDevice(true),
-      mEnableDiskDevice(true),
-      mMemoryDevice(nullptr),
-      mDiskDevice(nullptr),
-      mOfflineDevice(nullptr),
-      mTotalEntries(0),
-      mCacheHits(0),
-      mCacheMisses(0),
-      mMaxKeyLength(0),
-      mMaxDataSize(0),
-      mMaxMetaSize(0),
-      mDeactivateFailures(0),
-      mDeactivatedUnboundEntries(0)
+  : mObserver(nullptr)
+  , mLock("nsCacheService.mLock")
+  , mCondVar(mLock, "nsCacheService.mCondVar")
+  , mNotified(false)
+  , mTimeStampLock("nsCacheService.mTimeStampLock")
+  , mInitialized(false)
+  , mClearingEntries(false)
+  , mEnableMemoryDevice(true)
+  , mEnableDiskDevice(true)
+  , mEnableOfflineDevice{ false }
+  , mMemoryDevice(nullptr)
+  , mDiskDevice(nullptr)
+  , mOfflineDevice(nullptr)
+  , mDoomedEntries{}
+  , mTotalEntries(0)
+  , mCacheHits(0)
+  , mCacheMisses(0)
+  , mMaxKeyLength(0)
+  , mMaxDataSize(0)
+  , mMaxMetaSize(0)
+  , mDeactivateFailures(0)
+  , mDeactivatedUnboundEntries(0)
 {
     NS_ASSERTION(gService==nullptr, "multiple nsCacheService instances!");
     gService = this;

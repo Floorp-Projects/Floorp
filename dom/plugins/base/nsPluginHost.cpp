@@ -1658,9 +1658,14 @@ class GetSitesClosure : public nsIGetSitesWithDataCallback {
 public:
   NS_DECL_ISUPPORTS
   GetSitesClosure(const nsACString& domain, nsPluginHost* host)
-  : domain(domain), host(host), keepWaiting(true)
+    : domain(domain)
+    , host(host)
+    , result{ false }
+    , keepWaiting(true)
+    , retVal{ NS_ERROR_NOT_INITIALIZED }
   {
   }
+
   NS_IMETHOD SitesWithData(InfallibleTArray<nsCString>& sites) override {
     retVal = HandleGetSites(sites);
     keepWaiting = false;

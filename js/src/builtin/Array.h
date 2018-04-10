@@ -264,7 +264,13 @@ class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final
     bool isArrayStateStillSane();
 
   public:
-    ArraySpeciesLookup() {
+    ArraySpeciesLookup()
+      : arrayProto_{ nullptr }
+      , arrayConstructor_{ nullptr }
+      , arrayConstructorShape_{ nullptr }
+      , arrayProtoShape_{ nullptr }
+      , arrayProtoConstructorSlot_{} /* FIXME: initialize state_ */
+    {
         reset();
     }
 

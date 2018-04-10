@@ -483,31 +483,33 @@ MBasicBlock::New(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred, Ki
 }
 
 MBasicBlock::MBasicBlock(MIRGraph& graph, const CompileInfo& info, BytecodeSite* site, Kind kind)
-  : unreachable_(false),
-    specialized_(false),
-    graph_(graph),
-    info_(info),
-    predecessors_(graph.alloc()),
-    stackPosition_(info_.firstStackSlot()),
-    numDominated_(0),
-    pc_(site->pc()),
-    lir_(nullptr),
-    callerResumePoint_(nullptr),
-    entryResumePoint_(nullptr),
-    outerResumePoint_(nullptr),
-    successorWithPhis_(nullptr),
-    positionInPhiSuccessor_(0),
-    loopDepth_(0),
-    kind_(kind),
-    mark_(false),
-    immediatelyDominated_(graph.alloc()),
-    immediateDominator_(nullptr),
-    trackedSite_(site),
-    hitCount_(0),
-    hitState_(HitState::NotDefined)
-#if defined (JS_ION_PERF)
-    , lineno_(0u),
-    columnIndex_(0u)
+  : unreachable_(false)
+  , specialized_(false)
+  , graph_(graph)
+  , info_(info)
+  , predecessors_(graph.alloc())
+  , stackPosition_(info_.firstStackSlot())
+  , id_{}
+  , domIndex_{}
+  , numDominated_(0)
+  , pc_(site->pc())
+  , lir_(nullptr)
+  , callerResumePoint_(nullptr)
+  , entryResumePoint_(nullptr)
+  , outerResumePoint_(nullptr)
+  , successorWithPhis_(nullptr)
+  , positionInPhiSuccessor_(0)
+  , loopDepth_(0)
+  , kind_(kind)
+  , mark_(false)
+  , immediatelyDominated_(graph.alloc())
+  , immediateDominator_(nullptr)
+  , trackedSite_(site)
+  , hitCount_(0)
+  , hitState_(HitState::NotDefined)
+#if defined(JS_ION_PERF) || defined(DEBUG)
+  , lineno_(0u)
+  , columnIndex_(0u)
 #endif
 {
 }

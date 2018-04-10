@@ -130,7 +130,12 @@ class TraceLoggerGraph
             nextId_ = nextId;
         }
         TreeEntry()
-        { }
+          : start_{}
+          , stop_{}
+          , u{}
+          , nextId_{}
+        {
+        }
         uint64_t start() {
             return start_;
         }

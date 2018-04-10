@@ -38,6 +38,7 @@ class TextInputProcessorNotification final :
 public:
   explicit TextInputProcessorNotification(const char* aType)
     : mType(aType)
+    , mTextChangeData{}
   {
   }
 
@@ -278,7 +279,10 @@ private:
     SelectionChangeDataBase mSelectionChangeData;
   };
 
-  TextInputProcessorNotification() { }
+  TextInputProcessorNotification()
+    : mTextChangeData{}
+  {
+  }
 };
 
 NS_IMPL_ISUPPORTS(TextInputProcessorNotification,

@@ -308,10 +308,12 @@ private:
 class MOZ_STACK_CLASS SVGUserUnitList
 {
 public:
-
   SVGUserUnitList()
     : mList(nullptr)
-  {}
+    , mElement{ nullptr }
+    , mAxis{ '\0' }
+  {
+  }
 
   void Init(const SVGLengthList *aList, nsSVGElement *aElement, uint8_t aAxis) {
     mList = aList;

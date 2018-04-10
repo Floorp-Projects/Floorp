@@ -1209,6 +1209,7 @@ private:
     explicit DiskConsumptionObserver(nsWeakPtr const& aWeakObserver)
       : Runnable("net::CacheIndex::DiskConsumptionObserver")
       , mObserver(aWeakObserver)
+      , mSize{}
     {
     }
     virtual ~DiskConsumptionObserver() {

@@ -97,7 +97,10 @@ class ExitReason
 {
     uint32_t payload_;
 
-    ExitReason() {}
+    ExitReason()
+      : payload_{}
+    {
+    }
 
   public:
     enum class Fixed : uint32_t

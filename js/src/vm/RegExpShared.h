@@ -234,7 +234,11 @@ class RegExpZone
         JSAtom* atom;
         uint16_t flag;
 
-        Key() {}
+        Key()
+          : atom{ nullptr }
+          , flag{}
+        {
+        }
         Key(JSAtom* atom, RegExpFlag flag)
           : atom(atom), flag(flag)
         { }

@@ -172,7 +172,11 @@ namespace binding_danger {
 
 template<typename CleanupPolicy>
 struct TErrorResult<CleanupPolicy>::Message {
-  Message() { MOZ_COUNT_CTOR(TErrorResult::Message); }
+  Message()
+    : mErrorNumber{ dom::Err_Limit }
+  {
+    MOZ_COUNT_CTOR(TErrorResult::Message);
+  }
   ~Message() { MOZ_COUNT_DTOR(TErrorResult::Message); }
 
   nsTArray<nsString> mArgs;

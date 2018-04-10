@@ -229,10 +229,11 @@ VideoEngine::GenerateId() {
   return mId = sId++;
 }
 
-VideoEngine::VideoEngine(UniquePtr<const webrtc::Config>&& aConfig):
-  mCaptureDevInfo(aConfig->Get<webrtc::CaptureDeviceInfo>()),
-  mDeviceInfo(nullptr),
-  mConfig(std::move(aConfig))
+VideoEngine::VideoEngine(UniquePtr<const webrtc::Config>&& aConfig)
+  : mId{}
+  , mCaptureDevInfo(aConfig->Get<webrtc::CaptureDeviceInfo>())
+  , mDeviceInfo(nullptr)
+  , mConfig(std::move(aConfig))
 {
   LOG((__PRETTY_FUNCTION__));
 }

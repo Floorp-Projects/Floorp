@@ -12,6 +12,7 @@ namespace media {
 
 MediaSystemResourceManagerChild::MediaSystemResourceManagerChild()
   : mDestroyed(false)
+  , mManager{ nullptr }
 {
 }
 

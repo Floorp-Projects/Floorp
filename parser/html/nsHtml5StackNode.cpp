@@ -87,7 +87,14 @@ nsHtml5StackNode::isHtmlIntegrationPoint()
 
 nsHtml5StackNode::nsHtml5StackNode(int32_t idxInTreeBuilder)
   : idxInTreeBuilder(idxInTreeBuilder)
+  , flags{}
+  , name{ nullptr }
+  , popName{ nullptr }
+  , ns{}
+  , node{ nullptr }
+  , attributes{ nullptr }
   , refcount(0)
+  , htmlCreator{ nullptr }
 {
   MOZ_COUNT_CTOR(nsHtml5StackNode);
 }

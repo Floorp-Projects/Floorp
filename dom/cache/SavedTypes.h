@@ -22,7 +22,15 @@ namespace cache {
 
 struct SavedRequest
 {
-  SavedRequest() : mHasBodyId(false) { mValue.body() = void_t(); }
+  SavedRequest()
+    : mHasBodyId(false)
+    , mCacheId{}
+  {
+    this->mBodyId.m0 = {};
+    this->mBodyId.m1 = {};
+    this->mBodyId.m2 = {};
+    mValue.body() = void_t();
+  }
   CacheRequest mValue;
   bool mHasBodyId;
   nsID mBodyId;
@@ -31,7 +39,15 @@ struct SavedRequest
 
 struct SavedResponse
 {
-  SavedResponse() : mHasBodyId(false) { mValue.body() = void_t(); }
+  SavedResponse()
+    : mHasBodyId(false)
+    , mCacheId{}
+  {
+    this->mBodyId.m0 = {};
+    this->mBodyId.m1 = {};
+    this->mBodyId.m2 = {};
+    mValue.body() = void_t();
+  }
   CacheResponse mValue;
   bool mHasBodyId;
   nsID mBodyId;

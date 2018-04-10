@@ -43,9 +43,19 @@ public:
 
     // GCC 2.95.2 requires this to be defined, although we never call it.
     // and OS/2 requires that it not be private
-    nsDiskCacheStreamIO() { NS_NOTREACHED("oops"); }
+    nsDiskCacheStreamIO()
+      : mBinding{ nullptr }
+      , mDevice{ nullptr }
+      , mFD{ nullptr }
+      , mStreamEnd{}
+      , mBufSize{}
+      , mBuffer{ nullptr }
+      , mOutputStreamIsOpen{ false }
+    {
+      NS_NOTREACHED("oops");
+    }
 
-private:
+  private:
     virtual ~nsDiskCacheStreamIO();
 
     nsresult    OpenCacheFile(int flags, PRFileDesc ** fd);

@@ -319,12 +319,13 @@ CompositorLoop()
   return CompositorThreadHolder::Loop();
 }
 
-CompositorBridgeParent::CompositorBridgeParent(CompositorManagerParent* aManager,
-                                               CSSToLayoutDeviceScale aScale,
-                                               const TimeDuration& aVsyncRate,
-                                               const CompositorOptions& aOptions,
-                                               bool aUseExternalSurfaceSize,
-                                               const gfx::IntSize& aSurfaceSize)
+CompositorBridgeParent::CompositorBridgeParent(
+  CompositorManagerParent* aManager,
+  CSSToLayoutDeviceScale aScale,
+  const TimeDuration& aVsyncRate,
+  const CompositorOptions& aOptions,
+  bool aUseExternalSurfaceSize,
+  const gfx::IntSize& aSurfaceSize)
   : CompositorBridgeParentBase(aManager)
   , mWidget(nullptr)
   , mScale(aScale)
@@ -336,14 +337,15 @@ CompositorBridgeParent::CompositorBridgeParent(CompositorManagerParent* aManager
   , mOptions(aOptions)
   , mPauseCompositionMonitor("PauseCompositionMonitor")
   , mResumeCompositionMonitor("ResumeCompositionMonitor")
-  , mRootLayerTreeID{0}
+  , mCompositorBridgeID{}
+  , mRootLayerTreeID{ 0 }
   , mOverrideComposeReadiness(false)
   , mForceCompositionTask(nullptr)
   , mCompositorScheduler(nullptr)
   , mAnimationStorage(nullptr)
   , mPaintTime(TimeDuration::Forever())
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  , mLastPluginUpdateLayerTreeId{0}
+  , mLastPluginUpdateLayerTreeId{ 0 }
   , mDeferPluginWindows(false)
   , mPluginWindowsHidden(false)
 #endif

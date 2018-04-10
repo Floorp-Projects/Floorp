@@ -47,11 +47,14 @@ TrustDomain::IssuerChecker::~IssuerChecker() { }
 class PathBuildingStep final : public TrustDomain::IssuerChecker
 {
 public:
-  PathBuildingStep(TrustDomain& aTrustDomain, const BackCert& aSubject,
-                   Time aTime, KeyPurposeId aRequiredEKUIfPresent,
+  PathBuildingStep(TrustDomain& aTrustDomain,
+                   const BackCert& aSubject,
+                   Time aTime,
+                   KeyPurposeId aRequiredEKUIfPresent,
                    const CertPolicyId& aRequiredPolicy,
                    /*optional*/ const Input* aStapledOCSPResponse,
-                   unsigned int aSubCACount, Result aDeferredSubjectError,
+                   unsigned int aSubCACount,
+                   Result aDeferredSubjectError,
                    unsigned int& aBuildForwardCallBudget)
     : trustDomain(aTrustDomain)
     , subject(aSubject)
@@ -61,6 +64,7 @@ public:
     , stapledOCSPResponse(aStapledOCSPResponse)
     , subCACount(aSubCACount)
     , deferredSubjectError(aDeferredSubjectError)
+    , subjectSignaturePublicKeyAlg{ static_cast<der::PublicKeyAlgorithm>(0) }
     , result(Result::FATAL_ERROR_LIBRARY_FAILURE)
     , resultWasSet(false)
     , buildForwardCallBudget(aBuildForwardCallBudget)

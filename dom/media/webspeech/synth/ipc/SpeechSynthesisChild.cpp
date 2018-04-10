@@ -160,8 +160,10 @@ SpeechSynthesisRequestChild::RecvOnMark(const nsString& aName,
 
 // SpeechTaskChild
 
-SpeechTaskChild::SpeechTaskChild(SpeechSynthesisUtterance* aUtterance, bool aIsChrome)
+SpeechTaskChild::SpeechTaskChild(SpeechSynthesisUtterance* aUtterance,
+                                 bool aIsChrome)
   : nsSpeechTask(aUtterance, aIsChrome)
+  , mActor{ nullptr }
 {
 }
 

@@ -585,8 +585,15 @@ Range::unionWith(const Range* other)
 }
 
 Range::Range(const MDefinition* def)
-  : symbolicLower_(nullptr),
-    symbolicUpper_(nullptr)
+  : lower_{}
+  , upper_{}
+  , hasInt32LowerBound_{ false }
+  , hasInt32UpperBound_{ false }
+  , canHaveFractionalPart_{ static_cast<FractionalPartFlag>(false) }
+  , canBeNegativeZero_{ static_cast<NegativeZeroFlag>(false) }
+  , max_exponent_{}
+  , symbolicLower_(nullptr)
+  , symbolicUpper_(nullptr)
 {
     if (const Range* other = def->range()) {
         // The instruction has range information; use it.

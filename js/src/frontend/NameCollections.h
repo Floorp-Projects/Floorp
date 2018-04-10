@@ -113,7 +113,9 @@ struct RecyclableAtomMapValueWrapper
                       "Can only recycle atom maps with values smaller than uint64");
     }
 
-    RecyclableAtomMapValueWrapper() {
+    RecyclableAtomMapValueWrapper()
+      : dummy{}
+    {
         assertInvariant();
     }
 

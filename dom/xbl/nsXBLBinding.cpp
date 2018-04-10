@@ -106,6 +106,7 @@ nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
   , mUsingContentXBLScope(false)
   , mIsShadowRootBinding(false)
   , mPrototypeBinding(aBinding)
+  , mBoundElement{ nullptr }
 {
   NS_ASSERTION(mPrototypeBinding, "Must have a prototype binding!");
   // Grab a ref to the document info so the prototype binding won't die
@@ -113,12 +114,14 @@ nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
 }
 
 // Constructor used by web components.
-nsXBLBinding::nsXBLBinding(ShadowRoot* aShadowRoot, nsXBLPrototypeBinding* aBinding)
-  : mMarkedForDeath(false),
-    mUsingContentXBLScope(false),
-    mIsShadowRootBinding(true),
-    mPrototypeBinding(aBinding),
-    mContent(aShadowRoot)
+nsXBLBinding::nsXBLBinding(ShadowRoot* aShadowRoot,
+                           nsXBLPrototypeBinding* aBinding)
+  : mMarkedForDeath(false)
+  , mUsingContentXBLScope(false)
+  , mIsShadowRootBinding(true)
+  , mPrototypeBinding(aBinding)
+  , mContent(aShadowRoot)
+  , mBoundElement{ nullptr }
 {
   NS_ASSERTION(mPrototypeBinding, "Must have a prototype binding!");
   // Grab a ref to the document info so the prototype binding won't die

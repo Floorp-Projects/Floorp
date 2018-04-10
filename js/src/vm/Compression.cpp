@@ -37,6 +37,13 @@ Compressor::Compressor(const unsigned char* inp, size_t inplen)
       currentChunkSize(0),
       chunkOffsets()
 {
+    this->zs.total_in = {};
+    this->zs.total_out = {};
+    this->zs.msg = { nullptr };
+    this->zs.state = { nullptr };
+    this->zs.data_type = {};
+    this->zs.adler = {};
+    this->zs.reserved = {};
     MOZ_ASSERT(inplen > 0);
     zs.opaque = nullptr;
     zs.next_in = (Bytef*)inp;

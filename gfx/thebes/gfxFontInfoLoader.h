@@ -47,13 +47,12 @@ class FontInfoData {
 public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FontInfoData)
 
-    FontInfoData(bool aLoadOtherNames,
-                 bool aLoadFaceNames,
-                 bool aLoadCmaps) :
-        mCanceled(false),
-        mLoadOtherNames(aLoadOtherNames),
-        mLoadFaceNames(aLoadFaceNames),
-        mLoadCmaps(aLoadCmaps)
+    FontInfoData(bool aLoadOtherNames, bool aLoadFaceNames, bool aLoadCmaps)
+      : mCanceled(false)
+      , mLoadStats{}
+      , mLoadOtherNames(aLoadOtherNames)
+      , mLoadFaceNames(aLoadFaceNames)
+      , mLoadCmaps(aLoadCmaps)
     {
         MOZ_COUNT_CTOR(FontInfoData);
     }

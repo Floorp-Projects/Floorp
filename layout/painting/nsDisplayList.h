@@ -320,6 +320,9 @@ struct ActiveScrolledRoot {
 
 private:
   ActiveScrolledRoot()
+    : mScrollableFrame{ nullptr }
+    , mDepth{}
+    , mRetained{ false }
   {
   }
 
@@ -1189,6 +1192,7 @@ public:
     AutoSaveRestorePerspectiveIndex(nsDisplayListBuilder* aBuilder,
                                     const bool aChildrenHavePerspective)
       : mBuilder(nullptr)
+      , mCachedItemIndex{}
     {
       if (aChildrenHavePerspective) {
         mBuilder = aBuilder;

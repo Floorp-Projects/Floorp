@@ -20,7 +20,11 @@
 class nsPluginManifestLineReader
 {
   public:
-    nsPluginManifestLineReader() {mBase = mCur = mNext = mLimit = 0;}
+    nsPluginManifestLineReader()
+      : mLength{}
+    {
+      mBase = mCur = mNext = mLimit = 0;
+    }
     ~nsPluginManifestLineReader() { if (mBase) delete[] mBase; mBase=0;}
 
     char* Init(uint32_t flen)
