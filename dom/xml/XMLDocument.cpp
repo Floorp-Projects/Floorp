@@ -259,9 +259,6 @@ XMLDocument::~XMLDocument()
   mLoopingForSyncLoad = false;
 }
 
-// QueryInterface implementation for XMLDocument
-NS_IMPL_ISUPPORTS_INHERITED(XMLDocument, nsDocument, nsIDOMXMLDocument)
-
 nsresult
 XMLDocument::Init()
 {

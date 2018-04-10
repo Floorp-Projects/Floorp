@@ -25,8 +25,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIWindowWatcher.h"
 
-#include "nsIDOMXULElement.h"
-
 #include "nsWidgetInitData.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"

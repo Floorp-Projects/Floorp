@@ -136,8 +136,7 @@ NS_IMPL_ISUPPORTS(TabParent,
                   nsITabParent,
                   nsIAuthPromptProvider,
                   nsISecureBrowserUI,
-                  nsISupportsWeakReference,
-                  nsIWebBrowserPersistable)
+                  nsISupportsWeakReference)
 
 TabParent::TabParent(nsIContentParent* aManager,
                      const TabId& aTabId,
@@ -1722,9 +1721,9 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvSetCursor(const uint32_t& aCursor, const bool& aForce)
+TabParent::RecvSetCursor(const nsCursor& aCursor, const bool& aForce)
 {
-  mCursor = static_cast<nsCursor>(aCursor);
+  mCursor = aCursor;
   mCustomCursor = nullptr;
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -3437,19 +3436,23 @@ TabParent::AsyncPanZoomEnabled() const
   return widget && widget->AsyncPanZoomEnabled();
 }
 
-NS_IMETHODIMP
+void
 TabParent::StartPersistence(uint64_t aOuterWindowID,
-                            nsIWebBrowserPersistDocumentReceiver* aRecv)
+                            nsIWebBrowserPersistDocumentReceiver* aRecv,
+                            ErrorResult& aRv)
 {
   nsCOMPtr<nsIContentParent> manager = Manager();
   if (!manager->IsContentParent()) {
-    return NS_ERROR_UNEXPECTED;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
   }
   auto* actor = new WebBrowserPersistDocumentParent();
   actor->SetOnReady(aRecv);
-  return manager->AsContentParent()
-    ->SendPWebBrowserPersistDocumentConstructor(actor, this, aOuterWindowID)
-    ? NS_OK : NS_ERROR_FAILURE;
+  bool ok = manager->AsContentParent()
+    ->SendPWebBrowserPersistDocumentConstructor(actor, this, aOuterWindowID);
+  if (!ok) {
+    aRv.Throw(NS_ERROR_FAILURE);
+  }
   // (The actor will be destroyed on constructor failure.)
 }
 
