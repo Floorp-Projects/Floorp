@@ -164,10 +164,8 @@ struct ServoComputedValueFlags {
 };
 
 #define STYLE_STRUCT(name_) struct Gecko##name_;
-#define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
 // These measurements are obtained for both the UA cache and the Stylist, but
 // not all the fields are used in both cases.
@@ -219,11 +217,8 @@ public:
 #define STYLE_STRUCT(name_)                                \
   mozilla::ServoRawOffsetArc<mozilla::Gecko##name_> name_; \
   inline const nsStyle##name_* GetStyle##name_() const;
-  #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
-  const nsStyleVariables* GetStyleVariables() const;
 
   void AddSizeOfExcludingThis(nsWindowSizes& aSizes) const;
 

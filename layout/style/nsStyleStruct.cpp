@@ -4788,36 +4788,6 @@ nsStyleUIReset::CalcDifference(const nsStyleUIReset& aNewData) const
 }
 
 //-----------------------
-// nsStyleVariables
-//
-
-nsStyleVariables::nsStyleVariables()
-{
-  MOZ_COUNT_CTOR(nsStyleVariables);
-}
-
-nsStyleVariables::nsStyleVariables(const nsPresContext* aContext)
-{
-  MOZ_COUNT_CTOR(nsStyleVariables);
-}
-
-nsStyleVariables::nsStyleVariables(const nsStyleVariables& aSource)
-{
-  MOZ_COUNT_CTOR(nsStyleVariables);
-}
-
-nsStyleVariables::~nsStyleVariables()
-{
-  MOZ_COUNT_DTOR(nsStyleVariables);
-}
-
-nsChangeHint
-nsStyleVariables::CalcDifference(const nsStyleVariables& aNewData) const
-{
-  return nsChangeHint(0);
-}
-
-//-----------------------
 // nsStyleEffects
 //
 
