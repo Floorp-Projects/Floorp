@@ -367,6 +367,9 @@ class Session(object):
         self.alert = UserPrompt(self)
         self.actions = Actions(self)
 
+    def __repr__(self):
+        return "<%s %s>" % (self.__class__.__name__, self.session_id or "(disconnected)")
+
     def __eq__(self, other):
         return (self.session_id is not None and isinstance(other, Session) and
                 self.session_id == other.session_id)
