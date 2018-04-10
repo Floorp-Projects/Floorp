@@ -43,16 +43,16 @@ for (i = 0; i < vals.length; ++i) {
 $('t').style.overflow = mozVals[0];
 is($('t').style.getPropertyValue("overflow-y"), "scroll", "Roundtrip");
 is($('t').style.getPropertyValue("overflow-x"), "hidden", "Roundtrip");
-is($('t').style.overflow, "", "Shorthand read directly");
-is(c(), "", "Shorthand computed");
-is(cval(), null, "Shorthand as CSSValue");
+is($('t').style.overflow, "hidden scroll", "Shorthand read directly");
+is(c(), "hidden scroll", "Shorthand computed");
+isnot(cval(), null, "Shorthand as CSSValue");
 
 $('t').style.overflow = mozVals[1];
 is($('t').style.getPropertyValue("overflow-x"), "scroll", "Roundtrip");
 is($('t').style.getPropertyValue("overflow-y"), "hidden", "Roundtrip");
-is($('t').style.overflow, "", "Shorthand read directly");
-is(c(), "", "Shorthand computed");
-is(cval(), null, "Shorthand as CSSValue");
+is($('t').style.overflow, "scroll hidden", "Shorthand read directly");
+is(c(), "scroll hidden", "Shorthand computed");
+isnot(cval(), null, "Shorthand as CSSValue");
 
 for (i = 0; i < vals.length; ++i) {
   for (j = 0; j < vals.length; ++j) {
@@ -64,7 +64,7 @@ for (i = 0; i < vals.length; ++i) {
     if (i == j) {
       is($('t').style.overflow, vals[i], "Shorthand serialization");
     } else {
-      is($('t').style.overflow, "", "Shorthand serialization");
+      is($('t').style.overflow, vals[i] + " " + vals[j], "Shorthand serialization");
     }
 
     // "visible" overflow-x and overflow-y become "auto" in computed style if
@@ -74,10 +74,12 @@ for (i = 0; i < vals.length; ++i) {
       isnot(cval(), null, "Shorthand computation as CSSValue");
     } else if (vals[j] == "visible" && vals[i] == "auto") {
       is(c(), vals[i], "Shorthand computation");
-      isnot(cval(), null, "Shorthand computation as CSSValue");    
+      isnot(cval(), null, "Shorthand computation as CSSValue");
     } else {
-      is(c(), "", "Shorthand computation");
-      is(cval(), null, "Shorthand computation as CSSValue");
+      let x = vals[i] == "visible" ? "auto" : vals[i];
+      let y = vals[j] == "visible" ? "auto" : vals[j];
+      is(c(), x + " " + y, "Shorthand computation");
+      isnot(cval(), null, "Shorthand computation as CSSValue");
     }
   }
 }
