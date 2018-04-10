@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebRenderAPI.h"
+
 #include "DisplayItemClipChain.h"
+#include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -134,8 +136,15 @@ private:
 
 TransactionBuilder::TransactionBuilder()
 {
-  mTxn = wr_transaction_new();
-  mResourceUpdates = wr_resource_updates_new();
+  // We need the if statement to avoid miscompilation on windows, see
+  // bug 1449982 comment 22.
+  if (gfxPrefs::WebRenderAsyncSceneBuild()) {
+    mTxn = wr_transaction_new(true);
+    mResourceUpdates = wr_resource_updates_new();
+  } else {
+    mResourceUpdates = wr_resource_updates_new();
+    mTxn = wr_transaction_new(false);
+  }
 }
 
 TransactionBuilder::~TransactionBuilder()

@@ -863,8 +863,17 @@ pub unsafe extern "C" fn wr_api_shut_down(dh: &mut DocumentHandle) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_transaction_new() -> *mut Transaction {
-    Box::into_raw(Box::new(Transaction::new()))
+pub extern "C" fn wr_transaction_new(do_async: bool) -> *mut Transaction {
+    let mut transaction = Transaction::new();
+    // Ensure that we either use async scene building or not based on the
+    // gecko pref, regardless of what the default is. We can remove this once
+    // the scene builder thread is enabled everywhere and working well.
+    if do_async {
+        transaction.use_scene_builder_thread();
+    } else {
+        transaction.skip_scene_builder();
+    }
+    Box::into_raw(Box::new(transaction))
 }
 
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
