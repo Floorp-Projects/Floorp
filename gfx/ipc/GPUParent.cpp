@@ -84,7 +84,6 @@ GPUParent::GetSingleton()
 
 bool
 GPUParent::Init(base::ProcessId aParentPid,
-                const char* aParentBuildID,
                 MessageLoop* aIOLoop,
                 IPC::Channel* aChannel)
 {
@@ -101,15 +100,10 @@ GPUParent::Init(base::ProcessId aParentPid,
 
   nsDebugImpl::SetMultiprocessMode("GPU");
 
-  // This must be checked before any IPDL message, which may hit sentinel
+  // This must be sent before any IPDL message, which may hit sentinel
   // errors due to parent and content processes having different
   // versions.
-  MessageChannel* channel = GetIPCChannel();
-  if (channel && !channel->SendBuildIDsMatchMessage(aParentBuildID)) {
-    // We need to quit this process if the buildID doesn't match the parent's.
-    // This can occur when an update occurred in the background.
-    ProcessChild::QuickExit();
-  }
+  GetIPCChannel()->SendBuildID();
 
   // Init crash reporter support.
   CrashReporterClient::InitSingleton(this);
