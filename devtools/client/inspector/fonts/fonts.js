@@ -10,7 +10,6 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 const { getColor } = require("devtools/client/shared/theme");
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
-const { throttle } = require("devtools/shared/throttle");
 
 const FontsApp = createFactory(require("./components/FontsApp"));
 
@@ -20,18 +19,9 @@ const INSPECTOR_L10N =
 
 const { updateFonts } = require("./actions/fonts");
 const { updatePreviewText } = require("./actions/font-options");
-const { resetFontEditor, toggleFontEditor, updateAxis, updateFontEditor } =
-  require("./actions/font-editor");
+const { toggleFontEditor } = require("./actions/font-editor");
 
 const FONT_EDITOR_ID = "fonteditor";
-const FONT_PROPERTIES = [
-  "font-optical-sizing",
-  "font-size",
-  "font-stretch",
-  "font-style",
-  "font-variation-settings",
-  "font-weight",
-];
 
 class FontInspector {
   constructor(inspector, window) {
@@ -42,15 +32,12 @@ class FontInspector {
     this.selectedRule = null;
     this.store = this.inspector.store;
 
-    this.syncChanges = throttle(this.syncChanges, 100, this);
-    this.onAxisUpdate = this.onAxisUpdate.bind(this);
+    this.update = this.update.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
     this.onRuleSelected = this.onRuleSelected.bind(this);
     this.onRuleUnselected = this.onRuleUnselected.bind(this);
-    this.onRuleUpdated = this.onRuleUpdated.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
-    this.update = this.update.bind(this);
 
     this.init();
   }
@@ -62,7 +49,6 @@ class FontInspector {
 
     let fontsApp = FontsApp({
       onPreviewFonts: this.onPreviewFonts,
-      onAxisUpdate: this.onAxisUpdate,
     });
 
     let provider = createElement(Provider, {
@@ -160,63 +146,6 @@ class FontInspector {
   }
 
   /**
-   * Live preview all CSS font property values from the fontEditor store on the page
-   * and sync the changes to the Rule view.
-   */
-  applyChanges() {
-    const fontEditor = this.store.getState().fontEditor;
-    // Until registered axis values are supported as font property values,
-    // write all axes and their values to font-variation-settings.
-    // Bug 1449891: https://bugzilla.mozilla.org/show_bug.cgi?id=1449891
-    const name = "font-variation-settings";
-    const value = Object.keys(fontEditor.axes)
-      .map(tag => `"${tag}" ${fontEditor.axes[tag]}`)
-      .join(", ");
-
-    let textProperty = this.selectedRule.textProps.filter(prop => prop.name === name)[0];
-    if (!textProperty) {
-      textProperty = this.selectedRule.editor.addProperty(name, value, "", true);
-    }
-
-    // Prevent reacting to changes we caused.
-    this.ruleView.off("property-value-updated", this.onRuleUpdated);
-    // Live preview font property changes on the page.
-    this.selectedRule.previewPropertyValue(textProperty, value, "");
-    // Sync Rule view with changes reflected on the page (throttled).
-    this.syncChanges(textProperty, value);
-  }
-
-  /**
-   * Sync the Rule view with the styles from the page. Called in a throttled way
-   * (see constructor) after property changes are applied directly to the CSS style rule
-   * on the page circumventing TextProperty.setValue() which triggers expensive DOM
-   * operations in TextPropertyEditor.update().
-   *
-   * @param  {TextProperty} textProperty
-   *         Model of CSS declaration for a property in used in the rule view.
-   * @param  {String} value
-   *         Value of the CSS property that should be reflected in the rule view.
-   */
-  syncChanges(textProperty, value) {
-    textProperty.updateValue(value);
-    this.ruleView.on("property-value-updated", this.onRuleUpdated);
-  }
-
-  /**
-   * Handler for changes of font axis value. Updates the value in the store and previews
-   * the change on the page.
-   *
-   * @param  {String} tag
-   *         Tag name of the font axis.
-   * @param  {String} value
-   *         Value of the font axis.
-   */
-  onAxisUpdate(tag, value) {
-    this.store.dispatch(updateAxis(tag, value));
-    this.applyChanges();
-  }
-
-  /**
    * Selection 'new-node' event handler.
    */
   onNewNode() {
@@ -239,29 +168,18 @@ class FontInspector {
    * If selected for the font editor, hold a reference to the rule so we know where to
    * put property changes coming from the font editor and show the font editor panel.
    *
-   * @param  {Object} eventData
-   *         Data payload for the event. Contains:
-   *         - {String} editorId - id of the editor for which the rule was selected
-   *         - {Rule} rule - reference to rule that was selected
+   * @param {Object} eventData
+   *        Data payload for the event. Contains:
+   *        - {String} editorId - id of the editor for which the rule was selected
+   *        - {Rule} rule - reference to rule that was selected
    */
-  async onRuleSelected(eventData) {
+  onRuleSelected(eventData) {
     const { editorId, rule } = eventData;
     if (editorId === FONT_EDITOR_ID) {
       const selector = rule.matchedSelectors[0];
       this.selectedRule = rule;
-
-      await this.refreshFontEditor();
       this.store.dispatch(toggleFontEditor(true, selector));
-      this.ruleView.on("property-value-updated", this.onRuleUpdated);
     }
-  }
-
-  /**
-   * Handler for "property-value-updated" event emitted from the rule view whenever a
-   * property value changes.
-   */
-  async onRuleUpdated() {
-    await this.refreshFontEditor();
   }
 
   /**
@@ -280,8 +198,6 @@ class FontInspector {
     if (editorId === FONT_EDITOR_ID && rule == this.selectedRule) {
       this.selectedRule = null;
       this.store.dispatch(toggleFontEditor(false));
-      this.store.dispatch(resetFontEditor());
-      this.ruleView.off("property-value-updated", this.onRuleUpdated);
     }
   }
 
@@ -291,46 +207,6 @@ class FontInspector {
   onThemeChanged(frame) {
     if (frame === this.document.defaultView) {
       this.update();
-    }
-  }
-
-  /**
-   * Update the state of the font editor with:
-   * - the fonts which apply to the current node;
-   * - the CSS font properties declared on the selected rule.
-   *
-   * This method is called during initial setup and as a result of any property
-   * values change in the Rule view. For the latter case, we do a deep compare between the
-   * font properties on the selected rule and the ones already store to decide if to
-   * update the font edtior to reflect a new external state.
-   */
-  async refreshFontEditor() {
-    if (!this.selectedRule || !this.inspector || !this.store) {
-      return;
-    }
-
-    const options = {};
-    if (this.pageStyle.supportsFontVariations) {
-      options.includeVariations = true;
-    }
-
-    const node = this.inspector.selection.nodeFront;
-    const fonts = await this.getFontsForNode(node, options);
-    // Collect any expected font properties and their values from the selected rule.
-    const properties = this.selectedRule.textProps.reduce((acc, prop) => {
-      if (FONT_PROPERTIES.includes(prop.name)) {
-        acc[prop.name] = prop.value;
-      }
-
-      return acc;
-    }, {});
-
-    const fontEditor = this.store.getState().fontEditor;
-
-    // Update the font editor state only if property values in rule differ from store.
-    // This can happen when a user makes manual edits to the values in the rule view.
-    if (JSON.stringify(properties) !== JSON.stringify(fontEditor.properties)) {
-      this.store.dispatch(updateFontEditor(fonts, properties));
     }
   }
 
