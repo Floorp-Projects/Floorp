@@ -231,7 +231,11 @@ protected:
   nsresult ParseContentRangeHeader(nsIHttpChannel * aHttpChan,
                                    int64_t& aRangeStart,
                                    int64_t& aRangeEnd,
-                                   int64_t& aRangeTotal);
+                                   int64_t& aRangeTotal) const;
+
+  // Calculates the length of the resource using HTTP headers, if this
+  // is an HTTP channel. Returns -1 on failure, or for non HTTP channels.
+  int64_t CalculateStreamLength() const;
 
   struct Closure
   {

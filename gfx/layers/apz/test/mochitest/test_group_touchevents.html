@@ -76,7 +76,8 @@ var subtests = [
                                                 ["apz.test.fails_with_native_injection", isWindows]]},
 
   {'file': 'helper_tap_default_passive.html', 'prefs': [["apz.content_response_timeout", 24 * 60 * 60 * 1000],
-                                                        ["apz.test.fails_with_native_injection", isWindows]]},
+                                                        ["apz.test.fails_with_native_injection", isWindows],
+                                                        ["dom.event.default_to_passive_touch_listeners", true]]},
 
   // Simple test to exercise touch-action CSS property
   {'file': 'helper_touch_action.html', 'prefs': touch_action_prefs},

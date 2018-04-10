@@ -248,7 +248,7 @@ interface nsIWebBrowserPersist : nsICancelable
    *                           specified by the encoding flags.
    *
    * @see nsIWebBrowserPersistDocument
-   * @see nsIWebBrowserPersistable
+   * @see WebBrowserPersistable
    * @see nsIFile
    * @see nsIURI
    *

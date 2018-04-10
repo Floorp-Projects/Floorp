@@ -10,7 +10,7 @@ const getSender = (extension, target, sender) => {
     // page-open listener below).
     tabId = sender.tabId;
     delete sender.tabId;
-  } else if (target instanceof Ci.nsIDOMXULElement) {
+  } else if (ChromeUtils.getClassName(target) == "XULElement") {
     tabId = tabTracker.getBrowserData(target).tabId;
   }
 

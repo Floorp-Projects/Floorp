@@ -54,7 +54,7 @@ using mozilla::layers::APZCCallbackHelper;
 using mozilla::layers::AsyncDragMetrics;
 using mozilla::layers::InputAPZContext;
 using mozilla::layers::ScrollDirection;
-using mozilla::layers::ScrollThumbData;
+using mozilla::layers::ScrollbarData;
 
 bool nsSliderFrame::gMiddlePref = false;
 int32_t nsSliderFrame::gSnapMultiplier;
@@ -460,13 +460,14 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
       aLists.Content()->AppendToTop(
         MakeDisplayItem<nsDisplayOwnLayer>(aBuilder, this, &masterList, ownLayerASR,
                                            flags, scrollTargetId,
-                                           ScrollThumbData{scrollDirection,
-                                                           GetThumbRatio(),
-                                                           thumbStart,
-                                                           thumbLength,
-                                                           isAsyncDraggable,
-                                                           sliderTrackStart,
-                                                           sliderTrackLength}));
+                                           ScrollbarData{scrollDirection,
+                                                         layers::ScrollbarLayerType::Thumb,
+                                                         GetThumbRatio(),
+                                                         thumbStart,
+                                                         thumbLength,
+                                                         isAsyncDraggable,
+                                                         sliderTrackStart,
+                                                         sliderTrackLength}));
 
       return;
     }

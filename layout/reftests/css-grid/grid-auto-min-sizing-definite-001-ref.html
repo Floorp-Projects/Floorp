@@ -65,32 +65,50 @@ b40 {
 .h.r {
   height: 42px;
   width: 42px;
-  /* This margin-left is 20% of 98px-wide grid area */
-  margin-left: 19.6px;
-  /* This padding-bottom is 10% of 98px wide grid area */
-  /* This padding-left   is 30% of 98px wide grid area */
-  padding: 1px 3px 9.8px 29.4px;
+  /* 49px is the percentage basis, i.e. the column size */
+  margin-left: calc(0.2 * 49px);
+  padding: 1px 3px calc(0.1 * 49px) calc(0.3 * 49px);
 }
 .v.r {
   height: 42px;
   width: 42px;
   /* This margin-left is 20% of 54px-wide grid area */
-  margin-left: 10.8px;
-  /* This padding-bottom is 10% of 54px wide grid area */
-  /* This padding-left   is 30% of 54px wide grid area */
-  padding: 1px 3px 5.4px 16.2px;
+  /* 27px is the percentage basis, i.e. the column size */
+  margin-left: calc(0.2 * 27px);
+  padding: 1px 3px calc(0.1 * 27px) calc(0.3 * 27px);
 }
 
 .r { position:relative; }
 
+.t4 { width: 49px;
+      height: calc(10px /* item min-height */ +
+                   7px  /* item margin-top */ +
+                   1px /* item padding-top */ +
+                   1px /* item border-top */ +
+                   calc(0.5 * 49px) /* item margin-bottom */ +
+                   calc(0.1 * 49px) /* item padding-bottom */);
+    }
 .t6 { width:46px; }
-.t8 { width:118px; height: 102.5px; }
+.t8 { width: 27px;
+      height: calc(30px /* item min-height */ +
+                   7px  /* item margin-top */ +
+                   3px /* item padding-top */ +
+                   1px /* item border-top */ +
+                   calc(0.5 * 27px) /* item margin-bottom */ +
+                   calc(0.1 * 27px) /* item padding-bottom */);
+    }
+   
 
 xx {
   display: block;
   background: lime;
-  padding:32px 32px 16px 32px;
-  margin: 0 0 32px 16px;
+  padding: 32px 32px calc(0.2 * 32px) calc(0.4 * 32px);
+  margin: 0 0 calc(0.4 * 32px) calc(0.2 * 32px);
+}
+.t9, .t10 {
+  position: relative;
+  z-index: 1;
+  grid: calc(32px + calc(0.4 * 32px) + calc(0.2 * 32px)) 0 / 32px;
 }
   </style>
 </head>
@@ -100,15 +118,15 @@ xx {
 <div class="grid"><span class="h"><x></x></span></div>
 <div class="grid"><span class="h bb"><x></x></span></div>
 <div class="grid"><span class="h"><x></x></span><span class="h"><x></x></span></div>
-<div class="grid" style="grid:48px / 122px"><span class="h r"><b40></b40></span></div>
+<div class="grid t4"><span class="h r"><b40></b40></span></div>
 <br>
 <div class="grid"><span class="v"><x></x></span></div>
-<div class="grid t6"><span class="v bb"><x></x></span></div>
+<div class="grid"><span class="v bb"><x></x></span></div>
 <div class="grid"><span class="v"><x></x></span><span class="v"><x></x></span></div>
 <div class="grid t8"><span class="v r"><b40></b40></span></div>
 
-<div class="grid"><xx class="v"></xx></div>
-<div class="grid v"><xx class="h"></xx></div>
+<div class="grid t9"><xx class="v"></xx></div>
+<div class="grid v t10"><xx class="h"></xx></div>
 
 </body>
 </html>

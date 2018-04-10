@@ -10,9 +10,9 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/XMLHttpRequest.h"
+#include "mozilla/UniquePtr.h"
 #include "nsContentUtils.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMSerializer.h"
+#include "nsDOMSerializer.h"
 #include "nsIGlobalObject.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -73,8 +73,7 @@ BodyExtractor<nsIDocument>::GetAsStream(nsIInputStream** aResult,
                                         nsACString& aContentTypeWithCharset,
                                         nsACString& aCharset) const
 {
-  nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mBody));
-  NS_ENSURE_STATE(domdoc);
+  NS_ENSURE_STATE(mBody);
   aCharset.AssignLiteral("UTF-8");
 
   nsresult rv;
@@ -107,13 +106,15 @@ BodyExtractor<nsIDocument>::GetAsStream(nsIInputStream** aResult,
   } else {
     aContentTypeWithCharset.AssignLiteral("application/xml;charset=UTF-8");
 
-    nsCOMPtr<nsIDOMSerializer> serializer =
-      do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    auto serializer = MakeUnique<nsDOMSerializer>();
 
     // Make sure to use the encoding we'll send
-    rv = serializer->SerializeToStream(domdoc, output, aCharset);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult res;
+    serializer->SerializeToStream(*mBody, output, NS_LITERAL_STRING("UTF-8"),
+                                  res);
+    if (NS_WARN_IF(res.Failed())) {
+      return res.StealNSResult();
+    }
   }
 
   output->Close();

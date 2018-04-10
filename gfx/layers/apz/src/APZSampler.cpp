@@ -67,7 +67,7 @@ APZSampler::SampleAnimations(const LayerMetricsWrapper& aLayer,
 LayerToParentLayerMatrix4x4
 APZSampler::ComputeTransformForScrollThumb(const LayerToParentLayerMatrix4x4& aCurrentTransform,
                                            const LayerMetricsWrapper& aContent,
-                                           const ScrollThumbData& aThumbData,
+                                           const ScrollbarData& aThumbData,
                                            bool aScrollbarIsDescendant,
                                            AsyncTransformComponentMatrix* aOutClipTransform)
 {

@@ -24,15 +24,8 @@ struct XPTTypeDescriptor;
 struct XPTTypeDescriptorPrefix;
 
 struct XPTHeader {
-  friend struct XPTInterfaceDescriptor;
-  friend struct XPTConstDescriptor;
-  friend struct XPTMethodDescriptor;
-  friend struct XPTTypeDescriptor;
-
   static const uint16_t kNumInterfaces;
   static const XPTInterfaceDescriptor kInterfaces[];
-
-private:
   static const XPTTypeDescriptor kTypes[];
   static const XPTParamDescriptor kParams[];
   static const XPTMethodDescriptor kMethods[];
@@ -48,24 +41,6 @@ private:
  * its methods.
  */
 struct XPTInterfaceDescriptor {
-  constexpr XPTInterfaceDescriptor(nsID aIID,
-                                   uint32_t aName,
-                                   uint16_t aMethodDescriptors,
-                                   uint16_t aConstDescriptors,
-                                   uint16_t aParentInterface,
-                                   uint16_t aNumMethods,
-                                   uint16_t aNumConstants,
-                                   uint8_t aFlags)
-    : mIID(aIID)
-    , mName(aName)
-    , mMethodDescriptors(aMethodDescriptors)
-    , mConstDescriptors(aConstDescriptors)
-    , mParentInterface(aParentInterface)
-    , mNumMethods(aNumMethods)
-    , mNumConstants(aNumConstants)
-    , mFlags(aFlags)
-  {}
-
   static const uint8_t kScriptableMask =                0x80;
   static const uint8_t kFunctionMask =                  0x40;
   static const uint8_t kBuiltinClassMask =              0x20;
@@ -84,18 +59,12 @@ struct XPTInterfaceDescriptor {
    * This field ordering minimizes the size of this struct.
    */
   nsID mIID;
-
-private:
   uint32_t mName; // Index into XPTHeader::mStrings.
   uint16_t mMethodDescriptors; // Index into XPTHeader::mMethods.
   uint16_t mConstDescriptors; // Index into XPTHeader::mConsts.
-
-public:
   uint16_t mParentInterface;
   uint16_t mNumMethods;
   uint16_t mNumConstants;
-
-private:
   uint8_t mFlags;
 };
 
@@ -160,14 +129,6 @@ enum XPTTypeDescriptorTags {
 };
 
 struct XPTTypeDescriptor {
-  explicit constexpr XPTTypeDescriptor(XPTTypeDescriptorPrefix aPrefix,
-                                       uint8_t aData1 = 0,
-                                       uint8_t aData2 = 0)
-    : mPrefix(aPrefix)
-    , mData1(aData1)
-    , mData2(aData2)
-  {}
-
   uint8_t Tag() const {
     return mPrefix.TagPart();
   }
@@ -195,7 +156,6 @@ struct XPTTypeDescriptor {
 
   XPTTypeDescriptorPrefix mPrefix;
 
-private:
   // The data for the different variants is stored in these two data fields.
   // These should only be accessed via the getter methods above, which will
   // assert if the tag is invalid. The memory layout here doesn't exactly match
@@ -230,22 +190,11 @@ union XPTConstValue {
 };
 
 struct XPTConstDescriptor {
-  constexpr XPTConstDescriptor(uint32_t aName,
-                               const XPTTypeDescriptor& aType,
-                               const XPTConstValue& aValue)
-    : mName(aName)
-    , mType(aType)
-    , mValue(aValue)
-  {}
-
   const char* Name() const {
     return &XPTHeader::kStrings[mName];
   }
 
-private:
   uint32_t mName; // Index into XPTHeader::mStrings.
-
-public:
   XPTTypeDescriptor mType;
   XPTConstValue mValue;
 };
@@ -255,16 +204,7 @@ public:
  * a method's result.
  */
 struct XPTParamDescriptor {
-  constexpr XPTParamDescriptor(uint8_t aFlags,
-                               const XPTTypeDescriptor& aType)
-    : mFlags(aFlags)
-    , mType(aType)
-  {}
-
-protected:
   uint8_t mFlags;
-
-public:
   XPTTypeDescriptor mType;
 };
 
@@ -272,16 +212,6 @@ public:
  * A MethodDescriptor is used to describe a single interface method.
  */
 struct XPTMethodDescriptor {
-  constexpr XPTMethodDescriptor(uint32_t aName,
-                                uint32_t aParams,
-                                uint8_t aFlags,
-                                uint8_t aNumArgs)
-    : mName(aName)
-    , mParams(aParams)
-    , mFlags(aFlags)
-    , mNumArgs(aNumArgs)
-  {}
-
   const char* Name() const {
     return &XPTHeader::kStrings[mName];
   }
@@ -289,11 +219,8 @@ struct XPTMethodDescriptor {
     return XPTHeader::kParams[mParams + aIndex];
   }
 
-private:
   uint32_t mName; // Index into XPTHeader::mStrings.
   uint32_t mParams; // Index into XPTHeader::mParams.
-
-protected:
   uint8_t mFlags;
   uint8_t mNumArgs;
 };

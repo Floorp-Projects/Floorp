@@ -70,8 +70,7 @@ runTest(new DOMParser(), new XMLSerializer());
 
 runTest(Cc["@mozilla.org/xmlextras/domparser;1"]
         .createInstance(Ci.nsIDOMParser),
-        Cc["@mozilla.org/xmlextras/xmlserializer;1"]
-        .createInstance(Ci.nsIDOMSerializer));
+        new XMLSerializer());
 
 function runTest(parser, serializer) {
   is(typeof parser.parseFromString, "function", "parseFromString should exist");

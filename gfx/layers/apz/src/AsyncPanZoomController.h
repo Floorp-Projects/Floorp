@@ -503,7 +503,7 @@ public:
    * Only the component in the direction of scrolling is returned.
    */
   CSSCoord ConvertScrollbarPoint(const ParentLayerPoint& aScrollbarPoint,
-                                 const ScrollThumbData& aThumbData) const;
+                                 const ScrollbarData& aThumbData) const;
 
   void NotifyMozMouseScrollEvent(const nsString& aString) const;
 

@@ -14,11 +14,7 @@
 #include "nsIDocShell.h"
 #include "nsReadableUtils.h"
 #include "nsView.h"
-#ifdef MOZ_XUL
-#include "nsIDOMXULElement.h"
-#else
 #include "nsIDOMElement.h"
-#endif
 #include "nsLayoutUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsSupportsPrimitives.h"

@@ -5478,7 +5478,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsDisplayOwnLayerFlags)
  */
 class nsDisplayOwnLayer : public nsDisplayWrapList {
 public:
-  typedef mozilla::layers::ScrollThumbData ScrollThumbData;
+  typedef mozilla::layers::ScrollbarData ScrollbarData;
 
   /**
    * @param aFlags eGenerateSubdocInvalidations :
@@ -5496,7 +5496,7 @@ public:
                     const ActiveScrolledRoot* aActiveScrolledRoot,
                     nsDisplayOwnLayerFlags aFlags = nsDisplayOwnLayerFlags::eNone,
                     ViewID aScrollTarget = mozilla::layers::FrameMetrics::NULL_SCROLL_ID,
-                    const ScrollThumbData& aThumbData = ScrollThumbData{},
+                    const ScrollbarData& aThumbData = ScrollbarData{},
                     bool aForceActive = true,
                     bool aClearClipChain = false);
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -5551,7 +5551,7 @@ protected:
   // stores information about the scroll thumb. Otherwise, mThumbData will be
   // default-constructed (in particular with mDirection == Nothing())
   // and can be ignored.
-  ScrollThumbData mThumbData;
+  ScrollbarData mThumbData;
   bool mForceActive;
   uint64_t mWrAnimationId;
 };

@@ -44,7 +44,7 @@ function getAnchorFromBrowser(aBrowser, aAnchorID) {
                aBrowser.getAttribute(ICON_ANCHOR_ATTRIBUTE) ||
                aBrowser[ICON_ANCHOR_ATTRIBUTE];
   if (anchor) {
-    if (anchor instanceof Ci.nsIDOMXULElement) {
+    if (ChromeUtils.getClassName(anchor) == "XULElement") {
       return anchor;
     }
     return aBrowser.ownerDocument.getElementById(anchor);
@@ -213,9 +213,9 @@ function PopupNotifications(tabbrowser, panel,
                                                       iconBox, options = {}) {
   if (!tabbrowser)
     throw "Invalid tabbrowser";
-  if (iconBox && !(iconBox instanceof Ci.nsIDOMXULElement))
+  if (iconBox && ChromeUtils.getClassName(iconBox) != "XULElement")
     throw "Invalid iconBox";
-  if (!(panel instanceof Ci.nsIDOMXULElement))
+  if (ChromeUtils.getClassName(panel) != "XULElement")
     throw "Invalid panel";
 
   this._shouldSuppress = options.shouldSuppress || (() => false);
@@ -1085,7 +1085,7 @@ PopupNotifications.prototype = {
    *                       currently displayed notifications will be left alone.
    */
   _update: function PopupNotifications_update(notifications, anchors = new Set(), dismissShowing = false) {
-    if (anchors instanceof Ci.nsIDOMXULElement)
+    if (ChromeUtils.getClassName(anchors) == "XULElement")
       anchors = new Set([anchors]);
 
     if (!notifications)
