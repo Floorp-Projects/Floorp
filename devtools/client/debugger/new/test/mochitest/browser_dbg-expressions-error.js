@@ -29,17 +29,6 @@ async function addExpression(dbg, input) {
   await evaluation;
 }
 
-async function editExpression(dbg, input) {
-  info("updating the expression");
-  dblClickElement(dbg, "expressionNode", 1);
-  // Position cursor reliably at the end of the text.
-  const evaluation = waitForDispatch(dbg, "EVALUATE_EXPRESSION");
-  pressKey(dbg, "End");
-  type(dbg, input);
-  pressKey(dbg, "Enter");
-  await evaluation;
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
 

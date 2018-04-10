@@ -28,6 +28,65 @@ struct Nothing { };
 
 namespace detail {
 
+// You would think that poisoning Maybe instances could just be a call
+// to mozWritePoison.  Unfortunately, using a simple call to
+// mozWritePoison generates poor code on MSVC for small structures.  The
+// generated code contains (always not-taken) branches and does a bunch
+// of setup for `rep stos{l,q}`, even though we know at compile time
+// exactly how many words we're poisoning.  Instead, we're going to
+// force MSVC to generate the code we want via recursive templates.
+
+// Write the given poisonValue into p at offset*sizeof(uintptr_t).
+template<size_t offset>
+inline void
+WritePoisonAtOffset(void* p, const uintptr_t poisonValue)
+{
+    memcpy(static_cast<char*>(p) + offset*sizeof(poisonValue),
+           &poisonValue, sizeof(poisonValue));
+}
+
+
+template<size_t Offset, size_t NOffsets>
+struct InlinePoisoner
+{
+    static void poison(void* p, const uintptr_t poisonValue)
+    {
+        WritePoisonAtOffset<Offset>(p, poisonValue);
+        InlinePoisoner<Offset+1, NOffsets>::poison(p, poisonValue);
+    }
+};
+
+template<size_t N>
+struct InlinePoisoner<N, N>
+{
+    static void poison(void*, const uintptr_t)
+    {
+        // All done!
+    }
+};
+
+// We can't generate inline code for large structures, though, because we'll
+// blow out recursive template instantiation limits, and the code would be
+// bloated to boot.  So provide a fallback to the out-of-line poisoner.
+template<size_t ObjectSize>
+struct OutOfLinePoisoner
+{
+  static void poison(void* p, const uintptr_t)
+  {
+    mozWritePoison(p, ObjectSize);
+  }
+};
+
+template<typename T>
+inline void
+PoisonObject(T* p)
+{
+  const uintptr_t POISON = mozPoisonValue();
+  Conditional<(sizeof(T) <= 8*sizeof(POISON)),
+    InlinePoisoner<0, sizeof(T) / sizeof(POISON)>,
+    OutOfLinePoisoner<sizeof(T)>>::Type::poison(p, POISON);
+}
+
 template<typename T>
 struct MaybePoisoner
 {
@@ -36,9 +95,8 @@ struct MaybePoisoner
   static void poison(void* aPtr)
   {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    // Avoid MOZ_ASSERT in mozWritePoison.
     if (N >= sizeof(uintptr_t)) {
-      mozWritePoison(aPtr, N);
+      PoisonObject(static_cast<typename RemoveCV<T>::Type*>(aPtr));
     }
 #endif
     MOZ_MAKE_MEM_UNDEFINED(aPtr, N);
@@ -126,13 +184,11 @@ public:
 
   Maybe() : mIsSome(false)
   {
-    poisonData();
   }
   ~Maybe() { reset(); }
 
   MOZ_IMPLICIT Maybe(Nothing) : mIsSome(false)
   {
-    poisonData();
   }
 
   Maybe(const Maybe& aOther)
@@ -140,8 +196,6 @@ public:
   {
     if (aOther.mIsSome) {
       emplace(*aOther);
-    } else {
-      poisonData();
     }
   }
 
@@ -157,8 +211,6 @@ public:
   {
     if (aOther.isSome()) {
       emplace(*aOther);
-    } else {
-      poisonData();
     }
   }
 
@@ -168,8 +220,6 @@ public:
     if (aOther.mIsSome) {
       emplace(Move(*aOther));
       aOther.reset();
-    } else {
-      poisonData();
     }
   }
 
@@ -186,8 +236,6 @@ public:
     if (aOther.isSome()) {
       emplace(Move(*aOther));
       aOther.reset();
-    } else {
-      poisonData();
     }
   }
 

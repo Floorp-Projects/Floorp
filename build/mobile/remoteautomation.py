@@ -247,7 +247,9 @@ class RemoteAutomation(Automation):
                 else:
                     args = args[:-1]
                 if 'geckoview' in app:
-                    self.device.launch_geckoview_example(app, moz_env=env, extra_args=args, url=url)
+                    activity = "TestRunnerActivity"
+                    self.device.launch_activity(app, activity, e10s=True, moz_env=env,
+                                                extra_args=args, url=url)
                 else:
                     self.device.launch_fennec(app, moz_env=env, extra_args=args, url=url)
 

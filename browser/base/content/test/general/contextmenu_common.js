@@ -321,6 +321,12 @@ async function test_contextmenu(selector, menuItems, options = {}) {
       menuItems = menuItems.concat(inspectItems);
     }
 
+    if (Services.prefs.getBoolPref("devtools.accessibility.enabled", true) &&
+        Services.appinfo.accessibilityEnabled) {
+      let inspectA11YItems = ["context-inspect-a11y", true];
+      menuItems = menuItems.concat(inspectA11YItems);
+    }
+
     if (options.maybeScreenshotsPresent &&
         !Services.prefs.getBoolPref("extensions.screenshots.disabled", false)) {
       let screenshotItems = [

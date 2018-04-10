@@ -16,6 +16,7 @@
 #include "nsIIPCSerializableInputStream.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICloneableInputStream.h"
+#include "mozilla/Mutex.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -95,7 +96,11 @@ protected:
     NS_IMETHOD Fill() override;
     NS_IMETHOD Flush() override { return NS_OK; } // no-op for input streams
 
+    mozilla::Mutex mMutex;
+
+    // This value is protected by mutex.
     nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
+
     bool mIsIPCSerializable;
     bool mIsAsyncInputStream;
     bool mIsCloneableInputStream;

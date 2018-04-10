@@ -337,7 +337,8 @@ class RemoteReftest(RefTest):
         try:
             if printLogcat:
                 logcat = self.device.get_logcat(filter_out_regexps=fennecLogcatFilters)
-                print ''.join(logcat)
+                for l in logcat:
+                    print "%s\n" % l.decode('utf-8', 'replace')
             print "Device info:"
             devinfo = self.device.get_info()
             for category in devinfo:

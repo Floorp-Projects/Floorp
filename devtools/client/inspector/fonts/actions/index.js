@@ -8,6 +8,15 @@ const { createEnum } = require("devtools/client/shared/enum");
 
 createEnum([
 
+  // Reset font editor to intial state.
+  "RESET_EDITOR",
+
+  // Update the value of a variable font axis.
+  "UPDATE_AXIS_VALUE",
+
+  // Update font editor with applicable fonts and user-defined CSS font properties.
+  "UPDATE_EDITOR_STATE",
+
   // Toggle the visibiltiy of the font editor
   "UPDATE_EDITOR_VISIBILITY",
 
