@@ -33,12 +33,7 @@ public class WebViewProvider {
     private static GeckoRuntime geckoRuntime;
 
     public static void preload(final Context context) {
-        if (geckoRuntime == null) {
-            Log.v("CreateRunTime", "here");
-            final GeckoRuntimeSettings geckoRuntimeSettings = new GeckoRuntimeSettings();
-            geckoRuntimeSettings.setUseContentProcessHint(true);
-            geckoRuntime = GeckoRuntime.create(context, geckoRuntimeSettings);
-        }
+        createGeckoRuntimeIfNeeded(context);
     }
 
     public static View create(Context context, AttributeSet attrs) {
@@ -51,6 +46,14 @@ public class WebViewProvider {
 
     public static void performNewBrowserSessionCleanup() {
         // Nothing: a WebKit work-around.
+    }
+
+    private static void createGeckoRuntimeIfNeeded(Context context) {
+        if (geckoRuntime == null) {
+            final GeckoRuntimeSettings geckoRuntimeSettings = new GeckoRuntimeSettings();
+            geckoRuntimeSettings.setUseContentProcessHint(true);
+            geckoRuntime = GeckoRuntime.create(context, geckoRuntimeSettings);
+        }
     }
 
     public static class GeckoWebView extends NestedGeckoView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
@@ -66,15 +69,10 @@ public class WebViewProvider {
         public GeckoWebView(Context context, AttributeSet attrs) {
             super(context, attrs);
 
-            if (geckoRuntime == null) {
-                Log.v("CreateRunTime", "here");
-                final GeckoRuntimeSettings geckoRuntimeSettings = new GeckoRuntimeSettings();
-                geckoRuntimeSettings.setUseContentProcessHint(true);
-                geckoRuntime = GeckoRuntime.create(getContext(), geckoRuntimeSettings);
-            }
+            createGeckoRuntimeIfNeeded(context);
 
             final GeckoSessionSettings settings = new GeckoSessionSettings();
-            settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, true);
+            settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
             settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
 
             geckoSession = new GeckoSession(settings);
