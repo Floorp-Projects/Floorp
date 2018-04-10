@@ -27,6 +27,8 @@
 //!                 ^^^^^ ~~~~~ ^^^^
 //! ```
 
+#[cfg(any(feature = "full", feature = "derive"))]
+use std::iter;
 use std::iter::FromIterator;
 use std::ops::{Index, IndexMut};
 use std::slice;
@@ -100,17 +102,21 @@ impl<T, P> Punctuated<T, P> {
     }
 
     /// Returns an iterator over borrowed syntax tree nodes of type `&T`.
-    pub fn iter(&self) -> Iter<T, P> {
+    pub fn iter(&self) -> Iter<T> {
         Iter {
-            inner: self.inner.iter(),
+            inner: Box::new(PrivateIter {
+                inner: self.inner.iter(),
+            }),
         }
     }
 
     /// Returns an iterator over mutably borrowed syntax tree nodes of type
     /// `&mut T`.
-    pub fn iter_mut(&mut self) -> IterMut<T, P> {
+    pub fn iter_mut(&mut self) -> IterMut<T> {
         IterMut {
-            inner: self.inner.iter_mut(),
+            inner: Box::new(PrivateIterMut {
+                inner: self.inner.iter_mut(),
+            }),
         }
     }
 
@@ -290,7 +296,7 @@ impl<T, P> IntoIterator for Punctuated<T, P> {
 
 impl<'a, T, P> IntoIterator for &'a Punctuated<T, P> {
     type Item = &'a T;
-    type IntoIter = Iter<'a, T, P>;
+    type IntoIter = Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         Punctuated::iter(self)
@@ -299,7 +305,7 @@ impl<'a, T, P> IntoIterator for &'a Punctuated<T, P> {
 
 impl<'a, T, P> IntoIterator for &'a mut Punctuated<T, P> {
     type Item = &'a mut T;
-    type IntoIter = IterMut<'a, T, P>;
+    type IntoIter = IterMut<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         Punctuated::iter_mut(self)
@@ -394,22 +400,34 @@ impl<T, P> Iterator for IntoIter<T, P> {
 /// Refer to the [module documentation] for details about punctuated sequences.
 ///
 /// [module documentation]: index.html
-pub struct Iter<'a, T: 'a, P: 'a> {
+pub struct Iter<'a, T: 'a> {
+    inner: Box<Iterator<Item = &'a T> + 'a>,
+}
+
+struct PrivateIter<'a, T: 'a, P: 'a> {
     inner: slice::Iter<'a, (T, Option<P>)>,
 }
 
 #[cfg(any(feature = "full", feature = "derive"))]
-impl<'a, T, P> Iter<'a, T, P> {
+impl<'a, T> Iter<'a, T> {
     // Not public API.
     #[doc(hidden)]
     pub fn private_empty() -> Self {
         Iter {
-            inner: [].iter(),
+            inner: Box::new(iter::empty()),
         }
     }
 }
 
-impl<'a, T, P> Iterator for Iter<'a, T, P> {
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+}
+
+impl<'a, T, P> Iterator for PrivateIter<'a, T, P> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -422,11 +440,23 @@ impl<'a, T, P> Iterator for Iter<'a, T, P> {
 /// Refer to the [module documentation] for details about punctuated sequences.
 ///
 /// [module documentation]: index.html
-pub struct IterMut<'a, T: 'a, P: 'a> {
+pub struct IterMut<'a, T: 'a> {
+    inner: Box<Iterator<Item = &'a mut T> + 'a>,
+}
+
+struct PrivateIterMut<'a, T: 'a, P: 'a> {
     inner: slice::IterMut<'a, (T, Option<P>)>,
 }
 
-impl<'a, T, P> Iterator for IterMut<'a, T, P> {
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+}
+
+impl<'a, T, P> Iterator for PrivateIterMut<'a, T, P> {
     type Item = &'a mut T;
 
     fn next(&mut self) -> Option<Self::Item> {

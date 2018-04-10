@@ -176,7 +176,7 @@ PlacesController.prototype = {
     case "placesCmd_show:info": {
       let selectedNode = this._view.selectedNode;
       return selectedNode && (PlacesUtils.nodeIsTagQuery(selectedNode) ||
-                              PlacesUtils.getConcreteItemId(selectedNode) != -1);
+                              PlacesUtils.nodeIsBookmark(selectedNode));
     }
     case "placesCmd_reload": {
       // Livemark containers

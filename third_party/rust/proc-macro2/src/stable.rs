@@ -1,4 +1,5 @@
-use std::ascii;
+#![cfg_attr(not(procmacro2_semver_exempt), allow(dead_code))]
+
 use std::borrow::Borrow;
 use std::cell::RefCell;
 #[cfg(procmacro2_semver_exempt)]
@@ -6,16 +7,14 @@ use std::cmp;
 use std::collections::HashMap;
 use std::fmt;
 use std::iter;
-use std::marker::PhantomData;
 use std::rc::Rc;
 use std::str::FromStr;
 use std::vec;
 
-use proc_macro;
+use strnom::{block_comment, skip_whitespace, whitespace, word_break, Cursor, PResult};
 use unicode_xid::UnicodeXID;
-use strnom::{Cursor, PResult, skip_whitespace, block_comment, whitespace, word_break};
 
-use {TokenTree, TokenNode, Delimiter, Spacing};
+use {Delimiter, Group, Op, Spacing, TokenTree};
 
 #[derive(Clone, Debug)]
 pub struct TokenStream {
@@ -51,9 +50,7 @@ fn get_cursor(src: &str) -> Cursor {
 
 #[cfg(not(procmacro2_semver_exempt))]
 fn get_cursor(src: &str) -> Cursor {
-    Cursor {
-        rest: src,
-    }
+    Cursor { rest: src }
 }
 
 impl FromStr for TokenStream {
@@ -68,7 +65,7 @@ impl FromStr for TokenStream {
                 if skip_whitespace(input).len() != 0 {
                     Err(LexError)
                 } else {
-                    Ok(output.0)
+                    Ok(output.inner)
                 }
             }
             Err(LexError) => Err(LexError),
@@ -84,35 +81,29 @@ impl fmt::Display for TokenStream {
                 write!(f, " ")?;
             }
             joint = false;
-            match tt.kind {
-                TokenNode::Group(delim, ref stream) => {
-                    let (start, end) = match delim {
+            match *tt {
+                TokenTree::Group(ref tt) => {
+                    let (start, end) = match tt.delimiter() {
                         Delimiter::Parenthesis => ("(", ")"),
                         Delimiter::Brace => ("{", "}"),
                         Delimiter::Bracket => ("[", "]"),
                         Delimiter::None => ("", ""),
                     };
-                    if stream.0.inner.len() == 0 {
+                    if tt.stream().inner.inner.len() == 0 {
                         write!(f, "{} {}", start, end)?
                     } else {
-                        write!(f, "{} {} {}", start, stream, end)?
+                        write!(f, "{} {} {}", start, tt.stream(), end)?
                     }
                 }
-                TokenNode::Term(ref sym) => write!(f, "{}", sym.as_str())?,
-                TokenNode::Op(ch, ref op) => {
-                    write!(f, "{}", ch)?;
-                    match *op {
+                TokenTree::Term(ref tt) => write!(f, "{}", tt.as_str())?,
+                TokenTree::Op(ref tt) => {
+                    write!(f, "{}", tt.op())?;
+                    match tt.spacing() {
                         Spacing::Alone => {}
                         Spacing::Joint => joint = true,
                     }
                 }
-                TokenNode::Literal(ref literal) => {
-                    write!(f, "{}", literal)?;
-                    // handle comments
-                    if (literal.0).0.starts_with("/") {
-                        write!(f, "\n")?;
-                    }
-                }
+                TokenTree::Literal(ref tt) => write!(f, "{}", tt)?,
             }
         }
 
@@ -120,18 +111,25 @@ impl fmt::Display for TokenStream {
     }
 }
 
-impl From<proc_macro::TokenStream> for TokenStream {
-    fn from(inner: proc_macro::TokenStream) -> TokenStream {
-        inner.to_string().parse().expect("compiler token stream parse failed")
+#[cfg(feature = "proc-macro")]
+impl From<::proc_macro::TokenStream> for TokenStream {
+    fn from(inner: ::proc_macro::TokenStream) -> TokenStream {
+        inner
+            .to_string()
+            .parse()
+            .expect("compiler token stream parse failed")
     }
 }
 
-impl From<TokenStream> for proc_macro::TokenStream {
-    fn from(inner: TokenStream) -> proc_macro::TokenStream {
-        inner.to_string().parse().expect("failed to parse to compiler tokens")
+#[cfg(feature = "proc-macro")]
+impl From<TokenStream> for ::proc_macro::TokenStream {
+    fn from(inner: TokenStream) -> ::proc_macro::TokenStream {
+        inner
+            .to_string()
+            .parse()
+            .expect("failed to parse to compiler tokens")
     }
 }
-
 
 impl From<TokenTree> for TokenStream {
     fn from(tree: TokenTree) -> TokenStream {
@@ -139,12 +137,12 @@ impl From<TokenTree> for TokenStream {
     }
 }
 
-impl iter::FromIterator<TokenStream> for TokenStream {
-    fn from_iter<I: IntoIterator<Item=TokenStream>>(streams: I) -> Self {
+impl iter::FromIterator<TokenTree> for TokenStream {
+    fn from_iter<I: IntoIterator<Item = TokenTree>>(streams: I) -> Self {
         let mut v = Vec::new();
 
-        for stream in streams.into_iter() {
-            v.extend(stream.inner);
+        for token in streams.into_iter() {
+            v.push(token);
         }
 
         TokenStream { inner: v }
@@ -239,16 +237,19 @@ struct FileInfo {
 #[cfg(procmacro2_semver_exempt)]
 impl FileInfo {
     fn offset_line_column(&self, offset: usize) -> LineColumn {
-        assert!(self.span_within(Span { lo: offset as u32, hi: offset as u32 }));
+        assert!(self.span_within(Span {
+            lo: offset as u32,
+            hi: offset as u32
+        }));
         let offset = offset - self.span.lo as usize;
         match self.lines.binary_search(&offset) {
             Ok(found) => LineColumn {
                 line: found + 1,
-                column: 0
+                column: 0,
             },
             Err(idx) => LineColumn {
                 line: idx,
-                column: offset - self.lines[idx - 1]
+                column: offset - self.lines[idx - 1],
             },
         }
     }
@@ -258,7 +259,7 @@ impl FileInfo {
     }
 }
 
-/// Computes the offsets of each line in the given source string.
+/// Computesthe offsets of each line in the given source string.
 #[cfg(procmacro2_semver_exempt)]
 fn lines_offsets(s: &str) -> Vec<usize> {
     let mut lines = vec![0];
@@ -289,7 +290,10 @@ impl Codemap {
         let lines = lines_offsets(src);
         let lo = self.next_start_pos();
         // XXX(nika): Shouild we bother doing a checked cast or checked add here?
-        let span = Span { lo: lo, hi: lo + (src.len() as u32) };
+        let span = Span {
+            lo: lo,
+            hi: lo + (src.len() as u32),
+        };
 
         self.files.push(FileInfo {
             name: name.to_owned(),
@@ -310,7 +314,7 @@ impl Codemap {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Span {
     #[cfg(procmacro2_semver_exempt)]
     lo: u32,
@@ -392,16 +396,18 @@ impl Span {
 #[derive(Copy, Clone)]
 pub struct Term {
     intern: usize,
-    not_send_sync: PhantomData<*const ()>,
+    span: Span,
 }
 
 thread_local!(static SYMBOLS: RefCell<Interner> = RefCell::new(Interner::new()));
 
 impl Term {
-    pub fn intern(string: &str) -> Term {
+    pub fn new(string: &str, span: Span) -> Term {
+        validate_term(string);
+
         Term {
             intern: SYMBOLS.with(|s| s.borrow_mut().intern(string)),
-            not_send_sync: PhantomData,
+            span: span,
         }
     }
 
@@ -409,10 +415,52 @@ impl Term {
         SYMBOLS.with(|interner| {
             let interner = interner.borrow();
             let s = interner.get(self.intern);
-            unsafe {
-                &*(s as *const str)
-            }
+            unsafe { &*(s as *const str) }
         })
+    }
+
+    pub fn span(&self) -> Span {
+        self.span
+    }
+
+    pub fn set_span(&mut self, span: Span) {
+        self.span = span;
+    }
+}
+
+fn validate_term(string: &str) {
+    let validate = if string.starts_with('\'') {
+        &string[1..]
+    } else if string.starts_with("r#") {
+        &string[2..]
+    } else {
+        string
+    };
+
+    if validate.is_empty() {
+        panic!("Term is not allowed to be empty; use Option<Term>");
+    }
+
+    if validate.bytes().all(|digit| digit >= b'0' && digit <= b'9') {
+        panic!("Term cannot be a number; use Literal instead");
+    }
+
+    fn xid_ok(string: &str) -> bool {
+        let mut chars = string.chars();
+        let first = chars.next().unwrap();
+        if !(UnicodeXID::is_xid_start(first) || first == '_') {
+            return false;
+        }
+        for ch in chars {
+            if !UnicodeXID::is_xid_continue(ch) {
+                return false;
+            }
+        }
+        true
+    }
+
+    if !xid_ok(validate) {
+        panic!("{:?} is not a valid Term", string);
     }
 }
 
@@ -444,36 +492,108 @@ impl Interner {
         }
     }
 
-   fn intern(&mut self, s: &str) -> usize {
+    fn intern(&mut self, s: &str) -> usize {
         if let Some(&idx) = self.string_to_index.get(s) {
-            return idx
+            return idx;
         }
         let s = Rc::new(s.to_string());
         self.index_to_string.push(s.clone());
-        self.string_to_index.insert(MyRc(s), self.index_to_string.len() - 1);
+        self.string_to_index
+            .insert(MyRc(s), self.index_to_string.len() - 1);
         self.index_to_string.len() - 1
     }
 
-   fn get(&self, idx: usize) -> &str {
-       &self.index_to_string[idx]
-   }
+    fn get(&self, idx: usize) -> &str {
+        &self.index_to_string[idx]
+    }
 }
 
 #[derive(Clone, Debug)]
-pub struct Literal(String);
+pub struct Literal {
+    text: String,
+    span: Span,
+}
+
+macro_rules! suffixed_numbers {
+    ($($name:ident => $kind:ident,)*) => ($(
+        pub fn $name(n: $kind) -> Literal {
+            Literal::_new(format!(concat!("{}", stringify!($kind)), n))
+        }
+    )*)
+}
+
+macro_rules! unsuffixed_numbers {
+    ($($name:ident => $kind:ident,)*) => ($(
+        pub fn $name(n: $kind) -> Literal {
+            Literal::_new(n.to_string())
+        }
+    )*)
+}
 
 impl Literal {
-    pub fn byte_char(byte: u8) -> Literal {
-        match byte {
-            0 => Literal(format!("b'\\0'")),
-            b'\"' => Literal(format!("b'\"'")),
-            n => {
-                let mut escaped = "b'".to_string();
-                escaped.extend(ascii::escape_default(n).map(|c| c as char));
-                escaped.push('\'');
-                Literal(escaped)
-            }
+    fn _new(text: String) -> Literal {
+        Literal {
+            text: text,
+            span: Span::call_site(),
         }
+    }
+
+    suffixed_numbers! {
+        u8_suffixed => u8,
+        u16_suffixed => u16,
+        u32_suffixed => u32,
+        u64_suffixed => u64,
+        usize_suffixed => usize,
+        i8_suffixed => i8,
+        i16_suffixed => i16,
+        i32_suffixed => i32,
+        i64_suffixed => i64,
+        isize_suffixed => isize,
+
+        f32_suffixed => f32,
+        f64_suffixed => f64,
+    }
+
+    unsuffixed_numbers! {
+        u8_unsuffixed => u8,
+        u16_unsuffixed => u16,
+        u32_unsuffixed => u32,
+        u64_unsuffixed => u64,
+        usize_unsuffixed => usize,
+        i8_unsuffixed => i8,
+        i16_unsuffixed => i16,
+        i32_unsuffixed => i32,
+        i64_unsuffixed => i64,
+        isize_unsuffixed => isize,
+    }
+
+    pub fn f32_unsuffixed(f: f32) -> Literal {
+        let mut s = f.to_string();
+        if !s.contains(".") {
+            s.push_str(".0");
+        }
+        Literal::_new(s)
+    }
+
+    pub fn f64_unsuffixed(f: f64) -> Literal {
+        let mut s = f.to_string();
+        if !s.contains(".") {
+            s.push_str(".0");
+        }
+        Literal::_new(s)
+    }
+
+    pub fn string(t: &str) -> Literal {
+        let mut s = t.chars()
+            .flat_map(|c| c.escape_default())
+            .collect::<String>();
+        s.push('"');
+        s.insert(0, '"');
+        Literal::_new(s)
+    }
+
+    pub fn character(t: char) -> Literal {
+        Literal::_new(format!("'{}'", t.escape_default().collect::<String>()))
     }
 
     pub fn byte_string(bytes: &[u8]) -> Literal {
@@ -486,172 +606,123 @@ impl Literal {
                 b'\r' => escaped.push_str(r"\r"),
                 b'"' => escaped.push_str("\\\""),
                 b'\\' => escaped.push_str("\\\\"),
-                b'\x20' ... b'\x7E' => escaped.push(*b as char),
+                b'\x20'...b'\x7E' => escaped.push(*b as char),
                 _ => escaped.push_str(&format!("\\x{:02X}", b)),
             }
         }
         escaped.push('"');
-        Literal(escaped)
+        Literal::_new(escaped)
     }
 
-    pub fn doccomment(s: &str) -> Literal {
-        Literal(s.to_string())
+    pub fn span(&self) -> Span {
+        self.span
     }
 
-    pub fn float(n: f64) -> Literal {
-        if !n.is_finite() {
-            panic!("Invalid float literal {}", n);
-        }
-        let mut s = n.to_string();
-        if !s.contains('.') {
-            s += ".0";
-        }
-        Literal(s)
-    }
-
-    pub fn integer(s: i64) -> Literal {
-        Literal(s.to_string())
-    }
-
-    pub fn raw_string(s: &str, pounds: usize) -> Literal {
-        let mut ret = format!("r");
-        ret.extend((0..pounds).map(|_| "#"));
-        ret.push('"');
-        ret.push_str(s);
-        ret.push('"');
-        ret.extend((0..pounds).map(|_| "#"));
-        Literal(ret)
-    }
-
-    pub fn raw_byte_string(s: &str, pounds: usize) -> Literal {
-        let mut ret = format!("br");
-        ret.extend((0..pounds).map(|_| "#"));
-        ret.push('"');
-        ret.push_str(s);
-        ret.push('"');
-        ret.extend((0..pounds).map(|_| "#"));
-        Literal(ret)
+    pub fn set_span(&mut self, span: Span) {
+        self.span = span;
     }
 }
 
 impl fmt::Display for Literal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
+        self.text.fmt(f)
     }
 }
 
-macro_rules! ints {
-    ($($t:ty,)*) => {$(
-        impl From<$t> for Literal {
-            fn from(t: $t) -> Literal {
-                Literal(format!(concat!("{}", stringify!($t)), t))
-            }
+fn token_stream(mut input: Cursor) -> PResult<::TokenStream> {
+    let mut trees = Vec::new();
+    loop {
+        let input_no_ws = skip_whitespace(input);
+        if input_no_ws.rest.len() == 0 {
+            break
         }
-    )*}
-}
-
-ints! {
-    u8, u16, u32, u64, usize,
-    i8, i16, i32, i64, isize,
-}
-
-macro_rules! floats {
-    ($($t:ty,)*) => {$(
-        impl From<$t> for Literal {
-            fn from(t: $t) -> Literal {
-                assert!(!t.is_nan());
-                assert!(!t.is_infinite());
-                Literal(format!(concat!("{}", stringify!($t)), t))
-            }
+        if let Ok((a, tokens)) = doc_comment(input_no_ws) {
+            input = a;
+            trees.extend(tokens);
+            continue
         }
-    )*}
-}
 
-floats! {
-    f32, f64,
-}
-
-impl<'a> From<&'a str> for Literal {
-    fn from(t: &'a str) -> Literal {
-        let mut s = t.chars().flat_map(|c| c.escape_default()).collect::<String>();
-        s.push('"');
-        s.insert(0, '"');
-        Literal(s)
+        let (a, tt) = match token_tree(input_no_ws) {
+            Ok(p) => p,
+            Err(_) => break,
+        };
+        trees.push(tt);
+        input = a;
     }
+    Ok((input, ::TokenStream::_new(TokenStream { inner: trees })))
 }
-
-impl From<char> for Literal {
-    fn from(t: char) -> Literal {
-        Literal(format!("'{}'", t.escape_default().collect::<String>()))
-    }
-}
-
-named!(token_stream -> ::TokenStream, map!(
-    many0!(token_tree),
-    |trees| ::TokenStream(TokenStream { inner: trees })
-));
 
 #[cfg(not(procmacro2_semver_exempt))]
-fn token_tree(input: Cursor) -> PResult<TokenTree> {
-    let (input, kind) = token_kind(input)?;
-    Ok((input, TokenTree {
-        span: ::Span(Span {}),
-        kind: kind,
-    }))
+fn spanned<'a, T>(
+    input: Cursor<'a>,
+    f: fn(Cursor<'a>) -> PResult<'a, T>,
+) -> PResult<'a, (T, ::Span)> {
+    let (a, b) = f(skip_whitespace(input))?;
+    Ok((a, ((b, ::Span::_new(Span { })))))
 }
 
 #[cfg(procmacro2_semver_exempt)]
-fn token_tree(input: Cursor) -> PResult<TokenTree> {
+fn spanned<'a, T>(
+    input: Cursor<'a>,
+    f: fn(Cursor<'a>) -> PResult<'a, T>,
+) -> PResult<'a, (T, ::Span)> {
     let input = skip_whitespace(input);
     let lo = input.off;
-    let (input, kind) = token_kind(input)?;
-    let hi = input.off;
-    Ok((input, TokenTree {
-        span: ::Span(Span {
-            lo: lo,
-            hi: hi,
-        }),
-        kind: kind,
-    }))
+    let (a, b) = f(input)?;
+    let hi = a.off;
+    let span = ::Span::_new(Span { lo: lo, hi: hi });
+    Ok((a, (b, span)))
 }
 
-named!(token_kind -> TokenNode, alt!(
-    map!(delimited, |(d, s)| TokenNode::Group(d, s))
+fn token_tree(input: Cursor) -> PResult<TokenTree> {
+    let (rest, (mut tt, span)) = spanned(input, token_kind)?;
+    tt.set_span(span);
+    Ok((rest, tt))
+}
+
+named!(token_kind -> TokenTree, alt!(
+    map!(group, TokenTree::Group)
     |
-    map!(literal, TokenNode::Literal) // must be before symbol
+    map!(literal, TokenTree::Literal) // must be before symbol
     |
     symbol
     |
-    map!(op, |(op, kind)| TokenNode::Op(op, kind))
+    map!(op, TokenTree::Op)
 ));
 
-named!(delimited -> (Delimiter, ::TokenStream), alt!(
+named!(group -> Group, alt!(
     delimited!(
         punct!("("),
         token_stream,
         punct!(")")
-    ) => { |ts| (Delimiter::Parenthesis, ts) }
+    ) => { |ts| Group::new(Delimiter::Parenthesis, ts) }
     |
     delimited!(
         punct!("["),
         token_stream,
         punct!("]")
-    ) => { |ts| (Delimiter::Bracket, ts) }
+    ) => { |ts| Group::new(Delimiter::Bracket, ts) }
     |
     delimited!(
         punct!("{"),
         token_stream,
         punct!("}")
-    ) => { |ts| (Delimiter::Brace, ts) }
+    ) => { |ts| Group::new(Delimiter::Brace, ts) }
 ));
 
-fn symbol(mut input: Cursor) -> PResult<TokenNode> {
+fn symbol(mut input: Cursor) -> PResult<TokenTree> {
     input = skip_whitespace(input);
 
     let mut chars = input.char_indices();
 
     let lifetime = input.starts_with("'");
     if lifetime {
+        chars.next();
+    }
+
+    let raw = !lifetime && input.starts_with("r#");
+    if raw {
+        chars.next();
         chars.next();
     }
 
@@ -668,27 +739,26 @@ fn symbol(mut input: Cursor) -> PResult<TokenNode> {
         }
     }
 
-    if lifetime && &input.rest[..end] != "'static" && KEYWORDS.contains(&&input.rest[1..end]) {
+    let a = &input.rest[..end];
+    if a == "r#_" || lifetime && a != "'static" && KEYWORDS.contains(&&a[1..]) {
         Err(LexError)
+    } else if a == "_" {
+        Ok((input.advance(end), Op::new('_', Spacing::Alone).into()))
     } else {
-        let a = &input.rest[..end];
-        if a == "_" {
-            Ok((input.advance(end), TokenNode::Op('_', Spacing::Alone)))
-        } else {
-            Ok((input.advance(end), TokenNode::Term(::Term::intern(a))))
-        }
+        Ok((
+            input.advance(end),
+            ::Term::new(a, ::Span::call_site()).into(),
+        ))
     }
 }
 
 // From https://github.com/rust-lang/rust/blob/master/src/libsyntax_pos/symbol.rs
 static KEYWORDS: &'static [&'static str] = &[
-    "abstract", "alignof", "as", "become", "box", "break", "const", "continue",
-    "crate", "do", "else", "enum", "extern", "false", "final", "fn", "for",
-    "if", "impl", "in", "let", "loop", "macro", "match", "mod", "move", "mut",
-    "offsetof", "override", "priv", "proc", "pub", "pure", "ref", "return",
-    "self", "Self", "sizeof", "static", "struct", "super", "trait", "true",
-    "type", "typeof", "unsafe", "unsized", "use", "virtual", "where", "while",
-    "yield",
+    "abstract", "alignof", "as", "become", "box", "break", "const", "continue", "crate", "do",
+    "else", "enum", "extern", "false", "final", "fn", "for", "if", "impl", "in", "let", "loop",
+    "macro", "match", "mod", "move", "mut", "offsetof", "override", "priv", "proc", "pub", "pure",
+    "ref", "return", "self", "Self", "sizeof", "static", "struct", "super", "trait", "true",
+    "type", "typeof", "unsafe", "unsized", "use", "virtual", "where", "while", "yield",
 ];
 
 fn literal(input: Cursor) -> PResult<::Literal> {
@@ -699,7 +769,10 @@ fn literal(input: Cursor) -> PResult<::Literal> {
             let start = input.len() - input_no_ws.len();
             let len = input_no_ws.len() - a.len();
             let end = start + len;
-            Ok((a, ::Literal(Literal(input.rest[start..end].to_string()))))
+            Ok((
+                a,
+                ::Literal::_new(Literal::_new(input.rest[start..end].to_string())),
+            ))
         }
         Err(LexError) => Err(LexError),
     }
@@ -717,8 +790,6 @@ named!(literal_nocapture -> (), alt!(
     float
     |
     int
-    |
-    doc_comment
 ));
 
 named!(string -> (), alt!(
@@ -750,37 +821,30 @@ fn cooked_string(input: Cursor) -> PResult<()> {
                     break;
                 }
             }
-            '\\' => {
-                match chars.next() {
-                    Some((_, 'x')) => {
-                        if !backslash_x_char(&mut chars) {
-                            break
-                        }
+            '\\' => match chars.next() {
+                Some((_, 'x')) => {
+                    if !backslash_x_char(&mut chars) {
+                        break;
                     }
-                    Some((_, 'n')) |
-                    Some((_, 'r')) |
-                    Some((_, 't')) |
-                    Some((_, '\\')) |
-                    Some((_, '\'')) |
-                    Some((_, '"')) |
-                    Some((_, '0')) => {}
-                    Some((_, 'u')) => {
-                        if !backslash_u(&mut chars) {
-                            break
-                        }
-                    }
-                    Some((_, '\n')) | Some((_, '\r')) => {
-                        while let Some(&(_, ch)) = chars.peek() {
-                            if ch.is_whitespace() {
-                                chars.next();
-                            } else {
-                                break;
-                            }
-                        }
-                    }
-                    _ => break,
                 }
-            }
+                Some((_, 'n')) | Some((_, 'r')) | Some((_, 't')) | Some((_, '\\'))
+                | Some((_, '\'')) | Some((_, '"')) | Some((_, '0')) => {}
+                Some((_, 'u')) => {
+                    if !backslash_u(&mut chars) {
+                        break;
+                    }
+                }
+                Some((_, '\n')) | Some((_, '\r')) => {
+                    while let Some(&(_, ch)) = chars.peek() {
+                        if ch.is_whitespace() {
+                            chars.next();
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                _ => break,
+            },
             _ch => {}
         }
     }
@@ -814,35 +878,27 @@ fn cooked_byte_string(mut input: Cursor) -> PResult<()> {
                     break;
                 }
             }
-            b'\\' => {
-                match bytes.next() {
-                    Some((_, b'x')) => {
-                        if !backslash_x_byte(&mut bytes) {
-                            break
-                        }
-                    }
-                    Some((_, b'n')) |
-                    Some((_, b'r')) |
-                    Some((_, b't')) |
-                    Some((_, b'\\')) |
-                    Some((_, b'0')) |
-                    Some((_, b'\'')) |
-                    Some((_, b'"'))  => {}
-                    Some((newline, b'\n')) |
-                    Some((newline, b'\r')) => {
-                        let rest = input.advance(newline + 1);
-                        for (offset, ch) in rest.char_indices() {
-                            if !ch.is_whitespace() {
-                                input = rest.advance(offset);
-                                bytes = input.bytes().enumerate();
-                                continue 'outer;
-                            }
-                        }
+            b'\\' => match bytes.next() {
+                Some((_, b'x')) => {
+                    if !backslash_x_byte(&mut bytes) {
                         break;
                     }
-                    _ => break,
                 }
-            }
+                Some((_, b'n')) | Some((_, b'r')) | Some((_, b't')) | Some((_, b'\\'))
+                | Some((_, b'0')) | Some((_, b'\'')) | Some((_, b'"')) => {}
+                Some((newline, b'\n')) | Some((newline, b'\r')) => {
+                    let rest = input.advance(newline + 1);
+                    for (offset, ch) in rest.char_indices() {
+                        if !ch.is_whitespace() {
+                            input = rest.advance(offset);
+                            bytes = input.bytes().enumerate();
+                            continue 'outer;
+                        }
+                    }
+                    break;
+                }
+                _ => break,
+            },
             b if b < 0x80 => {}
             _ => break,
         }
@@ -867,7 +923,7 @@ fn raw_string(input: Cursor) -> PResult<()> {
         match ch {
             '"' if input.advance(byte_offset + 1).starts_with(&input.rest[..n]) => {
                 let rest = input.advance(byte_offset + 1 + n);
-                return Ok((rest, ()))
+                return Ok((rest, ()));
             }
             '\r' => {}
             _ => {}
@@ -887,19 +943,12 @@ named!(byte -> (), do_parse!(
 fn cooked_byte(input: Cursor) -> PResult<()> {
     let mut bytes = input.bytes().enumerate();
     let ok = match bytes.next().map(|(_, b)| b) {
-        Some(b'\\') => {
-            match bytes.next().map(|(_, b)| b) {
-                Some(b'x') => backslash_x_byte(&mut bytes),
-                Some(b'n') |
-                Some(b'r') |
-                Some(b't') |
-                Some(b'\\') |
-                Some(b'0') |
-                Some(b'\'') |
-                Some(b'"') => true,
-                _ => false,
-            }
-        }
+        Some(b'\\') => match bytes.next().map(|(_, b)| b) {
+            Some(b'x') => backslash_x_byte(&mut bytes),
+            Some(b'n') | Some(b'r') | Some(b't') | Some(b'\\') | Some(b'0') | Some(b'\'')
+            | Some(b'"') => true,
+            _ => false,
+        },
         b => b.is_some(),
     };
     if ok {
@@ -928,20 +977,14 @@ named!(character -> (), do_parse!(
 fn cooked_char(input: Cursor) -> PResult<()> {
     let mut chars = input.char_indices();
     let ok = match chars.next().map(|(_, ch)| ch) {
-        Some('\\') => {
-            match chars.next().map(|(_, ch)| ch) {
-                Some('x') => backslash_x_char(&mut chars),
-                Some('u') => backslash_u(&mut chars),
-                Some('n') |
-                Some('r') |
-                Some('t') |
-                Some('\\') |
-                Some('0') |
-                Some('\'') |
-                Some('"') => true,
-                _ => false,
+        Some('\\') => match chars.next().map(|(_, ch)| ch) {
+            Some('x') => backslash_x_char(&mut chars),
+            Some('u') => backslash_u(&mut chars),
+            Some('n') | Some('r') | Some('t') | Some('\\') | Some('0') | Some('\'') | Some('"') => {
+                true
             }
-        }
+            _ => false,
+        },
         ch => ch.is_some(),
     };
     if ok {
@@ -967,7 +1010,8 @@ macro_rules! next_ch {
 }
 
 fn backslash_x_char<I>(chars: &mut I) -> bool
-    where I: Iterator<Item = (usize, char)>
+where
+    I: Iterator<Item = (usize, char)>,
 {
     next_ch!(chars @ '0'...'7');
     next_ch!(chars @ '0'...'9' | 'a'...'f' | 'A'...'F');
@@ -975,7 +1019,8 @@ fn backslash_x_char<I>(chars: &mut I) -> bool
 }
 
 fn backslash_x_byte<I>(chars: &mut I) -> bool
-    where I: Iterator<Item = (usize, u8)>
+where
+    I: Iterator<Item = (usize, u8)>,
 {
     next_ch!(chars @ b'0'...b'9' | b'a'...b'f' | b'A'...b'F');
     next_ch!(chars @ b'0'...b'9' | b'a'...b'f' | b'A'...b'F');
@@ -983,7 +1028,8 @@ fn backslash_x_byte<I>(chars: &mut I) -> bool
 }
 
 fn backslash_u<I>(chars: &mut I) -> bool
-    where I: Iterator<Item = (usize, char)>
+where
+    I: Iterator<Item = (usize, char)>,
 {
     next_ch!(chars @ '{');
     next_ch!(chars @ '0'...'9' | 'a'...'f' | 'A'...'F');
@@ -1026,9 +1072,11 @@ fn float_digits(input: Cursor) -> PResult<()> {
                     break;
                 }
                 chars.next();
-                if chars.peek()
-                       .map(|&ch| ch == '.' || UnicodeXID::is_xid_start(ch))
-                       .unwrap_or(false) {
+                if chars
+                    .peek()
+                    .map(|&ch| ch == '.' || UnicodeXID::is_xid_start(ch))
+                    .unwrap_or(false)
+                {
                     return Err(LexError);
                 }
                 len += 1;
@@ -1083,18 +1131,7 @@ fn float_digits(input: Cursor) -> PResult<()> {
 fn int(input: Cursor) -> PResult<()> {
     let (rest, ()) = digits(input)?;
     for suffix in &[
-        "isize",
-        "i8",
-        "i16",
-        "i32",
-        "i64",
-        "i128",
-        "usize",
-        "u8",
-        "u16",
-        "u32",
-        "u64",
-        "u128",
+        "isize", "i8", "i16", "i32", "i64", "i128", "usize", "u8", "u16", "u32", "u64", "u128"
     ] {
         if rest.starts_with(suffix) {
             return word_break(rest.advance(suffix.len()));
@@ -1146,7 +1183,7 @@ fn digits(mut input: Cursor) -> PResult<()> {
     }
 }
 
-fn op(input: Cursor) -> PResult<(char, Spacing)> {
+fn op(input: Cursor) -> PResult<Op> {
     let input = skip_whitespace(input);
     match op_char(input) {
         Ok((rest, ch)) => {
@@ -1154,7 +1191,7 @@ fn op(input: Cursor) -> PResult<(char, Spacing)> {
                 Ok(_) => Spacing::Joint,
                 Err(LexError) => Spacing::Alone,
             };
-            Ok((rest, (ch, kind)))
+            Ok((rest, Op::new(ch, kind)))
         }
         Err(LexError) => Err(LexError),
     }
@@ -1176,31 +1213,53 @@ fn op_char(input: Cursor) -> PResult<char> {
     }
 }
 
-named!(doc_comment -> (), alt!(
+fn doc_comment(input: Cursor) -> PResult<Vec<TokenTree>> {
+    let mut trees = Vec::new();
+    let (rest, ((comment, inner), span)) = spanned(input, doc_comment_contents)?;
+    trees.push(TokenTree::Op(Op::new('#', Spacing::Alone)));
+    if inner {
+        trees.push(Op::new('!', Spacing::Alone).into());
+    }
+    let mut stream = vec![
+        TokenTree::Term(::Term::new("doc", span)),
+        TokenTree::Op(Op::new('=', Spacing::Alone)),
+        TokenTree::Literal(::Literal::string(comment)),
+    ];
+    for tt in stream.iter_mut() {
+        tt.set_span(span);
+    }
+    trees.push(Group::new(Delimiter::Bracket, stream.into_iter().collect()).into());
+    for tt in trees.iter_mut() {
+        tt.set_span(span);
+    }
+    Ok((rest, trees))
+}
+
+named!(doc_comment_contents -> (&str, bool), alt!(
     do_parse!(
         punct!("//!") >>
-        take_until!("\n") >>
-        (())
+        s: take_until_newline_or_eof!() >>
+        ((s, true))
     )
     |
     do_parse!(
         option!(whitespace) >>
         peek!(tag!("/*!")) >>
-        block_comment >>
-        (())
+        s: block_comment >>
+        ((s, true))
     )
     |
     do_parse!(
         punct!("///") >>
         not!(tag!("/")) >>
-        take_until!("\n") >>
-        (())
+        s: take_until_newline_or_eof!() >>
+        ((s, false))
     )
     |
     do_parse!(
         option!(whitespace) >>
         peek!(tuple!(tag!("/**"), not!(tag!("*")))) >>
-        block_comment >>
-        (())
+        s: block_comment >>
+        ((s, false))
     )
 ));

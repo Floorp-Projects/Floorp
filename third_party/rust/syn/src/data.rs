@@ -71,7 +71,7 @@ impl Fields {
     /// fields uniformly.
     ///
     /// [`Field`]: struct.Field.html
-    pub fn iter(&self) -> punctuated::Iter<Field, Token![,]> {
+    pub fn iter(&self) -> punctuated::Iter<Field> {
         match *self {
             Fields::Unit => punctuated::Iter::private_empty(),
             Fields::Named(ref f) => f.named.iter(),
@@ -82,7 +82,7 @@ impl Fields {
 
 impl<'a> IntoIterator for &'a Fields {
     type Item = &'a Field;
-    type IntoIter = punctuated::Iter<'a, Field, Token![,]>;
+    type IntoIter = punctuated::Iter<'a, Field>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -134,18 +134,16 @@ ast_enum_of_structs! {
             pub pub_token: Token![pub],
         }),
 
-        /// A crate-level visibility: `pub(crate)`.
+        /// A crate-level visibility: `crate`.
         ///
         /// *This type is available if Syn is built with the `"derive"` or
         /// `"full"` feature.*
         pub Crate(VisCrate {
-            pub pub_token: Token![pub],
-            pub paren_token: token::Paren,
             pub crate_token: Token![crate],
         }),
 
         /// A visibility level restricted to some path: `pub(self)` or
-        /// `pub(super)` or `pub(in some::module)`.
+        /// `pub(super)` or `pub(crate)` or `pub(in some::module)`.
         ///
         /// *This type is available if Syn is built with the `"derive"` or
         /// `"full"` feature.*
@@ -255,12 +253,19 @@ pub mod parsing {
             do_parse!(
                 pub_token: keyword!(pub) >>
                 other: parens!(keyword!(crate)) >>
-                (Visibility::Crate(VisCrate {
+                (Visibility::Restricted(VisRestricted {
                     pub_token: pub_token,
                     paren_token: other.0,
-                    crate_token: other.1,
+                    in_token: None,
+                    path: Box::new(other.1.into()),
                 }))
             )
+            |
+            keyword!(crate) => { |tok| {
+                Visibility::Crate(VisCrate {
+                    crate_token: tok,
+                })
+            } }
             |
             do_parse!(
                 pub_token: keyword!(pub) >>
@@ -367,10 +372,7 @@ mod printing {
 
     impl ToTokens for VisCrate {
         fn to_tokens(&self, tokens: &mut Tokens) {
-            self.pub_token.to_tokens(tokens);
-            self.paren_token.surround(tokens, |tokens| {
-                self.crate_token.to_tokens(tokens);
-            })
+            self.crate_token.to_tokens(tokens);
         }
     }
 
@@ -378,8 +380,8 @@ mod printing {
         fn to_tokens(&self, tokens: &mut Tokens) {
             self.pub_token.to_tokens(tokens);
             self.paren_token.surround(tokens, |tokens| {
-                // XXX: If we have a path which is not "self" or "super",
-                // automatically add the "in" token.
+                // XXX: If we have a path which is not "self" or "super" or
+                // "crate", automatically add the "in" token.
                 self.in_token.to_tokens(tokens);
                 self.path.to_tokens(tokens);
             });

@@ -99,7 +99,6 @@ use proc_macro2::Span;
 #[derive(Copy, Clone, Debug)]
 pub struct Ident {
     term: Term,
-    pub span: Span,
 }
 
 impl Ident {
@@ -145,15 +144,22 @@ impl Ident {
         }
 
         Ident {
-            term: Term::intern(s),
-            span: span,
+            term: Term::new(s, span),
         }
+    }
+
+    pub fn span(&self) -> Span {
+        self.term.span()
+    }
+
+    pub fn set_span(&mut self, span: Span) {
+        self.term.set_span(span);
     }
 }
 
 impl<'a> From<&'a str> for Ident {
     fn from(s: &str) -> Self {
-        Ident::new(s, Span::def_site())
+        Ident::new(s, Span::call_site())
     }
 }
 
@@ -183,13 +189,13 @@ impl From<Token![crate]> for Ident {
 
 impl<'a> From<Cow<'a, str>> for Ident {
     fn from(s: Cow<'a, str>) -> Self {
-        Ident::new(&s, Span::def_site())
+        Ident::new(&s, Span::call_site())
     }
 }
 
 impl From<String> for Ident {
     fn from(s: String) -> Self {
-        Ident::new(&s, Span::def_site())
+        Ident::new(&s, Span::call_site())
     }
 }
 
@@ -244,7 +250,7 @@ pub mod parsing {
 
     impl Synom for Ident {
         fn parse(input: Cursor) -> PResult<Self> {
-            let (span, term, rest) = match input.term() {
+            let (term, rest) = match input.term() {
                 Some(term) => term,
                 _ => return parse_error(),
             };
@@ -265,7 +271,6 @@ pub mod parsing {
 
             Ok((
                 Ident {
-                    span: span,
                     term: term,
                 },
                 rest,
@@ -282,14 +287,10 @@ pub mod parsing {
 mod printing {
     use super::*;
     use quote::{ToTokens, Tokens};
-    use proc_macro2::{TokenNode, TokenTree};
 
     impl ToTokens for Ident {
         fn to_tokens(&self, tokens: &mut Tokens) {
-            tokens.append(TokenTree {
-                span: self.span,
-                kind: TokenNode::Term(self.term),
-            })
+            tokens.append(self.term);
         }
     }
 }

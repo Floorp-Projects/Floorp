@@ -519,15 +519,14 @@ APZCTreeManager::UpdateHitTestingTree(LayersId aRootLayerTreeId,
 
 void
 APZCTreeManager::UpdateHitTestingTree(LayersId aRootLayerTreeId,
-                                      const WebRenderScrollData& aScrollData,
+                                      const WebRenderScrollDataWrapper& aScrollWrapper,
                                       bool aIsFirstPaint,
                                       LayersId aOriginatingLayersId,
                                       uint32_t aPaintSequenceNumber)
 {
   AssertOnUpdaterThread();
 
-  WebRenderScrollDataWrapper wrapper(&aScrollData);
-  UpdateHitTestingTreeImpl(aRootLayerTreeId, wrapper, aIsFirstPaint,
+  UpdateHitTestingTreeImpl(aRootLayerTreeId, aScrollWrapper, aIsFirstPaint,
                            aOriginatingLayersId, aPaintSequenceNumber);
 }
 
@@ -1977,6 +1976,7 @@ APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
     MOZ_ASSERT(XRE_IsParentProcess());
 
     GetUpdater()->RunOnUpdaterThread(
+        aGuid.mLayersId,
         NewRunnableMethod<ScrollableLayerGuid, Maybe<ZoomConstraints>>(
             "APZCTreeManager::UpdateZoomConstraints",
             this,
@@ -3239,6 +3239,20 @@ void
 APZCTreeManager::AssertOnUpdaterThread()
 {
   GetUpdater()->AssertOnUpdaterThread();
+}
+
+void
+APZCTreeManager::LockTree()
+{
+  AssertOnUpdaterThread();
+  mTreeLock.Lock();
+}
+
+void
+APZCTreeManager::UnlockTree()
+{
+  AssertOnUpdaterThread();
+  mTreeLock.Unlock();
 }
 
 void

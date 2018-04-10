@@ -47,6 +47,8 @@ XPCOMUtils.defineLazyGetter(this, "SMALLPNG_DATA_URI", function() {
          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
          "AAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==");
 });
+const SMALLPNG_DATA_LEN = 67;
+
 XPCOMUtils.defineLazyGetter(this, "SMALLSVG_DATA_URI", function() {
   return NetUtil.newURI(
          "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy5" +
