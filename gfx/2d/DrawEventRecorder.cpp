@@ -97,10 +97,10 @@ void
 DrawEventRecorderMemory::FlushItem(IntRect aRect)
 {
   MOZ_RELEASE_ASSERT(!aRect.IsEmpty());
-  // Detatching our existing resources will add some
+  // Detaching our existing resources will add some
   // destruction events to our stream so we need to do that
   // first.
-  DetatchResources();
+  DetachResources();
 
   // See moz2d_renderer.rs for a description of the stream format
   WriteElement(mIndex, mOutputStream.mLength);

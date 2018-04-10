@@ -565,7 +565,9 @@ const PanelUI = {
       // Bug 1402849, close library panel on mid mouse click
       CustomizableUI.hidePanelForNode(button);
     }
-    window.openUILink(button._highlight.url, event);
+    window.openUILink(button._highlight.url, event, {
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})
+    });
   },
 
   /**

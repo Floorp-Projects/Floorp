@@ -74,11 +74,13 @@ DebuggerPanel.prototype = {
     }
 
     const top = win.ownerDocument.defaultView.top;
-    if (!top || typeof top.openUILinkIn !== "function") {
+    if (!top || typeof top.openWebLink !== "function") {
       return;
     }
 
-    top.openUILinkIn(url, "tab");
+    top.openWebLinkIn(url, "tab", {
+      triggeringPrincipal: win.document.nodePrincipal
+    });
   },
 
   openWorkerToolbox: function(worker) {

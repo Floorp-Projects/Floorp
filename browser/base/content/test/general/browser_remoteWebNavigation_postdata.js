@@ -38,8 +38,10 @@ add_task(async function test_remoteWebNavigation_postdata() {
       "\r\n" +
       "success";
 
-    openUILinkIn(path, "tab", null, makeInputStream(postdata));
-
+    openTrustedLinkIn(path, "tab", {
+       allowThirdPartyFixup: null,
+       postData: makeInputStream(postdata),
+     });
   });
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 

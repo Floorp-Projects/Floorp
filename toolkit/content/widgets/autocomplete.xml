@@ -1248,7 +1248,7 @@
     <handlers>
       <handler event="click" button="0"><![CDATA[
         let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-        window.openUILinkIn(baseURL + "insecure-password", "tab", {
+        window.openTrustedLinkIn(baseURL + "insecure-password", "tab", {
           relatedToCurrent: true,
         });
       ]]></handler>

@@ -113,7 +113,7 @@ TabListComponent.prototype = {
   },
 
   onOpenTab(url, where, params) {
-    this._window.openUILinkIn(url, where, params);
+    this._window.openTrustedLinkIn(url, where, params);
     BrowserUITelemetry.countSyncedTabEvent("open", "sidebar");
   },
 

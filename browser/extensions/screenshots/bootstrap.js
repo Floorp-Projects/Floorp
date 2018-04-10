@@ -109,7 +109,7 @@ const LibraryButton = {
     const {nextSibling} = libraryViewInsertionPoint;
     const item = win.document.createElement("toolbarbutton");
     item.className = "subviewbutton subviewbutton-iconic";
-    item.addEventListener("command", () => win.openUILinkIn(this.PAGE_TO_OPEN, "tab"));
+    item.addEventListener("command", () => win.openTrustedLinkIn(this.PAGE_TO_OPEN, "tab"));
     item.id = this.ITEM_ID;
     const iconURL = this.ICON_URL;
     item.setAttribute("image", iconURL);

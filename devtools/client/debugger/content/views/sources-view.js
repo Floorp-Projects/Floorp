@@ -900,7 +900,10 @@ SourcesView.prototype = extend(WidgetMethods, {
   _onNewTabCommand: function () {
     let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     let selected = this.selectedItem.attachment;
-    win.openUILinkIn(selected.source.url, "tab", { relatedToCurrent: true });
+    win.openWebLinkIn(selected.source.url, "tab", {
+      triggeringPrincipal: win.document.nodePrincipal,
+      relatedToCurrent: true,
+    });
   },
 
   /**
