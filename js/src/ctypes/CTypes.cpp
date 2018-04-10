@@ -9,6 +9,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WrappingOperations.h"
 
@@ -46,6 +47,8 @@
 #include "vm/JSObject-inl.h"
 
 using namespace std;
+
+using mozilla::IsAsciiAlpha;
 
 using JS::AutoCheckCannotGC;
 
@@ -4063,9 +4066,7 @@ BuildTypeName(JSContext* cx, JSObject* typeObj_)
 
   // If prepending the base type name directly would splice two
   // identifiers, insert a space.
-  if (('a' <= result[0] && result[0] <= 'z') ||
-      ('A' <= result[0] && result[0] <= 'Z') ||
-      (result[0] == '_'))
+  if (IsAsciiAlpha(result[0]) || result[0] == '_')
     PrependString(result, " ");
 
   // Stick the base type and derived type parts together.
