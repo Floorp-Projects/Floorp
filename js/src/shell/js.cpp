@@ -5327,7 +5327,7 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
     state.sp = (void*)sim->get_register(jit::Simulator::sp);
     state.lr = (void*)sim->get_register(jit::Simulator::lr);
     state.fp = (void*)sim->get_register(jit::Simulator::fp);
-#elif defined(JS_SIMULATOR_MIPS64)
+#elif defined(JS_SIMULATOR_MIPS64) || defined(JS_SIMULATOR_MIPS32)
     state.sp = (void*)sim->getRegister(jit::Simulator::sp);
     state.lr = (void*)sim->getRegister(jit::Simulator::ra);
     state.fp = (void*)sim->getRegister(jit::Simulator::fp);

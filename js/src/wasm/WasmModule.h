@@ -19,6 +19,7 @@
 #ifndef wasm_module_h
 #define wasm_module_h
 
+#include "jit/shared/Assembler-shared.h"
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
 #include "threading/Mutex.h"
