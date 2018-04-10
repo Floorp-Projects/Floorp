@@ -157,7 +157,6 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
 
   auto cache = nsLayoutStylesheetCache::Singleton();
 
-  EnsureOnDemandBuiltInUASheet(cache->NumberControlSheet());
   EnsureOnDemandBuiltInUASheet(cache->FormsSheet());
   EnsureOnDemandBuiltInUASheet(cache->CounterStylesSheet());
   EnsureOnDemandBuiltInUASheet(cache->HTMLSheet());

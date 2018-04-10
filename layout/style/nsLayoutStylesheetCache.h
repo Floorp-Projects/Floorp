@@ -45,7 +45,6 @@ class nsLayoutStylesheetCache final
 
   mozilla::StyleSheet* ScrollbarsSheet();
   mozilla::StyleSheet* FormsSheet();
-  mozilla::StyleSheet* NumberControlSheet();
   mozilla::StyleSheet* UserContentSheet();
   mozilla::StyleSheet* UserChromeSheet();
   mozilla::StyleSheet* UASheet();
@@ -106,7 +105,6 @@ private:
   RefPtr<mozilla::StyleSheet> mMinimalXULSheet;
   RefPtr<mozilla::StyleSheet> mNoFramesSheet;
   RefPtr<mozilla::StyleSheet> mNoScriptSheet;
-  RefPtr<mozilla::StyleSheet> mNumberControlSheet;
   RefPtr<mozilla::StyleSheet> mQuirkSheet;
   RefPtr<mozilla::StyleSheet> mSVGSheet;
   RefPtr<mozilla::StyleSheet> mScrollbarsSheet;
