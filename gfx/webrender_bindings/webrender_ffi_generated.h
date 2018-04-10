@@ -315,6 +315,20 @@ using VecU8 = Vec<uint8_t>;
 
 using ArcVecU8 = Arc<VecU8>;
 
+struct WrWindowId {
+  uint64_t mHandle;
+
+  bool operator==(const WrWindowId& aOther) const {
+    return mHandle == aOther.mHandle;
+  }
+  bool operator<(const WrWindowId& aOther) const {
+    return mHandle < aOther.mHandle;
+  }
+  bool operator<=(const WrWindowId& aOther) const {
+    return mHandle <= aOther.mHandle;
+  }
+};
+
 template<typename T, typename U>
 struct TypedSize2D {
   T width;
@@ -745,20 +759,6 @@ struct MutByteSlice {
   }
 };
 
-struct WrWindowId {
-  uint64_t mHandle;
-
-  bool operator==(const WrWindowId& aOther) const {
-    return mHandle == aOther.mHandle;
-  }
-  bool operator<(const WrWindowId& aOther) const {
-    return mHandle < aOther.mHandle;
-  }
-  bool operator<=(const WrWindowId& aOther) const {
-    return mHandle <= aOther.mHandle;
-  }
-};
-
 struct Epoch {
   uint32_t mHandle;
 
@@ -947,6 +947,17 @@ extern void AddNativeFontHandle(WrFontKey aKey,
 
 extern void DeleteFontData(WrFontKey aKey);
 
+extern void apz_deregister_updater(WrWindowId aWindowId);
+
+extern void apz_post_scene_swap(WrWindowId aWindowId,
+                                WrPipelineInfo *aPipelineInfo);
+
+extern void apz_pre_scene_swap(WrWindowId aWindowId);
+
+extern void apz_register_updater(WrWindowId aWindowId);
+
+extern void apz_run_updater(WrWindowId aWindowId);
+
 extern void gecko_printf_stderr_output(const char *aMsg);
 
 extern void gecko_profiler_register_thread(const char *aName);
@@ -1033,6 +1044,10 @@ WR_FUNC;
 WR_INLINE
 void wr_api_shut_down(DocumentHandle *aDh)
 WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE
+void wr_api_wake_scene_builder(DocumentHandle *aDh)
+WR_FUNC;
 
 WR_INLINE
 void wr_clear_item_tag(WrState *aState)
