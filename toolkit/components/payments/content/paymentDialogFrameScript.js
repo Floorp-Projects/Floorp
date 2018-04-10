@@ -65,7 +65,11 @@ let PaymentFrameScript = {
    * Expose privileged utility functions to the unprivileged page.
    */
   exposeUtilityFunctions() {
+    let waivedContent = Cu.waiveXrays(content);
     let PaymentDialogUtils = {
+      DEFAULT_REGION: FormAutofillUtils.DEFAULT_REGION,
+      supportedCountries: FormAutofillUtils.supportedCountries,
+
       getAddressLabel(address) {
         return FormAutofillUtils.getAddressLabel(address);
       },
@@ -73,8 +77,12 @@ let PaymentFrameScript = {
       isCCNumber(value) {
         return FormAutofillUtils.isCCNumber(value);
       },
+
+      getFormFormat(country) {
+        let format = FormAutofillUtils.getFormFormat(country);
+        return Cu.cloneInto(format, waivedContent);
+      },
     };
-    let waivedContent = Cu.waiveXrays(content);
     waivedContent.PaymentDialogUtils = Cu.cloneInto(PaymentDialogUtils, waivedContent, {
       cloneFunctions: true,
     });
