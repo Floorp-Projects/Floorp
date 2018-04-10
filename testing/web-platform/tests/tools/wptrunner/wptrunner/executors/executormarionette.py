@@ -403,7 +403,7 @@ class MarionetteProtocol(Protocol):
                 self.prefs.set(name, value)
 
         for name, value in new_environment.get("prefs", {}).iteritems():
-            self.executor.original_pref_values[name] = self.get_pref(name)
+            self.executor.original_pref_values[name] = self.prefs.get(name)
             self.prefs.set(name, value)
 
 
