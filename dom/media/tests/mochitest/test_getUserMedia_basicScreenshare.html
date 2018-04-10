@@ -104,15 +104,24 @@
     });
 
     info("Testing screenshare without constraints");
-    let stream = await getUserMedia({
-      video: {mediaSource: "screen"},
-      fake: false,
-    });
+    let stream = await getUserMedia({video: {mediaSource: "screen"}});
+    let settings = stream.getTracks()[0].getSettings();
+    ok(settings.width <= 8192,
+       `Width setting ${settings.width} should be set after gUM (or 0 per bug 1453247)`);
+    ok(settings.height <= 8192,
+       `Height setting ${settings.height} should be set after gUM (or 0 per bug 1453247)`);
     draw(helper.red, helper.blue,
          helper.green, helper.grey);
     let playback = new LocalMediaStreamPlayback(testVideo, stream);
     playback.startMedia();
     await playback.verifyPlaying();
+    settings = stream.getTracks()[0].getSettings();
+    is(settings.width, testVideo.videoWidth,
+       "Width setting should match video width");
+    is(settings.height, testVideo.videoHeight,
+       "Height setting should match video height");
+    let screenWidth = testVideo.videoWidth;
+    let screenHeight = testVideo.videoHeight;
     await verifyScreenshare(testVideo, helper,
                             helper.red, helper.blue,
                             helper.green, helper.grey);
@@ -138,30 +147,65 @@
           max: '15'
         },
       },
-      fake: false,
     });
+    settings = stream.getTracks()[0].getSettings();
+    ok(settings.width == 0 || (settings.width >= 10 && settings.width <= 100),
+       `Width setting ${settings.width} should be correct after gUM (or 0 per bug 1453247)`);
+    ok(settings.height == 0 || (settings.height >= 10 && settings.height <= 100),
+       `Height setting ${settings.height} should be correct after gUM (or 0 per bug 1453247)`);
     draw(helper.green, helper.red,
          helper.grey, helper.blue);
     playback = new LocalMediaStreamPlayback(testVideo, stream);
     playback.startMedia();
     await playback.verifyPlaying();
+    settings = stream.getTracks()[0].getSettings();
+    ok(settings.width >= 10 && settings.width <= 100,
+       `Width setting ${settings.width} should be within constraints`);
+    ok(settings.height >= 10 && settings.height <= 100,
+       `Height setting ${settings.height} should be within constraints`);
+    is(settings.width, testVideo.videoWidth,
+       "Width setting should match video width");
+    is(settings.height, testVideo.videoHeight,
+       "Height setting should match video height");
+    let expectedHeight = (screenHeight * settings.width) / screenWidth;
+    ok(Math.abs(expectedHeight - settings.height) <= 1,
+       "Aspect ratio after constrained gUM should be close enough");
     await verifyScreenshare(testVideo, helper,
                             helper.green, helper.red,
                             helper.grey, helper.blue);
 
     info("Testing modifying screenshare with applyConstraints");
-    await Promise.all([
-      testVideo.srcObject.getVideoTracks()[0].applyConstraints({
-        mediaSource: 'screen',
-        width: 200,
-        height: 200,
-        frameRate: {
-          min: '5',
-          max: '10'
-        }
-      }),
-      haveEvent(testVideo, "resize", wait(5000, new Error("Timeout"))),
-    ]);
+    let resize = haveEvent(testVideo, "resize", wait(5000, new Error("Timeout")));
+    await testVideo.srcObject.getVideoTracks()[0].applyConstraints({
+      mediaSource: 'screen',
+      width: 200,
+      height: 200,
+      frameRate: {
+        min: '5',
+        max: '10'
+      }
+    });
+    // getSettings() should report correct size as soon as applyConstraints()
+    // resolves - bug 1453259. Until fixed, check that we at least report
+    // something sane.
+    let newSettings = stream.getTracks()[0].getSettings();
+    ok(newSettings.width > settings.width && newSettings.width < screenWidth,
+       `Width setting ${newSettings.width} should have increased after applyConstraints`);
+    ok(newSettings.height > settings.height && newSettings.height < screenHeight,
+       `Height setting ${newSettings.height} should have increased after applyConstraints`);
+    await resize;
+    settings = stream.getTracks()[0].getSettings();
+    ok(settings.width > 100 && settings.width < screenWidth,
+       `Width setting ${settings.width} should have increased after first frame after applyConstraints`);
+    ok(settings.height > 100 && settings.height < screenHeight,
+       `Height setting ${settings.height} should have increased after first frame after applyConstraints`);
+    is(settings.width, testVideo.videoWidth,
+       "Width setting should match video width");
+    is(settings.height, testVideo.videoHeight,
+       "Height setting should match video height");
+    expectedHeight = (screenHeight * settings.width) / screenWidth;
+    ok(Math.abs(expectedHeight - settings.height) <= 1,
+       "Aspect ratio after applying constraints should be close enough");
     draw(helper.grey, helper.green,
          helper.blue, helper.red);
     await playback.verifyPlaying(); // still playing
