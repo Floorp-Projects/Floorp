@@ -153,6 +153,11 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/promises",
   },
   {
+    types: ["propertyIterator"],
+    spec: "devtools/shared/specs/property-iterator",
+    front: null,
+  },
+  {
     types: ["reflow"],
     spec: "devtools/shared/specs/reflow",
     front: "devtools/shared/fronts/reflow",
