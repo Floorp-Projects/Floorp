@@ -75,6 +75,16 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mSettings.mJavaScript.set(flag);
             return this;
         }
+
+        /**
+         * Set whether support for web fonts should be enabled.
+         *
+         * @param flag A flag determining whether web fonts should be enabled.
+         */
+        public @NonNull Builder webFontsEnabled(final boolean flag) {
+            mSettings.mWebFonts.set(flag);
+            return this;
+        }
     }
 
     /* package */ GeckoRuntime runtime;
@@ -114,9 +124,11 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
     /* package */ Pref<Boolean> mJavaScript = new Pref<Boolean>(
         "javascript.enabled", true);
+    /* package */ Pref<Boolean> mWebFonts = new Pref<Boolean>(
+        "browser.display.use_document_fonts", true);
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
-        mJavaScript
+        mJavaScript, mWebFonts
     };
 
     /* package */ GeckoRuntimeSettings() {
@@ -136,6 +148,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mArgs = settings.getArguments().clone();
             mExtras = new Bundle(settings.getExtras());
             mJavaScript.set(settings.mJavaScript.get());
+            mWebFonts.set(settings.mWebFonts.get());
         }
     }
 
@@ -191,6 +204,25 @@ public final class GeckoRuntimeSettings implements Parcelable {
         return this;
     }
 
+    /**
+     * Get whether web fonts support is enabled.
+     *
+     * @return Whether web fonts support is enabled.
+     */
+    public boolean getWebFontsEnabled() {
+        return mWebFonts.get();
+    }
+
+    /**
+     * Set whether support for web fonts should be enabled.
+     *
+     * @param flag A flag determining whether web fonts should be enabled.
+     */
+    public @NonNull GeckoRuntimeSettings setWebFontsEnabled(final boolean flag) {
+        mWebFonts.set(flag);
+        return this;
+    }
+
     @Override // Parcelable
     public int describeContents() {
         return 0;
@@ -202,6 +234,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         out.writeStringArray(mArgs);
         mExtras.writeToParcel(out, flags);
         out.writeByte((byte) (mJavaScript.get() ? 1 : 0));
+        out.writeByte((byte) (mWebFonts.get() ? 1 : 0));
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -210,6 +243,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mArgs = source.createStringArray();
         mExtras.readFromParcel(source);
         mJavaScript.set(source.readByte() == 1);
+        mWebFonts.set(source.readByte() == 1);
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR
