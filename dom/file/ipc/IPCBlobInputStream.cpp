@@ -133,6 +133,7 @@ IPCBlobInputStream::IPCBlobInputStream(IPCBlobInputStreamChild* aActor)
   , mState(eInit)
   , mStart(0)
   , mLength(0)
+  , mMutex("IPCBlobInputStream::mMutex")
 {
   MOZ_ASSERT(aActor);
 
@@ -256,8 +257,12 @@ IPCBlobInputStream::Close()
     mRemoteStream = nullptr;
   }
 
-  mInputStreamCallback = nullptr;
-  mInputStreamCallbackEventTarget = nullptr;
+  {
+    MutexAutoLock lock(mMutex);
+
+    mInputStreamCallback = nullptr;
+    mInputStreamCallbackEventTarget = nullptr;
+  }
 
   mFileMetadataCallback = nullptr;
   mFileMetadataCallbackEventTarget = nullptr;
@@ -361,7 +366,9 @@ IPCBlobInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
     return NS_OK;
 
   // We are still waiting for the remote inputStream
-  case ePending:
+  case ePending: {
+    MutexAutoLock lock(mMutex);
+
     if (mInputStreamCallback && aCallback) {
       return NS_ERROR_FAILURE;
     }
@@ -369,10 +376,13 @@ IPCBlobInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
     mInputStreamCallback = aCallback;
     mInputStreamCallbackEventTarget = aEventTarget;
     return NS_OK;
+  }
 
   // We have the remote inputStream, let's check if we can execute the callback.
-  case eRunning:
-    return MaybeExecuteInputStreamCallback(aCallback, aEventTarget);
+  case eRunning: {
+    MutexAutoLock lock(mMutex);
+    return MaybeExecuteInputStreamCallback(aCallback, aEventTarget, lock);
+  }
 
   // Stream is closed.
   default:
@@ -425,21 +435,27 @@ IPCBlobInputStream::StreamReady(already_AddRefed<nsIInputStream> aInputStream)
                                           this);
   }
 
-  nsCOMPtr<nsIInputStreamCallback> inputStreamCallback;
-  inputStreamCallback.swap(mInputStreamCallback);
+  {
+    MutexAutoLock lock(mMutex);
 
-  nsCOMPtr<nsIEventTarget> inputStreamCallbackEventTarget;
-  inputStreamCallbackEventTarget.swap(mInputStreamCallbackEventTarget);
+    nsCOMPtr<nsIInputStreamCallback> inputStreamCallback;
+    inputStreamCallback.swap(mInputStreamCallback);
 
-  if (inputStreamCallback) {
-    MaybeExecuteInputStreamCallback(inputStreamCallback,
-                                    inputStreamCallbackEventTarget);
+    nsCOMPtr<nsIEventTarget> inputStreamCallbackEventTarget;
+    inputStreamCallbackEventTarget.swap(mInputStreamCallbackEventTarget);
+
+    if (inputStreamCallback) {
+      MaybeExecuteInputStreamCallback(inputStreamCallback,
+                                      inputStreamCallbackEventTarget,
+                                      lock);
+    }
   }
 }
 
 nsresult
 IPCBlobInputStream::MaybeExecuteInputStreamCallback(nsIInputStreamCallback* aCallback,
-                                                    nsIEventTarget* aCallbackEventTarget)
+                                                    nsIEventTarget* aCallbackEventTarget,
+                                                    const MutexAutoLock& aProofOfLock)
 {
   MOZ_ASSERT(mState == eRunning);
   MOZ_ASSERT(mRemoteStream || mAsyncRemoteStream);
@@ -449,12 +465,25 @@ IPCBlobInputStream::MaybeExecuteInputStreamCallback(nsIInputStreamCallback* aCal
     return NS_ERROR_FAILURE;
   }
 
+  bool hadCallback = !!mInputStreamCallback;
+
   mInputStreamCallback = aCallback;
   mInputStreamCallbackEventTarget = aCallbackEventTarget;
 
+  nsCOMPtr<nsIInputStreamCallback> callback = this;
+
   if (!mInputStreamCallback) {
-    return NS_OK;
+    if (!hadCallback) {
+      // Nothing was pending.
+      return NS_OK;
+    }
+
+    // Let's set a null callback in order to abort the current operation.
+    callback = nullptr;
   }
+
+  // We don't need to be locked anymore.
+  MutexAutoUnlock unlock(mMutex);
 
   nsresult rv = EnsureAsyncRemoteStream();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -463,7 +492,7 @@ IPCBlobInputStream::MaybeExecuteInputStreamCallback(nsIInputStreamCallback* aCal
 
   MOZ_ASSERT(mAsyncRemoteStream);
 
-  return mAsyncRemoteStream->AsyncWait(this, 0, 0, aCallbackEventTarget);
+  return mAsyncRemoteStream->AsyncWait(callback, 0, 0, aCallbackEventTarget);
 }
 
 void
@@ -489,27 +518,31 @@ IPCBlobInputStream::InitWithExistingRange(uint64_t aStart, uint64_t aLength)
 NS_IMETHODIMP
 IPCBlobInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
 {
-  // We have been closed in the meantime.
-  if (mState == eClosed) {
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(mState == eRunning);
-  MOZ_ASSERT(mAsyncRemoteStream == aStream);
-
-  // The callback has been canceled in the meantime.
-  if (!mInputStreamCallback) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIInputStreamCallback> callback;
-  callback.swap(mInputStreamCallback);
-
   nsCOMPtr<nsIEventTarget> callbackEventTarget;
-  callbackEventTarget.swap(mInputStreamCallbackEventTarget);
+  {
+    MutexAutoLock lock(mMutex);
+
+    // We have been closed in the meantime.
+    if (mState == eClosed) {
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(mState == eRunning);
+    MOZ_ASSERT(mAsyncRemoteStream == aStream);
+
+    // The callback has been canceled in the meantime.
+    if (!mInputStreamCallback) {
+      return NS_OK;
+    }
+
+    callback.swap(mInputStreamCallback);
+    callbackEventTarget.swap(mInputStreamCallbackEventTarget);
+  }
 
   // This must be the last operation because the execution of the callback can
   // be synchronous.
+  MOZ_ASSERT(callback);
   InputStreamCallbackRunnable::Execute(callback, callbackEventTarget, this);
   return NS_OK;
 }
