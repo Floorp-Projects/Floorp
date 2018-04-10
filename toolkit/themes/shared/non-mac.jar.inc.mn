@@ -12,7 +12,6 @@
 
   skin/classic/global/dialog.css                           (../../windows/global/dialog.css)
   skin/classic/global/progressmeter.css                    (../../windows/global/progressmeter.css)
-  skin/classic/global/resizer.css                          (../../windows/global/resizer.css)
   skin/classic/global/richlistbox.css                      (../../windows/global/richlistbox.css)
   skin/classic/global/scrollbars.css                       (../../windows/global/xulscrollbars.css)
   skin/classic/global/tabprompts.css                       (../../windows/global/tabprompts.css)
