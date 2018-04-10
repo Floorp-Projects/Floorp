@@ -368,6 +368,9 @@ function ReadTests() {
                 let decoder = new TextDecoder();
                 g.urls = JSON.parse(decoder.decode(array)).map(CreateUrls);
                 StartTests();
+            }).catch(function onFailure(e) {
+                logger.error("Failed to load test objects: " + e);
+                DoneTests();
             });
         } else if (manifests) {
             // Parse reftest manifests
