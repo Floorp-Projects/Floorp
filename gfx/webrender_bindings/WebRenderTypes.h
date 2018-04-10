@@ -44,17 +44,8 @@ typedef Maybe<ExternalImageId> MaybeExternalImageId;
 typedef Maybe<FontInstanceOptions> MaybeFontInstanceOptions;
 typedef Maybe<FontInstancePlatformOptions> MaybeFontInstancePlatformOptions;
 
-inline WindowId NewWindowId(uint64_t aId) {
-  WindowId id;
-  id.mHandle = aId;
-  return id;
-}
-
-inline Epoch NewEpoch(uint32_t aEpoch) {
-  Epoch e;
-  e.mHandle = aEpoch;
-  return e;
-}
+/* Generate a brand new window id and return it. */
+WindowId NewWindowId();
 
 inline DebugFlags NewDebugFlags(uint32_t aFlags) {
   DebugFlags flags;

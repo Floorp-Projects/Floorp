@@ -12,22 +12,19 @@ struct X;
 
 impl quote::ToTokens for X {
     fn to_tokens(&self, tokens: &mut quote::Tokens) {
-        tokens.append(proc_macro2::TokenTree {
-            kind: proc_macro2::TokenNode::Term(Term::intern("X")),
-            span: Span::def_site(),
-        });
+        tokens.append(Term::new("X", Span::call_site()));
     }
 }
 
 #[test]
 fn test_quote_impl() {
-    let tokens = quote!(
+    let tokens = quote! {
         impl<'a, T: ToTokens> ToTokens for &'a T {
             fn to_tokens(&self, tokens: &mut Tokens) {
                 (**self).to_tokens(tokens)
             }
         }
-    );
+    };
 
     let expected = concat!(
         "impl < 'a , T : ToTokens > ToTokens for & 'a T { ",
@@ -185,8 +182,8 @@ fn test_string() {
 
 #[test]
 fn test_ident() {
-    let foo = Term::intern("Foo");
-    let bar = Term::intern(&format!("Bar{}", 7));
+    let foo = Term::new("Foo", Span::call_site());
+    let bar = Term::new(&format!("Bar{}", 7), Span::call_site());
     let tokens = quote!(struct #foo; enum #bar {});
     let expected = "struct Foo ; enum Bar7 { }";
     assert_eq!(expected, tokens.to_string());
@@ -260,9 +257,9 @@ fn test_box_str() {
 
 #[test]
 fn test_cow() {
-    let owned: Cow<Term> = Cow::Owned(Term::intern("owned"));
+    let owned: Cow<Term> = Cow::Owned(Term::new("owned", Span::call_site()));
 
-    let ident = Term::intern("borrowed");
+    let ident = Term::new("borrowed", Span::call_site());
     let borrowed = Cow::Borrowed(&ident);
 
     let tokens = quote! { #owned #borrowed };
@@ -272,7 +269,7 @@ fn test_cow() {
 #[test]
 fn test_closure() {
     fn field_i(i: usize) -> Term {
-        Term::intern(&format!("__field{}", i))
+        Term::new(&format!("__field{}", i), Span::call_site())
     }
 
     let fields = (0usize..3)

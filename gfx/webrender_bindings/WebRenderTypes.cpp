@@ -11,6 +11,16 @@
 namespace mozilla {
 namespace wr {
 
+WindowId
+NewWindowId()
+{
+  static uint64_t sNextId = 1;
+
+  WindowId id;
+  id.mHandle = sNextId++;
+  return id;
+}
+
 void
 Assign_WrVecU8(wr::WrVecU8& aVec, mozilla::ipc::ByteBuf&& aOther)
 {

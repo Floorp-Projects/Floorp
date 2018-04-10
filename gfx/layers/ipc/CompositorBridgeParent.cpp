@@ -640,7 +640,7 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
   MOZ_ASSERT((mApzUpdater != nullptr) == (mApzcTreeManager != nullptr));
   if (mApzUpdater) {
     mApzSampler = nullptr;
-    mApzUpdater->ClearTree();
+    mApzUpdater->ClearTree(mRootLayerTreeID);
     mApzUpdater = nullptr;
     mApzcTreeManager = nullptr;
   }
@@ -1766,7 +1766,14 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   MOZ_ASSERT(mWidget);
 
   RefPtr<widget::CompositorWidget> widget = mWidget;
-  RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(this, Move(widget), aSize);
+  wr::WrWindowId windowId = wr::NewWindowId();
+  if (mApzUpdater) {
+    // If APZ is enabled, we need to register the APZ updater with the window id
+    // before the updater thread is created in WebRenderAPI::Create, so
+    // that the callback from the updater thread can find the right APZUpdater.
+    mApzUpdater->SetWebRenderWindowId(windowId);
+  }
+  RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(this, Move(widget), windowId, aSize);
   if (!api) {
     mWrBridge = WebRenderBridgeParent::CreateDestroyed(aPipelineId);
     mWrBridge.get()->AddRef(); // IPDL reference
@@ -1828,18 +1835,22 @@ CompositorBridgeParent::GetTestingTimeStamp() const
 void
 EraseLayerState(LayersId aId)
 {
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  RefPtr<APZUpdater> apz;
 
-  auto iter = sIndirectLayerTrees.find(aId);
-  if (iter != sIndirectLayerTrees.end()) {
-    CompositorBridgeParent* parent = iter->second.mParent;
-    if (parent) {
-      if (RefPtr<APZUpdater> apz = parent->GetAPZUpdater()) {
-        apz->NotifyLayerTreeRemoved(aId);
+  { // scope lock
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    auto iter = sIndirectLayerTrees.find(aId);
+    if (iter != sIndirectLayerTrees.end()) {
+      CompositorBridgeParent* parent = iter->second.mParent;
+      if (parent) {
+        apz = parent->GetAPZUpdater();
       }
+      sIndirectLayerTrees.erase(iter);
     }
+  }
 
-    sIndirectLayerTrees.erase(iter);
+  if (apz) {
+    apz->NotifyLayerTreeRemoved(aId);
   }
 }
 

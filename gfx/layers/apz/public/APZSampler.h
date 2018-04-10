@@ -75,12 +75,12 @@ public:
    * sampler thread (which samples the async transform).
    * This does nothing if thread assertions are disabled.
    */
-  void AssertOnSamplerThread();
+  void AssertOnSamplerThread() const;
 
   /**
    * Returns true if currently on the APZSampler's "sampler thread".
    */
-  bool IsSamplerThread();
+  bool IsSamplerThread() const;
 
 protected:
   virtual ~APZSampler();

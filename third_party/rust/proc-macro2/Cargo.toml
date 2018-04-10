@@ -12,7 +12,7 @@
 
 [package]
 name = "proc-macro2"
-version = "0.2.2"
+version = "0.3.6"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 description = "A stable implementation of the upcoming new `proc_macro` API. Comes with an\noption, off by default, to also reimplement itself in terms of the upstream\nunstable API.\n"
 homepage = "https://github.com/alexcrichton/proc-macro2"
@@ -28,4 +28,6 @@ doctest = false
 version = "0.1"
 
 [features]
-nightly = []
+default = ["proc-macro"]
+nightly = ["proc-macro"]
+proc-macro = []

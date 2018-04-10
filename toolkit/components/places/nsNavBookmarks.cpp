@@ -863,48 +863,6 @@ bool nsNavBookmarks::IsLivemark(int64_t aFolderId)
 }
 
 nsresult
-nsNavBookmarks::GetDescendantFolders(int64_t aFolderId,
-                                     nsTArray<int64_t>& aDescendantFoldersArray) {
-  nsresult rv;
-  // New descendant folders will be added from this index on.
-  uint32_t startIndex = aDescendantFoldersArray.Length();
-  {
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "SELECT id "
-      "FROM moz_bookmarks "
-      "WHERE parent = :parent "
-      "AND type = :item_type "
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("parent"), aFolderId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_type"), TYPE_FOLDER);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool hasMore = false;
-    while (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
-      int64_t itemId;
-      rv = stmt->GetInt64(0, &itemId);
-      NS_ENSURE_SUCCESS(rv, rv);
-      aDescendantFoldersArray.AppendElement(itemId);
-    }
-  }
-
-  // Recursively call GetDescendantFolders for added folders.
-  // We start at startIndex since previous folders are checked
-  // by previous calls to this method.
-  uint32_t childCount = aDescendantFoldersArray.Length();
-  for (uint32_t i = startIndex; i < childCount; ++i) {
-    GetDescendantFolders(aDescendantFoldersArray[i], aDescendantFoldersArray);
-  }
-
-  return NS_OK;
-}
-
-
-nsresult
 nsNavBookmarks::GetDescendantChildren(int64_t aFolderId,
                                       const nsACString& aFolderGuid,
                                       int64_t aGrandParentId,

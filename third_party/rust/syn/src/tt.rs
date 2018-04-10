@@ -19,56 +19,42 @@ use {parse_error, MacroDelimiter};
 use std::hash::{Hash, Hasher};
 
 #[cfg(any(feature = "parsing", feature = "extra-traits"))]
-use proc_macro2::{Delimiter, TokenNode, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, TokenStream, TokenTree};
 
 #[cfg(feature = "parsing")]
 pub fn delimited(input: Cursor) -> PResult<(MacroDelimiter, TokenStream)> {
-    match input.token_tree() {
-        Some((
-            TokenTree {
-                span,
-                kind: TokenNode::Group(delimiter, tts),
-            },
-            rest,
-        )) => {
-            let delimiter = match delimiter {
-                Delimiter::Parenthesis => MacroDelimiter::Paren(Paren(span)),
-                Delimiter::Brace => MacroDelimiter::Brace(Brace(span)),
-                Delimiter::Bracket => MacroDelimiter::Bracket(Bracket(span)),
-                Delimiter::None => return parse_error(),
-            };
-            Ok(((delimiter, tts), rest))
-        }
-        _ => parse_error(),
+    if let Some((TokenTree::Group(g), rest)) = input.token_tree() {
+        let span = g.span();
+        let delimiter = match g.delimiter() {
+            Delimiter::Parenthesis => MacroDelimiter::Paren(Paren(span)),
+            Delimiter::Brace => MacroDelimiter::Brace(Brace(span)),
+            Delimiter::Bracket => MacroDelimiter::Bracket(Bracket(span)),
+            Delimiter::None => return parse_error(),
+        };
+
+        return Ok(((delimiter, g.stream().clone()), rest))
     }
+    parse_error()
 }
 
 #[cfg(all(feature = "full", feature = "parsing"))]
 pub fn braced(input: Cursor) -> PResult<(Brace, TokenStream)> {
-    match input.token_tree() {
-        Some((
-            TokenTree {
-                span,
-                kind: TokenNode::Group(Delimiter::Brace, tts),
-            },
-            rest,
-        )) => Ok(((Brace(span), tts), rest)),
-        _ => parse_error(),
+    if let Some((TokenTree::Group(g), rest)) = input.token_tree() {
+        if g.delimiter() == Delimiter::Brace {
+            return Ok(((Brace(g.span()), g.stream().clone()), rest))
+        }
     }
+    parse_error()
 }
 
 #[cfg(all(feature = "full", feature = "parsing"))]
 pub fn parenthesized(input: Cursor) -> PResult<(Paren, TokenStream)> {
-    match input.token_tree() {
-        Some((
-            TokenTree {
-                span,
-                kind: TokenNode::Group(Delimiter::Parenthesis, tts),
-            },
-            rest,
-        )) => Ok(((Paren(span), tts), rest)),
-        _ => parse_error(),
+    if let Some((TokenTree::Group(g), rest)) = input.token_tree() {
+        if g.delimiter() == Delimiter::Parenthesis {
+            return Ok(((Paren(g.span()), g.stream().clone()), rest))
+        }
     }
+    parse_error()
 }
 
 #[cfg(feature = "extra-traits")]
@@ -79,9 +65,9 @@ impl<'a> PartialEq for TokenTreeHelper<'a> {
     fn eq(&self, other: &Self) -> bool {
         use proc_macro2::Spacing;
 
-        match (&self.0.kind, &other.0.kind) {
-            (&TokenNode::Group(d1, ref s1), &TokenNode::Group(d2, ref s2)) => {
-                match (d1, d2) {
+        match (self.0, other.0) {
+            (&TokenTree::Group(ref g1), &TokenTree::Group(ref g2)) => {
+                match (g1.delimiter(), g2.delimiter()) {
                     (Delimiter::Parenthesis, Delimiter::Parenthesis)
                     | (Delimiter::Brace, Delimiter::Brace)
                     | (Delimiter::Bracket, Delimiter::Bracket)
@@ -89,8 +75,8 @@ impl<'a> PartialEq for TokenTreeHelper<'a> {
                     _ => return false,
                 }
 
-                let s1 = s1.clone().into_iter();
-                let mut s2 = s2.clone().into_iter();
+                let s1 = g1.stream().clone().into_iter();
+                let mut s2 = g2.stream().clone().into_iter();
 
                 for item1 in s1 {
                     let item2 = match s2.next() {
@@ -103,16 +89,16 @@ impl<'a> PartialEq for TokenTreeHelper<'a> {
                 }
                 s2.next().is_none()
             }
-            (&TokenNode::Op(o1, k1), &TokenNode::Op(o2, k2)) => {
-                o1 == o2 && match (k1, k2) {
+            (&TokenTree::Op(ref o1), &TokenTree::Op(ref o2)) => {
+                o1.op() == o2.op() && match (o1.spacing(), o2.spacing()) {
                     (Spacing::Alone, Spacing::Alone) | (Spacing::Joint, Spacing::Joint) => true,
                     _ => false,
                 }
             }
-            (&TokenNode::Literal(ref l1), &TokenNode::Literal(ref l2)) => {
+            (&TokenTree::Literal(ref l1), &TokenTree::Literal(ref l2)) => {
                 l1.to_string() == l2.to_string()
             }
-            (&TokenNode::Term(ref s1), &TokenNode::Term(ref s2)) => s1.as_str() == s2.as_str(),
+            (&TokenTree::Term(ref s1), &TokenTree::Term(ref s2)) => s1.as_str() == s2.as_str(),
             _ => false,
         }
     }
@@ -123,31 +109,31 @@ impl<'a> Hash for TokenTreeHelper<'a> {
     fn hash<H: Hasher>(&self, h: &mut H) {
         use proc_macro2::Spacing;
 
-        match self.0.kind {
-            TokenNode::Group(delim, ref stream) => {
+        match *self.0 {
+            TokenTree::Group(ref g) => {
                 0u8.hash(h);
-                match delim {
+                match g.delimiter() {
                     Delimiter::Parenthesis => 0u8.hash(h),
                     Delimiter::Brace => 1u8.hash(h),
                     Delimiter::Bracket => 2u8.hash(h),
                     Delimiter::None => 3u8.hash(h),
                 }
 
-                for item in stream.clone() {
+                for item in g.stream().clone() {
                     TokenTreeHelper(&item).hash(h);
                 }
                 0xffu8.hash(h); // terminator w/ a variant we don't normally hash
             }
-            TokenNode::Op(op, kind) => {
+            TokenTree::Op(ref op) => {
                 1u8.hash(h);
-                op.hash(h);
-                match kind {
+                op.op().hash(h);
+                match op.spacing() {
                     Spacing::Alone => 0u8.hash(h),
                     Spacing::Joint => 1u8.hash(h),
                 }
             }
-            TokenNode::Literal(ref lit) => (2u8, lit.to_string()).hash(h),
-            TokenNode::Term(ref word) => (3u8, word.as_str()).hash(h),
+            TokenTree::Literal(ref lit) => (2u8, lit.to_string()).hash(h),
+            TokenTree::Term(ref word) => (3u8, word.as_str()).hash(h),
         }
     }
 }

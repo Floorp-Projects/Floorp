@@ -9,8 +9,8 @@
 
 const TOP_CONTAINER_LEVEL = 3;
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(`
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(`
     data:text/html;charset=utf-8,
     <h1>foo</h1>
     <span>bar</span>
@@ -22,10 +22,10 @@ add_task(function* () {
   let win = doc.defaultView;
 
   let rootElt = markup.getContainer(markup._rootNode).elt;
-  let bodyContainer = yield getContainerForSelector("body", inspector);
-  let spanContainer = yield getContainerForSelector("span", inspector);
-  let headerContainer = yield getContainerForSelector("h1", inspector);
-  let listContainer = yield getContainerForSelector("ul", inspector);
+  let bodyContainer = await getContainerForSelector("body", inspector);
+  let spanContainer = await getContainerForSelector("span", inspector);
+  let headerContainer = await getContainerForSelector("h1", inspector);
+  let listContainer = await getContainerForSelector("ul", inspector);
 
   // Focus on the tree element.
   rootElt.focus();
@@ -71,16 +71,16 @@ add_task(function* () {
     "Closed tree item should have aria-expanded unset");
 
   info("Selecting and expanding list container");
-  yield selectNode("ul", inspector);
+  await selectNode("ul", inspector);
   EventUtils.synthesizeKey("VK_RIGHT", {}, win);
-  yield waitForMultipleChildrenUpdates(inspector);
+  await waitForMultipleChildrenUpdates(inspector);
 
   is(rootElt.getAttribute("aria-activedescendant"),
     listContainer.tagLine.getAttribute("id"),
     "Active descendant should not be set to list container tagLine");
   is(listContainer.tagLine.getAttribute("aria-expanded"), "true",
     "Open tree item should have aria-expanded set");
-  let listItemContainer = yield getContainerForSelector("li", inspector);
+  let listItemContainer = await getContainerForSelector("li", inspector);
   is(listItemContainer.tagLine.getAttribute("aria-level"),
     TOP_CONTAINER_LEVEL + 1,
     "Grand child container tagLine should have nested level up to date");
@@ -90,7 +90,7 @@ add_task(function* () {
 
   info("Collapsing list container");
   EventUtils.synthesizeKey("VK_LEFT", {}, win);
-  yield waitForMultipleChildrenUpdates(inspector);
+  await waitForMultipleChildrenUpdates(inspector);
 
   is(listContainer.tagLine.getAttribute("aria-expanded"), "false",
     "Closed tree item should have aria-expanded unset");
