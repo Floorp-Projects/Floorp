@@ -25,6 +25,7 @@ add_task(async function() {
   let {inspector, view} = await openRuleView();
   let highlighters = view.highlighters;
 
+  info("Select a node with a shape value");
   await selectNode("#shape", inspector);
   let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
   let shapesToggle = container.querySelector(".ruleview-shapeswatch");
@@ -36,7 +37,6 @@ add_task(async function() {
   ok(!highlighters.highlighters[HIGHLIGHTER_TYPE],
     "No CSS shapes highlighter exists in the rule-view.");
   ok(!highlighters.shapesHighlighterShown, "No CSS shapes highlighter is shown.");
-
   info("Toggling ON the CSS shapes highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
   shapesToggle.click();
