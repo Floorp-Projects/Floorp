@@ -6,7 +6,7 @@
 
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
-const { describeNthCaller } = require("devtools/shared/platform/stack");
+const { getNthPathExcluding } = require("devtools/shared/platform/stack");
 let loggingEnabled = false;
 
 if (!isWorker) {
@@ -150,7 +150,7 @@ EventEmitter.prototype = {
       return;
     }
 
-    let description = describeNthCaller(2);
+    let description = getNthPathExcluding(0, "devtools/shared/old-event-emitter.js");
 
     let argOut = "(";
     if (args.length === 1) {

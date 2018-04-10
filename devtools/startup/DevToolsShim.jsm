@@ -13,6 +13,15 @@ XPCOMUtils.defineLazyGetter(this, "DevtoolsStartup", () => {
             .wrappedJSObject;
 });
 
+// We don't want to spend time initializing the full loader here so we create
+// our own lazy require.
+XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
+  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  const Telemetry = require("devtools/client/shared/telemetry");
+
+  return Telemetry;
+});
+
 const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
@@ -38,6 +47,14 @@ function removeItem(array, callback) {
 this.DevToolsShim = {
   _gDevTools: null,
   listeners: [],
+
+  get telemetry() {
+    if (!this._telemetry) {
+      this._telemetry = new Telemetry();
+      this._telemetry.setEventRecordingEnabled("devtools.main", true);
+    }
+    return this._telemetry;
+  },
 
   /**
    * Returns true if DevTools are enabled for the current profile. If devtools are not
@@ -244,6 +261,12 @@ this.DevToolsShim = {
   initDevTools: function(reason) {
     if (!this.isEnabled()) {
       throw new Error("DevTools are not enabled and can not be initialized.");
+    }
+
+    if (reason) {
+      this.telemetry.addEventProperty(
+        "devtools.main", "open", "tools", null, "entrypoint", reason
+      );
     }
 
     if (!this.isInitialized()) {

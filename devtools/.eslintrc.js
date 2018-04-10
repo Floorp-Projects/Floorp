@@ -36,6 +36,7 @@ module.exports = {
     "files": [
       "client/scratchpad/scratchpad-manager.jsm",
       "client/scratchpad/scratchpad.js",
+      "client/shared/*.jsm",
     ],
     "rules": {
       "camelcase": "off",
@@ -44,6 +45,8 @@ module.exports = {
     "files": [
       "client/framework/**",
       "client/scratchpad/**",
+      "client/shared/*.jsm",
+      "client/shared/widgets/*.jsm",
     ],
     "rules": {
       "consistent-return": "off",
@@ -52,6 +55,7 @@ module.exports = {
     "files": [
       "client/framework/**",
       "client/scratchpad/**",
+      "client/shared/AppCacheUtils.jsm",
     ],
     "rules": {
       "max-nested-callbacks": "off",
@@ -60,6 +64,8 @@ module.exports = {
     "files": [
       "client/framework/**",
       "client/scratchpad/**",
+      "client/shared/*.jsm",
+      "client/shared/widgets/*.jsm",
     ],
     "rules": {
       "max-len": "off",
@@ -76,6 +82,8 @@ module.exports = {
     "files": [
       "client/framework/**",
       "client/scratchpad/**",
+      "client/shared/*.jsm",
+      "client/shared/widgets/*.jsm",
     ],
     "rules": {
       "mozilla/no-aArgs": "off",
@@ -92,6 +100,8 @@ module.exports = {
     "files": [
       "client/framework/**",
       "client/scratchpad/**",
+      "client/shared/AppCacheUtils.jsm",
+      "client/shared/widgets/*.jsm",
     ],
     "rules": {
       "no-shadow": "off",

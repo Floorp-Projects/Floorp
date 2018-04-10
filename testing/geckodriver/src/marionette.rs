@@ -55,6 +55,8 @@ use logging;
 use prefs;
 
 const DEFAULT_HOST: &'static str = "localhost";
+const CHROME_ELEMENT_KEY: &'static str = "chromeelement-9fc5-4b51-a3c8-01716eedeb04";
+const LEGACY_ELEMENT_KEY: &'static str = "ELEMENT";
 
 pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
     return vec![(Method::Get, "/session/{sessionId}/moz/context", GeckoExtensionRoute::GetContext),
@@ -647,25 +649,26 @@ impl MarionetteSession {
     }
 
     fn to_web_element(&self, json_data: &Json) -> WebDriverResult<WebElement> {
-        let data = try_opt!(json_data.as_object(),
-                            ErrorStatus::UnknownError,
-                            "Failed to convert data to an object");
-        let id = try_opt!(
-            try_opt!(
-                match data.get("ELEMENT") {
-                    Some(id) => Some(id),
-                    None => {
-                        match data.get(ELEMENT_KEY) {
-                            Some(id) => Some(id),
-                            None => None
-                        }
-                    }
-                },
-                ErrorStatus::UnknownError,
-                "Failed to extract Web Element from response").as_string(),
+        let data = try_opt!(
+            json_data.as_object(),
             ErrorStatus::UnknownError,
-            "Failed to convert id value to string"
-            ).to_string();
+            "Failed to convert data to an object"
+        );
+
+        let web_element = data.get(ELEMENT_KEY);
+        let chrome_element = data.get(CHROME_ELEMENT_KEY);
+        let legacy_element = data.get(LEGACY_ELEMENT_KEY);
+
+        let value = try_opt!(
+            web_element.or(chrome_element).or(legacy_element),
+            ErrorStatus::UnknownError,
+            "Failed to extract web element from Marionette response"
+        );
+        let id = try_opt!(
+            value.as_string(),
+            ErrorStatus::UnknownError,
+            "Failed to convert web element reference value to string"
+        ).to_string();
         Ok(WebElement::new(id))
     }
 
