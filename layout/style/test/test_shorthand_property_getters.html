@@ -237,7 +237,7 @@ is(e.style.animation, "", "should not have animation shorthand (lists different 
 // (bug 482692).
 e.setAttribute("style", 'border-image: url("foo.png") 5 5 5 5 / 5 5 5 5 / 5 5 5 5 repeat repeat; border-left: medium solid green');
 is(e.style.cssText,
-   'border-image: url("foo.png") 5 / 5 / 5 repeat repeat; border-left: medium solid green;',
+   'border-image: url("foo.png") 5 / 5 / 5 repeat; border-left: medium solid green;',
    "border-left does NOT reset border-image");
 e.setAttribute("style", 'border-image: url("foo.png") 5 5 5 5; border: medium solid green');
 is(e.style.cssText,
