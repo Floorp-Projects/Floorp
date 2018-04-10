@@ -252,7 +252,7 @@ Rule.prototype = {
       // relevant properties here.
       for (let index in modifications.changedDeclarations) {
         let newValue = modifications.changedDeclarations[index];
-        this.textProps[index].updateValue(newValue);
+        this.textProps[index].noticeNewValue(newValue);
       }
       // Recompute and redisplay the computed properties.
       for (let prop of this.textProps) {
