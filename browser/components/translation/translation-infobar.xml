@@ -31,7 +31,7 @@
             <xul:description class="translation-welcome-body" anonid="welcomeBody"/>
             <xul:hbox align="center">
               <xul:label anonid="learnMore" class="plain text-link"
-                         onclick="openUILinkIn('https://support.mozilla.org/kb/automatic-translation', 'tab'); this.parentNode.parentNode.parentNode.hidePopup();"/>
+                         onclick="openTrustedLinkIn('https://support.mozilla.org/kb/automatic-translation', 'tab'); this.parentNode.parentNode.parentNode.hidePopup();"/>
               <xul:spacer flex="1"/>
               <xul:button class="translate-infobar-element" anonid="thanksButton"
                           onclick="this.parentNode.parentNode.parentNode.hidePopup();"/>

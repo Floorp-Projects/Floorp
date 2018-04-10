@@ -75,7 +75,7 @@ var Translation = {
   openProviderAttribution() {
     let attribution = this.supportedEngines[this.translationEngine];
     ChromeUtils.import("resource:///modules/RecentWindow.jsm");
-    RecentWindow.getMostRecentBrowserWindow().openUILinkIn(attribution, "tab");
+    RecentWindow.getMostRecentBrowserWindow().openTrustedLinkIn(attribution, "tab");
   },
 
   /**

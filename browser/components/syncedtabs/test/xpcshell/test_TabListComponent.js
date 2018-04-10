@@ -89,7 +89,7 @@ add_task(async function testActions() {
     },
     getBrowserURL() {},
     openDialog() {},
-    openUILinkIn() {}
+    openTrustedLinkIn() {}
   };
   let component = new TabListComponent({
     window: windowMock, store, View: null, SyncedTabs,
@@ -133,9 +133,9 @@ add_task(async function testActions() {
   Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][1], "uri");
   Assert.equal(windowMock.top.PlacesCommandHook.bookmarkLink.args[0][2], "title");
 
-  sinon.spy(windowMock, "openUILinkIn");
+  sinon.spy(windowMock, "openTrustedLinkIn");
   component.onOpenTab("uri", "where", "params");
-  Assert.ok(windowMock.openUILinkIn.calledWith("uri", "where", "params"));
+  Assert.ok(windowMock.openTrustedLinkIn.calledWith("uri", "where", "params"));
 
   sinon.spy(chromeWindowMock.gBrowser, "loadTabs");
   let tabsToOpen = ["uri1", "uri2"];

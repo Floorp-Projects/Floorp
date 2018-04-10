@@ -174,6 +174,7 @@ uint32_t   nsIOService::gDefaultSegmentCount = 24;
 
 bool nsIOService::sIsDataURIUniqueOpaqueOrigin = false;
 bool nsIOService::sBlockToplevelDataUriNavigations = false;
+bool nsIOService::sBlockFTPSubresources = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -247,6 +248,8 @@ nsIOService::Init()
                                  "security.data_uri.unique_opaque_origin", false);
     Preferences::AddBoolVarCache(&sBlockToplevelDataUriNavigations,
                                  "security.data_uri.block_toplevel_data_uri_navigations", false);
+    Preferences::AddBoolVarCache(&sBlockFTPSubresources,
+                                 "security.block_ftp_subresources", true);
     Preferences::AddBoolVarCache(&mOfflineMirrorsConnectivity, OFFLINE_MIRRORS_CONNECTIVITY, true);
 
     gIOService = this;
@@ -1926,6 +1929,12 @@ nsIOService::IsDataURIUniqueOpaqueOrigin()
 nsIOService::BlockToplevelDataUriNavigations()
 {
   return sBlockToplevelDataUriNavigations;
+}
+
+/*static*/ bool
+nsIOService::BlockFTPSubresources()
+{
+  return sBlockFTPSubresources;
 }
 
 NS_IMETHODIMP

@@ -488,7 +488,7 @@ StyleEditorUI.prototype = {
    */
   _openLinkNewTab: function() {
     if (this._contextMenuStyleSheet) {
-      this._window.openUILinkIn(this._contextMenuStyleSheet.href, "tab");
+      this._window.openWebLinkIn(this._contextMenuStyleSheet.href, "tab");
     }
   },
 

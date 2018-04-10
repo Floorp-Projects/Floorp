@@ -2935,7 +2935,10 @@ jit::Invalidate(JSContext* cx, const RecompileInfoVector& invalid, bool resetUse
 void
 jit::IonScript::invalidate(JSContext* cx, JSScript* script, bool resetUses, const char* reason)
 {
-    MOZ_RELEASE_ASSERT(script->ionScript() == this);
+    // Note: we could short circuit here if we already invalidated this
+    // IonScript, but jit::Invalidate also cancels off-thread compilations of
+    // |script|.
+    MOZ_RELEASE_ASSERT(invalidated() || script->ionScript() == this);
 
     JitSpew(JitSpew_IonInvalidate, " Invalidate IonScript %p: %s", this, reason);
 

@@ -289,7 +289,7 @@ AppCacheUtils.prototype = {
   viewEntry: function ACU_viewEntry(key) {
     let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     let url = "about:cache-entry?storage=appcache&context=&eid=&uri=" + key;
-    win.openUILinkIn(url, "tab");
+    win.openTrustedLinkIn(url, "tab");
   },
 
   clearAll: function ACU_clearAll() {

@@ -64,7 +64,8 @@ add_task(async function() {
   ok(shapeToggle, "shapes highlighter toggle is visible.");
   ok(!shapeToggle.classList.contains("active"),
     "shapes highlighter toggle button is not active.");
-  ok(highlighters.shapesHighlighterShown, "CSS shapes highlighter is still shown.");
+  ok(!highlighters.shapesHighlighterShown, "CSS shapes highlighter is still no longer" +
+    "shown due to selecting another node.");
 
   info("Toggling ON the CSS shapes highlighter for the second shapes container " +
     "from the rule-view.");

@@ -381,11 +381,11 @@ WebConsole.prototype = {
    */
   openLink(link, e) {
     let isOSX = Services.appinfo.OS == "Darwin";
+    let where = "tab";
     if (e && (e.button === 1 || (e.button === 0 && (isOSX ? e.metaKey : e.ctrlKey)))) {
-      this.chromeUtilsWindow.openUILinkIn(link, "tabshifted");
-    } else {
-      this.chromeUtilsWindow.openUILinkIn(link, "tab");
+      where = "tabshifted";
     }
+    this.chromeUtilsWindow.openWebLinkIn(link, where);
   },
 
   /**

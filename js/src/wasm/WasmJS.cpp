@@ -249,6 +249,12 @@ GetImports(JSContext* cx,
 #if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
             if (v.isObject() && v.toObject().is<WasmGlobalObject>()) {
                 RootedWasmGlobalObject obj(cx, &v.toObject().as<WasmGlobalObject>());
+
+                if (obj->isMutable() != global.isMutable()) {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MUT_LINK);
+                    return false;
+                }
+
                 if (globalObjs.length() <= index && !globalObjs.resize(index + 1)) {
                     ReportOutOfMemory(cx);
                     return false;
@@ -257,17 +263,23 @@ GetImports(JSContext* cx,
                 val = obj->val();
             } else
 #endif
-            {
+            if (v.isNumber()) {
                 if (global.type() == ValType::I64) {
                     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
                     return false;
                 }
 
-                if (!v.isNumber())
-                    return ThrowBadImportType(cx, import.field.get(), "Number");
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
+                if (global.isMutable()) {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MUT_LINK);
+                    return false;
+                }
+#endif
 
                 if (!ToWebAssemblyValue(cx, global.type(), v, &val))
                     return false;
+            } else {
+                return ThrowBadImportType(cx, import.field.get(), "Number");
             }
 
             if (!globalImportValues->append(val))
@@ -2178,7 +2190,7 @@ WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args)
         args.rval().set(args.thisv().toObject().as<WasmGlobalObject>().value());
         return true;
       case ValType::I64:
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_TYPE);
         return false;
       default:
         MOZ_CRASH();
@@ -2202,7 +2214,7 @@ WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args)
     }
 
     if (global->type() == ValType::I64) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_TYPE);
         return false;
     }
 

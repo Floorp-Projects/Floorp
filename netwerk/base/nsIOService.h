@@ -95,6 +95,8 @@ public:
     static bool IsDataURIUniqueOpaqueOrigin();
     static bool BlockToplevelDataUriNavigations();
 
+    static bool BlockFTPSubresources();
+
     // Used to count the total number of HTTP requests made
     void IncrementRequestNumber() { mTotalRequests++; }
     uint32_t GetTotalRequestNumber() { return mTotalRequests; }
@@ -196,6 +198,8 @@ private:
 
     static bool                          sIsDataURIUniqueOpaqueOrigin;
     static bool                          sBlockToplevelDataUriNavigations;
+
+    static bool                          sBlockFTPSubresources;
 
     uint32_t mTotalRequests;
     uint32_t mCacheWon;
