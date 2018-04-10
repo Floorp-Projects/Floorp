@@ -13,9 +13,14 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/layers/WebRenderScrollData.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
 namespace layers {
+
+StaticMutex APZUpdater::sWindowIdLock;
+std::unordered_map<uint64_t, APZUpdater*> APZUpdater::sWindowIdMap;
+
 
 APZUpdater::APZUpdater(const RefPtr<APZCTreeManager>& aApz)
   : mApz(aApz)
@@ -27,6 +32,12 @@ APZUpdater::APZUpdater(const RefPtr<APZCTreeManager>& aApz)
 APZUpdater::~APZUpdater()
 {
   mApz->SetUpdater(nullptr);
+
+  StaticMutexAutoLock lock(sWindowIdLock);
+  if (mWindowId) {
+    // Ensure that ClearTree was called and the task got run
+    MOZ_ASSERT(sWindowIdMap.find(wr::AsUint64(*mWindowId)) == sWindowIdMap.end());
+  }
 }
 
 bool
@@ -36,13 +47,34 @@ APZUpdater::HasTreeManager(const RefPtr<APZCTreeManager>& aApz)
 }
 
 void
+APZUpdater::SetWebRenderWindowId(const wr::WindowId& aWindowId)
+{
+  StaticMutexAutoLock lock(sWindowIdLock);
+  MOZ_ASSERT(!mWindowId);
+  mWindowId = Some(aWindowId);
+  sWindowIdMap[wr::AsUint64(aWindowId)] = this;
+}
+
+void
 APZUpdater::ClearTree()
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  RunOnUpdaterThread(NewRunnableMethod(
-      "APZUpdater::ClearTree",
-      mApz,
-      &APZCTreeManager::ClearTree));
+  RefPtr<APZUpdater> self = this;
+  RunOnUpdaterThread(NS_NewRunnableFunction(
+    "APZUpdater::ClearTree",
+    [=]() {
+      self->mApz->ClearTree();
+
+      // Once ClearTree is called on the APZCTreeManager, we are in a shutdown
+      // phase. After this point it's ok if WebRender cannot get a hold of the
+      // updater via the window id, and it's a good point to remove the mapping
+      // and avoid leaving a dangling pointer to this object.
+      StaticMutexAutoLock lock(sWindowIdLock);
+      if (self->mWindowId) {
+        sWindowIdMap.erase(wr::AsUint64(*(self->mWindowId)));
+      }
+    }
+  ));
 }
 
 void
