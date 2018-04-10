@@ -1672,7 +1672,7 @@ pref("extensions.formautofill.loglevel", "Warn");
 #ifdef NIGHTLY_BUILD
 // Comma separated list of countries Form Autofill supports.
 // This affects feature availability and the address edit form country picker.
-pref("extensions.formautofill.supportedCountries", "US,CA,DE");
+pref("extensions.formautofill.supportedCountries", "US,CA");
 pref("extensions.formautofill.supportRTL", true);
 #else
 pref("extensions.formautofill.supportedCountries", "US");

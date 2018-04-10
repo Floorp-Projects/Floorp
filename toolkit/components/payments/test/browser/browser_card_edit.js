@@ -17,8 +17,7 @@ add_task(async function test_add_link() {
 
     let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
       return state.page.id == "basic-card-page" && !state.page.guid;
-    },
-                                                          "Check add page state");
+    }, "Check add page state");
 
     ok(!state.isPrivate,
        "isPrivate flag is not set when paymentrequest is shown from a non-private session");
@@ -44,8 +43,7 @@ add_task(async function test_add_link() {
 
     state = await PTU.DialogContentUtils.waitForState(content, (state) => {
       return Object.keys(state.savedBasicCards).length == 1;
-    },
-                                                      "Check card was added");
+    }, "Check card was added");
 
     let cardGUIDs = Object.keys(state.savedBasicCards);
     is(cardGUIDs.length, 1, "Check there is one card");
@@ -57,8 +55,7 @@ add_task(async function test_add_link() {
 
     state = await PTU.DialogContentUtils.waitForState(content, (state) => {
       return state.page.id == "payment-summary";
-    },
-                                                      "Switched back to payment-summary");
+    }, "Switched back to payment-summary");
   }, args);
 });
 
@@ -79,8 +76,7 @@ add_task(async function test_edit_link() {
 
     let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
       return state.page.id == "basic-card-page" && !!state.page.guid;
-    },
-                                                          "Check edit page state");
+    }, "Check edit page state");
 
     let nextYear = (new Date()).getFullYear() + 1;
     let card = {
@@ -102,8 +98,7 @@ add_task(async function test_edit_link() {
 
     state = await PTU.DialogContentUtils.waitForState(content, (state) => {
       return Object.keys(state.savedBasicCards).length == 1;
-    },
-                                                      "Check card was added");
+    }, "Check card was added");
 
     let cardGUIDs = Object.keys(state.savedBasicCards);
     is(cardGUIDs.length, 1, "Check there is still one card");
@@ -115,8 +110,7 @@ add_task(async function test_edit_link() {
 
     state = await PTU.DialogContentUtils.waitForState(content, (state) => {
       return state.page.id == "payment-summary";
-    },
-                                                      "Switched back to payment-summary");
+    }, "Switched back to payment-summary");
   }, args);
 });
 
