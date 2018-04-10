@@ -826,23 +826,28 @@ var gPrivacyPane = {
 
   /**
    * Reads the network.cookie.cookieBehavior preference value and
-   * enables/disables the rest of the cookie UI accordingly, returning true
-   * if cookies are enabled.
+   * enables/disables the rest of the cookie UI accordingly.
+   *
+   * Returns "0" if cookies are accepted and "2" if they are entirely disabled.
    */
   readAcceptCookies() {
-    var pref = Preferences.get("network.cookie.cookieBehavior");
-    var acceptThirdPartyLabel = document.getElementById("acceptThirdPartyLabel");
-    var acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
-    var keepUntil = document.getElementById("keepUntil");
-    var menu = document.getElementById("keepCookiesUntil");
+    let pref = Preferences.get("network.cookie.cookieBehavior");
+    let acceptThirdPartyLabel = document.getElementById("acceptThirdPartyLabel");
+    let acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
+    let keepUntilLabel = document.getElementById("keepUntil");
+    let keepUntilMenu = document.getElementById("keepCookiesUntil");
 
     // enable the rest of the UI for anything other than "disable all cookies"
-    var acceptCookies = (pref.value != 2);
+    let acceptCookies = (pref.value != 2);
+    let cookieBehaviorLocked = Services.prefs.prefIsLocked("network.cookie.cookieBehavior");
+    const acceptThirdPartyControlsDisabled = !acceptCookies || cookieBehaviorLocked;
 
-    acceptThirdPartyLabel.disabled = acceptThirdPartyMenu.disabled = !acceptCookies;
+    acceptThirdPartyLabel.disabled = acceptThirdPartyMenu.disabled = acceptThirdPartyControlsDisabled;
 
     let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart").value;
-    keepUntil.disabled = menu.disabled = privateBrowsing || !acceptCookies;
+    let cookieExpirationLocked = Services.prefs.prefIsLocked("network.cookie.lifetimePolicy");
+    const keepUntilControlsDisabled = privateBrowsing || !acceptCookies || cookieExpirationLocked;
+    keepUntilLabel.disabled = keepUntilMenu.disabled = keepUntilControlsDisabled;
 
     // Our top-level setting is a radiogroup that only sets "enable all"
     // and "disable all", so convert the pref value accordingly.
