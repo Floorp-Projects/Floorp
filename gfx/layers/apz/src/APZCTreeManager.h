@@ -544,6 +544,14 @@ protected:
   APZSampler* GetSampler() const;
   APZUpdater* GetUpdater() const;
 
+  // We need to allow APZUpdater to lock and unlock this tree during a WR
+  // scene swap. We do this using private helpers to avoid exposing these
+  // functions to the world.
+private:
+  friend class APZUpdater;
+  void LockTree();
+  void UnlockTree();
+
   // Protected hooks for gtests subclass
   virtual AsyncPanZoomController* NewAPZCInstance(LayersId aLayersId,
                                                   GeckoContentController* aController);

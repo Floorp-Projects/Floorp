@@ -170,9 +170,6 @@ public:
     return mIdNamespace;
   }
 
-  void UpdateAPZFocusState(const FocusTarget& aFocus);
-  void UpdateAPZScrollData(WebRenderScrollData&& aData);
-
   void FlushRendering();
   void FlushRenderingAsync();
 
@@ -197,6 +194,9 @@ public:
 private:
   explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
   virtual ~WebRenderBridgeParent();
+
+  void UpdateAPZFocusState(const FocusTarget& aFocus);
+  void UpdateAPZScrollData(const wr::Epoch& aEpoch, WebRenderScrollData&& aData);
 
   bool UpdateResources(const nsTArray<OpUpdateResource>& aResourceUpdates,
                        const nsTArray<RefCountedShmem>& aSmallShmems,

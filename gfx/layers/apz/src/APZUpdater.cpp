@@ -14,7 +14,6 @@
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
 namespace layers {
@@ -71,14 +70,67 @@ APZUpdater::SetUpdaterThread(const wr::WrWindowId& aWindowId)
 }
 
 /*static*/ void
+APZUpdater::PrepareForSceneSwap(const wr::WrWindowId& aWindowId)
+{
+  if (RefPtr<APZUpdater> updater = GetUpdater(aWindowId)) {
+    updater->mApz->LockTree();
+  }
+}
+
+/*static*/ void
+APZUpdater::CompleteSceneSwap(const wr::WrWindowId& aWindowId,
+                              wr::WrPipelineInfo* aInfo)
+{
+  RefPtr<APZUpdater> updater = GetUpdater(aWindowId);
+  if (!updater) {
+    // This should only happen in cases where PrepareForSceneSwap also got a
+    // null updater. No updater-thread tasks get run between PrepareForSceneSwap
+    // and this function, so there is no opportunity for the updater mapping
+    // to have gotten removed from sWindowIdMap in between the two calls.
+    return;
+  }
+
+  wr::WrPipelineId pipeline;
+  wr::WrEpoch epoch;
+  while (wr_pipeline_info_next_removed_pipeline(aInfo, &pipeline)) {
+    LayersId layersId = wr::AsLayersId(pipeline);
+    updater->mEpochData.erase(layersId);
+  }
+  // Reset the built info for all pipelines, then put it back for the ones
+  // that got built in this scene swap.
+  for (auto& i : updater->mEpochData) {
+    i.second.mBuilt = Nothing();
+  }
+  while (wr_pipeline_info_next_epoch(aInfo, &pipeline, &epoch)) {
+    LayersId layersId = wr::AsLayersId(pipeline);
+    updater->mEpochData[layersId].mBuilt = Some(epoch);
+  }
+  wr_pipeline_info_delete(aInfo);
+
+  // Run any tasks that got unblocked, then unlock the tree. The order is
+  // important because we want to run all the tasks up to and including the
+  // UpdateHitTestingTree calls corresponding to the built epochs, and we
+  // want to run those before we release the lock (i.e. atomically with the
+  // scene swap). This ensures that any hit-tests always encounter a consistent
+  // state between the APZ tree and the built scene in WR.
+  //
+  // While we could add additional information to the queued tasks to figure
+  // out the minimal set of tasks we want to run here, it's easier and harmless
+  // to just run all the queued and now-unblocked tasks inside the lock.
+  //
+  // Note that the ProcessQueue here might remove the window id -> APZUpdater
+  // mapping from sWindowIdMap, but we still unlock the tree successfully to
+  // leave things in a good state.
+  updater->ProcessQueue();
+
+  updater->mApz->UnlockTree();
+}
+
+/*static*/ void
 APZUpdater::ProcessPendingTasks(const wr::WrWindowId& aWindowId)
 {
   if (RefPtr<APZUpdater> updater = GetUpdater(aWindowId)) {
-    MutexAutoLock lock(updater->mQueueLock);
-    for (auto task : updater->mUpdaterQueue) {
-      task->Run();
-    }
-    updater->mUpdaterQueue.clear();
+    updater->ProcessQueue();
   }
 }
 
@@ -135,10 +187,25 @@ APZUpdater::UpdateHitTestingTree(LayersId aRootLayerTreeId,
 void
 APZUpdater::UpdateScrollDataAndTreeState(LayersId aRootLayerTreeId,
                                          LayersId aOriginatingLayersId,
+                                         const wr::Epoch& aEpoch,
                                          WebRenderScrollData&& aScrollData)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   RefPtr<APZUpdater> self = this;
+  // Insert an epoch requirement update into the queue, so that
+  // tasks inserted into the queue after this point only get executed
+  // once the epoch requirement is satisfied. In particular, the
+  // UpdateHitTestingTree call below needs to wait until the epoch requirement
+  // is satisfied, which is why it is a separate task in the queue.
+  RunOnUpdaterThread(NS_NewRunnableFunction(
+    "APZUpdater::UpdateEpochRequirement",
+    [=]() {
+      if (aRootLayerTreeId == aOriginatingLayersId) {
+        self->mEpochData[aOriginatingLayersId].mIsRoot = true;
+      }
+      self->mEpochData[aOriginatingLayersId].mRequired = aEpoch;
+    }
+  ));
   RunOnUpdaterThread(NS_NewRunnableFunction(
     "APZUpdater::UpdateHitTestingTree",
     [=,aScrollData=Move(aScrollData)]() {
@@ -179,6 +246,7 @@ APZUpdater::NotifyLayerTreeRemoved(LayersId aLayersId)
   RunOnUpdaterThread(NS_NewRunnableFunction(
     "APZUpdater::NotifyLayerTreeRemoved",
     [=]() {
+      self->mEpochData.erase(aLayersId);
       self->mScrollData.erase(aLayersId);
       self->mApz->NotifyLayerTreeRemoved(aLayersId);
     }
@@ -358,6 +426,80 @@ APZUpdater::GetUpdater(const wr::WrWindowId& aWindowId)
   return updater.forget();
 }
 
+bool
+APZUpdater::IsQueueBlocked() const
+{
+  AssertOnUpdaterThread();
+
+  for (const auto& i : mEpochData) {
+    if (i.second.IsBlockingQueue()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+APZUpdater::ProcessQueue()
+{
+  { // scope lock to check for emptiness
+    MutexAutoLock lock(mQueueLock);
+    if (mUpdaterQueue.empty()) {
+      return;
+    }
+  }
+
+  // Note that running a task might update mEpochData, so we can't
+  // cache the result of IsQueueBlocked().
+  while (!IsQueueBlocked()) {
+    RefPtr<Runnable> task;
+
+    { // scope lock to extract a task
+      MutexAutoLock lock(mQueueLock);
+      if (mUpdaterQueue.empty()) {
+        break;
+      }
+      task = mUpdaterQueue.front();
+      mUpdaterQueue.pop_front();
+    }
+
+    task->Run();
+  }
+}
+
+APZUpdater::EpochState::EpochState()
+  : mRequired{0}
+  , mIsRoot(false)
+{
+}
+
+bool
+APZUpdater::EpochState::IsBlockingQueue() const
+{
+  // The root is a special case because we basically assume it is "visible"
+  // even before it is built for the first time. This is because building the
+  // scene automatically makes it visible, and we need to make sure the APZ
+  // scroll data gets applied atomically with that happening.
+  //
+  // Layer subtrees on the other hand do not automatically become visible upon
+  // being built, because there must be a another layer tree update to change
+  // the visibility (i.e. an ancestor layer tree update that adds the necessary
+  // reflayer to complete the chain of reflayers).
+  //
+  // So in the case of non-visible subtrees, we know that no hit-test will
+  // actually end up hitting that subtree either before or after the scene swap,
+  // because the subtree will remain non-visible. That in turns means that we
+  // can apply the APZ scroll data for that subtree epoch before the scene is
+  // built, because it's not going to get used anyway. And that means we don't
+  // need to block the queue for non-visible subtrees. Which is a good thing,
+  // because in practice it seems like we often have non-visible subtrees sent
+  // to the compositor from content.
+  if (mIsRoot && !mBuilt) {
+    return true;
+  }
+  return mBuilt && (*mBuilt < mRequired);
+}
+
 } // namespace layers
 } // namespace mozilla
 
@@ -372,12 +514,18 @@ apz_register_updater(mozilla::wr::WrWindowId aWindowId)
 void
 apz_pre_scene_swap(mozilla::wr::WrWindowId aWindowId)
 {
+  // This should never get called unless async scene building is enabled.
+  MOZ_ASSERT(gfxPrefs::WebRenderAsyncSceneBuild());
+  mozilla::layers::APZUpdater::PrepareForSceneSwap(aWindowId);
 }
 
 void
 apz_post_scene_swap(mozilla::wr::WrWindowId aWindowId,
                     mozilla::wr::WrPipelineInfo* aInfo)
 {
+  // This should never get called unless async scene building is enabled.
+  MOZ_ASSERT(gfxPrefs::WebRenderAsyncSceneBuild());
+  mozilla::layers::APZUpdater::CompleteSceneSwap(aWindowId, aInfo);
 }
 
 void
