@@ -128,12 +128,9 @@ TextProperty.prototype = {
 
   /**
    * Called when the property's value has been updated externally, and
-   * the property and editor should update to reflect that value.
-   *
-   * @param {String} value
-   *        Property value
+   * the property and editor should update.
    */
-  updateValue: function(value) {
+  noticeNewValue: function(value) {
     if (value !== this.value) {
       this.value = value;
       this.updateEditor();
