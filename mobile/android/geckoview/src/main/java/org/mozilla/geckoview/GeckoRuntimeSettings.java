@@ -65,6 +65,16 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mSettings.mExtras = extras;
             return this;
         }
+
+        /**
+         * Set whether JavaScript support should be enabled.
+         *
+         * @param flag A flag determining whether JavaScript should be enabled.
+         */
+        public @NonNull Builder javaScriptEnabled(final boolean flag) {
+            mSettings.mJavaScript.set(flag);
+            return this;
+        }
     }
 
     /* package */ GeckoRuntime runtime;
@@ -102,7 +112,12 @@ public final class GeckoRuntimeSettings implements Parcelable {
         }
     }
 
-    private final Pref<?>[] mPrefs = new Pref<?>[] {};
+    /* package */ Pref<Boolean> mJavaScript = new Pref<Boolean>(
+        "javascript.enabled", true);
+
+    private final Pref<?>[] mPrefs = new Pref<?>[] {
+        mJavaScript
+    };
 
     /* package */ GeckoRuntimeSettings() {
         this(null);
@@ -120,6 +135,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mUseContentProcess = settings.getUseContentProcessHint();
             mArgs = settings.getArguments().clone();
             mExtras = new Bundle(settings.getExtras());
+            mJavaScript.set(settings.mJavaScript.get());
         }
     }
 
@@ -156,6 +172,25 @@ public final class GeckoRuntimeSettings implements Parcelable {
         return mExtras;
     }
 
+    /**
+     * Get whether JavaScript support is enabled.
+     *
+     * @return Whether JavaScript support is enabled.
+     */
+    public boolean getJavaScriptEnabled() {
+        return mJavaScript.get();
+    }
+
+    /**
+     * Set whether JavaScript support should be enabled.
+     *
+     * @param flag A flag determining whether JavaScript should be enabled.
+     */
+    public @NonNull GeckoRuntimeSettings setJavaScriptEnabled(final boolean flag) {
+        mJavaScript.set(flag);
+        return this;
+    }
+
     @Override // Parcelable
     public int describeContents() {
         return 0;
@@ -166,6 +201,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         out.writeByte((byte) (mUseContentProcess ? 1 : 0));
         out.writeStringArray(mArgs);
         mExtras.writeToParcel(out, flags);
+        out.writeByte((byte) (mJavaScript.get() ? 1 : 0));
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -173,6 +209,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mUseContentProcess = source.readByte() == 1;
         mArgs = source.createStringArray();
         mExtras.readFromParcel(source);
+        mJavaScript.set(source.readByte() == 1);
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR
