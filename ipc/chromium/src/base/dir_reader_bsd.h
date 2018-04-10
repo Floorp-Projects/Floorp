@@ -38,7 +38,7 @@ class DirReaderBSD {
 
   ~DirReaderBSD() {
     if (fd_ >= 0) {
-      if (HANDLE_EINTR(close(fd_)))
+      if (IGNORE_EINTR(close(fd_)))
         DLOG(ERROR) << "Failed to close directory handle";
     }
   }

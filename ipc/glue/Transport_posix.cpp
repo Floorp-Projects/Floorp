@@ -48,8 +48,8 @@ CreateTransport(base::ProcessId aProcIdOne,
   }
 
   if (fd1 < 0 || fd2 < 0) {
-    HANDLE_EINTR(close(fd1));
-    HANDLE_EINTR(close(fd2));
+    IGNORE_EINTR(close(fd1));
+    IGNORE_EINTR(close(fd2));
     return NS_ERROR_DUPLICATE_HANDLE;
   }
 

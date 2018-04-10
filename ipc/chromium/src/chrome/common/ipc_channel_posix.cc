@@ -255,16 +255,16 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
     if (fcntl(pipe_fds[0], F_SETFL, O_NONBLOCK) == -1 ||
         fcntl(pipe_fds[1], F_SETFL, O_NONBLOCK) == -1) {
       mozilla::ipc::AnnotateCrashReportWithErrno("IpcCreatePipeFcntlErrno", errno);
-      HANDLE_EINTR(close(pipe_fds[0]));
-      HANDLE_EINTR(close(pipe_fds[1]));
+      IGNORE_EINTR(close(pipe_fds[0]));
+      IGNORE_EINTR(close(pipe_fds[1]));
       return false;
     }
 
     if (!SetCloseOnExec(pipe_fds[0]) ||
         !SetCloseOnExec(pipe_fds[1])) {
       mozilla::ipc::AnnotateCrashReportWithErrno("IpcCreatePipeCloExecErrno", errno);
-      HANDLE_EINTR(close(pipe_fds[0]));
-      HANDLE_EINTR(close(pipe_fds[1]));
+      IGNORE_EINTR(close(pipe_fds[0]));
+      IGNORE_EINTR(close(pipe_fds[1]));
       return false;
     }
 
@@ -362,7 +362,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
 
     if (client_pipe_ != -1) {
       Singleton<PipeMap>()->Remove(pipe_name_);
-      HANDLE_EINTR(close(client_pipe_));
+      IGNORE_EINTR(close(client_pipe_));
       client_pipe_ = -1;
     }
 
@@ -401,7 +401,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
                                 << " cmsg_len:" << cmsg->cmsg_len
                                 << " fd:" << pipe_;
             for (unsigned i = 0; i < num_wire_fds; ++i)
-              HANDLE_EINTR(close(wire_fds[i]));
+              IGNORE_EINTR(close(wire_fds[i]));
             return false;
           }
           break;
@@ -520,7 +520,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
                                 << " fds_i:" << fds_i;
           // close the existing file descriptors so that we don't leak them
           for (unsigned i = fds_i; i < num_fds; ++i)
-            HANDLE_EINTR(close(fds[i]));
+            IGNORE_EINTR(close(fds[i]));
           input_overflow_fds_.clear();
           // abort the connection
           return false;
@@ -789,7 +789,7 @@ void Channel::ChannelImpl::GetClientFileDescriptorMapping(int *src_fd,
 void Channel::ChannelImpl::CloseClientFileDescriptor() {
   if (client_pipe_ != -1) {
     Singleton<PipeMap>()->Remove(pipe_name_);
-    HANDLE_EINTR(close(client_pipe_));
+    IGNORE_EINTR(close(client_pipe_));
     client_pipe_ = -1;
   }
 }
@@ -851,7 +851,7 @@ void Channel::ChannelImpl::Close() {
   server_listen_connection_watcher_.StopWatchingFileDescriptor();
 
   if (server_listen_pipe_ != -1) {
-    HANDLE_EINTR(close(server_listen_pipe_));
+    IGNORE_EINTR(close(server_listen_pipe_));
     server_listen_pipe_ = -1;
   }
 
@@ -859,12 +859,12 @@ void Channel::ChannelImpl::Close() {
   read_watcher_.StopWatchingFileDescriptor();
   write_watcher_.StopWatchingFileDescriptor();
   if (pipe_ != -1) {
-    HANDLE_EINTR(close(pipe_));
+    IGNORE_EINTR(close(pipe_));
     pipe_ = -1;
   }
   if (client_pipe_ != -1) {
     Singleton<PipeMap>()->Remove(pipe_name_);
-    HANDLE_EINTR(close(client_pipe_));
+    IGNORE_EINTR(close(client_pipe_));
     client_pipe_ = -1;
   }
 
@@ -877,7 +877,7 @@ void Channel::ChannelImpl::Close() {
   // Close any outstanding, received file descriptors
   for (std::vector<int>::iterator
        i = input_overflow_fds_.begin(); i != input_overflow_fds_.end(); ++i) {
-    HANDLE_EINTR(close(*i));
+    IGNORE_EINTR(close(*i));
   }
   input_overflow_fds_.clear();
 

@@ -90,7 +90,7 @@ bool FileDescriptorTableInjection::Move(int src, int dest) {
 }
 
 void FileDescriptorTableInjection::Close(int fd) {
-  HANDLE_EINTR(close(fd));
+  IGNORE_EINTR(close(fd));
 }
 
 }  // namespace base
