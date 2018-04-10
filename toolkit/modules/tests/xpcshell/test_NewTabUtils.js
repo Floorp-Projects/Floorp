@@ -438,8 +438,10 @@ add_task(async function getHighlightsWithoutPocket() {
   Assert.equal(links.length, 2, "adding visits to bookmarks yields more links");
   Assert.equal(links[0].url, bookmarks[1].url, "first bookmark is younger bookmark");
   Assert.equal(links[0].type, "bookmark", "first bookmark is bookmark");
+  Assert.ok(links[0].date_added, "got a date_added for the bookmark");
   Assert.equal(links[1].url, bookmarks[0].url, "second bookmark is older bookmark");
   Assert.equal(links[1].type, "bookmark", "second bookmark is bookmark");
+  Assert.ok(links[1].date_added, "got a date_added for the bookmark");
 
   // Add metadata to history
   await addMetadata(testURI);
@@ -495,6 +497,7 @@ add_task(async function getHighlightsWithoutPocket() {
   Assert.equal(links.length, 3, "a visited bookmark doesn't appear as bookmark and history");
   Assert.equal(links[0].url, testURI, "history is now the first, i.e., most recent, bookmark");
   Assert.equal(links[0].type, "bookmark", "was history now bookmark");
+  Assert.ok(links[0].date_added, "got a date_added for the now bookmark");
   Assert.equal(links[1].url, bookmarks[1].url, "still have younger bookmark now second");
   Assert.equal(links[2].url, bookmarks[0].url, "still have older bookmark now third");
 
@@ -522,6 +525,7 @@ add_task(async function getHighlightsWithPocketSuccess() {
   const fakeResponse = {
     list: {
       "123": {
+        time_added: "123",
         image: {src: "foo.com/img.png"},
         excerpt: "A description for foo",
         resolved_title: "A title for foo",
@@ -565,6 +569,7 @@ add_task(async function getHighlightsWithPocketSuccess() {
   Assert.equal(currentLink.description, pocketItem.excerpt, "Correct description was added");
   Assert.equal(currentLink.pocket_id, pocketItem.item_id, "item_id was preserved");
   Assert.equal(currentLink.open_url, pocketItem.open_url, "open_url was preserved");
+  Assert.equal(currentLink.date_added, pocketItem.time_added * 1000, "date_added was added to pocket item");
 
   NewTabUtils.activityStreamLinks._savedPocketStories = null;
 });
@@ -575,6 +580,7 @@ add_task(async function getHighlightsWithPocketCached() {
   let fakeResponse = {
     list: {
       "123": {
+        time_added: "123",
         image: {src: "foo.com/img.png"},
         excerpt: "A description for foo",
         resolved_title: "A title for foo",
@@ -599,6 +605,7 @@ add_task(async function getHighlightsWithPocketCached() {
 
   // Update what the response would be
   fakeResponse.list["789"] = {
+    time_added: "123",
     image: {src: "bar.com/img.png"},
     excerpt: "A description for bar",
     resolved_title: "A title for bar",

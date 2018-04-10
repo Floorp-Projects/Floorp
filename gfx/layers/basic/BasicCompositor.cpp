@@ -313,7 +313,7 @@ BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, c
     }
     rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
     if (!aClearRect.IsEmpty()) {
-      IntRect clearRect = aRect.ToUnknownRect();
+      IntRect clearRect = aClearRect.ToUnknownRect();
       mDrawTarget->ClearRect(Rect(clearRect - rt->GetOrigin()));
     }
   }
@@ -1038,13 +1038,7 @@ BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd)
   if (mRenderTarget->mDrawTarget != mDrawTarget) {
     // Note: Most platforms require us to buffer drawing to the widget surface.
     // That's why we don't draw to mDrawTarget directly.
-    RefPtr<SourceSurface> source;
-    if (mRenderTarget->mDrawTarget != mDrawTarget) {
-      source = mWidget->EndBackBufferDrawing();
-    } else {
-      source = mRenderTarget->mDrawTarget->Snapshot();
-    }
-    RefPtr<DrawTarget> dest(mTarget ? mTarget : mDrawTarget);
+    RefPtr<SourceSurface> source = mWidget->EndBackBufferDrawing();
 
     nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
 
@@ -1053,9 +1047,9 @@ BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd)
     // pixels.
     for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
       const LayoutDeviceIntRect& r = iter.Get();
-      dest->CopySurface(source,
-                        IntRect(r.X(), r.Y(), r.Width(), r.Height()) - mRenderTarget->GetOrigin(),
-                        IntPoint(r.X(), r.Y()) - offset);
+      mDrawTarget->CopySurface(source,
+                               r.ToUnknownRect() - mRenderTarget->GetOrigin(),
+                               r.TopLeft().ToUnknownPoint() - offset);
     }
   }
 

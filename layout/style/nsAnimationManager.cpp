@@ -418,14 +418,13 @@ private:
 };
 
 
-template<class BuilderType>
 static void
 UpdateOldAnimationPropertiesWithNew(
     CSSAnimation& aOld,
     TimingParams& aNewTiming,
     nsTArray<Keyframe>&& aNewKeyframes,
     bool aNewIsStylePaused,
-    BuilderType& aBuilder)
+    ServoCSSAnimationBuilder& aBuilder)
 {
   bool animationChanged = false;
 
@@ -472,13 +471,12 @@ UpdateOldAnimationPropertiesWithNew(
 // Returns a new animation set up with given StyleAnimation.
 // Or returns an existing animation matching StyleAnimation's name updated
 // with the new StyleAnimation.
-template<class BuilderType>
 static already_AddRefed<CSSAnimation>
 BuildAnimation(nsPresContext* aPresContext,
                const NonOwningAnimationTarget& aTarget,
                const nsStyleDisplay& aStyleDisplay,
                uint32_t animIdx,
-               BuilderType& aBuilder,
+               ServoCSSAnimationBuilder& aBuilder,
                nsAnimationManager::CSSAnimationCollection* aCollection)
 {
   MOZ_ASSERT(aPresContext);
@@ -555,12 +553,11 @@ BuildAnimation(nsPresContext* aPresContext,
 }
 
 
-template<class BuilderType>
 static nsAnimationManager::OwningCSSAnimationPtrArray
 BuildAnimations(nsPresContext* aPresContext,
                 const NonOwningAnimationTarget& aTarget,
                 const nsStyleDisplay& aStyleDisplay,
-                BuilderType& aBuilder,
+                ServoCSSAnimationBuilder& aBuilder,
                 nsAnimationManager::CSSAnimationCollection* aCollection,
                 nsTHashtable<nsRefPtrHashKey<nsAtom>>& aReferencedAnimations)
 {
@@ -628,12 +625,11 @@ nsAnimationManager::UpdateAnimations(
   DoUpdateAnimations(target, *disp, builder);
 }
 
-template<class BuilderType>
 void
 nsAnimationManager::DoUpdateAnimations(
   const NonOwningAnimationTarget& aTarget,
   const nsStyleDisplay& aStyleDisplay,
-  BuilderType& aBuilder)
+  ServoCSSAnimationBuilder& aBuilder)
 {
   // Everything that causes our animation data to change triggers a
   // style change, which in turn triggers a non-animation restyle.

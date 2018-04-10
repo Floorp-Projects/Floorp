@@ -373,8 +373,7 @@ public:
    * Any properties contained in |aPropertiesToSkip| will not be added or
    * updated in |aComposeResult|.
    */
-  template<typename ComposeAnimationResult>
-  void ComposeStyle(ComposeAnimationResult&& aComposeResult,
+  void ComposeStyle(RawServoAnimationValueMap& aComposeResult,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
   void NotifyEffectTimingUpdated();

@@ -81,19 +81,17 @@ public:
    *
    * @param aKeyframes The input keyframes.
    * @param aElement The context element.
-   * @param aStyleType The |ComputedStyle| or |GeckoComputedStyle| to use
-   *   when computing values.
+   * @param aStyle The computed style values.
    * @param aEffectComposite The composite operation specified on the effect.
    *   For any keyframes in |aKeyframes| that do not specify a composite
    *   operation, this value will be used.
    * @return The set of animation properties. If an error occurs, the returned
    *   array will be empty.
    */
-  template<typename StyleType>
   static nsTArray<AnimationProperty> GetAnimationPropertiesFromKeyframes(
     const nsTArray<Keyframe>& aKeyframes,
     dom::Element* aElement,
-    StyleType* aStyleType,
+    const ComputedStyle* aStyle,
     dom::CompositeOperation aEffectComposite);
 
   /**

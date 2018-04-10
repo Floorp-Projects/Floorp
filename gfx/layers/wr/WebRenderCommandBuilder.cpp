@@ -536,11 +536,11 @@ struct DIGroup
       }
     }
 
-    // Round the bounds in a way that matches the existing fallback code
-    LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(mGroupBounds, aGrouper->mAppUnitsPerDevPixel);
-    bounds = LayoutDeviceRect(RoundedToInt(bounds));
-
-    IntSize size = mGroupBounds.Size().ScaleToNearestPixels(mScale.width, mScale.height, aGrouper->mAppUnitsPerDevPixel);
+    // Round the bounds out to leave space for unsnapped content
+    LayoutDeviceToLayerScale2D scale(mScale.width, mScale.height);
+    LayerIntRect layerBounds = LayerIntRect::FromUnknownRect(mGroupBounds.ScaleToOutsidePixels(mScale.width, mScale.height, aGrouper->mAppUnitsPerDevPixel));
+    IntSize dtSize = layerBounds.Size().ToUnknownSize();
+    LayoutDeviceRect bounds = layerBounds / scale;
 
     if (mInvalidRect.IsEmpty()) {
       GP("Not repainting group because it's empty\n");
@@ -566,7 +566,7 @@ struct DIGroup
     RefPtr<gfx::DrawTarget> dummyDt =
       gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
 
-    RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, size);
+    RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, dtSize);
     // Setup the gfxContext
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
     GP("ctx-offset %f %f\n", bounds.x, bounds.y);
@@ -590,8 +590,8 @@ struct DIGroup
       float r = float(rand()) / RAND_MAX;
       float g = float(rand()) / RAND_MAX;
       float b = float(rand()) / RAND_MAX;
-      dt->FillRect(gfx::Rect(0, 0, size.width, size.height), gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
-      dt->FlushItem(IntRect(IntPoint(0, 0), size));
+      dt->FillRect(gfx::Rect(0, 0, dtSize.width, dtSize.height), gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
+      dt->FlushItem(IntRect(IntPoint(0, 0), dtSize));
     }
 
     // XXX: set this correctly perhaps using aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);?
@@ -605,17 +605,17 @@ struct DIGroup
         return;
       wr::ImageKey key = aWrManager->WrBridge()->GetNextImageKey();
       GP("No previous key making new one %d\n", key.mHandle);
-      wr::ImageDescriptor descriptor(size, 0, dt->GetFormat(), isOpaque);
+      wr::ImageDescriptor descriptor(dtSize, 0, dt->GetFormat(), isOpaque);
       MOZ_RELEASE_ASSERT(bytes.length() > sizeof(size_t));
       if (!aResources.AddBlobImage(key, descriptor, bytes)) {
         return;
       }
       mKey = Some(key);
     } else {
-      wr::ImageDescriptor descriptor(size, 0, dt->GetFormat(), isOpaque);
+      wr::ImageDescriptor descriptor(dtSize, 0, dt->GetFormat(), isOpaque);
       auto bottomRight = mInvalidRect.BottomRight();
-      GP("check invalid %d %d - %d %d\n", bottomRight.x, bottomRight.y, size.width, size.height);
-      MOZ_RELEASE_ASSERT(bottomRight.x <= size.width && bottomRight.y <= size.height);
+      GP("check invalid %d %d - %d %d\n", bottomRight.x, bottomRight.y, dtSize.width, dtSize.height);
+      MOZ_RELEASE_ASSERT(bottomRight.x <= dtSize.width && bottomRight.y <= dtSize.height);
       GP("Update Blob %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y, mInvalidRect.width, mInvalidRect.height);
       if (!aResources.UpdateBlobImage(mKey.value(), descriptor, bytes, ViewAs<ImagePixel>(mInvalidRect))) {
         return;
