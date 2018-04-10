@@ -1,0 +1,19 @@
+<html class="reftest-wait">
+  <head>
+    <script>
+      function getDTMF () {
+        try { o4 = o2.dtmf } catch(e) { }
+        try { o4.insertDTMF("1BC1D55", new Uint32Array([3538134876])[0], new Uint32Array([666182017])[0]) } catch (e) { }
+        document.documentElement.removeAttribute("class");
+      }
+
+      o1 = new RTCPeerConnection({ }, null)
+      window.navigator.mediaDevices.getUserMedia({video: true, fake: true}).then((stream) => {
+        o2 = o1.addTrack(stream.getVideoTracks()[0], stream)
+      }).catch((error) => {})
+      o3 = window.open("datr=0")
+      setTimeout(getDTMF, 400)
+      setTimeout(window.location.reload.bind(window.location), 500);
+    </script>
+  </head>
+</html>
