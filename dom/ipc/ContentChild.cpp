@@ -607,6 +607,7 @@ ContentChild::RecvSetXPCOMProcessAttributes(const XPCOMInitData& aXPCOMInit,
 bool
 ContentChild::Init(MessageLoop* aIOLoop,
                    base::ProcessId aParentPid,
+                   const char* aParentBuildID,
                    IPC::Channel* aChannel,
                    uint64_t aChildID,
                    bool aIsForBrowser)
@@ -675,10 +676,15 @@ ContentChild::Init(MessageLoop* aIOLoop,
   GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_A11Y_REENTRY);
 #endif
 
-  // This must be sent before any IPDL message, which may hit sentinel
+  // This must be checked before any IPDL message, which may hit sentinel
   // errors due to parent and content processes having different
   // versions.
-  GetIPCChannel()->SendBuildID();
+  MessageChannel* channel = GetIPCChannel();
+  if (channel && !channel->SendBuildIDsMatchMessage(aParentBuildID)) {
+    // We need to quit this process if the buildID doesn't match the parent's.
+    // This can occur when an update occurred in the background.
+    ProcessChild::QuickExit();
+  }
 
 #ifdef MOZ_X11
   if (!gfxPlatform::IsHeadless()) {
