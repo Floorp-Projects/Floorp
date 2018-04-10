@@ -12,6 +12,7 @@ use webrender::{ReadPixelsFormat, Renderer, RendererOptions, ThreadListener};
 use webrender::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::DebugFlags;
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
+use webrender::{PipelineInfo, SceneBuilderHooks};
 use webrender::{ProgramCache, UploadMethod, VertexUsageHint};
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dImageRenderer;
@@ -601,16 +602,19 @@ pub struct WrPipelineInfo {
     removed_pipelines: Vec<PipelineId>,
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn wr_renderer_flush_pipeline_info(renderer: &mut Renderer) -> *mut WrPipelineInfo {
-    let info = renderer.flush_pipeline_info();
-    let pipeline_epochs = Box::new(
+impl WrPipelineInfo {
+    fn new(info: PipelineInfo) -> Self {
         WrPipelineInfo {
             epochs: info.epochs.into_iter().collect(),
             removed_pipelines: info.removed_pipelines,
         }
-    );
-    return Box::into_raw(pipeline_epochs);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_renderer_flush_pipeline_info(renderer: &mut Renderer) -> *mut WrPipelineInfo {
+    let info = renderer.flush_pipeline_info();
+    Box::into_raw(Box::new(WrPipelineInfo::new(info)))
 }
 
 #[no_mangle]
@@ -643,6 +647,52 @@ pub unsafe extern "C" fn wr_pipeline_info_next_removed_pipeline(
 #[no_mangle]
 pub unsafe extern "C" fn wr_pipeline_info_delete(info: *mut WrPipelineInfo) {
     Box::from_raw(info);
+}
+
+#[allow(improper_ctypes)] // this is needed so that rustc doesn't complain about passing the *mut WrPipelineInfo to an extern function
+extern "C" {
+    fn apz_register_updater(window_id: WrWindowId);
+    fn apz_pre_scene_swap(window_id: WrWindowId);
+    // This function takes ownership of the pipeline_info and is responsible for
+    // freeing it via wr_pipeline_info_delete.
+    fn apz_post_scene_swap(window_id: WrWindowId, pipeline_info: *mut WrPipelineInfo);
+    fn apz_run_updater(window_id: WrWindowId);
+    fn apz_deregister_updater(window_id: WrWindowId);
+}
+
+struct APZCallbacks {
+    window_id: WrWindowId,
+}
+
+impl APZCallbacks {
+    pub fn new(window_id: WrWindowId) -> Self {
+        APZCallbacks {
+            window_id,
+        }
+    }
+}
+
+impl SceneBuilderHooks for APZCallbacks {
+    fn register(&self) {
+        unsafe { apz_register_updater(self.window_id) }
+    }
+
+    fn pre_scene_swap(&self) {
+        unsafe { apz_pre_scene_swap(self.window_id) }
+    }
+
+    fn post_scene_swap(&self, info: PipelineInfo) {
+        let info = Box::into_raw(Box::new(WrPipelineInfo::new(info)));
+        unsafe { apz_post_scene_swap(self.window_id, info) }
+    }
+
+    fn poke(&self) {
+        unsafe { apz_run_updater(self.window_id) }
+    }
+
+    fn deregister(&self) {
+        unsafe { apz_deregister_updater(self.window_id) }
+    }
 }
 
 extern "C" {
@@ -784,6 +834,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         },
         renderer_id: Some(window_id.0),
         upload_method,
+        scene_builder_hooks: Some(Box::new(APZCallbacks::new(window_id))),
         ..Default::default()
     };
 
@@ -863,8 +914,17 @@ pub unsafe extern "C" fn wr_api_shut_down(dh: &mut DocumentHandle) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_transaction_new() -> *mut Transaction {
-    Box::into_raw(Box::new(Transaction::new()))
+pub extern "C" fn wr_transaction_new(do_async: bool) -> *mut Transaction {
+    let mut transaction = Transaction::new();
+    // Ensure that we either use async scene building or not based on the
+    // gecko pref, regardless of what the default is. We can remove this once
+    // the scene builder thread is enabled everywhere and working well.
+    if do_async {
+        transaction.use_scene_builder_thread();
+    } else {
+        transaction.skip_scene_builder();
+    }
+    Box::into_raw(Box::new(transaction))
 }
 
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
@@ -1316,6 +1376,11 @@ pub extern "C" fn wr_resource_updates_delete(updates: *mut ResourceUpdates) {
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_get_namespace(dh: &mut DocumentHandle) -> WrIdNamespace {
     dh.api.get_namespace_id()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_api_wake_scene_builder(dh: &mut DocumentHandle) {
+    dh.api.wake_scene_builder();
 }
 
 // RenderThread WIP notes:

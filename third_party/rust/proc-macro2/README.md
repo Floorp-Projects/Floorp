@@ -27,7 +27,7 @@ itself. Usage is done via:
 
 ```toml
 [dependencies]
-proc-macro2 = "0.2"
+proc-macro2 = "0.3"
 ```
 
 followed by
@@ -57,7 +57,7 @@ You can enable this feature via:
 
 ```toml
 [dependencies]
-proc-macro2 = { version = "0.2", features = ["nightly"] }
+proc-macro2 = { version = "0.3", features = ["nightly"] }
 ```
 
 

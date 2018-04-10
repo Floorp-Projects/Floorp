@@ -48,6 +48,8 @@ with Files('**.py'):
 
 SPHINX_TREES['mach'] = 'mach/docs'
 
+SPHINX_TREES['python'] = 'docs'
+
 with Files('mach/docs/**'):
     SCHEDULES.exclusive = ['docs']
 
