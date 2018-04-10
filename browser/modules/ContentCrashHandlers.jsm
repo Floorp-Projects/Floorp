@@ -320,7 +320,6 @@ var TabCrashHandler = {
   },
 
   sendToRestartRequiredPage(browser) {
-    let title = browser.contentTitle;
     let uri = browser.currentURI;
     let gBrowser = browser.ownerGlobal.gBrowser;
     let tab = gBrowser.getTabForBrowser(browser);
