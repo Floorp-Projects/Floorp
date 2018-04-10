@@ -25,8 +25,6 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 
-#ifdef CSS_REPORT_PARSE_ERRORS
-
 using namespace mozilla;
 using namespace mozilla::css;
 
@@ -164,12 +162,9 @@ void
 ErrorReporter::OutputError()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(ShouldReportErrors());
 
   if (mError.IsEmpty()) {
-    return;
-  }
-  if (!ShouldReportErrors()) {
-    ClearError();
     return;
   }
 
@@ -222,14 +217,6 @@ ErrorReporter::OutputError()
   }
 
   ClearError();
-}
-
-void
-ErrorReporter::OutputError(uint32_t aLineNumber, uint32_t aColNumber)
-{
-  mErrorLineNumber = aLineNumber;
-  mErrorColNumber = aColNumber;
-  OutputError();
 }
 
 // When Stylo's CSS parser is in use, this reporter does not have access to the CSS parser's
@@ -292,22 +279,6 @@ ErrorReporter::ReportUnexpected(const char *aMessage)
 }
 
 void
-ErrorReporter::ReportUnexpected(const char *aMessage,
-                                const nsString &aParam)
-{
-  if (!ShouldReportErrors()) return;
-
-  nsAutoString qparam;
-  nsStyleUtil::AppendEscapedCSSIdent(aParam, qparam);
-  const char16_t *params[1] = { qparam.get() };
-
-  nsAutoString str;
-  sStringBundle->FormatStringFromName(aMessage, params, ArrayLength(params),
-                                      str);
-  AddToError(str);
-}
-
-void
 ErrorReporter::ReportUnexpectedUnescaped(const char *aMessage,
                                          const nsAutoString& aParam)
 {
@@ -321,84 +292,5 @@ ErrorReporter::ReportUnexpectedUnescaped(const char *aMessage,
   AddToError(str);
 }
 
-void
-ErrorReporter::ReportUnexpected(const char *aMessage,
-                                const nsCSSToken &aToken)
-{
-  if (!ShouldReportErrors()) return;
-
-  nsAutoString tokenString;
-  aToken.AppendToString(tokenString);
-  ReportUnexpectedUnescaped(aMessage, tokenString);
-}
-
-void
-ErrorReporter::ReportUnexpected(const char *aMessage,
-                                const nsCSSToken &aToken,
-                                char16_t aChar)
-{
-  if (!ShouldReportErrors()) return;
-
-  nsAutoString tokenString;
-  aToken.AppendToString(tokenString);
-  const char16_t charStr[2] = { aChar, 0 };
-  const char16_t *params[2] = { tokenString.get(), charStr };
-
-  nsAutoString str;
-  sStringBundle->FormatStringFromName(aMessage, params, ArrayLength(params),
-                                      str);
-  AddToError(str);
-}
-
-void
-ErrorReporter::ReportUnexpected(const char *aMessage,
-                                const nsString &aParam,
-                                const nsString &aValue)
-{
-  if (!ShouldReportErrors()) return;
-
-  nsAutoString qparam;
-  nsStyleUtil::AppendEscapedCSSIdent(aParam, qparam);
-  const char16_t *params[2] = { qparam.get(), aValue.get() };
-
-  nsAutoString str;
-  sStringBundle->FormatStringFromName(aMessage, params, ArrayLength(params),
-                                      str);
-  AddToError(str);
-}
-
-void
-ErrorReporter::ReportUnexpectedEOF(const char *aMessage)
-{
-  if (!ShouldReportErrors()) return;
-
-  nsAutoString innerStr;
-  sStringBundle->GetStringFromName(aMessage, innerStr);
-  const char16_t *params[1] = { innerStr.get() };
-
-  nsAutoString str;
-  sStringBundle->FormatStringFromName("PEUnexpEOF2", params,
-                                      ArrayLength(params), str);
-  AddToError(str);
-}
-
-void
-ErrorReporter::ReportUnexpectedEOF(char16_t aExpected)
-{
-  if (!ShouldReportErrors()) return;
-
-  const char16_t expectedStr[] = {
-    char16_t('\''), aExpected, char16_t('\''), char16_t(0)
-  };
-  const char16_t *params[1] = { expectedStr };
-
-  nsAutoString str;
-  sStringBundle->FormatStringFromName("PEUnexpEOF2", params,
-                                      ArrayLength(params), str);
-  AddToError(str);
-}
-
 } // namespace css
 } // namespace mozilla
-
-#endif
