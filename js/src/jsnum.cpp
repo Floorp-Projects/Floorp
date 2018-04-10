@@ -14,6 +14,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
+#include "mozilla/TextUtils.h"
 
 #ifdef HAVE_LOCALECONV
 #include <locale.h>
@@ -41,6 +42,8 @@ using namespace js;
 
 using mozilla::Abs;
 using mozilla::ArrayLength;
+using mozilla::AsciiAlphanumericToNumber;
+using mozilla::IsAsciiAlphanumeric;
 using mozilla::Maybe;
 using mozilla::MinNumberValue;
 using mozilla::NegativeInfinity;
@@ -84,7 +87,7 @@ ComputeAccurateDecimalInteger(JSContext* cx, const CharT* start, const CharT* en
 
     for (size_t i = 0; i < length; i++) {
         char c = char(start[i]);
-        MOZ_ASSERT(('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'));
+        MOZ_ASSERT(IsAsciiAlphanumeric(c));
         cstr[i] = c;
     }
     cstr[length] = 0;
@@ -122,13 +125,8 @@ class BinaryDigitReader
                 return -1;
 
             int c = *start++;
-            MOZ_ASSERT(('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'));
-            if ('0' <= c && c <= '9')
-                digit = c - '0';
-            else if ('a' <= c && c <= 'z')
-                digit = c - 'a' + 10;
-            else
-                digit = c - 'A' + 10;
+            MOZ_ASSERT(IsAsciiAlphanumeric(c));
+            digit = AsciiAlphanumericToNumber(c);
             digitMask = base >> 1;
         }
 
@@ -226,18 +224,14 @@ js::GetPrefixInteger(JSContext* cx, const CharT* start, const CharT* end, int ba
     const CharT* s = start;
     double d = 0.0;
     for (; s < end; s++) {
-        int digit;
         CharT c = *s;
-        if ('0' <= c && c <= '9')
-            digit = c - '0';
-        else if ('a' <= c && c <= 'z')
-            digit = c - 'a' + 10;
-        else if ('A' <= c && c <= 'Z')
-            digit = c - 'A' + 10;
-        else
+        if (!IsAsciiAlphanumeric(c))
             break;
+
+        uint8_t digit = AsciiAlphanumericToNumber(c);
         if (digit >= base)
             break;
+
         d = d * base + digit;
     }
 
