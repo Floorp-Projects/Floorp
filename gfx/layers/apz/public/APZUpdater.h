@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_APZUpdater_h
 #define mozilla_layers_APZUpdater_h
 
+#include <deque>
 #include <unordered_map>
 
 #include "base/platform_thread.h"   // for PlatformThreadId
@@ -52,6 +53,7 @@ public:
    * which thread it is.
    */
   static void SetUpdaterThread(const wr::WrWindowId& aWindowId);
+  static void ProcessPendingTasks(const wr::WrWindowId& aWindowId);
 
   void ClearTree();
   void UpdateFocusState(LayersId aRootLayerTreeId,
@@ -140,6 +142,13 @@ private:
   // stuff before the updater thread has been properly initialized.
   mutable bool mUpdaterThreadQueried;
 #endif
+
+  // Lock used to protect mUpdaterQueue
+  Mutex mQueueLock;
+  // Holds a FIFO queue of tasks to be run on the updater thread,
+  // when the updater thread is a WebRender thread, since it won't have a
+  // message loop we can dispatch to.
+  std::deque<RefPtr<Runnable>> mUpdaterQueue;
 };
 
 } // namespace layers

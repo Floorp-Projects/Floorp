@@ -533,6 +533,10 @@ public:
   // Assert that the current thread is the updater thread for this APZCTM.
   void AssertOnUpdaterThread();
 
+  // Returns a pointer to the WebRenderAPI for the root layers id this APZCTreeManager
+  // is for. This might be null (for example, if WebRender is not enabled).
+  already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI() const;
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~APZCTreeManager();
@@ -686,10 +690,6 @@ private:
 
   // Requires the caller to hold mTreeLock.
   LayerToParentLayerMatrix4x4 ComputeTransformForNode(const HitTestingTreeNode* aNode) const;
-
-  // Returns a pointer to the WebRenderAPI for the root layers id this APZCTreeManager
-  // is for. This might be null (for example, if WebRender is not enabled).
-  already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI() const;
 
   // Returns a pointer to the GeckoContentController for the given layers id.
   already_AddRefed<GeckoContentController> GetContentController(LayersId aLayersId) const;
