@@ -100,18 +100,13 @@ protected:
   // caps, which leads to REQUIRES hell, since this header is included all
   // over.
 
-  // For both constructors aString must not be null.
-  // For both constructors principal of aExtraData must not be null.
+  // aString must not be null.
+  // principal of aExtraData must not be null.
   // Construct with a base URI; this will create the actual URI lazily from
   // aString and aExtraData.
-  URLValueData(const nsAString& aString,
-               already_AddRefed<URLExtraData> aExtraData);
   URLValueData(ServoRawOffsetArc<RustString> aString,
                already_AddRefed<URLExtraData> aExtraData);
   // Construct with the actual URI.
-  URLValueData(already_AddRefed<nsIURI> aURI,
-               const nsAString& aString,
-               already_AddRefed<URLExtraData> aExtraData);
   URLValueData(already_AddRefed<nsIURI> aURI,
                ServoRawOffsetArc<RustString> aString,
                already_AddRefed<URLExtraData> aExtraData);
@@ -163,40 +158,29 @@ public:
 
   bool EqualsExceptRef(nsIURI* aURI) const;
 
-  // Can only be called from the main thread. Returns this URL's UTF-16 representation,
-  // converting and caching its value if necessary.
-  const nsString& GetUTF16String() const;
-  // Returns this URL's UTF-16 representation, converting if necessary.
-  nsString GetUTF16StringForAnyThread() const;
+  bool IsStringEmpty() const
+  {
+    return GetString().IsEmpty();
+  }
 
-  bool IsStringEmpty() const;
+  nsDependentCSubstring GetString() const;
 
 private:
   // mURI stores the lazily resolved URI.  This may be null if the URI is
   // invalid, even once resolved.
   mutable nsCOMPtr<nsIURI> mURI;
+
 public:
   RefPtr<URLExtraData> mExtraData;
-private:
-  // Returns a substring based on mStrings.mRustString which should not be exposed
-  // to external consumers.
-  nsDependentCSubstring GetRustString() const;
 
+private:
   mutable bool mURIResolved;
+
   // mIsLocalRef is set when url starts with a U+0023 number sign(#) character.
   mutable Maybe<bool> mIsLocalRef;
   mutable Maybe<bool> mMightHaveRef;
 
-  mutable union RustOrGeckoString {
-    explicit RustOrGeckoString(const nsAString& aString)
-    : mString(aString) {}
-    explicit RustOrGeckoString(ServoRawOffsetArc<RustString> aString)
-    : mRustString(aString) {}
-    ~RustOrGeckoString() {}
-    nsString mString;
-    mozilla::ServoRawOffsetArc<RustString> mRustString;
-  } mStrings;
-  mutable bool mUsingRustString;
+  mozilla::ServoRawOffsetArc<RustString> mString;
 
 protected:
   // Only used by ImageValue.  Declared up here because otherwise bindgen gets
@@ -223,16 +207,10 @@ private:
 
 struct URLValue final : public URLValueData
 {
-  // These two constructors are safe to call only on the main thread.
-  URLValue(const nsAString& aString, nsIURI* aBaseURI, nsIURI* aReferrer,
-           nsIPrincipal* aOriginPrincipal);
-  URLValue(nsIURI* aURI, const nsAString& aString, nsIURI* aBaseURI,
-           nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal);
-
-  // This constructor is safe to call from any thread.
   URLValue(ServoRawOffsetArc<RustString> aString,
            already_AddRefed<URLExtraData> aExtraData)
-    : URLValueData(aString, Move(aExtraData)) {}
+    : URLValueData(aString, Move(aExtraData))
+  { }
 
   URLValue(const URLValue&) = delete;
   URLValue& operator=(const URLValue&) = delete;
@@ -242,9 +220,8 @@ struct URLValue final : public URLValueData
 
 struct ImageValue final : public URLValueData
 {
-  static ImageValue* CreateFromURLValue(URLValue* url,
-                                        nsIDocument* aDocument,
-                                        CORSMode aCORSMode);
+  static already_AddRefed<ImageValue>
+    CreateFromURLValue(URLValue*, nsIDocument*, CORSMode);
 
   // Not making the constructor and destructor inline because that would
   // force us to include imgIRequest.h, which leads to REQUIRES hell, since
@@ -683,15 +660,6 @@ public:
     MOZ_ASSERT(mUnit == eCSSUnit_GridTemplateAreas,
                "not a grid-template-areas value");
     return mValue.mGridTemplateAreas;
-  }
-
-  const char16_t* GetOriginalURLValue() const
-  {
-    MOZ_ASSERT(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
-               "not a URL value");
-    return mUnit == eCSSUnit_URL ?
-             mValue.mURL->GetUTF16String().get() :
-             mValue.mImage->GetUTF16String().get();
   }
 
   // Not making this inline because that would force us to include
