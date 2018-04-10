@@ -139,6 +139,12 @@ WorkerGlobalScope::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   MOZ_CRASH("We should never get here!");
 }
 
+void
+WorkerGlobalScope::NoteTerminating()
+{
+  DisconnectEventTargetObjects();
+}
+
 already_AddRefed<Console>
 WorkerGlobalScope::GetConsole(ErrorResult& aRv)
 {
