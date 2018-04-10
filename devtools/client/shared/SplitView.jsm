@@ -28,8 +28,7 @@ var bindings = new WeakMap();
  * @param DOMElement aRoot
  * @see appendItem
  */
-this.SplitView = function SplitView(aRoot)
-{
+this.SplitView = function SplitView(aRoot) {
   this._root = aRoot;
   this._controller = aRoot.querySelector(".splitview-controller");
   this._nav = aRoot.querySelector(".splitview-nav");
@@ -89,8 +88,7 @@ SplitView.prototype = {
     *
     * @return boolean
     */
-  get isLandscape()
-  {
+  get isLandscape() {
     return this._mql.matches;
   },
 
@@ -99,8 +97,7 @@ SplitView.prototype = {
     *
     * @return DOMElement
     */
-  get rootElement()
-  {
+  get rootElement() {
     return this._root;
   },
 
@@ -109,8 +106,7 @@ SplitView.prototype = {
     *
     * @return DOMElement
     */
-  get activeSummary()
-  {
+  get activeSummary() {
     return this._activeSummary;
   },
 
@@ -119,8 +115,7 @@ SplitView.prototype = {
     *
     * @param DOMElement aSummary
     */
-  set activeSummary(aSummary)
-  {
+  set activeSummary(aSummary) {
     if (aSummary == this._activeSummary) {
       return;
     }
@@ -155,8 +150,7 @@ SplitView.prototype = {
     * Retrieve the active item's details element or null if there is none.
     * @return DOMElement
     */
-  get activeDetails()
-  {
+  get activeDetails() {
     let summary = this.activeSummary;
     return summary ? bindings.get(summary)._details : null;
   },
@@ -169,8 +163,7 @@ SplitView.prototype = {
    *         Summary element with given ordinal or null if not found.
    * @see appendItem
    */
-  getSummaryElementByOrdinal: function SEC_getSummaryElementByOrdinal(aOrdinal)
-  {
+  getSummaryElementByOrdinal: function SEC_getSummaryElementByOrdinal(aOrdinal) {
     return this._nav.querySelector("* > li[data-ordinal='" + aOrdinal + "']");
   },
 
@@ -198,8 +191,7 @@ SplitView.prototype = {
    *         Items with a lower ordinal are displayed before those with a
    *         higher ordinal.
    */
-  appendItem: function ASV_appendItem(aSummary, aDetails, aOptions)
-  {
+  appendItem: function ASV_appendItem(aSummary, aDetails, aOptions) {
     let binding = aOptions || {};
 
     binding._summary = aSummary;
@@ -235,8 +227,7 @@ SplitView.prototype = {
    *         Object with the new DOM elements created for summary and details.
    * @see appendItem
    */
-  appendTemplatedItem: function ASV_appendTemplatedItem(aName, aOptions)
-  {
+  appendTemplatedItem: function ASV_appendTemplatedItem(aName, aOptions) {
     aOptions = aOptions || {};
     let summary = this._root.querySelector("#splitview-tpl-summary-" + aName);
     let details = this._root.querySelector("#splitview-tpl-details-" + aName);
@@ -260,8 +251,7 @@ SplitView.prototype = {
     * @param DOMElement aSummary
     *        Summary element of the item to remove.
     */
-  removeItem: function ASV_removeItem(aSummary)
-  {
+  removeItem: function ASV_removeItem(aSummary) {
     if (aSummary == this._activeSummary) {
       this.activeSummary = null;
     }
@@ -278,8 +268,7 @@ SplitView.prototype = {
   /**
    * Remove all items from the split view.
    */
-  removeAll: function ASV_removeAll()
-  {
+  removeAll: function ASV_removeAll() {
     while (this._nav.hasChildNodes()) {
       this.removeItem(this._nav.firstChild);
     }
@@ -295,8 +284,7 @@ SplitView.prototype = {
    * @param string aClassName
    *        One or more space-separated CSS classes.
    */
-  setItemClassName: function ASV_setItemClassName(aSummary, aClassName)
-  {
+  setItemClassName: function ASV_setItemClassName(aSummary, aClassName) {
     let binding = bindings.get(aSummary);
     let viewSpecific;
 

@@ -3495,27 +3495,46 @@ GeckoDriver.prototype.teardownReftest = function() {
 
 GeckoDriver.prototype.commands = {
   // Marionette service
-  "Marionette:SetContext": GeckoDriver.prototype.setContext,
-  "setContext": GeckoDriver.prototype.setContext,  // deprecated, remove in Firefox 60
-  "Marionette:GetContext": GeckoDriver.prototype.getContext,
-  "getContext": GeckoDriver.prototype.getContext,
   "Marionette:AcceptConnections": GeckoDriver.prototype.acceptConnections,
-  "acceptConnections": GeckoDriver.prototype.acceptConnections,  // deprecated, remove in Firefox 60
+  "Marionette:GetContext": GeckoDriver.prototype.getContext,
+  "Marionette:GetScreenOrientation": GeckoDriver.prototype.getScreenOrientation,
+  "Marionette:GetWindowType": GeckoDriver.prototype.getWindowType,
   "Marionette:Quit": GeckoDriver.prototype.quit,
-  "quit": GeckoDriver.prototype.quit,  // deprecated, remove in Firefox 60
-  "quitApplication": GeckoDriver.prototype.quit,  // deprecated, remove in Firefox 60
+  "Marionette:SetContext": GeckoDriver.prototype.setContext,
+  "Marionette:SetScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
+  // Bug 1354578 - Remove legacy action commands
+  "Marionette:ActionChain": GeckoDriver.prototype.actionChain,
+  "Marionette:MultiAction": GeckoDriver.prototype.multiAction,
+  "Marionette:SingleTap": GeckoDriver.prototype.singleTap,
+  // deprecated Marionette commands, remove in Firefox 63
+  "actionChain": GeckoDriver.prototype.actionChain,
+  "acceptConnections": GeckoDriver.prototype.acceptConnections,
+  "closeChromeWindow": GeckoDriver.prototype.closeChromeWindow,
+  "getChromeWindowHandles": GeckoDriver.prototype.getChromeWindowHandles,
+  "getContext": GeckoDriver.prototype.getContext,
+  "getCurrentChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
+  "getScreenOrientation": GeckoDriver.prototype.getScreenOrientation,
+  "getWindowType": GeckoDriver.prototype.getWindowType,
+  "multiAction": GeckoDriver.prototype.multiAction,
+  "quit": GeckoDriver.prototype.quit,
+  "quitApplication": GeckoDriver.prototype.quit,
+  "setContext": GeckoDriver.prototype.setContext,
+  "setScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
+  "singleTap": GeckoDriver.prototype.singleTap,
 
   // Addon service
   "Addon:Install": GeckoDriver.prototype.installAddon,
-  "addon:install": GeckoDriver.prototype.installAddon,  // deprecated, remove in Firefox 60
   "Addon:Uninstall": GeckoDriver.prototype.uninstallAddon,
-  "addon:uninstall": GeckoDriver.prototype.uninstallAddon,  // deprecated, remove in Firefox 60
+  // deprecated Addon commands, remove in Firefox 63
+  "addon:install": GeckoDriver.prototype.installAddon,
+  "addon:uninstall": GeckoDriver.prototype.uninstallAddon,
 
   // L10n service
   "L10n:LocalizeEntity": GeckoDriver.prototype.localizeEntity,
-  "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,  // deprecated, remove in Firefox 60
   "L10n:LocalizeProperty": GeckoDriver.prototype.localizeProperty,
-  "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,  // deprecated, remove in Firefox 60
+  // deprecated L10n commands, remove in Firefox 63
+  "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,
+  "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,
 
   // Reftest service
   "reftest:setup": GeckoDriver.prototype.setupReftest,
@@ -3523,7 +3542,8 @@ GeckoDriver.prototype.commands = {
   "reftest:teardown": GeckoDriver.prototype.teardownReftest,
 
   // WebDriver service
-  "WebDriver:AcceptDialog": GeckoDriver.prototype.acceptDialog,
+  "WebDriver:AcceptAlert": GeckoDriver.prototype.acceptDialog,
+  "WebDriver:AcceptDialog": GeckoDriver.prototype.acceptDialog,  // deprecated, remove in Firefox 63
   "WebDriver:AddCookie": GeckoDriver.prototype.addCookie,
   "WebDriver:Back": GeckoDriver.prototype.goBack,
   "WebDriver:CloseChromeWindow": GeckoDriver.prototype.closeChromeWindow,
@@ -3557,13 +3577,11 @@ GeckoDriver.prototype.commands = {
   "WebDriver:GetElementTagName": GeckoDriver.prototype.getElementTagName,
   "WebDriver:GetElementText": GeckoDriver.prototype.getElementText,
   "WebDriver:GetPageSource": GeckoDriver.prototype.getPageSource,
-  "WebDriver:GetScreenOrientation": GeckoDriver.prototype.getScreenOrientation,
   "WebDriver:GetTimeouts": GeckoDriver.prototype.getTimeouts,
   "WebDriver:GetTitle": GeckoDriver.prototype.getTitle,
   "WebDriver:GetWindowHandle": GeckoDriver.prototype.getWindowHandle,
   "WebDriver:GetWindowHandles": GeckoDriver.prototype.getWindowHandles,
   "WebDriver:GetWindowRect": GeckoDriver.prototype.getWindowRect,
-  "WebDriver:GetWindowType": GeckoDriver.prototype.getWindowType,
   "WebDriver:IsElementDisplayed": GeckoDriver.prototype.isElementDisplayed,
   "WebDriver:IsElementEnabled": GeckoDriver.prototype.isElementEnabled,
   "WebDriver:IsElementSelected": GeckoDriver.prototype.isElementSelected,
@@ -3575,7 +3593,6 @@ GeckoDriver.prototype.commands = {
   "WebDriver:Refresh":  GeckoDriver.prototype.refresh,
   "WebDriver:ReleaseActions": GeckoDriver.prototype.releaseActions,
   "WebDriver:SendAlertText": GeckoDriver.prototype.sendKeysToDialog,
-  "WebDriver:SetScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
   "WebDriver:SetTimeouts": GeckoDriver.prototype.setTimeouts,
   "WebDriver:SetWindowRect": GeckoDriver.prototype.setWindowRect,
   "WebDriver:SwitchToFrame": GeckoDriver.prototype.switchToFrame,
@@ -3584,13 +3601,11 @@ GeckoDriver.prototype.commands = {
   "WebDriver:SwitchToWindow": GeckoDriver.prototype.switchToWindow,
   "WebDriver:TakeScreenshot": GeckoDriver.prototype.takeScreenshot,
 
-  // deprecated WebDriver commands, remove in Firefox 60
+  // deprecated WebDriver commands, remove in Firefox 63
   "acceptDialog": GeckoDriver.prototype.acceptDialog,
-  "actionChain": GeckoDriver.prototype.actionChain,
   "addCookie": GeckoDriver.prototype.addCookie,
   "clearElement": GeckoDriver.prototype.clearElement,
   "clickElement": GeckoDriver.prototype.clickElement,
-  "closeChromeWindow": GeckoDriver.prototype.closeChromeWindow,
   "close": GeckoDriver.prototype.close,
   "deleteAllCookies": GeckoDriver.prototype.deleteAllCookies,
   "deleteCookie": GeckoDriver.prototype.deleteCookie,
@@ -3603,10 +3618,7 @@ GeckoDriver.prototype.commands = {
   "fullscreen": GeckoDriver.prototype.fullscreenWindow,
   "getActiveElement": GeckoDriver.prototype.getActiveElement,
   "getActiveFrame": GeckoDriver.prototype.getActiveFrame,
-  "getChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
-  "getChromeWindowHandles": GeckoDriver.prototype.getChromeWindowHandles,
   "getCookies": GeckoDriver.prototype.getCookies,
-  "getCurrentChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
   "getCurrentUrl": GeckoDriver.prototype.getCurrentUrl,
   "getElementAttribute": GeckoDriver.prototype.getElementAttribute,
   "getElementProperty": GeckoDriver.prototype.getElementProperty,
@@ -3616,7 +3628,6 @@ GeckoDriver.prototype.commands = {
   "getElementValueOfCssProperty": GeckoDriver.prototype.getElementValueOfCssProperty,
   "get": GeckoDriver.prototype.get,
   "getPageSource": GeckoDriver.prototype.getPageSource,
-  "getScreenOrientation": GeckoDriver.prototype.getScreenOrientation,
   "getSessionCapabilities": GeckoDriver.prototype.getSessionCapabilities,
   "getTextFromDialog": GeckoDriver.prototype.getTextFromDialog,
   "getTimeouts": GeckoDriver.prototype.getTimeouts,
@@ -3626,26 +3637,22 @@ GeckoDriver.prototype.commands = {
   "getWindowPosition": GeckoDriver.prototype.getWindowRect, // redirect for compatibility
   "getWindowRect": GeckoDriver.prototype.getWindowRect,
   "getWindowSize": GeckoDriver.prototype.getWindowRect, // redirect for compatibility
-  "getWindowType": GeckoDriver.prototype.getWindowType,
   "goBack": GeckoDriver.prototype.goBack,
   "goForward": GeckoDriver.prototype.goForward,
   "isElementDisplayed": GeckoDriver.prototype.isElementDisplayed,
   "isElementEnabled": GeckoDriver.prototype.isElementEnabled,
   "isElementSelected": GeckoDriver.prototype.isElementSelected,
   "maximizeWindow": GeckoDriver.prototype.maximizeWindow,
-  "multiAction": GeckoDriver.prototype.multiAction,
   "newSession": GeckoDriver.prototype.newSession,
   "performActions": GeckoDriver.prototype.performActions,
   "refresh":  GeckoDriver.prototype.refresh,
   "releaseActions": GeckoDriver.prototype.releaseActions,
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog,
   "sendKeysToElement": GeckoDriver.prototype.sendKeysToElement,
-  "setScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
   "setTimeouts": GeckoDriver.prototype.setTimeouts,
   "setWindowPosition": GeckoDriver.prototype.setWindowRect, // redirect for compatibility
   "setWindowRect": GeckoDriver.prototype.setWindowRect,
   "setWindowSize": GeckoDriver.prototype.setWindowRect, // redirect for compatibility
-  "singleTap": GeckoDriver.prototype.singleTap,
   "switchToFrame": GeckoDriver.prototype.switchToFrame,
   "switchToParentFrame": GeckoDriver.prototype.switchToParentFrame,
   "switchToShadowRoot": GeckoDriver.prototype.switchToShadowRoot,
