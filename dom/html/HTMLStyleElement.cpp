@@ -173,6 +173,16 @@ HTMLStyleElement::SetTextContentInternal(const nsAString& aTextContent,
                                          nsIPrincipal* aScriptedPrincipal,
                                          ErrorResult& aError)
 {
+  // Per spec, if we're setting text content to an empty string and don't
+  // already have any children, we should not trigger any mutation observers, or
+  // re-parse the stylesheet.
+  if (aTextContent.IsEmpty() && !GetFirstChild()) {
+    nsIPrincipal* principal = mTriggeringPrincipal ? mTriggeringPrincipal.get() : NodePrincipal();
+    if (principal == aScriptedPrincipal) {
+      return;
+    }
+  }
+
   SetEnableUpdates(false);
 
   aError = nsContentUtils::SetNodeTextContent(this, aTextContent, true);
