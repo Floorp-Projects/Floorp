@@ -67,19 +67,66 @@ public final class GeckoRuntimeSettings implements Parcelable {
         }
     }
 
+    /* package */ GeckoRuntime runtime;
     /* package */ boolean mUseContentProcess;
     /* package */ String[] mArgs;
     /* package */ Bundle mExtras;
+    /* package */ int prefCount;
 
-    /* package */ GeckoRuntimeSettings() {
-        mArgs = new String[0];
-        mExtras = new Bundle();
+    private class Pref<T> {
+        public final String name;
+        public final T defaultValue;
+        private T value;
+
+        public Pref(final String name, final T defaultValue) {
+            GeckoRuntimeSettings.this.prefCount++;
+
+            this.name = name;
+            this.defaultValue = defaultValue;
+            value = defaultValue;
+        }
+
+        public void set(T newValue) {
+            value = newValue;
+            flush();
+        }
+
+        public T get() {
+            return value;
+        }
+
+        public void flush() {
+            if (GeckoRuntimeSettings.this.runtime != null) {
+                GeckoRuntimeSettings.this.runtime.setPref(name, value);
+            }
+        }
     }
 
-    /* package */ GeckoRuntimeSettings(final @NonNull GeckoRuntimeSettings settings) {
-        mUseContentProcess = settings.getUseContentProcessHint();
-        mArgs = settings.getArguments().clone();
-        mExtras = new Bundle(settings.getExtras());
+    private final Pref<?>[] mPrefs = new Pref<?>[] {};
+
+    /* package */ GeckoRuntimeSettings() {
+        this(null);
+    }
+
+    /* package */ GeckoRuntimeSettings(final @Nullable GeckoRuntimeSettings settings) {
+        if (BuildConfig.DEBUG && prefCount != mPrefs.length) {
+            throw new AssertionError("Add new pref to prefs list");
+        }
+
+        if (settings == null) {
+            mArgs = new String[0];
+            mExtras = new Bundle();
+        } else {
+            mUseContentProcess = settings.getUseContentProcessHint();
+            mArgs = settings.getArguments().clone();
+            mExtras = new Bundle(settings.getExtras());
+        }
+    }
+
+    /* package */ void flush() {
+        for (final Pref<?> pref: mPrefs) {
+            pref.flush();
+        }
     }
 
     /**
