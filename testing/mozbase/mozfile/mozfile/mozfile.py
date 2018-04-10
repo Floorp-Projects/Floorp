@@ -261,9 +261,9 @@ ascii_delimeters = {
 
 # unicode delimiters
 unicode_delimeters = {
-    'vertical_line': '│',
-    'item_marker': '├',
-    'last_child': '└'
+    'vertical_line': u'│',
+    'item_marker': u'├',
+    'last_child': u'└'
 }
 
 
