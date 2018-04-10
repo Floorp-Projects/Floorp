@@ -162,15 +162,9 @@ Template <yaml-templates>`.
 balrog
 ------
 
-Balrog is the Mozilla Update Server. Jobs of this kind are submitting information
-which assists in telling Firefox that an update is available for the related job.
-
-balrog-l10n
------------
-
-Balrog is the Mozilla Update Server. Jobs of this kind are submitting information
-which assists in telling Firefox that an update is available for the localized
-job involved.
+Balrog tasks are responsible for submitting metadata to our update server (Balrog).
+They are typically downstream of a beetmover job that moves signed MARs somewhere
+(eg: beetmover and beetmover-l10n for releases, beetmover-repackage for nightlies).
 
 beetmover
 ---------
@@ -229,20 +223,27 @@ all the signed multi-locales (aka "multi") APKs for a given release and upload t
 all at once.
 
 release-balrog-submit-toplevel
-----------------------
-Push a top-level release blob to Balrog.
+------------------------------
+Toplevel tasks are responsible for submitting metadata to Balrog that is not specific to any
+particular platform+locale. For example: fileUrl templates, versions, and platform aliases.
+
+Toplevel tasks are also responsible for updating test channel rules to point at the Release
+being generated.
 
 release-secondary-balrog-submit-toplevel
-----------------------
-Push a top-level RC release blob to Balrog.
+----------------------------------------
+Performs the same function as `release-balrog-submit-toplevel`, but against the beta channel
+during RC builds.
 
 release-balrog-scheduling
-----------------------
-Schedule a release to go live in Balrog.
+-------------------------
+Schedules a Release for shipping in Balrog. If a `release_eta` was provided when starting the Release,
+it will be scheduled to go live at that day and time.
 
 release-secondary-balrog-scheduling
-----------------------
-Schedule an RC release to go live in Balrog.
+-----------------------------------
+Performs the same function as `release-balrog-scheduling`, except for the beta channel as part of RC
+Releases.
 
 release-binary-transparency
 ---------------------------
@@ -308,10 +309,6 @@ Verifies the contents and package of release update MARs.
 release-secondary-final-verify
 ------------------------------
 Verifies the contents and package of release update MARs for RC releases.
-
-release-secondary-balrog-publishing
----------------------
-Schedule an RC release to go live in Balrog. Usually this will happen on the beta channel, to a smaller audience, before the RC goes live on the release channel.
 
 release-update-verify
 ---------------------
