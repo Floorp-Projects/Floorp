@@ -1362,11 +1362,14 @@ WSRunObject::DeleteRange(const EditorDOMPointBase<PT1, CT1>& aStartPoint,
     return NS_OK;
   }
 
+  MOZ_ASSERT(mHTMLEditor);
+  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+
   if (aStartPoint.GetContainer() == aEndPoint.GetContainer() &&
       aStartPoint.IsInTextNode()) {
-    return mHTMLEditor->DeleteText(*aStartPoint.GetContainerAsText(),
-                                   aStartPoint.Offset(),
-                                   aEndPoint.Offset() - aStartPoint.Offset());
+    return htmlEditor->DeleteText(*aStartPoint.GetContainerAsText(),
+                                  aStartPoint.Offset(),
+                                  aEndPoint.Offset() - aStartPoint.Offset());
   }
 
   RefPtr<nsRange> range;
@@ -1386,16 +1389,16 @@ WSRunObject::DeleteRange(const EditorDOMPointBase<PT1, CT1>& aStartPoint,
     if (node == aStartPoint.GetContainer()) {
       if (!aStartPoint.IsEndOfContainer()) {
         nsresult rv =
-          mHTMLEditor->DeleteText(*node, aStartPoint.Offset(),
-                                  aStartPoint.GetContainer()->Length() -
-                                    aStartPoint.Offset());
+          htmlEditor->DeleteText(*node, aStartPoint.Offset(),
+                                 aStartPoint.GetContainer()->Length() -
+                                   aStartPoint.Offset());
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       }
     } else if (node == aEndPoint.GetContainer()) {
       if (!aEndPoint.IsStartOfContainer()) {
-        nsresult rv = mHTMLEditor->DeleteText(*node, 0, aEndPoint.Offset());
+        nsresult rv = htmlEditor->DeleteText(*node, 0, aEndPoint.Offset());
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -1419,7 +1422,7 @@ WSRunObject::DeleteRange(const EditorDOMPointBase<PT1, CT1>& aStartPoint,
         break;
       }
       if (!nodeBefore) {
-        rv = mHTMLEditor->DeleteNode(node);
+        rv = htmlEditor->DeleteNodeWithTransaction(*node);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }

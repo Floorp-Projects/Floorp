@@ -385,8 +385,18 @@ public:
 
   NS_IMETHOD DeleteSelectionImpl(EDirection aAction,
                                  EStripWrappers aStripWrappers) override;
-  nsresult DeleteNode(nsINode* aNode);
+
+  /**
+   * DeleteNodeWithTransaction() removes aNode from the DOM tree if it's
+   * modifiable.  Note that this is not an override of same method of
+   * EditorBase.
+   *
+   * @param aNode       The node to be removed from the DOM tree.
+   */
+  nsresult DeleteNodeWithTransaction(nsINode& aNode);
+
   NS_IMETHOD DeleteNode(nsIDOMNode* aNode) override;
+
   nsresult DeleteText(dom::CharacterData& aTextNode, uint32_t aOffset,
                       uint32_t aLength);
   virtual nsresult
