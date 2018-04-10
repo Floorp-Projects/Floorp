@@ -21,8 +21,9 @@ public class TestRunnerActivity extends Activity {
 
     static GeckoRuntime sRuntime;
 
-    GeckoSession mSession;
-    GeckoView mView;
+    private GeckoSession mSession;
+    private GeckoView mView;
+    private boolean mKillProcessOnDestroy;
 
     private GeckoSession.NavigationDelegate mNavigationDelegate = new GeckoSession.NavigationDelegate() {
         @Override
@@ -113,6 +114,13 @@ public class TestRunnerActivity extends Activity {
             geckoSettings.setArguments(new String[] { "-purgecaches" });
             geckoSettings.setExtras(intent.getExtras());
             sRuntime = GeckoRuntime.create(this, geckoSettings);
+            sRuntime.setDelegate(new GeckoRuntime.Delegate() {
+                @Override
+                public void onShutdown() {
+                    mKillProcessOnDestroy = true;
+                    finish();
+                }
+            });
         }
 
         mSession = createSession();
@@ -133,6 +141,10 @@ public class TestRunnerActivity extends Activity {
     protected void onDestroy() {
         mSession.close();
         super.onDestroy();
+
+        if (mKillProcessOnDestroy) {
+            android.os.Process.killProcess(android.os.Process.myPid());
+        }
     }
 
     public GeckoView getGeckoView() {
