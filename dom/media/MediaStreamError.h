@@ -19,6 +19,7 @@
 #endif
 
 namespace mozilla {
+
 namespace dom {
 
 #define MOZILLA_DOM_MEDIASTREAMERROR_IMPLEMENTATION_IID \
@@ -31,20 +32,37 @@ class MediaStreamError;
 class BaseMediaMgrError
 {
   friend class dom::MediaStreamError;
+public:
+  enum class Name
+  {
+    AbortError,
+    InternalError,
+    InvalidStateError,
+    NotAllowedError,
+    NotFoundError,
+    NotReadableError,
+    NotSupportedError,
+    OverconstrainedError,
+    SecurityError,
+    TypeError,
+  };
+
 protected:
-  BaseMediaMgrError(const nsAString& aName,
+  BaseMediaMgrError(Name aName,
                     const nsAString& aMessage,
                     const nsAString& aConstraint);
-  const nsString mName;
+  nsString mNameString;
   nsString mMessage;
   const nsString mConstraint;
+private:
+  const Name mName;
 };
 
 class MediaMgrError final : public nsISupports,
                             public BaseMediaMgrError
 {
 public:
-  explicit MediaMgrError(const nsAString& aName,
+  explicit MediaMgrError(Name aName,
                          const nsAString& aMessage =  EmptyString(),
                          const nsAString& aConstraint =  EmptyString())
   : BaseMediaMgrError(aName, aMessage, aConstraint) {}
@@ -62,7 +80,7 @@ class MediaStreamError final : public nsISupports,
 {
 public:
   MediaStreamError(nsPIDOMWindowInner* aParent,
-                   const nsAString& aName,
+                   Name aName,
                    const nsAString& aMessage = EmptyString(),
                    const nsAString& aConstraint =  EmptyString());
 

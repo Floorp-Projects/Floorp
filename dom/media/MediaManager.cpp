@@ -1300,7 +1300,7 @@ public:
                   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(weakWindow);
                   auto error = MakeRefPtr<MediaStreamError>(
                       window,
-                      NS_LITERAL_STRING("OverConstrainedError"),
+                      MediaMgrError::Name::OverconstrainedError,
                       NS_LITERAL_STRING(""),
                       aBadConstraint.valueOr(nsString()));
                   p->Reject(error);
@@ -1402,9 +1402,9 @@ public:
 
       if (auto* window = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID)) {
         RefPtr<MediaStreamError> error = new MediaStreamError(window->AsInner(),
-            NS_LITERAL_STRING("InternalError"),
+            MediaStreamError::Name::InternalError,
             sHasShutdown ? NS_LITERAL_STRING("In shutdown") :
-                          NS_LITERAL_STRING("No stream."));
+                           NS_LITERAL_STRING("No stream."));
         mOnFailure->OnError(error);
       }
       return NS_OK;
@@ -1649,7 +1649,7 @@ public:
   }
 
   void
-  Fail(const nsAString& aName,
+  Fail(MediaMgrError::Name aName,
        const nsAString& aMessage = EmptyString(),
        const nsAString& aConstraint = EmptyString()) {
     RefPtr<MediaMgrError> error = new MediaMgrError(aName, aMessage, aConstraint);
@@ -1715,11 +1715,11 @@ public:
     if (errorMsg) {
       LOG(("%s %" PRIu32, errorMsg, static_cast<uint32_t>(rv)));
       if (badConstraint) {
-        Fail(NS_LITERAL_STRING("OverconstrainedError"),
+        Fail(MediaMgrError::Name::OverconstrainedError,
              NS_LITERAL_STRING(""),
              NS_ConvertUTF8toUTF16(badConstraint));
       } else {
-        Fail(NS_LITERAL_STRING("NotReadableError"),
+        Fail(MediaMgrError::Name::NotReadableError,
              NS_ConvertUTF8toUTF16(errorMsg));
       }
       NS_DispatchToMainThread(NS_NewRunnableFunction("MediaManager::SendPendingGUMRequest",
@@ -1747,7 +1747,7 @@ public:
   }
 
   nsresult
-  Denied(const nsAString& aName,
+  Denied(MediaMgrError::Name aName,
          const nsAString& aMessage = EmptyString())
   {
     MOZ_ASSERT(mOnSuccess);
@@ -2445,7 +2445,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   if (!IsOn(c.mVideo) && !IsOn(c.mAudio)) {
     RefPtr<MediaStreamError> error =
         new MediaStreamError(aWindow,
-                             NS_LITERAL_STRING("TypeError"),
+                             MediaStreamError::Name::TypeError,
                              NS_LITERAL_STRING("audio and/or video is required"));
     onFailure->OnError(error);
     return NS_OK;
@@ -2453,7 +2453,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 
   if (!IsFullyActive(aWindow)) {
     RefPtr<MediaStreamError> error =
-        new MediaStreamError(aWindow, NS_LITERAL_STRING("InvalidStateError"));
+        new MediaStreamError(aWindow, MediaStreamError::Name::InvalidStateError);
     onFailure->OnError(error);
     return NS_OK;
   }
@@ -2461,7 +2461,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   if (sHasShutdown) {
     RefPtr<MediaStreamError> error =
         new MediaStreamError(aWindow,
-                             NS_LITERAL_STRING("AbortError"),
+                             MediaStreamError::Name::AbortError,
                              NS_LITERAL_STRING("In shutdown"));
     onFailure->OnError(error);
     return NS_OK;
@@ -2575,7 +2575,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
             (!privileged && !aWindow->IsSecureContext())) {
           RefPtr<MediaStreamError> error =
               new MediaStreamError(aWindow,
-                                   NS_LITERAL_STRING("NotAllowedError"));
+                                   MediaStreamError::Name::NotAllowedError);
           onFailure->OnError(error);
           return NS_OK;
         }
@@ -2586,7 +2586,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
       default: {
         RefPtr<MediaStreamError> error =
             new MediaStreamError(aWindow,
-                                 NS_LITERAL_STRING("OverconstrainedError"),
+                                 MediaStreamError::Name::OverconstrainedError,
                                  NS_LITERAL_STRING(""),
                                  NS_LITERAL_STRING("mediaSource"));
         onFailure->OnError(error);
@@ -2655,7 +2655,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
         if (!Preferences::GetBool("media.getusermedia.audiocapture.enabled")) {
           RefPtr<MediaStreamError> error =
             new MediaStreamError(aWindow,
-                                 NS_LITERAL_STRING("NotAllowedError"));
+                                 MediaStreamError::Name::NotAllowedError);
           onFailure->OnError(error);
           return NS_OK;
         }
@@ -2665,7 +2665,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
       default: {
         RefPtr<MediaStreamError> error =
             new MediaStreamError(aWindow,
-                                 NS_LITERAL_STRING("OverconstrainedError"),
+                                 MediaStreamError::Name::OverconstrainedError,
                                  NS_LITERAL_STRING(""),
                                  NS_LITERAL_STRING("mediaSource"));
         onFailure->OnError(error);
@@ -2738,7 +2738,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
         (IsOn(c.mAudio) && audioPerm == nsIPermissionManager::DENY_ACTION) ||
         (IsOn(c.mVideo) && videoPerm == nsIPermissionManager::DENY_ACTION)) {
       RefPtr<MediaStreamError> error =
-          new MediaStreamError(aWindow, NS_LITERAL_STRING("NotAllowedError"));
+          new MediaStreamError(aWindow, MediaStreamError::Name::NotAllowedError);
       onFailure->OnError(error);
       windowListener->Remove(sourceListener);
       return NS_OK;
@@ -2844,7 +2844,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
         constraint.AssignASCII(badConstraint);
         RefPtr<MediaStreamError> error =
             new MediaStreamError(window,
-                                 NS_LITERAL_STRING("OverconstrainedError"),
+                                 MediaStreamError::Name::OverconstrainedError,
                                  NS_LITERAL_STRING(""),
                                  constraint);
         onFailure->OnError(error);
@@ -2859,8 +2859,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
                 // When privacy.resistFingerprinting = true, no available
                 // device implies content script is requesting a fake
                 // device, so report NotAllowedError.
-                resistFingerprinting ? NS_LITERAL_STRING("NotAllowedError")
-                                     : NS_LITERAL_STRING("NotFoundError"));
+                resistFingerprinting ? MediaStreamError::Name::NotAllowedError
+                                     : MediaStreamError::Name::NotFoundError);
         onFailure->OnError(error);
         return;
       }
@@ -3050,7 +3050,7 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     RefPtr<PledgeSourceSet> p = new PledgeSourceSet();
     RefPtr<MediaStreamError> error =
-      new MediaStreamError(window, NS_LITERAL_STRING("NotAllowedError"));
+      new MediaStreamError(window, MediaStreamError::Name::NotAllowedError);
     p->Reject(error);
     return p.forget();
   }
@@ -3651,34 +3651,41 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       MOZ_ASSERT(needVideo || needAudio);
 
       if ((needVideo && !videoFound) || (needAudio && !audioFound)) {
-        task->Denied(NS_LITERAL_STRING("NotAllowedError"));
+        task->Denied(MediaMgrError::Name::NotAllowedError);
         return NS_OK;
       }
     }
 
     if (sHasShutdown) {
-      return task->Denied(NS_LITERAL_STRING("In shutdown"));
+      return task->Denied(MediaMgrError::Name::AbortError,
+                          NS_LITERAL_STRING("In shutdown"));
     }
     // Reuse the same thread to save memory.
     MediaManager::PostTask(task.forget());
     return NS_OK;
 
   } else if (!strcmp(aTopic, "getUserMedia:response:deny")) {
-    nsString errorMessage(NS_LITERAL_STRING("NotAllowedError"));
+    MediaMgrError::Name errorName = MediaMgrError::Name::NotAllowedError;
 
     if (aSubject) {
       nsCOMPtr<nsISupportsString> msg(do_QueryInterface(aSubject));
       MOZ_ASSERT(msg);
-      msg->GetData(errorMessage);
-      if (errorMessage.IsEmpty())
-        errorMessage.AssignLiteral(u"InternalError");
+      nsString msgData;
+      msg->GetData(msgData);
+      // The only errors other than NotAllowedError allowed by the getUserMedia
+      // spec related to selection are NotFoundError for no valid options and
+      // the catch-all AbortError for everything else (NotReadableError is
+      // reserved for device startup errors later).
+      errorName = (msgData.EqualsLiteral("NotFoundError"))
+          ? MediaMgrError::Name::NotFoundError
+          : MediaMgrError::Name::InternalError;
     }
 
     nsString key(aData);
     RefPtr<GetUserMediaTask> task;
     mActiveCallbacks.Remove(key, getter_AddRefs(task));
     if (task) {
-      task->Denied(errorMessage);
+      task->Denied(errorName);
       nsTArray<nsString>* array;
       if (!mCallIds.Get(task->GetWindowID(), &array)) {
         return NS_OK;
@@ -4025,12 +4032,12 @@ SourceListener::InitializeAsync()
           if (rv == NS_ERROR_NOT_AVAILABLE) {
             log.AssignASCII("Concurrent mic process limit.");
             aHolder.Reject(MakeRefPtr<MediaMgrError>(
-                  NS_LITERAL_STRING("NotReadableError"), log), __func__);
+                  MediaMgrError::Name::NotReadableError, log), __func__);
             return;
           }
           log.AssignASCII("Starting audio failed");
           aHolder.Reject(MakeRefPtr<MediaMgrError>(
-                NS_LITERAL_STRING("InternalError"), log), __func__);
+                MediaMgrError::Name::InternalError, log), __func__);
           return;
         }
       }
@@ -4048,7 +4055,7 @@ SourceListener::InitializeAsync()
           }
           nsString log;
           log.AssignASCII("Starting video failed");
-          aHolder.Reject(MakeRefPtr<MediaMgrError>(NS_LITERAL_STRING("InternalError"), log), __func__);
+          aHolder.Reject(MakeRefPtr<MediaMgrError>(MediaMgrError::Name::InternalError, log), __func__);
           return;
         }
       }
