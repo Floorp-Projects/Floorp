@@ -59,7 +59,6 @@ nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
            strcmp(aTopic, "chrome-flush-caches") == 0) {
     mScrollbarsSheet = nullptr;
     mFormsSheet = nullptr;
-    mNumberControlSheet = nullptr;
   }
   else {
     NS_NOTREACHED("Unexpected observer topic.");
@@ -89,17 +88,6 @@ nsLayoutStylesheetCache::FormsSheet()
   }
 
   return mFormsSheet;
-}
-
-StyleSheet*
-nsLayoutStylesheetCache::NumberControlSheet()
-{
-  if (!mNumberControlSheet) {
-    LoadSheetURL("resource://gre-resources/number-control.css",
-                 &mNumberControlSheet, eAgentSheetFeatures, eCrash);
-  }
-
-  return mNumberControlSheet;
 }
 
 StyleSheet*
@@ -302,7 +290,6 @@ nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf
   MEASURE(mMinimalXULSheet);
   MEASURE(mNoFramesSheet);
   MEASURE(mNoScriptSheet);
-  MEASURE(mNumberControlSheet);
   MEASURE(mQuirkSheet);
   MEASURE(mSVGSheet);
   MEASURE(mScrollbarsSheet);
