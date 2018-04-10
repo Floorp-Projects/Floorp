@@ -753,9 +753,9 @@ MoveScrollbarForLayerMargin(Layer* aRoot, FrameMetrics::ViewID aRootScrollId,
   // adjustment on the layer tree.
   Layer* scrollbar = BreadthFirstSearch<ReverseIterator>(aRoot,
     [aRootScrollId](Layer* aNode) {
-      return (aNode->GetScrollThumbData().mDirection.isSome() &&
-              *aNode->GetScrollThumbData().mDirection == ScrollDirection::eHorizontal &&
-              aNode->GetScrollbarTargetContainerId() == aRootScrollId);
+      return (aNode->GetScrollbarData().mDirection.isSome() &&
+              *aNode->GetScrollbarData().mDirection == ScrollDirection::eHorizontal &&
+              aNode->GetScrollbarTargetViewId() == aRootScrollId);
     });
   if (scrollbar) {
     // Shift the horizontal scrollbar down into the new space exposed by the
@@ -1034,7 +1034,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
 
         ExpandRootClipRect(layer, fixedLayerMargins);
 
-        if (layer->GetScrollThumbData().mDirection.isSome()) {
+        if (layer->GetScrollbarData().mScrollbarLayerType == layers::ScrollbarLayerType::Thumb) {
           ApplyAsyncTransformToScrollbar(layer);
         }
       });
@@ -1050,7 +1050,7 @@ LayerIsScrollbarTarget(const LayerMetricsWrapper& aTarget, Layer* aScrollbar)
   }
   const FrameMetrics& metrics = aTarget.Metrics();
   MOZ_ASSERT(metrics.IsScrollable());
-  if (metrics.GetScrollId() != aScrollbar->GetScrollbarTargetContainerId()) {
+  if (metrics.GetScrollId() != aScrollbar->GetScrollbarTargetViewId()) {
     return false;
   }
   return !metrics.IsScrollInfoLayer();
@@ -1069,7 +1069,7 @@ ApplyAsyncTransformToScrollbarForContent(const RefPtr<APZSampler>& aSampler,
       aSampler->ComputeTransformForScrollThumb(
           aScrollbar->GetLocalTransformTyped(),
           aContent,
-          aScrollbar->GetScrollThumbData(),
+          aScrollbar->GetScrollbarData(),
           aScrollbarIsDescendant,
           &clipTransform);
 

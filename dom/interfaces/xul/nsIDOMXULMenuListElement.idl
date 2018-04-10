@@ -5,6 +5,7 @@
 
 #include "nsIDOMXULSelectCntrlEl.idl"
 interface nsIDOMXULTextBoxElement;
+interface nsIDOMNode;
 
 [scriptable, uuid(36c16a17-c0e9-4b35-951b-81a147314ef1)]
 interface nsIDOMXULMenuListElement : nsIDOMXULSelectControlElement {
