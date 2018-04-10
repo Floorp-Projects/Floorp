@@ -4053,7 +4053,7 @@ window._gBrowser = {
       let tab = this.getTabForBrowser(browser);
 
       if (this.selectedBrowser == browser) {
-        TabCrashHandler.onSelectedBrowserCrash(browser, false);
+        TabCrashHandler.onSelectedBrowserCrash(browser);
       } else {
         this.updateBrowserRemoteness(browser, false);
         SessionStore.reviveCrashedTab(tab);
@@ -4061,17 +4061,6 @@ window._gBrowser = {
 
       tab.removeAttribute("soundplaying");
       this.setIcon(tab, icon, browser.contentPrincipal, browser.contentRequestContextID);
-    });
-
-    this.addEventListener("oop-browser-buildid-mismatch", (event) => {
-      if (!event.isTrusted)
-        return;
-
-      let browser = event.originalTarget;
-
-      if (this.selectedBrowser == browser) {
-        TabCrashHandler.onSelectedBrowserCrash(browser, true);
-      }
     });
 
     this.addEventListener("DOMAudioPlaybackStarted", (event) => {

@@ -238,8 +238,7 @@ private:
         gUnresolvedResponses++;
     }
 
-    bool SendBuildIDsMatchMessage(const char* aParentBuildI);
-    bool DoBuildIDsMatch() { return mBuildIDsConfirmedMatch; }
+    void SendBuildID();
 
     // Asynchronously deliver a message back to this side of the
     // channel
@@ -855,8 +854,6 @@ private:
     // held in a queue until another thread deems it is safe to send them.
     bool mIsPostponingSends;
     std::vector<UniquePtr<Message>> mPostponedSends;
-
-    bool mBuildIDsConfirmedMatch;
 };
 
 void

@@ -220,7 +220,6 @@ XPC_MSG_DEF(NS_ERROR_GFX_PRINTER_DOC_IS_BUSY          , "Cannot print this docum
 
 /* Codes related to content */
 XPC_MSG_DEF(NS_ERROR_CONTENT_CRASHED                  , "The process that hosted this content has crashed.")
-XPC_MSG_DEF(NS_ERROR_BUILDID_MISMATCH                 , "The process that hosted this content did not have the same buildID as the parent.")
 
 /* Codes for the JS-implemented Push DOM API. These can be removed as part of bug 1252660. */
 XPC_MSG_DEF(NS_ERROR_DOM_PUSH_INVALID_KEY_ERR         , "Invalid raw ECDSA P-256 public key.")

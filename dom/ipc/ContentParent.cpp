@@ -2055,10 +2055,6 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
     extraArgs.push_back("-safeMode");
   }
 
-  nsCString parentBuildID(mozilla::PlatformBuildID());
-  extraArgs.push_back("-parentBuildID");
-  extraArgs.push_back(parentBuildID.get());
-
   SetOtherProcessId(kInvalidProcessId, ProcessIdState::ePending);
   if (!mSubprocess->Launch(extraArgs)) {
     NS_ERROR("failed to launch child in the parent");

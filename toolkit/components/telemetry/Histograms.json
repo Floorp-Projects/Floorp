@@ -12564,15 +12564,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Counts the number of times that about:tabcrashed was unloaded without submitting."
   },
-  "FX_CONTENT_BUILDID_MISMATCH": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["spohl@mozilla.com"],
-    "bug_numbers": [1366808],
-    "expires_in_version": "never",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "Counts the number of times that about:restartrequired appeared."
-  },
    "D3D9_COMPOSITING_FAILURE_ID": {
     "record_in_processes": ["main", "content"],
        "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],

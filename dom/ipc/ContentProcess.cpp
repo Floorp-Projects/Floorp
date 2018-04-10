@@ -99,7 +99,6 @@ ContentProcess::Init(int aArgc, char* aArgv[])
   Maybe<base::SharedMemoryHandle> prefsHandle;
   Maybe<size_t> prefsLen;
   Maybe<const char*> schedulerPrefs;
-  Maybe<const char*> parentBuildID;
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
   nsCOMPtr<nsIFile> profileDir;
 #endif
@@ -169,12 +168,6 @@ ContentProcess::Init(int aArgc, char* aArgv[])
     } else if (strcmp(aArgv[i], "-safeMode") == 0) {
       gSafeMode = true;
 
-    } else if (strcmp(aArgv[i], "-parentBuildID") == 0) {
-      if (++i == aArgc) {
-        return false;
-      }
-      parentBuildID = Some(aArgv[i]);
-
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
     } else if (strcmp(aArgv[i], "-profile") == 0) {
       if (++i == aArgc) {
@@ -204,8 +197,7 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       isForBrowser.isNothing() ||
       prefsHandle.isNothing() ||
       prefsLen.isNothing() ||
-      schedulerPrefs.isNothing() ||
-      parentBuildID.isNothing()) {
+      schedulerPrefs.isNothing()) {
     return false;
   }
 
@@ -225,7 +217,6 @@ ContentProcess::Init(int aArgc, char* aArgv[])
   Scheduler::SetPrefs(*schedulerPrefs);
   mContent.Init(IOThreadChild::message_loop(),
                 ParentPid(),
-                *parentBuildID,
                 IOThreadChild::channel(),
                 *childID,
                 *isForBrowser);
