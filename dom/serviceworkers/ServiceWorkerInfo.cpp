@@ -118,7 +118,7 @@ namespace {
 class ChangeStateUpdater final : public Runnable
 {
 public:
-  ChangeStateUpdater(const nsTArray<RefPtr<ServiceWorker>>& aInstances,
+  ChangeStateUpdater(const nsTArray<ServiceWorker*>& aInstances,
                      ServiceWorkerState aState)
     : Runnable("dom::ChangeStateUpdater")
     , mState(aState)
@@ -176,11 +176,6 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r.forget()));
   if (State() == ServiceWorkerState::Redundant) {
     serviceWorkerScriptCache::PurgeCache(mPrincipal, mCacheName);
-
-    // Break the ref-cycle with the binding objects.  We won't need to
-    // fire any more events and they should be able to GC once content
-    // script no longer references them.
-    mInstances.Clear();
   }
 }
 
@@ -256,11 +251,8 @@ ServiceWorkerInfo::RemoveServiceWorker(ServiceWorker* aWorker)
     workerURL.Equals(NS_ConvertUTF8toUTF16(mDescriptor.ScriptURL())));
 #endif
 
-  // If the binding layer initiates this call by disconnecting the global,
-  // then we will find an entry in mInstances here.  If the worker transitions
-  // to redundant and we clear mInstances, then we will not find an entry
-  // here.
-  mInstances.RemoveElement(aWorker);
+  DebugOnly<bool> removed = mInstances.RemoveElement(aWorker);
+  MOZ_ASSERT(removed);
 }
 
 void

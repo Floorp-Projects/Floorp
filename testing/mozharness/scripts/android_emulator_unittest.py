@@ -379,9 +379,11 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin)
 
     def _query_package_name(self):
         if self.app_name is None:
-            # For convenience, assume geckoview_example when install target
-            # looks like geckoview.
-            if 'geckoview' in self.installer_path:
+            # For convenience, assume geckoview.test/geckoview_example when install
+            # target looks like geckoview.
+            if 'androidTest' in self.installer_path:
+                self.app_name = 'org.mozilla.geckoview.test'
+            elif 'geckoview' in self.installer_path:
                 self.app_name = 'org.mozilla.geckoview_example'
         if self.app_name is None:
             # Find appname from package-name.txt - assumes download-and-extract

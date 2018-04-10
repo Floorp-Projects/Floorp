@@ -439,6 +439,14 @@ nsContextMenu.prototype = {
                       Services.prefs.getBoolPref("devtools.inspector.enabled", true) &&
                       !Services.prefs.getBoolPref("devtools.policy.disabled", false);
 
+    var showInspectA11Y = showInspect &&
+                          // Only when accessibility service started.
+                          Services.appinfo.accessibilityEnabled &&
+                          this.inTabBrowser &&
+                          Services.prefs.getBoolPref("devtools.enabled", true) &&
+                          Services.prefs.getBoolPref("devtools.accessibility.enabled", true) &&
+                          !Services.prefs.getBoolPref("devtools.policy.disabled", false);
+
     this.showItem("context-viewsource", shouldShow);
     this.showItem("context-viewinfo", shouldShow);
     // The page info is broken for WebExtension popups, as the browser is
@@ -446,6 +454,8 @@ nsContextMenu.prototype = {
     this.setItemAttr("context-viewinfo", "disabled", this.webExtBrowserType === "popup");
     this.showItem("inspect-separator", showInspect);
     this.showItem("context-inspect", showInspect);
+
+    this.showItem("context-inspect-a11y", showInspectA11Y);
 
     this.showItem("context-sep-viewsource", shouldShow);
 
@@ -752,6 +762,10 @@ nsContextMenu.prototype = {
 
   inspectNode() {
     return DevToolsShim.inspectNode(gBrowser.selectedTab, this.targetSelectors);
+  },
+
+  inspectA11Y() {
+    return DevToolsShim.inspectA11Y(gBrowser.selectedTab, this.targetSelectors);
   },
 
   _openLinkInParameters(extra) {
