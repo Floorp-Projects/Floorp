@@ -45,8 +45,6 @@ class nsLayoutStylesheetCache final
 
   mozilla::StyleSheet* ScrollbarsSheet();
   mozilla::StyleSheet* FormsSheet();
-  // This function is expected to return nullptr when the dom.forms.number
-  // pref is disabled.
   mozilla::StyleSheet* NumberControlSheet();
   mozilla::StyleSheet* UserContentSheet();
   mozilla::StyleSheet* UserChromeSheet();
