@@ -36,7 +36,14 @@ const TEST_CREDIT_CARD_4 = {
   "cc-number": "9999888877776666",
 };
 
+const TEST_CREDIT_CARD_WITH_BILLING_ADDRESS = {
+  "cc-name": "J. Smith",
+  "cc-number": "4111111111111111",
+  billingAddressGUID: "9m6hf4gfr6ge",
+};
+
 const TEST_CREDIT_CARD_WITH_EMPTY_FIELD = {
+  billingAddressGUID: "",
   "cc-name": "",
   "cc-number": "1234123412341234",
   "cc-exp-month": 1,
@@ -107,6 +114,20 @@ const MERGE_TESTCASES = [
     },
   },
   {
+    description: "Merge a superset with billingAddressGUID",
+    creditCardInStorage: {
+      "cc-number": "1234567812345678",
+    },
+    creditCardToMerge: {
+      "cc-number": "1234567812345678",
+      billingAddressGUID: "ijsnbhfr",
+    },
+    expectedCreditCard: {
+      "cc-number": "1234567812345678",
+      billingAddressGUID: "ijsnbhfr",
+    },
+  },
+  {
     description: "Merge a subset",
     creditCardInStorage: {
       "cc-name": "John Doe",
@@ -124,6 +145,21 @@ const MERGE_TESTCASES = [
       "cc-number": "1234567812345678",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
+    },
+    noNeedToUpdate: true,
+  },
+  {
+    description: "Merge a subset with billingAddressGUID",
+    creditCardInStorage: {
+      "cc-number": "1234567812345678",
+      billingAddressGUID: "8fhdb3ug6",
+    },
+    creditCardToMerge: {
+      "cc-number": "1234567812345678",
+    },
+    expectedCreditCard: {
+      billingAddressGUID: "8fhdb3ug6",
+      "cc-number": "1234567812345678",
     },
     noNeedToUpdate: true,
   },
@@ -274,6 +310,7 @@ add_task(async function test_add() {
   let creditCard = profileStorage.creditCards._data[2];
   Assert.equal(creditCard["cc-exp-month"], TEST_CREDIT_CARD_WITH_EMPTY_FIELD["cc-exp-month"]);
   Assert.equal(creditCard["cc-name"], undefined);
+  Assert.equal(creditCard.billingAddressGUID, undefined);
 
   // Empty computed fields shouldn't cause any problem.
   profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD);
@@ -289,6 +326,22 @@ add_task(async function test_add() {
 
   Assert.throws(() => profileStorage.creditCards.add(TEST_CREDIT_CARD_EMPTY_AFTER_NORMALIZE),
     /Record contains no valid field\./);
+});
+
+add_task(async function test_addWithBillingAddress() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+  let profileStorage = new FormAutofillStorage(path);
+  await profileStorage.initialize();
+
+  let creditCards = profileStorage.creditCards.getAll();
+
+  Assert.equal(creditCards.length, 0);
+
+  await profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_BILLING_ADDRESS);
+
+  creditCards = profileStorage.creditCards.getAll();
+  Assert.equal(creditCards.length, 1);
+  do_check_credit_card_matches(creditCards[0], TEST_CREDIT_CARD_WITH_BILLING_ADDRESS);
 });
 
 add_task(async function test_update() {
@@ -338,6 +391,7 @@ add_task(async function test_update() {
   creditCard = profileStorage.creditCards._data[0];
   Assert.equal(creditCard["cc-exp-month"], TEST_CREDIT_CARD_WITH_EMPTY_FIELD["cc-exp-month"]);
   Assert.equal(creditCard["cc-name"], undefined);
+  Assert.equal(creditCard.billingAddressGUID, undefined);
 
   // Empty computed fields shouldn't cause any problem.
   profileStorage.creditCards.update(profileStorage.creditCards._data[0].guid, TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD, false);
