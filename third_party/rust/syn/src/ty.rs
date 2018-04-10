@@ -713,7 +713,7 @@ mod printing {
         fn to_tokens(&self, tokens: &mut Tokens) {
             self.paren_token.surround(tokens, |tokens| {
                 self.elems.to_tokens(tokens);
-            })
+            });
         }
     }
 

@@ -3,7 +3,8 @@ Nom parser for Rust source code
 
 [![Build Status](https://api.travis-ci.org/dtolnay/syn.svg?branch=master)](https://travis-ci.org/dtolnay/syn)
 [![Latest Version](https://img.shields.io/crates/v/syn.svg)](https://crates.io/crates/syn)
-[![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/syn/0.12/syn/)
+[![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/syn/0.13/syn/)
+[![Rustc Version 1.15+](https://img.shields.io/badge/rustc-1.15+-lightgray.svg)](https://blog.rust-lang.org/2017/02/02/Rust-1.15.html)
 
 Syn is a parsing library for parsing a stream of Rust tokens into a syntax tree
 of Rust source code.
@@ -41,11 +42,11 @@ contains some APIs that may be useful for Rust procedural macros more generally.
   procedural macros enable only what they need, and do not pay in compile time
   for all the rest.
 
-[`syn::File`]: https://docs.rs/syn/0.12/syn/struct.File.html
-[`syn::Item`]: https://docs.rs/syn/0.12/syn/enum.Item.html
-[`syn::Expr`]: https://docs.rs/syn/0.12/syn/enum.Expr.html
-[`syn::Type`]: https://docs.rs/syn/0.12/syn/enum.Type.html
-[`syn::DeriveInput`]: https://docs.rs/syn/0.12/syn/struct.DeriveInput.html
+[`syn::File`]: https://docs.rs/syn/0.13/syn/struct.File.html
+[`syn::Item`]: https://docs.rs/syn/0.13/syn/enum.Item.html
+[`syn::Expr`]: https://docs.rs/syn/0.13/syn/enum.Expr.html
+[`syn::Type`]: https://docs.rs/syn/0.13/syn/enum.Type.html
+[`syn::DeriveInput`]: https://docs.rs/syn/0.13/syn/struct.DeriveInput.html
 
 If you get stuck with anything involving procedural macros in Rust I am happy to
 provide help even if the issue is not related to Syn. Please file a ticket in
@@ -69,8 +70,8 @@ tokens back to the compiler to compile into the user's crate.
 
 ```toml
 [dependencies]
-syn = "0.12"
-quote = "0.4"
+syn = "0.13"
+quote = "0.5"
 
 [lib]
 proc-macro = true
@@ -257,8 +258,8 @@ On a nightly compiler, to eliminate the stable shim and use the compiler's
 
 ```toml
 [dependencies]
-syn = "0.12"
-proc-macro2 = { version = "0.2", features = ["nightly"] }
+syn = "0.13"
+proc-macro2 = { version = "0.3", features = ["nightly"] }
 ```
 
 ## License

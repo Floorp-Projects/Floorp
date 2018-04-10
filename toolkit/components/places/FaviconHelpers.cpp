@@ -53,29 +53,35 @@ FetchPageInfo(const RefPtr<Database>& aDB,
   MOZ_ASSERT(_page.spec.Length(), "Must have a non-empty spec!");
   MOZ_ASSERT(!NS_IsMainThread());
 
-  // This query finds the bookmarked uri we want to set the icon for,
-  // walking up to two redirect levels.
+  // The subquery finds the bookmarked uri we want to set the icon for,
+  // walking up redirects.
   nsCString query = nsPrintfCString(
     "SELECT h.id, pi.id, h.guid, ( "
-      "SELECT h.url FROM moz_bookmarks b WHERE b.fk = h.id "
-      "UNION ALL " // Union not directly bookmarked pages.
-      "SELECT url FROM moz_places WHERE id = ( "
-        "SELECT COALESCE(grandparent.place_id, parent.place_id) as r_place_id "
-        "FROM moz_historyvisits dest "
-        "LEFT JOIN moz_historyvisits parent ON parent.id = dest.from_visit "
-                                          "AND dest.visit_type IN (%d, %d) "
-        "LEFT JOIN moz_historyvisits grandparent ON parent.from_visit = grandparent.id "
-          "AND parent.visit_type IN (%d, %d) "
-        "WHERE dest.place_id = h.id "
-        "AND EXISTS(SELECT 1 FROM moz_bookmarks b WHERE b.fk = r_place_id) "
-        "LIMIT 1 "
+      "WITH RECURSIVE "
+      "destinations(visit_type, from_visit, place_id, rev_host, bm) AS ( "
+        "SELECT v.visit_type, v.from_visit, p.id, p.rev_host, b.id "
+        "FROM moz_places p  "
+        "LEFT JOIN moz_historyvisits v ON v.place_id = p.id  "
+        "LEFT JOIN moz_bookmarks b ON b.fk = p.id "
+        "WHERE p.id = h.id "
+        "UNION "
+        "SELECT src.visit_type, src.from_visit, src.place_id, p.rev_host, b.id "
+        "FROM moz_places p "
+        "JOIN moz_historyvisits src ON src.place_id = p.id "
+        "JOIN destinations dest ON dest.from_visit = src.id AND dest.visit_type IN (%d, %d) "
+        "LEFT JOIN moz_bookmarks b ON b.fk = src.place_id "
+        "WHERE instr(p.rev_host, dest.rev_host) = 1 "
+           "OR instr(dest.rev_host, p.rev_host) = 1 "
       ") "
+      "SELECT url "
+      "FROM moz_places p "
+      "JOIN destinations r ON r.place_id = p.id "
+      "WHERE bm NOTNULL "
+      "LIMIT 1 "
     "), fixup_url(get_unreversed_host(h.rev_host)) AS host "
     "FROM moz_places h "
     "LEFT JOIN moz_pages_w_icons pi ON page_url_hash = hash(:page_url) AND page_url = :page_url "
     "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url",
-    nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-    nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY,
     nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
     nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY
   );
@@ -542,6 +548,19 @@ AsyncFetchAndSetIconForPage::Run()
   bool fetchIconFromNetwork = mIcon.fetchMode == FETCH_ALWAYS ||
                               (mIcon.fetchMode == FETCH_IF_MISSING && isInvalidIcon);
 
+  // Check if we can associate the icon to this page.
+  rv = FetchPageInfo(DB, mPage);
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      // We have never seen this page.  If we can add the page to history,
+      // we will try to do it later, otherwise just bail out.
+      if (!mPage.canAddToHistory) {
+        return NS_OK;
+      }
+    }
+    return rv;
+  }
+
   if (!fetchIconFromNetwork) {
     // There is already a valid icon or we don't want to fetch a new one,
     // directly proceed with association.
@@ -827,20 +846,9 @@ NS_IMETHODIMP
 AsyncAssociateIconToPage::Run()
 {
   MOZ_ASSERT(!NS_IsMainThread());
-
-  RefPtr<Database> DB = Database::GetDatabase();
-  NS_ENSURE_STATE(DB);
-  nsresult rv = FetchPageInfo(DB, mPage);
-  if (rv == NS_ERROR_NOT_AVAILABLE){
-    // We have never seen this page.  If we can add the page to history,
-    // we will try to do it later, otherwise just bail out.
-    if (!mPage.canAddToHistory) {
-      return NS_OK;
-    }
-  }
-  else {
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  MOZ_ASSERT(!mPage.guid.IsEmpty(), "Page info should have been fetched already");
+  MOZ_ASSERT(mPage.canAddToHistory || !mPage.bookmarkedSpec.IsEmpty(),
+             "The page should be addable to history or a bookmark");
 
   bool shouldUpdateIcon = mIcon.status & ICON_STATUS_CHANGED;
   if (!shouldUpdateIcon) {
@@ -853,9 +861,11 @@ AsyncAssociateIconToPage::Run()
     }
   }
 
+  RefPtr<Database> DB = Database::GetDatabase();
+  NS_ENSURE_STATE(DB);
   mozStorageTransaction transaction(DB->MainConn(), false,
                                     mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
+  nsresult rv;
   if (shouldUpdateIcon) {
     rv = SetIconInfo(DB, mIcon);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -953,6 +963,23 @@ AsyncAssociateIconToPage::Run()
   nsCOMPtr<nsIRunnable> event = new NotifyIconObservers(mIcon, mPage, mCallback);
   rv = NS_DispatchToMainThread(event);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // If there is a bookmarked page that redirects to this one, try to update its
+  // icon as well.
+  if (!mPage.bookmarkedSpec.IsEmpty() &&
+      !mPage.bookmarkedSpec.Equals(mPage.spec)) {
+    // Create a new page struct to avoid polluting it with old data.
+    PageData bookmarkedPage;
+    bookmarkedPage.spec = mPage.bookmarkedSpec;
+    RefPtr<Database> DB = Database::GetDatabase();
+    if (DB && NS_SUCCEEDED(FetchPageInfo(DB, bookmarkedPage))) {
+      // This will be silent, so be sure to not pass in the current callback.
+      nsMainThreadPtrHandle<nsIFaviconDataCallback> nullCallback;
+      RefPtr<AsyncAssociateIconToPage> event =
+          new AsyncAssociateIconToPage(mIcon, bookmarkedPage, nullCallback);
+      Unused << event->Run();
+    }
+  }
 
   return NS_OK;
 }
@@ -1128,7 +1155,15 @@ NotifyIconObservers::Run()
       // Notify observers only if something changed.
       if (mIcon.status & ICON_STATUS_SAVED ||
           mIcon.status & ICON_STATUS_ASSOCIATED) {
-        SendGlobalNotifications(iconURI);
+        nsCOMPtr<nsIURI> pageURI;
+        MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(pageURI), mPage.spec));
+        if (pageURI) {
+          nsFaviconService* favicons = nsFaviconService::GetFaviconService();
+          MOZ_ASSERT(favicons);
+          if (favicons) {
+            (void)favicons->SendFaviconNotifications(pageURI, iconURI, mPage.guid);
+          }
+        }
       }
     }
   }
@@ -1145,38 +1180,6 @@ NotifyIconObservers::Run()
   }
   return mCallback->OnComplete(iconURI, 0, TO_INTBUFFER(EmptyCString()),
                                EmptyCString(), 0);
-}
-
-void
-NotifyIconObservers::SendGlobalNotifications(nsIURI* aIconURI)
-{
-  nsCOMPtr<nsIURI> pageURI;
-  MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(pageURI), mPage.spec));
-  if (pageURI) {
-    nsFaviconService* favicons = nsFaviconService::GetFaviconService();
-    MOZ_ASSERT(favicons);
-    if (favicons) {
-      (void)favicons->SendFaviconNotifications(pageURI, aIconURI, mPage.guid);
-    }
-  }
-
-  // If the page is bookmarked and the bookmarked url is different from the
-  // updated one, start a new task to update its icon as well.
-  if (!mPage.bookmarkedSpec.IsEmpty() &&
-      !mPage.bookmarkedSpec.Equals(mPage.spec)) {
-    // Create a new page struct to avoid polluting it with old data.
-    PageData bookmarkedPage;
-    bookmarkedPage.spec = mPage.bookmarkedSpec;
-
-    RefPtr<Database> DB = Database::GetDatabase();
-    if (!DB)
-      return;
-    // This will be silent, so be sure to not pass in the current callback.
-    nsMainThreadPtrHandle<nsIFaviconDataCallback> nullCallback;
-    RefPtr<AsyncAssociateIconToPage> event =
-        new AsyncAssociateIconToPage(mIcon, bookmarkedPage, nullCallback);
-    DB->DispatchToAsyncThread(event);
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
