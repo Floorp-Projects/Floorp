@@ -5,6 +5,8 @@
 
 #include "nsIDOMXULSelectCntrlEl.idl"
 
+interface nsIDOMNodeList;
+
 [scriptable, uuid(40654a10-8204-4f06-9f21-7baa31c7b1dd)]
 interface nsIDOMXULMultiSelectControlElement : nsIDOMXULSelectControlElement
 {

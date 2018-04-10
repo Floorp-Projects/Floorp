@@ -28,7 +28,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMXULElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsScreen.h"
 #include "nsIEmbeddingSiteWindow.h"

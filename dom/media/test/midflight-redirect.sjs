@@ -9,29 +9,17 @@ function parseQuery(query, key) {
   }
 }
 
-// Return seek.ogv file content for the first request with a given key.
-// All subsequent requests return a redirect to a different-origin resource.
+// Return the first few bytes in a short byte range response. When Firefox
+// requests subsequent bytes in a second range request, respond with a
+// redirect. Requests after the first redirected are serviced as expected.
 function handleRequest(request, response)
 {
   var query = request.queryString;
-  var key = parseQuery(query, "key");
-  var resource = parseQuery(query, "res");
-  var nested = parseQuery(query, "nested") || false;
+  var resource = parseQuery(query, "resource");
+  var type = parseQuery(query, "type") || "application/octet-stream";
+  var redirected = parseQuery(query, "redirected") || false;
+  var useCors = parseQuery(query, "cors") || false;
 
-  dump("Received request for key = "+ key +"\n");
-  if (!nested) {
-    if (getState(key) == "redirect") {
-      var origin = request.host == "mochi.test" ? "example.org" : "mochi.test:8888";
-      response.setStatusLine(request.httpVersion, 303, "See Other");
-      let url = "http://" + origin +
-                "/tests/dom/media/test/dynamic_redirect.sjs?nested&" + query;
-      dump("Redirecting to "+ url + "\n");
-      response.setHeader("Location", url);
-      response.setHeader("Content-Type", "text/html");
-      return;
-    }
-    setState(key, "redirect");
-  }
   var file = Components.classes["@mozilla.org/file/directory_service;1"].
                         getService(Components.interfaces.nsIProperties).
                         get("CurWorkD", Components.interfaces.nsIFile);
@@ -49,19 +37,42 @@ function handleRequest(request, response)
   bis.setInputStream(fis);
   var bytes = bis.readBytes(bis.available());
   let [from, to] = request.getHeader("range").split("=")[1].split("-").map(s => parseInt(s));
-  to = to || Math.max(from, bytes.length - 1);
+
+  if (!redirected && from > 0) {
+    var origin = request.host == "mochi.test" ? "example.org" : "mochi.test:8888";
+    response.setStatusLine(request.httpVersion, 303, "See Other");
+    let url = "http://" + origin +
+              "/tests/dom/media/test/midflight-redirect.sjs?redirected&" + query;
+    response.setHeader("Location", url);
+    response.setHeader("Content-Type", "text/html");
+    return;
+  }
+
+  if (isNaN(to)) {
+    to = bytes.length - 1;
+  }
+
+  if (from == 0 && !redirected) {
+    to = parseInt(parseQuery(query, "redirectAt")) || Math.floor(bytes.length / 4);
+  }
+  to = Math.min(to, bytes.length - 1);
+
+  // Note: 'to' is the first index *excluded*, so we need (to + 1)
+  // in the substring end here.
   byterange = bytes.substring(from, to + 1);
 
-  let contentRange = "bytes "+ from +"-"+ to +"/"+ bytes.length;
-  let contentLength = (to - from + 1).toString();
-  dump("Response Content-Range = "+ contentRange +"\n");
-  dump("Response Content-Length = "+ contentLength +"\n");
+  let contentRange = "bytes " + from + "-" + to + "/" + bytes.length;
+  let contentLength = byterange.length.toString();
 
   response.setStatusLine(request.httpVersion, 206, "Partial Content");
   response.setHeader("Content-Range", contentRange);
   response.setHeader("Content-Length", contentLength, false);
-  response.setHeader("Content-Type", "video/ogg", false);
+  response.setHeader("Content-Type", type, false);
   response.setHeader("Accept-Ranges", "bytes", false);
+  response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  if (redirected && useCors) {
+    response.setHeader("Access-Control-Allow-Origin", "*");
+  }
   response.write(byterange, byterange.length);
   bis.close();
 }

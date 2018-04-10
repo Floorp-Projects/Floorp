@@ -259,11 +259,16 @@ var BrowserTestUtils = {
    *        If a function, takes a URL and returns true if that's the load we're
    *        interested in. If a string, gives the URL of the load we're interested
    *        in. If not present, the first load resolves the promise.
+   * @param {optional boolean} maybeErrorPage
+   *        If true, this uses DOMContentLoaded event instead of load event.
+   *        Also wantLoad will be called with visible URL, instead of
+   *        'about:neterror?...' for error page.
    *
    * @return {Promise}
    * @resolves When a load event is triggered for the browser.
    */
-  browserLoaded(browser, includeSubFrames=false, wantLoad=null) {
+  browserLoaded(browser, includeSubFrames=false, wantLoad=null,
+                maybeErrorPage=false) {
     // Passing a url as second argument is a common mistake we should prevent.
     if (includeSubFrames && typeof includeSubFrames != "boolean") {
       throw("The second argument to browserLoaded should be a boolean.");
@@ -289,11 +294,17 @@ var BrowserTestUtils = {
 
     return new Promise(resolve => {
       let mm = browser.ownerGlobal.messageManager;
-      mm.addMessageListener("browser-test-utils:loadEvent", function onLoad(msg) {
+      let eventName = maybeErrorPage
+          ? "browser-test-utils:DOMContentLoadedEvent"
+          : "browser-test-utils:loadEvent";
+      mm.addMessageListener(eventName, function onLoad(msg) {
+        // See testing/mochitest/BrowserTestUtils/content/content-utils.js for
+        // the difference between visibleURL and internalURL.
         if (msg.target == browser && (!msg.data.subframe || includeSubFrames) &&
-            isWanted(msg.data.url)) {
-          mm.removeMessageListener("browser-test-utils:loadEvent", onLoad);
-          resolve(msg.data.url);
+            isWanted(maybeErrorPage
+                     ? msg.data.visibleURL : msg.data.internalURL)) {
+          mm.removeMessageListener(eventName, onLoad);
+          resolve(msg.data.internalURL);
         }
       });
     });
@@ -480,44 +491,79 @@ var BrowserTestUtils = {
   /**
    * Waits for the next browser window to open and be fully loaded.
    *
-   * @param {string} initialBrowserLoaded (optional)
-   *        If set, we will wait until the initial browser in the new
-   *        window has loaded a particular page. If unset, the initial
-   *        browser may or may not have finished loading its first page
-   *        when the resulting Promise resolves.
+   * @param aParams
+   *        {
+   *          url: A string (optional). If set, we will wait until the initial
+   *               browser in the new window has loaded a particular page.
+   *               If unset, the initial browser may or may not have finished
+   *               loading its first page when the resulting Promise resolves.
+   *          anyWindow: True to wait for the url to be loaded in any new
+   *                     window, not just the next one opened.
+   *          maybeErrorPage: See browserLoaded function.
+   *        }
    * @return {Promise}
    *         A Promise which resolves the next time that a DOM window
    *         opens and the delayed startup observer notification fires.
    */
-  async waitForNewWindow(initialBrowserLoaded=null) {
-    let win = await this.domWindowOpened();
+  waitForNewWindow(aParams = {}) {
+    let {
+      url = null,
+      anyWindow = false,
+      maybeErrorPage = false,
+    } = aParams;
 
-    let promises = [
-      TestUtils.topicObserved("browser-delayed-startup-finished",
-                              subject => subject == win),
-    ];
-
-    if (initialBrowserLoaded) {
-      await this.waitForEvent(win, "DOMContentLoaded");
-
-      let browser = win.gBrowser.selectedBrowser;
-
-      // Retrieve the given browser's current process type.
-      let process =
-        browser.isRemoteBrowser ? Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
-                                : Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-      if (win.gMultiProcessBrowser &&
-          !E10SUtils.canLoadURIInProcess(initialBrowserLoaded, process)) {
-        await this.waitForEvent(browser, "XULFrameLoaderCreated");
-      }
-
-      let loadPromise = this.browserLoaded(browser, false, initialBrowserLoaded);
-      promises.push(loadPromise);
+    if (anyWindow && !url) {
+      throw new Error("url should be specified if anyWindow is true");
     }
 
-    await Promise.all(promises);
+    return new Promise(resolve => {
+      let observe = async (win, topic, data) => {
+        if (topic != "domwindowopened") {
+          return;
+        }
 
-    return win;
+        if (!anyWindow) {
+          Services.ww.unregisterNotification(observe);
+        }
+
+        if (url) {
+          await this.waitForEvent(win, "DOMContentLoaded");
+
+          if (win.document.documentURI != "chrome://browser/content/browser.xul") {
+            return;
+          }
+        }
+
+        let promises = [
+          TestUtils.topicObserved("browser-delayed-startup-finished",
+                                  subject => subject == win),
+        ];
+
+        if (url) {
+          let browser = win.gBrowser.selectedBrowser;
+
+          // Retrieve the given browser's current process type.
+          let process =
+              browser.isRemoteBrowser ? Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
+              : Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+          if (win.gMultiProcessBrowser &&
+              !E10SUtils.canLoadURIInProcess(url, process)) {
+            await this.waitForEvent(browser, "XULFrameLoaderCreated");
+          }
+
+          let loadPromise = this.browserLoaded(browser, false, url, maybeErrorPage);
+          promises.push(loadPromise);
+        }
+
+        await Promise.all(promises);
+
+        if (anyWindow) {
+          Services.ww.unregisterNotification(observe);
+        }
+        resolve(win);
+      };
+      Services.ww.registerNotification(observe);
+    });
   },
 
   /**
