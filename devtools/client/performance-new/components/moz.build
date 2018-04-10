@@ -5,4 +5,6 @@
 
 DevToolsModules(
     'Perf.js',
+    'PerfSettings.js',
+    'Range.js',
 )

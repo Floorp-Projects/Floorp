@@ -19,10 +19,12 @@ const { createElement } = require("devtools/client/shared/vendor/react");
 /**
  * Perform a simple initialization on the panel. Hook up event listeners.
  *
+ * @param toolbox - The toolbox
  * @param perfFront - The Perf actor's front. Used to start and stop recordings.
  */
-function gInit(perfFront) {
+function gInit(toolbox, perfFront) {
   const props = {
+    toolbox,
     perfFront,
     receiveProfile: profile => {
       // Open up a new tab and send a message with the profile.
