@@ -596,8 +596,10 @@ HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode,
     IsEmptyNode(leftNode, &bIsEmptyNode, false, true);
     if (bIsEmptyNode) {
       // delete leftNode if it became empty
-      rv = DeleteNode(leftNode);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = DeleteNodeWithTransaction(*leftNode);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
   }
   if (rightNode) {
@@ -627,8 +629,10 @@ HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode,
       IsEmptyNode(rightNode, &bIsEmptyNode, false, true);
       if (bIsEmptyNode) {
         // delete rightNode if it became empty
-        rv = DeleteNode(rightNode);
-        NS_ENSURE_SUCCESS(rv, rv);
+        rv = DeleteNodeWithTransaction(*rightNode);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
 

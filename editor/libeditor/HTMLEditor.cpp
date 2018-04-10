@@ -1256,7 +1256,7 @@ HTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 
   // First delete all children in head
   while (nsCOMPtr<nsIContent> child = headNode->GetFirstChild()) {
-    nsresult rv = DeleteNode(child);
+    nsresult rv = DeleteNodeWithTransaction(*child);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3183,7 +3183,7 @@ HTMLEditor::DeleteSelectionImpl(EDirection aAction,
            content->GetParent() != content->GetEditingHost()) {
       content = content->GetParent();
     }
-    rv = DeleteNode(content);
+    rv = DeleteNodeWithTransaction(*content);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3191,22 +3191,37 @@ HTMLEditor::DeleteSelectionImpl(EDirection aAction,
 }
 
 nsresult
-HTMLEditor::DeleteNode(nsINode* aNode)
+HTMLEditor::DeleteNodeWithTransaction(nsINode& aNode)
 {
-  return DeleteNode(aNode->AsDOMNode());
+  if (NS_WARN_IF(!aNode.IsContent())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  // Do nothing if the node is read-only.
+  // XXX This is not a override method of EditorBase's method.  This might
+  //     cause not called accidentally.  We need to investigate this issue.
+  if (NS_WARN_IF(!IsModifiableNode(aNode.AsContent()) &&
+                 !IsMozEditorBogusNode(aNode.AsContent()))) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = EditorBase::DeleteNodeWithTransaction(aNode);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLEditor::DeleteNode(nsIDOMNode* aNode)
+HTMLEditor::DeleteNode(nsIDOMNode* aDOMNode)
 {
-  // do nothing if the node is read-only
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  if (NS_WARN_IF(!IsModifiableNode(content) &&
-                 !IsMozEditorBogusNode(content))) {
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsINode> node = do_QueryInterface(aDOMNode);
+  if (NS_WARN_IF(!node)) {
+    return NS_ERROR_INVALID_ARG;
   }
-
-  return EditorBase::DeleteNode(aNode);
+  nsresult rv = DeleteNodeWithTransaction(*node);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -4462,20 +4477,24 @@ HTMLEditor::CopyLastEditableChildStyles(nsINode* aPreviousBlock,
                                         nsINode* aNewBlock,
                                         Element** aOutBrNode)
 {
-  nsCOMPtr<nsINode> newBlock = do_QueryInterface(aNewBlock);
-  NS_ENSURE_STATE(newBlock || !aNewBlock);
+  if (NS_WARN_IF(!aNewBlock)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsINode> newBlock(aNewBlock);
   *aOutBrNode = nullptr;
-  nsCOMPtr<nsINode> child, tmp;
-  // first, clear out aNewBlock.  Contract is that we want only the styles from previousBlock.
-  child = aNewBlock->GetFirstChild();
-  while (child) {
-    nsresult rv = DeleteNode(child);
-    NS_ENSURE_SUCCESS(rv, rv);
-    child = aNewBlock->GetFirstChild();
+  // First, clear out aNewBlock.  Contract is that we want only the styles
+  // from aPreviousBlock.
+  for (nsCOMPtr<nsINode> child = aNewBlock->GetFirstChild();
+       child;
+       child = aNewBlock->GetFirstChild()) {
+    nsresult rv = DeleteNodeWithTransaction(*child);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
   // now find and clone the styles
-  child = aPreviousBlock;
-  tmp = aPreviousBlock;
+  nsCOMPtr<nsINode> child = aPreviousBlock;
+  nsCOMPtr<nsINode> tmp = aPreviousBlock;
   while (tmp) {
     child = tmp;
     tmp = GetLastEditableChild(*child);
