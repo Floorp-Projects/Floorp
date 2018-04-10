@@ -1,4 +1,4 @@
-const { Instance, Module } = WebAssembly;
+const { Instance, Module, LinkError } = WebAssembly;
 
 // Locally-defined globals
 assertErrorMessage(() => wasmEvalText(`(module (global))`), SyntaxError, /parsing/);
@@ -131,14 +131,14 @@ else
     assertEq(module.value, 42);
 
 // Can only import numbers (no implicit coercions).
-module = new WebAssembly.Module(wasmTextToBinary(`(module
+module = new Module(wasmTextToBinary(`(module
     (global (import "globs" "i32") i32)
     (global (import "globs" "f32") f32)
     (global (import "globs" "f64") f32)
 )`));
 
 const assertLinkFails = (m, imp, err) => {
-    assertErrorMessage(() => new WebAssembly.Instance(m, imp), WebAssembly.LinkError, err);
+    assertErrorMessage(() => new Instance(m, imp), LinkError, err);
 }
 
 var imp = {
@@ -149,7 +149,7 @@ var imp = {
     }
 };
 
-let i = new WebAssembly.Instance(module, imp);
+let i = new Instance(module, imp);
 
 for (let v of [
     null,
@@ -252,39 +252,47 @@ testInitExpr('f64', 13.37, 0.1989, x => +x);
 // Int64.
 
 // Import and export
+
+// The test for a Number value dominates the guard against int64.
+assertErrorMessage(() => wasmEvalText(`(module
+                                        (import "globals" "x" (global i64)))`,
+                                      {globals: {x:false}}),
+                   LinkError,
+                   /import object field 'x' is not a Number/);
+
+// The imported value is a Number, so the int64 guard should stop us
+assertErrorMessage(() => wasmEvalText(`(module
+                                        (import "globals" "x" (global i64)))`,
+                                      {globals: {x:42}}),
+                   LinkError,
+                   /cannot pass i64 to or from JS/);
+
 if (typeof WebAssembly.Global === "undefined") {
 
-    // Without WebAssembly.Global, i64 cannot be imported or exported
+    // Cannot export int64 at all.
 
-    module = new WebAssembly.Module(wasmTextToBinary(`(module (import "globals" "x" (global i64)))`));
-    assertErrorMessage(() => new WebAssembly.Instance(module, {globals: {x:42}}),
-                       WebAssembly.LinkError,
+    assertErrorMessage(() => wasmEvalText(`(module
+                                            (global i64 (i64.const 42))
+                                            (export "" global 0))`),
+                       LinkError,
                        /cannot pass i64 to or from JS/);
 
-    module = new WebAssembly.Module(wasmTextToBinary(`(module (global i64 (i64.const 42)) (export "" global 0))`));
-    assertErrorMessage(() => new WebAssembly.Instance(module), WebAssembly.LinkError, /cannot pass i64 to or from JS/);
-
-}
-else {
+} else {
 
     // We can import and export i64 globals as cells.  They cannot be created
     // from JS because there's no way to specify a non-zero initial value; that
     // restriction is tested later.  But we can export one from a module and
     // import it into another.
 
-    let i = new WebAssembly.Instance(
-        new WebAssembly.Module(
-            wasmTextToBinary(`(module
-                (global (export "g") i64 (i64.const 37))
-                (global (export "h") (mut i64) (i64.const 37)))`)));
+    let i = wasmEvalText(`(module
+                           (global (export "g") i64 (i64.const 37))
+                           (global (export "h") (mut i64) (i64.const 37)))`);
 
-    let j = new WebAssembly.Instance(
-        new WebAssembly.Module(
-            wasmTextToBinary(`(module
-                (import "globals" "g" (global i64))
-                (func (export "f") (result i32)
-                    (i64.eq (get_global 0) (i64.const 37))))`)),
-        {globals: {g: i.exports.g}});
+    let j = wasmEvalText(`(module
+                           (import "globals" "g" (global i64))
+                           (func (export "f") (result i32)
+                            (i64.eq (get_global 0) (i64.const 37))))`,
+                         {globals: {g: i.exports.g}});
 
     assertEq(j.exports.f(), 1);
 
@@ -292,11 +300,11 @@ else {
 
     let g = i.exports.g;
 
-    assertErrorMessage(() => i.exports.g.value, WebAssembly.LinkError, /cannot pass i64 to or from JS/);
+    assertErrorMessage(() => i.exports.g.value, TypeError, /cannot pass i64 to or from JS/);
 
     // Mutability check comes before i64 check.
     assertErrorMessage(() => i.exports.g.value = 12, TypeError, /can't set value of immutable global/);
-    assertErrorMessage(() => i.exports.h.value = 12, WebAssembly.LinkError, /cannot pass i64 to or from JS/);
+    assertErrorMessage(() => i.exports.h.value = 12, TypeError, /cannot pass i64 to or from JS/);
 }
 
 // Test inner
@@ -339,35 +347,30 @@ wasmAssert(`(module
 
 if (typeof WebAssembly.Global === "function") {
 
+    const Global = WebAssembly.Global;
+
     // These types should work:
-    assertEq(new WebAssembly.Global({type: "i32"}) instanceof WebAssembly.Global, true);
-    assertEq(new WebAssembly.Global({type: "f32"}) instanceof WebAssembly.Global, true);
-    assertEq(new WebAssembly.Global({type: "f64"}) instanceof WebAssembly.Global, true);
+    assertEq(new Global({type: "i32"}) instanceof Global, true);
+    assertEq(new Global({type: "f32"}) instanceof Global, true);
+    assertEq(new Global({type: "f64"}) instanceof Global, true);
 
     // These types should not work:
-    assertErrorMessage(() => new WebAssembly.Global({type: "i64"}),
-                       TypeError,
-                       /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new WebAssembly.Global({}),
-                       TypeError,
-                       /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new WebAssembly.Global({type: "fnord"}),
-                       TypeError,
-                       /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new WebAssembly.Global(),
-                       TypeError,
-                       /WebAssembly.Global requires more than 0 arguments/);
+    assertErrorMessage(() => new Global({type: "i64"}),   TypeError, /bad type for a WebAssembly.Global/);
+    assertErrorMessage(() => new Global({}),              TypeError, /bad type for a WebAssembly.Global/);
+    assertErrorMessage(() => new Global({type: "fnord"}), TypeError, /bad type for a WebAssembly.Global/);
+    assertErrorMessage(() => new Global(),                TypeError, /Global requires more than 0 arguments/);
 
     // Coercion of init value; ".value" accessor
-    assertEq((new WebAssembly.Global({type: "i32", value: 3.14})).value, 3);
-    assertEq((new WebAssembly.Global({type: "f32", value: { valueOf: () => 33.5 }})).value, 33.5);
+    assertEq((new Global({type: "i32", value: 3.14})).value, 3);
+    assertEq((new Global({type: "f32", value: { valueOf: () => 33.5 }})).value, 33.5);
+    assertEq((new Global({type: "f64", value: "3.25"})).value, 3.25);
 
     // Nothing special about NaN, it coerces just fine
-    assertEq((new WebAssembly.Global({type: "i32", value: NaN})).value, 0);
+    assertEq((new Global({type: "i32", value: NaN})).value, 0);
 
     {
         // "value" is enumerable
-        let x = new WebAssembly.Global({type: "i32"});
+        let x = new Global({type: "i32"});
         let s = "";
         for ( let i in x )
             s = s + i + ",";
@@ -375,23 +378,23 @@ if (typeof WebAssembly.Global === "function") {
     }
 
     // "value" is defined on the prototype, not on the object
-    assertEq("value" in WebAssembly.Global.prototype, true);
+    assertEq("value" in Global.prototype, true);
 
     // Can't set the value of an immutable global
-    assertErrorMessage(() => (new WebAssembly.Global({type: "i32"})).value = 10,
+    assertErrorMessage(() => (new Global({type: "i32"})).value = 10,
                        TypeError,
                        /can't set value of immutable global/);
 
     {
         // Can set the value of a mutable global
-        let g = new WebAssembly.Global({type: "i32", mutable: true, value: 37});
+        let g = new Global({type: "i32", mutable: true, value: 37});
         g.value = 10;
         assertEq(g.value, 10);
     }
 
     {
         // Misc internal conversions
-        let g = new WebAssembly.Global({type: "i32", value: 42});
+        let g = new Global({type: "i32", value: 42});
 
         // valueOf
         assertEq(g - 5, 37);
@@ -401,67 +404,52 @@ if (typeof WebAssembly.Global === "function") {
     }
 
     {
-        // An exported global should appear as a WebAssembly.Global instance:
-        let i =
-            new WebAssembly.Instance(
-                new WebAssembly.Module(
-                    wasmTextToBinary(`(module (global (export "g") i32 (i32.const 42)))`)));
+        // An exported global should appear as a Global instance:
+        let i = wasmEvalText(`(module (global (export "g") i32 (i32.const 42)))`);
 
         assertEq(typeof i.exports.g, "object");
-        assertEq(i.exports.g instanceof WebAssembly.Global, true);
+        assertEq(i.exports.g instanceof Global, true);
 
         // An exported global can be imported into another instance even if
         // it is an object:
-        let j =
-            new WebAssembly.Instance(
-                new WebAssembly.Module(
-                    wasmTextToBinary(`(module
-                        (global (import "" "g") i32)
-                        (func (export "f") (result i32)
-                            (get_global 0)))`)),
-                { "": { "g": i.exports.g }});
+        let j = wasmEvalText(`(module
+                               (global (import "" "g") i32)
+                               (func (export "f") (result i32)
+                                (get_global 0)))`,
+                             { "": { "g": i.exports.g }});
 
         // And when it is then accessed it has the right value:
         assertEq(j.exports.f(), 42);
     }
 
-    // Identity of WebAssembly.Global objects (independent of mutablity).
+    // Identity of Global objects (independent of mutablity).
     {
         // When a global is exported twice, the two objects are the same.
-        let i =
-            new WebAssembly.Instance(
-                new WebAssembly.Module(
-                    wasmTextToBinary(`(module
-                        (global i32 (i32.const 0))
-                        (export "a" global 0)
-                        (export "b" global 0))`)));
+        let i = wasmEvalText(`(module
+                               (global i32 (i32.const 0))
+                               (export "a" global 0)
+                               (export "b" global 0))`);
         assertEq(i.exports.a, i.exports.b);
 
         // When a global is imported and then exported, the exported object is
         // the same as the imported object.
-        let j =
-            new WebAssembly.Instance(
-                new WebAssembly.Module(
-                    wasmTextToBinary(`(module
-                        (import "" "a" (global i32))
-                        (export "x" global 0))`)),
-                { "": {a: i.exports.a}});
+        let j = wasmEvalText(`(module
+                               (import "" "a" (global i32))
+                               (export "x" global 0))`,
+                             { "": {a: i.exports.a}});
 
         assertEq(i.exports.a, j.exports.x);
 
         // When a global is imported twice (ie aliased) and then exported twice,
         // the exported objects are the same, and are also the same as the
         // imported object.
-        let k =
-            new WebAssembly.Instance(
-                new WebAssembly.Module(
-                    wasmTextToBinary(`(module
-                        (import "" "a" (global i32))
-                        (import "" "b" (global i32))
-                        (export "x" global 0)
-                        (export "y" global 1))`)),
-                { "": {a: i.exports.a,
-                    b: i.exports.a}});
+        let k = wasmEvalText(`(module
+                               (import "" "a" (global i32))
+                               (import "" "b" (global i32))
+                               (export "x" global 0)
+                               (export "y" global 1))`,
+                             { "": {a: i.exports.a,
+                                    b: i.exports.a}});
 
         assertEq(i.exports.a, k.exports.x);
         assertEq(k.exports.x, k.exports.y);
@@ -469,26 +457,20 @@ if (typeof WebAssembly.Global === "function") {
 
     // Mutability
     {
-        let i =
-            new WebAssembly.Instance(
-                new WebAssembly.Module(
-                    wasmTextToBinary(`(module
-                        (global (export "g") (mut i32) (i32.const 37))
-                        (func (export "getter") (result i32)
-                            (get_global 0))
-                        (func (export "setter") (param i32)
-                            (set_global 0 (get_local 0))))`)));
+        let i = wasmEvalText(`(module
+                               (global (export "g") (mut i32) (i32.const 37))
+                               (func (export "getter") (result i32)
+                                (get_global 0))
+                               (func (export "setter") (param i32)
+                                (set_global 0 (get_local 0))))`);
 
-        let j =
-            new WebAssembly.Instance(
-                new WebAssembly.Module(
-                    wasmTextToBinary(`(module
-                        (import "" "g" (global (mut i32)))
-                        (func (export "getter") (result i32)
-                            (get_global 0))
-                        (func (export "setter") (param i32)
-                            (set_global 0 (get_local 0))))`)),
-                {"": {g: i.exports.g}});
+        let j = wasmEvalText(`(module
+                               (import "" "g" (global (mut i32)))
+                               (func (export "getter") (result i32)
+                                (get_global 0))
+                               (func (export "setter") (param i32)
+                                (set_global 0 (get_local 0))))`,
+                             {"": {g: i.exports.g}});
 
         // Initial values
         assertEq(i.exports.g.value, 37);
@@ -517,19 +499,48 @@ if (typeof WebAssembly.Global === "function") {
         assertEq(j.exports.getter(), 197);
     }
 
-    // Providing a primitive value to an imported global should internally
-    // promote it to a Webassembly.Global object.
+    // Mutability of import declaration and imported value have to match
+    {
+        const mutErr = /imported global mutability mismatch/;
+        const i64Err = /cannot pass i64 to or from JS/;
 
-    assertEq(wasmEvalText(`(module
-        (global (import "a" "b") (mut i32))
-        (func (export "get") (result i32) get_global 0)
-    )`, { a: { b: 42 } }).exports.get(), 42);
+        let m1 = new Module(wasmTextToBinary(`(module
+                                               (import "m" "g" (global i32)))`));
+
+        // Mutable Global matched to immutable import
+        let gm = new Global({type: "i32", value: 42, mutable: true});
+        assertErrorMessage(() => new Instance(m1, {m: {g: gm}}),
+                           LinkError,
+                           mutErr);
+
+        let m2 = new Module(wasmTextToBinary(`(module
+                                               (import "m" "g" (global (mut i32))))`));
+
+        // Immutable Global matched to mutable import
+        let gi = new Global({type: "i32", value: 42, mutable: false});
+        assertErrorMessage(() => new Instance(m2, {m: {g: gi}}),
+                           LinkError,
+                           mutErr);
+
+        // Constant value is the same as immutable Global
+        assertErrorMessage(() => new Instance(m2, {m: {g: 42}}),
+                           LinkError,
+                           mutErr);
+
+        let m3 = new Module(wasmTextToBinary(`(module
+                                               (import "m" "g" (global (mut i64))))`));
+
+        // Check against i64 import before matching mutability
+        assertErrorMessage(() => new Instance(m3, {m: {g: 42}}),
+                           LinkError,
+                           i64Err);
+    }
 
     // TEST THIS LAST
 
     // "value" is deletable
-    assertEq(delete WebAssembly.Global.prototype.value, true);
-    assertEq("value" in WebAssembly.Global.prototype, false);
+    assertEq(delete Global.prototype.value, true);
+    assertEq("value" in Global.prototype, false);
 
     // ADD NO MORE TESTS HERE!
 }

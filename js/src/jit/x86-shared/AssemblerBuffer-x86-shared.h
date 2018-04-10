@@ -67,6 +67,33 @@ namespace js {
 
 namespace jit {
 
+    // AllocPolicy for AssemblerBuffer. OOMs when trying to allocate more than
+    // MaxCodeBytesPerProcess bytes. Use private inheritance to make sure we
+    // explicitly have to expose SystemAllocPolicy methods.
+    class AssemblerBufferAllocPolicy : private SystemAllocPolicy
+    {
+      public:
+        using SystemAllocPolicy::checkSimulatedOOM;
+        using SystemAllocPolicy::reportAllocOverflow;
+        using SystemAllocPolicy::free_;
+
+        template <typename T> T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
+            static_assert(sizeof(T) == 1,
+                          "AssemblerBufferAllocPolicy should only be used with byte vectors");
+            MOZ_ASSERT(oldSize <= MaxCodeBytesPerProcess);
+            if (MOZ_UNLIKELY(newSize > MaxCodeBytesPerProcess))
+                return nullptr;
+            return SystemAllocPolicy::pod_realloc<T>(p, oldSize, newSize);
+        }
+        template <typename T> T* pod_malloc(size_t numElems) {
+            static_assert(sizeof(T) == 1,
+                          "AssemblerBufferAllocPolicy should only be used with byte vectors");
+            if (MOZ_UNLIKELY(numElems > MaxCodeBytesPerProcess))
+                return nullptr;
+            return SystemAllocPolicy::pod_malloc<T>(numElems);
+        }
+    };
+
     class AssemblerBuffer
     {
         template<size_t size, typename T>
@@ -87,6 +114,9 @@ namespace jit {
 
         void ensureSpace(size_t space)
         {
+            // This should only be called with small |space| values to ensure
+            // we don't overflow below.
+            MOZ_ASSERT(space <= 16);
             if (MOZ_UNLIKELY(!m_buffer.reserve(m_buffer.length() + space)))
                 oomDetected();
         }
@@ -164,7 +194,7 @@ namespace jit {
             m_buffer.clear();
         }
 
-        mozilla::Vector<unsigned char, 256, SystemAllocPolicy> m_buffer;
+        mozilla::Vector<unsigned char, 256, AssemblerBufferAllocPolicy> m_buffer;
         bool m_oom;
     };
 

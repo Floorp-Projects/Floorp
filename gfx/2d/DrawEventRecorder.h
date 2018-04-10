@@ -30,7 +30,7 @@ public:
   virtual ~DrawEventRecorderPrivate() { }
   virtual bool Finish() override { ClearResources(); return true; }
   virtual void FlushItem(IntRect) { }
-  void DetatchResources() {
+  void DetachResources() {
     // The iteration is a bit awkward here because our iterator will
     // be invalidated by the removal
     for (auto font = mStoredFonts.begin(); font != mStoredFonts.end(); ) {

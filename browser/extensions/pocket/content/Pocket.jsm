@@ -25,7 +25,7 @@ var Pocket = {
     if (where == "current" && !win.isTabEmpty(win.gBrowser.selectedTab)) {
       where = "tab";
     }
-    win.openUILinkIn(this.listURL, where);
+    win.openTrustedLinkIn(this.listURL, where);
   },
 
   /**
