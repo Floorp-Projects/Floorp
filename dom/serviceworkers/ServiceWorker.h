@@ -103,10 +103,6 @@ private:
 
   ServiceWorkerDescriptor mDescriptor;
 
-  // Hold a strong reference to the inner service worker object.  This will
-  // create a ref-cycle.  The cycle is broken when either DisconnectFromOwner()
-  // is called due to the global tearing down or when the underlying service
-  // worker transitions to the redundant state.
   RefPtr<Inner> mInner;
 };
 

@@ -76,6 +76,11 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mInner);
 
+  KeepAliveIfHasListenersFor(NS_LITERAL_STRING("statechange"));
+
+  // The error event handler is required by the spec currently, but is not used
+  // anywhere.  Don't keep the object alive in that case.
+
   // This will update our state too.
   mInner->AddServiceWorker(this);
 }
@@ -83,9 +88,7 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
 ServiceWorker::~ServiceWorker()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mInner) {
-    mInner->RemoveServiceWorker(this);
-  }
+  mInner->RemoveServiceWorker(this);
 }
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorker, DOMEventTargetHelper)
@@ -114,8 +117,17 @@ ServiceWorker::SetState(ServiceWorkerState aState)
 {
   ServiceWorkerState oldState = mDescriptor.State();
   mDescriptor.SetState(aState);
-  if (oldState != aState) {
-    DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("statechange"));
+  if (oldState == aState) {
+    return;
+  }
+
+  DOMEventTargetHelper::DispatchTrustedEvent(NS_LITERAL_STRING("statechange"));
+
+  // Once we have transitioned to the redundant state then no
+  // more statechange events will occur.  We can allow the DOM
+  // object to GC if script is not holding it alive.
+  if (mDescriptor.State() == ServiceWorkerState::Redundant) {
+    IgnoreKeepAliveIfHasListenersFor(NS_LITERAL_STRING("statechange"));
   }
 }
 
@@ -130,7 +142,7 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                            const Sequence<JSObject*>& aTransferable,
                            ErrorResult& aRv)
 {
-  if (State() == ServiceWorkerState::Redundant || !mInner) {
+  if (State() == ServiceWorkerState::Redundant) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -148,10 +160,6 @@ ServiceWorker::Descriptor() const
 void
 ServiceWorker::DisconnectFromOwner()
 {
-  if (mInner) {
-    mInner->RemoveServiceWorker(this);
-    mInner = nullptr;
-  }
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 

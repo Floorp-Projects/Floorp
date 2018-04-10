@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_ipc_IPCBlobInputStream_h
 #define mozilla_dom_ipc_IPCBlobInputStream_h
 
+#include "mozilla/Mutex.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICloneableInputStream.h"
 #include "nsIFileStreams.h"
@@ -45,7 +46,8 @@ private:
 
   nsresult
   MaybeExecuteInputStreamCallback(nsIInputStreamCallback* aCallback,
-                                  nsIEventTarget* aEventTarget);
+                                  nsIEventTarget* aEventTarget,
+                                  const MutexAutoLock& aProofOfLock);
 
   nsresult
   EnsureAsyncRemoteStream();
@@ -83,12 +85,15 @@ private:
   nsCOMPtr<nsIAsyncInputStream> mAsyncRemoteStream;
 
   // These 2 values are set only if mState is ePending.
+  // They are protected by mutex.
   nsCOMPtr<nsIInputStreamCallback> mInputStreamCallback;
   nsCOMPtr<nsIEventTarget> mInputStreamCallbackEventTarget;
 
   // These 2 values are set only if mState is ePending.
   nsCOMPtr<nsIFileMetadataCallback> mFileMetadataCallback;
   nsCOMPtr<nsIEventTarget> mFileMetadataCallbackEventTarget;
+
+  Mutex mMutex;
 };
 
 } // namespace dom

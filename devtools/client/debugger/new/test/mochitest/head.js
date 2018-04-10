@@ -177,7 +177,7 @@ function waitForState(dbg, predicate, msg) {
     }
 
     const unsubscribe = dbg.store.subscribe(() => {
-      const result = predicate(dbg.store.getState())
+      const result = predicate(dbg.store.getState());
       if (result) {
         info(`Finished waiting for state change: ${msg || ""}`);
         unsubscribe();
@@ -228,10 +228,14 @@ async function waitForSources(dbg, ...sources) {
  * @static
  */
 function waitForSource(dbg, url) {
-  return waitForState(dbg, state => {
-    const sources = dbg.selectors.getSources(state);
-    return sources.find(s => (s.get("url") || "").includes(url));
-  }, `source exists`);
+  return waitForState(
+    dbg,
+    state => {
+      const sources = dbg.selectors.getSources(state);
+      return sources.find(s => (s.get("url") || "").includes(url));
+    },
+    `source exists`
+  );
 }
 
 async function waitForElement(dbg, name) {
@@ -265,7 +269,10 @@ function waitForSelectedSource(dbg, url) {
 
       // wait for async work to be done
       const hasSymbols = dbg.selectors.hasSymbols(state, source);
-      const hasSourceMetaData = dbg.selectors.hasSourceMetaData(state, source.id);
+      const hasSourceMetaData = dbg.selectors.hasSourceMetaData(
+        state,
+        source.id
+      );
       const hasPausePoints = dbg.selectors.hasPausePoints(state, source.id);
       return hasSymbols && hasSourceMetaData && hasPausePoints;
     },
@@ -689,8 +696,8 @@ function deleteExpression(dbg, input) {
  * @static
  */
 async function reload(dbg, ...sources) {
-  const navigated = waitForDispatch(dbg, "NAVIGATE")
-  await dbg.client.reload()
+  const navigated = waitForDispatch(dbg, "NAVIGATE");
+  await dbg.client.reload();
   await navigated;
   return waitForSources(dbg, ...sources);
 }
@@ -936,7 +943,8 @@ const selectors = {
     `.expressions-list .expression-container:nth-child(${i}) .close`,
   expressionNodes: ".expressions-list .tree-node",
   scopesHeader: ".scopes-pane ._header",
-  breakpointItem: i => `.breakpoints-list .breakpoint:nth-child(${i})`,
+  breakpointItem: i => `.breakpoints-list .breakpoint:nth-of-type(${i})`,
+  breakpointItems: `.breakpoints-list .breakpoint`,
   scopes: ".scopes-list",
   scopeNode: i => `.scopes-list .tree-node:nth-child(${i}) .object-label`,
   scopeValue: i =>
@@ -1113,12 +1121,13 @@ function getCoordsFromPosition(cm, { line, ch }) {
 }
 
 function hoverAtPos(dbg, { line, ch }) {
+  info(`Hovering at ${line}, ${ch}`);
   const cm = getCM(dbg);
 
   // Ensure the line is visible with margin because the bar at the bottom of
   // the editor overlaps into what the editor things is its own space, blocking
   // the click event below.
-  cm.scrollIntoView({ line: line - 1, ch  }, 100);
+  cm.scrollIntoView({ line: line - 1, ch }, 100);
 
   const coords = getCoordsFromPosition(cm, { line: line - 1, ch });
   const tokenEl = dbg.win.document.elementFromPoint(coords.left, coords.top);
@@ -1132,7 +1141,7 @@ function hoverAtPos(dbg, { line, ch }) {
 }
 
 async function assertPreviewTextValue(dbg, { text, expression }) {
-  const previewEl = await waitForElement(dbg, "previewPopup");;
+  const previewEl = await waitForElement(dbg, "previewPopup");
 
   is(previewEl.innerText, text, "Preview text shown to user");
 
@@ -1155,13 +1164,35 @@ async function assertPreviewPopup(dbg, { field, value, expression }) {
   const previewEl = await waitForElement(dbg, "popup");
   const preview = dbg.selectors.getPreview(dbg.getState());
 
-  is(
-    `${preview.result.preview.ownProperties[field].value}`,
-    value,
-    "Preview.result"
-  );
+  const properties =
+    preview.result.preview.ownProperties || preview.result.preview.items;
+  const property = properties[field];
+
+  is(`${property.value || property}`, value, "Preview.result");
   is(preview.updating, false, "Preview.updating");
   is(preview.expression, expression, "Preview.expression");
+}
+
+async function assertPreviews(dbg, previews) {
+  for (const { line, column, expression, result, fields } of previews) {
+    hoverAtPos(dbg, { line, ch: column - 1 });
+
+    if (fields && result) {
+      throw new Error("Invalid test fixture");
+    }
+
+    if (fields) {
+      for (const [field, value] of fields) {
+        await assertPreviewPopup(dbg, { expression, field, value });
+      }
+    } else {
+      await assertPreviewTextValue(dbg, { expression, text: result });
+    }
+
+    // Move to column 0 after to make sure that the preview created by this
+    // test does not affect later attempts to hover and preview.
+    hoverAtPos(dbg, { line: line, ch: 0 });
+  }
 }
 
 // NOTE: still experimental, the screenshots might not be exactly correct

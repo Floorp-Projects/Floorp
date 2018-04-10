@@ -3165,6 +3165,12 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
       currentStatus = mStatus;
     }
 
+    if (currentStatus >= Terminating && previousStatus < Terminating) {
+      if (mScope) {
+        mScope->NoteTerminating();
+      }
+    }
+
     // if all holders are done then we can kill this thread.
     if (currentStatus != Running && !HasActiveHolders()) {
 

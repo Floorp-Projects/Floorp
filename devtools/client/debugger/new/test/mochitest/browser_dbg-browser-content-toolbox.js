@@ -14,7 +14,7 @@ const {
 } = require("devtools/client/framework/devtools-browser");
 
 function toggleBreakpoint(dbg, index) {
-  const bp = findElement(dbg, "breakpointItem", index);
+  const bp = findAllElements(dbg, "breakpointItems")[index];
   const input = bp.querySelector("input");
   input.click();
 }
@@ -57,12 +57,12 @@ add_task(async function() {
   await addBreakpoint(dbg, "simple2", 3);
 
   info("Disable the breakpoint");
-  await disableBreakpoint(dbg, 1);
+  await disableBreakpoint(dbg, 0);
   let bp = findBreakpoint(dbg, "simple2", 3);
   is(bp.disabled, true, "breakpoint is disabled");
 
   info("Enable the breakpoint");
-  await enableBreakpoint(dbg, 1);
+  await enableBreakpoint(dbg, 0);
   bp = findBreakpoint(dbg, "simple2", 3);
   is(bp.disabled, false, "breakpoint is enabled");
 
