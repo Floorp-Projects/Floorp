@@ -30,7 +30,7 @@ class CompositorWidget;
 }
 
 namespace layers {
-class CompositorBridgeParentBase;
+class CompositorBridgeParent;
 class WebRenderBridgeParent;
 }
 
@@ -152,8 +152,9 @@ class WebRenderAPI
 
 public:
   /// This can be called on the compositor thread only.
-  static already_AddRefed<WebRenderAPI> Create(layers::CompositorBridgeParentBase* aBridge,
+  static already_AddRefed<WebRenderAPI> Create(layers::CompositorBridgeParent* aBridge,
                                                RefPtr<widget::CompositorWidget>&& aWidget,
+                                               const wr::WrWindowId& aWindowId,
                                                LayoutDeviceIntSize aSize);
 
   already_AddRefed<WebRenderAPI> CreateDocument(LayoutDeviceIntSize aSize, int8_t aLayerIndex);
