@@ -175,6 +175,39 @@ this.DevToolsShim = {
   },
 
   /**
+   * Called from nsContextMenu.js in mozilla-central when using the Inspect Accessibility
+   * context menu item.
+   *
+   * @param {XULTab} tab
+   *        The browser tab on which inspect accessibility was used.
+   * @param {Array} selectors
+   *        An array of CSS selectors to find the target accessible object. Several
+   *        selectors can be needed if the element is nested in frames and not directly
+   *        in the root document.
+   * @return {Promise} a promise that resolves when the accessible node is selected in the
+   *         accessibility inspector or that resolves immediately if DevTools are not
+   *         enabled.
+   */
+  inspectA11Y: function(tab, selectors) {
+    if (!this.isEnabled()) {
+      if (!this.isDisabledByPolicy()) {
+        DevtoolsStartup.openInstallPage("ContextMenu");
+      }
+      return Promise.resolve();
+    }
+
+    // Record the timing at which this event started in order to compute later in
+    // gDevTools.showToolbox, the complete time it takes to open the toolbox.
+    // i.e. especially take `DevtoolsStartup.initDevTools` into account.
+    let { performance } = Services.appShell.hiddenDOMWindow;
+    let startTime = performance.now();
+
+    this.initDevTools("ContextMenu");
+
+    return this._gDevTools.inspectA11Y(tab, selectors, startTime);
+  },
+
+  /**
    * Called from nsContextMenu.js in mozilla-central when using the Inspect Element
    * context menu item.
    *

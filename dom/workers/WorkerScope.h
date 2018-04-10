@@ -92,6 +92,9 @@ public:
     return this;
   }
 
+  void
+  NoteTerminating();
+
   already_AddRefed<Console>
   GetConsole(ErrorResult& aRv);
 

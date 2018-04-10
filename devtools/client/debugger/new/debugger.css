@@ -326,6 +326,18 @@ menuseparator {
   --reference-color: var(--theme-highlight-purple);
 }
 
+.theme-firebug {
+  --number-color: #000088;
+  --string-color: #ff0000;
+  --null-color: #787878;
+  --object-color: DarkGreen;
+  --caption-color: #444444;
+  --location-color: #555555;
+  --source-link-color: blue;
+  --node-color: rgb(0, 0, 136);
+  --reference-color: rgb(102, 102, 255);
+}
+
 /******************************************************************************/
 
 .objectLink:hover {
@@ -1912,6 +1924,18 @@ html .toggle-button.end.vertical svg {
   --stack-function-color: var(--theme-highlight-red);
 }
 
+.theme-firebug {
+  --number-color: #000088;
+  --string-color: #FF0000;
+  --null-color: #787878;
+  --object-color: DarkGreen;
+  --caption-color: #444444;
+  --location-color: #555555;
+  --source-link-color: blue;
+  --node-color: rgb(0, 0, 136);
+  --reference-color: rgb(102, 102, 255);
+}
+
 /******************************************************************************/
 
 .inline {
@@ -2749,20 +2773,32 @@ debug-expression-error {
   user-select: none;
 }
 
+.breakpoints-list .breakpoint-heading {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.breakpoints-list .breakpoint-heading,
 .breakpoints-list .breakpoint {
   font-size: 12px;
   color: var(--theme-content-color1);
-  padding: 0.5em 1em 0.5em 0.5em;
   line-height: 1em;
   position: relative;
   transition: all 0.25s ease;
+  padding: 0.5em 1em 0.5em 0.5em;
 }
 
-html[dir="rtl"] .breakpoints-list .breakpoint {
+.breakpoints-list .breakpoint {
+  display: flex;
+}
+
+html[dir="rtl"] .breakpoints-list .breakpoint,
+html[dir="rtl"] .breakpoints-list .breakpoint-heading {
   border-right: 4px solid transparent;
 }
 
-html:not([dir="rtl"]) .breakpoints-list .breakpoint {
+html:not([dir="rtl"]) .breakpoints-list .breakpoint,
+html:not([dir="rtl"]) .breakpoints-list .breakpoint-heading {
   border-left: 4px solid transparent;
 }
 
@@ -2792,6 +2828,28 @@ html .breakpoints-list .breakpoint.paused {
   background-color: var(--search-overlays-semitransparent);
 }
 
+.breakpoints-list .breakpoint .breakpoint-line,
+.breakpoints-list .breakpoint-label {
+  font-family: var(--monospace-font-family);
+}
+
+.breakpoints-list .breakpoint .breakpoint-line {
+  font-size: 11px;
+  color: var(--theme-comment);
+  padding-top: 3px;
+  padding-inline-end: 2px;
+  min-width: 14px;
+  text-align: right;
+}
+
+html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
+  text-align: left;
+}
+
+.breakpoints-list .breakpoint:hover .breakpoint-line {
+  display: none;
+}
+
 .breakpoints-list .breakpoint.paused:hover {
   border-color: var(--breakpoint-active-color-hover);
 }
@@ -2800,7 +2858,12 @@ html .breakpoints-list .breakpoint.paused {
   max-width: calc(100% - var(--breakpoint-expression-right-clear-space));
   display: inline-block;
   padding-inline-start: 2px;
+  padding-inline-end: 8px;
   cursor: default;
+  flex-grow: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-top: 3px;
 }
 
 .breakpoint-label .breakpoint-checkbox {
@@ -2827,6 +2890,11 @@ html .breakpoints-list .breakpoint.paused {
   offset-inline-end: 13px;
   offset-inline-start: auto;
   top: 9px;
+  display: none;
+}
+
+.breakpoint:hover .close-btn {
+  display: flex;
 }
 
 .breakpoint .close {
@@ -2835,6 +2903,30 @@ html .breakpoints-list .breakpoint.paused {
 
 .breakpoint:hover .close {
   visibility: visible;
+}
+
+.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-lines {
+  padding: 0;
+}
+
+.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-sizer {
+  min-width: initial !important;
+}
+
+.breakpoints-list .breakpoint.disabled .CodeMirror.cm-s-mozilla-breakpoint {
+  transition: opacity 0.5s linear;
+  opacity: 0.5;
+}
+
+.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-line span[role=presentation] {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+
+.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-code {
+  cursor: default;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2914,6 +3006,10 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 :root.theme-dark .expression-container:hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+:root.theme-firebug .expression-container:hover {
   background-color: var(--theme-selection-background-hover);
 }
 
@@ -3062,7 +3158,8 @@ html .breakpoints-list .breakpoint.paused {
   flex-shrink: 0;
 }
 
-.theme-light .frames .location {
+.theme-light .frames .location,
+.theme-firebug .frames .location {
   color: var(--theme-comment);
 }
 
@@ -3097,6 +3194,7 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 :root.theme-light .frames ul li.selected .location,
+:root.theme-firebug .frames ul li.selected .location,
 :root.theme-dark .frames ul li.selected .location {
   color: white;
 }
