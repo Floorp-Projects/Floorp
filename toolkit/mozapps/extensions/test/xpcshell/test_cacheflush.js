@@ -15,7 +15,9 @@ var CacheFlushObserver = {
     if (aData == "cert-override")
       return;
 
-    ok(gExpectedFile != null);
+    if (!gExpectedFile) {
+      return;
+    }
     ok(aSubject instanceof Ci.nsIFile);
     equal(aSubject.path, gExpectedFile.path);
     gCacheFlushCount++;
