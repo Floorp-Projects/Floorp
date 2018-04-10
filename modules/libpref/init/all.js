@@ -4856,6 +4856,7 @@ pref("layers.low-precision-buffer", false);
 pref("layers.progressive-paint", false);
 pref("layers.tile-width", 256);
 pref("layers.tile-height", 256);
+pref("layers.tiles.retain-back-buffer", true);
 pref("layers.child-process-shutdown", true);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
