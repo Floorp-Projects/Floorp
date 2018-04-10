@@ -1757,13 +1757,6 @@ private:
   IsInputDateTimeOthersEnabled();
 
   /**
-   * Checks preference "dom.forms.number" to determine if input type=number
-   * should be supported.
-   */
-  static bool
-  IsInputNumberEnabled();
-
-  /**
    * Checks preference "dom.forms.color" to determine if date/time related
    * types should be supported.
    */
