@@ -109,10 +109,10 @@ protected:
   URLValueData(ServoRawOffsetArc<RustString> aString,
                already_AddRefed<URLExtraData> aExtraData);
   // Construct with the actual URI.
-  URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
+  URLValueData(already_AddRefed<nsIURI> aURI,
                const nsAString& aString,
                already_AddRefed<URLExtraData> aExtraData);
-  URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
+  URLValueData(already_AddRefed<nsIURI> aURI,
                ServoRawOffsetArc<RustString> aString,
                already_AddRefed<URLExtraData> aExtraData);
 
@@ -174,7 +174,7 @@ public:
 private:
   // mURI stores the lazily resolved URI.  This may be null if the URI is
   // invalid, even once resolved.
-  mutable PtrHandle<nsIURI> mURI;
+  mutable nsCOMPtr<nsIURI> mURI;
 public:
   RefPtr<URLExtraData> mExtraData;
 private:
