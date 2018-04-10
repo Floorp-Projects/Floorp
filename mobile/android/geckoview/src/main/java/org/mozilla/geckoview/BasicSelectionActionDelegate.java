@@ -15,6 +15,7 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.ActionMode;
 import android.view.Menu;
@@ -24,8 +25,23 @@ import android.view.View;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Class that implements a basic SelectionActionDelegate. This class is used by GeckoView by
+ * default if the consumer does not explicitly set a SelectionActionDelegate.
+ *
+ * To provide custom actions, extend this class and override the following methods,
+ *
+ * 1) Override {@link #getAllActions} to include custom action IDs in the returned array. This
+ * array must include all actions, available or not, and must not change over the class lifetime.
+ *
+ * 2) Override {@link #isActionAvailable} to return whether a custom action is currently available.
+ *
+ * 3) Override {@link #prepareAction} to set custom title and/or icon for a custom action.
+ *
+ * 4) Override {@link #performAction} to perform a custom action when used.
+ */
 public class BasicSelectionActionDelegate implements ActionMode.Callback,
-                                             GeckoSession.SelectionActionDelegate {
+                                                     GeckoSession.SelectionActionDelegate {
     private static final String LOGTAG = "GeckoBasicSelectionAction";
 
     protected static final String ACTION_PROCESS_TEXT = Intent.ACTION_PROCESS_TEXT;
@@ -80,11 +96,12 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
         }
     }
 
-    public BasicSelectionActionDelegate(final Activity activity) {
+    public BasicSelectionActionDelegate(final @NonNull Activity activity) {
         this(activity, Build.VERSION.SDK_INT >= 23);
     }
 
-    public BasicSelectionActionDelegate(final Activity activity, final boolean useFloatingToolbar) {
+    public BasicSelectionActionDelegate(final @NonNull Activity activity,
+                                        final boolean useFloatingToolbar) {
         mActivity = activity;
         mUseFloatingToolbar = useFloatingToolbar;
         mExternalActionsEnabled = true;
@@ -118,7 +135,7 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
      *
      * @return Array of action IDs in proper order.
      */
-    protected String[] getAllActions() {
+    protected @NonNull String[] getAllActions() {
         return mUseFloatingToolbar ? FLOATING_TOOLBAR_ACTIONS
                                    : FIXED_TOOLBAR_ACTIONS;
     }
@@ -130,7 +147,7 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
      * @param id Action ID.
      * @return True if the action is presently available.
      */
-    protected boolean isActionAvailable(final String id) {
+    protected boolean isActionAvailable(final @NonNull String id) {
         if (mExternalActionsEnabled && !mSelection.text.isEmpty() &&
                 ACTION_PROCESS_TEXT.equals(id)) {
             final PackageManager pm = mActivity.getPackageManager();
@@ -147,7 +164,7 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
      * @param id Action ID.
      * @param item New menu item to prepare.
      */
-    protected void prepareAction(final String id, final MenuItem item) {
+    protected void prepareAction(final @NonNull String id, final @NonNull MenuItem item) {
         switch (id) {
             case ACTION_CUT:
                 item.setTitle(android.R.string.cut);
@@ -173,7 +190,7 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
      * @param item Nenu item for the action.
      * @return True if the action was performed.
      */
-    protected boolean performAction(final String id, final MenuItem item) {
+    protected boolean performAction(final @NonNull String id, final @NonNull MenuItem item) {
         if (ACTION_PROCESS_TEXT.equals(id)) {
             try {
                 mActivity.startActivity(item.getIntent());
@@ -200,6 +217,9 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
         return true;
     }
 
+    /**
+     * Clear the current selection, if possible.
+     */
     protected void clearSelection() {
         if (mResponse != null) {
             if (isActionAvailable(ACTION_COLLAPSE_TO_END)) {
