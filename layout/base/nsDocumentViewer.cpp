@@ -2408,11 +2408,6 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     // an SVG document, and excluding xul.css which will be loaded on demand by
     // nsXULElement::BindToTree.)
 
-    sheet = cache->NumberControlSheet();
-    if (sheet) {
-      styleSet->PrependStyleSheet(SheetType::Agent, sheet->AsServo());
-    }
-
     sheet = cache->FormsSheet();
     if (sheet) {
       styleSet->PrependStyleSheet(SheetType::Agent, sheet->AsServo());
