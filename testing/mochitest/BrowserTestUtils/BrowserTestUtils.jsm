@@ -526,18 +526,20 @@ var BrowserTestUtils = {
           Services.ww.unregisterNotification(observe);
         }
 
-        let promises = [
-          TestUtils.topicObserved("browser-delayed-startup-finished",
-                                  subject => subject == win),
-        ];
-
         if (url) {
           await this.waitForEvent(win, "DOMContentLoaded");
 
           if (win.document.documentURI != "chrome://browser/content/browser.xul") {
             return;
           }
+        }
 
+        let promises = [
+          TestUtils.topicObserved("browser-delayed-startup-finished",
+                                  subject => subject == win),
+        ];
+
+        if (url) {
           let browser = win.gBrowser.selectedBrowser;
 
           // Retrieve the given browser's current process type.
