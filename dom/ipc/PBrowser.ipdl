@@ -33,6 +33,7 @@ include "mozilla/layers/LayersMessageUtils.h";
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using mozilla::gfx::Matrix from "mozilla/gfx/Matrix.h";
+using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
 using mozilla::ScreenIntPoint from "Units.h";
@@ -394,7 +395,7 @@ parent:
      *   update.
      */
     async SetCustomCursor(nsCString cursorData, uint32_t width, uint32_t height,
-                          uint32_t stride, uint8_t format,
+                          uint32_t stride, SurfaceFormat format,
                           uint32_t hotspotX, uint32_t hotspotY, bool force);
 
     /**
@@ -568,7 +569,7 @@ parent:
 
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
                             OptionalShmem visualData,
-                            uint32_t stride, uint8_t format,
+                            uint32_t stride, SurfaceFormat format,
                             LayoutDeviceIntRect dragRect,
                             nsCString principalURISpec);
 

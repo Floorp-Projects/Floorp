@@ -7984,7 +7984,7 @@ nsContentUtils::DataTransferItemToImage(const IPCDataTransferItem& aItem,
 
   RefPtr<DataSourceSurface> image =
       CreateDataSourceSurfaceFromData(size,
-                                      static_cast<SurfaceFormat>(imageDetails.format()),
+                                      imageDetails.format(),
                                       data.get<uint8_t>(),
                                       imageDetails.stride());
 
@@ -8142,7 +8142,7 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
             imageDetails.width() = size.width;
             imageDetails.height() = size.height;
             imageDetails.stride() = stride;
-            imageDetails.format() = static_cast<uint8_t>(dataSurface->GetFormat());
+            imageDetails.format() = dataSurface->GetFormat();
 
             continue;
           }
