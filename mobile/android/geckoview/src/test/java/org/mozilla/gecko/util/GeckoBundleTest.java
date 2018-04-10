@@ -20,7 +20,7 @@ import java.util.List;
 @RunWith(RobolectricTestRunner.class)
 @SmallTest
 public class GeckoBundleTest {
-    private static final int INNER_BUNDLE_SIZE = 25;
+    private static final int INNER_BUNDLE_SIZE = 28;
     private static final int OUTER_BUNDLE_SIZE = INNER_BUNDLE_SIZE + 6;
 
     private static GeckoBundle createInnerBundle() {
@@ -35,6 +35,9 @@ public class GeckoBundleTest {
         bundle.putDouble("double", 0.5);
         bundle.putDoubleArray("doubleArray", new double[] {1.5, 2.5});
 
+        bundle.putLong("long", 1L);
+        bundle.putLongArray("longArray", new long[] {2L, 3L});
+
         bundle.putString("string", "foo");
         bundle.putString("nullString", null);
         bundle.putString("emptyString", "");
@@ -44,11 +47,13 @@ public class GeckoBundleTest {
         bundle.putBooleanArray("emptyBooleanArray", new boolean[0]);
         bundle.putIntArray("emptyIntArray", new int[0]);
         bundle.putDoubleArray("emptyDoubleArray", new double[0]);
+        bundle.putLongArray("emptyLongArray", new long[0]);
         bundle.putStringArray("emptyStringArray", new String[0]);
 
         bundle.putBooleanArray("nullBooleanArray", (boolean[]) null);
         bundle.putIntArray("nullIntArray", (int[]) null);
         bundle.putDoubleArray("nullDoubleArray", (double[]) null);
+        bundle.putLongArray("nullLongArray", (long[]) null);
         bundle.putStringArray("nullStringArray", (String[]) null);
 
         bundle.putDoubleArray("mixedArray", new double[] {1.0, 1.5});
@@ -56,7 +61,6 @@ public class GeckoBundleTest {
         bundle.putInt("byte", 1);
         bundle.putInt("short", 1);
         bundle.putDouble("float", 0.5);
-        bundle.putDouble("long", 1.0);
         bundle.putString("char", "f");
 
         return bundle;
@@ -88,6 +92,9 @@ public class GeckoBundleTest {
         assertEquals(0.5, bundle.getDouble("double"), 0.0);
         assertArrayEquals(new double[] {1.5, 2.5}, bundle.getDoubleArray("doubleArray"), 0.0);
 
+        assertEquals(1L, bundle.getLong("long"));
+        assertArrayEquals(new long[] {2L, 3L}, bundle.getLongArray("longArray"));
+
         assertEquals("foo", bundle.getString("string"));
         assertEquals(null, bundle.getString("nullString"));
         assertEquals("", bundle.getString("emptyString"));
@@ -97,11 +104,13 @@ public class GeckoBundleTest {
         assertArrayEquals(new boolean[0], bundle.getBooleanArray("emptyBooleanArray"));
         assertArrayEquals(new int[0], bundle.getIntArray("emptyIntArray"));
         assertArrayEquals(new double[0], bundle.getDoubleArray("emptyDoubleArray"), 0.0);
+        assertArrayEquals(new long[0], bundle.getLongArray("emptyLongArray"));
         assertArrayEquals(new String[0], bundle.getStringArray("emptyStringArray"));
 
         assertArrayEquals(null, bundle.getBooleanArray("nullBooleanArray"));
         assertArrayEquals(null, bundle.getIntArray("nullIntArray"));
         assertArrayEquals(null, bundle.getDoubleArray("nullDoubleArray"), 0.0);
+        assertArrayEquals(null, bundle.getLongArray("nullLongArray"));
         assertArrayEquals(null, bundle.getStringArray("nullStringArray"));
 
         assertArrayEquals(new double[] {1.0, 1.5}, bundle.getDoubleArray("mixedArray"), 0.0);
@@ -109,7 +118,6 @@ public class GeckoBundleTest {
         assertEquals(1, bundle.getInt("byte"));
         assertEquals(1, bundle.getInt("short"));
         assertEquals(0.5, bundle.getDouble("float"), 0.0);
-        assertEquals(1.0, bundle.getDouble("long"), 0.0);
         assertEquals("f", bundle.getString("char"));
     }
 
@@ -209,6 +217,8 @@ public class GeckoBundleTest {
         testRemove(test, "intArray");
         testRemove(test, "double");
         testRemove(test, "doubleArray");
+        testRemove(test, "long");
+        testRemove(test, "longArray");
         testRemove(test, "string");
         testRemove(test, "nullString");
         testRemove(test, "emptyString");
@@ -217,16 +227,17 @@ public class GeckoBundleTest {
         testRemove(test, "emptyBooleanArray");
         testRemove(test, "emptyIntArray");
         testRemove(test, "emptyDoubleArray");
+        testRemove(test, "emptyLongArray");
         testRemove(test, "emptyStringArray");
         testRemove(test, "nullBooleanArray");
         testRemove(test, "nullIntArray");
         testRemove(test, "nullDoubleArray");
+        testRemove(test, "nullLongArray");
         testRemove(test, "nullStringArray");
         testRemove(test, "mixedArray");
         testRemove(test, "byte");
         testRemove(test, "short");
         testRemove(test, "float");
-        testRemove(test, "long");
         testRemove(test, "char");
         testRemove(test, "object");
         testRemove(test, "nullObject");
@@ -250,12 +261,13 @@ public class GeckoBundleTest {
     public void keysShouldReturnCorrectResult() {
         final String[] actual = reference.keys();
         final String[] expected = new String[] {
-            "boolean", "booleanArray", "int", "intArray", "double", "doubleArray", "string",
-            "nullString", "emptyString", "stringArray", "stringArrayOfNull",
-            "emptyBooleanArray", "emptyIntArray", "emptyDoubleArray", "emptyStringArray",
-            "nullBooleanArray", "nullIntArray", "nullDoubleArray", "nullStringArray",
-            "mixedArray", "byte", "short", "float", "long", "char", "object", "nullObject",
-            "objectArray", "objectArrayOfNull", "emptyObjectArray", "nullObjectArray"
+            "boolean", "booleanArray", "int", "intArray", "double", "doubleArray", "long",
+            "longArray", "string", "nullString", "emptyString", "stringArray", "stringArrayOfNull",
+            "emptyBooleanArray", "emptyIntArray", "emptyDoubleArray", "emptyLongArray",
+            "emptyStringArray", "nullBooleanArray", "nullIntArray", "nullDoubleArray",
+            "nullLongArray", "nullStringArray", "mixedArray", "byte", "short", "float", "char",
+            "object", "nullObject", "objectArray", "objectArrayOfNull", "emptyObjectArray",
+            "nullObjectArray"
         };
 
         Arrays.sort(expected);
@@ -275,6 +287,7 @@ public class GeckoBundleTest {
         assertNotEquals(false, reference.getBoolean("boolean", false));
         assertNotEquals(0, reference.getInt("int", 0));
         assertNotEquals(0.0, reference.getDouble("double", 0.0), 0.0);
+        assertNotEquals(0L, reference.getLong("long", 0L));
         assertNotEquals("", reference.getString("string", ""));
     }
 
@@ -303,6 +316,7 @@ public class GeckoBundleTest {
         assertArrayEquals(null, reference.getBooleanArray("nonexistent"));
         assertArrayEquals(null, reference.getIntArray("nonexistent"));
         assertArrayEquals(null, reference.getDoubleArray("nonexistent"), 0.0);
+        assertArrayEquals(null, reference.getLongArray("nonexistent"));
         assertArrayEquals(null, reference.getStringArray("nonexistent"));
         assertArrayEquals(null, reference.getBundleArray("nonexistent"));
 
@@ -312,6 +326,7 @@ public class GeckoBundleTest {
         testDefaultValueForNull(reference, "nullBooleanArray");
         testDefaultValueForNull(reference, "nullIntArray");
         testDefaultValueForNull(reference, "nullDoubleArray");
+        testDefaultValueForNull(reference, "nullLongArray");
         testDefaultValueForNull(reference, "nullStringArray");
         testDefaultValueForNull(reference, "nullObjectArray");
     }
@@ -410,6 +425,25 @@ public class GeckoBundleTest {
             }
         }
 
+        if (!allowed.contains("long")) {
+            try {
+                bundle.getLong(key);
+                fail(String.format("%s should not coerce to long", key));
+            } catch (final Exception e) {
+                assertTrue(true);
+            }
+        }
+
+        if (!allowed.contains("longArray") && !allowed.contains("emptyLongArray") &&
+            !allowed.contains("nullLongArray")) {
+            try {
+                bundle.getLongArray(key);
+                fail(String.format("%s should not coerce to long array", key));
+            } catch (final Exception e) {
+                assertTrue(true);
+            }
+        }
+
         if (!allowed.contains("string") && !allowed.contains("nullString")) {
             try {
                 bundle.getString(key);
@@ -466,9 +500,16 @@ public class GeckoBundleTest {
     }
 
     @Test
+    public void intShouldCoerceToLong() {
+        assertEquals(1L, reference.getLong("int"));
+        assertArrayEquals(new long[] {2L, 3L}, reference.getLongArray("intArray"));
+    }
+
+    @Test
     public void intShouldNotCoerceToOtherTypes() {
-        testInvalidCoercions(reference, "int", /* except */ "double");
-        testInvalidCoercions(reference, "intArray", /* except */ "doubleArray");
+        testInvalidCoercions(reference, "int", /* except */ "double", "long");
+        testInvalidCoercions(reference, "intArray",
+                             /* except */ "doubleArray", "longArray");
     }
 
     @Test
@@ -478,9 +519,35 @@ public class GeckoBundleTest {
     }
 
     @Test
+    public void doubleShouldCoerceToLong() {
+        assertEquals(0L, reference.getLong("double"));
+        assertArrayEquals(new long[] {1L, 2L}, reference.getLongArray("doubleArray"));
+    }
+
+    @Test
     public void doubleShouldNotCoerceToOtherTypes() {
-        testInvalidCoercions(reference, "double", /* except */ "int");
-        testInvalidCoercions(reference, "doubleArray", /* except */ "intArray");
+        testInvalidCoercions(reference, "double", /* except */ "int", "long");
+        testInvalidCoercions(reference, "doubleArray",
+                             /* except */ "intArray", "longArray");
+    }
+
+    @Test
+    public void longShouldCoerceToInt() {
+        assertEquals(1, reference.getInt("long"));
+        assertArrayEquals(new int[] {2, 3}, reference.getIntArray("longArray"));
+    }
+
+    @Test
+    public void longShouldCoerceToDouble() {
+        assertEquals(1.0, reference.getDouble("long"), 0.0);
+        assertArrayEquals(new double[] {2.0, 3.0}, reference.getDoubleArray("longArray"), 0.0);
+    }
+
+    @Test
+    public void longShouldNotCoerceToOtherTypes() {
+        testInvalidCoercions(reference, "long", /* except */ "int", "double");
+        testInvalidCoercions(reference, "longArray",
+                             /* except */ "intArray", "doubleArray");
     }
 
     @Test
@@ -519,69 +586,93 @@ public class GeckoBundleTest {
     public void emptyArrayShouldCoerceToAnyArray() {
         assertArrayEquals(new int[0], reference.getIntArray("emptyBooleanArray"));
         assertArrayEquals(new double[0], reference.getDoubleArray("emptyBooleanArray"), 0.0);
+        assertArrayEquals(new long[0], reference.getLongArray("emptyBooleanArray"));
         assertArrayEquals(new String[0], reference.getStringArray("emptyBooleanArray"));
         assertArrayEquals(new GeckoBundle[0], reference.getBundleArray("emptyBooleanArray"));
 
         assertArrayEquals(new boolean[0], reference.getBooleanArray("emptyIntArray"));
         assertArrayEquals(new double[0], reference.getDoubleArray("emptyIntArray"), 0.0);
+        assertArrayEquals(new long[0], reference.getLongArray("emptyIntArray"));
         assertArrayEquals(new String[0], reference.getStringArray("emptyIntArray"));
         assertArrayEquals(new GeckoBundle[0], reference.getBundleArray("emptyIntArray"));
 
         assertArrayEquals(new boolean[0], reference.getBooleanArray("emptyDoubleArray"));
         assertArrayEquals(new int[0], reference.getIntArray("emptyDoubleArray"));
+        assertArrayEquals(new long[0], reference.getLongArray("emptyDoubleArray"));
         assertArrayEquals(new String[0], reference.getStringArray("emptyDoubleArray"));
         assertArrayEquals(new GeckoBundle[0], reference.getBundleArray("emptyDoubleArray"));
+
+        assertArrayEquals(new boolean[0], reference.getBooleanArray("emptyLongArray"));
+        assertArrayEquals(new int[0], reference.getIntArray("emptyLongArray"));
+        assertArrayEquals(new double[0], reference.getDoubleArray("emptyLongArray"), 0.0);
+        assertArrayEquals(new String[0], reference.getStringArray("emptyLongArray"));
+        assertArrayEquals(new GeckoBundle[0], reference.getBundleArray("emptyLongArray"));
 
         assertArrayEquals(new boolean[0], reference.getBooleanArray("emptyStringArray"));
         assertArrayEquals(new int[0], reference.getIntArray("emptyStringArray"));
         assertArrayEquals(new double[0], reference.getDoubleArray("emptyStringArray"), 0.0);
+        assertArrayEquals(new long[0], reference.getLongArray("emptyStringArray"));
         assertArrayEquals(new GeckoBundle[0], reference.getBundleArray("emptyStringArray"));
 
         assertArrayEquals(new boolean[0], reference.getBooleanArray("emptyObjectArray"));
         assertArrayEquals(new int[0], reference.getIntArray("emptyObjectArray"));
         assertArrayEquals(new double[0], reference.getDoubleArray("emptyObjectArray"), 0.0);
+        assertArrayEquals(new long[0], reference.getLongArray("emptyObjectArray"));
         assertArrayEquals(new String[0], reference.getStringArray("emptyObjectArray"));
     }
 
     @Test
     public void emptyArrayShouldNotCoerceToOtherTypes() {
         testInvalidCoercions(reference, "emptyBooleanArray", /* except */ "intArray",
-                             "doubleArray", "stringArray", "objectArray");
+                             "doubleArray", "longArray", "stringArray", "objectArray");
         testInvalidCoercions(reference, "emptyIntArray", /* except */ "booleanArray",
-                             "doubleArray", "stringArray", "objectArray");
+                             "doubleArray", "longArray", "stringArray", "objectArray");
         testInvalidCoercions(reference, "emptyDoubleArray", /* except */ "booleanArray",
-                             "intArray", "stringArray", "objectArray");
+                             "intArray", "longArray", "stringArray", "objectArray");
+        testInvalidCoercions(reference, "emptyLongArray", /* except */ "booleanArray",
+                             "intArray", "doubleArray", "stringArray", "objectArray");
         testInvalidCoercions(reference, "emptyStringArray", /* except */ "booleanArray",
-                             "intArray", "doubleArray", "objectArray");
+                             "intArray", "doubleArray", "longArray", "objectArray");
         testInvalidCoercions(reference, "emptyObjectArray", /* except */ "booleanArray",
-                             "intArray", "doubleArray", "stringArray");
+                             "intArray", "doubleArray", "longArray", "stringArray");
     }
 
     @Test
     public void nullArrayShouldCoerceToAnyArray() {
         assertArrayEquals(null, reference.getIntArray("nullBooleanArray"));
         assertArrayEquals(null, reference.getDoubleArray("nullBooleanArray"), 0.0);
+        assertArrayEquals(null, reference.getLongArray("nullBooleanArray"));
         assertArrayEquals(null, reference.getStringArray("nullBooleanArray"));
         assertArrayEquals(null, reference.getBundleArray("nullBooleanArray"));
 
         assertArrayEquals(null, reference.getBooleanArray("nullIntArray"));
         assertArrayEquals(null, reference.getDoubleArray("nullIntArray"), 0.0);
+        assertArrayEquals(null, reference.getLongArray("nullIntArray"));
         assertArrayEquals(null, reference.getStringArray("nullIntArray"));
         assertArrayEquals(null, reference.getBundleArray("nullIntArray"));
 
         assertArrayEquals(null, reference.getBooleanArray("nullDoubleArray"));
         assertArrayEquals(null, reference.getIntArray("nullDoubleArray"));
+        assertArrayEquals(null, reference.getLongArray("nullDoubleArray"));
         assertArrayEquals(null, reference.getStringArray("nullDoubleArray"));
         assertArrayEquals(null, reference.getBundleArray("nullDoubleArray"));
+
+        assertArrayEquals(null, reference.getBooleanArray("nullLongArray"));
+        assertArrayEquals(null, reference.getIntArray("nullLongArray"));
+        assertArrayEquals(null, reference.getDoubleArray("nullLongArray"), 0.0);
+        assertArrayEquals(null, reference.getStringArray("nullLongArray"));
+        assertArrayEquals(null, reference.getBundleArray("nullLongArray"));
 
         assertArrayEquals(null, reference.getBooleanArray("nullStringArray"));
         assertArrayEquals(null, reference.getIntArray("nullStringArray"));
         assertArrayEquals(null, reference.getDoubleArray("nullStringArray"), 0.0);
+        assertArrayEquals(null, reference.getLongArray("nullStringArray"));
         assertArrayEquals(null, reference.getBundleArray("nullStringArray"));
 
         assertArrayEquals(null, reference.getBooleanArray("nullObjectArray"));
         assertArrayEquals(null, reference.getIntArray("nullObjectArray"));
         assertArrayEquals(null, reference.getDoubleArray("nullObjectArray"), 0.0);
+        assertArrayEquals(null, reference.getLongArray("nullObjectArray"));
         assertArrayEquals(null, reference.getStringArray("nullObjectArray"));
     }
 }
