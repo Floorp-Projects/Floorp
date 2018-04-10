@@ -59,7 +59,7 @@ public:
 
   wr::PipelineId PipelineId() { return mPipelineId; }
   already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI() { return do_AddRef(mApi); }
-  wr::Epoch WrEpoch() { return wr::NewEpoch(mWrEpoch); }
+  wr::Epoch WrEpoch() const { return mWrEpoch; }
   AsyncImagePipelineManager* AsyncImageManager() { return mAsyncImageManager; }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
@@ -153,7 +153,7 @@ public:
   void SendPendingAsyncMessages() override;
   void SetAboutToSendAsyncMessages() override;
 
-  void HoldPendingTransactionId(uint32_t aWrEpoch,
+  void HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
                                 uint64_t aTransactionId,
                                 const TimeStamp& aTxnStartTime,
                                 const TimeStamp& aFwdTime);
@@ -226,11 +226,11 @@ private:
   bool PushAPZStateToWR(wr::TransactionBuilder& aTxn,
                         nsTArray<wr::WrTransformProperty>& aTransformArray);
 
-  uint32_t GetNextWrEpoch();
+  wr::Epoch GetNextWrEpoch();
 
 private:
   struct PendingTransactionId {
-    PendingTransactionId(wr::Epoch aEpoch, uint64_t aId, const TimeStamp& aTxnStartTime, const TimeStamp& aFwdTime)
+    PendingTransactionId(const wr::Epoch& aEpoch, uint64_t aId, const TimeStamp& aTxnStartTime, const TimeStamp& aFwdTime)
       : mEpoch(aEpoch)
       , mId(aId)
       , mTxnStartTime(aTxnStartTime)
@@ -264,7 +264,7 @@ private:
   uint64_t mParentLayerObserverEpoch;
 
   std::queue<PendingTransactionId> mPendingTransactionIds;
-  uint32_t mWrEpoch;
+  wr::Epoch mWrEpoch;
   wr::IdNamespace mIdNamespace;
 
   bool mPaused;
