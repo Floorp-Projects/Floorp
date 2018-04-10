@@ -8,7 +8,7 @@ import RichSelect from "../components/rich-select.js";
 
 /**
  * <address-picker></address-picker>
- * Container around <rich-select> (eventually providing add/edit links) with
+ * Container around add/edit links and <rich-select> with
  * <address-option> listening to savedAddresses.
  */
 
@@ -21,10 +21,21 @@ export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLEleme
     super();
     this.dropdown = new RichSelect();
     this.dropdown.addEventListener("change", this);
+    this.addLink = document.createElement("a");
+    this.addLink.href = "javascript:void(0)";
+    this.addLink.textContent = this.dataset.addLinkLabel;
+    this.addLink.addEventListener("click", this);
+    this.editLink = document.createElement("a");
+    this.editLink.href = "javascript:void(0)";
+    this.editLink.textContent = this.dataset.editLinkLabel;
+    this.editLink.addEventListener("click", this);
   }
 
   connectedCallback() {
     this.appendChild(this.dropdown);
+    this.appendChild(this.addLink);
+    this.append(" ");
+    this.appendChild(this.editLink);
     super.connectedCallback();
   }
 
@@ -134,6 +145,9 @@ export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLEleme
         this.onChange(event);
         break;
       }
+      case "click": {
+        this.onClick(event);
+      }
     }
   }
 
@@ -145,6 +159,33 @@ export default class AddressPicker extends PaymentStateSubscriberMixin(HTMLEleme
         [selectedKey]: select.selectedOption && select.selectedOption.guid,
       });
     }
+  }
+
+  onClick({target}) {
+    let nextState = {
+      page: {
+        id: "address-page",
+        selectedStateKey: this.selectedStateKey,
+      },
+    };
+
+    switch (target) {
+      case this.addLink: {
+        nextState.page.guid = null;
+        break;
+      }
+      case this.editLink: {
+        let state = this.requestStore.getState();
+        let selectedAddressGUID = state[this.selectedStateKey];
+        nextState.page.guid = selectedAddressGUID;
+        break;
+      }
+      default: {
+        throw new Error("Unexpected onClick");
+      }
+    }
+
+    this.requestStore.setState(nextState);
   }
 }
 
