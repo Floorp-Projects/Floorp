@@ -13,8 +13,7 @@ resizer {
   height: 15px;
 }
 
-resizer[rtl="true"],
-resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
+resizer:-moz-locale-dir(rtl) {
   background: url("chrome://global/skin/icons/resizer-rtl.png") no-repeat;
 }
 
@@ -25,8 +24,8 @@ resizer[dir="bottomstart"] {
 }
 
 resizer[dir="bottomleft"],
-resizer[dir="bottomstart"]:not([rtl="true"]):not(:-moz-locale-dir(rtl)),
-resizer[dir="bottomend"][rtl="true"] {
+resizer[dir="bottomstart"]:not(:-moz-locale-dir(rtl)),
+resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
   cursor: sw-resize;
 }
 
