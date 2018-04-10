@@ -184,13 +184,11 @@ public:
 
   Maybe() : mIsSome(false)
   {
-    poisonData();
   }
   ~Maybe() { reset(); }
 
   MOZ_IMPLICIT Maybe(Nothing) : mIsSome(false)
   {
-    poisonData();
   }
 
   Maybe(const Maybe& aOther)
@@ -198,8 +196,6 @@ public:
   {
     if (aOther.mIsSome) {
       emplace(*aOther);
-    } else {
-      poisonData();
     }
   }
 
@@ -215,8 +211,6 @@ public:
   {
     if (aOther.isSome()) {
       emplace(*aOther);
-    } else {
-      poisonData();
     }
   }
 
@@ -226,8 +220,6 @@ public:
     if (aOther.mIsSome) {
       emplace(Move(*aOther));
       aOther.reset();
-    } else {
-      poisonData();
     }
   }
 
@@ -244,8 +236,6 @@ public:
     if (aOther.isSome()) {
       emplace(Move(*aOther));
       aOther.reset();
-    } else {
-      poisonData();
     }
   }
 
