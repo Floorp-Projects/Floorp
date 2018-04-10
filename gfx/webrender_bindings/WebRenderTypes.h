@@ -47,12 +47,6 @@ typedef Maybe<FontInstancePlatformOptions> MaybeFontInstancePlatformOptions;
 /* Generate a brand new window id and return it. */
 WindowId NewWindowId();
 
-inline Epoch NewEpoch(uint32_t aEpoch) {
-  Epoch e;
-  e.mHandle = aEpoch;
-  return e;
-}
-
 inline DebugFlags NewDebugFlags(uint32_t aFlags) {
   DebugFlags flags;
   flags.mBits = aFlags;

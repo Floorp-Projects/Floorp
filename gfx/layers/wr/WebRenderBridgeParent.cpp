@@ -173,7 +173,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mAnimStorage(aAnimStorage)
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
-  , mWrEpoch(0)
+  , mWrEpoch{0}
   , mIdNamespace(aApi->GetNamespace())
   , mPaused(false)
   , mDestroyed(false)
@@ -194,7 +194,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
   , mPipelineId(aPipelineId)
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
-  , mWrEpoch(0)
+  , mWrEpoch{0}
   , mIdNamespace{0}
   , mPaused(false)
   , mDestroyed(true)
@@ -588,7 +588,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   // to early-return from RecvDPEnd without doing so.
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
-  uint32_t wrEpoch = GetNextWrEpoch();
+  wr::Epoch wrEpoch = GetNextWrEpoch();
 
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
 
@@ -613,7 +613,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
       txn.SetWindowParameters(widgetSize, docRect);
     }
     gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
-    txn.SetDisplayList(clearColor, wr::NewEpoch(wrEpoch), LayerSize(aSize.width, aSize.height),
+    txn.SetDisplayList(clearColor, wrEpoch, LayerSize(aSize.width, aSize.height),
                        mPipelineId, aContentSize,
                        dlDesc, dlData);
 
@@ -678,8 +678,8 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
 
   if (!aCommands.IsEmpty()) {
     wr::TransactionBuilder txn;
-    uint32_t wrEpoch = GetNextWrEpoch();
-    txn.UpdateEpoch(mPipelineId, wr::NewEpoch(wrEpoch));
+    wr::Epoch wrEpoch = GetNextWrEpoch();
+    txn.UpdateEpoch(mPipelineId, wrEpoch);
     mApi->SendTransaction(txn);
 
     HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
@@ -688,7 +688,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     if (mPendingTransactionIds.empty()) {
       sendDidComposite = true;
     }
-    HoldPendingTransactionId(mWrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
+    HoldPendingTransactionId(WrEpoch(), aTransactionId, aTxnStartTime, aFwdTime);
     // If WebRenderBridgeParent does not have pending DidComposites,
     // send DidComposite now.
     if (sendDidComposite) {
@@ -945,7 +945,7 @@ WebRenderBridgeParent::RecvClearCachedResources()
 
   // Clear resources
   wr::TransactionBuilder txn;
-  txn.ClearDisplayList(wr::NewEpoch(GetNextWrEpoch()), mPipelineId);
+  txn.ClearDisplayList(GetNextWrEpoch(), mPipelineId);
   mApi->SendTransaction(txn);
   // Schedule generate frame to clean up Pipeline
   ScheduleGenerateFrame();
@@ -1241,13 +1241,13 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 }
 
 void
-WebRenderBridgeParent::HoldPendingTransactionId(uint32_t aWrEpoch,
+WebRenderBridgeParent::HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
                                                 uint64_t aTransactionId,
                                                 const TimeStamp& aTxnStartTime,
                                                 const TimeStamp& aFwdTime)
 {
   MOZ_ASSERT(aTransactionId > LastPendingTransactionId());
-  mPendingTransactionIds.push(PendingTransactionId(wr::NewEpoch(aWrEpoch), aTransactionId, aTxnStartTime, aFwdTime));
+  mPendingTransactionIds.push(PendingTransactionId(aWrEpoch, aTransactionId, aTxnStartTime, aFwdTime));
 }
 
 uint64_t
@@ -1371,10 +1371,10 @@ WebRenderBridgeParent::ClearResources()
     return;
   }
 
-  uint32_t wrEpoch = GetNextWrEpoch();
+  wr::Epoch wrEpoch = GetNextWrEpoch();
 
   wr::TransactionBuilder txn;
-  txn.ClearDisplayList(wr::NewEpoch(wrEpoch), mPipelineId);
+  txn.ClearDisplayList(wrEpoch, mPipelineId);
   mReceivedDisplayList = false;
 
   // Schedule generate frame to clean up Pipeline
@@ -1392,7 +1392,7 @@ WebRenderBridgeParent::ClearResources()
   }
   mAsyncCompositables.Clear();
 
-  mAsyncImageManager->RemovePipeline(mPipelineId, wr::NewEpoch(wrEpoch));
+  mAsyncImageManager->RemovePipeline(mPipelineId, wrEpoch);
   txn.RemovePipeline(mPipelineId);
 
   mApi->SendTransaction(txn);
@@ -1499,11 +1499,12 @@ WebRenderBridgeParent::GetTextureFactoryIdentifier()
                                   mApi->GetSyncHandle());
 }
 
-uint32_t
+wr::Epoch
 WebRenderBridgeParent::GetNextWrEpoch()
 {
-  MOZ_RELEASE_ASSERT(mWrEpoch != UINT32_MAX);
-  return ++mWrEpoch;
+  MOZ_RELEASE_ASSERT(mWrEpoch.mHandle != UINT32_MAX);
+  mWrEpoch.mHandle++;
+  return mWrEpoch;
 }
 
 void
