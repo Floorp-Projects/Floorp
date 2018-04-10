@@ -2798,11 +2798,14 @@ MacroAssembler::alignJitStackBasedOnNArgs(uint32_t nargs)
 // ===============================================================
 
 MacroAssembler::MacroAssembler(JSContext* cx)
-  : framePushed_(0),
+  : framePushed_(0)
+  ,
 #ifdef DEBUG
-    inCall_(false),
+  inCall_(false)
+  ,
 #endif
-    emitProfilingInstrumentation_(false)
+  dynamicAlignment_{ false }
+  , emitProfilingInstrumentation_(false)
 {
     jitContext_.emplace(cx, (js::jit::TempAllocator*)nullptr);
     alloc_.emplace(cx);
@@ -2817,11 +2820,14 @@ MacroAssembler::MacroAssembler(JSContext* cx)
 }
 
 MacroAssembler::MacroAssembler()
-  : framePushed_(0),
+  : framePushed_(0)
+  ,
 #ifdef DEBUG
-    inCall_(false),
+  inCall_(false)
+  ,
 #endif
-    emitProfilingInstrumentation_(false)
+  dynamicAlignment_{ false }
+  , emitProfilingInstrumentation_(false)
 {
     JitContext* jcx = GetJitContext();
 
@@ -2843,11 +2849,14 @@ MacroAssembler::MacroAssembler()
 }
 
 MacroAssembler::MacroAssembler(WasmToken, TempAllocator& alloc)
-  : framePushed_(0),
+  : framePushed_(0)
+  ,
 #ifdef DEBUG
-    inCall_(false),
+  inCall_(false)
+  ,
 #endif
-    emitProfilingInstrumentation_(false)
+  dynamicAlignment_{ false }
+  , emitProfilingInstrumentation_(false)
 {
     moveResolver_.setAllocator(alloc);
 

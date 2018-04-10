@@ -753,6 +753,8 @@ public:
   explicit ReportFetchListenerWarningRunnable(const nsString& aScope)
     : mozilla::Runnable("ReportFetchListenerWarningRunnable")
     , mScope(NS_ConvertUTF16toUTF8(aScope))
+    , mLine{}
+    , mColumn{}
   {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);

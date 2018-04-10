@@ -307,7 +307,11 @@ class FloatingPoint {
   // around may change its bits, although the new value is guaranteed
   // to be also a NAN.  Therefore, don't expect this constructor to
   // preserve the bits in x when x is a NAN.
-  explicit FloatingPoint(const RawType& x) { u_.value_ = x; }
+  explicit FloatingPoint(const RawType& x)
+    : u_{}
+  {
+    u_.value_ = x;
+  }
 
   // Static methods
 
@@ -1039,12 +1043,18 @@ class NativeArray {
   typedef const Element* const_iterator;
 
   // Constructs from a native array. References the source.
-  NativeArray(const Element* array, size_t count, RelationToSourceReference) {
+  NativeArray(const Element* array, size_t count, RelationToSourceReference)
+    : array_{ nullptr }
+    , size_{}
+  {
     InitRef(array, count);
   }
 
   // Constructs from a native array. Copies the source.
-  NativeArray(const Element* array, size_t count, RelationToSourceCopy) {
+  NativeArray(const Element* array, size_t count, RelationToSourceCopy)
+    : array_{ nullptr }
+    , size_{}
+  {
     InitCopy(array, count);
   }
 

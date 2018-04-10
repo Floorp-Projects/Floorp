@@ -4418,7 +4418,7 @@ IMEInputHandler::IMEInputHandler(nsChildView* aWidget,
   , mPendingMethods(0)
   , mIMECompositionString(nullptr)
   , mIMECompositionStart(UINT32_MAX)
-  , mIsIMEComposing(false)
+  , mRangeForWritingMode{}, mIsIMEComposing(false)
   , mIsDeadKeyComposing(false)
   , mIsIMEEnabled(true)
   , mIsASCIICapableOnly(false)

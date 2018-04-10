@@ -435,6 +435,7 @@ inline nsStyleCoord::nsStyleCoord(const nsStyleCoord& aCopy)
 
 inline nsStyleCoord::nsStyleCoord(const nsStyleUnion& aValue, nsStyleUnit aUnit)
   : mUnit(eStyleUnit_Null)
+  , mValue{}
 {
   InitWithValue(mUnit, mValue, aUnit, aValue);
 }

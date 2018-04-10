@@ -40,8 +40,11 @@ public:
 
   SourceSurfaceSharedDataWrapper()
     : mStride(0)
+    , mConsumers{}
     , mFormat(SurfaceFormat::UNKNOWN)
-  { }
+    , mCreatorPid{}
+  {
+  }
 
   bool Init(const IntSize& aSize,
             int32_t aStride,

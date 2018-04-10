@@ -68,6 +68,7 @@ namespace mozilla {
 
 ThreadStackHelper::ThreadStackHelper()
   : mStackToFill(nullptr)
+  , mRunnableNameBuffer{ nullptr }
   , mMaxStackSize(16)
   , mMaxBufferSize(512)
   , mDesiredStackSize(0)

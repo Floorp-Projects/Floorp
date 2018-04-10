@@ -19,7 +19,12 @@ extern mozilla::LazyLogModule gMP4MetadataLog;
 class MOZ_RAII BufferReader
 {
 public:
-  BufferReader() : mPtr(nullptr), mRemaining(0) {}
+  BufferReader()
+    : mPtr(nullptr)
+    , mRemaining(0)
+    , mLength{}
+  {
+  }
   BufferReader(const uint8_t* aData, size_t aSize)
     : mPtr(aData), mRemaining(aSize), mLength(aSize)
   {

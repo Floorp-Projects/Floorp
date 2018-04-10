@@ -111,19 +111,23 @@ private:
 
 
   struct PendingResolution {
-    PendingResolution(NrIceResolverFake *resolver,
+    PendingResolution(NrIceResolverFake* resolver,
                       const std::string& hostname,
                       uint16_t port,
                       int transport,
                       int address_family,
-                      int (*cb)(void *cb_arg, nr_transport_addr *addr),
-                      void *cb_arg) :
-        resolver_(resolver),
-        hostname_(hostname),
-        port_(port),
-        transport_(transport),
-        address_family_(address_family),
-        cb_(cb), cb_arg_(cb_arg) {}
+                      int (*cb)(void* cb_arg, nr_transport_addr* addr),
+                      void* cb_arg)
+      : resolver_(resolver)
+      , hostname_(hostname)
+      , port_(port)
+      , transport_(transport)
+      , address_family_(address_family)
+      , cb_(cb)
+      , cb_arg_(cb_arg)
+      , timer_handle_{ nullptr }
+    {
+    }
 
     NrIceResolverFake *resolver_;
     std::string hostname_;

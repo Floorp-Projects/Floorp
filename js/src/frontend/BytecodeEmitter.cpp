@@ -1574,15 +1574,18 @@ class MOZ_STACK_CLASS TryEmitter
     }
 
   public:
-    TryEmitter(BytecodeEmitter* bce, Kind kind, ShouldUseRetVal retValKind = UseRetVal,
+    TryEmitter(BytecodeEmitter* bce,
+               Kind kind,
+               ShouldUseRetVal retValKind = UseRetVal,
                ShouldUseControl controlKind = UseControl)
-      : bce_(bce),
-        kind_(kind),
-        retValKind_(retValKind),
-        depth_(0),
-        noteIndex_(0),
-        tryStart_(0),
-        state_(Start)
+      : bce_(bce)
+      , kind_(kind)
+      , retValKind_(retValKind)
+      , depth_(0)
+      , noteIndex_(0)
+      , tryStart_(0)
+      , tryEnd_{}
+      , state_(Start)
     {
         if (controlKind == UseControl)
             controlInfo_.emplace(bce_, hasFinally() ? StatementKind::Finally : StatementKind::Try);
@@ -2142,40 +2145,44 @@ class ForOfLoopControl : public LoopControl
 };
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
-                                 const EitherParser<FullParseHandler>& parser, SharedContext* sc,
-                                 HandleScript script, Handle<LazyScript*> lazyScript,
-                                 uint32_t lineNum, EmitterMode emitterMode)
-  : sc(sc),
-    cx(sc->context),
-    parent(parent),
-    script(cx, script),
-    lazyScript(cx, lazyScript),
-    prologue(cx, lineNum),
-    main(cx, lineNum),
-    current(&main),
-    parser(parser),
-    atomIndices(cx->frontendCollectionPool()),
-    firstLine(lineNum),
-    maxFixedSlots(0),
-    maxStackDepth(0),
-    stackDepth(0),
-    emitLevel(0),
-    bodyScopeIndex(UINT32_MAX),
-    varEmitterScope(nullptr),
-    innermostNestableControl(nullptr),
-    innermostEmitterScope(nullptr),
-    innermostTDZCheckCache(nullptr),
-    constList(cx),
-    scopeList(cx),
-    tryNoteList(cx),
-    scopeNoteList(cx),
-    yieldAndAwaitOffsetList(cx),
-    typesetCount(0),
-    hasSingletons(false),
-    hasTryFinally(false),
-    emittingRunOnceLambda(false),
-    emitterMode(emitterMode),
-    functionBodyEndPosSet(false)
+                                 const EitherParser<FullParseHandler>& parser,
+                                 SharedContext* sc,
+                                 HandleScript script,
+                                 Handle<LazyScript*> lazyScript,
+                                 uint32_t lineNum,
+                                 EmitterMode emitterMode)
+  : sc(sc)
+  , cx(sc->context)
+  , parent(parent)
+  , script(cx, script)
+  , lazyScript(cx, lazyScript)
+  , prologue(cx, lineNum)
+  , main(cx, lineNum)
+  , current(&main)
+  , parser(parser)
+  , atomIndices(cx->frontendCollectionPool())
+  , firstLine(lineNum)
+  , maxFixedSlots(0)
+  , maxStackDepth(0)
+  , stackDepth(0)
+  , emitLevel(0)
+  , bodyScopeIndex(UINT32_MAX)
+  , varEmitterScope(nullptr)
+  , innermostNestableControl(nullptr)
+  , innermostEmitterScope(nullptr)
+  , innermostTDZCheckCache(nullptr)
+  , constList(cx)
+  , scopeList(cx)
+  , tryNoteList(cx)
+  , scopeNoteList(cx)
+  , yieldAndAwaitOffsetList(cx)
+  , typesetCount(0)
+  , hasSingletons(false)
+  , hasTryFinally(false)
+  , emittingRunOnceLambda(false)
+  , emitterMode(emitterMode)
+  , functionBodyEndPos{}
+  , functionBodyEndPosSet(false)
 {
     MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
 }

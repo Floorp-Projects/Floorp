@@ -254,7 +254,7 @@ ExceptionHandler::ExceptionHandler(DirectCallback callback,
                                    void* callback_context,
                                    bool install_handler)
     : dump_path_(),
-      filter_(NULL),
+      dump_path_c_{nullptr}, next_minidump_id_c_{nullptr}, next_minidump_path_c_{nullptr}, filter_(NULL),
       callback_(NULL),
       callback_context_(callback_context),
       directCallback_(callback),

@@ -236,13 +236,20 @@ struct MOZ_STACK_CLASS ScrollReflowInput {
   MOZ_INIT_OUTSIDE_CTOR
   bool mShowVScrollbar;
 
-  ScrollReflowInput(nsIScrollableFrame* aFrame,
-                    const ReflowInput& aReflowInput) :
-    mReflowInput(aReflowInput),
+  ScrollReflowInput(nsIScrollableFrame* aFrame, const ReflowInput& aReflowInput)
+    : mReflowInput(aReflowInput)
+    ,
     // mBoxState is just used for scrollbars so we don't need to
     // worry about the reflow depth here
-    mBoxState(aReflowInput.mFrame->PresContext(), aReflowInput.mRenderingContext, 0),
-    mStyles(aFrame->GetScrollbarStyles()) {
+    mBoxState(aReflowInput.mFrame->PresContext(),
+              aReflowInput.mRenderingContext,
+              0)
+    , mStyles(aFrame->GetScrollbarStyles())
+    , mReflowedContentsWithHScrollbar{ false }
+    , mReflowedContentsWithVScrollbar{ false }
+    , mShowHScrollbar{ false }
+    , mShowVScrollbar{ false }
+  {
   }
 };
 
@@ -2046,8 +2053,7 @@ static ScrollFrameActivityTracker *gScrollFrameActivityTracker = nullptr;
 // ensure the new one gets a fresh value.
 static uint32_t sScrollGenerationCounter = 0;
 
-ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
-                                             bool aIsRoot)
+ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
   : mHScrollbarBox(nullptr)
   , mVScrollbarBox(nullptr)
   , mScrolledFrame(nullptr)
@@ -2069,6 +2075,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mLastUpdateFramesPos(-1, -1)
   , mHadDisplayPortAtLastFrameUpdate(false)
   , mDisplayPortAtLastFrameUpdate()
+  , mScrollParentID{}
   , mNeverHasVerticalScrollbar(false)
   , mNeverHasHorizontalScrollbar(false)
   , mHasVerticalScrollbar(false)
@@ -2090,6 +2097,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mWillBuildScrollableLayer(false)
   , mIsScrollParent(false)
   , mIsScrollableLayerInRootContainer(false)
+  , mAddClipRectToLayer{ false }
   , mHasBeenScrolled(false)
   , mIgnoreMomentumScroll(false)
   , mTransformingByAPZ(false)

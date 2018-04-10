@@ -161,9 +161,12 @@ class ContinuousSpace {
     static const uint32_t LIMIT = 200 * 1024 * 1024;
 
   public:
-    ContinuousSpace ()
-     : data_(nullptr)
-    { }
+    ContinuousSpace()
+      : data_(nullptr)
+      , size_{}
+      , capacity_{}
+    {
+    }
 
     bool init() {
         capacity_ = 64;

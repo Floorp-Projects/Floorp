@@ -72,10 +72,15 @@ struct DisplayItemClipChain {
   {}
 
   DisplayItemClipChain()
+    : mASR
+  {
+    nullptr
+  }
 #ifdef DEBUG
-    : mOnStack(true)
+  , mOnStack(true)
 #endif
-  {}
+  {
+  }
 
   DisplayItemClip mClip;
   const ActiveScrolledRoot* mASR;

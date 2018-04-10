@@ -150,7 +150,37 @@ class OptimizationInfo
     uint32_t inliningRecompileThresholdFactor_;
 
     OptimizationInfo()
-    { }
+      : level_{ OptimizationLevel::Normal }
+      , eaa_{ false }
+      , ama_{ false }
+      , edgeCaseAnalysis_{ false }
+      , eliminateRedundantChecks_{ false }
+      , inlineInterpreted_{ false }
+      , inlineNative_{ false }
+      , eagerSimdUnbox_{ false }
+      , gvn_{ false }
+      , licm_{ false }
+      , rangeAnalysis_{ false }
+      , loopUnrolling_{ false }
+      , reordering_{ false }
+      , autoTruncate_{ false }
+      , sincos_{ false }
+      , sink_{ false }
+      , registerAllocator_{ static_cast<IonRegisterAllocator>(0) }
+      , inlineMaxBytecodePerCallSiteHelperThread_{}
+      , inlineMaxBytecodePerCallSiteActiveCooperatingThread_{}
+      , inlineMaxCalleeInlinedBytecodeLength_{}
+      , inlineMaxTotalBytecodeLength_{}
+      , inliningMaxCallerBytecodeLength_{}
+      , maxInlineDepth_{}
+      , scalarReplacement_{ false }
+      , smallFunctionMaxInlineDepth_{}
+      , compilerWarmUpThreshold_{}
+      , compilerSmallFunctionWarmUpThreshold_{}
+      , inliningWarmUpThresholdFactor_{ 0.0 }
+      , inliningRecompileThresholdFactor_{}
+    {
+    }
 
     void initNormalOptimizationInfo();
     void initWasmOptimizationInfo();

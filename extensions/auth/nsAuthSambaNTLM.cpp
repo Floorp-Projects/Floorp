@@ -14,8 +14,11 @@
 #include <stdlib.h>
 
 nsAuthSambaNTLM::nsAuthSambaNTLM()
-    : mInitialMessage(nullptr), mChildPID(nullptr), mFromChildFD(nullptr),
-      mToChildFD(nullptr)
+  : mInitialMessage(nullptr)
+  , mInitialMessageLen{}
+  , mChildPID(nullptr)
+  , mFromChildFD(nullptr)
+  , mToChildFD(nullptr)
 {
 }
 

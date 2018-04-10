@@ -17,14 +17,16 @@ class ForceDiscreteGPUHelperCGL
     CGLPixelFormatObj mPixelFormatObj;
 
 public:
-    ForceDiscreteGPUHelperCGL()
-    {
-        // the code in this function is taken from Chromium, src/ui/gfx/gl/gl_context_cgl.cc, r122013
-        // BSD-style license, (c) The Chromium Authors
-        CGLPixelFormatAttribute attribs[1];
-        attribs[0] = static_cast<CGLPixelFormatAttribute>(0);
-        GLint num_pixel_formats = 0;
-        CGLChoosePixelFormat(attribs, &mPixelFormatObj, &num_pixel_formats);
+  ForceDiscreteGPUHelperCGL()
+    : mPixelFormatObj{ nullptr }
+  {
+    // the code in this function is taken from Chromium,
+    // src/ui/gfx/gl/gl_context_cgl.cc, r122013 BSD-style license, (c) The
+    // Chromium Authors
+    CGLPixelFormatAttribute attribs[1];
+    attribs[0] = static_cast<CGLPixelFormatAttribute>(0);
+    GLint num_pixel_formats = 0;
+    CGLChoosePixelFormat(attribs, &mPixelFormatObj, &num_pixel_formats);
     }
 
     ~ForceDiscreteGPUHelperCGL()

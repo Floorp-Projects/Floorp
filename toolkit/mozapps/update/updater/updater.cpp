@@ -1437,7 +1437,18 @@ AddFile::Finish(int status)
 class PatchFile : public Action
 {
 public:
-  PatchFile() : mPatchFile(nullptr), mPatchIndex(-1), buf(nullptr) { }
+  PatchFile()
+    : mPatchFile(nullptr)
+    , mPatchIndex(-1)
+    , buf(nullptr)
+  {
+    this->header.slen = {};
+    this->header.scrc32 = {};
+    this->header.dlen = {};
+    this->header.cblen = {};
+    this->header.difflen = {};
+    this->header.extralen = {};
+  }
 
   ~PatchFile() override;
 

@@ -218,15 +218,21 @@ struct Statistics
     static const size_t MAX_SUSPENDED_PHASES = MAX_PHASE_NESTING * 3;
 
     struct SliceData {
-        SliceData(SliceBudget budget, JS::gcreason::Reason reason,
-                  TimeStamp start, size_t startFaults, gc::State initialState)
-          : budget(budget), reason(reason),
-            initialState(initialState),
-            finalState(gc::State::NotActive),
-            resetReason(gc::AbortReason::None),
-            start(start),
-            startFaults(startFaults)
-        {}
+        SliceData(SliceBudget budget,
+                  JS::gcreason::Reason reason,
+                  TimeStamp start,
+                  size_t startFaults,
+                  gc::State initialState)
+          : budget(budget)
+          , reason(reason)
+          , initialState(initialState)
+          , finalState(gc::State::NotActive)
+          , resetReason(gc::AbortReason::None)
+          , start(start)
+          , startFaults(startFaults)
+          , endFaults{}
+        {
+        }
 
         SliceBudget budget;
         JS::gcreason::Reason reason;

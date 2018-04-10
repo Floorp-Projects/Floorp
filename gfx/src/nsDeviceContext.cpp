@@ -47,22 +47,26 @@ using mozilla::widget::ScreenManager;
 class nsFontCache final : public nsIObserver
 {
 public:
-    nsFontCache() {}
+  nsFontCache()
+    : mContext{ nullptr }
+  {
+  }
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
-    void Init(nsDeviceContext* aContext);
-    void Destroy();
+  void Init(nsDeviceContext* aContext);
+  void Destroy();
 
-    already_AddRefed<nsFontMetrics> GetMetricsFor(
-        const nsFont& aFont, const nsFontMetrics::Params& aParams);
+  already_AddRefed<nsFontMetrics> GetMetricsFor(
+    const nsFont& aFont,
+    const nsFontMetrics::Params& aParams);
 
-    void FontMetricsDeleted(const nsFontMetrics* aFontMetrics);
-    void Compact();
-    void Flush();
+  void FontMetricsDeleted(const nsFontMetrics* aFontMetrics);
+  void Compact();
+  void Flush();
 
-    void UpdateUserFonts(gfxUserFontSet* aUserFontSet);
+  void UpdateUserFonts(gfxUserFontSet* aUserFontSet);
 
 protected:
     ~nsFontCache() {}

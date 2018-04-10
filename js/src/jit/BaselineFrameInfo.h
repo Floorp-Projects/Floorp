@@ -56,10 +56,8 @@ class StackValue
         ArgSlot,
         ThisSlot,
         EvalNewTargetSlot
-#ifdef DEBUG
         // In debug builds, assert Kind is initialized.
         , Uninitialized
-#endif
     };
 
   private:
@@ -105,10 +103,8 @@ class StackValue
         return knownType_;
     }
     void reset() {
-#ifdef DEBUG
         kind_ = Uninitialized;
         knownType_ = JSVAL_TYPE_UNKNOWN;
-#endif
     }
     Value constant() const {
         MOZ_ASSERT(kind_ == Constant);

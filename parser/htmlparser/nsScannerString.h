@@ -101,8 +101,11 @@ class nsScannerBufferList
       class Position
         {
           public:
-
-            Position() {}
+            Position()
+              : mBuffer{ nullptr }
+              , mPosition{ nullptr }
+            {
+            }
 
             Position( Buffer* buffer, char16_t* position )
               : mBuffer(buffer)

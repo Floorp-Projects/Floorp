@@ -28,12 +28,15 @@ GetUserMediaRequest::GetUserMediaRequest(
 {
 }
 
-GetUserMediaRequest::GetUserMediaRequest(
-    nsPIDOMWindowInner* aInnerWindow,
-    const nsAString& aRawId,
-    const nsAString& aMediaSource)
-  : mRawID(aRawId)
+GetUserMediaRequest::GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow,
+                                         const nsAString& aRawId,
+                                         const nsAString& aMediaSource)
+  : mInnerWindowID{}
+  , mOuterWindowID{}
+  , mRawID(aRawId)
   , mMediaSource(aMediaSource)
+  , mIsSecure{ false }
+  , mIsHandlingUserInput{ false }
 {
   if (aInnerWindow && aInnerWindow->GetOuterWindow()) {
     mOuterWindowID = aInnerWindow->GetOuterWindow()->WindowID();

@@ -685,8 +685,9 @@ class ActionNode : public SeqRegExpNode
     };
 
     ActionNode(ActionType action_type, RegExpNode* on_success)
-      : SeqRegExpNode(on_success),
-        action_type_(action_type)
+      : SeqRegExpNode(on_success)
+      , data_{}
+      , action_type_(action_type)
     {}
 
     static ActionNode* SetRegister(int reg, int val, RegExpNode* on_success);

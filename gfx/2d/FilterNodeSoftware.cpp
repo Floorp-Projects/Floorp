@@ -2080,15 +2080,20 @@ FilterNodeLinearTransferSoftware::FillLookupTableImpl(Float aSlope,
 }
 
 FilterNodeGammaTransferSoftware::FilterNodeGammaTransferSoftware()
- : mAmplitudeR(0)
- , mAmplitudeG(0)
- , mAmplitudeB(0)
- , mAmplitudeA(0)
- , mExponentR(0)
- , mExponentG(0)
- , mExponentB(0)
- , mExponentA(0)
-{}
+  : mAmplitudeR(0)
+  , mAmplitudeG(0)
+  , mAmplitudeB(0)
+  , mAmplitudeA(0)
+  , mExponentR(0)
+  , mExponentG(0)
+  , mExponentB(0)
+  , mExponentA(0)
+  , mOffsetR{ 0.0 }
+  , mOffsetG{ 0.0 }
+  , mOffsetB{ 0.0 }
+  , mOffsetA{ 0.0 }
+{
+}
 
 void
 FilterNodeGammaTransferSoftware::SetAttribute(uint32_t aIndex,
@@ -3075,7 +3080,8 @@ FilterNodeGaussianBlurSoftware::StdDeviationXY()
 }
 
 FilterNodeDirectionalBlurSoftware::FilterNodeDirectionalBlurSoftware()
- : mBlurDirection(BLUR_DIRECTION_X)
+  : mStdDeviation{ 0.0 }
+  , mBlurDirection(BLUR_DIRECTION_X)
 {}
 
 void

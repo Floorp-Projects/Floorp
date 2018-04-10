@@ -41,7 +41,10 @@ namespace test {
 
 class SdpTest : public ::testing::Test {
   public:
-    SdpTest() : sdp_ptr_(nullptr) {
+    SdpTest()
+      : final_level_{}
+      , sdp_ptr_(nullptr)
+    {
     }
 
     ~SdpTest() {
@@ -1506,7 +1509,10 @@ class NewSdpTest : public ::testing::Test,
                    public ::testing::WithParamInterface<
                      ::testing::tuple<bool, bool> > {
   public:
-    NewSdpTest() {}
+    NewSdpTest()
+      : mSdpErrorHolder{ nullptr }
+    {
+    }
 
     void ParseSdp(const std::string &sdp, bool expectSuccess = true) {
       if (::testing::get<1>(GetParam())) {

@@ -57,10 +57,16 @@ public:
     Set(src.mPtr);
   }
 
-  explicit RefPtr(T* aPtr) {
+  explicit RefPtr(T* aPtr)
+    : mPtr{ nullptr }
+  {
     Set(aPtr);
   }
-  RefPtr() { Set(nullptr); }
+  RefPtr()
+    : mPtr{ nullptr }
+  {
+    Set(nullptr);
+  }
 
   ~RefPtr() {
     Set(nullptr);

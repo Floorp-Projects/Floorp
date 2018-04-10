@@ -93,6 +93,7 @@ nsRDFXMLSerializer::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 }
 
 nsRDFXMLSerializer::nsRDFXMLSerializer()
+  : mPrefixID{}
 {
 }
 

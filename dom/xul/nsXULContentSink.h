@@ -112,7 +112,12 @@ protected:
             nsPrototypeArray    mChildren;
             State               mState;
             Entry*              mNext;
-            Entry() : mChildren(8) {}
+            Entry()
+              : mChildren(8)
+              , mState{ static_cast<State>(0) }
+              , mNext{ nullptr }
+            {
+            }
         };
 
         Entry* mTop;

@@ -34,12 +34,13 @@ class LIRGeneratorShared
     LOsiPoint* osiPoint_;
 
     LIRGeneratorShared(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
-      : gen(gen),
-        graph(graph),
-        lirGraph_(lirGraph),
-        lastResumePoint_(nullptr),
-        cachedRecoverInfo_(nullptr),
-        osiPoint_(nullptr)
+      : gen(gen)
+      , graph(graph)
+      , lirGraph_(lirGraph)
+      , current{ nullptr }
+      , lastResumePoint_(nullptr)
+      , cachedRecoverInfo_(nullptr)
+      , osiPoint_(nullptr)
     { }
 
     MIRGenerator* mir() {

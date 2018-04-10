@@ -15,6 +15,7 @@ using namespace js;
 using namespace js::jit;
 
 MoveOperand::MoveOperand(MacroAssembler& masm, const ABIArg& arg)
+  : disp_{}
 {
     switch (arg.kind()) {
       case ABIArg::GPR:

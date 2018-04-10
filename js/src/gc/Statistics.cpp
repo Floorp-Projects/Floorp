@@ -695,19 +695,23 @@ Statistics::formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes, JSONPrinter& 
 }
 
 Statistics::Statistics(JSRuntime* rt)
-  : runtime(rt),
-    fp(nullptr),
-    nonincrementalReason_(gc::AbortReason::None),
-    preBytes(0),
-    thresholdTriggered(false),
-    triggerAmount(0.0),
-    triggerThreshold(0.0),
-    maxPauseInInterval(0),
-    sliceCallback(nullptr),
-    nurseryCollectionCallback(nullptr),
-    aborted(false),
-    enableProfiling_(false),
-    sliceCount_(0)
+  : runtime(rt)
+  , fp(nullptr)
+  , gckind{ GC_NORMAL }
+  , nonincrementalReason_(gc::AbortReason::None)
+  , preBytes(0)
+  , thresholdTriggered(false)
+  , triggerAmount(0.0)
+  , triggerThreshold(0.0)
+  , startingMinorGCNumber{}
+  , startingMajorGCNumber{}
+  , startingSliceNumber{}
+  , maxPauseInInterval(0)
+  , sliceCallback(nullptr)
+  , nurseryCollectionCallback(nullptr)
+  , aborted(false)
+  , enableProfiling_(false)
+  , sliceCount_(0)
 {
     for (auto& count : counts)
         count = 0;

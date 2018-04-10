@@ -17,20 +17,24 @@ using AutoList = BinTokenReaderTester::AutoList;
 using AutoTaggedTuple = BinTokenReaderTester::AutoTaggedTuple;
 using AutoTuple = BinTokenReaderTester::AutoTuple;
 
-BinTokenReaderTester::BinTokenReaderTester(JSContext* cx, const uint8_t* start, const size_t length)
-    : cx_(cx)
-    , start_(start)
-    , current_(start)
-    , stop_(start + length)
-    , latestKnownGoodPos_(0)
+BinTokenReaderTester::BinTokenReaderTester(JSContext* cx,
+                                           const uint8_t* start,
+                                           const size_t length)
+  : cx_(cx)
+  , poisoned_{ false }
+  , start_(start)
+  , current_(start)
+  , stop_(start + length)
+  , latestKnownGoodPos_(0)
 { }
 
 BinTokenReaderTester::BinTokenReaderTester(JSContext* cx, const Vector<uint8_t>& chars)
-    : cx_(cx)
-    , start_(chars.begin())
-    , current_(chars.begin())
-    , stop_(chars.end())
-    , latestKnownGoodPos_(0)
+  : cx_(cx)
+  , poisoned_{ false }
+  , start_(chars.begin())
+  , current_(chars.begin())
+  , stop_(chars.end())
+  , latestKnownGoodPos_(0)
 { }
 
 bool
@@ -441,7 +445,8 @@ BinTokenReaderTester::AutoBase::init()
 }
 
 BinTokenReaderTester::AutoBase::AutoBase(BinTokenReaderTester& reader)
-    : reader_(reader)
+  : initialized_{ false }
+  , reader_(reader)
 { }
 
 BinTokenReaderTester::AutoBase::~AutoBase()
@@ -462,8 +467,10 @@ BinTokenReaderTester::AutoBase::checkPosition(const uint8_t* expectedEnd)
 }
 
 BinTokenReaderTester::AutoList::AutoList(BinTokenReaderTester& reader)
-    : AutoBase(reader)
-{ }
+  : AutoBase(reader)
+  , expectedEnd_{ nullptr }
+{
+}
 
 void
 BinTokenReaderTester::AutoList::init(const uint8_t* expectedEnd)

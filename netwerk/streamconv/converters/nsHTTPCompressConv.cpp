@@ -46,6 +46,8 @@ nsHTTPCompressConv::nsHTTPCompressConv()
   , mCheckHeaderDone(false)
   , mStreamEnded(false)
   , mStreamInitialized(false)
+  , mDummyStreamInitialised{ false }
+  , d_stream{}
   , mLen(0)
   , hMode(0)
   , mSkipCount(0)

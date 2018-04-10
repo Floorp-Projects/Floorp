@@ -235,7 +235,9 @@ private:
   class RecentURIKey : public nsURIHashKey
   {
   public:
-    explicit RecentURIKey(const nsIURI* aURI) : nsURIHashKey(aURI)
+    explicit RecentURIKey(const nsIURI* aURI)
+      : nsURIHashKey(aURI)
+      , time{}
     {
     }
     RecentURIKey(const RecentURIKey& aOther) : nsURIHashKey(aOther)

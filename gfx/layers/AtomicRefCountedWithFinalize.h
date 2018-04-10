@@ -34,16 +34,17 @@ template<typename T>
 class AtomicRefCountedWithFinalize
 {
 protected:
-    explicit AtomicRefCountedWithFinalize(const char* aName)
-      : mRecycleCallback(nullptr)
-      , mRefCount(0)
+  explicit AtomicRefCountedWithFinalize(const char* aName)
+    : mRecycleCallback(nullptr)
+    , mClosure{ nullptr }
+    , mRefCount(0)
 #ifdef DEBUG
-      , mSpew(false)
-      , mManualAddRefs(0)
-      , mManualReleases(0)
+    , mSpew(false)
+    , mManualAddRefs(0)
+    , mManualReleases(0)
 #endif
 #ifdef NS_BUILD_REFCNT_LOGGING
-      , mName(aName)
+    , mName(aName)
 #endif
     {}
 

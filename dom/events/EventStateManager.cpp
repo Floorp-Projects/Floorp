@@ -291,8 +291,10 @@ EventStateManager::EventStateManager()
   : mLockCursor(0)
   , mLastFrameConsumedSetCursor(false)
   , mCurrentTarget(nullptr)
-    // init d&d gesture state machine variables
-  , mGestureDownPoint(0,0)
+  // init d&d gesture state machine variables
+  , mGestureDownPoint(0, 0)
+  , mGestureModifiers{}
+  , mGestureDownButtons{}
   , mPresContext(nullptr)
   , mLClickCount(0)
   , mMClickCount(0)

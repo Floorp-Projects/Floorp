@@ -664,10 +664,10 @@ class OutOfLineTestObject : public OutOfLineCodeBase<CodeGenerator>
 
   public:
     OutOfLineTestObject()
-#ifdef DEBUG
-      : ifEmulatesUndefined_(nullptr), ifDoesntEmulateUndefined_(nullptr)
-#endif
-    { }
+      : ifEmulatesUndefined_{ nullptr }
+      , ifDoesntEmulateUndefined_{ nullptr }
+    {
+    }
 
     void accept(CodeGenerator* codegen) final {
         MOZ_ASSERT(initialized());

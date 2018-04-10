@@ -102,13 +102,16 @@ class OrderedHashTable
 
   public:
     OrderedHashTable(AllocPolicy& ap, mozilla::HashCodeScrambler hcs)
-      : hashTable(nullptr),
-        data(nullptr),
-        dataLength(0),
-        ranges(nullptr),
-        nurseryRanges(nullptr),
-        alloc(ap),
-        hcs(hcs)
+      : hashTable(nullptr)
+      , data(nullptr)
+      , dataLength(0)
+      , dataCapacity{}
+      , liveCount{}
+      , hashShift{}
+      , ranges(nullptr)
+      , nurseryRanges(nullptr)
+      , alloc(ap)
+      , hcs(hcs)
     {}
 
     MOZ_MUST_USE bool init() {

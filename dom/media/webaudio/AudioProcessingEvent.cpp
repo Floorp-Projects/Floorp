@@ -27,6 +27,7 @@ AudioProcessingEvent::AudioProcessingEvent(ScriptProcessorNode* aOwner,
   : Event(aOwner, aPresContext, aEvent)
   , mPlaybackTime(0.0)
   , mNode(aOwner)
+  , mNumberOfInputChannels{}
 {
 }
 

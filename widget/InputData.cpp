@@ -66,6 +66,9 @@ SingleTouchData::SingleTouchData(int32_t aIdentifier,
 }
 
 SingleTouchData::SingleTouchData()
+  : mIdentifier{}
+  , mRotationAngle{ 0.0 }
+  , mForce{ 0.0 }
 {
 }
 
@@ -91,6 +94,7 @@ MultiTouchInput::MultiTouchInput(MultiTouchType aType, uint32_t aTime,
 
 MultiTouchInput::MultiTouchInput()
   : InputData(MULTITOUCH_INPUT)
+  , mType{ static_cast<MultiTouchType>(0) }
   , mHandledByAPZ(false)
 {
 }
@@ -104,8 +108,11 @@ MultiTouchInput::MultiTouchInput(const MultiTouchInput& aOther)
 }
 
 MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
-  : InputData(MULTITOUCH_INPUT, aTouchEvent.mTime, aTouchEvent.mTimeStamp,
+  : InputData(MULTITOUCH_INPUT,
+              aTouchEvent.mTime,
+              aTouchEvent.mTimeStamp,
               aTouchEvent.mModifiers)
+  , mType{ static_cast<MultiTouchType>(0) }
   , mHandledByAPZ(aTouchEvent.mFlags.mHandledByAPZ)
 {
   MOZ_ASSERT(NS_IsMainThread(),
@@ -301,7 +308,7 @@ MultiTouchInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform
 {
   for (size_t i = 0; i < mTouches.Length(); i++) {
     Maybe<ParentLayerIntPoint> point = UntransformBy(aTransform, mTouches[i].mScreenPoint);
-    if (!point) { 
+    if (!point) {
       return false;
     }
     mTouches[i].mLocalScreenPoint = *point;
@@ -491,6 +498,7 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
 
 PanGestureInput::PanGestureInput()
   : InputData(PANGESTURE_INPUT)
+  , mType{ static_cast<PanGestureType>(0) }
   , mLineOrPageDeltaX(0)
   , mLineOrPageDeltaY(0)
   , mUserDeltaMultiplierX(1.0)
@@ -560,13 +568,13 @@ PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
 
 bool
 PanGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
-{ 
+{
   Maybe<ParentLayerPoint> panStartPoint = UntransformBy(aTransform, mPanStartPoint);
   if (!panStartPoint) {
     return false;
   }
   mLocalPanStartPoint = *panStartPoint;
-  
+
   Maybe<ParentLayerPoint> panDisplacement = UntransformVector(aTransform, mPanDisplacement, mPanStartPoint);
   if (!panDisplacement) {
     return false;
@@ -591,6 +599,7 @@ PanGestureInput::UserMultipliedLocalPanDisplacement() const
 
 PinchGestureInput::PinchGestureInput()
   : InputData(PINCHGESTURE_INPUT)
+  , mType{ static_cast<PinchGestureType>(0) }
 {
 }
 
@@ -610,7 +619,7 @@ PinchGestureInput::PinchGestureInput(PinchGestureType aType, uint32_t aTime,
 
 bool
 PinchGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
-{ 
+{
   Maybe<ParentLayerPoint> point = UntransformBy(aTransform, mFocusPoint);
   if (!point) {
     return false;
@@ -621,6 +630,7 @@ PinchGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransfo
 
 TapGestureInput::TapGestureInput()
   : InputData(TAPGESTURE_INPUT)
+  , mType{ static_cast<TapGestureType>(0) }
 {
 }
 
@@ -657,7 +667,11 @@ TapGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform
 
 ScrollWheelInput::ScrollWheelInput()
   : InputData(SCROLLWHEEL_INPUT)
+  , mDeltaType{ static_cast<ScrollDeltaType>(0) }
+  , mScrollMode{ static_cast<ScrollMode>(0) }
   , mHandledByAPZ(false)
+  , mDeltaX{ 0.0 }
+  , mDeltaY{ 0.0 }
   , mLineOrPageDeltaX(0)
   , mLineOrPageDeltaY(0)
   , mScrollSeriesNumber(0)
@@ -665,6 +679,7 @@ ScrollWheelInput::ScrollWheelInput()
   , mUserDeltaMultiplierY(1.0)
   , mMayHaveMomentum(false)
   , mIsMomentum(false)
+  , mAllowToOverrideSystemScrollSpeed{ false }
 {
 }
 
@@ -836,6 +851,7 @@ KeyboardInput::KeyboardInput(const WidgetKeyboardEvent& aEvent)
 
 KeyboardInput::KeyboardInput()
   : InputData(KEYBOARD_INPUT)
+  , mType{ static_cast<KeyboardEventType>(0) }
   , mKeyCode(0)
   , mCharCode(0)
   , mHandledByAPZ(false)

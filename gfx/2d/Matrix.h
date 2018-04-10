@@ -1878,15 +1878,11 @@ public:
                         Float a41, Float a42, Float a43, Float a44)
     : Parent(a11, a12, a13, a14, a21, a22, a23, a24,
              a31, a32, a33, a34, a41, a42, a43, a44)
-  {
-    Analyze();
-  }
+  /* FIXME: initialize mType */ { Analyze(); }
 
   MOZ_IMPLICIT Matrix4x4TypedFlagged(const Parent& aOther)
     : Parent(aOther)
-  {
-    Analyze();
-  }
+  /* FIXME: initialize mType */ { Analyze(); }
 
   template<class F>
   PointTyped<TargetUnits, F> TransformPoint(const PointTyped<SourceUnits, F> &aPoint) const

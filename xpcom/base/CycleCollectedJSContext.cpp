@@ -51,6 +51,7 @@ CycleCollectedJSContext::CycleCollectedJSContext()
   : mIsPrimaryContext(true)
   , mRuntime(nullptr)
   , mJSContext(nullptr)
+  , mBaseRecursionDepth{}
   , mDoingStableStates(false)
   , mTargetedMicroTaskRecursionDepth(0)
   , mMicroTaskLevel(0)

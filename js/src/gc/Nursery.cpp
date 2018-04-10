@@ -133,6 +133,7 @@ js::Nursery::Nursery(JSRuntime* rt)
   , canAllocateStrings_(false)
   , reportTenurings_(0)
   , minorGCTriggerReason_(JS::gcreason::NO_REASON)
+  , previousGC{}
   , freeMallocedBuffersTask(nullptr)
 #ifdef JS_GC_ZEAL
   , lastCanary_(nullptr)

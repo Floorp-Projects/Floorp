@@ -97,8 +97,10 @@ struct BlobItemData
   IntRect mImageRect;
   IntPoint mGroupOffset;
 
-  BlobItemData(DIGroup* aGroup, nsDisplayItem *aItem)
-    : mGroup(aGroup)
+  BlobItemData(DIGroup* aGroup, nsDisplayItem* aItem)
+    : mUsed{ false }
+    , mGroup(aGroup)
+    , mOpacity{ 0.0 }
   {
     mInvalid = false;
     mEmpty = false;
@@ -179,7 +181,9 @@ struct DIGroup;
 struct Grouper
 {
   explicit Grouper(ScrollingLayersHelper& aScrollingHelper)
-   : mScrollingHelper(aScrollingHelper)
+    : mAppUnitsPerDevPixel{}
+    , mDisplayListBuilder{ nullptr }
+    , mScrollingHelper(aScrollingHelper)
   {}
 
   int32_t mAppUnitsPerDevPixel;

@@ -436,6 +436,8 @@ public:
 
   explicit AutoClearDeviceOffset(const Pattern& aPattern)
     : mSurface(nullptr)
+    , mX{ 0.0 }
+    , mY{ 0.0 }
   {
     if (aPattern.GetType() == PatternType::SURFACE) {
       const SurfacePattern& pattern = static_cast<const SurfacePattern&>(aPattern);

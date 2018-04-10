@@ -159,9 +159,10 @@ class WasmToken
         u()
     { }
     WasmToken(Kind kind, const char16_t* begin, const char16_t* end)
-      : kind_(kind),
-        begin_(begin),
-        end_(end)
+      : kind_(kind)
+      , begin_(begin)
+      , end_(end)
+      , u{}
     {
         MOZ_ASSERT(kind_ != Error);
         MOZ_ASSERT(kind_ != Invalid);
@@ -242,10 +243,12 @@ class WasmToken
         u.threadOp_ = op;
     }
     explicit WasmToken(const char16_t* begin)
-      : kind_(Error),
-        begin_(begin),
-        end_(begin)
-    {}
+      : kind_(Error)
+      , begin_(begin)
+      , end_(begin)
+      , u{}
+    {
+    }
     Kind kind() const {
         MOZ_ASSERT(kind_ != Kind::Invalid);
         return kind_;

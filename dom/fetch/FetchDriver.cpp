@@ -339,16 +339,20 @@ FetchDriver::FetchDriver(InternalRequest* aRequest,
   , mPerformanceStorage(aPerformanceStorage)
   , mNeedToObserveOnDataAvailable(false)
   , mIsTrackingFetch(aIsTrackingFetch)
+  , mOnStopRequestCalled
+{
+  false
+}
 #ifdef DEBUG
   , mResponseAvailableCalled(false)
   , mFetchCalled(false)
 #endif
-{
-  AssertIsOnMainThread();
+  {
+    AssertIsOnMainThread();
 
-  MOZ_ASSERT(aRequest);
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(aMainThreadEventTarget);
+    MOZ_ASSERT(aRequest);
+    MOZ_ASSERT(aPrincipal);
+    MOZ_ASSERT(aMainThreadEventTarget);
 }
 
 FetchDriver::~FetchDriver()

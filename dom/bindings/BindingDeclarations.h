@@ -387,10 +387,15 @@ class NonNull
 {
 public:
   NonNull()
+    : ptr
+  {
+    nullptr
+  }
 #ifdef DEBUG
-    : inited(false)
+  , inited(false)
 #endif
-  {}
+  {
+  }
 
   // This is no worse than get() in terms of const handling.
   operator T&() const {
