@@ -47,7 +47,7 @@ class TestProfilePrint(unittest.TestCase):
     def test_str_cast(self):
         """Test casting to a string."""
         profile = mozprofile.Profile()
-        self.assertEqual(str(profile), profile.summary().encode("UTF-8"))
+        self.assertEqual(str(profile), profile.summary().encode("utf-8"))
 
     def test_unicode_cast(self):
         """Test casting to a unicode string."""
