@@ -1553,53 +1553,10 @@ Navigator::OnNavigation()
   }
 }
 
-bool
-Navigator::CheckPermission(const char* type)
-{
-  return CheckPermission(mWindow, type);
-}
-
-/* static */
-bool
-Navigator::CheckPermission(nsPIDOMWindowInner* aWindow, const char* aType)
-{
-  if (!aWindow) {
-    return false;
-  }
-
-  uint32_t permission = GetPermission(aWindow, aType);
-  return permission == nsIPermissionManager::ALLOW_ACTION;
-}
-
 JSObject*
 Navigator::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
   return NavigatorBinding::Wrap(cx, this, aGivenProto);
-}
-
-/* static */
-bool
-Navigator::HasWakeLockSupport(JSContext* /* unused*/, JSObject* /*unused */)
-{
-  nsCOMPtr<nsIPowerManagerService> pmService =
-    do_GetService(POWERMANAGERSERVICE_CONTRACTID);
-  // No service means no wake lock support
-  return !!pmService;
-}
-
-/* static */
-bool
-Navigator::HasWifiManagerSupport(JSContext* /* unused */,
-                                 JSObject* aGlobal)
-{
-  // On XBL scope, the global object is NOT |window|. So we have
-  // to use nsContentUtils::GetObjectPrincipal to get the principal
-  // and test directly with permission manager.
-
-  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aGlobal);
-  uint32_t permission = GetPermission(principal, "wifi-manage");
-
-  return permission == nsIPermissionManager::ALLOW_ACTION;
 }
 
 /* static */
