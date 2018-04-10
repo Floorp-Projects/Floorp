@@ -649,7 +649,17 @@ impl From<(WrPipelineId, WrEpoch)> for WrPipelineEpoch {
 
 #[repr(C)]
 pub struct WrPipelineInfo {
+    // This contains an entry for each pipeline that was rendered, along with
+    // the epoch at which it was rendered. Rendered pipelines include the root
+    // pipeline and any other pipelines that were reachable via IFrame display
+    // items from the root pipeline.
     epochs: FfiVec<WrPipelineEpoch>,
+    // This contains an entry for each pipeline that was removed during the
+    // last transaction. These pipelines would have been explicitly removed by
+    // calling remove_pipeline on the transaction object; the pipeline showing
+    // up in this array means that the data structures have been torn down on
+    // the webrender side, and so any remaining data structures on the caller
+    // side can now be torn down also.
     removed_pipelines: FfiVec<PipelineId>,
 }
 
