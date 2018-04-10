@@ -3665,27 +3665,11 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
 
   } else if (!strcmp(aTopic, "getUserMedia:response:deny")) {
-    MediaMgrError::Name errorName = MediaMgrError::Name::NotAllowedError;
-
-    if (aSubject) {
-      nsCOMPtr<nsISupportsString> msg(do_QueryInterface(aSubject));
-      MOZ_ASSERT(msg);
-      nsString msgData;
-      msg->GetData(msgData);
-      // The only errors other than NotAllowedError allowed by the getUserMedia
-      // spec related to selection are NotFoundError for no valid options and
-      // the catch-all AbortError for everything else (NotReadableError is
-      // reserved for device startup errors later).
-      errorName = (msgData.EqualsLiteral("NotFoundError"))
-          ? MediaMgrError::Name::NotFoundError
-          : MediaMgrError::Name::AbortError;
-    }
-
     nsString key(aData);
     RefPtr<GetUserMediaTask> task;
     mActiveCallbacks.Remove(key, getter_AddRefs(task));
     if (task) {
-      task->Denied(errorName);
+      task->Denied(MediaMgrError::Name::NotAllowedError);
       nsTArray<nsString>* array;
       if (!mCallIds.Get(task->GetWindowID(), &array)) {
         return NS_OK;
