@@ -9,6 +9,7 @@
 
 #include <unordered_map>
 
+#include "base/platform_thread.h"   // for PlatformThreadId
 #include "LayersTypes.h"
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/StaticMutex.h"
@@ -43,6 +44,14 @@ public:
 
   bool HasTreeManager(const RefPtr<APZCTreeManager>& aApz);
   void SetWebRenderWindowId(const wr::WindowId& aWindowId);
+
+  /**
+   * This function is invoked from rust on the scene builder thread when it
+   * is created. It effectively tells the APZUpdater "the current thread is
+   * the updater thread for this window id" and allows APZUpdater to remember
+   * which thread it is.
+   */
+  static void SetUpdaterThread(const wr::WrWindowId& aWindowId);
 
   void ClearTree();
   void UpdateFocusState(LayersId aRootLayerTreeId,
@@ -104,6 +113,9 @@ public:
 protected:
   virtual ~APZUpdater();
 
+  bool UsingWebRenderUpdaterThread() const;
+  static already_AddRefed<APZUpdater> GetUpdater(const wr::WrWindowId& aWindowId);
+
 private:
   RefPtr<APZCTreeManager> mApz;
 
@@ -113,6 +125,21 @@ private:
   static StaticMutex sWindowIdLock;
   static std::unordered_map<uint64_t, APZUpdater*> sWindowIdMap;
   Maybe<wr::WrWindowId> mWindowId;
+
+  // If WebRender and async scene building are enabled, this holds the thread id
+  // of the scene builder thread (which is the updater thread) for the
+  // compositor associated with this APZUpdater instance. It may be populated
+  // even if async scene building is not enabled, but in that case we don't
+  // care about the contents.
+  // This is written to once during init and never cleared, and so reading it
+  // from multiple threads during normal operation (after initialization)
+  // without locking should be fine.
+  Maybe<PlatformThreadId> mUpdaterThreadId;
+#ifdef DEBUG
+  // This flag is used to ensure that we don't ever try to do updater-thread
+  // stuff before the updater thread has been properly initialized.
+  mutable bool mUpdaterThreadQueried;
+#endif
 };
 
 } // namespace layers
