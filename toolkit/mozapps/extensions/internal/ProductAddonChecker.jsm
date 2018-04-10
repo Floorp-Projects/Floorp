@@ -22,7 +22,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/CertUtils.jsm");
-/* globals checkCert, BadCertHandler*/
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
@@ -103,7 +102,7 @@ function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
       request = request.wrappedJSObject;
     }
     request.open("GET", url, true);
-    request.channel.notificationCallbacks = new BadCertHandler(allowNonBuiltIn);
+    request.channel.notificationCallbacks = new CertUtils.BadCertHandler(allowNonBuiltIn);
     // Prevent the request from reading from the cache.
     request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     // Prevent the request from writing to the cache.
@@ -139,7 +138,7 @@ function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
       let request = event.target;
 
       try {
-        checkCert(request.channel, allowNonBuiltIn, allowedCerts);
+        CertUtils.checkCert(request.channel, allowNonBuiltIn, allowedCerts);
       } catch (ex) {
         logger.error("Request failed certificate checks: " + ex);
         ex.status = getRequestStatus(request);
