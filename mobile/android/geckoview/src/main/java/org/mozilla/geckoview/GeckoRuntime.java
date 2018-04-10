@@ -182,6 +182,10 @@ public final class GeckoRuntime implements Parcelable {
         return mDelegate;
     }
 
+    public GeckoRuntimeSettings getSettings() {
+        return mSettings;
+    }
+
     @Override // Parcelable
     public int describeContents() {
         return 0;
