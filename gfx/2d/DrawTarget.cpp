@@ -268,5 +268,25 @@ DrawTarget::IntoLuminanceSource(LuminanceType aMaskType, float aOpacity)
   return destMaskSurface.forget();
 }
 
+void
+DrawTarget::Blur(const AlphaBoxBlur& aBlur)
+{
+  uint8_t* data;
+  IntSize size;
+  int32_t stride;
+  SurfaceFormat format;
+  if (!LockBits(&data, &size, &stride, &format)) {
+    gfxWarning() << "Cannot perform in-place blur on non-data DrawTarget";
+    return;
+  }
+
+  // Sanity check that the blur size matches the draw target.
+  MOZ_ASSERT(size == aBlur.GetSize());
+  MOZ_ASSERT(stride == aBlur.GetStride());
+  aBlur.Blur(data);
+
+  ReleaseBits(data);
+}
+
 } // namespace gfx
 } // namespace mozilla
