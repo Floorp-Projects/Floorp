@@ -43,7 +43,7 @@ Where the individual fields are:
 - ``method``: ``String``, identifier. This describes the type of event that occurred, e.g. ``click``, ``keydown`` or ``focus``.
 - ``object``: ``String``, identifier. This is the object the event occurred on, e.g. ``reload_button`` or ``urlbar``.
 - ``value``: ``String``, optional, may be ``null``. This is a user defined value, providing context for the event.
-- ``extra``: ``Object``, optional, may be ``null``. This is an object of the form ``{"key": "value", ...}``, both keys and values need to be strings. This is used for events where additional richer context is needed.
+- ``extra``: ``Object``, optional, may be ``null``. This is an object of the form ``{"key": "value", ...}``, both keys and values need to be strings, keys are identifiers. This is used for events where additional richer context is needed.
 
 .. _eventlimits:
 

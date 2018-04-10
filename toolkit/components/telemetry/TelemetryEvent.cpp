@@ -981,7 +981,7 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Events can only be registered in the parent process");
 
-  if (!IsValidIdentifierString(aCategory, 30, true, false)) {
+  if (!IsValidIdentifierString(aCategory, 30, true, true)) {
     JS_ReportErrorASCII(cx, "Category parameter should match the identifier pattern.");
     return NS_ERROR_INVALID_ARG;
   }
@@ -1065,7 +1065,7 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
 
     // Validate methods.
     for (auto& method : methods) {
-      if (!IsValidIdentifierString(method, kMaxMethodNameByteLength, false, false)) {
+      if (!IsValidIdentifierString(method, kMaxMethodNameByteLength, false, true)) {
         JS_ReportErrorASCII(cx, "Method names should match the identifier pattern.");
         return NS_ERROR_INVALID_ARG;
       }
@@ -1085,7 +1085,7 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
       return NS_ERROR_INVALID_ARG;
     }
     for (auto& key : extra_keys) {
-      if (!IsValidIdentifierString(key, kMaxExtraKeyNameByteLength, false, false)) {
+      if (!IsValidIdentifierString(key, kMaxExtraKeyNameByteLength, false, true)) {
         JS_ReportErrorASCII(cx, "Extra key names should match the identifier pattern.");
         return NS_ERROR_INVALID_ARG;
       }
