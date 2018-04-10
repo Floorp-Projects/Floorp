@@ -11,6 +11,7 @@ DIRS += [
 ]
 DevToolsModules(
     'console-output.js',
+    'jsterm.js',
     'webconsole.js',
 )
 with Files('**'):
