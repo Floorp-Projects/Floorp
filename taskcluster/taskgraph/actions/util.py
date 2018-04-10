@@ -24,18 +24,21 @@ logger = logging.getLogger(__name__)
 PUSHLOG_TMPL = '{}/json-pushes?version=2&changeset={}&tipsonly=1&full=1'
 
 
-def find_decision_task(parameters):
+def find_decision_task(parameters, graph_config):
     """Given the parameters for this action, find the taskId of the decision
     task"""
-    return find_task_id('gecko.v2.{}.pushlog-id.{}.decision'.format(
+    return find_task_id('{}.v2.{}.pushlog-id.{}.decision'.format(
+        graph_config['trust-domain'],
         parameters['project'],
         parameters['pushlog_id']))
 
 
-def find_hg_revision_pushlog_id(parameters, revision):
+def find_hg_revision_pushlog_id(parameters, graph_config, revision):
     """Given the parameters for this action and a revision, find the
     pushlog_id of the revision."""
-    pushlog_url = PUSHLOG_TMPL.format(parameters['head_repository'], revision)
+
+    repo_param = '{}head_repository'.format(graph_config['project-repo-param-prefix'])
+    pushlog_url = PUSHLOG_TMPL.format(parameters[repo_param], revision)
     r = requests.get(pushlog_url)
     r.raise_for_status()
     pushes = r.json()['pushes'].keys()
@@ -63,8 +66,8 @@ def find_existing_tasks_from_previous_kinds(full_task_graph, previous_graph_ids,
     return existing_tasks
 
 
-def fetch_graph_and_labels(parameters):
-    decision_task_id = find_decision_task(parameters)
+def fetch_graph_and_labels(parameters, graph_config):
+    decision_task_id = find_decision_task(parameters, graph_config)
 
     # First grab the graph and labels generated during the initial decision task
     full_task_graph = get_artifact(decision_task_id, "public/full-task-graph.json")
@@ -73,7 +76,8 @@ def fetch_graph_and_labels(parameters):
 
     # Now fetch any modifications made by action tasks and swap out new tasks
     # for old ones
-    namespace = 'gecko.v2.{}.pushlog-id.{}.actions'.format(
+    namespace = '{}.v2.{}.pushlog-id.{}.actions'.format(
+        graph_config['trust-domain'],
         parameters['project'],
         parameters['pushlog_id'])
     for action in list_tasks(namespace):
