@@ -18,7 +18,7 @@ async function activateContextAndWaitFor(selector, where) {
       break;
     case "privatewindow":
       contextMenuItem += "private";
-      openPromise = BrowserTestUtils.waitForNewWindow(TEST_LINK).then(win => {
+      openPromise = BrowserTestUtils.waitForNewWindow({url: TEST_LINK}).then(win => {
         ok(PrivateBrowsingUtils.isWindowPrivate(win), "Should have opened a private window.");
         return win;
       });
@@ -26,7 +26,7 @@ async function activateContextAndWaitFor(selector, where) {
       break;
     case "window":
       // No contextMenuItem suffix for normal new windows;
-      openPromise = BrowserTestUtils.waitForNewWindow(TEST_LINK).then(win => {
+      openPromise = BrowserTestUtils.waitForNewWindow({url: TEST_LINK}).then(win => {
         ok(!PrivateBrowsingUtils.isWindowPrivate(win), "Should have opened a normal window.");
         return win;
       });
