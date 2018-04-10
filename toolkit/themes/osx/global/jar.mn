@@ -24,7 +24,6 @@ toolkit.jar:
   skin/classic/global/popup.css
   skin/classic/global/progressmeter.css
   skin/classic/global/radio.css
-  skin/classic/global/resizer.css
   skin/classic/global/richlistbox.css
   skin/classic/global/scrollbars.css                                 (nativescrollbars.css)
   skin/classic/global/scrollbox.css
@@ -61,10 +60,6 @@ toolkit.jar:
   skin/classic/global/icons/glyph-dropdown.png                       (icons/glyph-dropdown.png)
   skin/classic/global/icons/glyph-dropdown@2x.png                    (icons/glyph-dropdown@2x.png)
   skin/classic/global/icons/panel-dropmarker.png                     (icons/panel-dropmarker.png)
-  skin/classic/global/icons/resizer.png                              (icons/resizer.png)
-  skin/classic/global/icons/resizer@2x.png                           (icons/resizer@2x.png)
-  skin/classic/global/icons/resizer-rtl.png                          (icons/resizer-rtl.png)
-  skin/classic/global/icons/resizer-rtl@2x.png                       (icons/resizer-rtl@2x.png)
   skin/classic/global/icons/search-textbox.svg                       (icons/search-textbox.svg)
   skin/classic/global/icons/searchfield-cancel.svg                   (icons/searchfield-cancel.svg)
   skin/classic/global/icons/warning-16.png                           (icons/warning-16.png)

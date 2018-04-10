@@ -39,8 +39,6 @@ toolkit.jar:
    skin/classic/global/icons/blacklist_large.png               (icons/blacklist_large.png)
    skin/classic/global/icons/Close.gif                         (icons/Close.gif)
    skin/classic/global/icons/Minimize.gif                      (icons/Minimize.gif)
-   skin/classic/global/icons/resizer.png                       (icons/resizer.png)
-   skin/classic/global/icons/resizer-rtl.png                   (icons/resizer-rtl.png)
    skin/classic/global/icons/Restore.gif                       (icons/Restore.gif)
    skin/classic/global/icons/sslWarning.png                    (icons/sslWarning.png)
 
