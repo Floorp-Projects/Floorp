@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebRenderAPI.h"
+
 #include "DisplayItemClipChain.h"
+#include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -134,8 +136,15 @@ private:
 
 TransactionBuilder::TransactionBuilder()
 {
-  mTxn = wr_transaction_new();
-  mResourceUpdates = wr_resource_updates_new();
+  // We need the if statement to avoid miscompilation on windows, see
+  // bug 1449982 comment 22.
+  if (gfxPrefs::WebRenderAsyncSceneBuild()) {
+    mTxn = wr_transaction_new(true);
+    mResourceUpdates = wr_resource_updates_new();
+  } else {
+    mResourceUpdates = wr_resource_updates_new();
+    mTxn = wr_transaction_new(false);
+  }
 }
 
 TransactionBuilder::~TransactionBuilder()
@@ -251,17 +260,15 @@ WebRenderAPI::ShutdownExternalLogHandler()
 }
 
 /*static*/ already_AddRefed<WebRenderAPI>
-WebRenderAPI::Create(layers::CompositorBridgeParentBase* aBridge,
+WebRenderAPI::Create(layers::CompositorBridgeParent* aBridge,
                      RefPtr<widget::CompositorWidget>&& aWidget,
+                     const wr::WrWindowId& aWindowId,
                      LayoutDeviceIntSize aSize)
 {
   MOZ_ASSERT(aBridge);
   MOZ_ASSERT(aWidget);
   static_assert(sizeof(size_t) == sizeof(uintptr_t),
       "The FFI bindings assume size_t is the same size as uintptr_t!");
-
-  static uint64_t sNextId = 1;
-  auto id = NewWindowId(sNextId++);
 
   wr::DocumentHandle* docHandle = nullptr;
   uint32_t maxTextureSize = 0;
@@ -275,7 +282,7 @@ WebRenderAPI::Create(layers::CompositorBridgeParentBase* aBridge,
   auto event = MakeUnique<NewRenderer>(&docHandle, aBridge, &maxTextureSize, &useANGLE,
                                        Move(aWidget), &task, aSize,
                                        &syncHandle);
-  RenderThread::Get()->RunEvent(id, Move(event));
+  RenderThread::Get()->RunEvent(aWindowId, Move(event));
 
   task.Wait();
 
@@ -283,7 +290,7 @@ WebRenderAPI::Create(layers::CompositorBridgeParentBase* aBridge,
     return nullptr;
   }
 
-  return RefPtr<WebRenderAPI>(new WebRenderAPI(docHandle, id, maxTextureSize, useANGLE, syncHandle)).forget();
+  return RefPtr<WebRenderAPI>(new WebRenderAPI(docHandle, aWindowId, maxTextureSize, useANGLE, syncHandle)).forget();
 }
 
 already_AddRefed<WebRenderAPI>
@@ -497,6 +504,12 @@ WebRenderAPI::Resume()
 
     task.Wait();
     return result;
+}
+
+void
+WebRenderAPI::WakeSceneBuilder()
+{
+    wr_api_wake_scene_builder(mDocHandle);
 }
 
 void

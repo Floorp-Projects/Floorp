@@ -30,7 +30,7 @@ AsyncImagePipelineManager::AsyncImagePipelineManager(already_AddRefed<wr::WebRen
  : mApi(aApi)
  , mIdNamespace(mApi->GetNamespace())
  , mResourceId(0)
- , mAsyncImageEpoch(0)
+ , mAsyncImageEpoch{0}
  , mWillGenerateFrame(false)
  , mDestroyed(false)
 {
@@ -129,13 +129,13 @@ AsyncImagePipelineManager::RemoveAsyncImagePipeline(const wr::PipelineId& aPipel
   uint64_t id = wr::AsUint64(aPipelineId);
   if (auto entry = mAsyncImagePipelines.Lookup(id)) {
     AsyncImagePipeline* holder = entry.Data();
-    ++mAsyncImageEpoch; // Update webrender epoch
-    aTxn.ClearDisplayList(wr::NewEpoch(mAsyncImageEpoch), aPipelineId);
+    wr::Epoch epoch = GetNextImageEpoch();
+    aTxn.ClearDisplayList(epoch, aPipelineId);
     for (wr::ImageKey key : holder->mKeys) {
       aTxn.DeleteImage(key);
     }
     entry.Remove();
-    RemovePipeline(aPipelineId, wr::NewEpoch(mAsyncImageEpoch));
+    RemovePipeline(aPipelineId, epoch);
   }
 }
 
@@ -271,8 +271,7 @@ AsyncImagePipelineManager::ApplyAsyncImages()
     return;
   }
 
-  ++mAsyncImageEpoch; // Update webrender epoch
-  wr::Epoch epoch = wr::NewEpoch(mAsyncImageEpoch);
+  wr::Epoch epoch = GetNextImageEpoch();
 
   // TODO: We can improve upon this by using two transactions: one for everything that
   // doesn't change the display list (in other words does not cause the scene to be
@@ -414,6 +413,13 @@ AsyncImagePipelineManager::PipelineRemoved(const wr::PipelineId& aPipelineId)
     // If mDestroyedEpoch contains nothing it means we reused the same pipeline id (probably because
     // we moved the tab to another window). In this case we need to keep the holder.
   }
+}
+
+wr::Epoch
+AsyncImagePipelineManager::GetNextImageEpoch()
+{
+  mAsyncImageEpoch.mHandle++;
+  return mAsyncImageEpoch;
 }
 
 } // namespace layers

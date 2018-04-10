@@ -173,7 +173,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mAnimStorage(aAnimStorage)
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
-  , mWrEpoch(0)
+  , mWrEpoch{0}
   , mIdNamespace(aApi->GetNamespace())
   , mPaused(false)
   , mDestroyed(false)
@@ -194,7 +194,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
   , mPipelineId(aPipelineId)
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
-  , mWrEpoch(0)
+  , mWrEpoch{0}
   , mIdNamespace{0}
   , mPaused(false)
   , mDestroyed(true)
@@ -506,25 +506,29 @@ WebRenderBridgeParent::GetRootCompositorBridgeParent() const
 }
 
 void
-WebRenderBridgeParent::UpdateAPZ(bool aUpdateHitTestingTree)
+WebRenderBridgeParent::UpdateAPZFocusState(const FocusTarget& aFocus)
 {
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (!cbp) {
     return;
   }
   LayersId rootLayersId = cbp->RootLayerTreeId();
-  RefPtr<WebRenderBridgeParent> rootWrbp = cbp->GetWebRenderBridgeParent();
-  if (!rootWrbp) {
+  if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
+    apz->UpdateFocusState(rootLayersId, GetLayersId(), aFocus);
+  }
+}
+
+void
+WebRenderBridgeParent::UpdateAPZScrollData(const wr::Epoch& aEpoch,
+                                           WebRenderScrollData&& aData)
+{
+  CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
+  if (!cbp) {
     return;
   }
+  LayersId rootLayersId = cbp->RootLayerTreeId();
   if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
-    apz->UpdateFocusState(rootLayersId, GetLayersId(),
-                          mScrollData.GetFocusTarget());
-    if (aUpdateHitTestingTree) {
-      apz->UpdateHitTestingTree(rootLayersId, rootWrbp->GetScrollData(),
-          mScrollData.IsFirstPaint(), GetLayersId(),
-          mScrollData.GetPaintSequenceNumber());
-    }
+    apz->UpdateScrollDataAndTreeState(rootLayersId, GetLayersId(), aEpoch, Move(aData));
   }
 }
 
@@ -548,13 +552,6 @@ WebRenderBridgeParent::PushAPZStateToWR(wr::TransactionBuilder& aTxn,
     return apz->PushStateToWR(aTxn, animationTime, aTransformArray);
   }
   return false;
-}
-
-const WebRenderScrollData&
-WebRenderBridgeParent::GetScrollData() const
-{
-  MOZ_ASSERT(mozilla::layers::CompositorThreadHolder::IsInCompositorThread());
-  return mScrollData;
 }
 
 mozilla::ipc::IPCResult
@@ -588,7 +585,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   // to early-return from RecvDPEnd without doing so.
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
-  uint32_t wrEpoch = GetNextWrEpoch();
+  wr::Epoch wrEpoch = GetNextWrEpoch();
 
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
 
@@ -600,6 +597,15 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   }
 
   mReceivedDisplayList = true;
+
+  // aScrollData is moved into this function but that is not reflected by the
+  // function signature due to the way the IPDL generator works. We remove the
+  // const so that we can move this structure all the way to the desired
+  // destination.
+  // Also note that this needs to happen before the display list transaction is
+  // sent to WebRender, so that the UpdateHitTestingTree call is guaranteed to
+  // be in the updater queue at the time that the scene swap completes.
+  UpdateAPZScrollData(wrEpoch, Move(const_cast<WebRenderScrollData&>(aScrollData)));
 
   wr::Vec<uint8_t> dlData(Move(dl));
 
@@ -613,7 +619,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
       txn.SetWindowParameters(widgetSize, docRect);
     }
     gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
-    txn.SetDisplayList(clearColor, wr::NewEpoch(wrEpoch), LayerSize(aSize.width, aSize.height),
+    txn.SetDisplayList(clearColor, wrEpoch, LayerSize(aSize.width, aSize.height),
                        mPipelineId, aContentSize,
                        dlDesc, dlData);
 
@@ -627,9 +633,6 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   }
 
   HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
-
-  mScrollData = aScrollData;
-  UpdateAPZ(true);
 
   if (mIdNamespace != aIdNamespace) {
     // Pretend we composited since someone is wating for this event,
@@ -673,13 +676,12 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     ScheduleGenerateFrame();
   }
 
-  mScrollData.SetFocusTarget(aFocusTarget);
-  UpdateAPZ(false);
+  UpdateAPZFocusState(aFocusTarget);
 
   if (!aCommands.IsEmpty()) {
     wr::TransactionBuilder txn;
-    uint32_t wrEpoch = GetNextWrEpoch();
-    txn.UpdateEpoch(mPipelineId, wr::NewEpoch(wrEpoch));
+    wr::Epoch wrEpoch = GetNextWrEpoch();
+    txn.UpdateEpoch(mPipelineId, wrEpoch);
     mApi->SendTransaction(txn);
 
     HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
@@ -688,7 +690,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     if (mPendingTransactionIds.empty()) {
       sendDidComposite = true;
     }
-    HoldPendingTransactionId(mWrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
+    HoldPendingTransactionId(WrEpoch(), aTransactionId, aTxnStartTime, aFwdTime);
     // If WebRenderBridgeParent does not have pending DidComposites,
     // send DidComposite now.
     if (sendDidComposite) {
@@ -703,8 +705,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvSetFocusTarget(const FocusTarget& aFocusTarget)
 {
-  mScrollData.SetFocusTarget(aFocusTarget);
-  UpdateAPZ(false);
+  UpdateAPZFocusState(aFocusTarget);
   return IPC_OK();
 }
 
@@ -945,7 +946,7 @@ WebRenderBridgeParent::RecvClearCachedResources()
 
   // Clear resources
   wr::TransactionBuilder txn;
-  txn.ClearDisplayList(wr::NewEpoch(GetNextWrEpoch()), mPipelineId);
+  txn.ClearDisplayList(GetNextWrEpoch(), mPipelineId);
   mApi->SendTransaction(txn);
   // Schedule generate frame to clean up Pipeline
   ScheduleGenerateFrame();
@@ -1241,13 +1242,13 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 }
 
 void
-WebRenderBridgeParent::HoldPendingTransactionId(uint32_t aWrEpoch,
+WebRenderBridgeParent::HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
                                                 uint64_t aTransactionId,
                                                 const TimeStamp& aTxnStartTime,
                                                 const TimeStamp& aFwdTime)
 {
   MOZ_ASSERT(aTransactionId > LastPendingTransactionId());
-  mPendingTransactionIds.push(PendingTransactionId(wr::NewEpoch(aWrEpoch), aTransactionId, aTxnStartTime, aFwdTime));
+  mPendingTransactionIds.push(PendingTransactionId(aWrEpoch, aTransactionId, aTxnStartTime, aFwdTime));
 }
 
 uint64_t
@@ -1371,10 +1372,10 @@ WebRenderBridgeParent::ClearResources()
     return;
   }
 
-  uint32_t wrEpoch = GetNextWrEpoch();
+  wr::Epoch wrEpoch = GetNextWrEpoch();
 
   wr::TransactionBuilder txn;
-  txn.ClearDisplayList(wr::NewEpoch(wrEpoch), mPipelineId);
+  txn.ClearDisplayList(wrEpoch, mPipelineId);
   mReceivedDisplayList = false;
 
   // Schedule generate frame to clean up Pipeline
@@ -1392,7 +1393,7 @@ WebRenderBridgeParent::ClearResources()
   }
   mAsyncCompositables.Clear();
 
-  mAsyncImageManager->RemovePipeline(mPipelineId, wr::NewEpoch(wrEpoch));
+  mAsyncImageManager->RemovePipeline(mPipelineId, wrEpoch);
   txn.RemovePipeline(mPipelineId);
 
   mApi->SendTransaction(txn);
@@ -1499,11 +1500,12 @@ WebRenderBridgeParent::GetTextureFactoryIdentifier()
                                   mApi->GetSyncHandle());
 }
 
-uint32_t
+wr::Epoch
 WebRenderBridgeParent::GetNextWrEpoch()
 {
-  MOZ_RELEASE_ASSERT(mWrEpoch != UINT32_MAX);
-  return ++mWrEpoch;
+  MOZ_RELEASE_ASSERT(mWrEpoch.mHandle != UINT32_MAX);
+  mWrEpoch.mHandle++;
+  return mWrEpoch;
 }
 
 void

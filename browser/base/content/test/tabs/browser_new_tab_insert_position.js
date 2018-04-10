@@ -44,6 +44,21 @@ function verifyTabState(state) {
   }
 }
 
+const bulkLoad = ["http://mochi.test:8888/#5", "http://mochi.test:8888/#6",
+                "http://mochi.test:8888/#7", "http://mochi.test:8888/#8"];
+
+const sessData = {
+  windows: [{
+    tabs: [
+      {entries: [{url: "http://mochi.test:8888/#0", triggeringPrincipal_base64}]},
+      {entries: [{url: "http://mochi.test:8888/#1", triggeringPrincipal_base64}]},
+      {entries: [{url: "http://mochi.test:8888/#3", triggeringPrincipal_base64}]},
+      {entries: [{url: "http://mochi.test:8888/#4", triggeringPrincipal_base64}]},
+    ],
+  }],
+};
+const urlbarURL = "http://example.com/#urlbar";
+
 async function doTest(aInsertRelatedAfterCurrent, aInsertAfterCurrent) {
   const kDescription = "(aInsertRelatedAfterCurrent=" + aInsertRelatedAfterCurrent +
                        ", aInsertAfterCurrent=" + aInsertAfterCurrent + "): ";
@@ -56,17 +71,6 @@ async function doTest(aInsertRelatedAfterCurrent, aInsertAfterCurrent) {
   ]});
 
   let oldState = SessionStore.getBrowserState();
-
-  let sessData = {
-    windows: [{
-      tabs: [
-        {entries: [{url: "http://mochi.test:8888/#0", triggeringPrincipal_base64}]},
-        {entries: [{url: "http://mochi.test:8888/#1", triggeringPrincipal_base64}]},
-        {entries: [{url: "http://mochi.test:8888/#3", triggeringPrincipal_base64}]},
-        {entries: [{url: "http://mochi.test:8888/#4", triggeringPrincipal_base64}]},
-      ],
-    }],
-  };
 
   await promiseBrowserStateRestored(sessData);
 
@@ -100,7 +104,6 @@ async function doTest(aInsertRelatedAfterCurrent, aInsertAfterCurrent) {
   openTabIndex = aInsertAfterCurrent ? openerTabIndex + 1 : gBrowser.tabs.length;
   openTabDescription = aInsertAfterCurrent ? "immediately to the right" : "at rightmost";
 
-  const urlbarURL = "http://example.com/#urlbar";
   gURLBar.focus();
   gURLBar.select();
   newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, urlbarURL, true);
@@ -144,6 +147,18 @@ async function doTest(aInsertRelatedAfterCurrent, aInsertAfterCurrent) {
   // Remove a tab in the middle, then undo.  It should reappear where it was.
   await promiseRemoveThenUndoCloseTab(gBrowser.tabs[2]);
   verifyTabState(newState);
+
+  // Bug 1442679 - Test bulk opening with loadTabs loads the tabs in order
+
+  let loadPromises = Promise.all(bulkLoad.map(url => BrowserTestUtils.waitForNewTab(gBrowser, url, false, true)));
+  // loadTabs will insertAfterCurrent
+  let nextTab = aInsertAfterCurrent ? gBrowser.selectedTab._tPos + 1 : gBrowser.tabs.length;
+
+  gBrowser.loadTabs(bulkLoad, true);
+  await loadPromises;
+  for (let i = nextTab, j = 0; j < bulkLoad.length; i++, j++) {
+    is(gBrowser.tabs[i].linkedBrowser.currentURI.spec, bulkLoad[j], `bulkLoad tab pos ${i} matched`);
+  }
 
   // Now we want to test that positioning remains correct after a session restore.
 

@@ -146,7 +146,7 @@ APZSampler::HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer)
 }
 
 void
-APZSampler::AssertOnSamplerThread()
+APZSampler::AssertOnSamplerThread() const
 {
   if (APZThreadUtils::GetThreadAssertionsEnabled()) {
     MOZ_ASSERT(IsSamplerThread());
@@ -154,7 +154,7 @@ APZSampler::AssertOnSamplerThread()
 }
 
 bool
-APZSampler::IsSamplerThread()
+APZSampler::IsSamplerThread() const
 {
   return CompositorThreadHolder::IsInCompositorThread();
 }

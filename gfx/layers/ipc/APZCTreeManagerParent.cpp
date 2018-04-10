@@ -43,7 +43,7 @@ APZCTreeManagerParent::ChildAdopted(RefPtr<APZCTreeManager> aAPZCTreeManager,
 mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetKeyboardMap(const KeyboardMap& aKeyboardMap)
 {
-  mUpdater->RunOnControllerThread(NewRunnableMethod<KeyboardMap>(
+  mUpdater->RunOnControllerThread(mLayersId, NewRunnableMethod<KeyboardMap>(
     "layers::IAPZCTreeManager::SetKeyboardMap",
     mTreeManager,
     &IAPZCTreeManager::SetKeyboardMap,
@@ -65,6 +65,7 @@ APZCTreeManagerParent::RecvZoomToRect(
   }
 
   mUpdater->RunOnControllerThread(
+    mLayersId,
     NewRunnableMethod<ScrollableLayerGuid, CSSRect, uint32_t>(
       "layers::IAPZCTreeManager::ZoomToRect",
       mTreeManager,
@@ -78,7 +79,7 @@ APZCTreeManagerParent::RecvContentReceivedInputBlock(
     const uint64_t& aInputBlockId,
     const bool& aPreventDefault)
 {
-  mUpdater->RunOnControllerThread(NewRunnableMethod<uint64_t, bool>(
+  mUpdater->RunOnControllerThread(mLayersId, NewRunnableMethod<uint64_t, bool>(
     "layers::IAPZCTreeManager::ContentReceivedInputBlock",
     mTreeManager,
     &IAPZCTreeManager::ContentReceivedInputBlock,
@@ -101,6 +102,7 @@ APZCTreeManagerParent::RecvSetTargetAPZC(
     }
   }
   mUpdater->RunOnControllerThread(
+    mLayersId,
     NewRunnableMethod<uint64_t,
                       StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(
       "layers::IAPZCTreeManager::SetTargetAPZC",
@@ -130,7 +132,7 @@ APZCTreeManagerParent::RecvUpdateZoomConstraints(
 mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetDPI(const float& aDpiValue)
 {
-  mUpdater->RunOnControllerThread(NewRunnableMethod<float>(
+  mUpdater->RunOnControllerThread(mLayersId, NewRunnableMethod<float>(
     "layers::IAPZCTreeManager::SetDPI",
     mTreeManager,
     &IAPZCTreeManager::SetDPI,
@@ -144,6 +146,7 @@ APZCTreeManagerParent::RecvSetAllowedTouchBehavior(
     nsTArray<TouchBehaviorFlags>&& aValues)
 {
   mUpdater->RunOnControllerThread(
+    mLayersId,
     NewRunnableMethod<uint64_t,
                       StoreCopyPassByRRef<nsTArray<TouchBehaviorFlags>>>(
       "layers::IAPZCTreeManager::SetAllowedTouchBehavior",
@@ -167,6 +170,7 @@ APZCTreeManagerParent::RecvStartScrollbarDrag(
   }
 
   mUpdater->RunOnControllerThread(
+    mLayersId,
     NewRunnableMethod<ScrollableLayerGuid, AsyncDragMetrics>(
       "layers::IAPZCTreeManager::StartScrollbarDrag",
       mTreeManager,
@@ -190,6 +194,7 @@ APZCTreeManagerParent::RecvStartAutoscroll(
   // sending the child process's layers id).
 
   mUpdater->RunOnControllerThread(
+      mLayersId,
       NewRunnableMethod<ScrollableLayerGuid, ScreenPoint>(
         "layers::IAPZCTreeManager::StartAutoscroll",
         mTreeManager,
@@ -205,6 +210,7 @@ APZCTreeManagerParent::RecvStopAutoscroll(const ScrollableLayerGuid& aGuid)
   // See RecvStartAutoscroll() for why we don't check the layers id.
 
   mUpdater->RunOnControllerThread(
+      mLayersId,
       NewRunnableMethod<ScrollableLayerGuid>(
         "layers::IAPZCTreeManager::StopAutoscroll",
         mTreeManager,
@@ -218,6 +224,7 @@ mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetLongTapEnabled(const bool& aLongTapEnabled)
 {
   mUpdater->RunOnControllerThread(
+      mLayersId,
       NewRunnableMethod<bool>(
         "layers::IAPZCTreeManager::SetLongTapEnabled",
         mTreeManager,

@@ -145,41 +145,43 @@ add_task(function visits_searchterm_query() {
   });
 });
 
-add_task(function pages_searchterm_is_tag_query() {
+add_task(async function pages_searchterm_is_tag_query() {
   let [query, options] = newQueryWithOptions();
   query.searchTerms = "test-tag";
-  testQueryContents(query, options, function(root) {
-    compareArrayToResult([], root);
-    gTestData.forEach(function(data) {
-      let uri = NetUtil.newURI(data.uri);
-      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                           uri,
-                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                           data.title);
-      PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      compareArrayToResult([data], root);
-      PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      compareArrayToResult([], root);
+  let root;
+  testQueryContents(query, options, rv => root = rv);
+  compareArrayToResult([], root);
+  for (let data of gTestData) {
+    let uri = NetUtil.newURI(data.uri);
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      url: uri,
+      title: data.title
     });
-  });
+    PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
+    compareArrayToResult([data], root);
+    PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
+    compareArrayToResult([], root);
+  }
 });
 
-add_task(function visits_searchterm_is_tag_query() {
+add_task(async function visits_searchterm_is_tag_query() {
   let [query, options] = newQueryWithOptions();
   query.searchTerms = "test-tag";
   options.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_VISIT;
-  testQueryContents(query, options, function(root) {
-    compareArrayToResult([], root);
-    gTestData.forEach(function(data) {
-      let uri = NetUtil.newURI(data.uri);
-      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                           uri,
-                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                           data.title);
-      PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      compareArrayToResult([data], root);
-      PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      compareArrayToResult([], root);
+  let root;
+  testQueryContents(query, options, rv => root = rv);
+  compareArrayToResult([], root);
+  for (let data of gTestData) {
+    let uri = NetUtil.newURI(data.uri);
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      url: uri,
+      title: data.title
     });
-  });
+    PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
+    compareArrayToResult([data], root);
+    PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
+    compareArrayToResult([], root);
+  }
 });

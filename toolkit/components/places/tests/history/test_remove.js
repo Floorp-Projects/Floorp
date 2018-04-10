@@ -31,11 +31,11 @@ add_task(async function test_remove_single() {
     let removeArg = await filter(uri);
 
     if (options.addBookmark) {
-      PlacesUtils.bookmarks.insertBookmark(
-        PlacesUtils.unfiledBookmarksFolderId,
-        uri,
-        PlacesUtils.bookmarks.DEFAULT_INDEX,
-        "test bookmark");
+      await PlacesUtils.bookmarks.insert({
+        parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+        url: uri,
+        title: "test bookmark"
+      });
     }
 
     let shouldRemove = !options.addBookmark;
