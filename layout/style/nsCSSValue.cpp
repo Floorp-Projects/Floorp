@@ -698,19 +698,6 @@ nsCSSValue::GetCalcValue() const
   return result;
 }
 
-void nsCSSValue::StartImageLoad(nsIDocument* aDocument,
-                                mozilla::CORSMode aCORSMode) const
-{
-  MOZ_ASSERT(eCSSUnit_URL == mUnit, "Not a URL value!");
-  mozilla::css::ImageValue* image =
-      mozilla::css::ImageValue::CreateFromURLValue(mValue.mURL,
-                                                   aDocument,
-                                                   aCORSMode);
-
-  nsCSSValue* writable = const_cast<nsCSSValue*>(this);
-  writable->SetImageValue(image);
-}
-
 nsCSSValue::Array*
 nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, uint32_t aNumArgs)
 {
@@ -1153,37 +1140,12 @@ nsCSSValue::Array::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
 }
 
 css::URLValueData::URLValueData(already_AddRefed<nsIURI> aURI,
-                                const nsAString& aString,
-                                already_AddRefed<URLExtraData> aExtraData)
-  : mURI(Move(aURI))
-  , mExtraData(Move(aExtraData))
-  , mURIResolved(true)
-  , mStrings(aString)
-  , mUsingRustString(false)
-{
-  MOZ_ASSERT(mExtraData);
-  MOZ_ASSERT(mExtraData->GetPrincipal());
-}
-
-css::URLValueData::URLValueData(already_AddRefed<nsIURI> aURI,
                                 ServoRawOffsetArc<RustString> aString,
                                 already_AddRefed<URLExtraData> aExtraData)
   : mURI(Move(aURI))
   , mExtraData(Move(aExtraData))
   , mURIResolved(true)
-  , mStrings(aString)
-  , mUsingRustString(true)
-{
-  MOZ_ASSERT(mExtraData);
-  MOZ_ASSERT(mExtraData->GetPrincipal());
-}
-
-css::URLValueData::URLValueData(const nsAString& aString,
-                                already_AddRefed<URLExtraData> aExtraData)
-  : mExtraData(Move(aExtraData))
-  , mURIResolved(false)
-  , mStrings(aString)
-  , mUsingRustString(false)
+  , mString(aString)
 {
   MOZ_ASSERT(mExtraData);
   MOZ_ASSERT(mExtraData->GetPrincipal());
@@ -1193,8 +1155,7 @@ css::URLValueData::URLValueData(ServoRawOffsetArc<RustString> aString,
                                 already_AddRefed<URLExtraData> aExtraData)
   : mExtraData(Move(aExtraData))
   , mURIResolved(false)
-  , mStrings(aString)
-  , mUsingRustString(true)
+  , mString(aString)
 {
   MOZ_ASSERT(mExtraData);
   MOZ_ASSERT(mExtraData->GetPrincipal());
@@ -1202,11 +1163,7 @@ css::URLValueData::URLValueData(ServoRawOffsetArc<RustString> aString,
 
 css::URLValueData::~URLValueData()
 {
-  if (mUsingRustString) {
-    Servo_ReleaseArcStringData(&mStrings.mRustString);
-  } else {
-    mStrings.mString.~nsString();
-  }
+  Servo_ReleaseArcStringData(&mString);
 }
 
 bool
@@ -1217,13 +1174,7 @@ css::URLValueData::Equals(const URLValueData& aOther) const
   bool eq;
   const URLExtraData* self = mExtraData;
   const URLExtraData* other = aOther.mExtraData;
-  bool stringsEqual;
-  if (mUsingRustString && aOther.mUsingRustString) {
-    stringsEqual = GetRustString() == aOther.GetRustString();
-  } else {
-    stringsEqual = GetUTF16String() == aOther.GetUTF16String();
-  }
-  return stringsEqual &&
+  return GetString() == aOther.GetString() &&
           (GetURI() == aOther.GetURI() || // handles null == null
            (mURI && aOther.mURI &&
             NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
@@ -1242,10 +1193,7 @@ css::URLValueData::DefinitelyEqualURIs(const URLValueData& aOther) const
   if (mExtraData->BaseURI() != aOther.mExtraData->BaseURI()) {
     return false;
   }
-  if (mUsingRustString && aOther.mUsingRustString) {
-    return GetRustString() == aOther.GetRustString();
-  }
-  return GetUTF16StringForAnyThread() == aOther.GetUTF16StringForAnyThread();
+  return GetString() == aOther.GetString();
 }
 
 bool
@@ -1257,46 +1205,12 @@ css::URLValueData::DefinitelyEqualURIsAndPrincipal(
 }
 
 nsDependentCSubstring
-css::URLValueData::GetRustString() const
+css::URLValueData::GetString() const
 {
   const uint8_t* chars;
   uint32_t len;
-  Servo_GetArcStringData(mStrings.mRustString.mPtr, &chars, &len);
+  Servo_GetArcStringData(mString.mPtr, &chars, &len);
   return nsDependentCSubstring(reinterpret_cast<const char*>(chars), len);
-}
-
-bool
-css::URLValueData::IsStringEmpty() const
-{
-  if (mUsingRustString) {
-    return GetRustString().IsEmpty();
-  }
-  return mStrings.mString.IsEmpty();
-}
-
-const nsString&
-css::URLValueData::GetUTF16String() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mUsingRustString) {
-    nsDependentCSubstring rust = GetRustString();
-    nsString converted = NS_ConvertUTF8toUTF16(rust);
-    Servo_ReleaseArcStringData(&mStrings.mRustString);
-    new (&mStrings) RustOrGeckoString(converted);
-    mUsingRustString = false;
-  }
-  return mStrings.mString;
-}
-
-nsString
-css::URLValueData::GetUTF16StringForAnyThread() const
-{
-  if (!mUsingRustString) {
-    return mStrings.mString;
-  }
-  nsDependentCSubstring rust = GetRustString();
-  return NS_ConvertUTF8toUTF16(rust);
 }
 
 nsIURI*
@@ -1307,15 +1221,9 @@ css::URLValueData::GetURI() const
   if (!mURIResolved) {
     MOZ_ASSERT(!mURI);
     nsCOMPtr<nsIURI> newURI;
-    if (!mUsingRustString) {
-      NS_NewURI(getter_AddRefs(newURI),
-                NS_ConvertUTF16toUTF8(mStrings.mString),
-                nullptr, mExtraData->BaseURI());
-    } else {
-      NS_NewURI(getter_AddRefs(newURI),
-                GetRustString(),
-                nullptr, mExtraData->BaseURI());
-    }
+    NS_NewURI(getter_AddRefs(newURI),
+              GetString(),
+              nullptr, mExtraData->BaseURI());
     mURI = newURI.forget();
     mURIResolved = true;
   }
@@ -1328,13 +1236,8 @@ css::URLValueData::IsLocalRef() const
 {
   if (mIsLocalRef.isNothing()) {
     // IsLocalRefURL is O(N), use it only when IsLocalRef is called.
-    if (mUsingRustString) {
-      mIsLocalRef.emplace(nsContentUtils::IsLocalRefURL(GetRustString()));
-    } else {
-      mIsLocalRef.emplace(nsContentUtils::IsLocalRefURL(mStrings.mString));
-    }
+    mIsLocalRef.emplace(nsContentUtils::IsLocalRefURL(GetString()));
   }
-
   return mIsLocalRef.value();
 }
 
@@ -1364,9 +1267,7 @@ bool
 css::URLValueData::MightHaveRef() const
 {
   if (mMightHaveRef.isNothing()) {
-    bool result = mUsingRustString ?
-        ::MightHaveRef(GetRustString()) :
-        ::MightHaveRef(mStrings.mString);
+    bool result = ::MightHaveRef(GetString());
     if (!ServoStyleSet::IsInServoTraversal()) {
       // Can only cache the result if we're not on a style worker thread.
       mMightHaveRef.emplace(result);
@@ -1448,34 +1349,12 @@ css::URLValueData::EqualsExceptRef(nsIURI* aURI) const
 size_t
 css::URLValueData::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  size_t n = 0;
-  if (!mUsingRustString) {
-    n += mStrings.mString.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  }
-
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
   // - mURI
+  // - mString
   // - mExtraData
-  return n;
-}
-
-URLValue::URLValue(const nsAString& aString, nsIURI* aBaseURI, nsIURI* aReferrer,
-                   nsIPrincipal* aOriginPrincipal)
-  : URLValueData(aString, do_AddRef(new URLExtraData(aBaseURI, aReferrer,
-                                                     aOriginPrincipal)))
-{
-  MOZ_ASSERT(NS_IsMainThread());
-}
-
-URLValue::URLValue(nsIURI* aURI, const nsAString& aString, nsIURI* aBaseURI,
-                   nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal)
-  : URLValueData(do_AddRef(aURI),
-                 aString,
-                 do_AddRef(new URLExtraData(aBaseURI, aReferrer,
-                                            aOriginPrincipal)))
-{
-  MOZ_ASSERT(NS_IsMainThread());
+  return 0;
 }
 
 size_t
@@ -1490,7 +1369,8 @@ css::URLValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
-css::ImageValue::ImageValue(nsIURI* aURI, const nsAString& aString,
+css::ImageValue::ImageValue(nsIURI* aURI,
+                            ServoRawOffsetArc<RustString> aString,
                             already_AddRefed<URLExtraData> aExtraData,
                             nsIDocument* aDocument,
                             CORSMode aCORSMode)
@@ -1498,24 +1378,6 @@ css::ImageValue::ImageValue(nsIURI* aURI, const nsAString& aString,
 {
   mCORSMode = aCORSMode;
   Initialize(aDocument);
-}
-
-css::ImageValue::ImageValue(nsIURI* aURI, ServoRawOffsetArc<RustString> aString,
-                            already_AddRefed<URLExtraData> aExtraData,
-                            nsIDocument* aDocument,
-                            CORSMode aCORSMode)
-  : URLValueData(do_AddRef(aURI), aString, Move(aExtraData))
-{
-  mCORSMode = aCORSMode;
-  Initialize(aDocument);
-}
-
-css::ImageValue::ImageValue(const nsAString& aString,
-                            already_AddRefed<URLExtraData> aExtraData,
-                            CORSMode aCORSMode)
-  : URLValueData(aString, Move(aExtraData))
-{
-  mCORSMode = aCORSMode;
 }
 
 css::ImageValue::ImageValue(ServoRawOffsetArc<RustString> aString,
@@ -1526,23 +1388,17 @@ css::ImageValue::ImageValue(ServoRawOffsetArc<RustString> aString,
   mCORSMode = aCORSMode;
 }
 
-/*static*/ css::ImageValue*
+/*static*/ already_AddRefed<css::ImageValue>
 css::ImageValue::CreateFromURLValue(URLValue* aUrl,
                                     nsIDocument* aDocument,
                                     CORSMode aCORSMode)
 {
-  if (aUrl->mUsingRustString) {
-    return new css::ImageValue(aUrl->GetURI(),
-                               Servo_CloneArcStringData(&aUrl->mStrings.mRustString),
-                               do_AddRef(aUrl->mExtraData),
-                               aDocument,
-                               aCORSMode);
-  }
-  return new css::ImageValue(aUrl->GetURI(),
-                             aUrl->mStrings.mString,
-                             do_AddRef(aUrl->mExtraData),
-                             aDocument,
-                             aCORSMode);
+  return do_AddRef(
+    new css::ImageValue(aUrl->GetURI(),
+                        Servo_CloneArcStringData(&aUrl->mString),
+                        do_AddRef(aUrl->mExtraData),
+                        aDocument,
+                        aCORSMode));
 }
 
 void
