@@ -519,7 +519,8 @@ WebRenderBridgeParent::UpdateAPZFocusState(const FocusTarget& aFocus)
 }
 
 void
-WebRenderBridgeParent::UpdateAPZScrollData(WebRenderScrollData&& aData)
+WebRenderBridgeParent::UpdateAPZScrollData(const wr::Epoch& aEpoch,
+                                           WebRenderScrollData&& aData)
 {
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (!cbp) {
@@ -527,7 +528,7 @@ WebRenderBridgeParent::UpdateAPZScrollData(WebRenderScrollData&& aData)
   }
   LayersId rootLayersId = cbp->RootLayerTreeId();
   if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
-    apz->UpdateScrollDataAndTreeState(rootLayersId, GetLayersId(), Move(aData));
+    apz->UpdateScrollDataAndTreeState(rootLayersId, GetLayersId(), aEpoch, Move(aData));
   }
 }
 
@@ -597,6 +598,15 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
 
   mReceivedDisplayList = true;
 
+  // aScrollData is moved into this function but that is not reflected by the
+  // function signature due to the way the IPDL generator works. We remove the
+  // const so that we can move this structure all the way to the desired
+  // destination.
+  // Also note that this needs to happen before the display list transaction is
+  // sent to WebRender, so that the UpdateHitTestingTree call is guaranteed to
+  // be in the updater queue at the time that the scene swap completes.
+  UpdateAPZScrollData(wrEpoch, Move(const_cast<WebRenderScrollData&>(aScrollData)));
+
   wr::Vec<uint8_t> dlData(Move(dl));
 
   // If id namespaces do not match, it means the command is obsolete, probably
@@ -623,12 +633,6 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   }
 
   HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
-
-  // aScrollData is moved into this function but that is not reflected by the
-  // function signature due to the way the IPDL generator works. We remove the
-  // const so that we can move this structure all the way to the desired
-  // destination.
-  UpdateAPZScrollData(Move(const_cast<WebRenderScrollData&>(aScrollData)));
 
   if (mIdNamespace != aIdNamespace) {
     // Pretend we composited since someone is wating for this event,
