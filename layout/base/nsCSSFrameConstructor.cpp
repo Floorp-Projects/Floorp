@@ -332,6 +332,32 @@ static int32_t FFWC_recursions=0;
 static int32_t FFWC_nextInFlows=0;
 #endif
 
+#ifdef MOZ_XUL
+
+static bool
+IsXULListBox(nsIContent* aContainer)
+{
+  return aContainer->IsXULElement(nsGkAtoms::listbox);
+}
+
+static
+nsListBoxBodyFrame*
+MaybeGetListBoxBodyFrame(nsIContent* aChild)
+{
+  if (aChild->IsXULElement(nsGkAtoms::listitem) && aChild->GetParent() &&
+      IsXULListBox(aChild->GetParent())) {
+    RefPtr<nsXULElement> xulElement =
+      nsXULElement::FromNode(aChild->GetParent());
+    nsCOMPtr<nsIBoxObject> boxObject = xulElement->GetBoxObject(IgnoreErrors());
+    nsCOMPtr<nsPIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
+    if (listBoxObject) {
+      return listBoxObject->GetListBoxBody(false);
+    }
+  }
+
+  return nullptr;
+}
+#endif // MOZ_XUL
 
 // Returns true if aFrame is an anonymous flex/grid item.
 static inline bool
@@ -5474,6 +5500,11 @@ nsCSSFrameConstructor::ShouldCreateItemsForChild(nsFrameConstructorState& aState
   if (aContent->GetPrimaryFrame() &&
       aContent->GetPrimaryFrame()->GetContent() == aContent &&
       !aState.mCreatingExtraFrames) {
+    // This condition is known to be reachable for listitems, assert fatally
+    // elsewhere.
+    MOZ_ASSERT(MaybeGetListBoxBodyFrame(aContent),
+               "asked to create frame construction item for a node that "
+               "already has a frame");
     NS_ERROR("asked to create frame construction item for a node that already "
              "has a frame");
     return false;
@@ -6694,33 +6725,6 @@ IsSpecialFramesetChild(nsIContent* aContent)
 
 static void
 InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node);
-
-#ifdef MOZ_XUL
-
-static bool
-IsXULListBox(nsIContent* aContainer)
-{
-  return aContainer->IsXULElement(nsGkAtoms::listbox);
-}
-
-static
-nsListBoxBodyFrame*
-MaybeGetListBoxBodyFrame(nsIContent* aChild)
-{
-  if (aChild->IsXULElement(nsGkAtoms::listitem) && aChild->GetParent() &&
-      IsXULListBox(aChild->GetParent())) {
-    RefPtr<nsXULElement> xulElement =
-      nsXULElement::FromNode(aChild->GetParent());
-    nsCOMPtr<nsIBoxObject> boxObject = xulElement->GetBoxObject(IgnoreErrors());
-    nsCOMPtr<nsPIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
-    if (listBoxObject) {
-      return listBoxObject->GetListBoxBody(false);
-    }
-  }
-
-  return nullptr;
-}
-#endif // MOZ_XUL
 
 void
 nsCSSFrameConstructor::AddTextItemIfNeeded(nsFrameConstructorState& aState,
