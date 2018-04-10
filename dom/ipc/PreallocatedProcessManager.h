@@ -55,19 +55,7 @@ public:
    */
   static already_AddRefed<ContentParent> Take();
 
-  /**
-   * ContentParent entry point for recycling existing content processes that are
-   * no longer in use. This class currently only caches one instance. It is safe
-   * to call this repeatedly with the same process.
-   *
-   * @returns boolean indicating if aParent is cached for reuse.
-   */
   static bool Provide(ContentParent* aParent);
-
-  /**
-   * Disables this service and discards any cached content processes.
-   */
-  static void Disable();
 
 private:
   PreallocatedProcessManager();
