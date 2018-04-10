@@ -201,6 +201,19 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   width: var(--sidebar-width);
 }
 
+/* Reps component */
+.animation-target .objectBox {
+  display: flex;
+  width: 100%;
+}
+
+.animation-target .objectBox .attrName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Summary Graph */
 .animation-summary-graph {
   cursor: pointer;
@@ -336,6 +349,8 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 .animation-detail-title {
   flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

@@ -186,10 +186,12 @@ this.contextualIdentities = class extends ExtensionAPI {
           }
 
           if (details.color !== null) {
+            getContainerColor(details.color);
             identity.color = details.color;
           }
 
           if (details.icon !== null) {
+            getContainerIcon(details.icon);
             identity.icon = details.icon;
           }
 

@@ -46,7 +46,6 @@ struct AnimationRule;
 struct TimingParams;
 class EffectSet;
 class ComputedStyle;
-class GeckoComputedStyle;
 
 namespace dom {
 class ElementOrCSSPseudoElement;
@@ -204,8 +203,7 @@ public:
   // Updates |aComposeResult| with the animation values produced by this
   // AnimationEffect for the current time except any properties contained
   // in |aPropertiesToSkip|.
-  template<typename ComposeAnimationResult>
-  void ComposeStyle(ComposeAnimationResult&& aRestultContainer,
+  void ComposeStyle(RawServoAnimationValueMap& aComposeResult,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
 
@@ -296,8 +294,7 @@ protected:
   // Build properties by recalculating from |mKeyframes| using |aComputedStyle|
   // to resolve specified values. This function also applies paced spacing if
   // needed.
-  template<typename StyleType>
-  nsTArray<AnimationProperty> BuildProperties(StyleType* aStyle);
+  nsTArray<AnimationProperty> BuildProperties(const ComputedStyle* aStyle);
 
   // This effect is registered with its target element so long as:
   //
@@ -422,9 +419,6 @@ private:
                                     nsChangeHint_AddOrRemoveTransform |
                                     nsChangeHint_UpdateTransformLayer);
   }
-
-  // FIXME: This flag will be removed in bug 1324966.
-  bool mIsComposingStyle = false;
 };
 
 } // namespace dom

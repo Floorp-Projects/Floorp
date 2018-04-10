@@ -379,9 +379,8 @@ EffectCompositor::ClearRestyleRequestsFor(Element* aElement)
   }
 }
 
-template<typename StyleType>
 void
-EffectCompositor::UpdateEffectProperties(StyleType* aStyleType,
+EffectCompositor::UpdateEffectProperties(const ComputedStyle* aStyle,
                                          Element* aElement,
                                          CSSPseudoElementType aPseudoType)
 {
@@ -396,7 +395,7 @@ EffectCompositor::UpdateEffectProperties(StyleType* aStyleType,
   effectSet->MarkCascadeNeedsUpdate();
 
   for (KeyframeEffectReadOnly* effect : *effectSet) {
-    effect->UpdateProperties(aStyleType);
+    effect->UpdateProperties(aStyle);
   }
 }
 
@@ -988,12 +987,5 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
   return found;
 }
 
-
-template
-void
-EffectCompositor::UpdateEffectProperties(
-  const ComputedStyle* aComputedStyle,
-  Element* aElement,
-  CSSPseudoElementType aPseudoType);
 
 } // namespace mozilla

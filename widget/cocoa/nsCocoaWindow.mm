@@ -554,10 +554,11 @@ nsCocoaWindow::CreatePopupContentView(const LayoutDeviceIntRect &aRect,
     return rv;
   }
 
-  ChildView* newContentView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
-  [newContentView setFrame:NSZeroRect];
-  [newContentView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
-  [[mWindow contentView] addSubview:newContentView];
+  NSView* contentView = [mWindow contentView];
+  ChildView* childView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
+  [childView setFrame:[contentView bounds]];
+  [childView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+  [contentView addSubview:childView];
 
   return NS_OK;
 
@@ -1705,6 +1706,10 @@ nsCocoaWindow::UpdateBounds()
   }
   mBounds =
     nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, BackingScaleFactor());
+
+  if (mPopupContentView) {
+    mPopupContentView->UpdateBoundsFromView();
+  }
 }
 
 LayoutDeviceIntRect
