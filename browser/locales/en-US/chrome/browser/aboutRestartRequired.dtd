@@ -1,0 +1,13 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY restartRequired.title "Restart Required">
+
+<!ENTITY restartRequired.header "Sorry. We just need to do one small thing to keep going.">
+<!ENTITY restartRequired.description "
+<p>We have just installed an update in the background. Click Restart Firefox to finish applying it.</p>
+<p>We will restore all your pages, windows and tabs afterwards, so you can be on your way quickly.</p>
+">
+
+<!ENTITY restartRequired.label "Restart Firefox">
