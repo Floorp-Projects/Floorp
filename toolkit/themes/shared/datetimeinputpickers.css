@@ -27,20 +27,12 @@
   --selected-font-color: HighlightText;
   --selected-fill-color: Highlight;
 
-  --button-font-color: ButtonText;
-  --button-font-color-hover: ButtonText;
-  --button-font-color-active: ButtonText;
   --button-fill-color-active: ButtonFace;
 
-  --weekday-header-font-color: ButtonText;
-  --weekend-header-font-color: -moz-activehyperlinktext;
-
+  /* Use -moz-activehyperlinktext to get a system color that
+     by default will be closest to Red */
   --weekend-font-color: -moz-activehyperlinktext;
-  --weekday-outside-font-color: ButtonText;
-  --weekend-outside-font-color: -moz-activehyperlinktext;
 
-  --weekday-disabled-font-color: ButtonText;
-  --weekend-disabled-font-color: ButtonText;
   --disabled-fill-color: ButtonShadow;
 
   --disabled-opacity: 0.2;
@@ -75,17 +67,15 @@ button {
   width: 3rem;
   height: var(--date-picker-item-height);
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--button-font-color);
+  fill: var(--font-color);
   fill-opacity: .5;
 }
 
 .nav > button:hover {
-  fill: var(--button-font-color-hover);
   fill-opacity: .8;
 }
 
 .nav > button.active {
-  fill: var(--button-font-color-active);
   fill-opacity: 1;
 }
 
@@ -138,7 +128,7 @@ button.month-year::after {
   height: 1.6rem;
   background: url("chrome://global/skin/icons/spinner-arrow-down.svg") no-repeat 50% 50%;
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--button-font-color);
+  fill: var(--font-color);
   fill-opacity: .5;
 }
 
@@ -212,12 +202,7 @@ button.month-year.active::after {
 }
 
 .week-header > div {
-  color: var(--weekday-header-font-color);
   opacity: .5;
-}
-
-.week-header > div.weekend {
-  color: var(--weekend-header-font-color);
 }
 
 .days-viewport {
@@ -244,28 +229,20 @@ button.month-year.active::after {
 }
 
 .days-view > .outside {
-  color: var(--weekday-outside-font-color);
   opacity: .5;
 }
 
-.days-view > .weekend {
+.weekend {
   color: var(--weekend-font-color);
 }
 
 .days-view > .weekend.outside {
-  color: var(--weekend-outside-font-color);
   opacity: .5;
 }
 
 .days-view > .out-of-range,
 .days-view > .off-step {
-  color: var(--weekday-disabled-font-color);
   background: var(--disabled-fill-color);
-}
-
-.days-view > .out-of-range.weekend,
-.days-view > .off-step.weekend {
-  color: var(--weekend-disabled-font-color);
 }
 
 .days-view > .today {
@@ -302,17 +279,15 @@ button.month-year.active::after {
 .spinner-container > button {
   height: var(--spinner-button-height);
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--button-font-color);
+  fill: var(--font-color);
   fill-opacity: .5;
 }
 
 .spinner-container > button:hover {
-  fill: var(--button-font-color-hover);
   fill-opacity: .8;
 }
 
 .spinner-container > button.active {
-  fill: var(--button-font-color-active);
   fill-opacity: 1;
 }
 
