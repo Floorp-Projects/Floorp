@@ -28,6 +28,7 @@
 #ifdef CSS_REPORT_PARSE_ERRORS
 
 using namespace mozilla;
+using namespace mozilla::css;
 
 namespace {
 class ShortTermURISpecCache : public Runnable {
@@ -67,7 +68,9 @@ private:
 
 } // namespace
 
-static bool sReportErrors;
+bool ErrorReporter::sReportErrors = false;
+bool ErrorReporter::sInitialized = false;
+
 static nsIConsoleService *sConsoleService;
 static nsIFactory *sScriptErrorFactory;
 static nsIStringBundle *sStringBundle;
@@ -75,55 +78,45 @@ static ShortTermURISpecCache *sSpecCache;
 
 #define CSS_ERRORS_PREF "layout.css.report_errors"
 
-static bool
-InitGlobals()
+void
+ErrorReporter::InitGlobals()
 {
-  MOZ_ASSERT(!sConsoleService && !sScriptErrorFactory && !sStringBundle,
-             "should not have been called");
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!sInitialized, "should not have been called");
 
-  if (NS_FAILED(Preferences::AddBoolVarCache(&sReportErrors, CSS_ERRORS_PREF,
+  sInitialized = true;
+
+  if (NS_FAILED(Preferences::AddBoolVarCache(&sReportErrors,
+                                             CSS_ERRORS_PREF,
                                              true))) {
-    return false;
+    return;
   }
 
   nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   if (!cs) {
-    return false;
+    return;
   }
 
   nsCOMPtr<nsIFactory> sf = do_GetClassObject(NS_SCRIPTERROR_CONTRACTID);
   if (!sf) {
-    return false;
+    return;
   }
 
   nsCOMPtr<nsIStringBundleService> sbs = services::GetStringBundleService();
   if (!sbs) {
-    return false;
+    return;
   }
 
   nsCOMPtr<nsIStringBundle> sb;
   nsresult rv = sbs->CreateBundle("chrome://global/locale/css.properties",
                                   getter_AddRefs(sb));
   if (NS_FAILED(rv) || !sb) {
-    return false;
+    return;
   }
 
   cs.forget(&sConsoleService);
   sf.forget(&sScriptErrorFactory);
   sb.forget(&sStringBundle);
-
-  return true;
-}
-
-static inline bool
-ShouldReportErrors()
-{
-  if (!sConsoleService) {
-    if (!InitGlobals()) {
-      return false;
-    }
-  }
-  return sReportErrors;
 }
 
 namespace mozilla {
@@ -170,6 +163,8 @@ ErrorReporter::~ErrorReporter()
 void
 ErrorReporter::OutputError()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mError.IsEmpty()) {
     return;
   }

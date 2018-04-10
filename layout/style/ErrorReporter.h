@@ -35,6 +35,18 @@ public:
   ~ErrorReporter();
 
   static void ReleaseGlobals();
+  static void EnsureGlobalsInitialized()
+  {
+    if (MOZ_UNLIKELY(!sInitialized)) {
+      InitGlobals();
+    }
+  }
+
+  bool ShouldReportErrors() const
+  {
+    EnsureGlobalsInitialized();
+    return sReportErrors;
+  }
 
   void OutputError();
   void OutputError(uint32_t aLineNumber, uint32_t aLineOffset);
@@ -69,6 +81,10 @@ public:
 
 private:
   void AddToError(const nsString &aErrorText);
+  static void InitGlobals();
+
+  static bool sInitialized;
+  static bool sReportErrors;
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   nsAutoString mError;
