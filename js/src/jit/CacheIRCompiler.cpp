@@ -1896,8 +1896,6 @@ CacheIRCompiler::emitTruncateDoubleToUInt32()
     masm.bind(&truncateABICall);
     LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
     save.takeUnchecked(FloatReg0);
-    // Bug 1451976
-    save.takeUnchecked(FloatReg0.asSingle());
     masm.PushRegsInMask(save);
 
     masm.setupUnalignedABICall(res);
