@@ -335,9 +335,11 @@ public:
   already_AddRefed<Element> DeleteSelectionAndCreateElement(nsAtom& aTag);
 
   /**
-   * Helper routines for node/parent manipulations.
+   * DeleteNodeWithTransaction() removes aNode from the DOM tree.
+   *
+   * @param aNode       The node which will be removed form the DOM tree.
    */
-  nsresult DeleteNode(nsINode* aNode);
+  nsresult DeleteNodeWithTransaction(nsINode& aNode);
 
   /**
    * InsertNodeWithTransaction() inserts aContentToInsert before the child

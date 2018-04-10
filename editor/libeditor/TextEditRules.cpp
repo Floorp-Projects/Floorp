@@ -387,8 +387,13 @@ TextEditRules::WillInsert(Selection& aSelection, bool* aCancel)
 
   // check for the magic content node and delete it if it exists
   if (mBogusNode) {
-    NS_ENSURE_TRUE_VOID(mTextEditor);
-    mTextEditor->DeleteNode(mBogusNode);
+    if (NS_WARN_IF(!mTextEditor)) {
+      return; // XXX Shouldn't we release mBogusNode now?
+    }
+    RefPtr<TextEditor> textEditor(mTextEditor);
+    DebugOnly<nsresult> rv = textEditor->DeleteNodeWithTransaction(*mBogusNode);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to remove the bogus node");
     mBogusNode = nullptr;
   }
 }
@@ -1088,7 +1093,9 @@ TextEditRules::DidDeleteSelection(Selection* aSelection,
       return NS_ERROR_NOT_AVAILABLE;
     }
     RefPtr<TextEditor> textEditor(mTextEditor);
-    nsresult rv = textEditor->DeleteNode(selectionStartPoint.GetContainer());
+    nsresult rv =
+      textEditor->DeleteNodeWithTransaction(
+                    *selectionStartPoint.GetContainer());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

@@ -1609,39 +1609,39 @@ NS_IMETHODIMP
 EditorBase::DeleteNode(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_STATE(node);
-  return DeleteNode(node);
+  if (NS_WARN_IF(!node)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return DeleteNodeWithTransaction(*node);
 }
 
 nsresult
-EditorBase::DeleteNode(nsINode* aNode)
+EditorBase::DeleteNodeWithTransaction(nsINode& aNode)
 {
-  if (NS_WARN_IF(!aNode)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   AutoRules beginRulesSniffing(this, EditAction::createNode,
                                nsIEditor::ePrevious);
 
   if (mRules && mRules->AsHTMLEditRules()) {
     RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-    htmlEditRules->WillDeleteNode(aNode);
+    htmlEditRules->WillDeleteNode(&aNode);
   }
 
+  // FYI: DeleteNodeTransaction grabs aNode while it's alive.  So, it's safe
+  //      to refer aNode even after calling DoTransaction().
   RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-    DeleteNodeTransaction::MaybeCreate(*this, *aNode);
+    DeleteNodeTransaction::MaybeCreate(*this, aNode);
   nsresult rv = deleteNodeTransaction ? DoTransaction(deleteNodeTransaction) :
                                         NS_ERROR_FAILURE;
 
   if (mTextServicesDocument && NS_SUCCEEDED(rv)) {
     RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
-    textServicesDocument->DidDeleteNode(aNode);
+    textServicesDocument->DidDeleteNode(&aNode);
   }
 
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidDeleteNode(aNode->AsDOMNode(), rv);
+      listener->DidDeleteNode(aNode.AsDOMNode(), rv);
     }
   }
 
@@ -1695,8 +1695,10 @@ EditorBase::ReplaceContainer(Element* aOldContainer,
     // Move all children from the old container to the new container.
     while (aOldContainer->HasChildren()) {
       nsCOMPtr<nsIContent> child = aOldContainer->GetFirstChild();
-
-      nsresult rv = DeleteNode(child);
+      if (NS_WARN_IF(!child)) {
+        return nullptr;
+      }
+      nsresult rv = DeleteNodeWithTransaction(*child);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;
       }
@@ -1719,7 +1721,7 @@ EditorBase::ReplaceContainer(Element* aOldContainer,
   }
 
   // Delete old container.
-  rv = DeleteNode(aOldContainer);
+  rv = DeleteNodeWithTransaction(*aOldContainer);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -1750,7 +1752,10 @@ EditorBase::RemoveContainer(nsIContent* aNode)
   // Move all children from aNode to its parent.
   while (aNode->HasChildren()) {
     nsCOMPtr<nsIContent> child = aNode->GetLastChild();
-    nsresult rv = DeleteNode(child);
+    if (NS_WARN_IF(!child)) {
+      return NS_ERROR_FAILURE;
+    }
+    nsresult rv = DeleteNodeWithTransaction(*child);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1767,7 +1772,11 @@ EditorBase::RemoveContainer(nsIContent* aNode)
     }
   }
 
-  return DeleteNode(aNode);
+  nsresult rv = DeleteNodeWithTransaction(*aNode);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 /**
@@ -1814,7 +1823,7 @@ EditorBase::InsertContainerAbove(nsIContent* aNode,
   AutoInsertContainerSelNotify selNotify(mRangeUpdater);
 
   // Put aNode in the new container, first.
-  nsresult rv = DeleteNode(aNode);
+  nsresult rv = DeleteNodeWithTransaction(*aNode);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
@@ -1877,14 +1886,14 @@ EditorBase::MoveNode(nsIContent* aNode,
   }
 
   // Hold a reference so aNode doesn't go away when we remove it (bug 772282)
-  nsCOMPtr<nsINode> kungFuDeathGrip = aNode;
-
-  nsresult rv = DeleteNode(aNode);
+  nsCOMPtr<nsIContent> nodeToBeMoved(aNode);
+  nsresult rv = DeleteNodeWithTransaction(*nodeToBeMoved);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = InsertNodeWithTransaction(*aNode, EditorRawDOMPoint(aParent, aOffset));
+  rv = InsertNodeWithTransaction(*nodeToBeMoved,
+                                 EditorRawDOMPoint(aParent, aOffset));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2875,7 +2884,7 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   if (isIMETransaction && mComposition) {
     Text* textNode = mComposition->GetContainerTextNode();
     if (textNode && !textNode->Length()) {
-      DeleteNode(textNode);
+      DeleteNodeWithTransaction(*textNode);
       mComposition->OnTextNodeRemoved();
       static_cast<CompositionTransaction*>(transaction.get())->MarkFixed();
     }

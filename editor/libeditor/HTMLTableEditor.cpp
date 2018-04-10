@@ -838,8 +838,14 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
           NS_ENSURE_SUCCESS(rv, rv);
 
           // Then delete the cell
-          rv = DeleteNode(cell);
-          NS_ENSURE_SUCCESS(rv, rv);
+          nsCOMPtr<nsINode> cellToBeRemoved = do_QueryInterface(cell);
+          if (NS_WARN_IF(!cellToBeRemoved)) {
+            return NS_ERROR_FAILURE;
+          }
+          rv = DeleteNodeWithTransaction(*cellToBeRemoved);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
 
           // The next cell to delete
           cell = nextCell;
@@ -891,10 +897,15 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
                                                    startColIndex, ePreviousColumn,
                                                    false);
         AutoTransactionsConserveSelection dontChangeSelection(this);
-
-        rv = DeleteNode(cell);
+        nsCOMPtr<nsINode> cellToBeRemoved = do_QueryInterface(cell);
+        if (NS_WARN_IF(!cellToBeRemoved)) {
+          return NS_ERROR_FAILURE;
+        }
+        rv = DeleteNodeWithTransaction(*cellToBeRemoved);
         // If we fail, don't try to delete any more cells???
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
   }
@@ -963,8 +974,10 @@ HTMLEditor::DeleteCellContents(nsIDOMElement* aCell)
   AutoRules beginRulesSniffing(this, EditAction::deleteNode, nsIEditor::eNext);
 
   while (nsCOMPtr<nsINode> child = cell->GetLastChild()) {
-    nsresult rv = DeleteNode(child);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = DeleteNodeWithTransaction(*child);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
   return NS_OK;
 }
@@ -1121,8 +1134,14 @@ HTMLEditor::DeleteColumn(nsIDOMElement* aTable,
           // row now has current rowIndex
         } else {
           // A more "normal" deletion
-          rv = DeleteNode(cell);
-          NS_ENSURE_SUCCESS(rv, rv);
+          nsCOMPtr<nsINode> cellToBeRemoved = do_QueryInterface(cell);
+          if (NS_WARN_IF(!cellToBeRemoved)) {
+            return NS_ERROR_FAILURE;
+          }
+          rv = DeleteNodeWithTransaction(*cellToBeRemoved);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
 
           //Skip over any rows spanned by this cell
           rowIndex += actualRowSpan;
@@ -1312,8 +1331,14 @@ HTMLEditor::DeleteRow(nsIDOMElement* aTable,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (parentRow) {
-    rv = DeleteNode(parentRow);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsINode> rowToBeRemoved = do_QueryInterface(parentRow);
+    if (NS_WARN_IF(!rowToBeRemoved)) {
+      return NS_ERROR_FAILURE;
+    }
+    rv = DeleteNodeWithTransaction(*rowToBeRemoved);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // Now we can set new rowspans for cells stored above
@@ -2169,9 +2194,14 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     for (uint32_t i = 0, n = deleteList.Length(); i < n; i++) {
       nsIDOMElement *elementPtr = deleteList[i];
       if (elementPtr) {
-        nsCOMPtr<nsIDOMNode> node = do_QueryInterface(elementPtr);
-        rv = DeleteNode(node);
-        NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsINode> nodeToBeRemoved = do_QueryInterface(elementPtr);
+        if (NS_WARN_IF(!nodeToBeRemoved)) {
+          return NS_ERROR_FAILURE;
+        }
+        rv = DeleteNodeWithTransaction(*nodeToBeRemoved);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
     // Cleanup selection: remove ranges where cells were deleted
@@ -2293,8 +2323,13 @@ HTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
     if (len == 1 && IsEmptyCell(targetCell)) {
       // Delete the empty node
       nsIContent* cellChild = targetCell->GetFirstChild();
-      nsresult rv = DeleteNode(cellChild->AsDOMNode());
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(!cellChild)) {
+        return NS_ERROR_FAILURE;
+      }
+      nsresult rv = DeleteNodeWithTransaction(*cellChild);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       insertIndex = 0;
     } else {
       insertIndex = (int32_t)len;
@@ -2303,10 +2338,13 @@ HTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
     // Move the contents
     while (cellToMerge->HasChildren()) {
       nsCOMPtr<nsIContent> cellChild = cellToMerge->GetLastChild();
-      // XXX We need HTMLEditor::DeleteNode(nsINode&).
-      nsresult rv = DeleteNode(cellChild->AsDOMNode());
-      NS_ENSURE_SUCCESS(rv, rv);
-
+      if (NS_WARN_IF(!cellChild)) {
+        return NS_ERROR_FAILURE;
+      }
+      nsresult rv = DeleteNodeWithTransaction(*cellChild);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       rv = InsertNodeWithTransaction(*cellChild,
                                      EditorRawDOMPoint(aTargetCell,
                                                        insertIndex));
@@ -2316,11 +2354,19 @@ HTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
     }
   }
 
-  // Delete cells whose contents were moved
-  if (aDeleteCellToMerge) {
-    return DeleteNode(aCellToMerge);
+  if (!aDeleteCellToMerge) {
+    return NS_OK;
   }
 
+  // Delete cells whose contents were moved.
+  nsCOMPtr<nsIContent> cellToBeRemoved = do_QueryInterface(aCellToMerge);
+  if (NS_WARN_IF(!cellToBeRemoved)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsresult rv = DeleteNodeWithTransaction(*cellToBeRemoved);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   return NS_OK;
 }
 
