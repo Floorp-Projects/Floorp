@@ -102,8 +102,9 @@ class GeckoviewTestRunner:
             env["R_LOG_VERBOSE"] = "1"
             env["R_LOG_LEVEL"] = "6"
             env["R_LOG_DESTINATION"] = "stderr"
-            self.device.launch_geckoview_example("org.mozilla.geckoview_example",
-                                                 extra_args=args, moz_env=env)
+            self.device.launch_activity("org.mozilla.geckoview_example",
+                                        "GeckoViewActivity",
+                                        extra_args=args, moz_env=env)
         except Exception:
             return (False, "Exception during %s startup" % self.appname)
         return (True, "%s started" % self.appname)
