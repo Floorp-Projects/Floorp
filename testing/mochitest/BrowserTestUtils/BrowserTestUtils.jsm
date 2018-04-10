@@ -480,16 +480,22 @@ var BrowserTestUtils = {
   /**
    * Waits for the next browser window to open and be fully loaded.
    *
-   * @param {string} initialBrowserLoaded (optional)
-   *        If set, we will wait until the initial browser in the new
-   *        window has loaded a particular page. If unset, the initial
-   *        browser may or may not have finished loading its first page
-   *        when the resulting Promise resolves.
+   * @param aParams
+   *        {
+   *          url: A string (optional). If set, we will wait until the initial
+   *               browser in the new window has loaded a particular page.
+   *               If unset, the initial browser may or may not have finished
+   *               loading its first page when the resulting Promise resolves.
+   *        }
    * @return {Promise}
    *         A Promise which resolves the next time that a DOM window
    *         opens and the delayed startup observer notification fires.
    */
-  async waitForNewWindow(initialBrowserLoaded=null) {
+  async waitForNewWindow(aParams = {}) {
+    let {
+      url = null,
+    } = aParams;
+
     let win = await this.domWindowOpened();
 
     let promises = [
@@ -497,7 +503,7 @@ var BrowserTestUtils = {
                               subject => subject == win),
     ];
 
-    if (initialBrowserLoaded) {
+    if (url) {
       await this.waitForEvent(win, "DOMContentLoaded");
 
       let browser = win.gBrowser.selectedBrowser;
@@ -507,11 +513,11 @@ var BrowserTestUtils = {
         browser.isRemoteBrowser ? Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
                                 : Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
       if (win.gMultiProcessBrowser &&
-          !E10SUtils.canLoadURIInProcess(initialBrowserLoaded, process)) {
+          !E10SUtils.canLoadURIInProcess(url, process)) {
         await this.waitForEvent(browser, "XULFrameLoaderCreated");
       }
 
-      let loadPromise = this.browserLoaded(browser, false, initialBrowserLoaded);
+      let loadPromise = this.browserLoaded(browser, false, url);
       promises.push(loadPromise);
     }
 
