@@ -48,22 +48,30 @@ DottedCornerFinder::DottedCornerFinder(const Bezier& aOuterBezier,
                                        Corner aCorner,
                                        Float aBorderRadiusX,
                                        Float aBorderRadiusY,
-                                       const Point& aC0, Float aR0,
-                                       const Point& aCn, Float aRn,
+                                       const Point& aC0,
+                                       Float aR0,
+                                       const Point& aCn,
+                                       Float aRn,
                                        const Size& aCornerDim)
- : mOuterBezier(aOuterBezier),
-   mInnerBezier(aInnerBezier),
-   mCorner(aCorner),
-   mNormalSign((aCorner == C_TL || aCorner == C_BR) ? -1.0f : 1.0f),
-   mC0(aC0), mCn(aCn),
-   mR0(aR0), mRn(aRn), mMaxR(std::max(aR0, aRn)),
-   mCenterCurveOrigin(mC0.x, mCn.y),
-   mInnerCurveOrigin(mInnerBezier.mPoints[0].x, mInnerBezier.mPoints[3].y),
-   mBestOverlap(0.0f),
-   mHasZeroBorderWidth(false), mHasMore(true),
-   mMaxCount(aCornerDim.width + aCornerDim.height),
-   mType(OTHER),
-   mI(0), mCount(0)
+  : mOuterBezier(aOuterBezier)
+  , mInnerBezier(aInnerBezier)
+  , mCorner(aCorner)
+  , mNormalSign((aCorner == C_TL || aCorner == C_BR) ? -1.0f : 1.0f)
+  , mC0(aC0)
+  , mCn(aCn)
+  , mR0(aR0)
+  , mRn(aRn)
+  , mMaxR(std::max(aR0, aRn))
+  , mCenterCurveOrigin(mC0.x, mCn.y)
+  , mCenterCurveR{ 0.0 }
+  , mInnerCurveOrigin(mInnerBezier.mPoints[0].x, mInnerBezier.mPoints[3].y)
+  , mBestOverlap(0.0f)
+  , mHasZeroBorderWidth(false)
+  , mHasMore(true)
+  , mMaxCount(aCornerDim.width + aCornerDim.height)
+  , mType(OTHER)
+  , mI(0)
+  , mCount(0)
 {
   NS_ASSERTION(mR0 > 0.0f || mRn > 0.0f,
                "At least one side should have non-zero radius.");

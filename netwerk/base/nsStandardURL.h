@@ -476,8 +476,12 @@ public:
             return NS_OK;
         }
 
-        explicit TemplatedMutator() { }
-    private:
+        explicit TemplatedMutator()
+          : mMarkedFileURL{ false }
+        {
+        }
+
+      private:
         virtual ~TemplatedMutator() { }
 
         bool mMarkedFileURL = false;

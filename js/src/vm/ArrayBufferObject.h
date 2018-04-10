@@ -513,7 +513,10 @@ ClampDoubleToUint8(const double x);
 struct uint8_clamped {
     uint8_t val;
 
-    uint8_clamped() { }
+    uint8_clamped()
+      : val{ '\0' }
+    {
+    }
     uint8_clamped(const uint8_clamped& other) : val(other.val) { }
 
     // invoke our assignment helpers for constructor conversion

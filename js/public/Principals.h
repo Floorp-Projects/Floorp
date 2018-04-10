@@ -30,7 +30,15 @@ struct JSPrincipals {
     uint32_t    debugToken;
 #endif
 
-    JSPrincipals() : refcount(0) {}
+    JSPrincipals()
+      : refcount(0)
+#ifdef JS_DEBUG
+      , debugToken
+    {
+    }
+#endif
+    {
+    }
 
     void setDebugToken(uint32_t token) {
 # ifdef JS_DEBUG

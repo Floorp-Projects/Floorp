@@ -51,10 +51,19 @@ public:
 
     // note that these initial values are what GL initializes vertex attribs to
     WebGLVertexAttribData()
-        : mDivisor(0)
-        , mEnabled(false)
+      : mDivisor(0)
+      , mEnabled(false)
+      , mIntegerFunc{ false }
+      , mType{}
+      , mBaseType{}
+      , mSize{ '\0' }
+      , mBytesPerVertex{ '\0' }
+      , mNormalized{ false }
+      , mStride{}
+      , mExplicitStride{}
+      , mByteOffset{}
     {
-        VertexAttribPointer(false, nullptr, 4, LOCAL_GL_FLOAT, false, 0, 0);
+      VertexAttribPointer(false, nullptr, 4, LOCAL_GL_FLOAT, false, 0, 0);
     }
 
     void VertexAttribPointer(bool integerFunc, WebGLBuffer* buf, uint8_t size,

@@ -1510,11 +1510,12 @@ SnapshotIterator::SnapshotIterator(const JSJitFrameIter& iter, const MachineStat
 }
 
 SnapshotIterator::SnapshotIterator()
-  : snapshot_(nullptr, 0, 0, 0),
-    recover_(snapshot_, nullptr, 0),
-    fp_(nullptr),
-    ionScript_(nullptr),
-    instructionResults_(nullptr)
+  : snapshot_(nullptr, 0, 0, 0)
+  , recover_(snapshot_, nullptr, 0)
+  , fp_(nullptr)
+  , machine_{ nullptr }
+  , ionScript_(nullptr)
+  , instructionResults_(nullptr)
 {
 }
 
@@ -2024,20 +2025,24 @@ SnapshotIterator::maybeReadAllocByIndex(size_t index)
 }
 
 InlineFrameIterator::InlineFrameIterator(JSContext* cx, const JSJitFrameIter* iter)
-  : calleeTemplate_(cx),
-    calleeRVA_(),
-    script_(cx)
+  : calleeTemplate_(cx)
+  , calleeRVA_()
+  , script_(cx)
+  , pc_{ nullptr }
+  , numActualArgs_{}
 {
     resetOn(iter);
 }
 
 InlineFrameIterator::InlineFrameIterator(JSContext* cx, const InlineFrameIterator* iter)
-  : frame_(iter ? iter->frame_ : nullptr),
-    framesRead_(0),
-    frameCount_(iter ? iter->frameCount_ : UINT32_MAX),
-    calleeTemplate_(cx),
-    calleeRVA_(),
-    script_(cx)
+  : frame_(iter ? iter->frame_ : nullptr)
+  , framesRead_(0)
+  , frameCount_(iter ? iter->frameCount_ : UINT32_MAX)
+  , calleeTemplate_(cx)
+  , calleeRVA_()
+  , script_(cx)
+  , pc_{ nullptr }
+  , numActualArgs_{}
 {
     if (frame_) {
         machine_ = iter->machine_;

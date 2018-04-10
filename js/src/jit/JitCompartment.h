@@ -30,9 +30,18 @@ class FrameSizeClass;
 struct EnterJitData
 {
     explicit EnterJitData(JSContext* cx)
-      : envChain(cx),
-        result(cx)
-    {}
+      : jitcode{ nullptr }
+      , osrFrame{ nullptr }
+      , calleeToken{ nullptr }
+      , maxArgv{ nullptr }
+      , maxArgc{}
+      , numActualArgs{}
+      , osrNumStackValues{}
+      , envChain(cx)
+      , result(cx)
+      , constructing{ false }
+    {
+    }
 
     uint8_t* jitcode;
     InterpreterFrame* osrFrame;

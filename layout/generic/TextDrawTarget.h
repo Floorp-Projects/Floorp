@@ -54,7 +54,10 @@ public:
                           layers::WebRenderLayerManager* aManager,
                           nsDisplayItem* aItem,
                           nsRect& aBounds)
-    : mBuilder(aBuilder), mSc(aSc), mManager(aManager)
+    : mBuilder(aBuilder)
+    , mSc(aSc)
+    , mManager(aManager)
+    , mWRGlyphFlags{}
   {
     SetPermitSubpixelAA(!aItem->IsSubpixelAADisabled());
 

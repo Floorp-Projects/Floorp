@@ -473,7 +473,10 @@ class SrcNoteLineScanner
 
   public:
     SrcNoteLineScanner(jssrcnote* sn, uint32_t lineno)
-        : offset(0), sn(sn), lineno(lineno)
+      : offset(0)
+      , sn(sn)
+      , lineno(lineno)
+      , lineHeader{ false }
     {
     }
 

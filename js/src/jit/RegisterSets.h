@@ -253,9 +253,10 @@ class ConstantOrRegister
     }
 
   public:
-
     ConstantOrRegister()
-    {}
+      : constant_{ false }
+    {
+    }
 
     MOZ_IMPLICIT ConstantOrRegister(const Value& value)
       : constant_(true)

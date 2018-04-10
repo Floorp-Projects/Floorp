@@ -54,6 +54,7 @@ class StupidAllocator : public RegisterAllocator
   public:
     StupidAllocator(MIRGenerator* mir, LIRGenerator* lir, LIRGraph& graph)
       : RegisterAllocator(mir, lir, graph)
+      , registerCount{}
     {
     }
 

@@ -22,12 +22,12 @@
 
 namespace mozilla {
 
-AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig,
-                               TaskQueue* aTaskQueue)
+AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig, TaskQueue* aTaskQueue)
   : mConfig(aConfig)
   , mFileStreamError(false)
   , mTaskQueue(aTaskQueue)
   , mConverter(nullptr)
+  , mOutputFormat{}
   , mStream(nullptr)
   , mParsedFramesForAACMagicCookie(0)
   , mErrored(false)

@@ -13,16 +13,17 @@ using namespace js::jit;
 using mozilla::DebugOnly;
 
 ControlFlowGenerator::ControlFlowGenerator(TempAllocator& temp, JSScript* script)
-  : script(script),
-    current(nullptr),
-    alloc_(temp),
-    blocks_(temp),
-    cfgStack_(temp),
-    loops_(temp),
-    switches_(temp),
-    labels_(temp),
-    aborted_(false),
-    checkedTryFinally_(false)
+  : script(script)
+  , current(nullptr)
+  , pc{ nullptr }
+  , alloc_(temp)
+  , blocks_(temp)
+  , cfgStack_(temp)
+  , loops_(temp)
+  , switches_(temp)
+  , labels_(temp)
+  , aborted_(false)
+  , checkedTryFinally_(false)
 { }
 
 static inline int32_t

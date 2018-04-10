@@ -303,10 +303,15 @@ debug_printf(const char *format, ...)
   }
 }
 
-DataChannelConnection::DataChannelConnection(DataConnectionListener *listener,
-                                             nsIEventTarget *aTarget)
+DataChannelConnection::DataChannelConnection(DataConnectionListener* listener,
+                                             nsIEventTarget* aTarget)
   : NeckoTargetHolder(aTarget)
   , mLock("netwerk::sctp::DataChannelConnection")
+  , mSendInterleaved{ false }
+  , mPpidFragmentation{ false }
+  , mMaxMessageSizeSet{ false }
+  , mMaxMessageSize{}
+  , mAllocateEven{ false }
 {
   mCurrentStream = 0;
   mState = CLOSED;

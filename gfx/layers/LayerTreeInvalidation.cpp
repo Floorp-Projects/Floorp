@@ -170,6 +170,10 @@ struct LayerPropertiesBase : public LayerProperties
   LayerPropertiesBase()
     : mLayer(nullptr)
     , mMaskLayer(nullptr)
+    , mPostXScale{ 0.0 }
+    , mPostYScale{ 0.0 }
+    , mOpacity{ 0.0 }
+    , mUseClipRect{ false }
   {
     MOZ_COUNT_CTOR(LayerPropertiesBase);
   }

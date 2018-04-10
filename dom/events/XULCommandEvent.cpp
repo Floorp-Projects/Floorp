@@ -13,9 +13,10 @@ namespace dom {
 XULCommandEvent::XULCommandEvent(EventTarget* aOwner,
                                  nsPresContext* aPresContext,
                                  WidgetInputEvent* aEvent)
-  : UIEvent(aOwner, aPresContext,
-            aEvent ? aEvent :
-                     new WidgetInputEvent(false, eVoidEvent, nullptr))
+  : UIEvent(aOwner,
+            aPresContext,
+            aEvent ? aEvent : new WidgetInputEvent(false, eVoidEvent, nullptr))
+  , mInputSource{}
 {
   if (aEvent) {
     mEventIsInternal = false;

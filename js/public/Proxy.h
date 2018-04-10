@@ -586,10 +586,18 @@ class JS_FRIEND_API(AutoEnterPolicy)
 {
   public:
     typedef BaseProxyHandler::Action Action;
-    AutoEnterPolicy(JSContext* cx, const BaseProxyHandler* handler,
-                    HandleObject wrapper, HandleId id, Action act, bool mayThrow)
+    AutoEnterPolicy(JSContext* cx,
+                    const BaseProxyHandler* handler,
+                    HandleObject wrapper,
+                    HandleId id,
+                    Action act,
+                    bool mayThrow)
+      : rv
+    {
+      false
+    }
 #ifdef JS_DEBUG
-        : context(nullptr)
+    , context(nullptr), enteredAction{}, prev { nullptr }
 #endif
     {
         allow = handler->hasSecurityPolicy() ? handler->enter(cx, wrapper, id, act, mayThrow, &rv)
@@ -611,11 +619,17 @@ class JS_FRIEND_API(AutoEnterPolicy)
   protected:
     // no-op constructor for subclass
     AutoEnterPolicy()
+      : allow{ false }
+      , rv
+    {
+      false
+    }
 #ifdef JS_DEBUG
-        : context(nullptr)
-        , enteredAction(BaseProxyHandler::NONE)
+    , context(nullptr), enteredAction(BaseProxyHandler::NONE), prev { nullptr }
 #endif
-        {}
+    {
+    }
+
     void reportErrorIfExceptionIsNotPending(JSContext* cx, jsid id);
     bool allow;
     bool rv;

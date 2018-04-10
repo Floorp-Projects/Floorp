@@ -920,7 +920,12 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTarget)
-  DrawTarget() : mTransformDirty(false), mPermitSubpixelAA(false) {}
+  DrawTarget()
+    : mTransformDirty(false)
+    , mPermitSubpixelAA(false)
+    , mFormat{ SurfaceFormat::UNKNOWN }
+  {
+  }
   virtual ~DrawTarget() {}
 
   virtual bool IsValid() const { return true; };

@@ -626,7 +626,11 @@ public:
 
     Endpoint()
       : mValid(false)
-    {}
+      , mMode{ static_cast<mozilla::ipc::Transport::Mode>(0) }
+      , mMyPid{}
+      , mOtherPid{}
+    {
+    }
 
     Endpoint(const PrivateIPDLInterface&,
              mozilla::ipc::Transport::Mode aMode,

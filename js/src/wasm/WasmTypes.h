@@ -469,7 +469,10 @@ class Val
         I16x8 i16x8_;
         I32x4 i32x4_;
         F32x4 f32x4_;
-        U() {}
+        U()
+          : i32_{}
+        {
+        }
     } u;
 
   public:
@@ -606,7 +609,10 @@ class InitExpr
             uint32_t index_;
             ValType type_;
         } global;
-        U() {}
+        U()
+          : global{}
+        {
+        }
     } u;
 
   public:
@@ -729,7 +735,10 @@ class GlobalDesc
                     ValType type_;
                     uint32_t index_;
                 } import;
-                U() {}
+                U()
+                  : import{}
+                {
+                }
             } val;
             unsigned offset_;
             bool isMutable_;
@@ -1312,7 +1321,11 @@ class CallSiteDesc
         LeaveFrame, // call to a leave frame handler
         Breakpoint  // call to instruction breakpoint
     };
-    CallSiteDesc() {}
+    CallSiteDesc()
+      : lineOrBytecode_{}
+      , kind_{}
+    {
+    }
     explicit CallSiteDesc(Kind kind)
       : lineOrBytecode_(0), kind_(kind)
     {
@@ -1333,7 +1346,10 @@ class CallSite : public CallSiteDesc
     uint32_t returnAddressOffset_;
 
   public:
-    CallSite() {}
+    CallSite()
+      : returnAddressOffset_{}
+    {
+    }
 
     CallSite(CallSiteDesc desc, uint32_t returnAddressOffset)
       : CallSiteDesc(desc),
@@ -1708,7 +1724,10 @@ class CalleeDesc
     // which_ shall be initialized in the static constructors
     MOZ_INIT_OUTSIDE_CTOR Which which_;
     union U {
-        U() {}
+        U()
+          : funcIndex_{}
+        {
+        }
         uint32_t funcIndex_;
         struct {
             uint32_t globalDataOffset_;
@@ -1723,7 +1742,7 @@ class CalleeDesc
     } u;
 
   public:
-    CalleeDesc() {}
+    CalleeDesc() /* FIXME: initialize which_ */ {}
     static CalleeDesc function(uint32_t funcIndex) {
         CalleeDesc c;
         c.which_ = Func;

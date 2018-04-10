@@ -32,7 +32,6 @@
 #include "imgIContainer.h"
 #include "CounterStyleManager.h"
 
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for PlaybackDirection
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/ImageTracker.h"
 #include "mozilla/CORSMode.h"
@@ -321,6 +320,10 @@ nsStyleBorder::nsStyleBorder(const nsPresContext* aContext)
   , mBorderImageRepeatV(StyleBorderImageRepeat::Stretch)
   , mFloatEdge(StyleFloatEdge::ContentBox)
   , mBoxDecorationBreak(StyleBoxDecorationBreak::Slice)
+  , mBorderTopColor{}
+  , mBorderRightColor{}
+  , mBorderBottomColor{}
+  , mBorderLeftColor{}
   , mComputedBorder(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStyleBorder);
@@ -2314,6 +2317,7 @@ CachedBorderImageData::GetSubImage(uint8_t aIndex)
 
 nsStyleImage::nsStyleImage()
   : mType(eStyleImageType_Null)
+  , mImage{ nullptr }
   , mCropRect(nullptr)
 {
   MOZ_COUNT_CTOR(nsStyleImage);
@@ -3121,7 +3125,8 @@ nsStyleImageLayers::Size::operator==(const Size& aOther) const
 
 nsStyleImageLayers::Layer::Layer()
   : mClip(StyleGeometryBox::BorderBox)
-  , mAttachment(NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL)
+  , /* FIXME: initialize mOrigin */ mAttachment(
+    NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL)
   , mBlendMode(NS_STYLE_BLEND_NORMAL)
   , mComposite(NS_STYLE_MASK_COMPOSITE_ADD)
   , mMaskMode(NS_STYLE_MASK_MODE_MATCH_SOURCE)

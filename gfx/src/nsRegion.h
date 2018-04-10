@@ -2181,6 +2181,12 @@ public:
     explicit RectIterator(const nsRegion& aRegion)
       : mRegion(aRegion)
       , mCurrentBand(aRegion.mBands.begin())
+#ifndef DEBUG
+      , mCurrentStrip
+    {
+      nullptr
+    }
+#endif
     {
       mIsDone = mRegion.mBounds.IsEmpty();
       if (mCurrentBand != aRegion.mBands.end()) {

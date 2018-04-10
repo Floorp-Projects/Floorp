@@ -1356,11 +1356,13 @@ public:
   uint32_t nodeCount;
   uint32_t edgeCount;
 
-  HeapSnapshotHandler(CoreDumpWriter& writer,
-                      JS::CompartmentSet* compartments)
-    : writer(writer),
-      compartments(compartments)
-  { }
+  HeapSnapshotHandler(CoreDumpWriter& writer, JS::CompartmentSet* compartments)
+    : writer(writer)
+    , compartments(compartments)
+    , nodeCount{}
+    , edgeCount{}
+  {
+  }
 
   // JS::ubi::BreadthFirst handler interface.
 

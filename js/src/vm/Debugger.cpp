@@ -4223,19 +4223,24 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
 {
   public:
     /* Construct a ScriptQuery to use matching scripts for |dbg|. */
-    ScriptQuery(JSContext* cx, Debugger* dbg):
-        cx(cx),
-        debugger(dbg),
-        iterMarker(&cx->runtime()->gc),
-        compartments(cx->zone()),
-        url(cx),
-        displayURLString(cx),
-        hasSource(false),
-        source(cx, AsVariant(static_cast<ScriptSourceObject*>(nullptr))),
-        innermostForCompartment(cx->zone()),
-        vector(cx, ScriptVector(cx)),
-        wasmInstanceVector(cx, WasmInstanceObjectVector(cx))
-    {}
+    ScriptQuery(JSContext* cx, Debugger* dbg)
+      : cx(cx)
+      , debugger(dbg)
+      , iterMarker(&cx->runtime()->gc)
+      , compartments(cx->zone())
+      , url(cx)
+      , displayURLString(cx)
+      , hasSource(false)
+      , source(cx, AsVariant(static_cast<ScriptSourceObject*>(nullptr)))
+      , hasLine{ false }
+      , line{}
+      , innermost{ false }
+      , innermostForCompartment(cx->zone())
+      , vector(cx, ScriptVector(cx))
+      , wasmInstanceVector(cx, WasmInstanceObjectVector(cx))
+      , oom{ false }
+    {
+    }
 
     /*
      * Initialize this ScriptQuery. Raise an error and return false if we
@@ -5431,7 +5436,11 @@ struct DebuggerScriptGetLineCountMatcher
     JSContext* cx_;
     double totalLines;
 
-    explicit DebuggerScriptGetLineCountMatcher(JSContext* cx) : cx_(cx) {}
+    explicit DebuggerScriptGetLineCountMatcher(JSContext* cx)
+      : cx_(cx)
+      , totalLines{ 0.0 }
+    {
+    }
     using ReturnType = bool;
 
     ReturnType match(HandleScript script) {
@@ -6655,7 +6664,12 @@ class DebuggerScriptIsInCatchScopeMatcher
     bool isInCatch_;
 
   public:
-    explicit DebuggerScriptIsInCatchScopeMatcher(JSContext* cx, size_t offset) : cx_(cx), offset_(offset) { }
+    explicit DebuggerScriptIsInCatchScopeMatcher(JSContext* cx, size_t offset)
+      : cx_(cx)
+      , offset_(offset)
+      , isInCatch_{ false }
+    {
+    }
     using ReturnType = bool;
 
     inline bool isInCatch() const { return isInCatch_; }

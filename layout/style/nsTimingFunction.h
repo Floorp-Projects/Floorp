@@ -32,8 +32,10 @@ struct nsTimingFunction
            aType != Type::Frames;
   }
 
-  explicit nsTimingFunction(int32_t aTimingFunctionType
-                              = NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE)
+  explicit nsTimingFunction(
+    int32_t aTimingFunctionType = NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE)
+    /* FIXME: initialize mType */
+    : mFunc{} /* FIXME: initialize mType */
   {
     AssignFromKeyword(aTimingFunctionType);
   }

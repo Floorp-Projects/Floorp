@@ -1223,33 +1223,131 @@ class BindingIter
     explicit BindingIter(Scope* scope);
     explicit BindingIter(JSScript* script);
 
-    BindingIter(LexicalScope::Data& data, uint32_t firstFrameSlot, bool isNamedLambda) {
+    BindingIter(LexicalScope::Data& data, uint32_t firstFrameSlot, bool isNamedLambda)
+      : positionalFormalStart_{}
+      , nonPositionalFormalStart_{}
+      , topLevelFunctionStart_{}
+      , varStart_{}
+      , letStart_{}
+      , constStart_{}
+      , length_{}
+      , index_{}
+      , flags_{ '\0' }
+      , argumentSlot_{}
+      , frameSlot_{}
+      , environmentSlot_{}
+      , names_{ nullptr }
+    {
         init(data, firstFrameSlot, isNamedLambda ? IsNamedLambda : 0);
     }
 
-    BindingIter(FunctionScope::Data& data, bool hasParameterExprs) {
+    BindingIter(FunctionScope::Data& data, bool hasParameterExprs)
+      : positionalFormalStart_{}
+      , nonPositionalFormalStart_{}
+      , topLevelFunctionStart_{}
+      , varStart_{}
+      , letStart_{}
+      , constStart_{}
+      , length_{}
+      , index_{}
+      , flags_{ '\0' }
+      , argumentSlot_{}
+      , frameSlot_{}
+      , environmentSlot_{}
+      , names_{ nullptr }
+    {
         init(data,
              IgnoreDestructuredFormalParameters |
              (hasParameterExprs ? HasFormalParameterExprs : 0));
     }
 
-    BindingIter(VarScope::Data& data, uint32_t firstFrameSlot) {
+    BindingIter(VarScope::Data& data, uint32_t firstFrameSlot)
+      : positionalFormalStart_{}
+      , nonPositionalFormalStart_{}
+      , topLevelFunctionStart_{}
+      , varStart_{}
+      , letStart_{}
+      , constStart_{}
+      , length_{}
+      , index_{}
+      , flags_{ '\0' }
+      , argumentSlot_{}
+      , frameSlot_{}
+      , environmentSlot_{}
+      , names_{ nullptr }
+    {
         init(data, firstFrameSlot);
     }
 
-    explicit BindingIter(GlobalScope::Data& data) {
+    explicit BindingIter(GlobalScope::Data& data)
+      : positionalFormalStart_{}
+      , nonPositionalFormalStart_{}
+      , topLevelFunctionStart_{}
+      , varStart_{}
+      , letStart_{}
+      , constStart_{}
+      , length_{}
+      , index_{}
+      , flags_{ '\0' }
+      , argumentSlot_{}
+      , frameSlot_{}
+      , environmentSlot_{}
+      , names_{ nullptr }
+    {
         init(data);
     }
 
-    explicit BindingIter(ModuleScope::Data& data) {
+    explicit BindingIter(ModuleScope::Data& data)
+      : positionalFormalStart_{}
+      , nonPositionalFormalStart_{}
+      , topLevelFunctionStart_{}
+      , varStart_{}
+      , letStart_{}
+      , constStart_{}
+      , length_{}
+      , index_{}
+      , flags_{ '\0' }
+      , argumentSlot_{}
+      , frameSlot_{}
+      , environmentSlot_{}
+      , names_{ nullptr }
+    {
         init(data);
     }
 
-    explicit BindingIter(WasmFunctionScope::Data& data) {
+    explicit BindingIter(WasmFunctionScope::Data& data)
+      : positionalFormalStart_{}
+      , nonPositionalFormalStart_{}
+      , topLevelFunctionStart_{}
+      , varStart_{}
+      , letStart_{}
+      , constStart_{}
+      , length_{}
+      , index_{}
+      , flags_{ '\0' }
+      , argumentSlot_{}
+      , frameSlot_{}
+      , environmentSlot_{}
+      , names_{ nullptr }
+    {
         init(data);
     }
 
-    BindingIter(EvalScope::Data& data, bool strict) {
+    BindingIter(EvalScope::Data& data, bool strict)
+      : positionalFormalStart_{}
+      , nonPositionalFormalStart_{}
+      , topLevelFunctionStart_{}
+      , varStart_{}
+      , letStart_{}
+      , constStart_{}
+      , length_{}
+      , index_{}
+      , flags_{ '\0' }
+      , argumentSlot_{}
+      , frameSlot_{}
+      , environmentSlot_{}
+      , names_{ nullptr }
+    {
         init(data, strict);
     }
 
