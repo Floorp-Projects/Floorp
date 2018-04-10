@@ -11,6 +11,7 @@
   skin/classic/browser/blockedSite.css                         (../shared/blockedSite.css)
   skin/classic/browser/error-pages.css                         (../shared/error-pages.css)
 * skin/classic/browser/aboutSessionRestore.css                 (../shared/aboutSessionRestore.css)
+  skin/classic/browser/aboutLibrary.css                        (../shared/aboutLibrary.css)
   skin/classic/browser/aboutTabCrashed.css                     (../shared/aboutTabCrashed.css)
   skin/classic/browser/aboutWelcomeBack.css                    (../shared/aboutWelcomeBack.css)
   skin/classic/browser/addons/addon-install-blocked.svg        (../shared/addons/addon-install-blocked.svg)
