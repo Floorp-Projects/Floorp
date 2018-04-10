@@ -79,7 +79,7 @@ APZUpdater::PrepareForSceneSwap(const wr::WrWindowId& aWindowId)
 
 /*static*/ void
 APZUpdater::CompleteSceneSwap(const wr::WrWindowId& aWindowId,
-                              wr::WrPipelineInfo* aInfo)
+                              const wr::WrPipelineInfo& aInfo)
 {
   RefPtr<APZUpdater> updater = GetUpdater(aWindowId);
   if (!updater) {
@@ -90,10 +90,8 @@ APZUpdater::CompleteSceneSwap(const wr::WrWindowId& aWindowId,
     return;
   }
 
-  wr::WrPipelineId pipeline;
-  wr::WrEpoch epoch;
-  while (wr_pipeline_info_next_removed_pipeline(aInfo, &pipeline)) {
-    LayersId layersId = wr::AsLayersId(pipeline);
+  for (uintptr_t i = 0; i < aInfo.removed_pipelines.length; i++) {
+    LayersId layersId = wr::AsLayersId(aInfo.removed_pipelines.data[i]);
     updater->mEpochData.erase(layersId);
   }
   // Reset the built info for all pipelines, then put it back for the ones
@@ -101,11 +99,10 @@ APZUpdater::CompleteSceneSwap(const wr::WrWindowId& aWindowId,
   for (auto& i : updater->mEpochData) {
     i.second.mBuilt = Nothing();
   }
-  while (wr_pipeline_info_next_epoch(aInfo, &pipeline, &epoch)) {
-    LayersId layersId = wr::AsLayersId(pipeline);
-    updater->mEpochData[layersId].mBuilt = Some(epoch);
+  for (uintptr_t i = 0; i < aInfo.epochs.length; i++) {
+    LayersId layersId = wr::AsLayersId(aInfo.epochs.data[i].pipeline_id);
+    updater->mEpochData[layersId].mBuilt = Some(aInfo.epochs.data[i].epoch);
   }
-  wr_pipeline_info_delete(aInfo);
 
   // Run any tasks that got unblocked, then unlock the tree. The order is
   // important because we want to run all the tasks up to and including the
@@ -525,11 +522,12 @@ apz_pre_scene_swap(mozilla::wr::WrWindowId aWindowId)
 
 void
 apz_post_scene_swap(mozilla::wr::WrWindowId aWindowId,
-                    mozilla::wr::WrPipelineInfo* aInfo)
+                    mozilla::wr::WrPipelineInfo aInfo)
 {
   // This should never get called unless async scene building is enabled.
   MOZ_ASSERT(gfxPrefs::WebRenderAsyncSceneBuild());
   mozilla::layers::APZUpdater::CompleteSceneSwap(aWindowId, aInfo);
+  wr_pipeline_info_delete(aInfo);
 }
 
 void

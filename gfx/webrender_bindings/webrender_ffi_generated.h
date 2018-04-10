@@ -274,8 +274,6 @@ struct Vec;
 // Geometry in the document's coordinate space (logical pixels).
 struct WorldPixel;
 
-struct WrPipelineInfo;
-
 struct WrProgramCache;
 
 struct WrState;
@@ -326,6 +324,75 @@ struct WrWindowId {
   }
   bool operator<=(const WrWindowId& aOther) const {
     return mHandle <= aOther.mHandle;
+  }
+};
+
+// This type carries no valuable semantics for WR. However, it reflects the fact that
+// clients (Servo) may generate pipelines by different semi-independent sources.
+// These pipelines still belong to the same `IdNamespace` and the same `DocumentId`.
+// Having this extra Id field enables them to generate `PipelineId` without collision.
+using PipelineSourceId = uint32_t;
+
+// From the point of view of WR, `PipelineId` is completely opaque and generic as long as
+// it's clonable, serializable, comparable, and hashable.
+struct PipelineId {
+  PipelineSourceId mNamespace;
+  uint32_t mHandle;
+
+  bool operator==(const PipelineId& aOther) const {
+    return mNamespace == aOther.mNamespace &&
+           mHandle == aOther.mHandle;
+  }
+};
+
+using WrPipelineId = PipelineId;
+
+struct Epoch {
+  uint32_t mHandle;
+
+  bool operator==(const Epoch& aOther) const {
+    return mHandle == aOther.mHandle;
+  }
+  bool operator<(const Epoch& aOther) const {
+    return mHandle < aOther.mHandle;
+  }
+  bool operator<=(const Epoch& aOther) const {
+    return mHandle <= aOther.mHandle;
+  }
+};
+
+using WrEpoch = Epoch;
+
+struct WrPipelineEpoch {
+  WrPipelineId pipeline_id;
+  WrEpoch epoch;
+
+  bool operator==(const WrPipelineEpoch& aOther) const {
+    return pipeline_id == aOther.pipeline_id &&
+           epoch == aOther.epoch;
+  }
+};
+
+template<typename T>
+struct FfiVec {
+  const T *data;
+  uintptr_t length;
+  uintptr_t capacity;
+
+  bool operator==(const FfiVec& aOther) const {
+    return data == aOther.data &&
+           length == aOther.length &&
+           capacity == aOther.capacity;
+  }
+};
+
+struct WrPipelineInfo {
+  FfiVec<WrPipelineEpoch> epochs;
+  FfiVec<PipelineId> removed_pipelines;
+
+  bool operator==(const WrPipelineInfo& aOther) const {
+    return epochs == aOther.epochs &&
+           removed_pipelines == aOther.removed_pipelines;
   }
 };
 
@@ -395,26 +462,6 @@ struct TypedPoint2D {
 };
 
 using WorldPoint = TypedPoint2D<float, WorldPixel>;
-
-// This type carries no valuable semantics for WR. However, it reflects the fact that
-// clients (Servo) may generate pipelines by different semi-independent sources.
-// These pipelines still belong to the same `IdNamespace` and the same `DocumentId`.
-// Having this extra Id field enables them to generate `PipelineId` without collision.
-using PipelineSourceId = uint32_t;
-
-// From the point of view of WR, `PipelineId` is completely opaque and generic as long as
-// it's clonable, serializable, comparable, and hashable.
-struct PipelineId {
-  PipelineSourceId mNamespace;
-  uint32_t mHandle;
-
-  bool operator==(const PipelineId& aOther) const {
-    return mNamespace == aOther.mNamespace &&
-           mHandle == aOther.mHandle;
-  }
-};
-
-using WrPipelineId = PipelineId;
 
 // A 2d Rectangle optionally tagged with a unit.
 template<typename T, typename U>
@@ -759,22 +806,6 @@ struct MutByteSlice {
   }
 };
 
-struct Epoch {
-  uint32_t mHandle;
-
-  bool operator==(const Epoch& aOther) const {
-    return mHandle == aOther.mHandle;
-  }
-  bool operator<(const Epoch& aOther) const {
-    return mHandle < aOther.mHandle;
-  }
-  bool operator<=(const Epoch& aOther) const {
-    return mHandle <= aOther.mHandle;
-  }
-};
-
-using WrEpoch = Epoch;
-
 struct WrDebugFlags {
   uint32_t mBits;
 
@@ -950,7 +981,7 @@ extern void DeleteFontData(WrFontKey aKey);
 extern void apz_deregister_updater(WrWindowId aWindowId);
 
 extern void apz_post_scene_swap(WrWindowId aWindowId,
-                                WrPipelineInfo *aPipelineInfo);
+                                WrPipelineInfo aPipelineInfo);
 
 extern void apz_pre_scene_swap(WrWindowId aWindowId);
 
@@ -1373,19 +1404,8 @@ extern void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId,
 extern void wr_notifier_wake_up(WrWindowId aWindowId);
 
 WR_INLINE
-void wr_pipeline_info_delete(WrPipelineInfo *aInfo)
+void wr_pipeline_info_delete(WrPipelineInfo aInfo)
 WR_DESTRUCTOR_SAFE_FUNC;
-
-WR_INLINE
-bool wr_pipeline_info_next_epoch(WrPipelineInfo *aInfo,
-                                 WrPipelineId *aOutPipeline,
-                                 WrEpoch *aOutEpoch)
-WR_FUNC;
-
-WR_INLINE
-bool wr_pipeline_info_next_removed_pipeline(WrPipelineInfo *aInfo,
-                                            WrPipelineId *aOutPipeline)
-WR_FUNC;
 
 WR_INLINE
 void wr_program_cache_delete(WrProgramCache *aProgramCache)
@@ -1406,7 +1426,7 @@ void wr_renderer_delete(Renderer *aRenderer)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-WrPipelineInfo *wr_renderer_flush_pipeline_info(Renderer *aRenderer)
+WrPipelineInfo wr_renderer_flush_pipeline_info(Renderer *aRenderer)
 WR_FUNC;
 
 WR_INLINE
