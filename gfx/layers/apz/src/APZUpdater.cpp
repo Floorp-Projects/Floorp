@@ -268,3 +268,31 @@ APZUpdater::RunOnControllerThread(already_AddRefed<Runnable> aTask)
 
 } // namespace layers
 } // namespace mozilla
+
+// Rust callback implementations
+
+void
+apz_register_updater(mozilla::wr::WrWindowId aWindowId)
+{
+}
+
+void
+apz_pre_scene_swap(mozilla::wr::WrWindowId aWindowId)
+{
+}
+
+void
+apz_post_scene_swap(mozilla::wr::WrWindowId aWindowId,
+                    mozilla::wr::WrPipelineInfo* aInfo)
+{
+}
+
+void
+apz_run_updater(mozilla::wr::WrWindowId aWindowId)
+{
+}
+
+void
+apz_deregister_updater(mozilla::wr::WrWindowId aWindowId)
+{
+}

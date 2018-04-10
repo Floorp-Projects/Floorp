@@ -507,6 +507,12 @@ WebRenderAPI::Resume()
 }
 
 void
+WebRenderAPI::WakeSceneBuilder()
+{
+    wr_api_wake_scene_builder(mDocHandle);
+}
+
+void
 WebRenderAPI::WaitFlushed()
 {
     class WaitFlushedEvent : public RendererEvent
