@@ -37,6 +37,7 @@ PartiallySeekableInputStream::PartiallySeekableInputStream(already_AddRefed<nsII
   , mBufferSize(aBufferSize)
   , mPos(0)
   , mClosed(false)
+  , mMutex("PartiallySeekableInputStream::mMutex")
 {
   Init();
 }
@@ -51,6 +52,7 @@ PartiallySeekableInputStream::PartiallySeekableInputStream(already_AddRefed<nsII
   , mBufferSize(aClonedFrom->mBufferSize)
   , mPos(aClonedFrom->mPos)
   , mClosed(aClonedFrom->mClosed)
+  , mMutex("PartiallySeekableInputStream::mMutex")
 {
   Init();
 }
@@ -227,17 +229,17 @@ PartiallySeekableInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 
   NS_ENSURE_STATE(mWeakAsyncInputStream);
 
-  if (mAsyncWaitCallback && aCallback) {
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIInputStreamCallback> callback = aCallback ? this : nullptr;
+  {
+    MutexAutoLock lock(mMutex);
+    if (mAsyncWaitCallback && aCallback) {
+      return NS_ERROR_FAILURE;
+    }
+
+    mAsyncWaitCallback = aCallback;
   }
 
-  mAsyncWaitCallback = aCallback;
-
-  if (!mAsyncWaitCallback) {
-    return NS_OK;
-  }
-
-  return mWeakAsyncInputStream->AsyncWait(this, aFlags, aRequestedCount,
+  return mWeakAsyncInputStream->AsyncWait(callback, aFlags, aRequestedCount,
                                           aEventTarget);
 }
 
@@ -249,15 +251,20 @@ PartiallySeekableInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
   MOZ_ASSERT(mWeakAsyncInputStream);
   MOZ_ASSERT(mWeakAsyncInputStream == aStream);
 
-  // We have been canceled in the meanwhile.
-  if (!mAsyncWaitCallback) {
-    return NS_OK;
+  nsCOMPtr<nsIInputStreamCallback> callback;
+
+  {
+    MutexAutoLock lock(mMutex);
+
+    // We have been canceled in the meanwhile.
+    if (!mAsyncWaitCallback) {
+      return NS_OK;
+    }
+
+    callback.swap(mAsyncWaitCallback);
   }
 
-  nsCOMPtr<nsIInputStreamCallback> callback = mAsyncWaitCallback;
-
-  mAsyncWaitCallback = nullptr;
-
+  MOZ_ASSERT(callback);
   return callback->OnInputStreamReady(this);
 }
 
