@@ -3469,6 +3469,17 @@ nsCookieService::CanSetCookie(nsIURI*             aHostURI,
     return newCookie;
   }
 
+  // If the new cookie is same-site but in a cross site context,
+  // browser must ignore the cookie.
+  if (aCookieAttributes.sameSite != nsICookie2::SAMESITE_UNSET &&
+      aThirdPartyUtil) {
+    bool isThirdParty = true;
+    aThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isThirdParty);
+    if (isThirdParty) {
+      return newCookie;
+    }
+  }
+
   aSetCookie = true;
   return newCookie;
 }
