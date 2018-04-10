@@ -15,6 +15,7 @@
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "nsThreadUtils.h"
 #include "Units.h"
 
@@ -54,6 +55,9 @@ public:
    * which thread it is.
    */
   static void SetUpdaterThread(const wr::WrWindowId& aWindowId);
+  static void PrepareForSceneSwap(const wr::WrWindowId& aWindowId);
+  static void CompleteSceneSwap(const wr::WrWindowId& aWindowId,
+                                wr::WrPipelineInfo* aInfo);
   static void ProcessPendingTasks(const wr::WrWindowId& aWindowId);
 
   void ClearTree();
@@ -68,11 +72,14 @@ public:
   /**
    * This should be called (in the WR-enabled case) when the compositor receives
    * a new WebRenderScrollData for a layers id. The |aScrollData| parameter is
-   * the scroll data for |aOriginatingLayersId|. This function will store
-   * the new scroll data and update the focus state and hit-testing tree.
+   * the scroll data for |aOriginatingLayersId| and |aEpoch| is the corresponding
+   * epoch for the transaction that transferred the scroll data. This function
+   * will store the new scroll data and update the focus state and hit-testing
+   * tree.
    */
   void UpdateScrollDataAndTreeState(LayersId aRootLayerTreeId,
                                     LayersId aOriginatingLayersId,
+                                    const wr::Epoch& aEpoch,
                                     WebRenderScrollData&& aScrollData);
 
   void NotifyLayerTreeAdopted(LayersId aLayersId,
@@ -126,6 +133,9 @@ protected:
   bool UsingWebRenderUpdaterThread() const;
   static already_AddRefed<APZUpdater> GetUpdater(const wr::WrWindowId& aWindowId);
 
+  bool IsQueueBlocked() const;
+  void ProcessQueue();
+
 private:
   RefPtr<APZCTreeManager> mApz;
 
@@ -134,6 +144,40 @@ private:
   std::unordered_map<LayersId,
                      WebRenderScrollData,
                      LayersId::HashFn> mScrollData;
+
+  // Stores epoch state for a particular layers id. This structure is only
+  // accessed on the updater thread.
+  struct EpochState {
+    // The epoch for the most recent scroll data sent from the content side.
+    wr::Epoch mRequired;
+    // The epoch for the most recent scene built and swapped in on the WR side.
+    Maybe<wr::Epoch> mBuilt;
+    // True if and only if the layers id is the root layers id for the compositor
+    bool mIsRoot;
+
+    EpochState();
+
+    // Whether or not the state for this layers id is such that it blocks
+    // processing of queued tasks. This happens if the root layers id or any
+    // "visible" layers id has scroll data for an epoch newer than what has
+    // been built. A "visible" layers id is one that is attached to the full
+    // layer tree (i.e. there is a chain of reflayer items from the root layer
+    // tree to the relevant layer subtree. This is not always the case; for
+    // instance a content process may send the compositor layers for a document
+    // before the chrome has attached the remote iframe to the root document.
+    // Since WR only builds pipelines for "visible" layers ids, |mBuilt| being
+    // populated means that the layers id is "visible".
+    bool IsBlockingQueue() const;
+  };
+
+  // Map from layers id to epoch state. If any of the epoch states returns true
+  // for IsBlockingQueue(), that means we cannot yet process content-side data
+  // still in the task queue, because otherwise we would apply it before the
+  // scene swap for that scene has occurred.
+  // This data structure can only be touched on the updater thread.
+  std::unordered_map<LayersId,
+                     EpochState,
+                     LayersId::HashFn> mEpochData;
 
   // Used to manage the mapping from a WR window id to APZUpdater. These are only
   // used if WebRender is enabled. Both sWindowIdMap and mWindowId should only

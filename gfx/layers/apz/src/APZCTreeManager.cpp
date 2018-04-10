@@ -3241,6 +3241,20 @@ APZCTreeManager::AssertOnUpdaterThread()
 }
 
 void
+APZCTreeManager::LockTree()
+{
+  AssertOnUpdaterThread();
+  mTreeLock.Lock();
+}
+
+void
+APZCTreeManager::UnlockTree()
+{
+  AssertOnUpdaterThread();
+  mTreeLock.Unlock();
+}
+
+void
 APZCTreeManager::SetDPI(float aDpiValue)
 {
   APZThreadUtils::AssertOnControllerThread();
