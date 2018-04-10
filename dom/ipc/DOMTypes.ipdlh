@@ -28,6 +28,8 @@ using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientatio
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
+
 
 namespace mozilla {
 namespace dom {
@@ -66,7 +68,7 @@ struct IPCDataTransferImage
   uint32_t width;
   uint32_t height;
   uint32_t stride;
-  uint8_t format;
+  SurfaceFormat format;
 };
 
 struct IPCDataTransferItem
