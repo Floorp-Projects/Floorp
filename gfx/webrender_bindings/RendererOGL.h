@@ -84,7 +84,7 @@ public:
 
   layers::CompositorBridgeParentBase* GetCompositorBridge() { return mBridge; }
 
-  wr::WrPipelineInfo* FlushPipelineInfo();
+  wr::WrPipelineInfo FlushPipelineInfo();
 
   RenderTextureHost* GetRenderTexture(wr::WrExternalImageId aExternalImageId);
 

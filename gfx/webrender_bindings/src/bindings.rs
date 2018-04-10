@@ -630,65 +630,57 @@ pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut Renderer) {
     // let renderer go out of scope and get dropped
 }
 
+// cbindgen doesn't support tuples, so we have a little struct instead, with
+// an Into implementation to convert from the tuple to the struct.
+#[repr(C)]
+pub struct WrPipelineEpoch {
+    pipeline_id: WrPipelineId,
+    epoch: WrEpoch,
+}
+
+impl From<(WrPipelineId, WrEpoch)> for WrPipelineEpoch {
+    fn from(tuple: (WrPipelineId, WrEpoch)) -> WrPipelineEpoch {
+        WrPipelineEpoch {
+            pipeline_id: tuple.0,
+            epoch: tuple.1
+        }
+    }
+}
+
+#[repr(C)]
 pub struct WrPipelineInfo {
-    epochs: Vec<(WrPipelineId, WrEpoch)>,
-    removed_pipelines: Vec<PipelineId>,
+    epochs: FfiVec<WrPipelineEpoch>,
+    removed_pipelines: FfiVec<PipelineId>,
 }
 
 impl WrPipelineInfo {
     fn new(info: PipelineInfo) -> Self {
         WrPipelineInfo {
-            epochs: info.epochs.into_iter().collect(),
-            removed_pipelines: info.removed_pipelines,
+            epochs: FfiVec::from_vec(info.epochs.into_iter().map(WrPipelineEpoch::from).collect()),
+            removed_pipelines: FfiVec::from_vec(info.removed_pipelines),
         }
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_renderer_flush_pipeline_info(renderer: &mut Renderer) -> *mut WrPipelineInfo {
+pub unsafe extern "C" fn wr_renderer_flush_pipeline_info(renderer: &mut Renderer) -> WrPipelineInfo {
     let info = renderer.flush_pipeline_info();
-    Box::into_raw(Box::new(WrPipelineInfo::new(info)))
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wr_pipeline_info_next_epoch(
-    info: &mut WrPipelineInfo,
-    out_pipeline: &mut WrPipelineId,
-    out_epoch: &mut WrEpoch
-) -> bool {
-    if let Some((pipeline, epoch)) = info.epochs.pop() {
-        *out_pipeline = pipeline;
-        *out_epoch = epoch;
-        return true;
-    }
-    return false;
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wr_pipeline_info_next_removed_pipeline(
-    info: &mut WrPipelineInfo,
-    out_pipeline: &mut WrPipelineId,
-) -> bool {
-    if let Some(pipeline) = info.removed_pipelines.pop() {
-        *out_pipeline = pipeline;
-        return true;
-    }
-    return false;
+    WrPipelineInfo::new(info)
 }
 
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
-pub unsafe extern "C" fn wr_pipeline_info_delete(info: *mut WrPipelineInfo) {
-    Box::from_raw(info);
+pub unsafe extern "C" fn wr_pipeline_info_delete(_info: WrPipelineInfo) {
+    // _info will be dropped here, and the drop impl on FfiVec will free
+    // the underlying vec memory
 }
 
-#[allow(improper_ctypes)] // this is needed so that rustc doesn't complain about passing the *mut WrPipelineInfo to an extern function
 extern "C" {
     fn apz_register_updater(window_id: WrWindowId);
     fn apz_pre_scene_swap(window_id: WrWindowId);
     // This function takes ownership of the pipeline_info and is responsible for
     // freeing it via wr_pipeline_info_delete.
-    fn apz_post_scene_swap(window_id: WrWindowId, pipeline_info: *mut WrPipelineInfo);
+    fn apz_post_scene_swap(window_id: WrWindowId, pipeline_info: WrPipelineInfo);
     fn apz_run_updater(window_id: WrWindowId);
     fn apz_deregister_updater(window_id: WrWindowId);
 }
@@ -715,7 +707,7 @@ impl SceneBuilderHooks for APZCallbacks {
     }
 
     fn post_scene_swap(&self, info: PipelineInfo) {
-        let info = Box::into_raw(Box::new(WrPipelineInfo::new(info)));
+        let info = WrPipelineInfo::new(info);
         unsafe { apz_post_scene_swap(self.window_id, info) }
     }
 
