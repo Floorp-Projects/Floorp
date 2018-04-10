@@ -451,6 +451,12 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.pushLibs()
 
     def pushLibs(self):
+        elfhack = None
+        xrePath = self.options.get('xrePath')
+        if xrePath:
+            elfhack = os.path.join(xrePath, 'elfhack')
+            if not os.path.exists(elfhack):
+                elfhack = None
         pushed_libs_count = 0
         if self.options['localAPK']:
             try:
@@ -468,6 +474,10 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                                 subprocess.check_output(cmd)
                                 # xz strips the ".so" file suffix.
                                 os.rename(localFile[:-3], localFile)
+                                # elfhack -r should provide better crash reports
+                                if elfhack:
+                                    cmd = [elfhack, '-r', localFile]
+                                    subprocess.check_output(cmd)
                         self.device.pushFile(localFile, remoteFile)
                         pushed_libs_count += 1
             finally:
