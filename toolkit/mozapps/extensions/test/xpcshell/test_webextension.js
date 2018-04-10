@@ -212,29 +212,6 @@ add_task(async function() {
   await promiseRestartManager();
 });
 
-// install.rdf should be read before manifest.json
-add_task(async function() {
-
-  await Promise.all([
-    promiseInstallAllFiles([do_get_addon("webextension_2")], true)
-  ]);
-
-  await promiseRestartManager();
-
-  let installrdf_id = "first-webextension2@tests.mozilla.org";
-  let first_addon = await promiseAddonByID(installrdf_id);
-  Assert.notEqual(first_addon, null);
-  Assert.ok(!first_addon.appDisabled);
-  Assert.ok(first_addon.isActive);
-  Assert.ok(!first_addon.isSystem);
-
-  let manifestjson_id = "last-webextension2@tests.mozilla.org";
-  let last_addon = await promiseAddonByID(manifestjson_id);
-  Assert.equal(last_addon, null);
-
-  await promiseRestartManager();
-});
-
 // Test that the "options_ui" manifest section is processed correctly.
 add_task(async function test_options_ui() {
   let OPTIONS_RE = /^moz-extension:\/\/[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}\/options\.html$/;
