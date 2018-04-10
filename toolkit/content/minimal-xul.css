@@ -18,6 +18,8 @@
  * HAVING YOUR CHANGES REVIEWED BY enndeakin@gmail.com
  */
 
+@import url("chrome://global/skin/resizer.css");
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
@@ -74,7 +76,6 @@ html|span.accesskey {
 /********** resizer **********/
 
 resizer {
-  -moz-binding: url("chrome://global/content/bindings/resizer.xml#resizer");
   position: relative;
   z-index: 2147483647;
 }
