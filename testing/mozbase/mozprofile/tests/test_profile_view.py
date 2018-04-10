@@ -44,13 +44,15 @@ class TestProfilePrint(unittest.TestCase):
         finally:
             mozfile.rmtree(tempdir)
 
-    def test_strcast(self):
-        """
-        test casting to a string
-        """
-
+    def test_str_cast(self):
+        """Test casting to a string."""
         profile = mozprofile.Profile()
-        self.assertEqual(str(profile), profile.summary())
+        self.assertEqual(str(profile), profile.summary().encode("UTF-8"))
+
+    def test_unicode_cast(self):
+        """Test casting to a unicode string."""
+        profile = mozprofile.Profile()
+        self.assertEqual(unicode(profile), profile.summary())
 
     def test_profile_diff(self):
         profile1 = mozprofile.Profile()
