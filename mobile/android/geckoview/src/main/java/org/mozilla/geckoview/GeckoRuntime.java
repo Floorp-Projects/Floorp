@@ -6,24 +6,19 @@
 
 package org.mozilla.geckoview;
 
-import java.util.ArrayList;
-
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.content.Context;
-import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.ThreadUtils;
 
 public final class GeckoRuntime implements Parcelable {
     private static final String LOGTAG = "GeckoRuntime";
@@ -53,6 +48,7 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     private GeckoRuntimeSettings mSettings;
+    private Delegate mDelegate;
 
     /**
      * Attach the runtime to the given context.
@@ -68,6 +64,17 @@ public final class GeckoRuntime implements Parcelable {
             GeckoAppShell.setApplicationContext(appContext);
         }
     }
+
+    private final BundleEventListener mEventListener = new BundleEventListener() {
+        @Override
+        public void handleMessage(final String event, final GeckoBundle message,
+                                  final EventCallback callback) {
+            if ("Gecko:Exited".equals(event) && mDelegate != null) {
+                mDelegate.onShutdown();
+                EventDispatcher.getInstance().unregisterUiThreadListener(mEventListener, "Gecko:Exited");
+            }
+        }
+    };
 
     /* package */ boolean init(final @NonNull GeckoRuntimeSettings settings) {
         if (DEBUG) {
@@ -85,6 +92,9 @@ public final class GeckoRuntime implements Parcelable {
                 return false;
             }
             mSettings = settings;
+
+            // Bug 1453062 -- the EventDispatcher should really live here (or in GeckoThread)
+            EventDispatcher.getInstance().registerUiThreadListener(mEventListener, "Gecko:Exited");
             return true;
         }
         Log.d(LOGTAG, "init failed (could not initiate GeckoThread)");
@@ -144,6 +154,32 @@ public final class GeckoRuntime implements Parcelable {
         }
 
         GeckoThread.forceQuit();
+    }
+
+    public interface Delegate {
+        /**
+         * This is called when the runtime shuts down. Any GeckoSession instances that were
+         * opened with this instance are now considered closed.
+         **/
+        void onShutdown();
+    }
+
+    /**
+     * Set a delegate for receiving callbacks relevant to to this GeckoRuntime.
+     *
+     * @param delegate an implementation of {@link GeckoRuntime.Delegate}.
+     */
+    public void setDelegate(final Delegate delegate) {
+        mDelegate = delegate;
+    }
+
+    /**
+     * Returns the current delegate, if any.
+     *
+     * @return an instance of {@link GeckoRuntime.Delegate} or null if no delegate has been set.
+     */
+    public @Nullable Delegate getDelegate() {
+        return mDelegate;
     }
 
     @Override // Parcelable
