@@ -12,6 +12,14 @@ interface nsIZipEntry;
 interface nsIJARChannel : nsIChannel
 {
     /**
+     * Returns TRUE if the JAR file is not safe (if the content type reported
+     * by the server for a remote JAR is not of an expected type).  Scripting,
+     * redirects, and plugins should be disabled when loading from this
+     * channel.
+     */
+    [infallible] readonly attribute boolean isUnsafe;
+
+    /**
      * Returns the JAR file.  May be null if the jar is remote.
      * Setting the JAR file is optional and overrides the JAR
      * file used for local file JARs. Setting the JAR file after

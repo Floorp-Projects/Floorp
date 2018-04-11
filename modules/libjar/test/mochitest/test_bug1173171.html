@@ -18,6 +18,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1173171
 
 /** Test for Bug 1173171 **/
 
+// __setPref(key, value)__.
+// Set a pref value asynchronously, returning a prmoise that resolves
+// when it succeeds.
+let pushPref = function (key, value) {
+  return new Promise(function(resolve, reject) {
+    SpecialPowers.pushPrefEnv({"set": [[key, value]]}, resolve);
+  });
+};
+
 // __xhr(method, url, responseType__.
 // A simple async XMLHttpRequest call.
 // Returns a promise with the response.
@@ -40,9 +49,12 @@ let jarURL = "jar:http://mochi.test:8888/tests/modules/libjar/test/mochitest/bug
 
 // Test behavior when blocking is deactivated and activated.
 add_task(async function() {
-  let shouldBlock = true;
-  let response = await xhr("GET", jarURL, "document");
-  is(response, null, "Remote jars should be blocked.");
+  for (let shouldBlock of [false, true]) {
+    await pushPref("network.jar.block-remote-files", shouldBlock);
+    let response = await xhr("GET", jarURL, "document");
+    ok(shouldBlock === (response === null),
+       "Remote jars should be blocked if and only if the 'network.jar.block-remote-files' pref is active.");
+  }
 });
 
 </script>
