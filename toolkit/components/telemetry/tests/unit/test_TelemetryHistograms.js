@@ -1007,7 +1007,7 @@ function test_keyed_subsession() {
   Assert.equal(h.subsessionSnapshot(KEY).sum, 0);
 });
 
-add_task(function* test_keyed_keys() {
+add_task(async function test_keyed_keys() {
   let h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_KEYS");
   h.clear();
   Telemetry.clearScalars();

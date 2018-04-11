@@ -536,7 +536,7 @@ add_task(async function test_keyed_max_keys() {
   });
 });
 
-add_task(function* test_dynamicScalars_registration() {
+add_task(async function test_dynamicScalars_registration() {
   Telemetry.clearScalars();
 
   const TEST_CASES = [
@@ -606,7 +606,7 @@ add_task(function* test_dynamicScalars_registration() {
   }
 });
 
-add_task(function* test_dynamicScalars_doubleRegistration() {
+add_task(async function test_dynamicScalars_doubleRegistration() {
   Telemetry.clearScalars();
 
   // Register a test scalar.
@@ -664,7 +664,7 @@ add_task(function* test_dynamicScalars_doubleRegistration() {
                "The recorded scalar must contain the right value.");
 });
 
-add_task(function* test_dynamicScalars_recording() {
+add_task(async function test_dynamicScalars_recording() {
   Telemetry.clearScalars();
 
   // Disable extended recording so that we will just record opt-out.
