@@ -41,6 +41,33 @@ interface mozIMozIntl : nsISupports
   jsval getDisplayNames([optional] in jsval locales, [optional] in jsval options);
   jsval getLocaleInfo([optional] in jsval locales);
 
+  /**
+   * Returns a list of language names formatted for display.
+   *
+   * Example:
+   *   let langs = getLanguageDisplayNames(["pl"], ["fr", "de", "en"]);
+   *   langs === ["Francuski", "Niemiecki", "Angielski"]
+   */
+  jsval getLanguageDisplayNames(in jsval locales, in jsval langCodes);
+
+  /**
+   * Returns a list of region names formatted for display.
+   *
+   * Example:
+   *   let regs = getLanguageDisplayNames(["pl"], ["US", "CA", "MX"]);
+   *   regs === ["Stany Zjednoczone", "Kanada", "Meksyk"]
+   */
+  jsval getRegionDisplayNames(in jsval locales, in jsval regionCodes);
+
+  /**
+   * Returns a list of locale names formatted for display.
+   *
+   * Example:
+   *   let locs = getLanguageDisplayNames(["pl"], ["sr-RU", "es-MX", "fr-CA"]);
+   *   locs === ["Serbski (Rosja)", "Hiszpański (Meksyk)", "Francuski (Kanada)"]
+   */
+  jsval getLocaleDisplayNames(in jsval locales, in jsval localeCodes);
+
   readonly attribute jsval DateTimeFormat;
   readonly attribute jsval NumberFormat;
   readonly attribute jsval Collator;

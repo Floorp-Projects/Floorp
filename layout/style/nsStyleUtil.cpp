@@ -623,8 +623,8 @@ nsStyleUtil::AppendSerializedFontSrc(const nsCSSValue& aValue,
 
     if (sources[i].GetUnit() == eCSSUnit_URL) {
       aResult.AppendLiteral("url(");
-      nsDependentString url(sources[i].GetOriginalURLValue());
-      nsStyleUtil::AppendEscapedCSSString(url, aResult);
+      nsDependentCSubstring url(sources[i].GetURLStructValue()->GetString());
+      nsStyleUtil::AppendEscapedCSSString(NS_ConvertUTF8toUTF16(url), aResult);
       aResult.Append(')');
     } else if (sources[i].GetUnit() == eCSSUnit_Local_Font) {
       aResult.AppendLiteral("local(");

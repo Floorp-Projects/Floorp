@@ -537,12 +537,12 @@
  */
 
 /* Lightweight theme on tabs */
-:root[lwtheme-image] #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background[selected=true] {
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background[selected=true]:-moz-lwtheme {
   background-attachment: scroll, scroll, fixed;
   background-color: transparent;
   background-image: linear-gradient(var(--lwt-selected-tab-background-color, transparent), var(--lwt-selected-tab-background-color, transparent)),
                     linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)),
-                    var(--lwt-header-image);
+                    var(--lwt-header-image, none);
   background-position: 0 0, 0 0, right top;
   background-repeat: repeat-x, repeat-x, no-repeat;
   background-size: auto 100%, auto 100%, auto auto;
@@ -747,4 +747,3 @@
 .alltabs-endimage[activemedia-blocked] {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-blocked.svg);
 }
-

@@ -29,8 +29,10 @@ module.exports = async function() {
   messageManager.loadFrameScript("data:,(" + encodeURIComponent(
     `function () {
       addMessageListener("do-dir", function () {
-        content.console.dir(Array.from({length:1000}).reduce((res, _, i)=> {
-          res["item_" + i] = i;
+        content.console.dir(Array.from({length:333}).reduce((res, _, i)=> {
+          res["item_" + i] = "alphanum-indexed-" + i;
+          res[i] = "num-indexed-" + i;
+          res[Symbol(i)] = "symbol-indexed-" + i;
           return res;
         }, {}));
       });

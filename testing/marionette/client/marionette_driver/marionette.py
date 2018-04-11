@@ -1706,16 +1706,15 @@ class Marionette(object):
         args = self._to_json(script_args)
         stack = traceback.extract_stack()
         frame = stack[-2:-1][0]  # grab the second-to-last frame
-        body = {"script": script,
+        filename = frame[0] if sys.platform == "win32" else os.path.relpath(frame[0])
+        body = {"script": script.strip(),
                 "args": args,
                 "newSandbox": new_sandbox,
                 "sandbox": sandbox,
                 "scriptTimeout": script_timeout,
                 "line": int(frame[1]),
-                "filename": os.path.basename(frame[0])}
-
-        rv = self._send_message("WebDriver:ExecuteScript",
-                                body, key="value")
+                "filename": filename}
+        rv = self._send_message("WebDriver:ExecuteScript", body, key="value")
         return self._from_json(rv)
 
     def execute_async_script(self, script, script_args=(), new_sandbox=True,
@@ -1756,13 +1755,14 @@ class Marionette(object):
         args = self._to_json(script_args)
         stack = traceback.extract_stack()
         frame = stack[-2:-1][0]  # grab the second-to-last frame
-        body = {"script": script,
+        filename = frame[0] if sys.platform == "win32" else os.path.relpath(frame[0])
+        body = {"script": script.strip(),
                 "args": args,
                 "newSandbox": new_sandbox,
                 "sandbox": sandbox,
                 "scriptTimeout": script_timeout,
                 "line": int(frame[1]),
-                "filename": os.path.basename(frame[0]),
+                "filename": filename,
                 "debug_script": debug_script}
 
         rv = self._send_message("WebDriver:ExecuteAsyncScript",

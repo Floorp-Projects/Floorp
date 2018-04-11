@@ -163,10 +163,8 @@ class TestExecuteContent(MarionetteTestCase):
             self.marionette.execute_script("return b")
 
         # by default execute_script pass the name of the python file
-        self.assertIn(os.path.basename(__file__.replace(".pyc", ".py")),
-                      cm.exception.stacktrace)
+        self.assertIn(os.path.relpath(__file__.replace(".pyc", ".py")), cm.exception.stacktrace)
         self.assertIn("b is not defined", cm.exception.message)
-        self.assertIn("return b", cm.exception.stacktrace)
 
     def test_permission(self):
         for sandbox in ["default", None]:
