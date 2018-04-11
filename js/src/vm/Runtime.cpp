@@ -31,6 +31,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
+#include "jit/IonBuilder.h"
 #include "jit/JitCompartment.h"
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/mips64/Simulator-mips64.h"
@@ -418,8 +419,13 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
             rtSizes->scriptData += mallocSizeOf(r.front());
     }
 
-    if (jitRuntime_)
+    if (jitRuntime_) {
         jitRuntime_->execAlloc().addSizeOfCode(&rtSizes->code);
+
+        // Sizes of the IonBuilders we are holding for lazy linking
+        for (auto builder : jitRuntime_->ionLazyLinkList(this))
+            rtSizes->jitLazyLink += builder->sizeOfIncludingThis(mallocSizeOf);
+    }
 
     rtSizes->wasmRuntime += wasmInstances.lock()->sizeOfExcludingThis(mallocSizeOf);
 }
