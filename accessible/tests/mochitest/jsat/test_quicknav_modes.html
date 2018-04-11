@@ -13,10 +13,9 @@
           src="./jsatcommon.js"></script>
   <script type="application/javascript">
 
-    function prefStart() {
-      // Start AccessFu via pref.
-      SpecialPowers.pushPrefEnv({"set": [["accessibility.accessfu.activate", 1]]});
+    function startAccessFu() {
       AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
+      AccessFu._enable();
     }
 
     function nextMode(aCurrentMode, aNextMode) {
@@ -69,15 +68,14 @@
       }
     }
 
-    // Listen for initial 'EventManager.start' and disable AccessFu.
-    function prefStop() {
-      ok(AccessFu._enabled, "AccessFu was started via preference.");
+    function stopAccessFu() {
+      ok(AccessFu._enabled, "AccessFu is enabled.");
       AccessFuTest.once_log("EventManager.stop", () => AccessFuTest.finish());
-      SpecialPowers.pushPrefEnv({"set": [["accessibility.accessfu.activate", 0]]});
+      AccessFu._disable();
     }
 
     function doTest() {
-      AccessFuTest.addFunc(prefStart);
+      AccessFuTest.addFunc(startAccessFu);
       AccessFuTest.addFunc(nextMode("Link", "Heading"));
       AccessFuTest.addFunc(nextMode("Heading", "FormElement"));
       AccessFuTest.addFunc(nextMode("FormElement", "Link"));
@@ -86,7 +84,7 @@
       AccessFuTest.addFunc(prevMode("Link", "FormElement"));
       AccessFuTest.addFunc(setMode(1, "Heading"));
       AccessFuTest.addFunc(reconfigureModes);
-      AccessFuTest.addFunc(prefStop);
+      AccessFuTest.addFunc(stopAccessFu);
       AccessFuTest.waitForExplicitFinish();
       AccessFuTest.runTests([   // Will call SimpleTest.finish();
         ["accessibility.accessfu.quicknav_modes", "Link,Heading,FormElement"]]);
