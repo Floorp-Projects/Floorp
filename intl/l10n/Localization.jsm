@@ -16,7 +16,7 @@
  */
 
 
-/* fluent@0.6.3 */
+/* fluent-dom@0.2.0 */
 
 /* eslint no-console: ["error", { allow: ["warn", "error"] }] */
 /* global console */
@@ -327,15 +327,15 @@ function messageFromContext(ctx, errors, id, args) {
 
   const formatted = {
     value: ctx.format(msg, args, errors),
-    attrs: null,
+    attributes: null,
   };
 
   if (msg.attrs) {
-    formatted.attrs = [];
-    for (const name in msg.attrs) {
-      const value = ctx.format(msg.attrs[name], args, errors);
+    formatted.attributes = [];
+    for (const [name, attr] of Object.entries(msg.attrs)) {
+      const value = ctx.format(attr, args, errors);
       if (value !== null) {
-        formatted.attrs.push({ name, value });
+        formatted.attributes.push({name, value});
       }
     }
   }
