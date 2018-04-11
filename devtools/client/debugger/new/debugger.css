@@ -612,6 +612,11 @@ img.source-icon {
   height: 15px;
 }
 
+img.result-item-icon {
+  height: 18px;
+  width: 18px;
+}
+
 img.domain {
   mask: url("chrome://devtools/skin/images/debugger/domain.svg") no-repeat;
 }
@@ -626,6 +631,10 @@ img.coffeescript {
 
 img.javascript {
   mask: url("chrome://devtools/skin/images/debugger/javascript.svg") no-repeat;
+}
+
+img.tab {
+  mask: url("chrome://devtools/skin/images/debugger/tab.svg") no-repeat;
 }
 
 img.react {
@@ -648,6 +657,13 @@ img.file,
 img.source-icon {
   mask-size: 100%;
   margin-inline-end: 5px;
+  display: inline-block;
+}
+
+img.result-item-icon {
+  mask-size: 100%;
+  margin-inline-end: 15px;
+  margin-inline-start: 5px;
   display: inline-block;
 }
 
@@ -756,6 +772,8 @@ html[dir="rtl"] .arrow svg,
   display: grid;
   grid-template-columns: 1fr;
   align-content: start;
+
+  line-height: 1.4em;
 }
 
 .managed-tree .tree button {
@@ -1603,6 +1621,10 @@ menuseparator {
 .function-signature .comma {
   color: var(--object-color);
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 .command-bar-button {
   appearance: none;
   background: transparent;
@@ -2774,7 +2796,6 @@ debug-expression-error {
 .breakpoints-list .breakpoint {
   font-size: 12px;
   color: var(--theme-content-color1);
-  line-height: 1em;
   position: relative;
   transition: all 0.25s ease;
   padding: 0.5em 1em 0.5em 0.5em;
@@ -3063,6 +3084,10 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 .frames ul .frames-group.expanded .badge {
   color: var(--theme-highlight-blue);
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 .badge {
   --size: 17px;
   --radius: calc(var(--size) / 2);
@@ -3617,6 +3642,10 @@ html[dir="rtl"] .dropdown {
   left: 0;
   top: 0;
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 .dropdown span.icon-spacer {
   margin-left: 8px;
 }
@@ -4019,6 +4048,7 @@ html .welcomebox .toggle-button-end.collapsed {
   padding: 10px;
   flex-direction: row;
   border-bottom: 1px solid var(--theme-splitter-color);
+  line-height: 18px;
 }
 
 .result-list.small li {
@@ -4050,8 +4080,24 @@ html .welcomebox .toggle-button-end.collapsed {
   background: var(--grey-70);
 }
 
+.result-list li .result-item-icon {
+  background-color: var(--theme-comment);
+}
+.result-list li.selected .result-item-icon {
+  background-color: var(--theme-selection-color);
+}
+
+.result-list li .result-item-icon.tab {
+  mask-size: 150%;
+  mask-position: 2px 4px;
+}
+
+.result-list li img.result-item-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .result-list li .title {
-  line-height: 1.5em;
   word-break: break-all;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4107,6 +4153,10 @@ html .welcomebox .toggle-button-end.collapsed {
 .theme-dark .result-list {
   background-color: var(--theme-body-background);
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 .result-item .title .highlight {
   font-weight: bold;
   background-color: transparent;

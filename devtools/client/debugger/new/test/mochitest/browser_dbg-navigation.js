@@ -6,6 +6,14 @@ function countSources(dbg) {
   return sources.size;
 }
 
+const sources = [
+  "simple1.js",
+  "simple2.js",
+  "simple3.js",
+  "long.js",
+  "scripts.html"
+];
+
 /**
  * Test navigating
  * navigating while paused will reset the pause state and sources
@@ -27,21 +35,11 @@ add_task(async function() {
   assertPausedLocation(dbg);
   is(countSources(dbg), 5, "5 sources are loaded.");
 
-  await navigate(dbg, "about:blank");
-  await waitForDispatch(dbg, "NAVIGATE");
-  is(countSources(dbg), 0, "0 sources are loaded.");
+  await navigate(dbg, "doc-scripts.html", ...sources);
+  is(countSources(dbg), 5, "5 sources are loaded.");
   ok(!isPaused(getState()), "Is not paused");
 
-  await navigate(
-    dbg,
-    "doc-scripts.html",
-    "simple1.js",
-    "simple2.js",
-    "simple3.js",
-    "long.js",
-    "scripts.html"
-  );
-
+  await navigate(dbg, "doc-scripts.html", ...sources);
   is(countSources(dbg), 5, "5 sources are loaded.");
 
   // Test that the current select source persists across reloads
@@ -50,9 +48,7 @@ add_task(async function() {
   await waitForSelectedSource(dbg, "long.js");
 
   ok(
-    getSelectedSource(getState())
-      .get("url")
-      .includes("long.js"),
+    getSelectedSource(getState()).url.includes("long.js"),
     "Selected source is long.js"
   );
 });
