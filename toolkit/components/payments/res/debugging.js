@@ -211,6 +211,7 @@ let DUPED_ADDRESSES = {
 
 let BASIC_CARDS_1 = {
   "53f9d009aed2": {
+    billingAddressGUID: "68gjdh354j",
     "cc-number": "************5461",
     "guid": "53f9d009aed2",
     "version": 1,
