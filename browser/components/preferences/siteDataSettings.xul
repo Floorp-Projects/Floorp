@@ -35,7 +35,7 @@
     </hbox>
     <separator class="thin"/>
 
-    <richlistbox id="sitesList" orient="vertical" flex="1">
+    <richlistbox seltype="multiple" id="sitesList" orient="vertical" flex="1">
       <listheader>
         <treecol flex="4" width="50" label="&hostCol.label;" id="hostCol"/>
         <treecol flex="1" width="50" label="&cookiesCol.label;" id="cookiesCol"/>
