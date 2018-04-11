@@ -355,7 +355,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.device.push(localWrapper, self.remoteClearDirScript)
         os.remove(localWrapper)
 
-        self.device.chmod(self.remoteBinDir, recursive=True)
+        self.device.chmod(self.remoteBinDir, recursive=True, root=True)
 
     def buildEnvironment(self):
         self.buildCoreEnvironment()

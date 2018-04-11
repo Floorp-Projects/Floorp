@@ -315,7 +315,7 @@ class RemoteReftest(RefTest):
 
         try:
             self.device.push(profileDir, options.remoteProfile)
-            self.device.chmod(options.remoteProfile, recursive=True)
+            self.device.chmod(options.remoteProfile, recursive=True, root=True)
         except Exception:
             print "Automation Error: Failed to copy profiledir to device"
             raise
@@ -328,7 +328,7 @@ class RemoteReftest(RefTest):
         if len(os.listdir(profileDir)) > 0:
             try:
                 self.device.push(profileDir, options.remoteProfile)
-                self.device.chmod(options.remoteProfile, recursive=True)
+                self.device.chmod(options.remoteProfile, recursive=True, root=True)
             except Exception:
                 print "Automation Error: Failed to copy extra files to device"
                 raise
