@@ -235,8 +235,8 @@ nsTextBoxFrame::UpdateAttributes(nsAtom*         aAttribute,
 
     if (aAttribute == nullptr || aAttribute == nsGkAtoms::crop) {
         static Element::AttrValuesArray strings[] =
-          {nsGkAtoms::left, nsGkAtoms::start, nsGkAtoms::center,
-           nsGkAtoms::right, nsGkAtoms::end, nsGkAtoms::none, nullptr};
+          {&nsGkAtoms::left, &nsGkAtoms::start, &nsGkAtoms::center,
+           &nsGkAtoms::right, &nsGkAtoms::end, &nsGkAtoms::none, nullptr};
         CroppingStyle cropType;
         switch (mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
                                                        nsGkAtoms::crop, strings,

@@ -183,37 +183,37 @@ nsMathMLElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 static Element::MappedAttributeEntry sMtableStyles[] = {
-  { nsGkAtoms::width },
+  { &nsGkAtoms::width },
   { nullptr }
 };
 
 static Element::MappedAttributeEntry sTokenStyles[] = {
-  { nsGkAtoms::mathsize_ },
-  { nsGkAtoms::fontsize_ },
-  { nsGkAtoms::color },
-  { nsGkAtoms::fontfamily_ },
-  { nsGkAtoms::fontstyle_ },
-  { nsGkAtoms::fontweight_ },
-  { nsGkAtoms::mathvariant_},
+  { &nsGkAtoms::mathsize_ },
+  { &nsGkAtoms::fontsize_ },
+  { &nsGkAtoms::color },
+  { &nsGkAtoms::fontfamily_ },
+  { &nsGkAtoms::fontstyle_ },
+  { &nsGkAtoms::fontweight_ },
+  { &nsGkAtoms::mathvariant_},
   { nullptr }
 };
 
 static Element::MappedAttributeEntry sEnvironmentStyles[] = {
-  { nsGkAtoms::scriptlevel_ },
-  { nsGkAtoms::scriptminsize_ },
-  { nsGkAtoms::scriptsizemultiplier_ },
-  { nsGkAtoms::background },
+  { &nsGkAtoms::scriptlevel_ },
+  { &nsGkAtoms::scriptminsize_ },
+  { &nsGkAtoms::scriptsizemultiplier_ },
+  { &nsGkAtoms::background },
   { nullptr }
 };
 
 static Element::MappedAttributeEntry sCommonPresStyles[] = {
-  { nsGkAtoms::mathcolor_ },
-  { nsGkAtoms::mathbackground_ },
+  { &nsGkAtoms::mathcolor_ },
+  { &nsGkAtoms::mathbackground_ },
   { nullptr }
 };
 
 static Element::MappedAttributeEntry sDirStyles[] = {
-  { nsGkAtoms::dir },
+  { &nsGkAtoms::dir },
   { nullptr }
 };
 
@@ -998,13 +998,13 @@ nsMathMLElement::IsLink(nsIURI** aURI) const
     // result is poorly specified. Either way, we return false.
 
     static Element::AttrValuesArray sTypeVals[] =
-      { nsGkAtoms::_empty, nsGkAtoms::simple, nullptr };
+      { &nsGkAtoms::_empty, &nsGkAtoms::simple, nullptr };
 
     static Element::AttrValuesArray sShowVals[] =
-      { nsGkAtoms::_empty, nsGkAtoms::_new, nsGkAtoms::replace, nullptr };
+      { &nsGkAtoms::_empty, &nsGkAtoms::_new, &nsGkAtoms::replace, nullptr };
 
     static Element::AttrValuesArray sActuateVals[] =
-      { nsGkAtoms::_empty, nsGkAtoms::onRequest, nullptr };
+      { &nsGkAtoms::_empty, &nsGkAtoms::onRequest, nullptr };
 
     // Optimization: check for href first for early return
     href = mAttrsAndChildren.GetAttr(nsGkAtoms::href,
@@ -1050,7 +1050,7 @@ nsMathMLElement::GetLinkTarget(nsAString& aTarget)
   if (aTarget.IsEmpty()) {
 
     static Element::AttrValuesArray sShowVals[] =
-      { nsGkAtoms::_new, nsGkAtoms::replace, nullptr };
+      { &nsGkAtoms::_new, &nsGkAtoms::replace, nullptr };
 
     switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
                             sShowVals, eCaseMatters)) {

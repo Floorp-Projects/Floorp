@@ -1375,7 +1375,7 @@ nsXULPopupManager::ExecuteMenu(nsIContent* aMenu, nsXULMenuCommandEvent* aEvent)
   CloseMenuMode cmm = CloseMenuMode_Auto;
 
   static Element::AttrValuesArray strings[] =
-    {nsGkAtoms::none, nsGkAtoms::single, nullptr};
+    {&nsGkAtoms::none, &nsGkAtoms::single, nullptr};
 
   if (aMenu->IsElement()) {
     switch (aMenu->AsElement()->FindAttrValueIn(kNameSpaceID_None,

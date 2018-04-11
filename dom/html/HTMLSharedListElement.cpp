@@ -100,7 +100,7 @@ HTMLSharedListElement::IsAttributeMapped(const nsAtom* aAttribute) const
   if (mNodeInfo->Equals(nsGkAtoms::ol) ||
       mNodeInfo->Equals(nsGkAtoms::ul)) {
     static const MappedAttributeEntry attributes[] = {
-      { nsGkAtoms::type },
+      { &nsGkAtoms::type },
       { nullptr }
     };
 
