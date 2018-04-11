@@ -1439,10 +1439,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
     }
 
     if (tmp->IsHTMLElement() || tmp->IsSVGElement()) {
-      nsStaticAtom* const* props =
-        Element::HTMLSVGPropertiesToTraverseAndUnlink();
+      nsStaticAtom*** props = Element::HTMLSVGPropertiesToTraverseAndUnlink();
       for (uint32_t i = 0; props[i]; ++i) {
-        tmp->DeleteProperty(props[i]);
+        tmp->DeleteProperty(*props[i]);
       }
       if (tmp->MayHaveAnimations()) {
         nsAtom** effectProps = EffectSet::GetEffectSetPropertyAtoms();
@@ -2005,11 +2004,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
       }
     }
     if (tmp->IsHTMLElement() || tmp->IsSVGElement()) {
-      nsStaticAtom* const* props =
-        Element::HTMLSVGPropertiesToTraverseAndUnlink();
+      nsStaticAtom*** props = Element::HTMLSVGPropertiesToTraverseAndUnlink();
       for (uint32_t i = 0; props[i]; ++i) {
         nsISupports* property =
-          static_cast<nsISupports*>(tmp->GetProperty(props[i]));
+          static_cast<nsISupports*>(tmp->GetProperty(*props[i]));
         cb.NoteXPCOMChild(property);
       }
       if (tmp->MayHaveAnimations()) {

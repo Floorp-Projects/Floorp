@@ -5818,8 +5818,8 @@ NS_IMETHODIMP_(bool)
 HTMLInputElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { nsGkAtoms::align },
-    { nsGkAtoms::type },
+    { &nsGkAtoms::align },
+    { &nsGkAtoms::type },
     { nullptr },
   };
 

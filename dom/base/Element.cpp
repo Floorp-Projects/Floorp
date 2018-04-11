@@ -2164,7 +2164,7 @@ Element::FindAttributeDependence(const nsAtom* aAttribute,
   for (uint32_t mapindex = 0; mapindex < aMapCount; ++mapindex) {
     for (const MappedAttributeEntry* map = aMaps[mapindex];
          map->attribute; ++map) {
-      if (aAttribute == map->attribute) {
+      if (aAttribute == *map->attribute) {
         return true;
       }
     }
@@ -2906,7 +2906,7 @@ Element::FindAttrValueIn(int32_t aNameSpaceID,
   const nsAttrValue* val = mAttrsAndChildren.GetAttr(aName, aNameSpaceID);
   if (val) {
     for (int32_t i = 0; aValues[i]; ++i) {
-      if (val->Equals(aValues[i], aCaseSensitive)) {
+      if (val->Equals(*aValues[i], aCaseSensitive)) {
         return i;
       }
     }
@@ -3418,16 +3418,16 @@ nsDOMTokenListPropertyDestructor(void *aObject, nsAtom *aProperty,
   NS_RELEASE(list);
 }
 
-static nsStaticAtom* const sPropertiesToTraverseAndUnlink[] =
+static nsStaticAtom** sPropertiesToTraverseAndUnlink[] =
   {
-    nsGkAtoms::sandbox,
-    nsGkAtoms::sizes,
-    nsGkAtoms::dirAutoSetBy,
+    &nsGkAtoms::sandbox,
+    &nsGkAtoms::sizes,
+    &nsGkAtoms::dirAutoSetBy,
     nullptr
   };
 
 // static
-nsStaticAtom* const*
+nsStaticAtom***
 Element::HTMLSVGPropertiesToTraverseAndUnlink()
 {
   return sPropertiesToTraverseAndUnlink;
@@ -3438,10 +3438,10 @@ Element::GetTokenList(nsAtom* aAtom,
                       const DOMTokenListSupportedTokenArray aSupportedTokens)
 {
 #ifdef DEBUG
-  const nsStaticAtom* const* props = HTMLSVGPropertiesToTraverseAndUnlink();
+  nsStaticAtom*** props = HTMLSVGPropertiesToTraverseAndUnlink();
   bool found = false;
   for (uint32_t i = 0; props[i]; ++i) {
-    if (props[i] == aAtom) {
+    if (*props[i] == aAtom) {
       found = true;
       break;
     }
