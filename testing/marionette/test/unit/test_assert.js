@@ -3,9 +3,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+/* eslint-disable no-array-constructor, no-new-object */
 
 ChromeUtils.import("chrome://marionette/content/assert.js");
-ChromeUtils.import("chrome://marionette/content/error.js");
+const {
+  InvalidArgumentError,
+  InvalidSessionIDError,
+  JavaScriptError,
+  NoSuchWindowError,
+  SessionNotCreatedError,
+  UnexpectedAlertOpenError,
+  UnsupportedOperationError,
+} = ChromeUtils.import("chrome://marionette/content/error.js", {});
 
 add_test(function test_acyclic() {
   assert.acyclic({});
@@ -111,7 +120,7 @@ add_test(function test_number() {
 });
 
 add_test(function test_callable() {
-  assert.callable(function () {});
+  assert.callable(function() {});
   assert.callable(() => {});
 
   for (let typ of [undefined, "", true, {}, []]) {
@@ -224,3 +233,5 @@ add_test(function test_that() {
 
   run_next_test();
 });
+
+/* eslint-enable no-array-constructor, no-new-object */

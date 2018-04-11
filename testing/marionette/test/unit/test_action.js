@@ -5,8 +5,7 @@
 "use strict";
 
 ChromeUtils.import("chrome://marionette/content/action.js");
-const {ContentWebElement} = ChromeUtils.import("chrome://marionette/content/element.js", {});
-ChromeUtils.import("chrome://marionette/content/error.js");
+const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js", {});
 
 const XHTMLNS = "http://www.w3.org/1999/xhtml";
 
@@ -46,9 +45,9 @@ add_test(function test_processPointerParameters() {
     let message = `parametersData: [pointerType: ${parametersData.pointerType}]`;
     check(/Unknown pointerType/, message, parametersData);
   }
-  parametersData.pointerType = "mouse"; //TODO "pen";
+  parametersData.pointerType = "mouse"; // TODO "pen";
   deepEqual(action.PointerParameters.fromJSON(parametersData),
-      {pointerType: "mouse"}); //TODO action.PointerType.Pen});
+      {pointerType: "mouse"}); // TODO action.PointerType.Pen});
 
   run_next_test();
 });
@@ -72,7 +71,7 @@ add_test(function test_processPointerUpDownAction() {
 add_test(function test_validateActionDurationAndCoordinates() {
   let actionItem = {};
   let actionSequence = {id: "some_id"};
-  let check = function (type, subtype, message = undefined) {
+  let check = function(type, subtype, message = undefined) {
     message = message || `duration: ${actionItem.duration}, subtype: ${subtype}`;
     actionItem.type = subtype;
     actionSequence.type = type;
@@ -193,7 +192,7 @@ add_test(function test_processPointerMoveAction() {
 });
 
 add_test(function test_computePointerDestinationViewport() {
-  let act = { type: "pointerMove", x: 100, y: 200, origin: "viewport"};
+  let act = {type: "pointerMove", x: 100, y: 200, origin: "viewport"};
   let inputState = new action.InputState.Pointer(action.PointerType.Mouse);
   // these values should not affect the outcome
   inputState.x = "99";
@@ -206,7 +205,7 @@ add_test(function test_computePointerDestinationViewport() {
 });
 
 add_test(function test_computePointerDestinationPointer() {
-  let act = { type: "pointerMove", x: 100, y: 200, origin: "pointer"};
+  let act = {type: "pointerMove", x: 100, y: 200, origin: "pointer"};
   let inputState = new action.InputState.Pointer(action.PointerType.Mouse);
   inputState.x = 10;
   inputState.y = 99;
@@ -246,7 +245,7 @@ add_test(function test_processPointerAction() {
     type: "pointer",
     id: "some_id",
     parameters: {
-      pointerType: "mouse" //TODO "touch"
+      pointerType: "mouse", // TODO "touch"
     },
   };
   let actionItems = [
@@ -261,7 +260,7 @@ add_test(function test_processPointerAction() {
     {
       type: "pointerUp",
       button: 1,
-    }
+    },
   ];
   for (let expected of actionItems) {
     let actual = action.Action.fromJSON(actionSequence, expected);
@@ -303,7 +302,7 @@ add_test(function test_processPauseAction() {
 add_test(function test_processActionSubtypeValidation() {
   let actionItem = {type: "dancing"};
   let actionSequence = {id: "some_id"};
-  let check = function (regex) {
+  let check = function(regex) {
     let message = `type: ${actionSequence.type}, subtype: ${actionItem.type}`;
     checkErrors(regex, action.Action.fromJSON, [actionSequence, actionItem], message);
   };
@@ -366,7 +365,7 @@ add_test(function test_processInputSourceActionSequenceValidation() {
 });
 
 add_test(function test_processInputSourceActionSequence() {
-  let actionItem = { type: "pause", duration: 5};
+  let actionItem = {type: "pause", duration: 5};
   let actionSequence = {
     type: "none",
     id: "some id",
@@ -388,7 +387,7 @@ add_test(function test_processInputSourceActionSequencePointer() {
     id: "9",
     actions: [actionItem],
     parameters: {
-      pointerType: "mouse" // TODO "pen"
+      pointerType: "mouse", // TODO "pen"
     },
   };
   let expectedAction = new action.Action(
@@ -425,7 +424,7 @@ add_test(function test_processInputSourceActionSequenceInputStateMap() {
   let actionItem = {type: "pause", duration: 5000};
   let actionSequence = {
     type: "key",
-    id: id,
+    id,
     actions: [actionItem],
   };
   let wrongInputState = new action.InputState.Null();
@@ -455,13 +454,13 @@ add_test(function test_processPointerActionInputStateMap() {
   action.inputStateMap.clear();
 
   // TODO - uncomment once pen is supported
-  //wrongInputState = new action.InputState.Pointer("pen");
-  //action.inputStateMap.set(id, wrongInputState);
-  //checkErrors(
+  // wrongInputState = new action.InputState.Pointer("pen");
+  // action.inputStateMap.set(id, wrongInputState);
+  // checkErrors(
   //    /to be mapped to InputState whose subtype is/, action.processPointerAction,
   //    [id, parameters, a],
   //    `subtype ${parameters.pointerType} with ${wrongInputState.subtype} in inputState`);
-  //action.inputStateMap.clear();
+  // action.inputStateMap.clear();
 
   let rightInputState = new action.InputState.Pointer("mouse");
   action.inputStateMap.set(id, rightInputState);
@@ -541,7 +540,7 @@ add_test(function test_extractActionChain_twoAndThreeTicks() {
     id: "7",
     actions: mouseActionItems,
     parameters: {
-      pointerType: "mouse" //TODO "touch"
+      pointerType: "mouse", // TODO "touch"
     },
   };
   let keyActionItems = [
@@ -622,7 +621,7 @@ add_test(function test_computeTickDuration_noDurations() {
 // helpers
 function getTypeString(obj) {
   return Object.prototype.toString.call(obj);
-};
+}
 
 function checkErrors(regex, func, args, message) {
   if (typeof message == "undefined") {
@@ -630,4 +629,4 @@ function checkErrors(regex, func, args, message) {
   }
   Assert.throws(() => func.apply(this, args), InvalidArgumentError, message);
   Assert.throws(() => func.apply(this, args), regex, message);
-};
+}
