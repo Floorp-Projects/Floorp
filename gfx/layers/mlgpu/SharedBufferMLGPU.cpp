@@ -13,16 +13,19 @@ using namespace std;
 namespace mozilla {
 namespace layers {
 
-SharedBufferMLGPU::SharedBufferMLGPU(MLGDevice* aDevice, MLGBufferType aType, size_t aDefaultSize)
- : mDevice(aDevice),
-   mType(aType),
-   mDefaultSize(aDefaultSize),
-   mCanUseOffsetAllocation(true),
-   mCurrentPosition(0),
-   mMaxSize(0),
-   mMapped(false),
-   mBytesUsedThisFrame(0),
-   mNumSmallFrames(0)
+SharedBufferMLGPU::SharedBufferMLGPU(MLGDevice* aDevice,
+                                     MLGBufferType aType,
+                                     size_t aDefaultSize)
+  : mDevice(aDevice)
+  , mType(aType)
+  , mDefaultSize(aDefaultSize)
+  , mCanUseOffsetAllocation(true)
+  , mCurrentPosition(0)
+  , mMaxSize(0)
+  , mMap{}
+  , mMapped(false)
+  , mBytesUsedThisFrame(0)
+  , mNumSmallFrames(0)
 {
   MOZ_COUNT_CTOR(SharedBufferMLGPU);
 }
@@ -193,8 +196,11 @@ VertexBufferSection::Init(MLGBuffer* aBuffer, ptrdiff_t aOffset, size_t aNumVert
 }
 
 ConstantBufferSection::ConstantBufferSection()
- : mOffset(-1)
-{}
+  : mOffset(-1)
+  , mNumBytes{}
+  , mNumItems{}
+{
+}
 
 void
 ConstantBufferSection::Init(MLGBuffer* aBuffer, ptrdiff_t aOffset, size_t aBytes, size_t aNumItems)

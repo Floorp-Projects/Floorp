@@ -221,6 +221,7 @@ private:
 public:
   ArrayBufferView_base()
     : Base()
+    , mType{ static_cast<js::Scalar::Type>(0) }
   {
   }
 

@@ -435,23 +435,24 @@ FrameLayerBuilder::DestroyDisplayItemDataFor(nsIFrame* aFrame)
  */
 class PaintedLayerData {
 public:
-  PaintedLayerData() :
-    mAnimatedGeometryRoot(nullptr),
-    mASR(nullptr),
-    mReferenceFrame(nullptr),
-    mLayer(nullptr),
-    mSolidColor(NS_RGBA(0, 0, 0, 0)),
-    mIsSolidColorInVisibleRegion(false),
-    mNeedComponentAlpha(false),
-    mForceTransparentSurface(false),
-    mHideAllLayersBelow(false),
-    mOpaqueForAnimatedGeometryRootParent(false),
-    mDisableFlattening(false),
-    mBackfaceHidden(false),
-    mShouldPaintOnContentSide(false),
-    mDTCRequiresTargetConfirmation(false),
-    mImage(nullptr),
-    mNewChildLayersIndex(-1)
+  PaintedLayerData()
+    : mAnimatedGeometryRoot(nullptr)
+    , mASR(nullptr)
+    , mClipChain{ nullptr }
+    , mReferenceFrame(nullptr)
+    , mLayer(nullptr)
+    , mSolidColor(NS_RGBA(0, 0, 0, 0))
+    , mIsSolidColorInVisibleRegion(false)
+    , mNeedComponentAlpha(false)
+    , mForceTransparentSurface(false)
+    , mHideAllLayersBelow(false)
+    , mOpaqueForAnimatedGeometryRootParent(false)
+    , mDisableFlattening(false)
+    , mBackfaceHidden(false)
+    , mShouldPaintOnContentSide(false)
+    , mDTCRequiresTargetConfirmation(false)
+    , mImage(nullptr)
+    , mNewChildLayersIndex(-1)
   {}
 
 #ifdef MOZ_DUMP_PAINTING
@@ -1479,15 +1480,19 @@ protected:
 class PaintedDisplayItemLayerUserData : public LayerUserData
 {
 public:
-  PaintedDisplayItemLayerUserData() :
-    mForcedBackgroundColor(NS_RGBA(0,0,0,0)),
-    mXScale(1.f), mYScale(1.f),
-    mAppUnitsPerDevPixel(0),
-    mTranslation(0, 0),
-    mAnimatedGeometryRootPosition(0, 0),
-    mLastItemCount(0),
-    mContainerLayerFrame(nullptr),
-    mHasExplicitLastPaintOffset(false) {}
+  PaintedDisplayItemLayerUserData()
+    : mForcedBackgroundColor(NS_RGBA(0, 0, 0, 0))
+    , mXScale(1.f)
+    , mYScale(1.f)
+    , mAppUnitsPerDevPixel(0)
+    , mTranslation(0, 0)
+    , mAnimatedGeometryRootPosition(0, 0)
+    , mLastItemCount(0)
+    , mContainerLayerFrame(nullptr)
+    , mHasExplicitLastPaintOffset(false)
+    , mDisabledAlpha{ false }
+  {
+  }
 
   NS_INLINE_DECL_REFCOUNTING(PaintedDisplayItemLayerUserData);
 
@@ -1571,6 +1576,7 @@ protected:
 
 FrameLayerBuilder::FrameLayerBuilder()
   : mRetainingManager(nullptr)
+  , mDisplayListBuilder{ nullptr }
   , mContainingPaintedLayer(nullptr)
   , mInactiveLayerClip(nullptr)
   , mInvalidateAllLayers(false)

@@ -123,6 +123,10 @@ class TErrorResult {
 public:
   TErrorResult()
     : mResult(NS_OK)
+    , mMessage
+  {
+    nullptr
+  }
 #ifdef DEBUG
     , mMightHaveUnreportedJSException(false)
     , mUnionState(HasNothing)

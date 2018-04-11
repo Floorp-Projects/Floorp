@@ -362,12 +362,13 @@ private:
 class WalkDiskCacheRunnable : public WalkCacheRunnable
 {
 public:
-  WalkDiskCacheRunnable(nsILoadContextInfo *aLoadInfo,
+  WalkDiskCacheRunnable(nsILoadContextInfo* aLoadInfo,
                         bool aVisitEntries,
                         nsICacheStorageVisitor* aVisitor)
     : WalkCacheRunnable(aVisitor, aVisitEntries)
     , mLoadInfo(aLoadInfo)
     , mPass(COLLECT_STATS)
+    , mCount{}
   {
   }
 
@@ -396,6 +397,11 @@ private:
     explicit OnCacheEntryInfoRunnable(WalkDiskCacheRunnable* aWalker)
       : Runnable("net::WalkDiskCacheRunnable::OnCacheEntryInfoRunnable")
       , mWalker(aWalker)
+      , mDataSize{}
+      , mFetchCount{}
+      , mLastModifiedTime{}
+      , mExpirationTime{}
+      , mPinned{ false }
     {
     }
 
@@ -1633,7 +1639,10 @@ public:
   NS_DECL_NSIRUNNABLE
 
   explicit CacheEntryDoomByKeyCallback(nsICacheEntryDoomCallback* aCallback)
-    : mCallback(aCallback) { }
+    : mCallback(aCallback)
+    , mResult{ NS_ERROR_NOT_INITIALIZED }
+  {
+  }
 
 private:
   virtual ~CacheEntryDoomByKeyCallback();

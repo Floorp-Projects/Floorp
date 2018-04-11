@@ -33,7 +33,8 @@ class AudioTrack;
 class MediaTrack : public DOMEventTargetHelper
 {
 public:
-  MediaTrack(const nsAString& aId,
+  MediaTrack(nsIGlobalObject* aOwnerGlobal,
+             const nsAString& aId,
              const nsAString& aKind,
              const nsAString& aLabel,
              const nsAString& aLanguage);
@@ -89,7 +90,6 @@ protected:
   virtual ~MediaTrack();
 
   void SetTrackList(MediaTrackList* aList);
-  void Init(nsPIDOMWindowInner* aOwnerWindow);
 
   RefPtr<MediaTrackList> mList;
   nsString mId;

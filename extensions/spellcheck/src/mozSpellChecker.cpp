@@ -38,7 +38,8 @@ NS_IMPL_CYCLE_COLLECTION(mozSpellChecker,
                          mPersonalDictionary)
 
 mozSpellChecker::mozSpellChecker()
-  : mEngine(nullptr)
+  : mFromStart{ false }
+  , mEngine(nullptr)
 {
 }
 

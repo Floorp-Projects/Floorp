@@ -32,18 +32,19 @@ class JsepSessionImpl : public JsepSession
 {
 public:
   JsepSessionImpl(const std::string& name, UniquePtr<JsepUuidGenerator> uuidgen)
-      : JsepSession(name),
-        mIsOfferer(false),
-        mWasOffererLastTime(false),
-        mIceControlling(false),
-        mLocalIceIsRestarting(false),
-        mRemoteIsIceLite(false),
-        mRemoteIceIsRestarting(false),
-        mBundlePolicy(kBundleBalanced),
-        mSessionId(0),
-        mSessionVersion(0),
-        mUuidGen(Move(uuidgen)),
-        mSdpHelper(&mLastError)
+    : JsepSession(name)
+    , mIsOfferer(false)
+    , mWasOffererLastTime(false)
+    , mIceControlling(false)
+    , mLocalIceIsRestarting(false)
+    , mRemoteIsIceLite(false)
+    , mRemoteIceIsRestarting(false)
+    , mBundlePolicy(kBundleBalanced)
+    , mSessionId(0)
+    , mSessionVersion(0)
+    , mUuidGen(Move(uuidgen))
+    , mSdpHelper(&mLastError)
+    , mRunRustParser{ false }
   {
   }
 

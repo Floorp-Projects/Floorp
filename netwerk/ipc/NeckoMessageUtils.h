@@ -27,7 +27,12 @@ struct Permission
   uint32_t capability, expireType;
   int64_t expireTime;
 
-  Permission() { }
+  Permission()
+    : capability{}
+    , expireType{}
+    , expireTime{}
+  {
+  }
   Permission(const nsCString& aOrigin,
              const nsCString& aType,
              const uint32_t aCapability,

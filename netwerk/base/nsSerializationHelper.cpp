@@ -40,7 +40,7 @@ NS_DeserializeObject(const nsACString& str, nsISupports** obj)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIInputStream> stream;
-  rv = NS_NewCStringInputStream(getter_AddRefs(stream), decodedData);
+  rv = NS_NewCStringInputStream(getter_AddRefs(stream), Move(decodedData));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIObjectInputStream> objstream =

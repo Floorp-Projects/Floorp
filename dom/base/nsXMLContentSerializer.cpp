@@ -57,16 +57,23 @@ NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer)
 }
 
 nsXMLContentSerializer::nsXMLContentSerializer()
-  : mPrefixIndex(0),
-    mColPos(0),
-    mIndentOverflow(0),
-    mIsIndentationAddedOnCurrentLine(false),
-    mInAttribute(false),
-    mAddNewlineForRootNode(false),
-    mAddSpace(false),
-    mMayIgnoreLineBreakSequence(false),
-    mBodyOnly(false),
-    mInBody(0)
+  : mPrefixIndex(0)
+  , mFlags{}
+  , mColPos(0)
+  , mDoFormat{ false }
+  , mDoRaw{ false }
+  , mDoWrap{ false }
+  , mAllowLineBreaking{ false }
+  , mMaxColumn{}
+  , mIndentOverflow(0)
+  , mIsIndentationAddedOnCurrentLine(false)
+  , mInAttribute(false)
+  , mAddNewlineForRootNode(false)
+  , mAddSpace(false)
+  , mMayIgnoreLineBreakSequence(false)
+  , mBodyOnly(false)
+  , mInBody(0)
+  , mPreLevel{}
 {
 }
 

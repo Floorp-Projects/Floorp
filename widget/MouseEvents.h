@@ -512,6 +512,7 @@ private:
     , mLineOrPageDeltaY(0)
     , mScrollType(SCROLL_DEFAULT)
     , mCustomizedByUserPrefs(false)
+    , mMayHaveMomentum{ false }
     , mIsMomentum(false)
     , mIsNoLineOrPageDelta(false)
     , mViewPortIsOverscrolled(false)

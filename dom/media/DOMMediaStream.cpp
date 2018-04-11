@@ -422,12 +422,19 @@ NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
 DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow,
                                MediaStreamTrackSourceGetter* aTrackSourceGetter)
-  : mLogicalStreamStartTime(0), mWindow(aWindow),
-    mInputStream(nullptr), mOwnedStream(nullptr), mPlaybackStream(nullptr),
-    mTracksPendingRemoval(0), mTrackSourceGetter(aTrackSourceGetter),
-    mPlaybackTrackListener(MakeAndAddRef<PlaybackTrackListener>(this)),
-    mTracksCreated(false), mNotifiedOfMediaStreamGraphShutdown(false),
-    mActive(false), mSetInactiveOnFinish(false)
+  : mLogicalStreamStartTime(0)
+  , mWindow(aWindow)
+  , mInputStream(nullptr)
+  , mOwnedStream(nullptr)
+  , mPlaybackStream(nullptr)
+  , mTracksPendingRemoval(0)
+  , mTrackSourceGetter(aTrackSourceGetter)
+  , mPlaybackTrackListener(MakeAndAddRef<PlaybackTrackListener>(this))
+  , mTracksCreated(false)
+  , mNotifiedOfMediaStreamGraphShutdown(false)
+  , mActive(false)
+  , mSetInactiveOnFinish(false)
+  , mCORSMode{ CORS_NONE }
 {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =

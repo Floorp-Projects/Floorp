@@ -59,7 +59,9 @@ Hacl_Bignum_Fproduct_sum_scalar_multiplication_(uint64_t *output, uint32_t *inpu
     for (uint32_t i = (uint32_t)0U; i < (uint32_t)5U; i = i + (uint32_t)1U) {
         uint64_t xi = output[i];
         uint32_t yi = input[i];
-        output[i] = xi + (uint64_t)yi * (uint64_t)s;
+        uint64_t x_wide = (uint64_t)yi;
+        uint64_t y_wide = (uint64_t)s;
+        output[i] = xi + x_wide * y_wide;
     }
 }
 

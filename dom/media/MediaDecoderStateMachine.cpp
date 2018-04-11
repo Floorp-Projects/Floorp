@@ -820,7 +820,11 @@ class MediaDecoderStateMachine::SeekingState
   : public MediaDecoderStateMachine::StateObject
 {
 public:
-  explicit SeekingState(Master* aPtr) : StateObject(aPtr) { }
+  explicit SeekingState(Master* aPtr)
+    : StateObject(aPtr)
+    , mVisibility{ static_cast<EventVisibility>(0) }
+  {
+  }
 
   RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aSeekJob,
                                           EventVisibility aVisibility)

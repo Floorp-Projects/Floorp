@@ -14,6 +14,7 @@
 nsSMILValue::nsSMILValue(const nsISMILType* aType)
   : mType(nsSMILNullType::Singleton())
 {
+  this->mU.mBool = { false };
   if (!aType) {
     NS_ERROR("Trying to construct nsSMILValue with null mType pointer");
     return;

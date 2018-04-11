@@ -63,6 +63,15 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 
   explicit nsSplitterFrameInner(nsSplitterFrame* aSplitter)
+    : mDidDrag{ false }
+    , mDragStart{}
+    , mCurrentPos{}
+    , mParentBox{ nullptr }
+    , mChildInfosBeforeCount{}
+    , mChildInfosAfterCount{}
+    , mState{ static_cast<State>(0) }
+    , mSplitterPos{}
+    , mDragging{ false }
   {
     mOuter = aSplitter;
     mPressed = false;

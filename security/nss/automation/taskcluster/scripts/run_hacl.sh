@@ -12,6 +12,9 @@ set -e -x -v
 # The extracted C code from HACL* is already generated and the HACL* tests were
 # successfully executed.
 
+# Verify HACL*. Taskcluster fails when we do this in the image build.
+make -C hacl-star verify-nss -j$(nproc)
+
 # Add license header to specs
 spec_files=($(find ~/hacl-star/specs -type f -name '*.fst'))
 for f in "${spec_files[@]}"; do

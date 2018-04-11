@@ -237,11 +237,15 @@ struct NativeIMEContext final
   uint64_t mOriginProcessID;
 
   NativeIMEContext()
+    : mRawNativeIMEContext{}
+    , mOriginProcessID{}
   {
     Init(nullptr);
   }
 
   explicit NativeIMEContext(nsIWidget* aWidget)
+    : mRawNativeIMEContext{}
+    , mOriginProcessID{}
   {
     Init(aWidget);
   }
@@ -523,6 +527,7 @@ struct IMENotification final
 {
   IMENotification()
     : mMessage(NOTIFY_IME_OF_NOTHING)
+    , mSelectionChangeData{}
   {
   }
 
@@ -539,6 +544,7 @@ struct IMENotification final
 
   MOZ_IMPLICIT IMENotification(IMEMessage aMessage)
     : mMessage(aMessage)
+    , mSelectionChangeData{}
   {
     switch (aMessage) {
       case NOTIFY_IME_OF_SELECTION_CHANGE:

@@ -8998,7 +8998,8 @@ nsLayoutUtils::NeedsPrintPreviewBackground(nsPresContext* aPresContext)
      aPresContext->Type() == nsPresContext::eContext_PageLayout);
 }
 
-AutoMaybeDisableFontInflation::AutoMaybeDisableFontInflation(nsIFrame *aFrame)
+AutoMaybeDisableFontInflation::AutoMaybeDisableFontInflation(nsIFrame* aFrame)
+  : mOldValue{ false }
 {
   // FIXME: Now that inflation calculations are based on the flow
   // root's NCA's (nearest common ancestor of its inflatable

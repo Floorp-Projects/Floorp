@@ -34,6 +34,7 @@ namespace gmp {
 
 GMPContentParent::GMPContentParent(GMPParent* aParent)
   : mParent(aParent)
+  , mPluginId{}
 {
   if (mParent) {
     SetDisplayName(mParent->GetDisplayName());

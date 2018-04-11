@@ -33,7 +33,8 @@ gfxGraphiteShaper::gfxGraphiteShaper(gfxFont *aFont)
       mGrFace(mFont->GetFontEntry()->GetGrFace()),
       mGrFont(nullptr), mFallbackToSmallCaps(false)
 {
-    mCallbackData.mFont = aFont;
+  this->mCallbackData.mDrawTarget = { nullptr };
+  mCallbackData.mFont = aFont;
 }
 
 gfxGraphiteShaper::~gfxGraphiteShaper()

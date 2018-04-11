@@ -3049,14 +3049,18 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNavHistoryFolderResultNode,
                             mozIStorageStatementCallback)
 
 nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
-    const nsACString& aTitle, nsNavHistoryQueryOptions* aOptions,
-    int64_t aFolderId) :
-  nsNavHistoryContainerResultNode(EmptyCString(), aTitle, 0,
-                                  nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
-                                  aOptions),
-  mContentsValid(false),
-  mTargetFolderItemId(aFolderId),
-  mIsRegisteredFolderObserver(false)
+  const nsACString& aTitle,
+  nsNavHistoryQueryOptions* aOptions,
+  int64_t aFolderId)
+  : nsNavHistoryContainerResultNode(EmptyCString(),
+                                    aTitle,
+                                    0,
+                                    nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
+                                    aOptions)
+  , mContentsValid(false)
+  , mTargetFolderItemId(aFolderId)
+  , mIsRegisteredFolderObserver(false)
+  , mAsyncBookmarkIndex{}
 {
   mItemId = aFolderId;
 }

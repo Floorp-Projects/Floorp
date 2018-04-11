@@ -153,6 +153,7 @@ NS_IMPL_ISUPPORTS_INHERITED(PaymentCanMakeActionResponse,
                             nsIPaymentCanMakeActionResponse)
 
 PaymentCanMakeActionResponse::PaymentCanMakeActionResponse()
+  : mResult{ false }
 {
   mType = nsIPaymentActionResponse::CANMAKE_ACTION;
 }
@@ -180,6 +181,7 @@ NS_IMPL_ISUPPORTS_INHERITED(PaymentShowActionResponse,
                             nsIPaymentShowActionResponse)
 
 PaymentShowActionResponse::PaymentShowActionResponse()
+  : mAcceptStatus{}
 {
   mType = nsIPaymentActionResponse::SHOW_ACTION;
 }
@@ -291,6 +293,7 @@ NS_IMPL_ISUPPORTS_INHERITED(PaymentAbortActionResponse,
                             nsIPaymentAbortActionResponse)
 
 PaymentAbortActionResponse::PaymentAbortActionResponse()
+  : mAbortStatus{}
 {
   mType = nsIPaymentActionResponse::ABORT_ACTION;
 }
@@ -327,6 +330,7 @@ NS_IMPL_ISUPPORTS_INHERITED(PaymentCompleteActionResponse,
                             nsIPaymentCompleteActionResponse)
 
 PaymentCompleteActionResponse::PaymentCompleteActionResponse()
+  : mCompleteStatus{}
 {
   mType = nsIPaymentActionResponse::COMPLETE_ACTION;
 }
