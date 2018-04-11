@@ -2996,11 +2996,11 @@ exports.CSS_PROPERTIES = {
       "grid-template-rows",
       "height",
       "hyphens",
-      "initial-letter",
       "image-orientation",
       "-moz-image-region",
       "image-rendering",
       "ime-mode",
+      "initial-letter",
       "inline-size",
       "isolation",
       "justify-content",
@@ -3064,8 +3064,11 @@ exports.CSS_PROPERTIES = {
       "outline-width",
       "overflow-clip-box-block",
       "overflow-clip-box-inline",
+      "overflow-wrap",
       "overflow-x",
       "overflow-y",
+      "overscroll-behavior-x",
+      "overscroll-behavior-y",
       "padding-block-end",
       "padding-block-start",
       "padding-bottom",
@@ -3088,9 +3091,8 @@ exports.CSS_PROPERTIES = {
       "rotate",
       "ruby-align",
       "ruby-position",
+      "scale",
       "scroll-behavior",
-      "overscroll-behavior-x",
-      "overscroll-behavior-y",
       "scroll-snap-coordinate",
       "scroll-snap-destination",
       "scroll-snap-points-x",
@@ -3133,7 +3135,6 @@ exports.CSS_PROPERTIES = {
       "-moz-text-size-adjust",
       "-webkit-text-stroke-color",
       "-webkit-text-stroke-width",
-      "scale",
       "text-transform",
       "top",
       "-moz-top-layer",
@@ -3158,13 +3159,12 @@ exports.CSS_PROPERTIES = {
       "width",
       "will-change",
       "-moz-window-dragging",
-      "-moz-window-shadow",
       "-moz-window-opacity",
+      "-moz-window-shadow",
       "-moz-window-transform",
       "-moz-window-transform-origin",
       "word-break",
       "word-spacing",
-      "overflow-wrap",
       "writing-mode",
       "z-index"
     ],
@@ -9512,12 +9512,12 @@ exports.PREFERENCES = [
     "layout.css.font-variations.enabled"
   ],
   [
-    "initial-letter",
-    "layout.css.initial-letter.enabled"
-  ],
-  [
     "image-orientation",
     "layout.css.image-orientation.enabled"
+  ],
+  [
+    "initial-letter",
+    "layout.css.initial-letter.enabled"
   ],
   [
     "isolation",
@@ -9544,14 +9544,6 @@ exports.PREFERENCES = [
     "layout.css.overflow-clip-box.enabled"
   ],
   [
-    "rotate",
-    "layout.css.individual-transform.enabled"
-  ],
-  [
-    "scroll-behavior",
-    "layout.css.scroll-behavior.property-enabled"
-  ],
-  [
     "overscroll-behavior",
     "layout.css.overscroll-behavior.enabled"
   ],
@@ -9562,6 +9554,18 @@ exports.PREFERENCES = [
   [
     "overscroll-behavior-y",
     "layout.css.overscroll-behavior.enabled"
+  ],
+  [
+    "rotate",
+    "layout.css.individual-transform.enabled"
+  ],
+  [
+    "scale",
+    "layout.css.individual-transform.enabled"
+  ],
+  [
+    "scroll-behavior",
+    "layout.css.scroll-behavior.property-enabled"
   ],
   [
     "scroll-snap-coordinate",
@@ -9622,10 +9626,6 @@ exports.PREFERENCES = [
   [
     "-webkit-text-stroke-width",
     "layout.css.prefixes.webkit"
-  ],
-  [
-    "scale",
-    "layout.css.individual-transform.enabled"
   ],
   [
     "touch-action",
