@@ -167,7 +167,7 @@ var PushServiceAndroidGCM = {
     // No action required.
   },
 
-  connect: function(records) {
+  connect: function(records, broadcastListeners) {
     console.debug("connect:", records);
     // It's possible for the registration or subscriptions backing the
     // PushService to not be registered with the underlying AndroidPushService.
@@ -192,6 +192,10 @@ var PushServiceAndroidGCM = {
           });
       }));
     });
+  },
+
+  sendSubscribeBroadcast: async function(serviceId, version) {
+    // Not implemented yet
   },
 
   isConnected: function() {
