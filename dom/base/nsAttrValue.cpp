@@ -30,11 +30,6 @@
 #include "nsIDocument.h"
 #include <algorithm>
 
-#ifdef LoadImage
-// Undefine LoadImage to prevent naming conflict with Windows.
-#undef LoadImage
-#endif
-
 using namespace mozilla;
 
 #define MISC_STR_PTR(_cont) \
@@ -305,11 +300,6 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       NS_ADDREF(cont->mValue.mURL = otherCont->mValue.mURL);
       break;
     }
-    case eImage:
-    {
-      NS_ADDREF(cont->mValue.mImage = otherCont->mValue.mImage);
-      break;
-    }
     case eAtomArray:
     {
       if (!EnsureEmptyAtomArray() ||
@@ -416,7 +406,7 @@ nsAttrValue::SetTo(already_AddRefed<DeclarationBlock> aValue,
 }
 
 void
-nsAttrValue::SetTo(css::URLValue* aValue, const nsAString* aSerialized)
+nsAttrValue::SetTo(nsIURI* aValue, const nsAString* aSerialized)
 {
   MiscContainer* cont = EnsureEmptyMiscContainer();
   NS_ADDREF(cont->mValue.mURL = aValue);
@@ -878,10 +868,7 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mValue.mCSSDeclaration);
     }
-    // Intentionally identical, so that loading the image does not change the
-    // hash code.
     case eURL:
-    case eImage:
     {
       nsString str;
       ToString(str);
@@ -991,10 +978,6 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     case eURL:
     {
       return thisCont->mValue.mURL == otherCont->mValue.mURL;
-    }
-    case eImage:
-    {
-      return thisCont->mValue.mImage == otherCont->mValue.mImage;
     }
     case eAtomArray:
     {
@@ -1681,28 +1664,6 @@ nsAttrValue::ParseIntMarginValue(const nsAString& aString)
   return true;
 }
 
-void
-nsAttrValue::LoadImage(nsIDocument* aDocument)
-{
-  NS_ASSERTION(Type() == eURL, "wrong type");
-
-  MiscContainer* cont = GetMiscContainer();
-  mozilla::css::URLValue* url = cont->mValue.mURL;
-
-  NS_ASSERTION(!url->IsStringEmpty(),
-               "How did we end up with an empty string for eURL");
-
-  mozilla::css::ImageValue* image =
-      mozilla::css::ImageValue::CreateFromURLValue(url,
-                                                   aDocument,
-                                                   mozilla::CORSMode::CORS_NONE);
-
-  NS_ADDREF(image);
-  cont->mValue.mImage = image;
-  NS_RELEASE(url);
-  cont->mType = eImage;
-}
-
 bool
 nsAttrValue::ParseStyleAttribute(const nsAString& aString,
                                  nsIPrincipal* aMaybeScriptedPrincipal,
@@ -1867,11 +1828,6 @@ nsAttrValue::ClearMiscContainer()
         case eURL:
         {
           NS_RELEASE(cont->mValue.mURL);
-          break;
-        }
-        case eImage:
-        {
-          NS_RELEASE(cont->mValue.mImage);
           break;
         }
         case eAtomArray:
