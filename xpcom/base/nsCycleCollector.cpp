@@ -610,6 +610,11 @@ public:
 
   // Allow NodePool::NodeBlock's constructor to compile.
   PtrInfo()
+    : mPointer{ nullptr }
+    , mParticipant{ nullptr }
+    , mColor{}
+    , mInternalRefs{}
+    , mRefCount{}
   {
     NS_NOTREACHED("should never be called");
   }
@@ -691,6 +696,7 @@ private:
     // We create and destroy NodeBlock using moz_xmalloc/free rather than new
     // and delete to avoid calling its constructor and destructor.
     NodeBlock()
+      : mNext{ nullptr }
     {
       NS_NOTREACHED("should never be called");
 
@@ -2231,6 +2237,7 @@ CCGraphBuilder::CCGraphBuilder(CCGraph& aGraph,
   , mResults(aResults)
   , mNodeBuilder(aGraph.mNodes)
   , mEdgeBuilder(aGraph.mEdges)
+  , mCurrPi{ nullptr }
   , mJSParticipant(nullptr)
   , mJSZoneParticipant(nullptr)
   , mLogger(aLogger)

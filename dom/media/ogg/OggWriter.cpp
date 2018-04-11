@@ -11,8 +11,28 @@
 
 namespace mozilla {
 
-OggWriter::OggWriter() : ContainerWriter()
+OggWriter::OggWriter()
+  : ContainerWriter()
+  , mOggPage{}
+  , mPacket{}
 {
+  this->mOggStreamState.body_data = { nullptr };
+  this->mOggStreamState.body_storage = {};
+  this->mOggStreamState.body_fill = {};
+  this->mOggStreamState.body_returned = {};
+  this->mOggStreamState.lacing_vals = { nullptr };
+  this->mOggStreamState.granule_vals = { nullptr };
+  this->mOggStreamState.lacing_storage = {};
+  this->mOggStreamState.lacing_fill = {};
+  this->mOggStreamState.lacing_packet = {};
+  this->mOggStreamState.lacing_returned = {};
+  this->mOggStreamState.header_fill = {};
+  this->mOggStreamState.e_o_s = {};
+  this->mOggStreamState.b_o_s = {};
+  this->mOggStreamState.serialno = {};
+  this->mOggStreamState.pageno = {};
+  this->mOggStreamState.packetno = {};
+  this->mOggStreamState.granulepos = {};
   if (NS_FAILED(Init())) {
     LOG("ERROR! Fail to initialize the OggWriter.");
   }

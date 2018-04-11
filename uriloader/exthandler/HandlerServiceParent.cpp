@@ -35,8 +35,9 @@ protected:
 NS_IMPL_ISUPPORTS(ProxyHandlerInfo, nsIHandlerInfo)
 
 ProxyHandlerInfo::ProxyHandlerInfo(const HandlerInfo& aHandlerInfo)
-  : mHandlerInfo(aHandlerInfo),
-    mPossibleApps(do_CreateInstance(NS_ARRAY_CONTRACTID))
+  : mHandlerInfo(aHandlerInfo)
+  , mPrefAction{}
+  , mPossibleApps(do_CreateInstance(NS_ARRAY_CONTRACTID))
 {
   for (auto& happ : aHandlerInfo.possibleApplicationHandlers()) {
     mPossibleApps->AppendElement(new RemoteHandlerApp(happ));

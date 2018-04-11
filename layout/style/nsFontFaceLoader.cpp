@@ -52,10 +52,11 @@ nsFontFaceLoader::nsFontFaceLoader(gfxUserFontEntry* aUserFontEntry,
                                    nsIURI* aFontURI,
                                    FontFaceSet* aFontFaceSet,
                                    nsIChannel* aChannel)
-  : mUserFontEntry(aUserFontEntry),
-    mFontURI(aFontURI),
-    mFontFaceSet(aFontFaceSet),
-    mChannel(aChannel)
+  : mUserFontEntry(aUserFontEntry)
+  , mFontURI(aFontURI)
+  , mFontFaceSet(aFontFaceSet)
+  , mChannel(aChannel)
+  , mStreamLoader{ nullptr }
 {
   MOZ_ASSERT(mFontFaceSet,
              "We should get a valid FontFaceSet from the caller!");

@@ -127,7 +127,12 @@ protected:
   class TTextAttr : public TextAttr
   {
   public:
-    explicit TTextAttr(bool aGetRootValue) : mGetRootValue(aGetRootValue) {}
+    explicit TTextAttr(bool aGetRootValue)
+      : mGetRootValue(aGetRootValue)
+      , mIsDefined{ false }
+      , mIsRootDefined{ false }
+    {
+    }
 
     // TextAttr
     virtual void Expose(nsIPersistentProperties* aAttributes,

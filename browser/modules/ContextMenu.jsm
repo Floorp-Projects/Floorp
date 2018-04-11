@@ -539,13 +539,15 @@ class ContextMenu {
     let contentDisposition = null;
     if (aEvent.target.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
         aEvent.target instanceof Ci.nsIImageLoadingContent &&
-        aEvent.target.currentRequestFinalURI) {
+        aEvent.target.currentURI) {
       disableSetDesktopBg = this._disableSetDesktopBackground(aEvent.target);
 
       try {
         let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                                                          .getImgCacheForDocument(doc);
-        let props = imageCache.findEntryProperties(aEvent.target.currentRequestFinalURI, doc);
+        // The image cache's notion of where this image is located is
+        // the currentURI of the image loading content.
+        let props = imageCache.findEntryProperties(aEvent.target.currentURI, doc);
 
         try {
           contentType = props.get("type", Ci.nsISupportsCString).data;
@@ -830,6 +832,9 @@ class ContextMenu {
         context.onCompletedImage = true;
       }
 
+      // The actual URL the image was loaded from (after redirects) is the
+      // currentRequestFinalURI.  We should use that as the URL for purposes of
+      // deciding on the filename.
       context.mediaURL = context.target.currentRequestFinalURI.spec;
 
       const descURL = context.target.getAttribute("longdesc");

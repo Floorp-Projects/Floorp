@@ -44,6 +44,7 @@ public:
 
   ComputedTimingFunction() = default;
   explicit ComputedTimingFunction(const nsTimingFunction& aFunction)
+    : mStepsOrFrames{}
   {
     Init(aFunction);
   }
@@ -114,7 +115,10 @@ public:
 private:
   ComputedTimingFunction(double x1, double y1, double x2, double y2)
     : mType(nsTimingFunction::Type::CubicBezier)
-    , mTimingFunction(x1, y1, x2, y2) { }
+    , mTimingFunction(x1, y1, x2, y2)
+    , mStepsOrFrames{}
+  {
+  }
   ComputedTimingFunction(nsTimingFunction::Type aType, uint32_t aStepsOrFrames)
     : mType(aType)
     , mStepsOrFrames(aStepsOrFrames) { }

@@ -13,7 +13,13 @@
 class CharDistributionAnalysis
 {
 public:
-  CharDistributionAnalysis() {Reset();}
+  CharDistributionAnalysis()
+    : mCharToFreqOrder{ nullptr }
+    , mTableSize{}
+    , mTypicalDistributionRatio{ 0.0 }
+  {
+    Reset();
+  }
 
   //feed a block of data and do distribution analysis
   void HandleData(const char* aBuf, uint32_t aLen) {}

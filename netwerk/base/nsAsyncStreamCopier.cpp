@@ -68,12 +68,14 @@ private:
 //-----------------------------------------------------------------------------
 
 nsAsyncStreamCopier::nsAsyncStreamCopier()
-    : mLock("nsAsyncStreamCopier.mLock")
-    , mMode(NS_ASYNCCOPY_VIA_READSEGMENTS)
-    , mChunkSize(nsIOService::gDefaultSegmentSize)
-    , mStatus(NS_OK)
-    , mIsPending(false)
-    , mShouldSniffBuffering(false)
+  : mLock("nsAsyncStreamCopier.mLock")
+  , mMode(NS_ASYNCCOPY_VIA_READSEGMENTS)
+  , mChunkSize(nsIOService::gDefaultSegmentSize)
+  , mStatus(NS_OK)
+  , mIsPending(false)
+  , mCloseSource{ false }
+  , mCloseSink{ false }
+  , mShouldSniffBuffering(false)
 {
     LOG(("Creating nsAsyncStreamCopier @%p\n", this));
 }

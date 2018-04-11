@@ -3,10 +3,15 @@
 set -v -e -x
 
 if [[ $(id -u) -eq 0 ]]; then
+    # Stupid Docker. It works without sometimes... But not always.
+    echo "127.0.0.1 localhost.localdomain" >> /etc/hosts
+
     # Drop privileges by re-running this script.
     # Note: this mangles arguments, better to avoid running scripts as root.
     exec su worker -c "$0 $*"
 fi
+
+export PATH="${PATH}:/home/worker/.cargo/bin/:/usr/lib/go-1.6/bin"
 
 # Usage: hg_clone repo dir [revision=@]
 hg_clone() {

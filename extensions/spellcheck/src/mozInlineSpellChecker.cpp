@@ -104,7 +104,11 @@ static const PRTime kMaxSpellCheckTimeInUsec =
   INLINESPELL_CHECK_TIMEOUT * PR_USEC_PER_MSEC;
 
 mozInlineSpellStatus::mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker)
-    : mSpellChecker(aSpellChecker), mWordCount(0)
+  : mSpellChecker(aSpellChecker)
+  , mWordCount(0)
+  , mOp{ static_cast<Operation>(0) }
+  , mForceNavigationWordCheck{ false }
+  , mNewNavigationPositionOffset{}
 {
 }
 
@@ -552,15 +556,16 @@ mozInlineSpellChecker::SpellCheckingState
   mozInlineSpellChecker::gCanEnableSpellChecking =
   mozInlineSpellChecker::SpellCheck_Uninitialized;
 
-mozInlineSpellChecker::mozInlineSpellChecker() :
-    mNumWordsInSpellSelection(0),
-    mMaxNumWordsInSpellSelection(250),
-    mNumPendingSpellChecks(0),
-    mNumPendingUpdateCurrentDictionary(0),
-    mDisabledAsyncToken(0),
-    mNeedsCheckAfterNavigation(false),
-    mFullSpellCheckScheduled(false),
-    mIsListeningToEditActions(false)
+mozInlineSpellChecker::mozInlineSpellChecker()
+  : mNumWordsInSpellSelection(0)
+  , mMaxNumWordsInSpellSelection(250)
+  , mCurrentSelectionOffset{}
+  , mNumPendingSpellChecks(0)
+  , mNumPendingUpdateCurrentDictionary(0)
+  , mDisabledAsyncToken(0)
+  , mNeedsCheckAfterNavigation(false)
+  , mFullSpellCheckScheduled(false)
+  , mIsListeningToEditActions(false)
 {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs)

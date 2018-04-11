@@ -158,17 +158,18 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
   }
 }
 
-AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
-                             const nsACString &originScheme,
-                             const nsACString &originHost,
+AltSvcMapping::AltSvcMapping(DataStorage* storage,
+                             int32_t epoch,
+                             const nsACString& originScheme,
+                             const nsACString& originHost,
                              int32_t originPort,
-                             const nsACString &username,
+                             const nsACString& username,
                              bool privateBrowsing,
                              uint32_t expiresAt,
-                             const nsACString &alternateHost,
+                             const nsACString& alternateHost,
                              int32_t alternatePort,
-                             const nsACString &npnToken,
-                             const OriginAttributes &originAttributes)
+                             const nsACString& npnToken,
+                             const OriginAttributes& originAttributes)
   : mStorage(storage)
   , mStorageEpoch(epoch)
   , mAlternateHost(alternateHost)
@@ -179,6 +180,7 @@ AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
   , mPrivate(privateBrowsing)
   , mExpiresAt(expiresAt)
   , mValidated(false)
+  , mHttps{ false }
   , mMixedScheme(false)
   , mNPNToken(npnToken)
   , mOriginAttributes(originAttributes)

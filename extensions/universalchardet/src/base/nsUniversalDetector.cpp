@@ -12,6 +12,7 @@
 #include "nsLatin1Prober.h"
 
 nsUniversalDetector::nsUniversalDetector()
+  : mLanguageFilter{}
 {
   mDone = false;
   mBestGuess = -1;   //illegal value as signal

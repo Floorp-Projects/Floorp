@@ -60,12 +60,14 @@ std::string connect_response(int code, const std::string &tail = "") {
 
 class DummyResolver {
  public:
-  DummyResolver() {
-    vtbl_ = new nr_resolver_vtbl;
-    vtbl_->destroy = &DummyResolver::destroy;
-    vtbl_->resolve = &DummyResolver::resolve;
-    vtbl_->cancel = &DummyResolver::cancel;
-    nr_resolver_create_int((void *)this, vtbl_, &resolver_);
+   DummyResolver()
+     : resolver_{ nullptr }
+   {
+     vtbl_ = new nr_resolver_vtbl;
+     vtbl_->destroy = &DummyResolver::destroy;
+     vtbl_->resolve = &DummyResolver::resolve;
+     vtbl_->cancel = &DummyResolver::cancel;
+     nr_resolver_create_int((void*)this, vtbl_, &resolver_);
   }
 
   ~DummyResolver() {
@@ -106,13 +108,40 @@ class DummyResolver {
 
 class ProxyTunnelSocketTest : public MtransportTest {
  public:
-  ProxyTunnelSocketTest()
-      : socket_impl_(nullptr),
-        nr_socket_(nullptr) {}
+   ProxyTunnelSocketTest()
+     : socket_impl_(nullptr)
+     , nr_socket_(nullptr)
+     , nr_resolver_{ nullptr }
+     , config_{ nullptr }
+   {
+     this->proxy_addr_.ip_version = { '\0' };
+     this->proxy_addr_.protocol = { '\0' };
+     this->proxy_addr_.addr = { nullptr };
+     this->proxy_addr_.addr_len = {};
+     this->proxy_addr_.u.addr4.sin_family = { '\0' };
+     this->proxy_addr_.u.addr4.sin_port = {};
+     this->proxy_addr_.u.addr4.sin_addr = {};
+     this->proxy_addr_.u.addr6.sin6_family = { '\0' };
+     this->proxy_addr_.u.addr6.sin6_port = {};
+     this->proxy_addr_.u.addr6.sin6_flowinfo = {};
+     this->proxy_addr_.u.addr6.sin6_scope_id = {};
+     this->remote_addr_.ip_version = { '\0' };
+     this->remote_addr_.protocol = { '\0' };
+     this->remote_addr_.addr = { nullptr };
+     this->remote_addr_.addr_len = {};
+     this->remote_addr_.u.addr4.sin_family = { '\0' };
+     this->remote_addr_.u.addr4.sin_port = {};
+     this->remote_addr_.u.addr4.sin_addr = {};
+     this->remote_addr_.u.addr6.sin6_family = { '\0' };
+     this->remote_addr_.u.addr6.sin6_port = {};
+     this->remote_addr_.u.addr6.sin6_flowinfo = {};
+     this->remote_addr_.u.addr6.sin6_scope_id = {};
+   }
 
-  ~ProxyTunnelSocketTest() {
-    nr_socket_destroy(&nr_socket_);
-    nr_proxy_tunnel_config_destroy(&config_);
+   ~ProxyTunnelSocketTest()
+   {
+     nr_socket_destroy(&nr_socket_);
+     nr_proxy_tunnel_config_destroy(&config_);
   }
 
   void SetUp() override {

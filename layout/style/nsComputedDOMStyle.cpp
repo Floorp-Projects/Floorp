@@ -321,6 +321,12 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
   , mComputedStyleGeneration(0)
   , mExposeVisitedStyle(false)
   , mResolvedComputedStyle(false)
+#ifdef DEBUG
+  , mFlushedPendingReflows
+{
+  false
+}
+#endif
 {
   MOZ_ASSERT(aElement && aPresShell);
   MOZ_ASSERT(aPresShell->GetPresContext());

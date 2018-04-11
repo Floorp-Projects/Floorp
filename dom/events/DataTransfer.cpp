@@ -6,6 +6,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/CheckedInt.h"
 
 #include "DataTransfer.h"
 
@@ -1470,11 +1471,14 @@ DataTransfer::FillInExternalCustomTypes(nsIVariant* aData, uint32_t aIndex,
     return;
   }
 
-  nsAutoCString str;
-  str.Adopt(chrs, len);
+  CheckedInt<int32_t> checkedLen(len);
+  if (!checkedLen.isValid()) {
+    return;
+  }
 
   nsCOMPtr<nsIInputStream> stringStream;
-  NS_NewCStringInputStream(getter_AddRefs(stringStream), str);
+  NS_NewByteInputStream(getter_AddRefs(stringStream), chrs, checkedLen.value(),
+                        NS_ASSIGNMENT_ADOPT);
 
   nsCOMPtr<nsIObjectInputStream> stream =
     NS_NewObjectInputStream(stringStream);

@@ -159,7 +159,11 @@ public:
   GetFilesHelperChild(nsIGlobalObject* aGlobal, bool aRecursiveFlag)
     : GetFilesHelper(aGlobal, aRecursiveFlag)
     , mPendingOperation(false)
-  {}
+  {
+    this->mUUID.m0 = {};
+    this->mUUID.m1 = {};
+    this->mUUID.m2 = {};
+  }
 
   virtual void
   Work(ErrorResult& aRv) override;

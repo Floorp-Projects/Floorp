@@ -639,6 +639,8 @@ RangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
  ******************************************************************************/
 
 RangeItem::RangeItem()
+  : mStartOffset{}
+  , mEndOffset{}
 {
 }
 

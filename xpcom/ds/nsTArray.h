@@ -2446,6 +2446,7 @@ public:
   typedef typename base_type::elem_type elem_type;
 
   AutoTArray()
+    : mAlign{}
   {
     Init();
   }
@@ -2458,12 +2459,14 @@ public:
   }
 
   explicit AutoTArray(const base_type& aOther)
+    : mAlign{}
   {
     Init();
     this->AppendElements(aOther);
   }
 
   explicit AutoTArray(base_type&& aOther)
+    : mAlign{}
   {
     Init();
     this->SwapElements(aOther);
@@ -2477,6 +2480,7 @@ public:
   }
 
   MOZ_IMPLICIT AutoTArray(std::initializer_list<E> aIL)
+    : mAlign{}
   {
     Init();
     this->AppendElements(aIL.begin(), aIL.size());

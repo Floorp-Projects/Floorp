@@ -264,8 +264,11 @@ NS_IMPL_ISUPPORTS(Predictor,
                   nsINetworkPredictorVerifier)
 
 Predictor::Predictor()
-  :mInitialized(false)
-  ,mStartupCount(1)
+  : mInitialized(false)
+  , mCleanedUp{ false }
+  , mStartupTime{}
+  , mLastStartupTime{}
+  , mStartupCount(1)
 {
   MOZ_ASSERT(!sSelf, "multiple Predictor instances!");
   sSelf = this;

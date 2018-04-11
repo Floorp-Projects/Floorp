@@ -24,6 +24,10 @@ Downscaler::Downscaler(const nsIntSize& aTargetSize)
   : mTargetSize(aTargetSize)
   , mOutputBuffer(nullptr)
   , mWindowCapacity(0)
+  , mLinesInBuffer{}
+  , mPrevInvalidatedLine{}
+  , mCurrentOutLine{}
+  , mCurrentInLine{}
   , mHasAlpha(true)
   , mFlipVertically(false)
 {

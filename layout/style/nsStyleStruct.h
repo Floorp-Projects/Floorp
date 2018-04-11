@@ -38,6 +38,8 @@
 #include <utility>
 #include "X11UndefineNone.h"
 
+#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for PlaybackDirection
+
 class nsIFrame;
 class nsIURI;
 class nsTextFrame;
@@ -59,7 +61,11 @@ struct Position {
   Coord mXPosition, mYPosition;
 
   // Initialize nothing
-  Position() {}
+  Position()
+    : mXPosition{}
+    , mYPosition{}
+  {
+  }
 
   // Sets both mXPosition and mYPosition to the given percent value for the
   // initial property-value (e.g. 0.0f for "0% 0%", or 0.5f for "50% 50%")
@@ -614,7 +620,11 @@ struct nsStyleImageLayers {
     bool DependsOnPositioningAreaSize(const nsStyleImage& aImage) const;
 
     // Initialize nothing
-    Size() {}
+    Size()
+      : mWidthType{ '\0' }
+      , mHeightType{ '\0' }
+    {
+    }
 
     // Initialize to initial values
     void SetInitialValues();
@@ -629,7 +639,11 @@ struct nsStyleImageLayers {
     mozilla::StyleImageLayerRepeat mXRepeat, mYRepeat;
 
     // Initialize nothing
-    Repeat() {}
+    Repeat()
+      : mXRepeat{ mozilla::StyleImageLayerRepeat::NoRepeat }
+      , mYRepeat{ mozilla::StyleImageLayerRepeat::NoRepeat }
+    {
+    }
 
     bool IsInitialValue() const {
       return mXRepeat == mozilla::StyleImageLayerRepeat::Repeat &&
@@ -893,7 +907,15 @@ struct nsCSSShadowItem
   bool mHasColor; // Whether mColor should be used
   bool mInset;
 
-  nsCSSShadowItem() : mHasColor(false) {
+  nsCSSShadowItem()
+    : mXOffset{}
+    , mYOffset{}
+    , mRadius{}
+    , mSpread{}
+    , mColor{}
+    , mHasColor(false)
+    , mInset{ false }
+  {
     MOZ_COUNT_CTOR(nsCSSShadowItem);
   }
   ~nsCSSShadowItem() {
@@ -1917,7 +1939,12 @@ namespace mozilla {
 
 struct StyleTransition
 {
-  StyleTransition() { /* leaves uninitialized; see also SetInitialValues */ }
+  StyleTransition()
+    : mDuration{ 0.0 }
+    , mDelay{ 0.0 }
+    , mProperty{ eCSSProperty_UNKNOWN }
+  { /* leaves uninitialized; see also SetInitialValues */
+  }
   explicit StyleTransition(const StyleTransition& aCopy);
 
   void SetInitialValues();
@@ -1969,7 +1996,15 @@ private:
 
 struct StyleAnimation
 {
-  StyleAnimation() { /* leaves uninitialized; see also SetInitialValues */ }
+  StyleAnimation()
+    : mDuration{ 0.0 }
+    , mDelay{ 0.0 }
+    , mDirection{ dom::PlaybackDirection::Normal }
+    , mFillMode{ dom::FillMode::None }
+    , mPlayState{ '\0' }
+    , mIterationCount{ 0.0 }
+  { /* leaves uninitialized; see also SetInitialValues */
+  }
   explicit StyleAnimation(const StyleAnimation& aCopy);
 
   void SetInitialValues();

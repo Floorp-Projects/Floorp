@@ -234,7 +234,8 @@ TableUpdateV4::NewFullHashResponse(const Prefix& aPrefix,
 HashStore::HashStore(const nsACString& aTableName,
                      const nsACString& aProvider,
                      nsIFile* aRootStoreDir)
-  : mTableName(aTableName)
+  : mHeader{}
+  , mTableName(aTableName)
   , mInUpdate(false)
   , mFileSize(0)
 {

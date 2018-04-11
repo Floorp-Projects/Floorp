@@ -90,21 +90,22 @@ public:
   NS_DECL_NSIEVENTTARGET_FULL
 
   explicit WebSocketImpl(WebSocket* aWebSocket)
-  : mWebSocket(aWebSocket)
-  , mIsServerSide(false)
-  , mSecure(false)
-  , mOnCloseScheduled(false)
-  , mFailed(false)
-  , mDisconnectingOrDisconnected(false)
-  , mCloseEventWasClean(false)
-  , mCloseEventCode(nsIWebSocketChannel::CLOSE_ABNORMAL)
-  , mScriptLine(0)
-  , mScriptColumn(0)
-  , mInnerWindowID(0)
-  , mPrivateBrowsing(false)
-  , mIsMainThread(true)
-  , mMutex("WebSocketImpl::mMutex")
-  , mWorkerShuttingDown(false)
+    : mWebSocket(aWebSocket)
+    , mIsServerSide(false)
+    , mSecure(false)
+    , mOnCloseScheduled(false)
+    , mFailed(false)
+    , mDisconnectingOrDisconnected(false)
+    , mCloseEventWasClean(false)
+    , mCloseEventCode(nsIWebSocketChannel::CLOSE_ABNORMAL)
+    , mPort{}
+    , mScriptLine(0)
+    , mScriptColumn(0)
+    , mInnerWindowID(0)
+    , mPrivateBrowsing(false)
+    , mIsMainThread(true)
+    , mMutex("WebSocketImpl::mMutex")
+    , mWorkerShuttingDown(false)
   {
     if (!NS_IsMainThread()) {
       mIsMainThread = false;
