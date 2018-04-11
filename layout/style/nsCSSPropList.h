@@ -2958,18 +2958,6 @@ CSS_PROP_(
     VARIANT_HLPN | VARIANT_OPENTYPE_SVG_KEYWORD,
     kStrokeContextValueKTable,
     eStyleAnimType_Coord)
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_(
-    -x-system-font,
-    _x_system_font,
-    CSS_PROP_DOMPROP_PREFIXED(SystemFont),
-    CSS_PROPERTY_INTERNAL |
-        CSS_PROPERTY_PARSE_INACCESSIBLE,
-    "",
-    0,
-    kFontKTable,
-    eStyleAnimType_None)
-#endif // CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_(
     -moz-tab-size,
     _moz_tab_size,
