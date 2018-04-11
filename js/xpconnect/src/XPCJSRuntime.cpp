@@ -3096,7 +3096,15 @@ XPCJSRuntime::InitSingletonScopes()
 void
 XPCJSRuntime::DeleteSingletonScopes()
 {
+    // We're pretty late in shutdown, so we call ReleaseWrapper on the scopes. This way
+    // the GC can collect them immediately, and we don't rely on the CC to clean up.
+    RefPtr<SandboxPrivate> sandbox = SandboxPrivate::GetPrivate(mUnprivilegedJunkScope);
+    sandbox->ReleaseWrapper(sandbox);
     mUnprivilegedJunkScope = nullptr;
+    sandbox = SandboxPrivate::GetPrivate(mPrivilegedJunkScope);
+    sandbox->ReleaseWrapper(sandbox);
     mPrivilegedJunkScope = nullptr;
+    sandbox = SandboxPrivate::GetPrivate(mCompilationScope);
+    sandbox->ReleaseWrapper(sandbox);
     mCompilationScope = nullptr;
 }
