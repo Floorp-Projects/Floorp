@@ -1168,6 +1168,14 @@ GlobalHelperThreadState::addSizeOfIncludingThis(JS::GlobalStats* stats,
     for (auto task : parseWaitingOnGC_)
         htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
 
+    // Report IonBuilders on wait lists
+    for (auto builder : ionWorklist_)
+        htStats.ionBuilder += builder->sizeOfIncludingThis(mallocSizeOf);
+    for (auto builder : ionFinishedList_)
+        htStats.ionBuilder += builder->sizeOfIncludingThis(mallocSizeOf);
+    for (auto builder : ionFreeList_)
+        htStats.ionBuilder += builder->sizeOfIncludingThis(mallocSizeOf);
+
     // Report number of helper threads.
     MOZ_ASSERT(htStats.idleThreadCount == 0);
     if (threads) {
