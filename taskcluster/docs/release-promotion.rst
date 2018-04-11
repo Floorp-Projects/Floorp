@@ -47,3 +47,8 @@ In-depth relpro guide
 
     release-promotion-action
     balrog
+
+Release Promotion Tasks
+-----------------------
+
+* :doc:`partials`
