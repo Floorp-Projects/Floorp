@@ -1175,11 +1175,7 @@ BrowserPageActions.addSearchEngine = {
     if (!this.engines.length) {
       return;
     }
-    let title =
-      this.engines.length == 1 ?
-      this.strings.formatStringFromName("searchAddFoundEngine",
-                                        [this.engines[0].title], 1) :
-      this.strings.GetStringFromName("searchAddFoundEngineMenu");
+    let title = this.strings.GetStringFromName("searchAddFoundEngine2");
     this.action.setTitle(title, window);
     this.action.setIconURL(this.engines[0].icon, window);
   },
@@ -1238,7 +1234,7 @@ BrowserPageActions.addSearchEngine = {
     Services.search.addEngine(uri, null, image, false, {
       onSuccess: engine => {
         BrowserPageActionFeedback.show(this.action, {
-          text: this.strings.GetStringFromName("searchAddedFoundEngine"),
+          text: this.strings.GetStringFromName("searchAddedFoundEngine2"),
         });
       },
       onError(errorCode) {
