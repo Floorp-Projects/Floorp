@@ -712,11 +712,13 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
     case NS_VK_SHIFT:
     case NS_VK_CONTROL:
     case NS_VK_ALT:
-    case NS_VK_BACK:
-    case NS_VK_DELETE:
       // These keys are handled on EditorBase, so, we can bypass
       // TextEditor.
       return EditorBase::HandleKeyPressEvent(aKeyboardEvent);
+    case NS_VK_BACK:
+    case NS_VK_DELETE:
+      // These keys are handled on TextEditor.
+      return TextEditor::HandleKeyPressEvent(aKeyboardEvent);
     case NS_VK_TAB: {
       if (IsPlaintextEditor()) {
         // If this works as plain text editor, e.g., mail editor for plain
@@ -1143,8 +1145,10 @@ HTMLEditor::InsertBR()
   NS_ENSURE_STATE(selection);
 
   if (!selection->Collapsed()) {
-    nsresult rv = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = DeleteSelectionAsAction(eNone, eStrip);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   EditorRawDOMPoint atStartOfSelection(GetStartPoint(selection));
@@ -1549,8 +1553,10 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
         // inline wrappers before we do the insertion.  Otherwise we let
         // DeleteSelectionAndPrepareToCreateNode do the deletion for us, which
         // calls DeleteSelection with aStripWrappers = eStrip.
-        rv = DeleteSelection(nsIEditor::eNone, nsIEditor::eNoStrip);
-        NS_ENSURE_SUCCESS(rv, rv);
+        rv = DeleteSelectionAsAction(eNone, eNoStrip);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
 
       nsresult rv = DeleteSelectionAndPrepareToCreateNode();
@@ -3135,13 +3141,13 @@ HTMLEditor::GetEmbeddedObjects(nsIArray** aNodeList)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::DeleteSelectionImpl(EDirection aAction,
                                 EStripWrappers aStripWrappers)
 {
   MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
 
-  nsresult rv = EditorBase::DeleteSelectionImpl(aAction, aStripWrappers);
+  nsresult rv = TextEditor::DeleteSelectionImpl(aAction, aStripWrappers);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If we weren't asked to strip any wrappers, we're done.
@@ -3424,7 +3430,7 @@ HTMLEditor::StyleSheetLoaded(StyleSheet* aSheet,
  * All editor operations which alter the doc should be prefaced
  * with a call to StartOperation, naming the action and direction.
  */
-NS_IMETHODIMP
+nsresult
 HTMLEditor::StartOperation(EditAction opID,
                            nsIEditor::EDirection aDirection)
 {
@@ -3442,7 +3448,7 @@ HTMLEditor::StartOperation(EditAction opID,
  * All editor operations which alter the doc should be followed
  * with a call to EndOperation.
  */
-NS_IMETHODIMP
+nsresult
 HTMLEditor::EndOperation()
 {
   // Protect the edit rules object from dying

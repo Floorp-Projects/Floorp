@@ -59,23 +59,7 @@ public:
   // nsIEditorMailSupport overrides
   NS_DECL_NSIEDITORMAILSUPPORT
 
-  // Overrides of EditorBase
-  virtual nsresult RemoveAttributeOrEquivalent(
-                     Element* aElement,
-                     nsAtom* aAttribute,
-                     bool aSuppressTransaction) override;
-  virtual nsresult SetAttributeOrEquivalent(Element* aElement,
-                                            nsAtom* aAttribute,
-                                            const nsAString& aValue,
-                                            bool aSuppressTransaction) override;
-  using EditorBase::RemoveAttributeOrEquivalent;
-  using EditorBase::SetAttributeOrEquivalent;
-
-  virtual nsresult Init(nsIDocument& aDoc, Element* aRoot,
-                        nsISelectionController* aSelCon, uint32_t aFlags,
-                        const nsAString& aValue) override;
-
-  nsresult DocumentIsEmpty(bool* aIsEmpty);
+  // Overrides of nsIEditor
   NS_IMETHOD GetDocumentIsEmpty(bool* aDocumentIsEmpty) override;
 
   NS_IMETHOD DeleteSelection(EDirection aAction,
@@ -108,18 +92,36 @@ public:
                             const nsACString& aCharsetOverride,
                             uint32_t aFlags) override;
 
+  // Overrides of EditorBase
+  virtual nsresult RemoveAttributeOrEquivalent(
+                     Element* aElement,
+                     nsAtom* aAttribute,
+                     bool aSuppressTransaction) override;
+  virtual nsresult SetAttributeOrEquivalent(Element* aElement,
+                                            nsAtom* aAttribute,
+                                            const nsAString& aValue,
+                                            bool aSuppressTransaction) override;
+  using EditorBase::RemoveAttributeOrEquivalent;
+  using EditorBase::SetAttributeOrEquivalent;
+
+  virtual nsresult Init(nsIDocument& aDoc, Element* aRoot,
+                        nsISelectionController* aSelCon, uint32_t aFlags,
+                        const nsAString& aValue) override;
+
+  nsresult DocumentIsEmpty(bool* aIsEmpty);
+
   /**
    * All editor operations which alter the doc should be prefaced
    * with a call to StartOperation, naming the action and direction.
    */
-  NS_IMETHOD StartOperation(EditAction opID,
-                            nsIEditor::EDirection aDirection) override;
+  virtual nsresult StartOperation(EditAction opID,
+                                  nsIEditor::EDirection aDirection) override;
 
   /**
    * All editor operations which alter the doc should be followed
    * with a call to EndOperation.
    */
-  NS_IMETHOD EndOperation() override;
+  virtual nsresult EndOperation() override;
 
   /**
    * Make the given selection span the entire document.
@@ -136,6 +138,21 @@ public:
                      WidgetCompositionEvent* aCompositionChangeEvet) override;
 
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
+
+  /**
+   * DeleteSelectionAsAction() removes selection content or content around
+   * caret with transactions.  This should be used for handling it as an
+   * edit action.
+   *
+   * @param aDirection          How much range should be removed.
+   * @param aStripWrappers      Whether the parent blocks should be removed
+   *                            when they become empty.
+   */
+  nsresult DeleteSelectionAsAction(EDirection aDirection,
+                                   EStripWrappers aStripWrappers);
+
+  virtual nsresult DeleteSelectionImpl(EDirection aAction,
+                                       EStripWrappers aStripWrappers);
 
   // Utility Routines, not part of public API
   NS_IMETHOD TypedText(const nsAString& aString, ETypingAction aAction);
@@ -246,6 +263,24 @@ protected:
    */
   NS_IMETHOD PrepareTransferable(nsITransferable** transferable);
   nsresult InsertTextFromTransferable(nsITransferable* transferable);
+
+  /**
+   * DeleteSelectionAndCreateElement() creates a element whose name is aTag.
+   * And insert it into the DOM tree after removing the selected content.
+   *
+   * @param aTag                The element name to be created.
+   * @return                    Created new element.
+   */
+  already_AddRefed<Element> DeleteSelectionAndCreateElement(nsAtom& aTag);
+
+  /**
+   * This method first deletes the selection, if it's not collapsed.  Then if
+   * the selection lies in a CharacterData node, it splits it.  If the
+   * selection is at this point collapsed in a CharacterData node, it's
+   * adjusted to be collapsed right before or after the node instead (which is
+   * always possible, since the node was split).
+   */
+  nsresult DeleteSelectionAndPrepareToCreateNode();
 
   /**
    * Shared outputstring; returns whether selection is collapsed and resulting

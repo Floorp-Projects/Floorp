@@ -329,11 +329,6 @@ public:
                        const nsAString& aString,
                        Text& aTextNode);
 
-  NS_IMETHOD DeleteSelectionImpl(EDirection aAction,
-                                 EStripWrappers aStripWrappers);
-
-  already_AddRefed<Element> DeleteSelectionAndCreateElement(nsAtom& aTag);
-
   /**
    * DeleteNodeWithTransaction() removes aNode from the DOM tree.
    *
@@ -591,15 +586,6 @@ protected:
                                      uint32_t aOffset, uint32_t aLength);
 
   /**
-   * This method first deletes the selection, if it's not collapsed.  Then if
-   * the selection lies in a CharacterData node, it splits it.  If the
-   * selection is at this point collapsed in a CharacterData node, it's
-   * adjusted to be collapsed right before or after the node instead (which is
-   * always possible, since the node was split).
-   */
-  nsresult DeleteSelectionAndPrepareToCreateNode();
-
-  /**
    * Called after a transaction is done successfully.
    */
   void DoAfterDoTransaction(nsITransaction *aTxn);
@@ -780,14 +766,14 @@ public:
    * All editor operations which alter the doc should be prefaced
    * with a call to StartOperation, naming the action and direction.
    */
-  NS_IMETHOD StartOperation(EditAction opID,
-                            nsIEditor::EDirection aDirection);
+  virtual nsresult StartOperation(EditAction opID,
+                                  nsIEditor::EDirection aDirection);
 
   /**
    * All editor operations which alter the doc should be followed
    * with a call to EndOperation.
    */
-  NS_IMETHOD EndOperation();
+  virtual nsresult EndOperation();
 
   /**
    * Routines for managing the preservation of selection across

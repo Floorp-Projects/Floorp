@@ -316,7 +316,13 @@ CutOrDeleteCommand::DoCommand(const char* aCommandName,
   MOZ_ASSERT(textEditor);
   dom::Selection* selection = textEditor->GetSelection();
   if (selection && selection->Collapsed()) {
-    return textEditor->DeleteSelection(nsIEditor::eNext, nsIEditor::eStrip);
+    nsresult rv =
+      textEditor->DeleteSelectionAsAction(nsIEditor::eNext,
+                                          nsIEditor::eStrip);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
   return textEditor->Cut();
 }
@@ -428,7 +434,13 @@ CopyOrDeleteCommand::DoCommand(const char* aCommandName,
   MOZ_ASSERT(textEditor);
   dom::Selection* selection = textEditor->GetSelection();
   if (selection && selection->Collapsed()) {
-    return textEditor->DeleteSelection(nsIEditor::eNextWord, nsIEditor::eStrip);
+    nsresult rv =
+      textEditor->DeleteSelectionAsAction(nsIEditor::eNextWord,
+                                          nsIEditor::eStrip);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
   return textEditor->Copy();
 }
@@ -789,7 +801,12 @@ DeleteCommand::DoCommand(const char* aCommandName,
 
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->DeleteSelection(deleteDir, nsIEditor::eStrip);
+  nsresult rv =
+    textEditor->DeleteSelectionAsAction(deleteDir, nsIEditor::eStrip);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

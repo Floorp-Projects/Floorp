@@ -350,14 +350,14 @@ public:
    * All editor operations which alter the doc should be prefaced
    * with a call to StartOperation, naming the action and direction.
    */
-  NS_IMETHOD StartOperation(EditAction opID,
-                            nsIEditor::EDirection aDirection) override;
+  virtual nsresult StartOperation(EditAction opID,
+                                  nsIEditor::EDirection aDirection) override;
 
   /**
    * All editor operations which alter the doc should be followed
    * with a call to EndOperation.
    */
-  NS_IMETHOD EndOperation() override;
+  virtual nsresult EndOperation() override;
 
   /**
    * returns true if aParentTag can contain a child of type aChildTag.
@@ -383,8 +383,8 @@ public:
   virtual bool AreNodesSameType(nsIContent* aNode1,
                                 nsIContent* aNode2) override;
 
-  NS_IMETHOD DeleteSelectionImpl(EDirection aAction,
-                                 EStripWrappers aStripWrappers) override;
+  virtual nsresult DeleteSelectionImpl(EDirection aAction,
+                                       EStripWrappers aStripWrappers) override;
 
   /**
    * DeleteNodeWithTransaction() removes aNode from the DOM tree if it's

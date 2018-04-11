@@ -1288,9 +1288,16 @@ HTMLEditRules::WillInsertText(EditAction aAction,
                               nsAString* outString,
                               int32_t aMaxLength)
 {
-  if (!aSelection || !aCancel || !aHandled) {
+  if (NS_WARN_IF(!aSelection) ||
+      NS_WARN_IF(!aCancel) ||
+      NS_WARN_IF(!aHandled)) {
     return NS_ERROR_NULL_POINTER;
   }
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
   // initialize out param
   *aCancel = false;
@@ -1298,10 +1305,12 @@ HTMLEditRules::WillInsertText(EditAction aAction,
   // If the selection isn't collapsed, delete it.  Don't delete existing inline
   // tags, because we're hopefully going to insert text (bug 787432).
   if (!aSelection->Collapsed()) {
-    NS_ENSURE_STATE(mHTMLEditor);
     nsresult rv =
-      mHTMLEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eNoStrip);
-    NS_ENSURE_SUCCESS(rv, rv);
+      htmlEditor->DeleteSelectionAsAction(nsIEditor::eNone,
+                                          nsIEditor::eNoStrip);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   WillInsert(*aSelection, aCancel);
@@ -1310,16 +1319,18 @@ HTMLEditRules::WillInsertText(EditAction aAction,
   *aCancel = false;
 
   // we need to get the doc
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsCOMPtr<nsIDocument> doc = mHTMLEditor->GetDocument();
-  NS_ENSURE_STATE(doc);
+  nsCOMPtr<nsIDocument> doc = htmlEditor->GetDocument();
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // for every property that is set, insert a new inline style node
   nsresult rv = CreateStyleForInsertText(*aSelection, *doc);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // get the (collapsed) selection location
-  NS_ENSURE_STATE(mHTMLEditor);
   nsRange* firstRange = aSelection->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return NS_ERROR_FAILURE;
@@ -1331,35 +1342,33 @@ HTMLEditRules::WillInsertText(EditAction aAction,
   MOZ_ASSERT(pointToInsert.IsSetAndValid());
 
   // dont put text in places that can't have it
-  if (NS_WARN_IF(!mHTMLEditor) ||
-      (!EditorBase::IsTextNode(pointToInsert.GetContainer()) &&
-       !mHTMLEditor->CanContainTag(*pointToInsert.GetContainer(),
-                                   *nsGkAtoms::textTagName))) {
+  if (!EditorBase::IsTextNode(pointToInsert.GetContainer()) &&
+      !htmlEditor->CanContainTag(*pointToInsert.GetContainer(),
+                                 *nsGkAtoms::textTagName)) {
     return NS_ERROR_FAILURE;
   }
 
   if (aAction == EditAction::insertIMEText) {
     // Right now the WSRunObject code bails on empty strings, but IME needs
     // the InsertTextImpl() call to still happen since empty strings are meaningful there.
-    NS_ENSURE_STATE(mHTMLEditor);
     // If there is one or more IME selections, its minimum offset should be
     // the insertion point.
     int32_t IMESelectionOffset =
-      mHTMLEditor->GetIMESelectionStartOffsetIn(pointToInsert.GetContainer());
+      htmlEditor->GetIMESelectionStartOffsetIn(pointToInsert.GetContainer());
     if (IMESelectionOffset >= 0) {
       pointToInsert.Set(pointToInsert.GetContainer(), IMESelectionOffset);
     }
 
     if (inString->IsEmpty()) {
-      rv = mHTMLEditor->InsertTextImpl(*doc, *inString,
-                                       EditorRawDOMPoint(pointToInsert));
+      rv = htmlEditor->InsertTextImpl(*doc, *inString,
+                                      EditorRawDOMPoint(pointToInsert));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       return NS_OK;
     }
 
-    WSRunObject wsObj(mHTMLEditor, pointToInsert);
+    WSRunObject wsObj(htmlEditor, pointToInsert);
     rv = wsObj.InsertText(*doc, *inString, pointToInsert);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1383,16 +1392,14 @@ HTMLEditRules::WillInsertText(EditAction aAction,
   AutoLockListener lockit(&mListenerEnabled);
 
   // don't change my selection in subtransactions
-  NS_ENSURE_STATE(mHTMLEditor);
-  AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
+  AutoTransactionsConserveSelection dontChangeMySelection(htmlEditor);
   nsAutoString tString(*inString);
   const char16_t *unicodeBuf = tString.get();
   int32_t pos = 0;
   NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);
 
   {
-    NS_ENSURE_STATE(mHTMLEditor);
-    AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, &pointToInsert);
+    AutoTrackDOMPoint tracker(htmlEditor->mRangeUpdater, &pointToInsert);
 
     // for efficiency, break out the pre case separately.  This is because
     // its a lot cheaper to search the input string for only newlines than
@@ -1419,11 +1426,12 @@ HTMLEditRules::WillInsertText(EditAction aAction,
 
         // is it a return?
         if (subStr.Equals(newlineStr)) {
-          NS_ENSURE_STATE(mHTMLEditor);
           nsCOMPtr<Element> br =
-            mHTMLEditor->CreateBRImpl(*aSelection, currentPoint,
-                                      nsIEditor::eNone);
-          NS_ENSURE_STATE(br);
+            htmlEditor->CreateBRImpl(*aSelection, currentPoint,
+                                     nsIEditor::eNone);
+          if (NS_WARN_IF(!br)) {
+            return NS_ERROR_FAILURE;
+          }
           pos++;
           if (br->GetNextSibling()) {
             pointToInsert.Set(br->GetNextSibling());
@@ -1441,12 +1449,13 @@ HTMLEditRules::WillInsertText(EditAction aAction,
             "Perhaps, <br> element position has been moved to different point "
             "by mutation observer");
         } else {
-          NS_ENSURE_STATE(mHTMLEditor);
           EditorRawDOMPoint pointAfterInsertedString;
-          rv = mHTMLEditor->InsertTextImpl(*doc, subStr,
-                                           EditorRawDOMPoint(currentPoint),
-                                           &pointAfterInsertedString);
-          NS_ENSURE_SUCCESS(rv, rv);
+          rv = htmlEditor->InsertTextImpl(*doc, subStr,
+                                          EditorRawDOMPoint(currentPoint),
+                                          &pointAfterInsertedString);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
           currentPoint = pointAfterInsertedString;
           pointToInsert = pointAfterInsertedString;
         }
@@ -1473,8 +1482,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
         }
 
         nsDependentSubstring subStr(tString, oldPos, subStrLen);
-        NS_ENSURE_STATE(mHTMLEditor);
-        WSRunObject wsObj(mHTMLEditor, currentPoint);
+        WSRunObject wsObj(htmlEditor, currentPoint);
 
         // is it a tab?
         if (subStr.Equals(tabStr)) {
@@ -1628,8 +1636,10 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   // If the selection isn't collapsed, delete it.
   if (!aSelection.Collapsed()) {
     nsresult rv =
-      htmlEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
-    NS_ENSURE_SUCCESS(rv, rv);
+      htmlEditor->DeleteSelectionAsAction(nsIEditor::eNone, nsIEditor::eStrip);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   WillInsert(aSelection, aCancel);
