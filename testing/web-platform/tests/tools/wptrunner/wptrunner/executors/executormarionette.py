@@ -475,8 +475,8 @@ class ExecuteAsyncScriptRun(object):
             if message:
                 message += "\n"
             message += traceback.format_exc(e)
+            self.logger.warning(traceback.format_exc())
             self.result = False, ("ERROR", e)
-
         finally:
             self.result_flag.set()
 
@@ -551,6 +551,9 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
         while True:
             result = protocol.base.execute_script(
                 self.script_resume % format_map, async=True)
+            if result is None:
+                # This can happen if we get an content process crash
+                return None
             done, rv = handler(result)
             if done:
                 break
