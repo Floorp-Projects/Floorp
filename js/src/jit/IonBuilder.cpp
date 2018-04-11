@@ -13717,3 +13717,18 @@ IonBuilder::trace(JSTracer* trc)
     MOZ_ASSERT(rootList_);
     rootList_->trace(trc);
 }
+
+size_t
+IonBuilder::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    // See js::jit::FreeIonBuilder.
+    // The IonBuilder and most of its contents live in the LifoAlloc we point
+    // to. Note that this is only true for background IonBuilders.
+
+    size_t result = alloc_->lifoAlloc()->sizeOfIncludingThis(mallocSizeOf);
+
+    if (backgroundCodegen_)
+        result += mallocSizeOf(backgroundCodegen_);
+
+    return result;
+}
