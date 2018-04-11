@@ -6,6 +6,9 @@
 // Concept
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+include ':concept-toolbar'
+project(':concept-toolbar').projectDir = new File(rootDir, 'components/concept/toolbar')
+
 include ':concept-engine'
 project(':concept-engine').projectDir = new File(rootDir, 'components/concept/engine')
 
