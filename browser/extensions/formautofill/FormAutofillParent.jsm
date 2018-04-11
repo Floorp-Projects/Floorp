@@ -36,14 +36,12 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "FormAutofillPreferences",
-                               "resource://formautofill/FormAutofillPreferences.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillDoorhanger",
-                               "resource://formautofill/FormAutofillDoorhanger.jsm");
-ChromeUtils.defineModuleGetter(this, "MasterPassword",
-                               "resource://formautofill/MasterPassword.jsm");
-ChromeUtils.defineModuleGetter(this, "RecentWindow",
-                               "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  FormAutofillPreferences: "resource://formautofill/FormAutofillPreferences.jsm",
+  FormAutofillDoorhanger: "resource://formautofill/FormAutofillDoorhanger.jsm",
+  MasterPassword: "resource://formautofill/MasterPassword.jsm",
+});
 
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
@@ -243,7 +241,7 @@ FormAutofillParent.prototype = {
         break;
       }
       case "FormAutofill:OpenPreferences": {
-        const win = RecentWindow.getMostRecentBrowserWindow();
+        const win = BrowserWindowTracker.getMostRecentBrowserWindow();
         win.openPreferences("panePrivacy", {origin: "autofillFooter"});
         break;
       }

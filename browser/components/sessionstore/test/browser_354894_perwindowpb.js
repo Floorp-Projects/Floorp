@@ -24,7 +24,7 @@
  * notifications. The latter won't.
  */
 
-// The rejection "RecentWindow.getMostRecentBrowserWindow(...) is null" is left
+// The rejection "BrowserWindowTracker.getMostRecentBrowserWindow(...) is null" is left
 // unhandled in some cases. This bug should be fixed, but for the moment this
 // file is whitelisted.
 //
