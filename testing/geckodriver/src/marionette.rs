@@ -1012,92 +1012,106 @@ impl MarionetteCommand {
                               -> WebDriverResult<MarionetteCommand> {
         let (opt_name, opt_parameters) = match msg.command {
             Status => panic!("Got status command that should already have been handled"),
-            AcceptAlert => (Some("acceptDialog"), None),
-            AddCookie(ref x) => (Some("addCookie"), Some(x.to_marionette())),
-            CloseWindow => (Some("close"), None),
+            AcceptAlert => {
+                // Needs to be updated to "WebDriver:AcceptAlert" for Firefox 63
+                (Some("WebDriver:AcceptDialog"), None)
+            }
+            AddCookie(ref x) => (Some("WebDriver:AddCookie"), Some(x.to_marionette())),
+            CloseWindow => (Some("WebDriver:CloseWindow"), None),
             DeleteCookie(ref x) => {
                 let mut data = BTreeMap::new();
                 data.insert("name".to_string(), x.to_json());
-                (Some("deleteCookie"), Some(Ok(data)))
-            },
-            DeleteCookies => (Some("deleteAllCookies"), None),
+                (Some("WebDriver:DeleteCookie"), Some(Ok(data)))
+            }
+            DeleteCookies => (Some("WebDriver:DeleteAllCookies"), None),
             DeleteSession => {
                 let mut body = BTreeMap::new();
                 body.insert("flags".to_owned(), vec!["eForceQuit".to_json()].to_json());
                 (Some("quit"), Some(Ok(body)))
-            },
-            DismissAlert => (Some("dismissDialog"), None),
-            ElementClear(ref x) => (Some("clearElement"), Some(x.to_marionette())),
-            ElementClick(ref x) => (Some("clickElement"), Some(x.to_marionette())),
+            }
+            DismissAlert => (Some("WebDriver:DismissAlert"), None),
+            ElementClear(ref x) => (Some("WebDriver:ElementClear"), Some(x.to_marionette())),
+            ElementClick(ref x) => (Some("WebDriver:ElementClick"), Some(x.to_marionette())),
             ElementSendKeys(ref e, ref x) => {
                 let mut data = BTreeMap::new();
                 data.insert("id".to_string(), e.id.to_json());
                 data.insert("text".to_string(), x.text.to_json());
-                data.insert("value".to_string(),
-                            x.text
-                                .chars()
-                                .map(|x| x.to_string())
-                                .collect::<Vec<String>>()
-                                .to_json());
-                (Some("sendKeysToElement"), Some(Ok(data)))
-            },
+                data.insert(
+                    "value".to_string(),
+                    x.text
+                        .chars()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .to_json(),
+                );
+                (Some("WebDriver:ElementSendKeys"), Some(Ok(data)))
+            }
             ElementTap(ref x) => (Some("singleTap"), Some(x.to_marionette())),
-            ExecuteScript(ref x) => (Some("executeScript"), Some(x.to_marionette())),
-            ExecuteAsyncScript(ref x) => (Some("executeAsyncScript"), Some(x.to_marionette())),
-            FindElement(ref x) => (Some("findElement"), Some(x.to_marionette())),
+            ExecuteAsyncScript(ref x) => (
+                Some("WebDriver:ExecuteAsyncScript"),
+                Some(x.to_marionette()),
+            ),
+            ExecuteScript(ref x) => (Some("WebDriver:ExecuteScript"), Some(x.to_marionette())),
+            FindElement(ref x) => (Some("WebDriver:FindElement"), Some(x.to_marionette())),
             FindElementElement(ref e, ref x) => {
                 let mut data = try!(x.to_marionette());
                 data.insert("element".to_string(), e.id.to_json());
-                (Some("findElement"), Some(Ok(data)))
-            },
-            FindElements(ref x) => (Some("findElements"), Some(x.to_marionette())),
+                (Some("WebDriver:FindElement"), Some(Ok(data)))
+            }
+            FindElements(ref x) => (Some("WebDriver:FindElements"), Some(x.to_marionette())),
             FindElementElements(ref e, ref x) => {
                 let mut data = try!(x.to_marionette());
                 data.insert("element".to_string(), e.id.to_json());
-                (Some("findElements"), Some(Ok(data)))
-            },
-            FullscreenWindow => (Some("fullscreen"), None),
-            Get(ref x) => (Some("get"), Some(x.to_marionette())),
-            GetAlertText => (Some("getTextFromDialog"), None),
-            GetActiveElement => (Some("getActiveElement"), None),
-            GetCookies | GetNamedCookie(_) => (Some("getCookies"), None),
-            GetCurrentUrl => (Some("getCurrentUrl"), None),
+                (Some("WebDriver:FindElements"), Some(Ok(data)))
+            }
+            FullscreenWindow => (Some("WebDriver:FullscreenWindow"), None),
+            Get(ref x) => (Some("WebDriver:Navigate"), Some(x.to_marionette())),
+            GetAlertText => (Some("WebDriver:GetAlertText"), None),
+            GetActiveElement => (Some("WebDriver:GetActiveElement"), None),
+            GetCookies | GetNamedCookie(_) => (Some("WebDriver:GetCookies"), None),
+            GetCurrentUrl => (Some("WebDriver:GetCurrentURL"), None),
             GetCSSValue(ref e, ref x) => {
                 let mut data = BTreeMap::new();
                 data.insert("id".to_string(), e.id.to_json());
                 data.insert("propertyName".to_string(), x.to_json());
-                (Some("getElementValueOfCssProperty"), Some(Ok(data)))
-            },
+                (Some("WebDriver:GetElementCSSValue"), Some(Ok(data)))
+            }
             GetElementAttribute(ref e, ref x) => {
                 let mut data = BTreeMap::new();
                 data.insert("id".to_string(), e.id.to_json());
                 data.insert("name".to_string(), x.to_json());
-                (Some("getElementAttribute"), Some(Ok(data)))
-            },
+                (Some("WebDriver:GetElementAttribute"), Some(Ok(data)))
+            }
             GetElementProperty(ref e, ref x) => {
                 let mut data = BTreeMap::new();
                 data.insert("id".to_string(), e.id.to_json());
                 data.insert("name".to_string(), x.to_json());
-                (Some("getElementProperty"), Some(Ok(data)))
-            },
-            GetElementRect(ref x) => (Some("getElementRect"), Some(x.to_marionette())),
-            GetElementTagName(ref x) => (Some("getElementTagName"), Some(x.to_marionette())),
-            GetElementText(ref x) => (Some("getElementText"), Some(x.to_marionette())),
-            GetPageSource => (Some("getPageSource"), None),
-            GetTimeouts => (Some("getTimeouts"), None),
-            GetTitle => (Some("getTitle"), None),
-            GetWindowHandle => (Some("getWindowHandle"), None),
-            GetWindowHandles => (Some("getWindowHandles"), None),
-            GetWindowRect => (Some("getWindowRect"), None),
-            GoBack => (Some("goBack"), None),
-            GoForward => (Some("goForward"), None),
-            IsDisplayed(ref x) => (Some("isElementDisplayed"), Some(x.to_marionette())),
-            IsEnabled(ref x) => (Some("isElementEnabled"), Some(x.to_marionette())),
-            IsSelected(ref x) => (Some("isElementSelected"), Some(x.to_marionette())),
-            MaximizeWindow => (Some("maximizeWindow"), None),
+                (Some("WebDriver:GetElementProperty"), Some(Ok(data)))
+            }
+            GetElementRect(ref x) => (Some("WebDriver:GetElementRect"), Some(x.to_marionette())),
+            GetElementTagName(ref x) => {
+                (Some("WebDriver:GetElementTagName"), Some(x.to_marionette()))
+            }
+            GetElementText(ref x) => (Some("WebDriver:GetElementText"), Some(x.to_marionette())),
+            GetPageSource => (Some("WebDriver:GetPageSource"), None),
+            GetTimeouts => (Some("WebDriver:GetTimeouts"), None),
+            GetTitle => (Some("WebDriver:GetTitle"), None),
+            GetWindowHandle => (Some("WebDriver:GetWindowHandle"), None),
+            GetWindowHandles => (Some("WebDriver:GetWindowHandles"), None),
+            GetWindowRect => (Some("WebDriver:GetWindowRect"), None),
+            GoBack => (Some("WebDriver:Back"), None),
+            GoForward => (Some("WebDriver::Forward"), None),
+            IsDisplayed(ref x) => (
+                Some("WebDriver:IsElementDisplayed"),
+                Some(x.to_marionette()),
+            ),
+            IsEnabled(ref x) => (Some("WebDriver:IsElementEnabled"), Some(x.to_marionette())),
+            IsSelected(ref x) => (Some("WebDriver:IsElementSelected"), Some(x.to_marionette())),
+            MaximizeWindow => (Some("WebDriver:MaximizeWindow"), None),
             MinimizeWindow => (Some("WebDriver:MinimizeWindow"), None),
             NewSession(_) => {
-                let caps = capabilities.expect("Tried to create new session without processing capabilities");
+                let caps = capabilities
+                    .expect("Tried to create new session without processing capabilities");
 
                 let mut data = BTreeMap::new();
                 for (k, v) in caps.iter() {
@@ -1109,41 +1123,43 @@ impl MarionetteCommand {
                 legacy_caps.insert("desiredCapabilities".to_string(), caps.to_json());
                 data.insert("capabilities".to_string(), legacy_caps.to_json());
 
-                (Some("newSession"), Some(Ok(data)))
-            },
-            PerformActions(ref x) => (Some("performActions"), Some(x.to_marionette())),
-            Refresh => (Some("refresh"), None),
-            ReleaseActions => (Some("releaseActions"), None),
+                (Some("WebDriver:NewSession"), Some(Ok(data)))
+            }
+            PerformActions(ref x) => (Some("WebDriver:PerformActions"), Some(x.to_marionette())),
+            Refresh => (Some("WebDriver:Refresh"), None),
+            ReleaseActions => (Some("WebDriver:ReleaseActions"), None),
             SendAlertText(ref x) => {
                 let mut data = BTreeMap::new();
                 data.insert("text".to_string(), x.text.to_json());
-                data.insert("value".to_string(),
-                            x.text
-                                .chars()
-                                .map(|x| x.to_string())
-                                .collect::<Vec<String>>()
-                                .to_json());
-                (Some("sendKeysToDialog"), Some(Ok(data)))
-            },
-            SetTimeouts(ref x) => (Some("setTimeouts"), Some(x.to_marionette())),
-            SetWindowRect(ref x) => (Some("setWindowRect"), Some(x.to_marionette())),
-            SwitchToFrame(ref x) => (Some("switchToFrame"), Some(x.to_marionette())),
-            SwitchToParentFrame => (Some("switchToParentFrame"), None),
-            SwitchToWindow(ref x) => (Some("switchToWindow"), Some(x.to_marionette())),
+                data.insert(
+                    "value".to_string(),
+                    x.text
+                        .chars()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .to_json(),
+                );
+                (Some("WebDriver:SendAlertText"), Some(Ok(data)))
+            }
+            SetTimeouts(ref x) => (Some("WebDriver:SetTimeouts"), Some(x.to_marionette())),
+            SetWindowRect(ref x) => (Some("WebDriver:SetWindowRect"), Some(x.to_marionette())),
+            SwitchToFrame(ref x) => (Some("WebDriver:SwitchToFrame"), Some(x.to_marionette())),
+            SwitchToParentFrame => (Some("WebDriver:SwitchToParentFrame"), None),
+            SwitchToWindow(ref x) => (Some("WebDriver:SwitchToWindow"), Some(x.to_marionette())),
             TakeElementScreenshot(ref e) => {
                 let mut data = BTreeMap::new();
                 data.insert("id".to_string(), e.id.to_json());
                 data.insert("highlights".to_string(), Json::Array(vec![]));
                 data.insert("full".to_string(), Json::Boolean(false));
-                (Some("takeScreenshot"), Some(Ok(data)))
-            },
+                (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
+            }
             TakeScreenshot => {
                 let mut data = BTreeMap::new();
                 data.insert("id".to_string(), Json::Null);
                 data.insert("highlights".to_string(), Json::Array(vec![]));
                 data.insert("full".to_string(), Json::Boolean(false));
-                (Some("takeScreenshot"), Some(Ok(data)))
-            },
+                (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
+            }
             Extension(ref extension) => {
                 match extension {
                     &GeckoExtensionCommand::GetContext => {
