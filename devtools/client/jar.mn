@@ -284,6 +284,7 @@ devtools.jar:
     skin/images/debugger/stepIn.svg (themes/images/debugger/stepIn.svg)
     skin/images/debugger/stepOut.svg (themes/images/debugger/stepOut.svg)
     skin/images/debugger/stepOver.svg (themes/images/debugger/stepOver.svg)
+    skin/images/debugger/tab.svg (themes/images/debugger/tab.svg)
     skin/images/debugger/typescript.svg (themes/images/debugger/typescript.svg)
 
     # Netmonitor
