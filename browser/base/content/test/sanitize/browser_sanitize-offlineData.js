@@ -2,6 +2,8 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
+const {SiteDataTestUtils} = ChromeUtils.import("resource://testing-common/SiteDataTestUtils.jsm", {});
+const {PromiseTestUtils} = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", {});
 
 XPCOMUtils.defineLazyServiceGetter(this, "sas",
                                    "@mozilla.org/storage/activity-service;1",
@@ -9,14 +11,26 @@ XPCOMUtils.defineLazyServiceGetter(this, "sas",
 XPCOMUtils.defineLazyServiceGetter(this, "swm",
                                    "@mozilla.org/serviceworkers/manager;1",
                                    "nsIServiceWorkerManager");
-XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
-                                   "@mozilla.org/dom/quota-manager-service;1",
-                                   "nsIQuotaManagerService");
 
 const oneHour = 3600000000;
 const fiveHours = oneHour * 5;
 
 const itemsToClear = [ "cookies", "offlineApps" ];
+
+function hasIndexedDB(origin) {
+  return new Promise(resolve => {
+    let hasData = true;
+    let uri = Services.io.newURI(origin);
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+    let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
+    request.onupgradeneeded = function(e) {
+      hasData = false;
+    };
+    request.onsuccess = function(e) {
+      resolve(hasData);
+    };
+  });
+}
 
 function waitForUnregister(host) {
   return new Promise(resolve => {
@@ -36,20 +50,11 @@ function waitForUnregister(host) {
 }
 
 async function createData(host) {
-  let pageURL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://" + host) + "sanitize.html";
+  let origin = "https://" + host;
+  let dummySWURL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", origin) + "dummy.js";
 
-  return BrowserTestUtils.withNewTab(pageURL, async function(browser) {
-    await ContentTask.spawn(browser, null, () => {
-      return new content.window.Promise(resolve => {
-        let id = content.window.setInterval(() => {
-          if ("foobar" in content.window.localStorage) {
-            content.window.clearInterval(id);
-            resolve(true);
-          }
-        }, 1000);
-      });
-    });
-  });
+  await SiteDataTestUtils.addToIndexedDB(origin);
+  await SiteDataTestUtils.addServiceWorker(dummySWURL);
 }
 
 function moveOriginInTime(principals, endDate, host) {
@@ -63,44 +68,12 @@ function moveOriginInTime(principals, endDate, host) {
   return false;
 }
 
-async function getData(host) {
-  let dummyURL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://" + host) + "dummy_page.html";
-
-  // LocalStorage + IndexedDB
-  let data = await BrowserTestUtils.withNewTab(dummyURL, async function(browser) {
-    return ContentTask.spawn(browser, null, () => {
-      return new content.window.Promise(resolve => {
-        let obj = {
-          localStorage: "foobar" in content.window.localStorage,
-          indexedDB: true,
-          serviceWorker: false,
-        };
-
-        let request = content.window.indexedDB.open("sanitizer_test", 1);
-        request.onupgradeneeded = event => {
-          obj.indexedDB = false;
-        };
-        request.onsuccess = event => {
-          resolve(obj);
-        };
-      });
-    });
-  });
-
-  // ServiceWorkers
-  let serviceWorkers = swm.getAllRegistrations();
-  for (let i = 0; i < serviceWorkers.length; i++) {
-    let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
-    if (sw.principal.URI.host == host) {
-      data.serviceWorker = true;
-      break;
-    }
-  }
-
-  return data;
-}
-
 add_task(async function testWithRange() {
+  // We have intermittent occurrences of NS_ERROR_ABORT being
+  // thrown at closing database instances when using Santizer.sanitize().
+  // This does not seem to impact cleanup, since our tests run fine anyway.
+  PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_ABORT/);
+
   await SpecialPowers.pushPrefEnv({"set": [
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
@@ -137,15 +110,15 @@ add_task(async function testWithRange() {
 
   is(found, 2, "Our origins are active.");
 
-  let dataPre = await getData("example.org");
-  ok(dataPre.localStorage, "We have localStorage data");
-  ok(dataPre.indexedDB, "We have indexedDB data");
-  ok(dataPre.serviceWorker, "We have serviceWorker data");
+  ok(await hasIndexedDB("https://example.org"),
+    "We have indexedDB data for example.org");
+  ok(SiteDataTestUtils.hasServiceWorkers("https://example.org"),
+    "We have serviceWorker data for example.org");
 
-  dataPre = await getData("example.com");
-  ok(dataPre.localStorage, "We have localStorage data");
-  ok(dataPre.indexedDB, "We have indexedDB data");
-  ok(dataPre.serviceWorker, "We have serviceWorker data");
+  ok(await hasIndexedDB("https://example.com"),
+    "We have indexedDB data for example.com");
+  ok(SiteDataTestUtils.hasServiceWorkers("https://example.com"),
+    "We have serviceWorker data for example.com");
 
   // Let's move example.com in the past.
   ok(moveOriginInTime(principals, endDate, "example.com"), "Operation completed!");
@@ -157,15 +130,15 @@ add_task(async function testWithRange() {
   await Sanitizer.sanitize(itemsToClear, {ignoreTimespan: false});
   await p;
 
-  let dataPost = await getData("example.org");
-  ok(!dataPost.localStorage, "We don't have localStorage data");
-  ok(!dataPost.indexedDB, "We don't have indexedDB data");
-  ok(!dataPost.serviceWorker, "We don't have serviceWorker data");
+  ok(!(await hasIndexedDB("https://example.org")),
+    "We don't have indexedDB data for example.org");
+  ok(!SiteDataTestUtils.hasServiceWorkers("https://example.org"),
+    "We don't have serviceWorker data for example.org");
 
-  dataPost = await getData("example.com");
-  ok(dataPost.localStorage, "We still have localStorage data");
-  ok(dataPost.indexedDB, "We still have indexedDB data");
-  ok(dataPost.serviceWorker, "We still have serviceWorker data");
+  ok(await hasIndexedDB("https://example.com"),
+    "We still have indexedDB data for example.com");
+  ok(SiteDataTestUtils.hasServiceWorkers("https://example.com"),
+    "We still have serviceWorker data for example.com");
 
   // We have to move example.com in the past because how we check IDB triggers
   // a storage activity.
@@ -175,15 +148,18 @@ add_task(async function testWithRange() {
   info("sanitize again to ensure clearing doesn't expand the activity scope");
   await Sanitizer.sanitize(itemsToClear, {ignoreTimespan: false});
 
-  dataPost = await getData("example.com");
-  ok(dataPost.localStorage, "We still have localStorage data");
-  ok(dataPost.indexedDB, "We still have indexedDB data");
-  ok(dataPost.serviceWorker, "We still have serviceWorker data");
+  ok(await hasIndexedDB("https://example.com"),
+    "We still have indexedDB data for example.com");
+  ok(SiteDataTestUtils.hasServiceWorkers("https://example.com"),
+    "We still have serviceWorker data for example.com");
 
-  dataPost = await getData("example.org");
-  ok(!dataPost.localStorage, "We don't have localStorage data");
-  ok(!dataPost.indexedDB, "We don't have indexedDB data");
-  ok(!dataPost.serviceWorker, "We don't have serviceWorker data");
+  ok(!(await hasIndexedDB("https://example.org")),
+    "We don't have indexedDB data for example.org");
+  ok(!SiteDataTestUtils.hasServiceWorkers("https://example.org"),
+    "We don't have serviceWorker data for example.org");
 
   sas.testOnlyReset();
+
+  // Clean up.
+  await Sanitizer.sanitize(itemsToClear);
 });
