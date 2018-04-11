@@ -436,8 +436,8 @@ var TelemetryReportingPolicyImpl = {
 
     let win;
     try {
-      const { RecentWindow } = ChromeUtils.import("resource:///modules/RecentWindow.jsm", {});
-      win = RecentWindow.getMostRecentBrowserWindow();
+      const { BrowserWindowTracker } = ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm", {});
+      win = BrowserWindowTracker.getMostRecentBrowserWindow();
     } catch (e) {}
 
     if (!win) {
