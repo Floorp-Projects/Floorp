@@ -1466,7 +1466,7 @@ public abstract class GeckoApp extends GeckoActivity
         final String passedUri = getIntentURI(intent);
 
         final boolean intentHasURL = passedUri != null;
-        final boolean isAboutHomeURL = intentHasURL && AboutPages.isAboutHome(passedUri);
+        final boolean isAboutHomeURL = intentHasURL && AboutPages.isDefaultHomePage(passedUri);
         final boolean isAssistIntent = Intent.ACTION_ASSIST.equals(action);
         final boolean needsNewForegroundTab = intentHasURL || isAssistIntent;
 

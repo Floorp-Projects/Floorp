@@ -626,9 +626,9 @@ AutoIPCStream::TakeOptionalValue()
 }
 
 void
-IPDLParamTraits<nsCOMPtr<nsIInputStream>>::Write(IPC::Message* aMsg,
-                                                 IProtocol* aActor,
-                                                 const nsCOMPtr<nsIInputStream>& aParam)
+IPDLParamTraits<nsIInputStream>::Write(IPC::Message* aMsg,
+                                       IProtocol* aActor,
+                                       nsIInputStream* aParam)
 {
   mozilla::ipc::AutoIPCStream autoStream;
   bool ok = false;
@@ -677,8 +677,8 @@ IPDLParamTraits<nsCOMPtr<nsIInputStream>>::Write(IPC::Message* aMsg,
 }
 
 bool
-IPDLParamTraits<nsCOMPtr<nsIInputStream>>::Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                                                IProtocol* aActor, nsCOMPtr<nsIInputStream>* aResult)
+IPDLParamTraits<nsIInputStream>::Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                                      IProtocol* aActor, RefPtr<nsIInputStream>* aResult)
 {
   mozilla::ipc::OptionalIPCStream ipcStream;
   if (!ReadIPDLParam(aMsg, aIter, aActor, &ipcStream)) {

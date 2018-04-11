@@ -408,13 +408,11 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
 
 #ifdef XP_MACOSX
 template <>
-struct ParamTraits<NPNSString*>
+struct ParamTraits<NPNSString>
 {
-  typedef NPNSString* paramType;
-
   // Empty string writes a length of 0 and no buffer.
   // We don't write a nullptr terminating character in buffers.
-  static void Write(Message* aMsg, const paramType& aParam)
+  static void Write(Message* aMsg, NPNSString* aParam)
   {
     CFStringRef cfString = (CFStringRef)aParam;
 
@@ -441,7 +439,7 @@ struct ParamTraits<NPNSString*>
     }
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, NPNSString** aResult)
   {
     bool haveString = false;
     if (!aMsg->ReadBool(aIter, &haveString)) {

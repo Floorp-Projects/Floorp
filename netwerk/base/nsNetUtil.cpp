@@ -77,6 +77,8 @@
 #include "nsIRedirectHistoryEntry.h"
 #include "nsICertBlocklist.h"
 #include "nsICertOverrideService.h"
+#include "nsQueryObject.h"
+#include "mozIThirdPartyUtil.h"
 
 #include <limits>
 
@@ -1659,8 +1661,7 @@ private:
         nsresult rv = mTaskQueue->Dispatch(runnable.forget());
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = lock.Wait();
-        NS_ENSURE_SUCCESS(rv, rv);
+        lock.Wait();
 
         mCompleted = true;
         return mAsyncResult;

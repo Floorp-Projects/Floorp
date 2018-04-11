@@ -474,11 +474,6 @@ with modules["LAYOUT"]:
     errors["NS_OK_PARSE_SHEET"] = SUCCESS(1)
     # Return code for nsFrame::GetNextPrevLineFromeBlockFrame
     errors["NS_POSITION_BEFORE_TABLE"] = SUCCESS(3)
-    # Return codes for nsPresState::GetProperty()
-    # Returned if the property exists
-    errors["NS_STATE_PROPERTY_EXISTS"] = errors["NS_OK"]
-    # Returned if the property does not exist
-    errors["NS_STATE_PROPERTY_NOT_THERE"] = SUCCESS(5)
 
 
 

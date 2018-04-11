@@ -404,10 +404,6 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
         if (loadFromCache &&
           webNav.currentDocumentChannel instanceof Ci.nsICacheInfoChannel) {
           cacheKey = webNav.currentDocumentChannel.cacheKey;
-          assert(
-            cacheKey,
-            "Could not fetch the cacheKey from the related document."
-          );
         }
       }
 

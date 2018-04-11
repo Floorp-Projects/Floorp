@@ -93,6 +93,5 @@ function PanelBrowserStop() {
 function PanelBrowserReload() {
     getPanelBrowser().webNavigation
                      .sessionHistory
-                     .QueryInterface(Ci.nsIWebNavigation)
                      .reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
 }

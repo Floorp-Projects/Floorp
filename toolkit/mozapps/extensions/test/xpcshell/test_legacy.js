@@ -12,12 +12,6 @@ add_task(async function test_disable() {
       version: "1.0",
       bootstrap: true,
     },
-    {
-      id: "apiexperiment@tests.mozilla.org",
-      name: "WebExtension Experiment",
-      version: "1.0",
-      type: 256,
-    },
   ];
 
   let nonLegacy = [

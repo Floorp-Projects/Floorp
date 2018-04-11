@@ -102,7 +102,7 @@ var ReaderMode = {
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     let sh = webNav.sessionHistory;
     if (webNav.canGoForward) {
-      let forwardEntry = sh.getEntryAtIndex(sh.index + 1, false);
+      let forwardEntry = sh.legacySHistory.getEntryAtIndex(sh.index + 1, false);
       let forwardURL = forwardEntry.URI.spec;
       if (forwardURL && (forwardURL == readerURL || !readerURL)) {
         webNav.goForward();
@@ -123,7 +123,7 @@ var ReaderMode = {
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     let sh = webNav.sessionHistory;
     if (webNav.canGoBack) {
-      let prevEntry = sh.getEntryAtIndex(sh.index - 1, false);
+      let prevEntry = sh.legacySHistory.getEntryAtIndex(sh.index - 1, false);
       let prevURL = prevEntry.URI.spec;
       if (prevURL && (prevURL == originalURL || !originalURL)) {
         webNav.goBack();

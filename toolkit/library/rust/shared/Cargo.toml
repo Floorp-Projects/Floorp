@@ -13,7 +13,7 @@ nserror = { path = "../../../../xpcom/rust/nserror" }
 netwerk_helper = { path = "../../../../netwerk/base/rust-helper" }
 xpcom = { path = "../../../../xpcom/rust/xpcom" }
 prefs_parser = { path = "../../../../modules/libpref/parser" }
-rust_url_capi = { path = "../../../../netwerk/base/rust-url-capi" }
+mozurl = { path = "../../../../netwerk/base/mozurl" }
 webrender_bindings = { path = "../../../../gfx/webrender_bindings", optional = true }
 cubeb-pulse = { path = "../../../../media/libcubeb/cubeb-pulse-rs", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.5.0", optional = true, features=["gecko-in-tree"] }
