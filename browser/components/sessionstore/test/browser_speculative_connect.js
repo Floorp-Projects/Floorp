@@ -29,7 +29,7 @@ add_task(async function speculative_connect_restore_on_demand() {
   // Reopen a window.
   let newWin = undoCloseWindow(0);
   // Make sure we wait until this window is restored.
-  await BrowserTestUtils.waitForEvent(newWin, "load");
+  await promiseWindowRestored(newWin);
 
   let tabs = newWin.gBrowser.tabs;
   is(tabs.length, TEST_URLS.length + 1, "Restored right number of tabs");
@@ -79,7 +79,7 @@ add_task(async function speculative_connect_restore_automatically() {
   // Reopen a window.
   let newWin = undoCloseWindow(0);
   // Make sure we wait until this window is restored.
-  await BrowserTestUtils.waitForEvent(newWin, "load");
+  await promiseWindowRestored(newWin);
 
   let tabs = newWin.gBrowser.tabs;
   is(tabs.length, TEST_URLS.length + 1, "Restored right number of tabs");

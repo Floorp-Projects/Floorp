@@ -21,7 +21,7 @@
  *          promisePrefChangeObserved openContextMenuInFrame
  *          promiseAnimationFrame getCustomizableUIPanelID
  *          awaitEvent BrowserWindowIterator
- *          navigateTab historyPushState
+ *          navigateTab historyPushState promiseWindowRestored
  */
 
 // There are shutdown issues for which multiple rejections are left uncaught.
@@ -486,6 +486,10 @@ function promisePrefChangeObserved(pref) {
       Preferences.ignore(pref, prefObserver);
       resolve();
     }));
+}
+
+function promiseWindowRestored(window) {
+  return new Promise(resolve => window.addEventListener("SSWindowRestored", resolve, {once: true}));
 }
 
 function awaitEvent(eventName, id) {
