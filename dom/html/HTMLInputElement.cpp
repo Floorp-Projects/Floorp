@@ -695,14 +695,7 @@ HTMLInputElement::IsPopupBlocked() const
     return false;
   }
 
-  nsCOMPtr<nsIPopupWindowManager> pm = do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID);
-  if (!pm) {
-    return true;
-  }
-
-  uint32_t permission;
-  pm->TestPermission(OwnerDoc()->NodePrincipal(), &permission);
-  return permission == nsIPopupWindowManager::DENY_POPUP;
+  return !nsContentUtils::CanShowPopup(OwnerDoc()->NodePrincipal());
 }
 
 nsresult
