@@ -438,7 +438,8 @@ TextEditRules::WillInsertBreak(Selection* aSelection,
     // if the selection isn't collapsed, delete it.
     if (!aSelection->IsCollapsed()) {
       NS_ENSURE_STATE(mTextEditor);
-      rv = mTextEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
+      rv = mTextEditor->DeleteSelectionAsAction(nsIEditor::eNone,
+                                                nsIEditor::eStrip);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -685,7 +686,8 @@ TextEditRules::WillInsertText(EditAction aAction,
   // if the selection isn't collapsed, delete it.
   if (!aSelection->IsCollapsed()) {
     NS_ENSURE_STATE(mTextEditor);
-    rv = mTextEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
+    rv = mTextEditor->DeleteSelectionAsAction(nsIEditor::eNone,
+                                              nsIEditor::eStrip);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

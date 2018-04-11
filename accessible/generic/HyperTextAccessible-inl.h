@@ -107,10 +107,13 @@ inline void
 HyperTextAccessible::DeleteText(int32_t aStartPos, int32_t aEndPos)
 {
   RefPtr<TextEditor> textEditor = GetEditor();
-  if (textEditor) {
-    SetSelectionRange(aStartPos, aEndPos);
-    textEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
+  if (!textEditor) {
+    return;
   }
+  SetSelectionRange(aStartPos, aEndPos);
+  DebugOnly<nsresult> rv =
+    textEditor->DeleteSelectionAsAction(nsIEditor::eNone, nsIEditor::eStrip);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to delete text");
 }
 
 inline void

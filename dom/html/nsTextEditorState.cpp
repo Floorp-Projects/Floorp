@@ -2422,7 +2422,11 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
               StringTail(newValue, newlength - currentLength);
 
             if (insertValue.IsEmpty()) {
-              textEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
+              DebugOnly<nsresult> rv =
+                textEditor->DeleteSelectionAsAction(nsIEditor::eNone,
+                                                    nsIEditor::eStrip);
+              NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                "Failed to remove the text");
             } else {
               textEditor->InsertText(insertValue);
             }
