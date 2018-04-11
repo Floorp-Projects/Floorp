@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=403331
+-->
+<head>
+  <title>Test for Bug 403331</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe id="testFrame"></iframe>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 403331 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  var testFrame = document.getElementById('testFrame');
+
+  // Try a redirected load from another domain to this one.
+
+  testFrame.onload = function() {
+    // If properly redirected, we'll be able to access elements in the loaded
+    // document.
+    var item = testFrame.contentDocument.getElementById('testitem');
+    is(item.textContent, "testcontents", "Should be able to access the child document");
+
+    SimpleTest.finish();
+  }
+
+  testFrame.src = "jar:http://example.org:80/tests/modules/libjar/test/mochitest/openredirect.sjs?http://mochi.test:8888/tests/modules/libjar/test/mochitest/bug403331.zip!/test.html";
+}
+
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set": [["network.jar.block-remote-files", false]]}, runTest);
+});
+
+</script>
+</pre>
+
+</body>
+</html>
