@@ -23,6 +23,7 @@
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
 #include "vm/Xdr.h"
+#include "wasm/WasmGenerator.h"
 
 #include "gc/PrivateIterators-inl.h"
 #include "vm/JSCompartment-inl.h"
@@ -1175,6 +1176,12 @@ GlobalHelperThreadState::addSizeOfIncludingThis(JS::GlobalStats* stats,
         htStats.ionBuilder += builder->sizeOfIncludingThis(mallocSizeOf);
     for (auto builder : ionFreeList_)
         htStats.ionBuilder += builder->sizeOfIncludingThis(mallocSizeOf);
+
+    // Report wasm::CompileTasks on wait lists
+    for (auto task : wasmWorklist_tier1_)
+        htStats.wasmCompile += task->sizeOfIncludingThis(mallocSizeOf);
+    for (auto task : wasmWorklist_tier2_)
+        htStats.wasmCompile += task->sizeOfIncludingThis(mallocSizeOf);
 
     // Report number of helper threads.
     MOZ_ASSERT(htStats.idleThreadCount == 0);
