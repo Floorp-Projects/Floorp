@@ -62,7 +62,7 @@ HTMLPreElement::IsAttributeMapped(const nsAtom* aAttribute) const
   }
 
   static const MappedAttributeEntry attributes[] = {
-    { nsGkAtoms::wrap },
+    { &nsGkAtoms::wrap },
     { nullptr },
   };
 
