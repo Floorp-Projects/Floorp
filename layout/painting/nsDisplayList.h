@@ -840,8 +840,8 @@ public:
    */
   bool IsInSubdocument() { return mPresShellStates.Length() > 1; }
 
-  void SetBuiltOverlayScrollbars(bool aOverlayScrollbars) { mBuiltOverlayScrollbars = aOverlayScrollbars; }
-  bool BuiltOverlayScrollbars() { return mBuiltOverlayScrollbars; }
+  void SetDisablePartialUpdates(bool aDisable) { mDisablePartialUpdates = aDisable; }
+  bool DisablePartialUpdates() { return mDisablePartialUpdates; }
 
   /**
    * Return true if we're currently building a display list for the presshell
@@ -2013,7 +2013,7 @@ private:
   bool                           mInInvalidSubtree;
   bool                           mBuildCompositorHitTestInfo;
   bool                           mLessEventRegionItems;
-  bool                           mBuiltOverlayScrollbars;
+  bool                           mDisablePartialUpdates;
 };
 
 class nsDisplayItem;
