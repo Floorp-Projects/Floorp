@@ -53,17 +53,10 @@ function getEngineModules() {
       symbol: "CreditCardsEngine",
     };
   }
-  if (Svc.Prefs.get("engine.bookmarks.buffer", false)) {
-    result.Bookmarks = {
-      module: "bookmarks.js",
-      symbol: "BufferedBookmarksEngine",
-    };
-  } else {
-    result.Bookmarks = {
-      module: "bookmarks.js",
-      symbol: "BookmarksEngine",
-    };
-  }
+  result.Bookmarks = {
+    module: "bookmarks.js",
+    symbol: "BookmarksEngine",
+  };
   return result;
 }
 
