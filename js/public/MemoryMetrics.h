@@ -504,6 +504,25 @@ struct NotableScriptSourceInfo : public ScriptSourceInfo
     NotableScriptSourceInfo(const NotableScriptSourceInfo& info) = delete;
 };
 
+struct HelperThreadStats
+{
+#define FOR_EACH_SIZE(macro) \
+    macro(_, MallocHeap, stateData)
+
+    explicit HelperThreadStats()
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        idleThreadCount(0),
+        activeThreadCount(0)
+    { }
+
+    FOR_EACH_SIZE(DECL_SIZE)
+
+    unsigned idleThreadCount;
+    unsigned activeThreadCount;
+
+#undef FOR_EACH_SIZE
+};
+
 /**
  * Measurements that not associated with any individual runtime.
  */
@@ -518,6 +537,8 @@ struct GlobalStats
     { }
 
     FOR_EACH_SIZE(DECL_SIZE)
+
+    HelperThreadStats helperThread;
 
     mozilla::MallocSizeOf mallocSizeOf_;
 

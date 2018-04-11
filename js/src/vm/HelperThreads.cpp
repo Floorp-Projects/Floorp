@@ -991,7 +991,7 @@ GlobalHelperThreadState::unlock()
 
 #ifdef DEBUG
 bool
-GlobalHelperThreadState::isLockedByCurrentThread()
+GlobalHelperThreadState::isLockedByCurrentThread() const
 {
     return helperLock.ownedByCurrentThread();
 }
@@ -1118,6 +1118,50 @@ IsHelperThreadSimulatingOOM(js::ThreadType threadType)
 #else
     return false;
 #endif
+}
+
+void
+GlobalHelperThreadState::addSizeOfIncludingThis(JS::GlobalStats* stats,
+                                                AutoLockHelperThreadState& lock) const
+{
+    MOZ_ASSERT(isLockedByCurrentThread());
+
+    mozilla::MallocSizeOf mallocSizeOf = stats->mallocSizeOf_;
+    JS::HelperThreadStats& htStats = stats->helperThread;
+
+    htStats.stateData += mallocSizeOf(this);
+
+    if (threads)
+        htStats.stateData += threads->sizeOfIncludingThis(mallocSizeOf);
+
+    // Report memory used by various containers
+    htStats.stateData +=
+        ionWorklist_.sizeOfExcludingThis(mallocSizeOf) +
+        ionFinishedList_.sizeOfExcludingThis(mallocSizeOf) +
+        ionFreeList_.sizeOfExcludingThis(mallocSizeOf) +
+        wasmWorklist_tier1_.sizeOfExcludingThis(mallocSizeOf) +
+        wasmWorklist_tier2_.sizeOfExcludingThis(mallocSizeOf) +
+        wasmTier2GeneratorWorklist_.sizeOfExcludingThis(mallocSizeOf) +
+        promiseHelperTasks_.sizeOfExcludingThis(mallocSizeOf) +
+        parseWorklist_.sizeOfExcludingThis(mallocSizeOf) +
+        parseFinishedList_.sizeOfExcludingThis(mallocSizeOf) +
+        parseWaitingOnGC_.sizeOfExcludingThis(mallocSizeOf) +
+        compressionPendingList_.sizeOfExcludingThis(mallocSizeOf) +
+        compressionWorklist_.sizeOfExcludingThis(mallocSizeOf) +
+        compressionFinishedList_.sizeOfExcludingThis(mallocSizeOf) +
+        gcHelperWorklist_.sizeOfExcludingThis(mallocSizeOf) +
+        gcParallelWorklist_.sizeOfExcludingThis(mallocSizeOf);
+
+    // Report number of helper threads.
+    MOZ_ASSERT(htStats.idleThreadCount == 0);
+    if (threads) {
+        for (auto& thread : *threads) {
+            if (thread.idle())
+                htStats.idleThreadCount++;
+            else
+                htStats.activeThreadCount++;
+        }
+    }
 }
 
 size_t
