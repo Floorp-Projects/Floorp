@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint no-unused-vars: ["error", {"args": "none", "vars": "local"}] */
+
 "use strict";
 
 var customName;
@@ -171,7 +173,7 @@ function addNewFieldBoolean() {
   ok(found, "Found new boolean field line");
 
   // Mouse event trigger
-  var mouseClick = new MouseEvent("click", {
+  let mouseClick = new MouseEvent("click", {
     canBubble: true,
     cancelable: true,
     view: doc.parent,

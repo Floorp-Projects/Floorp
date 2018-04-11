@@ -6,7 +6,6 @@
 
 const { require } =
   ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-const Services = require("Services");
 const QR = require("devtools/shared/qrcode/index");
 
 window.addEventListener("load", function() {

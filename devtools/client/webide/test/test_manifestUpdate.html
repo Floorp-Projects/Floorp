@@ -54,7 +54,6 @@
 
             // Read file
           let manifestPath = OS.Path.join(packagedAppLocation, "manifest.webapp");
-          let Decoder = new TextDecoder();
           let data = await OS.File.read(manifestPath);
           data = new TextDecoder().decode(data);
           let json = JSON.parse(data);

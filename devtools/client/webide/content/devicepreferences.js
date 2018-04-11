@@ -59,7 +59,9 @@ function SearchField(event) {
   configView.search(event);
 }
 
-var getAllPrefs; // Used by tests
+// Used by tests
+/* exported getAllPrefs */
+var getAllPrefs;
 function BuildUI() {
   configView.resetTable();
 

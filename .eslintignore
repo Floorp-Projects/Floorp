@@ -116,17 +116,9 @@ devtools/client/storage/test/*.html
 !devtools/client/storage/test/storage-search.html
 !devtools/client/storage/test/storage-unsecured-iframe.html
 !devtools/client/storage/test/storage-unsecured-iframe-usercontextid.html
-devtools/client/webaudioeditor/**
-devtools/client/webconsole/old/net/**
-!devtools/client/webconsole/test/mochitest/**
-devtools/client/webconsole/old/test/**
-devtools/client/webconsole/old/webconsole.js
-devtools/client/webide/**
-!devtools/client/webide/components/webideCli.js
 devtools/server/tests/browser/storage-*.html
 !devtools/server/tests/browser/storage-unsecured-iframe.html
 devtools/server/tests/browser/stylesheets-nested-iframes.html
-devtools/server/tests/unit/xpcshell_debugging_script.js
 devtools/client/shared/webpack/shims/test/test_clipboard.html
 devtools/shared/qrcode/tests/mochitest/test_decode.html
 devtools/shared/tests/mochitest/*.html
@@ -137,6 +129,10 @@ devtools/client/commandline/**
 # Soon to be removed, the new/ directory is explicitly excluded below due to
 # also being an imported repository.
 devtools/client/debugger/**
+# Soon to be removed
+devtools/client/webconsole/old/net/**
+devtools/client/webconsole/old/test/**
+devtools/client/webconsole/old/webconsole.js
 
 # Ignore devtools imported repositories
 devtools/client/debugger/new/**
@@ -144,6 +140,7 @@ devtools/client/shared/components/reps/**
 
 # Ignore devtools preferences files
 devtools/client/preferences/**
+devtools/client/webide/preferences/**
 devtools/shared/preferences/**
 devtools/startup/preferences/devtools-startup.js
 
@@ -179,6 +176,9 @@ devtools/client/webconsole/test/mochitest/code_bundle_invalidmap.js
 devtools/server/tests/unit/babel_and_browserify_script_with_source_map.js
 devtools/server/tests/unit/setBreakpoint*
 devtools/server/tests/unit/sourcemapped.js
+
+# devtools specific format test file
+devtools/server/tests/unit/xpcshell_debugging_script.js
 
 # dom/ exclusions
 dom/abort/**

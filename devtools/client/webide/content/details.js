@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-const Services = require("Services");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 
 window.addEventListener("load", function() {
@@ -117,6 +116,8 @@ function updateUI() {
   AppManager.update("details");
 }
 
+// Used in details.xhtml.
+/* exported removeProject */
 function removeProject() {
   AppManager.removeSelectedProject();
 }

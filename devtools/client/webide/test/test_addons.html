@@ -15,12 +15,13 @@
   <body>
 
     <script type="application/javascript">
+      // XXX Bug 1072167 - When updating after migration, fix the no-undef issues.
+      /* eslint-disable no-undef */
+
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        const {Devices} = ChromeUtils.import("resource://devtools/shared/apps/Devices.jsm");
-
-        let adbAddonsInstalled;
+        const {Devices} = ChromeUtils.import("resource://devtools/shared/apps/Devices.jsm", {});
 
         function uninstallADBFromUI(doc) {
           return new Promise((resolve, reject) => {
@@ -44,7 +45,6 @@
           ok(!Devices.helperAddonInstalled, "Helper not installed");
 
           let win = await openWebIDE(true);
-          let docRuntime = getRuntimeDocument(win);
 
           ok(Devices.helperAddonInstalled, "Helper has been auto-installed");
 
