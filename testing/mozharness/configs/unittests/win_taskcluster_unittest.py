@@ -33,10 +33,6 @@ config = {
     "virtualenv_modules": ['pypiwin32'],
     "virtualenv_path": 'venv',
 
-    "find_links": [
-        "http://pypi.pub.build.mozilla.org/pub",
-    ],
-    "pip_index": False,
     "exe_suffix": EXE_SUFFIX,
     "run_file_names": {
         "mochitest": "runtests.py",

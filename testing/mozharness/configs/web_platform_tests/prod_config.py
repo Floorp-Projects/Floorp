@@ -21,7 +21,6 @@ config = {
         "http://pypi.pub.build.mozilla.org/pub",
     ],
 
-    "pip_index": False,
 
     "buildbot_json_path": "buildprops.json",
 
