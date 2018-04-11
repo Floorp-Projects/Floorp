@@ -29,6 +29,9 @@ var log = {
 };
 
 var PaymentDialogUtils = {
+  getAddressLabel(address) {
+    return `${address.name} (${address.guid})`;
+  },
   isCCNumber(str) {
     return str.length > 0;
   },
