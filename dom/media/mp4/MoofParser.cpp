@@ -930,7 +930,6 @@ Saiz::Parse(Box& aBox)
 
   uint32_t flags;
   MOZ_TRY_VAR(flags, reader->ReadU32());
-  uint8_t version = flags >> 24;
   if (flags & 1) {
     MOZ_TRY_VAR(mAuxInfoType, reader->ReadU32());
     MOZ_TRY_VAR(mAuxInfoTypeParameter, reader->ReadU32());
