@@ -23,7 +23,7 @@ function test_methods_calling() {
   Services.intl.getCalendarInfo("pl");
   Services.intl.getDisplayNames("ar");
   Services.intl.getLocaleInfo("de");
-  Services.intl.getLocaleDisplayNames(["en-US", "sr-Cyrl-RU"]);
+  Services.intl.getLocaleDisplayNames(undefined, ["en-US", "sr-Cyrl-RU"]);
   new Services.intl.DateTimeFormat("fr");
   new Services.intl.RelativeTimeFormat("fr");
   ok(true);
