@@ -111,8 +111,10 @@ nsresult CreatePrincipalInfo(nsILineInputStream* aStream,
     return rv;
   }
 
-  aEntry->principal() =
-      mozilla::ipc::ContentPrincipalInfo(attrs, origin, aEntry->scope());
+  // CSP will be applied during the script load.
+  nsTArray<mozilla::ipc::ContentSecurityPolicy> policies;
+  aEntry->principal() = mozilla::ipc::ContentPrincipalInfo(
+      attrs, origin, aEntry->scope(), std::move(policies));
 
   return NS_OK;
 }
