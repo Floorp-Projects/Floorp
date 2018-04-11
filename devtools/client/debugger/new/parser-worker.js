@@ -1707,16 +1707,24 @@ function extractSymbol(path, symbols) {
   }
 
   if (t.isVariableDeclarator(path)) {
-    const node = path.node.id;
-    const { start, end } = path.node.loc;
-    if (t.isArrayPattern(node)) {
+    const nodeId = path.node.id;
+
+    if (t.isArrayPattern(nodeId)) {
       return;
     }
 
-    symbols.identifiers.push({
-      name: node.name,
-      expression: node.name,
-      location: { start, end }
+    const properties = nodeId.properties && t.objectPattern(nodeId.properties) ? nodeId.properties : [{
+      value: { name: nodeId.name },
+      loc: path.node.loc
+    }];
+
+    properties.forEach(function (property) {
+      const { start, end } = property.loc;
+      symbols.identifiers.push({
+        name: property.value.name,
+        expression: property.value.name,
+        location: { start, end }
+      });
     });
   }
 }
@@ -21339,7 +21347,9 @@ function replaceNode(ancestors, node) {
   } else {
     ancestor.node[ancestor.key] = node;
   }
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function getFirstExpression(ast) {
   const statements = ast.program.body;
