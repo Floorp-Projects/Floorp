@@ -192,7 +192,7 @@ nsCSSProps::AddRefTable(void)
       #undef CSS_PROP_SHORTHAND
 
       #define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_)    \
-        OBSERVE_PROP(pref_, eCSSPropertyAlias_##aliasmethod_)
+        OBSERVE_PROP(pref_, eCSSPropertyAlias_##aliasid_)
       #include "nsCSSPropAliasList.h"
       #undef CSS_PROP_ALIAS
 
