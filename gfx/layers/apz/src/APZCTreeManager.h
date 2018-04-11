@@ -201,13 +201,12 @@ public:
    * sample time. In effect it is the webrender equivalent of (part of) the
    * code in AsyncCompositionManager. If scrollbar transforms need updating
    * to reflect the async scroll position, the updated transforms are appended
-   * to the provided aTransformArray.
+   * to the provided transaction as well.
    * Returns true if any APZ animations are in progress and we need to keep
    * compositing.
    */
   bool PushStateToWR(wr::TransactionBuilder& aTxn,
-                     const TimeStamp& aSampleTime,
-                     nsTArray<wr::WrTransformProperty>& aTransformArray);
+                     const TimeStamp& aSampleTime);
 
   /**
    * Walk the tree of APZCs and flushes the repaint requests for all the APZCS
