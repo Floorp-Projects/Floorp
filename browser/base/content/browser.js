@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUITelemetry: "resource:///modules/BrowserUITelemetry.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CharsetMenu: "resource://gre/modules/CharsetMenu.jsm",
   Color: "resource://gre/modules/Color.jsm",
   ContentSearch: "resource:///modules/ContentSearch.jsm",
@@ -48,7 +49,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   ReaderParent: "resource:///modules/ReaderParent.jsm",
-  RecentWindow: "resource:///modules/RecentWindow.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
@@ -1489,8 +1489,7 @@ var gBrowserInit = {
     if (!getBoolPref("ui.click_hold_context_menus", false))
       SetClickAndHoldHandlers();
 
-    ChromeUtils.import("resource:///modules/UpdateTopLevelContentWindowIDHelper.jsm", {})
-      .trackBrowserWindow(window);
+    BrowserWindowTracker.track(window);
 
     PlacesToolbarHelper.init();
 
@@ -2675,7 +2674,7 @@ async function BrowserViewSourceOfDocument(aArgsOrDocument) {
   // In the case of popups, we need to find a non-popup browser window.
   if (!tabBrowser || !window.toolbar.visible) {
     // This returns only non-popup browser windows by default.
-    let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+    let browserWindow = BrowserWindowTracker.getMostRecentBrowserWindow();
     tabBrowser = browserWindow.gBrowser;
   }
 
@@ -5301,7 +5300,7 @@ nsBrowserAccess.prototype = {
     if (window.toolbar.visible)
       win = window;
     else {
-      win = RecentWindow.getMostRecentBrowserWindow({private: aIsPrivate});
+      win = BrowserWindowTracker.getMostRecentBrowserWindow({private: aIsPrivate});
       needToFocusWin = true;
     }
 

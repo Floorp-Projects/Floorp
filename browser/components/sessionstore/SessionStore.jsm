@@ -165,11 +165,11 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
   GlobalState: "resource:///modules/sessionstore/GlobalState.jsm",
   PrivacyFilter: "resource:///modules/sessionstore/PrivacyFilter.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
-  RecentWindow: "resource:///modules/RecentWindow.jsm",
   RunState: "resource:///modules/sessionstore/RunState.jsm",
   SessionCookies: "resource:///modules/sessionstore/SessionCookies.jsm",
   SessionFile: "resource:///modules/sessionstore/SessionFile.jsm",
@@ -4230,7 +4230,7 @@ var SessionStoreInternal = {
    * @returns Window reference
    */
   _getMostRecentBrowserWindow: function ssi_getMostRecentBrowserWindow() {
-    return RecentWindow.getMostRecentBrowserWindow({ allowPopups: true });
+    return BrowserWindowTracker.getMostRecentBrowserWindow({ allowPopups: true });
   },
 
   /**

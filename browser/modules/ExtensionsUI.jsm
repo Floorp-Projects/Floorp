@@ -8,18 +8,14 @@ var EXPORTED_SYMBOLS = ["ExtensionsUI"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "AppMenuNotifications",
-                               "resource://gre/modules/AppMenuNotifications.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionData",
-                               "resource://gre/modules/Extension.jsm");
-ChromeUtils.defineModuleGetter(this, "RecentWindow",
-                               "resource:///modules/RecentWindow.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
+  AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  ExtensionData: "resource://gre/modules/Extension.jsm",
+  Services: "resource://gre/modules/Services.jsm"
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       "extensions.webextPermissionPrompts", false);
