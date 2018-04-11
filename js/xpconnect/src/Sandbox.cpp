@@ -1051,11 +1051,8 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     {
         JSAutoCompartment ac(cx, sandbox);
 
-        nsCOMPtr<nsIScriptObjectPrincipal> sbp =
-            new SandboxPrivate(principal, sandbox);
-
-        // Pass on ownership of sbp to |sandbox|.
-        JS_SetPrivate(sandbox, sbp.forget().take());
+        // This creates a SandboxPrivate and passes ownership of it to |sandbox|.
+        SandboxPrivate::Create(principal, sandbox);
 
         // Ensure |Object.prototype| is instantiated before prototype-
         // splicing below.
