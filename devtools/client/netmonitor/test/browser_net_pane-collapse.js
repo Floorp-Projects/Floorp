@@ -11,40 +11,41 @@ add_task(async function() {
   let { tab, monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, windowRequire } = monitor.panelWin;
+  let { document, store, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   let { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
-  let detailsPaneToggleButton = document.querySelector(".network-details-panel-toggle");
 
   let wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
   await wait;
 
   ok(!document.querySelector(".network-details-panel") &&
-     detailsPaneToggleButton.classList.contains("pane-collapsed"),
+     !document.querySelector(".sidebar-toggle"),
     "The details panel should initially be hidden.");
 
-  EventUtils.sendMouseEvent({ type: "click" }, detailsPaneToggleButton);
+  store.dispatch(Actions.toggleNetworkDetails());
 
   is(~~(document.querySelector(".network-details-panel").clientWidth),
     Prefs.networkDetailsWidth,
     "The details panel has an incorrect width.");
   ok(document.querySelector(".network-details-panel") &&
-     !detailsPaneToggleButton.classList.contains("pane-collapsed"),
+     document.querySelector(".sidebar-toggle"),
     "The details panel should at this point be visible.");
 
-  EventUtils.sendMouseEvent({ type: "click" }, detailsPaneToggleButton);
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector(".sidebar-toggle"));
 
   ok(!document.querySelector(".network-details-panel") &&
-     detailsPaneToggleButton.classList.contains("pane-collapsed"),
+     !document.querySelector(".sidebar-toggle"),
     "The details panel should not be visible after collapsing.");
 
-  EventUtils.sendMouseEvent({ type: "click" }, detailsPaneToggleButton);
+  store.dispatch(Actions.toggleNetworkDetails());
 
   is(~~(document.querySelector(".network-details-panel").clientWidth),
     Prefs.networkDetailsWidth,
     "The details panel has an incorrect width after uncollapsing.");
   ok(document.querySelector(".network-details-panel") &&
-     !detailsPaneToggleButton.classList.contains("pane-collapsed"),
+     document.querySelector(".sidebar-toggle"),
     "The details panel should be visible again after uncollapsing.");
 
   await teardown(monitor);
