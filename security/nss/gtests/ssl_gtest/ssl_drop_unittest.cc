@@ -142,10 +142,13 @@ class TlsDropDatagram13 : public TlsConnectDatagram13,
   void CheckAcks(const DropAckChain& chain, size_t index,
                  std::vector<uint64_t> acks) {
     const DataBuffer& buf = chain.ack_->record(index).buffer;
-    size_t offset = 0;
+    size_t offset = 2;
+    uint64_t len;
 
-    EXPECT_EQ(acks.size() * 8, buf.len());
-    if ((acks.size() * 8) != buf.len()) {
+    EXPECT_EQ(2 + acks.size() * 8, buf.len());
+    ASSERT_TRUE(buf.Read(0, 2, &len));
+    ASSERT_EQ(static_cast<size_t>(len + 2), buf.len());
+    if ((2 + acks.size() * 8) != buf.len()) {
       while (offset < buf.len()) {
         uint64_t ack;
         ASSERT_TRUE(buf.Read(offset, 8, &ack));

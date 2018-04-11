@@ -366,6 +366,50 @@ TEST_P(TlsConnectTls12, SignatureAlgorithmDrop) {
   server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
 }
 
+// Replaces the signature scheme in a TLS 1.3 CertificateVerify message.
+class TlsReplaceSignatureSchemeFilter : public TlsHandshakeFilter {
+ public:
+  TlsReplaceSignatureSchemeFilter(const std::shared_ptr<TlsAgent>& a,
+                                  SSLSignatureScheme scheme)
+      : TlsHandshakeFilter(a, {kTlsHandshakeCertificateVerify}),
+        scheme_(scheme) {
+    EnableDecryption();
+  }
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) {
+    *output = input;
+    output->Write(0, scheme_, 2);
+    return CHANGE;
+  }
+
+ private:
+  SSLSignatureScheme scheme_;
+};
+
+TEST_P(TlsConnectTls13, UnsupportedSignatureSchemeAlert) {
+  EnsureTlsSetup();
+  MakeTlsFilter<TlsReplaceSignatureSchemeFilter>(server_, ssl_sig_none);
+
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CERT_VERIFY);
+}
+
+TEST_P(TlsConnectTls13, InconsistentSignatureSchemeAlert) {
+  EnsureTlsSetup();
+
+  // This won't work because we use an RSA cert by default.
+  MakeTlsFilter<TlsReplaceSignatureSchemeFilter>(
+      server_, ssl_sig_ecdsa_secp256r1_sha256);
+
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  client_->CheckErrorCode(SSL_ERROR_INCORRECT_SIGNATURE_ALGORITHM);
+}
+
 TEST_P(TlsConnectTls12Plus, RequestClientAuthWithSha384) {
   server_->SetSignatureSchemes(SignatureSchemeRsaSha384,
                                PR_ARRAY_SIZE(SignatureSchemeRsaSha384));
