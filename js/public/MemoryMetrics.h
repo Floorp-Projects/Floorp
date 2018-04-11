@@ -543,7 +543,8 @@ struct RuntimeSizes
     macro(_, MallocHeap, uncompressedSourceCache) \
     macro(_, MallocHeap, scriptData) \
     macro(_, MallocHeap, tracelogger) \
-    macro(_, MallocHeap, wasmRuntime)
+    macro(_, MallocHeap, wasmRuntime) \
+    macro(_, MallocHeap, jitLazyLink)
 
     RuntimeSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
