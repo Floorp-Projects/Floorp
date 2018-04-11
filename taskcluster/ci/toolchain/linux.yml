@@ -180,6 +180,23 @@ linux64-gcc-6:
         toolchain-alias: linux64-gcc
         toolchain-artifact: public/build/gcc.tar.xz
 
+linux64-gcc-7:
+    description: "GCC 7 toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(gcc7)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: build-gcc-7-linux.sh
+        resources:
+            - 'build/unix/build-gcc/build-gcc.sh'
+        toolchain-artifact: public/build/gcc.tar.xz
+
 linux64-sixgill:
     description: "sixgill GCC plugin build"
     treeherder:

@@ -40,8 +40,8 @@ class CurrentTimeScrubberController extends PureComponent {
   }
 
   componentDidMount() {
-    const parentEl = ReactDOM.findDOMNode(this).parentElement;
-    parentEl.addEventListener("mousedown", this.onMouseDown);
+    const el = ReactDOM.findDOMNode(this);
+    el.addEventListener("mousedown", this.onMouseDown);
   }
 
   componentWillUnmount() {
@@ -127,7 +127,7 @@ class CurrentTimeScrubberController extends PureComponent {
 
     return dom.div(
       {
-        className: "current-time-scrubber-controller devtools-toolbar",
+        className: "current-time-scrubber-controller",
       },
       CurrentTimeScrubber(
         {

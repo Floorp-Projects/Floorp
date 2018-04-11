@@ -17,15 +17,23 @@ const {
   WATERFALL_RESIZE,
 } = require("../constants");
 
+const { getDisplayedRequests } = require("../selectors/index");
+
 /**
  * Change network details panel.
  *
  * @param {boolean} open - expected network details panel open state
  */
 function openNetworkDetails(open) {
-  return {
-    type: OPEN_NETWORK_DETAILS,
-    open,
+  return (dispatch, getState) => {
+    const visibleRequestItems = getDisplayedRequests(getState());
+    let defaultSelectedId = visibleRequestItems.length ? visibleRequestItems[0].id : null;
+
+    return dispatch({
+      type: OPEN_NETWORK_DETAILS,
+      open,
+      defaultSelectedId,
+    });
   };
 }
 

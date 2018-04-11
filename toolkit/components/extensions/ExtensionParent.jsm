@@ -232,6 +232,7 @@ ProxyMessenger = {
       if (this.ports.has(messageManager)) {
         this.ports.set(event.detail.messageManager, this.ports.get(messageManager));
         this.ports.delete(messageManager);
+        event.detail.addEventListener("SwapDocShells", this, {once: true});
       }
     }
   },

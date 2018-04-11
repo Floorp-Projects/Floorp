@@ -248,7 +248,7 @@ GetClickableAncestor(nsIFrame* aFrame, nsAtom* stopAt = nullptr, nsAutoString* a
     }
 
     static Element::AttrValuesArray clickableRoles[] =
-      { nsGkAtoms::button, nsGkAtoms::key, nullptr };
+      { &nsGkAtoms::button, &nsGkAtoms::key, nullptr };
     if (content->IsElement() &&
         content->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::role,
                                               clickableRoles, eIgnoreCase) >= 0) {
