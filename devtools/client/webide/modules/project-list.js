@@ -15,7 +15,7 @@ const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.p
 
 var ProjectList;
 
-module.exports = ProjectList = function (win, parentWindow) {
+module.exports = ProjectList = function(win, parentWindow) {
   EventEmitter.decorate(this);
   this._doc = win.document;
   this._UI = parentWindow.UI;
@@ -36,7 +36,7 @@ ProjectList.prototype = {
     return this._doc;
   },
 
-  appManagerUpdate: function (what, details) {
+  appManagerUpdate: function(what, details) {
     // Got a message from app-manager.js
     // See AppManager.update() for descriptions of what these events mean.
     switch (what) {
@@ -52,7 +52,7 @@ ProjectList.prototype = {
     }
   },
 
-  onWebIDEUpdate: function (what, details) {
+  onWebIDEUpdate: function(what, details) {
     if (what == "busy" || what == "unbusy") {
       this.updateCommands();
     }
@@ -65,15 +65,16 @@ ProjectList.prototype = {
    *   name: String       name of the app
    * }
    */
-  newApp: function (testOptions) {
+  newApp: function(testOptions) {
     let parentWindow = this._parentWindow;
     let self = this;
-    return this._UI.busyUntil((async function () {
+    return this._UI.busyUntil((async function() {
       // Open newapp.xul, which will feed ret.location
       let ret = {location: null, testOptions: testOptions};
       parentWindow.openDialog("chrome://webide/content/newapp.xul", "newapp", "chrome,modal", ret);
-      if (!ret.location)
+      if (!ret.location) {
         return;
+      }
 
       // Retrieve added project
       let project = AppProjects.get(ret.location);
@@ -85,10 +86,10 @@ ProjectList.prototype = {
     })(), "creating new app");
   },
 
-  importPackagedApp: function (location) {
+  importPackagedApp: function(location) {
     let parentWindow = this._parentWindow;
     let UI = this._UI;
-    return UI.busyUntil((async function () {
+    return UI.busyUntil((async function() {
       let directory = await utils.getPackagedDirectory(parentWindow, location);
 
       if (!directory) {
@@ -100,10 +101,10 @@ ProjectList.prototype = {
     })(), "importing packaged app");
   },
 
-  importHostedApp: function (location) {
+  importHostedApp: function(location) {
     let parentWindow = this._parentWindow;
     let UI = this._UI;
-    return UI.busyUntil((async function () {
+    return UI.busyUntil((async function() {
       let url = utils.getHostedURL(parentWindow, location);
 
       if (!url) {
@@ -121,7 +122,7 @@ ProjectList.prototype = {
    *   icon: String       path of the project icon
    * }
    */
-  _renderProjectItem: function (opts) {
+  _renderProjectItem: function(opts) {
     let span = opts.panel.querySelector("span") || this._doc.createElement("span");
     span.textContent = opts.name;
     let icon = opts.panel.querySelector("img") || this._doc.createElement("img");
@@ -132,7 +133,7 @@ ProjectList.prototype = {
     opts.panel.setAttribute("title", opts.name);
   },
 
-  refreshTabs: function () {
+  refreshTabs: function() {
     if (AppManager.connected) {
       return AppManager.listTabs().then(() => {
         this.updateTabs();
@@ -140,7 +141,7 @@ ProjectList.prototype = {
     }
   },
 
-  updateTabs: function () {
+  updateTabs: function() {
     let tabsHeaderNode = this._doc.querySelector("#panel-header-tabs");
     let tabsNode = this._doc.querySelector("#project-panel-tabs");
 
@@ -200,7 +201,7 @@ ProjectList.prototype = {
     return Promise.resolve();
   },
 
-  updateApps: function () {
+  updateApps: function() {
     let doc = this._doc;
     let runtimeappsHeaderNode = doc.querySelector("#panel-header-runtimeapps");
     let sortedApps = [];
@@ -263,7 +264,7 @@ ProjectList.prototype = {
     return Promise.resolve();
   },
 
-  updateCommands: function () {
+  updateCommands: function() {
     let doc = this._doc;
     let newAppCmd;
     let packagedAppCmd;
@@ -295,7 +296,7 @@ ProjectList.prototype = {
    *        An |options| object containing a type of |apps| or |tabs| will limit
    *        what is updated to only those sections.
    */
-  update: function (options) {
+  update: function(options) {
     if (options && options.type === "apps") {
       return this.updateApps();
     } else if (options && options.type === "tabs") {
@@ -359,7 +360,7 @@ ProjectList.prototype = {
     });
   },
 
-  destroy: function () {
+  destroy: function() {
     this._doc = null;
     AppManager.off("app-manager-update", this.appManagerUpdate);
     this._UI.off("webide-update", this.onWebIDEUpdate);

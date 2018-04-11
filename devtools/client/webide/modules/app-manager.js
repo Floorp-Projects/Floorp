@@ -28,7 +28,7 @@ var AppManager = exports.AppManager = {
 
   _initialized: false,
 
-  init: function () {
+  init: function() {
     if (this._initialized) {
       return;
     }
@@ -56,7 +56,7 @@ var AppManager = exports.AppManager = {
     this._telemetry = new Telemetry();
   },
 
-  destroy: function () {
+  destroy: function() {
     if (!this._initialized) {
       return;
     }
@@ -122,12 +122,12 @@ var AppManager = exports.AppManager = {
    *     has changed.  This event includes |type| in the details, to distinguish
    *     "apps" and "tabs".
    */
-  update: function (what, details) {
+  update: function(what, details) {
     // Anything we want to forward to the UI
     this.emit("app-manager-update", what, details);
   },
 
-  reportError: function (l10nProperty, ...l10nArgs) {
+  reportError: function(l10nProperty, ...l10nArgs) {
     let win = Services.wm.getMostRecentWindow("devtools:webide");
     if (win) {
       win.UI.reportError(l10nProperty, ...l10nArgs);
@@ -142,7 +142,7 @@ var AppManager = exports.AppManager = {
     }
   },
 
-  onConnectionChanged: function () {
+  onConnectionChanged: function() {
     console.log("Connection status changed: " + this.connection.status);
 
     if (this.connection.status == Connection.Status.DISCONNECTED) {
@@ -170,12 +170,11 @@ var AppManager = exports.AppManager = {
   get apps() {
     if (this._appsFront) {
       return this._appsFront.apps;
-    } else {
-      return new Map();
     }
+    return new Map();
   },
 
-  isProjectRunning: function () {
+  isProjectRunning: function() {
     if (this.selectedProject.type == "mainProcess" ||
         this.selectedProject.type == "tab") {
       return true;
@@ -185,7 +184,7 @@ var AppManager = exports.AppManager = {
     return app && app.running;
   },
 
-  checkIfProjectIsRunning: function () {
+  checkIfProjectIsRunning: function() {
     if (this.selectedProject) {
       if (this.isProjectRunning()) {
         this.update("project-started");
@@ -195,16 +194,16 @@ var AppManager = exports.AppManager = {
     }
   },
 
-  listTabs: function () {
+  listTabs: function() {
     return this.tabStore.listTabs();
   },
 
-  onTabList: function () {
+  onTabList: function() {
     this.update("runtime-targets", { type: "tabs" });
   },
 
   // TODO: Merge this into TabProject as part of project-agnostic work
-  onTabNavigate: function () {
+  onTabNavigate: function() {
     this.update("runtime-targets", { type: "tabs" });
     if (this.selectedProject.type !== "tab") {
       return;
@@ -226,14 +225,14 @@ var AppManager = exports.AppManager = {
     this.update("project-validated");
   },
 
-  onTabClosed: function () {
+  onTabClosed: function() {
     if (this.selectedProject.type !== "tab") {
       return;
     }
     this.selectedProject = null;
   },
 
-  reloadTab: function () {
+  reloadTab: function() {
     if (this.selectedProject && this.selectedProject.type != "tab") {
       return Promise.reject("tried to reload non-tab project");
     }
@@ -242,7 +241,7 @@ var AppManager = exports.AppManager = {
     }, console.error);
   },
 
-  getTarget: function () {
+  getTarget: function() {
     if (this.selectedProject.type == "mainProcess") {
       // Fx >=39 exposes a ChromeActor to debug the main process
       if (this.connection.client.mainRoot.traits.allowChromeProcess) {
@@ -254,15 +253,14 @@ var AppManager = exports.AppManager = {
                        chrome: true
                      });
                    });
-      } else {
+      }
         // Fx <39 exposes tab actors on the root actor
-        return TargetFactory.forRemoteTab({
+      return TargetFactory.forRemoteTab({
           form: this._listTabsResponse,
           client: this.connection.client,
           chrome: true,
           isTabActor: false
-        });
-      }
+      });
     }
 
     if (this.selectedProject.type == "tab") {
@@ -274,7 +272,7 @@ var AppManager = exports.AppManager = {
       return Promise.reject("Can't find app front for selected project");
     }
 
-    return (async function () {
+    return (async function() {
       // Once we asked the app to launch, the app isn't necessary completely loaded.
       // launch request only ask the app to launch and immediatly returns.
       // We have to keep trying to get app tab actors required to create its target.
@@ -293,7 +291,7 @@ var AppManager = exports.AppManager = {
     })();
   },
 
-  getProjectManifestURL: function (project) {
+  getProjectManifestURL: function(project) {
     let manifest = null;
     if (project.type == "runtimeApp") {
       manifest = project.app.manifestURL;
@@ -310,7 +308,7 @@ var AppManager = exports.AppManager = {
     return manifest;
   },
 
-  _getProjectFront: function (project) {
+  _getProjectFront: function(project) {
     let manifest = this.getProjectManifestURL(project);
     if (manifest && this._appsFront) {
       return this._appsFront.apps.get(manifest);
@@ -346,7 +344,9 @@ var AppManager = exports.AppManager = {
     }
 
     let cancelled = false;
-    this.update("before-project", { cancel: () => { cancelled = true; } });
+    this.update("before-project", { cancel: () => {
+      cancelled = true;
+    } });
     if (cancelled) {
       return;
     }
@@ -401,8 +401,7 @@ var AppManager = exports.AppManager = {
     return this._selectedRuntime;
   },
 
-  connectToRuntime: function (runtime) {
-
+  connectToRuntime: function(runtime) {
     if (this.connected && this.selectedRuntime === runtime) {
       // Already connected
       return Promise.resolve();
@@ -489,7 +488,7 @@ var AppManager = exports.AppManager = {
     this.update("runtime-telemetry");
   },
 
-  isMainProcessDebuggable: function () {
+  isMainProcessDebuggable: function() {
     // Fx <39 exposes chrome tab actors on RootActor
     // Fx >=39 exposes a dedicated actor via getProcess request
     return this.connection.client &&
@@ -517,7 +516,7 @@ var AppManager = exports.AppManager = {
     return getPreferenceFront(this.connection.client, this._listTabsResponse);
   },
 
-  disconnectRuntime: function () {
+  disconnectRuntime: function() {
     if (!this.connected) {
       return Promise.resolve();
     }
@@ -528,7 +527,7 @@ var AppManager = exports.AppManager = {
     });
   },
 
-  launchRuntimeApp: function () {
+  launchRuntimeApp: function() {
     if (this.selectedProject && this.selectedProject.type != "runtimeApp") {
       return Promise.reject("attempting to launch a non-runtime app");
     }
@@ -536,23 +535,22 @@ var AppManager = exports.AppManager = {
     return app.launch();
   },
 
-  launchOrReloadRuntimeApp: function () {
+  launchOrReloadRuntimeApp: function() {
     if (this.selectedProject && this.selectedProject.type != "runtimeApp") {
       return Promise.reject("attempting to launch / reload a non-runtime app");
     }
     let app = this._getProjectFront(this.selectedProject);
     if (!app.running) {
       return app.launch();
-    } else {
-      return app.reload();
     }
+    return app.reload();
   },
 
-  runtimeCanHandleApps: function () {
+  runtimeCanHandleApps: function() {
     return !!this._appsFront;
   },
 
-  installAndRunProject: function () {
+  installAndRunProject: function() {
     let project = this.selectedProject;
 
     if (!project || (project.type != "packaged" && project.type != "hosted")) {
@@ -570,7 +568,7 @@ var AppManager = exports.AppManager = {
       return Promise.reject("Can't install");
     }
 
-    return (async function () {
+    return (async function() {
       let self = AppManager;
 
       // Validate project
@@ -639,20 +637,19 @@ var AppManager = exports.AppManager = {
     })();
   },
 
-  stopRunningApp: function () {
+  stopRunningApp: function() {
     let app = this._getProjectFront(this.selectedProject);
     return app.close();
   },
 
   /* PROJECT VALIDATION */
 
-  validateAndUpdateProject: function (project) {
+  validateAndUpdateProject: function(project) {
     if (!project) {
       return Promise.reject();
     }
 
-    return (async function () {
-
+    return (async function() {
       let packageDir = project.location;
       let validation = new AppValidator({
         type: project.type,
@@ -673,16 +670,14 @@ var AppManager = exports.AppManager = {
         }
         if (!iconPath) {
           project.icon = AppManager.DEFAULT_PROJECT_ICON;
-        } else {
-          if (project.type == "hosted") {
-            let manifestURL = Services.io.newURI(project.location);
-            let origin = Services.io.newURI(manifestURL.prePath);
-            project.icon = Services.io.newURI(iconPath, null, origin).spec;
-          } else if (project.type == "packaged") {
-            let projectFolder = FileUtils.File(packageDir);
-            let folderURI = Services.io.newFileURI(projectFolder).spec;
-            project.icon = folderURI + iconPath.replace(/^\/|\\/, "");
-          }
+        } else if (project.type == "hosted") {
+          let manifestURL = Services.io.newURI(project.location);
+          let origin = Services.io.newURI(manifestURL.prePath);
+          project.icon = Services.io.newURI(iconPath, null, origin).spec;
+        } else if (project.type == "packaged") {
+          let projectFolder = FileUtils.File(packageDir);
+          let folderURI = Services.io.newFileURI(projectFolder).spec;
+          project.icon = folderURI + iconPath.replace(/^\/|\\/, "");
         }
         project.manifest = validation.manifest;
 
@@ -735,7 +730,7 @@ var AppManager = exports.AppManager = {
 
   /* RUNTIME LIST */
 
-  _clearRuntimeList: function () {
+  _clearRuntimeList: function() {
     this.runtimeList = {
       usb: [],
       wifi: [],
@@ -743,7 +738,7 @@ var AppManager = exports.AppManager = {
     };
   },
 
-  _rebuildRuntimeList: function () {
+  _rebuildRuntimeList: function() {
     let runtimes = RuntimeScanners.listRuntimes();
     this._clearRuntimeList();
 
@@ -767,7 +762,7 @@ var AppManager = exports.AppManager = {
 
   /* MANIFEST UTILS */
 
-  writeManifest: function (project) {
+  writeManifest: function(project) {
     if (project.type != "packaged") {
       return Promise.reject("Not a packaged app");
     }

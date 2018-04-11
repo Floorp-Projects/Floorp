@@ -5,7 +5,7 @@
  * Test the `connect-param` event on the web audio actor.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, front } = await initBackend(CONNECT_PARAM_URL);
   let [, , [destNode, carrierNode, modNode, gainNode], , connectParam] = await Promise.all([
     front.setup({ reload: true }),

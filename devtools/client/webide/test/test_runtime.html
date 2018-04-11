@@ -21,7 +21,7 @@
         let win;
 
         SimpleTest.registerCleanupFunction(() => {
-          (async function () {
+          (async function() {
             if (win) {
               await closeWebIDE(win);
             }
@@ -30,7 +30,7 @@
           })();
         });
 
-        (async function () {
+        (async function() {
           function isPlayActive() {
             return !win.document.querySelector("#cmd_play").hasAttribute("disabled");
           }
@@ -192,7 +192,7 @@
 
           SimpleTest.finish();
         })();
-      }
+      };
     </script>
   </body>
 </html>
