@@ -38,7 +38,7 @@ enum nsCSSPropertyID {
   eCSSProperty_COUNT_DUMMY2 = eCSSProperty_COUNT - 1,
 
   #define CSS_PROP_ALIAS(aliasname_, aliasid_, id_, method_, pref_) \
-    eCSSPropertyAlias_##method_,
+    eCSSPropertyAlias_##aliasid_,
   #include "nsCSSPropAliasList.h"
   #undef CSS_PROP_ALIAS
 
