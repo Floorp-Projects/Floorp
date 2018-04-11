@@ -140,6 +140,9 @@
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Add custom URL</string>
 
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Add custom URL</string>
+
     <string name="preference_autocomplete_title_remove">Remove custom URLs</string>
 
     <!-- A link to SUMO at autocomplete settings. -->
