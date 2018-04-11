@@ -1,4 +1,14 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 /* Copyright 2016 Mozilla Foundation
  *
@@ -981,3 +991,119 @@ var WasmDisassembler = /** @class */ (function () {
     return WasmDisassembler;
 }());
 exports.WasmDisassembler = WasmDisassembler;
+var UNKNOWN_FUNCTION_PREFIX = "unknown";
+var NameSectionNameResolver = /** @class */ (function (_super) {
+    __extends(NameSectionNameResolver, _super);
+    function NameSectionNameResolver(names) {
+        var _this = _super.call(this) || this;
+        _this._names = names;
+        return _this;
+    }
+    NameSectionNameResolver.prototype.getFunctionName = function (index, isImport, isRef) {
+        var name = this._names[index];
+        if (!name)
+            return "$" + UNKNOWN_FUNCTION_PREFIX + index;
+        return isRef ? "$" + name : "$" + name + " (;" + index + ";)";
+    };
+    return NameSectionNameResolver;
+}(DefaultNameResolver));
+var NameSectionReader = /** @class */ (function () {
+    function NameSectionReader() {
+        this._done = false;
+        this._functionsCount = 0;
+        this._functionImportsCount = 0;
+        this._functionNames = null;
+        this._hasNames = false;
+    }
+    NameSectionReader.prototype.read = function (reader) {
+        var _this = this;
+        if (this._done)
+            throw new Error('Invalid state: disassembly process was already finished.');
+        while (true) {
+            if (!reader.read())
+                return false;
+            switch (reader.state) {
+                case 2 /* END_WASM */:
+                    if (!reader.hasMoreBytes()) {
+                        this._done = true;
+                        return true;
+                    }
+                    break;
+                case -1 /* ERROR */:
+                    throw reader.error;
+                case 1 /* BEGIN_WASM */:
+                    this._functionsCount = 0;
+                    this._functionImportsCount = 0;
+                    this._functionNames = [];
+                    this._hasNames = false;
+                    break;
+                case 4 /* END_SECTION */:
+                    break;
+                case 3 /* BEGIN_SECTION */:
+                    var sectionInfo = reader.result;
+                    if (sectionInfo.id === 0 /* Custom */ &&
+                        WasmParser_1.bytesToString(sectionInfo.name) === "name") {
+                        break;
+                    }
+                    if (sectionInfo.id === 3 /* Function */ ||
+                        sectionInfo.id === 2 /* Import */) {
+                        break;
+                    }
+                    reader.skipSection();
+                    break;
+                case 12 /* IMPORT_SECTION_ENTRY */:
+                    var importInfo = reader.result;
+                    if (importInfo.kind === 0 /* Function */)
+                        this._functionImportsCount++;
+                    break;
+                case 13 /* FUNCTION_SECTION_ENTRY */:
+                    this._functionsCount++;
+                    break;
+                case 19 /* NAME_SECTION_ENTRY */:
+                    var nameInfo = reader.result;
+                    if (nameInfo.type !== 1 /* Function */)
+                        break;
+                    var functionNameInfo = nameInfo;
+                    functionNameInfo.names.forEach(function (naming) {
+                        _this._functionNames[naming.index] = WasmParser_1.bytesToString(naming.name);
+                    });
+                    this._hasNames = true;
+                    break;
+                default:
+                    throw new Error("Expectected state: " + reader.state);
+            }
+        }
+    };
+    NameSectionReader.prototype.hasValidNames = function () {
+        return this._hasNames;
+    };
+    NameSectionReader.prototype.getNameResolver = function () {
+        if (!this.hasValidNames())
+            throw new Error("Has no valid name section");
+        // Fix bad names.
+        var functionNamesLength = this._functionImportsCount + this._functionsCount;
+        var functionNames = this._functionNames.slice(0, functionNamesLength);
+        var usedNameAt = Object.create(null);
+        for (var i = 0; i < functionNames.length; i++) {
+            var name_1 = functionNames[i];
+            if (!name_1)
+                continue;
+            var goodName = !(name_1 in usedNameAt) &&
+                !/[^0-9A-Za-z!#$%&'*+.:<=>?@^_`|~\/\-]/.test(name_1) &&
+                name_1.indexOf(UNKNOWN_FUNCTION_PREFIX) !== 0;
+            if (!goodName) {
+                if (usedNameAt[name_1] >= 0) {
+                    // Remove all non-unique names.
+                    functionNames[usedNameAt[name_1]] = null;
+                    usedNameAt[name_1] = -1;
+                }
+                functionNames[i] = null;
+                continue;
+            }
+            usedNameAt[name_1] = i;
+        }
+        return new NameSectionNameResolver(functionNames);
+    };
+    return NameSectionReader;
+}());
+exports.NameSectionReader = NameSectionReader;
