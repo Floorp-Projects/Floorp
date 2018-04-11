@@ -68,8 +68,9 @@ MediaTrackList::GetTrackById(const nsAString& aId)
 void
 MediaTrackList::AddTrack(MediaTrack* aTrack)
 {
+  MOZ_ASSERT(aTrack->GetOwnerGlobal() == GetOwnerGlobal(),
+             "Where is this track from?");
   mTracks.AppendElement(aTrack);
-  aTrack->Init(GetOwner());
   aTrack->SetTrackList(this);
   CreateAndDispatchTrackEventRunner(aTrack, NS_LITERAL_STRING("addtrack"));
 
@@ -103,25 +104,29 @@ MediaTrackList::RemoveTracks()
 }
 
 already_AddRefed<AudioTrack>
-MediaTrackList::CreateAudioTrack(const nsAString& aId,
+MediaTrackList::CreateAudioTrack(nsIGlobalObject* aOwnerGlobal,
+                                 const nsAString& aId,
                                  const nsAString& aKind,
                                  const nsAString& aLabel,
                                  const nsAString& aLanguage,
                                  bool aEnabled)
 {
-  RefPtr<AudioTrack> track = new AudioTrack(aId, aKind, aLabel, aLanguage,
-                                              aEnabled);
+  RefPtr<AudioTrack> track = new AudioTrack(aOwnerGlobal,
+                                            aId, aKind, aLabel, aLanguage,
+                                            aEnabled);
   return track.forget();
 }
 
 already_AddRefed<VideoTrack>
-MediaTrackList::CreateVideoTrack(const nsAString& aId,
+MediaTrackList::CreateVideoTrack(nsIGlobalObject* aOwnerGlobal,
+                                 const nsAString& aId,
                                  const nsAString& aKind,
                                  const nsAString& aLabel,
                                  const nsAString& aLanguage,
                                  VideoStreamTrack* aVideoTrack)
 {
-  RefPtr<VideoTrack> track = new VideoTrack(aId, aKind, aLabel, aLanguage, aVideoTrack);
+  RefPtr<VideoTrack> track = new VideoTrack(aOwnerGlobal, aId, aKind, aLabel,
+                                            aLanguage, aVideoTrack);
   return track.forget();
 }
 
