@@ -222,10 +222,9 @@ private:
 
   // Have APZ push the async scroll state to WR. Returns true if an APZ
   // animation is in effect and we need to schedule another composition.
-  // If scrollbars need their transforms updated, the provided aTransformArray
-  // is populated with the property update details.
-  bool PushAPZStateToWR(wr::TransactionBuilder& aTxn,
-                        nsTArray<wr::WrTransformProperty>& aTransformArray);
+  // If scrollbars need their transforms updated, the transaction builder
+  // is populated with the property update details via AppendTransformProperties
+  bool PushAPZStateToWR(wr::TransactionBuilder& aTxn);
 
   wr::Epoch GetNextWrEpoch();
 
