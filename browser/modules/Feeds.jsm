@@ -43,7 +43,7 @@ var Feeds = {
       }
 
       case "FeedConverter:addLiveBookmark": {
-        let topWindow = BrowserWindowTracker.getMostRecentBrowserWindow();
+        let topWindow = BrowserWindowTracker.getTopWindow();
         topWindow.PlacesCommandHook.addLiveBookmark(data.spec, data.title, data.subtitle)
                                    .catch(Cu.reportError);
         break;

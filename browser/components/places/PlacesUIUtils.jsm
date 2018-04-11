@@ -607,7 +607,7 @@ var PlacesUIUtils = {
     var browserWindow = null;
     browserWindow =
       aWindow && aWindow.document.documentElement.getAttribute("windowtype") == "navigator:browser" ?
-      aWindow : BrowserWindowTracker.getMostRecentBrowserWindow();
+      aWindow : BrowserWindowTracker.getTopWindow();
 
     var urls = [];
     let skipMarking = browserWindow && PrivateBrowsingUtils.isWindowPrivate(browserWindow);
@@ -745,7 +745,7 @@ var PlacesUIUtils = {
       if (aWhere == "current" && isBookmark) {
         if (PlacesUtils.annotations
                        .itemHasAnnotation(aNode.itemId, this.LOAD_IN_SIDEBAR_ANNO)) {
-          let browserWin = BrowserWindowTracker.getMostRecentBrowserWindow();
+          let browserWin = BrowserWindowTracker.getTopWindow();
           if (browserWin) {
             browserWin.openWebPanel(aNode.title, aNode.uri);
             return;

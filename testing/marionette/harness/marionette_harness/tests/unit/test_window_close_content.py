@@ -97,7 +97,7 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
             self.marionette.execute_async_script("""
               Components.utils.import("resource:///modules/BrowserWindowTracker.jsm");
 
-              let win = BrowserWindowTracker.getMostRecentBrowserWindow();
+              let win = BrowserWindowTracker.getTopWindow();
               win.addEventListener("TabBrowserDiscarded", ev => {
                 marionetteScriptFinished(true);
               }, { once: true});

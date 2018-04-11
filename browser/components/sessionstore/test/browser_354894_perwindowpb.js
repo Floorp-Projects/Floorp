@@ -24,14 +24,14 @@
  * notifications. The latter won't.
  */
 
-// The rejection "BrowserWindowTracker.getMostRecentBrowserWindow(...) is null" is left
+// The rejection "BrowserWindowTracker.getTopWindow(...) is null" is left
 // unhandled in some cases. This bug should be fixed, but for the moment this
 // file is whitelisted.
 //
 // NOTE: Whitelisting a class of rejections should be limited. Normally you
 //       should use "expectUncaughtRejection" to flag individual failures.
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/getMostRecentBrowserWindow/);
+PromiseTestUtils.whitelistRejectionsGlobally(/getTopWindow/);
 
 // Some urls that might be opened in tabs and/or popups
 // Do not use about:blank:

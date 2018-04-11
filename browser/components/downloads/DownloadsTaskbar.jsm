@@ -138,7 +138,7 @@ var DownloadsTaskbar = {
 
     aWindow.addEventListener("unload", () => {
       // Locate another browser window, excluding the one being closed.
-      let browserWindow = BrowserWindowTracker.getMostRecentBrowserWindow();
+      let browserWindow = BrowserWindowTracker.getTopWindow();
       if (browserWindow) {
         // Move the progress indicator to the other browser window.
         this._attachIndicator(browserWindow);
@@ -167,7 +167,7 @@ var DownloadsTaskbar = {
 
     aWindow.addEventListener("unload", () => {
       // Locate another browser window, excluding the one being closed.
-      let browserWindow = BrowserWindowTracker.getMostRecentBrowserWindow();
+      let browserWindow = BrowserWindowTracker.getTopWindow();
       if (browserWindow) {
         // Move the progress indicator to the other browser window.
         this._attachGtkTaskbarProgress(browserWindow);

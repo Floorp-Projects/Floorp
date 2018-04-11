@@ -566,7 +566,7 @@ DownloadsPlacesView.prototype = {
 
   _downloadURLFromClipboard() {
     let [url, name] = this._getURLFromClipboardData();
-    let browserWin = BrowserWindowTracker.getMostRecentBrowserWindow();
+    let browserWin = BrowserWindowTracker.getTopWindow();
     let initiatingDoc = browserWin ? browserWin.document : document;
     DownloadURL(url, name, initiatingDoc);
   },
@@ -746,7 +746,7 @@ DownloadsPlacesView.prototype = {
     let links = Services.droppedLinkHandler.dropLinks(aEvent);
     if (!links.length)
       return;
-    let browserWin = BrowserWindowTracker.getMostRecentBrowserWindow();
+    let browserWin = BrowserWindowTracker.getTopWindow();
     let initiatingDoc = browserWin ? browserWin.document : document;
     for (let link of links) {
       if (link.url.startsWith("about:"))

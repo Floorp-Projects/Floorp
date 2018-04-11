@@ -241,7 +241,7 @@ FormAutofillParent.prototype = {
         break;
       }
       case "FormAutofill:OpenPreferences": {
-        const win = BrowserWindowTracker.getMostRecentBrowserWindow();
+        const win = BrowserWindowTracker.getTopWindow();
         win.openPreferences("panePrivacy", {origin: "autofillFooter"});
         break;
       }

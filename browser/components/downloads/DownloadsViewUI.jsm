@@ -127,7 +127,7 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   get browserWindow() {
-    return BrowserWindowTracker.getMostRecentBrowserWindow();
+    return BrowserWindowTracker.getTopWindow();
   },
 
   /**

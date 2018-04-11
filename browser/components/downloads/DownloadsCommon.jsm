@@ -826,7 +826,7 @@ DownloadsDataCtor.prototype = {
     DownloadsCommon.log("Attempting to notify that a new download has started or finished.");
 
     // Show the panel in the most recent browser window, if present.
-    let browserWin = BrowserWindowTracker.getMostRecentBrowserWindow({ private: this._isPrivate });
+    let browserWin = BrowserWindowTracker.getTopWindow({ private: this._isPrivate });
     if (!browserWin) {
       return;
     }

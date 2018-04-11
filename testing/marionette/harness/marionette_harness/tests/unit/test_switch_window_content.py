@@ -45,7 +45,7 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
                   win = Services.wm.getMostRecentWindow("navigator:browser");
                 } else {
                   Components.utils.import("resource:///modules/BrowserWindowTracker.jsm");
-                  win = BrowserWindowTracker.getMostRecentBrowserWindow();
+                  win = BrowserWindowTracker.getTopWindow();
                 }
 
                 let tabBrowser = null;
