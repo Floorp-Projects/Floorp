@@ -15,7 +15,8 @@ namespace dom {
 class AudioTrack : public MediaTrack
 {
 public:
-  AudioTrack(const nsAString& aId,
+  AudioTrack(nsIGlobalObject* aOwnerGlobal,
+             const nsAString& aId,
              const nsAString& aKind,
              const nsAString& aLabel,
              const nsAString& aLanguage,
