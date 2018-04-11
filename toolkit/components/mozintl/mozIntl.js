@@ -11,6 +11,11 @@ const osPrefs =
   Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
 
 /**
+ * RegExp used to parse a BCP47 language tag (ex: en-US, sr-Cyrl-RU etc.)
+ */
+const languageTagMatch = /^([a-z]{2,3}|[a-z]{4}|[a-z]{5,8})(?:[-_]([a-z]{4}))?(?:[-_]([A-Z]{2}|[0-9]{3}))?((?:[-_](?:[a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*)(?:[-_][a-wy-z0-9](?:[-_][a-z0-9]{2,8})+)*(?:[-_]x(?:[-_][a-z0-9]{1,8})+)?$/i;
+
+/**
  * This helper function retrives currently used app locales, allowing
  * all mozIntl APIs to use the current regional prefs locales unless
  * called with explicitly listed locales.
@@ -173,6 +178,101 @@ class MozIntl {
     }
 
     return this._cache.getLocaleInfo(getLocales(locales), ...args);
+  }
+
+  getLanguageDisplayNames(locales, langCodes) {
+    if (locales !== undefined) {
+      throw new Error("First argument support not implemented yet");
+    }
+    const languageBundle = Services.strings.createBundle(
+          "chrome://global/locale/languageNames.properties");
+
+    return langCodes.map(langCode => {
+      if (typeof langCode !== "string") {
+        throw new TypeError("All language codes must be strings.");
+      }
+      try {
+        return languageBundle.GetStringFromName(langCode.toLowerCase());
+      } catch (e) {
+        return langCode.toLowerCase(); // Fall back to raw language subtag.
+      }
+    });
+  }
+
+  getRegionDisplayNames(locales, regionCodes) {
+    if (locales !== undefined) {
+      throw new Error("First argument support not implemented yet");
+    }
+    const regionBundle = Services.strings.createBundle(
+          "chrome://global/locale/regionNames.properties");
+
+    return regionCodes.map(regionCode => {
+      if (typeof regionCode !== "string") {
+        throw new TypeError("All region codes must be strings.");
+      }
+      try {
+        return regionBundle.GetStringFromName(regionCode.toLowerCase());
+      } catch (e) {
+        return regionCode.toUpperCase(); // Fall back to raw region subtag.
+      }
+    });
+  }
+
+  getLocaleDisplayNames(locales, localeCodes) {
+    if (locales !== undefined) {
+      throw new Error("First argument support not implemented yet");
+    }
+    // Patterns hardcoded from CLDR 33 english.
+    // We can later look into fetching them from CLDR directly.
+    const localePattern = "{0} ({1})";
+    const localeSeparator = ", ";
+
+    return localeCodes.map(localeCode => {
+      if (typeof localeCode !== "string") {
+        throw new TypeError("All locale codes must be strings.");
+      }
+      // Get the display name for this dictionary.
+      // XXX: To be replaced with Intl.Locale once it lands - bug 1433303.
+      const match = localeCode.match(languageTagMatch);
+
+      if (match === null) {
+        return localeCode;
+      }
+
+      const [
+        /* languageTag */,
+        languageSubtag,
+        scriptSubtag,
+        regionSubtag,
+        variantSubtags
+      ] = match;
+
+      const displayName = [
+        this.getLanguageDisplayNames(locales, [languageSubtag])[0]
+      ];
+
+      if (scriptSubtag) {
+        displayName.push(scriptSubtag);
+      }
+
+      if (regionSubtag) {
+        displayName.push(this.getRegionDisplayNames(locales, [regionSubtag])[0]);
+      }
+
+      if (variantSubtags) {
+        displayName.push(...variantSubtags.substr(1).split(/[-_]/)); // Collapse multiple variants.
+      }
+
+      let modifiers;
+      if (displayName.length === 1) {
+        return displayName[0];
+      } else if (displayName.length > 2) {
+        modifiers = displayName.slice(1).join(localeSeparator);
+      } else {
+        modifiers = displayName[1];
+      }
+      return localePattern.replace("{0}", displayName[0]).replace("{1}", modifiers);
+    });
   }
 
   get DateTimeFormat() {

@@ -177,6 +177,12 @@ add_task(async function testSidebarDOMNodeHighlighting() {
   // Wait the DOM node to be rendered inside the component.
   await waitForObjectInspector(sidebarPanelContent, "node");
 
+  // Wait for the object to be expanded so we only target the "body" property node, and
+  // not the root object element.
+  await ContentTaskUtils.waitForCondition(
+    () => sidebarPanelContent.querySelectorAll(".object-inspector .tree-node").length > 1
+  );
+
   // Get and verify the DOMNode and the "open inspector"" icon
   // rendered inside the ObjectInspector.
   assertObjectInspector(sidebarPanelContent, {
