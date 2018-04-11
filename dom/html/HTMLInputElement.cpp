@@ -54,7 +54,7 @@
 #include "nsAttrValueOrString.h"
 #include "nsDateTimeControlFrame.h"
 
-#include "nsPresState.h"
+#include "mozilla/PresState.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNodeList.h"
 #include "nsLinebreakConverter.h" //to strip out carriage returns
@@ -273,129 +273,6 @@ public:
 private:
   RefPtr<HTMLInputElement> mInputElement;
 };
-
-class HTMLInputElementState final : public nsISupports
-{
-  public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(NS_INPUT_ELEMENT_STATE_IID)
-    NS_DECL_ISUPPORTS
-
-    bool IsCheckedSet()
-    {
-      return mCheckedSet;
-    }
-
-    bool GetChecked()
-    {
-      return mChecked;
-    }
-
-    void SetChecked(bool aChecked)
-    {
-      mChecked = aChecked;
-      mCheckedSet = true;
-    }
-
-    const nsString& GetValue()
-    {
-      return mValue;
-    }
-
-    void SetValue(const nsAString& aValue)
-    {
-      mValue = aValue;
-    }
-
-    void
-    GetFilesOrDirectories(nsPIDOMWindowInner* aWindow,
-                          nsTArray<OwningFileOrDirectory>& aResult) const
-    {
-      for (uint32_t i = 0; i < mBlobImplsOrDirectoryPaths.Length(); ++i) {
-        if (mBlobImplsOrDirectoryPaths[i].mType == BlobImplOrDirectoryPath::eBlobImpl) {
-          RefPtr<File> file =
-            File::Create(aWindow,
-                         mBlobImplsOrDirectoryPaths[i].mBlobImpl);
-          MOZ_ASSERT(file);
-
-          OwningFileOrDirectory* element = aResult.AppendElement();
-          element->SetAsFile() = file;
-        } else {
-          MOZ_ASSERT(mBlobImplsOrDirectoryPaths[i].mType == BlobImplOrDirectoryPath::eDirectoryPath);
-
-          nsCOMPtr<nsIFile> file;
-          nsresult rv =
-            NS_NewLocalFile(mBlobImplsOrDirectoryPaths[i].mDirectoryPath,
-                            true, getter_AddRefs(file));
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            continue;
-          }
-
-          RefPtr<Directory> directory = Directory::Create(aWindow, file);
-          MOZ_ASSERT(directory);
-
-          OwningFileOrDirectory* element = aResult.AppendElement();
-          element->SetAsDirectory() = directory;
-        }
-      }
-    }
-
-    void SetFilesOrDirectories(const nsTArray<OwningFileOrDirectory>& aArray)
-    {
-      mBlobImplsOrDirectoryPaths.Clear();
-      for (uint32_t i = 0; i < aArray.Length(); ++i) {
-        if (aArray[i].IsFile()) {
-          BlobImplOrDirectoryPath* data = mBlobImplsOrDirectoryPaths.AppendElement();
-
-          data->mBlobImpl = aArray[i].GetAsFile()->Impl();
-          data->mType = BlobImplOrDirectoryPath::eBlobImpl;
-        } else {
-          MOZ_ASSERT(aArray[i].IsDirectory());
-          nsAutoString fullPath;
-          nsresult rv = aArray[i].GetAsDirectory()->GetFullRealPath(fullPath);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            continue;
-          }
-
-          BlobImplOrDirectoryPath* data =
-            mBlobImplsOrDirectoryPaths.AppendElement();
-
-          data->mDirectoryPath = fullPath;
-          data->mType = BlobImplOrDirectoryPath::eDirectoryPath;
-        }
-      }
-    }
-
-    HTMLInputElementState()
-      : mValue()
-      , mChecked(false)
-      , mCheckedSet(false)
-    {}
-
-  protected:
-    ~HTMLInputElementState() {}
-
-    nsString mValue;
-
-    struct BlobImplOrDirectoryPath
-    {
-      RefPtr<BlobImpl> mBlobImpl;
-      nsString mDirectoryPath;
-
-      enum {
-        eBlobImpl,
-        eDirectoryPath
-      } mType;
-    };
-
-    nsTArray<BlobImplOrDirectoryPath> mBlobImplsOrDirectoryPaths;
-
-    bool mChecked;
-    bool mCheckedSet;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(HTMLInputElementState, NS_INPUT_ELEMENT_STATE_IID)
-
-NS_IMPL_ISUPPORTS(HTMLInputElementState, HTMLInputElementState)
 
 struct HTMLInputElement::FileData
 {
@@ -6351,11 +6228,31 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
   return aFormSubmission->AddNameValuePair(name, value);
 }
 
+static nsTArray<FileContentData>
+SaveFileContentData(const nsTArray<OwningFileOrDirectory>& aArray)
+{
+  nsTArray<FileContentData> res(aArray.Length());
+  for (auto& it : aArray) {
+    if (it.IsFile()) {
+      RefPtr<BlobImpl> impl = it.GetAsFile()->Impl();
+      res.AppendElement(Move(impl));
+    } else {
+      MOZ_ASSERT(it.IsDirectory());
+      nsString fullPath;
+      nsresult rv = it.GetAsDirectory()->GetFullRealPath(fullPath);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+      res.AppendElement(Move(fullPath));
+    }
+  }
+  return res;
+}
 
 NS_IMETHODIMP
 HTMLInputElement::SaveState()
 {
-  nsPresState* state = nullptr;
+  PresState* state = nullptr;
   switch (GetValueMode()) {
     case VALUE_MODE_DEFAULT_ON:
       if (mCheckedChanged) {
@@ -6364,9 +6261,7 @@ HTMLInputElement::SaveState()
           return NS_OK;
         }
 
-        RefPtr<HTMLInputElementState> inputState = new HTMLInputElementState();
-        inputState->SetChecked(mChecked);
-        state->SetStateProperty(inputState);
+        state->contentData() = CheckedContentData(mChecked);
       }
       break;
     case VALUE_MODE_FILENAME:
@@ -6376,9 +6271,8 @@ HTMLInputElement::SaveState()
           return NS_OK;
         }
 
-        RefPtr<HTMLInputElementState> inputState = new HTMLInputElementState();
-        inputState->SetFilesOrDirectories(mFileData->mFilesOrDirectories);
-        state->SetStateProperty(inputState);
+        state->contentData() =
+          SaveFileContentData(mFileData->mFilesOrDirectories);
       }
       break;
     case VALUE_MODE_VALUE:
@@ -6396,7 +6290,6 @@ HTMLInputElement::SaveState()
         return NS_OK;
       }
 
-      RefPtr<HTMLInputElementState> inputState = new HTMLInputElementState();
       nsAutoString value;
       GetValue(value, CallerType::System);
 
@@ -6412,8 +6305,7 @@ HTMLInputElement::SaveState()
         }
       }
 
-      inputState->SetValue(value);
-      state->SetStateProperty(inputState);
+      state->contentData() = Move(value);
       break;
   }
 
@@ -6424,7 +6316,8 @@ HTMLInputElement::SaveState()
     if (state) {
       // We do not want to save the real disabled state but the disabled
       // attribute.
-      state->SetDisabled(HasAttr(kNameSpaceID_None, nsGkAtoms::disabled));
+      state->disabled() = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+      state->disabledSet() = true;
     }
   }
 
@@ -6600,50 +6493,85 @@ HTMLInputElement::RemoveStates(EventStates aStates)
   nsGenericHTMLFormElementWithState::RemoveStates(aStates);
 }
 
+static nsTArray<OwningFileOrDirectory>
+RestoreFileContentData(nsPIDOMWindowInner* aWindow,
+                       const nsTArray<FileContentData>& aData)
+{
+  nsTArray<OwningFileOrDirectory> res(aData.Length());
+  for (auto& it : aData) {
+    if (it.type() == FileContentData::TBlobImpl) {
+      if (!it.get_BlobImpl()) {
+        // Serialization failed, skip this file.
+        continue;
+      }
+
+      RefPtr<File> file = File::Create(aWindow, it.get_BlobImpl());
+      MOZ_ASSERT(file);
+
+      OwningFileOrDirectory* element = res.AppendElement();
+      element->SetAsFile() = file;
+    } else {
+      MOZ_ASSERT(it.type() == FileContentData::TnsString);
+      nsCOMPtr<nsIFile> file;
+      nsresult rv = NS_NewLocalFile(it.get_nsString(), true,
+                                    getter_AddRefs(file));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+
+      RefPtr<Directory> directory = Directory::Create(aWindow, file);
+      MOZ_ASSERT(directory);
+
+      OwningFileOrDirectory* element = res.AppendElement();
+      element->SetAsDirectory() = directory;
+    }
+  }
+  return res;
+}
+
 bool
-HTMLInputElement::RestoreState(nsPresState* aState)
+HTMLInputElement::RestoreState(PresState* aState)
 {
   bool restoredCheckedState = false;
 
-  nsCOMPtr<HTMLInputElementState> inputState
-    (do_QueryInterface(aState->GetStateProperty()));
+  const PresContentData& inputState = aState->contentData();
 
-  if (inputState) {
-    switch (GetValueMode()) {
-      case VALUE_MODE_DEFAULT_ON:
-        if (inputState->IsCheckedSet()) {
-          restoredCheckedState = true;
-          DoSetChecked(inputState->GetChecked(), true, true);
+  switch (GetValueMode()) {
+    case VALUE_MODE_DEFAULT_ON:
+      if (inputState.type() == PresContentData::TCheckedContentData) {
+        restoredCheckedState = true;
+        bool checked = inputState.get_CheckedContentData().checked();
+        DoSetChecked(checked, true, true);
+      }
+      break;
+    case VALUE_MODE_FILENAME:
+      if (inputState.type() == PresContentData::TArrayOfFileContentData) {
+        nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
+        if (window) {
+          nsTArray<OwningFileOrDirectory> array =
+            RestoreFileContentData(window, inputState);
+          SetFilesOrDirectories(array, true);
         }
+      }
+      break;
+    case VALUE_MODE_VALUE:
+    case VALUE_MODE_DEFAULT:
+      if (GetValueMode() == VALUE_MODE_DEFAULT &&
+          mType != NS_FORM_INPUT_HIDDEN) {
         break;
-      case VALUE_MODE_FILENAME:
-        {
-          nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-          if (window) {
-            nsTArray<OwningFileOrDirectory> array;
-            inputState->GetFilesOrDirectories(window, array);
+      }
 
-            SetFilesOrDirectories(array, true);
-          }
-        }
-        break;
-      case VALUE_MODE_VALUE:
-      case VALUE_MODE_DEFAULT:
-        if (GetValueMode() == VALUE_MODE_DEFAULT &&
-            mType != NS_FORM_INPUT_HIDDEN) {
-          break;
-        }
-
+      if (inputState.type() == PresContentData::TnsString) {
         // TODO: What should we do if SetValueInternal fails?  (The allocation
         // may potentially be big, but most likely we've failed to allocate
         // before the type change.)
-        SetValueInternal(inputState->GetValue(),
+        SetValueInternal(inputState.get_nsString(),
                          nsTextEditorState::eSetValue_Notify);
-        break;
-    }
+      }
+      break;
   }
 
-  if (aState->IsDisabledSet() && !aState->GetDisabled()) {
+  if (aState->disabledSet() && !aState->disabled()) {
     SetDisabled(false, IgnoreErrors());
   }
 

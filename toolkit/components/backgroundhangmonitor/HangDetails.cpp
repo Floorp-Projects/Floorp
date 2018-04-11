@@ -13,9 +13,9 @@
 namespace mozilla {
 
 NS_IMETHODIMP
-nsHangDetails::GetDuration(uint32_t* aDuration)
+nsHangDetails::GetDuration(double* aDuration)
 {
-  *aDuration = mDetails.duration();
+  *aDuration = mDetails.duration().ToMilliseconds();
   return NS_OK;
 }
 

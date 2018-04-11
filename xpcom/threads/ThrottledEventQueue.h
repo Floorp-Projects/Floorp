@@ -52,26 +52,16 @@ namespace mozilla {
 // If you are targeting a single thread or other non-concurrent event
 // target, you probably want a ThrottledEventQueue.
 //
-// ThrottledEventQueue also implements an automatic shutdown mechanism.
-// De-referencing the queue or browser shutdown will automatically begin
-// shutdown.
-//
-// Once shutdown begins all events will bypass the queue and be dispatched
-// straight to the underlying base target.
+// If you drop a ThrottledEventQueue while its queue still has events to be run,
+// they will continue to be dispatched as usual to the base. Only once the last
+// event has run will all the ThrottledEventQueue's memory be freed.
 class ThrottledEventQueue final : public nsISerialEventTarget
 {
   class Inner;
   RefPtr<Inner> mInner;
 
   explicit ThrottledEventQueue(already_AddRefed<Inner> aInner);
-  ~ThrottledEventQueue();
-
-  // Begin shutdown of the event queue.  This has no effect if shutdown
-  // is already in process.  After this is called nsIEventTarget methods
-  // will bypass the queue and operate directly on the base target.
-  // Note, this could be made public if code needs to explicitly shutdown
-  // for some reason.
-  void MaybeStartShutdown();
+  ~ThrottledEventQueue() = default;
 
 public:
   // Attempt to create a ThrottledEventQueue for the given target.  This

@@ -810,14 +810,15 @@ class ADBDevice(ADBCommand):
 
     def _try_test_root(self, test_root):
         base_path, sub_path = posixpath.split(test_root)
-        if not self.is_dir(base_path):
+        if not self.is_dir(base_path, root=True):
             return False
 
         try:
             dummy_dir = posixpath.join(test_root, 'dummy')
-            if self.is_dir(dummy_dir):
-                self.rm(dummy_dir, recursive=True)
-            self.mkdir(dummy_dir, parents=True)
+            if self.is_dir(dummy_dir, root=True):
+                self.rm(dummy_dir, recursive=True, root=True)
+            self.mkdir(dummy_dir, parents=True, root=True)
+            self.chmod(test_root, recursive=True, root=True)
         except ADBError:
             self._logger.debug("%s is not writable" % test_root)
             return False

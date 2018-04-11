@@ -722,7 +722,7 @@ def run_tests_remote(tests, num_tests, prefix, options, slog):
     device.mkdir(options.remote_test_root, parents=True)
     push_libs(options, device)
     push_progs(options, device, [prefix[0]])
-    device.chmod(options.remote_test_root, recursive=True)
+    device.chmod(options.remote_test_root, recursive=True, root=True)
 
     JitTest.CacheDir = posixpath.join(options.remote_test_root, '.js-cache')
     device.mkdir(JitTest.CacheDir)

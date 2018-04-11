@@ -29,7 +29,7 @@
 #include "nsITextControlFrame.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsPresState.h"
+#include "mozilla/PresState.h"
 #include "nsIHTMLDocument.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
@@ -58,6 +58,7 @@
 #include "nsIScrollPositionListener.h"
 #include "StickyScrollContainer.h"
 #include "nsIFrameInlines.h"
+#include "nsILayoutHistoryState.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "ScrollAnimationPhysics.h"
@@ -6201,7 +6202,7 @@ ScrollFrameHelper::GetCoordAttribute(nsIFrame* aBox, nsAtom* aAtom,
   return aDefaultValue;
 }
 
-nsPresState*
+UniquePtr<PresState>
 ScrollFrameHelper::SaveState() const
 {
   nsIScrollbarMediator* mediator = do_QueryFrame(GetScrolledFrame());
@@ -6217,7 +6218,7 @@ ScrollFrameHelper::SaveState() const
     return nullptr;
   }
 
-  nsPresState* state = new nsPresState();
+  UniquePtr<PresState> state = NewPresState();
   bool allowScrollOriginDowngrade =
     !nsLayoutUtils::CanScrollOriginClobberApz(mLastScrollOrigin) ||
     mAllowScrollOriginDowngrade;
@@ -6238,36 +6239,36 @@ ScrollFrameHelper::SaveState() const
   if (mRestorePos.y != -1 && pt == mLastPos) {
     pt = mRestorePos;
   }
-  state->SetScrollState(pt);
-  state->SetAllowScrollOriginDowngrade(allowScrollOriginDowngrade);
+  state->scrollState() = pt;
+  state->allowScrollOriginDowngrade() = allowScrollOriginDowngrade;
   if (mIsRoot) {
     // Only save resolution properties for root scroll frames
     nsIPresShell* shell = mOuter->PresShell();
-    state->SetResolution(shell->GetResolution());
-    state->SetScaleToResolution(shell->ScaleToResolution());
+    state->resolution() = shell->GetResolution();
+    state->scaleToResolution() = shell->ScaleToResolution();
   }
   return state;
 }
 
 void
-ScrollFrameHelper::RestoreState(nsPresState* aState)
+ScrollFrameHelper::RestoreState(PresState* aState)
 {
-  mRestorePos = aState->GetScrollPosition();
+  mRestorePos = aState->scrollState();
   MOZ_ASSERT(mLastScrollOrigin == nsGkAtoms::other);
-  mAllowScrollOriginDowngrade = aState->GetAllowScrollOriginDowngrade();
+  mAllowScrollOriginDowngrade = aState->allowScrollOriginDowngrade();
   mDidHistoryRestore = true;
   mLastPos = mScrolledFrame ? GetLogicalScrollPosition() : nsPoint(0,0);
 
   // Resolution properties should only exist on root scroll frames.
-  MOZ_ASSERT(mIsRoot || (!aState->GetScaleToResolution() &&
-                         aState->GetResolution() == 1.0));
+  MOZ_ASSERT(mIsRoot || (!aState->scaleToResolution() &&
+                         aState->resolution() == 1.0));
 
   if (mIsRoot) {
     nsIPresShell* presShell = mOuter->PresShell();
-    if (aState->GetScaleToResolution()) {
-      presShell->SetResolutionAndScaleTo(aState->GetResolution());
+    if (aState->scaleToResolution()) {
+      presShell->SetResolutionAndScaleTo(aState->resolution());
     } else {
-      presShell->SetResolution(aState->GetResolution());
+      presShell->SetResolution(aState->resolution());
     }
   }
 }

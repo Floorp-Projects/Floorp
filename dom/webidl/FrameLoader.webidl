@@ -34,6 +34,12 @@ interface FrameLoader {
   readonly attribute LoadContext loadContext;
 
   /**
+   * Get the ParentSHistory for the nsFrameLoader. May return null if this
+   * frameloader is not for a toplevel frame.
+   */
+  readonly attribute ParentSHistory? parentSHistory;
+
+  /**
    * Adds a blocking promise for the current cross process navigation.
    * This method can only be called while the "BrowserWillChangeProcess" event
    * is being fired.

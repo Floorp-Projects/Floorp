@@ -11,7 +11,7 @@ extern crate nserror;
 extern crate xpcom;
 extern crate netwerk_helper;
 extern crate prefs_parser;
-extern crate rust_url_capi;
+extern crate mozurl;
 #[cfg(feature = "quantum_render")]
 extern crate webrender_bindings;
 #[cfg(feature = "cubeb_pulse_rust")]

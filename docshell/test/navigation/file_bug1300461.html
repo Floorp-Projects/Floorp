@@ -40,7 +40,7 @@
           opener.is(shistory.index, 0, 'check history index');
           opener.ok(webNav.canGoForward, 'check canGoForward');
           window.history.forward();
-          opener.is(shistory.requestedIndex, 1, 'check requestedIndex');
+          opener.is(shistory.legacySHistory.requestedIndex, 1, 'check requestedIndex');
         },
         function() {
           opener.is(shistory.count, 2, 'check history length');

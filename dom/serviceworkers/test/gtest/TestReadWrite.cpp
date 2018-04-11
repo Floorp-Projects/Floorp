@@ -39,7 +39,7 @@ public:
   }
 
   nsresult TestReadData() { return ReadData(); }
-  nsresult TestWriteData() { return WriteData(); }
+  nsresult TestWriteData() { return WriteData(mData); }
   void TestDeleteData() { DeleteData(); }
 
   void TestRegisterServiceWorker(const ServiceWorkerRegistrationData& aData)

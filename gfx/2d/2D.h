@@ -1259,9 +1259,7 @@ public:
    * Perform an in-place blur operation. This is only supported on data draw
    * targets.
    */
-  virtual void Blur(const AlphaBoxBlur& aBlur) {
-    MOZ_CRASH("GFX: DoBlur");
-  }
+  virtual void Blur(const AlphaBoxBlur& aBlur);
 
   /**
    * Create a SourceSurface optimized for use with this DrawTarget from

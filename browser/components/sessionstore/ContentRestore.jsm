@@ -164,7 +164,7 @@ ContentRestoreInternal.prototype = {
       this.restoreTabContent(null, false, callbacks.onLoadFinished);
     });
 
-    webNavigation.sessionHistory.addSHistoryListener(listener);
+    webNavigation.sessionHistory.legacySHistory.addSHistoryListener(listener);
     this._historyListener = listener;
 
     // Make sure to reset the capabilities and attributes in case this tab gets
@@ -203,7 +203,7 @@ ContentRestoreInternal.prototype = {
     this._tabData = null;
 
     let webNavigation = this.docShell.QueryInterface(Ci.nsIWebNavigation);
-    let history = webNavigation.sessionHistory;
+    let history = webNavigation.sessionHistory.legacySHistory;
 
     // Listen for the tab to finish loading.
     this.restoreTabContentStarted(finishCallback);
@@ -365,7 +365,7 @@ ContentRestoreInternal.prototype = {
  */
 function HistoryListener(docShell, callback) {
   let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
-  webNavigation.sessionHistory.addSHistoryListener(this);
+  webNavigation.sessionHistory.legacySHistory.addSHistoryListener(this);
 
   this.webNavigation = webNavigation;
   this.callback = callback;
@@ -377,7 +377,7 @@ HistoryListener.prototype = {
   ]),
 
   uninstall() {
-    let shistory = this.webNavigation.sessionHistory;
+    let shistory = this.webNavigation.sessionHistory.legacySHistory;
     if (shistory) {
       shistory.removeSHistoryListener(this);
     }

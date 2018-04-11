@@ -12,6 +12,7 @@
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/TextUtils.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -34,6 +35,7 @@
 #include "vm/JSContext.h"
 
 using mozilla::ArrayLength;
+using mozilla::IsAsciiAlpha;
 using mozilla::MakeScopeExit;
 using mozilla::PodArrayZero;
 using mozilla::PodCopy;
@@ -665,23 +667,6 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::advance(size_t position)
     MOZ_MAKE_MEM_UNDEFINED(&cur->type, sizeof(cur->type));
     anyChars.lookahead = 0;
     return true;
-}
-
-template<typename CharT, class AnyCharsAccess>
-void
-TokenStreamSpecific<CharT, AnyCharsAccess>::tell(Position* pos)
-{
-    TokenStreamAnyChars& anyChars = anyCharsAccess();
-
-    pos->buf = userbuf.addressOfNextRawChar(/* allowPoisoned = */ true);
-    pos->flags = anyChars.flags;
-    pos->lineno = anyChars.lineno;
-    pos->linebase = anyChars.linebase;
-    pos->prevLinebase = anyChars.prevLinebase;
-    pos->lookahead = anyChars.lookahead;
-    pos->currentToken = anyChars.currentToken();
-    for (unsigned i = 0; i < anyChars.lookahead; i++)
-        pos->lookaheadTokens[i] = anyChars.tokens[(anyChars.cursor + 1 + i) & ntokensMask];
 }
 
 template<typename CharT, class AnyCharsAccess>
@@ -2012,7 +1997,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                     flag = StickyFlag;
                 else if (c == 'u')
                     flag = UnicodeFlag;
-                else if (JS7_ISLET(c))
+                else if (IsAsciiAlpha(c))
                     flag = NoFlags;
                 else
                     break;

@@ -8,7 +8,7 @@ include protocol PChildToParentStream;
 include protocol PParentToChildStream;
 
 using struct nsID from "nsID.h";
-using nsCOMPtr<nsIInputStream> from "mozilla/ipc/IPCStreamUtils.h";
+using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -19,7 +19,7 @@ protocol PCacheStreamControl
   manager PBackground;
 
 parent:
-  async OpenStream(nsID aStreamId) returns(nsCOMPtr<nsIInputStream> aStream);
+  async OpenStream(nsID aStreamId) returns(nsIInputStream aStream);
   async NoteClosed(nsID aStreamId);
 
 child:

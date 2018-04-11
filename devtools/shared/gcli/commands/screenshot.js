@@ -580,7 +580,7 @@ var saveToFile = Task.async(function* (context, reply) {
   let listener = new DownloadListener(window, tr);
   persist.progressListener = listener;
   persist.savePrivacyAwareURI(sourceURI,
-                              null,
+                              0,
                               document.documentURIObject,
                               Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
                               null,
