@@ -2732,7 +2732,7 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
   // If the property has "ENABLED_IN" flags but doesn't have a pref,
   // it is an internal property which is disabled elsewhere.
   #define IS_ENABLED_BY_DEFAULT(flags_) \
-    (!((flags_) & CSS_PROPERTY_ENABLED_MASK))
+    (!((flags_) & (CSS_PROPERTY_ENABLED_MASK | CSS_PROPERTY_PARSE_INACCESSIBLE)))
 
   #define CSS_PROP(name_, id_, method_, flags_, ...) \
     IS_ENABLED_BY_DEFAULT(flags_),
