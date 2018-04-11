@@ -77,7 +77,7 @@ var TabsProgressListener = {
   },
 
   onRestored(browser) {
-    if (this.callback && browser.__SS_restoreState == TAB_STATE_RESTORING)
+    if (this.callback && ss.getInternalObjectState(browser) == TAB_STATE_RESTORING)
       this.callback.apply(null, [this.window].concat(this.countTabs()));
   },
 
@@ -85,10 +85,10 @@ var TabsProgressListener = {
     let needsRestore = 0, isRestoring = 0;
 
     for (let i = 0; i < this.window.gBrowser.tabs.length; i++) {
-      let browser = this.window.gBrowser.tabs[i].linkedBrowser;
-      if (browser.__SS_restoreState == TAB_STATE_RESTORING)
+      let state = ss.getInternalObjectState(this.window.gBrowser.tabs[i].linkedBrowser);
+      if (state == TAB_STATE_RESTORING)
         isRestoring++;
-      else if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
+      else if (state == TAB_STATE_NEEDS_RESTORE)
         needsRestore++;
     }
 

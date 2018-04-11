@@ -364,7 +364,7 @@ var gProgressListener = {
   },
 
   onRestored(browser) {
-    if (browser.__SS_restoreState == TAB_STATE_RESTORING) {
+    if (ss.getInternalObjectState(browser) == TAB_STATE_RESTORING) {
       let args = [browser].concat(gProgressListener._countTabs());
       gProgressListener._callback.apply(gProgressListener, args);
     }
@@ -376,11 +376,12 @@ var gProgressListener = {
     for (let win of BrowserWindowIterator()) {
       for (let i = 0; i < win.gBrowser.tabs.length; i++) {
         let browser = win.gBrowser.tabs[i].linkedBrowser;
-        if (browser.isConnected && !browser.__SS_restoreState)
+        let state = ss.getInternalObjectState(browser);
+        if (browser.isConnected && !state)
           wasRestored++;
-        else if (browser.__SS_restoreState == TAB_STATE_RESTORING)
+        else if (state == TAB_STATE_RESTORING)
           isRestoring++;
-        else if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE || !browser.isConnected)
+        else if (state == TAB_STATE_NEEDS_RESTORE || !browser.isConnected)
           needsRestore++;
       }
     }

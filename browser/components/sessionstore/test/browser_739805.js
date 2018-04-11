@@ -23,7 +23,7 @@ function test() {
     isnot(gBrowser.selectedTab, tab, "newly created tab is not selected");
 
     ss.setTabState(tab, JSON.stringify(tabState));
-    is(browser.__SS_restoreState, TAB_STATE_NEEDS_RESTORE, "tab needs restoring");
+    is(ss.getInternalObjectState(browser), TAB_STATE_NEEDS_RESTORE, "tab needs restoring");
 
     let {formdata} = JSON.parse(ss.getTabState(tab));
     is(formdata && formdata.id.foo, "bar", "tab state's formdata is valid");
