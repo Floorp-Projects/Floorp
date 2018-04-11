@@ -1,19 +1,5 @@
 "use strict";
 
-function promiseSettingsDialogClose() {
-  return new Promise(resolve => {
-    let win = gBrowser.selectedBrowser.contentWindow;
-    let dialogOverlay = win.gSubDialog._topDialog._overlay;
-    let dialogWin = win.gSubDialog._topDialog._frame.contentWindow;
-    dialogWin.addEventListener("unload", function unload() {
-      if (dialogWin.document.documentURI === "chrome://browser/content/preferences/siteDataSettings.xul") {
-        isnot(dialogOverlay.style.visibility, "visible", "The Settings dialog should be hidden");
-        resolve();
-      }
-    }, { once: true });
-  });
-}
-
 function assertAllSitesNotListed(win) {
   let frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   let removeBtn = frameDoc.getElementById("removeSelected");
