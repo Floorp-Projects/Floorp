@@ -23,7 +23,6 @@ config = {
         "http://pypi.pub.build.mozilla.org/pub",
     ],
     "cmd_timeout": 6500,
-    "pip_index": False,
     "exes": {
     },
     "title": os.uname()[1].lower().split('.')[0],
