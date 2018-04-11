@@ -39,7 +39,6 @@ config = {
         "http://pypi.pvt.build.mozilla.org/pub",
         "http://pypi.pub.build.mozilla.org/pub",
     ],
-    "pip_index": False,
     ###
     "installer_path": INSTALLER_PATH,
     "binary_path": BINARY_PATH,

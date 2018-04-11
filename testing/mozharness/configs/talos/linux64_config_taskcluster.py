@@ -27,7 +27,6 @@ config = {
         "http://pypi.pvt.build.mozilla.org/pub",
         "http://pypi.pub.build.mozilla.org/pub",
     ],
-    "pip_index": False,
     "exes": exes,
     "title": os.uname()[1].lower().split('.')[0],
     "default_actions": [
