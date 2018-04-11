@@ -27,6 +27,8 @@ android {
 }
 
 dependencies {
+    implementation project(':concept-toolbar')
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 }
 
