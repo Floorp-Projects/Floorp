@@ -11,10 +11,10 @@ import os
 import re
 import yaml
 from slugid import nice as slugid
-from mozbuild.util import memoize
 from types import FunctionType
 from collections import namedtuple
 from taskgraph import create, GECKO
+from taskgraph.generator import load_graph_config
 from taskgraph.util import taskcluster
 from taskgraph.parameters import Parameters
 
@@ -173,7 +173,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
         assert cb.__name__ not in callbacks, 'callback name {} is not unique'.format(cb.__name__)
 
         @register_task_action(name, title, description, order, context, schema)
-        def build_callback_action_task(parameters):
+        def build_callback_action_task(parameters, graph_config):
             if not available(parameters):
                 return None
 
@@ -225,7 +225,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
     return register_callback
 
 
-def render_actions_json(parameters):
+def render_actions_json(parameters, graph_config):
     """
     Render JSON object for the ``public/actions.json`` artifact.
 
@@ -241,8 +241,8 @@ def render_actions_json(parameters):
     """
     assert isinstance(parameters, Parameters), 'requires instance of Parameters'
     result = []
-    for action in sorted(get_actions(), key=lambda action: action.order):
-        task = action.task_template_builder(parameters)
+    for action in sorted(_get_actions(graph_config), key=lambda action: action.order):
+        task = action.task_template_builder(parameters, graph_config)
         if task:
             assert is_json(task), 'task must be a JSON compatible object'
             res = {
@@ -272,10 +272,12 @@ def trigger_action_callback(task_group_id, task_id, task, input, callback, param
     Trigger action callback with the given inputs. If `test` is true, then run
     the action callback in testing mode, without actually creating tasks.
     """
-    cb = get_callbacks().get(callback, None)
+    graph_config = load_graph_config("taskcluster/ci")
+    callbacks = _get_callbacks(graph_config)
+    cb = callbacks.get(callback, None)
     if not cb:
         raise Exception('Unknown callback: {}. Known callbacks: {}'.format(
-            callback, get_callbacks().keys()))
+            callback, callbacks))
 
     if test:
         create.testing = True
@@ -284,8 +286,7 @@ def trigger_action_callback(task_group_id, task_id, task, input, callback, param
     cb(Parameters(**parameters), input, task_group_id, task_id, task)
 
 
-@memoize
-def _load():
+def _load(graph_config):
     # Load all modules from this folder, relying on the side-effects of register_
     # functions to populate the action registry.
     actions_dir = os.path.dirname(__file__)
@@ -295,13 +296,13 @@ def _load():
         if f.endswith('.yml'):
             with open(os.path.join(actions_dir, f), 'r') as d:
                 frontmatter, template = yaml.safe_load_all(d)
-                register_task_action(**frontmatter)(lambda _: template)
+                register_task_action(**frontmatter)(lambda _p, _g: template)
     return callbacks, actions
 
 
-def get_callbacks():
-    return _load()[0]
+def _get_callbacks(graph_config):
+    return _load(graph_config)[0]
 
 
-def get_actions():
-    return _load()[1]
+def _get_actions(graph_config):
+    return _load(graph_config)[1]
