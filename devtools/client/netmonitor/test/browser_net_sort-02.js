@@ -51,8 +51,7 @@ add_task(async function() {
   await performRequestsInContent(requests);
   await wait;
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector(".network-details-panel-toggle"));
+  store.dispatch(Actions.toggleNetworkDetails());
 
   isnot(getSelectedRequest(store.getState()), undefined,
     "There should be a selected item in the requests menu.");
