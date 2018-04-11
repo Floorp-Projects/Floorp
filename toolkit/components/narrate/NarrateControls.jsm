@@ -248,12 +248,14 @@ NarrateControls.prototype = {
   },
 
   _getLanguageName(lang) {
-    try {
-      // This may throw if the lang doesn't match.
-      // XXX: Replace with Intl.Locale once bug 1433303 lands.
-      let langCode = lang.match(/^[a-z]{2,3}/)[0];
+    if (!this._langStrings) {
+      this._langStrings = Services.strings.createBundle(
+        "chrome://global/locale/languageNames.properties ");
+    }
 
-      return Services.intl.getLanguageDisplayNames(undefined, [langCode]);
+    try {
+      // language tags will be lower case ascii between 2 and 3 characters long.
+      return this._langStrings.GetStringFromName(lang.match(/^[a-z]{2,3}/)[0]);
     } catch (e) {
       return "";
     }
