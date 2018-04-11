@@ -23,11 +23,8 @@ menubar {
 }
 
 toolbarseparator {
-  -moz-appearance: none;
+  -moz-appearance: separator;
   margin: 3px 4px;
-  background-color: ThreeDShadow;
-  padding: 0;
-  width: 1px !important;
 }
 
 /* ::::: toolbarpaletteitem ::::: */
@@ -56,4 +53,3 @@ toolbarpaletteitem[dragover="left"] {
 toolbarpaletteitem[dragover="right"] {
   border-right-color: #000000;
 }
-
