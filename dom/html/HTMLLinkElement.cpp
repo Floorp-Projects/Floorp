@@ -235,7 +235,7 @@ HTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
   // doing the "right" thing costs virtually nothing here, even if it doesn't
   // make much sense.
   static Element::AttrValuesArray strings[] =
-    {nsGkAtoms::_empty, nsGkAtoms::stylesheet, nullptr};
+    {&nsGkAtoms::_empty, &nsGkAtoms::stylesheet, nullptr};
 
   if (!nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
                                        nsGkAtoms::rev) &&

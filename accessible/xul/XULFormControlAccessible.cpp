@@ -193,7 +193,7 @@ bool
 XULButtonAccessible::ContainsMenu() const
 {
   static Element::AttrValuesArray strings[] =
-    {nsGkAtoms::menu, nsGkAtoms::menuButton, nullptr};
+    {&nsGkAtoms::menu, &nsGkAtoms::menuButton, nullptr};
 
   return mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
                                                 nsGkAtoms::type,
