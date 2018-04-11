@@ -381,19 +381,11 @@ class SCInput {
 
 struct JSStructuredCloneReader {
   public:
-    explicit JSStructuredCloneReader(SCInput& in,
-                                     JS::StructuredCloneScope scope,
+    explicit JSStructuredCloneReader(SCInput& in, JS::StructuredCloneScope scope,
                                      const JSStructuredCloneCallbacks* cb,
                                      void* cbClosure)
-      : in(in)
-      , allowedScope(scope)
-      , storedScope{ static_cast<JS::StructuredCloneScope>(0) }
-      , objs(in.context())
-      , allObjs(in.context())
-      , callbacks(cb)
-      , closure(cbClosure)
-    {
-    }
+        : in(in), allowedScope(scope), objs(in.context()), allObjs(in.context()),
+          callbacks(cb), closure(cbClosure) { }
 
     SCInput& input() { return in; }
     bool read(MutableHandleValue vp);

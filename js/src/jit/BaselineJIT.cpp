@@ -58,45 +58,31 @@ ICStubSpace::freeAllAfterMinorGC(Zone* zone)
         zone->runtimeFromActiveCooperatingThread()->gc.freeAllLifoBlocksAfterMinorGC(&allocator_);
 }
 
-BaselineScript::BaselineScript(uint32_t prologueOffset,
-                               uint32_t epilogueOffset,
+BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
                                uint32_t postDebugPrologueOffset)
-  : method_(nullptr)
-  , templateEnv_(nullptr)
-  , fallbackStubSpace_()
-  , dependentWasmImports_(nullptr)
-  , prologueOffset_(prologueOffset)
-  , epilogueOffset_(epilogueOffset)
-  , profilerEnterToggleOffset_(profilerEnterToggleOffset)
-  , profilerExitToggleOffset_(profilerExitToggleOffset)
-  ,
+  : method_(nullptr),
+    templateEnv_(nullptr),
+    fallbackStubSpace_(),
+    dependentWasmImports_(nullptr),
+    prologueOffset_(prologueOffset),
+    epilogueOffset_(epilogueOffset),
+    profilerEnterToggleOffset_(profilerEnterToggleOffset),
+    profilerExitToggleOffset_(profilerExitToggleOffset),
 #ifdef JS_TRACE_LOGGING
 # ifdef DEBUG
-  traceLoggerScriptsEnabled_(false)
-  , traceLoggerEngineEnabled_(false)
-  ,
+    traceLoggerScriptsEnabled_(false),
+    traceLoggerEngineEnabled_(false),
 # endif
-  traceLoggerScriptEvent_()
-  ,
+    traceLoggerScriptEvent_(),
 #endif
-  postDebugPrologueOffset_(postDebugPrologueOffset)
-  , flags_(0)
-  , icEntriesOffset_{}
-  , icEntries_{}
-  , pcMappingIndexOffset_{}
-  , pcMappingIndexEntries_{}
-  , pcMappingOffset_{}
-  , pcMappingSize_{}
-  , bytecodeTypeMapOffset_{}
-  , yieldEntriesOffset_{}
-  , traceLoggerToggleOffsetsOffset_{}
-  , numTraceLoggerToggleOffsets_{}
-  , inlinedBytecodeLength_(0)
-  , maxInliningDepth_(UINT8_MAX)
-  , pendingBuilder_(nullptr)
-  , controlFlowGraph_(nullptr)
+    postDebugPrologueOffset_(postDebugPrologueOffset),
+    flags_(0),
+    inlinedBytecodeLength_(0),
+    maxInliningDepth_(UINT8_MAX),
+    pendingBuilder_(nullptr),
+    controlFlowGraph_(nullptr)
 { }
 
 static bool

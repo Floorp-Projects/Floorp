@@ -1464,11 +1464,7 @@ struct SafepointSlotEntry {
     // Byte offset of the slot, as in LStackSlot or LArgument.
     uint32_t slot:31;
 
-    SafepointSlotEntry()
-      : stack{}
-      , slot{}
-    {
-    }
+    SafepointSlotEntry() { }
     SafepointSlotEntry(bool stack, uint32_t slot)
       : stack(stack), slot(slot)
     { }
@@ -1482,10 +1478,7 @@ struct SafepointNunboxEntry {
     LAllocation type;
     LAllocation payload;
 
-    SafepointNunboxEntry()
-      : typeVreg{}
-    {
-    }
+    SafepointNunboxEntry() { }
     SafepointNunboxEntry(uint32_t typeVreg, LAllocation type, LAllocation payload)
       : typeVreg(typeVreg), type(type), payload(payload)
     { }

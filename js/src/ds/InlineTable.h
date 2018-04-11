@@ -118,10 +118,9 @@ class InlineTable
         MOZ_INIT_OUTSIDE_CTOR bool         isInlinePtr_;
 
         explicit Ptr(TablePtr p)
-          : entry_(p.found() ? &*p : nullptr)
-          , tablePtr_(p)
-          , inlPtr_{ nullptr }
-          , isInlinePtr_(false)
+          : entry_(p.found() ? &*p : nullptr),
+            tablePtr_(p),
+            isInlinePtr_(false)
         { }
 
         explicit Ptr(InlineEntry* inlineEntry)
@@ -134,10 +133,7 @@ class InlineTable
 
       public:
         // Leaves Ptr uninitialized.
-        Ptr()
-          : inlPtr_{ nullptr }
-          , isInlinePtr_{ false }
-        {
+        Ptr() {
 #ifdef DEBUG
             inlPtr_ = (InlineEntry*) 0xbad;
             isInlinePtr_ = true;
@@ -198,21 +194,13 @@ class InlineTable
         {}
 
         explicit AddPtr(const TableAddPtr& p)
-          : entry_(p.found() ? &*p : nullptr)
-          , tableAddPtr_(p)
-          , inlAddPtr_{ nullptr }
-          , isInlinePtr_(false)
-          , inlPtrFound_{ false }
-        {
-        }
+          : entry_(p.found() ? &*p : nullptr),
+            tableAddPtr_(p),
+            isInlinePtr_(false)
+        { }
 
       public:
-        AddPtr()
-          : inlAddPtr_{ nullptr }
-          , isInlinePtr_{ false }
-          , inlPtrFound_{ false }
-        {
-        }
+        AddPtr() {}
 
         bool found() const {
             return isInlinePtr_ ? inlPtrFound_ : tableAddPtr_.found();

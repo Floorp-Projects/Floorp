@@ -193,11 +193,7 @@ struct TokenPos {
     uint32_t    begin;  // Offset of the token's first char.
     uint32_t    end;    // Offset of 1 past the token's last char.
 
-    TokenPos()
-      : begin{}
-      , end{}
-    {
-    }
+    TokenPos() {}
     TokenPos(uint32_t begin, uint32_t end) : begin(begin), end(end) {}
 
     // Return a TokenPos that covers left, right, and anything in between.

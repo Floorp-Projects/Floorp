@@ -78,12 +78,7 @@ struct EvalCacheEntry
 
 struct EvalCacheLookup
 {
-    explicit EvalCacheLookup(JSContext* cx)
-      : str(cx)
-      , callerScript(cx)
-      , pc{ nullptr }
-    {
-    }
+    explicit EvalCacheLookup(JSContext* cx) : str(cx), callerScript(cx) {}
     RootedLinearString str;
     RootedScript callerScript;
     jsbytecode* pc;

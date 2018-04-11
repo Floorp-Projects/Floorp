@@ -844,17 +844,15 @@ ParserBase::~ParserBase()
     context->frontendCollectionPool().removeActiveCompilation();
 }
 
-template<class ParseHandler>
-PerHandlerParser<ParseHandler>::PerHandlerParser(JSContext* cx,
-                                                 LifoAlloc& alloc,
+template <class ParseHandler>
+PerHandlerParser<ParseHandler>::PerHandlerParser(JSContext* cx, LifoAlloc& alloc,
                                                  const ReadOnlyCompileOptions& options,
-                                                 bool foldConstants,
-                                                 UsedNameTracker& usedNames,
+                                                 bool foldConstants, UsedNameTracker& usedNames,
                                                  LazyScript* lazyOuterFunction)
-  : ParserBase(cx, alloc, options, foldConstants, usedNames)
-  , handler(cx, alloc, lazyOuterFunction)
-  , internalSyntaxParser_{ nullptr }
+  : ParserBase(cx, alloc, options, foldConstants, usedNames),
+    handler(cx, alloc, lazyOuterFunction)
 {
+
 }
 
 template <class ParseHandler, typename CharT>

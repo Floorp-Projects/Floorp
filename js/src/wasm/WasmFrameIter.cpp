@@ -34,14 +34,13 @@ using mozilla::Maybe;
 // WasmFrameIter implementation
 
 WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
-  : activation_(activation)
-  , code_(nullptr)
-  , codeRange_(nullptr)
-  , lineOrBytecode_(0)
-  , fp_(fp ? fp : activation->wasmExitFP())
-  , unwoundIonCallerFP_(nullptr)
-  , unwind_(Unwind::False)
-  , unwoundAddressOfReturnAddress_{ nullptr }
+  : activation_(activation),
+    code_(nullptr),
+    codeRange_(nullptr),
+    lineOrBytecode_(0),
+    fp_(fp ? fp : activation->wasmExitFP()),
+    unwoundIonCallerFP_(nullptr),
+    unwind_(Unwind::False)
 {
     MOZ_ASSERT(fp_);
 
