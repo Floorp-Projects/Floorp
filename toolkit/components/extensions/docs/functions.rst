@@ -97,7 +97,7 @@ for above looks like this:
 
 .. code-block:: js
 
-   class myapi extends ExtensionAPI {
+   this.myapi = class extends ExtensionAPI {
      getAPI(context) {
        return {
          myapi: {
@@ -127,7 +127,7 @@ To throw a specific error to extensions, use the ``ExtensionError`` class:
 
 .. code-block:: js
 
-   class myapi extends ExtensionAPI {
+   this.myapi = class extends ExtensionAPI {
      getAPI(context) {
        return {
          myapi: {
@@ -173,7 +173,7 @@ the API context as follows:
 
 .. code-block:: js
 
-   class myapi extends ExtensionAPI {
+   this.myapi = class extends ExtensionAPI {
      getAPI(context) {
        return {
          myapi: {
