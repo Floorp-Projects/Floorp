@@ -245,7 +245,7 @@ The example below illustrates how to create such an action in Python::
           'default': 'low',
       },
   )
-  def task_template_builder(parameters):
+  def task_template_builder(parameters, graph_config):
       # The task template builder may return None to signal that the action
       # isn't available.
       if parameters.get('project', None) != 'try':
