@@ -1372,6 +1372,8 @@ public class BrowserApp extends GeckoApp
         for (final BrowserAppDelegate delegate : delegates) {
             delegate.onStart(this);
         }
+
+        MmaDelegate.track(MmaDelegate.RESUMED_FROM_BACKGROUND);
     }
 
     @Override

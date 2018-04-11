@@ -8,10 +8,15 @@ package org.mozilla.geckoview;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
+import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,15 +25,32 @@ import android.view.View;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Class that implements a basic SelectionActionDelegate. This class is used by GeckoView by
+ * default if the consumer does not explicitly set a SelectionActionDelegate.
+ *
+ * To provide custom actions, extend this class and override the following methods,
+ *
+ * 1) Override {@link #getAllActions} to include custom action IDs in the returned array. This
+ * array must include all actions, available or not, and must not change over the class lifetime.
+ *
+ * 2) Override {@link #isActionAvailable} to return whether a custom action is currently available.
+ *
+ * 3) Override {@link #prepareAction} to set custom title and/or icon for a custom action.
+ *
+ * 4) Override {@link #performAction} to perform a custom action when used.
+ */
 public class BasicSelectionActionDelegate implements ActionMode.Callback,
-                                             GeckoSession.SelectionActionDelegate {
+                                                     GeckoSession.SelectionActionDelegate {
     private static final String LOGTAG = "GeckoBasicSelectionAction";
 
+    protected static final String ACTION_PROCESS_TEXT = Intent.ACTION_PROCESS_TEXT;
+
     private static final String[] FLOATING_TOOLBAR_ACTIONS = new String[] {
-            ACTION_CUT, ACTION_COPY, ACTION_PASTE, ACTION_SELECT_ALL
+        ACTION_CUT, ACTION_COPY, ACTION_PASTE, ACTION_SELECT_ALL, ACTION_PROCESS_TEXT
     };
     private static final String[] FIXED_TOOLBAR_ACTIONS = new String[] {
-            ACTION_SELECT_ALL, ACTION_CUT, ACTION_COPY, ACTION_PASTE
+        ACTION_SELECT_ALL, ACTION_CUT, ACTION_COPY, ACTION_PASTE
     };
 
     protected final Activity mActivity;
@@ -36,11 +58,14 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
     protected final Matrix mTempMatrix = new Matrix();
     protected final RectF mTempRect = new RectF();
 
+    private boolean mExternalActionsEnabled;
+
     protected ActionMode mActionMode;
     protected GeckoSession mSession;
     protected Selection mSelection;
     protected List<String> mActions;
     protected GeckoSession.Response<String> mResponse;
+    protected boolean mRepopulatedMenu;
 
     @TargetApi(Build.VERSION_CODES.M)
     private class Callback2Wrapper extends ActionMode.Callback2 {
@@ -71,13 +96,37 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
         }
     }
 
-    public BasicSelectionActionDelegate(final Activity activity) {
+    public BasicSelectionActionDelegate(final @NonNull Activity activity) {
         this(activity, Build.VERSION.SDK_INT >= 23);
     }
 
-    public BasicSelectionActionDelegate(final Activity activity, final boolean useFloatingToolbar) {
+    public BasicSelectionActionDelegate(final @NonNull Activity activity,
+                                        final boolean useFloatingToolbar) {
         mActivity = activity;
         mUseFloatingToolbar = useFloatingToolbar;
+        mExternalActionsEnabled = true;
+    }
+
+    /**
+     * Set whether to include text actions from other apps in the floating toolbar.
+     *
+     * @param enable True if external actions should be enabled.
+     */
+    public void enableExternalActions(final boolean enable) {
+        mExternalActionsEnabled = enable;
+
+        if (mActionMode != null) {
+            mActionMode.invalidate();
+        }
+    }
+
+    /**
+     * Get whether text actions from other apps are enabled.
+     *
+     * @return True if external actions are enabled.
+     */
+    public boolean areExternalActionsEnabled() {
+        return mExternalActionsEnabled;
     }
 
     /**
@@ -86,7 +135,7 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
      *
      * @return Array of action IDs in proper order.
      */
-    protected String[] getAllActions() {
+    protected @NonNull String[] getAllActions() {
         return mUseFloatingToolbar ? FLOATING_TOOLBAR_ACTIONS
                                    : FIXED_TOOLBAR_ACTIONS;
     }
@@ -98,7 +147,13 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
      * @param id Action ID.
      * @return True if the action is presently available.
      */
-    protected boolean isActionAvailable(final String id) {
+    protected boolean isActionAvailable(final @NonNull String id) {
+        if (mExternalActionsEnabled && !mSelection.text.isEmpty() &&
+                ACTION_PROCESS_TEXT.equals(id)) {
+            final PackageManager pm = mActivity.getPackageManager();
+            return pm.resolveActivity(getProcessTextIntent(),
+                                      PackageManager.MATCH_DEFAULT_ONLY) != null;
+        }
         return mActions.contains(id);
     }
 
@@ -109,7 +164,7 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
      * @param id Action ID.
      * @param item New menu item to prepare.
      */
-    protected void prepareAction(final String id, final MenuItem item) {
+    protected void prepareAction(final @NonNull String id, final @NonNull MenuItem item) {
         switch (id) {
             case ACTION_CUT:
                 item.setTitle(android.R.string.cut);
@@ -123,6 +178,8 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
             case ACTION_SELECT_ALL:
                 item.setTitle(android.R.string.selectAll);
                 break;
+            case ACTION_PROCESS_TEXT:
+                throw new IllegalStateException("Unexpected action");
         }
     }
 
@@ -130,9 +187,20 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
      * Perform the specified action. Override to perform custom actions.
      *
      * @param id Action ID.
+     * @param item Nenu item for the action.
      * @return True if the action was performed.
      */
-    protected boolean performAction(final String id) {
+    protected boolean performAction(final @NonNull String id, final @NonNull MenuItem item) {
+        if (ACTION_PROCESS_TEXT.equals(id)) {
+            try {
+                mActivity.startActivity(item.getIntent());
+            } catch (final ActivityNotFoundException e) {
+                Log.e(LOGTAG, "Cannot perform action", e);
+                return false;
+            }
+            return true;
+        }
+
         if (mResponse == null) {
             return false;
         }
@@ -149,6 +217,9 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
         return true;
     }
 
+    /**
+     * Clear the current selection, if possible.
+     */
     protected void clearSelection() {
         if (mResponse != null) {
             if (isActionAvailable(ACTION_COLLAPSE_TO_END)) {
@@ -157,6 +228,16 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
                 mResponse.respond(ACTION_UNSELECT);
             }
         }
+    }
+
+    private Intent getProcessTextIntent() {
+        final Intent intent = new Intent(Intent.ACTION_PROCESS_TEXT);
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_PROCESS_TEXT, mSelection.text);
+        // TODO: implement ability to replace text in Gecko for editable selection (bug 1453137).
+        intent.putExtra(Intent.EXTRA_PROCESS_TEXT_READONLY, true);
+        return intent;
     }
 
     @Override
@@ -180,10 +261,29 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
         final String[] allActions = getAllActions();
         boolean changed = false;
 
+        // Whether we are repopulating an existing menu.
+        mRepopulatedMenu = menu.size() != 0;
+
         // For each action, see if it's available at present, and if necessary,
         // add to or remove from menu.
-        for (int menuId = 0; menuId < allActions.length; menuId++) {
-            final String actionId = allActions[menuId];
+        for (int i = 0; i < allActions.length; i++) {
+            final String actionId = allActions[i];
+            final int menuId = i + Menu.FIRST;
+
+            if (ACTION_PROCESS_TEXT.equals(actionId)) {
+                if (mExternalActionsEnabled && !mSelection.text.isEmpty()) {
+                    menu.addIntentOptions(menuId, menuId, menuId,
+                                          mActivity.getComponentName(),
+                                          /* specifiec */ null, getProcessTextIntent(),
+                                          /* flags */ 0, /* items */ null);
+                    changed = true;
+                } else if (menu.findItem(menuId) != null) {
+                    menu.removeGroup(menuId);
+                    changed = true;
+                }
+                continue;
+            }
+
             if (isActionAvailable(actionId)) {
                 if (menu.findItem(menuId) == null) {
                     prepareAction(actionId, menu.add(/* group */ Menu.NONE, menuId,
@@ -200,8 +300,29 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
 
     @Override
     public boolean onActionItemClicked(final ActionMode actionMode, final MenuItem menuItem) {
+        MenuItem realMenuItem = null;
+        if (mRepopulatedMenu) {
+            // When we repopulate an existing menu, Android can sometimes give us an old,
+            // deleted MenuItem. Find the current MenuItem that corresponds to the old one.
+            final Menu menu = actionMode.getMenu();
+            final int size = menu.size();
+            for (int i = 0; i < size; i++) {
+                final MenuItem item = menu.getItem(i);
+                if (item == menuItem || (item.getItemId() == menuItem.getItemId() &&
+                        item.getTitle().equals(menuItem.getTitle()))) {
+                    realMenuItem = item;
+                    break;
+                }
+            }
+        } else {
+            realMenuItem = menuItem;
+        }
+
+        if (realMenuItem == null) {
+            return false;
+        }
         final String[] allActions = getAllActions();
-        return performAction(allActions[menuItem.getItemId()]);
+        return performAction(allActions[realMenuItem.getItemId() - Menu.FIRST], realMenuItem);
     }
 
     @Override

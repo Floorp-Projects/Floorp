@@ -17,7 +17,7 @@ pref(mathml.disabled,true) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-
 == displaystyle-2.html displaystyle-2-ref.html
 == displaystyle-3.html displaystyle-3-ref.html
 == displaystyle-4.html displaystyle-4-ref.html
-random-if(smallScreen&&Android) fuzzy(255,200) fails-if(webrender&&winWidget) == mirror-op-1.html mirror-op-1-ref.html
+random-if(smallScreen&&Android) fuzzy(255,200) fuzzy-if(webrender&&winWidget,255-255,265-265) == mirror-op-1.html mirror-op-1-ref.html
 != mirror-op-2.html mirror-op-2-ref.html
 != mirror-op-3.html mirror-op-3-ref.html
 != mirror-op-4.html mirror-op-4-ref.html

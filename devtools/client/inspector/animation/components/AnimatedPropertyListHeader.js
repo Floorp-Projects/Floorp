@@ -35,8 +35,13 @@ class AnimatedPropertyListHeader extends PureComponent {
 
     return dom.div(
       {
-        className: "animated-property-list-header devtools-toolbar"
+        className: "animated-property-list-header"
       },
+      dom.div(
+        {
+          className: "devtools-toolbar"
+        }
+      ),
       KeyframesProgressTickList(),
       KeyframesProgressBar(
         {
