@@ -832,7 +832,7 @@ var UnsubmittedCrashHandler = {
    * @returns The <xul:notification> if one is shown. null otherwise.
    */
   show({ notificationID, message, reportIDs, onAction }) {
-    let chromeWin = BrowserWindowTracker.getMostRecentBrowserWindow();
+    let chromeWin = BrowserWindowTracker.getTopWindow();
     if (!chromeWin) {
       // Can't show a notification in this case. We'll hopefully
       // get another opportunity to have the user submit their

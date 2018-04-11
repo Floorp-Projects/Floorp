@@ -59,9 +59,10 @@ function getTopWin(skipPopups) {
       (!skipPopups || top.toolbar.visible))
     return top;
 
-  let isPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
-  return BrowserWindowTracker.getMostRecentBrowserWindow({private: isPrivate,
-                                                         allowPopups: !skipPopups});
+  return BrowserWindowTracker.getTopWindow({
+    private: PrivateBrowsingUtils.isWindowPrivate(window),
+    allowPopups: !skipPopups
+  });
 }
 
 function getBoolPref(prefname, def) {

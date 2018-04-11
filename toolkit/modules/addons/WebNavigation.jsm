@@ -216,7 +216,7 @@ var Manager = {
    * @param {boolean} [tabTransitionData.typed]
    */
   setRecentTabTransitionData(tabTransitionData) {
-    let window = BrowserWindowTracker.getMostRecentBrowserWindow();
+    let window = BrowserWindowTracker.getTopWindow();
     if (window && window.gBrowser && window.gBrowser.selectedTab &&
         window.gBrowser.selectedTab.linkedBrowser) {
       let browser = window.gBrowser.selectedTab.linkedBrowser;

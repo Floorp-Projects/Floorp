@@ -37,16 +37,16 @@ function debug(s) {
   }
 }
 
-function _updateCurrentContentOuterWindowID(aBrowser) {
-  if (!aBrowser.outerWindowID ||
-      aBrowser.outerWindowID === _lastTopLevelWindowID) {
+function _updateCurrentContentOuterWindowID(browser) {
+  if (!browser.outerWindowID ||
+      browser.outerWindowID === _lastTopLevelWindowID) {
     return;
   }
 
-  debug("Current window uri=" + aBrowser.currentURI.spec +
-        " id=" + aBrowser.outerWindowID);
+  debug("Current window uri=" + browser.currentURI.spec +
+        " id=" + browser.outerWindowID);
 
-  _lastTopLevelWindowID = aBrowser.outerWindowID;
+  _lastTopLevelWindowID = browser.outerWindowID;
   let windowIDWrapper = Cc["@mozilla.org/supports-PRUint64;1"]
                           .createInstance(Ci.nsISupportsPRUint64);
   windowIDWrapper.data = _lastTopLevelWindowID;
@@ -73,9 +73,9 @@ function _handleEvent(aEvent) {
   }
 }
 
-function _handleMessage(aMessage) {
-  let browser = aMessage.target;
-  if (aMessage.name === "Browser:Init" &&
+function _handleMessage(message) {
+  let browser = message.target;
+  if (message.name === "Browser:Init" &&
       browser === browser.ownerGlobal.gBrowser.selectedBrowser) {
     _updateCurrentContentOuterWindowID(browser);
   }
@@ -83,70 +83,70 @@ function _handleMessage(aMessage) {
 
 // Methods that impact a window. Put into single object for organization.
 var WindowHelper = {
-  addWindow: function NP_WH_addWindow(aWindow) {
+  addWindow(window) {
     // Add event listeners
     TAB_EVENTS.forEach(function(event) {
-      aWindow.gBrowser.tabContainer.addEventListener(event, _handleEvent);
+      window.gBrowser.tabContainer.addEventListener(event, _handleEvent);
     });
     WINDOW_EVENTS.forEach(function(event) {
-      aWindow.addEventListener(event, _handleEvent);
+      window.addEventListener(event, _handleEvent);
     });
 
-    let messageManager = aWindow.getGroupMessageManager("browsers");
+    let messageManager = window.getGroupMessageManager("browsers");
     messageManager.addMessageListener("Browser:Init", _handleMessage);
 
     // This gets called AFTER activate event, so if this is the focused window
     // we want to activate it.
-    if (aWindow == _focusManager.activeWindow)
-      this.handleFocusedWindow(aWindow);
+    if (window == _focusManager.activeWindow)
+      this.handleFocusedWindow(window);
 
     // Update the selected tab's content outer window ID.
-    _updateCurrentContentOuterWindowID(aWindow.gBrowser.selectedBrowser);
+    _updateCurrentContentOuterWindowID(window.gBrowser.selectedBrowser);
   },
 
-  removeWindow: function NP_WH_removeWindow(aWindow) {
-    if (aWindow == _lastFocusedWindow)
+  removeWindow(window) {
+    if (window == _lastFocusedWindow)
       _lastFocusedWindow = null;
 
     // Remove the event listeners
     TAB_EVENTS.forEach(function(event) {
-      aWindow.gBrowser.tabContainer.removeEventListener(event, _handleEvent);
+      window.gBrowser.tabContainer.removeEventListener(event, _handleEvent);
     });
     WINDOW_EVENTS.forEach(function(event) {
-      aWindow.removeEventListener(event, _handleEvent);
+      window.removeEventListener(event, _handleEvent);
     });
 
-    let messageManager = aWindow.getGroupMessageManager("browsers");
+    let messageManager = window.getGroupMessageManager("browsers");
     messageManager.removeMessageListener("Browser:Init", _handleMessage);
   },
 
-  onActivate: function NP_WH_onActivate(aWindow, aHasFocus) {
+  onActivate(window, hasFocus) {
     // If this window was the last focused window, we don't need to do anything
-    if (aWindow == _lastFocusedWindow)
+    if (window == _lastFocusedWindow)
       return;
 
-    this.handleFocusedWindow(aWindow);
+    this.handleFocusedWindow(window);
 
-    _updateCurrentContentOuterWindowID(aWindow.gBrowser.selectedBrowser);
+    _updateCurrentContentOuterWindowID(window.gBrowser.selectedBrowser);
   },
 
-  handleFocusedWindow: function NP_WH_handleFocusedWindow(aWindow) {
-    // aWindow is now focused
-    _lastFocusedWindow = aWindow;
+  handleFocusedWindow(window) {
+    // window is now focused
+    _lastFocusedWindow = window;
   },
 
-  getMostRecentBrowserWindow: function RW_getMostRecentBrowserWindow(aOptions) {
-    let checkPrivacy = typeof aOptions == "object" &&
-                       "private" in aOptions;
+  getTopWindow(options) {
+    let checkPrivacy = typeof options == "object" &&
+                       "private" in options;
 
-    let allowPopups = typeof aOptions == "object" && !!aOptions.allowPopups;
+    let allowPopups = typeof options == "object" && !!options.allowPopups;
 
     function isSuitableBrowserWindow(win) {
       return (!win.closed &&
               (allowPopups || win.toolbar.visible) &&
               (!checkPrivacy ||
                PrivateBrowsingUtils.permanentPrivateBrowsing ||
-               PrivateBrowsingUtils.isWindowPrivate(win) == aOptions.private));
+               PrivateBrowsingUtils.isWindowPrivate(win) == options.private));
     }
 
     let broken_wm_z_order =
@@ -182,14 +182,14 @@ this.BrowserWindowTracker = {
   /**
    * Get the most recent browser window.
    *
-   * @param aOptions an object accepting the arguments for the search.
+   * @param options an object accepting the arguments for the search.
    *        * private: true to restrict the search to private windows
    *            only, false to restrict the search to non-private only.
    *            Omit the property to search in both groups.
    *        * allowPopups: true if popup windows are permissable.
    */
-  getMostRecentBrowserWindow(options) {
-    return WindowHelper.getMostRecentBrowserWindow(options);
+  getTopWindow(options) {
+    return WindowHelper.getTopWindow(options);
   },
 
   track(window) {

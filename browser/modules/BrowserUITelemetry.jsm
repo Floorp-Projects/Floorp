@@ -264,7 +264,7 @@ var BrowserUITelemetry = {
     // probably been closed, since the vast majority of saved-session
     // pings are gathered during shutdown.
     Services.search.init(rv => {
-      let win = BrowserWindowTracker.getMostRecentBrowserWindow({
+      let win = BrowserWindowTracker.getTopWindow({
         private: false,
         allowPopups: false,
       });
