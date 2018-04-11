@@ -1015,7 +1015,7 @@ menuitem.subviewbutton@menuStateHover@,
   background-color: var(--arrowpanel-dimmed);
 }
 
-panelview .toolbarbutton-1:-moz-any(@buttonStateActive@,[checked=true]),
+panelview .toolbarbutton-1@buttonStateActive@,
 toolbarbutton.subviewbutton@buttonStateActive@,
 menu.subviewbutton@menuStateActive@,
 menuitem.subviewbutton@menuStateActive@,
@@ -1293,10 +1293,6 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 .subviewbutton > .menu-iconic-left {
   -moz-appearance: none;
   margin-inline-end: 0;
-}
-
-menuitem[checked="true"].subviewbutton > .menu-iconic-left {
-  visibility: hidden;
 }
 
 #PanelUI-panicView > .panel-subview-body,
