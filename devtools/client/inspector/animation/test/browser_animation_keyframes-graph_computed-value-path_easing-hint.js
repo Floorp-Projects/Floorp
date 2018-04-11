@@ -223,14 +223,17 @@ add_task(async function() {
           `Content of <title> in ${ hintTarget } should be ${ expectedHint.hint }`);
 
         let interactionEl = null;
+        let displayedEl = null;
         if (expectedHint.path) {
           info(`Checking <path> in ${ hintTarget }`);
           interactionEl = hintEl.querySelector("path");
+          displayedEl = interactionEl;
           ok(interactionEl, `The <path> element  in ${ hintTarget } should be existence`);
           assertPathSegments(interactionEl, false, expectedHint.path);
         } else {
           info(`Checking <rect> in ${ hintTarget }`);
           interactionEl = hintEl.querySelector("rect");
+          displayedEl = hintEl.querySelector("line");
           ok(interactionEl, `The <rect> element  in ${ hintTarget } should be existence`);
           is(interactionEl.getAttribute("x"), expectedHint.rect.x,
             `x of <rect> in ${ hintTarget } should be ${ expectedHint.rect.x }`);
@@ -243,11 +246,11 @@ add_task(async function() {
         const win = hintEl.ownerGlobal;
         // Mouse out once from pathEl.
         EventUtils.synthesizeMouse(interactionEl, -1, -1, { type: "mouseout" }, win);
-        is(win.getComputedStyle(interactionEl).strokeOpacity, 0,
+        is(win.getComputedStyle(displayedEl).strokeOpacity, 0,
           `stroke-opacity of hintEl for ${ hintTarget } should be 0` +
           " while mouse is out from the element");
         // Mouse over the pathEl.
-        ok(isStrokeChangedByMouseOver(interactionEl, win),
+        ok(isStrokeChangedByMouseOver(interactionEl, displayedEl, win),
           `stroke-opacity of hintEl for ${ hintTarget } should be 1` +
           " while mouse is over the element");
       }
@@ -255,14 +258,14 @@ add_task(async function() {
   }
 });
 
-function isStrokeChangedByMouseOver(pathEl, win) {
-  const boundingBox = pathEl.getBoundingClientRect();
+function isStrokeChangedByMouseOver(mouseoverEl, displayedEl, win) {
+  const boundingBox = mouseoverEl.getBoundingClientRect();
   const x = boundingBox.width / 2;
 
   for (let y = 0; y < boundingBox.height; y++) {
-    EventUtils.synthesizeMouse(pathEl, x, y, { type: "mouseover" }, win);
+    EventUtils.synthesizeMouse(mouseoverEl, x, y, { type: "mouseover" }, win);
 
-    if (win.getComputedStyle(pathEl).strokeOpacity == 1) {
+    if (win.getComputedStyle(displayedEl).strokeOpacity == 1) {
       return true;
     }
   }
