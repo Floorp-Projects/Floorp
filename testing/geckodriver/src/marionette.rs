@@ -1011,6 +1011,91 @@ impl MarionetteCommand {
                               msg: &WebDriverMessage<GeckoExtensionRoute>)
                               -> WebDriverResult<MarionetteCommand> {
         let (opt_name, opt_parameters) = match msg.command {
+            Status => panic!("Got status command that should already have been handled"),
+            AcceptAlert => (Some("acceptDialog"), None),
+            AddCookie(ref x) => (Some("addCookie"), Some(x.to_marionette())),
+            CloseWindow => (Some("close"), None),
+            DeleteCookie(ref x) => {
+                let mut data = BTreeMap::new();
+                data.insert("name".to_string(), x.to_json());
+                (Some("deleteCookie"), Some(Ok(data)))
+            },
+            DeleteCookies => (Some("deleteAllCookies"), None),
+            DeleteSession => {
+                let mut body = BTreeMap::new();
+                body.insert("flags".to_owned(), vec!["eForceQuit".to_json()].to_json());
+                (Some("quit"), Some(Ok(body)))
+            },
+            DismissAlert => (Some("dismissDialog"), None),
+            ElementClear(ref x) => (Some("clearElement"), Some(x.to_marionette())),
+            ElementClick(ref x) => (Some("clickElement"), Some(x.to_marionette())),
+            ElementSendKeys(ref e, ref x) => {
+                let mut data = BTreeMap::new();
+                data.insert("id".to_string(), e.id.to_json());
+                data.insert("text".to_string(), x.text.to_json());
+                data.insert("value".to_string(),
+                            x.text
+                                .chars()
+                                .map(|x| x.to_string())
+                                .collect::<Vec<String>>()
+                                .to_json());
+                (Some("sendKeysToElement"), Some(Ok(data)))
+            },
+            ElementTap(ref x) => (Some("singleTap"), Some(x.to_marionette())),
+            ExecuteScript(ref x) => (Some("executeScript"), Some(x.to_marionette())),
+            ExecuteAsyncScript(ref x) => (Some("executeAsyncScript"), Some(x.to_marionette())),
+            FindElement(ref x) => (Some("findElement"), Some(x.to_marionette())),
+            FindElementElement(ref e, ref x) => {
+                let mut data = try!(x.to_marionette());
+                data.insert("element".to_string(), e.id.to_json());
+                (Some("findElement"), Some(Ok(data)))
+            },
+            FindElements(ref x) => (Some("findElements"), Some(x.to_marionette())),
+            FindElementElements(ref e, ref x) => {
+                let mut data = try!(x.to_marionette());
+                data.insert("element".to_string(), e.id.to_json());
+                (Some("findElements"), Some(Ok(data)))
+            },
+            FullscreenWindow => (Some("fullscreen"), None),
+            Get(ref x) => (Some("get"), Some(x.to_marionette())),
+            GetAlertText => (Some("getTextFromDialog"), None),
+            GetActiveElement => (Some("getActiveElement"), None),
+            GetCookies | GetNamedCookie(_) => (Some("getCookies"), None),
+            GetCurrentUrl => (Some("getCurrentUrl"), None),
+            GetCSSValue(ref e, ref x) => {
+                let mut data = BTreeMap::new();
+                data.insert("id".to_string(), e.id.to_json());
+                data.insert("propertyName".to_string(), x.to_json());
+                (Some("getElementValueOfCssProperty"), Some(Ok(data)))
+            },
+            GetElementAttribute(ref e, ref x) => {
+                let mut data = BTreeMap::new();
+                data.insert("id".to_string(), e.id.to_json());
+                data.insert("name".to_string(), x.to_json());
+                (Some("getElementAttribute"), Some(Ok(data)))
+            },
+            GetElementProperty(ref e, ref x) => {
+                let mut data = BTreeMap::new();
+                data.insert("id".to_string(), e.id.to_json());
+                data.insert("name".to_string(), x.to_json());
+                (Some("getElementProperty"), Some(Ok(data)))
+            },
+            GetElementRect(ref x) => (Some("getElementRect"), Some(x.to_marionette())),
+            GetElementTagName(ref x) => (Some("getElementTagName"), Some(x.to_marionette())),
+            GetElementText(ref x) => (Some("getElementText"), Some(x.to_marionette())),
+            GetPageSource => (Some("getPageSource"), None),
+            GetTimeouts => (Some("getTimeouts"), None),
+            GetTitle => (Some("getTitle"), None),
+            GetWindowHandle => (Some("getWindowHandle"), None),
+            GetWindowHandles => (Some("getWindowHandles"), None),
+            GetWindowRect => (Some("getWindowRect"), None),
+            GoBack => (Some("goBack"), None),
+            GoForward => (Some("goForward"), None),
+            IsDisplayed(ref x) => (Some("isElementDisplayed"), Some(x.to_marionette())),
+            IsEnabled(ref x) => (Some("isElementEnabled"), Some(x.to_marionette())),
+            IsSelected(ref x) => (Some("isElementSelected"), Some(x.to_marionette())),
+            MaximizeWindow => (Some("maximizeWindow"), None),
+            MinimizeWindow => (Some("WebDriver:MinimizeWindow"), None),
             NewSession(_) => {
                 let caps = capabilities.expect("Tried to create new session without processing capabilities");
 
@@ -1026,99 +1111,9 @@ impl MarionetteCommand {
 
                 (Some("newSession"), Some(Ok(data)))
             },
-            DeleteSession => {
-                let mut body = BTreeMap::new();
-                body.insert("flags".to_owned(), vec!["eForceQuit".to_json()].to_json());
-                (Some("quit"), Some(Ok(body)))
-            },
-            Status => panic!("Got status command that should already have been handled"),
-            Get(ref x) => (Some("get"), Some(x.to_marionette())),
-            GetCurrentUrl => (Some("getCurrentUrl"), None),
-            GoBack => (Some("goBack"), None),
-            GoForward => (Some("goForward"), None),
-            Refresh => (Some("refresh"), None),
-            GetTitle => (Some("getTitle"), None),
-            GetPageSource => (Some("getPageSource"), None),
-            GetWindowHandle => (Some("getWindowHandle"), None),
-            GetWindowHandles => (Some("getWindowHandles"), None),
-            CloseWindow => (Some("close"), None),
-            GetTimeouts => (Some("getTimeouts"), None),
-            SetTimeouts(ref x) => (Some("setTimeouts"), Some(x.to_marionette())),
-            SetWindowRect(ref x) => (Some("setWindowRect"), Some(x.to_marionette())),
-            GetWindowRect => (Some("getWindowRect"), None),
-            MinimizeWindow => (Some("WebDriver:MinimizeWindow"), None),
-            MaximizeWindow => (Some("maximizeWindow"), None),
-            FullscreenWindow => (Some("fullscreen"), None),
-            SwitchToWindow(ref x) => (Some("switchToWindow"), Some(x.to_marionette())),
-            SwitchToFrame(ref x) => (Some("switchToFrame"), Some(x.to_marionette())),
-            SwitchToParentFrame => (Some("switchToParentFrame"), None),
-            FindElement(ref x) => (Some("findElement"), Some(x.to_marionette())),
-            FindElements(ref x) => (Some("findElements"), Some(x.to_marionette())),
-            FindElementElement(ref e, ref x) => {
-                let mut data = try!(x.to_marionette());
-                data.insert("element".to_string(), e.id.to_json());
-                (Some("findElement"), Some(Ok(data)))
-            },
-            FindElementElements(ref e, ref x) => {
-                let mut data = try!(x.to_marionette());
-                data.insert("element".to_string(), e.id.to_json());
-                (Some("findElements"), Some(Ok(data)))
-            },
-            GetActiveElement => (Some("getActiveElement"), None),
-            IsDisplayed(ref x) => (Some("isElementDisplayed"), Some(x.to_marionette())),
-            IsSelected(ref x) => (Some("isElementSelected"), Some(x.to_marionette())),
-            GetElementAttribute(ref e, ref x) => {
-                let mut data = BTreeMap::new();
-                data.insert("id".to_string(), e.id.to_json());
-                data.insert("name".to_string(), x.to_json());
-                (Some("getElementAttribute"), Some(Ok(data)))
-            },
-            GetElementProperty(ref e, ref x) => {
-                let mut data = BTreeMap::new();
-                data.insert("id".to_string(), e.id.to_json());
-                data.insert("name".to_string(), x.to_json());
-                (Some("getElementProperty"), Some(Ok(data)))
-            },
-            GetCSSValue(ref e, ref x) => {
-                let mut data = BTreeMap::new();
-                data.insert("id".to_string(), e.id.to_json());
-                data.insert("propertyName".to_string(), x.to_json());
-                (Some("getElementValueOfCssProperty"), Some(Ok(data)))
-            },
-            GetElementText(ref x) => (Some("getElementText"), Some(x.to_marionette())),
-            GetElementTagName(ref x) => (Some("getElementTagName"), Some(x.to_marionette())),
-            GetElementRect(ref x) => (Some("getElementRect"), Some(x.to_marionette())),
-            IsEnabled(ref x) => (Some("isElementEnabled"), Some(x.to_marionette())),
             PerformActions(ref x) => (Some("performActions"), Some(x.to_marionette())),
+            Refresh => (Some("refresh"), None),
             ReleaseActions => (Some("releaseActions"), None),
-            ElementClick(ref x) => (Some("clickElement"), Some(x.to_marionette())),
-            ElementTap(ref x) => (Some("singleTap"), Some(x.to_marionette())),
-            ElementClear(ref x) => (Some("clearElement"), Some(x.to_marionette())),
-            ElementSendKeys(ref e, ref x) => {
-                let mut data = BTreeMap::new();
-                data.insert("id".to_string(), e.id.to_json());
-                data.insert("text".to_string(), x.text.to_json());
-                data.insert("value".to_string(),
-                            x.text
-                                .chars()
-                                .map(|x| x.to_string())
-                                .collect::<Vec<String>>()
-                                .to_json());
-                (Some("sendKeysToElement"), Some(Ok(data)))
-            },
-            ExecuteScript(ref x) => (Some("executeScript"), Some(x.to_marionette())),
-            ExecuteAsyncScript(ref x) => (Some("executeAsyncScript"), Some(x.to_marionette())),
-            GetCookies | GetNamedCookie(_) => (Some("getCookies"), None),
-            DeleteCookies => (Some("deleteAllCookies"), None),
-            DeleteCookie(ref x) => {
-                let mut data = BTreeMap::new();
-                data.insert("name".to_string(), x.to_json());
-                (Some("deleteCookie"), Some(Ok(data)))
-            },
-            AddCookie(ref x) => (Some("addCookie"), Some(x.to_marionette())),
-            DismissAlert => (Some("dismissDialog"), None),
-            AcceptAlert => (Some("acceptDialog"), None),
-            GetAlertText => (Some("getTextFromDialog"), None),
             SendAlertText(ref x) => {
                 let mut data = BTreeMap::new();
                 data.insert("text".to_string(), x.text.to_json());
@@ -1130,13 +1125,11 @@ impl MarionetteCommand {
                                 .to_json());
                 (Some("sendKeysToDialog"), Some(Ok(data)))
             },
-            TakeScreenshot => {
-                let mut data = BTreeMap::new();
-                data.insert("id".to_string(), Json::Null);
-                data.insert("highlights".to_string(), Json::Array(vec![]));
-                data.insert("full".to_string(), Json::Boolean(false));
-                (Some("takeScreenshot"), Some(Ok(data)))
-            },
+            SetTimeouts(ref x) => (Some("setTimeouts"), Some(x.to_marionette())),
+            SetWindowRect(ref x) => (Some("setWindowRect"), Some(x.to_marionette())),
+            SwitchToFrame(ref x) => (Some("switchToFrame"), Some(x.to_marionette())),
+            SwitchToParentFrame => (Some("switchToParentFrame"), None),
+            SwitchToWindow(ref x) => (Some("switchToWindow"), Some(x.to_marionette())),
             TakeElementScreenshot(ref e) => {
                 let mut data = BTreeMap::new();
                 data.insert("id".to_string(), e.id.to_json());
@@ -1144,11 +1137,31 @@ impl MarionetteCommand {
                 data.insert("full".to_string(), Json::Boolean(false));
                 (Some("takeScreenshot"), Some(Ok(data)))
             },
+            TakeScreenshot => {
+                let mut data = BTreeMap::new();
+                data.insert("id".to_string(), Json::Null);
+                data.insert("highlights".to_string(), Json::Array(vec![]));
+                data.insert("full".to_string(), Json::Boolean(false));
+                (Some("takeScreenshot"), Some(Ok(data)))
+            },
             Extension(ref extension) => {
                 match extension {
-                    &GeckoExtensionCommand::GetContext => (Some("getContext"), None),
+                    &GeckoExtensionCommand::GetContext => {
+                        (Some("getContext"), None)
+                    },
+                    &GeckoExtensionCommand::InstallAddon(ref x) => {
+                        (Some("addon:install"), Some(x.to_marionette()))
+                    },
                     &GeckoExtensionCommand::SetContext(ref x) => {
                         (Some("setContext"), Some(x.to_marionette()))
+                    },
+                    &GeckoExtensionCommand::UninstallAddon(ref x) => {
+                        (Some("addon:uninstall"), Some(x.to_marionette()))
+                    },
+                    &GeckoExtensionCommand::XblAnonymousByAttribute(ref e, ref x) => {
+                        let mut data = try!(x.to_marionette());
+                        data.insert("element".to_string(), e.id.to_json());
+                        (Some("findElement"), Some(Ok(data)))
                     },
                     &GeckoExtensionCommand::XblAnonymousChildren(ref e) => {
                         let mut data = BTreeMap::new();
@@ -1156,17 +1169,6 @@ impl MarionetteCommand {
                         data.insert("value".to_owned(), Json::Null);
                         data.insert("element".to_string(), e.id.to_json());
                         (Some("findElements"), Some(Ok(data)))
-                    },
-                    &GeckoExtensionCommand::XblAnonymousByAttribute(ref e, ref x) => {
-                        let mut data = try!(x.to_marionette());
-                        data.insert("element".to_string(), e.id.to_json());
-                        (Some("findElement"), Some(Ok(data)))
-                    },
-                    &GeckoExtensionCommand::InstallAddon(ref x) => {
-                        (Some("addon:install"), Some(x.to_marionette()))
-                    },
-                    &GeckoExtensionCommand::UninstallAddon(ref x) => {
-                        (Some("addon:uninstall"), Some(x.to_marionette()))
                     }
                 }
             }
