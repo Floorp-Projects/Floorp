@@ -80,6 +80,8 @@ public class TelemetryCrashPingBuilder extends TelemetryPingBuilder {
         // Parse the telemetry environment and extract relevant fields from it
         ExtendedJSONObject env = null;
         String architecture = null;
+        String displayVersion = null;
+        String platformVersion = null;
         String xpcomAbi = null;
 
         try {
@@ -88,6 +90,8 @@ public class TelemetryCrashPingBuilder extends TelemetryPingBuilder {
 
             if (build != null) {
                 architecture = build.getString("architecture");
+                displayVersion = build.getString("displayVersion");
+                platformVersion = build.getString("platformVersion");
                 xpcomAbi = build.getString("xpcomAbi");
             }
         } catch (NonObjectJSONException | IOException e) {
@@ -99,7 +103,8 @@ public class TelemetryCrashPingBuilder extends TelemetryPingBuilder {
         }
 
         payload.put("payload", createPayloadNode(crashId, annotations));
-        payload.put("application", createApplicationNode(annotations, architecture, xpcomAbi));
+        payload.put("application",
+                    createApplicationNode(annotations, architecture, displayVersion, platformVersion, xpcomAbi));
     }
 
     /**
@@ -180,15 +185,16 @@ public class TelemetryCrashPingBuilder extends TelemetryPingBuilder {
      * @returns A JSON object representing the ping's application node
      */
     private static ExtendedJSONObject createApplicationNode(HashMap<String, String> annotations,
-                                                            String architecture, String xpcomAbi) {
+                                                            String architecture, String displayVersion,
+                                                            String platformVersion, String xpcomAbi) {
         ExtendedJSONObject node = new ExtendedJSONObject();
         final String version = annotations.get("Version");
 
         node.put("vendor", annotations.get("Vendor"));
         node.put("name", annotations.get("ProductName"));
         node.put("buildId", annotations.get("BuildID"));
-        node.put("displayVersion", version);
-        node.put("platformVersion", version);
+        node.put("displayVersion", displayVersion);
+        node.put("platformVersion", platformVersion);
         node.put("version", version);
         node.put("channel", annotations.get("ReleaseChannel"));
 
