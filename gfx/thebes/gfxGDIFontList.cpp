@@ -303,7 +303,7 @@ GDIFontEntry::TestCharacterMap(uint32_t aCh)
         if (!IsUpright()) {
             fakeStyle.style = NS_FONT_STYLE_ITALIC;
         }
-        fakeStyle.weight = mWeight * 100;
+        fakeStyle.weight = mWeight;
 
         RefPtr<gfxFont> tempFont = FindOrMakeFont(&fakeStyle, false);
         if (!tempFont || !tempFont->Valid())
