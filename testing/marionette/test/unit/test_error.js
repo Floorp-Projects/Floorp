@@ -213,13 +213,13 @@ add_test(function test_ElementClickInterceptedError() {
     nodeType: 1,
     localName: "b",
     ownerDocument: {
-      elementFromPoint: function (x, y) {
+      elementFromPoint() {
         return otherEl;
       },
     },
     style: {
       pointerEvents: "auto",
-    }
+    },
   };
 
   let err1 = new ElementClickInterceptedError(obscuredEl, {x: 1, y: 2});
@@ -255,6 +255,16 @@ add_test(function test_ElementNotInteractableError() {
   equal("ElementNotInteractableError", err.name);
   equal("foo", err.message);
   equal("element not interactable", err.status);
+  ok(err instanceof WebDriverError);
+
+  run_next_test();
+});
+
+add_test(function test_InsecureCertificateError() {
+  let err = new InsecureCertificateError("foo");
+  equal("InsecureCertificateError", err.name);
+  equal("foo", err.message);
+  equal("insecure certificate", err.status);
   ok(err instanceof WebDriverError);
 
   run_next_test();
@@ -323,6 +333,16 @@ add_test(function test_JavaScriptError() {
   let inheritedErr = new JavaScriptError(superErr);
   equal("RangeError: foo", inheritedErr.message);
   equal(superErr.stack, inheritedErr.stack);
+
+  run_next_test();
+});
+
+add_test(function test_MoveTargetOutOfBoundsError() {
+  let err = new MoveTargetOutOfBoundsError("foo");
+  equal("MoveTargetOutOfBoundsError", err.name);
+  equal("foo", err.message);
+  equal("move target out of bounds", err.status);
+  ok(err instanceof WebDriverError);
 
   run_next_test();
 });
@@ -412,6 +432,16 @@ add_test(function test_UnableToSetCookieError() {
   equal("UnableToSetCookieError", err.name);
   equal("foo", err.message);
   equal("unable to set cookie", err.status);
+  ok(err instanceof WebDriverError);
+
+  run_next_test();
+});
+
+add_test(function test_UnexpectedAlertOpenError() {
+  let err = new UnexpectedAlertOpenError("foo");
+  equal("UnexpectedAlertOpenError", err.name);
+  equal("foo", err.message);
+  equal("unexpected alert open", err.status);
   ok(err instanceof WebDriverError);
 
   run_next_test();
