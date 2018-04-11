@@ -140,12 +140,13 @@ BodyExtractor<const nsAString>::GetAsStream(nsIInputStream** aResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = NS_NewCStringInputStream(aResult, encoded);
+  uint32_t encodedLength = encoded.Length();
+  nsresult rv = NS_NewCStringInputStream(aResult, Move(encoded));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  *aContentLength = encoded.Length();
+  *aContentLength = encodedLength;
   aContentTypeWithCharset.AssignLiteral("text/plain;charset=UTF-8");
   aCharset.AssignLiteral("UTF-8");
   return NS_OK;
