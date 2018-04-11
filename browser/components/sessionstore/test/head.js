@@ -181,6 +181,20 @@ function promiseTabState(tab, state) {
   return promise;
 }
 
+function promiseWindowRestored(win) {
+  return new Promise(resolve => win.addEventListener("SSWindowRestored", resolve, {once: true}));
+}
+
+async function setBrowserState(state, win = window) {
+  ss.setBrowserState(typeof state != "string" ? JSON.stringify(state) : state);
+  await promiseWindowRestored(win);
+}
+
+async function setWindowState(win, state, overwrite = false) {
+  ss.setWindowState(win, typeof state != "string" ? JSON.stringify(state) : state, overwrite);
+  await promiseWindowRestored(win);
+}
+
 /**
  * Wait for a content -> chrome message.
  */
