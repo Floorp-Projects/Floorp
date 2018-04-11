@@ -1,21 +1,140 @@
 diff -uNr ./dist/DOMLocalization.jsm /home/zbraniecki/projects/mozilla-unified/intl/l10n/DOMLocalization.jsm
---- ./dist/DOMLocalization.jsm	2018-01-30 13:46:58.589811108 -0800
-+++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/DOMLocalization.jsm	2018-01-30 13:46:13.613146435 -0800
-@@ -18,7 +18,8 @@
+--- ./dist/DOMLocalization.jsm	2018-04-13 08:25:21.143138950 -0700
++++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/DOMLocalization.jsm	2018-04-13 08:27:11.658083766 -0700
+@@ -18,10 +18,8 @@
  
- /* fluent@0.6.0 */
+ /* fluent-dom@0.2.0 */
  
 -import Localization from '../../fluent-dom/src/localization.js';
+-
+-/* eslint no-console: ["error", {allow: ["warn"]}] */
+-/* global console */
 +const { Localization } =
-+  Components.utils.import("resource://gre/modules/Localization.jsm", {});
++  ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
  
  // Match the opening angle bracket (<) in HTML tags, and HTML entities like
  // &amp;, &#0038;, &#x0026;.
-@@ -623,36 +624,5 @@
+@@ -96,6 +94,7 @@
+       const templateElement = element.ownerDocument.createElementNS(
+         "http://www.w3.org/1999/xhtml", "template"
+       );
++      // eslint-disable-next-line no-unsanitized/property
+       templateElement.innerHTML = value;
+       overlayChildNodes(templateElement.content, element);
+     }
+@@ -323,6 +322,46 @@
+   return toElement;
+ }
+ 
++/**
++ * Sanitizes a translation before passing them to Node.localize API.
++ *
++ * It returns `false` if the translation contains DOM Overlays and should
++ * not go into Node.localize.
++ *
++ * Note: There's a third item of work that JS DOM Overlays do - removal
++ * of attributes from the previous translation.
++ * This is not trivial to implement for Node.localize scenario, so
++ * at the moment it is not supported.
++ *
++ * @param {{
++ *          localName: string,
++ *          namespaceURI: string,
++ *          type: string || null
++ *          l10nId: string,
++ *          l10nArgs: Array<Object> || null,
++ *          l10nAttrs: string ||null,
++ *        }}                                     l10nItems
++ * @param {{value: string, attrs: Object}} translations
++ * @returns boolean
++ * @private
++ */
++function sanitizeTranslationForNodeLocalize(l10nItem, translation) {
++  if (reOverlay.test(translation.value)) {
++    return false;
++  }
++
++  if (translation.attributes) {
++    const explicitlyAllowed = l10nItem.l10nAttrs === null ? null :
++      l10nItem.l10nAttrs.split(",").map(i => i.trim());
++    for (const [j, {name}] of translation.attributes.entries()) {
++      if (!isAttrNameLocalizable(name, l10nItem, explicitlyAllowed)) {
++        translation.attributes.splice(j, 1);
++      }
++    }
++  }
++  return true;
++}
++
+ const L10NID_ATTR_NAME = "data-l10n-id";
+ const L10NARGS_ATTR_NAME = "data-l10n-args";
+ 
+@@ -568,6 +607,59 @@
+    * @returns {Promise}
+    */
+   translateFragment(frag) {
++    if (frag.localize) {
++      // This is a temporary fast-path offered by Gecko to workaround performance
++      // issues coming from Fluent and XBL+Stylo performing unnecesary
++      // operations during startup.
++      // For details see bug 1441037, bug 1442262, and bug 1363862.
++
++      // A sparse array which will store translations separated out from
++      // all translations that is needed for DOM Overlay.
++      const overlayTranslations = [];
++
++      const getTranslationsForItems = async l10nItems => {
++        const keys = l10nItems.map(l10nItem => [l10nItem.l10nId, l10nItem.l10nArgs]);
++        const translations = await this.formatMessages(keys);
++
++        // Here we want to separate out elements that require DOM Overlays.
++        // Those elements will have to be translated using our JS
++        // implementation, while everything else is going to use the fast-path.
++        for (const [i, translation] of translations.entries()) {
++          if (translation === undefined) {
++            continue;
++          }
++
++          const hasOnlyText =
++            sanitizeTranslationForNodeLocalize(l10nItems[i], translation);
++          if (!hasOnlyText) {
++            // Removing from translations to make Node.localize skip it.
++            // We will translate it below using JS DOM Overlays.
++            overlayTranslations[i] = translations[i];
++            translations[i] = undefined;
++          }
++        }
++
++        // We pause translation observing here because Node.localize
++        // will translate the whole DOM next, using the `translations`.
++        //
++        // The observer will be resumed after DOM Overlays are localized
++        // in the next microtask.
++        this.pauseObserving();
++        return translations;
++      };
++
++      return frag.localize(getTranslationsForItems.bind(this))
++        .then(untranslatedElements => {
++          for (let i = 0; i < overlayTranslations.length; i++) {
++            if (overlayTranslations[i] !== undefined &&
++                untranslatedElements[i] !== undefined) {
++              translateElement(untranslatedElements[i], overlayTranslations[i]);
++            }
++          }
++          this.resumeObserving();
++        })
++        .catch(() => this.resumeObserving());
++    }
+     return this.translateElements(this.getTranslatables(frag));
+   }
+ 
+@@ -647,37 +739,5 @@
    }
  }
  
 -/* global L10nRegistry, Services */
+-
 -/**
 - * The default localization strategy for Gecko. It comabines locales
 - * available in L10nRegistry, with locales requested by the user to
@@ -47,38 +166,82 @@ diff -uNr ./dist/DOMLocalization.jsm /home/zbraniecki/projects/mozilla-unified/i
 -}
 -
 -this.DOMLocalization = GeckoDOMLocalization;
+-this.EXPORTED_SYMBOLS = ["DOMLocalization"];
 +this.DOMLocalization = DOMLocalization;
- this.EXPORTED_SYMBOLS = ['DOMLocalization'];
++var EXPORTED_SYMBOLS = ["DOMLocalization"];
 diff -uNr ./dist/l10n.js /home/zbraniecki/projects/mozilla-unified/intl/l10n/l10n.js
---- ./dist/l10n.js	2018-01-30 13:46:58.749811101 -0800
-+++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/l10n.js	2018-01-26 20:52:09.106650798 -0800
-@@ -1,7 +1,6 @@
+--- ./dist/l10n.js	2018-04-13 08:25:21.307139138 -0700
++++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/l10n.js	2018-04-13 08:27:25.230296529 -0700
+@@ -1,20 +1,26 @@
 -/* global Components, document, window */
  {
    const { DOMLocalization } =
--    Components.utils.import('resource://gre/modules/DOMLocalization.jsm');
-+    Components.utils.import("resource://gre/modules/DOMLocalization.jsm");
+-    Components.utils.import("resource://gre/modules/DOMLocalization.jsm");
++    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
  
    /**
     * Polyfill for document.ready polyfill.
-diff -uNr ./dist/Localization.jsm /home/zbraniecki/projects/mozilla-unified/intl/l10n/Localization.jsm
---- ./dist/Localization.jsm	2018-01-30 13:46:58.393144450 -0800
-+++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/Localization.jsm	2018-01-30 13:46:04.593146834 -0800
-@@ -18,92 +18,16 @@
+    * See: https://github.com/whatwg/html/issues/127 for details.
+    *
++   * XXX: The callback is a temporary workaround for bug 1193394. Once Promises in Gecko
++   *      start beeing a microtask and stop pushing translation post-layout, we can
++   *      remove it and start using the returned Promise again.
++   *
++   * @param {Function} callback - function to be called when the document is ready.
+    * @returns {Promise}
+    */
+-  function documentReady() {
++  function documentReady(callback) {
+     if (document.contentType === "application/vnd.mozilla.xul+xml") {
+       // XUL
+       return new Promise(
+         resolve => document.addEventListener(
+-          "MozBeforeInitialXULLayout", resolve, { once: true }
++          "MozBeforeInitialXULLayout", () => {
++            resolve(callback());
++          }, { once: true }
+         )
+       );
+     }
+@@ -22,11 +28,13 @@
+     // HTML
+     const rs = document.readyState;
+     if (rs === "interactive" || rs === "completed") {
+-      return Promise.resolve();
++      return Promise.resolve(callback);
+     }
+     return new Promise(
+       resolve => document.addEventListener(
+-        "readystatechange", resolve, { once: true }
++        "readystatechange", () => {
++          resolve(callback());
++        }, { once: true }
+       )
+     );
+   }
+@@ -50,11 +58,8 @@
+   // trigger first context to be fetched eagerly
+   document.l10n.ctxs.touchNext();
  
- /* fluent@0.6.0 */
+-  document.l10n.ready = documentReady().then(() => {
++  document.l10n.ready = documentReady(() => {
+     document.l10n.registerObservers();
+-    window.addEventListener("unload", () => {
+-      document.l10n.unregisterObservers();
+-    });
+     document.l10n.connectRoot(document.documentElement);
+     return document.l10n.translateRoots();
+   });
+diff -uNr ./dist/Localization.jsm /home/zbraniecki/projects/mozilla-unified/intl/l10n/Localization.jsm
+--- ./dist/Localization.jsm	2018-04-13 08:25:20.946138732 -0700
++++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/Localization.jsm	2018-04-13 08:27:16.396155987 -0700
+@@ -18,70 +18,13 @@
+ 
+ /* fluent-dom@0.2.0 */
  
 -/*  eslint no-magic-numbers: [0]  */
 -
 -/* global Intl */
--
--/**
-- * The `FluentType` class is the base of Fluent's type system.
-- *
-- * Fluent types wrap JavaScript values and store additional configuration for
-- * them, which can then be used in the `toString` method together with a proper
-- * `Intl` formatter.
-- */
 -
 -/**
 - * @overview
@@ -142,30 +305,14 @@ diff -uNr ./dist/Localization.jsm /home/zbraniecki/projects/mozilla-unified/intl
 - *      Set of patterns already encountered during this resolution.
 - *      This is used to prevent cyclic resolutions.
 - */
-+const Cu = Components.utils;
-+const Cc = Components.classes;
-+const Ci = Components.interfaces;
- 
--/**
-- * Message contexts are single-language stores of translations.  They are
-- * responsible for parsing translation resources in the Fluent syntax and can
-- * format translation units (entities) to strings.
-- *
-- * Always use `MessageContext.format` to retrieve translation units from
-- * a context.  Translations can contain references to other entities or
-- * external arguments, conditional logic in form of select expressions, traits
-- * which describe their grammatical features, and can use Fluent builtins which
-- * make use of the `Intl` formatters to format numbers, dates, lists and more
-- * into the context's language.  See the documentation of the Fluent syntax for
-- * more information.
-- */
-+const { L10nRegistry } = Cu.import("resource://gre/modules/L10nRegistry.jsm", {});
-+const LocaleService = Cc["@mozilla.org/intl/localeservice;1"].getService(Ci.mozILocaleService);
-+const ObserverService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
++const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
++const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
++const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
++const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
  
  /*
   * CachedIterable caches the elements yielded by an iterable.
-@@ -170,87 +94,6 @@
+@@ -148,58 +91,19 @@
    }
  }
  
@@ -212,75 +359,30 @@ diff -uNr ./dist/Localization.jsm /home/zbraniecki/projects/mozilla-unified/intl
 - */
 -
 -/*
-- * Synchronously map an identifier or an array of identifiers to the best
-- * `MessageContext` instance(s).
-- *
-- * @param {Iterable} iterable
-- * @param {string|Array<string>} ids
-- * @returns {MessageContext|Array<MessageContext>}
-- */
--
--
--/*
-- * Asynchronously map an identifier or an array of identifiers to the best
-- * `MessageContext` instance(s).
-- *
-- * @param {AsyncIterable} iterable
-- * @param {string|Array<string>} ids
-- * @returns {Promise<MessageContext|Array<MessageContext>>}
-- */
--
--/**
-- * Template literal tag for dedenting FTL code.
-- *
-- * Strip the common indent of non-blank lines. Remove blank lines.
-- *
-- * @param {Array<string>} strings
-- */
--
--/*
 - * @module fluent
 - * @overview
 - *
 - * `fluent` is a JavaScript implementation of Project Fluent, a localization
 - * framework designed to unleash the expressive power of the natural language.
-- *
-- */
--
--/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
--/* global console */
--
- /**
-  * Specialized version of an Error used to indicate errors that are result
-  * of a problem during the localization process.
-@@ -269,6 +112,26 @@
-   }
- }
- 
-+ /**
++/**
 + * The default localization strategy for Gecko. It comabines locales
 + * available in L10nRegistry, with locales requested by the user to
 + * generate the iterator over MessageContexts.
-+ *
+  *
 + * In the future, we may want to allow certain modules to override this
 + * with a different negotitation strategy to allow for the module to
 + * be localized into a different language - for example DevTools.
-+ */
+  */
+-
+-/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
 +function defaultGenerateMessages(resourceIds) {
-+  const availableLocales = L10nRegistry.getAvailableLocales();
-+
-+  const requestedLocales = LocaleService.getRequestedLocales();
-+  const defaultLocale = LocaleService.defaultLocale;
-+  const locales = LocaleService.negotiateLanguages(
-+    requestedLocales, availableLocales, defaultLocale,
-+  );
-+  return L10nRegistry.generateContexts(locales, resourceIds);
++  const appLocales = Services.locale.getAppLocalesAsLangTags();
++  return L10nRegistry.generateContexts(appLocales, resourceIds);
 +}
-+
+ 
  /**
   * The `Localization` class is a central high-level API for vanilla
-  * JavaScript use of Fluent.
-@@ -283,7 +146,7 @@
+@@ -215,7 +119,7 @@
     *
     * @returns {Localization}
     */
@@ -289,35 +391,35 @@ diff -uNr ./dist/Localization.jsm /home/zbraniecki/projects/mozilla-unified/intl
      this.resourceIds = resourceIds;
      this.generateMessages = generateMessages;
      this.ctxs = new CachedIterable(this.generateMessages(this.resourceIds));
-@@ -303,7 +166,7 @@
-    */
+@@ -236,7 +140,7 @@
    async formatWithFallback(keys, method) {
      const translations = [];
+ 
 -    for (let ctx of this.ctxs) {
 +    for await (let ctx of this.ctxs) {
        // This can operate on synchronous and asynchronous
        // contexts coming from the iterator.
-       if (typeof ctx.then === 'function') {
-@@ -394,8 +257,38 @@
+       if (typeof ctx.then === "function") {
+@@ -248,7 +152,7 @@
+         break;
+       }
+ 
+-      if (typeof console !== "undefined") {
++      if (AppConstants.NIGHTLY_BUILD) {
+         const locale = ctx.locales[0];
+         const ids = Array.from(missingIds).join(", ");
+         console.warn(`Missing translations in ${locale}: ${ids}`);
+@@ -335,8 +239,28 @@
      return val;
    }
  
 -  handleEvent() {
 -    this.onLanguageChange();
 +  /**
-+   * Register observers on events that will trigger cache invalidation
++   * Register weak observers on events that will trigger cache invalidation
 +   */
 +  registerObservers() {
-+    ObserverService.addObserver(this, 'l10n:available-locales-changed', false);
-+    ObserverService.addObserver(this, 'intl:requested-locales-changed', false);
-+  }
-+
-+  /**
-+   * Unregister observers on events that will trigger cache invalidation
-+   */
-+  unregisterObservers() {
-+    ObserverService.removeObserver(this, 'l10n:available-locales-changed');
-+    ObserverService.removeObserver(this, 'intl:requested-locales-changed');
++    Services.obs.addObserver(this, "intl:app-locales-changed", true);
 +  }
 +
 +  /**
@@ -329,8 +431,7 @@ diff -uNr ./dist/Localization.jsm /home/zbraniecki/projects/mozilla-unified/intl
 +   */
 +  observe(subject, topic, data) {
 +    switch (topic) {
-+      case 'l10n:available-locales-changed':
-+      case 'intl:requested-locales-changed':
++      case "intl:app-locales-changed":
 +        this.onLanguageChange();
 +        break;
 +      default:
@@ -339,18 +440,27 @@ diff -uNr ./dist/Localization.jsm /home/zbraniecki/projects/mozilla-unified/intl
    }
  
    /**
-@@ -538,7 +431,8 @@
-       hasErrors = true;
-     }
+@@ -348,6 +272,10 @@
+   }
+ }
  
--    if (messageErrors.length && typeof console !== 'undefined') {
-+    if (messageErrors.length) {
-+      const { console } = Cu.import("resource://gre/modules/Console.jsm", {});
-       messageErrors.forEach(error => console.warn(error));
-     }
-   });
-@@ -546,45 +440,5 @@
-   return hasErrors;
++Localization.prototype.QueryInterface = XPCOMUtils.generateQI([
++  Ci.nsISupportsWeakReference
++]);
++
+ /**
+  * Format the value of a message into a string.
+  *
+@@ -368,6 +296,7 @@
+  */
+ function valueFromContext(ctx, errors, id, args) {
+   const msg = ctx.getMessage(id);
++
+   return ctx.format(msg, args, errors);
+ }
+ 
+@@ -467,44 +396,5 @@
+   return missingIds;
  }
  
 -/* global Components */
@@ -361,12 +471,11 @@ diff -uNr ./dist/Localization.jsm /home/zbraniecki/projects/mozilla-unified/intl
 -const Ci = Components.interfaces;
 -
 -const { L10nRegistry } =
--  Cu.import('resource://gre/modules/L10nRegistry.jsm', {});
+-  Cu.import("resource://gre/modules/L10nRegistry.jsm", {});
 -const ObserverService =
--  Cc['@mozilla.org/observer-service;1'].getService(Ci.nsIObserverService);
+-  Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
 -const { Services } =
--  Cu.import('resource://gre/modules/Services.jsm', {});
--
+-  Cu.import("resource://gre/modules/Services.jsm", {});
 -
 -/**
 - * The default localization strategy for Gecko. It comabines locales
@@ -394,12 +503,22 @@ diff -uNr ./dist/Localization.jsm /home/zbraniecki/projects/mozilla-unified/intl
 -}
 -
 -this.Localization = GeckoLocalization;
+-this.EXPORTED_SYMBOLS = ["Localization"];
 +this.Localization = Localization;
- this.EXPORTED_SYMBOLS = ['Localization'];
++var EXPORTED_SYMBOLS = ["Localization"];
 diff -uNr ./dist/MessageContext.jsm /home/zbraniecki/projects/mozilla-unified/intl/l10n/MessageContext.jsm
---- ./dist/MessageContext.jsm	2018-01-30 13:46:58.119811129 -0800
-+++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/MessageContext.jsm	2018-01-30 13:53:23.036460739 -0800
-@@ -1838,90 +1838,5 @@
+--- ./dist/MessageContext.jsm	2018-04-13 08:25:20.698138486 -0700
++++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/MessageContext.jsm	2018-04-13 08:27:20.944227388 -0700
+@@ -16,7 +16,7 @@
+  */
+ 
+ 
+-/* fluent-dom@0.2.0 */
++/* fluent@0.6.3 */
+ 
+ /*  eslint no-magic-numbers: [0]  */
+ 
+@@ -1858,63 +1858,5 @@
    }
  }
  
@@ -453,33 +572,6 @@ diff -uNr ./dist/MessageContext.jsm /home/zbraniecki/projects/mozilla-unified/in
 - */
 -
 -/*
-- * Synchronously map an identifier or an array of identifiers to the best
-- * `MessageContext` instance(s).
-- *
-- * @param {Iterable} iterable
-- * @param {string|Array<string>} ids
-- * @returns {MessageContext|Array<MessageContext>}
-- */
--
--
--/*
-- * Asynchronously map an identifier or an array of identifiers to the best
-- * `MessageContext` instance(s).
-- *
-- * @param {AsyncIterable} iterable
-- * @param {string|Array<string>} ids
-- * @returns {Promise<MessageContext|Array<MessageContext>>}
-- */
--
--/**
-- * Template literal tag for dedenting FTL code.
-- *
-- * Strip the common indent of non-blank lines. Remove blank lines.
-- *
-- * @param {Array<string>} strings
-- */
--
--/*
 - * @module fluent
 - * @overview
 - *
@@ -489,4 +581,5 @@ diff -uNr ./dist/MessageContext.jsm /home/zbraniecki/projects/mozilla-unified/in
 - */
 -
  this.MessageContext = MessageContext;
- this.EXPORTED_SYMBOLS = ['MessageContext'];
+-this.EXPORTED_SYMBOLS = ["MessageContext"];
++var EXPORTED_SYMBOLS = ["MessageContext"];
