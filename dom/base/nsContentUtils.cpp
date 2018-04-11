@@ -276,6 +276,7 @@ nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nullptr;
 
 bool nsContentUtils::sIsHandlingKeyBoardEvent = false;
 bool nsContentUtils::sAllowXULXBL_for_file = false;
+bool nsContentUtils::sDisablePopups = false;
 
 nsString* nsContentUtils::sShiftText = nullptr;
 nsString* nsContentUtils::sControlText = nullptr;
@@ -732,6 +733,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sIsBytecodeCacheEnabled,
                                "dom.script_loader.bytecode_cache.enabled", false);
+
+  Preferences::AddBoolVarCache(&sDisablePopups,
+                               "dom.disable_open_during_load", false);
 
   Preferences::AddIntVarCache(&sBytecodeCacheStrategy,
                               "dom.script_loader.bytecode_cache.strategy", 0);
@@ -11012,4 +11016,25 @@ nsContentUtils::InnerOrOuterWindowDestroyed()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInnerOrOuterWindowCount > 0);
   --sInnerOrOuterWindowCount;
+}
+
+/* static */ bool
+nsContentUtils::CanShowPopup(nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(aPrincipal);
+  uint32_t permit;
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+    services::GetPermissionManager();
+
+  if (permissionManager &&
+      NS_SUCCEEDED(permissionManager->TestPermissionFromPrincipal(aPrincipal, "popup", &permit))) {
+    if (permit == nsIPermissionManager::ALLOW_ACTION) {
+      return true;
+    }
+    if (permit == nsIPermissionManager::DENY_ACTION) {
+      return false;
+    }
+  }
+
+  return !sDisablePopups;
 }
