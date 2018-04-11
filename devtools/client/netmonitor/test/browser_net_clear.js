@@ -13,7 +13,6 @@ add_task(async function() {
 
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let detailsPanelToggleButton = document.querySelector(".network-details-panel-toggle");
   let clearButton = document.querySelector(".requests-list-clear-button");
 
   store.dispatch(Actions.batchEnable(false));
@@ -40,11 +39,11 @@ add_task(async function() {
   assertSingleRequestState();
 
   // Make sure we can now open the network details panel
-  EventUtils.sendMouseEvent({ type: "click" }, detailsPanelToggleButton);
-
-  ok(document.querySelector(".network-details-panel") &&
+  store.dispatch(Actions.toggleNetworkDetails());
+  let detailsPanelToggleButton = document.querySelector(".sidebar-toggle");
+  ok(detailsPanelToggleButton &&
     !detailsPanelToggleButton.classList.contains("pane-collapsed"),
-    "The details pane should be visible after clicking the toggle button.");
+    "The details pane should be visible.");
 
   // Click clear and make sure the details pane closes
   EventUtils.sendMouseEvent({ type: "click" }, clearButton);
@@ -61,8 +60,6 @@ add_task(async function() {
   function assertSingleRequestState() {
     is(store.getState().requests.requests.size, 1,
       "The request menu should have one item at this point.");
-    is(detailsPanelToggleButton.hasAttribute("disabled"), false,
-      "The pane toggle button should be enabled after a request is made.");
   }
 
   /**
@@ -71,7 +68,5 @@ add_task(async function() {
   function assertNoRequestState() {
     is(store.getState().requests.requests.size, 0,
       "The request menu should be empty at this point.");
-    is(detailsPanelToggleButton.hasAttribute("disabled"), true,
-      "The pane toggle button should be disabled when the request menu is cleared.");
   }
 });
