@@ -119,10 +119,15 @@ dtls13_SendAck(sslSocket *ss)
     SECStatus rv = SECSuccess;
     PRCList *cursor;
     PRInt32 sent;
+    unsigned int offset;
 
     SSL_TRC(10, ("%d: SSL3[%d]: Sending ACK",
                  SSL_GETPID(), ss->fd));
 
+    rv = sslBuffer_Skip(&buf, 2, &offset);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
     for (cursor = PR_LIST_HEAD(&ss->ssl3.hs.dtlsRcvdHandshake);
          cursor != &ss->ssl3.hs.dtlsRcvdHandshake;
          cursor = PR_NEXT_LINK(cursor)) {
@@ -134,6 +139,11 @@ dtls13_SendAck(sslSocket *ss)
         if (rv != SECSuccess) {
             goto loser;
         }
+    }
+
+    rv = sslBuffer_InsertLength(&buf, offset, 2);
+    if (rv != SECSuccess) {
+        goto loser;
     }
 
     ssl_GetXmitBufLock(ss);
@@ -401,6 +411,7 @@ dtls13_HandleAck(sslSocket *ss, sslBuffer *databuf)
 {
     PRUint8 *b = databuf->buf;
     PRUint32 l = databuf->len;
+    unsigned int length;
     SECStatus rv;
 
     /* Ensure we don't loop. */
@@ -409,10 +420,19 @@ dtls13_HandleAck(sslSocket *ss, sslBuffer *databuf)
     PORT_Assert(IS_DTLS(ss));
     if (!tls13_MaybeTls13(ss)) {
         tls13_FatalError(ss, SSL_ERROR_RX_UNKNOWN_RECORD_TYPE, illegal_parameter);
-        return SECSuccess;
+        return SECFailure;
     }
 
     SSL_TRC(10, ("%d: SSL3[%d]: Handling ACK", SSL_GETPID(), ss->fd));
+    rv = ssl3_ConsumeHandshakeNumber(ss, &length, 2, &b, &l);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    if (length != l) {
+        tls13_FatalError(ss, SSL_ERROR_RX_MALFORMED_DTLS_ACK, decode_error);
+        return SECFailure;
+    }
+
     while (l > 0) {
         PRUint64 seq;
         PRCList *cursor;

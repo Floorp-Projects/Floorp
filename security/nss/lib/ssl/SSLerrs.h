@@ -543,3 +543,9 @@ ER3(SSL_ERROR_TOO_MANY_KEY_UPDATES, (SSL_ERROR_BASE + 171),
 
 ER3(SSL_ERROR_HANDSHAKE_FAILED, (SSL_ERROR_BASE + 172),
     "SSL handshake has already failed. No more operations possible.")
+
+ER3(SSL_ERROR_BAD_RESUMPTION_TOKEN_ERROR, (SSL_ERROR_BASE + 173),
+    "SSL received an invalid resumption token.")
+
+ER3(SSL_ERROR_RX_MALFORMED_DTLS_ACK, (SSL_ERROR_BASE + 174),
+    "SSL received a malformed DTLS ACK")

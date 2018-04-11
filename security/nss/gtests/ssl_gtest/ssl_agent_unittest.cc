@@ -145,6 +145,35 @@ TEST_F(TlsAgentDgramTestClient, EncryptedExtensionsInClearTwoPieces) {
                  SSL_ERROR_RX_UNEXPECTED_HANDSHAKE);
 }
 
+TEST_F(TlsAgentDgramTestClient, AckWithBogusLengthField) {
+  EnsureInit();
+  // Length doesn't match
+  const uint8_t ackBuf[] = {0x00, 0x08, 0x00};
+  DataBuffer record;
+  MakeRecord(variant_, kTlsAckType, SSL_LIBRARY_VERSION_TLS_1_2, ackBuf,
+             sizeof(ackBuf), &record, 0);
+  agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
+                          SSL_LIBRARY_VERSION_TLS_1_3);
+  ExpectAlert(kTlsAlertDecodeError);
+  ProcessMessage(record, TlsAgent::STATE_ERROR,
+                 SSL_ERROR_RX_MALFORMED_DTLS_ACK);
+}
+
+TEST_F(TlsAgentDgramTestClient, AckWithNonEvenLength) {
+  EnsureInit();
+  // Length isn't a multiple of 8
+  const uint8_t ackBuf[] = {0x00, 0x01, 0x00};
+  DataBuffer record;
+  MakeRecord(variant_, kTlsAckType, SSL_LIBRARY_VERSION_TLS_1_2, ackBuf,
+             sizeof(ackBuf), &record, 0);
+  agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
+                          SSL_LIBRARY_VERSION_TLS_1_3);
+  // Because we haven't negotiated the version,
+  // ssl3_DecodeError() sends an older (pre-TLS error).
+  ExpectAlert(kTlsAlertIllegalParameter);
+  ProcessMessage(record, TlsAgent::STATE_ERROR, SSL_ERROR_BAD_SERVER);
+}
+
 TEST_F(TlsAgentStreamTestClient, Set0RttOptionThenWrite) {
   EnsureInit();
   agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
