@@ -28,8 +28,8 @@
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP
 
-#define CSS_PROP_ALIAS(name, aliasid_, id, method, pref) \
-  DO_PROP(name, method, id, 0, pref, "alias")
+#define CSS_PROP_ALIAS(name, aliasid, id, method, pref) \
+  DO_PROP(name, method, aliasid, 0, pref, "alias")
 
 #include "nsCSSPropAliasList.h"
 

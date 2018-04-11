@@ -57,7 +57,7 @@ def generate_idl_names(properties):
 def generate_assertions(properties):
     def enum(p):
         if p["proptype"] is "alias":
-            return "eCSSPropertyAlias_%s" % p["prop"]
+            return "eCSSPropertyAlias_%s" % p["id"]
         else:
             return "eCSSProperty_%s" % p["id"]
     msg = ('static_assert(%s == %d, "GenerateCSSPropsGenerated.py did not list '
