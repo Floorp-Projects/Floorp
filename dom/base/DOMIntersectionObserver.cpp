@@ -415,27 +415,25 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
 
     double intersectionRatio;
     if (targetArea > 0.0) {
-      intersectionRatio = (double) intersectionArea / (double) targetArea;
+      intersectionRatio =
+        std::min((double) intersectionArea / (double) targetArea, 1.0);
     } else {
       intersectionRatio = intersectionRect.isSome() ? 1.0 : 0.0;
     }
 
     int32_t threshold = -1;
-    if (intersectionRatio > 0.0) {
-      if (intersectionRatio >= 1.0) {
-        intersectionRatio = 1.0;
-        threshold = (int32_t)mThresholds.Length();
-      } else {
-        for (size_t k = 0; k < mThresholds.Length(); ++k) {
-          if (mThresholds[k] <= intersectionRatio) {
-            threshold = (int32_t)k + 1;
-          } else {
-            break;
-          }
-        }
+    if (intersectionRect.isSome()) {
+      // Spec: "Let thresholdIndex be the index of the first entry in
+      // observer.thresholds whose value is greater than intersectionRatio."
+      threshold = mThresholds.IndexOfFirstElementGt(intersectionRatio);
+      if (threshold == 0) {
+        // Per the spec, we should leave threshold at 0 and distinguish between
+        // "less than all thresholds and intersecting" and "not intersecting"
+        // (queuing observer entries as both cases come to pass). However,
+        // neither Chrome nor the WPT tests expect this behavior, so treat these
+        // two cases as one.
+        threshold = -1;
       }
-    } else if (intersectionRect.isSome()) {
-      threshold = 0;
     }
 
     if (target->UpdateIntersectionObservation(this, threshold)) {
