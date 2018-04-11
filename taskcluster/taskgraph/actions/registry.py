@@ -177,9 +177,11 @@ def register_callback_action(name, title, symbol, description, order=10000,
             if not available(parameters):
                 return None
 
-            match = re.match(r'https://(hg.mozilla.org)/(.*?)/?$', parameters['head_repository'])
+            repo_param = '{}head_repository'.format(graph_config['project-repo-param-prefix'])
+            revision = parameters['{}head_rev'.format(graph_config['project-repo-param-prefix'])]
+            match = re.match(r'https://(hg.mozilla.org)/(.*?)/?$', parameters[repo_param])
             if not match:
-                raise Exception('Unrecognized head_repository')
+                raise Exception('Unrecognized {}'.format(repo_param))
             repo_scope = 'assume:repo:{}/{}:branch:default'.format(
                 match.group(1), match.group(2))
 
@@ -198,14 +200,14 @@ def register_callback_action(name, title, symbol, description, order=10000,
                     '$let': {
                         'tasks_for': 'action',
                         'repository': {
-                            'url': parameters['head_repository'],
+                            'url': parameters[repo_param],
                             'project': parameters['project'],
                             'level': parameters['level'],
                         },
                         'push': {
                             'owner': 'mozilla-taskcluster-maintenance@mozilla.com',
                             'pushlog_id': parameters['pushlog_id'],
-                            'revision': parameters['head_rev'],
+                            'revision': revision,
                         },
                         'action': {
                             'name': name,
