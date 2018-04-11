@@ -748,6 +748,9 @@ public:
     // to each other.
     return aRadii.width == aRadii.height;
   }
+  nscoord LineEdge(const nscoord aBStart,
+                   const nscoord aBEnd,
+                   bool aLeft) const;
   nscoord LineLeft(const nscoord aBStart,
                    const nscoord aBEnd) const override;
   nscoord LineRight(const nscoord aBStart,
@@ -827,39 +830,237 @@ nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
     return;
   }
 
-  NS_ERROR("shape-margin > 0 not yet implemented for ellipse.");
+  // We have to calculate a distance field from the ellipse edge, then build
+  // intervals based on pixels with less than aShapeMargin distance to an
+  // edge pixel.
+
+  // mCenter and mRadii have already been translated into logical coordinates.
+  // x = inline, y = block. Due to symmetry, we only need to calculate the
+  // distance field for one quadrant of the ellipse. We choose the positive-x,
+  // positive-y quadrant (the lower right quadrant in horizontal-tb writing
+  // mode). We choose this quadrant because it allows us to traverse our
+  // distance field in memory order, which is more cache efficient.
+  // When we apply these intervals in LineLeft() and LineRight(), we
+  // account for block ranges that hit other quadrants, or hit multiple
+  // quadrants.
+
+  // Given this setup, computing the distance field is a one-pass O(n)
+  // operation that runs from block top-to-bottom, inline left-to-right. We
+  // use a chamfer 5-7-11 5x5 matrix to compute minimum distance to an edge
+  // pixel. This integer math computation is reasonably close to the true
+  // Euclidean distance. The distances will be approximately 5x the true
+  // distance, quantized in integer units. The 5x is factored away in the
+  // comparison which builds the intervals.
+
+  // Our distance field has to be able to hold values equal to the
+  // maximum shape-margin value that we care about faithfully rendering,
+  // times 5. A 16-bit unsigned int can represent up to ~ 65K which means
+  // we can handle a margin up to ~ 13K device pixels. That's good enough
+  // for practical usage. Any supplied shape-margin value higher than this
+  // maximum will be clamped.
+  typedef uint16_t dfType;
+  const dfType MAX_CHAMFER_VALUE = 11;
+  const dfType MAX_MARGIN = (std::numeric_limits<dfType>::max() -
+                             MAX_CHAMFER_VALUE) / 5;
+  const dfType MAX_MARGIN_5X = MAX_MARGIN * 5;
+
+  // Convert aShapeMargin to dev pixels, convert that into 5x-dev-pixel
+  // space, then clamp to MAX_MARGIN_5X.
+  float shapeMarginDevPixels =
+    NSAppUnitsToFloatPixels(aShapeMargin, aAppUnitsPerDevPixel);
+  int32_t shapeMarginDevPixelsInt5X =
+    NSToIntRound(5.0f * shapeMarginDevPixels);
+  NS_WARNING_ASSERTION(shapeMarginDevPixelsInt5X <= MAX_MARGIN_5X,
+                       "shape-margin is too large and is being clamped.");
+  dfType usedMargin5X = (dfType)std::min((int32_t)MAX_MARGIN_5X,
+                                         shapeMarginDevPixelsInt5X);
+
+  nsSize radiiPlusShapeMargin(mRadii.width + aShapeMargin,
+                              mRadii.height + aShapeMargin);
+  const LayoutDeviceIntSize bounds =
+    LayoutDevicePixel::FromAppUnitsRounded(radiiPlusShapeMargin,
+                                           aAppUnitsPerDevPixel);
+  // Since our distance field is computed with a 5x5 neighborhood, but only
+  // looks in the negative block and negative inline directions, it is
+  // effectively a 3x3 neighborhood. We need to expand our distance field
+  // outwards by a further 2 pixels in both axes (on the minimum block edge
+  // and the minimum inline edge). We call this edge area the expanded region.
+  static const int32_t iExpand = 2;
+  static const int32_t bExpand = 2;
+  const int32_t iSize = bounds.width + iExpand;
+  const int32_t bSize = bounds.height + bExpand;
+  auto df = MakeUniqueFallible<dfType[]>(iSize * bSize);
+  if (!df) {
+    // Without a distance field, we can't reason about the float area.
+    return;
+  }
+
+  // Single pass setting distance field, in positive block direction, three
+  // cases:
+  // 1) Expanded region pixel: set to MAX_MARGIN_5X.
+  // 2) Pixel within the ellipse: set to 0.
+  // 3) Other pixel: set to minimum neighborhood distance value, computed
+  //                 with 5-7-11 chamfer.
+
+  for (int32_t b = 0; b < bSize; ++b) {
+    bool bIsInExpandedRegion(b < bExpand);
+    nscoord bInAppUnits = (b - bExpand) * aAppUnitsPerDevPixel;
+    bool bIsMoreThanEllipseBEnd(bInAppUnits > mRadii.height);
+
+    // Find the i intercept of the ellipse edge for this block row, and
+    // adjust it to compensate for the expansion of the inline dimension.
+    // If we're in the expanded region, or if we're using a b that's more
+    // than the bStart of the ellipse, the intercept is nscoord_MIN.
+    const int32_t iIntercept = (bIsInExpandedRegion ||
+                                bIsMoreThanEllipseBEnd) ? nscoord_MIN :
+      iExpand + NSAppUnitsToIntPixels(
+        XInterceptAtY(bInAppUnits, mRadii.width, mRadii.height),
+        aAppUnitsPerDevPixel);
+
+    // Set iMax in preparation for this block row.
+    int32_t iMax = iIntercept;
+
+    for (int32_t i = 0; i < iSize; ++i) {
+      const int32_t index = i + b * iSize;
+
+      // Handle our three cases, in order.
+      if (i < iExpand ||
+          bIsInExpandedRegion) {
+        // Case 1: Expanded reqion pixel.
+        df[index] = MAX_MARGIN_5X;
+      } else if (i <= iIntercept) {
+        // Case 2: Pixel within the ellipse.
+        df[index] = 0;
+      } else {
+        // Case 3: Other pixel.
+
+        // Backward-looking neighborhood distance from target pixel X
+        // with chamfer 5-7-11 looks like:
+        //
+        // +--+--+--+
+        // |  |11|  |
+        // +--+--+--+
+        // |11| 7| 5|
+        // +--+--+--+
+        // |  | 5| X|
+        // +--+--+--+
+        //
+        // X should be set to the minimum of the values of all of the numbered
+        // neighbors summed with the value in that chamfer cell.
+        df[index] = std::min<dfType>(df[index - 1] + 5,
+                    std::min<dfType>(df[index - iSize] + 5,
+                    std::min<dfType>(df[index - iSize - 1] + 7,
+                    std::min<dfType>(df[index - iSize - 2] + 11,
+                                     df[index - (iSize * 2) - 1] + 11))));
+
+        // Check the df value and see if it's less than or equal to the
+        // usedMargin5X value.
+        if (df[index] <= usedMargin5X) {
+          MOZ_ASSERT(iMax < i);
+          iMax = i;
+        }
+      }
+    }
+
+    NS_WARNING_ASSERTION(bIsInExpandedRegion || iMax > nscoord_MIN,
+                         "Once past the expanded region, we should always "
+                         "find a pixel within the shape-margin distance for "
+                         "each block row.");
+
+    if (iMax > nscoord_MIN) {
+      // Origin for this interval is at the center of the ellipse, adjusted
+      // in the positive block direction by bInAppUnits.
+      nsPoint origin(aCenter.x, aCenter.y + bInAppUnits);
+      // Size is an inline iMax plus 1 (to account for the whole pixel) dev
+      // pixels, by 1 block dev pixel. We convert this to app units.
+      nsSize size((iMax - iExpand + 1) * aAppUnitsPerDevPixel,
+                  aAppUnitsPerDevPixel);
+      mIntervals.AppendElement(nsRect(origin, size));
+    }
+  }
+}
+
+nscoord
+nsFloatManager::EllipseShapeInfo::LineEdge(const nscoord aBStart,
+                                           const nscoord aBEnd,
+                                           bool aIsLineLeft) const
+{
+  // If no mShapeMargin, just compute the edge using math.
+  if (mShapeMargin == 0) {
+    nscoord lineDiff =
+      ComputeEllipseLineInterceptDiff(BStart(), BEnd(),
+                                      mRadii.width, mRadii.height,
+                                      mRadii.width, mRadii.height,
+                                      aBStart, aBEnd);
+    return mCenter.x + (aIsLineLeft ? (-mRadii.width + lineDiff) :
+                                      (mRadii.width - lineDiff));
+  }
+
+  // We are checking against our intervals. Make sure we have some.
+  if (mIntervals.IsEmpty()) {
+    NS_WARNING("With mShapeMargin > 0, we can't proceed without intervals.");
+    return 0;
+  }
+
+  // Map aBStart and aBEnd into our intervals. Our intervals are calculated
+  // for the lower-right quadrant (in terms of horizontal-tb writing mode).
+  // If aBStart and aBEnd span the center of the ellipse, then we know we
+  // are at the maximum displacement from the center.
+  bool bStartIsAboveCenter = (aBStart < mCenter.y);
+  bool bEndIsBelowOrAtCenter = (aBEnd >= mCenter.y);
+  if (bStartIsAboveCenter && bEndIsBelowOrAtCenter) {
+    return mCenter.x + (aIsLineLeft ? (-mRadii.width - mShapeMargin) :
+                                      (mRadii.width + mShapeMargin));
+  }
+
+  // aBStart and aBEnd don't span the center. Since the intervals are
+  // strictly wider approaching the center (the start of the mIntervals
+  // array), we only need to find the interval at the block value closest to
+  // the center. We find the min of aBStart, aBEnd, and their reflections --
+  // whichever two of them are within the lower-right quadrant. When we
+  // reflect from the upper-right quadrant to the lower-right, we have to
+  // subtract 1 from the reflection, to account that block values are always
+  // addressed from the leading block edge.
+
+  // The key example is when we check with aBStart == aBEnd at the top of the
+  // intervals. That block line would be considered contained in the
+  // intervals (though it has no height), but its reflection would not be
+  // within the intervals unless we subtract 1.
+  nscoord bSmallestWithinIntervals = std::min(
+    bStartIsAboveCenter ? aBStart + (mCenter.y - aBStart) * 2 - 1 : aBStart,
+    bEndIsBelowOrAtCenter ? aBEnd : aBEnd + (mCenter.y - aBEnd) * 2 - 1);
+
+  MOZ_ASSERT(bSmallestWithinIntervals >= mCenter.y &&
+             bSmallestWithinIntervals < BEnd(),
+             "We should have a block value within the intervals.");
+
+  size_t index = MinIntervalIndexContainingY(mIntervals,
+                                             bSmallestWithinIntervals);
+  MOZ_ASSERT(index < mIntervals.Length(),
+             "We should have found a matching interval for this block value.");
+
+  // The interval is storing the line right value. If aIsLineLeft is true,
+  // return the line right value reflected about the center. Since this is
+  // an inline measurement, it's just checking the distance to an edge, and
+  // not a collision with a specific pixel. For that reason, we don't need
+  // to subtract 1 from the reflection, as we did with the block reflection.
+  nscoord iLineRight = mIntervals[index].XMost();
+  return aIsLineLeft ? iLineRight - (iLineRight - mCenter.x) * 2
+                     : iLineRight;
 }
 
 nscoord
 nsFloatManager::EllipseShapeInfo::LineLeft(const nscoord aBStart,
                                            const nscoord aBEnd) const
 {
-  if (mShapeMargin == 0) {
-    nscoord lineLeftDiff =
-      ComputeEllipseLineInterceptDiff(BStart(), BEnd(),
-                                      mRadii.width, mRadii.height,
-                                      mRadii.width, mRadii.height,
-                                      aBStart, aBEnd);
-    return mCenter.x - mRadii.width + lineLeftDiff;
-  }
-  NS_ERROR("shape-margin > 0 not yet implemented for ellipse.");
-  return 0;
+  return LineEdge(aBStart, aBEnd, true);
 }
 
 nscoord
 nsFloatManager::EllipseShapeInfo::LineRight(const nscoord aBStart,
                                             const nscoord aBEnd) const
 {
-  if (mShapeMargin == 0) {
-    nscoord lineRightDiff =
-      ComputeEllipseLineInterceptDiff(BStart(), BEnd(),
-                                      mRadii.width, mRadii.height,
-                                      mRadii.width, mRadii.height,
-                                      aBStart, aBEnd);
-    return mCenter.x + mRadii.width - lineRightDiff;
-  }
-  NS_ERROR("shape-margin > 0 not yet implemented for ellipse.");
-  return 0;
+  return LineEdge(aBStart, aBEnd, false);
 }
 
 /////////////////////////////////////////////////////////////////////////////
