@@ -50,6 +50,10 @@ using nscolor from "nsColor.h";
 using class mozilla::WidgetCompositionEvent from "ipc/nsGUIEventIPC.h";
 using struct mozilla::widget::IMENotification from "mozilla/widget/IMEData.h";
 using struct mozilla::widget::IMENotificationRequests from "mozilla/widget/IMEData.h";
+using mozilla::widget::IMEState::Enabled from "mozilla/widget/IMEData.h";
+using mozilla::widget::IMEState::Open from "mozilla/widget/IMEData.h";
+using mozilla::widget::InputContextAction::Cause from "mozilla/widget/IMEData.h";
+using mozilla::widget::InputContextAction::FocusChange from "mozilla/widget/IMEData.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
@@ -345,17 +349,17 @@ parent:
                                 nsCString[] enabledCommands,
                                 nsCString[] disabledCommands);
 
-    nested(inside_cpow) sync GetInputContext() returns (int32_t IMEEnabled,
-                                                        int32_t IMEOpen);
+    nested(inside_cpow) sync GetInputContext() returns (Enabled IMEEnabled,
+                                                        Open IMEOpen);
 
-    nested(inside_cpow) async SetInputContext(int32_t IMEEnabled,
-                                              int32_t IMEOpen,
+    nested(inside_cpow) async SetInputContext(Enabled IMEEnabled,
+                                              Open IMEOpen,
                                               nsString type,
                                               nsString inputmode,
                                               nsString actionHint,
                                               bool inPrivateBrowsing,
-                                              int32_t cause,
-                                              int32_t focusChange);
+                                              Cause cause,
+                                              FocusChange focusChange);
 
     sync IsParentWindowMainWidgetVisible() returns (bool visible);
 
