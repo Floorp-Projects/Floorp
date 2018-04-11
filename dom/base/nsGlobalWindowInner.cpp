@@ -182,10 +182,6 @@
 #include "nsBindingManager.h"
 #include "nsXBLService.h"
 
-// used for popup blocking, needs to be converted to something
-// belonging to the back-end like nsIContentPolicy
-#include "nsIPopupWindowManager.h"
-
 #include "nsIDragService.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
