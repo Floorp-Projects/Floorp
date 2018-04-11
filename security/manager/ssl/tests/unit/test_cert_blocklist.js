@@ -166,18 +166,19 @@ converter.charset = "UTF-8";
 
 function verify_cert(file, expectedError) {
   let ee = constructCertFromFile(file);
-  checkCertErrorGeneric(certDB, ee, expectedError, certificateUsageSSLServer);
+  return checkCertErrorGeneric(certDB, ee, expectedError,
+                               certificateUsageSSLServer);
 }
 
 // The certificate blocklist currently only applies to TLS server certificates.
-function verify_non_tls_usage_succeeds(file) {
+async function verify_non_tls_usage_succeeds(file) {
   let ee = constructCertFromFile(file);
-  checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
-                        certificateUsageSSLClient);
-  checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
-                        certificateUsageEmailSigner);
-  checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
-                        certificateUsageEmailRecipient);
+  await checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
+                              certificateUsageSSLClient);
+  await checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
+                              certificateUsageEmailSigner);
+  await checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
+                              certificateUsageEmailRecipient);
 }
 
 function load_cert(cert, trust) {
@@ -309,7 +310,7 @@ function run_test() {
                        " c2VyaWFsMi4=": true }
                  };
 
-  add_test(function () {
+  add_task(async function() {
     // check some existing items in revocations.txt are blocked. Since the
     // CertBlocklistItems don't know about the data they contain, we can use
     // arbitrary data (not necessarily DER) to test if items are revoked or not.
@@ -336,25 +337,23 @@ function run_test() {
     // test-int-ee.pem.
     // Check the cert validates before we load the blocklist
     let file = "test_onecrl/test-int-ee.pem";
-    verify_cert(file, PRErrorCodeSuccess);
+    await verify_cert(file, PRErrorCodeSuccess);
 
     // The blocklist also revokes other-test-ca.pem, which issued
     // other-ca-ee.pem. Check the cert validates before we load the blocklist
     file = "bad_certs/other-issuer-ee.pem";
-    verify_cert(file, PRErrorCodeSuccess);
+    await verify_cert(file, PRErrorCodeSuccess);
 
     // The blocklist will revoke same-issuer-ee.pem via subject / pubKeyHash.
     // Check the cert validates before we load the blocklist
     file = "test_onecrl/same-issuer-ee.pem";
-    verify_cert(file, PRErrorCodeSuccess);
-
-    run_next_test();
+    await verify_cert(file, PRErrorCodeSuccess);
   });
 
   // blocklist load is async so we must use add_test from here
   add_task(fetch_blocklist);
 
-  add_test(function() {
+  add_task(async function() {
     // The blocklist will be loaded now. Let's check the data is sane.
     // In particular, we should still have the revoked issuer / serial pair
     // that was in both revocations.txt and the blocklist.
@@ -379,26 +378,26 @@ function run_test() {
 
     // Check the blocklisted intermediate now causes a failure
     let file = "test_onecrl/test-int-ee.pem";
-    verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
-    verify_non_tls_usage_succeeds(file);
+    await verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
+    await verify_non_tls_usage_succeeds(file);
 
     // Check the ee with the blocklisted root also causes a failure
     file = "bad_certs/other-issuer-ee.pem";
-    verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
-    verify_non_tls_usage_succeeds(file);
+    await verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
+    await verify_non_tls_usage_succeeds(file);
 
     // Check the ee blocked by subject / pubKey causes a failure
     file = "test_onecrl/same-issuer-ee.pem";
-    verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
-    verify_non_tls_usage_succeeds(file);
+    await verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
+    await verify_non_tls_usage_succeeds(file);
 
     // Check a non-blocklisted chain still validates OK
     file = "bad_certs/default-ee.pem";
-    verify_cert(file, PRErrorCodeSuccess);
+    await verify_cert(file, PRErrorCodeSuccess);
 
     // Check a bad cert is still bad (unknown issuer)
     file = "bad_certs/unknownissuer.pem";
-    verify_cert(file, SEC_ERROR_UNKNOWN_ISSUER);
+    await verify_cert(file, SEC_ERROR_UNKNOWN_ISSUER);
 
     // check that save with no further update is a no-op
     let lastModified = gRevocations.lastModifiedTime;
@@ -409,8 +408,6 @@ function run_test() {
     let newModified = gRevocations.lastModifiedTime;
     equal(lastModified, newModified,
           "saveEntries with no modifications should not update the backing file");
-
-    run_next_test();
   });
 
   add_test(function() {

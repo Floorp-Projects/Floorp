@@ -176,39 +176,53 @@ function getXPCOMStatusFromNSS(statusNSS) {
   return nssErrorsService.getXPCOMFromNSSError(statusNSS);
 }
 
+// Helper for checkCertErrorGenericAtTime
+class CertVerificationExpectedErrorResult {
+  constructor(certName, expectedError, expectedEVStatus, resolve) {
+    this.certName = certName;
+    this.expectedError = expectedError;
+    this.expectedEVStatus = expectedEVStatus;
+    this.resolve = resolve;
+  }
+
+  verifyCertFinished(aPRErrorCode, aVerifiedChain, aHasEVPolicy) {
+    equal(aPRErrorCode, this.expectedError,
+          `verifying ${this.certName}: should get error ${this.expectedError}`);
+    if (this.expectedEVStatus != undefined) {
+      equal(aHasEVPolicy, this.expectedEVStatus,
+            `verifying ${this.certName}: ` +
+            `should ${this.expectedEVStatus ? "be" : "not be"} EV`);
+    }
+    this.resolve();
+  }
+}
+
 // certdb implements nsIX509CertDB. See nsIX509CertDB.idl for documentation.
 // In particular, hostname is optional.
 function checkCertErrorGenericAtTime(certdb, cert, expectedError, usage, time,
-                                     /* optional */ hasEVPolicy,
+                                     /* optional */ isEVExpected,
                                      /* optional */ hostname) {
-  info(`cert cn=${cert.commonName}`);
-  info(`cert issuer cn=${cert.issuerCommonName}`);
-  let verifiedChain = {};
-  let error = certdb.verifyCertAtTime(cert, usage, NO_FLAGS, hostname, time,
-                                      verifiedChain, hasEVPolicy || {});
-  Assert.equal(error, expectedError,
-               "Actual and expected error should match");
+  return new Promise((resolve, reject) => {
+      let result = new CertVerificationExpectedErrorResult(
+        cert.commonName, expectedError, isEVExpected, resolve);
+      certdb.asyncVerifyCertAtTime(cert, usage, NO_FLAGS, hostname, time,
+                                   result);
+  });
 }
 
 // certdb implements nsIX509CertDB. See nsIX509CertDB.idl for documentation.
 // In particular, hostname is optional.
 function checkCertErrorGeneric(certdb, cert, expectedError, usage,
-                               /* optional */ hasEVPolicy,
-                               /* optional */ hostname) {
-  info(`cert cn=${cert.commonName}`);
-  info(`cert issuer cn=${cert.issuerCommonName}`);
-  let verifiedChain = {};
-  let error = certdb.verifyCertNow(cert, usage, NO_FLAGS, hostname,
-                                   verifiedChain, hasEVPolicy || {});
-  Assert.equal(error, expectedError,
-               "Actual and expected error should match");
+                                     /* optional */ isEVExpected,
+                                     /* optional */ hostname) {
+  let now = (new Date()).getTime() / 1000;
+  return checkCertErrorGenericAtTime(certdb, cert, expectedError, usage, now,
+                                     isEVExpected, hostname);
 }
 
 function checkEVStatus(certDB, cert, usage, isEVExpected) {
-  let hasEVPolicy = {};
-  checkCertErrorGeneric(certDB, cert, PRErrorCodeSuccess, usage, hasEVPolicy);
-  Assert.equal(hasEVPolicy.value, isEVExpected,
-               "Actual and expected EV status should match");
+  return checkCertErrorGeneric(certDB, cert, PRErrorCodeSuccess, usage,
+                               isEVExpected);
 }
 
 function _getLibraryFunctionWithNoArguments(functionName, libraryName,
@@ -672,6 +686,15 @@ function startOCSPResponder(serverPort, identity, nssDBLocation,
     }
   };
 }
+
+// Given an OCSP responder (see startOCSPResponder), returns a promise that
+// resolves when the responder has successfully stopped.
+function stopOCSPResponder(responder) {
+  return new Promise((resolve, reject) => {
+    responder.stop(resolve);
+  });
+}
+
 
 // A prototype for a fake, error-free sslstatus
 var FakeSSLStatus = function(certificate) {
