@@ -187,6 +187,7 @@ function MockWebSocket(originalURI, handlers = {}) {
   this._onUnregister = handlers.onUnregister;
   this._onACK = handlers.onACK;
   this._onPing = handlers.onPing;
+  this._onBroadcastSubscribe = handlers.onBroadcastSubscribe;
 }
 
 MockWebSocket.prototype = {
@@ -257,6 +258,13 @@ MockWebSocket.prototype = {
         // Echo ping packets.
         this.serverSendMsg('{}');
       }
+      break;
+
+    case 'broadcast_subscribe':
+      if (typeof this._onBroadcastSubscribe != 'function') {
+        throw new Error('Unexpected broadcast_subscribe');
+      }
+      this._onBroadcastSubscribe(request);
       break;
 
     default:
