@@ -91,10 +91,10 @@ NS_IMETHODIMP_(bool)
 HTMLTableColElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { nsGkAtoms::width },
-    { nsGkAtoms::align },
-    { nsGkAtoms::valign },
-    { nsGkAtoms::span },
+    { &nsGkAtoms::width },
+    { &nsGkAtoms::align },
+    { &nsGkAtoms::valign },
+    { &nsGkAtoms::span },
     { nullptr }
   };
 

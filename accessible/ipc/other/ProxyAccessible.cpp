@@ -127,7 +127,7 @@ ProxyAccessible::LandmarkRole() const
   return NS_GetStaticAtom(landmark);
 }
 
-nsStaticAtom*
+nsAtom*
 ProxyAccessible::ARIARoleAtom() const
 {
   nsString role;

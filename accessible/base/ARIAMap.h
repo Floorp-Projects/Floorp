@@ -142,7 +142,7 @@ struct nsRoleMapEntry
    * Return true if matches to the given ARIA role.
    */
   bool Is(nsAtom* aARIARole) const
-    { return roleAtom == aARIARole; }
+    { return *roleAtom == aARIARole; }
 
   /**
    * Return true if ARIA role has the given accessible type.
@@ -154,10 +154,10 @@ struct nsRoleMapEntry
    * Return ARIA role.
    */
   const nsDependentAtomString ARIARoleString() const
-    { return nsDependentAtomString(roleAtom); }
+    { return nsDependentAtomString(*roleAtom); }
 
   // ARIA role: string representation such as "button"
-  nsStaticAtom* const roleAtom;
+  nsStaticAtom** roleAtom;
 
   // Role mapping rule: maps to enum Role
   mozilla::a11y::role role;

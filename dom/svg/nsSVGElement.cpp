@@ -929,38 +929,38 @@ nsSVGElement::IsAttributeMapped(const nsAtom* name) const
 // PresentationAttributes-FillStroke
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sFillStrokeMap[] = {
-  { nsGkAtoms::fill },
-  { nsGkAtoms::fill_opacity },
-  { nsGkAtoms::fill_rule },
-  { nsGkAtoms::paint_order },
-  { nsGkAtoms::stroke },
-  { nsGkAtoms::stroke_dasharray },
-  { nsGkAtoms::stroke_dashoffset },
-  { nsGkAtoms::stroke_linecap },
-  { nsGkAtoms::stroke_linejoin },
-  { nsGkAtoms::stroke_miterlimit },
-  { nsGkAtoms::stroke_opacity },
-  { nsGkAtoms::stroke_width },
-  { nsGkAtoms::vector_effect },
+  { &nsGkAtoms::fill },
+  { &nsGkAtoms::fill_opacity },
+  { &nsGkAtoms::fill_rule },
+  { &nsGkAtoms::paint_order },
+  { &nsGkAtoms::stroke },
+  { &nsGkAtoms::stroke_dasharray },
+  { &nsGkAtoms::stroke_dashoffset },
+  { &nsGkAtoms::stroke_linecap },
+  { &nsGkAtoms::stroke_linejoin },
+  { &nsGkAtoms::stroke_miterlimit },
+  { &nsGkAtoms::stroke_opacity },
+  { &nsGkAtoms::stroke_width },
+  { &nsGkAtoms::vector_effect },
   { nullptr }
 };
 
 // PresentationAttributes-Graphics
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sGraphicsMap[] = {
-  { nsGkAtoms::clip_path },
-  { nsGkAtoms::clip_rule },
-  { nsGkAtoms::colorInterpolation },
-  { nsGkAtoms::cursor },
-  { nsGkAtoms::display },
-  { nsGkAtoms::filter },
-  { nsGkAtoms::image_rendering },
-  { nsGkAtoms::mask },
-  { nsGkAtoms::opacity },
-  { nsGkAtoms::pointer_events },
-  { nsGkAtoms::shape_rendering },
-  { nsGkAtoms::text_rendering },
-  { nsGkAtoms::visibility },
+  { &nsGkAtoms::clip_path },
+  { &nsGkAtoms::clip_rule },
+  { &nsGkAtoms::colorInterpolation },
+  { &nsGkAtoms::cursor },
+  { &nsGkAtoms::display },
+  { &nsGkAtoms::filter },
+  { &nsGkAtoms::image_rendering },
+  { &nsGkAtoms::mask },
+  { &nsGkAtoms::opacity },
+  { &nsGkAtoms::pointer_events },
+  { &nsGkAtoms::shape_rendering },
+  { &nsGkAtoms::text_rendering },
+  { &nsGkAtoms::visibility },
   { nullptr }
 };
 
@@ -968,90 +968,90 @@ nsSVGElement::sGraphicsMap[] = {
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sTextContentElementsMap[] = {
   // Properties that we don't support are commented out.
-  // { nsGkAtoms::alignment_baseline },
-  // { nsGkAtoms::baseline_shift },
-  { nsGkAtoms::direction },
-  { nsGkAtoms::dominant_baseline },
-  { nsGkAtoms::letter_spacing },
-  { nsGkAtoms::text_anchor },
-  { nsGkAtoms::text_decoration },
-  { nsGkAtoms::unicode_bidi },
-  { nsGkAtoms::word_spacing },
-  { nsGkAtoms::writing_mode },
+  // { &nsGkAtoms::alignment_baseline },
+  // { &nsGkAtoms::baseline_shift },
+  { &nsGkAtoms::direction },
+  { &nsGkAtoms::dominant_baseline },
+  { &nsGkAtoms::letter_spacing },
+  { &nsGkAtoms::text_anchor },
+  { &nsGkAtoms::text_decoration },
+  { &nsGkAtoms::unicode_bidi },
+  { &nsGkAtoms::word_spacing },
+  { &nsGkAtoms::writing_mode },
   { nullptr }
 };
 
 // PresentationAttributes-FontSpecification
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sFontSpecificationMap[] = {
-  { nsGkAtoms::font_family },
-  { nsGkAtoms::font_size },
-  { nsGkAtoms::font_size_adjust },
-  { nsGkAtoms::font_stretch },
-  { nsGkAtoms::font_style },
-  { nsGkAtoms::font_variant },
-  { nsGkAtoms::fontWeight },
+  { &nsGkAtoms::font_family },
+  { &nsGkAtoms::font_size },
+  { &nsGkAtoms::font_size_adjust },
+  { &nsGkAtoms::font_stretch },
+  { &nsGkAtoms::font_style },
+  { &nsGkAtoms::font_variant },
+  { &nsGkAtoms::fontWeight },
   { nullptr }
 };
 
 // PresentationAttributes-GradientStop
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sGradientStopMap[] = {
-  { nsGkAtoms::stop_color },
-  { nsGkAtoms::stop_opacity },
+  { &nsGkAtoms::stop_color },
+  { &nsGkAtoms::stop_opacity },
   { nullptr }
 };
 
 // PresentationAttributes-Viewports
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sViewportsMap[] = {
-  { nsGkAtoms::overflow },
-  { nsGkAtoms::clip },
+  { &nsGkAtoms::overflow },
+  { &nsGkAtoms::clip },
   { nullptr }
 };
 
 // PresentationAttributes-Makers
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sMarkersMap[] = {
-  { nsGkAtoms::marker_end },
-  { nsGkAtoms::marker_mid },
-  { nsGkAtoms::marker_start },
+  { &nsGkAtoms::marker_end },
+  { &nsGkAtoms::marker_mid },
+  { &nsGkAtoms::marker_start },
   { nullptr }
 };
 
 // PresentationAttributes-Color
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sColorMap[] = {
-  { nsGkAtoms::color },
+  { &nsGkAtoms::color },
   { nullptr }
 };
 
 // PresentationAttributes-Filters
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sFiltersMap[] = {
-  { nsGkAtoms::colorInterpolationFilters },
+  { &nsGkAtoms::colorInterpolationFilters },
   { nullptr }
 };
 
 // PresentationAttributes-feFlood
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sFEFloodMap[] = {
-  { nsGkAtoms::flood_color },
-  { nsGkAtoms::flood_opacity },
+  { &nsGkAtoms::flood_color },
+  { &nsGkAtoms::flood_opacity },
   { nullptr }
 };
 
 // PresentationAttributes-LightingEffects
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sLightingEffectsMap[] = {
-  { nsGkAtoms::lighting_color },
+  { &nsGkAtoms::lighting_color },
   { nullptr }
 };
 
 // PresentationAttributes-mask
 /* static */ const Element::MappedAttributeEntry
 nsSVGElement::sMaskMap[] = {
-  { nsGkAtoms::mask_type },
+  { &nsGkAtoms::mask_type },
   { nullptr }
 };
 

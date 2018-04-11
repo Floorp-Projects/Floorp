@@ -53,17 +53,16 @@ xpcAccessibleApplication* XPCApplicationAcc();
 
 typedef Accessible* (New_Accessible)(nsIContent* aContent, Accessible* aContext);
 
-// These fields are not `nsStaticAtom* const` because MSVC doesn't like it.
 struct MarkupAttrInfo {
-  nsStaticAtom* name;
-  nsStaticAtom* value;
+  nsStaticAtom** name;
+  nsStaticAtom** value;
 
-  nsStaticAtom* DOMAttrName;
-  nsStaticAtom* DOMAttrValue;
+  nsStaticAtom** DOMAttrName;
+  nsStaticAtom** DOMAttrValue;
 };
 
 struct HTMLMarkupMapInfo {
-  const nsStaticAtom* const tag;
+  nsStaticAtom** tag;
   New_Accessible* new_func;
   a11y::role role;
   MarkupAttrInfo attrs[4];
@@ -71,7 +70,7 @@ struct HTMLMarkupMapInfo {
 
 #ifdef MOZ_XUL
 struct XULMarkupMapInfo {
-  const nsStaticAtom* const tag;
+  nsStaticAtom** tag;
   New_Accessible* new_func;
 };
 #endif

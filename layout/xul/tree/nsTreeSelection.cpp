@@ -291,7 +291,7 @@ NS_IMETHODIMP nsTreeSelection::SetTree(nsITreeBoxObject * aTree)
 NS_IMETHODIMP nsTreeSelection::GetSingle(bool* aSingle)
 {
   static Element::AttrValuesArray strings[] =
-    {nsGkAtoms::single, nsGkAtoms::cell, nsGkAtoms::text, nullptr};
+    {&nsGkAtoms::single, &nsGkAtoms::cell, &nsGkAtoms::text, nullptr};
 
   nsCOMPtr<nsIContent> content = GetContent();
   if (!content) {
