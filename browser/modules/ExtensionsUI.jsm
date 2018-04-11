@@ -31,6 +31,13 @@ const BRAND_PROPERTIES = "chrome://branding/locale/brand.properties";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
+function getTabBrowser(browser) {
+  while (browser.ownerDocument.docShell.itemType !== Ci.nsIDocShell.typeChrome) {
+    browser = browser.ownerDocument.docShell.chromeEventHandler;
+  }
+  return {browser, window: browser.ownerGlobal};
+}
+
 var ExtensionsUI = {
   sideloaded: new Set(),
   updates: new Set(),
@@ -166,9 +173,7 @@ var ExtensionsUI = {
   showAddonsManager(browser, strings, icon, histkey) {
     let global = browser.selectedBrowser.ownerGlobal;
     return global.BrowserOpenAddonsMgr("addons://list/extension").then(aomWin => {
-      let aomBrowser = aomWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsIDocShell)
-                             .chromeEventHandler;
+      let aomBrowser = aomWin.document.docShell.chromeEventHandler;
       return this.showPermissionsPrompt(aomBrowser, strings, icon, histkey);
     });
   },
@@ -208,10 +213,12 @@ var ExtensionsUI = {
     if (topic == "webextension-permission-prompt") {
       let {target, info} = subject.wrappedJSObject;
 
+      let {browser, window} = getTabBrowser(target);
+
       // Dismiss the progress notification.  Note that this is bad if
       // there are multiple simultaneous installs happening, see
       // bug 1329884 for a longer explanation.
-      let progressNotification = target.ownerGlobal.PopupNotifications.getNotification("addon-progress", target);
+      let progressNotification = window.PopupNotifications.getNotification("addon-progress", browser);
       if (progressNotification) {
         progressNotification.remove();
       }
@@ -245,7 +252,7 @@ var ExtensionsUI = {
         histkey = "installWeb";
       }
 
-      this.showPermissionsPrompt(target, strings, icon, histkey)
+      this.showPermissionsPrompt(browser, strings, icon, histkey)
           .then(answer => {
             if (answer) {
               info.resolve();
@@ -323,13 +330,13 @@ var ExtensionsUI = {
     return strings;
   },
 
-  async showPermissionsPrompt(browser, strings, icon, histkey) {
-    let win = browser.ownerGlobal;
+  async showPermissionsPrompt(target, strings, icon, histkey) {
+    let {browser, window} = getTabBrowser(target);
 
     // Wait for any pending prompts in this window to complete before
     // showing the next one.
     let pending;
-    while ((pending = this.pendingNotifications.get(win))) {
+    while ((pending = this.pendingNotifications.get(window))) {
       await pending;
     }
 
@@ -397,17 +404,17 @@ var ExtensionsUI = {
         },
       ];
 
-      win.PopupNotifications.show(browser, "addon-webext-permissions", strings.header,
-                                  "addons-notification-icon", action,
-                                  secondaryActions, popupOptions);
+      window.PopupNotifications.show(browser, "addon-webext-permissions", strings.header,
+                                     "addons-notification-icon", action,
+                                     secondaryActions, popupOptions);
     });
 
-    this.pendingNotifications.set(win, promise);
-    promise.finally(() => this.pendingNotifications.delete(win));
+    this.pendingNotifications.set(window, promise);
+    promise.finally(() => this.pendingNotifications.delete(window));
     return promise;
   },
 
-  showDefaultSearchPrompt(browser, strings, icon) {
+  showDefaultSearchPrompt(target, strings, icon) {
     return new Promise(resolve => {
       let popupOptions = {
         hideClose: true,
@@ -440,20 +447,20 @@ var ExtensionsUI = {
         },
       ];
 
-      let win = browser.ownerGlobal;
-      win.PopupNotifications.show(browser, "addon-webext-defaultsearch", strings.text,
-                                  "addons-notification-icon", action,
-                                  secondaryActions, popupOptions);
+      let {browser, window} = getTabBrowser(target);
+      window.PopupNotifications.show(browser, "addon-webext-defaultsearch", strings.text,
+                                     "addons-notification-icon", action,
+                                     secondaryActions, popupOptions);
     });
   },
 
   showInstallNotification(target, addon) {
-    let win = target.ownerGlobal;
-    let popups = win.PopupNotifications;
+    let {browser, window} = getTabBrowser(target);
+    let popups = window.PopupNotifications;
 
-    let brandBundle = win.document.getElementById("bundle_brand");
+    let brandBundle = window.document.getElementById("bundle_brand");
     let appName = brandBundle.getString("brandShortName");
-    let bundle = win.gNavigatorBundle;
+    let bundle = window.gNavigatorBundle;
 
     let message = bundle.getFormattedString("addonPostInstall.message1",
                                             ["<>", appName]);
@@ -479,7 +486,7 @@ var ExtensionsUI = {
         name: addon.name,
       };
 
-      popups.show(target, "addon-installed", message, "addons-notification-icon",
+      popups.show(browser, "addon-installed", message, "addons-notification-icon",
                   action, null, options);
     });
   },

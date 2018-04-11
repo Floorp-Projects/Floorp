@@ -2219,7 +2219,9 @@ HttpBaseChannel::RedirectTo(nsIURI *targetURI)
   // Only Web Extensions are allowed to redirect a channel to a data:
   // URI. To avoid any bypasses after the channel was flagged by
   // the WebRequst API, we are dropping the flag here.
-  mLoadInfo->SetAllowInsecureRedirectToDataURI(false);
+  if (mLoadInfo) {
+    mLoadInfo->SetAllowInsecureRedirectToDataURI(false);
+  }
   return NS_OK;
 }
 

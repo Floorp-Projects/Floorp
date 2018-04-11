@@ -14,12 +14,6 @@ interface nsIDocShell;
 interface nsIURI;
 
 %{C++
-#define NS_SHISTORY_INTERNAL_CID \
-{ 0x3dfb2f54, 0x378d, 0x4d3c, \
-  { 0xa9, 0xf9, 0x95, 0xdd, 0x26, 0x73, 0x24, 0x8c } }
-
-#define NS_SHISTORY_INTERNAL_CONTRACTID "@mozilla.org/browser/shistory-internal;1"
-
 #include "nsTArrayForwardDeclare.h"
 %}
 

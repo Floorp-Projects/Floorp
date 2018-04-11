@@ -50,7 +50,6 @@ public:
   int32_t cx;
   int32_t cy;
   bool visible;
-  nsCOMPtr<nsISHistory> sessionHistory;
   nsString name;
 };
 

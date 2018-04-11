@@ -255,14 +255,13 @@ MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS)
   MarkContentViewer(cview, aCleanupJS);
 
   nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(shell);
-  nsCOMPtr<nsISHistory> history;
-  webNav->GetSessionHistory(getter_AddRefs(history));
+  RefPtr<ChildSHistory> history = webNav->GetSessionHistory();
   if (history) {
-    int32_t i, historyCount;
-    history->GetCount(&historyCount);
-    for (i = 0; i < historyCount; ++i) {
+    int32_t historyCount = history->Count();
+    for (int32_t i = 0; i < historyCount; ++i) {
       nsCOMPtr<nsISHEntry> shEntry;
-      history->GetEntryAtIndex(i, false, getter_AddRefs(shEntry));
+      history->LegacySHistory()->GetEntryAtIndex(
+        i, false, getter_AddRefs(shEntry));
 
       MarkSHEntry(shEntry, aCleanupJS);
     }

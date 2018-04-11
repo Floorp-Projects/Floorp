@@ -857,13 +857,6 @@ MessageChannel::SpinInternalEventLoop()
   } while (true);
 }
 
-static inline bool
-IsTimeoutExpired(PRIntervalTime aStart, PRIntervalTime aTimeout)
-{
-  return (aTimeout != PR_INTERVAL_NO_TIMEOUT) &&
-    (aTimeout <= (PR_IntervalNow() - aStart));
-}
-
 static HHOOK gWindowHook;
 
 static inline void
@@ -1041,27 +1034,21 @@ MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages)
   // Use a blocking wait if this channel does not require
   // Windows message deferral behavior.
   if (!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION) || !aHandleWindowsMessages) {
-    PRIntervalTime timeout = (kNoTimeout == mTimeoutMs) ?
-                             PR_INTERVAL_NO_TIMEOUT :
-                             PR_MillisecondsToInterval(mTimeoutMs);
-    PRIntervalTime waitStart = 0;
-
-    if (timeout != PR_INTERVAL_NO_TIMEOUT) {
-      waitStart = PR_IntervalNow();
-    }
+    TimeDuration timeout = (kNoTimeout == mTimeoutMs) ?
+                           TimeDuration::Forever() :
+                           TimeDuration::FromMilliseconds(mTimeoutMs);
 
     MOZ_ASSERT(!mIsSyncWaitingOnNonMainThread);
     mIsSyncWaitingOnNonMainThread = true;
 
-    mMonitor->Wait(timeout);
+    CVStatus status = mMonitor->Wait(timeout);
 
     MOZ_ASSERT(mIsSyncWaitingOnNonMainThread);
     mIsSyncWaitingOnNonMainThread = false;
 
     // If the timeout didn't expire, we know we received an event. The
     // converse is not true.
-    return WaitResponse(timeout == PR_INTERVAL_NO_TIMEOUT ?
-                        false : IsTimeoutExpired(waitStart, timeout));
+    return WaitResponse(status == CVStatus::Timeout);
   }
 
   NS_ASSERTION(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION,

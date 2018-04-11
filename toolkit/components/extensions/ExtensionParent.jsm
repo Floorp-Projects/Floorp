@@ -430,10 +430,6 @@ GlobalManager = {
   getExtension(extensionId) {
     return this.extensionMap.get(extensionId);
   },
-
-  injectInObject(context, isChromeCompat, dest) {
-    SchemaAPIManager.generateAPIs(context, context.extension.apis, dest);
-  },
 };
 
 /**
@@ -513,7 +509,6 @@ class ProxyContextParent extends BaseContext {
 defineLazyGetter(ProxyContextParent.prototype, "apiCan", function() {
   let obj = {};
   let can = new CanOfAPIs(this, this.extension.apiManager, obj);
-  GlobalManager.injectInObject(this, false, obj);
   return can;
 });
 

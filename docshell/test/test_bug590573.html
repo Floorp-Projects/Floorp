@@ -106,10 +106,10 @@ function dumpSHistory(theWindow)
 
   dump(" count: " + sh.count + "\n");
   dump(" index: " + sh.index + "\n");
-  dump(" requestedIndex: " + sh.requestedIndex + "\n");
+  dump(" requestedIndex: " + sh.legacySHistory.requestedIndex + "\n");
 
   for (let i = 0; i < sh.count; i++) {
-    let shentry = sh.getEntryAtIndex(i, false);
+    let shentry = sh.legacySHistory.getEntryAtIndex(i, false);
     dump(" " + i + ": " + shentry.URI.spec + '\n');
     shentry.QueryInterface(SpecialPowers.Ci.nsISHContainer);
     for (let j = 0; j < shentry.childCount; j++) {

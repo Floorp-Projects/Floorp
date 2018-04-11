@@ -24,7 +24,7 @@ function test() {
 
   promiseTabState(tab, tabState).then(() => {
     let sessionHistory = browser.sessionHistory;
-    let entry = sessionHistory.getEntryAtIndex(0, false);
+    let entry = sessionHistory.legacySHistory.getEntryAtIndex(0, false);
     entry.QueryInterface(Ci.nsISHContainer);
 
     whenChildCount(entry, 1, function() {

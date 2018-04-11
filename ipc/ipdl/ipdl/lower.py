@@ -467,7 +467,10 @@ class _ConvertToCxxType(TypeVisitor):
         return thing.name()
 
     def visitImportedCxxType(self, t):
-        return Type(self.typename(t))
+        cxxtype = Type(self.typename(t))
+        if t.isRefcounted():
+            cxxtype = _refptr(cxxtype)
+        return cxxtype
 
     def visitActorType(self, a):
         return Type(_actorName(self.typename(a.protocol), self.side), ptr=1)
@@ -521,6 +524,11 @@ def _cxxConstRefType(ipdltype, side):
         # Keep same constness as inner type.
         t.const = _cxxConstRefType(ipdltype.basetype, side).const
         t.ref = 1
+        return t
+    if ipdltype.isCxx() and ipdltype.isRefcounted():
+        # Use T* instead of const RefPtr<T>&
+        t = t.T
+        t.ptr = 1
         return t
     t.const = 1
     t.ref = 1
@@ -591,6 +599,11 @@ info needed by later passes, along with a basic name for the decl."""
 
     def var(self):
         return ExprVar(self.name)
+
+    def mayMoveExpr(self):
+        if self.isCopyable():
+            return self.var()
+        return ExprMove(self.var())
 
     def bareType(self, side, fq=0):
         """Return this decl's unqualified C++ type."""
@@ -998,7 +1011,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
         cxxargs = [ ]
 
         if paramsems is 'move':
-            cxxargs.extend([ ExprMove(p.var()) for p in self.params ])
+            cxxargs.extend([ p.mayMoveExpr() for p in self.params ])
         elif paramsems is 'in':
             cxxargs.extend([ p.var() for p in self.params ])
         else:
@@ -1879,8 +1892,12 @@ class _ParamTraits():
 
     @classmethod
     def generateDecl(cls, fortype, write, read, constin=1):
+        # IPDLParamTraits impls are selected ignoring constness, references,
+        # and pointers.
         pt = Class('IPDLParamTraits',
-                   specializes=fortype,
+                   specializes=Type(fortype.name,
+                                    T=fortype.T,
+                                    inner=fortype.inner),
                    struct=True)
 
         # typedef T paramType;

@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/HistoryBinding.h"
+#include "mozilla/dom/ChildSHistory.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h" // for GetParentObject
@@ -59,7 +60,7 @@ protected:
                           const nsAString& aTitle, const nsAString& aUrl,
                           mozilla::ErrorResult& aRv, bool aReplace);
 
-  already_AddRefed<nsISHistory> GetSessionHistory() const;
+  already_AddRefed<mozilla::dom::ChildSHistory> GetSessionHistory() const;
 
   nsCOMPtr<nsIWeakReference> mInnerWindow;
 };

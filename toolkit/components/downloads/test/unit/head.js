@@ -299,7 +299,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
 
       // Start the actual download process.
       persist.savePrivacyAwareURI(
-        sourceURI, null, referrer, Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
+        sourceURI, 0, referrer, Ci.nsIHttpChannel.REFERRER_POLICY_UNSAFE_URL,
         null, null, targetFile, isPrivate);
     }).catch(do_report_unexpected_exception);
 
