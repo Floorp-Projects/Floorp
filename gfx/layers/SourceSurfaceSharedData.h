@@ -40,9 +40,7 @@ public:
 
   SourceSurfaceSharedDataWrapper()
     : mStride(0)
-    , mConsumers{}
     , mFormat(SurfaceFormat::UNKNOWN)
-    , mCreatorPid{}
   {
   }
 
