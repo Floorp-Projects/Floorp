@@ -23,6 +23,14 @@ buildscript {
         version: '0.4'
     ]
 
+    // Synchronized versions numbers of GeckoView artifacts.
+    ext.gecko = [
+        // Discover nightly builds: https://tools.taskcluster.net/index/gecko.v2.mozilla-central.nightly
+        nightlyDate: '2018.04.10',
+        revision: 'a8061a09cd7064a8783ca9e67979d77fb52e001e',
+        version: '61.0.20180410100334'
+    ]
+
     repositories {
         google()
         jcenter()
@@ -46,6 +54,11 @@ allprojects {
     repositories {
         google()
         jcenter()
+
+        // Only ARM for now. See issue #51
+        maven {
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${gecko['nightlyDate']}.revision.${gecko['revision']}.mobile.android-api-16-opt/artifacts/public/android/maven"
+        }
     }
 }
 

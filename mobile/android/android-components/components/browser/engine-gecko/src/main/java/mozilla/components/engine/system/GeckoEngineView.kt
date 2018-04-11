@@ -4,6 +4,36 @@
 
 package mozilla.components.engine.system
 
+import android.content.Context
+import android.util.AttributeSet
+import android.widget.FrameLayout
+import mozilla.components.engine.EngineSession
 import mozilla.components.engine.EngineView
+import org.mozilla.geckoview.GeckoView
 
-class GeckoEngineView : EngineView
+/**
+ * Gecko-based EngineView implementation.
+ */
+class GeckoEngineView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr), EngineView {
+
+    private val currentGeckoView = GeckoView(context)
+
+    init {
+        // Currently this is just a FrameLayout with a single GeckoView instance. Eventually this
+        // implementation should handle at least two GeckoView so that we can switch between
+        addView(currentGeckoView)
+    }
+
+    /**
+     * Render the content of the given session.
+     */
+    override fun render(session: EngineSession) {
+        val internalSession = session as GeckoEngineSession
+
+        currentGeckoView.session = internalSession.geckoSession
+    }
+}
