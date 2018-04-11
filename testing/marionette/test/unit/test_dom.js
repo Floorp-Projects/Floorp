@@ -23,11 +23,11 @@ class Window {
     this.events = [];
   }
 
-  addEventListener(type, listener) {
+  addEventListener(type) {
     this.events.push(type);
   }
 
-  removeEventListener(type, listener) {
+  removeEventListener(type) {
     for (let i = 0; i < this.events.length; ++i) {
       if (this.events[i] === type) {
         this.events.splice(i, 1);
@@ -56,8 +56,8 @@ add_test(function test_addEventListener() {
   // click listener was appended
   equal(Object.keys(eventTarget.listeners).length, 1);
   ok("click" in eventTarget.listeners);
-  equal(eventTarget.listeners["click"].length, 1);
-  equal(eventTarget.listeners["click"][0], listener);
+  equal(eventTarget.listeners.click.length, 1);
+  equal(eventTarget.listeners.click[0], listener);
 
   // should have sent a registration message
   deepEqual(
@@ -77,7 +77,7 @@ add_test(function test_addEventListener_sameReference() {
   let listener = () => {};
   eventTarget.addEventListener("click", listener);
   eventTarget.addEventListener("click", listener);
-  equal(eventTarget.listeners["click"].length, 1);
+  equal(eventTarget.listeners.click.length, 1);
 
   run_next_test();
 });
@@ -87,10 +87,10 @@ add_test(function test_WebElementEventTarget_addEventListener_once() {
   let eventTarget = new WebElementEventTarget(ipc);
 
   eventTarget.addEventListener("click", () => {}, {once: true});
-  equal(eventTarget.listeners["click"][0].once, true);
+  equal(eventTarget.listeners.click[0].once, true);
 
   eventTarget.dispatchEvent({type: "click"});
-  equal(eventTarget.listeners["click"].length, 0);
+  equal(eventTarget.listeners.click.length, 0);
   deepEqual(
       ipc.sent[1], {
         name: "Marionette:DOM:RemoveEventListener",
@@ -111,26 +111,26 @@ add_test(function test_WebElementEventTarget_removeEventListener() {
 
   let firstListener = () => {};
   eventTarget.addEventListener("click", firstListener);
-  equal(eventTarget.listeners["click"].length, 1);
-  ok(eventTarget.listeners["click"][0] === firstListener);
+  equal(eventTarget.listeners.click.length, 1);
+  ok(eventTarget.listeners.click[0] === firstListener);
 
   let secondListener = () => {};
   eventTarget.addEventListener("click", secondListener);
-  equal(eventTarget.listeners["click"].length, 2);
-  ok(eventTarget.listeners["click"][1] === secondListener);
+  equal(eventTarget.listeners.click.length, 2);
+  ok(eventTarget.listeners.click[1] === secondListener);
 
-  ok(eventTarget.listeners["click"][0] !== eventTarget.listeners["click"][1]);
+  ok(eventTarget.listeners.click[0] !== eventTarget.listeners.click[1]);
 
   eventTarget.removeEventListener("click", secondListener);
-  equal(eventTarget.listeners["click"].length, 1);
-  ok(eventTarget.listeners["click"][0] === firstListener);
+  equal(eventTarget.listeners.click.length, 1);
+  ok(eventTarget.listeners.click[0] === firstListener);
 
   // event should not have been unregistered
   // because there still exists another click event
   equal(ipc.sent[ipc.sent.length - 1].name, "Marionette:DOM:AddEventListener");
 
   eventTarget.removeEventListener("click", firstListener);
-  equal(eventTarget.listeners["click"].length, 0);
+  equal(eventTarget.listeners.click.length, 0);
   deepEqual(
       ipc.sent[ipc.sent.length - 1],
       {

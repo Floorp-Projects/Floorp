@@ -7,7 +7,7 @@
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.import("chrome://marionette/content/error.js");
+const {InvalidArgumentError} = ChromeUtils.import("chrome://marionette/content/error.js", {});
 ChromeUtils.import("chrome://marionette/content/session.js");
 
 add_test(function test_Timeouts_ctor() {
@@ -197,7 +197,7 @@ add_test(function test_Proxy_toJSON() {
   deepEqual(p.toJSON(), {proxyType: "manual"});
 
   for (let proxy of ["ftpProxy", "httpProxy", "sslProxy", "socksProxy"]) {
-    let expected = {proxyType: "manual"}
+    let expected = {proxyType: "manual"};
 
     p = new session.Proxy();
     p.proxyType = "manual";
@@ -209,7 +209,7 @@ add_test(function test_Proxy_toJSON() {
 
     // without port
     p[proxy] = "foo";
-    expected[proxy] = "foo"
+    expected[proxy] = "foo";
     deepEqual(p.toJSON(), expected);
 
     // with port
@@ -219,13 +219,13 @@ add_test(function test_Proxy_toJSON() {
     deepEqual(p.toJSON(), expected);
 
     p[`${proxy}Port`] = 42;
-    expected[proxy] = "foo:42"
+    expected[proxy] = "foo:42";
     deepEqual(p.toJSON(), expected);
 
     // add brackets for IPv6 address as proxy hostname
     p[proxy] = "2001:db8::1";
     p[`${proxy}Port`] = 42;
-    expected[proxy] = "foo:42"
+    expected[proxy] = "foo:42";
     expected[proxy] = "[2001:db8::1]:42";
     deepEqual(p.toJSON(), expected);
   }
@@ -276,8 +276,8 @@ add_test(function test_Proxy_fromJSON() {
 
     // invalid hosts
     for (let host of [true, 42, [], {}, null, "http://foo",
-        "foo:-1", "foo:65536", "foo/test", "foo#42", "foo?foo=bar",
-        "2001:db8::1"]) {
+      "foo:-1", "foo:65536", "foo/test", "foo#42", "foo?foo=bar",
+      "2001:db8::1"]) {
       manual[proxy] = host;
       Assert.throws(() => session.Proxy.fromJSON(manual),
           /InvalidArgumentError/);
@@ -304,8 +304,8 @@ add_test(function test_Proxy_fromJSON() {
     for (let host in host_map) {
       manual[proxy] = host;
 
-      p[`${proxy}`] = host_map[host]["hostname"];
-      p[`${proxy}Port`] = host_map[host]["port"];
+      p[`${proxy}`] = host_map[host].hostname;
+      p[`${proxy}Port`] = host_map[host].port;
 
       deepEqual(p, session.Proxy.fromJSON(manual));
     }
@@ -320,7 +320,7 @@ add_test(function test_Proxy_fromJSON() {
         p[`${proxy}Port`] = null;
       } else {
         let default_ports = {"ftpProxy": 21, "httpProxy": 80,
-           "sslProxy": 443};
+          "sslProxy": 443};
 
         p[`${proxy}Port`] = default_ports[proxy];
       }
@@ -338,7 +338,7 @@ add_test(function test_Proxy_fromJSON() {
   for (let noProxy of [true, 42, {}, null, "foo",
       [true], [42], [{}], [null]]) {
     Assert.throws(() => session.Proxy.fromJSON(
-        {proxyType: "manual", noProxy: noProxy}),
+        {proxyType: "manual", noProxy}),
         /InvalidArgumentError/);
   }
 
@@ -346,7 +346,7 @@ add_test(function test_Proxy_fromJSON() {
   p = new session.Proxy();
   p.proxyType = "manual";
   for (let noProxy of [[], ["foo"], ["foo", "bar"], ["127.0.0.1"]]) {
-    let manual = {proxyType: "manual", "noProxy": noProxy}
+    let manual = {proxyType: "manual", "noProxy": noProxy};
     p.noProxy = noProxy;
     deepEqual(p, session.Proxy.fromJSON(manual));
   }
@@ -355,7 +355,7 @@ add_test(function test_Proxy_fromJSON() {
   p = new session.Proxy();
   p.proxyType = "manual";
   p.noProxy = ["2001:db8::1"];
-  let manual = {proxyType: "manual", "noProxy": ["[2001:db8::1]"]}
+  let manual = {proxyType: "manual", "noProxy": ["[2001:db8::1]"]};
   deepEqual(p, session.Proxy.fromJSON(manual));
 
   run_next_test();
@@ -408,7 +408,7 @@ add_test(function test_Capabilities_toJSON() {
   equal(caps.get("moz:processID"), json["moz:processID"]);
   equal(caps.get("moz:profile"), json["moz:profile"]);
   equal(caps.get("moz:useNonSpecCompliantPointerOrigin"),
-        json["moz:useNonSpecCompliantPointerOrigin"]);
+      json["moz:useNonSpecCompliantPointerOrigin"]);
   equal(caps.get("moz:webdriverClick"), json["moz:webdriverClick"]);
 
   run_next_test();
