@@ -4,14 +4,10 @@
 
 "use strict";
 
-const Services = require("Services");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {RuntimeScanners, WiFiScanner} = require("devtools/client/webide/modules/runtimes");
 const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
-const utils = require("devtools/client/webide/modules/utils");
-
-const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
 var RuntimeList;
 

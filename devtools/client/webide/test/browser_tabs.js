@@ -6,7 +6,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webide/test/doc_tab
 
 function test() {
   waitForExplicitFinish();
-  requestCompleteLog();
+  SimpleTest.requestCompleteLog();
 
   (async function() {
     // Since we test the connections set below, destroy the server in case it

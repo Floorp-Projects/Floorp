@@ -44,8 +44,8 @@ var openWebIDE = async function(autoInstallAddons) {
 
   Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", !!autoInstallAddons);
 
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
-  let win = ww.openWindow(null, "chrome://webide/content/", "webide", "chrome,centerscreen,resizable", null);
+  let win = Services.ww.openWindow(null, "chrome://webide/content/", "webide",
+                                   "chrome,centerscreen,resizable", null);
 
   await new Promise(resolve => {
     win.addEventListener("load", function() {

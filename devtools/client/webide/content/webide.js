@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// These files are loaded via webide.xul
+/* import-globals-from project-panel.js */
+/* import-globals-from runtime-panel.js */
+
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
@@ -14,14 +18,12 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const {GetAvailableAddons} = require("devtools/client/webide/modules/addons");
 const {getJSON} = require("devtools/client/shared/getjson");
-const utils = require("devtools/client/webide/modules/utils");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
 const {showDoorhanger} = require("devtools/client/shared/doorhanger");
 
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
-const HTML = "http://www.w3.org/1999/xhtml";
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/WebIDE/Troubleshooting";
 
 const MAX_ZOOM = 1.4;
@@ -435,7 +437,7 @@ var UI = {
         !this.lastConnectedRuntime) {
       return;
     }
-    let [_, type, id] = this.lastConnectedRuntime.match(/^(\w+):(.+)$/);
+    let [ , type, id] = this.lastConnectedRuntime.match(/^(\w+):(.+)$/);
 
     type = type.toLowerCase();
 
@@ -658,7 +660,7 @@ var UI = {
     if (!m) {
       return;
     }
-    let [_, type, project] = m;
+    let [ , type, project] = m;
 
     if (type == "local") {
       let lastProject = AppProjects.get(project);

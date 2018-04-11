@@ -51,6 +51,8 @@
           ok(win.document.querySelector("window").className, "busy", "UI is busy");
           await win.UI._busyPromise;
 
+          await deferred;
+
           is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
 
           await waitForUpdate(win, "runtime-global-actors");

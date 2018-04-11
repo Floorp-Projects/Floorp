@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cu} = require("chrome");
-
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
@@ -76,7 +74,7 @@ ConfigView.prototype = {
         }
       }
     } else {
-      var trs = this._doc.getElementById("device-fields").querySelectorAll("tr");
+      let trs = this._doc.getElementById("device-fields").querySelectorAll("tr");
 
       for (let i = 0; i < trs.length; i++) {
         trs[i].classList.remove("hide");
@@ -164,7 +162,7 @@ ConfigView.prototype = {
     let table = this._doc.querySelector("table");
     let trs = table.querySelectorAll("tr:not(#add-custom-field)");
 
-    for (var i = 0; i < trs.length; i++) {
+    for (let i = 0; i < trs.length; i++) {
       table.removeChild(trs[i]);
     }
 
@@ -299,7 +297,6 @@ ConfigView.prototype = {
     let table = this._doc.querySelector("table");
     let customValueType = table.querySelector("#custom-value-type").value;
     let customTextEl = table.querySelector("#custom-value-text");
-    let customText = customTextEl.value;
 
     if (customValueType.length === 0) {
       return false;
@@ -308,10 +305,8 @@ ConfigView.prototype = {
     switch (customValueType) {
       case "boolean":
         customTextEl.type = "checkbox";
-        customText = customTextEl.checked;
         break;
       case "number":
-        customText = parseInt(customText, 10) || 0;
         customTextEl.type = "number";
         break;
       default:

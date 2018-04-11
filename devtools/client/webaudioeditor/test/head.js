@@ -118,7 +118,7 @@ function getN(front, eventName, count, spread) {
   let actors = [];
   info(`Waiting for ${count} ${eventName} events`);
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     front.on(eventName, function onEvent(...args) {
       let actor = args[0];
       if (actors.length !== count) {
@@ -164,7 +164,7 @@ function waitForGraphRendered(front, nodeCount, edgeCount, paramEdgeCount) {
   let eventName = front.EVENTS.UI_GRAPH_RENDERED;
   info(`Wait for graph rendered with ${nodeCount} nodes, ${edgeCount} edges`);
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     front.on(eventName, function onGraphRendered(nodes, edges, pEdges) {
       let paramEdgesDone = paramEdgeCount != null ? paramEdgeCount === pEdges : true;
       info(`Got graph rendered with ${nodes} / ${nodeCount} nodes, ` +

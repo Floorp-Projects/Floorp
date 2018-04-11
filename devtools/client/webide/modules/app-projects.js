@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+const {Cc, Ci, Cr} = require("chrome");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
@@ -100,9 +100,9 @@ const IDB = {
 
   update: function(project) {
     return new Promise((resolve, reject) => {
-      var transaction = IDB._db.transaction(["projects"], "readwrite");
-      var objectStore = transaction.objectStore("projects");
-      var request = objectStore.put(project);
+      let transaction = IDB._db.transaction(["projects"], "readwrite");
+      let objectStore = transaction.objectStore("projects");
+      let request = objectStore.put(project);
       request.onerror = function(event) {
         reject("Unable to update project to the AppProjects indexedDB: " +
                this.error.name + " - " + this.error.message);
