@@ -8,6 +8,13 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 namespace mozilla {
 namespace ipc {
 
+struct ContentSecurityPolicy
+{
+  nsString policy;
+  bool reportOnlyFlag;
+  bool deliveredViaMetaTagFlag;
+};
+
 struct ContentPrincipalInfo
 {
   OriginAttributes attrs;
@@ -22,6 +29,8 @@ struct ContentPrincipalInfo
   nsCString originNoSuffix;
 
   nsCString spec;
+
+  ContentSecurityPolicy[] securityPolicies;
 };
 
 struct SystemPrincipalInfo
