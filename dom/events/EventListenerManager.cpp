@@ -1443,7 +1443,7 @@ EventListenerManager::RemoveEventListener(
 }
 
 void
-EventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aDOMListener,
+EventListenerManager::AddListenerForAllEvents(EventListener* aDOMListener,
                                               bool aUseCapture,
                                               bool aWantsUntrusted,
                                               bool aSystemEventGroup)
@@ -1457,10 +1457,9 @@ EventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aDOMListener,
 }
 
 void
-EventListenerManager::RemoveListenerForAllEvents(
-                        nsIDOMEventListener* aDOMListener,
-                        bool aUseCapture,
-                        bool aSystemEventGroup)
+EventListenerManager::RemoveListenerForAllEvents(EventListener* aDOMListener,
+                                                 bool aUseCapture,
+                                                 bool aSystemEventGroup)
 {
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
