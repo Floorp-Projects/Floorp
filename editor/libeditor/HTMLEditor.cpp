@@ -3142,12 +3142,13 @@ HTMLEditor::GetEmbeddedObjects(nsIArray** aNodeList)
 }
 
 nsresult
-HTMLEditor::DeleteSelectionImpl(EDirection aAction,
-                                EStripWrappers aStripWrappers)
+HTMLEditor::DeleteSelectionWithTransaction(EDirection aAction,
+                                           EStripWrappers aStripWrappers)
 {
   MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
 
-  nsresult rv = TextEditor::DeleteSelectionImpl(aAction, aStripWrappers);
+  nsresult rv =
+    TextEditor::DeleteSelectionWithTransaction(aAction, aStripWrappers);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If we weren't asked to strip any wrappers, we're done.

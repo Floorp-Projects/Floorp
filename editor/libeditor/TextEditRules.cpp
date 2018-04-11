@@ -1070,7 +1070,8 @@ TextEditRules::WillDeleteSelection(Selection* aSelection,
 
   NS_ENSURE_STATE(mTextEditor);
   nsresult rv =
-    mTextEditor->DeleteSelectionImpl(aCollapsedAction, nsIEditor::eStrip);
+    mTextEditor->DeleteSelectionWithTransaction(aCollapsedAction,
+                                                nsIEditor::eStrip);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aHandled = true;

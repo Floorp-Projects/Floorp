@@ -151,8 +151,17 @@ public:
   nsresult DeleteSelectionAsAction(EDirection aDirection,
                                    EStripWrappers aStripWrappers);
 
-  virtual nsresult DeleteSelectionImpl(EDirection aAction,
-                                       EStripWrappers aStripWrappers);
+  /**
+   * DeleteSelectionWithTransaction() removes selected content or content
+   * around caret with transactions.
+   *
+   * @param aDirection          How much range should be removed.
+   * @param aStripWrappers      Whether the parent blocks should be removed
+   *                            when they become empty.
+   */
+  virtual nsresult
+  DeleteSelectionWithTransaction(EDirection aAction,
+                                 EStripWrappers aStripWrappers);
 
   // Utility Routines, not part of public API
   NS_IMETHOD TypedText(const nsAString& aString, ETypingAction aAction);

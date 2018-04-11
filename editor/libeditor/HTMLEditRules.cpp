@@ -2719,19 +2719,24 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
   }
 
   {
+    if (NS_WARN_IF(!mHTMLEditor)) {
+      return NS_ERROR_FAILURE;
+    }
+    RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+
     // Track location of where we are deleting
-    NS_ENSURE_STATE(mHTMLEditor);
-    AutoTrackDOMPoint startTracker(mHTMLEditor->mRangeUpdater,
+    AutoTrackDOMPoint startTracker(htmlEditor->mRangeUpdater,
                                    address_of(startNode), &startOffset);
-    AutoTrackDOMPoint endTracker(mHTMLEditor->mRangeUpdater,
+    AutoTrackDOMPoint endTracker(htmlEditor->mRangeUpdater,
                                  address_of(endNode), &endOffset);
     // We are handling all ranged deletions directly now.
     *aHandled = true;
 
     if (endNode == startNode) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      rv = mHTMLEditor->DeleteSelectionImpl(aAction, aStripWrappers);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = htmlEditor->DeleteSelectionWithTransaction(aAction, aStripWrappers);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     } else {
       // Figure out mailcite ancestors
       nsCOMPtr<Element> startCiteNode = GetTopEnclosingMailCite(*startNode);
@@ -2747,14 +2752,13 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
       }
 
       // Figure out block parents
-      NS_ENSURE_STATE(mHTMLEditor);
       nsCOMPtr<Element> leftParent = HTMLEditor::GetBlock(*startNode);
       nsCOMPtr<Element> rightParent = HTMLEditor::GetBlock(*endNode);
 
       // Are endpoint block parents the same?  Use default deletion
       if (leftParent && leftParent == rightParent) {
         NS_ENSURE_STATE(mHTMLEditor);
-        mHTMLEditor->DeleteSelectionImpl(aAction, aStripWrappers);
+        htmlEditor->DeleteSelectionWithTransaction(aAction, aStripWrappers);
       } else {
         // Deleting across blocks.  Are the blocks of same type?
         NS_ENSURE_STATE(leftParent && rightParent);
@@ -2764,22 +2768,22 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         nsCOMPtr<nsINode> rightBlockParent = rightParent->GetParentNode();
 
         // MOOSE: this could conceivably screw up a table.. fix me.
-        NS_ENSURE_STATE(mHTMLEditor);
         if (leftBlockParent == rightBlockParent &&
-            mHTMLEditor->AreNodesSameType(leftParent, rightParent) &&
+            htmlEditor->AreNodesSameType(leftParent, rightParent) &&
             // XXX What's special about these three types of block?
             (leftParent->IsHTMLElement(nsGkAtoms::p) ||
              HTMLEditUtils::IsListItem(leftParent) ||
              HTMLEditUtils::IsHeader(*leftParent))) {
           // First delete the selection
-          NS_ENSURE_STATE(mHTMLEditor);
-          rv = mHTMLEditor->DeleteSelectionImpl(aAction, aStripWrappers);
-          NS_ENSURE_SUCCESS(rv, rv);
+          rv = htmlEditor->DeleteSelectionWithTransaction(aAction,
+                                                          aStripWrappers);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
           // Join blocks
-          NS_ENSURE_STATE(mHTMLEditor);
           EditorDOMPoint pt =
-            mHTMLEditor->JoinNodesDeepWithTransaction(*leftParent,
-                                                      *rightParent);
+            htmlEditor->JoinNodesDeepWithTransaction(*leftParent,
+                                                     *rightParent);
           if (NS_WARN_IF(!pt.IsSet())) {
             return NS_ERROR_FAILURE;
           }
@@ -2822,12 +2826,10 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
               }
               nsCOMPtr<nsIContent> content = somenode->AsContent();
               if (Text* text = content->GetAsText()) {
-                NS_ENSURE_STATE(mHTMLEditor);
-                join = !mHTMLEditor->IsInVisibleTextFrames(*text);
+                join = !htmlEditor->IsInVisibleTextFrames(*text);
               } else {
-                NS_ENSURE_STATE(mHTMLEditor);
                 join = content->IsHTMLElement(nsGkAtoms::br) &&
-                       !mHTMLEditor->IsVisibleBRElement(somenode);
+                       !htmlEditor->IsVisibleBRElement(somenode);
               }
             }
           }
@@ -2839,10 +2841,6 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         // node was already handled (we wouldn't be here)
         if (startNode->GetAsText() &&
             startNode->Length() > static_cast<uint32_t>(startOffset)) {
-          if (NS_WARN_IF(!mHTMLEditor)) {
-            return NS_ERROR_FAILURE;
-          }
-          RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
           // Delete to last character
           OwningNonNull<CharacterData> dataNode =
             *static_cast<CharacterData*>(startNode.get());
@@ -2854,10 +2852,6 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
           }
         }
         if (endNode->GetAsText() && endOffset) {
-          if (NS_WARN_IF(!mHTMLEditor)) {
-            return NS_ERROR_FAILURE;
-          }
-          RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
           // Delete to first character
           OwningNonNull<CharacterData> dataNode =
             *static_cast<CharacterData*>(endNode.get());

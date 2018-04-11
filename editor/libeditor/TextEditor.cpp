@@ -565,7 +565,7 @@ TextEditor::ExtendSelectionForDelete(Selection* aSelection,
     switch (*aAction) {
       case eNextWord: {
         nsresult rv = selCont->WordExtendForDelete(true);
-        // DeleteSelectionImpl doesn't handle these actions
+        // DeleteSelectionWithTransaction() doesn't handle these actions
         // because it's inside batching, so don't confuse it:
         *aAction = eNone;
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -715,7 +715,7 @@ TextEditor::DeleteSelectionAsAction(EDirection aDirection,
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!cancel && !handled) {
-    rv = DeleteSelectionImpl(aDirection, aStripWrappers);
+    rv = DeleteSelectionWithTransaction(aDirection, aStripWrappers);
   }
   if (!cancel) {
     // post-process
@@ -725,8 +725,8 @@ TextEditor::DeleteSelectionAsAction(EDirection aDirection,
 }
 
 nsresult
-TextEditor::DeleteSelectionImpl(EDirection aDirection,
-                                EStripWrappers aStripWrappers)
+TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
+                                           EStripWrappers aStripWrappers)
 {
   MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
 
