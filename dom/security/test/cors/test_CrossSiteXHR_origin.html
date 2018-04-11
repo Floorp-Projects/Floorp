@@ -39,6 +39,9 @@ var origins =
    { server: 'http://\u03c0\u03b1\u03c1\u03ac\u03b4\u03b5\u03b9\u03b3\u03bc\u03b1.\u03b4\u03bf\u03ba\u03b9\u03bc\u03ae',
      origin: 'http://xn--hxajbheg2az3al.xn--jxalpdlp'
    },
+   { origin: 'http://example.org',
+     file: 'jar:http://example.org/tests/dom/security/test/cors/file_CrossSiteXHR_inner.jar!/file_CrossSiteXHR_inner.html'
+   },
    { origin: 'null',
      file: 'http://example.org/tests/dom/security/test/cors/file_CrossSiteXHR_inner_data.sjs'
    },
@@ -159,7 +162,9 @@ function* runTest() {
 }
 
 addLoadEvent(function() {
-  gen.next();
+  SpecialPowers.pushPrefEnv({"set": [["network.jar.block-remote-files", false]]}, function() {
+    gen.next();
+  });
 });
 </script>
 </pre>

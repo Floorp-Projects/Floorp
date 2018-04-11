@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=430251
+-->
+<head>
+  <title>postMessage's interaction with pages at jar: URIs</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="browserFu.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <base href="http://mochi.test:8888/" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=430251">Mozilla Bug 430251</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 430251 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function receiveMessage(evt)
+{
+  is(evt.origin, "http://mochi.test:8888", "wrong sender");
+  ok(evt.source === window.frames.kid, "wrong source");
+
+  is(evt.data, "finish-test", "wrong data");
+  is(evt.lastEventId, "", "wrong lastEventId");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("message", receiveMessage);
+
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set": [["network.jar.block-remote-files", false]]}, function() {
+    var iframe = document.createElement('iframe');
+    iframe.setAttribute('src', 'jar:http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage.jar!/postMessage_jar.html');
+    iframe.setAttribute('name', 'kid');
+    document.getElementById("content").appendChild(iframe);
+
+    iframe.onload = function() {
+      window.frames.kid.postMessage("start-test", "http://mochi.test:8888");
+    }
+  });
+});
+</script>
+</pre>
+</body>
+</html>

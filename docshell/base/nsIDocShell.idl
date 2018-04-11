@@ -583,6 +583,13 @@ interface nsIDocShell : nsIDocShellTreeItem
   readonly attribute boolean isInUnload;
 
   /**
+   * Find out if the currently loaded document came from a suspicious channel
+   * (such as a JAR channel where the server-returned content type isn't a
+   * known JAR type).
+   */
+  readonly attribute boolean channelIsUnsafe;
+
+  /**
    * This attribute determines whether Mixed Active Content is loaded on the
    * document. When it is true, mixed active content was not blocked and has
    * loaded (or is about to load) on the page. When it is false, mixed active content
