@@ -389,7 +389,6 @@ JSContext::freeOsrTempData()
 
 JitCompartment::JitCompartment()
   : stubCodes_(nullptr)
-  , stringsCanBeInNursery{ false }
 {
 }
 
@@ -824,44 +823,38 @@ JitCode::finalize(FreeOp* fop)
 }
 
 IonScript::IonScript(IonCompilationId compilationId)
-  : method_(nullptr)
-  , osrPc_(nullptr)
-  , osrEntryOffset_(0)
-  , skipArgCheckEntryOffset_(0)
-  , invalidateEpilogueOffset_(0)
-  , invalidateEpilogueDataOffset_(0)
-  , numBailouts_(0)
-  , hasProfilingInstrumentation_(false)
-  , recompiling_(false)
-  , runtimeData_(0)
-  , runtimeSize_(0)
-  , icIndex_(0)
-  , icEntries_(0)
-  , safepointIndexOffset_(0)
-  , safepointIndexEntries_(0)
-  , safepointsStart_(0)
-  , safepointsSize_(0)
-  , frameSlots_(0)
-  , argumentSlots_{}
-  , frameSize_(0)
-  , bailoutTable_(0)
-  , bailoutEntries_(0)
-  , osiIndexOffset_(0)
-  , osiIndexEntries_(0)
-  , snapshots_(0)
-  , snapshotsListSize_(0)
-  , snapshotsRVATableSize_(0)
-  , recovers_{}
-  , recoversSize_{}
-  , constantTable_(0)
-  , constantEntries_(0)
-  , sharedStubList_{}
-  , sharedStubEntries_{}
-  , invalidationCount_(0)
-  , compilationId_(compilationId)
-  , optimizationLevel_{ OptimizationLevel::Normal }
-  , osrPcMismatchCounter_(0)
-  , fallbackStubSpace_()
+  : method_(nullptr),
+    osrPc_(nullptr),
+    osrEntryOffset_(0),
+    skipArgCheckEntryOffset_(0),
+    invalidateEpilogueOffset_(0),
+    invalidateEpilogueDataOffset_(0),
+    numBailouts_(0),
+    hasProfilingInstrumentation_(false),
+    recompiling_(false),
+    runtimeData_(0),
+    runtimeSize_(0),
+    icIndex_(0),
+    icEntries_(0),
+    safepointIndexOffset_(0),
+    safepointIndexEntries_(0),
+    safepointsStart_(0),
+    safepointsSize_(0),
+    frameSlots_(0),
+    frameSize_(0),
+    bailoutTable_(0),
+    bailoutEntries_(0),
+    osiIndexOffset_(0),
+    osiIndexEntries_(0),
+    snapshots_(0),
+    snapshotsListSize_(0),
+    snapshotsRVATableSize_(0),
+    constantTable_(0),
+    constantEntries_(0),
+    invalidationCount_(0),
+    compilationId_(compilationId),
+    osrPcMismatchCounter_(0),
+    fallbackStubSpace_()
 {
 }
 

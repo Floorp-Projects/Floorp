@@ -2823,21 +2823,18 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
     }
 
   public:
-    CompileStreamTask(JSContext* cx,
-                      Handle<PromiseObject*> promise,
-                      CompileArgs& compileArgs,
-                      bool instantiate,
+    CompileStreamTask(JSContext* cx, Handle<PromiseObject*> promise,
+                      CompileArgs& compileArgs, bool instantiate,
                       HandleObject importObj)
-      : PromiseHelperTask(cx, promise)
-      , compileArgs_(&compileArgs)
-      , instantiate_(instantiate)
-      , importObj_(cx, importObj)
-      , streamState_(mutexid::WasmStreamStatus, Env)
-      , codeSection_{}
-      , codeStreamEnd_(nullptr)
-      , exclusiveCodeStreamEnd_(mutexid::WasmCodeStreamEnd, nullptr)
-      , exclusiveTailBytes_(mutexid::WasmTailBytesPtr, nullptr)
-      , streamFailed_(false)
+      : PromiseHelperTask(cx, promise),
+        compileArgs_(&compileArgs),
+        instantiate_(instantiate),
+        importObj_(cx, importObj),
+        streamState_(mutexid::WasmStreamStatus, Env),
+        codeStreamEnd_(nullptr),
+        exclusiveCodeStreamEnd_(mutexid::WasmCodeStreamEnd, nullptr),
+        exclusiveTailBytes_(mutexid::WasmTailBytesPtr, nullptr),
+        streamFailed_(false)
     {
         MOZ_ASSERT_IF(importObj_, instantiate_);
     }

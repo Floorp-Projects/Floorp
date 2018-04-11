@@ -57,12 +57,7 @@ class DtoaCache {
     JSFlatString* s;      // if s==nullptr, d and base are not valid
 
   public:
-    DtoaCache()
-      : d{ 0.0 }
-      , base{}
-      , s(nullptr)
-    {
-    }
+    DtoaCache() : s(nullptr) {}
     void purge() { s = nullptr; }
 
     JSFlatString* lookup(int base, double d) {
@@ -313,9 +308,7 @@ class WrapperMap
             goToNext();
         }
 
-        Enum(WrapperMap& m, JSCompartment* target)
-          : filter{ nullptr } /* FIXME: initialize skipStrings */
-        {
+        Enum(WrapperMap& m, JSCompartment* target) {
             // Leave the outer map as nothing and only iterate the inner map we
             // find here.
             auto p = m.map.lookup(target);

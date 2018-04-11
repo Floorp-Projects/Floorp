@@ -373,13 +373,12 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
 const char* ObjectMemoryView::phaseName = "Scalar Replacement of Object";
 
 ObjectMemoryView::ObjectMemoryView(TempAllocator& alloc, MInstruction* obj)
-  : alloc_(alloc)
-  , undefinedVal_{ nullptr }
-  , obj_(obj)
-  , startBlock_(obj->block())
-  , state_(nullptr)
-  , lastResumePoint_(nullptr)
-  , oom_(false)
+  : alloc_(alloc),
+    obj_(obj),
+    startBlock_(obj->block()),
+    state_(nullptr),
+    lastResumePoint_(nullptr),
+    oom_(false)
 {
     // Annotate snapshots RValue such that we recover the store first.
     obj_->setIncompleteObject();

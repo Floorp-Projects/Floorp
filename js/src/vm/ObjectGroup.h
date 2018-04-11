@@ -597,11 +597,7 @@ class ObjectGroupCompartment
         JSObject* associated_;
 
       public:
-        DefaultNewGroupCache()
-          : associated_{ nullptr }
-        {
-            purge();
-        }
+        DefaultNewGroupCache() { purge(); }
 
         void purge() {
             group_ = nullptr;

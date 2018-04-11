@@ -1452,9 +1452,7 @@ class MOZ_STACK_CLASS JS_FRIEND_API(AutoStableStringChars)
 
   public:
     explicit AutoStableStringChars(JSContext* cx)
-      : s_(cx)
-      , twoByteChars_{ nullptr }
-      , state_(Uninitialized)
+      : s_(cx), state_(Uninitialized)
     {}
 
     MOZ_MUST_USE

@@ -2044,9 +2044,8 @@ class JSScript : public js::gc::TenuredCell
         bool oldDoNotRelazify_;
       public:
         explicit AutoDelazify(JSContext* cx, JS::HandleFunction fun = nullptr)
-          : script_(cx)
-          , cx_(cx)
-          , oldDoNotRelazify_{ false }
+            : script_(cx)
+            , cx_(cx)
         {
             holdScript(fun);
         }

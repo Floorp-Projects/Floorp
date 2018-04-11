@@ -70,19 +70,9 @@ class JitCode : public gc::TenuredCell
                                       // native=>bytecode mapping tables.
 
     JitCode()
-      : code_(nullptr)
-      , pool_(nullptr)
-      , bufferSize_{}
-      , insnSize_{}
-      , dataSize_{}
-      , jumpRelocTableBytes_{}
-      , dataRelocTableBytes_{}
-      , headerSize_{ '\0' }
-      , kind_{ '\0' }
-      , invalidated_{ false }
-      , hasBytecodeMap_{ false }
-    {
-    }
+      : code_(nullptr),
+        pool_(nullptr)
+    { }
     JitCode(uint8_t* code, uint32_t bufferSize, uint32_t headerSize, ExecutablePool* pool,
             CodeKind kind)
       : code_(code),
