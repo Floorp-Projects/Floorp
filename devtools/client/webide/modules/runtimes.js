@@ -7,7 +7,6 @@
 const {Ci} = require("chrome");
 const Services = require("Services");
 const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
-const {Connection} = require("devtools/shared/client/connection-manager");
 const {DebuggerServer} = require("devtools/server/main");
 const discovery = require("devtools/shared/discovery/discovery");
 const EventEmitter = require("devtools/shared/event-emitter");

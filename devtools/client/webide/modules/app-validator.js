@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var {Ci, Cu} = require("chrome");
+var {Ci} = require("chrome");
 
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const Services = require("Services");

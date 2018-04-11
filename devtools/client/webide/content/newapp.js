@@ -5,7 +5,6 @@
 "use strict";
 
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const Services = require("Services");
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const {AppProjects} = require("devtools/client/webide/modules/app-projects");
@@ -67,8 +66,7 @@ function getTemplatesJSON() {
 }
 
 function failAndBail(msg) {
-  let promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
-  promptService.alert(window, "error", msg);
+  Services.prompt.alert(window, "error", msg);
   window.close();
 }
 

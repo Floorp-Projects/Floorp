@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Cc, Cu, Ci } = require("chrome");
+const { Cc, Ci } = require("chrome");
 const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 const Services = require("Services");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");

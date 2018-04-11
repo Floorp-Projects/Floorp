@@ -2,8 +2,6 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cu} = require("chrome");
-
 const Services = require("Services");
 const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
@@ -205,7 +203,7 @@ ProjectList.prototype = {
     let doc = this._doc;
     let runtimeappsHeaderNode = doc.querySelector("#panel-header-runtimeapps");
     let sortedApps = [];
-    for (let [manifestURL, app] of AppManager.apps) {
+    for (let [/* manifestURL */, app] of AppManager.apps) {
       sortedApps.push(app);
     }
     sortedApps = sortedApps.sort((a, b) => {

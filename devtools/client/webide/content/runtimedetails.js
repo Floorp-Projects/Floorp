@@ -52,7 +52,9 @@ function generateFields(json) {
   }
 }
 
-var getDescriptionPromise; // Used by tests
+// Used by tests
+/* exported getDescriptionPromise */
+var getDescriptionPromise;
 function BuildUI() {
   let table = document.querySelector("table");
   table.innerHTML = "";
@@ -70,7 +72,6 @@ function CheckLockState() {
   let adbCheckResult = document.querySelector("#adb-check > .yesno");
   let devtoolsCheckResult = document.querySelector("#devtools-check > .yesno");
   let flipCertPerfButton = document.querySelector("#devtools-check button");
-  let adbRootButton = document.querySelector("#adb-check button");
   let flipCertPerfAction = document.querySelector("#devtools-check > .action");
   let adbRootAction = document.querySelector("#adb-check > .action");
 

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Cu } = require("chrome");
-
 const { TargetFactory } = require("devtools/client/framework/target");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Connection } = require("devtools/shared/client/connection-manager");
