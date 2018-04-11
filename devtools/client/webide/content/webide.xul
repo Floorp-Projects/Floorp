@@ -57,6 +57,7 @@
     </commandset>
   </commandset>
 
+  <toolbar type="menubar">
   <menubar id="main-menubar">
     <menu id="menu-project" label="&projectMenu_label;" accesskey="&projectMenu_accesskey;">
       <menupopup id="menu-project-popup">
@@ -97,6 +98,7 @@
     </menu>
 
   </menubar>
+  </toolbar>
 
   <keyset id="mainKeyset">
     <key key="&key_quit;" id="key_quit" command="cmd_quit" modifiers="accel"/>

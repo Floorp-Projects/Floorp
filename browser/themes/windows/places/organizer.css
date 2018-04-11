@@ -35,8 +35,6 @@
 /* Menu */
 #placesMenu {
   margin-inline-start: 6px;
-  -moz-appearance: none;
-  border: none;
 }
 
 #placesMenu > menu {

@@ -49,6 +49,7 @@
   <vbox flex="1">
 
     <toolbox>
+      <toolbar type="menubar">
       <menubar id="main-menubar">
         <menu id="menu_file" label="File" accesskey="F">
           <menupopup id="menu_FilePopup">
@@ -91,6 +92,7 @@
         <menu id="windowMenu"/>
         <menu id="menu_Help"/>
       </menubar>
+      </toolbar>
 
       <toolbar>
         <toolbarbutton id="back-button" class="toolbarbutton-1"
