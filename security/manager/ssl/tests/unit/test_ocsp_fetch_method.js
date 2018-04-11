@@ -28,7 +28,7 @@ function check_cert_err(cert_name, expected_error) {
                                certificateUsageSSLServer);
 }
 
-function run_test() {
+add_task(async function() {
   addCertFromFile(certdb, "test_ocsp_fetch_method/ca.pem", "CTu,CTu,CTu");
   addCertFromFile(certdb, "test_ocsp_fetch_method/int.pem", ",,");
 
@@ -39,21 +39,15 @@ function run_test() {
                              "www.example.com");
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
 
-  add_test(function() {
-    clearOCSPCache();
-    Services.prefs.setBoolPref("security.OCSP.GET.enabled", false);
-    let ocspResponder = start_ocsp_responder(["a"], [], ["POST"]);
-    check_cert_err("a", PRErrorCodeSuccess);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  Services.prefs.setBoolPref("security.OCSP.GET.enabled", false);
+  let ocspResponder = start_ocsp_responder(["a"], [], ["POST"]);
+  await check_cert_err("a", PRErrorCodeSuccess);
+  await stopOCSPResponder(ocspResponder);
 
-  add_test(function() {
-    clearOCSPCache();
-    Services.prefs.setBoolPref("security.OCSP.GET.enabled", true);
-    let ocspResponder = start_ocsp_responder(["a"], [], ["GET"]);
-    check_cert_err("a", PRErrorCodeSuccess);
-    ocspResponder.stop(run_next_test);
-  });
-
-  run_next_test();
-}
+  clearOCSPCache();
+  Services.prefs.setBoolPref("security.OCSP.GET.enabled", true);
+  ocspResponder = start_ocsp_responder(["a"], [], ["GET"]);
+  await check_cert_err("a", PRErrorCodeSuccess);
+  await stopOCSPResponder(ocspResponder);
+});

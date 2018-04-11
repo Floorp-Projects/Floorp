@@ -14,7 +14,7 @@ do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"]
                  .getService(Ci.nsIX509CertDB);
 
-function do_testcase(certname, checkCommonName) {
+async function do_testcase(certname, checkCommonName) {
   let cert = constructCertFromFile(`test_cert_embedded_null/${certname}.pem`);
   // Where applicable, check that the testcase is meaningful (i.e. that the
   // certificate's subject common name has an embedded NUL in it).
@@ -22,17 +22,19 @@ function do_testcase(certname, checkCommonName) {
     equal(cert.commonName, "www.bank1.com\\00www.bad-guy.com",
           "certificate subject common name should have an embedded NUL byte");
   }
-  checkCertErrorGeneric(certdb, cert, SSL_ERROR_BAD_CERT_DOMAIN,
-                        certificateUsageSSLServer, {}, "www.bank1.com");
-  checkCertErrorGeneric(certdb, cert, SSL_ERROR_BAD_CERT_DOMAIN,
-                        certificateUsageSSLServer, {}, "www.bad-guy.com");
+  await checkCertErrorGeneric(certdb, cert, SSL_ERROR_BAD_CERT_DOMAIN,
+                              certificateUsageSSLServer, undefined,
+                              "www.bank1.com");
+  await checkCertErrorGeneric(certdb, cert, SSL_ERROR_BAD_CERT_DOMAIN,
+                              certificateUsageSSLServer, undefined,
+                              "www.bad-guy.com");
 }
 
-function run_test() {
+add_task(async function() {
   addCertFromFile(certdb, "test_cert_embedded_null/ca.pem", "CTu,,");
 
-  do_testcase("embeddedNull", true);
-  do_testcase("embeddedNullSAN", false);
-  do_testcase("embeddedNullCNAndSAN", true);
-  do_testcase("embeddedNullSAN2", false);
-}
+  await do_testcase("embeddedNull", true);
+  await do_testcase("embeddedNullSAN", false);
+  await do_testcase("embeddedNullCNAndSAN", true);
+  await do_testcase("embeddedNullSAN2", false);
+});

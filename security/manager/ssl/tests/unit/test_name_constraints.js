@@ -38,26 +38,26 @@ function loadCertWithTrust(certName, trustString) {
 }
 
 function checkCertNotInNameSpace(cert) {
-  checkCertErrorGeneric(certdb, cert, SEC_ERROR_CERT_NOT_IN_NAME_SPACE,
-                        certificateUsageSSLServer);
+  return checkCertErrorGeneric(certdb, cert, SEC_ERROR_CERT_NOT_IN_NAME_SPACE,
+                               certificateUsageSSLServer);
 }
 
 function checkCertInNameSpace(cert) {
-  checkCertErrorGeneric(certdb, cert, PRErrorCodeSuccess,
-                        certificateUsageSSLServer);
+  return checkCertErrorGeneric(certdb, cert, PRErrorCodeSuccess,
+                               certificateUsageSSLServer);
 }
 
-function run_test() {
+add_task(async function() {
   // Test that name constraints from the entire certificate chain are enforced.
   loadCertWithTrust("ca-example-com-permitted", "CTu,,");
   loadCertWithTrust("int-example-org-permitted", ",,");
-  checkCertNotInNameSpace(certFromFile("ee-example-com-and-org"));
-  checkCertNotInNameSpace(certFromFile("ee-example-com"));
-  checkCertNotInNameSpace(certFromFile("ee-example-org"));
-  checkCertNotInNameSpace(certFromFile("ee-example-test"));
+  await checkCertNotInNameSpace(certFromFile("ee-example-com-and-org"));
+  await checkCertNotInNameSpace(certFromFile("ee-example-com"));
+  await checkCertNotInNameSpace(certFromFile("ee-example-org"));
+  await checkCertNotInNameSpace(certFromFile("ee-example-test"));
 
   // Test that externally-imposed name constraints are enforced (DCISS tests).
   loadCertWithTrust("dciss", "CTu,,");
-  checkCertInNameSpace(certFromFile("NameConstraints.dcissallowed"));
-  checkCertNotInNameSpace(certFromFile("NameConstraints.dcissblocked"));
-}
+  await checkCertInNameSpace(certFromFile("NameConstraints.dcissallowed"));
+  await checkCertNotInNameSpace(certFromFile("NameConstraints.dcissblocked"));
+});

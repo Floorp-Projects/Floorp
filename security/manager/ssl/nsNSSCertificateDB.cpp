@@ -1306,35 +1306,6 @@ VerifyCertAtTime(nsIX509Cert* aCert,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
-                                  int64_t /*SECCertificateUsage*/ aUsage,
-                                  uint32_t aFlags,
-                                  const nsACString& aHostname,
-                                  nsIX509CertList** aVerifiedChain,
-                                  bool* aHasEVPolicy,
-                                  int32_t* /*PRErrorCode*/ _retval)
-{
-  return ::VerifyCertAtTime(aCert, aUsage, aFlags, aHostname,
-                            mozilla::pkix::Now(),
-                            aVerifiedChain, aHasEVPolicy, _retval);
-}
-
-NS_IMETHODIMP
-nsNSSCertificateDB::VerifyCertAtTime(nsIX509Cert* aCert,
-                                     int64_t /*SECCertificateUsage*/ aUsage,
-                                     uint32_t aFlags,
-                                     const nsACString& aHostname,
-                                     uint64_t aTime,
-                                     nsIX509CertList** aVerifiedChain,
-                                     bool* aHasEVPolicy,
-                                     int32_t* /*PRErrorCode*/ _retval)
-{
-  return ::VerifyCertAtTime(aCert, aUsage, aFlags, aHostname,
-                            mozilla::pkix::TimeFromEpochInSeconds(aTime),
-                            aVerifiedChain, aHasEVPolicy, _retval);
-}
-
 class VerifyCertAtTimeTask final : public CryptoTask
 {
 public:
@@ -1361,9 +1332,10 @@ private:
     if (!certDB) {
       return NS_ERROR_FAILURE;
     }
-    return certDB->VerifyCertAtTime(mCert, mUsage, mFlags, mHostname, mTime,
-                                    getter_AddRefs(mVerifiedCertList),
-                                    &mHasEVPolicy, &mPRErrorCode);
+    return VerifyCertAtTime(mCert, mUsage, mFlags, mHostname,
+                            mozilla::pkix::TimeFromEpochInSeconds(mTime),
+                            getter_AddRefs(mVerifiedCertList),
+                            &mHasEVPolicy, &mPRErrorCode);
   }
 
   virtual void CallCallback(nsresult rv) override
