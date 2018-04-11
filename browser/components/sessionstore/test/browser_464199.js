@@ -57,6 +57,7 @@ add_task(async function() {
   Services.prefs.setIntPref("browser.sessionstore.max_tabs_undo",
                             test_state.windows[0]._closedTabs.length);
   ss.setWindowState(newWin, JSON.stringify(test_state), true);
+  await promiseWindowRestored(newWin);
 
   let closedTabs = JSON.parse(ss.getClosedTabData(newWin));
   is(closedTabs.length, test_state.windows[0]._closedTabs.length,

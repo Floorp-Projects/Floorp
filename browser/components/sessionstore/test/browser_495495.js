@@ -2,41 +2,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
+add_task(async function test_urlbarFocus() {
   /** Test for Bug 495495 **/
 
-  waitForExplicitFinish();
-
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no,toolbar=yes");
-  promiseWindowLoaded(newWin).then(() => {
-    let state1 = ss.getWindowState(newWin);
-    BrowserTestUtils.closeWindow(newWin).then(() => {
+  await promiseWindowLoaded(newWin);
+  let state1 = ss.getWindowState(newWin);
+  await BrowserTestUtils.closeWindow(newWin);
 
-      newWin = openDialog(location, "_blank",
-        "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar=no,location,personal,directories,dialog=no");
-      promiseWindowLoaded(newWin).then(() => {
-        let state2 = ss.getWindowState(newWin);
+  newWin = openDialog(location, "_blank",
+    "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar=no,location,personal,directories,dialog=no");
+  await promiseWindowLoaded(newWin);
+  let state2 = ss.getWindowState(newWin);
 
-        function testState(state, expected, callback) {
-          let win = openDialog(location, "_blank", "chrome,all,dialog=no");
-          promiseWindowLoaded(win).then(() => {
+  async function testState(state, expected) {
+    let win = openDialog(location, "_blank", "chrome,all,dialog=no");
+    await promiseWindowLoaded(win);
 
-            is(win.gURLBar.readOnly, false,
-               "URL bar should not be read-only before setting the state");
-            ss.setWindowState(win, state, true);
-            is(win.gURLBar.readOnly, expected.readOnly,
-               "URL bar read-only state should be restored correctly");
+    is(win.gURLBar.readOnly, false,
+       "URL bar should not be read-only before setting the state");
+    await setWindowState(win, state, true);
+    is(win.gURLBar.readOnly, expected.readOnly,
+       "URL bar read-only state should be restored correctly");
 
-            BrowserTestUtils.closeWindow(win).then(callback);
-          });
-        }
+    await BrowserTestUtils.closeWindow(win);
+  }
 
-        BrowserTestUtils.closeWindow(newWin).then(() => {
-          testState(state1, {readOnly: false}, function() {
-            testState(state2, {readOnly: true}, finish);
-          });
-        });
-      });
-    });
-  });
-}
+  await BrowserTestUtils.closeWindow(newWin);
+  await testState(state1, {readOnly: false});
+  await testState(state2, {readOnly: true});
+});

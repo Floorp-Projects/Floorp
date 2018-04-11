@@ -439,8 +439,6 @@ add_task(async function test_open_close_restore_from_popup() {
 
     newWin2 = await promiseNewWindowLoaded();
 
-    is(newWin2.gBrowser.browsers.length, 1,
-       "Did not restore, as undoCloseWindow() was last called");
     is(TEST_URLS.indexOf(newWin2.gBrowser.browsers[0].currentURI.spec), -1,
        "Did not restore, as undoCloseWindow() was last called (2)");
 
