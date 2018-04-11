@@ -3761,6 +3761,8 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
         return true;
     }
 
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
   private:
     void operator=(const CompileOptions& rhs) = delete;
 };
