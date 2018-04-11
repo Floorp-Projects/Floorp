@@ -1001,9 +1001,9 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(
   // We don't support retaining with overlay scrollbars, since they require
   // us to look at the display list and pick the highest z-index, which
   // we can't do during partial building.
-  if (mBuilder.BuiltOverlayScrollbars()) {
+  if (mBuilder.DisablePartialUpdates()) {
     shouldBuildPartial = false;
-    mBuilder.SetBuiltOverlayScrollbars(false);
+    mBuilder.SetDisablePartialUpdates(false);
   }
 
   if (mPreviousCaret != mBuilder.GetCaretFrame()) {
