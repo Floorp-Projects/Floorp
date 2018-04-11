@@ -14,7 +14,7 @@
 
   async function* mockGenerateMessages(locales, resourceIds) {
     const mc = new MessageContext(locales);
-    mc.addMessages("title = Visit <a>Mozilla</a> or <a>Firefox</a> website!");
+    mc.addMessages(`title = Visit <a data-l10n-name="mozilla-link">Mozilla</a> or <a data-l10n-name="firefox-link">Firefox</a> website!`);
     yield mc;
   }
 
@@ -46,9 +46,9 @@
 </head>
 <body>
   <p data-l10n-id="title">
-    <a href="http://www.mozilla.org"></a>
-    <a href="http://www.firefox.com"></a>
-    <a href="http://www.w3.org"></a>
+    <a href="http://www.mozilla.org" data-l10n-name="mozilla-link"></a>
+    <a href="http://www.firefox.com" data-l10n-name="firefox-link"></a>
+    <a href="http://www.w3.org" data-l10n-name="w3-link"></a>
   </p>
 </body>
 </html>
