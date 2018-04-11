@@ -19,14 +19,7 @@ let TEST_AUDIO_FREQ = 1000;
 */
 function updateConfigFromFakeAndLoopbackPrefs() {
   let audioDevice = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
-  // TODO: Remove once Bug 1441563 is fixed.
-  const isLinux = navigator.userAgent.includes("Linux");
-  if (isLinux && SpecialPowers.isDebugBuild) {
-    // Due to deadlocks on loopback device, use fake devices on Linux debug.
-    WANT_FAKE_AUDIO = true;
-    SpecialPowers.setCharPref("media.audio_loopback_dev", "");
-    dump("TEST DEVICES: On Linux Debug use fake audio devices.\n");
-  } else if (audioDevice) {
+  if (audioDevice) {
     WANT_FAKE_AUDIO = false;
     dump("TEST DEVICES: Got loopback audio: " + audioDevice + "\n");
   } else {
