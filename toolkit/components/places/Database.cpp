@@ -1245,7 +1245,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 61 uses schema version 46.
+      if (currentSchemaVersion < 47) {
+        rv = MigrateV47Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 61 uses schema version 47.
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -2110,13 +2115,15 @@ Database::MigrateV46Up() {
   // edit these queries, and just do a 1:1 conversion.
   nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "UPDATE moz_places "
-       "SET url = 'place:tag=' || ( "
-          "SELECT title FROM moz_bookmarks "
-          "WHERE id = CAST(get_query_param(substr(url, 7), 'folder') AS INT) "
-       ") "
+      "SET url = IFNULL('place:tag=' || ( "
+        "SELECT title FROM moz_bookmarks "
+        "WHERE id = CAST(get_query_param(substr(url, 7), 'folder') AS INT) "
+      "), url) "
     "WHERE url_hash BETWEEN hash('place', 'prefix_lo') AND "
                            "hash('place', 'prefix_hi') "
       "AND url LIKE '%type=7%' "
+      "AND EXISTS(SELECT 1 FROM moz_bookmarks "
+          "WHERE id = CAST(get_query_param(substr(url, 7), 'folder') AS INT)) "
   ));
 
   // Recalculate hashes for all tag queries.
@@ -2139,7 +2146,30 @@ Database::MigrateV46Up() {
     ") "
   ));
   NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
 
+nsresult
+Database::MigrateV47Up() {
+  // v46 may have mistakenly set some url to NULL, we must fix those.
+  // Since the original url was an invalid query, we replace NULLs with an
+  // empty query.
+  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_places "
+    "SET url = 'place:excludeItems=1', url_hash = hash('place:excludeItems=1') "
+    "WHERE url ISNULL "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Update Sync fields for these queries.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_bookmarks SET syncChangeCounter = syncChangeCounter + 1 "
+    "WHERE fk IN ( "
+      "SELECT id FROM moz_places "
+      "WHERE url_hash = hash('place:excludeItems=1') "
+        "AND url = 'place:excludeItems=1' "
+    ") "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -2340,6 +2370,15 @@ Database::Shutdown()
     rv = stmt->ExecuteStep(&hasResult);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     MOZ_ASSERT(!hasResult, "Found a duplicate url!");
+
+    // Sanity check NULL urls
+    rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT 1 FROM moz_places WHERE url ISNULL "
+    ), getter_AddRefs(stmt));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = stmt->ExecuteStep(&hasResult);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    MOZ_ASSERT(!hasResult, "Found a NULL url!");
   }
 #endif
 
