@@ -15,11 +15,11 @@
           data-category="paneSearchResults"
           hidden="true">
   <vbox class="no-results-container">
-    <label id="sorry-message" data-l10n-id="search-results-sorry-message">
-      <html:span id="sorry-message-query"/>
+    <label id="sorry-message" data-l10n-id="search-results-empty-message">
+      <html:span data-l10n-name="query" id="sorry-message-query"/>
     </label>
-    <label id="need-help" data-l10n-id="search-results-need-help">
-      <a class="text-link" target="_blank"></a>
+    <label id="need-help" data-l10n-id="search-results-help-link">
+      <a class="text-link" data-l10n-name="url" target="_blank"></a>
     </label>
   </vbox>
   <vbox class="no-results-container" align="center">
