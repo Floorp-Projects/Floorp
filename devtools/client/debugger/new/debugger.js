@@ -5113,14 +5113,6 @@ function showSource(sourceId) {
   return ({ dispatch, getState }) => {
     const source = (0, _selectors.getSource)(getState(), sourceId);
 
-    if ((0, _selectors.getPaneCollapse)(getState(), "start")) {
-      dispatch({
-        type: "TOGGLE_PANE",
-        position: "start",
-        paneCollapsed: false
-      });
-    }
-
     dispatch(setPrimaryPaneTab("sources"));
     dispatch({
       type: "SHOW_SOURCE",
@@ -6441,7 +6433,10 @@ function getMappedExpression(expression) {
       return expression;
     }
 
-    return parser.mapOriginalExpression(expression, mappings);
+    return await dispatch({
+      type: "MAP_EXPRESSION_RESULT",
+      [_promise.PROMISE]: parser.mapOriginalExpression(expression, mappings)
+    });
   };
 }
 
@@ -6621,31 +6616,14 @@ var _WasmDis = __webpack_require__(678);
 
 var wasmStates = Object.create(null);
 
-function maybeWasmSectionNameResolver(data) {
-  try {
-    const parser = new _WasmParser.BinaryReader();
-    parser.setData(data.buffer, 0, data.length);
-    const reader = new _WasmDis.NameSectionReader();
-    reader.read(parser);
-    return reader.hasValidNames() ? reader.getNameResolver() : null;
-  } catch (ex) {
-    // Ignoring any errors during names section retrival.
-    return null;
-  }
-}
-
 /**
  * @memberof utils/wasm
  * @static
  */
 function getWasmText(sourceId, data) {
-  const nameResolver = maybeWasmSectionNameResolver(data);
   const parser = new _WasmParser.BinaryReader();
   parser.setData(data.buffer, 0, data.length);
   const dis = new _WasmDis.WasmDisassembler();
-  if (nameResolver) {
-    dis.nameResolver = nameResolver;
-  }
   dis.addOffsets = true;
   const done = dis.disassembleChunk(parser);
   let result = dis.getResult();
@@ -7041,18 +7019,9 @@ class ManagedTree extends _react.Component {
     if (expanded.has(this.props.getPath(highlightItems[0]))) {
       this.focusItem(highlightItems[0]);
     } else {
-      // Look at folders starting from the top-level and expand all the items
-      // which lie in the path of the item to be highlighted
-      highlightItems.reverse();
-      let index = highlightItems.findIndex(item => !expanded.has(this.props.getPath(item)));
-
-      if (this.props.autoExpandOnHighlight) {
-        while (index < highlightItems.length - 1) {
-          this.setExpanded(highlightItems[index], true, false);
-          index++;
-        }
-      }
-
+      // Look at folders starting from the top-level until finds a
+      // closed folder and highlights this folder
+      const index = highlightItems.reverse().findIndex(item => !expanded.has(this.props.getPath(item)));
       this.focusItem(highlightItems[index]);
     }
   }
@@ -7134,7 +7103,7 @@ function getURL(sourceUrl, debuggeeUrl = "") {
       // A Webpack source is a special case
       return (0, _lodash.merge)(def, {
         path: path,
-        group: "webpack://",
+        group: "Webpack",
         filename: filename
       });
 
@@ -7142,7 +7111,7 @@ function getURL(sourceUrl, debuggeeUrl = "") {
       // An Angular source is a special case
       return (0, _lodash.merge)(def, {
         path: path,
-        group: "ng://",
+        group: "Angular",
         filename: filename
       });
 
@@ -9923,7 +9892,7 @@ function isUnderRoot(url, projectRoot) {
     return true;
   }
 
-  return `${url.group}${url.path}`.startsWith(projectRoot);
+  return `/${url.group}${url.path}`.startsWith(projectRoot);
 } /* This Source Code Form is subject to the terms of the Mozilla Public
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -9989,7 +9958,7 @@ function traverseTree(url, tree, debuggeeHost, projectRoot) {
 
   let path = "";
   return parts.reduce((subTree, part, index) => {
-    path = path ? `${path}/${part}` : part;
+    path = `${path}/${part}`;
     const debuggeeHostIfRoot = index === 0 ? debuggeeHost : null;
     return findOrCreateNode(parts, subTree, path, part, index, url, debuggeeHostIfRoot);
   }, tree);
@@ -12905,12 +12874,8 @@ var _pause = __webpack_require__(1394);
 
 var _sources = __webpack_require__(1369);
 
-function getGeneratedId(sourceId) {
-  if ((0, _devtoolsSourceMap.isOriginalId)(sourceId)) {
-    return (0, _devtoolsSourceMap.originalToGeneratedId)(sourceId);
-  }
-
-  return sourceId;
+function visibleSourceId(location) {
+  return (0, _devtoolsSourceMap.isOriginalId)(location.sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(location.sourceId) : location.sourceId;
 }
 
 /*
@@ -12929,11 +12894,7 @@ function isSelectedFrameVisible(state) {
     return false;
   }
 
-  if ((0, _devtoolsSourceMap.isOriginalId)(selectedLocation.sourceId)) {
-    return selectedLocation.sourceId === selectedFrame.location.sourceId;
-  }
-
-  return selectedLocation.sourceId === getGeneratedId(selectedFrame.location.sourceId);
+  return visibleSourceId(selectedLocation) === visibleSourceId(selectedFrame.location);
 }
 
 /***/ }),
@@ -16198,7 +16159,7 @@ function findSource(sourceTree, sourceUrl) {
 
 function getDirectories(sourceUrl, sourceTree) {
   const url = (0, _getURL.getURL)(sourceUrl);
-  const fullUrl = `${url.group}${url.path}`;
+  const fullUrl = `/${url.group}${url.path}`;
   const parentMap = (0, _utils.createParentMap)(sourceTree);
   const source = findSource(sourceTree, fullUrl);
   if (!source) {
@@ -16776,15 +16737,6 @@ class SourcesTree extends _react.Component {
     }
   }
 
-  renderItemName(name) {
-    const hosts = {
-      "ng://": "Angular",
-      "webpack://": "Webpack"
-    };
-
-    return hosts[name] || name;
-  }
-
   renderEmptyElement(message) {
     return _react2.default.createElement(
       "div",
@@ -16851,7 +16803,6 @@ class SourcesTree extends _react.Component {
     const treeProps = {
       autoExpandAll: false,
       autoExpandDepth: expanded ? 0 : 1,
-      autoExpandOnHighlight: true,
       expanded,
       getChildren: item => (0, _sourcesTree.nodeHasChildren)(item) ? item.contents : [],
       getParent: item => parentMap.get(item),
@@ -16923,7 +16874,7 @@ var _initialiseProps = function () {
   this.getIcon = (sources, item, depth) => {
     const { debuggeeUrl, projectRoot } = this.props;
 
-    if (item.path === "webpack://") {
+    if (item.path === "/Webpack") {
       return _react2.default.createElement(_Svg2.default, { name: "webpack" });
     }
     if (item.path === "/Angular") {
@@ -17035,7 +16986,7 @@ var _initialiseProps = function () {
         "span",
         { className: "label" },
         " ",
-        this.renderItemName(item.name),
+        item.name,
         " "
       )
     );
@@ -18344,7 +18295,9 @@ class Preview extends _react.PureComponent {
 
     this.onMouseOver = e => {
       const { target } = e;
-      this.props.updatePreview(target, this.props.editor);
+      if (this.props.selectedFrameVisible) {
+        this.props.updatePreview(target, this.props.editor);
+      }
     };
 
     this.onMouseUp = () => {
@@ -18431,7 +18384,8 @@ const {
 
 exports.default = (0, _reactRedux.connect)(state => ({
   preview: (0, _selectors.getPreview)(state),
-  selectedSource: (0, _selectors.getSelectedSource)(state)
+  selectedSource: (0, _selectors.getSelectedSource)(state),
+  selectedFrameVisible: (0, _selectors.isSelectedFrameVisible)(state)
 }), {
   addExpression,
   setPopupObjectProperties,
@@ -30508,7 +30462,7 @@ function updatePreview(target, editor) {
       return;
     }
 
-    if (!(0, _selectors.isSelectedFrameVisible)(getState()) || !(0, _selectors.isLineInScope)(getState(), tokenPos.line)) {
+    if (!(0, _selectors.isLineInScope)(getState(), tokenPos.line)) {
       return;
     }
 
@@ -38823,6 +38777,7 @@ function formatSource(source, root) {
 function getRelativeSources(state) {
   const sources = (0, _selectors.getSources)(state);
   const root = (0, _selectors.getProjectDirectoryRoot)(state);
+
   return sources.valueSeq().toJS().filter(({ url }) => url && url.includes(root)).map(source => formatSource(source, root));
 }
 
@@ -39031,7 +38986,6 @@ class BreakpointItem extends _react.Component {
         // $FlowIgnore
         mountNode.innerHTML = "";
         this.editor.appendToLocalElement(mountNode);
-        this.editor.codeMirror.on("mousedown", (_, e) => e.preventDefault());
       }
     }
   }
