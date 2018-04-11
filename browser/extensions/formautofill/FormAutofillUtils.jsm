@@ -849,7 +849,6 @@ this.FormAutofillUtils = {
       default:
         throw new Error("Unexpected attributeName");
     }
-
   },
 
   /**
