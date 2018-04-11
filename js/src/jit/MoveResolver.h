@@ -46,23 +46,11 @@ class MoveOperand
 
   public:
     MoveOperand()
-      : kind_{ static_cast<Kind>(0) }
-      , code_{}
-      , disp_{}
-    {
-    }
-    explicit MoveOperand(Register reg)
-      : kind_(REG)
-      , code_(reg.code())
-      , disp_{}
-    {
-    }
-    explicit MoveOperand(FloatRegister reg)
-      : kind_(FLOAT_REG)
-      , code_(reg.code())
-      , disp_{}
-    {
-    }
+    { }
+    explicit MoveOperand(Register reg) : kind_(REG), code_(reg.code())
+    { }
+    explicit MoveOperand(FloatRegister reg) : kind_(FLOAT_REG), code_(reg.code())
+    { }
     MoveOperand(Register reg, int32_t disp, Kind kind = MEMORY)
         : kind_(kind),
         code_(reg.code()),
@@ -220,14 +208,7 @@ class MoveOp
 
   public:
     MoveOp()
-      : cycleBegin_{ false }
-      , cycleEnd_{ false }
-      , cycleBeginSlot_{}
-      , cycleEndSlot_{}
-      , type_{ GENERAL }
-      , endCycleType_{ GENERAL }
-    {
-    }
+    { }
     MoveOp(const MoveOperand& from, const MoveOperand& to, Type type)
       : from_(from),
         to_(to),

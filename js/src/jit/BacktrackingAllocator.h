@@ -531,11 +531,6 @@ class VirtualRegister
 
   public:
     explicit VirtualRegister()
-      : ins_{ nullptr }
-      , def_{ nullptr }
-      , isTemp_{ false }
-      , usedByPhi_{ false }
-      , mustCopyInput_{ false }
     {
         // Note: This class is zeroed before it is constructed.
     }

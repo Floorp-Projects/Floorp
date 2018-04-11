@@ -1538,14 +1538,14 @@ class MutableWrappedPtrOperations<StackShape, Wrapper>
     void setAttrs(uint8_t attrs) { ss().attrs = attrs; }
 };
 
-inline Shape::Shape(const StackShape& other, uint32_t nfixed)
-  : base_(other.base)
-  , propid_(other.propid)
-  , slotInfo(other.maybeSlot() | (nfixed << FIXED_SLOTS_SHIFT))
-  , attrs(other.attrs)
-  , flags(other.flags)
-  , parent(nullptr)
-  , listp{ nullptr }
+inline
+Shape::Shape(const StackShape& other, uint32_t nfixed)
+  : base_(other.base),
+    propid_(other.propid),
+    slotInfo(other.maybeSlot() | (nfixed << FIXED_SLOTS_SHIFT)),
+    attrs(other.attrs),
+    flags(other.flags),
+    parent(nullptr)
 {
 #ifdef DEBUG
     gc::AllocKind allocKind = getAllocKind();
@@ -1570,14 +1570,14 @@ class NurseryShapesRef : public gc::BufferableRef
     void trace(JSTracer* trc) override;
 };
 
-inline Shape::Shape(UnownedBaseShape* base, uint32_t nfixed)
-  : base_(base)
-  , propid_(JSID_EMPTY)
-  , slotInfo(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT))
-  , attrs(0)
-  , flags(0)
-  , parent(nullptr)
-  , listp{ nullptr }
+inline
+Shape::Shape(UnownedBaseShape* base, uint32_t nfixed)
+  : base_(base),
+    propid_(JSID_EMPTY),
+    slotInfo(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
+    attrs(0),
+    flags(0),
+    parent(nullptr)
 {
     MOZ_ASSERT(base);
     kids.setNull();

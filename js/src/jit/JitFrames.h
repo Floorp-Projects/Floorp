@@ -231,9 +231,7 @@ class FrameSizeClass
 
   public:
     FrameSizeClass()
-      : class_{}
-    {
-    }
+    { }
 
     static FrameSizeClass None() {
         return FrameSizeClass(NO_FRAME_SIZE_CLASS_ID);

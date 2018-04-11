@@ -1646,25 +1646,19 @@ IsLatin1Equivalent(char16_t c, RegExpCompiler* compiler)
 
 // Attempts to compile the regexp using an Irregexp code generator.  Returns
 // a fixed array or a null handle depending on whether it succeeded.
-RegExpCompiler::RegExpCompiler(JSContext* cx,
-                               LifoAlloc* alloc,
-                               int capture_count,
-                               bool ignore_case,
-                               bool latin1,
-                               bool match_only,
-                               bool unicode)
-  : next_register_(2 * (capture_count + 1))
-  , recursion_depth_(0)
-  , macro_assembler_{ nullptr }
-  , ignore_case_(ignore_case)
-  , latin1_(latin1)
-  , match_only_(match_only)
-  , unicode_(unicode)
-  , reg_exp_too_big_(false)
-  , current_expansion_factor_(1)
-  , frequency_collator_()
-  , cx_(cx)
-  , alloc_(alloc)
+RegExpCompiler::RegExpCompiler(JSContext* cx, LifoAlloc* alloc, int capture_count,
+                               bool ignore_case, bool latin1, bool match_only, bool unicode)
+  : next_register_(2 * (capture_count + 1)),
+    recursion_depth_(0),
+    ignore_case_(ignore_case),
+    latin1_(latin1),
+    match_only_(match_only),
+    unicode_(unicode),
+    reg_exp_too_big_(false),
+    current_expansion_factor_(1),
+    frequency_collator_(),
+    cx_(cx),
+    alloc_(alloc)
 {
     accept_ = alloc->newInfallible<EndNode>(alloc, EndNode::ACCEPT);
     MOZ_ASSERT(next_register_ - 1 <= RegExpMacroAssembler::kMaxRegister);

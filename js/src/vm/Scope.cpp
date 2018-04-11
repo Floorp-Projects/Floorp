@@ -1356,17 +1356,6 @@ ScopeIter::hasSyntacticEnvironment() const
 }
 
 BindingIter::BindingIter(Scope* scope)
-  : positionalFormalStart_{}
-  , nonPositionalFormalStart_{}
-  , topLevelFunctionStart_{}
-  , varStart_{}
-  , letStart_{}
-  , constStart_{}
-  , flags_{ '\0' }
-  , argumentSlot_{}
-  , frameSlot_{}
-  , environmentSlot_{}
-  , names_{ nullptr }
 {
     switch (scope->kind()) {
       case ScopeKind::Lexical:

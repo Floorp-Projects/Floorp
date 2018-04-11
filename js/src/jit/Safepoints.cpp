@@ -393,12 +393,9 @@ SafepointWriter::endEntry()
 
 SafepointReader::SafepointReader(IonScript* script, const SafepointIndex* si)
   : stream_(script->safepoints() + si->safepointOffset(),
-            script->safepoints() + script->safepointsSize())
-  , frameSlots_((script->frameSlots() / sizeof(intptr_t)) + 1)
-  , // Stack slot counts are inclusive.
-  argumentSlots_(script->argumentSlots() / sizeof(intptr_t))
-  , nunboxSlotsRemaining_{}
-  , slotsOrElementsSlotsRemaining_{}
+            script->safepoints() + script->safepointsSize()),
+    frameSlots_((script->frameSlots() / sizeof(intptr_t)) + 1), // Stack slot counts are inclusive.
+    argumentSlots_(script->argumentSlots() / sizeof(intptr_t))
 {
     osiCallPointOffset_ = stream_.readUnsigned();
 

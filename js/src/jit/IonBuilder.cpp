@@ -115,63 +115,53 @@ jit::NewBaselineFrameInspector(TempAllocator* temp, BaselineFrame* frame)
     return inspector;
 }
 
-IonBuilder::IonBuilder(JSContext* analysisContext,
-                       CompileCompartment* comp,
-                       const JitCompileOptions& options,
-                       TempAllocator* temp,
-                       MIRGraph* graph,
-                       CompilerConstraintList* constraints,
-                       BaselineInspector* inspector,
-                       CompileInfo* info,
+IonBuilder::IonBuilder(JSContext* analysisContext, CompileCompartment* comp,
+                       const JitCompileOptions& options, TempAllocator* temp,
+                       MIRGraph* graph, CompilerConstraintList* constraints,
+                       BaselineInspector* inspector, CompileInfo* info,
                        const OptimizationInfo* optimizationInfo,
-                       BaselineFrameInspector* baselineFrame,
-                       size_t inliningDepth,
+                       BaselineFrameInspector* baselineFrame, size_t inliningDepth,
                        uint32_t loopDepth)
-  : MIRGenerator(comp, options, temp, graph, info, optimizationInfo)
-  , backgroundCodegen_(nullptr)
-  , actionableAbortScript_(nullptr)
-  , actionableAbortPc_(nullptr)
-  , actionableAbortMessage_(nullptr)
-  , rootList_(nullptr)
-  , analysisContext(analysisContext)
-  , baselineFrame_(baselineFrame)
-  , constraints_(constraints)
-  , thisTypes(nullptr)
-  , argTypes(nullptr)
-  , typeArray(nullptr)
-  , typeArrayHint(0)
-  , bytecodeTypeMap(nullptr)
-  , current{ nullptr }
-  , loopDepth_(loopDepth)
-  , blockWorklist(*temp)
-  , cfgCurrent(nullptr)
-  , cfg(nullptr)
-  , trackedOptimizationSites_(*temp)
-  , lexicalCheck_(nullptr)
-  , callerResumePoint_(nullptr)
-  , callerBuilder_(nullptr)
-  , iterators_(*temp)
-  , loopHeaders_(*temp)
-  , loopHeaderStack_(*temp)
-  ,
+  : MIRGenerator(comp, options, temp, graph, info, optimizationInfo),
+    backgroundCodegen_(nullptr),
+    actionableAbortScript_(nullptr),
+    actionableAbortPc_(nullptr),
+    actionableAbortMessage_(nullptr),
+    rootList_(nullptr),
+    analysisContext(analysisContext),
+    baselineFrame_(baselineFrame),
+    constraints_(constraints),
+    thisTypes(nullptr),
+    argTypes(nullptr),
+    typeArray(nullptr),
+    typeArrayHint(0),
+    bytecodeTypeMap(nullptr),
+    loopDepth_(loopDepth),
+    blockWorklist(*temp),
+    cfgCurrent(nullptr),
+    cfg(nullptr),
+    trackedOptimizationSites_(*temp),
+    lexicalCheck_(nullptr),
+    callerResumePoint_(nullptr),
+    callerBuilder_(nullptr),
+    iterators_(*temp),
+    loopHeaders_(*temp),
+    loopHeaderStack_(*temp),
 #ifdef DEBUG
-  cfgLoopHeaderStack_(*temp)
-  ,
+    cfgLoopHeaderStack_(*temp),
 #endif
-  inspector(inspector)
-  , inliningDepth_(inliningDepth)
-  , inlinedBytecodeLength_(0)
-  , numLoopRestarts_(0)
-  , failedBoundsCheck_(info->script()->failedBoundsCheck())
-  , failedShapeGuard_(info->script()->failedShapeGuard())
-  , failedLexicalCheck_(info->script()->failedLexicalCheck())
-  ,
+    inspector(inspector),
+    inliningDepth_(inliningDepth),
+    inlinedBytecodeLength_(0),
+    numLoopRestarts_(0),
+    failedBoundsCheck_(info->script()->failedBoundsCheck()),
+    failedShapeGuard_(info->script()->failedShapeGuard()),
+    failedLexicalCheck_(info->script()->failedLexicalCheck()),
 #ifdef DEBUG
-  hasLazyArguments_(false)
-  ,
+    hasLazyArguments_(false),
 #endif
-  inlineCallInfo_(nullptr)
-  , maybeFallbackFunctionGetter_(nullptr)
+    inlineCallInfo_(nullptr),
+    maybeFallbackFunctionGetter_(nullptr)
 {
     script_ = info->script();
     scriptHasIonScript_ = script_->hasIonScript();

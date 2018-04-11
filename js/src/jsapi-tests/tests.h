@@ -490,11 +490,7 @@ class AutoLeaveZeal
     uint32_t frequency_;
 
   public:
-    explicit AutoLeaveZeal(JSContext* cx)
-      : cx_(cx)
-      , zealBits_{}
-      , frequency_{}
-    {
+    explicit AutoLeaveZeal(JSContext* cx) : cx_(cx) {
         uint32_t dummy;
         JS_GetGCZealBits(cx_, &zealBits_, &frequency_, &dummy);
         JS_SetGCZeal(cx_, 0, 0);

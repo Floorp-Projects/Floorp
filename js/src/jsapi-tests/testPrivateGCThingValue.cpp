@@ -23,10 +23,8 @@ class TestTracer : public JS::CallbackTracer
     bool found;
 
     explicit TestTracer(JSContext* cx)
-      : JS::CallbackTracer(cx)
-      , expectedCell{ nullptr }
-      , expectedKind{ static_cast<JS::TraceKind>(0) }
-      , found(false)
+      : JS::CallbackTracer(cx),
+        found(false)
     { }
 };
 

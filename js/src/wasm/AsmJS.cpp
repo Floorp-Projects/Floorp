@@ -137,10 +137,7 @@ class AsmJSGlobal
                 union U {
                     ValType importType_;
                     Val val_;
-                    U()
-                      : importType_{ static_cast<ValType>(0) }
-                    {
-                    }
+                    U() {}
                 } u;
             } var;
             uint32_t ffiIndex_;
@@ -156,10 +153,7 @@ class AsmJSGlobal
                 ConstantKind kind_;
                 double value_;
             } constant;
-            V()
-              : ffiIndex_{}
-            {
-            }
+            V() {}
         } u;
     } pod;
     CacheableChars field_;
@@ -341,11 +335,10 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
     }
 
     AsmJSMetadata()
-      : Metadata(ModuleKind::AsmJS)
-      , cacheResult(CacheResult::Miss)
-      , toStringStart{}
-      , srcStart(0)
-      , strict(false)
+      : Metadata(ModuleKind::AsmJS),
+        cacheResult(CacheResult::Miss),
+        srcStart(0),
+        strict(false)
     {}
     ~AsmJSMetadata() override {}
 
@@ -1586,11 +1579,7 @@ class MOZ_STACK_CLASS ModuleValidator
             AsmJSMathBuiltinFunction func;
         } u;
 
-        MathBuiltin()
-          : kind(Kind(-1))
-          , u{}
-        {
-        }
+        MathBuiltin() : kind(Kind(-1)) {}
         explicit MathBuiltin(double cst) : kind(Constant) {
             u.cst = cst;
         }

@@ -16,10 +16,9 @@ using namespace js;
 using namespace js::jit;
 
 BytecodeAnalysis::BytecodeAnalysis(TempAllocator& alloc, JSScript* script)
-  : script_(script)
-  , infos_(alloc)
-  , usesEnvironmentChain_(false)
-  , hasTryFinally_{ false }
+  : script_(script),
+    infos_(alloc),
+    usesEnvironmentChain_(false)
 {
 }
 

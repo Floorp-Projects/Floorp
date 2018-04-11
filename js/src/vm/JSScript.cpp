@@ -1627,14 +1627,10 @@ ScriptSource::chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& 
     return ret;
 }
 
-ScriptSource::PinnedChars::PinnedChars(JSContext* cx,
-                                       ScriptSource* source,
+ScriptSource::PinnedChars::PinnedChars(JSContext* cx, ScriptSource* source,
                                        UncompressedSourceCache::AutoHoldEntry& holder,
-                                       size_t begin,
-                                       size_t len)
-  : stack_{ nullptr }
-  , prev_{ nullptr }
-  , source_(source)
+                                       size_t begin, size_t len)
+  : source_(source)
 {
     chars_ = source->chars(cx, holder, begin, len);
     if (chars_) {
