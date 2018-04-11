@@ -18,39 +18,39 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
-            let win = await openWebIDE();
+        (async function() {
+          let win = await openWebIDE();
 
-            const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
-            await gDevToolsBrowser.isWebIDEInitialized.promise;
-            ok(true, "WebIDE was initialized");
+          const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
+          await gDevToolsBrowser.isWebIDEInitialized.promise;
+          ok(true, "WebIDE was initialized");
 
-            ok(win, "Found a window");
-            ok(win.AppManager, "App Manager accessible");
-            let appmgr = win.AppManager;
-            ok(appmgr.connection, "App Manager connection ready");
-            ok(appmgr.runtimeList, "Runtime list ready");
+          ok(win, "Found a window");
+          ok(win.AppManager, "App Manager accessible");
+          let appmgr = win.AppManager;
+          ok(appmgr.connection, "App Manager connection ready");
+          ok(appmgr.runtimeList, "Runtime list ready");
 
             // test error reporting
-            let nbox = win.document.querySelector("#notificationbox");
-            let notification =  nbox.getNotificationWithValue("webide:errornotification");
-            ok(!notification, "No notification yet");
-            let deferred = new Promise((resolve, reject) => {
-              nextTick().then(() => {
-                reject("BOOM!");
-              });
+          let nbox = win.document.querySelector("#notificationbox");
+          let notification =  nbox.getNotificationWithValue("webide:errornotification");
+          ok(!notification, "No notification yet");
+          let deferred = new Promise((resolve, reject) => {
+            nextTick().then(() => {
+              reject("BOOM!");
             });
-            try {
-              await win.UI.busyUntil(deferred, "xx");
-            } catch(e) {/* This *will* fail */}
-            notification =  nbox.getNotificationWithValue("webide:errornotification");
-            ok(notification, "Error has been reported");
+          });
+          try {
+            await win.UI.busyUntil(deferred, "xx");
+          } catch (e) { /* This *will* fail */ }
+          notification =  nbox.getNotificationWithValue("webide:errornotification");
+          ok(notification, "Error has been reported");
 
-            await closeWebIDE(win);
+          await closeWebIDE(win);
 
-            SimpleTest.finish();
+          SimpleTest.finish();
         })();
-      }
+      };
     </script>
   </body>
 </html>

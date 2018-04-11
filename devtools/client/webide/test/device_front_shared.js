@@ -109,7 +109,7 @@ function addNewFieldInteger() {
   is(customValue.value, "", "Custom integer value reset");
 }
 
-var editFieldInteger = async function () {
+var editFieldInteger = async function() {
   // Edit existing custom integer preference
   newField.value = 3;
   newField.click();
@@ -130,7 +130,7 @@ var editFieldInteger = async function () {
   }
 };
 
-var resetExistingField = async function (id) {
+var resetExistingField = async function(id) {
   let existing = doc.getElementById(id);
   existing.click();
   is(existing.checked, true, "Existing boolean value is correct");
@@ -143,7 +143,7 @@ var resetExistingField = async function (id) {
   is(existing.checked, true, "Existing field reset");
 };
 
-var resetNewField = async function (id) {
+var resetNewField = async function(id) {
   let custom = doc.getElementById(id);
   custom.click();
   is(custom.value, "test", "New string value is correct");

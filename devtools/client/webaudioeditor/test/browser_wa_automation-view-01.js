@@ -6,7 +6,7 @@
  * or params exist.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, panel } = await initWebAudioEditor(AUTOMATION_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;

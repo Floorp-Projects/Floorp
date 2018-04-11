@@ -5,7 +5,7 @@
  * Tests audio param connection rendering.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, panel } = await initWebAudioEditor(CONNECT_MULTI_PARAM_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;

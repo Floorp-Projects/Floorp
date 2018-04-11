@@ -15,8 +15,9 @@ function waitForDeviceClosed() {
   ChromeUtils.import("resource:///modules/webrtcUI.jsm", temp);
   let webrtcUI = temp.webrtcUI;
 
-  if (!webrtcUI.showGlobalIndicator)
+  if (!webrtcUI.showGlobalIndicator) {
     return Promise.resolve();
+  }
 
   return new Promise((resolve, reject) => {
     const message = "webrtc:UpdateGlobalIndicators";
@@ -30,7 +31,7 @@ function waitForDeviceClosed() {
   });
 }
 
-add_task(async function () {
+add_task(async function() {
   let { target, panel } = await initWebAudioEditor(MEDIA_NODES_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;

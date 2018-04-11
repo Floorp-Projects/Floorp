@@ -6,7 +6,7 @@
  * switching between AudioParam rerenders the graph.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, panel } = await initWebAudioEditor(AUTOMATION_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, AutomationView } = panelWin;

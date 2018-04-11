@@ -43,7 +43,7 @@ var ContextView = {
   /**
    * Initialization function, called when the tool is started.
    */
-  initialize: function () {
+  initialize: function() {
     this._onGraphClick = this._onGraphClick.bind(this);
     this._onThemeChange = this._onThemeChange.bind(this);
     this._onStartContext = this._onStartContext.bind(this);
@@ -60,7 +60,7 @@ var ContextView = {
   /**
    * Destruction function, called when the tool is closed.
    */
-  destroy: function () {
+  destroy: function() {
     // If the graph was rendered at all, then the handler
     // for zooming in will be set. We must remove it to prevent leaks.
     if (this._zoomBinding) {
@@ -77,7 +77,7 @@ var ContextView = {
    * Called when a page is reloaded and waiting for a "start-context" event
    * and clears out old content
    */
-  resetUI: function () {
+  resetUI: function() {
     this.clearGraph();
     this.resetGraphTransform();
   },
@@ -86,14 +86,14 @@ var ContextView = {
    * Clears out the rendered graph, called when resetting the SVG elements to draw again,
    * or when resetting the entire UI tool
    */
-  clearGraph: function () {
+  clearGraph: function() {
     $("#graph-target").innerHTML = "";
   },
 
   /**
    * Moves the graph back to its original scale and translation.
    */
-  resetGraphTransform: function () {
+  resetGraphTransform: function() {
     // Only reset if the graph was ever drawn.
     if (this._zoomBinding) {
       let { translate, scale } = GRAPH_DEFAULTS;
@@ -106,11 +106,11 @@ var ContextView = {
     }
   },
 
-  getCurrentScale: function () {
+  getCurrentScale: function() {
     return this._zoomBinding ? this._zoomBinding.scale() : null;
   },
 
-  getCurrentTranslation: function () {
+  getCurrentTranslation: function() {
     return this._zoomBinding ? this._zoomBinding.translate() : null;
   },
 
@@ -119,7 +119,7 @@ var ContextView = {
    * focused styles from all other nodes. If no `actorID` specified,
    * make all nodes appear unselected.
    */
-  focusNode: function (actorID) {
+  focusNode: function(actorID) {
     // Remove class "selected" from all nodes
     Array.forEach($$(".nodes > g"), $node => $node.classList.remove("selected"));
     // Add to "selected"
@@ -131,7 +131,7 @@ var ContextView = {
   /**
    * Takes an actorID and returns the corresponding DOM SVG element in the graph
    */
-  _getNodeByID: function (actorID) {
+  _getNodeByID: function(actorID) {
     return $(".nodes > g[data-id='" + actorID + "']");
   },
 
@@ -139,7 +139,7 @@ var ContextView = {
    * Sets the appropriate class on an SVG node when its bypass
    * status is toggled.
    */
-  _bypassNode: function (node, enabled) {
+  _bypassNode: function(node, enabled) {
     let el = this._getNodeByID(node.id);
     el.classList[enabled ? "add" : "remove"]("bypassed");
   },
@@ -149,7 +149,7 @@ var ContextView = {
    * throttled to be called at most every `GRAPH_DEBOUNCE_TIMER` milliseconds.
    * It's called whenever the audio context routing changes, after being debounced.
    */
-  draw: function () {
+  draw: function() {
     // Clear out previous SVG information
     this.clearGraph();
 
@@ -159,9 +159,9 @@ var ContextView = {
 
     // Post-render manipulation of the nodes
     let oldDrawNodes = renderer.drawNodes();
-    renderer.drawNodes(function (graph, root) {
+    renderer.drawNodes(function(graph, root) {
       let svgNodes = oldDrawNodes(graph, root);
-      svgNodes.each(function (n) {
+      svgNodes.each(function(n) {
         let node = graph.node(n);
         let classString = "audionode type-" + node.type + (node.bypassed ? " bypassed" : "");
         this.setAttribute("class", classString);
@@ -175,9 +175,9 @@ var ContextView = {
     let oldDrawEdgePaths = renderer.drawEdgePaths();
     let defaultClasses = "edgePath enter";
 
-    renderer.drawEdgePaths(function (graph, root) {
+    renderer.drawEdgePaths(function(graph, root) {
       let svgEdges = oldDrawEdgePaths(graph, root);
-      svgEdges.each(function (e) {
+      svgEdges.each(function(e) {
         let edge = graph.edge(e);
 
         // We have to manually specify the default classes on the edges
@@ -242,7 +242,7 @@ var ContextView = {
     // Handle the sliding and zooming of the graph,
     // store as `this._zoomBinding` so we can unbind during destruction
     if (!this._zoomBinding) {
-      this._zoomBinding = d3.behavior.zoom().on("zoom", function () {
+      this._zoomBinding = d3.behavior.zoom().on("zoom", function() {
         var ev = d3.event;
         d3.select("#graph-target")
           .attr("transform", "translate(" + ev.translate + ") scale(" + ev.scale + ")");
@@ -263,7 +263,7 @@ var ContextView = {
    * Called once "start-context" is fired, indicating that there is an audio
    * context being created to view so render the graph.
    */
-  _onStartContext: function () {
+  _onStartContext: function() {
     this.draw();
   },
 
@@ -271,7 +271,7 @@ var ContextView = {
    * Called when `gAudioNodes` fires an event -- most events (listed
    * in GRAPH_REDRAW_EVENTS) qualify as a redraw event.
    */
-  _onEvent: function (eventName, ...args) {
+  _onEvent: function(eventName, ...args) {
     // If bypassing, just toggle the class on the SVG node
     // rather than rerendering everything
     if (eventName === "bypass") {
@@ -285,7 +285,7 @@ var ContextView = {
   /**
    * Fired when the devtools theme changes.
    */
-  _onThemeChange: function (theme) {
+  _onThemeChange: function(theme) {
     let markerColor = MARKER_STYLING[theme];
     let marker = $("#arrowhead");
     if (marker) {
@@ -299,12 +299,13 @@ var ContextView = {
    * @param Event e
    *        Click event.
    */
-  _onGraphClick: function (e) {
+  _onGraphClick: function(e) {
     let node = findGraphNodeParent(e.target);
     // If node not found (clicking outside of an audio node in the graph),
     // then ignore this event
-    if (!node)
+    if (!node) {
       return;
+    }
 
     let id = node.getAttribute("data-id");
 

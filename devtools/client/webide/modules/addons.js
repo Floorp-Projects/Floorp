@@ -37,7 +37,7 @@ addonsListener.onUninstalled = (updatedAddon) => {
 AddonManager.addAddonListener(addonsListener);
 
 var AvailableAddons = null;
-var GetAvailableAddons = exports.GetAvailableAddons = function () {
+var GetAvailableAddons = exports.GetAvailableAddons = function() {
   if (!AvailableAddons) {
     AvailableAddons = {
       adb: new ADBAddon()
@@ -46,7 +46,7 @@ var GetAvailableAddons = exports.GetAvailableAddons = function () {
   return AvailableAddons;
 };
 
-exports.ForgetAddonsList = function () {
+exports.ForgetAddonsList = function() {
   AvailableAddons = null;
 };
 
@@ -63,7 +63,7 @@ Addon.prototype = {
     return this._status;
   },
 
-  updateInstallStatus: function () {
+  updateInstallStatus: function() {
     AddonManager.getAddonByID(this.addonID, (addon) => {
       if (addon && !addon.userDisabled) {
         this.status = "installed";
@@ -73,7 +73,7 @@ Addon.prototype = {
     });
   },
 
-  install: function () {
+  install: function() {
     AddonManager.getAddonByID(this.addonID, (addon) => {
       if (addon && !addon.userDisabled) {
         this.status = "installed";
@@ -91,26 +91,26 @@ Addon.prototype = {
     });
   },
 
-  uninstall: function () {
+  uninstall: function() {
     AddonManager.getAddonByID(this.addonID, (addon) => {
       addon.uninstall();
     });
   },
 
-  installFailureHandler: function (install, message) {
+  installFailureHandler: function(install, message) {
     this.status = "uninstalled";
     this.emit("failure", message);
   },
 
-  onDownloadStarted: function () {
+  onDownloadStarted: function() {
     this.status = "downloading";
   },
 
-  onInstallStarted: function () {
+  onInstallStarted: function() {
     this.status = "installing";
   },
 
-  onDownloadProgress: function (install) {
+  onDownloadProgress: function(install) {
     if (install.maxProgress == -1) {
       this.emit("progress", -1);
     } else {
@@ -118,20 +118,20 @@ Addon.prototype = {
     }
   },
 
-  onInstallEnded: function ({addon}) {
+  onInstallEnded: function({addon}) {
     addon.userDisabled = false;
   },
 
-  onDownloadCancelled: function (install) {
+  onDownloadCancelled: function(install) {
     this.installFailureHandler(install, "Download cancelled");
   },
-  onDownloadFailed: function (install) {
+  onDownloadFailed: function(install) {
     this.installFailureHandler(install, "Download failed");
   },
-  onInstallCancelled: function (install) {
+  onInstallCancelled: function(install) {
     this.installFailureHandler(install, "Install cancelled");
   },
-  onInstallFailed: function (install) {
+  onInstallFailed: function(install) {
     this.installFailureHandler(install, "Install failed");
   },
 };

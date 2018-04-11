@@ -33,15 +33,14 @@
                 } else {
                   reject("Can't find item");
                 }
-              })
+              });
             });
             let li = doc.querySelector('[status="installed"][addon="adb"]');
             li.querySelector(".uninstall-button").click();
           });
         }
 
-        (async function () {
-
+        (async function() {
           ok(!Devices.helperAddonInstalled, "Helper not installed");
 
           let win = await openWebIDE(true);
@@ -52,7 +51,7 @@
           await nextTick();
 
           let w = addonDoc.querySelector(".warning");
-          let display = addonDoc.defaultView.getComputedStyle(w).display
+          let display = addonDoc.defaultView.getComputedStyle(w).display;
           is(display, "none", "Warning about missing ADB hidden");
 
           await uninstallADBFromUI(addonDoc, "adb");
@@ -60,15 +59,14 @@
           items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 0, "No usb runtime listed");
 
-          display = addonDoc.defaultView.getComputedStyle(w).display
+          display = addonDoc.defaultView.getComputedStyle(w).display;
           is(display, "block", "Warning about missing ADB present");
 
           await closeWebIDE(win);
 
           SimpleTest.finish();
-
         })();
-      }
+      };
     </script>
   </body>
 </html>

@@ -8,8 +8,8 @@ const {gDevTools} = require("devtools/client/framework/devtools");
 const {GetAvailableAddons, ForgetAddonsList} = require("devtools/client/webide/modules/addons");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
-window.addEventListener("load", function () {
-  document.querySelector("#aboutaddons").onclick = function () {
+window.addEventListener("load", function() {
+  document.querySelector("#aboutaddons").onclick = function() {
     let browserWin = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     if (browserWin && browserWin.BrowserOpenAddonsMgr) {
       browserWin.BrowserOpenAddonsMgr("addons://list/extension");
@@ -19,7 +19,7 @@ window.addEventListener("load", function () {
   BuildUI(GetAvailableAddons());
 }, {capture: true, once: true});
 
-window.addEventListener("unload", function () {
+window.addEventListener("unload", function() {
   ForgetAddonsList();
 }, {capture: true, once: true});
 
@@ -32,7 +32,6 @@ function BuildUI(addons) {
 }
 
 function BuildItem(addon, type) {
-
   function onAddonUpdate(arg) {
     progress.removeAttribute("value");
     li.setAttribute("status", addon.status);
@@ -55,7 +54,7 @@ function BuildItem(addon, type) {
   addon.on("failure", onAddonFailure);
   addon.on("progress", onAddonProgress);
 
-  window.addEventListener("unload", function () {
+  window.addEventListener("unload", function() {
     addon.off("update", onAddonUpdate);
     addon.off("failure", onAddonFailure);
     addon.off("progress", onAddonProgress);

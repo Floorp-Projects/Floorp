@@ -12,7 +12,7 @@ var AutomationView = {
   /**
    * Initialization function called when the tool starts up.
    */
-  initialize: function () {
+  initialize: function() {
     this._buttons = $("#automation-param-toolbar-buttons");
     this.graph = new LineGraphWidget($("#automation-graph"), { avg: false });
     this.graph.selectionEnabled = false;
@@ -29,7 +29,7 @@ var AutomationView = {
   /**
    * Destruction function called when the tool cleans up.
    */
-  destroy: function () {
+  destroy: function() {
     this._buttons.removeEventListener("click", this._onButtonClick);
     window.off(EVENTS.UI_INSPECTOR_RESIZE, this._onResize);
     window.off(EVENTS.UI_INSPECTOR_NODE_SET, this._onNodeSet);
@@ -38,7 +38,7 @@ var AutomationView = {
   /**
    * Empties out the props view.
    */
-  resetUI: function () {
+  resetUI: function() {
     this._currentNode = null;
   },
 
@@ -83,7 +83,7 @@ var AutomationView = {
    * Create the buttons for each AudioParam, that when clicked,
    * render the graph for that AudioParam.
    */
-  _createParamButtons: function (params) {
+  _createParamButtons: function(params) {
     this._buttons.innerHTML = "";
     params.forEach((param, i) => {
       let button = document.createElement("toolbarbutton");
@@ -105,7 +105,7 @@ var AutomationView = {
    * Internally sets the current audio node and rebuilds appropriate
    * views.
    */
-  _setAudioNode: function (node) {
+  _setAudioNode: function(node) {
     this._currentNode = node;
     if (this._currentNode) {
       this.build();
@@ -117,7 +117,7 @@ var AutomationView = {
    * the audio node has no AudioParams, no automation events, or
    * shows the graph.
    */
-  _setState: function (state) {
+  _setState: function(state) {
     let contentView = $("#automation-content");
     let emptyView = $("#automation-empty");
 
@@ -135,7 +135,7 @@ var AutomationView = {
    * Event handlers
    */
 
-  _onButtonClick: function (e) {
+  _onButtonClick: function(e) {
     Array.forEach($$(".automation-param-button"), $btn => $btn.removeAttribute("selected"));
     let paramName = e.target.getAttribute("data-param");
     e.target.setAttribute("selected", true);
@@ -146,14 +146,14 @@ var AutomationView = {
   /**
    * Called when the inspector is resized.
    */
-  _onResize: function () {
+  _onResize: function() {
     this.graph.refresh();
   },
 
   /**
    * Called when the inspector view determines a node is selected.
    */
-  _onNodeSet: function (id) {
+  _onNodeSet: function(id) {
     this._setAudioNode(id != null ? gAudioNodes.get(id) : null);
   }
 };

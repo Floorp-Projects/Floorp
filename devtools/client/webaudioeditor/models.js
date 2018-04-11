@@ -141,7 +141,6 @@ class AudioNodeModel extends EventEmitter {
   }
 }
 
-
 /**
  * Constructor for a Collection of `AudioNodeModel` models.
  *

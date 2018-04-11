@@ -5,7 +5,7 @@
  * Tests more edge rendering for complex graphs.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, panel } = await initWebAudioEditor(COMPLEX_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$ } = panelWin;
@@ -22,7 +22,6 @@ add_task(async function () {
 
   let types = ["AudioDestinationNode", "OscillatorNode", "GainNode", "ScriptProcessorNode",
                "OscillatorNode", "GainNode", "AudioBufferSourceNode", "BiquadFilterNode"];
-
 
   types.forEach((type, i) => {
     ok(findGraphNode(panelWin, nodeIDs[i]).classList.contains("type-" + type), "found " + type + " with class");
