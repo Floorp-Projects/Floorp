@@ -19,7 +19,6 @@
 #include "nsIUUIDGenerator.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIPermissionManager.h"
-#include "nsIPopupWindowManager.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsISupportsPrimitives.h"
