@@ -606,12 +606,15 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
 
 .keyframes-graph-path .hint rect {
   fill-opacity: 0.1;
+}
+
+.keyframes-graph-path .hint line {
   stroke: #00b0bd;
   stroke-opacity: 0;
   vector-effect: non-scaling-stroke;
 }
 
-.keyframes-graph-path .hint rect:hover {
+.keyframes-graph-path .hint:hover line {
   stroke-opacity: 1;
 }
 

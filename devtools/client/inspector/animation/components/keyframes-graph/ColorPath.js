@@ -94,6 +94,14 @@ class ColorPath extends ComputedStylePath {
             y: -graphHeight,
             height: graphHeight,
             width: endTime - startTime,
+          }
+        ),
+        dom.line(
+          {
+            x1: startTime,
+            y1: -graphHeight,
+            x2: endTime,
+            y2: -graphHeight,
             style: {
               "stroke-width": easingHintStrokeWidth,
             },
