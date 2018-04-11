@@ -509,7 +509,8 @@ struct HelperThreadStats
 #define FOR_EACH_SIZE(macro) \
     macro(_, MallocHeap, stateData) \
     macro(_, MallocHeap, parseTask) \
-    macro(_, MallocHeap, ionBuilder)
+    macro(_, MallocHeap, ionBuilder) \
+    macro(_, MallocHeap, wasmCompile)
 
     explicit HelperThreadStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
