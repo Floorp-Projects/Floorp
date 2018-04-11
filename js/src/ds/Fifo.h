@@ -177,6 +177,14 @@ class Fifo
         erased += EraseIf(rear_, pred);
         return erased;
     }
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return front_.sizeOfExcludingThis(mallocSizeOf) +
+               rear_.sizeOfExcludingThis(mallocSizeOf);
+    }
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+    }
 };
 
 } // namespace js
