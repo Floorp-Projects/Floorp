@@ -225,7 +225,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    */
   getIterationCount: function() {
     let iterations = this.player.effect.getComputedTiming().iterations;
-    return iterations === "Infinity" ? null : iterations;
+    return iterations === Infinity ? null : iterations;
   },
 
   /**
