@@ -67,7 +67,7 @@ NS_IMETHODIMP_(bool)
 HTMLBRElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { nsGkAtoms::clear },
+    { &nsGkAtoms::clear },
     { nullptr }
   };
 
