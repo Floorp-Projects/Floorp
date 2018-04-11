@@ -297,11 +297,11 @@ public:
     RemoveEventListener(aType, EventListenerHolder(aListener), aOptions);
   }
 
-  void AddListenerForAllEvents(nsIDOMEventListener* aListener,
+  void AddListenerForAllEvents(dom::EventListener* aListener,
                                bool aUseCapture,
                                bool aWantsUntrusted,
                                bool aSystemEventGroup);
-  void RemoveListenerForAllEvents(nsIDOMEventListener* aListener,
+  void RemoveListenerForAllEvents(dom::EventListener* aListener,
                                   bool aUseCapture,
                                   bool aSystemEventGroup);
 
@@ -309,7 +309,13 @@ public:
   * Sets events listeners of all types.
   * @param an event listener
   */
-  void AddEventListenerByType(nsIDOMEventListener *aListener,
+  void AddEventListenerByType(nsIDOMEventListener* aListener,
+                              const nsAString& type,
+                              const EventListenerFlags& aFlags)
+  {
+    AddEventListenerByType(EventListenerHolder(aListener), type, aFlags);
+  }
+  void AddEventListenerByType(dom::EventListener* aListener,
                               const nsAString& type,
                               const EventListenerFlags& aFlags)
   {
@@ -320,7 +326,13 @@ public:
                               const EventListenerFlags& aFlags,
                               const dom::Optional<bool>& aPassive =
                                 dom::Optional<bool>());
-  void RemoveEventListenerByType(nsIDOMEventListener *aListener,
+  void RemoveEventListenerByType(nsIDOMEventListener* aListener,
+                                 const nsAString& type,
+                                 const EventListenerFlags& aFlags)
+  {
+    RemoveEventListenerByType(EventListenerHolder(aListener), type, aFlags);
+  }
+  void RemoveEventListenerByType(dom::EventListener* aListener,
                                  const nsAString& type,
                                  const EventListenerFlags& aFlags)
   {

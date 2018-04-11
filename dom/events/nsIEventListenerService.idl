@@ -5,7 +5,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMEventListener;
 interface nsIDOMEventTarget;
 interface nsIArray;
 
@@ -94,27 +93,31 @@ interface nsIEventListenerService : nsISupports
   /**
    * Add a system-group eventlistener to a event target.
    */
+  [implicit_jscontext]
   void addSystemEventListener(in nsIDOMEventTarget target,
                               in DOMString type,
-                              in nsIDOMEventListener listener,
+                              in jsval listener,
                               in boolean useCapture);
 
   /**
    * Remove a system-group eventlistener from a event target.
    */
+  [implicit_jscontext]
   void removeSystemEventListener(in nsIDOMEventTarget target,
                                  in DOMString type,
-                                 in nsIDOMEventListener listener,
+                                 in jsval listener,
                                  in boolean useCapture);
 
+  [implicit_jscontext]
   void addListenerForAllEvents(in nsIDOMEventTarget target,
-                               in nsIDOMEventListener listener,
+                               in jsval listener,
                                [optional] in boolean aUseCapture,
                                [optional] in boolean aWantsUntrusted,
                                [optional] in boolean aSystemEventGroup);
 
+  [implicit_jscontext]
   void removeListenerForAllEvents(in nsIDOMEventTarget target,
-                                  in nsIDOMEventListener listener,
+                                  in jsval listener,
                                   [optional] in boolean aUseCapture,
                                   [optional] in boolean aSystemEventGroup);
 
