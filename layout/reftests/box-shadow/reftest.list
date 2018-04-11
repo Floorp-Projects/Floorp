@@ -11,7 +11,7 @@ random != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint divisi
 == boxshadow-rounding.html boxshadow-rounding-ref.html
 # One uses old path, one uses WR box shadow.
 fails-if(Android) == boxshadow-button.html boxshadow-button-ref.html
-fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,999) fuzzy-if(skiaContent,1,12) fuzzy-if(webrender,7-7,1560-1680) fails-if(webrender&&winWidget) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
+fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,999) fuzzy-if(skiaContent,1,12) fuzzy-if(webrender,5-7,1560-1680) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
 
 fails-if(Android) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),98,152) fuzzy-if(skiaContent,13,28) fuzzy-if(webrender,19-19,50-50) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg

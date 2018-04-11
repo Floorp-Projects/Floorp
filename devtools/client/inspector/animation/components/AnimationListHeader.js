@@ -33,8 +33,13 @@ class AnimationListHeader extends PureComponent {
 
     return dom.div(
       {
-        className: "animation-list-header devtools-toolbar"
+        className: "animation-list-header"
       },
+      dom.div(
+        {
+          className: "devtools-toolbar"
+        }
+      ),
       AnimationTimelineTickList(
         {
           timeScale

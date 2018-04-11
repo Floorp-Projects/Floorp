@@ -40,10 +40,6 @@
 using namespace mozilla;
 using namespace mozilla::css;
 
-static bool sNumberControlEnabled;
-
-#define NUMBER_CONTROL_PREF "dom.forms.number"
-
 NS_IMPL_ISUPPORTS(
   nsLayoutStylesheetCache, nsIObserver, nsIMemoryReporter)
 
@@ -63,7 +59,6 @@ nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
            strcmp(aTopic, "chrome-flush-caches") == 0) {
     mScrollbarsSheet = nullptr;
     mFormsSheet = nullptr;
-    mNumberControlSheet = nullptr;
   }
   else {
     NS_NOTREACHED("Unexpected observer topic.");
@@ -93,21 +88,6 @@ nsLayoutStylesheetCache::FormsSheet()
   }
 
   return mFormsSheet;
-}
-
-StyleSheet*
-nsLayoutStylesheetCache::NumberControlSheet()
-{
-  if (!sNumberControlEnabled) {
-    return nullptr;
-  }
-
-  if (!mNumberControlSheet) {
-    LoadSheetURL("resource://gre-resources/number-control.css",
-                 &mNumberControlSheet, eAgentSheetFeatures, eCrash);
-  }
-
-  return mNumberControlSheet;
 }
 
 StyleSheet*
@@ -310,7 +290,6 @@ nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf
   MEASURE(mMinimalXULSheet);
   MEASURE(mNoFramesSheet);
   MEASURE(mNoScriptSheet);
-  MEASURE(mNumberControlSheet);
   MEASURE(mQuirkSheet);
   MEASURE(mSVGSheet);
   MEASURE(mScrollbarsSheet);
@@ -391,9 +370,6 @@ nsLayoutStylesheetCache::Singleton()
   if (!gStyleCache) {
     gStyleCache = new nsLayoutStylesheetCache;
     gStyleCache->InitMemoryReporter();
-
-    Preferences::AddBoolVarCache(&sNumberControlEnabled, NUMBER_CONTROL_PREF,
-                                 true);
 
     // For each pref that controls a CSS feature that a UA style sheet depends
     // on (such as a pref that enables a property that a UA style sheet uses),

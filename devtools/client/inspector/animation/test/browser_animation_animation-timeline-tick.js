@@ -28,15 +28,15 @@ add_task(async function() {
   ok(listHeaderEl, "The header element should be in animation list container element");
 
   info("Checking time tick item elements existence");
-  assertTimelineTickItems(timeScale, listHeaderEl);
+  assertTimelineTickItems(timeScale, listContainerEl);
   const timelineTickItemLength =
-    listHeaderEl.querySelectorAll(".animation-timeline-tick-item").length;
+    listContainerEl.querySelectorAll(".animation-timeline-tick-item").length;
 
   info("Checking timeline tick item elements after enlarge sidebar width");
   await setSidebarWidth("100%", inspector);
-  assertTimelineTickItems(timeScale, listHeaderEl);
+  assertTimelineTickItems(timeScale, listContainerEl);
   ok(timelineTickItemLength <
-    listHeaderEl.querySelectorAll(".animation-timeline-tick-item").length,
+     listContainerEl.querySelectorAll(".animation-timeline-tick-item").length,
      "The timeline tick item elements should increase");
 });
 
@@ -44,22 +44,22 @@ add_task(async function() {
  * Assert timeline tick item's position and label.
  *
  * @param {TimeScale} - timeScale
- * @param {Element} - listHeaderEl which is header element
+ * @param {Element} - listContainerEl
  */
-function assertTimelineTickItems(timeScale, listHeaderEl) {
-  const animationTimelineTickListEl =
-    listHeaderEl.querySelector(".animation-timeline-tick-list");
-  ok(animationTimelineTickListEl,
+function assertTimelineTickItems(timeScale, listContainerEl) {
+  const timelineTickListEl =
+    listContainerEl.querySelector(".animation-timeline-tick-list");
+  ok(timelineTickListEl,
     "The animation timeline tick list element should be in header");
 
-  const width = animationTimelineTickListEl.offsetWidth;
+  const width = timelineTickListEl.offsetWidth;
   const animationDuration = timeScale.getDuration();
   const minTimeInterval = TIME_GRADUATION_MIN_SPACING * animationDuration / width;
   const interval = findOptimalTimeInterval(minTimeInterval);
   const expectedTickItem = Math.ceil(animationDuration / interval);
 
   const timelineTickItemEls =
-    listHeaderEl.querySelectorAll(".animation-timeline-tick-item");
+    timelineTickListEl.querySelectorAll(".animation-timeline-tick-item");
   is(timelineTickItemEls.length, expectedTickItem,
     "The expected number of timeline ticks were found");
 

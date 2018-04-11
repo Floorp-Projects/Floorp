@@ -1271,9 +1271,6 @@ pref("dom.timeout.enable_budget_timer_throttling", true);
 // Don't use new input types
 pref("dom.experimental_forms", false);
 
-// Enable <input type=number>:
-pref("dom.forms.number", true);
-
 // Enable <input type=color> by default. It will be turned off for remaining
 // platforms which don't have a color picker implemented yet.
 pref("dom.forms.color", true);

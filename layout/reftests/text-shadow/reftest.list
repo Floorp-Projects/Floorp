@@ -1,10 +1,10 @@
 == 723669.html 723669-ref.html
 
-fails-if(webrender&&winWidget) == basic.xul basic-ref.xul
-random-if(Android) fails-if(webrender&&winWidget) == basic-negcoord.xul basic-negcoord-ref.xul
+fuzzy-if(webrender&&winWidget,1-1,7-7) == basic.xul basic-ref.xul
+random-if(Android) fuzzy-if(webrender&&winWidget,1-1,6-6) == basic-negcoord.xul basic-negcoord-ref.xul
 != blur.xul blur-notref.xul
-fails-if(webrender&&winWidget) == color-inherit.xul color-inherit-ref.xul
-fails-if(webrender&&winWidget) == multiple-noblur.xul multiple-noblur-ref.xul
+fuzzy-if(webrender&&winWidget,1-1,6-6) == color-inherit.xul color-inherit-ref.xul
+fuzzy-if(webrender&&winWidget,1-1,44-44) == multiple-noblur.xul multiple-noblur-ref.xul
 == blur-opacity.html blur-opacity-ref.html
 
 == basic.html basic-ref.html
