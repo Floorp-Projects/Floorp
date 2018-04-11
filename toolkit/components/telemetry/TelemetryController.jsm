@@ -575,22 +575,7 @@ var Impl = {
     // Unified Telemetry makes it opt-out. If extended Telemetry is enabled, base recording
     // is always on as well.
     if (IS_UNIFIED_TELEMETRY) {
-      // Enable extended Telemetry on pre-release channels and disable it
-      // on Release/ESR.
-      let prereleaseChannels = ["nightly", "aurora", "beta"];
-      if (!AppConstants.MOZILLA_OFFICIAL) {
-        // Turn extended telemetry for local developer builds.
-        prereleaseChannels.push("default");
-      }
-      const isPrereleaseChannel =
-        prereleaseChannels.includes(AppConstants.MOZ_UPDATE_CHANNEL);
-      const isReleaseCandidateOnBeta =
-        AppConstants.MOZ_UPDATE_CHANNEL === "release" &&
-        Services.prefs.getCharPref("app.update.channel", null) === "beta";
-      Telemetry.canRecordBase = true;
-      Telemetry.canRecordExtended = isPrereleaseChannel ||
-        isReleaseCandidateOnBeta ||
-        Services.prefs.getBoolPref(TelemetryUtils.Preferences.OverridePreRelease, false);
+      TelemetryUtils.setTelemetryRecordingFlags();
     } else {
       // We're not on unified Telemetry, stick to the old behaviour for
       // supporting Fennec.

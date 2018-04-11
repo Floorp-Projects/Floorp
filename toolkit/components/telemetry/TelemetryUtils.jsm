@@ -9,6 +9,8 @@ var EXPORTED_SYMBOLS = [
 ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.defineModuleGetter(this, "AppConstants",
+                               "resource://gre/modules/AppConstants.jsm");
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -201,5 +203,27 @@ var TelemetryUtils = {
     } catch (ex) {
       return Date.now();
     }
-  }
+  },
+
+  /**
+   * Set the Telemetry core recording flag for Unified Telemetry.
+   */
+  setTelemetryRecordingFlags() {
+    // Enable extended Telemetry on pre-release channels and disable it
+    // on Release/ESR.
+    let prereleaseChannels = ["nightly", "aurora", "beta"];
+    if (!AppConstants.MOZILLA_OFFICIAL) {
+      // Turn extended telemetry for local developer builds.
+      prereleaseChannels.push("default");
+    }
+    const isPrereleaseChannel =
+      prereleaseChannels.includes(AppConstants.MOZ_UPDATE_CHANNEL);
+    const isReleaseCandidateOnBeta =
+      AppConstants.MOZ_UPDATE_CHANNEL === "release" &&
+      Services.prefs.getCharPref("app.update.channel", null) === "beta";
+    Services.telemetry.canRecordBase = true;
+    Services.telemetry.canRecordExtended = isPrereleaseChannel ||
+      isReleaseCandidateOnBeta ||
+      Services.prefs.getBoolPref(this.Preferences.OverridePreRelease, false);
+  },
 };
