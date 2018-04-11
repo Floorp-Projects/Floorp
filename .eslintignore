@@ -343,7 +343,6 @@ services/sync/services-sync.js
 servo/**
 
 # Remote protocol exclusions
-testing/marionette/test_*.js
 testing/marionette/atom.js
 testing/marionette/legacyaction.js
 testing/marionette/client
