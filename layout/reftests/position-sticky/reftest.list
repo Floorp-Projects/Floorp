@@ -40,7 +40,7 @@ fuzzy-if(Android,4,810) == containing-block-1.html containing-block-1-ref.html
 == inline-1.html inline-1-ref.html
 == inline-2.html inline-2-ref.html
 fuzzy-if(OSX,99,210) == inline-3.html inline-3-ref.html
-skip-if(!asyncPan) fails-if(webrender&&winWidget) == inline-4.html inline-4-ref.html
+skip-if(!asyncPan) fuzzy-if(webrender&&winWidget,126-126,4-4) == inline-4.html inline-4-ref.html
 fails == column-contain-1a.html column-contain-1-ref.html
 == column-contain-1b.html column-contain-1-ref.html
 == column-contain-2.html column-contain-2-ref.html

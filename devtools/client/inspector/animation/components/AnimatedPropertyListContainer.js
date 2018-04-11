@@ -55,6 +55,12 @@ class AnimatedPropertyListContainer extends PureComponent {
           timeScale,
         }
       ),
+      dom.div(
+        {
+          className: "animated-property-list-background",
+        },
+        dom.span()
+      ),
       AnimatedPropertyList(
         {
           animation,
