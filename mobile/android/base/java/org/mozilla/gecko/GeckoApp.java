@@ -687,12 +687,6 @@ public abstract class GeckoApp extends GeckoActivity
                 finish();
             }
 
-        } else if ("Accessibility:Ready".equals(event)) {
-            GeckoAccessibility.updateAccessibilitySettings(this);
-
-        } else if ("Accessibility:Event".equals(event)) {
-            GeckoAccessibility.sendAccessibilityEvent(mLayerView, message);
-
         } else if ("Contact:Add".equals(event)) {
             final String email = message.getString("email");
             final String phone = message.getString("phone");
@@ -1038,7 +1032,6 @@ public abstract class GeckoApp extends GeckoActivity
 
         // To prevent races, register startup events before launching the Gecko thread.
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
-            "Accessibility:Ready",
             "Gecko:Ready",
             null);
 
@@ -1091,15 +1084,12 @@ public abstract class GeckoApp extends GeckoActivity
         mLayerView.setSession(session, GeckoRuntime.getDefault(this));
         mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
-        GeckoAccessibility.setDelegate(mLayerView);
-
         getAppEventDispatcher().registerGeckoThreadListener(this,
             "Locale:Set",
             "PrivateBrowsing:Data",
             null);
 
         getAppEventDispatcher().registerUiThreadListener(this,
-            "Accessibility:Event",
             "Contact:Add",
             "DevToolsAuth:Scan",
             "DOMFullScreen:Start",
@@ -2089,7 +2079,6 @@ public abstract class GeckoApp extends GeckoActivity
         }
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-            "Accessibility:Ready",
             "Gecko:Ready",
             null);
 
@@ -2106,7 +2095,6 @@ public abstract class GeckoApp extends GeckoActivity
             null);
 
         getAppEventDispatcher().unregisterUiThreadListener(this,
-            "Accessibility:Event",
             "Contact:Add",
             "DevToolsAuth:Scan",
             "DOMFullScreen:Start",
