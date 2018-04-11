@@ -7929,46 +7929,24 @@ nsHttpChannel::SetOfflineCacheToken(nsISupports *token)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetCacheKey(nsISupports **key)
+nsHttpChannel::GetCacheKey(uint32_t* key)
 {
-    nsresult rv;
     NS_ENSURE_ARG_POINTER(key);
 
     LOG(("nsHttpChannel::GetCacheKey [this=%p]\n", this));
 
-    *key = nullptr;
-
-    nsCOMPtr<nsISupportsPRUint32> container =
-        do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
-
-    if (!container)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = container->SetData(mPostID);
-    if (NS_FAILED(rv)) return rv;
-
-    return CallQueryInterface(container.get(), key);
+    *key = mPostID;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetCacheKey(nsISupports *key)
+nsHttpChannel::SetCacheKey(uint32_t key)
 {
-    nsresult rv;
-
-    LOG(("nsHttpChannel::SetCacheKey [this=%p key=%p]\n", this, key));
+    LOG(("nsHttpChannel::SetCacheKey [this=%p key=%u]\n", this, key));
 
     ENSURE_CALLED_BEFORE_CONNECT();
 
-    if (!key)
-        mPostID = 0;
-    else {
-        // extract the post id
-        nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(key, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = container->GetData(&mPostID);
-        if (NS_FAILED(rv)) return rv;
-    }
+    mPostID = key;
     return NS_OK;
 }
 

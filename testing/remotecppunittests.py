@@ -44,7 +44,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         self.device.mkdir(self.remote_tmp_dir)
         self.push_libs()
         self.push_progs(progs)
-        self.device.chmod(self.remote_bin_dir, recursive=True)
+        self.device.chmod(self.remote_bin_dir, recursive=True, root=True)
 
     def push_libs(self):
         if self.options.local_apk:

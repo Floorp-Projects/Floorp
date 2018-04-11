@@ -5726,10 +5726,6 @@ var gUIDensity = {
     return { mode: Services.prefs.getIntPref(this.uiDensityPref), overridden: false };
   },
 
-  setCurrentMode(mode) {
-    Services.prefs.setIntPref(this.uiDensityPref, mode);
-  },
-
   update(mode) {
     if (mode == null) {
       mode = this.getCurrentDensity().mode;

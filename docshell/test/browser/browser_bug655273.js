@@ -23,7 +23,7 @@ add_task(async function test() {
                          .getInterface(Ci.nsIWebNavigation)
                          .sessionHistory;
 
-        is(shistory.getEntryAtIndex(shistory.index, false).title,
+        is(shistory.legacySHistory.getEntryAtIndex(shistory.index, false).title,
            oldTitle, 'SHEntry title after pushstate.');
       });
     });

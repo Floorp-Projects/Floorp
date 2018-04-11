@@ -1,13 +1,10 @@
 [package]
-name = "rust_url_capi"
+name = "mozurl"
 version = "0.0.1"
-authors = ["Valentin Gosu <valentin.gosu@gmail.com>"]
-
-[lib]
-name = "rust_url_capi"
+authors = ["Nika Layzell <nika@thelayzells.com>"]
 
 [dependencies]
-libc = "0.2.0"
 url = "1.5.1"
 nsstring = { path = "../../../servo/support/gecko/nsstring" }
 nserror = { path = "../../../xpcom/rust/nserror" }
+xpcom = { path = "../../../xpcom/rust/xpcom" }

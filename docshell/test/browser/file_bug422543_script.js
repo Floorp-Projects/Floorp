@@ -50,13 +50,13 @@ let testAPI = {
   init() {
     this.shistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
     for (let listener of this.listeners) {
-      this.shistory.addSHistoryListener(listener);
+      this.shistory.legacySHistory.addSHistoryListener(listener);
     }
   },
 
   cleanup() {
     for (let listener of this.listeners) {
-      this.shistory.removeSHistoryListener(listener);
+      this.shistory.legacySHistory.removeSHistoryListener(listener);
     }
     this.shistory = null;
     sendAsyncMessage("bug422543:cleanup:return", {});
@@ -76,7 +76,7 @@ let testAPI = {
   },
 
   notifyReload() {
-    let internal = this.shistory.QueryInterface(Ci.nsISHistoryInternal);
+    let internal = this.shistory.legacySHistory.QueryInterface(Ci.nsISHistoryInternal);
     let rval =
       internal.notifyOnHistoryReload(content.document.documentURIObject, 0);
     sendAsyncMessage("bug422543:notifyReload:return", { rval });

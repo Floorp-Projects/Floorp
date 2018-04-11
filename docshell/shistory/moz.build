@@ -20,18 +20,28 @@ EXPORTS += [
     'nsSHEntryShared.h',
 ]
 
+EXPORTS.mozilla.dom += [
+    'ChildSHistory.h',
+    'ParentSHistory.h',
+]
+
 UNIFIED_SOURCES += [
+    'ChildSHistory.cpp',
     'nsSHEntry.cpp',
     'nsSHEntryShared.cpp',
     'nsSHistory.cpp',
     'nsSHTransaction.cpp',
+    'ParentSHistory.cpp',
 ]
 
 LOCAL_INCLUDES += [
     '/docshell/base',
+    '/dom/base',
 ]
 
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
+
+include('/ipc/chromium/chromium-config.mozbuild')

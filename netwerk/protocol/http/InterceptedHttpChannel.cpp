@@ -1330,7 +1330,7 @@ InterceptedHttpChannel::OpenAlternativeOutputStream(const nsACString & type, nsI
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::GetCacheKey(nsISupports **key)
+InterceptedHttpChannel::GetCacheKey(uint32_t* key)
 {
   if (mSynthesizedCacheInfo) {
     return mSynthesizedCacheInfo->GetCacheKey(key);
@@ -1339,7 +1339,7 @@ InterceptedHttpChannel::GetCacheKey(nsISupports **key)
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::SetCacheKey(nsISupports *key)
+InterceptedHttpChannel::SetCacheKey(uint32_t key)
 {
   if (mSynthesizedCacheInfo) {
     return mSynthesizedCacheInfo->SetCacheKey(key);

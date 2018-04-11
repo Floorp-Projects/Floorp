@@ -14,7 +14,6 @@ import subprocess
 import sys
 import runxpcshelltests as xpcshell
 import tempfile
-import time
 from zipfile import ZipFile
 
 from mozdevice import ADBAndroid, ADBDevice
@@ -37,6 +36,13 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         for key in mobileArgs:
             setattr(self, key, mobileArgs[key])
 
+    def initDir(self, path, mask="777", timeout=None, root=True):
+        """Initialize a directory by removing it if it exists, creating it
+        and changing the permissions."""
+        self.device.rm(path, recursive=True, force=True, timeout=timeout, root=root)
+        self.device.mkdir(path, parents=True, timeout=timeout, root=root)
+        self.device.chmod(path, recursive=True, mask=mask, timeout=timeout, root=root)
+
     def buildCmdTestFile(self, name):
         remoteDir = self.remoteForLocal(os.path.dirname(name))
         if remoteDir == self.remoteHere:
@@ -54,7 +60,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
 
     def setupTempDir(self):
         # make sure the temp dir exists
-        self.clearRemoteDir(self.remoteTmpDir)
+        self.initDir(self.remoteTmpDir)
         # env var is set in buildEnvironment
         return self.remoteTmpDir
 
@@ -67,12 +73,13 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
 
         pluginsDir = posixpath.join(self.remoteTmpDir, "plugins")
         self.device.push(self.pluginsPath, pluginsDir)
+        self.device.chmod(pluginsDir, root=True)
         if self.interactive:
             self.log.info("plugins dir is %s" % pluginsDir)
         return pluginsDir
 
     def setupProfileDir(self):
-        self.clearRemoteDir(self.profileDir)
+        self.initDir(self.profileDir)
         if self.interactive or self.singleFile:
             self.log.info("profile dir is %s" % self.profileDir)
         return self.profileDir
@@ -82,6 +89,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         mozinfo.output_to_file(local)
         mozInfoJSPath = posixpath.join(self.profileDir, "mozinfo.json")
         self.device.push(local, mozInfoJSPath)
+        self.device.chmod(mozInfoJSPath, root=True)
         os.remove(local)
         return mozInfoJSPath
 
@@ -143,7 +151,9 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         cmd.insert(1, self.remoteHere)
         cmd = ADBDevice._escape_command_line(cmd)
         try:
-            adb_process = self.device.shell(cmd, timeout=timeout+10)
+            # env is ignored here since the environment has already been
+            # set for the command via the pushWrapper method.
+            adb_process = self.device.shell(cmd, timeout=timeout+10, root=True)
             output_file = adb_process.stdout_file
             self.shellReturnCode = adb_process.exitcode
         except Exception as e:
@@ -165,7 +175,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
                         dump_directory,
                         symbols_path,
                         test_name=None):
-        if not self.device.is_dir(self.remoteMinidumpDir):
+        if not self.device.is_dir(self.remoteMinidumpDir, root=True):
             # The minidumps directory is automatically created when Fennec
             # (first) starts, so its lack of presence is a hint that
             # something went wrong.
@@ -177,7 +187,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
             self.device.pull(self.remoteMinidumpDir, dumpDir)
             crashed = xpcshell.XPCShellTestThread.checkForCrashes(
                   self, dumpDir, symbols_path, test_name)
-            self.clearRemoteDir(self.remoteMinidumpDir)
+            self.initDir(self.remoteMinidumpDir)
         return crashed
 
     def communicate(self, proc):
@@ -202,20 +212,10 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
             return -1
 
     def removeDir(self, dirname):
-        self.device.rm(dirname, recursive=True)
-
-    def clearRemoteDir(self, remoteDir):
-        out = ""
         try:
-            out = self.device.shell_output("%s %s" % (self.remoteClearDirScript, remoteDir))
-        except Exception:
-            self.log.info("unable to delete %s: '%s'" % (remoteDir, str(out)))
-            self.log.info("retrying after 10 seconds...")
-            time.sleep(10)
-            try:
-                out = self.device.shell_output("%s %s" % (self.remoteClearDirScript, remoteDir))
-            except Exception:
-                self.log.error("failed to delete %s: '%s'" % (remoteDir, str(out)))
+            self.device.rm(dirname, recursive=True, root=True)
+        except Exception as e:
+            self.log.warning(str(e))
 
     # TODO: consider creating a separate log dir.  We don't have the test file structure,
     # so we use filename.log.  Would rather see ./logs/filename.log
@@ -268,7 +268,6 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.remoteComponentsDir = posixpath.join(self.remoteTestRoot, "c")
         self.remoteModulesDir = posixpath.join(self.remoteTestRoot, "m")
         self.remoteMinidumpDir = posixpath.join(self.remoteTestRoot, "minidumps")
-        self.remoteClearDirScript = posixpath.join(self.remoteBinDir, "cleardir")
         self.profileDir = posixpath.join(self.remoteTestRoot, "p")
         self.remoteDebugger = options['debugger']
         self.remoteDebuggerArgs = options['debuggerArgs']
@@ -290,7 +289,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             self.setupTestDir()
             self.setupUtilities()
             self.setupModules()
-        self.setupMinidumpDir()
+        self.initDir(self.remoteMinidumpDir)
         self.remoteAPK = None
         if options['localAPK']:
             self.remoteAPK = posixpath.join(self.remoteBinDir,
@@ -310,10 +309,16 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             'profileDir': self.profileDir,
             'remoteTmpDir': self.remoteTmpDir,
             'remoteMinidumpDir': self.remoteMinidumpDir,
-            'remoteClearDirScript': self.remoteClearDirScript,
         }
         if self.remoteAPK:
             self.mobileArgs['remoteAPK'] = self.remoteAPK
+
+    def initDir(self, path, mask="777", timeout=None, root=True):
+        """Initialize a directory by removing it if it exists, creating it
+        and changing the permissions."""
+        self.device.rm(path, recursive=True, force=True, timeout=timeout, root=root)
+        self.device.mkdir(path, parents=True, timeout=timeout, root=root)
+        self.device.chmod(path, recursive=True, mask=mask, timeout=timeout, root=root)
 
     def setLD_LIBRARY_PATH(self):
         self.env["LD_LIBRARY_PATH"] = self.remoteBinDir
@@ -338,24 +343,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         f.close()
         remoteWrapper = posixpath.join(self.remoteBinDir, "xpcw")
         self.device.push(localWrapper, remoteWrapper)
+        self.device.chmod(remoteWrapper, root=True)
         os.remove(localWrapper)
-
-        # Removing and re-creating a directory is a common operation which
-        # can be implemented more efficiently with a shell script.
-        localWrapper = tempfile.mktemp()
-        f = open(localWrapper, "w")
-        # The directory may not exist initially, so rm may fail. 'rm -f' is not
-        # supported on some Androids. Similarly, 'test' and 'if [ -d ]' are not
-        # universally available, so we just ignore errors from rm.
-        f.writelines([
-            "#!/system/bin/sh\n",
-            "rm -r \"$1\"\n",
-            "mkdir \"$1\"\n"])
-        f.close()
-        self.device.push(localWrapper, self.remoteClearDirScript)
-        os.remove(localWrapper)
-
-        self.device.chmod(self.remoteBinDir, recursive=True)
 
     def buildEnvironment(self):
         self.buildCoreEnvironment()
@@ -387,17 +376,16 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         return None
 
     def setupUtilities(self):
-        self.device.rm(self.remoteTmpDir, force=True, recursive=True)
-        self.device.mkdir(self.remoteTmpDir)
-        self.device.rm(self.remoteBinDir, force=True, recursive=True)
+        self.initDir(self.remoteTmpDir)
+        self.initDir(self.remoteBinDir)
         remotePrefDir = posixpath.join(self.remoteBinDir, "defaults", "pref")
-        self.device.mkdir(posixpath.join(remotePrefDir, "extra"), parents=True)
-        self.device.mkdir(self.remoteScriptsDir, parents=True)
-        self.device.mkdir(self.remoteComponentsDir, parents=True)
+        self.initDir(posixpath.join(remotePrefDir, "extra"))
+        self.initDir(self.remoteComponentsDir)
 
         local = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'head.js')
         remoteFile = posixpath.join(self.remoteScriptsDir, "head.js")
         self.device.push(local, remoteFile)
+        self.device.chmod(remoteFile, root=True)
 
         # The xpcshell binary is required for all tests. Additional binaries
         # are required for some tests. This list should be similar to
@@ -416,6 +404,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                 print("Pushing %s.." % fname, file=sys.stderr)
                 remoteFile = posixpath.join(self.remoteBinDir, fname)
                 self.device.push(local, remoteFile)
+                self.device.chmod(remoteFile, root=True)
             else:
                 print("*** Expected binary %s not found in %s!" %
                       (fname, self.localBin), file=sys.stderr)
@@ -423,15 +412,18 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         local = os.path.join(self.localBin, "components/httpd.js")
         remoteFile = posixpath.join(self.remoteComponentsDir, "httpd.js")
         self.device.push(local, remoteFile)
+        self.device.chmod(remoteFile, root=True)
 
         local = os.path.join(self.localBin, "components/httpd.manifest")
         remoteFile = posixpath.join(self.remoteComponentsDir, "httpd.manifest")
         self.device.push(local, remoteFile)
+        self.device.chmod(remoteFile, root=True)
 
         if self.options['localAPK']:
             remoteFile = posixpath.join(self.remoteBinDir,
                                         os.path.basename(self.options['localAPK']))
             self.device.push(self.options['localAPK'], remoteFile)
+            self.device.chmod(remoteFile, root=True)
 
         self.pushLibs()
 
@@ -466,6 +458,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                                     subprocess.check_output(cmd)
                         self.device.push(localFile, remoteFile)
                         pushed_libs_count += 1
+                        self.device.chmod(remoteFile, root=True)
             finally:
                 shutil.rmtree(dir)
             return pushed_libs_count
@@ -479,6 +472,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                 remoteFile = posixpath.join(self.remoteBinDir, file)
                 self.device.push(localFile, remoteFile)
                 pushed_libs_count += 1
+                self.device.chmod(remoteFile, root=True)
 
         # Additional libraries may be found in a sub-directory such as "lib/armeabi-v7a"
         localArmLib = os.path.join(self.localLib, "lib")
@@ -491,24 +485,26 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                         remoteFile = posixpath.join(self.remoteBinDir, file)
                         self.device.push(localFile, remoteFile)
                         pushed_libs_count += 1
+                        self.device.chmod(remoteFile, root=True)
 
         return pushed_libs_count
 
     def setupModules(self):
         if self.testingModulesDir:
             self.device.push(self.testingModulesDir, self.remoteModulesDir)
+            self.device.chmod(self.remoteModulesDir, root=True)
 
     def setupTestDir(self):
         print('pushing %s' % self.xpcDir)
         # The tests directory can be quite large: 5000 files and growing!
         # Sometimes - like on a low-end aws instance running an emulator - the push
         # may exceed the default 5 minute timeout, so we increase it here to 10 minutes.
-        self.device.rm(self.remoteTestRoot, force=True, recursive=True)
+        self.initDir(self.remoteScriptsDir)
         self.device.push(self.xpcDir, self.remoteScriptsDir, timeout=600)
+        self.device.chmod(self.remoteScriptsDir, recursive=True, root=True)
 
     def setupMinidumpDir(self):
-        self.device.rm(self.remoteMinidumpDir, force=True, recursive=True)
-        self.device.mkdir(self.remoteMinidumpDir)
+        self.initDir(self.remoteMinidumpDir)
 
     def buildTestList(self, test_tags=None, test_paths=None, verify=False):
         xpcshell.XPCShellTests.buildTestList(

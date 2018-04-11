@@ -15,19 +15,20 @@
 #include "nsContentUtils.h"
 #include "nsQueryFrame.h"
 
-class nsPresState;
+namespace mozilla {
+class PresState;
+} // namespace mozilla
 
 class nsIStatefulFrame
 {
  public:
   NS_DECL_QUERYFRAME_TARGET(nsIStatefulFrame)
 
-  // Save the state for this frame.  If this method succeeds, the caller is
-  // responsible for deleting the resulting state when done with it.
-  NS_IMETHOD SaveState(nsPresState** aState) = 0;
+  // Save the state for this frame.
+  virtual mozilla::UniquePtr<mozilla::PresState> SaveState() = 0;
 
   // Restore the state for this frame from aState
-  NS_IMETHOD RestoreState(nsPresState* aState) = 0;
+  NS_IMETHOD RestoreState(mozilla::PresState* aState) = 0;
 
   // Generate a key for this stateful frame
   NS_IMETHOD GenerateStateKey(nsIContent* aContent,

@@ -1499,7 +1499,6 @@ HelperThread::handleGCParallelWorkload(AutoLockHelperThreadState& locked)
     currentTask.emplace(HelperThreadState().gcParallelWorklist(locked).popCopy());
     gcParallelTask()->runFromHelperThread(locked);
     currentTask.reset();
-    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
 }
 
 static void

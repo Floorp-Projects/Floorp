@@ -14,11 +14,11 @@ add_task(async function runTests() {
   ok(browser.canGoBack, "we can go back");
 
   await whenPageShown(browser, () => browser.goBack());
-  await checkListeners("goback", "back to the first shentry");
+  await checkListeners("gotoindex", "back to the first shentry");
   ok(browser.canGoForward, "we can go forward");
 
   await whenPageShown(browser, () => browser.goForward());
-  await checkListeners("goforward", "forward to the second shentry");
+  await checkListeners("gotoindex", "forward to the second shentry");
 
   await whenPageShown(browser, () => browser.reload());
   await checkListeners("reload", "current shentry reloaded");
