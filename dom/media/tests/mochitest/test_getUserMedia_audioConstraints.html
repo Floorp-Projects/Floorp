@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+createHTML({
+  title: "Test that microphone getSettings report correct settings after applyConstraints",
+  bug: "1447982",
+});
+
+function testTrackAgainstAudioConstraints(track, audioConstraints) {
+  let constraints = track.getConstraints();
+  is(constraints.autoGainControl, audioConstraints.autoGainControl,
+     "Should report correct autoGainControl constraint");
+  is(constraints.echoCancellation, audioConstraints.echoCancellation,
+     "Should report correct echoCancellation constraint");
+  is(constraints.noiseSuppression, audioConstraints.noiseSuppression,
+     "Should report correct noiseSuppression constraint");
+
+  let settings = track.getSettings();
+  is(settings.autoGainControl, audioConstraints.autoGainControl,
+     "Should report correct autoGainControl setting");
+  is(settings.echoCancellation, audioConstraints.echoCancellation,
+     "Should report correct echoCancellation setting");
+  is(settings.noiseSuppression, audioConstraints.noiseSuppression,
+     "Should report correct noiseSuppression setting");
+}
+
+async function testAudioConstraints(track, audioConstraints) {
+  // We applyConstraints() first and do a fresh gUM later, to avoid
+  // testing multiple concurrent captures at different settings.
+
+  info(`Testing applying constraints ${JSON.stringify(audioConstraints)} ` +
+       `to track with settings ${JSON.stringify(track.getSettings())}`);
+  await track.applyConstraints(audioConstraints);
+  testTrackAgainstAudioConstraints(track, audioConstraints);
+
+  info("Testing fresh gUM request with audio constraints " +
+       JSON.stringify(audioConstraints));
+  let stream = await getUserMedia({audio: audioConstraints});
+  testTrackAgainstAudioConstraints(stream.getTracks()[0], audioConstraints);
+  stream.getTracks().forEach(t => t.stop());
+}
+
+runTest(async () => {
+  let audioDevice = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
+  if (!audioDevice) {
+    ok(false, "No device set by framework. Try --use-test-media-devices");
+    return;
+  }
+
+  let supportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+  is(supportedConstraints.autoGainControl, true,
+     "autoGainControl constraint should be supported");
+  is(supportedConstraints.echoCancellation, true,
+     "echoCancellation constraint should be supported");
+  is(supportedConstraints.noiseSuppression, true,
+     "noiseSuppression constraint should be supported");
+
+  let egn = (e, g, n) => ({
+    echoCancellation: e,
+    autoGainControl: g,
+    noiseSuppression: n
+  });
+
+  let stream = await getUserMedia({
+    audio: egn(true, true, true),
+  });
+  let track = stream.getTracks()[0];
+  let audioConstraintsToTest = [
+    egn(false, true,  true),
+    egn(true,  false, true),
+    egn(true,  true,  false),
+    egn(false, false, true),
+    egn(false, true,  false),
+    egn(true,  false, false),
+    egn(false, false, false),
+    egn(true,  true,  true),
+  ];
+  for (let audioConstraints of audioConstraintsToTest) {
+    await testAudioConstraints(track, audioConstraints);
+  }
+  track.stop();
+});
+</script>
+</pre>
+</body>
+</html>
