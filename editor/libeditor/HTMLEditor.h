@@ -383,8 +383,17 @@ public:
   virtual bool AreNodesSameType(nsIContent* aNode1,
                                 nsIContent* aNode2) override;
 
-  virtual nsresult DeleteSelectionImpl(EDirection aAction,
-                                       EStripWrappers aStripWrappers) override;
+  /**
+   * DeleteSelectionWithTransaction() removes selected content or content
+   * around caret with transactions.
+   *
+   * @param aDirection          How much range should be removed.
+   * @param aStripWrappers      Whether the parent blocks should be removed
+   *                            when they become empty.
+   */
+  virtual nsresult
+  DeleteSelectionWithTransaction(EDirection aAction,
+                                 EStripWrappers aStripWrappers) override;
 
   /**
    * DeleteNodeWithTransaction() removes aNode from the DOM tree if it's
