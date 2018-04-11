@@ -9658,18 +9658,33 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
                                                                             aSc, aDisplayListBuilder,
                                                                             bounds);
   if (mask) {
+    auto layoutBounds = wr::ToRoundedLayoutRect(bounds);
     wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), Nothing(),
-        wr::ToRoundedLayoutRect(bounds), nullptr, mask.ptr());
-    // Don't record this clip push in aBuilder's internal clip stack, because
-    // otherwise any nested ScrollingLayersHelper instances that are created
-    // will get confused about which clips are pushed.
-    aBuilder.PushClip(clipId, GetClipChain());
+        layoutBounds, nullptr, mask.ptr());
+
+    // Create a new stacking context to attach the mask to, ensuring the mask is
+    // applied to the aggregate, and not the individual elements.
+
+    // The stacking context shouldn't have any offset.
+    layoutBounds.origin.x = 0;
+    layoutBounds.origin.y = 0;
+
+    aBuilder.PushStackingContext(/*aBounds: */ layoutBounds,
+                                 /*aClipNodeId: */ &clipId,
+                                 /*aAnimation: */ nullptr,
+                                 /*aOpacity: */ nullptr,
+                                 /*aTransform: */ nullptr,
+                                 /*aTransformStyle: */ wr::TransformStyle::Flat,
+                                 /*aPerspective: */ nullptr,
+                                 /*aMixBlendMode: */ wr::MixBlendMode::Normal,
+                                 /*aFilters: */ nsTArray<wr::WrFilterOp>(),
+                                 /*aBackfaceVisible: */ true);
   }
 
   nsDisplaySVGEffects::CreateWebRenderCommands(aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
 
   if (mask) {
-    aBuilder.PopClip(GetClipChain());
+    aBuilder.PopStackingContext();
   }
 
   return true;
