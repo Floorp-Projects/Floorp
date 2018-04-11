@@ -98,6 +98,10 @@ enum class ValType
 
 typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
 
+// The representation of a null reference value throughout the compiler.
+
+static const intptr_t NULLREF_VALUE = intptr_t((void*)nullptr);
+
 enum class DefinitionKind
 {
     Function                             = 0x00,
