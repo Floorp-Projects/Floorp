@@ -27,7 +27,7 @@ function loadCert(certFilename, trustString) {
 }
 
 /**
- * Adds a single EV test.
+ * Asynchronously runs a single EV test.
  *
  * @param {Array} expectedNamesForOCSP
  *        An array of nicknames of the certs to be responded to.
@@ -41,24 +41,22 @@ function loadCert(certFilename, trustString) {
  * @param {Boolean} expectedResult
  *        Whether the chain is expected to validate as EV.
  */
-function addEVTest(expectedNamesForOCSP, rootCertFileName, intCertFileNames,
-                   endEntityCertFileName, expectedResult) {
-  add_test(function() {
-    clearOCSPCache();
-    let ocspResponder = getOCSPResponder(expectedNamesForOCSP);
+async function doEVTest(expectedNamesForOCSP, rootCertFileName, intCertFileNames,
+                        endEntityCertFileName, expectedResult) {
+  clearOCSPCache();
+  let ocspResponder = getOCSPResponder(expectedNamesForOCSP);
 
-    loadCert(`${rootCertFileName}.pem`, "CTu,CTu,CTu");
-    for (let intCertFileName of intCertFileNames) {
-      loadCert(`${intCertFileName}.pem`, ",,");
-    }
-    checkEVStatus(certDB, certFromFile(`${endEntityCertFileName}.pem`),
-                  certificateUsageSSLServer, expectedResult);
+  loadCert(`${rootCertFileName}.pem`, "CTu,CTu,CTu");
+  for (let intCertFileName of intCertFileNames) {
+    loadCert(`${intCertFileName}.pem`, ",,");
+  }
+  await checkEVStatus(certDB, certFromFile(`${endEntityCertFileName}.pem`),
+                certificateUsageSSLServer, expectedResult);
 
-    ocspResponder.stop(run_next_test);
-  });
+  await stopOCSPResponder(ocspResponder);
 }
 
-function checkEVChains() {
+async function checkEVChains() {
   // Chain with an end entity cert with a validity period that is acceptable
   // for EV.
   const intFullName = "ev_int_60_months-evroot";
@@ -67,8 +65,8 @@ function checkEVChains() {
                            ? [ intFullName,
                                eeFullName ]
                            : [ eeFullName ];
-  addEVTest(expectedNamesForOCSP, "../test_ev_certs/evroot", [ intFullName ],
-            eeFullName, gEVExpected);
+  await doEVTest(expectedNamesForOCSP, "../test_ev_certs/evroot",
+                 [ intFullName ], eeFullName, gEVExpected);
 
   // Chain with an end entity cert with a validity period that is too long
   // for EV.
@@ -77,15 +75,13 @@ function checkEVChains() {
                            ? [ intFullName,
                                eeFullName ]
                            : [ eeFullName ];
-  addEVTest(expectedNamesForOCSP, "../test_ev_certs/evroot", [ intFullName ],
-            eeFullName, false);
+  await doEVTest(expectedNamesForOCSP, "../test_ev_certs/evroot",
+                 [ intFullName ], eeFullName, false);
 }
 
-function run_test() {
+add_task(async function () {
   Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
 
-  checkEVChains();
-
-  run_next_test();
-}
+  await checkEVChains();
+});

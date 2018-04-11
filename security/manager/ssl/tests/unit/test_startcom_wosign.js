@@ -12,7 +12,8 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"]
                  .getService(Ci.nsIX509CertDB);
 
 function loadCertWithTrust(certName, trustString) {
-  addCertFromFile(certdb, "test_startcom_wosign/" + certName + ".pem", trustString);
+  addCertFromFile(certdb, "test_startcom_wosign/" + certName + ".pem",
+                  trustString);
 }
 
 function certFromFile(certName) {
@@ -22,22 +23,25 @@ function certFromFile(certName) {
 function checkEndEntity(cert, expectedResult) {
   // (new Date("2016-11-01")).getTime() / 1000
   const VALIDATION_TIME = 1477958400;
-  checkCertErrorGenericAtTime(certdb, cert, expectedResult,
-                              certificateUsageSSLServer, VALIDATION_TIME);
+  return checkCertErrorGenericAtTime(certdb, cert, expectedResult,
+                                     certificateUsageSSLServer,
+                                     VALIDATION_TIME);
 }
 
-loadCertWithTrust("ca", "CTu,,");
-// This is not a real StartCom CA - it merely has the same distinguished name as
-// one (namely "/C=IL/O=StartCom Ltd./CN=StartCom Certification Authority G2",
-// encoded with PrintableStrings). By checking for specific DNs, we can enforce
-// the date-based policy in a way that is testable.
-loadCertWithTrust("StartComCA", ",,");
-checkEndEntity(certFromFile("StartCom-before-cutoff"), PRErrorCodeSuccess);
-checkEndEntity(certFromFile("StartCom-after-cutoff"), SEC_ERROR_REVOKED_CERTIFICATE);
+add_task(async function() {
+  loadCertWithTrust("ca", "CTu,,");
+  // This is not a real StartCom CA - it merely has the same distinguished name
+  // as one (namely "/C=IL/O=StartCom Ltd./CN=StartCom Certification Authority
+  // G2", encoded with PrintableStrings). By checking for specific DNs, we can
+  // enforce the date-based policy in a way that is testable.
+  loadCertWithTrust("StartComCA", ",,");
+  await checkEndEntity(certFromFile("StartCom-before-cutoff"), PRErrorCodeSuccess);
+  await checkEndEntity(certFromFile("StartCom-after-cutoff"), SEC_ERROR_REVOKED_CERTIFICATE);
 
-// Similarly, this is not a real WoSign CA. It has the same distinguished name
-// as "/C=CN/O=WoSign CA Limited/CN=Certification Authority of WoSign", encoded
-// with PrintableStrings).
-loadCertWithTrust("WoSignCA", ",,");
-checkEndEntity(certFromFile("WoSign-before-cutoff"), PRErrorCodeSuccess);
-checkEndEntity(certFromFile("WoSign-after-cutoff"), SEC_ERROR_REVOKED_CERTIFICATE);
+  // Similarly, this is not a real WoSign CA. It has the same distinguished name
+  // as "/C=CN/O=WoSign CA Limited/CN=Certification Authority of WoSign",
+  // encoded with PrintableStrings).
+  loadCertWithTrust("WoSignCA", ",,");
+  await checkEndEntity(certFromFile("WoSign-before-cutoff"), PRErrorCodeSuccess);
+  await checkEndEntity(certFromFile("WoSign-after-cutoff"), SEC_ERROR_REVOKED_CERTIFICATE);
+});

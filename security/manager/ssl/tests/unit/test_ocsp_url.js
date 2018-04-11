@@ -30,7 +30,7 @@ function check_cert_err(cert_name, expected_error) {
                                certificateUsageSSLServer);
 }
 
-function run_test() {
+add_task(async function() {
   addCertFromFile(certdb, "test_ocsp_url/ca.pem", "CTu,CTu,CTu");
   addCertFromFile(certdb, "test_ocsp_url/int.pem", ",,");
 
@@ -45,93 +45,67 @@ function run_test() {
   //       because the OCSP code would then send a request to port 80, which we
   //       can't use in tests.
 
-  add_test(function() {
-    clearOCSPCache();
-    let ocspResponder = failingOCSPResponder();
-    check_cert_err("bad-scheme", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  let ocspResponder = failingOCSPResponder();
+  await check_cert_err("bad-scheme", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
+  await stopOCSPResponder(ocspResponder);
 
-  add_test(function() {
-    clearOCSPCache();
-    let ocspResponder = failingOCSPResponder();
-    check_cert_err("empty-scheme-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  ocspResponder = failingOCSPResponder();
+  await check_cert_err("empty-scheme-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
+  await stopOCSPResponder(ocspResponder);
 
-  add_test(() => {
-    clearOCSPCache();
-    let ocspResponder = failingOCSPResponder();
-    check_cert_err("ftp-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  ocspResponder = failingOCSPResponder();
+  await check_cert_err("ftp-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
+  await stopOCSPResponder(ocspResponder);
 
-  add_test(function() {
-    clearOCSPCache();
-    let ocspResponder = failingOCSPResponder();
-    check_cert_err("https-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  ocspResponder = failingOCSPResponder();
+  await check_cert_err("https-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
+  await stopOCSPResponder(ocspResponder);
 
-  add_test(function() {
-    clearOCSPCache();
-    let ocspResponder = start_ocsp_responder(["hTTp-url"], ["hTTp-url"]);
-    check_cert_err("hTTp-url", PRErrorCodeSuccess);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  ocspResponder = start_ocsp_responder(["hTTp-url"], ["hTTp-url"]);
+  await check_cert_err("hTTp-url", PRErrorCodeSuccess);
+  await stopOCSPResponder(ocspResponder);
 
-  add_test(function() {
-    clearOCSPCache();
-    let ocspResponder = failingOCSPResponder();
-    check_cert_err("negative-port", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  ocspResponder = failingOCSPResponder();
+  await check_cert_err("negative-port", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
+  await stopOCSPResponder(ocspResponder);
 
-  add_test(function() {
-    clearOCSPCache();
-    let ocspResponder = failingOCSPResponder();
-    // XXX Bug 1013615 parser accepts ":8888" as hostname
-    check_cert_err("no-host-url", SEC_ERROR_OCSP_SERVER_ERROR);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  ocspResponder = failingOCSPResponder();
+  // XXX Bug 1013615 parser accepts ":8888" as hostname
+  await check_cert_err("no-host-url", SEC_ERROR_OCSP_SERVER_ERROR);
+  await stopOCSPResponder(ocspResponder);
 
-  add_test(function() {
-    clearOCSPCache();
-    let ocspResponder = start_ocsp_responder(["no-path-url"], [""]);
-    check_cert_err("no-path-url", PRErrorCodeSuccess);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  ocspResponder = start_ocsp_responder(["no-path-url"], [""]);
+  await check_cert_err("no-path-url", PRErrorCodeSuccess);
+  await stopOCSPResponder(ocspResponder);
 
-  add_test(function() {
-    clearOCSPCache();
-    let ocspResponder = failingOCSPResponder();
-    check_cert_err("no-scheme-host-port", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  ocspResponder = failingOCSPResponder();
+  await check_cert_err("no-scheme-host-port", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
+  await stopOCSPResponder(ocspResponder);
 
-  add_test(function() {
-    clearOCSPCache();
-    let ocspResponder = failingOCSPResponder();
-    check_cert_err("no-scheme-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  ocspResponder = failingOCSPResponder();
+  await check_cert_err("no-scheme-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
+  await stopOCSPResponder(ocspResponder);
 
-  add_test(function() {
-    clearOCSPCache();
-    let ocspResponder = failingOCSPResponder();
-    check_cert_err("unknown-scheme", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
-    ocspResponder.stop(run_next_test);
-  });
+  clearOCSPCache();
+  ocspResponder = failingOCSPResponder();
+  await check_cert_err("unknown-scheme", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
+  await stopOCSPResponder(ocspResponder);
 
   // Note: We currently don't have anything that ensures user:pass sections
   //       weren't sent. The following test simply checks that such sections
   //       don't cause failures.
-  add_test(() => {
-    clearOCSPCache();
-    let ocspResponder = start_ocsp_responder(["user-pass"], [""]);
-    check_cert_err("user-pass", PRErrorCodeSuccess);
-    ocspResponder.stop(run_next_test);
-  });
-
-  run_next_test();
-}
+  clearOCSPCache();
+  ocspResponder = start_ocsp_responder(["user-pass"], [""]);
+  await check_cert_err("user-pass", PRErrorCodeSuccess);
+  await stopOCSPResponder(ocspResponder);
+});

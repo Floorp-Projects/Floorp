@@ -24,6 +24,8 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"]
  * @param {String} eeKeyType
  * @param {Number} eeKeySize
  * @param {PRErrorCode} eeExpectedError
+ * @return {Promise} a promise that will resolve when the verification has
+ *                   completed
  */
 function checkChain(rootKeyType, rootKeySize, intKeyType, intKeySize,
                     eeKeyType, eeKeySize, eeExpectedError) {
@@ -40,8 +42,8 @@ function checkChain(rootKeyType, rootKeySize, intKeyType, intKeySize,
 
   info("cert o=" + eeCert.organization);
   info("cert issuer o=" + eeCert.issuerOrganization);
-  checkCertErrorGeneric(certdb, eeCert, eeExpectedError,
-                        certificateUsageSSLServer);
+  return checkCertErrorGeneric(certdb, eeCert, eeExpectedError,
+                               certificateUsageSSLServer);
 }
 
 /**
@@ -50,78 +52,76 @@ function checkChain(rootKeyType, rootKeySize, intKeyType, intKeySize,
  * @param {Number} inadequateKeySize
  * @param {Number} adequateKeySize
  */
-function checkRSAChains(inadequateKeySize, adequateKeySize) {
+async function checkRSAChains(inadequateKeySize, adequateKeySize) {
   // Chain with certs that have adequate sizes for DV
-  checkChain("rsa", adequateKeySize,
-             "rsa", adequateKeySize,
-             "rsa", adequateKeySize,
-             PRErrorCodeSuccess);
+  await checkChain("rsa", adequateKeySize,
+                   "rsa", adequateKeySize,
+                   "rsa", adequateKeySize,
+                   PRErrorCodeSuccess);
 
   // Chain with a root cert that has an inadequate size for DV
-  checkChain("rsa", inadequateKeySize,
-             "rsa", adequateKeySize,
-             "rsa", adequateKeySize,
-             MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
+  await checkChain("rsa", inadequateKeySize,
+                   "rsa", adequateKeySize,
+                   "rsa", adequateKeySize,
+                   MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
 
   // Chain with an intermediate cert that has an inadequate size for DV
-  checkChain("rsa", adequateKeySize,
-             "rsa", inadequateKeySize,
-             "rsa", adequateKeySize,
-             MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
+  await checkChain("rsa", adequateKeySize,
+                   "rsa", inadequateKeySize,
+                   "rsa", adequateKeySize,
+                   MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
 
   // Chain with an end entity cert that has an inadequate size for DV
-  checkChain("rsa", adequateKeySize,
-             "rsa", adequateKeySize,
-             "rsa", inadequateKeySize,
-             MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
+  await checkChain("rsa", adequateKeySize,
+                   "rsa", adequateKeySize,
+                   "rsa", inadequateKeySize,
+                   MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
 }
 
-function checkECCChains() {
-  checkChain("secp256r1", 256,
-             "secp384r1", 384,
-             "secp521r1", 521,
-             PRErrorCodeSuccess);
-  checkChain("secp256r1", 256,
-             "secp224r1", 224,
-             "secp256r1", 256,
-             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-  checkChain("secp256r1", 256,
-             "secp256r1", 256,
-             "secp224r1", 224,
-             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-  checkChain("secp224r1", 224,
-             "secp256r1", 256,
-             "secp256r1", 256,
-             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-  checkChain("secp256r1", 256,
-             "secp256r1", 256,
-             "secp256k1", 256,
-             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-  checkChain("secp256k1", 256,
-             "secp256r1", 256,
-             "secp256r1", 256,
-             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+async function checkECCChains() {
+  await checkChain("secp256r1", 256,
+                   "secp384r1", 384,
+                   "secp521r1", 521,
+                   PRErrorCodeSuccess);
+  await checkChain("secp256r1", 256,
+                   "secp224r1", 224,
+                   "secp256r1", 256,
+                   SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+  await checkChain("secp256r1", 256,
+                   "secp256r1", 256,
+                   "secp224r1", 224,
+                   SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+  await checkChain("secp224r1", 224,
+                   "secp256r1", 256,
+                   "secp256r1", 256,
+                   SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+  await checkChain("secp256r1", 256,
+                   "secp256r1", 256,
+                   "secp256k1", 256,
+                   SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+  await checkChain("secp256k1", 256,
+                   "secp256r1", 256,
+                   "secp256r1", 256,
+                   SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
 }
 
-function checkCombinationChains() {
-  checkChain("rsa", 2048,
-             "secp256r1", 256,
-             "secp384r1", 384,
-             PRErrorCodeSuccess);
-  checkChain("rsa", 2048,
-             "secp256r1", 256,
-             "secp224r1", 224,
-             SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-  checkChain("secp256r1", 256,
-             "rsa", 1016,
-             "secp256r1", 256,
-             MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
+async function checkCombinationChains() {
+  await checkChain("rsa", 2048,
+                   "secp256r1", 256,
+                   "secp384r1", 384,
+                   PRErrorCodeSuccess);
+  await checkChain("rsa", 2048,
+                   "secp256r1", 256,
+                   "secp224r1", 224,
+                   SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+  await checkChain("secp256r1", 256,
+                   "rsa", 1016,
+                   "secp256r1", 256,
+                   MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
 }
 
-function run_test() {
-  checkRSAChains(1016, 1024);
-  checkECCChains();
-  checkCombinationChains();
-
-  run_next_test();
-}
+add_task(async function() {
+  await checkRSAChains(1016, 1024);
+  await checkECCChains();
+  await checkCombinationChains();
+});
