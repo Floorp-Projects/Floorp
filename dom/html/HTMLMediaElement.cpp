@@ -5233,26 +5233,30 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback()
 }
 
 static already_AddRefed<AudioTrack>
-CreateAudioTrack(AudioStreamTrack* aStreamTrack)
+CreateAudioTrack(AudioStreamTrack* aStreamTrack,
+                 nsIGlobalObject* aOwnerGlobal)
 {
   nsAutoString id;
   nsAutoString label;
   aStreamTrack->GetId(id);
   aStreamTrack->GetLabel(label, CallerType::System);
 
-  return MediaTrackList::CreateAudioTrack(id, NS_LITERAL_STRING("main"),
+  return MediaTrackList::CreateAudioTrack(aOwnerGlobal,
+                                          id, NS_LITERAL_STRING("main"),
                                           label, EmptyString(), true);
 }
 
 static already_AddRefed<VideoTrack>
-CreateVideoTrack(VideoStreamTrack* aStreamTrack)
+CreateVideoTrack(VideoStreamTrack* aStreamTrack,
+                 nsIGlobalObject* aOwnerGlobal)
 {
   nsAutoString id;
   nsAutoString label;
   aStreamTrack->GetId(id);
   aStreamTrack->GetLabel(label, CallerType::System);
 
-  return MediaTrackList::CreateVideoTrack(id, NS_LITERAL_STRING("main"),
+  return MediaTrackList::CreateVideoTrack(aOwnerGlobal,
+                                          id, NS_LITERAL_STRING("main"),
                                           label, EmptyString(),
                                           aStreamTrack);
 }
@@ -5276,14 +5280,16 @@ HTMLMediaElement::NotifyMediaStreamTrackAdded(const RefPtr<MediaStreamTrack>& aT
 #endif
 
   if (AudioStreamTrack* t = aTrack->AsAudioStreamTrack()) {
-    RefPtr<AudioTrack> audioTrack = CreateAudioTrack(t);
+    RefPtr<AudioTrack> audioTrack =
+      CreateAudioTrack(t, AudioTracks()->GetOwnerGlobal());
     AudioTracks()->AddTrack(audioTrack);
   } else if (VideoStreamTrack* t = aTrack->AsVideoStreamTrack()) {
     // TODO: Fix this per the spec on bug 1273443.
     if (!IsVideo()) {
       return;
     }
-    RefPtr<VideoTrack> videoTrack = CreateVideoTrack(t);
+    RefPtr<VideoTrack> videoTrack =
+      CreateVideoTrack(t, VideoTracks()->GetOwnerGlobal());
     VideoTracks()->AddTrack(videoTrack);
     // New MediaStreamTrack added, set the new added video track as selected
     // video track when there is no selected track.
@@ -7690,8 +7696,10 @@ HTMLMediaElement::ConstructMediaTracks(const MediaInfo* aInfo)
   AudioTrackList* audioList = AudioTracks();
   if (audioList && aInfo->HasAudio()) {
     const TrackInfo& info = aInfo->mAudio;
-    RefPtr<AudioTrack> track = MediaTrackList::CreateAudioTrack(
-    info.mId, info.mKind, info.mLabel, info.mLanguage, info.mEnabled);
+    RefPtr<AudioTrack> track =
+      MediaTrackList::CreateAudioTrack(audioList->GetOwnerGlobal(), info.mId,
+                                       info.mKind, info.mLabel, info.mLanguage,
+                                       info.mEnabled);
 
     audioList->AddTrack(track);
   }
@@ -7699,8 +7707,9 @@ HTMLMediaElement::ConstructMediaTracks(const MediaInfo* aInfo)
   VideoTrackList* videoList = VideoTracks();
   if (videoList && aInfo->HasVideo()) {
     const TrackInfo& info = aInfo->mVideo;
-    RefPtr<VideoTrack> track = MediaTrackList::CreateVideoTrack(
-    info.mId, info.mKind, info.mLabel, info.mLanguage);
+    RefPtr<VideoTrack> track =
+      MediaTrackList::CreateVideoTrack(videoList->GetOwnerGlobal(), info.mId,
+                                       info.mKind, info.mLabel, info.mLanguage);
 
     videoList->AddTrack(track);
     track->SetEnabledInternal(info.mEnabled, MediaTrack::FIRE_NO_EVENTS);
