@@ -377,20 +377,6 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     impl: "_getNodeValue"
   }),
 
-  // Accessors for custom form properties.
-
-  getFormProperty: function(name) {
-    return this._form.props ? this._form.props[name] : null;
-  },
-
-  hasFormProperty: function(name) {
-    return this._form.props ? (name in this._form.props) : null;
-  },
-
-  get formProperties() {
-    return this._form.props;
-  },
-
   /**
    * Return a new AttributeModificationList for this node.
    */
