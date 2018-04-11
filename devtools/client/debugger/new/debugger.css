@@ -326,6 +326,18 @@ menuseparator {
   --reference-color: var(--theme-highlight-purple);
 }
 
+.theme-firebug {
+  --number-color: #000088;
+  --string-color: #ff0000;
+  --null-color: #787878;
+  --object-color: DarkGreen;
+  --caption-color: #444444;
+  --location-color: #555555;
+  --source-link-color: blue;
+  --node-color: rgb(0, 0, 136);
+  --reference-color: rgb(102, 102, 255);
+}
+
 /******************************************************************************/
 
 .objectLink:hover {
@@ -1066,12 +1078,20 @@ html[dir="rtl"] .tree-node img.arrow {
   font-family: Menlo, monospace;
 }
 
+.project-text-search .result.focused {
+  background-color: var(--search-overlays-semitransparent);
+}
+
 .project-text-search .result .query-match {
   background-color: var(--theme-selection-background);
   color: white;
   padding: 1px 4px;
   margin: 0 2px 0 2px;
   border-radius: 2px;
+}
+
+.project-text-search .result.focused .line-number {
+  font-weight: bolder;
 }
 
 .project-text-search .result .line-number {
@@ -1101,6 +1121,10 @@ html[dir="rtl"] .tree-node img.arrow {
   margin: 2px 0 2px 0;
 }
 
+.project-text-search .file-result.focused {
+  background-color: var(--search-overlays-semitransparent);
+}
+
 .project-text-search .line-match {
   display: "flex";
   flex-grow: 1;
@@ -1123,22 +1147,6 @@ html[dir="rtl"] .tree-node img.arrow {
 
 .project-text-search .managed-tree .tree {
   height: 100%;
-}
-
-/* Focus values */
-
-.project-text-search .file-result.focused,
-.project-text-search .result.focused {
-  background-color: var(--theme-selection-background);
-}
-
-.project-text-search .result.focused .line-number {
-  font-weight: bolder;
-}
-
-.project-text-search .result.focused .query-match {
-  background-color: #ffffff;
-  color: #000000;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2917,8 +2925,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   display: inline-block;
 }
 
-.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-code,
-.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-scroll {
+.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-code {
   cursor: default;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -2999,6 +3006,10 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 :root.theme-dark .expression-container:hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+:root.theme-firebug .expression-container:hover {
   background-color: var(--theme-selection-background-hover);
 }
 
@@ -3147,7 +3158,8 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   flex-shrink: 0;
 }
 
-.theme-light .frames .location {
+.theme-light .frames .location,
+.theme-firebug .frames .location {
   color: var(--theme-comment);
 }
 
@@ -3182,6 +3194,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 :root.theme-light .frames ul li.selected .location,
+:root.theme-firebug .frames ul li.selected .location,
 :root.theme-dark .frames ul li.selected .location {
   color: white;
 }
@@ -4054,6 +4067,7 @@ html .welcomebox .toggle-button-end.collapsed {
   line-height: 1.5em;
   word-break: break-all;
   text-overflow: ellipsis;
+  overflow: hidden;
   white-space: nowrap;
 }
 
