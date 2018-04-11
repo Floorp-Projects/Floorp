@@ -1807,6 +1807,107 @@ waitForAllPaints(() => {
 
     await ensureElementRemoval(div);
   });
+
+  add_task(
+    async function no_restyling_for_throttled_animation_on_querying_play_state() {
+      var div = addDiv(null, { style: 'animation: opacity 100s' });
+      var animation = div.getAnimations()[0];
+      var sibling = addDiv(null);
+
+      await animation.ready;
+      ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+      var markers = observeAnimSyncStyling(() => {
+        sibling.style.opacity = '0.5';
+        is(animation.playState, 'running',
+           'Animation.playState should be running');
+      });
+      is(markers.length, 0,
+         'Animation.playState should not flush throttled animation in the ' +
+         'case where there are only style changes that don\'t affect the ' +
+         'throttled animation');
+
+      await ensureElementRemoval(div);
+      await ensureElementRemoval(sibling);
+    }
+  );
+
+  add_task(
+    async function restyling_for_throttled_animation_on_querying_play_state() {
+      var div = addDiv(null, { style: 'animation: opacity 100s' });
+      var animation = div.getAnimations()[0];
+
+      await animation.ready;
+      ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+      var markers = observeAnimSyncStyling(() => {
+        div.style.animationPlayState = 'paused';
+        is(animation.playState, 'paused',
+           'Animation.playState should be reflected by pending style');
+      });
+
+      is(markers.length, 1,
+         'Animation.playState should flush throttled animation style that ' +
+         'affects the throttled animation');
+
+      await ensureElementRemoval(div);
+    }
+  );
+
+  add_task(
+    async function no_restyling_for_throttled_transition_on_querying_play_state() {
+      var div = addDiv(null, { style: 'transition: opacity 100s; opacity: 0' });
+      var sibling = addDiv(null);
+
+      getComputedStyle(div).opacity;
+      div.style.opacity = 1;
+
+      var transition = div.getAnimations()[0];
+
+      await transition.ready;
+      ok(SpecialPowers.wrap(transition).isRunningOnCompositor);
+
+      var markers = observeAnimSyncStyling(() => {
+        sibling.style.opacity = '0.5';
+        is(transition.playState, 'running',
+           'Animation.playState should be running');
+      });
+
+      is(markers.length, 0,
+         'Animation.playState should not flush throttled transition in the ' +
+         'case where there are only style changes that don\'t affect the ' +
+         'throttled animation');
+
+      await ensureElementRemoval(div);
+      await ensureElementRemoval(sibling);
+    }
+  );
+
+  add_task(
+    async function restyling_for_throttled_transition_on_querying_play_state() {
+      var div = addDiv(null, { style: 'transition: opacity 100s; opacity: 0' });
+      getComputedStyle(div).opacity;
+      div.style.opacity = '1';
+
+      var transition = div.getAnimations()[0];
+
+      await transition.ready;
+      ok(SpecialPowers.wrap(transition).isRunningOnCompositor);
+
+      var markers = observeAnimSyncStyling(() => {
+        div.style.transitionProperty = 'none';
+        is(transition.playState, 'idle',
+           'Animation.playState should be reflected by pending style change ' +
+           'which cancel the transition');
+      });
+
+      is(markers.length, 1,
+         'Animation.playState should flush throttled transition style that ' +
+         'affects the throttled animation');
+
+      await ensureElementRemoval(div);
+    }
+  );
 });
 
 </script>

@@ -53,7 +53,7 @@ CSSAnimation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 mozilla::dom::Promise*
 CSSAnimation::GetReady(ErrorResult& aRv)
 {
-  FlushStyle();
+  FlushUnanimatedStyle();
   return Animation::GetReady(aRv);
 }
 
@@ -76,7 +76,7 @@ CSSAnimation::PlayStateFromJS() const
 {
   // Flush style to ensure that any properties controlling animation state
   // (e.g. animation-play-state) are fully updated.
-  FlushStyle();
+  FlushUnanimatedStyle();
   return Animation::PlayStateFromJS();
 }
 
@@ -85,7 +85,7 @@ CSSAnimation::PendingFromJS() const
 {
   // Flush style since, for example, if the animation-play-state was just
   // changed its possible we should now be pending.
-  FlushStyle();
+  FlushUnanimatedStyle();
   return Animation::PendingFromJS();
 }
 
@@ -94,7 +94,7 @@ CSSAnimation::PlayFromJS(ErrorResult& aRv)
 {
   // Note that flushing style below might trigger calls to
   // PlayFromStyle()/PauseFromStyle() on this object.
-  FlushStyle();
+  FlushUnanimatedStyle();
   Animation::PlayFromJS(aRv);
 }
 
