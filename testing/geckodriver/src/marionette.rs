@@ -1027,7 +1027,7 @@ impl MarionetteCommand {
             DeleteSession => {
                 let mut body = BTreeMap::new();
                 body.insert("flags".to_owned(), vec!["eForceQuit".to_json()].to_json());
-                (Some("quit"), Some(Ok(body)))
+                (Some("Marionette:Quit"), Some(Ok(body)))
             }
             DismissAlert => (Some("WebDriver:DismissAlert"), None),
             ElementClear(ref x) => (Some("WebDriver:ElementClear"), Some(x.to_marionette())),
@@ -1160,34 +1160,30 @@ impl MarionetteCommand {
                 data.insert("full".to_string(), Json::Boolean(false));
                 (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
             }
-            Extension(ref extension) => {
-                match extension {
-                    &GeckoExtensionCommand::GetContext => {
-                        (Some("getContext"), None)
-                    },
-                    &GeckoExtensionCommand::InstallAddon(ref x) => {
-                        (Some("addon:install"), Some(x.to_marionette()))
-                    },
-                    &GeckoExtensionCommand::SetContext(ref x) => {
-                        (Some("setContext"), Some(x.to_marionette()))
-                    },
-                    &GeckoExtensionCommand::UninstallAddon(ref x) => {
-                        (Some("addon:uninstall"), Some(x.to_marionette()))
-                    },
-                    &GeckoExtensionCommand::XblAnonymousByAttribute(ref e, ref x) => {
-                        let mut data = try!(x.to_marionette());
-                        data.insert("element".to_string(), e.id.to_json());
-                        (Some("findElement"), Some(Ok(data)))
-                    },
-                    &GeckoExtensionCommand::XblAnonymousChildren(ref e) => {
-                        let mut data = BTreeMap::new();
-                        data.insert("using".to_owned(), "anon".to_json());
-                        data.insert("value".to_owned(), Json::Null);
-                        data.insert("element".to_string(), e.id.to_json());
-                        (Some("findElements"), Some(Ok(data)))
-                    }
+            Extension(ref extension) => match extension {
+                &GeckoExtensionCommand::GetContext => (Some("Marionette:GetContext"), None),
+                &GeckoExtensionCommand::InstallAddon(ref x) => {
+                    (Some("Addon:Install"), Some(x.to_marionette()))
                 }
-            }
+                &GeckoExtensionCommand::SetContext(ref x) => {
+                    (Some("Marionette:SetContext"), Some(x.to_marionette()))
+                }
+                &GeckoExtensionCommand::UninstallAddon(ref x) => {
+                    (Some("Addon:Uninstall"), Some(x.to_marionette()))
+                }
+                &GeckoExtensionCommand::XblAnonymousByAttribute(ref e, ref x) => {
+                    let mut data = try!(x.to_marionette());
+                    data.insert("element".to_string(), e.id.to_json());
+                    (Some("WebDriver:FindElement"), Some(Ok(data)))
+                }
+                &GeckoExtensionCommand::XblAnonymousChildren(ref e) => {
+                    let mut data = BTreeMap::new();
+                    data.insert("using".to_owned(), "anon".to_json());
+                    data.insert("value".to_owned(), Json::Null);
+                    data.insert("element".to_string(), e.id.to_json());
+                    (Some("WebDriver:FindElements"), Some(Ok(data)))
+                }
+            },
         };
 
         let name = try_opt!(opt_name,
