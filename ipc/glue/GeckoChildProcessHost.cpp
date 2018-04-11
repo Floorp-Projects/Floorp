@@ -374,12 +374,12 @@ GeckoChildProcessHost::WaitUntilConnected(int32_t aTimeoutMs)
 
   // NB: this uses a different mechanism than the chromium parent
   // class.
-  PRIntervalTime timeoutTicks = (aTimeoutMs > 0) ?
-    PR_MillisecondsToInterval(aTimeoutMs) : PR_INTERVAL_NO_TIMEOUT;
+  TimeDuration timeout = (aTimeoutMs > 0) ?
+    TimeDuration::FromMilliseconds(aTimeoutMs) : TimeDuration::Forever();
 
   MonitorAutoLock lock(mMonitor);
-  PRIntervalTime waitStart = PR_IntervalNow();
-  PRIntervalTime current;
+  TimeStamp waitStart = TimeStamp::Now();
+  TimeStamp current;
 
   // We'll receive several notifications, we need to exit when we
   // have either successfully launched or have timed out.
@@ -389,15 +389,14 @@ GeckoChildProcessHost::WaitUntilConnected(int32_t aTimeoutMs)
       break;
     }
 
-    lock.Wait(timeoutTicks);
+    CVStatus status = lock.Wait(timeout);
+    if (status == CVStatus::Timeout) {
+      break;
+    }
 
-    if (timeoutTicks != PR_INTERVAL_NO_TIMEOUT) {
-      current = PR_IntervalNow();
-      PRIntervalTime elapsed = current - waitStart;
-      if (elapsed > timeoutTicks) {
-        break;
-      }
-      timeoutTicks = timeoutTicks - elapsed;
+    if (timeout != TimeDuration::Forever()) {
+      current = TimeStamp::Now();
+      timeout -= current - waitStart;
       waitStart = current;
     }
   }

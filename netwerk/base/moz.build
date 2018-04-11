@@ -173,7 +173,6 @@ EXPORTS.mozilla.net += [
     'Dashboard.h',
     'DashboardTypes.h',
     'MemoryDownloader.h',
-    'MozURL.h',
     'PartiallySeekableInputStream.h',
     'Predictor.h',
     'ReferrerPolicy.h',
@@ -192,7 +191,6 @@ UNIFIED_SOURCES += [
     'LoadContextInfo.cpp',
     'LoadInfo.cpp',
     'MemoryDownloader.cpp',
-    'MozURL.cpp',
     'NetworkActivityMonitor.cpp',
     'nsAsyncRedirectVerifyHelper.cpp',
     'nsAsyncStreamCopier.cpp',
@@ -290,6 +288,8 @@ elif CONFIG['OS_ARCH'] == 'Linux':
 EXTRA_JS_MODULES += [
     'NetUtil.jsm',
 ]
+
+DIRS += [ 'mozurl' ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

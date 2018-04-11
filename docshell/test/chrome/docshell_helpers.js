@@ -341,7 +341,7 @@ function pageEventListener(event) {
 function finish() {
   // Work around bug 467960.
   var history = TestWindow.getBrowser().webNavigation.sessionHistory;
-  history.PurgeHistory(history.count);
+  history.legacySHistory.PurgeHistory(history.count);
   
   // If the test changed the value of max_total_viewers via a call to
   // enableBFCache(), then restore it now.

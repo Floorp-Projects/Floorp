@@ -25,7 +25,6 @@ class nsIFormControlFrame;
 class nsIFrame;
 class nsILayoutHistoryState;
 class nsIURI;
-class nsPresState;
 struct nsSize;
 
 namespace mozilla {
@@ -35,6 +34,7 @@ class EventChainVisitor;
 class EventListenerManager;
 class EventStates;
 class TextEditor;
+class PresState;
 namespace dom {
 class HTMLFormElement;
 class HTMLMenuElement;
@@ -1018,7 +1018,7 @@ public:
     return NS_OK;
   }
 
-  virtual bool RestoreState(nsPresState* aState) override
+  virtual bool RestoreState(mozilla::PresState* aState) override
   {
     return false;
   }
@@ -1184,7 +1184,7 @@ public:
    * Get the presentation state for a piece of content, or create it if it does
    * not exist.  Generally used by SaveState().
    */
-  nsPresState* GetPrimaryPresState();
+  mozilla::PresState* GetPrimaryPresState();
 
   /**
    * Get the layout history object for a particular piece of content.

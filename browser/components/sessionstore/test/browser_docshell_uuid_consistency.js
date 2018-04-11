@@ -8,7 +8,7 @@ add_task(async function duplicateTab() {
     let docshell = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIWebNavigation)
                                  .QueryInterface(Ci.nsIDocShell);
-    let shEntry = docshell.sessionHistory.getEntryAtIndex(0, false);
+    let shEntry = docshell.sessionHistory.legacySHistory.getEntryAtIndex(0, false);
     is(shEntry.docshellID.toString(), docshell.historyID.toString());
   });
 
@@ -19,7 +19,7 @@ add_task(async function duplicateTab() {
     let docshell = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIWebNavigation)
                                  .QueryInterface(Ci.nsIDocShell);
-    let shEntry = docshell.sessionHistory.getEntryAtIndex(0, false);
+    let shEntry = docshell.sessionHistory.legacySHistory.getEntryAtIndex(0, false);
     is(shEntry.docshellID.toString(), docshell.historyID.toString());
   });
 
@@ -39,7 +39,7 @@ add_task(async function contentToChromeNavigate() {
                                  .QueryInterface(Ci.nsIDocShell);
     let sh = docshell.sessionHistory;
     is(sh.count, 1);
-    is(sh.getEntryAtIndex(0, false).docshellID.toString(), docshell.historyID.toString());
+    is(sh.legacySHistory.getEntryAtIndex(0, false).docshellID.toString(), docshell.historyID.toString());
   });
 
   // Force the browser to navigate to the chrome process.
@@ -58,8 +58,8 @@ add_task(async function contentToChromeNavigate() {
   let sh = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
 
   is(sh.count, 2);
-  is(sh.getEntryAtIndex(0, false).docshellID.toString(), docShell.historyID.toString());
-  is(sh.getEntryAtIndex(1, false).docshellID.toString(), docShell.historyID.toString());
+  is(sh.legacySHistory.getEntryAtIndex(0, false).docshellID.toString(), docShell.historyID.toString());
+  is(sh.legacySHistory.getEntryAtIndex(1, false).docshellID.toString(), docShell.historyID.toString());
 
   BrowserTestUtils.removeTab(tab);
 });

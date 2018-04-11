@@ -24,12 +24,12 @@
 #include "nsExpirationTracker.h"
 #include "TextOverflow.h"
 #include "ScrollVelocityQueue.h"
+#include "mozilla/PresState.h"
 
 class nsPresContext;
 class nsIPresShell;
 class nsIContent;
 class nsAtom;
-class nsPresState;
 class nsIScrollPositionListener;
 
 namespace mozilla {
@@ -297,8 +297,8 @@ public:
   nsSize GetLineScrollAmount() const;
   nsSize GetPageScrollAmount() const;
 
-  nsPresState* SaveState() const;
-  void RestoreState(nsPresState* aState);
+  mozilla::UniquePtr<mozilla::PresState> SaveState() const;
+  void RestoreState(mozilla::PresState* aState);
 
   nsIFrame* GetScrolledFrame() const { return mScrolledFrame; }
   nsIFrame* GetScrollbarBox(bool aVertical) const {
@@ -1004,12 +1004,10 @@ public:
   }
 
   // nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresState** aState) override {
-    NS_ENSURE_ARG_POINTER(aState);
-    *aState = mHelper.SaveState();
-    return NS_OK;
+  mozilla::UniquePtr<mozilla::PresState> SaveState() override {
+    return mHelper.SaveState();
   }
-  NS_IMETHOD RestoreState(nsPresState* aState) override {
+  NS_IMETHOD RestoreState(mozilla::PresState* aState) override {
     NS_ENSURE_ARG_POINTER(aState);
     mHelper.RestoreState(aState);
     return NS_OK;
@@ -1431,12 +1429,10 @@ public:
   }
 
   // nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresState** aState) override {
-    NS_ENSURE_ARG_POINTER(aState);
-    *aState = mHelper.SaveState();
-    return NS_OK;
+  mozilla::UniquePtr<mozilla::PresState> SaveState() override {
+    return mHelper.SaveState();
   }
-  NS_IMETHOD RestoreState(nsPresState* aState) override {
+  NS_IMETHOD RestoreState(mozilla::PresState* aState) override {
     NS_ENSURE_ARG_POINTER(aState);
     mHelper.RestoreState(aState);
     return NS_OK;

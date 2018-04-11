@@ -1424,6 +1424,7 @@ ChildImpl::Shutdown()
 #endif
 
     ThreadLocalDestructor(threadLocalInfo);
+    sMainThreadInfo = nullptr;
   }
 }
 
@@ -1452,6 +1453,10 @@ ChildImpl::GetOrCreateForCurrentThread()
 {
   MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex,
              "BackgroundChild::Startup() was never called!");
+
+  if (NS_IsMainThread() && sShutdownHasStarted) {
+    return nullptr;
+  }
 
   auto threadLocalInfo = NS_IsMainThread() ? sMainThreadInfo :
     static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));

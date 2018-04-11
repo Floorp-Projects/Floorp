@@ -152,7 +152,7 @@ pub fn set_port(url: &mut Url, new_port: &str) -> Result<(), ()> {
     {
         // has_host implies !cannot_be_a_base
         let scheme = url.scheme();
-        if !url.has_host() || scheme == "file" {
+        if !url.has_host() || url.host() == Some(Host::Domain("")) || scheme == "file" {
             return Err(())
         }
         result = Parser::parse_port(Input::new(new_port), || default_port(scheme), Context::Setter)

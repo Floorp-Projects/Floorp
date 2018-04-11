@@ -24,14 +24,14 @@ function test() {
 
   promiseTabState(tab, tabState).then(() => {
     let sessionHistory = browser.sessionHistory;
-    let entry = sessionHistory.getEntryAtIndex(0, false);
+    let entry = sessionHistory.legacySHistory.getEntryAtIndex(0, false);
     entry.QueryInterface(Ci.nsISHContainer);
 
     whenChildCount(entry, 1, function() {
       whenChildCount(entry, 2, function() {
         promiseBrowserLoaded(browser).then(() => {
           let newSessionHistory = browser.sessionHistory;
-          let newEntry = newSessionHistory.getEntryAtIndex(0, false);
+          let newEntry = newSessionHistory.legacySHistory.getEntryAtIndex(0, false);
 
           whenChildCount(newEntry, 0, function() {
             // Make sure that we reset the state.

@@ -681,21 +681,10 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     httpChannel->SetLoadFlags(newLoadFlags);
   }
 
-  nsCOMPtr<nsISupportsPRUint32> cacheKey =
-    do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return SendFailedAsyncOpen(rv);
-  }
-
-  rv = cacheKey->SetData(aCacheKey);
-  if (NS_FAILED(rv)) {
-    return SendFailedAsyncOpen(rv);
-  }
-
   nsCOMPtr<nsICacheInfoChannel> cacheChannel =
     do_QueryInterface(static_cast<nsIChannel*>(httpChannel.get()));
   if (cacheChannel) {
-    cacheChannel->SetCacheKey(cacheKey);
+    cacheChannel->SetCacheKey(aCacheKey);
     cacheChannel->PreferAlternativeDataType(aPreferredAlternativeType);
 
     cacheChannel->SetAllowStaleCacheContent(aAllowStaleCacheContent);
@@ -1508,7 +1497,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   // It could be already released by nsHttpChannel at that time.
   nsCOMPtr<nsISupports> cacheEntry;
   nsresult channelStatus = NS_OK;
-  uint32_t cacheKeyValue = 0;
+  uint32_t cacheKey = 0;
   nsAutoCString altDataType;
 
   if (httpChannelImpl) {
@@ -1517,19 +1506,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
     httpChannelImpl->GetStatus(&channelStatus);
 
-    nsCOMPtr<nsISupports> cacheKey;
-    httpChannelImpl->GetCacheKey(getter_AddRefs(cacheKey));
-    if (cacheKey) {
-      nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(cacheKey);
-      if (!container) {
-        return NS_ERROR_ILLEGAL_VALUE;
-      }
-
-      nsresult rv = container->GetData(&cacheKeyValue);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
+    httpChannelImpl->GetCacheKey(&cacheKey);
 
     httpChannelImpl->GetAlternativeDataType(altDataType);
   }
@@ -1579,7 +1556,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                           cachedCharset, secInfoSerialization,
                           chan->GetSelfAddr(), chan->GetPeerAddr(),
                           redirectCount,
-                          cacheKeyValue,
+                          cacheKey,
                           altDataType,
                           altDataLen,
                           ipcController,

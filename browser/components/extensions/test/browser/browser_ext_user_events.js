@@ -55,15 +55,68 @@ add_task(async function testSources() {
       });
       browser.contextMenus.onClicked.addListener(() => request("webNavigation"));
 
+      browser.test.onMessage.addListener(msg => {
+        if (msg === "openOptionsPage") {
+          browser.runtime.openOptionsPage();
+        }
+      });
+
       browser.test.sendMessage("actions-ready");
+    },
+
+    files: {
+      "options.html": `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <script src="options.js"></script>
+          <script src="https://example.com/tests/SimpleTest/EventUtils.js"></script>
+        </head>
+        <body>
+          <a id="link" href="#">Link</a>
+        </body>
+        </html>`,
+
+      "options.js"() {
+        addEventListener("load", async () => {
+          let link = document.getElementById("link");
+          link.onclick = async event => {
+            event.preventDefault();
+
+            try {
+              let result = await browser.permissions.request({
+                permissions: ["webRequest"],
+              });
+              browser.test.sendMessage("request", {success: true, result});
+            } catch (err) {
+              browser.test.sendMessage("request", {success: false, errmsg: err.message});
+            }
+          };
+
+          // Make a few trips through the event loop to make sure the
+          // options browser is fully visible. This is a bit dodgy, but
+          // we don't really have a reliable way to detect this from the
+          // options page side, and synthetic click events won't work
+          // until it is.
+          for (let i = 0; i < 10; i++) {
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
+
+          synthesizeMouseAtCenter(link, {});
+        }, {once: true});
+      },
     },
 
     manifest: {
       browser_action: {default_title: "test"},
       page_action: {default_title: "test"},
       permissions: ["contextMenus"],
-      optional_permissions: ["bookmarks", "tabs", "webNavigation"],
+      optional_permissions: ["bookmarks", "tabs", "webNavigation", "webRequest"],
+      options_ui: {page: "options.html"},
+      content_security_policy: "script-src 'self' https://example.com; object-src 'none';",
     },
+
+    useAddonManager: "temporary",
   });
 
   async function check(what) {
@@ -105,10 +158,18 @@ add_task(async function testSources() {
   EventUtils.synthesizeMouseAtCenter(items[0], {});
   await check("context menu click");
 
-  BrowserTestUtils.removeTab(tab);
+  extension.sendMessage("openOptionsPage");
+  promisePopupNotificationShown("addon-webext-permissions").then(panel => {
+    panel.button.click();
+  });
+  await check("options page link click");
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.removeTab(tab);
 
   await extension.unload();
 
   registerCleanupFunction(() => CustomizableUI.reset());
 });
+
 

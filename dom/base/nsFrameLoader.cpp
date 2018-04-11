@@ -98,6 +98,8 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/GroupedHistoryEvent.h"
+#include "mozilla/dom/ParentSHistory.h"
+#include "mozilla/dom/ChildSHistory.h"
 
 #include "mozilla/dom/HTMLBodyElement.h"
 
@@ -146,7 +148,8 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsFrameLoader,
                                       mDocShell,
                                       mMessageManager,
                                       mChildMessageManager,
-                                      mOpener)
+                                      mOpener,
+                                      mParentSHistory)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 
@@ -1376,10 +1379,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsCOMPtr<nsISHistory> ourHistory;
-  nsCOMPtr<nsISHistory> otherHistory;
-  ourRootWebnav->GetSessionHistory(getter_AddRefs(ourHistory));
-  otherRootWebnav->GetSessionHistory(getter_AddRefs(otherHistory));
+  RefPtr<ChildSHistory> ourHistory = ourRootWebnav->GetSessionHistory();
+  RefPtr<ChildSHistory> otherHistory = otherRootWebnav->GetSessionHistory();
 
   if ((ourRootTreeItem != ourDocshell || otherRootTreeItem != otherDocshell) &&
       (ourHistory || otherHistory)) {
@@ -1609,15 +1610,11 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   aOtherOwner->InternalSetFrameLoader(kungFuDeathGrip);
 
   // Drop any cached content viewers in the two session histories.
-  nsCOMPtr<nsISHistoryInternal> ourInternalHistory =
-    do_QueryInterface(ourHistory);
-  nsCOMPtr<nsISHistoryInternal> otherInternalHistory =
-    do_QueryInterface(otherHistory);
-  if (ourInternalHistory) {
-    ourInternalHistory->EvictAllContentViewers();
+  if (ourHistory) {
+    ourHistory->EvictLocalContentViewers();
   }
-  if (otherInternalHistory) {
-    otherInternalHistory->EvictAllContentViewers();
+  if (otherHistory) {
+    otherHistory->EvictLocalContentViewers();
   }
 
   NS_ASSERTION(ourFrame == ourContent->GetPrimaryFrame() &&
@@ -2107,16 +2104,16 @@ nsFrameLoader::MaybeCreateDocShell()
     return NS_ERROR_FAILURE;
   }
 
+  // If we are an in-process browser, we want to set up our session history. We
+  // do this by creating both the child SHistory (which is in the nsDocShell),
+  // and creating the corresponding in-process ParentSHistory.
   if (mIsTopLevelContent &&
       mOwnerContent->IsXULElement(nsGkAtoms::browser) &&
       !mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disablehistory)) {
-    nsresult rv;
-    nsCOMPtr<nsISHistory> sessionHistory =
-      do_CreateInstance(NS_SHISTORY_CONTRACTID, &rv);
+    // XXX(nika): Set this up more explicitly?
+    nsresult rv = mDocShell->InitSessionHistory();
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-    webNav->SetSessionHistory(sessionHistory);
+    mParentSHistory = new ParentSHistory(this);
   }
 
   OriginAttributes attrs;
@@ -2678,6 +2675,14 @@ nsFrameLoader::TryRemoteBrowser()
     nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
     rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
     mRemoteBrowser->SetBrowserDOMWindow(browserDOMWin);
+  }
+
+  // Set up a parent SHistory
+  if (XRE_IsParentProcess()) {
+    // XXX(nika): Once we get out of process iframes we won't want to
+    // unconditionally set this up. What do we do for iframes in a chrome loaded
+    // document for example?
+    mParentSHistory = new ParentSHistory(this);
   }
 
   // Send down the name of the browser through mRemoteBrowser if it is set.
