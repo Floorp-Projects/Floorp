@@ -120,9 +120,10 @@ JS_PUBLIC_API void JSPrincipals::dump() {
   return ReadKnownPrincipalType(aCx, aReader, tag, aOutPrincipals);
 }
 
-static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader,
-                              OriginAttributes& aAttrs, nsACString& aSpec,
-                              nsACString& aOriginNoSuffix) {
+static bool ReadPrincipalInfo(
+    JSStructuredCloneReader* aReader, OriginAttributes& aAttrs,
+    nsACString& aSpec, nsACString& aOriginNoSuffix,
+    nsTArray<ContentSecurityPolicy>* aPolicies = nullptr) {
   uint32_t suffixLength, specLength;
   if (!JS_ReadUint32Pair(aReader, &suffixLength, &specLength)) {
     return false;
@@ -149,12 +150,14 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader,
     return false;
   }
 
-  uint32_t originNoSuffixLength, dummy;
-  if (!JS_ReadUint32Pair(aReader, &originNoSuffixLength, &dummy)) {
+  uint32_t originNoSuffixLength, policyCount;
+  if (!JS_ReadUint32Pair(aReader, &originNoSuffixLength, &policyCount)) {
     return false;
   }
 
-  MOZ_ASSERT(dummy == 0);
+  if (!aPolicies) {
+    MOZ_ASSERT(policyCount == 0);
+  }
 
   if (!aOriginNoSuffix.SetLength(originNoSuffixLength, fallible)) {
     return false;
@@ -163,6 +166,29 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader,
   if (!JS_ReadBytes(aReader, aOriginNoSuffix.BeginWriting(),
                     originNoSuffixLength)) {
     return false;
+  }
+
+  for (uint32_t i = 0; i < policyCount; i++) {
+    uint32_t policyLength, reportAndMeta;
+    if (!JS_ReadUint32Pair(aReader, &policyLength, &reportAndMeta)) {
+      return false;
+    }
+    bool reportOnly = reportAndMeta & 1;
+    bool deliveredViaMetaTag = reportAndMeta & 2;
+
+    nsAutoCString policyStr;
+    if (!policyStr.SetLength(policyLength, fallible)) {
+      return false;
+    }
+
+    if (!JS_ReadBytes(aReader, policyStr.BeginWriting(), policyLength)) {
+      return false;
+    }
+
+    if (aPolicies) {
+      aPolicies->AppendElement(ContentSecurityPolicy(
+          NS_ConvertUTF8toUTF16(policyStr), reportOnly, deliveredViaMetaTag));
+    }
   }
 
   return true;
@@ -206,7 +232,8 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader, uint32_t aTag,
     OriginAttributes attrs;
     nsAutoCString spec;
     nsAutoCString originNoSuffix;
-    if (!ReadPrincipalInfo(aReader, attrs, spec, originNoSuffix)) {
+    nsTArray<ContentSecurityPolicy> policies;
+    if (!ReadPrincipalInfo(aReader, attrs, spec, originNoSuffix, &policies)) {
       return false;
     }
 
@@ -218,7 +245,8 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader, uint32_t aTag,
 
     MOZ_DIAGNOSTIC_ASSERT(!originNoSuffix.IsEmpty());
 
-    aInfo = ContentPrincipalInfo(attrs, originNoSuffix, spec);
+    aInfo =
+        ContentPrincipalInfo(attrs, originNoSuffix, spec, std::move(policies));
   } else {
 #ifdef FUZZING
     return false;
@@ -259,19 +287,37 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader, uint32_t aTag,
   return true;
 }
 
-static bool WritePrincipalInfo(JSStructuredCloneWriter* aWriter,
-                               const OriginAttributes& aAttrs,
-                               const nsCString& aSpec,
-                               const nsCString& aOriginNoSuffix) {
+static bool WritePrincipalInfo(
+    JSStructuredCloneWriter* aWriter, const OriginAttributes& aAttrs,
+    const nsCString& aSpec, const nsCString& aOriginNoSuffix,
+    const nsTArray<ContentSecurityPolicy>* aPolicies = nullptr) {
   nsAutoCString suffix;
   aAttrs.CreateSuffix(suffix);
+  size_t policyCount = aPolicies ? aPolicies->Length() : 0;
 
-  return JS_WriteUint32Pair(aWriter, suffix.Length(), aSpec.Length()) &&
-         JS_WriteBytes(aWriter, suffix.get(), suffix.Length()) &&
-         JS_WriteBytes(aWriter, aSpec.get(), aSpec.Length()) &&
-         JS_WriteUint32Pair(aWriter, aOriginNoSuffix.Length(), 0) &&
-         JS_WriteBytes(aWriter, aOriginNoSuffix.get(),
-                       aOriginNoSuffix.Length());
+  if (!(JS_WriteUint32Pair(aWriter, suffix.Length(), aSpec.Length()) &&
+        JS_WriteBytes(aWriter, suffix.get(), suffix.Length()) &&
+        JS_WriteBytes(aWriter, aSpec.get(), aSpec.Length()) &&
+        JS_WriteUint32Pair(aWriter, aOriginNoSuffix.Length(), policyCount) &&
+        JS_WriteBytes(aWriter, aOriginNoSuffix.get(),
+                      aOriginNoSuffix.Length()))) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < policyCount; i++) {
+    nsCString policy;
+    CopyUTF16toUTF8((*aPolicies)[i].policy(), policy);
+    uint32_t reportAndMeta =
+        ((*aPolicies)[i].reportOnlyFlag() ? 1 : 0) |
+        ((*aPolicies)[i].deliveredViaMetaTagFlag() ? 2 : 0);
+    if (!(JS_WriteUint32Pair(aWriter, policy.Length(), reportAndMeta) &&
+          JS_WriteBytes(aWriter, PromiseFlatCString(policy).get(),
+                        policy.Length()))) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 static bool WritePrincipalInfo(JSStructuredCloneWriter* aWriter,
@@ -304,7 +350,8 @@ static bool WritePrincipalInfo(JSStructuredCloneWriter* aWriter,
   const ContentPrincipalInfo& cInfo = aInfo;
   return JS_WriteUint32Pair(aWriter, SCTAG_DOM_CONTENT_PRINCIPAL, 0) &&
          WritePrincipalInfo(aWriter, cInfo.attrs(), cInfo.spec(),
-                            cInfo.originNoSuffix());
+                            cInfo.originNoSuffix(),
+                            &(cInfo.securityPolicies()));
 }
 
 bool nsJSPrincipals::write(JSContext* aCx, JSStructuredCloneWriter* aWriter) {
