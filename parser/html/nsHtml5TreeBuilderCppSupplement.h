@@ -13,13 +13,27 @@
 #include "mozilla/UniquePtr.h"
 
 nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder)
-  : scriptingEnabled(false)
+  : mode{}
+  , originalMode{}
+  , framesetOk{ false }
+  , tokenizer{ nullptr }
+  , scriptingEnabled(false)
+  , needToDropLF{ false }
   , fragment(false)
   , contextName(nullptr)
   , contextNamespace(kNameSpaceID_None)
   , contextNode(nullptr)
+  , templateModePtr{}
+  , stackNodesIdx{}
+  , numStackNodes{}
+  , currentPtr{}
+  , listPtr{}
   , formPointer(nullptr)
   , headPointer(nullptr)
+  , deepTreeSurrogateParent{ nullptr }
+  , charBufferLen{}
+  , quirks{ false }
+  , isSrcdocDocument{ false }
   , mBuilder(aBuilder)
   , mViewSource(nullptr)
   , mOpSink(nullptr)
@@ -38,13 +52,27 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder)
 
 nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink,
                                        nsHtml5TreeOpStage* aStage)
-  : scriptingEnabled(false)
+  : mode{}
+  , originalMode{}
+  , framesetOk{ false }
+  , tokenizer{ nullptr }
+  , scriptingEnabled(false)
+  , needToDropLF{ false }
   , fragment(false)
   , contextName(nullptr)
   , contextNamespace(kNameSpaceID_None)
   , contextNode(nullptr)
+  , templateModePtr{}
+  , stackNodesIdx{}
+  , numStackNodes{}
+  , currentPtr{}
+  , listPtr{}
   , formPointer(nullptr)
   , headPointer(nullptr)
+  , deepTreeSurrogateParent{ nullptr }
+  , charBufferLen{}
+  , quirks{ false }
+  , isSrcdocDocument{ false }
   , mBuilder(nullptr)
   , mViewSource(nullptr)
   , mOpSink(aOpSink)

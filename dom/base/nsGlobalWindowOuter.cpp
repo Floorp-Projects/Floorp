@@ -7668,6 +7668,7 @@ nsGlobalWindowOuter::AbstractMainThreadFor(TaskCategory aCategory)
 
 nsGlobalWindowOuter::TemporarilyDisableDialogs::TemporarilyDisableDialogs(
   nsGlobalWindowOuter* aWindow MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : mSavedDialogsEnabled{ false }
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 

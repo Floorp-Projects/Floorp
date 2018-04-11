@@ -32,7 +32,14 @@ struct nsSVGViewBoxRect
   float width, height;
   bool none;
 
-  nsSVGViewBoxRect() : none(true) {}
+  nsSVGViewBoxRect()
+    : x{ 0.0 }
+    , y{ 0.0 }
+    , width{ 0.0 }
+    , height{ 0.0 }
+    , none(true)
+  {
+  }
   nsSVGViewBoxRect(float aX, float aY, float aWidth, float aHeight) :
     x(aX), y(aY), width(aWidth), height(aHeight), none(false) {}
   nsSVGViewBoxRect(const nsSVGViewBoxRect& rhs) :

@@ -22,27 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-More ICU-build-related touching for bug 1447475, trying a CLOBBER after a previous build failure just in case.
-
-# HG changeset patch
-# User André Bargull <andre.bargull@gmail.com>
-# Date 1522162741 25200
-#      Tue Mar 27 07:59:01 2018 -0700
-# Node ID ff604dc06da17fef36d59350ae5f5842ff1f9061
-# Parent  db367b34a6a682ed6955ae6e893477381f8e3f4b
-Bug 1445465 - Part 4: Clobber for ICU update. r=clobber
-
-diff --git a/CLOBBER b/CLOBBER
---- a/CLOBBER
-+++ b/CLOBBER
-@@ -17,9 +17,9 @@
- #
- # Modifying this file will now automatically clobber the buildbot machines \o/
- #
- 
- # Are you updating CLOBBER because you think it's needed for your WebIDL
- # changes to stick? As of bug 928195, this shouldn't be necessary! Please
- # don't change CLOBBER for WebIDL changes any more.
- 
--Historically updating ICU has required a CLOBBER.  Bug 1445524 is a fairly notable ICU-related change, so play it safe and force a full rebuild, even if no problem along these lines has actually been observed.
-+Bug 1445465 - Update to ICU 61 requires clobber
+Bug 1453317 - Update VS2017 used for builds in automation to version 15.6.6.

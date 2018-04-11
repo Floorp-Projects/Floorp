@@ -492,13 +492,19 @@ private:
 //-----------------------------------------------------------------------------
 
 nsDNSService::nsDNSService()
-    : mLock("nsDNSServer.mLock")
-    , mDisableIPv6(false)
-    , mDisablePrefetch(false)
-    , mNotifyResolution(false)
-    , mOfflineLocalhost(false)
-    , mForceResolveOn(false)
-    , mTrrService(nullptr)
+  : mLock("nsDNSServer.mLock")
+  , mDisableIPv6(false)
+  , mDisablePrefetch(false)
+  , mBlockDotOnion{ false }
+  , mNotifyResolution(false)
+  , mOfflineLocalhost(false)
+  , mForceResolveOn(false)
+  , mProxyType{}
+  , mTrrService(nullptr)
+  , mResCacheEntries{}
+  , mResCacheExpiration{}
+  , mResCacheGrace{}
+  , mResolverPrefsUpdated{ false }
 {
 }
 

@@ -314,6 +314,7 @@ BasicLayerManager::BasicLayerManager(BasicLayerManagerType aType)
   , mType(aType)
   , mUsingDefaultTarget(false)
   , mTransactionIncomplete(false)
+  , mCompositorMightResample{ false }
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
   MOZ_ASSERT(mType != BLM_WIDGET);

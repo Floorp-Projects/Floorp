@@ -474,11 +474,15 @@ public:
 
     class MOZ_STACK_CLASS GlyphRunIterator {
     public:
-        GlyphRunIterator(const gfxTextRun *aTextRun, Range aRange)
-          : mTextRun(aTextRun)
-          , mStartOffset(aRange.start)
-          , mEndOffset(aRange.end) {
-            mNextIndex = mTextRun->FindFirstGlyphRunContaining(aRange.start);
+      GlyphRunIterator(const gfxTextRun* aTextRun, Range aRange)
+        : mTextRun(aTextRun)
+        , mGlyphRun{ nullptr }
+        , mStringStart{}
+        , mStringEnd{}
+        , mStartOffset(aRange.start)
+        , mEndOffset(aRange.end)
+      {
+        mNextIndex = mTextRun->FindFirstGlyphRunContaining(aRange.start);
         }
         bool NextRun();
         const GlyphRun *GetGlyphRun() const { return mGlyphRun; }

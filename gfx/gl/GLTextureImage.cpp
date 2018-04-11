@@ -243,15 +243,16 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
                                      TextureImage::ContentType aContentType,
                                      TextureImage::Flags aFlags,
                                      TextureImage::ImageFormat aImageFormat)
-    : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aFlags)
-    , mCurrentImage(0)
-    , mIterationCallback(nullptr)
-    , mIterationCallbackData(nullptr)
-    , mRows(0)
-    , mColumns(0)
-    , mGL(aGL)
-    , mTextureState(Created)
-    , mImageFormat(aImageFormat)
+  : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aFlags)
+  , mCurrentImage(0)
+  , mIterationCallback(nullptr)
+  , mIterationCallbackData(nullptr)
+  , mTileSize{}
+  , mRows(0)
+  , mColumns(0)
+  , mGL(aGL)
+  , mTextureState(Created)
+  , mImageFormat(aImageFormat)
 {
     if (!(aFlags & TextureImage::DisallowBigImage) && WantsSmallTiles(mGL)) {
       mTileSize = 256;

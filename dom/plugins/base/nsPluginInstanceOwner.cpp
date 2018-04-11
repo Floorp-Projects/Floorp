@@ -257,6 +257,7 @@ nsPluginInstanceOwner::GetCurrentImageSize()
 
 nsPluginInstanceOwner::nsPluginInstanceOwner()
   : mPluginWindow(nullptr)
+  , mLastEventloopNestingLevel{}
 {
   // create nsPluginNativeWindow object, it is derived from NPWindow
   // struct and allows to manipulate native window procedure

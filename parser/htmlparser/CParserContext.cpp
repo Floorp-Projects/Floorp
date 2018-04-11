@@ -7,33 +7,34 @@
 
 #include "nsAtom.h"
 #include "CParserContext.h"
-#include "prenv.h"  
+#include "prenv.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
 #include "nsMimeTypes.h"
 #include "nsHTMLTokenizer.h"
 
 CParserContext::CParserContext(CParserContext* aPrevContext,
-                               nsScanner* aScanner, 
-                               void *aKey, 
+                               nsScanner* aScanner,
+                               void* aKey,
                                eParserCommands aCommand,
-                               nsIRequestObserver* aListener, 
-                               eAutoDetectResult aStatus, 
+                               nsIRequestObserver* aListener,
+                               eAutoDetectResult aStatus,
                                bool aCopyUnused)
-  : mListener(aListener),
-    mKey(aKey),
-    mPrevContext(aPrevContext),
-    mScanner(aScanner),
-    mDTDMode(eDTDMode_unknown),
-    mStreamListenerState(eNone),
-    mContextType(eCTNone),
-    mAutoDetectStatus(aStatus),
-    mParserCommand(aCommand),
-    mMultipart(true),
-    mCopyUnused(aCopyUnused)
-{ 
-  MOZ_COUNT_CTOR(CParserContext); 
-} 
+  : mListener(aListener)
+  , mKey(aKey)
+  , mPrevContext(aPrevContext)
+  , mScanner(aScanner)
+  , mDTDMode(eDTDMode_unknown)
+  , mDocType{ static_cast<eParserDocType>(0) }
+  , mStreamListenerState(eNone)
+  , mContextType(eCTNone)
+  , mAutoDetectStatus(aStatus)
+  , mParserCommand(aCommand)
+  , mMultipart(true)
+  , mCopyUnused(aCopyUnused)
+{
+  MOZ_COUNT_CTOR(CParserContext);
+}
 
 CParserContext::~CParserContext()
 {

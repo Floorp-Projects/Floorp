@@ -95,8 +95,11 @@ private:
 class RecordedDrawTargetDestruction : public RecordedEventDerived<RecordedDrawTargetDestruction> {
 public:
   MOZ_IMPLICIT RecordedDrawTargetDestruction(ReferencePtr aRefPtr)
-    : RecordedEventDerived(DRAWTARGETDESTRUCTION), mRefPtr(aRefPtr)
-  {}
+    : RecordedEventDerived(DRAWTARGETDESTRUCTION)
+    , mRefPtr(aRefPtr)
+    , mBackendType{ BackendType::NONE }
+  {
+  }
 
   virtual bool PlayEvent(Translator *aTranslator) const override;
 
@@ -180,8 +183,14 @@ private:
 
 class RecordedFillRect : public RecordedDrawingEvent<RecordedFillRect> {
 public:
-  RecordedFillRect(DrawTarget *aDT, const Rect &aRect, const Pattern &aPattern, const DrawOptions &aOptions)
-    : RecordedDrawingEvent(FILLRECT, aDT), mRect(aRect), mOptions(aOptions)
+  RecordedFillRect(DrawTarget* aDT,
+                   const Rect& aRect,
+                   const Pattern& aPattern,
+                   const DrawOptions& aOptions)
+    : RecordedDrawingEvent(FILLRECT, aDT)
+    , mRect(aRect)
+    , mPattern{}
+    , mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
   }
@@ -207,10 +216,16 @@ private:
 
 class RecordedStrokeRect : public RecordedDrawingEvent<RecordedStrokeRect> {
 public:
-  RecordedStrokeRect(DrawTarget *aDT, const Rect &aRect, const Pattern &aPattern,
-                     const StrokeOptions &aStrokeOptions, const DrawOptions &aOptions)
-    : RecordedDrawingEvent(STROKERECT, aDT), mRect(aRect),
-      mStrokeOptions(aStrokeOptions), mOptions(aOptions)
+  RecordedStrokeRect(DrawTarget* aDT,
+                     const Rect& aRect,
+                     const Pattern& aPattern,
+                     const StrokeOptions& aStrokeOptions,
+                     const DrawOptions& aOptions)
+    : RecordedDrawingEvent(STROKERECT, aDT)
+    , mRect(aRect)
+    , mPattern{}
+    , mStrokeOptions(aStrokeOptions)
+    , mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
   }
@@ -237,11 +252,18 @@ private:
 
 class RecordedStrokeLine : public RecordedDrawingEvent<RecordedStrokeLine> {
 public:
-  RecordedStrokeLine(DrawTarget *aDT, const Point &aBegin, const Point &aEnd,
-                     const Pattern &aPattern, const StrokeOptions &aStrokeOptions,
-                     const DrawOptions &aOptions)
-    : RecordedDrawingEvent(STROKELINE, aDT), mBegin(aBegin), mEnd(aEnd),
-      mStrokeOptions(aStrokeOptions), mOptions(aOptions)
+  RecordedStrokeLine(DrawTarget* aDT,
+                     const Point& aBegin,
+                     const Point& aEnd,
+                     const Pattern& aPattern,
+                     const StrokeOptions& aStrokeOptions,
+                     const DrawOptions& aOptions)
+    : RecordedDrawingEvent(STROKELINE, aDT)
+    , mBegin(aBegin)
+    , mEnd(aEnd)
+    , mPattern{}
+    , mStrokeOptions(aStrokeOptions)
+    , mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
   }
@@ -269,8 +291,14 @@ private:
 
 class RecordedFill : public RecordedDrawingEvent<RecordedFill> {
 public:
-  RecordedFill(DrawTarget *aDT, ReferencePtr aPath, const Pattern &aPattern, const DrawOptions &aOptions)
-    : RecordedDrawingEvent(FILL, aDT), mPath(aPath), mOptions(aOptions)
+  RecordedFill(DrawTarget* aDT,
+               ReferencePtr aPath,
+               const Pattern& aPattern,
+               const DrawOptions& aOptions)
+    : RecordedDrawingEvent(FILL, aDT)
+    , mPath(aPath)
+    , mPattern{}
+    , mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
   }
@@ -295,9 +323,16 @@ private:
 
 class RecordedFillGlyphs : public RecordedDrawingEvent<RecordedFillGlyphs> {
 public:
-  RecordedFillGlyphs(DrawTarget *aDT, ReferencePtr aScaledFont, const Pattern &aPattern, const DrawOptions &aOptions,
-                     const Glyph *aGlyphs, uint32_t aNumGlyphs)
-    : RecordedDrawingEvent(FILLGLYPHS, aDT), mScaledFont(aScaledFont), mOptions(aOptions)
+  RecordedFillGlyphs(DrawTarget* aDT,
+                     ReferencePtr aScaledFont,
+                     const Pattern& aPattern,
+                     const DrawOptions& aOptions,
+                     const Glyph* aGlyphs,
+                     uint32_t aNumGlyphs)
+    : RecordedDrawingEvent(FILLGLYPHS, aDT)
+    , mScaledFont(aScaledFont)
+    , mPattern{}
+    , mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
     mNumGlyphs = aNumGlyphs;
@@ -328,8 +363,14 @@ private:
 
 class RecordedMask : public RecordedDrawingEvent<RecordedMask> {
 public:
-  RecordedMask(DrawTarget *aDT, const Pattern &aSource, const Pattern &aMask, const DrawOptions &aOptions)
-    : RecordedDrawingEvent(MASK, aDT), mOptions(aOptions)
+  RecordedMask(DrawTarget* aDT,
+               const Pattern& aSource,
+               const Pattern& aMask,
+               const DrawOptions& aOptions)
+    : RecordedDrawingEvent(MASK, aDT)
+    , mSource{}
+    , mMask{}
+    , mOptions(aOptions)
   {
     StorePattern(mSource, aSource);
     StorePattern(mMask, aMask);
@@ -355,10 +396,16 @@ private:
 
 class RecordedStroke : public RecordedDrawingEvent<RecordedStroke> {
 public:
-  RecordedStroke(DrawTarget *aDT, ReferencePtr aPath, const Pattern &aPattern,
-                     const StrokeOptions &aStrokeOptions, const DrawOptions &aOptions)
-    : RecordedDrawingEvent(STROKE, aDT), mPath(aPath),
-      mStrokeOptions(aStrokeOptions), mOptions(aOptions)
+  RecordedStroke(DrawTarget* aDT,
+                 ReferencePtr aPath,
+                 const Pattern& aPattern,
+                 const StrokeOptions& aStrokeOptions,
+                 const DrawOptions& aOptions)
+    : RecordedDrawingEvent(STROKE, aDT)
+    , mPath(aPath)
+    , mPattern{}
+    , mStrokeOptions(aStrokeOptions)
+    , mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);
   }
@@ -976,10 +1023,11 @@ public:
     recordedFontData->SetFontData(aData, aSize, aIndex);
   }
 
-  explicit RecordedFontData(UnscaledFont *aUnscaledFont)
+  explicit RecordedFontData(UnscaledFont* aUnscaledFont)
     : RecordedEventDerived(FONTDATA)
     , mType(aUnscaledFont->GetType())
     , mData(nullptr)
+    , mFontDetails{}
   {
     mGetFontFileDataSucceeded = aUnscaledFont->GetFontFileData(&FontDataProc, this) && mData;
   }
@@ -1239,9 +1287,15 @@ private:
 
 class RecordedMaskSurface : public RecordedDrawingEvent<RecordedMaskSurface> {
 public:
-  RecordedMaskSurface(DrawTarget *aDT, const Pattern &aPattern, ReferencePtr aRefMask,
-                      const Point &aOffset, const DrawOptions &aOptions)
-    : RecordedDrawingEvent(MASKSURFACE, aDT), mRefMask(aRefMask), mOffset(aOffset)
+  RecordedMaskSurface(DrawTarget* aDT,
+                      const Pattern& aPattern,
+                      ReferencePtr aRefMask,
+                      const Point& aOffset,
+                      const DrawOptions& aOptions)
+    : RecordedDrawingEvent(MASKSURFACE, aDT)
+    , mPattern{}
+    , mRefMask(aRefMask)
+    , mOffset(aOffset)
     , mOptions(aOptions)
   {
     StorePattern(mPattern, aPattern);

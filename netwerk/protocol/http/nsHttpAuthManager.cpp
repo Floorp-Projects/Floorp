@@ -17,6 +17,8 @@ namespace net {
 NS_IMPL_ISUPPORTS(nsHttpAuthManager, nsIHttpAuthManager)
 
 nsHttpAuthManager::nsHttpAuthManager()
+  : mAuthCache{ nullptr }
+  , mPrivateAuthCache{ nullptr }
 {
 }
 

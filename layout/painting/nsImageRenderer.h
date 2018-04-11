@@ -33,8 +33,12 @@ struct CSSSizeOrRatio
 {
   CSSSizeOrRatio()
     : mRatio(0, 0)
+    , mWidth{}
+    , mHeight{}
     , mHasWidth(false)
-    , mHasHeight(false) {}
+    , mHasHeight(false)
+  {
+  }
 
   bool CanComputeConcreteSize() const
   {

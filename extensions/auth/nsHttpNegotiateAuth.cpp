@@ -252,9 +252,11 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
     explicit GetNextTokenCompleteEvent(nsIHttpAuthenticatorCallback* aCallback)
-        : mCallback(aCallback)
-        , mCreds(nullptr)
-        , mCancelled(false)
+      : mCallback(aCallback)
+      , mCreds(nullptr)
+      , mFlags{}
+      , mResult{ NS_ERROR_NOT_INITIALIZED }
+      , mCancelled(false)
     {
     }
 

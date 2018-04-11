@@ -16,7 +16,8 @@ NS_IMPL_ISUPPORTS(MemoryDownloader,
 		  nsIRequestObserver)
 
 MemoryDownloader::MemoryDownloader(IObserver* aObserver)
-: mObserver(aObserver)
+  : mObserver(aObserver)
+  , mStatus{ NS_ERROR_NOT_INITIALIZED }
 {
 }
 

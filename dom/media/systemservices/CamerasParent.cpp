@@ -133,6 +133,7 @@ public:
     , mCapEngine(aEngine)
     , mStreamId(aStreamId)
     , mProperties(aProperties)
+    , mResult{}
   {
     // No ShmemBuffer (of the right size) was available, so make an
     // extra buffer here.  We have no idea when we are going to run and
@@ -155,7 +156,8 @@ public:
     , mCapEngine(aEngine)
     , mStreamId(aStreamId)
     , mBuffer(Move(aBuffer))
-    , mProperties(aProperties){};
+    , mProperties(aProperties)
+    , mResult{} {};
 
   NS_IMETHOD Run() override {
     if (mParent->IsShuttingDown()) {

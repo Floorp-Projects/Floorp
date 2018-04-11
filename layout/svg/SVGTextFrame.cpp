@@ -471,6 +471,13 @@ struct TextRenderedRun
    */
   TextRenderedRun()
     : mFrame(nullptr)
+    , mLengthAdjustScaleFactor{ 0.0 }
+    , mRotate{ 0.0 }
+    , mFontSizeScaleFactor{ 0.0 }
+    , mBaseline{}
+    , mTextFrameContentOffset{}
+    , mTextFrameContentLength{}
+    , mTextElementCharIndex{}
   {
   }
 
@@ -2434,14 +2441,16 @@ CharIterator::CharIterator(SVGTextFrame* aSVGTextFrame,
                            CharIterator::CharacterFilter aFilter,
                            nsIContent* aSubtree,
                            bool aPostReflow)
-  : mFilter(aFilter),
-    mFrameIterator(aSVGTextFrame, aSubtree),
-    mFrameForTrimCheck(nullptr),
-    mTrimmedOffset(0),
-    mTrimmedLength(0),
-    mTextElementCharIndex(0),
-    mGlyphStartTextElementCharIndex(0),
-    mLengthAdjustScaleFactor(aSVGTextFrame->mLengthAdjustScaleFactor)
+  : mFilter(aFilter)
+  , mFrameIterator(aSVGTextFrame, aSubtree)
+  , mFrameForTrimCheck(nullptr)
+  , mTrimmedOffset(0)
+  , mTrimmedLength(0)
+  , mTextRun{ nullptr }
+  , mTextElementCharIndex(0)
+  , mGlyphStartTextElementCharIndex(0)
+  , mGlyphUndisplayedCharacters{}
+  , mLengthAdjustScaleFactor(aSVGTextFrame->mLengthAdjustScaleFactor)
   , mPostReflow(aPostReflow)
 {
   if (!AtEnd()) {
@@ -2767,12 +2776,13 @@ public:
                            const gfxMatrix& aCanvasTM,
                            imgDrawingParams& aImgParams,
                            bool aShouldPaintSVGGlyphs)
-    : DrawPathCallbacks(aShouldPaintSVGGlyphs),
-      mSVGTextFrame(aSVGTextFrame),
-      mContext(aContext),
-      mFrame(aFrame),
-      mCanvasTM(aCanvasTM),
-      mImgParams(aImgParams)
+    : DrawPathCallbacks(aShouldPaintSVGGlyphs)
+    , mSVGTextFrame(aSVGTextFrame)
+    , mContext(aContext)
+    , mFrame(aFrame)
+    , mCanvasTM(aCanvasTM)
+    , mImgParams(aImgParams)
+    , mColor{}
   {
   }
 

@@ -103,7 +103,7 @@ class cfAction(argparse.Action):
         files = []
         if os.path.exists(os.path.join(cwd, '.hg')):
             st = subprocess.Popen(['hg', 'status', '-m', '-a'],
-                                  cwd=cwd, stdout=subprocess.PIPE)
+                                  cwd=cwd, stdout=subprocess.PIPE, universal_newlines=True)
             for line in iter(st.stdout.readline, ''):
                 files += [line[2:].rstrip()]
         elif os.path.exists(os.path.join(cwd, '.git')):
@@ -194,7 +194,7 @@ def parse_arguments():
     tests = [
         "cipher", "lowhash", "chains", "cert", "dbtests", "tools", "fips",
         "sdr", "crmf", "smime", "ssl", "ocsp", "merge", "pkits", "ec",
-        "gtests", "ssl_gtests"
+        "gtests", "ssl_gtests", "bogo"
     ]
     parser_test.add_argument(
         'test', choices=tests, help="Available tests", action=testAction)

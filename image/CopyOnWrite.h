@@ -30,11 +30,36 @@ class CopyOnWriteValue final
 public:
   NS_INLINE_DECL_REFCOUNTING(CopyOnWriteValue)
 
-  explicit CopyOnWriteValue(T* aValue) : mValue(aValue) { }
-  explicit CopyOnWriteValue(already_AddRefed<T>& aValue) : mValue(aValue) { }
-  explicit CopyOnWriteValue(already_AddRefed<T>&& aValue) : mValue(aValue) { }
-  explicit CopyOnWriteValue(const RefPtr<T>& aValue) : mValue(aValue) { }
-  explicit CopyOnWriteValue(RefPtr<T>&& aValue) : mValue(aValue) { }
+  explicit CopyOnWriteValue(T* aValue)
+    : mValue(aValue)
+    , mReaders{}
+    , mWriter{ false }
+  {
+  }
+  explicit CopyOnWriteValue(already_AddRefed<T>& aValue)
+    : mValue(aValue)
+    , mReaders{}
+    , mWriter{ false }
+  {
+  }
+  explicit CopyOnWriteValue(already_AddRefed<T>&& aValue)
+    : mValue(aValue)
+    , mReaders{}
+    , mWriter{ false }
+  {
+  }
+  explicit CopyOnWriteValue(const RefPtr<T>& aValue)
+    : mValue(aValue)
+    , mReaders{}
+    , mWriter{ false }
+  {
+  }
+  explicit CopyOnWriteValue(RefPtr<T>&& aValue)
+    : mValue(aValue)
+    , mReaders{}
+    , mWriter{ false }
+  {
+  }
 
   T* get() { return mValue.get(); }
   const T* get() const { return mValue.get(); }

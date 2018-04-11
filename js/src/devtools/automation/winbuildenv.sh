@@ -10,7 +10,7 @@ topsrcdir="$SOURCE"
 # Tooltool installs in parent of topsrcdir for spidermonkey builds.
 # Resolve that path since the mozconfigs assume tooltool installs in
 # topsrcdir.
-export VSPATH="$(cd ${topsrcdir}/.. && pwd)/vs2017_15.6.0"
+export VSPATH="$(cd ${topsrcdir}/.. && pwd)/vs2017_15.6.6"
 
 # When running on a developer machine, several variables will already
 # have the right settings and we will need to keep them since the

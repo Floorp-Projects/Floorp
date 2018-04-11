@@ -508,15 +508,11 @@ public class CrashReporter extends AppCompatActivity
             // crash-stats.mozilla.org. Remove this when bug 607942 is fixed.
             StringBuilder sb = new StringBuilder();
             sb.append(extras.containsKey(NOTES_KEY) ? extras.get(NOTES_KEY) + "\n" : "");
-            if (AppConstants.MOZ_MIN_CPU_VERSION < 7) {
-                sb.append("nothumb Build\n");
-            }
             sb.append(Build.MANUFACTURER).append(' ')
               .append(Build.MODEL).append('\n')
               .append(Build.FINGERPRINT);
             sendPart(os, boundary, NOTES_KEY, sb.toString());
 
-            sendPart(os, boundary, "Min_ARM_Version", Integer.toString(AppConstants.MOZ_MIN_CPU_VERSION));
             sendPart(os, boundary, "Android_Manufacturer", Build.MANUFACTURER);
             sendPart(os, boundary, "Android_Model", Build.MODEL);
             sendPart(os, boundary, "Android_Board", Build.BOARD);

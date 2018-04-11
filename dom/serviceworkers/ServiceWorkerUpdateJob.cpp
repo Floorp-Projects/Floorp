@@ -203,8 +203,7 @@ ServiceWorkerUpdateJob::ServiceWorkerUpdateJob(
   : ServiceWorkerJob(aType, aPrincipal, aScope, aScriptSpec)
   , mLoadGroup(aLoadGroup)
   , mUpdateViaCache(aUpdateViaCache)
-{
-}
+/* FIXME: initialize mOnFailure */ {}
 
 ServiceWorkerUpdateJob::~ServiceWorkerUpdateJob()
 {

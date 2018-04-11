@@ -464,8 +464,15 @@ nsHttpConnectionMgr::DoShiftReloadConnectionCleanup(nsHttpConnectionInfo *aCI)
 class SpeculativeConnectArgs : public ARefBase
 {
 public:
-    SpeculativeConnectArgs() { mOverridesOK = false; }
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SpeculativeConnectArgs, override)
+  SpeculativeConnectArgs()
+    : mParallelSpeculativeConnectLimit{}
+    , mIgnoreIdle{ false }
+    , mIsFromPredictor{ false }
+    , mAllow1918{ false }
+  {
+    mOverridesOK = false;
+  }
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SpeculativeConnectArgs, override)
 
 public: // intentional!
     RefPtr<NullHttpTransaction> mTrans;

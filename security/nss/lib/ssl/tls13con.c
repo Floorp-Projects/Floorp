@@ -3820,13 +3820,14 @@ tls13_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length)
 
     rv = ssl_ConsumeSignatureScheme(ss, &b, &length, &sigScheme);
     if (rv != SECSuccess) {
-        PORT_SetError(SSL_ERROR_RX_MALFORMED_CERT_VERIFY);
+        FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_CERT_VERIFY, illegal_parameter);
         return SECFailure;
     }
 
     rv = ssl_CheckSignatureSchemeConsistency(ss, sigScheme, ss->sec.peerCert);
     if (rv != SECSuccess) {
         /* Error set already */
+        FATAL_ERROR(ss, PORT_GetError(), illegal_parameter);
         return SECFailure;
     }
     hashAlg = ssl_SignatureSchemeToHashType(sigScheme);

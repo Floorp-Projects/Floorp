@@ -41,7 +41,8 @@ public:
   SourceSurfaceSharedDataWrapper()
     : mStride(0)
     , mFormat(SurfaceFormat::UNKNOWN)
-  { }
+  {
+  }
 
   bool Init(const IntSize& aSize,
             int32_t aStride,

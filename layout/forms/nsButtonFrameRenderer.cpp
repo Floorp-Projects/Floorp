@@ -30,6 +30,7 @@ using namespace mozilla::image;
 using namespace mozilla::layers;
 
 nsButtonFrameRenderer::nsButtonFrameRenderer()
+  : mFrame{ nullptr }
 {
   MOZ_COUNT_CTOR(nsButtonFrameRenderer);
 }

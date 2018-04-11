@@ -276,8 +276,12 @@ GetSkImageForSurface(SourceSurface* aSurface, const Rect* aBounds = nullptr, con
 }
 
 DrawTargetSkia::DrawTargetSkia()
-  : mSnapshot(nullptr)
-  , mSnapshotLock{"DrawTargetSkia::mSnapshotLock"}
+  : mCanvas{ nullptr }
+  , mSnapshot(nullptr)
+  , mSnapshotLock
+{
+  "DrawTargetSkia::mSnapshotLock"
+}
 #ifdef MOZ_WIDGET_COCOA
   , mCG(nullptr)
   , mColorSpace(nullptr)

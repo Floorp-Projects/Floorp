@@ -44,6 +44,7 @@ public:
   // for array mTracks.
   MediaTrack* operator[](uint32_t aIndex);
 
+  // The track must be from the same Window as this MediaTrackList.
   void AddTrack(MediaTrack* aTrack);
 
   // In remove track case, the VideoTrackList::mSelectedIndex should be updated
@@ -53,7 +54,8 @@ public:
   void RemoveTracks();
 
   static already_AddRefed<AudioTrack>
-  CreateAudioTrack(const nsAString& aId,
+  CreateAudioTrack(nsIGlobalObject* aOwnerGlobal,
+                   const nsAString& aId,
                    const nsAString& aKind,
                    const nsAString& aLabel,
                    const nsAString& aLanguage,
@@ -62,7 +64,8 @@ public:
   // For the case of src of HTMLMediaElement is non-MediaStream, leave the
   // aVideoTrack as default(nullptr).
   static already_AddRefed<VideoTrack>
-  CreateVideoTrack(const nsAString& aId,
+  CreateVideoTrack(nsIGlobalObject* aOwnerGlobal,
+                   const nsAString& aId,
                    const nsAString& aKind,
                    const nsAString& aLabel,
                    const nsAString& aLanguage,

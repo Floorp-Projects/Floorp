@@ -111,14 +111,21 @@ private:
   ~GlobalQueueItem() {}
 
 public:
-  GlobalQueueItem(VoiceData* aVoice, nsSpeechTask* aTask, const nsAString& aText,
-                  const float& aVolume, const float& aRate, const float& aPitch)
+  GlobalQueueItem(VoiceData* aVoice,
+                  nsSpeechTask* aTask,
+                  const nsAString& aText,
+                  const float& aVolume,
+                  const float& aRate,
+                  const float& aPitch)
     : mVoice(aVoice)
     , mTask(aTask)
     , mText(aText)
     , mVolume(aVolume)
     , mRate(aRate)
-    , mPitch(aPitch) {}
+    , mPitch(aPitch)
+    , mIsLocal{ false }
+  {
+  }
 
   NS_INLINE_DECL_REFCOUNTING(GlobalQueueItem)
 

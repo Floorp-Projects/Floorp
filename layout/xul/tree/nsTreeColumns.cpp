@@ -22,9 +22,10 @@ using namespace mozilla;
 
 // Column class that caches all the info about our column.
 nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, nsIContent* aContent)
-  : mContent(aContent),
-    mColumns(aColumns),
-    mPrevious(nullptr)
+  : mContent(aContent)
+  , mColumns(aColumns)
+  , mIndex{}
+  , mPrevious(nullptr)
 {
   NS_ASSERTION(aContent &&
                aContent->NodeInfo()->Equals(nsGkAtoms::treecol,

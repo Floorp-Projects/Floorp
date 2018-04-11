@@ -16,7 +16,13 @@
 class nsSMILKeySpline
 {
 public:
-  nsSMILKeySpline() { /* caller must call Init later */ }
+  nsSMILKeySpline()
+    : mX1{ 0.0 }
+    , mY1{ 0.0 }
+    , mX2{ 0.0 }
+    , mY2{ 0.0 }
+  { /* caller must call Init later */
+  }
 
   /**
    * Creates a new key spline control point description.
@@ -24,8 +30,11 @@ public:
    * aX1, etc. are the x1, y1, x2, y2 cubic Bezier control points as defined by
    * SMILANIM 3.2.3. They must each be in the range 0.0 <= x <= 1.0
    */
-  nsSMILKeySpline(double aX1, double aY1,
-                  double aX2, double aY2)
+  nsSMILKeySpline(double aX1, double aY1, double aX2, double aY2)
+    : mX1{ 0.0 }
+    , mY1{ 0.0 }
+    , mX2{ 0.0 }
+    , mY2{ 0.0 }
   {
     Init(aX1, aY1, aX2, aY2);
   }

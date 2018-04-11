@@ -98,11 +98,6 @@ def _defines():
         DEFINES['MOZ_APP_ABI'] = 'arm-eabi-gcc3'
         DEFINES['TARGET_XPCOM_ABI'] = 'arm-eabi-gcc3'
 
-    if '-march=armv7' in CONFIG['OS_CFLAGS']:
-        DEFINES['MOZ_MIN_CPU_VERSION'] = 7
-    else:
-        DEFINES['MOZ_MIN_CPU_VERSION'] = 5
-
     # It's okay to use MOZ_ADJUST_SDK_KEY here because this doesn't
     # leak the value to build logs.
     if CONFIG['MOZ_INSTALL_TRACKING']:

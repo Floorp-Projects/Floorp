@@ -98,11 +98,12 @@ ScopedBindFramebuffer::UnwrapImpl()
 /* ScopedBindTextureUnit ******************************************************/
 
 ScopedBindTextureUnit::ScopedBindTextureUnit(GLContext* aGL, GLenum aTexUnit)
-    : ScopedGLWrapper<ScopedBindTextureUnit>(aGL)
+  : ScopedGLWrapper<ScopedBindTextureUnit>(aGL)
+  , mOldTexUnit{}
 {
-    MOZ_ASSERT(aTexUnit >= LOCAL_GL_TEXTURE0);
-    mGL->GetUIntegerv(LOCAL_GL_ACTIVE_TEXTURE, &mOldTexUnit);
-    mGL->fActiveTexture(aTexUnit);
+  MOZ_ASSERT(aTexUnit >= LOCAL_GL_TEXTURE0);
+  mGL->GetUIntegerv(LOCAL_GL_ACTIVE_TEXTURE, &mOldTexUnit);
+  mGL->fActiveTexture(aTexUnit);
 }
 
 void
@@ -114,9 +115,10 @@ ScopedBindTextureUnit::UnwrapImpl() {
 /* ScopedTexture **************************************************************/
 
 ScopedTexture::ScopedTexture(GLContext* aGL)
-    : ScopedGLWrapper<ScopedTexture>(aGL)
+  : ScopedGLWrapper<ScopedTexture>(aGL)
+  , mTexture{}
 {
-    mGL->fGenTextures(1, &mTexture);
+  mGL->fGenTextures(1, &mTexture);
 }
 
 void
@@ -128,9 +130,10 @@ ScopedTexture::UnwrapImpl()
 /* ScopedFramebuffer **************************************************************/
 
 ScopedFramebuffer::ScopedFramebuffer(GLContext* aGL)
-    : ScopedGLWrapper<ScopedFramebuffer>(aGL)
+  : ScopedGLWrapper<ScopedFramebuffer>(aGL)
+  , mFB{}
 {
-    mGL->fGenFramebuffers(1, &mFB);
+  mGL->fGenFramebuffers(1, &mFB);
 }
 
 void
@@ -143,9 +146,10 @@ ScopedFramebuffer::UnwrapImpl()
 /* ScopedRenderbuffer **************************************************************/
 
 ScopedRenderbuffer::ScopedRenderbuffer(GLContext* aGL)
-    : ScopedGLWrapper<ScopedRenderbuffer>(aGL)
+  : ScopedGLWrapper<ScopedRenderbuffer>(aGL)
+  , mRB{}
 {
-    mGL->fGenRenderbuffers(1, &mRB);
+  mGL->fGenRenderbuffers(1, &mRB);
 }
 
 void
@@ -362,19 +366,35 @@ ScopedVertexAttribPointer::ScopedVertexAttribPointer(GLContext* aGL,
                                                      GLsizei stride,
                                                      GLuint buffer,
                                                      const GLvoid* pointer)
-    : ScopedGLWrapper<ScopedVertexAttribPointer>(aGL)
+  : ScopedGLWrapper<ScopedVertexAttribPointer>(aGL)
+  , mAttribEnabled{}
+  , mAttribSize{}
+  , mAttribStride{}
+  , mAttribType{}
+  , mAttribNormalized{}
+  , mAttribBufferBinding{}
+  , mAttribPointer{ nullptr }
+  , mBoundBuffer{}
 {
-    WrapImpl(index);
-    mGL->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, buffer);
-    mGL->fVertexAttribPointer(index, size, type, normalized, stride, pointer);
-    mGL->fEnableVertexAttribArray(index);
+  WrapImpl(index);
+  mGL->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, buffer);
+  mGL->fVertexAttribPointer(index, size, type, normalized, stride, pointer);
+  mGL->fEnableVertexAttribArray(index);
 }
 
 ScopedVertexAttribPointer::ScopedVertexAttribPointer(GLContext* aGL,
                                                      GLuint index)
-    : ScopedGLWrapper<ScopedVertexAttribPointer>(aGL)
+  : ScopedGLWrapper<ScopedVertexAttribPointer>(aGL)
+  , mAttribEnabled{}
+  , mAttribSize{}
+  , mAttribStride{}
+  , mAttribType{}
+  , mAttribNormalized{}
+  , mAttribBufferBinding{}
+  , mAttribPointer{ nullptr }
+  , mBoundBuffer{}
 {
-    WrapImpl(index);
+  WrapImpl(index);
 }
 
 void
@@ -427,24 +447,34 @@ ScopedVertexAttribPointer::UnwrapImpl()
 // ScopedPackState
 
 ScopedPackState::ScopedPackState(GLContext* gl)
-    : ScopedGLWrapper<ScopedPackState>(gl)
+  : ScopedGLWrapper<ScopedPackState>(gl)
+  , mAlignment{}
+  , mPixelBuffer{}
+  , mRowLength{}
+  , mSkipPixels{}
+  , mSkipRows{}
 {
-    mGL->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &mAlignment);
+  mGL->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &mAlignment);
 
-    if (mAlignment != 4) mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
+  if (mAlignment != 4)
+    mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
 
-    if (!mGL->HasPBOState())
-        return;
+  if (!mGL->HasPBOState())
+    return;
 
-    mGL->fGetIntegerv(LOCAL_GL_PIXEL_PACK_BUFFER_BINDING, (GLint*)&mPixelBuffer);
-    mGL->fGetIntegerv(LOCAL_GL_PACK_ROW_LENGTH, &mRowLength);
-    mGL->fGetIntegerv(LOCAL_GL_PACK_SKIP_PIXELS, &mSkipPixels);
-    mGL->fGetIntegerv(LOCAL_GL_PACK_SKIP_ROWS, &mSkipRows);
+  mGL->fGetIntegerv(LOCAL_GL_PIXEL_PACK_BUFFER_BINDING, (GLint*)&mPixelBuffer);
+  mGL->fGetIntegerv(LOCAL_GL_PACK_ROW_LENGTH, &mRowLength);
+  mGL->fGetIntegerv(LOCAL_GL_PACK_SKIP_PIXELS, &mSkipPixels);
+  mGL->fGetIntegerv(LOCAL_GL_PACK_SKIP_ROWS, &mSkipRows);
 
-    if (mPixelBuffer != 0) mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, 0);
-    if (mRowLength != 0)   mGL->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, 0);
-    if (mSkipPixels != 0)  mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, 0);
-    if (mSkipRows != 0)    mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, 0);
+  if (mPixelBuffer != 0)
+    mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, 0);
+  if (mRowLength != 0)
+    mGL->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, 0);
+  if (mSkipPixels != 0)
+    mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, 0);
+  if (mSkipRows != 0)
+    mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, 0);
 }
 
 void
@@ -465,29 +495,37 @@ ScopedPackState::UnwrapImpl()
 // ResetUnpackState
 
 ResetUnpackState::ResetUnpackState(GLContext* gl)
-    : ScopedGLWrapper<ResetUnpackState>(gl)
+  : ScopedGLWrapper<ResetUnpackState>(gl)
+  , mAlignment{}
+  , mPBO{}
+  , mRowLength{}
+  , mImageHeight{}
+  , mSkipPixels{}
+  , mSkipRows{}
+  , mSkipImages{}
 {
-    const auto fnReset = [&](GLenum pname, GLuint val, GLuint* const out_old) {
-        mGL->GetUIntegerv(pname, out_old);
-        if (*out_old != val) {
-            mGL->fPixelStorei(pname, val);
-        }
-    };
+  const auto fnReset = [&](GLenum pname, GLuint val, GLuint* const out_old) {
+    mGL->GetUIntegerv(pname, out_old);
+    if (*out_old != val) {
+      mGL->fPixelStorei(pname, val);
+    }
+  };
 
-    // Default is 4, but 1 is more useful.
-    fnReset(LOCAL_GL_UNPACK_ALIGNMENT, 1, &mAlignment);
+  // Default is 4, but 1 is more useful.
+  fnReset(LOCAL_GL_UNPACK_ALIGNMENT, 1, &mAlignment);
 
-    if (!mGL->HasPBOState())
-        return;
+  if (!mGL->HasPBOState())
+    return;
 
-    mGL->GetUIntegerv(LOCAL_GL_PIXEL_UNPACK_BUFFER_BINDING, &mPBO);
-    if (mPBO != 0) mGL->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+  mGL->GetUIntegerv(LOCAL_GL_PIXEL_UNPACK_BUFFER_BINDING, &mPBO);
+  if (mPBO != 0)
+    mGL->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
 
-    fnReset(LOCAL_GL_UNPACK_ROW_LENGTH  , 0, &mRowLength);
-    fnReset(LOCAL_GL_UNPACK_IMAGE_HEIGHT, 0, &mImageHeight);
-    fnReset(LOCAL_GL_UNPACK_SKIP_PIXELS , 0, &mSkipPixels);
-    fnReset(LOCAL_GL_UNPACK_SKIP_ROWS   , 0, &mSkipRows);
-    fnReset(LOCAL_GL_UNPACK_SKIP_IMAGES , 0, &mSkipImages);
+  fnReset(LOCAL_GL_UNPACK_ROW_LENGTH, 0, &mRowLength);
+  fnReset(LOCAL_GL_UNPACK_IMAGE_HEIGHT, 0, &mImageHeight);
+  fnReset(LOCAL_GL_UNPACK_SKIP_PIXELS, 0, &mSkipPixels);
+  fnReset(LOCAL_GL_UNPACK_SKIP_ROWS, 0, &mSkipRows);
+  fnReset(LOCAL_GL_UNPACK_SKIP_IMAGES, 0, &mSkipImages);
 }
 
 void

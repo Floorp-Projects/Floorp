@@ -20,20 +20,25 @@ namespace mozilla {
 extern LazyLogModule gMediaDecoderLog;
 #define OPUS_LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
 
-OpusParser::OpusParser():
-  mRate(0),
-  mNominalRate(0),
-  mChannels(0),
-  mPreSkip(0),
+OpusParser::OpusParser()
+  : mRate(0)
+  , mNominalRate(0)
+  , mChannels(0)
+  , mPreSkip(0)
+  ,
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
-  mGain(1.0f),
+  mGain(1.0f)
+  ,
 #else
-  mGain_Q16(65536),
+  mGain_Q16(65536)
+  ,
 #endif
-  mChannelMapping(0),
-  mStreams(0),
-  mCoupledStreams(0)
-{ }
+  mChannelMapping(0)
+  , mStreams(0)
+  , mCoupledStreams(0)
+  , mPrevPacketGranulepos{}
+{
+}
 
 bool OpusParser::DecodeHeader(unsigned char* aData, size_t aLength)
 {

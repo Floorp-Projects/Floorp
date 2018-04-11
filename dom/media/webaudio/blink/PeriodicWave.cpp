@@ -108,12 +108,15 @@ PeriodicWave::createTriangle(float sampleRate)
     return periodicWave.forget();
 }
 
-PeriodicWave::PeriodicWave(float sampleRate, size_t numberOfComponents, bool disableNormalization)
-    : m_sampleRate(sampleRate)
-    , m_centsPerRange(CentsPerRange)
-    , m_maxPartialsInBandLimitedTable(0)
-    , m_normalizationScale(1.0f)
-    , m_disableNormalization(disableNormalization)
+PeriodicWave::PeriodicWave(float sampleRate,
+                           size_t numberOfComponents,
+                           bool disableNormalization)
+  : m_sampleRate(sampleRate)
+  , m_centsPerRange(CentsPerRange)
+  , m_numberOfComponents{}
+  , m_maxPartialsInBandLimitedTable(0)
+  , m_normalizationScale(1.0f)
+  , m_disableNormalization(disableNormalization)
 {
     float nyquist = 0.5 * m_sampleRate;
 
