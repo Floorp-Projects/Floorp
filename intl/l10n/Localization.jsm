@@ -16,7 +16,7 @@
  */
 
 
-/* fluent@0.6.3 */
+/* fluent-dom@0.2.0 */
 
 /* eslint no-console: ["error", { allow: ["warn", "error"] }] */
 /* global console */
