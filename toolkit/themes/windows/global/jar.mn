@@ -52,6 +52,7 @@ toolkit.jar:
   skin/classic/global/icons/Search-close.png               (icons/Search-close.png)
   skin/classic/global/icons/Question.png                   (icons/Question.png)
   skin/classic/global/icons/resizer.png                    (icons/resizer.png)
+  skin/classic/global/icons/resizer-rtl.png                (icons/resizer-rtl.png)
   skin/classic/global/icons/sslWarning.png                 (icons/sslWarning.png)
   skin/classic/global/icons/Warning.png                    (icons/Warning.png)
   skin/classic/global/icons/warning-large.png              (icons/warning-large.png)
