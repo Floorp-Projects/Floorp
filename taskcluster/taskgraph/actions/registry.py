@@ -268,13 +268,13 @@ def render_actions_json(parameters, graph_config):
     }
 
 
-def trigger_action_callback(task_group_id, task_id, task, input, callback, parameters,
+def trigger_action_callback(task_group_id, task_id, task, input, callback, parameters, root,
                             test=False):
     """
     Trigger action callback with the given inputs. If `test` is true, then run
     the action callback in testing mode, without actually creating tasks.
     """
-    graph_config = load_graph_config("taskcluster/ci")
+    graph_config = load_graph_config(root)
     callbacks = _get_callbacks(graph_config)
     cb = callbacks.get(callback, None)
     if not cb:
