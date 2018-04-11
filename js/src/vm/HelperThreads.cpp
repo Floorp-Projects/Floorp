@@ -459,6 +459,14 @@ ParseTask::trace(JSTracer* trc)
     sourceObjects.trace(trc);
 }
 
+size_t
+ParseTask::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    return options.sizeOfExcludingThis(mallocSizeOf) +
+           alloc.sizeOfExcludingThis(mallocSizeOf) +
+           errors.sizeOfExcludingThis(mallocSizeOf);
+}
+
 ScriptParseTask::ScriptParseTask(JSContext* cx, const char16_t* chars, size_t length,
                                  JS::OffThreadCompileCallback callback, void* callbackData)
   : ParseTask(ParseTaskKind::Script, cx, callback, callbackData),
@@ -1151,6 +1159,14 @@ GlobalHelperThreadState::addSizeOfIncludingThis(JS::GlobalStats* stats,
         compressionFinishedList_.sizeOfExcludingThis(mallocSizeOf) +
         gcHelperWorklist_.sizeOfExcludingThis(mallocSizeOf) +
         gcParallelWorklist_.sizeOfExcludingThis(mallocSizeOf);
+
+    // Report ParseTasks on wait lists
+    for (auto task : parseWorklist_)
+        htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
+    for (auto task : parseFinishedList_)
+        htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
+    for (auto task : parseWaitingOnGC_)
+        htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
 
     // Report number of helper threads.
     MOZ_ASSERT(htStats.idleThreadCount == 0);

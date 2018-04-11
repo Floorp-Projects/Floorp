@@ -507,7 +507,8 @@ struct NotableScriptSourceInfo : public ScriptSourceInfo
 struct HelperThreadStats
 {
 #define FOR_EACH_SIZE(macro) \
-    macro(_, MallocHeap, stateData)
+    macro(_, MallocHeap, stateData) \
+    macro(_, MallocHeap, parseTask)
 
     explicit HelperThreadStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
