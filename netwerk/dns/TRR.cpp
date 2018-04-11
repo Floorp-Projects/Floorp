@@ -236,13 +236,14 @@ TRR::SendHTTPRequest()
     if (!uploadChannel) {
       return NS_ERROR_UNEXPECTED;
     }
+    uint32_t streamLength = body.Length();
     nsCOMPtr<nsIInputStream> uploadStream;
-    rv = NS_NewCStringInputStream(getter_AddRefs(uploadStream), body);
+    rv = NS_NewCStringInputStream(getter_AddRefs(uploadStream), Move(body));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = uploadChannel->ExplicitSetUploadStream(uploadStream,
                                                 NS_LITERAL_CSTRING("application/dns-udpwireformat"),
-                                                body.Length(),
+                                                streamLength,
                                                 NS_LITERAL_CSTRING("POST"), false);
     NS_ENSURE_SUCCESS(rv, rv);
   }

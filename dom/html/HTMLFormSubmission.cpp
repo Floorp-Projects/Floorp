@@ -782,8 +782,9 @@ FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
                 ConvertLineBreaks(cbody.get(),
                                   nsLinebreakConverter::eLinebreakAny,
                                   nsLinebreakConverter::eLinebreakNet));
+    uint32_t bodyLength = cbody.Length();
     nsCOMPtr<nsIInputStream> bodyStream;
-    rv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), cbody);
+    rv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), Move(cbody));
     if (!bodyStream) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -797,7 +798,7 @@ FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
     mimeStream->SetData(bodyStream);
     CallQueryInterface(mimeStream, aPostDataStream);
 
-    *aPostDataStreamLength = cbody.Length();
+    *aPostDataStreamLength = bodyLength;
   }
 
   return rv;

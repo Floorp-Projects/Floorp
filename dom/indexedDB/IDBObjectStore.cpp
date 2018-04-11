@@ -465,7 +465,7 @@ private:
       reinterpret_cast<uint8_t*>(compiled.BeginWriting()), compiledSize);
 
     MOZ_ALWAYS_SUCCEEDS(NS_NewCStringInputStream(getter_AddRefs(mStream),
-                                                 compiled));
+                                                 Move(compiled)));
 
     mModule = nullptr;
 
