@@ -3200,7 +3200,7 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     if (overlayScrollbars ||
         scrollParts[i] == mResizerBox) {
       appendToTopFlags |= APPEND_OVERLAY;
-      aBuilder->SetBuiltOverlayScrollbars(true);
+      aBuilder->SetDisablePartialUpdates(true);
     }
 
     {

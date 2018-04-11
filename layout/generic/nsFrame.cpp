@@ -2846,7 +2846,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     // to retain, so override the dirty rect now.
     if (aBuilder->IsRetainingDisplayList()) {
       dirtyRect = visibleRect;
-      aBuilder->MarkFrameModifiedDuringBuilding(this);
+      aBuilder->SetDisablePartialUpdates(true);
     }
   }
 
@@ -2856,7 +2856,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // this requirement.
   if (aBuilder->IsRetainingDisplayList() && childrenHavePerspective) {
     dirtyRect = visibleRect;
-    aBuilder->MarkFrameModifiedDuringBuilding(this);
+    aBuilder->SetDisablePartialUpdates(true);
   }
 
   // reset blend mode so we can keep track if this stacking context needs have
