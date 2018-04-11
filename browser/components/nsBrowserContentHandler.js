@@ -673,7 +673,7 @@ function handURIToExistingBrowser(uri, location, cmdLine, forcePrivate, triggeri
   // Unless using a private window is forced, open external links in private
   // windows only if we're in perma-private mode.
   var allowPrivate = forcePrivate || PrivateBrowsingUtils.permanentPrivateBrowsing;
-  var navWin = BrowserWindowTracker.getMostRecentBrowserWindow({private: allowPrivate});
+  var navWin = BrowserWindowTracker.getTopWindow({private: allowPrivate});
   if (!navWin) {
     // if we couldn't load it in an existing window, open a new one
     openBrowserWindow(cmdLine, uri.spec, null, forcePrivate);
@@ -785,7 +785,7 @@ nsDefaultCommandLineHandler.prototype = {
           cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
           WindowsUIUtils.inTabletMode) {
         // In windows 10 tablet mode, do not create a new window, but reuse the existing one.
-        let win = BrowserWindowTracker.getMostRecentBrowserWindow();
+        let win = BrowserWindowTracker.getTopWindow();
         if (win) {
           win.focus();
           return;

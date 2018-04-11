@@ -35,7 +35,7 @@ const DIALOG_URL = "chrome://browser/content/places/bookmarkProperties.xul";
 const DIALOG_URL_MINIMAL_UI = "chrome://browser/content/places/bookmarkProperties2.xul";
 
 ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
-var win = BrowserWindowTracker.getMostRecentBrowserWindow();
+var win = BrowserWindowTracker.getTopWindow();
 
 function add_bookmark(url) {
   return PlacesUtils.bookmarks.insert({
