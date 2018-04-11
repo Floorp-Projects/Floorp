@@ -90,19 +90,6 @@ var tests = [
   },
 
   function() {
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=969756
-    if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
-      // This test is irrelevant when using stylo.
-      return;
-    }
-    var test6 = document.getElementById("test6");
-    test6.textContent = "p { font: var(--var6) hangul mongolian; font-size-adjust: none; }";
-    var declaration = test6.sheet.cssRules[0].style;
-    test6.style.color = "white";
-    is(declaration.getPropertyValue("-x-system-font"), " var(--var6) hangul mongolian");
-  },
-
-  function() {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1154356
     var test7 = document.getElementById("test7");
     test7.textContent = "p { --weird\\;name: green; }";

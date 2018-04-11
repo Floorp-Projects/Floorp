@@ -396,7 +396,7 @@ GetFieldSetBlockFrame(nsIFrame* aFieldsetFrame)
   { _flags, { (FrameCreationFunc)_func }, nullptr, nullptr }
 #define FCDATA_WITH_WRAPPING_BLOCK(_flags, _func, _anon_box)  \
   { _flags | FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS,        \
-      { (FrameCreationFunc)_func }, nullptr, _anon_box }
+      { (FrameCreationFunc)_func }, nullptr, &_anon_box }
 
 #define UNREACHABLE_FCDATA()                                  \
   { 0, { (FrameCreationFunc)nullptr }, nullptr, nullptr }
@@ -3509,7 +3509,7 @@ nsCSSFrameConstructor::FindDataByTag(nsAtom* aTag,
          *endData = aDataPtr + aDataLength;
        curData != endData;
        ++curData) {
-    if (curData->mTag == aTag) {
+    if (*curData->mTag == aTag) {
       if (aTagFound) {
         *aTagFound = true;
       }
@@ -3533,11 +3533,11 @@ nsCSSFrameConstructor::FindDataByTag(nsAtom* aTag,
   { _int, FULL_CTOR_FCDATA(0, _func) }
 
 #define SIMPLE_TAG_CREATE(_tag, _func)          \
-  { nsGkAtoms::_tag, SIMPLE_FCDATA(_func) }
+  { &nsGkAtoms::_tag, SIMPLE_FCDATA(_func) }
 #define SIMPLE_TAG_CHAIN(_tag, _func)                                   \
-  { nsGkAtoms::_tag, FCDATA_DECL(FCDATA_FUNC_IS_DATA_GETTER,  _func) }
+  { &nsGkAtoms::_tag, FCDATA_DECL(FCDATA_FUNC_IS_DATA_GETTER,  _func) }
 #define COMPLEX_TAG_CREATE(_tag, _func)             \
-  { nsGkAtoms::_tag, FULL_CTOR_FCDATA(0, _func) }
+  { &nsGkAtoms::_tag, FULL_CTOR_FCDATA(0, _func) }
 
 static bool
 IsFrameForFieldSet(nsIFrame* aFrame)
@@ -3587,7 +3587,7 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     SIMPLE_TAG_CHAIN(img, nsCSSFrameConstructor::FindImgData),
     SIMPLE_TAG_CHAIN(mozgeneratedcontentimage,
                      nsCSSFrameConstructor::FindImgData),
-    { nsGkAtoms::br,
+    { &nsGkAtoms::br,
       FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT | FCDATA_IS_LINE_BREAK,
                   NS_NewBRFrame) },
     SIMPLE_TAG_CREATE(wbr, NS_NewWBRFrame),
@@ -3598,12 +3598,12 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     SIMPLE_TAG_CHAIN(embed, nsCSSFrameConstructor::FindObjectData),
     COMPLEX_TAG_CREATE(fieldset,
                        &nsCSSFrameConstructor::ConstructFieldSetFrame),
-    { nsGkAtoms::legend,
+    { &nsGkAtoms::legend,
       FCDATA_DECL(FCDATA_ALLOW_BLOCK_STYLES | FCDATA_MAY_NEED_SCROLLFRAME,
                   NS_NewLegendFrame) },
     SIMPLE_TAG_CREATE(frameset, NS_NewHTMLFramesetFrame),
     SIMPLE_TAG_CREATE(iframe, NS_NewSubDocumentFrame),
-    { nsGkAtoms::button,
+    { &nsGkAtoms::button,
       FCDATA_WITH_WRAPPING_BLOCK(FCDATA_ALLOW_BLOCK_STYLES |
                                  FCDATA_ALLOW_GRID_FLEX_COLUMNSET,
                                  NS_NewHTMLButtonControlFrame,
@@ -3895,7 +3895,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     nsIFrame* possiblyLeafFrame = newFrame;
     if (bits & FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS) {
       RefPtr<ComputedStyle> outerSC = mPresShell->StyleSet()->
-        ResolveInheritingAnonymousBoxStyle(data->mAnonBoxPseudo, computedStyle);
+        ResolveInheritingAnonymousBoxStyle(*data->mAnonBoxPseudo,
+                                           computedStyle);
 #ifdef DEBUG
       nsContainerFrame* containerFrame = do_QueryFrame(newFrame);
       MOZ_ASSERT(containerFrame);
@@ -4274,9 +4275,9 @@ bool IsXULDisplayType(const nsStyleDisplay* aDisplay)
               FCDATA_MAY_NEED_SCROLLFRAME, _func)
 
 #define SIMPLE_XUL_CREATE(_tag, _func)            \
-  { nsGkAtoms::_tag, SIMPLE_XUL_FCDATA(_func) }
+  { &nsGkAtoms::_tag, SIMPLE_XUL_FCDATA(_func) }
 #define SCROLLABLE_XUL_CREATE(_tag, _func)            \
-  { nsGkAtoms::_tag, SCROLLABLE_XUL_FCDATA(_func) }
+  { &nsGkAtoms::_tag, SCROLLABLE_XUL_FCDATA(_func) }
 #define SIMPLE_XUL_DISPLAY_CREATE(_display, _func)      \
   FCDATA_FOR_DISPLAY(_display, SIMPLE_XUL_FCDATA(_func))
 #define SCROLLABLE_XUL_DISPLAY_CREATE(_display, _func)                          \
@@ -5064,10 +5065,10 @@ nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
 // Only <math> elements can be floated or positioned.  All other MathML
 // should be in-flow.
 #define SIMPLE_MATHML_CREATE(_tag, _func)                               \
-  { nsGkAtoms::_tag,                                                    \
-    FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |                           \
-                FCDATA_FORCE_NULL_ABSPOS_CONTAINER |                    \
-                FCDATA_WRAP_KIDS_IN_BLOCKS, _func) }
+  { &nsGkAtoms::_tag,                                                   \
+      FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |                         \
+                  FCDATA_FORCE_NULL_ABSPOS_CONTAINER |                  \
+                  FCDATA_WRAP_KIDS_IN_BLOCKS, _func) }
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
@@ -5242,7 +5243,7 @@ nsCSSFrameConstructor::ConstructMarker(nsFrameConstructorState& aState,
               FCDATA_SKIP_ABSPOS_PUSH |                                 \
               FCDATA_DISALLOW_GENERATED_CONTENT,  _func)
 #define SIMPLE_SVG_CREATE(_tag, _func)            \
-  { nsGkAtoms::_tag, SIMPLE_SVG_FCDATA(_func) }
+  { &nsGkAtoms::_tag, SIMPLE_SVG_FCDATA(_func) }
 
 static bool
 IsFilterPrimitiveChildTag(const nsAtom* aTag)
@@ -5445,12 +5446,12 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     SIMPLE_SVG_CREATE(path, NS_NewSVGGeometryFrame),
     SIMPLE_SVG_CREATE(defs, NS_NewSVGContainerFrame),
     SIMPLE_SVG_CREATE(generic_, NS_NewSVGGenericContainerFrame),
-    { nsGkAtoms::text,
+    { &nsGkAtoms::text,
       FCDATA_WITH_WRAPPING_BLOCK(FCDATA_DISALLOW_OUT_OF_FLOW |
                                  FCDATA_ALLOW_BLOCK_STYLES,
                                  NS_NewSVGTextFrame,
                                  nsCSSAnonBoxes::mozSVGText) },
-    { nsGkAtoms::foreignObject,
+    { &nsGkAtoms::foreignObject,
       FCDATA_WITH_WRAPPING_BLOCK(FCDATA_DISALLOW_OUT_OF_FLOW,
                                  NS_NewSVGForeignObjectFrame,
                                  nsCSSAnonBoxes::mozSVGForeignContent) },
@@ -9330,7 +9331,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
                      FCDATA_IS_WRAPPER_ANON_BOX |
                      FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRow),
                      &nsCSSFrameConstructor::ConstructTableCell),
-    nsCSSAnonBoxes::tableCell
+    &nsCSSAnonBoxes::tableCell
   },
   { // Row
     FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
@@ -9338,7 +9339,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
                      FCDATA_IS_WRAPPER_ANON_BOX |
                      FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRowGroup),
                      &nsCSSFrameConstructor::ConstructTableRowOrRowGroup),
-    nsCSSAnonBoxes::tableRow
+    &nsCSSAnonBoxes::tableRow
   },
   { // Row group
     FULL_CTOR_FCDATA(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
@@ -9346,7 +9347,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
                      FCDATA_IS_WRAPPER_ANON_BOX |
                      FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                      &nsCSSFrameConstructor::ConstructTableRowOrRowGroup),
-    nsCSSAnonBoxes::tableRowGroup
+    &nsCSSAnonBoxes::tableRowGroup
   },
   { // Column group
     FCDATA_DECL(FCDATA_IS_TABLE_PART | FCDATA_SKIP_FRAMESET |
@@ -9356,13 +9357,13 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
                 // restyle these: they have non-inheriting styles.
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable),
                 NS_NewTableColGroupFrame),
-    nsCSSAnonBoxes::tableColGroup
+    &nsCSSAnonBoxes::tableColGroup
   },
   { // Table
     FULL_CTOR_FCDATA(FCDATA_SKIP_FRAMESET | FCDATA_USE_CHILD_ITEMS |
                      FCDATA_IS_WRAPPER_ANON_BOX,
                      &nsCSSFrameConstructor::ConstructTable),
-    nsCSSAnonBoxes::table
+    &nsCSSAnonBoxes::table
   },
   { // Ruby
     FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
@@ -9370,7 +9371,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
                 FCDATA_IS_WRAPPER_ANON_BOX |
                 FCDATA_SKIP_FRAMESET,
                 NS_NewRubyFrame),
-    nsCSSAnonBoxes::ruby
+    &nsCSSAnonBoxes::ruby
   },
   { // Ruby Base
     FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
@@ -9379,7 +9380,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyBaseContainer) |
                 FCDATA_SKIP_FRAMESET,
                 NS_NewRubyBaseFrame),
-    nsCSSAnonBoxes::rubyBase
+    &nsCSSAnonBoxes::rubyBase
   },
   { // Ruby Base Container
     FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
@@ -9388,7 +9389,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby) |
                 FCDATA_SKIP_FRAMESET,
                 NS_NewRubyBaseContainerFrame),
-    nsCSSAnonBoxes::rubyBaseContainer
+    &nsCSSAnonBoxes::rubyBaseContainer
   },
   { // Ruby Text
     FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
@@ -9397,7 +9398,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyTextContainer) |
                 FCDATA_SKIP_FRAMESET,
                 NS_NewRubyTextFrame),
-    nsCSSAnonBoxes::rubyText
+    &nsCSSAnonBoxes::rubyText
   },
   { // Ruby Text Container
     FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
@@ -9405,7 +9406,7 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby) |
                 FCDATA_SKIP_FRAMESET,
                 NS_NewRubyTextContainerFrame),
-    nsCSSAnonBoxes::rubyTextContainer
+    &nsCSSAnonBoxes::rubyTextContainer
   }
 };
 
@@ -9974,7 +9975,7 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
                                                const FCItemIterator& aEndIter)
 {
   const PseudoParentData& pseudoData = sPseudoParentData[aWrapperType];
-  nsICSSAnonBoxPseudo* pseudoType = pseudoData.mPseudoType;
+  nsAtom* pseudoType = *pseudoData.mPseudoType;
   StyleDisplay parentDisplay = aParentStyle->StyleDisplay()->mDisplay;
 
   if (pseudoType == nsCSSAnonBoxes::table &&
@@ -10057,7 +10058,7 @@ nsCSSFrameConstructor::CreateNeededPseudoSiblings(
   const PseudoParentData& pseudoData =
     sPseudoParentData[eTypeRubyBaseContainer];
   already_AddRefed<ComputedStyle> pseudoStyle = mPresShell->StyleSet()->
-    ResolveInheritingAnonymousBoxStyle(pseudoData.mPseudoType,
+    ResolveInheritingAnonymousBoxStyle(*pseudoData.mPseudoType,
                                        aParentFrame->Style());
   FrameConstructionItem* newItem =
     new (this) FrameConstructionItem(&pseudoData.mFCData,

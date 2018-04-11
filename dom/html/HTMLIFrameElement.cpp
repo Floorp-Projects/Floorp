@@ -109,9 +109,9 @@ NS_IMETHODIMP_(bool)
 HTMLIFrameElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { nsGkAtoms::width },
-    { nsGkAtoms::height },
-    { nsGkAtoms::frameborder },
+    { &nsGkAtoms::width },
+    { &nsGkAtoms::height },
+    { &nsGkAtoms::frameborder },
     { nullptr },
   };
 

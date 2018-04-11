@@ -5538,20 +5538,6 @@ HTMLInputElement::IsInputDateTimeOthersEnabled()
 }
 
 /* static */ bool
-HTMLInputElement::IsInputNumberEnabled()
-{
-  static bool sInputNumberEnabled = false;
-  static bool sInputNumberPrefCached = false;
-  if (!sInputNumberPrefCached) {
-    sInputNumberPrefCached = true;
-    Preferences::AddBoolVarCache(&sInputNumberEnabled, "dom.forms.number",
-                                 false);
-  }
-
-  return sInputNumberEnabled;
-}
-
-/* static */ bool
 HTMLInputElement::IsInputColorEnabled()
 {
   static bool sInputColorEnabled = false;
@@ -5587,8 +5573,7 @@ HTMLInputElement::ParseAttribute(int32_t aNamespaceID,
     if (aAttribute == nsGkAtoms::type) {
       aResult.ParseEnumValue(aValue, kInputTypeTable, false, kInputDefaultType);
       int32_t newType = aResult.GetEnumValue();
-      if ((newType == NS_FORM_INPUT_NUMBER && !IsInputNumberEnabled()) ||
-          (newType == NS_FORM_INPUT_COLOR && !IsInputColorEnabled()) ||
+      if ((newType == NS_FORM_INPUT_COLOR && !IsInputColorEnabled()) ||
           (IsDateTimeInputType(newType) && !IsDateTimeTypeSupported(newType))) {
         // There's no public way to set an nsAttrValue to an enum value, but we
         // can just re-parse with a table that doesn't have any types other than
@@ -5695,8 +5680,8 @@ NS_IMETHODIMP_(bool)
 HTMLInputElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { nsGkAtoms::align },
-    { nsGkAtoms::type },
+    { &nsGkAtoms::align },
+    { &nsGkAtoms::type },
     { nullptr },
   };
 
