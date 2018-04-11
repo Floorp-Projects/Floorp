@@ -185,7 +185,7 @@ function testAllListener() {
   }
   function allListener2() {
     allListenerCalled = true;
-    notok(clickListenerCalled, "Shouldn't have called click listener before '*' listener!");
+    ok(!clickListenerCalled, "Shouldn't have called click listener before '*' listener!");
   }
   root.onclick = null; // Remove the listener added in earlier tests.
   root.addEventListener("click", clickListener);
