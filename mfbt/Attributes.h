@@ -507,6 +507,14 @@
  *   attribute is not limited to virtual methods, so if it is applied to a
  *   nonvirtual method and the subclass does not provide an equivalent
  *   definition, the compiler will emit an error.
+ * MOZ_STATIC_CLASS: Applies to all classes. Any class with this annotation is
+ *   expected to live in static memory, so it is a compile-time error to use
+ *   it, or an array of such objects, as the type of a variable declaration, or
+ *   as a temporary object, or as the type of a new expression (unless
+ *   placement new is being used). If a member of another class uses this
+ *   class, or if another class inherits from this class, then it is considered
+ *   to be a static class as well, although this attribute need not be provided
+ *   in such cases.
  * MOZ_STACK_CLASS: Applies to all classes. Any class with this annotation is
  *   expected to live on the stack, so it is a compile-time error to use it, or
  *   an array of such objects, as a global or static variable, or as the type of
@@ -666,6 +674,7 @@
 #  define MOZ_CAN_RUN_SCRIPT __attribute__((annotate("moz_can_run_script")))
 #  define MOZ_CAN_RUN_SCRIPT_BOUNDARY __attribute__((annotate("moz_can_run_script_boundary")))
 #  define MOZ_MUST_OVERRIDE __attribute__((annotate("moz_must_override")))
+#  define MOZ_STATIC_CLASS __attribute__((annotate("moz_global_class")))
 #  define MOZ_STACK_CLASS __attribute__((annotate("moz_stack_class")))
 #  define MOZ_NONHEAP_CLASS __attribute__((annotate("moz_nonheap_class")))
 #  define MOZ_HEAP_CLASS __attribute__((annotate("moz_heap_class")))
@@ -723,6 +732,7 @@
 #  define MOZ_CAN_RUN_SCRIPT /* nothing */
 #  define MOZ_CAN_RUN_SCRIPT_BOUNDARY /* nothing */
 #  define MOZ_MUST_OVERRIDE /* nothing */
+#  define MOZ_STATIC_CLASS /* nothing */
 #  define MOZ_STACK_CLASS /* nothing */
 #  define MOZ_NONHEAP_CLASS /* nothing */
 #  define MOZ_HEAP_CLASS /* nothing */

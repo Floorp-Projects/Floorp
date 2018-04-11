@@ -66,8 +66,8 @@ include HangTypes;
 // XXX Remove this once bug 1069073 is fixed
 include "mozilla/dom/PContentBridgeParent.h";
 
-using GeoPosition from "nsGeoPositionIPCSerialiser.h";
-using AlertNotificationType from "mozilla/AlertNotificationIPCSerializer.h";
+using refcounted class nsIDOMGeoPosition from "nsGeoPositionIPCSerialiser.h";
+using refcounted class nsIAlertNotification from "mozilla/AlertNotificationIPCSerializer.h";
 
 using struct ChromePackage from "mozilla/chrome/RegistryMessageUtils.h";
 using struct SubstitutionMapping from "mozilla/chrome/RegistryMessageUtils.h";
@@ -99,7 +99,7 @@ using mozilla::Telemetry::DynamicScalarDefinition from "mozilla/TelemetryComms.h
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
-using nsCOMPtr<nsIInputStream> from "mozilla/ipc/IPCStreamUtils.h";
+using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 
 union ChromeRegistryItem
 {
@@ -444,7 +444,7 @@ child:
 
     async NotifyAlertsObserver(nsCString topic, nsString data);
 
-    async GeolocationUpdate(GeoPosition somewhere);
+    async GeolocationUpdate(nsIDOMGeoPosition aPosition);
 
     async GeolocationError(uint16_t errorCode);
 
@@ -805,7 +805,7 @@ parent:
                                         CpowEntry[] aCpows, Principal aPrincipal)
       returns (StructuredCloneData[] retval);
 
-    async ShowAlert(AlertNotificationType alert);
+    async ShowAlert(nsIAlertNotification alert);
 
     async CloseAlert(nsString name, Principal principal);
 
@@ -884,7 +884,7 @@ parent:
     async DeviceReset();
 
     sync KeywordToURI(nsCString keyword)
-        returns (nsString providerName, nsCOMPtr<nsIInputStream> postData, OptionalURIParams uri);
+        returns (nsString providerName, nsIInputStream postData, OptionalURIParams uri);
 
     sync NotifyKeywordSearchLoading(nsString providerName, nsString keyword);
 

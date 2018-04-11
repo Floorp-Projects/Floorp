@@ -28,7 +28,7 @@
 #include "mozilla/TextEvents.h"
 #include "nsUnicharUtils.h"
 #include "nsLayoutUtils.h"
-#include "nsPresState.h"
+#include "mozilla/PresState.h"
 #include "nsError.h"
 #include "nsFocusManager.h"
 #include "mozilla/dom/HTMLFormElement.h"
@@ -448,20 +448,21 @@ HTMLButtonElement::SaveState()
     return NS_OK;
   }
 
-  nsPresState* state = GetPrimaryPresState();
+  PresState* state = GetPrimaryPresState();
   if (state) {
     // We do not want to save the real disabled state but the disabled
     // attribute.
-    state->SetDisabled(HasAttr(kNameSpaceID_None, nsGkAtoms::disabled));
+    state->disabled() = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+    state->disabledSet() = true;
   }
 
   return NS_OK;
 }
 
 bool
-HTMLButtonElement::RestoreState(nsPresState* aState)
+HTMLButtonElement::RestoreState(PresState* aState)
 {
-  if (aState && aState->IsDisabledSet() && !aState->GetDisabled()) {
+  if (aState && aState->disabledSet() && !aState->disabled()) {
     SetDisabled(false, IgnoreErrors());
   }
 

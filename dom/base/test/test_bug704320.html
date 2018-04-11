@@ -29,46 +29,68 @@ var generateURLArray = (function(from, to){
   ];
 });
 
-var testIframeUrls = generateURLArray('http', 'http');
-testIframeUrls = testIframeUrls.concat(generateURLArray('https', 'https'));
-testIframeUrls = testIframeUrls.concat(generateURLArray('http', 'https'));
-testIframeUrls = testIframeUrls.concat(generateURLArray('https', 'http'));
+let testIframeUrls = [generateURLArray('http', 'http'),
+                      generateURLArray('https', 'https'),
+                      generateURLArray('http', 'https'),
+                      generateURLArray('https', 'http')];
 
 SimpleTest.waitForExplicitFinish();
-var advance = function() { tests.next(); };
+let advance = function(testName) {
+  testsGenerator[testName].next();
+};
 
+let testNames = ['testframeone', 'testframetwo', 'testframethree',
+                 'testframefour'];
+let isTestFinished = 0;
+
+function checkTestsCompleted() {
+  isTestFinished++;
+  if (isTestFinished == 4) {
+    SimpleTest.finish();
+  }
+}
+let testsGenerator = {};
+SimpleTest.requestLongerTimeout(4);
 /**
  * This is the main test routine -- serialized by use of a generator.
- * It performs all tests in sequence using in the same iframe.
+ * It performs all tests in sequence using four iframes.
  */
-var tests = (function*() {
-  SimpleTest.requestLongerTimeout(4);
-  var iframe = document.getElementById("testframe");
-  iframe.onload = function() {
-     advance();
-  }
+function startTests(testName, testIframeUrls) {
+  testsGenerator[testName] = (function*() {
+    var testframe = document.getElementById(testName);
+    testframe.onload = function() {
+      advance(testName);
+    }
 
-  // load the test frame from testIframeUrls[url]
-  // it will call back into this function via postMessage when it finishes loading.
-  // and continue beyond the yield.
-  for(url in testIframeUrls) {
-    yield iframe.src = testIframeUrls[url];
-    // run test and check result for loaded test URL
-    yield checkExpectedGlobalResults();
-  }
+    // load the test frame from testIframeUrls[url]
+    // it will call back into this function via postMessage when it finishes
+    // loading and continue beyond the yield.
+    for(url in testIframeUrls) {
+      yield testframe.src = testIframeUrls[url];
+      // run test and check result for loaded test URL
+      yield checkExpectedGlobalResults(testName);
+    }
+    checkTestsCompleted();
+  })();
+}
 
-  // complete.
-  SimpleTest.finish();
-})();
+for (i = 0; i < testIframeUrls.length; i++) {
+  startTests(testNames[i], testIframeUrls[i]);
+}
 
 </script>
 </head>
 
-<body onload="tests.next();">
+<body onload="testsGenerator[testNames[0]].next();
+              testsGenerator[testNames[1]].next();
+              testsGenerator[testNames[2]].next();
+              testsGenerator[testNames[3]].next();">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=704320">Mozilla Bug 704320 - HTTP/HTTPS to HTTPS/HTTP</a>
 <p id="display"></p>
 <pre id="content">
 </pre>
-  <iframe id="testframe"></iframe>
-
+  <iframe id="testframeone"></iframe>
+  <iframe id="testframetwo"></iframe>
+  <iframe id="testframethree"></iframe>
+  <iframe id="testframefour"></iframe>
 </body>

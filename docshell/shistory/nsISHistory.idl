@@ -19,14 +19,6 @@ interface nsISimpleEnumerator;
  * it in the nsIWebNavigation object.
  * This interface is accessible from javascript.
  */
- 
-
-%{C++
-#define NS_SHISTORY_CID \
-{0x7b807041, 0xe60a, 0x4384, {0x93, 0x5f, 0xaf, 0x30, 0x61, 0xd8, 0xb8, 0x15}}
-
-#define NS_SHISTORY_CONTRACTID "@mozilla.org/browser/shistory;1"
-%}
 
 [scriptable, uuid(7b807041-e60a-4384-935f-af3061d8b815)]
 interface nsISHistory: nsISupports

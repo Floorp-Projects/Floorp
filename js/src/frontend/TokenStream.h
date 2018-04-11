@@ -320,9 +320,9 @@ struct Token
     friend class TokenStreamShared;
 
   public:
-    // WARNING: TokenStreamSpecific::Position assumes that the only GC things
-    //          a Token includes are atoms.  DON'T ADD NON-ATOM GC THING
-    //          POINTERS HERE UNLESS YOU ADD ADDITIONAL ROOTING TO THAT CLASS.
+    // WARNING: TokenStreamPosition assumes that the only GC things a Token
+    //          includes are atoms.  DON'T ADD NON-ATOM GC THING POINTERS HERE
+    //          UNLESS YOU ADD ADDITIONAL ROOTING TO THAT CLASS.
 
     TokenKind           type;           // char value or above enumerator
     TokenPos            pos;            // token position in file
@@ -434,6 +434,8 @@ struct TokenStreamFlags
     {}
 };
 
+template<typename CharT>
+class TokenStreamPosition;
 
 /**
  * TokenStream types and constants that are used in both TokenStreamAnyChars
@@ -447,6 +449,8 @@ class TokenStreamShared
                                          // to power of 2 to avoid divmod by 3
 
     static constexpr unsigned ntokensMask = ntokens - 1;
+
+    template<typename CharT> friend class TokenStreamPosition;
 
   public:
     static constexpr unsigned maxLookahead = 2;
@@ -496,6 +500,40 @@ static_assert(mozilla::IsEmpty<TokenStreamShared>::value,
 template<typename CharT, class AnyCharsAccess>
 class TokenStreamSpecific;
 
+template<typename CharT>
+class MOZ_STACK_CLASS TokenStreamPosition final
+{
+  public:
+    // The JS_HAZ_ROOTED is permissible below because: 1) the only field in
+    // TokenStreamPosition that can keep GC things alive is Token, 2) the only
+    // GC things Token can keep alive are atoms, and 3) the AutoKeepAtoms&
+    // passed to the constructor here represents that collection of atoms
+    // is disabled while atoms in Tokens in this Position are alive.  DON'T
+    // ADD NON-ATOM GC THING POINTERS HERE!  They would create a rooting
+    // hazard that JS_HAZ_ROOTED will cause to be ignored.
+    template<class AnyCharsAccess>
+    inline TokenStreamPosition(AutoKeepAtoms& keepAtoms,
+                               TokenStreamSpecific<CharT, AnyCharsAccess>& tokenStream);
+
+  private:
+    TokenStreamPosition(const TokenStreamPosition&) = delete;
+
+    // Technically only TokenStreamSpecific<CharT, AnyCharsAccess>::seek with
+    // CharT constant and AnyCharsAccess varying must be friended, but 1) it's
+    // hard to friend one function in template classes, and 2) C++ doesn't
+    // allow partial friend specialization to target just that single class.
+    template<typename Char, class AnyCharsAccess> friend class TokenStreamSpecific;
+
+    const CharT* buf;
+    TokenStreamFlags flags;
+    unsigned lineno;
+    size_t linebase;
+    size_t prevLinebase;
+    Token currentToken;
+    unsigned lookahead;
+    Token lookaheadTokens[TokenStreamShared::maxLookahead];
+} JS_HAZ_ROOTED;
+
 class TokenStreamAnyChars
   : public TokenStreamShared,
     public ErrorReporter
@@ -506,6 +544,8 @@ class TokenStreamAnyChars
 
     template<typename CharT, class AnyCharsAccess> friend class GeneralTokenStreamChars;
     template<typename CharT, class AnyCharsAccess> friend class TokenStreamSpecific;
+
+    template<typename CharT> friend class TokenStreamPosition;
 
     // Accessors.
     const Token& currentToken() const { return tokens[cursor]; }
@@ -950,36 +990,6 @@ class TokenStreamCharsBase
 
     MOZ_MUST_USE bool appendCodePointToTokenbuf(uint32_t codePoint);
 
-    class MOZ_STACK_CLASS Position
-    {
-      public:
-        // The JS_HAZ_ROOTED is permissible below because: 1) the only field in
-        // Position that can keep GC things alive is Token, 2) the only GC
-        // things Token can keep alive are atoms, and 3) the AutoKeepAtoms&
-        // passed to the constructor here represents that collection of atoms
-        // is disabled while atoms in Tokens in this Position are alive.  DON'T
-        // ADD NON-ATOM GC THING POINTERS HERE!  They would create a rooting
-        // hazard that JS_HAZ_ROOTED will cause to be ignored.
-        explicit Position(AutoKeepAtoms&) { }
-
-      private:
-        Position(const Position&) = delete;
-
-        // Technically this should only friend TokenStreamSpecific instantiated
-        // with CharT (letting the AnyCharsAccess parameter vary), but C++
-        // doesn't allow partial friend specialization.
-        template<typename, class> friend class TokenStreamSpecific;
-
-        const CharT* buf;
-        TokenStreamFlags flags;
-        unsigned lineno;
-        size_t linebase;
-        size_t prevLinebase;
-        Token currentToken;
-        unsigned lookahead;
-        Token lookaheadTokens[TokenStreamShared::maxLookahead];
-    } JS_HAZ_ROOTED;
-
   protected:
     /** User input buffer. */
     TokenBuf userbuf;
@@ -1122,8 +1132,8 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 // for more details:
 // https://groups.google.com/forum/?fromgroups=#!topic/mozilla.dev.tech.js-engine.internals/2JLH5jRcr7E).
 //
-// The methods seek() and tell() allow to rescan from a previous visited
-// location of the buffer.
+// The method seek() allows rescanning from a previously visited location of
+// the buffer, initially computed by constructing a Position local variable.
 //
 template<typename CharT, class AnyCharsAccess>
 class MOZ_STACK_CLASS TokenStreamSpecific
@@ -1134,6 +1144,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsBase = TokenStreamChars<CharT, AnyCharsAccess>;
     using GeneralCharsBase = GeneralTokenStreamChars<CharT, AnyCharsAccess>;
     using CharsSharedBase = TokenStreamCharsBase<CharT>;
+
+    using Position = TokenStreamPosition<CharT>;
 
     // Anything inherited through a base class whose type depends upon this
     // class's template parameters can only be accessed through a dependent
@@ -1146,9 +1158,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     // class, using explicit qualification to address the dependent-name
     // problem.  |this| or other qualification is no longer necessary -- at
     // cost of this ever-changing laundry list of |using|s.  So it goes.
-  public:
-    using typename CharsSharedBase::Position;
-
   public:
     using GeneralCharsBase::anyCharsAccess;
     using CharsSharedBase::getTokenbuf;
@@ -1168,6 +1177,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::ungetCharIgnoreEOL;
     using CharsBase::ungetCodePointIgnoreEOL;
     using CharsSharedBase::userbuf;
+
+    template<typename CharU> friend class TokenStreamPosition;
 
   public:
     TokenStreamSpecific(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -1423,7 +1434,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     MOZ_MUST_USE bool advance(size_t position);
 
-    void tell(Position*);
     void seek(const Position& pos);
     MOZ_MUST_USE bool seek(const Position& pos, const TokenStreamAnyChars& other);
 
@@ -1496,6 +1506,33 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     MOZ_MUST_USE MOZ_ALWAYS_INLINE bool updateLineInfoForEOL();
 };
+
+// It's preferable to define this in TokenStream.cpp, but its template-ness
+// means we'd then have to *instantiate* this constructor for all possible
+// (CharT, AnyCharsAccess) pairs -- and that gets super-messy as AnyCharsAccess
+// *itself* is templated.  This symbol really isn't that huge compared to some
+// defined inline in TokenStreamSpecific, so just rely on the linker commoning
+// stuff up.
+template<typename CharT>
+template<class AnyCharsAccess>
+inline
+TokenStreamPosition<CharT>::TokenStreamPosition(AutoKeepAtoms& keepAtoms,
+                                                TokenStreamSpecific<CharT, AnyCharsAccess>& tokenStream)
+{
+    TokenStreamAnyChars& anyChars = tokenStream.anyCharsAccess();
+
+    buf = tokenStream.userbuf.addressOfNextRawChar(/* allowPoisoned = */ true);
+    flags = anyChars.flags;
+    lineno = anyChars.lineno;
+    linebase = anyChars.linebase;
+    prevLinebase = anyChars.prevLinebase;
+    lookahead = anyChars.lookahead;
+    currentToken = anyChars.currentToken();
+    for (unsigned i = 0; i < anyChars.lookahead; i++) {
+        lookaheadTokens[i] =
+            anyChars.tokens[(anyChars.cursor + 1 + i) & TokenStreamShared::ntokensMask];
+    }
+}
 
 class TokenStreamAnyCharsAccess
 {

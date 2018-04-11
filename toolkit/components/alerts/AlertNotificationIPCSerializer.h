@@ -15,16 +15,12 @@
 
 #include "mozilla/dom/PermissionMessageUtils.h"
 
-typedef nsIAlertNotification* AlertNotificationType;
-
 namespace IPC {
 
 template <>
-struct ParamTraits<AlertNotificationType>
+struct ParamTraits<nsIAlertNotification>
 {
-  typedef AlertNotificationType paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
+  static void Write(Message* aMsg, nsIAlertNotification* aParam)
   {
     bool isNull = !aParam;
     if (isNull) {
@@ -70,7 +66,7 @@ struct ParamTraits<AlertNotificationType>
     WriteParam(aMsg, requireInteraction);
   }
 
-  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, RefPtr<nsIAlertNotification>* aResult)
   {
     bool isNull;
     NS_ENSURE_TRUE(ReadParam(aMsg, aIter, &isNull), false);
@@ -112,7 +108,7 @@ struct ParamTraits<AlertNotificationType>
       *aResult = nullptr;
       return true;
     }
-    alert.forget(aResult);
+    *aResult = alert.forget();
     return true;
   }
 };

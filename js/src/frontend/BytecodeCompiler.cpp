@@ -65,8 +65,10 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool createScript();
     bool createScript(uint32_t toStringStart, uint32_t toStringEnd);
 
+    using TokenStreamPosition = frontend::TokenStreamPosition<char16_t>;
+
     bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext* sharedContext);
-    bool handleParseFailure(const Directives& newDirectives);
+    bool handleParseFailure(const Directives& newDirectives, TokenStreamPosition& startPosition);
     bool deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
 
     AutoKeepAtoms keepAtoms;
@@ -86,7 +88,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
     Maybe<Parser<FullParseHandler, char16_t>> parser;
 
     Directives directives;
-    TokenStream::Position startPosition;
 
     RootedScript script;
 };
@@ -157,7 +158,6 @@ BytecodeCompiler::BytecodeCompiler(JSContext* cx,
     sourceObject(cx),
     scriptSource(nullptr),
     directives(options.strictOption),
-    startPosition(keepAtoms),
     script(cx)
 {
     MOZ_ASSERT(sourceBuffer.get());
@@ -229,11 +229,7 @@ BytecodeCompiler::createParser()
     parser.emplace(cx, alloc, options, sourceBuffer.get(), sourceBuffer.length(),
                    /* foldConstants = */ true, *usedNames, syntaxParser.ptrOr(nullptr), nullptr);
     parser->ss = scriptSource;
-    if (!parser->checkOptions())
-        return false;
-
-    parser->tokenStream.tell(&startPosition);
-    return true;
+    return parser->checkOptions();
 }
 
 bool
@@ -269,7 +265,8 @@ BytecodeCompiler::emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext*
 }
 
 bool
-BytecodeCompiler::handleParseFailure(const Directives& newDirectives)
+BytecodeCompiler::handleParseFailure(const Directives& newDirectives,
+                                     TokenStreamPosition& startPosition)
 {
     if (parser->hadAbortedSyntaxParse()) {
         // Hit some unrecoverable ambiguity during an inner syntax parse.
@@ -316,6 +313,8 @@ BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
     if (!createSourceAndParser())
         return nullptr;
 
+    TokenStreamPosition startPosition(keepAtoms, parser->tokenStream);
+
     if (!createScript())
         return nullptr;
 
@@ -350,7 +349,7 @@ BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
         }
 
         // Maybe we aborted a syntax parse. See if we can try again.
-        if (!handleParseFailure(directives))
+        if (!handleParseFailure(directives, startPosition))
             return nullptr;
 
         // Reset UsedNameTracker state before trying again.
@@ -452,6 +451,8 @@ BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
     if (!createSourceAndParser(parameterListEnd))
         return false;
 
+    TokenStreamPosition startPosition(keepAtoms, parser->tokenStream);
+
     // Speculatively parse using the default directives implied by the context.
     // If a directive is encountered (e.g., "use strict") that changes how the
     // function should have been parsed, we backup and reparse with the new set
@@ -462,7 +463,7 @@ BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
         Directives newDirectives = directives;
         fn = parser->standaloneFunction(fun, enclosingScope, parameterListEnd, generatorKind,
                                         asyncKind, directives, &newDirectives);
-        if (!fn && !handleParseFailure(newDirectives))
+        if (!fn && !handleParseFailure(newDirectives, startPosition))
             return false;
     } while (!fn);
 

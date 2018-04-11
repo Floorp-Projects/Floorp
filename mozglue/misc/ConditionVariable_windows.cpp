@@ -59,21 +59,35 @@ mozilla::detail::ConditionVariableImpl::wait(MutexImpl& lock)
   MOZ_RELEASE_ASSERT(r);
 }
 
-mozilla::detail::CVStatus
+mozilla::CVStatus
 mozilla::detail::ConditionVariableImpl::wait_for(MutexImpl& lock,
                                                  const mozilla::TimeDuration& rel_time)
 {
+  if (rel_time == mozilla::TimeDuration::Forever()) {
+    wait(lock);
+    return CVStatus::NoTimeout;
+  }
+
   CRITICAL_SECTION* cs = &lock.platformData()->criticalSection;
 
-  // Note that DWORD is unsigned, so we have to be careful to clamp at 0.
-  // If rel_time is Forever, then ToMilliseconds is +inf, which evaluates as
-  // greater than UINT32_MAX, resulting in the correct INFINITE wait.
+  // Note that DWORD is unsigned, so we have to be careful to clamp at 0. If
+  // rel_time is Forever, then ToMilliseconds is +inf, which evaluates as
+  // greater than UINT32_MAX, resulting in the correct INFINITE wait. We also
+  // don't want to round sub-millisecond waits to 0, as that wastes energy (see
+  // bug 1437167 comment 6), so we instead round submillisecond waits to 1ms.
   double msecd = rel_time.ToMilliseconds();
-  DWORD msec = msecd < 0.0
-               ? 0
-               : msecd > UINT32_MAX
-                 ? INFINITE
-                 : static_cast<DWORD>(msecd);
+  DWORD msec;
+  if (msecd < 0.0) {
+    msec = 0;
+  } else if (msecd > UINT32_MAX) {
+    msec = INFINITE;
+  } else {
+    msec = static_cast<DWORD>(msecd);
+    // Round submillisecond waits to 1ms.
+    if (msec == 0 && !rel_time.IsZero()) {
+      msec = 1;
+    }
+  }
 
   BOOL r = SleepConditionVariableCS(&platformData()->cv_, cs, msec);
   if (r)

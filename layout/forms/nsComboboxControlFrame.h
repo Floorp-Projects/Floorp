@@ -213,8 +213,8 @@ public:
   virtual nsIWidget* GetRollupWidget() override;
 
   //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresState** aState) override;
-  NS_IMETHOD RestoreState(nsPresState* aState) override;
+  mozilla::UniquePtr<mozilla::PresState> SaveState() override;
+  NS_IMETHOD RestoreState(mozilla::PresState* aState) override;
   NS_IMETHOD GenerateStateKey(nsIContent* aContent,
                               nsIDocument* aDocument,
                               nsACString& aKey) override;

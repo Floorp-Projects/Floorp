@@ -579,6 +579,9 @@ CompositorBridgeParent::RecvFlushRenderingAsync()
 mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvForcePresent()
 {
+  if (mWrBridge) {
+    mWrBridge->ScheduleGenerateFrame();
+  }
   // During the shutdown sequence mLayerManager may be null
   if (mLayerManager) {
     mLayerManager->ForcePresent();

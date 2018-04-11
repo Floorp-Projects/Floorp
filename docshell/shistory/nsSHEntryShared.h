@@ -73,7 +73,7 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
   nsCString mContentType;
 
-  nsCOMPtr<nsISupports> mCacheKey;
+  uint32_t mCacheKey;
   uint32_t mLastTouched;
 
   // These members aren't copied by nsSHEntryShared::Duplicate() because

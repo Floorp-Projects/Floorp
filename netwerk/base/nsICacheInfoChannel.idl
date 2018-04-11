@@ -51,23 +51,22 @@ interface nsICacheInfoChannel : nsISupports
   uint64_t getCacheEntryId();
 
   /**
-   * Set/get the cache key... uniquely identifies the data in the cache
-   * for this channel.  Holding a reference to this key does NOT prevent
-   * the cached data from being removed.
+   * Set/get the cache key. This integer uniquely identifies the data in
+   * the cache for this channel.
    *
    * A cache key retrieved from a particular instance of nsICacheInfoChannel
    * could be set on another instance of nsICacheInfoChannel provided the
-   * underlying implementations are compatible and provided the new 
+   * underlying implementations are compatible and provided the new
    * channel instance was created with the same URI.  The implementation of
    * nsICacheInfoChannel would be expected to use the cache entry identified
    * by the cache token.  Depending on the value of nsIRequest::loadFlags,
    * the cache entry may be validated, overwritten, or simply read.
    *
-   * The cache key may be NULL indicating that the URI of the channel is
-   * sufficient to locate the same cache entry.  Setting a NULL cache key
+   * The cache key may be 0 indicating that the URI of the channel is
+   * sufficient to locate the same cache entry.  Setting a 0 cache key
    * is likewise valid.
    */
-  attribute nsISupports cacheKey;
+  attribute unsigned long cacheKey;
 
   /**
    * Tells the channel to behave as if the LOAD_FROM_CACHE flag has been set,

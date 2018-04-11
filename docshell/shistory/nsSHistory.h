@@ -21,6 +21,7 @@
 #include "mozilla/UniquePtr.h"
 
 class nsIDocShell;
+class nsDocShell;
 class nsSHEnumerator;
 class nsSHistoryObserver;
 class nsISHEntry;
@@ -207,5 +208,11 @@ private:
   int32_t mIndex;
   nsSHistory* mSHistory;
 };
+
+inline nsISupports*
+ToSupports(nsSHistory* aObj)
+{
+  return static_cast<nsISHistory*>(aObj);
+}
 
 #endif /* nsSHistory */

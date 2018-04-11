@@ -33,8 +33,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
                                    "@mozilla.org/content/style-sheet-service;1",
                                    "nsIStyleSheetService");
 
-const global = Cu.getGlobalForObject(this);
-
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
@@ -114,77 +112,6 @@ class ExtensionAPI extends ExtensionUtils.EventEmitter {
     throw new Error("Not Implemented");
   }
 }
-
-var ExtensionAPIs = {
-  apis: new Map(),
-
-  load(apiName) {
-    let api = this.apis.get(apiName);
-    if (!api) {
-      return null;
-    }
-
-    if (api.loadPromise) {
-      return api.loadPromise;
-    }
-
-    let {script, schema} = api;
-
-    let addonId = `${apiName}@experiments.addons.mozilla.org`;
-    api.sandbox = Cu.Sandbox(global, {
-      wantXrays: false,
-      sandboxName: script,
-      addonId,
-      wantGlobalProperties: ["ChromeUtils"],
-      metadata: {addonID: addonId},
-    });
-
-    api.sandbox.ExtensionAPI = ExtensionAPI;
-
-    // Create a console getter which lazily provide a ConsoleAPI instance.
-    XPCOMUtils.defineLazyGetter(api.sandbox, "console", () => {
-      return new ConsoleAPI({prefix: addonId});
-    });
-
-    Services.scriptloader.loadSubScript(script, api.sandbox, "UTF-8");
-
-    api.loadPromise = Schemas.load(schema).then(() => {
-      let API = Cu.evalInSandbox("API", api.sandbox);
-      API.prototype.namespace = apiName;
-      return API;
-    });
-
-    return api.loadPromise;
-  },
-
-  unload(apiName) {
-    let api = this.apis.get(apiName);
-
-    let {schema} = api;
-
-    Schemas.unload(schema);
-    Cu.nukeSandbox(api.sandbox);
-
-    api.sandbox = null;
-    api.loadPromise = null;
-  },
-
-  register(namespace, schema, script) {
-    if (this.apis.has(namespace)) {
-      throw new Error(`API namespace already exists: ${namespace}`);
-    }
-
-    this.apis.set(namespace, {schema, script});
-  },
-
-  unregister(namespace) {
-    if (!this.apis.has(namespace)) {
-      throw new Error(`API namespace does not exist: ${namespace}`);
-    }
-
-    this.apis.delete(namespace);
-  },
-};
 
 /**
  * This class contains the information we have about an individual
@@ -1423,26 +1350,6 @@ class SchemaAPIManager extends EventEmitter {
     // Save the scope to avoid it being garbage collected.
     this._scriptScopes.push(scope);
   }
-
-  /**
-   * Mash together all the APIs from `apis` into `obj`.
-   *
-   * @param {BaseContext} context The context for which the API bindings are
-   *     generated.
-   * @param {Array} apis A list of objects, see `registerSchemaAPI`.
-   * @param {object} obj The destination of the API.
-   */
-  static generateAPIs(context, apis, obj) {
-    function hasPermission(perm) {
-      return context.extension.hasPermission(perm, true);
-    }
-    for (let api of apis) {
-      if (Schemas.checkPermissions(api.namespace, {hasPermission})) {
-        api = api.getAPI(context);
-        deepCopy(obj, api);
-      }
-    }
-  }
 }
 
 class LazyAPIManager extends SchemaAPIManager {
@@ -2132,7 +2039,6 @@ ExtensionCommon = {
   CanOfAPIs,
   EventManager,
   ExtensionAPI,
-  ExtensionAPIs,
   LocalAPIImplementation,
   LocaleData,
   NoCloneSpreadArgs,

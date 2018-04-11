@@ -168,7 +168,7 @@ interface nsISHEntry : nsISupports
     attribute unsigned long ID;
 
     /** attribute to set and get the cache key for the entry */
-    attribute nsISupports cacheKey;
+    attribute unsigned long cacheKey;
 
     /** attribute to indicate whether layoutHistoryState should be saved */
     attribute boolean saveLayoutStateFlag;
@@ -203,7 +203,7 @@ interface nsISHEntry : nsISupports
     [noscript] void create(in nsIURI URI, in AString title,
                            in nsIInputStream inputStream,
                            in nsILayoutHistoryState layoutHistoryState,
-                           in nsISupports cacheKey, in ACString contentType,
+                           in unsigned long cacheKey, in ACString contentType,
                            in nsIPrincipal triggeringPrincipal,
                            in nsIPrincipal principalToInherit,
                            in nsIDRef docshellID,
