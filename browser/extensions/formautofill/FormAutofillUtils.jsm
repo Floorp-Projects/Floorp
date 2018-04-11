@@ -833,22 +833,22 @@ this.FormAutofillUtils = {
    * @param {string} attributeName
    */
   localizeAttributeForElement(element, attributeName) {
+    let bundle = null;
     switch (attributeName) {
       case "data-localization": {
-        element.textContent =
-          this.stringBundle.GetStringFromName(element.getAttribute(attributeName));
-        element.removeAttribute(attributeName);
+        bundle = this.stringBundle;
         break;
       }
       case "data-localization-region": {
-        let regionCode = element.getAttribute(attributeName);
-        element.textContent = Services.intl.getRegionDisplayNames(undefined, [regionCode]);
-        element.removeAttribute(attributeName);
-        return;
+        bundle = this.regionsBundle;
+        break;
       }
       default:
         throw new Error("Unexpected attributeName");
     }
+
+    element.textContent = bundle.GetStringFromName(element.getAttribute(attributeName));
+    element.removeAttribute(attributeName);
   },
 
   /**
@@ -873,6 +873,10 @@ this.FormAutofillUtils.defineLazyLogGetter(this, EXPORTED_SYMBOLS[0]);
 
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function() {
   return Services.strings.createBundle("chrome://formautofill/locale/formautofill.properties");
+});
+
+XPCOMUtils.defineLazyGetter(FormAutofillUtils, "regionsBundle", function() {
+  return Services.strings.createBundle("chrome://global/locale/regionNames.properties");
 });
 
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "brandBundle", function() {
