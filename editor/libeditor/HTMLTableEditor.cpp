@@ -699,7 +699,11 @@ HTMLEditor::DeleteTable2(nsIDOMElement* aTable,
   rv = AppendNodeToSelectionAsRange(aTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return DeleteSelection(nsIEditor::eNext, nsIEditor::eStrip);
+  rv = DeleteSelectionAsAction(eNext, eStrip);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

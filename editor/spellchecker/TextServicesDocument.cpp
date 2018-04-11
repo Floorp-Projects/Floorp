@@ -1099,7 +1099,8 @@ TextServicesDocument::DeleteSelection()
   // Now delete the actual content!
   RefPtr<TextEditor> textEditor = mTextEditor;
   nsresult rv =
-    textEditor->DeleteSelection(nsIEditor::ePrevious, nsIEditor::eStrip);
+    textEditor->DeleteSelectionAsAction(nsIEditor::ePrevious,
+                                        nsIEditor::eStrip);
   if (NS_FAILED(rv)) {
     UNLOCK_DOC(this);
     return rv;

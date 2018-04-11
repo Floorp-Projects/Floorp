@@ -707,8 +707,7 @@ NS_IMETHODIMP
 EditorBase::DeleteSelection(EDirection aAction,
                             EStripWrappers aStripWrappers)
 {
-  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
-  return DeleteSelectionImpl(aAction, aStripWrappers);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -2493,7 +2492,7 @@ EditorBase::GetRootElement(nsIDOMElement** aRootElement)
  * All editor operations which alter the doc should be prefaced
  * with a call to StartOperation, naming the action and direction.
  */
-NS_IMETHODIMP
+nsresult
 EditorBase::StartOperation(EditAction opID,
                            nsIEditor::EDirection aDirection)
 {
@@ -2506,7 +2505,7 @@ EditorBase::StartOperation(EditAction opID,
  * All editor operations which alter the doc should be followed
  * with a call to EndOperation.
  */
-NS_IMETHODIMP
+nsresult
 EditorBase::EndOperation()
 {
   mAction = EditAction::none;
@@ -4262,126 +4261,6 @@ EditorBase::GetShouldTxnSetSelection()
   return mShouldTxnSetSelection;
 }
 
-NS_IMETHODIMP
-EditorBase::DeleteSelectionImpl(EDirection aAction,
-                                EStripWrappers aStripWrappers)
-{
-  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
-
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_STATE(selection);
-
-  RefPtr<EditAggregateTransaction> deleteSelectionTransaction;
-  nsCOMPtr<nsINode> deleteNode;
-  int32_t deleteCharOffset = 0, deleteCharLength = 0;
-  if (!selection->Collapsed() || aAction != eNone) {
-    deleteSelectionTransaction =
-      CreateTxnForDeleteSelection(aAction,
-                                  getter_AddRefs(deleteNode),
-                                  &deleteCharOffset,
-                                  &deleteCharLength);
-    if (NS_WARN_IF(!deleteSelectionTransaction)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  RefPtr<CharacterData> deleteCharData =
-    CharacterData::FromNodeOrNull(deleteNode);
-  AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
-
-  if (mRules && mRules->AsHTMLEditRules()) {
-    if (!deleteNode) {
-      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->WillDeleteSelection(selection);
-    } else if (!deleteCharData) {
-      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-      htmlEditRules->WillDeleteNode(deleteNode);
-    }
-  }
-
-  // Notify nsIEditActionListener::WillDelete[Selection|Text]
-  if (!mActionListeners.IsEmpty()) {
-    if (!deleteNode) {
-      AutoActionListenerArray listeners(mActionListeners);
-      for (auto& listener : listeners) {
-        listener->WillDeleteSelection(selection);
-      }
-    } else if (deleteCharData) {
-      AutoActionListenerArray listeners(mActionListeners);
-      for (auto& listener : listeners) {
-        listener->WillDeleteText(deleteCharData, deleteCharOffset, 1);
-      }
-    }
-  }
-
-  // Delete the specified amount
-  nsresult rv = DoTransaction(deleteSelectionTransaction);
-
-  if (mRules && mRules->AsHTMLEditRules() && deleteCharData) {
-    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-    htmlEditRules->DidDeleteText(deleteNode, deleteCharOffset, 1);
-  }
-
-  if (mTextServicesDocument && NS_SUCCEEDED(rv) &&
-      deleteNode && !deleteCharData) {
-    RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
-    textServicesDocument->DidDeleteNode(deleteNode);
-  }
-
-  // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
-  {
-    AutoActionListenerArray listeners(mActionListeners);
-    if (!deleteNode) {
-      for (auto& listener : mActionListeners) {
-        listener->DidDeleteSelection(selection);
-      }
-    } else if (deleteCharData) {
-      for (auto& listener : mActionListeners) {
-        listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, rv);
-      }
-    } else {
-      for (auto& listener : mActionListeners) {
-        listener->DidDeleteNode(deleteNode->AsDOMNode(), rv);
-      }
-    }
-  }
-
-  return rv;
-}
-
-already_AddRefed<Element>
-EditorBase::DeleteSelectionAndCreateElement(nsAtom& aTag)
-{
-  nsresult rv = DeleteSelectionAndPrepareToCreateNode();
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, nullptr);
-
-  EditorRawDOMPoint pointToInsert(selection->AnchorRef());
-  if (!pointToInsert.IsSet()) {
-    return nullptr;
-  }
-  RefPtr<Element> newElement = CreateNodeWithTransaction(aTag, pointToInsert);
-
-  // We want the selection to be just after the new node
-  EditorRawDOMPoint afterNewElement(newElement);
-  MOZ_ASSERT(afterNewElement.IsSetAndValid());
-  DebugOnly<bool> advanced = afterNewElement.AdvanceOffset();
-  NS_WARNING_ASSERTION(advanced,
-                       "Failed to move offset next to the new element");
-  ErrorResult error;
-  selection->Collapse(afterNewElement, error);
-  if (NS_WARN_IF(error.Failed())) {
-    // XXX Even if it succeeded to create new element, this returns error
-    //     when Selection.Collapse() fails something.  This could occur with
-    //     mutation observer or mutation event listener.
-    error.SuppressException();
-    return nullptr;
-  }
-  return newElement.forget();
-}
-
 TextComposition*
 EditorBase::GetComposition() const
 {
@@ -4401,79 +4280,6 @@ EditorBase::ShouldHandleIMEComposition() const
   // InsertText().  In this time, the text should be inserted as not a part
   // of the composition.
   return mComposition && mDidPostCreate;
-}
-
-nsresult
-EditorBase::DeleteSelectionAndPrepareToCreateNode()
-{
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  if (NS_WARN_IF(!selection->GetAnchorFocusRange())) {
-    return NS_OK;
-  }
-
-  if (!selection->GetAnchorFocusRange()->Collapsed()) {
-    nsresult rv = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    MOZ_ASSERT(selection->GetAnchorFocusRange() &&
-               selection->GetAnchorFocusRange()->Collapsed(),
-               "Selection not collapsed after delete");
-  }
-
-  // If the selection is a chardata node, split it if necessary and compute
-  // where to put the new node
-  EditorDOMPoint atAnchor(selection->AnchorRef());
-  if (NS_WARN_IF(!atAnchor.IsSet()) || !atAnchor.IsInDataNode()) {
-    return NS_OK;
-  }
-
-  if (NS_WARN_IF(!atAnchor.GetContainer()->GetParentNode())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (atAnchor.IsStartOfContainer()) {
-    EditorRawDOMPoint atAnchorContainer(atAnchor.GetContainer());
-    if (NS_WARN_IF(!atAnchorContainer.IsSetAndValid())) {
-      return NS_ERROR_FAILURE;
-    }
-    ErrorResult error;
-    selection->Collapse(atAnchorContainer, error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-    return NS_OK;
-  }
-
-  if (atAnchor.IsEndOfContainer()) {
-    EditorRawDOMPoint afterAnchorContainer(atAnchor.GetContainer());
-    if (NS_WARN_IF(!afterAnchorContainer.AdvanceOffset())) {
-      return NS_ERROR_FAILURE;
-    }
-    ErrorResult error;
-    selection->Collapse(afterAnchorContainer, error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-    return NS_OK;
-  }
-
-  ErrorResult error;
-  nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atAnchor, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  EditorRawDOMPoint atRightNode(atAnchor.GetContainer());
-  if (NS_WARN_IF(!atRightNode.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-  MOZ_ASSERT(atRightNode.IsSetAndValid());
-  selection->Collapse(atRightNode, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-  return NS_OK;
 }
 
 void
@@ -4895,26 +4701,6 @@ EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
     case NS_VK_SHIFT:
     case NS_VK_CONTROL:
     case NS_VK_ALT:
-      aKeyboardEvent->PreventDefault(); // consumed
-      return NS_OK;
-    case NS_VK_BACK:
-      if (aKeyboardEvent->IsControl() || aKeyboardEvent->IsAlt() ||
-          aKeyboardEvent->IsMeta() || aKeyboardEvent->IsOS()) {
-        return NS_OK;
-      }
-      DeleteSelection(nsIEditor::ePrevious, nsIEditor::eStrip);
-      aKeyboardEvent->PreventDefault(); // consumed
-      return NS_OK;
-    case NS_VK_DELETE:
-      // on certain platforms (such as windows) the shift key
-      // modifies what delete does (cmd_cut in this case).
-      // bailing here to allow the keybindings to do the cut.
-      if (aKeyboardEvent->IsShift() || aKeyboardEvent->IsControl() ||
-          aKeyboardEvent->IsAlt() || aKeyboardEvent->IsMeta() ||
-          aKeyboardEvent->IsOS()) {
-        return NS_OK;
-      }
-      DeleteSelection(nsIEditor::eNext, nsIEditor::eStrip);
       aKeyboardEvent->PreventDefault(); // consumed
       return NS_OK;
   }
