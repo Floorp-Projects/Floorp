@@ -193,5 +193,14 @@ processes_data = GENERATED_FILES['TelemetryProcessData.h']
 processes_data.script = 'gen_process_data.py'
 processes_data.inputs = processes_files
 
+# Add support for GeckoView: please note that building GeckoView
+# implies having an Android build. The packaging step decides
+# which files to include. As a consequence, we can simply only
+# include the GeckoView files on all Android builds.
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXTRA_JS_MODULES += [
+        'geckoview/GeckoViewTelemetryController.jsm',
+    ]
+
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Telemetry')
