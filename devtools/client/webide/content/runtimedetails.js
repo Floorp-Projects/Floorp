@@ -11,11 +11,11 @@ const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.p
 
 const UNRESTRICTED_HELP_URL = "https://developer.mozilla.org/docs/Tools/WebIDE/Running_and_debugging_apps#Unrestricted_app_debugging_%28including_certified_apps_main_process_etc.%29";
 
-window.addEventListener("load", function () {
+window.addEventListener("load", function() {
   document.querySelector("#close").onclick = CloseUI;
   document.querySelector("#devtools-check button").onclick = EnableCertApps;
   document.querySelector("#adb-check button").onclick = RootADB;
-  document.querySelector("#unrestricted-privileges").onclick = function () {
+  document.querySelector("#unrestricted-privileges").onclick = function() {
     window.parent.UI.openInBrowser(UNRESTRICTED_HELP_URL);
   };
   AppManager.on("app-manager-update", OnAppManagerUpdate);
@@ -23,7 +23,7 @@ window.addEventListener("load", function () {
   CheckLockState();
 }, {capture: true, once: true});
 
-window.addEventListener("unload", function () {
+window.addEventListener("unload", function() {
   AppManager.off("app-manager-update", OnAppManagerUpdate);
 }, {once: true});
 
@@ -88,7 +88,6 @@ function CheckLockState() {
 
   if (AppManager.connection &&
       AppManager.connection.status == Connection.Status.CONNECTED) {
-
     // ADB check
     if (AppManager.selectedRuntime.type === RuntimeTypes.USB) {
       let device = AppManager.selectedRuntime.device;
@@ -125,9 +124,7 @@ function CheckLockState() {
       devtoolsCheckResult.textContent = sNo;
       flipCertPerfAction.removeAttribute("hidden");
     }
-
   }
-
 }
 
 function EnableCertApps() {

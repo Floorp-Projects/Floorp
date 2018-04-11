@@ -6,7 +6,7 @@
  * like AudioBuffer and Float32Array in properties of AudioNodes.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, panel } = await initWebAudioEditor(BUFFER_AND_ARRAY_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;

@@ -9,7 +9,7 @@ const ProjectList = require("devtools/client/webide/modules/project-list");
 
 var projectList = new ProjectList(window, window.parent);
 
-window.addEventListener("load", function () {
+window.addEventListener("load", function() {
   document.getElementById("new-app").onclick = CreateNewApp;
   document.getElementById("hosted-app").onclick = ImportHostedApp;
   document.getElementById("packaged-app").onclick = ImportPackagedApp;
@@ -18,7 +18,7 @@ window.addEventListener("load", function () {
   projectList.updateCommands();
 }, {capture: true, once: true});
 
-window.addEventListener("unload", function () {
+window.addEventListener("unload", function() {
   projectList.destroy();
 }, {once: true});
 

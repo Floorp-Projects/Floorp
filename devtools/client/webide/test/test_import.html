@@ -17,7 +17,7 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
+        (async function() {
           let win = await openWebIDE();
           let docProject = getProjectDocument(win);
           let winProject = getProjectWindow(win);
@@ -58,7 +58,7 @@
           await waitForUpdate(win, "project-validated");
 
           project = win.AppManager.selectedProject;
-          ok(project.location.endsWith('manifest.webapp'), "The manifest was found and the project was updated");
+          ok(project.location.endsWith("manifest.webapp"), "The manifest was found and the project was updated");
 
           let panelNode = docProject.querySelector("#project-panel");
           let items = panelNode.querySelectorAll(".panel-item");
@@ -76,7 +76,7 @@
           ok(false, "Exception: " + e);
           SimpleTest.finish();
         });
-      }
+      };
     </script>
   </body>
 </html>

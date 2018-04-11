@@ -6,7 +6,7 @@
  * `setTargetAtTime`, which approaches its target to infinity.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
   let [_, [destNode, oscNode, gainNode]] = await Promise.all([
     front.setup({ reload: true }),

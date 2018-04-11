@@ -19,7 +19,7 @@ const TEMPLATES_URL = "devtools.webide.templatesURL";
 
 var gTemplateList = null;
 
-window.addEventListener("load", function () {
+window.addEventListener("load", function() {
   let projectNameNode = document.querySelector("#project-name");
   projectNameNode.addEventListener("input", canValidate, true);
   getTemplatesJSON();
@@ -154,7 +154,9 @@ function doOK() {
             project.manifest.name = projectName;
             AppManager.writeManifest(project).then(() => {
               AppManager.validateAndUpdateProject(project).then(
-                () => {window.close();}, bail);
+                () => {
+                  window.close();
+                }, bail);
             }, bail);
           } else {
             bail("Manifest not found");

@@ -5,7 +5,7 @@
  * Test AudioNode#source
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, front } = await initBackend(SIMPLE_NODES_URL);
   let [_, nodes] = await Promise.all([
     front.setup({ reload: true }),
@@ -17,10 +17,11 @@ add_task(async function () {
 
   actualTypes.forEach((type, i) => {
     let shouldBeSource = type === "AudioBufferSourceNode" || type === "OscillatorNode";
-    if (shouldBeSource)
+    if (shouldBeSource) {
       is(isSourceResult[i], true, type + "'s `source` is `true`");
-    else
+    } else {
       is(isSourceResult[i], false, type + "'s `source` is `false`");
+    }
   });
 
   await removeTab(target.tab);
