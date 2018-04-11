@@ -8,18 +8,12 @@ add_task(async function test_tab_background_color_property() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "theme": {
-        "images": {
-          "headerURL": "image1.png",
-        },
         "colors": {
           "accentcolor": ACCENT_COLOR,
           "textcolor": TEXT_COLOR,
           "tab_selected": TAB_BACKGROUND_COLOR,
         },
       },
-    },
-    files: {
-      "image1.png": BACKGROUND,
     },
   });
 
