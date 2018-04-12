@@ -5,6 +5,8 @@
 #include "nsSessionStoreUtils.h"
 
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventListenerBinding.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 
@@ -18,14 +20,14 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(DynamicFrameEventFilter)
 
-  explicit DynamicFrameEventFilter(nsIDOMEventListener* aListener)
+  explicit DynamicFrameEventFilter(EventListener* aListener)
     : mListener(aListener)
   { }
 
   NS_IMETHODIMP HandleEvent(nsIDOMEvent* aEvent) override
   {
     if (mListener && TargetInNonDynamicDocShell(aEvent)) {
-      mListener->HandleEvent(aEvent);
+      mListener->HandleEvent(*aEvent->InternalDOMEvent());
     }
 
     return NS_OK;
@@ -56,7 +58,7 @@ private:
     return NS_SUCCEEDED(rv) && !isDynamic;
   }
 
-  nsCOMPtr<nsIDOMEventListener> mListener;
+  RefPtr<EventListener> mListener;
 };
 
 NS_IMPL_CYCLE_COLLECTION(DynamicFrameEventFilter, mListener)
@@ -114,12 +116,19 @@ nsSessionStoreUtils::ForEachNonDynamicChildFrame(mozIDOMWindowProxy* aWindow,
 }
 
 NS_IMETHODIMP
-nsSessionStoreUtils::CreateDynamicFrameEventFilter(nsIDOMEventListener* aListener,
+nsSessionStoreUtils::CreateDynamicFrameEventFilter(JS::Handle<JS::Value> aListener,
+                                                   JSContext* aCx,
                                                    nsIDOMEventListener** aResult)
 {
-  NS_ENSURE_TRUE(aListener, NS_ERROR_INVALID_ARG);
+  if (NS_WARN_IF(!aListener.isObject())) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  nsCOMPtr<nsIDOMEventListener> filter(new DynamicFrameEventFilter(aListener));
+  JS::Rooted<JSObject*> obj(aCx, &aListener.toObject());
+  RefPtr<EventListener> listener =
+    new EventListener(aCx, obj, GetIncumbentGlobal());
+
+  nsCOMPtr<nsIDOMEventListener> filter(new DynamicFrameEventFilter(listener));
   filter.forget(aResult);
 
   return NS_OK;
