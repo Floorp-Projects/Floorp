@@ -1008,6 +1008,19 @@ TabActor.prototype = {
   },
 
   /**
+   * Ensure that CSS error reporting is enabled.
+   */
+  ensureCSSErrorReportingEnabled(request) {
+    if (!this.docShell || this.docShell.cssErrorReportingEnabled) {
+      return {};
+    }
+
+    this.docShell.cssErrorReportingEnabled = true;
+    // FIXME(emilio): Reparse sheets.
+    return {};
+  },
+
+  /**
    * Handle logic to enable/disable JS/cache/Service Worker testing.
    */
   _toggleDevToolsSettings(options) {
@@ -1430,6 +1443,7 @@ TabActor.prototype.requestTypes = {
   "reload": TabActor.prototype.onReload,
   "navigateTo": TabActor.prototype.onNavigateTo,
   "reconfigure": TabActor.prototype.onReconfigure,
+  "ensureCSSErrorReportingEnabled": TabActor.prototype.ensureCSSErrorReportingEnabled,
   "switchToFrame": TabActor.prototype.onSwitchToFrame,
   "listFrames": TabActor.prototype.onListFrames,
   "listWorkers": TabActor.prototype.onListWorkers,
