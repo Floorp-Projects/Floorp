@@ -53,9 +53,11 @@ class GeckoViewModule {
       }, "GeckoView:Unregister"
     );
 
-    this.onInit();
-    this.onSettingsUpdate();
+    this.onInitBrowser();
   }
+
+  // Override to initialize the browser before it is bound to the window.
+  onInitBrowser() {}
 
   // Override to initialize module.
   onInit() {}
