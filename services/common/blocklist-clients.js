@@ -6,10 +6,6 @@
 
 var EXPORTED_SYMBOLS = [
   "initialize",
-  "AddonBlocklistClient",
-  "PluginBlocklistClient",
-  "GfxBlocklistClient",
-  "PinningBlocklistClient",
 ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -21,16 +17,21 @@ ChromeUtils.defineModuleGetter(this, "RemoteSettings",
 const PREF_BLOCKLIST_BUCKET                  = "services.blocklist.bucket";
 const PREF_BLOCKLIST_ONECRL_COLLECTION       = "services.blocklist.onecrl.collection";
 const PREF_BLOCKLIST_ONECRL_CHECKED_SECONDS  = "services.blocklist.onecrl.checked";
+const PREF_BLOCKLIST_ONECRL_SIGNER           = "services.blocklist.onecrl.signer";
 const PREF_BLOCKLIST_ADDONS_COLLECTION       = "services.blocklist.addons.collection";
 const PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS  = "services.blocklist.addons.checked";
+const PREF_BLOCKLIST_ADDONS_SIGNER           = "services.blocklist.addons.signer";
 const PREF_BLOCKLIST_PLUGINS_COLLECTION      = "services.blocklist.plugins.collection";
 const PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS = "services.blocklist.plugins.checked";
+const PREF_BLOCKLIST_PLUGINS_SIGNER          = "services.blocklist.plugins.signer";
 const PREF_BLOCKLIST_PINNING_ENABLED         = "services.blocklist.pinning.enabled";
 const PREF_BLOCKLIST_PINNING_BUCKET          = "services.blocklist.pinning.bucket";
 const PREF_BLOCKLIST_PINNING_COLLECTION      = "services.blocklist.pinning.collection";
 const PREF_BLOCKLIST_PINNING_CHECKED_SECONDS = "services.blocklist.pinning.checked";
+const PREF_BLOCKLIST_PINNING_SIGNER          = "services.blocklist.pinning.signer";
 const PREF_BLOCKLIST_GFX_COLLECTION          = "services.blocklist.gfx.collection";
 const PREF_BLOCKLIST_GFX_CHECKED_SECONDS     = "services.blocklist.gfx.checked";
+const PREF_BLOCKLIST_GFX_SIGNER              = "services.blocklist.gfx.signer";
 
 /**
  * Revoke the appropriate certificates based on the records from the blocklist.
@@ -136,35 +137,35 @@ function initialize() {
   OneCRLBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_ONECRL_CHECKED_SECONDS,
-    signerName: "onecrl.content-signature.mozilla.org",
+    signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_SIGNER),
   });
   OneCRLBlocklistClient.on("change", updateCertBlocklist);
 
   AddonBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS,
-    signerName: "",  // disabled
+    signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS_SIGNER),
   });
   AddonBlocklistClient.on("change", updateJSONBlocklist.bind(null, AddonBlocklistClient));
 
   PluginBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS,
-    signerName: "",  // disabled
+    signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_PLUGINS_SIGNER),
   });
   PluginBlocklistClient.on("change", updateJSONBlocklist.bind(null, PluginBlocklistClient));
 
   GfxBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_GFX_CHECKED_SECONDS,
-    signerName: "",  // disabled
+    signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_GFX_SIGNER),
   });
   GfxBlocklistClient.on("change", updateJSONBlocklist.bind(null, GfxBlocklistClient));
 
   PinningBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_COLLECTION), {
     bucketName: Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_BUCKET),
     lastCheckTimePref: PREF_BLOCKLIST_PINNING_CHECKED_SECONDS,
-    signerName: "pinning-preload.content-signature.mozilla.org",
+    signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_PINNING_SIGNER),
   });
   PinningBlocklistClient.on("change", updatePinningList);
 }
