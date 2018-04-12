@@ -21,7 +21,6 @@ add_task(async function() {
   let {
     getSelectedRequest,
     getSortedRequests,
-    getRequestById
   } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
@@ -32,13 +31,13 @@ add_task(async function() {
   let origItemId = getSortedRequests(store.getState()).get(0).id;
 
   store.dispatch(Actions.selectRequest(origItemId));
-  await waitForRequestHeaders(origItemId);
+  await waitForRequestData(store, ["requestHeaders", "requestPostData"], origItemId);
 
   let origItem = getSortedRequests(store.getState()).get(0);
 
   // add a new custom request cloned from selected request
-  store.dispatch(Actions.cloneSelectedRequest());
 
+  store.dispatch(Actions.cloneSelectedRequest());
   await testCustomForm(origItem);
 
   let customItem = getSelectedRequest(store.getState());
@@ -80,13 +79,6 @@ add_task(async function() {
   function testCustomItem(item, orig) {
     is(item.method, orig.method, "item is showing the same method as original request");
     is(item.url, orig.url, "item is showing the same URL as original request");
-  }
-
-  function waitForRequestHeaders(id) {
-    return waitUntil(() => {
-      const item = getRequestById(store.getState(), id);
-      return item.requestHeaders && item.requestPostData;
-    });
   }
 
   function testCustomItemChanged(item, orig) {
