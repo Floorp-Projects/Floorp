@@ -10,18 +10,33 @@ from __future__ import absolute_import, print_function, unicode_literals
 import subprocess
 
 
-def match_utc(params, hour=None, minute=None):
-    """ Return True if params['time'] matches the given hour and minute.
-    If hour is not specified, any hour will match.  If minute is not
-    specified, then every multiple of fifteen minutes will match.  Times
-    not an even multiple of fifteen minutes will result in an exception
-    (since they would never run)."""
-    if minute is not None and minute % 15 != 0:
+def match_utc(params, sched):
+    """Return True if params['time'] matches the given schedule.
+
+    If minute is not specified, then every multiple of fifteen minutes will match.
+    Times not an even multiple of fifteen minutes will result in an exception
+    (since they would never run).
+    If hour is not specified, any hour will match. Similar for day and weekday.
+    """
+    if sched.get('minute') and sched.get('minute') % 15 != 0:
         raise Exception("cron jobs only run on multiples of 15 minutes past the hour")
-    if hour is not None and params['time'].hour != hour:
+
+    if sched.get('minute') is not None and sched.get('minute') != params['time'].minute:
         return False
-    if minute is not None and params['time'].minute != minute:
+
+    if sched.get('hour') is not None and sched.get('hour') != params['time'].hour:
         return False
+
+    if sched.get('day') is not None and sched.get('day') != params['time'].day:
+        return False
+
+    if isinstance(sched.get('weekday'), str) or isinstance(sched.get('weekday'), unicode):
+        if sched.get('weekday', str()).lower() != params['time'].strftime('%A').lower():
+            return False
+    elif sched.get('weekday') is not None:
+        # don't accept other values.
+        return False
+
     return True
 
 
