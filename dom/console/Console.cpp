@@ -22,6 +22,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WorkletGlobalScope.h"
+#include "mozilla/dom/WorkletThread.h"
 #include "mozilla/Maybe.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDocument.h"
@@ -2421,15 +2422,6 @@ Console::GetConsole(const GlobalObject& aGlobal)
 /* static */ already_AddRefed<Console>
 Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  // Worklet
-  if (NS_IsMainThread()) {
-    nsCOMPtr<WorkletGlobalScope> workletScope =
-      do_QueryInterface(aGlobal.GetAsSupports());
-    if (workletScope) {
-      return workletScope->GetConsole(aGlobal.Context(), aRv);
-    }
-  }
-
   // Window
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> innerWindow =
@@ -2448,6 +2440,14 @@ Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
 
     nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(innerWindow);
     return window->GetConsole(aGlobal.Context(), aRv);
+  }
+
+  // Worklet
+  nsCOMPtr<WorkletGlobalScope> workletScope =
+    do_QueryInterface(aGlobal.GetAsSupports());
+  if (workletScope) {
+    WorkletThread::AssertIsOnWorkletThread();
+    return workletScope->GetConsole(aGlobal.Context(), aRv);
   }
 
   // Workers
