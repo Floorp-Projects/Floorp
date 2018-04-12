@@ -94,6 +94,7 @@
 #include "xpcpublic.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "nsIConsoleService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2259,18 +2260,28 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
     nsresult rv;
 
     // XUL overlays are in the process of being removed. In a Firefox build,
-    // loading an overlay will cause a crash as they are no longer allowed.
+    // loading an overlay will no longer work and display an error in the
+    // console. In automation, doing so will cause a crash.
     // However, overlays are allowed in other applications (e.g. Thunderbird)
     // while they work on removing them. See bug 1448162.
-#ifdef MOZ_CRASH_XUL_OVERLAYS
+#ifdef MOZ_BREAK_XUL_OVERLAYS
     nsCString docSpec;
     mCurrentPrototype->GetURI()->GetSpec(docSpec);
     nsCString overlaySpec;
     aURI->GetSpec(overlaySpec);
-    printf("Attempt to load overlay %s into %s\n",
-           overlaySpec.get(),
-           docSpec.get());
-    MOZ_CRASH("Attempt to load overlay");
+    nsPrintfCString msg("Attempt to load overlay %s into %s\n",
+                        overlaySpec.get(),
+                        docSpec.get());
+    nsCOMPtr<nsIConsoleService> consoleSvc =
+        do_GetService("@mozilla.org/consoleservice;1");
+    if (consoleSvc) {
+        consoleSvc->LogStringMessage(NS_ConvertASCIItoUTF16(msg).get());
+    }
+    printf("%s", msg.get());
+    if (xpc::IsInAutomation()) {
+        MOZ_CRASH("Attempt to load overlay.");
+    }
+    return NS_ERROR_NOT_AVAILABLE;
 #endif
 
     *aShouldReturn = false;
