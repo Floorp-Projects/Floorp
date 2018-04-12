@@ -40,7 +40,9 @@ NS_INTERFACE_MAP_END_INHERITING(mozilla::net::nsSimpleURI)
 NS_IMETHODIMP
 nsHostObjectURI::GetPrincipal(nsIPrincipal** aPrincipal)
 {
-  NS_IF_ADDREF(*aPrincipal = mPrincipal);
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIPrincipal> principal = mPrincipal.get();
+  principal.forget(aPrincipal);
 
   return NS_OK;
 }
@@ -77,7 +79,8 @@ nsHostObjectURI::ReadPrivate(nsIObjectInputStream *aStream)
   rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPrincipal = do_QueryInterface(supports, &rv);
+  nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(supports, &rv);
+  mPrincipal = new nsMainThreadPtrHolder<nsIPrincipal>("nsIPrincipal", principal, false);
   return rv;
 }
 
@@ -87,7 +90,8 @@ nsHostObjectURI::Write(nsIObjectOutputStream* aStream)
   nsresult rv = mozilla::net::nsSimpleURI::Write(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_WriteOptionalCompoundObject(aStream, mPrincipal,
+  nsCOMPtr<nsIPrincipal> principal = mPrincipal.get();
+  return NS_WriteOptionalCompoundObject(aStream, principal,
                                         NS_GET_IID(nsIPrincipal),
                                         true);
 }
@@ -104,9 +108,10 @@ nsHostObjectURI::Serialize(mozilla::ipc::URIParams& aParams)
   mozilla::net::nsSimpleURI::Serialize(simpleParams);
   hostParams.simpleParams() = simpleParams;
 
-  if (mPrincipal) {
+  nsCOMPtr<nsIPrincipal> principal = mPrincipal.get();
+  if (principal) {
     PrincipalInfo info;
-    nsresult rv = PrincipalToPrincipalInfo(mPrincipal, &info);
+    nsresult rv = PrincipalToPrincipalInfo(principal, &info);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
@@ -139,10 +144,11 @@ nsHostObjectURI::Deserialize(const mozilla::ipc::URIParams& aParams)
     return true;
   }
 
-  mPrincipal = PrincipalInfoToPrincipal(hostParams.principal().get_PrincipalInfo());
-  if (!mPrincipal) {
+  nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(hostParams.principal().get_PrincipalInfo());
+  if (!principal) {
     return false;
   }
+  mPrincipal = new nsMainThreadPtrHolder<nsIPrincipal>("nsIPrincipal", principal, false);
 
   return true;
 }
