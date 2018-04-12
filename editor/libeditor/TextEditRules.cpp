@@ -1680,8 +1680,9 @@ TextEditRules::CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
   // give it special moz attr
   if (aCreateMozBR) {
     // XXX Why do we need to set this attribute with transaction?
-    nsresult rv = textEditor->SetAttribute(brElement, nsGkAtoms::type,
-                                           NS_LITERAL_STRING("_moz"));
+    nsresult rv =
+      textEditor->SetAttributeWithTransaction(*brElement, *nsGkAtoms::type,
+                                              NS_LITERAL_STRING("_moz"));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       // XXX Don't we need to remove the new <br> element from the DOM tree
       //     in this case?

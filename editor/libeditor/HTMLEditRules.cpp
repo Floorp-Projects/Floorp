@@ -3807,14 +3807,19 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
         }
       }
       nsCOMPtr<Element> curElement = do_QueryInterface(curNode);
+      if (NS_WARN_IF(!curElement)) {
+        return NS_ERROR_FAILURE;
+      }
       if (aBulletType && !aBulletType->IsEmpty()) {
-        rv = htmlEditor->SetAttribute(curElement, nsGkAtoms::type,
-                                      *aBulletType);
+        rv = htmlEditor->SetAttributeWithTransaction(*curElement,
+                                                     *nsGkAtoms::type,
+                                                     *aBulletType);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       } else {
-        rv = htmlEditor->RemoveAttribute(curElement, nsGkAtoms::type);
+        rv = htmlEditor->RemoveAttributeWithTransaction(*curElement,
+                                                        *nsGkAtoms::type);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -7301,7 +7306,8 @@ HTMLEditRules::SplitParagraph(
   }
 
   // Remove ID attribute on the paragraph from the existing right node.
-  rv = htmlEditor->RemoveAttribute(aParentDivOrP.AsElement(), nsGkAtoms::id);
+  rv = htmlEditor->RemoveAttributeWithTransaction(*aParentDivOrP.AsElement(),
+                                                  *nsGkAtoms::id);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We need to ensure to both paragraphs visible even if they are empty.
@@ -9265,9 +9271,12 @@ HTMLEditRules::RemoveAlignment(nsINode& aNode,
       if (HTMLEditUtils::SupportsAlignAttr(*child)) {
         // remove the ALIGN attribute if this element can have it
         NS_ENSURE_STATE(mHTMLEditor);
-        nsresult rv = mHTMLEditor->RemoveAttribute(child->AsElement(),
-                                                   nsGkAtoms::align);
-        NS_ENSURE_SUCCESS(rv, rv);
+        nsresult rv =
+          mHTMLEditor->RemoveAttributeWithTransaction(*child->AsElement(),
+                                                      *nsGkAtoms::align);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
       if (useCSS) {
         if (child->IsAnyOfHTMLElements(nsGkAtoms::table, nsGkAtoms::hr)) {

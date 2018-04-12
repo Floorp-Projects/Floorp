@@ -1199,22 +1199,23 @@ EditorBase::SetAttribute(nsIDOMElement* aElement,
                          const nsAString& aValue)
 {
   if (NS_WARN_IF(aAttribute.IsEmpty())) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
   }
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!element)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-
-  return SetAttribute(element, attribute, aValue);
+  return SetAttributeWithTransaction(*element, *attribute, aValue);
 }
 
 nsresult
-EditorBase::SetAttribute(Element* aElement,
-                         nsAtom* aAttribute,
-                         const nsAString& aValue)
+EditorBase::SetAttributeWithTransaction(Element& aElement,
+                                        nsAtom& aAttribute,
+                                        const nsAString& aValue)
 {
   RefPtr<ChangeAttributeTransaction> transaction =
-    ChangeAttributeTransaction::Create(*aElement, *aAttribute, aValue);
+    ChangeAttributeTransaction::Create(aElement, aAttribute, aValue);
   return DoTransaction(transaction);
 }
 
@@ -1244,21 +1245,25 @@ EditorBase::RemoveAttribute(nsIDOMElement* aElement,
                             const nsAString& aAttribute)
 {
   if (NS_WARN_IF(aAttribute.IsEmpty())) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
   }
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!element)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-
-  return RemoveAttribute(element, attribute);
+  return RemoveAttributeWithTransaction(*element, *attribute);
 }
 
 nsresult
-EditorBase::RemoveAttribute(Element* aElement,
-                            nsAtom* aAttribute)
+EditorBase::RemoveAttributeWithTransaction(Element& aElement,
+                                           nsAtom& aAttribute)
 {
+  // XXX If aElement doesn't have aAttribute, shouldn't we stop creating
+  //     the transaction?  Otherwise, there will be added a transaction
+  //     which does nothing at doing undo/redo.
   RefPtr<ChangeAttributeTransaction> transaction =
-    ChangeAttributeTransaction::CreateToRemove(*aElement, *aAttribute);
+    ChangeAttributeTransaction::CreateToRemove(aElement, aAttribute);
   return DoTransaction(transaction);
 }
 
@@ -2525,22 +2530,24 @@ EditorBase::CloneAttribute(const nsAString& aAttribute,
 
   nsCOMPtr<Element> destElement = do_QueryInterface(aDestNode);
   nsCOMPtr<Element> sourceElement = do_QueryInterface(aSourceNode);
-  NS_ENSURE_TRUE(destElement && sourceElement, NS_ERROR_NO_INTERFACE);
+  if (NS_WARN_IF(!destElement) || NS_WARN_IF(!sourceElement)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   RefPtr<nsAtom> attribute = NS_Atomize(aAttribute);
-  return CloneAttribute(attribute, destElement, sourceElement);
+  return CloneAttributeWithTransaction(*attribute, *destElement, *sourceElement);
 }
 
 nsresult
-EditorBase::CloneAttribute(nsAtom* aAttribute,
-                           Element* aDestElement,
-                           Element* aSourceElement)
+EditorBase::CloneAttributeWithTransaction(nsAtom& aAttribute,
+                                          Element& aDestElement,
+                                          Element& aSourceElement)
 {
   nsAutoString attrValue;
-  if (aSourceElement->GetAttr(kNameSpaceID_None, aAttribute, attrValue)) {
-    return SetAttribute(aDestElement, aAttribute, attrValue);
+  if (aSourceElement.GetAttr(kNameSpaceID_None, &aAttribute, attrValue)) {
+    return SetAttributeWithTransaction(aDestElement, aAttribute, attrValue);
   }
-  return RemoveAttribute(aDestElement, aAttribute);
+  return RemoveAttributeWithTransaction(aDestElement, aAttribute);
 }
 
 /**
@@ -2579,7 +2586,7 @@ EditorBase::CloneAttributes(Element* aDest,
   RefPtr<nsDOMAttributeMap> destAttributes = aDest->Attributes();
   while (RefPtr<Attr> attr = destAttributes->Item(0)) {
     if (destInBody) {
-      RemoveAttribute(aDest, attr->NodeInfo()->NameAtom());
+      RemoveAttributeWithTransaction(*aDest, *attr->NodeInfo()->NameAtom());
     } else {
       aDest->UnsetAttr(kNameSpaceID_None, attr->NodeInfo()->NameAtom(), true);
     }

@@ -455,14 +455,45 @@ public:
                     const EditorRawDOMPoint& aPointToInsert,
                     ErrorResult& aError);
 
-  nsresult CloneAttribute(nsAtom* aAttribute, Element* aDestElement,
-                          Element* aSourceElement);
-  nsresult RemoveAttribute(Element* aElement, nsAtom* aAttribute);
+  /**
+   * CloneAttributeWithTransaction() copies aAttribute of aSourceElement to
+   * aDestElement.  If aSourceElement doesn't have aAttribute, this removes
+   * aAttribute from aDestElement.
+   *
+   * @param aAttribute          Attribute name to be cloned.
+   * @param aDestElement        Element node which will be set aAttribute or
+   *                            whose aAttribute will be removed.
+   * @param aSourceElement      Element node which provides the value of
+   *                            aAttribute in aDestElement.
+   */
+  nsresult CloneAttributeWithTransaction(nsAtom& aAttribute,
+                                         Element& aDestElement,
+                                         Element& aSourceElement);
+
+  /**
+   * RemoveAttributeWithTransaction() removes aAttribute from aElement.
+   *
+   * @param aElement        Element node which will lose aAttribute.
+   * @param aAttribute      Attribute name to be removed from aElement.
+   */
+  nsresult RemoveAttributeWithTransaction(Element& aElement,
+                                          nsAtom& aAttribute);
+
   virtual nsresult RemoveAttributeOrEquivalent(Element* aElement,
                                                nsAtom* aAttribute,
                                                bool aSuppressTransaction) = 0;
-  nsresult SetAttribute(Element* aElement, nsAtom* aAttribute,
-                        const nsAString& aValue);
+
+  /**
+   * SetAttributeWithTransaction() sets aAttribute of aElement to aValue.
+   *
+   * @param aElement        Element node which will have aAttribute.
+   * @param aAttribute      Attribute name to be set.
+   * @param aValue          Attribute value be set to aAttribute.
+   */
+  nsresult SetAttributeWithTransaction(Element& aElement,
+                                       nsAtom& aAttribute,
+                                       const nsAString& aValue);
+
   virtual nsresult SetAttributeOrEquivalent(Element* aElement,
                                             nsAtom* aAttribute,
                                             const nsAString& aValue,
