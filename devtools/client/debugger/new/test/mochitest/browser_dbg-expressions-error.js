@@ -10,6 +10,7 @@
  */
 
 const expressionSelectors = {
+  plusIcon: ".watch-expressions-pane button.plus",
   input: "input.input-expression"
 };
 
@@ -22,6 +23,7 @@ function getValue(dbg, index) {
 }
 
 async function addExpression(dbg, input) {
+  findElementWithSelector(dbg, expressionSelectors.plusIcon).click();
   const evaluation = waitForDispatch(dbg, "EVALUATE_EXPRESSION");
   findElementWithSelector(dbg, expressionSelectors.input).focus();
   type(dbg, input);
