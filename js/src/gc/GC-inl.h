@@ -207,7 +207,8 @@ class ZoneCellIter<TenuredCell> {
 
     void init(JS::Zone* zone, AllocKind kind) {
         MOZ_ASSERT_IF(IsNurseryAllocable(kind),
-                      zone->isAtomsZone() || zone->group()->nursery().isEmpty());
+                      (zone->isAtomsZone() ||
+                       zone->runtimeFromActiveCooperatingThread()->gc.nursery().isEmpty()));
         initForTenuredIteration(zone, kind);
     }
 

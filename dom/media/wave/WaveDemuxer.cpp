@@ -12,7 +12,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
 #include "BufferReader.h"
-#include "nsAutoPtr.h"
 #include "VideoUtils.h"
 #include "TimeUnits.h"
 
@@ -515,7 +514,7 @@ WAVTrackDemuxer::GetNextChunk(const MediaByteRange& aRange)
   RefPtr<MediaRawData> datachunk = new MediaRawData();
   datachunk->mOffset = aRange.mStart;
 
-  nsAutoPtr<MediaRawDataWriter> chunkWriter(datachunk->CreateWriter());
+  UniquePtr<MediaRawDataWriter> chunkWriter(datachunk->CreateWriter());
   if (!chunkWriter->SetSize(aRange.Length())) {
     return nullptr;
   }
@@ -559,7 +558,7 @@ WAVTrackDemuxer::GetFileHeader(const MediaByteRange& aRange)
   RefPtr<MediaRawData> fileHeader = new MediaRawData();
   fileHeader->mOffset = aRange.mStart;
 
-  nsAutoPtr<MediaRawDataWriter> headerWriter(fileHeader->CreateWriter());
+  UniquePtr<MediaRawDataWriter> headerWriter(fileHeader->CreateWriter());
   if (!headerWriter->SetSize(aRange.Length())) {
     return nullptr;
   }
