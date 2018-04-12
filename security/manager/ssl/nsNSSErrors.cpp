@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsNSSComponent.h"
+#include "pkix/pkixnss.h"
 #include "secerr.h"
 #include "sslerr.h"
 
