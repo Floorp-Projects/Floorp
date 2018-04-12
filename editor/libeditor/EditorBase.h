@@ -365,13 +365,66 @@ public:
   InsertNodeWithTransaction(nsIContent& aContentToInsert,
                             const EditorDOMPointBase<PT, CT>& aPointToInsert);
 
-  enum ECloneAttributes { eDontCloneAttributes, eCloneAttributes };
-  already_AddRefed<Element> ReplaceContainer(Element* aOldContainer,
-                                             nsAtom* aNodeType,
-                                             nsAtom* aAttribute = nullptr,
-                                             const nsAString* aValue = nullptr,
-                                             ECloneAttributes aCloneAttributes
-                                             = eDontCloneAttributes);
+  /**
+   * ReplaceContainerWithTransaction() creates new element whose name is
+   * aTagName, moves all children in aOldContainer to the new element, then,
+   * removes aOldContainer from the DOM tree.
+   *
+   * @param aOldContainer       The element node which should be replaced
+   *                            with new element.
+   * @param aTagName            The name of new element node.
+   */
+  already_AddRefed<Element>
+  ReplaceContainerWithTransaction(Element& aOldContainer,
+                                  nsAtom& aTagName)
+  {
+    return ReplaceContainerWithTransactionInternal(aOldContainer, aTagName,
+                                                   *nsGkAtoms::_empty,
+                                                   EmptyString(), false);
+  }
+
+  /**
+   * ReplaceContainerAndCloneAttributesWithTransaction() creates new element
+   * whose name is aTagName, copies all attributes from aOldContainer to the
+   * new element, moves all children in aOldContainer to the new element, then,
+   * removes aOldContainer from the DOM tree.
+   *
+   * @param aOldContainer       The element node which should be replaced
+   *                            with new element.
+   * @param aTagName            The name of new element node.
+   */
+  already_AddRefed<Element>
+  ReplaceContainerAndCloneAttributesWithTransaction(Element& aOldContainer,
+                                                    nsAtom& aTagName)
+  {
+    return ReplaceContainerWithTransactionInternal(aOldContainer, aTagName,
+                                                   *nsGkAtoms::_empty,
+                                                   EmptyString(), true);
+  }
+
+  /**
+   * ReplaceContainerWithTransaction() creates new element whose name is
+   * aTagName, sets aAttributes of the new element to aAttributeValue, moves
+   * all children in aOldContainer to the new element, then, removes
+   * aOldContainer from the DOM tree.
+   *
+   * @param aOldContainer       The element node which should be replaced
+   *                            with new element.
+   * @param aTagName            The name of new element node.
+   * @param aAttribute          Attribute name to be set to the new element.
+   * @param aAttributeValue     Attribute value to be set to aAttribute.
+   */
+  already_AddRefed<Element>
+  ReplaceContainerWithTransaction(Element& aOldContainer,
+                                  nsAtom& aTagName,
+                                  nsAtom& aAttribute,
+                                  const nsAString& aAttributeValue)
+  {
+    return ReplaceContainerWithTransactionInternal(aOldContainer, aTagName,
+                                                   aAttribute,
+                                                   aAttributeValue, false);
+  }
+
   void CloneAttributes(Element* aDest, Element* aSource);
 
   nsresult RemoveContainer(nsIContent* aNode);
@@ -628,6 +681,29 @@ protected:
    */
   nsresult DeleteTextWithTransaction(dom::CharacterData& aCharacterData,
                                      uint32_t aOffset, uint32_t aLength);
+
+  /**
+   * ReplaceContainerWithTransactionInternal() is implementation of
+   * ReplaceContainerWithTransaction() and
+   * ReplaceContainerAndCloneAttributesWithTransaction().
+   *
+   * @param aOldContainer       The element which will be replaced with new
+   *                            element.
+   * @param aTagName            The name of new element node.
+   * @param aAttribute          Attribute name which will be set to the new
+   *                            element.  This will be ignored if
+   *                            aCloneAllAttributes is set to true.
+   * @param aAttributeValue     Attribute value which will be set to
+   *                            aAttribute.
+   * @param aCloneAllAttributes If true, all attributes of aOldContainer will
+   *                            be copied to the new element.
+   */
+  already_AddRefed<Element>
+  ReplaceContainerWithTransactionInternal(Element& aElement,
+                                          nsAtom& aTagName,
+                                          nsAtom& aAttribute,
+                                          const nsAString& aAttributeValue,
+                                          bool aCloneAllAttributes);
 
   /**
    * Called after a transaction is done successfully.

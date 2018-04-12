@@ -1653,52 +1653,47 @@ EditorBase::DeleteNodeWithTransaction(nsINode& aNode)
   return NS_OK;
 }
 
-/**
- * ReplaceContainer() replaces inNode with a new node (outNode) which is
- * constructed to be of type aNodeType.  Put inNodes children into outNode.
- * Callers responsibility to make sure inNode's children can go in outNode.
- */
 already_AddRefed<Element>
-EditorBase::ReplaceContainer(Element* aOldContainer,
-                             nsAtom* aNodeType,
-                             nsAtom* aAttribute,
-                             const nsAString* aValue,
-                             ECloneAttributes aCloneAttributes)
+EditorBase::ReplaceContainerWithTransactionInternal(
+              Element& aOldContainer,
+              nsAtom& aTagName,
+              nsAtom& aAttribute,
+              const nsAString& aAttributeValue,
+              bool aCloneAllAttributes)
 {
-  MOZ_ASSERT(aOldContainer && aNodeType);
-
-  EditorDOMPoint atOldContainer(aOldContainer);
+  EditorDOMPoint atOldContainer(&aOldContainer);
   if (NS_WARN_IF(!atOldContainer.IsSet())) {
     return nullptr;
   }
 
-  RefPtr<Element> newContainer = CreateHTMLContent(aNodeType);
+  RefPtr<Element> newContainer = CreateHTMLContent(&aTagName);
   if (NS_WARN_IF(!newContainer)) {
     return nullptr;
   }
 
-  // Set attribute if needed.
-  if (aAttribute && aValue && aAttribute != nsGkAtoms::_empty) {
+  // Set or clone attribute if needed.
+  if (aCloneAllAttributes) {
+    MOZ_ASSERT(&aAttribute == nsGkAtoms::_empty);
+    CloneAttributes(newContainer, &aOldContainer);
+  } else if (&aAttribute != nsGkAtoms::_empty) {
     nsresult rv =
-      newContainer->SetAttr(kNameSpaceID_None, aAttribute, *aValue, true);
+      newContainer->SetAttr(kNameSpaceID_None, &aAttribute, aAttributeValue,
+                            true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
-  }
-  if (aCloneAttributes == eCloneAttributes) {
-    CloneAttributes(newContainer, aOldContainer);
   }
 
   // Notify our internal selection state listener.
   // Note: An AutoSelectionRestorer object must be created before calling this
   // to initialize mRangeUpdater.
-  AutoReplaceContainerSelNotify selStateNotify(mRangeUpdater, aOldContainer,
+  AutoReplaceContainerSelNotify selStateNotify(mRangeUpdater, &aOldContainer,
                                                newContainer);
   {
     AutoTransactionsConserveSelection conserveSelection(this);
     // Move all children from the old container to the new container.
-    while (aOldContainer->HasChildren()) {
-      nsCOMPtr<nsIContent> child = aOldContainer->GetFirstChild();
+    while (aOldContainer.HasChildren()) {
+      nsCOMPtr<nsIContent> child = aOldContainer.GetFirstChild();
       if (NS_WARN_IF(!child)) {
         return nullptr;
       }
@@ -1725,7 +1720,7 @@ EditorBase::ReplaceContainer(Element* aOldContainer,
   }
 
   // Delete old container.
-  rv = DeleteNodeWithTransaction(*aOldContainer);
+  rv = DeleteNodeWithTransaction(aOldContainer);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
