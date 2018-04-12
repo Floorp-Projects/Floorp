@@ -32,6 +32,7 @@ class CycleCollectedJSRuntime;
 
 namespace dom {
 class Exception;
+class WorkletJSContext;
 } // namespace dom
 
 // Contains various stats about the cycle collection.
@@ -129,6 +130,8 @@ public:
     FinalizeIncrementally,
     FinalizeNow,
   };
+
+  virtual dom::WorkletJSContext* GetAsWorkletJSContext() { return nullptr; }
 
   CycleCollectedJSRuntime* Runtime() const
   {
@@ -235,6 +238,8 @@ public:
   // in the last turn of the event loop.
   JS::PersistentRooted<JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>> mConsumedRejections;
   nsTArray<nsCOMPtr<nsISupports /* UncaughtRejectionObserver */ >> mUncaughtRejectionObservers;
+
+  virtual bool IsSystemCaller() const = 0;
 
 private:
   // A primary context owns the mRuntime. Non-main-thread contexts should always

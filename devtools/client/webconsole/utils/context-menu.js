@@ -20,8 +20,8 @@ const { l10n } = require("devtools/client/webconsole/utils/messages");
 /**
  * Create a Menu instance for the webconsole.
  *
- * @param {Object} jsterm
- *        The JSTerm instance used by the webconsole.
+ * @param {Object} hud
+ *        The webConsoleFrame.
  * @param {Element} parentNode
  *        The container of the new console frontend output wrapper.
  * @param {Object} options
@@ -36,7 +36,7 @@ const { l10n } = require("devtools/client/webconsole/utils/messages");
  *            inspector sidebar
  *        - {String} rootActorId (optional) actor id for the root object being clicked on
  */
-function createContextMenu(jsterm, parentNode, {
+function createContextMenu(hud, parentNode, {
   actor,
   clipboardText,
   variableText,
@@ -114,9 +114,9 @@ function createContextMenu(jsterm, parentNode, {
         selectedObjectActor: actor,
       };
 
-      jsterm.requestEvaluation(evalString, options).then((res) => {
-        jsterm.focus();
-        jsterm.setInputValue(res.result);
+      hud.jsterm.requestEvaluation(evalString, options).then((res) => {
+        hud.jsterm.focus();
+        hud.jsterm.setInputValue(res.result);
       });
     },
   }));
@@ -149,7 +149,7 @@ function createContextMenu(jsterm, parentNode, {
     click: () => {
       if (actor) {
         // The Debugger.Object of the OA will be bound to |_self| during evaluation,
-        jsterm.copyObject(`_self`, { selectedObjectActor: actor }).then((res) => {
+        hud.jsterm.copyObject(`_self`, { selectedObjectActor: actor }).then((res) => {
           clipboardHelper.copyString(res.helperResult.value);
         });
       } else {

@@ -667,6 +667,12 @@ double
 AudioContext::CurrentTime()
 {
   MediaStream* stream = Destination()->Stream();
+
+  if (!mIsStarted &&
+    stream->StreamTimeToSeconds(stream->GetCurrentTime()) == 0) {
+      return 0;
+  }
+
   // The value of a MediaStream's CurrentTime will always advance forward; it will never
   // reset (even if one rewinds a video.) Therefore we can use a single Random Seed
   // initialized at the same time as the object.

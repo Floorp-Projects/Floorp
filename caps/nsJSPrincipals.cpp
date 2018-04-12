@@ -17,6 +17,8 @@
 #include "mozilla/dom/StructuredCloneTags.h"
 // for mozilla::dom::workerinternals::kJSPrincipalsDebugToken
 #include "mozilla/dom/workerinternals/JSSettings.h"
+// for mozilla::dom::worklet::kJSPrincipalsDebugToken
+#include "mozilla/dom/WorkletPrincipal.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 
 using namespace mozilla;
@@ -92,6 +94,8 @@ JSPrincipals::dump()
               NS_SUCCEEDED(rv) ? str.get() : "(unknown)");
     } else if (debugToken == dom::workerinternals::kJSPrincipalsDebugToken) {
         fprintf(stderr, "Web Worker principal singleton (%p)\n", this);
+    } else if (debugToken == mozilla::dom::WorkletPrincipal::kJSPrincipalsDebugToken) {
+        fprintf(stderr, "Web Worklet principal singleton (%p)\n", this);
     } else {
         fprintf(stderr,
                 "!!! JSPrincipals (%p) is not nsJSPrincipals instance - bad token: "

@@ -22,6 +22,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WorkletGlobalScope.h"
+#include "mozilla/dom/WorkletThread.h"
 #include "mozilla/Maybe.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDocument.h"
@@ -297,21 +298,379 @@ private:
   }
 };
 
-class ConsoleRunnable : public WorkerProxyToMainThreadRunnable
-                      , public StructuredCloneHolderBase
+// This base class must be extended for Worker and for Worklet.
+class ConsoleRunnable : public StructuredCloneHolderBase
 {
 public:
-  explicit ConsoleRunnable(Console* aConsole)
-    : WorkerProxyToMainThreadRunnable(GetCurrentThreadWorkerPrivate())
-    , mConsole(aConsole)
-  {}
-
-  virtual
-  ~ConsoleRunnable()
+  ~ConsoleRunnable() override
   {
     // Clear the StructuredCloneHolderBase class.
     Clear();
   }
+
+protected:
+  JSObject*
+  CustomReadHandler(JSContext* aCx,
+                    JSStructuredCloneReader* aReader,
+                    uint32_t aTag,
+                    uint32_t aIndex) override
+  {
+    AssertIsOnMainThread();
+
+    if (aTag == CONSOLE_TAG_BLOB) {
+      MOZ_ASSERT(mClonedData.mBlobs.Length() > aIndex);
+
+      JS::Rooted<JS::Value> val(aCx);
+      {
+        RefPtr<Blob> blob =
+          Blob::Create(mClonedData.mParent,
+                       mClonedData.mBlobs.ElementAt(aIndex));
+        if (!ToJSValue(aCx, blob, &val)) {
+          return nullptr;
+        }
+      }
+
+      return &val.toObject();
+    }
+
+    MOZ_CRASH("No other tags are supported.");
+    return nullptr;
+  }
+
+  bool
+  CustomWriteHandler(JSContext* aCx,
+                     JSStructuredCloneWriter* aWriter,
+                     JS::Handle<JSObject*> aObj) override
+  {
+    RefPtr<Blob> blob;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob)) &&
+        blob->Impl()->MayBeClonedToOtherThreads()) {
+      if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, CONSOLE_TAG_BLOB,
+                                         mClonedData.mBlobs.Length()))) {
+        return false;
+      }
+
+      mClonedData.mBlobs.AppendElement(blob->Impl());
+      return true;
+    }
+
+    if (!JS_ObjectNotWritten(aWriter, aObj)) {
+      return false;
+    }
+
+    JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aObj));
+    JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
+    if (NS_WARN_IF(!jsString)) {
+      return false;
+    }
+
+    if (NS_WARN_IF(!JS_WriteString(aWriter, jsString))) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // Helper methods for CallData
+  bool
+  StoreConsoleData(JSContext* aCx, ConsoleCallData* aCallData)
+  {
+    ConsoleCommon::ClearException ce(aCx);
+
+    JS::Rooted<JSObject*> arguments(aCx,
+      JS_NewArrayObject(aCx, aCallData->mCopiedArguments.Length()));
+    if (NS_WARN_IF(!arguments)) {
+      return false;
+    }
+
+    JS::Rooted<JS::Value> arg(aCx);
+    for (uint32_t i = 0; i < aCallData->mCopiedArguments.Length(); ++i) {
+      arg = aCallData->mCopiedArguments[i];
+      if (NS_WARN_IF(!JS_DefineElement(aCx, arguments, i, arg,
+                                       JSPROP_ENUMERATE))) {
+        return false;
+      }
+    }
+
+    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*arguments));
+
+    if (NS_WARN_IF(!Write(aCx, value))) {
+      return false;
+    }
+
+    return true;
+  }
+
+  void
+  ProcessCallData(JSContext* aCx, Console* aConsole, ConsoleCallData* aCallData)
+  {
+    AssertIsOnMainThread();
+
+    ConsoleCommon::ClearException ce(aCx);
+
+    JS::Rooted<JS::Value> argumentsValue(aCx);
+    if (!Read(aCx, &argumentsValue)) {
+      return;
+    }
+
+    MOZ_ASSERT(argumentsValue.isObject());
+
+    JS::Rooted<JSObject*> argumentsObj(aCx, &argumentsValue.toObject());
+
+    uint32_t length;
+    if (!JS_GetArrayLength(aCx, argumentsObj, &length)) {
+      return;
+    }
+
+    Sequence<JS::Value> values;
+    SequenceRooter<JS::Value> arguments(aCx, &values);
+
+    for (uint32_t i = 0; i < length; ++i) {
+      JS::Rooted<JS::Value> value(aCx);
+
+      if (!JS_GetElement(aCx, argumentsObj, i, &value)) {
+        return;
+      }
+
+      if (!values.AppendElement(value, fallible)) {
+        return;
+      }
+    }
+
+    MOZ_ASSERT(values.Length() == length);
+
+    aConsole->ProcessCallData(aCx, aCallData, values);
+  }
+
+  void
+  ReleaseCallData(Console* aConsole, ConsoleCallData* aCallData)
+  {
+    aConsole->AssertIsOnOwningThread();
+
+    if (aCallData->mStatus == ConsoleCallData::eToBeDeleted) {
+      aConsole->ReleaseCallData(aCallData);
+    } else {
+      MOZ_ASSERT(aCallData->mStatus == ConsoleCallData::eInUse);
+      aCallData->mStatus = ConsoleCallData::eUnused;
+    }
+  }
+
+  // Helper methods for Profile calls
+  bool
+  StoreProfileData(JSContext* aCx, const Sequence<JS::Value>& aArguments)
+  {
+    ConsoleCommon::ClearException ce(aCx);
+
+    JS::Rooted<JSObject*> arguments(aCx,
+      JS_NewArrayObject(aCx, aArguments.Length()));
+    if (NS_WARN_IF(!arguments)) {
+      return false;
+    }
+
+    JS::Rooted<JS::Value> arg(aCx);
+    for (uint32_t i = 0; i < aArguments.Length(); ++i) {
+      arg = aArguments[i];
+      if (NS_WARN_IF(!JS_DefineElement(aCx, arguments, i, arg,
+                                       JSPROP_ENUMERATE))) {
+        return false;
+      }
+    }
+
+    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*arguments));
+
+    if (NS_WARN_IF(!Write(aCx, value))) {
+      return false;
+    }
+
+    return true;
+  }
+
+  void
+  ProcessProfileData(JSContext* aCx, Console* aConsole,
+                     Console::MethodName aMethodName, const nsAString& aAction)
+  {
+    AssertIsOnMainThread();
+
+    ConsoleCommon::ClearException ce(aCx);
+
+    JS::Rooted<JS::Value> argumentsValue(aCx);
+    bool ok = Read(aCx, &argumentsValue);
+    mClonedData.mParent = nullptr;
+
+    if (!ok) {
+      return;
+    }
+
+    MOZ_ASSERT(argumentsValue.isObject());
+    JS::Rooted<JSObject*> argumentsObj(aCx, &argumentsValue.toObject());
+    if (NS_WARN_IF(!argumentsObj)) {
+      return;
+    }
+
+    uint32_t length;
+    if (!JS_GetArrayLength(aCx, argumentsObj, &length)) {
+      return;
+    }
+
+    Sequence<JS::Value> arguments;
+
+    for (uint32_t i = 0; i < length; ++i) {
+      JS::Rooted<JS::Value> value(aCx);
+
+      if (!JS_GetElement(aCx, argumentsObj, i, &value)) {
+        return;
+      }
+
+      if (!arguments.AppendElement(value, fallible)) {
+        return;
+      }
+    }
+
+    aConsole->ProfileMethodInternal(aCx, aMethodName, aAction, arguments);
+  }
+
+  ConsoleStructuredCloneData mClonedData;
+};
+
+class ConsoleWorkletRunnable : public Runnable
+                             , public ConsoleRunnable
+{
+protected:
+  explicit ConsoleWorkletRunnable(Console* aConsole)
+    : Runnable("dom::console::ConsoleWorkletRunnable")
+    , mConsole(aConsole)
+    , mWorkletThread(WorkletThread::Get())
+  {
+    WorkletThread::AssertIsOnWorkletThread();
+    MOZ_ASSERT(mWorkletThread);
+  }
+
+  ~ConsoleWorkletRunnable() override = default;
+
+  NS_IMETHOD
+  Run() override
+  {
+    // This runnable is dispatched to main-thread first, then it goes back to
+    // worklet thread.
+    if (NS_IsMainThread()) {
+      RunOnMainThread();
+      RefPtr<ConsoleWorkletRunnable> runnable(this);
+      return mWorkletThread->DispatchRunnable(runnable.forget());
+    }
+
+    WorkletThread::AssertIsOnWorkletThread();
+
+    ReleaseData();
+    mConsole = nullptr;
+    return NS_OK;
+  }
+
+protected:
+  // This method is called in the main-thread.
+  virtual void
+  RunOnMainThread() = 0;
+
+  // This method is called in the owning thread of the Console object.
+  virtual void
+  ReleaseData() = 0;
+
+  // This must be released on the worker thread.
+  RefPtr<Console> mConsole;
+
+  RefPtr<WorkletThread> mWorkletThread;
+};
+
+// This runnable appends a CallData object into the Console queue running on
+// the main-thread.
+class ConsoleCallDataWorkletRunnable final : public ConsoleWorkletRunnable
+{
+public:
+  static already_AddRefed<ConsoleCallDataWorkletRunnable>
+  Create(Console* aConsole, ConsoleCallData* aConsoleData)
+  {
+    WorkletThread::AssertIsOnWorkletThread();
+
+    RefPtr<WorkletThread> workletThread = WorkletThread::Get();
+    MOZ_ASSERT(workletThread);
+
+    aConsoleData->SetIDs(workletThread->GetWorkletLoadInfo().OuterWindowID(),
+                         workletThread->GetWorkletLoadInfo().InnerWindowID());
+
+    RefPtr<ConsoleCallDataWorkletRunnable> runnable =
+      new ConsoleCallDataWorkletRunnable(aConsole, aConsoleData);
+
+    if (!runnable->StoreConsoleData(WorkletThread::Get()->GetJSContext(),
+                                    aConsoleData)) {
+      return nullptr;
+    }
+
+    return runnable.forget();
+  }
+
+private:
+  ConsoleCallDataWorkletRunnable(Console* aConsole,
+                                 ConsoleCallData* aCallData)
+    : ConsoleWorkletRunnable(aConsole)
+    , mCallData(aCallData)
+  {
+    WorkletThread::AssertIsOnWorkletThread();
+    MOZ_ASSERT(aCallData);
+    aCallData->AssertIsOnOwningThread();
+
+    // Marking this CallData as in use.
+    mCallData->mStatus = ConsoleCallData::eInUse;
+  }
+
+  ~ConsoleCallDataWorkletRunnable() override
+  {
+    MOZ_ASSERT(!mCallData);
+  }
+
+  void
+  RunOnMainThread() override
+  {
+    AutoSafeJSContext cx;
+
+    JSObject* sandbox =
+      mConsole->GetOrCreateSandbox(cx,
+                                   mWorkletThread->GetWorkletLoadInfo().Principal());
+    JS::Rooted<JSObject*> global(cx, sandbox);
+    if (NS_WARN_IF(!global)) {
+      return;
+    }
+
+    // The CreateSandbox call returns a proxy to the actual sandbox object. We
+    // don't need a proxy here.
+    global = js::UncheckedUnwrap(global);
+
+    JSAutoCompartment ac(cx, global);
+
+    // We don't need to set a parent object in mCallData bacause there are not
+    // DOM objects exposed to worklet.
+
+    ProcessCallData(cx, mConsole, mCallData);
+  }
+
+  virtual void
+  ReleaseData() override
+  {
+    ReleaseCallData(mConsole, mCallData);
+    mCallData = nullptr;
+  }
+
+  RefPtr<ConsoleCallData> mCallData;
+};
+
+class ConsoleWorkerRunnable : public WorkerProxyToMainThreadRunnable
+                            , public ConsoleRunnable
+{
+public:
+  explicit ConsoleWorkerRunnable(Console* aConsole)
+    : WorkerProxyToMainThreadRunnable(GetCurrentThreadWorkerPrivate())
+    , mConsole(aConsole)
+  {}
+
+  ~ConsoleWorkerRunnable() override = default;
 
   bool
   Dispatch(JSContext* aCx)
@@ -425,65 +784,6 @@ protected:
   virtual void
   ReleaseData() = 0;
 
-  virtual JSObject* CustomReadHandler(JSContext* aCx,
-                                      JSStructuredCloneReader* aReader,
-                                      uint32_t aTag,
-                                      uint32_t aIndex) override
-  {
-    AssertIsOnMainThread();
-
-    if (aTag == CONSOLE_TAG_BLOB) {
-      MOZ_ASSERT(mClonedData.mBlobs.Length() > aIndex);
-
-      JS::Rooted<JS::Value> val(aCx);
-      {
-        RefPtr<Blob> blob =
-          Blob::Create(mClonedData.mParent, mClonedData.mBlobs.ElementAt(aIndex));
-        if (!ToJSValue(aCx, blob, &val)) {
-          return nullptr;
-        }
-      }
-
-      return &val.toObject();
-    }
-
-    MOZ_CRASH("No other tags are supported.");
-    return nullptr;
-  }
-
-  virtual bool CustomWriteHandler(JSContext* aCx,
-                                  JSStructuredCloneWriter* aWriter,
-                                  JS::Handle<JSObject*> aObj) override
-  {
-    RefPtr<Blob> blob;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob)) &&
-        blob->Impl()->MayBeClonedToOtherThreads()) {
-      if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, CONSOLE_TAG_BLOB,
-                                         mClonedData.mBlobs.Length()))) {
-        return false;
-      }
-
-      mClonedData.mBlobs.AppendElement(blob->Impl());
-      return true;
-    }
-
-    if (!JS_ObjectNotWritten(aWriter, aObj)) {
-      return false;
-    }
-
-    JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aObj));
-    JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
-    if (NS_WARN_IF(!jsString)) {
-      return false;
-    }
-
-    if (NS_WARN_IF(!JS_WriteString(aWriter, jsString))) {
-      return false;
-    }
-
-    return true;
-  }
-
   // This must be released on the worker thread.
   RefPtr<Console> mConsole;
 
@@ -492,12 +792,12 @@ protected:
 
 // This runnable appends a CallData object into the Console queue running on
 // the main-thread.
-class ConsoleCallDataRunnable final : public ConsoleRunnable
+class ConsoleCallDataWorkerRunnable final : public ConsoleWorkerRunnable
 {
 public:
-  ConsoleCallDataRunnable(Console* aConsole,
-                          ConsoleCallData* aCallData)
-    : ConsoleRunnable(aConsole)
+  ConsoleCallDataWorkerRunnable(Console* aConsole,
+                                ConsoleCallData* aCallData)
+    : ConsoleWorkerRunnable(aConsole)
     , mCallData(aCallData)
   {
     MOZ_ASSERT(aCallData);
@@ -509,7 +809,7 @@ public:
   }
 
 private:
-  ~ConsoleCallDataRunnable()
+  ~ConsoleCallDataWorkerRunnable() override
   {
     MOZ_ASSERT(!mCallData);
   }
@@ -517,33 +817,7 @@ private:
   bool
   PreDispatch(JSContext* aCx) override
   {
-    mWorkerPrivate->AssertIsOnWorkerThread();
-    mCallData->AssertIsOnOwningThread();
-
-    ConsoleCommon::ClearException ce(aCx);
-
-    JS::Rooted<JSObject*> arguments(aCx,
-      JS_NewArrayObject(aCx, mCallData->mCopiedArguments.Length()));
-    if (NS_WARN_IF(!arguments)) {
-      return false;
-    }
-
-    JS::Rooted<JS::Value> arg(aCx);
-    for (uint32_t i = 0; i < mCallData->mCopiedArguments.Length(); ++i) {
-      arg = mCallData->mCopiedArguments[i];
-      if (NS_WARN_IF(!JS_DefineElement(aCx, arguments, i, arg,
-                                       JSPROP_ENUMERATE))) {
-        return false;
-      }
-    }
-
-    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*arguments));
-
-    if (NS_WARN_IF(!Write(aCx, value))) {
-      return false;
-    }
-
-    return true;
+    return StoreConsoleData(aCx, mCallData);
   }
 
   void
@@ -582,7 +856,7 @@ private:
     // Now we could have the correct window (if we are not window-less).
     mClonedData.mParent = aInnerWindow;
 
-    ProcessCallData(aCx);
+    ProcessCallData(aCx, mConsole, mCallData);
 
     mClonedData.mParent = nullptr;
   }
@@ -590,70 +864,87 @@ private:
   virtual void
   ReleaseData() override
   {
-    mConsole->AssertIsOnOwningThread();
-
-    if (mCallData->mStatus == ConsoleCallData::eToBeDeleted) {
-      mConsole->ReleaseCallData(mCallData);
-    } else {
-      MOZ_ASSERT(mCallData->mStatus == ConsoleCallData::eInUse);
-      mCallData->mStatus = ConsoleCallData::eUnused;
-    }
-
+    ReleaseCallData(mConsole, mCallData);
     mCallData = nullptr;
-  }
-
-  void
-  ProcessCallData(JSContext* aCx)
-  {
-    AssertIsOnMainThread();
-
-    ConsoleCommon::ClearException ce(aCx);
-
-    JS::Rooted<JS::Value> argumentsValue(aCx);
-    if (!Read(aCx, &argumentsValue)) {
-      return;
-    }
-
-    MOZ_ASSERT(argumentsValue.isObject());
-
-    JS::Rooted<JSObject*> argumentsObj(aCx, &argumentsValue.toObject());
-
-    uint32_t length;
-    if (!JS_GetArrayLength(aCx, argumentsObj, &length)) {
-      return;
-    }
-
-    Sequence<JS::Value> values;
-    SequenceRooter<JS::Value> arguments(aCx, &values);
-
-    for (uint32_t i = 0; i < length; ++i) {
-      JS::Rooted<JS::Value> value(aCx);
-
-      if (!JS_GetElement(aCx, argumentsObj, i, &value)) {
-        return;
-      }
-
-      if (!values.AppendElement(value, fallible)) {
-        return;
-      }
-    }
-
-    MOZ_ASSERT(values.Length() == length);
-
-    mConsole->ProcessCallData(aCx, mCallData, values);
   }
 
   RefPtr<ConsoleCallData> mCallData;
 };
 
 // This runnable calls ProfileMethod() on the console on the main-thread.
-class ConsoleProfileRunnable final : public ConsoleRunnable
+class ConsoleProfileWorkletRunnable final : public ConsoleWorkletRunnable
 {
 public:
-  ConsoleProfileRunnable(Console* aConsole, Console::MethodName aName,
-                         const nsAString& aAction,
-                         const Sequence<JS::Value>& aArguments)
-    : ConsoleRunnable(aConsole)
+  static already_AddRefed<ConsoleProfileWorkletRunnable>
+  Create(Console* aConsole, Console::MethodName aName, const nsAString& aAction,
+         const Sequence<JS::Value>& aArguments)
+  {
+    WorkletThread::AssertIsOnWorkletThread();
+
+    RefPtr<ConsoleProfileWorkletRunnable> runnable =
+      new ConsoleProfileWorkletRunnable(aConsole, aName, aAction);
+
+    if (!runnable->StoreProfileData(WorkletThread::Get()->GetJSContext(),
+                                    aArguments)) {
+      return nullptr;
+    }
+
+    return runnable.forget();
+  }
+
+private:
+  ConsoleProfileWorkletRunnable(Console* aConsole, Console::MethodName aName,
+                                const nsAString& aAction)
+    : ConsoleWorkletRunnable(aConsole)
+    , mName(aName)
+    , mAction(aAction)
+  {
+    MOZ_ASSERT(aConsole);
+  }
+
+  void
+  RunOnMainThread() override
+  {
+    AssertIsOnMainThread();
+
+    AutoSafeJSContext cx;
+
+    JSObject* sandbox =
+      mConsole->GetOrCreateSandbox(cx,
+                                   mWorkletThread->GetWorkletLoadInfo().Principal());
+    JS::Rooted<JSObject*> global(cx, sandbox);
+    if (NS_WARN_IF(!global)) {
+      return;
+    }
+
+    // The CreateSandbox call returns a proxy to the actual sandbox object. We
+    // don't need a proxy here.
+    global = js::UncheckedUnwrap(global);
+
+    JSAutoCompartment ac(cx, global);
+
+    // We don't need to set a parent object in mCallData bacause there are not
+    // DOM objects exposed to worklet.
+
+    ProcessProfileData(cx, mConsole, mName, mAction);
+  }
+
+  virtual void
+  ReleaseData() override
+  {}
+
+  Console::MethodName mName;
+  nsString mAction;
+};
+
+// This runnable calls ProfileMethod() on the console on the main-thread.
+class ConsoleProfileWorkerRunnable final : public ConsoleWorkerRunnable
+{
+public:
+  ConsoleProfileWorkerRunnable(Console* aConsole, Console::MethodName aName,
+                               const nsAString& aAction,
+                               const Sequence<JS::Value>& aArguments)
+    : ConsoleWorkerRunnable(aConsole)
     , mName(aName)
     , mAction(aAction)
     , mArguments(aArguments)
@@ -665,30 +956,7 @@ private:
   bool
   PreDispatch(JSContext* aCx) override
   {
-    ConsoleCommon::ClearException ce(aCx);
-
-    JS::Rooted<JSObject*> arguments(aCx,
-      JS_NewArrayObject(aCx, mArguments.Length()));
-    if (NS_WARN_IF(!arguments)) {
-      return false;
-    }
-
-    JS::Rooted<JS::Value> arg(aCx);
-    for (uint32_t i = 0; i < mArguments.Length(); ++i) {
-      arg = mArguments[i];
-      if (NS_WARN_IF(!JS_DefineElement(aCx, arguments, i, arg,
-                                       JSPROP_ENUMERATE))) {
-        return false;
-      }
-    }
-
-    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*arguments));
-
-    if (NS_WARN_IF(!Write(aCx, value))) {
-      return false;
-    }
-
-    return true;
+    return StoreProfileData(aCx, mArguments);
   }
 
   void
@@ -697,45 +965,12 @@ private:
   {
     AssertIsOnMainThread();
 
-    ConsoleCommon::ClearException ce(aCx);
-
     // Now we could have the correct window (if we are not window-less).
     mClonedData.mParent = aInnerWindow;
 
-    JS::Rooted<JS::Value> argumentsValue(aCx);
-    bool ok = Read(aCx, &argumentsValue);
+    ProcessProfileData(aCx, mConsole, mName, mAction);
+
     mClonedData.mParent = nullptr;
-
-    if (!ok) {
-      return;
-    }
-
-    MOZ_ASSERT(argumentsValue.isObject());
-    JS::Rooted<JSObject*> argumentsObj(aCx, &argumentsValue.toObject());
-    if (NS_WARN_IF(!argumentsObj)) {
-      return;
-    }
-
-    uint32_t length;
-    if (!JS_GetArrayLength(aCx, argumentsObj, &length)) {
-      return;
-    }
-
-    Sequence<JS::Value> arguments;
-
-    for (uint32_t i = 0; i < length; ++i) {
-      JS::Rooted<JS::Value> value(aCx);
-
-      if (!JS_GetElement(aCx, argumentsObj, i, &value)) {
-        return;
-      }
-
-      if (!arguments.AppendElement(value, fallible)) {
-        return;
-      }
-    }
-
-    mConsole->ProfileMethodInternal(aCx, mName, mAction, arguments);
   }
 
   virtual void
@@ -795,7 +1030,22 @@ Console::Create(JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
 {
   MOZ_ASSERT_IF(NS_IsMainThread(), aWindow);
 
-  RefPtr<Console> console = new Console(aCx, aWindow);
+  uint64_t outerWindowID = 0;
+  uint64_t innerWindowID = 0;
+
+  if (aWindow) {
+    innerWindowID = aWindow->WindowID();
+
+    // Without outerwindow any console message coming from this object will not
+    // shown in the devtools webconsole. But this should be fine because
+    // probably we are shutting down, or the window is CCed/GCed.
+    nsPIDOMWindowOuter* outerWindow = aWindow->GetOuterWindow();
+    if (outerWindow) {
+      outerWindowID = outerWindow->WindowID();
+    }
+  }
+
+  RefPtr<Console> console = new Console(aCx, aWindow, outerWindowID, innerWindowID);
   console->Initialize(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -804,28 +1054,33 @@ Console::Create(JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv)
   return console.forget();
 }
 
-Console::Console(JSContext* aCx, nsPIDOMWindowInner* aWindow)
+/* static */ already_AddRefed<Console>
+Console::CreateForWorklet(JSContext* aCx, uint64_t aOuterWindowID,
+                          uint64_t aInnerWindowID, ErrorResult& aRv)
+{
+  WorkletThread::AssertIsOnWorkletThread();
+
+  RefPtr<Console> console =
+    new Console(aCx, nullptr, aOuterWindowID, aInnerWindowID);
+  console->Initialize(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return console.forget();
+}
+
+Console::Console(JSContext* aCx, nsPIDOMWindowInner* aWindow,
+                 uint64_t aOuterWindowID, uint64_t aInnerWindowID)
   : mWindow(aWindow)
-  , mOuterID(0)
-  , mInnerID(0)
+  , mOuterID(aOuterWindowID)
+  , mInnerID(aInnerWindowID)
   , mDumpToStdout(false)
   , mChromeInstance(false)
   , mMaxLogLevel(ConsoleLogLevel::All)
   , mStatus(eUnknown)
   , mCreationTimeStamp(TimeStamp::Now())
 {
-  if (mWindow) {
-    mInnerID = mWindow->WindowID();
-
-    // Without outerwindow any console message coming from this object will not
-    // shown in the devtools webconsole. But this should be fine because
-    // probably we are shutting down, or the window is CCed/GCed.
-    nsPIDOMWindowOuter* outerWindow = mWindow->GetOuterWindow();
-    if (outerWindow) {
-      mOuterID = outerWindow->WindowID();
-    }
-  }
-
   // Let's enable the dumping to stdout by default for chrome.
   if (nsContentUtils::ThreadsafeIsSystemCaller(aCx)) {
     mDumpToStdout = DOMPrefs::DumpEnabled();
@@ -1093,10 +1348,22 @@ Console::ProfileMethodInternal(JSContext* aCx, MethodName aMethodName,
 
   MaybeExecuteDumpFunction(aCx, aAction, aData, nullptr);
 
+  if (WorkletThread::IsOnWorkletThread()) {
+    RefPtr<ConsoleProfileWorkletRunnable> runnable =
+      ConsoleProfileWorkletRunnable::Create(this, aMethodName, aAction, aData);
+    if (!runnable) {
+      return;
+    }
+
+    WorkletThread::Get()->DispatchRunnable(runnable.forget());
+    return;
+  }
+
   if (!NS_IsMainThread()) {
     // Here we are in a worker thread.
-    RefPtr<ConsoleProfileRunnable> runnable =
-      new ConsoleProfileRunnable(this, aMethodName, aAction, aData);
+    RefPtr<ConsoleProfileWorkerRunnable> runnable =
+      new ConsoleProfileWorkerRunnable(this, aMethodName, aAction, aData);
+
 
     runnable->Dispatch(aCx);
     return;
@@ -1275,6 +1542,8 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
       }
 #endif
     }
+  } else if (WorkletThread::IsOnWorkletThread()) {
+    oa = WorkletThread::Get()->GetWorkletLoadInfo().OriginAttributesRef();
   } else {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
@@ -1369,11 +1638,22 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
     return;
   }
 
+  if (WorkletThread::IsOnWorkletThread()) {
+    RefPtr<ConsoleCallDataWorkletRunnable> runnable =
+      ConsoleCallDataWorkletRunnable::Create(this, callData);
+    if (!runnable) {
+      return;
+    }
+
+    NS_DispatchToMainThread(runnable);
+    return;
+  }
+
   // We do this only in workers for now.
   NotifyHandler(aCx, aData, callData);
 
-  RefPtr<ConsoleCallDataRunnable> runnable =
-    new ConsoleCallDataRunnable(this, callData);
+  RefPtr<ConsoleCallDataWorkerRunnable> runnable =
+    new ConsoleCallDataWorkerRunnable(this, callData);
   Unused << NS_WARN_IF(!runnable->Dispatch(aCx));
 }
 
@@ -2267,7 +2547,8 @@ Console::StoreCallData(ConsoleCallData* aCallData)
     MOZ_ASSERT(callData->mStatus != ConsoleCallData::eToBeDeleted);
 
     // We cannot delete this object now because we have to trace its JSValues
-    // until the pending operation (ConsoleCallDataRunnable) is completed.
+    // until the pending operation (ConsoleCallDataWorkerRunnable or
+    // ConsoleCallDataWorkletRunnable) is completed.
     if (callData->mStatus == ConsoleCallData::eInUse) {
       callData->mStatus = ConsoleCallData::eToBeDeleted;
       mCallDataStoragePending.AppendElement(callData);
@@ -2421,15 +2702,6 @@ Console::GetConsole(const GlobalObject& aGlobal)
 /* static */ already_AddRefed<Console>
 Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  // Worklet
-  if (NS_IsMainThread()) {
-    nsCOMPtr<WorkletGlobalScope> workletScope =
-      do_QueryInterface(aGlobal.GetAsSupports());
-    if (workletScope) {
-      return workletScope->GetConsole(aGlobal.Context(), aRv);
-    }
-  }
-
   // Window
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> innerWindow =
@@ -2437,7 +2709,7 @@ Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
 
     // we are probably running a chrome script.
     if (!innerWindow) {
-      RefPtr<Console> console = new Console(aGlobal.Context(), nullptr);
+      RefPtr<Console> console = new Console(aGlobal.Context(), nullptr, 0, 0);
       console->Initialize(aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;
@@ -2448,6 +2720,14 @@ Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
 
     nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(innerWindow);
     return window->GetConsole(aGlobal.Context(), aRv);
+  }
+
+  // Worklet
+  nsCOMPtr<WorkletGlobalScope> workletScope =
+    do_QueryInterface(aGlobal.GetAsSupports());
+  if (workletScope) {
+    WorkletThread::AssertIsOnWorkletThread();
+    return workletScope->GetConsole(aGlobal.Context(), aRv);
   }
 
   // Workers
@@ -2545,6 +2825,11 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
 
   if (NS_IsMainThread()) {
     *aTimeStamp = (TimeStamp::Now() - mCreationTimeStamp).ToMilliseconds();
+    return true;
+  }
+
+  if (WorkletThread::IsOnWorkletThread()) {
+    *aTimeStamp = WorkletThread::Get()->TimeStampToDOMHighRes(TimeStamp::Now());
     return true;
   }
 

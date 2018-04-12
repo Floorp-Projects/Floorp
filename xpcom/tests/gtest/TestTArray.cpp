@@ -136,7 +136,7 @@ TEST(TArray, AssignmentOperatorSelfAssignment)
   nsTArray<int> array;
   array = DummyArray();
 
-  array = array;
+  array = *&array;
   ASSERT_EQ(DummyArray(), array);
   array = Move(array);
   ASSERT_EQ(DummyArray(), array);

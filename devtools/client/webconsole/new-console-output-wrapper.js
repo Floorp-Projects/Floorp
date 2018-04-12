@@ -18,14 +18,15 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const ConsoleOutput = createFactory(require("devtools/client/webconsole/components/ConsoleOutput"));
 const FilterBar = createFactory(require("devtools/client/webconsole/components/FilterBar"));
 const SideBar = createFactory(require("devtools/client/webconsole/components/SideBar"));
+const JSTerm = createFactory(require("devtools/client/webconsole/components/JSTerm"));
 
 let store = null;
 
-function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
+function NewConsoleOutputWrapper(parentNode, hud, toolbox, owner, document) {
   EventEmitter.decorate(this);
 
   this.parentNode = parentNode;
-  this.jsterm = jsterm;
+  this.hud = hud;
   this.toolbox = toolbox;
   this.owner = owner;
   this.document = document;
@@ -37,13 +38,13 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
   this.queuedRequestUpdates = [];
   this.throttledDispatchPromise = null;
 
-  store = configureStore(this.jsterm.hud);
+  store = configureStore(this.hud);
 }
 NewConsoleOutputWrapper.prototype = {
   init: function() {
     return new Promise((resolve) => {
       const attachRefToHud = (id, node) => {
-        this.jsterm.hud[id] = node;
+        this.hud[id] = node;
       };
       // Focus the input line whenever the output area is clicked.
       this.parentNode.addEventListener("click", (event) => {
@@ -75,15 +76,17 @@ NewConsoleOutputWrapper.prototype = {
           return;
         }
 
-        this.jsterm.focus();
+        if (this.hud && this.hud.jsterm) {
+          this.hud.jsterm.focus();
+        }
       });
 
-      let { hud } = this.jsterm;
+      let { hud } = this;
 
       const serviceContainer = {
         attachRefToHud,
         emitNewMessage: (node, messageId, timeStamp) => {
-          this.jsterm.hud.emit("new-messages", new Set([{
+          hud.emit("new-messages", new Set([{
             node,
             messageId,
             timeStamp,
@@ -140,9 +143,15 @@ NewConsoleOutputWrapper.prototype = {
           store.dispatch(actions.showObjectInSidebar(rootActorId, messageId));
         } : null;
 
-        let menu = createContextMenu(this.jsterm, this.parentNode,
-          { actor, clipboardText, variableText, message,
-            serviceContainer, openSidebar, rootActorId });
+        let menu = createContextMenu(this.hud, this.parentNode, {
+          actor,
+          clipboardText,
+          variableText,
+          message,
+          serviceContainer,
+          openSidebar,
+          rootActorId
+        });
 
         // Emit the "menu-open" event for testing.
         menu.once("open", () => this.emit("menu-open"));
@@ -155,7 +164,7 @@ NewConsoleOutputWrapper.prototype = {
         Object.assign(serviceContainer, {
           onViewSourceInDebugger: frame => {
             this.toolbox.viewSourceInDebugger(frame.url, frame.line).then(() =>
-              this.jsterm.hud.emit("source-in-debugger-opened")
+              this.hud.emit("source-in-debugger-opened")
             );
           },
           onViewSourceInScratchpad: frame => this.toolbox.viewSourceInScratchpad(
@@ -199,34 +208,29 @@ NewConsoleOutputWrapper.prototype = {
         });
       }
 
-      let consoleOutput = ConsoleOutput({
-        serviceContainer,
-        onFirstMeaningfulPaint: resolve
-      });
-
-      let filterBar = FilterBar({
-        hidePersistLogsCheckbox: this.jsterm.hud.isBrowserConsole,
-        serviceContainer: {
-          attachRefToHud
-        }
-      });
-
-      let sideBar = SideBar({
-        serviceContainer,
-      });
-
       let provider = createElement(
         Provider,
         { store },
         dom.div(
           {className: "webconsole-output-wrapper"},
-          filterBar,
-          consoleOutput,
-          sideBar
+          FilterBar({
+            hidePersistLogsCheckbox: this.hud.isBrowserConsole,
+            serviceContainer: {
+              attachRefToHud
+            }
+          }),
+          ConsoleOutput({
+            serviceContainer,
+            onFirstMeaningfulPaint: resolve
+          }),
+          SideBar({
+            serviceContainer,
+          }),
+          JSTerm({
+            hud: this.hud,
+          }),
         ));
       this.body = ReactDOM.render(provider, this.parentNode);
-
-      this.jsterm.focus();
     });
   },
 
@@ -243,16 +247,15 @@ NewConsoleOutputWrapper.prototype = {
         : packet.timestamp;
 
       promise = new Promise(resolve => {
-        let jsterm = this.jsterm;
-        jsterm.hud.on("new-messages", function onThisMessage(messages) {
+        this.hud.on("new-messages", function onThisMessage(messages) {
           for (let m of messages) {
             if (m.timeStamp === timeStampToMatch) {
               resolve(m.node);
-              jsterm.hud.off("new-messages", onThisMessage);
+              this.hud.off("new-messages", onThisMessage);
               return;
             }
           }
-        });
+        }.bind(this));
       });
     } else {
       promise = Promise.resolve();
@@ -388,7 +391,7 @@ NewConsoleOutputWrapper.prototype = {
         if (this.queuedMessageUpdates.length > 0) {
           this.queuedMessageUpdates.forEach(({ message, res }) => {
             store.dispatch(actions.networkMessageUpdate(message, null, res));
-            this.jsterm.hud.emit("network-message-updated", res);
+            this.hud.emit("network-message-updated", res);
           });
           this.queuedMessageUpdates = [];
         }
@@ -405,7 +408,7 @@ NewConsoleOutputWrapper.prototype = {
           // (netmonitor/src/connector/firefox-data-provider).
           // This event might be utilized in tests to find the right
           // time when to finish.
-          this.jsterm.hud.emit("network-request-payload-ready");
+          this.hud.emit("network-request-payload-ready");
         }
         done();
       }, 50);
