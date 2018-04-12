@@ -2,59 +2,40 @@
 
 from __future__ import absolute_import
 
-import threading
 from time import sleep
 
 import mozunit
 
-import mozrunnertest
+
+def test_run_interactive(runner, create_thread):
+    """Bug 965183: Run process in interactive mode and call wait()"""
+    runner.start(interactive=True)
+
+    thread = create_thread(runner, timeout=2)
+    thread.start()
+
+    # This is a blocking call. So the process should be killed by the thread
+    runner.wait()
+    thread.join()
+    assert not runner.is_running()
 
 
-class RunnerThread(threading.Thread):
-
-    def __init__(self, runner, timeout=10):
-        threading.Thread.__init__(self)
-        self.runner = runner
-        self.timeout = timeout
-
-    def run(self):
-        sleep(self.timeout)
-        self.runner.stop()
+def test_stop_interactive(runner):
+    """Bug 965183: Explicitely stop process in interactive mode"""
+    runner.start(interactive=True)
+    runner.stop()
 
 
-class MozrunnerInteractiveTestCase(mozrunnertest.MozrunnerTestCase):
+def test_wait_after_process_finished(runner):
+    """Wait after the process has been stopped should not raise an error"""
+    runner.start(interactive=True)
+    sleep(1)
+    runner.process_handler.kill()
 
-    def test_run_interactive(self):
-        """Bug 965183: Run process in interactive mode and call wait()"""
-        pid = self.runner.start(interactive=True)
-        self.pids.append(pid)
+    returncode = runner.wait(1)
 
-        thread = RunnerThread(self.runner, 5)
-        self.threads.append(thread)
-        thread.start()
-
-        # This is a blocking call. So the process should be killed by the thread
-        self.runner.wait()
-        thread.join()
-        self.assertFalse(self.runner.is_running())
-
-    def test_stop_interactive(self):
-        """Bug 965183: Explicitely stop process in interactive mode"""
-        pid = self.runner.start(interactive=True)
-        self.pids.append(pid)
-
-        self.runner.stop()
-
-    def test_wait_after_process_finished(self):
-        """Wait after the process has been stopped should not raise an error"""
-        self.runner.start(interactive=True)
-        sleep(5)
-        self.runner.process_handler.kill()
-
-        returncode = self.runner.wait(1)
-
-        self.assertNotIn(returncode, [None, 0])
-        self.assertIsNotNone(self.runner.process_handler)
+    assert returncode not in [None, 0]
+    assert runner.process_handler is not None
 
 
 if __name__ == '__main__':

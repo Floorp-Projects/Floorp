@@ -5,76 +5,54 @@
 
 from __future__ import absolute_import
 
-import threading
-from time import sleep
-
 import mozunit
 
-import mozrunnertest
+
+def test_process_start_via_thread(runner, create_thread):
+    """Start the runner via a thread"""
+    thread = create_thread(runner, True, 2)
+
+    thread.start()
+    thread.join()
+
+    assert runner.is_running()
 
 
-class RunnerThread(threading.Thread):
-
-    def __init__(self, runner, do_start, timeout=10):
-        threading.Thread.__init__(self)
-        self.runner = runner
-        self.timeout = timeout
-        self.do_start = do_start
-
-    def run(self):
-        sleep(self.timeout)
-        if self.do_start:
-            self.runner.start()
-        else:
-            self.runner.stop()
-
-
-class MozrunnerThreadsTestCase(mozrunnertest.MozrunnerTestCase):
-
-    def test_process_start_via_thread(self):
-        """Start the runner via a thread"""
-        thread = RunnerThread(self.runner, True, 2)
-        self.threads.append(thread)
-
-        thread.start()
-        thread.join()
-
-        self.assertTrue(self.runner.is_running())
-
-    def test_process_stop_via_multiple_threads(self):
-        """Stop the runner via multiple threads"""
-        self.runner.start()
-        for i in range(5):
-            thread = RunnerThread(self.runner, False, 5)
-            self.threads.append(thread)
-            thread.start()
-
-        # Wait until the process has been stopped by another thread
-        for thread in self.threads:
-            thread.join()
-        returncode = self.runner.wait(2)
-
-        self.assertNotIn(returncode, [None, 0])
-        self.assertEqual(self.runner.returncode, returncode)
-        self.assertIsNotNone(self.runner.process_handler)
-        self.assertEqual(self.runner.wait(10), returncode)
-
-    def test_process_post_stop_via_thread(self):
-        """Stop the runner and try it again with a thread a bit later"""
-        self.runner.start()
-        thread = RunnerThread(self.runner, False, 5)
-        self.threads.append(thread)
+def test_process_stop_via_multiple_threads(runner, create_thread):
+    """Stop the runner via multiple threads"""
+    runner.start()
+    threads = []
+    for i in range(5):
+        thread = create_thread(runner, False, 5)
+        threads.append(thread)
         thread.start()
 
-        # Wait a bit to start the application gets started
-        self.runner.wait(2)
-        returncode = self.runner.stop()
+    # Wait until the process has been stopped by another thread
+    for thread in threads:
         thread.join()
+    returncode = runner.wait(1)
 
-        self.assertNotIn(returncode, [None, 0])
-        self.assertEqual(self.runner.returncode, returncode)
-        self.assertIsNotNone(self.runner.process_handler)
-        self.assertEqual(self.runner.wait(10), returncode)
+    assert returncode not in [None, 0]
+    assert runner.returncode == returncode
+    assert runner.process_handler is not None
+    assert runner.wait(2) == returncode
+
+
+def test_process_post_stop_via_thread(runner, create_thread):
+    """Stop the runner and try it again with a thread a bit later"""
+    runner.start()
+    thread = create_thread(runner, False, 5)
+    thread.start()
+
+    # Wait a bit to start the application gets started
+    runner.wait(1)
+    returncode = runner.stop()
+    thread.join()
+
+    assert returncode not in [None, 0]
+    assert runner.returncode == returncode
+    assert runner.process_handler is not None
+    assert runner.wait(2) == returncode
 
 
 if __name__ == '__main__':
