@@ -154,6 +154,9 @@ var Doctor = {
       }
       let validator = engine.getValidator();
       if (!validator) {
+        // This is probably only possible in profile downgrade cases.
+        log.warn(`engine.getValidator returned null for ${engineName
+                 } but the pref that controls validation is enabled.`);
         continue;
       }
 
