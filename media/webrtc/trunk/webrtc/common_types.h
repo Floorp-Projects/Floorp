@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <atomic>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -408,14 +409,37 @@ struct AudioDecodingCallStats {
         decoded_plc_cng(0),
         decoded_muted_output(0) {}
 
-  int calls_to_silence_generator;  // Number of calls where silence generated,
+  AudioDecodingCallStats(const AudioDecodingCallStats& other)
+  {
+    calls_to_silence_generator = other.calls_to_silence_generator.load();
+    calls_to_neteq = other.calls_to_neteq.load();
+    decoded_normal = other.decoded_normal.load();
+    decoded_plc = other.decoded_plc.load();
+    decoded_cng = other.decoded_cng.load();
+    decoded_plc_cng = other.decoded_plc_cng.load();
+    decoded_muted_output = other.decoded_muted_output.load();
+  }
+
+  AudioDecodingCallStats& operator=(const AudioDecodingCallStats& other)
+  {
+    calls_to_silence_generator = other.calls_to_silence_generator.load();
+    calls_to_neteq = other.calls_to_neteq.load();
+    decoded_normal = other.decoded_normal.load();
+    decoded_plc = other.decoded_plc.load();
+    decoded_cng = other.decoded_cng.load();
+    decoded_plc_cng = other.decoded_plc_cng.load();
+    decoded_muted_output = other.decoded_muted_output.load();
+    return *this;
+  }
+
+  std::atomic<int> calls_to_silence_generator;  // Number of calls where silence generated,
                                    // and NetEq was disengaged from decoding.
-  int calls_to_neteq;              // Number of calls to NetEq.
-  int decoded_normal;  // Number of calls where audio RTP packet decoded.
-  int decoded_plc;     // Number of calls resulted in PLC.
-  int decoded_cng;  // Number of calls where comfort noise generated due to DTX.
-  int decoded_plc_cng;  // Number of calls resulted where PLC faded to CNG.
-  int decoded_muted_output;  // Number of calls returning a muted state output.
+  std::atomic<int> calls_to_neteq;              // Number of calls to NetEq.
+  std::atomic<int> decoded_normal;  // Number of calls where audio RTP packet decoded.
+  std::atomic<int> decoded_plc;     // Number of calls resulted in PLC.
+  std::atomic<int> decoded_cng;  // Number of calls where comfort noise generated due to DTX.
+  std::atomic<int> decoded_plc_cng;  // Number of calls resulted where PLC faded to CNG.
+  std::atomic<int> decoded_muted_output;  // Number of calls returning a muted state output.
 };
 
 // Type of Noise Suppression.
