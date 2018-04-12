@@ -121,17 +121,20 @@ class TimeStamp;
   /* Restyle profiling. */ \
   macro(6, "restyle", Restyle) \
   \
+  /* Take a snapshot of the window on every composition. */ \
+  macro(7, "screenshots", Screenshots) \
+  \
   /* Walk the C++ stack. Not available on all platforms. */ \
-  macro(7, "stackwalk", StackWalk) \
+  macro(8, "stackwalk", StackWalk) \
   \
   /* Start profiling with feature TaskTracer. */ \
-  macro(8, "tasktracer", TaskTracer) \
+  macro(9, "tasktracer", TaskTracer) \
   \
   /* Profile the registered secondary threads. */ \
-  macro(9, "threads", Threads) \
+  macro(10, "threads", Threads) \
   \
   /* Have the JavaScript engine track JIT optimizations. */ \
-  macro(10, "trackopts", TrackOptimizations)
+  macro(11, "trackopts", TrackOptimizations)
 
 struct ProfilerFeature
 {
