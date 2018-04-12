@@ -8,11 +8,10 @@
 const { require, DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const flags = require("devtools/shared/flags");
 
-flags.testing = true;
+Services.prefs.setBoolPref("devtools.testing", true);
 registerCleanupFunction(() => {
-  flags.testing = false;
+  Services.prefs.clearUserPref("devtools.testing");
 });
 
 // Register a console listener, so console messages don't just disappear

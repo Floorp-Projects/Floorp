@@ -16,7 +16,6 @@ var { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } 
   require("devtools/shared/transport/transport");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
-var flags = require("devtools/shared/flags");
 
 DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
   let { DebuggerSocket } = require("devtools/shared/security/socket");
@@ -38,19 +37,6 @@ Object.defineProperty(this, "Components", {
     return require("chrome").components;
   }
 });
-
-if (isWorker) {
-  flags.wantLogging = true;
-  flags.wantVerbose = true;
-} else {
-  const LOG_PREF = "devtools.debugger.log";
-  const VERBOSE_PREF = "devtools.debugger.log.verbose";
-
-  flags.wantLogging = Services.prefs.getBoolPref(LOG_PREF);
-  flags.wantVerbose =
-    Services.prefs.getPrefType(VERBOSE_PREF) !== Services.prefs.PREF_INVALID &&
-    Services.prefs.getBoolPref(VERBOSE_PREF);
-}
 
 const CONTENT_PROCESS_SERVER_STARTUP_SCRIPT =
   "resource://devtools/server/startup/content-process.js";

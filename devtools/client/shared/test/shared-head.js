@@ -25,7 +25,6 @@ const {loader, require} = scopedCuImport("resource://devtools/shared/Loader.jsm"
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {TargetFactory} = require("devtools/client/framework/target");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const flags = require("devtools/shared/flags");
 let promise = require("promise");
 let defer = require("devtools/shared/defer");
 const Services = require("Services");
@@ -109,9 +108,7 @@ function loadFrameScriptUtils(browser = gBrowser.selectedBrowser) {
   return mm;
 }
 
-flags.testing = true;
 registerCleanupFunction(() => {
-  flags.testing = false;
   Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.toolbox.host");
   Services.prefs.clearUserPref("devtools.toolbox.previousHost");
