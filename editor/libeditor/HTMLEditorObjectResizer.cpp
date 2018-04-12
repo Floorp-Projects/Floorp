@@ -876,12 +876,12 @@ HTMLEditor::SetFinalSize(int32_t aX,
   }
   if (IsCSSEnabled() || mResizedObjectIsAbsolutelyPositioned) {
     if (setWidth && mResizedObject->HasAttr(kNameSpaceID_None, nsGkAtoms::width)) {
-      RemoveAttribute(mResizedObject, nsGkAtoms::width);
+      RemoveAttributeWithTransaction(*mResizedObject, *nsGkAtoms::width);
     }
 
     if (setHeight && mResizedObject->HasAttr(kNameSpaceID_None,
                                              nsGkAtoms::height)) {
-      RemoveAttribute(mResizedObject, nsGkAtoms::height);
+      RemoveAttributeWithTransaction(*mResizedObject, *nsGkAtoms::height);
     }
 
     if (setWidth) {
@@ -909,12 +909,12 @@ HTMLEditor::SetFinalSize(int32_t aX,
     if (setWidth) {
       nsAutoString w;
       w.AppendInt(width);
-      SetAttribute(mResizedObject, nsGkAtoms::width, w);
+      SetAttributeWithTransaction(*mResizedObject, *nsGkAtoms::width, w);
     }
     if (setHeight) {
       nsAutoString h;
       h.AppendInt(height);
-      SetAttribute(mResizedObject, nsGkAtoms::height, h);
+      SetAttributeWithTransaction(*mResizedObject, *nsGkAtoms::height, h);
     }
 
     if (setWidth) {

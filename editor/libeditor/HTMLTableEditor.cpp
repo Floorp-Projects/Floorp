@@ -155,23 +155,35 @@ HTMLEditor::InsertCell(nsIDOMElement* aDOMCell,
 }
 
 nsresult
-HTMLEditor::SetColSpan(nsIDOMElement* aCell,
+HTMLEditor::SetColSpan(nsIDOMElement* aDOMCell,
                        int32_t aColSpan)
 {
-  NS_ENSURE_TRUE(aCell, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aDOMCell)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<Element> cell = do_QueryInterface(aDOMCell);
+  if (NS_WARN_IF(!cell)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   nsAutoString newSpan;
   newSpan.AppendInt(aColSpan, 10);
-  return SetAttribute(aCell, NS_LITERAL_STRING("colspan"), newSpan);
+  return SetAttributeWithTransaction(*cell, *nsGkAtoms::colspan, newSpan);
 }
 
 nsresult
-HTMLEditor::SetRowSpan(nsIDOMElement* aCell,
+HTMLEditor::SetRowSpan(nsIDOMElement* aDOMCell,
                        int32_t aRowSpan)
 {
-  NS_ENSURE_TRUE(aCell, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aDOMCell)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<Element> cell = do_QueryInterface(aDOMCell);
+  if (NS_WARN_IF(!cell)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   nsAutoString newSpan;
   newSpan.AppendInt(aRowSpan, 10);
-  return SetAttribute(aCell, NS_LITERAL_STRING("rowspan"), newSpan);
+  return SetAttributeWithTransaction(*cell, *nsGkAtoms::rowspan, newSpan);
 }
 
 NS_IMETHODIMP
@@ -1766,23 +1778,30 @@ HTMLEditor::SplitTableCell()
 }
 
 nsresult
-HTMLEditor::CopyCellBackgroundColor(nsIDOMElement* destCell,
-                                    nsIDOMElement* sourceCell)
+HTMLEditor::CopyCellBackgroundColor(nsIDOMElement* aDOMDestCell,
+                                    nsIDOMElement* aDOMSourceCell)
 {
-  NS_ENSURE_TRUE(destCell && sourceCell, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aDOMDestCell) || NS_WARN_IF(!aDOMSourceCell)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<Element> destCell = do_QueryInterface(aDOMDestCell);
+  if (NS_WARN_IF(!destCell)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  // Copy backgournd color to new cell
-  NS_NAMED_LITERAL_STRING(bgcolor, "bgcolor");
+  // Copy backgournd color to new cell.
   nsAutoString color;
   bool isSet;
-  nsresult rv = GetAttributeValue(sourceCell, bgcolor, color, &isSet);
+  nsresult rv =
+    GetAttributeValue(aDOMSourceCell, NS_LITERAL_STRING("bgcolor"),
+                      color, &isSet);
   if (NS_FAILED(rv)) {
     return rv;
   }
   if (!isSet) {
     return NS_OK;
   }
-  return SetAttribute(destCell, bgcolor, color);
+  return SetAttributeWithTransaction(*destCell, *nsGkAtoms::bgcolor, color);
 }
 
 nsresult

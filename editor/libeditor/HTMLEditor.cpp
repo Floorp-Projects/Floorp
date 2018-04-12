@@ -2760,43 +2760,55 @@ HTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
   MOZ_ASSERT(IsInitialized(), "The HTMLEditor hasn't been initialized yet");
 
   // Find a selected or enclosing table element to set background on
-  nsCOMPtr<nsIDOMElement> element;
+  nsCOMPtr<nsIDOMElement> domElement;
   int32_t selectedCount;
   nsAutoString tagName;
   nsresult rv = GetSelectedOrParentTableElement(tagName, &selectedCount,
-                                                getter_AddRefs(element));
+                                                getter_AddRefs(domElement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool setColor = !aColor.IsEmpty();
 
-  NS_NAMED_LITERAL_STRING(bgcolor, "bgcolor");
-  if (element) {
+  nsCOMPtr<Element> element = nullptr;
+  RefPtr<nsAtom> bgColorAtom = NS_Atomize("bgcolor");
+  if (domElement) {
     if (selectedCount > 0) {
       // Traverse all selected cells
-      nsCOMPtr<nsIDOMElement> cell;
-      rv = GetFirstSelectedCell(nullptr, getter_AddRefs(cell));
-      if (NS_SUCCEEDED(rv) && cell) {
-        while (cell) {
-          rv = setColor ? SetAttribute(cell, bgcolor, aColor) :
-                          RemoveAttribute(cell, bgcolor);
+      nsCOMPtr<nsIDOMElement> domCell;
+      rv = GetFirstSelectedCell(nullptr, getter_AddRefs(domCell));
+      if (NS_SUCCEEDED(rv) && domCell) {
+        while (domCell) {
+          nsCOMPtr<Element> cell = do_QueryInterface(domCell);
+          if (NS_WARN_IF(!cell)) {
+            return NS_ERROR_FAILURE;
+          }
+          rv = setColor ?
+                 SetAttributeWithTransaction(*cell, *bgColorAtom, aColor) :
+                 RemoveAttributeWithTransaction(*cell, *bgColorAtom);
           if (NS_FAILED(rv)) {
             return rv;
           }
-
-          GetNextSelectedCell(nullptr, getter_AddRefs(cell));
+          GetNextSelectedCell(nullptr, getter_AddRefs(domCell));
         }
         return NS_OK;
       }
     }
     // If we failed to find a cell, fall through to use originally-found element
+    element = do_QueryInterface(domElement);
+    if (NS_WARN_IF(!element)) {
+      return NS_ERROR_FAILURE;
+    }
   } else {
     // No table element -- set the background color on the body tag
-    element = do_QueryInterface(GetRoot());
-    NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
+    element = GetRoot();
+    if (NS_WARN_IF(!element)) {
+      return NS_ERROR_FAILURE;
+    }
   }
   // Use the editor method that goes through the transaction system
-  return setColor ? SetAttribute(element, bgcolor, aColor) :
-                    RemoveAttribute(element, bgcolor);
+  return setColor ?
+           SetAttributeWithTransaction(*element, *bgColorAtom, aColor) :
+           RemoveAttributeWithTransaction(*element, *bgColorAtom);
 }
 
 NS_IMETHODIMP
@@ -2808,11 +2820,14 @@ HTMLEditor::SetBodyAttribute(const nsAString& aAttribute,
   MOZ_ASSERT(IsInitialized(), "The HTMLEditor hasn't been initialized yet");
 
   // Set the background color attribute on the body tag
-  nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(GetRoot());
-  NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
+  RefPtr<Element> rootElement = GetRoot();
+  if (NS_WARN_IF(!rootElement)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Use the editor method that goes through the transaction system
-  return SetAttribute(bodyElement, aAttribute, aValue);
+  RefPtr<nsAtom> attributeAtom = NS_Atomize(aAttribute);
+  return SetAttributeWithTransaction(*rootElement, *attributeAtom, aValue);
 }
 
 NS_IMETHODIMP
@@ -4199,7 +4214,7 @@ HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
     }
     return aSuppressTransaction ?
              aElement->SetAttr(kNameSpaceID_None, aAttribute, aValue, true) :
-             SetAttribute(aElement, aAttribute, aValue);
+             SetAttributeWithTransaction(*aElement, *aAttribute, aValue);
   }
 
   int32_t count =
@@ -4216,7 +4231,7 @@ HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
 
     return aSuppressTransaction ?
              aElement->UnsetAttr(kNameSpaceID_None, aAttribute, true) :
-             RemoveAttribute(aElement, aAttribute);
+             RemoveAttributeWithTransaction(*aElement, *aAttribute);
   }
 
   // count is an integer that represents the number of CSS declarations applied
@@ -4231,14 +4246,14 @@ HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
     existingValue.Append(aValue);
     return aSuppressTransaction ?
        aElement->SetAttr(kNameSpaceID_None, aAttribute, existingValue, true) :
-      SetAttribute(aElement, aAttribute, existingValue);
+      SetAttributeWithTransaction(*aElement, *aAttribute, existingValue);
   }
 
   // we have no CSS equivalence for this attribute and it is not the style
   // attribute; let's set it the good'n'old HTML way
   return aSuppressTransaction ?
            aElement->SetAttr(kNameSpaceID_None, aAttribute, aValue, true) :
-           SetAttribute(aElement, aAttribute, aValue);
+           SetAttributeWithTransaction(*aElement, *aAttribute, aValue);
 }
 
 nsresult
@@ -4262,7 +4277,7 @@ HTMLEditor::RemoveAttributeOrEquivalent(Element* aElement,
 
   return aSuppressTransaction ?
     aElement->UnsetAttr(kNameSpaceID_None, aAttribute, /* aNotify = */ true) :
-    RemoveAttribute(aElement, aAttribute);
+    RemoveAttributeWithTransaction(*aElement, *aAttribute);
 }
 
 nsresult
