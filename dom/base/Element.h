@@ -1263,9 +1263,6 @@ public:
   void SetSlot(const nsAString& aName, ErrorResult& aError);
   void GetSlot(nsAString& aName);
 
-  // [deprecated] Shadow DOM v0
-  already_AddRefed<ShadowRoot> CreateShadowRoot(ErrorResult& aError);
-
   ShadowRoot* GetShadowRoot() const
   {
     const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
