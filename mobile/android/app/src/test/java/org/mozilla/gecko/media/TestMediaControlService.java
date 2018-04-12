@@ -15,9 +15,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.media.MediaControlService.State;
 import org.robolectric.Robolectric;
+import org.robolectric.RobolectricTestRunner;
 
 import java.lang.ref.WeakReference;
 
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestMediaControlService {
 
     private MediaControlService mSpyService;

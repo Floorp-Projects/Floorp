@@ -13,7 +13,7 @@ add_task(async function test_explicit_weakupload() {
       tags: ["moz", "dot", "org"],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["mozBmk______"],
@@ -52,7 +52,7 @@ add_task(async function test_explicit_weakupload_with_dateAdded() {
       dateAdded,
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["mozBmk______"],
@@ -66,7 +66,7 @@ add_task(async function test_explicit_weakupload_with_dateAdded() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Make remote change with older date added");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "mozBmk______",
     type: "bookmark",
     title: "Firefox",

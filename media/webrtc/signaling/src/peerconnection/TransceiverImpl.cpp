@@ -572,6 +572,8 @@ TransceiverImpl::InsertDTMFTone(int tone, uint32_t duration)
     return;
   }
 
+  MOZ_ASSERT(mConduit->type() == MediaSessionConduit::AUDIO);
+
   RefPtr<AudioSessionConduit> conduit(static_cast<AudioSessionConduit*>(
         mConduit.get()));
   mStsThread->Dispatch(WrapRunnableNM([conduit, tone, duration] () {

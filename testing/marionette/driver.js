@@ -854,9 +854,6 @@ GeckoDriver.prototype.getContext = function() {
  *     Filename of the client's program where this script is evaluated.
  * @param {number=} line
  *     Line in the client's program where this script is evaluated.
- * @param {boolean=} debug_script
- *     Attach an <code>onerror</code> event handler on the {@link Window}
- *     object.  It does not differentiate content errors from chrome errors.
  *
  * @return {(string|boolean|number|object|WebElement)}
  *     Return value from the script, or null which signifies either the
@@ -878,7 +875,6 @@ GeckoDriver.prototype.executeScript = async function(cmd, resp) {
     newSandbox: cmd.parameters.newSandbox,
     file: cmd.parameters.filename,
     line: cmd.parameters.line,
-    debug: cmd.parameters.debug_script,
   };
   resp.body.value = await this.execute_(script, args, opts);
 };
@@ -926,9 +922,6 @@ GeckoDriver.prototype.executeScript = async function(cmd, resp) {
  *     Filename of the client's program where this script is evaluated.
  * @param {number=} line
  *     Line in the client's program where this script is evaluated.
- * @param {boolean=} debug_script
- *     Attach an <code>onerror</code> event handler on the {@link Window}
- *     object.  It does not differentiate content errors from chrome errors.
  *
  * @return {(string|boolean|number|object|WebElement)}
  *     Return value from the script, or null which signifies either the
@@ -950,7 +943,6 @@ GeckoDriver.prototype.executeAsyncScript = async function(cmd, resp) {
     newSandbox: cmd.parameters.newSandbox,
     file: cmd.parameters.filename,
     line: cmd.parameters.line,
-    debug: cmd.parameters.debug_script,
     async: true,
   };
   resp.body.value = await this.execute_(script, args, opts);
@@ -965,7 +957,6 @@ GeckoDriver.prototype.execute_ = async function(
       newSandbox = false,
       file = "",
       line = 0,
-      debug = false,
       async = false,
     } = {}) {
 
@@ -984,7 +975,6 @@ GeckoDriver.prototype.execute_ = async function(
   assert.boolean(newSandbox, pprint`Expected newSandbox to be boolean: ${newSandbox}`);
   assert.string(file, pprint`Expected file to be a string: ${file}`);
   assert.number(line, pprint`Expected line to be a number: ${line}`);
-  assert.boolean(debug, pprint`Expected debug_script to be boolean: ${debug}`);
 
   let opts = {
     timeout,
@@ -992,7 +982,6 @@ GeckoDriver.prototype.execute_ = async function(
     newSandbox,
     file,
     line,
-    debug,
     async,
   };
 

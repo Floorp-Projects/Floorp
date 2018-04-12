@@ -70,54 +70,54 @@ public:
         : 0;
   }
 
-  DOMHighResTimeStamp RedirectStart() const {
+  DOMHighResTimeStamp RedirectStart(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
     // We have to check if all the redirect URIs had the same origin (since
-    // there is no check in RedirectEndHighRes())
-    return mTimingData && mTimingData->ShouldReportCrossOriginRedirect()
+    // there is no check in RedirectStartHighRes())
+    return ReportRedirectForCaller(aSubjectPrincipal)
         ? mTimingData->RedirectStartHighRes(mPerformance)
         : 0;
   }
 
-  DOMHighResTimeStamp RedirectEnd() const {
+  DOMHighResTimeStamp RedirectEnd(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
     // We have to check if all the redirect URIs had the same origin (since
     // there is no check in RedirectEndHighRes())
-    return mTimingData && mTimingData->ShouldReportCrossOriginRedirect()
+    return ReportRedirectForCaller(aSubjectPrincipal)
         ? mTimingData->RedirectEndHighRes(mPerformance)
         : 0;
   }
 
-  DOMHighResTimeStamp DomainLookupStart() const {
-    return mTimingData && mTimingData->TimingAllowed()
+  DOMHighResTimeStamp DomainLookupStart(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+    return TimingAllowedForCaller(aSubjectPrincipal)
         ? mTimingData->DomainLookupStartHighRes(mPerformance)
         : 0;
   }
 
-  DOMHighResTimeStamp DomainLookupEnd() const {
-    return mTimingData && mTimingData->TimingAllowed()
+  DOMHighResTimeStamp DomainLookupEnd(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+    return TimingAllowedForCaller(aSubjectPrincipal)
         ? mTimingData->DomainLookupEndHighRes(mPerformance)
         : 0;
   }
 
-  DOMHighResTimeStamp ConnectStart() const {
-    return mTimingData && mTimingData->TimingAllowed()
+  DOMHighResTimeStamp ConnectStart(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+    return TimingAllowedForCaller(aSubjectPrincipal)
         ? mTimingData->ConnectStartHighRes(mPerformance)
         : 0;
   }
 
-  DOMHighResTimeStamp ConnectEnd() const {
-    return mTimingData && mTimingData->TimingAllowed()
+  DOMHighResTimeStamp ConnectEnd(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+    return TimingAllowedForCaller(aSubjectPrincipal)
         ? mTimingData->ConnectEndHighRes(mPerformance)
         : 0;
   }
 
-  DOMHighResTimeStamp RequestStart() const {
-    return mTimingData && mTimingData->TimingAllowed()
+  DOMHighResTimeStamp RequestStart(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+    return TimingAllowedForCaller(aSubjectPrincipal)
         ? mTimingData->RequestStartHighRes(mPerformance)
         : 0;
   }
 
-  DOMHighResTimeStamp ResponseStart() const {
-    return mTimingData && mTimingData->TimingAllowed()
+  DOMHighResTimeStamp ResponseStart(Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+    return TimingAllowedForCaller(aSubjectPrincipal)
         ? mTimingData->ResponseStartHighRes(mPerformance)
         : 0;
   }
@@ -128,10 +128,10 @@ public:
         : 0;
   }
 
-  DOMHighResTimeStamp SecureConnectionStart() const
+  DOMHighResTimeStamp SecureConnectionStart(Maybe<nsIPrincipal*>& aSubjectPrincipal) const
   {
-    return mTimingData && mTimingData->TimingAllowed()
-        ?  mTimingData->SecureConnectionStartHighRes(mPerformance)
+    return TimingAllowedForCaller(aSubjectPrincipal)
+        ? mTimingData->SecureConnectionStartHighRes(mPerformance)
         : 0;
   }
 
@@ -140,19 +140,25 @@ public:
     return this;
   }
 
-  uint64_t TransferSize() const
+  uint64_t TransferSize(Maybe<nsIPrincipal*>& aSubjectPrincipal) const
   {
-    return mTimingData ? mTimingData->TransferSize() : 0;
+    return TimingAllowedForCaller(aSubjectPrincipal)
+        ? mTimingData->TransferSize()
+        : 0;
   }
 
-  uint64_t EncodedBodySize() const
+  uint64_t EncodedBodySize(Maybe<nsIPrincipal*>& aSubjectPrincipal) const
   {
-    return mTimingData ? mTimingData->EncodedBodySize() : 0;
+    return TimingAllowedForCaller(aSubjectPrincipal)
+        ? mTimingData->EncodedBodySize()
+        : 0;
   }
 
-  uint64_t DecodedBodySize() const
+  uint64_t DecodedBodySize(Maybe<nsIPrincipal*>& aSubjectPrincipal) const
   {
-    return mTimingData ? mTimingData->DecodedBodySize() : 0;
+    return TimingAllowedForCaller(aSubjectPrincipal)
+        ? mTimingData->DecodedBodySize()
+        : 0;
   }
 
   size_t
@@ -164,9 +170,21 @@ protected:
   size_t
   SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
+  // Check if caller has access to cross-origin timings, either by the rules
+  // from the spec, or based on addon permissions.
+  bool
+  TimingAllowedForCaller(Maybe<nsIPrincipal*>& aCaller) const;
+
+  // Check if cross-origin redirects should be reported to the caller.
+  bool
+  ReportRedirectForCaller(Maybe<nsIPrincipal*>& aCaller) const;
+
   nsString mInitiatorType;
   UniquePtr<PerformanceTimingData> mTimingData;
   RefPtr<Performance> mPerformance;
+
+  // The same initial requested URI as the `name` attribute.
+  nsCOMPtr<nsIURI> mOriginalURI;
 };
 
 } // namespace dom

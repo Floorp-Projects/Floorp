@@ -8,14 +8,14 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.icons.IconDescriptor;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.icons.storage.FailureCache;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestFilterKnownFailureUrls {
     private static final String TEST_PAGE_URL = "http://www.mozilla.org";
     private static final String TEST_ICON_URL = "https://example.org/favicon.ico";

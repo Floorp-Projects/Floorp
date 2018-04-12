@@ -5,11 +5,11 @@ package org.mozilla.gecko.sync.test;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoCounts;
 import org.mozilla.gecko.sync.Utils;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test both info/collections and info/collection_counts.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestInfoCollections {
   public static final String TEST_COLLECTIONS_JSON =
       "{\"history\":1.3319567131E9, "    +

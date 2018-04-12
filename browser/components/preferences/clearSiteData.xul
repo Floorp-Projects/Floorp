@@ -8,19 +8,16 @@
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/preferences/clearSiteData.css" type="text/css"?>
 
-<!DOCTYPE dialog [
- <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
- <!ENTITY % clearSiteDataDTD SYSTEM "chrome://browser/locale/preferences/clearSiteData.dtd">
- %brandDTD;
- %clearSiteDataDTD;
-]>
-
 <window id="ClearSiteDataDialog" class="windowDialog"
         windowtype="Browser:ClearSiteData"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="width: &window.width;;"
-        title="&window.title;"
+        data-l10n-id="clear-site-data-window"
+        data-l10n-attrs="title, style"
         persist="screenX screenY width height">
+
+  <link rel="localization" href="branding/brand.ftl"/>
+  <link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
+  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
   <script src="chrome://browser/content/preferences/clearSiteData.js"/>
 
@@ -28,27 +25,31 @@
                 src="chrome://browser/locale/preferences/preferences.properties"/>
 
   <keyset>
-    <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
+    <key data-l10n-id="clear-site-data-close-key" modifiers="accel" oncommand="window.close();"/>
   </keyset>
 
   <vbox class="contentPane largeDialogContainer" flex="1">
-    <description control="url">&window.description;</description>
+    <description control="url" data-l10n-id="clear-site-data-description"/>
     <separator class="thin"/>
     <vbox class="options-container">
       <hbox class="option">
-        <checkbox id="clearSiteData" checked="true"
-                  accesskey="&clearSiteData.accesskey;" />
+        <checkbox id="clearSiteData" checked="true" />
         <vbox>
-          <label for="clearSiteData" id="clearSiteDataLabel" value="&clearSiteData.label;" />
-          <description class="option-description">&clearSiteData.description;</description>
+          <label for="clearSiteData"
+                 id="clearSiteDataLabel"
+                 control="clearSiteData"
+                 data-l10n-id="clear-site-data-cookies" />
+          <description class="option-description" data-l10n-id="clear-site-data-cookies-info" />
         </vbox>
       </hbox>
       <hbox class="option">
-        <checkbox id="clearCache" checked="true"
-                  accesskey="&clearCache.accesskey;" />
+        <checkbox id="clearCache" checked="true" />
         <vbox>
-          <label for="clearCache" id="clearCacheLabel" value="&clearCache.label;" />
-          <description class="option-description">&clearCache.description;</description>
+          <label for="clearCache"
+                 id="clearCacheLabel"
+                 control="clearCache"
+                 data-l10n-id="clear-site-data-cache" />
+          <description class="option-description" data-l10n-id="clear-site-data-cache-info"/>
         </vbox>
       </hbox>
     </vbox>
@@ -56,9 +57,9 @@
   <vbox>
     <hbox class="actionButtons" align="right" flex="1">
       <button id="cancelButton" icon="close"
-              label="&button.cancel.label;" accesskey="&button.cancel.accesskey;" />
+              data-l10n-id="clear-site-data-cancel" />
       <button id="clearButton" icon="save"
-              label="&button.clear.label;" accesskey="&button.clear.accesskey;"/>
+              data-l10n-id="clear-site-data-clear" />
     </hbox>
   </vbox>
 </window>

@@ -20,7 +20,7 @@ add_task(async function test_livemarks() {
         }],
       }],
     });
-    await buf.store(shuffle([{
+    await storeRecords(buf, shuffle([{
       id: "menu",
       type: "folder",
       children: ["livemarkAAAA"],
@@ -49,7 +49,7 @@ add_task(async function test_livemarks() {
     });
 
     info("Make remote changes");
-    await buf.store(shuffle([{
+    await storeRecords(buf, shuffle([{
       id: "livemarkAAAA",
       type: "livemark",
       title: "A (remote)",
@@ -334,7 +334,7 @@ add_task(async function test_mismatched_but_compatible_folder_types() {
   await PlacesTestUtils.markBookmarksAsSynced();
 
   info("Make remote changes");
-  await buf.store([{
+  await storeRecords(buf, [{
     "id": "l1nZZXfB8nC7",
     "type": "livemark",
     "siteUri": "http://sneglehode.wordpress.com/",
@@ -395,7 +395,7 @@ add_task(async function test_mismatched_but_incompatible_folder_types() {
     await PlacesTestUtils.markBookmarksAsSynced();
 
     info("Make remote changes");
-    await buf.store([{
+    await storeRecords(buf, [{
       "id": "livemarkAAAA",
       "type": "folder",
       "title": "not really a Livemark",
@@ -443,7 +443,7 @@ add_task(async function test_different_but_compatible_bookmark_types() {
     Assert.equal(changes.bookmarkBBBB.cleartext.type, "query");
 
     // Now pretend that same records are already on the server.
-    await buf.store([{
+    await storeRecords(buf, [{
       id: "menu",
       type: "folder",
       children: ["bookmarkAAAA", "bookmarkBBBB"],
@@ -516,7 +516,7 @@ add_task(async function test_incompatible_types() {
 
     // Now pretend that same records are already on the server with incompatible
     // types.
-    await buf.store([{
+    await storeRecords(buf, [{
       id: "menu",
       type: "folder",
       children: ["AAAAAAAAAAAA"],

@@ -31,8 +31,7 @@ add_task(async function one() {
     let actions = PageActions.actionsInPanel(window);
     let action = actions.find(a => a.id == "addSearchEngine");
     Assert.ok(action, "Action should be present in panel");
-    let expectedTitle =
-      "Add \u{201C}page_action_menu_add_search_engine_0\u{201D} to One-Click Search";
+    let expectedTitle = "Add Search Engine";
     Assert.equal(action.getTitle(window), expectedTitle, "Action title");
     let button =
       BrowserPageActions.panelButtonNodeForActionID("addSearchEngine");
@@ -50,7 +49,7 @@ add_task(async function one() {
     await hiddenPromise;
     let engine = await enginePromise;
     let feedbackText = await feedbackPromise;
-    Assert.equal(feedbackText, "Added to Search Dropdown");
+    Assert.equal(feedbackText, "Added Search Engine");
 
     // Open the panel again.
     await promisePageActionPanelOpen();
@@ -100,7 +99,7 @@ add_task(async function many() {
     let actions = PageActions.actionsInPanel(window);
     let action = actions.find(a => a.id == "addSearchEngine");
     Assert.ok(action, "Action should be present in panel");
-    let expectedTitle = "Add One-Click Search Engine";
+    let expectedTitle = "Add Search Engine";
     Assert.equal(action.getTitle(window), expectedTitle, "Action title");
     let button =
       BrowserPageActions.panelButtonNodeForActionID("addSearchEngine");
@@ -139,7 +138,7 @@ add_task(async function many() {
     let engine = await enginePromise;
     engines.push(engine);
     let feedbackText = await feedbackPromise;
-    Assert.equal(feedbackText, "Added to Search Dropdown", "Feedback text");
+    Assert.equal(feedbackText, "Added Search Engine", "Feedback text");
 
     // Open the panel and show the subview again.  The installed engine should
     // be gone.
@@ -166,7 +165,7 @@ add_task(async function many() {
     engine = await enginePromise;
     engines.push(engine);
     feedbackText = await feedbackPromise;
-    Assert.equal(feedbackText, "Added to Search Dropdown", "Feedback text");
+    Assert.equal(feedbackText, "Added Search Engine", "Feedback text");
 
     // Open the panel again.  This time the action button should show the one
     // remaining engine.
@@ -174,8 +173,7 @@ add_task(async function many() {
     actions = PageActions.actionsInPanel(window);
     action = actions.find(a => a.id == "addSearchEngine");
     Assert.ok(action, "Action should be present in panel");
-    expectedTitle =
-      "Add \u{201C}page_action_menu_add_search_engine_2\u{201D} to One-Click Search";
+    expectedTitle = "Add Search Engine";
     Assert.equal(action.getTitle(window), expectedTitle, "Action title");
     button = BrowserPageActions.panelButtonNodeForActionID("addSearchEngine");
     Assert.ok(button, "Button should be present in panel");
@@ -193,7 +191,7 @@ add_task(async function many() {
     engine = await enginePromise;
     engines.push(engine);
     feedbackText = await feedbackPromise;
-    Assert.equal(feedbackText, "Added to Search Dropdown", "Feedback text");
+    Assert.equal(feedbackText, "Added Search Engine", "Feedback text");
 
     // All engines are installed at this point.  Open the panel and make sure
     // the action is gone.
@@ -220,8 +218,7 @@ add_task(async function many() {
     actions = PageActions.actionsInPanel(window);
     action = actions.find(a => a.id == "addSearchEngine");
     Assert.ok(action, "Action should be present in panel");
-    expectedTitle =
-      "Add \u{201C}page_action_menu_add_search_engine_0\u{201D} to One-Click Search";
+    expectedTitle = "Add Search Engine";
     Assert.equal(action.getTitle(window), expectedTitle, "Action title");
     button = BrowserPageActions.panelButtonNodeForActionID("addSearchEngine");
     Assert.ok(button, "Button should be present in panel");
@@ -241,7 +238,7 @@ add_task(async function many() {
     actions = PageActions.actionsInPanel(window);
     action = actions.find(a => a.id == "addSearchEngine");
     Assert.ok(action, "Action should be present in panel");
-    expectedTitle = "Add One-Click Search Engine";
+    expectedTitle = "Add Search Engine";
     Assert.equal(action.getTitle(window), expectedTitle, "Action title");
     button = BrowserPageActions.panelButtonNodeForActionID("addSearchEngine");
     Assert.ok(button, "Button should be in panel");
@@ -313,7 +310,7 @@ add_task(async function urlbarOne() {
     EventUtils.synthesizeMouseAtCenter(button, {});
     let engine = await enginePromise;
     let feedbackText = await feedbackPromise;
-    Assert.equal(feedbackText, "Added to Search Dropdown");
+    Assert.equal(feedbackText, "Added Search Engine");
 
     // The action should be gone.
     actions = PageActions.actionsInUrlbar(window);
@@ -392,7 +389,7 @@ add_task(async function urlbarMany() {
     let engine = await enginePromise;
     engines.push(engine);
     let feedbackText = await feedbackPromise;
-    Assert.equal(feedbackText, "Added to Search Dropdown", "Feedback text");
+    Assert.equal(feedbackText, "Added Search Engine", "Feedback text");
 
     // Open the panel again.  The installed engine should be gone.
     EventUtils.synthesizeMouseAtCenter(button, {});
@@ -418,7 +415,7 @@ add_task(async function urlbarMany() {
     engine = await enginePromise;
     engines.push(engine);
     feedbackText = await feedbackPromise;
-    Assert.equal(feedbackText, "Added to Search Dropdown", "Feedback text");
+    Assert.equal(feedbackText, "Added Search Engine", "Feedback text");
 
     // Now there's only one engine left, so clicking the button should simply
     // install it instead of opening the activated-action panel.
@@ -429,7 +426,7 @@ add_task(async function urlbarMany() {
     engine = await enginePromise;
     engines.push(engine);
     feedbackText = await feedbackPromise;
-    Assert.equal(feedbackText, "Added to Search Dropdown", "Feedback text");
+    Assert.equal(feedbackText, "Added Search Engine", "Feedback text");
 
     // All engines are installed at this point.  The action should be gone.
     actions = PageActions.actionsInUrlbar(window);

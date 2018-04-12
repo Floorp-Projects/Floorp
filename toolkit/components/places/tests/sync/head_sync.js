@@ -45,6 +45,40 @@ function run_test() {
   run_next_test();
 }
 
+// Returns a `CryptoWrapper`-like object that wraps the Sync record cleartext.
+// This exists to avoid importing `record.js` from Sync.
+function makeRecord(cleartext) {
+  return new Proxy({ cleartext }, {
+    get(target, property, receiver) {
+      if (property == "cleartext") {
+        return target.cleartext;
+      }
+      if (property == "cleartextToString") {
+        return () => JSON.stringify(target.cleartext);
+      }
+      return target.cleartext[property];
+    },
+    set(target, property, value, receiver) {
+      if (property == "cleartext") {
+        target.cleartext = value;
+      } else if (property != "cleartextToString") {
+        target.cleartext[property] = value;
+      }
+    },
+    has(target, property) {
+      return property == "cleartext" || (property in target.cleartext);
+    },
+    deleteProperty(target, property) {},
+    ownKeys(target) {
+      return ["cleartext", ...Reflect.ownKeys(target)];
+    },
+  });
+}
+
+async function storeRecords(buf, records, options) {
+  await buf.store(records.map(makeRecord), options);
+}
+
 function inspectChangeRecords(changeRecords) {
   let results = { updated: [], deleted: [] };
   for (let [id, record] of Object.entries(changeRecords)) {

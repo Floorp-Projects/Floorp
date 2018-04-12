@@ -16,11 +16,11 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentBuilder;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
 import org.mozilla.gecko.util.IOUtils;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.BufferedInputStream;
@@ -45,7 +45,7 @@ import static org.mockito.Mockito.verify;
 /**
  * SyncAction: Synchronize catalog from a (mocked) Kinto instance.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestSyncAction {
     /**
      * Scenario: The server returns an empty record set.

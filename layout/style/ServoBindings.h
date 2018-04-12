@@ -86,10 +86,8 @@ namespace mozilla {
 
 #define STYLE_STRUCT(name_) \
   const nsStyle##name_* ServoComputedData::GetStyle##name_() const { return &name_.mPtr->gecko; }
-#define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
 #define NS_DECL_THREADSAFE_FFI_REFCOUNTING(class_, name_)                     \
   void Gecko_AddRef##name_##ArbitraryThread(class_* aPtr);                    \
@@ -404,7 +402,7 @@ mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed
 // they wrap the value in a struct.
 uint32_t Gecko_CalcStyleDifference(ComputedStyleBorrowed old_style,
                                    ComputedStyleBorrowed new_style,
-                                   bool* any_style_changed,
+                                   bool* any_style_struct_changed,
                                    bool* reset_only_changed);
 
 // Get an element snapshot for a given element from the table.

@@ -7,17 +7,19 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/blocklists.dtd" >
-
 <window id="BlocklistsDialog" class="windowDialog"
         windowtype="Browser:Blocklists"
-        title="&window.title;"
+        data-l10n-id="blocklist-window"
+        data-l10n-attrs="title, style"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="width: &window.width;;"
         onload="gBlocklistManager.onLoad();"
         onunload="gBlocklistManager.uninit();"
         persist="screenX screenY width height"
         onkeypress="gBlocklistManager.onWindowKeyPress(event);">
+
+  <link rel="localization" href="branding/brand.ftl"/>
+  <link rel="localization" href="browser/preferences/blocklists.ftl"/>
+  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
   <script src="chrome://global/content/treeUtils.js"/>
   <script src="chrome://browser/content/preferences/blocklists.js"/>
@@ -26,11 +28,11 @@
                 src="chrome://browser/locale/preferences/preferences.properties"/>
 
   <keyset>
-    <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
+    <key data-l10n-id="blocklist-close-key" modifiers="accel" oncommand="window.close();"/>
   </keyset>
 
   <vbox class="contentPane largeDialogContainer" flex="1">
-    <description id="blocklistsText" control="url"/>
+    <description id="blocklistsText" data-l10n-id="blocklist-desc" control="url"/>
     <separator class="thin"/>
     <tree id="blocklistsTree" flex="1" style="height: 18em;"
           hidecolumnpicker="true"
@@ -38,7 +40,7 @@
       <treecols>
         <treecol id="selectionCol" label="" flex="1" sortable="false"
                  type="checkbox"/>
-        <treecol id="listCol" label="&treehead.list.label;" flex="80"
+        <treecol id="listCol" data-l10n-id="blocklist-treehead-list" flex="80"
                  sortable="false"/>
       </treecols>
       <treechildren/>
@@ -48,9 +50,9 @@
     <spacer flex="1"/>
     <hbox class="actionButtons" align="right" flex="1">
       <button oncommand="close();" icon="close"
-              label="&button.cancel.label;" accesskey="&button.cancel.accesskey;" />
+              data-l10n-id="blocklist-button-cancel"/>
       <button id="btnApplyChanges" oncommand="gBlocklistManager.onApplyChanges();" icon="save"
-              label="&button.ok.label;" accesskey="&button.ok.accesskey;"/>
+              data-l10n-id="blocklist-button-ok"/>
     </hbox>
   </vbox>
 </window>
