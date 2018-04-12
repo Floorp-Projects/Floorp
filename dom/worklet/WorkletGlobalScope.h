@@ -17,8 +17,6 @@
   { 0x1b3f62e7, 0xe357, 0x44be, \
     { 0xbf, 0xe0, 0xdf, 0x85, 0xe6, 0x56, 0x85, 0xac } }
 
-class nsIPrincipal;
-
 namespace mozilla {
 namespace dom {
 
@@ -44,8 +42,7 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual bool
-  WrapGlobalObject(JSContext* aCx, nsIPrincipal* aPrincipal,
-                   JS::MutableHandle<JSObject*> aReflector) = 0;
+  WrapGlobalObject(JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) = 0;
 
   virtual JSObject*
   GetGlobalJSObject() override

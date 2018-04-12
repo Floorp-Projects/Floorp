@@ -64,6 +64,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/XULCommandEvent.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkletThread.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
@@ -6083,6 +6084,11 @@ nsContentUtils::GetCurrentJSContextForThread()
   if (MOZ_LIKELY(NS_IsMainThread())) {
     return GetCurrentJSContext();
   }
+
+  if (WorkletThread::IsOnWorkletThread()) {
+    return WorkletThread::Get()->GetJSContext();
+  }
+
   return GetCurrentWorkerThreadJSContext();
 }
 
