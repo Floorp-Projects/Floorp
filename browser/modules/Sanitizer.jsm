@@ -275,6 +275,10 @@ var Sanitizer = {
     Ci.nsISupportsWeakReference
   ]),
 
+  // When making any changes to the sanitize implementations here,
+  // please check whether the changes are applicable to Android
+  // (mobile/android/modules/Sanitizer.jsm) as well.
+
   items: {
     cache: {
       async clear(range) {
