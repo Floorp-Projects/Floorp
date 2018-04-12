@@ -218,3 +218,32 @@ add_task(async function test_password_dupe() {
   }
 
 });
+
+add_task(async function test_sync_password_validation() {
+  // This test isn't in test_password_validator to avoid duplicating cleanup.
+  _("Ensure that if a password validation happens, it ends up in the ping");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  Svc.Prefs.set("engine.passwords.validation.interval", 0);
+  Svc.Prefs.set("engine.passwords.validation.percentageChance", 100);
+  Svc.Prefs.set("engine.passwords.validation.maxRecords", -1);
+  Svc.Prefs.set("engine.passwords.validation.enabled", true);
+
+  try {
+
+    let ping = await wait_for_ping(() => Service.sync());
+
+    let engineInfo = ping.engines.find(e => e.name == "passwords");
+    ok(engineInfo, "Engine should be in ping");
+
+    let validation = engineInfo.validation;
+    ok(validation, "Engine should have validation info");
+
+  } finally {
+    await cleanup(engine, server);
+  }
+});
