@@ -84,7 +84,7 @@
         <spacer flex="2"/>
     </xbl:content>
 
-    <implementation implements="nsIDOMEventListener">
+    <implementation>
         <constructor>
         <![CDATA[
             let self = this;

@@ -100,7 +100,7 @@
       </xul:arrowscrollbox>
     </content>
 
-    <implementation implements="nsIDOMEventListener, nsIObserver">
+    <implementation implements="nsIObserver">
       <constructor>
         <![CDATA[
           this._tabClipWidth = Services.prefs.getIntPref("browser.tabs.tabClipWidth");
@@ -1965,7 +1965,7 @@
 
   <binding id="tabbrowser-alltabs-popup"
            extends="chrome://global/content/bindings/popup.xml#popup">
-    <implementation implements="nsIDOMEventListener">
+    <implementation>
       <method name="_tabOnAttrModified">
         <parameter name="aEvent"/>
         <body><![CDATA[
