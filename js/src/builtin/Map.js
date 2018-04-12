@@ -75,8 +75,8 @@ function MapIteratorNext() {
     var O = this;
 
     // Steps 2-3.
-    if (!IsObject(O) || !IsMapIterator(O))
-        return callFunction(CallMapIteratorMethodIfWrapped, O, "MapIteratorNext");
+    if (!IsObject(O) || (O = GuardToMapIterator(O)) === null)
+        return callFunction(CallMapIteratorMethodIfWrapped, this, "MapIteratorNext");
 
     // Steps 4-5 (implemented in _GetNextMapEntryForIterator).
     // Steps 8-9 (omitted).
@@ -95,7 +95,7 @@ function MapIteratorNext() {
         // Steps 10.b-c (omitted).
 
         // Step 6.
-        var itemKind = UnsafeGetInt32FromReservedSlot(this, ITERATOR_SLOT_ITEM_KIND);
+        var itemKind = UnsafeGetInt32FromReservedSlot(O, ITERATOR_SLOT_ITEM_KIND);
 
         var result;
         if (itemKind === ITEM_KIND_KEY) {

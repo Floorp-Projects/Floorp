@@ -321,8 +321,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineSubstringKernel(callInfo);
       case InlinableNative::IntrinsicGuardToArrayIterator:
         return inlineGuardToClass(callInfo, &ArrayIteratorObject::class_);
-      case InlinableNative::IntrinsicIsMapIterator:
-        return inlineHasClass(callInfo, &MapIteratorObject::class_);
+      case InlinableNative::IntrinsicGuardToMapIterator:
+        return inlineGuardToClass(callInfo, &MapIteratorObject::class_);
       case InlinableNative::IntrinsicIsSetIterator:
         return inlineHasClass(callInfo, &SetIteratorObject::class_);
       case InlinableNative::IntrinsicGuardToStringIterator:
