@@ -145,7 +145,7 @@ LIRGraph* GenerateLIR(MIRGenerator* mir);
 CodeGenerator* GenerateCode(MIRGenerator* mir, LIRGraph* lir);
 CodeGenerator* CompileBackEnd(MIRGenerator* mir);
 
-void AttachFinishedCompilations(ZoneGroup* group, JSContext* maybecx);
+void AttachFinishedCompilations(JSContext* cx);
 void FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
                             const AutoLockHelperThreadState& lock);
 void FreeIonBuilder(IonBuilder* builder);
