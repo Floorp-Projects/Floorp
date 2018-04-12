@@ -310,6 +310,14 @@ release-secondary-final-verify
 ------------------------------
 Verifies the contents and package of release update MARs for RC releases.
 
+release-sign-and-push-langpacks
+-------------------------------
+Sign a langpack XPI and publishes it onto addons.mozilla.org.
+
+release-beetmover-signed-langpacks
+----------------------------------
+Publishes signed langpacks to archive.mozilla.org
+
 release-update-verify
 ---------------------
 Verifies the contents and package of release update MARs.
@@ -394,6 +402,10 @@ Dummy tasks to consolidate beetmover dependencies to avoid taskcluster limits on
 post-beetmover-checksums-dummy
 ------------------------------
 Dummy tasks to consolidate beetmover-checksums dependencies to avoid taskcluster limits on number of dependencies per task.
+
+post-langpack-dummy
+------------------------------
+Dummy tasks to consolidate language pack beetmover dependencies to avoid taskcluster limits on number of dependencies per task.
 
 packages
 --------

@@ -54,6 +54,38 @@ talos-chrome-profiling:
             - --add-option
             - --webServer,localhost
 
+talos-damp:
+    description: "Talos devtools (damp)"
+    try-name: damp
+    treeherder-symbol: T(damp)
+    max-run-time:
+        by-test-platform:
+            linux64.*: 2700
+            default: 5400
+    run-on-projects:
+        by-test-platform:
+            .*-qr/.*: ['mozilla-central', 'try']
+            linux64-ccov/.*: ['try']  # Bug 1407593
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    mozharness:
+        extra-options:
+            - --suite=damp
+            - --add-option
+            - --webServer,localhost
+
+talos-damp-profiling:
+    description: "Talos profiling devtools"
+    try-name: damp-profiling
+    treeherder-symbol: T-P(damp)
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 1200
+    mozharness:
+        extra-options:
+            - --suite=damp
+            - --geckoProfile
+            - --add-option
+            - --webServer,localhost
+
 talos-dromaeojs:
     description: "Talos dromaeojs"
     try-name: dromaeojs
@@ -125,41 +157,6 @@ talos-g1-profiling:
     mozharness:
         extra-options:
             - --suite=g1
-            - --geckoProfile
-            - --add-option
-            - --webServer,localhost
-
-talos-g2:
-    description: "Talos g2"
-    try-name: g2
-    treeherder-symbol: T(g2)
-    max-run-time:
-        by-test-platform:
-            linux64.*: 2700
-            default: 7200
-    run-on-projects:
-        by-test-platform:
-            .*-qr/.*: ['mozilla-central', 'try']
-            linux64-ccov/.*: ['try']  # Bug 1407593
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
-    mozharness:
-        extra-options:
-            - --suite=g2
-            - --add-option
-            - --webServer,localhost
-
-talos-g2-profiling:
-    description: "Talos profiling g2"
-    try-name: g2-profiling
-    treeherder-symbol: T-P(g2)
-    max-run-time:
-        by-test-platform:
-            linux64.*: 2700
-            default: 7200
-    run-on-projects: ['mozilla-central', 'try']
-    mozharness:
-        extra-options:
-            - --suite=g2
             - --geckoProfile
             - --add-option
             - --webServer,localhost
@@ -526,6 +523,35 @@ talos-tp6-stylo-threads:
     mozharness:
         extra-options:
             - --suite=tp6-stylo-threads
+
+talos-tps:
+    description: "Talos page scroll (tps)"
+    try-name: tps
+    treeherder-symbol: T(tps)
+    max-run-time: 900
+    run-on-projects:
+        by-test-platform:
+            .*-qr/.*: ['mozilla-central', 'try']
+            linux64-ccov/.*: ['try']  # Bug 1407593
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    mozharness:
+        extra-options:
+            - --suite=tps
+            - --add-option
+            - --webServer,localhost
+
+talos-tps-profiling:
+    description: "Talos page scroll profiling (tps)"
+    try-name: tps-profiling
+    treeherder-symbol: T-P(tps)
+    max-run-time: 900
+    run-on-projects: ['mozilla-central', 'try']
+    mozharness:
+        extra-options:
+            - --suite=tps
+            - --geckoProfile
+            - --add-option
+            - --webServer,localhost
 
 talos-xperf:
     description: "Talos xperf"

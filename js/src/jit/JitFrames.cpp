@@ -975,7 +975,7 @@ TraceBailoutFrame(JSTracer* trc, const JSJitFrameIter& frame)
 }
 
 static void
-UpdateIonJSFrameForMinorGC(const JSJitFrameIter& frame)
+UpdateIonJSFrameForMinorGC(JSRuntime* rt, const JSJitFrameIter& frame)
 {
     // Minor GCs may move slots/elements allocated in the nursery. Update
     // any slots/elements pointers stored in this frame.
@@ -991,7 +991,7 @@ UpdateIonJSFrameForMinorGC(const JSJitFrameIter& frame)
         ionScript = frame.ionScriptFromCalleeToken();
     }
 
-    Nursery& nursery = ionScript->method()->zone()->group()->nursery();
+    Nursery& nursery = rt->gc.nursery();
 
     const SafepointIndex* si = ionScript->getSafepointIndex(frame.returnAddressToFp());
     SafepointReader safepoint(ionScript, si);
@@ -1315,7 +1315,7 @@ UpdateJitActivationsForMinorGC(JSRuntime* rt)
     for (JitActivationIterator activations(cx); !activations.done(); ++activations) {
         for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter) {
             if (iter.frame().type() == JitFrame_IonJS)
-                UpdateIonJSFrameForMinorGC(iter.frame());
+                UpdateIonJSFrameForMinorGC(rt, iter.frame());
         }
     }
 }

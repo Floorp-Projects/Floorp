@@ -1289,17 +1289,6 @@ var BookmarkingUI = {
     return gNavigatorBundle.getFormattedString(strId, args);
   },
 
-  /**
-   * The popup contents must be updated when the user customizes the UI, or
-   * changes the personal toolbar collapsed status.  In such a case, any needed
-   * change should be handled in the popupshowing helper, for performance
-   * reasons.
-   */
-  _popupNeedsUpdate: true,
-  onToolbarVisibilityChange: function BUI_onToolbarVisibilityChange() {
-    this._popupNeedsUpdate = true;
-  },
-
   onPopupShowing: function BUI_onPopupShowing(event) {
     // Don't handle events for submenus.
     if (event.target != event.currentTarget)
@@ -1331,23 +1320,21 @@ var BookmarkingUI = {
 
     this._initMobileBookmarks(document.getElementById("BMB_mobileBookmarks"));
 
-    if (!this._popupNeedsUpdate)
-      return;
-    this._popupNeedsUpdate = false;
+    this.selectLabel("BMB_viewBookmarksSidebar",
+                     SidebarUI.currentID == "viewBookmarksSidebar");
+    this.selectLabel("BMB_viewBookmarksToolbar",
+                     !document.getElementById("PersonalToolbar").collapsed);
+  },
 
-    let popup = event.target;
-    let getPlacesAnonymousElement =
-      aAnonId => document.getAnonymousElementByAttribute(popup.parentNode,
-                                                         "placesanonid",
-                                                         aAnonId);
+  selectLabel(elementId, visible) {
+    let element = document.getElementById(elementId);
+    element.setAttribute("label", element.getAttribute(visible ? "label-hide"
+                                                               : "label-show"));
+  },
 
-    let viewToolbarMenuitem = getPlacesAnonymousElement("view-toolbar");
-    if (viewToolbarMenuitem) {
-      // Update View bookmarks toolbar checkbox menuitem.
-      viewToolbarMenuitem.classList.add("subviewbutton");
-      let personalToolbar = document.getElementById("PersonalToolbar");
-      viewToolbarMenuitem.setAttribute("checked", !personalToolbar.collapsed);
-    }
+  toggleBookmarksToolbar() {
+    CustomizableUI.setToolbarVisibility("PersonalToolbar",
+      document.getElementById("PersonalToolbar").collapsed);
   },
 
   attachPlacesView(event, node) {
@@ -1440,7 +1427,6 @@ var BookmarkingUI = {
   onCustomizeEnd: function BUI_customizeEnd(aWindow) {
     if (aWindow == window) {
       this._isCustomizing = false;
-      this.onToolbarVisibilityChange();
     }
   },
 
@@ -1651,40 +1637,14 @@ var BookmarkingUI = {
   },
 
   showBookmarkingTools(triggerNode) {
-    const panelID = "PanelUI-bookmarkingTools";
-    let viewNode = document.getElementById(panelID);
-    for (let button of [...viewNode.getElementsByTagName("toolbarbutton")]) {
-      let update = true;
-      switch (button.id) {
-        case "panelMenu_toggleBookmarksMenu":
-          let placement = CustomizableUI.getPlacementOfWidget(this.BOOKMARK_BUTTON_ID);
-          button.setAttribute("checked", !!placement && placement.area == CustomizableUI.AREA_NAVBAR);
-          break;
-        case "panelMenu_viewBookmarksSidebar":
-          button.setAttribute("checked", SidebarUI.currentID == "viewBookmarksSidebar");
-          break;
-        case "panelMenu_viewBookmarksToolbar":
-          let toolbar = document.getElementById("PersonalToolbar");
-          // This is an actual toolbarbutton[type=checkbox], and its checked
-          // attribute will get added/removed by the binding when clicked.
-          // Setting the attribute to 'false' breaks showing the toolbar,
-          // because the binding removes the attribute instead of setting it
-          // to 'true' when clicked.
-          if (toolbar.getAttribute("collapsed") != "true") {
-            button.setAttribute("checked", "true");
-          } else {
-            button.removeAttribute("checked");
-          }
-          break;
-        default:
-          update = false;
-          break;
-      }
-      if (update) {
-        updateToggleControlLabel(button);
-      }
-    }
-    PanelUI.showSubView(panelID, triggerNode);
+    let placement = CustomizableUI.getPlacementOfWidget(this.BOOKMARK_BUTTON_ID);
+    this.selectLabel("panelMenu_toggleBookmarksMenu",
+                     placement && placement.area == CustomizableUI.AREA_NAVBAR);
+    this.selectLabel("panelMenu_viewBookmarksSidebar",
+                     SidebarUI.currentID == "viewBookmarksSidebar");
+    this.selectLabel("panelMenu_viewBookmarksToolbar",
+                     !document.getElementById("PersonalToolbar").collapsed);
+    PanelUI.showSubView("PanelUI-bookmarkingTools", triggerNode);
   },
 
   toggleMenuButtonInToolbar(triggerNode) {

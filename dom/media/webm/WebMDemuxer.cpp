@@ -19,7 +19,6 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/SharedThreadPool.h"
 #include "MediaDataDemuxer.h"
-#include "nsAutoPtr.h"
 #include "nsAutoRef.h"
 #include "NesteggPacketHolder.h"
 #include "XiphExtradata.h"
@@ -781,7 +780,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
     if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED ||
         packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED ||
         packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_PARTITIONED) {
-      nsAutoPtr<MediaRawDataWriter> writer(sample->CreateWriter());
+      UniquePtr<MediaRawDataWriter> writer(sample->CreateWriter());
       unsigned char const* iv;
       size_t ivLength;
       nestegg_packet_iv(holder->Packet(), &iv, &ivLength);
@@ -1272,7 +1271,7 @@ WebMTrackDemuxer::UpdateSamples(nsTArray<RefPtr<MediaRawData>>& aSamples)
 {
   for (const auto& sample : aSamples) {
     if (sample->mCrypto.mValid) {
-      nsAutoPtr<MediaRawDataWriter> writer(sample->CreateWriter());
+      UniquePtr<MediaRawDataWriter> writer(sample->CreateWriter());
       writer->mCrypto.mMode = mInfo->mCrypto.mMode;
       writer->mCrypto.mIVSize = mInfo->mCrypto.mIVSize;
       writer->mCrypto.mKeyId.AppendElements(mInfo->mCrypto.mKeyId);
