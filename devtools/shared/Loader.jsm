@@ -14,7 +14,9 @@ var { Loader, Require, resolveURI, unload } =
 var { requireRawId } = ChromeUtils.import("resource://devtools/shared/loader-plugin-raw.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
-                         "require", "loader"];
+                         "require", "loader",
+                         // Export StructuredCloneHolder for its use from builtin-modules
+                         "StructuredCloneHolder"];
 
 /**
  * Providers are different strategies for loading the devtools.

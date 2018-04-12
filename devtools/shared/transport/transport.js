@@ -760,8 +760,43 @@
       this.hooks.onPacket(data);
     },
 
+    /**
+     * Helper method to ensure a given `object` can be sent across message manager
+     * without being serialized to JSON.
+     * See https://searchfox.org/mozilla-central/rev/6bfadf95b4a6aaa8bb3b2a166d6c3545983e179a/dom/base/nsFrameMessageManager.cpp#458-469
+     */
+    _canBeSerialized: function(object) {
+      try {
+        let holder = new StructuredCloneHolder(object);
+        holder.deserialize(this);
+      } catch (e) {
+        return false;
+      }
+      return true;
+    },
+
+    pathToUnserializable: function(object) {
+      for (let key in object) {
+        let value = object[key];
+        if (!this._canBeSerialized(value)) {
+          if (typeof value == "object") {
+            return [key].concat(this.pathToUnserializable(value));
+          }
+          return [key];
+        }
+      }
+      return [];
+    },
+
     send: function(packet) {
       this.emit("send", packet);
+      if (flags.testing && !this._canBeSerialized(packet)) {
+        let attributes = this.pathToUnserializable(packet);
+        let msg = "Following packet can't be serialized: " + JSON.stringify(packet);
+        msg += "\nBecause of attributes: " + attributes.join(", ") + "\n";
+        msg += "Did you pass a function or an XPCOM object in it?";
+        throw new Error(msg);
+      }
       try {
         this._mm.sendAsyncMessage(this._messageName, packet);
       } catch (e) {

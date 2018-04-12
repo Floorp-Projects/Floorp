@@ -15,12 +15,13 @@
 
 const { Cu, CC, Cc, Ci } = require("chrome");
 const promise = require("resource://gre/modules/Promise.jsm").Promise;
-const jsmScope = require("resource://gre/modules/Services.jsm");
+const jsmScope = require("resource://devtools/shared/Loader.jsm");
 const { Services } = jsmScope;
 // Steal various globals only available in JSM scope (and not Sandbox one)
 const {
   console,
   HeapSnapshot,
+  StructuredCloneHolder,
 } = Cu.getGlobalForObject(jsmScope);
 
 // Create a single Sandbox to access global properties needed in this module.
@@ -275,6 +276,7 @@ exports.globals = {
   },
   Node: Ci.nsIDOMNode,
   reportError: Cu.reportError,
+  StructuredCloneHolder,
   TextDecoder,
   TextEncoder,
   URL,
