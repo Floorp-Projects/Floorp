@@ -292,14 +292,11 @@ EventListenerManager::AddEventListenerInternal(
     nsContentUtils::LegacyIsCallerChromeOrNativeCode();
 
   // Detect the type of event listener.
-  nsCOMPtr<nsIXPConnectWrappedJS> wjs;
   if (aFlags.mListenerIsJSListener) {
     MOZ_ASSERT(!aListenerHolder.HasWebIDLCallback());
     listener->mListenerType = Listener::eJSEventListener;
   } else if (aListenerHolder.HasWebIDLCallback()) {
     listener->mListenerType = Listener::eWebIDLListener;
-  } else if ((wjs = do_QueryInterface(aListenerHolder.GetXPCOMCallback()))) {
-    listener->mListenerType = Listener::eWrappedJSListener;
   } else {
     listener->mListenerType = Listener::eNativeListener;
   }
@@ -1715,8 +1712,6 @@ EventListenerManager::MarkForCC()
       if (typedHandler.HasEventHandler()) {
         typedHandler.Ptr()->MarkForCC();
       }
-    } else if (listener.mListenerType == Listener::eWrappedJSListener) {
-      xpc_TryUnmarkWrappedGrayObject(listener.mListener.GetXPCOMCallback());
     } else if (listener.mListenerType == Listener::eWebIDLListener) {
       listener.mListener.GetWebIDLCallback()->MarkForCC();
     }
