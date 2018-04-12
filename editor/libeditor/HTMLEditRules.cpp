@@ -3788,9 +3788,12 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
         NS_ENSURE_SUCCESS(rv, rv);
         // convert list item type if needed
         if (!curNode->IsHTMLElement(itemType)) {
-          newBlock = htmlEditor->ReplaceContainer(curNode->AsElement(),
-                                                  itemType);
-          NS_ENSURE_STATE(newBlock);
+          newBlock =
+            htmlEditor->ReplaceContainerWithTransaction(*curNode->AsElement(),
+                                                        *itemType);
+          if (NS_WARN_IF(!newBlock)) {
+            return NS_ERROR_FAILURE;
+          }
         }
       } else {
         // item is in right type of list.  But we might still have to move it.
@@ -3803,9 +3806,12 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
           NS_ENSURE_SUCCESS(rv, rv);
         }
         if (!curNode->IsHTMLElement(itemType)) {
-          newBlock = htmlEditor->ReplaceContainer(curNode->AsElement(),
-                                                  itemType);
-          NS_ENSURE_STATE(newBlock);
+          newBlock =
+            htmlEditor->ReplaceContainerWithTransaction(*curNode->AsElement(),
+                                                        *itemType);
+          if (NS_WARN_IF(!newBlock)) {
+            return NS_ERROR_FAILURE;
+          }
         }
       }
       nsCOMPtr<Element> curElement = do_QueryInterface(curNode);
@@ -3875,9 +3881,12 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
       } else {
         // don't wrap li around a paragraph.  instead replace paragraph with li
         if (curNode->IsHTMLElement(nsGkAtoms::p)) {
-          listItem = htmlEditor->ReplaceContainer(curNode->AsElement(),
-                                                  itemType);
-          NS_ENSURE_STATE(listItem);
+          listItem =
+            htmlEditor->ReplaceContainerWithTransaction(*curNode->AsElement(),
+                                                        *itemType);
+          if (NS_WARN_IF(!listItem)) {
+            return NS_ERROR_FAILURE;
+          }
         } else {
           listItem = htmlEditor->InsertContainerAbove(curNode, itemType);
           NS_ENSURE_STATE(listItem);
@@ -5021,7 +5030,8 @@ HTMLEditRules::ConvertListType(Element* aList,
       dom::Element* element = child->AsElement();
       if (HTMLEditUtils::IsListItem(element) &&
           !element->IsHTMLElement(aItemType)) {
-        child = mHTMLEditor->ReplaceContainer(element, aItemType);
+        child =
+          mHTMLEditor->ReplaceContainerWithTransaction(*element, *aItemType);
         if (NS_WARN_IF(!child)) {
           return nullptr;
         }
@@ -5041,7 +5051,7 @@ HTMLEditRules::ConvertListType(Element* aList,
     return list.forget();
   }
 
-  return mHTMLEditor->ReplaceContainer(aList, aListType);
+  return mHTMLEditor->ReplaceContainerWithTransaction(*aList, *aListType);
 }
 
 
@@ -7747,9 +7757,8 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       // Forget any previous block used for previous inline nodes
       curBlock = nullptr;
       newBlock =
-        htmlEditor->ReplaceContainer(curNode->AsElement(),
-                                     &aBlockTag, nullptr, nullptr,
-                                     EditorBase::eCloneAttributes);
+        htmlEditor->ReplaceContainerAndCloneAttributesWithTransaction(
+                      *curNode->AsElement(), aBlockTag);
       NS_ENSURE_STATE(newBlock);
       continue;
     }

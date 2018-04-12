@@ -1970,32 +1970,41 @@ HTMLEditor::SwitchTableCellHeaderType(nsIDOMElement* aSourceCell,
                                       nsIDOMElement** aNewCell)
 {
   nsCOMPtr<Element> sourceCell = do_QueryInterface(aSourceCell);
-  NS_ENSURE_TRUE(sourceCell, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!sourceCell)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   AutoPlaceholderBatch beginBatching(this);
-  // Prevent auto insertion of BR in new cell created by ReplaceContainer
+  // Prevent auto insertion of BR in new cell created by
+  // ReplaceContainerAndCloneAttributesWithTransaction().
   AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
-  // Save current selection to restore when done
-  // This is needed so ReplaceContainer can monitor selection
-  //  when replacing nodes
+  // Save current selection to restore when done.
+  // This is needed so ReplaceContainerAndCloneAttributesWithTransaction()
+  // can monitor selection when replacing nodes.
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+
   AutoSelectionRestorer selectionRestorer(selection, this);
 
   // Set to the opposite of current type
-  nsAtom* newCellType =
+  nsAtom* newCellName =
     sourceCell->IsHTMLElement(nsGkAtoms::td) ? nsGkAtoms::th : nsGkAtoms::td;
 
   // This creates new node, moves children, copies attributes (true)
   //   and manages the selection!
-  nsCOMPtr<Element> newNode = ReplaceContainer(sourceCell, newCellType,
-      nullptr, nullptr, EditorBase::eCloneAttributes);
-  NS_ENSURE_TRUE(newNode, NS_ERROR_FAILURE);
+  RefPtr<Element> newCell =
+    ReplaceContainerAndCloneAttributesWithTransaction(*sourceCell,
+                                                      *newCellName);
+  if (NS_WARN_IF(!newCell)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Return the new cell
   if (aNewCell) {
-    nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newNode);
+    nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newCell);
     *aNewCell = newElement.get();
     NS_ADDREF(*aNewCell);
   }
