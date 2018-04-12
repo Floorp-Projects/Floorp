@@ -326,13 +326,7 @@ pref("devtools.webconsole.autoMultiline", true);
 
 // Enable the new webconsole frontend
 pref("devtools.webconsole.new-frontend-enabled", true);
-
-// Enable the new webconsole frontend in the browser console
-#if defined(NIGHTLY_BUILD)
 pref("devtools.browserconsole.new-frontend-enabled", true);
-#else
-pref("devtools.browserconsole.new-frontend-enabled", false);
-#endif
 
 // Enable the webconsole sidebar toggle
 pref("devtools.webconsole.sidebarToggle", false);
