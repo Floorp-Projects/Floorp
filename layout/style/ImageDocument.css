@@ -9,12 +9,12 @@
 */
 
 @media not print {
-  .overflowingVertical, .overflowingHorizontalOnly {
-    cursor: zoom-out;
-  }
-
   .shrinkToFit {
     cursor: zoom-in;
+  }
+
+  .overflowingVertical, .overflowingHorizontalOnly {
+    cursor: zoom-out;
   }
 }
 
