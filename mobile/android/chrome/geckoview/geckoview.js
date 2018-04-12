@@ -42,6 +42,10 @@ var ModuleManager = {
 
   remove: function(aType) {
     this.modules.delete(aType);
+  },
+
+  forEach: function(aCallback) {
+    this.modules.forEach(aCallback, this);
   }
 };
 
@@ -54,9 +58,6 @@ function createBrowser() {
   // There may be a GeckoViewNavigation module in another window waiting for us to
   // create a browser so it can call presetOpenerWindow(), so allow them to do that now.
   Services.obs.notifyObservers(window, "geckoview-window-created");
-  window.document.getElementById("main-window").appendChild(browser);
-
-  browser.stop();
   return browser;
 }
 
@@ -86,6 +87,13 @@ function startup() {
                     "GeckoViewSelectionAction");
   ModuleManager.add("resource://gre/modules/GeckoViewAccessibility.jsm",
                     "GeckoViewAccessibility");
+
+  window.document.documentElement.appendChild(browser);
+
+  ModuleManager.forEach(module => {
+    module.onInit();
+    module.onSettingsUpdate();
+  });
 
   // Move focus to the content window at the end of startup,
   // so things like text selection can work properly.
