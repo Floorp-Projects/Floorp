@@ -35,13 +35,15 @@ function debug(aMsg) {
 // * multiprocess
 // * user agent override
 class GeckoViewSettings extends GeckoViewModule {
+  onInitBrowser() {
+    if (this.settings.useMultiprocess) {
+      this.browser.setAttribute("remote", "true");
+    }
+  }
+
   onInit() {
     this._isSafeBrowsingInit = false;
     this._useDesktopMode = false;
-
-    // We only allow to set this setting during initialization, further updates
-    // will be ignored.
-    this.useMultiprocess = !!this.settings.useMultiprocess;
     this._displayMode = Ci.nsIDocShell.DISPLAY_MODE_BROWSER;
 
     this.messageManager.loadFrameScript(
@@ -58,21 +60,6 @@ class GeckoViewSettings extends GeckoViewModule {
 
   get useMultiprocess() {
     return this.browser.getAttribute("remote") == "true";
-  }
-
-  set useMultiprocess(aUse) {
-    if (aUse == this.useMultiprocess) {
-      return;
-    }
-    let parentNode = this.browser.parentNode;
-    parentNode.removeChild(this.browser);
-
-    if (aUse) {
-      this.browser.setAttribute("remote", "true");
-    } else {
-      this.browser.removeAttribute("remote");
-    }
-    parentNode.appendChild(this.browser);
   }
 
   set useTrackingProtection(aUse) {
