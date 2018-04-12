@@ -4,11 +4,8 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-<%helpers:shorthand
-    name="overflow"
-    sub_properties="overflow-x overflow-y"
-    spec="https://drafts.csswg.org/css-overflow/#propdef-overflow"
->
+<%helpers:shorthand name="overflow" sub_properties="overflow-x overflow-y"
+                    spec="https://drafts.csswg.org/css-overflow/#propdef-overflow">
     use properties::longhands::overflow_x::parse as parse_overflow;
     % if product == "gecko":
         use properties::longhands::overflow_x::SpecifiedValue;
@@ -45,23 +42,20 @@
                 return moz_kw_found
             }
         % endif
-        let overflow_x = parse_overflow(context, input)?;
-        let overflow_y =
-            input.try(|i| parse_overflow(context, i)).unwrap_or(overflow_x);
+        let overflow = parse_overflow(context, input)?;
         Ok(expanded! {
-            overflow_x: overflow_x,
-            overflow_y: overflow_y,
+            overflow_x: overflow,
+            overflow_y: overflow,
         })
     }
 
     impl<'a> ToCss for LonghandsToSerialize<'a>  {
         fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result where W: fmt::Write {
-            self.overflow_x.to_css(dest)?;
-            if self.overflow_x != self.overflow_y {
-                dest.write_char(' ')?;
-                self.overflow_y.to_css(dest)?;
+            if self.overflow_x == self.overflow_y {
+                self.overflow_x.to_css(dest)
+            } else {
+                Ok(())
             }
-            Ok(())
         }
     }
 </%helpers:shorthand>
