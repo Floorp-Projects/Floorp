@@ -178,7 +178,7 @@ var GeckoViewUtils = {
       });
   },
 
-  _getRootDocShell: function(aWin) {
+  getRootDocShell: function(aWin) {
     if (!aWin) {
       return null;
     }
@@ -200,7 +200,7 @@ var GeckoViewUtils = {
    * @param aWin a DOM window.
    */
   getChromeWindow: function(aWin) {
-    const docShell = this._getRootDocShell(aWin);
+    const docShell = this.getRootDocShell(aWin);
     return docShell && docShell.getInterface(Ci.nsIDOMWindow);
   },
 
@@ -211,7 +211,7 @@ var GeckoViewUtils = {
    * @param aWin a DOM window.
    */
   getContentFrameMessageManager: function(aWin) {
-    const docShell = this._getRootDocShell(aWin);
+    const docShell = this.getRootDocShell(aWin);
     return docShell && docShell.getInterface(Ci.nsITabChild).messageManager;
   },
 

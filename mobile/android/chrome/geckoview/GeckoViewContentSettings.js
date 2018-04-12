@@ -6,6 +6,10 @@
 ChromeUtils.import("resource://gre/modules/GeckoViewContentModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
+});
+
 XPCOMUtils.defineLazyGetter(this, "dump", () =>
     ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
                        {}).AndroidLog.d.bind(null, "ViewSettings[C]"));
@@ -20,26 +24,23 @@ function debug(aMsg) {
 class GeckoViewContentSettings extends GeckoViewContentModule {
   onInit() {
     debug("onInit");
-    this._useTrackingProtection = false;
     this._useDesktopMode = false;
   }
 
   onSettingsUpdate() {
     debug("onSettingsUpdate");
 
+    this.displayMode = this.settings.displayMode;
     this.useTrackingProtection = !!this.settings.useTrackingProtection;
     this.useDesktopMode = !!this.settings.useDesktopMode;
   }
 
   get useTrackingProtection() {
-    return this._useTrackingProtection;
+    return docShell.useTrackingProtection;
   }
 
   set useTrackingProtection(aUse) {
-    if (aUse != this._useTrackingProtection) {
-      docShell.useTrackingProtection = aUse;
-      this._useTrackingProtection = aUse;
-    }
+    docShell.useTrackingProtection = aUse;
   }
 
   get useDesktopMode() {
@@ -51,9 +52,22 @@ class GeckoViewContentSettings extends GeckoViewContentModule {
       return;
     }
     let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIDOMWindowUtils);
+                       .getInterface(Ci.nsIDOMWindowUtils);
     utils.setDesktopModeViewport(aUse);
     this._useDesktopMode = aUse;
+  }
+
+  get displayMode() {
+    const docShell = content && GeckoViewUtils.getRootDocShell(content);
+    return docShell ? docShell.displayMode
+                    : Ci.nsIDocShell.DISPLAY_MODE_BROWSER;
+  }
+
+  set displayMode(aMode) {
+    const docShell = content && GeckoViewUtils.getRootDocShell(content);
+    if (docShell) {
+      docShell.displayMode = aMode;
+    }
   }
 }
 
