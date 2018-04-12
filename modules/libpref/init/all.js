@@ -5318,7 +5318,7 @@ pref("network.captive-portal-service.backoffFactor", "5.0");
 pref("network.captive-portal-service.enabled", false);
 
 // DNS Trusted Recursive Resolver
-// 0 - off, 1 - race, 2 TRR first, 3 TRR only, 4 shadow
+// 0 - default off, 1 - race, 2 TRR first, 3 TRR only, 4 shadow, 5 off by choice
 pref("network.trr.mode", 0);
 // DNS-over-HTTP service to use, must be HTTPS://
 pref("network.trr.uri", "");
