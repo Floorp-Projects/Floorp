@@ -470,7 +470,31 @@ public:
    */
   nsresult JoinNodesWithTransaction(nsINode& aLeftNode, nsINode& aRightNode);
 
-  nsresult MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset);
+  /**
+   * MoveNodeWithTransaction() moves aContent to aPointToInsert.
+   *
+   * @param aContent        The node to be moved.
+   */
+  template<typename PT, typename CT>
+  nsresult
+  MoveNodeWithTransaction(nsIContent& aContent,
+                          const EditorDOMPointBase<PT, CT>& aPointToInsert);
+
+  /**
+   * MoveNodeToEndWithTransaction() moves aContent to end of aNewContainer.
+   *
+   * @param aContent        The node to be moved.
+   * @param aNewContainer   The new container which will contain aContent as
+   *                        its last child.
+   */
+  nsresult
+  MoveNodeToEndWithTransaction(nsIContent& aContent,
+                               nsINode& aNewContainer)
+  {
+    EditorRawDOMPoint pointToInsert;
+    pointToInsert.SetToEndOf(&aNewContainer);
+    return MoveNodeWithTransaction(aContent, pointToInsert);
+  }
 
   /**
    * MoveAllChildren() moves all children of aContainer to before
