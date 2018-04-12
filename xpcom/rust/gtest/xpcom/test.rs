@@ -9,6 +9,7 @@ extern crate xpcom;
 
 extern crate nserror;
 
+use std::os::raw::c_char;
 use std::ptr;
 use std::ffi::{CStr, CString};
 use xpcom::interfaces;
@@ -29,7 +30,7 @@ pub unsafe extern fn Rust_ObserveFromRust() -> *const interfaces::nsIObserverSer
         unsafe fn Observe(
             &self,
             _subject: *const interfaces::nsISupports,
-            topic: *const i8,
+            topic: *const c_char,
             _data: *const i16
         ) -> nsresult {
             *self.run = true;
