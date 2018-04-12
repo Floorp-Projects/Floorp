@@ -2,10 +2,11 @@ This directory contains FreeType v2.9 downloaded from
 https://download.savannah.gnu.org/releases/freetype/
 
 The following post-2.9 commits have been cherry-picked from
-the upstream FreeType repository (see bug 1434697, bug 1438522):
+the upstream FreeType repository (see bug 1434697, bug 1438522, bug 1453653):
 
 http://git.savannah.gnu.org/cgit/freetype/freetype2.git/commit/?id=994eb2b34934bc5face9f83b2d3b12cf7a9262ab
 http://git.savannah.gnu.org/cgit/freetype/freetype2.git/commit/?id=cc2f3cdecff5a351e7e8961b9f2e389ab740231a
 http://git.savannah.gnu.org/cgit/freetype/freetype2.git/commit/?id=4a03f17449ae45f0dacf4de4694ccd6e5e1b24d1
 http://git.savannah.gnu.org/cgit/freetype/freetype2.git/commit/?id=68dddcdcbe18a08d778026efc01b1369e35cbf6a
 http://git.savannah.gnu.org/cgit/freetype/freetype2.git/commit/?id=29c759284e305ec428703c9a5831d0b1fc3497ef
+http://git.savannah.gnu.org/cgit/freetype/freetype2.git/commit/?id=bd9400bd464f6cd7c74f52ece1c1065fe2a87aab
