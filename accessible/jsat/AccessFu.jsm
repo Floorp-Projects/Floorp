@@ -13,19 +13,13 @@ if (Utils.MozBuildApp === "mobile/android") {
   ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 }
 
+// const ACCESSFU_DISABLE = 0;
+const ACCESSFU_ENABLE = 1;
+const ACCESSFU_AUTO = 2;
+
+const SCREENREADER_SETTING = "accessibility.screenreader";
 const QUICKNAV_MODES_PREF = "accessibility.accessfu.quicknav_modes";
 const QUICKNAV_INDEX_PREF = "accessibility.accessfu.quicknav_index";
-
-const GECKOVIEW_MESSAGE = {
-  ACTIVATE: "GeckoView:AccessibilityActivate",
-  VIEW_FOCUSED: "GeckoView:AccessibilityViewFocused",
-  LONG_PRESS: "GeckoView:AccessibilityLongPress",
-  BY_GRANULARITY: "GeckoView:AccessibilityByGranularity",
-  NEXT: "GeckoView:AccessibilityNext",
-  PREVIOUS: "GeckoView:AccessibilityPrevious",
-  SCROLL_BACKWARD: "GeckoView:AccessibilityScrollBackward",
-  SCROLL_FORWARD: "GeckoView:AccessibilityScrollForward",
-};
 
 var AccessFu = {
   /**
@@ -33,12 +27,18 @@ var AccessFu = {
    * If accessibility is enabled on the platform, then a special accessibility
    * mode is started.
    */
-  attach: function attach(aWindow, aInTest = false) {
+  attach: function attach(aWindow) {
     Utils.init(aWindow);
 
-    if (!aInTest) {
-      this._enable();
+    if (Utils.MozBuildApp === "mobile/android") {
+      EventDispatcher.instance.dispatch("Accessibility:Ready");
+      EventDispatcher.instance.registerListener(this, "Accessibility:Settings");
     }
+
+    this._activatePref = new PrefCache(
+      "accessibility.accessfu.activate", this._enableOrDisable.bind(this));
+
+    this._enableOrDisable();
   },
 
   /**
@@ -49,7 +49,10 @@ var AccessFu = {
     if (this._enabled) {
       this._disable();
     }
-
+    if (Utils.MozBuildApp === "mobile/android") {
+      EventDispatcher.instance.unregisterListener(this, "Accessibility:Settings");
+    }
+    delete this._activatePref;
     Utils.uninit();
   },
 
@@ -114,8 +117,16 @@ var AccessFu = {
     PointerAdapter.start();
 
     if (Utils.MozBuildApp === "mobile/android") {
-      Utils.win.WindowEventDispatcher.registerListener(this,
-        Object.values(GECKOVIEW_MESSAGE));
+      EventDispatcher.instance.registerListener(this, [
+        "Accessibility:ActivateObject",
+        "Accessibility:Focus",
+        "Accessibility:LongPress",
+        "Accessibility:MoveByGranularity",
+        "Accessibility:NextObject",
+        "Accessibility:PreviousObject",
+        "Accessibility:ScrollBackward",
+        "Accessibility:ScrollForward",
+      ]);
     }
 
     Services.obs.addObserver(this, "remote-browser-shown");
@@ -161,8 +172,16 @@ var AccessFu = {
     Services.obs.removeObserver(this, "inprocess-browser-shown");
 
     if (Utils.MozBuildApp === "mobile/android") {
-      Utils.win.WindowEventDispatcher.unregisterListener(this,
-        Object.values(GECKOVIEW_MESSAGE));
+      EventDispatcher.instance.unregisterListener(this, [
+        "Accessibility:ActivateObject",
+        "Accessibility:Focus",
+        "Accessibility:LongPress",
+        "Accessibility:MoveByGranularity",
+        "Accessibility:NextObject",
+        "Accessibility:PreviousObject",
+        "Accessibility:ScrollBackward",
+        "Accessibility:ScrollForward",
+      ]);
     }
 
     delete this._quicknavModesPref;
@@ -174,6 +193,23 @@ var AccessFu = {
     }
 
     Logger.info("AccessFu:Disabled");
+  },
+
+  _enableOrDisable: function _enableOrDisable() {
+    try {
+      if (!this._activatePref) {
+        return;
+      }
+      let activatePref = this._activatePref.value;
+      if (activatePref == ACCESSFU_ENABLE ||
+          this._systemPref && activatePref == ACCESSFU_AUTO) {
+        this._enable();
+      } else {
+        this._disable();
+      }
+    } catch (x) {
+      dump("Error " + x.message + " " + x.fileName + ":" + x.lineNumber);
+    }
   },
 
   receiveMessage: function receiveMessage(aMessage) {
@@ -260,43 +296,40 @@ var AccessFu = {
 
   onEvent(event, data, callback) {
     switch (event) {
-      case GECKOVIEW_MESSAGE.SETTINGS:
-        if (data.enabled) {
-          this._enable();
-        } else {
-          this._disable();
-        }
+      case "Accessibility:Settings":
+        this._systemPref = data.enabled;
+        this._enableOrDisable();
         break;
-      case GECKOVIEW_MESSAGE.NEXT:
-      case GECKOVIEW_MESSAGE.PREVIOUS: {
+      case "Accessibility:NextObject":
+      case "Accessibility:PreviousObject": {
         let rule = "Simple";
         if (data && data.rule && data.rule.length) {
           rule = data.rule.substr(0, 1).toUpperCase() +
             data.rule.substr(1).toLowerCase();
         }
-        let method = event.replace(/GeckoView:Accessibility(\w+)/, "move$1");
+        let method = event.replace(/Accessibility:(\w+)Object/, "move$1");
         this.Input.moveCursor(method, rule, "gesture");
         break;
       }
-      case GECKOVIEW_MESSAGE.ACTIVATE:
+      case "Accessibility:ActivateObject":
         this.Input.activateCurrent(data);
         break;
-      case GECKOVIEW_MESSAGE.LONG_PRESS:
+      case "Accessibility:LongPress":
         this.Input.sendContextMenuMessage();
         break;
-      case GECKOVIEW_MESSAGE.SCROL_LFORWARD:
+      case "Accessibility:ScrollForward":
         this.Input.androidScroll("forward");
         break;
-      case GECKOVIEW_MESSAGE.SCROLL_BACKWARD:
+      case "Accessibility:ScrollBackward":
         this.Input.androidScroll("backward");
         break;
-      case GECKOVIEW_MESSAGE.VIEW_FOCUSED:
+      case "Accessibility:Focus":
         this._focused = data.gainFocus;
         if (this._focused) {
           this.autoMove({ forcePresent: true, noOpIfOnScreen: true });
         }
         break;
-      case GECKOVIEW_MESSAGE.BY_GRANULARITY:
+      case "Accessibility:MoveByGranularity":
         this.Input.moveByGranularity(data);
         break;
     }
@@ -351,7 +384,14 @@ var AccessFu = {
         break;
       }
       default:
+      {
+        // A settings change, it does not have an event type
+        if (aEvent.settingName == SCREENREADER_SETTING) {
+          this._systemPref = aEvent.settingValue;
+          this._enableOrDisable();
+        }
         break;
+      }
     }
   },
 
@@ -545,7 +585,7 @@ var Output = {
     const ANDROID_VIEW_TEXT_SELECTION_CHANGED = 0x2000;
 
     for (let androidEvent of aDetails) {
-      androidEvent.type = "GeckoView:AccessibilityEvent";
+      androidEvent.type = "Accessibility:Event";
       if (androidEvent.bounds) {
         androidEvent.bounds = AccessFu.adjustContentBounds(
           androidEvent.bounds, aBrowser);

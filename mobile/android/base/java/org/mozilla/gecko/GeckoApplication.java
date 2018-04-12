@@ -367,6 +367,8 @@ public class GeckoApplication extends Application
             });
         }
 
+        GeckoAccessibility.setAccessibilityManagerListeners(this);
+
         AudioFocusAgent.getInstance().attachToContext(this);
     }
 
