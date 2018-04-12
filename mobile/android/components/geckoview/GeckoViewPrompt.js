@@ -22,7 +22,7 @@ PromptFactory.prototype = {
   classID: Components.ID("{076ac188-23c1-4390-aa08-7ef1f78ca5d9}"),
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIDOMEventListener, Ci.nsIPromptFactory, Ci.nsIPromptService]),
+    Ci.nsIPromptFactory, Ci.nsIPromptService]),
 
   handleEvent: function(aEvent) {
     switch (aEvent.type) {

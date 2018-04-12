@@ -7,7 +7,7 @@ ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
 GeckoViewUtils.addLazyEventListener(this, ["click", "contextmenu"], {
   handler: _ =>
-    Cc["@mozilla.org/prompter;1"].getService(Ci.nsIDOMEventListener),
+    Cc["@mozilla.org/prompter;1"].getService().wrappedJSObject,
   options: {
     capture: false,
     mozSystemGroup: true,
