@@ -462,6 +462,7 @@ public:
         IDX_MESSAGE                 ,
         IDX_LASTINDEX               ,
         IDX_THEN                    ,
+        IDX_ISINSTANCE              ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
