@@ -1558,13 +1558,13 @@ JSObject::fixDictionaryShapeAfterSwap()
 }
 
 static MOZ_MUST_USE bool
-CopyProxyValuesBeforeSwap(ProxyObject* proxy, Vector<Value>& values)
+CopyProxyValuesBeforeSwap(JSContext* cx, ProxyObject* proxy, Vector<Value>& values)
 {
     MOZ_ASSERT(values.empty());
 
     // Remove the GCPtrValues we're about to swap from the store buffer, to
     // ensure we don't trace bogus values.
-    StoreBuffer& sb = proxy->zone()->group()->storeBuffer();
+    StoreBuffer& sb = cx->runtime()->gc.storeBuffer();
 
     // Reserve space for the private slot and the reserved slots.
     if (!values.reserve(1 + proxy->numReservedSlots()))
@@ -1635,8 +1635,8 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
      * nursery pointers in either object.
      */
     MOZ_ASSERT(!IsInsideNursery(a) && !IsInsideNursery(b));
-    cx->zone()->group()->storeBuffer().putWholeCell(a);
-    cx->zone()->group()->storeBuffer().putWholeCell(b);
+    cx->runtime()->gc.storeBuffer().putWholeCell(a);
+    cx->runtime()->gc.storeBuffer().putWholeCell(b);
 
     unsigned r = NotifyGCPreSwap(a, b);
 
@@ -1722,11 +1722,11 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
         ProxyObject* proxyB = b->is<ProxyObject>() ? &b->as<ProxyObject>() : nullptr;
 
         if (aIsProxyWithInlineValues) {
-            if (!CopyProxyValuesBeforeSwap(proxyA, avals))
+            if (!CopyProxyValuesBeforeSwap(cx, proxyA, avals))
                 oomUnsafe.crash("CopyProxyValuesBeforeSwap");
         }
         if (bIsProxyWithInlineValues) {
-            if (!CopyProxyValuesBeforeSwap(proxyB, bvals))
+            if (!CopyProxyValuesBeforeSwap(cx, proxyB, bvals))
                 oomUnsafe.crash("CopyProxyValuesBeforeSwap");
         }
 
@@ -3885,7 +3885,7 @@ JSObject::sizeOfIncludingThisInNursery() const
 
     MOZ_ASSERT(!isTenured());
 
-    const Nursery& nursery = zone()->group()->nursery();
+    const Nursery& nursery = runtimeFromActiveCooperatingThread()->gc.nursery();
     size_t size = Arena::thingSize(allocKindForTenure(nursery));
 
     if (is<NativeObject>()) {

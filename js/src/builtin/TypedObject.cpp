@@ -1434,7 +1434,7 @@ OutlineTypedObject::setOwnerAndData(JSObject* owner, uint8_t* data)
     // Trigger a post barrier when attaching an object outside the nursery to
     // one that is inside it.
     if (owner && !IsInsideNursery(this) && IsInsideNursery(owner))
-        zone()->group()->storeBuffer().putWholeCell(this);
+        owner->storeBuffer()->putWholeCell(this);
 }
 
 /*static*/ OutlineTypedObject*
@@ -1634,7 +1634,7 @@ OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
         typedObj.setData(newData);
 
         if (trc->isTenuringTracer()) {
-            Nursery& nursery = typedObj.zoneFromAnyThread()->group()->nursery();
+            Nursery& nursery = trc->runtime()->gc.nursery();
             nursery.maybeSetForwardingPointer(trc, oldData, newData, /* direct = */ false);
         }
     }
@@ -2144,7 +2144,7 @@ InlineTypedObject::obj_moved(JSObject* dst, JSObject* src)
         // but they will not set any direct forwarding pointers.
         uint8_t* oldData = reinterpret_cast<uint8_t*>(src) + offsetOfDataStart();
         uint8_t* newData = dst->as<InlineTypedObject>().inlineTypedMem();
-        auto& nursery = dst->zone()->group()->nursery();
+        auto& nursery = dst->runtimeFromActiveCooperatingThread()->gc.nursery();
         bool direct = descr.size() >= sizeof(uintptr_t);
         nursery.setForwardingPointerWhileTenuring(oldData, newData, direct);
     }
@@ -2195,7 +2195,7 @@ InlineTransparentTypedObject::getOrCreateBuffer(JSContext* cx)
     if (IsInsideNursery(this)) {
         // Make sure the buffer is traced by the next generational collection,
         // so that its data pointer is updated after this typed object moves.
-        zone()->group()->storeBuffer().putWholeCell(buffer);
+        storeBuffer()->putWholeCell(buffer);
     }
 
     return buffer;

@@ -47,54 +47,6 @@ GetUnboxedValue(uint8_t* p, JSValueType type, bool maybeUninitialized)
     }
 }
 
-static inline void
-SetUnboxedValueNoTypeChange(JSObject* unboxedObject,
-                            uint8_t* p, JSValueType type, const Value& v,
-                            bool preBarrier)
-{
-    switch (type) {
-      case JSVAL_TYPE_BOOLEAN:
-        *p = v.toBoolean();
-        return;
-
-      case JSVAL_TYPE_INT32:
-        *reinterpret_cast<int32_t*>(p) = v.toInt32();
-        return;
-
-      case JSVAL_TYPE_DOUBLE:
-        *reinterpret_cast<double*>(p) = v.toNumber();
-        return;
-
-      case JSVAL_TYPE_STRING: {
-        MOZ_ASSERT(!IsInsideNursery(v.toString()));
-        JSString** np = reinterpret_cast<JSString**>(p);
-        if (preBarrier)
-            JSString::writeBarrierPre(*np);
-        *np = v.toString();
-        return;
-      }
-
-      case JSVAL_TYPE_OBJECT: {
-        JSObject** np = reinterpret_cast<JSObject**>(p);
-
-        // Manually trigger post barriers on the whole object. If we treat
-        // the pointer as a HeapPtrObject we will get confused later if the
-        // object is converted to its native representation.
-        JSObject* obj = v.toObjectOrNull();
-        if (IsInsideNursery(obj) && !IsInsideNursery(unboxedObject))
-            unboxedObject->zone()->group()->storeBuffer().putWholeCell(unboxedObject);
-
-        if (preBarrier)
-            JSObject::writeBarrierPre(*np);
-        *np = obj;
-        return;
-      }
-
-      default:
-        MOZ_CRASH("Invalid type for unboxed value");
-    }
-}
-
 static inline bool
 SetUnboxedValue(JSContext* cx, JSObject* unboxedObject, jsid id,
                 uint8_t* p, JSValueType type, const Value& v, bool preBarrier)
@@ -125,7 +77,7 @@ SetUnboxedValue(JSContext* cx, JSObject* unboxedObject, jsid id,
         if (v.isString()) {
             JSString** np = reinterpret_cast<JSString**>(p);
             if (IsInsideNursery(v.toString()) && !IsInsideNursery(unboxedObject))
-                unboxedObject->zone()->group()->storeBuffer().putWholeCell(unboxedObject);
+                v.toString()->storeBuffer()->putWholeCell(unboxedObject);
 
             if (preBarrier)
                 JSString::writeBarrierPre(*np);
@@ -145,8 +97,8 @@ SetUnboxedValue(JSContext* cx, JSObject* unboxedObject, jsid id,
 
             // As above, trigger post barriers on the whole object.
             JSObject* obj = v.toObjectOrNull();
-            if (IsInsideNursery(v.toObjectOrNull()) && !IsInsideNursery(unboxedObject))
-                unboxedObject->zone()->group()->storeBuffer().putWholeCell(unboxedObject);
+            if (IsInsideNursery(obj) && !IsInsideNursery(unboxedObject))
+                obj->storeBuffer()->putWholeCell(unboxedObject);
 
             if (preBarrier)
                 JSObject::writeBarrierPre(*np);

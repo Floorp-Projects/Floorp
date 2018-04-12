@@ -868,7 +868,7 @@ ArgumentsObject::objectMoved(JSObject* dst, JSObject* src)
     if (!IsInsideNursery(src))
         return 0;
 
-    Nursery& nursery = dst->zone()->group()->nursery();
+    Nursery& nursery = dst->runtimeFromActiveCooperatingThread()->gc.nursery();
 
     size_t nbytesTotal = 0;
     if (!nursery.isInside(nsrc->data())) {

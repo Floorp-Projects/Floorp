@@ -582,7 +582,9 @@ struct Zone : public JS::shadow::Zone,
         // If the cell was in the nursery, hopefully unlikely, then we need to
         // tell the nursery about it so that it can sweep the uid if the thing
         // does not get tenured.
-        if (IsInsideNursery(cell) && !group()->nursery().addedUniqueIdToCell(cell)) {
+        if (IsInsideNursery(cell) &&
+            !runtimeFromActiveCooperatingThread()->gc.nursery().addedUniqueIdToCell(cell))
+        {
             uniqueIds().remove(cell);
             return false;
         }
