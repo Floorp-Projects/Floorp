@@ -20,8 +20,9 @@ namespace mozilla {
 namespace dom {
 
 class Promise;
-class WorkletGlobalScope;
 class WorkletFetchHandler;
+class WorkletGlobalScope;
+class WorkletThread;
 enum class CallerType : uint32_t;
 
 class Worklet final : public nsISupports
@@ -51,8 +52,16 @@ public:
   Import(const nsAString& aModuleURL, CallerType aCallerType,
          ErrorResult& aRv);
 
-  WorkletGlobalScope*
-  GetOrCreateGlobalScope(JSContext* aCx);
+  WorkletType Type() const
+  {
+    return mWorkletType;
+  }
+
+  static already_AddRefed<WorkletGlobalScope>
+  CreateGlobalScope(JSContext* aCx, WorkletType aWorkletType);
+
+  WorkletThread*
+  GetOrCreateThread();
 
 private:
   ~Worklet();
@@ -63,13 +72,17 @@ private:
   void
   AddImportFetchHandler(const nsACString& aURI, WorkletFetchHandler* aHandler);
 
+  void
+  TerminateThread();
+
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   WorkletType mWorkletType;
 
-  RefPtr<WorkletGlobalScope> mScope;
   nsRefPtrHashtable<nsCStringHashKey, WorkletFetchHandler> mImportHandlers;
+
+  RefPtr<WorkletThread> mWorkletThread;
 
   friend class WorkletFetchHandler;
 };

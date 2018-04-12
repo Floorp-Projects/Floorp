@@ -20,7 +20,7 @@ public:
   PaintWorkletGlobalScope();
 
   bool
-  WrapGlobalObject(JSContext* aCx, nsIPrincipal* aPrincipal,
+  WrapGlobalObject(JSContext* aCx,
                    JS::MutableHandle<JSObject*> aReflector) override;
 
   void
