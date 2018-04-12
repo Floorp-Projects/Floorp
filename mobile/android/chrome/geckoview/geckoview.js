@@ -27,23 +27,21 @@ XPCOMUtils.defineLazyGetter(this, "dump", () =>
 var ModuleManager = {
   init: function(aBrowser) {
     this.browser = aBrowser;
-    this.modules = {};
+    this.modules = new Map();
   },
 
   add: function(aResource, aType, ...aArgs) {
     this.remove(aType);
     let scope = {};
     ChromeUtils.import(aResource, scope);
-    this.modules[aType] = new scope[aType](
+
+    this.modules.set(aType, new scope[aType](
       aType, window, this.browser, WindowEventDispatcher, ...aArgs
-    );
+    ));
   },
 
   remove: function(aType) {
-    if (!(aType in this.modules)) {
-      return;
-    }
-    delete this.modules[aType];
+    this.modules.delete(aType);
   }
 };
 
