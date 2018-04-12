@@ -313,10 +313,10 @@ TextEditor::UpdateMetaCharset(nsIDocument& aDocument,
     RefPtr<Element> metaElement = metaNode->AsElement();
     MOZ_ASSERT(metaElement);
     nsresult rv =
-      EditorBase::SetAttribute(metaElement, nsGkAtoms::content,
-                               Substring(originalStart, start) +
-                                 charsetEquals +
-                                 NS_ConvertASCIItoUTF16(aCharacterSet));
+      SetAttributeWithTransaction(*metaElement, *nsGkAtoms::content,
+                                  Substring(originalStart, start) +
+                                    charsetEquals +
+                                    NS_ConvertASCIItoUTF16(aCharacterSet));
     return NS_SUCCEEDED(rv);
   }
   return false;
@@ -2004,7 +2004,10 @@ TextEditor::SetAttributeOrEquivalent(Element* aElement,
                                      const nsAString& aValue,
                                      bool aSuppressTransaction)
 {
-  return EditorBase::SetAttribute(aElement, aAttribute, aValue);
+  if (NS_WARN_IF(!aElement) || NS_WARN_IF(!aAttribute)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return SetAttributeWithTransaction(*aElement, *aAttribute, aValue);
 }
 
 nsresult
@@ -2012,7 +2015,10 @@ TextEditor::RemoveAttributeOrEquivalent(Element* aElement,
                                         nsAtom* aAttribute,
                                         bool aSuppressTransaction)
 {
-  return EditorBase::RemoveAttribute(aElement, aAttribute);
+  if (NS_WARN_IF(!aElement) || NS_WARN_IF(!aAttribute)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return RemoveAttributeWithTransaction(*aElement, *aAttribute);
 }
 
 } // namespace mozilla
