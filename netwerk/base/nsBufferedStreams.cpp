@@ -382,12 +382,25 @@ nsBufferedInputStream::Close()
 NS_IMETHODIMP
 nsBufferedInputStream::Available(uint64_t *result)
 {
-    nsresult rv = NS_OK;
     *result = 0;
-    if (mStream) {
-        rv = Source()->Available(result);
+
+    if (!mStream) {
+        return NS_OK;
     }
-    *result += (mFillPoint - mCursor);
+
+    uint64_t avail = mFillPoint - mCursor;
+
+    uint64_t tmp;
+    nsresult rv = Source()->Available(&tmp);
+    if (NS_SUCCEEDED(rv)) {
+        avail += tmp;
+    }
+
+    if (avail) {
+        *result = avail;
+        return NS_OK;
+    }
+
     return rv;
 }
 
