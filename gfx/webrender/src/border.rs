@@ -103,134 +103,116 @@ pub enum BorderEdgeKind {
     Clip,
 }
 
-trait NormalBorderHelpers {
-    fn get_corner(
-        &self,
-        edge0: &BorderSide,
-        width0: f32,
-        edge1: &BorderSide,
-        width1: f32,
-        radius: &LayerSize,
-        corner: BorderCorner,
-        border_rect: &LayerRect,
-    ) -> BorderCornerKind;
-
-    fn get_edge(&self, edge: &BorderSide, width: f32) -> (BorderEdgeKind, f32);
-}
-
-impl NormalBorderHelpers for NormalBorder {
-    fn get_corner(
-        &self,
-        edge0: &BorderSide,
-        width0: f32,
-        edge1: &BorderSide,
-        width1: f32,
-        radius: &LayerSize,
-        corner: BorderCorner,
-        border_rect: &LayerRect,
-    ) -> BorderCornerKind {
-        // If both widths are zero, a corner isn't formed.
-        if width0 == 0.0 && width1 == 0.0 {
-            return BorderCornerKind::None;
-        }
-
-        // If both edges are transparent, no corner is formed.
-        if edge0.color.a == 0.0 && edge1.color.a == 0.0 {
-            return BorderCornerKind::None;
-        }
-
-        match (edge0.style, edge1.style) {
-            // If both edges are none or hidden, no corner is needed.
-            (BorderStyle::None, BorderStyle::None) |
-            (BorderStyle::None, BorderStyle::Hidden) |
-            (BorderStyle::Hidden, BorderStyle::None) |
-            (BorderStyle::Hidden, BorderStyle::Hidden) => {
-                BorderCornerKind::None
-            }
-
-            // If one of the edges is none or hidden, we just draw one style.
-            (BorderStyle::None, _) |
-            (_, BorderStyle::None) |
-            (BorderStyle::Hidden, _) |
-            (_, BorderStyle::Hidden) => {
-                BorderCornerKind::Clip(BorderCornerInstance::Single)
-            }
-
-            // If both borders are solid, we can draw them with a simple rectangle if
-            // both the colors match and there is no radius.
-            (BorderStyle::Solid, BorderStyle::Solid) => {
-                if edge0.color == edge1.color && radius.width == 0.0 && radius.height == 0.0 {
-                    BorderCornerKind::Solid
-                } else {
-                    BorderCornerKind::Clip(BorderCornerInstance::Single)
-                }
-            }
-
-            // Inset / outset borders just modify the color of edges, so can be
-            // drawn with the normal border corner shader.
-            (BorderStyle::Outset, BorderStyle::Outset) |
-            (BorderStyle::Inset, BorderStyle::Inset) |
-            (BorderStyle::Double, BorderStyle::Double) |
-            (BorderStyle::Groove, BorderStyle::Groove) |
-            (BorderStyle::Ridge, BorderStyle::Ridge) => {
-                BorderCornerKind::Clip(BorderCornerInstance::Single)
-            }
-
-            // Dashed and dotted border corners get drawn into a clip mask.
-            (BorderStyle::Dashed, BorderStyle::Dashed) => BorderCornerKind::new_mask(
-                BorderCornerClipKind::Dash,
-                width0,
-                width1,
-                corner,
-                *radius,
-                *border_rect,
-            ),
-            (BorderStyle::Dotted, BorderStyle::Dotted) => BorderCornerKind::new_mask(
-                BorderCornerClipKind::Dot,
-                width0,
-                width1,
-                corner,
-                *radius,
-                *border_rect,
-            ),
-
-            // Draw border transitions with dots and/or dashes as
-            // solid segments. The old border path didn't support
-            // this anyway, so we might as well start using the new
-            // border path here, since the dashing in the edges is
-            // much higher quality anyway.
-            (BorderStyle::Dotted, _) |
-            (_, BorderStyle::Dotted) |
-            (BorderStyle::Dashed, _) |
-            (_, BorderStyle::Dashed) => BorderCornerKind::Clip(BorderCornerInstance::Single),
-
-            // Everything else can be handled by drawing the corner twice,
-            // where the shader outputs zero alpha for the side it's not
-            // drawing. This is somewhat inefficient in terms of pixels
-            // written, but it's a fairly rare case, and we can optimize
-            // this case later.
-            _ => BorderCornerKind::Clip(BorderCornerInstance::Double),
-        }
+fn get_corner(
+    edge0: &BorderSide,
+    width0: f32,
+    edge1: &BorderSide,
+    width1: f32,
+    radius: &LayerSize,
+    corner: BorderCorner,
+    border_rect: &LayerRect,
+) -> BorderCornerKind {
+    // If both widths are zero, a corner isn't formed.
+    if width0 == 0.0 && width1 == 0.0 {
+        return BorderCornerKind::None;
     }
 
-    fn get_edge(&self, edge: &BorderSide, width: f32) -> (BorderEdgeKind, f32) {
-        if width == 0.0 {
-            return (BorderEdgeKind::None, 0.0);
+    // If both edges are transparent, no corner is formed.
+    if edge0.color.a == 0.0 && edge1.color.a == 0.0 {
+        return BorderCornerKind::None;
+    }
+
+    match (edge0.style, edge1.style) {
+        // If both edges are none or hidden, no corner is needed.
+        (BorderStyle::None, BorderStyle::None) |
+        (BorderStyle::None, BorderStyle::Hidden) |
+        (BorderStyle::Hidden, BorderStyle::None) |
+        (BorderStyle::Hidden, BorderStyle::Hidden) => {
+            BorderCornerKind::None
         }
 
-        match edge.style {
-            BorderStyle::None | BorderStyle::Hidden => (BorderEdgeKind::None, 0.0),
+        // If one of the edges is none or hidden, we just draw one style.
+        (BorderStyle::None, _) |
+        (_, BorderStyle::None) |
+        (BorderStyle::Hidden, _) |
+        (_, BorderStyle::Hidden) => {
+            BorderCornerKind::Clip(BorderCornerInstance::Single)
+        }
 
-            BorderStyle::Solid | BorderStyle::Inset | BorderStyle::Outset => {
-                (BorderEdgeKind::Solid, width)
+        // If both borders are solid, we can draw them with a simple rectangle if
+        // both the colors match and there is no radius.
+        (BorderStyle::Solid, BorderStyle::Solid) => {
+            if edge0.color == edge1.color && radius.width == 0.0 && radius.height == 0.0 {
+                BorderCornerKind::Solid
+            } else {
+                BorderCornerKind::Clip(BorderCornerInstance::Single)
             }
-
-            BorderStyle::Double |
-            BorderStyle::Groove |
-            BorderStyle::Ridge |
-            BorderStyle::Dashed |
-            BorderStyle::Dotted => (BorderEdgeKind::Clip, width),
         }
+
+        // Inset / outset borders just modify the color of edges, so can be
+        // drawn with the normal border corner shader.
+        (BorderStyle::Outset, BorderStyle::Outset) |
+        (BorderStyle::Inset, BorderStyle::Inset) |
+        (BorderStyle::Double, BorderStyle::Double) |
+        (BorderStyle::Groove, BorderStyle::Groove) |
+        (BorderStyle::Ridge, BorderStyle::Ridge) => {
+            BorderCornerKind::Clip(BorderCornerInstance::Single)
+        }
+
+        // Dashed and dotted border corners get drawn into a clip mask.
+        (BorderStyle::Dashed, BorderStyle::Dashed) => BorderCornerKind::new_mask(
+            BorderCornerClipKind::Dash,
+            width0,
+            width1,
+            corner,
+            *radius,
+            *border_rect,
+        ),
+        (BorderStyle::Dotted, BorderStyle::Dotted) => BorderCornerKind::new_mask(
+            BorderCornerClipKind::Dot,
+            width0,
+            width1,
+            corner,
+            *radius,
+            *border_rect,
+        ),
+
+        // Draw border transitions with dots and/or dashes as
+        // solid segments. The old border path didn't support
+        // this anyway, so we might as well start using the new
+        // border path here, since the dashing in the edges is
+        // much higher quality anyway.
+        (BorderStyle::Dotted, _) |
+        (_, BorderStyle::Dotted) |
+        (BorderStyle::Dashed, _) |
+        (_, BorderStyle::Dashed) => BorderCornerKind::Clip(BorderCornerInstance::Single),
+
+        // Everything else can be handled by drawing the corner twice,
+        // where the shader outputs zero alpha for the side it's not
+        // drawing. This is somewhat inefficient in terms of pixels
+        // written, but it's a fairly rare case, and we can optimize
+        // this case later.
+        _ => BorderCornerKind::Clip(BorderCornerInstance::Double),
+    }
+}
+
+fn get_edge(edge: &BorderSide, width: f32, height: f32) -> (BorderEdgeKind, f32) {
+    if width == 0.0 || height <= 0.0 {
+        return (BorderEdgeKind::None, 0.0);
+    }
+
+    match edge.style {
+        BorderStyle::None | BorderStyle::Hidden => (BorderEdgeKind::None, 0.0),
+
+        BorderStyle::Solid | BorderStyle::Inset | BorderStyle::Outset => {
+            (BorderEdgeKind::Solid, width)
+        }
+
+        BorderStyle::Double |
+        BorderStyle::Groove |
+        BorderStyle::Ridge |
+        BorderStyle::Dashed |
+        BorderStyle::Dotted => (BorderEdgeKind::Clip, width),
     }
 }
 
@@ -431,7 +413,7 @@ impl<'a> DisplayListFlattener<'a> {
         }
 
         let corners = [
-            border.get_corner(
+            get_corner(
                 left,
                 widths.left,
                 top,
@@ -440,7 +422,7 @@ impl<'a> DisplayListFlattener<'a> {
                 BorderCorner::TopLeft,
                 &info.rect,
             ),
-            border.get_corner(
+            get_corner(
                 right,
                 widths.right,
                 top,
@@ -449,7 +431,7 @@ impl<'a> DisplayListFlattener<'a> {
                 BorderCorner::TopRight,
                 &info.rect,
             ),
-            border.get_corner(
+            get_corner(
                 right,
                 widths.right,
                 bottom,
@@ -458,7 +440,7 @@ impl<'a> DisplayListFlattener<'a> {
                 BorderCorner::BottomRight,
                 &info.rect,
             ),
-            border.get_corner(
+            get_corner(
                 left,
                 widths.left,
                 bottom,
@@ -469,10 +451,14 @@ impl<'a> DisplayListFlattener<'a> {
             ),
         ];
 
-        let (left_edge, left_len) = border.get_edge(left, widths.left);
-        let (top_edge, top_len) = border.get_edge(top, widths.top);
-        let (right_edge, right_len) = border.get_edge(right, widths.right);
-        let (bottom_edge, bottom_len) = border.get_edge(bottom, widths.bottom);
+        let (left_edge, left_len) = get_edge(left, widths.left,
+            info.rect.size.height - radius.top_left.height - radius.bottom_left.height);
+        let (top_edge, top_len) = get_edge(top, widths.top,
+            info.rect.size.width - radius.top_left.width - radius.top_right.width);
+        let (right_edge, right_len) = get_edge(right, widths.right,
+            info.rect.size.height - radius.top_right.height - radius.bottom_right.height);
+        let (bottom_edge, bottom_len) = get_edge(bottom, widths.bottom,
+            info.rect.size.width - radius.bottom_right.width - radius.bottom_left.width);
 
         let edges = [left_edge, top_edge, right_edge, bottom_edge];
 
