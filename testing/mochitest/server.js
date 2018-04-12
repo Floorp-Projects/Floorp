@@ -126,7 +126,7 @@ function runServer()
   //if a.b.c.d or 'localhost'
   if (typeof(_SERVER_ADDR) != "undefined") {
     if (_SERVER_ADDR == "localhost") {
-      gServerAddress = _SERVER_ADDR;      
+      gServerAddress = _SERVER_ADDR;
     } else {
       var quads = _SERVER_ADDR.split('.');
       if (quads.length == 4) {
@@ -172,8 +172,7 @@ function runServer()
     serverAlive.initWithPath(_PROFILE_PATH);
   }
 
-  // If we're running outside of the test harness, there might
-  // not be a test profile directory present
+  // Create a file to inform the harness that the server is ready
   if (serverAlive.exists()) {
     serverAlive.append("server_alive.txt");
     foStream.init(serverAlive,
@@ -181,6 +180,9 @@ function runServer()
     var data = "It's alive!";
     foStream.write(data, data.length);
     foStream.close();
+  } else {
+    throw new Error("Failed to create server_alive.txt because " + serverAlive.path +
+                    " could not be found.");
   }
 
   makeTags();
@@ -304,7 +306,7 @@ function processLocations(server)
           throw "Multiple primary locations in server-locations.txt, " +
                 "line " + lineno;
         }
-  
+
         server.identity.setPrimary(scheme, host, port);
         seenPrimary = true;
         continue;
@@ -451,7 +453,7 @@ function isTest(filename, pattern)
   var testPattern = new RegExp("^" + testPrefix);
 
   var pathPieces = filename.split('/');
-    
+
   return testPattern.test(pathPieces[pathPieces.length - 1]) &&
          !filename.includes(".js") &&
          !filename.includes(".css") &&
@@ -471,7 +473,7 @@ function linksToListItems(links)
       ? "non-test invisible"
       : "test";
     if (value instanceof Object) {
-      children = UL({class: "testdir"}, linksToListItems(value)); 
+      children = UL({class: "testdir"}, linksToListItems(value));
     } else {
       children = "";
     }
@@ -756,5 +758,5 @@ function defaultDirHandler(metadata, response)
     }
   } catch (ex) {
     response.write(ex);
-  }  
+  }
 }
