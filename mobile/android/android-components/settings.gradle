@@ -19,6 +19,9 @@ project(':concept-engine').projectDir = new File(rootDir, 'components/concept/en
 include ':feature-session'
 project(':feature-session').projectDir = new File(rootDir, 'components/feature/session')
 
+include ':feature-toolbar'
+project(':feature-toolbar').projectDir = new File(rootDir, 'components/feature/toolbar')
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Browser components
 ////////////////////////////////////////////////////////////////////////////////////////////////////
