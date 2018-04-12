@@ -3289,6 +3289,14 @@
     "bug_numbers": [1434852],
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
   },
+  "DNS_TRR_NS_VERFIFIED": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "TRR managed to verify NS entry",
+    "bug_numbers": [1453825],
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
+  },
   "DNS_LOOKUP_ALGORITHM": {
     "record_in_processes": ["main"],
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
