@@ -48,7 +48,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
-        if CONFIG['CPU_ARCH'] in ('arm', 'x86', 'x86_64', 'mips64'):
+        if CONFIG['CPU_ARCH'] in ('arm', 'aarch64', 'x86', 'x86_64', 'mips64'):
             UNIFIED_SOURCES += [
                 'lul/AutoObjectMapper.cpp',
                 'lul/LulCommon.cpp',
