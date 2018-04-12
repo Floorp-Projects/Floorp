@@ -138,18 +138,18 @@ function runServer()
         if (!invalid)
           gServerAddress = _SERVER_ADDR;
         else
-          throw "invalid _SERVER_ADDR, please specify a valid IP Address";
+          throw new Error("invalid _SERVER_ADDR, please specify a valid IP Address");
       }
     }
   } else {
-    throw "please defined _SERVER_ADDR (as an ip address) before running server.js";
+    throw new Error("please define _SERVER_ADDR (as an ip address) before running server.js");
   }
 
   if (typeof(_SERVER_PORT) != "undefined") {
     if (parseInt(_SERVER_PORT) > 0 && parseInt(_SERVER_PORT) < 65536)
       SERVER_PORT = _SERVER_PORT;
   } else {
-    throw "please define _SERVER_PORT (as a port number) before running server.js";
+    throw new Error("please define _SERVER_PORT (as a port number) before running server.js");
   }
 
   // If DISPLAY_RESULTS is not specified, it defaults to true
@@ -294,7 +294,7 @@ function processLocations(server)
 
     var match = LINE_REGEXP.exec(lineValue);
     if (!match)
-      throw "Syntax error in server-locations.txt, line " + lineno;
+      throw new Error("Syntax error in server-locations.txt, line " + lineno);
 
     var [, scheme, host, port, options] = match;
     if (options)
@@ -303,8 +303,8 @@ function processLocations(server)
       {
         if (seenPrimary)
         {
-          throw "Multiple primary locations in server-locations.txt, " +
-                "line " + lineno;
+          throw new Error("Multiple primary locations in server-locations.txt, " +
+                          "line " + lineno);
         }
 
         server.identity.setPrimary(scheme, host, port);
