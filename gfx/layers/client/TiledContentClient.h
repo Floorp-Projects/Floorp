@@ -384,7 +384,6 @@ public:
                          void* aCallbackData) override;
   
   void ResetPaintedAndValidState() override {
-    mPaintedRegion.SetEmpty();
     mValidRegion.SetEmpty();
     mTiles.mSize.width = 0;
     mTiles.mSize.height = 0;

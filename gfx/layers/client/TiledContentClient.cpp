@@ -118,7 +118,6 @@ MultiTiledContentClient::UpdatedBuffer(TiledBufferType aType)
   MOZ_ASSERT(aType != LOW_PRECISION_TILED_BUFFER || mHasLowPrecision);
 
   mForwarder->UseTiledLayerBuffer(this, buffer->GetSurfaceDescriptorTiles());
-  buffer->ClearPaintedRegion();
 }
 
 SharedFrameMetricsHelper::SharedFrameMetricsHelper()
@@ -1101,7 +1100,6 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
 
   mTiles = newTiles;
   mValidRegion = newValidRegion;
-  mPaintedRegion.OrWith(paintRegion);
 }
 
 bool
@@ -1175,7 +1173,6 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   // Add the region we copied from the front buffer into the painted region
   extraPainted.MoveBy(aTileOrigin);
   extraPainted.And(extraPainted, mNewValidRegion);
-  mPaintedRegion.Or(mPaintedRegion, extraPainted);
 
   if (!backBuffer) {
     return false;
