@@ -189,10 +189,13 @@ public:
 
     enum ListenerType : uint8_t
     {
+      // No listener.
       eNoListener,
+      // A generic C++ implementation of nsIDOMEventListener.
       eNativeListener,
+      // An event handler attribute using JSEventHandler.
       eJSEventListener,
-      eWrappedJSListener,
+      // A scripted EventListener.
       eWebIDLListener,
     };
     ListenerType mListenerType;
