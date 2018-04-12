@@ -2539,7 +2539,8 @@ testingFunc_bailAfter(JSContext* cx, unsigned argc, Value* vp)
     }
 
 #ifdef DEBUG
-    cx->zone()->group()->setIonBailAfter(args[0].toInt32());
+    if (auto* jitRuntime = cx->runtime()->jitRuntime())
+        jitRuntime->setIonBailAfter(args[0].toInt32());
 #endif
 
     args.rval().setUndefined();
