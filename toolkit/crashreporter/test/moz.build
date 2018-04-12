@@ -25,9 +25,10 @@ SOURCES += [
 ]
 
 if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'x86_64':
-    SOURCES += [
-        'win64UnwindInfoTests.asm',
-    ]
+    if CONFIG['CC_TYPE'] != 'gcc':
+        SOURCES += [
+            'win64UnwindInfoTests.asm',
+        ]
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     SOURCES['ExceptionThrower.cpp'].flags += [
