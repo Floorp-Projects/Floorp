@@ -71,6 +71,9 @@ for (let [key, val] of Object.entries({
     focusFilterMode: "all",
     compareRetainedDisplayLists: false,
 
+    // add a delay between loading tests
+    runSlower: false,
+
     browser: undefined,
     // Are we testing web content loaded in a separate process?
     browserIsRemote: undefined,        // bool
