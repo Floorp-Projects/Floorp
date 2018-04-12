@@ -417,6 +417,7 @@ You can set this by:
             'jsreftest': 'reftest',
             'crashtest': 'reftest',
             'reftest-debug': 'reftest',
+            'reftest-fonts': 'reftest',
             'jsreftest-debug': 'reftest',
             'crashtest-debug': 'reftest',
         }
