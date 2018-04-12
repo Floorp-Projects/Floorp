@@ -130,27 +130,12 @@ public final class SessionTextInput {
      * @param defHandler Handler returned by the system {@code getHandler} implementation.
      * @return Handler to return to the system through {@code getHandler}.
      */
-    public @NonNull Handler getHandler(final @NonNull Handler defHandler) {
+    public synchronized @NonNull Handler getHandler(final @NonNull Handler defHandler) {
         // May be called on any thread.
         if (mInputConnection != null) {
             return mInputConnection.getHandler(defHandler);
         }
         return defHandler;
-    }
-
-    private synchronized boolean ensureInputConnection() {
-        if (!mQueue.isReady()) {
-            return false;
-        }
-
-        if (mInputConnection == null) {
-            mInputConnection = GeckoInputConnection.create(mSession,
-                                                           /* view */ null,
-                                                           mEditable);
-            mInputConnection.setShowSoftInputOnFocus(mShowSoftInputOnFocus);
-            mEditable.setListener((EditableListener) mInputConnection);
-        }
-        return true;
     }
 
     /**
@@ -189,9 +174,10 @@ public final class SessionTextInput {
      * @param attrs EditorInfo instance to be filled on return.
      * @return InputConnection instance or null if input method is not active.
      */
-    public @Nullable InputConnection onCreateInputConnection(final @NonNull EditorInfo attrs) {
+    public synchronized @Nullable InputConnection onCreateInputConnection(
+            final @NonNull EditorInfo attrs) {
         // May be called on any thread.
-        if (!ensureInputConnection()) {
+        if (!mQueue.isReady() || mInputConnection == null) {
             return null;
         }
         return mInputConnection.onCreateInputConnection(attrs);
@@ -271,14 +257,26 @@ public final class SessionTextInput {
     }
 
     /**
-     * Prevent soft input when gaining focus
+     * Set whether to show the soft keyboard when an input field gains focus.
      *
-     * @param showSoftInputOnFocus Set whether soft input is shown when an input field gains focus.
+     * @param showSoftInputOnFocus True to show soft input on input focus.
      */
-    synchronized public void setShowSoftInputOnFocus(boolean showSoftInputOnFocus) {
+    public void setShowSoftInputOnFocus(final boolean showSoftInputOnFocus) {
+        ThreadUtils.assertOnUiThread();
+
         mShowSoftInputOnFocus = showSoftInputOnFocus;
         if (mInputConnection != null) {
             mInputConnection.setShowSoftInputOnFocus(showSoftInputOnFocus);
         }
+    }
+
+    /**
+     * Return whether to show the soft keyboard when an input field gains focus.
+     *
+     * @return True if soft input is shown on input focus.
+     */
+    public boolean getShowSoftInputOnFocus() {
+        ThreadUtils.assertOnUiThread();
+        return mShowSoftInputOnFocus;
     }
 }
