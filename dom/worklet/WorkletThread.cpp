@@ -6,6 +6,7 @@
 
 #include "WorkletThread.h"
 #include "prthread.h"
+#include "nsContentUtils.h"
 #include "nsCycleCollector.h"
 #include "mozilla/dom/AtomList.h"
 #include "mozilla/EventQueue.h"
@@ -295,7 +296,10 @@ WorkletThread::WorkletThread(const WorkletLoadInfo& aWorkletLoadInfo)
   , mWorkletLoadInfo(aWorkletLoadInfo)
   , mCreationTimeStamp(TimeStamp::Now())
   , mJSContext(nullptr)
+  , mIsTerminating(false)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  nsContentUtils::RegisterShutdownObserver(this);
 }
 
 WorkletThread::~WorkletThread()
@@ -399,6 +403,16 @@ WorkletThread::Terminate()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (mIsTerminating) {
+    // nsThread::Dispatch() would leak the runnable if the event queue is no
+    // longer accepting runnables.
+    return;
+  }
+
+  mIsTerminating = true;
+
+  nsContentUtils::UnregisterShutdownObserver(this);
+
   RefPtr<TerminateRunnable> runnable = new TerminateRunnable(this);
   DispatchRunnable(runnable.forget());
 }
@@ -458,7 +472,18 @@ WorkletThread::Get()
     static_cast<WorkletThreadContextPrivate*>(cxPrivate)->GetWorkletThread();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(WorkletThread, nsThread)
+// nsIObserver
+NS_IMETHODIMP
+WorkletThread::Observe(nsISupports* aSubject, const char* aTopic,
+                       const char16_t*)
+{
+  MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
+
+  Terminate();
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED(WorkletThread, nsThread, nsIObserver)
 
 } // namespace dom
 } // namespace mozilla

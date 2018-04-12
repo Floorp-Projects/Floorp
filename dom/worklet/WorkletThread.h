@@ -20,10 +20,11 @@ class nsIRunnable;
 namespace mozilla {
 namespace dom {
 
-class WorkletThread final : public nsThread
+class WorkletThread final : public nsThread, public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIOBSERVER
 
   static already_AddRefed<WorkletThread>
   Create(const WorkletLoadInfo& aWorkletLoadInfo);
@@ -89,6 +90,8 @@ private:
   // Touched only on the worklet thread. This is a raw pointer because it's set
   // and nullified by RunEventLoop().
   JSContext* mJSContext;
+
+  bool mIsTerminating; // main thread
 };
 
 } // namespace dom
