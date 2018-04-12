@@ -18,7 +18,6 @@ const { addDebuggerToGlobal } =
   ChromeUtils.import("resource://gre/modules/jsdebugger.jsm", {});
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const flags = require("devtools/shared/flags");
 const HeapAnalysesClient =
   require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 const Services = require("Services");
@@ -32,8 +31,10 @@ const { LabelAndShallowSizeVisitor } = DominatorTreeNode;
 // the output away anyway, unless you give it the --verbose flag.
 if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
   Services.prefs.setBoolPref("devtools.debugger.log", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("devtools.debugger.log");
+  });
 }
-flags.wantLogging = true;
 
 const SYSTEM_PRINCIPAL = Cc["@mozilla.org/systemprincipal;1"]
   .createInstance(Ci.nsIPrincipal);

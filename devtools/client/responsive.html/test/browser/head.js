@@ -48,14 +48,12 @@ SimpleTest.waitForExplicitFinish();
 // should be enough.
 requestLongerTimeout(2);
 
-flags.testing = true;
 Services.prefs.setCharPref("devtools.devices.url", TEST_URI_ROOT + "devices.json");
 // The appearance of this notification causes intermittent behavior in some tests that
 // send mouse events, since it causes the content to shift when it appears.
 Services.prefs.setBoolPref("devtools.responsive.reloadNotification.enabled", false);
 
 registerCleanupFunction(async () => {
-  flags.testing = false;
   Services.prefs.clearUserPref("devtools.devices.url");
   Services.prefs.clearUserPref("devtools.responsive.reloadNotification.enabled");
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");

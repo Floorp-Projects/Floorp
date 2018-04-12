@@ -43,8 +43,6 @@ const DOCS_GA_PARAMS = "?utm_source=mozilla" +
                        "&utm_medium=firefox-console-errors" +
                        "&utm_campaign=default";
 
-flags.testing = true;
-
 Services.prefs.setBoolPref("devtools.browserconsole.new-frontend-enabled", false);
 registerCleanupFunction(async function () {
   Services.prefs.clearUserPref("devtools.browserconsole.new-frontend-enabled");
@@ -325,8 +323,6 @@ registerCleanupFunction(function* () {
 });
 
 registerCleanupFunction(function* () {
-  flags.testing = false;
-
   // Remove stored console commands in between tests
   yield asyncStorage.removeItem("webConsoleHistory");
 
