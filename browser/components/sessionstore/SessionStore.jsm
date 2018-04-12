@@ -429,7 +429,6 @@ Object.freeze(SessionStore);
 
 var SessionStoreInternal = {
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIDOMEventListener,
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference
   ]),
@@ -999,7 +998,7 @@ var SessionStoreInternal = {
   /* ........ Window Event Handlers .............. */
 
   /**
-   * Implement nsIDOMEventListener for handling various window and tab events
+   * Implement EventListener for handling various window and tab events
    */
   handleEvent: function ssi_handleEvent(aEvent) {
     let win = aEvent.currentTarget.ownerGlobal;
