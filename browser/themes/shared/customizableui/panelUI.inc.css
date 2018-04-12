@@ -863,7 +863,7 @@ panelview .toolbarbutton-1,
 .subviewbutton[shortcut]::after {
   content: attr(shortcut);
   float: right;
-  color: GrayText;
+  opacity: 0.5;
 }
 
 .PanelUI-subView .subviewbutton-nav::after {

@@ -55,15 +55,6 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
     "target_info.txt",
     "target.jsshell.zip",
     "mozharness.zip",
-    "target.langpack.xpi",
-]
-
-# Until bug 1331141 is fixed, if you are adding any new artifacts here that
-# need to be transfered to S3, please be aware you also need to follow-up
-# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
-# See example in bug 1348286
-_DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N = [
-    "target.langpack.xpi",
 ]
 
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
@@ -71,18 +62,36 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N = [
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
-    r'^(linux(|64)|macosx64)(|-devedition)-nightly$':
+    r'^(linux(|64)|macosx64)-nightly$':
         _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
             'host/bin/mar',
             'host/bin/mbsdiff',
         ],
-    r'^win(32|64)(|-devedition)-nightly$':
+    r'^(linux(|64)|macosx64)-devedition-nightly$':
         _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
-            "host/bin/mar.exe",
-            "host/bin/mbsdiff.exe",
+            'host/bin/mar',
+            'host/bin/mbsdiff',
+            # TODO Bug 1453033: Sign devedition langpacks
+            'target.langpack.xpi',
         ],
-    r'^(linux(|64)|macosx64|win(32|64))(|-devedition)-nightly-l10n$':
-        _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N,
+    r'^win(32|64)-nightly$':
+        _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
+            'host/bin/mar.exe',
+            'host/bin/mbsdiff.exe',
+        ],
+    r'^win(32|64)-devedition-nightly$':
+        _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
+            'host/bin/mar.exe',
+            'host/bin/mbsdiff.exe',
+            # TODO Bug 1453033: Sign devedition langpacks
+            'target.langpack.xpi',
+        ],
+    r'^(linux(|64)|macosx64|win(32|64))-nightly-l10n$': [],
+    r'^(linux(|64)|macosx64|win(32|64))-devedition-nightly-l10n$':
+        [
+            # TODO Bug 1453033: Sign devedition langpacks
+            'target.langpack.xpi',
+        ],
 }
 
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
@@ -287,12 +296,13 @@ def generate_upstream_artifacts(build_task_ref, build_signing_task_ref,
                 _check_platform_matched_only_one_regex(
                     tasktype, platform, plarform_was_previously_matched_by_regex, platform_regex
                 )
-                upstream_artifacts.append({
-                    "taskId": {"task-reference": ref},
-                    "taskType": tasktype,
-                    "paths": ["{}/{}".format(artifact_prefix, path) for path in paths],
-                    "locale": locale or "en-US",
-                })
+                if paths:
+                    upstream_artifacts.append({
+                        "taskId": {"task-reference": ref},
+                        "taskType": tasktype,
+                        "paths": ["{}/{}".format(artifact_prefix, path) for path in paths],
+                        "locale": locale or "en-US",
+                    })
                 plarform_was_previously_matched_by_regex = platform_regex
 
     return upstream_artifacts

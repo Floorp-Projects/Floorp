@@ -384,7 +384,7 @@ UnboxedPlainObject::ensureExpando(JSContext* cx, Handle<UnboxedPlainObject*> obj
     // convert the object to its native representation, we will end up with a
     // corrupted store buffer entry.
     if (IsInsideNursery(expando) && !IsInsideNursery(obj))
-        cx->zone()->group()->storeBuffer().putWholeCell(obj);
+        expando->storeBuffer()->putWholeCell(obj);
 
     obj->setExpandoUnsafe(expando);
     return expando;
@@ -599,7 +599,7 @@ UnboxedPlainObject::convertToNative(JSContext* cx, JSObject* obj)
     // writes to the expando (see WholeCellEdges::trace), so after conversion
     // we need to make sure the expando itself will still be traced.
     if (expando && !IsInsideNursery(expando))
-        cx->zone()->group()->storeBuffer().putWholeCell(expando);
+        cx->runtime()->gc.storeBuffer().putWholeCell(expando);
 
     obj->setGroup(layout.nativeGroup());
     obj->as<PlainObject>().setLastPropertyMakeNative(cx, layout.nativeShape());

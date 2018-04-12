@@ -135,6 +135,22 @@ class JitRuntime
     // Global table of jitcode native address => bytecode address mappings.
     UnprotectedData<JitcodeGlobalTable*> jitcodeGlobalTable_;
 
+#ifdef DEBUG
+    // The number of possible bailing places encounters before forcefully bailing
+    // in that place. Zero means inactive.
+    ActiveThreadData<uint32_t> ionBailAfter_;
+#endif
+
+    // Number of Ion compilations which were finished off thread and are
+    // waiting to be lazily linked. This is only set while holding the helper
+    // thread state lock, but may be read from at other times.
+    mozilla::Atomic<size_t> numFinishedBuilders_;
+
+    // List of Ion compilation waiting to get linked.
+    using IonBuilderList = mozilla::LinkedList<js::jit::IonBuilder>;
+    ActiveThreadData<IonBuilderList> ionLazyLinkList_;
+    ActiveThreadData<size_t> ionLazyLinkListSize_;
+
   private:
     void generateLazyLinkStub(MacroAssembler& masm);
     void generateInterpreterStub(MacroAssembler& masm);
@@ -272,9 +288,35 @@ class JitRuntime
         return rt->geckoProfiler().enabled();
     }
 
-    bool isOptimizationTrackingEnabled(ZoneGroup* group) {
-        return isProfilerInstrumentationEnabled(group->runtime);
+    bool isOptimizationTrackingEnabled(JSRuntime* rt) {
+        return isProfilerInstrumentationEnabled(rt);
     }
+
+#ifdef DEBUG
+    void* addressOfIonBailAfter() { return &ionBailAfter_; }
+
+    // Set after how many bailing places we should forcefully bail.
+    // Zero disables this feature.
+    void setIonBailAfter(uint32_t after) {
+        ionBailAfter_ = after;
+    }
+#endif
+
+    size_t numFinishedBuilders() const {
+        return numFinishedBuilders_;
+    }
+    mozilla::Atomic<size_t>& numFinishedBuildersRef(const AutoLockHelperThreadState& locked) {
+        return numFinishedBuilders_;
+    }
+
+    IonBuilderList& ionLazyLinkList(JSRuntime* rt);
+
+    size_t ionLazyLinkListSize() const {
+        return ionLazyLinkListSize_;
+    }
+
+    void ionLazyLinkListRemove(JSRuntime* rt, js::jit::IonBuilder* builder);
+    void ionLazyLinkListAdd(JSRuntime* rt, js::jit::IonBuilder* builder);
 };
 
 enum class CacheKind : uint8_t;
