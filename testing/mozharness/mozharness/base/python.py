@@ -780,12 +780,17 @@ class Python3Virtualenv(object):
                 env=self.query_env())
 
     @py3_venv_initialized
-    def py3_install_modules(self, modules):
+    def py3_install_modules(self, modules,
+                            use_mozharness_pip_config=True):
         if not os.path.exists(self.py3_venv_path):
             raise Exception('You need to call py3_create_venv() first.')
 
         for m in modules:
-            self.run_command('%s install %s' % (self.py3_pip_path, m), env=self.query_env())
+            cmd = [self.py3_pip_path, 'install']
+            if use_mozharness_pip_config:
+                cmd += self._mozharness_pip_args()
+            cmd += [m]
+            self.run_command(cmd, env=self.query_env())
 
     def _mozharness_pip_args(self):
         '''We have information in Mozharness configs that apply to pip'''
