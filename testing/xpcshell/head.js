@@ -200,6 +200,10 @@ _Timer.prototype = {
   }
 };
 
+function _isGenerator(val) {
+  return typeof val === "object" && val && typeof val.next === "function";
+}
+
 function _do_main() {
   if (_quit)
     return;
@@ -574,7 +578,10 @@ function _execute_test() {
   (async () => {
     for (let func of _cleanupFunctions.reverse()) {
       try {
-        await func();
+        let result = await func();
+        if (_isGenerator(result)) {
+          Assert.ok(false, "Cleanup function returned a generator");
+        }
       } catch (ex) {
         reportCleanupError(ex);
       }
@@ -1415,8 +1422,11 @@ function run_next_test() {
 
       if (_properties.isTask) {
         _gTaskRunning = true;
-        (async () => _gRunningTest())().then(() => {
+        (async () => _gRunningTest())().then(result => {
           _gTaskRunning = false;
+          if (_isGenerator(result)) {
+            Assert.ok(false, "Task returned a generator");
+          }
           run_next_test();
         }, ex => {
           _gTaskRunning = false;
