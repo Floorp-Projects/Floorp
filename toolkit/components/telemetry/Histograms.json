@@ -3294,7 +3294,7 @@
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "labels": ["nativeOnly", "trrRace", "trrFirst", "trrOnly", "trrShadow"],
+    "labels": ["nativeOnly", "trrRace", "trrFirst", "trrOnly", "trrShadow", "trrOff"],
     "bug_numbers": [1434852],
     "description": "DNS: lookup algorithm"
   },

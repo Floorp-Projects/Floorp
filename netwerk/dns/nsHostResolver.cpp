@@ -314,6 +314,9 @@ nsHostRecord::ResolveComplete()
     case MODE_SHADOW:
         AccumulateCategorical(Telemetry::LABELS_DNS_LOOKUP_ALGORITHM::trrShadow);
         break;
+    case MODE_TRROFF:
+        AccumulateCategorical(Telemetry::LABELS_DNS_LOOKUP_ALGORITHM::trrOff);
+        break;
     }
 
     if (mTRRUsed && !mTRRSuccess && mNativeSuccess && gTRRService) {
@@ -1267,12 +1270,12 @@ nsHostResolver::NameLookup(nsHostRecord *rec)
         mode = MODE_NATIVEONLY;
     }
 
-    if (mode != MODE_NATIVEONLY) {
+    if (!TRR_DISABLED(mode)) {
         rv = TrrLookup(rec);
     }
 
     if ((mode == MODE_PARALLEL) ||
-        (mode == MODE_NATIVEONLY) ||
+        TRR_DISABLED(mode) ||
         (mode == MODE_SHADOW) ||
         ((mode == MODE_TRRFIRST) && NS_FAILED(rv))) {
         rv = NativeLookup(rec);
