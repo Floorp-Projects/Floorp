@@ -729,7 +729,8 @@ Response.prototype = {
       if (value instanceof RetVal) {
         result[key] = value.write(ret, ctx);
       } else {
-        result[key] = value;
+        throw new Error("Response can only be a `RetVal` instance or an object " +
+                        "with one property being a `RetVal` instance.");
       }
     }
     return result;
