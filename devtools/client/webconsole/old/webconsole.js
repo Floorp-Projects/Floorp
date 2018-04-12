@@ -31,8 +31,8 @@ loader.lazyRequireGetter(this, "ConsoleOutput", "devtools/client/webconsole/old/
 loader.lazyRequireGetter(this, "Messages", "devtools/client/webconsole/old/console-output", true);
 loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/environment-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
-loader.lazyRequireGetter(this, "JSTerm", "devtools/client/webconsole/jsterm", true);
-loader.lazyRequireGetter(this, "gSequenceId", "devtools/client/webconsole/jsterm", true);
+loader.lazyRequireGetter(this, "JSTerm", "devtools/client/webconsole/old/jsterm", true);
+loader.lazyRequireGetter(this, "gSequenceId", "devtools/client/webconsole/old/jsterm", true);
 loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/widgets/VariablesView.jsm");
 loader.lazyImporter(this, "VariablesViewController", "resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);

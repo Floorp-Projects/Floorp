@@ -17,7 +17,13 @@ let gTags = [
   { folder: 345678,
     url: "place:type=7&folder=345678&queryType=1",
     title: "tag3",
-    hash: " 268506471927988",
+    hash: "268506471927988",
+  },
+  // This will point to an invalid folder id.
+  { folder: 456789,
+    url: "place:type=7&folder=456789&queryType=1",
+    title: "invalid",
+    hash: "268505972797836",
   },
 ];
 gTags.forEach(t => t.guid = t.title.padEnd(12, "_"));
@@ -34,9 +40,11 @@ add_task(async function setup() {
     await db.execute(`INSERT INTO moz_places (url, guid, url_hash)
                       VALUES (:url, :guid, :hash)
                      `, { url: tag.url, guid: tag.guid, hash: tag.hash });
-    await db.execute(`INSERT INTO moz_bookmarks (id, fk, guid, title)
-                     VALUES (:id, (SELECT id FROM moz_places WHERE guid = :guid), :guid, :title)
-                    `, { id: tag.folder, guid: tag.guid, title: tag.title });
+    if (tag.title != "invalid") {
+      await db.execute(`INSERT INTO moz_bookmarks (id, fk, guid, title)
+                      VALUES (:id, (SELECT id FROM moz_places WHERE guid = :guid), :guid, :title)
+                      `, { id: tag.folder, guid: tag.guid, title: tag.title });
+    }
   }
 
   await db.close();
@@ -53,19 +61,22 @@ add_task(async function database_is_valid() {
 
 add_task(async function test_queries_converted() {
   for (let tag of gTags) {
-    let bm = await PlacesUtils.bookmarks.fetch(tag.guid);
-    Assert.equal(bm.url.href, "place:tag=" + tag.title);
+    let url = tag.title == "invalid" ? tag.url : "place:tag=" + tag.title;
+    let page = await PlacesUtils.history.fetch(tag.guid);
+    Assert.equal(page.url.href, url);
   }
 });
 
 add_task(async function test_sync_fields() {
   let db = await PlacesUtils.promiseDBConnection();
   for (let tag of gTags) {
-    let rows = await db.execute(`
-      SELECT syncChangeCounter
-      FROM moz_bookmarks
-      WHERE guid = :guid
-    `, { guid: tag.guid });
-    Assert.equal(rows[0].getResultByIndex(0), 2);
+    if (tag.title != "invalid") {
+      let rows = await db.execute(`
+        SELECT syncChangeCounter
+        FROM moz_bookmarks
+        WHERE guid = :guid
+      `, { guid: tag.guid });
+      Assert.equal(rows[0].getResultByIndex(0), 2);
+    }
   }
 });

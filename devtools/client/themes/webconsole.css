@@ -353,8 +353,6 @@ a {
 
 /* JSTerm Styles */
 
-html #jsterm-wrapper,
-html .jsterm-stack-node,
 html .jsterm-input-node-html,
 html #webconsole-notificationbox {
   flex: 0;
@@ -391,10 +389,6 @@ html #webconsole-notificationbox {
 
 /*  styles for the new HTML frontend */
 
-html .jsterm-stack-node {
-  position: relative;
-}
-
 textarea.jsterm-input-node,
 textarea.jsterm-complete-node {
   width: 100%;
@@ -430,6 +424,12 @@ textarea.jsterm-input-node:focus {
 :root[platform="mac"] textarea.jsterm-input-node,
 :root[platform="mac"] textarea.jsterm-complete-node {
   border-radius: 0 0 4px 4px;
+}
+
+/* Unset the bottom right radius on the jsterm inputs when the sidebar is visible */
+:root[platform="mac"] .sidebar ~ .jsterm-input-container textarea.jsterm-input-node,
+:root[platform="mac"] .sidebar ~ .jsterm-input-container textarea.jsterm-complete-node {
+  border-bottom-right-radius: 0;
 }
 
 
@@ -1097,12 +1097,40 @@ body #output-container {
   overflow: hidden;
 }
 
+
+/*
+ * Here's what the layout of the console looks like:
+ *
+ *  +------------------------------+--------------+
+ *  | FILTER BAR                   |              |
+ *  +------------------------------+              |
+ *  |                              |              |
+ *  | CONSOLE OUTPUT               |   SIDEBAR    |
+ *  |                              |              |
+ *  +------------------------------+              |
+ *  | NOTIFICATION BOX             |              |
+ *  +------------------------------+              |
+ *  | JSTERM CONTAINER             |              |
+ *  +------------------------------+--------------+
+ */
 .webconsole-output-wrapper {
   display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto 1fr;
+  grid-template-columns: minmax(200px, 1fr) auto;
+  grid-template-rows: auto 1fr auto auto;
   height: 100%;
   width: 100vw;
+}
+
+.webconsole-output-wrapper #webconsole-notificationbox {
+  grid-column: 1 / 2;
+  grid-row: 3 / 4;
+}
+
+.webconsole-output-wrapper .jsterm-input-container {
+  grid-column: 1 / 2;
+  grid-row: -1 / -2;
+  position: relative;
+  z-index: 1;
 }
 
 /* Object Inspector */

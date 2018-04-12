@@ -225,7 +225,7 @@ GetIncumbentGlobal()
   // manipulated the stack. If it's null, that means that there
   // must be no entry global on the stack, and therefore no incumbent
   // global either.
-  JSContext* cx = nsContentUtils::GetCurrentJSContextForThread();
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
   if (!cx) {
     MOZ_ASSERT(ScriptSettingsStack::EntryGlobal() == nullptr);
     return nullptr;
@@ -247,7 +247,7 @@ GetIncumbentGlobal()
 nsIGlobalObject*
 GetCurrentGlobal()
 {
-  JSContext* cx = nsContentUtils::GetCurrentJSContextForThread();
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
   if (!cx) {
     return nullptr;
   }
@@ -748,7 +748,7 @@ AutoEntryScript::DocshellEntryMonitor::Exit(JSContext* aCx)
 
 AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
   : ScriptSettingsStackEntry(aGlobalObject, eIncumbentScript)
-  , mCallerOverride(nsContentUtils::GetCurrentJSContextForThread())
+  , mCallerOverride(nsContentUtils::GetCurrentJSContext())
 {
   ScriptSettingsStack::Push(this);
 }

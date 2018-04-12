@@ -104,7 +104,6 @@ async function testObjectInspectorPropertiesAreSet(objInspector) {
 }
 
 function testJSTermIsNotVisible(hud) {
-  let inputContainer = hud.ui.window.document
-                                    .querySelector(".jsterm-input-container");
-  is(inputContainer.style.display, "none", "input is not visible");
+  let inputContainer = hud.ui.window.document.querySelector(".jsterm-input-container");
+  is(inputContainer, null, "input is not in dom");
 }

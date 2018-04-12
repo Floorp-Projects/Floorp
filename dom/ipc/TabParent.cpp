@@ -2443,8 +2443,8 @@ TabParent::RecvDefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent)
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvGetInputContext(int32_t* aIMEEnabled,
-                               int32_t* aIMEOpen)
+TabParent::RecvGetInputContext(IMEState::Enabled* aIMEEnabled,
+                               IMEState::Open* aIMEOpen)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -2454,33 +2454,32 @@ TabParent::RecvGetInputContext(int32_t* aIMEEnabled,
   }
 
   InputContext context = widget->GetInputContext();
-  *aIMEEnabled = static_cast<int32_t>(context.mIMEState.mEnabled);
-  *aIMEOpen = static_cast<int32_t>(context.mIMEState.mOpen);
+  *aIMEEnabled = context.mIMEState.mEnabled;
+  *aIMEOpen = context.mIMEState.mOpen;
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvSetInputContext(const int32_t& aIMEEnabled,
-                               const int32_t& aIMEOpen,
-                               const nsString& aType,
-                               const nsString& aInputmode,
-                               const nsString& aActionHint,
-                               const bool& aInPrivateBrowsing,
-                               const int32_t& aCause,
-                               const int32_t& aFocusChange)
+TabParent::RecvSetInputContext(
+  const IMEState::Enabled& aIMEEnabled,
+  const IMEState::Open& aIMEOpen,
+  const nsString& aType,
+  const nsString& aInputmode,
+  const nsString& aActionHint,
+  const bool& aInPrivateBrowsing,
+  const InputContextAction::Cause& aCause,
+  const InputContextAction::FocusChange& aFocusChange)
 {
   InputContext context;
-  context.mIMEState.mEnabled = static_cast<IMEState::Enabled>(aIMEEnabled);
-  context.mIMEState.mOpen = static_cast<IMEState::Open>(aIMEOpen);
+  context.mIMEState.mEnabled = aIMEEnabled;
+  context.mIMEState.mOpen = aIMEOpen;
   context.mHTMLInputType.Assign(aType);
   context.mHTMLInputInputmode.Assign(aInputmode);
   context.mActionHint.Assign(aActionHint);
   context.mOrigin = InputContext::ORIGIN_CONTENT;
   context.mInPrivateBrowsing = aInPrivateBrowsing;
 
-  InputContextAction action(
-    static_cast<InputContextAction::Cause>(aCause),
-    static_cast<InputContextAction::FocusChange>(aFocusChange));
+  InputContextAction action(aCause, aFocusChange);
 
   IMEStateManager::SetInputContextForChildProcess(this, context, action);
 
