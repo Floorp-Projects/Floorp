@@ -584,6 +584,8 @@ function handleRequest(req, res) {
     var content= new Buffer("00000100000100010000000003626172076578616D706C6503636F6D0000010001C00C000100010000003700047F000001", "hex");
     res.setHeader('Content-Type', 'application/dns-udpwireformat');
     res.setHeader('Content-Length', content.length);
+    // pass back a cookie here, check it in /dns-auth
+    res.setHeader('Set-Cookie', 'trackyou=yes; path=/; max-age=100000;');
     res.writeHead(200);
     res.write(content);
     res.end("");
@@ -672,6 +674,15 @@ function handleRequest(req, res) {
   }
   // for use with test_trr.js
   else if (u.pathname === "/dns-auth") {
+    // There's a Set-Cookie: header in the response for "/dns" , which this
+    // request subsequently would include if the http channel wasn't
+    // anonymous. Thus, if there's a cookie in this request, we know Firefox
+    // mishaved. If there's not, we're fine.
+    if (req.headers['cookie']) {
+      res.writeHead(403);
+      res.end("cookie for me, not for you");
+      return;
+    }
     if (req.headers['authorization'] != "user:password") {
       res.writeHead(401);
       res.end("bad boy!");
