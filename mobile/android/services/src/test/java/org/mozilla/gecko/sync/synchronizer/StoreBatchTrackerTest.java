@@ -6,14 +6,14 @@ package org.mozilla.gecko.sync.synchronizer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.synchronizer.StoreBatchTracker.Batch;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class StoreBatchTrackerTest {
     private StoreBatchTracker tracker;
 

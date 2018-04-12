@@ -6,16 +6,14 @@ package org.mozilla.gecko.activitystream.homepanel.model;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static android.R.id.input;
-
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestHighlight {
 
     @Test

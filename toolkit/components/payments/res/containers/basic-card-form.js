@@ -54,10 +54,12 @@ class BasicCardForm extends PaymentStateSubscriberMixin(HTMLElement) {
       this.appendChild(form);
 
       let record = {};
+      let addresses = [];
       this.formHandler = new EditCreditCard({
         form,
-      }, record, {
+      }, record, addresses, {
         isCCNumber: PaymentDialogUtils.isCCNumber,
+        getAddressLabel: PaymentDialogUtils.getAddressLabel,
       });
 
       this.appendChild(this.genericErrorText);
@@ -76,6 +78,7 @@ class BasicCardForm extends PaymentStateSubscriberMixin(HTMLElement) {
     let record = {};
     let {
       page,
+      savedAddresses,
       savedBasicCards,
     } = state;
 
@@ -92,7 +95,7 @@ class BasicCardForm extends PaymentStateSubscriberMixin(HTMLElement) {
       }
     }
 
-    this.formHandler.loadRecord(record);
+    this.formHandler.loadRecord(record, savedAddresses);
   }
 
   handleEvent(event) {

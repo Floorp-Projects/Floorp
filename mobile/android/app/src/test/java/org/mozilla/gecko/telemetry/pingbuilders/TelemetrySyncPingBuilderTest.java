@@ -12,18 +12,18 @@ import org.json.simple.JSONArray;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.synchronizer.StoreBatchTracker;
 import org.mozilla.gecko.sync.telemetry.TelemetryStageCollector;
 import org.mozilla.gecko.telemetry.TelemetryLocalPing;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TelemetrySyncPingBuilderTest {
     private TelemetrySyncPingBundleBuilderTest.MockTelemetryPingStore pingStore;
     private TelemetrySyncPingBuilder builder;

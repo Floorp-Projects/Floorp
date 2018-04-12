@@ -113,8 +113,7 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
 
   DebugOnly<uint32_t> structsFound = 0;
 
-  *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
-  DebugOnly<int> styleStructCount = 1;  // count Variables already
+  DebugOnly<int> styleStructCount = 0;
 
   // Servo's optimization to stop the cascade when there are no style changes
   // that children need to be recascade for relies on comparing all of the
@@ -192,7 +191,6 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
              "missing a call to DO_STRUCT_DIFFERENCE");
 
 #ifdef DEBUG
-  #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
   #define STYLE_STRUCT(name_)                                             \
     MOZ_ASSERT(!!(structsFound & NS_STYLE_INHERIT_BIT(name_)) ==          \
                (PEEK(name_) != nullptr),                                  \
@@ -200,7 +198,6 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
                "difference calculation.");
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
-  #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #endif
 
   // Note that we do not check whether this->RelevantLinkVisited() !=

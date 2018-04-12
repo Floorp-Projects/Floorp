@@ -191,17 +191,12 @@ var Authentication = {
   },
 
   /**
-   * Sign out of Firefox Accounts. It also clears out the device ID, if we find one.
+   * Sign out of Firefox Accounts.
    */
   async signOut() {
     if (await Authentication.isLoggedIn()) {
-      let user = await Authentication.getSignedInUser();
-      if (!user) {
-        throw new Error("Failed to get signed in user!");
-      }
-      let { sessionToken } = user;
-      let fxc = new FxAccountsClient();
-      await fxc.signOut(sessionToken, { service: "sync" });
+      // Note: This will clean up the device ID.
+      await fxAccounts.signOut();
     }
   }
 };

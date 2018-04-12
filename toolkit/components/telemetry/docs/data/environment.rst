@@ -29,6 +29,7 @@ Structure:
         buildId: <string>, // e.g. "20141126041045"
         version: <string>, // e.g. "35.0"
         vendor: <string>, // e.g. "Mozilla"
+        displayVersion: <string>, // e.g. "35.0b1"
         platformVersion: <string>, // e.g. "35.0"
         xpcomAbi: <string>, // e.g. "x86-msvc"
         updaterAvailable: <bool>, // Whether the app was built with app update available (MOZ_UPDATER)

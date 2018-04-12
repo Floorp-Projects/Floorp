@@ -5,33 +5,29 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE dialog [
-  <!ENTITY % preferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
-  %preferencesDTD;
-  <!ENTITY % languagesDTD SYSTEM "chrome://browser/locale/preferences/languages.dtd">
-  %languagesDTD;
-]>
-
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 
 <dialog id="LanguagesDialog" type="child" class="prefwindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&languages.customize.Header;"
+        data-l10n-id="languages-window"
+        data-l10n-attrs="title, style"
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
         role="dialog"
         onload="gLanguagesDialog.init();"
         helpTopic="prefs-languages"
-        ondialoghelp="openPrefsHelp()"
-        style="width: &window.width;">
+        ondialoghelp="openPrefsHelp()">
+
+  <link rel="localization" href="browser/preferences/languages.ftl"/>
+  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
   <script type="application/javascript" src="chrome://browser/content/preferences/languages.js"/>
 
   <keyset>
-    <key key="&windowClose.key;" modifiers="accel" oncommand="Preferences.close(event)"/>
+    <key data-l10n-id="languages-close-key" modifiers="accel" oncommand="Preferences.close(event)"/>
   </keyset>
 
   <vbox id="LanguagesDialogPane" class="prefpane largeDialogContainer">
@@ -41,9 +37,9 @@
       <stringbundle id="bundleAccepted"     src="resource://gre/res/language.properties"/>
     </stringbundleset>
 
-    <description>&languages.customize2.description;</description>
+    <description data-l10n-id="languages-description"/>
     <checkbox id="spoofEnglish"
-              label="&languages.customize.spoofEnglish;"
+              data-l10n-id="languages-customize-spoof-english"
               preference="privacy.spoof_english"
               onsyncfrompreference="return gLanguagesDialog.readSpoofEnglish();"
               onsynctopreference="return gLanguagesDialog.writeSpoofEnglish();"/>
@@ -61,16 +57,13 @@
                     onsynctopreference="return gLanguagesDialog.writeAcceptLanguages();"/>
           <vbox>
             <button id="up" class="up" oncommand="gLanguagesDialog.moveUp();" disabled="true"
-                    label="&languages.customize.moveUp.label;"
-                    accesskey="&languages.customize.moveUp.accesskey;"
+                    data-l10n-id="languages-customize-moveup"
                     preference="pref.browser.language.disable_button.up"/>
             <button id="down" class="down" oncommand="gLanguagesDialog.moveDown();" disabled="true"
-                    label="&languages.customize.moveDown.label;"
-                    accesskey="&languages.customize.moveDown.accesskey;"
+                    data-l10n-id="languages-customize-movedown"
                     preference="pref.browser.language.disable_button.down"/>
             <button id="remove" oncommand="gLanguagesDialog.removeLanguage();" disabled="true"
-                    label="&languages.customize.deleteButton.label;"
-                    accesskey="&languages.customize.deleteButton.accesskey;"
+                    data-l10n-id="languages-customize-remove"
                     preference="pref.browser.language.disable_button.remove"/>
           </vbox>
         </row>
@@ -81,14 +74,12 @@
           <!-- This <vbox> is needed to position search tooltips correctly. -->
           <vbox>
             <menulist id="availableLanguages" oncommand="gLanguagesDialog.onAvailableLanguageSelect();"
-                      label="&languages.customize.selectLanguage.label;"
-                      label2="&languages.customize.selectLanguage.label;">
+                      data-l10n-id="languages-customize-select-language" data-l10n-attrs="placeholder">
               <menupopup id="availableLanguagesPopup"/>
             </menulist>
           </vbox>
           <button id="addButton" oncommand="gLanguagesDialog.addLanguage();" disabled="true"
-                  label="&languages.customize.addButton.label;"
-                  accesskey="&languages.customize.addButton.accesskey;"/>
+                  data-l10n-id="languages-customize-add"/>
         </row>
       </rows>
     </grid>

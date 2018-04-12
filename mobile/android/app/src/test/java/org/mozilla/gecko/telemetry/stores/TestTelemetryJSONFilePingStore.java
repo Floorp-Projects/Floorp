@@ -12,11 +12,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.telemetry.TelemetryOutgoingPing;
 import org.mozilla.gecko.telemetry.TelemetryPing;
 import org.mozilla.gecko.util.FileUtils;
+import org.robolectric.RobolectricTestRunner;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,7 +32,7 @@ import static org.junit.Assert.*;
 /**
  * Unit test methods of the {@link TelemetryJSONFilePingStore} class.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestTelemetryJSONFilePingStore {
 
     @Rule

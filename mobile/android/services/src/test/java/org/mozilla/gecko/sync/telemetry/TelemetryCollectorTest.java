@@ -9,7 +9,6 @@ import org.json.simple.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.HTTPFailureException;
@@ -19,6 +18,7 @@ import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.doReturn;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TelemetryCollectorTest {
     private TelemetryCollector collector;
 

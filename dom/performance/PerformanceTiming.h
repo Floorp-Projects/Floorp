@@ -54,17 +54,17 @@ public:
 
   uint64_t TransferSize() const
   {
-    return mTimingAllowed ? mTransferSize : 0;
+    return mTransferSize;
   }
 
   uint64_t EncodedBodySize() const
   {
-    return mTimingAllowed ? mEncodedBodySize : 0;
+    return mEncodedBodySize;
   }
 
   uint64_t DecodedBodySize() const
   {
-    return mTimingAllowed ? mDecodedBodySize : 0;
+    return mDecodedBodySize;
   }
 
   /**

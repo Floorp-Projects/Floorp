@@ -9,8 +9,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.gcm.GcmTokenClient;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.util.UUID;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestPushManager {
     private PushState state;
     private GcmTokenClient gcmTokenClient;

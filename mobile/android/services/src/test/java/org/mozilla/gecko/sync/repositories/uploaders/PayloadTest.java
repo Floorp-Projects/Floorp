@@ -6,11 +6,11 @@ package org.mozilla.gecko.sync.repositories.uploaders;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class PayloadTest {
     private Payload payload;
     private long byteLimit = 1024;

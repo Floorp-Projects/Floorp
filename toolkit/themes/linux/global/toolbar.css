@@ -8,7 +8,9 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: menubar & toolbar ::::: */
+toolbox {
+  -moz-appearance: toolbox;
+}
 
 toolbar {
   -moz-appearance: toolbar;
@@ -17,7 +19,7 @@ toolbar {
   padding: 2px 0px;
 }
 
-menubar, toolbar[type="menubar"] {
+toolbar[type="menubar"] {
   -moz-appearance: menubar;
   color: -moz-menubartext;
   min-width: 1px;
@@ -25,18 +27,10 @@ menubar, toolbar[type="menubar"] {
   padding: 1px 0px;
 }
 
-menubar:-moz-lwtheme,
 toolbar:-moz-lwtheme {
   -moz-appearance: none;
   color: inherit;
 }
-
-/* in browser.xul, the menubar is inside a toolbar... */
-toolbaritem > menubar {
-  -moz-appearance: none;
-}
-
-/* ::::: toolbar decorations ::::: */
 
 toolbarseparator {
   -moz-appearance: separator;
@@ -47,8 +41,6 @@ toolbarseparator {
 toolbarspacer {
   width: 15px;
 }
-
-/* ::::: toolbarpaletteitem ::::: */
 
 toolbarpaletteitem {
   cursor: grab;

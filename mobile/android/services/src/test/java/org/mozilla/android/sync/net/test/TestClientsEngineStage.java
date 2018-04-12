@@ -19,7 +19,6 @@ import org.mozilla.gecko.background.testhelpers.MockClientsDataDelegate;
 import org.mozilla.gecko.background.testhelpers.MockClientsDatabaseAccessor;
 import org.mozilla.gecko.background.testhelpers.MockGlobalSession;
 import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.CollectionKeys;
 import org.mozilla.gecko.sync.CommandProcessor.Command;
@@ -42,6 +41,7 @@ import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.telemetry.TelemetryCollector;
 import org.mozilla.gecko.sync.telemetry.TelemetryStageCollector;
+import org.robolectric.RobolectricTestRunner;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
@@ -67,7 +67,7 @@ import static org.junit.Assert.fail;
  * One reason the server might throw an assertion is if you have not installed the crypto policies. See
  * https://wiki.mozilla.org/Mobile/Fennec/Android/Testing#JUnit4_tests for more information.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestClientsEngineStage extends MockSyncClientsEngineStage {
   public final static String LOG_TAG = "TestClientsEngSta";
 
