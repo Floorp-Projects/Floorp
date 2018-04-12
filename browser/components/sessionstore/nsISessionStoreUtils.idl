@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 
 interface mozIDOMWindowProxy;
-interface nsIDOMEventListener;
+interface nsIDOMEventTarget;
 
 /**
  * A callback passed to nsISessionStoreUtils.forEachNonDynamicChildFrame().
@@ -35,13 +35,35 @@ interface nsISessionStoreUtils : nsISupports
                                    in nsISessionStoreUtilsFrameCallback callback);
 
   /**
-   * Creates and returns an event listener that filters events from dynamic
-   * docShells. It forwards those from non-dynamic docShells to the given
-   * |listener|.
+   * Takes the given listener, wraps it in a filter that filters out events from
+   * dynamic docShells, and adds that filter as a listener for the given event
+   * type on the given event target.  The listener that was added is returned
+   * (as nsISupports) so that it can later be removed via
+   * removeDynamicFrameFilteredListener.
    *
    * This is implemented as a native filter, rather than a JS-based one, for
    * performance reasons.
+   *
+   * Once bug 1444991 is fixed, this should start taking an EventTarget.
    */
   [implicit_jscontext]
-  nsIDOMEventListener createDynamicFrameEventFilter(in jsval listener);
+  nsISupports addDynamicFrameFilteredListener(in nsIDOMEventTarget target,
+                                              in AString type,
+                                              in jsval listener,
+                                              in boolean useCapture);
+
+  /**
+   * Remove the passed-in filtered listener from the given event target, if it's
+   * currently a listener for the given event type there.  The 'listener'
+   * argument must be something that was returned by
+   * addDynamicFrameFilteredListener.
+   *
+   * This is needed, instead of the normal removeEventListener, because the
+   * caller doesn't actually have something that WebIDL considers an
+   * EventListener.
+   */
+  void removeDynamicFrameFilteredListener(in nsIDOMEventTarget target,
+                                          in AString type,
+                                          in nsISupports listener,
+                                          in boolean useCapture);
 };
