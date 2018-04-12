@@ -44,6 +44,7 @@ elif CONFIG['CPU_ARCH'] == 'x86':
             ASFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
             LOCAL_INCLUDES += [ '/media/libaom/config/win/ia32/' ]
             EXPORTS.aom += [ 'config/win/ia32/aom_config.h' ]
+            NO_PGO = True # Compiler OOMs, bug 1445922
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
         LOCAL_INCLUDES += [ '/media/libaom/config/linux/ia32/' ]

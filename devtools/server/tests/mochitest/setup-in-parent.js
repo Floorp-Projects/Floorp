@@ -1,11 +1,11 @@
 "use strict";
 
-var {Ci} = require("chrome");
 var Services = require("Services");
+var ChromeUtils = require("ChromeUtils");
 
 exports.setupParent = function({mm, prefix}) {
   let args = [
-    !!mm.QueryInterface(Ci.nsIMessageSender),
+    ChromeUtils.getClassName(mm) == "ChromeMessageSender",
     prefix
   ];
   Services.obs.notifyObservers(null, "test:setupParent", JSON.stringify(args));

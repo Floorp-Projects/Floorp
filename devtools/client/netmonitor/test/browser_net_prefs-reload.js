@@ -184,8 +184,7 @@ add_task(async function() {
     await networkEvent;
 
     let wait = waitForDOM(getDoc(), ".network-details-panel");
-    EventUtils.sendMouseEvent({ type: "click" },
-      getDoc().querySelector(".network-details-panel-toggle"));
+    getStore().dispatch(Actions.toggleNetworkDetails());
     await wait;
   }
 

@@ -80,7 +80,37 @@ EventListenerChange::GetCountOfEventListenerChangesAffectingAccessibility(
  * mozilla::EventListenerInfo
  ******************************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION(EventListenerInfo, mListener)
+EventListenerInfo::EventListenerInfo(const nsAString& aType,
+                                     JS::Handle<JSObject*> aScriptedListener,
+                                     bool aCapturing,
+                                     bool aAllowsUntrusted,
+                                     bool aInSystemEventGroup)
+  : mType(aType)
+  , mScriptedListener(aScriptedListener)
+  , mCapturing(aCapturing)
+  , mAllowsUntrusted(aAllowsUntrusted)
+  , mInSystemEventGroup(aInSystemEventGroup)
+{
+  HoldJSObjects(this);
+}
+
+EventListenerInfo::~EventListenerInfo()
+{
+  DropJSObjects(this);
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(EventListenerInfo)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EventListenerInfo)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EventListenerInfo)
+  tmp->mScriptedListener = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(EventListenerInfo)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScriptedListener)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EventListenerInfo)
   NS_INTERFACE_MAP_ENTRY(nsIEventListenerInfo)
@@ -138,28 +168,13 @@ EventListenerInfo::GetJSVal(JSContext* aCx,
                             Maybe<JSAutoCompartment>& aAc,
                             JS::MutableHandle<JS::Value> aJSVal)
 {
-  aJSVal.setNull();
-  nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(mListener);
-  if (wrappedJS) {
-    JS::Rooted<JSObject*> object(aCx, wrappedJS->GetJSObject());
-    if (!object) {
-      return false;
-    }
-    aAc.emplace(aCx, object);
-    aJSVal.setObject(*object);
+  if (mScriptedListener) {
+    aJSVal.setObject(*mScriptedListener);
+    aAc.emplace(aCx, mScriptedListener);
     return true;
   }
 
-  nsCOMPtr<JSEventHandler> jsHandler = do_QueryInterface(mListener);
-  if (jsHandler && jsHandler->GetTypedEventHandler().HasEventHandler()) {
-    JS::Handle<JSObject*> handler =
-      jsHandler->GetTypedEventHandler().Ptr()->CallableOrNull();
-    if (handler) {
-      aAc.emplace(aCx, handler);
-      aJSVal.setObject(*handler);
-      return true;
-    }
-  }
+  aJSVal.setNull();
   return false;
 }
 
