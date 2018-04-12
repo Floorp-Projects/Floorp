@@ -20,10 +20,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mozilla.gecko.background.db.DelegatingTestContentProvider;
 import org.mozilla.gecko.background.fxa.FxAccountClient;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowContentResolver;
 
 import java.util.List;
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestFxAccountDeviceListUpdater {
 
     @Before

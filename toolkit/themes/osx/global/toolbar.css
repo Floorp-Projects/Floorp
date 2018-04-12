@@ -4,30 +4,28 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+toolbox {
+  /* Setting -moz-appearance:toolbox causes sheets to attach under the
+   * toolbox and has no other effects. It doesn't render anything. */
+  -moz-appearance: toolbox;
+}
+
 toolbar {
   min-width: 1px;
   min-height: 20px;
   -moz-appearance: toolbar;
 }
 
-menubar:-moz-lwtheme,
 toolbar:-moz-lwtheme {
   -moz-appearance: none;
   background: none;
   border-color: transparent;
 }
 
-menubar {
-  -moz-appearance: dialog; /* For content menubars, "toolbar" is too dark, so we use "dialog". */
-  min-width: 1px;
-}
-
 toolbarseparator {
   -moz-appearance: separator;
   margin: 3px 4px;
 }
-
-/* ::::: toolbarpaletteitem ::::: */
 
 toolbarpaletteitem {
   cursor: grab;

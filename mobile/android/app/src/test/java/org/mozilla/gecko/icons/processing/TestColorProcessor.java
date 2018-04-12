@@ -11,8 +11,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.icons.IconResponse;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestColorProcessor {
     @Test
     public void testExtractingColor() {

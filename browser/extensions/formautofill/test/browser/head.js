@@ -338,7 +338,7 @@ async function waitForFocusAndFormReady(win) {
   ]);
 }
 
-async function testDialog(url, testFn, arg) {
+async function testDialog(url, testFn, arg = undefined) {
   let win = window.openDialog(url, null, "width=600,height=600", arg);
   await waitForFocusAndFormReady(win);
   let unloadPromise = BrowserTestUtils.waitForEvent(win, "unload");

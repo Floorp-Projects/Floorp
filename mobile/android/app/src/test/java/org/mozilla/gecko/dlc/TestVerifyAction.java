@@ -9,10 +9,10 @@ import android.content.Context;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentBuilder;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.File;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 /**
  * VerifyAction: Validate downloaded content. Does it still exist and does it have the correct checksum?
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestVerifyAction {
     /**
      * Scenario: Downloaded file does not exist anymore.

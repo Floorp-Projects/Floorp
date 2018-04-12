@@ -12,10 +12,10 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserContract.Visits;
+import org.robolectric.RobolectricTestRunner;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 /**
  * Testing direct interactions with visits through BrowserProvider
  */

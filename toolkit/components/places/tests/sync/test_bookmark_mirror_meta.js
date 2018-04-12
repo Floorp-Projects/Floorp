@@ -11,7 +11,7 @@ add_task(async function test_highWaterMark() {
   equal(await buf.getCollectionHighWaterMark(), 123.45,
     "High water mark should be last modified time without items");
 
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: [],
@@ -25,7 +25,7 @@ add_task(async function test_highWaterMark() {
   equal(await buf.getCollectionHighWaterMark(), 123.45,
     "High water mark should be last modified time if items are older");
 
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "unfiled",
     type: "folder",
     children: [],
@@ -45,7 +45,7 @@ add_task(async function test_ensureCurrentSyncId() {
     "High water mark should be 0 after setting sync ID");
 
   info("Insert items and set collection last modified");
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "menu",
     type: "folder",
     children: ["folderAAAAAA"],

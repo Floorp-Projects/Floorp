@@ -37,6 +37,8 @@ public:
   virtual bool AddonHasPermission(const nsAtom* aPerm) override;
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
 
+  bool AddonAllowsLoad(nsIURI* aURI, bool aExplicit = false);
+
   // Returns the principal to inherit when this principal requests the given
   // URL. See BasePrincipal::PrincipalToInherit.
   nsIPrincipal* PrincipalToInherit(nsIURI* aRequestedURI = nullptr);

@@ -11,10 +11,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentBuilder;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.ByteArrayInputStream;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 /**
  * DownloadAction: Download content that has been scheduled during "study" or "verify".
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestDownloadAction {
     private static final String TEST_URL = "http://example.org";
 

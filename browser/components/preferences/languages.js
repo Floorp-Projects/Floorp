@@ -112,6 +112,7 @@ var gLanguagesDialog = {
         menuitem.setAttribute("label", this._availableLanguagesList[i].name);
       }
     }
+    this._availableLanguages.setAttribute("label", this._availableLanguages.getAttribute("placeholder"));
   },
 
   readAcceptLanguages() {
@@ -187,8 +188,6 @@ var gLanguagesDialog = {
 
     // Rebuild the available list with the added item removed...
     this._buildAvailableLanguageList();
-
-    this._availableLanguages.setAttribute("label", this._availableLanguages.getAttribute("label2"));
   },
 
   removeLanguage() {

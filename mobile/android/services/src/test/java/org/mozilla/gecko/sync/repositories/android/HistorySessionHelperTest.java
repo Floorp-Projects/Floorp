@@ -5,14 +5,14 @@ package org.mozilla.gecko.sync.repositories.android;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class HistorySessionHelperTest {
     @Test
     public void testShouldIgnore() throws Exception {

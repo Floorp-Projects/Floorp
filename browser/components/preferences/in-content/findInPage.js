@@ -477,16 +477,24 @@ var gSearchResultsPane = {
       // Map the localized messages taking value or a selected attribute and
       // building a string of concatenated translated strings out of it.
       let keywords = messages.map((msg, i) => {
-        if (msg === null) {
-          console.warn(`Missing search l10n id "${refs[i][0]}"`);
+        let [refId, refAttr] = refs[i];
+        if (!msg) {
+          console.error(`Missing search l10n id "${refId}"`);
           return null;
         }
-        if (refs[i][1]) {
-          let attr = msg.attrs.find(a => a.name === refs[i][1]);
-          if (attr) {
-            return attr.value;
+        if (refAttr) {
+          let attr = msg.attrs.find(a => a.name === refAttr);
+          if (!attr) {
+            console.error(`Missing search l10n id "${refId}.${refAttr}"`);
+            return null;
           }
-          return null;
+          if (attr.value === "") {
+            console.error(`Empty value added to search-l10n-ids "${refId}.${refAttr}"`);
+          }
+          return attr.value;
+        }
+        if (msg.value === "") {
+          console.error(`Empty value added to search-l10n-ids "${refId}"`);
         }
         return msg.value;
       }).filter(keyword => keyword !== null).join(" ");

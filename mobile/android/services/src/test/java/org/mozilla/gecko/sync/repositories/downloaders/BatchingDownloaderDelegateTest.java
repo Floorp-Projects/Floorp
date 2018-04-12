@@ -10,7 +10,6 @@ import android.os.SystemClock;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.HTTPFailureException;
@@ -25,6 +24,7 @@ import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
 import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
+import org.robolectric.RobolectricTestRunner;
 
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
@@ -38,7 +38,7 @@ import ch.boye.httpclientandroidlib.message.BasicStatusLine;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class BatchingDownloaderDelegateTest {
     private Server15RepositorySession repositorySession;
     private MockDownloader mockDownloader;

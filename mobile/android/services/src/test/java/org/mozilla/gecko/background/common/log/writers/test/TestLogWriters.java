@@ -15,7 +15,7 @@ import org.mozilla.gecko.background.common.log.writers.PrintLogWriter;
 import org.mozilla.gecko.background.common.log.writers.SimpleTagLogWriter;
 import org.mozilla.gecko.background.common.log.writers.StringLogWriter;
 import org.mozilla.gecko.background.common.log.writers.ThreadLocalTagLogWriter;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestLogWriters {
 
   public static final String TEST_LOG_TAG_1 = "TestLogTag1";

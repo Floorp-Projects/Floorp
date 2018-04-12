@@ -7,11 +7,11 @@ import org.junit.Assert;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.TreeSet;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestIconDescriptorComparator {
     private static final String TEST_ICON_URL_1 = "http://www.mozilla.org/favicon.ico";
     private static final String TEST_ICON_URL_2 = "http://www.example.org/favicon.ico";

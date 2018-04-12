@@ -66,7 +66,7 @@
                     class="homepage-button check-home-page-controlled"
                     data-l10n-id="choose-bookmark"
                     preference="pref.browser.homepage.disable_button.bookmark_page"
-                    searchkeywords="&selectBookmark.title; &selectBookmark.label;"/>
+                    search-l10n-ids="select-bookmark-window.title, select-bookmark-desc"/>
           </hbox>
         </vbox>
       </vbox>

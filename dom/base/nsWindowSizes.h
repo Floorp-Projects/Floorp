@@ -54,10 +54,8 @@ struct nsStyleSizes
     :
       #define STYLE_STRUCT(name_) \
         NS_STYLE_SIZES_FIELD(name_)(0),
-      #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
       #include "nsStyleStructList.h"
       #undef STYLE_STRUCT
-      #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
       dummy()
   {}
@@ -66,10 +64,8 @@ struct nsStyleSizes
   {
     #define STYLE_STRUCT(name_) \
       aSizes->add(nsTabSizes::Style, NS_STYLE_SIZES_FIELD(name_));
-    #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
     #include "nsStyleStructList.h"
     #undef STYLE_STRUCT
-    #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
   }
 
   size_t getTotalSize() const
@@ -78,20 +74,16 @@ struct nsStyleSizes
 
     #define STYLE_STRUCT(name_) \
       total += NS_STYLE_SIZES_FIELD(name_);
-    #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
     #include "nsStyleStructList.h"
     #undef STYLE_STRUCT
-    #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
     return total;
   }
 
   #define STYLE_STRUCT(name_) \
     size_t NS_STYLE_SIZES_FIELD(name_);
-  #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
-  #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
   // Present just to absorb the trailing comma in the constructor.
   int dummy;
