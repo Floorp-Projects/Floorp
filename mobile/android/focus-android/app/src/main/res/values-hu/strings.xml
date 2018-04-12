@@ -35,6 +35,7 @@
   <string name="preference_category_autocomplete_preinstalled">Alapértelmezett URL lista</string>
   <string name="preference_autocomplete_preinstalled_summary">Engedélyezés, hogy a %1$s 450 népszerű URL-t automatikusan kiegészítsen a címsávban.</string>
   <string name="preference_category_autocomplete_custom">Egyéni URL</string>
+  <string name="preference_category_autocomplete_custom_urls">Egyéni URL-ek</string>
   <string name="preference_autocomplete_subitem_customlist">Egyéni URL-ek</string>
   <string name="preference_autocomplete_action_add">+ Egyéni URL hozzáadása</string>
   <string name="preference_autocomplete_title_add">Egyéni URL hozzáadása</string>
@@ -67,6 +68,8 @@
   <string name="preference_performance_block_webfonts">Webes betűkészletek blokkolása</string>
   <string name="preference_performance_block_webfonts_summary">Hiányzó ikonokat és képeket eredményezhet</string>
   <string name="preference_performance_block_images">Képek blokkolása</string>
+  <string name="preference_performance_block_javascript">JavaScript blokkolása</string>
+  <string name="preference_performance_block_javascript_summary">Az oldalak gyorsabban tölthetnek be, de nem várt módon is viselkedhetnek</string>
   <string name="preference_default_browser2">A %1$s legyen az alapértelmezett böngésző</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Használati adatok elküldése</string>

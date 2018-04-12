@@ -35,6 +35,7 @@
   <string name="preference_category_autocomplete_preinstalled">Izvorna URL lista</string>
   <string name="preference_autocomplete_preinstalled_summary">Omogućite da %1$s automatski završi preko 450 popularnih URL adresa u adresnoj traci.</string>
   <string name="preference_category_autocomplete_custom">Prilagođeni URL</string>
+  <string name="preference_category_autocomplete_custom_urls">Prilagođeni URL-ovi</string>
   <string name="preference_autocomplete_subitem_customlist">Prilagođeni URL-ovi</string>
   <string name="preference_autocomplete_action_add">+ Dodaj prilagođeni URL</string>
   <string name="preference_autocomplete_title_add">Dodaj prilagođeni URL</string>
@@ -67,6 +68,8 @@
   <string name="preference_performance_block_webfonts">Blokiraj web fontove</string>
   <string name="preference_performance_block_webfonts_summary">Može prouzrokovati nestajanje ikona ili slika</string>
   <string name="preference_performance_block_images">Blokiraj slike</string>
+  <string name="preference_performance_block_javascript">Blokiraj JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Stranice će se možda učitavati brže, ali također se mogu ponašati neočekivano</string>
   <string name="preference_default_browser2">Učini %1$s glavnim pretraživačem</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Šalji podatke o korištenju</string>

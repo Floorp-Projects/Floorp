@@ -35,6 +35,7 @@
   <string name="preference_category_autocomplete_preinstalled">Domyślna lista adresów</string>
   <string name="preference_autocomplete_preinstalled_summary">Włącz, aby %1$s automatycznie uzupełniał ponad 450 popularnych adresów na pasku adresu.</string>
   <string name="preference_category_autocomplete_custom">Inny adres</string>
+  <string name="preference_category_autocomplete_custom_urls">Inne adresy</string>
   <string name="preference_autocomplete_subitem_customlist">Inne adresy</string>
   <string name="preference_autocomplete_action_add">+ Dodaj inny adres</string>
   <string name="preference_autocomplete_title_add">Dodaj inny adres</string>
@@ -67,6 +68,8 @@
   <string name="preference_performance_block_webfonts">Blokowanie czcionek sieciowych</string>
   <string name="preference_performance_block_webfonts_summary">Może spowodować, że niektóre ikony lub obrazy będą niewidoczne</string>
   <string name="preference_performance_block_images">Blokowanie obrazów</string>
+  <string name="preference_performance_block_javascript">Blokowanie skryptów JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Strony mogą się szybciej wczytywać, ale mogą także nie działać poprawnie</string>
   <string name="preference_default_browser2">Ustaw przeglądarkę %1$s jako domyślną</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Przesyłanie danych o użyciu</string>

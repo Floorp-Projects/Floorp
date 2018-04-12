@@ -35,6 +35,7 @@
   <string name="preference_category_autocomplete_preinstalled">Rhestr URL rhagosodedig</string>
   <string name="preference_autocomplete_preinstalled_summary">Galluogi i %1$s awtogwblhau dros 450 URLs poblogaidd yn y bar cyfeiriad.</string>
   <string name="preference_category_autocomplete_custom">URL cyfaddas</string>
+  <string name="preference_category_autocomplete_custom_urls">URLau cyfaddas</string>
   <string name="preference_autocomplete_subitem_customlist">URLau cyfaddas</string>
   <string name="preference_autocomplete_action_add">+ Ychwanegu URL cyfaddas</string>
   <string name="preference_autocomplete_title_add">Ychwanegu URL cyfaddas</string>
@@ -67,6 +68,8 @@
   <string name="preference_performance_block_webfonts">Rhwystro ffontiau Gwe</string>
   <string name="preference_performance_block_webfonts_summary">Gall olygu colli eiconau neu ddelweddau</string>
   <string name="preference_performance_block_images">Rhwystro delweddau</string>
+  <string name="preference_performance_block_javascript">Rhwystro JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Gall tudalennau lwytho\'n gynt, ond o bosib ymddwyn yn annisgwyl</string>
   <string name="preference_default_browser2">Gwneud %1$s yn borwr rhagosodedig</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Anfon data defnydd</string>

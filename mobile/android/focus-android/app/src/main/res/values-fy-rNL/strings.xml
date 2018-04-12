@@ -35,6 +35,7 @@
   <string name="preference_category_autocomplete_preinstalled">Standert URL-list</string>
   <string name="preference_autocomplete_preinstalled_summary">Skeakel dit yn om %1$s automatysk mear as 450 populêre URL’s yn de adresbalke oanfolje te litten.</string>
   <string name="preference_category_autocomplete_custom">Oanpaste URL</string>
+  <string name="preference_category_autocomplete_custom_urls">Eigen URL\'s</string>
   <string name="preference_autocomplete_subitem_customlist">Oanpaste URL\'s</string>
   <string name="preference_autocomplete_action_add">+ Oanpaste URL tafoegje</string>
   <string name="preference_autocomplete_title_add">Oanpaste URL tafoegje</string>
@@ -67,6 +68,8 @@
   <string name="preference_performance_block_webfonts">Weblettertypen blokkearje</string>
   <string name="preference_performance_block_webfonts_summary">Kin ta ûntbrekkende piktogrammen of ôfbyldingen liede</string>
   <string name="preference_performance_block_images">Ofbyldingen blokkearje</string>
+  <string name="preference_performance_block_javascript">JavaScript blokkearje</string>
+  <string name="preference_performance_block_javascript_summary">Siden kinne flugger laden wurde, mar kinne harren ek ûnferwachte hâlde en drage</string>
   <string name="preference_default_browser2">%1$s standertbrowser meitsje</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Brûksgegevens ferstjoere</string>

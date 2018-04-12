@@ -35,12 +35,13 @@
   <string name="preference_category_autocomplete_preinstalled">ნაგულისხმევი URL ჩამონათვალი</string>
   <string name="preference_autocomplete_preinstalled_summary">ჩართეთ და %1$s-ში გექნებათ 450-ზე მეტი სასურველი URLs ბმული მისამართების ზოლში.</string>
   <string name="preference_category_autocomplete_custom">საკუთარი URL</string>
-  <string name="preference_autocomplete_subitem_customlist">საკუთარი URLs მისამართები</string>
+  <string name="preference_category_autocomplete_custom_urls">საკუთარი URL-ები</string>
+  <string name="preference_autocomplete_subitem_customlist">საკუთარი URL მისამართები</string>
   <string name="preference_autocomplete_action_add">+ საკუთარი URL მისამართის დამატება</string>
   <string name="preference_autocomplete_title_add">საკუთარი URL მისამართის დამატება</string>
-  <string name="preference_autocomplete_title_remove">საკუთარი URLs მისამართების წაშლა</string>
+  <string name="preference_autocomplete_title_remove">საკუთარი URL მისამართების წაშლა</string>
   <string name="preference_autocomplete_learn_more">ვრცლად</string>
-  <string name="preference_autocomplete_custom_summary">დაამატეთ და მართეთ საკუთარი URLs მისამართები.</string>
+  <string name="preference_autocomplete_custom_summary">დაამატეთ და მართეთ საკუთარი URL მისამართები.</string>
   <string name="preference_autocomplete_add_title">URL დასამატებლად</string>
   <string name="preference_autocomplete_add_hint">ჩასვით ან შეიყვანეთ URL</string>
   <string name="preference_autocomplete_add_example">მაგალითად: example.com</string>
@@ -67,6 +68,8 @@
   <string name="preference_performance_block_webfonts">საიტის შრიფტების შეზღუდვა</string>
   <string name="preference_performance_block_webfonts_summary">შესაძლოა ხატულების და სურათების ნაწილი გაქრეს</string>
   <string name="preference_performance_block_images">სურათების შეზღუდვა</string>
+  <string name="preference_performance_block_javascript">JavaScript-ის შეზღუდვა</string>
+  <string name="preference_performance_block_javascript_summary">გვერდები, შესაძლოა უფრო სწრაფად ჩაიტვირთოს, მაგრამ ხარვეზებით იმუშაოს</string>
   <string name="preference_default_browser2">%1$s-ის ნაგულისხმევ ბრაუზერად მითითება</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">მონაცემების გაგზავნა</string>

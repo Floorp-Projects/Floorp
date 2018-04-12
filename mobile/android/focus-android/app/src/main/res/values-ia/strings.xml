@@ -35,6 +35,7 @@
   <string name="preference_category_autocomplete_preinstalled">Lista de URL predefinite</string>
   <string name="preference_autocomplete_preinstalled_summary">Activa %1$s sur 450 URLs popular a ser auto-completate in le barra del adresses.</string>
   <string name="preference_category_autocomplete_custom">URL personalisate</string>
+  <string name="preference_category_autocomplete_custom_urls">URLs personalisate</string>
   <string name="preference_autocomplete_subitem_customlist">URLs personalisate</string>
   <string name="preference_autocomplete_action_add">+ Adder URL personalisate</string>
   <string name="preference_autocomplete_title_add">Adder URL personalisate</string>
@@ -67,6 +68,8 @@
   <string name="preference_performance_block_webfonts">Blocar le typos de character de web</string>
   <string name="preference_performance_block_webfonts_summary">Pote resultar in icones o imagines mancante</string>
   <string name="preference_performance_block_images">Blocar le imagines</string>
+  <string name="preference_performance_block_javascript">Blocar JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Le paginas pote cargar se plus rapidemente, mais pute alsi comportar se in maniera inattendite</string>
   <string name="preference_default_browser2">Facer de %1$s tu navigator predefinite</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Inviar datos de uso</string>

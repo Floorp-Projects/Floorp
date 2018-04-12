@@ -35,6 +35,7 @@
   <string name="preference_category_autocomplete_preinstalled">Standardna lisćina adresow</string>
   <string name="preference_autocomplete_preinstalled_summary">Zmóžniś, aby %1$s wěcej ako 450 woblubowanych adresow w adresowrm pólu wudopołnił.</string>
   <string name="preference_category_autocomplete_custom">Swójska adresa</string>
+  <string name="preference_category_autocomplete_custom_urls">Swójske URL</string>
   <string name="preference_autocomplete_subitem_customlist">Swójske adrese</string>
   <string name="preference_autocomplete_action_add">+ Swójsku adresu pśidaś</string>
   <string name="preference_autocomplete_title_add">Swójsku adresu pśidaś</string>
@@ -67,6 +68,8 @@
   <string name="preference_performance_block_webfonts">Webpisma blokěrowaś</string>
   <string name="preference_performance_block_webfonts_summary">Móžo k tomu wjasć, až symbole abo wobraze feluju</string>
   <string name="preference_performance_block_images">Wobraze blokěrowaś</string>
+  <string name="preference_performance_block_javascript">JavaScript blokěrowaś</string>
+  <string name="preference_performance_block_javascript_summary">Boki se malsnjej zacytaju, mógli se pak teke na njewócakowanu wašnju zaźaržaś</string>
   <string name="preference_default_browser2">%1$s ako standardny wobglědowak nastajiś</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Wužywańske daty pósłaś</string>
