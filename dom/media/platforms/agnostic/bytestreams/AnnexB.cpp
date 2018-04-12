@@ -74,13 +74,8 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
     // the length of the first clear data subsample. Otherwise decryption
     // will fail.
     if (aSample->mCrypto.mValid) {
-      if (aSample->mCrypto.mPlainSizes.Length() == 0) {
-        samplewriter->mCrypto.mPlainSizes.AppendElement(annexB->Length());
-        samplewriter->mCrypto.mEncryptedSizes.AppendElement(
-          samplewriter->Size() - annexB->Length());
-      } else {
-        samplewriterwriter->mCrypto.mPlainSizes[0] += annexB->Length();
-      }
+      MOZ_ASSERT(samplewriter->mCrypto.mPlainSizes.Length() > 0);
+      samplewriter->mCrypto.mPlainSizes[0] += annexB->Length();
     }
   }
 
