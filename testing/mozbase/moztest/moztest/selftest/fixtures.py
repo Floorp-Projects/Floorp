@@ -15,10 +15,14 @@ import mozfile
 import mozinstall
 import pytest
 import requests
-from mozbuild.base import MozbuildObject
 
 here = os.path.abspath(os.path.dirname(__file__))
-build = MozbuildObject.from_environment(cwd=here)
+
+try:
+    from mozbuild.base import MozbuildObject
+    build = MozbuildObject.from_environment(cwd=here)
+except ImportError:
+    build = None
 
 
 HARNESS_ROOT_NOT_FOUND = """
@@ -29,9 +33,10 @@ environment variable is required.
 
 def _get_test_harness(suite, install_dir):
     # Check if there is a local build
-    harness_root = os.path.join(build.topobjdir, '_tests', install_dir)
-    if os.path.isdir(harness_root):
-        return harness_root
+    if build:
+        harness_root = os.path.join(build.topobjdir, '_tests', install_dir)
+        if os.path.isdir(harness_root):
+            return harness_root
 
     # Check if it was previously set up by another test
     harness_root = os.path.join(os.environ['PYTHON_TEST_TMP'], 'tests', suite)
@@ -113,3 +118,6 @@ def binary():
         bindir = mozinstall.install(
             os.environ['GECKO_INSTALLER_URL'], os.environ['PYTHON_TEST_TMP'])
         return mozinstall.get_binary(bindir, app_name='firefox')
+
+    if 'GECKO_BINARY_PATH' in os.environ:
+        return os.environ['GECKO_BINARY_PATH']
