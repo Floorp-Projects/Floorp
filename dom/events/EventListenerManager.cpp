@@ -22,6 +22,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTargetBinding.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/EventTimelineMarker.h"
@@ -1569,16 +1570,28 @@ EventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     } else {
       eventType.Assign(Substring(nsDependentAtomString(listener.mTypeAtom), 2));
     }
-    nsCOMPtr<nsIDOMEventListener> callback = listener.mListener.ToXPCOMCallback();
-    if (!callback) {
-      // This will be null for cross-compartment event listeners which have been
-      // destroyed.
-      continue;
+
+    JS::Rooted<JSObject*> callback(RootingCx());
+    if (JSEventHandler* handler = listener.GetJSEventHandler()) {
+      if (handler->GetTypedEventHandler().HasEventHandler()) {
+        callback = handler->GetTypedEventHandler().Ptr()->CallableOrNull();
+        if (!callback) {
+          // This will be null for cross-compartment event listeners
+          // which have been destroyed.
+          continue;
+        }
+      }
+    } else if (listener.mListenerType == Listener::eWebIDLListener) {
+      callback = listener.mListener.GetWebIDLCallback()->CallbackOrNull();
+      if (!callback) {
+        // This will be null for cross-compartment event listeners
+        // which have been destroyed.
+        continue;
+      }
     }
-    // EventListenerInfo is defined in XPCOM, so we have to go ahead
-    // and convert to an XPCOM callback here...
+
     RefPtr<EventListenerInfo> info =
-      new EventListenerInfo(eventType, callback.forget(),
+      new EventListenerInfo(eventType, callback,
                             listener.mFlags.mCapture,
                             listener.mFlags.mAllowUntrustedEvents,
                             listener.mFlags.mInSystemGroup);
