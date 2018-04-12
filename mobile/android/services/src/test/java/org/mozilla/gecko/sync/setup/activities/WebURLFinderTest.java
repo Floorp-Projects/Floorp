@@ -5,13 +5,13 @@ package org.mozilla.gecko.sync.setup.activities;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class WebURLFinderTest {
     public String find(String string) {
         return new WebURLFinder(string).bestWebURL();

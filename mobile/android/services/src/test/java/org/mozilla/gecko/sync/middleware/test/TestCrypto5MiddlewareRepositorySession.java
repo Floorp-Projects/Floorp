@@ -12,7 +12,6 @@ import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionFinis
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositorySessionStoreDelegate;
 import org.mozilla.android.sync.test.helpers.ExpectSuccessRepositoryWipeDelegate;
 import org.mozilla.gecko.background.testhelpers.MockRecord;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.CryptoRecord;
@@ -26,13 +25,14 @@ import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestCrypto5MiddlewareRepositorySession {
   public static WaitHelper getTestWaiter() {
     return WaitHelper.getTestWaiter();

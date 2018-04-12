@@ -1262,6 +1262,7 @@ class XPIStateLocation extends Map {
     this.name = name;
     this.path = path || saved.path || null;
     this.staged = saved.staged || {};
+    this.changed = saved.changed || false;
     this.dir = this.path && new nsIFile(this.path);
 
     for (let [id, data] of Object.entries(saved.addons || {})) {

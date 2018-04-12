@@ -11,8 +11,8 @@ import android.content.SharedPreferences;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.telemetry.measurements.SessionMeasurements.SessionMeasurementsContainer;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.util.concurrent.TimeUnit;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 /**
  * Tests the session measurements class.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestSessionMeasurements {
 
     private SessionMeasurements testMeasurements;

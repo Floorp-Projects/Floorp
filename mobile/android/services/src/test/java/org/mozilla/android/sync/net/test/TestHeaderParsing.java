@@ -5,12 +5,12 @@ package org.mozilla.android.sync.net.test;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.Utils;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestHeaderParsing {
 
   @SuppressWarnings("static-method")

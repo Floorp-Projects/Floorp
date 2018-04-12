@@ -203,13 +203,6 @@ ServoComputedData::ServoComputedData(
   PodAssign(this, aValue.mPtr);
 }
 
-const nsStyleVariables*
-ServoComputedData::GetStyleVariables() const
-{
-  MOZ_CRASH("ServoComputedData::GetStyleVariables should never need to be "
-            "called");
-}
-
 MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoStyleStructsMallocEnclosingSizeOf)
 
 void
@@ -228,10 +221,8 @@ ServoComputedData::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
     aSizes.mStyleSizes.NS_STYLE_SIZES_FIELD(name_) += \
       ServoStyleStructsMallocEnclosingSizeOf(p##name_); \
   }
-  #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
   if (visited_style.mPtr && !aSizes.mState.HaveSeenPtr(visited_style.mPtr)) {
     visited_style.mPtr->AddSizeOfIncludingThis(
@@ -351,7 +342,7 @@ Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement)
 uint32_t
 Gecko_CalcStyleDifference(ComputedStyleBorrowed aOldStyle,
                           ComputedStyleBorrowed aNewStyle,
-                          bool* aAnyStyleChanged,
+                          bool* aAnyStyleStructChanged,
                           bool* aOnlyResetStructsChanged)
 {
   MOZ_ASSERT(aOldStyle);
@@ -363,7 +354,7 @@ Gecko_CalcStyleDifference(ComputedStyleBorrowed aOldStyle,
       const_cast<mozilla::ComputedStyle*>(aNewStyle),
       &equalStructs);
 
-  *aAnyStyleChanged = equalStructs != NS_STYLE_INHERIT_MASK;
+  *aAnyStyleStructChanged = equalStructs != NS_STYLE_INHERIT_MASK;
 
   const uint32_t kInheritStructsMask =
     NS_STYLE_INHERIT_MASK & ~NS_STYLE_RESET_STRUCT_MASK;

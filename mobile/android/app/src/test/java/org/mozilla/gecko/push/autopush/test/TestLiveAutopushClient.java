@@ -15,8 +15,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
-import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.push.RegisterUserAgentResponse;
 import org.mozilla.gecko.push.SubscribeChannelResponse;
 import org.mozilla.gecko.push.autopush.AutopushClient;
@@ -24,6 +22,7 @@ import org.mozilla.gecko.push.autopush.AutopushClient.RequestDelegate;
 import org.mozilla.gecko.push.autopush.AutopushClientException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.BaseResource;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -38,7 +37,7 @@ import static org.mockito.Mockito.verify;
  * endpoint.  That's why it's a <b>live</b> test: most of its value is checking that the client
  * implementation and the upstream server implementation are corresponding correctly.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 @Ignore("Live test that requires network connection -- remove this line to run this test.")
 public class TestLiveAutopushClient {
     final String serverURL = "https://updates-autopush.stage.mozaws.net/v1/gcm/829133274407";

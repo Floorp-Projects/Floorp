@@ -141,6 +141,7 @@
 
 </keyset>
 
+<toolbar type="menubar">
 <menubar id="sp-menubar">
   <menu id="sp-file-menu" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
     <menupopup id="sp-menu-filepopup">
@@ -330,6 +331,7 @@
     </menupopup>
   </menu>
 </menubar>
+</toolbar>
 
 <toolbar id="sp-toolbar"
          class="devtools-toolbar">

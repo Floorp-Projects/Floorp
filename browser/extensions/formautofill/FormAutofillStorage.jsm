@@ -57,6 +57,9 @@
  *       version,              // schema version in integer
  *
  *       // credit card fields
+ *       billingAddressGUID,   // An optional GUID of an autofill address record
+ *                                which may or may not exist locally.
+ *
  *       cc-name,
  *       cc-number,            // will be stored in masked format (************1234)
  *                             // (see details below)
@@ -186,6 +189,7 @@ const VALID_ADDRESS_COMPUTED_FIELDS = [
 ].concat(STREET_ADDRESS_COMPONENTS, TEL_COMPONENTS);
 
 const VALID_CREDIT_CARD_FIELDS = [
+  "billingAddressGUID",
   "cc-name",
   "cc-number",
   "cc-exp-month",
@@ -1651,7 +1655,7 @@ class CreditCards extends AutofillRecords {
   }
 
   /**
-   * Normailze the given record and retrun the first matched guid if storage has the same record.
+   * Normalize the given record and return the first matched guid if storage has the same record.
    * @param {Object} targetCreditCard
    *        The credit card for duplication checking.
    * @returns {string|null}
@@ -1713,7 +1717,7 @@ class CreditCards extends AutofillRecords {
         return false;
       }
 
-      if (!creditCardToMerge[field]) {
+      if (!creditCardToMerge[field] && typeof(existingField) != "undefined") {
         creditCardToMerge[field] = existingField;
       }
 

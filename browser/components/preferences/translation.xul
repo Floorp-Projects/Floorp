@@ -7,17 +7,18 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/translation.dtd">
-
 <window id="TranslationDialog" class="windowDialog"
         windowtype="Browser:TranslationExceptions"
-        title="&window.title;"
+        data-l10n-id="translation-window"
+        data-l10n-attrs="title, style"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="width: &window.width;;"
         onload="gTranslationExceptions.onLoad();"
         onunload="gTranslationExceptions.uninit();"
         persist="screenX screenY width height"
         onkeypress="gTranslationExceptions.onWindowKeyPress(event);">
+
+  <link rel="localization" href="browser/preferences/translation.ftl"/>
+  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
   <script src="chrome://browser/content/preferences/translation.js"/>
 
@@ -25,19 +26,21 @@
                 src="chrome://browser/locale/preferences/preferences.properties"/>
 
   <keyset>
-    <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
+    <key data-l10n-id="translation-close-key" modifiers="accel" oncommand="window.close();"/>
   </keyset>
 
   <vbox class="largeDialogContainer">
     <vbox class="contentPane" flex="1">
-      <label id="languagesLabel" control="permissionsTree">&noTranslationForLanguages2.label;</label>
+      <label id="languagesLabel"
+             data-l10n-id="translation-languages-disabled-desc"
+             control="permissionsTree"/>
       <separator class="thin"/>
       <tree id="languagesTree" flex="1" style="height: 12em;"
             hidecolumnpicker="true"
             onkeypress="gTranslationExceptions.onLanguageKeyPress(event)"
             onselect="gTranslationExceptions.onLanguageSelected();">
         <treecols>
-          <treecol id="languageCol" label="&treehead.languageName.label;" flex="1"/>
+          <treecol id="languageCol" data-l10n-id="translation-languages-column" flex="1"/>
         </treecols>
         <treechildren/>
       </tree>
@@ -45,26 +48,28 @@
     <hbox align="end">
       <hbox class="actionButtons" flex="1">
         <button id="removeLanguage" disabled="true"
-                accesskey="&removeLanguage.accesskey;"
-                icon="remove" label="&removeLanguage.label;"
+                data-l10n-id="translation-languages-button-remove"
+                icon="remove"
                 oncommand="gTranslationExceptions.onLanguageDeleted();"/>
         <button id="removeAllLanguages"
-                icon="clear" label="&removeAllLanguages.label;"
-                accesskey="&removeAllLanguages.accesskey;"
+                data-l10n-id="translation-languages-button-remove-all"
+                icon="clear"
                 oncommand="gTranslationExceptions.onAllLanguagesDeleted();"/>
         <spacer flex="1"/>
       </hbox>
     </hbox>
     <separator/>
     <vbox class="contentPane" flex="1">
-      <label id="languagesLabel" control="permissionsTree">&noTranslationForSites2.label;</label>
+      <label id="languagesLabel"
+             data-l10n-id="translation-sites-disabled-desc"
+             control="permissionsTree"/>
       <separator class="thin"/>
       <tree id="sitesTree" flex="1" style="height: 12em;"
             hidecolumnpicker="true"
             onkeypress="gTranslationExceptions.onSiteKeyPress(event)"
             onselect="gTranslationExceptions.onSiteSelected();">
         <treecols>
-          <treecol id="siteCol" label="&treehead.siteName2.label;" flex="1"/>
+          <treecol id="siteCol" data-l10n-id="translation-sites-column" flex="1"/>
         </treecols>
         <treechildren/>
       </tree>
@@ -73,16 +78,16 @@
   <hbox align="end">
     <hbox class="actionButtons" flex="1">
       <button id="removeSite" disabled="true"
-              accesskey="&removeSite.accesskey;"
-              icon="remove" label="&removeSite.label;"
+              data-l10n-id="translation-sites-button-remove"
+              icon="remove"
               oncommand="gTranslationExceptions.onSiteDeleted();"/>
       <button id="removeAllSites"
-              icon="clear" label="&removeAllSites.label;"
-              accesskey="&removeAllSites.accesskey;"
+              data-l10n-id="translation-sites-button-remove-all"
+              icon="clear"
               oncommand="gTranslationExceptions.onAllSitesDeleted();"/>
       <spacer flex="1"/>
       <button oncommand="close();" icon="close"
-              label="&button.close.label;" accesskey="&button.close.accesskey;"/>
+              data-l10n-id="translation-button-close"/>
     </hbox>
   </hbox>
 </window>

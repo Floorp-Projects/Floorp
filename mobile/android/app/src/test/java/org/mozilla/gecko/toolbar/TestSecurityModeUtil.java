@@ -11,7 +11,7 @@ import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.SiteIdentity.MixedMode;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.SiteIdentity.TrackingMode;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doReturn;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.spy;
 import static org.mozilla.gecko.toolbar.SecurityModeUtil.IconType;
 import static org.mozilla.gecko.toolbar.SecurityModeUtil.resolve;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestSecurityModeUtil {
 
     private SiteIdentity identity;

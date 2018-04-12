@@ -6,15 +6,15 @@ package org.mozilla.gecko.icons.preparation;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.icons.IconDescriptor;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.Icons;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.util.Iterator;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestAddDefaultIconUrl {
     @Test
     public void testAddingDefaultUrl() {

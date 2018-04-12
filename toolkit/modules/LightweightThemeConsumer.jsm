@@ -12,7 +12,7 @@ const toolkitVariableMap = [
   ["--lwt-accent-color", {
     lwtProperty: "accentcolor",
     processColor(rgbaChannels, element) {
-      if (!rgbaChannels) {
+      if (!rgbaChannels || rgbaChannels.a == 0) {
         return "white";
       }
       // Remove the alpha channel
@@ -204,14 +204,15 @@ function _sanitizeCSSColor(doc, cssColor) {
   if (!cssColor) {
     return null;
   }
-  // style.color normalizes color values and rejects invalid ones, so a
+  const HTML_NS = "http://www.w3.org/1999/xhtml";
+  // style.color normalizes color values and makes invalid ones black, so a
   // simple round trip gets us a sanitized color value.
-  let span = doc.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  let div = doc.createElementNS(HTML_NS, "div");
+  div.style.color = "black";
+  let span = doc.createElementNS(HTML_NS, "span");
   span.style.color = cssColor;
+  div.appendChild(span);
   cssColor = doc.defaultView.getComputedStyle(span).color;
-  if (cssColor == "rgba(0, 0, 0, 0)") {
-    return null;
-  }
   return cssColor;
 }
 
@@ -225,6 +226,6 @@ function _parseRGBA(aColorString) {
     r: rgba[0],
     g: rgba[1],
     b: rgba[2],
-    a: rgba[3] || 1,
+    a: 3 in rgba ? rgba[3] : 1,
   };
 }

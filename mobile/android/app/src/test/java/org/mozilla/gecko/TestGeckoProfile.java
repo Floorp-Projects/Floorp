@@ -13,8 +13,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.util.FileUtils;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.File;
@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 /**
  * Unit test methods of the GeckoProfile class.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestGeckoProfile {
     private static final String PROFILE_NAME = "profileName";
 
