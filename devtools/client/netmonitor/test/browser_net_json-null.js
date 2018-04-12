@@ -20,12 +20,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  let onReponsePanelReady = waitForDOM(document, "#response-panel .CodeMirror-code");
-  store.dispatch(Actions.toggleNetworkDetails());
-  EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#response-tab"));
-  await onReponsePanelReady;
-
+  await openResponsePanel();
   checkResponsePanelDisplaysJSON();
 
   let tabpanel = document.querySelector("#response-panel");
@@ -61,5 +56,18 @@ add_task(async function() {
       "The response editor has the intended visibility.");
     is(panel.querySelector(".response-image-box") === null, true,
       "The response image box doesn't have the intended visibility.");
+  }
+
+  /**
+   * Open the netmonitor details panel and switch to the response tab.
+   * Returns a promise that will resolve when the response panel DOM element is available.
+   */
+  function openResponsePanel() {
+    let onReponsePanelReady = waitForDOM(document, "#response-panel .CodeMirror-code");
+    EventUtils.sendMouseEvent({ type: "click" },
+      document.querySelector(".network-details-panel-toggle"));
+    EventUtils.sendMouseEvent({ type: "click" },
+      document.querySelector("#response-tab"));
+    return onReponsePanelReady;
   }
 });

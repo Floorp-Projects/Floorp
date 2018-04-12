@@ -31,7 +31,6 @@ function NetworkDetailsPanel({
   request,
   selectTab,
   sourceMapService,
-  toggleNetworkDetails,
   openLink,
 }) {
   if (!request) {
@@ -49,7 +48,6 @@ function NetworkDetailsPanel({
           request,
           selectTab,
           sourceMapService,
-          toggleNetworkDetails,
         }) :
         CustomRequestPanel({
           connector,
@@ -69,7 +67,6 @@ NetworkDetailsPanel.propTypes = {
   request: PropTypes.object,
   selectTab: PropTypes.func.isRequired,
   sourceMapService: PropTypes.object,
-  toggleNetworkDetails: PropTypes.func.isRequired,
   openLink: PropTypes.func,
 };
 
@@ -81,6 +78,5 @@ module.exports = connect(
   (dispatch) => ({
     cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
     selectTab: (tabId) => dispatch(Actions.selectDetailsPanelTab(tabId)),
-    toggleNetworkDetails: () => dispatch(Actions.toggleNetworkDetails()),
   }),
 )(NetworkDetailsPanel);

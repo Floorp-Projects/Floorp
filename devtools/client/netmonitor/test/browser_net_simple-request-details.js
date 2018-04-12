@@ -35,7 +35,8 @@ add_task(async function() {
   is(!!document.querySelector(".network-details-panel"), false,
     "The network details panel should still be hidden after first request.");
 
-  store.dispatch(Actions.toggleNetworkDetails());
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector(".network-details-panel-toggle"));
 
   isnot(getSelectedRequest(store.getState()), undefined,
     "There should be a selected item in the requests menu.");

@@ -50,7 +50,8 @@ add_task(async function() {
     });
 
   wait = waitForDOM(document, "#response-panel .CodeMirror-code");
-  store.dispatch(Actions.toggleNetworkDetails());
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
   await wait;
