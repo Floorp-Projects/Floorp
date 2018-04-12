@@ -237,12 +237,12 @@ public:
               nsIEditor::EDirection aSelect);
 
   /**
-   * InsertTextImpl() inserts aStringToInsert to aPointToInsert and makes any
+   * InsertText() inserts aStringToInsert to aPointToInsert and makes any
    * needed adjustments to white spaces around that point. E.g., trailing white
    * spaces before aPointToInsert needs to be removed.
-   * This calls EditorBase::InsertTextImpl() after adjusting white spaces.
-   * So, please refer the method's explanation to know what this method exactly
-   * does.
+   * This calls EditorBase::InsertTextWithTransaction() after adjusting white
+   * spaces.  So, please refer the method's explanation to know what this
+   * method exactly does.
    *
    * @param aDocument       The document of this editor.
    * @param aStringToInsert The string to insert.

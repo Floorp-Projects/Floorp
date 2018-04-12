@@ -778,7 +778,8 @@ TextEditRules::WillInsertText(EditAction aAction,
       betterInsertionPoint.Set(betterInsertionPoint.GetContainer(),
                                IMESelectionOffset);
     }
-    rv = mTextEditor->InsertTextImpl(*doc, *outString, betterInsertionPoint);
+    rv = mTextEditor->InsertTextWithTransaction(*doc, *outString,
+                                                betterInsertionPoint);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // aAction == EditAction::insertText
@@ -788,9 +789,12 @@ TextEditRules::WillInsertText(EditAction aAction,
     AutoTransactionsConserveSelection dontChangeMySelection(mTextEditor);
 
     EditorRawDOMPoint pointAfterStringInserted;
-    rv = mTextEditor->InsertTextImpl(*doc, *outString, atStartOfSelection,
-                                     &pointAfterStringInserted);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mTextEditor->InsertTextWithTransaction(*doc, *outString,
+                                                atStartOfSelection,
+                                                &pointAfterStringInserted);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     if (pointAfterStringInserted.IsSet()) {
       // Make the caret attach to the inserted text, unless this text ends with a LF,

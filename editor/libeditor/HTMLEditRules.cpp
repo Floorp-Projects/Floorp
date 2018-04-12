@@ -1350,7 +1350,8 @@ HTMLEditRules::WillInsertText(EditAction aAction,
 
   if (aAction == EditAction::insertIMEText) {
     // Right now the WSRunObject code bails on empty strings, but IME needs
-    // the InsertTextImpl() call to still happen since empty strings are meaningful there.
+    // the InsertTextWithTransaction() call to still happen since empty strings
+    // are meaningful there.
     // If there is one or more IME selections, its minimum offset should be
     // the insertion point.
     int32_t IMESelectionOffset =
@@ -1360,8 +1361,8 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     }
 
     if (inString->IsEmpty()) {
-      rv = htmlEditor->InsertTextImpl(*doc, *inString,
-                                      EditorRawDOMPoint(pointToInsert));
+      rv = htmlEditor->InsertTextWithTransaction(
+                         *doc, *inString, EditorRawDOMPoint(pointToInsert));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1450,9 +1451,10 @@ HTMLEditRules::WillInsertText(EditAction aAction,
             "by mutation observer");
         } else {
           EditorRawDOMPoint pointAfterInsertedString;
-          rv = htmlEditor->InsertTextImpl(*doc, subStr,
-                                          EditorRawDOMPoint(currentPoint),
-                                          &pointAfterInsertedString);
+          rv = htmlEditor->InsertTextWithTransaction(
+                             *doc, subStr,
+                             EditorRawDOMPoint(currentPoint),
+                             &pointAfterInsertedString);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
