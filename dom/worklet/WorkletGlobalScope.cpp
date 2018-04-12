@@ -7,7 +7,6 @@
 #include "WorkletGlobalScope.h"
 #include "mozilla/dom/WorkletGlobalScopeBinding.h"
 #include "mozilla/dom/Console.h"
-#include "mozilla/dom/DOMPrefs.h"
 
 namespace mozilla {
 namespace dom {
@@ -50,14 +49,19 @@ WorkletGlobalScope::WrapObject(JSContext* aCx,
 already_AddRefed<Console>
 WorkletGlobalScope::GetConsole(JSContext* aCx, ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_FAILURE);
-/* TODO
+  RefPtr<WorkletThread> thread = WorkletThread::Get();
+  MOZ_ASSERT(thread);
+
   if (!mConsole) {
-    mConsole = Console::CreateForWorklet(aCx, aRv);
+    mConsole =
+      Console::CreateForWorklet(aCx,
+                                thread->GetWorkletLoadInfo().OuterWindowID(),
+                                thread->GetWorkletLoadInfo().InnerWindowID(),
+                                aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
-  } */
+  }
 
   RefPtr<Console> console = mConsole;
   return console.forget();
@@ -66,7 +70,12 @@ WorkletGlobalScope::GetConsole(JSContext* aCx, ErrorResult& aRv)
 void
 WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const
 {
-  if (!DOMPrefs::DumpEnabled()) {
+  WorkletThread::AssertIsOnWorkletThread();
+
+  WorkletThread* workletThread = WorkletThread::Get();
+  MOZ_ASSERT(workletThread);
+
+  if (!workletThread->GetWorkletLoadInfo().DumpEnabled()) {
     return;
   }
 

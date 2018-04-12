@@ -44,6 +44,10 @@ public:
   static already_AddRefed<Console>
   Create(JSContext* aCx, nsPIDOMWindowInner* aWindow, ErrorResult& aRv);
 
+  static already_AddRefed<Console>
+  CreateForWorklet(JSContext* aCx, uint64_t aOuterWindowID,
+                   uint64_t aInnerWindowID, ErrorResult& aRv);
+
   // WebIDL methods
   nsPIDOMWindowInner* GetParentObject() const
   {
@@ -129,7 +133,8 @@ public:
   SetConsoleEventHandler(AnyCallback* aHandler);
 
 private:
-  Console(JSContext* aCx, nsPIDOMWindowInner* aWindow);
+  Console(JSContext* aCx, nsPIDOMWindowInner* aWindow,
+          uint64_t aOuterWindowID, uint64_t aInnerWIndowID);
   ~Console();
 
   void
@@ -463,10 +468,12 @@ private:
   mozilla::TimeStamp mCreationTimeStamp;
 
   friend class ConsoleCallData;
+  friend class ConsoleCallDataWorkletRunnable;
   friend class ConsoleInstance;
+  friend class ConsoleProfileWorkerRunnable;
+  friend class ConsoleProfileWorkletRunnable;
   friend class ConsoleRunnable;
-  friend class ConsoleCallDataRunnable;
-  friend class ConsoleProfileRunnable;
+  friend class ConsoleWorkerRunnable;
 };
 
 } // namespace dom

@@ -9,8 +9,10 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/dom/Worklet.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/TimeStamp.h"
 #include "nsThread.h"
 
 class nsIRunnable;
@@ -24,7 +26,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   static already_AddRefed<WorkletThread>
-  Create();
+  Create(const WorkletLoadInfo& aWorkletLoadInfo);
 
   static WorkletThread*
   Get();
@@ -41,14 +43,25 @@ public:
   JSContext*
   GetJSContext() const;
 
+  const WorkletLoadInfo&
+  GetWorkletLoadInfo() const;
+
   nsresult
   DispatchRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
   void
   Terminate();
 
+  DOMHighResTimeStamp
+  TimeStampToDOMHighRes(const TimeStamp& aTimeStamp) const
+  {
+    MOZ_ASSERT(!aTimeStamp.IsNull());
+    TimeDuration duration = aTimeStamp - mCreationTimeStamp;
+    return duration.ToMilliseconds();
+  }
+
 private:
-  WorkletThread();
+  explicit WorkletThread(const WorkletLoadInfo& aWorkletLoadInfo);
   ~WorkletThread();
 
   void
@@ -69,6 +82,9 @@ private:
 
   NS_IMETHOD
   DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override;
+
+  const WorkletLoadInfo mWorkletLoadInfo;
+  TimeStamp mCreationTimeStamp;
 
   // Touched only on the worklet thread. This is a raw pointer because it's set
   // and nullified by RunEventLoop().
