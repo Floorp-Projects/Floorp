@@ -3593,7 +3593,7 @@ nsIDocument::NodesFromRectHelper(float aX, float aY,
   for (uint32_t i = 0; i < outFrames.Length(); i++) {
     nsIContent* node = GetContentInThisDocument(outFrames[i]);
 
-    if (node && !node->IsElement() && !node->IsNodeOfType(nsINode::eTEXT)) {
+    if (node && !node->IsElement() && !node->IsText()) {
       // We have a node that isn't an element or a text node,
       // use its parent content instead.
       node = node->GetParent();

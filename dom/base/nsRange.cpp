@@ -2724,8 +2724,8 @@ nsRange::SurroundContents(nsINode& aNewParent, ErrorResult& aRv)
   // INVALID_STATE_ERROR: Raised if the Range partially selects a non-text
   // node.
   if (mStart.Container() != mEnd.Container()) {
-    bool startIsText = mStart.Container()->IsNodeOfType(nsINode::eTEXT);
-    bool endIsText = mEnd.Container()->IsNodeOfType(nsINode::eTEXT);
+    bool startIsText = mStart.Container()->IsText();
+    bool endIsText = mEnd.Container()->IsText();
     nsINode* startGrandParent = mStart.Container()->GetParentNode();
     nsINode* endGrandParent = mEnd.Container()->GetParentNode();
     if (!((startIsText && endIsText &&
@@ -3074,9 +3074,8 @@ nsRange::CollectClientRectsAndText(nsLayoutUtils::RectCallback* aCollector,
 
   if (iter.IsDone()) {
     // the range is collapsed, only continue if the cursor is in a text node
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aStartContainer);
-    if (content && content->IsNodeOfType(nsINode::eTEXT)) {
-      nsTextFrame* textFrame = GetTextFrameForContent(content, aFlushLayout);
+    if (aStartContainer->IsText()) {
+      nsTextFrame* textFrame = GetTextFrameForContent(aStartContainer->AsText(), aFlushLayout);
       if (textFrame) {
         int32_t outOffset;
         nsIFrame* outFrame;
@@ -3104,7 +3103,7 @@ nsRange::CollectClientRectsAndText(nsLayoutUtils::RectCallback* aCollector,
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
     if (!content)
       continue;
-    if (content->IsNodeOfType(nsINode::eTEXT)) {
+    if (content->IsText()) {
        if (node == startContainer) {
          int32_t offset = startContainer == endContainer ?
            static_cast<int32_t>(aEndOffset) : content->GetText()->GetLength();
@@ -3223,7 +3222,7 @@ nsRange::GetUsedFontFaces(nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
       continue;
     }
 
-    if (content->IsNodeOfType(nsINode::eTEXT)) {
+    if (content->IsText()) {
        if (node == startContainer) {
          int32_t offset = startContainer == endContainer ?
            mEnd.Offset() : content->GetText()->GetLength();
@@ -3300,7 +3299,7 @@ nsRange::Constructor(const GlobalObject& aGlobal,
 
 static bool ExcludeIfNextToNonSelectable(nsIContent* aContent)
 {
-  return aContent->IsNodeOfType(nsINode::eTEXT) &&
+  return aContent->IsText() &&
     aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE);
 }
 
@@ -3573,7 +3572,7 @@ nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
 {
   InnerTextAccumulator result(aValue);
 
-  if (aContainer->IsNodeOfType(nsINode::eTEXT)) {
+  if (aContainer->IsText()) {
     AppendTransformedText(result, aContainer);
     return;
   }
@@ -3594,7 +3593,7 @@ nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
     nsIFrame* f = currentNode->GetPrimaryFrame();
     bool isVisibleAndNotReplaced = IsVisibleAndNotInReplacedElement(f);
     if (currentState == AT_NODE) {
-      bool isText = currentNode->IsNodeOfType(nsINode::eTEXT);
+      bool isText = currentNode->IsText();
       if (isText && currentNode->GetParent()->IsHTMLElement(nsGkAtoms::rp) &&
           ElementIsVisibleNoFlush(currentNode->GetParent()->AsElement())) {
         nsAutoString str;

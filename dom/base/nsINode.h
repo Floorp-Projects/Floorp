@@ -450,17 +450,13 @@ public:
   bool
   IsContainerNode() const
   {
-    return IsElement() ||
-      !(IsNodeOfType(eTEXT) ||
-        IsNodeOfType(ePROCESSING_INSTRUCTION) ||
-        IsNodeOfType(eCOMMENT) ||
-        IsNodeOfType(eDATA_NODE));
+    return IsElement() || !IsCharacterData();
   }
 
   bool
   IsSlotable() const
   {
-    return IsElement() || IsNodeOfType(eTEXT);
+    return IsElement() || IsText();
   }
 
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;

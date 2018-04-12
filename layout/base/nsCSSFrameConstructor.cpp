@@ -2371,7 +2371,7 @@ NeedFrameFor(const nsFrameConstructorState& aState,
   if ((aParentFrame &&
        (!aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace) ||
         aParentFrame->IsGeneratedContentFrame())) ||
-      !aChildContent->IsNodeOfType(nsINode::eTEXT)) {
+      !aChildContent->IsText()) {
     return true;
   }
 
@@ -4997,7 +4997,7 @@ nsCSSFrameConstructor::ResolveComputedStyle(nsIContent* aContent)
     return styleSet->ResolveServoStyle(aContent->AsElement());
   }
 
-  MOZ_ASSERT(aContent->IsNodeOfType(nsINode::eTEXT),
+  MOZ_ASSERT(aContent->IsText(),
              "shouldn't waste time creating ComputedStyles for "
              "comments and processing instructions");
 
@@ -5621,8 +5621,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                                                          nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren,
                                                          FrameConstructionItemList& aItems)
 {
-  NS_PRECONDITION(aContent->IsNodeOfType(nsINode::eTEXT) ||
-                  aContent->IsElement(),
+  NS_PRECONDITION(aContent->IsText() || aContent->IsElement(),
                   "Shouldn't get anything else here!");
   MOZ_ASSERT(aContent->IsInComposedDoc());
   MOZ_ASSERT(!aContent->GetPrimaryFrame() || aState.mCreatingExtraFrames ||
@@ -6769,7 +6768,7 @@ nsCSSFrameConstructor::AddTextItemIfNeeded(nsFrameConstructorState& aState,
                                            FrameConstructionItemList& aItems)
 {
   NS_PRECONDITION(aPossibleTextContent, "Must have node");
-  if (!aPossibleTextContent->IsNodeOfType(nsINode::eTEXT) ||
+  if (!aPossibleTextContent->IsText() ||
       !aPossibleTextContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) ||
       aPossibleTextContent->HasFlag(NODE_NEEDS_FRAME)) {
     // Not text, or not suppressed due to being all-whitespace (if it were being
@@ -6786,7 +6785,7 @@ nsCSSFrameConstructor::AddTextItemIfNeeded(nsFrameConstructorState& aState,
 void
 nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aContent)
 {
-  if (!aContent->IsNodeOfType(nsINode::eTEXT) ||
+  if (!aContent->IsText() ||
       !aContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) ||
       aContent->HasFlag(NODE_NEEDS_FRAME)) {
     // Not text, or not suppressed due to being all-whitespace (if it were being
@@ -10714,8 +10713,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
                                          nsContainerFrame* aParentFrame,
                                          nsFrameItems& aResult)
 {
-  NS_PRECONDITION(aTextContent->IsNodeOfType(nsINode::eTEXT),
-                  "aTextContent isn't text");
+  NS_PRECONDITION(aTextContent->IsText(), "aTextContent isn't text");
   NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlockFrame),
                  "Not a block frame?");
 

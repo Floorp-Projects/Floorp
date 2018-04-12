@@ -1109,7 +1109,7 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
   RefPtr<Accessible> newAcc;
 
   // Create accessible for visible text frames.
-  if (content->IsNodeOfType(nsINode::eTEXT)) {
+  if (content->IsText()) {
     nsIFrame::RenderedText text = frame->GetRenderedText(0,
         UINT32_MAX, nsIFrame::TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
         nsIFrame::TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);

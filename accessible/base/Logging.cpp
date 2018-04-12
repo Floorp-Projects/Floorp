@@ -837,7 +837,7 @@ logging::Node(const char* aDescr, nsINode* aNode)
   nsINode* parentNode = aNode->GetParentNode();
   int32_t idxInParent = parentNode ? parentNode->ComputeIndexOf(aNode) : - 1;
 
-  if (aNode->IsNodeOfType(nsINode::eTEXT)) {
+  if (aNode->IsText()) {
     printf("%s: %p, text node, idx in parent: %d\n",
            aDescr, static_cast<void*>(aNode), idxInParent);
     return;
@@ -911,7 +911,7 @@ logging::AccessibleInfo(const char* aDescr, Accessible* aAccessible)
   else if (node->IsNodeOfType(nsINode::eDOCUMENT)) {
     printf(", document node: %p\n", static_cast<void*>(node));
   }
-  else if (node->IsNodeOfType(nsINode::eTEXT)) {
+  else if (node->IsText()) {
     printf(", text node: %p\n", static_cast<void*>(node));
   }
   else if (node->IsElement()) {

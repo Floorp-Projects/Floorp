@@ -96,7 +96,7 @@ GetFrameForNode(nsINode* aNode)
   if (aNode == aNode->OwnerDoc()) {
     return GetFrameForNode(aNode, GEOMETRY_NODE_DOCUMENT);
   }
-  NS_ASSERTION(aNode->IsNodeOfType(nsINode::eTEXT), "Unknown node type");
+  NS_ASSERTION(aNode->IsText(), "Unknown node type");
   return GetFrameForNode(aNode, GEOMETRY_NODE_TEXT);
 }
 

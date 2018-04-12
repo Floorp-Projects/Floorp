@@ -1062,7 +1062,7 @@ gfxRect
 nsSVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
                     const gfxMatrix* aToBoundsSpace)
 {
-  if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
+  if (aFrame->GetContent()->IsText()) {
     aFrame = aFrame->GetParent();
   }
 
@@ -1338,7 +1338,7 @@ bool
 nsSVGUtils::GetNonScalingStrokeTransform(nsIFrame *aFrame,
                                          gfxMatrix* aUserToOuterSVG)
 {
-  if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
+  if (aFrame->GetContent()->IsText()) {
     aFrame = aFrame->GetParent();
   }
 
@@ -1667,7 +1667,7 @@ nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, SVGContextPaint* aContextPaint)
   }
 
   nsIContent* content = aFrame->GetContent();
-  if (content->IsNodeOfType(nsINode::eTEXT)) {
+  if (content->IsText()) {
     content = content->GetParent();
   }
 

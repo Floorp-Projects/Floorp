@@ -744,7 +744,7 @@ nsStyleUtil::ColorComponentToFloat(uint8_t aAlpha)
 nsStyleUtil::IsSignificantChild(nsIContent* aChild,
                                 bool aWhitespaceIsSignificant)
 {
-  bool isText = aChild->IsNodeOfType(nsINode::eTEXT);
+  bool isText = aChild->IsText();
 
   if (!isText && !aChild->IsNodeOfType(nsINode::eCOMMENT) &&
       !aChild->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
@@ -760,7 +760,7 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild,
 nsStyleUtil::ThreadSafeIsSignificantChild(const nsIContent* aChild,
                                           bool aWhitespaceIsSignificant)
 {
-  bool isText = aChild->IsNodeOfType(nsINode::eTEXT);
+  bool isText = aChild->IsText();
 
   if (!isText && !aChild->IsNodeOfType(nsINode::eCOMMENT) &&
       !aChild->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {

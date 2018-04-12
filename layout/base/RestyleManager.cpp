@@ -273,7 +273,7 @@ RestyleManager::CharacterDataChanged(nsIContent* aContent,
     return;
   }
 
-  if (!aContent->IsNodeOfType(nsINode::eTEXT)) {
+  if (!aContent->IsText()) {
     // Doesn't matter to styling (could be a processing instruction or a
     // comment), it can't change whether any selectors match or don't.
     return;
@@ -1253,7 +1253,7 @@ NextSiblingWhichMayHaveFrame(nsIContent* aContent)
   for (nsIContent* next = aContent->GetNextSibling();
        next;
        next = next->GetNextSibling()) {
-    if (next->IsElement() || next->IsNodeOfType(nsINode::eTEXT)) {
+    if (next->IsElement() || next->IsText()) {
       return next;
     }
   }
@@ -2774,7 +2774,7 @@ RestyleManager::ProcessPostTraversal(
                                                     upToDateContext,
                                                     childrenRestyleState,
                                                     childrenFlags);
-      } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
+      } else if (traverseTextChildren && n->IsText()) {
         recreatedAnyContext |= ProcessPostTraversalForText(n, textState,
                                                            childrenRestyleState,
                                                            childrenFlags);

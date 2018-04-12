@@ -184,7 +184,7 @@ Accessible::Description(nsString& aDescription)
   // 3. it doesn't have an accName; or
   // 4. its title attribute already equals to its accName nsAutoString name;
 
-  if (!HasOwnContent() || mContent->IsNodeOfType(nsINode::eTEXT))
+  if (!HasOwnContent() || mContent->IsText())
     return;
 
   nsTextEquivUtils::

@@ -204,7 +204,7 @@ nsCoreUtils::GetDOMElementFor(nsIContent *aContent)
   if (aContent->IsElement())
     return aContent;
 
-  if (aContent->IsNodeOfType(nsINode::eTEXT))
+  if (aContent->IsText())
     return aContent->GetFlattenedTreeParent();
 
   return nullptr;
