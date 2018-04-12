@@ -5325,7 +5325,12 @@ pref("network.trr.uri", "");
 // credentials to pass to DOH end-point
 pref("network.trr.credentials", "");
 // Wait for captive portal confirmation before enabling TRR
+#if defined(ANDROID)
+// On Android, the captive portal is handled by the OS itself
+pref("network.trr.wait-for-portal", false);
+#else
 pref("network.trr.wait-for-portal", true);
+#endif
 // Allow RFC1918 address in responses?
 pref("network.trr.allow-rfc1918", false);
 // Use GET (rather than POST)
