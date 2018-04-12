@@ -62,7 +62,7 @@ protected:
   void GetCookieStringFromCookieHashTable(nsIURI *aHostURI,
                                           bool aIsForeign,
                                           bool aIsSafeTopLevelNav,
-                                          bool aIsTopLevelForeign,
+                                          bool aIsSameSiteForeign,
                                           const OriginAttributes &aAttrs,
                                           nsCString &aCookieString);
 
@@ -70,7 +70,7 @@ protected:
   GetCookieStringSyncIPC(nsIURI                 *aHostURI,
                          bool                    aIsForeign,
                          bool                    aIsSafeTopLevelNav,
-                         bool                    aIsTopLevelForeign,
+                         bool                    aIsSameSiteForeign,
                          const OriginAttributes &aAttrs,
                          nsAutoCString          &aCookieString);
 
