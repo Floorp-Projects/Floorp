@@ -410,8 +410,8 @@ WSRunObject::InsertText(nsIDocument& aDocument,
 
   // Ready, aim, fire!
   nsresult rv =
-    mHTMLEditor->InsertTextImpl(aDocument, theString, pointToInsert,
-                                aPointAfterInsertedString);
+    mHTMLEditor->InsertTextWithTransaction(aDocument, theString, pointToInsert,
+                                           aPointAfterInsertedString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_OK;
   }
@@ -1548,9 +1548,9 @@ WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces(WSPoint aPoint)
  // First, insert an NBSP.
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
   nsresult rv =
-    mHTMLEditor->InsertTextIntoTextNodeImpl(nsDependentSubstring(&kNBSP, 1),
-                                            *aPoint.mTextNode, aPoint.mOffset,
-                                            true);
+    mHTMLEditor->InsertTextIntoTextNodeWithTransaction(
+                   nsDependentSubstring(&kNBSP, 1),
+                   *aPoint.mTextNode, aPoint.mOffset, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1885,8 +1885,10 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
       AutoTransactionsConserveSelection dontChangeMySelection(htmlEditor);
       nsAutoString spaceStr(char16_t(32));
       nsresult rv =
-        htmlEditor->InsertTextIntoTextNodeImpl(spaceStr, *thePoint.mTextNode,
-                                               thePoint.mOffset, true);
+        htmlEditor->InsertTextIntoTextNodeWithTransaction(spaceStr,
+                                                          *thePoint.mTextNode,
+                                                          thePoint.mOffset,
+                                                          true);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Finally, delete that nbsp
@@ -1924,8 +1926,9 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
       // Finally, insert that nbsp before the ASCII ws run
       AutoTransactionsConserveSelection dontChangeMySelection(htmlEditor);
       rv =
-        htmlEditor->InsertTextIntoTextNodeImpl(nsDependentSubstring(&kNBSP, 1),
-                                               *startNode, startOffset, true);
+        htmlEditor->InsertTextIntoTextNodeWithTransaction(
+                      nsDependentSubstring(&kNBSP, 1),
+                      *startNode, startOffset, true);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -1977,8 +1980,9 @@ WSRunObject::ReplacePreviousNBSPIfUnncessary(
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
   nsAutoString spaceStr(char16_t(32));
   nsresult rv =
-    mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, *thePoint.mTextNode,
-                                            thePoint.mOffset, true);
+    mHTMLEditor->InsertTextIntoTextNodeWithTransaction(spaceStr,
+                                                       *thePoint.mTextNode,
+                                                       thePoint.mOffset, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2025,8 +2029,10 @@ WSRunObject::CheckLeadingNBSP(WSFragment* aRun,
     AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
     nsAutoString spaceStr(char16_t(32));
     nsresult rv =
-      mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, *thePoint.mTextNode,
-                                              thePoint.mOffset, true);
+      mHTMLEditor->InsertTextIntoTextNodeWithTransaction(spaceStr,
+                                                         *thePoint.mTextNode,
+                                                         thePoint.mOffset,
+                                                         true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Finally, delete that nbsp

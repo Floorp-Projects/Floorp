@@ -418,12 +418,16 @@ public:
   nsresult DeleteTextWithTransaction(dom::CharacterData& aTextNode,
                                      uint32_t aOffset, uint32_t aLength);
 
+  /**
+   * InsertTextWithTransaction() inserts aStringToInsert at aPointToInsert.
+   */
   virtual nsresult
-  InsertTextImpl(nsIDocument& aDocument,
-                 const nsAString& aStringToInsert,
-                 const EditorRawDOMPoint& aPointToInsert,
-                 EditorRawDOMPoint* aPointAfterInsertedString =
-                   nullptr) override;
+  InsertTextWithTransaction(nsIDocument& aDocument,
+                            const nsAString& aStringToInsert,
+                            const EditorRawDOMPoint& aPointToInsert,
+                            EditorRawDOMPoint* aPointAfterInsertedString =
+                              nullptr) override;
+
   virtual bool IsModifiableNode(nsINode* aNode) override;
 
   NS_IMETHOD SelectAll() override;
