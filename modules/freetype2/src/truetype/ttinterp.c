@@ -2165,7 +2165,7 @@
       val = ADD_LONG( distance,
                       exc->threshold - exc->phase + compensation ) &
               -exc->period;
-      val += exc->phase;
+      val = ADD_LONG( val, exc->phase );
       if ( val < 0 )
         val = exc->phase;
     }
@@ -2174,7 +2174,7 @@
       val = NEG_LONG( SUB_LONG( exc->threshold - exc->phase + compensation,
                                 distance ) &
                         -exc->period );
-      val -= exc->phase;
+      val = SUB_LONG( val, exc->phase );
       if ( val > 0 )
         val = -exc->phase;
     }
@@ -2216,7 +2216,7 @@
       val = ( ADD_LONG( distance,
                         exc->threshold - exc->phase + compensation ) /
                 exc->period ) * exc->period;
-      val += exc->phase;
+      val = ADD_LONG( val, exc->phase );
       if ( val < 0 )
         val = exc->phase;
     }
@@ -2225,7 +2225,7 @@
       val = NEG_LONG( ( SUB_LONG( exc->threshold - exc->phase + compensation,
                                   distance ) /
                           exc->period ) * exc->period );
-      val -= exc->phase;
+      val = SUB_LONG( val, exc->phase );
       if ( val > 0 )
         val = -exc->phase;
     }
