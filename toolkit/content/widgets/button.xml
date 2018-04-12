@@ -372,7 +372,4 @@
     </content>
   </binding>
 
-  <binding id="button-repeat" display="xul:autorepeatbutton"
-           extends="chrome://global/content/bindings/button.xml#button"/>
-
 </bindings>

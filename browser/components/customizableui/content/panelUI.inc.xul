@@ -660,26 +660,21 @@
     <panelview id="PanelUI-bookmarkingTools" class="PanelUI-subView">
       <vbox class="panel-subview-body">
         <toolbarbutton id="panelMenu_toggleBookmarksMenu"
-                       label="&addBookmarksMenu.label;"
-                       label-checked="&removeBookmarksMenu.label;"
                        class="subviewbutton subviewbutton-iconic"
-                       oncommand="BookmarkingUI.toggleMenuButtonInToolbar(this); PanelUI.hide();"/>
+                       label-show="&addBookmarksMenu.label;"
+                       label-hide="&removeBookmarksMenu.label;"
+                       oncommand="BookmarkingUI.toggleMenuButtonInToolbar(this);"/>
         <toolbarbutton id="panelMenu_viewBookmarksSidebar"
-                       label="&viewBookmarksSidebar2.label;"
-                       label-checked="&hideBookmarksSidebar.label;"
                        class="subviewbutton subviewbutton-iconic"
+                       label-show="&viewBookmarksSidebar2.label;"
+                       label-hide="&hideBookmarksSidebar.label;"
                        key="viewBookmarksSidebarKb"
-                       oncommand="SidebarUI.toggle('viewBookmarksSidebar', this); PanelUI.hide();">
-          <observes element="viewBookmarksSidebar" attribute="checked"/>
-        </toolbarbutton>
+                       oncommand="SidebarUI.toggle('viewBookmarksSidebar', this);"/>
         <toolbarbutton id="panelMenu_viewBookmarksToolbar"
                        class="subviewbutton subviewbutton-iconic"
-                       placesanonid="view-toolbar"
-                       toolbarId="PersonalToolbar"
-                       type="checkbox"
-                       oncommand="onViewToolbarCommand(event)"
-                       label="&viewBookmarksToolbar.label;"
-                       label-checked="&hideBookmarksToolbar.label;"/>
+                       label-show="&viewBookmarksToolbar.label;"
+                       label-hide="&hideBookmarksToolbar.label;"
+                       oncommand="BookmarkingUI.toggleBookmarksToolbar();"/>
       </vbox>
     </panelview>
   </panelmultiview>

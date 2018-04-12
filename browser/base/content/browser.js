@@ -5605,8 +5605,6 @@ function setToolbarVisibility(toolbar, isVisible, persist = true) {
   let event = new CustomEvent("toolbarvisibilitychange", eventParams);
   toolbar.dispatchEvent(event);
 
-  BookmarkingUI.onToolbarVisibilityChange();
-
   if (toolbar.getAttribute("type") == "menubar" && CustomizationHandler.isCustomizing()) {
     gCustomizeMode._updateDragSpaceCheckbox();
   }

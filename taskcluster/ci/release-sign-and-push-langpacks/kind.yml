@@ -1,0 +1,48 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.single_dep:loader
+
+transforms:
+   - taskgraph.transforms.release_sign_and_push_langpacks:transforms
+   - taskgraph.transforms.release_notifications:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - build
+   - nightly-l10n
+
+
+only-for-build-platforms:
+   - linux64-nightly/opt    # addons.mozilla.org only support 1 platform per locale. That's why we use linux64
+   - macosx64-nightly/opt   # Although, we need the special locale "ja-JP-Mac" from this platform
+   # TODO Activate devedition
+
+
+job-template:
+   description: Signs {locales} XPIs for platform via addons.mozilla.org and pushes them
+   worker-type:
+      by-project:
+         mozilla-beta: scriptworker-prov-v1/addon-v1
+         mozilla-release: scriptworker-prov-v1/addon-v1
+         default: scriptworker-prov-v1/addon-dev
+   worker:
+      implementation: sign-and-push-addons
+      channel:
+         by-project:
+            # Only release langpacks are listed publicly
+            mozilla-release: listed
+            default: unlisted
+      upstream-artifacts:   # See transforms
+   run-on-projects: []
+   scopes:
+      by-project:
+         mozilla-beta:
+            - project:releng:addons.mozilla.org:server:production
+         mozilla-release:
+            - project:releng:addons.mozilla.org:server:production
+         default:
+            - project:releng:addons.mozilla.org:server:staging
+   shipping-phase: promote
+   shipping-product: firefox

@@ -82,52 +82,8 @@ class ZoneGroup
     explicit ZoneGroup(JSRuntime* runtime);
     ~ZoneGroup();
 
-    inline Nursery& nursery();
-    inline gc::StoreBuffer& storeBuffer();
-
-    inline bool isCollecting();
-    inline bool isGCScheduled();
-
     // Delete an empty zone after its contents have been merged.
     void deleteEmptyZone(Zone* zone);
-
-#ifdef DEBUG
-  private:
-    // The number of possible bailing places encounters before forcefully bailing
-    // in that place. Zero means inactive.
-    ZoneGroupData<uint32_t> ionBailAfter_;
-
-  public:
-    void* addressOfIonBailAfter() { return &ionBailAfter_; }
-
-    // Set after how many bailing places we should forcefully bail.
-    // Zero disables this feature.
-    void setIonBailAfter(uint32_t after) {
-        ionBailAfter_ = after;
-    }
-#endif
-
-    // Number of Ion compilations which were finished off thread and are
-    // waiting to be lazily linked. This is only set while holding the helper
-    // thread state lock, but may be read from at other times.
-    mozilla::Atomic<size_t> numFinishedBuilders;
-
-  private:
-    /* List of Ion compilation waiting to get linked. */
-    typedef mozilla::LinkedList<js::jit::IonBuilder> IonBuilderList;
-
-    js::HelperThreadLockData<IonBuilderList> ionLazyLinkList_;
-    js::HelperThreadLockData<size_t> ionLazyLinkListSize_;
-
-  public:
-    IonBuilderList& ionLazyLinkList();
-
-    size_t ionLazyLinkListSize() {
-        return ionLazyLinkListSize_;
-    }
-
-    void ionLazyLinkListRemove(js::jit::IonBuilder* builder);
-    void ionLazyLinkListAdd(js::jit::IonBuilder* builder);
 };
 
 } // namespace js
