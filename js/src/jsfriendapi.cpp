@@ -1219,7 +1219,7 @@ void
 js::DumpHeap(JSContext* cx, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehaviour)
 {
     if (nurseryBehaviour == js::CollectNurseryBeforeDump)
-        EvictAllNurseries(cx->runtime(), JS::gcreason::API);
+        cx->runtime()->gc.evictNursery(JS::gcreason::API);
 
     DumpHeapTracer dtrc(fp, cx);
 

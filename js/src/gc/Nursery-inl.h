@@ -139,12 +139,6 @@ ReallocateObjectBuffer(JSContext* cx, JSObject* obj, T* oldBuffer,
     return buffer;
 }
 
-static inline void
-EvictAllNurseries(JSRuntime* rt, JS::gcreason::Reason reason = JS::gcreason::EVICT_NURSERY)
-{
-    rt->gc.evictNursery(reason);
-}
-
 } // namespace js
 
 #endif /* gc_Nursery_inl_h */
