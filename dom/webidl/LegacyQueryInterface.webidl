@@ -17,23 +17,18 @@ interface LegacyQueryInterface {
   nsISupports QueryInterface(IID iid);
 };
 
-Attr implements LegacyQueryInterface;
 BoxObject implements LegacyQueryInterface;
 ChildProcessMessageManager implements LegacyQueryInterface;
 ChromeMessageBroadcaster implements LegacyQueryInterface;
 ChromeMessageSender implements LegacyQueryInterface;
-Comment implements LegacyQueryInterface;
 ContentFrameMessageManager implements LegacyQueryInterface;
 ContentProcessMessageManager implements LegacyQueryInterface;
 DOMParser implements LegacyQueryInterface;
 Document implements LegacyQueryInterface;
 DocumentFragment implements LegacyQueryInterface;
-DocumentType implements LegacyQueryInterface;
 Element implements LegacyQueryInterface;
 Event implements LegacyQueryInterface;
-ProcessingInstruction implements LegacyQueryInterface;
 Selection implements LegacyQueryInterface;
-Text implements LegacyQueryInterface;
 TreeColumns implements LegacyQueryInterface;
 TreeContentView implements LegacyQueryInterface;
 Window implements LegacyQueryInterface;
