@@ -975,23 +975,17 @@ impl AlphaBatchBuilder {
                 let border_cpu =
                     &ctx.prim_store.cpu_borders[prim_metadata.cpu_prim_index.0];
                 // TODO(gw): Select correct blend mode for edges and corners!!
-                let corner_kind = BatchKind::Transformable(
-                    transform_kind,
-                    TransformBatchKind::BorderCorner,
-                );
-                let corner_key = BatchKey::new(corner_kind, non_segmented_blend_mode, no_textures);
-                let edge_kind = BatchKind::Transformable(
-                    transform_kind,
-                    TransformBatchKind::BorderEdge,
-                );
-                let edge_key = BatchKey::new(edge_kind, non_segmented_blend_mode, no_textures);
 
-                // Work around borrow ck on borrowing batch_list twice.
-                {
-                    let batch =
-                        self.batch_list.get_suitable_batch(corner_key, &task_relative_bounding_rect);
-                    for (i, instance_kind) in border_cpu.corner_instances.iter().enumerate()
-                    {
+                if border_cpu.corner_instances.iter().any(|&kind| kind != BorderCornerInstance::None) {
+                    let corner_kind = BatchKind::Transformable(
+                        transform_kind,
+                        TransformBatchKind::BorderCorner,
+                    );
+                    let corner_key = BatchKey::new(corner_kind, non_segmented_blend_mode, no_textures);
+                    let batch = self.batch_list
+                        .get_suitable_batch(corner_key, &task_relative_bounding_rect);
+
+                    for (i, instance_kind) in border_cpu.corner_instances.iter().enumerate() {
                         let sub_index = i as i32;
                         match *instance_kind {
                             BorderCornerInstance::None => {}
@@ -1018,12 +1012,22 @@ impl AlphaBatchBuilder {
                     }
                 }
 
-                let batch = self.batch_list.get_suitable_batch(edge_key, &task_relative_bounding_rect);
-                for (border_segment, instance_kind) in border_cpu.edges.iter().enumerate() {
-                    match *instance_kind {
-                        BorderEdgeKind::None => {},
-                        _ => {
-                          batch.push(base_instance.build(border_segment as i32, 0, 0));
+                if border_cpu.edges.iter().any(|&kind| kind != BorderEdgeKind::None) {
+                    let edge_kind = BatchKind::Transformable(
+                        transform_kind,
+                        TransformBatchKind::BorderEdge,
+                    );
+                    let edge_key = BatchKey::new(edge_kind, non_segmented_blend_mode, no_textures);
+                    let batch = self.batch_list
+                        .get_suitable_batch(edge_key, &task_relative_bounding_rect);
+
+                    for (border_segment, instance_kind) in border_cpu.edges.iter().enumerate() {
+                        match *instance_kind {
+                            BorderEdgeKind::None => {},
+                            BorderEdgeKind::Solid |
+                            BorderEdgeKind::Clip => {
+                                batch.push(base_instance.build(border_segment as i32, 0, 0));
+                            }
                         }
                     }
                 }

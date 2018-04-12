@@ -93,16 +93,16 @@ fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64-64,37
 fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64,371) == clip-path-paddingBox-1a.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) == clip-path-paddingBox-1b.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64,371) == clip-path-paddingBox-1c.html clip-path-geometryBox-1-ref.html
-fuzzy(64,370) == clip-path-borderBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy(64,371) == clip-path-borderBox-1a.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) == clip-path-borderBox-1b.html clip-path-geometryBox-1-ref.html
-fuzzy(64,370) == clip-path-borderBox-1c.html clip-path-geometryBox-1-ref.html
+fuzzy(64,371) == clip-path-borderBox-1c.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,16,21) fuzzy-if(skiaContent,1,60) == clip-path-marginBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy(64,370) == clip-path-fillBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy(64,370) == clip-path-strokeBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy(64,371) == clip-path-fillBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy(64,371) == clip-path-strokeBox-1a.html clip-path-geometryBox-1-ref.html
 fuzzy(64,370) == clip-path-strokeBox-1b.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) == clip-path-viewBox-1a.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) == clip-path-viewBox-1b.html clip-path-geometryBox-1-ref.html
-fuzzy(64,370) == clip-path-viewBox-1c.html clip-path-geometryBox-1-ref.html
+fuzzy(64,371) == clip-path-viewBox-1c.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,9,98) fuzzy-if(webrender,64,100) == clip-path-geometryBox-2.html clip-path-geometryBox-2-ref.html
 
 == clip-path-localRef-1.html clip-path-localRef-1-ref.html

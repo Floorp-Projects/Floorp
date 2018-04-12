@@ -12,7 +12,7 @@
 
 [package]
 name = "gl_generator"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Brendan Zabarauskas <bjzaba@yahoo.com.au>", "Corey Richardson", "Arseny Kapoulkine"]
 description = "Code generators for creating bindings to the Khronos OpenGL APIs."
 homepage = "https://github.com/brendanzab/gl-rs/gl_generator/"
@@ -27,10 +27,10 @@ repository = "https://github.com/brendanzab/gl-rs/"
 name = "gl_generator"
 path = "lib.rs"
 [dependencies.khronos_api]
-version = "2.0.0"
+version = "2.1.0"
 
 [dependencies.log]
-version = "0.3.5"
+version = "0.4.1"
 
 [dependencies.xml-rs]
 version = "0.7.0"

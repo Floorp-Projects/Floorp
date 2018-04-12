@@ -15,7 +15,7 @@ use syn::punctuated::Punctuated;
 use syn::synom::{Synom, ParseError};
 use std::collections::BTreeSet;
 use std::str::FromStr;
-use proc_macro2::{Span, TokenStream, TokenNode, TokenTree};
+use proc_macro2::{Span, TokenStream, TokenTree, Group};
 
 // This module handles parsing of `#[serde(...)]` attributes. The entrypoints
 // are `attr::Container::from_ast`, `attr::Variant::from_ast`, and
@@ -332,7 +332,11 @@ impl Container {
                     // Parse `#[serde(remote = "...")]`
                     Meta(NameValue(ref m)) if m.ident == "remote" => {
                         if let Ok(path) = parse_lit_into_path(cx, m.ident.as_ref(), &m.lit) {
-                            remote.set(path);
+                            if is_primitive_path(&path, "Self") {
+                                remote.set(item.ident.into());
+                            } else {
+                                remote.set(path);
+                            }
                         }
                     }
 
@@ -935,10 +939,10 @@ impl Field {
                     leading_colon: None,
                     segments: Punctuated::new(),
                 };
-                path.segments.push(Ident::new("_serde", Span::def_site()).into());
-                path.segments.push(Ident::new("private", Span::def_site()).into());
-                path.segments.push(Ident::new("de", Span::def_site()).into());
-                path.segments.push(Ident::new("borrow_cow_str", Span::def_site()).into());
+                path.segments.push(Ident::new("_serde", Span::call_site()).into());
+                path.segments.push(Ident::new("private", Span::call_site()).into());
+                path.segments.push(Ident::new("de", Span::call_site()).into());
+                path.segments.push(Ident::new("borrow_cow_str", Span::call_site()).into());
                 let expr = syn::ExprPath {
                     attrs: Vec::new(),
                     qself: None,
@@ -950,10 +954,10 @@ impl Field {
                     leading_colon: None,
                     segments: Punctuated::new(),
                 };
-                path.segments.push(Ident::new("_serde", Span::def_site()).into());
-                path.segments.push(Ident::new("private", Span::def_site()).into());
-                path.segments.push(Ident::new("de", Span::def_site()).into());
-                path.segments.push(Ident::new("borrow_cow_bytes", Span::def_site()).into());
+                path.segments.push(Ident::new("_serde", Span::call_site()).into());
+                path.segments.push(Ident::new("private", Span::call_site()).into());
+                path.segments.push(Ident::new("de", Span::call_site()).into());
+                path.segments.push(Ident::new("borrow_cow_bytes", Span::call_site()).into());
                 let expr = syn::ExprPath {
                     attrs: Vec::new(),
                     qself: None,
@@ -1156,7 +1160,7 @@ fn parse_lit_into_where(
         return Ok(Vec::new());
     }
 
-    let where_string = syn::LitStr::new(&format!("where {}", string.value()), string.span);
+    let where_string = syn::LitStr::new(&format!("where {}", string.value()), string.span());
 
     parse_lit_str::<syn::WhereClause>(&where_string)
         .map(|wh| wh.predicates.into_iter().collect())
@@ -1291,27 +1295,30 @@ fn is_rptr(ty: &syn::Type, elem: fn(&syn::Type) -> bool) -> bool {
 }
 
 fn is_str(ty: &syn::Type) -> bool {
-    is_primitive_path(ty, "str")
+    is_primitive_type(ty, "str")
 }
 
 fn is_slice_u8(ty: &syn::Type) -> bool {
     match *ty {
-        syn::Type::Slice(ref ty) => is_primitive_path(&ty.elem, "u8"),
+        syn::Type::Slice(ref ty) => is_primitive_type(&ty.elem, "u8"),
         _ => false,
     }
 }
 
-fn is_primitive_path(ty: &syn::Type, primitive: &str) -> bool {
+fn is_primitive_type(ty: &syn::Type, primitive: &str) -> bool {
     match *ty {
         syn::Type::Path(ref ty) => {
-            ty.qself.is_none()
-                && ty.path.leading_colon.is_none()
-                && ty.path.segments.len() == 1
-                && ty.path.segments[0].ident == primitive
-                && ty.path.segments[0].arguments.is_empty()
+            ty.qself.is_none() && is_primitive_path(&ty.path, primitive)
         }
         _ => false,
     }
+}
+
+fn is_primitive_path(path: &syn::Path, primitive: &str) -> bool {
+    path.leading_colon.is_none()
+        && path.segments.len() == 1
+        && path.segments[0].ident == primitive
+        && path.segments[0].arguments.is_empty()
 }
 
 // All lifetimes that this type could borrow from a Deserializer.
@@ -1403,21 +1410,17 @@ where
 
 fn spanned_tokens(s: &syn::LitStr) -> Result<TokenStream, ParseError> {
     let stream = try!(syn::parse_str(&s.value()));
-    Ok(respan_token_stream(stream, s.span))
+    Ok(respan_token_stream(stream, s.span()))
 }
 
 fn respan_token_stream(stream: TokenStream, span: Span) -> TokenStream {
     stream.into_iter().map(|token| respan_token_tree(token, span)).collect()
 }
 
-fn respan_token_tree(token: TokenTree, span: Span) -> TokenTree {
-    TokenTree {
-        span: span,
-        kind: match token.kind {
-            TokenNode::Group(delimiter, nested) => {
-                TokenNode::Group(delimiter, respan_token_stream(nested, span))
-            }
-            other => other,
-        },
+fn respan_token_tree(mut token: TokenTree, span: Span) -> TokenTree {
+    if let TokenTree::Group(ref mut g) = token {
+        *g = Group::new(g.delimiter(), respan_token_stream(g.stream().clone(), span));
     }
+    token.set_span(span);
+    token
 }

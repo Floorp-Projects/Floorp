@@ -1504,6 +1504,7 @@ pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               bounds: LayoutRect,
+                                              clip_node_id: *const usize,
                                               animation: *const WrAnimationProperty,
                                               opacity: *const f32,
                                               transform: *const LayoutTransform,
@@ -1533,6 +1534,12 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
             WrFilterOpType::ColorMatrix => FilterOp::ColorMatrix(c_filter.matrix),
         }
     }).collect();
+
+    let clip_node_id_ref = unsafe { clip_node_id.as_ref() };
+    let clip_node_id = match clip_node_id_ref {
+        Some(clip_node_id) => Some(ClipId::Clip(*clip_node_id, state.pipeline_id)),
+        None => None,
+    };
 
     let opacity_ref = unsafe { opacity.as_ref() };
     if let Some(opacity) = opacity_ref {
@@ -1569,7 +1576,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     state.frame_builder
          .dl_builder
          .push_stacking_context(&prim_info,
-                                None,
+                                clip_node_id,
                                 ScrollPolicy::Scrollable,
                                 transform_binding,
                                 transform_style,

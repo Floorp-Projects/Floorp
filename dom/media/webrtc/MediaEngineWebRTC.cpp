@@ -75,10 +75,7 @@ void AudioInputCubeb::UpdateDeviceList()
          i, devices.device[i].type, devices.device[i].state,
          devices.device[i].friendly_name, devices.device[i].device_id));
     if (devices.device[i].type == CUBEB_DEVICE_TYPE_INPUT && // paranoia
-        (devices.device[i].state == CUBEB_DEVICE_STATE_ENABLED ||
-         (devices.device[i].state == CUBEB_DEVICE_STATE_DISABLED &&
-          devices.device[i].friendly_name &&
-          strcmp(devices.device[i].friendly_name, "Sine source at 440 Hz") == 0)))
+        devices.device[i].state == CUBEB_DEVICE_STATE_ENABLED )
     {
       auto j = mDeviceNames->IndexOf(devices.device[i].device_id);
       if (j != nsTArray<nsCString>::NoIndex) {
