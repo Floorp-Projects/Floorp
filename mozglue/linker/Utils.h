@@ -11,6 +11,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Scoped.h"
 
 /**
@@ -102,12 +103,18 @@ struct AutoCloseFILETraits
 };
 typedef mozilla::Scoped<AutoCloseFILETraits> AutoCloseFILE;
 
+extern mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gPageSize;
+
 /**
  * Page alignment helpers
  */
-static inline size_t PageSize()
+static size_t PageSize()
 {
-  return 4096;
+  if (!gPageSize) {
+    gPageSize = sysconf(_SC_PAGESIZE);
+  }
+
+  return gPageSize;
 }
 
 static inline uintptr_t AlignedPtr(uintptr_t ptr, size_t alignment)
