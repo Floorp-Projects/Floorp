@@ -180,24 +180,6 @@
         </getter>
       </property>
 
-      <method name="enableKeyboardNavigator">
-        <parameter name="aEnableKeyboardNavigator"/>
-        <body>
-        <![CDATA[
-          this.popupBoxObject.enableKeyboardNavigator(aEnableKeyboardNavigator);
-        ]]>
-        </body>
-      </method>
-
-      <method name="enableRollup">
-        <parameter name="aEnableRollup"/>
-        <body>
-        <![CDATA[
-          this.popupBoxObject.enableRollup(aEnableRollup);
-        ]]>
-        </body>
-      </method>
-
       <method name="sizeTo">
         <parameter name="aWidth"/>
         <parameter name="aHeight"/>

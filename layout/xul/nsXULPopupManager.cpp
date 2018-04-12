@@ -1925,7 +1925,6 @@ nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup)
     mWidget = popup->GetWidget();
     if (mWidget) {
       mWidget->CaptureRollupEvents(nullptr, true);
-      popup->AttachedDismissalListener();
     }
   }
 
