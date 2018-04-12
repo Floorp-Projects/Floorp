@@ -187,6 +187,8 @@
   skin/classic/browser/tabbrowser/tab-loading-inverted.png     (../shared/tabbrowser/tab-loading-inverted.png)
   skin/classic/browser/tabbrowser/tab-loading-inverted@2x.png  (../shared/tabbrowser/tab-loading-inverted@2x.png)
   skin/classic/browser/tabbrowser/loading.svg                  (../shared/tabbrowser/loading.svg)
+  skin/classic/browser/tabbrowser/loading-20fps.svg            (../shared/tabbrowser/loading-20fps.svg)
+  skin/classic/browser/tabbrowser/loading-30fps.svg            (../shared/tabbrowser/loading-30fps.svg)
   skin/classic/browser/tabbrowser/loading-burst.svg            (../shared/tabbrowser/loading-burst.svg)
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
   skin/classic/browser/tabbrowser/newtab.svg                   (../shared/tabbrowser/newtab.svg)

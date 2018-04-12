@@ -201,13 +201,21 @@
   opacity: 0.7;
 }
 
-%ifdef NIGHTLY_BUILD
 @supports -moz-bool-pref("browser.tabs.30FpsThrobber") {
   :root[sessionrestored] .tab-throbber[busy]::before {
+    background-image: url("chrome://browser/skin/tabbrowser/loading-30fps.svg");
     animation: tab-throbber-animation 1.05s steps(30) infinite;
+    width: 480px;
   }
 }
-%endif
+
+@supports -moz-bool-pref("browser.tabs.20FpsThrobber") {
+  :root[sessionrestored] .tab-throbber[busy]::before {
+    background-image: url("chrome://browser/skin/tabbrowser/loading-20fps.svg");
+    animation: tab-throbber-animation 1.05s steps(20) infinite;
+    width: 320px;
+  }
+}
 
 :root[sessionrestored] .tab-throbber[busy]:-moz-locale-dir(rtl)::before {
   animation-name: tab-throbber-animation-rtl;
