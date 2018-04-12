@@ -578,14 +578,16 @@ menuseparator {
 .folder,
 .domain,
 .source-icon,
-.file {
+.file,
+.extension {
   background-color: var(--theme-comment);
 }
 
 .worker,
 .file,
 .folder,
-.source-icon {
+.source-icon,
+.extension {
   position: relative;
   top: 2px;
 }
@@ -610,6 +612,12 @@ img.folder,
 img.source-icon {
   width: 15px;
   height: 15px;
+}
+
+img.extension {
+  width: 13px;
+  height: 13px;
+  margin-inline-start: 2px;
 }
 
 img.result-item-icon {
@@ -645,6 +653,10 @@ img.typescript {
   mask: url("chrome://devtools/skin/images/debugger/typescript.svg") no-repeat;
 }
 
+img.extension {
+  mask: url("chrome://devtools/skin/images/debugger/extension.svg") no-repeat;
+}
+
 img.file {
   mask: url("chrome://devtools/skin/images/debugger/file.svg") no-repeat;
   width: 13px;
@@ -654,7 +666,8 @@ img.file {
 img.domain,
 img.folder,
 img.file,
-img.source-icon {
+img.source-icon,
+img.extension {
   mask-size: 100%;
   margin-inline-end: 5px;
   display: inline-block;
@@ -2981,7 +2994,6 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .input-expression::placeholder {
-  text-align: center;
   font-style: italic;
   color: var(--theme-comment);
 }
@@ -2998,6 +3010,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 .expression-input-container {
   display: flex;
+  border: 1px solid var(--theme-highlight-blue);
 }
 
 .expression-container {
@@ -3427,7 +3440,8 @@ img.reverseStepIn,
 img.reverseStepOut,
 img.replay-previous,
 img.replay-next,
-img.resume {
+img.resume,
+img.shortcuts {
   background-color: var(--theme-body-color);
 }
 
@@ -3502,6 +3516,10 @@ img.resume {
   mask: url("chrome://devtools/skin/images/debugger/forward.svg") no-repeat;
   mask-size: 75%;
   margin-top: 5px;
+}
+
+.command-bar img.shortcuts {
+  mask: url("chrome://devtools/skin/images/help.svg") no-repeat;
 }
 
 .command-bar .replay-inactive {
@@ -3933,6 +3951,7 @@ html .welcomebox .toggle-button-end.collapsed {
   margin-inline-start: 3px;
   margin-top: 3px;
   cursor: default;
+  height: 27px;
 }
 
 .source-tab:first-child {

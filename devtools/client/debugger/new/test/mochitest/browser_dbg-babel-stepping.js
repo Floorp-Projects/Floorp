@@ -5,52 +5,12 @@
 requestLongerTimeout(4);
 
 async function breakpointSteps(dbg, fixture, { line, column }, steps) {
-  const { selectors: { getBreakpoint, getBreakpoints }, getState } = dbg;
-
   const filename = `fixtures/${fixture}/input.js`;
-  await waitForSources(dbg, filename);
-
-  ok(true, "Original sources exist");
-  const source = findSource(dbg, filename);
-
-  await selectSource(dbg, source);
-
-  // Test that breakpoint is not off by a line.
-  await addBreakpoint(dbg, source, line);
-
-  is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
-
-  ok(
-    getBreakpoint(getState(), { sourceId: source.id, line, column }),
-    "Breakpoint has correct line"
-  );
-
   const fnName = fixture.replace(/-([a-z])/g, (s, c) => c.toUpperCase());
 
-  const invokeResult = invokeInTab(fnName);
-
-  let invokeFailed = await Promise.race([
-    waitForPaused(dbg),
-    invokeResult.then(() => new Promise(() => {}), () => true)
-  ]);
-
-  if (invokeFailed) {
-    return invokeResult;
-  }
-
-  assertPausedLocation(dbg);
-
-  await removeBreakpoint(dbg, source.id, line, column);
-
-  is(getBreakpoints(getState()).size, 0, "Breakpoint reverted");
-
-  await runSteps(dbg, source, steps);
-
-  await resume(dbg);
-
-  // If the invoke errored later somehow, capture here so the error is
-  // reported nicely.
-  await invokeResult;
+  await invokeWithBreakpoint(dbg, fnName, filename, { line, column }, async source => {
+    await runSteps(dbg, source, steps);
+  });
 
   ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
 }
