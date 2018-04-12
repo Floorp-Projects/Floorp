@@ -13,7 +13,6 @@ use std::os::raw::{c_char, c_int, c_void};
 use std::ptr;
 use std::rc::Rc;
 use std::str;
-use std::iter::repeat;
 use std::ffi::{CString, CStr};
 use ffi;
 
@@ -61,6 +60,45 @@ fn calculate_length(width: GLsizei, height: GLsizei, format: GLenum, pixel_type:
     };
 
     return (width * height * colors * depth) as usize;
+}
+
+// https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.10
+fn get_uniform_iv_vector_length(uniform_type: &GLuint) -> usize {
+    match *uniform_type {
+        ffi::BOOL |
+        ffi::INT |
+        ffi::SAMPLER_2D |
+        ffi::SAMPLER_CUBE => 1,
+        ffi::INT_VEC2 |
+        ffi::BOOL_VEC2 => 2,
+        ffi::INT_VEC3 |
+        ffi::BOOL_VEC3 => 3,
+        ffi::INT_VEC4 |
+        ffi::BOOL_VEC4 => 4,
+        _ => panic!("Invalid location argument"),
+    }
+}
+
+// https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.10
+fn get_uniform_fv_vector_length(uniform_type: &GLuint) -> usize {
+    match *uniform_type {
+        ffi::FLOAT => 1,
+        ffi::FLOAT_VEC2 => 2,
+        ffi::FLOAT_VEC3 => 3,
+        ffi::FLOAT_VEC4 |
+        ffi::FLOAT_MAT2 => 4,
+        ffi::FLOAT_MAT3 => 9,
+        ffi::FLOAT_MAT4 => 16,
+        _ => panic!("Invalid location argument"),
+    }
+}
+
+pub struct DebugMessage {
+    pub message: String,
+    pub source: GLenum,
+    pub ty: GLenum,
+    pub id: GLenum,
+    pub severity: GLenum,
 }
 
 pub trait Gl {
@@ -130,6 +168,8 @@ pub trait Gl {
     fn active_texture(&self, texture: GLenum);
     fn attach_shader(&self, program: GLuint, shader: GLuint);
     fn bind_attrib_location(&self, program: GLuint, index: GLuint, name: &str);
+    fn get_uniform_iv(&self, program: GLuint, location: GLint) -> Vec<GLint>;
+    fn get_uniform_fv(&self, program: GLuint, location: GLint) -> Vec<GLfloat>;
     fn get_uniform_block_index(&self, program: GLuint, name: &str) -> GLuint;
     fn get_uniform_indices(&self,  program: GLuint, names: &[&str]) -> Vec<GLuint>;
     fn bind_buffer_base(&self, target: GLenum, index: GLuint, buffer: GLuint);
@@ -143,6 +183,7 @@ pub trait Gl {
     fn bind_renderbuffer(&self, target: GLenum, renderbuffer: GLuint);
     fn bind_framebuffer(&self, target: GLenum, framebuffer: GLuint);
     fn bind_texture(&self, target: GLenum, texture: GLuint);
+    fn draw_buffers(&self, bufs: &[GLenum]);
     fn tex_image_2d(&self,
                     target: GLenum,
                     level: GLint,
@@ -265,6 +306,12 @@ pub trait Gl {
     fn get_integer_64iv(&self, name: GLenum, index: GLuint) -> GLint64;
     fn get_boolean_v(&self, name: GLenum) -> GLboolean;
     fn get_float_v(&self, name: GLenum) -> GLfloat;
+    fn get_framebuffer_attachment_parameter_iv(&self,
+                                               target: GLenum,
+                                               attachment: GLenum,
+                                               pname: GLenum) -> GLint;
+    fn get_tex_parameter_iv(&self, target: GLenum, name: GLenum) -> GLint;
+    fn get_tex_parameter_fv(&self, target: GLenum, name: GLenum) -> GLfloat;
     fn tex_parameter_i(&self, target: GLenum, pname: GLenum, param: GLint);
     fn tex_parameter_f(&self, target: GLenum, pname: GLenum, param: GLfloat);
     fn framebuffer_texture_2d(&self,
@@ -312,6 +359,7 @@ pub trait Gl {
                                offset: GLuint);
     fn vertex_attrib_divisor(&self, index: GLuint, divisor: GLuint);
     fn viewport(&self, x: GLint, y: GLint, width: GLsizei, height: GLsizei);
+    fn get_viewport(&self) -> (GLint, GLint, GLsizei, GLsizei);
     fn scissor(&self, x: GLint, y: GLint, width: GLsizei, height: GLsizei);
     fn line_width(&self, width: GLfloat);
     fn use_program(&self, program: GLuint);
@@ -456,6 +504,14 @@ pub trait Gl {
         program: GLuint,
         name: &str,
     ) -> GLint;
+
+    fn alias_point_size_range(&self) -> (GLfloat, GLfloat);
+
+    /// Returns the the maximum supported width and height of the viewport.
+    fn max_viewport_dims(&self) -> (GLint, GLint);
+
+    // GL_KHR_debug
+    fn get_debug_messages(&self) -> Vec<DebugMessage>;
 }
 
 #[inline]

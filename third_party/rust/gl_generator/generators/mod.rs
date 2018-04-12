@@ -65,12 +65,16 @@ pub fn gen_enum_item<W>(enm: &Enum, types_prefix: &str, dest: &mut W) -> io::Res
 pub fn gen_types<W>(api: Api, dest: &mut W) -> io::Result<()>
     where W: io::Write
 {
+    if let Api::Egl = api {
+        try!(writeln!(dest, "{}", include_str!("templates/types/egl.rs")));
+        return Ok(());
+    }
+
     try!(writeln!(dest, "{}", include_str!("templates/types/gl.rs")));
 
     match api {
         Api::Glx => try!(writeln!(dest, "{}", include_str!("templates/types/glx.rs"))),
         Api::Wgl => try!(writeln!(dest, "{}", include_str!("templates/types/wgl.rs"))),
-        Api::Egl => try!(writeln!(dest, "{}", include_str!("templates/types/egl.rs"))),
         _ => {}
     }
 
