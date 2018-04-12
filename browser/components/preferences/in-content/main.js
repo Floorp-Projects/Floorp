@@ -1295,7 +1295,7 @@ var gMainPane = {
 
   // nsISupports
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsIDOMEventListener]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   // nsIObserver
 
@@ -1327,7 +1327,7 @@ var gMainPane = {
   },
 
 
-  // nsIDOMEventListener
+  // EventListener
 
   handleEvent(aEvent) {
     if (aEvent.type == "unload") {

@@ -349,7 +349,7 @@ var BookmarkPropertiesPanel = {
     acceptButton.disabled = acceptButtonDisabled;
   },
 
-  // nsIDOMEventListener
+  // EventListener
   handleEvent: function BPP_handleEvent(aEvent) {
     var target = aEvent.target;
     switch (aEvent.type) {
@@ -373,8 +373,7 @@ var BookmarkPropertiesPanel = {
 
   // nsISupports
   QueryInterface: function BPP_QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIDOMEventListener) ||
-        aIID.equals(Ci.nsISupports))
+    if (aIID.equals(Ci.nsISupports))
       return this;
 
     throw Cr.NS_NOINTERFACE;

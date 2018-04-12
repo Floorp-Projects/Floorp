@@ -555,7 +555,7 @@ CompositorBridgeParent::RecvWaitOnTransactionProcessed()
 mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRendering()
 {
-  if (mOptions.UseWebRender()) {
+  if (mWrBridge) {
     mWrBridge->FlushRendering();
     return IPC_OK();
   }
@@ -570,7 +570,7 @@ CompositorBridgeParent::RecvFlushRendering()
 mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRenderingAsync()
 {
-  if (mOptions.UseWebRender()) {
+  if (mWrBridge) {
     mWrBridge->FlushRenderingAsync();
     return IPC_OK();
   }
@@ -698,9 +698,9 @@ CompositorBridgeParent::PauseComposition()
   if (!mPaused) {
     mPaused = true;
 
-    if (!mOptions.UseWebRender()) {
+    if (mCompositor) {
       mCompositor->Pause();
-    } else {
+    } else if (mWrBridge) {
       mWrBridge->Pause();
     }
     TimeStamp now = TimeStamp::Now();

@@ -161,7 +161,7 @@ function registerRunTests() {
       form.appendChild(password);
 
       var observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
-        var formLikeRoot = subject.QueryInterface(SpecialPowers.Ci.nsIDOMNode);
+        var formLikeRoot = subject;
         if (formLikeRoot.id !== "observerforcer")
           return;
         SpecialPowers.removeObserver(observer, "passwordmgr-processed-form");

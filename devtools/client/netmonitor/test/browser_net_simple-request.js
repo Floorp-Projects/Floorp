@@ -21,9 +21,6 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  is(document.querySelector(".network-details-panel-toggle").hasAttribute("disabled"),
-    true,
-    "The pane toggle button should be disabled when the frontend is opened.");
   ok(document.querySelector(".request-list-empty-notice"),
     "An empty notice should be displayed when the frontend is opened.");
   is(store.getState().requests.requests.size, 0,
@@ -33,9 +30,6 @@ add_task(async function() {
 
   await reloadAndWait();
 
-  is(document.querySelector(".network-details-panel-toggle").hasAttribute("disabled"),
-    false,
-    "The pane toggle button should be enabled after the first request.");
   ok(!document.querySelector(".request-list-empty-notice"),
     "The empty notice should be hidden after the first request.");
   is(store.getState().requests.requests.size, 1,
@@ -45,9 +39,6 @@ add_task(async function() {
 
   await reloadAndWait();
 
-  is(document.querySelector(".network-details-panel-toggle").hasAttribute("disabled"),
-    false,
-    "The pane toggle button should be still be enabled after a reload.");
   ok(!document.querySelector(".request-list-empty-notice"),
     "The empty notice should be still hidden after a reload.");
   is(store.getState().requests.requests.size, 1,
@@ -57,9 +48,6 @@ add_task(async function() {
 
   store.dispatch(Actions.clearRequests());
 
-  is(document.querySelector(".network-details-panel-toggle").hasAttribute("disabled"),
-    true,
-    "The pane toggle button should be disabled when after clear.");
   ok(document.querySelector(".request-list-empty-notice"),
     "An empty notice should be displayed again after clear.");
   is(store.getState().requests.requests.size, 0,

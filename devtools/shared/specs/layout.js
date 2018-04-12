@@ -31,6 +31,15 @@ const layoutSpec = generateActorSpec({
       }
     },
 
+    getCurrentGrid: {
+      request: {
+        node: Arg(0, "domnode"),
+      },
+      response: {
+        grid: RetVal("nullable:grid")
+      }
+    },
+
     getGrids: {
       request: {
         rootNode: Arg(0, "domnode")
