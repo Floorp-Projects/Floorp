@@ -746,7 +746,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                       JS::Handle<JSObject*> proto,
                       const NativeProperties* properties,
                       const NativeProperties* chromeOnlyProperties,
-                      const char* name, bool defineOnGlobal)
+                      const char* name, bool isChrome, bool defineOnGlobal)
 {
   JS::Rooted<JSObject*> constructor(cx);
   MOZ_ASSERT(constructorProto);
@@ -802,7 +802,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
     }
   }
 
-  if (chromeOnlyProperties) {
+  if (chromeOnlyProperties && isChrome) {
     if (chromeOnlyProperties->HasStaticMethods() &&
         !DefinePrefable(cx, constructor,
                         chromeOnlyProperties->StaticMethods())) {
@@ -983,11 +983,14 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
              "Must have a constructor proto if we plan to create a constructor "
              "object");
 
+  bool isChrome = nsContentUtils::ThreadsafeIsSystemCaller(aCx);
+
   JS::Rooted<JSObject*> proto(cx);
   if (protoClass) {
     proto =
       CreateInterfacePrototypeObject(cx, global, protoProto, protoClass,
-                                     properties, chromeOnlyProperties,
+                                     properties,
+                                     isChrome ? chromeOnlyProperties : nullptr,
                                      unscopableNames, isGlobal);
     if (!proto) {
       return;
@@ -1005,6 +1008,7 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                                       constructorClass, ctorNargs,
                                       namedConstructors, proto, properties,
                                       chromeOnlyProperties, name,
+                                      isChrome,
                                       defineOnGlobal);
     if (!interface) {
       if (protoCache) {

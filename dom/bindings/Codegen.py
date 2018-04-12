@@ -3079,7 +3079,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             properties = "nullptr"
         if self.properties.hasChromeOnly():
-            chromeProperties = "nsContentUtils::ThreadsafeIsSystemCaller(aCx) ? sChromeOnlyNativeProperties.Upcast() : nullptr"
+            chromeProperties = "sChromeOnlyNativeProperties.Upcast()"
         else:
             chromeProperties = "nullptr"
 
