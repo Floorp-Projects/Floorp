@@ -83,7 +83,6 @@ WebRenderBridgeChild::DoDestroy()
 void
 WebRenderBridgeChild::AddWebRenderParentCommand(const WebRenderParentCommand& aCmd)
 {
-  MOZ_ASSERT(mIsInTransaction || mIsInClearCachedResources);
   mParentCommands.AppendElement(aCmd);
 }
 
@@ -198,25 +197,23 @@ void
 WebRenderBridgeChild::AddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId,
                                                         const CompositableHandle& aHandle)
 {
-  MOZ_ASSERT(!mDestroyed);
-  SendAddPipelineIdForCompositable(aPipelineId, aHandle, true);
+  AddWebRenderParentCommand(
+    OpAddPipelineIdForCompositable(aPipelineId, aHandle, /* isAsync */ true));
 }
 
 void
 WebRenderBridgeChild::AddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
                                                    const CompositableHandle& aHandle)
 {
-  MOZ_ASSERT(!mDestroyed);
-  SendAddPipelineIdForCompositable(aPipelineId, aHandle, false);
+  AddWebRenderParentCommand(
+    OpAddPipelineIdForCompositable(aPipelineId, aHandle, /* isAsync */ false));
 }
 
 void
 WebRenderBridgeChild::RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId)
 {
-  if (!IPCOpen()) {
-    return;
-  }
-  SendRemovePipelineIdForCompositable(aPipelineId);
+  AddWebRenderParentCommand(
+    OpRemovePipelineIdForCompositable(aPipelineId));
 }
 
 wr::ExternalImageId
@@ -230,23 +227,17 @@ WebRenderBridgeChild::GetNextExternalImageId()
 wr::ExternalImageId
 WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aCompositable)
 {
-  MOZ_ASSERT(!mDestroyed);
-  MOZ_ASSERT(aCompositable->IsConnected());
-
   wr::ExternalImageId imageId = GetNextExternalImageId();
-  SendAddExternalImageIdForCompositable(imageId, aCompositable->GetIPCHandle());
+  AddWebRenderParentCommand(
+    OpAddExternalImageIdForCompositable(imageId, aCompositable->GetIPCHandle()));
   return imageId;
 }
 
 void
 WebRenderBridgeChild::DeallocExternalImageId(const wr::ExternalImageId& aImageId)
 {
-  if (mDestroyed) {
-    // This can happen if the IPC connection was torn down, because, e.g.
-    // the GPU process died.
-    return;
-  }
-  SendRemoveExternalImageId(aImageId);
+  AddWebRenderParentCommand(
+    OpRemoveExternalImageId(aImageId));
 }
 
 struct FontFileDataSink

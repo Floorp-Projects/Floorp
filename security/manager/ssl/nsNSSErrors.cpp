@@ -31,6 +31,10 @@ nsNSSErrors::getOverrideErrorStringName(PRErrorCode aErrorCode)
     case SEC_ERROR_REUSED_ISSUER_AND_SERIAL:
       id_str = "PSMERR_HostReusedIssuerSerial";
       break;
+
+    case mozilla::pkix::MOZILLA_PKIX_ERROR_MITM_DETECTED:
+      id_str = "certErrorTrust_MitM";
+      break;
   }
 
   return id_str;

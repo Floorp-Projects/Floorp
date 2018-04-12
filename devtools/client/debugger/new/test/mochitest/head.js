@@ -252,6 +252,7 @@ function waitForSelectedSource(dbg, url) {
   return waitForState(
     dbg,
     state => {
+
       const source = dbg.selectors.getSelectedSource(state);
       const isLoaded = source && sourceUtils.isLoaded(source);
       if (!isLoaded) {
@@ -713,7 +714,10 @@ async function reload(dbg, ...sources) {
  * @static
  */
 async function navigate(dbg, url, ...sources) {
+  info(`Navigating to ${url}`)
+  const navigated =  waitForDispatch(dbg, "NAVIGATE");
   await dbg.client.navigate(url);
+  await navigated;
   return waitForSources(dbg, ...sources);
 }
 
@@ -941,6 +945,7 @@ const selectors = {
     `.expressions-list .expression-container:nth-child(${i}) .object-delimiter + *`,
   expressionClose: i =>
     `.expressions-list .expression-container:nth-child(${i}) .close`,
+  expressionInput: '.expressions-list  input.input-expression',
   expressionNodes: ".expressions-list .tree-node",
   scopesHeader: ".scopes-pane ._header",
   breakpointItem: i => `.breakpoints-list .breakpoint:nth-of-type(${i})`,
@@ -1103,8 +1108,11 @@ function getScopeValue(dbg, index) {
 }
 
 function toggleObjectInspectorNode(node) {
+
   const objectInspector = node.closest(".object-inspector");
   const properties = objectInspector.querySelectorAll(".node").length;
+
+  log(`Toggling node ${node.innerText}`)
   node.click();
   return waitUntil(
     () => objectInspector.querySelectorAll(".node").length !== properties

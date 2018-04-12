@@ -107,12 +107,6 @@ class ZoneGroup
     }
 #endif
 
-  private:
-    /* Linked list of all Debugger objects in the group. */
-    ZoneGroupData<mozilla::LinkedList<js::Debugger>> debuggerList_;
-  public:
-    mozilla::LinkedList<js::Debugger>& debuggerList() { return debuggerList_.ref(); }
-
     // Number of Ion compilations which were finished off thread and are
     // waiting to be lazily linked. This is only set while holding the helper
     // thread state lock, but may be read from at other times.

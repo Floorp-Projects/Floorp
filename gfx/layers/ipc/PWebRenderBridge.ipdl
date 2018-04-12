@@ -18,14 +18,6 @@ using mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
-using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::FontInstanceKey from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::MaybeFontInstanceOptions from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::MaybeFontInstancePlatformOptions from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::BuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::layers::WebRenderScrollData from "mozilla/layers/WebRenderScrollData.h";
@@ -56,10 +48,6 @@ parent:
   async UpdateResources(OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems);
   async ParentCommands(WebRenderParentCommand[] commands);
   sync GetSnapshot(PTexture texture);
-  async AddPipelineIdForCompositable(PipelineId aImageId, CompositableHandle aHandle, bool aAsync);
-  async RemovePipelineIdForCompositable(PipelineId aPipelineId);
-  async AddExternalImageIdForCompositable(ExternalImageId aImageId, CompositableHandle aHandle);
-  async RemoveExternalImageId(ExternalImageId aImageId);
   async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
   async ClearCachedResources();
   // Schedule a composite if one isn't already scheduled.

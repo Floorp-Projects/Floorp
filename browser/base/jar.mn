@@ -130,6 +130,7 @@ browser.jar:
 *       content/browser/license.html                  (/toolkit/content/license.html)
 % override chrome://global/content/license.html chrome://browser/content/license.html
         content/browser/blockedSite.xhtml               (content/blockedSite.xhtml)
+        content/browser/blockedSite.js                  (content/blockedSite.js)
 
 % override chrome://global/content/netError.xhtml chrome://browser/content/aboutNetError.xhtml
 

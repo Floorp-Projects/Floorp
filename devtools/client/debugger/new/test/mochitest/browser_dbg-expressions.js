@@ -46,8 +46,9 @@ async function editExpression(dbg, input) {
   // Position cursor reliably at the end of the text.
   pressKey(dbg, "End");
   type(dbg, input);
+  const evaluated = waitForDispatch(dbg, "EVALUATE_EXPRESSIONS");
   pressKey(dbg, "Enter");
-  await waitForDispatch(dbg, "EVALUATE_EXPRESSION");
+  await evaluated;
 }
 
 add_task(async function() {
