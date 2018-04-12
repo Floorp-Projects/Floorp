@@ -783,6 +783,13 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                                JSPROP_READONLY | JSPROP_PERMANENT)) {
       return nullptr;
     }
+
+    if (isChrome && !JS_DefineFunction(cx, constructor, "isInstance",
+                                       InterfaceHasInstance, 1,
+                                       // Don't bother making it enumerable
+                                       0)) {
+      return nullptr;
+    }
   }
 
   if (properties) {
@@ -983,7 +990,7 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
              "Must have a constructor proto if we plan to create a constructor "
              "object");
 
-  bool isChrome = nsContentUtils::ThreadsafeIsSystemCaller(aCx);
+  bool isChrome = nsContentUtils::ThreadsafeIsSystemCaller(cx);
 
   JS::Rooted<JSObject*> proto(cx);
   if (protoClass) {
@@ -1752,6 +1759,26 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                            desc, cacheOnHolder);
     }
 
+    if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_ISINSTANCE) &&
+        DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj))->
+          wantsInterfaceHasInstance) {
+      cacheOnHolder = true;
+      JSNativeWrapper interfaceIsInstanceWrapper = { InterfaceIsInstance,
+                                                      nullptr };
+      JSObject* funObj = XrayCreateFunction(cx, wrapper,
+                                            interfaceIsInstanceWrapper, 1, id);
+      if (!funObj) {
+        return false;
+      }
+
+      desc.value().setObject(*funObj);
+      desc.setAttributes(0);
+      desc.object().set(wrapper);
+      desc.setSetter(nullptr);
+      desc.setGetter(nullptr);
+      return true;
+    }
+
     if (id == SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::hasInstance)) &&
         DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj))->
           wantsInterfaceHasInstance) {
@@ -2504,33 +2531,53 @@ InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
 }
 
 bool
-InterfaceIsInstance(JSContext* cx, unsigned argc, JS::Value* vp,
-                    prototypes::ID prototypeID, int depth)
+InterfaceIsInstance(JSContext* cx, unsigned argc, JS::Value* vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  if (MOZ_UNLIKELY(args.length() < 1)) {
-    nsPrintfCString message("%s.isInstance",
-                            NamesOfInterfacesWithProtos(prototypeID));
-    return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, message.get());
-  }
 
-  if (!args[0].isObject()) {
-    nsPrintfCString message("Argument 1 of %s.isInstance",
-                            NamesOfInterfacesWithProtos(prototypeID));
-    return ThrowErrorMessage(cx, MSG_NOT_OBJECT, message.get());
-  }
-
-  JS::Rooted<JSObject*> instance(cx, &args[0].toObject());
-
-  const DOMJSClass* domClass =
-    GetDOMClass(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
-
-  if (domClass && domClass->mInterfaceChain[depth] == prototypeID) {
-    args.rval().setBoolean(true);
+  // If the thing we were passed is not an object, return false.
+  if (!args.get(0).isObject()) {
+    args.rval().setBoolean(false);
     return true;
   }
 
-  args.rval().setBoolean(false);
+  // If "this" isn't a DOM constructor or is a constructor for an interface
+  // without a prototype, return false.
+  if (!args.thisv().isObject()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  JS::Rooted<JSObject*> thisObj(cx, js::CheckedUnwrap(&args.thisv().toObject()));
+  if (!thisObj) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  const js::Class* thisClass = js::GetObjectClass(thisObj);
+  if (!IsDOMIfaceAndProtoClass(thisClass)) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  const DOMIfaceAndProtoJSClass* clasp =
+    DOMIfaceAndProtoJSClass::FromJSClass(thisClass);
+
+  if (clasp->mType != eInterface ||
+      clasp->mPrototypeID == prototypes::id::_ID_Count) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  JS::Rooted<JSObject*> instance(cx, &args[0].toObject());
+  const DOMJSClass* domClass =
+    GetDOMClass(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
+
+  bool isInstance =
+    domClass &&
+    domClass->mInterfaceChain[clasp->mDepth] == clasp->mPrototypeID;
+
+  args.rval().setBoolean(isInstance);
   return true;
 }
 
