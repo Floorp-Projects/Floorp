@@ -35,6 +35,7 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nscore.h"                     // for nsAString, etc
 #include "LayerTreeInvalidation.h"
+#include "mozilla/layers/CompositorScreenshotGrabber.h"
 
 class gfxContext;
 
@@ -445,7 +446,6 @@ private:
    */
   void RenderDebugOverlay(const gfx::IntRect& aBounds);
 
-
   RefPtr<CompositingRenderTarget> PushGroupForLayerEffects();
   void PopGroupForLayerEffects(RefPtr<CompositingRenderTarget> aPreviousTarget,
                                gfx::IntRect aClipRect,
@@ -470,6 +470,7 @@ private:
   bool mIsCompositorReady;
 
   RefPtr<CompositingRenderTarget> mTwoPassTmpTarget;
+  CompositorScreenshotGrabber mProfilerScreenshotGrabber;
   RefPtr<TextRenderer> mTextRenderer;
 
 #ifdef USE_SKIA
