@@ -8,6 +8,8 @@ use api::{ColorF, ColorU};
 use api::{FontInstanceFlags, FontInstancePlatformOptions};
 use api::{FontKey, FontRenderMode, FontTemplate, FontVariation};
 use api::{GlyphDimensions, GlyphKey, LayerToWorldTransform, SubpixelDirection};
+#[cfg(feature = "pathfinder")]
+use api::NativeFontHandle;
 #[cfg(any(test, feature = "pathfinder"))]
 use api::DeviceIntSize;
 #[cfg(not(feature = "pathfinder"))]
@@ -128,12 +130,12 @@ impl FontTransform {
         )
     }
 
-    #[cfg(not(feature = "pathfinder"))]
+    #[allow(dead_code)]
     pub fn determinant(&self) -> f64 {
         self.scale_x as f64 * self.scale_y as f64 - self.skew_y as f64 * self.skew_x as f64
     }
 
-    #[cfg(not(feature = "pathfinder"))]
+    #[allow(dead_code)]
     pub fn compute_scale(&self) -> Option<(f64, f64)> {
         let det = self.determinant();
         if det != 0.0 {
@@ -145,7 +147,7 @@ impl FontTransform {
         }
     }
 
-    #[cfg(not(feature = "pathfinder"))]
+    #[allow(dead_code)]
     pub fn pre_scale(&self, scale_x: f32, scale_y: f32) -> Self {
         FontTransform::new(
             self.scale_x * scale_x,
@@ -155,7 +157,7 @@ impl FontTransform {
         )
     }
 
-    #[cfg(not(feature = "pathfinder"))]
+    #[allow(dead_code)]
     pub fn invert_scale(&self, x_scale: f64, y_scale: f64) -> Self {
         self.pre_scale(x_scale.recip() as f32, y_scale.recip() as f32)
     }
@@ -453,6 +455,7 @@ impl GlyphRasterizer {
     #[cfg(feature = "pathfinder")]
     fn add_font_to_pathfinder(&mut self, font_key: &FontKey, template: &FontTemplate) {
         let font_contexts = Arc::clone(&self.font_contexts);
+        debug!("add_font_to_pathfinder({:?})", font_key);
         font_contexts.lock_pathfinder_context().add_font(&font_key, &template);
     }
 
@@ -861,10 +864,10 @@ impl AddFont for PathfinderFontContext {
     fn add_font(&mut self, font_key: &FontKey, template: &FontTemplate) {
         match *template {
             FontTemplate::Raw(ref bytes, index) => {
-                drop(self.add_font_from_memory(font_key, bytes.clone(), index));
+                drop(self.add_font_from_memory(&font_key, bytes.clone(), index))
             }
             FontTemplate::Native(ref native_font_handle) => {
-                drop(self.add_native_font(font_key, (*native_font_handle).clone().0));
+                drop(self.add_native_font(&font_key, NativeFontHandleWrapper(native_font_handle)))
             }
         }
     }
@@ -1067,3 +1070,6 @@ fn request_render_task_from_pathfinder(glyph_key: &GlyphKey,
 
     Ok((root_task_id, false))
 }
+
+#[cfg(feature = "pathfinder")]
+pub struct NativeFontHandleWrapper<'a>(pub &'a NativeFontHandle);
