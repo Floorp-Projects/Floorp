@@ -889,62 +889,6 @@ nsNSSCertificateDB::ExportPKCS12File(nsIFile* aFile, uint32_t count,
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::FindCertByEmailAddress(const nsACString& aEmailAddress,
-                                           nsIX509Cert** _retval)
-{
-  nsresult rv = BlockUntilLoadableRootsLoaded();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
-  NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
-
-  const nsCString& flatEmailAddress = PromiseFlatCString(aEmailAddress);
-  UniqueCERTCertList certlist(
-    PK11_FindCertsFromEmailAddress(flatEmailAddress.get(), nullptr));
-  if (!certlist)
-    return NS_ERROR_FAILURE;
-
-  // certlist now contains certificates with the right email address,
-  // but they might not have the correct usage or might even be invalid
-
-  if (CERT_LIST_END(CERT_LIST_HEAD(certlist), certlist))
-    return NS_ERROR_FAILURE; // no certs found
-
-  CERTCertListNode *node;
-  // search for a valid certificate
-  for (node = CERT_LIST_HEAD(certlist);
-       !CERT_LIST_END(node, certlist);
-       node = CERT_LIST_NEXT(node)) {
-
-    UniqueCERTCertList unusedCertChain;
-    mozilla::pkix::Result result =
-      certVerifier->VerifyCert(node->cert, certificateUsageEmailRecipient,
-                               mozilla::pkix::Now(),
-                               nullptr /*XXX pinarg*/,
-                               nullptr /*hostname*/,
-                               unusedCertChain);
-    if (result == mozilla::pkix::Success) {
-      break;
-    }
-  }
-
-  if (CERT_LIST_END(node, certlist)) {
-    // no valid cert found
-    return NS_ERROR_FAILURE;
-  }
-
-  // node now contains the first valid certificate with correct usage
-  RefPtr<nsNSSCertificate> nssCert = nsNSSCertificate::Create(node->cert);
-  if (!nssCert)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nssCert.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNSSCertificateDB::ConstructX509FromBase64(const nsACString& base64,
                                     /*out*/ nsIX509Cert** _retval)
 {
