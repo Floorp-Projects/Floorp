@@ -35,7 +35,7 @@ function debug(aMsg) {
 // * multiprocess
 // * user agent override
 class GeckoViewSettings extends GeckoViewModule {
-  init() {
+  onInit() {
     this._isSafeBrowsingInit = false;
     this._useDesktopMode = false;
 

@@ -53,25 +53,38 @@ class GeckoViewModule {
       }, "GeckoView:Unregister"
     );
 
-    this.init();
+    this.onInit();
     this.onSettingsUpdate();
   }
 
-  // Override this with module initialization.
-  init() {}
+  // Override to initialize module.
+  onInit() {}
 
-  // Called when settings have changed. Access settings via this.settings.
+  // Override to detect settings change. Access settings via this.settings.
   onSettingsUpdate() {}
+
+  // Override to enable module after setting a Java delegate.
+  onEnable() {}
+
+  // Override to disable module after clearing the Java delegate.
+  onDisable() {}
 
   _register() {
     if (this.isRegistered) {
       return;
     }
-    this.register();
+    this.onEnable();
     this.isRegistered = true;
   }
 
-  register() {}
+  _unregister() {
+    if (!this.isRegistered) {
+      return;
+    }
+    this._eventProxy.unregisterListener();
+    this.onDisable();
+    this.isRegistered = false;
+  }
 
   registerContent(aUri) {
     if (this._isContentLoaded) {
@@ -97,17 +110,6 @@ class GeckoViewModule {
   registerListener(aEventList) {
     this._eventProxy.registerListener(aEventList);
   }
-
-  _unregister() {
-    if (!this.isRegistered) {
-      return;
-    }
-    this._eventProxy.unregisterListener();
-    this.unregister();
-    this.isRegistered = false;
-  }
-
-  unregister() {}
 
   get settings() {
     let view = this.window.arguments[0].QueryInterface(Ci.nsIAndroidView);

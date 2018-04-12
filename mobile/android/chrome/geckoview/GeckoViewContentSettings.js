@@ -18,8 +18,8 @@ function debug(aMsg) {
 // * tracking protection
 // * desktop mode
 class GeckoViewContentSettings extends GeckoViewContentModule {
-  init() {
-    debug("init");
+  onInit() {
+    debug("onInit");
     this._useTrackingProtection = false;
     this._useDesktopMode = false;
   }
