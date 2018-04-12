@@ -99,8 +99,10 @@ const toolkitVariableMap = [
 
 // Get the theme variables from the app resource directory.
 // This allows per-app variables.
-ChromeUtils.import("resource:///modules/ThemeVariableMap.jsm");
-
+ChromeUtils.defineModuleGetter(this, "ThemeContentPropertyList",
+  "resource:///modules/ThemeVariableMap.jsm");
+ChromeUtils.defineModuleGetter(this, "ThemeVariableMap",
+  "resource:///modules/ThemeVariableMap.jsm");
 ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
 
@@ -116,6 +118,7 @@ function LightweightThemeConsumer(aDocument) {
 
   this._win.addEventListener("resolutionchange", this);
   this._win.addEventListener("unload", this, { once: true });
+  this._win.messageManager.addMessageListener("LightweightTheme:Request", this);
 
   let darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
   darkThemeMediaQuery.addListener(temp.LightweightThemeManager);
@@ -141,6 +144,13 @@ LightweightThemeConsumer.prototype = {
     }
 
     this._update(parsedData);
+  },
+
+  receiveMessage({ name, target }) {
+    if (name == "LightweightTheme:Request") {
+      let contentThemeData = _getContentProperties(this._doc, this._active, this._lastData);
+      target.messageManager.sendAsyncMessage("LightweightTheme:Update", contentThemeData);
+    }
   },
 
   handleEvent(aEvent) {
@@ -204,8 +214,28 @@ LightweightThemeConsumer.prototype = {
       root.setAttribute("lwthemefooter", "true");
     else
       root.removeAttribute("lwthemefooter");
+
+    let contentThemeData = _getContentProperties(this._doc, active, aData);
+
+    let browserMessageManager = this._win.getGroupMessageManager("browsers");
+    browserMessageManager.broadcastAsyncMessage(
+      "LightweightTheme:Update", contentThemeData
+    );
   }
 };
+
+function _getContentProperties(doc, active, data) {
+  if (!active) {
+    return {};
+  }
+  let properties = {};
+  for (let property in data) {
+    if (ThemeContentPropertyList.includes(property)) {
+      properties[property] = _parseRGBA(_sanitizeCSSColor(doc, data[property]));
+    }
+  }
+  return properties;
+}
 
 function _setImage(aRoot, aActive, aVariableName, aURLs) {
   if (aURLs && !Array.isArray(aURLs)) {
