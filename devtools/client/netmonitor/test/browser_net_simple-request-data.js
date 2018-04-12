@@ -104,10 +104,7 @@ function test() {
     });
 
     expectEvent(EVENTS.RECEIVED_REQUEST_HEADERS, async () => {
-      await waitUntil(() => {
-        let requestItem = getSortedRequests(store.getState()).get(0);
-        return requestItem && requestItem.requestHeaders;
-      });
+      await waitForRequestData(store, ["requestHeaders"]);
 
       let requestItem = getSortedRequests(store.getState()).get(0);
 
@@ -130,10 +127,7 @@ function test() {
     });
 
     expectEvent(EVENTS.RECEIVED_REQUEST_COOKIES, async () => {
-      await waitUntil(() => {
-        let requestItem = getSortedRequests(store.getState()).get(0);
-        return requestItem && requestItem.requestCookies;
-      });
+      await waitForRequestData(store, ["requestCookies"]);
 
       let requestItem = getSortedRequests(store.getState()).get(0);
 
@@ -156,10 +150,7 @@ function test() {
     });
 
     expectEvent(EVENTS.RECEIVED_RESPONSE_HEADERS, async () => {
-      await waitUntil(() => {
-        let requestItem = getSortedRequests(store.getState()).get(0);
-        return requestItem && requestItem.responseHeaders;
-      });
+      await waitForRequestData(store, ["responseHeaders"]);
 
       let requestItem = getSortedRequests(store.getState()).get(0);
 
@@ -180,10 +171,7 @@ function test() {
     });
 
     expectEvent(EVENTS.RECEIVED_RESPONSE_COOKIES, async () => {
-      await waitUntil(() => {
-        let requestItem = getSortedRequests(store.getState()).get(0);
-        return requestItem && requestItem.responseCookies;
-      });
+      await waitForRequestData(store, ["responseCookies"]);
 
       let requestItem = getSortedRequests(store.getState()).get(0);
 
@@ -202,14 +190,12 @@ function test() {
     });
 
     expectEvent(EVENTS.STARTED_RECEIVING_RESPONSE, async () => {
-      await waitUntil(() => {
-        let requestItem = getSortedRequests(store.getState()).get(0);
-        return requestItem &&
-               requestItem.httpVersion &&
-               requestItem.status &&
-               requestItem.statusText &&
-               requestItem.headersSize;
-      });
+      await waitForRequestData(store, [
+        "httpVersion",
+        "status",
+        "statusText",
+        "headersSize"
+      ]);
 
       let requestItem = getSortedRequests(store.getState()).get(0);
 
@@ -242,13 +228,11 @@ function test() {
     });
 
     expectEvent(EVENTS.PAYLOAD_READY, async () => {
-      await waitUntil(() => {
-        let requestItem = getSortedRequests(store.getState()).get(0);
-        return requestItem &&
-               requestItem.transferredSize &&
-               requestItem.contentSize &&
-               requestItem.mimeType;
-      });
+      await waitForRequestData(store, [
+        "transferredSize",
+        "contentSize",
+        "mimeType"
+      ]);
 
       let requestItem = getSortedRequests(store.getState()).get(0);
 
@@ -275,10 +259,7 @@ function test() {
     });
 
     expectEvent(EVENTS.UPDATING_EVENT_TIMINGS, async () => {
-      await waitUntil(() => {
-        let requestItem = getSortedRequests(store.getState()).get(0);
-        return requestItem && requestItem.eventTimings;
-      });
+      await waitForRequestData(store, ["eventTimings"]);
 
       let requestItem = getSortedRequests(store.getState()).get(0);
 
@@ -300,10 +281,7 @@ function test() {
     });
 
     expectEvent(EVENTS.RECEIVED_EVENT_TIMINGS, async () => {
-      await waitUntil(() => {
-        let requestItem = getSortedRequests(store.getState()).get(0);
-        return requestItem && requestItem.eventTimings;
-      });
+      await waitForRequestData(store, ["eventTimings"]);
 
       let requestItem = getSortedRequests(store.getState()).get(0);
 

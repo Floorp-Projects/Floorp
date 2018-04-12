@@ -32,10 +32,7 @@ add_task(async function() {
 });
 
 async function verifyHeaders(monitor) {
-  let { document, store, windowRequire } = monitor.panelWin;
-  let {
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  let { document, store } = monitor.panelWin;
 
   info("Check if Request-Headers and Response-Headers are sorted");
 
@@ -44,10 +41,7 @@ async function verifyHeaders(monitor) {
     document.querySelectorAll(".request-list-item")[0]);
   await wait;
 
-  await waitUntil(() => {
-    let request = getSortedRequests(store.getState()).get(0);
-    return request.requestHeaders && request.responseHeaders;
-  });
+  await waitForRequestData(store, ["requestHeaders", "responseHeaders"]);
 
   let expectedResponseHeaders = ["cache-control", "connection", "content-length",
                                  "content-type", "date", "expires", "foo-bar",
