@@ -6,7 +6,8 @@ add_task(async function init() {
     set: [["browser.urlbar.oneOffSearches", true],
           ["browser.urlbar.suggest.searches", true]],
   });
-  let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.moveEngine(engine, 0);
   Services.search.currentEngine = engine;
