@@ -9,13 +9,13 @@
 #ifndef mozilla_css_ErrorReporter_h_
 #define mozilla_css_ErrorReporter_h_
 
-#include "nsString.h"
+#include "nsStringFwd.h"
 
 struct nsCSSToken;
+class nsIDocument;
 class nsIURI;
 
 namespace mozilla {
-class ServoStyleSheet;
 class StyleSheet;
 
 namespace css {
@@ -37,11 +37,9 @@ public:
     }
   }
 
-  bool ShouldReportErrors() const
-  {
-    EnsureGlobalsInitialized();
-    return sReportErrors;
-  }
+  static bool ShouldReportErrors(const nsIDocument&);
+
+  bool ShouldReportErrors();
 
   void OutputError(uint32_t aLineNumber,
                    uint32_t aLineOffset,
@@ -55,7 +53,7 @@ public:
   // no parameters
   void ReportUnexpected(const char *aMessage);
   // one parameter which has already been escaped appropriately
-  void ReportUnexpectedUnescaped(const char *aMessage,
+  void ReportUnexpectedUnescaped(const char* aMessage,
                                  const nsAutoString& aParam);
 
 private:
@@ -69,8 +67,8 @@ private:
   nsAutoString mError;
   nsString mErrorLine;
   nsString mFileName;
-  const StyleSheet *mSheet;
-  const Loader *mLoader;
+  const StyleSheet* mSheet;
+  const Loader* mLoader;
   nsIURI *mURI;
   uint64_t mInnerWindowID;
   uint32_t mErrorLineNumber;
