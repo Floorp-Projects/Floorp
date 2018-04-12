@@ -19,6 +19,8 @@ const DECKINDEX_TABSDISABLED = 1;
 const DECKINDEX_FETCHING = 2;
 const DECKINDEX_NOCLIENTS = 3;
 
+const SAMPLE_TAB_URL = "https://example.com/";
+
 var initialLocation = gBrowser.currentURI.spec;
 var newTab = null;
 
@@ -335,13 +337,14 @@ add_task(async function() {
           // on the second to last page we should have 22 items shown
           // (because we have to show at least NEXT_PAGE_MIN_TABS=5 tabs on the last page)
           for (let i = 1; i <= 77; i++) {
-            allTabsDesktop.push({ title: "Tab #" + i });
+            allTabsDesktop.push({ title: "Tab #" + i, url: SAMPLE_TAB_URL });
           }
           return allTabsDesktop;
         }(),
       }
     ]);
   };
+
 
   gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, lastSync: new Date(),
                       email: "foo@bar.com" });
@@ -370,6 +373,7 @@ add_task(async function() {
       node = node.nextSibling;
       is(node.getAttribute("itemtype"), "tab", "node is a tab");
       is(node.getAttribute("label"), "Tab #" + (i + 1), "the tab is the correct one");
+      is(node.getAttribute("targetURI"), SAMPLE_TAB_URL, "url is the correct one");
     }
     let showMoreButton;
     if (showMoreLabel) {
@@ -381,6 +385,14 @@ add_task(async function() {
     is(node, null, "no more entries");
 
     return showMoreButton;
+  }
+
+  async function checkCanOpenURL() {
+    let tabList = document.getElementById("PanelUI-remotetabs-tabslist");
+    let node = tabList.firstChild.nextSibling;
+    let promiseTabOpened = BrowserTestUtils.waitForLocationChange(gBrowser, SAMPLE_TAB_URL);
+    node.click();
+    await promiseTabOpened;
   }
 
   let showMoreButton;
@@ -400,6 +412,6 @@ add_task(async function() {
   await clickShowMoreButton();
 
   checkTabsPage(77, null);
-
-  await hideOverflow();
+  /* calling this will close the overflow menu */
+  await checkCanOpenURL();
 });
