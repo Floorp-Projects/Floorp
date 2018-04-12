@@ -1257,3 +1257,9 @@ XPCJSContext::AfterProcessTask(uint32_t aNewRecursionDepth)
 
     mozilla::jsipc::AfterProcessTask();
 }
+
+bool
+XPCJSContext::IsSystemCaller() const
+{
+    return nsContentUtils::IsSystemCaller(Context());
+}

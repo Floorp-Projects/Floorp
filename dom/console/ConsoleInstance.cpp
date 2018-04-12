@@ -80,7 +80,7 @@ WebIDLevelToConsoleUtilsLevel(ConsoleLevel aLevel)
 
 ConsoleInstance::ConsoleInstance(JSContext* aCx,
                                  const ConsoleInstanceOptions& aOptions)
-  : mConsole(new Console(aCx, nullptr))
+  : mConsole(new Console(aCx, nullptr, 0, 0))
 {
   mConsole->mConsoleID = aOptions.mConsoleID;
   mConsole->mPassedInnerID = aOptions.mInnerID;
