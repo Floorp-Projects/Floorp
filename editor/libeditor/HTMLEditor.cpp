@@ -2916,8 +2916,16 @@ HTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
 NS_IMETHODIMP
 HTMLEditor::RemoveStyleSheet(const nsAString& aURL)
 {
+  return RemoveStyleSheetWithTransaction(aURL);
+}
+
+nsresult
+HTMLEditor::RemoveStyleSheetWithTransaction(const nsAString& aURL)
+{
   RefPtr<StyleSheet> sheet = GetStyleSheetForURL(aURL);
-  NS_ENSURE_TRUE(sheet, NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(!sheet)) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   RefPtr<RemoveStyleSheetTransaction> transaction =
     RemoveStyleSheetTransaction::Create(*this, *sheet);
@@ -3419,8 +3427,9 @@ HTMLEditor::StyleSheetLoaded(StyleSheet* aSheet,
 {
   AutoPlaceholderBatch batchIt(this);
 
-  if (!mLastStyleSheetURL.IsEmpty())
-    RemoveStyleSheet(mLastStyleSheetURL);
+  if (!mLastStyleSheetURL.IsEmpty()) {
+    RemoveStyleSheetWithTransaction(mLastStyleSheetURL);
+  }
 
   RefPtr<AddStyleSheetTransaction> transaction =
     AddStyleSheetTransaction::Create(*this, *aSheet);
