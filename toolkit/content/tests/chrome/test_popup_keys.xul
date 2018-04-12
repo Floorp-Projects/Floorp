@@ -48,9 +48,6 @@ function runTests()
 {
   (async function() {
     var popup = $("popup");
-    popup.enableKeyboardNavigator(false);
-    is(popup.getAttribute("ignorekeys"), "true", "keys disabled");
-    popup.enableKeyboardNavigator(true);
     is(popup.hasAttribute("ignorekeys"), false, "keys enabled");
 
     let popupShownPromise = waitForEvent(popup, "popupshown");
