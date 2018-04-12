@@ -57,7 +57,7 @@ public:
   static void SetUpdaterThread(const wr::WrWindowId& aWindowId);
   static void PrepareForSceneSwap(const wr::WrWindowId& aWindowId);
   static void CompleteSceneSwap(const wr::WrWindowId& aWindowId,
-                                wr::WrPipelineInfo* aInfo);
+                                const wr::WrPipelineInfo& aInfo);
   static void ProcessPendingTasks(const wr::WrWindowId& aWindowId);
 
   void ClearTree(LayersId aRootLayersId);

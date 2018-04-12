@@ -66,6 +66,10 @@ let PaymentFrameScript = {
    */
   exposeUtilityFunctions() {
     let PaymentDialogUtils = {
+      getAddressLabel(address) {
+        return FormAutofillUtils.getAddressLabel(address);
+      },
+
       isCCNumber(value) {
         return FormAutofillUtils.isCCNumber(value);
       },

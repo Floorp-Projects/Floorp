@@ -1718,8 +1718,7 @@ class Marionette(object):
         return self._from_json(rv)
 
     def execute_async_script(self, script, script_args=(), new_sandbox=True,
-                             sandbox="default", script_timeout=None,
-                             debug_script=False):
+                             sandbox="default", script_timeout=None):
         """Executes an asynchronous JavaScript script, and returns the
         result (or None if the script does return a value).
 
@@ -1736,8 +1735,6 @@ class Marionette(object):
         :param new_sandbox: If False, preserve global variables from
             the last execute_*script call. This is True by default,
             in which case no globals are preserved.
-        :param debug_script: Capture javascript exceptions when in
-            `CONTEXT_CHROME` context.
 
         Usage example:
 
@@ -1762,11 +1759,9 @@ class Marionette(object):
                 "sandbox": sandbox,
                 "scriptTimeout": script_timeout,
                 "line": int(frame[1]),
-                "filename": filename,
-                "debug_script": debug_script}
+                "filename": filename}
 
-        rv = self._send_message("WebDriver:ExecuteAsyncScript",
-                                body, key="value")
+        rv = self._send_message("WebDriver:ExecuteAsyncScript", body, key="value")
         return self._from_json(rv)
 
     def find_element(self, method, target, id=None):

@@ -8,16 +8,10 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 
-<!DOCTYPE dialog [
-  <!ENTITY % preferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
-  %preferencesDTD;
-  <!ENTITY % fontsDTD SYSTEM "chrome://browser/locale/preferences/fonts.dtd">
-  %fontsDTD;
-]>
-
 <dialog id="FontsDialog" type="child" class="prefwindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&fontsDialog.title;"
+        data-l10n-id="fonts-window"
+        data-l10n-attrs="title"
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
         role="dialog"
@@ -25,11 +19,14 @@
         ondialoghelp="openPrefsHelp()"
         onbeforeaccept="return gFontsDialog.onBeforeAccept();">
 
+  <link rel="localization" href="browser/preferences/fonts.ftl"/>
+  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
+
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
 
   <keyset>
-    <key key="&windowClose.key;" modifiers="accel" oncommand="Preferences.close(event)"/>
+    <key data-l10n-id="fonts-window-close" modifiers="accel" oncommand="Preferences.close(event)"/>
   </keyset>
 
   <vbox id="FontsDialogPane" class="prefpane largeDialogContainer">
@@ -42,42 +39,42 @@
     <groupbox>
       <caption>
         <hbox align="center">
-          <label accesskey="&fonts.accesskey;" control="selectLangs">&fonts.label;</label>
+          <label data-l10n-id="fonts-langgroup-header" control="selectLangs"/>
         </hbox>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
           <menulist id="selectLangs" preference="font.language.group"
                     onsyncfrompreference="return gFontsDialog.readFontLanguageGroup();">
             <menupopup>
-              <menuitem value="ar"              label="&font.langGroup.arabic;"/>
-              <menuitem value="x-armn"          label="&font.langGroup.armenian;"/>
-              <menuitem value="x-beng"          label="&font.langGroup.bengali;"/>
-              <menuitem value="zh-CN"           label="&font.langGroup.simpl-chinese;"/>
-              <menuitem value="zh-HK"           label="&font.langGroup.trad-chinese-hk;"/>
-              <menuitem value="zh-TW"           label="&font.langGroup.trad-chinese;"/>
-              <menuitem value="x-cyrillic"      label="&font.langGroup.cyrillic;"/>
-              <menuitem value="x-devanagari"    label="&font.langGroup.devanagari;"/>
-              <menuitem value="x-ethi"          label="&font.langGroup.ethiopic;"/>
-              <menuitem value="x-geor"          label="&font.langGroup.georgian;"/>
-              <menuitem value="el"              label="&font.langGroup.el;"/>
-              <menuitem value="x-gujr"          label="&font.langGroup.gujarati;"/>
-              <menuitem value="x-guru"          label="&font.langGroup.gurmukhi;"/>
-              <menuitem value="he"              label="&font.langGroup.hebrew;"/>
-              <menuitem value="ja"              label="&font.langGroup.japanese;"/>
-              <menuitem value="x-knda"          label="&font.langGroup.kannada;"/>
-              <menuitem value="x-khmr"          label="&font.langGroup.khmer;"/>
-              <menuitem value="ko"              label="&font.langGroup.korean;"/>
-              <menuitem value="x-western"       label="&font.langGroup.latin;"/>
-              <menuitem value="x-mlym"          label="&font.langGroup.malayalam;"/>
-              <menuitem value="x-math"          label="&font.langGroup.math;"/>
-              <menuitem value="x-orya"          label="&font.langGroup.odia;"/>
-              <menuitem value="x-sinh"          label="&font.langGroup.sinhala;"/>
-              <menuitem value="x-tamil"         label="&font.langGroup.tamil;"/>
-              <menuitem value="x-telu"          label="&font.langGroup.telugu;"/>
-              <menuitem value="th"              label="&font.langGroup.thai;"/>
-              <menuitem value="x-tibt"          label="&font.langGroup.tibetan;"/>
-              <menuitem value="x-cans"          label="&font.langGroup.canadian;"/>
-              <menuitem value="x-unicode"       label="&font.langGroup.other;"/>
+              <menuitem value="ar"              data-l10n-id="fonts-langgroup-arabic"/>
+              <menuitem value="x-armn"          data-l10n-id="fonts-langgroup-armenian"/>
+              <menuitem value="x-beng"          data-l10n-id="fonts-langgroup-bengali"/>
+              <menuitem value="zh-CN"           data-l10n-id="fonts-langgroup-simpl-chinese"/>
+              <menuitem value="zh-HK"           data-l10n-id="fonts-langgroup-trad-chinese-hk"/>
+              <menuitem value="zh-TW"           data-l10n-id="fonts-langgroup-trad-chinese"/>
+              <menuitem value="x-cyrillic"      data-l10n-id="fonts-langgroup-cyrillic"/>
+              <menuitem value="x-devanagari"    data-l10n-id="fonts-langgroup-devanagari"/>
+              <menuitem value="x-ethi"          data-l10n-id="fonts-langgroup-ethiopic"/>
+              <menuitem value="x-geor"          data-l10n-id="fonts-langgroup-georgian"/>
+              <menuitem value="el"              data-l10n-id="fonts-langgroup-el"/>
+              <menuitem value="x-gujr"          data-l10n-id="fonts-langgroup-gujarati"/>
+              <menuitem value="x-guru"          data-l10n-id="fonts-langgroup-gurmukhi"/>
+              <menuitem value="he"              data-l10n-id="fonts-langgroup-hebrew"/>
+              <menuitem value="ja"              data-l10n-id="fonts-langgroup-japanese"/>
+              <menuitem value="x-knda"          data-l10n-id="fonts-langgroup-kannada"/>
+              <menuitem value="x-khmr"          data-l10n-id="fonts-langgroup-khmer"/>
+              <menuitem value="ko"              data-l10n-id="fonts-langgroup-korean"/>
+              <menuitem value="x-western"       data-l10n-id="fonts-langgroup-latin"/>
+              <menuitem value="x-mlym"          data-l10n-id="fonts-langgroup-malayalam"/>
+              <menuitem value="x-math"          data-l10n-id="fonts-langgroup-math"/>
+              <menuitem value="x-orya"          data-l10n-id="fonts-langgroup-odia"/>
+              <menuitem value="x-sinh"          data-l10n-id="fonts-langgroup-sinhala"/>
+              <menuitem value="x-tamil"         data-l10n-id="fonts-langgroup-tamil"/>
+              <menuitem value="x-telu"          data-l10n-id="fonts-langgroup-telugu"/>
+              <menuitem value="th"              data-l10n-id="fonts-langgroup-thai"/>
+              <menuitem value="x-tibt"          data-l10n-id="fonts-langgroup-tibetan"/>
+              <menuitem value="x-cans"          data-l10n-id="fonts-langgroup-canadian"/>
+              <menuitem value="x-unicode"       data-l10n-id="fonts-langgroup-other"/>
             </menupopup>
           </menulist>
         </hbox>
@@ -98,20 +95,19 @@
 
           <row align="center">
             <hbox align="center" pack="end">
-              <label accesskey="&proportional2.accesskey;" control="defaultFontType">&proportional2.label;</label>
+              <label data-l10n-id="fonts-proportional-header" control="defaultFontType"/>
             </hbox>
             <!-- This <hbox> is needed to position search tooltips correctly. -->
             <hbox>
               <menulist id="defaultFontType" flex="1" style="width: 0px;">
                 <menupopup>
-                  <menuitem value="serif" label="&useDefaultFontSerif.label;"/>
-                  <menuitem value="sans-serif" label="&useDefaultFontSansSerif.label;"/>
+                  <menuitem value="serif" data-l10n-id="fonts-default-serif"/>
+                  <menuitem value="sans-serif" data-l10n-id="fonts-default-sans-serif"/>
                 </menupopup>
               </menulist>
             </hbox>
             <hbox align="center" pack="end">
-              <label accesskey="&sizeProportional.accesskey;"
-                     control="sizeVar">&size2.label;</label>
+              <label data-l10n-id="fonts-proportional-size" control="sizeVar"/>
             </hbox>
             <!-- This <hbox> is needed to position search tooltips correctly. -->
             <hbox>
@@ -148,7 +144,7 @@
           </row>
           <row align="center">
             <hbox align="center" pack="end">
-              <label accesskey="&serif2.accesskey;" control="serif">&serif2.label;</label>
+              <label data-l10n-id="fonts-serif" control="serif"/>
             </hbox>
             <hbox>
               <menulist id="serif" flex="1" style="width: 0px;" delayprefsave="true"
@@ -158,7 +154,7 @@
           </row>
           <row align="center">
             <hbox align="center" pack="end">
-              <label accesskey="&sans-serif2.accesskey;" control="sans-serif">&sans-serif2.label;</label>
+              <label data-l10n-id="fonts-sans-serif" control="sans-serif"/>
             </hbox>
             <hbox>
               <menulist id="sans-serif" flex="1" style="width: 0px;" delayprefsave="true"
@@ -168,15 +164,14 @@
           </row>
           <row align="center">
             <hbox align="center" pack="end">
-              <label accesskey="&monospace2.accesskey;" control="monospace">&monospace2.label;</label>
+              <label data-l10n-id="fonts-monospace" control="monospace"/>
             </hbox>
             <hbox>
               <menulist id="monospace" flex="1" style="width: 0px;" crop="right" delayprefsave="true"
                         onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
             </hbox>
             <hbox align="center" pack="end">
-              <label accesskey="&sizeMonospace.accesskey;"
-                     control="sizeMono">&size2.label;</label>
+              <label data-l10n-id="fonts-monospace-size" control="sizeMono"/>
             </hbox>
             <hbox>
               <menulist id="sizeMono" delayprefsave="true">
@@ -216,12 +211,12 @@
       <hbox flex="1">
         <spacer flex="1"/>
         <hbox align="center" pack="end">
-          <label accesskey="&minSize2.accesskey;" control="minSize">&minSize2.label;</label>
+          <label data-l10n-id="fonts-minsize" control="minSize"/>
           <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
           <hbox>
             <menulist id="minSize">
               <menupopup>
-                <menuitem value="0" label="&minSize.none;"/>
+                <menuitem value="0" data-l10n-id="fonts-minsize-none"/>
                 <menuitem value="9" label="9"/>
                 <menuitem value="10" label="10"/>
                 <menuitem value="11" label="11"/>
@@ -256,7 +251,7 @@
       <separator class="groove"/>
       <hbox>
         <checkbox id="useDocumentFonts"
-                  label="&allowPagesToUseOwn.label;" accesskey="&allowPagesToUseOwn.accesskey;"
+                  data-l10n-id="fonts-allow-own"
                   preference="browser.display.use_document_fonts"
                   onsyncfrompreference="return gFontsDialog.readUseDocumentFonts();"
                   onsynctopreference="return gFontsDialog.writeUseDocumentFonts();"/>
@@ -265,33 +260,32 @@
 
     <!-- Text Encoding -->
     <groupbox>
-      <caption><label>&languages.customize.Fallback2.grouplabel;</label></caption>
-      <description>&languages.customize.Fallback2.desc;</description>
+      <caption><label data-l10n-id="fonts-languages-fallback-header"/></caption>
+      <description data-l10n-id="fonts-languages-fallback-desc"/>
       <hbox align="center">
-        <label accesskey="&languages.customize.Fallback3.accesskey;"
-               control="DefaultCharsetList">&languages.customize.Fallback3.label;</label>
+        <label data-l10n-id="fonts-languages-fallback-label" control="DefaultCharsetList"/>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
           <menulist id="DefaultCharsetList" preference="intl.charset.fallback.override">
             <menupopup>
-              <menuitem label="&languages.customize.Fallback.auto;"        value=""/>
-              <menuitem label="&languages.customize.Fallback.arabic;"      value="windows-1256"/>
-              <menuitem label="&languages.customize.Fallback.baltic;"      value="windows-1257"/>
-              <menuitem label="&languages.customize.Fallback.ceiso;"       value="ISO-8859-2"/>
-              <menuitem label="&languages.customize.Fallback.cewindows;"   value="windows-1250"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-auto"        value=""/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-arabic"      value="windows-1256"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-baltic"      value="windows-1257"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-ceiso"       value="ISO-8859-2"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-cewindows"   value="windows-1250"/>
               <!-- Using gbk instead of GBK for compat with previously-stored prefs.
                   The value gets normalized in dom/encoding/FallbackEncoding.cpp. -->
-              <menuitem label="&languages.customize.Fallback.simplified;"  value="gbk"/>
-              <menuitem label="&languages.customize.Fallback.traditional;" value="Big5"/>
-              <menuitem label="&languages.customize.Fallback.cyrillic;"    value="windows-1251"/>
-              <menuitem label="&languages.customize.Fallback.greek;"       value="ISO-8859-7"/>
-              <menuitem label="&languages.customize.Fallback.hebrew;"      value="windows-1255"/>
-              <menuitem label="&languages.customize.Fallback.japanese;"    value="Shift_JIS"/>
-              <menuitem label="&languages.customize.Fallback.korean;"      value="EUC-KR"/>
-              <menuitem label="&languages.customize.Fallback.thai;"        value="windows-874"/>
-              <menuitem label="&languages.customize.Fallback.turkish;"     value="windows-1254"/>
-              <menuitem label="&languages.customize.Fallback.vietnamese;"  value="windows-1258"/>
-              <menuitem label="&languages.customize.Fallback.other;"       value="windows-1252"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-simplified"  value="gbk"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-traditional" value="Big5"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-cyrillic"    value="windows-1251"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-greek"       value="ISO-8859-7"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-hebrew"      value="windows-1255"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-japanese"    value="Shift_JIS"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-korean"      value="EUC-KR"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-thai"        value="windows-874"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-turkish"     value="windows-1254"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-vietnamese"  value="windows-1258"/>
+              <menuitem data-l10n-id="fonts-languages-fallback-name-other"       value="windows-1252"/>
             </menupopup>
           </menulist>
         </hbox>

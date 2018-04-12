@@ -464,6 +464,9 @@ BasePrincipal::CloneStrippingUserContextIdAndFirstPartyDomain()
 bool
 BasePrincipal::AddonAllowsLoad(nsIURI* aURI, bool aExplicit /* = false */)
 {
+  if (Is<ExpandedPrincipal>()) {
+    return As<ExpandedPrincipal>()->AddonAllowsLoad(aURI, aExplicit);
+  }
   if (auto policy = AddonPolicy()) {
     return policy->CanAccessURI(aURI, aExplicit);
   }

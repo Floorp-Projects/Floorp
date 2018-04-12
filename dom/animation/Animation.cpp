@@ -1418,11 +1418,12 @@ Animation::UpdateEffect()
 }
 
 void
-Animation::FlushStyle() const
+Animation::FlushUnanimatedStyle() const
 {
   nsIDocument* doc = GetRenderedDocument();
   if (doc) {
-    doc->FlushPendingNotifications(FlushType::Style);
+    doc->FlushPendingNotifications(
+      ChangesToFlush(FlushType::Style, false /* flush animations */));
   }
 }
 

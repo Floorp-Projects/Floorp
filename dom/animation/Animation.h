@@ -432,7 +432,11 @@ protected:
   void UpdateFinishedState(SeekFlag aSeekFlag,
                            SyncNotifyFlag aSyncNotifyFlag);
   void UpdateEffect();
-  void FlushStyle() const;
+  /**
+   * Flush all pending styles other than throttled animation styles (e.g.
+   * animations running on the compositor).
+   */
+  void FlushUnanimatedStyle() const;
   void PostUpdate();
   void ResetFinishedPromise();
   void MaybeResolveFinishedPromise();

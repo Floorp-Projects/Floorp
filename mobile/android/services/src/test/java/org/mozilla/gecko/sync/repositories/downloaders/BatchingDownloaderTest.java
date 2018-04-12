@@ -12,7 +12,6 @@ import android.support.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.InfoCollections;
@@ -30,6 +29,7 @@ import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
+import org.robolectric.RobolectricTestRunner;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -49,7 +49,7 @@ import ch.boye.httpclientandroidlib.message.BasicStatusLine;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class BatchingDownloaderTest {
     private MockSever15Repository serverRepository;
     private Server15RepositorySession repositorySession;

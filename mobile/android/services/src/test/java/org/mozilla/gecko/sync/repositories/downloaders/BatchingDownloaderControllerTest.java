@@ -7,14 +7,14 @@ package org.mozilla.gecko.sync.repositories.downloaders;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class BatchingDownloaderControllerTest {
     private BatchingDownloaderTest.MockSever15Repository serverRepository;
     private Server15RepositorySession repositorySession;

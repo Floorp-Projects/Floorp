@@ -11,7 +11,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
@@ -24,7 +24,7 @@ import java.util.UUID;
 import static org.junit.Assert.*;
 
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class BrowserDatabaseHelperTest {
     private TestSQLiteOpenHelper helper = new TestSQLiteOpenHelper();
     private final long NEVER_SYNCED_BOOKMARKS = -1;

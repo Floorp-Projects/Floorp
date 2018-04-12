@@ -7,15 +7,15 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.net.BaseResource;
+import org.robolectric.RobolectricTestRunner;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestFxAccountClient20 {
   protected static class MockFxAccountClient20 extends FxAccountClient20 {
     public MockFxAccountClient20(String serverURI, Executor executor) {

@@ -8,16 +8,18 @@
 <?xml-stylesheet href="chrome://browser/content/preferences/siteDataSettings.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/in-content/siteDataSettings.css" type="text/css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/siteDataSettings.dtd" >
-
 <dialog id="SiteDataRemoveSelectedDialog"
         windowtype="Browser:SiteDataRemoveSelected"
         width="500"
-        title="&removingDialog1.title;"
+        data-l10n-id="site-data-removing-window"
+        data-l10n-attrs="title"
         onload="gSiteDataRemoveSelected.init();"
         ondialogaccept="gSiteDataRemoveSelected.ondialogaccept(); return true;"
         ondialogcancel="gSiteDataRemoveSelected.ondialogcancel(); return true;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
+  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
   <script src="chrome://browser/content/preferences/siteDataRemoveSelected.js"/>
 
@@ -32,19 +34,20 @@
       <vbox flex="1">
         <!-- Only show this label on OS X because of no dialog title -->
         <label id="removing-label"
+               data-l10n-id="site-data-removing-header"
 #ifndef XP_MACOSX
                hidden="true"
 #endif
-        >&removingDialog1.title;</label>
+        />
         <separator class="thin"/>
-        <description id="removing-description">&removingSelected1.description;</description>
+        <description id="removing-description" data-l10n-id="site-data-removing-desc"/>
       </vbox>
     </hbox>
 
     <separator />
 
     <vbox flex="1">
-      <label>&siteTree3.label;</label>
+      <label data-l10n-id="site-data-removing-table"/>
       <separator class="thin"/>
       <tree id="sitesTree" flex="1" seltype="single" hidecolumnpicker="true">
         <treecols>
