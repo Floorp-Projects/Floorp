@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Testing a11y name ccomputation testcases</title>
+
+  <link rel="stylesheet"
+        type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // All test cases taken from https://www.w3.org/TR/accname-1.1/
+      // These were especially called out to demonstrate edge cases.
+
+      // Example 1 from section 4.3.1 under 2.B.
+      // Element1 should get its name from the text in element3.
+      // Element2 should not gets name from element1 because that already
+      // gets its name from another element.
+      testName("el1", "hello");
+      testName("el2", null);
+
+      // Example 2 from section 4.3.1 under 2.C.
+      // The buttons should get their name from their labels and the links.
+      testName("del_row1", "Delete Documentation.pdf");
+      testName("del_row2", "Delete HolidayLetter.pdf");
+
+      // Example 3 from section 4.3.1 under 2.F.
+      // Name should be own content text plus the value of the input plus
+      // more own inner text, separated by 1 space.
+      testName("chkbx", "Flash the screen 5 times");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <!-- el1 should be labeled, el2 should not. -->
+  <div id="el1" aria-labelledby="el3"></div>
+  <div id="el2" aria-labelledby="el1"></div>
+  <div id="el3"> hello </div>
+
+  <!-- The buttons should be labeled by themselves and the referenced link -->
+  <ul>
+    <li>
+      <a id="file_row1" href="./files/Documentation.pdf">Documentation.pdf</a>
+      <span role="button" tabindex="0" id="del_row1" aria-label="Delete"
+            aria-labelledby="del_row1 file_row1"></span>
+    </li>
+    <li>
+      <a id="file_row2" href="./files/HolidayLetter.pdf">HolidayLetter.pdf</a>
+      <span role="button" tabindex="0" id="del_row2" aria-label="Delete"
+            aria-labelledby="del_row2 file_row2"></span>
+    </li>
+  </ul>
+
+  <!-- Label from combined text and subtree -->
+  <div id="chkbx" role="checkbox" aria-checked="false">Flash the screen
+       <span role="textbox" aria-multiline="false"> 5 </span> times</div>
+</body>
+</html>
