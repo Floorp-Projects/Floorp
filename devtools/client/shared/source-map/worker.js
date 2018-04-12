@@ -1049,53 +1049,81 @@ WorkerDispatcher.prototype = {
     this.worker = null;
   },
 
-  task(method) {
-    return (...args) => {
+  task(method, { queue = false } = {}) {
+    const calls = [];
+    const push = args => {
       return new Promise((resolve, reject) => {
-        const id = this.msgId++;
-        this.worker.postMessage({ id, method, args });
+        if (queue && calls.length === 0) {
+          Promise.resolve().then(flush);
+        }
 
-        const listener = ({ data: result }) => {
-          if (result.id !== id) {
-            return;
-          }
+        calls.push([args, resolve, reject]);
 
-          if (!this.worker) {
-            return;
-          }
-
-          this.worker.removeEventListener("message", listener);
-          if (result.error) {
-            reject(result.error);
-          } else {
-            resolve(result.response);
-          }
-        };
-
-        this.worker.addEventListener("message", listener);
+        if (!queue) {
+          flush();
+        }
       });
     };
+
+    const flush = () => {
+      const items = calls.slice();
+      calls.length = 0;
+
+      const id = this.msgId++;
+      this.worker.postMessage({ id, method, calls: items.map(item => item[0]) });
+
+      const listener = ({ data: result }) => {
+        if (result.id !== id) {
+          return;
+        }
+
+        if (!this.worker) {
+          return;
+        }
+
+        this.worker.removeEventListener("message", listener);
+
+        result.results.forEach((resultData, i) => {
+          const [, resolve, reject] = items[i];
+
+          if (resultData.error) {
+            reject(resultData.error);
+          } else {
+            resolve(resultData.response);
+          }
+        });
+      };
+
+      this.worker.addEventListener("message", listener);
+    };
+
+    return (...args) => push(args);
   }
 };
 
 function workerHandler(publicInterface) {
   return function (msg) {
-    const { id, method, args } = msg.data;
-    try {
-      const response = publicInterface[method].apply(undefined, args);
-      if (response instanceof Promise) {
-        response.then(val => self.postMessage({ id, response: val }),
-        // Error can't be sent via postMessage, so be sure to
-        // convert to string.
-        err => self.postMessage({ id, error: err.toString() }));
-      } else {
-        self.postMessage({ id, response });
+    const { id, method, calls } = msg.data;
+
+    Promise.all(calls.map(args => {
+      try {
+        const response = publicInterface[method].apply(undefined, args);
+        if (response instanceof Promise) {
+          return response.then(val => ({ response: val }),
+          // Error can't be sent via postMessage, so be sure to
+          // convert to string.
+          err => ({ error: err.toString() }));
+        } else {
+          return { response };
+        }
+      } catch (error) {
+        // Error can't be sent via postMessage, so be sure to convert to
+        // string.
+        return { error: error.toString() };
       }
-    } catch (error) {
-      // Error can't be sent via postMessage, so be sure to convert to
-      // string.
-      self.postMessage({ id, error: error.toString() });
-    }
+    })).then(results => {
+      self.postMessage({ id, results });
+    });
   };
 }
 
@@ -2025,6 +2053,7 @@ exports.WasmRemap = WasmRemap;
 
 const {
   getOriginalURLs,
+  getGeneratedRanges,
   getGeneratedLocation,
   getAllGeneratedLocations,
   getOriginalLocation,
@@ -2042,6 +2071,7 @@ const { workerUtils: { workerHandler } } = __webpack_require__(1);
 // easier to unit test.
 self.onmessage = workerHandler({
   getOriginalURLs,
+  getGeneratedRanges,
   getGeneratedLocation,
   getAllGeneratedLocations,
   getOriginalLocation,
@@ -2067,8 +2097,65 @@ let getOriginalURLs = (() => {
   };
 })();
 
-let getGeneratedLocation = (() => {
+/**
+ * Given an original location, find the ranges on the generated file that
+ * are mapped from the original range containing the location.
+ */
+let getGeneratedRanges = (() => {
   var _ref2 = _asyncToGenerator(function* (location, originalSource) {
+    if (!isOriginalId(location.sourceId)) {
+      return [];
+    }
+
+    const generatedSourceId = originalToGeneratedId(location.sourceId);
+    const map = yield getSourceMap(generatedSourceId);
+    if (!map) {
+      return [];
+    }
+
+    if (!COMPUTED_SPANS.has(map)) {
+      COMPUTED_SPANS.add(map);
+      map.computeColumnSpans();
+    }
+
+    // We want to use 'allGeneratedPositionsFor' to get the _first_ generated
+    // location, but it hard-codes SourceMapConsumer.LEAST_UPPER_BOUND as the
+    // bias, making it search in the wrong direction for this usecase.
+    // To work around this, we use 'generatedPositionFor' and then look up the
+    // exact original location, making any bias value unnecessary, and then
+    // use that location for the call to 'allGeneratedPositionsFor'.
+    const genPos = map.generatedPositionFor({
+      source: originalSource.url,
+      line: location.line,
+      column: location.column == null ? 0 : location.column,
+      bias: SourceMapConsumer.GREATEST_LOWER_BOUND
+    });
+    if (genPos.line === null) return [];
+
+    const positions = map.allGeneratedPositionsFor(map.originalPositionFor({
+      line: genPos.line,
+      column: genPos.column
+    }));
+
+    return positions.map(function (mapping) {
+      return {
+        line: mapping.line,
+        columnStart: mapping.column,
+        columnEnd: mapping.lastColumn
+      };
+    }).sort(function (a, b) {
+      const line = a.line - b.line;
+      return line === 0 ? a.column - b.column : line;
+    });
+  });
+
+  return function getGeneratedRanges(_x2, _x3) {
+    return _ref2.apply(this, arguments);
+  };
+})();
+
+let getGeneratedLocation = (() => {
+  var _ref3 = _asyncToGenerator(function* (location, originalSource) {
     if (!isOriginalId(location.sourceId)) {
       return location;
     }
@@ -2093,13 +2180,13 @@ let getGeneratedLocation = (() => {
     };
   });
 
-  return function getGeneratedLocation(_x2, _x3) {
-    return _ref2.apply(this, arguments);
+  return function getGeneratedLocation(_x4, _x5) {
+    return _ref3.apply(this, arguments);
   };
 })();
 
 let getAllGeneratedLocations = (() => {
-  var _ref3 = _asyncToGenerator(function* (location, originalSource) {
+  var _ref4 = _asyncToGenerator(function* (location, originalSource) {
     if (!isOriginalId(location.sourceId)) {
       return [];
     }
@@ -2113,8 +2200,7 @@ let getAllGeneratedLocations = (() => {
     const positions = map.allGeneratedPositionsFor({
       source: originalSource.url,
       line: location.line,
-      column: location.column == null ? 0 : location.column,
-      bias: SourceMapConsumer.LEAST_UPPER_BOUND
+      column: location.column == null ? 0 : location.column
     });
 
     return positions.map(function ({ line, column }) {
@@ -2126,13 +2212,13 @@ let getAllGeneratedLocations = (() => {
     });
   });
 
-  return function getAllGeneratedLocations(_x4, _x5) {
-    return _ref3.apply(this, arguments);
+  return function getAllGeneratedLocations(_x6, _x7) {
+    return _ref4.apply(this, arguments);
   };
 })();
 
 let getOriginalLocation = (() => {
-  var _ref4 = _asyncToGenerator(function* (location) {
+  var _ref5 = _asyncToGenerator(function* (location) {
     if (!isGeneratedId(location.sourceId)) {
       return location;
     }
@@ -2160,13 +2246,13 @@ let getOriginalLocation = (() => {
     };
   });
 
-  return function getOriginalLocation(_x6) {
-    return _ref4.apply(this, arguments);
+  return function getOriginalLocation(_x8) {
+    return _ref5.apply(this, arguments);
   };
 })();
 
 let getOriginalSourceText = (() => {
-  var _ref5 = _asyncToGenerator(function* (originalSource) {
+  var _ref6 = _asyncToGenerator(function* (originalSource) {
     assert(isOriginalId(originalSource.id), "Source is not an original source");
 
     const generatedSourceId = originalToGeneratedId(originalSource.id);
@@ -2186,13 +2272,13 @@ let getOriginalSourceText = (() => {
     };
   });
 
-  return function getOriginalSourceText(_x7) {
-    return _ref5.apply(this, arguments);
+  return function getOriginalSourceText(_x9) {
+    return _ref6.apply(this, arguments);
   };
 })();
 
 let hasMappedSource = (() => {
-  var _ref6 = _asyncToGenerator(function* (location) {
+  var _ref7 = _asyncToGenerator(function* (location) {
     if (isOriginalId(location.sourceId)) {
       return true;
     }
@@ -2201,8 +2287,8 @@ let hasMappedSource = (() => {
     return loc.sourceId !== location.sourceId;
   });
 
-  return function hasMappedSource(_x8) {
-    return _ref6.apply(this, arguments);
+  return function hasMappedSource(_x10) {
+    return _ref7.apply(this, arguments);
   };
 })();
 
@@ -2237,6 +2323,8 @@ const {
 
 const { WasmRemap } = __webpack_require__(14);
 
+const COMPUTED_SPANS = new WeakSet();
+
 function applySourceMap(generatedId, url, code, mappings) {
   const generator = new SourceMapGenerator({ file: url });
   mappings.forEach(mapping => generator.addMapping(mapping));
@@ -2248,6 +2336,7 @@ function applySourceMap(generatedId, url, code, mappings) {
 
 module.exports = {
   getOriginalURLs,
+  getGeneratedRanges,
   getGeneratedLocation,
   getAllGeneratedLocations,
   getOriginalLocation,
