@@ -6,6 +6,7 @@
 
 #include "gc/Zone.h"
 
+#include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
 #include "jit/BaselineJIT.h"
@@ -134,7 +135,7 @@ Zone::getOrCreateDebuggers(JSContext* cx)
 void
 Zone::sweepBreakpoints(FreeOp* fop)
 {
-    if (!group() || group()->debuggerList().isEmpty())
+    if (!group() || fop->runtime()->debuggerList().isEmpty())
         return;
 
     /*
