@@ -2374,9 +2374,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("_SetCanonicalName",       intrinsic_SetCanonicalName,        2,0),
 
-    JS_INLINABLE_FN("IsArrayIterator",
-                    intrinsic_IsInstanceOfBuiltin<ArrayIteratorObject>, 1,0,
-                    IntrinsicIsArrayIterator),
+    JS_INLINABLE_FN("GuardToArrayIterator",
+                    intrinsic_GuardToBuiltin<ArrayIteratorObject>, 1,0,
+                    IntrinsicGuardToArrayIterator),
     JS_INLINABLE_FN("IsMapIterator",
                     intrinsic_IsInstanceOfBuiltin<MapIteratorObject>,   1,0,
                     IntrinsicIsMapIterator),
