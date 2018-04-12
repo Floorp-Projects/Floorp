@@ -489,6 +489,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         # now create the py3 venv
         self.py3_venv_configuration(python_path=self.py3_path, venv_path='py3venv')
         self.py3_create_venv()
+        self.py3_install_modules(["cffi==1.10.0"])
         requirements = [os.path.join(self.talos_path, 'talos', 'mitmproxy', 'mitmproxy_requirements.txt')]
         self.py3_install_requirement_files(requirements)
         # add py3 executables path to system path
