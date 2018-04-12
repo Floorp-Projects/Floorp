@@ -205,10 +205,20 @@ config = {
                         "--setpref=layers.acceleration.force-enabled=true"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
         },
+        "reftest-fonts": {
+            "options": ["--suite=reftest",
+                        "--setpref=layers.acceleration.force-enabled=true"],
+            "tests": ["tests/reftest/tests/layout/reftests/reftest_fonts.list"]
+        },
         "reftest-no-accel": {
             "options": ["--suite=reftest",
                         "--setpref=layers.acceleration.disabled=true"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
+        },
+        "reftest-no-accel-fonts": {
+            "options": ["--suite=reftest",
+                        "--setpref=layers.acceleration.disabled=true"],
+            "tests": ["tests/reftest/tests/layout/reftests/reftest_fonts.list"]
         },
     },
     "all_xpcshell_suites": {
