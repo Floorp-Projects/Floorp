@@ -255,6 +255,7 @@ bitflags! {
         const DISABLE_BATCHING  = 1 << 5;
         const EPOCHS            = 1 << 6;
         const COMPACT_PROFILER  = 1 << 7;
+        const ECHO_DRIVER_MESSAGES = 1 << 8;
     }
 }
 
@@ -1257,6 +1258,12 @@ impl LazyInitializedDebugRenderer {
     }
 }
 
+pub struct RendererVAOs {
+    prim_vao: VAO,
+    blur_vao: VAO,
+    clip_vao: VAO,
+}
+
 /// The renderer is responsible for submitting to the GPU the work prepared by the
 /// RenderBackend.
 pub struct Renderer {
@@ -1287,9 +1294,7 @@ pub struct Renderer {
     last_time: u64,
 
     pub gpu_profile: GpuProfiler<GpuProfileTag>,
-    prim_vao: VAO,
-    blur_vao: VAO,
-    clip_vao: VAO,
+    vaos: RendererVAOs,
 
     node_data_texture: VertexDataTexture,
     local_clip_rects_texture: VertexDataTexture,
@@ -1412,7 +1417,7 @@ impl Renderer {
         // gracefully fail now than panic as soon as a texture is allocated.
         let min_texture_size = 512;
         if device_max_size < min_texture_size {
-            println!(
+            error!(
                 "Device reporting insufficient max texture size ({})",
                 device_max_size
             );
@@ -1689,9 +1694,11 @@ impl Renderer {
             last_time: 0,
             gpu_profile,
             gpu_glyph_renderer,
-            prim_vao,
-            blur_vao,
-            clip_vao,
+            vaos: RendererVAOs {
+                prim_vao,
+                blur_vao,
+                clip_vao,
+            },
             node_data_texture,
             local_clip_rects_texture,
             render_task_texture,
@@ -2298,6 +2305,10 @@ impl Renderer {
             }
         }
 
+        if self.debug_flags.contains(DebugFlags::ECHO_DRIVER_MESSAGES) {
+            self.device.echo_driver_messages();
+        }
+
         self.backend_profile_counters.reset();
         self.profile_counters.reset();
         self.profile_counters.frame_counter.inc();
@@ -2512,11 +2523,7 @@ impl Renderer {
         vertex_array_kind: VertexArrayKind,
         stats: &mut RendererStats,
     ) {
-        let vao = get_vao(vertex_array_kind,
-                          &self.prim_vao,
-                          &self.clip_vao,
-                          &self.blur_vao,
-                          &self.gpu_glyph_renderer);
+        let vao = get_vao(vertex_array_kind, &self.vaos, &self.gpu_glyph_renderer);
 
         self.device.bind_vao(vao);
 
@@ -3920,9 +3927,9 @@ impl Renderer {
         self.render_task_texture.deinit(&mut self.device);
         self.device.delete_pbo(self.texture_cache_upload_pbo);
         self.texture_resolver.deinit(&mut self.device);
-        self.device.delete_vao(self.prim_vao);
-        self.device.delete_vao(self.clip_vao);
-        self.device.delete_vao(self.blur_vao);
+        self.device.delete_vao(self.vaos.prim_vao);
+        self.device.delete_vao(self.vaos.clip_vao);
+        self.device.delete_vao(self.vaos.blur_vao);
 
         #[cfg(feature = "debug_renderer")]
         {
@@ -4488,19 +4495,15 @@ impl Renderer {
     }
 }
 
-// FIXME(pcwalton): We should really gather up all the VAOs into a separate structure so that they
-// don't have to be passed in as parameters here.
 #[cfg(feature = "pathfinder")]
 fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
-               prim_vao: &'a VAO,
-               clip_vao: &'a VAO,
-               blur_vao: &'a VAO,
+               vaos: &'a RendererVAOs,
                gpu_glyph_renderer: &'a GpuGlyphRenderer)
                -> &'a VAO {
     match vertex_array_kind {
-        VertexArrayKind::Primitive => prim_vao,
-        VertexArrayKind::Clip => clip_vao,
-        VertexArrayKind::Blur => blur_vao,
+        VertexArrayKind::Primitive => &vaos.prim_vao,
+        VertexArrayKind::Clip => &vaos.clip_vao,
+        VertexArrayKind::Blur => &vaos.blur_vao,
         VertexArrayKind::VectorStencil => &gpu_glyph_renderer.vector_stencil_vao,
         VertexArrayKind::VectorCover => &gpu_glyph_renderer.vector_cover_vao,
     }
@@ -4508,15 +4511,13 @@ fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
 
 #[cfg(not(feature = "pathfinder"))]
 fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
-               prim_vao: &'a VAO,
-               clip_vao: &'a VAO,
-               blur_vao: &'a VAO,
+               vaos: &'a RendererVAOs,
                _: &'a GpuGlyphRenderer)
                -> &'a VAO {
     match vertex_array_kind {
-        VertexArrayKind::Primitive => prim_vao,
-        VertexArrayKind::Clip => clip_vao,
-        VertexArrayKind::Blur => blur_vao,
+        VertexArrayKind::Primitive => &vaos.prim_vao,
+        VertexArrayKind::Clip => &vaos.clip_vao,
+        VertexArrayKind::Blur => &vaos.blur_vao,
         VertexArrayKind::VectorStencil | VertexArrayKind::VectorCover => unreachable!(),
     }
 }

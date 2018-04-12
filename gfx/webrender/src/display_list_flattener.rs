@@ -570,7 +570,11 @@ impl<'a> DisplayListFlattener<'a> {
         let iframe_pipeline_id = info.pipeline_id;
         let pipeline = match self.scene.pipelines.get(&iframe_pipeline_id) {
             Some(pipeline) => pipeline,
-            None => return,
+            None => {
+                //TODO: assert/debug_assert?
+                error!("Unknown pipeline used for iframe {:?}", info);
+                return
+            },
         };
 
         self.id_to_index_mapper.initialize_for_pipeline(pipeline);
