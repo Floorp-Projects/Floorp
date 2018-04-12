@@ -34,11 +34,6 @@ public final class SessionTextInput {
         View getView();
         Handler getHandler(Handler defHandler);
         InputConnection onCreateInputConnection(EditorInfo attrs);
-        boolean onKeyPreIme(int keyCode, KeyEvent event);
-        boolean onKeyDown(int keyCode, KeyEvent event);
-        boolean onKeyUp(int keyCode, KeyEvent event);
-        boolean onKeyLongPress(int keyCode, KeyEvent event);
-        boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event);
         boolean isInputActive();
         void setShowSoftInputOnFocus(boolean showSoftInputOnFocus);
     }
@@ -55,12 +50,12 @@ public final class SessionTextInput {
         // ENDT_MONITOR stops the monitor for composing character rects.
         @WrapForJNI final int END_MONITOR = 3;
 
-        void sendKeyEvent(KeyEvent event, int action, int metaState);
+        void sendKeyEvent(@Nullable View view, boolean inputActive, int action,
+                          @NonNull KeyEvent event);
         Editable getEditable();
         void setBatchMode(boolean isBatchMode);
-        void setSuppressKeyUp(boolean suppress);
-        Handler setInputConnectionHandler(Handler handler);
-        void postToInputConnection(Runnable runnable);
+        Handler setInputConnectionHandler(@NonNull Handler handler);
+        void postToInputConnection(@NonNull Runnable runnable);
         void requestCursorUpdates(int requestMode);
     }
 
@@ -211,10 +206,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyPreIme(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        if (!ensureInputConnection()) {
-            return false;
-        }
-        return mInputConnection.onKeyPreIme(keyCode, event);
+        return mEditable.onKeyPreIme(getView(), isInputActive(), keyCode, event);
     }
 
     /**
@@ -226,10 +218,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyDown(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        if (!ensureInputConnection()) {
-            return false;
-        }
-        return mInputConnection.onKeyDown(keyCode, event);
+        return mEditable.onKeyDown(getView(), isInputActive(), keyCode, event);
     }
 
     /**
@@ -241,10 +230,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyUp(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        if (!ensureInputConnection()) {
-            return false;
-        }
-        return mInputConnection.onKeyUp(keyCode, event);
+        return mEditable.onKeyUp(getView(), isInputActive(), keyCode, event);
     }
 
     /**
@@ -256,10 +242,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyLongPress(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        if (!ensureInputConnection()) {
-            return false;
-        }
-        return mInputConnection.onKeyLongPress(keyCode, event);
+        return mEditable.onKeyLongPress(getView(), isInputActive(), keyCode, event);
     }
 
     /**
@@ -273,10 +256,7 @@ public final class SessionTextInput {
     public boolean onKeyMultiple(final int keyCode, final int repeatCount,
                                  final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        if (!ensureInputConnection()) {
-            return false;
-        }
-        return mInputConnection.onKeyMultiple(keyCode, repeatCount, event);
+        return mEditable.onKeyMultiple(getView(), isInputActive(), keyCode, repeatCount, event);
     }
 
     /**
