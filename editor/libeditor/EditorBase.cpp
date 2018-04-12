@@ -149,6 +149,12 @@ EditorBase::SplitNodeDeepWithTransaction(
               nsIContent& aMostAncestorToSplit,
               const EditorRawDOMPoint& aStartOfDeepestRightNode,
               SplitAtEdges aSplitAtEdges);
+template nsresult
+EditorBase::MoveNodeWithTransaction(nsIContent& aContent,
+                                    const EditorDOMPoint& aPointToInsert);
+template nsresult
+EditorBase::MoveNodeWithTransaction(nsIContent& aContent,
+                                    const EditorRawDOMPoint& aPointToInsert);
 
 EditorBase::EditorBase()
   : mPlaceholderName(nullptr)
@@ -1838,55 +1844,49 @@ EditorBase::InsertContainerAbove(nsIContent* aNode,
   return newContainer.forget();
 }
 
-/**
- * MoveNode() moves aNode to {aParent,aOffset}.
- */
+template<typename PT, typename CT>
 nsresult
-EditorBase::MoveNode(nsIContent* aNode,
-                     nsINode* aParent,
-                     int32_t aOffset)
+EditorBase::MoveNodeWithTransaction(
+              nsIContent& aContent,
+              const EditorDOMPointBase<PT, CT>& aPointToInsert)
 {
-  MOZ_ASSERT(aNode);
-  MOZ_ASSERT(aParent);
-  MOZ_ASSERT(aOffset == -1 ||
-             (0 <= aOffset &&
-              AssertedCast<uint32_t>(aOffset) <= aParent->Length()));
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
-  nsCOMPtr<nsINode> oldParent = aNode->GetParentNode();
-  if (NS_WARN_IF(!oldParent)) {
+  EditorDOMPoint oldPoint(&aContent);
+  if (NS_WARN_IF(!oldPoint.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-  int32_t oldOffset = oldParent->ComputeIndexOf(aNode);
 
-  if (aOffset == -1) {
-    // Magic value meaning "move to end of aParent"
-    aOffset = AssertedCast<int32_t>(aParent->Length());
-  }
-
-  // Don't do anything if it's already in right place
-  if (aParent == oldParent && aOffset == oldOffset) {
+  // Don't do anything if it's already in right place.
+  if (aPointToInsert == oldPoint) {
     return NS_OK;
   }
 
   // Notify our internal selection state listener
-  AutoMoveNodeSelNotify selNotify(mRangeUpdater, oldParent, oldOffset,
-                                  aParent, aOffset);
-
-  // Need to adjust aOffset if we're moving aNode later in its current parent
-  if (aParent == oldParent && oldOffset < aOffset) {
-    // When we delete aNode, it will make the offsets after it off by one
-    aOffset--;
-  }
+  EditorDOMPoint newPoint(aPointToInsert);
+  AutoMoveNodeSelNotify selNotify(mRangeUpdater, oldPoint, newPoint);
 
   // Hold a reference so aNode doesn't go away when we remove it (bug 772282)
-  nsCOMPtr<nsIContent> nodeToBeMoved(aNode);
-  nsresult rv = DeleteNodeWithTransaction(*nodeToBeMoved);
+  nsresult rv = DeleteNodeWithTransaction(aContent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = InsertNodeWithTransaction(*nodeToBeMoved,
-                                 EditorRawDOMPoint(aParent, aOffset));
+  // Mutation event listener could break insertion point. Let's check it.
+  EditorRawDOMPoint pointToInsert(selNotify.ComputeInsertionPoint());
+  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  // If some children have removed from the container, let's append to the
+  // container.
+  // XXX Perhaps, if mutation event listener inserts or removes some children
+  //     but the child node referring with aPointToInsert is still available,
+  //     we should insert aContent before it.  However, we should keep
+  //     traditional behavior for now.
+  if (NS_WARN_IF(!pointToInsert.IsSetAndValid())) {
+    pointToInsert.SetToEndOf(pointToInsert.GetContainer());
+  }
+  rv = InsertNodeWithTransaction(aContent, pointToInsert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

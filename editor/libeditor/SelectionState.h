@@ -315,27 +315,18 @@ public:
 
 class MOZ_STACK_CLASS AutoMoveNodeSelNotify final
 {
-private:
-  RangeUpdater& mRangeUpdater;
-  nsINode* mOldParent;
-  nsINode* mNewParent;
-  int32_t mOldOffset;
-  int32_t mNewOffset;
-
 public:
   AutoMoveNodeSelNotify(RangeUpdater& aRangeUpdater,
-                        nsINode* aOldParent,
-                        int32_t aOldOffset,
-                        nsINode* aNewParent,
-                        int32_t aNewOffset)
+                        const EditorDOMPoint& aOldPoint,
+                        const EditorDOMPoint& aNewPoint)
     : mRangeUpdater(aRangeUpdater)
-    , mOldParent(aOldParent)
-    , mNewParent(aNewParent)
-    , mOldOffset(aOldOffset)
-    , mNewOffset(aNewOffset)
+    , mOldParent(aOldPoint.GetContainer())
+    , mNewParent(aNewPoint.GetContainer())
+    , mOldOffset(aOldPoint.Offset())
+    , mNewOffset(aNewPoint.Offset())
   {
-    MOZ_ASSERT(aOldParent);
-    MOZ_ASSERT(aNewParent);
+    MOZ_ASSERT(mOldParent);
+    MOZ_ASSERT(mNewParent);
     mRangeUpdater.WillMoveNode();
   }
 
@@ -343,6 +334,22 @@ public:
   {
     mRangeUpdater.DidMoveNode(mOldParent, mOldOffset, mNewParent, mNewOffset);
   }
+
+  EditorRawDOMPoint ComputeInsertionPoint() const
+  {
+    if (mOldParent == mNewParent &&
+        mOldOffset < mNewOffset) {
+      return EditorRawDOMPoint(mNewParent, mNewOffset - 1);
+    }
+    return EditorRawDOMPoint(mNewParent, mNewOffset);
+  }
+
+private:
+  RangeUpdater& mRangeUpdater;
+  nsINode* mOldParent;
+  nsINode* mNewParent;
+  uint32_t mOldOffset;
+  uint32_t mNewOffset;
 };
 
 } // namespace mozilla
