@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Masks need to cause grouping / intermediate surfaces</title>
+<style>
+
+.outer {
+  filter: opacity(50%);
+}
+
+.box {
+  width: 100px;
+  height: 100px;
+}
+
+.one {
+  background: green;
+}
+
+.another {
+  background: blue;
+  margin-top: -50px;
+  margin-left: 50px;
+}
+
+</style>
+
+<div class="outer">
+  <div class="one box"></div>
+  <div class="another box"></div>
+</div>

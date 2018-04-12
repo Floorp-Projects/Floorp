@@ -53,6 +53,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   }
 
   mBuilder->PushStackingContext(wr::ToLayoutRect(aBounds),
+                                nullptr,
                                 aAnimation,
                                 aOpacityPtr,
                                 aTransformPtr,

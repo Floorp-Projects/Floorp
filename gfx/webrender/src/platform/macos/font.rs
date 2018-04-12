@@ -28,6 +28,8 @@ use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
 use gamma_lut::{ColorLut, GammaLut};
 use glyph_rasterizer::{FontInstance, FontTransform};
+#[cfg(feature = "pathfinder")]
+use glyph_rasterizer::NativeFontHandleWrapper;
 #[cfg(not(feature = "pathfinder"))]
 use glyph_rasterizer::{GlyphFormat, GlyphRasterResult, RasterizedGlyph};
 use internal_types::{FastHashMap, ResourceCacheError};
@@ -727,5 +729,12 @@ impl FontContext {
             format: if bitmap { GlyphFormat::ColorBitmap } else { font.get_glyph_format() },
             bytes: rasterized_pixels,
         })
+    }
+}
+
+#[cfg(feature = "pathfinder")]
+impl<'a> Into<CGFont> for NativeFontHandleWrapper<'a> {
+    fn into(self) -> CGFont {
+        (self.0).0.clone()
     }
 }

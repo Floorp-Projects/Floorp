@@ -3207,6 +3207,92 @@ private:
   bool mForceTransparentSurface;
 };
 
+class FlattenedDisplayItemIterator
+{
+public:
+  FlattenedDisplayItemIterator(nsDisplayListBuilder* aBuilder,
+                               nsDisplayList* aList,
+                               const bool aResolveFlattening = true)
+    : mBuilder(aBuilder)
+    , mNext(aList->GetBottom())
+  {
+    if (aResolveFlattening) {
+      // This is done conditionally in case subclass overrides
+      // ShouldFlattenNextItem().
+      ResolveFlattening();
+    }
+  }
+
+  virtual ~FlattenedDisplayItemIterator()
+  {
+    MOZ_ASSERT(!HasNext());
+  }
+
+  nsDisplayItem* GetNext()
+  {
+    nsDisplayItem* next = mNext;
+
+    // Advance mNext to the following item
+    if (next) {
+      mNext = mNext->GetAbove();
+      ResolveFlattening();
+    }
+    return next;
+  }
+
+  bool HasNext() const
+  {
+    return mNext || !mStack.IsEmpty();
+  }
+
+  nsDisplayItem* PeekNext()
+  {
+    return mNext;
+  }
+
+protected:
+  bool AtEndOfNestedList() const
+  {
+    return !mNext && mStack.Length() > 0;
+  }
+
+  virtual bool ShouldFlattenNextItem() const
+  {
+    return mNext && mNext->ShouldFlattenAway(mBuilder);
+  }
+
+  void ResolveFlattening()
+  {
+    // Handle the case where we reach the end of a nested list, or the current
+    // item should start a new nested list. Repeat this until we find an actual
+    // item, or the very end of the outer list.
+    while (AtEndOfNestedList() || ShouldFlattenNextItem()) {
+      if (AtEndOfNestedList()) {
+        // Pop the last item off the stack.
+        mNext = mStack.LastElement();
+        EndNested(mNext);
+        mStack.RemoveElementAt(mStack.Length() - 1);
+        // We stored the item that was flattened, so advance to the next.
+        mNext = mNext->GetAbove();
+      } else {
+        // This item wants to be flattened. Store the current item on the stack,
+        // and use the first item in the child list instead.
+        mStack.AppendElement(mNext);
+        StartNested(mNext);
+        nsDisplayList* childItems = mNext->GetSameCoordinateSystemChildren();
+        mNext = childItems->GetBottom();
+      }
+    }
+  }
+
+  virtual void EndNested(nsDisplayItem* aItem) {}
+  virtual void StartNested(nsDisplayItem* aItem) {}
+
+  nsDisplayListBuilder* mBuilder;
+  nsDisplayItem* mNext;
+  AutoTArray<nsDisplayItem*, 10> mStack;
+};
+
 /**
  * This is passed as a parameter to nsIFrame::BuildDisplayList. That method
  * will put any generated items onto the appropriate list given here. It's
@@ -5164,12 +5250,18 @@ public:
                    nsDisplayList* aList,
                    const ActiveScrolledRoot* aActiveScrolledRoot,
                    bool aForEventsAndPluginsOnly);
+
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                    const nsDisplayOpacity& aOther)
     : nsDisplayWrapList(aBuilder, aOther)
     , mOpacity(aOther.mOpacity)
     , mForEventsAndPluginsOnly(aOther.mForEventsAndPluginsOnly)
-  {}
+    , mOpacityAppliedToChildren(false)
+  {
+    // We should not try to merge flattened opacities.
+    MOZ_ASSERT(!aOther.mOpacityAppliedToChildren);
+  }
+
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOpacity();
 #endif
@@ -5178,6 +5270,7 @@ public:
   {
     nsDisplayItem::RestoreState();
     mOpacity = mState.mOpacity;
+    mOpacityAppliedToChildren = false;
   }
 
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
@@ -5205,12 +5298,15 @@ public:
     return HasSameTypeAndClip(aItem) && HasSameContent(aItem);
   }
 
+  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
+  {
+    return new nsDisplayOpacityGeometry(this, aBuilder, mOpacity);
+  }
+
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion) const override
-  {
-    // We don't need to compute an invalidation region since we have LayerTreeInvalidation
-  }
+                                         nsRegion* aInvalidRegion) const override;
+
   virtual bool IsInvalid(nsRect& aRect) const override
   {
     if (mForEventsAndPluginsOnly) {
@@ -5223,6 +5319,12 @@ public:
                             const DisplayItemClipChain* aClip) override;
   virtual bool CanApplyOpacity() const override;
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
+
+  /**
+   * Returns true if ShouldFlattenAway() applied opacity to children.
+   */
+  bool OpacityAppliedToChildren() const { return mOpacityAppliedToChildren; }
+
   static bool NeedsActiveLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
@@ -5238,8 +5340,11 @@ public:
   float GetOpacity() { return mOpacity; }
 
 private:
+  bool ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder);
+
   float mOpacity;
   bool mForEventsAndPluginsOnly;
+  bool mOpacityAppliedToChildren;
 
   struct {
     float mOpacity;
@@ -6773,72 +6878,6 @@ public:
   nscoord mVisIEndEdge;
   // Cached result of mFrame->IsSelected().  Only initialized when needed.
   mutable mozilla::Maybe<bool> mIsFrameSelected;
-};
-
-class FlattenedDisplayItemIterator
-{
-public:
-  FlattenedDisplayItemIterator(nsDisplayListBuilder* aBuilder,
-                               nsDisplayList* aList)
-    : mBuilder(aBuilder)
-    , mNext(aList->GetBottom())
-  {
-    ResolveFlattening();
-  }
-
-  nsDisplayItem* GetNext()
-  {
-    nsDisplayItem* next = mNext;
-
-    // Advance mNext to the following item
-    if (next) {
-      mNext = mNext->GetAbove();
-      ResolveFlattening();
-    }
-    return next;
-  }
-
-  nsDisplayItem* PeekNext()
-  {
-    return mNext;
-  }
-
-private:
-  bool AtEndOfNestedList()
-  {
-    return !mNext && mStack.Length() > 0;
-  }
-
-  bool ShouldFlattenNextItem()
-  {
-    return mNext && mNext->ShouldFlattenAway(mBuilder);
-  }
-
-  void ResolveFlattening()
-  {
-    // Handle the case where we reach the end of a nested list, or the current
-    // item should start a new nested list. Repeat this until we find an actual
-    // item, or the very end of the outer list.
-    while (AtEndOfNestedList() || ShouldFlattenNextItem()) {
-      if (AtEndOfNestedList()) {
-        // Pop the last item off the stack.
-        mNext = mStack.PopLastElement();
-        // We stored the item that was flattened, so advance to the next.
-        mNext = mNext->GetAbove();
-      } else {
-        // This item wants to be flattened. Store the current item on the stack,
-        // and use the first item in the child list instead.
-        mStack.AppendElement(mNext);
-        nsDisplayList* childItems = mNext->GetSameCoordinateSystemChildren();
-        mNext = childItems->GetBottom();
-      }
-    }
-  }
-
-
-  nsDisplayListBuilder* mBuilder;
-  nsDisplayItem* mNext;
-  AutoTArray<nsDisplayItem*, 10> mStack;
 };
 
 /**

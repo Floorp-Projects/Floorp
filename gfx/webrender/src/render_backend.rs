@@ -666,6 +666,10 @@ impl RenderBackend {
                 doc.dynamic_properties.set_properties(property_bindings);
                 DocumentOps::render()
             }
+            FrameMsg::AppendDynamicProperties(property_bindings) => {
+                doc.dynamic_properties.add_properties(property_bindings);
+                DocumentOps::render()
+            }
         }
     }
 

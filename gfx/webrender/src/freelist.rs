@@ -90,6 +90,12 @@ impl<T> FreeList<T> {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.slots.clear();
+        self.free_list_head = None;
+        self.active_count = 0;
+    }
+
     #[allow(dead_code)]
     pub fn get(&self, id: &FreeListHandle<T>) -> &T {
         self.slots[id.index as usize].value.as_ref().unwrap()
