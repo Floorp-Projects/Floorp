@@ -296,8 +296,8 @@ public:
   virtual bool IsModifiableNode(nsINode* aNode);
 
   /**
-   * InsertTextImpl() inserts aStringToInsert to aPointToInsert or better
-   * insertion point around it.  If aPointToInsert isn't in a text node,
+   * InsertTextWithTransaction() inserts aStringToInsert to aPointToInsert or
+   * better insertion point around it.  If aPointToInsert isn't in a text node,
    * this method looks for the nearest point in a text node with
    * FindBetterInsertionPoint().  If there is no text node, this creates
    * new text node and put aStringToInsert to it.
@@ -316,14 +316,27 @@ public:
    *                        Otherwise, an error code.
    */
   virtual nsresult
-  InsertTextImpl(nsIDocument& aDocument,
-                 const nsAString& aStringToInsert,
-                 const EditorRawDOMPoint& aPointToInsert,
-                 EditorRawDOMPoint* aPointAfterInsertedString = nullptr);
+  InsertTextWithTransaction(nsIDocument& aDocument,
+                            const nsAString& aStringToInsert,
+                            const EditorRawDOMPoint& aPointToInsert,
+                            EditorRawDOMPoint* aPointAfterInsertedString =
+                              nullptr);
 
-  nsresult InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
-                                      Text& aTextNode, int32_t aOffset,
-                                      bool aSuppressIME = false);
+  /**
+   * InsertTextIntoTextNodeWithTransaction() inserts aStringToInsert into
+   * aOffset of aTextNode with transaction.
+   *
+   * @param aStringToInsert     String to be inserted.
+   * @param aTextNode           Text node to contain aStringToInsert.
+   * @param aOffset             Offset at insertion point in aTextNode.
+   * @param aSuppressIME        true if it's not a part of IME composition.
+   *                            E.g., adjusting whitespaces during composition.
+   *                            false, otherwise.
+   */
+  nsresult
+  InsertTextIntoTextNodeWithTransaction(const nsAString& aStringToInsert,
+                                        Text& aTextNode, int32_t aOffset,
+                                        bool aSuppressIME = false);
 
   nsresult SetTextImpl(Selection& aSelection,
                        const nsAString& aString,

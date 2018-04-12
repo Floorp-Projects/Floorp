@@ -3268,10 +3268,11 @@ HTMLEditor::DeleteTextWithTransaction(CharacterData& aCharData,
 }
 
 nsresult
-HTMLEditor::InsertTextImpl(nsIDocument& aDocument,
-                           const nsAString& aStringToInsert,
-                           const EditorRawDOMPoint& aPointToInsert,
-                           EditorRawDOMPoint* aPointAfterInsertedString)
+HTMLEditor::InsertTextWithTransaction(
+              nsIDocument& aDocument,
+              const nsAString& aStringToInsert,
+              const EditorRawDOMPoint& aPointToInsert,
+              EditorRawDOMPoint* aPointAfterInsertedString)
 {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return NS_ERROR_INVALID_ARG;
@@ -3282,8 +3283,9 @@ HTMLEditor::InsertTextImpl(nsIDocument& aDocument,
     return NS_ERROR_FAILURE;
   }
 
-  return EditorBase::InsertTextImpl(aDocument, aStringToInsert, aPointToInsert,
-                                    aPointAfterInsertedString);
+  return EditorBase::InsertTextWithTransaction(aDocument, aStringToInsert,
+                                               aPointToInsert,
+                                               aPointAfterInsertedString);
 }
 
 void
