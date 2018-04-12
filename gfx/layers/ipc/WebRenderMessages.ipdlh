@@ -11,12 +11,11 @@ include LayersSurfaces;
 include LayersMessages;
 include protocol PTexture;
 
-using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::wr::LayoutSize from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::ImageDescriptor from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::ImageRendering from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::MixBlendMode from "mozilla/webrender/webrender_ffi.h";
-using mozilla::wr::MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::MaybeFontInstanceOptions from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::MaybeFontInstancePlatformOptions from "mozilla/webrender/WebRenderTypes.h";
@@ -58,6 +57,25 @@ struct OpAddCompositorAnimations {
   OptionalOpacity opacity;
 };
 
+struct OpAddPipelineIdForCompositable {
+  PipelineId pipelineId;
+  CompositableHandle handle;
+  bool isAsync;
+};
+
+struct OpRemovePipelineIdForCompositable {
+  PipelineId pipelineId;
+};
+
+struct OpAddExternalImageIdForCompositable {
+  ExternalImageId externalImageId;
+  CompositableHandle handle;
+};
+
+struct OpRemoveExternalImageId {
+  ExternalImageId externalImageId;
+};
+
 struct OpUpdateAsyncImagePipeline {
   PipelineId pipelineId;
   LayoutDeviceRect scBounds;
@@ -68,6 +86,10 @@ struct OpUpdateAsyncImagePipeline {
 };
 
 union WebRenderParentCommand {
+  OpAddPipelineIdForCompositable;
+  OpRemovePipelineIdForCompositable;
+  OpAddExternalImageIdForCompositable;
+  OpRemoveExternalImageId;
   OpUpdateAsyncImagePipeline;
   CompositableOperation;
   OpAddCompositorAnimations;
