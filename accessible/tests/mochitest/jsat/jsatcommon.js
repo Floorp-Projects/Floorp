@@ -141,19 +141,13 @@ var AccessFuTest = {
     // Start AccessFu and put it in stand-by.
     ChromeUtils.import("resource://gre/modules/accessibility/AccessFu.jsm");
 
-    let chromeWin = getMainChromeWindow(window);
-    chromeWin.WindowEventDispatcher = {
-      dispatch: () => {},
-      sendRequest: () => {}
-    };
+    AccessFu.attach(getMainChromeWindow(window));
 
     AccessFu.readyCallback = function readyCallback() {
       // Enable logging to the console service.
       Logger.test = true;
       Logger.logLevel = Logger.DEBUG;
     };
-
-    AccessFu.attach(chromeWin, true);
 
     var prefs = [["accessibility.accessfu.notify_output", 1]];
     prefs.push.apply(prefs, aAdditionalPrefs);
