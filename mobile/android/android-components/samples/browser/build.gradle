@@ -29,6 +29,19 @@ android {
 }
 
 dependencies {
+    implementation project(':concept-engine')
+    implementation project(':concept-toolbar')
+
+    implementation project(':browser-engine-system')
+    implementation project(':browser-engine-gecko')
+
+    implementation project(':browser-session')
+    implementation project(':browser-toolbar')
+
+    implementation project(':feature-session')
+    implementation project(':feature-toolbar')
+
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 
     implementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
