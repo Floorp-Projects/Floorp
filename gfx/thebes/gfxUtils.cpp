@@ -938,13 +938,13 @@ gfxUtils::GetColorForFrameNumber(uint64_t aFrameNumber)
     return colors[aFrameNumber % sNumFrameColors];
 }
 
-static nsresult
-EncodeSourceSurfaceInternal(SourceSurface* aSurface,
-                           const nsACString& aMimeType,
-                           const nsAString& aOutputOptions,
-                           gfxUtils::BinaryOrData aBinaryOrData,
-                           FILE* aFile,
-                           nsACString* aStrOut)
+/* static */ nsresult
+gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
+                              const nsACString& aMimeType,
+                              const nsAString& aOutputOptions,
+                              BinaryOrData aBinaryOrData,
+                              FILE* aFile,
+                              nsACString* aStrOut)
 {
   MOZ_ASSERT(aBinaryOrData == gfxUtils::eDataURIEncode || aFile || aStrOut,
              "Copying binary encoding to clipboard not currently supported");
@@ -1093,21 +1093,10 @@ static nsCString
 EncodeSourceSurfaceAsPNGURI(SourceSurface* aSurface)
 {
   nsCString string;
-  EncodeSourceSurfaceInternal(aSurface, NS_LITERAL_CSTRING("image/png"),
-                              EmptyString(), gfxUtils::eDataURIEncode,
-                              nullptr, &string);
+  gfxUtils::EncodeSourceSurface(aSurface, NS_LITERAL_CSTRING("image/png"),
+                                EmptyString(), gfxUtils::eDataURIEncode,
+                                nullptr, &string);
   return string;
-}
-
-/* static */ nsresult
-gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
-                              const nsACString& aMimeType,
-                              const nsAString& aOutputOptions,
-                              BinaryOrData aBinaryOrData,
-                              FILE* aFile)
-{
-  return EncodeSourceSurfaceInternal(aSurface, aMimeType, aOutputOptions,
-                                     aBinaryOrData, aFile, nullptr);
 }
 
 // https://jdashg.github.io/misc/colors/from-coeffs.html
