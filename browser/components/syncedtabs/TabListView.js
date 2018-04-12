@@ -231,10 +231,14 @@ TabListView.prototype = {
     } else {
       itemNode.classList.remove("selected");
     }
+    if (item.isMobile) {
+      itemNode.classList.add("device-image-mobile");
+    } else {
+      itemNode.classList.add("device-image-desktop");
+    }
     if (item.focused) {
       itemNode.focus();
     }
-    itemNode.setAttribute("clientType", item.clientType);
     itemNode.dataset.id = item.id;
     itemNode.querySelector(".item-title").textContent = item.name;
   },
