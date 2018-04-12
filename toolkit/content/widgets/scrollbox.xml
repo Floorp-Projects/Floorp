@@ -614,7 +614,7 @@
                          onmouseover="_continueScroll(1);"
                          onmouseout="_pauseScroll();"/>
     </content>
-    <implementation implements="nsITimerCallback, nsIDOMEventListener">
+    <implementation implements="nsITimerCallback">
       <constructor><![CDATA[
         this._scrollDelay =
           this._prefBranch.getIntPref("toolkit.scrollbox.clickToScroll.scrollDelay",

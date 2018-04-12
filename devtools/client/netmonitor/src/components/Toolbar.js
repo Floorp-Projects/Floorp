@@ -15,7 +15,6 @@ const { FILTER_SEARCH_DELAY, FILTER_TAGS } = require("../constants");
 const {
   getRecordingState,
   getTypeFilteredRequests,
-  isNetworkDetailsToggleButtonDisabled,
 } = require("../selectors/index");
 const { autocompleteProvider } = require("../utils/filter-autocomplete-provider");
 const { L10N } = require("../utils/l10n");
@@ -27,8 +26,6 @@ const SearchBox = createFactory(require("devtools/client/shared/components/Searc
 const { button, div, input, label, span } = dom;
 
 // Localization
-const COLLAPSE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");
-const EXPAND_DETAILS_PANE = L10N.getStr("expandDetailsPane");
 const SEARCH_KEY_SHORTCUT = L10N.getStr("netmonitor.toolbar.filterFreetext.key");
 const SEARCH_PLACE_HOLDER = L10N.getStr("netmonitor.toolbar.filterFreetext.label");
 const TOOLBAR_CLEAR = L10N.getStr("netmonitor.toolbar.clear");
@@ -61,9 +58,6 @@ class Toolbar extends Component {
       clearRequests: PropTypes.func.isRequired,
       requestFilterTypes: PropTypes.object.isRequired,
       setRequestFilterText: PropTypes.func.isRequired,
-      networkDetailsToggleDisabled: PropTypes.bool.isRequired,
-      networkDetailsOpen: PropTypes.bool.isRequired,
-      toggleNetworkDetails: PropTypes.func.isRequired,
       enablePersistentLogs: PropTypes.func.isRequired,
       togglePersistentLogs: PropTypes.func.isRequired,
       persistentLogsEnabled: PropTypes.bool.isRequired,
@@ -92,9 +86,7 @@ class Toolbar extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return this.props.networkDetailsOpen !== nextProps.networkDetailsOpen
-    || this.props.networkDetailsToggleDisabled !== nextProps.networkDetailsToggleDisabled
-    || this.props.persistentLogsEnabled !== nextProps.persistentLogsEnabled
+    return this.props.persistentLogsEnabled !== nextProps.persistentLogsEnabled
     || this.props.browserCacheDisabled !== nextProps.browserCacheDisabled
     || this.props.recording !== nextProps.recording
     || !Object.is(this.props.requestFilterTypes, nextProps.requestFilterTypes)
@@ -149,9 +141,6 @@ class Toolbar extends Component {
       clearRequests,
       requestFilterTypes,
       setRequestFilterText,
-      networkDetailsToggleDisabled,
-      networkDetailsOpen,
-      toggleNetworkDetails,
       togglePersistentLogs,
       persistentLogsEnabled,
       toggleBrowserCache,
@@ -185,19 +174,6 @@ class Toolbar extends Component {
       "requests-list-pause-button",
       recording ? "devtools-pause-icon" : "devtools-play-icon",
     ].join(" ");
-
-    // Detail toggle button
-    let toggleDetailButtonClassList = [
-      "network-details-panel-toggle",
-      "devtools-button",
-    ];
-
-    if (!networkDetailsOpen) {
-      toggleDetailButtonClassList.push("pane-collapsed");
-    }
-    let toggleDetailButtonClass = toggleDetailButtonClassList.join(" ");
-    let toggleDetailButtonTitle = networkDetailsOpen ? COLLAPSE_DETAILS_PANE :
-      EXPAND_DETAILS_PANE;
 
     // Render the entire toolbar.
     return (
@@ -253,14 +229,7 @@ class Toolbar extends Component {
             onChange: setRequestFilterText,
             onFocus: this.onSearchBoxFocus,
             autocompleteProvider: this.autocompleteProvider,
-          }),
-          button({
-            className: toggleDetailButtonClass,
-            title: toggleDetailButtonTitle,
-            disabled: networkDetailsToggleDisabled,
-            tabIndex: "0",
-            onClick: toggleNetworkDetails,
-          }),
+          })
         )
       )
     );
@@ -271,8 +240,6 @@ module.exports = connect(
   (state) => ({
     browserCacheDisabled: state.ui.browserCacheDisabled,
     filteredRequests: getTypeFilteredRequests(state),
-    networkDetailsToggleDisabled: isNetworkDetailsToggleButtonDisabled(state),
-    networkDetailsOpen: state.ui.networkDetailsOpen,
     persistentLogsEnabled: state.ui.persistentLogsEnabled,
     recording: getRecordingState(state),
     requestFilterTypes: state.filters.requestFilterTypes,
@@ -283,7 +250,6 @@ module.exports = connect(
     enablePersistentLogs: (enabled) => dispatch(Actions.enablePersistentLogs(enabled)),
     setRequestFilterText: (text) => dispatch(Actions.setRequestFilterText(text)),
     toggleBrowserCache: () => dispatch(Actions.toggleBrowserCache()),
-    toggleNetworkDetails: () => dispatch(Actions.toggleNetworkDetails()),
     toggleRecording: () => dispatch(Actions.toggleRecording()),
     togglePersistentLogs: () => dispatch(Actions.togglePersistentLogs()),
     toggleRequestFilterType: (type) => dispatch(Actions.toggleRequestFilterType(type)),

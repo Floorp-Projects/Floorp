@@ -261,7 +261,7 @@
 
   <binding id="menu-button-base"
            extends="chrome://global/content/bindings/button.xml#button-base">
-    <implementation implements="nsIDOMEventListener">
+    <implementation>
       <constructor>
         this.init();
       </constructor>

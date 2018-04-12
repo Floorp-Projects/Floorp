@@ -21,13 +21,8 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  let toggleButton = document.querySelector(".network-details-panel-toggle");
-
-  is(toggleButton.hasAttribute("disabled"), true,
-    "The pane toggle button should be disabled when the frontend is opened.");
-  is(toggleButton.classList.contains("pane-collapsed"), true,
-    "The pane toggle button should indicate that the details pane is " +
-    "collapsed when the frontend is opened.");
+  ok(!document.querySelector(".sidebar-toggle"),
+    "The pane toggle button should not be visible.");
   is(!!document.querySelector(".network-details-panel"), false,
     "The details pane should be hidden when the frontend is opened.");
   is(getSelectedRequest(store.getState()), null,
@@ -37,23 +32,20 @@ add_task(async function() {
   tab.linkedBrowser.reload();
   await networkEvent;
 
-  is(toggleButton.hasAttribute("disabled"), false,
-    "The pane toggle button should be enabled after the first request.");
-  is(toggleButton.classList.contains("pane-collapsed"), true,
-    "The pane toggle button should still indicate that the details pane is " +
-    "collapsed after the first request.");
+  ok(!document.querySelector(".sidebar-toggle"),
+    "The pane toggle button should not be visible after the first request.");
   is(!!document.querySelector(".network-details-panel"), false,
     "The details pane should still be hidden after the first request.");
   is(getSelectedRequest(store.getState()), null,
     "There should still be no selected item in the requests menu.");
 
-  EventUtils.sendMouseEvent({ type: "click" }, toggleButton);
+  store.dispatch(Actions.toggleNetworkDetails());
 
-  is(toggleButton.hasAttribute("disabled"), false,
-    "The pane toggle button should still be enabled after being pressed.");
+  let toggleButton = document.querySelector(".sidebar-toggle");
+
   is(toggleButton.classList.contains("pane-collapsed"), false,
     "The pane toggle button should now indicate that the details pane is " +
-    "not collapsed anymore after being pressed.");
+    "not collapsed anymore.");
   is(!!document.querySelector(".network-details-panel"), true,
     "The details pane should not be hidden after toggle button was pressed.");
   isnot(getSelectedRequest(store.getState()), null,
@@ -63,11 +55,6 @@ add_task(async function() {
 
   EventUtils.sendMouseEvent({ type: "click" }, toggleButton);
 
-  is(toggleButton.hasAttribute("disabled"), false,
-    "The pane toggle button should still be enabled after being pressed again.");
-  is(toggleButton.classList.contains("pane-collapsed"), true,
-    "The pane toggle button should now indicate that the details pane is " +
-    "collapsed after being pressed again.");
   is(!!document.querySelector(".network-details-panel"), false,
     "The details pane should now be hidden after the toggle button was pressed again.");
   is(getSelectedRequest(store.getState()), null,

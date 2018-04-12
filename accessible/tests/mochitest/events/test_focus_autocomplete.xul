@@ -259,7 +259,7 @@
         // HTML form autocomplete
         var controller = Cc["@mozilla.org/autocomplete/controller;1"].
           getService(Ci.nsIAutoCompleteController);
-        popupNode = controller.input.popup.QueryInterface(nsIDOMNode);
+        popupNode = controller.input.popup;
       }
 
       if (popupNode) {

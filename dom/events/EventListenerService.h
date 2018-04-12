@@ -48,32 +48,24 @@ class EventListenerInfo final : public nsIEventListenerInfo
 {
 public:
   EventListenerInfo(const nsAString& aType,
-                    already_AddRefed<nsIDOMEventListener> aListener,
+                    JS::Handle<JSObject*> aScriptedListener,
                     bool aCapturing,
                     bool aAllowsUntrusted,
-                    bool aInSystemEventGroup)
-    : mType(aType)
-    , mListener(aListener)
-    , mCapturing(aCapturing)
-    , mAllowsUntrusted(aAllowsUntrusted)
-    , mInSystemEventGroup(aInSystemEventGroup)
-  {
-  }
+                    bool aInSystemEventGroup);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(EventListenerInfo)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(EventListenerInfo)
   NS_DECL_NSIEVENTLISTENERINFO
 
 protected:
-  virtual ~EventListenerInfo() {}
+ virtual ~EventListenerInfo();
 
   bool GetJSVal(JSContext* aCx,
                 Maybe<JSAutoCompartment>& aAc,
                 JS::MutableHandle<JS::Value> aJSVal);
 
   nsString mType;
-  // nsReftPtr because that is what nsListenerStruct uses too.
-  RefPtr<nsIDOMEventListener> mListener;
+  JS::Heap<JSObject*> mScriptedListener;  // May be null.
   bool mCapturing;
   bool mAllowsUntrusted;
   bool mInSystemEventGroup;

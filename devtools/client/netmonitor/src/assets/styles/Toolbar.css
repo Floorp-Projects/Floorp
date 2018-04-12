@@ -45,27 +45,3 @@
   margin-inline-end: 3px;
   white-space: nowrap;
 }
-
-/* Network details panel toggle */
-
-.network-details-panel-toggle:dir(ltr)::before,
-.network-details-panel-toggle.pane-collapsed:dir(rtl)::before {
-  background-image: var(--theme-pane-collapse-image);
-}
-
-.network-details-panel-toggle.pane-collapsed:dir(ltr)::before,
-.network-details-panel-toggle:dir(rtl)::before {
-  background-image: var(--theme-pane-expand-image);
-}
-
-/* Responsive web design support */
-
-@media (max-width: 700px) {
-  .network-details-panel-toggle:dir(ltr)::before {
-    transform: rotate(90deg);
-  }
-
-  .network-details-panel-toggle:dir(rtl)::before {
-    transform: rotate(-90deg);
-  }
-}
