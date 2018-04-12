@@ -81,7 +81,6 @@ class GeckoViewModule {
     if (!this.isRegistered) {
       return;
     }
-    this._eventProxy.unregisterListener();
     this.onDisable();
     this.isRegistered = false;
   }
@@ -101,14 +100,18 @@ class GeckoViewModule {
         }
         self.messageManager.removeMessageListener("GeckoView:ContentRegistered",
                                                   listener);
-        self._eventProxy.dispatchQueuedEvents();
         self._eventProxy.enableQueuing(false);
+        self._eventProxy.dispatchQueuedEvents();
     });
     this.messageManager.loadFrameScript(aUri, true);
   }
 
   registerListener(aEventList) {
     this._eventProxy.registerListener(aEventList);
+  }
+
+  unregisterListener() {
+    this._eventProxy.unregisterListener();
   }
 
   get settings() {
@@ -150,7 +153,7 @@ class EventProxy {
       debug("queue " + aEvent + ", aData=" + JSON.stringify(aData));
       this._eventQueue.unshift(arguments);
     } else {
-      this._dispatch.apply(this, arguments);
+      this._dispatch(...arguments);
     }
   }
 
@@ -161,14 +164,18 @@ class EventProxy {
 
   _dispatch(aEvent, aData, aCallback) {
     debug("dispatch " + aEvent + ", aData=" + JSON.stringify(aData));
-    this.listener.onEvent.apply(this.listener, arguments);
+    if (this.listener.onEvent) {
+      this.listener.onEvent(...arguments);
+    } else {
+      this.listener(...arguments);
+    }
   }
 
   dispatchQueuedEvents() {
     debug("dispatchQueued");
     while (this._eventQueue.length) {
-      const e = this._eventQueue.pop();
-      this._dispatch.apply(this, e);
+      const args = this._eventQueue.pop();
+      this._dispatch(...args);
     }
   }
 }
