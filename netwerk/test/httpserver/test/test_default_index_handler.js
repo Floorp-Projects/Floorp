@@ -108,26 +108,20 @@ function hiddenDataCheck(bytes, uri, path)
     do_throw("document failed to parse as XML");
   }
 
-  // See all the .QueryInterface()s and .item()s happening here?  That's because
-  // xpcshell sucks and doesn't have classinfo, so no automatic interface
-  // flattening or array-style access to items in NodeLists.  Suck.
-
   var body = doc.documentElement.getElementsByTagName("body");
   Assert.equal(body.length, 1);
-  body = body.item(0);
+  body = body[0];
 
   // header
-  var header = body.QueryInterface(Ci.nsIDOMElement)
-                   .getElementsByTagName("h1");
+  var header = body.getElementsByTagName("h1");
   Assert.equal(header.length, 1);
 
-  Assert.equal(header.item(0).QueryInterface(Ci.nsIDOMNode).textContent, path);
+  Assert.equal(header[0].textContent, path);
 
   // files
   var lst = body.getElementsByTagName("ol");
   Assert.equal(lst.length, 1);
-  var items = lst.item(0).QueryInterface(Ci.nsIDOMElement)
-                         .getElementsByTagName("li");
+  var items = lst[0].getElementsByTagName("li");
 
   var ios = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService);
@@ -140,11 +134,7 @@ function hiddenDataCheck(bytes, uri, path)
 
   for (var i = 0; i < items.length; i++)
   {
-    var link = items.item(i)
-                    .childNodes
-                    .item(0)
-                    .QueryInterface(Ci.nsIDOMNode)
-                    .QueryInterface(Ci.nsIDOMElement);
+    var link = items[i].childNodes[0];
     var f = dirEntries[i];
 
     var sep = f.isDirectory ? "/" : "";
@@ -192,26 +182,20 @@ function dataCheck(bytes, uri, path, dirEntries)
     do_throw("document failed to parse as XML");
   }
 
-  // See all the .QueryInterface()s and .item()s happening here?  That's because
-  // xpcshell sucks and doesn't have classinfo, so no automatic interface
-  // flattening or array-style access to items in NodeLists.  Suck.
-
   var body = doc.documentElement.getElementsByTagName("body");
   Assert.equal(body.length, 1);
-  body = body.item(0);
+  body = body[0];
 
   // header
-  var header = body.QueryInterface(Ci.nsIDOMElement)
-                   .getElementsByTagName("h1");
+  var header = body.getElementsByTagName("h1");
   Assert.equal(header.length, 1);
 
-  Assert.equal(header.item(0).QueryInterface(Ci.nsIDOMNode).textContent, path);
+  Assert.equal(header[0].textContent, path);
 
   // files
   var lst = body.getElementsByTagName("ol");
   Assert.equal(lst.length, 1);
-  var items = lst.item(0).QueryInterface(Ci.nsIDOMElement)
-                         .getElementsByTagName("li");
+  var items = lst[0].getElementsByTagName("li");
 
   var ios = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService);
@@ -220,11 +204,7 @@ function dataCheck(bytes, uri, path, dirEntries)
 
   for (var i = 0; i < items.length; i++)
   {
-    var link = items.item(i)
-                    .childNodes
-                    .item(0)
-                    .QueryInterface(Ci.nsIDOMNode)
-                    .QueryInterface(Ci.nsIDOMElement);
+    var link = items[i].childNodes[0];
     var f = dirEntries[i];
 
     var sep = f.isDirectory ? "/" : "";
