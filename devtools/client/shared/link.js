@@ -51,7 +51,7 @@ exports.openWebLink = async function(url, toolbox, options) {
  */
 exports.openTrustedLink = async function(url, toolbox, options) {
   const top = _getTopWindow(toolbox);
-  if (top && typeof top.openWebLinkIn === "function") {
+  if (top && typeof top.openTrustedLinkIn === "function") {
     top.openTrustedLinkIn(url, "tab", options);
   }
 };
