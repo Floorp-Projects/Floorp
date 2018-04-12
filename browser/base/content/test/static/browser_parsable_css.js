@@ -25,7 +25,7 @@ let whitelist = [
    isFromDevTools: false},
   // PDFjs rules needed for compat with other UAs.
   {sourceName: /web\/viewer\.css$/i,
-   errorMessage: /Unknown property.*appearance/i,
+   errorMessage: /Unknown property.*(appearance|user-select)/i,
    isFromDevTools: false},
   // Highlighter CSS uses a UA-only pseudo-class, see bug 985597.
   {sourceName: /highlighters\.css$/i,
