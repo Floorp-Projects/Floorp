@@ -528,7 +528,7 @@ HTMLEditor::SetPositionToStatic(Element& aElement)
     NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
     nsresult rv = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = RemoveContainer(&aElement);
+    rv = RemoveContainerWithTransaction(aElement);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;

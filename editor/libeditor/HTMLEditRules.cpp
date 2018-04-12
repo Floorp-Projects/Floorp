@@ -3707,7 +3707,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
 
   for (uint32_t i = 0; i < listCount; i++) {
     // here's where we actually figure out what to do
-    nsCOMPtr<Element> newBlock;
+    RefPtr<Element> newBlock;
     NS_ENSURE_STATE(arrayOfNodes[i]->IsContent());
     OwningNonNull<nsIContent> curNode = *arrayOfNodes[i]->AsContent();
 
@@ -3734,16 +3734,16 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
       // do we have a curList already?
       if (curList && !EditorUtils::IsDescendantOf(*curNode, *curList)) {
         // move all of our children into curList.  cheezy way to do it: move
-        // whole list and then RemoveContainer() on the list.  ConvertListType
-        // first: that routine handles converting the list item types, if
-        // needed
+        // whole list and then RemoveContainerWithTransaction() on the list.
+        // ConvertListType first: that routine handles converting the list
+        // item types, if needed.
         rv = htmlEditor->MoveNode(curNode, curList, -1);
         NS_ENSURE_SUCCESS(rv, rv);
         newBlock = ConvertListType(curNode->AsElement(), listType, itemType);
         if (NS_WARN_IF(!newBlock)) {
           return NS_ERROR_FAILURE;
         }
-        rv = htmlEditor->RemoveBlockContainer(*newBlock);
+        rv = htmlEditor->RemoveBlockContainerWithTransaction(*newBlock);
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
         // replace list with new list type
@@ -3841,7 +3841,7 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
       prevListItem = nullptr;
       int32_t j = i + 1;
       GetInnerContent(*curNode, arrayOfNodes, &j);
-      rv = htmlEditor->RemoveContainer(curNode);
+      rv = htmlEditor->RemoveContainerWithTransaction(*curNode->AsElement());
       NS_ENSURE_SUCCESS(rv, rv);
       listCount = arrayOfNodes.Length();
       continue;
@@ -4725,8 +4725,11 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
           lastBQChild = nullptr;
           curBlockQuoteIsIndentedWithCSS = false;
         }
-        rv = htmlEditor->RemoveBlockContainer(curNode);
-        NS_ENSURE_SUCCESS(rv, rv);
+        rv = htmlEditor->RemoveBlockContainerWithTransaction(
+                           *curNode->AsElement());
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
         continue;
       }
       // Is it a block with a 'margin' property?
@@ -4828,8 +4831,11 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
           // Move node out of list
           if (HTMLEditUtils::IsList(curNode)) {
             // Just unwrap this sublist
-            rv = htmlEditor->RemoveBlockContainer(curNode);
-            NS_ENSURE_SUCCESS(rv, rv);
+            rv = htmlEditor->RemoveBlockContainerWithTransaction(
+                               *curNode->AsElement());
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return rv;
+            }
           }
           // handled list item case above
         } else if (HTMLEditUtils::IsList(curNode)) {
@@ -4856,8 +4862,11 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
             child = curNode->GetLastChild();
           }
           // Delete the now-empty list
-          rv = htmlEditor->RemoveBlockContainer(curNode);
-          NS_ENSURE_SUCCESS(rv, rv);
+          rv = htmlEditor->RemoveBlockContainerWithTransaction(
+                             *curNode->AsElement());
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
         } else if (useCSS) {
           nsCOMPtr<Element> element;
           if (curNode->GetAsText()) {
@@ -4926,7 +4935,7 @@ HTMLEditRules::RemovePartOfBlock(Element& aBlock,
   // Get rid of part of blockquote we are outdenting
 
   NS_ENSURE_STATE(mHTMLEditor);
-  nsresult rv = mHTMLEditor->RemoveBlockContainer(aBlock);
+  nsresult rv = mHTMLEditor->RemoveBlockContainerWithTransaction(aBlock);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -4997,11 +5006,15 @@ HTMLEditRules::OutdentPartOfBlock(Element& aBlock,
   SplitBlock(aBlock, aStartChild, aEndChild, aOutLeftNode, aOutRightNode,
              getter_AddRefs(middleNode));
 
-  NS_ENSURE_STATE(middleNode);
+  if (NS_WARN_IF(!middleNode) || NS_WARN_IF(!middleNode->IsElement())) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (!aIsBlockIndentedWithCSS) {
     NS_ENSURE_STATE(mHTMLEditor);
-    nsresult rv = mHTMLEditor->RemoveBlockContainer(*middleNode);
+    nsresult rv =
+      mHTMLEditor->RemoveBlockContainerWithTransaction(
+                     *middleNode->AsElement());
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (middleNode->IsElement()) {
     // We do nothing if middleNode isn't an element
@@ -7653,7 +7666,8 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
         continue;
       }
       // Remove current block
-      nsresult rv = htmlEditor->RemoveBlockContainer(*curNode->AsContent());
+      nsresult rv =
+        htmlEditor->RemoveBlockContainerWithTransaction(*curNode->AsElement());
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (curNode->IsAnyOfHTMLElements(nsGkAtoms::table,
                                             nsGkAtoms::tr,
@@ -8886,7 +8900,8 @@ HTMLEditRules::PopListItem(nsIContent& aListItem,
   if (!HTMLEditUtils::IsList(pointToInsertListItem.GetContainer()) &&
       HTMLEditUtils::IsListItem(&aListItem)) {
     NS_ENSURE_STATE(mHTMLEditor);
-    rv = mHTMLEditor->RemoveBlockContainer(*aListItem.AsElement());
+    rv = mHTMLEditor->RemoveBlockContainerWithTransaction(
+                        *aListItem.AsElement());
     NS_ENSURE_SUCCESS(rv, rv);
     if (aOutOfList) {
       *aOutOfList = true;
@@ -8923,7 +8938,7 @@ HTMLEditRules::RemoveListStructure(Element& aList)
   }
 
   // Delete the now-empty list
-  nsresult rv = htmlEditor->RemoveBlockContainer(aList);
+  nsresult rv = htmlEditor->RemoveBlockContainerWithTransaction(aList);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -9275,7 +9290,7 @@ HTMLEditRules::RemoveAlignment(nsINode& aNode,
 
       // now remove the CENTER container
       NS_ENSURE_STATE(mHTMLEditor);
-      rv = mHTMLEditor->RemoveContainer(child->AsElement());
+      rv = mHTMLEditor->RemoveContainerWithTransaction(*child->AsElement());
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (IsBlockNode(*child) || child->IsHTMLElement(nsGkAtoms::hr)) {
       // the current node is a block element
@@ -9471,7 +9486,7 @@ HTMLEditRules::ChangeIndentation(Element& aElement,
     return NS_OK;
   }
 
-  nsresult rv = htmlEditor->RemoveContainer(&aElement);
+  nsresult rv = htmlEditor->RemoveContainerWithTransaction(aElement);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

@@ -946,7 +946,15 @@ protected:
   bool IsAtEndOfNode(nsINode& aNode, int32_t aOffset);
   bool IsOnlyAttribute(const Element* aElement, nsAtom* aAttribute);
 
-  nsresult RemoveBlockContainer(nsIContent& aNode);
+  /**
+   * RemoveBlockContainerWithTransaction() removes aElement from the DOM tree
+   * but moves its all children to its parent node and if its parent needs <br>
+   * element to have at least one line-height, this inserts <br> element
+   * automatically.
+   *
+   * @param aElement            Block element to be removed.
+   */
+  nsresult RemoveBlockContainerWithTransaction(Element& aElement);
 
   nsIContent* GetPriorHTMLSibling(nsINode* aNode);
 

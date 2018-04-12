@@ -1728,29 +1728,23 @@ EditorBase::ReplaceContainerWithTransactionInternal(
   return newContainer.forget();
 }
 
-/**
- * RemoveContainer() removes inNode, reparenting its children (if any) into the
- * parent of inNode.
- */
 nsresult
-EditorBase::RemoveContainer(nsIContent* aNode)
+EditorBase::RemoveContainerWithTransaction(Element& aElement)
 {
-  MOZ_ASSERT(aNode);
-
-  EditorDOMPoint pointToInsertChildren(aNode);
+  EditorDOMPoint pointToInsertChildren(&aElement);
   if (NS_WARN_IF(!pointToInsertChildren.IsSet())) {
     return NS_ERROR_FAILURE;
   }
 
   // Notify our internal selection state listener.
-  AutoRemoveContainerSelNotify selNotify(mRangeUpdater, aNode,
+  AutoRemoveContainerSelNotify selNotify(mRangeUpdater, &aElement,
                                          pointToInsertChildren.GetContainer(),
                                          pointToInsertChildren.Offset(),
-                                         aNode->GetChildCount());
+                                         aElement.GetChildCount());
 
   // Move all children from aNode to its parent.
-  while (aNode->HasChildren()) {
-    nsCOMPtr<nsIContent> child = aNode->GetLastChild();
+  while (aElement.HasChildren()) {
+    nsCOMPtr<nsIContent> child = aElement.GetLastChild();
     if (NS_WARN_IF(!child)) {
       return NS_ERROR_FAILURE;
     }
@@ -1771,7 +1765,7 @@ EditorBase::RemoveContainer(nsIContent* aNode)
     }
   }
 
-  nsresult rv = DeleteNodeWithTransaction(*aNode);
+  nsresult rv = DeleteNodeWithTransaction(aElement);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

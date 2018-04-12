@@ -583,7 +583,7 @@ CSSEditUtils::RemoveCSSInlineStyle(nsINode& aNode,
     return NS_OK;
   }
 
-  return mHTMLEditor->RemoveContainer(element);
+  return mHTMLEditor->RemoveContainerWithTransaction(*element);
 }
 
 // Answers true if the property can be removed by setting a "none" CSS value

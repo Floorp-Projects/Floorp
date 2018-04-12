@@ -3742,7 +3742,7 @@ HTMLEditor::SetSelectionAtDocumentStart(Selection* aSelection)
  * addition, insert any br's needed to preserve identity of removed block.
  */
 nsresult
-HTMLEditor::RemoveBlockContainer(nsIContent& aNode)
+HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement)
 {
   // Two possibilities: the container could be empty of editable content.  If
   // that is the case, we need to compare what is before and after aNode to
@@ -3752,7 +3752,7 @@ HTMLEditor::RemoveBlockContainer(nsIContent& aNode)
   // sibling and first child to determine if we need a leading br, and compare
   // following sibling and last child to determine if we need a trailing br.
 
-  nsCOMPtr<nsIContent> child = GetFirstEditableChild(aNode);
+  nsCOMPtr<nsIContent> child = GetFirstEditableChild(aElement);
 
   if (child) {
     // The case of aNode not being empty.  We need a br at start unless:
@@ -3761,11 +3761,11 @@ HTMLEditor::RemoveBlockContainer(nsIContent& aNode)
     // 3) first child of aNode is a block OR
     // 4) either is null
 
-    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(&aNode);
+    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(&aElement);
     if (sibling && !IsBlockNode(sibling) &&
         !sibling->IsHTMLElement(nsGkAtoms::br) && !IsBlockNode(child)) {
       // Insert br node
-      RefPtr<Element> brElement = CreateBR(EditorRawDOMPoint(&aNode, 0));
+      RefPtr<Element> brElement = CreateBR(EditorRawDOMPoint(&aElement, 0));
       if (NS_WARN_IF(!brElement)) {
         return NS_ERROR_FAILURE;
       }
@@ -3777,14 +3777,14 @@ HTMLEditor::RemoveBlockContainer(nsIContent& aNode)
     // 3) last child of aNode is a br OR
     // 4) either is null
 
-    sibling = GetNextHTMLSibling(&aNode);
+    sibling = GetNextHTMLSibling(&aElement);
     if (sibling && !IsBlockNode(sibling)) {
-      child = GetLastEditableChild(aNode);
+      child = GetLastEditableChild(aElement);
       MOZ_ASSERT(child, "aNode has first editable child but not last?");
       if (!IsBlockNode(child) && !child->IsHTMLElement(nsGkAtoms::br)) {
         // Insert br node
         EditorRawDOMPoint endOfNode;
-        endOfNode.SetToEndOf(&aNode);
+        endOfNode.SetToEndOf(&aElement);
         RefPtr<Element> brElement = CreateBR(endOfNode);
         if (NS_WARN_IF(!brElement)) {
           return NS_ERROR_FAILURE;
@@ -3798,14 +3798,14 @@ HTMLEditor::RemoveBlockContainer(nsIContent& aNode)
     // 3) following sibling of aNode is a block, OR
     // 4) following sibling of aNode is a br OR
     // 5) either is null
-    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(&aNode);
+    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(&aElement);
     if (sibling && !IsBlockNode(sibling) &&
         !sibling->IsHTMLElement(nsGkAtoms::br)) {
-      sibling = GetNextHTMLSibling(&aNode);
+      sibling = GetNextHTMLSibling(&aElement);
       if (sibling && !IsBlockNode(sibling) &&
           !sibling->IsHTMLElement(nsGkAtoms::br)) {
         // Insert br node
-        RefPtr<Element> brElement = CreateBR(EditorRawDOMPoint(&aNode, 0));
+        RefPtr<Element> brElement = CreateBR(EditorRawDOMPoint(&aElement, 0));
         if (NS_WARN_IF(!brElement)) {
           return NS_ERROR_FAILURE;
         }
@@ -3814,9 +3814,10 @@ HTMLEditor::RemoveBlockContainer(nsIContent& aNode)
   }
 
   // Now remove container
-  nsresult rv = RemoveContainer(&aNode);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsresult rv = RemoveContainerWithTransaction(aElement);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   return NS_OK;
 }
 

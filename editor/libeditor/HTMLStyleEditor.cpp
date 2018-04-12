@@ -689,7 +689,7 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
                               nsAtom* aAttribute,
                               const bool aChildrenOnly /* = false */)
 {
-  if (aNode.GetAsText()) {
+  if (!aNode.IsElement()) {
     return NS_OK;
   }
 
@@ -717,10 +717,8 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
     // remove any matching inlinestyles entirely
     if (!aAttribute) {
       bool hasStyleAttr =
-        aNode.IsElement() &&
         aNode.AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::style);
       bool hasClassAttr =
-        aNode.IsElement() &&
         aNode.AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::_class);
       if (aProperty && (hasStyleAttr || hasClassAttr)) {
         // aNode carries inline styles or a class attribute so we can't
@@ -744,7 +742,7 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
           return rv;
         }
       }
-      nsresult rv = RemoveContainer(&aNode);
+      nsresult rv = RemoveContainerWithTransaction(*aNode.AsElement());
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (aNode.IsElement()) {
       // otherwise we just want to eliminate the attribute
@@ -752,7 +750,7 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
         // if this matching attribute is the ONLY one on the node,
         // then remove the whole node.  Otherwise just nix the attribute.
         if (IsOnlyAttribute(aNode.AsElement(), aAttribute)) {
-          nsresult rv = RemoveContainer(&aNode);
+          nsresult rv = RemoveContainerWithTransaction(*aNode.AsElement());
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -802,7 +800,7 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
        aNode.IsHTMLElement(nsGkAtoms::small)) &&
       aAttribute == nsGkAtoms::size) {
     // if we are setting font size, remove any nested bigs and smalls
-    return RemoveContainer(&aNode);
+    return RemoveContainerWithTransaction(*aNode.AsElement());
   }
   return NS_OK;
 }
@@ -1600,7 +1598,7 @@ HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     nsresult rv = RelativeFontChangeHelper(aSizeChange, aNode);
     NS_ENSURE_SUCCESS(rv, rv);
     // in that case, just remove this node and pull up the children
-    return RemoveContainer(aNode);
+    return RemoveContainerWithTransaction(*aNode->AsElement());
   }
 
   // can it be put inside a "big" or "small"?
@@ -1763,7 +1761,7 @@ HTMLEditor::RemoveElementIfNoStyleOrIdOrClass(Element& aElement)
     return NS_OK;
   }
 
-  return RemoveContainer(&aElement);
+  return RemoveContainerWithTransaction(aElement);
 }
 
 } // namespace mozilla
