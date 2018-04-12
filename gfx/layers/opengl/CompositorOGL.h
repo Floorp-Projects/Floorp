@@ -165,6 +165,11 @@ public:
   virtual already_AddRefed<AsyncReadbackBuffer>
   CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) override;
 
+  virtual bool
+  BlitRenderTarget(CompositingRenderTarget* aSource,
+                   const gfx::IntSize& aSourceSize,
+                   const gfx::IntSize& aDestSize) override;
+
   virtual void DrawQuad(const gfx::Rect& aRect,
                         const gfx::IntRect& aClipRect,
                         const EffectChain &aEffectChain,

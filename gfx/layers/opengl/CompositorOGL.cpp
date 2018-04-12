@@ -44,6 +44,7 @@
 #include "GLReadTexImageHelper.h"
 #include "GLBlitTextureImageHelper.h"
 #include "HeapCopyOfStackArray.h"
+#include "GLBlitHelper.h"
 #include "mozilla/gfx/Swizzle.h"
 
 #if MOZ_WIDGET_ANDROID
@@ -708,6 +709,24 @@ CompositorOGL::ReadbackRenderTarget(CompositingRenderTarget* aSource,
   if (previousTarget != aSource) {
     SetRenderTarget(previousTarget);
   }
+  return true;
+}
+
+bool
+CompositorOGL::BlitRenderTarget(CompositingRenderTarget* aSource,
+                                const gfx::IntSize& aSourceSize,
+                                const gfx::IntSize& aDestSize)
+{
+  if (!mGLContext->IsSupported(GLFeature::framebuffer_blit)) {
+    return false;
+  }
+  CompositingRenderTargetOGL* source =
+    static_cast<CompositingRenderTargetOGL*>(aSource);
+  GLuint srcFBO = source->GetFBO();
+  GLuint destFBO = mCurrentRenderTarget->GetFBO();
+  mGLContext->BlitHelper()->
+    BlitFramebufferToFramebuffer(srcFBO, destFBO, aSourceSize, aDestSize,
+                                 LOCAL_GL_LINEAR);
   return true;
 }
 
