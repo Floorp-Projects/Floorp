@@ -59,7 +59,7 @@ Linker::newCode(JSContext* cx, CodeKind kind)
     code->copyFrom(masm);
     masm.link(code);
     if (masm.embedsNurseryPointers())
-        cx->zone()->group()->storeBuffer().putWholeCell(code);
+        cx->runtime()->gc.storeBuffer().putWholeCell(code);
     return code;
 }
 

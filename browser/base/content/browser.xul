@@ -1110,11 +1110,9 @@
                    tooltip="bhTooltip" popupsinherittooltip="true">
           <menuitem id="BMB_viewBookmarksSidebar"
                     class="subviewbutton"
-                    label="&viewBookmarksSidebar2.label;"
-                    type="checkbox"
-                    oncommand="SidebarUI.toggle('viewBookmarksSidebar');">
-            <observes element="viewBookmarksSidebar" attribute="checked"/>
-          </menuitem>
+                    label-show="&viewBookmarksSidebar2.label;"
+                    label-hide="&hideBookmarksSidebar.label;"
+                    oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
           <!-- NB: temporary solution for bug 985024, this should go away soon. -->
           <menuitem id="BMB_bookmarksShowAllTop"
                     class="menuitem-iconic subviewbutton"
@@ -1133,11 +1131,10 @@
                                          new PlacesMenu(event, 'place:folder=TOOLBAR',
                                                         PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);">
               <menuitem id="BMB_viewBookmarksToolbar"
-                        placesanonid="view-toolbar"
-                        toolbarId="PersonalToolbar"
-                        type="checkbox"
-                        oncommand="onViewToolbarCommand(event)"
-                        label="&viewBookmarksToolbar.label;"/>
+                        class="subviewbutton"
+                        label-show="&viewBookmarksToolbar.label;"
+                        label-hide="&hideBookmarksToolbar.label;"
+                        oncommand="BookmarkingUI.toggleBookmarksToolbar();"/>
               <menuseparator/>
               <!-- Bookmarks toolbar items -->
             </menupopup>
