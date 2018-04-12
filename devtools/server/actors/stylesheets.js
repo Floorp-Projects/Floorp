@@ -125,6 +125,137 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
   }
 });
 
+function getSheetText(sheet, consoleActor) {
+  let cssText = modifiedStyleSheets.get(sheet);
+  if (cssText !== undefined) {
+    return Promise.resolve(cssText);
+  }
+
+  if (!sheet.href) {
+    // this is an inline <style> sheet
+    let content = sheet.ownerNode.textContent;
+    return Promise.resolve(content);
+  }
+
+  return fetchStylesheet(sheet, consoleActor).then(({ content }) => content);
+}
+
+exports.getSheetText = getSheetText;
+
+/**
+ * Try to fetch the stylesheet text from the network monitor.  If it was enabled during
+ * the load, it should have a copy of the text saved.
+ *
+ * @param string href
+ *        The URL of the sheet to fetch.
+ */
+function fetchStylesheetFromNetworkMonitor(href, consoleActor) {
+  if (!consoleActor) {
+    return null;
+  }
+  let request = consoleActor.getNetworkEventActorForURL(href);
+  if (!request) {
+    return null;
+  }
+  let content = request._response.content;
+  if (request._discardResponseBody || request._truncated || !content) {
+    return null;
+  }
+  if (content.text.type != "longString") {
+    // For short strings, the text is available directly.
+    return {
+      content: content.text,
+      contentType: content.mimeType,
+    };
+  }
+  // For long strings, look up the actor that holds the full text.
+  let longStringActor = consoleActor.conn._getOrCreateActor(content.text.actor);
+  if (!longStringActor) {
+    return null;
+  }
+  return {
+    content: longStringActor.rawValue(),
+    contentType: content.mimeType,
+  };
+}
+
+/**
+ * Get the charset of the stylesheet.
+ */
+function getCSSCharset(sheet) {
+  if (sheet) {
+    // charset attribute of <link> or <style> element, if it exists
+    if (sheet.ownerNode && sheet.ownerNode.getAttribute) {
+      let linkCharset = sheet.ownerNode.getAttribute("charset");
+      if (linkCharset != null) {
+        return linkCharset;
+      }
+    }
+
+    // charset of referring document.
+    if (sheet.ownerNode && sheet.ownerNode.ownerDocument.characterSet) {
+      return sheet.ownerNode.ownerDocument.characterSet;
+    }
+  }
+
+  return "UTF-8";
+}
+
+/**
+ * Fetch a stylesheet at the provided URL. Returns a promise that will resolve the
+ * result of the fetch command.
+ *
+ * @return {Promise} a promise that resolves with an object with the following members
+ *         on success:
+ *           - content: the document at that URL, as a string,
+ *           - contentType: the content type of the document
+ *         If an error occurs, the promise is rejected with that error.
+ */
+async function fetchStylesheet(sheet, consoleActor) {
+  let href = sheet.href;
+
+  let result = fetchStylesheetFromNetworkMonitor(href, consoleActor);
+  if (result) {
+    return result;
+  }
+
+  let options = {
+    loadFromCache: true,
+    policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
+    charset: getCSSCharset(sheet)
+  };
+
+  // Bug 1282660 - We use the system principal to load the default internal
+  // stylesheets instead of the content principal since such stylesheets
+  // require system principal to load. At meanwhile, we strip the loadGroup
+  // for preventing the assertion of the userContextId mismatching.
+
+  // chrome|file|resource|moz-extension protocols rely on the system principal.
+  let excludedProtocolsRe = /^(chrome|file|resource|moz-extension):\/\//;
+  if (!excludedProtocolsRe.test(href)) {
+    // Stylesheets using other protocols should use the content principal.
+    if (sheet.ownerNode) {
+      // eslint-disable-next-line mozilla/use-ownerGlobal
+      options.window = sheet.ownerNode.ownerDocument.defaultView;
+      options.principal = sheet.ownerNode.ownerDocument.nodePrincipal;
+    }
+  }
+
+  try {
+    result = await fetch(href, options);
+  } catch (e) {
+    // The list of excluded protocols can be missing some protocols, try to use the
+    // system principal if the first fetch failed.
+    console.error(`stylesheets actor: fetch failed for ${href},` +
+      ` using system principal instead.`);
+    options.window = undefined;
+    options.principal = undefined;
+    result = await fetch(href, options);
+  }
+
+  return result;
+}
+
 /**
  * A StyleSheetActor represents a stylesheet on the server.
  */
@@ -372,80 +503,16 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       return Promise.resolve(this.text);
     }
 
-    let cssText = modifiedStyleSheets.get(this.rawSheet);
-    if (cssText !== undefined) {
-      this.text = cssText;
-      return Promise.resolve(cssText);
-    }
-
-    if (!this.href) {
-      // this is an inline <style> sheet
-      let content = this.ownerNode.textContent;
-      this.text = content;
-      return Promise.resolve(content);
-    }
-
-    return this.fetchStylesheet(this.href).then(({ content }) => {
-      this.text = content;
-      return content;
+    return getSheetText(this.rawSheet, this._consoleActor).then(text => {
+      this.text = text;
+      return text;
     });
   },
 
   /**
-   * Fetch a stylesheet at the provided URL. Returns a promise that will resolve the
-   * result of the fetch command.
-   *
-   * @param  {String} href
-   *         The href of the stylesheet to retrieve.
-   * @return {Promise} a promise that resolves with an object with the following members
-   *         on success:
-   *           - content: the document at that URL, as a string,
-   *           - contentType: the content type of the document
-   *         If an error occurs, the promise is rejected with that error.
-   */
-  async fetchStylesheet(href) {
-    // Check if network monitor observed this load, and if so, use that.
-    let result = this.fetchStylesheetFromNetworkMonitor(href);
-    if (result) {
-      return result;
-    }
-
-    let options = {
-      loadFromCache: true,
-      policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
-      charset: this._getCSSCharset()
-    };
-
-    // Bug 1282660 - We use the system principal to load the default internal
-    // stylesheets instead of the content principal since such stylesheets
-    // require system principal to load. At meanwhile, we strip the loadGroup
-    // for preventing the assertion of the userContextId mismatching.
-
-    // chrome|file|resource|moz-extension protocols rely on the system principal.
-    let excludedProtocolsRe = /^(chrome|file|resource|moz-extension):\/\//;
-    if (!excludedProtocolsRe.test(this.href)) {
-      // Stylesheets using other protocols should use the content principal.
-      options.window = this.ownerWindow;
-      options.principal = this.ownerDocument.nodePrincipal;
-    }
-
-    try {
-      result = await fetch(this.href, options);
-    } catch (e) {
-      // The list of excluded protocols can be missing some protocols, try to use the
-      // system principal if the first fetch failed.
-      console.error(`stylesheets actor: fetch failed for ${this.href},` +
-        ` using system principal instead.`);
-      options.window = undefined;
-      options.principal = undefined;
-      result = await fetch(this.href, options);
-    }
-
-    return result;
-  },
-
-  /**
    * Try to locate the console actor if it exists via our parent actor (the tab).
+   *
+   * Keep this in sync with the TabActor version.
    */
   get _consoleActor() {
     if (this.parentActor.exited) {
@@ -453,44 +520,6 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     }
     let form = this.parentActor.form();
     return this.conn._getOrCreateActor(form.consoleActor);
-  },
-
-  /**
-   * Try to fetch the stylesheet text from the network monitor.  If it was enabled during
-   * the load, it should have a copy of the text saved.
-   *
-   * @param string href
-   *        The URL of the sheet to fetch.
-   */
-  fetchStylesheetFromNetworkMonitor(href) {
-    let consoleActor = this._consoleActor;
-    if (!consoleActor) {
-      return null;
-    }
-    let request = consoleActor.getNetworkEventActorForURL(href);
-    if (!request) {
-      return null;
-    }
-    let content = request._response.content;
-    if (request._discardResponseBody || request._truncated || !content) {
-      return null;
-    }
-    if (content.text.type != "longString") {
-      // For short strings, the text is available directly.
-      return {
-        content: content.text,
-        contentType: content.mimeType,
-      };
-    }
-    // For long strings, look up the actor that holds the full text.
-    let longStringActor = this.conn._getOrCreateActor(content.text.actor);
-    if (!longStringActor) {
-      return null;
-    }
-    return {
-      content: longStringActor.rawValue(),
-      contentType: content.mimeType,
-    };
   },
 
   /**
@@ -521,49 +550,6 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       }
       return mediaRules;
     });
-  },
-
-  /**
-   * Get the charset of the stylesheet according to the character set rules
-   * defined in <http://www.w3.org/TR/CSS2/syndata.html#charset>.
-   * Note that some of the algorithm is implemented in DevToolsUtils.fetch.
-   */
-  _getCSSCharset: function() {
-    let sheet = this.rawSheet;
-    if (sheet) {
-      // Do we have a @charset rule in the stylesheet?
-      // step 2 of syndata.html (without the BOM check).
-      if (sheet.cssRules) {
-        let rules = sheet.cssRules;
-        if (rules.length
-            && rules.item(0).type == CSSRule.CHARSET_RULE) {
-          return rules.item(0).encoding;
-        }
-      }
-
-      // step 3: charset attribute of <link> or <style> element, if it exists
-      if (sheet.ownerNode && sheet.ownerNode.getAttribute) {
-        let linkCharset = sheet.ownerNode.getAttribute("charset");
-        if (linkCharset != null) {
-          return linkCharset;
-        }
-      }
-
-      // step 4 (1 of 2): charset of referring stylesheet.
-      let parentSheet = sheet.parentStyleSheet;
-      if (parentSheet && parentSheet.cssRules &&
-          parentSheet.cssRules[0].type == CSSRule.CHARSET_RULE) {
-        return parentSheet.cssRules[0].encoding;
-      }
-
-      // step 4 (2 of 2): charset of referring document.
-      if (sheet.ownerNode && sheet.ownerNode.ownerDocument.characterSet) {
-        return sheet.ownerNode.ownerDocument.characterSet;
-      }
-    }
-
-    // step 5: default to utf-8.
-    return "UTF-8";
   },
 
   /**
