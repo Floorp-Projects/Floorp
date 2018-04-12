@@ -17,10 +17,10 @@ class VoidFunction;
 class AudioWorkletGlobalScope final : public WorkletGlobalScope
 {
 public:
-  explicit AudioWorkletGlobalScope(nsPIDOMWindowInner* aWindow);
+  AudioWorkletGlobalScope();
 
   bool
-  WrapGlobalObject(JSContext* aCx, nsIPrincipal* aPrincipal,
+  WrapGlobalObject(JSContext* aCx,
                    JS::MutableHandle<JSObject*> aReflector) override;
 
   void
@@ -28,7 +28,7 @@ public:
                     VoidFunction& aProcessorCtor);
 
 private:
-  ~AudioWorkletGlobalScope();
+  ~AudioWorkletGlobalScope() = default;
 };
 
 } // namespace dom

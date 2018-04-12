@@ -34,11 +34,6 @@ public final class SessionTextInput {
         View getView();
         Handler getHandler(Handler defHandler);
         InputConnection onCreateInputConnection(EditorInfo attrs);
-        boolean onKeyPreIme(int keyCode, KeyEvent event);
-        boolean onKeyDown(int keyCode, KeyEvent event);
-        boolean onKeyUp(int keyCode, KeyEvent event);
-        boolean onKeyLongPress(int keyCode, KeyEvent event);
-        boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event);
         boolean isInputActive();
         void setShowSoftInputOnFocus(boolean showSoftInputOnFocus);
     }
@@ -55,12 +50,12 @@ public final class SessionTextInput {
         // ENDT_MONITOR stops the monitor for composing character rects.
         @WrapForJNI final int END_MONITOR = 3;
 
-        void sendKeyEvent(KeyEvent event, int action, int metaState);
+        void sendKeyEvent(@Nullable View view, boolean inputActive, int action,
+                          @NonNull KeyEvent event);
         Editable getEditable();
         void setBatchMode(boolean isBatchMode);
-        void setSuppressKeyUp(boolean suppress);
-        Handler setInputConnectionHandler(Handler handler);
-        void postToInputConnection(Runnable runnable);
+        Handler setInputConnectionHandler(@NonNull Handler handler);
+        void postToInputConnection(@NonNull Runnable runnable);
         void requestCursorUpdates(int requestMode);
     }
 
@@ -135,27 +130,12 @@ public final class SessionTextInput {
      * @param defHandler Handler returned by the system {@code getHandler} implementation.
      * @return Handler to return to the system through {@code getHandler}.
      */
-    public @NonNull Handler getHandler(final @NonNull Handler defHandler) {
+    public synchronized @NonNull Handler getHandler(final @NonNull Handler defHandler) {
         // May be called on any thread.
         if (mInputConnection != null) {
             return mInputConnection.getHandler(defHandler);
         }
         return defHandler;
-    }
-
-    private synchronized boolean ensureInputConnection() {
-        if (!mQueue.isReady()) {
-            return false;
-        }
-
-        if (mInputConnection == null) {
-            mInputConnection = GeckoInputConnection.create(mSession,
-                                                           /* view */ null,
-                                                           mEditable);
-            mInputConnection.setShowSoftInputOnFocus(mShowSoftInputOnFocus);
-            mEditable.setListener((EditableListener) mInputConnection);
-        }
-        return true;
     }
 
     /**
@@ -194,9 +174,10 @@ public final class SessionTextInput {
      * @param attrs EditorInfo instance to be filled on return.
      * @return InputConnection instance or null if input method is not active.
      */
-    public @Nullable InputConnection onCreateInputConnection(final @NonNull EditorInfo attrs) {
+    public synchronized @Nullable InputConnection onCreateInputConnection(
+            final @NonNull EditorInfo attrs) {
         // May be called on any thread.
-        if (!ensureInputConnection()) {
+        if (!mQueue.isReady() || mInputConnection == null) {
             return null;
         }
         return mInputConnection.onCreateInputConnection(attrs);
@@ -211,10 +192,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyPreIme(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        if (!ensureInputConnection()) {
-            return false;
-        }
-        return mInputConnection.onKeyPreIme(keyCode, event);
+        return mEditable.onKeyPreIme(getView(), isInputActive(), keyCode, event);
     }
 
     /**
@@ -226,10 +204,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyDown(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        if (!ensureInputConnection()) {
-            return false;
-        }
-        return mInputConnection.onKeyDown(keyCode, event);
+        return mEditable.onKeyDown(getView(), isInputActive(), keyCode, event);
     }
 
     /**
@@ -241,10 +216,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyUp(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        if (!ensureInputConnection()) {
-            return false;
-        }
-        return mInputConnection.onKeyUp(keyCode, event);
+        return mEditable.onKeyUp(getView(), isInputActive(), keyCode, event);
     }
 
     /**
@@ -256,10 +228,7 @@ public final class SessionTextInput {
      */
     public boolean onKeyLongPress(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        if (!ensureInputConnection()) {
-            return false;
-        }
-        return mInputConnection.onKeyLongPress(keyCode, event);
+        return mEditable.onKeyLongPress(getView(), isInputActive(), keyCode, event);
     }
 
     /**
@@ -273,10 +242,7 @@ public final class SessionTextInput {
     public boolean onKeyMultiple(final int keyCode, final int repeatCount,
                                  final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        if (!ensureInputConnection()) {
-            return false;
-        }
-        return mInputConnection.onKeyMultiple(keyCode, repeatCount, event);
+        return mEditable.onKeyMultiple(getView(), isInputActive(), keyCode, repeatCount, event);
     }
 
     /**
@@ -291,14 +257,26 @@ public final class SessionTextInput {
     }
 
     /**
-     * Prevent soft input when gaining focus
+     * Set whether to show the soft keyboard when an input field gains focus.
      *
-     * @param showSoftInputOnFocus Set whether soft input is shown when an input field gains focus.
+     * @param showSoftInputOnFocus True to show soft input on input focus.
      */
-    synchronized public void setShowSoftInputOnFocus(boolean showSoftInputOnFocus) {
+    public void setShowSoftInputOnFocus(final boolean showSoftInputOnFocus) {
+        ThreadUtils.assertOnUiThread();
+
         mShowSoftInputOnFocus = showSoftInputOnFocus;
         if (mInputConnection != null) {
             mInputConnection.setShowSoftInputOnFocus(showSoftInputOnFocus);
         }
+    }
+
+    /**
+     * Return whether to show the soft keyboard when an input field gains focus.
+     *
+     * @return True if soft input is shown on input focus.
+     */
+    public boolean getShowSoftInputOnFocus() {
+        ThreadUtils.assertOnUiThread();
+        return mShowSoftInputOnFocus;
     }
 }

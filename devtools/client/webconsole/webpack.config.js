@@ -77,7 +77,6 @@ webpackConfig.resolve = {
   alias: {
     "Services": "devtools-modules/src/Services",
 
-    "devtools/client/webconsole/jsterm": path.join(__dirname, "../../client/shared/webpack/shims/jsterm-stub"),
     "devtools/client/webconsole/utils": path.join(__dirname, "test/fixtures/WebConsoleUtils"),
 
     "devtools/client/shared/vendor/immutable": "immutable",

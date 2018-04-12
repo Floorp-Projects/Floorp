@@ -229,7 +229,8 @@ public:
   // Check whether the caller is system if you know you're on the main thread.
   static bool IsSystemCaller(JSContext* aCx);
 
-  // Check whether the caller is system if you might be on a worker thread.
+  // Check whether the caller is system if you might be on a worker or worklet
+  // thread.
   static bool ThreadsafeIsSystemCaller(JSContext* aCx);
 
   // In the traditional Gecko architecture, both C++ code and untrusted JS code
@@ -2047,7 +2048,6 @@ public:
                                       const nsAString &viewportInfo);
 
   static JSContext *GetCurrentJSContext();
-  static JSContext *GetCurrentJSContextForThread();
 
   /**
    * Case insensitive comparison between two strings. However it only ignores

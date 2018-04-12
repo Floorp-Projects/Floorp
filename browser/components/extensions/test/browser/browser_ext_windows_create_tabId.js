@@ -138,3 +138,88 @@ add_task(async function testWindowCreate() {
   await extension.awaitFinish("window-create");
   await extension.unload();
 });
+
+add_task(async function testWebNavigationOnWindowCreateTabId() {
+  async function background() {
+    const webNavEvents = [];
+    const onceTabsAttached = [];
+
+    let promiseTabAttached = (tab) => {
+      return new Promise(resolve => {
+        browser.tabs.onAttached.addListener(function listener(tabId) {
+          if (tabId !== tab.id) {
+            return;
+          }
+          browser.tabs.onAttached.removeListener(listener);
+          resolve();
+        });
+      });
+    };
+
+    // Listen to webNavigation.onCompleted events to ensure that
+    // it is not going to be fired when we move the existent tabs
+    // to new windows.
+    browser.webNavigation.onCompleted.addListener((data) => {
+      webNavEvents.push(data);
+    });
+
+    // Wait for the list of urls needed to select the test tabs,
+    // and then move these tabs to a new window and assert that
+    // no webNavigation.onCompleted events should be received
+    // while the tabs are being adopted into the new windows.
+    browser.test.onMessage.addListener(async (msg, testTabURLs) => {
+      if (msg !== "testTabURLs") {
+        return;
+      }
+
+      // Retrieve the tabs list and filter out the tabs that should
+      // not be moved into a new window.
+      let allTabs = await browser.tabs.query({});
+      let testTabs = allTabs.filter(tab => {
+        return testTabURLs.includes(tab.url);
+      });
+
+      browser.test.assertEq(2, testTabs.length, "Got the expected number of test tabs");
+
+      for (let tab of testTabs) {
+        onceTabsAttached.push(promiseTabAttached(tab));
+        await browser.windows.create({tabId: tab.id});
+      }
+
+      // Wait the tabs to have been attached to the new window and then assert that no
+      // webNavigation.onCompleted event has been received.
+      browser.test.log("Waiting tabs move to new window to be attached");
+      await Promise.all(onceTabsAttached);
+
+      browser.test.assertEq("[]", JSON.stringify(webNavEvents),
+                            "No webNavigation.onCompleted event should have been received");
+
+      // Remove all the test tabs before exiting the test successfully.
+      for (let tab of testTabs) {
+        await browser.tabs.remove(tab.id);
+      }
+
+      browser.test.notifyPass("webNavigation-on-window-create-tabId");
+    });
+  }
+
+  const testURLs = ["http://example.com/", "http://example.org/"];
+
+  for (let url of testURLs) {
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs", "webNavigation"],
+    },
+    background,
+  });
+
+  await extension.startup();
+
+  await extension.sendMessage("testTabURLs", testURLs);
+
+  await extension.awaitFinish("webNavigation-on-window-create-tabId");
+  await extension.unload();
+});

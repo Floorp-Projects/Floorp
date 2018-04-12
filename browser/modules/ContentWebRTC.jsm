@@ -148,9 +148,9 @@ function handleGUMRequest(aSubject, aTopic, aData) {
              constraints, devices, secure, isHandlingUserInput);
     },
     function(error) {
-      // bug 827146 -- In the future, the UI should catch NotFoundError
-      // and allow the user to plug in a device, instead of immediately failing.
-      denyGUMRequest({callID: aSubject.callID}, error);
+      // Device enumeration is done ahead of handleGUMRequest, so we're not
+      // responsible for handling the NotFoundError spec case.
+      denyGUMRequest({callID: aSubject.callID});
     },
     aSubject.innerWindowID,
     aSubject.callID);
@@ -203,7 +203,9 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
     requestTypes.push(sharingAudio ? "AudioCapture" : "Microphone");
 
   if (!requestTypes.length) {
-    denyGUMRequest({callID: aCallID}, "NotFoundError");
+    // Device enumeration is done ahead of handleGUMRequest, so we're not
+    // responsible for handling the NotFoundError spec case.
+    denyGUMRequest({callID: aCallID});
     return;
   }
 
@@ -235,13 +237,8 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
   mm.sendAsyncMessage("webrtc:Request", request);
 }
 
-function denyGUMRequest(aData, aError) {
-  let msg = null;
-  if (aError) {
-    msg = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-    msg.data = aError;
-  }
-  Services.obs.notifyObservers(msg, "getUserMedia:response:deny", aData.callID);
+function denyGUMRequest(aData) {
+  Services.obs.notifyObservers(null, "getUserMedia:response:deny", aData.callID);
 
   if (!aData.windowID)
     return;

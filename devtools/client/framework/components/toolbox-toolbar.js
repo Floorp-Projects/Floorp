@@ -7,7 +7,7 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {div, button} = dom;
-const {openLink} = require("devtools/client/shared/link");
+const {openTrustedLink} = require("devtools/client/shared/link");
 
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
@@ -397,7 +397,7 @@ function showMeatballMenu(
     id: "toolbox-meatball-menu-gettingstarted",
     label: L10N.getStr("toolbox.meatballMenu.gettingStarted.label"),
     click: () => {
-      openLink("https://developer.mozilla.org/docs/Tools", toolbox);
+      openTrustedLink("https://developer.mozilla.org/docs/Tools", toolbox);
     },
   }));
 
@@ -406,7 +406,7 @@ function showMeatballMenu(
     id: "toolbox-meatball-menu-feedback",
     label: L10N.getStr("toolbox.meatballMenu.giveFeedback.label"),
     click: () => {
-      openLink("https://discourse.mozilla.org/c/devtools", toolbox);
+      openTrustedLink("https://discourse.mozilla.org/c/devtools", toolbox);
     },
   }));
 
