@@ -2709,8 +2709,7 @@ InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
 
 // Used to implement the cross-context <Interface>.isInstance static method.
 bool
-InterfaceIsInstance(JSContext* cx, unsigned argc, JS::Value* vp,
-                    prototypes::ID prototypeID, int depth);
+InterfaceIsInstance(JSContext* cx, unsigned argc, JS::Value* vp);
 
 // Helper for lenient getters/setters to report to console.  If this
 // returns false, we couldn't even get a global.

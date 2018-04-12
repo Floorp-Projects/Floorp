@@ -106,7 +106,8 @@ const char* const XPCJSRuntime::mStrings[] = {
     "stack",                // IDX_STACK
     "message",              // IDX_MESSAGE
     "lastIndex",            // IDX_LASTINDEX
-    "then"                  // IDX_THEN
+    "then",                 // IDX_THEN
+    "isInstance",           // IDX_ISINSTANCE
 };
 
 /***************************************************************************/
