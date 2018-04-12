@@ -6,7 +6,6 @@
 #include "MediaData.h"
 #include "mozilla/Array.h"
 #include "mozilla/ArrayUtils.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla
 {
@@ -56,7 +55,7 @@ Adts::ConvertSample(uint16_t aChannelCount,
   header[5] = ((newSize & 7) << 5) + 0x1f;
   header[6] = 0xfc;
 
-  nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
+  UniquePtr<MediaRawDataWriter> writer(aSample->CreateWriter());
   if (!writer->Prepend(&header[0], ArrayLength(header))) {
     return false;
   }
@@ -88,7 +87,7 @@ Adts::RevertSample(MediaRawData* aSample)
     }
   }
 
-  nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
+  UniquePtr<MediaRawDataWriter> writer(aSample->CreateWriter());
   writer->PopFront(kADTSHeaderSize);
 
   if (aSample->mCrypto.mValid) {
