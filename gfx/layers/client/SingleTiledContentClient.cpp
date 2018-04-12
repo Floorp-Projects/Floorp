@@ -33,7 +33,6 @@ void
 SingleTiledContentClient::UpdatedBuffer(TiledBufferType aType)
 {
   mForwarder->UseTiledLayerBuffer(this, mTiledBuffer->GetSurfaceDescriptorTiles());
-  mTiledBuffer->ClearPaintedRegion();
 }
 
 /* static */ bool
@@ -180,8 +179,6 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
   extraPainted.MoveBy(mTilingOrigin);
   extraPainted.And(extraPainted, aNewValidRegion);
-  mPaintedRegion.OrWith(paintRegion);
-  mPaintedRegion.OrWith(extraPainted);
 
   if (!backBuffer) {
     return;
