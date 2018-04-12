@@ -690,20 +690,19 @@ IsFullStoreBufferReason(JS::gcreason::Reason reason)
 void
 js::Nursery::collect(JS::gcreason::Reason reason)
 {
-    MOZ_ASSERT(!TlsContext.get()->suppressGC);
+    JSRuntime* rt = runtime();
+    MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
     if (!isEnabled() || isEmpty()) {
         // Our barriers are not always exact, and there may be entries in the
         // storebuffer even when the nursery is disabled or empty. It's not safe
         // to keep these entries as they may refer to tenured cells which may be
         // freed after this point.
-        runtime()->gc.storeBuffer().clear();
+        rt->gc.storeBuffer().clear();
     }
 
     if (!isEnabled())
         return;
-
-    JSRuntime* rt = runtime();
 
 #ifdef JS_GC_ZEAL
     if (rt->gc.hasZealMode(ZealMode::CheckNursery)) {
@@ -750,7 +749,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
         IsFullStoreBufferReason(reason);
 
     if (shouldPretenure) {
-        JSContext* cx = TlsContext.get();
+        JSContext* cx = rt->mainContextFromOwnThread();
         for (auto& entry : tenureCounts.entries) {
             if (entry.count >= 3000) {
                 ObjectGroup* group = entry.group;

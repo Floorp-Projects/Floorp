@@ -313,9 +313,11 @@ Zone::canCollect()
 void
 Zone::notifyObservingDebuggers()
 {
+    JSRuntime* rt = runtimeFromActiveCooperatingThread();
+    JSContext* cx = rt->mainContextFromOwnThread();
+
     for (CompartmentsInZoneIter comps(this); !comps.done(); comps.next()) {
-        JSRuntime* rt = runtimeFromAnyThread();
-        RootedGlobalObject global(TlsContext.get(), comps->unsafeUnbarrieredMaybeGlobal());
+        RootedGlobalObject global(cx, comps->unsafeUnbarrieredMaybeGlobal());
         if (!global)
             continue;
 
