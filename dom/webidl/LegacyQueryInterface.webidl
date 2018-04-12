@@ -18,11 +18,6 @@ interface LegacyQueryInterface {
 };
 
 BoxObject implements LegacyQueryInterface;
-ChildProcessMessageManager implements LegacyQueryInterface;
-ChromeMessageBroadcaster implements LegacyQueryInterface;
-ChromeMessageSender implements LegacyQueryInterface;
-ContentFrameMessageManager implements LegacyQueryInterface;
-ContentProcessMessageManager implements LegacyQueryInterface;
 DOMParser implements LegacyQueryInterface;
 Document implements LegacyQueryInterface;
 DocumentFragment implements LegacyQueryInterface;
