@@ -5,12 +5,6 @@
 
 package org.mozilla.geckoview;
 
-import org.mozilla.gecko.Clipboard;
-import org.mozilla.gecko.InputMethods;
-import org.mozilla.gecko.util.ActivityUtils;
-import org.mozilla.gecko.util.GamepadUtils;
-import org.mozilla.gecko.util.ThreadUtils;
-
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -22,14 +16,12 @@ import android.media.AudioManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
 import android.text.SpannableString;
 import android.text.Spanned;
-import android.text.method.KeyListener;
-import android.text.method.TextKeyListener;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -41,6 +33,11 @@ import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+
+import org.mozilla.gecko.Clipboard;
+import org.mozilla.gecko.InputMethods;
+import org.mozilla.gecko.util.ActivityUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -85,7 +82,7 @@ import java.lang.reflect.Proxy;
 
     // Prevent showSoftInput and hideSoftInput from causing reentrant calls on some devices.
     private volatile boolean mSoftInputReentrancyGuard;
-    private boolean mShowSoftInputOnFocus = true;
+    /* package */ boolean mShowSoftInputOnFocus = true;
 
     public static SessionTextInput.Delegate create(
             final GeckoSession session,
@@ -287,9 +284,6 @@ import java.lang.reflect.Proxy;
     }
 
     private void showSoftInputWithToolbar(final boolean showToolbar) {
-        if (!mShowSoftInputOnFocus) {
-            return;
-        }
         if (mSoftInputReentrancyGuard) {
             return;
         }
@@ -302,6 +296,10 @@ import java.lang.reflect.Proxy;
         v.post(new Runnable() {
             @Override
             public void run() {
+                if (!mShowSoftInputOnFocus) {
+                    return;
+                }
+
                 if (v.hasFocus() && !imm.isActive(v)) {
                     // Marshmallow workaround: The view has focus but it is not the active
                     // view for the input method. (Bug 1211848)
@@ -773,103 +771,22 @@ import java.lang.reflect.Proxy;
         return super.setSelection(start, end);
     }
 
-    /* package */ void sendKeyEvent(final int action, KeyEvent event) {
-        final Editable editable = getEditable();
-        if (editable == null) {
-            return;
-        }
-
-        final KeyListener keyListener = TextKeyListener.getInstance();
-        event = translateKey(event.getKeyCode(), event);
-
-        // We only let TextKeyListener do UI things on the UI thread.
-        final View v = ThreadUtils.isOnUiThread() ? getView() : null;
-        final int keyCode = event.getKeyCode();
-        final boolean handled;
-
-        if (shouldSkipKeyListener(keyCode, event)) {
-            handled = false;
-        } else if (action == KeyEvent.ACTION_DOWN) {
-            mEditableClient.setSuppressKeyUp(true);
-            handled = keyListener.onKeyDown(v, editable, keyCode, event);
-        } else if (action == KeyEvent.ACTION_UP) {
-            handled = keyListener.onKeyUp(v, editable, keyCode, event);
-        } else {
-            handled = keyListener.onKeyOther(v, editable, event);
-        }
-
-        if (!handled) {
-            mEditableClient.sendKeyEvent(event, action, TextKeyListener.getMetaState(editable));
-        }
-
-        if (action == KeyEvent.ACTION_DOWN) {
-            if (!handled) {
-                // Usually, the down key listener call above adjusts meta states for us.
-                // However, if the call didn't handle the event, we have to manually
-                // adjust meta states so the meta states remain consistent.
-                TextKeyListener.adjustMetaAfterKeypress(editable);
-            }
-            mEditableClient.setSuppressKeyUp(false);
-        }
-    }
-
     @Override
-    public boolean sendKeyEvent(KeyEvent event) {
-        sendKeyEvent(event.getAction(), event);
+    public boolean sendKeyEvent(@NonNull KeyEvent event) {
+        event = translateKey(event.getKeyCode(), event);
+        mEditableClient.sendKeyEvent(getView(), isInputActive(), event.getAction(), event);
         return false; // seems to always return false
     }
 
-    @Override // SessionTextInput.Delegate
-    public boolean onKeyPreIme(int keyCode, KeyEvent event) {
-        return false;
-    }
-
-    private boolean shouldProcessKey(int keyCode, KeyEvent event) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_MENU:
-            case KeyEvent.KEYCODE_BACK:
-            case KeyEvent.KEYCODE_VOLUME_UP:
-            case KeyEvent.KEYCODE_VOLUME_DOWN:
-            case KeyEvent.KEYCODE_SEARCH:
-            // ignore HEADSETHOOK to allow hold-for-voice-search to work
-            case KeyEvent.KEYCODE_HEADSETHOOK:
-                return false;
-        }
-        return true;
-    }
-
-    private boolean shouldSkipKeyListener(int keyCode, KeyEvent event) {
-        if (mIMEState == IME_STATE_DISABLED) {
-            return true;
-        }
-        // Preserve enter and tab keys for the browser
-        if (keyCode == KeyEvent.KEYCODE_ENTER ||
-            keyCode == KeyEvent.KEYCODE_TAB) {
-            return true;
-        }
-        // BaseKeyListener returns false even if it handled these keys for us,
-        // so we skip the key listener entirely and handle these ourselves
-        if (keyCode == KeyEvent.KEYCODE_DEL ||
-            keyCode == KeyEvent.KEYCODE_FORWARD_DEL) {
-            return true;
-        }
-        return false;
-    }
-
-    private KeyEvent translateKey(int keyCode, KeyEvent event) {
+    private KeyEvent translateKey(final int keyCode, final @NonNull KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_ENTER:
                 if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0 &&
-                    mIMEActionHint.equalsIgnoreCase("next")) {
+                        mIMEActionHint.equalsIgnoreCase("next")) {
                     return new KeyEvent(event.getAction(), KeyEvent.KEYCODE_TAB);
                 }
                 break;
         }
-
-        if (GamepadUtils.isSonyXperiaGamepadKeyEvent(event)) {
-            return GamepadUtils.translateSonyXperiaGamepadKeys(keyCode, event);
-        }
-
         return event;
     }
 
@@ -904,92 +821,6 @@ import java.lang.reflect.Proxy;
         }
     }
 
-    private boolean processKey(final int action, final int keyCode, final KeyEvent event) {
-
-        if (keyCode > KeyEvent.getMaxKeyCode() || !shouldProcessKey(keyCode, event)) {
-            return false;
-        }
-
-        mEditableClient.postToInputConnection(new Runnable() {
-            @Override
-            public void run() {
-                sendKeyEvent(action, event);
-            }
-        });
-        return true;
-    }
-
-    @Override // SessionTextInput.Delegate
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        return processKey(KeyEvent.ACTION_DOWN, keyCode, event);
-    }
-
-    @Override // SessionTextInput.Delegate
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        return processKey(KeyEvent.ACTION_UP, keyCode, event);
-    }
-
-    /**
-     * Get a key that represents a given character.
-     */
-    private KeyEvent getCharKeyEvent(final char c) {
-        final long time = SystemClock.uptimeMillis();
-        return new KeyEvent(time, time, KeyEvent.ACTION_MULTIPLE,
-                            KeyEvent.KEYCODE_UNKNOWN, /* repeat */ 0) {
-            @Override
-            public int getUnicodeChar() {
-                return c;
-            }
-
-            @Override
-            public int getUnicodeChar(int metaState) {
-                return c;
-            }
-        };
-    }
-
-    @Override // SessionTextInput.Delegate
-    public boolean onKeyMultiple(int keyCode, int repeatCount, final KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
-            // KEYCODE_UNKNOWN means the characters are in KeyEvent.getCharacters()
-            final String str = event.getCharacters();
-            for (int i = 0; i < str.length(); i++) {
-                final KeyEvent charEvent = getCharKeyEvent(str.charAt(i));
-                if (!processKey(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_UNKNOWN, charEvent) ||
-                    !processKey(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_UNKNOWN, charEvent)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        while ((repeatCount--) != 0) {
-            if (!processKey(KeyEvent.ACTION_DOWN, keyCode, event) ||
-                !processKey(KeyEvent.ACTION_UP, keyCode, event)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override // SessionTextInput.Delegate
-    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        View v = getView();
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_MENU:
-                if (!mShowSoftInputOnFocus) {
-                    return false;
-                }
-                InputMethodManager imm = getInputMethodManager();
-                imm.toggleSoftInputFromWindow(v.getWindowToken(),
-                                              InputMethodManager.SHOW_FORCED, 0);
-                return true;
-            default:
-                break;
-        }
-        return false;
-    }
-
     @Override // SessionTextInput.Delegate
     public synchronized boolean isInputActive() {
         // Make sure this picks up PASSWORD state as well.
@@ -998,6 +829,7 @@ import java.lang.reflect.Proxy;
 
     @Override // SessionTextInput.Delegate
     public void setShowSoftInputOnFocus(final boolean showSoftInputOnFocus) {
+        ThreadUtils.assertOnUiThread();
         mShowSoftInputOnFocus = showSoftInputOnFocus;
     }
 

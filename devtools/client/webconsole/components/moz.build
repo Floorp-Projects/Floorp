@@ -15,6 +15,7 @@ DevToolsModules(
     'FilterButton.js',
     'FilterCheckbox.js',
     'GripMessageBody.js',
+    'JSTerm.js',
     'Message.js',
     'MessageContainer.js',
     'MessageIcon.js',

@@ -765,14 +765,12 @@ var PlacesUIUtils = {
    * Helper for guessing scheme from an url string.
    * Used to avoid nsIURI overhead in frequently called UI functions.
    *
-   * @param aUrlString the url to guess the scheme from.
-   *
+   * @param {string} href The url to guess the scheme from.
    * @return guessed scheme for this url string.
-   *
    * @note this is not supposed be perfect, so use it only for UI purposes.
    */
-  guessUrlSchemeForUI: function PUIU_guessUrlSchemeForUI(aUrlString) {
-    return aUrlString.substr(0, aUrlString.indexOf(":"));
+  guessUrlSchemeForUI(href) {
+    return href.substr(0, href.indexOf(":"));
   },
 
   getBestTitle: function PUIU_getBestTitle(aNode, aDoNotCutTitle) {

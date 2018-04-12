@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.mozilla.gecko.GeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
+import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
@@ -23,6 +24,9 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
+import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Selection;
@@ -32,10 +36,13 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.TextUtils;
+import android.text.method.KeyListener;
+import android.text.method.TextKeyListener;
 import android.text.style.CharacterStyle;
 import android.util.Log;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
+import android.view.View;
 
 /**
  * GeckoEditable implements only some functions of Editable
@@ -846,7 +853,49 @@ import android.view.KeyEvent;
     }
 
     @Override // SessionTextInput.EditableClient
-    public void sendKeyEvent(final KeyEvent event, int action, int metaState) {
+    public void sendKeyEvent(final @Nullable View view, final boolean inputActive, final int action,
+                             @NonNull KeyEvent event) {
+        final Editable editable = getEditable();
+        if (editable == null) {
+            return;
+        }
+
+        final KeyListener keyListener = TextKeyListener.getInstance();
+        event = translateKey(event.getKeyCode(), event);
+
+        // We only let TextKeyListener do UI things on the UI thread.
+        final View v = ThreadUtils.isOnUiThread() ? view : null;
+        final int keyCode = event.getKeyCode();
+        final boolean handled;
+
+        if (!inputActive || shouldSkipKeyListener(keyCode, event)) {
+            handled = false;
+        } else if (action == KeyEvent.ACTION_DOWN) {
+            setSuppressKeyUp(true);
+            handled = keyListener.onKeyDown(v, editable, keyCode, event);
+        } else if (action == KeyEvent.ACTION_UP) {
+            handled = keyListener.onKeyUp(v, editable, keyCode, event);
+        } else {
+            handled = keyListener.onKeyOther(v, editable, event);
+        }
+
+        if (!handled) {
+            sendKeyEvent(event, action, TextKeyListener.getMetaState(editable));
+        }
+
+        if (action == KeyEvent.ACTION_DOWN) {
+            if (!handled) {
+                // Usually, the down key listener call above adjusts meta states for us.
+                // However, if the call didn't handle the event, we have to manually
+                // adjust meta states so the meta states remain consistent.
+                TextKeyListener.adjustMetaAfterKeypress(editable);
+            }
+            setSuppressKeyUp(false);
+        }
+    }
+
+    private void sendKeyEvent(final @NonNull KeyEvent event, final int action,
+                              final int metaState) {
         if (DEBUG) {
             assertOnIcThread();
             Log.d(LOGTAG, "sendKeyEvent(" + event + ", " + action + ", " + metaState + ")");
@@ -877,6 +926,28 @@ import android.view.KeyEvent;
         } catch (final RemoteException e) {
             Log.e(LOGTAG, "Remote call failed", e);
         }
+    }
+
+    private boolean shouldSkipKeyListener(final int keyCode, final @NonNull KeyEvent event) {
+        // Preserve enter and tab keys for the browser
+        if (keyCode == KeyEvent.KEYCODE_ENTER ||
+            keyCode == KeyEvent.KEYCODE_TAB) {
+            return true;
+        }
+        // BaseKeyListener returns false even if it handled these keys for us,
+        // so we skip the key listener entirely and handle these ourselves
+        if (keyCode == KeyEvent.KEYCODE_DEL ||
+            keyCode == KeyEvent.KEYCODE_FORWARD_DEL) {
+            return true;
+        }
+        return false;
+    }
+
+    private KeyEvent translateKey(final int keyCode, final @NonNull KeyEvent event) {
+        if (GamepadUtils.isSonyXperiaGamepadKeyEvent(event)) {
+            return GamepadUtils.translateSonyXperiaGamepadKeys(keyCode, event);
+        }
+        return event;
     }
 
     @Override // SessionTextInput.EditableClient
@@ -927,8 +998,7 @@ import android.view.KeyEvent;
         mText.syncShadowText(mListener);
     }
 
-    @Override // SessionTextInput.EditableClient
-    public void setSuppressKeyUp(boolean suppress) {
+    private void setSuppressKeyUp(boolean suppress) {
         if (DEBUG) {
             assertOnIcThread();
         }
@@ -1632,6 +1702,101 @@ import android.view.KeyEvent;
     @Override
     public String toString() {
         throw new UnsupportedOperationException("method must be called through mProxy");
+    }
+
+    public boolean onKeyPreIme(final @Nullable View view, final boolean inputActive,
+                               final int keyCode, final @NonNull KeyEvent event) {
+        return false;
+    }
+
+    public boolean onKeyDown(final @Nullable View view, final boolean inputActive,
+                             final int keyCode, final @NonNull KeyEvent event) {
+        return processKey(view, inputActive, KeyEvent.ACTION_DOWN, keyCode, event);
+    }
+
+    public boolean onKeyUp(final @Nullable View view, final boolean inputActive,
+                           final int keyCode, final @NonNull KeyEvent event) {
+        return processKey(view, inputActive, KeyEvent.ACTION_UP, keyCode, event);
+    }
+
+    public boolean onKeyMultiple(final @Nullable View view, final boolean inputActive,
+                                 final int keyCode, int repeatCount,
+                                 final @NonNull KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
+            // KEYCODE_UNKNOWN means the characters are in KeyEvent.getCharacters()
+            final String str = event.getCharacters();
+            for (int i = 0; i < str.length(); i++) {
+                final KeyEvent charEvent = getCharKeyEvent(str.charAt(i));
+                if (!processKey(view, inputActive, KeyEvent.ACTION_DOWN,
+                                KeyEvent.KEYCODE_UNKNOWN, charEvent) ||
+                    !processKey(view, inputActive, KeyEvent.ACTION_UP,
+                                KeyEvent.KEYCODE_UNKNOWN, charEvent)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        while ((repeatCount--) > 0) {
+            if (!processKey(view, inputActive, KeyEvent.ACTION_DOWN, keyCode, event) ||
+                !processKey(view, inputActive, KeyEvent.ACTION_UP, keyCode, event)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean onKeyLongPress(final @Nullable View view, final boolean inputActive,
+                                  final int keyCode, final @NonNull KeyEvent event) {
+        return false;
+    }
+
+    /**
+     * Get a key that represents a given character.
+     */
+    private static KeyEvent getCharKeyEvent(final char c) {
+        final long time = SystemClock.uptimeMillis();
+        return new KeyEvent(time, time, KeyEvent.ACTION_MULTIPLE,
+                            KeyEvent.KEYCODE_UNKNOWN, /* repeat */ 0) {
+            @Override
+            public int getUnicodeChar() {
+                return c;
+            }
+
+            @Override
+            public int getUnicodeChar(int metaState) {
+                return c;
+            }
+        };
+    }
+
+    private boolean processKey(final @Nullable View view, final boolean inputActive,
+                               final int action, final int keyCode, final @NonNull KeyEvent event) {
+        if (keyCode > KeyEvent.getMaxKeyCode() || !shouldProcessKey(keyCode, event)) {
+            return false;
+        }
+
+        postToInputConnection(new Runnable() {
+            @Override
+            public void run() {
+                sendKeyEvent(view, inputActive, action, event);
+            }
+        });
+        return true;
+    }
+
+    private static boolean shouldProcessKey(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_MENU:
+            case KeyEvent.KEYCODE_BACK:
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+            case KeyEvent.KEYCODE_SEARCH:
+                // ignore HEADSETHOOK to allow hold-for-voice-search to work
+            case KeyEvent.KEYCODE_HEADSETHOOK:
+                return false;
+        }
+        return true;
     }
 }
 

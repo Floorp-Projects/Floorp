@@ -4208,8 +4208,10 @@ var gCSSProperties = {
     prerequisites: { "display": "block", "contain": "none" },
     subproperties: [ "overflow-x", "overflow-y" ],
     initial_values: [ "visible" ],
-    other_values: [ "auto", "scroll", "hidden", "-moz-hidden-unscrollable", "-moz-scrollbars-none" ],
-    invalid_values: []
+    other_values: [ "auto", "scroll", "hidden", "-moz-hidden-unscrollable", "-moz-scrollbars-none",
+                    "auto auto", "auto scroll", "hidden scroll", "auto hidden",
+                    "-moz-hidden-unscrollable -moz-hidden-unscrollable" ],
+    invalid_values: [ "-moz-hidden-unscrollable -moz-scrollbars-none" ]
   },
   "overflow-x": {
     domProp: "overflowX",

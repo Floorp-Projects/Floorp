@@ -17,7 +17,6 @@ DevToolsModules(
     'console-commands.js',
     'constants.js',
     'hudservice.js',
-    'jsterm.js',
     'main.js',
     'new-console-output-wrapper.js',
     'new-webconsole.js',
