@@ -2216,18 +2216,6 @@ public:
     NotifyPullImpl(aDesiredTime);
   }
 
-  RefPtr<SourceMediaStream::NotifyPullPromise> AsyncNotifyPull(
-    MediaStreamGraph* aGraph,
-    StreamTime aDesiredTime) override
-  {
-    RefPtr<PipelineListener> self = this;
-    return InvokeAsync(mTaskQueue, __func__, [self, aDesiredTime]() {
-      self->NotifyPullImpl(aDesiredTime);
-      return SourceMediaStream::NotifyPullPromise::CreateAndResolve(true,
-                                                                    __func__);
-    });
-  }
-
 private:
   ~PipelineListener()
   {

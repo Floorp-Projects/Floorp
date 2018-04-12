@@ -61,14 +61,6 @@ public:
    * some reason, then data before aDesiredTime may not be played immediately.
    */
   virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) {}
-  virtual RefPtr<SourceMediaStream::NotifyPullPromise> AsyncNotifyPull(
-    MediaStreamGraph* aGraph,
-    StreamTime aDesiredTime)
-  {
-    NotifyPull(aGraph, aDesiredTime);
-    return SourceMediaStream::NotifyPullPromise::CreateAndResolve(true,
-                                                                  __func__);
-  }
 
   enum Blocking {
     BLOCKED,
