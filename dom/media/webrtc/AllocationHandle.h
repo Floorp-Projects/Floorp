@@ -44,20 +44,17 @@ public:
   AllocationHandle() = delete;
   AllocationHandle(const dom::MediaTrackConstraints& aConstraints,
                    const ipc::PrincipalInfo& aPrincipalInfo,
-                   const MediaEnginePrefs& aPrefs,
                    const nsString& aDeviceId)
     : mId(GetUniqueId())
     , mDeviceId(aDeviceId)
     , mPrincipalInfo(aPrincipalInfo)
     , mConstraints(aConstraints)
-    , mPrefs(aPrefs)
   {}
 
   const uint64_t mId;
   const nsString mDeviceId;
   const ipc::PrincipalInfo mPrincipalInfo;
   NormalizedConstraints mConstraints;
-  MediaEnginePrefs mPrefs;
 };
 
 } // namespace mozilla

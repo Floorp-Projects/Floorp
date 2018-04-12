@@ -63,7 +63,7 @@ impl ws::Handler for Server {
                     "fetch_clip_scroll_tree" => DebugCommand::FetchClipScrollTree,
                     "fetch_render_tasks" => DebugCommand::FetchRenderTasks,
                     msg => {
-                        println!("unknown msg {}", msg);
+                        error!("unknown msg {}", msg);
                         return Ok(());
                     }
                 };
@@ -105,9 +105,9 @@ impl DebugServer {
 
         let join_handle = Some(thread::spawn(move || {
             let address = "127.0.0.1:3583";
-            println!("WebRender debug server started: {}", address);
+            debug!("WebRender debug server started: {}", address);
             if let Err(..) = socket.listen(address) {
-                println!("ERROR: Unable to bind debugger websocket (port may be in use).");
+                error!("ERROR: Unable to bind debugger websocket (port may be in use).");
             }
         }));
 

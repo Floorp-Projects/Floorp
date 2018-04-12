@@ -324,6 +324,14 @@ impl Transaction {
         self.frame_ops.push(FrameMsg::UpdateDynamicProperties(properties));
     }
 
+    /// Add to the list of animated property bindings that should be used to
+    /// resolve bindings in the current display list. This is a convenience method
+    /// so the caller doesn't have to figure out all the dynamic properties before
+    /// setting them on the transaction but can do them incrementally.
+    pub fn append_dynamic_properties(&mut self, properties: DynamicProperties) {
+        self.frame_ops.push(FrameMsg::AppendDynamicProperties(properties));
+    }
+
     /// Enable copying of the output of this pipeline id to
     /// an external texture for callers to consume.
     pub fn enable_frame_output(&mut self, pipeline_id: PipelineId, enable: bool) {
@@ -486,6 +494,7 @@ pub enum FrameMsg {
     ScrollNodeWithId(LayoutPoint, ExternalScrollId, ScrollClamping),
     GetScrollNodeState(MsgSender<Vec<ScrollNodeState>>),
     UpdateDynamicProperties(DynamicProperties),
+    AppendDynamicProperties(DynamicProperties),
 }
 
 impl fmt::Debug for SceneMsg {
@@ -513,6 +522,7 @@ impl fmt::Debug for FrameMsg {
             FrameMsg::GetScrollNodeState(..) => "FrameMsg::GetScrollNodeState",
             FrameMsg::EnableFrameOutput(..) => "FrameMsg::EnableFrameOutput",
             FrameMsg::UpdateDynamicProperties(..) => "FrameMsg::UpdateDynamicProperties",
+            FrameMsg::AppendDynamicProperties(..) => "FrameMsg::AppendDynamicProperties",
         })
     }
 }

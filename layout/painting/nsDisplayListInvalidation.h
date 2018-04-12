@@ -353,4 +353,17 @@ public:
   nsPoint mFrameOffsetToViewport;
 };
 
+class nsDisplayOpacityGeometry : public nsDisplayItemGenericGeometry
+{
+public:
+  nsDisplayOpacityGeometry(nsDisplayItem* aItem,
+                           nsDisplayListBuilder* aBuilder,
+                           float aOpacity)
+    : nsDisplayItemGenericGeometry(aItem, aBuilder)
+    , mOpacity(aOpacity)
+  {}
+
+  float mOpacity;
+};
+
 #endif /*NSDISPLAYLISTINVALIDATION_H_*/

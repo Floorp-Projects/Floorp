@@ -197,7 +197,7 @@ impl Wrench {
             )) as Box<webrender::ApiRecordingReceiver>,
         });
 
-        let mut debug_flags = DebugFlags::default();
+        let mut debug_flags = DebugFlags::ECHO_DRIVER_MESSAGES;
         debug_flags.set(DebugFlags::DISABLE_BATCHING, no_batch);
         let callbacks = Arc::new(Mutex::new(blob::BlobCallbacks::new()));
 

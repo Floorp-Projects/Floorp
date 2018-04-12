@@ -762,6 +762,7 @@ DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,
 
 void
 DisplayListBuilder::PushStackingContext(const wr::LayoutRect& aBounds,
+                                        const wr::WrClipId* aClipNodeId,
                                         const WrAnimationProperty* aAnimation,
                                         const float* aOpacity,
                                         const gfx::Matrix4x4* aTransform,
@@ -781,9 +782,10 @@ DisplayListBuilder::PushStackingContext(const wr::LayoutRect& aBounds,
     perspective = ToLayoutTransform(*aPerspective);
   }
   const wr::LayoutTransform* maybePerspective = aPerspective ? &perspective : nullptr;
+  const size_t* maybeClipNodeId = aClipNodeId ? &aClipNodeId->id : nullptr;
   WRDL_LOG("PushStackingContext b=%s t=%s\n", mWrState, Stringify(aBounds).c_str(),
       aTransform ? Stringify(*aTransform).c_str() : "none");
-  wr_dp_push_stacking_context(mWrState, aBounds, aAnimation, aOpacity,
+  wr_dp_push_stacking_context(mWrState, aBounds, maybeClipNodeId, aAnimation, aOpacity,
                               maybeTransform, aTransformStyle, maybePerspective,
                               aMixBlendMode, aFilters.Elements(), aFilters.Length(), aIsBackfaceVisible);
 }

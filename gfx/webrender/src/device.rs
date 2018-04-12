@@ -11,6 +11,7 @@ use api::ImageDescriptor;
 use euclid::Transform3D;
 use gleam::gl;
 use internal_types::{FastHashMap, RenderTargetInfo};
+use log::Level;
 use smallvec::SmallVec;
 use std::cell::RefCell;
 use std::fs::File;
@@ -787,7 +788,7 @@ impl Device {
             _ => return,
         };
         for (line, prefix) in source.lines().skip(base_line_number).zip(&["|",">","|"]) {
-            println!("{}\t{}", prefix, line);
+            error!("{}\t{}", prefix, line);
         }
     }
 
@@ -803,13 +804,13 @@ impl Device {
         gl.compile_shader(id);
         let log = gl.get_shader_info_log(id);
         if gl.get_shader_iv(id, gl::COMPILE_STATUS) == (0 as gl::GLint) {
-            println!("Failed to compile shader: {}\n{}", name, log);
+            error!("Failed to compile shader: {}\n{}", name, log);
             #[cfg(debug_assertions)]
             Self::print_shader_errors(source, &log);
             Err(ShaderError::Compilation(name.to_string(), log))
         } else {
             if !log.is_empty() {
-                println!("Warnings detected on shader: {}\n{}", name, log);
+                warn!("Warnings detected on shader: {}\n{}", name, log);
             }
             Ok(id)
         }
@@ -1380,7 +1381,7 @@ impl Device {
 
                 if self.gl.get_program_iv(pid, gl::LINK_STATUS) == (0 as gl::GLint) {
                     let error_log = self.gl.get_program_info_log(pid);
-                    println!(
+                    error!(
                       "Failed to load a program object with a program binary: {} renderer {}\n{}",
                       base_filename,
                       self.renderer_name,
@@ -1442,7 +1443,7 @@ impl Device {
 
             if self.gl.get_program_iv(pid, gl::LINK_STATUS) == (0 as gl::GLint) {
                 let error_log = self.gl.get_program_info_log(pid);
-                println!(
+                error!(
                     "Failed to link shader program: {}\n{}",
                     base_filename,
                     error_log
@@ -2102,6 +2103,31 @@ impl Device {
 
     pub fn supports_extension(&self, extension: &str) -> bool {
         self.extensions.iter().any(|s| s == extension)
+    }
+
+    pub fn echo_driver_messages(&self) {
+        for msg in self.gl.get_debug_messages() {
+            let level = match msg.severity {
+                gl::DEBUG_SEVERITY_HIGH => Level::Error,
+                gl::DEBUG_SEVERITY_MEDIUM => Level::Warn,
+                gl::DEBUG_SEVERITY_LOW => Level::Info,
+                gl::DEBUG_SEVERITY_NOTIFICATION => Level::Debug,
+                _ => Level::Trace,
+            };
+            let ty = match msg.ty {
+                gl::DEBUG_TYPE_ERROR => "error",
+                gl::DEBUG_TYPE_DEPRECATED_BEHAVIOR => "deprecated",
+                gl::DEBUG_TYPE_UNDEFINED_BEHAVIOR => "undefined",
+                gl::DEBUG_TYPE_PORTABILITY => "portability",
+                gl::DEBUG_TYPE_PERFORMANCE => "perf",
+                gl::DEBUG_TYPE_MARKER => "marker",
+                gl::DEBUG_TYPE_PUSH_GROUP => "group push",
+                gl::DEBUG_TYPE_POP_GROUP => "group pop",
+                gl::DEBUG_TYPE_OTHER => "other",
+                _ => "?",
+            };
+            log!(level, "({}) {}", ty, msg.message);
+        }
     }
 }
 

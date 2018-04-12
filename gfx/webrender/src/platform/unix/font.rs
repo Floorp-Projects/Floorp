@@ -19,7 +19,11 @@ use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING, FT_LOAD_VERTICAL
 use freetype::freetype::{FT_FACE_FLAG_SCALABLE, FT_FACE_FLAG_FIXED_SIZES};
 use freetype::succeeded;
 use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphRasterResult, RasterizedGlyph};
+#[cfg(feature = "pathfinder")]
+use glyph_rasterizer::NativeFontHandleWrapper;
 use internal_types::{FastHashMap, ResourceCacheError};
+#[cfg(feature = "pathfinder")]
+use pathfinder_font_renderer::freetype as pf_freetype;
 use std::{cmp, mem, ptr, slice};
 use std::cmp::max;
 use std::ffi::CString;
@@ -192,7 +196,7 @@ impl FontContext {
                     },
                 );
             } else {
-                println!("WARN: webrender failed to load font");
+                warn!("WARN: webrender failed to load font");
                 debug!("font={:?}", font_key);
             }
         }
@@ -219,7 +223,7 @@ impl FontContext {
                     },
                 );
             } else {
-                println!("WARN: webrender failed to load font");
+                warn!("WARN: webrender failed to load font");
                 debug!("font={:?}, path={:?}", font_key, pathname);
             }
         }
@@ -786,5 +790,13 @@ impl Drop for FontContext {
         unsafe {
             FT_Done_FreeType(self.lib);
         }
+    }
+}
+
+#[cfg(feature = "pathfinder")]
+impl<'a> Into<pf_freetype::FontDescriptor> for NativeFontHandleWrapper<'a> {
+    fn into(self) -> pf_freetype::FontDescriptor {
+        let NativeFontHandleWrapper(font_handle) = self;
+        pf_freetype::FontDescriptor::new(font_handle.pathname.clone().into(), font_handle.index)
     }
 }

@@ -4,7 +4,7 @@
 
 use api::{AddFont, BlobImageData, BlobImageResources, ResourceUpdate, ResourceUpdates};
 use api::{BlobImageDescriptor, BlobImageError, BlobImageRenderer, BlobImageRequest};
-use api::{ClearCache, ColorF, DevicePoint, DeviceUintRect, DeviceUintSize};
+use api::{ClearCache, ColorF, DevicePoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
 use api::{Epoch, FontInstanceKey, FontKey, FontTemplate};
 use api::{ExternalImageData, ExternalImageType};
 use api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
@@ -482,7 +482,8 @@ impl ResourceCache {
             data,
             epoch: Epoch(0),
             tiling,
-            dirty_rect: None,
+            dirty_rect: Some(DeviceUintRect::new(DeviceUintPoint::zero(),
+                                                 DeviceUintSize::new(descriptor.width, descriptor.height))),
         };
 
         self.resources.image_templates.insert(image_key, resource);
