@@ -11,9 +11,9 @@ html {
 <script>
 function boom()
 {
-    document.documentElement.offsetHeight;
-    document.getElementById("hostW").createShadowRoot().innerHTML = '<z></z>';
-    document.getElementsByTagName("style")[0].remove();
+  document.documentElement.offsetHeight;
+  document.getElementById("hostW").attachShadow({ mode: "open" }).innerHTML = '<z></z>';
+  document.getElementsByTagName("style")[0].remove();
 }
 </script>
 

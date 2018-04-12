@@ -52,7 +52,7 @@ window.GaiaSwitch = (function(win) {
   // Extend from the HTMLElement prototype
   class GaiaSwitch extends HTMLElement {
     connectedCallback() {
-      var shadow = this.createShadowRoot();
+      var shadow = this.attachShadow({ mode: "open" });
       this._template = template.content.cloneNode(true);
       this._input = this._template.querySelector('input[type="checkbox"]');
 
@@ -105,7 +105,7 @@ window.GaiaSwitch = (function(win) {
   var template = document.createElement('template');
   template.innerHTML = '<label id="switch-label" class="pack-switch">' +
       '<input type="checkbox">' +
-      '<span><content select="label"></content></span>' +
+      '<span><slot></slot></span>' +
     '</label>';
 
   // Register and return the constructor
