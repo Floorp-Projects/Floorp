@@ -238,7 +238,7 @@ ClientEngine.prototype = {
       return "desktop";
     }
     if (client.formfactor && client.formfactor.includes("tablet")) {
-      return "tablet"
+      return "tablet";
     }
     return "phone";
   },
