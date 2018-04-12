@@ -16,8 +16,12 @@
             "tests": ["tp5o_scroll", "glterrain"],
             "pagesets_name": "tp5n.zip"
         },
-        "g2-e10s": {
-            "tests": ["damp", "tps"],
+        "damp-e10s": {
+            "tests": ["damp"],
+            "pagesets_name": "tp5n.zip"
+        },
+        "tps-e10s": {
+            "tests": ["tps"],
             "pagesets_name": "tp5n.zip"
         },
         "g3-e10s": {
