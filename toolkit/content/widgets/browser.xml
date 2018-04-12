@@ -12,7 +12,7 @@
     <content clickthrough="never">
       <children/>
     </content>
-    <implementation type="application/javascript" implements="nsIObserver, nsIDOMEventListener, nsIBrowser">
+    <implementation type="application/javascript" implements="nsIObserver, nsIBrowser">
       <property name="autoscrollEnabled">
         <getter>
           <![CDATA[

@@ -17,7 +17,7 @@
 
   <binding id="tabbox"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <implementation implements="nsIDOMEventListener">
+    <implementation>
       <property name="handleCtrlTab">
         <setter>
         <![CDATA[
