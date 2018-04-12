@@ -9,6 +9,11 @@ const TEST_ENGINE_2_BASENAME = "searchSuggestionEngine2.xml";
 
 const TEST_MSG = "ContentSearchUIControllerTest";
 
+let {SearchTestUtils} = ChromeUtils.import(
+  "resource://testing-common/SearchTestUtils.jsm", {});
+
+SearchTestUtils.init(Assert, registerCleanupFunction);
+
 requestLongerTimeout(2);
 
 add_task(async function emptyInput() {
@@ -391,6 +396,7 @@ add_task(async function cycleEngines() {
         if (data != "engine-current") {
           return;
         }
+        subj.QueryInterface(Ci.nsISearchEngine);
         SimpleTest.is(subj.name, newEngineName, "Engine cycled correctly");
         Services.obs.removeObserver(resolver, "browser-search-engine-modified");
         resolve();
@@ -739,8 +745,11 @@ function setUpEngines() {
     let currentEngineName = Services.search.currentEngine.name;
     let currentEngines = Services.search.getVisibleEngines();
     info("Adding test search engines");
-    let engine1 = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
-    await promiseNewSearchEngine(TEST_ENGINE_2_BASENAME);
+    let rootDir = getRootDirectory(gTestPath);
+    let engine1 = await SearchTestUtils.promiseNewSearchEngine(
+      rootDir + TEST_ENGINE_BASENAME);
+    await SearchTestUtils.promiseNewSearchEngine(
+      rootDir + TEST_ENGINE_2_BASENAME);
     Services.search.currentEngine = engine1;
     for (let engine of currentEngines) {
       Services.search.removeEngine(engine);
