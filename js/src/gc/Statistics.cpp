@@ -966,7 +966,7 @@ Statistics::beginNurseryCollection(JS::gcreason::Reason reason)
     count(STAT_MINOR_GC);
     startingMinorGCNumber = runtime->gc.minorGCCount();
     if (nurseryCollectionCallback) {
-        (*nurseryCollectionCallback)(TlsContext.get(),
+        (*nurseryCollectionCallback)(runtime->mainContextFromOwnThread(),
                                      JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START,
                                      reason);
     }
@@ -976,7 +976,7 @@ void
 Statistics::endNurseryCollection(JS::gcreason::Reason reason)
 {
     if (nurseryCollectionCallback) {
-        (*nurseryCollectionCallback)(TlsContext.get(),
+        (*nurseryCollectionCallback)(runtime->mainContextFromOwnThread(),
                                      JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END,
                                      reason);
     }
@@ -1011,7 +1011,7 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
     // Slice callbacks should only fire for the outermost level.
     bool wasFullGC = zoneStats.isFullCollection();
     if (sliceCallback) {
-        JSContext* cx = TlsContext.get();
+        JSContext* cx = runtime->mainContextFromOwnThread();
         JS::GCDescription desc(!wasFullGC, false, gckind, reason);
         if (first)
             (*sliceCallback)(cx, JS::GC_CYCLE_BEGIN, desc);
@@ -1082,7 +1082,7 @@ Statistics::endSlice()
     if (!aborted) {
         bool wasFullGC = zoneStats.isFullCollection();
         if (sliceCallback) {
-            JSContext* cx = TlsContext.get();
+            JSContext* cx = runtime->mainContextFromOwnThread();
             JS::GCDescription desc(!wasFullGC, last, gckind, slices_.back().reason);
             (*sliceCallback)(cx, JS::GC_SLICE_END, desc);
             if (last)
