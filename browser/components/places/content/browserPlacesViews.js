@@ -437,7 +437,7 @@ PlacesViewBase.prototype = {
       aPopup._siteURIMenuitem.setAttribute("targetURI", siteUrl);
       aPopup._siteURIMenuitem.setAttribute("oncommand",
         "openUILink(this.getAttribute('targetURI'), event, {" +
-        " triggeringPrincipal: Services.scriptSecurityManger.createNullPrincipal({})});");
+        " triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});");
 
       // If a user middle-clicks this item we serve the oncommand event.
       // We are using checkForMiddleClick because of Bug 246720.
