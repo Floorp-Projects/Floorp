@@ -232,8 +232,14 @@ MediaEngineWebRTCMicrophoneSource::Reconfigure(const RefPtr<AllocationHandle>& a
   LOG(("Mic source %p allocation %p Reconfigure()", this, aHandle.get()));
 
   NormalizedConstraints constraints(aConstraints);
-  return ReevaluateAllocation(aHandle, &constraints, aPrefs, aDeviceId,
-                              aOutBadConstraint);
+  nsresult rv = ReevaluateAllocation(aHandle, &constraints, aPrefs, aDeviceId,
+                                     aOutBadConstraint);
+
+  size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
+  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex);
+  ApplySettings(mNetPrefs, mAllocations[i].mStream->GraphImpl());
+
+  return rv;
 }
 
 bool operator == (const MediaEnginePrefs& a, const MediaEnginePrefs& b)
@@ -451,11 +457,12 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
       break;
 
     case kStarted:
-      if (prefs == mLastPrefs) {
+    case kStopped:
+      if (prefs == mNetPrefs) {
         return NS_OK;
       }
 
-      if (prefs.mChannels != mLastPrefs.mChannels) {
+      if (prefs.mChannels != mNetPrefs.mChannels) {
         // If the channel count changed, tell the MSG to open a new driver with
         // the correct channel count.
         MOZ_ASSERT(!mAllocations.IsEmpty());
@@ -472,8 +479,8 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
         // Get validated number of channel
         uint32_t channelCount = 0;
         mAudioInput->GetChannelCount(channelCount);
-        MOZ_ASSERT(channelCount > 0 && mLastPrefs.mChannels > 0);
-        if (mLastPrefs.mChannels != prefs.mChannels &&
+        MOZ_ASSERT(channelCount > 0 && mNetPrefs.mChannels > 0);
+        if (mNetPrefs.mChannels != prefs.mChannels &&
             !stream->OpenNewAudioCallbackDriver(mListener)) {
           MOZ_LOG(GetMediaManagerLog(), LogLevel::Error, ("Could not open a new AudioCallbackDriver for input"));
           return NS_ERROR_FAILURE;
@@ -504,29 +511,21 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
     config.Set<webrtc::DelayAgnostic>(new webrtc::DelayAgnostic(mDelayAgnostic));
     mAudioProcessing->SetExtraOptions(config);
   }
-  mLastPrefs = prefs;
+  mNetPrefs = prefs;
   return NS_OK;
 }
 
 #undef HANDLE_APM_ERROR
 
 void
-MediaEngineWebRTCMicrophoneSource::ApplySettings(const MediaEnginePrefs& aPrefs)
+MediaEngineWebRTCMicrophoneSource::ApplySettings(const MediaEnginePrefs& aPrefs,
+                                                 RefPtr<MediaStreamGraphImpl> aGraph)
 {
   AssertIsOnOwningThread();
-
-  mLastPrefs = aPrefs;
+  MOZ_DIAGNOSTIC_ASSERT(aGraph);
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  RefPtr<MediaStreamGraphImpl> graph;
-  for (const Allocation& allocation : mAllocations) {
-    if (allocation.mStream && allocation.mStream->GraphImpl()) {
-      graph = allocation.mStream->GraphImpl();
-      break;
-    }
-  }
-  MOZ_DIAGNOSTIC_ASSERT(graph);
-  NS_DispatchToMainThread(media::NewRunnableFrom([that, graph, aPrefs]() mutable {
+  NS_DispatchToMainThread(media::NewRunnableFrom([that, graph = Move(aGraph), aPrefs]() mutable {
     that->mSettings->mEchoCancellation.Value() = aPrefs.mAecOn;
     that->mSettings->mAutoGainControl.Value() = aPrefs.mAgcOn;
     that->mSettings->mNoiseSuppression.Value() = aPrefs.mNoiseOn;
@@ -719,7 +718,7 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
     mState = kStarted;
   }
 
-  ApplySettings(mLastPrefs);
+  ApplySettings(mNetPrefs, allocation.mStream->GraphImpl());
 
   return NS_OK;
 }
