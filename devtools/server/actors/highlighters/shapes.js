@@ -525,7 +525,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       case "mouseup":
         if (this[_dragging]) {
           this[_dragging] = null;
-          this._handleMarkerHover(this.hoveredPoint);
+          this._handleMarkerHover(null);
         }
         break;
       case "mousemove":
@@ -615,6 +615,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     this[_dragging] = { type, pointsInfo, x: pageX, y: pageY, bb: this.boundingBox,
                         matrix: this.transformMatrix,
                         transformedBB: this.transformedBoundingBox };
+    this._handleMarkerHover(this.hoveredPoint);
   }
 
   /**
@@ -1384,7 +1385,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         { pointName: "scale-s", x: s[0], y: s[1], anchor: "n" },
         { pointName: "scale-e", x: e[0], y: e[1], anchor: "w" },
         { pointName: "scale-w", x: w[0], y: w[1], anchor: "e" },
-        { pointName: "rotate", x: rotatePoint[0], y: rotatePoint[1], cursor: "grab" },
+        { pointName: "rotate", x: rotatePoint[0], y: rotatePoint[1],
+          cursor: hoverCursor
+        },
       ];
 
       for (let { pointName, x, y, cursor, anchor } of points) {
