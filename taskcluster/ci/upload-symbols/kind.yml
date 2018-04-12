@@ -12,9 +12,6 @@ transforms:
 kind-dependencies:
     - build
 
-only-for-attributes:
-    - nightly
-
 job-template:
     description: Upload Symbols
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
@@ -38,4 +35,7 @@ job-template:
     run-on-projects:
         by-build-platform:
             .*devedition.*: ['mozilla-beta', 'maple']
-            default: ['all']
+            # Only upload symbols for nightlies on most branches.
+            .*(?<!-devedition)-nightly: ['all']
+            # Allow symbol upload for any build type on try.
+            default: ['try']
