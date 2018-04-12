@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[scriptable, function, uuid(df31c120-ded6-11d1-bd85-00805f8ae3f4)]
+[scriptable, builtinclass, uuid(df31c120-ded6-11d1-bd85-00805f8ae3f4)]
 interface nsIDOMEventListener : nsISupports
 {
   /**
