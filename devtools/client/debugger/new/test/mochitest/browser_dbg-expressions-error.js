@@ -35,11 +35,11 @@ add_task(async function() {
   await togglePauseOnExceptions(dbg, true, false);
 
   // add a good expression, 2 bad expressions, and another good one
+  log(`Adding location`);
   await addExpression(dbg, "location");
   await addExpression(dbg, "foo.bar");
   await addExpression(dbg, "foo.batt");
   await addExpression(dbg, "2");
-
   // check the value of
   is(getValue(dbg, 2), "(unavailable)");
   is(getValue(dbg, 3), "(unavailable)");

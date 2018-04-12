@@ -55,6 +55,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MainThreadIdlePeriod.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
@@ -109,10 +110,6 @@ const size_t gStackSize = 8192;
 #define NS_FIRST_GC_DELAY           10000 // ms
 
 #define NS_FULL_GC_DELAY            60000 // ms
-
-// The default amount of time to wait from the user being idle to starting a
-// shrinking GC.
-#define NS_DEAULT_INACTIVE_GC_DELAY 300000 // ms
 
 // Maximum amount of time that should elapse between incremental GC slices
 #define NS_INTERSLICE_GC_DELAY      100 // ms
@@ -183,8 +180,6 @@ static bool sLoadingInProgress;
 static uint32_t sCCollectedWaitingForGC;
 static uint32_t sCCollectedZonesWaitingForGC;
 static uint32_t sLikelyShortLivingObjectsNeedingGC;
-static bool sPostGCEventsToConsole;
-static bool sPostGCEventsToObserver;
 static int32_t sCCRunnerFireCount = 0;
 static uint32_t sMinForgetSkippableTime = UINT32_MAX;
 static uint32_t sMaxForgetSkippableTime = 0;
@@ -205,18 +200,10 @@ static bool sIsInitialized;
 static bool sDidShutdown;
 static bool sShuttingDown;
 
-// nsJSEnvironmentObserver observes the memory-pressure notifications
-// and forces a garbage collection and cycle collection when it happens, if
-// the appropriate pref is set.
-
-static bool sGCOnMemoryPressure;
-
 // nsJSEnvironmentObserver observes the user-interaction-inactive notifications
 // and triggers a shrinking a garbage collection if the user is still inactive
 // after NS_SHRINKING_GC_DELAY ms later, if the appropriate pref is set.
 
-static bool sCompactOnUserInactive;
-static uint32_t sCompactOnUserInactiveDelay = NS_DEAULT_INACTIVE_GC_DELAY;
 static bool sIsCompactingOnUserInactive = false;
 
 static TimeDuration sGCUnnotifiedTotalTime;
@@ -329,9 +316,9 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                  const char16_t* aData)
 {
   if (!nsCRT::strcmp(aTopic, "memory-pressure")) {
-    if (sGCOnMemoryPressure) {
-      if(StringBeginsWith(nsDependentString(aData),
-                          NS_LITERAL_STRING("low-memory-ongoing"))) {
+    if (StaticPrefs::javascript_options_gc_on_memory_pressure()) {
+      if (StringBeginsWith(nsDependentString(aData),
+                           NS_LITERAL_STRING("low-memory-ongoing"))) {
         // Don't GC/CC if we are in an ongoing low-memory state since its very
         // slow and it likely won't help us anyway.
         return NS_OK;
@@ -347,7 +334,7 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
       }
     }
   } else if (!nsCRT::strcmp(aTopic, "user-interaction-inactive")) {
-    if (sCompactOnUserInactive) {
+    if (StaticPrefs::javascript_options_compact_on_user_inactive()) {
       nsJSContext::PokeShrinkingGC();
     }
   } else if (!nsCRT::strcmp(aTopic, "user-interaction-active")) {
@@ -597,8 +584,6 @@ DumpString(const nsAString &str)
   printf("%s\n", NS_ConvertUTF16toUTF8(str).get());
 }
 #endif
-
-#define JS_OPTIONS_DOT_STR "javascript.options."
 
 nsJSContext::nsJSContext(bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
@@ -1699,7 +1684,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
   uint32_t minForgetSkippableTime = (sMinForgetSkippableTime == UINT32_MAX)
     ? 0 : sMinForgetSkippableTime;
 
-  if (sPostGCEventsToConsole || gCCStats.mFile) {
+  if (StaticPrefs::javascript_options_mem_log() || gCCStats.mFile) {
     nsCString mergeMsg;
     if (aResults.mMergedZones) {
       mergeMsg.AssignLiteral(" merged");
@@ -1729,7 +1714,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
                               PR_USEC_PER_MSEC,
                               sTotalForgetSkippableTime / PR_USEC_PER_MSEC,
                               gCCStats.mMaxSkippableDuration, sRemovedPurples);
-    if (sPostGCEventsToConsole) {
+    if (StaticPrefs::javascript_options_mem_log()) {
       nsCOMPtr<nsIConsoleService> cs =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
       if (cs) {
@@ -1741,7 +1726,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
     }
   }
 
-  if (sPostGCEventsToObserver) {
+  if (StaticPrefs::javascript_options_mem_notify()) {
     const char16_t* kJSONFmt =
        u"{ \"timestamp\": %llu, "
          u"\"duration\": %lu, "
@@ -2177,7 +2162,7 @@ nsJSContext::PokeShrinkingGC()
 
   NS_NewTimerWithFuncCallback(&sShrinkingGCTimer,
                               ShrinkingGCTimerFired, nullptr,
-                              sCompactOnUserInactiveDelay,
+                              StaticPrefs::javascript_options_compact_on_user_inactive_delay(),
                               nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
                               "ShrinkingGCTimerFired",
                               SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
@@ -2319,7 +2304,7 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
     case JS::GC_CYCLE_END: {
       PRTime delta = GetCollectionTimeDelta();
 
-      if (sPostGCEventsToConsole) {
+      if (StaticPrefs::javascript_options_mem_log()) {
         nsString gcstats;
         gcstats.Adopt(aDesc.formatSummaryMessage(aCx));
         nsAutoString prefix;
@@ -2334,7 +2319,8 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       }
 
       if (!sShuttingDown) {
-        if (sPostGCEventsToObserver || Telemetry::CanRecordExtended()) {
+        if (StaticPrefs::javascript_options_mem_notify() ||
+            Telemetry::CanRecordExtended()) {
           nsString json;
           json.Adopt(aDesc.formatJSON(aCx, PR_Now()));
           RefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
@@ -2406,7 +2392,7 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
-      if (sPostGCEventsToConsole) {
+      if (StaticPrefs::javascript_options_mem_log()) {
         nsString gcstats;
         gcstats.Adopt(aDesc.formatSliceMessage(aCx));
         nsAutoString prefix;
@@ -2463,7 +2449,6 @@ mozilla::dom::StartupJSEnvironment()
   sCCollectedWaitingForGC = 0;
   sCCollectedZonesWaitingForGC = 0;
   sLikelyShortLivingObjectsNeedingGC = 0;
-  sPostGCEventsToConsole = false;
   sNeedsFullCC = false;
   sNeedsFullGC = true;
   sNeedsGCAfterCC = false;
@@ -2776,23 +2761,6 @@ nsJSContext::EnsureStatics()
   if (!obs) {
     MOZ_CRASH();
   }
-
-  Preferences::AddBoolVarCache(&sGCOnMemoryPressure,
-                               "javascript.options.gc_on_memory_pressure",
-                               true);
-
-  Preferences::AddBoolVarCache(&sCompactOnUserInactive,
-                               "javascript.options.compact_on_user_inactive",
-                               true);
-
-  Preferences::AddUintVarCache(&sCompactOnUserInactiveDelay,
-                               "javascript.options.compact_on_user_inactive_delay",
-                               NS_DEAULT_INACTIVE_GC_DELAY);
-
-  Preferences::AddBoolVarCache(&sPostGCEventsToConsole,
-                               JS_OPTIONS_DOT_STR "mem.log");
-  Preferences::AddBoolVarCache(&sPostGCEventsToObserver,
-                               JS_OPTIONS_DOT_STR "mem.notify");
 
   nsIObserver* observer = new nsJSEnvironmentObserver();
   obs->AddObserver(observer, "memory-pressure", false);

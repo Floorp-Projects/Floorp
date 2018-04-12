@@ -725,14 +725,37 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
     switch (cmd.type()) {
+      case WebRenderParentCommand::TOpAddPipelineIdForCompositable: {
+        const OpAddPipelineIdForCompositable& op = cmd.get_OpAddPipelineIdForCompositable();
+        AddPipelineIdForCompositable(op.pipelineId(),
+                                     op.handle(),
+                                     op.isAsync());
+        break;
+      }
+      case WebRenderParentCommand::TOpRemovePipelineIdForCompositable: {
+        const OpRemovePipelineIdForCompositable& op = cmd.get_OpRemovePipelineIdForCompositable();
+        RemovePipelineIdForCompositable(op.pipelineId());
+        break;
+      }
+      case WebRenderParentCommand::TOpAddExternalImageIdForCompositable: {
+        const OpAddExternalImageIdForCompositable& op = cmd.get_OpAddExternalImageIdForCompositable();
+        AddExternalImageIdForCompositable(op.externalImageId(),
+                                          op.handle());
+        break;
+      }
+      case WebRenderParentCommand::TOpRemoveExternalImageId: {
+        const OpRemoveExternalImageId& op = cmd.get_OpRemoveExternalImageId();
+        RemoveExternalImageId(op.externalImageId());
+        break;
+      }
       case WebRenderParentCommand::TOpUpdateAsyncImagePipeline: {
         const OpUpdateAsyncImagePipeline& op = cmd.get_OpUpdateAsyncImagePipeline();
         mAsyncImageManager->UpdateAsyncImagePipeline(op.pipelineId(),
-                                                      op.scBounds(),
-                                                      op.scTransform(),
-                                                      op.scaleToSize(),
-                                                      op.filter(),
-                                                      op.mixBlendMode());
+                                                     op.scBounds(),
+                                                     op.scTransform(),
+                                                     op.scaleToSize(),
+                                                     op.filter(),
+                                                     op.mixBlendMode());
         break;
       }
       case WebRenderParentCommand::TCompositableOperation: {
@@ -816,13 +839,13 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvAddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
-                                                        const CompositableHandle& aHandle,
-                                                        const bool& aAsync)
+void
+WebRenderBridgeParent::AddPipelineIdForCompositable(const wr::PipelineId& aPipelineId,
+                                                    const CompositableHandle& aHandle,
+                                                    const bool& aAsync)
 {
   if (mDestroyed) {
-    return IPC_OK();
+    return;
   }
 
   MOZ_ASSERT(!mAsyncCompositables.Get(wr::AsUint64(aPipelineId)).get());
@@ -831,14 +854,14 @@ WebRenderBridgeParent::RecvAddPipelineIdForCompositable(const wr::PipelineId& aP
   if (aAsync) {
     RefPtr<ImageBridgeParent> imageBridge = ImageBridgeParent::GetInstance(OtherPid());
     if (!imageBridge) {
-       return IPC_FAIL_NO_REASON(this);
+       return;
     }
     host = imageBridge->FindCompositable(aHandle);
   } else {
     host = FindCompositable(aHandle);
   }
   if (!host) {
-    return IPC_FAIL_NO_REASON(this);
+    return;
   }
 
   WebRenderImageHost* wrHost = host->AsWebRenderImageHost();
@@ -848,7 +871,7 @@ WebRenderBridgeParent::RecvAddPipelineIdForCompositable(const wr::PipelineId& aP
   }
 
   if (!wrHost) {
-    return IPC_OK();
+    return;
   }
 
   wrHost->SetWrBridge(this);
@@ -856,19 +879,19 @@ WebRenderBridgeParent::RecvAddPipelineIdForCompositable(const wr::PipelineId& aP
   mAsyncCompositables.Put(wr::AsUint64(aPipelineId), wrHost);
   mAsyncImageManager->AddAsyncImagePipeline(aPipelineId, wrHost);
 
-  return IPC_OK();
+  return;
 }
 
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvRemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId)
+void
+WebRenderBridgeParent::RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId)
 {
   if (mDestroyed) {
-    return IPC_OK();
+    return;
   }
 
   WebRenderImageHost* wrHost = mAsyncCompositables.Get(wr::AsUint64(aPipelineId)).get();
   if (!wrHost) {
-    return IPC_OK();
+    return;
   }
 
   wr::TransactionBuilder txn;
@@ -878,15 +901,15 @@ WebRenderBridgeParent::RecvRemovePipelineIdForCompositable(const wr::PipelineId&
   txn.RemovePipeline(aPipelineId);
   mApi->SendTransaction(txn);
   mAsyncCompositables.Remove(wr::AsUint64(aPipelineId));
-  return IPC_OK();
+  return;
 }
 
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const ExternalImageId& aImageId,
-                                                             const CompositableHandle& aHandle)
+void
+WebRenderBridgeParent::AddExternalImageIdForCompositable(const ExternalImageId& aImageId,
+                                                         const CompositableHandle& aHandle)
 {
   if (mDestroyed) {
-    return IPC_OK();
+    return;
   }
   MOZ_ASSERT(!mExternalImageIds.Get(wr::AsUint64(aImageId)).get());
 
@@ -899,31 +922,31 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const ExternalImage
   }
 
   if (!wrHost) {
-    return IPC_OK();
+    return;
   }
 
   wrHost->SetWrBridge(this);
   mExternalImageIds.Put(wr::AsUint64(aImageId), wrHost);
 
-  return IPC_OK();
+  return;
 }
 
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvRemoveExternalImageId(const ExternalImageId& aImageId)
+void
+WebRenderBridgeParent::RemoveExternalImageId(const ExternalImageId& aImageId)
 {
   if (mDestroyed) {
-    return IPC_OK();
+    return;
   }
 
   WebRenderImageHost* wrHost = mExternalImageIds.Get(wr::AsUint64(aImageId)).get();
   if (!wrHost) {
-    return IPC_OK();
+    return;
   }
 
   wrHost->ClearWrBridge();
   mExternalImageIds.Remove(wr::AsUint64(aImageId));
 
-  return IPC_OK();
+  return;
 }
 
 mozilla::ipc::IPCResult

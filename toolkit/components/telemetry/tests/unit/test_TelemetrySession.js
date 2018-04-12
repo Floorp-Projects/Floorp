@@ -158,7 +158,7 @@ function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
   Assert.equal("environment" in aPing, aHasEnvironment);
 }
 
-function checkPayloadInfo(data) {
+function checkPayloadInfo(data, reason) {
   const ALLOWED_REASONS = [
     "environment-change", "shutdown", "daily", "saved-session", "test-ping"
   ];
@@ -216,6 +216,7 @@ function checkPayloadInfo(data) {
 
   Assert.ok(ALLOWED_REASONS.find(r => r == data.reason),
             "Payload must contain an allowed reason.");
+  Assert.equal(data.reason, reason, "Payload reason must match expected.");
 
   Assert.ok(Date.parse(data.subsessionStartDate) >= Date.parse(data.sessionStartDate));
   Assert.ok(data.profileSubsessionCounter >= data.subsessionCounter);
@@ -323,7 +324,7 @@ function checkEvents(processes) {
 
 function checkPayload(payload, reason, successfulPings, savedPings) {
   Assert.ok("info" in payload, "Payload must contain an info section.");
-  checkPayloadInfo(payload.info);
+  checkPayloadInfo(payload.info, reason);
 
   Assert.ok(payload.simpleMeasurements.totalTime >= 0);
   Assert.ok(payload.simpleMeasurements.uptime >= 0);

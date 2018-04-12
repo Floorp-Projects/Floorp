@@ -22,6 +22,8 @@ ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 ChromeUtils.defineModuleGetter(this, "TelemetryHealthPing",
   "resource://gre/modules/TelemetryHealthPing.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "cookies", "@mozilla.org/cookieService;1", "nsICookieService");
+
 const MS_IN_A_MINUTE = 60 * 1000;
 
 function countPingTypes(pings) {
@@ -528,6 +530,22 @@ add_task(async function test_sendCheckOverride() {
   // Restore the test mode and disable the override.
   TelemetrySend.setTestModeEnabled(true);
   Services.prefs.clearUserPref(TelemetryUtils.Preferences.OverrideOfficialCheck);
+});
+
+add_task(async function testCookies() {
+  const TEST_TYPE = "test-cookies";
+
+  await TelemetrySend.reset();
+  PingServer.clearRequests();
+
+  let uri = Services.io.newURI("http://localhost:" + PingServer.port);
+  Services.cookies.setCookieString(uri, null, "cookie-time=yes", null);
+
+  const id = await TelemetryController.submitExternalPing(TEST_TYPE, {});
+  let request = await PingServer.promiseNextRequest();
+  let ping = decodeRequestPayload(request);
+  Assert.equal(id, ping.id, "We're testing the right ping's request, right?");
+  Assert.equal(false, request.hasHeader("Cookie"), "Request should not have Cookie header");
 });
 
 add_task(async function test_measurePingsSize() {

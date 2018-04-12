@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1452496 - Do not allow same-site cookies in cross site context</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<iframe id="setCookieFrame"></iframe>
+<iframe id="getCookieFrame"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * 1) We load an iframe which tries to set a same site cookie using an
+ *    inline script in top-level context of http://mochi.test.
+ * 2) We load an iframe from http://example.com and check if the cookie
+ *    is available.
+ * 3) We observe that:
+ *    (a) same site cookie is available in same origin context.
+ *    (a) same site cookie has been discarded in a cross origin context.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const SAME_ORIGIN = "http://mochi.test:8888/";
+const CROSS_ORIGIN = "http://example.com/";
+const PATH = "tests/dom/security/test/general/file_same_site_cookies_from_script.sjs";
+
+let curTest = 0;
+
+var tests = [
+  {
+    description: "same-site cookie inline script within same-site context",
+    setCookieSrc: SAME_ORIGIN + PATH + "?setSameSiteCookieUsingInlineScript",
+    getCookieSrc: SAME_ORIGIN + PATH + "?getCookieFrame",
+    result: "myKey=sameSiteCookieInlineScript",
+  },
+  {
+    description: "same-site cookie inline script within cross-site context",
+    setCookieSrc: CROSS_ORIGIN + PATH + "?setSameSiteCookieUsingInlineScript",
+    getCookieSrc: CROSS_ORIGIN + PATH + "?getCookieFrame",
+    result: "", // same-site cookie should be discarded in cross site context
+  },
+];
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  is(event.data.result, tests[curTest].result, tests[curTest].description);
+  curTest += 1;
+
+  // lets see if we ran all the tests
+  if (curTest == tests.length) {
+    window.removeEventListener("message", receiveMessage);
+    SimpleTest.finish();
+    return;
+  }
+  // otherwise it's time to run the next test
+  setCookieAndInitTest();
+}
+
+function setupQueryResultAndRunTest() {
+  let getCookieFrame = document.getElementById("getCookieFrame");
+  getCookieFrame.src = tests[curTest].getCookieSrc;
+}
+
+function setCookieAndInitTest() {
+  var cookieFrame = document.getElementById("setCookieFrame");
+  setCookieFrame.onload = function() {
+    ok(true, "trying to set cookie for test (" + tests[curTest].description + ")");
+    setupQueryResultAndRunTest();
+  }
+  setCookieFrame.onerror = function() {
+    ok(false, "could not load image for test (" + tests[curTest].description + ")");
+  }
+  cookieFrame.src =  tests[curTest].setCookieSrc;
+}
+
+// fire up the test
+setCookieAndInitTest();
+
+</script>
+</body>
+</html>
