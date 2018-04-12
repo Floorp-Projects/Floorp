@@ -51,6 +51,6 @@
   </binding>
 
   <binding id="toolbarbutton-badged-menu" display="xul:menu"
-           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-badged">
   </binding>
 </bindings>

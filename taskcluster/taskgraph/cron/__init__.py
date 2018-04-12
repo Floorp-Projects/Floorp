@@ -55,8 +55,7 @@ def should_run(job, params):
     # actually want to run on this branch.
     resolve_keyed_by(job, 'when', 'Cron job ' + job['name'],
                      project=params['project'])
-    if not any(match_utc(params, hour=sched.get('hour'), minute=sched.get('minute'))
-               for sched in job.get('when', [])):
+    if not any(match_utc(params, sched=sched) for sched in job.get('when', [])):
         return False
     return True
 

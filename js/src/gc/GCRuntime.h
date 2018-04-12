@@ -255,8 +255,6 @@ class GCRuntime
     void startDebugGC(JSGCInvocationKind gckind, SliceBudget& budget);
     void debugGCSlice(SliceBudget& budget);
 
-    bool canChangeActiveContext(JSContext* cx);
-
     void triggerFullGCForAtoms(JSContext* cx);
 
     void runDebugGC();

@@ -310,7 +310,22 @@ MediaEngineRemoteVideoSource::Start(const RefPtr<const AllocationHandle>& aHandl
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MediaEngineRemoteVideoSource::SetLastCapability",
-      [settings = mSettings, cap = mCapability]() mutable {
+      [settings = mSettings, source = mMediaSource, cap = mCapability]() mutable {
+    switch (source) {
+      case dom::MediaSourceEnum::Screen:
+      case dom::MediaSourceEnum::Window:
+      case dom::MediaSourceEnum::Application:
+        // Undo the hack where ideal and max constraints are crammed together
+        // in mCapability for consumption by low-level code. We don't actually
+        // know the real resolution yet, so report min(ideal, max) for now.
+        // TODO: This can be removed in bug 1453269.
+        cap.width = std::min(cap.width >> 16, cap.width & 0xffff);
+        cap.height = std::min(cap.height >> 16, cap.height & 0xffff);
+        break;
+      default:
+        break;
+    }
+
     settings->mWidth.Value() = cap.width;
     settings->mHeight.Value() = cap.height;
     settings->mFrameRate.Value() = cap.maxFPS;
@@ -494,6 +509,7 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mState == kStarted);
+    // TODO: These can be removed in bug 1453269.
     req_max_width = mCapability.width & 0xffff;
     req_max_height = mCapability.height & 0xffff;
     req_ideal_width = (mCapability.width >> 16) & 0xffff;
@@ -826,6 +842,7 @@ MediaEngineRemoteVideoSource::ChooseCapability(
       // time (and may in fact change over time), so as a hack, we push ideal
       // and max constraints down to desktop_capture_impl.cc and finish the
       // algorithm there.
+      // TODO: This can be removed in bug 1453269.
       aCapability.width =
         (c.mWidth.mIdeal.valueOr(0) & 0xffff) << 16 | (c.mWidth.mMax & 0xffff);
       aCapability.height =

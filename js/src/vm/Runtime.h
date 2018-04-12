@@ -451,6 +451,12 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     WatchersList& onNewGlobalObjectWatchers() { return onNewGlobalObjectWatchers_.ref(); }
 
   private:
+    /* Linked list of all Debugger objects in the runtime. */
+    js::ActiveThreadData<mozilla::LinkedList<js::Debugger>> debuggerList_;
+  public:
+    mozilla::LinkedList<js::Debugger>& debuggerList() { return debuggerList_.ref(); }
+
+  private:
     /*
      * Lock taken when using per-runtime or per-zone data that could otherwise
      * be accessed simultaneously by multiple threads.

@@ -101,14 +101,6 @@ public:
   mozilla::ipc::IPCResult RecvParentCommands(nsTArray<WebRenderParentCommand>&& commands) override;
   mozilla::ipc::IPCResult RecvGetSnapshot(PTextureParent* aTexture) override;
 
-  mozilla::ipc::IPCResult RecvAddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
-                                                           const CompositableHandle& aHandle,
-                                                           const bool& aAsync) override;
-  mozilla::ipc::IPCResult RecvRemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId) override;
-
-  mozilla::ipc::IPCResult RecvAddExternalImageIdForCompositable(const ExternalImageId& aImageId,
-                                                                const CompositableHandle& aHandle) override;
-  mozilla::ipc::IPCResult RecvRemoveExternalImageId(const ExternalImageId& aImageId) override;
   mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
 
   mozilla::ipc::IPCResult RecvClearCachedResources() override;
@@ -204,6 +196,15 @@ private:
                        wr::TransactionBuilder& aUpdates);
   bool AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                         wr::TransactionBuilder& aResources);
+
+  void AddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
+                                    const CompositableHandle& aHandle,
+                                    const bool& aAsync);
+  void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId);
+
+  void AddExternalImageIdForCompositable(const ExternalImageId& aImageId,
+                                         const CompositableHandle& aHandle);
+  void RemoveExternalImageId(const ExternalImageId& aImageId);
 
   LayersId GetLayersId() const;
   void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands);

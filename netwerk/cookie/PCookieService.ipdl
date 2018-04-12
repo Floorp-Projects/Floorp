@@ -46,6 +46,10 @@ parent:
    *        mozIThirdPartyUtil.isThirdPartyChannel. Third party requests may be
    *        rejected depending on user preferences; if those checks are
    *        disabled, this parameter is ignored.
+   * @param isSafeTopLevelNav
+   *        True for safe methods like e.g. GET.
+   * @param isSameSiteForeign
+   *        True if the same-site cookie originates from a cross-site context.
    * @param fromHttp
    *        Whether the result is for an HTTP request header. This should be
    *        true for nsICookieService.getCookieStringFromHttp calls, false
@@ -63,7 +67,7 @@ parent:
   nested(inside_cpow) sync GetCookieString(URIParams host,
                                            bool isForeign,
                                            bool isSafeTopLevelNav,
-                                           bool isTopLevelForeign,
+                                           bool isSameSiteForeign,
                                            OriginAttributes attrs)
        returns (nsCString result);
 
@@ -72,6 +76,8 @@ parent:
    *
    * @param host
    *        Same as the 'aURI' argument to nsICookieService.setCookieString.
+   * @param channelURI
+   *        The URI of the request.
    * @param isForeign
    *        True if the the request is third party, for purposes of allowing
    *        access to cookies. This should be obtained from
@@ -97,6 +103,7 @@ parent:
    * @see mozIThirdPartyUtil.isThirdPartyChannel
    */
   nested(inside_cpow) async SetCookieString(URIParams host,
+                                            URIParams channelURI,
                                             bool isForeign,
                                             nsCString cookieString,
                                             nsCString serverTime,
@@ -106,7 +113,7 @@ parent:
   async PrepareCookieList(URIParams host,
                           bool isForeign,
                           bool isSafeTopLevelNav,
-                          bool isTopLevelForeign,
+                          bool isSameSiteForeign,
                           OriginAttributes attrs);
 
   async __delete__();
