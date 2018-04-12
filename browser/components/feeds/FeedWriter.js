@@ -546,7 +546,7 @@ FeedWriter.prototype = {
     }
   },
 
-  // nsIDomEventListener
+  // EventListener
   handleEvent(event) {
     if (event.target.ownerDocument != this._document) {
       LOG("FeedWriter.handleEvent: Someone passed the feed writer as a listener to the events of another document!");
@@ -981,7 +981,7 @@ FeedWriter.prototype = {
   },
 
   classID: FEEDWRITER_CID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMEventListener, Ci.nsIObserver,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsIDOMGlobalPropertyInitializer])
 };
 

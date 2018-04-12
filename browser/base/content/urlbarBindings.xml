@@ -53,7 +53,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <children includes="toolbarbutton"/>
     </content>
 
-    <implementation implements="nsIObserver, nsIDOMEventListener">
+    <implementation implements="nsIObserver">
       <field name="ExtensionSearchHandler" readonly="true">
         (ChromeUtils.import("resource://gre/modules/ExtensionSearchHandler.jsm", {})).ExtensionSearchHandler;
       </field>

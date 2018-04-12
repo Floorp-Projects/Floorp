@@ -84,17 +84,18 @@ function TextPropertyEditor(ruleEditor, property) {
   const toolbox = this.ruleView.inspector.toolbox;
   this.cssProperties = getCssProperties(toolbox);
 
+  this.getGridlineNames = this.getGridlineNames.bind(this);
+  this.update = this.update.bind(this);
+  this.updatePropertyState = this.updatePropertyState.bind(this);
   this._onEnableClicked = this._onEnableClicked.bind(this);
   this._onExpandClicked = this._onExpandClicked.bind(this);
-  this._onStartEditing = this._onStartEditing.bind(this);
   this._onNameDone = this._onNameDone.bind(this);
-  this._onValueDone = this._onValueDone.bind(this);
+  this._onStartEditing = this._onStartEditing.bind(this);
   this._onSwatchCommit = this._onSwatchCommit.bind(this);
   this._onSwatchPreview = this._onSwatchPreview.bind(this);
   this._onSwatchRevert = this._onSwatchRevert.bind(this);
   this._onValidate = this.ruleView.debounce(this._previewValue, 10, this);
-  this.update = this.update.bind(this);
-  this.updatePropertyState = this.updatePropertyState.bind(this);
+  this._onValueDone = this._onValueDone.bind(this);
 
   this._create();
   this.update();
@@ -316,8 +317,40 @@ TextPropertyEditor.prototype = {
         maxWidth: () => this.container.getBoundingClientRect().width,
         cssProperties: this.cssProperties,
         cssVariables: this.rule.elementStyle.variables,
+        getGridLineNames: this.getGridlineNames,
       });
     }
+  },
+
+  /**
+   * Get the grid line names of the grid that the currently selected element is
+   * contained in.
+   *
+   * @return {Object} Contains the names of the cols and rows as arrays
+   * {cols: [], rows: []}.
+   */
+  getGridlineNames: async function() {
+    let gridLineNames = {cols: [], rows: []};
+    let layoutInspector = await this.ruleView.inspector.walker.getLayoutInspector();
+    let gridFront = await layoutInspector.getCurrentGrid(
+      this.ruleView.inspector.selection.nodeFront);
+
+    if (gridFront) {
+      let gridFragments = gridFront.gridFragments;
+
+      for (let gridFragment of gridFragments) {
+        for (let rowLine of gridFragment.rows.lines) {
+          gridLineNames.rows = gridLineNames.rows.concat(rowLine.names);
+        }
+        for (let colLine of gridFragment.cols.lines) {
+          gridLineNames.cols = gridLineNames.cols.concat(colLine.names);
+        }
+      }
+    }
+
+    // Emit message for test files
+    this.ruleView.inspector.emit("grid-line-names-updated");
+    return gridLineNames;
   },
 
   /**

@@ -392,7 +392,7 @@ function getMessageManager(target) {
   if (target.frameLoader) {
     return target.frameLoader.messageManager;
   }
-  return target.QueryInterface(Ci.nsIMessageSender);
+  return target;
 }
 
 function flushJarCache(jarPath) {

@@ -22,6 +22,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTargetBinding.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/EventTimelineMarker.h"
@@ -292,14 +293,11 @@ EventListenerManager::AddEventListenerInternal(
     nsContentUtils::LegacyIsCallerChromeOrNativeCode();
 
   // Detect the type of event listener.
-  nsCOMPtr<nsIXPConnectWrappedJS> wjs;
   if (aFlags.mListenerIsJSListener) {
     MOZ_ASSERT(!aListenerHolder.HasWebIDLCallback());
     listener->mListenerType = Listener::eJSEventListener;
   } else if (aListenerHolder.HasWebIDLCallback()) {
     listener->mListenerType = Listener::eWebIDLListener;
-  } else if ((wjs = do_QueryInterface(aListenerHolder.GetXPCOMCallback()))) {
-    listener->mListenerType = Listener::eWrappedJSListener;
   } else {
     listener->mListenerType = Listener::eNativeListener;
   }
@@ -1572,16 +1570,28 @@ EventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     } else {
       eventType.Assign(Substring(nsDependentAtomString(listener.mTypeAtom), 2));
     }
-    nsCOMPtr<nsIDOMEventListener> callback = listener.mListener.ToXPCOMCallback();
-    if (!callback) {
-      // This will be null for cross-compartment event listeners which have been
-      // destroyed.
-      continue;
+
+    JS::Rooted<JSObject*> callback(RootingCx());
+    if (JSEventHandler* handler = listener.GetJSEventHandler()) {
+      if (handler->GetTypedEventHandler().HasEventHandler()) {
+        callback = handler->GetTypedEventHandler().Ptr()->CallableOrNull();
+        if (!callback) {
+          // This will be null for cross-compartment event listeners
+          // which have been destroyed.
+          continue;
+        }
+      }
+    } else if (listener.mListenerType == Listener::eWebIDLListener) {
+      callback = listener.mListener.GetWebIDLCallback()->CallbackOrNull();
+      if (!callback) {
+        // This will be null for cross-compartment event listeners
+        // which have been destroyed.
+        continue;
+      }
     }
-    // EventListenerInfo is defined in XPCOM, so we have to go ahead
-    // and convert to an XPCOM callback here...
+
     RefPtr<EventListenerInfo> info =
-      new EventListenerInfo(eventType, callback.forget(),
+      new EventListenerInfo(eventType, callback,
                             listener.mFlags.mCapture,
                             listener.mFlags.mAllowUntrustedEvents,
                             listener.mFlags.mInSystemGroup);
@@ -1715,8 +1725,6 @@ EventListenerManager::MarkForCC()
       if (typedHandler.HasEventHandler()) {
         typedHandler.Ptr()->MarkForCC();
       }
-    } else if (listener.mListenerType == Listener::eWrappedJSListener) {
-      xpc_TryUnmarkWrappedGrayObject(listener.mListener.GetXPCOMCallback());
     } else if (listener.mListenerType == Listener::eWebIDLListener) {
       listener.mListener.GetWebIDLCallback()->MarkForCC();
     }

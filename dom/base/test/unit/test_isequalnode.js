@@ -46,10 +46,10 @@ function test_isEqualNode_setAttribute()
   check_eq_nodes(node1, node2);
 
 
-  el(node1).setAttribute("bar", "baz");
+  node1.setAttribute("bar", "baz");
   check_neq_nodes(node1, node2);
 
-  el(node2).setAttribute("bar", "baz");
+  node2.setAttribute("bar", "baz");
   check_eq_nodes(node1, node2);
 
 
@@ -85,7 +85,7 @@ function test_isEqualNode_clones()
   var all_elts = doc.getElementsByTagName("*");
   for (var i = 0; i < all_elts.length; i++)
   {
-    var elt = el(all_elts.item(i));
+    var elt = all_elts.item(i);
     check_eq_nodes(elt, elt.cloneNode(true));
 
     var attrs = elt.attributes;
@@ -385,12 +385,6 @@ function test_isEqualNode_wholeDoc()
     tw1.nextNode();
   } while(tw2.nextNode());
 }
-
-// UTILITY FUNCTIONS
-
-function n(node)  { return node ? node.QueryInterface(nsIDOMNode) : null; }
-function el(node) { return node ? node.QueryInterface(nsIDOMElement) : null; }
-
 
 // TESTING FUNCTIONS
 

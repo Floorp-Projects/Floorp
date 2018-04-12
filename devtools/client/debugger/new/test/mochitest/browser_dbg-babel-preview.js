@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Tests for preview through Babel's compile output.
+requestLongerTimeout(3);
+
 function getCoordsFromPosition(cm, { line, ch }) {
   return cm.charCoords({ line: ~~line, ch: ~~ch });
 }
