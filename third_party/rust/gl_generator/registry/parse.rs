@@ -155,18 +155,6 @@ fn make_enum(ident: String, ty: Option<String>, value: String, alias: Option<Str
             } else {
                 panic!("Unexpected value format: {}", value)
             }
-        } else if value.starts_with("EGL_CAST(") && value.ends_with(")") {
-            // Handling "SpecialNumbers" in the egl.xml file
-            // The values for these enums has the form `'EGL_CAST(' type ',' expr ')'`.
-            let working = &value[9..value.len() - 1];
-            if let Some((i, _)) = working.match_indices(",").next() {
-                let ty = working[..i].to_string();
-                let value = working[i + 1..].to_string();
-
-                (Cow::Owned(ty), value, true)
-            } else {
-                panic!("Unexpected value format: {}", value)
-            }
         } else {
             let ty = match ty {
                 Some(ref ty) if ty == "u" => "GLuint",
@@ -188,6 +176,47 @@ fn make_enum(ident: String, ty: Option<String>, value: String, alias: Option<Str
         ty: ty,
     }
 }
+
+fn make_egl_enum(ident: String, ty: Option<String>, value: String, alias: Option<String>) -> Enum {
+    let (ty, value, cast) = {
+        if value.starts_with("EGL_CAST(") && value.ends_with(")") {
+            // Handling "SpecialNumbers" in the egl.xml file
+            // The values for these enums has the form `'EGL_CAST(' type ',' expr ')'`.
+            let working = &value[9..value.len() - 1];
+            if let Some((i, _)) = working.match_indices(",").next() {
+                let ty = working[..i].to_string();
+                let value = working[i + 1..].to_string();
+
+                (Cow::Owned(ty), value, true)
+            } else {
+                panic!("Unexpected value format: {}", value)
+            }
+        } else {
+            match value.chars().next() {
+                Some('-') | Some('0' ... '9') => (),
+                _ => panic!("Unexpected value format: {}", value),
+            }
+
+            let ty = match ty {
+                Some(ref ty) if ty == "ull" => "EGLuint64KHR",
+                Some(ty) => panic!("Unhandled enum type: {}", ty),
+                None if value.starts_with('-') => "EGLint",
+                None if ident == "TRUE" || ident == "FALSE" => "EGLBoolean",
+                None => "EGLenum",
+            };
+            (Cow::Borrowed(ty), value, false)
+        }
+    };
+
+    Enum {
+        ident: ident,
+        value: value,
+        cast: cast,
+        alias: alias,
+        ty: ty,
+    }
+}
+
 
 fn trim_cmd_prefix(ident: &str, api: Api) -> &str {
     match api {
@@ -503,7 +532,10 @@ trait Parse: Sized + Iterator<Item = ParseEvent> {
         let ty = get_attribute(&attributes, "type");
         self.consume_end_element("enum");
 
-        make_enum(ident, ty, value, alias)
+        match api {
+            Api::Egl => make_egl_enum(ident, ty, value, alias),
+            _ => make_enum(ident, ty, value, alias)
+        }
     }
 
     fn consume_cmds(&mut self, api: Api) -> (Vec<Cmd>, BTreeMap<String, Vec<String>>) {
@@ -1065,17 +1097,6 @@ mod tests {
         }
 
         #[test]
-        fn test_cast_egl() {
-            let e = parse::make_enum("FOO".to_string(),
-                                     None,
-                                     "EGL_CAST(EGLint,-1)".to_string(),
-                                     Some("BAR".to_string()));
-            assert_eq!(e.ident, "FOO");
-            assert_eq!((&*e.ty, &*e.value), ("EGLint", "-1"));
-            assert_eq!(e.alias, Some("BAR".to_string()));
-        }
-
-        #[test]
         fn test_no_type() {
             let e = parse::make_enum("FOO".to_string(),
                                      None,
@@ -1131,6 +1152,78 @@ mod tests {
         fn test_ident_false() {
             let e = parse::make_enum("FALSE".to_string(), None, String::new(), None);
             assert_eq!(e.ty, "GLboolean");
+        }
+    }
+
+    mod make_egl_enum {
+        use registry::parse;
+
+        #[test]
+        fn test_cast_egl() {
+            let e = parse::make_egl_enum("FOO".to_string(),
+                                     None,
+                                     "EGL_CAST(EGLint,-1)".to_string(),
+                                     Some("BAR".to_string()));
+            assert_eq!(e.ident, "FOO");
+            assert_eq!((&*e.ty, &*e.value), ("EGLint", "-1"));
+            assert_eq!(e.alias, Some("BAR".to_string()));
+        }
+
+        #[test]
+        fn test_ident_true() {
+            let e = parse::make_egl_enum("TRUE".to_string(), None, "1234".to_string(), None);
+            assert_eq!(e.ty, "EGLBoolean");
+        }
+
+        #[test]
+        fn test_ident_false() {
+            let e = parse::make_egl_enum("FALSE".to_string(), None, "1234".to_string(), None);
+            assert_eq!(e.ty, "EGLBoolean");
+        }
+
+        #[test]
+        fn test_ull() {
+            let e = parse::make_egl_enum("FOO".to_string(),
+                                     Some("ull".to_string()),
+                                     "1234".to_string(),
+                                     None);
+            assert_eq!(e.ty, "EGLuint64KHR");
+        }
+
+        #[test]
+        fn test_negative_value() {
+            let e = parse::make_egl_enum("FOO".to_string(),
+                                     None,
+                                     "-1".to_string(),
+                                     None);
+            assert_eq!(e.ty, "EGLint");
+        }
+
+        #[test]
+        #[should_panic]
+        fn test_unknown_type() {
+            parse::make_egl_enum("FOO".to_string(),
+                             Some("blargh".to_string()),
+                             String::new(),
+                             None);
+        }
+
+        #[test]
+        #[should_panic]
+        fn test_unknown_value() {
+            parse::make_egl_enum("FOO".to_string(),
+                             None,
+                             "a".to_string(),
+                             None);
+        }
+
+        #[test]
+        #[should_panic]
+        fn test_empty_value() {
+            parse::make_egl_enum("FOO".to_string(),
+                             None,
+                             String::new(),
+                             None);
         }
     }
 

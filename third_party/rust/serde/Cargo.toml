@@ -12,7 +12,7 @@
 
 [package]
 name = "serde"
-version = "1.0.35"
+version = "1.0.37"
 authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>", "David Tolnay <dtolnay@gmail.com>"]
 include = ["Cargo.toml", "src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "A generic serialization/deserialization framework"

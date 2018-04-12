@@ -474,6 +474,15 @@ impl Shaders {
         gl_type: GlType,
         options: &RendererOptions,
     ) -> Result<Self, ShaderError> {
+        // needed for the precache fake draws
+        let dummy_vao = if options.precache_shaders {
+            let vao = device.create_custom_vao(&[]);
+            device.bind_custom_vao(&vao);
+            Some(vao)
+        } else {
+            None
+        };
+
         let brush_solid = BrushShader::new(
             "brush_solid",
             device,
@@ -680,6 +689,10 @@ impl Shaders {
             device,
             options.precache_shaders,
         )?;
+
+        if let Some(vao) = dummy_vao {
+            device.delete_custom_vao(vao);
+        }
 
         Ok(Shaders {
             cs_blur_a8,

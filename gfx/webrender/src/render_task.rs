@@ -11,6 +11,7 @@ use clip_scroll_tree::CoordinateSystemId;
 use device::TextureFilter;
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
+use freelist::{FreeList, FreeListHandle};
 use glyph_rasterizer::GpuGlyphCacheKey;
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use gpu_types::{ImageSource, RasterizationSpace};
@@ -866,8 +867,8 @@ pub struct RenderTaskCacheKey {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-struct RenderTaskCacheEntry {
-    handle: TextureCacheHandle,
+pub struct RenderTaskCacheEntry {
+    pub handle: TextureCacheHandle,
 }
 
 // A cache of render tasks that are stored in the texture
@@ -875,18 +876,21 @@ struct RenderTaskCacheEntry {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskCache {
-    entries: FastHashMap<RenderTaskCacheKey, RenderTaskCacheEntry>,
+    map: FastHashMap<RenderTaskCacheKey, FreeListHandle<RenderTaskCacheEntry>>,
+    cache_entries: FreeList<RenderTaskCacheEntry>,
 }
 
 impl RenderTaskCache {
     pub fn new() -> Self {
         RenderTaskCache {
-            entries: FastHashMap::default(),
+            map: FastHashMap::default(),
+            cache_entries: FreeList::new(),
         }
     }
 
     pub fn clear(&mut self) {
-        self.entries.clear();
+        self.map.clear();
+        self.cache_entries.clear();
     }
 
     pub fn begin_frame(
@@ -906,9 +910,19 @@ impl RenderTaskCache {
         // Nonetheless, we should remove stale entries
         // from here so that this hash map doesn't
         // grow indefinitely!
-        self.entries.retain(|_, value| {
-            texture_cache.is_allocated(&value.handle)
-        });
+        let mut keys_to_remove = Vec::new();
+
+        for (key, handle) in &self.map {
+            let entry = self.cache_entries.get(handle);
+            if !texture_cache.is_allocated(&entry.handle) {
+                keys_to_remove.push(key.clone())
+            }
+        }
+
+        for key in &keys_to_remove {
+            let handle = self.map.remove(key).unwrap();
+            self.cache_entries.free(handle);
+        }
     }
 
     pub fn request_render_task<F>(
@@ -923,11 +937,16 @@ impl RenderTaskCache {
          where F: FnMut(&mut RenderTaskTree) -> Result<(RenderTaskId, bool), ()> {
         // Get the texture cache handle for this cache key,
         // or create one.
-        let cache_entry = self.entries
-                              .entry(key)
-                              .or_insert(RenderTaskCacheEntry {
-                                  handle: TextureCacheHandle::new(),
-                              });
+        let cache_entries = &mut self.cache_entries;
+        let entry_handle = self.map
+                               .entry(key)
+                               .or_insert_with(|| {
+                                    let entry = RenderTaskCacheEntry {
+                                        handle: TextureCacheHandle::new(),
+                                    };
+                                    cache_entries.insert(entry)
+                                });
+        let cache_entry = cache_entries.get_mut(entry_handle);
 
         // Check if this texture cache handle is valid.
         if texture_cache.request(&cache_entry.handle, gpu_cache) {
@@ -1000,7 +1019,8 @@ impl RenderTaskCache {
                                           key: &RenderTaskCacheKey)
                                           -> CacheItem {
         // Get the texture cache handle for this cache key.
-        let cache_entry = self.entries.get(key).unwrap();
+        let handle = self.map.get(key).unwrap();
+        let cache_entry = self.cache_entries.get(handle);
         texture_cache.get(&cache_entry.handle)
     }
 
@@ -1009,7 +1029,8 @@ impl RenderTaskCache {
                                                    texture_cache: &TextureCache,
                                                    key: &RenderTaskCacheKey)
                                                    -> bool {
-        let cache_entry = self.entries.get(key).unwrap();
+        let handle = self.map.get(key).unwrap();
+        let cache_entry = self.cache_entries.get(handle);
         texture_cache.is_allocated(&cache_entry.handle)
     }
 }

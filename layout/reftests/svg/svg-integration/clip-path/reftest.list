@@ -16,12 +16,12 @@
 == clip-path-polygon-012.html clip-path-stripes-001-ref.html
 fuzzy-if(skiaContent,1,20) fails-if(webrender&&winWidget) == clip-path-polygon-013.html clip-path-stripes-003-ref.html
 
-fuzzy-if(webrender,90-90,690-690) == clip-path-circle-001.html clip-path-circle-001-ref.html
-fuzzy-if(webrender,90-90,690-690) == clip-path-circle-002.html clip-path-circle-001-ref.html
-fuzzy-if(webrender,90-90,690-690) == clip-path-circle-003.html clip-path-circle-001-ref.html
-fuzzy-if(webrender,90-90,690-690) == clip-path-circle-004.html clip-path-circle-001-ref.html
+fuzzy-if(webrender,64-64,714-714) == clip-path-circle-001.html clip-path-circle-001-ref.html
+fuzzy-if(webrender,64-64,714-714) == clip-path-circle-002.html clip-path-circle-001-ref.html
+fuzzy-if(webrender,64-64,714-714) == clip-path-circle-003.html clip-path-circle-001-ref.html
+fuzzy-if(webrender,64-64,714-714) == clip-path-circle-004.html clip-path-circle-001-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-005.html clip-path-circle-002-ref.html
-fuzzy-if(webrender,90-90,690-690) == clip-path-circle-006.html clip-path-circle-001-ref.html
+fuzzy-if(webrender,64-64,714-714) == clip-path-circle-006.html clip-path-circle-001-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-007.html clip-path-circle-002-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-008.html clip-path-circle-002-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-009.html clip-path-circle-003-ref.html
@@ -29,10 +29,10 @@ fuzzy-if(webrender,64-64,714-714) == clip-path-circle-010.html clip-path-circle-
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-011.html clip-path-circle-005-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-012.html clip-path-circle-006-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-013.html clip-path-circle-002-ref.html
-fuzzy-if(webrender,90-90,698-698) == clip-path-circle-014.html clip-path-circle-007-ref.html
+fuzzy-if(webrender,64-64,714-714) == clip-path-circle-014.html clip-path-circle-007-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-015.html clip-path-circle-008-ref.html
-fuzzy-if(webrender,90-90,702-702) == clip-path-circle-016.html clip-path-circle-009-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),16,9) fuzzy-if(webrender,90-90,698-698) == clip-path-circle-017.html clip-path-circle-007-ref.html
+fuzzy-if(webrender,64-64,714-714) == clip-path-circle-016.html clip-path-circle-009-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),16,9) fuzzy-if(webrender,64-64,714-714) == clip-path-circle-017.html clip-path-circle-007-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-018.html clip-path-circle-010-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-019.html clip-path-circle-002-ref.html
 fuzzy-if(webrender,64-64,714-714) == clip-path-circle-020.html clip-path-circle-002-ref.html
@@ -51,10 +51,10 @@ fuzzy-if(webrender,64-64,1106-1106) == clip-path-ellipse-008.html clip-path-elli
 == clip-path-inset-001b.html clip-path-inset-001-ref.html
 == clip-path-inset-001c.html clip-path-inset-001-ref.html
 # Anti-aliasing behavior for masking and borders is different
-fuzzy(64,146) == clip-path-inset-002a.html clip-path-inset-002-ref.html
-fuzzy(64,146) == clip-path-inset-002b.html clip-path-inset-002-ref.html
-fuzzy(64,146) == clip-path-inset-002c.html clip-path-inset-002-ref.html
-fuzzy(64,340) fuzzy-if(webrender,69-69,292-292) == clip-path-inset-003.html clip-path-inset-003-ref.html
+fuzzy(64,146) fuzzy-if(webrender,90-90,132-132) == clip-path-inset-002a.html clip-path-inset-002-ref.html
+fuzzy(64,146) fuzzy-if(webrender,90-90,132-132) == clip-path-inset-002b.html clip-path-inset-002-ref.html
+fuzzy(64,146) fuzzy-if(webrender,90-90,132-132) == clip-path-inset-002c.html clip-path-inset-002-ref.html
+fuzzy(64,340) fuzzy-if(webrender,104-104,311-311) == clip-path-inset-003.html clip-path-inset-003-ref.html
 
 == clip-path-stroke-001.html clip-path-stroke-001-ref.html
 

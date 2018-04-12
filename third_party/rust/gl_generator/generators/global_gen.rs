@@ -57,9 +57,9 @@ fn write_metaloadfn<W>(dest: &mut W) -> io::Result<()>
     writeln!(dest,
              r#"
         #[inline(never)]
-        fn metaloadfn(loadfn: &mut FnMut(&str) -> *const __gl_imports::raw::c_void,
-                      symbol: &str,
-                      fallbacks: &[&str]) -> *const __gl_imports::raw::c_void {{
+        fn metaloadfn(loadfn: &mut FnMut(&'static str) -> *const __gl_imports::raw::c_void,
+                      symbol: &'static str,
+                      fallbacks: &[&'static str]) -> *const __gl_imports::raw::c_void {{
             let mut ptr = loadfn(symbol);
             if ptr.is_null() {{
                 for &sym in fallbacks {{
@@ -218,7 +218,7 @@ fn write_fn_mods<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
                 }}
 
                 #[allow(dead_code)]
-                pub fn load_with<F>(mut loadfn: F) where F: FnMut(&str) -> *const raw::c_void {{
+                pub fn load_with<F>(mut loadfn: F) where F: FnMut(&'static str) -> *const raw::c_void {{
                     unsafe {{
                         storage::{fnname} = FnPtr::new(metaloadfn(&mut loadfn, "{symbol}", {fallbacks}))
                     }}
@@ -259,7 +259,7 @@ fn write_load_fn<W>(registry: &Registry, dest: &mut W) -> io::Result<()>
         /// gl::load_with(|s| glfw.get_proc_address(s));
         /// ~~~
         #[allow(dead_code)]
-        pub fn load_with<F>(mut loadfn: F) where F: FnMut(&str) -> *const __gl_imports::raw::c_void {{
+        pub fn load_with<F>(mut loadfn: F) where F: FnMut(&'static str) -> *const __gl_imports::raw::c_void {{
     "));
 
     for c in &registry.cmds {

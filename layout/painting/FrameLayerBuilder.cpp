@@ -55,6 +55,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <list>
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -117,6 +118,99 @@ static inline MaskLayerImageCache* GetMaskLayerImageCache()
 
   return gMaskLayerImageCache;
 }
+
+struct DisplayItemEntry {
+  DisplayItemEntry(nsDisplayItem* aItem,
+                   DisplayItemEntryType aType)
+    : mItem(aItem)
+    , mType(aType)
+  {}
+
+  nsDisplayItem* mItem;
+  DisplayItemEntryType mType;
+};
+
+class FLBDisplayItemIterator : protected FlattenedDisplayItemIterator
+{
+public:
+  FLBDisplayItemIterator(nsDisplayListBuilder* aBuilder,
+                         nsDisplayList* aList,
+                         ContainerState* aState)
+    : FlattenedDisplayItemIterator(aBuilder, aList, false)
+    , mState(aState)
+  {
+    MOZ_ASSERT(mState);
+    ResolveFlattening();
+  }
+
+  DisplayItemEntry GetNextEntry()
+  {
+    if (!mMarkers.empty()) {
+      DisplayItemEntry entry = mMarkers.front();
+      mMarkers.pop_front();
+      return entry;
+    }
+
+    nsDisplayItem* next = GetNext();
+    return DisplayItemEntry { next, DisplayItemEntryType::ITEM };
+  }
+
+  nsDisplayItem* GetNext()
+  {
+    // This function is only supposed to be called if there are no markers set.
+    // Breaking this invariant can potentially break effect flattening and/or
+    // display item merging.
+    MOZ_ASSERT(mMarkers.empty());
+
+    return FlattenedDisplayItemIterator::GetNext();
+  }
+
+  bool HasNext() const
+  {
+    return FlattenedDisplayItemIterator::HasNext() || !mMarkers.empty();
+  }
+
+  nsDisplayItem* PeekNext()
+  {
+    return mNext;
+  }
+
+private:
+  bool ShouldFlattenNextItem() const override;
+
+  void StartNested(nsDisplayItem* aItem) override
+  {
+    if (aItem->GetType() == DisplayItemType::TYPE_OPACITY) {
+      nsDisplayOpacity* opacity = static_cast<nsDisplayOpacity*> (aItem);
+
+      if (opacity->OpacityAppliedToChildren()) {
+        // If the opacity was already applied to children, there is no need to
+        // emit opacity markers.
+        return;
+      }
+
+      mMarkers.emplace_back(aItem, DisplayItemEntryType::PUSH_OPACITY);
+      mActiveMarkers.AppendElement(aItem);
+    }
+  }
+
+  void EndNested(nsDisplayItem* aItem) override
+  {
+    if (mActiveMarkers.IsEmpty() || mActiveMarkers.LastElement() != aItem) {
+      // Do not emit an end marker if this item did not emit a start marker.
+      return;
+    }
+
+    if (aItem->GetType() == DisplayItemType::TYPE_OPACITY) {
+      mMarkers.emplace_back(aItem, DisplayItemEntryType::POP_OPACITY);
+      mActiveMarkers.RemoveLastElement();
+    }
+  }
+
+  std::list<DisplayItemEntry> mMarkers;
+  AutoTArray<nsDisplayItem*, 4> mActiveMarkers;
+  ContainerState* mState;
+};
 
 DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
                                  Layer* aLayer, nsIFrame* aFrame)
@@ -482,7 +576,8 @@ public:
                   const nsIntRect& aVisibleRect,
                   const DisplayItemClip& aClip,
                   LayerState aLayerState,
-                  nsDisplayList *aList);
+                  nsDisplayList *aList,
+                  DisplayItemEntryType aType);
   AnimatedGeometryRoot* GetAnimatedGeometryRoot() { return mAnimatedGeometryRoot; }
 
   /**
@@ -678,7 +773,11 @@ public:
    * These items get added by Accumulate().
    */
   nsTArray<AssignedDisplayItem> mAssignedDisplayItems;
-
+  /**
+   * Tracks the active opacity markers by holding the indices to PUSH_OPACITY
+   * items in |mAssignedDisplayItems|.
+   */
+  nsTArray<size_t> mOpacityIndices;
 };
 
 struct NewLayerEntry {
@@ -1214,6 +1313,7 @@ public:
 
 protected:
   friend class PaintedLayerData;
+  friend class FLBDisplayItemIterator;
 
   LayerManager::PaintedLayerCreationHint
     GetLayerCreationHint(AnimatedGeometryRoot* aAnimatedGeometryRoot);
@@ -1476,6 +1576,43 @@ protected:
   AnimatedGeometryRoot* mLastDisplayPortAGR;
   nsRect mLastDisplayPortRect;
 };
+
+bool
+FLBDisplayItemIterator::ShouldFlattenNextItem() const
+{
+  if (!mNext) {
+    return false;
+  }
+
+  if (!mNext->ShouldFlattenAway(mBuilder)) {
+    return false;
+  }
+
+  if (mNext->GetType() == DisplayItemType::TYPE_OPACITY) {
+    nsDisplayOpacity* opacity = static_cast<nsDisplayOpacity*>(mNext);
+
+    if (opacity->OpacityAppliedToChildren()) {
+      // This is the previous opacity flattening path, where the opacity has
+      // been applied to children.
+      return true;
+    }
+
+    if (!mState->mManager->IsWidgetLayerManager()) {
+      // Do not flatten opacity inside an inactive layer tree.
+      return false;
+    }
+
+    LayerState layerState = mNext->GetLayerState(mState->mBuilder,
+                                                 mState->mManager,
+                                                 mState->mParameters);
+
+    // Do not flatten opacity if child display items require an active layer.
+    return (layerState == LayerState::LAYER_NONE ||
+            layerState == LayerState::LAYER_INACTIVE);
+  }
+
+  return true;
+}
 
 class PaintedDisplayItemLayerUserData : public LayerUserData
 {
@@ -2604,6 +2741,13 @@ ContainerState::FindOpaqueBackgroundColorInLayer(const PaintedLayerData* aData,
   appUnitRect.ScaleInverseRoundOut(mParameters.mXScale, mParameters.mYScale);
 
   for (auto& assignedItem : Reversed(aData->mAssignedDisplayItems)) {
+    if (assignedItem.mType != DisplayItemEntryType::ITEM ||
+        assignedItem.mHasOpacity) {
+      // |assignedItem| is either an effect marker, or within a flatten opacity
+      // group. In both cases, there is no opaque area.
+      continue;
+    }
+
     nsDisplayItem* item = assignedItem.mItem;
     bool snap;
     nsRect bounds = item->GetBounds(mBuilder, &snap);
@@ -3173,6 +3317,8 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
 {
   PaintedLayerData* data = &aData;
 
+  MOZ_ASSERT(data->mOpacityIndices.IsEmpty());
+
   if (!data->mLayer) {
     // No layer was recycled, so we create a new one.
     RefPtr<PaintedLayer> paintedLayer = CreatePaintedLayer(data);
@@ -3240,6 +3386,11 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
   for (auto& item : data->mAssignedDisplayItems) {
     MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_LAYER_EVENT_REGIONS);
     MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO);
+
+    if (item.mType == DisplayItemEntryType::POP_OPACITY) {
+      // Do not invalidate for end markers.
+      continue;
+    }
 
     InvalidateForLayerChange(item.mItem, data->mLayer, item.mDisplayItemData);
     mLayerBuilder->AddPaintedDisplayItem(data, item, *this, layer);
@@ -3448,32 +3599,68 @@ IsItemAreaInWindowOpaqueRegion(nsDisplayListBuilder* aBuilder,
 
 void
 PaintedLayerData::Accumulate(ContainerState* aState,
-                            nsDisplayItem* aItem,
-                            const nsIntRect& aVisibleRect,
-                            const DisplayItemClip& aClip,
-                            LayerState aLayerState,
-                            nsDisplayList* aList)
+                             nsDisplayItem* aItem,
+                             const nsIntRect& aVisibleRect,
+                             const DisplayItemClip& aClip,
+                             LayerState aLayerState,
+                             nsDisplayList* aList,
+                             DisplayItemEntryType aType)
 {
   FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating dp=%s(%p), f=%p against pld=%p\n", aItem->Name(), aItem, aItem->Frame(), this);
+
+  const bool hasOpacity = mOpacityIndices.Length() > 0;
+
+  if (aType == DisplayItemEntryType::POP_OPACITY) {
+    MOZ_ASSERT(!mOpacityIndices.IsEmpty());
+    mOpacityIndices.RemoveLastElement();
+
+    AssignedDisplayItem item(aItem, aClip, aLayerState,
+                             nullptr, aType, hasOpacity);
+    mAssignedDisplayItems.AppendElement(Move(item));
+    return;
+  }
 
   if (aState->mBuilder->NeedToForceTransparentSurfaceForItem(aItem)) {
     mForceTransparentSurface = true;
   }
+
+  nsRect componentAlphaBounds;
   if (aState->mParameters.mDisableSubpixelAntialiasingInDescendants) {
     // Disable component alpha.
-    // Note that the transform (if any) on the PaintedLayer is always an integer translation so
-    // we don't have to factor that in here.
+    // Note that the transform (if any) on the PaintedLayer is always an integer
+    // translation so we don't have to factor that in here.
     aItem->DisableComponentAlpha();
+  } else {
+    componentAlphaBounds = aItem->GetComponentAlphaBounds(aState->mBuilder);
+
+    if (!componentAlphaBounds.IsEmpty()) {
+      // This display item needs background copy when pushing opacity group.
+      for (size_t i : mOpacityIndices) {
+        AssignedDisplayItem& item = mAssignedDisplayItems[i];
+        MOZ_ASSERT(item.mType == DisplayItemEntryType::PUSH_OPACITY ||
+                   item.mType == DisplayItemEntryType::PUSH_OPACITY_WITH_BG);
+        item.mType = DisplayItemEntryType::PUSH_OPACITY_WITH_BG;
+      }
+    }
   }
 
   bool clipMatches = mItemClip == aClip;
   mItemClip = aClip;
 
+  DisplayItemData* currentData =
+    aItem->HasMergedFrames() ? nullptr : aItem->GetDisplayItemData();
+
   DisplayItemData* oldData =
-      aState->mLayerBuilder->GetOldLayerForFrame(aItem->Frame(),
-                                         aItem->GetPerFrameKey(),
-                                         aItem->HasMergedFrames() ? nullptr : aItem->GetDisplayItemData());
-  mAssignedDisplayItems.AppendElement(AssignedDisplayItem(aItem, aClip, aLayerState, oldData));
+    aState->mLayerBuilder->GetOldLayerForFrame(aItem->Frame(),
+                                               aItem->GetPerFrameKey(),
+                                               currentData);
+  AssignedDisplayItem item(aItem, aClip, aLayerState,
+                           oldData, aType, hasOpacity);
+  mAssignedDisplayItems.AppendElement(Move(item));
+
+  if (aType == DisplayItemEntryType::PUSH_OPACITY) {
+    mOpacityIndices.AppendElement(mAssignedDisplayItems.Length() - 1);
+  }
 
   if (aItem->MustPaintOnContentSide()) {
      mShouldPaintOnContentSide = true;
@@ -3492,10 +3679,15 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     return;
   }
 
-  nsIntRegion opaquePixels = aState->ComputeOpaqueRect(aItem,
-                                                       mAnimatedGeometryRoot, mASR, aClip, aList,
-                                                       &mHideAllLayersBelow, &mOpaqueForAnimatedGeometryRootParent);
-  opaquePixels.AndWith(aVisibleRect);
+  nsIntRegion opaquePixels;
+
+  // Active opacity means no opaque pixels.
+  if (!hasOpacity) {
+    opaquePixels = aState->ComputeOpaqueRect(aItem, mAnimatedGeometryRoot, mASR,
+                                             aClip, aList, &mHideAllLayersBelow,
+                                             &mOpaqueForAnimatedGeometryRootParent);
+    opaquePixels.AndWith(aVisibleRect);
+  }
 
   /* Mark as available for conversion to image layer if this is a nsDisplayImage and
    * it's the only thing visible in this layer.
@@ -3512,7 +3704,10 @@ PaintedLayerData::Accumulate(ContainerState* aState,
 
   bool isFirstVisibleItem = mVisibleRegion.IsEmpty();
 
-  Maybe<nscolor> uniformColor = aItem->IsUniform(aState->mBuilder);
+  Maybe<nscolor> uniformColor;
+  if (!hasOpacity) {
+    uniformColor = aItem->IsUniform(aState->mBuilder);
+  }
 
   // Some display items have to exist (so they can set forceTransparentSurface
   // below) but don't draw anything. They'll return true for isUniform but
@@ -3570,18 +3765,17 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     }
   }
 
-  if (!aState->mParameters.mDisableSubpixelAntialiasingInDescendants) {
-    nsRect componentAlpha = aItem->GetComponentAlphaBounds(aState->mBuilder);
-    if (!componentAlpha.IsEmpty()) {
-      nsIntRect componentAlphaRect =
-        aState->ScaleToOutsidePixels(componentAlpha, false).Intersect(aVisibleRect);
-      if (!mOpaqueRegion.Contains(componentAlphaRect)) {
-        if (IsItemAreaInWindowOpaqueRegion(aState->mBuilder, aItem,
-              componentAlpha.Intersect(aItem->GetVisibleRect()))) {
-          mNeedComponentAlpha = true;
-        } else {
-          aItem->DisableComponentAlpha();
-        }
+  if (!aState->mParameters.mDisableSubpixelAntialiasingInDescendants &&
+      !componentAlphaBounds.IsEmpty()) {
+    nsIntRect componentAlphaRect =
+      aState->ScaleToOutsidePixels(componentAlphaBounds, false).Intersect(aVisibleRect);
+
+    if (!mOpaqueRegion.Contains(componentAlphaRect)) {
+      if (IsItemAreaInWindowOpaqueRegion(aState->mBuilder, aItem,
+            componentAlphaBounds.Intersect(aItem->GetVisibleRect()))) {
+        mNeedComponentAlpha = true;
+      } else {
+        aItem->DisableComponentAlpha();
       }
     }
   }
@@ -3591,8 +3785,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
   // not support subpixel positioning of text that animated transforms can
   // generate. bug 633097
   if (aState->mParameters.mInActiveTransformedSubtree &&
-       (mNeedComponentAlpha ||
-         !aItem->GetComponentAlphaBounds(aState->mBuilder).IsEmpty())) {
+       (mNeedComponentAlpha || !componentAlphaBounds.IsEmpty())) {
     mDisableFlattening = true;
   }
 }
@@ -4089,11 +4282,20 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
   AnimatedGeometryRoot* lastAnimatedGeometryRoot = nullptr;
   nsPoint lastTopLeft;
-  FlattenedDisplayItemIterator iter(mBuilder, aList);
-  while (nsDisplayItem* i = iter.GetNext()) {
+
+  // Tracks the PaintedLayerData that the item will be accumulated in, if it is
+  // non-null. Currently only used with PUSH_OPACITY and POP_OPACITY markers.
+  PaintedLayerData* selectedPLD = nullptr;
+
+  FLBDisplayItemIterator iter(mBuilder, aList, this);
+  while (iter.HasNext()) {
+    DisplayItemEntry e = iter.GetNextEntry();
+    nsDisplayItem* i = e.mItem;
+    DisplayItemEntryType marker = e.mType;
+
+
     nsDisplayItem* item = i;
     MOZ_ASSERT(item);
-
     DisplayItemType itemType = item->GetType();
 
     // If the item is a event regions item, but is empty (has no regions in it)
@@ -4125,20 +4327,23 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     // Only allow either LayerEventRegions or CompositorHitTestInfo items.
     MOZ_ASSERT(!(hadLayerEventRegions && hadCompositorHitTestInfo));
 
-
     // Peek ahead to the next item and see if it can be merged with the current
     // item. We create a list of consecutive items that can be merged together.
     AutoTArray<nsDisplayItem*, 1> mergedItems;
-    mergedItems.AppendElement(item);
-    while (nsDisplayItem* peek = iter.PeekNext()) {
-      if (!item->CanMerge(peek)) {
-        break;
+
+    if (marker == DisplayItemEntryType::ITEM) {
+      mergedItems.AppendElement(item);
+
+      while (nsDisplayItem* peek = iter.PeekNext()) {
+        if (!item->CanMerge(peek)) {
+          break;
+        }
+
+        mergedItems.AppendElement(peek);
+
+        // Move the iterator forward since we will merge this item.
+        i = iter.GetNext();
       }
-
-      mergedItems.AppendElement(peek);
-
-      // Move the iterator forward since we will merge this item.
-      i = iter.GetNext();
     }
 
     if (mergedItems.Length() > 1) {
@@ -4164,10 +4369,14 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       continue;
     }
 
-    LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
-    if (layerState == LAYER_INACTIVE &&
-        nsDisplayItem::ForceActiveLayers()) {
-      layerState = LAYER_ACTIVE;
+    LayerState layerState = LAYER_NONE;
+
+    if (marker == DisplayItemEntryType::ITEM) {
+      layerState = item->GetLayerState(mBuilder, mManager, mParameters);
+
+      if (layerState == LAYER_INACTIVE && nsDisplayItem::ForceActiveLayers()) {
+        layerState = LAYER_ACTIVE;
+      }
     }
 
     bool forceInactive = false;
@@ -4269,6 +4478,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           layerState == LAYER_ACTIVE))) {
 
       layerCount++;
+
+      // Currently we do not support flattening effects within nested inactive
+      // layer trees.
+      MOZ_ASSERT(selectedPLD == nullptr);
+      MOZ_ASSERT(marker == DisplayItemEntryType::ITEM);
 
       // LAYER_ACTIVE_EMPTY means the layer is created just for its metadata.
       // We should never see an empty layer with any visible content!
@@ -4589,14 +4803,21 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       const bool backfaceHidden = item->In3DContextAndBackfaceIsHidden();
       const nsIFrame* referenceFrame = item->ReferenceFrame();
 
-      PaintedLayerData* paintedLayerData =
-        mPaintedLayerDataTree.FindPaintedLayerFor(animatedGeometryRoot, itemASR, layerClipChain,
-                                                  itemVisibleRect, backfaceHidden,
-                                                  [&](PaintedLayerData* aData) {
-          NewPaintedLayerData(aData, animatedGeometryRoot, itemASR,
-                              layerClipChain, scrollMetadataASR, topLeft,
-                              referenceFrame, backfaceHidden);
+      PaintedLayerData* paintedLayerData = selectedPLD;
+
+      if (!selectedPLD) {
+        MOZ_ASSERT(marker != DisplayItemEntryType::POP_OPACITY);
+
+        paintedLayerData =
+          mPaintedLayerDataTree.FindPaintedLayerFor(animatedGeometryRoot, itemASR, layerClipChain,
+                                                    itemVisibleRect, backfaceHidden,
+                                                    [&](PaintedLayerData* aData) {
+            NewPaintedLayerData(aData, animatedGeometryRoot, itemASR,
+                                layerClipChain, scrollMetadataASR, topLeft,
+                                referenceFrame, backfaceHidden);
         });
+      }
+      MOZ_ASSERT(paintedLayerData);
 
       if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
         nsDisplayLayerEventRegions* eventRegions =
@@ -4607,7 +4828,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           static_cast<nsDisplayCompositorHitTestInfo*>(item);
         paintedLayerData->AccumulateHitTestInfo(this, hitTestInfo);
       } else {
-        paintedLayerData->Accumulate(this, item, itemVisibleRect, itemClip, layerState, aList);
+        paintedLayerData->Accumulate(this, item, itemVisibleRect, itemClip,
+                                     layerState, aList, marker);
 
         if (!paintedLayerData->mLayer) {
           // Try to recycle the old layer of this display item.
@@ -4626,6 +4848,18 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           }
         }
       }
+
+      if (marker == DisplayItemEntryType::PUSH_OPACITY) {
+        selectedPLD = paintedLayerData;
+      }
+
+      if (marker == DisplayItemEntryType::POP_OPACITY ) {
+        MOZ_ASSERT(selectedPLD);
+
+        if (selectedPLD->mOpacityIndices.IsEmpty()) {
+          selectedPLD = nullptr;
+        }
+      }
     }
 
     nsDisplayList* childItems = item->GetSameCoordinateSystemChildren();
@@ -4633,6 +4867,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       aList->SetNeedsTransparentSurface();
     }
   }
+
+  MOZ_ASSERT(selectedPLD == nullptr);
 }
 
 void
@@ -4965,13 +5201,17 @@ FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame,
 AssignedDisplayItem::AssignedDisplayItem(nsDisplayItem* aItem,
                                          const DisplayItemClip& aClip,
                                          LayerState aLayerState,
-                                         DisplayItemData* aData)
+                                         DisplayItemData* aData,
+                                         DisplayItemEntryType aType,
+                                         const bool aHasOpacity)
   : mItem(aItem)
   , mClip(aClip)
   , mLayerState(aLayerState)
   , mDisplayItemData(aData)
   , mReused(aItem->IsReused())
   , mMerged(aItem->HasMergedFrames())
+  , mType(aType)
+  , mHasOpacity(aHasOpacity)
 {}
 
 AssignedDisplayItem::~AssignedDisplayItem()
@@ -5912,6 +6152,16 @@ FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aI
     if (!cdi->mItem) {
       continue;
     }
+
+    if (cdi->mType == DisplayItemEntryType::POP_OPACITY ||
+        (cdi->mType == DisplayItemEntryType::ITEM && cdi->mHasOpacity)) {
+      // The visibility calculations are skipped when the item is an effect end
+      // marker, or when the display item is within a flattened opacity group.
+      // This is because RecomputeVisibility has already been called for the
+      // group item, and all the children.
+      continue;
+    }
+
     const DisplayItemClip& clip = cdi->mItem->GetClip();
 
     NS_ASSERTION(AppUnitsPerDevPixel(cdi->mItem) == aAppUnitsPerDevPixel,
@@ -5946,6 +6196,70 @@ FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aI
   }
 }
 
+/**
+ * Sets the clip chain and starts a new opacity group.
+ */
+static void
+PushOpacity(gfxContext* aContext,
+            const nsRect& aPaintRect,
+            AssignedDisplayItem& aItem,
+            const int32_t aAUPDP)
+{
+  MOZ_ASSERT(aItem.mType == DisplayItemEntryType::PUSH_OPACITY ||
+             aItem.mType == DisplayItemEntryType::PUSH_OPACITY_WITH_BG);
+  MOZ_ASSERT(aItem.mItem->GetType() == DisplayItemType::TYPE_OPACITY);
+
+  aContext->Save();
+
+  DisplayItemClip clip;
+  clip.SetTo(aPaintRect);
+  clip.IntersectWith(aItem.mItem->GetClip());
+  clip.ApplyTo(aContext, aAUPDP);
+
+  nsDisplayOpacity* opacityItem = static_cast<nsDisplayOpacity*>(aItem.mItem);
+  const float opacity = opacityItem->GetOpacity();
+
+  if (aItem.mType == DisplayItemEntryType::PUSH_OPACITY_WITH_BG) {
+    aContext->PushGroupAndCopyBackground(gfxContentType::COLOR_ALPHA, opacity);
+  } else {
+    aContext->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity);
+  }
+}
+
+/**
+ * Tracks item clips per opacity nesting level.
+ */
+struct ClipTracker {
+  explicit ClipTracker(gfxContext* aContext)
+    : mContext(aContext)
+  {}
+
+  bool HasClip(int aOpacityNesting) const
+  {
+    return !mClips.IsEmpty() &&
+            mClips.LastElement() == aOpacityNesting;
+  }
+
+  void PopClipIfNeeded(int aOpacityNesting)
+  {
+    if (!HasClip(aOpacityNesting)) {
+      return;
+    }
+
+    mContext->Restore();
+    mClips.RemoveLastElement();
+  };
+
+  void SaveClip(int aOpacityNesting)
+  {
+    mContext->Save();
+    mClips.AppendElement(aOpacityNesting);
+  };
+
+  AutoTArray<int, 2> mClips;
+  gfxContext* mContext;
+};
+
 void
 FrameLayerBuilder::PaintItems(nsTArray<AssignedDisplayItem>& aItems,
                               const nsIntRect& aRect,
@@ -5963,73 +6277,102 @@ FrameLayerBuilder::PaintItems(nsTArray<AssignedDisplayItem>& aItems,
                  NSIntPixelsToAppUnits(aOffset.y, appUnitsPerDevPixel));
   boundRect.ScaleInverseRoundOut(aXScale, aYScale);
 
-  DisplayItemClip currentClip;
-  bool currentClipIsSetInContext = false;
-  DisplayItemClip tmpClip;
+  DisplayItemClip currentClip, tmpClip;
+
+  int opacityNesting = 0;
+  ClipTracker clipTracker(aContext);
 
   for (uint32_t i = 0; i < aItems.Length(); ++i) {
-    AssignedDisplayItem* cdi = &aItems[i];
-    if (!cdi->mItem) {
+    AssignedDisplayItem& cdi = aItems[i];
+    nsDisplayItem* item = cdi.mItem;
+
+    if (!item) {
+      MOZ_ASSERT(cdi.mType == DisplayItemEntryType::ITEM);
       continue;
     }
 
-    nsRect paintRect = cdi->mItem->GetVisibleRect().Intersect(boundRect);
-    if (paintRect.IsEmpty())
+    const nsRect& visibleRect = item->GetVisibleRect();
+
+    nsRect paintRect = visibleRect.Intersect(boundRect);
+    if (paintRect.IsEmpty()) {
       continue;
+    }
 
 #ifdef MOZ_DUMP_PAINTING
     AUTO_PROFILER_LABEL_DYNAMIC_CSTR("FrameLayerBuilder::PaintItems", GRAPHICS,
-                                     cdi->mItem->Name());
+                                     item->Name());
 #else
     AUTO_PROFILER_LABEL("FrameLayerBuilder::PaintItems", GRAPHICS);
 #endif
 
+    MOZ_ASSERT((opacityNesting == 0 && !cdi.mHasOpacity) ||
+               (opacityNesting > 0 && cdi.mHasOpacity));
+
+    if (cdi.mType == DisplayItemEntryType::PUSH_OPACITY ||
+        cdi.mType == DisplayItemEntryType::PUSH_OPACITY_WITH_BG) {
+      clipTracker.PopClipIfNeeded(opacityNesting);
+      PushOpacity(aContext, paintRect, cdi, appUnitsPerDevPixel);
+      opacityNesting++;
+    }
+
+    if (cdi.mType == DisplayItemEntryType::POP_OPACITY) {
+      MOZ_ASSERT(item->GetType() == DisplayItemType::TYPE_OPACITY);
+      MOZ_ASSERT(opacityNesting > 0);
+
+      clipTracker.PopClipIfNeeded(opacityNesting);
+      aContext->PopGroupAndBlend();
+      aContext->Restore();
+      opacityNesting--;
+    }
+
+    if (cdi.mType != DisplayItemEntryType::ITEM) {
+      continue;
+    }
+
     // If the new desired clip state is different from the current state,
     // update the clip.
-    const DisplayItemClip* clip = &cdi->mItem->GetClip();
+    const DisplayItemClip* clip = &item->GetClip();
     if (clip->GetRoundedRectCount() > 0 &&
-        !clip->IsRectClippedByRoundedCorner(cdi->mItem->GetVisibleRect())) {
+        !clip->IsRectClippedByRoundedCorner(visibleRect)) {
       tmpClip = *clip;
       tmpClip.RemoveRoundedCorners();
       clip = &tmpClip;
     }
-    if (currentClipIsSetInContext != clip->HasClip() ||
+    if (clipTracker.HasClip(opacityNesting) != clip->HasClip() ||
         (clip->HasClip() && *clip != currentClip)) {
-      if (currentClipIsSetInContext) {
-        aContext->Restore();
-      }
-      currentClipIsSetInContext = clip->HasClip();
-      if (currentClipIsSetInContext) {
+      clipTracker.PopClipIfNeeded(opacityNesting);
+
+      if (clip->HasClip()) {
         currentClip = *clip;
-        aContext->Save();
-        currentClip.ApplyTo(aContext, aPresContext->AppUnitsPerDevPixel());
+        clipTracker.SaveClip(opacityNesting);
+        currentClip.ApplyTo(aContext, appUnitsPerDevPixel);
         aContext->NewPath();
       }
     }
 
-    if (cdi->mInactiveLayerManager) {
+    if (cdi.mInactiveLayerManager) {
       bool saved = aDrawTarget.GetPermitSubpixelAA();
-      PaintInactiveLayer(aBuilder, cdi->mInactiveLayerManager, cdi->mItem, aContext, aContext);
+      PaintInactiveLayer(aBuilder, cdi.mInactiveLayerManager,
+                         item, aContext, aContext);
       aDrawTarget.SetPermitSubpixelAA(saved);
     } else {
-      nsIFrame* frame = cdi->mItem->Frame();
+      nsIFrame* frame = item->Frame();
       if (aBuilder->IsPaintingToWindow()) {
         frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
       }
 #ifdef MOZ_DUMP_PAINTING
       if (gfxEnv::DumpPaintItems()) {
-        DebugPaintItem(aDrawTarget, aPresContext, cdi->mItem, aBuilder);
+        DebugPaintItem(aDrawTarget, aPresContext, item, aBuilder);
       } else
 #endif
       {
-        cdi->mItem->Paint(aBuilder, aContext);
+        item->Paint(aBuilder, aContext);
       }
     }
   }
 
-  if (currentClipIsSetInContext) {
-    aContext->Restore();
-  }
+  clipTracker.PopClipIfNeeded(opacityNesting);
+  MOZ_ASSERT(opacityNesting == 0);
 }
 
 /**
