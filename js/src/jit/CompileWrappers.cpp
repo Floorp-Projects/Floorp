@@ -167,7 +167,7 @@ CompileZone::isAtomsZone()
 const void*
 CompileZone::addressOfIonBailAfter()
 {
-    return zone()->group()->addressOfIonBailAfter();
+    return zone()->runtimeFromAnyThread()->jitRuntime()->addressOfIonBailAfter();
 }
 #endif
 
