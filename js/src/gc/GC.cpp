@@ -1065,10 +1065,8 @@ GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
     }
 
     ZealMode zealMode = ZealMode(zeal);
-    if (zealMode == ZealMode::GenerationalGC) {
-        for (ZoneGroupsIter group(rt); !group.done(); group.next())
-            group->nursery().enterZealMode();
-    }
+    if (zealMode == ZealMode::GenerationalGC)
+        nursery().enterZealMode();
 
     // Some modes are mutually exclusive. If we're setting one of those, we
     // first reset all of them.
@@ -1282,8 +1280,7 @@ GCRuntime::finish()
 
     FinishTrace();
 
-    for (ZoneGroupsIter group(rt); !group.done(); group.next())
-        group->nursery().printTotalProfileTimes();
+    nursery().printTotalProfileTimes();
     stats().printTotalProfileTimes();
 }
 
@@ -6609,7 +6606,7 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
         Zone* zone = zonesToMaybeCompact.ref().front();
         zonesToMaybeCompact.ref().removeFront();
 
-        MOZ_ASSERT(zone->group()->nursery().isEmpty());
+        MOZ_ASSERT(nursery().isEmpty());
         zone->changeGCState(Zone::Finished, Zone::Compact);
 
         if (relocateArenas(zone, reason, relocatedArenas, sliceBudget)) {
@@ -6699,18 +6696,6 @@ HeapStateToLabel(JS::HeapState heapState)
     return nullptr;
 }
 
-#ifdef DEBUG
-static bool
-AllNurseriesAreEmpty(JSRuntime* rt)
-{
-    for (ZoneGroupsIter group(rt); !group.done(); group.next()) {
-        if (!group->nursery().isEmpty())
-            return false;
-    }
-    return true;
-}
-#endif
-
 /* Start a new heap session. */
 AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
   : runtime(rt),
@@ -6720,7 +6705,7 @@ AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
 {
     MOZ_ASSERT(prevState == JS::HeapState::Idle);
     MOZ_ASSERT(heapState != JS::HeapState::Idle);
-    MOZ_ASSERT_IF(heapState == JS::HeapState::MajorCollecting, AllNurseriesAreEmpty(rt));
+    MOZ_ASSERT_IF(heapState == JS::HeapState::MajorCollecting, rt->gc.nursery().isEmpty());
 
     // Session always begins with lock held, see comment in class definition.
     maybeLock.emplace(rt);
@@ -7691,8 +7676,7 @@ GCRuntime::onOutOfMallocMemory()
     decommitTask.join();
 
     // Wait for background free of nursery huge slots to finish.
-    for (ZoneGroupsIter group(rt); !group.done(); group.next())
-        group->nursery().waitBackgroundFreeEnd();
+    nursery().waitBackgroundFreeEnd();
 
     AutoLockGC lock(rt);
     onOutOfMallocMemory(lock);
@@ -7756,10 +7740,8 @@ JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSContext* cx)
 
 JS::AutoDisableGenerationalGC::~AutoDisableGenerationalGC()
 {
-    if (--cx->generationalDisabled == 0) {
-        for (ZoneGroupsIter group(cx->runtime()); !group.done(); group.next())
-            group->nursery().enable();
-    }
+    if (--cx->generationalDisabled == 0)
+        cx->nursery().enable();
 }
 
 JS_PUBLIC_API(bool)
@@ -7804,8 +7786,7 @@ js::gc::FinishGC(JSContext* cx)
         JS::FinishIncrementalGC(cx, JS::gcreason::API);
     }
 
-    for (ZoneGroupsIter group(cx->runtime()); !group.done(); group.next())
-        group->nursery().waitBackgroundFreeEnd();
+    cx->nursery().waitBackgroundFreeEnd();
 }
 
 AutoPrepareForTracing::AutoPrepareForTracing(JSContext* cx)
@@ -7858,9 +7839,6 @@ js::NewCompartment(JSContext* cx, JSPrincipals* principals,
             return nullptr;
 
         groupHolder.reset(group);
-
-        if (cx->generationalDisabled)
-            group->nursery().disable();
     }
 
     if (!zone) {
@@ -8942,7 +8920,7 @@ AutoAssertEmptyNursery::checkCondition(JSContext* cx) {
     if (!noAlloc)
         noAlloc.emplace();
     this->cx = cx;
-    MOZ_ASSERT(AllNurseriesAreEmpty(cx->runtime()));
+    MOZ_ASSERT(cx->nursery().isEmpty());
 }
 
 AutoEmptyNursery::AutoEmptyNursery(JSContext* cx)
@@ -8950,7 +8928,7 @@ AutoEmptyNursery::AutoEmptyNursery(JSContext* cx)
 {
     MOZ_ASSERT(!cx->suppressGC);
     cx->runtime()->gc.stats().suspendPhases();
-    EvictAllNurseries(cx->runtime(), JS::gcreason::EVICT_NURSERY);
+    cx->runtime()->gc.evictNursery(JS::gcreason::EVICT_NURSERY);
     cx->runtime()->gc.stats().resumePhases();
     checkCondition(cx);
 }

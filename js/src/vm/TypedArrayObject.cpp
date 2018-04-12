@@ -196,7 +196,7 @@ TypedArrayObject::objectMoved(JSObject* obj, JSObject* old)
         return 0;
     }
 
-    Nursery& nursery = obj->zone()->group()->nursery();
+    Nursery& nursery = obj->runtimeFromActiveCooperatingThread()->gc.nursery();
     void* buf = oldObj->elements();
 
     if (!nursery.isInside(buf)) {
@@ -494,7 +494,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                     MOZ_ASSERT(buffer->byteLength() == 0 &&
                                (uintptr_t(ptr.unwrapValue()) & gc::ChunkMask) == 0);
                 } else {
-                    cx->zone()->group()->storeBuffer().putWholeCell(obj);
+                    cx->runtime()->gc.storeBuffer().putWholeCell(obj);
                 }
             }
         } else {
