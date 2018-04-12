@@ -16,7 +16,9 @@
 #include "nsCSSScanner.h"
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
+#include "nsIDocShell.h"
 #include "nsIFactory.h"
+#include "nsINode.h"
 #include "nsIScriptError.h"
 #include "nsISensitiveInfoHiddenURI.h"
 #include "nsIStringBundle.h"
@@ -134,9 +136,11 @@ ErrorReporter::ErrorReporter(const StyleSheet* aSheet,
                              nsIURI* aURI)
   : mSheet(aSheet)
   , mLoader(aLoader)
-  , mURI(aURI),
-    mInnerWindowID(0), mErrorLineNumber(0), mPrevErrorLineNumber(0),
-    mErrorColNumber(0)
+  , mURI(aURI)
+  , mInnerWindowID(0)
+  , mErrorLineNumber(0)
+  , mPrevErrorLineNumber(0)
+  , mErrorColNumber(0)
 {
 }
 
@@ -156,6 +160,54 @@ ErrorReporter::~ErrorReporter()
       sSpecCache->SetPending();
     }
   }
+}
+
+bool
+ErrorReporter::ShouldReportErrors(const nsIDocument& aDoc)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsIDocShell* shell = aDoc.GetDocShell();
+  if (!shell) {
+    return false;
+  }
+
+  bool report = false;
+  shell->GetCssErrorReportingEnabled(&report);
+  return report;
+}
+
+bool
+ErrorReporter::ShouldReportErrors()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  EnsureGlobalsInitialized();
+  if (!sReportErrors) {
+    return false;
+  }
+
+  if (mInnerWindowID) {
+    // We already reported an error, and that has cleared mSheet and mLoader, so
+    // we'd get the bogus value otherwise.
+    return true;
+  }
+
+  if (mSheet) {
+    nsINode* owner = mSheet->GetOwnerNode()
+      ? mSheet->GetOwnerNode()
+      : mSheet->GetAssociatedDocument();
+
+    if (owner && ShouldReportErrors(*owner->OwnerDoc())) {
+      return true;
+    }
+  }
+
+  if (mLoader && mLoader->GetDocument() &&
+      ShouldReportErrors(*mLoader->GetDocument())) {
+    return true;
+  }
+
+  return false;
 }
 
 void
@@ -258,7 +310,7 @@ ErrorReporter::ClearError()
 void
 ErrorReporter::AddToError(const nsString &aErrorText)
 {
-  if (!ShouldReportErrors()) return;
+  MOZ_ASSERT(ShouldReportErrors());
 
   if (mError.IsEmpty()) {
     mError = aErrorText;
@@ -271,7 +323,7 @@ ErrorReporter::AddToError(const nsString &aErrorText)
 void
 ErrorReporter::ReportUnexpected(const char *aMessage)
 {
-  if (!ShouldReportErrors()) return;
+  MOZ_ASSERT(ShouldReportErrors());
 
   nsAutoString str;
   sStringBundle->GetStringFromName(aMessage, str);
@@ -282,7 +334,7 @@ void
 ErrorReporter::ReportUnexpectedUnescaped(const char *aMessage,
                                          const nsAutoString& aParam)
 {
-  if (!ShouldReportErrors()) return;
+  MOZ_ASSERT(ShouldReportErrors());
 
   const char16_t *params[1] = { aParam.get() };
 

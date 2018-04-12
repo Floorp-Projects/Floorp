@@ -289,9 +289,14 @@ interface nsIDocShell : nsIDocShellTreeItem
   attribute nsIDOMEventTarget chromeEventHandler;
 
   /**
-    * This allows chrome to set a custom User agent on a specific docshell
-    */
+   * This allows chrome to set a custom User agent on a specific docshell
+   */
   attribute DOMString customUserAgent;
+
+  /**
+   * Whether CSS error reporting is enabled.
+   */
+  attribute boolean cssErrorReportingEnabled;
 
   /**
    * Whether to allow plugin execution
