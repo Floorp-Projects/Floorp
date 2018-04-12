@@ -348,7 +348,7 @@ public class MediaControlService extends Service {
 
         final Tab tab = AudioFocusAgent.getInstance().getActiveMediaTab();
 
-        if (tab == null) {
+        if (tab == null || tab.isPrivate()) {
             return;
         }
 
