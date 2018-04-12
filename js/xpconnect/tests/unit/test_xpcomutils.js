@@ -19,7 +19,7 @@ add_test(function test_generateQI_string_names()
     var x = {
         QueryInterface: XPCOMUtils.generateQI([
             Ci.nsIClassInfo,
-            "nsIDOMNode"
+            "nsIObserver"
         ])
     };
 
@@ -29,12 +29,12 @@ add_test(function test_generateQI_string_names()
         do_throw("Should QI to nsIClassInfo");
     }
     try {
-        x.QueryInterface(Ci.nsIDOMNode);
+        x.QueryInterface(Ci.nsIObserver);
     } catch(e) {
-        do_throw("Should QI to nsIDOMNode");
+        do_throw("Should QI to nsIObserver");
     }
     try {
-        x.QueryInterface(Ci.nsIDOMDocument);
+        x.QueryInterface(Ci.nsIObserverService);
         do_throw("QI should not have succeeded!");
     } catch(e) {}
     run_next_test();

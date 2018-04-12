@@ -211,8 +211,6 @@
 
       is(savedElement.QueryInterface(Ci.nsISupports), savedElement,
          "QI to nsISupports works");
-      is(savedElement.QueryInterface(Ci.nsIDOMNode), savedElement,
-         "QI to a random (implemented) interface works");
 
       function testNoInterface(savedElement, i) {
         try {
