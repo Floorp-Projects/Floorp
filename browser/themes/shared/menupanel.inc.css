@@ -83,7 +83,7 @@
 }
 
 #PanelUI-remotetabs-view-managedevices {
-  list-style-image: url("chrome://browser/skin/device-phone.svg");
+  list-style-image: url("chrome://browser/skin/device-mobile.svg");
 }
 
 #appMenuViewHistorySidebar,

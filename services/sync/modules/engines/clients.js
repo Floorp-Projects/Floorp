@@ -232,15 +232,10 @@ ClientEngine.prototype = {
     return null;
   },
 
-  getClientType(id) {
-    const client = this._store._remoteClients[id];
-    if (client.type == DEVICE_TYPE_DESKTOP) {
-      return "desktop";
-    }
-    if (client.formfactor && client.formfactor.includes("tablet")) {
-      return "tablet";
-    }
-    return "phone";
+  isMobile: function isMobile(id) {
+    if (this._store._remoteClients[id])
+      return this._store._remoteClients[id].type == DEVICE_TYPE_MOBILE;
+    return false;
   },
 
   async _readCommands() {
