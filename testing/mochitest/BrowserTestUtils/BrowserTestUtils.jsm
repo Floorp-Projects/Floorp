@@ -700,10 +700,6 @@ var BrowserTestUtils = {
       features += `,${remoteState}`;
     }
 
-    if (options.url) {
-      argString.data = options.url;
-    }
-
     let win = Services.ww.openWindow(
       opener, Services.prefs.getCharPref("browser.chromeURL"), "_blank",
       features, argString);
