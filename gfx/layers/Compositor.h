@@ -281,6 +281,16 @@ public:
   CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) { return nullptr; }
 
   /**
+   * Draw a part of aSource into the current render target.
+   * Scaling is done with linear filtering.
+   * Returns whether the operation was successful.
+   */
+  virtual bool
+  BlitRenderTarget(CompositingRenderTarget* aSource,
+                   const gfx::IntSize& aSourceSize,
+                   const gfx::IntSize& aDestSize) { return false; }
+
+  /**
    * Sets the given surface as the target for subsequent calls to DrawQuad.
    * Passing null as aSurface sets the screen as the target.
    */
