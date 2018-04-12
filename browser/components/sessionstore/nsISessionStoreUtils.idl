@@ -42,5 +42,6 @@ interface nsISessionStoreUtils : nsISupports
    * This is implemented as a native filter, rather than a JS-based one, for
    * performance reasons.
    */
-  nsIDOMEventListener createDynamicFrameEventFilter(in nsIDOMEventListener listener);
+  [implicit_jscontext]
+  nsIDOMEventListener createDynamicFrameEventFilter(in jsval listener);
 };
