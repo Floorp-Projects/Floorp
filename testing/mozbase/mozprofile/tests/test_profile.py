@@ -11,7 +11,12 @@ import os
 import mozunit
 import pytest
 
-from mozprofile import Profile
+from mozprofile import (
+    Profile,
+    FirefoxProfile,
+    ThunderbirdProfile,
+    create_profile,
+)
 
 
 def test_with_profile_should_cleanup():
@@ -30,6 +35,25 @@ def test_with_profile_should_cleanup_even_on_exception():
 
     # profile is cleaned
     assert not os.path.exists(profile.profile)
+
+
+@pytest.mark.parametrize('app,cls', [
+    ('firefox', FirefoxProfile),
+    ('thunderbird', ThunderbirdProfile),
+    ('unknown', None)
+])
+def test_create_profile(tmpdir, app, cls):
+    path = tmpdir.strpath
+
+    if cls is None:
+        with pytest.raises(NotImplementedError):
+            create_profile(app)
+        return
+
+    profile = create_profile(app, profile=path)
+    assert isinstance(profile, Profile)
+    assert profile.__class__ == cls
+    assert profile.profile == path
 
 
 if __name__ == '__main__':
