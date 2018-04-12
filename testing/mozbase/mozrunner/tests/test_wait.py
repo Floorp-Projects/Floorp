@@ -6,30 +6,28 @@
 from __future__ import absolute_import
 
 import mozunit
-import mozrunnertest
 
 
-class MozrunnerWaitTestCase(mozrunnertest.MozrunnerTestCase):
+def test_wait_while_running(runner):
+    """Wait for the process while it is running"""
+    runner.start()
+    returncode = runner.wait(1)
 
-    def test_wait_while_running(self):
-        """Wait for the process while it is running"""
-        self.runner.start()
-        returncode = self.runner.wait(1)
+    assert runner.is_running()
+    assert returncode is None
+    assert runner.returncode == returncode
+    assert runner.process_handler is not None
 
-        self.assertTrue(self.runner.is_running())
-        self.assertEqual(returncode, None)
-        self.assertEqual(self.runner.returncode, returncode)
-        self.assertIsNotNone(self.runner.process_handler)
 
-    def test_wait_after_process_finished(self):
-        """Bug 965714: wait() after stop should not raise an error"""
-        self.runner.start()
-        self.runner.process_handler.kill()
+def test_wait_after_process_finished(runner):
+    """Bug 965714: wait() after stop should not raise an error"""
+    runner.start()
+    runner.process_handler.kill()
 
-        returncode = self.runner.wait(1)
+    returncode = runner.wait(1)
 
-        self.assertNotIn(returncode, [None, 0])
-        self.assertIsNotNone(self.runner.process_handler)
+    assert returncode not in [None, 0]
+    assert runner.process_handler is not None
 
 
 if __name__ == '__main__':

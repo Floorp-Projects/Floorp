@@ -9,38 +9,34 @@ import signal
 
 import mozunit
 
-import mozrunnertest
+
+def test_stop_process(runner):
+    """Stop the process and test properties"""
+    runner.start()
+    returncode = runner.stop()
+
+    assert not runner.is_running()
+    assert returncode not in [None, 0]
+    assert runner.returncode == returncode
+    assert runner.process_handler is not None
+    assert runner.wait(1) == returncode
 
 
-class MozrunnerStopTestCase(mozrunnertest.MozrunnerTestCase):
+def test_stop_before_start(runner):
+    """Stop the process before it gets started should not raise an error"""
+    runner.stop()
 
-    def test_stop_process(self):
-        """Stop the process and test properties"""
-        self.runner.start()
-        returncode = self.runner.stop()
 
-        self.assertFalse(self.runner.is_running())
-        self.assertNotIn(returncode, [None, 0])
-        self.assertEqual(self.runner.returncode, returncode)
-        self.assertIsNotNone(self.runner.process_handler)
+def test_stop_process_custom_signal(runner):
+    """Stop the process via a custom signal and test properties"""
+    runner.start()
+    returncode = runner.stop(signal.SIGTERM)
 
-        self.assertEqual(self.runner.wait(1), returncode)
-
-    def test_stop_before_start(self):
-        """Stop the process before it gets started should not raise an error"""
-        self.runner.stop()
-
-    def test_stop_process_custom_signal(self):
-        """Stop the process via a custom signal and test properties"""
-        self.runner.start()
-        returncode = self.runner.stop(signal.SIGTERM)
-
-        self.assertFalse(self.runner.is_running())
-        self.assertNotIn(returncode, [None, 0])
-        self.assertEqual(self.runner.returncode, returncode)
-        self.assertIsNotNone(self.runner.process_handler)
-
-        self.assertEqual(self.runner.wait(1), returncode)
+    assert not runner.is_running()
+    assert returncode not in [None, 0]
+    assert runner.returncode == returncode
+    assert runner.process_handler is not None
+    assert runner.wait(1) == returncode
 
 
 if __name__ == '__main__':
