@@ -56,12 +56,13 @@ add_task(async function test_show_completePayment() {
     tel: "+16172535702",
     email: "timbl@example.org",
   };
-  formAutofillStorage.addresses.add(address);
+  let addressGUID = await formAutofillStorage.addresses.add(address);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                       (subject, data) => data == "add");
   let card = {
+    billingAddressGUID: addressGUID,
     "cc-exp-month": 1,
     "cc-exp-year": 9999,
     "cc-name": "John Doe",
@@ -95,20 +96,8 @@ add_task(async function test_show_completePayment() {
     info("acknowledging the completion from the merchant page");
     let result = await ContentTask.spawn(browser, {}, PTU.ContentTasks.addCompletionHandler);
 
-    let addressLines = address["street-address"].split("\n");
     let actualShippingAddress = result.response.shippingAddress;
-    is(actualShippingAddress.addressLine[0], addressLines[0], "Address line 1 should match");
-    is(actualShippingAddress.addressLine[1], addressLines[1], "Address line 2 should match");
-    is(actualShippingAddress.country, address.country, "Country should match");
-    is(actualShippingAddress.region, address["address-level1"], "Region should match");
-    is(actualShippingAddress.city, address["address-level2"], "City should match");
-    is(actualShippingAddress.postalCode, address["postal-code"], "Zip code should match");
-    is(actualShippingAddress.organization, address.organization, "Org should match");
-    is(actualShippingAddress.recipient,
-       `${address["given-name"]} ${address["additional-name"]} ${address["family-name"]}`,
-       "Recipient country should match");
-    is(actualShippingAddress.phone, address.tel, "Phone should match");
-
+    checkPaymentAddressMatchesStorageAddress(actualShippingAddress, address, "Shipping address");
     is(result.response.methodName, "basic-card", "Check methodName");
     let methodDetails = result.methodDetails;
     is(methodDetails.cardholderName, "John Doe", "Check cardholderName");
@@ -116,6 +105,8 @@ add_task(async function test_show_completePayment() {
     is(methodDetails.expiryMonth, "01", "Check expiryMonth");
     is(methodDetails.expiryYear, "9999", "Check expiryYear");
     is(methodDetails.cardSecurityCode, "999", "Check cardSecurityCode");
+    checkPaymentAddressMatchesStorageAddress(methodDetails.billingAddress, address,
+                                             "Billing address");
 
     is(result.response.shippingOption, "2", "Check shipping option");
 

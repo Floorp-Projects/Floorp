@@ -8,16 +8,18 @@
 <?xml-stylesheet href="chrome://browser/content/preferences/sitePermissions.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/permissions.dtd" >
-
 <window id="SitePermissionsDialog" class="windowDialog"
         windowtype="Browser:SitePermissions"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="width: &window.width;;"
+        data-l10n-id="permissions-window"
+        data-l10n-attrs="style"
         onload="gSitePermissionsManager.onLoad();"
         onunload="gSitePermissionsManager.uninit();"
         persist="screenX screenY width height"
         onkeypress="gSitePermissionsManager.onWindowKeyPress(event);">
+
+  <link rel="localization" href="browser/preferences/permissions.ftl"/>
+  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
   <script src="chrome://browser/content/preferences/sitePermissions.js"/>
 
@@ -25,14 +27,14 @@
                 src="chrome://browser/locale/preferences/preferences.properties"/>
 
   <keyset>
-    <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
+    <key data-l10n-id="permissions-close-key" modifiers="accel" oncommand="window.close();"/>
   </keyset>
 
   <vbox class="contentPane largeDialogContainer" flex="1">
     <description id="permissionsText" control="url"/>
     <separator class="thin"/>
     <hbox align="start">
-      <textbox id="searchBox" flex="1" placeholder="&searchbox.placeholder;"
+      <textbox id="searchBox" flex="1" data-l10n-id="permissions-searchbox"
                type="search" oncommand="gSitePermissionsManager.buildPermissionsList();"/>
     </hbox>
     <separator class="thin"/>
@@ -41,10 +43,10 @@
                  onkeypress="gSitePermissionsManager.onPermissionKeyPress(event);"
                  onselect="gSitePermissionsManager.onPermissionSelect();">
       <listheader>
-        <treecol id="siteCol" label="&treehead.sitename2.label;" flex="3"
+        <treecol id="siteCol" data-l10n-id="permissions-site-name" flex="3"
                  persist="width" width="50"
                  onclick="gSitePermissionsManager.buildPermissionsList(event.target)"/>
-        <treecol id="statusCol" label="&treehead.status.label;" flex="1"
+        <treecol id="statusCol" data-l10n-id="permissions-status" flex="1"
                  persist="width" width="50" data-isCurrentSortCol="true"
                  onclick="gSitePermissionsManager.buildPermissionsList(event.target);"/>
       </listheader>
@@ -53,12 +55,12 @@
   <vbox>
     <hbox class="actionButtons" align="left" flex="1">
       <button id="removePermission" disabled="true"
-              accesskey="&removepermission2.accesskey;"
-              icon="remove" label="&removepermission2.label;"
+              data-l10n-id="permissions-remove"
+              icon="remove"
               oncommand="gSitePermissionsManager.onPermissionDelete();"/>
       <button id="removeAllPermissions"
-              icon="clear" label="&removeallpermissions2.label;"
-              accesskey="&removeallpermissions2.accesskey;"
+              data-l10n-id="permissions-remove-all"
+              icon="clear"
               oncommand="gSitePermissionsManager.onAllPermissionsDelete();"/>
     </hbox>
     <spacer flex="1"/>
@@ -67,9 +69,9 @@
     <spacer flex="1"/>
     <hbox class="actionButtons" align="right" flex="1">
       <button oncommand="close();" icon="close" id="cancel"
-              label="&button.cancel.label;" accesskey="&button.cancel.accesskey;" />
+              data-l10n-id="permissions-button-cancel" />
       <button id="btnApplyChanges" oncommand="gSitePermissionsManager.onApplyChanges();" icon="save"
-              label="&button.ok.label;" accesskey="&button.ok.accesskey;"/>
+              data-l10n-id="permissions-button-ok" />
     </hbox>
   </vbox>
 </window>

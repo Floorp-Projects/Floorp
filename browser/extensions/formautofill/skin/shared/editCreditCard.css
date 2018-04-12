@@ -13,6 +13,7 @@ form > div {
   margin: 0 0 0.5em !important;
 }
 
+#billingAddressGUID,
 input {
   flex: 1 0 auto;
 }

@@ -10,7 +10,6 @@ import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.DataAvailableWBORepository;
 import org.mozilla.android.sync.test.SynchronizerHelpers.ShouldSkipWBORepository;
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.SynchronizerConfiguration;
@@ -20,6 +19,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerSession;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerSessionDelegate;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestSynchronizerSession {
   public static final String LOG_TAG = TestSynchronizerSession.class.getSimpleName();
 

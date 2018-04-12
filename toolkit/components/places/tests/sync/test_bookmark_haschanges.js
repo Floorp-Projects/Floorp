@@ -13,7 +13,7 @@ add_task(async function test_no_changes() {
       tags: ["moz", "dot", "org"],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["mozBmk______"],
@@ -58,7 +58,7 @@ add_task(async function test_changes_remote() {
       tags: ["moz", "dot", "org"],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["mozBmk______"],
@@ -71,7 +71,7 @@ add_task(async function test_changes_remote() {
   }]), { needsMerge: false });
   await PlacesTestUtils.markBookmarksAsSynced();
 
-  await buf.store([{
+  await storeRecords(buf, [{
     id: "mozBmk______",
     type: "bookmark",
     title: "New Mozilla",
@@ -99,7 +99,7 @@ add_task(async function test_changes_local() {
       tags: ["moz", "dot", "org"],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["mozBmk______"],
@@ -137,7 +137,7 @@ add_task(async function test_changes_deleted_bookmark() {
       tags: ["moz", "dot", "org"],
     }],
   });
-  await buf.store(shuffle([{
+  await storeRecords(buf, shuffle([{
     id: "menu",
     type: "folder",
     children: ["mozBmk______"],

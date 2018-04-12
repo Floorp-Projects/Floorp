@@ -692,8 +692,17 @@ FxAccountsInternal.prototype = {
   },
 
   async getDeviceList() {
-    let accountData = await this._getVerifiedAccountOrReject();
-    return this.fxAccountsClient.getDeviceList(accountData.sessionToken);
+    const accountData = await this._getVerifiedAccountOrReject();
+    const devices = await this.fxAccountsClient.getDeviceList(accountData.sessionToken);
+
+    // Check if our push registration is still good.
+    const ourDevice = devices.find(device => device.isCurrentDevice);
+    if (ourDevice.pushEndpointExpired) {
+      await this.fxaPushService.unsubscribe();
+      await this._registerOrUpdateDevice(accountData);
+    }
+
+    return devices;
   },
 
   /**

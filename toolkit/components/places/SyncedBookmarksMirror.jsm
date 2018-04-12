@@ -324,35 +324,30 @@ class SyncedBookmarksMirror {
         "SyncedBookmarksMirror: store",
         db => db.executeTransaction(async () => {
           for await (let record of yieldingIterator(records)) {
+            MirrorLog.trace(`Storing in mirror: ${record.cleartextToString()}`);
             switch (record.type) {
               case "bookmark":
-                MirrorLog.trace("Storing bookmark in mirror", record);
                 await this.storeRemoteBookmark(record, ignoreCounts, options);
                 continue;
 
               case "query":
-                MirrorLog.trace("Storing query in mirror", record);
                 await this.storeRemoteQuery(record, ignoreCounts, options);
                 continue;
 
               case "folder":
-                MirrorLog.trace("Storing folder in mirror", record);
                 await this.storeRemoteFolder(record, ignoreCounts, options);
                 continue;
 
               case "livemark":
-                MirrorLog.trace("Storing livemark in mirror", record);
                 await this.storeRemoteLivemark(record, ignoreCounts, options);
                 continue;
 
               case "separator":
-                MirrorLog.trace("Storing separator in mirror", record);
                 await this.storeRemoteSeparator(record, ignoreCounts, options);
                 continue;
 
               default:
                 if (record.deleted) {
-                  MirrorLog.trace("Storing tombstone in mirror", record);
                   await this.storeRemoteTombstone(record, ignoreCounts,
                                                   options);
                   continue;

@@ -177,26 +177,32 @@ class EditCreditCard extends EditAutofillForm {
   /**
    * @param {HTMLElement[]} elements
    * @param {object} record with a decrypted cc-number
+   * @param {object} addresses in an object with guid keys for the billing address picker.
    * @param {object} config
-   * @param {function} config.isCCNumber Function to determine is a string is a valid CC number.
+   * @param {function} config.isCCNumber Function to determine if a string is a valid CC number.
    */
-  constructor(elements, record, config) {
+  constructor(elements, record, addresses, config) {
     super(elements);
 
+    this._addresses = addresses;
     Object.assign(this, config);
     Object.assign(this._elements, {
       ccNumber: this._elements.form.querySelector("#cc-number"),
       year: this._elements.form.querySelector("#cc-exp-year"),
+      billingAddress: this._elements.form.querySelector("#billingAddressGUID"),
+      billingAddressRow: this._elements.form.querySelector(".billingAddressRow"),
     });
 
-    this.loadRecord(record);
+    this.loadRecord(record, addresses);
     this.attachEventListeners();
   }
 
-  loadRecord(record) {
-    // _record must be updated before generateYears is called.
+  loadRecord(record, addresses) {
+    // _record must be updated before generateYears and generateBillingAddressOptions are called.
     this._record = record;
+    this._addresses = addresses;
     this.generateYears();
+    this.generateBillingAddressOptions();
     super.loadRecord(record);
   }
 
@@ -221,6 +227,24 @@ class EditCreditCard extends EditAutofillForm {
     if (ccExpYear && ccExpYear > currentYear + count) {
       this._elements.year.appendChild(new Option(ccExpYear));
     }
+  }
+
+  generateBillingAddressOptions() {
+    let billingAddressGUID = this._record && this._record.billingAddressGUID;
+
+    this._elements.billingAddress.textContent = "";
+
+    this._elements.billingAddress.appendChild(new Option("", ""));
+
+    let hasAddresses = false;
+    for (let [guid, address] of Object.entries(this._addresses)) {
+      hasAddresses = true;
+      let selected = guid == billingAddressGUID;
+      let option = new Option(this.getAddressLabel(address), guid, selected, selected);
+      this._elements.billingAddress.appendChild(option);
+    }
+
+    this._elements.billingAddressRow.hidden = !hasAddresses;
   }
 
   attachEventListeners() {

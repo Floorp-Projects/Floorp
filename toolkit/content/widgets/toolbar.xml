@@ -125,50 +125,6 @@
     </implementation>
   </binding>
 
-  <binding id="menubar">
-    <implementation>
-       <field name="_active">false</field>
-       <field name="_statusbar">null</field>
-       <field name="_originalStatusText">null</field>
-       <property name="statusbar" onget="return this.getAttribute('statusbar');"
-                                  onset="this.setAttribute('statusbar', val); return val;"/>
-       <method name="_updateStatusText">
-          <parameter name="itemText"/>
-          <body>
-           <![CDATA[
-            if (!this._active)
-                return;
-            var newText = itemText ? itemText : this._originalStatusText;
-            if (newText != this._statusbar.label)
-                this._statusbar.label = newText;
-           ]]>
-          </body>
-        </method>
-    </implementation>
-    <handlers>
-        <handler event="DOMMenuBarActive">
-          <![CDATA[
-            if (!this.statusbar) return;
-            this._statusbar = document.getElementById(this.statusbar);
-            if (!this._statusbar)
-              return;
-            this._active = true;
-            this._originalStatusText = this._statusbar.label;
-          ]]>
-        </handler>
-        <handler event="DOMMenuBarInactive">
-          <![CDATA[
-            if (!this._active)
-              return;
-            this._active = false;
-            this._statusbar.label = this._originalStatusText;
-          ]]>
-        </handler>
-        <handler event="DOMMenuItemActive">this._updateStatusText(event.target.statusText);</handler>
-        <handler event="DOMMenuItemInactive">this._updateStatusText("");</handler>
-    </handlers>
-  </binding>
-
   <binding id="toolbarpaletteitem" extends="xul:button">
     <content>
       <xul:hbox class="toolbarpaletteitem-box" flex="1" xbl:inherits="type,place">

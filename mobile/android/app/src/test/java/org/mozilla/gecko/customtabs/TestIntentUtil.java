@@ -19,8 +19,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.mozglue.SafeIntent;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.util.List;
@@ -29,7 +29,7 @@ import java.util.Objects;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestIntentUtil {
 
     private static final String THIRD_PARTY_PACKAGE_NAME = "mozilla.unit.test";

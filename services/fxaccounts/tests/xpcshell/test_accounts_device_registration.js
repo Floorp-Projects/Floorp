@@ -131,7 +131,7 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
   const credentials = getTestUser("baz");
   const fxa = new MockFxAccounts({ name: deviceName });
   await fxa.internal.setSignedInUser(credentials);
-  // Remove the current device registration (setSIgnedInUser does one!).
+  // Remove the current device registration (setSignedInUser does one!).
   await fxa.updateUserAccountData({uid: credentials.uid, device: null});
 
   const spy = {
@@ -530,6 +530,40 @@ add_task(async function test_migration_toplevel_deviceId_to_device() {
   Assert.deepEqual(data.device, {id: "mydeviceid", registrationVersion: DEVICE_REGISTRATION_VERSION});
   Assert.ok(!data.deviceId);
   Assert.ok(!data.deviceRegistrationVersion);
+});
+
+add_task(async function test_devicelist_pushendpointexpired() {
+  const deviceId = "mydeviceid";
+  const credentials = getTestUser("baz");
+  credentials.verified = true;
+  const fxa = new MockFxAccounts();
+  await fxa.internal.setSignedInUser(credentials);
+  await fxa.updateUserAccountData({uid: credentials.uid, device: {
+    id: deviceId,
+    registrationVersion: 1 // < 42
+  }});
+
+  const spy = {
+    updateDevice: { count: 0, args: [] },
+    getDeviceList: { count: 0, args: [] }
+  };
+  const client = fxa.internal.fxAccountsClient;
+  client.updateDevice = function() {
+    spy.updateDevice.count += 1;
+    spy.updateDevice.args.push(arguments);
+    return Promise.resolve({});
+  };
+  client.getDeviceList = function() {
+    spy.getDeviceList.count += 1;
+    spy.getDeviceList.args.push(arguments);
+    return Promise.resolve([{id: "mydeviceid", name: "foo", type: "desktop",
+                             isCurrentDevice: true, pushEndpointExpired: true}]);
+  };
+
+  await fxa.getDeviceList();
+
+  Assert.equal(spy.getDeviceList.count, 1);
+  Assert.equal(spy.updateDevice.count, 1);
 });
 
 function expandHex(two_hex) {

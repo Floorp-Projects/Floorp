@@ -272,7 +272,6 @@ menulist {
 /******* toolbar *******/
 
 toolbox {
-  -moz-appearance: toolbox;
   -moz-box-orient: vertical;
 }
 
@@ -318,12 +317,6 @@ toolbarpaletteitem {
 toolbarpaletteitem[place="palette"] {
   -moz-box-orient: vertical;
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem-palette");
-}
-
-/********* menubar ***********/
-
-menubar {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#menubar");
 }
 
 /********* menu ***********/

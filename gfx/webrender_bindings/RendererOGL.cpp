@@ -191,7 +191,7 @@ RendererOGL::SetFrameStartTime(const TimeStamp& aTime)
   mFrameStartTime = aTime;
 }
 
-wr::WrPipelineInfo*
+wr::WrPipelineInfo
 RendererOGL::FlushPipelineInfo()
 {
   return wr_renderer_flush_pipeline_info(mRenderer);

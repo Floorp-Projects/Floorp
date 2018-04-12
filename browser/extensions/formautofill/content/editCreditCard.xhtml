@@ -47,6 +47,11 @@
         <option/>
       </select>
     </div>
+    <label class="billingAddressRow">
+      <span data-localization="billingAddress"/>
+      <select id="billingAddressGUID">
+      </select>
+    </label>
   </form>
   <div id="controls-container">
     <button id="cancel" data-localization="cancelBtnLabel"/>
@@ -56,15 +61,21 @@
     "use strict";
 
     let {
+      getAddressLabel,
       isCCNumber,
     } = FormAutofillUtils;
     let record = window.arguments && window.arguments[0];
+    let addresses = {};
+    for (let address of formAutofillStorage.addresses.getAll()) {
+      addresses[address.guid] = address;
+    }
 
     /* import-globals-from autofillEditForms.js */
     let fieldContainer = new EditCreditCard({
       form: document.getElementById("form"),
-    }, record,
+    }, record, addresses,
       {
+        getAddressLabel: getAddressLabel.bind(FormAutofillUtils),
         isCCNumber: isCCNumber.bind(FormAutofillUtils),
       });
 
