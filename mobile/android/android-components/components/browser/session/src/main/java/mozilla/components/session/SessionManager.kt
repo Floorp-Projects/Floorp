@@ -49,6 +49,15 @@ class SessionManager(
     }
 
     /**
+     * Mark the given session as selected.
+     */
+    fun select(session: Session) {
+        sessions.select(session)
+
+        observers.forEach { it.onSessionSelected(session) }
+    }
+
+    /**
      * Interface to be implemented by classes that want to observe the session manager.
      */
     interface Observer {

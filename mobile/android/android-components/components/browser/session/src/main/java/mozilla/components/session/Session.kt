@@ -45,7 +45,7 @@ class Session(
     /**
      * Helper method to notify observers.
      */
-    private fun notifyObservers(block: Observer.() -> Unit) {
+    internal fun notifyObservers(block: Observer.() -> Unit) {
         observers.forEach { it.block() }
     }
 }

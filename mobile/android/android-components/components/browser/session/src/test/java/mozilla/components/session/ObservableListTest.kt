@@ -4,10 +4,10 @@
 
 package mozilla.components.session
 
+import mozilla.components.session.helper.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
@@ -75,5 +75,88 @@ class ObservableListTest {
         verifyNoMoreInteractions(observer)
     }
 
-    inline fun <reified T : Any> mock(): T = Mockito.mock(T::class.java)!!
+    @Test
+    fun `list returns selected item`() {
+        val list = ObservableList<String>()
+
+        list.add("banana")
+        list.add("apple")
+        list.add("orange")
+
+        list.select("banana")
+
+        assertEquals("banana", list.selected)
+
+        list.select("apple")
+
+        assertEquals("apple", list.selected)
+    }
+
+    @Test
+    fun `observer is not called after unregistering`() {
+        val list = ObservableList<String>()
+
+        val observer: ObservableList.Observer<String> = mock()
+        list.register(observer)
+
+        list.add("Hello")
+        verify(observer).onValueAdded("Hello")
+
+        list.unregister(observer)
+
+        list.add("World")
+        list.remove("Hello")
+
+        verify(observer, never()).onValueAdded("World")
+        verify(observer, never()).onValueRemoved("Hello")
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `list allows add and select with one method call`() {
+        val list = ObservableList<String>()
+
+        list.add("banana")
+        list.select("banana")
+
+        assertEquals("banana", list.selected)
+
+        list.add("apple")
+        assertEquals("banana", list.selected)
+
+        list.add("orange", select = true)
+        assertEquals("orange", list.selected)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `selecting item that is not in list will throw exception`() {
+        val list = ObservableList<String>()
+
+        list.add("orange")
+        list.select("banana")
+    }
+
+    @Test
+    fun `observer will be notified when item is selected`() {
+        val list = ObservableList<String>()
+        list.add("orange")
+
+        val observer: ObservableList.Observer<String> = mock()
+        list.register(observer)
+
+        list.select("orange")
+
+        verify(observer).onValueSelected("orange")
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `initial items and selection passed to constructor will be used`() {
+        val list = ObservableList<String>(
+                initialValues = listOf("banana", "orange"),
+                selectedIndex = 1)
+
+        assertEquals(2, list.size)
+        assertEquals("orange", list.selected)
+    }
 }
