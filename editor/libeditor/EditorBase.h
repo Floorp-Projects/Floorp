@@ -427,7 +427,14 @@ public:
 
   void CloneAttributes(Element* aDest, Element* aSource);
 
-  nsresult RemoveContainer(nsIContent* aNode);
+  /**
+   * RemoveContainerWithTransaction() removes aElement from the DOM tree and
+   * moves all its children to the parent of aElement.
+   *
+   * @param aElement            The element to be removed.
+   */
+  nsresult RemoveContainerWithTransaction(Element& aElement);
+
   already_AddRefed<Element> InsertContainerAbove(nsIContent* aNode,
                                                  nsAtom* aNodeType,
                                                  nsAtom* aAttribute = nullptr,
