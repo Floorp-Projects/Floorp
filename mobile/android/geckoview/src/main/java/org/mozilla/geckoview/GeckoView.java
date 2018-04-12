@@ -323,7 +323,9 @@ public class GeckoView extends FrameLayout {
             mSession.open(mRuntime);
         }
 
-        mSession.getTextInput().setView(this);
+        if (mSession.getTextInput().getView() == null) {
+            mSession.getTextInput().setView(this);
+        }
 
         super.onAttachedToWindow();
     }
@@ -332,16 +334,16 @@ public class GeckoView extends FrameLayout {
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
 
-        if (mSession != null) {
-          mSession.getTextInput().setView(null);
-        }
-
-        if (mStateSaved) {
-            // If we saved state earlier, we don't want to close the window.
+        if (mSession == null) {
             return;
         }
 
-        if (mSession != null && mSession.isOpen()) {
+        if (mSession.getTextInput().getView() == this) {
+          mSession.getTextInput().setView(null);
+        }
+
+        // If we saved state earlier, we don't want to close the window.
+        if (!mStateSaved && mSession.isOpen()) {
             mSession.close();
         }
     }
