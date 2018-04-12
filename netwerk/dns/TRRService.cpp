@@ -573,6 +573,13 @@ TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRS
         mRetryConfirmInterval *= 2;
       }
     } else {
+      if (mMode != MODE_TRRONLY) {
+        // don't accumulate trronly data here since trronly failures are
+        // handled above by trying again, so counting the successes here would
+        // skew the numbers
+        Telemetry::Accumulate(Telemetry::DNS_TRR_NS_VERFIFIED,
+                              (mConfirmationState == CONFIRM_OK));
+      }
       mRetryConfirmInterval = 1000;
     }
     return LOOKUP_OK;
@@ -582,7 +589,7 @@ TRRService::CompleteLookup(nsHostRecord *rec, nsresult status, AddrInfo *aNewRRS
   if (NS_SUCCEEDED(status)) {
     LOG(("TRR verified %s to be fine!\n", newRRSet->mHostName));
   } else {
-    LOG(("TRR says %s doesn't resove as NS!\n", newRRSet->mHostName));
+    LOG(("TRR says %s doesn't resolve as NS!\n", newRRSet->mHostName));
     TRRBlacklist(nsCString(newRRSet->mHostName), pb, false);
   }
   return LOOKUP_OK;
