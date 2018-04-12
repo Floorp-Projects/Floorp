@@ -67,6 +67,10 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
   // The window becomes visible after OnStopRequest, so make this happen now.
   win.stop();
 
+  let { TelemetryTimestamps } =
+    ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", {});
+  TelemetryTimestamps.add("blankWindowShown");
+
   // Used in nsBrowserContentHandler.js to close unwanted blank windows.
   docElt.setAttribute("windowtype", "navigator:blank");
 })();
