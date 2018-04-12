@@ -23,7 +23,6 @@ ZoneGroup::ZoneGroup(JSRuntime* runtime)
 #ifdef DEBUG
     ionBailAfter_(this, 0),
 #endif
-    debuggerList_(this),
     numFinishedBuilders(0),
     ionLazyLinkListSize_(0)
 {}
