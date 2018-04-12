@@ -2135,7 +2135,7 @@ NS_IsSafeTopLevelNav(nsIChannel* aChannel)
   return requestHead->IsSafeMethod();
 }
 
-bool NS_IsTopLevelForeign(nsIChannel* aChannel)
+bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI)
 {
   if (!aChannel) {
     return false;
@@ -2144,8 +2144,14 @@ bool NS_IsTopLevelForeign(nsIChannel* aChannel)
   if (!loadInfo) {
     return false;
   }
-  if (loadInfo->GetExternalContentPolicyType() != nsIContentPolicy::TYPE_DOCUMENT) {
-    return false;
+  nsCOMPtr<nsIURI> uri;
+  if (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
+    // for loads of TYPE_DOCUMENT we query the hostURI from the triggeringPricnipal
+    // which returns the URI of the document that caused the navigation.
+    loadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(uri));
+  }
+  else {
+    uri = aHostURI;
   }
 
   nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
@@ -2153,9 +2159,6 @@ bool NS_IsTopLevelForeign(nsIChannel* aChannel)
   if (!thirdPartyUtil) {
     return false;
   }
-
-  nsCOMPtr<nsIURI> uri;
-  loadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(uri));
 
   bool isForeign = false;
   thirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
