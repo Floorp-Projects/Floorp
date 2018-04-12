@@ -4,7 +4,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "OfflineAppCacheHelper",
-                               "resource:///modules/offlineAppCache.jsm");
+                               "resource://gre/modules/offlineAppCache.jsm");
 ChromeUtils.defineModuleGetter(this, "ServiceWorkerCleanUp",
                                "resource://gre/modules/ServiceWorkerCleanUp.jsm");
 
