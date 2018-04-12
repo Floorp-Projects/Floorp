@@ -103,6 +103,14 @@ Sanitizer.prototype = {
           Services.cookies.removeAll();
 
           TelemetryStopwatch.finish("FX_SANITIZE_COOKIES_2", refObj);
+
+          // Clear deviceIds. Done asynchronously (returns before complete).
+          try {
+            let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"]
+                             .getService(Ci.nsIMediaManagerService);
+            mediaMgr.sanitizeDeviceIds(0);
+          } catch (er) { }
+
           resolve();
         });
       },
