@@ -9,7 +9,7 @@ replace-with = 'vendored-sources'
 
 [source."https://github.com/servo/serde"]
 git = "https://github.com/servo/serde"
-branch = "deserialize_from_enums5"
+branch = "deserialize_from_enums6"
 replace-with = "vendored-sources"
 
 [source.vendored-sources]
