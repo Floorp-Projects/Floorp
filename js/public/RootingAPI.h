@@ -545,10 +545,7 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T, Handle<T>>
     DECLARE_NONPOINTER_ACCESSOR_METHODS(*ptr);
 
   private:
-    Handle()
-      : ptr{ nullptr }
-    {
-    }
+    Handle() {}
     DELETE_ASSIGNMENT_OPS(Handle, T);
 
     enum Disambiguator { DeliberatelyChoosingThisOverload = 42 };
@@ -607,10 +604,7 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T, MutableHan
     DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS(*ptr);
 
   private:
-    MutableHandle()
-      : ptr{ nullptr }
-    {
-    }
+    MutableHandle() {}
     DELETE_ASSIGNMENT_OPS(MutableHandle, T);
 
     T* ptr;
