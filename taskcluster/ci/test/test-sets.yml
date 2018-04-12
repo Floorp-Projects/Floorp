@@ -56,9 +56,9 @@ opt-only-tests:
 
 talos:
     - talos-chrome
+    - talos-damp
     - talos-dromaeojs
     - talos-g1
-    - talos-g2
     - talos-g3
     - talos-g4
     - talos-g5
@@ -69,6 +69,7 @@ talos:
     - talos-perf-reftest-singletons
     - talos-tp6
     - talos-tp6-stylo-threads
+    - talos-tps
     - talos-speedometer
     - talos-motionmark
     - talos-h1
@@ -119,9 +120,9 @@ linux-qr-tests:
 
 linux-talos-profiling:
     - talos-chrome-profiling
+    - talos-damp-profiling
     - talos-dromaeojs-profiling
     - talos-g1-profiling
-    - talos-g2-profiling
     - talos-g3-profiling
     - talos-g4-profiling
     - talos-g5-profiling
@@ -133,6 +134,7 @@ linux-talos-profiling:
     - talos-svgr-profiling
     - talos-tp5o-profiling
     - talos-tp6-profiling
+    - talos-tps-profiling
 
 linux-talos-flex:
     - talos-flex
@@ -194,9 +196,9 @@ windows-tests:
 
 windows-talos:
     - talos-chrome
+    - talos-damp
     - talos-dromaeojs
     - talos-g1
-    - talos-g2
     - talos-g4
     - talos-g5
     - talos-other
@@ -207,14 +209,15 @@ windows-talos:
     - talos-xperf
     - talos-speedometer
     - talos-tp6
+    - talos-tps
     - talos-motionmark
     - talos-h1
 
 windows-talos-profiling:
     - talos-chrome-profiling
+    - talos-damp-profiling
     - talos-dromaeojs-profiling
     - talos-g1-profiling
-    - talos-g2-profiling
     - talos-g3-profiling
     - talos-g4-profiling
     - talos-g5-profiling
@@ -226,6 +229,7 @@ windows-talos-profiling:
     - talos-svgr-profiling
     - talos-tp5o-profiling
     - talos-tp6-profiling
+    - talos-tps-profiling
 
 macosx64-tests:
     - cppunit
@@ -255,9 +259,9 @@ macosx64-tests:
 
 macosx64-talos:
     - talos-chrome
+    - talos-damp
     - talos-dromaeojs
     - talos-g1
-    - talos-g2
     - talos-g4
     - talos-g5
     - talos-other
@@ -267,15 +271,16 @@ macosx64-talos:
     - talos-perf-reftest-singletons
     - talos-tp6
     - talos-tp6-stylo-threads
+    - talos-tps
     - talos-speedometer
     - talos-motionmark
     - talos-h1
 
 macosx64-talos-profiling:
     - talos-chrome-profiling
+    - talos-damp-profiling
     - talos-dromaeojs-profiling
     - talos-g1-profiling
-    - talos-g2-profiling
     - talos-g3-profiling
     - talos-g4-profiling
     - talos-g5-profiling
@@ -287,6 +292,7 @@ macosx64-talos-profiling:
     - talos-svgr-profiling
     - talos-tp5o-profiling
     - talos-tp6-profiling
+    - talos-tps-profiling
 
 linux32-tests:
     - cppunit
