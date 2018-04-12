@@ -19,6 +19,21 @@ impl GlFns
             ffi_gl_: ffi_gl_,
         }) as Rc<Gl>
     }
+
+    fn get_active_uniform_type(&self, program: GLuint) -> GLuint {
+        let mut size: GLint = 0;
+        let mut uniform_type: GLuint = 0;
+        unsafe {
+            self.ffi_gl_.GetActiveUniform(program,
+                                          0 as GLuint,
+                                          0 as GLsizei,
+                                          ptr::null_mut(),
+                                          &mut size,
+                                          &mut uniform_type,
+                                          ptr::null_mut());
+        }
+        uniform_type
+    }
 }
 
 impl Gl for GlFns {
@@ -109,47 +124,47 @@ impl Gl for GlFns {
     }
 
     fn gen_buffers(&self, n: GLsizei) -> Vec<GLuint> {
+        let mut result = vec![0 as GLuint; n as usize];
         unsafe {
-            let mut result: Vec<_> = repeat(0 as GLuint).take(n as usize).collect();
             self.ffi_gl_.GenBuffers(n, result.as_mut_ptr());
-            return result;
         }
+        result
     }
 
     fn gen_renderbuffers(&self, n: GLsizei) -> Vec<GLuint> {
+        let mut result = vec![0 as GLuint; n as usize];
         unsafe {
-            let mut result: Vec<_> = repeat(0 as GLuint).take(n as usize).collect();
             self.ffi_gl_.GenRenderbuffers(n, result.as_mut_ptr());
-            return result;
         }
+        result
     }
 
     fn gen_framebuffers(&self, n: GLsizei) -> Vec<GLuint> {
+        let mut result = vec![0 as GLuint; n as usize];
         unsafe {
-            let mut result: Vec<_> = repeat(0 as GLuint).take(n as usize).collect();
             self.ffi_gl_.GenFramebuffers(n, result.as_mut_ptr());
-            return result;
         }
+        result
     }
 
     fn gen_textures(&self, n: GLsizei) -> Vec<GLuint> {
+        let mut result = vec![0 as GLuint; n as usize];
         unsafe {
-            let mut result: Vec<_> = repeat(0 as GLuint).take(n as usize).collect();
             self.ffi_gl_.GenTextures(n, result.as_mut_ptr());
-            return result;
         }
+        result
     }
 
     fn gen_vertex_arrays(&self, n: GLsizei) -> Vec<GLuint> {
+        let mut result = vec![0 as GLuint; n as usize];
         unsafe {
-            let mut result: Vec<_> = repeat(0 as GLuint).take(n as usize).collect();
             self.ffi_gl_.GenVertexArrays(n, result.as_mut_ptr());
-            return result;
         }
+        result
     }
 
     fn gen_queries(&self, n: GLsizei) -> Vec<GLuint> {
-        let mut result = vec![0; n as usize];
+        let mut result = vec![0 as GLuint; n as usize];
         unsafe {
             self.ffi_gl_.GenQueries(n, result.as_mut_ptr());
         }
@@ -293,6 +308,28 @@ impl Gl for GlFns {
         }
     }
 
+    // https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glGetUniform.xml
+    fn get_uniform_iv(&self, program: GLuint, location: GLint) -> Vec<GLint> {
+        let uniform_type = self.get_active_uniform_type(program);
+        let len = get_uniform_iv_vector_length(&uniform_type);
+        let mut result: [GLint; 4] = [0; 4];
+        unsafe {
+            self.ffi_gl_.GetUniformiv(program, location, result.as_mut_ptr());
+        }
+        Vec::from(&result[0..len])
+    }
+
+    // https://www.khronos.org/registry/OpenGL-Refpages/es2.0/xhtml/glGetUniform.xml
+    fn get_uniform_fv(&self, program: GLuint, location: GLint) -> Vec<GLfloat> {
+        let uniform_type = self.get_active_uniform_type(program);
+        let len = get_uniform_fv_vector_length(&uniform_type);
+        let mut result: [GLfloat; 16] = [0.0; 16];
+        unsafe {
+            self.ffi_gl_.GetUniformfv(program, location, result.as_mut_ptr());
+        }
+        Vec::from(&result[0..len])
+    }
+
     fn get_uniform_block_index(&self, program: GLuint, name: &str) -> GLuint {
         let c_string = CString::new(name).unwrap();
         unsafe {
@@ -359,6 +396,12 @@ impl Gl for GlFns {
     fn bind_texture(&self, target: GLenum, texture: GLuint) {
         unsafe {
             self.ffi_gl_.BindTexture(target, texture);
+        }
+    }
+
+    fn draw_buffers(&self, bufs: &[GLenum]) {
+        unsafe {
+            self.ffi_gl_.DrawBuffers(bufs.len() as GLsizei, bufs.as_ptr());
         }
     }
 
@@ -645,7 +688,7 @@ impl Gl for GlFns {
     }
 
     fn get_boolean_v(&self, name: GLenum) -> GLboolean {
-        let mut result: GLboolean = 0 as GLboolean;
+        let mut result = 0 as GLboolean;
         unsafe {
             self.ffi_gl_.GetBooleanv(name, &mut result);
         }
@@ -653,9 +696,33 @@ impl Gl for GlFns {
     }
 
     fn get_float_v(&self, name: GLenum) -> GLfloat {
-        let mut result: GLfloat = 0 as GLfloat;
+        let mut result = 0 as GLfloat;
         unsafe {
             self.ffi_gl_.GetFloatv(name, &mut result);
+        }
+        result
+    }
+
+    fn get_framebuffer_attachment_parameter_iv(&self, target: GLenum, attachment: GLenum, pname: GLenum) -> GLint {
+        let mut result: GLint = 0;
+        unsafe {
+            self.ffi_gl_.GetFramebufferAttachmentParameteriv(target, attachment, pname, &mut result);
+        }
+        result
+    }
+
+    fn get_tex_parameter_iv(&self, target: GLenum, pname: GLenum) -> GLint {
+        let mut result: GLint = 0;
+        unsafe {
+            self.ffi_gl_.GetTexParameteriv(target, pname, &mut result);
+        }
+        result
+    }
+
+    fn get_tex_parameter_fv(&self, target: GLenum, pname: GLenum) -> GLfloat {
+        let mut result: GLfloat = 0.0;
+        unsafe {
+            self.ffi_gl_.GetTexParameterfv(target, pname, &mut result);
         }
         result
     }
@@ -787,6 +854,14 @@ impl Gl for GlFns {
     fn viewport(&self, x: GLint, y: GLint, width: GLsizei, height: GLsizei) {
         unsafe {
             self.ffi_gl_.Viewport(x, y, width, height);
+        }
+    }
+
+    fn get_viewport(&self) -> (GLint, GLint, GLsizei, GLsizei) {
+        unsafe {
+            let mut ret = [0; 4];
+            self.ffi_gl_.GetIntegerv(ffi::VIEWPORT, ret.as_mut_ptr());
+            (ret[0], ret[1], ret[2], ret[3])
         }
     }
 
@@ -1235,24 +1310,25 @@ impl Gl for GlFns {
     }
 
     fn get_program_info_log(&self, program: GLuint) -> String {
+        let max_len = self.get_program_iv(program, ffi::INFO_LOG_LENGTH);
+        let mut result = vec![0u8; max_len as usize];
+        let mut result_len = 0 as GLsizei;
         unsafe {
-            let mut result = vec![0u8; 1024];
-            let mut result_len: GLsizei = 0 as GLsizei;
             self.ffi_gl_.GetProgramInfoLog(program,
-                                           1024 as GLsizei,
+                                           max_len as GLsizei,
                                            &mut result_len,
                                            result.as_mut_ptr() as *mut GLchar);
-            result.truncate(if result_len > 0 {result_len as usize} else {0});
-            String::from_utf8(result).unwrap()
         }
+        result.truncate(if result_len > 0 {result_len as usize} else {0});
+        String::from_utf8(result).unwrap()
     }
 
     fn get_program_iv(&self, program: GLuint, pname: GLenum) -> GLint {
+        let mut result = 0 as GLint;
         unsafe {
-            let mut result: GLint = 0 as GLint;
             self.ffi_gl_.GetProgramiv(program, pname, &mut result);
-            return result;
         }
+        result
     }
 
     fn get_program_binary(&self, program: GLuint) -> (Vec<u8>, GLenum) {
@@ -1303,19 +1379,19 @@ impl Gl for GlFns {
     }
 
     fn get_vertex_attrib_iv(&self, index: GLuint, pname: GLenum) -> GLint {
+        let mut result = 0 as GLint;
         unsafe {
-            let mut result: GLint = 0 as GLint;
             self.ffi_gl_.GetVertexAttribiv(index, pname, &mut result);
-            return result;
         }
+        result
     }
 
     fn get_vertex_attrib_fv(&self, index: GLuint, pname: GLenum) -> Vec<GLfloat> {
+        let mut result = vec![0 as GLfloat; 4];
         unsafe {
-            let mut result = vec![0 as GLfloat; 4];
             self.ffi_gl_.GetVertexAttribfv(index, pname, result.as_mut_ptr());
-            return result;
         }
+        result
     }
 
     fn get_vertex_attrib_pointer_v(&self, index: GLuint, pname: GLenum) -> GLsizeiptr {
@@ -1327,24 +1403,25 @@ impl Gl for GlFns {
     }
 
     fn get_buffer_parameter_iv(&self, target: GLuint, pname: GLenum) -> GLint {
+        let mut result = 0 as GLint;
         unsafe {
-            let mut result: GLint = 0 as GLint;
             self.ffi_gl_.GetBufferParameteriv(target, pname, &mut result);
-            return result;
         }
+        result
     }
 
     fn get_shader_info_log(&self, shader: GLuint) -> String {
+        let max_len = self.get_shader_iv(shader, ffi::INFO_LOG_LENGTH);
+        let mut result = vec![0u8; max_len as usize];
+        let mut result_len = 0 as GLsizei;
         unsafe {
-            let mut result = vec![0u8; 1024];
-            let mut result_len: GLsizei = 0 as GLsizei;
             self.ffi_gl_.GetShaderInfoLog(shader,
-                                          1024 as GLsizei,
+                                          max_len as GLsizei,
                                           &mut result_len,
                                           result.as_mut_ptr() as *mut GLchar);
-            result.truncate(if result_len > 0 {result_len as usize} else {0});
-            String::from_utf8(result).unwrap()
         }
+        result.truncate(if result_len > 0 {result_len as usize} else {0});
+        String::from_utf8(result).unwrap()
     }
 
     fn get_string(&self, which: GLenum) -> String {
@@ -1370,11 +1447,11 @@ impl Gl for GlFns {
     }
 
     fn get_shader_iv(&self, shader: GLuint, pname: GLenum) -> GLint {
+        let mut result = 0 as GLint;
         unsafe {
-            let mut result: GLint = 0 as GLint;
             self.ffi_gl_.GetShaderiv(shader, pname, &mut result);
-            return result;
         }
+        result
     }
 
     fn get_shader_precision_format(&self, _shader_type: GLuint, precision_type: GLuint) -> (GLint, GLint, GLint) {
@@ -1599,11 +1676,11 @@ impl Gl for GlFns {
     }
 
     fn gen_fences_apple(&self, n: GLsizei) -> Vec<GLuint> {
+        let mut result = vec![0 as GLuint; n as usize];
         unsafe {
-            let mut result: Vec<_> = repeat(0 as GLuint).take(n as usize).collect();
             self.ffi_gl_.GenFencesAPPLE(n, result.as_mut_ptr());
-            result
         }
+        result
     }
 
     fn delete_fences_apple(&self, fences: &[GLuint]) {
@@ -1670,6 +1747,80 @@ impl Gl for GlFns {
                 program,
                 c_string.as_ptr(),
             )
+        }
+    }
+
+    fn alias_point_size_range(&self) -> (GLfloat, GLfloat) {
+        unsafe {
+            let mut ret = [0.; 2];
+            self.ffi_gl_.GetFloatv(ffi::ALIASED_POINT_SIZE_RANGE, ret.as_mut_ptr());
+            (ret[0], ret[1])
+        }
+    }
+
+    fn max_viewport_dims(&self) -> (GLint, GLint) {
+        unsafe {
+            let mut ret = [0; 2];
+            self.ffi_gl_.GetIntegerv(ffi::MAX_VIEWPORT_DIMS, ret.as_mut_ptr());
+            (ret[0], ret[1])
+        }
+    }
+
+    // GL_KHR_debug
+    fn get_debug_messages(&self) -> Vec<DebugMessage> {
+        if !self.ffi_gl_.GetDebugMessageLog.is_loaded() {
+            return Vec::new();
+        }
+
+        let mut max_message_len = 0;
+        unsafe {
+            self.ffi_gl_.GetIntegerv(
+                ffi::MAX_DEBUG_MESSAGE_LENGTH,
+                &mut max_message_len
+            )
+        }
+
+        let mut output = Vec::new();
+        const CAPACITY: usize = 4;
+
+        let mut msg_data = vec![0u8; CAPACITY * max_message_len as usize];
+        let mut sources = [0 as GLenum; CAPACITY];
+        let mut types = [0 as GLenum; CAPACITY];
+        let mut severities = [0 as GLenum; CAPACITY];
+        let mut ids = [0 as GLuint; CAPACITY];
+        let mut lengths = [0 as GLsizei; CAPACITY];
+
+        loop {
+            let count = unsafe {
+                self.ffi_gl_.GetDebugMessageLog(
+                    CAPACITY as _,
+                    msg_data.len() as _,
+                    sources.as_mut_ptr(),
+                    types.as_mut_ptr(),
+                    ids.as_mut_ptr(),
+                    severities.as_mut_ptr(),
+                    lengths.as_mut_ptr(),
+                    msg_data.as_mut_ptr() as *mut _,
+                )
+            };
+
+            let mut offset = 0;
+            output.extend((0 .. count as usize).map(|i| {
+                let len = lengths[i] as usize;
+                let slice = &msg_data[offset .. offset + len];
+                offset += len;
+                DebugMessage {
+                    message: String::from_utf8_lossy(slice).to_string(),
+                    source: sources[i],
+                    ty: types[i],
+                    id: ids[i],
+                    severity: severities[i],
+                }
+            }));
+
+            if (count as usize) < CAPACITY {
+                return output
+            }
         }
     }
 }

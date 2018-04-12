@@ -12,9 +12,9 @@
 
 [package]
 name = "khronos_api"
-version = "2.0.0"
+version = "2.2.0"
 authors = ["Brendan Zabarauskas <bjzaba@yahoo.com.au>", "Corey Richardson", "Arseny Kapoulkine", "Pierre Krieger <pierre.krieger1708@gmail.com>"]
-include = ["/README.md", "/src/**/*", "/Cargo.toml", "/api/xml/**/*.xml", "/api_egl/api/**/*.xml"]
+include = ["/README.md", "/src/**/*", "/Cargo.toml", "/build.rs", "/api/xml/**/*.xml", "/api_egl/api/**/*.xml", "/api_webgl/specs/latest/**/*.idl", "/api_webgl/extensions/**/extension.xml"]
 description = "The Khronos XML API Registry, exposed as byte string constants."
 homepage = "https://github.com/brendanzab/gl-rs/khronos_api/"
 documentation = "https://docs.rs/khronos_api"
