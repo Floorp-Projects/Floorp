@@ -332,11 +332,16 @@ async function testToggleWebExtensions() {
      "There should not be any checkbox for the unregistered WebExtensions");
 }
 
+function getToolNode(id) {
+  return panelWin.document.getElementById(id);
+}
+
 async function testToggleTools() {
   let toolNodes = panelWin.document.querySelectorAll(
     "#default-tools-box input[type=checkbox]:not([data-unsupported])," +
     "#additional-tools-box input[type=checkbox]:not([data-unsupported])");
-  let enabledTools = [...toolNodes].filter(node => node.checked);
+  let toolNodeIds = [...toolNodes].map(node => node.id);
+  let enabledToolIds = [...toolNodes].filter(node => node.checked).map(node => node.id);
 
   let toggleableTools = gDevTools.getDefaultTools()
                                  .filter(tool => {
@@ -358,39 +363,43 @@ async function testToggleTools() {
   }
 
   // Toggle each tool
-  for (let node of toolNodes) {
-    await toggleTool(node);
+  for (let id of toolNodeIds) {
+    await toggleTool(getToolNode(id));
   }
 
   // Toggle again to reset tool enablement state
-  for (let node of toolNodes) {
-    await toggleTool(node);
+  for (let id of toolNodeIds) {
+    await toggleTool(getToolNode(id));
   }
 
   // Test that a tool can still be added when no tabs are present:
   // Disable all tools
-  for (let node of enabledTools) {
-    await toggleTool(node);
+  for (let id of enabledToolIds) {
+    await toggleTool(getToolNode(id));
   }
   // Re-enable the tools which are enabled by default
-  for (let node of enabledTools) {
-    await toggleTool(node);
+  for (let id of enabledToolIds) {
+    await toggleTool(getToolNode(id));
   }
 
   // Toggle first, middle, and last tools to ensure that toolbox tabs are
   // inserted in order
-  let firstTool = toolNodes[0];
-  let middleTool = toolNodes[(toolNodes.length / 2) | 0];
-  let lastTool = toolNodes[toolNodes.length - 1];
+  let firstToolId = toolNodeIds[0];
+  let middleToolId = toolNodeIds[(toolNodeIds.length / 2) | 0];
+  let lastToolId = toolNodeIds[toolNodeIds.length - 1];
 
-  await toggleTool(firstTool);
-  await toggleTool(firstTool);
-  await toggleTool(middleTool);
-  await toggleTool(middleTool);
-  await toggleTool(lastTool);
-  await toggleTool(lastTool);
+  await toggleTool(getToolNode(firstToolId));
+  await toggleTool(getToolNode(firstToolId));
+  await toggleTool(getToolNode(middleToolId));
+  await toggleTool(getToolNode(middleToolId));
+  await toggleTool(getToolNode(lastToolId));
+  await toggleTool(getToolNode(lastToolId));
 }
 
+/**
+ * Toggle tool node checkbox. Note: because toggling the checkbox will result in
+ * re-rendering of the tool list, we must re-query the checkboxes every time.
+ */
 async function toggleTool(node) {
   let deferred = defer();
 
