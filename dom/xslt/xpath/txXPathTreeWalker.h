@@ -254,7 +254,7 @@ inline bool
 txXPathNodeUtils::isText(const txXPathNode& aNode)
 {
     return aNode.isContent() &&
-           aNode.Content()->IsNodeOfType(nsINode::eTEXT);
+           aNode.Content()->IsText();
 }
 
 #endif /* txXPathTreeWalker_h__ */

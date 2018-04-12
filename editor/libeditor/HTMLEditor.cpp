@@ -912,7 +912,7 @@ HTMLEditor::IsNextCharInNodeWhitespace(nsIContent* aContent,
     *outOffset = -1;
   }
 
-  if (aContent->IsNodeOfType(nsINode::eTEXT) &&
+  if (aContent->IsText() &&
       (uint32_t)aOffset < aContent->Length()) {
     char16_t ch = aContent->GetText()->CharAt(aOffset);
     *outIsSpace = nsCRT::IsAsciiSpace(ch);
@@ -947,7 +947,7 @@ HTMLEditor::IsPrevCharInNodeWhitespace(nsIContent* aContent,
     *outOffset = -1;
   }
 
-  if (aContent->IsNodeOfType(nsINode::eTEXT) && aOffset > 0) {
+  if (aContent->IsText() && aOffset > 0) {
     char16_t ch = aContent->GetText()->CharAt(aOffset - 1);
     *outIsSpace = nsCRT::IsAsciiSpace(ch);
     *outIsNBSP = (ch == kNBSP);
@@ -3441,7 +3441,7 @@ HTMLEditor::IsContainer(nsINode* aNode)
 
   int32_t tagEnum;
   // XXX Should this handle #cdata-section too?
-  if (aNode->IsNodeOfType(nsINode::eTEXT)) {
+  if (aNode->IsText()) {
     tagEnum = eHTMLTag_text;
   } else {
     tagEnum = nsHTMLTags::StringTagToId(aNode->NodeName());

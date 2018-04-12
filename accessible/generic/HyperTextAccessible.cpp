@@ -219,7 +219,7 @@ HyperTextAccessible::DOMPointToOffset(nsINode* aNode, int32_t aNodeOffset,
   if (aNodeOffset == -1) {
     findNode = aNode;
 
-  } else if (aNode->IsNodeOfType(nsINode::eTEXT)) {
+  } else if (aNode->IsText()) {
     // For text nodes, aNodeOffset comes in as a character offset
     // Text offset will be added at the end, if we find the offset in this hypertext
     // We want the "skipped" offset into the text (rendered text without the extra whitespace)
@@ -1393,7 +1393,7 @@ HyperTextAccessible::CaretOffset() const
     // Ignore offset if cached accessible isn't a text leaf.
     if (nsCoreUtils::IsAncestorOf(GetNode(), textNode))
       return TransformOffset(text,
-        textNode->IsNodeOfType(nsINode::eTEXT) ? caretOffset : 0, false);
+        textNode->IsText() ? caretOffset : 0, false);
   }
 
   // No caret if the focused node is not inside this DOM node and this DOM node

@@ -471,7 +471,7 @@ TextServicesDocument::LastSelectedBlock(BlockSelectionStatus* aSelStatus,
     }
 
     nsresult rv;
-    if (parent->IsNodeOfType(nsINode::eTEXT)) {
+    if (parent->IsText()) {
       // The caret is in a text node. Find the beginning
       // of the text block containing this text node and
       // return.
@@ -544,7 +544,7 @@ TextServicesDocument::LastSelectedBlock(BlockSelectionStatus* aSelStatus,
       nsIContent* content = nullptr;
       while (!iter->IsDone()) {
         nsINode* currentNode = iter->GetCurrentNode();
-        if (currentNode->IsNodeOfType(nsINode::eTEXT)) {
+        if (currentNode->IsText()) {
           content = currentNode->AsContent();
           break;
         }
@@ -1516,8 +1516,7 @@ TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
                                    nsINode& aRightNode)
 {
   // Make sure that both nodes are text nodes -- otherwise we don't care.
-  if (!aLeftNode.IsNodeOfType(nsINode::eTEXT) ||
-      !aRightNode.IsNodeOfType(nsINode::eTEXT)) {
+  if (!aLeftNode.IsText() || !aRightNode.IsText()) {
     return;
   }
 
@@ -2455,13 +2454,13 @@ TextServicesDocument::GetUncollapsedSelection(
 
   iter->First();
 
-  if (!p1->IsNodeOfType(nsINode::eTEXT)) {
+  if (!p1->IsText()) {
     found = false;
 
     while (!iter->IsDone()) {
       nsINode* node = iter->GetCurrentNode();
 
-      if (node->IsNodeOfType(nsINode::eTEXT)) {
+      if (node->IsText()) {
         p1 = node;
         o1 = 0;
         found = true;
@@ -2479,11 +2478,11 @@ TextServicesDocument::GetUncollapsedSelection(
 
   iter->Last();
 
-  if (!p2->IsNodeOfType(nsINode::eTEXT)) {
+  if (!p2->IsText()) {
     found = false;
     while (!iter->IsDone()) {
       nsINode* node = iter->GetCurrentNode();
-      if (node->IsNodeOfType(nsINode::eTEXT)) {
+      if (node->IsText()) {
         p2 = node;
         o2 = p2->Length();
         found = true;

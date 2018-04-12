@@ -79,7 +79,7 @@ IsSpellCheckingTextNode(nsINode* aNode)
   nsIContent *parent = aNode->GetParent();
   if (parent && parent->IsAnyOfHTMLElements(nsGkAtoms::script, nsGkAtoms::style))
       return false;
-  return aNode->IsNodeOfType(nsINode::eTEXT);
+  return aNode->IsText();
 }
 
 typedef void (* OnLeaveNodeFunPtr)(nsINode* aNode, void* aClosure);

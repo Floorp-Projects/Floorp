@@ -231,7 +231,7 @@ public:
   bool
   IsInTextNode() const
   {
-    return mParent && mParent->IsNodeOfType(nsINode::eTEXT);
+    return mParent && mParent->IsText();
   }
 
   /**

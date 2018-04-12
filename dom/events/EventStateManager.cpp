@@ -2456,7 +2456,7 @@ EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   if (!targetContent)
     return;
 
-  while (targetContent->IsNodeOfType(nsINode::eTEXT)) {
+  while (targetContent->IsText()) {
     targetContent = targetContent->GetParent();
   }
 
@@ -2495,7 +2495,7 @@ EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
       return;
   }
 
-  while (targetContent->IsNodeOfType(nsINode::eTEXT)) {
+  while (targetContent->IsText()) {
     targetContent = targetContent->GetParent();
   }
 
@@ -4920,7 +4920,7 @@ EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
     mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(mouseContent));
   }
   if (mouseContent) {
-    if (mouseContent->IsNodeOfType(nsINode::eTEXT)) {
+    if (mouseContent->IsText()) {
       mouseContent = mouseContent->GetParent();
     }
     if (mouseContent && mouseContent->IsRootOfNativeAnonymousSubtree()) {
