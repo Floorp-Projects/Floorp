@@ -73,6 +73,10 @@
 # define SHT_ARM_EXIDX (SHT_LOPROC + 1)
 #endif
 
+// Old Linux header doesn't define EM_AARCH64
+#ifndef EM_AARCH64
+#define EM_AARCH64 183
+#endif
 
 // This namespace contains helper functions.
 namespace {
@@ -166,6 +170,9 @@ bool DwarfCFIRegisterNames(const typename ElfClass::Ehdr* elf_header,
       return true;
     case EM_MIPS:
       *num_dw_regnames = DwarfCFIToModule::RegisterNames::MIPS();
+      return true;
+    case EM_AARCH64:
+      *num_dw_regnames = DwarfCFIToModule::RegisterNames::ARM64();
       return true;
     default:
       MOZ_ASSERT(0);
@@ -454,6 +461,7 @@ const char* ElfArchitecture(const typename ElfClass::Ehdr* elf_header) {
   switch (arch) {
     case EM_386:        return "x86";
     case EM_ARM:        return "arm";
+    case EM_AARCH64:    return "arm64";
     case EM_MIPS:       return "mips";
     case EM_PPC64:      return "ppc64";
     case EM_PPC:        return "ppc";
