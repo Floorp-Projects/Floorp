@@ -501,10 +501,11 @@ MediaRawData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return size;
 }
 
-MediaRawDataWriter*
+UniquePtr<MediaRawDataWriter>
 MediaRawData::CreateWriter()
 {
-  return new MediaRawDataWriter(this);
+  UniquePtr<MediaRawDataWriter> p(new MediaRawDataWriter(this));
+  return p;
 }
 
 MediaRawDataWriter::MediaRawDataWriter(MediaRawData* aMediaRawData)
