@@ -23,7 +23,8 @@ add_task(async function() {
   await requestsDone;
 
   let securityInfoLoaded = waitForDOM(document, ".security-info-value");
-  store.dispatch(Actions.toggleNetworkDetails());
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector(".network-details-panel-toggle"));
 
   await waitUntil(() => document.querySelector("#security-tab"));
   EventUtils.sendMouseEvent({ type: "click" },

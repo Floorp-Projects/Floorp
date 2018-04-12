@@ -24,7 +24,8 @@ add_task(async function() {
 
   // Wait for all tree view updated by react
   wait = waitForDOM(document, "#params-panel .tree-section");
-  store.dispatch(Actions.toggleNetworkDetails());
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#params-tab"));
   await wait;

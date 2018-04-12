@@ -6,8 +6,13 @@
 
 const { createSelector } = require("devtools/client/shared/vendor/reselect");
 const { REQUESTS_WATERFALL } = require("../constants");
+const { getDisplayedRequests } = require("./requests");
 
 const EPSILON = 0.001;
+
+function isNetworkDetailsToggleButtonDisabled(state) {
+  return getDisplayedRequests(state).length == 0;
+}
 
 const getWaterfallScale = createSelector(
   state => state.requests,
@@ -31,5 +36,6 @@ const getWaterfallScale = createSelector(
 );
 
 module.exports = {
+  isNetworkDetailsToggleButtonDisabled,
   getWaterfallScale,
 };

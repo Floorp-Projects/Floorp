@@ -20,7 +20,6 @@ const SecurityPanel = createFactory(require("./SecurityPanel"));
 const StackTracePanel = createFactory(require("./StackTracePanel"));
 const TimingsPanel = createFactory(require("./TimingsPanel"));
 
-const COLLAPSE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");
 const COOKIES_TITLE = L10N.getStr("netmonitor.tab.cookies");
 const HEADERS_TITLE = L10N.getStr("netmonitor.tab.headers");
 const PARAMS_TITLE = L10N.getStr("netmonitor.tab.params");
@@ -41,7 +40,6 @@ function TabboxPanel({
   request,
   selectTab,
   sourceMapService,
-  toggleNetworkDetails,
 }) {
   if (!request) {
     return null;
@@ -54,12 +52,6 @@ function TabboxPanel({
       onSelect: selectTab,
       renderOnlySelected: true,
       showAllTabsMenu: true,
-      sidebarToggleButton: {
-        collapsed: false,
-        collapsePaneTitle: COLLAPSE_DETAILS_PANE,
-        expandPaneTitle: "",
-        onClick: toggleNetworkDetails,
-      },
     },
       TabPanel({
         id: PANELS.HEADERS,
