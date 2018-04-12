@@ -178,7 +178,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
   get isShadowRoot() {
     let isFragment = this.rawNode.nodeType === Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE;
-    return isFragment && this.rawNode.host;
+    return isFragment && !!this.rawNode.host;
   },
 
   get isShadowHost() {
@@ -193,7 +193,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     }
 
     let parentNode = this.rawNode.parentNode;
-    return parentNode && parentNode.shadowRoot;
+    return parentNode && !!parentNode.shadowRoot;
   },
 
   // Estimate the number of children that the walker will return without making
