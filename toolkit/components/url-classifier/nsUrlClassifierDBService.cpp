@@ -571,7 +571,8 @@ nsUrlClassifierDBServiceWorker::FinishStream()
 
   if (NS_SUCCEEDED(mUpdateStatus)) {
     if (mProtocolParser->ResetRequested()) {
-      mClassifier->ResetTables(Classifier::Clear_All, mUpdateTables);
+      mClassifier->ResetTables(Classifier::Clear_All,
+                               mProtocolParser->TablesToReset());
     }
   }
 
