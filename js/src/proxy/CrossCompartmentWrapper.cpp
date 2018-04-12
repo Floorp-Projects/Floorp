@@ -706,7 +706,7 @@ js::RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
             continue;
 
         if (!evictedNursery && c->hasNurseryAllocatedWrapperEntries(targetFilter)) {
-            EvictAllNurseries(cx->runtime());
+            cx->runtime()->gc.evictNursery();
             evictedNursery = true;
         }
 

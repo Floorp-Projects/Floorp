@@ -138,8 +138,8 @@ ArenaCellSet*
 StoreBuffer::WholeCellBuffer::allocateCellSet(Arena* arena)
 {
     Zone* zone = arena->zone;
-    Nursery& nursery = zone->group()->nursery();
-    if (!nursery.isEnabled())
+    JSRuntime* rt = zone->runtimeFromActiveCooperatingThread();
+    if (!rt->gc.nursery().isEnabled())
         return nullptr;
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
@@ -151,7 +151,7 @@ StoreBuffer::WholeCellBuffer::allocateCellSet(Arena* arena)
     head_ = cells;
 
     if (isAboutToOverflow())
-        zone->group()->storeBuffer().setAboutToOverflow(JS::gcreason::FULL_WHOLE_CELL_BUFFER);
+        rt->gc.storeBuffer().setAboutToOverflow(JS::gcreason::FULL_WHOLE_CELL_BUFFER);
 
     return cells;
 }

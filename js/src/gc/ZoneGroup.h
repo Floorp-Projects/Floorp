@@ -82,12 +82,6 @@ class ZoneGroup
     explicit ZoneGroup(JSRuntime* runtime);
     ~ZoneGroup();
 
-    inline Nursery& nursery();
-    inline gc::StoreBuffer& storeBuffer();
-
-    inline bool isCollecting();
-    inline bool isGCScheduled();
-
     // Delete an empty zone after its contents have been merged.
     void deleteEmptyZone(Zone* zone);
 
