@@ -50,11 +50,6 @@ class Redirection;
 class CachePage;
 class AutoLockSimulator;
 
-// When the SingleStepCallback is called, the simulator is about to execute
-// sim->get_pc() and the current machine state represents the completed
-// execution of the previous pc.
-typedef void (*SingleStepCallback)(void* arg, Simulator* sim, void* pc);
-
 const intptr_t kPointerAlignment = 4;
 const intptr_t kPointerAlignmentMask = kPointerAlignment - 1;
 
@@ -206,9 +201,6 @@ class Simulator {
 
     template <typename T>
     T get_pc_as() const { return reinterpret_cast<T>(get_pc()); }
-
-    void enable_single_stepping(SingleStepCallback cb, void* arg);
-    void disable_single_stepping();
 
     // Accessor to the internal simulator stack area.
     uintptr_t stackLimit() const;
@@ -370,11 +362,6 @@ class Simulator {
     // Registered breakpoints.
     SimInstruction* break_pc_;
     Instr break_instr_;
-
-    // Single-stepping support
-    bool single_stepping_;
-    SingleStepCallback single_step_callback_;
-    void* single_step_callback_arg_;
 
     // A stop is watched if its code is less than kNumOfWatchedStops.
     // Only watched stops support enabling/disabling and the counter feature.

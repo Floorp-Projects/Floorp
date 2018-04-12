@@ -13,6 +13,14 @@
           src="./jsatcommon.js"></script>
   <script type="application/javascript">
 
+    function prefStart() {
+      AccessFuTest.once_log("AccessFu:Enabled", () =>
+        ok(AccessFu._enabled, "AccessFu was enabled again."));
+      AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
+      // Start AccessFu via pref.
+      SpecialPowers.pushPrefEnv({"set": [["accessibility.accessfu.activate", 1]]});
+    }
+
     // Listen for 'EventManager.stop' and enable AccessFu again.
     function settingsStart() {
       isnot(AccessFu._enabled, true, "AccessFu was disabled.");
@@ -39,7 +47,19 @@
       AccessFu._disable();
     }
 
+    // Listen for initial 'EventManager.start' and disable AccessFu.
+    function prefStop() {
+      ok(AccessFu._enabled, "AccessFu was started via preference.");
+      AccessFuTest.once_log("AccessFu:Disabled", () =>
+        isnot(AccessFu._enabled, true, "AccessFu was disabled."));
+      AccessFuTest.once_log("EventManager.stop", AccessFuTest.nextTest);
+
+      SpecialPowers.pushPrefEnv({"set": [["accessibility.accessfu.activate", 0]]});
+    }
+
     function doTest() {
+      AccessFuTest.addFunc(prefStart);
+      AccessFuTest.addFunc(prefStop);
       AccessFuTest.addFunc(settingsStart);
       AccessFuTest.addFunc(settingsStop);
       AccessFuTest.waitForExplicitFinish();

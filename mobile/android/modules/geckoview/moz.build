@@ -6,7 +6,6 @@
 
 EXTRA_JS_MODULES += [
     'AndroidLog.jsm',
-    'GeckoViewAccessibility.jsm',
     'GeckoViewContent.jsm',
     'GeckoViewContentModule.jsm',
     'GeckoViewModule.jsm',

@@ -883,7 +883,7 @@ public class BrowserApp extends GeckoApp
             null);
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
-            "GeckoView:AccessibilityEnabled",
+            "Accessibility:Enabled",
             "Menu:Open",
             "Menu:Update",
             "Menu:Add",
@@ -1715,7 +1715,7 @@ public class BrowserApp extends GeckoApp
             null);
 
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
-            "GeckoView:AccessibilityEnabled",
+            "Accessibility:Enabled",
             "Menu:Open",
             "Menu:Update",
             "Menu:Add",
@@ -1968,7 +1968,7 @@ public class BrowserApp extends GeckoApp
 
                 break;
 
-            case "GeckoView:AccessibilityEnabled":
+            case "Accessibility:Enabled":
                 mDynamicToolbar.setAccessibilityEnabled(message.getBoolean("enabled"));
                 break;
 
