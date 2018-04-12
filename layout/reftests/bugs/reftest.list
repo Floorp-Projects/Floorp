@@ -1682,7 +1682,7 @@ HTTP == 652991-3.html 652991-3-ref.html
 HTTP == 652991-4.html 652991-4-ref.html
 fuzzy-if(skiaContent,1,5) == 653930-1.html 653930-1-ref.html
 == 654057-1.html 654057-1-ref.html
-fuzzy-if(skiaContent,1,4500) == 654950-1.html 654950-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
+fuzzy-if(skiaContent,1,65536) == 654950-1.html 654950-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 == 655549-1.html 655549-1-ref.html
 == 655836-1.html 655836-1-ref.html
 != 656875.html about:blank
@@ -2066,3 +2066,4 @@ fuzzy-if(Android,66,574) fuzzy-if(d2d,89,777) fuzzy-if(!Android&&!d2d,1,31219) =
 pref(layout.css.moz-document.url-prefix-hack.enabled,true) == 1446470.html 1035091-ref.html
 pref(layout.css.moz-document.url-prefix-hack.enabled,false) == 1446470-2.html 1035091-ref.html
 test-pref(layout.css.prefixes.gradients,false) == 1451874.html 1451874-ref.html
+fuzzy-if(!(webrender&&gtkWidget),1-2,17500-17500) == 1412375.html 1412375-ref.html
