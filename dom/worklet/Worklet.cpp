@@ -11,6 +11,7 @@
 
 #include "mozilla/dom/WorkletBinding.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/RegisterWorkletBindings.h"
@@ -29,7 +30,8 @@ class ExecutionRunnable final : public Runnable
 {
 public:
   ExecutionRunnable(WorkletFetchHandler* aHandler, Worklet::WorkletType aType,
-                    char16_t* aScriptBuffer, size_t aScriptLength)
+                    char16_t* aScriptBuffer, size_t aScriptLength,
+                    const WorkletLoadInfo& aWorkletLoadInfo)
     : Runnable("Worklet::ExecutionRunnable")
     , mHandler(aHandler)
     , mWorkletType(aType)
@@ -222,7 +224,7 @@ public:
     // Moving the ownership of the buffer
     nsCOMPtr<nsIRunnable> runnable =
       new ExecutionRunnable(this, mWorklet->Type(), scriptTextBuf,
-                            scriptTextLength);
+                            scriptTextLength, mWorklet->LoadInfo());
 
     RefPtr<WorkletThread> thread = mWorklet->GetOrCreateThread();
     if (!thread) {
@@ -425,6 +427,19 @@ ExecutionRunnable::RunOnMainThread()
 }
 
 // ---------------------------------------------------------------------------
+// WorkletLoadInfo
+
+WorkletLoadInfo::WorkletLoadInfo()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+WorkletLoadInfo::~WorkletLoadInfo()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+// ---------------------------------------------------------------------------
 // Worklet
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Worklet)
@@ -452,7 +467,6 @@ NS_INTERFACE_MAP_END
 Worklet::Worklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
                  WorkletType aWorkletType)
   : mWindow(aWindow)
-  , mPrincipal(aPrincipal)
   , mWorkletType(aWorkletType)
 {
   MOZ_ASSERT(aWindow);
@@ -462,6 +476,24 @@ Worklet::Worklet(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
 #ifdef RELEASE_OR_BETA
   MOZ_CRASH("This code should not go to release/beta yet!");
 #endif
+
+  // Reset mWorkletLoadInfo and populate it.
+
+  memset(&mWorkletLoadInfo, 0, sizeof(WorkletLoadInfo));
+
+  mWorkletLoadInfo.mInnerWindowID = aWindow->WindowID();
+
+  nsPIDOMWindowOuter* outerWindow = aWindow->GetOuterWindow();
+  if (outerWindow) {
+    mWorkletLoadInfo.mOuterWindowID = outerWindow->WindowID();
+  }
+
+  mWorkletLoadInfo.mOriginAttributes =
+    BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
+
+  mWorkletLoadInfo.mPrincipal = aPrincipal;
+
+  mWorkletLoadInfo.mDumpEnabled = DOMPrefs::DumpEnabled();
 }
 
 Worklet::~Worklet()
@@ -540,7 +572,7 @@ Worklet::GetOrCreateThread()
 
   if (!mWorkletThread) {
     // Thread creation. FIXME: this will change.
-    mWorkletThread = WorkletThread::Create();
+    mWorkletThread = WorkletThread::Create(mWorkletLoadInfo);
   }
 
   return mWorkletThread;
@@ -556,6 +588,7 @@ Worklet::TerminateThread()
 
   mWorkletThread->Terminate();
   mWorkletThread = nullptr;
+  mWorkletLoadInfo.mPrincipal = nullptr;
 }
 
 } // dom namespace

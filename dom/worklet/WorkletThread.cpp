@@ -27,7 +27,7 @@ namespace {
 const uint32_t kWorkletStackSize = 256 * sizeof(size_t) * 1024;
 
 // This class is allocated per thread and can be retrieved from CC.
-// It's used to get the current WorketThread object.
+// It's used to get the current WorkletThread object.
 class WorkletThreadContextPrivate : private PerThreadAtomCache
 {
 public:
@@ -283,10 +283,12 @@ private:
   RefPtr<WorkletThread> mWorkletThread;
 };
 
-WorkletThread::WorkletThread()
+WorkletThread::WorkletThread(const WorkletLoadInfo& aWorkletLoadInfo)
   : nsThread(MakeNotNull<ThreadEventQueue<mozilla::EventQueue>*>(
                MakeUnique<mozilla::EventQueue>()),
              nsThread::NOT_MAIN_THREAD, kWorkletStackSize)
+  , mWorkletLoadInfo(aWorkletLoadInfo)
+  , mCreationTimeStamp(TimeStamp::Now())
   , mJSContext(nullptr)
 {
 }
@@ -299,9 +301,10 @@ WorkletThread::~WorkletThread()
 
 // static
 already_AddRefed<WorkletThread>
-WorkletThread::Create()
+WorkletThread::Create(const WorkletLoadInfo& aWorkletLoadInfo)
 {
-  RefPtr<WorkletThread> thread = new WorkletThread();
+  RefPtr<WorkletThread> thread =
+    new WorkletThread(aWorkletLoadInfo);
   if (NS_WARN_IF(NS_FAILED(thread->Init()))) {
     return nullptr;
   }
@@ -414,6 +417,12 @@ WorkletThread::GetJSContext() const
   AssertIsOnWorkletThread();
   MOZ_ASSERT(mJSContext);
   return mJSContext;
+}
+
+const WorkletLoadInfo&
+WorkletThread::GetWorkletLoadInfo() const
+{
+  return mWorkletLoadInfo;
 }
 
 /* static */ bool
