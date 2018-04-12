@@ -2798,7 +2798,7 @@ FilterNodeArithmeticCombineSoftware::SetAttribute(uint32_t aIndex,
                                                   uint32_t aSize)
 {
   MOZ_ASSERT(aIndex == ATT_ARITHMETIC_COMBINE_COEFFICIENTS);
-  MOZ_ASSERT(aSize == 4);
+  MOZ_RELEASE_ASSERT(aSize == 4);
 
   mK1 = aFloat[0];
   mK2 = aFloat[1];
