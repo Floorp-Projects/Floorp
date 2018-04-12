@@ -54,10 +54,6 @@ function createBrowser() {
   browser.setAttribute("type", "content");
   browser.setAttribute("primary", "true");
   browser.setAttribute("flex", "1");
-
-  // There may be a GeckoViewNavigation module in another window waiting for us to
-  // create a browser so it can call presetOpenerWindow(), so allow them to do that now.
-  Services.obs.notifyObservers(window, "geckoview-window-created");
   return browser;
 }
 
@@ -65,8 +61,6 @@ function startup() {
   const browser = createBrowser();
   ModuleManager.init(browser);
 
-  // GeckoViewNavigation needs to go first because nsIDOMBrowserWindow must set up
-  // before the first remote browser. Bug 1365364.
   ModuleManager.add("resource://gre/modules/GeckoViewNavigation.jsm",
                     "GeckoViewNavigation");
   ModuleManager.add("resource://gre/modules/GeckoViewSettings.jsm",
