@@ -134,7 +134,7 @@ linux-talos-profiling:
     - talos-svgr-profiling
     - talos-tp5o-profiling
     - talos-tp6-profiling
-    - talos-tps-profiling
+    # - talos-tps-profiling # Bug 1453007 - times out
 
 linux-talos-flex:
     - talos-flex
@@ -271,7 +271,7 @@ macosx64-talos:
     - talos-perf-reftest-singletons
     - talos-tp6
     - talos-tp6-stylo-threads
-    - talos-tps
+    # - talos-tps # Bug 1453007 times out
     - talos-speedometer
     - talos-motionmark
     - talos-h1
@@ -292,7 +292,7 @@ macosx64-talos-profiling:
     - talos-svgr-profiling
     - talos-tp5o-profiling
     - talos-tp6-profiling
-    - talos-tps-profiling
+    # - talos-tps-profiling # Bug 1453007 times out
 
 linux32-tests:
     - cppunit
