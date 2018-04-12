@@ -1117,7 +1117,7 @@
       </xul:menupopup>
     </content>
 
-    <implementation implements="nsIDOMEventListener,nsIObserver,nsIWeakReference">
+    <implementation implements="nsIObserver,nsIWeakReference">
 
       <!-- Width in pixels of the one-off buttons.  49px is the min-width of
            each search engine button, adapt this const when changing the css.
