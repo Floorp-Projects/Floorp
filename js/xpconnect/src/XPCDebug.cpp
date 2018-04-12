@@ -38,7 +38,7 @@ static void DebugDump(const char* fmt, ...)
 bool
 xpc_DumpJSStack(bool showArgs, bool showLocals, bool showThisProps)
 {
-    JSContext* cx = nsContentUtils::GetCurrentJSContextForThread();
+    JSContext* cx = nsContentUtils::GetCurrentJSContext();
     if (!cx) {
         printf("there is no JSContext on the stack!\n");
     } else if (JS::UniqueChars buf = xpc_PrintJSStack(cx, showArgs, showLocals, showThisProps)) {

@@ -7,7 +7,6 @@
 #include "WorkletGlobalScope.h"
 #include "mozilla/dom/WorkletGlobalScopeBinding.h"
 #include "mozilla/dom/Console.h"
-#include "mozilla/dom/DOMPrefs.h"
 
 namespace mozilla {
 namespace dom {
@@ -16,13 +15,11 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(WorkletGlobalScope)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WorkletGlobalScope)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
   tmp->UnlinkHostObjectURIs();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WorkletGlobalScope)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
   tmp->TraverseHostObjectURIs(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -37,18 +34,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkletGlobalScope)
   NS_INTERFACE_MAP_ENTRY(WorkletGlobalScope)
 NS_INTERFACE_MAP_END
 
-WorkletGlobalScope::WorkletGlobalScope(nsPIDOMWindowInner* aWindow)
-  : mWindow(aWindow)
-{
-  MOZ_ASSERT(aWindow);
-}
-
-WorkletGlobalScope::~WorkletGlobalScope()
-{
-}
+WorkletGlobalScope::WorkletGlobalScope() = default;
 
 JSObject*
-WorkletGlobalScope::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+WorkletGlobalScope::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto)
 {
   MOZ_CRASH("We should never get here!");
   return nullptr;
@@ -57,8 +47,15 @@ WorkletGlobalScope::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto
 already_AddRefed<Console>
 WorkletGlobalScope::GetConsole(JSContext* aCx, ErrorResult& aRv)
 {
+  RefPtr<WorkletThread> thread = WorkletThread::Get();
+  MOZ_ASSERT(thread);
+
   if (!mConsole) {
-    mConsole = Console::Create(aCx, mWindow, aRv);
+    mConsole =
+      Console::CreateForWorklet(aCx,
+                                thread->GetWorkletLoadInfo().OuterWindowID(),
+                                thread->GetWorkletLoadInfo().InnerWindowID(),
+                                aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -71,7 +68,12 @@ WorkletGlobalScope::GetConsole(JSContext* aCx, ErrorResult& aRv)
 void
 WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const
 {
-  if (!DOMPrefs::DumpEnabled()) {
+  WorkletThread::AssertIsOnWorkletThread();
+
+  WorkletThread* workletThread = WorkletThread::Get();
+  MOZ_ASSERT(workletThread);
+
+  if (!workletThread->GetWorkletLoadInfo().DumpEnabled()) {
     return;
   }
 

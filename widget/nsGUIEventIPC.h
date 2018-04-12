@@ -949,6 +949,42 @@ struct ParamTraits<mozilla::widget::IMENotification>
 };
 
 template<>
+struct ParamTraits<mozilla::widget::IMEState::Enabled>
+  : ContiguousEnumSerializer<mozilla::widget::IMEState::Enabled,
+                             mozilla::widget::IMEState::Enabled::DISABLED,
+                             mozilla::widget::IMEState::Enabled::UNKNOWN>
+{
+};
+
+template<>
+struct ParamTraits<mozilla::widget::IMEState::Open>
+  : ContiguousEnumSerializerInclusive<
+      mozilla::widget::IMEState::Open,
+      mozilla::widget::IMEState::Open::OPEN_STATE_NOT_SUPPORTED,
+      mozilla::widget::IMEState::Open::CLOSED>
+{
+};
+
+template<>
+struct ParamTraits<mozilla::widget::InputContextAction::Cause>
+  : ContiguousEnumSerializerInclusive<
+      mozilla::widget::InputContextAction::Cause,
+      mozilla::widget::InputContextAction::Cause::CAUSE_UNKNOWN,
+      mozilla::widget::InputContextAction::Cause::
+        CAUSE_UNKNOWN_DURING_KEYBOARD_INPUT>
+{
+};
+
+template<>
+struct ParamTraits<mozilla::widget::InputContextAction::FocusChange>
+  : ContiguousEnumSerializerInclusive<
+      mozilla::widget::InputContextAction::FocusChange,
+      mozilla::widget::InputContextAction::FocusChange::FOCUS_NOT_CHANGED,
+      mozilla::widget::InputContextAction::FocusChange::WIDGET_CREATED>
+{
+};
+
+template<>
 struct ParamTraits<mozilla::WidgetPluginEvent>
 {
   typedef mozilla::WidgetPluginEvent paramType;

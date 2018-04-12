@@ -7,9 +7,19 @@ All notable changes to this program is documented in this file.
 Unreleased
 ----------
 
+Note that with geckodriver 'next' the following versions are recommended:
+- Firefox 56.0 (and greater)
+- Selenium 3.11 (and greater)
+
 ### Added
 
 - Support for the new chrome element identifier in Marionette.
+
+### Changed
+
+- Updated mapping of all supported commands to the new prefixed commands
+  in Marionette, whereby all WebDriver specific commands make use of the
+  `WebDriver:` prefix.
 
 
 0.20.1 (2018-04-06)

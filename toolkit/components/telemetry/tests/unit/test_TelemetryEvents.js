@@ -475,7 +475,7 @@ add_task(async function test_dynamicEvents() {
   Assert.deepEqual(snapshot.dynamic.map(e => e.slice(1)), expected);
 });
 
-add_task(function* test_dynamicEventRegistrationValidation() {
+add_task(async function test_dynamicEventRegistrationValidation() {
   Telemetry.canRecordExtended = true;
   Telemetry.clearEvents();
 
@@ -601,7 +601,7 @@ add_task(function* test_dynamicEventRegistrationValidation() {
 
 // When add-ons update, they may re-register some of the dynamic events.
 // Test through some possible scenarios.
-add_task(function* test_dynamicEventRegisterAgain() {
+add_task(async function test_dynamicEventRegisterAgain() {
   Telemetry.canRecordExtended = true;
   Telemetry.clearEvents();
 

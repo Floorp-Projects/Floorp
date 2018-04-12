@@ -29,7 +29,7 @@ public:
     RefPtr<PledgeVoid> p = new PledgeVoid();
     p->Reject(
         new dom::MediaStreamError(aWindow,
-                                  NS_LITERAL_STRING("OverconstrainedError"),
+                                  MediaStreamError::Name::OverconstrainedError,
                                   NS_LITERAL_STRING("")));
     return p.forget();
   }

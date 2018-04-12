@@ -5,23 +5,53 @@
 "use strict";
 
 /**
- * Opens |url| in a new tab.
+ * Retrieve the top window for the provided toolbox that should have the expected
+ * open*LinkIn methods.
  */
-exports.openLink = async function(url, toolbox) {
+function _getTopWindow(toolbox) {
   const parentDoc = toolbox.doc;
   if (!parentDoc) {
-    return;
+    return null;
   }
 
   const win = parentDoc.querySelector("window");
   if (!win) {
-    return;
+    return null;
   }
 
-  const top = win.ownerDocument.defaultView.top;
-  if (!top || typeof top.openUILinkIn !== "function") {
-    return;
-  }
+  return win.ownerDocument.defaultView.top;
+}
 
-  top.openUILinkIn(url, "tab");
+/**
+ * Opens a |url| controlled by webcontent in a new tab.
+ *
+ * @param {String} url
+ *        The url to open.
+ * @param {Toolbox} toolbox
+ *        Toolbox reference to find the parent window.
+ * @param {Object} options
+ *        Optional parameters, see documentation for openUILinkIn in utilityOverlay.js
+ */
+exports.openWebLink = async function(url, toolbox, options) {
+  const top = _getTopWindow(toolbox);
+  if (top && typeof top.openWebLinkIn === "function") {
+    top.openWebLinkIn(url, "tab", options);
+  }
+};
+
+/**
+ * Open a trusted |url| in a new tab using the SystemPrincipal.
+ *
+ * @param {String} url
+ *        The url to open.
+ * @param {Toolbox} toolbox
+ *        Toolbox reference to find the parent window.
+ * @param {Object} options
+ *        Optional parameters, see documentation for openUILinkIn in utilityOverlay.js
+ */
+exports.openTrustedLink = async function(url, toolbox, options) {
+  const top = _getTopWindow(toolbox);
+  if (top && typeof top.openTrustedLinkIn === "function") {
+    top.openTrustedLinkIn(url, "tab", options);
+  }
 };
