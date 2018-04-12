@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
+  OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   Task: "resource://gre/modules/Task.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
@@ -147,10 +148,9 @@ Sanitizer.prototype = {
     offlineApps: {
       clear: function() {
         return new Promise(function(resolve, reject) {
-          var appCacheStorage = Services.cache2.appCacheStorage(Services.loadContextInfo.default, null);
-          try {
-            appCacheStorage.asyncEvictStorage(null);
-          } catch (er) {}
+          // AppCache
+          // This doesn't wait for the cleanup to be complete.
+          OfflineAppCacheHelper.clear();
 
           resolve();
         });
