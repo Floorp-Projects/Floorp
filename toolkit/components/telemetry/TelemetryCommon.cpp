@@ -171,13 +171,6 @@ IsValidIdentifierString(const nsACString& aStr, const size_t aMaxLength,
 }
 
 JSString*
-ToJSString(JSContext* cx, const nsACString& aStr)
-{
-  const NS_ConvertUTF8toUTF16 wide(aStr);
-  return JS_NewUCStringCopyN(cx, wide.Data(), wide.Length());
-}
-
-JSString*
 ToJSString(JSContext* cx, const nsAString& aStr)
 {
   return JS_NewUCStringCopyN(cx, aStr.Data(), aStr.Length());
