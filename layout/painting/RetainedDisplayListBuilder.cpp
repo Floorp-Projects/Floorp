@@ -779,7 +779,7 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
 
       // Grab the visible (display list building) rect for children of this wrapper
       // item and convert into into coordinate relative to the current frame.
-      nsRect previousVisible = wrapperItem->GetVisibleRectForChildren();
+      nsRect previousVisible = wrapperItem->GetChildren()->GetBounds(&aBuilder);
       if (wrapperItem->ReferenceFrameForChildren() == wrapperItem->ReferenceFrame()) {
         previousVisible -= wrapperItem->ToReferenceFrame();
       } else {
