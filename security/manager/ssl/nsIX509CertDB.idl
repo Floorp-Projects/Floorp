@@ -78,17 +78,6 @@ interface nsIX509CertDB : nsISupports {
   nsIX509Cert findCertByDBKey(in ACString aDBkey);
 
   /**
-   *  Find a certificate by email address.
-   *
-   *  @param aEmailAddress The email address to be used as the key
-   *                       to find the certificate.
-   *
-   *  @return The matching certificate if found.
-   */
-  [must_use]
-  nsIX509Cert findCertByEmailAddress(in ACString aEmailAddress);
-
-  /**
    *  Use this to import a stream sent down as a mime type into
    *  the certificate database on the default token.
    *  The stream may consist of one or more certificates.
