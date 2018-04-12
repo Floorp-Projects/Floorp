@@ -135,7 +135,7 @@ var PlacesRemoteTabsAutocompleteProvider = {
         // create the record we return for auto-complete.
         let record = {
           url, title, icon,
-          deviceClass: Weave.Service.clientsEngine.getClientType(clientId),
+          deviceClass: Weave.Service.clientsEngine.isMobile(clientId) ? "mobile" : "desktop",
           deviceName: client.clientName,
         };
         matches.push(record);
