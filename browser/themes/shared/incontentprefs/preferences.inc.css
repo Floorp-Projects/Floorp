@@ -297,6 +297,9 @@ button > hbox > label {
 #homepageGroup textbox {
   margin: 5px 0;
 }
+#homepageAndNewWindowsOption {
+  margin-top: 20px;
+}
 #homepageGroup:-moz-locale-dir(rtl) input {
   unicode-bidi: plaintext;
   direction: rtl;

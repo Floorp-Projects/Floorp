@@ -27,7 +27,7 @@
   </hbox>
   <description data-l10n-id="home-new-windows-tabs-description2" />
 
-  <groupbox>
+  <vbox>
     <hbox id="homepageAndNewWindowsOption">
       <label control="homeMode" data-l10n-id="home-homepage-mode-label" flex="1" />
 
@@ -99,5 +99,5 @@
               data-l10n-id="disable-extension" />
     </hbox>
 
-  </groupbox>
+  </vbox>
 </groupbox>
