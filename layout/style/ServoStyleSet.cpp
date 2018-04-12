@@ -515,7 +515,7 @@ already_AddRefed<ComputedStyle>
 ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
                                    ComputedStyle* aParentContext)
 {
-  MOZ_ASSERT(aTextNode && aTextNode->IsNodeOfType(nsINode::eTEXT));
+  MOZ_ASSERT(aTextNode && aTextNode->IsText());
   MOZ_ASSERT(aTextNode->GetParent());
   MOZ_ASSERT(aParentContext);
 

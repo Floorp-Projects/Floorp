@@ -728,8 +728,7 @@ WSRunObject::GetWSNodes()
         mStartOffset = start.Offset();
         mStartReason = WSType::otherBlock;
         mStartReasonNode = priorNode;
-      } else if (priorNode->IsNodeOfType(nsINode::eTEXT) &&
-                 priorNode->IsEditable()) {
+      } else if (priorNode->IsText() && priorNode->IsEditable()) {
         RefPtr<Text> textNode = priorNode->GetAsText();
         mNodeArray.InsertElementAt(0, textNode);
         const nsTextFragment *textFrag;
@@ -837,8 +836,7 @@ WSRunObject::GetWSNodes()
         mEndOffset = end.Offset();
         mEndReason = WSType::otherBlock;
         mEndReasonNode = nextNode;
-      } else if (nextNode->IsNodeOfType(nsINode::eTEXT) &&
-                 nextNode->IsEditable()) {
+      } else if (nextNode->IsText() && nextNode->IsEditable()) {
         RefPtr<Text> textNode = nextNode->GetAsText();
         mNodeArray.AppendElement(textNode);
         const nsTextFragment *textFrag;

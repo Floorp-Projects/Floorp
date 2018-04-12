@@ -159,7 +159,7 @@ HTMLSelectOptionAccessible::NativeName(nsString& aName)
   // CASE #2 -- no label parameter, get the first child,
   // use it if it is a text node
   nsIContent* text = mContent->GetFirstChild();
-  if (text && text->IsNodeOfType(nsINode::eTEXT)) {
+  if (text && text->IsText()) {
     nsTextEquivUtils::AppendTextEquivFromTextContent(text, &aName);
     aName.CompressWhitespace();
     return aName.IsEmpty() ? eNameOK : eNameFromSubtree;

@@ -5292,7 +5292,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
       for (child = aContent->GetFirstChild();
            child && child->GetParentNode() == aContent;
            child = child->GetNextSibling()) {
-        if (skipFirst && child->IsNodeOfType(nsINode::eTEXT)) {
+        if (skipFirst && child->IsText()) {
           skipFirst = false;
           continue;
         }
@@ -5413,7 +5413,7 @@ nsContentUtils::HasNonEmptyTextContent(nsINode* aNode,
   for (nsIContent* child = aNode->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->IsNodeOfType(nsINode::eTEXT) &&
+    if (child->IsText() &&
         child->TextLength() > 0) {
         return true;
     }
@@ -7440,7 +7440,7 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
                endContainer == lastChild, "Unexpected endContainer");
   // firstChild is either text or a <br> (hence an element).
   MOZ_ASSERT_IF(firstChild,
-                firstChild->IsNodeOfType(nsINode::eTEXT) || firstChild->IsElement());
+                firstChild->IsText() || firstChild->IsElement());
 #endif
   // Testing IsElement() is faster than testing IsNodeOfType(), since it's
   // non-virtual.

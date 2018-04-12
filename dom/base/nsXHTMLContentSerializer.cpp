@@ -821,7 +821,7 @@ nsXHTMLContentSerializer::HasNoChildren(nsIContent* aContent) {
        child;
        child = child->GetNextSibling()) {
 
-    if (!child->IsNodeOfType(nsINode::eTEXT))
+    if (!child->IsText())
       return false;
 
     if (child->TextLength())

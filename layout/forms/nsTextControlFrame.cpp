@@ -962,14 +962,14 @@ nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect)
       if (child->IsHTMLElement(nsGkAtoms::br)) {
         child = child->GetPreviousSibling();
         --numChildren;
-      } else if (child->IsNodeOfType(nsINode::eTEXT) && !child->Length()) {
+      } else if (child->IsText() && !child->Length()) {
         // Editor won't remove text node when empty value.
         --numChildren;
       }
     }
     if (!aSelect && numChildren) {
       child = child->GetPreviousSibling();
-      if (child && child->IsNodeOfType(nsINode::eTEXT)) {
+      if (child && child->IsText()) {
         rootNode = child;
         const nsTextFragment* fragment = child->GetText();
         numChildren = fragment ? fragment->GetLength() : 0;

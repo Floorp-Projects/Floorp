@@ -928,7 +928,7 @@ void
 IMEContentObserver::CharacterDataWillChange(nsIContent* aContent,
                                             const CharacterDataChangeInfo& aInfo)
 {
-  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
+  NS_ASSERTION(aContent->IsText(),
                "character data changed for non-text node");
   MOZ_ASSERT(mPreCharacterDataChangeLength < 0,
              "CharacterDataChanged() should've reset "
@@ -960,7 +960,7 @@ void
 IMEContentObserver::CharacterDataChanged(nsIContent* aContent,
                                          const CharacterDataChangeInfo& aInfo)
 {
-  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
+  NS_ASSERTION(aContent->IsText(),
                "character data changed for non-text node");
 
   if (!NeedsTextChangeNotification() ||
@@ -1156,7 +1156,7 @@ IMEContentObserver::ContentRemoved(nsIContent* aChild,
 
   // get offset at the end of the deleted node
   uint32_t textLength = 0;
-  if (aChild->IsNodeOfType(nsINode::eTEXT)) {
+  if (aChild->IsText()) {
     textLength = ContentEventHandler::GetNativeTextLength(aChild);
   } else {
     uint32_t nodeLength = static_cast<int32_t>(aChild->GetChildCount());

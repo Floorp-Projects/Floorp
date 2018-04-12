@@ -246,7 +246,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
     // Set mSource for this consumer.
     // If this gradient is applied to text, our caller will be the glyph, which
     // is not an element, so we need to get the parent
-    mSource = aSource->GetContent()->IsNodeOfType(nsINode::eTEXT) ?
+    mSource = aSource->GetContent()->IsText() ?
                 aSource->GetParent() : aSource;
   }
 

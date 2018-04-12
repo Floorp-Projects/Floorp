@@ -7809,7 +7809,7 @@ nsresult
 nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
 {
   aResult = aType;
-  if (mContent && !mContent->IsNodeOfType(nsINode::eTEXT)) {
+  if (mContent && !mContent->IsText()) {
     nsAutoString buf;
     mContent->NodeInfo()->NameAtom()->ToString(buf);
     if (IsSubDocumentFrame()) {

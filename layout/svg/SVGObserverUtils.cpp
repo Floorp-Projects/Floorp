@@ -626,7 +626,7 @@ SVGObserverUtils::GetPaintServer(nsIFrame* aTargetFrame,
   // least look up past a text frame, and if the text frame's parent is the
   // anonymous block frame, then we look up to its parent (the SVGTextFrame).
   nsIFrame* frame = aTargetFrame;
-  if (frame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
+  if (frame->GetContent()->IsText()) {
     frame = frame->GetParent();
     nsIFrame* grandparent = frame->GetParent();
     if (grandparent && grandparent->IsSVGTextFrame()) {

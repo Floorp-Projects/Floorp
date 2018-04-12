@@ -2639,7 +2639,7 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
     // available.  In that case, we'll just adjust node and offset accordingly.
     if (aPoint.IsStartOfContainer() &&
         aPoint.GetContainer()->HasChildren() &&
-        aPoint.GetContainer()->GetFirstChild()->IsNodeOfType(nsINode::eTEXT)) {
+        aPoint.GetContainer()->GetFirstChild()->IsText()) {
       return EditorRawDOMPoint(aPoint.GetContainer()->GetFirstChild(), 0);
     }
 
@@ -2651,7 +2651,7 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
         // Fall back to a slow path that uses GetChildAt_Deprecated() for Thunderbird's
         // plaintext editor.
         nsIContent* child = aPoint.GetPreviousSiblingOfChild();
-        if (child && child->IsNodeOfType(nsINode::eTEXT)) {
+        if (child && child->IsText()) {
           if (NS_WARN_IF(child->Length() > INT32_MAX)) {
             return aPoint;
           }
@@ -2662,7 +2662,7 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
         // calling GetChildAt_Deprecated() which may perform a linear search.
         nsIContent* child = aPoint.GetContainer()->GetLastChild();
         while (child) {
-          if (child->IsNodeOfType(nsINode::eTEXT)) {
+          if (child->IsText()) {
             if (NS_WARN_IF(child->Length() > INT32_MAX)) {
               return aPoint;
             }
@@ -2680,7 +2680,7 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
   if (TextEditUtils::IsMozBR(aPoint.GetContainer()) &&
       aPoint.IsStartOfContainer()) {
     nsIContent* previousSibling = aPoint.GetContainer()->GetPreviousSibling();
-    if (previousSibling && previousSibling->IsNodeOfType(nsINode::eTEXT)) {
+    if (previousSibling && previousSibling->IsText()) {
       if (NS_WARN_IF(previousSibling->Length() > INT32_MAX)) {
         return aPoint;
       }
@@ -2737,11 +2737,11 @@ EditorBase::InsertTextImpl(nsIDocument& aDocument,
     nsIContent* child = nullptr;
     if (!pointToInsert.IsStartOfContainer() &&
         (child = pointToInsert.GetPreviousSiblingOfChild()) &&
-        child->IsNodeOfType(nsINode::eTEXT)) {
+        child->IsText()) {
       pointToInsert.Set(child, child->Length());
     } else if (!pointToInsert.IsEndOfContainer() &&
                (child = pointToInsert.GetChild()) &&
-               child->IsNodeOfType(nsINode::eTEXT)) {
+               child->IsText()) {
       pointToInsert.Set(child, 0);
     }
   }

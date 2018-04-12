@@ -114,7 +114,7 @@ protected:
       if (content) {
         nsIFrame* frame = content->GetPrimaryFrame();
         if (!frame) {
-          if (aNode->IsNodeOfType(nsINode::eTEXT)) {
+          if (aNode->IsText()) {
             // We have already checked that our parent is visible.
             return true;
           }
@@ -126,7 +126,7 @@ protected:
           return false;
         }
         bool isVisible = frame->StyleVisibility()->IsVisible();
-        if (!isVisible && aNode->IsNodeOfType(nsINode::eTEXT))
+        if (!isVisible && aNode->IsText())
           return false;
       }
     }
@@ -631,7 +631,7 @@ nsDocumentEncoder::FlushText(nsAString& aString, bool aForce)
 
 static bool IsTextNode(nsINode *aNode)
 {
-  return aNode && aNode->IsNodeOfType(nsINode::eTEXT);
+  return aNode && aNode->IsText();
 }
 
 nsresult

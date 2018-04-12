@@ -1806,7 +1806,7 @@ Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
   }
 
   // We must call first one explicitly
-  bool isFirstContentTextNode = startContent->IsNodeOfType(nsINode::eTEXT);
+  bool isFirstContentTextNode = startContent->IsText();
   nsINode* endNode = aRange->GetEndContainer();
   if (isFirstContentTextNode) {
     nsIFrame* frame = startContent->GetPrimaryFrame();
@@ -1864,7 +1864,7 @@ Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
     if (NS_WARN_IF(!endContent)) {
       return NS_ERROR_UNEXPECTED;
     }
-    if (endContent->IsNodeOfType(nsINode::eTEXT)) {
+    if (endContent->IsText()) {
       nsIFrame* frame = endContent->GetPrimaryFrame();
       // The frame could be an SVG text frame, in which case we'll ignore it.
       if (frame && frame->IsTextFrame()) {
@@ -2387,12 +2387,12 @@ Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv)
 
   // find out the length of the end node, so we can select all of it
   int32_t beginOffset, endOffset;
-  if (endNode->IsNodeOfType(nsINode::eTEXT)) {
+  if (endNode->IsText()) {
     // Get the length of the text. We can't just use the offset because
     // another range could be touching this text node but not intersect our
     // range.
     beginOffset = 0;
-    endOffset = static_cast<nsIContent*>(endNode)->TextLength();
+    endOffset = endNode->AsText()->TextLength();
   } else {
     // For non-text nodes, the given offsets should be sufficient.
     beginOffset = aRange.StartOffset();
@@ -3217,7 +3217,7 @@ Selection::ContainsNode(nsINode& aNode, bool aAllowPartial, ErrorResult& aRv)
   uint32_t nodeLength;
   bool isData = aNode.IsNodeOfType(nsINode::eDATA_NODE);
   if (isData) {
-    nodeLength = static_cast<nsIContent&>(aNode).TextLength();
+    nodeLength = aNode.AsText()->TextLength();
   } else {
     nodeLength = aNode.GetChildCount();
   }
@@ -3431,7 +3431,7 @@ Selection::GetSelectionEndPointGeometry(SelectionRegion aRegion, nsRect* aRect)
 
   // Figure out what node type we have, then get the
   // appropriate rect for it's nodeOffset.
-  bool isText = node->IsNodeOfType(nsINode::eTEXT);
+  bool isText = node->IsText();
 
   nsPoint pt(0, 0);
   if (isText) {

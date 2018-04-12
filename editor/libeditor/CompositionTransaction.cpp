@@ -128,8 +128,7 @@ CompositionTransaction::DoTransaction()
     if (replaceableLength < mReplaceLength) {
       int32_t remainLength = mReplaceLength - replaceableLength;
       nsCOMPtr<nsINode> node = mTextNode->GetNextSibling();
-      while (node && node->IsNodeOfType(nsINode::eTEXT) &&
-             remainLength > 0) {
+      while (node && node->IsText() && remainLength > 0) {
         Text* text = static_cast<Text*>(node.get());
         uint32_t textLength = text->TextLength();
         text->DeleteData(0, remainLength, IgnoreErrors());

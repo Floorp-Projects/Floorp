@@ -93,7 +93,7 @@ SVGTextContentElement::GetNonLayoutDependentNumberOfChars()
   uint32_t num = 0;
 
   for (nsINode* n = Element::GetFirstChild(); n; n = n->GetNextSibling()) {
-    if (!n->IsNodeOfType(nsINode::eTEXT)) {
+    if (!n->IsText()) {
       return Nothing();
     }
 
