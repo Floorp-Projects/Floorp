@@ -516,6 +516,10 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
     req_ideal_height = (mCapability.height >> 16) & 0xffff;
   }
 
+  // This is only used in the case of screen sharing, see bug 1453269.
+  const int32_t target_width = aProps.width();
+  const int32_t target_height = aProps.height();
+
   if (aProps.rotation() == 90 || aProps.rotation() == 270) {
     // This frame is rotated, so what was negotiated as width is now height,
     // and vice versa.
@@ -530,6 +534,33 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
   // The following snippet will set dst_width to dst_max_width and dst_height to dst_max_height
   int32_t dst_width = std::min(req_ideal_width > 0 ? req_ideal_width : aProps.width(), dst_max_width);
   int32_t dst_height = std::min(req_ideal_height > 0 ? req_ideal_height : aProps.height(), dst_max_height);
+
+  // Apply scaling for screen sharing, see bug 1453269.
+  switch (mMediaSource) {
+    case MediaSourceEnum::Screen:
+    case MediaSourceEnum::Window:
+    case MediaSourceEnum::Application: {
+      // scale to average of portrait and landscape
+      float scale_width = (float)dst_width / (float)aProps.width();
+      float scale_height = (float)dst_height / (float)aProps.height();
+      float scale = (scale_width + scale_height) / 2;
+      dst_width = (int)(scale * target_width);
+      dst_height = (int)(scale * target_height);
+
+      // if scaled rectangle exceeds max rectangle, scale to minimum of portrait and landscape
+      if (dst_width > dst_max_width || dst_height > dst_max_height) {
+        scale_width = (float)dst_max_width / (float)dst_width;
+        scale_height = (float)dst_max_height / (float)dst_height;
+        scale = std::min(scale_width, scale_height);
+        dst_width = (int32_t)(scale * dst_width);
+        dst_height = (int32_t)(scale * dst_height);
+      }
+      break;
+    }
+    default: {
+      break;
+    }
+  }
 
   rtc::Callback0<void> callback_unused;
   rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer =
