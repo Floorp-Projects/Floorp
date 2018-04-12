@@ -18,7 +18,8 @@ from shutil import copytree
 
 __all__ = ['Profile',
            'FirefoxProfile',
-           'ThunderbirdProfile']
+           'ThunderbirdProfile',
+           'create_profile']
 
 
 class Profile(object):
@@ -423,3 +424,25 @@ class ThunderbirdProfile(Profile):
                    # prevents the 'new e-mail address' wizard on new profile
                    'mail.provider.enabled': False,
                    }
+
+
+profile_class = {
+    'firefox': FirefoxProfile,
+    'thunderbird': ThunderbirdProfile,
+}
+
+
+def create_profile(app, **kwargs):
+    """Create a profile given an application name.
+
+    :param app: String name of the application to create a profile for, e.g 'firefox'.
+    :param kwargs: Same as the arguments for the Profile class (optional).
+    :returns: An application specific Profile instance
+    :raises: NotImplementedError
+    """
+    cls = profile_class.get(app)
+
+    if not cls:
+        raise NotImplementedError("Profiles not supported for application '{}'".format(app))
+
+    return cls(**kwargs)
