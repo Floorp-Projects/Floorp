@@ -37,7 +37,7 @@ class GeckoViewContentModule {
       aMsg => {
         if (aMsg.data.module == this.moduleName) {
           this.settings = aMsg.data.settings;
-          this.register();
+          this.onEnable();
           this.messageManager.sendAsyncMessage(
             "GeckoView:ContentRegistered", { module: this.moduleName });
         }
@@ -47,16 +47,23 @@ class GeckoViewContentModule {
       "GeckoView:Unregister",
       aMsg => {
         if (aMsg.data.module == this.moduleName) {
-          this.unregister();
+          this.onDisable();
         }
       }
     );
 
-    this.init();
+    this.onInit();
   }
 
-  init() {}
-  register() {}
-  unregister() {}
+  // Override to initialize module.
+  onInit() {}
+
+  // Override to detect settings change. Access settings via this.settings.
   onSettingsUpdate() {}
+
+  // Override to enable module after setting a Java delegate.
+  onEnable() {}
+
+  // Override to disable module after clearing the Java delegate.
+  onDisable() {}
 }

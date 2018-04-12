@@ -187,12 +187,12 @@ var IdentityHandler = {
 };
 
 class GeckoViewProgress extends GeckoViewModule {
-  init() {
+  onInit() {
     this._hostChanged = false;
   }
 
-  register() {
-    debug("register");
+  onEnable() {
+    debug("onEnable");
 
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
                 Ci.nsIWebProgress.NOTIFY_SECURITY |
@@ -204,8 +204,8 @@ class GeckoViewProgress extends GeckoViewModule {
     this.browser.addProgressListener(this.progressFilter, flags);
   }
 
-  unregister() {
-    debug("unregister");
+  onDisable() {
+    debug("onDisable");
 
     if (this.progressFilter) {
       this.progressFilter.removeProgressListener(this);

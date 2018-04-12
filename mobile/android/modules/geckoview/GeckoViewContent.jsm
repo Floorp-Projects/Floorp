@@ -18,13 +18,13 @@ function debug(aMsg) {
 }
 
 class GeckoViewContent extends GeckoViewModule {
-  init() {
+  onInit() {
     this.eventDispatcher.registerListener(this, [
       "GeckoView:SetActive"
     ]);
   }
 
-  register() {
+  onEnable() {
     this.registerContent("chrome://geckoview/content/GeckoViewContent.js");
 
     this.window.addEventListener("MozDOMFullScreen:Entered", this,
@@ -65,7 +65,7 @@ class GeckoViewContent extends GeckoViewModule {
     }
   }
 
-  unregister() {
+  onDisable() {
     this.window.removeEventListener("MozDOMFullScreen:Entered", this,
                                     /* capture */ true);
     this.window.removeEventListener("MozDOMFullScreen:Exited", this,
