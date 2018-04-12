@@ -147,7 +147,6 @@ struct ProfilerFeature
   #undef DECLARE
 };
 
-#ifdef MOZ_GECKO_PROFILER
 namespace mozilla {
 namespace profiler {
 namespace detail {
@@ -203,7 +202,6 @@ private:
 } // namespace detail
 } // namespace profiler
 } // namespace mozilla
-#endif
 
 //---------------------------------------------------------------------------
 // Start and stop the profiler
@@ -328,11 +326,7 @@ void profiler_clear_js_context();
 // calls.
 inline bool profiler_is_active()
 {
-#ifdef MOZ_GECKO_PROFILER
   return mozilla::profiler::detail::RacyFeatures::IsActive();
-#else
-  return false;
-#endif
 }
 
 // Is the profiler active and paused? Returns false if the profiler is inactive.
