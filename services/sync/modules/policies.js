@@ -202,11 +202,27 @@ SyncScheduler.prototype = {
         }
         break;
       case "network:link-status-changed":
-        if (!this.offline) {
+        // Note: NetworkLinkService is unreliable, we get false negatives for it
+        // in cases such as VMs (bug 1420802), so we don't want to use it in
+        // `get offline`, but we assume that it's probably reliable if we're
+        // getting status changed events. (We might be wrong about this, but
+        // if that's true, then the only downside is that we won't sync as
+        // promptly).
+        let isOffline = this.offline;
+        this._log.debug(`Network link status changed to "${data}". Offline?`,
+                        isOffline);
+        // Data may be one of `up`, `down`, `change`, or `unknown`. We only want
+        // to sync if it's "up".
+        if (data == "up" && !isOffline) {
           this._log.debug("Network link looks up. Syncing.");
           this.scheduleNextSync(0, {why: topic});
+        } else if (data == "down") {
+          // Unschedule pending syncs if we know we're going down. We don't do
+          // this via `checkSyncStatus`, since link status isn't reflected in
+          // `this.offline`.
+          this.clearSyncTriggers();
         }
-        // Intended fallthrough
+        break;
       case "network:offline-status-changed":
       case "captive-portal-detected":
         // Whether online or offline, we'll reschedule syncs
