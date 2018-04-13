@@ -33,7 +33,6 @@ nsBaseAppShell::nsBaseAppShell()
   , mRunning(false)
   , mExiting(false)
   , mBlockNativeEvent(false)
-  , mProcessedGeckoEvents{ false }
 {
 }
 

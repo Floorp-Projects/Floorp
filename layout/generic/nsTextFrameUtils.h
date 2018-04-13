@@ -162,15 +162,10 @@ public:
     LENGTH_INCLUDES_SKIPPED = true
   };
   nsSkipCharsRunIterator(const gfxSkipCharsIterator& aStart,
-                         LengthMode aLengthIncludesSkipped,
-                         uint32_t aLength)
-    : mIterator(aStart)
-    , mRemainingLength(aLength)
-    , mRunLength(0)
-    , mSkipped{ false }
-    , mVisitSkipped(false)
-    , mLengthIncludesSkipped(aLengthIncludesSkipped)
-  {
+      LengthMode aLengthIncludesSkipped, uint32_t aLength)
+    : mIterator(aStart), mRemainingLength(aLength), mRunLength(0),
+      mVisitSkipped(false),
+      mLengthIncludesSkipped(aLengthIncludesSkipped) {
   }
   void SetVisitSkipped() { mVisitSkipped = true; }
   void SetOriginalOffset(int32_t aOffset) {

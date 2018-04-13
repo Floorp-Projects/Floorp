@@ -111,8 +111,7 @@ private:
 //// StorageBaseStatementInternal
 
 StorageBaseStatementInternal::StorageBaseStatementInternal()
-  : mNativeConnection{ nullptr }
-  , mAsyncStatement(nullptr)
+: mAsyncStatement(nullptr)
 {
 }
 

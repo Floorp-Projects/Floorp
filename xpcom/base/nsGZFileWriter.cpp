@@ -22,7 +22,6 @@ nsGZFileWriter::nsGZFileWriter(Operation aMode)
   : mMode(aMode)
   , mInitialized(false)
   , mFinished(false)
-  , mGZFile{ nullptr }
 {
 }
 

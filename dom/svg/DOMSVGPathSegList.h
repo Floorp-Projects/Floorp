@@ -230,11 +230,7 @@ private:
    * want to create the DOMSVGPathSeg items lazily on demand.
    */
   struct ItemProxy {
-    ItemProxy()
-      : mItem{ nullptr }
-      , mInternalDataIndex{}
-    {
-    }
+    ItemProxy(){}
     ItemProxy(DOMSVGPathSeg *aItem, uint32_t aInternalDataIndex)
       : mItem(aItem)
       , mInternalDataIndex(aInternalDataIndex)

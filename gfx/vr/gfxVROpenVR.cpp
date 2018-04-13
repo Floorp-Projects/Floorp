@@ -427,14 +427,10 @@ VRDisplayOpenVR::SubmitFrame(MacIOSurface* aMacIOSurface,
 
 #endif
 
-VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand,
-                                       uint32_t aDisplayID,
-                                       uint32_t aNumButtons,
-                                       uint32_t aNumTriggers,
-                                       uint32_t aNumAxes,
-                                       const nsCString& aId)
+VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aDisplayID,
+                                       uint32_t aNumButtons, uint32_t aNumTriggers,
+                                       uint32_t aNumAxes, const nsCString& aId)
   : VRControllerHost(VRDeviceType::OpenVR, aHand, aDisplayID)
-  , mTrackedIndex{}
   , mVibrateThread(nullptr)
   , mIsVibrateStopped(false)
 {

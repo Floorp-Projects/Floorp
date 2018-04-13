@@ -93,9 +93,6 @@ PuppetWidget::PuppetWidget(TabChild* aTabChild)
   , mDefaultScale(-1)
   , mCursorHotspotX(0)
   , mCursorHotspotY(0)
-  , mEnabled{ false }
-  , mVisible{ false }
-  , mNeedIMEStateInit{ false }
   , mIgnoreCompositionEvents(false)
 {
   // Setting 'Unknown' means "not yet cached".

@@ -92,9 +92,8 @@ void nsXPCOMDetector::Report(const char* aCharset)
 
 
 //---------------------------------------------------------------------
-nsXPCOMStringDetector::nsXPCOMStringDetector()
+nsXPCOMStringDetector:: nsXPCOMStringDetector()
   : nsUniversalDetector()
-  , mResult{ nullptr }
 {
 }
 //---------------------------------------------------------------------

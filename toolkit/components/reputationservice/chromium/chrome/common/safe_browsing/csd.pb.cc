@@ -1114,7 +1114,7 @@ const int ChromeUserPopulation::kFinchActiveGroupsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ChromeUserPopulation::ChromeUserPopulation()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , is_history_sync_enabled_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -1875,7 +1875,7 @@ const int ClientPhishingRequest::kPopulationFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientPhishingRequest::ClientPhishingRequest()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , _shingle_hashes_cached_byte_size_{}, client_score_{0.0}, is_phishing_{false}, model_version_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -4803,7 +4803,7 @@ const int LoginReputationClientRequest_Frame::kFormsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 LoginReputationClientRequest_Frame::LoginReputationClientRequest_Frame()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , parent_frame_index_{}, has_password_field_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -5384,7 +5384,7 @@ const int LoginReputationClientRequest_PasswordReuseEvent::kSyncAccountTypeField
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 LoginReputationClientRequest_PasswordReuseEvent::LoginReputationClientRequest_PasswordReuseEvent()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , is_chrome_signin_password_{false}, sync_account_type_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -5844,7 +5844,7 @@ const int LoginReputationClientRequest::kClickedThroughInterstitialFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 LoginReputationClientRequest::LoginReputationClientRequest()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , population_{nullptr}, trigger_type_{}, stored_verdict_cnt_{}, clicked_through_interstitial_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -6542,7 +6542,7 @@ const int LoginReputationClientResponse::kVerdictTokenFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 LoginReputationClientResponse::LoginReputationClientResponse()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , verdict_type_{}, deprecated_cache_expression_exact_match_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -12214,7 +12214,7 @@ const int ClientDownloadRequest_ArchivedBinary::kImageHeadersFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientDownloadRequest_ArchivedBinary::ClientDownloadRequest_ArchivedBinary()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , signature_{nullptr}, image_headers_{nullptr}, length_{}, download_type_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -12901,7 +12901,7 @@ const int ClientDownloadRequest::kUdifCodeSignatureFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientDownloadRequest::ClientDownloadRequest()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , signature_{nullptr}, image_headers_{nullptr}, population_{nullptr}, length_{}, deprecated_download_attribution_finch_enabled_{false}, download_type_{}, user_initiated_{false}, archive_valid_{false}, skipped_url_whitelist_{false}, skipped_certificate_whitelist_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -14829,7 +14829,7 @@ const int ReferrerChainEntry::kServerRedirectChainFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ReferrerChainEntry::ReferrerChainEntry()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , is_retargeting_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -16148,7 +16148,7 @@ const int ClientDownloadResponse::kUploadFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientDownloadResponse::ClientDownloadResponse()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , verdict_{}, upload_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -16915,7 +16915,7 @@ const int ClientDownloadReport::kDownloadResponseFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientDownloadReport::ClientDownloadReport()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , user_information_{nullptr}, download_response_{nullptr}, reason_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -18418,7 +18418,7 @@ const int ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFil
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFile::ClientIncidentReport_IncidentData_BinaryIntegrityIncident_ContainedFile()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , image_headers_{nullptr} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -18881,7 +18881,7 @@ const int ClientIncidentReport_IncidentData_BinaryIntegrityIncident::kContainedF
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport_IncidentData_BinaryIntegrityIncident::ClientIncidentReport_IncidentData_BinaryIntegrityIncident()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , image_headers_{nullptr}, sec_error_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -19916,7 +19916,7 @@ const int ClientIncidentReport_IncidentData::kResourceRequestFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport_IncidentData::ClientIncidentReport_IncidentData()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , binary_integrity_{nullptr}, resource_request_{nullptr}, incident_time_msec_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -20414,7 +20414,7 @@ const int ClientIncidentReport_DownloadDetails::kOpenTimeMsecFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport_DownloadDetails::ClientIncidentReport_DownloadDetails()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , download_time_msec_{}, open_time_msec_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -23246,7 +23246,7 @@ const int ClientIncidentReport_EnvironmentData_Process_Dll::kImageHeadersFieldNu
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport_EnvironmentData_Process_Dll::ClientIncidentReport_EnvironmentData_Process_Dll()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , base_address_{}, length_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -23819,7 +23819,7 @@ const int ClientIncidentReport_EnvironmentData_Process_ModuleState_Modification:
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport_EnvironmentData_Process_ModuleState_Modification::ClientIncidentReport_EnvironmentData_Process_ModuleState_Modification()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , byte_count_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -24842,7 +24842,7 @@ const int ClientIncidentReport_EnvironmentData_Process::kOBSOLETEFieldTrialParti
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport_EnvironmentData_Process::ClientIncidentReport_EnvironmentData_Process()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , chrome_update_channel_{}, metrics_consent_{false}, obsolete_extended_consent_{false}, obsolete_field_trial_participant_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -25861,7 +25861,7 @@ const int ClientIncidentReport_EnvironmentData::kProcessFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport_EnvironmentData::ClientIncidentReport_EnvironmentData()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , machine_{nullptr}, process_{nullptr} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -26317,7 +26317,7 @@ const int ClientIncidentReport_ExtensionData_ExtensionInfo::kManifestFieldNumber
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport_ExtensionData_ExtensionInfo::ClientIncidentReport_ExtensionData_ExtensionInfo()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , type_{}, has_signature_validation_{false}, signature_is_valid_{false}, installed_by_custodian_{false}, installed_by_default_{false}, installed_by_oem_{false}, from_bookmark_{false}, from_webstore_{false}, converted_from_user_script_{false}, install_time_msec_{}, may_be_untrusted_{false}, manifest_location_type_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -28643,7 +28643,7 @@ const int ClientIncidentReport::kNonBinaryDownloadFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientIncidentReport::ClientIncidentReport()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , environment_{nullptr}, population_{nullptr}, extension_data_{nullptr}, non_binary_download_{nullptr} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -29945,7 +29945,7 @@ const int DownloadMetadata::kDownloadFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 DownloadMetadata::DownloadMetadata()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , download_id_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -31141,7 +31141,7 @@ const int ClientSafeBrowsingReportRequest_HTTPRequest::kBodylengthFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientSafeBrowsingReportRequest_HTTPRequest::ClientSafeBrowsingReportRequest_HTTPRequest()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , bodylength_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -32182,7 +32182,7 @@ const int ClientSafeBrowsingReportRequest_HTTPResponse::kRemoteIpFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientSafeBrowsingReportRequest_HTTPResponse::ClientSafeBrowsingReportRequest_HTTPResponse()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , bodylength_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -32884,7 +32884,7 @@ const int ClientSafeBrowsingReportRequest_Resource::kTagNameFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientSafeBrowsingReportRequest_Resource::ClientSafeBrowsingReportRequest_Resource()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , response_{nullptr}, id_{}, parent_id_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -33634,7 +33634,7 @@ const int ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::kUrlApiT
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties::ClientSafeBrowsingReportRequest_SafeBrowsingClientProperties()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , is_instant_apps_{false}, url_api_type_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -34106,7 +34106,7 @@ const int ClientSafeBrowsingReportRequest::kShowDownloadInFolderFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ClientSafeBrowsingReportRequest::ClientSafeBrowsingReportRequest()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , type_{}, complete_{false}, did_proceed_{false}, repeat_visit_{false}, show_download_in_folder_{false}, download_verdict_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -35853,7 +35853,7 @@ const int HTMLElement::kAttributeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 HTMLElement::HTMLElement()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , resource_id_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -36384,7 +36384,7 @@ const int ImageData_Dimensions::kHeightFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ImageData_Dimensions::ImageData_Dimensions()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , height_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }
@@ -36682,7 +36682,7 @@ const int ImageData::kOriginalDimensionsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ImageData::ImageData()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , original_dimensions_{nullptr} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_csd_2eproto::InitDefaults();
   }

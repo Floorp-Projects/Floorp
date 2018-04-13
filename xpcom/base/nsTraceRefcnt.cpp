@@ -304,7 +304,6 @@ class BloatEntry
 public:
   BloatEntry(const char* aClassName, uint32_t aClassSize)
     : mClassSize(aClassSize)
-    , mStats{}
   {
     MOZ_ASSERT(strlen(aClassName) > 0, "BloatEntry name must be non-empty");
     mClassName = PL_strdup(aClassName);

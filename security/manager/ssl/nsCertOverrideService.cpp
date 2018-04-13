@@ -88,7 +88,6 @@ NS_IMPL_ISUPPORTS(nsCertOverrideService,
 
 nsCertOverrideService::nsCertOverrideService()
   : mMutex("nsCertOverrideService.mutex")
-  , mOidTagForStoringNewHashes{ SEC_OID_UNKNOWN }
 {
 }
 

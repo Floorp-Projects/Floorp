@@ -57,11 +57,7 @@ class SegmentedVector : private AllocPolicy
   struct SegmentImpl
     : public mozilla::LinkedListElement<SegmentImpl<SegmentCapacity>>
   {
-    SegmentImpl()
-      : mLength(0)
-    {
-      this->mStorage.mAlign = {};
-    }
+    SegmentImpl() : mLength(0) {}
 
     ~SegmentImpl()
     {

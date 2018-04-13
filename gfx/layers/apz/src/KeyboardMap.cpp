@@ -11,15 +11,7 @@
 namespace mozilla {
 namespace layers {
 
-KeyboardShortcut::KeyboardShortcut()
-  : mKeyCode{}
-  , mCharCode{}
-  , mModifiers{}
-  , mModifiersMask{}
-  , mEventType{ static_cast<KeyboardInput::KeyboardEventType>(0) }
-  , mDispatchToContent{ false }
-{
-}
+KeyboardShortcut::KeyboardShortcut() = default;
 
 KeyboardShortcut::KeyboardShortcut(KeyboardInput::KeyboardEventType aEventType,
                                    uint32_t aKeyCode,

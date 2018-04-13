@@ -577,7 +577,6 @@ private:
 
     CompositionEventDispatcher()
       : Runnable("TextComposition::CompositionEventDispatcher")
-      , mEventMessage{ eVoidEvent }
       , mIsSynthesizedEvent(false){};
   };
 

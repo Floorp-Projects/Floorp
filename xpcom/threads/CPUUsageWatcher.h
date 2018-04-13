@@ -49,9 +49,7 @@ public:
     , mProcessUpdateTime(0)
     , mGlobalUsageTime(0)
     , mGlobalUpdateTime(0)
-    , mNumCPUs{}
-  {
-  }
+  {}
 #endif
 
   Result<Ok, CPUUsageWatcherError> Init();

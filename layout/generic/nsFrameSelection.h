@@ -33,11 +33,7 @@ class nsRange;
 struct SelectionDetails
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
-  SelectionDetails()
-    : mStart{}
-    , mEnd{}
-    , mSelectionType{ mozilla::SelectionType::eInvalid }
-  {
+  SelectionDetails() {
     MOZ_COUNT_CTOR(SelectionDetails);
   }
   ~SelectionDetails() {

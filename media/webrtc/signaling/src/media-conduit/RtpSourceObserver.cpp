@@ -18,11 +18,8 @@ RtpSourceObserver::RtpSourceEntry::ToLinearAudioLevel() const
   return std::pow(10, -static_cast<double>(audioLevel) / 20);
 }
 
-RtpSourceObserver::RtpSourceObserver()
-  : mMaxJitterWindow{}
-  , mLevelGuard("RtpSourceObserver::mLevelGuard")
-{
-}
+RtpSourceObserver::RtpSourceObserver() :
+  mLevelGuard("RtpSourceObserver::mLevelGuard") {}
 
 void
 RtpSourceObserver::OnRtpPacket(const webrtc::WebRtcRTPHeader* aHeader,

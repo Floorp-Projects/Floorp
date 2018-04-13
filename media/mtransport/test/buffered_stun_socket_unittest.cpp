@@ -41,45 +41,35 @@ static size_t kStunMessageLen = sizeof(kStunMessage);
 
 class BufferedStunSocketTest : public MtransportTest {
  public:
-   BufferedStunSocketTest()
-     : MtransportTest()
-     , dummy_(nullptr)
-     , test_socket_(nullptr)
-   {
-     this->remote_addr_.ip_version = { '\0' };
-     this->remote_addr_.protocol = { '\0' };
-     this->remote_addr_.addr = { nullptr };
-     this->remote_addr_.addr_len = {};
-     this->remote_addr_.u.addr4.sin_family = { '\0' };
-     this->remote_addr_.u.addr4.sin_port = {};
-     this->remote_addr_.u.addr4.sin_addr = {};
-     this->remote_addr_.u.addr6.sin6_family = { '\0' };
-     this->remote_addr_.u.addr6.sin6_port = {};
-     this->remote_addr_.u.addr6.sin6_flowinfo = {};
-     this->remote_addr_.u.addr6.sin6_scope_id = {};
-   }
+  BufferedStunSocketTest()
+      : MtransportTest(),
+        dummy_(nullptr),
+        test_socket_(nullptr) { }
 
-   ~BufferedStunSocketTest() { nr_socket_destroy(&test_socket_); }
+  ~BufferedStunSocketTest() {
+    nr_socket_destroy(&test_socket_);
+  }
 
-   void SetUp() override
-   {
-     MtransportTest::SetUp();
+  void SetUp() override {
+    MtransportTest::SetUp();
 
-     RefPtr<DummySocket> dummy(new DummySocket());
+    RefPtr<DummySocket> dummy(new DummySocket());
 
-     int r = nr_socket_buffered_stun_create(dummy->get_nr_socket(),
-                                            kStunMessageLen,
-                                            TURN_TCP_FRAMING,
-                                            &test_socket_);
-     ASSERT_EQ(0, r);
-     dummy_ = dummy.forget(); // Now owned by test_socket_.
+    int r = nr_socket_buffered_stun_create(
+        dummy->get_nr_socket(),
+        kStunMessageLen,
+        TURN_TCP_FRAMING,
+        &test_socket_);
+    ASSERT_EQ(0, r);
+    dummy_ = dummy.forget();  // Now owned by test_socket_.
 
-     r = nr_str_port_to_transport_addr(
-       (char*)"192.0.2.133", 3333, IPPROTO_TCP, &remote_addr_);
-     ASSERT_EQ(0, r);
+    r = nr_str_port_to_transport_addr(
+        (char *)"192.0.2.133", 3333, IPPROTO_TCP, &remote_addr_);
+    ASSERT_EQ(0, r);
 
-     r = nr_socket_connect(test_socket_, &remote_addr_);
-     ASSERT_EQ(0, r);
+    r = nr_socket_connect(test_socket_,
+                          &remote_addr_);
+    ASSERT_EQ(0, r);
   }
 
   nr_socket *socket() { return test_socket_; }

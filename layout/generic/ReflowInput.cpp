@@ -54,32 +54,15 @@ static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
 
 // Initialize a <b>root</b> reflow state with a rendering context to
 // use for measuring things.
-ReflowInput::ReflowInput(nsPresContext* aPresContext,
-                         nsIFrame* aFrame,
-                         gfxContext* aRenderingContext,
-                         const LogicalSize& aAvailableSpace,
-                         uint32_t aFlags)
+ReflowInput::ReflowInput(nsPresContext*       aPresContext,
+                                     nsIFrame*            aFrame,
+                                     gfxContext*          aRenderingContext,
+                                     const LogicalSize&   aAvailableSpace,
+                                     uint32_t             aFlags)
   : SizeComputationInput(aFrame, aRenderingContext)
-  , mCBReflowInput{ nullptr }
-  , mFrameType{}
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
-  , mAvailableWidth{}
-  , mAvailableHeight{}
-  , mComputedWidth{}
-  , mComputedHeight{}
-  , mComputedMinWidth{}
-  , mComputedMaxWidth{}
-  , mComputedMinHeight{}
-  , mComputedMaxHeight{}
   , mContainingBlockSize(mWritingMode)
-  , mStyleDisplay{ nullptr }
-  , mStyleVisibility{ nullptr }
-  , mStylePosition{ nullptr }
-  , mStyleBorder{ nullptr }
-  , mStyleMargin{ nullptr }
-  , mStylePadding{ nullptr }
-  , mStyleText{ nullptr }
   , mReflowDepth(0)
 {
   NS_PRECONDITION(aRenderingContext, "no rendering context");
@@ -189,33 +172,17 @@ SizeComputationInput::SizeComputationInput(nsIFrame *aFrame,
 // Initialize a reflow state for a child frame's reflow. Some state
 // is copied from the parent reflow state; the remaining state is
 // computed.
-ReflowInput::ReflowInput(nsPresContext* aPresContext,
-                         const ReflowInput& aParentReflowInput,
-                         nsIFrame* aFrame,
-                         const LogicalSize& aAvailableSpace,
-                         const LogicalSize* aContainingBlockSize,
-                         uint32_t aFlags)
+ReflowInput::ReflowInput(
+                     nsPresContext*           aPresContext,
+                     const ReflowInput& aParentReflowInput,
+                     nsIFrame*                aFrame,
+                     const LogicalSize&       aAvailableSpace,
+                     const LogicalSize*       aContainingBlockSize,
+                     uint32_t                 aFlags)
   : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext)
-  , mCBReflowInput{ nullptr }
-  , mFrameType{}
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
-  , mAvailableWidth{}
-  , mAvailableHeight{}
-  , mComputedWidth{}
-  , mComputedHeight{}
-  , mComputedMinWidth{}
-  , mComputedMaxWidth{}
-  , mComputedMinHeight{}
-  , mComputedMaxHeight{}
   , mContainingBlockSize(mWritingMode)
-  , mStyleDisplay{ nullptr }
-  , mStyleVisibility{ nullptr }
-  , mStylePosition{ nullptr }
-  , mStyleBorder{ nullptr }
-  , mStyleMargin{ nullptr }
-  , mStylePadding{ nullptr }
-  , mStyleText{ nullptr }
   , mFlags(aParentReflowInput.mFlags)
   , mReflowDepth(aParentReflowInput.mReflowDepth + 1)
 {
