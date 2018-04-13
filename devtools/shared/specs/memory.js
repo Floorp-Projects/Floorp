@@ -50,13 +50,13 @@ const memorySpec = generateActorSpec({
     attach: {
       request: {},
       response: {
-        type: "attached"
+        type: RetVal("string")
       }
     },
     detach: {
       request: {},
       response: {
-        type: "detached"
+        type: RetVal("string")
       }
     },
     getState: {

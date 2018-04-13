@@ -81,7 +81,7 @@ const childSpec = protocol.generateActorSpec({
       response: { sibling: RetVal("childActor") }
     },
     emitEvents: {
-      response: { value: "correct response" },
+      response: { value: RetVal("string") },
     },
     release: {
       release: true
@@ -156,6 +156,7 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
     EventEmitter.emit(this, "named-event", 1, 2, 3);
     EventEmitter.emit(this, "object-event", this);
     EventEmitter.emit(this, "array-object-event", [this]);
+    return "correct response";
   },
 
   release: function() { },
