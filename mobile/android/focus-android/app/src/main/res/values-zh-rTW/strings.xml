@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">自訂網址</string>
   <string name="preference_autocomplete_action_add">+ 新增自訂網址</string>
   <string name="preference_autocomplete_title_add">新增自訂網址</string>
+  <string name="custom_autocomplete_quick_add">新增自訂網址</string>
   <string name="preference_autocomplete_title_remove">移除自訂網址</string>
   <string name="preference_autocomplete_learn_more">了解更多</string>
   <string name="preference_autocomplete_custom_summary">新增與管理自訂自動完成網址。</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">內嵌於網站，用來追蹤您的造訪紀錄，並提供分享按鈕等功能</string>
   <string name="preference_privacy_block_content">封鎖其他內容追蹤器</string>
   <string name="preference_privacy_block_content_summary2">開啟後，可能會造成某些頁面的行為不正常</string>
+  <string name="preference_privacy_category_cookies">封鎖 Cookie</string>
+  <string name="preference_privacy_should_block_cookies_no_option">否</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">僅封鎖第三方 Cookie</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">是</string>
   <string name="preference_privacy_secure_mode">秘密行動</string>
   <string name="preference_privacy_stealth_summary">切換程式時，隱藏網頁內容</string>
   <string name="preference_category_performance">效能</string>

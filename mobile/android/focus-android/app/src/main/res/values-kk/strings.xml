@@ -35,6 +35,7 @@
   <string name="preference_category_autocomplete_preinstalled">Бастапқы URL тізімі</string>
   <string name="preference_autocomplete_preinstalled_summary">%1$s адрестік жолақта 450-ден астам әйгілі URL-ді автотолықтыру үшін іске қосыңыз.</string>
   <string name="preference_category_autocomplete_custom">Таңдауыңызша URL</string>
+  <string name="preference_category_autocomplete_custom_urls">Таңдауыңызша URL</string>
   <string name="preference_autocomplete_subitem_customlist">Таңдауыңызша URL-дер</string>
   <string name="preference_autocomplete_action_add">+ Таңдауыңызша URL қосу</string>
   <string name="preference_autocomplete_title_add">Таңдауыңызша URL қосу</string>
@@ -67,6 +68,8 @@
   <string name="preference_performance_block_webfonts">Веб қаріптерін блоктау</string>
   <string name="preference_performance_block_webfonts_summary">Жоқ болып тұрған таңбашалар немесе суреттерге әкеп соғуы мүмкін</string>
   <string name="preference_performance_block_images">Суреттерді блоктау</string>
+  <string name="preference_performance_block_javascript">JavaScript бұғаттау</string>
+  <string name="preference_performance_block_javascript_summary">Беттер жылдамдау жүктелуі мүмкін, бірақ, мінез-құлығы күтпегендей өзгеруі мүмкін</string>
   <string name="preference_default_browser2">%1$s-ты негізгі браузер қылу</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Қолдану деректерін жіберу</string>

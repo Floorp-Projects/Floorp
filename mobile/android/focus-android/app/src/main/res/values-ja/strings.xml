@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">カスタム URL</string>
   <string name="preference_autocomplete_action_add">+ カスタム URL を追加</string>
   <string name="preference_autocomplete_title_add">カスタム URL を追加</string>
+  <string name="custom_autocomplete_quick_add">カスタム URL を追加</string>
   <string name="preference_autocomplete_title_remove">カスタム URL を削除</string>
   <string name="preference_autocomplete_learn_more">詳細情報</string>
   <string name="preference_autocomplete_custom_summary">カスタム自動補完 URL の追加と管理。</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">ユーザーの訪問を追跡するためサイトに埋め込まれ、共有ボタンのように表示されます</string>
   <string name="preference_privacy_block_content">他の追跡コンテンツをブロック</string>
   <string name="preference_privacy_block_content_summary2">有効にすると、ページによっては予期せぬ動作をする原因になります</string>
+  <string name="preference_privacy_category_cookies">Cookie をブロック</string>
+  <string name="preference_privacy_should_block_cookies_no_option">いいえ</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">サードパーティ Cookie のみブロック</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">はい</string>
   <string name="preference_privacy_secure_mode">ステルス</string>
   <string name="preference_privacy_stealth_summary">アプリ切り替え時にウェブページを隠す</string>
   <string name="preference_category_performance">パフォーマンス</string>

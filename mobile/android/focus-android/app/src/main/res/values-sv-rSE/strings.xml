@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">Anpassade webbadresser</string>
   <string name="preference_autocomplete_action_add">+ Lägg till anpassad webbadress</string>
   <string name="preference_autocomplete_title_add">Lägg till anpassad webbadress</string>
+  <string name="custom_autocomplete_quick_add">Lägg till anpassad webbadress</string>
   <string name="preference_autocomplete_title_remove">Ta bort anpassade webbadresser</string>
   <string name="preference_autocomplete_learn_more">Läs mer</string>
   <string name="preference_autocomplete_custom_summary">Lägg till och hantera anpassade autokompletterade webbadresser.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Inbäddad på webbplatser för att spåra dina besök och visa funktionalitet som dela-knappar</string>
   <string name="preference_privacy_block_content">Blockera andra innehållstrackers</string>
   <string name="preference_privacy_block_content_summary2">Aktivering kan leda till att vissa sidor uppträder oväntat</string>
+  <string name="preference_privacy_category_cookies">Blockera kakor</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Nej</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Blockera endast tredjepartskakor</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
   <string name="preference_privacy_secure_mode">Dolt läge</string>
   <string name="preference_privacy_stealth_summary">Dölj webbsidor när du byter appar</string>
   <string name="preference_category_performance">Prestanda</string>
@@ -69,6 +74,7 @@
   <string name="preference_performance_block_webfonts_summary">Kan resultera i att ikoner eller bilder saknas</string>
   <string name="preference_performance_block_images">Blockera bilder</string>
   <string name="preference_performance_block_javascript">Blockera Javascript</string>
+  <string name="preference_performance_block_javascript_summary">Sidor kan laddas snabbare, men kan också uppträda oväntat</string>
   <string name="preference_default_browser2">Gör %1$s till standardwebbläsare</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Skicka användningsdata</string>

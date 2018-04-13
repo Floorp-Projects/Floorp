@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">Swójske adresy</string>
   <string name="preference_autocomplete_action_add">+ Swójsku adresu přidać</string>
   <string name="preference_autocomplete_title_add">Swójsku adresu přidać</string>
+  <string name="custom_autocomplete_quick_add">Swójski URL přidać</string>
   <string name="preference_autocomplete_title_remove">Swójske adresy wotstronić</string>
   <string name="preference_autocomplete_learn_more">Dalše informacije</string>
   <string name="preference_autocomplete_custom_summary">Swójske adresy za wudospołnjenje přidać a rjadowác.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Na sydłach zasadźene, zo bychu waše wopyty slědowali a funkcije kaž tłóčatka za dźělenje zwobraznili</string>
   <string name="preference_privacy_block_content">Druhe wobsahowe přesćěhowaki blokować</string>
   <string name="preference_privacy_block_content_summary2">To móže wjesć k tomu, zo so někotre strony njewšědnje zadźerža</string>
+  <string name="preference_privacy_category_cookies">Placki blokować</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Ně</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Jenož placki třećich poskićowarjow</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Haj</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
   <string name="preference_privacy_stealth_summary">Webstrony schować, hdyž so nałoženja přepinaja</string>
   <string name="preference_category_performance">Wukon</string>

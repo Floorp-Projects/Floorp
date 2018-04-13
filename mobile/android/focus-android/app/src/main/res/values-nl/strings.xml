@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">Aangepaste URL’s</string>
   <string name="preference_autocomplete_action_add">+ Aangepaste URL toevoegen</string>
   <string name="preference_autocomplete_title_add">Aangepaste URL toevoegen</string>
+  <string name="custom_autocomplete_quick_add">Aangepaste URL toevoegen</string>
   <string name="preference_autocomplete_title_remove">Aangepaste URL’s verwijderen</string>
   <string name="preference_autocomplete_learn_more">Meer info</string>
   <string name="preference_autocomplete_custom_summary">Eigen URL’s voor automatisch aanvullen toevoegen en beheren</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Ingebed op websites om uw bezoeken te volgen en functionaliteiten zoals deelknoppen weer te geven</string>
   <string name="preference_privacy_block_content">Andere inhoudstrackers blokkeren</string>
   <string name="preference_privacy_block_content_summary2">Inschakelen kan onverwacht gedrag van bepaalde pagina’s veroorzaken</string>
+  <string name="preference_privacy_category_cookies">Cookies blokkeren</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Nee</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Alleen cookies van derden blokkeren</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
   <string name="preference_privacy_stealth_summary">Webpagina’s verbergen bij wisselen van apps</string>
   <string name="preference_category_performance">Prestaties</string>

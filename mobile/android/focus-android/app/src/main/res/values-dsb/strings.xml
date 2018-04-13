@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">Swójske adrese</string>
   <string name="preference_autocomplete_action_add">+ Swójsku adresu pśidaś</string>
   <string name="preference_autocomplete_title_add">Swójsku adresu pśidaś</string>
+  <string name="custom_autocomplete_quick_add">Swójski URL pśidaś</string>
   <string name="preference_autocomplete_title_remove">Swójske adrese wótwónoźeś</string>
   <string name="preference_autocomplete_learn_more">Dalšne informacije</string>
   <string name="preference_autocomplete_custom_summary">Swójske adrese za wudopołnjenje pśidaś a zastojaś.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Na sedłach zasajźone, aby wóne waše woglědy slědowali a funkcije ako tłocaški za źělenje zwobraznili</string>
   <string name="preference_privacy_block_content">Druge wopśimjeśowe pśeslědowaki blokěrowaś</string>
   <string name="preference_privacy_block_content_summary2">To móžo wjasć k tomu, až se někotare boki njewšednje zaźarže</string>
+  <string name="preference_privacy_category_cookies">Cookieje blokěrowaś</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Ně</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Jano cookieje tśeśich póbitowarjow blokěrowaś</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Jo</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
   <string name="preference_privacy_stealth_summary">Webboki schowaś, gaž se nałoženja pśešaltuju</string>
   <string name="preference_category_performance">Wugbaśe</string>

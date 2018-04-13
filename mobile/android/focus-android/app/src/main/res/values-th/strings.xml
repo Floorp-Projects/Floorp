@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">URL ที่กำหนดเอง</string>
   <string name="preference_autocomplete_action_add">+ เพิ่ม URL ที่กำหนดเอง</string>
   <string name="preference_autocomplete_title_add">เพิ่ม URL ที่กำหนดเอง</string>
+  <string name="custom_autocomplete_quick_add">เพิ่ม URL ที่กำหนดเอง</string>
   <string name="preference_autocomplete_title_remove">เอา URL ที่กำหนดเองออก</string>
   <string name="preference_autocomplete_learn_more">เรียนรู้เพิ่มเติม</string>
   <string name="preference_autocomplete_custom_summary">เพิ่มและจัดการ URL เติมอัตโนมัติที่กำหนดเอง</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">ฝังอยู่ในไซต์เพื่อติดตามการเยี่ยมชมของคุณและแสดงผลฟังก์ชันการทำงานอย่างปุ่มแบ่งปัน</string>
   <string name="preference_privacy_block_content">ปิดกั้นตัวติดตามของเนื้อหาอื่น ๆ</string>
   <string name="preference_privacy_block_content_summary2">การเปิดใช้งานอาจส่งผลให้หน้าบางส่วนทำงานอย่างไม่คาดคิด</string>
+  <string name="preference_privacy_category_cookies">ปิดกั้นคุกกี้</string>
+  <string name="preference_privacy_should_block_cookies_no_option">ไม่</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">ปิดกั้นคุกกี้จากบุคคลที่สามเท่านั้น</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">ใช่</string>
   <string name="preference_privacy_secure_mode">พรางตัว</string>
   <string name="preference_privacy_stealth_summary">ซ่อนหน้าเว็บเมื่อสลับแอป</string>
   <string name="preference_category_performance">ประสิทธิภาพ</string>

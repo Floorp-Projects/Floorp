@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">Egyéni URL-ek</string>
   <string name="preference_autocomplete_action_add">+ Egyéni URL hozzáadása</string>
   <string name="preference_autocomplete_title_add">Egyéni URL hozzáadása</string>
+  <string name="custom_autocomplete_quick_add">Egyéni URL hozzáadása</string>
   <string name="preference_autocomplete_title_remove">Egyéni URL-ek eltávolítása</string>
   <string name="preference_autocomplete_learn_more">További tudnivalók</string>
   <string name="preference_autocomplete_custom_summary">Automatikusan kiegészített URL-ek hozzáadása és kezelése.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Az oldalakba vannak ágyazva, hogy kövessék a látogatásait, és megosztás gombokat jelenítsenek meg</string>
   <string name="preference_privacy_block_content">Más tartalomkövetők blokkolása</string>
   <string name="preference_privacy_block_content_summary2">Az engedélyezés néhány oldalon váratlan működést okozhat</string>
+  <string name="preference_privacy_category_cookies">Sütik blokkolása</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Nem</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Csak a harmadik féltől származó sütik törlése</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Igen</string>
   <string name="preference_privacy_secure_mode">Rejtőzködés</string>
   <string name="preference_privacy_stealth_summary">Weboldalak elrejtése alkalmazásváltáskor</string>
   <string name="preference_category_performance">Teljesítmény</string>

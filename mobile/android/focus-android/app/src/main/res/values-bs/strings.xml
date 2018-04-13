@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">Prilagođeni URL-ovi</string>
   <string name="preference_autocomplete_action_add">+ Dodaj prilagođeni URL</string>
   <string name="preference_autocomplete_title_add">Dodaj prilagođeni URL</string>
+  <string name="custom_autocomplete_quick_add">Dodaj prilagođeni URL</string>
   <string name="preference_autocomplete_title_remove">Ukloni prilagođene URL-ove</string>
   <string name="preference_autocomplete_learn_more">Saznajte više</string>
   <string name="preference_autocomplete_custom_summary">Dodajte i upravljajte prilagođenim automatski završenim URL-ovima.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Ugrađene u stranice kako bi pratile vaše posjete i da prikažu funkcije kao što su dugmići za dijeljenje</string>
   <string name="preference_privacy_block_content">Blokiraj pratioce ostalog sadržaja</string>
   <string name="preference_privacy_block_content_summary2">Omogućavanje može uticati loše na neke stranice</string>
+  <string name="preference_privacy_category_cookies">Blokiraj kolačiće</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokiraj samo kolačiće trećih strana</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Da</string>
   <string name="preference_privacy_secure_mode">Tajni način</string>
   <string name="preference_privacy_stealth_summary">Sakrij web stranice prilikom prebacivanja između aplikacija</string>
   <string name="preference_category_performance">Performanse</string>

@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">URLau cyfaddas</string>
   <string name="preference_autocomplete_action_add">+ Ychwanegu URL cyfaddas</string>
   <string name="preference_autocomplete_title_add">Ychwanegu URL cyfaddas</string>
+  <string name="custom_autocomplete_quick_add">Ychwanegu URL cyfaddas</string>
   <string name="preference_autocomplete_title_remove">Tynnu URLau cyfaddas</string>
   <string name="preference_autocomplete_learn_more">Dysgu rhagor</string>
   <string name="preference_autocomplete_custom_summary">Ychwanegu a rheoli URLs awtogwblhau cyfaddas.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Wedi eu mewnblannu ar wefannau er mwyn tracio eich ymweliadau ac i ddangos swyddogaethau fel botymau rhannu</string>
   <string name="preference_privacy_block_content">Rhwystro tracwyr cynnwys eraill</string>
   <string name="preference_privacy_block_content_summary2">Gall ei alluogi achosi i rai tudalennau i ymddwyn yn rhyfedd</string>
+  <string name="preference_privacy_category_cookies">Rhwystro cwcis</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Na</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Rhwystro cwcis trydydd parti\'n unig</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Iawn</string>
   <string name="preference_privacy_secure_mode">Dirgel</string>
   <string name="preference_privacy_stealth_summary">Cuddio tudalennau gwe wrth agor apiau</string>
   <string name="preference_category_performance">Perfformiad</string>

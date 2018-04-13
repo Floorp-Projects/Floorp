@@ -35,6 +35,7 @@
   <string name="preference_category_autocomplete_preinstalled">Lista de URLs predeterminadas</string>
   <string name="preference_autocomplete_preinstalled_summary">Actívalo para que %1$s complete automáticamente más de 450 URL populares en la barra de direcciones.</string>
   <string name="preference_category_autocomplete_custom">URL personalizada</string>
+  <string name="preference_category_autocomplete_custom_urls">URLs personalizadas</string>
   <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
   <string name="preference_autocomplete_action_add">+ Agregar URL personalizada</string>
   <string name="preference_autocomplete_title_add">Agregar URL personalizada</string>
@@ -67,6 +68,8 @@
   <string name="preference_performance_block_webfonts">Bloquear fuentes web</string>
   <string name="preference_performance_block_webfonts_summary">Puede hacer que falten iconos o imágenes</string>
   <string name="preference_performance_block_images">Bloquear imágenes</string>
+  <string name="preference_performance_block_javascript">Bloquear JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Las páginas pueden cargar más rápido, pero también pueden comportarse de forma inesperada</string>
   <string name="preference_default_browser2">Convertir %1$s en tu navegador predeterminado</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Enviar datos de consumo</string>

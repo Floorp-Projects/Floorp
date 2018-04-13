@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">Adresses personnalisées</string>
   <string name="preference_autocomplete_action_add">+ Ajouter une adresse personnalisée</string>
   <string name="preference_autocomplete_title_add">Ajouter une adresse personnalisée</string>
+  <string name="custom_autocomplete_quick_add">Ajouter une adresse personnalisée</string>
   <string name="preference_autocomplete_title_remove">Supprimer des adresses personnalisées</string>
   <string name="preference_autocomplete_learn_more">En savoir plus</string>
   <string name="preference_autocomplete_custom_summary">Ajouter et gérer des adresses personnalisées pour la saisie semi-automatique.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Ils sont insérés sur certains sites pour pister vos visites et afficher des fonctionnalités comme des boutons de partage</string>
   <string name="preference_privacy_block_content">Bloquer les autres traqueurs de contenu</string>
   <string name="preference_privacy_block_content_summary2">Activer cette option peut provoquer des problèmes sur certaines pages</string>
+  <string name="preference_privacy_category_cookies">Interdire les cookies</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Non</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Interdire les cookies tiers uniquement</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Oui</string>
   <string name="preference_privacy_secure_mode">Mode furtif</string>
   <string name="preference_privacy_stealth_summary">Masquer les pages web lorsque vous changez d’application</string>
   <string name="preference_category_performance">Performances</string>
