@@ -1842,7 +1842,7 @@ JS::CompartmentCreationOptions&
 JS::CompartmentCreationOptions::setSystemZone()
 {
     zoneSpec_ = JS::SystemZone;
-    zonePointer_ = nullptr;
+    zone_ = nullptr;
     return *this;
 }
 
@@ -1850,31 +1850,15 @@ JS::CompartmentCreationOptions&
 JS::CompartmentCreationOptions::setExistingZone(JSObject* obj)
 {
     zoneSpec_ = JS::ExistingZone;
-    zonePointer_ = obj->zone();
+    zone_ = obj->zone();
     return *this;
 }
 
 JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptions::setNewZoneInNewZoneGroup()
+JS::CompartmentCreationOptions::setNewZone()
 {
-    zoneSpec_ = JS::NewZoneInNewZoneGroup;
-    zonePointer_ = nullptr;
-    return *this;
-}
-
-JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptions::setNewZoneInSystemZoneGroup()
-{
-    zoneSpec_ = JS::NewZoneInSystemZoneGroup;
-    zonePointer_ = nullptr;
-    return *this;
-}
-
-JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptions::setNewZoneInExistingZoneGroup(JSObject* obj)
-{
-    zoneSpec_ = JS::NewZoneInExistingZoneGroup;
-    zonePointer_ = obj->zone()->group();
+    zoneSpec_ = JS::NewZone;
+    zone_ = nullptr;
     return *this;
 }
 

@@ -6,7 +6,7 @@ const FIXTURE = [
     "type": "client",
     "lastModified": 1492201200,
     "name": "zcarter's Nightly on MacBook-Pro-25",
-    "isMobile": false,
+    "clientType": "desktop",
     "tabs": [
       {
         "type": "tab",
@@ -23,7 +23,7 @@ const FIXTURE = [
     "type": "client",
     "lastModified": 1492201200,
     "name": "laptop",
-    "isMobile": false,
+    "clientType": "desktop",
     "tabs": [
       {
         "type": "tab",
@@ -57,7 +57,7 @@ const FIXTURE = [
     "type": "client",
     "lastModified": 1492201200,
     "name": "desktop",
-    "isMobile": false,
+    "clientType": "desktop",
     "tabs": []
   }
 ];
