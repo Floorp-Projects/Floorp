@@ -31,21 +31,21 @@ class Session(
     /**
      * Register an observer that gets notified when the session changes.
      */
-    fun register(observer: Observer) {
+    fun register(observer: Observer) = synchronized(observers) {
         observers.add(observer)
     }
 
     /**
      * Unregister an observer.
      */
-    fun unregister(observer: Observer) {
+    fun unregister(observer: Observer) = synchronized(observers) {
         observers.remove(observer)
     }
 
     /**
      * Helper method to notify observers.
      */
-    internal fun notifyObservers(block: Observer.() -> Unit) {
+    internal fun notifyObservers(block: Observer.() -> Unit) = synchronized(observers) {
         observers.forEach { it.block() }
     }
 }
