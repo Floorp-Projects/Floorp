@@ -1317,9 +1317,9 @@ void nsIDocument::SelectorCache::NotifyExpired(SelectorCacheKey* aSelector)
   // There is no guarantee that this method won't be re-entered when selector
   // matching is ongoing because "memory-pressure" could be notified immediately
   // when OOM happens according to the design of nsExpirationTracker.
-  // The perfect solution is to delete the |aSelector| and its nsCSSSelectorList
-  // in mTable asynchronously.
-  // We remove these objects synchronously for now because NotifiyExpired() will
+  // The perfect solution is to delete the |aSelector| and its
+  // RawServoSelectorList in mTable asynchronously.
+  // We remove these objects synchronously for now because NotifyExpired() will
   // never be triggered by "memory-pressure" which is not implemented yet in
   // the stage 2 of mozalloc_handle_oom().
   // Once these objects are removed asynchronously, we should update the warning
