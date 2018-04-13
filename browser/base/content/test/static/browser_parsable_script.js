@@ -9,6 +9,11 @@ const kWhitelist = new Set([
   /browser\/content\/browser\/places\/controller.js$/,
 ]);
 
+const kESModuleList = new Set([
+  /toolkit\/res\/payments\/(components|containers|mixins)\/.*.js$/,
+  /toolkit\/res\/payments\/PaymentsStore.js$/,
+]);
+
 // Normally we would use reflect.jsm to get Reflect.parse. However, if
 // we do that, then all the AST data is allocated in reflect.jsm's
 // zone. That exposes a bug in our GC. The GC collects reflect.jsm's
@@ -36,7 +41,22 @@ function uriIsWhiteListed(uri) {
   return false;
 }
 
-function parsePromise(uri) {
+/**
+ * Check if a URI should be parsed as an ES module.
+ *
+ * @param uri the uri to check against the ES module list
+ * @return true if the uri should be parsed as a module, otherwise parse it as a script.
+ */
+function uriIsESModule(uri) {
+  for (let whitelistItem of kESModuleList) {
+    if (whitelistItem.test(uri.spec)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function parsePromise(uri, parseTarget) {
   let promise = new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", uri, true);
@@ -44,8 +64,12 @@ function parsePromise(uri) {
       if (this.readyState == this.DONE) {
         let scriptText = this.responseText;
         try {
-          info("Checking " + uri);
-          Reflect.parse(scriptText, {source: uri});
+          info(`Checking ${parseTarget} ${uri}`);
+          let parseOpts = {
+            source: uri,
+            target: parseTarget,
+          };
+          Reflect.parse(scriptText, parseOpts);
           resolve(true);
         } catch (ex) {
           let errorMsg = "Script error reading " + uri + ": " + ex;
@@ -118,7 +142,11 @@ add_task(async function checkAllTheJS() {
       info("Not checking whitelisted " + uri.spec);
       return undefined;
     }
-    return parsePromise(uri.spec);
+    let target = "script";
+    if (uriIsESModule(uri)) {
+      target = "module";
+    }
+    return parsePromise(uri.spec, target);
   });
   ok(true, "All files parsed");
 });
