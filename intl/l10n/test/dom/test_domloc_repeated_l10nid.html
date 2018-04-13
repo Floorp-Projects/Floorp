@@ -17,7 +17,7 @@
     mc.addMessages(`
 key1 = Translation For Key 1
 
-key2 = Visit <a data-l10n-name="link">this link<a/>.
+key2 = Visit <a>this link<a/>.
     `);
     yield mc;
   }
@@ -53,11 +53,11 @@ key2 = Visit <a data-l10n-name="link">this link<a/>.
   <h2 id="elem2" data-l10n-id="key1"></h2>
 
   <p id="elem3" data-l10n-id="key2">
-    <a href="http://www.mozilla.org" data-l10n-name="link"></a>
+    <a href="http://www.mozilla.org"></a>
   </p>
 
   <p id="elem4" data-l10n-id="key2">
-    <a href="http://www.firefox.com" data-l10n-name="link"></a>
+    <a href="http://www.firefox.com"></a>
   </p>
 </body>
 </html>
