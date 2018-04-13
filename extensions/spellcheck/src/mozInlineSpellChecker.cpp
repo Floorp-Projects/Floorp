@@ -69,7 +69,6 @@
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIContent.h"
-#include "nsIContentInlines.h"
 #include "nsRange.h"
 #include "nsContentUtils.h"
 #include "nsIObserverService.h"

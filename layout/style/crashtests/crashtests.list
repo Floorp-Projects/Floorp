@@ -271,4 +271,3 @@ load 1439793.html
 load 1409183.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1445682.html
 load 1450691.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1453206.html
