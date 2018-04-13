@@ -19,8 +19,8 @@ function debug(aMsg) {
 }
 
 class GeckoViewContent extends GeckoViewContentModule {
-  register() {
-    debug("register");
+  onEnable() {
+    debug("onEnable");
 
     addEventListener("DOMTitleChanged", this, false);
     addEventListener("DOMWindowFocus", this, false);
@@ -39,8 +39,8 @@ class GeckoViewContent extends GeckoViewContentModule {
                                            this);
   }
 
-  unregister() {
-    debug("unregister");
+  onDisable() {
+    debug("onDisable");
 
     removeEventListener("DOMTitleChanged", this);
     removeEventListener("DOMWindowFocus", this);

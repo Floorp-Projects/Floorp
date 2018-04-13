@@ -189,13 +189,18 @@ add_test(function test_handle_ja_JP_mac() {
   localeService.setRequestedLocales(['ja-JP-mac']);
 
   let reqLocales = localeService.getRequestedLocales();
-  Assert.ok(reqLocales[0] === 'ja-JP-mac');
+  Assert.equal(reqLocales[0], 'ja-JP-macos');
 
   let avLocales = localeService.getAvailableLocales();
-  Assert.ok(avLocales[0] === 'ja-JP-mac');
+  Assert.equal(avLocales[0], 'ja-JP-macos');
 
-  let appLocales = localeService.getAppLocalesAsLangTags();
-  Assert.ok(appLocales[0] === 'ja-JP-mac');
+  let appLocales = localeService.getAppLocalesAsBCP47();
+  Assert.equal(appLocales[0], 'ja-JP-macos');
+
+  let appLocalesAsLT = localeService.getAppLocalesAsLangTags();
+  Assert.equal(appLocalesAsLT[0], 'ja-JP-mac');
+
+  Assert.equal(localeService.getAppLocaleAsLangTag(), "ja-JP-mac");
 
   localeService.setAvailableLocales(bkpAvLocales);
 

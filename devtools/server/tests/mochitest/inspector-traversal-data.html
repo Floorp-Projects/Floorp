@@ -23,8 +23,8 @@
     window.onload = function() {
       // Set up a basic shadow DOM
       let host = document.querySelector("#shadow");
-      if (host.createShadowRoot) {
-        let root = host.createShadowRoot();
+      if (host.attachShadow) {
+        let root = host.attachShadow({ mode: "open" });
 
         let h3 = document.createElement("h3");
         h3.append("Shadow ");

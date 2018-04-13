@@ -128,13 +128,13 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
     return offset;
   }
 
-  register() {
-    debug("register");
+  onEnable() {
+    debug("onEnable");
     addEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
   }
 
-  unregister() {
-    debug("unregister");
+  onDisable() {
+    debug("onDisable");
     removeEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
   }
 

@@ -18,13 +18,13 @@ function debug(aMsg) {
 }
 
 class GeckoViewContent extends GeckoViewModule {
-  init() {
+  onInit() {
     this.eventDispatcher.registerListener(this, [
       "GeckoView:SetActive"
     ]);
   }
 
-  register() {
+  onEnable() {
     this.registerContent("chrome://geckoview/content/GeckoViewContent.js");
 
     this.window.addEventListener("MozDOMFullScreen:Entered", this,
@@ -39,6 +39,18 @@ class GeckoViewContent extends GeckoViewModule {
 
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenExit", this);
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenRequest", this);
+  }
+
+  onDisable() {
+    this.window.removeEventListener("MozDOMFullScreen:Entered", this,
+                                    /* capture */ true);
+    this.window.removeEventListener("MozDOMFullScreen:Exited", this,
+                                    /* capture */ true);
+
+    this.unregisterListener();
+
+    this.messageManager.removeMessageListener("GeckoView:DOMFullscreenExit", this);
+    this.messageManager.removeMessageListener("GeckoView:DOMFullscreenRequest", this);
   }
 
   // Bundle event handler.
@@ -63,16 +75,6 @@ class GeckoViewContent extends GeckoViewModule {
         }
         break;
     }
-  }
-
-  unregister() {
-    this.window.removeEventListener("MozDOMFullScreen:Entered", this,
-                                    /* capture */ true);
-    this.window.removeEventListener("MozDOMFullScreen:Exited", this,
-                                    /* capture */ true);
-
-    this.messageManager.removeMessageListener("GeckoView:DOMFullscreenExit", this);
-    this.messageManager.removeMessageListener("GeckoView:DOMFullscreenRequest", this);
   }
 
   // DOM event handler

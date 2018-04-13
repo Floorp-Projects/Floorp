@@ -25,7 +25,7 @@ function debug(aMsg) {
 }
 
 class GeckoViewRemoteDebugger extends GeckoViewModule {
-  init() {
+  onInit() {
     this._isEnabled = false;
     this._usbDebugger = new USBRemoteDebugger();
   }
@@ -34,13 +34,13 @@ class GeckoViewRemoteDebugger extends GeckoViewModule {
     let enabled = this.settings.useRemoteDebugger;
 
     if (enabled && !this._isEnabled) {
-      this.register();
-    } else if (!enabled) {
-      this.unregister();
+      this.onEnable();
+    } else if (!enabled && this._isEnabled) {
+      this.onDisable();
     }
   }
 
-  register() {
+  onEnable() {
     DebuggerServer.init();
     DebuggerServer.registerAllActors();
     DebuggerServer.registerModule("resource://gre/modules/dbg-browser-actors.js");
@@ -66,7 +66,7 @@ class GeckoViewRemoteDebugger extends GeckoViewModule {
     this._usbDebugger.start(portOrPath);
   }
 
-  unregister() {
+  onDisable() {
     this._isEnabled = false;
     this._usbDebugger.stop();
   }
