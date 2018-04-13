@@ -263,7 +263,7 @@ DocAccessibleChild::SendSelectionEvent(const uint64_t& aID,
 }
 
 bool
-DocAccessibleChild::SendRoleChangedEvent(const uint32_t& aRole)
+DocAccessibleChild::SendRoleChangedEvent(const a11y::role& aRole)
 {
   if (IsConstructedInParentProcess()) {
     return PDocAccessibleChild::SendRoleChangedEvent(aRole);
