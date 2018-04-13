@@ -23,7 +23,7 @@
   <vbox id="passwordSettings">
     <hbox id="savePasswordsBox">
       <checkbox id="savePasswords"
-                data-l10n-id="forms-remember-logins"
+                data-l10n-id="forms-ask-to-save-logins"
                 preference="signon.rememberSignons"
                 onsyncfrompreference="return gPrivacyPane.readSavePasswords();"
                 flex="1" />
