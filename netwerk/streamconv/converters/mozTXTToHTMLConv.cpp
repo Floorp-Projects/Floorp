@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/TextUtils.h"
 #include "mozTXTToHTMLConv.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
@@ -18,9 +17,6 @@
 #include "prtime.h"
 #include "prinrval.h"
 #endif
-
-using mozilla::IsAsciiAlpha;
-using mozilla::IsAsciiDigit;
 
 const double growthRate = 1.2;
 
@@ -223,14 +219,14 @@ mozTXTToHTMLConv::FindURLStart(const char16_t * aInString, int32_t aInLength,
   {
     int32_t i = pos - 1;
     for (; i >= 0 && (
-         IsAsciiAlpha(aInString[uint32_t(i)]) ||
-         IsAsciiDigit(aInString[uint32_t(i)]) ||
+         nsCRT::IsAsciiAlpha(aInString[uint32_t(i)]) ||
+         nsCRT::IsAsciiDigit(aInString[uint32_t(i)]) ||
          aInString[uint32_t(i)] == '+' ||
          aInString[uint32_t(i)] == '-' ||
          aInString[uint32_t(i)] == '.'
          ); i--)
       ;
-    if (++i >= 0 && uint32_t(i) < pos && IsAsciiAlpha(aInString[uint32_t(i)]))
+    if (++i >= 0 && uint32_t(i) < pos && nsCRT::IsAsciiAlpha(aInString[uint32_t(i)]))
     {
       start = uint32_t(i);
       return true;
@@ -261,8 +257,8 @@ mozTXTToHTMLConv::FindURLStart(const char16_t * aInString, int32_t aInLength,
         ++i >= 0 && uint32_t(i) < pos
           &&
           (
-            IsAsciiAlpha(aInString[uint32_t(i)]) ||
-            IsAsciiDigit(aInString[uint32_t(i)])
+            nsCRT::IsAsciiAlpha(aInString[uint32_t(i)]) ||
+            nsCRT::IsAsciiDigit(aInString[uint32_t(i)])
           )
       )
     {
@@ -601,25 +597,25 @@ mozTXTToHTMLConv::ItMatchesDelimited(const char16_t * aInString,
   if
     (
       (before == LT_ALPHA
-        && !IsAsciiAlpha(text0)) ||
+        && !nsCRT::IsAsciiAlpha(text0)) ||
       (before == LT_DIGIT
-        && !IsAsciiDigit(text0)) ||
+        && !nsCRT::IsAsciiDigit(text0)) ||
       (before == LT_DELIMITER
         &&
         (
-          IsAsciiAlpha(text0) ||
-          IsAsciiDigit(text0) ||
+          nsCRT::IsAsciiAlpha(text0) ||
+          nsCRT::IsAsciiDigit(text0) ||
           text0 == *rep
         )) ||
       (after == LT_ALPHA
-        && !IsAsciiAlpha(textAfterPos)) ||
+        && !nsCRT::IsAsciiAlpha(textAfterPos)) ||
       (after == LT_DIGIT
-        && !IsAsciiDigit(textAfterPos)) ||
+        && !nsCRT::IsAsciiDigit(textAfterPos)) ||
       (after == LT_DELIMITER
         &&
         (
-          IsAsciiAlpha(textAfterPos) ||
-          IsAsciiDigit(textAfterPos) ||
+          nsCRT::IsAsciiAlpha(textAfterPos) ||
+          nsCRT::IsAsciiDigit(textAfterPos) ||
           textAfterPos == *rep
         )) ||
         !Substring(Substring(aInString, aInString+aInLength),
@@ -948,13 +944,13 @@ mozTXTToHTMLConv::GlyphHit(const char16_t * aInString, int32_t aInLength, bool c
       text1 == '^'
       &&
       (
-        IsAsciiDigit(text0) || IsAsciiAlpha(text0) ||
+        nsCRT::IsAsciiDigit(text0) || nsCRT::IsAsciiAlpha(text0) ||
         text0 == ')' || text0 == ']' || text0 == '}'
       )
       &&
       (
-        (2 < aInLength && IsAsciiDigit(aInString[2])) ||
-        (3 < aInLength && aInString[2] == '-' && IsAsciiDigit(aInString[3]))
+        (2 < aInLength && nsCRT::IsAsciiDigit(aInString[2])) ||
+        (3 < aInLength && aInString[2] == '-' && nsCRT::IsAsciiDigit(aInString[3]))
       )
     )
   {
@@ -963,14 +959,14 @@ mozTXTToHTMLConv::GlyphHit(const char16_t * aInString, int32_t aInLength, bool c
     for (; delimPos < aInLength
            &&
            (
-             IsAsciiDigit(aInString[delimPos]) ||
+             nsCRT::IsAsciiDigit(aInString[delimPos]) ||
              (aInString[delimPos] == '.' && delimPos + 1 < aInLength &&
-               IsAsciiDigit(aInString[delimPos + 1]))
+               nsCRT::IsAsciiDigit(aInString[delimPos + 1]))
            );
          delimPos++)
       ;
 
-    if (delimPos < aInLength && IsAsciiAlpha(aInString[delimPos]))
+    if (delimPos < aInLength && nsCRT::IsAsciiAlpha(aInString[delimPos]))
     {
       return false;
     }
@@ -1052,7 +1048,7 @@ mozTXTToHTMLConv::CiteLevelTXT(const char16_t *line,
 #ifdef QUOTE_RECOGNITION_AGGRESSIVE
     for (; int32_t(i) < lineLength && IsSpace(line[i]); i++)
       ;
-    for (; int32_t(i) < lineLength && IsAsciiAlpha(line[i])
+    for (; int32_t(i) < lineLength && nsCRT::IsAsciiAlpha(line[i])
                                    && nsCRT::IsUpper(line[i])   ; i++)
       ;
     if (int32_t(i) < lineLength && (line[i] == '>' || line[i] == ']'))

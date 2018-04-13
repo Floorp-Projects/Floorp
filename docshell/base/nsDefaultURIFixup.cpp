@@ -7,6 +7,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
+#include "nsCRT.h"
 
 #include "nsIFile.h"
 #include <algorithm>
@@ -22,7 +23,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/TextUtils.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/Unused.h"
 #include "nsIObserverService.h"
@@ -746,8 +746,8 @@ nsDefaultURIFixup::PossiblyHostPortUrl(const nsACString& aUrl)
     // Parse a chunk of the address
     while (iter != iterEnd &&
            (*iter == '-' ||
-            IsAsciiAlpha(*iter) ||
-            IsAsciiDigit(*iter))) {
+            nsCRT::IsAsciiAlpha(*iter) ||
+            nsCRT::IsAsciiDigit(*iter))) {
       ++chunkSize;
       ++iter;
     }
@@ -775,7 +775,7 @@ nsDefaultURIFixup::PossiblyHostPortUrl(const nsACString& aUrl)
 
   uint32_t digitCount = 0;
   while (iter != iterEnd && digitCount <= 5) {
-    if (IsAsciiDigit(*iter)) {
+    if (nsCRT::IsAsciiDigit(*iter)) {
       digitCount++;
     } else if (*iter == '/') {
       break;
@@ -854,7 +854,7 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
              *iter == ']' ||
              (*iter >= 'a' && *iter <= 'f') ||
              (*iter >= 'A' && *iter <= 'F') ||
-             IsAsciiDigit(*iter)))) {
+             nsCRT::IsAsciiDigit(*iter)))) {
         looksLikeIpv6 = false;
       }
     }
@@ -900,9 +900,9 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
       foundRSBrackets++;
     } else if (*iter == '/') {
       lastSlashLoc = pos;
-    } else if (IsAsciiAlpha(*iter)) {
+    } else if (nsCRT::IsAsciiAlpha(*iter)) {
       hasAsciiAlpha = true;
-    } else if (IsAsciiDigit(*iter)) {
+    } else if (nsCRT::IsAsciiDigit(*iter)) {
       ++foundDigits;
     }
 

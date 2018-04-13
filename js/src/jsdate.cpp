@@ -21,7 +21,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/TextUtils.h"
 
 #include <ctype.h>
 #include <math.h>
@@ -51,7 +50,6 @@ using namespace js;
 
 using mozilla::Atomic;
 using mozilla::ArrayLength;
-using mozilla::IsAsciiAlpha;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
 using mozilla::NumbersAreIdentical;
@@ -1124,7 +1122,7 @@ ParseDate(const CharT* s, size_t length, ClippedTime* result)
             size_t st = i - 1;
             while (i < length) {
                 c = s[i];
-                if (!IsAsciiAlpha(c))
+                if (!(('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')))
                     break;
                 i++;
             }

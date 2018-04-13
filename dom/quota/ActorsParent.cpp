@@ -43,7 +43,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/TextUtils.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 #include "mozStorageCID.h"
@@ -8334,7 +8333,7 @@ OriginParser::HandleToken(const nsDependentCSubstring& aToken)
         return;
       }
 
-      if (IsAsciiDigit(aToken.First())) {
+      if (NS_IsAsciiDigit(aToken.First())) {
         // nsDependentCSubstring doesn't provice ToInteger()
         nsCString token(aToken);
 
@@ -8495,7 +8494,7 @@ OriginParser::HandleToken(const nsDependentCSubstring& aToken)
         return;
       }
 
-      if (aToken.Length() == 1 && IsAsciiAlpha(aToken.First())) {
+      if (aToken.Length() == 1 && NS_IsAsciiAlpha(aToken.First())) {
         mMaybeDriveLetter = true;
 
         mPathnameComponents.AppendElement(aToken);

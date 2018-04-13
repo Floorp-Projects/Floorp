@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/TextUtils.h"
 
 #include "nspr.h"
 
@@ -31,6 +30,7 @@
 #include "nsEscape.h"
 #include "nsUnicharUtils.h"
 #include "nsIStringEnumerator.h"
+#include "nsCRT.h"
 #include "nsContentCID.h"
 #include "nsStreamUtils.h"
 
@@ -2142,7 +2142,7 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
             for (;*p && *p != ';' && *p != '?' && *p != '#' && *p != '.'
                  ;p++)
             {
-                if (IsAsciiAlpha(*p) || IsAsciiDigit(*p)
+                if (nsCRT::IsAsciiAlpha(*p) || nsCRT::IsAsciiDigit(*p)
                     || *p == '.' || *p == '-' ||  *p == '_' || (*p == ' '))
                 {
                     fileName.Append(char16_t(*p));

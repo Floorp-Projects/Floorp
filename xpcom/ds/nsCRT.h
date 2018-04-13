@@ -96,6 +96,8 @@ public:
 
   static bool IsAscii(char16_t aChar) { return NS_IsAscii(aChar); }
   static bool IsAscii(const char16_t* aString) { return NS_IsAscii(aString); }
+  static bool IsAsciiAlpha(char16_t aChar) { return NS_IsAsciiAlpha(aChar); }
+  static bool IsAsciiDigit(char16_t aChar) { return NS_IsAsciiDigit(aChar); }
   static bool IsAsciiSpace(char16_t aChar) { return NS_IsAsciiWhitespace(aChar); }
   static bool IsAscii(const char* aString) { return NS_IsAscii(aString); }
   static bool IsAscii(const char* aString, uint32_t aLength)
