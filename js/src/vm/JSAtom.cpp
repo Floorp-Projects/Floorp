@@ -132,10 +132,6 @@ JS_FOR_EACH_PROTOTYPE(DEFINE_PROTO_STRING)
 FOR_EACH_COMMON_PROPERTYNAME(CONST_CHAR_STR)
 #undef CONST_CHAR_STR
 
-/* Constant strings that are not atomized. */
-const char js_getter_str[]          = "getter";
-const char js_setter_str[]          = "setter";
-
 // Use a low initial capacity for atom hash tables to avoid penalizing runtimes
 // which create a small number of atoms.
 static const uint32_t JS_STRING_HASH_COUNT = 64;
