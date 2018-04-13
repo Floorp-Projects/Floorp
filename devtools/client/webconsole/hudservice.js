@@ -11,7 +11,6 @@ loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/targe
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
-loader.lazyRequireGetter(this, "WebConsoleFrame", "devtools/client/webconsole/old/webconsole", true);
 loader.lazyRequireGetter(this, "NewWebConsoleFrame", "devtools/client/webconsole/new-webconsole", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
@@ -193,10 +192,6 @@ HUD_SERVICE.prototype =
 
       win.document.title = l10n.getStr("browserConsole.title");
 
-      if (browserConsoleURL === Tools.webConsole.oldWebConsoleURL) {
-        return {iframeWindow: win, chromeWindow: win};
-      }
-
       let iframe = win.document.querySelector("iframe");
       await new Promise(resolve => {
         iframe.addEventListener("DOMContentLoaded", resolve, {once: true});
@@ -273,11 +268,7 @@ function WebConsole(target, iframeWindow, chromeWindow) {
   if (element.getAttribute("windowtype") != gDevTools.chromeWindowType) {
     this.browserWindow = HUDService.currentContext();
   }
-  if (iframeWindow.location.href === Tools.webConsole.newWebConsoleURL) {
-    this.ui = new NewWebConsoleFrame(this);
-  } else {
-    this.ui = new WebConsoleFrame(this);
-  }
+  this.ui = new NewWebConsoleFrame(this);
 }
 WebConsole.prototype = {
   iframeWindow: null,

@@ -442,7 +442,7 @@
   <hbox align="center">
     <vbox flex="1">
       <description id="updateAppInfo">
-        <html:a id="releasenotes" class="learnMore text-link" hidden="true"/>
+        <html:a id="releasenotes" data-l10n-name="learn-more" class="learnMore text-link" hidden="true"/>
       </description>
       <description id="distribution" class="text-blurb" hidden="true"/>
       <description id="distributionId" class="text-blurb" hidden="true"/>
@@ -615,8 +615,8 @@
       </menulist>
     </hbox>
     <description id="contentProcessCountEnabledDescription" class="tip-caption" data-l10n-id="performance-limit-content-process-enabled-desc"/>
-    <description id="contentProcessCountDisabledDescription" class="tip-caption" data-l10n-id="performance-limit-content-process-disabled-desc">
-      <html:a class="text-link" href="https://wiki.mozilla.org/Electrolysis"/>
+    <description id="contentProcessCountDisabledDescription" class="tip-caption" data-l10n-id="performance-limit-content-process-blocked-desc">
+      <html:a class="text-link" data-l10n-name="learn-more" href="https://wiki.mozilla.org/Electrolysis"/>
     </description>
   </vbox>
 </groupbox>

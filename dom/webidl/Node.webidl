@@ -192,9 +192,9 @@ interface Node : EventTarget {
    *       },
    *     ]
    * [2] trans == [
-   *       {value: "Key 1", attrs: {accesskey: "K"} },
+   *       {value: "Key 1", attributes: {accesskey: "K"} },
    *       undefined,
-   *       {value: null, attrs: {title: "Unread emails: 5"} },
+   *       {value: null, attributes: {title: "Unread emails: 5"} },
    *     ]
    * [3] untranslatedElements == [
    *       ,

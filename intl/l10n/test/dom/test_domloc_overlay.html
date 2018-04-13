@@ -15,7 +15,7 @@
   async function* mockGenerateMessages(locales, resourceIds) {
     const mc = new MessageContext(locales);
     mc.addMessages("title = <strong>Hello</strong> World");
-    mc.addMessages("title2 = This is <a>a link</a>!");
+    mc.addMessages(`title2 = This is <a data-l10n-name="link">a link</a>!`);
     yield mc;
   }
 
@@ -50,7 +50,7 @@
 <body>
   <p data-l10n-id="title" />
   <p data-l10n-id="title2">
-    <a href="http://www.mozilla.org"></a>
+    <a href="http://www.mozilla.org" data-l10n-name="link"></a>
   </p>
 </body>
 </html>

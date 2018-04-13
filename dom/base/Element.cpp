@@ -1219,18 +1219,6 @@ Element::AttachShadow(const ShadowRootInit& aInit, ErrorResult& aError)
     return nullptr;
   }
 
-  return AttachShadowInternal(aInit.mMode, aError);
-}
-
-already_AddRefed<ShadowRoot>
-Element::CreateShadowRoot(ErrorResult& aError)
-{
-  return AttachShadowInternal(ShadowRootMode::Open, aError);
-}
-
-already_AddRefed<ShadowRoot>
-Element::AttachShadowInternal(ShadowRootMode aMode, ErrorResult& aError)
-{
   /**
    * 3. If context object is a shadow host, then throw
    *    an "InvalidStateError" DOMException.
@@ -1260,7 +1248,7 @@ Element::AttachShadowInternal(ShadowRootMode aMode, ErrorResult& aError)
    *    and mode is init’s mode.
    */
   RefPtr<ShadowRoot> shadowRoot =
-    new ShadowRoot(this, aMode, nodeInfo.forget());
+    new ShadowRoot(this, aInit.mMode, nodeInfo.forget());
 
   shadowRoot->SetIsComposedDocParticipant(IsInComposedDoc());
 

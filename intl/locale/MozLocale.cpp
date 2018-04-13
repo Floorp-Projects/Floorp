@@ -83,11 +83,7 @@ Locale::Locale(const nsACString& aLocale)
       mRegion = subTag;
       ToUpperCase(mRegion);
       position = 4;
-    } else if (position <= 4 && slen >= 3 && slen <= 8) {
-      // we're quirky here because we allow for variant to be 3 char long.
-      // BCP47 requires variants to be 5-8 char long at lest.
-      //
-      // We do this to support the `ja-JP-mac` quirk that we have.
+    } else if (position <= 4 && slen >= 5 && slen <= 8) {
       nsAutoCString lcSubTag(subTag);
       ToLowerCase(lcSubTag);
       mVariants.InsertElementSorted(lcSubTag);
