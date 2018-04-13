@@ -34,9 +34,7 @@ const STATUS_CODES_GA_PARAMS = `?${new URLSearchParams({
 
 const wcActions = require("devtools/client/webconsole/actions/index");
 
-Services.prefs.setBoolPref("devtools.browserconsole.new-frontend-enabled", true);
 registerCleanupFunction(async function() {
-  Services.prefs.clearUserPref("devtools.browserconsole.new-frontend-enabled");
   Services.prefs.clearUserPref("devtools.webconsole.ui.filterbar");
 
   // Reset all filter prefs between tests. First flushPrefEnv in case one of the
