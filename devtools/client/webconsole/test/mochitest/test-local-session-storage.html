@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>localStorage and sessionStorage Test</title>
+
+  <script>
+    "use strict";
+
+    /* eslint-disable no-unused-vars */
+
+    function init() {
+      // We use the value key to ensure we cover an issue with iterating through
+      // storage entries... please leave this key as "key"
+      localStorage.setItem("key", "value1");
+      localStorage.setItem("key2", "value2");
+
+      // We use the value key to ensure we cover an issue with iterating through
+      // storage entries... please leave this key as "key"
+      sessionStorage.setItem("key", "value3");
+      sessionStorage.setItem("key2", "value4");
+    }
+  </script>
+</head>
+<body onload="init()">
+  <h1>localStorage and sessionStorage Test</h1>
+</body>
+</html>
