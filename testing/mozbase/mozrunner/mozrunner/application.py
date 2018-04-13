@@ -20,10 +20,13 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 
 def get_app_context(appname):
-    context_map = {'default': DefaultContext,
-                   'firefox': FirefoxContext,
-                   'thunderbird': ThunderbirdContext,
-                   'fennec': FennecContext}
+    context_map = {
+        'chrome': ChromeContext,
+        'default': DefaultContext,
+        'fennec': FennecContext,
+        'firefox': FirefoxContext,
+        'thunderbird': ThunderbirdContext,
+    }
     if appname not in context_map:
         raise KeyError("Application '%s' not supported!" % appname)
     return context_map[appname]
@@ -131,3 +134,11 @@ class FirefoxContext(object):
 
 class ThunderbirdContext(object):
     profile_class = ThunderbirdProfile
+
+
+class ChromeProfile(object):
+    """Dummy profile class until a proper one is implemented in mozprofile"""
+
+
+class ChromeContext(object):
+    profile_class = ChromeProfile

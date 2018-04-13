@@ -11,7 +11,7 @@ used Mozilla applications, such as Firefox, Firefox for Android or Thunderbird.
 from __future__ import absolute_import
 
 from .application import get_app_context
-from .base import GeckoRuntimeRunner, FennecRunner
+from .base import GeckoRuntimeRunner, FennecRunner, BlinkRuntimeRunner
 from .devices import EmulatorAVD
 
 
@@ -74,6 +74,17 @@ def ThunderbirdRunner(*args, **kwargs):
     return GeckoRuntimeRunner(*args, **kwargs)
 
 
+def ChromeRunner(*args, **kwargs):
+    """
+    Create a desktop Google Chrome runner.
+
+    :param binary: Path to Chrome binary.
+    :param cmdargs: Arguments to pass into the binary.
+    """
+    kwargs['app_ctx'] = get_app_context('chrome')()
+    return BlinkRuntimeRunner(*args, **kwargs)
+
+
 def FennecEmulatorRunner(avd='mozemulator-4.3',
                          adb_path=None,
                          avd_home=None,
@@ -113,8 +124,9 @@ def FennecEmulatorRunner(avd='mozemulator-4.3',
 
 
 runners = {
+    'chrome': ChromeRunner,
     'default': Runner,
     'firefox': FirefoxRunner,
+    'fennec': FennecEmulatorRunner,
     'thunderbird': ThunderbirdRunner,
-    'fennec': FennecEmulatorRunner
 }

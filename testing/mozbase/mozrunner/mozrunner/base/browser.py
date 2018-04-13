@@ -77,3 +77,19 @@ class GeckoRuntimeRunner(BaseRunner):
             self.env["MOZ_CRASHREPORTER"] = "1"
 
         BaseRunner.start(self, *args, **kwargs)
+
+
+class BlinkRuntimeRunner(BaseRunner):
+    """A base runner class for running apps like Google Chrome or Chromium."""
+    def __init__(self, binary, cmdargs=None, **runner_args):
+        super(BlinkRuntimeRunner, self).__init__(**runner_args)
+        self.binary = binary
+        self.cmdargs = cmdargs or []
+
+    @property
+    def command(self):
+        cmd = self.cmdargs[:]
+        return [self.binary] + cmd
+
+    def check_for_crashes(self, *args, **kwargs):
+        raise NotImplementedError

@@ -153,6 +153,12 @@ GeckoRuntimeRunner
    :show-inheritance:
    :members:
 
+BlinkRuntimeRunner
+~~~~~~~~~~~~~~~~~~
+.. autoclass:: mozrunner.base.BlinkRuntimeRunner
+   :show-inheritance:
+   :members:
+
 DeviceRunner
 ~~~~~~~~~~~~
 .. autoclass:: mozrunner.base.DeviceRunner
