@@ -1,0 +1,4 @@
+
+### Building
+
+* `ember build`

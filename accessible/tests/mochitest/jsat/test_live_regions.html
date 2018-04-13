@@ -14,13 +14,13 @@
   <script type="application/javascript">
 
     function startAccessFu() {
-      SpecialPowers.pushPrefEnv({"set": [["accessibility.accessfu.activate", 1]]});
       AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
+      AccessFu._enable();
     }
 
     function stopAccessFu() {
-      SpecialPowers.pushPrefEnv({"set": [["accessibility.accessfu.activate", 0]]});
       AccessFuTest.once_log("EventManager.stop", () => AccessFuTest.finish());
+      AccessFu._disable();
     }
 
     function hide(id) {

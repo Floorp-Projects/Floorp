@@ -27,8 +27,8 @@ ChromeUtils.defineModuleGetter(this, "AddonSettings",
                                "resource://gre/modules/addons/AddonSettings.jsm");
 ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyGetter(this, "CertUtils",
-                            () => ChromeUtils.import("resource://gre/modules/CertUtils.jsm", {}));
+ChromeUtils.defineModuleGetter(this, "CertUtils",
+                               "resource://gre/modules/CertUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionData",
                                "resource://gre/modules/Extension.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",

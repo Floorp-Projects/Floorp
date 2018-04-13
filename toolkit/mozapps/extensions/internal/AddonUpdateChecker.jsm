@@ -25,18 +25,12 @@ ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonRepository",
                                "resource://gre/modules/addons/AddonRepository.jsm");
+ChromeUtils.defineModuleGetter(this, "CertUtils",
+                               "resource://gre/modules/CertUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
                                "resource://gre/modules/ServiceRequest.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateRDFConverter",
                                "resource://gre/modules/addons/UpdateRDFConverter.jsm");
-
-
-// Shared code for suppressing bad cert dialogs.
-XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
-  let certUtils = {};
-  ChromeUtils.import("resource://gre/modules/CertUtils.jsm", certUtils);
-  return certUtils;
-});
 
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.update-checker";
