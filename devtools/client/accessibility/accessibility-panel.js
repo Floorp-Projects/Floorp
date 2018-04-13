@@ -40,6 +40,7 @@ function AccessibilityPanel(iframeWindow, toolbox) {
     this.onAccessibilityInspectorUpdated.bind(this);
   this.updateA11YServiceDurationTimer = this.updateA11YServiceDurationTimer.bind(this);
   this.updatePickerButton = this.updatePickerButton.bind(this);
+  this.updateToolboxButtons = this.updateToolboxButtons.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -130,11 +131,11 @@ AccessibilityPanel.prototype = {
     this.cancelPicker();
 
     if (this.isVisible) {
-      this._front.on("init", this.updatePickerButton);
-      this._front.on("shutdown", this.updatePickerButton);
+      this._front.on("init", this.updateToolboxButtons);
+      this._front.on("shutdown", this.updateToolboxButtons);
     } else {
-      this._front.off("init", this.updatePickerButton);
-      this._front.off("shutdown", this.updatePickerButton);
+      this._front.off("init", this.updateToolboxButtons);
+      this._front.off("shutdown", this.updateToolboxButtons);
       // Do not refresh if the panel isn't visible.
       return;
     }
@@ -181,6 +182,10 @@ AccessibilityPanel.prototype = {
     });
 
     this.panelWin.dispatchEvent(event);
+  },
+
+  updateToolboxButtons() {
+    this._toolbox.updatePickerButton();
   },
 
   updatePickerButton() {
