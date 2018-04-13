@@ -585,9 +585,9 @@ privacy-header = Browser Privacy
 ## Privacy Section - Forms
 
 forms-header = Forms & Passwords
-forms-remember-logins =
-    .label = Remember logins and passwords for websites
-    .accesskey = R
+forms-ask-to-save-logins =
+    .label = Ask to save logins and passwords for websites
+    .accesskey = r
 forms-exceptions =
     .label = Exceptions…
     .accesskey = x

@@ -440,6 +440,9 @@ UNIFIED_SOURCES += [
 # StoreBuffer.cpp cannot be built in unified because its template
 #   instantiations may or may not be needed depending on what it gets bundled
 #   with.
+# perf/ProfilingStack.cpp cannot be built in unified mode because we want to
+#   suppress warnings due to usage of the system allocator, and this allows it
+#   to have a deterministic object name.
 # util/DoubleToString.cpp cannot be built in unified mode because we want to
 #   suppress compiler warnings in third-party dtoa.c.
 # vm/Interpreter.cpp is gigantic and destroys incremental build times for any
@@ -454,6 +457,7 @@ SOURCES += [
     'util/DoubleToString.cpp',
     'vm/Interpreter.cpp',
     'vm/JSAtom.cpp',
+    'vm/ProfilingStack.cpp',
 ]
 
 if CONFIG['JS_POSIX_NSPR']:

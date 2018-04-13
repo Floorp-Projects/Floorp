@@ -85,12 +85,6 @@ let propNameWhitelist = [
   // Bug 1441837
   {propName: "--in-content-category-text-active",
    isFromDevTools: false},
-  // Bug 1441855
-  {propName: "--chrome-nav-buttons-background",
-   isFromDevTools: false},
-  // Bug 1441855
-  {propName: "--chrome-nav-buttons-hover-background",
-   isFromDevTools: false},
   // Bug 1441929
   {propName: "--theme-search-overlays-semitransparent",
    isFromDevTools: true},

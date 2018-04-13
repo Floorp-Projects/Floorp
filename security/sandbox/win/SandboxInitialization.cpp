@@ -106,6 +106,9 @@ InitializeHandleVerifier()
 static sandbox::TargetServices*
 InitializeTargetServices()
 {
+  // This might disable the verifier, so we want to do it before it is used.
+  InitializeHandleVerifier();
+
   sandbox::TargetServices* targetServices =
     sandbox::SandboxFactory::GetTargetServices();
   if (!targetServices) {
@@ -115,8 +118,6 @@ InitializeTargetServices()
   if (targetServices->Init() != sandbox::SBOX_ALL_OK) {
     return nullptr;
   }
-
-  InitializeHandleVerifier();
 
   return targetServices;
 }
@@ -139,6 +140,9 @@ LowerSandbox()
 static sandbox::BrokerServices*
 InitializeBrokerServices()
 {
+  // This might disable the verifier, so we want to do it before it is used.
+  InitializeHandleVerifier();
+
   sandbox::BrokerServices* brokerServices =
     sandbox::SandboxFactory::GetBrokerServices();
   if (!brokerServices) {
@@ -157,8 +161,6 @@ InitializeBrokerServices()
   // will be broken. This has to run before threads and windows are created.
   scoped_refptr<sandbox::TargetPolicy> policy = brokerServices->CreatePolicy();
   sandbox::ResultCode result = policy->CreateAlternateDesktop(true);
-
-  InitializeHandleVerifier();
 
   return brokerServices;
 }

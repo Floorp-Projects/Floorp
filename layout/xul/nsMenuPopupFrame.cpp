@@ -56,11 +56,9 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
-#include "mozilla/dom/PopupBoxObject.h"
 #include <algorithm>
 
 using namespace mozilla;
-using mozilla::dom::PopupBoxObject;
 using mozilla::dom::KeyboardEvent;
 
 int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
@@ -109,7 +107,6 @@ nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle)
   , mPopupAlignment(POPUPALIGNMENT_NONE)
   , mPopupAnchor(POPUPALIGNMENT_NONE)
   , mPosition(POPUPPOSITION_UNKNOWN)
-  , mConsumeRollupEvent(PopupBoxObject::ROLLUP_DEFAULT)
   , mFlip(FlipType_Default)
   , mIsOpenChanged(false)
   , mIsContextMenu(false)
@@ -1812,12 +1809,6 @@ void nsMenuPopupFrame::CanAdjustEdges(Side aHorizontalSide,
 
 ConsumeOutsideClicksResult nsMenuPopupFrame::ConsumeOutsideClicks()
 {
-  // If the popup has explicitly set a consume mode, honor that.
-  if (mConsumeRollupEvent != PopupBoxObject::ROLLUP_DEFAULT) {
-    return (mConsumeRollupEvent == PopupBoxObject::ROLLUP_CONSUME) ?
-           ConsumeOutsideClicks_True : ConsumeOutsideClicks_ParentOnly;
-  }
-
   if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
                                          nsGkAtoms::consumeoutsideclicks,
                                          nsGkAtoms::_true, eCaseMatters)) {
@@ -2275,12 +2266,6 @@ nsMenuPopupFrame::GetWidget()
   return view->GetWidget();
 }
 
-void
-nsMenuPopupFrame::AttachedDismissalListener()
-{
-  mConsumeRollupEvent = PopupBoxObject::ROLLUP_DEFAULT;
-}
-
 // helpers /////////////////////////////////////////////////////////////
 
 nsresult
@@ -2456,12 +2441,6 @@ nsMenuPopupFrame::SetAutoPosition(bool aShouldAutoPosition)
   if (pm) {
     pm->UpdateFollowAnchor(this);
   }
-}
-
-void
-nsMenuPopupFrame::SetConsumeRollupEvent(uint32_t aConsumeMode)
-{
-  mConsumeRollupEvent = aConsumeMode;
 }
 
 int8_t
