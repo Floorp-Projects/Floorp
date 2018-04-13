@@ -475,6 +475,12 @@
      {}
     ]
    ],
+   "editor/joining_nodes.html": [
+    [
+     "/_mozilla/editor/joining_nodes.html",
+     {}
+    ]
+   ],
    "fetch/api/redirect/redirect-referrer.https.html": [
     [
      "/_mozilla/fetch/api/redirect/redirect-referrer.https.html",
@@ -1030,6 +1036,10 @@
   ],
   "editor/initial_selection_on_focus.html": [
    "06948dbf72160a7de5a0baaa2f6cf1bb54fbeb8f",
+   "testharness"
+  ],
+  "editor/joining_nodes.html": [
+   "048cf7d99acdecb927f97c4554c4d04ca8b15a8a",
    "testharness"
   ],
   "fetch/api/redirect/redirect-referrer-mixed-content.js": [
