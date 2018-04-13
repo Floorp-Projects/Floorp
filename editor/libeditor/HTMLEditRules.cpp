@@ -3902,8 +3902,11 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
             return NS_ERROR_FAILURE;
           }
         } else {
-          listItem = htmlEditor->InsertContainerAbove(curNode, itemType);
-          NS_ENSURE_STATE(listItem);
+          listItem =
+            htmlEditor->InsertContainerWithTransaction(*curNode, *itemType);
+          if (NS_WARN_IF(!listItem)) {
+            return NS_ERROR_FAILURE;
+          }
         }
         if (IsInlineNode(curNode)) {
           prevListItem = listItem;

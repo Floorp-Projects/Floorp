@@ -4547,9 +4547,12 @@ HTMLEditor::CopyLastEditableChildStyles(nsINode* aPreviousBlock,
     if (HTMLEditUtils::IsInlineStyle(childElement) ||
         childElement->IsHTMLElement(nsGkAtoms::span)) {
       if (newStyles) {
-        newStyles = InsertContainerAbove(newStyles,
-                                         childElement->NodeInfo()->NameAtom());
-        NS_ENSURE_STATE(newStyles);
+        newStyles =
+          InsertContainerWithTransaction(*newStyles,
+                                         *childElement->NodeInfo()->NameAtom());
+        if (NS_WARN_IF(!newStyles)) {
+          return NS_ERROR_FAILURE;
+        }
       } else {
         EditorRawDOMPoint atStartOfNewBlock(newBlock, 0);
         deepestStyle = newStyles =
