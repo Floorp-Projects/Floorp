@@ -350,12 +350,12 @@ function sanitizeTranslationForNodeLocalize(l10nItem, translation) {
     return false;
   }
 
-  if (translation.attrs) {
+  if (translation.attributes) {
     const explicitlyAllowed = l10nItem.l10nAttrs === null ? null :
       l10nItem.l10nAttrs.split(",").map(i => i.trim());
-    for (const [j, {name}] of translation.attrs.entries()) {
+    for (const [j, {name}] of translation.attributes.entries()) {
       if (!isAttrNameLocalizable(name, l10nItem, explicitlyAllowed)) {
-        translation.attrs.splice(j, 1);
+        translation.attributes.splice(j, 1);
       }
     }
   }
@@ -636,6 +636,8 @@ class DOMLocalization extends Localization {
             // We will translate it below using JS DOM Overlays.
             overlayTranslations[i] = translations[i];
             translations[i] = undefined;
+          } else {
+            translations[i].attrs = translations[i].attributes;
           }
         }
 
