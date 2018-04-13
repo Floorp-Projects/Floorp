@@ -79,7 +79,7 @@ const performanceSpec = generateActorSpec({
 
     setProfilerStatusInterval: {
       request: { interval: Arg(0, "number") },
-      response: { oneway: true }
+      oneway: true
     },
   }
 });

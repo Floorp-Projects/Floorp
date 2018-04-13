@@ -76,6 +76,7 @@ Memory.prototype = {
     this.dbg.addDebuggees();
     this.dbg.memory.onGarbageCollection = this._onGarbageCollection.bind(this);
     this.state = "attached";
+    return this.state;
   }, "attaching to the debugger"),
 
   /**
@@ -86,6 +87,7 @@ Memory.prototype = {
     this.dbg.enabled = false;
     this._dbg = null;
     this.state = "detached";
+    return this.state;
   }, "detaching from the debugger"),
 
   /**
