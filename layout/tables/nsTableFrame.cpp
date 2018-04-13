@@ -4562,15 +4562,13 @@ struct BCMapCellInfo
 
 };
 
+
 BCMapCellInfo::BCMapCellInfo(nsTableFrame* aTableFrame)
   : mTableFrame(aTableFrame)
   , mNumTableRows(aTableFrame->GetRowCount())
   , mNumTableCols(aTableFrame->GetColCount())
   , mTableBCData(mTableFrame->GetProperty(TableBCProperty()))
   , mTableWM(aTableFrame->Style())
-  , mCurrentRowFrame{ nullptr }
-  , mCurrentColGroupFrame{ nullptr }
-  , mCurrentColFrame{ nullptr }
 {
   ResetCellInfo();
 }
@@ -4655,13 +4653,7 @@ private:
 
 BCMapCellIterator::BCMapCellIterator(nsTableFrame* aTableFrame,
                                      const TableArea& aDamageArea)
-  : mRowGroupStart{}
-  , mRowGroupEnd{}
-  , mCellMap{ nullptr }
-  , mTableFrame(aTableFrame)
-  , mRowGroup{ nullptr }
-  , mPrevRow{ nullptr }
-  , mIsNewRow{ false }
+  : mTableFrame(aTableFrame)
 {
   mTableCellMap  = aTableFrame->GetCellMap();
 
@@ -5283,16 +5275,9 @@ Perpendicular(mozilla::LogicalSide aSide1,
 // XXX allocate this as number-of-cols+1 instead of number-of-cols+1 * number-of-rows+1
 struct BCCornerInfo
 {
-  BCCornerInfo()
-    : unused{}
-  {
-    ownerColor = 0;
-    ownerWidth = subWidth = ownerElem = subSide = subElem = hasDashDot =
-      numSegs = bevel = 0;
-    ownerSide = eLogicalSideBStart;
-    ownerStyle = 0xFF;
-    subStyle = NS_STYLE_BORDER_STYLE_SOLID;
-  }
+  BCCornerInfo() { ownerColor = 0; ownerWidth = subWidth = ownerElem = subSide =
+                   subElem = hasDashDot = numSegs = bevel = 0; ownerSide = eLogicalSideBStart;
+                   ownerStyle = 0xFF; subStyle = NS_STYLE_BORDER_STYLE_SOLID;  }
   void Set(mozilla::LogicalSide aSide,
            BCCellBorder  border);
 
@@ -6805,36 +6790,13 @@ private:
 
 };
 
+
+
 BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
   : mTable(aTable)
   , mTableFirstInFlow(static_cast<nsTableFrame*>(aTable->FirstInFlow()))
   , mTableCellMap(aTable->GetCellMap())
-  , mCellMap{ nullptr }
   , mTableWM(aTable->Style())
-  , mPrevRg{ nullptr }
-  , mRg{ nullptr }
-  , mIsRepeatedHeader{ false }
-  , mIsRepeatedFooter{ false }
-  , mStartRg{ nullptr }
-  , mRgIndex{}
-  , mFifRgFirstRowIndex{}
-  , mRgFirstRowIndex{}
-  , mRgLastRowIndex{}
-  , mColIndex{}
-  , mRowIndex{}
-  , mIsNewRow{ false }
-  , mAtEnd{ false }
-  , mPrevRow{ nullptr }
-  , mRow{ nullptr }
-  , mStartRow{ nullptr }
-  , mPrevCell{ nullptr }
-  , mCell{ nullptr }
-  , mPrevCellData{ nullptr }
-  , mCellData{ nullptr }
-  , mBCData{ nullptr }
-  , mInitialOffsetI{}
-  , mNextOffsetB{}
-  , mPrevInlineSegBSize{}
 {
   mBlockDirInfo    = nullptr;
   LogicalMargin childAreaOffset = mTable->GetChildAreaOffset(mTableWM, nullptr);
@@ -7254,11 +7216,6 @@ CalcHorCornerOffset(nsPresContext* aPresContext,
 }
 
 BCBlockDirSeg::BCBlockDirSeg()
-  : mFirstRowGroup{ nullptr }
-  , mFirstRow{ nullptr }
-  , mBEndInlineSegBSize{}
-  , mBEndOffset{}
-  , mIsBEndBevel{ false }
 {
   mCol = nullptr;
   mFirstCell = mLastCell = mAjaCell = nullptr;
@@ -7588,11 +7545,6 @@ BCBlockDirSeg::IncludeCurrentBorder(BCPaintBorderIterator& aIter)
 }
 
 BCInlineDirSeg::BCInlineDirSeg()
-  : mIsIEndBevel{ false }
-  , mIEndBevelOffset{}
-  , mIEndBevelSide{ static_cast<LogicalSide>(0) }
-  , mEndOffset{}
-  , mOwner{ '\0' }
 {
   mOffsetI = mOffsetB = mLength = mWidth =  mIStartBevelOffset = 0;
   mIStartBevelSide = eLogicalSideBStart;

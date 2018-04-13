@@ -64,9 +64,7 @@ static unsigned int kDefaultTimeout = 7000;
 class IcePeer {
 
 public:
-  IcePeer(const char* name,
-          TestNat* nat,
-          UINT4 flags,
+  IcePeer(const char* name, TestNat* nat, UINT4 flags,
           MtransportTestUtils* test_utils)
     : name_(name)
     , ice_checking_(false)
@@ -76,7 +74,6 @@ public:
     , stream_ready_(false)
     , stream_failed_(false)
     , ice_ctx_(nullptr)
-    , ice_media_stream_{ nullptr }
     , peer_ctx_(nullptr)
     , nat_(nat)
     , test_utils_(test_utils)

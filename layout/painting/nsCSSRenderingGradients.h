@@ -90,13 +90,7 @@ public:
                                   float aOpacity = 1.0);
 
 private:
-  nsCSSGradientRenderer()
-    : mPresContext{ nullptr }
-    , mGradient{ nullptr }
-    , mRadiusX{ 0.0 }
-    , mRadiusY{ 0.0 }
-  {
-  }
+  nsCSSGradientRenderer() {}
 
   /**
    * Attempts to paint the tiles for a gradient by painting it once to an

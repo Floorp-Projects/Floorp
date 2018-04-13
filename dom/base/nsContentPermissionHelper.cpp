@@ -582,7 +582,6 @@ nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy
 }
 
 nsContentPermissionRequestProxy::nsContentPermissionRequestProxy()
-  : mParent{ nullptr }
 {
 }
 

@@ -76,11 +76,7 @@ private:
 class nsAutoPushCurrentTableItem
 {
 public:
-  nsAutoPushCurrentTableItem()
-    : mBuilder(nullptr)
-    , mOldCurrentItem{ nullptr }
-  {
-  }
+  nsAutoPushCurrentTableItem() : mBuilder(nullptr) {}
 
   void Push(nsDisplayListBuilder* aBuilder, nsDisplayTableItem* aPushItem)
   {

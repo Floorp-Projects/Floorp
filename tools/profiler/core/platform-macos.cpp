@@ -159,14 +159,12 @@ ThreadEntry(void* aArg)
   return nullptr;
 }
 
-SamplerThread::SamplerThread(PSLockRef aLock,
-                             uint32_t aActivityGeneration,
+SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
                              double aIntervalMilliseconds)
   : Sampler(aLock)
   , mActivityGeneration(aActivityGeneration)
   , mIntervalMicroseconds(
       std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5))))
-  , mThread{ nullptr }
 {
   pthread_attr_t* attr_ptr = nullptr;
   if (pthread_create(&mThread, attr_ptr, ThreadEntry, this) != 0) {

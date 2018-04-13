@@ -17,7 +17,6 @@ PrintTargetSkPDF::PrintTargetSkPDF(const IntSize& aSize,
   : PrintTarget(/* not using cairo_surface_t */ nullptr, aSize)
   , mOStream(Move(aStream))
   , mPageCanvas(nullptr)
-  , mRefCanvas{ nullptr }
 {
 }
 

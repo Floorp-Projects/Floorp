@@ -87,15 +87,11 @@ CompositorOGL::BindBackdrop(ShaderProgramOGL* aProgram, GLuint aBackdrop, GLenum
 
 CompositorOGL::CompositorOGL(CompositorBridgeParent* aParent,
                              widget::CompositorWidget* aWidget,
-                             int aSurfaceWidth,
-                             int aSurfaceHeight,
+                             int aSurfaceWidth, int aSurfaceHeight,
                              bool aUseExternalSurfaceSize)
   : Compositor(aWidget, aParent)
   , mWidgetSize(-1, -1)
   , mSurfaceSize(aSurfaceWidth, aSurfaceHeight)
-  , mFBOTextureTarget{}
-  , mQuadVBO{}
-  , mTriangleVBO{}
   , mHasBGRA(0)
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
   , mFrameInProgress(false)

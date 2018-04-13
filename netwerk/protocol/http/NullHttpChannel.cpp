@@ -15,17 +15,13 @@ NS_IMPL_ISUPPORTS(NullHttpChannel, nsINullChannel,
                   nsIHttpChannel, nsITimedChannel)
 
 NullHttpChannel::NullHttpChannel()
-  : mAllRedirectsSameOrigin{ false }
-  , mAllRedirectsPassTimingAllowCheck{ false }
 {
   mChannelCreationTime = PR_Now();
   mChannelCreationTimestamp = TimeStamp::Now();
   mAsyncOpenTime = TimeStamp::Now();
 }
 
-NullHttpChannel::NullHttpChannel(nsIHttpChannel* chan)
-  : mAllRedirectsSameOrigin{ false }
-  , mAllRedirectsPassTimingAllowCheck{ false }
+NullHttpChannel::NullHttpChannel(nsIHttpChannel * chan)
 {
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   ssm->GetChannelURIPrincipal(chan, getter_AddRefs(mResourcePrincipal));

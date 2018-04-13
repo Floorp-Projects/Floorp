@@ -206,7 +206,6 @@ imgFrame::imgFrame()
   , mTimeout(FrameTimeout::FromRawMilliseconds(100))
   , mDisposalMethod(DisposalMethod::NOT_SPECIFIED)
   , mBlendMethod(BlendMethod::OVER)
-  , mFormat{ SurfaceFormat::UNKNOWN }
   , mAborted(false)
   , mFinished(false)
   , mOptimizable(false)

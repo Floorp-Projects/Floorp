@@ -1198,34 +1198,28 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END
 
-nsExternalAppHandler::nsExternalAppHandler(
-  nsIMIMEInfo* aMIMEInfo,
-  const nsACString& aTempFileExtension,
-  nsIInterfaceRequestor* aContentContext,
-  nsIInterfaceRequestor* aWindowContext,
-  nsExternalHelperAppService* aExtProtSvc,
-  const nsAString& aSuggestedFilename,
-  uint32_t aReason,
-  bool aForceSave)
-  : mMimeInfo(aMIMEInfo)
-  , mContentContext(aContentContext)
-  , mWindowContext(aWindowContext)
-  , mSuggestedFileName(aSuggestedFilename)
-  , mForceSave(aForceSave)
-  , mCanceled(false)
-  , mStopRequestIssued(false)
-  , mIsFileChannel{ false }
-  , mReason(aReason)
-  , mTempFileIsExecutable{ false }
-  , mTimeDownloadStarted{}
-  , mContentLength(-1)
-  , mProgress(0)
-  , mSaver(nullptr)
-  , mDialogProgressListener(nullptr)
-  , mTransfer(nullptr)
-  , mKeepRequestAlive{ false }
-  , mRequest(nullptr)
-  , mExtProtSvc(aExtProtSvc)
+nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
+                                           const nsACString& aTempFileExtension,
+                                           nsIInterfaceRequestor* aContentContext,
+                                           nsIInterfaceRequestor* aWindowContext,
+                                           nsExternalHelperAppService *aExtProtSvc,
+                                           const nsAString& aSuggestedFilename,
+                                           uint32_t aReason, bool aForceSave)
+: mMimeInfo(aMIMEInfo)
+, mContentContext(aContentContext)
+, mWindowContext(aWindowContext)
+, mSuggestedFileName(aSuggestedFilename)
+, mForceSave(aForceSave)
+, mCanceled(false)
+, mStopRequestIssued(false)
+, mReason(aReason)
+, mContentLength(-1)
+, mProgress(0)
+, mSaver(nullptr)
+, mDialogProgressListener(nullptr)
+, mTransfer(nullptr)
+, mRequest(nullptr)
+, mExtProtSvc(aExtProtSvc)
 {
 
   // make sure the extention includes the '.'

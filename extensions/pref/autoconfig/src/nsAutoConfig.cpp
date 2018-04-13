@@ -42,7 +42,6 @@ NS_IMPL_ISUPPORTS(nsAutoConfig, nsIAutoConfig, nsITimerCallback, nsIStreamListen
                   nsINamed)
 
 nsAutoConfig::nsAutoConfig()
-  : mLoaded{ false }
 {
 }
 

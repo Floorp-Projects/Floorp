@@ -46,15 +46,14 @@ using mozilla::Some;
 // nsBufferedStream
 
 nsBufferedStream::nsBufferedStream()
-  : mBufferSize{}
-  , mBuffer(nullptr)
-  , mBufferStartOffset(0)
-  , mCursor(0)
-  , mFillPoint(0)
-  , mStream(nullptr)
-  , mBufferDisabled(false)
-  , mEOF(false)
-  , mGetBufferCount(0)
+    : mBuffer(nullptr),
+      mBufferStartOffset(0),
+      mCursor(0),
+      mFillPoint(0),
+      mStream(nullptr),
+      mBufferDisabled(false),
+      mEOF(false),
+      mGetBufferCount(0)
 {
 }
 

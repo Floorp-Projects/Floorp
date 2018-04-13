@@ -68,9 +68,7 @@ do {                             \
   return NS_ERROR_ILLEGAL_VALUE; \
   } while (0)
 
-Http2Session::Http2Session(nsISocketTransport* aSocketTransport,
-                           uint32_t version,
-                           bool attemptingEarlyData)
+Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t version, bool attemptingEarlyData)
   : mSocketTransport(aSocketTransport)
   , mSegmentReader(nullptr)
   , mSegmentWriter(nullptr)
@@ -116,7 +114,6 @@ Http2Session::Http2Session(nsISocketTransport* aSocketTransport,
   , mLastReadEpoch(PR_IntervalNow())
   , mPingSentEpoch(0)
   , mPreviousUsed(false)
-  , mAggregatedHeaderSize{}
   , mWaitingForSettingsAck(false)
   , mGoAwayOnPush(false)
   , mUseH2Deps(false)

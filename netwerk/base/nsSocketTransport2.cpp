@@ -804,14 +804,10 @@ nsSocketTransport::nsSocketTransport()
     , mFirstRetryError(NS_OK)
     , mDoNotRetryToConnect(false)
 {
-  this->mNetAddr.raw.family = {};
-  this->mNetAddr.inet = {};
-  this->mSelfAddr.raw.family = {};
-  this->mSelfAddr.inet = {};
-  SOCKET_LOG(("creating nsSocketTransport @%p\n", this));
+    SOCKET_LOG(("creating nsSocketTransport @%p\n", this));
 
-  mTimeouts[TIMEOUT_CONNECT] = UINT16_MAX;    // no timeout
-  mTimeouts[TIMEOUT_READ_WRITE] = UINT16_MAX; // no timeout
+    mTimeouts[TIMEOUT_CONNECT]    = UINT16_MAX; // no timeout
+    mTimeouts[TIMEOUT_READ_WRITE] = UINT16_MAX; // no timeout
 }
 
 nsSocketTransport::~nsSocketTransport()

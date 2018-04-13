@@ -126,9 +126,7 @@ NS_IMPL_ISUPPORTS(nsUrlClassifierDBServiceWorker,
                   nsIUrlClassifierDBService)
 
 nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
-  : mUpdateWaitSec{}
-  , mUpdateStatus{ NS_ERROR_NOT_INITIALIZED }
-  , mInStream(false)
+  : mInStream(false)
   , mGethashNoise(0)
   , mPendingLookupLock("nsUrlClassifierDBServerWorker.mPendingLookupLock")
 {

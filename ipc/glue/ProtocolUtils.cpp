@@ -577,15 +577,14 @@ IProtocol::GetActorEventTargetInternal(IProtocol* aActor)
 }
 
 IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
-  : IProtocol(aSide)
-  , mMonitor("mozilla.ipc.IToplevelProtocol.mMonitor")
-  , mProtocolId(aProtoId)
-  , mOtherPid(mozilla::ipc::kInvalidProcessId)
-  , mOtherPidState(ProcessIdState::eUnstarted)
-  , mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId)
-  , mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId)
-  , mIsMainThreadProtocol{ false }
-  , mEventTargetMutex("ProtocolEventTargetMutex")
+ : IProtocol(aSide),
+   mMonitor("mozilla.ipc.IToplevelProtocol.mMonitor"),
+   mProtocolId(aProtoId),
+   mOtherPid(mozilla::ipc::kInvalidProcessId),
+   mOtherPidState(ProcessIdState::eUnstarted),
+   mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId),
+   mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId),
+   mEventTargetMutex("ProtocolEventTargetMutex")
 {
 }
 

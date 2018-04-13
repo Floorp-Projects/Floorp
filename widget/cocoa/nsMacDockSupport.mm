@@ -14,7 +14,7 @@ NS_IMPL_ISUPPORTS(nsMacDockSupport, nsIMacDockSupport, nsITaskbarProgress)
 nsMacDockSupport::nsMacDockSupport()
 : mAppIcon(nil)
 , mProgressBackground(nil)
-, mProgressBounds{}, mProgressState(STATE_NO_PROGRESS)
+, mProgressState(STATE_NO_PROGRESS)
 , mProgressFraction(0.0)
 {
   mProgressTimer = NS_NewTimer();

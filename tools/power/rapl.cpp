@@ -316,11 +316,7 @@ class RAPL
 
 public:
   RAPL()
-    : mIsGpuSupported{ false }
-    , mIsRamSupported{ false }
-    , mHasRamUnitsQuirk(false)
-    , mPrevPp1Ticks{}
-    , mPrevDdrTicks{}
+    : mHasRamUnitsQuirk(false)
   {
     // Work out which RAPL MSRs this CPU model supports.
     int cpuModel;

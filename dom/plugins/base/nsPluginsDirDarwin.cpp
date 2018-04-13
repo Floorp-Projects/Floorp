@@ -267,9 +267,8 @@ static void ParsePlistPluginInfo(nsPluginInfo& info, CFBundleRef bundle)
   }
 }
 
-nsPluginFile::nsPluginFile(nsIFile* spec)
-  : pLibrary{ nullptr }
-  , mPlugin(spec)
+nsPluginFile::nsPluginFile(nsIFile *spec)
+    : mPlugin(spec)
 {
 }
 

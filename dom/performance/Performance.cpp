@@ -75,7 +75,6 @@ Performance::CreateForWorker(WorkerPrivate* aWorkerPrivate)
 Performance::Performance()
   : mResourceTimingBufferSize(kDefaultResourceTimingBufferSize)
   , mPendingNotificationObserversTask(false)
-  , mSystemPrincipal{ false }
 {
   MOZ_ASSERT(!NS_IsMainThread());
 }
@@ -84,7 +83,6 @@ Performance::Performance(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mResourceTimingBufferSize(kDefaultResourceTimingBufferSize)
   , mPendingNotificationObserversTask(false)
-  , mSystemPrincipal{ false }
 {
   MOZ_ASSERT(NS_IsMainThread());
 }

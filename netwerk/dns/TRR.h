@@ -105,10 +105,10 @@ public:
   }
 
   // used on push
-  explicit TRR(AHostResolver* aResolver, bool aPB)
+  explicit TRR(AHostResolver *aResolver, bool aPB)
     : mozilla::Runnable("TRR")
     , mHostResolver(aResolver)
-    , /* FIXME: initialize mType */ mBodySize(0)
+    , mBodySize(0)
     , mFailed(false)
     , mPB(aPB)
     , mCnameLoop(kCnameChaseMax)

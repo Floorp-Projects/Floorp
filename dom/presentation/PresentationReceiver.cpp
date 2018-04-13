@@ -42,8 +42,7 @@ PresentationReceiver::Create(nsPIDOMWindowInner* aWindow)
 }
 
 PresentationReceiver::PresentationReceiver(nsPIDOMWindowInner* aWindow)
-  : mWindowId{}
-  , mOwner(aWindow)
+  : mOwner(aWindow)
 {
   MOZ_ASSERT(aWindow);
 }

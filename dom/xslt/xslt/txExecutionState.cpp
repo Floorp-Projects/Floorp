@@ -54,18 +54,17 @@ txLoadedDocumentsHash::~txLoadedDocumentsHash()
 
 txExecutionState::txExecutionState(txStylesheet* aStylesheet,
                                    bool aDisableLoads)
-  : mOutputHandler(nullptr)
-  , mResultHandler(nullptr)
-  , mOutputHandlerFactory{ nullptr }
-  , mStylesheet(aStylesheet)
-  , mNextInstruction(nullptr)
-  , mLocalVariables(nullptr)
-  , mRecursionDepth(0)
-  , mEvalContext(nullptr)
-  , mInitialEvalContext(nullptr)
-  , mGlobalParams(nullptr)
-  , mKeyHash(aStylesheet->getKeyMap())
-  , mDisableLoads(aDisableLoads)
+    : mOutputHandler(nullptr),
+      mResultHandler(nullptr),
+      mStylesheet(aStylesheet),
+      mNextInstruction(nullptr),
+      mLocalVariables(nullptr),
+      mRecursionDepth(0),
+      mEvalContext(nullptr),
+      mInitialEvalContext(nullptr),
+      mGlobalParams(nullptr),
+      mKeyHash(aStylesheet->getKeyMap()),
+      mDisableLoads(aDisableLoads)
 {
     MOZ_COUNT_CTOR(txExecutionState);
 }

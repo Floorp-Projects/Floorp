@@ -12694,8 +12694,6 @@ namespace {
 struct PrefStore
 {
   PrefStore()
-    : mFlashBlockEnabled{ false }
-    , mPluginsHttpOnly{ false }
   {
     Preferences::AddBoolVarCache(&mFlashBlockEnabled,
                                  "plugins.flashBlock.enabled");

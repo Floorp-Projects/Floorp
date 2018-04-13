@@ -11,10 +11,7 @@ using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS(PuppetBidiKeyboard, nsIBidiKeyboard)
 
-PuppetBidiKeyboard::PuppetBidiKeyboard()
-  : nsIBidiKeyboard()
-  , mIsLangRTL{ false }
-  , mHaveBidiKeyboards{ false }
+PuppetBidiKeyboard::PuppetBidiKeyboard() : nsIBidiKeyboard()
 {
 }
 

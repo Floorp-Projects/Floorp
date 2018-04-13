@@ -188,9 +188,7 @@ class FileSystemTaskParentBase : public Runnable
 public:
   FileSystemTaskParentBase()
     : Runnable("FileSystemTaskParentBase")
-    , mErrorValue{ NS_ERROR_NOT_INITIALIZED }
-  {
-  }
+  {}
 
   /*
    * Start the task. This must be called from the PBackground thread only.

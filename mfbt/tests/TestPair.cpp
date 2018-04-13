@@ -33,27 +33,13 @@ INSTANTIATE(int, int, prim1, 2 * sizeof(int));
 INSTANTIATE(int, long, prim2, 2 * sizeof(long));
 
 struct EmptyClass { explicit EmptyClass(int) {} };
-struct NonEmpty
-{
-  char mC;
-  explicit NonEmpty(int)
-    : mC{ '\0' }
-  {
-  }
-};
+struct NonEmpty { char mC; explicit NonEmpty(int) {} };
 
 INSTANTIATE(int, EmptyClass, both1, sizeof(int));
 INSTANTIATE(int, NonEmpty, both2, 2 * sizeof(int));
 INSTANTIATE(EmptyClass, NonEmpty, both3, 1);
 
-struct A
-{
-  char dummy;
-  explicit A(int)
-    : dummy{ '\0' }
-  {
-  }
-};
+struct A { char dummy; explicit A(int) {} };
 struct B : A { explicit B(int aI) : A(aI) {} };
 
 INSTANTIATE(A, A, class1, 2);
