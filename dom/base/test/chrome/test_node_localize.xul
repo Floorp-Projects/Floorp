@@ -25,25 +25,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1363862
   const translations = {
     "key1": {
       value: "Value 1",
-      attributes: null,
+      attrs: null,
     },
     "key2": {
       value: null,
-      attributes: [
+      attrs: [
         {name: "label", value: "Value 2"},
         {name: "accesskey", value: "K"},
       ]
     },
     "key3": {
       value: "Value 3",
-      attributes: [
+      attrs: [
         {name: "accesskey", value: "V"},
       ]
     },
     "key4": undefined,
     "key5": {
       value: null,
-      attributes: [
+      attrs: [
         {name: "value", value: "Submit Value"},
       ]
     }
@@ -118,8 +118,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1363862
         "element's textContent should be populated with the translation value");
       }
 
-      if (translation.attributes !== null) {
-        for (const {name, value} of translation.attributes) {
+      if (translation.attrs !== null) {
+        for (const {name, value} of translation.attrs) {
           ok(elem.getAttribute(name) === value,
             "attribute value should be populated from the translation");
         }

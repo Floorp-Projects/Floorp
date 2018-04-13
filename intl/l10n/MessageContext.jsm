@@ -1608,10 +1608,6 @@ function Pattern(env, ptn) {
   dirty.add(ptn);
   const result = [];
 
-  // Wrap interpolations with Directional Isolate Formatting characters
-  // only when the pattern has more than one element.
-  const useIsolating = ctx._useIsolating && ptn.length > 1;
-
   for (const elem of ptn) {
     if (typeof elem === "string") {
       result.push(elem);
@@ -1620,7 +1616,7 @@ function Pattern(env, ptn) {
 
     const part = Type(env, elem).toString(ctx);
 
-    if (useIsolating) {
+    if (ctx._useIsolating) {
       result.push(FSI);
     }
 
@@ -1636,7 +1632,7 @@ function Pattern(env, ptn) {
       result.push(part);
     }
 
-    if (useIsolating) {
+    if (ctx._useIsolating) {
       result.push(PDI);
     }
   }
@@ -1779,16 +1775,8 @@ class MessageContext {
       if (id.startsWith("-")) {
         // Identifiers starting with a dash (-) define terms. Terms are private
         // and cannot be retrieved from MessageContext.
-        if (this._terms.has(id)) {
-          errors.push(`Attempt to override an existing term: "${id}"`);
-          continue;
-        }
         this._terms.set(id, entries[id]);
       } else {
-        if (this._messages.has(id)) {
-          errors.push(`Attempt to override an existing message: "${id}"`);
-          continue;
-        }
         this._messages.set(id, entries[id]);
       }
     }
