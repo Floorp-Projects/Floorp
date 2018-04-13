@@ -9,7 +9,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
 
-add_task(function* test_snackbar_api() {
+add_task(async function test_snackbar_api() {
   RuntimePermissions.waitForPermissions([
     RuntimePermissions.CAMERA,
     RuntimePermissions.RECORD_AUDIO,

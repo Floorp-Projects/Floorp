@@ -21,14 +21,14 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   // Load a custom sjs script that echos our "User-Agent" header back at us
   const TestURI = Services.io.newURI("http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/desktopmode_user_agent.sjs");
 
-  add_task(function* test_desktopmode() {
+  add_task(async function test_desktopmode() {
     let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
     let BrowserApp = chromeWin.BrowserApp;
 
     // Add a new 'desktop mode' tab with our test page
     let desktopTab = BrowserApp.addTab(TestURI.spec, { selected: true, parentId: BrowserApp.selectedTab.id, desktopMode: true });
     let desktopBrowser = desktopTab.browser;
-    yield promiseBrowserEvent(desktopBrowser, "load");
+    await promiseBrowserEvent(desktopBrowser, "load");
 
     // Some debugging
     info("desktop: " + desktopBrowser.contentWindow.navigator.userAgent);
@@ -43,7 +43,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     // Add a new 'mobile mode' tab with our test page
     let mobileTab = BrowserApp.addTab(TestURI.spec, { selected: true, parentId: BrowserApp.selectedTab.id });
     let mobileBrowser = mobileTab.browser;
-    yield promiseBrowserEvent(mobileBrowser, "load");
+    await promiseBrowserEvent(mobileBrowser, "load");
 
     // Some debugging
     info("mobile: " + mobileBrowser.contentWindow.navigator.userAgent);

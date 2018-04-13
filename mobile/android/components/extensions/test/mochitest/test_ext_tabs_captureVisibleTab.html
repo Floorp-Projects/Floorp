@@ -133,17 +133,17 @@ function* runTest(options) {
   win.close();
 }
 
-add_task(function* testCaptureVisibleTab() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function testCaptureVisibleTab() {
+  await SpecialPowers.pushPrefEnv({
     "set": [["security.data_uri.block_toplevel_data_uri_navigations", false]],
   });
 
-  yield runTest({color: [0, 0, 0]});
+  await runTest({color: [0, 0, 0]});
 
-  yield runTest({color: [255, 255, 255]});
+  await runTest({color: [255, 255, 255]});
 });
 
-add_task(function* testCaptureVisibleTabPermissions() {
+add_task(async function testCaptureVisibleTabPermissions() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -156,11 +156,11 @@ add_task(function* testCaptureVisibleTabPermissions() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("captureVisibleTabPermissions");
+  await extension.awaitFinish("captureVisibleTabPermissions");
 
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 
