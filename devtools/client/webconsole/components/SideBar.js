@@ -29,13 +29,26 @@ class SideBar extends Component {
     this.onClickSidebarClose = this.onClickSidebarClose.bind(this);
   }
 
+  shouldComponentUpdate(nextProps) {
+    const {
+      grip,
+      sidebarVisible,
+    } = nextProps;
+
+    return sidebarVisible !== this.props.sidebarVisible
+      || grip !== this.props.grip;
+  }
+
   onClickSidebarClose() {
     this.props.dispatch(actions.sidebarClose());
   }
 
   render() {
+    if (!this.props.sidebarVisible) {
+      return null;
+    }
+
     let {
-      sidebarVisible,
       grip,
       serviceContainer,
     } = this.props;
@@ -43,6 +56,7 @@ class SideBar extends Component {
     let objectInspector = getObjectInspector(grip, serviceContainer, {
       autoExpandDepth: 1,
       mode: MODE.SHORT,
+      autoFocusRoot: true,
     });
 
     let endPanel = dom.aside({
@@ -61,18 +75,14 @@ class SideBar extends Component {
       }, objectInspector)
     );
 
-    return (
-      sidebarVisible ?
-        SplitBox({
-          className: "sidebar",
-          endPanel,
-          endPanelControl: true,
-          initialSize: "200px",
-          minSize: "100px",
-          vert: true,
-        })
-        : null
-    );
+    return SplitBox({
+      className: "sidebar",
+      endPanel,
+      endPanelControl: true,
+      initialSize: "200px",
+      minSize: "100px",
+      vert: true,
+    });
   }
 }
 
