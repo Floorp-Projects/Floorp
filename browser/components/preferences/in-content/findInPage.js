@@ -483,7 +483,7 @@ var gSearchResultsPane = {
           return null;
         }
         if (refAttr) {
-          let attr = msg.attributes && msg.attributes.find(a => a.name === refAttr);
+          let attr = msg.attrs.find(a => a.name === refAttr);
           if (!attr) {
             console.error(`Missing search l10n id "${refId}.${refAttr}"`);
             return null;

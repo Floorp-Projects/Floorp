@@ -2738,7 +2738,7 @@ public:
       }
 
       Nullable<Sequence<AttributeNameValue>>& attributes =
-        l10nData[i].mAttributes;
+        l10nData[i].mAttrs;
       if (!attributes.IsNull()) {
         for (size_t j = 0; j < attributes.Value().Length(); ++j) {
           // Use SetAttribute here to validate the attribute name!
