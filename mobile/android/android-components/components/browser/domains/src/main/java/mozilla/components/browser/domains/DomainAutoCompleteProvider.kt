@@ -9,6 +9,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import mozilla.components.browser.domains.DomainAutoCompleteProvider.Domain
 import java.util.Locale
 
 typealias ResultCallback = (String, String, Int) -> Unit
@@ -22,6 +23,30 @@ class DomainAutoCompleteProvider {
     object AutocompleteSource {
         const val DEFAULT_LIST = "default"
         const val CUSTOM_LIST = "custom"
+    }
+
+    data class Domain(val protocol: String, val hasWww: Boolean, val host: String) {
+        companion object {
+            private const val PROTOCOL_INDEX = 1
+            private const val WWW_INDEX = 2
+            private const val HOST_INDEX = 3
+
+            private const val DEFAULT_PROTOCOL = "http://"
+
+            private val urlMatcher = Regex("""(https?://)?(www.)?(.+)?""")
+
+            internal fun create(url: String): Domain {
+                val result = urlMatcher.find(url)
+
+                return result?.let {
+                    val protocol = it.groups[PROTOCOL_INDEX]?.value ?: DEFAULT_PROTOCOL
+                    val hasWww = it.groups[WWW_INDEX]?.value == "www."
+                    val host = it.groups[HOST_INDEX]?.value ?: throw IllegalStateException()
+
+                    return Domain(protocol, hasWww, host)
+                } ?: throw IllegalStateException()
+            }
+        }
     }
 
     private var customDomains = emptyList<String>()

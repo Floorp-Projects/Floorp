@@ -6,6 +6,7 @@ package mozilla.components.browser.domains
 
 import android.preference.PreferenceManager
 import mozilla.components.browser.domains.DomainAutoCompleteProvider.AutocompleteSource
+import mozilla.components.browser.domains.DomainAutoCompleteProvider.Domain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,6 +27,26 @@ class DomainAutoCompleteProviderTest {
                 .edit()
                 .clear()
                 .apply()
+    }
+
+    @Test
+    fun testDomainCreation() {
+        val firstItem = Domain.create("https://mozilla.com")
+
+        assertTrue(firstItem.protocol == "https://")
+        assertFalse(firstItem.hasWww)
+        assertTrue(firstItem.host == "mozilla.com")
+
+        val secondItem = Domain.create("www.mozilla.com")
+
+        assertTrue(secondItem.protocol == "http://")
+        assertTrue(secondItem.hasWww)
+        assertTrue(secondItem.host == "mozilla.com")
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testDomainCreationWithBadURLThrowsException() {
+        Domain.create("http://www.")
     }
 
     @Test
