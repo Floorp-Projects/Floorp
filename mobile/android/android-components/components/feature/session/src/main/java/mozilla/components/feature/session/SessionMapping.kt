@@ -4,9 +4,9 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.engine.Engine
-import mozilla.components.engine.EngineSession
-import mozilla.components.session.Session
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.browser.session.Session
 import java.util.WeakHashMap
 
 /**

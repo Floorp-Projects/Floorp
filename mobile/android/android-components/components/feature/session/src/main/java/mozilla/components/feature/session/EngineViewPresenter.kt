@@ -4,19 +4,19 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.engine.Engine
-import mozilla.components.engine.EngineView
-import mozilla.components.session.Session
-import mozilla.components.session.SessionManager
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineView
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 
 /**
  * Presenter implementation for EngineView.
  */
 class EngineViewPresenter(
-    private val sessionManager: SessionManager,
-    private val engine: Engine,
-    private val engineView: EngineView,
-    private val sessionMapping: SessionMapping
+        private val sessionManager: SessionManager,
+        private val engine: Engine,
+        private val engineView: EngineView,
+        private val sessionMapping: SessionMapping
 ) : SessionManager.Observer {
 
     /**

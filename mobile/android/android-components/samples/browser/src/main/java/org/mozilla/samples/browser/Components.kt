@@ -5,10 +5,10 @@
 package org.mozilla.samples.browser
 
 import android.content.Context
-import mozilla.components.engine.Engine
-import mozilla.components.engine.system.SystemEngine
-import mozilla.components.session.SessionManager
-import mozilla.components.session.SessionProvider
+import mozilla.components.concept.engine.Engine
+import mozilla.components.browser.engine.system.SystemEngine
+import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.SessionProvider
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 

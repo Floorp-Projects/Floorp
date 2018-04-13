@@ -10,7 +10,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.AttributeSet
 import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
-import mozilla.components.engine.EngineView
+import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 

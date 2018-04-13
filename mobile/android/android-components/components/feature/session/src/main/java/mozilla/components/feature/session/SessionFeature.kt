@@ -4,18 +4,18 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.engine.Engine
-import mozilla.components.engine.EngineView
-import mozilla.components.session.SessionManager
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineView
+import mozilla.components.browser.session.SessionManager
 
 /**
  * Feature implementation for connecting the engine module with the session module.
  */
 class SessionFeature(
-    sessionManager: SessionManager,
-    engine: Engine,
-    engineView: EngineView,
-    sessionMapping: SessionMapping = SessionMapping()
+        sessionManager: SessionManager,
+        engine: Engine,
+        engineView: EngineView,
+        sessionMapping: SessionMapping = SessionMapping()
 ) {
     private val presenter = EngineViewPresenter(sessionManager, engine, engineView, sessionMapping)
 

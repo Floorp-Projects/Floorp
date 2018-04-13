@@ -18,8 +18,8 @@
     <ID>MagicNumber:DownloadUtils.kt$DownloadUtils$16</ID>
     <ID>MagicNumber:DownloadUtils.kt$DownloadUtils$3</ID>
     <ID>MagicNumber:DownloadUtils.kt$DownloadUtils$4</ID>
-    <ID>MaxLineLength:SafeIntent.kt$mozilla.components.utils.SafeIntent.kt</ID>
-    <ID>MaxLineLength:WebURLFinder.kt$mozilla.components.utils.WebURLFinder.kt</ID>
+    <ID>MaxLineLength:SafeIntent.kt$mozilla.components.support.utils.SafeIntent.kt</ID>
+    <ID>MaxLineLength:WebURLFinder.kt$mozilla.components.support.utils.WebURLFinder.kt</ID>
     <ID>NestedBlockDepth:DownloadUtils.kt$DownloadUtils$ @JvmStatic fun guessFileName(contentDisposition: String?, url: String?, mimeType: String?): String</ID>
     <ID>ReturnCount:DownloadUtils.kt$DownloadUtils$private fun parseContentDisposition(contentDisposition: String): String?</ID>
     <ID>ReturnCount:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$ fun onAutocomplete(result: AutocompleteResult?)</ID>

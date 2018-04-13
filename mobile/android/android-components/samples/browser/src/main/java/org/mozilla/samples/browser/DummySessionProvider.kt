@@ -4,8 +4,8 @@
 
 package org.mozilla.samples.browser
 
-import mozilla.components.session.Session
-import mozilla.components.session.SessionProvider
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionProvider
 
 /**
  * Dummy implementation that will always return a session pointing to mozilla.org.

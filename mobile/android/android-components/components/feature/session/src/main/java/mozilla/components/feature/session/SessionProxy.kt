@@ -4,16 +4,16 @@
 
 package mozilla.components.feature.session
 
-import mozilla.components.engine.EngineSession
-import mozilla.components.session.Session
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.browser.session.Session
 
 /**
  * Proxy class that will subscribe to an EngineSession and update the Session object whenever new
  * data is available.
  */
 class SessionProxy(
-    private val session: Session,
-    engineSession: EngineSession
+        private val session: Session,
+        engineSession: EngineSession
 ) : EngineSession.Observer {
     init {
         engineSession.register(this)

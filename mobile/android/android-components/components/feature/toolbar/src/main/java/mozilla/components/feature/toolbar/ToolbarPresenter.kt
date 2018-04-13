@@ -4,17 +4,17 @@
 
 package mozilla.components.feature.toolbar
 
-import mozilla.components.toolbar.Toolbar
-import mozilla.components.session.Session
-import mozilla.components.session.SessionManager
+import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 
 /**
  * Presenter implementation for a toolbar implementation in order to update the toolbar whenever
  * the state of the selected session changes.
  */
 class ToolbarPresenter(
-    private val sessionManager: SessionManager,
-    private val toolbar: Toolbar
+        private val sessionManager: SessionManager,
+        private val toolbar: Toolbar
 ) : SessionManager.Observer, Session.Observer {
     var session: Session = sessionManager.selectedSession
 
