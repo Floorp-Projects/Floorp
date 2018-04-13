@@ -33,8 +33,10 @@ class SVGLength
 public:
 
   SVGLength()
+#ifdef DEBUG
     : mValue(0.0f)
     , mUnit(dom::SVGLengthBinding::SVG_LENGTHTYPE_UNKNOWN) // caught by IsValid()
+#endif
   {}
 
   SVGLength(float aValue, uint8_t aUnit)

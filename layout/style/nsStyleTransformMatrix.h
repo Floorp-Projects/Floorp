@@ -74,19 +74,11 @@ namespace nsStyleTransformMatrix {
 
     explicit TransformReferenceBox()
       : mFrame(nullptr)
-      , mX{}
-      , mY{}
-      , mWidth{}
-      , mHeight{}
       , mIsCached(false)
     {}
 
     explicit TransformReferenceBox(const nsIFrame* aFrame)
       : mFrame(aFrame)
-      , mX{}
-      , mY{}
-      , mWidth{}
-      , mHeight{}
       , mIsCached(false)
     {
       MOZ_ASSERT(mFrame);
@@ -94,10 +86,6 @@ namespace nsStyleTransformMatrix {
 
     explicit TransformReferenceBox(const nsIFrame* aFrame,
                                    const nsSize& aFallbackDimensions)
-      : mX{}
-      , mY{}
-      , mWidth{}
-      , mHeight{}
     {
       mFrame = aFrame;
       mIsCached = false;

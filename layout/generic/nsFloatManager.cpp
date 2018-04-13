@@ -1205,14 +1205,11 @@ nsFloatManager::ImageShapeInfo::Translate(nscoord aLineLeft,
 // FloatInfo
 
 nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
-                                     nscoord aLineLeft,
-                                     nscoord aBlockStart,
+                                     nscoord aLineLeft, nscoord aBlockStart,
                                      const LogicalRect& aMarginRect,
                                      WritingMode aWM,
                                      const nsSize& aContainerSize)
   : mFrame(aFrame)
-  , mLeftBEnd{}
-  , mRightBEnd{}
   , mRect(ShapeInfo::ConvertToFloatLogical(aMarginRect, aWM, aContainerSize) +
           nsPoint(aLineLeft, aBlockStart))
 {

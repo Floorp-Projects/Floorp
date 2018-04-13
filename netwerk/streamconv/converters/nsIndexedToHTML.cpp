@@ -861,9 +861,7 @@ void nsIndexedToHTML::FormatSizeString(int64_t inSize, nsCString& outSizeString)
     }
 }
 
-nsIndexedToHTML::nsIndexedToHTML()
-  : mExpectAbsLoc{ false }
-{
+nsIndexedToHTML::nsIndexedToHTML() {
 }
 
 nsIndexedToHTML::~nsIndexedToHTML() {

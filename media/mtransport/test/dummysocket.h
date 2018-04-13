@@ -48,38 +48,24 @@ static UniquePtr<DataBuffer> merge(UniquePtr<DataBuffer> a, UniquePtr<DataBuffer
 
 class DummySocket : public NrSocketBase {
  public:
-   DummySocket()
-     : writable_(UINT_MAX)
-     , write_buffer_(nullptr)
-     , readable_(UINT_MAX)
-     , read_buffer_(nullptr)
-     , cb_(nullptr)
-     , cb_arg_(nullptr)
-     , self_(nullptr)
-   {
-     this->connect_addr_.ip_version = { '\0' };
-     this->connect_addr_.protocol = { '\0' };
-     this->connect_addr_.addr = { nullptr };
-     this->connect_addr_.addr_len = {};
-     this->connect_addr_.u.addr4.sin_family = { '\0' };
-     this->connect_addr_.u.addr4.sin_port = {};
-     this->connect_addr_.u.addr4.sin_addr = {};
-     this->connect_addr_.u.addr6.sin6_family = { '\0' };
-     this->connect_addr_.u.addr6.sin6_port = {};
-     this->connect_addr_.u.addr6.sin6_flowinfo = {};
-     this->connect_addr_.u.addr6.sin6_scope_id = {};
-   }
+  DummySocket()
+      : writable_(UINT_MAX),
+        write_buffer_(nullptr),
+        readable_(UINT_MAX),
+        read_buffer_(nullptr),
+        cb_(nullptr),
+        cb_arg_(nullptr),
+        self_(nullptr) {}
 
-   // the nr_socket APIs
-   virtual int create(nr_transport_addr* addr) override { return 0; }
+  // the nr_socket APIs
+  virtual int create(nr_transport_addr *addr) override {
+    return 0;
+  }
 
-   virtual int sendto(const void* msg,
-                      size_t len,
-                      int flags,
-                      nr_transport_addr* to) override
-   {
-     MOZ_CRASH();
-     return 0;
+  virtual int sendto(const void *msg, size_t len,
+                     int flags, nr_transport_addr *to) override {
+    MOZ_CRASH();
+    return 0;
   }
 
   virtual int recvfrom(void * buf, size_t maxlen,

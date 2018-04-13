@@ -156,10 +156,6 @@ struct MOZ_STACK_CLASS BidiParagraphData
     , mRequiresBidi(false)
     , mParaLevel(nsBidiPresUtils::BidiLevelFromStyle(aBlockFrame->Style()))
     , mPrevContent(nullptr)
-    , mPrevFrame
-  {
-    nullptr
-  }
 #ifdef DEBUG
     , mCurrentBlock(aBlockFrame)
 #endif
@@ -2308,15 +2304,12 @@ public:
   nsIRenderingContextBidiProcessor(gfxContext* aCtx,
                                    DrawTarget* aTextRunConstructionDrawTarget,
                                    nsFontMetrics* aFontMetrics,
-                                   const nsPoint& aPt)
+                                   const nsPoint&       aPt)
     : mCtx(aCtx)
     , mTextRunConstructionDrawTarget(aTextRunConstructionDrawTarget)
     , mFontMetrics(aFontMetrics)
     , mPt(aPt)
-    , mText{ nullptr }
-    , mLength{}
-  {
-  }
+  {}
 
   ~nsIRenderingContextBidiProcessor()
   {

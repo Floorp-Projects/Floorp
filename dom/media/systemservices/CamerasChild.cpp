@@ -708,15 +708,11 @@ CamerasChild::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 CamerasChild::CamerasChild()
-  : mCallbackMutex("mozilla::cameras::CamerasChild::mCallbackMutex")
-  , mIPCIsAlive(true)
-  , mRequestMutex("mozilla::cameras::CamerasChild::mRequestMutex")
-  , mReplyMonitor("mozilla::cameras::CamerasChild::mReplyMonitor")
-  , mReceivedReply{ false }
-  , mReplySuccess{ false }
-  , mZero(0)
-  , mReplyInteger{}
-  , mReplyScary{ false }
+  : mCallbackMutex("mozilla::cameras::CamerasChild::mCallbackMutex"),
+    mIPCIsAlive(true),
+    mRequestMutex("mozilla::cameras::CamerasChild::mRequestMutex"),
+    mReplyMonitor("mozilla::cameras::CamerasChild::mReplyMonitor"),
+    mZero(0)
 {
   LOG(("CamerasChild: %p", this));
 

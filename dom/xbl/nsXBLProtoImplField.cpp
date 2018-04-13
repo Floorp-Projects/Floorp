@@ -44,12 +44,12 @@ nsXBLProtoImplField::nsXBLProtoImplField(const char16_t* aName, const char16_t* 
   }
 }
 
+
 nsXBLProtoImplField::nsXBLProtoImplField(const bool aIsReadOnly)
-  : mNext(nullptr)
-  , mName{ nullptr }
-  , mFieldText(nullptr)
-  , mFieldTextLength(0)
-  , mLineNumber(0)
+  : mNext(nullptr),
+    mFieldText(nullptr),
+    mFieldTextLength(0),
+    mLineNumber(0)
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplField);
 

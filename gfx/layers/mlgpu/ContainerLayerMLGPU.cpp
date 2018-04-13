@@ -20,11 +20,10 @@ namespace layers {
 using namespace gfx;
 
 ContainerLayerMLGPU::ContainerLayerMLGPU(LayerManagerMLGPU* aManager)
-  : ContainerLayer(aManager, nullptr)
-  , LayerMLGPU(aManager)
-  , mInvalidateEntireSurface(false)
-  , mSurfaceCopyNeeded(false)
-  , mView{ nullptr }
+ : ContainerLayer(aManager, nullptr),
+   LayerMLGPU(aManager),
+   mInvalidateEntireSurface(false),
+   mSurfaceCopyNeeded(false)
 {
 }
 

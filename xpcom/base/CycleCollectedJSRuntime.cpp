@@ -276,7 +276,6 @@ struct FixWeakMappingGrayBitsTracer : public js::WeakMapTracer
 {
   explicit FixWeakMappingGrayBitsTracer(JSRuntime* aRt)
     : js::WeakMapTracer(aRt)
-    , mAnyMarked{ false }
   {
   }
 

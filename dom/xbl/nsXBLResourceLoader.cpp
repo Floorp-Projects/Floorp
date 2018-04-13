@@ -63,14 +63,13 @@ struct nsXBLResource
 
 nsXBLResourceLoader::nsXBLResourceLoader(nsXBLPrototypeBinding* aBinding,
                                          nsXBLPrototypeResources* aResources)
-  : mBinding(aBinding)
-  , mResources(aResources)
-  , mResourceList(nullptr)
-  , mLastResource(nullptr)
-  , mLoadingResources(false)
-  , mInLoadResourcesFunc(false)
-  , mPendingSheets(0)
-  , mBoundDocument{ nullptr }
+:mBinding(aBinding),
+ mResources(aResources),
+ mResourceList(nullptr),
+ mLastResource(nullptr),
+ mLoadingResources(false),
+ mInLoadResourcesFunc(false),
+ mPendingSheets(0)
 {
 }
 
