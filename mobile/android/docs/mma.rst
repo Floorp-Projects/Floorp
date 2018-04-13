@@ -64,7 +64,7 @@ following parameters::
     "Pocket Installed" -> true          // If Pocket for Android is installed.
     "Signed In Sync" -> true            // If the user has signed in to Mozilla account.
     "Default Browser" -> true           // If the user has set Fennec as default browser.
-    "Pocket in Top Sites" -> true       // If Top Sites home panel contain websites recommended by Pocket
+    "Pocket in Top Sites" -> true       // If Pocket recommendations for Top Sites home panel are enabled (by default or through user action)
   }
   "appId" -> "app_6Ao...."              // Leanplum App ID.
   "clientKey" -> "dev_srwDUNZR...."     // Leanplum client access key.

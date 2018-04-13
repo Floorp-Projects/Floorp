@@ -13,6 +13,7 @@
 
 #include "APZCTreeManager.h"            // for APZCTreeManager
 #include "AsyncPanZoomAnimation.h"      // for AsyncPanZoomAnimation
+#include "AutoDirWheelDeltaAdjuster.h"  // for APZAutoDirWheelDeltaAdjuster
 #include "AutoscrollAnimation.h"        // for AutoscrollAnimation
 #include "Axis.h"                       // for AxisX, AxisY, Axis, etc
 #include "CheckerboardEvent.h"          // for CheckerboardEvent
@@ -1733,6 +1734,19 @@ AllowsScrollingMoreThanOnePage(double aMultiplier)
 ParentLayerPoint
 AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) const
 {
+  return GetScrollWheelDelta(aEvent,
+                             aEvent.mDeltaX, aEvent.mDeltaY,
+                             aEvent.mUserDeltaMultiplierX,
+                             aEvent.mUserDeltaMultiplierY);
+}
+
+ParentLayerPoint
+AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent,
+                                            double aDeltaX,
+                                            double aDeltaY,
+                                            double aMultiplierX,
+                                            double aMultiplierY) const
+{
   ParentLayerSize scrollAmount;
   ParentLayerSize pageScrollSize;
 
@@ -1750,24 +1764,25 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
   ParentLayerPoint delta;
   switch (aEvent.mDeltaType) {
     case ScrollWheelInput::SCROLLDELTA_LINE: {
-      delta.x = aEvent.mDeltaX * scrollAmount.width;
-      delta.y = aEvent.mDeltaY * scrollAmount.height;
+      delta.x = aDeltaX * scrollAmount.width;
+      delta.y = aDeltaY * scrollAmount.height;
       break;
     }
     case ScrollWheelInput::SCROLLDELTA_PAGE: {
-      delta.x = aEvent.mDeltaX * pageScrollSize.width;
-      delta.y = aEvent.mDeltaY * pageScrollSize.height;
+      delta.x = aDeltaX * pageScrollSize.width;
+      delta.y = aDeltaY * pageScrollSize.height;
       break;
     }
     case ScrollWheelInput::SCROLLDELTA_PIXEL: {
-      delta = ToParentLayerCoordinates(ScreenPoint(aEvent.mDeltaX, aEvent.mDeltaY), aEvent.mOrigin);
+      delta = ToParentLayerCoordinates(ScreenPoint(aDeltaX, aDeltaY),
+                                       aEvent.mOrigin);
       break;
     }
   }
 
   // Apply user-set multipliers.
-  delta.x *= aEvent.mUserDeltaMultiplierX;
-  delta.y *= aEvent.mUserDeltaMultiplierY;
+  delta.x *= aMultiplierX;
+  delta.y *= aMultiplierY;
 
   // For the conditions under which we allow system scroll overrides, see
   // EventStateManager::DeltaAccumulator::ComputeScrollAmountForDefaultAction
@@ -1798,13 +1813,13 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
 
   // We shouldn't scroll more than one page at once except when the
   // user preference is large.
-  if (!AllowsScrollingMoreThanOnePage(aEvent.mUserDeltaMultiplierX) &&
+  if (!AllowsScrollingMoreThanOnePage(aMultiplierX) &&
       Abs(delta.x) > pageScrollSize.width) {
     delta.x = (delta.x >= 0)
               ? pageScrollSize.width
               : -pageScrollSize.width;
   }
-  if (!AllowsScrollingMoreThanOnePage(aEvent.mUserDeltaMultiplierY) &&
+  if (!AllowsScrollingMoreThanOnePage(aMultiplierY) &&
       Abs(delta.y) > pageScrollSize.height) {
     delta.y = (delta.y >= 0)
               ? pageScrollSize.height
@@ -1987,6 +2002,26 @@ AsyncPanZoomController::CanScroll(const InputData& aEvent) const
   }
 
   if (SCROLLWHEEL_INPUT == aEvent.mInputType) {
+    const ScrollWheelInput& scrollWheelInput = aEvent.AsScrollWheelInput();
+    // If it's a wheel scroll, we first check if it is an auto-dir scroll.
+    // 1. For an auto-dir scroll, check if it's delta should be adjusted, if it
+    //    is, then we can conclude it must be scrollable; otherwise, fall back
+    //    to checking if it is scrollable without adjusting its delta.
+    // 2. For a non-auto-dir scroll, simply check if it is scrollable without
+    //    adjusting its delta.
+    if (scrollWheelInput.IsAutoDir()) {
+      RecursiveMutexAutoLock lock(mRecursiveMutex);
+      auto deltaX = scrollWheelInput.mDeltaX;
+      auto deltaY = scrollWheelInput.mDeltaY;
+      bool isRTL = IsContentOfHonouredTargetRightToLeft(
+                     scrollWheelInput.HonoursRoot());
+      APZAutoDirWheelDeltaAdjuster adjuster(deltaX, deltaY, mX, mY, isRTL);
+      if (adjuster.ShouldBeAdjusted()) {
+        // If we detect that the delta values should be adjusted for an auto-dir
+        // wheel scroll, then it is impossible to be an unscrollable scroll.
+        return true;
+      }
+    }
     return CanScrollWithWheel(delta);
   }
   return CanScroll(delta);
@@ -2046,6 +2081,17 @@ AsyncPanZoomController::CanScroll(ScrollDirection aDirection) const
 }
 
 bool
+AsyncPanZoomController::IsContentOfHonouredTargetRightToLeft(
+                          bool aHonoursRoot) const
+{
+  if (aHonoursRoot) {
+    return mScrollMetadata.IsAutoDirRootContentRTL();
+  }
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  return mFrameMetrics.IsHorizontalContentRightToLeft();
+}
+
+bool
 AsyncPanZoomController::AllowScrollHandoffInCurrentBlock() const
 {
   bool result = mInputQueue->AllowScrollHandoff();
@@ -2084,10 +2130,52 @@ AdjustDeltaForAllowedScrollDirections(
 
 nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEvent)
 {
-  ParentLayerPoint delta = GetScrollWheelDelta(aEvent);
-  APZC_LOG("%p got a scroll-wheel with delta %s\n", this, Stringify(delta).c_str());
+  // Get the scroll wheel's delta values in parent-layer pixels. But before
+  // getting the values, we need to check if it is an auto-dir scroll and if it
+  // should be adjusted, if both answers are yes, let's adjust X and Y values
+  // first, and then get the delta values in parent-layer pixels based on the
+  // adjusted values.
+  bool adjustedByAutoDir = false;
+  ParentLayerPoint delta;
+  if (aEvent.IsAutoDir()) {
+    // It's an auto-dir scroll, so check if its delta should be adjusted, if so,
+    // adjust it.
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    auto deltaX = aEvent.mDeltaX;
+    auto deltaY = aEvent.mDeltaY;
+    bool isRTL = IsContentOfHonouredTargetRightToLeft(aEvent.HonoursRoot());
+    APZAutoDirWheelDeltaAdjuster adjuster(deltaX, deltaY, mX, mY, isRTL);
+    if (adjuster.ShouldBeAdjusted()) {
+      adjuster.Adjust();
+      // If the original delta values have been adjusted, we pass them to
+      // replace the original delta values in |aEvent| so that the delta values
+      // in parent-layer pixels are caculated based on the adjusted values, not
+      // the original ones.
+      // Pay special attention to the last two parameters. They are in a swaped
+      // order so that they still correspond to their delta after adjustment.
+      delta = GetScrollWheelDelta(aEvent,
+                                  deltaX, deltaY,
+                                  aEvent.mUserDeltaMultiplierY,
+                                  aEvent.mUserDeltaMultiplierX);
+      adjustedByAutoDir = true;
+    }
+  }
+  if (!adjustedByAutoDir) {
+    // If the original delta values haven't been adjusted by auto-dir, just pass
+    // the |aEvent| and caculate the delta values in parent-layer pixels based
+    // on the original delta values from |aEvent|.
+    delta = GetScrollWheelDelta(aEvent);
+  }
 
-  if ((delta.x || delta.y) && !CanScrollWithWheel(delta)) {
+  APZC_LOG("%p got a scroll-wheel with delta in parent-layer pixels: %s\n",
+           this, Stringify(delta).c_str());
+
+  if (adjustedByAutoDir) {
+    MOZ_ASSERT(delta.x || delta.y,
+               "Adjusted auto-dir delta values can never be all-zero.");
+    APZC_LOG("%p got a scroll-wheel with adjusted auto-dir delta values\n",
+             this);
+  } else if ((delta.x || delta.y) && !CanScrollWithWheel(delta)) {
     // We can't scroll this apz anymore, so we simply drop the event.
     if (mInputQueue->GetActiveWheelTransaction() &&
         gfxPrefs::MouseScrollTestingEnabled()) {
@@ -4006,6 +4094,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     // has no business using it.
     mScrollMetadata.SetScrollClip(Nothing());
     mScrollMetadata.SetIsLayersIdRoot(aScrollMetadata.IsLayersIdRoot());
+    mScrollMetadata.SetIsAutoDirRootContentRTL(
+                      aScrollMetadata.IsAutoDirRootContentRTL());
     mScrollMetadata.SetUsesContainerScrolling(aScrollMetadata.UsesContainerScrolling());
     mFrameMetrics.SetIsScrollInfoLayer(aLayerMetrics.IsScrollInfoLayer());
     mScrollMetadata.SetForceDisableApz(aScrollMetadata.IsApzForceDisabled());

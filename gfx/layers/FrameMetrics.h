@@ -487,6 +487,17 @@ public:
     mScrollableRect = aScrollableRect;
   }
 
+  // If the frame is in vertical-RTL writing mode(E.g. "writing-mode:
+  // vertical-rl" in CSS), or if it's in horizontal-RTL writing-mode(E.g.
+  // "writing-mode: horizontal-tb; direction: rtl;" in CSS), then this function
+  // returns true. From the representation perspective, frames whose horizontal
+  // contents start at rightside also cause their horizontal scrollbars, if any,
+  // initially start at rightside. So we can also learn about the initial side
+  // of the horizontal scrollbar for the frame by calling this function.
+  bool IsHorizontalContentRightToLeft() {
+    return mScrollableRect.x < 0;
+  }
+
   void SetPaintRequestTime(const TimeStamp& aTime) {
     mPaintRequestTime = aTime;
   }
@@ -822,6 +833,7 @@ public:
     , mScrollClip()
     , mHasScrollgrab(false)
     , mIsLayersIdRoot(false)
+    , mIsAutoDirRootContentRTL(false)
     , mUsesContainerScrolling(false)
     , mForceDisableApz(false)
     , mOverscrollBehavior()
@@ -839,6 +851,7 @@ public:
            mScrollClip == aOther.mScrollClip &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
            mIsLayersIdRoot == aOther.mIsLayersIdRoot &&
+           mIsAutoDirRootContentRTL == aOther.mIsAutoDirRootContentRTL &&
            mUsesContainerScrolling == aOther.mUsesContainerScrolling &&
            mForceDisableApz == aOther.mForceDisableApz &&
            mDisregardedDirection == aOther.mDisregardedDirection &&
@@ -933,6 +946,12 @@ public:
   bool IsLayersIdRoot() const {
     return mIsLayersIdRoot;
   }
+  void SetIsAutoDirRootContentRTL(bool aValue) {
+    mIsAutoDirRootContentRTL = aValue;
+  }
+  bool IsAutoDirRootContentRTL() const {
+    return mIsAutoDirRootContentRTL;
+  }
   // Implemented out of line because the implementation needs gfxPrefs.h
   // and we don't want to include that from FrameMetrics.h.
   void SetUsesContainerScrolling(bool aValue);
@@ -1000,6 +1019,17 @@ private:
   // Whether these framemetrics are for the root scroll frame (root element if
   // we don't have a root scroll frame) for its layers id.
   bool mIsLayersIdRoot:1;
+
+  // The AutoDirRootContent is the <body> element in an HTML document, or the
+  // root scrollframe if there is no body. This member variable indicates
+  // whether this element's content in the horizontal direction starts from
+  // right to left (e.g. it's true either if "writing-mode: vertical-rl", or
+  // "writing-mode: horizontal-tb; direction: rtl" in CSS).
+  // When we do auto-dir scrolling (@see mozilla::WheelDeltaAdjustmentStrategy
+  // or refer to bug 1358017 for details), setting a pref can make the code use
+  // the writing mode of this root element instead of the target scrollframe,
+  // and so we need to know if the writing mode is RTL or not.
+  bool mIsAutoDirRootContentRTL:1;
 
   // True if scrolling using containers, false otherwise. This can be removed
   // when containerful scrolling is eliminated.

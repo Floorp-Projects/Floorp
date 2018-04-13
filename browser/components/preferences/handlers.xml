@@ -56,18 +56,4 @@
     </content>
   </binding>
 
-  <binding id="container">
-    <content>
-      <xul:hbox flex="1" equalsize="always">
-        <xul:hbox flex="1" align="center">
-          <xul:hbox xbl:inherits="data-identity-icon=containerIcon,data-identity-color=containerColor" height="24" width="24" class="userContext-icon"/>
-          <xul:label flex="1" crop="end" xbl:inherits="xbl:text=containerName,highlightable"/>
-        </xul:hbox>
-        <xul:hbox flex="1" align="right">
-          <children />
-        </xul:hbox>
-      </xul:hbox>
-    </content>
-  </binding>
-
 </bindings>

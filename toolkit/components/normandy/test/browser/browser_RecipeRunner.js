@@ -49,6 +49,13 @@ add_task(async function getFilterContext() {
     recipe,
     "normandy.recipe drops unrecognized attributes from the recipe",
   );
+
+  // Filter context attributes are cached.
+  await SpecialPowers.pushPrefEnv({set: [["app.normandy.user_id", "some id"]]});
+  is(context.normandy.userId, "some id", "User id is read from prefs when accessed");
+  await SpecialPowers.pushPrefEnv({set: [["app.normandy.user_id", "real id"]]});
+  is(context.normandy.userId, "some id", "userId was cached");
+
 });
 
 add_task(async function checkFilter() {
