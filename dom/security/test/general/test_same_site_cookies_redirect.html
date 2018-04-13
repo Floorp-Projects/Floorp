@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1453814 - Do not allow same-site cookies for cross origin redirect</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<img id="cookieImage">
+<iframe id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * 1) We load an image from http://mochi.test which set a same site cookie
+ * 2) We then load an iframe that redirects
+ *    (a) from same-origin to cross-origin
+ *    (b) from cross-origin to same-origin
+ * 3) We observe that in both cases same-site cookies should not be send
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const SAME_ORIGIN = "http://mochi.test:8888/"
+const CROSS_ORIGIN = "http://example.com/";
+const PATH = "tests/dom/security/test/general/file_same_site_cookies_redirect.sjs";
+
+let curTest = 0;
+
+var tests = [
+  {
+    description: "same-site cookie, redirect same-site to cross-site",
+    imgSRC: SAME_ORIGIN + PATH + "?setSameSiteCookie",
+    frameSRC: SAME_ORIGIN + PATH + "?sameToCrossRedirect",
+    result: "", // no cookie should be set
+  },
+  {
+    description: "same-site cookie, redirect cross-site to same-site",
+    imgSRC: SAME_ORIGIN + PATH + "?setSameSiteCookie",
+    frameSRC: CROSS_ORIGIN + PATH + "?crossToSameRedirect",
+    result: "", // no cookie should be set
+  },
+];
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  is(event.data.result, tests[curTest].result, tests[curTest].description);
+  curTest += 1;
+
+  // // lets see if we ran all the tests
+  if (curTest == tests.length) {
+    window.removeEventListener("message", receiveMessage);
+    SimpleTest.finish();
+    return;
+  }
+  // otherwise it's time to run the next test
+  setCookieAndInitTest();
+}
+
+function setupQueryResultAndRunTest() {
+  let testframe = document.getElementById("testframe");
+  testframe.src = tests[curTest].frameSRC;
+}
+
+function setCookieAndInitTest() {
+  var cookieImage = document.getElementById("cookieImage");
+  cookieImage.onload = function() {
+    ok(true, "trying to set cookie for test (" + tests[curTest].description + ")");
+    setupQueryResultAndRunTest();
+  }
+  cookieImage.onerror = function() {
+    ok(false, "could not load image for test (" + tests[curTest].description + ")");
+  }
+  cookieImage.src =  tests[curTest].imgSRC;
+}
+
+// fire up the test
+setCookieAndInitTest();
+
+</script>
+</body>
+</html>
