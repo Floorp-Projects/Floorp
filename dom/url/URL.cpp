@@ -126,9 +126,9 @@ URL::CreateSearchParamsIfNeeded()
 }
 
 void
-URL::SetSearch(const nsAString& aSearch, ErrorResult& aRv)
+URL::SetSearch(const nsAString& aSearch)
 {
-  SetSearchInternal(aSearch, aRv);
+  SetSearchInternal(aSearch);
   UpdateURLSearchParams();
 }
 
@@ -141,10 +141,7 @@ URL::URLSearchParamsUpdated(URLSearchParams* aSearchParams)
   nsAutoString search;
   mSearchParams->Serialize(search);
 
-  ErrorResult rv;
-  SetSearchInternal(search, rv);
-  NS_WARNING_ASSERTION(!rv.Failed(), "SetSearchInternal failed");
-  rv.SuppressException();
+  SetSearchInternal(search);
 }
 
 } // namespace dom
