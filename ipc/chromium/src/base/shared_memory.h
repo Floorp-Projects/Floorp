@@ -113,6 +113,14 @@ class SharedMemory {
     return ShareToProcessCommon(target_pid, new_handle, true);
   }
 
+#ifdef OS_POSIX
+  // If named POSIX shm is being used, append the prefix (including
+  // the leading '/') that would be used by a process with the given
+  // pid to the given string and return true.  If not, return false.
+  // (This is public so that the Linux sandboxing code can use it.)
+  static bool AppendPosixShmPrefix(std::string* str, pid_t pid);
+#endif
+
  private:
   bool ShareToProcessCommon(ProcessId target_pid,
                             SharedMemoryHandle* new_handle,
