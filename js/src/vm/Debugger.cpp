@@ -7485,9 +7485,8 @@ ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame, ResumeMode
 };
 
 /* static */ NativeObject*
-DebuggerFrame::initClass(JSContext* cx, HandleObject dbgCtor, HandleObject obj)
+DebuggerFrame::initClass(JSContext* cx, HandleObject dbgCtor, Handle<GlobalObject*> global)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedObject objProto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
 
     return InitClass(cx, dbgCtor, objProto, &class_, construct, 0, properties_,
@@ -9781,9 +9780,8 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
 };
 
 /* static */ NativeObject*
-DebuggerObject::initClass(JSContext* cx, HandleObject obj, HandleObject debugCtor)
+DebuggerObject::initClass(JSContext* cx, Handle<GlobalObject*> global, HandleObject debugCtor)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedObject objProto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
 
     RootedNativeObject objectProto(cx, InitClass(cx, debugCtor, objProto, &class_,
@@ -11034,9 +11032,8 @@ const JSFunctionSpec DebuggerEnvironment::methods_[] = {
 };
 
 /* static */ NativeObject*
-DebuggerEnvironment::initClass(JSContext* cx, HandleObject dbgCtor, HandleObject obj)
+DebuggerEnvironment::initClass(JSContext* cx, HandleObject dbgCtor, Handle<GlobalObject*> global)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedObject objProto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
 
     return InitClass(cx, dbgCtor, objProto, &DebuggerEnvironment::class_, construct, 0,
@@ -11412,14 +11409,14 @@ JS_DefineDebuggerObject(JSContext* cx, HandleObject obj)
     objProto = GlobalObject::getOrCreateObjectPrototype(cx, global);
     if (!objProto)
         return false;
-    debugProto = InitClass(cx, obj,
+    debugProto = InitClass(cx, global,
                            objProto, &Debugger::class_, Debugger::construct,
                            1, Debugger::properties, Debugger::methods, nullptr,
                            Debugger::static_methods, debugCtor.address());
     if (!debugProto)
         return false;
 
-    frameProto = DebuggerFrame::initClass(cx, debugCtor, obj);
+    frameProto = DebuggerFrame::initClass(cx, debugCtor, global);
     if (!frameProto)
         return false;
 
@@ -11437,11 +11434,11 @@ JS_DefineDebuggerObject(JSContext* cx, HandleObject obj)
     if (!sourceProto)
         return false;
 
-    objectProto = DebuggerObject::initClass(cx, obj, debugCtor);
+    objectProto = DebuggerObject::initClass(cx, global, debugCtor);
     if (!objectProto)
         return false;
 
-    envProto = DebuggerEnvironment::initClass(cx, debugCtor, obj);
+    envProto = DebuggerEnvironment::initClass(cx, debugCtor, global);
     if (!envProto)
         return false;
 
@@ -11474,7 +11471,7 @@ JS::dbg::IsDebugger(JSObject& obj)
 {
     JSObject* unwrapped = CheckedUnwrap(&obj);
     return unwrapped &&
-           js::GetObjectClass(unwrapped) == &Debugger::class_ &&
+           unwrapped->getClass() == &Debugger::class_ &&
            js::Debugger::fromJSObject(unwrapped) != nullptr;
 }
 

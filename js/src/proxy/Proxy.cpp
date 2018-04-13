@@ -725,8 +725,8 @@ ProxyObject::trace(JSTracer* trc, JSObject* obj)
     Proxy::trace(trc, obj);
 }
 
-JSObject*
-js::proxy_WeakmapKeyDelegate(JSObject* obj)
+static JSObject*
+proxy_WeakmapKeyDelegate(JSObject* obj)
 {
     MOZ_ASSERT(obj->is<ProxyObject>());
     return obj->as<ProxyObject>().handler()->weakmapKeyDelegate(obj);
