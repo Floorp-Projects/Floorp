@@ -698,22 +698,8 @@ protected:
   /**
    * Add/remove this element to the documents name cache
    */
-  void AddToNameTable(nsAtom* aName) {
-    NS_ASSERTION(HasName(), "Node doesn't have name?");
-    nsIDocument* doc = GetUncomposedDoc();
-    if (doc && !IsInAnonymousSubtree()) {
-      doc->AddToNameTable(this, aName);
-    }
-  }
-  void RemoveFromNameTable() {
-    if (HasName() && CanHaveName(NodeInfo()->NameAtom())) {
-      nsIDocument* doc = GetUncomposedDoc();
-      if (doc) {
-        doc->RemoveFromNameTable(this, GetParsedAttr(nsGkAtoms::name)->
-                                         GetAtomValue());
-      }
-    }
-  }
+  void AddToNameTable(nsAtom* aName);
+  void RemoveFromNameTable();
 
   /**
    * Register or unregister an access key to this element based on the
