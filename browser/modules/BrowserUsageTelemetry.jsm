@@ -83,6 +83,7 @@ const URLBAR_SELECTED_RESULT_METHODS = {
   click: 2,
   arrowEnterSelection: 3,
   tabEnterSelection: 4,
+  rightClickEnter: 5,
 };
 
 
@@ -564,6 +565,10 @@ let BrowserUsageTelemetry = {
         break;
       case "arrow":
         category = "arrowEnterSelection";
+        break;
+      case "rightClick":
+        // Selected by right mouse button.
+        category = "rightClickEnter";
         break;
       default:
         category = "enterSelection";
