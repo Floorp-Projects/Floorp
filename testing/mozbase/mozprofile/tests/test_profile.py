@@ -14,6 +14,7 @@ import pytest
 from mozprofile import (
     BaseProfile,
     Profile,
+    ChromeProfile,
     FirefoxProfile,
     ThunderbirdProfile,
     create_profile,
@@ -39,6 +40,7 @@ def test_with_profile_should_cleanup_even_on_exception():
 
 
 @pytest.mark.parametrize('app,cls', [
+    ('chrome', ChromeProfile),
     ('firefox', FirefoxProfile),
     ('thunderbird', ThunderbirdProfile),
     ('unknown', None)

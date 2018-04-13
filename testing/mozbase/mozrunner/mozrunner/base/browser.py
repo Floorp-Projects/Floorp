@@ -86,9 +86,19 @@ class BlinkRuntimeRunner(BaseRunner):
         self.binary = binary
         self.cmdargs = cmdargs or []
 
+        data_dir, name = os.path.split(self.profile.profile)
+        profile_args = [
+            '--user-data-dir={}'.format(data_dir),
+            '--profile-directory={}'.format(name),
+            '--no-first-run',
+        ]
+        self.cmdargs.extend(profile_args)
+
     @property
     def command(self):
         cmd = self.cmdargs[:]
+        if self.profile.addons:
+            cmd.append('--load-extension={}'.format(','.join(self.profile.addons)))
         return [self.binary] + cmd
 
     def check_for_crashes(self, *args, **kwargs):
