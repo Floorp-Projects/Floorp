@@ -10,7 +10,8 @@ import android.os.Looper
 import java.util.concurrent.Executors
 
 object ThreadUtils {
-    private val backgroundExecutorService = Executors.newSingleThreadExecutor()
+    // We lazily instantiate this thread so it's only taking up resources if it's used by the project.
+    private val backgroundExecutorService by lazy { Executors.newSingleThreadExecutor() }
     private val handler = Handler(Looper.getMainLooper())
     private val uiThread = Looper.getMainLooper().thread
 
