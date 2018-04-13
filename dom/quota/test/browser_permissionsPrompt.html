@@ -13,8 +13,7 @@
         SpecialPowers.pushPrefEnv({
           "set": [["dom.storageManager.enabled", true],
                   ["dom.storageManager.prompt.testing", false],
-                  ["dom.storageManager.prompt.testing.allow", false],
-                  ["browser.storageManager.enabled", true]]
+                  ["dom.storageManager.prompt.testing.allow", false]]
         }, continueToNextStep);
         yield undefined;
 

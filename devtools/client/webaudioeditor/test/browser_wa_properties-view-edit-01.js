@@ -5,7 +5,7 @@
  * Tests that properties are updated when modifying the VariablesView.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;
@@ -37,17 +37,17 @@ add_task(async function () {
   }, "default loaded string");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  await waitForInspectorRender(panelWin, EVENTS),
+  await waitForInspectorRender(panelWin, EVENTS);
   checkVariableView(gVars, 0, {
     "gain": 0
   }, "default loaded number");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[1]));
-  await waitForInspectorRender(panelWin, EVENTS),
+  await waitForInspectorRender(panelWin, EVENTS);
   await setAndCheck(0, "type", "square", "square", "sets string as string");
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
-  await waitForInspectorRender(panelWin, EVENTS),
+  await waitForInspectorRender(panelWin, EVENTS);
   await setAndCheck(0, "gain", "0.005", 0.005, "sets number as number");
   await setAndCheck(0, "gain", "0.1", 0.1, "sets float as float");
   await setAndCheck(0, "gain", ".2", 0.2, "sets float without leading zero as float");
@@ -56,7 +56,7 @@ add_task(async function () {
 });
 
 function setAndCheckVariable(panelWin, gVars) {
-  return async function (varNum, prop, value, expected, desc) {
+  return async function(varNum, prop, value, expected, desc) {
     await modifyVariableView(panelWin, gVars, varNum, prop, value);
     var props = {};
     props[prop] = expected;

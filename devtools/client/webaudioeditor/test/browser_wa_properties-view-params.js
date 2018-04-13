@@ -6,7 +6,7 @@
  * correctly, with default values and correct types.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, panel } = await initWebAudioEditor(SIMPLE_NODES_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, PropertiesView } = panelWin;

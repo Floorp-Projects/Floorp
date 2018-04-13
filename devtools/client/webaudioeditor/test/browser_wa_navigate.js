@@ -6,7 +6,7 @@
  * the audio graph if both pages have an AudioContext.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
   let { gFront, $ } = panelWin;

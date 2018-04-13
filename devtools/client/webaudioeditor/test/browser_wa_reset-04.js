@@ -5,7 +5,7 @@
  * Tests that switching to an iframe works fine.
  */
 
-add_task(async function () {
+add_task(async function() {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
   let { target, panel, toolbox } = await initWebAudioEditor(IFRAME_CONTEXT_URL);

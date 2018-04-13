@@ -53,6 +53,7 @@ DevToolsModules(
     'telemetry.js',
     'theme.js',
     'undo.js',
+    'unicode-url.js',
     'view-source.js',
     'webgl-utils.js',
     'zoom-keys.js',

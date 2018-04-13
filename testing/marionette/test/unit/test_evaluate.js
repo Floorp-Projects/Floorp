@@ -85,7 +85,7 @@ add_test(function test_toJSON_types() {
 
 
 add_test(function test_toJSON_sequences() {
-  let input = [null, true, [], domEl, {toJSON() { return "foo"}}, {bar: "baz"}];
+  let input = [null, true, [], domEl, {toJSON() { return "foo"; }}, {bar: "baz"}];
   let actual = evaluate.toJSON(input, seenEls);
 
   equal(null, actual[0]);

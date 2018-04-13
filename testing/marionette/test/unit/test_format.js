@@ -35,7 +35,7 @@ add_test(function test_pprint() {
     type: "t",
   };
   equal('<input id="foo" class="a b" href="#" name="bar" src="s" type="t">',
-        pprint`${el}`);
+      pprint`${el}`);
 
   run_next_test();
 });
@@ -88,12 +88,12 @@ add_test(function test_truncate_object() {
   equal(truncate`${{foo: ["bar", {baz: 42}]}}`, JSON.stringify({foo: ["bar", {baz: 42}]}));
 
   let complex = {
-    toString() { return "hello world"; }
+    toString() { return "hello world"; },
   };
   equal(truncate`${complex}`, "hello world");
 
   let longComplex = {
-    toString() { return "x".repeat(260); }
+    toString() { return "x".repeat(260); },
   };
   equal(truncate`${longComplex}`, `${HALF} ... ${HALF}`);
 

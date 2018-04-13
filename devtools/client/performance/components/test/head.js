@@ -14,7 +14,6 @@ let flags = require("devtools/shared/flags");
 let { TargetFactory } = require("devtools/client/framework/target");
 let { Toolbox } = require("devtools/client/framework/toolbox");
 
-flags.testing = true;
 let { require: browserRequire } = BrowserLoader({
   baseURI: "resource://devtools/client/performance/",
   window

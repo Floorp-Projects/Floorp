@@ -19,12 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1192536
   <script type="application/javascript">
 "use strict";
 
-const flags = require("devtools/shared/flags");
-const wasTesting = flags.testing;
-SimpleTest.registerCleanupFunction(function() {
-  flags.testing = wasTesting;
-});
-
 const PATH = "http://mochi.test:8888/chrome/devtools/server/tests/mochitest/";
 const BASE_IMAGE = PATH + "inspector-delay-image-response.sjs";
 const DELAYED_IMAGE = BASE_IMAGE + "?delay=300";
@@ -35,6 +29,13 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
+
+function pushPref(preferenceName, value) {
+  return new Promise(resolve => {
+    let options = {"set": [[preferenceName, value]]};
+    SpecialPowers.pushPrefEnv(options, resolve);
+  });
+}
 
 let gImg = null;
 let gNodeFront = null;
@@ -60,11 +61,11 @@ addTest(function setup() {
   });
 });
 
-addTest(function testTimeout() {
+addTest(async function testTimeout() {
   info("Testing that the method aborts if the image takes too long to load.");
 
   // imageToImageData() only times out when flags.testing is not set.
-  flags.testing = false;
+  await pushPref("devtools.testing", false);
 
   gImg.src = TIMEOUT_IMAGE;
 
@@ -72,11 +73,11 @@ addTest(function testTimeout() {
   ensureRejects(gNodeFront.getImageData(), "Timeout image").then(runNextTest);
 });
 
-addTest(function testNonExistentImage() {
+addTest(async function testNonExistentImage() {
   info("Testing that non-existent image causes a rejection.");
 
   // This test shouldn't hit the timeout.
-  flags.testing = true;
+  await pushPref("devtools.testing", true);
 
   gImg.src = NONEXISTENT_IMAGE;
 
@@ -84,11 +85,11 @@ addTest(function testNonExistentImage() {
   ensureRejects(gNodeFront.getImageData(), "Non-existent image").then(runNextTest);
 });
 
-addTest(function testDelayedImage() {
+addTest(async function testDelayedImage() {
   info("Testing that the method waits for an image to load.");
 
   // This test shouldn't hit the timeout.
-  flags.testing = true;
+  await pushPref("devtools.testing", true);
 
   gImg.src = DELAYED_IMAGE;
 

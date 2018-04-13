@@ -18,7 +18,7 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
+        (async function() {
           let win = await openWebIDE();
           let winProject = getProjectWindow(win);
           let tmpDir = FileUtils.getDir("TmpD", []);
@@ -40,7 +40,7 @@
           await removeAllProjects();
           SimpleTest.finish();
         })();
-      }
+      };
     </script>
   </body>
 </html>

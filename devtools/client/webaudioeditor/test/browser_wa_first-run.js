@@ -5,7 +5,7 @@
  * Tests that the reloading/onContentLoaded hooks work.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, panel } = await initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { gFront, $ } = panel.panelWin;
 

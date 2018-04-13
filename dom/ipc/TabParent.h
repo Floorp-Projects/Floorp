@@ -280,7 +280,7 @@ public:
                                                       const uint32_t& aWidth,
                                                       const uint32_t& aHeight,
                                                       const uint32_t& aStride,
-                                                      const uint8_t& aFormat,
+                                                      const gfx::SurfaceFormat& aFormat,
                                                       const uint32_t& aHotspotX,
                                                       const uint32_t& aHotspotY,
                                                       const bool& aForce) override;
@@ -571,7 +571,7 @@ public:
   RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
                         const uint32_t& aAction,
                         const OptionalShmem& aVisualDnDData,
-                        const uint32_t& aStride, const uint8_t& aFormat,
+                        const uint32_t& aStride, const gfx::SurfaceFormat& aFormat,
                         const LayoutDeviceIntRect& aDragRect,
                         const nsCString& aPrincipalURISpec) override;
 

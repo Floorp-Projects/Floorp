@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Cu } = require("chrome");
-
 const { TargetFactory } = require("devtools/client/framework/target");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Connection } = require("devtools/shared/client/connection-manager");
@@ -12,7 +10,7 @@ const _knownTabStores = new WeakMap();
 
 var TabStore;
 
-module.exports = TabStore = function (connection) {
+module.exports = TabStore = function(connection) {
   // If we already know about this connection,
   // let's re-use the existing store.
   if (_knownTabStores.has(connection)) {
@@ -39,7 +37,7 @@ module.exports = TabStore = function (connection) {
 
 TabStore.prototype = {
 
-  destroy: function () {
+  destroy: function() {
     if (this._connection) {
       // While this.destroy is bound using .once() above, that event may not
       // have occurred when the TabStore client calls destroy, so we
@@ -51,14 +49,14 @@ TabStore.prototype = {
     }
   },
 
-  _resetStore: function () {
+  _resetStore: function() {
     this.response = null;
     this.tabs = [];
     this._selectedTab = null;
     this._selectedTabTargetPromise = null;
   },
 
-  _onStatusChanged: function () {
+  _onStatusChanged: function() {
     if (this._connection.status == Connection.Status.CONNECTED) {
       // Watch for changes to remote browser tabs
       this._connection.client.addListener("tabListChanged",
@@ -77,12 +75,12 @@ TabStore.prototype = {
     }
   },
 
-  _onTabListChanged: function () {
+  _onTabListChanged: function() {
     this.listTabs().then(() => this.emit("tab-list"))
                    .catch(console.error);
   },
 
-  _onTabNavigated: function (e, { from, title, url }) {
+  _onTabNavigated: function(e, { from, title, url }) {
     if (!this._selectedTab || from !== this._selectedTab.actor) {
       return;
     }
@@ -91,7 +89,7 @@ TabStore.prototype = {
     this.emit("navigate");
   },
 
-  listTabs: function () {
+  listTabs: function() {
     if (!this._connection || !this._connection.client) {
       return Promise.reject(new Error("Can't listTabs, not connected."));
     }
@@ -135,7 +133,7 @@ TabStore.prototype = {
     }
   },
 
-  _checkSelectedTab: function () {
+  _checkSelectedTab: function() {
     if (!this._selectedTab) {
       return;
     }
@@ -149,12 +147,12 @@ TabStore.prototype = {
     }
   },
 
-  getTargetForTab: function () {
+  getTargetForTab: function() {
     if (this._selectedTabTargetPromise) {
       return this._selectedTabTargetPromise;
     }
     let store = this;
-    this._selectedTabTargetPromise = (async function () {
+    this._selectedTabTargetPromise = (async function() {
       // If you connect to a tab, then detach from it, the root actor may have
       // de-listed the actors that belong to the tab.  This breaks the toolbox
       // if you try to connect to the same tab again.  To work around this

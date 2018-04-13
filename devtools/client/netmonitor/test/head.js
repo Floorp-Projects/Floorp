@@ -18,8 +18,8 @@ const {
   getFormattedIPAndPort,
   getFormattedTime,
 } = require("devtools/client/netmonitor/src/utils/format-utils");
+const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 const {
-  decodeUnicodeUrl,
   getFormattedProtocol,
   getUrlBaseName,
   getUrlHost,
@@ -410,7 +410,7 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
 
   let target = document.querySelectorAll(".request-list-item")[visibleIndex];
   // Bug 1414981 - Request URL should not show #hash
-  let unicodeUrl = decodeUnicodeUrl(url).split("#")[0];
+  let unicodeUrl = getUnicodeUrl(url.split("#")[0]);
   let name = getUrlBaseName(url);
   let query = getUrlQuery(url);
   let host = getUrlHost(url);

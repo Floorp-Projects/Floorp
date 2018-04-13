@@ -34,6 +34,7 @@ user_pref("devtools.devedition.promo.enabled", false);
 user_pref("devtools.chrome.enabled", false);
 user_pref("devtools.debugger.remote-enabled", false);
 user_pref("devtools.debugger.prompt-connection", true);
+user_pref("devtools.testing", true);
 user_pref("browser.EULA.override", true);
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("gfx.logging.level", 1);

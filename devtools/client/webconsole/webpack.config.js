@@ -92,6 +92,7 @@ webpackConfig.resolve = {
     "devtools/client/framework/menu": "devtools-modules/src/menu",
     "devtools/client/sourceeditor/editor": "devtools-source-editor/src/source-editor",
 
+    "devtools/client/shared/unicode-url": path.join(__dirname, "../../client/shared/webpack/shims/unicode-url-stub"),
     "devtools/client/shared/zoom-keys": "devtools-modules/src/zoom-keys",
 
     "devtools/shared/fronts/timeline": path.join(__dirname, "../../client/shared/webpack/shims/fronts-timeline-shim"),

@@ -20,8 +20,6 @@ add_task(async function test_background_storagePersist() {
   await SpecialPowers.pushPrefEnv({
     "set": [
       ["dom.storageManager.enabled", true],
-      // Enable the storageManager permission prompt.
-      ["browser.storageManager.enabled", true],
       ["dom.storageManager.prompt.testing", false],
       ["dom.storageManager.prompt.testing.allow", false],
     ],

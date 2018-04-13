@@ -15,10 +15,11 @@
   <body>
 
     <script type="application/javascript">
+      /* import-globals-from device_front_shared.js */
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
+        (async function() {
           DebuggerServer.init();
           DebuggerServer.registerAllActors();
 
@@ -79,7 +80,7 @@
           ok(false, "Exception: " + e);
           SimpleTest.finish();
         });
-      }
+      };
     </script>
   </body>
 </html>

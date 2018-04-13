@@ -368,7 +368,7 @@ class BasePopup {
     this.panel.style.setProperty("--arrowpanel-background", background);
     if (background == "#fff") {
       // Set a usable default color that work with the default background-color.
-      this.panel.style.setProperty("--arrowpanel-border-color", "hsla(210,4%,10%,.05)");
+      this.panel.style.setProperty("--arrowpanel-border-color", "hsla(210,4%,10%,.15)");
     }
     this.background = background;
   }

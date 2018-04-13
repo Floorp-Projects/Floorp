@@ -16,19 +16,19 @@
       // be collected. We will zero this reference by force from the devtools
       // side.
       var keepAlive = [];
-      (function () {
-      let ctx = new AudioContext();
-      let osc = ctx.createOscillator();
-      let gain = ctx.createGain();
+      (function() {
+        let ctx = new AudioContext();
+        let osc = ctx.createOscillator();
+        let gain = ctx.createGain();
 
-      for (let i = 0; i < 10; i++) {
-        keepAlive.push(ctx.createBufferSource());
-      }
+        for (let i = 0; i < 10; i++) {
+          keepAlive.push(ctx.createBufferSource());
+        }
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      gain.gain.value = 0;
-      osc.start();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.value = 0;
+        osc.start();
       })();
     </script>
   </body>
