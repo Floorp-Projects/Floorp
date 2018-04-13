@@ -164,4 +164,19 @@ nsINode::NodeOrAncestorHasDirAuto() const
   return AncestorHasDirAuto() || (IsElement() && AsElement()->HasDirAuto());
 }
 
+inline bool
+nsIContent::IsActiveChildrenElement() const
+{
+  if (!mNodeInfo->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
+    return false;
+  }
+
+  nsIContent* bindingParent = GetBindingParent();
+  if (!bindingParent) {
+    return false;
+  }
+
+  return !bindingParent->GetShadowRoot();
+}
+
 #endif // nsIContentInlines_h

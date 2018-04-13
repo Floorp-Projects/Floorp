@@ -334,11 +334,8 @@ public:
   {
     return IsMathMLElement() && IsNodeInternal(aFirst, aArgs...);
   }
-  inline bool IsActiveChildrenElement() const
-  {
-    return mNodeInfo->Equals(nsGkAtoms::children, kNameSpaceID_XBL) &&
-           GetBindingParent();
-  }
+
+  inline bool IsActiveChildrenElement() const;
 
   bool IsGeneratedContentContainerForBefore() const
   {
@@ -813,6 +810,8 @@ protected:
 
     /**
      * The nearest enclosing content node with a binding that created us.
+     * TODO(emilio): This should be an Element*.
+     *
      * @see nsIContent::GetBindingParent
      */
     nsIContent* mBindingParent;  // [Weak]
