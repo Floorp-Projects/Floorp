@@ -582,18 +582,12 @@ public:
 #endif
 
 protected:
-  nsCacheableFuncStringContentList(
-    nsINode* aRootNode,
-    nsContentListMatchFunc aFunc,
-    nsContentListDestroyFunc aDestroyFunc,
-    nsFuncStringContentListDataAllocator aDataAllocator,
-    const nsAString& aString)
-    : nsContentList(aRootNode, aFunc, aDestroyFunc, nullptr)
-    ,
-#ifdef DEBUG
-    mType{ static_cast<ContentListType>(0) }
-    ,
-#endif
+  nsCacheableFuncStringContentList(nsINode* aRootNode,
+                                   nsContentListMatchFunc aFunc,
+                                   nsContentListDestroyFunc aDestroyFunc,
+                                   nsFuncStringContentListDataAllocator aDataAllocator,
+                                   const nsAString& aString) :
+    nsContentList(aRootNode, aFunc, aDestroyFunc, nullptr),
     mString(aString)
   {
     mData = (*aDataAllocator)(aRootNode, &mString);

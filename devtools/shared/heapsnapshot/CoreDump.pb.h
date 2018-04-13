@@ -403,18 +403,12 @@ class StackFrame_Data : public ::google::protobuf::MessageLite /* @@protoc_inser
   bool issystem_;
   bool isselfhosted_;
   union SourceOrRefUnion {
-    SourceOrRefUnion()
-      : sourceref_{}
-    {
-    }
+    SourceOrRefUnion() {}
     ::google::protobuf::internal::ArenaStringPtr source_;
     ::google::protobuf::uint64 sourceref_;
   } SourceOrRef_;
   union FunctionDisplayNameOrRefUnion {
-    FunctionDisplayNameOrRefUnion()
-      : functiondisplaynameref_{}
-    {
-    }
+    FunctionDisplayNameOrRefUnion() {}
     ::google::protobuf::internal::ArenaStringPtr functiondisplayname_;
     ::google::protobuf::uint64 functiondisplaynameref_;
   } FunctionDisplayNameOrRef_;
@@ -548,10 +542,7 @@ class StackFrame : public ::google::protobuf::MessageLite /* @@protoc_insertion_
   ::google::protobuf::internal::HasBits<1> _has_bits_;
   mutable int _cached_size_;
   union StackFrameTypeUnion {
-    StackFrameTypeUnion()
-      : data_{ nullptr }
-    {
-    }
+    StackFrameTypeUnion() {}
     ::mozilla::devtools::protobuf::StackFrame_Data* data_;
     ::google::protobuf::uint64 ref_;
   } StackFrameType_;
@@ -814,26 +805,17 @@ class Node : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(
   ::google::protobuf::uint64 size_;
   ::google::protobuf::uint32 coarsetype_;
   union TypeNameOrRefUnion {
-    TypeNameOrRefUnion()
-      : typenameref_{}
-    {
-    }
+    TypeNameOrRefUnion() {}
     ::google::protobuf::internal::ArenaStringPtr typename__;
     ::google::protobuf::uint64 typenameref_;
   } TypeNameOrRef_;
   union JSObjectClassNameOrRefUnion {
-    JSObjectClassNameOrRefUnion()
-      : jsobjectclassnameref_{}
-    {
-    }
+    JSObjectClassNameOrRefUnion() {}
     ::google::protobuf::internal::ArenaStringPtr jsobjectclassname_;
     ::google::protobuf::uint64 jsobjectclassnameref_;
   } JSObjectClassNameOrRef_;
   union ScriptFilenameOrRefUnion {
-    ScriptFilenameOrRefUnion()
-      : scriptfilenameref_{}
-    {
-    }
+    ScriptFilenameOrRefUnion() {}
     ::google::protobuf::internal::ArenaStringPtr scriptfilename_;
     ::google::protobuf::uint64 scriptfilenameref_;
   } ScriptFilenameOrRef_;
@@ -981,10 +963,7 @@ class Edge : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(
   mutable int _cached_size_;
   ::google::protobuf::uint64 referent_;
   union EdgeNameOrRefUnion {
-    EdgeNameOrRefUnion()
-      : nameref_{}
-    {
-    }
+    EdgeNameOrRefUnion() {}
     ::google::protobuf::internal::ArenaStringPtr name_;
     ::google::protobuf::uint64 nameref_;
   } EdgeNameOrRef_;

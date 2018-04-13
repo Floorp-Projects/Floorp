@@ -412,7 +412,7 @@ const int FramePacket::kScaleFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 FramePacket::FramePacket()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , scale_{0.0} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -708,7 +708,7 @@ const int ColorPacket::kColorFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ColorPacket::ColorPacket()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , width_{}, height_{}, color_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -1114,7 +1114,7 @@ const int TexturePacket_Rect::kHFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TexturePacket_Rect::TexturePacket_Rect()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , y_{0.0}, w_{0.0}, h_{0.0} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -1510,7 +1510,7 @@ const int TexturePacket_Size::kHFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TexturePacket_Size::TexturePacket_Size()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , h_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -1807,7 +1807,7 @@ const int TexturePacket_Matrix::kMFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TexturePacket_Matrix::TexturePacket_Matrix()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , isid_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -2168,7 +2168,7 @@ const int TexturePacket_EffectMask::kMMaskTransformFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TexturePacket_EffectMask::TexturePacket_EffectMask()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , mmasktransform_{nullptr}, mis3d_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -2586,7 +2586,7 @@ const int TexturePacket::kMaskFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 TexturePacket::TexturePacket()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , mask_{nullptr}, layerref_{}, width_{}, height_{}, stride_{}, name_{}, target_{}, dataformat_{}, glcontext_{}, mfilter_{}, mpremultiplied_{false}, ismask_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -3659,7 +3659,7 @@ const int LayersPacket_Layer_Size::kHFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 LayersPacket_Layer_Size::LayersPacket_Layer_Size()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , h_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -3957,7 +3957,7 @@ const int LayersPacket_Layer_Rect::kHFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 LayersPacket_Layer_Rect::LayersPacket_Layer_Rect()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , y_{}, w_{}, h_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -4594,7 +4594,7 @@ const int LayersPacket_Layer_Matrix::kMFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 LayersPacket_Layer_Matrix::LayersPacket_Layer_Matrix()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , isid_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -4955,7 +4955,7 @@ const int LayersPacket_Layer_Shadow::kVRegionFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 LayersPacket_Layer_Shadow::LayersPacket_Layer_Shadow()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , transform_{nullptr}, vregion_{nullptr} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -5414,7 +5414,7 @@ const int LayersPacket_Layer::kDisplayListLogFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 LayersPacket_Layer::LayersPacket_Layer()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , transform_{nullptr}, vregion_{nullptr}, shadow_{nullptr}, hitregion_{nullptr}, dispatchregion_{nullptr}, noactionregion_{nullptr}, hpanregion_{nullptr}, vpanregion_{nullptr}, valid_{nullptr}, size_{nullptr}, ptr_{}, parentptr_{}, type_{}, opacity_{0.0}, barid_{}, mask_{}, copaque_{false}, calpha_{false}, color_{}, refid_{}, filter_{}, displaylistloglength_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -7864,7 +7864,7 @@ const int DrawPacket_Rect::kHFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 DrawPacket_Rect::DrawPacket_Rect()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , y_{0.0}, w_{0.0}, h_{0.0} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -8287,7 +8287,7 @@ const int DrawPacket::kTextureRectFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 DrawPacket::DrawPacket()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , offsety_{0.0}, layerref_{}, totalrects_{} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -8983,7 +8983,7 @@ const int Packet::kDrawFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Packet::Packet()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , color_{nullptr}, texture_{nullptr}, layers_{nullptr}, meta_{nullptr}, draw_{nullptr} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }
@@ -9752,7 +9752,7 @@ const int CommandPacket::kValueFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 CommandPacket::CommandPacket()
-  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) , value_{false} {
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_LayerScopePacket_2eproto::InitDefaults();
   }

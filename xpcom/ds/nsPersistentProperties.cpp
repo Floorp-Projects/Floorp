@@ -56,13 +56,8 @@ class MOZ_STACK_CLASS nsPropertiesParser
 {
 public:
   explicit nsPropertiesParser(nsIPersistentProperties* aProps)
-    : mUnicodeValuesRead{}
-    , mUnicodeValue{ u'\0' }
-    , mHaveMultiLine(false)
-    , mMultiLineCanSkipN{ false }
-    , mMinLength{}
+    : mHaveMultiLine(false)
     , mState(eParserState_AwaitingKey)
-    , mSpecialState{ eParserSpecial_None }
     , mProps(aProps)
   {
   }

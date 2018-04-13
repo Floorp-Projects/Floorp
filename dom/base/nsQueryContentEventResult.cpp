@@ -53,10 +53,7 @@ NS_IMPL_RELEASE(nsQueryContentEventResult)
 
 nsQueryContentEventResult::nsQueryContentEventResult()
   : mEventMessage(eVoidEvent)
-  , mOffset{}
-  , mTentativeCaretOffset{}
   , mSucceeded(false)
-  , mReversed{ false }
 {
 }
 

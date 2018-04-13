@@ -313,6 +313,7 @@ nsDisplayTextOverflowMarker::CreateWebRenderCommands(mozilla::wr::DisplayListBui
   return !textDrawer->HasUnsupportedFeatures();
 }
 
+
 TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
                            nsIFrame* aBlockFrame)
   : mContentArea(aBlockFrame->GetWritingMode(),
@@ -324,8 +325,6 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
   , mBlockSize(aBlockFrame->GetSize())
   , mBlockWM(aBlockFrame->GetWritingMode())
   , mAdjustForPixelSnapping(false)
-  , mIStart{}
-  , mIEnd{}
 {
 #ifdef MOZ_XUL
   if (!mScrollableFrame) {

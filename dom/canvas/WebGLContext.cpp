@@ -109,129 +109,71 @@ WebGLContextOptions::WebGLContextOptions()
 }
 
 WebGLContext::WebGLContext()
-  : WebGLContextUnchecked(nullptr)
-  , mMaxPerfWarnings(gfxPrefs::WebGLMaxPerfWarnings())
-  , mNumPerfWarnings(0)
-  , mMaxAcceptableFBStatusInvals(gfxPrefs::WebGLMaxAcceptableFBStatusInvals())
-  , mDepthTestEnabled{ '\0' }
-  , mGenerateMipmapHint{}
-  , mDataAllocGLCallCount(0)
-  , mPrimRestartTypeBytes{}
-  , mActiveTexture{}
-  , mDefaultFB_DrawBuffer0{}
-  , mDefaultFB_ReadBuffer{}
-  , mBypassShaderValidation(false)
-  , mGLMaxTextureUnits{}
-  , mGLMaxVertexAttribs{}
-  , mGLMaxFragmentUniformVectors{}
-  , mGLMaxVertexUniformVectors{}
-  , mGLMaxVaryingVectors{}
-  , mGLMaxTransformFeedbackSeparateAttribs{}
-  , mGLMaxUniformBufferBindings{}
-  , mGLMaxVertexTextureImageUnits{}
-  , mGLMaxFragmentTextureImageUnits{}
-  , mGLMaxCombinedTextureImageUnits{}
-  , mGLMaxColorAttachments{}
-  , mGLMaxDrawBuffers{}
-  , mGLMaxTextureSize{}
-  , mGLMaxCubeMapTextureSize{}
-  , mGLMax3DTextureSize{}
-  , mGLMaxArrayTextureLayers{}
-  , mGLMaxRenderbufferSize{}
-  , mPixelStore_UnpackImageHeight{}
-  , mPixelStore_UnpackSkipImages{}
-  , mPixelStore_UnpackRowLength{}
-  , mPixelStore_UnpackSkipRows{}
-  , mPixelStore_UnpackSkipPixels{}
-  , mPixelStore_UnpackAlignment{}
-  , mPixelStore_PackRowLength{}
-  , mPixelStore_PackSkipRows{}
-  , mPixelStore_PackSkipPixels{}
-  , mPixelStore_PackAlignment{}
-  , mPixelStore_ColorspaceConversion{}
-  , mPixelStore_FlipY{ false }
-  , mPixelStore_PremultiplyAlpha{ false }
-  , mPixelStore_RequireFastPath{ false }
-  , mEmptyTFO(0)
-  , mFakeVertexAttrib0BufferObject{}
-  , mFakeVertexAttrib0BufferObjectSize{}
-  , mFakeVertexAttrib0DataDefined{ false }
-  , mStencilRefFront{}
-  , mStencilRefBack{}
-  , mStencilValueMaskFront{}
-  , mStencilValueMaskBack{}
-  , mStencilWriteMaskFront{}
-  , mStencilWriteMaskBack{}
-  , mColorWriteMask{ '\0' }
-  , mDepthWriteMask{ '\0' }
-  , mStencilClearValue{}
-  , mDepthClearValue{ 0.0 }
-  , mLineWidth{ 0.0 }
-  , mContextLossHandler(this)
-  , mNeedsFakeNoAlpha(false)
-  , mNeedsFakeNoDepth(false)
-  , mNeedsFakeNoStencil(false)
-  , mNeedsFakeNoStencil_UserFBs{ false }
-  , mDriverColorMask{ '\0' }
-  , mDriverDepthTest{ false }
-  , mDriverStencilTest{ false }
-  , mNeedsIndexValidation{ false }
-  , mAllowFBInvalidation(gfxPrefs::WebGLFBInvalidation())
-  , mMsaaSamples(gfxPrefs::WebGLMsaaSamples())
-  , mDefaultFB_IsInvalid{ false }
+    : WebGLContextUnchecked(nullptr)
+    , mMaxPerfWarnings(gfxPrefs::WebGLMaxPerfWarnings())
+    , mNumPerfWarnings(0)
+    , mMaxAcceptableFBStatusInvals(gfxPrefs::WebGLMaxAcceptableFBStatusInvals())
+    , mDataAllocGLCallCount(0)
+    , mBypassShaderValidation(false)
+    , mEmptyTFO(0)
+    , mContextLossHandler(this)
+    , mNeedsFakeNoAlpha(false)
+    , mNeedsFakeNoDepth(false)
+    , mNeedsFakeNoStencil(false)
+    , mAllowFBInvalidation(gfxPrefs::WebGLFBInvalidation())
+    , mMsaaSamples(gfxPrefs::WebGLMsaaSamples())
 {
-  mGeneration = 0;
-  mInvalidated = false;
-  mCapturedFrameInvalidated = false;
-  mShouldPresent = true;
-  mResetLayer = true;
-  mOptionsFrozen = false;
-  mDisableExtensions = false;
-  mIsMesa = false;
-  mEmitContextLostErrorOnce = false;
-  mWebGLError = 0;
-  mUnderlyingGLError = 0;
+    mGeneration = 0;
+    mInvalidated = false;
+    mCapturedFrameInvalidated = false;
+    mShouldPresent = true;
+    mResetLayer = true;
+    mOptionsFrozen = false;
+    mDisableExtensions = false;
+    mIsMesa = false;
+    mEmitContextLostErrorOnce = false;
+    mWebGLError = 0;
+    mUnderlyingGLError = 0;
 
-  mContextLostErrorSet = false;
+    mContextLostErrorSet = false;
 
-  mViewportX = 0;
-  mViewportY = 0;
-  mViewportWidth = 0;
-  mViewportHeight = 0;
+    mViewportX = 0;
+    mViewportY = 0;
+    mViewportWidth = 0;
+    mViewportHeight = 0;
 
-  mDitherEnabled = 1;
-  mRasterizerDiscardEnabled = 0; // OpenGL ES 3.0 spec p244
-  mScissorTestEnabled = 0;
-  mStencilTestEnabled = 0;
+    mDitherEnabled = 1;
+    mRasterizerDiscardEnabled = 0; // OpenGL ES 3.0 spec p244
+    mScissorTestEnabled = 0;
+    mStencilTestEnabled = 0;
 
-  if (NS_IsMainThread()) {
-    // XXX mtseng: bug 709490, not thread safe
-    WebGLMemoryTracker::AddWebGLContext(this);
-  }
+    if (NS_IsMainThread()) {
+        // XXX mtseng: bug 709490, not thread safe
+        WebGLMemoryTracker::AddWebGLContext(this);
+    }
 
-  mAllowContextRestore = true;
-  mLastLossWasSimulated = false;
-  mContextStatus = ContextNotLost;
-  mLoseContextOnMemoryPressure = false;
-  mCanLoseContextInForeground = true;
-  mRestoreWhenVisible = false;
+    mAllowContextRestore = true;
+    mLastLossWasSimulated = false;
+    mContextStatus = ContextNotLost;
+    mLoseContextOnMemoryPressure = false;
+    mCanLoseContextInForeground = true;
+    mRestoreWhenVisible = false;
 
-  mAlreadyGeneratedWarnings = 0;
-  mAlreadyWarnedAboutFakeVertexAttrib0 = false;
-  mAlreadyWarnedAboutViewportLargerThanDest = false;
+    mAlreadyGeneratedWarnings = 0;
+    mAlreadyWarnedAboutFakeVertexAttrib0 = false;
+    mAlreadyWarnedAboutViewportLargerThanDest = false;
 
-  mMaxWarnings = gfxPrefs::WebGLMaxWarningsPerContext();
-  if (mMaxWarnings < -1) {
-    GenerateWarning("webgl.max-warnings-per-context size is too large (seems "
-                    "like a negative value wrapped)");
-    mMaxWarnings = 0;
-  }
+    mMaxWarnings = gfxPrefs::WebGLMaxWarningsPerContext();
+    if (mMaxWarnings < -1) {
+        GenerateWarning("webgl.max-warnings-per-context size is too large (seems like a negative value wrapped)");
+        mMaxWarnings = 0;
+    }
 
-  mLastUseIndex = 0;
+    mLastUseIndex = 0;
 
-  mDisableFragHighP = false;
+    mDisableFragHighP = false;
 
-  mDrawCallsSinceLastFlush = 0;
+    mDrawCallsSinceLastFlush = 0;
 }
 
 WebGLContext::~WebGLContext()

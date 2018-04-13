@@ -69,29 +69,25 @@ NS_IMPL_ISUPPORTS(RasterImage, imgIContainer, nsIProperties,
 #endif
 
 //******************************************************************************
-RasterImage::RasterImage(ImageURL* aURI /* = nullptr */)
-  : ImageResource(aURI)
-  , // invoke superclass's constructor
-  mSize(0, 0)
-  , mLockCount(0)
-  , mDecoderType{ DecoderType::UNKNOWN }
-  , mDecodeCount(0)
-  ,
+RasterImage::RasterImage(ImageURL* aURI /* = nullptr */) :
+  ImageResource(aURI), // invoke superclass's constructor
+  mSize(0,0),
+  mLockCount(0),
+  mDecodeCount(0),
 #ifdef DEBUG
-  mFramesNotified(0)
-  ,
+  mFramesNotified(0),
 #endif
-  mSourceBuffer(MakeNotNull<SourceBuffer*>())
-  , mHasSize(false)
-  , mTransient(false)
-  , mSyncLoad(false)
-  , mDiscardable(false)
-  , mSomeSourceData(false)
-  , mAllSourceData(false)
-  , mHasBeenDecoded(false)
-  , mPendingAnimation(false)
-  , mAnimationFinished(false)
-  , mWantFullDecode(false)
+  mSourceBuffer(MakeNotNull<SourceBuffer*>()),
+  mHasSize(false),
+  mTransient(false),
+  mSyncLoad(false),
+  mDiscardable(false),
+  mSomeSourceData(false),
+  mAllSourceData(false),
+  mHasBeenDecoded(false),
+  mPendingAnimation(false),
+  mAnimationFinished(false),
+  mWantFullDecode(false)
 {
 }
 

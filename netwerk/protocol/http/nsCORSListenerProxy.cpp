@@ -413,18 +413,13 @@ nsCORSListenerProxy::Shutdown()
 nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
                                          nsIPrincipal* aRequestingPrincipal,
                                          bool aWithCredentials)
-  : mOuterListener(aOuter)
-  , mRequestingPrincipal(aRequestingPrincipal)
-  , mOriginHeaderPrincipal(aRequestingPrincipal)
-  , mWithCredentials(aWithCredentials && !gDisableCORSPrivateData)
-  , mRequestApproved(false)
-  , mHasBeenCrossSite(false)
-  ,
-#ifdef DEBUG
-  mInited{ false }
-  ,
-#endif
-  mMutex("nsCORSListenerProxy")
+  : mOuterListener(aOuter),
+    mRequestingPrincipal(aRequestingPrincipal),
+    mOriginHeaderPrincipal(aRequestingPrincipal),
+    mWithCredentials(aWithCredentials && !gDisableCORSPrivateData),
+    mRequestApproved(false),
+    mHasBeenCrossSite(false),
+    mMutex("nsCORSListenerProxy")
 {
 }
 

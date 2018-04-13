@@ -358,15 +358,12 @@ protected:
         };
 
         HostInfo()
-          : is_ipaddr(false)
-          , port(0)
-          , name{}
-        { /* other members intentionally uninitialized */
-        }
-        ~HostInfo()
-        {
-          if (!is_ipaddr && name.host)
-            free(name.host);
+            : is_ipaddr(false)
+            , port(0)
+            { /* other members intentionally uninitialized */ }
+       ~HostInfo() {
+            if (!is_ipaddr && name.host)
+                free(name.host);
         }
     };
 

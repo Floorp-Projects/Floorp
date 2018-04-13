@@ -225,8 +225,6 @@ EbmlComposer::EbmlComposer()
   , mClusterTimecode(0)
   , mWidth(0)
   , mHeight(0)
-  , mDisplayWidth{}
-  , mDisplayHeight{}
   , mSampleFreq(0)
   , mChannels(0)
 {}

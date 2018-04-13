@@ -52,45 +52,33 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
                            const ReflowInput* aOuterReflowInput,
                            const nsLineList::iterator* aLine,
                            nsLineLayout* aBaseLineLayout)
-  : mPresContext(aPresContext)
-  , mFloatManager(aFloatManager)
-  , mBlockReflowInput(aOuterReflowInput)
-  , mBaseLineLayout(aBaseLineLayout)
-  , mLastOptionalBreakFrame(nullptr)
-  , mForceBreakFrame(nullptr)
-  , mBlockRI(nullptr)
-  , /* XXX temporary */
-  mLastOptionalBreakPriority(gfxBreakPriority::eNoBreak)
-  , mLastOptionalBreakFrameOffset(-1)
-  , mForceBreakFrameOffset(-1)
-  , mMinLineBSize(0)
-  , mTextIndent(0)
-  , mMaxStartBoxBSize{}
-  , mMaxEndBoxBSize{}
-  , mFinalLineBSize{}
-  , mFirstLetterStyleOK(false)
-  , mIsTopOfPage(false)
-  , mImpactedByFloats(false)
-  , mLastFloatWasLetterFrame(false)
-  , mLineIsEmpty(false)
-  , mLineEndsInBR(false)
-  , mNeedBackup(false)
-  , mInFirstLine(false)
-  , mGotLineBox(false)
-  , mInFirstLetter(false)
-  , mHasBullet(false)
-  , mDirtyNextLine(false)
-  , mLineAtStart(false)
-  , mHasRuby(false)
-  , mSuppressLineWrap(nsSVGUtils::IsInSVGTextSubtree(aOuterReflowInput->mFrame))
-#ifdef DEBUG
-  , mSpansAllocated{}
-  , mSpansFreed{}
-  , mFramesAllocated{}
-  , mFramesFreed
-{
-}
-#endif
+  : mPresContext(aPresContext),
+    mFloatManager(aFloatManager),
+    mBlockReflowInput(aOuterReflowInput),
+    mBaseLineLayout(aBaseLineLayout),
+    mLastOptionalBreakFrame(nullptr),
+    mForceBreakFrame(nullptr),
+    mBlockRI(nullptr),/* XXX temporary */
+    mLastOptionalBreakPriority(gfxBreakPriority::eNoBreak),
+    mLastOptionalBreakFrameOffset(-1),
+    mForceBreakFrameOffset(-1),
+    mMinLineBSize(0),
+    mTextIndent(0),
+    mFirstLetterStyleOK(false),
+    mIsTopOfPage(false),
+    mImpactedByFloats(false),
+    mLastFloatWasLetterFrame(false),
+    mLineIsEmpty(false),
+    mLineEndsInBR(false),
+    mNeedBackup(false),
+    mInFirstLine(false),
+    mGotLineBox(false),
+    mInFirstLetter(false),
+    mHasBullet(false),
+    mDirtyNextLine(false),
+    mLineAtStart(false),
+    mHasRuby(false),
+    mSuppressLineWrap(nsSVGUtils::IsInSVGTextSubtree(aOuterReflowInput->mFrame))
 {
   MOZ_ASSERT(aOuterReflowInput, "aOuterReflowInput must not be null");
   NS_ASSERTION(aFloatManager || aOuterReflowInput->mFrame->IsLetterFrame(),

@@ -486,9 +486,6 @@ public:
     friend class StringListRange;
     Iterator(const CharType* aRangeStart, uint32_t aLength)
       : mRangeEnd(aRangeStart + aLength)
-      , mStart{ nullptr }
-      , mEnd{ nullptr }
-      , mComma{ nullptr }
     {
       SearchItemAt(aRangeStart);
     }

@@ -268,7 +268,6 @@ nsUDPSocket::nsUDPSocket()
   , mByteReadCount(0)
   , mByteWriteCount(0)
 {
-  this->mAddr.inet = {};
   mAddr.raw.family = PR_AF_UNSPEC;
   // we want to be able to access the STS directly, and it may not have been
   // constructed yet.  the STS constructor sets gSocketTransportService.

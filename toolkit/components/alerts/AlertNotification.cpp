@@ -22,7 +22,6 @@ NS_IMPL_ISUPPORTS(AlertNotification, nsIAlertNotification)
 
 AlertNotification::AlertNotification()
   : mTextClickable(false)
-  , mRequireInteraction{ false }
   , mInPrivateBrowsing(false)
 {}
 

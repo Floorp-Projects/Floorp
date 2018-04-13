@@ -204,7 +204,6 @@ public:
   BulletRenderer(imgIContainer* image, const nsRect& dest)
     : mImage(image)
     , mDest(dest)
-    , mColor{}
     , mListStyleType(NS_STYLE_LIST_STYLE_NONE)
   {
     MOZ_ASSERT(IsImageType());

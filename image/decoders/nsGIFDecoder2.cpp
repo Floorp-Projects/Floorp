@@ -86,7 +86,6 @@ nsGIFDecoder2::nsGIFDecoder2(RasterImage* aImage)
   , mOldColor(0)
   , mCurrentFrameIndex(-1)
   , mColorTablePos(0)
-  , mColorMask{ '\0' }
   , mGIFOpen(false)
   , mSawTransparency(false)
 {

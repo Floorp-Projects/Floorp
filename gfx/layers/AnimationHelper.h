@@ -55,7 +55,6 @@ struct AnimatedValue {
                 gfx::Matrix4x4&& aFrameTransform,
                 const TransformData& aData)
     : mType(AnimatedValue::TRANSFORM)
-    , mOpacity{ 0.0 }
   {
     mTransform.mTransformInDevSpace = Move(aTransformInDevSpace);
     mTransform.mFrameTransform = Move(aFrameTransform);

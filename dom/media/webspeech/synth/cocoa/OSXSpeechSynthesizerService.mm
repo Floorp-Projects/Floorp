@@ -109,7 +109,7 @@ SpeechTaskCallback::SpeechTaskCallback(nsISpeechTask* aTask,
                                        const nsTArray<size_t>& aOffsets)
   : mTask(aTask)
   , mSpeechSynthesizer(aSynth)
-  , mCurrentIndex{}, mOffsets(aOffsets)
+  , mOffsets(aOffsets)
 {
   mDelegate = [[SpeechDelegate alloc] initWithCallback:this];
   [mSpeechSynthesizer setDelegate:mDelegate];

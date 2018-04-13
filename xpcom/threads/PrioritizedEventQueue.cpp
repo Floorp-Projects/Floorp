@@ -14,22 +14,16 @@
 using namespace mozilla;
 
 template<class InnerQueueT>
-PrioritizedEventQueue<InnerQueueT>::PrioritizedEventQueue(
-  UniquePtr<InnerQueueT> aHighQueue,
-  UniquePtr<InnerQueueT> aInputQueue,
-  UniquePtr<InnerQueueT> aNormalQueue,
-  UniquePtr<InnerQueueT> aIdleQueue,
-  already_AddRefed<nsIIdlePeriod> aIdlePeriod)
+PrioritizedEventQueue<InnerQueueT>::PrioritizedEventQueue(UniquePtr<InnerQueueT> aHighQueue,
+                                                          UniquePtr<InnerQueueT> aInputQueue,
+                                                          UniquePtr<InnerQueueT> aNormalQueue,
+                                                          UniquePtr<InnerQueueT> aIdleQueue,
+                                                          already_AddRefed<nsIIdlePeriod> aIdlePeriod)
   : mHighQueue(Move(aHighQueue))
   , mInputQueue(Move(aInputQueue))
   , mNormalQueue(Move(aNormalQueue))
   , mIdleQueue(Move(aIdleQueue))
-  , mMutex{ nullptr }
-  , mNextIdleDeadline{ nullptr }
-  , mProcessHighPriorityQueue{ false }
   , mIdlePeriod(aIdlePeriod)
-  , mHasPendingEventsPromisedIdleEvent{ false }
-  , mInputQueueState{ STATE_DISABLED }
 {
   static_assert(IsBaseOf<AbstractEventQueue, InnerQueueT>::value,
                 "InnerQueueT must be an AbstractEventQueue subclass");

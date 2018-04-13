@@ -155,13 +155,10 @@ public:
     void StartTimer(uint32_t aTimeout);
     void StopTimer();
 
-    explicit ConnectionData(Dashboard* target)
-      : mPort{}
-      , mProtocol{ nullptr }
-      , mTimeout{}
+    explicit ConnectionData(Dashboard *target)
     {
-      mEventTarget = nullptr;
-      mDashboard = target;
+        mEventTarget = nullptr;
+        mDashboard = target;
     }
 
     nsCOMPtr<nsISocketTransport> mSocket;
@@ -302,10 +299,7 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIDNSLISTENER
 
-    LookupHelper()
-      : mEventTarget{ nullptr }
-      , mStatus{ NS_ERROR_NOT_INITIALIZED }
-    {
+    LookupHelper() {
     }
 
     nsresult ConstructAnswer(LookupArgument *aArgument);

@@ -409,12 +409,7 @@ private:
 
   private:
     struct Entry : public nsUint32HashKey {
-      explicit Entry(KeyTypePointer aKey)
-        : nsUint32HashKey(aKey)
-        , mNextBlock{}
-        , mPrevBlock{}
-      {
-      }
+      explicit Entry(KeyTypePointer aKey) : nsUint32HashKey(aKey) { }
       Entry(const Entry& toCopy) : nsUint32HashKey(&toCopy.GetKey()),
         mNextBlock(toCopy.mNextBlock), mPrevBlock(toCopy.mPrevBlock) {}
 

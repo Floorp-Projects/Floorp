@@ -771,11 +771,7 @@ class nsLineList_iterator {
     typedef nsLineLink                  link_type;
 
 #ifdef DEBUG
-    nsLineList_iterator()
-      : mListLink{ nullptr }
-    {
-      memset(&mCurrent, 0xcd, sizeof(mCurrent));
-    }
+    nsLineList_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
 #else
     // Auto generated default constructor OK.
 #endif
@@ -934,11 +930,7 @@ class nsLineList_reverse_iterator {
     typedef nsLineLink                  link_type;
 
 #ifdef DEBUG
-    nsLineList_reverse_iterator()
-      : mListLink{ nullptr }
-    {
-      memset(&mCurrent, 0xcd, sizeof(mCurrent));
-    }
+    nsLineList_reverse_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
 #else
     // Auto generated default constructor OK.
 #endif
@@ -1074,11 +1066,7 @@ class nsLineList_const_iterator {
     typedef nsLineLink                  link_type;
 
 #ifdef DEBUG
-    nsLineList_const_iterator()
-      : mListLink{ nullptr }
-    {
-      memset(&mCurrent, 0xcd, sizeof(mCurrent));
-    }
+    nsLineList_const_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
 #else
     // Auto generated default constructor OK.
 #endif
@@ -1212,11 +1200,7 @@ class nsLineList_const_reverse_iterator {
     typedef nsLineLink                  link_type;
 
 #ifdef DEBUG
-    nsLineList_const_reverse_iterator()
-      : mListLink{ nullptr }
-    {
-      memset(&mCurrent, 0xcd, sizeof(mCurrent));
-    }
+    nsLineList_const_reverse_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
 #else
     // Auto generated default constructor OK.
 #endif

@@ -97,11 +97,8 @@ extern const char kNrIceTransportTls[];
 
 class NrIceStunServer {
  public:
-   explicit NrIceStunServer(const PRNetAddr& addr)
-     : has_addr_(true)
-     , port_{}
-   {
-     memcpy(&addr_, &addr, sizeof(addr));
+  explicit NrIceStunServer(const PRNetAddr& addr) : has_addr_(true) {
+    memcpy(&addr_, &addr, sizeof(addr));
   }
 
    // The main function to use. Will take either an address or a hostname.
@@ -119,32 +116,27 @@ class NrIceStunServer {
   nsresult ToNicerStunStruct(nr_ice_stun_server* server) const;
 
  protected:
-   explicit NrIceStunServer(const char* transport)
-     : has_addr_{ false }
-     , port_{}
-     , addr_()
-     , transport_(transport)
-   {
-   }
+  explicit NrIceStunServer(const char *transport) :
+      addr_(), transport_(transport) {}
 
-   nsresult Init(const std::string& addr, uint16_t port)
-   {
-     PRStatus status = PR_StringToNetAddr(addr.c_str(), &addr_);
-     if (status == PR_SUCCESS) {
-       // Parseable as an address
-       addr_.inet.port = PR_htons(port);
-       port_ = port;
-       has_addr_ = true;
-       return NS_OK;
-     } else if (addr.size() < 256) {
-       // Apparently this is a hostname.
-       host_ = addr;
-       port_ = port;
-       has_addr_ = false;
-       return NS_OK;
-     }
+  nsresult Init(const std::string& addr, uint16_t port) {
+    PRStatus status = PR_StringToNetAddr(addr.c_str(), &addr_);
+    if (status == PR_SUCCESS) {
+      // Parseable as an address
+      addr_.inet.port = PR_htons(port);
+      port_ = port;
+      has_addr_ = true;
+      return NS_OK;
+    }
+    else if (addr.size() < 256) {
+      // Apparently this is a hostname.
+      host_ = addr;
+      port_ = port;
+      has_addr_ = false;
+      return NS_OK;
+    }
 
-     return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
 
   bool has_addr_;

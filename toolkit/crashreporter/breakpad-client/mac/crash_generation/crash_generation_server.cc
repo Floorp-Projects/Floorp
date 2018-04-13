@@ -57,7 +57,7 @@ CrashGenerationServer::CrashGenerationServer(
       dump_dir_(dump_path.empty() ? "/tmp" : dump_path),
       started_(false),
       receive_port_(mach_port_name),
-      mach_port_name_(mach_port_name) , server_thread_{nullptr} {
+      mach_port_name_(mach_port_name) {
 }
 
 CrashGenerationServer::~CrashGenerationServer() {

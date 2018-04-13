@@ -44,10 +44,7 @@ struct PropertyStyleAnimationValuePair;
 struct AnimationValue
 {
   explicit AnimationValue(const RefPtr<RawServoAnimationValue>& aValue)
-    : mGecko{}
-    , mServo(aValue)
-  {
-  }
+    : mServo(aValue) { }
   AnimationValue() = default;
 
   AnimationValue(const AnimationValue& aOther)

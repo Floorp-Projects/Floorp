@@ -35,8 +35,6 @@ class SmallPointerArray
 {
 public:
   SmallPointerArray()
-    : mPadding{ nullptr }
-    , mArray{ nullptr }
   {
     mInlineElements[0] = mInlineElements[1] = nullptr;
     static_assert(sizeof(SmallPointerArray<T>) == (2 * sizeof(void*)),
