@@ -7,6 +7,19 @@
 #ifndef mozilla_a11y_IPCTypes_h
 #define mozilla_a11y_IPCTypes_h
 
+#include "mozilla/a11y/Role.h"
+
+namespace IPC {
+
+template<>
+struct ParamTraits<mozilla::a11y::role>
+  : public ContiguousEnumSerializerInclusive<mozilla::a11y::role,
+                                             mozilla::a11y::role::NOTHING,
+                                             mozilla::a11y::role::LAST_ROLE>
+{
+};
+};
+
 /**
  * Since IPDL does not support preprocessing, this header file allows us to
  * define types used by PDocAccessible differently depending on platform.
