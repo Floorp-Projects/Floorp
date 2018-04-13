@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ResponsiveImageSelector.h"
 #include "mozilla/ServoStyleSetInlines.h"
+#include "mozilla/TextUtils.h"
 #include "nsIURI.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
@@ -55,8 +56,8 @@ ParseFloat(const nsAString& aString, double& aDouble)
     return false;
   }
 
-  if (nsCRT::IsAsciiDigit(*iter)) {
-    for (; iter != end && nsCRT::IsAsciiDigit(*iter) ; ++iter);
+  if (IsAsciiDigit(*iter)) {
+    for (; iter != end && IsAsciiDigit(*iter) ; ++iter);
   } else if (*iter == char16_t('.')) {
     // Do nothing, jumps to fraction part
   } else {
@@ -66,12 +67,12 @@ ParseFloat(const nsAString& aString, double& aDouble)
   // Fraction
   if (*iter == char16_t('.')) {
     ++iter;
-    if (iter == end || !nsCRT::IsAsciiDigit(*iter)) {
+    if (iter == end || !IsAsciiDigit(*iter)) {
       // U+002E FULL STOP character (.) must be followed by one or more ASCII digits
       return false;
     }
 
-    for (; iter != end && nsCRT::IsAsciiDigit(*iter) ; ++iter);
+    for (; iter != end && IsAsciiDigit(*iter) ; ++iter);
   }
 
   if (iter != end && (*iter == char16_t('e') || *iter == char16_t('E'))) {
@@ -80,12 +81,12 @@ ParseFloat(const nsAString& aString, double& aDouble)
       ++iter;
     }
 
-    if (iter == end || !nsCRT::IsAsciiDigit(*iter)) {
+    if (iter == end || !IsAsciiDigit(*iter)) {
       // Should have one or more ASCII digits
       return false;
     }
 
-    for (; iter != end && nsCRT::IsAsciiDigit(*iter) ; ++iter);
+    for (; iter != end && IsAsciiDigit(*iter) ; ++iter);
   }
 
   if (iter != end) {
