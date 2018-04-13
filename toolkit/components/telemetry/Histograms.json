@@ -294,7 +294,7 @@
   "CONTENT_PROCESS_LAUNCH_TIME_MS" : {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["fgomes@mozilla.com", "mconley@mozilla.com"],
-    "expires_in_version": "57",
+    "expires_in_version": "67",
     "bug_numbers": [1304790],
     "kind": "exponential",
     "high": 64000,
