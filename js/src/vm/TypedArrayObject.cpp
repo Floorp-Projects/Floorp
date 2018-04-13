@@ -11,6 +11,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TextUtils.h"
 
 #include <string.h>
 #ifndef XP_WIN
@@ -52,6 +53,7 @@ using namespace js;
 using namespace js::gc;
 
 using mozilla::AssertedCast;
+using mozilla::IsAsciiDigit;
 using JS::CanonicalizeNaN;
 using JS::ToInt32;
 using JS::ToUint32;
@@ -2198,7 +2200,7 @@ js::StringIsTypedArrayIndex(const CharT* s, size_t length, uint64_t* indexp)
             return false;
     }
 
-    if (!JS7_ISDEC(*s))
+    if (!IsAsciiDigit(*s))
         return false;
 
     uint64_t index = 0;
@@ -2211,7 +2213,7 @@ js::StringIsTypedArrayIndex(const CharT* s, size_t length, uint64_t* indexp)
     index = digit;
 
     for (; s < end; s++) {
-        if (!JS7_ISDEC(*s))
+        if (!IsAsciiDigit(*s))
             return false;
 
         digit = JS7_UNDEC(*s);

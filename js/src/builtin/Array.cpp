@@ -10,6 +10,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/TextUtils.h"
 
 #include <algorithm>
 
@@ -55,6 +56,7 @@ using mozilla::ArrayLength;
 using mozilla::CeilingLog2;
 using mozilla::CheckedInt;
 using mozilla::DebugOnly;
+using mozilla::IsAsciiDigit;
 
 using JS::AutoCheckCannotGC;
 using JS::IsArrayAnswer;
@@ -217,7 +219,7 @@ StringIsArrayIndex(const CharT* s, uint32_t length, uint32_t* indexp)
 {
     const CharT* end = s + length;
 
-    if (length == 0 || length > (sizeof("4294967294") - 1) || !JS7_ISDEC(*s))
+    if (length == 0 || length > (sizeof("4294967294") - 1) || !IsAsciiDigit(*s))
         return false;
 
     uint32_t c = 0, previous = 0;
@@ -228,7 +230,7 @@ StringIsArrayIndex(const CharT* s, uint32_t length, uint32_t* indexp)
         return false;
 
     for (; s < end; s++) {
-        if (!JS7_ISDEC(*s))
+        if (!IsAsciiDigit(*s))
             return false;
 
         previous = index;

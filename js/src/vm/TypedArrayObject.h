@@ -8,6 +8,7 @@
 #define vm_TypedArrayObject_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/TextUtils.h"
 
 #include "gc/Barrier.h"
 #include "js/Class.h"
@@ -361,13 +362,13 @@ IsTypedArrayIndex(jsid id, uint64_t* indexp)
 
     if (atom->hasLatin1Chars()) {
         const Latin1Char* s = atom->latin1Chars(nogc);
-        if (!JS7_ISDEC(*s) && *s != '-')
+        if (!mozilla::IsAsciiDigit(*s) && *s != '-')
             return false;
         return StringIsTypedArrayIndex(s, length, indexp);
     }
 
     const char16_t* s = atom->twoByteChars(nogc);
-    if (!JS7_ISDEC(*s) && *s != '-')
+    if (!mozilla::IsAsciiDigit(*s) && *s != '-')
         return false;
     return StringIsTypedArrayIndex(s, length, indexp);
 }
