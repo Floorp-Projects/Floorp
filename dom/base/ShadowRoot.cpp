@@ -6,7 +6,6 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ShadowRoot.h"
-#include "mozilla/dom/ShadowRootBinding.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "ChildIterator.h"
 #include "nsContentUtils.h"
