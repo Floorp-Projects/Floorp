@@ -619,5 +619,5 @@ def target_tasks_file_update(full_task_graph, parameters, graph_config):
     """
     def filter(task):
         # For now any task in the repo-update kind is ok
-        return task.kind in ['repo-update', 'repo-update-bb']
+        return task.kind in ['repo-update']
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
