@@ -74,28 +74,13 @@ METHODDEF(void) my_error_exit (j_common_ptr cinfo);
 
 nsJPEGDecoder::nsJPEGDecoder(RasterImage* aImage,
                              Decoder::DecodeStyle aDecodeStyle)
-  : Decoder(aImage)
-  , mLexer(Transition::ToUnbuffered(State::FINISHED_JPEG_DATA,
-                                    State::JPEG_DATA,
-                                    SIZE_MAX),
-           Transition::TerminateSuccess())
-  , mProfile{ nullptr }
-  , mProfileLength{}
-  , mDecodeStyle(aDecodeStyle)
+ : Decoder(aImage)
+ , mLexer(Transition::ToUnbuffered(State::FINISHED_JPEG_DATA,
+                                   State::JPEG_DATA,
+                                   SIZE_MAX),
+          Transition::TerminateSuccess())
+ , mDecodeStyle(aDecodeStyle)
 {
-  this->mErr.pub.error_exit = { nullptr };
-  this->mErr.pub.emit_message = { nullptr };
-  this->mErr.pub.output_message = { nullptr };
-  this->mErr.pub.format_message = { nullptr };
-  this->mErr.pub.reset_error_mgr = { nullptr };
-  this->mErr.pub.msg_code = {};
-  this->mErr.pub.trace_level = {};
-  this->mErr.pub.num_warnings = {};
-  this->mErr.pub.jpeg_message_table = { nullptr };
-  this->mErr.pub.last_jpeg_message = {};
-  this->mErr.pub.addon_message_table = { nullptr };
-  this->mErr.pub.first_addon_message = {};
-  this->mErr.pub.last_addon_message = {};
   mState = JPEG_HEADER;
   mReading = true;
   mImageData = nullptr;

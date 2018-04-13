@@ -31,61 +31,36 @@ public:
 
   EnumSet()
     : mBitField(0)
-#ifdef DEBUG
-    , mVersion
-  {
-  }
-#endif
   {
   }
 
   MOZ_IMPLICIT EnumSet(T aEnum)
     : mBitField(bitFor(aEnum))
-#ifdef DEBUG
-    , mVersion
-  {
-  }
-#endif
   { }
 
   EnumSet(T aEnum1, T aEnum2)
-    : mBitField(bitFor(aEnum1) | bitFor(aEnum2))
-#ifdef DEBUG
-    , mVersion
-  {
-  }
-#endif
+    : mBitField(bitFor(aEnum1) |
+                bitFor(aEnum2))
   {
   }
 
   EnumSet(T aEnum1, T aEnum2, T aEnum3)
-    : mBitField(bitFor(aEnum1) | bitFor(aEnum2) | bitFor(aEnum3))
-#ifdef DEBUG
-    , mVersion
-  {
-  }
-#endif
+    : mBitField(bitFor(aEnum1) |
+                bitFor(aEnum2) |
+                bitFor(aEnum3))
   {
   }
 
   EnumSet(T aEnum1, T aEnum2, T aEnum3, T aEnum4)
-    : mBitField(bitFor(aEnum1) | bitFor(aEnum2) | bitFor(aEnum3) |
+    : mBitField(bitFor(aEnum1) |
+                bitFor(aEnum2) |
+                bitFor(aEnum3) |
                 bitFor(aEnum4))
-#ifdef DEBUG
-    , mVersion
-  {
-  }
-#endif
   {
   }
 
   MOZ_IMPLICIT EnumSet(std::initializer_list<T> list)
     : mBitField(0)
-#ifdef DEBUG
-    , mVersion
-  {
-  }
-#endif
   {
     for (auto value : list) {
       (*this) += value;

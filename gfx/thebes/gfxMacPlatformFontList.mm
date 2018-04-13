@@ -381,7 +381,7 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mTrakTable(nullptr),
       mTrakValues(nullptr),
       mTrakSizeTable(nullptr)
-, mNumTrakSizes{} {
+{
     mWeight = aWeight;
 }
 
@@ -406,7 +406,7 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mTrakTable(nullptr),
       mTrakValues(nullptr),
       mTrakSizeTable(nullptr)
-, mNumTrakSizes{} {
+{
     mFontRef = aFontRef;
     mFontRefInitialized = true;
     ::CFRetain(mFontRef);

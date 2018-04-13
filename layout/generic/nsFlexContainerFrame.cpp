@@ -3513,11 +3513,8 @@ FlexboxAxisTracker::FlexboxAxisTracker(
   const nsFlexContainerFrame* aFlexContainer,
   const WritingMode& aWM,
   AxisTrackerFlags aFlags)
-  : mMainAxis{ static_cast<AxisOrientationType>(0) }
-  , mWM(aWM)
-  , mIsRowOriented{ false }
-  , mIsMainAxisReversed{ false }
-  , mAreAxesInternallyReversed(false)
+  : mWM(aWM),
+    mAreAxesInternallyReversed(false)
 {
   if (IsLegacyBox(aFlexContainer)) {
     InitAxesFromLegacyProps(aFlexContainer);

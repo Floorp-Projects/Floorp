@@ -514,24 +514,23 @@ txStylesheetCompiler::maybeDoneCompiling()
  * txStylesheetCompilerState
  */
 
-txStylesheetCompilerState::txStylesheetCompilerState(
-  txACompileObserver* aObserver)
-  : mHandlerTable(nullptr)
-  , mSorter(nullptr)
-  , mDOE(false)
-  , mSearchingForFallback(false)
-  , mDisAllowed(0)
-  , mObserver(aObserver)
-  , mEmbedStatus(eNoEmbed)
-  , mIsTopCompiler{ false }
-  , mDoneWithThisStylesheet(false)
-  , mNextInstrPtr(nullptr)
-  , mToplevelIterator(nullptr)
-  , mReferrerPolicy{ mozilla::net::RP_Unset }
+
+txStylesheetCompilerState::txStylesheetCompilerState(txACompileObserver* aObserver)
+    : mHandlerTable(nullptr),
+      mSorter(nullptr),
+      mDOE(false),
+      mSearchingForFallback(false),
+      mDisAllowed(0),
+      mObserver(aObserver),
+      mEmbedStatus(eNoEmbed),
+      mDoneWithThisStylesheet(false),
+      mNextInstrPtr(nullptr),
+      mToplevelIterator(nullptr)
 {
-  // Embedded stylesheets have another handler, which is set in
-  // txStylesheetCompiler::init if the baseURI has a fragment identifier.
-  mHandlerTable = gTxRootHandler;
+    // Embedded stylesheets have another handler, which is set in
+    // txStylesheetCompiler::init if the baseURI has a fragment identifier.
+    mHandlerTable = gTxRootHandler;
+
 }
 
 nsresult

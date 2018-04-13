@@ -331,12 +331,11 @@ nsTimer::Release(void)
   return count;
 }
 
-nsTimerImpl::nsTimerImpl(nsITimer* aTimer)
-  : mHolder(nullptr)
-  , mType{ '\0' }
-  , mGeneration(0)
-  , mITimer(aTimer)
-  , mMutex("nsTimerImpl::mMutex")
+nsTimerImpl::nsTimerImpl(nsITimer* aTimer) :
+  mHolder(nullptr),
+  mGeneration(0),
+  mITimer(aTimer),
+  mMutex("nsTimerImpl::mMutex")
 {
   // XXXbsmedberg: shouldn't this be in Init()?
   mEventTarget = mozilla::GetCurrentThreadEventTarget();

@@ -910,12 +910,11 @@ gfxUserFontEntry::GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult)
 }
 
 gfxUserFontSet::gfxUserFontSet()
-  : mFontFamilies(4)
-  , mRebuildGeneration{}
-  , mLocalRulesUsed(false)
-  , mRebuildLocalRules(false)
-  , mDownloadCount(0)
-  , mDownloadSize(0)
+    : mFontFamilies(4),
+      mLocalRulesUsed(false),
+      mRebuildLocalRules(false),
+      mDownloadCount(0),
+      mDownloadSize(0)
 {
     IncrementGeneration(true);
     gfxPlatformFontList* fp = gfxPlatformFontList::PlatformFontList();

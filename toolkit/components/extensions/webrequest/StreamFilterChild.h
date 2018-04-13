@@ -34,7 +34,6 @@ public:
 
   StreamFilterChild()
     : mState(State::Uninitialized)
-    , mNextState{ State::Uninitialized }
     , mReceivedOnStop(false)
   {}
 

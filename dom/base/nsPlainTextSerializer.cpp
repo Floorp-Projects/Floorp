@@ -81,10 +81,7 @@ NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer)
 }
 
 nsPlainTextSerializer::nsPlainTextSerializer()
-  : mFlags{}
-  , mFloatingLines{}
-  , mLineBreakDue{ false }
-  , kSpace(NS_LITERAL_STRING(" ")) // Init of "constant"
+  : kSpace(NS_LITERAL_STRING(" ")) // Init of "constant"
 {
 
   mOutputString = nullptr;

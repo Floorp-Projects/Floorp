@@ -80,20 +80,6 @@ WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder()
   , mCallback(nullptr)
   , mCachedPluginId(0)
 {
-  this->mCodecParams.mGMPApiVersion = {};
-  this->mCodecParams.mCodecType = { kGMPVideoCodecInvalid };
-  this->mCodecParams.mPLType = {};
-  this->mCodecParams.mWidth = {};
-  this->mCodecParams.mHeight = {};
-  this->mCodecParams.mStartBitrate = {};
-  this->mCodecParams.mMaxBitrate = {};
-  this->mCodecParams.mMinBitrate = {};
-  this->mCodecParams.mMaxFramerate = {};
-  this->mCodecParams.mFrameDroppingOn = { false };
-  this->mCodecParams.mKeyFrameInterval = {};
-  this->mCodecParams.mQPMax = {};
-  this->mCodecParams.mNumberOfSimulcastStreams = {};
-  this->mCodecParams.mMode = { kGMPCodecModeInvalid };
   if (mPCHandle.empty()) {
     mPCHandle = WebrtcGmpPCHandleSetter::GetCurrentHandle();
   }

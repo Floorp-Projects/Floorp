@@ -19,18 +19,11 @@
 //---------------------------------------------------
 //-- nsPrintObject Class Impl
 //---------------------------------------------------
-nsPrintObject::nsPrintObject()
-  : mContent(nullptr)
-  , mFrameType(eFrame)
-  , mParent(nullptr)
-  , mHasBeenPrinted(false)
-  , mDontPrint(true)
-  , mPrintAsIs(false)
-  , mInvisible(false)
-  , mPrintPreview{ false }
-  , mDidCreateDocShell(false)
-  , mShrinkRatio(1.0)
-  , mZoomRatio(1.0)
+nsPrintObject::nsPrintObject() :
+  mContent(nullptr), mFrameType(eFrame), mParent(nullptr),
+  mHasBeenPrinted(false), mDontPrint(true), mPrintAsIs(false),
+  mInvisible(false), mDidCreateDocShell(false),
+  mShrinkRatio(1.0), mZoomRatio(1.0)
 {
   MOZ_COUNT_CTOR(nsPrintObject);
 }

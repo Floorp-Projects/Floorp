@@ -73,13 +73,7 @@ enum class NetscapeStepUpPolicy : uint32_t;
 class PinningTelemetryInfo
 {
 public:
-  PinningTelemetryInfo()
-    : certPinningResultHistogram{ static_cast<Telemetry::HistogramID>(0) }
-    , certPinningResultBucket{}
-    , rootBucket{}
-  {
-    Reset();
-  }
+  PinningTelemetryInfo() { Reset(); }
 
   // Should we accumulate pinning telemetry for the result?
   bool accumulateResult;
@@ -95,12 +89,7 @@ public:
 class CertificateTransparencyInfo
 {
 public:
-  CertificateTransparencyInfo()
-    : enabled{ false }
-    , policyCompliance{ mozilla::ct::CTPolicyCompliance::Unknown }
-  {
-    Reset();
-  }
+  CertificateTransparencyInfo() { Reset(); }
 
   // Was CT enabled?
   bool enabled;

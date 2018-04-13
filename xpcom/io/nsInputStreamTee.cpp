@@ -134,10 +134,7 @@ private:
   RefPtr<nsInputStreamTee> mTee;
 };
 
-nsInputStreamTee::nsInputStreamTee()
-  : mWriter{ nullptr }
-  , mClosure{ nullptr }
-  , mLock(nullptr)
+nsInputStreamTee::nsInputStreamTee(): mLock(nullptr)
   , mSinkIsValid(true)
 {
 }

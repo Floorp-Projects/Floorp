@@ -111,17 +111,16 @@ nsXBLAttributeEntry::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
 // Constructors/Destructors
 nsXBLPrototypeBinding::nsXBLPrototypeBinding()
-  : mImplementation(nullptr)
-  , mBaseBinding(nullptr)
-  , mInheritStyle(true)
-  , mCheckedBaseProto(false)
-  , mKeyHandlersRegistered(false)
-  , mChromeOnlyContent(false)
-  , mBindToUntrustedContent(false)
-  , mSimpleScopeChain(false)
-  , mResources(nullptr)
-  , mXBLDocInfoWeak{ nullptr }
-  , mBaseNameSpaceID(kNameSpaceID_None)
+: mImplementation(nullptr),
+  mBaseBinding(nullptr),
+  mInheritStyle(true),
+  mCheckedBaseProto(false),
+  mKeyHandlersRegistered(false),
+  mChromeOnlyContent(false),
+  mBindToUntrustedContent(false),
+  mSimpleScopeChain(false),
+  mResources(nullptr),
+  mBaseNameSpaceID(kNameSpaceID_None)
 {
   MOZ_COUNT_CTOR(nsXBLPrototypeBinding);
 }

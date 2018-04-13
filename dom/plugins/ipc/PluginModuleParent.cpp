@@ -197,16 +197,15 @@ namespace {
 class PluginModuleMapping : public PRCList
 {
 public:
-  explicit PluginModuleMapping(uint32_t aPluginId)
-    : mPluginId(aPluginId)
-    , mProcessIdValid(false)
-    , mProcessId{}
-    , mModule(nullptr)
-    , mChannelOpened(false)
-  {
-    MOZ_COUNT_CTOR(PluginModuleMapping);
-    PR_INIT_CLIST(this);
-    PR_APPEND_LINK(this, &sModuleListHead);
+    explicit PluginModuleMapping(uint32_t aPluginId)
+        : mPluginId(aPluginId)
+        , mProcessIdValid(false)
+        , mModule(nullptr)
+        , mChannelOpened(false)
+    {
+        MOZ_COUNT_CTOR(PluginModuleMapping);
+        PR_INIT_CLIST(this);
+        PR_APPEND_LINK(this, &sModuleListHead);
     }
 
     ~PluginModuleMapping()
@@ -590,20 +589,19 @@ PluginModuleChromeParent::InitCrashReporter()
 }
 
 PluginModuleParent::PluginModuleParent(bool aIsChrome)
-  : mQuirks(QUIRKS_NOT_INITIALIZED)
-  , mIsChrome(aIsChrome)
-  , mShutdown(false)
-  , mHadLocalInstance(false)
-  , mClearSiteDataSupported(false)
-  , mGetSitesWithDataSupported(false)
-  , mNPNIface(nullptr)
-  , mNPPIface(nullptr)
-  , mPlugin(nullptr)
-  , mTaskFactory(this)
-  , mSandboxLevel(0)
-  , mIsFlashPlugin(false)
-  , mRunID{}
-  , mCrashReporterMutex("PluginModuleChromeParent::mCrashReporterMutex")
+    : mQuirks(QUIRKS_NOT_INITIALIZED)
+    , mIsChrome(aIsChrome)
+    , mShutdown(false)
+    , mHadLocalInstance(false)
+    , mClearSiteDataSupported(false)
+    , mGetSitesWithDataSupported(false)
+    , mNPNIface(nullptr)
+    , mNPPIface(nullptr)
+    , mPlugin(nullptr)
+    , mTaskFactory(this)
+    , mSandboxLevel(0)
+    , mIsFlashPlugin(false)
+    , mCrashReporterMutex("PluginModuleChromeParent::mCrashReporterMutex")
 {
 }
 
@@ -621,10 +619,9 @@ PluginModuleParent::~PluginModuleParent()
 }
 
 PluginModuleContentParent::PluginModuleContentParent()
-  : PluginModuleParent(false)
-  , mPluginId{}
+    : PluginModuleParent(false)
 {
-  Preferences::RegisterCallback(TimeoutChanged, kContentTimeoutPref, this);
+    Preferences::RegisterCallback(TimeoutChanged, kContentTimeoutPref, this);
 }
 
 PluginModuleContentParent::~PluginModuleContentParent()
@@ -635,25 +632,24 @@ PluginModuleContentParent::~PluginModuleContentParent()
 PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
                                                    uint32_t aPluginId,
                                                    int32_t aSandboxLevel)
-  : PluginModuleParent(true)
-  , mSubprocess(new PluginProcessParent(aFilePath))
-  , mPluginId(aPluginId)
-  , mChromeTaskFactory(this)
-  , mHangAnnotationFlags(0)
+    : PluginModuleParent(true)
+    , mSubprocess(new PluginProcessParent(aFilePath))
+    , mPluginId(aPluginId)
+    , mChromeTaskFactory(this)
+    , mHangAnnotationFlags(0)
 #ifdef XP_WIN
-  , mPluginCpuUsageOnHang()
-  , mHangUIParent(nullptr)
-  , mHangUIEnabled(true)
-  , mIsTimerReset(true)
-  , mBrokerParent(nullptr)
+    , mPluginCpuUsageOnHang()
+    , mHangUIParent(nullptr)
+    , mHangUIEnabled(true)
+    , mIsTimerReset(true)
+    , mBrokerParent(nullptr)
 #endif
 #ifdef MOZ_CRASHREPORTER_INJECTOR
-  , mFlashProcess1(0)
-  , mFlashProcess2(0)
-  , mFinishInitTask(nullptr)
+    , mFlashProcess1(0)
+    , mFlashProcess2(0)
+    , mFinishInitTask(nullptr)
 #endif
-  , mIsBlocklisted{ false }
-  , mIsCleaningFromTimeout(false)
+    , mIsCleaningFromTimeout(false)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
     mSandboxLevel = aSandboxLevel;

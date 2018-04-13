@@ -49,9 +49,6 @@ static const int kDefaultBufferSize = 65536;
 GzipInputStream::GzipInputStream(
     ZeroCopyInputStream* sub_stream, Format format, int buffer_size)
     : format_(format), sub_stream_(sub_stream), zerror_(Z_OK), byte_count_(0) {
-this->zcontext_.data_type = {};
-this->zcontext_.adler = {};
-this->zcontext_.reserved = {};
   zcontext_.state = Z_NULL;
   zcontext_.zalloc = Z_NULL;
   zcontext_.zfree = Z_NULL;
@@ -200,19 +197,11 @@ GzipOutputStream::Options::Options()
       compression_strategy(Z_DEFAULT_STRATEGY) {}
 
 GzipOutputStream::GzipOutputStream(ZeroCopyOutputStream* sub_stream) {
-this->zcontext_.state = {nullptr};
-this->zcontext_.data_type = {};
-this->zcontext_.adler = {};
-this->zcontext_.reserved = {};
   Init(sub_stream, Options());
 }
 
 GzipOutputStream::GzipOutputStream(ZeroCopyOutputStream* sub_stream,
                                    const Options& options) {
-this->zcontext_.state = {nullptr};
-this->zcontext_.data_type = {};
-this->zcontext_.adler = {};
-this->zcontext_.reserved = {};
   Init(sub_stream, options);
 }
 

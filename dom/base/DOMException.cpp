@@ -170,13 +170,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 Exception::Exception(const nsACString& aMessage,
                      nsresult aResult,
                      const nsACString& aName,
-                     nsIStackFrame* aLocation,
-                     nsISupports* aData)
+                     nsIStackFrame *aLocation,
+                     nsISupports *aData)
   : mMessage(aMessage)
   , mResult(aResult)
   , mName(aName)
   , mData(aData)
-  , mInitialized{ false }
   , mHoldingJSVal(false)
 {
   if (aLocation) {

@@ -164,10 +164,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-nsFrameLoader::nsFrameLoader(Element* aOwner,
-                             nsPIDOMWindowOuter* aOpener,
-                             bool aNetworkCreated,
-                             int32_t aJSPluginID)
+nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener,
+                             bool aNetworkCreated, int32_t aJSPluginID)
   : mOwnerContent(aOwner)
   , mDetachedSubdocFrame(nullptr)
   , mOpener(aOpener)
@@ -189,7 +187,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner,
   , mClipSubdocument(true)
   , mClampScrollPosition(true)
   , mObservingOwnerContent(false)
-  , mFreshProcess{ false }
 {
   mRemoteFrame = ShouldUseRemoteProcess();
   MOZ_ASSERT(!mRemoteFrame || !aOpener,
