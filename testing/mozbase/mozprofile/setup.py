@@ -7,12 +7,13 @@ from __future__ import absolute_import
 from setuptools import setup
 
 PACKAGE_NAME = 'mozprofile'
-PACKAGE_VERSION = '1.0.0'
+PACKAGE_VERSION = '1.1.0'
 
-deps = ['mozfile >= 1.0',
-        'mozlog >= 3.0',
-        'six >= 1.10.0'
-        ]
+deps = [
+    'mozfile==1.*',
+    'mozlog==3.*',
+    'six>=1.10.0,<2',
+]
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
