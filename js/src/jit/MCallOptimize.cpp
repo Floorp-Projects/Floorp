@@ -1933,12 +1933,21 @@ IonBuilder::inlineStrFromCharCode(CallInfo& callInfo)
 
     if (getInlineReturnType() != MIRType::String)
         return InliningStatus_NotInlined;
-    if (callInfo.getArg(0)->type() != MIRType::Int32)
-        return InliningStatus_NotInlined;
+
+    MDefinition* codeUnit = callInfo.getArg(0);
+    if (codeUnit->type() != MIRType::Int32) {
+        // MTruncateToInt32 will always bail for objects and symbols, so don't
+        // try to inline String.fromCharCode() for these two value types.
+        if (codeUnit->mightBeType(MIRType::Object) || codeUnit->mightBeType(MIRType::Symbol))
+            return InliningStatus_NotInlined;
+
+        codeUnit = MTruncateToInt32::New(alloc(), codeUnit);
+        current->add(codeUnit->toInstruction());
+    }
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MFromCharCode* string = MFromCharCode::New(alloc(), callInfo.getArg(0));
+    MFromCharCode* string = MFromCharCode::New(alloc(), codeUnit);
     current->add(string);
     current->push(string);
     return InliningStatus_Inlined;
