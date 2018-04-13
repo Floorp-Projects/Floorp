@@ -199,6 +199,8 @@ ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
                                "resource://gre/modules/AsyncShutdown.jsm");
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "CertUtils",
+                               "resource://gre/modules/CertUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "DeferredTask",
                                "resource://gre/modules/DeferredTask.jsm");
 
@@ -208,13 +210,6 @@ XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
 
 XPCOMUtils.defineLazyGetter(this, "gUpdateBundle", function aus_gUpdateBundle() {
   return Services.strings.createBundle(URI_UPDATES_PROPERTIES);
-});
-
-// shared code for suppressing bad cert dialogs
-XPCOMUtils.defineLazyGetter(this, "gCertUtils", function aus_gCertUtils() {
-  let temp = { };
-  ChromeUtils.import("resource://gre/modules/CertUtils.jsm", temp);
-  return temp;
 });
 
 /**
@@ -2986,7 +2981,7 @@ Checker.prototype = {
 
       this._request = new XMLHttpRequest();
       this._request.open("GET", url, true);
-      this._request.channel.notificationCallbacks = new gCertUtils.BadCertHandler(false);
+      this._request.channel.notificationCallbacks = new CertUtils.BadCertHandler(false);
       // Prevent the request from reading from the cache.
       this._request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
       // Prevent the request from writing to the cache.
