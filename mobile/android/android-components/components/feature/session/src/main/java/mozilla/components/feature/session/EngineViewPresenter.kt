@@ -36,7 +36,7 @@ class EngineViewPresenter(
     }
 
     /**
-     * A mew session has been selected: Render it on an EngineView.
+     * A new session has been selected: Render it on an EngineView.
      */
     override fun onSessionSelected(session: Session) {
         renderSession(session)
