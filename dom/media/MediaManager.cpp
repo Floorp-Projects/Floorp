@@ -4397,9 +4397,7 @@ SourceListener::StopSharing()
     nsCOMPtr<nsPIDOMWindowInner> window = nsGlobalWindowInner::GetInnerWindowWithId(windowID)->AsInner();
     MOZ_RELEASE_ASSERT(window);
     window->SetAudioCapture(false);
-    MediaStreamGraph* graph =
-      MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER, window,
-                                    MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
+    MediaStreamGraph* graph = mStream->Graph();
     graph->UnregisterCaptureStreamForWindow(windowID);
     mStream->Destroy();
   }

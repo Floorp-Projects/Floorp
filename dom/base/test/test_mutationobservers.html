@@ -590,9 +590,9 @@ function testExpandos() {
 }
 
 function testOutsideShadowDOM() {
-  if (!div.createShadowRoot) {
+  if (!div.attachShadow) {
     todo(false, "Skipping testOutsideShadowDOM and testInsideShadowDOM " +
-         "because createShadowRoot is not supported");
+         "because attachShadow is not supported");
     then(testMarquee);
     return;
   }
@@ -608,7 +608,7 @@ function testOutsideShadowDOM() {
       characterData: true,
       subtree: true
     })
-  var sr = div.createShadowRoot();
+  var sr = div.attachShadow({ mode: "open" });
   sr.innerHTML = "<div" + ">text</" + "div>";
   sr.firstChild.setAttribute("foo", "bar");
   sr.firstChild.firstChild.data = "text2";

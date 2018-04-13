@@ -19,20 +19,8 @@ function debug(aMsg) {
 
 // Handles inter-op between accessible carets and GeckoSession.
 class GeckoViewSelectionAction extends GeckoViewModule {
-  init() {
-  }
-
-  register() {
-    debug("register");
+  onEnable() {
+    debug("onEnable");
     this.registerContent("chrome://geckoview/content/GeckoViewSelectionActionContent.js");
-  }
-
-  unregister() {
-    debug("unregister");
-  }
-
-  // Message manager event handler.
-  receiveMessage(aMsg) {
-    debug("receiveMessage " + aMsg.name);
   }
 }

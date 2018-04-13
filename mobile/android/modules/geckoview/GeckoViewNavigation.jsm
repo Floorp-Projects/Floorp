@@ -30,9 +30,16 @@ function debug(aMsg) {
 // active.
 // Implements nsIBrowserDOMWindow.
 class GeckoViewNavigation extends GeckoViewModule {
-  init() {
+  onInitBrowser() {
     this.window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = this;
 
+    // There may be a GeckoViewNavigation module in another window waiting for
+    // us to create a browser so it can call presetOpenerWindow(), so allow them
+    // to do that now.
+    Services.obs.notifyObservers(this.window, "geckoview-window-created");
+  }
+
+  onInit() {
     this.registerListener([
       "GeckoView:GoBack",
       "GeckoView:GoForward",
@@ -248,8 +255,8 @@ class GeckoViewNavigation extends GeckoViewModule {
     return false;
   }
 
-  register() {
-    debug("register");
+  onEnable() {
+    debug("onEnable");
 
     this.registerContent(
       "chrome://geckoview/content/GeckoViewNavigationContent.js");
@@ -262,8 +269,8 @@ class GeckoViewNavigation extends GeckoViewModule {
     this.browser.addProgressListener(this.progressFilter, flags);
   }
 
-  unregister() {
-    debug("unregister");
+  onDisable() {
+    debug("onDisable");
 
     if (!this.progressFilter) {
       return;

@@ -157,6 +157,19 @@ public:
 
   virtual void SetRenderTarget(CompositingRenderTarget *aSurface) override;
   virtual CompositingRenderTarget* GetCurrentRenderTarget() const override;
+  virtual CompositingRenderTarget* GetWindowRenderTarget() const override;
+
+  virtual bool
+  ReadbackRenderTarget(CompositingRenderTarget* aSource,
+                       AsyncReadbackBuffer* aDest) override;
+
+  virtual already_AddRefed<AsyncReadbackBuffer>
+  CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) override;
+
+  virtual bool
+  BlitRenderTarget(CompositingRenderTarget* aSource,
+                   const gfx::IntSize& aSourceSize,
+                   const gfx::IntSize& aDestSize) override;
 
   virtual void DrawQuad(const gfx::Rect& aRect,
                         const gfx::IntRect& aClipRect,
@@ -278,9 +291,8 @@ private:
 
   /** Currently bound render target */
   RefPtr<CompositingRenderTargetOGL> mCurrentRenderTarget;
-#ifdef DEBUG
+
   CompositingRenderTargetOGL* mWindowRenderTarget;
-#endif
 
   /**
    * VBO that has some basics in it for a textured quad, including vertex

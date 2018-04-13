@@ -221,6 +221,8 @@ public:
 
     /**
      * Encodes the given surface to PNG/JPEG/BMP/etc. using imgIEncoder.
+     * If both aFile and aString are null, the encoded data is copied to the
+     * clipboard.
      *
      * @param aMimeType The MIME-type of the image type that the surface is to
      *   be encoded to. Used to create an appropriate imgIEncoder instance to
@@ -235,8 +237,9 @@ public:
      *   to the requested binary image format, or if the binary image is
      *   further converted to base-64 and written out as a 'data:' URI.
      *
-     * @aFile If specified, the encoded data is written out to aFile, otherwise
-     *   it is copied to the clipboard.
+     * @aFile If specified, the encoded data is written out to aFile.
+     *
+     * @aString If specified, the encoded data is written out to aString.
      *
      * TODO: Copying to the clipboard as a binary file is not currently
      * supported.
@@ -246,7 +249,8 @@ public:
                         const nsACString& aMimeType,
                         const nsAString& aOutputOptions,
                         BinaryOrData aBinaryOrData,
-                        FILE* aFile);
+                        FILE* aFile,
+                        nsACString* aString = nullptr);
 
     /**
      * Write as a PNG file to the path aFile.
