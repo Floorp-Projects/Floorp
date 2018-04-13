@@ -146,13 +146,11 @@ struct AlignedArray
   AlignedArray()
     : mPtr(nullptr)
     , mStorage(nullptr)
-    , mCount{}
   {
   }
 
   explicit MOZ_ALWAYS_INLINE AlignedArray(size_t aCount, bool aZero = false)
-    : mPtr{ nullptr }
-    , mStorage(nullptr)
+    : mStorage(nullptr)
     , mCount(0)
   {
     Realloc(aCount, aZero);

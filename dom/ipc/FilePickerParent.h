@@ -22,27 +22,25 @@ namespace dom {
 class FilePickerParent : public PFilePickerParent
 {
  public:
-   FilePickerParent(const nsString& aTitle, const int16_t& aMode)
-     : mTitle(aTitle)
-     , mMode(aMode)
-     , mResult{}
-   {
-   }
+  FilePickerParent(const nsString& aTitle,
+                   const int16_t& aMode)
+  : mTitle(aTitle)
+  , mMode(aMode)
+  {}
 
-   virtual ~FilePickerParent();
+  virtual ~FilePickerParent();
 
-   void Done(int16_t aResult);
+  void Done(int16_t aResult);
 
-   struct BlobImplOrString
-   {
-     RefPtr<BlobImpl> mBlobImpl;
-     nsString mDirectoryPath;
+  struct BlobImplOrString
+  {
+    RefPtr<BlobImpl> mBlobImpl;
+    nsString mDirectoryPath;
 
-     enum
-     {
-       eBlobImpl,
-       eDirectoryPath
-     } mType;
+    enum {
+      eBlobImpl,
+      eDirectoryPath
+    } mType;
   };
 
   void SendFilesOrDirectories(const nsTArray<BlobImplOrString>& aData);

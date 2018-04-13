@@ -40,7 +40,6 @@ NS_INTERFACE_MAP_END_INHERITING(Event)
 
 MediaKeyMessageEvent::MediaKeyMessageEvent(EventTarget* aOwner)
   : Event(aOwner, nullptr, nullptr)
-  , mMessageType{ static_cast<MediaKeyMessageType>(0) }
 {
   mozilla::HoldJSObjects(this);
 }

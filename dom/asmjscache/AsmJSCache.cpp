@@ -441,16 +441,15 @@ public:
   ParentRunnable(const PrincipalInfo& aPrincipalInfo,
                  OpenMode aOpenMode,
                  const WriteParams& aWriteParams)
-    : mOwningEventTarget(GetCurrentThreadEventTarget())
-    , mPrincipalInfo(aPrincipalInfo)
-    , mOpenMode(aOpenMode)
-    , mWriteParams(aWriteParams)
-    , mOperationMayProceed(true)
-    , mModuleIndex{}
-    , mState(eInitial)
-    , mResult(JS::AsmJSCache_InternalError)
-    , mActorDestroyed(false)
-    , mOpened(false)
+  : mOwningEventTarget(GetCurrentThreadEventTarget()),
+    mPrincipalInfo(aPrincipalInfo),
+    mOpenMode(aOpenMode),
+    mWriteParams(aWriteParams),
+    mOperationMayProceed(true),
+    mState(eInitial),
+    mResult(JS::AsmJSCache_InternalError),
+    mActorDestroyed(false),
+    mOpened(false)
   {
     MOZ_ASSERT(XRE_IsParentProcess());
     AssertIsOnOwningThread();

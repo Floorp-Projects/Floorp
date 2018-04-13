@@ -49,11 +49,7 @@ public:
   void         ClearDidSkip() {  mDidSkip = false; }
 
 protected:
-  nsFilteredContentIterator()
-    : mDidSkip(false)
-    , mIsOutOfRange(false) /* FIXME: initialize mDirection */
-  {
-  }
+  nsFilteredContentIterator() : mDidSkip(false), mIsOutOfRange(false) { }
 
   virtual ~nsFilteredContentIterator();
 

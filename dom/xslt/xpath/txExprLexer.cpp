@@ -17,11 +17,10 @@
  * Creates a new ExprLexer
  */
 txExprLexer::txExprLexer()
-  : mPosition{ nullptr }
-  , mCurrentItem(nullptr)
-  , mFirstItem(nullptr)
-  , mLastItem(nullptr)
-  , mTokenCount(0)
+  : mCurrentItem(nullptr),
+    mFirstItem(nullptr),
+    mLastItem(nullptr),
+    mTokenCount(0)
 {
 }
 

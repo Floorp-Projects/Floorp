@@ -460,10 +460,8 @@ private:
   uint32_t mGlyphID;
 
   explicit nsOpenTypeTable(gfxFont* aFont)
-    : mFont(aFont)
-    , mFontFamilyName(aFont->GetFontEntry()->FamilyName(), eUnquotedName)
-    , mGlyphID{}
-  {
+    : mFont(aFont),
+    mFontFamilyName(aFont->GetFontEntry()->FamilyName(), eUnquotedName) {
     MOZ_COUNT_CTOR(nsOpenTypeTable);
   }
 

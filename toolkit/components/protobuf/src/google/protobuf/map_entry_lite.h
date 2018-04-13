@@ -341,62 +341,52 @@ class MapEntryImpl : public Base {
   template <typename MapField, typename Map>
   class Parser {
    public:
-     explicit Parser(MapField* mf)
-       : mf_(mf)
-       , map_(mf->MutableMap())
-       , value_ptr_{ nullptr }
-     {
-     }
+    explicit Parser(MapField* mf) : mf_(mf), map_(mf->MutableMap()) {}
 
-     // This does what the typical MergePartialFromCodedStream() is expected to
-     // do, with the additional side-effect that if successful (i.e., if true is
-     // going to be its return value) it inserts the key-value pair into map_.
-     bool MergePartialFromCodedStream(
-       ::google::protobuf::io::CodedInputStream* input)
-     {
-       // Look for the expected thing: a key and then a value.  If it fails,
-       // invoke the enclosing class's MergePartialFromCodedStream, or return
-       // false if that would be pointless.
-       if (input->ExpectTag(kKeyTag)) {
-         if (!KeyTypeHandler::Read(input, &key_)) {
-           return false;
-         }
-         // Peek at the next byte to see if it is kValueTag.  If not, bail out.
-         const void* data;
-         int size;
-         input->GetDirectBufferPointerInline(&data, &size);
-         // We could use memcmp here, but we don't bother. The tag is one byte.
-         GOOGLE_COMPILE_ASSERT(kTagSize == 1, tag_size_error);
-         if (size > 0 && *reinterpret_cast<const char*>(data) == kValueTag) {
-           typename Map::size_type size = map_->size();
-           value_ptr_ = &(*map_)[key_];
-           if (GOOGLE_PREDICT_TRUE(size != map_->size())) {
-             // We created a new key-value pair.  Fill in the value.
-             typedef
-               typename MapIf<ValueTypeHandler::kIsEnum, int*, Value*>::type T;
-             input->Skip(kTagSize); // Skip kValueTag.
-             if (!ValueTypeHandler::Read(input,
-                                         reinterpret_cast<T>(value_ptr_))) {
-               map_->erase(key_); // Failure! Undo insertion.
-               return false;
-             }
-             if (input->ExpectAtEnd())
-               return true;
-             return ReadBeyondKeyValuePair(input);
-           }
-         }
-       } else {
-         key_ = Key();
-       }
+    // This does what the typical MergePartialFromCodedStream() is expected to
+    // do, with the additional side-effect that if successful (i.e., if true is
+    // going to be its return value) it inserts the key-value pair into map_.
+    bool MergePartialFromCodedStream(::google::protobuf::io::CodedInputStream* input) {
+      // Look for the expected thing: a key and then a value.  If it fails,
+      // invoke the enclosing class's MergePartialFromCodedStream, or return
+      // false if that would be pointless.
+      if (input->ExpectTag(kKeyTag)) {
+        if (!KeyTypeHandler::Read(input, &key_)) {
+          return false;
+        }
+        // Peek at the next byte to see if it is kValueTag.  If not, bail out.
+        const void* data;
+        int size;
+        input->GetDirectBufferPointerInline(&data, &size);
+        // We could use memcmp here, but we don't bother. The tag is one byte.
+        GOOGLE_COMPILE_ASSERT(kTagSize == 1, tag_size_error);
+        if (size > 0 && *reinterpret_cast<const char*>(data) == kValueTag) {
+          typename Map::size_type size = map_->size();
+          value_ptr_ = &(*map_)[key_];
+          if (GOOGLE_PREDICT_TRUE(size != map_->size())) {
+            // We created a new key-value pair.  Fill in the value.
+            typedef
+                typename MapIf<ValueTypeHandler::kIsEnum, int*, Value*>::type T;
+            input->Skip(kTagSize);  // Skip kValueTag.
+            if (!ValueTypeHandler::Read(input,
+                                        reinterpret_cast<T>(value_ptr_))) {
+              map_->erase(key_);  // Failure! Undo insertion.
+              return false;
+            }
+            if (input->ExpectAtEnd()) return true;
+            return ReadBeyondKeyValuePair(input);
+          }
+        }
+      } else {
+        key_ = Key();
+      }
 
-       entry_.reset(mf_->NewEntry());
-       *entry_->mutable_key() = key_;
-       const bool result = entry_->MergePartialFromCodedStream(input);
-       if (result)
-         UseKeyAndValueFromEntry();
-       if (entry_->GetArena() != NULL)
-         entry_.release();
-       return result;
+      entry_.reset(mf_->NewEntry());
+      *entry_->mutable_key() = key_;
+      const bool result = entry_->MergePartialFromCodedStream(input);
+      if (result) UseKeyAndValueFromEntry();
+      if (entry_->GetArena() != NULL) entry_.release();
+      return result;
     }
 
     const Key& key() const { return key_; }

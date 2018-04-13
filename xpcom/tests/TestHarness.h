@@ -80,9 +80,8 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
     NS_DECL_ISUPPORTS
 
     explicit ScopedXPCOM(const char* testName,
-                         nsIDirectoryServiceProvider* dirSvcProvider = nullptr)
-      : mServMgr{ nullptr }
-      , mDirSvcProvider(dirSvcProvider)
+                         nsIDirectoryServiceProvider *dirSvcProvider = nullptr)
+    : mDirSvcProvider(dirSvcProvider)
     {
       mTestName = testName;
       printf("Running %s tests...\n", mTestName);

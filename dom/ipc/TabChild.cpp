@@ -405,9 +405,8 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mChromeFlags(aChromeFlags)
   , mMaxTouchPoints(0)
   , mActiveSuppressDisplayport(0)
-  , mLayersId{ 0 }
+  , mLayersId{0}
   , mBeforeUnloadListeners(0)
-  , mLastBackgroundColor{}
   , mDidFakeShow(false)
   , mNotified(false)
   , mTriedBrowserInit(false)

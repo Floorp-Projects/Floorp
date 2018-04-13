@@ -37,8 +37,8 @@ nsLookAndFeel::nsLookAndFeel()
  , mUseOverlayScrollbarsCached(false)
  , mAllowOverlayScrollbarsOverlap(-1)
  , mAllowOverlayScrollbarsOverlapCached(false)
- , mColorTextSelectBackground{}, mColorTextSelectBackgroundDisabled{}, mColorHighlight{}, mColorMenuHover{}, mColorTextSelectForeground{}, mColorMenuHoverText{}, mColorButtonText{}, mHasColorButtonText(false)
- , mColorButtonHoverText{}, mColorText{}, mColorWindowText{}, mColorActiveCaption{}, mColorActiveBorder{}, mColorGrayText{}, mColorInactiveBorder{}, mColorInactiveCaption{}, mColorScrollbar{}, mColorThreeDHighlight{}, mColorMenu{}, mColorWindowFrame{}, mColorFieldText{}, mColorDialog{}, mColorDialogText{}, mColorDragTargetZone{}, mColorChromeActive{}, mColorChromeInactive{}, mColorFocusRing{}, mColorTextSelect{}, mColorDisabledToolbarText{}, mColorMenuSelect{}, mColorCellHighlight{}, mColorEvenTreeRow{}, mColorOddTreeRow{}, mColorActiveSourceListSelection{}, mInitialized(false)
+ , mHasColorButtonText(false)
+ , mInitialized(false)
 {
 }
 

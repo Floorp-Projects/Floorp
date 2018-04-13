@@ -12,37 +12,35 @@
 
 NS_IMPL_ISUPPORTS(nsPrintSettings, nsIPrintSettings)
 
-nsPrintSettings::nsPrintSettings()
-  : mPrintOptions(0L)
-  , mPrintRange(kRangeAllPages)
-  , mStartPageNum(1)
-  , mEndPageNum(1)
-  , mScaling(1.0)
-  , mPrintBGColors(false)
-  , mPrintBGImages(false)
-  , mPrintFrameTypeUsage(kUseInternalDefault)
-  , mPrintFrameType(kFramesAsIs)
-  , mHowToEnableFrameUI(kFrameEnableNone)
-  , mIsCancelled(false)
-  , mPrintSilent(false)
-  , mPrintPreview(false)
-  , mShrinkToFit(true)
-  , mShowPrintProgress(true)
-  , mPrintPageDelay(50)
-  , mPaperData(0)
-  , mPaperWidth(8.5)
-  , mPaperHeight(11.0)
-  , mPaperSizeUnit(kPaperSizeInches)
-  , mPrintReversed(false)
-  , mPrintInColor(true)
-  , mOrientation(kPortraitOrientation)
-  , mResolution{}
-  , mDuplex{}
-  , mNumCopies(1)
-  , mPrintToFile(false)
-  , mOutputFormat(kOutputFormatNative)
-  , mIsInitedFromPrinter(false)
-  , mIsInitedFromPrefs(false)
+nsPrintSettings::nsPrintSettings() :
+  mPrintOptions(0L),
+  mPrintRange(kRangeAllPages),
+  mStartPageNum(1),
+  mEndPageNum(1),
+  mScaling(1.0),
+  mPrintBGColors(false),
+  mPrintBGImages(false),
+  mPrintFrameTypeUsage(kUseInternalDefault),
+  mPrintFrameType(kFramesAsIs),
+  mHowToEnableFrameUI(kFrameEnableNone),
+  mIsCancelled(false),
+  mPrintSilent(false),
+  mPrintPreview(false),
+  mShrinkToFit(true),
+  mShowPrintProgress(true),
+  mPrintPageDelay(50),
+  mPaperData(0),
+  mPaperWidth(8.5),
+  mPaperHeight(11.0),
+  mPaperSizeUnit(kPaperSizeInches),
+  mPrintReversed(false),
+  mPrintInColor(true),
+  mOrientation(kPortraitOrientation),
+  mNumCopies(1),
+  mPrintToFile(false),
+  mOutputFormat(kOutputFormatNative),
+  mIsInitedFromPrinter(false),
+  mIsInitedFromPrefs(false)
 {
 
   /* member initializers and constructor code */

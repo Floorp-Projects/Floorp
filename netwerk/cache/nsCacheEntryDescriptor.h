@@ -118,14 +118,13 @@ private:
      public:
          NS_DECL_ISUPPORTS_INHERITED
 
-         nsDecompressInputStreamWrapper(nsCacheEntryDescriptor* desc,
-                                        uint32_t off)
-           : nsInputStreamWrapper(desc, off)
-           , mReadBuffer(0)
-           , mReadBufferLen(0)
-           , mZstream{}
-           , mStreamInitialized(false)
-           , mStreamEnded(false)
+         nsDecompressInputStreamWrapper(nsCacheEntryDescriptor * desc,
+                                      uint32_t off)
+          : nsInputStreamWrapper(desc, off)
+          , mReadBuffer(0)
+          , mReadBufferLen(0)
+          , mStreamInitialized(false)
+          , mStreamEnded(false)
          {
          }
          NS_IMETHOD Read(char* buf, uint32_t count, uint32_t * result) override;
@@ -199,15 +198,14 @@ private:
      public:
          NS_DECL_ISUPPORTS_INHERITED
 
-         nsCompressOutputStreamWrapper(nsCacheEntryDescriptor* desc,
+         nsCompressOutputStreamWrapper(nsCacheEntryDescriptor * desc,
                                        uint32_t off)
-           : nsOutputStreamWrapper(desc, off)
-           , mWriteBuffer(0)
-           , mWriteBufferLen(0)
-           , mZstream{}
-           , mStreamInitialized(false)
-           , mStreamEnded(false)
-           , mUncompressedCount(0)
+          : nsOutputStreamWrapper(desc, off)
+          , mWriteBuffer(0)
+          , mWriteBufferLen(0)
+          , mStreamInitialized(false)
+          , mStreamEnded(false)
+          , mUncompressedCount(0)
          {
          }
          NS_IMETHOD Write(const char* buf, uint32_t count, uint32_t * result) override;

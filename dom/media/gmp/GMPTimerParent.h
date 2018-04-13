@@ -35,9 +35,7 @@ private:
   static void GMPTimerExpired(nsITimer *aTimer, void *aClosure);
 
   struct Context {
-    Context()
-      : mId{}
-    {
+    Context() {
       MOZ_COUNT_CTOR(Context);
     }
     ~Context() {

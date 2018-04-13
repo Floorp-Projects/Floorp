@@ -49,11 +49,6 @@ NS_NewXHTMLContentSerializer(nsIContentSerializer** aSerializer)
 
 nsXHTMLContentSerializer::nsXHTMLContentSerializer()
   : mIsHTMLSerializer(false)
-  , mDoHeader{ false }
-  , mIsCopying{ false }
-  , mDisableEntityEncoding{}
-  , mRewriteEncodingDeclaration{ false }
-  , mIsFirstChildOfOL{ false }
 {
 }
 

@@ -92,8 +92,7 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
 }
 
 nsXMLContentSink::nsXMLContentSink()
-  : mState{ static_cast<XMLContentSinkState>(0) }
-  , mTextLength(0)
+  : mTextLength(0)
   , mNotifyLevel(0)
   , mPrettyPrintXML(true)
   , mPrettyPrintHasSpecialRoot(0)
