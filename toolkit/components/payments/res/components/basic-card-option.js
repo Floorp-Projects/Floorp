@@ -2,15 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import ObservedPropertiesMixin from "../mixins/ObservedPropertiesMixin.js";
+import RichOption from "./rich-option.js";
+
 /**
  * <rich-select>
  *  <basic-card-option></basic-card-option>
  * </rich-select>
  */
 
-/* global ObservedPropertiesMixin, RichOption */
-
-class BasicCardOption extends ObservedPropertiesMixin(RichOption) {
+export default class BasicCardOption extends ObservedPropertiesMixin(RichOption) {
   static get recordAttributes() {
     return [
       "cc-exp",

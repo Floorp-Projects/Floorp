@@ -2,17 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * The PaymentsStore class provides lightweight storage with an async publish/subscribe mechanism.
  * Synchronous state changes are batched to improve application performance and to reduce partial
  * state propagation.
  */
 
-/* exported PaymentsStore */
-
-class PaymentsStore {
+export default class PaymentsStore {
   /**
    * @param {object} [defaultState = {}] The initial state of the store.
    */

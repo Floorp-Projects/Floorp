@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global PaymentStateSubscriberMixin */
-
-"use strict";
+import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
+import RichSelect from "../components/rich-select.js";
+import ShippingOption from "../components/shipping-option.js";
 
 /**
  * <shipping-option-picker></shipping-option-picker>
@@ -12,10 +12,10 @@
  * <rich-option> listening to shippingOptions.
  */
 
-class ShippingOptionPicker extends PaymentStateSubscriberMixin(HTMLElement) {
+export default class ShippingOptionPicker extends PaymentStateSubscriberMixin(HTMLElement) {
   constructor() {
     super();
-    this.dropdown = document.createElement("rich-select");
+    this.dropdown = new RichSelect();
     this.dropdown.addEventListener("change", this);
   }
 
@@ -30,7 +30,7 @@ class ShippingOptionPicker extends PaymentStateSubscriberMixin(HTMLElement) {
     for (let option of shippingOptions) {
       let optionEl = this.dropdown.getOptionByValue(option.id);
       if (!optionEl) {
-        optionEl = document.createElement("shipping-option");
+        optionEl = new ShippingOption();
         optionEl.value = option.id;
       }
       optionEl.label = option.label;

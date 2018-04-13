@@ -43,30 +43,11 @@
   <link rel="stylesheet" href="components/payment-details-item.css"/>
   <link rel="stylesheet" href="containers/order-details.css"/>
 
-  <script src="vendor/custom-elements.min.js"></script>
-
   <script src="unprivileged-fallbacks.js"></script>
-
-  <script src="PaymentsStore.js"></script>
-
-  <script src="mixins/ObservedPropertiesMixin.js"></script>
-  <script src="mixins/PaymentStateSubscriberMixin.js"></script>
 
   <script src="formautofill/autofillEditForms.js"></script>
 
-  <script src="components/currency-amount.js"></script>
-  <script src="containers/order-details.js"></script>
-  <script src="components/payment-details-item.js"></script>
-  <script src="components/rich-select.js"></script>
-  <script src="components/rich-option.js"></script>
-  <script src="components/address-option.js"></script>
-  <script src="components/shipping-option.js"></script>
-  <script src="containers/address-picker.js"></script>
-  <script src="components/basic-card-option.js"></script>
-  <script src="containers/shipping-option-picker.js"></script>
-  <script src="containers/payment-method-picker.js"></script>
-  <script src="containers/basic-card-form.js"></script>
-  <script src="containers/payment-dialog.js"></script>
+  <script type="module" src="containers/payment-dialog.js"></script>
 
   <script src="paymentRequest.js"></script>
 
@@ -152,8 +133,7 @@
 <body dir="&locale.dir;">
   <iframe id="debugging-console"
           hidden="hidden"
-          height="400"
-          src="debugging.html"></iframe>
+          height="400"></iframe>
   <payment-dialog></payment-dialog>
 </body>
 </html>
