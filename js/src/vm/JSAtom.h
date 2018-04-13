@@ -37,10 +37,6 @@ JS_FOR_EACH_PROTOTYPE(DECLARE_PROTO_STR)
 FOR_EACH_COMMON_PROPERTYNAME(DECLARE_CONST_CHAR_STR)
 #undef DECLARE_CONST_CHAR_STR
 
-/* Constant strings that are not atomized. */
-extern const char js_getter_str[];
-extern const char js_setter_str[];
-
 namespace js {
 
 class AutoLockForExclusiveAccess;

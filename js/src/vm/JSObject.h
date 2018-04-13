@@ -34,10 +34,6 @@ class RelocationOverlay;
 
 /******************************************************************************/
 
-extern const Class IntlClass;
-extern const Class JSONClass;
-extern const Class MathClass;
-
 class GlobalObject;
 class NewObjectCache;
 

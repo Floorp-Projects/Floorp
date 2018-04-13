@@ -272,6 +272,9 @@ js::Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details)
 
 /*** PropertyDescriptor operations and DefineProperties ******************************************/
 
+static const char js_getter_str[] = "getter";
+static const char js_setter_str[] = "setter";
+
 static Result<>
 CheckCallable(JSContext* cx, JSObject* obj, const char* fieldName)
 {

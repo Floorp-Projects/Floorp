@@ -191,18 +191,6 @@ class GlobalObject : public NativeObject
         setSlot(prototypeSlot(key), value);
     }
 
-    bool classIsInitialized(JSProtoKey key) const {
-        bool inited = !getConstructor(key).isUndefined();
-        MOZ_ASSERT(inited == !getPrototype(key).isUndefined());
-        return inited;
-    }
-
-    bool functionObjectClassesInitialized() const {
-        bool inited = classIsInitialized(JSProto_Function);
-        MOZ_ASSERT(inited == classIsInitialized(JSProto_Object));
-        return inited;
-    }
-
     /*
      * Lazy standard classes need a way to indicate they have been initialized.
      * Otherwise, when we delete them, we might accidentally recreate them via
@@ -223,6 +211,18 @@ class GlobalObject : public NativeObject
     }
 
   private:
+    bool classIsInitialized(JSProtoKey key) const {
+        bool inited = !getConstructor(key).isUndefined();
+        MOZ_ASSERT(inited == !getPrototype(key).isUndefined());
+        return inited;
+    }
+
+    bool functionObjectClassesInitialized() const {
+        bool inited = classIsInitialized(JSProto_Function);
+        MOZ_ASSERT(inited == classIsInitialized(JSProto_Object));
+        return inited;
+    }
+
     bool arrayClassInitialized() const {
         return classIsInitialized(JSProto_Array);
     }

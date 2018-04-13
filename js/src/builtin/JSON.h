@@ -14,7 +14,11 @@
 #include "js/RootingAPI.h"
 
 namespace js {
+
+struct Class;
 class StringBuffer;
+
+extern const Class JSONClass;
 
 extern JSObject*
 InitJSONClass(JSContext* cx, HandleObject obj);
