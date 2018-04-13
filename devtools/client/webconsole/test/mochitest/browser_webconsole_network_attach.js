@@ -18,7 +18,7 @@ add_task(async function task() {
   let toolbox = gDevTools.getToolbox(target);
 
   let monitor = toolbox.getCurrentPanel();
-  let netReady = monitor.panelWin.once("NetMonitor:PayloadReady");
+  let netReady = monitor.panelWin.api.once("NetMonitor:PayloadReady");
 
   // Fire an XHR POST request.
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
@@ -69,7 +69,7 @@ async function testNetworkMessage(messageNode) {
 }
 
 /**
- * Wait until all lazily fetch requests in netmonitor get finsished.
+ * Wait until all lazily fetch requests in netmonitor get finished.
  * Otherwise test will be shutdown too early and cause failure.
  */
 async function waitForLazyRequests(toolbox) {
