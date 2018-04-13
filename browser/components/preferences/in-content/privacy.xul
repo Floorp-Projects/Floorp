@@ -129,32 +129,32 @@
                         preference="privacy.sanitize.sanitizeOnShutdown"
                         data-l10n-id="history-clear-on-close-option"
                         flex="1" />
-              <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-              <hbox>
-                <button id="clearDataSettings"
-                        class="accessory-button"
-                        data-l10n-id="history-clear-on-close-settings"
-                        searchkeywords="&clearDataSettings3.label;
-                                        &historySection.label;
-                                        &itemHistoryAndDownloads.label;
-                                        &itemCookies.label;
-                                        &itemActiveLogins.label;
-                                        &itemCache.label;
-                                        &itemFormSearchHistory.label;
-                                        &dataSection.label;
-                                        &itemSitePreferences.label;
-                                        &itemOfflineApps.label;"/>
-              </hbox>
             </hbox>
           </vbox>
         </vbox>
       </vbox>
     </deck>
-    <vbox align="end">
+    <vbox id="historyButtons" align="end">
       <button id="clearHistoryButton"
               class="accessory-button"
               icon="clear"
               data-l10n-id="history-clear-button"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="clearDataSettings"
+                class="accessory-button"
+                data-l10n-id="history-clear-on-close-settings"
+                searchkeywords="&clearDataSettings3.label;
+                                &historySection.label;
+                                &itemHistoryAndDownloads.label;
+                                &itemCookies.label;
+                                &itemActiveLogins.label;
+                                &itemCache.label;
+                                &itemFormSearchHistory.label;
+                                &dataSection.label;
+                                &itemSitePreferences.label;
+                                &itemOfflineApps.label;"/>
+      </hbox>
     </vbox>
   </hbox>
 </groupbox>
