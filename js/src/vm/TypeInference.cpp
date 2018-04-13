@@ -2340,7 +2340,7 @@ TemporaryTypeSet::getTypedArrayType(CompilerConstraintList* constraints,
     if (clasp && IsTypedArrayClass(clasp)) {
         if (sharedness)
             getTypedArraySharedness(constraints, sharedness);
-        return (Scalar::Type) (clasp - &TypedArrayObject::classes[0]);
+        return GetTypedArrayClassType(clasp);
     }
     return Scalar::MaxTypedArrayViewType;
 }
