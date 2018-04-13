@@ -210,6 +210,27 @@ private:
   mozilla::TimeStamp mVsyncTimestamp;
 };
 
+class ScreenshotPayload : public ProfilerMarkerPayload
+{
+public:
+  explicit ScreenshotPayload(mozilla::TimeStamp aTimeStamp,
+                             nsCString&& aScreenshotDataURL,
+                             const mozilla::gfx::IntSize& aWindowSize,
+                             uintptr_t aWindowIdentifier)
+    : ProfilerMarkerPayload(aTimeStamp, mozilla::TimeStamp())
+    , mScreenshotDataURL(mozilla::Move(aScreenshotDataURL))
+    , mWindowSize(aWindowSize)
+    , mWindowIdentifier(aWindowIdentifier)
+  {}
+
+  DECL_STREAM_PAYLOAD
+
+private:
+  nsCString mScreenshotDataURL;
+  mozilla::gfx::IntSize mWindowSize;
+  uintptr_t mWindowIdentifier;
+};
+
 class GCSliceMarkerPayload : public ProfilerMarkerPayload
 {
 public:

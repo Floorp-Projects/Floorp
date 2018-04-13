@@ -7,11 +7,17 @@
 var EXPORTED_SYMBOLS = ["GeckoViewSettings"];
 
 ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
+ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Services: "resource://gre/modules/Services.jsm",
+});
+
+/* global SafeBrowsing:false */
+GeckoViewUtils.addLazyGetter(this, "SafeBrowsing", {
+  module: "resource://gre/modules/SafeBrowsing.jsm",
+  init: sb => sb.init(),
 });
 
 XPCOMUtils.defineLazyGetter(
@@ -35,17 +41,18 @@ function debug(aMsg) {
 // * multiprocess
 // * user agent override
 class GeckoViewSettings extends GeckoViewModule {
-  init() {
-    this._isSafeBrowsingInit = false;
+  onInitBrowser() {
+    if (this.settings.useMultiprocess) {
+      this.browser.setAttribute("remote", "true");
+    }
+  }
+
+  onInit() {
+    this._useTrackingProtection = false;
     this._useDesktopMode = false;
 
-    // We only allow to set this setting during initialization, further updates
-    // will be ignored.
-    this.useMultiprocess = !!this.settings.useMultiprocess;
-    this._displayMode = Ci.nsIDocShell.DISPLAY_MODE_BROWSER;
-
-    this.messageManager.loadFrameScript(
-      "chrome://geckoview/content/GeckoViewContentSettings.js", true);
+    this.registerContent(
+        "chrome://geckoview/content/GeckoViewContentSettings.js");
   }
 
   onSettingsUpdate() {
@@ -57,29 +64,16 @@ class GeckoViewSettings extends GeckoViewModule {
   }
 
   get useMultiprocess() {
-    return this.browser.getAttribute("remote") == "true";
+    return this.browser.isRemoteBrowser;
   }
 
-  set useMultiprocess(aUse) {
-    if (aUse == this.useMultiprocess) {
-      return;
-    }
-    let parentNode = this.browser.parentNode;
-    parentNode.removeChild(this.browser);
-
-    if (aUse) {
-      this.browser.setAttribute("remote", "true");
-    } else {
-      this.browser.removeAttribute("remote");
-    }
-    parentNode.appendChild(this.browser);
+  get useTrackingProtection() {
+    return this._useTrackingProtection;
   }
 
   set useTrackingProtection(aUse) {
-    if (aUse && !this._isSafeBrowsingInit) {
-      SafeBrowsing.init();
-      this._isSafeBrowsingInit = true;
-    }
+    aUse && SafeBrowsing;
+    this._useTrackingProtection = aUse;
   }
 
   onUserAgentRequest(aSubject, aTopic, aData) {
@@ -115,20 +109,14 @@ class GeckoViewSettings extends GeckoViewModule {
   }
 
   get displayMode() {
-    return this._displayMode;
+    return this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDocShell)
+                      .displayMode;
   }
 
   set displayMode(aMode) {
-    if (!this.useMultiprocess) {
-      this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDocShell)
-                   .displayMode = aMode;
-    } else {
-      this.messageManager.loadFrameScript("data:," +
-        `docShell.displayMode = ${aMode}`,
-        true
-      );
-    }
-    this._displayMode = aMode;
+    this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDocShell)
+               .displayMode = aMode;
   }
 }

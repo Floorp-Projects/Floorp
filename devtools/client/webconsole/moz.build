@@ -7,7 +7,6 @@
 DIRS += [
     'actions',
     'components',
-    'old',
     'reducers',
     'selectors',
     'test',

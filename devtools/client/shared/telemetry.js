@@ -485,9 +485,15 @@ class Telemetry {
     // If the pending event has not been created add the property to the pending
     // list.
     if (!PENDING_EVENTS.has(sig)) {
-      PENDING_EVENT_PROPERTIES.set(sig, {
-        [pendingPropName]: pendingPropValue
-      });
+      let props = PENDING_EVENT_PROPERTIES.get(sig);
+
+      if (props) {
+        props[pendingPropName] = pendingPropValue;
+      } else {
+        PENDING_EVENT_PROPERTIES.set(sig, {
+          [pendingPropName]: pendingPropValue
+        });
+      }
       return;
     }
 

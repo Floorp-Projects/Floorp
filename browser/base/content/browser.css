@@ -626,8 +626,16 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 #PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-tags:not([empty]),
 #PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-separator:not([type=keyword]),
 #PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-url:not([actiontype]),
-#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-action[actiontype] {
+#PopupAutoCompleteRichResult > richlistbox > richlistitem > .ac-action[actiontype],
+#PopupAutoCompleteRichResult > richlistbox > richlistitem[selected] > .ac-url[actiontype=remotetab],
+#PopupAutoCompleteRichResult > richlistbox > richlistitem:hover > .ac-url[actiontype=remotetab]
+{
   display: -moz-box;
+}
+
+#PopupAutoCompleteRichResult > richlistbox > richlistitem[selected] > .ac-action[actiontype=remotetab],
+#PopupAutoCompleteRichResult > richlistbox > richlistitem:hover > .ac-action[actiontype=remotetab] {
+  display: none;
 }
 
 /* Only show the "Search with" label on hover or selection. */

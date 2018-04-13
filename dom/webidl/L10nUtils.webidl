@@ -31,7 +31,7 @@ dictionary AttributeNameValue {
 
 dictionary L10nValue {
   DOMString? value = null;
-  sequence<AttributeNameValue>? attrs = null;
+  sequence<AttributeNameValue>? attributes = null;
 };
 
 callback L10nCallback =

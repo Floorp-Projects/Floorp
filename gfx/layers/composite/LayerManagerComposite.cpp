@@ -179,6 +179,7 @@ LayerManagerComposite::Destroy()
     mCompositor->CancelFrame();
     mRoot = nullptr;
     mClonedLayerTreeProperties = nullptr;
+    mProfilerScreenshotGrabber.Destroy();
     mDestroyed = true;
 
 #ifdef USE_SKIA
@@ -923,6 +924,7 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
 #endif
 
   if (actualBounds.IsEmpty()) {
+    mProfilerScreenshotGrabber.NotifyEmptyFrame();
     mCompositor->GetWidget()->PostRender(&widgetContext);
     return;
   }
@@ -973,6 +975,8 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
   mCompositor->GetWidget()->DrawWindowOverlay(
     &widgetContext, LayoutDeviceIntRect::FromUnknownRect(actualBounds));
 
+  mProfilerScreenshotGrabber.MaybeGrabScreenshot(mCompositor);
+
   mCompositor->NormalDrawingDone();
 
 #if defined(MOZ_WIDGET_ANDROID)
@@ -995,6 +999,8 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
   }
 
   mCompositor->GetWidget()->PostRender(&widgetContext);
+
+  mProfilerScreenshotGrabber.MaybeProcessQueue();
 
   RecordFrame();
 }
