@@ -134,7 +134,6 @@ FOR_EACH_COMMON_PROPERTYNAME(CONST_CHAR_STR)
 
 /* Constant strings that are not atomized. */
 const char js_getter_str[]          = "getter";
-const char js_send_str[]            = "send";
 const char js_setter_str[]          = "setter";
 
 // Use a low initial capacity for atom hash tables to avoid penalizing runtimes

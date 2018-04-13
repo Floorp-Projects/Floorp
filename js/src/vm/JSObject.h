@@ -188,7 +188,6 @@ class JSObject : public js::gc::Cell
     }
 
     inline bool isBoundFunction() const;
-    inline bool hasSpecialEquality() const;
 
     // A "qualified" varobj is the object on which "qualified" variable
     // declarations (i.e., those defined with "var") are kept.
