@@ -848,7 +848,7 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
     size_t sourceLen = strlen(rawSource);
     size_t begin = 9;
     MOZ_ASSERT(rawSource[begin] == '(');
-    mozilla::UniquePtr<char16_t[], JS::FreePolicy> source(InflateString(cx, rawSource, sourceLen));
+    UniqueTwoByteChars source(InflateString(cx, rawSource, sourceLen));
     if (!source)
         return nullptr;
 
