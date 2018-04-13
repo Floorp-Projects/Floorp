@@ -21,41 +21,39 @@
        * Test that the profiler gets disabled during private browsing.
        */
       addPerfTest(async () => {
-        const Perf = require("devtools/client/performance-new/components/Perf");
-        const React = require("devtools/client/shared/vendor/react");
-        const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-        const perfFront = new MockPerfFront();
-        const container = document.querySelector("#container");
+        const {
+          perfFront,
+          getRecordingState,
+          mountComponent,
+        } = createPerfComponent();
 
         perfFront.mockIsLocked = true;
 
-        const receiveProfile = () => {};
-        const element = React.createElement(Perf, { perfFront, receiveProfile });
-        const perfComponent = ReactDOM.render(element, container);
+        mountComponent();
 
-        is(perfComponent.state.recordingState, "not-yet-known",
+        is(getRecordingState(), "not-yet-known",
           "The component at first is in an unknown state.");
 
         await perfFront.flushAsyncQueue();
-        is(perfComponent.state.recordingState, "locked-by-private-browsing",
+        is(getRecordingState(), "locked-by-private-browsing",
           "After talking to the actor, it's locked for private browsing.");
 
         perfFront.mockIsLocked = false;
         perfFront.emit("profile-unlocked-from-private-browsing");
 
         await perfFront.flushAsyncQueue();
-        is(perfComponent.state.recordingState, "available-to-record",
+        is(getRecordingState(), "available-to-record",
           "After the profiler is unlocked, it's available to record.");
 
         document.querySelector("button").click();
         await perfFront.flushAsyncQueue();
-        is(perfComponent.state.recordingState, "recording",
+        is(getRecordingState(), "recording",
           "The actor has started its recording");
 
         perfFront.mockIsLocked = true;
         perfFront.emit("profile-locked-by-private-browsing");
         await perfFront.flushAsyncQueue();
-        is(perfComponent.state.recordingState, "locked-by-private-browsing",
+        is(getRecordingState(), "locked-by-private-browsing",
           "The recording stops when going into private browsing mode.");
       });
     </script>
