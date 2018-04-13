@@ -168,6 +168,7 @@ panelview[mainview] > .panel-header {
   visibility: hidden;
 }
 
+.tab-icon-image[fadein],
 .tab-close-button[fadein],
 .tabbrowser-tab[fadein]::after,
 .tab-background[fadein] {
@@ -175,6 +176,7 @@ panelview[mainview] > .panel-header {
   transition: visibility 0ms 25ms;
 }
 
+.tab-icon-image:not([fadein]),
 .tab-close-button:not([fadein]),
 .tabbrowser-tab:not([fadein])::after,
 .tab-background:not([fadein]) {
@@ -183,8 +185,7 @@ panelview[mainview] > .panel-header {
 
 .tab-label:not([fadein]),
 .tab-throbber:not([fadein]),
-.tab-throbber-fallback:not([fadein]),
-.tab-icon-image:not([fadein]) {
+.tab-throbber-fallback:not([fadein]) {
   display: none;
 }
 
