@@ -38,32 +38,30 @@ using namespace mozilla::unicode; // for Unicode property lookup
  * Creation and destruction; on deletion, release any font tables we're holding
  */
 
-gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont* aFont)
-  : gfxFontShaper(aFont)
-  , mHBFace(aFont->GetFontEntry()->GetHBFace())
-  , mHBFont(nullptr)
-  , mBuffer(nullptr)
-  , mCallbackData{}
-  , mKernTable(nullptr)
-  , mHmtxTable(nullptr)
-  , mVmtxTable(nullptr)
-  , mVORGTable(nullptr)
-  , mLocaTable(nullptr)
-  , mGlyfTable(nullptr)
-  , mCmapTable(nullptr)
-  , mCmapFormat(-1)
-  , mSubtableOffset(0)
-  , mUVSTableOffset(0)
-  , mNumLongHMetrics(0)
-  , mNumLongVMetrics(0)
-  , mDefaultVOrg(-1.0)
-  , mUseFontGetGlyph(aFont->ProvidesGetGlyph())
-  , mUseFontGlyphWidths(false)
-  , mInitialized(false)
-  , mVerticalInitialized(false)
-  , mUseVerticalPresentationForms{ false }
-  , mLoadedLocaGlyf(false)
-  , mLocaLongOffsets(false)
+gfxHarfBuzzShaper::gfxHarfBuzzShaper(gfxFont *aFont)
+    : gfxFontShaper(aFont),
+      mHBFace(aFont->GetFontEntry()->GetHBFace()),
+      mHBFont(nullptr),
+      mBuffer(nullptr),
+      mKernTable(nullptr),
+      mHmtxTable(nullptr),
+      mVmtxTable(nullptr),
+      mVORGTable(nullptr),
+      mLocaTable(nullptr),
+      mGlyfTable(nullptr),
+      mCmapTable(nullptr),
+      mCmapFormat(-1),
+      mSubtableOffset(0),
+      mUVSTableOffset(0),
+      mNumLongHMetrics(0),
+      mNumLongVMetrics(0),
+      mDefaultVOrg(-1.0),
+      mUseFontGetGlyph(aFont->ProvidesGetGlyph()),
+      mUseFontGlyphWidths(false),
+      mInitialized(false),
+      mVerticalInitialized(false),
+      mLoadedLocaGlyf(false),
+      mLocaLongOffsets(false)
 {
 }
 

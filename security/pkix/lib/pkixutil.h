@@ -42,13 +42,11 @@ class BackCert final
 {
 public:
   // certDER and childCert must be valid for the lifetime of BackCert.
-  BackCert(Input aCertDER,
-           EndEntityOrCA aEndEntityOrCA,
+  BackCert(Input aCertDER, EndEntityOrCA aEndEntityOrCA,
            const BackCert* aChildCert)
     : der(aCertDER)
     , endEntityOrCA(aEndEntityOrCA)
     , childCert(aChildCert)
-    , version{ static_cast<der::Version>(0) }
   {
   }
 

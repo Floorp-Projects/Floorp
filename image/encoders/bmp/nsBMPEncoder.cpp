@@ -19,20 +19,15 @@ using namespace mozilla::image::bmp;
 NS_IMPL_ISUPPORTS(nsBMPEncoder, imgIEncoder, nsIInputStream,
                   nsIAsyncInputStream)
 
-nsBMPEncoder::nsBMPEncoder()
-  : mBMPInfoHeader{}
-  , mImageBufferStart(nullptr)
-  , mImageBufferCurr(0)
-  , mImageBufferSize(0)
-  , mImageBufferReadPoint(0)
-  , mFinished(false)
-  , mCallback(nullptr)
-  , mCallbackTarget(nullptr)
-  , mNotifyThreshold(0)
+nsBMPEncoder::nsBMPEncoder() : mImageBufferStart(nullptr),
+                               mImageBufferCurr(0),
+                               mImageBufferSize(0),
+                               mImageBufferReadPoint(0),
+                               mFinished(false),
+                               mCallback(nullptr),
+                               mCallbackTarget(nullptr),
+                               mNotifyThreshold(0)
 {
-  this->mBMPFileHeader.filesize = {};
-  this->mBMPFileHeader.reserved = {};
-  this->mBMPFileHeader.dataoffset = {};
 }
 
 nsBMPEncoder::~nsBMPEncoder()

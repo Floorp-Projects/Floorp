@@ -856,11 +856,9 @@ TestNrSocket::PortMapping* TestNrSocket::create_port_mapping(
 }
 
 TestNrSocket::PortMapping::PortMapping(
-  const nr_transport_addr& remote_address,
-  const RefPtr<NrSocketBase>& external_socket)
-  : last_used_{}
-  , external_socket_(external_socket)
-{
+    const nr_transport_addr &remote_address,
+    const RefPtr<NrSocketBase> &external_socket) :
+  external_socket_(external_socket) {
   // TODO(bug 1170299): Remove const_cast when no longer necessary
   nr_transport_addr_copy(&remote_address_,
                          const_cast<nr_transport_addr*>(&remote_address));

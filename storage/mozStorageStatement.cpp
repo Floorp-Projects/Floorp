@@ -109,12 +109,10 @@ static StatementClassInfo sStatementClassInfo;
 //// Statement
 
 Statement::Statement()
-  : StorageBaseStatementInternal()
-  , mDBStatement(nullptr)
-  , mParamCount{}
-  , mResultColumnCount{}
-  , mColumnNames()
-  , mExecuting(false)
+: StorageBaseStatementInternal()
+, mDBStatement(nullptr)
+, mColumnNames()
+, mExecuting(false)
 {
 }
 

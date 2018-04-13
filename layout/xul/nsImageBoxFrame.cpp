@@ -906,7 +906,6 @@ nsImageBoxFrame::OnFrameUpdate(imgIRequest* aRequest)
 NS_IMPL_ISUPPORTS(nsImageBoxListener, imgINotificationObserver)
 
 nsImageBoxListener::nsImageBoxListener()
-  : mFrame{ nullptr }
 {
 }
 

@@ -20,34 +20,30 @@
 
 using namespace mozilla;
 
-nsCacheEntry::nsCacheEntry(const nsACString& key,
-                           bool streamBased,
+nsCacheEntry::nsCacheEntry(const nsACString &   key,
+                           bool                 streamBased,
                            nsCacheStoragePolicy storagePolicy)
-  : mKey(key)
-  , mFetchCount(0)
-  , mLastFetched(0)
-  , mLastModified(0)
-  , mLastValidated{}
-  , mExpirationTime(nsICache::NO_EXPIRATION_TIME)
-  , mFlags(0)
-  , mPredictedDataSize(-1)
-  , mDataSize(0)
-  , mCacheDevice(nullptr)
-  , mCustomDevice(nullptr)
-  , mData(nullptr)
-  , mRequestQ{}
-  , mDescriptorQ{}
+    : mKey(key),
+      mFetchCount(0),
+      mLastFetched(0),
+      mLastModified(0),
+      mExpirationTime(nsICache::NO_EXPIRATION_TIME),
+      mFlags(0),
+      mPredictedDataSize(-1),
+      mDataSize(0),
+      mCacheDevice(nullptr),
+      mCustomDevice(nullptr),
+      mData(nullptr)
 {
-  MOZ_COUNT_CTOR(nsCacheEntry);
-  PR_INIT_CLIST(this);
-  PR_INIT_CLIST(&mRequestQ);
-  PR_INIT_CLIST(&mDescriptorQ);
+    MOZ_COUNT_CTOR(nsCacheEntry);
+    PR_INIT_CLIST(this);
+    PR_INIT_CLIST(&mRequestQ);
+    PR_INIT_CLIST(&mDescriptorQ);
 
-  if (streamBased)
-    MarkStreamBased();
-  SetStoragePolicy(storagePolicy);
+    if (streamBased) MarkStreamBased();
+    SetStoragePolicy(storagePolicy);
 
-  MarkPublic();
+    MarkPublic();
 }
 
 

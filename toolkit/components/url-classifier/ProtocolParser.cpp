@@ -113,7 +113,6 @@ ProtocolParser::GetTableUpdate(const nsACString& aTable)
 
 ProtocolParserV2::ProtocolParserV2()
   : mState(PROTOCOL_STATE_CONTROL)
-  , mChunkState{}
   , mResetRequested(false)
   , mTableUpdate(nullptr)
 {

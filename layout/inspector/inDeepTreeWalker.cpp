@@ -26,11 +26,10 @@
 ////////////////////////////////////////////////////
 
 inDeepTreeWalker::inDeepTreeWalker()
-  : mShowAnonymousContent(false)
-  , mShowSubDocuments(false)
-  , mShowDocumentsAsNodes(false)
-  , mCurrentIndex{}
-  , mWhatToShow(mozilla::dom::NodeFilterBinding::SHOW_ALL)
+  : mShowAnonymousContent(false),
+    mShowSubDocuments(false),
+    mShowDocumentsAsNodes(false),
+    mWhatToShow(mozilla::dom::NodeFilterBinding::SHOW_ALL)
 {
 }
 

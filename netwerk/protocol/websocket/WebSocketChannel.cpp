@@ -787,28 +787,6 @@ public:
     , mResetDeflater(false)
     , mMessageDeflated(false)
   {
-    this->mDeflater.next_in = { nullptr };
-    this->mDeflater.avail_in = {};
-    this->mDeflater.total_in = {};
-    this->mDeflater.next_out = { nullptr };
-    this->mDeflater.avail_out = {};
-    this->mDeflater.total_out = {};
-    this->mDeflater.msg = { nullptr };
-    this->mDeflater.state = { nullptr };
-    this->mDeflater.data_type = {};
-    this->mDeflater.adler = {};
-    this->mDeflater.reserved = {};
-    this->mInflater.next_in = { nullptr };
-    this->mInflater.avail_in = {};
-    this->mInflater.total_in = {};
-    this->mInflater.next_out = { nullptr };
-    this->mInflater.avail_out = {};
-    this->mInflater.total_out = {};
-    this->mInflater.msg = { nullptr };
-    this->mInflater.state = { nullptr };
-    this->mInflater.data_type = {};
-    this->mInflater.adler = {};
-    this->mInflater.reserved = {};
     MOZ_COUNT_CTOR(PMCECompression);
 
     mDeflater.zalloc = mInflater.zalloc = Z_NULL;
@@ -1174,45 +1152,42 @@ NS_IMPL_ISUPPORTS(OutboundEnqueuer, nsIRunnable)
 // WebSocketChannel
 //-----------------------------------------------------------------------------
 
-WebSocketChannel::WebSocketChannel()
-  : mPort(0)
-  , mCloseTimeout(20000)
-  , mOpenTimeout(20000)
-  , mConnecting(NOT_CONNECTING)
-  , mMaxConcurrentConnections(200)
-  , mInnerWindowID{}
-  , mGotUpgradeOK(0)
-  , mRecvdHttpUpgradeTransport(0)
-  , mAutoFollowRedirects(0)
-  , mAllowPMCE(1)
-  , mPingOutstanding(0)
-  , mReleaseOnTransmit(0)
-  , mDataStarted(0)
-  , mRequestedClose(0)
-  , mClientClosed(0)
-  , mServerClosed(0)
-  , mStopped(0)
-  , mCalledOnStop(0)
-  , mTCPClosed(0)
-  , mOpenedHttpChannel(0)
-  , mIncrementedSessionCount(0)
-  , mDecrementedSessionCount(0)
-  , mMaxMessageSize(INT32_MAX)
-  , mStopOnClose(NS_OK)
-  , mServerCloseCode(CLOSE_ABNORMAL)
-  , mScriptCloseCode(0)
-  , mFragmentOpcode(nsIWebSocketFrame::OPCODE_CONTINUATION)
-  , mFragmentAccumulator(0)
-  , mBuffered(0)
-  , mBufferSize(kIncomingBufferInitialSize)
-  , mCurrentOut(nullptr)
-  , mCurrentOutSent(0)
-  , mHdrOutToSend{}
-  , mHdrOut{ nullptr }
-  , mDynamicOutputSize(0)
-  , mDynamicOutput(nullptr)
-  , mPrivateBrowsing(false)
-  , mConnectionLogService(nullptr)
+WebSocketChannel::WebSocketChannel() :
+  mPort(0),
+  mCloseTimeout(20000),
+  mOpenTimeout(20000),
+  mConnecting(NOT_CONNECTING),
+  mMaxConcurrentConnections(200),
+  mGotUpgradeOK(0),
+  mRecvdHttpUpgradeTransport(0),
+  mAutoFollowRedirects(0),
+  mAllowPMCE(1),
+  mPingOutstanding(0),
+  mReleaseOnTransmit(0),
+  mDataStarted(0),
+  mRequestedClose(0),
+  mClientClosed(0),
+  mServerClosed(0),
+  mStopped(0),
+  mCalledOnStop(0),
+  mTCPClosed(0),
+  mOpenedHttpChannel(0),
+  mIncrementedSessionCount(0),
+  mDecrementedSessionCount(0),
+  mMaxMessageSize(INT32_MAX),
+  mStopOnClose(NS_OK),
+  mServerCloseCode(CLOSE_ABNORMAL),
+  mScriptCloseCode(0),
+  mFragmentOpcode(nsIWebSocketFrame::OPCODE_CONTINUATION),
+  mFragmentAccumulator(0),
+  mBuffered(0),
+  mBufferSize(kIncomingBufferInitialSize),
+  mCurrentOut(nullptr),
+  mCurrentOutSent(0),
+  mDynamicOutputSize(0),
+  mDynamicOutput(nullptr),
+  mPrivateBrowsing(false),
+  mConnectionLogService(nullptr)
 {
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 

@@ -108,10 +108,9 @@ struct VRDisplayInfo
 struct VRSubmitFrameResultInfo
 {
   VRSubmitFrameResultInfo()
-    : mFormat{ SurfaceFormat::UNKNOWN }
-    , mFrameNum(0)
-    , mWidth(0)
-    , mHeight(0)
+   : mFrameNum(0),
+     mWidth(0),
+     mHeight(0)
   {}
 
   nsCString mBase64Image;

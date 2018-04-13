@@ -189,7 +189,6 @@ private:
       : mScheduler(aScheduler)
       , mMainVirtual(GetCurrentVirtualThread())
       , mMainLoop(MessageLoop::current())
-      , mOldMainLoop{ nullptr }
       , mMainQueue(aQueue)
     {}
 
@@ -577,7 +576,6 @@ Scheduler::EventLoopActivation::EventLoopActivation()
   : mPrev(sTopActivation.get())
   , mProcessingEvent(false)
   , mIsLabeled(false)
-  , mPriority{ EventPriority::Normal }
 {
   sTopActivation.set(this);
 

@@ -577,8 +577,7 @@ protected:
   {
   public:
     explicit VisitHashKey(const nsIURI* aURI)
-      : nsURIHashKey(aURI)
-      , visitTime{}
+    : nsURIHashKey(aURI)
     {
     }
     VisitHashKey(const VisitHashKey& aOther)

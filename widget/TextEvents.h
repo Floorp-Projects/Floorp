@@ -659,7 +659,6 @@ private:
   friend class mozilla::dom::PBrowserChild;
 
   WidgetCompositionEvent()
-    : mOriginalMessage{ eVoidEvent }
   {
   }
 
@@ -1075,7 +1074,6 @@ private:
     , mExpandToClusterBoundary(true)
     , mSucceeded(false)
     , mUseNativeLineBreak(true)
-    , mReason{}
   {
   }
 

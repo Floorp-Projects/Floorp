@@ -68,12 +68,7 @@ public:
 
 private:
   SipccSdpMediaSection(size_t level, const SipccSdpAttributeList* sessionLevel)
-    : SdpMediaSection(level)
-    , mMediaType{ static_cast<MediaType>(0) }
-    , mPort{}
-    , mPortCount{}
-    , mProtocol{ static_cast<Protocol>(0) }
-    , mAttributeList(sessionLevel)
+      : SdpMediaSection(level), mAttributeList(sessionLevel)
   {
   }
 

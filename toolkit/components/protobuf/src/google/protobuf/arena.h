@@ -218,21 +218,13 @@ class LIBPROTOBUF_EXPORT Arena {
  public:
   // Arena constructor taking custom options. See ArenaOptions below for
   // descriptions of the options available.
-   explicit Arena(const ArenaOptions& options)
-     : impl_(options)
-     , on_arena_init_{ nullptr }
-   {
-     Init(options);
+  explicit Arena(const ArenaOptions& options) : impl_(options) {
+    Init(options);
   }
 
   // Default constructor with sensible default options, tuned for average
   // use-cases.
-  Arena()
-    : impl_(ArenaOptions())
-    , on_arena_init_{ nullptr }
-  {
-    Init(ArenaOptions());
-  }
+  Arena() : impl_(ArenaOptions()) { Init(ArenaOptions()); }
 
   ~Arena() {
     uint64 space_allocated = SpaceAllocated();

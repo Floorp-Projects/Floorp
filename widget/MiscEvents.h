@@ -187,7 +187,6 @@ public:
 
 protected:
   WidgetPluginEvent()
-    : mRetargetToFocusedDocument{ false }
   {
   }
 };

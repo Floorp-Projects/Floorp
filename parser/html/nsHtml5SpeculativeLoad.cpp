@@ -9,10 +9,13 @@
 using namespace mozilla;
 
 nsHtml5SpeculativeLoad::nsHtml5SpeculativeLoad()
-  : mOpCode(eSpeculativeLoadUninitialized)
-  , mIsAsync(false)
+  :
+#ifdef DEBUG
+  mOpCode(eSpeculativeLoadUninitialized)
+  ,
+#endif
+  mIsAsync(false)
   , mIsDefer(false)
-  , mEncoding{ nullptr }
 {
   MOZ_COUNT_CTOR(nsHtml5SpeculativeLoad);
   new (&mCharsetOrSrcset) nsString;

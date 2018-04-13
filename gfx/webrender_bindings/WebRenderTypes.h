@@ -598,9 +598,7 @@ struct Vec<uint8_t> {
     src.SetEmpty();
   }
 
-  explicit Vec(mozilla::ipc::ByteBuf&& aSrc)
-    : inner{}
-  {
+  explicit Vec(mozilla::ipc::ByteBuf&& aSrc) {
     Assign_WrVecU8(inner, std::move(aSrc));
   }
 

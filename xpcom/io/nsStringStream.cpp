@@ -50,7 +50,6 @@ public:
   NS_DECL_NSICLONEABLEINPUTSTREAM
 
   nsStringInputStream()
-    : mOffset{}
   {
     Clear();
   }

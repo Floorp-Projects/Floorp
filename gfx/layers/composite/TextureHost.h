@@ -908,15 +908,12 @@ private:
 class CompositingRenderTarget: public TextureSource
 {
 public:
+
   explicit CompositingRenderTarget(const gfx::IntPoint& aOrigin)
     : mClearOnBind(false)
     , mOrigin(aOrigin)
-    , mZNear{ 0.0 }
-    , mZFar{ 0.0 }
     , mHasComplexProjection(false)
-    , mEnableDepthBuffer{ false }
-  {
-  }
+  {}
   virtual ~CompositingRenderTarget() {}
 
   virtual const char* Name() const override { return "CompositingRenderTarget"; }

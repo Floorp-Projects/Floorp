@@ -20,7 +20,6 @@ WebrtcMediaDataDecoder::WebrtcMediaDataDecoder()
   , mImageContainer(layers::LayerManager::CreateImageContainer(
       layers::ImageContainer::ASYNCHRONOUS))
   , mFactory(new PDMFactory())
-  , mTrackType{ TrackInfo::kUndefinedTrack }
 {
 }
 

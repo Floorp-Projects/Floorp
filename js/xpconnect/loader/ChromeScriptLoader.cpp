@@ -48,12 +48,10 @@ public:
       , mGlobalObject(aGlobal)
       , mPromise(aPromise)
       , mCharset(aOptions.mCharset)
-      , mToken{ nullptr }
-      , mScriptLength{}
     {
-      mOptions.setNoScriptRval(!aOptions.mHasReturnValue)
-        .setCanLazilyParse(aOptions.mLazilyParse)
-        .setFile(aCx, mURL.get());
+        mOptions.setNoScriptRval(!aOptions.mHasReturnValue)
+                .setCanLazilyParse(aOptions.mLazilyParse)
+                .setFile(aCx, mURL.get());
     }
 
     nsresult Start(nsIPrincipal* aPrincipal);

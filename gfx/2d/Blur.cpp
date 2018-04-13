@@ -439,16 +439,13 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
                            const IntSize& aBlurRadius,
                            const Rect* aDirtyRect,
                            const Rect* aSkipRect)
-  : mStride{}
-  , mSurfaceAllocationSize(0)
+  : mSurfaceAllocationSize(0)
 {
   Init(aRect, aSpreadRadius, aBlurRadius, aDirtyRect, aSkipRect);
 }
 
 AlphaBoxBlur::AlphaBoxBlur()
-  : mStride{}
-  , mSurfaceAllocationSize(0)
-  , mHasDirtyRect{ false }
+  : mSurfaceAllocationSize(0)
 {
 }
 
@@ -516,12 +513,11 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
                            int32_t aStride,
                            float aSigmaX,
                            float aSigmaY)
-  : mRect(TruncatedToInt(aRect))
-  , mSpreadRadius()
-  , mBlurRadius(CalculateBlurRadius(Point(aSigmaX, aSigmaY)))
-  , mStride(aStride)
-  , mSurfaceAllocationSize(0)
-  , mHasDirtyRect{ false }
+  : mRect(TruncatedToInt(aRect)),
+    mSpreadRadius(),
+    mBlurRadius(CalculateBlurRadius(Point(aSigmaX, aSigmaY))),
+    mStride(aStride),
+    mSurfaceAllocationSize(0)
 {
   IntRect intRect;
   if (aRect.ToIntRect(&intRect)) {

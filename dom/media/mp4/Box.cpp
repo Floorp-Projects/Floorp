@@ -123,8 +123,6 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
 
 Box::Box()
   : mContext(nullptr)
-  , mBodyOffset{}
-  , mChildOffset{}
   , mParent(nullptr)
 {}
 

@@ -998,22 +998,17 @@ CreateObserversForAnimatedGlyphs(gfxTextRun* aTextRun)
  */
 class BuildTextRunsScanner {
 public:
-  BuildTextRunsScanner(nsPresContext* aPresContext,
-                       DrawTarget* aDrawTarget,
-                       nsIFrame* aLineContainer,
-                       nsTextFrame::TextRunType aWhichTextRun)
-    : mDrawTarget(aDrawTarget)
-    , mLineContainer(aLineContainer)
-    , mCommonAncestorWithLastFrame(nullptr)
-    , mMissingFonts(aPresContext->MissingFontRecorder())
-    , mBidiEnabled(aPresContext->BidiEnabled())
-    , mStartOfLine{ false }
-    , mSkipIncompleteTextRuns(false)
-    , mCanStopOnThisLine{ false }
-    , mWhichTextRun(aWhichTextRun)
-    , mNextRunContextInfo(nsTextFrameUtils::INCOMING_NONE)
-    , mCurrentRunContextInfo(nsTextFrameUtils::INCOMING_NONE)
-  {
+  BuildTextRunsScanner(nsPresContext* aPresContext, DrawTarget* aDrawTarget,
+      nsIFrame* aLineContainer, nsTextFrame::TextRunType aWhichTextRun) :
+    mDrawTarget(aDrawTarget),
+    mLineContainer(aLineContainer),
+    mCommonAncestorWithLastFrame(nullptr),
+    mMissingFonts(aPresContext->MissingFontRecorder()),
+    mBidiEnabled(aPresContext->BidiEnabled()),
+    mSkipIncompleteTextRuns(false),
+    mWhichTextRun(aWhichTextRun),
+    mNextRunContextInfo(nsTextFrameUtils::INCOMING_NONE),
+    mCurrentRunContextInfo(nsTextFrameUtils::INCOMING_NONE) {
     ResetRunInfo();
   }
   ~BuildTextRunsScanner() {
@@ -3119,33 +3114,24 @@ public:
    * textrun. If INT32_MAX is passed, justification and hyphen-related methods
    * cannot be called, nor can GetOriginalLength().
    */
-  PropertyProvider(gfxTextRun* aTextRun,
-                   const nsStyleText* aTextStyle,
-                   const nsTextFragment* aFrag,
-                   nsTextFrame* aFrame,
-                   const gfxSkipCharsIterator& aStart,
-                   int32_t aLength,
+  PropertyProvider(gfxTextRun* aTextRun, const nsStyleText* aTextStyle,
+                   const nsTextFragment* aFrag, nsTextFrame* aFrame,
+                   const gfxSkipCharsIterator& aStart, int32_t aLength,
                    nsIFrame* aLineContainer,
                    nscoord aOffsetFromBlockOriginForTabs,
                    nsTextFrame::TextRunType aWhichTextRun)
-    : mTextRun(aTextRun)
-    , mFontGroup(nullptr)
-    , mTextStyle(aTextStyle)
-    , mFrag(aFrag)
-    , mLineContainer(aLineContainer)
-    , mFrame(aFrame)
-    , mStart(aStart)
-    , mTempIterator(aStart)
-    , mTabWidths(nullptr)
-    , mTabWidthsAnalyzedLimit(0)
-    , mLength(aLength)
-    , mWordSpacing(WordSpacing(aFrame, mTextRun, aTextStyle))
-    , mLetterSpacing(LetterSpacing(aFrame, aTextStyle))
-    , mHyphenWidth(-1)
-    , mOffsetFromBlockOriginForTabs(aOffsetFromBlockOriginForTabs)
-    , mJustificationArrayStart{}
-    , mReflowing(true)
-    , mWhichTextRun(aWhichTextRun)
+    : mTextRun(aTextRun), mFontGroup(nullptr),
+      mTextStyle(aTextStyle), mFrag(aFrag),
+      mLineContainer(aLineContainer),
+      mFrame(aFrame), mStart(aStart), mTempIterator(aStart),
+      mTabWidths(nullptr), mTabWidthsAnalyzedLimit(0),
+      mLength(aLength),
+      mWordSpacing(WordSpacing(aFrame, mTextRun, aTextStyle)),
+      mLetterSpacing(LetterSpacing(aFrame, aTextStyle)),
+      mHyphenWidth(-1),
+      mOffsetFromBlockOriginForTabs(aOffsetFromBlockOriginForTabs),
+      mReflowing(true),
+      mWhichTextRun(aWhichTextRun)
   {
     NS_ASSERTION(mStart.IsInitialized(), "Start not initialized?");
   }
@@ -3155,27 +3141,21 @@ public:
    * have other data around. Gets everything from the frame. EnsureTextRun
    * *must* be called before this!!!
    */
-  PropertyProvider(nsTextFrame* aFrame,
-                   const gfxSkipCharsIterator& aStart,
+  PropertyProvider(nsTextFrame* aFrame, const gfxSkipCharsIterator& aStart,
                    nsTextFrame::TextRunType aWhichTextRun)
-    : mTextRun(aFrame->GetTextRun(aWhichTextRun))
-    , mFontGroup(nullptr)
-    , mTextStyle(aFrame->StyleText())
-    , mFrag(aFrame->GetContent()->GetText())
-    , mLineContainer(nullptr)
-    , mFrame(aFrame)
-    , mStart(aStart)
-    , mTempIterator(aStart)
-    , mTabWidths(nullptr)
-    , mTabWidthsAnalyzedLimit(0)
-    , mLength(aFrame->GetContentLength())
-    , mWordSpacing(WordSpacing(aFrame, mTextRun))
-    , mLetterSpacing(LetterSpacing(aFrame))
-    , mHyphenWidth(-1)
-    , mOffsetFromBlockOriginForTabs(0)
-    , mJustificationArrayStart{}
-    , mReflowing(false)
-    , mWhichTextRun(aWhichTextRun)
+    : mTextRun(aFrame->GetTextRun(aWhichTextRun)), mFontGroup(nullptr),
+      mTextStyle(aFrame->StyleText()),
+      mFrag(aFrame->GetContent()->GetText()),
+      mLineContainer(nullptr),
+      mFrame(aFrame), mStart(aStart), mTempIterator(aStart),
+      mTabWidths(nullptr), mTabWidthsAnalyzedLimit(0),
+      mLength(aFrame->GetContentLength()),
+      mWordSpacing(WordSpacing(aFrame, mTextRun)),
+      mLetterSpacing(LetterSpacing(aFrame)),
+      mHyphenWidth(-1),
+      mOffsetFromBlockOriginForTabs(0),
+      mReflowing(false),
+      mWhichTextRun(aWhichTextRun)
   {
     NS_ASSERTION(mTextRun, "Textrun not initialized!");
   }
@@ -3800,19 +3780,12 @@ EnsureDifferentColors(nscolor colorA, nscolor colorB)
 //-----------------------------------------------------------------------------
 
 nsTextPaintStyle::nsTextPaintStyle(nsTextFrame* aFrame)
-  : mFrame(aFrame)
-  , mPresContext(aFrame->PresContext())
-  , mInitCommonColors(false)
-  , mInitSelectionColorsAndShadow(false)
-  , mResolveColors(true)
-  , mSelectionStatus{}
-  , mSelectionTextColor{}
-  , mSelectionBGColor{}
-  , mHasSelectionShadow(false)
-  , mSufficientContrast{}
-  , mFrameBackgroundColor{}
-  , mSystemFieldForegroundColor{}
-  , mSystemFieldBackgroundColor{}
+  : mFrame(aFrame),
+    mPresContext(aFrame->PresContext()),
+    mInitCommonColors(false),
+    mInitSelectionColorsAndShadow(false),
+    mResolveColors(true),
+    mHasSelectionShadow(false)
 {
   for (uint32_t i = 0; i < ArrayLength(mSelectionStyle); i++)
     mSelectionStyle[i].mInit = false;
@@ -8220,14 +8193,9 @@ ClusterIterator::NextCluster()
   }
 }
 
-ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame,
-                                 int32_t aPosition,
-                                 int32_t aDirection,
-                                 nsString& aContext)
-  : mTextFrame(aTextFrame)
-  , mDirection(aDirection)
-  , mCharIndex(-1)
-  , mHaveWordBreak{ false }
+ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
+                                 int32_t aDirection, nsString& aContext)
+  : mTextFrame(aTextFrame), mDirection(aDirection), mCharIndex(-1)
 {
   mIterator = aTextFrame->EnsureTextRun(nsTextFrame::eInflated);
   if (!aTextFrame->GetTextRun(nsTextFrame::eInflated)) {

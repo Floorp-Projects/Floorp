@@ -1142,18 +1142,6 @@ nsZipCursor::nsZipCursor(nsZipItem *item, nsZipArchive *aZip, uint8_t* aBuf,
   , mCRC(0)
   , mDoCRC(doCRC)
 {
-  this->mZs.total_in = {};
-  this->mZs.next_out = { nullptr };
-  this->mZs.avail_out = {};
-  this->mZs.total_out = {};
-  this->mZs.msg = { nullptr };
-  this->mZs.state = { nullptr };
-  this->mZs.zalloc = { nullptr };
-  this->mZs.zfree = { nullptr };
-  this->mZs.opaque = { nullptr };
-  this->mZs.data_type = {};
-  this->mZs.adler = {};
-  this->mZs.reserved = {};
   if (mItem->Compression() == DEFLATED) {
 #ifdef DEBUG
     nsresult status =

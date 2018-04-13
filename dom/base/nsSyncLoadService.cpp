@@ -40,26 +40,21 @@ class nsSyncLoader : public nsIStreamListener,
                      public nsSupportsWeakReference
 {
 public:
-  nsSyncLoader()
-    : mLoading(false)
-    , mAsyncLoadStatus{ NS_ERROR_NOT_INITIALIZED }
-  {
-  }
+    nsSyncLoader() : mLoading(false) {}
 
-  NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
 
-  nsresult LoadDocument(nsIChannel* aChannel,
-                        bool aChannelIsSync,
-                        bool aForceToXML,
-                        ReferrerPolicy aReferrerPolicy,
-                        nsIDOMDocument** aResult);
+    nsresult LoadDocument(nsIChannel* aChannel,
+                          bool aChannelIsSync, bool aForceToXML,
+                          ReferrerPolicy aReferrerPolicy,
+                          nsIDOMDocument** aResult);
 
-  NS_FORWARD_NSISTREAMLISTENER(mListener->)
-  NS_DECL_NSIREQUESTOBSERVER
+    NS_FORWARD_NSISTREAMLISTENER(mListener->)
+    NS_DECL_NSIREQUESTOBSERVER
 
-  NS_DECL_NSICHANNELEVENTSINK
+    NS_DECL_NSICHANNELEVENTSINK
 
-  NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSIINTERFACEREQUESTOR
 
 private:
     virtual ~nsSyncLoader();

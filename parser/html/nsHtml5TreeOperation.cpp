@@ -80,11 +80,6 @@ private:
 
 nsHtml5TreeOperation::nsHtml5TreeOperation()
   : mOpCode(eTreeOpUninitialized)
-  , mOne{}
-  , mTwo{}
-  , mThree{}
-  , mFour{}
-  , mFive{}
 {
   MOZ_COUNT_CTOR(nsHtml5TreeOperation);
 }

@@ -201,7 +201,6 @@ NS_IMPL_RELEASE_INHERITED(MessagePort, DOMEventTargetHelper)
 MessagePort::MessagePort(nsIGlobalObject* aGlobal)
   : DOMEventTargetHelper(aGlobal)
   , mInnerID(0)
-  , mState{ static_cast<State>(0) }
   , mMessageQueueEnabled(false)
   , mIsKeptAlive(false)
   , mHasBeenTransferredOrClosed(false)

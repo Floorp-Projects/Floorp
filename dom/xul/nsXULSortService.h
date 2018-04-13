@@ -39,12 +39,8 @@ struct nsSortState
   MOZ_INIT_OUTSIDE_CTOR bool lastWasFirst, lastWasLast;
 
   nsSortState()
-    : initialized(false)
-    , invertSort{ false }
-    , sortHints(0)
-    /* FIXME: initialize direction */
-    , lastWasFirst{ false }
-    , lastWasLast{ false }
+    : initialized(false),
+      sortHints(0)
   {
   }
   void Traverse(nsCycleCollectionTraversalCallback &cb) const

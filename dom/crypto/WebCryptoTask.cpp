@@ -520,28 +520,18 @@ class AesTask : public ReturnArrayBufferViewTask,
                 public DeferredData
 {
 public:
-  AesTask(JSContext* aCx,
-          const ObjectOrString& aAlgorithm,
-          CryptoKey& aKey,
-          bool aEncrypt)
-    : mMechanism{}
-    , mSymKey(aKey.GetSymKey())
-    , mTagLength{ '\0' }
-    , mCounterLength{ '\0' }
+  AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+          CryptoKey& aKey, bool aEncrypt)
+    : mSymKey(aKey.GetSymKey())
     , mEncrypt(aEncrypt)
   {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
   }
 
-  AesTask(JSContext* aCx,
-          const ObjectOrString& aAlgorithm,
-          CryptoKey& aKey,
-          const CryptoOperationData& aData,
+  AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+          CryptoKey& aKey, const CryptoOperationData& aData,
           bool aEncrypt)
-    : mMechanism{}
-    , mSymKey(aKey.GetSymKey())
-    , mTagLength{ '\0' }
-    , mCounterLength{ '\0' }
+    : mSymKey(aKey.GetSymKey())
     , mEncrypt(aEncrypt)
   {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
@@ -1692,25 +1682,18 @@ private:
 class ImportRsaKeyTask : public ImportKeyTask
 {
 public:
-  ImportRsaKeyTask(nsIGlobalObject* aGlobal,
-                   JSContext* aCx,
-                   const nsAString& aFormat,
-                   const ObjectOrString& aAlgorithm,
-                   bool aExtractable,
-                   const Sequence<nsString>& aKeyUsages)
-    : mModulusLength{}
+  ImportRsaKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
+      const nsAString& aFormat,
+      const ObjectOrString& aAlgorithm, bool aExtractable,
+      const Sequence<nsString>& aKeyUsages)
   {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
   }
 
-  ImportRsaKeyTask(nsIGlobalObject* aGlobal,
-                   JSContext* aCx,
-                   const nsAString& aFormat,
-                   JS::Handle<JSObject*> aKeyData,
-                   const ObjectOrString& aAlgorithm,
-                   bool aExtractable,
-                   const Sequence<nsString>& aKeyUsages)
-    : mModulusLength{}
+  ImportRsaKeyTask(nsIGlobalObject* aGlobal, JSContext* aCx,
+      const nsAString& aFormat, JS::Handle<JSObject*> aKeyData,
+      const ObjectOrString& aAlgorithm, bool aExtractable,
+      const Sequence<nsString>& aKeyUsages)
   {
     Init(aGlobal, aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
     if (NS_FAILED(mEarlyRv)) {
@@ -2377,15 +2360,9 @@ private:
 };
 
 GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
-  nsIGlobalObject* aGlobal,
-  JSContext* aCx,
-  const ObjectOrString& aAlgorithm,
-  bool aExtractable,
-  const Sequence<nsString>& aKeyUsages)
+    nsIGlobalObject* aGlobal, JSContext* aCx, const ObjectOrString& aAlgorithm,
+    bool aExtractable, const Sequence<nsString>& aKeyUsages)
   : mKeyPair(new CryptoKeyPair())
-  , mMechanism{}
-  , mRsaParams{}
-  , mDhParams{}
 {
   mArena = UniquePLArenaPool(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!mArena) {
@@ -2624,23 +2601,15 @@ class DeriveHkdfBitsTask : public ReturnArrayBufferViewTask
 {
 public:
   DeriveHkdfBitsTask(JSContext* aCx,
-                     const ObjectOrString& aAlgorithm,
-                     CryptoKey& aKey,
-                     uint32_t aLength)
+      const ObjectOrString& aAlgorithm, CryptoKey& aKey, uint32_t aLength)
     : mSymKey(aKey.GetSymKey())
-    , mMechanism{}
   {
     Init(aCx, aAlgorithm, aKey, aLength);
   }
 
-  DeriveHkdfBitsTask(JSContext* aCx,
-                     const ObjectOrString& aAlgorithm,
-                     CryptoKey& aKey,
-                     const ObjectOrString& aTargetAlgorithm)
-    : mLengthInBits{}
-    , mLengthInBytes{}
-    , mSymKey(aKey.GetSymKey())
-    , mMechanism{}
+  DeriveHkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                      CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
+    : mSymKey(aKey.GetSymKey())
   {
     size_t length;
     mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, length);
@@ -2782,23 +2751,15 @@ class DerivePbkdfBitsTask : public ReturnArrayBufferViewTask
 {
 public:
   DerivePbkdfBitsTask(JSContext* aCx,
-                      const ObjectOrString& aAlgorithm,
-                      CryptoKey& aKey,
-                      uint32_t aLength)
+      const ObjectOrString& aAlgorithm, CryptoKey& aKey, uint32_t aLength)
     : mSymKey(aKey.GetSymKey())
-    , mHashOidTag{ SEC_OID_UNKNOWN }
   {
     Init(aCx, aAlgorithm, aKey, aLength);
   }
 
-  DerivePbkdfBitsTask(JSContext* aCx,
-                      const ObjectOrString& aAlgorithm,
-                      CryptoKey& aKey,
-                      const ObjectOrString& aTargetAlgorithm)
-    : mLength{}
-    , mIterations{}
-    , mSymKey(aKey.GetSymKey())
-    , mHashOidTag{ SEC_OID_UNKNOWN }
+  DerivePbkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                      CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
+    : mSymKey(aKey.GetSymKey())
   {
     size_t length;
     mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, length);

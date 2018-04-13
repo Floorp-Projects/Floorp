@@ -213,12 +213,10 @@ SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
 SRICheckDataVerifier::SRICheckDataVerifier(const SRIMetadata& aMetadata,
                                            const nsACString& aSourceFileURI,
                                            nsIConsoleReportCollector* aReporter)
-  : mCryptoHash(nullptr)
-  , mBytesHashed(0)
-  , mHashLength{}
-  , mHashType{ '\0' }
-  , mInvalidMetadata(false)
-  , mComplete(false)
+  : mCryptoHash(nullptr),
+    mBytesHashed(0),
+    mInvalidMetadata(false),
+    mComplete(false)
 {
   MOZ_ASSERT(!aMetadata.IsEmpty()); // should be checked by caller
 

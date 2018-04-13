@@ -67,11 +67,7 @@ public:
   const uint8_t *GetData() { return (const uint8_t *)(mData + mPos); };
 
 protected:
-  OutgoingMsg()
-    : mLength{}
-    , mData{ nullptr }
-    , mInfo{ nullptr }
-    , mPos{} {}; // Use this for inheritance only
+  OutgoingMsg() {}; // Use this for inheritance only
   size_t mLength;
   const uint8_t *mData;
   struct sctp_sendv_spa *mInfo;
@@ -361,16 +357,15 @@ public:
     WAITING_TO_OPEN = 4U
   };
 
-  DataChannel(DataChannelConnection* connection,
+  DataChannel(DataChannelConnection *connection,
               uint16_t stream,
               uint16_t state,
               const nsACString& label,
               const nsACString& protocol,
-              uint16_t policy,
-              uint32_t value,
+              uint16_t policy, uint32_t value,
               uint32_t flags,
-              DataChannelListener* aListener,
-              nsISupports* aContext)
+              DataChannelListener *aListener,
+              nsISupports *aContext)
     : mListenerLock("netwerk::sctp::DataChannel")
     , mListener(aListener)
     , mContext(aContext)
@@ -382,12 +377,11 @@ public:
     , mPrPolicy(policy)
     , mPrValue(value)
     , mFlags(flags)
-    , mId{}
     , mIsRecvBinary(false)
     , mBufferedThreshold(0) // default from spec
     , mMainThreadEventTarget(connection->GetNeckoTarget())
-  {
-    NS_ASSERTION(mConnection, "NULL connection");
+    {
+      NS_ASSERTION(mConnection,"NULL connection");
     }
 
 private:

@@ -161,7 +161,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mInResize(false)
 , mWindowTransformIsIdentity(true)
 , mNumModalDescendents(0)
-, mWindowAnimationBehavior{NSWindowAnimationBehaviorDefault} {
+{
   if ([NSWindow respondsToSelector:@selector(setAllowsAutomaticWindowTabbing:)]) {
     // Disable automatic tabbing on 10.12. We need to do this before we
     // orderFront any of our windows.
@@ -265,7 +265,7 @@ FitRectToVisibleAreaForScreen(DesktopIntRect& aRect, NSScreen* aScreen)
   if (aRect.height > screenBounds.height) {
     aRect.height = screenBounds.height;
   }
-
+  
   if (aRect.x - screenBounds.x + aRect.width > screenBounds.width) {
     aRect.x += screenBounds.width - (aRect.x - screenBounds.x + aRect.width);
   }
@@ -436,7 +436,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   if (aRectIsFrameRect) {
     contentRect = [NSWindow contentRectForFrameRect:aRect styleMask:features];
   } else {
-    /*
+    /* 
      * We pass a content area rect to initialize the native Cocoa window. The
      * content rect we give is the same size as the size we're given by gecko.
      * The origin we're given for non-popup windows is moved down by the height
@@ -469,9 +469,9 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   //       rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
 
   Class windowClass = [BaseWindow class];
-  // If we have a titlebar on a top-level window, we want to be able to control the
-  // titlebar color (for unified windows), so use the special ToolbarWindow class.
-  // Note that we need to check the window type because we mark sheets as
+  // If we have a titlebar on a top-level window, we want to be able to control the 
+  // titlebar color (for unified windows), so use the special ToolbarWindow class. 
+  // Note that we need to check the window type because we mark sheets as 
   // having titlebars.
   if ((mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) &&
       (features & NSTitledWindowMask))
@@ -485,7 +485,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
     windowClass = [BorderlessWindow class];
 
   // Create the window
-  mWindow = [[windowClass alloc] initWithContentRect:contentRect styleMask:features
+  mWindow = [[windowClass alloc] initWithContentRect:contentRect styleMask:features 
                                  backing:NSBackingStoreBuffered defer:YES];
 
   // Make sure that window titles don't leak to disk in private browsing mode
@@ -629,7 +629,7 @@ void* nsCocoaWindow::GetNativeData(uint32_t aDataType)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
 
   void* retVal = nullptr;
-
+  
   switch (aDataType) {
     // to emulate how windows works, we always have to return a NSView
     // for NS_NATIVE_WIDGET
@@ -637,11 +637,11 @@ void* nsCocoaWindow::GetNativeData(uint32_t aDataType)
     case NS_NATIVE_DISPLAY:
       retVal = [mWindow contentView];
       break;
-
+      
     case NS_NATIVE_WINDOW:
       retVal = mWindow;
       break;
-
+      
     case NS_NATIVE_GRAPHIC:
       // There isn't anything that makes sense to return here,
       // and it doesn't matter so just return nullptr.
@@ -816,7 +816,7 @@ nsCocoaWindow::Show(bool bState)
         return;
 
       NSWindow* topNonSheetWindow = nativeParentWindow;
-
+      
       // If this sheet is the child of another sheet, hide the parent so that
       // this sheet can be displayed. Leave the parent mSheetNeedsShow alone,
       // that is only used to handle sibling sheet contention. The parent will
@@ -942,10 +942,10 @@ nsCocoaWindow::Show(bool bState)
       else {
         // get sheet's parent *before* hiding the sheet (which breaks the linkage)
         NSWindow* sheetParent = mSheetWindowParent;
-
+        
         // hide the sheet
         [NSApp endSheet:mWindow];
-
+        
         [TopLevelWindowData deactivateInWindow:mWindow];
 
         nsCOMPtr<nsIWidget> siblingSheetToShow;
@@ -1898,7 +1898,7 @@ nsCocoaWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 // Pass notification of some drag event to Gecko
 //
 // The drag manager has let us know that something related to a drag has
-// occurred in this window. It could be any number of things, ranging from
+// occurred in this window. It could be any number of things, ranging from 
 // a drop, to a drag enter/leave, or a drag over event. The actual event
 // is passed in |aMessage| and is passed along to our event hanlder so Gecko
 // knows about it.
@@ -2179,7 +2179,7 @@ nsCocoaWindow::CaptureRollupEvents(nsIRollupListener* aListener,
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   gRollupListener = nullptr;
-
+  
   if (aDoCapture) {
     if (![NSApp isActive]) {
       // We need to capture mouse event if we aren't
@@ -2212,7 +2212,7 @@ nsCocoaWindow::CaptureRollupEvents(nsIRollupListener* aListener,
     if (mWindow && (mWindowType == eWindowType_popup))
       [mWindow setLevel:NSModalPanelWindowLevel];
   }
-
+  
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -2537,7 +2537,7 @@ nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
 
   nsCocoaWindow* geckoWidget = [windowDelegate geckoWidget];
   NS_ASSERTION(geckoWidget, "Window delegate not returning a gecko widget!");
-
+  
   nsMenuBarX* geckoMenuBar = geckoWidget->GetMenuBar();
   if (geckoMenuBar) {
     geckoMenuBar->Paint();
@@ -2585,7 +2585,7 @@ nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize
 {
   RollUpPopups();
-
+  
   return proposedFrameSize;
 }
 
@@ -3743,7 +3743,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 - (void)sendEvent:(NSEvent *)anEvent
 {
   NSEventType type = [anEvent type];
-
+  
   switch (type) {
     case NSScrollWheel:
     case NSLeftMouseDown:
@@ -3838,7 +3838,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 - (void)sendEvent:(NSEvent *)anEvent
 {
   NSEventType type = [anEvent type];
-
+  
   switch (type) {
     case NSScrollWheel:
     case NSLeftMouseDown:

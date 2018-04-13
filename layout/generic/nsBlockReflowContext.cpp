@@ -29,13 +29,10 @@ using namespace mozilla;
 
 nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,
                                            const ReflowInput& aParentRI)
-  : mPresContext(aPresContext)
-  , mOuterReflowInput(aParentRI)
-  , mFrame{ nullptr }
-  , mSpace(aParentRI.GetWritingMode())
-  , mICoord{}
-  , mBCoord{}
-  , mMetrics(aParentRI)
+  : mPresContext(aPresContext),
+    mOuterReflowInput(aParentRI),
+    mSpace(aParentRI.GetWritingMode()),
+    mMetrics(aParentRI)
 {
 }
 

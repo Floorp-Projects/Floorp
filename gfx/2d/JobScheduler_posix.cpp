@@ -17,7 +17,7 @@ void* ThreadCallback(void* threadData);
 class WorkerThreadPosix : public WorkerThread {
 public:
   explicit WorkerThreadPosix(MultiThreadedJobQueue* aJobQueue)
-    : WorkerThread(aJobQueue)
+  : WorkerThread(aJobQueue)
   {
     pthread_create(&mThread, nullptr, ThreadCallback, static_cast<WorkerThread*>(this));
   }

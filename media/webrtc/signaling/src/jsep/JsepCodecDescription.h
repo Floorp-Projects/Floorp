@@ -227,28 +227,21 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
 
 class JsepVideoCodecDescription : public JsepCodecDescription {
  public:
-   JsepVideoCodecDescription(const std::string& defaultPt,
-                             const std::string& name,
-                             uint32_t clock,
-                             bool enabled = true)
-     : JsepCodecDescription(mozilla::SdpMediaSection::kVideo,
-                            defaultPt,
-                            name,
-                            clock,
-                            0,
-                            enabled)
-     , mTmmbrEnabled(false)
-     , mRembEnabled(false)
-     , mFECEnabled(false)
-     , mREDPayloadType{ '\0' }
-     , mULPFECPayloadType{ '\0' }
-     , mProfileLevelId{}
-     , mPacketizationMode(0)
-   {
-     // Add supported rtcp-fb types
-     mNackFbTypes.push_back("");
-     mNackFbTypes.push_back(SdpRtcpFbAttributeList::pli);
-     mCcmFbTypes.push_back(SdpRtcpFbAttributeList::fir);
+  JsepVideoCodecDescription(const std::string& defaultPt,
+                            const std::string& name,
+                            uint32_t clock,
+                            bool enabled = true)
+      : JsepCodecDescription(mozilla::SdpMediaSection::kVideo, defaultPt, name,
+                             clock, 0, enabled),
+        mTmmbrEnabled(false),
+        mRembEnabled(false),
+        mFECEnabled(false),
+        mPacketizationMode(0)
+  {
+    // Add supported rtcp-fb types
+    mNackFbTypes.push_back("");
+    mNackFbTypes.push_back(SdpRtcpFbAttributeList::pli);
+    mCcmFbTypes.push_back(SdpRtcpFbAttributeList::fir);
   }
 
   virtual void
@@ -760,23 +753,18 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
 class JsepApplicationCodecDescription : public JsepCodecDescription {
   // This is the new draft-21 implementation
  public:
-   JsepApplicationCodecDescription(const std::string& name,
-                                   uint16_t channels,
-                                   uint16_t localPort,
-                                   uint32_t localMaxMessageSize,
-                                   bool enabled = true)
-     : JsepCodecDescription(mozilla::SdpMediaSection::kApplication,
-                            "",
-                            name,
-                            0,
-                            channels,
-                            enabled)
-     , mLocalPort(localPort)
-     , mLocalMaxMessageSize(localMaxMessageSize)
-     , mRemotePort(0)
-     , mRemoteMaxMessageSize(0)
-     , mRemoteMMSSet{ false }
-   {
+  JsepApplicationCodecDescription(const std::string& name,
+                                  uint16_t channels,
+                                  uint16_t localPort,
+                                  uint32_t localMaxMessageSize,
+                                  bool enabled = true)
+      : JsepCodecDescription(mozilla::SdpMediaSection::kApplication, "",
+                             name, 0, channels, enabled),
+        mLocalPort(localPort),
+        mLocalMaxMessageSize(localMaxMessageSize),
+        mRemotePort(0),
+        mRemoteMaxMessageSize(0)
+  {
   }
 
   JSEP_CODEC_CLONE(JsepApplicationCodecDescription)

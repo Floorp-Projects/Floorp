@@ -589,8 +589,6 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
   : mWindowProxy(nullptr)
   , mGCOnDestruction(aGCOnDestruction)
-  , mModalStateTime{}
-  , mModalStateDepth{}
   , mGlobalObjectRef(aGlobalObject)
 {
   EnsureStatics();

@@ -112,11 +112,7 @@ public:
   {
   public:
     SimplePath()
-      : mX{ 0.0 }
-      , mY{ 0.0 }
-      , mWidthOrX2{ 0.0 }
-      , mHeightOrY2{ 0.0 }
-      , mType(NONE)
+      : mType(NONE)
     {}
     bool IsPath() const {
       return mType != NONE;

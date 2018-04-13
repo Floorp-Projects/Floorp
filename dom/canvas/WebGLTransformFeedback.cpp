@@ -13,16 +13,13 @@
 namespace mozilla {
 
 WebGLTransformFeedback::WebGLTransformFeedback(WebGLContext* webgl, GLuint tf)
-  : WebGLRefCountedObject(webgl)
-  , mGLName(tf)
-  , mIndexedBindings(webgl->mGLMaxTransformFeedbackSeparateAttribs)
-  , mIsPaused(false)
-  , mIsActive(false)
-  , mActive_PrimMode{}
-  , mActive_VertPosition{}
-  , mActive_VertCapacity{}
+    : WebGLRefCountedObject(webgl)
+    , mGLName(tf)
+    , mIndexedBindings(webgl->mGLMaxTransformFeedbackSeparateAttribs)
+    , mIsPaused(false)
+    , mIsActive(false)
 {
-  mContext->mTransformFeedbacks.insertBack(this);
+    mContext->mTransformFeedbacks.insertBack(this);
 }
 
 WebGLTransformFeedback::~WebGLTransformFeedback()

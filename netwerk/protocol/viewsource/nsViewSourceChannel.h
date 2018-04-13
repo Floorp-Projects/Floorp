@@ -45,11 +45,8 @@ public:
 
     // nsViewSourceChannel methods:
     nsViewSourceChannel()
-      : mIsDocument(false)
-      , mOpened(false)
-      , mIsSrcdocChannel{ false }
-    {
-    }
+        : mIsDocument(false)
+        , mOpened(false) {}
 
     MOZ_MUST_USE nsresult Init(nsIURI* uri);
 

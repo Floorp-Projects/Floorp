@@ -128,63 +128,60 @@ CreateDrawTargetForSurface(gfxASurface *aSurface)
 
 bool PluginInstanceChild::sIsIMEComposing = false;
 
-PluginInstanceChild::PluginInstanceChild(
-  const NPPluginFuncs* aPluginIface,
-  const nsCString& aMimeType,
-  const InfallibleTArray<nsCString>& aNames,
-  const InfallibleTArray<nsCString>& aValues)
-  : mPluginIface(aPluginIface)
-  , mMimeType(aMimeType)
-  , mNames(aNames)
-  , mValues(aValues)
+PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
+                                         const nsCString& aMimeType,
+                                         const InfallibleTArray<nsCString>& aNames,
+                                         const InfallibleTArray<nsCString>& aValues)
+    : mPluginIface(aPluginIface)
+    , mMimeType(aMimeType)
+    , mNames(aNames)
+    , mValues(aValues)
 #if defined(XP_DARWIN) || defined (XP_WIN)
-  , mContentsScaleFactor(1.0)
+    , mContentsScaleFactor(1.0)
 #endif
-  , mCSSZoomFactor{ 0.0 }
-  , mPostingKeyEvents(0)
-  , mPostingKeyEventsOutdated(0)
-  , mDrawingModel(kDefaultDrawingModel)
-  , mCurrentDirectSurface(nullptr)
-  , mAsyncInvalidateMutex("PluginInstanceChild::mAsyncInvalidateMutex")
-  , mAsyncInvalidateTask(0)
-  , mCachedWindowActor(nullptr)
-  , mCachedElementActor(nullptr)
+    , mPostingKeyEvents(0)
+    , mPostingKeyEventsOutdated(0)
+    , mDrawingModel(kDefaultDrawingModel)
+    , mCurrentDirectSurface(nullptr)
+    , mAsyncInvalidateMutex("PluginInstanceChild::mAsyncInvalidateMutex")
+    , mAsyncInvalidateTask(0)
+    , mCachedWindowActor(nullptr)
+    , mCachedElementActor(nullptr)
 #if defined(OS_WIN)
-  , mPluginWindowHWND(0)
-  , mPluginWndProc(0)
-  , mPluginParentHWND(0)
-  , mCachedWinlessPluginHWND(0)
-  , mWinlessPopupSurrogateHWND(0)
-  , mWinlessThrottleOldWndProc(0)
-  , mWinlessHiddenMsgHWND(0)
+    , mPluginWindowHWND(0)
+    , mPluginWndProc(0)
+    , mPluginParentHWND(0)
+    , mCachedWinlessPluginHWND(0)
+    , mWinlessPopupSurrogateHWND(0)
+    , mWinlessThrottleOldWndProc(0)
+    , mWinlessHiddenMsgHWND(0)
 #endif // OS_WIN
 #if defined(MOZ_WIDGET_COCOA)
 #if defined(__i386__)
-  , mEventModel(NPEventModelCarbon)
+    , mEventModel(NPEventModelCarbon)
 #endif
-  , mShColorSpace(nullptr)
-  , mShContext(nullptr)
-  , mCGLayer(nullptr)
-  , mCARefreshTimer{}
-  , mCurrentEvent(nullptr)
+    , mShColorSpace(nullptr)
+    , mShContext(nullptr)
+    , mCGLayer(nullptr)
+    , mCurrentEvent(nullptr)
 #endif
-  , mLayersRendering(false)
+    , mLayersRendering(false)
 #ifdef XP_WIN
-  , mCurrentSurfaceActor(nullptr)
-  , mBackSurfaceActor(nullptr)
+    , mCurrentSurfaceActor(nullptr)
+    , mBackSurfaceActor(nullptr)
 #endif
-  , mAccumulatedInvalidRect(0, 0, 0, 0)
-  , mIsTransparent(false)
-  , mSurfaceType(gfxSurfaceType::Max)
-  , mPendingPluginCall(false)
-  , mDoAlphaExtraction(false)
-  , mHasPainted(false)
-  , mSurfaceDifferenceRect(0, 0, 0, 0)
-  , mDestroyed(false)
+    , mAccumulatedInvalidRect(0,0,0,0)
+    , mIsTransparent(false)
+    , mSurfaceType(gfxSurfaceType::Max)
+    , mPendingPluginCall(false)
+    , mDoAlphaExtraction(false)
+    , mHasPainted(false)
+    , mSurfaceDifferenceRect(0,0,0,0)
+    , mDestroyed(false)
 #ifdef XP_WIN
-  , mLastKeyEventConsumed(false)
+    , mLastKeyEventConsumed(false)
 #endif // #ifdef XP_WIN
-  , mStackDepth(0)
+    , mStackDepth(0)
 {
     memset(&mWindow, 0, sizeof(mWindow));
     mWindow.type = NPWindowTypeWindow;

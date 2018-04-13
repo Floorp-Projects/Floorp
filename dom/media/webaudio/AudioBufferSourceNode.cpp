@@ -42,28 +42,21 @@ class AudioBufferSourceNodeEngine final : public AudioNodeEngine
 {
 public:
   AudioBufferSourceNodeEngine(AudioNode* aNode,
-                              AudioDestinationNode* aDestination)
-    : AudioNodeEngine(aNode)
-    , mStart(0.0)
-    , mBeginProcessing(0)
-    , mStop(STREAM_TIME_MAX)
-    , mResampler(nullptr)
-    , mRemainingResamplerTail(0)
-    , mBufferEnd(0)
-    , mLoopStart(0)
-    , mLoopEnd(0)
-    , mBufferPosition(0)
-    , mBufferSampleRate(0)
-    ,
+                              AudioDestinationNode* aDestination) :
+    AudioNodeEngine(aNode),
+    mStart(0.0), mBeginProcessing(0),
+    mStop(STREAM_TIME_MAX),
+    mResampler(nullptr), mRemainingResamplerTail(0),
+    mBufferEnd(0),
+    mLoopStart(0), mLoopEnd(0),
+    mBufferPosition(0), mBufferSampleRate(0),
     // mResamplerOutRate is initialized in UpdateResampler().
-    mResamplerOutRate{}
-    , mChannels(0)
-    , mDopplerShift(1.0f)
-    , mDestination(aDestination->Stream())
-    , mSource{ nullptr }
-    , mPlaybackRateTimeline(1.0f)
-    , mDetuneTimeline(0.0f)
-    , mLoop(false)
+    mChannels(0),
+    mDopplerShift(1.0f),
+    mDestination(aDestination->Stream()),
+    mPlaybackRateTimeline(1.0f),
+    mDetuneTimeline(0.0f),
+    mLoop(false)
   {}
 
   ~AudioBufferSourceNodeEngine()
@@ -631,8 +624,6 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mLoopStart(0.0)
   , mLoopEnd(0.0)
   // mOffset and mDuration are initialized in Start().
-  , mOffset{ 0.0 }
-  , mDuration{ 0.0 }
   , mPlaybackRate(new AudioParam(this, PLAYBACKRATE, "playbackRate", 1.0f))
   , mDetune(new AudioParam(this, DETUNE, "detune", 0.0f))
   , mLoop(false)

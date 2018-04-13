@@ -37,8 +37,7 @@ class UnassociatedIconHashKey : public nsURIHashKey
 {
 public:
   explicit UnassociatedIconHashKey(const nsIURI* aURI)
-    : nsURIHashKey(aURI)
-    , created{}
+  : nsURIHashKey(aURI)
   {
   }
   UnassociatedIconHashKey(const UnassociatedIconHashKey& aOther)

@@ -72,29 +72,22 @@ private:
     virtual ~NodeIterator();
 
     struct NodePointer {
-      NodePointer()
-        : mNode(nullptr)
-        , mBeforeNode{ false }
-      {
-      }
-      NodePointer(nsINode* aNode, bool aBeforeNode);
+        NodePointer() : mNode(nullptr) {}
+        NodePointer(nsINode *aNode, bool aBeforeNode);
 
-      typedef bool (NodePointer::*MoveToMethodType)(nsINode*);
-      bool MoveToNext(nsINode* aRoot);
-      bool MoveToPrevious(nsINode* aRoot);
+        typedef bool (NodePointer::*MoveToMethodType)(nsINode*);
+        bool MoveToNext(nsINode *aRoot);
+        bool MoveToPrevious(nsINode *aRoot);
 
-      bool MoveForward(nsINode* aRoot, nsINode* aNode);
-      void MoveBackward(nsINode* aParent, nsINode* aNode);
+        bool MoveForward(nsINode *aRoot, nsINode *aNode);
+        void MoveBackward(nsINode *aParent, nsINode *aNode);
 
-      void AdjustAfterRemoval(nsINode* aRoot,
-                              nsINode* aContainer,
-                              nsIContent* aChild,
-                              nsIContent* aPreviousSibling);
+        void AdjustAfterRemoval(nsINode *aRoot, nsINode *aContainer, nsIContent *aChild, nsIContent *aPreviousSibling);
 
-      void Clear() { mNode = nullptr; }
+        void Clear() { mNode = nullptr; }
 
-      nsINode* mNode;
-      bool mBeforeNode;
+        nsINode *mNode;
+        bool mBeforeNode;
     };
 
     // Have to return a strong ref, because the act of testing the node can

@@ -88,21 +88,9 @@ private:
     public:
         // When constructing a new entry in the hashtable, we'll leave this
         // blank. The caller of Put() will fill this in.
-      explicit HashEntry(KeyTypePointer aPtr)
-        : nsUint32HashKey(aPtr)
-        , x{ 0.0 }
-        , y{ 0.0 }
-        , width{ 0.0 }
-        , height{ 0.0 }
-      {
-      }
-      HashEntry(const HashEntry& toCopy)
-        : nsUint32HashKey(toCopy)
-      {
-        x = toCopy.x;
-        y = toCopy.y;
-        width = toCopy.width;
-        height = toCopy.height;
+        explicit HashEntry(KeyTypePointer aPtr) : nsUint32HashKey(aPtr) {}
+        HashEntry(const HashEntry& toCopy) : nsUint32HashKey(toCopy) {
+          x = toCopy.x; y = toCopy.y; width = toCopy.width; height = toCopy.height;
         }
 
         float x, y, width, height;
