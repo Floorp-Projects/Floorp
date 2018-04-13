@@ -9,7 +9,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/TextUtils.h"
 #include "mozilla/Vector.h"
 
 #include <limits>
@@ -45,10 +44,6 @@
 #include "vm/JSObject-inl.h"
 
 using namespace std;
-
-using mozilla::AsciiAlphanumericToNumber;
-using mozilla::IsAsciiAlpha;
-using mozilla::IsAsciiAlphanumeric;
 
 using JS::AutoCheckCannotGC;
 
@@ -2936,13 +2931,17 @@ StringToInteger(JSContext* cx, CharT* cp, size_t length, IntegerType* result,
   IntegerType i = 0;
   while (cp != end) {
     char16_t c = *cp++;
-    if (!IsAsciiAlphanumeric(c))
-        return false;
-
-    uint8_t digit = AsciiAlphanumericToNumber(c);
+    if (c >= '0' && c <= '9')
+      c -= '0';
+    else if (base == 16 && c >= 'a' && c <= 'f')
+      c = c - 'a' + 10;
+    else if (base == 16 && c >= 'A' && c <= 'F')
+      c = c - 'A' + 10;
+    else
+      return false;
 
     IntegerType ii = i;
-    i = ii * base + sign * digit;
+    i = ii * base + sign * c;
     if (i / base != ii) {
       *overflow = true;
       return false;
@@ -4056,7 +4055,9 @@ BuildTypeName(JSContext* cx, JSObject* typeObj_)
 
   // If prepending the base type name directly would splice two
   // identifiers, insert a space.
-  if (IsAsciiAlpha(result[0]) || result[0] == '_')
+  if (('a' <= result[0] && result[0] <= 'z') ||
+      ('A' <= result[0] && result[0] <= 'Z') ||
+      (result[0] == '_'))
     PrependString(result, " ");
 
   // Stick the base type and derived type parts together.

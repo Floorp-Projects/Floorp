@@ -36,7 +36,6 @@
 
 using mozilla::ArrayLength;
 using mozilla::IsAsciiAlpha;
-using mozilla::IsAsciiDigit;
 using mozilla::MakeScopeExit;
 using mozilla::PodArrayZero;
 using mozilla::PodCopy;
@@ -1600,7 +1599,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
       decimal:
         decimalPoint = NoDecimal;
         hasExp = false;
-        while (IsAsciiDigit(c))
+        while (JS7_ISDEC(c))
             c = getCharIgnoreEOL();
 
         if (c == '.') {
@@ -1608,21 +1607,21 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
           decimal_dot:
             do {
                 c = getCharIgnoreEOL();
-            } while (IsAsciiDigit(c));
+            } while (JS7_ISDEC(c));
         }
         if (c == 'e' || c == 'E') {
             hasExp = true;
             c = getCharIgnoreEOL();
             if (c == '+' || c == '-')
                 c = getCharIgnoreEOL();
-            if (!IsAsciiDigit(c)) {
+            if (!JS7_ISDEC(c)) {
                 ungetCharIgnoreEOL(c);
                 reportError(JSMSG_MISSING_EXPONENT);
                 goto error;
             }
             do {
                 c = getCharIgnoreEOL();
-            } while (IsAsciiDigit(c));
+            } while (JS7_ISDEC(c));
         }
         ungetCharIgnoreEOL(c);
 
@@ -1723,10 +1722,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             numStart = userbuf.addressOfNextRawChar() - 1;  // one past the '0o'
             while ('0' <= c && c <= '7')
                 c = getCharIgnoreEOL();
-        } else if (IsAsciiDigit(c)) {
+        } else if (JS7_ISDEC(c)) {
             radix = 8;
             numStart = userbuf.addressOfNextRawChar() - 1;  // one past the '0'
-            while (IsAsciiDigit(c)) {
+            while (JS7_ISDEC(c)) {
                 // Octal integer literals are not permitted in strict mode code.
                 if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL))
                     goto error;
@@ -1786,7 +1785,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
     switch (c) {
       case '.':
         c = getCharIgnoreEOL();
-        if (IsAsciiDigit(c)) {
+        if (JS7_ISDEC(c)) {
             numStart = userbuf.addressOfNextRawChar() - 2;
             decimalPoint = HasDecimal;
             hasExp = false;
@@ -2267,7 +2266,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                         return false;
 
                     // Strict mode code allows only \0, then a non-digit.
-                    if (val != 0 || IsAsciiDigit(c)) {
+                    if (val != 0 || JS7_ISDEC(c)) {
                         TokenStreamAnyChars& anyChars = anyCharsAccess();
                         if (parsingTemplate) {
                             anyChars.setInvalidTemplateEscape(userbuf.offset() - 2,

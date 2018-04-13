@@ -104,7 +104,6 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/TextUtils.h"
 
 #include "nsIIDNService.h"
 
@@ -5049,7 +5048,7 @@ bool HTMLInputElement::IsValidSimpleColor(const nsAString& aValue) const
   }
 
   for (int i = 1; i < 7; ++i) {
-    if (!IsAsciiDigit(aValue[i]) &&
+    if (!nsCRT::IsAsciiDigit(aValue[i]) &&
         !(aValue[i] >= 'a' && aValue[i] <= 'f') &&
         !(aValue[i] >= 'A' && aValue[i] <= 'F')) {
       return false;
@@ -5357,7 +5356,7 @@ HTMLInputElement::DigitSubStringToNumber(const nsAString& aStr,
   MOZ_ASSERT(aStr.Length() > (aStart + aLen - 1));
 
   for (uint32_t offset = 0; offset < aLen; ++offset) {
-    if (!IsAsciiDigit(aStr[aStart + offset])) {
+    if (!NS_IsAsciiDigit(aStr[aStart + offset])) {
       return false;
     }
   }

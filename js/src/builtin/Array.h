@@ -9,8 +9,6 @@
 #ifndef builtin_Array_h
 #define builtin_Array_h
 
-#include "mozilla/TextUtils.h"
-
 #include "jspubtd.h"
 
 #include "vm/ArrayObject.h"
@@ -34,7 +32,7 @@ IdIsIndex(jsid id, uint32_t* indexp)
         return false;
 
     JSAtom* atom = JSID_TO_ATOM(id);
-    if (atom->length() == 0 || !mozilla::IsAsciiDigit(atom->latin1OrTwoByteChar(0)))
+    if (atom->length() == 0 || !JS7_ISDEC(atom->latin1OrTwoByteChar(0)))
         return false;
 
     return js::StringIsArrayIndex(atom, indexp);

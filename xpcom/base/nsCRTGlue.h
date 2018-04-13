@@ -135,12 +135,25 @@ NS_ConstExprIsAscii(const char* aString, uint32_t aLength)
 }
 
 constexpr bool
+NS_IsAsciiAlpha(char16_t aChar)
+{
+  return (aChar >= 'A' && aChar <= 'Z') ||
+         (aChar >= 'a' && aChar <= 'z');
+}
+
+constexpr bool
 NS_IsAsciiWhitespace(char16_t aChar)
 {
   return aChar == ' ' ||
          aChar == '\r' ||
          aChar == '\n' ||
          aChar == '\t';
+}
+
+constexpr bool
+NS_IsAsciiDigit(char16_t aChar)
+{
+  return aChar >= '0' && aChar <= '9';
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
