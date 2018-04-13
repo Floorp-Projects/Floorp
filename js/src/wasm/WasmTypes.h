@@ -183,9 +183,10 @@ SizeOf(ValType vt)
       case ValType::B16x8:
       case ValType::B32x4:
         return 16;
-      default:
-        MOZ_CRASH("Invalid ValType");
+      case ValType::AnyRef:
+        MOZ_CRASH("unexpected anyref");
     }
+    MOZ_CRASH("Invalid ValType");
 }
 
 static inline bool
@@ -275,19 +276,32 @@ static inline jit::MIRType
 ToMIRType(ValType vt)
 {
     switch (vt) {
-      case ValType::I32: return jit::MIRType::Int32;
-      case ValType::I64: return jit::MIRType::Int64;
-      case ValType::F32: return jit::MIRType::Float32;
-      case ValType::F64: return jit::MIRType::Double;
-      case ValType::I8x16: return jit::MIRType::Int8x16;
-      case ValType::I16x8: return jit::MIRType::Int16x8;
-      case ValType::I32x4: return jit::MIRType::Int32x4;
-      case ValType::F32x4: return jit::MIRType::Float32x4;
-      case ValType::B8x16: return jit::MIRType::Bool8x16;
-      case ValType::B16x8: return jit::MIRType::Bool16x8;
-      case ValType::B32x4: return jit::MIRType::Bool32x4;
+      case ValType::I32:    return jit::MIRType::Int32;
+      case ValType::I64:    return jit::MIRType::Int64;
+      case ValType::F32:    return jit::MIRType::Float32;
+      case ValType::F64:    return jit::MIRType::Double;
+      case ValType::AnyRef: return jit::MIRType::Pointer;
+      case ValType::I8x16:  return jit::MIRType::Int8x16;
+      case ValType::I16x8:  return jit::MIRType::Int16x8;
+      case ValType::I32x4:  return jit::MIRType::Int32x4;
+      case ValType::F32x4:  return jit::MIRType::Float32x4;
+      case ValType::B8x16:  return jit::MIRType::Bool8x16;
+      case ValType::B16x8:  return jit::MIRType::Bool16x8;
+      case ValType::B32x4:  return jit::MIRType::Bool32x4;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
+}
+
+static inline bool
+IsRefType(ValType vt)
+{
+    return vt == ValType::AnyRef;
+}
+
+static inline bool
+IsNumberType(ValType vt)
+{
+    return !IsRefType(vt);
 }
 
 // The ExprType enum represents the type of a WebAssembly expression or return
@@ -297,22 +311,23 @@ ToMIRType(ValType vt)
 
 enum class ExprType
 {
-    Void  = uint8_t(TypeCode::BlockVoid),
+    Void   = uint8_t(TypeCode::BlockVoid),
 
-    I32   = uint8_t(TypeCode::I32),
-    I64   = uint8_t(TypeCode::I64),
-    F32   = uint8_t(TypeCode::F32),
-    F64   = uint8_t(TypeCode::F64),
+    I32    = uint8_t(TypeCode::I32),
+    I64    = uint8_t(TypeCode::I64),
+    F32    = uint8_t(TypeCode::F32),
+    F64    = uint8_t(TypeCode::F64),
+    AnyRef = uint8_t(TypeCode::AnyRef),
 
-    I8x16 = uint8_t(TypeCode::I8x16),
-    I16x8 = uint8_t(TypeCode::I16x8),
-    I32x4 = uint8_t(TypeCode::I32x4),
-    F32x4 = uint8_t(TypeCode::F32x4),
-    B8x16 = uint8_t(TypeCode::B8x16),
-    B16x8 = uint8_t(TypeCode::B16x8),
-    B32x4 = uint8_t(TypeCode::B32x4),
+    I8x16  = uint8_t(TypeCode::I8x16),
+    I16x8  = uint8_t(TypeCode::I16x8),
+    I32x4  = uint8_t(TypeCode::I32x4),
+    F32x4  = uint8_t(TypeCode::F32x4),
+    B8x16  = uint8_t(TypeCode::B8x16),
+    B16x8  = uint8_t(TypeCode::B16x8),
+    B32x4  = uint8_t(TypeCode::B32x4),
 
-    Limit = uint8_t(TypeCode::Limit)
+    Limit  = uint8_t(TypeCode::Limit)
 };
 
 static inline bool
@@ -350,18 +365,19 @@ static inline const char*
 ToCString(ExprType type)
 {
     switch (type) {
-      case ExprType::Void:  return "void";
-      case ExprType::I32:   return "i32";
-      case ExprType::I64:   return "i64";
-      case ExprType::F32:   return "f32";
-      case ExprType::F64:   return "f64";
-      case ExprType::I8x16: return "i8x16";
-      case ExprType::I16x8: return "i16x8";
-      case ExprType::I32x4: return "i32x4";
-      case ExprType::F32x4: return "f32x4";
-      case ExprType::B8x16: return "b8x16";
-      case ExprType::B16x8: return "b16x8";
-      case ExprType::B32x4: return "b32x4";
+      case ExprType::Void:    return "void";
+      case ExprType::I32:     return "i32";
+      case ExprType::I64:     return "i64";
+      case ExprType::F32:     return "f32";
+      case ExprType::F64:     return "f64";
+      case ExprType::AnyRef:  return "anyref";
+      case ExprType::I8x16:   return "i8x16";
+      case ExprType::I16x8:   return "i16x8";
+      case ExprType::I32x4:   return "i32x4";
+      case ExprType::F32x4:   return "f32x4";
+      case ExprType::B8x16:   return "b8x16";
+      case ExprType::B16x8:   return "b16x8";
+      case ExprType::B32x4:   return "b32x4";
       case ExprType::Limit:;
     }
     MOZ_CRASH("bad expression type");
@@ -445,6 +461,12 @@ enum ModuleKind
 };
 
 enum class Shareable
+{
+    False,
+    True
+};
+
+enum class HasGcTypes
 {
     False,
     True
@@ -569,8 +591,17 @@ class Sig
     bool hasI64ArgOrRet() const {
         if (ret() == ExprType::I64)
             return true;
-        for (ValType a : args()) {
-            if (a == ValType::I64)
+        for (ValType arg : args()) {
+            if (arg == ValType::I64)
+                return true;
+        }
+        return false;
+    }
+    bool temporarilyUnsupportedAnyRef() const {
+        if (ret() == ExprType::AnyRef)
+            return true;
+        for (ValType arg : args()) {
+            if (arg == ValType::AnyRef)
                 return true;
         }
         return false;
@@ -1437,6 +1468,7 @@ enum class SymbolicAddress
     CallImport_I32,
     CallImport_I64,
     CallImport_F64,
+    CallImport_Ref,
     CoerceInPlace_ToInt32,
     CoerceInPlace_ToNumber,
     CoerceInPlace_JitEntry,

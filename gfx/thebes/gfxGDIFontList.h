@@ -6,6 +6,7 @@
 #ifndef GFX_GDIFONTLIST_H
 #define GFX_GDIFONTLIST_H
 
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxPlatformFontList.h"
@@ -107,11 +108,15 @@ enum gfxWindowsFontType {
 class GDIFontEntry : public gfxFontEntry
 {
 public:
+    typedef mozilla::FontWeight FontWeight;
+
     LPLOGFONTW GetLogFont() { return &mLogFont; }
 
     nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr) override;
 
-    void FillLogFont(LOGFONTW *aLogFont, uint16_t aWeight, gfxFloat aSize);
+    void FillLogFont(LOGFONTW *aLogFont,
+                     FontWeight aWeight,
+                     gfxFloat aSize);
 
     static gfxWindowsFontType DetermineFontType(const NEWTEXTMETRICW& metrics, 
                                                 DWORD fontType)
@@ -164,12 +169,13 @@ public:
     static GDIFontEntry* CreateFontEntry(const nsAString& aName,
                                          gfxWindowsFontType aFontType,
                                          uint8_t aStyle,
-                                         uint16_t aWeight, int16_t aStretch,
+                                         FontWeight aWeight,
+                                         int16_t aStretch,
                                          gfxUserFontData* aUserFontData);
 
     // create a font entry for a font referenced by its fullname
     static GDIFontEntry* LoadLocalFont(const nsAString& aFontName,
-                                       uint16_t aWeight,
+                                       FontWeight aWeight,
                                        int16_t aStretch,
                                        uint8_t aStyle);
 
@@ -182,7 +188,7 @@ protected:
     friend class gfxGDIFont;
 
     GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
-                 uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
+                 uint8_t aStyle, FontWeight aWeight, int16_t aStretch,
                  gfxUserFontData *aUserFontData);
 
     void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
@@ -314,6 +320,8 @@ private:
 
 class gfxGDIFontList : public gfxPlatformFontList {
 public:
+    typedef mozilla::FontWeight FontWeight;
+
     static gfxGDIFontList* PlatformFontList() {
         return static_cast<gfxGDIFontList*>(sPlatformFontList);
     }
@@ -330,12 +338,12 @@ public:
                             gfxFloat aDevToCssSize = 1.0) override;
 
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                          uint16_t aWeight,
+                                          FontWeight aWeight,
                                           int16_t aStretch,
                                           uint8_t aStyle);
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                           uint16_t aWeight,
+                                           FontWeight aWeight,
                                            int16_t aStretch,
                                            uint8_t aStyle,
                                            const uint8_t* aFontData,

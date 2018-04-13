@@ -609,22 +609,25 @@ LazyStubSegment::addStubs(size_t codeLength, const Uint32Vector& funcExportIndic
         return false;
 
     size_t i = 0;
-    for (DebugOnly<uint32_t> funcExportIndex : funcExportIndices) {
+    for (uint32_t funcExportIndex : funcExportIndices) {
         const CodeRange& interpRange = codeRanges[i];
         MOZ_ASSERT(interpRange.isInterpEntry());
         MOZ_ASSERT(interpRange.funcIndex() == funcExports[funcExportIndex].funcIndex());
 
         codeRanges_.infallibleAppend(interpRange);
         codeRanges_.back().offsetBy(offsetInSegment);
+        i++;
 
-        const CodeRange& jitRange = codeRanges[i + 1];
+        if (funcExports[funcExportIndex].sig().temporarilyUnsupportedAnyRef())
+            continue;
+
+        const CodeRange& jitRange = codeRanges[i];
         MOZ_ASSERT(jitRange.isJitEntry());
         MOZ_ASSERT(jitRange.funcIndex() == interpRange.funcIndex());
 
         codeRanges_.infallibleAppend(jitRange);
         codeRanges_.back().offsetBy(offsetInSegment);
-
-        i += 2;
+        i++;
     }
 
     return true;
@@ -658,8 +661,8 @@ struct ProjectLazyFuncIndex
 static constexpr unsigned LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE = 8 * 1024;
 
 bool
-LazyStubTier::createMany(const Uint32Vector& funcExportIndices, const CodeTier& codeTier,
-                         size_t* stubSegmentIndex)
+LazyStubTier::createMany(HasGcTypes gcTypesEnabled, const Uint32Vector& funcExportIndices,
+                         const CodeTier& codeTier, size_t* stubSegmentIndex)
 {
     MOZ_ASSERT(funcExportIndices.length());
 
@@ -673,16 +676,21 @@ LazyStubTier::createMany(const Uint32Vector& funcExportIndices, const CodeTier& 
     uint8_t* moduleSegmentBase = codeTier.segment().base();
 
     CodeRangeVector codeRanges;
+    DebugOnly<uint32_t> numExpectedRanges = 0;
     for (uint32_t funcExportIndex : funcExportIndices) {
         const FuncExport& fe = funcExports[funcExportIndex];
+        numExpectedRanges += fe.sig().temporarilyUnsupportedAnyRef() ? 1 : 2;
         void* calleePtr = moduleSegmentBase +
                           moduleRanges[fe.interpCodeRangeIndex()].funcNormalEntry();
         Maybe<ImmPtr> callee;
         callee.emplace(calleePtr, ImmPtr::NoCheckToken());
-        if (!GenerateEntryStubs(masm, funcExportIndex, fe, callee, /* asmjs*/ false, &codeRanges))
+        if (!GenerateEntryStubs(masm, funcExportIndex, fe, callee, /* asmjs */ false,
+                                gcTypesEnabled, &codeRanges))
+        {
             return false;
+        }
     }
-    MOZ_ASSERT(codeRanges.length() == 2 * funcExportIndices.length(), "two entries per function");
+    MOZ_ASSERT(codeRanges.length() == numExpectedRanges, "incorrect number of entries per function");
 
     masm.finish();
 
@@ -743,7 +751,9 @@ LazyStubTier::createMany(const Uint32Vector& funcExportIndices, const CodeTier& 
                                       fe.funcIndex(), &exportIndex));
         MOZ_ALWAYS_TRUE(exports_.insert(exports_.begin() + exportIndex, Move(lazyExport)));
 
-        interpRangeIndex += 2;
+        // Functions with anyref in their sig have only one entry (interp).
+        // All other functions get an extra jit entry.
+        interpRangeIndex += fe.sig().temporarilyUnsupportedAnyRef() ? 1 : 2;
     }
 
     return true;
@@ -757,11 +767,21 @@ LazyStubTier::createOne(uint32_t funcExportIndex, const CodeTier& codeTier)
         return false;
 
     size_t stubSegmentIndex;
-    if (!createMany(funcExportIndexes, codeTier, &stubSegmentIndex))
+    if (!createMany(codeTier.code().metadata().temporaryHasGcTypes, funcExportIndexes, codeTier,
+                    &stubSegmentIndex))
+    {
         return false;
+    }
 
     const UniqueLazyStubSegment& segment = stubSegments_[stubSegmentIndex];
     const CodeRangeVector& codeRanges = segment->codeRanges();
+
+    // Functions that have anyref in their sig don't get a jit entry.
+    if (codeTier.metadata().funcExports[funcExportIndex].sig().temporarilyUnsupportedAnyRef()) {
+        MOZ_ASSERT(codeRanges.length() >= 1);
+        MOZ_ASSERT(codeRanges.back().isInterpEntry());
+        return true;
+    }
 
     MOZ_ASSERT(codeRanges.length() >= 2);
     MOZ_ASSERT(codeRanges[codeRanges.length() - 2].isInterpEntry());
@@ -774,14 +794,14 @@ LazyStubTier::createOne(uint32_t funcExportIndex, const CodeTier& codeTier)
 }
 
 bool
-LazyStubTier::createTier2(const Uint32Vector& funcExportIndices, const CodeTier& codeTier,
-                          Maybe<size_t>* outStubSegmentIndex)
+LazyStubTier::createTier2(HasGcTypes gcTypesEnabled, const Uint32Vector& funcExportIndices,
+                          const CodeTier& codeTier, Maybe<size_t>* outStubSegmentIndex)
 {
     if (!funcExportIndices.length())
         return true;
 
     size_t stubSegmentIndex;
-    if (!createMany(funcExportIndices, codeTier, &stubSegmentIndex))
+    if (!createMany(gcTypesEnabled, funcExportIndices, codeTier, &stubSegmentIndex))
         return false;
 
     outStubSegmentIndex->emplace(stubSegmentIndex);

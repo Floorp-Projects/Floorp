@@ -8,6 +8,7 @@
 #define mozilla_dom_FontFace_h
 
 #include "mozilla/dom/FontFaceBinding.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "gfxUserFontSet.h"
 #include "nsAutoPtr.h"
 #include "nsCSSPropertyID.h"
@@ -47,7 +48,7 @@ public:
   public:
     Entry(gfxUserFontSet* aFontSet,
           const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-          uint32_t aWeight,
+          FontWeight aWeight,
           int32_t aStretch,
           uint8_t aStyle,
           const nsTArray<gfxFontFeature>& aFeatureSettings,

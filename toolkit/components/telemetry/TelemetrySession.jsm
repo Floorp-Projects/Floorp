@@ -767,8 +767,6 @@ var Impl = {
 
     ret.startupInterrupted = Number(Services.startup.interrupted);
 
-    ret.js = Cu.getJSEngineTelemetryValue();
-
     let maximalNumberOfConcurrentThreads = Telemetry.maximalNumberOfConcurrentThreads;
     if (maximalNumberOfConcurrentThreads) {
       ret.maximalNumberOfConcurrentThreads = maximalNumberOfConcurrentThreads;

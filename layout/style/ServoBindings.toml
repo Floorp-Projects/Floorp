@@ -463,6 +463,7 @@ structs-types = [
     "mozilla::dom::CallerType",
     "mozilla::AnonymousCounterStyle",
     "mozilla::AtomArray",
+    "mozilla::FontWeight",
     "mozilla::MallocSizeOf",
     "mozilla::OriginFlags",
     "mozilla::UniquePtr",

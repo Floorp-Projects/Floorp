@@ -935,6 +935,9 @@ class JS_PUBLIC_API(ContextOptions) {
         wasm_(true),
         wasmBaseline_(true),
         wasmIon_(true),
+#ifdef ENABLE_WASM_GC
+        wasmGc_(false),
+#endif
         testWasmAwaitTier2_(false),
         throwOnAsmJSValidationFailure_(false),
         nativeRegExp_(true),
@@ -1032,6 +1035,14 @@ class JS_PUBLIC_API(ContextOptions) {
         return *this;
     }
 
+#ifdef ENABLE_WASM_GC
+    bool wasmGc() const { return wasmGc_; }
+    ContextOptions& setWasmGc(bool flag) {
+        wasmGc_ = flag;
+        return *this;
+    }
+#endif
+
     bool throwOnAsmJSValidationFailure() const { return throwOnAsmJSValidationFailure_; }
     ContextOptions& setThrowOnAsmJSValidationFailure(bool flag) {
         throwOnAsmJSValidationFailure_ = flag;
@@ -1117,6 +1128,9 @@ class JS_PUBLIC_API(ContextOptions) {
         setWasm(false);
         setWasmBaseline(false);
         setWasmIon(false);
+#ifdef ENABLE_WASM_GC
+        setWasmGc(false);
+#endif
         setNativeRegExp(false);
     }
 
@@ -1127,6 +1141,9 @@ class JS_PUBLIC_API(ContextOptions) {
     bool wasm_ : 1;
     bool wasmBaseline_ : 1;
     bool wasmIon_ : 1;
+#ifdef ENABLE_WASM_GC
+    bool wasmGc_ : 1;
+#endif
     bool testWasmAwaitTier2_ : 1;
     bool throwOnAsmJSValidationFailure_ : 1;
     bool nativeRegExp_ : 1;

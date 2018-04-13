@@ -5,6 +5,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Base64.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "mozilla/dom/ContentChild.h"
@@ -256,7 +257,7 @@ FT2FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold
 /* static */
 FT2FontEntry*
 FT2FontEntry::CreateFontEntry(const nsAString& aFontName,
-                              uint16_t aWeight,
+                              FontWeight aWeight,
                               int16_t aStretch,
                               uint8_t aStyle,
                               const uint8_t* aFontData,
@@ -327,7 +328,9 @@ FT2FontEntry::CreateFontEntry(const FontListEntry& aFLE)
     FT2FontEntry *fe = new FT2FontEntry(aFLE.faceName());
     fe->mFilename = aFLE.filepath();
     fe->mFTFontIndex = aFLE.index();
-    fe->mWeight = aFLE.weight();
+    // The weight transported across IPC is a float, so we need to explicitly
+    // convert it back to a FontWeight.
+    fe->mWeight = FontWeight(aFLE.weight());
     fe->mStretch = aFLE.stretch();
     fe->mStyle = (aFLE.italic() ? NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL);
     return fe;
@@ -340,7 +343,7 @@ FTFaceIsItalic(FT_Face aFace)
     return !!(aFace->style_flags & FT_STYLE_FLAG_ITALIC);
 }
 
-static uint16_t
+static FontWeight
 FTFaceGetWeight(FT_Face aFace)
 {
     TT_OS2 *os2 = static_cast<TT_OS2*>(FT_Get_Sfnt_Table(aFace, ft_sfnt_os2));
@@ -368,7 +371,7 @@ FTFaceGetWeight(FT_Face aFace)
 
     NS_ASSERTION(result >= 100 && result <= 900, "Invalid weight in font!");
 
-    return result;
+    return FontWeight(result);
 }
 
 // Used to create the font entry for installed faces on the device,
@@ -660,10 +663,13 @@ FT2FontFamily::AddFacesToFontList(InfallibleTArray<FontListEntry>* aFontList)
         if (!fe) {
             continue;
         }
-        
+
+        // We convert the weight to a float purely for transport across IPC.
+        // Ideally we'd avoid doing that.
         aFontList->AppendElement(FontListEntry(Name(), fe->Name(),
                                                fe->mFilename,
-                                               fe->Weight(), fe->Stretch(),
+                                               fe->Weight().ToFloat(),
+                                               fe->Stretch(),
                                                fe->mStyle,
                                                fe->mFTFontIndex));
     }
@@ -985,7 +991,7 @@ AppendToFaceList(nsCString& aFaceList,
     aFaceList.Append(',');
     aFaceList.Append(aFontEntry->IsItalic() ? '1' : '0');
     aFaceList.Append(',');
-    aFaceList.AppendInt(aFontEntry->Weight());
+    aFaceList.AppendFloat(aFontEntry->Weight().ToFloat());
     aFaceList.Append(',');
     aFaceList.AppendInt(aFontEntry->Stretch());
     aFaceList.Append(',');
@@ -1144,11 +1150,11 @@ gfxFT2FontList::AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
         AppendToFaceList(aFaceList, name, fe);
         if (LOG_ENABLED()) {
             LOG(("(fontinit) added (%s) to family (%s)"
-                 " with style: %s weight: %d stretch: %d",
+                 " with style: %s weight: %g stretch: %d",
                  NS_ConvertUTF16toUTF8(fe->Name()).get(),
                  NS_ConvertUTF16toUTF8(family->Name()).get(),
                  fe->IsItalic() ? "italic" : "normal",
-                 fe->Weight(), fe->Stretch()));
+                 fe->Weight().ToFloat(), fe->Stretch()));
         }
     }
 }
@@ -1458,7 +1464,7 @@ gfxFT2FontList::InitFontListForPlatform()
 
 gfxFontEntry*
 gfxFT2FontList::LookupLocalFont(const nsAString& aFontName,
-                                uint16_t aWeight,
+                                FontWeight aWeight,
                                 int16_t aStretch,
                                 uint8_t aStyle)
 {
@@ -1540,7 +1546,7 @@ gfxFT2FontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle)
 
 gfxFontEntry*
 gfxFT2FontList::MakePlatformFont(const nsAString& aFontName,
-                                 uint16_t aWeight,
+                                 FontWeight aWeight,
                                  int16_t aStretch,
                                  uint8_t aStyle,
                                  const uint8_t* aFontData,

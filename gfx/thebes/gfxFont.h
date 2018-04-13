@@ -25,6 +25,7 @@
 #include "nsIObserver.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/TypedEnumBits.h"
 #include "MainThreadUtils.h"
 #include <algorithm>
@@ -75,8 +76,10 @@ class SVGContextPaint;
 } // namespace mozilla
 
 struct gfxFontStyle {
+    typedef mozilla::FontWeight FontWeight;
+
     gfxFontStyle();
-    gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
+    gfxFontStyle(uint8_t aStyle, FontWeight aWeight, int16_t aStretch,
                  gfxFloat aSize, nsAtom *aLanguage, bool aExplicitLanguage,
                  float aSizeAdjust, bool aSystemFont,
                  bool aPrinterFont,
@@ -137,7 +140,7 @@ struct gfxFontStyle {
     nscolor fontSmoothingBackgroundColor;
 
     // The weight of the font: 100, 200, ... 900.
-    uint16_t weight;
+    FontWeight weight;
 
     // The stretch of the font (the sum of various NS_FONT_STRETCH_*
     // constants; see gfxFontConstants.h).
@@ -184,8 +187,8 @@ struct gfxFontStyle {
     }
 
     PLDHashNumber Hash() const {
-        return ((style + (systemFont << 7) +
-            (weight << 8)) + uint32_t(size*1000) + int32_t(sizeAdjust*1000)) ^
+        return (style + (systemFont << 7) + (weight.ForHash() << 8) +
+            uint32_t(size*1000) + int32_t(sizeAdjust*1000)) ^
             nsRefPtrHashKey<nsAtom>::HashKey(language);
     }
 

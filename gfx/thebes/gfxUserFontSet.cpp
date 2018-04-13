@@ -10,6 +10,7 @@
 #include "gfxPrefs.h"
 #include "nsIProtocolHandler.h"
 #include "gfxFontConstants.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -104,7 +105,7 @@ private:
 
 gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
              const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-             uint32_t aWeight,
+             FontWeight aWeight,
              int32_t aStretch,
              uint8_t aStyle,
              const nsTArray<gfxFontFeature>& aFeatureSettings,
@@ -120,8 +121,8 @@ gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
       mLoader(nullptr),
       mFontSet(aFontSet)
 {
-    MOZ_ASSERT(aWeight != 0,
-               "aWeight must not be 0; use NS_FONT_WEIGHT_NORMAL instead");
+    MOZ_ASSERT(aWeight != FontWeight(0),
+               "aWeight must not be 0; use FontWeight::Normal() instead");
     mIsUserFontContainer = true;
     mSrcList = aFontFaceSrcList;
     mSrcIndex = 0;
@@ -144,7 +145,7 @@ gfxUserFontEntry::~gfxUserFontEntry()
 
 bool
 gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                          uint32_t aWeight,
+                          FontWeight aWeight,
                           int32_t aStretch,
                           uint8_t aStyle,
                           const nsTArray<gfxFontFeature>& aFeatureSettings,
@@ -935,7 +936,7 @@ already_AddRefed<gfxUserFontEntry>
 gfxUserFontSet::FindOrCreateUserFontEntry(
                                const nsAString& aFamilyName,
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                               uint32_t aWeight,
+                               FontWeight aWeight,
                                int32_t aStretch,
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
@@ -975,7 +976,7 @@ gfxUserFontSet::FindOrCreateUserFontEntry(
 already_AddRefed<gfxUserFontEntry>
 gfxUserFontSet::CreateUserFontEntry(
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                               uint32_t aWeight,
+                               FontWeight aWeight,
                                int32_t aStretch,
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
@@ -996,7 +997,7 @@ gfxUserFontEntry*
 gfxUserFontSet::FindExistingUserFontEntry(
                                gfxUserFontFamily* aFamily,
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                               uint32_t aWeight,
+                               FontWeight aWeight,
                                int32_t aStretch,
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
@@ -1005,8 +1006,8 @@ gfxUserFontSet::FindExistingUserFontEntry(
                                gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay)
 {
-    MOZ_ASSERT(aWeight != 0,
-               "aWeight must not be 0; use NS_FONT_WEIGHT_NORMAL instead");
+    MOZ_ASSERT(aWeight != FontWeight(0),
+               "aWeight must not be 0; use FontWeight::Normal() instead");
 
     nsTArray<RefPtr<gfxFontEntry>>& fontList = aFamily->GetFontList();
 
@@ -1039,12 +1040,12 @@ gfxUserFontSet::AddUserFontEntry(const nsAString& aFamilyName,
     family->AddFontEntry(aUserFontEntry);
 
     if (LOG_ENABLED()) {
-        LOG(("userfonts (%p) added to \"%s\" (%p) style: %s weight: %d "
+        LOG(("userfonts (%p) added to \"%s\" (%p) style: %s weight: %g "
              "stretch: %d display: %d",
              this, NS_ConvertUTF16toUTF8(aFamilyName).get(), aUserFontEntry,
              (aUserFontEntry->IsItalic() ? "italic" :
               (aUserFontEntry->IsOblique() ? "oblique" : "normal")),
-             aUserFontEntry->Weight(), aUserFontEntry->Stretch(),
+             aUserFontEntry->Weight().ToFloat(), aUserFontEntry->Stretch(),
              aUserFontEntry->GetFontDisplay()));
     }
 }

@@ -3,12 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gfxFontEntry.h"
+
 #include "mozilla/DebugOnly.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "mozilla/Logging.h"
 
-#include "gfxFontEntry.h"
 #include "gfxTextRun.h"
 #include "gfxPlatform.h"
 #include "nsGkAtoms.h"
@@ -1234,24 +1236,25 @@ StretchDistance(int16_t aFontStretch, int16_t aTargetStretch)
 
 // weight distance ==> [0,1598]
 static inline uint32_t
-WeightDistance(uint32_t aFontWeight, uint32_t aTargetWeight)
+WeightDistance(FontWeight aFontWeight, FontWeight aTargetWeight)
 {
     // Compute a measure of the "distance" between the requested
     // weight and the given fontEntry
 
-    int32_t distance = 0, addedDistance = 0;
+    float distance = 0.0f, addedDistance = 0.0f;
     if (aTargetWeight != aFontWeight) {
-        if (aTargetWeight > 500) {
+        if (aTargetWeight > FontWeight(500)) {
             distance = aFontWeight - aTargetWeight;
-        } else if (aTargetWeight < 400) {
+        } else if (aTargetWeight < FontWeight(400)) {
             distance = aTargetWeight - aFontWeight;
         } else {
             // special case - target is between 400 and 500
 
             // font weights between 400 and 500 are close
-            if (aFontWeight >= 400 && aFontWeight <= 500) {
+            if (aFontWeight >= FontWeight(400) &&
+                aFontWeight <= FontWeight(500)) {
                 if (aFontWeight < aTargetWeight) {
-                    distance = 500 - aFontWeight;
+                    distance = FontWeight(500) - aFontWeight;
                 } else {
                     distance = aFontWeight - aTargetWeight;
                 }
@@ -1263,7 +1266,7 @@ WeightDistance(uint32_t aFontWeight, uint32_t aTargetWeight)
                 addedDistance = 100;
             }
         }
-        if (distance < 0) {
+        if (distance < 0.0f) {
             distance = -distance + REVERSE_WEIGHT_DISTANCE;
         }
         distance += addedDistance;
@@ -1307,7 +1310,7 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
 
     aNeedsSyntheticBold = false;
 
-    bool wantBold = aFontStyle.weight >= 600;
+    bool wantBold = aFontStyle.weight >= FontWeight(600);
     gfxFontEntry *fe = nullptr;
 
     // If the family has only one face, we simply return it; no further
@@ -1406,7 +1409,7 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
 
     if (matched) {
         aFontEntryList.AppendElement(matched);
-        if (!matched->IsBold() && aFontStyle.weight >= 600 &&
+        if (!matched->IsBold() && aFontStyle.weight >= FontWeight(600) &&
             aFontStyle.allowSyntheticWeight) {
             aNeedsSyntheticBold = true;
         }
@@ -1442,7 +1445,7 @@ gfxFontFamily::CheckForSimpleFamily()
             return;
         }
         uint8_t faceIndex = (fe->IsItalic() ? kItalicMask : 0) |
-                            (fe->Weight() >= 600 ? kBoldMask : 0);
+                            (fe->Weight() >= FontWeight(600) ? kBoldMask : 0);
         if (faces[faceIndex]) {
             return; // two faces resolve to the same slot; family isn't "simple"
         }
@@ -1501,7 +1504,7 @@ CalcStyleMatch(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle)
          }
 
         // measure of closeness of weight to the desired value
-        rank += 9 - Abs((aFontEntry->Weight() - aStyle->weight) / 100);
+        rank += 9 - Abs((aFontEntry->Weight() - aStyle->weight) / 100.0f);
     } else {
         // if no font to match, prefer non-bold, non-italic fonts
         if (aFontEntry->IsUpright()) {

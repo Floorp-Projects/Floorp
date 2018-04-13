@@ -11,6 +11,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/SheetType.h"
@@ -441,7 +442,10 @@ enum nsCSSUnit {
   eCSSUnit_Milliseconds = 3001,    // (float) 1/1000 second
 
   // Flexible fraction (CSS Grid)
-  eCSSUnit_FlexFraction = 4000     // (float) Fraction of free space
+  eCSSUnit_FlexFraction = 4000,    // (float) Fraction of free space
+
+  // Font property types
+  eCSSUnit_FontWeight   = 5000,    // An encoded font-weight
 };
 
 struct nsCSSValuePair;
@@ -476,6 +480,7 @@ public:
   explicit nsCSSValue(mozilla::css::ImageValue* aValue);
   explicit nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue);
   explicit nsCSSValue(mozilla::SharedFontList* aValue);
+  explicit nsCSSValue(mozilla::FontWeight aWeight);
   nsCSSValue(const nsCSSValue& aCopy);
   nsCSSValue(nsCSSValue&& aOther)
     : mUnit(aOther.mUnit)
@@ -631,6 +636,12 @@ public:
     return mozilla::WrapNotNull(mValue.mFontFamilyList);
   }
 
+  mozilla::FontWeight GetFontWeight() const
+  {
+    MOZ_ASSERT(mUnit == eCSSUnit_FontWeight, "not a font weight value");
+    return mValue.mFontWeight;
+  }
+
   // bodies of these are below
   inline nsCSSValuePair& GetPairValue();
   inline const nsCSSValuePair& GetPairValue() const;
@@ -708,6 +719,7 @@ public:
   void SetImageValue(mozilla::css::ImageValue* aImage);
   void SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue);
   void SetFontFamilyListValue(already_AddRefed<mozilla::SharedFontList> aFontListValue);
+  void SetFontWeight(mozilla::FontWeight aWeight);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
   void SetSharedListValue(nsCSSValueSharedList* aList);
@@ -784,6 +796,7 @@ protected:
     nsCSSValuePairList_heap* MOZ_OWNING_REF mPairList;
     nsCSSValuePairList* mPairListDependent;
     mozilla::SharedFontList* MOZ_OWNING_REF mFontFamilyList;
+    mozilla::FontWeight mFontWeight;
   } mValue;
 };
 
