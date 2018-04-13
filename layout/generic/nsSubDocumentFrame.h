@@ -168,7 +168,6 @@ protected:
   RefPtr<nsFrameLoader> mFrameLoader;
   nsView* mOuterView;
   nsView* mInnerView;
-  Maybe<bool> mPreviouslyNeededLayer;
   bool mIsInline;
   bool mPostedReflowCallback;
   bool mDidCreateDoc;
