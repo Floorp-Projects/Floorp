@@ -3,11 +3,9 @@
 from __future__ import absolute_import
 
 import os
-import tempfile
-import unittest
-import shutil
 
 import mozunit
+import pytest
 
 from mozprofile import addons
 
@@ -15,40 +13,11 @@ from mozprofile import addons
 here = os.path.dirname(os.path.abspath(__file__))
 
 
-class AddonIDTest(unittest.TestCase):
-    """ Test finding the addon id in a variety of install.rdf styles """
+"""Test finding the addon id in a variety of install.rdf styles"""
 
-    def make_install_rdf(self, filecontents):
-        path = tempfile.mkdtemp()
-        f = open(os.path.join(path, "install.rdf"), "w")
-        f.write(filecontents)
-        f.close()
-        return path
 
-    def test_addonID(self):
-        testlist = self.get_test_list()
-        for t in testlist:
-            try:
-                p = self.make_install_rdf(t)
-                a = addons.AddonManager(os.path.join(p, "profile"))
-                addon_id = a.addon_details(p)['id']
-                self.assertEqual(addon_id, "winning", "We got the addon id")
-            finally:
-                shutil.rmtree(p)
-
-    def test_addonID_xpi(self):
-        a = addons.AddonManager("profile")
-        addon = a.addon_details(os.path.join(here, "addons", "empty.xpi"))
-        self.assertEqual(addon['id'], "test-empty@quality.mozilla.org", "We got the addon id")
-
-    def get_test_list(self):
-        """ This just returns a hardcoded list of install.rdf snippets for testing.
-            When adding snippets for testing, remember that the id we're looking for
-            is "winning" (no quotes).  So, make sure you have that id in your snippet
-            if you want it to pass.
-        """
-        tests = [
-            """<?xml version="1.0"?>
+ADDON_ID_TESTS = [
+    """
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
    <Description about="urn:mozilla:install-manifest">
@@ -108,7 +77,8 @@ class AddonIDTest(unittest.TestCase):
      </em:targetApplication>
    </Description>
 </RDF>""",
-            """<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    """
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
    <Description about="urn:mozilla:install-manifest">
      <em:targetApplication>
@@ -128,7 +98,8 @@ class AddonIDTest(unittest.TestCase):
      <em:unpack>true</em:unpack>
     </Description>
  </RDF>""",
-            """<RDF xmlns="http://www.mozilla.org/2004/em-rdf#"
+    """
+<RDF xmlns="http://www.mozilla.org/2004/em-rdf#"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <rdf:Description about="urn:mozilla:install-manifest">
      <id>winning</id>
@@ -138,7 +109,8 @@ class AddonIDTest(unittest.TestCase):
             Windmill Testing Framework client source</description>
  </rdf:Description>
 </RDF>""",
-            """<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    """
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:foobar="http://www.mozilla.org/2004/em-rdf#">
    <Description about="urn:mozilla:install-manifest">
      <foobar:targetApplication>
@@ -157,8 +129,30 @@ class AddonIDTest(unittest.TestCase):
             Windmill Testing Framework client source</foobar:description>
      <foobar:unpack>true</foobar:unpack>
     </Description>
- </RDF>"""]
-        return tests
+ </RDF>""",
+]
+
+
+@pytest.fixture(params=ADDON_ID_TESTS, ids=[str(i) for i in range(0, len(ADDON_ID_TESTS))])
+def profile(request, tmpdir):
+    test = request.param
+    path = tmpdir.mkdtemp().strpath
+
+    with open(os.path.join(path, "install.rdf"), "w") as fh:
+        fh.write(test)
+    return path
+
+
+def test_addonID(profile):
+    a = addons.AddonManager(os.path.join(profile, "profile"))
+    addon_id = a.addon_details(profile)['id']
+    assert addon_id == "winning"
+
+
+def test_addonID_xpi():
+    a = addons.AddonManager("profile")
+    addon = a.addon_details(os.path.join(here, "addons", "empty.xpi"))
+    assert addon['id'] == "test-empty@quality.mozilla.org"
 
 
 if __name__ == '__main__':

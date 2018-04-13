@@ -11,9 +11,9 @@ import mozhttpd
 import os
 import shutil
 import tempfile
-import unittest
 
 import mozunit
+import pytest
 
 from mozprofile.cli import MozProfileCLI
 from mozprofile.prefs import Preferences, PreferencesReadError
@@ -22,21 +22,20 @@ from mozprofile.profile import Profile
 here = os.path.dirname(os.path.abspath(__file__))
 
 
-class PreferencesTest(unittest.TestCase):
-    """test mozprofile preference handling"""
+# preferences from files/prefs_with_comments.js
+_prefs_with_comments = {'browser.startup.homepage': 'http://planet.mozilla.org',
+                        'zoom.minPercent': 30,
+                        'zoom.maxPercent': 300,
+                        'webgl.verbose': 'false'}
 
-    # preferences from files/prefs_with_comments.js
-    _prefs_with_comments = {'browser.startup.homepage': 'http://planet.mozilla.org',
-                            'zoom.minPercent': 30,
-                            'zoom.maxPercent': 300,
-                            'webgl.verbose': 'false'}
 
-    def run_command(self, *args):
-        """
-        invokes mozprofile command line via the CLI factory
-        - args : command line arguments (equivalent of sys.argv[1:])
-        """
-
+@pytest.fixture
+def run_command():
+    """
+    invokes mozprofile command line via the CLI factory
+    - args : command line arguments (equivalent of sys.argv[1:])
+    """
+    def inner(*args):
         # instantiate the factory
         cli = MozProfileCLI(list(args))
 
@@ -45,350 +44,366 @@ class PreferencesTest(unittest.TestCase):
 
         # return path to profile
         return profile.profile
+    return inner
 
-    def compare_generated(self, _prefs, commandline):
-        """
-        writes out to a new profile with mozprofile command line
-        reads the generated preferences with prefs.py
-        compares the results
-        cleans up
-        """
-        profile = self.run_command(*commandline)
+
+@pytest.fixture
+def compare_generated(run_command):
+    """
+    writes out to a new profile with mozprofile command line
+    reads the generated preferences with prefs.py
+    compares the results
+    cleans up
+    """
+    def inner(prefs, commandline):
+        profile = run_command(*commandline)
         prefs_file = os.path.join(profile, 'user.js')
-        self.assertTrue(os.path.exists(prefs_file))
+        assert os.path.exists(prefs_file)
         read = Preferences.read_prefs(prefs_file)
-        if isinstance(_prefs, dict):
+        if isinstance(prefs, dict):
             read = dict(read)
-        self.assertEqual(_prefs, read)
+        assert prefs == read
         shutil.rmtree(profile)
+    return inner
 
-    def test_basic_prefs(self):
-        """test setting a pref from the command line entry point"""
 
-        _prefs = {"browser.startup.homepage": "http://planet.mozilla.org/"}
-        commandline = []
-        _prefs = _prefs.items()
-        for pref, value in _prefs:
-            commandline += ["--pref", "%s:%s" % (pref, value)]
-        self.compare_generated(_prefs, commandline)
+def test_basic_prefs(compare_generated):
+    """test setting a pref from the command line entry point"""
 
-    def test_ordered_prefs(self):
-        """ensure the prefs stay in the right order"""
-        _prefs = [("browser.startup.homepage", "http://planet.mozilla.org/"),
-                  ("zoom.minPercent", 30),
-                  ("zoom.maxPercent", 300),
-                  ("webgl.verbose", 'false')]
-        commandline = []
-        for pref, value in _prefs:
-            commandline += ["--pref", "%s:%s" % (pref, value)]
-        _prefs = [(i, Preferences.cast(j)) for i, j in _prefs]
-        self.compare_generated(_prefs, commandline)
+    _prefs = {"browser.startup.homepage": "http://planet.mozilla.org/"}
+    commandline = []
+    _prefs = _prefs.items()
+    for pref, value in _prefs:
+        commandline += ["--pref", "%s:%s" % (pref, value)]
+    compare_generated(_prefs, commandline)
 
-    def test_ini(self):
 
-        # write the .ini file
-        _ini = """[DEFAULT]
+def test_ordered_prefs(compare_generated):
+    """ensure the prefs stay in the right order"""
+    _prefs = [("browser.startup.homepage", "http://planet.mozilla.org/"),
+              ("zoom.minPercent", 30),
+              ("zoom.maxPercent", 300),
+              ("webgl.verbose", 'false')]
+    commandline = []
+    for pref, value in _prefs:
+        commandline += ["--pref", "%s:%s" % (pref, value)]
+    _prefs = [(i, Preferences.cast(j)) for i, j in _prefs]
+    compare_generated(_prefs, commandline)
+
+
+def test_ini(compare_generated):
+    # write the .ini file
+    _ini = """[DEFAULT]
 browser.startup.homepage = http://planet.mozilla.org/
 
 [foo]
 browser.startup.homepage = http://github.com/
 """
-        try:
-            fd, name = tempfile.mkstemp(suffix='.ini')
-            os.write(fd, _ini)
-            os.close(fd)
-            commandline = ["--preferences", name]
+    try:
+        fd, name = tempfile.mkstemp(suffix='.ini')
+        os.write(fd, _ini)
+        os.close(fd)
+        commandline = ["--preferences", name]
 
-            # test the [DEFAULT] section
-            _prefs = {'browser.startup.homepage': 'http://planet.mozilla.org/'}
-            self.compare_generated(_prefs, commandline)
+        # test the [DEFAULT] section
+        _prefs = {'browser.startup.homepage': 'http://planet.mozilla.org/'}
+        compare_generated(_prefs, commandline)
 
-            # test a specific section
-            _prefs = {'browser.startup.homepage': 'http://github.com/'}
-            commandline[-1] = commandline[-1] + ':foo'
-            self.compare_generated(_prefs, commandline)
+        # test a specific section
+        _prefs = {'browser.startup.homepage': 'http://github.com/'}
+        commandline[-1] = commandline[-1] + ':foo'
+        compare_generated(_prefs, commandline)
 
-        finally:
-            # cleanup
-            os.remove(name)
+    finally:
+        # cleanup
+        os.remove(name)
 
-    def test_ini_keep_case(self):
-        """
-        Read a preferences config file with a preference in camel-case style.
-        Check that the read preference name has not been lower-cased
-        """
-        # write the .ini file
-        _ini = """[DEFAULT]
+
+def test_ini_keep_case(compare_generated):
+    """
+    Read a preferences config file with a preference in camel-case style.
+    Check that the read preference name has not been lower-cased
+    """
+    # write the .ini file
+    _ini = """[DEFAULT]
 general.warnOnAboutConfig = False
 """
-        try:
-            fd, name = tempfile.mkstemp(suffix='.ini')
-            os.write(fd, _ini)
-            os.close(fd)
-            commandline = ["--preferences", name]
+    try:
+        fd, name = tempfile.mkstemp(suffix='.ini')
+        os.write(fd, _ini)
+        os.close(fd)
+        commandline = ["--preferences", name]
 
-            # test the [DEFAULT] section
-            _prefs = {'general.warnOnAboutConfig': 'False'}
-            self.compare_generated(_prefs, commandline)
+        # test the [DEFAULT] section
+        _prefs = {'general.warnOnAboutConfig': 'False'}
+        compare_generated(_prefs, commandline)
 
-        finally:
-            # cleanup
-            os.remove(name)
+    finally:
+        # cleanup
+        os.remove(name)
 
-    def test_reset_should_remove_added_prefs(self):
-        """Check that when we call reset the items we expect are updated"""
-        profile = Profile()
-        prefs_file = os.path.join(profile.profile, 'user.js')
 
-        # we shouldn't have any initial preferences
-        initial_prefs = Preferences.read_prefs(prefs_file)
-        self.assertFalse(initial_prefs)
-        initial_prefs = open(prefs_file).read().strip()
-        self.assertFalse(initial_prefs)
+def test_reset_should_remove_added_prefs():
+    """Check that when we call reset the items we expect are updated"""
+    profile = Profile()
+    prefs_file = os.path.join(profile.profile, 'user.js')
 
-        # add some preferences
-        prefs1 = [("mr.t.quotes", "i aint getting on no plane!")]
-        profile.set_preferences(prefs1)
-        self.assertEqual(prefs1, Preferences.read_prefs(prefs_file))
-        lines = open(prefs_file).read().strip().splitlines()
-        self.assertTrue(any(line.startswith('#MozRunner Prefs Start') for line in lines))
-        self.assertTrue(any(line.startswith('#MozRunner Prefs End') for line in lines))
+    # we shouldn't have any initial preferences
+    initial_prefs = Preferences.read_prefs(prefs_file)
+    assert not initial_prefs
+    initial_prefs = open(prefs_file).read().strip()
+    assert not initial_prefs
 
-        profile.reset()
-        self.assertNotEqual(prefs1,
-                            Preferences.read_prefs(os.path.join(profile.profile, 'user.js')),
-                            "I pity the fool who left my pref")
+    # add some preferences
+    prefs1 = [("mr.t.quotes", "i aint getting on no plane!")]
+    profile.set_preferences(prefs1)
+    assert prefs1 == Preferences.read_prefs(prefs_file)
+    lines = open(prefs_file).read().strip().splitlines()
+    assert any(line.startswith('#MozRunner Prefs Start') for line in lines)
+    assert any(line.startswith('#MozRunner Prefs End') for line in lines)
 
-    def test_reset_should_keep_user_added_prefs(self):
-        """Check that when we call reset the items we expect are updated"""
-        profile = Profile()
-        prefs_file = os.path.join(profile.profile, 'user.js')
+    profile.reset()
+    assert prefs1 != Preferences.read_prefs(os.path.join(profile.profile, 'user.js'))
 
-        # we shouldn't have any initial preferences
-        initial_prefs = Preferences.read_prefs(prefs_file)
-        self.assertFalse(initial_prefs)
-        initial_prefs = open(prefs_file).read().strip()
-        self.assertFalse(initial_prefs)
 
-        # add some preferences
-        prefs1 = [("mr.t.quotes", "i aint getting on no plane!")]
-        profile.set_persistent_preferences(prefs1)
-        self.assertEqual(prefs1, Preferences.read_prefs(prefs_file))
-        lines = open(prefs_file).read().strip().splitlines()
-        self.assertTrue(any(line.startswith('#MozRunner Prefs Start') for line in lines))
-        self.assertTrue(any(line.startswith('#MozRunner Prefs End') for line in lines))
+def test_reset_should_keep_user_added_prefs():
+    """Check that when we call reset the items we expect are updated"""
+    profile = Profile()
+    prefs_file = os.path.join(profile.profile, 'user.js')
 
-        profile.reset()
-        self.assertEqual(prefs1,
-                         Preferences.read_prefs(os.path.join(profile.profile, 'user.js')),
-                         "I pity the fool who left my pref")
+    # we shouldn't have any initial preferences
+    initial_prefs = Preferences.read_prefs(prefs_file)
+    assert not initial_prefs
+    initial_prefs = open(prefs_file).read().strip()
+    assert not initial_prefs
 
-    def test_magic_markers(self):
-        """ensure our magic markers are working"""
+    # add some preferences
+    prefs1 = [("mr.t.quotes", "i aint getting on no plane!")]
+    profile.set_persistent_preferences(prefs1)
+    assert prefs1 == Preferences.read_prefs(prefs_file)
+    lines = open(prefs_file).read().strip().splitlines()
+    assert any(line.startswith('#MozRunner Prefs Start') for line in lines)
+    assert any(line.startswith('#MozRunner Prefs End') for line in lines)
 
-        profile = Profile()
-        prefs_file = os.path.join(profile.profile, 'user.js')
+    profile.reset()
+    assert prefs1 == Preferences.read_prefs(os.path.join(profile.profile, 'user.js'))
 
-        # we shouldn't have any initial preferences
-        initial_prefs = Preferences.read_prefs(prefs_file)
-        self.assertFalse(initial_prefs)
-        initial_prefs = open(prefs_file).read().strip()
-        self.assertFalse(initial_prefs)
 
-        # add some preferences
-        prefs1 = [("browser.startup.homepage", "http://planet.mozilla.org/"),
-                  ("zoom.minPercent", 30)]
-        profile.set_preferences(prefs1)
-        self.assertEqual(prefs1, Preferences.read_prefs(prefs_file))
-        lines = open(prefs_file).read().strip().splitlines()
-        self.assertTrue(bool([line for line in lines
-                              if line.startswith('#MozRunner Prefs Start')]))
-        self.assertTrue(bool([line for line in lines
-                              if line.startswith('#MozRunner Prefs End')]))
+def test_magic_markers():
+    """ensure our magic markers are working"""
 
-        # add some more preferences
-        prefs2 = [("zoom.maxPercent", 300),
-                  ("webgl.verbose", 'false')]
-        profile.set_preferences(prefs2)
-        self.assertEqual(prefs1 + prefs2, Preferences.read_prefs(prefs_file))
-        lines = open(prefs_file).read().strip().splitlines()
-        self.assertTrue(len([line for line in lines
-                             if line.startswith('#MozRunner Prefs Start')]) == 2)
-        self.assertTrue(len([line for line in lines
-                             if line.startswith('#MozRunner Prefs End')]) == 2)
+    profile = Profile()
+    prefs_file = os.path.join(profile.profile, 'user.js')
 
-        # now clean it up
-        profile.clean_preferences()
-        final_prefs = Preferences.read_prefs(prefs_file)
-        self.assertFalse(final_prefs)
-        lines = open(prefs_file).read().strip().splitlines()
-        self.assertTrue('#MozRunner Prefs Start' not in lines)
-        self.assertTrue('#MozRunner Prefs End' not in lines)
+    # we shouldn't have any initial preferences
+    initial_prefs = Preferences.read_prefs(prefs_file)
+    assert not initial_prefs
+    initial_prefs = open(prefs_file).read().strip()
+    assert not initial_prefs
 
-    def test_preexisting_preferences(self):
-        """ensure you don't clobber preexisting preferences"""
+    # add some preferences
+    prefs1 = [("browser.startup.homepage", "http://planet.mozilla.org/"),
+              ("zoom.minPercent", 30)]
+    profile.set_preferences(prefs1)
+    assert prefs1 == Preferences.read_prefs(prefs_file)
+    lines = open(prefs_file).read().strip().splitlines()
+    assert bool([line for line in lines
+                 if line.startswith('#MozRunner Prefs Start')])
+    assert bool([line for line in lines
+                 if line.startswith('#MozRunner Prefs End')])
 
-        # make a pretend profile
-        tempdir = tempfile.mkdtemp()
+    # add some more preferences
+    prefs2 = [("zoom.maxPercent", 300),
+              ("webgl.verbose", 'false')]
+    profile.set_preferences(prefs2)
+    assert prefs1 + prefs2 == Preferences.read_prefs(prefs_file)
+    lines = open(prefs_file).read().strip().splitlines()
+    assert len([line for line in lines
+                if line.startswith('#MozRunner Prefs Start')]) == 2
+    assert len([line for line in lines
+                if line.startswith('#MozRunner Prefs End')]) == 2
 
-        try:
-            # make a user.js
-            contents = """
+    # now clean it up
+    profile.clean_preferences()
+    final_prefs = Preferences.read_prefs(prefs_file)
+    assert not final_prefs
+    lines = open(prefs_file).read().strip().splitlines()
+    assert '#MozRunner Prefs Start' not in lines
+    assert '#MozRunner Prefs End' not in lines
+
+
+def test_preexisting_preferences():
+    """ensure you don't clobber preexisting preferences"""
+
+    # make a pretend profile
+    tempdir = tempfile.mkdtemp()
+
+    try:
+        # make a user.js
+        contents = """
 user_pref("webgl.enabled_for_all_sites", true);
 user_pref("webgl.force-enabled", true);
 """
-            user_js = os.path.join(tempdir, 'user.js')
-            f = open(user_js, 'w')
-            f.write(contents)
-            f.close()
+        user_js = os.path.join(tempdir, 'user.js')
+        f = open(user_js, 'w')
+        f.write(contents)
+        f.close()
 
-            # make sure you can read it
-            prefs = Preferences.read_prefs(user_js)
-            original_prefs = [('webgl.enabled_for_all_sites', True), ('webgl.force-enabled', True)]
-            self.assertTrue(prefs == original_prefs)
+        # make sure you can read it
+        prefs = Preferences.read_prefs(user_js)
+        original_prefs = [('webgl.enabled_for_all_sites', True), ('webgl.force-enabled', True)]
+        assert prefs == original_prefs
 
-            # now read this as a profile
-            profile = Profile(tempdir, preferences={"browser.download.dir": "/home/jhammel"})
+        # now read this as a profile
+        profile = Profile(tempdir, preferences={"browser.download.dir": "/home/jhammel"})
 
-            # make sure the new pref is now there
-            new_prefs = original_prefs[:] + [("browser.download.dir", "/home/jhammel")]
-            prefs = Preferences.read_prefs(user_js)
-            self.assertTrue(prefs == new_prefs)
+        # make sure the new pref is now there
+        new_prefs = original_prefs[:] + [("browser.download.dir", "/home/jhammel")]
+        prefs = Preferences.read_prefs(user_js)
+        assert prefs == new_prefs
 
-            # clean up the added preferences
-            profile.cleanup()
-            del profile
+        # clean up the added preferences
+        profile.cleanup()
+        del profile
 
-            # make sure you have the original preferences
-            prefs = Preferences.read_prefs(user_js)
-            self.assertTrue(prefs == original_prefs)
-        finally:
-            shutil.rmtree(tempdir)
+        # make sure you have the original preferences
+        prefs = Preferences.read_prefs(user_js)
+        assert prefs == original_prefs
+    finally:
+        shutil.rmtree(tempdir)
 
-    def test_can_read_prefs_with_multiline_comments(self):
-        """
-        Ensure that multiple comments in the file header do not break reading
-        the prefs (https://bugzilla.mozilla.org/show_bug.cgi?id=1233534).
-        """
-        user_js = tempfile.NamedTemporaryFile(suffix='.js', delete=False)
-        self.addCleanup(mozfile.remove, user_js.name)
+
+def test_can_read_prefs_with_multiline_comments():
+    """
+    Ensure that multiple comments in the file header do not break reading
+    the prefs (https://bugzilla.mozilla.org/show_bug.cgi?id=1233534).
+    """
+    user_js = tempfile.NamedTemporaryFile(suffix='.js', delete=False)
+    try:
         with user_js:
             user_js.write("""
 # Mozilla User Preferences
 
 /* Do not edit this file.
- *
- * If you make changes to this file while the application is running,
- * the changes will be overwritten when the application exits.
- *
- * To make a manual change to preferences, you can visit the URL about:config
- */
+*
+* If you make changes to this file while the application is running,
+* the changes will be overwritten when the application exits.
+*
+* To make a manual change to preferences, you can visit the URL about:config
+*/
 
 user_pref("webgl.enabled_for_all_sites", true);
 user_pref("webgl.force-enabled", true);
 """)
-        self.assertEqual(
-            Preferences.read_prefs(user_js.name),
-            [('webgl.enabled_for_all_sites', True),
-             ('webgl.force-enabled', True)]
-        )
+        assert Preferences.read_prefs(user_js.name) == [
+                ('webgl.enabled_for_all_sites', True),
+                ('webgl.force-enabled', True)
+        ]
+    finally:
+        mozfile.remove(user_js.name)
 
-    def test_json(self):
-        _prefs = {"browser.startup.homepage": "http://planet.mozilla.org/"}
-        json = '{"browser.startup.homepage": "http://planet.mozilla.org/"}'
 
-        # just repr it...could use the json module but we don't need it here
-        with mozfile.NamedTemporaryFile(suffix='.json') as f:
-            f.write(json)
-            f.flush()
+def test_json(compare_generated):
+    _prefs = {"browser.startup.homepage": "http://planet.mozilla.org/"}
+    json = '{"browser.startup.homepage": "http://planet.mozilla.org/"}'
 
-            commandline = ["--preferences", f.name]
-            self.compare_generated(_prefs, commandline)
+    # just repr it...could use the json module but we don't need it here
+    with mozfile.NamedTemporaryFile(suffix='.json') as f:
+        f.write(json)
+        f.flush()
 
-    def test_json_datatypes(self):
-        # minPercent is at 30.1 to test if non-integer data raises an exception
-        json = """{"zoom.minPercent": 30.1, "zoom.maxPercent": 300}"""
+        commandline = ["--preferences", f.name]
+        compare_generated(_prefs, commandline)
 
-        with mozfile.NamedTemporaryFile(suffix='.json') as f:
-            f.write(json)
-            f.flush()
 
-            with self.assertRaises(PreferencesReadError):
-                Preferences.read_json(f._path)
+def test_json_datatypes():
+    # minPercent is at 30.1 to test if non-integer data raises an exception
+    json = """{"zoom.minPercent": 30.1, "zoom.maxPercent": 300}"""
 
-    def test_prefs_write(self):
-        """test that the Preferences.write() method correctly serializes preferences"""
+    with mozfile.NamedTemporaryFile(suffix='.json') as f:
+        f.write(json)
+        f.flush()
 
-        _prefs = {'browser.startup.homepage': "http://planet.mozilla.org",
-                  'zoom.minPercent': 30,
-                  'zoom.maxPercent': 300}
+        with pytest.raises(PreferencesReadError):
+            Preferences.read_json(f._path)
 
-        # make a Preferences manager with the testing preferences
-        preferences = Preferences(_prefs)
 
-        # write them to a temporary location
-        path = None
-        read_prefs = None
-        try:
-            with mozfile.NamedTemporaryFile(suffix='.js', delete=False) as f:
-                path = f.name
-                preferences.write(f, _prefs)
+def test_prefs_write():
+    """test that the Preferences.write() method correctly serializes preferences"""
 
-            # read them back and ensure we get what we put in
-            read_prefs = dict(Preferences.read_prefs(path))
+    _prefs = {'browser.startup.homepage': "http://planet.mozilla.org",
+              'zoom.minPercent': 30,
+              'zoom.maxPercent': 300}
 
-        finally:
-            # cleanup
-            if path and os.path.exists(path):
-                os.remove(path)
+    # make a Preferences manager with the testing preferences
+    preferences = Preferences(_prefs)
 
-        self.assertEqual(read_prefs, _prefs)
+    # write them to a temporary location
+    path = None
+    read_prefs = None
+    try:
+        with mozfile.NamedTemporaryFile(suffix='.js', delete=False) as f:
+            path = f.name
+            preferences.write(f, _prefs)
 
-    def test_read_prefs_with_comments(self):
-        """test reading preferences from a prefs.js file that contains comments"""
+        # read them back and ensure we get what we put in
+        read_prefs = dict(Preferences.read_prefs(path))
 
-        path = os.path.join(here, 'files', 'prefs_with_comments.js')
-        self.assertEqual(dict(Preferences.read_prefs(path)), self._prefs_with_comments)
+    finally:
+        # cleanup
+        if path and os.path.exists(path):
+            os.remove(path)
 
-    def test_read_prefs_with_interpolation(self):
-        """test reading preferences from a prefs.js file whose values
-        require interpolation"""
+    assert read_prefs == _prefs
 
-        expected_prefs = {
-            "browser.foo": "http://server-name",
-            "zoom.minPercent": 30,
-            "webgl.verbose": "false",
-            "browser.bar": "somethingxyz"
-        }
-        values = {
-            "server": "server-name",
-            "abc": "something"
-        }
-        path = os.path.join(here, 'files', 'prefs_with_interpolation.js')
-        read_prefs = Preferences.read_prefs(path, interpolation=values)
-        self.assertEqual(dict(read_prefs), expected_prefs)
 
-    def test_read_prefs_ttw(self):
-        """test reading preferences through the web via mozhttpd"""
+def test_read_prefs_with_comments():
+    """test reading preferences from a prefs.js file that contains comments"""
 
-        # create a MozHttpd instance
-        docroot = os.path.join(here, 'files')
-        host = '127.0.0.1'
-        port = 8888
-        httpd = mozhttpd.MozHttpd(host=host, port=port, docroot=docroot)
+    path = os.path.join(here, 'files', 'prefs_with_comments.js')
+    assert dict(Preferences.read_prefs(path)) == _prefs_with_comments
 
-        # create a preferences instance
-        prefs = Preferences()
 
-        try:
-            # start server
-            httpd.start(block=False)
+def test_read_prefs_with_interpolation():
+    """test reading preferences from a prefs.js file whose values
+    require interpolation"""
 
-            # read preferences through the web
-            read = prefs.read_prefs('http://%s:%d/prefs_with_comments.js' % (host, port))
-            self.assertEqual(dict(read), self._prefs_with_comments)
-        finally:
-            httpd.stop()
+    expected_prefs = {
+        "browser.foo": "http://server-name",
+        "zoom.minPercent": 30,
+        "webgl.verbose": "false",
+        "browser.bar": "somethingxyz"
+    }
+    values = {
+        "server": "server-name",
+        "abc": "something"
+    }
+    path = os.path.join(here, 'files', 'prefs_with_interpolation.js')
+    read_prefs = Preferences.read_prefs(path, interpolation=values)
+    assert dict(read_prefs) == expected_prefs
+
+
+def test_read_prefs_ttw():
+    """test reading preferences through the web via mozhttpd"""
+
+    # create a MozHttpd instance
+    docroot = os.path.join(here, 'files')
+    host = '127.0.0.1'
+    port = 8888
+    httpd = mozhttpd.MozHttpd(host=host, port=port, docroot=docroot)
+
+    # create a preferences instance
+    prefs = Preferences()
+
+    try:
+        # start server
+        httpd.start(block=False)
+
+        # read preferences through the web
+        read = prefs.read_prefs('http://%s:%d/prefs_with_comments.js' % (host, port))
+        assert dict(read) == _prefs_with_comments
+    finally:
+        httpd.stop()
 
 
 if __name__ == '__main__':
