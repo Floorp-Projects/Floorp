@@ -226,7 +226,7 @@ class WebURLFinder {
         /**
          * Valid characters for IRI label defined in RFC 3987.
          */
-        private const val LABEL_CHAR = "a-zA-Z0-9${UCS_CHAR}"
+        private const val LABEL_CHAR = "a-zA-Z0-9$UCS_CHAR"
         private const val PATH_AND_QUERY = ("[/\\?](?:(?:[" + LABEL_CHAR +
                 ";/\\?:@&=#~" + // plus optional query params
                 "\\-\\.\\+!\\*'\\(\\),_\\$])|(?:%[a-fA-F0-9]{2}))*")
@@ -242,28 +242,28 @@ class WebURLFinder {
         /**
          * Regular expression that matches known TLDs and punycode TLDs
          */
-        private const val STRICT_TLD = "(?:${IANA_TOP_LEVEL_DOMAINS}|${PUNYCODE_TLD})"
+        private const val STRICT_TLD = "(?:$IANA_TOP_LEVEL_DOMAINS|$PUNYCODE_TLD)"
 
         /**
          * RFC 1035 Section 2.3.4 limits the labels to a maximum 63 octets.
          */
-        private const val IRI_LABEL = "[${LABEL_CHAR}](?:[${LABEL_CHAR}_\\-]{0,61}[${LABEL_CHAR}]){0,1}"
+        private const val IRI_LABEL = "[$LABEL_CHAR](?:[${LABEL_CHAR}_\\-]{0,61}[$LABEL_CHAR]){0,1}"
 
         /**
          * Regular expression that matches host names using [.STRICT_TLD]
          */
-        private const val STRICT_HOST_NAME = ("(?:(?:${IRI_LABEL}\\.)+${STRICT_TLD})")
+        private const val STRICT_HOST_NAME = ("(?:(?:$IRI_LABEL\\.)+$STRICT_TLD)")
 
         /**
          * Regular expression that matches domain names using either [.STRICT_HOST_NAME] or
          * [.IP_ADDRESS]
          */
-        private const val STRICT_DOMAIN_NAME = ("(?:${STRICT_HOST_NAME}|${IP_ADDRESS})")
+        private const val STRICT_DOMAIN_NAME = ("(?:$STRICT_HOST_NAME|$IP_ADDRESS)")
 
         /**
          * Regular expression that matches domain names without a TLD
          */
-        private const val RELAXED_DOMAIN_NAME = "(?:(?:${IRI_LABEL}(?:\\.(?=\\S))?)+|${IP_ADDRESS})"
+        private const val RELAXED_DOMAIN_NAME = "(?:(?:$IRI_LABEL(?:\\.(?=\\S))?)+|$IP_ADDRESS)"
 
         /**
          * Regular expression to match strings that do not start with a supported protocol. The TLDs
@@ -297,7 +297,7 @@ class WebURLFinder {
          * with http(s):// the TLDs are expected to be one of the known TLDs.
          */
         private val AUTOLINK_WEB_URL = Pattern.compile(
-            "(${WEB_URL_WITH_PROTOCOL}|${WEB_URL_WITHOUT_PROTOCOL})"
+            "($WEB_URL_WITH_PROTOCOL|$WEB_URL_WITHOUT_PROTOCOL)"
         )
 
         /**

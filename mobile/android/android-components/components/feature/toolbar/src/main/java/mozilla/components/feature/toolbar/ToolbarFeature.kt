@@ -11,8 +11,8 @@ import mozilla.components.browser.session.SessionManager
  * Feature implementation for connecting a toolbar implementation with the session module.
  */
 class ToolbarFeature(
-        sessionManager: SessionManager,
-        toolbar: Toolbar
+    sessionManager: SessionManager,
+    toolbar: Toolbar
 ) {
     private val presenter = ToolbarPresenter(sessionManager, toolbar)
 

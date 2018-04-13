@@ -79,11 +79,11 @@ class DomainAutoCompleteProviderTest {
     }
 
     private fun assertCompletion(
-            provider: DomainAutoCompleteProvider,
-            text: String,
-            domainSource: String,
-            sourceSize: Int,
-            completion: String
+        provider: DomainAutoCompleteProvider,
+        text: String,
+        domainSource: String,
+        sourceSize: Int,
+        completion: String
     ) {
         val resultCallback = { result: String, source: String, totalItems: Int ->
             assertFalse(result.isEmpty())

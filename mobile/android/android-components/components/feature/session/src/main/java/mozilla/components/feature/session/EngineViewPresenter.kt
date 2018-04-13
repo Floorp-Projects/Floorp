@@ -13,10 +13,10 @@ import mozilla.components.browser.session.SessionManager
  * Presenter implementation for EngineView.
  */
 class EngineViewPresenter(
-        private val sessionManager: SessionManager,
-        private val engine: Engine,
-        private val engineView: EngineView,
-        private val sessionMapping: SessionMapping
+    private val sessionManager: SessionManager,
+    private val engine: Engine,
+    private val engineView: EngineView,
+    private val sessionMapping: SessionMapping
 ) : SessionManager.Observer {
 
     /**

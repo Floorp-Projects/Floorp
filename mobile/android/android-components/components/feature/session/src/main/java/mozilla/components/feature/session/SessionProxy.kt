@@ -12,8 +12,8 @@ import mozilla.components.browser.session.Session
  * data is available.
  */
 class SessionProxy(
-        private val session: Session,
-        engineSession: EngineSession
+    private val session: Session,
+    engineSession: EngineSession
 ) : EngineSession.Observer {
     init {
         engineSession.register(this)

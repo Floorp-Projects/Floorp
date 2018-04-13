@@ -5,7 +5,6 @@
 package mozilla.components.support.utils
 
 import android.graphics.Color
-import mozilla.components.support.utils.ColorUtils
 
 import org.junit.Test
 import org.junit.runner.RunWith

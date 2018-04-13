@@ -13,8 +13,8 @@ import mozilla.components.browser.session.SessionManager
  * the state of the selected session changes.
  */
 class ToolbarPresenter(
-        private val sessionManager: SessionManager,
-        private val toolbar: Toolbar
+    private val sessionManager: SessionManager,
+    private val toolbar: Toolbar
 ) : SessionManager.Observer, Session.Observer {
     var session: Session = sessionManager.selectedSession
 

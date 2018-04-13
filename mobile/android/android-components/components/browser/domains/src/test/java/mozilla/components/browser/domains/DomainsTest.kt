@@ -5,7 +5,6 @@
 package mozilla.components.browser.domains
 
 import kotlinx.coroutines.experimental.runBlocking
-import mozilla.components.browser.domains.Domains
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith

@@ -9,7 +9,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 import junit.framework.Assert.assertEquals
-import mozilla.components.support.utils.DownloadUtils
 
 @RunWith(RobolectricTestRunner::class)
 class DownloadUtilsTest {
