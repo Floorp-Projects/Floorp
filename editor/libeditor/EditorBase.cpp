@@ -4397,7 +4397,9 @@ EditorBase::DeleteSelectionAndPrepareToCreateNode()
 {
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  MOZ_ASSERT(selection->GetAnchorFocusRange());
+  if (NS_WARN_IF(!selection->GetAnchorFocusRange())) {
+    return NS_OK;
+  }
 
   if (!selection->GetAnchorFocusRange()->Collapsed()) {
     nsresult rv = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
