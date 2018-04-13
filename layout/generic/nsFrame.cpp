@@ -5644,17 +5644,19 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
       eLogicalAxisInline : eLogicalAxisBlock;
 
     // NOTE: The logic here should match the similar chunk for updating
-    // mainAxisCoord in nsFrame::ComputeSizeWithIntrinsicDimensions().
+    // mainAxisCoord in nsFrame::ComputeSizeWithIntrinsicDimensions() (aside
+    // from using a different dummy value in the IsUsedFlexBasisContent() case).
     const nsStyleCoord* flexBasis = &(stylePos->mFlexBasis);
     auto& mainAxisCoord = (flexMainAxis == eLogicalAxisInline
                            ? inlineStyleCoord : blockStyleCoord);
 
     if (nsFlexContainerFrame::IsUsedFlexBasisContent(flexBasis,
                                                      mainAxisCoord)) {
-      // XXXdholbert Technically we shouldn't be using 'auto' here. A later
-      // patch will convert this to max-content instead.
-      static const nsStyleCoord autoStyleCoord(eStyleUnit_Auto);
-      mainAxisCoord = &autoStyleCoord;
+      static const nsStyleCoord maxContStyleCoord(NS_STYLE_WIDTH_MAX_CONTENT,
+                                                  eStyleUnit_Enumerated);
+      mainAxisCoord = &maxContStyleCoord;
+      // (Note: if our main axis is the block axis, then this 'max-content'
+      // value will be treated like 'auto', via the IsAutoBSize() call below.)
     } else if (flexBasis->GetUnit() != eStyleUnit_Auto) {
       // For all other non-'auto' flex-basis values, we just swap in the
       // flex-basis itself for the main-size property.
@@ -5896,7 +5898,8 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
       // "flex-basis:auto", in which case they use their main-size property
       // after all.
       // NOTE: The logic here should match the similar chunk for updating
-      // mainAxisCoord in nsFrame::ComputeSize().
+      // mainAxisCoord in nsFrame::ComputeSize() (aside from using a different
+      // dummy value in the IsUsedFlexBasisContent() case).
       const nsStyleCoord* flexBasis = &(stylePos->mFlexBasis);
       auto& mainAxisCoord = (flexMainAxis == eLogicalAxisInline
                              ? inlineStyleCoord : blockStyleCoord);
