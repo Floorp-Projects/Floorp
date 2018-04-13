@@ -20,6 +20,7 @@
 #include "nsClassHashtable.h"
 #include "nsDebug.h"
 #include "NSPRLogModulesParser.h"
+#include "LogCommandLineHandler.h"
 
 #include "prenv.h"
 #ifdef XP_WIN
@@ -191,39 +192,6 @@ public:
     delete logFile;
   }
 
-  void HandleCommandLineArgs(int argc, char* argv[])
-  {
-    for (int arg = 2; arg < argc; ++arg) {
-      if (argv[arg][0] == '-') {
-        continue;
-      }
-
-      for (auto name : {"-MOZ_LOG", "-MOZ_LOG_FILE"}) {
-        if (strcmp(name, argv[arg - 1])) {
-          continue;
-        }
-
-        // We deliberately set/rewrite the environment variables
-        // so that when child processes are spawned w/o passing
-        // the arguments they still inherit the logging settings
-        // as well as sandboxing can be correctly set.
-        // Scripts can pass -MOZ_LOG=$MOZ_LOG,modules as an argument
-        // to merge existing settings, if required.
-
-        nsAutoCString env;
-        env.Assign(name + 1);
-        env.Append('=');
-        env.Append(argv[arg]);
-
-        // PR_SetEnv takes ownership of the string.
-        PR_SetEnv(ToNewCString(env));
-
-        ++arg;
-        break;
-      }
-    }
-  }
-
   /**
    * Loads config from command line args or env vars if present, in
    * this specific order of priority.
@@ -238,7 +206,18 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(!mInitialized);
     mInitialized = true;
 
-    HandleCommandLineArgs(argc, argv);
+    LoggingHandleCommandLineArgs(argc, static_cast<char const* const*>(argv),
+                                 [](nsACString const& env) {
+      // We deliberately set/rewrite the environment variables
+      // so that when child processes are spawned w/o passing
+      // the arguments they still inherit the logging settings
+      // as well as sandboxing can be correctly set.
+      // Scripts can pass -MOZ_LOG=$MOZ_LOG,modules as an argument
+      // to merge existing settings, if required.
+
+      // PR_SetEnv takes ownership of the string.
+      PR_SetEnv(ToNewCString(env));
+    });
 
     bool shouldAppend = false;
     bool addTimestamp = false;
