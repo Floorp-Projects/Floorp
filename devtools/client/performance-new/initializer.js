@@ -13,19 +13,31 @@ const { require } = BrowserLoaderModule.BrowserLoader({
 });
 const Perf = require("devtools/client/performance-new/components/Perf");
 const Services = require("Services");
-const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
-const { createElement } = require("devtools/client/shared/vendor/react");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+const React = require("devtools/client/shared/vendor/react");
+const createStore = require("devtools/client/shared/redux/create-store")();
+const reducers = require("devtools/client/performance-new/store/reducers");
+const actions = require("devtools/client/performance-new/store/actions");
+const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 /**
- * Perform a simple initialization on the panel. Hook up event listeners.
+ * Initialize the panel by creating a redux store, and render the root component.
  *
  * @param toolbox - The toolbox
  * @param perfFront - The Perf actor's front. Used to start and stop recordings.
  */
 function gInit(toolbox, perfFront) {
-  const props = {
+  const store = createStore(reducers);
+  store.dispatch(actions.initializeStore({
     toolbox,
     perfFront,
+    /**
+     * This function uses privileged APIs in order to take the profile, open up a new
+     * tab, and then inject it into perf.html. In order to provide a clear separation
+     * in the codebase between privileged and non-privileged code, this function is
+     * defined in initializer.js, and injected into the the normal component. All of
+     * the React components and Redux store behave as normal unprivileged web components.
+     */
     receiveProfile: profile => {
       // Open up a new tab and send a message with the profile.
       let browser = top.gBrowser;
@@ -47,10 +59,18 @@ function gInit(toolbox, perfFront) {
       );
       mm.sendAsyncMessage("devtools:perf-html-transfer-profile", profile);
     }
-  };
-  render(createElement(Perf, props), document.querySelector("#root"));
+  }));
+
+  ReactDOM.render(
+    React.createElement(
+      Provider,
+      { store },
+      React.createElement(Perf)
+    ),
+    document.querySelector("#root")
+  );
 }
 
 function gDestroy() {
-  unmountComponentAtNode(document.querySelector("#root"));
+  ReactDOM.unmountComponentAtNode(document.querySelector("#root"));
 }

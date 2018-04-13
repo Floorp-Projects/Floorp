@@ -129,3 +129,59 @@ Object.getOwnPropertyNames(perfDescription.methods).forEach(methodName => {
                     "actor's spec. It should be added to the mock.");
   }
 });
+
+/**
+ * This is a helper function to correctly mount the Perf component, and provide
+ * mocks where needed.
+ */
+function createPerfComponent() {
+  const Perf = require("devtools/client/performance-new/components/Perf");
+  const React = require("devtools/client/shared/vendor/react");
+  const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+  const ReactRedux = require("devtools/client/shared/vendor/react-redux");
+  const createStore = require("devtools/client/shared/redux/create-store")();
+  const reducers = require("devtools/client/performance-new/store/reducers");
+  const actions = require("devtools/client/performance-new/store/actions");
+  const selectors = require("devtools/client/performance-new/store/selectors");
+
+  const perfFront = new MockPerfFront();
+  const toolboxMock = {};
+  const store = createStore(reducers);
+  const container = document.querySelector("#container");
+  const receiveProfileCalls = [];
+
+  function receiveProfileMock(profile) {
+    receiveProfileCalls.push(profile);
+  }
+
+  const mountComponent = () => {
+    store.dispatch(actions.initializeStore({
+      toolbox: toolboxMock,
+      perfFront,
+      receiveProfile: receiveProfileMock,
+    }));
+
+    return ReactDOM.render(
+      React.createElement(
+        ReactRedux.Provider,
+        { store },
+        React.createElement(Perf)
+      ),
+      container
+    );
+  };
+
+  // Provide a list of common values that may be needed during testing.
+  return {
+    receiveProfileCalls,
+    perfFront,
+    mountComponent,
+    selectors,
+    store,
+    container,
+    getState: store.getState,
+    dispatch: store.dispatch,
+    // Provide a common shortcut for this selector.
+    getRecordingState: () => selectors.getRecordingState(store.getState())
+  };
+}
