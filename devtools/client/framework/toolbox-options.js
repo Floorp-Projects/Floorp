@@ -61,10 +61,11 @@ function OptionsPanel(iframeWindow, toolbox) {
   this.toolbox = toolbox;
   this.isReady = false;
 
-  this.setupToolsList = this.setupToolsList.bind(this);
   this._prefChanged = this._prefChanged.bind(this);
   this._themeRegistered = this._themeRegistered.bind(this);
   this._themeUnregistered = this._themeUnregistered.bind(this);
+  this._webExtensionRegistered = this._webExtensionRegistered.bind(this);
+  this._webExtensionUnregistered = this._webExtensionUnregistered.bind(this);
   this._disableJSClicked = this._disableJSClicked.bind(this);
 
   this.disableJSNode = this.panelDoc.getElementById("devtools-disable-javascript");
@@ -105,14 +106,8 @@ OptionsPanel.prototype = {
     gDevTools.on("theme-registered", this._themeRegistered);
     gDevTools.on("theme-unregistered", this._themeUnregistered);
 
-    // Refresh the tools list when a new tool or webextension has been
-    // registered to the toolbox.
-    this.toolbox.on("tool-registered", this.setupToolsList);
-    this.toolbox.on("webextension-registered", this.setupToolsList);
-    // Refresh the tools list when a new tool or webextension has been
-    // unregistered from the toolbox.
-    this.toolbox.on("tool-unregistered", this.setupToolsList);
-    this.toolbox.on("webextension-unregistered", this.setupToolsList);
+    this.toolbox.on("webextension-registered", this._webExtensionRegistered);
+    this.toolbox.on("webextension-unregistered", this._webExtensionUnregistered);
   },
 
   _removeListeners: function() {
@@ -121,10 +116,8 @@ OptionsPanel.prototype = {
     Services.prefs.removeObserver("devtools.source-map.client-service.enabled",
                                   this._prefChanged);
 
-    this.toolbox.off("tool-registered", this.setupToolsList);
-    this.toolbox.off("tool-unregistered", this.setupToolsList);
-    this.toolbox.off("webextension-registered", this.setupToolsList);
-    this.toolbox.off("webextension-unregistered", this.setupToolsList);
+    this.toolbox.off("webextension-registered", this._webExtensionRegistered);
+    this.toolbox.off("webextension-unregistered", this._webExtensionUnregistered);
 
     gDevTools.off("theme-registered", this._themeRegistered);
     gDevTools.off("theme-unregistered", this._themeUnregistered);
@@ -153,6 +146,18 @@ OptionsPanel.prototype = {
     if (themeInput) {
       themeInput.parentNode.remove();
     }
+  },
+
+  _webExtensionRegistered: function(extensionUUID) {
+    // Refresh the tools list when a new webextension has been registered
+    // to the toolbox.
+    this.setupToolsList();
+  },
+
+  _webExtensionUnregistered: function(extensionUUID) {
+    // Refresh the tools list when a new webextension has been unregistered
+    // from the toolbox.
+    this.setupToolsList();
   },
 
   async setupToolbarButtonsList() {
