@@ -39,23 +39,10 @@ public:
     return mURL;
   }
 
-  nsIURI* URI()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    return mURL->GetURI();
-  }
-
-  void ReleaseURI()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    mURL = nullptr;
-  }
-
 private:
-  // Private destructor, to discourage deletion outside of Release():
   ~URLProxy()
   {
-     MOZ_ASSERT(!mURL);
+    NS_ReleaseOnMainThreadSystemGroup("URLMainThread", mURL.forget());
   }
 
   RefPtr<URLMainThread> mURL;
@@ -277,29 +264,6 @@ public:
 
     return mRetval;
   }
-};
-
-class TeardownURLRunnable : public Runnable
-{
-public:
-  explicit TeardownURLRunnable(URLWorker::URLProxy* aURLProxy)
-    : Runnable("dom::TeardownURLRunnable")
-    , mURLProxy(aURLProxy)
-  {
-  }
-
-  NS_IMETHOD Run() override
-  {
-    AssertIsOnMainThread();
-
-    mURLProxy->ReleaseURI();
-    mURLProxy = nullptr;
-
-    return NS_OK;
-  }
-
-private:
-  RefPtr<URLWorker::URLProxy> mURLProxy;
 };
 
 class OriginGetterRunnable : public WorkerMainThreadRunnable
@@ -562,20 +526,7 @@ URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
   mURLProxy = runnable->GetURLProxy(aRv);
 }
 
-URLWorker::~URLWorker()
-{
-  if (mURLProxy) {
-    mWorkerPrivate->AssertIsOnWorkerThread();
-
-    RefPtr<TeardownURLRunnable> runnable =
-      new TeardownURLRunnable(mURLProxy);
-    mURLProxy = nullptr;
-
-    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
-      NS_ERROR("Failed to dispatch teardown runnable!");
-    }
-  }
-}
+URLWorker::~URLWorker() = default;
 
 void
 URLWorker::GetHref(nsAString& aHref) const
@@ -617,18 +568,7 @@ URLWorker::SetHrefInternal(const nsAString& aHref, Strategy aStrategy,
     aRv = NS_MutateURI(new nsStandardURL::Mutator())
             .SetSpec(NS_ConvertUTF16toUTF8(aHref))
             .Finalize(mStdURL);
-    if (mURLProxy) {
-      mWorkerPrivate->AssertIsOnWorkerThread();
-
-      RefPtr<TeardownURLRunnable> runnable =
-        new TeardownURLRunnable(mURLProxy);
-      mURLProxy = nullptr;
-
-      if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)))) {
-        return;
-      }
-    }
-
+    mURLProxy = nullptr;
     UpdateURLSearchParams();
     return;
   }
