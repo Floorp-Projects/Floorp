@@ -3,17 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'components',
-    'store',
-]
-
 DevToolsModules(
-    'panel.js',
-    'utils.js',
+    'actions.js',
+    'reducers.js',
+    'selectors.js',
 )
-
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']
-
-with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')

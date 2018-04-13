@@ -6,6 +6,9 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { div, input, label } = require("devtools/client/shared/vendor/react-dom-factories");
 
+/**
+ * Provide a numeric range slider UI that works off of custom numeric scales.
+ */
 class Range extends PureComponent {
   static get propTypes() {
     return {
