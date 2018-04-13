@@ -627,7 +627,7 @@ inline T*
 NewObjectWithNullTaggedProto(JSContext* cx, NewObjectKind newKind = GenericObject,
                              uint32_t initialShapeFlags = 0)
 {
-    Rooted<TaggedProto> nullProto(cx, TaggedProto(nullptr));
+    Handle<TaggedProto> nullProto = AsTaggedProto(nullptr);
     return NewObjectWithGivenTaggedProto<T>(cx, nullProto, newKind, initialShapeFlags);
 }
 
