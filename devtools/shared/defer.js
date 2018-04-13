@@ -4,7 +4,9 @@
 
 "use strict";
 
-// See bug 1273941 to understand this choice of promise.
+// We have to keep using Promise.jsm here, because DOM Promises
+// start freezing during panel iframes destruction.
+// More info in bug 1454373 comment 15.
 const Promise = require("promise");
 
 /**
