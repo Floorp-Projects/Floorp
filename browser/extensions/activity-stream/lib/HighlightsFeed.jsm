@@ -90,12 +90,35 @@ this.HighlightsFeed = class HighlightsFeed {
   }
 
   /**
+   * Chronologically sort highlights of all types except 'visited'. Then just append
+   * the rest at the end of highlights.
+   * @param {Array} pages The full list of links to order.
+   * @return {Array} A sorted array of highlights
+   */
+  _orderHighlights(pages) {
+    const splitHighlights = {chronologicalCandidates: [], visited: []};
+    for (let page of pages) {
+      // If we have a page that is both a history item and a bookmark, treat it
+      // as a bookmark
+      if (page.type === "history" && !page.bookmarkGuid) {
+        splitHighlights.visited.push(page);
+      } else {
+        splitHighlights.chronologicalCandidates.push(page);
+      }
+    }
+
+    return splitHighlights.chronologicalCandidates
+            .sort((a, b) => a.date_added < b.date_added)
+            .concat(splitHighlights.visited);
+  }
+
+  /**
    * Refresh the highlights data for content.
    * @param {bool} options.broadcast Should the update be broadcasted.
    */
   async fetchHighlights(options = {}) {
-    // We need TopSites for deduping, so wait for TOP_SITES_UPDATED.
-    if (!this.store.getState().TopSites.initialized) {
+    // If TopSites are enabled we need them for deduping, so wait for TOP_SITES_UPDATED.
+    if (!this.store.getState().TopSites.initialized && this.store.getState().Prefs.values["feeds.topsites"]) {
       return;
     }
 
@@ -111,9 +134,11 @@ this.HighlightsFeed = class HighlightsFeed {
       excludePocket: !this.store.getState().Prefs.values["section.highlights.includePocket"]
     });
 
+    const orderedPages = this._orderHighlights(manyPages);
+
     // Remove adult highlights if we need to
     const checkedAdult = this.store.getState().Prefs.values.filterAdult ?
-      filterAdult(manyPages) : manyPages;
+      filterAdult(orderedPages) : orderedPages;
 
     // Remove any Highlights that are in Top Sites already
     const [, deduped] = this.dedupe.group(this.store.getState().TopSites.rows, checkedAdult);

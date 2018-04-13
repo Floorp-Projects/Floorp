@@ -389,8 +389,8 @@ describe("SectionsFeed", () => {
       state: {
         Prefs: {
           values: {
-            sectionOrder: "topsites,topstories,highlights",
-            showTopSites: true
+            "sectionOrder": "topsites,topstories,highlights",
+            "feeds.topsites": true
           }
         },
         Sections: [{initialized: false}]

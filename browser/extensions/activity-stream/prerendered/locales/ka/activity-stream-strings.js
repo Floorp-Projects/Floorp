@@ -59,7 +59,7 @@ window.gActivityStreamStrings = {
   "edit_topsites_button_text": "ჩასწორება",
   "edit_topsites_edit_button": "საიტის ჩასწორება",
   "topsites_form_add_header": "ახალი საიტი რჩეულებში",
-  "topsites_form_edit_header": "რჩეული საიტების ჩასწორება",
+  "topsites_form_edit_header": "რჩეული საიტის ჩასწორება",
   "topsites_form_title_label": "დასახელება",
   "topsites_form_title_placeholder": "სათაურის შეყვანა",
   "topsites_form_url_label": "URL ბმული",

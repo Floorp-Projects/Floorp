@@ -100,10 +100,6 @@ const PREFS_CONFIG = new Map([
     title: "Disable snippets on activity stream",
     value: false
   }],
-  ["showTopSites", {
-    title: "Show the Top Sites section",
-    value: true
-  }],
   ["topSitesRows", {
     title: "Number of rows of Top Sites to display",
     value: 1
