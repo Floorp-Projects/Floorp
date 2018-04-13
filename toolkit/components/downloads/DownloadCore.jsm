@@ -411,6 +411,11 @@ this.Download.prototype = {
       }
 
       try {
+        if (this.downloadingToSameFile()) {
+          throw new DownloadError({ message: "Can't overwrite the source file.",
+                                    becauseTargetFailed: true });
+        }
+
         // Disallow download if parental controls service restricts it.
         if (await DownloadIntegration.shouldBlockForParentalControls(this)) {
           throw new DownloadError({ becauseBlockedByParentalControls: true });
@@ -826,6 +831,23 @@ this.Download.prototype = {
     }
 
     return this._promiseRemovePartialData;
+  },
+
+  /**
+   * Returns true if the download source is the same as the target file.
+   */
+  downloadingToSameFile() {
+    if (!this.source.url || !this.source.url.startsWith("file:")) {
+      return false;
+    }
+
+    try {
+      let sourceUri = NetUtil.newURI(this.source.url);
+      let targetUri = NetUtil.newURI(new FileUtils.File(this.target.path));
+      return sourceUri.equals(targetUri);
+    } catch (ex) {
+      return false;
+    }
   },
 
   /**

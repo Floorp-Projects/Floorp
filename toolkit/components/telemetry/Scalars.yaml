@@ -159,12 +159,14 @@ browser.engagement:
   restored_pinned_tabs_count:
     bug_numbers:
       - 1373728
+      - 1451475
     description: >
       The count of the number of pinned tabs that were restored.
-    expires: '62'
+    expires: '67'
     kind: uint
     notification_emails:
       - chutten@mozilla.com
+      - jrediger@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
       - 'main'

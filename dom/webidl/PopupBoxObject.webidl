@@ -30,36 +30,6 @@ interface PopupBoxObject : BoxObject
   attribute boolean autoPosition;
 
   /**
-   * If keyboard navigation is enabled, the keyboard may be used to navigate
-   * the menuitems on the popup. Enabling keyboard navigation is the default
-   * behaviour and will install capturing key event listeners on the popup
-   * that do not propagate key events to the contents. If you wish to place
-   * elements in a popup which accept key events, such as textboxes, keyboard
-   * navigation should be disabled.
-   *
-   * Setting ignorekeys="true" on the popup element also disables keyboard
-   * navigation, and is recommended over calling this method.
-   */
-  void enableKeyboardNavigator(boolean enableKeyboardNavigator);
-
-  /**
-   * Enable automatic popup dismissal. This only has effect when called
-   * on an open popup.
-   */
-  void enableRollup(boolean enableRollup);
-
-  /**
-   * Control whether the event that caused the popup to be automatically
-   * dismissed ("rolled up") should be consumed, or dispatched as a
-   * normal event.  This should be set immediately before calling showPopup()
-   * if non-default behavior is desired.
-   */
-  const unsigned long ROLLUP_DEFAULT = 0;   /* widget/platform default */
-  const unsigned long ROLLUP_CONSUME = 1;   /* consume the rollup event */
-  const unsigned long ROLLUP_NO_CONSUME = 2; /* don't consume the rollup event */
-  void setConsumeRollupEvent(unsigned long consume);
-
-  /**
    * Size the popup to the given dimensions
    */
   void sizeTo(long width, long height);

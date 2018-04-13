@@ -1216,9 +1216,9 @@ ModuleBuilder::ModuleBuilder(JSContext* cx, HandleModuleObject module,
     tokenStream_(tokenStream),
     requestedModuleSpecifiers_(cx, AtomSet(cx)),
     requestedModules_(cx, RequestedModuleVector(cx)),
-    importedBoundNames_(cx, AtomVector(cx)),
-    importEntries_(cx, ImportEntryVector(cx)),
+    importEntries_(cx, ImportEntryMap(cx)),
     exportEntries_(cx, ExportEntryVector(cx)),
+    exportNames_(cx, AtomSet(cx)),
     localExportEntries_(cx, ExportEntryVector(cx)),
     indirectExportEntries_(cx, ExportEntryVector(cx)),
     starExportEntries_(cx, ExportEntryVector(cx))
@@ -1227,7 +1227,9 @@ ModuleBuilder::ModuleBuilder(JSContext* cx, HandleModuleObject module,
 bool
 ModuleBuilder::init()
 {
-    return requestedModuleSpecifiers_.init();
+    return requestedModuleSpecifiers_.init() &&
+           importEntries_.init() &&
+           exportNames_.init();
 }
 
 bool
@@ -1324,20 +1326,24 @@ ModuleBuilder::processImport(frontend::ParseNode* pn)
         RootedAtom importName(cx_, spec->pn_left->pn_atom);
         RootedAtom localName(cx_, spec->pn_right->pn_atom);
 
-        if (!importedBoundNames_.append(localName))
-            return false;
-
         uint32_t line;
         uint32_t column;
         tokenStream_.lineAndColumnAt(spec->pn_left->pn_pos.begin, &line, &column);
 
         RootedImportEntryObject importEntry(cx_);
         importEntry = ImportEntryObject::create(cx_, module, importName, localName, line, column);
-        if (!importEntry || !importEntries_.append(importEntry))
+        if (!importEntry || !appendImportEntryObject(importEntry))
             return false;
     }
 
     return true;
+}
+
+bool
+ModuleBuilder::appendImportEntryObject(HandleImportEntryObject importEntry)
+{
+    MOZ_ASSERT(importEntry->localName());
+    return importEntries_.put(importEntry->localName(), importEntry);
 }
 
 bool
@@ -1517,21 +1523,19 @@ ModuleBuilder::processExportFrom(frontend::ParseNode* pn)
 ImportEntryObject*
 ModuleBuilder::importEntryFor(JSAtom* localName) const
 {
-    for (auto import : importEntries_) {
-        if (import->localName() == localName)
-            return import;
-    }
-    return nullptr;
+    MOZ_ASSERT(localName);
+    auto ptr = importEntries_.lookup(localName);
+    if (!ptr)
+        return nullptr;
+
+    return ptr->value();
 }
 
 bool
 ModuleBuilder::hasExportedName(JSAtom* name) const
 {
-    for (auto entry : exportEntries_) {
-        if (entry->exportName() == name)
-            return true;
-    }
-    return false;
+    MOZ_ASSERT(name);
+    return exportNames_.has(name);
 }
 
 bool
@@ -1545,7 +1549,7 @@ ModuleBuilder::appendExportEntry(HandleAtom exportName, HandleAtom localName, Pa
     Rooted<ExportEntryObject*> exportEntry(cx_);
     exportEntry = ExportEntryObject::create(cx_, exportName, nullptr, nullptr, localName,
                                             line, column);
-    return exportEntry && exportEntries_.append(exportEntry);
+    return exportEntry && appendExportEntryObject(exportEntry);
 }
 
 bool
@@ -1559,7 +1563,17 @@ ModuleBuilder::appendExportFromEntry(HandleAtom exportName, HandleAtom moduleReq
     Rooted<ExportEntryObject*> exportEntry(cx_);
     exportEntry = ExportEntryObject::create(cx_, exportName, moduleRequest, importName, nullptr,
                                             line, column);
-    return exportEntry && exportEntries_.append(exportEntry);
+    return exportEntry && appendExportEntryObject(exportEntry);
+}
+
+bool
+ModuleBuilder::appendExportEntryObject(HandleExportEntryObject exportEntry)
+{
+    if (!exportEntries_.append(exportEntry))
+        return false;
+
+    JSAtom* exportName = exportEntry->exportName();
+    return !exportName || exportNames_.put(exportName);
 }
 
 bool
@@ -1593,6 +1607,23 @@ ArrayObject* ModuleBuilder::createArray(const JS::Rooted<GCVector<T>>& vector)
     array->setDenseInitializedLength(length);
     for (uint32_t i = 0; i < length; i++)
         array->initDenseElement(i, ObjectValue(*vector[i]));
+
+    return array;
+}
+
+template <typename K, typename V>
+ArrayObject* ModuleBuilder::createArray(const JS::Rooted<GCHashMap<K, V>>& map)
+{
+    uint32_t length = map.count();
+    RootedArrayObject array(cx_, NewDenseFullyAllocatedArray(cx_, length));
+    if (!array)
+        return nullptr;
+
+    array->setDenseInitializedLength(length);
+
+    uint32_t i = 0;
+    for (auto r = map.all(); !r.empty(); r.popFront())
+        array->initDenseElement(i++, ObjectValue(*r.front().value()));
 
     return array;
 }

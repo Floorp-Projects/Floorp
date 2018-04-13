@@ -215,7 +215,7 @@ GeckoProfilerThread::enter(JSContext* cx, JSScript* script, JSFunction* maybeFun
     // have a non-null pc. Only look at the top frames to avoid quadratic
     // behavior.
     uint32_t sp = pseudoStack_->stackPointer;
-    if (sp > 0 && sp - 1 < PseudoStack::MaxEntries) {
+    if (sp > 0 && sp - 1 < pseudoStack_->stackCapacity()) {
         size_t start = (sp > 4) ? sp - 4 : 0;
         for (size_t i = start; i < sp - 1; i++)
             MOZ_ASSERT_IF(pseudoStack_->entries[i].isJs(), pseudoStack_->entries[i].pc());
@@ -234,7 +234,7 @@ GeckoProfilerThread::exit(JSScript* script, JSFunction* maybeFun)
 #ifdef DEBUG
     /* Sanity check to make sure push/pop balanced */
     uint32_t sp = pseudoStack_->stackPointer;
-    if (sp < PseudoStack::MaxEntries) {
+    if (sp < pseudoStack_->stackCapacity()) {
         JSRuntime* rt = script->runtimeFromActiveCooperatingThread();
         const char* dynamicString = rt->geckoProfiler().profileString(script, maybeFun);
         /* Can't fail lookup because we should already be in the set */
@@ -246,7 +246,7 @@ GeckoProfilerThread::exit(JSScript* script, JSFunction* maybeFun)
             fprintf(stderr, " entries=%p size=%u/%u\n",
                             (void*) pseudoStack_->entries,
                             uint32_t(pseudoStack_->stackPointer),
-                            PseudoStack::MaxEntries);
+                            pseudoStack_->stackCapacity());
             for (int32_t i = sp; i >= 0; i--) {
                 ProfileEntry& entry = pseudoStack_->entries[i];
                 if (entry.isJs())
@@ -382,7 +382,7 @@ GeckoProfilerBaselineOSRMarker::GeckoProfilerBaselineOSRMarker(JSContext* cx, bo
     }
 
     uint32_t sp = profiler->pseudoStack_->stackPointer;
-    if (sp >= PseudoStack::MaxEntries) {
+    if (sp >= profiler->pseudoStack_->stackCapacity()) {
         profiler = nullptr;
         return;
     }

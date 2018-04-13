@@ -1393,6 +1393,17 @@ GfxInfo::GetGfxDriverInfo()
       nsIGfxInfo::FEATURE_ADVANCED_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
       DRIVER_BETWEEN_INCLUSIVE, V(23,21,13,8569), V(23,21,13,9135),
       "FEATURE_FAILURE_BUG_1419264", "Windows 10");
+
+    // Bug 1447141, for causing device creation crashes.
+    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows7,
+      (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorAMD), (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(Bug1447141),
+      GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+      DRIVER_EQUAL, V(15, 201, 2201, 0), "FEATURE_FAILURE_BUG_1447141_1");
+    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows7,
+      (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorAMD), (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(Bug1447141),
+      GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+      DRIVER_EQUAL, V(15, 201, 1701, 0), "FEATURE_FAILURE_BUG_1447141_1");
+
   }
   return *mDriverInfo;
 }

@@ -21186,19 +21186,13 @@ var _isEqual = __webpack_require__(1127);
 
 var _isEqual2 = _interopRequireDefault(_isEqual);
 
-var _uniqBy = __webpack_require__(3624);
-
-var _uniqBy2 = _interopRequireDefault(_uniqBy);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const isControlFlow = node => t.isForStatement(node) || t.isWhileStatement(node) || t.isIfStatement(node) || t.isSwitchCase(node) || t.isSwitchStatement(node);
+const isControlFlow = node => t.isForStatement(node) || t.isWhileStatement(node) || t.isIfStatement(node) || t.isSwitchCase(node) || t.isSwitchStatement(node); /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                                                                                 * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                                                                                 * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const isAssignment = node => t.isVariableDeclarator(node) || t.isAssignmentExpression(node);
 
@@ -21206,28 +21200,27 @@ const isImport = node => t.isImport(node) || t.isImportDeclaration(node);
 const isReturn = node => t.isReturnStatement(node);
 const isCall = node => t.isCallExpression(node) || t.isJSXElement(node);
 
-const inExpression = (parent, grandParent) => t.isArrayExpression(parent) || t.isObjectProperty(parent) || t.isCallExpression(parent) || t.isJSXElement(parent) || t.isJSXAttribute(grandParent) || t.isTemplateLiteral(parent);
+const inStepExpression = parent => t.isArrayExpression(parent) || t.isObjectProperty(parent) || t.isCallExpression(parent) || t.isJSXElement(parent);
+
+const inExpression = (parent, grandParent) => inStepExpression(parent) || t.isJSXAttribute(grandParent) || t.isTemplateLiteral(parent);
 
 const isExport = node => t.isExportNamedDeclaration(node) || t.isExportDefaultDeclaration(node);
 
-function removeDuplicatePoints(state) {
-  return (0, _uniqBy2.default)(state, ({ location }) => `${location.line}-$${location.column}`);
-}
-
 function getPausePoints(sourceId) {
-  const state = [];
+  const state = {};
   (0, _ast.traverseAst)(sourceId, { enter: onEnter }, state);
-  const uniqPoints = removeDuplicatePoints(state);
-  return uniqPoints;
+  return state;
 }
 
+/* eslint-disable complexity */
 function onEnter(node, ancestors, state) {
   const parent = ancestors[ancestors.length - 1];
+  const parentNode = parent && parent.node;
   const grandParent = ancestors[ancestors.length - 2];
   const startLocation = node.loc.start;
 
   if (isImport(node) || t.isClassDeclaration(node) || isExport(node) || t.isDebuggerStatement(node)) {
-    addPoint(state, startLocation);
+    return addStopPoint(state, startLocation);
   }
 
   if (isControlFlow(node)) {
@@ -21235,24 +21228,24 @@ function onEnter(node, ancestors, state) {
 
     const test = node.test || node.discriminant;
     if (test) {
-      addPoint(state, test.loc.start);
+      addStopPoint(state, test.loc.start);
     }
+    return;
   }
 
   if (isReturn(node)) {
     // We do not want to pause at the return and the call e.g. return foo()
     if (isCall(node.argument)) {
-      addEmptyPoint(state, startLocation);
-    } else {
-      addPoint(state, startLocation);
+      return addEmptyPoint(state, startLocation);
     }
+    return addStopPoint(state, startLocation);
   }
 
   if (isAssignment(node)) {
     // We only want to pause at literal assignments `var a = foo()`
     const value = node.right || node.init;
     if (!isCall(value)) {
-      addPoint(state, startLocation);
+      return addStopPoint(state, startLocation);
     }
   }
 
@@ -21266,49 +21259,63 @@ function onEnter(node, ancestors, state) {
     }
 
     // NOTE: we do not want to land inside an expression e.g. [], {}, call
-    const stepOver = !inExpression(parent.node, grandParent && grandParent.node);
+    const step = !inExpression(parent.node, grandParent && grandParent.node);
 
     // NOTE: we add a point at the beginning of the expression
     // and each of the calls because the engine does not support
     // column-based member expression calls.
-    addPoint(state, startLocation, { breakpoint: true, stepOver });
+    addPoint(state, startLocation, { break: true, step });
     if (location && !(0, _isEqual2.default)(location, startLocation)) {
-      addPoint(state, location, { breakpoint: true, stepOver });
+      addPoint(state, location, { break: true, step });
     }
+
+    return;
   }
 
   if (t.isClassProperty(node)) {
-    addBreakPoint(state, startLocation);
+    return addBreakPoint(state, startLocation);
   }
 
   if (t.isFunction(node)) {
     const { line, column } = node.loc.end;
     addBreakPoint(state, startLocation);
-    addPoint(state, { line, column: column - 1 });
+    return addStopPoint(state, { line, column: column - 1 });
   }
 
   if (t.isProgram(node)) {
     const lastStatement = node.body[node.body.length - 1];
     if (lastStatement) {
-      addPoint(state, lastStatement.loc.end);
+      return addStopPoint(state, lastStatement.loc.end);
     }
+  }
+
+  if (!hasPoint(state, startLocation) && inStepExpression(parentNode)) {
+    return addEmptyPoint(state, startLocation);
   }
 }
 
-function formatNode(location, types) {
-  return { location, types };
+function hasPoint(state, { line, column }) {
+  return state[line] && state[line][column];
 }
 
-function addPoint(state, location, types = { breakpoint: true, stepOver: true }) {
-  state.push(formatNode(location, types));
+function addPoint(state, { line, column }, types) {
+  if (!state[line]) {
+    state[line] = {};
+  }
+  state[line][column] = types;
+  return state;
+}
+
+function addStopPoint(state, location) {
+  return addPoint(state, location, { break: true, step: true });
 }
 
 function addEmptyPoint(state, location) {
-  addPoint(state, location, { breakpoint: false, stepOver: false });
+  return addPoint(state, location, {});
 }
 
 function addBreakPoint(state, location) {
-  addPoint(state, location, { breakpoint: true, stepOver: false });
+  return addPoint(state, location, { break: true });
 }
 
 /***/ }),
@@ -21392,44 +21399,6 @@ function mapOriginalExpression(expression, mappings) {
 
   return (0, _generator2.default)(ast).code;
 }
-
-/***/ }),
-
-/***/ 3624:
-/***/ (function(module, exports, __webpack_require__) {
-
-var baseIteratee = __webpack_require__(814),
-    baseUniq = __webpack_require__(562);
-
-/**
- * This method is like `_.uniq` except that it accepts `iteratee` which is
- * invoked for each element in `array` to generate the criterion by which
- * uniqueness is computed. The order of result values is determined by the
- * order they occur in the array. The iteratee is invoked with one argument:
- * (value).
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Array
- * @param {Array} array The array to inspect.
- * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
- * @returns {Array} Returns the new duplicate free array.
- * @example
- *
- * _.uniqBy([2.1, 1.2, 2.3], Math.floor);
- * // => [2.1, 1.2]
- *
- * // The `_.property` iteratee shorthand.
- * _.uniqBy([{ 'x': 1 }, { 'x': 2 }, { 'x': 1 }], 'x');
- * // => [{ 'x': 1 }, { 'x': 2 }]
- */
-function uniqBy(array, iteratee) {
-  return (array && array.length) ? baseUniq(array, baseIteratee(iteratee, 2)) : [];
-}
-
-module.exports = uniqBy;
-
 
 /***/ }),
 
