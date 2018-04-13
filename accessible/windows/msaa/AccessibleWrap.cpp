@@ -1217,16 +1217,6 @@ AccessibleWrap::FireWinEvent(Accessible* aTarget, uint32_t aEventType)
 
   // Fire MSAA event for client area window.
   ::NotifyWinEvent(winEvent, hwnd, OBJID_CLIENT, childID);
-
-  // JAWS announces collapsed combobox navigation based on focus events.
-  if (aEventType == nsIAccessibleEvent::EVENT_SELECTION &&
-      Compatibility::IsJAWS()) {
-    roles::Role role = aTarget->IsProxy() ? aTarget->Proxy()->Role() :
-      aTarget->Role();
-    if (role == roles::COMBOBOX_OPTION) {
-      ::NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childID);
-    }
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
