@@ -10,6 +10,7 @@ import mozilla.components.browser.domains.DomainAutoCompleteProvider.Domain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -73,23 +74,23 @@ class DomainAutoCompleteProviderTest {
     @Test
     fun testAutocompletionWithCustomDomains() {
         val domains = listOf("facebook.com", "google.com", "mozilla.org")
-        val customDomains = listOf("gap.com", "fanfiction.com", "mobile.de")
+        val customDomains = listOf("gap.com", "www.fanfiction.com", "https://mobile.de")
 
         val provider = DomainAutoCompleteProvider()
         provider.initialize(RuntimeEnvironment.application, true, true, false)
         provider.onDomainsLoaded(domains, customDomains)
 
-        assertCompletion(provider, "f", AutocompleteSource.CUSTOM_LIST, customDomains.size, "fanfiction.com")
-        assertCompletion(provider, "fa", AutocompleteSource.CUSTOM_LIST, customDomains.size, "fanfiction.com")
+        assertCompletion(provider, "f", AutocompleteSource.CUSTOM_LIST, customDomains.size, "fanfiction.com", hasWww = true)
+        assertCompletion(provider, "fa", AutocompleteSource.CUSTOM_LIST, customDomains.size, "fanfiction.com", hasWww = true)
         assertCompletion(provider, "fac", AutocompleteSource.DEFAULT_LIST, domains.size, "facebook.com")
 
         assertCompletion(provider, "g", AutocompleteSource.CUSTOM_LIST, customDomains.size, "gap.com")
         assertCompletion(provider, "go", AutocompleteSource.DEFAULT_LIST, domains.size, "google.com")
         assertCompletion(provider, "ga", AutocompleteSource.CUSTOM_LIST, customDomains.size, "gap.com")
 
-        assertCompletion(provider, "m", AutocompleteSource.CUSTOM_LIST, customDomains.size, "mobile.de")
-        assertCompletion(provider, "mo", AutocompleteSource.CUSTOM_LIST, customDomains.size, "mobile.de")
-        assertCompletion(provider, "mob", AutocompleteSource.CUSTOM_LIST, customDomains.size, "mobile.de")
+        assertCompletion(provider, "m", AutocompleteSource.CUSTOM_LIST, customDomains.size, "mobile.de", protocol = "https://")
+        assertCompletion(provider, "mo", AutocompleteSource.CUSTOM_LIST, customDomains.size, "mobile.de", protocol = "https://")
+        assertCompletion(provider, "mob", AutocompleteSource.CUSTOM_LIST, customDomains.size, "mobile.de", protocol = "https://")
         assertCompletion(provider, "moz", AutocompleteSource.DEFAULT_LIST, domains.size, "mozilla.org")
     }
 
@@ -104,11 +105,16 @@ class DomainAutoCompleteProviderTest {
         text: String,
         domainSource: String,
         sourceSize: Int,
-        completion: String
+        completion: String,
+        protocol: String = "http://",
+        hasWww: Boolean = false
     ) {
-        val resultCallback = { result: String, source: String, totalItems: Int ->
+        val resultCallback = { result: String, domain: Domain?, source: String, totalItems: Int ->
             assertFalse(result.isEmpty())
+
             assertEquals(completion, result)
+            assertEquals(protocol, domain?.protocol)
+            assertEquals(hasWww, domain?.hasWww)
             assertEquals(domainSource, source)
             assertEquals(sourceSize, totalItems)
         }
@@ -116,8 +122,9 @@ class DomainAutoCompleteProviderTest {
     }
 
     private fun assertNoCompletion(provider: DomainAutoCompleteProvider, text: String) {
-        val resultCallback = { result: String, source: String, totalItems: Int ->
+        val resultCallback = { result: String, domain: Domain?, source: String, totalItems: Int ->
             assertTrue(result.isEmpty())
+            assertNull(domain)
             assertTrue(source.isEmpty())
             assertEquals(0, totalItems)
         }

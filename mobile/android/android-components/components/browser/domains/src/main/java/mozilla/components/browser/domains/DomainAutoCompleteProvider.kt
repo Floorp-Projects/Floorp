@@ -12,7 +12,7 @@ import kotlinx.coroutines.experimental.launch
 import mozilla.components.browser.domains.DomainAutoCompleteProvider.Domain
 import java.util.Locale
 
-typealias ResultCallback = (String, String, Int) -> Unit
+typealias ResultCallback = (String, Domain?, String, Int) -> Unit
 
 /**
  * Provides autocomplete functionality for domains, based on a provided list
@@ -49,8 +49,8 @@ class DomainAutoCompleteProvider {
         }
     }
 
-    private var customDomains = emptyList<String>()
-    private var shippedDomains = emptyList<String>()
+    private var customDomains = emptyList<Domain>()
+    private var shippedDomains = emptyList<Domain>()
     private var useCustomDomains = false
     private var useShippedDomains = true
 
@@ -69,24 +69,26 @@ class DomainAutoCompleteProvider {
         val searchText = rawText.toLowerCase(Locale.US)
 
         if (useCustomDomains) {
-            val autocomplete = tryToAutocomplete(searchText, customDomains)
-            if (autocomplete != null) {
+            val result = tryToAutocomplete(searchText, customDomains)
+            if (result != null) {
+                val (autocomplete, domain) = result
                 val resultText = getResultText(rawText, autocomplete)
-                resultCallback(resultText, AutocompleteSource.CUSTOM_LIST, customDomains.size)
+                resultCallback(resultText, domain, AutocompleteSource.CUSTOM_LIST, customDomains.size)
                 return
             }
         }
 
         if (useShippedDomains) {
-            val autocomplete = tryToAutocomplete(searchText, shippedDomains)
-            if (autocomplete != null) {
+            val result = tryToAutocomplete(searchText, shippedDomains)
+            if (result != null) {
+                val (autocomplete, domain) = result
                 val resultText = getResultText(rawText, autocomplete)
-                resultCallback(resultText, AutocompleteSource.DEFAULT_LIST, shippedDomains.size)
+                resultCallback(resultText, domain, AutocompleteSource.DEFAULT_LIST, shippedDomains.size)
                 return
             }
         }
 
-        resultCallback("", "", 0)
+        resultCallback("", null, "", 0)
     }
 
     /**
@@ -121,20 +123,20 @@ class DomainAutoCompleteProvider {
     }
 
     internal fun onDomainsLoaded(domains: List<String>, customDomains: List<String>) {
-        this.shippedDomains = domains
-        this.customDomains = customDomains
+        this.shippedDomains = domains.map { Domain.create(it) }
+        this.customDomains = customDomains.map { Domain.create(it) }
     }
 
     @Suppress("ReturnCount")
-    private fun tryToAutocomplete(searchText: String, domains: List<String>): String? {
+    private fun tryToAutocomplete(searchText: String, domains: List<Domain>): Pair<String, Domain>? {
         domains.forEach {
-            val wwwDomain = "www.$it"
+            val wwwDomain = "www.${it.host}"
             if (wwwDomain.startsWith(searchText)) {
-                return wwwDomain
+                return Pair(wwwDomain, it)
             }
 
-            if (it.startsWith(searchText)) {
-                return it
+            if (it.host.startsWith(searchText)) {
+                return Pair(it.host, it)
             }
         }
 
