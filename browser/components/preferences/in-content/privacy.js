@@ -621,8 +621,6 @@ var gPrivacyPane = {
     document.getElementById("keepCookiesUntil").value = this.readKeepCookiesUntil();
     this.readAcceptCookies();
 
-    let clearDataSettings = document.getElementById("clearDataSettings");
-
     if (document.getElementById("historyMode").value == "custom") {
       let disabled = Preferences.get("browser.privatebrowsing.autostart").value;
       this.dependentControls.forEach(function(aElement) {
@@ -640,8 +638,6 @@ var gPrivacyPane = {
         control.disabled = disabled || preference.locked;
       });
 
-      clearDataSettings.removeAttribute("hidden");
-
       // adjust the checked state of the sanitizeOnShutdown checkbox
       document.getElementById("alwaysClear").checked = disabled ? false :
         Preferences.get("privacy.sanitize.sanitizeOnShutdown").value;
@@ -656,8 +652,6 @@ var gPrivacyPane = {
         // adjust the Settings button for sanitizeOnShutdown
         this._updateSanitizeSettingsButton();
       }
-    } else {
-      clearDataSettings.setAttribute("hidden", "true");
     }
   },
 

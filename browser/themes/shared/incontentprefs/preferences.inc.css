@@ -382,12 +382,6 @@ button > hbox > label {
   margin-top: 4px;
 }
 
-#historyButtons {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
 #acceptCookies {
   margin-top: 1.5em;
 }
