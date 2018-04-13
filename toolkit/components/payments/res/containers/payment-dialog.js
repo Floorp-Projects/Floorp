@@ -2,15 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global PaymentStateSubscriberMixin, paymentRequest */
+import "../vendor/custom-elements.min.js";
 
-"use strict";
+import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
+
+import "../components/currency-amount.js";
+import "./address-picker.js";
+import "./basic-card-form.js";
+import "./order-details.js";
+import "./payment-method-picker.js";
+import "./shipping-option-picker.js";
+
+/* global paymentRequest */
 
 /**
  * <payment-dialog></payment-dialog>
  */
 
-class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
+export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
   constructor() {
     super();
     this._template = document.getElementById("payment-dialog-template");
