@@ -535,7 +535,7 @@ HeapCheckTracerBase::onChild(const JS::GCCellPtr& thing)
     else
         zone = cell->asTenured().zone();
 
-    if (zone->group() && zone->group()->usedByHelperThread())
+    if (zone->usedByHelperThread())
         return;
 
     WorkItem item(thing, contextName(), parentIndex);
