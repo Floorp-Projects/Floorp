@@ -674,22 +674,22 @@ EnsureParserCreatedClasses(JSContext* cx, ParseTaskKind kind)
 
 class MOZ_RAII AutoSetCreatedForHelperThread
 {
-    ZoneGroup* group;
+    Zone* zone;
 
   public:
     explicit AutoSetCreatedForHelperThread(JSObject* global)
-      : group(global->zone()->group())
+      : zone(global->zone())
     {
-        group->setCreatedForHelperThread();
+        zone->setCreatedForHelperThread();
     }
 
     void forget() {
-        group = nullptr;
+        zone = nullptr;
     }
 
     ~AutoSetCreatedForHelperThread() {
-        if (group)
-            group->clearUsedByHelperThread();
+        if (zone)
+            zone->clearUsedByHelperThread();
     }
 };
 
@@ -705,7 +705,7 @@ CreateGlobalForOffThreadParse(JSContext* cx, const gc::AutoSuppressGC& nogc)
 
     creationOptions.setInvisibleToDebugger(true)
                    .setMergeable(true)
-                   .setNewZoneInNewZoneGroup();
+                   .setNewZone();
 
     // Don't falsely inherit the host's global trace hook.
     creationOptions.setTrace(nullptr);
@@ -1927,10 +1927,10 @@ HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
 
         JSContext* cx = TlsContext.get();
 
-        ZoneGroup* zoneGroup = task->parseGlobal->zoneFromAnyThread()->group();
-        zoneGroup->setHelperThreadOwnerContext(cx);
+        Zone* zone = task->parseGlobal->zoneFromAnyThread();
+        zone->setHelperThreadOwnerContext(cx);
         auto resetOwnerContext = mozilla::MakeScopeExit([&] {
-            zoneGroup->setHelperThreadOwnerContext(nullptr);
+            zone->setHelperThreadOwnerContext(nullptr);
         });
 
         AutoCompartment ac(cx, task->parseGlobal);

@@ -9,6 +9,8 @@
 
 #include "threading/Thread.h"
 
+namespace JS { struct Zone; }
+
 namespace js {
 
 // This file provides classes for encapsulating pieces of data with a check
@@ -137,8 +139,6 @@ class ProtectedDataNoCheckArgs : public ProtectedData<Check, T>
     ThisType& operator=(const U& p) { this->ref() = p; return *this; }
 };
 
-class ZoneGroup;
-
 // Intermediate class for protected data whose checks take a ZoneGroup constructor argument.
 template <typename Check, typename T>
 class ProtectedDataZoneGroupArg : public ProtectedData<Check, T>
@@ -147,8 +147,8 @@ class ProtectedDataZoneGroupArg : public ProtectedData<Check, T>
 
   public:
     template <typename... Args>
-    explicit ProtectedDataZoneGroupArg(ZoneGroup* group, Args&&... args)
-      : ProtectedData<Check, T>(Check(group), mozilla::Forward<Args>(args)...)
+    explicit ProtectedDataZoneGroupArg(JS::Zone* zone, Args&&... args)
+      : ProtectedData<Check, T>(Check(zone), mozilla::Forward<Args>(args)...)
     {}
 
     template <typename U>
@@ -223,14 +223,14 @@ template <AllowedHelperThread Helper>
 class CheckZoneGroup
 {
 #ifdef JS_HAS_PROTECTED_DATA_CHECKS
-    ZoneGroup* group;
+    JS::Zone* zone;
 
   public:
-    explicit CheckZoneGroup(ZoneGroup* group) : group(group) {}
+    explicit CheckZoneGroup(JS::Zone* zone) : zone(zone) {}
     void check() const;
 #else
   public:
-    explicit CheckZoneGroup(ZoneGroup* group) {}
+    explicit CheckZoneGroup(JS::Zone* zone) {}
 #endif
 };
 
