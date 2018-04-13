@@ -20,6 +20,7 @@
 #include "nsNetCID.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/TextUtils.h"
 #include <algorithm>
 #include "nsContentUtils.h"
 #include "prprf.h"
@@ -913,7 +914,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec,
     if (SegmentIs(buf, mScheme, "file")) {
         char* path = &buf[mPath.mPos];
         if (mPath.mLen >= 3 && path[0] == '/'
-            && nsCRT::IsAsciiAlpha(path[1])
+            && IsAsciiAlpha(path[1])
             && path[2] == '|') {
             buf[mPath.mPos + 2] = ':';
         }

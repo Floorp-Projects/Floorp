@@ -10,6 +10,7 @@
 using mozilla::AsciiAlphanumericToNumber;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiAlphanumeric;
+using mozilla::IsAsciiDigit;
 using mozilla::IsAsciiLowercaseAlpha;
 using mozilla::IsAsciiUppercaseAlpha;
 
@@ -606,6 +607,103 @@ TestAsciiAlphanumericToNumber()
   static_assert(AsciiAlphanumericToNumber(U'z') == 35, "U'z' converts to 35");
 }
 
+static void
+TestIsAsciiDigit()
+{
+  // char
+
+  static_assert(!IsAsciiDigit('/'), "'/' isn't an ASCII digit");
+  static_assert('/' == 0x2F, "'/' has value 0x2F");
+
+  static_assert('0' == 0x30, "'0' has value 0x30");
+  static_assert(IsAsciiDigit('0'), "'0' is an ASCII digit");
+  static_assert(IsAsciiDigit('1'), "'1' is an ASCII digit");
+  static_assert(IsAsciiDigit('5'), "'5' is an ASCII digit");
+  static_assert(IsAsciiDigit('8'), "'8' is an ASCII digit");
+  static_assert(IsAsciiDigit('9'), "'9' is an ASCII digit");
+
+  static_assert('9' == 0x39, "'9' has value 0x39");
+  static_assert(':' == 0x3A, "':' has value 0x3A");
+  static_assert(!IsAsciiDigit(':'), "':' isn't an ASCII digit");
+
+  static_assert(!IsAsciiDigit('@'), "'@' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('A'), "'A' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('B'), "'B' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('M'), "'M' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('Y'), "'Y' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('Z'), "'Z' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('['), "'[' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('`'), "'`' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('a'), "'a' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('b'), "'b' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('m'), "'m' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('y'), "'y' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('z'), "'z' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit('{'), "'{' isn't an ASCII digit");
+
+  // char16_t
+
+  static_assert(!IsAsciiDigit(u'/'), "u'/' isn't an ASCII digit");
+  static_assert(u'/' == 0x2F, "u'/' has value 0x2F");
+
+  static_assert(u'0' == 0x30, "u'0' has value 0x30");
+  static_assert(IsAsciiDigit(u'0'), "u'0' is an ASCII digit");
+  static_assert(IsAsciiDigit(u'1'), "u'1' is an ASCII digit");
+  static_assert(IsAsciiDigit(u'5'), "u'5' is an ASCII digit");
+  static_assert(IsAsciiDigit(u'8'), "u'8' is an ASCII digit");
+  static_assert(IsAsciiDigit(u'9'), "u'9' is an ASCII digit");
+
+  static_assert(u'9' == 0x39, "u'9' has value 0x39");
+  static_assert(u':' == 0x3A, "u':' has value 0x3A");
+  static_assert(!IsAsciiDigit(u':'), "u':' isn't an ASCII digit");
+
+  static_assert(!IsAsciiDigit(u'@'), "u'@' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'A'), "u'A' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'B'), "u'B' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'M'), "u'M' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'Y'), "u'Y' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'Z'), "u'Z' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'['), "u'[' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'`'), "u'`' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'a'), "u'a' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'b'), "u'b' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'm'), "u'm' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'y'), "u'y' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'z'), "u'z' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(u'{'), "u'{' isn't an ASCII digit");
+
+  // char32_t
+
+  static_assert(!IsAsciiDigit(U'/'), "U'/' isn't an ASCII digit");
+  static_assert(U'/' == 0x2F, "U'/' has value 0x2F");
+
+  static_assert(U'0' == 0x30, "U'0' has value 0x30");
+  static_assert(IsAsciiDigit(U'0'), "U'0' is an ASCII digit");
+  static_assert(IsAsciiDigit(U'1'), "U'1' is an ASCII digit");
+  static_assert(IsAsciiDigit(U'5'), "U'5' is an ASCII digit");
+  static_assert(IsAsciiDigit(U'8'), "U'8' is an ASCII digit");
+  static_assert(IsAsciiDigit(U'9'), "U'9' is an ASCII digit");
+
+  static_assert(U'9' == 0x39, "U'9' has value 0x39");
+  static_assert(U':' == 0x3A, "U':' has value 0x3A");
+  static_assert(!IsAsciiDigit(U':'), "U':' isn't an ASCII digit");
+
+  static_assert(!IsAsciiDigit(U'@'), "U'@' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'A'), "U'A' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'B'), "U'B' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'M'), "U'M' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'Y'), "U'Y' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'Z'), "U'Z' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'['), "U'[' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'`'), "U'`' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'a'), "U'a' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'b'), "U'b' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'm'), "U'm' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'y'), "U'y' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'z'), "U'z' isn't an ASCII digit");
+  static_assert(!IsAsciiDigit(U'{'), "U'{' isn't an ASCII digit");
+}
+
 int
 main()
 {
@@ -614,4 +712,5 @@ main()
   TestIsAsciiLowercaseAlpha();
   TestIsAsciiAlphanumeric();
   TestAsciiAlphanumericToNumber();
+  TestIsAsciiDigit();
 }
