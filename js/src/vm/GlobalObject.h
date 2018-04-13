@@ -222,21 +222,6 @@ class GlobalObject : public NativeObject
         return !value.isUndefined();
     }
 
-    /*
-     * Using a Handle<GlobalObject*> as a Handle<Object*> is always safe as
-     * GlobalObject derives JSObject. However, with C++'s semantics, Handle<T>
-     * is not related to Handle<S>, independent of how S and T are related.
-     * Further, Handle stores an indirect pointer and, again because of C++'s
-     * semantics, T** is not related to S**, independent of how S and T are
-     * related. Since we know that this specific case is safe, we provide a
-     * manual upcast operation here to do the reinterpret_cast in a known-safe
-     * manner.
-     */
-    static HandleObject upcast(Handle<GlobalObject*> global) {
-        return HandleObject::fromMarkedLocation(
-                reinterpret_cast<JSObject * const*>(global.address()));
-    }
-
   private:
     bool arrayClassInitialized() const {
         return classIsInitialized(JSProto_Array);
