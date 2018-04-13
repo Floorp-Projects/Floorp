@@ -80,14 +80,14 @@ restart-later = Restart Later
 
 search-results-header = Search Results
 
-# `<span></span>` will be replaced by the search term.
-search-results-sorry-message =
+# `<span data-l10n-name="query"></span>` will be replaced by the search term.
+search-results-empty-message =
     { PLATFORM() ->
-        [windows] Sorry! There are no results in Options for “<span></span>”.
-       *[other] Sorry! There are no results in Preferences for “<span></span>”.
+        [windows] Sorry! There are no results in Options for “<span data-l10n-name="query"></span>”.
+       *[other] Sorry! There are no results in Preferences for “<span data-l10n-name="query"></span>”.
     }
 
-search-results-need-help = Need help? Visit <a>{ -brand-short-name } Support</a>
+search-results-help-link = Need help? Visit <a data-l10n-name="url">{ -brand-short-name } Support</a>
 
 ## General Section
 
@@ -267,7 +267,7 @@ update-application-title = { -brand-short-name } Updates
 
 update-application-description = Keep { -brand-short-name } up to date for the best performance, stability, and security.
 
-update-application-info = Version { $version } <a>What's new</a>
+update-application-version = Version { $version } <a data-l10n-name="learn-more">What’s new</a>
 
 update-history =
     .label = Show Update History…
@@ -315,7 +315,7 @@ performance-limit-content-process-option = Content process limit
     .accesskey = l
 
 performance-limit-content-process-enabled-desc = Additional content processes can improve performance when using multiple tabs, but will also use more memory.
-performance-limit-content-process-disabled-desc = Modifying the number of content processes is only possible with multiprocess { -brand-short-name }. <a>Learn how to check if multiprocess is enabled</a>
+performance-limit-content-process-blocked-desc = Modifying the number of content processes is only possible with multiprocess { -brand-short-name }. <a data-l10n-name="learn-more">Learn how to check if multiprocess is enabled</a>
 
 # Variables:
 #   $num - default value of the `dom.ipc.processCount` pref.
@@ -698,7 +698,7 @@ addressbar-suggestions-settings = Change preferences for search engine suggestio
 
 tracking-header = Tracking Protection
 
-tracking-description = Tracking Protection blocks online trackers that collect your browsing data across multiple websites. <a>Learn more about Tracking Protection and your privacy</a>
+tracking-desc = Tracking Protection blocks online trackers that collect your browsing data across multiple websites. <a data-l10n-name="learn-more">Learn more about Tracking Protection and your privacy</a>
 
 tracking-mode-label = Use Tracking Protection to block known trackers
 

@@ -18,12 +18,8 @@ function debug(aMsg) {
 }
 
 class GeckoViewTrackingProtection extends GeckoViewModule {
-  init() {
-    debug("init");
-  }
-
-  register() {
-    debug("register");
+  onEnable() {
+    debug("onEnable");
 
     const flags = Ci.nsIWebProgress.NOTIFY_SECURITY;
     this.progressFilter =

@@ -1811,8 +1811,9 @@
 
           let popup = this.parentNode.parentNode;
           let titleLooksLikeUrl = false;
-          let displayUrl;
+          let displayUrl = originalUrl;
           let emphasiseUrl = true;
+          let trimDisplayUrl = true;
 
           let type = this.getAttribute("originaltype");
           let types = new Set(type.split(/\s+/));
@@ -1829,9 +1830,7 @@
             // Treat autofills as visiturl actions.
             action = {
               type: "visiturl",
-              params: {
-                url: this.getAttribute("title"),
-              },
+              params: { url: title },
             };
           }
 
@@ -1843,16 +1842,21 @@
             action = action || this._parseActionUrl(originalUrl);
             this.setAttribute("actiontype", action.type);
 
-            if (action.type == "switchtab") {
+            switch (action.type) {
+            case "switchtab": {
               this.classList.add("overridable-action");
-              displayUrl = this._unescapeUrl(action.params.url);
+              displayUrl = action.params.url;
               let desc = this._stringBundle.GetStringFromName("switchToTab2");
               this._setUpDescription(this._actionText, desc, true);
-            } else if (action.type == "remotetab") {
-              displayUrl = this._unescapeUrl(action.params.url);
+              break;
+            }
+            case "remotetab": {
+              displayUrl = action.params.url;
               let desc = action.params.deviceName;
               this._setUpDescription(this._actionText, desc, true);
-            } else if (action.type == "searchengine") {
+              break;
+            }
+            case "searchengine": {
               emphasiseUrl = false;
 
               // The order here is not localizable, we default to appending
@@ -1914,26 +1918,31 @@
               if (!action.params.alias && !initialTypes.has("favicon")) {
                 this.removeAttribute("image");
               }
-            } else if (action.type == "visiturl") {
+              break;
+            }
+            case "visiturl": {
               emphasiseUrl = false;
-              displayUrl = this._unescapeUrl(action.params.url);
-              title = displayUrl;
+              displayUrl = action.params.url;
               titleLooksLikeUrl = true;
               let visitStr = this._stringBundle.GetStringFromName("visit");
               this._setUpDescription(this._actionText, visitStr, true);
-            } else if (action.type == "extension") {
+              break;
+            }
+            case "extension": {
               let content = action.params.content;
               displayUrl = content;
+              trimDisplayUrl = false;
               this._setUpDescription(this._actionText, content, true);
+              break;
+            }
             }
           }
 
-          if (!displayUrl) {
+          if (trimDisplayUrl) {
             let input = popup.input;
-            let url = typeof(input.trimValue) == "function" ?
-                      input.trimValue(originalUrl) :
-                      originalUrl;
-            displayUrl = this._unescapeUrl(url);
+            if (typeof input.trimValue == "function")
+              displayUrl = input.trimValue(displayUrl);
+            displayUrl = this._unescapeUrl(displayUrl);
           }
           // For performance reasons we may want to limit the displayUrl size.
           if (popup.textRunsMaxLen) {
@@ -1943,7 +1952,6 @@
 
           // Show the domain as the title if we don't have a title.
           if (!title) {
-            title = displayUrl;
             titleLooksLikeUrl = true;
             try {
               let uri = Services.io.newURI(originalUrl);
@@ -1951,6 +1959,8 @@
               if (uri.host)
                 title = uri.host;
             } catch (e) {}
+            if (!title)
+              title = displayUrl;
           }
 
           this._tags.setAttribute("empty", "true");

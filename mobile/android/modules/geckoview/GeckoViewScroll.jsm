@@ -18,13 +18,8 @@ function debug(aMsg) {
 }
 
 class GeckoViewScroll extends GeckoViewModule {
-  init() {
-    debug("init");
-  }
-
-  register() {
-    debug("register");
-
+  onEnable() {
+    debug("onEnable");
     this.registerContent("chrome://geckoview/content/GeckoViewScrollContent.js");
   }
 }

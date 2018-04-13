@@ -17,7 +17,198 @@
   font-size: 120%;
 }
 
+.perf-button-image {
+  vertical-align: text-top;
+  padding-inline-end: 4px;
+}
+
 .perf-additional-message {
   margin: 10px;
   margin-top: 65px;
+}
+
+.perf > * {
+  max-width: 440px;
+}
+
+.perf-description {
+  line-height: 1.4;
+}
+
+.perf-external-link {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--blue-60);
+  text-decoration: underline;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Settings */
+
+.perf-settings {
+  width: 100%;
+  margin: 50px 0 25px;
+}
+
+.perf-settings-title {
+  padding: 5px 10px;
+  margin-bottom: 15px;
+  background-color: var(--grey-10);
+  border: var(--grey-30) 1px solid;
+  font-size: 11px;
+  font-weight: normal;
+}
+
+.perf-settings-row {
+  display: flex;
+  overflow: hidden;
+  line-height: 1.8;
+}
+
+.perf-settings-controls > .tree {
+  height: 100%;
+}
+
+.perf-settings-row.focused {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.perf-settings-label {
+  height: 30px;
+  min-width: 110px;
+}
+
+.perf-settings-value {
+  display: flex;
+  flex: 1;
+}
+
+.perf-settings-range-input {
+  flex: 1;
+}
+
+.perf-settings-range-input-el {
+  width: 100%;
+}
+
+.perf-settings-range-value {
+  min-width: 70px;
+  text-align: end;
+}
+
+.perf-settings-notches {
+  height: 14px;
+  margin: 5px 0 10px;
+  margin-inline-start: 0.7em;
+  display: flex;
+}
+
+.perf-settings-notch {
+  margin-right: 1px;
+  flex: 1;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 2px;
+}
+
+.perf-settings-notch-normal.perf-settings-notch-active {
+  border-color: hsl(90, 90%, 40%);
+  background-color: hsla(90, 90%, 40%, 0.5);
+}
+
+.perf-settings-notch-warning.perf-settings-notch-active {
+  border-color: hsl(45, 100%, 49%);
+  background-color: hsla(45, 100%, 49%, 0.5);
+}
+
+.perf-settings-notch-critical.perf-settings-notch-active {
+  border-color: hsl(0, 90%, 40%);
+  background-color: hsla(0, 90%, 40%, 0.5);
+}
+
+.perf-settings-text-input {
+  width: 100%;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.perf-settings-text-label {
+  flex: 1;
+}
+
+.perf-settings-details-contents {
+  overflow: hidden;
+}
+
+.perf-settings-details-contents-slider {
+  padding: 10px;
+  margin: 0 0 18px;
+  border: var(--grey-20) 1px solid;
+  background-color: var(--grey-10);
+  opacity: 0;
+  transform: translateY(-100px);
+  transition-duration: 250ms;
+  transition-timing-function: cubic-bezier(.07,.95,0,1);
+  transition-property: transform, opacity;
+}
+
+.perf-settings-details[open] .perf-settings-details-contents-slider {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.perf-settings-summary {
+  height: 30px;
+  cursor: default;
+  -moz-user-select: none;
+}
+
+.perf-settings-thread-columns {
+  margin-bottom: 20px;
+  display: flex;
+  line-height: 2;
+}
+
+.perf-settings-thread-column {
+  flex: 1;
+}
+
+.perf-settings-checkbox-label {
+  display: block;
+}
+
+.perf-settings-feature-label {
+  margin: 16px 0;
+  display: flex;
+}
+
+.perf-settings-feature-label {
+  margin: 16px 0;
+  display: flex;
+}
+
+.perf-settings-checkbox {
+  align-self: flex-start;
+}
+
+.perf-settings-feature-name {
+  width: 150px;
+  color: var(--blue-60);
+}
+
+.perf-settings-feature-title {
+  flex: 1;
+}
+
+.perf-settings-feature-name {
+  width: 130px;
+  color: var(--blue-60);
+  line-height: 1.6;
+}
+
+.perf-settings-subtext {
+  font-weight: bold;
 }

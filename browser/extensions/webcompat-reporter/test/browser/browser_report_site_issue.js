@@ -4,7 +4,10 @@ add_task(async function test_opened_page() {
   requestLongerTimeout(2);
 
   // ./head.js sets the value for PREF_WC_REPORTER_ENDPOINT
-  await SpecialPowers.pushPrefEnv({set: [[PREF_WC_REPORTER_ENDPOINT, NEW_ISSUE_PAGE]]});
+  await SpecialPowers.pushPrefEnv({set: [
+    [PREF_WC_REPORTER_ENABLED, true],
+    [PREF_WC_REPORTER_ENDPOINT, NEW_ISSUE_PAGE]
+  ]});
 
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
 
