@@ -11,8 +11,8 @@ import android.util.AttributeSet
 import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 import mozilla.components.engine.EngineView
-import mozilla.components.feature.toolbar.SessionFeature
-import mozilla.components.feature.toolbar.ToolbarFeature
+import mozilla.components.feature.session.SessionFeature
+import mozilla.components.feature.session.ToolbarFeature
 
 class MainActivity : AppCompatActivity() {
     private var sessionFeature : SessionFeature? = null
