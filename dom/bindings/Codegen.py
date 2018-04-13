@@ -5379,14 +5379,17 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 globalObj = GetEntryGlobal()->GetGlobalJSObject();
                 """)
         else:
-            getPromiseGlobal = ""
+            getPromiseGlobal = dedent(
+                """
+                globalObj = JS::CurrentGlobalOrNull(cx);
+                """)
 
         templateBody = fill(
             """
             { // Scope for our GlobalObject, FastErrorResult, JSAutoCompartment,
               // etc.
 
-              JS::Rooted<JSObject*> globalObj(cx, JS::CurrentGlobalOrNull(cx));
+              JS::Rooted<JSObject*> globalObj(cx);
               $*{getPromiseGlobal}
               JSAutoCompartment ac(cx, globalObj);
               GlobalObject promiseGlobal(cx, globalObj);
