@@ -81,6 +81,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     this.fillRule = "";
     this.numInsetPoints = 0;
     this.transformMode = false;
+    this.viewport = {};
 
     this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
       this._buildMarkup.bind(this));
@@ -433,6 +434,26 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       `${style}pointer-events:${pointerEvents};cursor:${cursorType};`);
   }
 
+  /**
+   * Set the absolute pixel offsets which define the current viewport in relation to
+   * the full page size.
+   *
+   * If a padding value is given, inset the viewport by this value. This is used to define
+   * a virtual viewport which ensures some element remains visible even when at the edges
+   * of the actual viewport.
+   *
+   * @param {Number} padding
+   *        Optional. Amount by which to inset the viewport in all directions.
+   */
+  setViewport(padding = 0) {
+    const { pageXOffset, pageYOffset, innerWidth, innerHeight } = this.win;
+    const left = pageXOffset + padding;
+    const right = innerWidth + pageXOffset - padding;
+    const top = pageYOffset + padding;
+    const bottom = innerHeight + pageYOffset - padding;
+    this.viewport = { left, right, top, bottom, padding };
+  }
+
   handleEvent(event, id) {
     // No event handling if the highlighter is hidden
     if (this.areShapesHidden()) {
@@ -481,6 +502,10 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         }
         event.stopPropagation();
         event.preventDefault();
+
+        // Calculate constraints for a virtual viewport which ensures that a dragged
+        // marker remains visible even at the edges of the actual viewport.
+        this.setViewport(BASE_MARKER_SIZE);
         break;
       case "mouseup":
         if (this[_dragging]) {
@@ -495,6 +520,11 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         }
         event.stopPropagation();
         event.preventDefault();
+
+        // Set constraints for mouse position to ensure dragged marker stays in viewport.
+        const { left, right, top, bottom } = this.viewport;
+        pageX = Math.min(Math.max(left, pageX), right);
+        pageY = Math.min(Math.max(top, pageY), bottom);
 
         let { point } = this[_dragging];
         if (this.transformMode) {
