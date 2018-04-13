@@ -15,6 +15,7 @@
 #include "mozilla/dom/FontFaceSetLoadEvent.h"
 #include "mozilla/dom/FontFaceSetLoadEventBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Logging.h"
@@ -205,7 +206,7 @@ void
 FontFaceSet::ParseFontShorthandForMatching(
                             const nsAString& aFont,
                             RefPtr<SharedFontList>& aFamilyList,
-                            uint32_t& aWeight,
+                            FontWeight& aWeight,
                             int32_t& aStretch,
                             uint8_t& aStyle,
                             ErrorResult& aRv)
@@ -219,7 +220,12 @@ FontFaceSet::ParseFontShorthandForMatching(
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
   }
-  aWeight = weight.GetIntValue();
+  if (weight.GetUnit() == eCSSUnit_FontWeight) {
+    aWeight = weight.GetFontWeight();
+  } else {
+    MOZ_ASSERT(weight.GetUnit() == eCSSUnit_Enumerated);
+    aWeight = FontWeight(weight.GetIntValue());
+  }
   aStretch = stretch.GetIntValue();
   aStyle = style.GetIntValue();
 }
@@ -247,7 +253,7 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
                                    ErrorResult& aRv)
 {
   RefPtr<SharedFontList> familyList;
-  uint32_t weight;
+  FontWeight weight;
   int32_t stretch;
   uint8_t italicStyle;
   ParseFontShorthandForMatching(aFont, familyList, weight, stretch, italicStyle,
@@ -972,7 +978,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   nsCSSValue val;
   nsCSSUnit unit;
 
-  uint32_t weight = NS_FONT_WEIGHT_NORMAL;
+  FontWeight weight = FontWeight::Normal();
   int32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
   uint8_t italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
@@ -981,18 +987,19 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   // set up weight
   aFontFace->GetDesc(eCSSFontDesc_Weight, val);
   unit = val.GetUnit();
-  if (unit == eCSSUnit_Integer || unit == eCSSUnit_Enumerated) {
-    weight = val.GetIntValue();
-    if (weight == 0) {
-      weight = NS_FONT_WEIGHT_NORMAL;
-    }
+  if (unit == eCSSUnit_FontWeight) {
+    weight = val.GetFontWeight();
+  } else if (unit == eCSSUnit_Enumerated) {
+    weight = FontWeight(val.GetIntValue());
   } else if (unit == eCSSUnit_Normal) {
-    weight = NS_FONT_WEIGHT_NORMAL;
+    weight = FontWeight::Normal();
   } else {
-    NS_ASSERTION(unit == eCSSUnit_Null,
-                 "@font-face weight has unexpected unit");
+    MOZ_ASSERT(unit == eCSSUnit_Null, "@font-face weight has unexpected unit");
   }
 
+  if (weight == FontWeight(0)) {
+    weight = FontWeight::Normal();
+  }
   // set up stretch
   aFontFace->GetDesc(eCSSFontDesc_Stretch, val);
   unit = val.GetUnit();
@@ -1243,25 +1250,13 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   nsAutoCString fontURI;
   aUserFontEntry->GetFamilyNameAndURIForLogging(familyName, fontURI);
 
-  char weightKeywordBuf[8]; // plenty to sprintf() a uint16_t
-  const char* weightKeyword;
-  const nsCString& weightKeywordString =
-    nsCSSProps::ValueToKeyword(aUserFontEntry->Weight(),
-                               nsCSSProps::kFontWeightKTable);
-  if (weightKeywordString.Length() > 0) {
-    weightKeyword = weightKeywordString.get();
-  } else {
-    SprintfLiteral(weightKeywordBuf, "%u", aUserFontEntry->Weight());
-    weightKeyword = weightKeywordBuf;
-  }
-
   nsPrintfCString message
        ("downloadable font: %s "
-        "(font-family: \"%s\" style:%s weight:%s stretch:%s src index:%d)",
+        "(font-family: \"%s\" style:%s weight:%g stretch:%s src index:%d)",
         aMessage,
         familyName.get(),
         aUserFontEntry->IsItalic() ? "italic" : "normal",
-        weightKeyword,
+        aUserFontEntry->Weight().ToFloat(),
         nsCSSProps::ValueToKeyword(aUserFontEntry->Stretch(),
                                    nsCSSProps::kFontStretchKTable).get(),
         aUserFontEntry->GetSrcIndex());
@@ -1934,7 +1929,7 @@ FontFaceSet::UserFontSet::DoRebuildUserFontSet()
 /* virtual */ already_AddRefed<gfxUserFontEntry>
 FontFaceSet::UserFontSet::CreateUserFontEntry(
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
-                               uint32_t aWeight,
+                               FontWeight aWeight,
                                int32_t aStretch,
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,

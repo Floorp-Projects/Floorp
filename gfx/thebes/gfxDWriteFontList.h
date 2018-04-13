@@ -6,6 +6,7 @@
 #ifndef GFX_DWRITEFONTLIST_H
 #define GFX_DWRITEFONTLIST_H
 
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
 #include "gfxDWriteCommon.h"
 #include "dwrite_3.h"
@@ -46,6 +47,8 @@ class gfxDWriteFontEntry;
 class gfxDWriteFontFamily : public gfxFontFamily
 {
 public:
+    typedef mozilla::FontWeight FontWeight;
+
     /**
      * Constructs a new DWriteFont Family.
      *
@@ -119,7 +122,7 @@ public:
 
         weight = std::max<uint16_t>(100, weight);
         weight = std::min<uint16_t>(900, weight);
-        mWeight = weight;
+        mWeight = FontWeight(weight);
 
         mIsCJK = UNINITIALIZED_VALUE;
     }
@@ -137,7 +140,7 @@ public:
      */
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFont *aFont,
-                              uint16_t aWeight,
+                              FontWeight aWeight,
                               int16_t aStretch,
                               uint8_t aStyle)
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
@@ -164,7 +167,7 @@ public:
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFontFile *aFontFile,
                               IDWriteFontFileStream *aFontFileStream,
-                              uint16_t aWeight,
+                              FontWeight aWeight,
                               int16_t aStretch,
                               uint8_t aStyle)
       : gfxFontEntry(aFaceName), mFont(nullptr),
@@ -401,12 +404,12 @@ public:
     gfxFontFamily* CreateFontFamily(const nsAString& aName) const override;
 
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                          uint16_t aWeight,
+                                          FontWeight aWeight,
                                           int16_t aStretch,
                                           uint8_t aStyle);
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                           uint16_t aWeight,
+                                           FontWeight aWeight,
                                            int16_t aStretch,
                                            uint8_t aStyle,
                                            const uint8_t* aFontData,
