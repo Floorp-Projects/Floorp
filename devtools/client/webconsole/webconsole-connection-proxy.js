@@ -33,7 +33,6 @@ function WebConsoleConnectionProxy(webConsoleFrame, target) {
   this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
   this._onFileActivity = this._onFileActivity.bind(this);
   this._onReflowActivity = this._onReflowActivity.bind(this);
-  this._onServerLogCall = this._onServerLogCall.bind(this);
   this._onTabNavigated = this._onTabNavigated.bind(this);
   this._onTabWillNavigate = this._onTabWillNavigate.bind(this);
   this._onAttachConsole = this._onAttachConsole.bind(this);
@@ -139,7 +138,6 @@ WebConsoleConnectionProxy.prototype = {
     client.addListener("consoleAPICall", this._onConsoleAPICall);
     client.addListener("fileActivity", this._onFileActivity);
     client.addListener("reflowActivity", this._onReflowActivity);
-    client.addListener("serverLogCall", this._onServerLogCall);
     client.addListener("lastPrivateContextExited",
                        this._onLastPrivateContextExited);
 
@@ -417,26 +415,6 @@ WebConsoleConnectionProxy.prototype = {
     }
   },
   /**
-   * The "serverLogCall" message type handler. We redirect any message to
-   * the UI for displaying.
-   *
-   * @private
-   * @param string type
-   *        Message type.
-   * @param object packet
-   *        The message received from the server.
-   */
-  _onServerLogCall: function(type, packet) {
-    if (!this.webConsoleFrame || packet.from != this._consoleActor) {
-      return;
-    }
-    if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
-      // TODO: Implement for new console
-    } else {
-      this.webConsoleFrame.handleConsoleAPICall(packet.message);
-    }
-  },
-  /**
    * The "lastPrivateContextExited" message type handler. When this message is
    * received the Web Console UI is cleared.
    *
@@ -517,7 +495,6 @@ WebConsoleConnectionProxy.prototype = {
     this.client.removeListener("consoleAPICall", this._onConsoleAPICall);
     this.client.removeListener("fileActivity", this._onFileActivity);
     this.client.removeListener("reflowActivity", this._onReflowActivity);
-    this.client.removeListener("serverLogCall", this._onServerLogCall);
     this.client.removeListener("lastPrivateContextExited",
                                this._onLastPrivateContextExited);
     this.webConsoleClient.off("networkEvent", this._onNetworkEvent);
