@@ -49,6 +49,7 @@
 using namespace std;
 
 using mozilla::IsAsciiAlpha;
+using mozilla::IsAsciiDigit;
 
 using JS::AutoCheckCannotGC;
 
@@ -2940,17 +2941,18 @@ StringToInteger(JSContext* cx, CharT* cp, size_t length, IntegerType* result,
   IntegerType i = 0;
   while (cp != end) {
     char16_t c = *cp++;
-    if (c >= '0' && c <= '9')
-      c -= '0';
+    uint8_t digit;
+    if (IsAsciiDigit(c))
+      digit = c - '0';
     else if (base == 16 && c >= 'a' && c <= 'f')
-      c = c - 'a' + 10;
+      digit = c - 'a' + 10;
     else if (base == 16 && c >= 'A' && c <= 'F')
-      c = c - 'A' + 10;
+      digit = c - 'A' + 10;
     else
       return false;
 
     IntegerType ii = i;
-    i = ii * base + sign * c;
+    i = ii * base + sign * digit;
     if (i / base != ii) {
       *overflow = true;
       return false;
