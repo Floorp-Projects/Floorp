@@ -38,7 +38,7 @@ window.gActivityStreamStrings = {
   "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "Sponzorované příběhy ze služby {provider}",
   "prefs_topstories_sponsored_learn_more": "Zjistit více",
-  "prefs_highlights_description": "Výběr stránek, které jste si uložili nebo navštívili",
+  "prefs_highlights_description": "Výběr z uložených nebo navštívených stránek",
   "prefs_snippets_description": "Informace od Mozilly a o Firefoxu",
   "settings_pane_button_label": "Přizpůsobení stránky nového panelu",
   "settings_pane_header": "Předvolby nového panelu",

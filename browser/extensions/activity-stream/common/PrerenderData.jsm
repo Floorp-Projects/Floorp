@@ -57,7 +57,7 @@ class _PrerenderData {
 this.PrerenderData = new _PrerenderData({
   initialPrefs: {
     "migrationExpired": true,
-    "showTopSites": true,
+    "feeds.topsites": true,
     "showSearch": true,
     "topSitesRows": 1,
     "feeds.section.topstories": true,
@@ -73,7 +73,7 @@ this.PrerenderData = new _PrerenderData({
   // will result in users who have modified some of their preferences not being
   // able to get the benefits of prerendering.
   validation: [
-    "showTopSites",
+    "feeds.topsites",
     "showSearch",
     "topSitesRows",
     "enableWideLayout",

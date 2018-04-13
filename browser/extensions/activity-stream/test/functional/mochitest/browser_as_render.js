@@ -13,7 +13,7 @@ test_newtab(function test_render_topsites() {
 
 test_newtab({
   async before({pushPrefs}) {
-    await pushPrefs(["browser.newtabpage.activity-stream.showTopSites", false]);
+    await pushPrefs(["browser.newtabpage.activity-stream.feeds.topsites", false]);
   },
   test: function test_render_no_topsites() {
     let topSites = content.document.querySelector(".top-sites-list");
