@@ -1311,6 +1311,7 @@ this.XPIDatabaseReconcile = {
         manifest = syncLoadManifestFromFile(file, aInstallLocation);
       } catch (err) {
         // If we can no longer read the manifest, it is no longer compatible.
+        aOldAddon.brokenManifest = true;
         aOldAddon.appDisabled = true;
         return aOldAddon;
       }
