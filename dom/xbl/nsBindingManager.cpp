@@ -16,6 +16,7 @@
 #include "nsString.h"
 #include "plstr.h"
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
