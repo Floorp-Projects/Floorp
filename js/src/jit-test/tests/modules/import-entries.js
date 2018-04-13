@@ -1,13 +1,29 @@
 // Test importEntries property
 
+function importEntryEq(a, b)
+{
+    return a['moduleRequest'] === b['moduleRequest'] &&
+           a['importName'] === b['importName'] &&
+           a['localName'] === b['localName'];
+}
+
+function findImportEntry(array, target)
+{
+    for (let i = 0; i < array.length; i++) {
+        if (importEntryEq(array[i], target))
+            return i;
+    }
+    return -1;
+}
+
 function testImportEntries(source, expected) {
     var module = parseModule(source);
-    var actual = module.importEntries;
+    var actual = module.importEntries.slice(0);
     assertEq(actual.length, expected.length);
-    for (var i = 0; i < actual.length; i++) {
-        for (var property in expected[i]) {
-            assertEq(actual[i][property], expected[i][property]);
-        }
+    for (var i = 0; i < expected.length; i++) {
+        let index = findImportEntry(actual, expected[i]);
+        assertEq(index >= 0, true);
+        actual.splice(index, 1);
     }
 }
 
