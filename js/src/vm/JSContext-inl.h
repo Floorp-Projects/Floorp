@@ -139,16 +139,6 @@ class CompartmentChecker
             check(i);
     }
 
-    void check(const ValueArray& arr) {
-        for (size_t i = 0; i < arr.length; i++)
-            check(arr.array[i]);
-    }
-
-    void check(const JSValueArray& arr) {
-        for (size_t i = 0; i < arr.length; i++)
-            check(arr.array[i]);
-    }
-
     void check(const JS::HandleValueArray& arr) {
         for (size_t i = 0; i < arr.length(); i++)
             check(arr[i]);

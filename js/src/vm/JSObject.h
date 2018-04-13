@@ -646,22 +646,6 @@ JSObject::writeBarrierPost(void* cellp, JSObject* prev, JSObject* next)
         buffer->unputCell(static_cast<js::gc::Cell**>(cellp));
 }
 
-class JSValueArray {
-  public:
-    const js::Value* array;
-    size_t length;
-
-    JSValueArray(const js::Value* v, size_t c) : array(v), length(c) {}
-};
-
-class ValueArray {
-  public:
-    js::Value* array;
-    size_t length;
-
-    ValueArray(js::Value* v, size_t c) : array(v), length(c) {}
-};
-
 namespace js {
 
 /*** Standard internal methods ********************************************************************
