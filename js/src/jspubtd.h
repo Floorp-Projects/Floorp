@@ -81,8 +81,6 @@ class JS_PUBLIC_API(JSTracer);
 
 class JSFlatString;
 
-typedef bool                    (*JSInitCallback)(void);
-
 template<typename T> struct JSConstScalarSpec;
 typedef JSConstScalarSpec<double> JSConstDoubleSpec;
 typedef JSConstScalarSpec<int32_t> JSConstIntegerSpec;
@@ -111,7 +109,6 @@ CurrentThreadIsPerformingGC();
 namespace JS {
 
 class JS_PUBLIC_API(AutoEnterCycleCollection);
-class JS_PUBLIC_API(AutoAssertOnBarrier);
 struct JS_PUBLIC_API(PropertyDescriptor);
 
 typedef void (*OffThreadCompileCallback)(void* token, void* callbackData);
