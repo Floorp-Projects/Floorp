@@ -1013,10 +1013,8 @@ AtomicsObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
 }
 
 JSObject*
-js::InitAtomicsClass(JSContext* cx, HandleObject obj)
+js::InitAtomicsClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    MOZ_ASSERT(obj->is<GlobalObject>());
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     return AtomicsObject::initClass(cx, global);
 }
 

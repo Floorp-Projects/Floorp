@@ -688,9 +688,8 @@ SimdObject::resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* 
 }
 
 JSObject*
-js::InitSimdClass(JSContext* cx, HandleObject obj)
+js::InitSimdClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     return GlobalObject::getOrCreateSimdGlobalObject(cx, global);
 }
 

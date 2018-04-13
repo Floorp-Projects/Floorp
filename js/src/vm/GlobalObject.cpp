@@ -54,14 +54,14 @@ extern const Class MathClass;
 extern const Class WebAssemblyClass;
 
 #define DECLARE_PROTOTYPE_CLASS_INIT(name,init,clasp) \
-    extern JSObject* init(JSContext* cx, Handle<JSObject*> obj);
+    extern JSObject* init(JSContext* cx, Handle<GlobalObject*> global);
 JS_FOR_EACH_PROTOTYPE(DECLARE_PROTOTYPE_CLASS_INIT)
 #undef DECLARE_PROTOTYPE_CLASS_INIT
 
 } // namespace js
 
 JSObject*
-js::InitViaClassSpec(JSContext* cx, Handle<JSObject*> obj)
+js::InitViaClassSpec(JSContext* cx, Handle<GlobalObject*> global)
 {
     MOZ_CRASH("InitViaClassSpec() should not be called.");
 }

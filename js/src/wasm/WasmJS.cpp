@@ -3128,11 +3128,10 @@ InitErrorClass(JSContext* cx, HandleObject wasm, const char* name, JSExnType exn
 }
 
 JSObject*
-js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
+js::InitWebAssemblyClass(JSContext* cx, Handle<GlobalObject*> global)
 {
     MOZ_RELEASE_ASSERT(HasSupport(cx));
 
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     MOZ_ASSERT(!global->isStandardClassResolved(JSProto_WebAssembly));
 
     RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));

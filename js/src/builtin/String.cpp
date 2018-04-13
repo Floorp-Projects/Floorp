@@ -3622,12 +3622,8 @@ StringObject::assignInitialShape(JSContext* cx, Handle<StringObject*> obj)
 }
 
 JSObject*
-js::InitStringClass(JSContext* cx, HandleObject obj)
+js::InitStringClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    MOZ_ASSERT(obj->isNative());
-
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
-
     Rooted<JSString*> empty(cx, cx->runtime()->emptyString);
     Rooted<StringObject*> proto(cx, GlobalObject::createBlankPrototype<StringObject>(cx, global));
     if (!proto)
