@@ -143,6 +143,7 @@ TEST_F(ImageAnimationFrameBuffer, FinishUnderBatchAndThreshold)
       EXPECT_FALSE(keepDecoding);
       EXPECT_TRUE(buffer.SizeKnown());
       EXPECT_EQ(size_t(0), buffer.PendingDecode());
+      EXPECT_FALSE(buffer.HasRedecodeError());
     }
 
     EXPECT_FALSE(buffer.MayDiscard());
@@ -220,6 +221,7 @@ TEST_F(ImageAnimationFrameBuffer, FinishMultipleBatchesUnderThreshold)
   EXPECT_TRUE(buffer.SizeKnown());
   EXPECT_EQ(size_t(0), buffer.PendingDecode());
   EXPECT_EQ(size_t(5), frames.Length());
+  EXPECT_FALSE(buffer.HasRedecodeError());
 
   // Finish progressing through the animation.
   for ( ; i < frames.Length(); ++i) {
@@ -330,6 +332,7 @@ TEST_F(ImageAnimationFrameBuffer, MayDiscard)
   EXPECT_TRUE(buffer.SizeKnown());
   EXPECT_EQ(size_t(2), buffer.PendingDecode());
   EXPECT_EQ(size_t(10), frames.Length());
+  EXPECT_FALSE(buffer.HasRedecodeError());
 
   // Use remaining pending room. It shouldn't add new frames, only replace.
   do {
@@ -511,5 +514,161 @@ TEST_F(ImageAnimationFrameBuffer, StartAfterBeginningAndReset)
   EXPECT_EQ(size_t(0), buffer.Displayed());
   EXPECT_EQ(size_t(1), buffer.PendingDecode());
   EXPECT_EQ(size_t(0), buffer.PendingAdvance());
+}
+
+TEST_F(ImageAnimationFrameBuffer, RedecodeMoreFrames)
+{
+  const size_t kThreshold = 5;
+  const size_t kBatch = 2;
+  AnimationFrameBuffer buffer;
+  buffer.Initialize(kThreshold, kBatch, 0);
+  const auto& frames = buffer.Frames();
+
+  // Add frames until we exceed the threshold.
+  bool keepDecoding;
+  bool restartDecoder;
+  size_t i = 0;
+  do {
+    keepDecoding = buffer.Insert(CreateEmptyFrame());
+    EXPECT_TRUE(keepDecoding);
+    if (i > 0) {
+      restartDecoder = buffer.AdvanceTo(i);
+      EXPECT_FALSE(restartDecoder);
+    }
+    ++i;
+  } while (!buffer.MayDiscard());
+
+  // Should have threshold + 1 frames, and still not complete.
+  EXPECT_EQ(size_t(6), frames.Length());
+  EXPECT_FALSE(buffer.SizeKnown());
+
+  // Now we lock in at 6 frames.
+  keepDecoding = buffer.MarkComplete();
+  EXPECT_TRUE(keepDecoding);
+  EXPECT_TRUE(buffer.SizeKnown());
+  EXPECT_FALSE(buffer.HasRedecodeError());
+
+  // Reinsert 6 frames first.
+  i = 0;
+  do {
+    keepDecoding = buffer.Insert(CreateEmptyFrame());
+    EXPECT_TRUE(keepDecoding);
+    restartDecoder = buffer.AdvanceTo(i);
+    EXPECT_FALSE(restartDecoder);
+    ++i;
+  } while (i < 6);
+
+  // We should now encounter an error and shutdown further decodes.
+  keepDecoding = buffer.Insert(CreateEmptyFrame());
+  EXPECT_FALSE(keepDecoding);
+  EXPECT_EQ(size_t(0), buffer.PendingDecode());
+  EXPECT_TRUE(buffer.HasRedecodeError());
+}
+
+TEST_F(ImageAnimationFrameBuffer, RedecodeFewerFrames)
+{
+  const size_t kThreshold = 5;
+  const size_t kBatch = 2;
+  AnimationFrameBuffer buffer;
+  buffer.Initialize(kThreshold, kBatch, 0);
+  const auto& frames = buffer.Frames();
+
+  // Add frames until we exceed the threshold.
+  bool keepDecoding;
+  bool restartDecoder;
+  size_t i = 0;
+  do {
+    keepDecoding = buffer.Insert(CreateEmptyFrame());
+    EXPECT_TRUE(keepDecoding);
+    if (i > 0) {
+      restartDecoder = buffer.AdvanceTo(i);
+      EXPECT_FALSE(restartDecoder);
+    }
+    ++i;
+  } while (!buffer.MayDiscard());
+
+  // Should have threshold + 1 frames, and still not complete.
+  EXPECT_EQ(size_t(6), frames.Length());
+  EXPECT_FALSE(buffer.SizeKnown());
+
+  // Now we lock in at 6 frames.
+  keepDecoding = buffer.MarkComplete();
+  EXPECT_TRUE(keepDecoding);
+  EXPECT_TRUE(buffer.SizeKnown());
+  EXPECT_FALSE(buffer.HasRedecodeError());
+
+  // Reinsert 5 frames before marking complete.
+  i = 0;
+  do {
+    keepDecoding = buffer.Insert(CreateEmptyFrame());
+    EXPECT_TRUE(keepDecoding);
+    restartDecoder = buffer.AdvanceTo(i);
+    EXPECT_FALSE(restartDecoder);
+    ++i;
+  } while (i < 5);
+
+  // We should now encounter an error and shutdown further decodes.
+  keepDecoding = buffer.MarkComplete();
+  EXPECT_FALSE(keepDecoding);
+  EXPECT_EQ(size_t(0), buffer.PendingDecode());
+  EXPECT_TRUE(buffer.HasRedecodeError());
+}
+
+TEST_F(ImageAnimationFrameBuffer, RedecodeFewerFramesAndBehindAdvancing)
+{
+  const size_t kThreshold = 5;
+  const size_t kBatch = 2;
+  AnimationFrameBuffer buffer;
+  buffer.Initialize(kThreshold, kBatch, 0);
+  const auto& frames = buffer.Frames();
+
+  // Add frames until we exceed the threshold.
+  bool keepDecoding;
+  bool restartDecoder;
+  size_t i = 0;
+  do {
+    keepDecoding = buffer.Insert(CreateEmptyFrame());
+    EXPECT_TRUE(keepDecoding);
+    if (i > 0) {
+      restartDecoder = buffer.AdvanceTo(i);
+      EXPECT_FALSE(restartDecoder);
+    }
+    ++i;
+  } while (!buffer.MayDiscard());
+
+  // Should have threshold + 1 frames, and still not complete.
+  EXPECT_EQ(size_t(6), frames.Length());
+  EXPECT_FALSE(buffer.SizeKnown());
+
+  // Now we lock in at 6 frames.
+  keepDecoding = buffer.MarkComplete();
+  EXPECT_TRUE(keepDecoding);
+  EXPECT_TRUE(buffer.SizeKnown());
+  EXPECT_FALSE(buffer.HasRedecodeError());
+
+  // Reinsert frames without advancing until we exhaust our pending space. This
+  // should be less than the current buffer length by definition.
+  i = 0;
+  do {
+    keepDecoding = buffer.Insert(CreateEmptyFrame());
+    ++i;
+  } while (keepDecoding);
+
+  EXPECT_EQ(size_t(2), i);
+
+  // We should now encounter an error and shutdown further decodes.
+  keepDecoding = buffer.MarkComplete();
+  EXPECT_FALSE(keepDecoding);
+  EXPECT_EQ(size_t(0), buffer.PendingDecode());
+  EXPECT_TRUE(buffer.HasRedecodeError());
+
+  // We should however be able to continue advancing to the last decoded frame
+  // without it requesting the decoder to restart.
+  i = 0;
+  do {
+    restartDecoder = buffer.AdvanceTo(i);
+    EXPECT_FALSE(restartDecoder);
+    ++i;
+  } while (i < 2);
 }
 
