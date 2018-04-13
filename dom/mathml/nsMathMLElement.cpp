@@ -9,9 +9,9 @@
 #include "base/compiler_specific.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/FontPropertyTypes.h"
-#include "mozilla/TextUtils.h"
 #include "nsGkAtoms.h"
 #include "nsITableCellLayout.h" // for MAX_COLSPAN / MAX_ROWSPAN
+#include "nsCRT.h"
 #include "nsLayoutStylesheetCache.h"
 #include "nsCSSValue.h"
 #include "nsCSSParser.h"
@@ -421,7 +421,7 @@ nsMathMLElement::ParseNumericValue(const nsString& aString,
     }
     else if (c == '.')
       gotDot = true;
-    else if (!IsAsciiDigit(c)) {
+    else if (!nsCRT::IsAsciiDigit(c)) {
       str.Right(unit, stringLength - i);
       // some authors leave blanks before the unit, but that shouldn't
       // be allowed, so don't CompressWhitespace on 'unit'.

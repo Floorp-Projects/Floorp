@@ -8,7 +8,6 @@
 #include "nsMathMLmpaddedFrame.h"
 #include "nsMathMLElement.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/TextUtils.h"
 #include <algorithm>
 
 //
@@ -161,7 +160,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 
     if (c == '.')
       gotDot = true;
-    else if (!IsAsciiDigit(c)) {
+    else if (!nsCRT::IsAsciiDigit(c)) {
       break;
     }
     number.Append(c);

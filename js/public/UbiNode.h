@@ -757,14 +757,14 @@ class Node {
     template<typename T>
     T* as() const {
         MOZ_ASSERT(isLive());
-        MOZ_ASSERT(this->is<T>());
+        MOZ_ASSERT(is<T>());
         return static_cast<T*>(base()->ptr);
     }
 
     template<typename T>
     T* asOrNull() const {
         MOZ_ASSERT(isLive());
-        return this->is<T>() ? static_cast<T*>(base()->ptr) : nullptr;
+        return is<T>() ? static_cast<T*>(base()->ptr) : nullptr;
     }
 
     // If this node refers to something that can be represented as a JavaScript
