@@ -24,21 +24,21 @@ abstract class EngineSession {
     /**
      * Register an observer that will be notified if this session changes (e.g. new location).
      */
-    fun register(observer: Observer) {
+    fun register(observer: Observer) = synchronized(observers) {
         observers.add(observer)
     }
 
     /**
      * Unregister an observer.
      */
-    fun unregister(observer: Observer) {
+    fun unregister(observer: Observer) = synchronized(observers) {
         observers.remove(observer)
     }
 
     /**
      * Helper method for notifying all observers.
      */
-    protected fun notifyObservers(block: Observer.() -> Unit) {
+    protected fun notifyObservers(block: Observer.() -> Unit) = synchronized(observers) {
         observers.forEach {
             it.block()
         }
@@ -54,7 +54,7 @@ abstract class EngineSession {
      * this session.
      */
     @CallSuper
-    fun close() {
+    fun close() = synchronized(observers) {
         observers.clear()
     }
 }
