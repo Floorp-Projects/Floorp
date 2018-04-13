@@ -163,8 +163,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mTabId(aTabId)
   , mCreatingWindow(false)
   , mCursor(eCursorInvalid)
-  , mCustomCursorHotspotX{}
-  , mCustomCursorHotspotY{}
   , mTabSetsCursor(false)
   , mHasContentOpener(false)
 #ifdef DEBUG

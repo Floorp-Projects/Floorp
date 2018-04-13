@@ -25,9 +25,6 @@ public:
     , mMaxDelayTicks(ceil(aMaxDelayTicks))
     , mCurrentChunk(0)
     // mLastReadChunk is initialized in EnsureBuffer
-    , mLastReadChunk
-  {
-  }
 #ifdef DEBUG
     , mHaveWrittenBlock(false)
 #endif

@@ -25,10 +25,7 @@ NS_IMPL_ISUPPORTS(nsDirIndexParser,
                   nsIStreamListener,
                   nsIDirIndexParser)
 
-nsDirIndexParser::nsDirIndexParser()
-  : mLineStart{}
-  , mHasDescription{ false }
-{
+nsDirIndexParser::nsDirIndexParser() {
 }
 
 nsresult

@@ -126,29 +126,9 @@ nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler,
                                    bool viewingXmlSource)
   : tokenHandler(tokenHandler)
   , encodingDeclarationHandler(nullptr)
-  , lastCR{ false }
-  , stateSave{}
-  , returnStateSave{}
-  , index{}
-  , forceQuirks{ false }
-  , additional{ u'\0' }
-  , entCol{}
-  , firstCharKey{}
-  , lo{}
-  , hi{}
-  , candidate{}
-  , charRefBufMark{}
-  , value{}
-  , seenDigits{ false }
-  , cstart{}
-  , strBufLen{}
   , charRefBuf(jArray<char16_t, int32_t>::newJArray(32))
-  , charRefBufLen{}
   , bmpChar(jArray<char16_t, int32_t>::newJArray(1))
   , astralChar(jArray<char16_t, int32_t>::newJArray(2))
-  , endTagExpectation{ nullptr }
-  , endTagExpectationAsArray{}
-  , endTag{ false }
   , containsHyphen(false)
   , tagName(nullptr)
   , nonInternedTagName(new nsHtml5ElementName())
@@ -160,11 +140,6 @@ nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler,
   , attributes(tokenHandler->HasBuilder() ? new nsHtml5HtmlAttributes(0)
                                           : nullptr)
   , newAttributesEachTime(!tokenHandler->HasBuilder())
-  , shouldSuspend{ false }
-  , confident{ false }
-  , line{}
-  , attributeLine{}
-  , interner{ nullptr }
   , viewingXmlSource(viewingXmlSource)
 {
   MOZ_COUNT_CTOR(nsHtml5Tokenizer);

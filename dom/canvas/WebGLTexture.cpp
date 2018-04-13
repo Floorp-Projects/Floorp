@@ -125,22 +125,21 @@ WebGLTexture::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) {
 }
 
 WebGLTexture::WebGLTexture(WebGLContext* webgl, GLuint tex)
-  : WebGLRefCountedObject(webgl)
-  , mGLName(tex)
-  , mTarget(LOCAL_GL_NONE)
-  , mFaceCount(0)
-  , mMinFilter(LOCAL_GL_NEAREST_MIPMAP_LINEAR)
-  , mMagFilter(LOCAL_GL_LINEAR)
-  , mWrapS(LOCAL_GL_REPEAT)
-  , mWrapT(LOCAL_GL_REPEAT)
-  , mImmutable(false)
-  , mImmutableLevelCount(0)
-  , mBaseMipmapLevel(0)
-  , mMaxMipmapLevel(1000)
-  , mTexCompareMode(LOCAL_GL_NONE)
-  , mIsResolved(false)
-  , mResolved_FakeBlack{ FakeBlackType::None }
-  , mResolved_Swizzle(nullptr)
+    : WebGLRefCountedObject(webgl)
+    , mGLName(tex)
+    , mTarget(LOCAL_GL_NONE)
+    , mFaceCount(0)
+    , mMinFilter(LOCAL_GL_NEAREST_MIPMAP_LINEAR)
+    , mMagFilter(LOCAL_GL_LINEAR)
+    , mWrapS(LOCAL_GL_REPEAT)
+    , mWrapT(LOCAL_GL_REPEAT)
+    , mImmutable(false)
+    , mImmutableLevelCount(0)
+    , mBaseMipmapLevel(0)
+    , mMaxMipmapLevel(1000)
+    , mTexCompareMode(LOCAL_GL_NONE)
+    , mIsResolved(false)
+    , mResolved_Swizzle(nullptr)
 {
     mContext->mTextures.insertBack(this);
 }

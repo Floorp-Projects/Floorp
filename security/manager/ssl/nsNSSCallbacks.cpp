@@ -559,17 +559,16 @@ nsNSSHttpRequestSession::~nsNSSHttpRequestSession()
 }
 
 nsHTTPListener::nsHTTPListener()
-  : mResultCode{ NS_ERROR_NOT_INITIALIZED }
-  , mHttpRequestSucceeded(false)
-  , mHttpResponseCode(0)
-  , mResultData(nullptr)
-  , mResultLen(0)
-  , mLock("nsHTTPListener.mLock")
-  , mCondition(mLock, "nsHTTPListener.mCondition")
-  , mWaitFlag(true)
-  , mResponsibleForDoneSignal(false)
-  , mLoadGroup(nullptr)
-  , mLoadGroupOwnerThread(nullptr)
+: mHttpRequestSucceeded(false),
+  mHttpResponseCode(0),
+  mResultData(nullptr),
+  mResultLen(0),
+  mLock("nsHTTPListener.mLock"),
+  mCondition(mLock, "nsHTTPListener.mCondition"),
+  mWaitFlag(true),
+  mResponsibleForDoneSignal(false),
+  mLoadGroup(nullptr),
+  mLoadGroupOwnerThread(nullptr)
 {
 }
 

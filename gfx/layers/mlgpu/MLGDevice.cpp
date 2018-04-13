@@ -67,12 +67,11 @@ MLGSwapChain::ApplyNewInvalidRegion(nsIntRegion&& aRegion, const Maybe<gfx::IntR
 }
 
 MLGDevice::MLGDevice()
-  : mTopology(MLGPrimitiveTopology::Unknown)
-  , mInitialized{ false }
-  , mIsValid(false)
-  , mCanUseClearView(false)
-  , mCanUseConstantBufferOffsetBinding(false)
-  , mMaxConstantBufferBindSize(0)
+ : mTopology(MLGPrimitiveTopology::Unknown),
+   mIsValid(false),
+   mCanUseClearView(false),
+   mCanUseConstantBufferOffsetBinding(false),
+   mMaxConstantBufferBindSize(0)
 {
 }
 

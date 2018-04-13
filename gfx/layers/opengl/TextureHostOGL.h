@@ -83,8 +83,7 @@ class TextureSourceOGL
 {
 public:
   TextureSourceOGL()
-    : mCachedSamplingFilter{ static_cast<gfx::SamplingFilter>(0) }
-    , mHasCachedSamplingFilter(false)
+    : mHasCachedSamplingFilter(false)
   {}
 
   virtual bool IsValid() const = 0;

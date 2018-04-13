@@ -133,20 +133,8 @@ class Map {
   typedef size_t size_type;
   typedef hash<Key> hasher;
 
-  Map()
-    : arena_(NULL)
-    , default_enum_value_(0)
-    , elements_{ nullptr }
-  {
-    Init();
-  }
-  explicit Map(Arena* arena)
-    : arena_(arena)
-    , default_enum_value_(0)
-    , elements_{ nullptr }
-  {
-    Init();
-  }
+  Map() : arena_(NULL), default_enum_value_(0) { Init(); }
+  explicit Map(Arena* arena) : arena_(arena), default_enum_value_(0) { Init(); }
 
   Map(const Map& other)
       : arena_(NULL), default_enum_value_(other.default_enum_value_) {
@@ -383,11 +371,7 @@ class Map {
       // are rechecked, and updated if necessary.
       iterator_base() : node_(NULL), m_(NULL), bucket_index_(0) {}
 
-      explicit iterator_base(const InnerMap* m)
-        : node_{ nullptr }
-        , m_(m)
-        , bucket_index_{}
-      {
+      explicit iterator_base(const InnerMap* m) : m_(m) {
         SearchFrom(m->index_of_first_non_null_);
       }
 

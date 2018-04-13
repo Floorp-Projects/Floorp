@@ -116,17 +116,7 @@ public:
   // Structure that stores the current state of a float manager for
   // Save/Restore purposes.
   struct SavedState {
-    explicit SavedState()
-      : mFloatInfoCount{}
-      , mLineLeft{}
-      , mBlockStart{}
-      , mPushedLeftFloatPastBreak{ false }
-      , mPushedRightFloatPastBreak{ false }
-      , mSplitLeftFloatAcrossBreak{ false }
-      , mSplitRightFloatAcrossBreak{ false }
-    {
-    }
-
+    explicit SavedState() {}
   private:
     uint32_t mFloatInfoCount;
     nscoord mLineLeft, mBlockStart;

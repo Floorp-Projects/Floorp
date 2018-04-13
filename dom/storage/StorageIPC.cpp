@@ -917,9 +917,7 @@ public:
     , mOrigin(aOriginNoSuffix)
     , mKey(aKey)
     , mValue(aValue)
-    , mRv{ NS_ERROR_NOT_INITIALIZED }
-  {
-  }
+  { }
 
   LoadRunnable(StorageDBParent* aParent,
                TaskType aType,

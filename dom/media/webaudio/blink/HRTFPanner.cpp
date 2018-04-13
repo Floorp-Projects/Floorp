@@ -42,23 +42,20 @@ const double MaxDelayTimeSeconds = 0.002;
 const int UninitializedAzimuth = -1;
 const unsigned RenderingQuantum = WEBAUDIO_BLOCK_SIZE;
 
-HRTFPanner::HRTFPanner(float sampleRate,
-                       already_AddRefed<HRTFDatabaseLoader> databaseLoader)
-  : m_databaseLoader(databaseLoader)
-  , m_sampleRate(sampleRate)
-  , m_crossfadeSelection(CrossfadeSelection1)
-  , m_azimuthIndex1(UninitializedAzimuth)
-  , m_elevation1{ 0.0 }
-  , m_azimuthIndex2(UninitializedAzimuth)
-  // m_elevation1 and m_elevation2 are initialized in pan()
-  , m_elevation2{ 0.0 }
-  , m_crossfadeX(0)
-  , m_crossfadeIncr(0)
-  , m_convolverL1(HRTFElevation::fftSizeForSampleRate(sampleRate))
-  , m_convolverR1(m_convolverL1.fftSize())
-  , m_convolverL2(m_convolverL1.fftSize())
-  , m_convolverR2(m_convolverL1.fftSize())
-  , m_delayLine(MaxDelayTimeSeconds * sampleRate)
+HRTFPanner::HRTFPanner(float sampleRate, already_AddRefed<HRTFDatabaseLoader> databaseLoader)
+    : m_databaseLoader(databaseLoader)
+    , m_sampleRate(sampleRate)
+    , m_crossfadeSelection(CrossfadeSelection1)
+    , m_azimuthIndex1(UninitializedAzimuth)
+    , m_azimuthIndex2(UninitializedAzimuth)
+    // m_elevation1 and m_elevation2 are initialized in pan()
+    , m_crossfadeX(0)
+    , m_crossfadeIncr(0)
+    , m_convolverL1(HRTFElevation::fftSizeForSampleRate(sampleRate))
+    , m_convolverR1(m_convolverL1.fftSize())
+    , m_convolverL2(m_convolverL1.fftSize())
+    , m_convolverR2(m_convolverL1.fftSize())
+    , m_delayLine(MaxDelayTimeSeconds * sampleRate)
 {
     MOZ_ASSERT(m_databaseLoader);
     MOZ_COUNT_CTOR(HRTFPanner);

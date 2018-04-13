@@ -92,9 +92,7 @@ public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
   // constructor and destructor
-  nsMathMLChar()
-    : mDirection{ NS_STRETCH_DIRECTION_DEFAULT }
-  {
+  nsMathMLChar() {
     MOZ_COUNT_CTOR(nsMathMLChar);
     mComputedStyle = nullptr;
     mUnscaledAscent = 0;

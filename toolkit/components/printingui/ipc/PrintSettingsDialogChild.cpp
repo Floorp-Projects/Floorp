@@ -10,8 +10,7 @@ namespace mozilla {
 namespace embedding {
 
 PrintSettingsDialogChild::PrintSettingsDialogChild()
-  : mReturned(false)
-  , mResult{ NS_ERROR_NOT_INITIALIZED }
+: mReturned(false)
 {
   MOZ_COUNT_CTOR(PrintSettingsDialogChild);
 }

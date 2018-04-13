@@ -93,8 +93,6 @@ NS_IMPL_ISUPPORTS(ClientLayerManager::MemoryPressureObserver, nsIObserver)
 ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   : mPhase(PHASE_NONE)
   , mWidget(aWidget)
-  , mPaintedLayerCallback{ nullptr }
-  , mPaintedLayerCallbackData{ nullptr }
   , mLatestTransactionId(0)
   , mLastPaintTime(TimeDuration::Forever())
   , mTargetRotation(ROTATION_0)

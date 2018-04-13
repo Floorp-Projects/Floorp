@@ -52,7 +52,6 @@ ThreadEventQueue<InnerQueueT>::ThreadEventQueue(UniquePtr<InnerQueueT> aQueue)
   : mBaseQueue(Move(aQueue))
   , mLock("ThreadEventQueue")
   , mEventsAvailable(mLock, "EventsAvail")
-  , mEventsAreDoomed{ false }
 {
   static_assert(IsBaseOf<AbstractEventQueue, InnerQueueT>::value,
                 "InnerQueueT must be an AbstractEventQueue subclass");
