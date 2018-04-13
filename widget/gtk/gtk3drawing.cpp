@@ -84,7 +84,7 @@ moz_gtk_add_style_border(GtkStyleContext* style,
 {
     GtkBorder border;
 
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
 
     *left += border.left;
     *right += border.right;
@@ -98,7 +98,7 @@ moz_gtk_add_style_padding(GtkStyleContext* style,
 {
     GtkBorder padding;
 
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
     *left += padding.left;
     *right += padding.right;
@@ -229,8 +229,8 @@ moz_gtk_get_focus_outline_size(GtkStyleContext* style,
 {
     GtkBorder border;
     GtkBorder padding;
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
     *focus_h_width = border.left + padding.left;
     *focus_v_width = border.top + padding.top;
     return MOZ_GTK_SUCCESS;
@@ -688,8 +688,8 @@ calculate_button_inner_rect(GtkWidget* button, GdkRectangle* rect,
     style = gtk_widget_get_style_context(button);
 
     /* This mirrors gtkbutton's child positioning */
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
     inner_rect->x = rect->x + border.left + padding.left;
     inner_rect->y = rect->y + padding.top + border.top;
@@ -1616,7 +1616,7 @@ moz_gtk_toolbar_separator_paint(cairo_t *cr, GdkRectangle* rect,
                           rect->height * (end_fraction - start_fraction));
     } else {
         GtkBorder padding;
-        gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+        gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
         paint_width = padding.left;
         if (paint_width > rect->width)
@@ -1785,7 +1785,7 @@ moz_gtk_get_tab_thickness(GtkStyleContext *style)
       return 0; /* tabs do not overdraw the tabpanel border with "no gap" style */
 
     GtkBorder border;
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
     if (border.top < 2)
         return 2; /* some themes don't set ythickness correctly */
 
@@ -2122,7 +2122,7 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     GtkBorder padding;
 
     style = GetStyleContext(MOZ_GTK_MENUSEPARATOR, direction);
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
     x = rect->x;
     y = rect->y;
@@ -2428,7 +2428,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
                                             NULL);
 
                 if (!wide_separators) {
-                    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL,
+                    gtk_style_context_get_border(style, gtk_style_context_get_state(style),
                                                  &border);
                     separator_width = border.left;
                 }
@@ -2601,13 +2601,13 @@ moz_gtk_get_tab_border(gint* left, gint* top, gint* right, gint* bottom,
     } else {
         GtkBorder margin;
 
-        gtk_style_context_get_margin(style, GTK_STATE_FLAG_NORMAL, &margin);
+        gtk_style_context_get_margin(style, gtk_style_context_get_state(style), &margin);
         *left += margin.left;
         *right += margin.right;
 
         if (flags & MOZ_GTK_TAB_FIRST) {
             style = GetStyleContext(MOZ_GTK_NOTEBOOK_HEADER, direction);
-            gtk_style_context_get_margin(style, GTK_STATE_FLAG_NORMAL, &margin);
+            gtk_style_context_get_margin(style, gtk_style_context_get_state(style), &margin);
             *left += margin.left;
             *right += margin.right;
         }
@@ -2682,7 +2682,7 @@ moz_gtk_get_toolbar_separator_width(gint* size)
                                 "separator-width", &separator_width,
                                 NULL);
     /* Just in case... */
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
     *size = MAX(*size, (wide_separators ? separator_width : border.left));
     return MOZ_GTK_SUCCESS;
 }
@@ -2713,7 +2713,7 @@ moz_gtk_get_menu_separator_height(gint *size)
     gint      separator_height;
     GtkBorder padding;
     GtkStyleContext* style = GetStyleContext(MOZ_GTK_MENUSEPARATOR);
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
     gtk_style_context_save(style);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_SEPARATOR);
@@ -2745,8 +2745,8 @@ moz_gtk_get_entry_min_height(gint* height)
 
     GtkBorder border;
     GtkBorder padding;
-    gtk_style_context_get_border(style, GTK_STATE_FLAG_NORMAL, &border);
-    gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
+    gtk_style_context_get_border(style, gtk_style_context_get_state(style), &border);
+    gtk_style_context_get_padding(style, gtk_style_context_get_state(style), &padding);
 
     *height += (border.top + border.bottom + padding.top + padding.bottom);
 }
