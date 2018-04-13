@@ -5870,4 +5870,4 @@ pref("general.document_open_conversion_depth_limit", 20);
 
 // If true, touchstart and touchmove listeners on window, document,
 // documentElement and document.body are passive by default.
-pref("dom.event.default_to_passive_touch_listeners", false);
+pref("dom.event.default_to_passive_touch_listeners", true);
