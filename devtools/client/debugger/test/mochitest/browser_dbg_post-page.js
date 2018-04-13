@@ -13,15 +13,15 @@ const FORM = "<form method=\"POST\"><input type=\"submit\"></form>";
 const GET_CONTENT = "<script>\"GET\";</script>" + FORM;
 const POST_CONTENT = "<script>\"POST\";</script>" + FORM;
 
-add_task(function* () {
+add_task(async function() {
   // Disable rcwn to make cache behavior deterministic.
-  yield pushPref("network.http.rcwn.enabled", false);
+  await pushPref("network.http.rcwn.enabled", false);
 
   let options = {
     source: TAB_URL,
     line: 1
   };
-  let [tab,, panel] = yield initDebugger(TAB_URL, options);
+  let [tab,, panel] = await initDebugger(TAB_URL, options);
   let win = panel.panelWin;
   let editor = win.DebuggerView.editor;
   let queries = win.require("./content/queries");
@@ -38,10 +38,10 @@ add_task(function* () {
 
   // Submit the form and wait for debugger update
   let onSourceUpdated = waitForSourceShown(panel, TAB_URL);
-  yield ContentTask.spawn(tab.linkedBrowser, null, function () {
+  await ContentTask.spawn(tab.linkedBrowser, null, function () {
     content.document.querySelector("input[type=\"submit\"]").click();
   });
-  yield onSourceUpdated;
+  await onSourceUpdated;
 
   // Verify that the source updates to the POST page content
   source = queries.getSelectedSource(getState());
@@ -52,5 +52,5 @@ add_task(function* () {
   is(editor.getText(), POST_CONTENT,
     "The currently shown source contains bacon. Mmm, delicious!");
 
-  yield closeDebuggerAndFinish(panel);
+  await closeDebuggerAndFinish(panel);
 });

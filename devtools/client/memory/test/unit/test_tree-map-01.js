@@ -5,7 +5,7 @@
 
 const { drawBox } = require("devtools/client/memory/components/tree-map/draw");
 
-add_task(function* () {
+add_task(async function() {
   let fillRectValues, strokeRectValues;
   let ctx = {
     fillRect: (...args) => {

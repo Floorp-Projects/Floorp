@@ -43,14 +43,14 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     Services.logins.addLogin(newLogin);
   }
 
-  add_task(function* test_passwords_list() {
+  add_task(async function test_passwords_list() {
     add_login(LOGIN_FIELDS);
 
     // Load about:logins.
     let BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
     let browser = BrowserApp.addTab("about:logins", { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
 
-    yield promiseBrowserEvent(browser, "load");
+    await promiseBrowserEvent(browser, "load");
 
     let logins_list_parent = browser.contentDocument.getElementById("logins-list").parentNode;
 
@@ -73,7 +73,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
       info("Now waiting for mutation to replace 'logins-list'");
     });
 
-    yield waitForLoginToBeAdded;
+    await waitForLoginToBeAdded;
 
     let logins_list = browser.contentDocument.getElementById("logins-list");
 

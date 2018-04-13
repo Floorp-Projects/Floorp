@@ -14,15 +14,15 @@ const SHEET_B = TEST_BASE_HTTPS + "browser_cmd_csscoverage_sheetB.css";
 const SHEET_C = TEST_BASE_HTTPS + "browser_cmd_csscoverage_sheetC.css";
 const SHEET_D = TEST_BASE_HTTPS + "browser_cmd_csscoverage_sheetD.css";
 
-add_task(function* () {
-  let options = yield helpers.openTab(PAGE_3);
-  yield helpers.openToolbar(options);
+add_task(async function() {
+  let options = await helpers.openTab(PAGE_3);
+  await helpers.openToolbar(options);
 
-  let usage = yield csscoverage.getUsage(options.target);
+  let usage = await csscoverage.getUsage(options.target);
 
-  yield navigate(usage, options);
-  yield checkPages(usage);
-  yield checkEditorReport(usage);
+  await navigate(usage, options);
+  await checkPages(usage);
+  await checkEditorReport(usage);
   // usage.createPageReport is not supported for usage.oneshot data as of
   // bug 1035300 because the page report assumed we have preload data which
   // oneshot can't gather. The ideal solution is to have a special no-preload
@@ -30,8 +30,8 @@ add_task(function* () {
   // function, we're currently not supporting page report for oneshot data
   // yield checkPageReport(usage);
 
-  yield helpers.closeToolbar(options);
-  yield helpers.closeTab(options);
+  await helpers.closeToolbar(options);
+  await helpers.closeTab(options);
 });
 
 /**

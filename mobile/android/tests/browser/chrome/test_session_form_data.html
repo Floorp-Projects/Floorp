@@ -81,7 +81,7 @@ function setup_browser() {
  * This test ensures that form data collection respects the privacy level as
  * set by the user.
  */
-add_task(function* test_formdata() {
+add_task(async function test_formdata() {
   const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/session_formdata_sample.html";
 
   const OUTER_VALUE = "browser_formdata_" + Math.random();
@@ -108,7 +108,7 @@ add_task(function* test_formdata() {
     });
   }
 
-  yield createAndRemoveTab();
+  await createAndRemoveTab();
   let state = ss.getClosedTabs(gChromeWin);
   let [{formdata}] = state;
   is(formdata.id.txt, OUTER_VALUE, "outer value is correct");
@@ -117,7 +117,7 @@ add_task(function* test_formdata() {
   // Disable saving data for encrypted sites.
   Services.prefs.setIntPref("browser.sessionstore.privacy_level", 1);
 
-  yield createAndRemoveTab();
+  await createAndRemoveTab();
   state = ss.getClosedTabs(gChromeWin);
   [{formdata}] = state;
   is(formdata.id.txt, OUTER_VALUE, "outer value is correct");
@@ -126,7 +126,7 @@ add_task(function* test_formdata() {
   // Disable saving data for any site.
   Services.prefs.setIntPref("browser.sessionstore.privacy_level", 2);
 
-  yield createAndRemoveTab();
+  await createAndRemoveTab();
   state = ss.getClosedTabs(gChromeWin);
   [{formdata}] = state;
   ok(!formdata, "form data has *not* been stored");
@@ -138,7 +138,7 @@ add_task(function* test_formdata() {
 /**
  * This test ensures that form data collection restores correctly.
  */
-add_task(function* test_formdata2() {
+add_task(async function test_formdata2() {
   const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/session_formdata_sample.html";
 
   const OUTER_VALUE = "browser_formdata_" + Math.random();
@@ -164,7 +164,7 @@ add_task(function* test_formdata2() {
     });
   }
 
-  yield createAndRemoveTab();
+  await createAndRemoveTab();
   let state = ss.getClosedTabs(gChromeWin);
   let [{formdata}] = state;
   is(formdata.id.txt, OUTER_VALUE, "outer value is correct");
@@ -173,7 +173,7 @@ add_task(function* test_formdata2() {
   // Restore the closed tab.
   let closedTabData = ss.getClosedTabs(gChromeWin)[0];
   let browser = ss.undoCloseTab(gChromeWin, closedTabData);
-  yield promiseBrowserEvent(browser, "load", { resolveAtNextTick: true });
+  await promiseBrowserEvent(browser, "load", { resolveAtNextTick: true });
 
   // Check the form data.
   is(getInputValue(browser, {id: "txt"}), OUTER_VALUE, "outer value restored correctly");
@@ -187,7 +187,7 @@ add_task(function* test_formdata2() {
  * This test ensures that form data collection restores correctly even after
  * navigating to a different page and then returning via hitting back.
  */
-add_task(function* test_formdata_navigation() {
+add_task(async function test_formdata_navigation() {
   const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/session_formdata_sample.html";
   const otherURL = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article.html";
 
@@ -244,7 +244,7 @@ add_task(function* test_formdata_navigation() {
     });
   }
 
-  yield createNavigateAndRemoveTab();
+  await createNavigateAndRemoveTab();
   let state = ss.getClosedTabs(gChromeWin);
   let [{formdata}] = state;
   is(formdata.id.txt, OUTER_VALUE, "outer value is correct");
@@ -253,7 +253,7 @@ add_task(function* test_formdata_navigation() {
   // Restore the closed tab.
   let closedTabData = ss.getClosedTabs(gChromeWin)[0];
   let browser = ss.undoCloseTab(gChromeWin, closedTabData);
-  yield promiseBrowserEvent(browser, "load", { resolveAtNextTick: true });
+  await promiseBrowserEvent(browser, "load", { resolveAtNextTick: true });
 
   // Check the form data.
   is(getInputValue(browser, {id: "txt"}), OUTER_VALUE, "outer value restored correctly");

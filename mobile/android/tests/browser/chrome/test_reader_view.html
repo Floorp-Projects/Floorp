@@ -16,7 +16,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-  add_task(function* test_reader_view_visibility() {
+  add_task(async function test_reader_view_visibility() {
     let gWin = Services.wm.getMostRecentWindow("navigator:browser");
     let BrowserApp = gWin.BrowserApp;
 
@@ -27,14 +27,14 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
       BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
     });
 
-    yield promiseBrowserEvent(browser, "load");
+    await promiseBrowserEvent(browser, "load");
 
     let doc = browser.contentDocument;
     let title = doc.querySelector(".reader-title");
 
     // We need to wait for reader content to appear because AboutReader.jsm
     // asynchronously fetches the content after about:reader loads.
-    yield promiseNotification("AboutReader:Ready");
+    await promiseNotification("AboutReader:Ready");
     is(title.textContent, "Article title", "found expected content");
   });
 

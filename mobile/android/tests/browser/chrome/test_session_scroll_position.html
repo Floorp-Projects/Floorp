@@ -81,7 +81,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
 
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
-  add_task(function* test_sessionStoreScrollPositionReaderMode() {
+  add_task(async function test_sessionStoreScrollPositionReaderMode() {
     // Creates a tab, sets a scroll position and closes the tab.
     function createAndRemoveReaderTab() {
       return Task.spawn(function* () {
@@ -108,7 +108,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
       });
     }
 
-    yield createAndRemoveReaderTab();
+    await createAndRemoveReaderTab();
     let state = ss.getClosedTabs(chromeWin);
     let [{scrolldata}] = state;
     is(scrolldata.scroll, SCROLL_STR_Y_ONLY, "stored scroll position is correct");
@@ -116,7 +116,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     // Restore the closed tab.
     let closedTabData = ss.getClosedTabs(chromeWin)[0];
     let browser = ss.undoCloseTab(chromeWin, closedTabData);
-    yield promiseBrowserEvent(browser, "AboutReaderContentReady");
+    await promiseBrowserEvent(browser, "AboutReaderContentReady");
 
     // Check the scroll position.
     let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
@@ -130,7 +130,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
   });
 
-  add_task(function* test_sessionStoreScrollPositionAndZoomLevel() {
+  add_task(async function test_sessionStoreScrollPositionAndZoomLevel() {
     // Creates a tab, sets a scroll position and zoom level and closes the tab.
     function createAndRemoveTab() {
       return Task.spawn(function* () {
@@ -174,7 +174,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
       });
     }
 
-    yield createAndRemoveTab();
+    await createAndRemoveTab();
     let state = ss.getClosedTabs(chromeWin);
     let [{scrolldata}] = state;
     is(scrolldata.scroll, SCROLL2_STR, "stored scroll position is correct");
@@ -185,8 +185,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     let browser = ss.undoCloseTab(chromeWin, closedTabData);
     let pageshow = promiseBrowserEvent(browser, "pageshow");
     let scroll = promiseBrowserEvent(browser, "scroll");
-    yield pageshow;
-    yield scroll;
+    await pageshow;
+    await scroll;
 
     // Check the scroll position and zoom level.
     let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
@@ -204,8 +204,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     pageshow = promiseBrowserEvent(browser, "pageshow");
     scroll = promiseBrowserEvent(browser, "scroll");
     browser.goBack();
-    yield pageshow;
-    yield scroll;
+    await pageshow;
+    await scroll;
 
     utils.getResolution(zoom);
     utils.getScrollXY(false, scrollX, scrollY);
@@ -217,7 +217,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
     BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
   });
 
-  add_task(function* test_sessionStoreZoomLevelRecalc() {
+  add_task(async function test_sessionStoreZoomLevelRecalc() {
     // Creates a tab, sets a scroll position and zoom level and closes the tab.
     function createAndRemoveTab() {
       return Task.spawn(function* () {
@@ -247,7 +247,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
       });
     }
 
-    yield createAndRemoveTab();
+    await createAndRemoveTab();
     let state = ss.getClosedTabs(chromeWin);
     let [{scrolldata}] = state;
     is(scrolldata.scroll, SCROLL_STR, "stored scroll position is correct");
@@ -262,7 +262,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
 
     // Restore the closed tab.
     let browser = ss.undoCloseTab(chromeWin, closedTabData);
-    yield promiseBrowserEvent(browser, "pageshow");
+    await promiseBrowserEvent(browser, "pageshow");
 
     // Check the scroll position and zoom level.
     let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);

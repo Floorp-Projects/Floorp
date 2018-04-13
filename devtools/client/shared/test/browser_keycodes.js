@@ -5,7 +5,7 @@
 
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
-add_task(function* () {
+add_task(async function() {
   for (let key in KeyCodes) {
     is(KeyCodes[key], KeyboardEvent[key], "checking value for " + key);
   }

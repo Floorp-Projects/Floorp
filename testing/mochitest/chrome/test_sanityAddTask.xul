@@ -15,18 +15,18 @@
 
       // Check that we can 'add_task' a few times and all tasks run asynchronously before test finishes.
 
-      add_task(function* () {
-        var x = yield Promise.resolve(1);
+      add_task(async function() {
+        var x = await Promise.resolve(1);
         is(x, 1, "task yields Promise value as expected");
       });
 
-      add_task(function* () {
-        var x = yield [Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)];
+      add_task(async function() {
+        var x = await [Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)];
         is(x.join(""), "123", "task yields Promise value as expected");
       });
 
-      add_task(function* () {
-        var x = yield (function* () {
+      add_task(async function() {
+        var x = await (function* () {
           return 3;
         }());
         is(x, 3, "task yields generator function return value as expected");

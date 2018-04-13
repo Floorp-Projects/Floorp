@@ -15,19 +15,19 @@ const SHEET_B = TEST_BASE_HTTPS + "browser_cmd_csscoverage_sheetB.css";
 const SHEET_C = TEST_BASE_HTTPS + "browser_cmd_csscoverage_sheetC.css";
 const SHEET_D = TEST_BASE_HTTPS + "browser_cmd_csscoverage_sheetD.css";
 
-add_task(function* () {
-  let options = yield helpers.openTab("about:blank");
-  yield helpers.openToolbar(options);
+add_task(async function() {
+  let options = await helpers.openTab("about:blank");
+  await helpers.openToolbar(options);
 
-  let usage = yield csscoverage.getUsage(options.target);
+  let usage = await csscoverage.getUsage(options.target);
 
-  yield navigate(usage, options);
-  yield checkPages(usage);
-  yield checkEditorReport(usage);
-  yield checkPageReport(usage);
+  await navigate(usage, options);
+  await checkPages(usage);
+  await checkEditorReport(usage);
+  await checkPageReport(usage);
 
-  yield helpers.closeToolbar(options);
-  yield helpers.closeTab(options);
+  await helpers.closeToolbar(options);
+  await helpers.closeTab(options);
 });
 
 /**

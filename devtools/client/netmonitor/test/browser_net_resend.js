@@ -12,8 +12,8 @@ const ADD_HEADER = "Test-header: true";
 const ADD_UA_HEADER = "User-Agent: Custom-Agent";
 const ADD_POSTDATA = "&t3=t4";
 
-add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(POST_DATA_URL);
+add_task(async function() {
+  let { tab, monitor } = await initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
   let { document, store, windowRequire, connector } = monitor.panelWin;
@@ -26,7 +26,7 @@ add_task(function* () {
   store.dispatch(Actions.batchEnable(false));
 
   // Execute requests.
-  yield performRequests(monitor, tab, 2);
+  await performRequests(monitor, tab, 2);
 
   let origItem = getSortedRequests(store.getState()).get(0);
 
@@ -41,7 +41,7 @@ add_task(function* () {
   testCustomItem(customItem, origItem);
 
   // edit the custom request
-  yield editCustomForm();
+  await editCustomForm();
 
   // FIXME: reread the customItem, it's been replaced by a new object (immutable!)
   customItem = getSelectedRequest(store.getState());
@@ -50,19 +50,19 @@ add_task(function* () {
   // send the new request
   wait = waitForNetworkEvents(monitor, 1);
   store.dispatch(Actions.sendCustomRequest(connector));
-  yield wait;
+  await wait;
 
   let sentItem;
   // Testing sent request will require updated requestHeaders and requestPostData,
   // we must wait for both properties get updated before starting test.
-  yield waitUntil(() => {
+  await waitUntil(() => {
     sentItem = getSelectedRequest(store.getState());
     origItem = getSortedRequests(store.getState()).get(0);
     return sentItem.requestHeaders && sentItem.requestPostData &&
       origItem.requestHeaders && origItem.requestPostData;
   });
 
-  yield testSentRequest(sentItem, origItem);
+  await testSentRequest(sentItem, origItem);
 
   // Ensure the UI shows the new request, selected, and that the detail panel was closed.
   is(getSortedRequests(store.getState()).length, 3, "There are 3 requests shown");

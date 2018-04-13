@@ -9,39 +9,39 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
 
-add_task(function *() {
+add_task(async function() {
   let options = {
     source: TAB_URL,
     line: 1
   };
-  let [tab,, panel] = yield initDebugger(TAB_URL, options);
+  let [tab,, panel] = await initDebugger(TAB_URL, options);
   let panelWin = panel.panelWin;
   let toolbox = panel._toolbox;
   let toolboxTab = toolbox.doc.getElementById("toolbox-tab-jsdebugger");
 
-  let newTab = yield addTab(TAB_URL);
+  let newTab = await addTab(TAB_URL);
   isnot(newTab, tab,
     "The newly added tab is different from the debugger's tab.");
   is(gBrowser.selectedTab, newTab,
     "Debugger's tab is not the selected tab.");
 
   info("Run tests against bottom host.");
-  yield testPause();
-  yield testResume();
+  await testPause();
+  await testResume();
 
   // testResume selected the console, select back the debugger.
-  yield toolbox.selectTool("jsdebugger");
+  await toolbox.selectTool("jsdebugger");
 
   info("Switching to a toolbox window host.");
-  yield toolbox.switchHost(Toolbox.HostType.WINDOW);
+  await toolbox.switchHost(Toolbox.HostType.WINDOW);
 
   info("Run tests against window host.");
-  yield testPause();
-  yield testResume();
+  await testPause();
+  await testResume();
 
   info("Cleanup after the test.");
-  yield toolbox.switchHost(Toolbox.HostType.BOTTOM);
-  yield closeDebuggerAndFinish(panel);
+  await toolbox.switchHost(Toolbox.HostType.BOTTOM);
+  await closeDebuggerAndFinish(panel);
 
   function* testPause() {
     is(panelWin.gThreadClient.paused, false,

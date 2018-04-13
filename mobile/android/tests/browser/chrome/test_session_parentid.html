@@ -51,60 +51,60 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301160
 
   const url = "data:text/html;charset=utf-8,It%20was%20a%20dark%20and%20stormy%20night.";
 
-  add_task(function* test_sessionStoreParentId() {
+  add_task(async function test_sessionStoreParentId() {
     SimpleTest.registerCleanupFunction(function() {
       cleanupTabs();
     });
 
     // First, check that passing a parent tab ID works as expected
     tabParent = BrowserApp.addTab(url, { selected: true });
-    yield promiseBrowserEvent(tabParent.browser, "DOMContentLoaded");
+    await promiseBrowserEvent(tabParent.browser, "DOMContentLoaded");
 
     // Open tabs without passing a parent tab ID
     tabChild1 = BrowserApp.addTab(url, { selected: false });
     tabChild2 = BrowserApp.addTab(url, { selected: true });
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabChild2, "2nd child tab is selected");
 
     // After closing that tab, its neighbour should be selected
     BrowserApp.closeTab(tabChild2);
     tabChild2 = null;
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabChild1, "1st child tab is selected");
 
     // Add a new tab and pass a parent tab ID this time
     tabChild2 = BrowserApp.addTab(url, { selected: true, parentId: tabParent.id });
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabChild2, "2nd child tab is selected");
 
     // After closing that tab, its parent should be selected
     BrowserApp.closeTab(tabChild2);
     tabChild2 = null;
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabParent, "parent tab is selected");
 
     // Reset selection and switch to the other child tab
     BrowserApp.selectTab(tabChild1);
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabChild1, "1st child tab is selected");
 
     // Now check that this works even if the child tab is closed and subsequently restored
     tabChild2 = BrowserApp.addTab(url, { selected: false, parentId: tabParent.id });
-    yield promiseTabEvent(tabChild2.browser, "SSTabDataUpdated");
+    await promiseTabEvent(tabChild2.browser, "SSTabDataUpdated");
     BrowserApp.closeTab(tabChild2);
-    yield promiseTabEvent(tabChild2.browser, "SSTabCloseProcessed");
+    await promiseTabEvent(tabChild2.browser, "SSTabCloseProcessed");
 
     // Restore the tab
     let closedTabData = ss.getClosedTabs(chromeWin)[0];
     let browser = ss.undoCloseTab(chromeWin, closedTabData);
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     tabChild2 = BrowserApp.getTabForBrowser(browser);
     is(BrowserApp.selectedTab, tabChild2, "restored 2nd child tab is selected");
 
     // After closing that tab, its parent should be selected
     BrowserApp.closeTab(tabChild2);
     tabChild2 = null;
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabParent, "parent tab is selected after restoring");
 
     cleanupTabs();
