@@ -57,7 +57,7 @@ DocAccessibleChildBase::SerializeTree(Accessible* aRoot,
 #if defined(XP_WIN)
   int32_t msaaId = AccessibleWrap::GetChildIDFor(aRoot);
 #endif
-  uint32_t role = aRoot->Role();
+  a11y::role role = aRoot->Role();
   uint32_t childCount = aRoot->ChildCount();
   uint32_t interfaces = InterfacesFor(aRoot);
 
