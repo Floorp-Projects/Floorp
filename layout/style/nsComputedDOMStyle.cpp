@@ -9,6 +9,7 @@
 #include "nsComputedDOMStyle.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"
 
 #include "nsError.h"
@@ -1973,8 +1974,9 @@ nsComputedDOMStyle::DoGetFontWeight()
 
   const nsStyleFont* font = StyleFont();
 
-  uint16_t weight = font->mFont.weight;
-  NS_ASSERTION(weight % 100 == 0, "unexpected value of font-weight");
+  float weight = font->mFont.weight.ToFloat();
+  MOZ_ASSERT(1.0f <= weight && weight <= 1000.0f,
+             "unexpected font-weight value");
   val->SetNumber(weight);
 
   return val.forget();

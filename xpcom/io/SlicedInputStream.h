@@ -57,9 +57,6 @@ private:
   void
   SetSourceStream(already_AddRefed<nsIInputStream> aInputStream);
 
-  nsresult
-  RunAsyncWaitCallback(const MutexAutoLock& aProofOfLock);
-
   nsCOMPtr<nsIInputStream> mInputStream;
 
   // Raw pointers because these are just QI of mInputStream.

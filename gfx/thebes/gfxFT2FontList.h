@@ -43,7 +43,7 @@ public:
     // create a font entry for a downloaded font
     static FT2FontEntry* 
     CreateFontEntry(const nsAString& aFontName,
-                    uint16_t aWeight,
+                    FontWeight aWeight,
                     int16_t aStretch,
                     uint8_t aStyle,
                     const uint8_t* aFontData,
@@ -122,12 +122,12 @@ public:
     virtual ~gfxFT2FontList();
 
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                          uint16_t aWeight,
+                                          FontWeight aWeight,
                                           int16_t aStretch,
                                           uint8_t aStyle) override;
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                           uint16_t aWeight,
+                                           FontWeight aWeight,
                                            int16_t aStretch,
                                            uint8_t aStyle,
                                            const uint8_t* aFontData,

@@ -60,6 +60,7 @@ struct ModuleEnvironment
     const ModuleKind          kind;
     const CompileMode         mode;
     const Shareable           sharedMemoryEnabled;
+    const HasGcTypes          gcTypesEnabled;
     const Tier                tier;
 
     // Module fields decoded from the module environment (or initialized while
@@ -87,12 +88,14 @@ struct ModuleEnvironment
     explicit ModuleEnvironment(CompileMode mode,
                                Tier tier,
                                DebugEnabled debug,
+                               HasGcTypes hasGcTypes,
                                Shareable sharedMemoryEnabled,
                                ModuleKind kind = ModuleKind::Wasm)
       : debug(debug),
         kind(kind),
         mode(mode),
         sharedMemoryEnabled(sharedMemoryEnabled),
+        gcTypesEnabled(hasGcTypes),
         tier(tier),
         memoryUsage(MemoryUsage::None),
         minMemoryLength(0)
@@ -696,7 +699,7 @@ MOZ_MUST_USE bool
 EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
 
 MOZ_MUST_USE bool
-DecodeLocalEntries(Decoder& d, ModuleKind kind, ValTypeVector* locals);
+DecodeLocalEntries(Decoder& d, ModuleKind kind, HasGcTypes gcTypesEnabled, ValTypeVector* locals);
 
 // Returns whether the given [begin, end) prefix of a module's bytecode starts a
 // code section and, if so, returns the SectionRange of that code section.

@@ -100,6 +100,9 @@ RenderThread::ShutDownTask(layers::SynchronousTask* aTask)
 {
   layers::AutoCompleteTask complete(aTask);
   MOZ_ASSERT(IsInRenderThread());
+
+  MutexAutoLock lock(mRenderTextureMapLock);
+  mRenderTextures.Clear();
 }
 
 // static

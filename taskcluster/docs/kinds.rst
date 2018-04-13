@@ -375,12 +375,6 @@ repo-update
 Repo-Update tasks are tasks that perform some action on the project repo itself,
 in order to update its state in some way.
 
-repo-update-bb
---------------
-Repo-Update tasks are tasks that perform some action on the project repo itself,
-in order to update its state in some way. This kind is the older, buildbot version.
-It will be removed after the migration to taskcluster.
-
 partials
 --------
 Partials takes the complete.mar files produced in previous tasks and generates partial

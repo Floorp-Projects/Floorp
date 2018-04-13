@@ -773,6 +773,9 @@ ReloadPrefsCallback(const char* pref, void* data)
     bool useWasm = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm");
     bool useWasmIon = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_ionjit");
     bool useWasmBaseline = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_baselinejit");
+#ifdef ENABLE_WASM_GC
+    bool useWasmGc = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_gc");
+#endif
     bool throwOnAsmJSValidationFailure = Preferences::GetBool(JS_OPTIONS_DOT_STR
                                                               "throw_on_asmjs_validation_failure");
     bool useNativeRegExp = Preferences::GetBool(JS_OPTIONS_DOT_STR "native_regexp");
@@ -844,6 +847,9 @@ ReloadPrefsCallback(const char* pref, void* data)
                              .setWasm(useWasm)
                              .setWasmIon(useWasmIon)
                              .setWasmBaseline(useWasmBaseline)
+#ifdef ENABLE_WASM_GC
+                             .setWasmGc(useWasmGc)
+#endif
                              .setThrowOnAsmJSValidationFailure(throwOnAsmJSValidationFailure)
                              .setNativeRegExp(useNativeRegExp)
                              .setAsyncStack(useAsyncStack)
