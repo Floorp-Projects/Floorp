@@ -10,29 +10,26 @@ Test the payment-dialog custom element
   <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script src="sinon-2.3.2.js"></script>
   <script src="payments_common.js"></script>
-  <script src="custom-elements.min.js"></script>
-  <script src="PaymentsStore.js"></script>
-  <script src="ObservedPropertiesMixin.js"></script>
-  <script src="PaymentStateSubscriberMixin.js"></script>
-  <script src="payment-dialog.js"></script>
+  <script src="../../res/vendor/custom-elements.min.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <link rel="stylesheet" type="text/css" href="paymentRequest.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/paymentRequest.css"/>
 </head>
 <body>
   <p id="display">
-    <iframe id="templateFrame" src="paymentRequest.xhtml" width="0" height="0"></iframe>
+    <iframe id="templateFrame" src="../../res/paymentRequest.xhtml" width="0" height="0"></iframe>
   </p>
 <div id="content" style="display: none">
 
 </div>
 <pre id="test">
 </pre>
-<script type="application/javascript">
+<script type="module">
 /** Test the payment-dialog element **/
 
 /* global sinon */
 /* import-globals-from payments_common.js */
-/* import-globals-from ../../res/mixins/PaymentStateSubscriberMixin.js */
+
+import PaymentDialog from "../../res/containers/payment-dialog.js";
 
 let el1;
 
@@ -62,7 +59,7 @@ add_task(async function setup_once() {
     displayEl.appendChild(imported);
   }
 
-  el1 = document.createElement("payment-dialog");
+  el1 = new PaymentDialog();
   displayEl.appendChild(el1);
 
   sinon.spy(el1, "render");

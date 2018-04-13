@@ -10,9 +10,8 @@ Test the PaymentStateSubscriberMixin
   <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script src="sinon-2.3.2.js"></script>
   <script src="payments_common.js"></script>
-  <script src="custom-elements.min.js"></script>
-  <script src="PaymentsStore.js"></script>
-  <script src="PaymentStateSubscriberMixin.js"></script>
+  <script src="../../res/vendor/custom-elements.min.js"></script>
+
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -24,12 +23,13 @@ Test the PaymentStateSubscriberMixin
 </div>
 <pre id="test">
 </pre>
-<script type="application/javascript">
+<script type="module">
 /** Test the PaymentStateSubscriberMixin **/
 
 /* global sinon */
 /* import-globals-from payments_common.js */
-/* import-globals-from ../../res/mixins/PaymentStateSubscriberMixin.js */
+
+import PaymentStateSubscriberMixin from "../../res/mixins/PaymentStateSubscriberMixin.js";
 
 class TestElement extends PaymentStateSubscriberMixin(HTMLElement) {
   render(state) {
