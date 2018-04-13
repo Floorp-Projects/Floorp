@@ -28,13 +28,13 @@ class SessionManager(
         get() = sessions.size
 
     /**
-     * Get the currently selected session. Only one session can be selected.
+     * Gets the currently selected session. Only one session can be selected.
      */
     val selectedSession: Session
         get() = sessions.selected
 
     /**
-     * Register an observer to get notified about changes regarding sessions (e.g. adding a new
+     * Registers an observer to get notified about changes regarding sessions (e.g. adding a new
      * session or removing an existing session).
      */
     fun register(observer: Observer) {
@@ -42,14 +42,14 @@ class SessionManager(
     }
 
     /**
-     * Unregister an observer.
+     * Unregisters an observer.
      */
     fun unregister(observer: Observer) {
         observers.remove(observer)
     }
 
     /**
-     * Mark the given session as selected.
+     * Marks the given session as selected.
      */
     fun select(session: Session) {
         sessions.select(session)
