@@ -9,12 +9,10 @@
 #include "jsdate.h"
 #include "jsexn.h"
 #include "jsfriendapi.h"
-#include "jsmath.h"
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/DataViewObject.h"
 #include "builtin/Eval.h"
-#include "builtin/JSON.h"
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
@@ -35,7 +33,6 @@
 #include "vm/PIC.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpStaticsObject.h"
-#include "wasm/WasmJS.h"
 
 #include "vm/JSCompartment-inl.h"
 #include "vm/JSObject-inl.h"
@@ -50,6 +47,11 @@ struct ProtoTableEntry {
 };
 
 namespace js {
+
+extern const Class IntlClass;
+extern const Class JSONClass;
+extern const Class MathClass;
+extern const Class WebAssemblyClass;
 
 #define DECLARE_PROTOTYPE_CLASS_INIT(name,init,clasp) \
     extern JSObject* init(JSContext* cx, Handle<JSObject*> obj);
