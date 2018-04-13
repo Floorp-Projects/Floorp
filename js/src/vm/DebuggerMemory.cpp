@@ -40,14 +40,14 @@ DebuggerMemory::create(JSContext* cx, Debugger* dbg)
 {
     Value memoryProtoValue = dbg->object->getReservedSlot(Debugger::JSSLOT_DEBUG_MEMORY_PROTO);
     RootedObject memoryProto(cx, &memoryProtoValue.toObject());
-    RootedNativeObject memory(cx, NewNativeObjectWithGivenProto(cx, &class_, memoryProto));
+    Rooted<DebuggerMemory*> memory(cx, NewObjectWithGivenProto<DebuggerMemory>(cx, memoryProto));
     if (!memory)
         return nullptr;
 
     dbg->object->setReservedSlot(Debugger::JSSLOT_DEBUG_MEMORY_INSTANCE, ObjectValue(*memory));
     memory->setReservedSlot(JSSLOT_DEBUGGER, ObjectValue(*dbg->object));
 
-    return &memory->as<DebuggerMemory>();
+    return memory;
 }
 
 Debugger*

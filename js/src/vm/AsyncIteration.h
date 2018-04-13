@@ -62,10 +62,8 @@ class AsyncGeneratorRequest : public NativeObject
         Slots,
     };
 
-    void init(CompletionKind completionKind, HandleValue completionValue,
-              HandleObject promise) {
-        setFixedSlot(Slot_CompletionKind,
-                     Int32Value(static_cast<int32_t>(completionKind)));
+    void init(CompletionKind completionKind, const Value& completionValue, JSObject* promise) {
+        setFixedSlot(Slot_CompletionKind, Int32Value(static_cast<int32_t>(completionKind)));
         setFixedSlot(Slot_CompletionValue, completionValue);
         setFixedSlot(Slot_Promise, ObjectValue(*promise));
     }
