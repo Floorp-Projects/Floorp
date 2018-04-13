@@ -4066,9 +4066,9 @@ MOZ_MUST_USE JSObject*
 js::SpeciesConstructor(JSContext* cx, HandleObject obj, JSProtoKey ctorKey,
                        bool (*isDefaultSpecies)(JSContext*, JSFunction*))
 {
-    if (!GlobalObject::ensureConstructor(cx, cx->global(), ctorKey))
+    RootedObject defaultCtor(cx, GlobalObject::getOrCreateConstructor(cx, ctorKey));
+    if (!defaultCtor)
         return nullptr;
-    RootedObject defaultCtor(cx, &cx->global()->getConstructor(ctorKey).toObject());
     return SpeciesConstructor(cx, obj, defaultCtor, isDefaultSpecies);
 }
 

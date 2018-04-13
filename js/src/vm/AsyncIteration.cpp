@@ -194,11 +194,7 @@ AsyncFromSyncIteratorObject::create(JSContext* cx, HandleObject iter, HandleValu
     Handle<AsyncFromSyncIteratorObject*> asyncIter = obj.as<AsyncFromSyncIteratorObject>();
 
     // Step 3.
-    asyncIter->setIterator(iter);
-
-    // Spec update pending:
-    // https://github.com/tc39/proposal-async-iteration/issues/116
-    asyncIter->setNextMethod(nextMethod);
+    asyncIter->init(iter, nextMethod);
 
     // Step 4.
     return asyncIter;
