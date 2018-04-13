@@ -168,14 +168,6 @@ panelview[mainview] > .panel-header {
   visibility: hidden;
 }
 
-.tab-close-button,
-.tabbrowser-tab::after,
-.tab-background {
-  /* Explicitly set the visibility to override the value (collapsed)
-   * we inherit from #TabsToolbar[collapsed] upon opening a browser window. */
-  visibility: visible;
-}
-
 .tab-close-button[fadein],
 .tabbrowser-tab[fadein]::after,
 .tab-background[fadein] {

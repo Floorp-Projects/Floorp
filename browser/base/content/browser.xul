@@ -640,8 +640,7 @@
              customizable="true"
              mode="icons"
              aria-label="&tabsToolbar.label;"
-             context="toolbar-context-menu"
-             collapsed="true">
+             context="toolbar-context-menu">
       <hbox class="titlebar-placeholder" type="pre-tabs"
             skipintoolbarset="true"/>
 
