@@ -1255,7 +1255,6 @@ js::math_atanh(JSContext* cx, unsigned argc, Value* vp)
     return math_function<math_atanh_impl>(cx, argc, vp);
 }
 
-/* Consistency wrapper for platform deviations in hypot() */
 double
 js::ecmaHypot(double x, double y)
 {
@@ -1281,9 +1280,7 @@ js::hypot4(double x, double y, double z, double w)
 {
     AutoUnsafeCallWithABI unsafe;
 
-    /* Check for infinity or NaNs so that we can return immediatelly.
-     * Does not need to be WIN_XP specific as ecmaHypot
-     */
+    // Check for infinities or NaNs so that we can return immediately.
     if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y) ||
             mozilla::IsInfinite(z) || mozilla::IsInfinite(w))
         return mozilla::PositiveInfinity<double>();
@@ -1320,7 +1317,7 @@ js::math_hypot(JSContext* cx, unsigned argc, Value* vp)
 bool
 js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue res)
 {
-    // IonMonkey calls the system hypot function directly if two arguments are
+    // IonMonkey calls the ecmaHypot function directly if two arguments are
     // given. Do that here as well to get the same results.
     if (args.length() == 2) {
         double x, y;
