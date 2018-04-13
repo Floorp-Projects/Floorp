@@ -341,7 +341,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return nullptr;
 
         const Class* clasp = TypedArrayObject::protoClassForType(ArrayTypeID());
-        return GlobalObject::createBlankPrototypeInheriting(cx, global, clasp, typedArrayProto);
+        return GlobalObject::createBlankPrototypeInheriting(cx, clasp, typedArrayProto);
     }
 
     static JSObject*

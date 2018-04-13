@@ -288,8 +288,7 @@ class GlobalObject : public NativeObject
      * of the returned blank prototype.
      */
     static NativeObject*
-    createBlankPrototypeInheriting(JSContext* cx, Handle<GlobalObject*> global,
-                                   const js::Class* clasp, HandleObject proto);
+    createBlankPrototypeInheriting(JSContext* cx, const js::Class* clasp, HandleObject proto);
 
     template <typename T>
     static T*
@@ -905,7 +904,7 @@ GenericCreatePrototype(JSContext* cx, JSProtoKey key)
     if (!GlobalObject::ensureConstructor(cx, cx->global(), protoKey))
         return nullptr;
     RootedObject parentProto(cx, &cx->global()->getPrototype(protoKey).toObject());
-    return GlobalObject::createBlankPrototypeInheriting(cx, cx->global(), clasp, parentProto);
+    return GlobalObject::createBlankPrototypeInheriting(cx, clasp, parentProto);
 }
 
 inline JSProtoKey

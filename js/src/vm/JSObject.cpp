@@ -1818,7 +1818,7 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
                               Native constructor, unsigned nargs,
                               const JSPropertySpec* ps, const JSFunctionSpec* fs,
                               const JSPropertySpec* static_ps, const JSFunctionSpec* static_fs,
-                              NativeObject** ctorp, AllocKind ctorKind)
+                              NativeObject** ctorp)
 {
     /*
      * Create a prototype object for this class.
@@ -1874,7 +1874,7 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
 
         ctor = proto;
     } else {
-        RootedFunction fun(cx, NewNativeConstructor(cx, constructor, nargs, atom, ctorKind));
+        RootedFunction fun(cx, NewNativeConstructor(cx, constructor, nargs, atom));
         if (!fun)
             goto bad;
 
@@ -1939,7 +1939,7 @@ js::InitClass(JSContext* cx, HandleObject obj, HandleObject protoProto_,
               const Class* clasp, Native constructor, unsigned nargs,
               const JSPropertySpec* ps, const JSFunctionSpec* fs,
               const JSPropertySpec* static_ps, const JSFunctionSpec* static_fs,
-              NativeObject** ctorp, AllocKind ctorKind)
+              NativeObject** ctorp)
 {
     RootedObject protoProto(cx, protoProto_);
 
@@ -1964,7 +1964,7 @@ js::InitClass(JSContext* cx, HandleObject obj, HandleObject protoProto_,
     }
 
     return DefineConstructorAndPrototype(cx, obj, key, atom, protoProto, clasp, constructor, nargs,
-                                         ps, fs, static_ps, static_fs, ctorp, ctorKind);
+                                         ps, fs, static_ps, static_fs, ctorp);
 }
 
 void

@@ -211,7 +211,7 @@ GlobalObject::initGenerators(JSContext* cx, Handle<GlobalObject*> global)
     if (!iteratorProto)
         return false;
 
-    RootedObject genObjectProto(cx, GlobalObject::createBlankPrototypeInheriting(cx, global,
+    RootedObject genObjectProto(cx, GlobalObject::createBlankPrototypeInheriting(cx,
                                                                                  &PlainObject::class_,
                                                                                  iteratorProto));
     if (!genObjectProto)
