@@ -54,44 +54,22 @@ SharedSurfacesParent::Get(const wr::ExternalImageId& aId)
   return surface.forget();
 }
 
-/* static */ already_AddRefed<DataSourceSurface>
-SharedSurfacesParent::Acquire(const wr::ExternalImageId& aId)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  if (!sInstance) {
-    return nullptr;
-  }
-
-  RefPtr<SourceSurfaceSharedDataWrapper> surface;
-  sInstance->mSurfaces.Get(wr::AsUint64(aId), getter_AddRefs(surface));
-
-  if (surface) {
-    DebugOnly<bool> rv = surface->AddConsumer();
-    MOZ_ASSERT(!rv);
-  }
-  return surface.forget();
-}
-
-/* static */ bool
-SharedSurfacesParent::Release(const wr::ExternalImageId& aId)
+/* static */ void
+SharedSurfacesParent::Remove(const wr::ExternalImageId& aId)
 {
   //MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (!sInstance) {
-    return false;
+    return;
   }
 
   uint64_t id = wr::AsUint64(aId);
   RefPtr<SourceSurfaceSharedDataWrapper> surface;
   sInstance->mSurfaces.Get(wr::AsUint64(aId), getter_AddRefs(surface));
   if (!surface) {
-    return false;
+    return;
   }
 
-  if (surface->RemoveConsumer()) {
-    sInstance->mSurfaces.Remove(id);
-  }
-
-  return true;
+  sInstance->mSurfaces.Remove(id);
 }
 
 /* static */ void
@@ -191,14 +169,6 @@ SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
   wr::RenderThread::Get()->RegisterExternalImage(id, texture.forget());
 
   sInstance->mSurfaces.Put(id, surface.forget());
-}
-
-/* static */ void
-SharedSurfacesParent::Remove(const wr::ExternalImageId& aId)
-{
-  //MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  DebugOnly<bool> rv = Release(aId);
-  MOZ_ASSERT(rv);
 }
 
 } // namespace layers
