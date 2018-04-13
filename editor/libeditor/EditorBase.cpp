@@ -1680,7 +1680,7 @@ EditorBase::ReplaceContainerWithTransactionInternal(
   // Set or clone attribute if needed.
   if (aCloneAllAttributes) {
     MOZ_ASSERT(&aAttribute == nsGkAtoms::_empty);
-    CloneAttributes(newContainer, &aOldContainer);
+    CloneAttributesWithTransaction(*newContainer, aOldContainer);
   } else if (&aAttribute != nsGkAtoms::_empty) {
     nsresult rv =
       newContainer->SetAttr(kNameSpaceID_None, &aAttribute, aAttributeValue,
@@ -2542,57 +2542,63 @@ EditorBase::CloneAttributeWithTransaction(nsAtom& aAttribute,
  * @param aSource   Must be a DOM element.
  */
 NS_IMETHODIMP
-EditorBase::CloneAttributes(nsIDOMNode* aDest,
-                            nsIDOMNode* aSource)
+EditorBase::CloneAttributes(nsIDOMNode* aDestDOMElement,
+                            nsIDOMNode* aSourceDOMElement)
 {
-  NS_ENSURE_TRUE(aDest && aSource, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<Element> destElement = do_QueryInterface(aDestDOMElement);
+  nsCOMPtr<Element> sourceElement = do_QueryInterface(aSourceDOMElement);
+  if (NS_WARN_IF(!destElement) || NS_WARN_IF(!sourceElement)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  nsCOMPtr<Element> dest = do_QueryInterface(aDest);
-  nsCOMPtr<Element> source = do_QueryInterface(aSource);
-  NS_ENSURE_TRUE(dest && source, NS_ERROR_NO_INTERFACE);
-
-  CloneAttributes(dest, source);
+  CloneAttributesWithTransaction(*destElement, *sourceElement);
 
   return NS_OK;
 }
 
 void
-EditorBase::CloneAttributes(Element* aDest,
-                            Element* aSource)
+EditorBase::CloneAttributesWithTransaction(Element& aDestElement,
+                                           Element& aSourceElement)
 {
-  MOZ_ASSERT(aDest && aSource);
-
   AutoPlaceholderBatch beginBatching(this);
 
   // Use transaction system for undo only if destination is already in the
   // document
-  NS_ENSURE_TRUE(GetRoot(), );
-  bool destInBody = GetRoot()->Contains(aDest);
+  Element* rootElement = GetRoot();
+  if (NS_WARN_IF(!rootElement)) {
+    return;
+  }
+
+  OwningNonNull<Element> destElement(aDestElement);
+  OwningNonNull<Element> sourceElement(aDestElement);
+  bool isDestElementInBody = rootElement->Contains(destElement);
 
   // Clear existing attributes
-  RefPtr<nsDOMAttributeMap> destAttributes = aDest->Attributes();
+  RefPtr<nsDOMAttributeMap> destAttributes = destElement->Attributes();
   while (RefPtr<Attr> attr = destAttributes->Item(0)) {
-    if (destInBody) {
-      RemoveAttributeWithTransaction(*aDest, *attr->NodeInfo()->NameAtom());
+    if (isDestElementInBody) {
+      RemoveAttributeWithTransaction(destElement,
+                                     *attr->NodeInfo()->NameAtom());
     } else {
-      aDest->UnsetAttr(kNameSpaceID_None, attr->NodeInfo()->NameAtom(), true);
+      destElement->UnsetAttr(kNameSpaceID_None, attr->NodeInfo()->NameAtom(),
+                             true);
     }
   }
 
   // Set just the attributes that the source element has
-  RefPtr<nsDOMAttributeMap> sourceAttributes = aSource->Attributes();
+  RefPtr<nsDOMAttributeMap> sourceAttributes = sourceElement->Attributes();
   uint32_t sourceCount = sourceAttributes->Length();
   for (uint32_t i = 0; i < sourceCount; i++) {
     RefPtr<Attr> attr = sourceAttributes->Item(i);
     nsAutoString value;
     attr->GetValue(value);
-    if (destInBody) {
-      SetAttributeOrEquivalent(aDest, attr->NodeInfo()->NameAtom(), value,
+    if (isDestElementInBody) {
+      SetAttributeOrEquivalent(destElement, attr->NodeInfo()->NameAtom(), value,
                                false);
     } else {
       // The element is not inserted in the document yet, we don't want to put
       // a transaction on the UndoStack
-      SetAttributeOrEquivalent(aDest, attr->NodeInfo()->NameAtom(), value,
+      SetAttributeOrEquivalent(destElement, attr->NodeInfo()->NameAtom(), value,
                                true);
     }
   }
