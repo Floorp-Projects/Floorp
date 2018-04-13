@@ -1747,6 +1747,12 @@ public:
     return false;
   }
 
+  void RebuildAllItemsInCurrentSubtree()
+  {
+    mInInvalidSubtree = true;
+    mDirtyRect = mVisibleRect;
+  }
+
   /**
    * This is a convenience function to ease the transition until AGRs and ASRs
    * are unified.
