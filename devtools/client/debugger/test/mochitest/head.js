@@ -35,7 +35,7 @@ const CHROME_URI = Services.io.newURI(CHROME_URL);
 
 Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
 
-registerCleanupFunction(function* () {
+registerCleanupFunction(async function() {
   Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
 
   info("finish() was called, cleaning up...");
@@ -44,7 +44,7 @@ registerCleanupFunction(function* () {
   while (gBrowser && gBrowser.tabs && gBrowser.tabs.length > 1) {
     info("Destroying toolbox.");
     let target = TargetFactory.forTab(gBrowser.selectedTab);
-    yield gDevTools.closeToolbox(target);
+    await gDevTools.closeToolbox(target);
 
     info("Removing tab.");
     gBrowser.removeCurrentTab();
@@ -55,7 +55,7 @@ registerCleanupFunction(function* () {
 
   // Debugger tests use a lot of memory, so force a GC to help fragmentation.
   info("Forcing GC/CC after debugger test.");
-  yield new Promise(resolve => {
+  await new Promise(resolve => {
     Cu.forceGC();
     Cu.forceCC();
     Cu.schedulePreciseGC(resolve);

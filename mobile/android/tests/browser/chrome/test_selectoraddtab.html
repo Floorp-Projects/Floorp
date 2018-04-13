@@ -45,48 +45,48 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1216047
 
   const kTestPage = "http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/basic_article.html";
 
-  add_task(function* test_selectOrAdd() {
+  add_task(async function test_selectOrAdd() {
     // Add a new tab with a blank page
     tabBlank = BrowserApp.addTab("about:blank", { selected: true, parentId: BrowserApp.selectedTab.id });
 
     // Now, let's force the target tab to be added
     tabTest = BrowserApp.selectOrAddTab(kTestPage, { selected: true, parentId: BrowserApp.selectedTab.id });
-    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+    await promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
 
     // Check that basic_article is now selected
     is(BrowserApp.selectedBrowser, tabTest.browser, "Target tab is selected after being added.");
 
     // Switch back to about:blank
     BrowserApp.selectTab(tabBlank);
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
 
     // Check that about:blank is selected
     is(BrowserApp.selectedTab, tabBlank, "about:blank is selected.");
 
     // Use selectOrAddTab to select the existing tab
     BrowserApp.selectOrAddTab(kTestPage, { selected: true, parentId: BrowserApp.selectedTab.id });
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
 
     // Check that basic_article is now selected
     is(BrowserApp.selectedTab, tabTest, "Target tab is selected.");
 
     // Switch back to about:blank
     BrowserApp.selectTab(tabBlank);
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
 
     // Check that about:blank is selected
     is(BrowserApp.selectedTab, tabBlank, "about:blank is selected.");
 
     // Use selectOrAddTab to select the existing tab using the startsWith flag
     BrowserApp.selectOrAddTab(kTestPage, { selected: true, parentId: BrowserApp.selectedTab.id }, { startsWith: kTestPage });
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
 
     // Check that basic_article is now selected
     is(BrowserApp.selectedTab, tabTest, "Target tab is selected.");
 
     // Switch back to about:blank
     BrowserApp.selectTab(tabBlank);
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
 
     // Check that about:blank is selected
     is(BrowserApp.selectedTab, tabBlank, "about:blank is selected.");
@@ -100,7 +100,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1216047
 
     // Use selectOrAddTab to select the existing tab
     BrowserApp.selectOrAddTab(kTestPage, { selected: true, parentId: BrowserApp.selectedTab.id });
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
 
     // Check that basic_article is now selected
     is(BrowserApp.selectedTab, tabTest, "Target tab is selected.");

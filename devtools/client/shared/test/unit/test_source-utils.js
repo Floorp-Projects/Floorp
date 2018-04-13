@@ -20,7 +20,7 @@ const CONTENT_URLS = [
 ];
 
 // Test `sourceUtils.parseURL`
-add_task(function* () {
+add_task(async function() {
   let parsed = sourceUtils.parseURL("https://foo.com:8888/boo/bar.js?q=query");
   equal(parsed.fileName, "bar.js", "parseURL parsed valid fileName");
   equal(parsed.host, "foo.com:8888", "parseURL parsed valid host");
@@ -37,7 +37,7 @@ add_task(function* () {
 });
 
 // Test `sourceUtils.isContentScheme`.
-add_task(function* () {
+add_task(async function() {
   for (let url of CHROME_URLS) {
     ok(!sourceUtils.isContentScheme(url),
        `${url} correctly identified as not content scheme`);
@@ -48,7 +48,7 @@ add_task(function* () {
 });
 
 // Test `sourceUtils.isChromeScheme`.
-add_task(function* () {
+add_task(async function() {
   for (let url of CHROME_URLS) {
     ok(sourceUtils.isChromeScheme(url), `${url} correctly identified as chrome scheme`);
   }
@@ -59,14 +59,14 @@ add_task(function* () {
 });
 
 // Test `sourceUtils.isWASM`.
-add_task(function* () {
+add_task(async function() {
   ok(sourceUtils.isWASM("wasm-function[66240] (?:13870536)"),
                         "wasm function correctly identified");
   ok(!sourceUtils.isWASM(CHROME_URLS[0]), `A chrome url does not identify as wasm.`);
 });
 
 // Test `sourceUtils.isDataScheme`.
-add_task(function* () {
+add_task(async function() {
   let dataURI = "data:text/html;charset=utf-8,<!DOCTYPE html></html>";
   ok(sourceUtils.isDataScheme(dataURI), `${dataURI} correctly identified as data scheme`);
 
@@ -79,7 +79,7 @@ add_task(function* () {
 });
 
 // Test `sourceUtils.getSourceNames`.
-add_task(function* () {
+add_task(async function() {
   testAbbreviation("http://example.com/foo/bar/baz/boo.js",
                    "boo.js",
                    "http://example.com/foo/bar/baz/boo.js",
@@ -87,7 +87,7 @@ add_task(function* () {
 });
 
 // Test `sourceUtils.isScratchpadTheme`
-add_task(function* () {
+add_task(async function() {
   ok(sourceUtils.isScratchpadScheme("Scratchpad/1"),
      "Scratchpad/1 identified as scratchpad");
   ok(sourceUtils.isScratchpadScheme("Scratchpad/20"),
@@ -96,7 +96,7 @@ add_task(function* () {
 });
 
 // Test `sourceUtils.getSourceNames`.
-add_task(function* () {
+add_task(async function() {
   // Check length
   let longMalformedURL = `example.com${new Array(100).fill("/a").join("")}/file.js`;
   ok(sourceUtils.getSourceNames(longMalformedURL).short.length <= 100,
@@ -162,7 +162,7 @@ add_task(function* () {
 });
 
 // Test for source mapped file name
-add_task(function* () {
+add_task(async function() {
   const { getSourceMappedFile } = sourceUtils;
   const source = "baz.js";
   const output = getSourceMappedFile(source);

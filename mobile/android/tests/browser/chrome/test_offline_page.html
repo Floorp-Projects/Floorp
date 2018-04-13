@@ -44,7 +44,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   const kUniqueURI = Services.io.newURI("http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/video_controls.html");
 
-  add_task(function* test_offline() {
+  add_task(async function test_offline() {
     // Tests always connect to localhost, and per bug 87717, localhost is now
     // reachable in offline mode.  To avoid this, disable any proxy.
     proxyPrefValue = Services.prefs.getIntPref("network.proxy.type");
@@ -66,11 +66,11 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     });
 
     // Go offline, expecting the error page.
-    yield promiseOffline(true);
+    await promiseOffline(true);
 
     // Load our test web page
     browser.loadURI(kUniqueURI.spec, null, null);
-    yield promiseBrowserEvent(browser, "DOMContentLoaded");
+    await promiseBrowserEvent(browser, "DOMContentLoaded");
 
     // This is an error page.
     is(browser.contentDocument.documentURI.substring(0, 27), "about:neterror?e=netOffline", "Document URI is the error page.");
@@ -81,13 +81,13 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     Services.prefs.setIntPref("network.proxy.type", proxyPrefValue);
 
     // Go online and try to load the page again
-    yield promiseOffline(false);
+    await promiseOffline(false);
 
     ok(browser.contentDocument.getElementById("errorTryAgain"), "The error page has got a #errorTryAgain element");
 
     // Click "Try Again" button to start the page load
     browser.contentDocument.getElementById("errorTryAgain").click();
-    yield promiseBrowserEvent(browser, "DOMContentLoaded");
+    await promiseBrowserEvent(browser, "DOMContentLoaded");
 
     // This is not an error page.
     is(browser.contentDocument.documentURI, kUniqueURI.spec, "Document URI is not the offline-error page, but the original URI.");

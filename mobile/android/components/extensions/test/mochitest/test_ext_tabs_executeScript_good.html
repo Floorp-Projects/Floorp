@@ -65,21 +65,21 @@ function* testHasPermission(params) {
   yield extension.unload();
 }
 
-add_task(function* testGoodPermissions() {
+add_task(async function testGoodPermissions() {
   let win = window.open("http://mochi.test:8888/");
 
   info("Test explicit host permission");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {"permissions": ["http://mochi.test/"]},
   });
 
   info("Test explicit host subdomain permission");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {"permissions": ["http://*.mochi.test/"]},
   });
 
   info("Test explicit <all_urls> permission");
-  yield testHasPermission({
+  await testHasPermission({
     manifest: {"permissions": ["<all_urls>"]},
   });
 
