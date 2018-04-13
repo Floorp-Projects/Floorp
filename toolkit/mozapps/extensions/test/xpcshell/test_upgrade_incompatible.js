@@ -8,7 +8,7 @@ add_task(async function test_upgrade_incompatible() {
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  await promiseStartupManager();
+  await promiseStartupManager(false);
 
   let file = createTempWebExtensionFile({
     manifest: {
@@ -49,6 +49,27 @@ add_task(async function test_upgrade_incompatible() {
   addon = await promiseAddonByID(ID);
   notEqual(addon, null);
   equal(addon.appDisabled, true);
+
+  await promiseShutdownManager();
+
+  file = createTempWebExtensionFile({
+    manifest: {
+      applications: {gecko: {id: ID}},
+    },
+  });
+
+  // swap the old extension back in and check that we don't persist the disabled state forever.
+  await OS.File.move(file.path, path);
+  await promiseSetExtensionModifiedTime(path, timestamp);
+  Services.obs.notifyObservers(new FileUtils.File(path), "flush-cache-entry");
+
+  // Restart.  With the change to the DB schema we recompute compatibility.
+  Services.prefs.setIntPref("extensions.databaseSchema", 0);
+  await promiseStartupManager(true);
+
+  addon = await promiseAddonByID(ID);
+  notEqual(addon, null);
+  equal(addon.appDisabled, false);
 
   await promiseShutdownManager();
 });

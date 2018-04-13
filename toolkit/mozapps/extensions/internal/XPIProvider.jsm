@@ -811,6 +811,11 @@ function isUsableAddon(aAddon) {
     return false;
   }
 
+  // If we can't read it, it's not usable:
+  if (aAddon.brokenManifest) {
+    return false;
+  }
+
   // Experiments are installed through an external mechanism that
   // limits target audience to compatible clients. We trust it knows what
   // it's doing and skip compatibility checks.
