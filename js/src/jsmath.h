@@ -9,7 +9,6 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include <cmath>
 #include <stdint.h>
 
 #include "NamespaceImports.h"

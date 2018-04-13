@@ -1772,15 +1772,10 @@ class HashTable : private AllocPolicy
         if (!EnsureHash<HashPolicy>(l))
             return AddPtr();
         HashNumber keyHash = prepareHash(l);
-        // Calling constructor in return statement here avoid excess copying
-        // when build with Visual Studio 2015 and 2017, but it triggers a bug in
-        // gcc which is fixed in gcc-6. See bug 1385181.
-#if MOZ_IS_GCC && __GNUC__ < 6
-        AddPtr p(lookup(l, keyHash, sCollisionBit), *this, keyHash);
-        return p;
-#else
+        // Directly call the constructor in the return statement to avoid
+        // excess copying when building with Visual Studio 2017.
+        // See bug 1385181.
         return AddPtr(lookup(l, keyHash, sCollisionBit), *this, keyHash);
-#endif
     }
 
     template <typename... Args>
