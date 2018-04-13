@@ -12,6 +12,7 @@ import mozunit
 import pytest
 
 from mozprofile import (
+    BaseProfile,
     Profile,
     FirefoxProfile,
     ThunderbirdProfile,
@@ -51,7 +52,7 @@ def test_create_profile(tmpdir, app, cls):
         return
 
     profile = create_profile(app, profile=path)
-    assert isinstance(profile, Profile)
+    assert isinstance(profile, BaseProfile)
     assert profile.__class__ == cls
     assert profile.profile == path
 
