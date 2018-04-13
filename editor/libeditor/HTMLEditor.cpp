@@ -1288,8 +1288,10 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<Element> bodyElement = GetRoot();
-  NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
+  RefPtr<Element> rootElement = GetRoot();
+  if (NS_WARN_IF(!rootElement)) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   // Find where the <body> tag starts.
   nsReadingIterator<char16_t> beginbody;
@@ -1410,11 +1412,12 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
       }
     }
 
-    nsCOMPtr<Element> divElement =
+    RefPtr<Element> divElement =
       CreateElementWithDefaults(NS_LITERAL_STRING("div"));
-    NS_ENSURE_TRUE(divElement, NS_ERROR_FAILURE);
-
-    CloneAttributes(bodyElement, divElement);
+    if (NS_WARN_IF(!divElement)) {
+      return NS_ERROR_FAILURE;
+    }
+    CloneAttributesWithTransaction(*rootElement, *divElement);
 
     return BeginningOfDocument();
   }
@@ -1453,7 +1456,7 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   NS_ENSURE_TRUE(child && child->IsElement(), NS_ERROR_NULL_POINTER);
 
   // Copy all attributes from the div child to current body element
-  CloneAttributes(bodyElement, child->AsElement());
+  CloneAttributesWithTransaction(*rootElement, *child->AsElement());
 
   // place selection at first editable content
   return BeginningOfDocument();
@@ -4562,7 +4565,7 @@ HTMLEditor::CopyLastEditableChildStyles(nsINode* aPreviousBlock,
           return NS_ERROR_FAILURE;
         }
       }
-      CloneAttributes(newStyles, childElement);
+      CloneAttributesWithTransaction(*newStyles, *childElement);
     }
     childElement = childElement->GetParentElement();
   }

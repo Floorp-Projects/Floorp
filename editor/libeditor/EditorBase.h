@@ -425,7 +425,13 @@ public:
                                                    aAttributeValue, false);
   }
 
-  void CloneAttributes(Element* aDest, Element* aSource);
+  /**
+   * CloneAttributesWithTransaction() clones all attributes from
+   * aSourceElement to aDestElement after removing all attributes in
+   * aDestElement.
+   */
+  void CloneAttributesWithTransaction(Element& aDestElement,
+                                      Element& aSourceElement);
 
   /**
    * RemoveContainerWithTransaction() removes aElement from the DOM tree and
