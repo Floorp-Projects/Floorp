@@ -636,7 +636,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       // This overrides the initial values specified in fontStyle, to avoid
       // inconsistencies in which attributes allow CSS changes and which do not.
       if (mFlags & MATH_FONT_WEIGHT_BOLD) {
-        font.weight = NS_FONT_WEIGHT_BOLD;
+        font.weight = FontWeight::Bold();
         if (mFlags & MATH_FONT_STYLING_NORMAL) {
           font.style = NS_FONT_STYLE_NORMAL;
         } else {
@@ -644,7 +644,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         }
       } else if (mFlags & MATH_FONT_STYLING_NORMAL) {
         font.style = NS_FONT_STYLE_NORMAL;
-        font.weight = NS_FONT_WEIGHT_NORMAL;
+        font.weight = FontWeight::Normal();
       } else {
         mathVar = NS_MATHML_MATHVARIANT_ITALIC;
       }
@@ -723,20 +723,20 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 
   if (mathVar == NS_MATHML_MATHVARIANT_BOLD && doMathvariantStyling) {
     font.style = NS_FONT_STYLE_NORMAL;
-    font.weight = NS_FONT_WEIGHT_BOLD;
+    font.weight = FontWeight::Bold();
   } else if (mathVar == NS_MATHML_MATHVARIANT_ITALIC && doMathvariantStyling) {
     font.style = NS_FONT_STYLE_ITALIC;
-    font.weight = NS_FONT_WEIGHT_NORMAL;
+    font.weight = FontWeight::Normal();
   } else if (mathVar == NS_MATHML_MATHVARIANT_BOLD_ITALIC &&
              doMathvariantStyling) {
     font.style = NS_FONT_STYLE_ITALIC;
-    font.weight = NS_FONT_WEIGHT_BOLD;
+    font.weight = FontWeight::Bold();
   } else if (mathVar != NS_MATHML_MATHVARIANT_NONE) {
     // Mathvariant overrides fontstyle and fontweight
     // Need to check to see if mathvariant is actually applied as this function
     // is used for other purposes.
     font.style = NS_FONT_STYLE_NORMAL;
-    font.weight = NS_FONT_WEIGHT_NORMAL;
+    font.weight = FontWeight::Normal();
   }
   gfxFontGroup* newFontGroup = nullptr;
 

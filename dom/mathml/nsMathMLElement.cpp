@@ -8,6 +8,7 @@
 #include "nsMathMLElement.h"
 #include "base/compiler_specific.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "nsGkAtoms.h"
 #include "nsITableCellLayout.h" // for MAX_COLSPAN / MAX_ROWSPAN
 #include "nsCRT.h"
@@ -726,10 +727,10 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       str.CompressWhitespace();
       if (str.EqualsASCII("normal")) {
         aData->SetKeywordValue(eCSSProperty_font_weight,
-                               NS_FONT_WEIGHT_NORMAL);
+                               FontWeight::Normal().ToFloat());
       } else if (str.EqualsASCII("bold")) {
         aData->SetKeywordValue(eCSSProperty_font_weight,
-                               NS_FONT_WEIGHT_BOLD);
+                               FontWeight::Bold().ToFloat());
       }
     }
   }
