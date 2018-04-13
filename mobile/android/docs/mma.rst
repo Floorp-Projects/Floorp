@@ -156,6 +156,10 @@ List of current Events related data that is sent:
 {
   "event" : "E_Dismiss_Onboarding"
 }
+* The user just resumed the app from background
+{
+  "event" : "E_Resumed_From_Background"
+}
 
 Deep Links:
 Deep links are actions that can point Fennec to open certain pages or load features such as `show bookmark list` or
