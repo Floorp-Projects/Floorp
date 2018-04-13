@@ -42,12 +42,13 @@ class InlineAutocompleteEditTextTest {
         assertEquals(0, empty.length)
         assertFalse(empty.startsWith("test"))
 
-        val nonEmpty = AutocompleteResult("testText", "testSource", 1)
+        val nonEmpty = AutocompleteResult("testText", "testSource", 1, { it.toUpperCase() })
         assertFalse(nonEmpty.isEmpty)
         assertEquals(8, nonEmpty.length)
         assertTrue(nonEmpty.startsWith("test"))
         assertEquals("testSource", nonEmpty.source)
         assertEquals(1, nonEmpty.totalItems)
+        assertEquals("TESTTEXT", nonEmpty.formattedText)
     }
 
     @Test

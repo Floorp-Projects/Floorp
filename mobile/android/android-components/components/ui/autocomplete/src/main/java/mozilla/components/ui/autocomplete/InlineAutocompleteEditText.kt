@@ -37,6 +37,8 @@ typealias OnKeyPreImeListener = (View, Int, KeyEvent) -> Boolean
 typealias OnSelectionChangedListener = (Int, Int) -> Unit
 typealias OnWindowsFocusChangeListener = (Boolean) -> Unit
 
+typealias TextFormatter = (String) -> String
+
 /**
  * An {@link EditText} component which supports inline autocompletion.
  *
@@ -60,9 +62,11 @@ typealias OnWindowsFocusChangeListener = (Boolean) -> Unit
  * {@link setOnSelectionChangedListener}, {@link setOnWindowsFocusChangeListener}).
  */
 open class InlineAutocompleteEditText(val ctx: Context, attrs: AttributeSet) : AppCompatEditText(ctx, attrs) {
-    data class AutocompleteResult(val text: String, val source: String, val totalItems: Int) {
+    data class AutocompleteResult(val text: String, val source: String, val totalItems: Int, val textFormatter: TextFormatter? = null) {
         val isEmpty: Boolean = this.text.isEmpty()
         val length: Int = this.text.length
+        val formattedText: String
+            get() = textFormatter?.invoke(text) ?: text
 
         fun startsWith(text: String): Boolean = this.text.startsWith(text)
 
