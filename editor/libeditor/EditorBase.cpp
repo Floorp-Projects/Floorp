@@ -1778,41 +1778,38 @@ EditorBase::RemoveContainerWithTransaction(Element& aElement)
   return NS_OK;
 }
 
-/**
- * InsertContainerAbove() inserts a new parent for inNode, which is contructed
- * to be of type aNodeType.  outNode becomes a child of inNode's earlier
- * parent.  Caller's responsibility to make sure inNode's can be child of
- * outNode, and outNode can be child of old parent.
- */
 already_AddRefed<Element>
-EditorBase::InsertContainerAbove(nsIContent* aNode,
-                                 nsAtom* aNodeType,
-                                 nsAtom* aAttribute,
-                                 const nsAString* aValue)
+EditorBase::InsertContainerWithTransactionInternal(
+              nsIContent& aContent,
+              nsAtom& aTagName,
+              nsAtom& aAttribute,
+              const nsAString& aAttributeValue)
 {
-  MOZ_ASSERT(aNode && aNodeType);
-
-  EditorDOMPoint pointToInsertNewContainer(aNode);
+  EditorDOMPoint pointToInsertNewContainer(&aContent);
   if (NS_WARN_IF(!pointToInsertNewContainer.IsSet())) {
     return nullptr;
   }
-  // aNode will be moved to the new container before inserting the new
+  // aContent will be moved to the new container before inserting the new
   // container.  So, when we insert the container, the insertion point
-  // is before the next sibling of aNode.
+  // is before the next sibling of aContent.
+  // XXX If pointerToInsertNewContainer stores offset here, the offset and
+  //     referring child node become mismatched.  Although, currently this
+  //     is not a problem since InsertNodeTransaction refers only child node.
   DebugOnly<bool> advanced = pointToInsertNewContainer.AdvanceOffset();
   NS_WARNING_ASSERTION(advanced,
-    "Failed to advance offset to after aNode");
+    "Failed to advance offset to after aContent");
 
-  // Create new container
-  RefPtr<Element> newContainer = CreateHTMLContent(aNodeType);
+  // Create new container.
+  RefPtr<Element> newContainer = CreateHTMLContent(&aTagName);
   if (NS_WARN_IF(!newContainer)) {
     return nullptr;
   }
 
-  // Set attribute if needed
-  if (aAttribute && aValue && aAttribute != nsGkAtoms::_empty) {
+  // Set attribute if needed.
+  if (&aAttribute != nsGkAtoms::_empty) {
     nsresult rv =
-      newContainer->SetAttr(kNameSpaceID_None, aAttribute, *aValue, true);
+      newContainer->SetAttr(kNameSpaceID_None, &aAttribute, aAttributeValue,
+                            true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
@@ -1822,14 +1819,15 @@ EditorBase::InsertContainerAbove(nsIContent* aNode,
   AutoInsertContainerSelNotify selNotify(mRangeUpdater);
 
   // Put aNode in the new container, first.
-  nsresult rv = DeleteNodeWithTransaction(*aNode);
+  nsresult rv = DeleteNodeWithTransaction(aContent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
 
   {
     AutoTransactionsConserveSelection conserveSelection(this);
-    rv = InsertNodeWithTransaction(*aNode, EditorRawDOMPoint(newContainer, 0));
+    rv = InsertNodeWithTransaction(aContent,
+                                   EditorRawDOMPoint(newContainer, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
