@@ -5,6 +5,7 @@
 #include <nsIMutableArray.h>
 #include <nsArrayUtils.h>
 #include <nsPerformanceMetrics.h>
+#include "nsComponentManagerUtils.h"
 
 /* ------------------------------------------------------
  *
