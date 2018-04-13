@@ -149,20 +149,6 @@ class ProfileEntry
     static int32_t pcToOffset(JSScript* aScript, jsbytecode* aPc);
 
   public:
-    ProfileEntry() = default;
-    ProfileEntry& operator=(const ProfileEntry& other)
-    {
-        label_ = other.label();
-        dynamicString_ = other.dynamicString();
-        void* spScript = other.spOrScript;
-        spOrScript = spScript;
-        int32_t offset = other.lineOrPcOffset;
-        lineOrPcOffset = offset;
-        uint32_t kindAndCategory = other.kindAndCategory_;
-        kindAndCategory_ = kindAndCategory;
-        return *this;
-    }
-
     enum class Kind : uint32_t {
         // A normal C++ frame.
         CPP_NORMAL = 0,
@@ -325,14 +311,18 @@ class PseudoStack final
       : stackPointer(0)
     {}
 
-    ~PseudoStack();
+    ~PseudoStack() {
+        // The label macros keep a reference to the PseudoStack to avoid a TLS
+        // access. If these are somehow not all cleared we will get a
+        // use-after-free so better to crash now.
+        MOZ_RELEASE_ASSERT(stackPointer == 0);
+    }
 
     void pushCppFrame(const char* label, const char* dynamicString, void* sp, uint32_t line,
                       js::ProfileEntry::Kind kind, js::ProfileEntry::Category category) {
-        uint32_t oldStackPointer = stackPointer;
-
-        if (MOZ_LIKELY(entryCapacity > oldStackPointer) || MOZ_LIKELY(ensureCapacitySlow()))
-            entries[oldStackPointer].initCppFrame(label, dynamicString, sp, line, kind, category);
+        if (stackPointer < MaxEntries) {
+            entries[stackPointer].initCppFrame(label, dynamicString, sp, line, kind, category);
+        }
 
         // This must happen at the end! The compiler will not reorder this
         // update because stackPointer is Atomic<..., ReleaseAcquire>, so any
@@ -342,15 +332,15 @@ class PseudoStack final
         // more expensive on x86 than the separate operations done here.
         // This thread is the only one that ever changes the value of
         // stackPointer.
+        uint32_t oldStackPointer = stackPointer;
         stackPointer = oldStackPointer + 1;
     }
 
     void pushJsFrame(const char* label, const char* dynamicString, JSScript* script,
                      jsbytecode* pc) {
-        uint32_t oldStackPointer = stackPointer;
-
-        if (MOZ_LIKELY(entryCapacity > oldStackPointer) || MOZ_LIKELY(ensureCapacitySlow()))
-            entries[oldStackPointer].initJsFrame(label, dynamicString, script, pc);
+        if (stackPointer < MaxEntries) {
+            entries[stackPointer].initJsFrame(label, dynamicString, script, pc);
+        }
 
         // This must happen at the end! The compiler will not reorder this
         // update because stackPointer is Atomic<..., ReleaseAcquire>, which
@@ -361,6 +351,7 @@ class PseudoStack final
         // more expensive on x86 than the separate operations done here.
         // This thread is the only one that ever changes the value of
         // stackPointer.
+        uint32_t oldStackPointer = stackPointer;
         stackPointer = oldStackPointer + 1;
     }
 
@@ -375,33 +366,20 @@ class PseudoStack final
         stackPointer = oldStackPointer - 1;
     }
 
-    uint32_t stackSize() const { return std::min(uint32_t(stackPointer), stackCapacity()); }
-    uint32_t stackCapacity() const { return entryCapacity; }
+    uint32_t stackSize() const { return std::min(uint32_t(stackPointer), uint32_t(MaxEntries)); }
 
   private:
-    // Out of line path for expanding the buffer, since otherwise this would get inlined in every
-    // DOM WebIDL call.
-    MOZ_COLD MOZ_MUST_USE bool ensureCapacitySlow();
-
     // No copying.
     PseudoStack(const PseudoStack&) = delete;
     void operator=(const PseudoStack&) = delete;
 
-    // No moving either.
-    PseudoStack(PseudoStack&&) = delete;
-    void operator=(PseudoStack&&) = delete;
-
-    uint32_t entryCapacity = 0;
-
   public:
+    static const uint32_t MaxEntries = 1024;
 
-    // The pointer to the stack entries, this is read from the profiler thread and written from the
-    // current thread.
-    //
-    // This is effectively a unique pointer.
-    mozilla::Atomic<js::ProfileEntry*> entries { nullptr };
+    // The stack entries.
+    js::ProfileEntry entries[MaxEntries];
 
-    // This may exceed the entry capacity, so instead use the stackSize() method to
+    // This may exceed MaxEntries, so instead use the stackSize() method to
     // determine the number of valid samples in entries. When this is less
     // than MaxEntries, it refers to the first free entry past the top of the
     // in-use stack (i.e. entries[stackPointer - 1] is the top stack entry).
