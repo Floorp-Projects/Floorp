@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.toolbar
 
-import mozilla.components.definition.toolbar.ToolbarConcept
+import mozilla.components.toolbar.Toolbar
 import mozilla.components.session.SessionManager
 
 /**
@@ -12,7 +12,7 @@ import mozilla.components.session.SessionManager
  */
 class ToolbarFeature(
     sessionManager: SessionManager,
-    toolbar: ToolbarConcept
+    toolbar: Toolbar
 ) {
     private val presenter = ToolbarPresenter(sessionManager, toolbar)
 

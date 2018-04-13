@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.toolbar
 
-import mozilla.components.definition.toolbar.ToolbarConcept
+import mozilla.components.toolbar.Toolbar
 import mozilla.components.session.Session
 import mozilla.components.session.SessionManager
 
@@ -14,7 +14,7 @@ import mozilla.components.session.SessionManager
  */
 class ToolbarPresenter(
     private val sessionManager: SessionManager,
-    private val toolbar: ToolbarConcept
+    private val toolbar: Toolbar
 ) : SessionManager.Observer, Session.Observer {
     var session: Session = sessionManager.selectedSession
 
