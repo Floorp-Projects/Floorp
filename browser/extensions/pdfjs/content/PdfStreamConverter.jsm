@@ -19,6 +19,7 @@ var EXPORTED_SYMBOLS = ["PdfStreamConverter"];
 
 const PDFJS_EVENT_ID = "pdf.js.message";
 const PREF_PREFIX = "pdfjs";
+const PDF_VIEWER_ORIGIN = "resource://pdf.js";
 const PDF_VIEWER_WEB_PAGE = "resource://pdf.js/web/viewer.html";
 const MAX_NUMBER_OF_PREFS = 50;
 const MAX_STRING_PREF_LENGTH = 128;
@@ -104,11 +105,15 @@ function log(aMsg) {
   dump(msg + "\n");
 }
 
-function getDOMWindow(aChannel) {
+function getDOMWindow(aChannel, aPrincipal) {
   var requestor = aChannel.notificationCallbacks ?
                   aChannel.notificationCallbacks :
                   aChannel.loadGroup.notificationCallbacks;
   var win = requestor.getInterface(Ci.nsIDOMWindow);
+  // Ensure the window wasn't navigated to something that is not PDF.js.
+  if (!win.document.nodePrincipal.equals(aPrincipal)) {
+    return null;
+  }
   return win;
 }
 
@@ -629,7 +634,7 @@ class RangedChromeActions extends ChromeActions {
           loaded,
           total,
           chunk: this.dataListener.readData(),
-        }, "*");
+        }, PDF_VIEWER_ORIGIN);
       };
       this.dataListener.oncomplete = () => {
         this.dataListener = null;
@@ -643,7 +648,7 @@ class RangedChromeActions extends ChromeActions {
       pdfUrl: this.pdfUrl,
       length: this.contentLength,
       data,
-    }, "*");
+    }, PDF_VIEWER_ORIGIN);
 
     return true;
   }
@@ -665,13 +670,13 @@ class RangedChromeActions extends ChromeActions {
           pdfjsLoadAction: "range",
           begin: aArgs.begin,
           chunk: aArgs.chunk,
-        }, "*");
+        }, PDF_VIEWER_ORIGIN);
       },
       onProgress: function RangedChromeActions_onProgress(evt) {
         domWindow.postMessage({
           pdfjsLoadAction: "rangeProgress",
           loaded: evt.loaded,
-        }, "*");
+        }, PDF_VIEWER_ORIGIN);
       },
     });
   }
@@ -707,7 +712,7 @@ class StandardChromeActions extends ChromeActions {
         pdfjsLoadAction: "progress",
         loaded,
         total,
-      }, "*");
+      }, PDF_VIEWER_ORIGIN);
     };
 
     this.dataListener.oncomplete = (data, errorCode) => {
@@ -715,7 +720,7 @@ class StandardChromeActions extends ChromeActions {
         pdfjsLoadAction: "complete",
         data,
         errorCode,
-      }, "*");
+      }, PDF_VIEWER_ORIGIN);
 
       this.dataListener = null;
       this.originalRequest = null;
@@ -973,9 +978,13 @@ PdfStreamConverter.prototype = {
                                  offset, count);
       },
       onStopRequest(request, context, statusCode) {
-        // We get the DOM window here instead of before the request since it
-        // may have changed during a redirect.
-        var domWindow = getDOMWindow(channel);
+        var domWindow = getDOMWindow(channel, resourcePrincipal);
+        if (!Components.isSuccessCode(statusCode) || !domWindow) {
+          // The request may have been aborted and the document may have been
+          // replaced with something that is not PDF.js, abort attaching.
+          listener.onStopRequest(aRequest, context, statusCode);
+          return;
+        }
         var actions;
         if (rangeRequest || streamRequest) {
           actions = new RangedChromeActions(
@@ -986,7 +995,7 @@ PdfStreamConverter.prototype = {
             domWindow, contentDispositionFilename, aRequest, dataListener);
         }
         var requestListener = new RequestListener(actions);
-        domWindow.addEventListener(PDFJS_EVENT_ID, function(event) {
+        domWindow.document.addEventListener(PDFJS_EVENT_ID, function(event) {
           requestListener.receive(event);
         }, false, true);
         if (actions.supportsIntegratedFind()) {
