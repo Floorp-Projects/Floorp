@@ -51,16 +51,17 @@ Structure:
           BlockedDllList: <list>, // Windows-only, see WindowsDllBlocklist.cpp for details
           BlocklistInitFailed: 1, // Windows-only, present only if the DLL blocklist initialization failed
           CrashTime: <time>, // Seconds since the Epoch
-          ContainsMemoryReport: 1, // Optional
-          EventLoopNestingLevel: <levels>, // Optional, present only if >0
+          ContainsMemoryReport: 1, // Optional, if set indicates that the crash had a memory report attached
+          EventLoopNestingLevel: <levels>, // Optional, present only if >0, indicates the nesting level of the event-loop
           ipc_channel_error: <error string>, // Optional, contains the string processing error reason for an ipc-based content crash
-          IsGarbageCollecting: 1, // Optional, present only if set to 1
+          IsGarbageCollecting: 1, // Optional, if set indicates that the crash occurred while the garbage collector was running
           MozCrashReason: <reason>, // Optional, contains the string passed to MOZ_CRASH()
           OOMAllocationSize: <size>, // Size of the allocation that caused an OOM
           RemoteType: <type>, // Optional, type of content process, see below for a list of types
           SecondsSinceLastCrash: <duration>, // Seconds elapsed since the last crash occurred
           ShutdownProgress: <phase>, // Optional, contains the shutdown phase in which the crash occurred
           SystemMemoryUsePercentage: <percentage>, // Windows-only, percent of memory in use
+          StartupCrash: 1, // Optional, if set indicates that Firefox crashed during startup
           TelemetrySessionId: <id>, // Active telemetry session ID when the crash was recorded
           TextureUsage: <usage>, // Optional, usage of texture memory in bytes
           TotalPageFile: <size>, // Windows-only, paging file in use
