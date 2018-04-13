@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -1757,7 +1758,7 @@ gfxPlatform::IsFontFormatSupported(uint32_t aFormatFlags)
 
 gfxFontEntry*
 gfxPlatform::LookupLocalFont(const nsAString& aFontName,
-                             uint16_t aWeight,
+                             FontWeight aWeight,
                              int16_t aStretch,
                              uint8_t aStyle)
 {
@@ -1769,7 +1770,7 @@ gfxPlatform::LookupLocalFont(const nsAString& aFontName,
 
 gfxFontEntry*
 gfxPlatform::MakePlatformFont(const nsAString& aFontName,
-                              uint16_t aWeight,
+                              FontWeight aWeight,
                               int16_t aStretch,
                               uint8_t aStyle,
                               const uint8_t* aFontData,

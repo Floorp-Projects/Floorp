@@ -10,6 +10,7 @@
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
 #include "WinUtils.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsVersion.h"
 #include "gfxFontConstants.h"
@@ -707,7 +708,7 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
   // FIXME: Other weights?
   aFontStyle.weight =
     (ptrLogFont->lfWeight == FW_BOLD ?
-        NS_FONT_WEIGHT_BOLD : NS_FONT_WEIGHT_NORMAL);
+        FontWeight::Bold() : FontWeight::Normal());
 
   // FIXME: Set aFontStyle->stretch correctly!
   aFontStyle.stretch = NS_FONT_STRETCH_NORMAL;

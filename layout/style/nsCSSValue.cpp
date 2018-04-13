@@ -9,6 +9,7 @@
 #include "nsCSSValue.h"
 
 #include "mozilla/CORSMode.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoTypes.h"
@@ -121,6 +122,12 @@ nsCSSValue::nsCSSValue(SharedFontList* aValue)
   mValue.mFontFamilyList->AddRef();
 }
 
+nsCSSValue::nsCSSValue(FontWeight aWeight)
+  : mUnit(eCSSUnit_FontWeight)
+{
+  mValue.mFontWeight = aWeight;
+}
+
 nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   : mUnit(aCopy.mUnit)
 {
@@ -179,6 +186,9 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (eCSSUnit_FontFamilyList == mUnit) {
     mValue.mFontFamilyList = aCopy.mValue.mFontFamilyList;
     mValue.mFontFamilyList->AddRef();
+  }
+  else if (eCSSUnit_FontWeight == mUnit) {
+    mValue.mFontWeight = aCopy.mValue.mFontWeight;
   }
   else if (eCSSUnit_AtomIdent == mUnit) {
     mValue.mAtom = aCopy.mValue.mAtom;
@@ -258,6 +268,9 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     else if (eCSSUnit_FontFamilyList == mUnit) {
       return mValue.mFontFamilyList->mNames ==
              aOther.mValue.mFontFamilyList->mNames;
+    }
+    else if (eCSSUnit_FontWeight == mUnit) {
+      return mValue.mFontWeight == aOther.mValue.mFontWeight;
     }
     else if (eCSSUnit_AtomIdent == mUnit) {
       return mValue.mAtom == aOther.mValue.mAtom;
@@ -475,6 +488,13 @@ void nsCSSValue::SetFontFamilyListValue(already_AddRefed<SharedFontList> aValue)
   Reset();
   mUnit = eCSSUnit_FontFamilyList;
   mValue.mFontFamilyList = aValue.take();
+}
+
+void nsCSSValue::SetFontWeight(FontWeight aWeight)
+{
+  Reset();
+  mUnit = eCSSUnit_FontWeight;
+  mValue.mFontWeight = aWeight;
 }
 
 void nsCSSValue::SetPairValue(const nsCSSValuePair* aValue)
@@ -895,6 +915,7 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     // Int: nothing extra to measure.
     case eCSSUnit_Integer:
     case eCSSUnit_Enumerated:
+    case eCSSUnit_FontWeight:
       break;
 
     // Float: nothing extra to measure.

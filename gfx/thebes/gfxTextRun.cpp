@@ -1768,9 +1768,9 @@ gfxTextRun::Dump(FILE* aOutput) {
         NS_ConvertUTF16toUTF8 fontName(font->GetName());
         nsAutoCString lang;
         style->language->ToUTF8String(lang);
-        fprintf(aOutput, "%d: %s %f/%d/%d/%s", glyphRuns[i].mCharacterOffset,
+        fprintf(aOutput, "%d: %s %f/%g/%d/%s", glyphRuns[i].mCharacterOffset,
                 fontName.get(), style->size,
-                style->weight, style->style, lang.get());
+                style->weight.ToFloat(), style->style, lang.get());
     }
     fputc(']', aOutput);
 }
@@ -2416,7 +2416,7 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
                 nsAutoCString str((const char*)aString, aLength);
                 MOZ_LOG(log, LogLevel::Warning,\
                        ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
-                        "len %d weight: %d width: %d style: %s size: %6.2f %zu-byte "
+                        "len %d weight: %g width: %d style: %s size: %6.2f %zu-byte "
                         "TEXTRUN [%s] ENDTEXTRUN\n",
                         (mStyle.systemFont ? "textrunui" : "textrun"),
                         NS_ConvertUTF16toUTF8(families).get(),
@@ -2425,7 +2425,7 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
                          (mFamilyList.GetDefaultFontType() == eFamily_sans_serif ?
                           "sans-serif" : "none")),
                         lang.get(), static_cast<int>(Script::LATIN), aLength,
-                        uint32_t(mStyle.weight), uint32_t(mStyle.stretch),
+                        mStyle.weight.ToFloat(), uint32_t(mStyle.stretch),
                         (mStyle.style & NS_FONT_STYLE_ITALIC ? "italic" :
                         (mStyle.style & NS_FONT_STYLE_OBLIQUE ? "oblique" :
                                                                 "normal")),
@@ -2464,7 +2464,7 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
                     uint32_t runLen = runLimit - runStart;
                     MOZ_LOG(log, LogLevel::Warning,\
                            ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
-                            "len %d weight: %d width: %d style: %s size: %6.2f "
+                            "len %d weight: %g width: %d style: %s size: %6.2f "
                             "%zu-byte TEXTRUN [%s] ENDTEXTRUN\n",
                             (mStyle.systemFont ? "textrunui" : "textrun"),
                             NS_ConvertUTF16toUTF8(families).get(),
@@ -2473,7 +2473,7 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
                              (mFamilyList.GetDefaultFontType() == eFamily_sans_serif ?
                               "sans-serif" : "none")),
                             lang.get(), static_cast<int>(runScript), runLen,
-                            uint32_t(mStyle.weight), uint32_t(mStyle.stretch),
+                            mStyle.weight.ToFloat(), uint32_t(mStyle.stretch),
                             (mStyle.style & NS_FONT_STYLE_ITALIC ? "italic" :
                             (mStyle.style & NS_FONT_STYLE_OBLIQUE ? "oblique" :
                                                                     "normal")),
@@ -2818,7 +2818,7 @@ gfxFontGroup::FindFallbackFaceForChar(gfxFontFamily* aFamily, uint32_t aCh)
         return nullptr;
     }
 
-    bool needsBold = mStyle.weight >= 600 && !fe->IsBold() &&
+    bool needsBold = mStyle.weight >= FontWeight(600) && !fe->IsBold() &&
                      mStyle.allowSyntheticWeight;
     return fe->FindOrMakeFont(&mStyle, needsBold);
 }
@@ -3444,7 +3444,7 @@ gfxFontGroup::WhichSystemFontSupportsChar(uint32_t aCh, uint32_t aNextCh,
         gfxPlatformFontList::PlatformFontList()->
             SystemFindFontForChar(aCh, aNextCh, aRunScript, &mStyle);
     if (fe) {
-        bool wantBold = mStyle.weight >= 600;
+        bool wantBold = mStyle.weight >= FontWeight(600);
         return fe->FindOrMakeFont(&mStyle, wantBold && !fe->IsBold());
     }
 

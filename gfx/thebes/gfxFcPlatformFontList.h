@@ -10,6 +10,7 @@
 #include "gfxFontEntry.h"
 #include "gfxFT2FontBase.h"
 #include "gfxPlatformFontList.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/mozalloc.h"
 #include "nsAutoRef.h"
 #include "nsClassHashtable.h"
@@ -93,7 +94,7 @@ public:
     // used for data fonts where the fontentry takes ownership
     // of the font data and the FT_Face
     explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
-                                    uint16_t aWeight,
+                                    FontWeight aWeight,
                                     int16_t aStretch,
                                     uint8_t aStyle,
                                     const uint8_t *aData,
@@ -103,7 +104,7 @@ public:
     // used for @font-face local system fonts with explicit patterns
     explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
                                     FcPattern* aFontPattern,
-                                    uint16_t aWeight,
+                                    FontWeight aWeight,
                                     int16_t aStretch,
                                     uint8_t aStyle);
 
@@ -287,11 +288,13 @@ public:
         InfallibleTArray<mozilla::dom::SystemFontListEntry>* retValue);
 
     gfxFontEntry*
-    LookupLocalFont(const nsAString& aFontName, uint16_t aWeight,
+    LookupLocalFont(const nsAString& aFontName,
+                    FontWeight aWeight,
                     int16_t aStretch, uint8_t aStyle) override;
 
     gfxFontEntry*
-    MakePlatformFont(const nsAString& aFontName, uint16_t aWeight,
+    MakePlatformFont(const nsAString& aFontName,
+                     FontWeight aWeight,
                      int16_t aStretch,
                      uint8_t aStyle,
                      const uint8_t* aFontData,
