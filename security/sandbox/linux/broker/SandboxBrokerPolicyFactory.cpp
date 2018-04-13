@@ -8,6 +8,7 @@
 #include "SandboxInfo.h"
 #include "SandboxLogging.h"
 
+#include "base/shared_memory.h"
 #include "mozilla/Array.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
@@ -187,7 +188,6 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   // are cached over the lifetime of the factory.
 #if defined(MOZ_CONTENT_SANDBOX)
   SandboxBroker::Policy* policy = new SandboxBroker::Policy;
-  policy->AddDir(rdwrcr, "/dev/shm");
   // Write permssions
   //
   // Bug 1308851: NVIDIA proprietary driver when using WebGL
@@ -504,6 +504,15 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
   if (allowAlsa) {
     // Bug 1309098: ALSA support
     policy->AddDir(rdwr, "/dev/snd");
+  }
+
+  if (allowPulse) {
+    policy->AddDir(rdwrcr, "/dev/shm");
+  } else {
+    std::string shmPath("/dev/shm");
+    if (base::SharedMemory::AppendPosixShmPrefix(&shmPath, aPid)) {
+      policy->AddPrefix(rdwrcr, shmPath.c_str());
+    }
   }
 
 #ifdef MOZ_WIDGET_GTK
