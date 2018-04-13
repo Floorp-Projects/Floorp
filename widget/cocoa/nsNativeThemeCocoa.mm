@@ -275,72 +275,11 @@ DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView* aInView)
 
 @end
 
-@interface ContextAwareSearchFieldCell : NSSearchFieldCell
-{
-  nsIFrame* mContext;
-}
-
-// setContext: stores the searchfield nsIFrame so that it can be consulted
-// during painting. Please reset this by calling setContext:nullptr as soon as
-// you're done with painting because we don't want to keep a dangling pointer.
-- (void)setContext:(nsIFrame*)aContext;
-@end
-
-@implementation ContextAwareSearchFieldCell
-
-- (id)initTextCell:(NSString*)aString
-{
-  if ((self = [super initTextCell:aString])) {
-    mContext = nullptr;
-  }
-  return self;
-}
-
-- (void)setContext:(nsIFrame*)aContext
-{
-  mContext = aContext;
-}
-
-static BOOL IsToolbarStyleContainer(nsIFrame* aFrame)
-{
-  nsIContent* content = aFrame->GetContent();
-  if (!content)
-    return NO;
-
-  if (content->IsAnyOfXULElements(nsGkAtoms::toolbar,
-                                  nsGkAtoms::toolbox,
-                                  nsGkAtoms::statusbar))
-    return YES;
-
-  switch (aFrame->StyleDisplay()->mAppearance) {
-    case NS_THEME_TOOLBAR:
-    case NS_THEME_STATUSBAR:
-      return YES;
-    default:
-      return NO;
-  }
-}
-
-- (BOOL)_isToolbarMode
-{
-  // On 10.7, searchfields have two different styles, depending on whether
-  // the searchfield is on top of of window chrome. This function is called on
-  // 10.7 during drawing in order to determine which style to use.
-  for (nsIFrame* frame = mContext; frame; frame = frame->GetParent()) {
-    if (IsToolbarStyleContainer(frame)) {
-      return YES;
-    }
-  }
-  return NO;
-}
-
-@end
+@interface SearchFieldCellWithFocusRing : NSSearchFieldCell {} @end
 
 // Workaround for Bug 542048
 // On 64-bit, NSSearchFieldCells don't draw focus rings.
 #if defined(__x86_64__)
-
-@interface SearchFieldCellWithFocusRing : ContextAwareSearchFieldCell {} @end
 
 @implementation SearchFieldCellWithFocusRing
 
@@ -368,6 +307,21 @@ static BOOL IsToolbarStyleContainer(nsIFrame* aFrame)
 @end
 
 #endif
+
+@interface ToolbarSearchFieldCellWithFocusRing : SearchFieldCellWithFocusRing
+@end
+
+@implementation ToolbarSearchFieldCellWithFocusRing
+
+- (BOOL)_isToolbarMode
+{
+  // This function is called during -[NSSearchFieldCell drawWithFrame:inView:].
+  // Returning YES from it selects the style that's appropriate for search
+  // fields inside toolbars.
+  return YES;
+}
+
+@end
 
 #define HITHEME_ORIENTATION kHIThemeOrientationNormal
 
@@ -557,15 +511,17 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   [mCheckboxCell setButtonType:NSSwitchButton];
   [mCheckboxCell setAllowsMixedState:YES];
 
-#if defined(__x86_64__)
   mSearchFieldCell = [[SearchFieldCellWithFocusRing alloc] initTextCell:@""];
-#else
-  mSearchFieldCell = [[ContextAwareSearchFieldCell alloc] initTextCell:@""];
-#endif
   [mSearchFieldCell setBezelStyle:NSTextFieldRoundedBezel];
   [mSearchFieldCell setBezeled:YES];
   [mSearchFieldCell setEditable:YES];
   [mSearchFieldCell setFocusRingType:NSFocusRingTypeExterior];
+
+  mToolbarSearchFieldCell = [[ToolbarSearchFieldCellWithFocusRing alloc] initTextCell:@""];
+  [mToolbarSearchFieldCell setBezelStyle:NSTextFieldRoundedBezel];
+  [mToolbarSearchFieldCell setBezeled:YES];
+  [mToolbarSearchFieldCell setEditable:YES];
+  [mToolbarSearchFieldCell setFocusRingType:NSFocusRingTypeExterior];
 
   mDropdownCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:NO];
 
@@ -596,6 +552,7 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
   [mRadioButtonCell release];
   [mCheckboxCell release];
   [mSearchFieldCell release];
+  [mToolbarSearchFieldCell release];
   [mDropdownCell release];
   [mComboBoxCell release];
   [mCellDrawView release];
@@ -1089,16 +1046,49 @@ static const CellRenderSettings searchFieldSettings = {
   }
 };
 
+static bool
+IsToolbarStyleContainer(nsIFrame* aFrame)
+{
+  nsIContent* content = aFrame->GetContent();
+  if (!content) {
+    return false;
+  }
+
+  if (content->IsAnyOfXULElements(nsGkAtoms::toolbar,
+                                  nsGkAtoms::toolbox,
+                                  nsGkAtoms::statusbar)) {
+    return true;
+  }
+
+  switch (aFrame->StyleDisplay()->mAppearance) {
+    case NS_THEME_TOOLBAR:
+    case NS_THEME_STATUSBAR:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static bool
+IsInsideToolbar(nsIFrame* aFrame)
+{
+  for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
+    if (IsToolbarStyleContainer(frame)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect,
                                     nsIFrame* aFrame, EventStates inState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  ContextAwareSearchFieldCell* cell = mSearchFieldCell;
-  [cell setContext:aFrame];
+  NSSearchFieldCell* cell =
+    IsInsideToolbar(aFrame) ? mToolbarSearchFieldCell : mSearchFieldCell;
   [cell setEnabled:!IsDisabled(aFrame, inState)];
-  // NOTE: this could probably use inState
   [cell setShowsFirstResponder:IsFocused(aFrame)];
 
   // When using the 10.11 SDK, the default string will be shown if we don't
@@ -1108,8 +1098,6 @@ nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxR
   DrawCellWithSnapping(cell, cgContext, inBoxRect, searchFieldSettings,
                        VerticalAlignFactor(aFrame), mCellDrawView,
                        IsFrameRTL(aFrame));
-
-  [cell setContext:nullptr];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
