@@ -26,7 +26,7 @@ const { Grip } = REPS;
  * @returns {ObjectInspector}
  *        An ObjectInspector for the given grip.
  */
-function getObjectInspector(grip, serviceContainer, override) {
+function getObjectInspector(grip, serviceContainer, override = {}) {
   let onDOMNodeMouseOver;
   let onDOMNodeMouseOut;
   let onInspectIconClick;
@@ -44,18 +44,12 @@ function getObjectInspector(grip, serviceContainer, override) {
       : null;
   }
 
+  const roots = createRootsFromGrip(grip);
+
   const objectInspectorProps = {
     autoExpandDepth: 0,
     mode: MODE.LONG,
-    // TODO: we disable focus since it's not currently working well in ObjectInspector.
-    // Let's remove the property below when problem are fixed in OI.
-    focusable: false,
-    roots: [{
-      path: (grip && grip.actor) || JSON.stringify(grip),
-      contents: {
-        value: grip
-      }
-    }],
+    roots,
     createObjectClient: object =>
       new ObjectClient(serviceContainer.hudProxy.client, object),
     createLongStringClient: object =>
@@ -79,7 +73,22 @@ function getObjectInspector(grip, serviceContainer, override) {
     });
   }
 
+  if (override.autoFocusRoot) {
+    Object.assign(objectInspectorProps, {
+      focusedItem: roots[0]
+    });
+  }
+
   return ObjectInspector({...objectInspectorProps, ...override});
 }
 
-exports.getObjectInspector = getObjectInspector;
+function createRootsFromGrip(grip) {
+  return [{
+    path: (grip && grip.actor) || JSON.stringify(grip),
+    contents: { value: grip }
+  }];
+}
+
+module.exports = {
+  getObjectInspector,
+};
