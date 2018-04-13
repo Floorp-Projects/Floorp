@@ -395,8 +395,6 @@ nsFrameLoader::FireWillChangeProcessEvent()
     return nullptr;
   }
   JSContext* cx = jsapi.cx();
-  GlobalObject global(cx, mOwnerContent->GetOwnerGlobal()->GetGlobalJSObject());
-  MOZ_ASSERT(!global.Failed());
 
   // Set our mBrowserChangingProcessBlockers property to refer to the blockers
   // list. We will synchronously dispatch a DOM event to collect this list of
@@ -418,7 +416,7 @@ nsFrameLoader::FireWillChangeProcessEvent()
   mBrowserChangingProcessBlockers = nullptr;
 
   ErrorResult rv;
-  RefPtr<Promise> allPromise = Promise::All(global, blockers, rv);
+  RefPtr<Promise> allPromise = Promise::All(cx, blockers, rv);
   return allPromise.forget();
 }
 
