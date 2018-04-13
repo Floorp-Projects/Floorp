@@ -27,8 +27,11 @@ android {
 }
 
 dependencies {
+    implementation project(':feature-session')
     implementation project(':browser-session')
     implementation project(':concept-toolbar')
+
+    implementation project(':support-ktx')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 }

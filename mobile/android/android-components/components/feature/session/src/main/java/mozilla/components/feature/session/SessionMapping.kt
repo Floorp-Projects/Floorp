@@ -21,7 +21,7 @@ class SessionMapping {
      */
     @Synchronized
     fun getOrCreate(engine: Engine, session: Session): EngineSession {
-        return mapping[session] ?: createNewSession(engine, session)
+        return mapping.getOrPut(session, { createNewSession(engine, session) })
     }
 
     private fun createNewSession(engine: Engine, session: Session): EngineSession {

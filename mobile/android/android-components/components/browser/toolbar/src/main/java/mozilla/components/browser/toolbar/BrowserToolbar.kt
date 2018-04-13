@@ -6,8 +6,9 @@ package mozilla.components.browser.toolbar
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.TextView
 import mozilla.components.concept.toolbar.Toolbar
 
 /**
@@ -18,13 +19,24 @@ class BrowserToolbar @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), Toolbar {
-    private val urlView = TextView(context)
-
-    init {
-        addView(urlView)
-    }
 
     override fun displayUrl(url: String) {
-        urlView.text = url
+        val urlView = getUrlViewComponent()
+        urlView.setText(url)
+        urlView.setSelection(0, url.length)
+    }
+
+    override fun setOnUrlChangeListener(listener: (String) -> Unit) {
+        val urlView = getUrlViewComponent()
+        urlView.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_GO) {
+                listener.invoke(urlView.text.toString())
+            }
+            true
+        }
+    }
+
+    internal fun getUrlViewComponent(): EditText {
+        return this.findViewById(R.id.urlView)
     }
 }

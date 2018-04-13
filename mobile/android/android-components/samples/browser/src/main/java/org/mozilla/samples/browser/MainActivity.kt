@@ -26,8 +26,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        sessionFeature = SessionFeature(components.sessionManager, components.engine, engineView)
-        toolbarFeature = ToolbarFeature(components.sessionManager, toolbar)
+        sessionFeature = SessionFeature(components.sessionManager, components.engine, engineView,
+                components.sessionMapping)
+
+        toolbarFeature = ToolbarFeature(components.sessionManager, components.sessionUseCases.loadUrl, toolbar)
     }
 
     override fun onResume() {

@@ -41,6 +41,7 @@ dependencies {
     implementation project(':feature-session')
     implementation project(':feature-toolbar')
 
+    implementation project(':ui-autocomplete')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 

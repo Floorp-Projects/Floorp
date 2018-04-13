@@ -6,20 +6,24 @@ package mozilla.components.feature.toolbar
 
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.feature.session.SessionUseCases
 
 /**
  * Feature implementation for connecting a toolbar implementation with the session module.
  */
 class ToolbarFeature(
     sessionManager: SessionManager,
-    toolbar: Toolbar
+    loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
+    val toolbar: Toolbar
 ) {
     private val presenter = ToolbarPresenter(sessionManager, toolbar)
+    private val interactor = ToolbarInteractor(loadUrlUseCase, toolbar)
 
     /**
      * Start feature: App is in the foreground.
      */
     fun start() {
+        interactor.start()
         presenter.start()
     }
 
@@ -27,6 +31,7 @@ class ToolbarFeature(
      * Stop feature: App is in the background.
      */
     fun stop() {
+        interactor.stop()
         presenter.stop()
     }
 }

@@ -48,7 +48,7 @@ class SessionTest {
     }
 
     @Test
-    fun `obserber is notified when URL changes`() {
+    fun `observer is notified when URL changes`() {
         val observer = mock(Session.Observer::class.java)
 
         val session = Session("https://www.mozilla.org")

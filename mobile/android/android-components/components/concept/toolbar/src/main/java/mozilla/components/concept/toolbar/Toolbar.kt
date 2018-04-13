@@ -8,8 +8,19 @@ package mozilla.components.concept.toolbar
  * Interface to be implemented by components that provide browser toolbar functionality.
  */
 interface Toolbar {
+
     /**
-     * Display the given URL.
+     * Displays the given URL string as part of this Toolbar.
+     *
+     * @param url the url to display
      */
     fun displayUrl(url: String)
+
+    /**
+     * Registers the given function to be invoked when the url changes as result
+     * of user input.
+     *
+     * @param listener the listener function
+     */
+    fun setOnUrlChangeListener(listener: (String) -> Unit)
 }

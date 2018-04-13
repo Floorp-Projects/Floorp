@@ -9,6 +9,8 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.browser.engine.system.SystemEngine
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.SessionProvider
+import mozilla.components.feature.session.SessionMapping
+import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 
@@ -21,10 +23,11 @@ class Components(private val applcationContext: Context) {
         GeckoRuntime.create(applcationContext, settings)
     }
 
-    private val sessionProvider : SessionProvider by lazy { DummySessionProvider() }
-
     //val engine : Engine by lazy { GeckoEngine(geckoRuntime) }
     val engine : Engine by lazy { SystemEngine() }
 
+    private val sessionProvider : SessionProvider by lazy { DummySessionProvider() }
     val sessionManager : SessionManager by lazy { SessionManager(sessionProvider) }
+    val sessionMapping = SessionMapping()
+    val sessionUseCases = SessionUseCases(sessionManager, engine, sessionMapping)
 }
