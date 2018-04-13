@@ -12,7 +12,6 @@
 #include "Logging.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticMutex.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 namespace gfx {
@@ -85,8 +84,6 @@ private:
 class DWriteFontFileStream final : public IDWriteFontFileStream
 {
 public:
-  DWriteFontFileStream(uint64_t aFontFileKey);
-
   /**
     * Used by the FontFileLoader to create a new font stream,
     * this font stream is created from data in memory. The memory
@@ -95,7 +92,7 @@ public:
     *
     * @param aData Font data
     */
-  bool Initialize(uint8_t *aData, uint32_t aSize);
+  DWriteFontFileStream(uint8_t *aData, uint32_t aSize, uint64_t aFontFileKey);
 
   // IUnknown interface
   IFACEMETHOD(QueryInterface)(IID const& iid, OUT void** ppObject)
@@ -138,7 +135,7 @@ public:
   virtual HRESULT STDMETHODCALLTYPE GetLastWriteTime(OUT UINT64* lastWriteTime);
 
 private:
-  nsTArray<uint8_t> mData;
+  std::vector<uint8_t> mData;
   Atomic<uint32_t> mRefCnt;
   uint64_t mFontFileKey;
 
@@ -169,10 +166,13 @@ DWriteFontFileLoader::CreateStreamFromKey(const void *fontFileReferenceKey,
   return S_OK;
 }
 
-DWriteFontFileStream::DWriteFontFileStream(uint64_t aFontFileKey)
+DWriteFontFileStream::DWriteFontFileStream(uint8_t *aData, uint32_t aSize,
+                                           uint64_t aFontFileKey)
   : mRefCnt(0)
   , mFontFileKey(aFontFileKey)
 {
+  mData.resize(aSize);
+  memcpy(&mData.front(), aData, aSize);
 }
 
 DWriteFontFileStream::~DWriteFontFileStream()
@@ -181,20 +181,10 @@ DWriteFontFileStream::~DWriteFontFileStream()
   sFontFileStreams.erase(mFontFileKey);
 }
 
-bool
-DWriteFontFileStream::Initialize(uint8_t *aData, uint32_t aSize)
-{
-  if (!mData.SetLength(aSize, fallible)) {
-    return false;
-  }
-  memcpy(mData.Elements(), aData, aSize);
-  return true;
-}
-
 HRESULT STDMETHODCALLTYPE
 DWriteFontFileStream::GetFileSize(UINT64 *fileSize)
 {
-  *fileSize = mData.Length();
+  *fileSize = mData.size();
   return S_OK;
 }
 
@@ -211,7 +201,7 @@ DWriteFontFileStream::ReadFileFragment(const void **fragmentStart,
                                        void **fragmentContext)
 {
   // We are required to do bounds checking.
-  if (fileOffset + fragmentSize > mData.Length()) {
+  if (fileOffset + fragmentSize > mData.size()) {
     return E_FAIL;
   }
 
@@ -242,12 +232,8 @@ NativeFontResourceDWrite::Create(uint8_t *aFontData, uint32_t aDataLength,
 
   sFontFileStreamsMutex.Lock();
   uint64_t fontFileKey = sNextFontFileKey++;
-  RefPtr<DWriteFontFileStream> ffsRef = new DWriteFontFileStream(fontFileKey);
-  if (!ffsRef->Initialize(aFontData, aDataLength)) {
-    sFontFileStreamsMutex.Unlock();
-    gfxWarning() << "Failed to create DWriteFontFileStream.";
-    return nullptr;
-  }
+  RefPtr<IDWriteFontFileStream> ffsRef =
+    new DWriteFontFileStream(aFontData, aDataLength, fontFileKey);
   sFontFileStreams[fontFileKey] = ffsRef;
   sFontFileStreamsMutex.Unlock();
 
