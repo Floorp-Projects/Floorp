@@ -25,6 +25,7 @@
 using namespace js;
 
 using mozilla::CheckedInt;
+using mozilla::IsAsciiDigit;
 
 /*
  * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad 21.2.5.2.2
@@ -1221,7 +1222,7 @@ InterpretDollar(JSLinearString* matched, JSLinearString* string, size_t position
 
     /* ES 2016 draft Mar 25, 2016 Table 46. */
     char16_t c = currentDollar[1];
-    if (JS7_ISDEC(c)) {
+    if (IsAsciiDigit(c)) {
         /* $n, $nn */
         unsigned num = JS7_UNDEC(c);
         if (num > captures.length()) {
@@ -1232,7 +1233,7 @@ InterpretDollar(JSLinearString* matched, JSLinearString* string, size_t position
         const CharT* currentChar = currentDollar + 2;
         if (currentChar < replacementEnd) {
             c = *currentChar;
-            if (JS7_ISDEC(c)) {
+            if (IsAsciiDigit(c)) {
                 unsigned tmpNum = 10 * num + JS7_UNDEC(c);
                 // If num > captures.length(), the result is implementation-defined.
                 // Consume next character only if num <= captures.length().
