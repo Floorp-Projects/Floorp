@@ -2,12 +2,23 @@
 
 const Services = require("Services");
 
-/*
- * Create a writable property by tracking it with a private variable.
- * We cannot make a normal property writeable on `exports` because
- * the module system freezes it.
+/**
+ * This module controls various global flags that can be toggled on and off.
+ * These flags are generally used to change the behavior of the code during
+ * testing. They are tracked by preferences so that they are propagated
+ * between the parent and content processes. The flags are exposed via a module
+ * as a conveniene and to stop from littering preference names throughout the
+ * code ase.
+ *
+ * Each of the flags is documented where it is defined.
  */
-function makeWritableFlag(exports, name, pref) {
+
+/**
+ * We cannot make a normal property writeable on `exports` because
+ * the module system freezes it. This function observes a preference
+ * and provides the latest value through a getter.
+ */
+function makePrefTrackedFlag(exports, name, pref) {
   let flag;
   // We don't have access to pref in worker, so disable all logs by default
   if (isWorker) {
@@ -33,10 +44,22 @@ function makeWritableFlag(exports, name, pref) {
   });
 }
 
-makeWritableFlag(exports, "wantLogging", "devtools.debugger.log");
-makeWritableFlag(exports, "wantVerbose", "devtools.debugger.log.verbose");
+/**
+ * Setting the "devtools.debugger.log" preference to true will enable logging of
+ * the RDP calls to the debugger server.
+ */
+makePrefTrackedFlag(exports, "wantLogging", "devtools.debugger.log");
 
-// When the testing flag is set, various behaviors may be altered from
-// production mode, typically to enable easier testing or enhanced
-// debugging.
-makeWritableFlag(exports, "testing", "devtools.testing");
+/**
+ * Setting the "devtools.debugger.log.verbose" preference to true will enable a
+ * more verbose logging of the the RDP. The "devtools.debugger.log" preference
+ * must be set to true as well for this to have any effect.
+ */
+makePrefTrackedFlag(exports, "wantVerbose", "devtools.debugger.log.verbose");
+
+/**
+ * Setting the "devtools.testing" preference to true will toggle on certain
+ * behaviors that can differ from the production version of the code. These
+ * behaviors typically enable easier testing or enhanced debugging features.
+ */
+makePrefTrackedFlag(exports, "testing", "devtools.testing");
