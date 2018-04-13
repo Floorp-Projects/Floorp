@@ -8,7 +8,7 @@ buildscript {
         supportLibraries: '27.1.1',
         junit: '4.12',
         robolectric: '3.8',
-        mockito: '2.12.0'
+        mockito: '2.18.0'
     ]
 
     // Synchronized build configuration for all modules
