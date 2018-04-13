@@ -37,6 +37,7 @@ namespace JS {
     _(SetProp_InlineCache)                              \
                                                         \
     _(GetElem_TypedObject)                              \
+    _(GetElem_CallSiteObject)                           \
     _(GetElem_Dense)                                    \
     _(GetElem_TypedArray)                               \
     _(GetElem_String)                                   \
