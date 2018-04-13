@@ -6,29 +6,30 @@
 
 from __future__ import absolute_import
 
-import unittest
 import os
 
 import mozunit
+import pytest
 
 from mozprofile import Profile
 
 
-class TestProfile(unittest.TestCase):
+def test_with_profile_should_cleanup():
+    with Profile() as profile:
+        assert os.path.exists(profile.profile)
 
-    def test_with_profile_should_cleanup(self):
+    # profile is cleaned
+    assert not os.path.exists(profile.profile)
+
+
+def test_with_profile_should_cleanup_even_on_exception():
+    with pytest.raises(ZeroDivisionError):
         with Profile() as profile:
-            self.assertTrue(os.path.exists(profile.profile))
-        # profile is cleaned
-        self.assertFalse(os.path.exists(profile.profile))
+            assert os.path.exists(profile.profile)
+            1 / 0  # will raise ZeroDivisionError
 
-    def test_with_profile_should_cleanup_even_on_exception(self):
-        with self.assertRaises(ZeroDivisionError):
-            with Profile() as profile:
-                self.assertTrue(os.path.exists(profile.profile))
-                1 / 0  # will raise ZeroDivisionError
-        # profile is cleaned
-        self.assertFalse(os.path.exists(profile.profile))
+    # profile is cleaned
+    assert not os.path.exists(profile.profile)
 
 
 if __name__ == '__main__':
