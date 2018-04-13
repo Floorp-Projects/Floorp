@@ -139,6 +139,7 @@ UNIFIED_SOURCES += [
     'ErrorNames.cpp',
     'HoldDropJSObjects.cpp',
     'JSObjectHolder.cpp',
+    'LogCommandLineHandler.cpp',
     'Logging.cpp',
     'LogModulePrefWatcher.cpp',
     'nsClassInfoImpl.cpp',

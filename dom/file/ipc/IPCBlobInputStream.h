@@ -45,11 +45,6 @@ private:
   ~IPCBlobInputStream();
 
   nsresult
-  MaybeExecuteInputStreamCallback(nsIInputStreamCallback* aCallback,
-                                  nsIEventTarget* aEventTarget,
-                                  const MutexAutoLock& aProofOfLock);
-
-  nsresult
   EnsureAsyncRemoteStream();
 
   void

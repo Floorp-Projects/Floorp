@@ -9,6 +9,7 @@
 #include "nsLookAndFeel.h"
 #include "gfxFont.h"
 #include "gfxFontConstants.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
 
 using namespace mozilla;
@@ -466,7 +467,7 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
 {
     aFontName.AssignLiteral("\"Roboto\"");
     aFontStyle.style = NS_FONT_STYLE_NORMAL;
-    aFontStyle.weight = NS_FONT_WEIGHT_NORMAL;
+    aFontStyle.weight = FontWeight::Normal();
     aFontStyle.stretch = NS_FONT_STRETCH_NORMAL;
     aFontStyle.size = 9.0 * 96.0f / 72.0f * aDevPixPerCSSPixel;
     aFontStyle.systemFont = true;

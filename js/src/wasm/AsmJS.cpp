@@ -1759,7 +1759,7 @@ class MOZ_STACK_CLASS ModuleValidator
         arrayViews_(cx),
         atomicsPresent_(false),
         simdPresent_(false),
-        env_(CompileMode::Once, Tier::Ion, DebugEnabled::False,
+        env_(CompileMode::Once, Tier::Ion, DebugEnabled::False, HasGcTypes::False,
              cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()
                ? Shareable::True
                : Shareable::False,
@@ -7723,6 +7723,9 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
             // Bool32x4 uses the same data layout as Int32x4.
             *val = Val(simdConstant.asInt32x4());
             return true;
+          }
+          case ValType::AnyRef: {
+            MOZ_CRASH("not available in asm.js");
           }
         }
       }

@@ -491,7 +491,7 @@ def setup_talos(config, tests):
 
         # Per https://bugzilla.mozilla.org/show_bug.cgi?id=1357753#c3, branch
         # name is only required for try
-        if config.params['project'] == 'try':
+        if config.params.is_try():
             extra_options.append('--branch-name')
             extra_options.append('try')
 
@@ -596,7 +596,7 @@ def set_expires_after(config, tests):
     keep storage costs low."""
     for test in tests:
         if 'expires-after' not in test:
-            if config.params['project'] == 'try':
+            if config.params.is_try():
                 test['expires-after'] = "14 days"
             else:
                 test['expires-after'] = "1 year"
@@ -976,7 +976,7 @@ def make_job_description(config, tests):
             jobdesc['when'] = test['when']
         elif 'optimization' in test:
             jobdesc['optimization'] = test['optimization']
-        elif config.params['project'] != 'try' and suite not in INCLUSIVE_COMPONENTS:
+        elif not config.params.is_try() and suite not in INCLUSIVE_COMPONENTS:
             # for non-try branches and non-inclusive suites, include SETA
             jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
         else:

@@ -25,6 +25,7 @@ UNIFIED_SOURCES += [
     'TestFile.cpp',
     'TestGCPostBarriers.cpp',
     'TestID.cpp',
+    'TestLogCommandLineHandler.cpp',
     'TestMoveString.cpp',
     'TestMozPromise.cpp',
     'TestMultiplexInputStream.cpp',
