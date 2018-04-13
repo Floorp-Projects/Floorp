@@ -88,6 +88,7 @@ if CONFIG['OS_TARGET'] == 'Android':
 FINAL_LIBRARY = 'gkmedias'
 
 CFLAGS += CONFIG['MOZ_ALSA_CFLAGS']
+CFLAGS += CONFIG['MOZ_JACK_CFLAGS']
 CFLAGS += CONFIG['MOZ_PULSEAUDIO_CFLAGS']
 
 # We allow warnings for third-party code that can be updated from upstream.

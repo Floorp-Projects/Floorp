@@ -79,9 +79,7 @@ endif
 ifndef RELEASE_OR_BETA
 	@$(MAKE) -C ../extensions/presentation/locale AB_CD=$* XPI_NAME=locale-$*
 endif
-ifneq '$(or $(MOZ_DEV_EDITION),$(NIGHTLY_BUILD))' ''
 	@$(MAKE) -C ../extensions/webcompat-reporter/locales AB_CD=$* XPI_NAME=locale-$*
-endif
 	@$(MAKE) -C ../../devtools/client/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
 	@$(MAKE) -C ../../devtools/startup/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
 	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
@@ -107,9 +105,7 @@ endif
 	@$(MAKE) -C ../../devtools/startup/locales chrome AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
-ifdef NIGHTLY_BUILD
 	@$(MAKE) -C ../extensions/webcompat-reporter/locales chrome AB_CD=$*
-endif
 
 package-win32-installer: WIN32_INSTALLER_OUT=$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 package-win32-installer: $(SUBMAKEFILES)

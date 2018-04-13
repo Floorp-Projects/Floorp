@@ -201,7 +201,7 @@
                 data-l10n-id="advanced-fonts"
                 search-l10n-ids="
                   fonts-window.title,
-                  fonts-header,
+                  fonts-langgroup-header,
                   fonts-proportional-size,
                   fonts-proportional-header,
                   fonts-serif,
@@ -307,7 +307,7 @@
                 languages-customize-moveup.label,
                 languages-customize-movedown.label,
                 languages-customize-remove.label,
-                languages-customize-select-language.label,
+                languages-customize-select-language.placeholder,
                 languages-customize-add.label,
               " />
     </hbox>

@@ -475,7 +475,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnWheelEvents) {
   for (int i = 0; i < 3; i++) {
     ScrollWheelInput swi(MillisecondsSinceStartup(mcc->Time()), mcc->Time(), 0,
       ScrollWheelInput::SCROLLMODE_INSTANT, ScrollWheelInput::SCROLLDELTA_PIXEL,
-      origin, 0, 10, false);
+      origin, 0, 10, false, WheelDeltaAdjustmentStrategy::eNone);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, manager->ReceiveInputEvent(swi, nullptr, nullptr));
     EXPECT_EQ(origin, swi.mOrigin);
 
@@ -501,7 +501,7 @@ TEST_F(APZHitTestingTester, TestForceDisableApz) {
   ScreenPoint origin(100, 50);
   ScrollWheelInput swi(MillisecondsSinceStartup(mcc->Time()), mcc->Time(), 0,
     ScrollWheelInput::SCROLLMODE_INSTANT, ScrollWheelInput::SCROLLDELTA_PIXEL,
-    origin, 0, 10, false);
+    origin, 0, 10, false, WheelDeltaAdjustmentStrategy::eNone);
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, manager->ReceiveInputEvent(swi, nullptr, nullptr));
   EXPECT_EQ(origin, swi.mOrigin);
 
@@ -528,7 +528,7 @@ TEST_F(APZHitTestingTester, TestForceDisableApz) {
   // flushed).
   swi = ScrollWheelInput(MillisecondsSinceStartup(mcc->Time()), mcc->Time(), 0,
     ScrollWheelInput::SCROLLMODE_INSTANT, ScrollWheelInput::SCROLLDELTA_PIXEL,
-    origin, 0, 0, false);
+    origin, 0, 0, false, WheelDeltaAdjustmentStrategy::eNone);
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, manager->ReceiveInputEvent(swi, nullptr, nullptr));
   EXPECT_EQ(origin, swi.mOrigin);
 }

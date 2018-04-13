@@ -8,13 +8,14 @@
 
 #include "gfxPrefs.h"                       // for gfxPrefs
 #include "InputData.h"                      // for MouseInput, etc
+#include "mozilla/dom/WheelEventBinding.h"  // for WheelEvent constants
 #include "mozilla/EventStateManager.h"      // for EventStateManager
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnControllerThread, etc
 #include "mozilla/MouseEvents.h"            // for WidgetMouseEvent
 #include "mozilla/TextEvents.h"             // for WidgetKeyboardEvent
 #include "mozilla/TouchEvents.h"            // for WidgetTouchEvent
-#include "mozilla/WheelHandlingHelper.h"    // for AutoWheelDeltaAdjuster
-#include "mozilla/dom/WheelEventBinding.h"  // for WheelEvent constants
+#include "mozilla/WheelHandlingHelper.h"    // for WheelDeltaHorizontalizer,
+                                            //     WheelDeltaAdjustmentStrategy
 
 namespace mozilla {
 namespace layers {
@@ -116,10 +117,18 @@ APZInputBridge::ReceiveInputEvent(
           scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
         }
 
-        // AutoWheelDeltaAdjuster may adjust the delta values for default
-        // action hander.  The delta values will be restored automatically
-        // when its instance is destroyed.
-        AutoWheelDeltaAdjuster adjuster(wheelEvent);
+        WheelDeltaAdjustmentStrategy strategy =
+          EventStateManager::GetWheelDeltaAdjustmentStrategy(wheelEvent);
+        // Adjust the delta values of the wheel event if the current default
+        // action is to horizontalize scrolling. I.e., deltaY values are set to
+        // deltaX and deltaY and deltaZ values are set to 0.
+        // If horizontalized, the delta values will be restored and its overflow
+        // deltaX will become 0 when the WheelDeltaHorizontalizer instance is
+        // being destroyed.
+        WheelDeltaHorizontalizer horizontalizer(wheelEvent);
+        if (WheelDeltaAdjustmentStrategy::eHorizontalize == strategy) {
+          horizontalizer.Horizontalize();
+        }
 
         // If the wheel event becomes no-op event, don't handle it as scroll.
         if (wheelEvent.mDeltaX || wheelEvent.mDeltaY) {
@@ -130,7 +139,8 @@ APZInputBridge::ReceiveInputEvent(
                                                      wheelEvent.mDeltaMode),
                                  origin,
                                  wheelEvent.mDeltaX, wheelEvent.mDeltaY,
-                                 wheelEvent.mAllowToOverrideSystemScrollSpeed);
+                                 wheelEvent.mAllowToOverrideSystemScrollSpeed,
+                                 strategy);
 
           // We add the user multiplier as a separate field, rather than premultiplying
           // it, because if the input is converted back to a WidgetWheelEvent, then

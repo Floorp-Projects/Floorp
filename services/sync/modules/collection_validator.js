@@ -232,6 +232,27 @@ class CollectionValidator {
       deletedRecords: [...serverDeleted]
     };
   }
+
+  async validate(engine) {
+    let start = Cu.now();
+    let clientItems = await this.getClientItems();
+    let serverItems = await this.getServerItems(engine);
+    let serverRecordCount = serverItems.length;
+    let result = await this.compareClientWithServer(clientItems, serverItems);
+    let end = Cu.now();
+    let duration = end - start;
+    engine._log.debug(`Validated ${this.name} in ${duration}ms`);
+    engine._log.debug(`Problem summary`);
+    for (let { name, count } of result.problemData.getSummary()) {
+      engine._log.debug(`  ${name}: ${count}`);
+    }
+    return {
+      duration,
+      version: this.version,
+      problems: result.problemData,
+      recordCount: serverRecordCount
+    };
+  }
 }
 
 // Default to 0, some engines may override.

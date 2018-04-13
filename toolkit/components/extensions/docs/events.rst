@@ -60,7 +60,7 @@ events relatively simple.  A simple event implementation looks like:
 
 .. code-block:: js
 
-   class myapi extends ExtensionAPI {
+   this.myapi = class extends ExtensionAPI {
      getAPI(context) {
        return {
          myapi: {
@@ -154,7 +154,7 @@ For example, extending our example above:
 
 .. code-block:: js
 
-   class myapi extends ExtensionAPI {
+   this.myapi = class extends ExtensionAPI {
      getAPI(context) {
        return {
          myapi: {
@@ -211,7 +211,7 @@ which is a Promise that resolves to the listener's return value:
 
 .. code-block:: js
 
-   class myapi extends ExtensionAPI {
+   this.myapi = class extends ExtensionAPI {
      getAPI(context) {
        return {
          myapi: {
@@ -263,7 +263,7 @@ could be written explicitly as:
 
 .. code-block:: js
 
-   class myapi extends ExtensionAPI {
+   this.myapi = class extends ExtensionAPI {
      getAPI(context) {
        return {
          myapi: {

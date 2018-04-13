@@ -7,14 +7,6 @@
 
 const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 
-// Use the old webconsole since this is directly accessing old DOM, and
-// the error count isn't reset when pressing the clear button in new one
-// See Bug 1304794.
-Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", false);
-registerCleanupFunction(function* () {
-  Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
-});
-
 let toolbar = gDevToolsBrowser.getDeveloperToolbar(window);
 
 function test() {

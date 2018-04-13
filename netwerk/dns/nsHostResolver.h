@@ -29,13 +29,16 @@ class nsResolveHostCallback;
 namespace mozilla { namespace net {
 class TRR;
 enum ResolverMode {
-  MODE_NATIVEONLY, // TRR OFF
-  MODE_PARALLEL,   // race and use the first response
-  MODE_TRRFIRST,   // fallback to native on TRR failure
-  MODE_TRRONLY,    // don't even fallback
-  MODE_SHADOW      // race for stats, but always use native result
+  MODE_NATIVEONLY, // 0 - TRR OFF (by default)
+  MODE_PARALLEL,   // 1 - race and use the first response
+  MODE_TRRFIRST,   // 2 - fallback to native on TRR failure
+  MODE_TRRONLY,    // 3 - don't even fallback
+  MODE_SHADOW,     // 4 - race for stats, but always use native result
+  MODE_TRROFF      // 5 - identical to MODE_NATIVEONLY but explicitly selected
 };
 } }
+
+#define TRR_DISABLED(x) (((x) == MODE_NATIVEONLY) || ((x) == MODE_TRROFF))
 
 extern mozilla::Atomic<bool, mozilla::Relaxed> gNativeIsLocalhost;
 

@@ -17,6 +17,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/WheelHandlingHelper.h"    // for WheelDeltaAdjustmentStrategy
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
@@ -5013,7 +5014,17 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
                                 position,
                                 preciseDelta.x,
                                 preciseDelta.y,
-                                false);
+                                false,
+                                // This parameter is used for wheel delta
+                                // adjustment, such as auto-dir scrolling,
+                                // but we do't need to do anything special here
+                                // since this wheel event is sent to
+                                // DispatchAPZWheelInputEvent, which turns this
+                                // ScrollWheelInput back into a WidgetWheelEvent
+                                // and then it goes through the regular handling
+                                // in APZInputBridge. So passing |eNone| won't
+                                // pass up the necessary wheel delta adjustment.
+                                WheelDeltaAdjustmentStrategy::eNone);
     wheelEvent.mLineOrPageDeltaX = lineOrPageDelta.x;
     wheelEvent.mLineOrPageDeltaY = lineOrPageDelta.y;
     wheelEvent.mIsMomentum = nsCocoaUtils::IsMomentumScrollEvent(theEvent);
@@ -5029,7 +5040,17 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
                                 position,
                                 lineOrPageDelta.x,
                                 lineOrPageDelta.y,
-                                false);
+                                false,
+                                // This parameter is used for wheel delta
+                                // adjustment, such as auto-dir scrolling,
+                                // but we do't need to do anything special here
+                                // since this wheel event is sent to
+                                // DispatchAPZWheelInputEvent, which turns this
+                                // ScrollWheelInput back into a WidgetWheelEvent
+                                // and then it goes through the regular handling
+                                // in APZInputBridge. So passing |eNone| won't
+                                // pass up the necessary wheel delta adjustment.
+                                WheelDeltaAdjustmentStrategy::eNone);
     wheelEvent.mLineOrPageDeltaX = lineOrPageDelta.x;
     wheelEvent.mLineOrPageDeltaY = lineOrPageDelta.y;
     geckoChildDeathGrip->DispatchAPZWheelInputEvent(wheelEvent, false);

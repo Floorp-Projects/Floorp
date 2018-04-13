@@ -932,7 +932,17 @@ IToplevelProtocol::SetEventTargetForActorInternal(IProtocol* aActor,
   aActor->SetId(id);
 
   MutexAutoLock lock(mEventTargetMutex);
-  mEventTargetMap.AddWithID(aEventTarget, id);
+  // FIXME bug 1445121 - sometimes the id is already mapped.
+  // (IDMap debug-asserts that the existing state is as expected.)
+  bool replace = false;
+#ifdef DEBUG
+  replace = mEventTargetMap.Lookup(id) != nullptr;
+#endif
+  if (replace) {
+    mEventTargetMap.ReplaceWithID(aEventTarget, id);
+  } else {
+    mEventTargetMap.AddWithID(aEventTarget, id);
+  }
 }
 
 void

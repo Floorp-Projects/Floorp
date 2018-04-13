@@ -12,10 +12,10 @@
 #include "SecretDecoderRing.h"
 #include "TransportSecurityInfo.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/SyncRunnable.h"
 #include "nsCURILoader.h"
 #include "nsCertOverrideService.h"
 #include "nsCryptoHash.h"
-#include "nsDataSignatureVerifier.h"
 #include "nsICategoryManager.h"
 #include "nsKeyModule.h"
 #include "nsKeygenHandler.h"
@@ -150,7 +150,6 @@ NS_DEFINE_NAMED_CID(NS_CRYPTO_HMAC_CID);
 NS_DEFINE_NAMED_CID(NS_NTLMAUTHMODULE_CID);
 NS_DEFINE_NAMED_CID(NS_KEYMODULEOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_KEYMODULEOBJECTFACTORY_CID);
-NS_DEFINE_NAMED_CID(NS_DATASIGNATUREVERIFIER_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTSIGNATUREVERIFIER_CID);
 NS_DEFINE_NAMED_CID(NS_CERTOVERRIDE_CID);
 NS_DEFINE_NAMED_CID(NS_RANDOMGENERATOR_CID);
@@ -196,8 +195,6 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
     Constructor<nsKeyObject, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_KEYMODULEOBJECTFACTORY_CID, false, nullptr,
     Constructor<nsKeyObjectFactory, nullptr, ProcessRestriction::AnyProcess> },
-  { &kNS_DATASIGNATUREVERIFIER_CID, false, nullptr,
-    Constructor<nsDataSignatureVerifier> },
   { &kNS_CONTENTSIGNATUREVERIFIER_CID, false, nullptr,
     Constructor<ContentSignatureVerifier> },
   { &kNS_CERTOVERRIDE_CID, false, nullptr,
@@ -247,7 +244,6 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { NS_NTLMAUTHMODULE_CONTRACTID, &kNS_NTLMAUTHMODULE_CID },
   { NS_KEYMODULEOBJECT_CONTRACTID, &kNS_KEYMODULEOBJECT_CID },
   { NS_KEYMODULEOBJECTFACTORY_CONTRACTID, &kNS_KEYMODULEOBJECTFACTORY_CID },
-  { NS_DATASIGNATUREVERIFIER_CONTRACTID, &kNS_DATASIGNATUREVERIFIER_CID },
   { NS_CONTENTSIGNATUREVERIFIER_CONTRACTID, &kNS_CONTENTSIGNATUREVERIFIER_CID },
   { NS_CERTOVERRIDE_CONTRACTID, &kNS_CERTOVERRIDE_CID },
   { NS_RANDOMGENERATOR_CONTRACTID, &kNS_RANDOMGENERATOR_CID },

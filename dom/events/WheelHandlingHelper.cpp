@@ -6,6 +6,8 @@
 
 #include "WheelHandlingHelper.h"
 
+#include <utility>                      // for std::swap
+
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/MouseEvents.h"
@@ -14,7 +16,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "nsIDocumentInlines.h"         // for nsIDocument and HTMLBodyElement
 #include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"
 #include "nsITextControlElement.h"
@@ -529,7 +531,8 @@ ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
     AutoWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
     MOZ_ASSERT(!*scrollTarget, "scroll target still temporarily activated!");
     nsIScrollableFrame* target = do_QueryFrame(
-      aESM->ComputeScrollTarget(aTargetFrame, dir->deltaX, dir->deltaY, aEvent,
+      aESM->ComputeScrollTarget(
+              aTargetFrame, dir->deltaX, dir->deltaY, aEvent,
               EventStateManager::COMPUTE_DEFAULT_ACTION_TARGET));
     nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(target);
     if (scrollbarMediator) {
@@ -584,37 +587,42 @@ WheelTransaction::Prefs::InitializeStatics()
 }
 
 /******************************************************************/
-/* mozilla::AutoWheelDeltaAdjuster                                */
+/* mozilla::WheelDeltaHorizontalizer                              */
 /******************************************************************/
 
-AutoWheelDeltaAdjuster::AutoWheelDeltaAdjuster(WidgetWheelEvent& aWheelEvent)
-  : mWheelEvent(aWheelEvent)
-  , mOldDeltaX(aWheelEvent.mDeltaX)
-  , mOldDeltaZ(aWheelEvent.mDeltaZ)
-  , mOldOverflowDeltaX(aWheelEvent.mOverflowDeltaX)
-  , mOldLineOrPageDeltaX(aWheelEvent.mLineOrPageDeltaX)
-  , mTreatedVerticalWheelAsHorizontalScroll(false)
+void
+WheelDeltaHorizontalizer::Horizontalize()
 {
-  MOZ_ASSERT(!aWheelEvent.mDeltaValuesAdjustedForDefaultHandler);
+  MOZ_ASSERT(!mWheelEvent.mDeltaValuesHorizontalizedForDefaultHandler,
+             "Wheel delta values in one wheel scroll event are being adjusted "
+             "a second time");
 
-  if (EventStateManager::WheelEventIsHorizontalScrollAction(&aWheelEvent)) {
-    // Move deltaY values to deltaX and set both deltaY and deltaZ to 0.
-    mWheelEvent.mDeltaX = mWheelEvent.mDeltaY;
-    mWheelEvent.mDeltaY = 0.0;
-    mWheelEvent.mDeltaZ = 0.0;
-    mWheelEvent.mOverflowDeltaX = mWheelEvent.mOverflowDeltaY;
-    mWheelEvent.mOverflowDeltaY = 0.0;
-    mWheelEvent.mLineOrPageDeltaX = mWheelEvent.mLineOrPageDeltaY;
-    mWheelEvent.mLineOrPageDeltaY = 0;
-    mWheelEvent.mDeltaValuesAdjustedForDefaultHandler = true;
-    mTreatedVerticalWheelAsHorizontalScroll = true;
-  }
+  // Log the old values.
+  mOldDeltaX = mWheelEvent.mDeltaX;
+  mOldDeltaZ = mWheelEvent.mDeltaZ;
+  mOldOverflowDeltaX = mWheelEvent.mOverflowDeltaX;
+  mOldLineOrPageDeltaX = mWheelEvent.mLineOrPageDeltaX;
+
+  // Move deltaY values to deltaX and set both deltaY and deltaZ to 0.
+  mWheelEvent.mDeltaX = mWheelEvent.mDeltaY;
+  mWheelEvent.mDeltaY = 0.0;
+  mWheelEvent.mDeltaZ = 0.0;
+  mWheelEvent.mOverflowDeltaX = mWheelEvent.mOverflowDeltaY;
+  mWheelEvent.mOverflowDeltaY = 0.0;
+  mWheelEvent.mLineOrPageDeltaX = mWheelEvent.mLineOrPageDeltaY;
+  mWheelEvent.mLineOrPageDeltaY = 0;
+
+  // Mark it horizontalized in order to restore the delta values when this
+  // instance is being destroyed.
+  mWheelEvent.mDeltaValuesHorizontalizedForDefaultHandler = true;
+  mHorizontalized = true;
 }
 
-void AutoWheelDeltaAdjuster::CancelAdjustment()
+void WheelDeltaHorizontalizer::CancelHorizontalization()
 {
-  if (mTreatedVerticalWheelAsHorizontalScroll &&
-      mWheelEvent.mDeltaValuesAdjustedForDefaultHandler) {
+  // Restore the horizontalized delta.
+  if (mHorizontalized &&
+      mWheelEvent.mDeltaValuesHorizontalizedForDefaultHandler) {
     mWheelEvent.mDeltaY = mWheelEvent.mDeltaX;
     mWheelEvent.mDeltaX = mOldDeltaX;
     mWheelEvent.mDeltaZ = mOldDeltaZ;
@@ -622,14 +630,289 @@ void AutoWheelDeltaAdjuster::CancelAdjustment()
     mWheelEvent.mOverflowDeltaX = mOldOverflowDeltaX;
     mWheelEvent.mLineOrPageDeltaY = mWheelEvent.mLineOrPageDeltaX;
     mWheelEvent.mLineOrPageDeltaX = mOldLineOrPageDeltaX;
-    mWheelEvent.mDeltaValuesAdjustedForDefaultHandler = false;
-    mTreatedVerticalWheelAsHorizontalScroll = false;
+    mWheelEvent.mDeltaValuesHorizontalizedForDefaultHandler = false;
+    mHorizontalized = false;
   }
 }
 
-AutoWheelDeltaAdjuster::~AutoWheelDeltaAdjuster()
+WheelDeltaHorizontalizer::~WheelDeltaHorizontalizer()
 {
-  CancelAdjustment();
+  CancelHorizontalization();
+}
+
+/******************************************************************/
+/* mozilla::AutoDirWheelDeltaAdjuster                             */
+/******************************************************************/
+
+bool
+AutoDirWheelDeltaAdjuster::ShouldBeAdjusted()
+{
+  // Sometimes, this function can be called more than one time. If we have
+  // already checked if the scroll should be adjusted, there's no need to check
+  // it again.
+  if (mCheckedIfShouldBeAdjusted) {
+    return mShouldBeAdjusted;
+  }
+  mCheckedIfShouldBeAdjusted = true;
+
+  // For an auto-dir wheel scroll, if all the following conditions are met, we
+  // should adjust X and Y values:
+  // 1. There is only one non-zero value between DeltaX and DeltaY.
+  // 2. There is only one direction for the target that overflows and is
+  //    scrollable with wheel.
+  // 3. The direction described in Condition 1 is orthogonal to the one
+  // described in Condition 2.
+  if ((mDeltaX && mDeltaY) || (!mDeltaX && !mDeltaY)) {
+    return false;
+  }
+  if (mDeltaX) {
+    if (CanScrollAlongXAxis()) {
+      return false;
+    }
+    if (IsHorizontalContentRightToLeft()) {
+      mShouldBeAdjusted = mDeltaX > 0 ? CanScrollUpwards()
+                                      : CanScrollDownwards();
+    } else {
+      mShouldBeAdjusted = mDeltaX < 0 ? CanScrollUpwards()
+                                      : CanScrollDownwards();
+    }
+    return mShouldBeAdjusted;
+  }
+  MOZ_ASSERT(0 != mDeltaY);
+  if (CanScrollAlongYAxis()) {
+    return false;
+  }
+  if (IsHorizontalContentRightToLeft()) {
+    mShouldBeAdjusted = mDeltaY > 0 ? CanScrollLeftwards()
+                                    : CanScrollRightwards();
+  } else {
+    mShouldBeAdjusted = mDeltaY < 0 ? CanScrollLeftwards()
+                                    : CanScrollRightwards();
+  }
+  return mShouldBeAdjusted;
+}
+
+void
+AutoDirWheelDeltaAdjuster::Adjust()
+{
+  if (!ShouldBeAdjusted()) {
+    return;
+  }
+  std::swap(mDeltaX, mDeltaY);
+  if (IsHorizontalContentRightToLeft()) {
+    mDeltaX *= -1;
+    mDeltaY *= -1;
+  }
+  mShouldBeAdjusted = false;
+  OnAdjusted();
+}
+
+/******************************************************************/
+/* mozilla::ESMAutoDirWheelDeltaAdjuster                          */
+/******************************************************************/
+
+ESMAutoDirWheelDeltaAdjuster::ESMAutoDirWheelDeltaAdjuster(
+                                WidgetWheelEvent& aEvent,
+                                nsIFrame& aScrollFrame,
+                                bool aHonoursRoot)
+  : AutoDirWheelDeltaAdjuster(aEvent.mDeltaX, aEvent.mDeltaY)
+  , mLineOrPageDeltaX(aEvent.mLineOrPageDeltaX)
+  , mLineOrPageDeltaY(aEvent.mLineOrPageDeltaY)
+  , mOverflowDeltaX(aEvent.mOverflowDeltaX)
+  , mOverflowDeltaY(aEvent.mOverflowDeltaY)
+{
+  mScrollTargetFrame = aScrollFrame.GetScrollTargetFrame();
+  MOZ_ASSERT(mScrollTargetFrame);
+
+  nsIFrame* honouredFrame = nullptr;
+  if (aHonoursRoot) {
+    // If we are going to honour root, first try to get the frame for <body> as
+    // the honoured root, because <body> is in preference to <html> if the
+    // current document is an HTML document.
+    nsIDocument* document = aScrollFrame.PresShell()->GetDocument();
+    if (document) {
+      Element* bodyElement = document->GetBodyElement();
+      if (bodyElement) {
+        honouredFrame = bodyElement->GetPrimaryFrame();
+      }
+    }
+
+    if (!honouredFrame) {
+      // If there is no <body> frame, fall back to the real root frame.
+      honouredFrame = aScrollFrame.PresShell()->GetRootScrollFrame();
+    }
+
+    if (!honouredFrame) {
+      // If there is no root scroll frame, fall back to the current scrolling
+      // frame.
+      honouredFrame = &aScrollFrame;
+    }
+  } else {
+    honouredFrame = &aScrollFrame;
+  }
+
+  WritingMode writingMode = honouredFrame->GetWritingMode();
+  WritingMode::BlockDir blockDir = writingMode.GetBlockDir();
+  WritingMode::InlineDir inlineDir = writingMode.GetInlineDir();
+  // Get whether the honoured frame's content in the horizontal direction starts
+  // from right to left(E.g. it's true either if "writing-mode: vertical-rl", or
+  // if "writing-mode: horizontal-tb; direction: rtl;" in CSS).
+  mIsHorizontalContentRightToLeft =
+    (blockDir == WritingMode::BlockDir::eBlockRL ||
+     (blockDir == WritingMode::BlockDir::eBlockTB &&
+      inlineDir == WritingMode::InlineDir::eInlineRTL));
+}
+
+void
+ESMAutoDirWheelDeltaAdjuster::OnAdjusted()
+{
+  // Adjust() only adjusted basic deltaX and deltaY, which are not enough for
+  // ESM, we should continue to adjust line-or-page and overflow values.
+  if (mDeltaX) {
+    // A vertical scroll was adjusted to be horizontal.
+    MOZ_ASSERT(0 == mDeltaY);
+
+    mLineOrPageDeltaX = mLineOrPageDeltaY;
+    mLineOrPageDeltaY = 0;
+    mOverflowDeltaX = mOverflowDeltaY;
+    mOverflowDeltaY = 0;
+  } else {
+    // A horizontal scroll was adjusted to be vertical.
+    MOZ_ASSERT(0 != mDeltaY);
+
+    mLineOrPageDeltaY = mLineOrPageDeltaX;
+    mLineOrPageDeltaX = 0;
+    mOverflowDeltaY = mOverflowDeltaX;
+    mOverflowDeltaX = 0;
+  }
+  if (mIsHorizontalContentRightToLeft) {
+    // If in RTL writing mode, reverse the side the scroll will go towards.
+    mLineOrPageDeltaX *= -1;
+    mLineOrPageDeltaY *= -1;
+    mOverflowDeltaX *= -1;
+    mOverflowDeltaY *= -1;
+  }
+}
+
+bool
+ESMAutoDirWheelDeltaAdjuster::CanScrollAlongXAxis() const
+{
+  return mScrollTargetFrame->GetPerceivedScrollingDirections() &
+           nsIScrollableFrame::HORIZONTAL;
+}
+
+bool
+ESMAutoDirWheelDeltaAdjuster::CanScrollAlongYAxis() const
+{
+  return mScrollTargetFrame->GetPerceivedScrollingDirections() &
+           nsIScrollableFrame::VERTICAL;
+}
+
+bool
+ESMAutoDirWheelDeltaAdjuster::CanScrollUpwards() const
+{
+  nsPoint scrollPt = mScrollTargetFrame->GetScrollPosition();
+  nsRect scrollRange = mScrollTargetFrame->GetScrollRange();
+  return static_cast<double>(scrollRange.y) < scrollPt.y;
+}
+
+bool
+ESMAutoDirWheelDeltaAdjuster::CanScrollDownwards() const
+{
+  nsPoint scrollPt = mScrollTargetFrame->GetScrollPosition();
+  nsRect scrollRange = mScrollTargetFrame->GetScrollRange();
+  return static_cast<double>(scrollRange.YMost()) > scrollPt.y;
+}
+
+bool
+ESMAutoDirWheelDeltaAdjuster::CanScrollLeftwards() const
+{
+  nsPoint scrollPt = mScrollTargetFrame->GetScrollPosition();
+  nsRect scrollRange = mScrollTargetFrame->GetScrollRange();
+  return static_cast<double>(scrollRange.x) < scrollPt.x;
+}
+
+bool
+ESMAutoDirWheelDeltaAdjuster::CanScrollRightwards() const
+{
+  nsPoint scrollPt = mScrollTargetFrame->GetScrollPosition();
+  nsRect scrollRange = mScrollTargetFrame->GetScrollRange();
+  return static_cast<double>(scrollRange.XMost()) > scrollPt.x;
+}
+
+bool
+ESMAutoDirWheelDeltaAdjuster::IsHorizontalContentRightToLeft() const
+{
+  return mIsHorizontalContentRightToLeft;
+}
+
+/******************************************************************/
+/* mozilla::ESMAutoDirWheelDeltaRestorer                          */
+/******************************************************************/
+
+/*explicit*/
+ESMAutoDirWheelDeltaRestorer::ESMAutoDirWheelDeltaRestorer(
+                                WidgetWheelEvent& aEvent)
+  : mEvent(aEvent)
+  , mOldDeltaX(aEvent.mDeltaX)
+  , mOldDeltaY(aEvent.mDeltaY)
+  , mOldLineOrPageDeltaX(aEvent.mLineOrPageDeltaX)
+  , mOldLineOrPageDeltaY(aEvent.mLineOrPageDeltaY)
+  , mOldOverflowDeltaX(aEvent.mOverflowDeltaX)
+  , mOldOverflowDeltaY(aEvent.mOverflowDeltaY)
+{
+}
+
+ESMAutoDirWheelDeltaRestorer::~ESMAutoDirWheelDeltaRestorer()
+{
+  if (mOldDeltaX == mEvent.mDeltaX || mOldDeltaY == mEvent.mDeltaY) {
+    // The delta of the event wasn't adjusted during the lifetime of this
+    // |ESMAutoDirWheelDeltaRestorer| instance. No need to restore it.
+    return;
+  }
+
+  bool forRTL = false;
+
+  // First, restore the basic deltaX and deltaY.
+  std::swap(mEvent.mDeltaX, mEvent.mDeltaY);
+  if (mOldDeltaX != mEvent.mDeltaX || mOldDeltaY != mEvent.mDeltaY) {
+    // If X and Y still don't equal to their original values after being
+    // swapped, then it must be because they were adjusted for RTL.
+    forRTL = true;
+    mEvent.mDeltaX *= -1;
+    mEvent.mDeltaY *= -1;
+    MOZ_ASSERT(mOldDeltaX == mEvent.mDeltaX && mOldDeltaY == mEvent.mDeltaY);
+  }
+
+  if (mEvent.mDeltaX) {
+    // A horizontal scroll was adjusted to be vertical during the lifetime of
+    // this instance.
+    MOZ_ASSERT(0 == mEvent.mDeltaY);
+
+    // Restore the line-or-page and overflow values to be horizontal.
+    mEvent.mOverflowDeltaX = mEvent.mOverflowDeltaY;
+    mEvent.mLineOrPageDeltaX = mEvent.mLineOrPageDeltaY;
+    if (forRTL) {
+      mEvent.mOverflowDeltaX *= -1;
+      mEvent.mLineOrPageDeltaX *= -1;
+    }
+    mEvent.mOverflowDeltaY = mOldOverflowDeltaY;
+    mEvent.mLineOrPageDeltaY = mOldLineOrPageDeltaY;
+  } else {
+    // A vertical scroll was adjusted to be horizontal during the lifetime of
+    // this instance.
+    MOZ_ASSERT(0 != mEvent.mDeltaY);
+
+    // Restore the line-or-page and overflow values to be vertical.
+    mEvent.mOverflowDeltaY = mEvent.mOverflowDeltaX;
+    mEvent.mLineOrPageDeltaY = mEvent.mLineOrPageDeltaX;
+    if (forRTL) {
+      mEvent.mOverflowDeltaY *= -1;
+      mEvent.mLineOrPageDeltaY *= -1;
+    }
+    mEvent.mOverflowDeltaX = mOldOverflowDeltaX;
+    mEvent.mLineOrPageDeltaX = mOldLineOrPageDeltaX;
+  }
 }
 
 } // namespace mozilla

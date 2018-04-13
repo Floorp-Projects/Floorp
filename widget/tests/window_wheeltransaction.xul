@@ -172,8 +172,16 @@ function finish()
   window.close();
 }
 
-function onload()
+async function onload()
 {
+  // Before actually running tests, we disable auto-dir scrolling, becasue the
+  // tests in this file are meant to test scrolling transactions, not meant to
+  // test default actions for wheel events, so we simply disabled auto-dir
+  // scrolling, which are well tested in
+  // dom/events/test/window_wheel_default_action.html.
+  await SpecialPowers.pushPrefEnv({"set": [["mousewheel.autodir.enabled",
+                                            false]]});
+
   runNextTestList();
 }
 

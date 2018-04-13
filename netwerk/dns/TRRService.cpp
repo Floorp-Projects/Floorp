@@ -324,7 +324,7 @@ TRRService::Observe(nsISupports *aSubject,
 void
 TRRService::MaybeConfirm()
 {
-  if ((mMode == MODE_NATIVEONLY) || mConfirmer ||
+  if (TRR_DISABLED(mMode) || mConfirmer ||
       mConfirmationState != CONFIRM_TRYING) {
     LOG(("TRRService:MaybeConfirm mode=%d, mConfirmer=%p mConfirmationState=%d\n",
          (int)mMode, (void *)mConfirmer, (int)mConfirmationState));
@@ -351,7 +351,7 @@ bool
 TRRService::MaybeBootstrap(const nsACString &aPossible, nsACString &aResult)
 {
   MutexAutoLock lock(mLock);
-  if ((mMode == MODE_NATIVEONLY) || mBootstrapAddr.IsEmpty()) {
+  if (TRR_DISABLED(mMode) || mBootstrapAddr.IsEmpty()) {
     return false;
   }
 

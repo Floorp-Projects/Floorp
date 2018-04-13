@@ -198,7 +198,10 @@ HTMLSelectOptionAccessible::NativeState()
     // visible option
     if (!selected) {
       state |= states::OFFSCREEN;
-      state ^= states::INVISIBLE;
+      // Ensure the invisible state is removed. Otherwise, group info will skip
+      // this option. Furthermore, this gets cached and this doesn't get
+      // invalidated even once the select is expanded.
+      state &= ~states::INVISIBLE;
     } else {
       // Clear offscreen and invisible for currently showing option
       state &= ~(states::OFFSCREEN | states::INVISIBLE);
