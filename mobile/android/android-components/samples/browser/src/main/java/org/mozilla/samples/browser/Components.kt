@@ -6,7 +6,7 @@ package org.mozilla.samples.browser
 
 import android.content.Context
 import mozilla.components.engine.Engine
-import mozilla.components.engine.system.SystemEngine
+import mozilla.components.engine.gecko.SystemEngine
 import mozilla.components.session.SessionManager
 import mozilla.components.session.SessionProvider
 import org.mozilla.geckoview.GeckoRuntime
