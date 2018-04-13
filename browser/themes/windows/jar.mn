@@ -16,8 +16,6 @@ browser.jar:
 * skin/classic/browser/searchbar.css
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/slowStartup-16.png
-  skin/classic/browser/sync-desktopIcon.svg  (../shared/sync-desktopIcon.svg)
-  skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
   skin/classic/browser/webRTC-indicator.css  (../shared/webRTC-indicator.css)
 * skin/classic/browser/controlcenter/panel.css                 (controlcenter/panel.css)
   skin/classic/browser/customizableui/menu-arrow.svg           (customizableui/menu-arrow.svg)

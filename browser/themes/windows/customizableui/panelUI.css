@@ -37,9 +37,7 @@
 }
 
 /* Disabled empty item looks too small otherwise, because it has no icon. */
-menuitem.subviewbutton[disabled]:not(.menuitem-iconic),
-/* Same for checkbox menu items, whose icons lose size due to -moz-appearance: none: */
-menuitem[type="checkbox"].subviewbutton {
+menuitem.subviewbutton[disabled]:not(.menuitem-iconic) {
   /* This is 16px for an icon + 3px for its margins + 1px for its padding +
    * 2px for its border, see above */
   min-height: 22px;
