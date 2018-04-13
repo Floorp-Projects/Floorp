@@ -12,6 +12,8 @@
 #include "nsContainerFrame.h"
 #include "mozilla/UniquePtr.h"
 
+class nsStyleCoord;
+
 namespace mozilla {
 template <class T> class LinkedList;
 class LogicalPoint;
@@ -211,6 +213,17 @@ public:
    *              to) its flex container's main axis. Otherwise, false.
    */
   static bool IsItemInlineAxisMainAxis(nsIFrame* aFrame);
+
+  /**
+   * Returns true iff the given computed 'flex-basis' & main-size property
+   * values collectively represent a used flex-basis of 'content'.
+   * See https://drafts.csswg.org/css-flexbox-1/#valdef-flex-basis-auto
+   *
+   * @param aFlexBasis the computed 'flex-basis' for a flex item.
+   * @param aMainSize the computed main-size property for a flex item.
+   */
+  static bool IsUsedFlexBasisContent(const nsStyleCoord* aFlexBasis,
+                                     const nsStyleCoord* aMainSize);
 
 protected:
   // Protected constructor & destructor

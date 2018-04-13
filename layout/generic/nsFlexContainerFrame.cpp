@@ -4429,6 +4429,22 @@ nsFlexContainerFrame::IsItemInlineAxisMainAxis(nsIFrame* aFrame)
   return flexContainerIsRowOriented == itemInlineAxisIsParallelToParent;
 }
 
+/* static */
+bool
+nsFlexContainerFrame::IsUsedFlexBasisContent(const nsStyleCoord* aFlexBasis,
+                                             const nsStyleCoord* aMainSize)
+{
+  // We have a used flex-basis of 'content' if flex-basis explicitly has that
+  // value, OR if flex-basis is 'auto' (deferring to the main-size property)
+  // and the main-size property is also 'auto'.
+  // See https://drafts.csswg.org/css-flexbox-1/#valdef-flex-basis-auto
+  return
+    (aFlexBasis->GetUnit() == eStyleUnit_Enumerated &&
+     aFlexBasis->GetIntValue() == NS_STYLE_FLEX_BASIS_CONTENT) ||
+    (aFlexBasis->GetUnit() == eStyleUnit_Auto &&
+     aMainSize->GetUnit() == eStyleUnit_Auto);
+}
+
 void
 nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                    ReflowOutput&     aDesiredSize,
