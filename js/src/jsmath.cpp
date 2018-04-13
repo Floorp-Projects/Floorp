@@ -1476,9 +1476,8 @@ static const JSFunctionSpec math_static_methods[] = {
 };
 
 JSObject*
-js::InitMathClass(JSContext* cx, HandleObject obj)
+js::InitMathClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
     if (!proto)
         return nullptr;
@@ -1486,7 +1485,7 @@ js::InitMathClass(JSContext* cx, HandleObject obj)
     if (!Math)
         return nullptr;
 
-    if (!JS_DefineProperty(cx, obj, js_Math_str, Math, JSPROP_RESOLVING))
+    if (!JS_DefineProperty(cx, global, js_Math_str, Math, JSPROP_RESOLVING))
         return nullptr;
     if (!JS_DefineFunctions(cx, Math, math_static_methods))
         return nullptr;
@@ -1495,7 +1494,7 @@ js::InitMathClass(JSContext* cx, HandleObject obj)
     if (!DefineToStringTag(cx, Math, cx->names().Math))
         return nullptr;
 
-    obj->as<GlobalObject>().setConstructor(JSProto_Math, ObjectValue(*Math));
+    global->setConstructor(JSProto_Math, ObjectValue(*Math));
 
     return Math;
 }

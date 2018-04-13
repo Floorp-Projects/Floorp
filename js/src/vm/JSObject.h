@@ -1025,7 +1025,7 @@ GetThisValueOfWith(JSObject* env);
 
 /* * */
 
-typedef JSObject* (*ClassInitializerOp)(JSContext* cx, JS::HandleObject obj);
+using ClassInitializerOp = JSObject* (*)(JSContext* cx, Handle<GlobalObject*> global);
 
 } /* namespace js */
 

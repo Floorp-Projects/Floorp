@@ -128,12 +128,8 @@ Boolean(JSContext* cx, unsigned argc, Value* vp)
 }
 
 JSObject*
-js::InitBooleanClass(JSContext* cx, HandleObject obj)
+js::InitBooleanClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    MOZ_ASSERT(obj->isNative());
-
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
-
     Rooted<BooleanObject*> booleanProto(cx, GlobalObject::createBlankPrototype<BooleanObject>(cx, global));
     if (!booleanProto)
         return nullptr;

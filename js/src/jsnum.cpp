@@ -1194,12 +1194,8 @@ js::FinishRuntimeNumberState(JSRuntime* rt)
 #endif
 
 JSObject*
-js::InitNumberClass(JSContext* cx, HandleObject obj)
+js::InitNumberClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    MOZ_ASSERT(obj->isNative());
-
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
-
     Rooted<NumberObject*> numberProto(cx);
     numberProto = GlobalObject::createBlankPrototype<NumberObject>(cx, global);
     if (!numberProto)

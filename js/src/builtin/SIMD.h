@@ -784,6 +784,8 @@
 
 namespace js {
 
+class GlobalObject;
+
 // Complete set of SIMD types.
 // It must be kept in sync with the enumeration of values in
 // TypedObjectConstants.h; in particular we need to ensure that Count is
@@ -1133,7 +1135,7 @@ template<typename V>
 MOZ_MUST_USE bool ToSimdConstant(JSContext* cx, HandleValue v, jit::SimdConstant* out);
 
 JSObject*
-InitSimdClass(JSContext* cx, HandleObject obj);
+InitSimdClass(JSContext* cx, Handle<GlobalObject*> global);
 
 namespace jit {
 

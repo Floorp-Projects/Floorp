@@ -12,6 +12,8 @@
 
 namespace js {
 
+class GlobalObject;
+
 // Abstract base class for WeakMapObject and WeakSetObject.
 class WeakCollectionObject : public NativeObject
 {
@@ -33,7 +35,7 @@ class WeakMapObject : public WeakCollectionObject
 };
 
 extern JSObject*
-InitWeakMapClass(JSContext* cx, HandleObject obj);
+InitWeakMapClass(JSContext* cx, Handle<GlobalObject*> global);
 
 } // namespace js
 

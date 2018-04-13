@@ -17,6 +17,7 @@
 namespace js {
 
 struct Class;
+class GlobalObject;
 
 typedef double (*UnaryFunType)(double);
 
@@ -89,7 +90,7 @@ class MathCache
 extern const Class MathClass;
 
 extern JSObject*
-InitMathClass(JSContext* cx, HandleObject obj);
+InitMathClass(JSContext* cx, Handle<GlobalObject*> global);
 
 extern uint64_t
 GenerateRandomSeed();
