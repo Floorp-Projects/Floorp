@@ -1,4 +1,5 @@
 trust-domain: gecko
+project-repo-param-prefix: ''
 treeherder:
     group-names:
         'cram': 'Cram tests'

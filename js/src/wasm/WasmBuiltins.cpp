@@ -536,6 +536,9 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::CallImport_F64:
         *abiType = Args_General4;
         return FuncCast(Instance::callImport_f64, *abiType);
+      case SymbolicAddress::CallImport_Ref:
+        *abiType = Args_General4;
+        return FuncCast(Instance::callImport_ref, *abiType);
       case SymbolicAddress::CoerceInPlace_ToInt32:
         *abiType = Args_General1;
         return FuncCast(CoerceInPlace_ToInt32, *abiType);
@@ -690,6 +693,7 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::CallImport_I32:
       case SymbolicAddress::CallImport_I64:
       case SymbolicAddress::CallImport_F64:
+      case SymbolicAddress::CallImport_Ref:
       case SymbolicAddress::CoerceInPlace_ToInt32:    // GenerateImportJitExit
       case SymbolicAddress::CoerceInPlace_ToNumber:
 #if defined(JS_CODEGEN_MIPS32)

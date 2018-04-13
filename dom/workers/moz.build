@@ -98,3 +98,6 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
+
+if CONFIG['NIGHTLY_BUILD']:
+    DEFINES['ENABLE_WASM_GC'] = True

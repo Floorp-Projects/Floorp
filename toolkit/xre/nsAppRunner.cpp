@@ -1716,8 +1716,8 @@ DumpHelp()
          "  --new-instance     Open new instance, not a new window in running instance.\n"
          "  --UILocale <locale> Start with <locale> resources as UI Locale.\n"
          "  --safe-mode        Disables extensions and themes for this session.\n"
-         "  -MOZ_LOG <modules> Treated as MOZ_LOG=<modules> environment variable, overrides it.\n"
-         "  -MOZ_LOG_FILE <file> Treated as MOZ_LOG_FILE=<file> environment variable, overrides it.\n"
+         "  -MOZ_LOG=<modules> Treated as MOZ_LOG=<modules> environment variable, overrides it.\n"
+         "  -MOZ_LOG_FILE=<file> Treated as MOZ_LOG_FILE=<file> environment variable, overrides it.\n"
          "                     If MOZ_LOG_FILE is not specified as an argument or as an environment variable,\n"
          "                     logging will be written to stdout.\n"
          , (const char*)gAppData->name);

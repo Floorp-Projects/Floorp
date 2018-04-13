@@ -695,6 +695,7 @@ if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_WASM_SATURATING_TRUNC_OPS'] = True
     DEFINES['ENABLE_WASM_SIGNEXTEND_OPS'] = True
     DEFINES['ENABLE_WASM_THREAD_OPS'] = True
+    DEFINES['ENABLE_WASM_GC'] = True
 
 # An experiment we want to run on Nightly and early Beta: Can we change the JS
 # representation of an exported global from the global's value to an instance

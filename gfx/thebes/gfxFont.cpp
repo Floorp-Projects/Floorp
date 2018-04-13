@@ -7,6 +7,7 @@
 
 #include "mozilla/BinarySearch.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/SVGContextPaint.h"
@@ -3521,7 +3522,7 @@ gfxFont::GetSmallCapsFont()
     style.size *= SMALL_CAPS_SCALE_FACTOR;
     style.variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
     gfxFontEntry* fe = GetFontEntry();
-    bool needsBold = style.weight >= 600 && !fe->IsBold();
+    bool needsBold = style.weight >= FontWeight(600) && !fe->IsBold();
     return fe->FindOrMakeFont(&style, needsBold, mUnicodeRangeMap);
 }
 
@@ -3531,7 +3532,7 @@ gfxFont::GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel)
     gfxFontStyle style(*GetStyle());
     style.AdjustForSubSuperscript(aAppUnitsPerDevPixel);
     gfxFontEntry* fe = GetFontEntry();
-    bool needsBold = style.weight >= 600 && !fe->IsBold();
+    bool needsBold = style.weight >= FontWeight(600) && !fe->IsBold();
     return fe->FindOrMakeFont(&style, needsBold, mUnicodeRangeMap);
 }
 
@@ -4110,7 +4111,8 @@ gfxFontStyle::gfxFontStyle() :
     size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(-1.0f), baselineOffset(0.0f),
     languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
     fontSmoothingBackgroundColor(NS_RGBA(0, 0, 0, 0)),
-    weight(NS_FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
+    weight(FontWeight::Normal()),
+    stretch(NS_FONT_STRETCH_NORMAL),
     style(NS_FONT_STYLE_NORMAL),
     variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
     variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL),
@@ -4121,7 +4123,9 @@ gfxFontStyle::gfxFontStyle() :
 {
 }
 
-gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
+gfxFontStyle::gfxFontStyle(uint8_t aStyle,
+                           FontWeight aWeight,
+                           int16_t aStretch,
                            gfxFloat aSize,
                            nsAtom *aLanguage, bool aExplicitLanguage,
                            float aSizeAdjust, bool aSystemFont,
@@ -4133,7 +4137,8 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     size(aSize), sizeAdjust(aSizeAdjust), baselineOffset(0.0f),
     languageOverride(aLanguageOverride),
     fontSmoothingBackgroundColor(NS_RGBA(0, 0, 0, 0)),
-    weight(aWeight), stretch(aStretch),
+    weight(aWeight),
+    stretch(aStretch),
     style(aStyle),
     variantCaps(NS_FONT_VARIANT_CAPS_NORMAL),
     variantSubSuper(NS_FONT_VARIANT_POSITION_NORMAL),
@@ -4147,10 +4152,12 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     MOZ_ASSERT(!mozilla::IsNaN(size));
     MOZ_ASSERT(!mozilla::IsNaN(sizeAdjust));
 
-    if (weight > 900)
-        weight = 900;
-    if (weight < 100)
-        weight = 100;
+    if (weight > FontWeight(900)) {
+        weight = FontWeight(900);
+    }
+    if (weight < FontWeight(100)) {
+        weight = FontWeight(100);
+    }
 
     if (size >= FONT_MAX_SIZE) {
         size = FONT_MAX_SIZE;
