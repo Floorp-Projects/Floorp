@@ -814,8 +814,7 @@ InitClass(JSContext* cx, HandleObject obj, HandleObject parent_proto,
           const Class* clasp, JSNative constructor, unsigned nargs,
           const JSPropertySpec* ps, const JSFunctionSpec* fs,
           const JSPropertySpec* static_ps, const JSFunctionSpec* static_fs,
-          NativeObject** ctorp = nullptr,
-          gc::AllocKind ctorKind = gc::AllocKind::FUNCTION);
+          NativeObject** ctorp = nullptr);
 
 MOZ_ALWAYS_INLINE const char*
 GetObjectClassName(JSContext* cx, HandleObject obj)
