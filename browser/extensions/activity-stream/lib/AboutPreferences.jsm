@@ -25,7 +25,7 @@ const PREFS_BEFORE_SECTIONS = [
   {
     id: "topsites",
     pref: {
-      feed: "showTopSites",
+      feed: "feeds.topsites",
       titleString: "settings_pane_topsites_header",
       descString: "prefs_topsites_description"
     },
@@ -52,6 +52,16 @@ const CUSTOM_CSS = `
   margin-inline-end: 8px;
   margin-inline-start: 4px;
   width: 16px;
+}
+#homeContentsGroup [data-subcategory] {
+  margin-top: 14px;
+}
+#homeContentsGroup [data-subcategory] > checkbox {
+  font-weight: 600;
+}
+#homeContentsGroup [data-subcategory] > vbox menulist {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 `;
 
@@ -189,7 +199,6 @@ this.AboutPreferences = class AboutPreferences {
       // Add more details for the section (e.g., description, more prefs)
       const detailVbox = createAppend("vbox", sectionVbox);
       detailVbox.classList.add("indent");
-      detailVbox.classList.add("tip-caption");
       if (descString) {
         const label = createAppend("label", detailVbox);
         label.classList.add("indent");

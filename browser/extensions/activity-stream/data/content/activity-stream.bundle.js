@@ -1392,7 +1392,7 @@ class ContextMenuItem extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.Pure
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ErrorBoundary_ErrorBoundary__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_SectionMenu_SectionMenu__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_SectionMenu_SectionMenu__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_lib_section_menu_options__ = __webpack_require__(13);
 
 
@@ -2487,8 +2487,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_lib_snippets__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_Base_Base__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_init_store__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_init_store__ = __webpack_require__(34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
@@ -3088,23 +3088,188 @@ const SimpleSnippet = props => external__React__default.a.createElement(
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_intl__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ConfirmDialog_ConfirmDialog__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_redux__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react_redux__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_ErrorBoundary_ErrorBoundary__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_components_ManualMigration_ManualMigration__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_content_src_components_MessageCenterAdmin_MessageCenterAdmin__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_common_PrerenderData_jsm__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_react__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_react__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_content_src_components_Search_Search__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_content_src_components_Sections_Sections__ = __webpack_require__(27);
 
-// EXTERNAL MODULE: ./system-addon/common/Actions.jsm
-var Actions = __webpack_require__(1);
 
-// EXTERNAL MODULE: external "ReactIntl"
-var external__ReactIntl_ = __webpack_require__(2);
-var external__ReactIntl__default = /*#__PURE__*/__webpack_require__.n(external__ReactIntl_);
 
-// EXTERNAL MODULE: external "ReactRedux"
-var external__ReactRedux_ = __webpack_require__(4);
-var external__ReactRedux__default = /*#__PURE__*/__webpack_require__.n(external__ReactRedux_);
 
-// EXTERNAL MODULE: external "React"
-var external__React_ = __webpack_require__(0);
-var external__React__default = /*#__PURE__*/__webpack_require__.n(external__React_);
 
-// CONCATENATED MODULE: ./system-addon/content-src/components/ConfirmDialog/ConfirmDialog.jsx
+
+
+
+
+
+
+
+const PrefsButton = Object(__WEBPACK_IMPORTED_MODULE_1_react_intl__["injectIntl"])(props => __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
+  "div",
+  { className: "prefs-button" },
+  __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement("button", { className: "icon icon-settings", onClick: props.onClick, title: props.intl.formatMessage({ id: "settings_pane_button_label" }) })
+));
+
+// Add the locale data for pluralization and relative-time formatting for now,
+// this just uses english locale data. We can make this more sophisticated if
+// more features are needed.
+function addLocaleDataForReactIntl(locale) {
+  Object(__WEBPACK_IMPORTED_MODULE_1_react_intl__["addLocaleData"])([{ locale, parentLocale: "en" }]);
+}
+
+class _Base extends __WEBPACK_IMPORTED_MODULE_8_react___default.a.PureComponent {
+  componentWillMount() {
+    const { App, locale, Theme } = this.props;
+    if (Theme.className) {
+      this.updateTheme(Theme);
+    }
+    this.sendNewTabRehydrated(App);
+    addLocaleDataForReactIntl(locale);
+  }
+
+  componentDidMount() {
+    // Request state AFTER the first render to ensure we don't cause the
+    // prerendered DOM to be unmounted. Otherwise, NEW_TAB_STATE_REQUEST is
+    // dispatched right after the store is ready.
+    if (this.props.isPrerendered) {
+      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].NEW_TAB_STATE_REQUEST }));
+      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].PAGE_PRERENDERED }));
+    }
+  }
+
+  componentWillUnmount() {
+    this.updateTheme({ className: "" });
+  }
+
+  componentWillUpdate({ App, Theme }) {
+    this.updateTheme(Theme);
+    this.sendNewTabRehydrated(App);
+  }
+
+  updateTheme(Theme) {
+    const bodyClassName = ["activity-stream", Theme.className].filter(v => v).join(" ");
+    global.document.body.className = bodyClassName;
+  }
+
+  // The NEW_TAB_REHYDRATED event is used to inform feeds that their
+  // data has been consumed e.g. for counting the number of tabs that
+  // have rendered that data.
+  sendNewTabRehydrated(App) {
+    if (App && App.initialized && !this.renderNotified) {
+      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].NEW_TAB_REHYDRATED, data: {} }));
+      this.renderNotified = true;
+    }
+  }
+
+  render() {
+    const { props } = this;
+    const { App, locale, strings } = props;
+    const { initialized } = App;
+
+    if (props.Prefs.values.messageCenterExperimentEnabled && window.location.hash === "#message-center-admin") {
+      return __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_6_content_src_components_MessageCenterAdmin_MessageCenterAdmin__["a" /* MessageCenterAdmin */], null);
+    }
+
+    if (!props.isPrerendered && !initialized) {
+      return null;
+    }
+
+    return __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_1_react_intl__["IntlProvider"],
+      { locale: locale, messages: strings },
+      __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_4_content_src_components_ErrorBoundary_ErrorBoundary__["a" /* ErrorBoundary */],
+        { className: "base-content-fallback" },
+        __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(BaseContent, this.props)
+      )
+    );
+  }
+}
+/* unused harmony export _Base */
+
+
+class BaseContent extends __WEBPACK_IMPORTED_MODULE_8_react___default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.openPreferences = this.openPreferences.bind(this);
+  }
+
+  openPreferences() {
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SETTINGS_OPEN }));
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
+  }
+
+  render() {
+    const { props } = this;
+    const { App } = props;
+    const { initialized } = App;
+    const prefs = props.Prefs.values;
+
+    const shouldBeFixedToTop = __WEBPACK_IMPORTED_MODULE_7_common_PrerenderData_jsm__["a" /* PrerenderData */].arePrefsValid(name => prefs[name]);
+
+    const outerClassName = ["outer-wrapper", shouldBeFixedToTop && "fixed-to-top", prefs.enableWideLayout ? "wide-layout-enabled" : "wide-layout-disabled"].filter(v => v).join(" ");
+
+    return __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
+      "div",
+      { className: outerClassName },
+      __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
+        "main",
+        null,
+        prefs.showSearch && __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
+          "div",
+          { className: "non-collapsible-section" },
+          __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
+            __WEBPACK_IMPORTED_MODULE_4_content_src_components_ErrorBoundary_ErrorBoundary__["a" /* ErrorBoundary */],
+            null,
+            __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_9_content_src_components_Search_Search__["a" /* Search */], null)
+          )
+        ),
+        __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
+          "div",
+          { className: `body-wrapper${initialized ? " on" : ""}` },
+          !prefs.migrationExpired && __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(
+            "div",
+            { className: "non-collapsible-section" },
+            __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_5_content_src_components_ManualMigration_ManualMigration__["a" /* ManualMigration */], null)
+          ),
+          __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_10_content_src_components_Sections_Sections__["a" /* Sections */], null),
+          __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(PrefsButton, { onClick: this.openPreferences })
+        ),
+        __WEBPACK_IMPORTED_MODULE_8_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2_content_src_components_ConfirmDialog_ConfirmDialog__["a" /* ConfirmDialog */], null)
+      )
+    );
+  }
+}
+/* unused harmony export BaseContent */
+
+
+const Base = Object(__WEBPACK_IMPORTED_MODULE_3_react_redux__["connect"])(state => ({ App: state.App, Prefs: state.Prefs, Theme: state.Theme }))(_Base);
+/* harmony export (immutable) */ __webpack_exports__["a"] = Base;
+
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
+
+/***/ }),
+/* 21 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_redux__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_redux__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_intl__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react_intl__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react__);
 
 
 
@@ -3129,7 +3294,7 @@ var external__React__default = /*#__PURE__*/__webpack_require__.n(external__Reac
  *   confirm_button_string_id: "menu_action_delete"
  * },
  */
-class ConfirmDialog__ConfirmDialog extends external__React__default.a.PureComponent {
+class _ConfirmDialog extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.PureComponent {
   constructor(props) {
     super(props);
     this._handleCancelBtn = this._handleCancelBtn.bind(this);
@@ -3137,8 +3302,8 @@ class ConfirmDialog__ConfirmDialog extends external__React__default.a.PureCompon
   }
 
   _handleCancelBtn() {
-    this.props.dispatch({ type: Actions["b" /* actionTypes */].DIALOG_CANCEL });
-    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: Actions["b" /* actionTypes */].DIALOG_CANCEL, source: this.props.data.eventSource }));
+    this.props.dispatch({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].DIALOG_CANCEL });
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].UserEvent({ event: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].DIALOG_CANCEL, source: this.props.data.eventSource }));
   }
 
   _handleConfirmBtn() {
@@ -3152,13 +3317,13 @@ class ConfirmDialog__ConfirmDialog extends external__React__default.a.PureCompon
       return null;
     }
 
-    return external__React__default.a.createElement(
+    return __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
       "span",
       null,
-      message_body.map(msg => external__React__default.a.createElement(
+      message_body.map(msg => __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
         "p",
         { key: msg },
-        external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: msg })
+        __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2_react_intl__["FormattedMessage"], { id: msg })
       ))
     );
   }
@@ -3168,43 +3333,56 @@ class ConfirmDialog__ConfirmDialog extends external__React__default.a.PureCompon
       return null;
     }
 
-    return external__React__default.a.createElement(
+    return __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
       "div",
       { className: "confirmation-dialog" },
-      external__React__default.a.createElement("div", { className: "modal-overlay", onClick: this._handleCancelBtn }),
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("div", { className: "modal-overlay", onClick: this._handleCancelBtn }),
+      __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
         "div",
         { className: "modal" },
-        external__React__default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
           "section",
           { className: "modal-message" },
-          this.props.data.icon && external__React__default.a.createElement("span", { className: `icon icon-spacer icon-${this.props.data.icon}` }),
+          this.props.data.icon && __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("span", { className: `icon icon-spacer icon-${this.props.data.icon}` }),
           this._renderModalMessage()
         ),
-        external__React__default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
           "section",
           { className: "actions" },
-          external__React__default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
             "button",
             { onClick: this._handleCancelBtn },
-            external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: this.props.data.cancel_button_string_id })
+            __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2_react_intl__["FormattedMessage"], { id: this.props.data.cancel_button_string_id })
           ),
-          external__React__default.a.createElement(
+          __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
             "button",
             { className: "done", onClick: this._handleConfirmBtn },
-            external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: this.props.data.confirm_button_string_id })
+            __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2_react_intl__["FormattedMessage"], { id: this.props.data.confirm_button_string_id })
           )
         )
       )
     );
   }
 }
+/* unused harmony export _ConfirmDialog */
 
-const ConfirmDialog = Object(external__ReactRedux_["connect"])(state => state.Dialog)(ConfirmDialog__ConfirmDialog);
-// EXTERNAL MODULE: ./system-addon/content-src/components/ErrorBoundary/ErrorBoundary.jsx
-var ErrorBoundary = __webpack_require__(9);
 
-// CONCATENATED MODULE: ./system-addon/content-src/components/ManualMigration/ManualMigration.jsx
+const ConfirmDialog = Object(__WEBPACK_IMPORTED_MODULE_1_react_redux__["connect"])(state => state.Dialog)(_ConfirmDialog);
+/* harmony export (immutable) */ __webpack_exports__["a"] = ConfirmDialog;
+
+
+/***/ }),
+/* 22 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_redux__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_redux__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_intl__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react_intl__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react__);
 
 
 
@@ -3218,7 +3396,7 @@ var ErrorBoundary = __webpack_require__(9);
  * 3.  After 3 active days
  * 4.  User clicks "Cancel" on the import wizard (currently not implemented).
  */
-class ManualMigration__ManualMigration extends external__React__default.a.PureComponent {
+class _ManualMigration extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onLaunchTour = this.onLaunchTour.bind(this);
@@ -3226,52 +3404,61 @@ class ManualMigration__ManualMigration extends external__React__default.a.PureCo
   }
 
   onLaunchTour() {
-    this.props.dispatch(Actions["a" /* actionCreators */].AlsoToMain({ type: Actions["b" /* actionTypes */].MIGRATION_START }));
-    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: Actions["b" /* actionTypes */].MIGRATION_START }));
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].MIGRATION_START }));
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].UserEvent({ event: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].MIGRATION_START }));
   }
 
   onCancelTour() {
-    this.props.dispatch(Actions["a" /* actionCreators */].AlsoToMain({ type: Actions["b" /* actionTypes */].MIGRATION_CANCEL }));
-    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: Actions["b" /* actionTypes */].MIGRATION_CANCEL }));
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].MIGRATION_CANCEL }));
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].UserEvent({ event: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].MIGRATION_CANCEL }));
   }
 
   render() {
-    return external__React__default.a.createElement(
+    return __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
       "div",
       { className: "manual-migration-container" },
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
         "p",
         null,
-        external__React__default.a.createElement("span", { className: "icon icon-import" }),
-        external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "manual_migration_explanation2" })
+        __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("span", { className: "icon icon-import" }),
+        __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2_react_intl__["FormattedMessage"], { id: "manual_migration_explanation2" })
       ),
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
         "div",
         { className: "manual-migration-actions actions" },
-        external__React__default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
           "button",
           { className: "dismiss", onClick: this.onCancelTour },
-          external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "manual_migration_cancel_button" })
+          __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2_react_intl__["FormattedMessage"], { id: "manual_migration_cancel_button" })
         ),
-        external__React__default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
           "button",
           { onClick: this.onLaunchTour },
-          external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "manual_migration_import_button" })
+          __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2_react_intl__["FormattedMessage"], { id: "manual_migration_import_button" })
         )
       )
     );
   }
 }
-
-const ManualMigration = Object(external__ReactRedux_["connect"])()(ManualMigration__ManualMigration);
-// EXTERNAL MODULE: ./system-addon/content-src/message-center/message-center-content.jsx
-var message_center_content = __webpack_require__(7);
-
-// CONCATENATED MODULE: ./system-addon/content-src/components/MessageCenterAdmin/MessageCenterAdmin.jsx
+/* unused harmony export _ManualMigration */
 
 
+const ManualMigration = Object(__WEBPACK_IMPORTED_MODULE_1_react_redux__["connect"])()(_ManualMigration);
+/* harmony export (immutable) */ __webpack_exports__["a"] = ManualMigration;
 
-class MessageCenterAdmin_MessageCenterAdmin extends external__React__default.a.PureComponent {
+
+/***/ }),
+/* 23 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__message_center_message_center_content__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react__);
+
+
+
+class MessageCenterAdmin extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onMessage = this.onMessage.bind(this);
@@ -3285,20 +3472,20 @@ class MessageCenterAdmin_MessageCenterAdmin extends external__React__default.a.P
   }
 
   componentWillMount() {
-    message_center_content["a" /* MessageCenterUtils */].sendMessage({ type: "ADMIN_CONNECT_STATE" });
-    message_center_content["a" /* MessageCenterUtils */].addListener(this.onMessage);
+    __WEBPACK_IMPORTED_MODULE_0__message_center_message_center_content__["a" /* MessageCenterUtils */].sendMessage({ type: "ADMIN_CONNECT_STATE" });
+    __WEBPACK_IMPORTED_MODULE_0__message_center_message_center_content__["a" /* MessageCenterUtils */].addListener(this.onMessage);
   }
 
   componentWillUnmount() {
-    message_center_content["a" /* MessageCenterUtils */].removeListener(this.onMessage);
+    __WEBPACK_IMPORTED_MODULE_0__message_center_message_center_content__["a" /* MessageCenterUtils */].removeListener(this.onMessage);
   }
 
   handleBlock(id) {
-    return () => message_center_content["a" /* MessageCenterUtils */].blockById(id);
+    return () => __WEBPACK_IMPORTED_MODULE_0__message_center_message_center_content__["a" /* MessageCenterUtils */].blockById(id);
   }
 
   handleUnblock(id) {
-    return () => message_center_content["a" /* MessageCenterUtils */].unblockById(id);
+    return () => __WEBPACK_IMPORTED_MODULE_0__message_center_message_center_content__["a" /* MessageCenterUtils */].unblockById(id);
   }
 
   renderMessageItem(msg) {
@@ -3313,31 +3500,31 @@ class MessageCenterAdmin_MessageCenterAdmin extends external__React__default.a.P
       itemClassName += " blocked";
     }
 
-    return external__React__default.a.createElement(
+    return __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
       "tr",
       { className: itemClassName, key: msg.id },
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
         "td",
         { className: "message-id" },
-        external__React__default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
           "span",
           null,
           msg.id
         )
       ),
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
         "td",
         null,
-        external__React__default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
           "button",
           { className: `button ${isBlocked ? "" : " primary"}`, onClick: isBlocked ? this.handleUnblock(msg.id) : this.handleBlock(msg.id) },
           isBlocked ? "Unblock" : "Block"
         )
       ),
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
         "td",
         { className: "message-summary" },
-        external__React__default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
           "pre",
           null,
           JSON.stringify(msg, null, 2)
@@ -3350,10 +3537,10 @@ class MessageCenterAdmin_MessageCenterAdmin extends external__React__default.a.P
     if (!this.state.messages) {
       return null;
     }
-    return external__React__default.a.createElement(
+    return __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
       "table",
       null,
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
         "tbody",
         null,
         this.state.messages.map(msg => this.renderMessageItem(msg))
@@ -3362,20 +3549,20 @@ class MessageCenterAdmin_MessageCenterAdmin extends external__React__default.a.P
   }
 
   render() {
-    return external__React__default.a.createElement(
+    return __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
       "div",
       { className: "messages-admin outer-wrapper" },
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
         "h1",
         null,
         "Messages Admin"
       ),
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
         "button",
-        { className: "button primary", onClick: message_center_content["a" /* MessageCenterUtils */].getNextMessage },
+        { className: "button primary", onClick: __WEBPACK_IMPORTED_MODULE_0__message_center_message_center_content__["a" /* MessageCenterUtils */].getNextMessage },
         "Refresh Current Message"
       ),
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
         "h2",
         null,
         "Messages"
@@ -3384,7 +3571,15 @@ class MessageCenterAdmin_MessageCenterAdmin extends external__React__default.a.P
     );
   }
 }
-// CONCATENATED MODULE: ./system-addon/common/PrerenderData.jsm
+/* harmony export (immutable) */ __webpack_exports__["a"] = MessageCenterAdmin;
+
+
+/***/ }),
+/* 24 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return PrerenderData; });
 class _PrerenderData {
   constructor(options) {
     this.initialPrefs = options.initialPrefs;
@@ -3440,10 +3635,12 @@ class _PrerenderData {
     return true;
   }
 }
+/* unused harmony export _PrerenderData */
+
 var PrerenderData = new _PrerenderData({
   initialPrefs: {
     "migrationExpired": true,
-    "showTopSites": true,
+    "feeds.topsites": true,
     "showSearch": true,
     "topSitesRows": 1,
     "feeds.section.topstories": true,
@@ -3458,7 +3655,7 @@ var PrerenderData = new _PrerenderData({
   // too different for the prerendered version to be used. Unfortunately, this
   // will result in users who have modified some of their preferences not being
   // able to get the benefits of prerendering.
-  validation: ["showTopSites", "showSearch", "topSitesRows", "enableWideLayout", "sectionOrder",
+  validation: ["feeds.topsites", "showSearch", "topSitesRows", "enableWideLayout", "sectionOrder",
   // This means if either of these are set to their default values,
   // prerendering can be used.
   { oneOf: ["feeds.section.topstories", "feeds.section.highlights"] },
@@ -3479,10 +3676,20 @@ var PrerenderData = new _PrerenderData({
     title: { id: "header_highlights" }
   }]
 });
-// EXTERNAL MODULE: ./system-addon/content-src/lib/constants.js
-var constants = __webpack_require__(21);
 
-// CONCATENATED MODULE: ./system-addon/content-src/components/Search/Search.jsx
+/***/ }),
+/* 25 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react_intl__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react_intl__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_Actions_jsm__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_redux__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react_redux__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_constants__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_react__);
 /* globals ContentSearchUIController */
 
 
@@ -3492,7 +3699,7 @@ var constants = __webpack_require__(21);
 
 
 
-class Search__Search extends external__React__default.a.PureComponent {
+class _Search extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.PureComponent {
   constructor(props) {
     super(props);
     this.onClick = this.onClick.bind(this);
@@ -3502,7 +3709,7 @@ class Search__Search extends external__React__default.a.PureComponent {
   handleEvent(event) {
     // Also track search events with our own telemetry
     if (event.detail.type === "Search") {
-      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: "SEARCH" }));
+      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_1_common_Actions_jsm__["a" /* actionCreators */].UserEvent({ event: "SEARCH" }));
     }
   }
 
@@ -3521,14 +3728,14 @@ class Search__Search extends external__React__default.a.PureComponent {
       // can add the appropriate telemetry probes for search. Without the correct
       // name, certain tests like browser_UsageTelemetry_content.js will fail
       // (See github ticket #2348 for more details)
-      const healthReportKey = constants["a" /* IS_NEWTAB */] ? "newtab" : "abouthome";
+      const healthReportKey = __WEBPACK_IMPORTED_MODULE_3_content_src_lib_constants__["a" /* IS_NEWTAB */] ? "newtab" : "abouthome";
 
       // The "searchSource" needs to be "newtab" or "homepage" and is sent with
       // the search data and acts as context for the search request (See
       // nsISearchEngine.getSubmission). It is necessary so that search engine
       // plugins can correctly atribute referrals. (See github ticket #3321 for
       // more details)
-      const searchSource = constants["a" /* IS_NEWTAB */] ? "newtab" : "homepage";
+      const searchSource = __WEBPACK_IMPORTED_MODULE_3_content_src_lib_constants__["a" /* IS_NEWTAB */] ? "newtab" : "homepage";
 
       // gContentSearchController needs to exist as a global so that tests for
       // the existing about:home can find it; and so it allows these tests to pass.
@@ -3547,191 +3754,50 @@ class Search__Search extends external__React__default.a.PureComponent {
    * in order to execute searches in various tests
    */
   render() {
-    return external__React__default.a.createElement(
+    return __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(
       "div",
       { className: "search-wrapper" },
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(
         "label",
         { htmlFor: "newtab-search-text", className: "search-label" },
-        external__React__default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(
           "span",
           { className: "sr-only" },
-          external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "search_web_placeholder" })
+          __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_react_intl__["FormattedMessage"], { id: "search_web_placeholder" })
         )
       ),
-      external__React__default.a.createElement("input", {
+      __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement("input", {
         id: "newtab-search-text",
         maxLength: "256",
         placeholder: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
         ref: this.onInputMount,
         title: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
         type: "search" }),
-      external__React__default.a.createElement(
+      __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(
         "button",
         {
           id: "searchSubmit",
           className: "search-button",
           onClick: this.onClick,
           title: this.props.intl.formatMessage({ id: "search_button" }) },
-        external__React__default.a.createElement(
+        __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(
           "span",
           { className: "sr-only" },
-          external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: "search_button" })
+          __WEBPACK_IMPORTED_MODULE_4_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_react_intl__["FormattedMessage"], { id: "search_button" })
         )
       )
     );
   }
 }
-
-const Search = Object(external__ReactRedux_["connect"])()(Object(external__ReactIntl_["injectIntl"])(Search__Search));
-// EXTERNAL MODULE: ./system-addon/content-src/components/Sections/Sections.jsx
-var Sections = __webpack_require__(22);
-
-// CONCATENATED MODULE: ./system-addon/content-src/components/Base/Base.jsx
+/* unused harmony export _Search */
 
 
-
-
-
-
-
-
-
-
-
-
-const PrefsButton = Object(external__ReactIntl_["injectIntl"])(props => external__React__default.a.createElement(
-  "div",
-  { className: "prefs-button" },
-  external__React__default.a.createElement("button", { className: "icon icon-settings", onClick: props.onClick, title: props.intl.formatMessage({ id: "settings_pane_button_label" }) })
-));
-
-// Add the locale data for pluralization and relative-time formatting for now,
-// this just uses english locale data. We can make this more sophisticated if
-// more features are needed.
-function addLocaleDataForReactIntl(locale) {
-  Object(external__ReactIntl_["addLocaleData"])([{ locale, parentLocale: "en" }]);
-}
-
-class Base__Base extends external__React__default.a.PureComponent {
-  componentWillMount() {
-    const { App, locale } = this.props;
-    this.sendNewTabRehydrated(App);
-    addLocaleDataForReactIntl(locale);
-  }
-
-  componentDidMount() {
-    // Request state AFTER the first render to ensure we don't cause the
-    // prerendered DOM to be unmounted. Otherwise, NEW_TAB_STATE_REQUEST is
-    // dispatched right after the store is ready.
-    if (this.props.isPrerendered) {
-      this.props.dispatch(Actions["a" /* actionCreators */].AlsoToMain({ type: Actions["b" /* actionTypes */].NEW_TAB_STATE_REQUEST }));
-      this.props.dispatch(Actions["a" /* actionCreators */].AlsoToMain({ type: Actions["b" /* actionTypes */].PAGE_PRERENDERED }));
-    }
-  }
-
-  componentWillUpdate({ App }) {
-    this.sendNewTabRehydrated(App);
-  }
-
-  // The NEW_TAB_REHYDRATED event is used to inform feeds that their
-  // data has been consumed e.g. for counting the number of tabs that
-  // have rendered that data.
-  sendNewTabRehydrated(App) {
-    if (App && App.initialized && !this.renderNotified) {
-      this.props.dispatch(Actions["a" /* actionCreators */].AlsoToMain({ type: Actions["b" /* actionTypes */].NEW_TAB_REHYDRATED, data: {} }));
-      this.renderNotified = true;
-    }
-  }
-
-  render() {
-    const { props } = this;
-    const { App, locale, strings } = props;
-    const { initialized } = App;
-
-    if (props.Prefs.values.messageCenterExperimentEnabled && window.location.hash === "#message-center-admin") {
-      return external__React__default.a.createElement(MessageCenterAdmin_MessageCenterAdmin, null);
-    }
-
-    if (!props.isPrerendered && !initialized) {
-      return null;
-    }
-
-    return external__React__default.a.createElement(
-      external__ReactIntl_["IntlProvider"],
-      { locale: locale, messages: strings },
-      external__React__default.a.createElement(
-        ErrorBoundary["a" /* ErrorBoundary */],
-        { className: "base-content-fallback" },
-        external__React__default.a.createElement(Base_BaseContent, this.props)
-      )
-    );
-  }
-}
-/* unused harmony export _Base */
-
-
-class Base_BaseContent extends external__React__default.a.PureComponent {
-  constructor(props) {
-    super(props);
-    this.openPreferences = this.openPreferences.bind(this);
-  }
-
-  openPreferences() {
-    this.props.dispatch(Actions["a" /* actionCreators */].OnlyToMain({ type: Actions["b" /* actionTypes */].SETTINGS_OPEN }));
-    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
-  }
-
-  render() {
-    const { props } = this;
-    const { App, Theme } = props;
-    const { initialized } = App;
-    const prefs = props.Prefs.values;
-
-    const shouldBeFixedToTop = PrerenderData.arePrefsValid(name => prefs[name]);
-
-    const outerClassName = ["outer-wrapper", Theme.className, shouldBeFixedToTop && "fixed-to-top", prefs.enableWideLayout ? "wide-layout-enabled" : "wide-layout-disabled"].filter(v => v).join(" ");
-
-    return external__React__default.a.createElement(
-      "div",
-      { className: outerClassName },
-      external__React__default.a.createElement(
-        "main",
-        null,
-        prefs.showSearch && external__React__default.a.createElement(
-          "div",
-          { className: "non-collapsible-section" },
-          external__React__default.a.createElement(
-            ErrorBoundary["a" /* ErrorBoundary */],
-            null,
-            external__React__default.a.createElement(Search, null)
-          )
-        ),
-        external__React__default.a.createElement(
-          "div",
-          { className: `body-wrapper${initialized ? " on" : ""}` },
-          !prefs.migrationExpired && external__React__default.a.createElement(
-            "div",
-            { className: "non-collapsible-section" },
-            external__React__default.a.createElement(ManualMigration, null)
-          ),
-          external__React__default.a.createElement(Sections["a" /* Sections */], null),
-          external__React__default.a.createElement(PrefsButton, { onClick: this.openPreferences })
-        ),
-        external__React__default.a.createElement(ConfirmDialog, null)
-      )
-    );
-  }
-}
-/* unused harmony export BaseContent */
-
-
-const Base = Object(external__ReactRedux_["connect"])(state => ({ App: state.App, Prefs: state.Prefs, Theme: state.Theme }))(Base__Base);
-/* harmony export (immutable) */ __webpack_exports__["a"] = Base;
+const Search = Object(__WEBPACK_IMPORTED_MODULE_2_react_redux__["connect"])()(Object(__WEBPACK_IMPORTED_MODULE_0_react_intl__["injectIntl"])(_Search));
+/* harmony export (immutable) */ __webpack_exports__["a"] = Search;
 
 
 /***/ }),
-/* 21 */
+/* 26 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3741,11 +3807,11 @@ const Base = Object(external__ReactRedux_["connect"])(state => ({ App: state.App
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 22 */
+/* 27 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__ = __webpack_require__(23);
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__ = __webpack_require__(28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_intl__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_common_Actions_jsm__ = __webpack_require__(1);
@@ -3755,8 +3821,8 @@ const Base = Object(external__ReactRedux_["connect"])(state => ({ App: state.App
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_content_src_components_Topics_Topics__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_content_src_components_TopSites_TopSites__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_content_src_components_Topics_Topics__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_content_src_components_TopSites_TopSites__ = __webpack_require__(31);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -3965,7 +4031,7 @@ class _Sections extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureCompon
   renderSections() {
     const sections = [];
     const enabledSections = this.props.Sections.filter(section => section.enabled);
-    const { sectionOrder, showTopSites } = this.props.Prefs.values;
+    const { sectionOrder, "feeds.topsites": showTopSites } = this.props.Prefs.values;
     // Enabled sections doesn't include Top Sites, so we add it if enabled.
     const expectedCount = enabledSections.length + ~~showTopSites;
 
@@ -4004,7 +4070,7 @@ const Sections = Object(__WEBPACK_IMPORTED_MODULE_5_react_redux__["connect"])(st
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 23 */
+/* 28 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4274,7 +4340,7 @@ const PlaceholderCard = () => external__React__default.a.createElement(Card_Card
 
 
 /***/ }),
-/* 24 */
+/* 29 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4346,7 +4412,7 @@ const SectionMenu = Object(__WEBPACK_IMPORTED_MODULE_2_react_intl__["injectIntl"
 
 
 /***/ }),
-/* 25 */
+/* 30 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4402,7 +4468,7 @@ class Topics extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureComponent
 
 
 /***/ }),
-/* 26 */
+/* 31 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4417,7 +4483,7 @@ class Topics extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureComponent
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_common_Reducers_jsm__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__TopSiteForm__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__TopSiteForm__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__TopSite__ = __webpack_require__(16);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -4536,7 +4602,7 @@ class _TopSites extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureCompon
           id: "topsites",
           title: { id: "header_top_sites" },
           extraMenuOptions: ["AddTopSite"],
-          showPrefName: "showTopSites",
+          showPrefName: "feeds.topsites",
           eventSource: __WEBPACK_IMPORTED_MODULE_1__TopSitesConstants__["d" /* TOP_SITES_SOURCE */],
           collapsed: props.TopSites.pref ? props.TopSites.pref.collapsed : undefined,
           isFirst: props.isFirst,
@@ -4579,7 +4645,7 @@ const TopSites = Object(__WEBPACK_IMPORTED_MODULE_4_react_redux__["connect"])(st
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 27 */
+/* 32 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4949,7 +5015,7 @@ TopSiteForm_TopSiteForm.defaultProps = {
 };
 
 /***/ }),
-/* 28 */
+/* 33 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5024,13 +5090,13 @@ class DetectUserSessionStart {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 29 */
+/* 34 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (immutable) */ __webpack_exports__["a"] = initStore;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux__ = __webpack_require__(35);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_redux__);
 /* eslint-env mozilla/frame-script */
 
@@ -5182,7 +5248,7 @@ function initStore(reducers, initialState) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 30 */
+/* 35 */
 /***/ (function(module, exports) {
 
 module.exports = Redux;

@@ -361,8 +361,8 @@ class SectionsFeed {
 
   get enabledSectionIds() {
     let sections = this.store.getState().Sections.filter(section => section.enabled).map(s => s.id);
-    // Top Sites is a special case. Append if show pref is on.
-    if (this.store.getState().Prefs.values.showTopSites) {
+    // Top Sites is a special case. Append if the feed is enabled.
+    if (this.store.getState().Prefs.values["feeds.topsites"]) {
       sections.push("topsites");
     }
     return sections;

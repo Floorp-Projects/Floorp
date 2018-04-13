@@ -124,9 +124,15 @@ function onBrowserReady() {
   migratePref("browser.newtabpage.rows", rows => {
     // Just disable top sites if rows are not desired
     if (rows <= 0) {
-      Services.prefs.setBoolPref("browser.newtabpage.activity-stream.showTopSites", false);
+      Services.prefs.setBoolPref("browser.newtabpage.activity-stream.feeds.topsites", false);
     } else {
       Services.prefs.setIntPref("browser.newtabpage.activity-stream.topSitesRows", rows);
+    }
+  });
+
+  migratePref("browser.newtabpage.activity-stream.showTopSites", value => {
+    if (value === false) {
+      Services.prefs.setBoolPref("browser.newtabpage.activity-stream.feeds.topsites", false);
     }
   });
 
