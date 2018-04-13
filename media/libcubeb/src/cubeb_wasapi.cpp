@@ -994,7 +994,6 @@ HRESULT register_notification_client(cubeb_stream * stm)
                                 IID_PPV_ARGS(stm->device_enumerator.receive()));
   if (FAILED(hr)) {
     LOG("Could not get device enumerator: %lx", hr);
-    XASSERT(hr != CO_E_NOTINITIALIZED);
     return hr;
   }
 
@@ -1041,7 +1040,6 @@ HRESULT get_endpoint(com_ptr<IMMDevice> & device, LPCWSTR devid)
                                 IID_PPV_ARGS(enumerator.receive()));
   if (FAILED(hr)) {
     LOG("Could not get device enumerator: %lx", hr);
-    XASSERT(hr != CO_E_NOTINITIALIZED);
     return hr;
   }
 
@@ -1062,7 +1060,6 @@ HRESULT get_default_endpoint(com_ptr<IMMDevice> & device, EDataFlow direction)
                                 IID_PPV_ARGS(enumerator.receive()));
   if (FAILED(hr)) {
     LOG("Could not get device enumerator: %lx", hr);
-    XASSERT(hr != CO_E_NOTINITIALIZED);
     return hr;
   }
   hr = enumerator->GetDefaultAudioEndpoint(direction, eConsole, device.receive());
@@ -2310,7 +2307,6 @@ wasapi_enumerate_devices(cubeb * context, cubeb_device_type type,
                         CLSCTX_INPROC_SERVER, IID_PPV_ARGS(enumerator.receive()));
   if (FAILED(hr)) {
     LOG("Could not get device enumerator: %lx", hr);
-    XASSERT(hr != CO_E_NOTINITIALIZED);
     return CUBEB_ERROR;
   }
 

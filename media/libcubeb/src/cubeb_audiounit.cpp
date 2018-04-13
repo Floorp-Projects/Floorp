@@ -1347,24 +1347,25 @@ audiounit_set_channel_layout(AudioUnit unit,
 
 
   OSStatus r;
-  int channels = cubeb_channel_layout_nb_channels(layout);
+  uint32_t nb_channels = cubeb_channel_layout_nb_channels(layout);
 
   // We do not use CoreAudio standard layout for lack of documentation on what
   // the actual channel orders are. So we set a custom layout.
-  size_t size = offsetof(AudioChannelLayout, mChannelDescriptions[channels]);
+  size_t size = offsetof(AudioChannelLayout, mChannelDescriptions[nb_channels]);
   auto au_layout = make_sized_audio_channel_layout(size);
   au_layout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
-  au_layout->mNumberChannelDescriptions = channels;
+  au_layout->mNumberChannelDescriptions = nb_channels;
+
+  uint32_t channels = 0;
   cubeb_channel_layout channelMap = layout;
-  int i = 0;
-  while (channelMap != 0) {
-    XASSERT(i < channels);
+  for (uint32_t i = 0; channelMap != 0; ++i) {
+    XASSERT(channels < nb_channels);
     uint32_t channel = (channelMap & 1) << i;
     if (channel != 0) {
-      au_layout->mChannelDescriptions[i].mChannelLabel =
+      au_layout->mChannelDescriptions[channels].mChannelLabel =
         cubeb_channel_to_channel_label(static_cast<cubeb_channel>(channel));
-      au_layout->mChannelDescriptions[i].mChannelFlags = kAudioChannelFlags_AllOff;
-      i += 1;
+      au_layout->mChannelDescriptions[channels].mChannelFlags = kAudioChannelFlags_AllOff;
+      channels++;
     }
     channelMap = channelMap >> 1;
   }
