@@ -34,6 +34,7 @@
 
 namespace js {
 
+class GlobalObject;
 class StringBuffer;
 
 extern MOZ_MUST_USE bool
@@ -46,7 +47,7 @@ FinishRuntimeNumberState(JSRuntime* rt);
 
 /* Initialize the Number class, returning its prototype object. */
 extern JSObject*
-InitNumberClass(JSContext* cx, HandleObject obj);
+InitNumberClass(JSContext* cx, Handle<GlobalObject*> global);
 
 /*
  * When base == 10, this function implements ToString() as specified by

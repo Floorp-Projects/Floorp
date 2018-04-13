@@ -205,9 +205,8 @@ static const JSFunctionSpec methods[] = {
 /*** Setup **************************************************************************************/
 
 JSObject*
-js::InitReflect(JSContext* cx, HandleObject obj)
+js::InitReflect(JSContext* cx, Handle<GlobalObject*> global)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
     if (!proto)
         return nullptr;
@@ -219,10 +218,10 @@ js::InitReflect(JSContext* cx, HandleObject obj)
         return nullptr;
 
     RootedValue value(cx, ObjectValue(*reflect));
-    if (!DefineDataProperty(cx, obj, cx->names().Reflect, value, JSPROP_RESOLVING))
+    if (!DefineDataProperty(cx, global, cx->names().Reflect, value, JSPROP_RESOLVING))
         return nullptr;
 
-    obj->as<GlobalObject>().setConstructor(JSProto_Reflect, value);
+    global->setConstructor(JSProto_Reflect, value);
 
     return reflect;
 }

@@ -11,8 +11,10 @@
 
 namespace js {
 
+class GlobalObject;
+
 extern JSObject*
-InitReflect(JSContext* cx, js::HandleObject obj);
+InitReflect(JSContext* cx, js::Handle<GlobalObject*> global);
 
 }
 

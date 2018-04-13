@@ -14,6 +14,8 @@
 
 namespace js {
 
+class GlobalObject;
+
 class StringObject : public NativeObject
 {
     static const unsigned PRIMITIVE_VALUE_SLOT = 0;
@@ -66,7 +68,7 @@ class StringObject : public NativeObject
 
     /* For access to init, as String.prototype is special. */
     friend JSObject*
-    js::InitStringClass(JSContext* cx, HandleObject global);
+    js::InitStringClass(JSContext* cx, Handle<GlobalObject*> global);
 };
 
 } // namespace js

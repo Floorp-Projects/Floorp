@@ -13,6 +13,8 @@
 
 namespace js {
 
+class GlobalObject;
+
 class BooleanObject : public NativeObject
 {
     /* Stores this Boolean object's [[PrimitiveValue]]. */
@@ -41,7 +43,7 @@ class BooleanObject : public NativeObject
 
     /* For access to init, as Boolean.prototype is special. */
     friend JSObject*
-    js::InitBooleanClass(JSContext* cx, js::HandleObject global);
+    js::InitBooleanClass(JSContext* cx, js::Handle<GlobalObject*> global);
 };
 
 } // namespace js

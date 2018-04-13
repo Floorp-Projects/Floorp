@@ -290,12 +290,8 @@ static const JSFunctionSpec weak_map_methods[] = {
 };
 
 JSObject*
-js::InitWeakMapClass(JSContext* cx, HandleObject obj)
+js::InitWeakMapClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    MOZ_ASSERT(obj->isNative());
-
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
-
     RootedPlainObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!proto)
         return nullptr;

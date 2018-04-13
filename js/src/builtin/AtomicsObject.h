@@ -17,6 +17,8 @@
 
 namespace js {
 
+class GlobalObject;
+
 class AtomicsObject : public NativeObject
 {
   public:
@@ -141,7 +143,7 @@ public:
 };
 
 JSObject*
-InitAtomicsClass(JSContext* cx, HandleObject obj);
+InitAtomicsClass(JSContext* cx, Handle<GlobalObject*> global);
 
 // Go to sleep if the int32_t value at the given address equals `value`.
 MOZ_MUST_USE FutexThread::WaitResult
