@@ -66,7 +66,7 @@ public:
      * support @font-face src local() )
      */
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                          uint16_t aWeight,
+                                          FontWeight aWeight,
                                           int16_t aStretch,
                                           uint8_t aStyle) override;
 
@@ -75,7 +75,7 @@ public:
      *
      */
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                           uint16_t aWeight,
+                                           FontWeight aWeight,
                                            int16_t aStretch,
                                            uint8_t aStyle,
                                            const uint8_t* aFontData,

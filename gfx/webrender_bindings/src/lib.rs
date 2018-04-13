@@ -10,6 +10,8 @@ extern crate app_units;
 extern crate gleam;
 extern crate rayon;
 extern crate thread_profiler;
+
+#[macro_use]
 extern crate log;
 
 #[cfg(target_os = "windows")]

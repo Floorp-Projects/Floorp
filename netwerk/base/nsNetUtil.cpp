@@ -2162,6 +2162,30 @@ bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI)
 
   bool isForeign = false;
   thirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
+
+  // if we are dealing with a cross origin request, we can return here
+  // because we already know the request is 'foreign'.
+  if (isForeign) {
+    return true;
+  }
+
+  // for the purpose of same-site cookies we have to treat any cross-origin
+  // redirects as foreign. E.g. cross-site to same-site redirect is a problem
+  // with regards to CSRF.
+
+  nsCOMPtr<nsIPrincipal> redirectPrincipal;
+  nsCOMPtr<nsIURI> redirectURI;
+  for (nsIRedirectHistoryEntry* entry : loadInfo->RedirectChain()) {
+    entry->GetPrincipal(getter_AddRefs(redirectPrincipal));
+    if (redirectPrincipal) {
+      redirectPrincipal->GetURI(getter_AddRefs(redirectURI));
+      thirdPartyUtil->IsThirdPartyChannel(aChannel, redirectURI, &isForeign);
+      // if at any point we encounter a cross-origin redirect we can return.
+      if (isForeign) {
+        return true;
+      }
+    }
+  }
   return isForeign;
 }
 

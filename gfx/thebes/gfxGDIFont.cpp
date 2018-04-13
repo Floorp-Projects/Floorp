@@ -445,20 +445,20 @@ gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize)
 {
     GDIFontEntry *fe = static_cast<GDIFontEntry*>(GetFontEntry());
 
-    uint16_t weight;
+    FontWeight weight;
     if (fe->IsUserFont()) {
         if (fe->IsLocalUserFont()) {
             // for local user fonts, don't change the original weight
             // in the entry's logfont, because that could alter the
             // choice of actual face used (bug 724231)
-            weight = 0;
+            weight = FontWeight(0);
         } else {
             // avoid GDI synthetic bold which occurs when weight
             // specified is >= font data weight + 200
-            weight = mNeedsBold ? 700 : 200;
+            weight = mNeedsBold ? FontWeight(700) : FontWeight(200);
         }
     } else {
-        weight = mNeedsBold ? 700 : fe->Weight();
+        weight = mNeedsBold ? FontWeight(700) : fe->Weight();
     }
 
     fe->FillLogFont(&aLogFont, weight, aSize);

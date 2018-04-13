@@ -52,6 +52,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Keyframe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
@@ -1327,6 +1328,19 @@ Gecko_nsFont_SetFontFeatureValuesLookup(nsFont* aFont,
   aFont->featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
 }
 
+float
+Gecko_FontWeight_ToFloat(mozilla::FontWeight aWeight)
+{
+  return aWeight.ToFloat();
+}
+
+void
+Gecko_FontWeight_SetFloat(mozilla::FontWeight* aWeight,
+                          float aFloat)
+{
+  *aWeight = mozilla::FontWeight(aFloat);
+}
+
 void
 Gecko_nsFont_ResetFontFeatureValuesLookup(nsFont* aFont)
 {
@@ -2304,6 +2318,13 @@ void
 Gecko_CSSValue_Drop(nsCSSValueBorrowedMut aCSSValue)
 {
   aCSSValue->~nsCSSValue();
+}
+
+void
+Gecko_CSSValue_SetFontWeight(nsCSSValueBorrowedMut aCSSValue,
+                             float weight)
+{
+  aCSSValue->SetFontWeight(mozilla::FontWeight(weight));
 }
 
 void

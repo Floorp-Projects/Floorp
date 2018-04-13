@@ -137,7 +137,7 @@ ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace *aFontFace,
     , mContrast(aContrast)
 {
   if (aStyle) {
-    mStyle = SkFontStyle(aStyle->weight,
+    mStyle = SkFontStyle(aStyle->weight.ToIntRounded(),
                          DWriteFontStretchFromStretch(aStyle->stretch),
                          aStyle->style == NS_FONT_STYLE_NORMAL ?
                          SkFontStyle::kUpright_Slant : SkFontStyle::kItalic_Slant);

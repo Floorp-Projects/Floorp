@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
     },
     available=lambda parameters: parameters.get('project', None) != 'try'
 )
-def backfill_action(parameters, input, task_group_id, task_id, task):
+def backfill_action(parameters, graph_config, input, task_group_id, task_id, task):
     label = task['metadata']['name']
     pushes = []
     depth = input.get('depth', 5)
@@ -82,7 +82,7 @@ def backfill_action(parameters, input, task_group_id, task_id, task):
             push_params = get_artifact_from_index(
                     INDEX_TMPL.format(parameters['project'], push),
                     'public/parameters.yml')
-            push_decision_task_id = find_decision_task(push_params)
+            push_decision_task_id = find_decision_task(push_params, graph_config)
         except HTTPError as e:
             logger.info('Skipping {} due to missing index artifacts! Error: {}'.format(push, e))
             continue
