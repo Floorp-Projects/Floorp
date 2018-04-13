@@ -7,6 +7,7 @@
 #include "nsEscape.h"
 #include "nsTextToSubURI.h"
 #include "nsCRT.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/Preferences.h"
 #include "nsISupportsPrimitives.h"

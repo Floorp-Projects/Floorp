@@ -11,11 +11,6 @@
  * JS public API typedefs.
  */
 
-#include "mozilla/Assertions.h"
-#include "mozilla/EnumeratedArray.h"
-#include "mozilla/LinkedList.h"
-#include "mozilla/PodOperations.h"
-
 #include "jstypes.h"
 
 #include "js/ProtoKey.h"
@@ -86,10 +81,6 @@ typedef JSConstScalarSpec<double> JSConstDoubleSpec;
 typedef JSConstScalarSpec<int32_t> JSConstIntegerSpec;
 
 namespace js {
-namespace gc {
-class AutoTraceSession;
-class StoreBuffer;
-} // namespace gc
 
 inline JSCompartment* GetContextCompartment(const JSContext* cx);
 inline JS::Zone* GetContextZone(const JSContext* cx);
@@ -108,7 +99,6 @@ CurrentThreadIsPerformingGC();
 
 namespace JS {
 
-class JS_PUBLIC_API(AutoEnterCycleCollection);
 struct JS_PUBLIC_API(PropertyDescriptor);
 
 typedef void (*OffThreadCompileCallback)(void* token, void* callbackData);
@@ -178,11 +168,11 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(AutoEnterCycleCollection)
 
 } /* namespace JS */
 
-MOZ_BEGIN_EXTERN_C
+extern "C" {
 
 // Defined in NSPR prio.h.
 typedef struct PRFileDesc PRFileDesc;
 
-MOZ_END_EXTERN_C
+}
 
 #endif /* jspubtd_h */
