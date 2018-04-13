@@ -103,8 +103,8 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-001.xhtml  flexbox-align
 == flexbox-flex-basis-content-001b.html flexbox-flex-basis-content-001-ref.html
 == flexbox-flex-basis-content-002a.html flexbox-flex-basis-content-002-ref.html
 == flexbox-flex-basis-content-002b.html flexbox-flex-basis-content-002-ref.html
-fails == flexbox-flex-basis-content-003a.html flexbox-flex-basis-content-003-ref.html # bug 1374540
-fails == flexbox-flex-basis-content-003b.html flexbox-flex-basis-content-003-ref.html # bug 1374540
+== flexbox-flex-basis-content-003a.html flexbox-flex-basis-content-003-ref.html
+== flexbox-flex-basis-content-003b.html flexbox-flex-basis-content-003-ref.html
 == flexbox-flex-basis-content-004a.html flexbox-flex-basis-content-004-ref.html
 == flexbox-flex-basis-content-004b.html flexbox-flex-basis-content-004-ref.html
 
