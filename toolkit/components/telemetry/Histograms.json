@@ -6624,10 +6624,11 @@
       "enterSelection",
       "click",
       "arrowEnterSelection",
-      "tabEnterSelection"
+      "tabEnterSelection",
+      "rightClickEnter"
     ],
     "bug_numbers": [1334615],
-    "description": "The input method the user used to select a result in the urlbar. 'enter' => The user hit the Enter key on the heuristic result at index 0. 'enterSelection' => The user chose a non-heuristic result (in exotic ways) and then hit the Enter key. 'click' => The user clicked a result with the mouse. 'arrowEnterSelection' => The user chose a non-heuristic result using arrow keys and then hit the Enter key. 'tabEnterSelection' => The user chose a non-heuristic result using tab at least once and then hit the Enter key."
+    "description": "The input method the user used to select a result in the urlbar. 'enter' => The user hit the Enter key on the heuristic result at index 0. 'enterSelection' => The user chose a non-heuristic result (in exotic ways) and then hit the Enter key. 'click' => The user clicked a result with the mouse. 'arrowEnterSelection' => The user chose a non-heuristic result using arrow keys and then hit the Enter key. 'tabEnterSelection' => The user chose a non-heuristic result using tab at least once and then hit the Enter key. 'rightClickEnter' => The user chose a non-heuristic result using right click and then hit the Enter key."
   },
   "FX_SEARCHBAR_SELECTED_RESULT_METHOD": {
     "record_in_processes": ["main", "content"],
