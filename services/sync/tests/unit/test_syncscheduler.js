@@ -1044,3 +1044,25 @@ add_task(async function test_proper_interval_on_only_failing() {
   Assert.ok(!scheduler.hasIncomingItems);
   Assert.equal(scheduler.syncInterval, scheduler.singleDeviceInterval);
 });
+
+add_task(async function test_link_status_change() {
+  _("Check that we only attempt to sync when link status is up");
+  try {
+    sinon.spy(scheduler, "scheduleNextSync");
+
+    Svc.Obs.notify("network:link-status-changed", null, "down");
+    equal(scheduler.scheduleNextSync.callCount, 0);
+
+    Svc.Obs.notify("network:link-status-changed", null, "change");
+    equal(scheduler.scheduleNextSync.callCount, 0);
+
+    Svc.Obs.notify("network:link-status-changed", null, "up");
+    equal(scheduler.scheduleNextSync.callCount, 1);
+
+    Svc.Obs.notify("network:link-status-changed", null, "change");
+    equal(scheduler.scheduleNextSync.callCount, 1);
+
+  } finally {
+    scheduler.scheduleNextSync.restore();
+  }
+});
