@@ -3629,11 +3629,10 @@ js::InitStringClass(JSContext* cx, HandleObject obj)
     Handle<GlobalObject*> global = obj.as<GlobalObject>();
 
     Rooted<JSString*> empty(cx, cx->runtime()->emptyString);
-    RootedObject proto(cx, GlobalObject::createBlankPrototype(cx, global, &StringObject::class_));
+    Rooted<StringObject*> proto(cx, GlobalObject::createBlankPrototype<StringObject>(cx, global));
     if (!proto)
         return nullptr;
-    Handle<StringObject*> protoObj = proto.as<StringObject>();
-    if (!StringObject::init(cx, protoObj, empty))
+    if (!StringObject::init(cx, proto, empty))
         return nullptr;
 
     /* Now create the String function. */
@@ -3656,8 +3655,8 @@ js::InitStringClass(JSContext* cx, HandleObject obj)
     RootedValue trimFn(cx);
     RootedId trimId(cx, NameToId(cx->names().trimStart));
     RootedId trimAliasId(cx, NameToId(cx->names().trimLeft));
-    if (!NativeGetProperty(cx, protoObj, trimId, &trimFn) ||
-        !NativeDefineDataProperty(cx, protoObj, trimAliasId, trimFn, 0))
+    if (!NativeGetProperty(cx, proto, trimId, &trimFn) ||
+        !NativeDefineDataProperty(cx, proto, trimAliasId, trimFn, 0))
     {
         return nullptr;
     }
@@ -3665,8 +3664,8 @@ js::InitStringClass(JSContext* cx, HandleObject obj)
     // Create "trimRight" as an alias for "trimEnd".
     trimId = NameToId(cx->names().trimEnd);
     trimAliasId = NameToId(cx->names().trimRight);
-    if (!NativeGetProperty(cx, protoObj, trimId, &trimFn) ||
-        !NativeDefineDataProperty(cx, protoObj, trimAliasId, trimFn, 0))
+    if (!NativeGetProperty(cx, proto, trimId, &trimFn) ||
+        !NativeDefineDataProperty(cx, proto, trimAliasId, trimFn, 0))
     {
         return nullptr;
     }

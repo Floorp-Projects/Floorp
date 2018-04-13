@@ -1367,10 +1367,9 @@ const Class ScriptSourceObject::class_ = {
 ScriptSourceObject*
 ScriptSourceObject::create(JSContext* cx, ScriptSource* source)
 {
-    RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, nullptr));
-    if (!object)
+    RootedScriptSource sourceObject(cx, NewObjectWithGivenProto<ScriptSourceObject>(cx, nullptr));
+    if (!sourceObject)
         return nullptr;
-    RootedScriptSource sourceObject(cx, &object->as<ScriptSourceObject>());
 
     source->incref();    // The matching decref is in ScriptSourceObject::finalize.
     sourceObject->initReservedSlot(SOURCE_SLOT, PrivateValue(source));

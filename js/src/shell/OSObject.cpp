@@ -404,14 +404,13 @@ class FileObject : public NativeObject
     static const js::Class class_;
 
     static FileObject* create(JSContext* cx, RCFile* file) {
-        JSObject* obj = js::NewObjectWithClassProto(cx, &class_, nullptr);
+        FileObject* obj = js::NewObjectWithClassProto<FileObject>(cx, nullptr);
         if (!obj)
             return nullptr;
 
-        FileObject* fileObj = &obj->as<FileObject>();
-        fileObj->setRCFile(file);
+        obj->setRCFile(file);
         file->acquire();
-        return fileObj;
+        return obj;
     }
 
     static void finalize(FreeOp* fop, JSObject* obj) {

@@ -149,11 +149,10 @@ ImportEntryObject::create(JSContext* cx,
     if (!proto)
         return nullptr;
 
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &class_, proto));
-    if (!obj)
+    ImportEntryObject* self = NewObjectWithGivenProto<ImportEntryObject>(cx, proto);
+    if (!self)
         return nullptr;
 
-    RootedImportEntryObject self(cx, &obj->as<ImportEntryObject>());
     self->initReservedSlot(ModuleRequestSlot, StringValue(moduleRequest));
     self->initReservedSlot(ImportNameSlot, StringValue(importName));
     self->initReservedSlot(LocalNameSlot, StringValue(localName));
@@ -238,11 +237,10 @@ ExportEntryObject::create(JSContext* cx,
     if (!proto)
         return nullptr;
 
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &class_, proto));
-    if (!obj)
+    ExportEntryObject* self = NewObjectWithGivenProto<ExportEntryObject>(cx, proto);
+    if (!self)
         return nullptr;
 
-    RootedExportEntryObject self(cx, &obj->as<ExportEntryObject>());
     self->initReservedSlot(ExportNameSlot, StringOrNullValue(maybeExportName));
     self->initReservedSlot(ModuleRequestSlot, StringOrNullValue(maybeModuleRequest));
     self->initReservedSlot(ImportNameSlot, StringOrNullValue(maybeImportName));
@@ -307,11 +305,10 @@ RequestedModuleObject::create(JSContext* cx,
     if (!proto)
         return nullptr;
 
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &class_, proto));
-    if (!obj)
+    RequestedModuleObject* self = NewObjectWithGivenProto<RequestedModuleObject>(cx, proto);
+    if (!self)
         return nullptr;
 
-    RootedRequestedModuleObject self(cx, &obj->as<RequestedModuleObject>());
     self->initReservedSlot(ModuleSpecifierSlot, StringValue(moduleSpecifier));
     self->initReservedSlot(LineNumberSlot, NumberValue(lineNumber));
     self->initReservedSlot(ColumnNumberSlot, NumberValue(columnNumber));
@@ -771,11 +768,9 @@ ModuleObject::create(JSContext* cx)
     if (!proto)
         return nullptr;
 
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &class_, proto));
-    if (!obj)
+    RootedModuleObject self(cx, NewObjectWithGivenProto<ModuleObject>(cx, proto));
+    if (!self)
         return nullptr;
-
-    RootedModuleObject self(cx, &obj->as<ModuleObject>());
 
     Zone* zone = cx->zone();
     IndirectBindingMap* bindings = zone->new_<IndirectBindingMap>();

@@ -998,7 +998,7 @@ CreateThisForFunctionWithGroup(JSContext* cx, HandleObjectGroup group,
 
     if (newKind == SingletonObject) {
         Rooted<TaggedProto> protoRoot(cx, group->proto());
-        return NewObjectWithGivenTaggedProto(cx, &PlainObject::class_, protoRoot, allocKind, newKind);
+        return NewObjectWithGivenTaggedProto<PlainObject>(cx, protoRoot, allocKind, newKind);
     }
     return NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
 }
