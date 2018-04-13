@@ -3145,7 +3145,11 @@ void
 profiler_unregister_thread()
 {
   MOZ_ASSERT_IF(NS_IsMainThread(), Scheduler::IsCooperativeThread());
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  if (!CorePS::Exists()) {
+    // This function can be called after the main thread has already shut down.
+    return;
+  }
 
   PSAutoLock lock(gPSMutex);
 
