@@ -22,7 +22,6 @@ loader.lazyRequireGetter(this, "NetworkMonitor", "devtools/shared/webconsole/net
 loader.lazyRequireGetter(this, "NetworkMonitorChild", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "ConsoleProgressListener", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "StackTraceCollector", "devtools/shared/webconsole/network-monitor", true);
-loader.lazyRequireGetter(this, "ServerLoggingListener", "devtools/shared/webconsole/server-logger", true);
 loader.lazyRequireGetter(this, "JSPropertyProvider", "devtools/shared/webconsole/js-property-provider", true);
 loader.lazyRequireGetter(this, "Parser", "resource://devtools/shared/Parser.jsm", true);
 loader.lazyRequireGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm", true);
@@ -372,10 +371,6 @@ WebConsoleActor.prototype =
       this.consoleReflowListener.destroy();
       this.consoleReflowListener = null;
     }
-    if (this.serverLoggingListener) {
-      this.serverLoggingListener.destroy();
-      this.serverLoggingListener = null;
-    }
     if (this.contentProcessListener) {
       this.contentProcessListener.destroy();
       this.contentProcessListener = null;
@@ -672,17 +667,6 @@ WebConsoleActor.prototype =
           }
           startedListeners.push(listener);
           break;
-        case "ServerLogging":
-          // Workers don't support this message type
-          if (isWorker) {
-            break;
-          }
-          if (!this.serverLoggingListener) {
-            this.serverLoggingListener =
-              new ServerLoggingListener(this.window, this);
-          }
-          startedListeners.push(listener);
-          break;
         case "ContentProcessMessages":
           // Workers don't support this message type
           if (isWorker) {
@@ -732,7 +716,7 @@ WebConsoleActor.prototype =
     // listeners.
     let toDetach = request.listeners ||
       ["PageError", "ConsoleAPI", "NetworkActivity",
-       "FileActivity", "ServerLogging", "ContentProcessMessages"];
+       "FileActivity", "ContentProcessMessages"];
 
     while (toDetach.length > 0) {
       let listener = toDetach.shift();
@@ -778,13 +762,6 @@ WebConsoleActor.prototype =
           if (this.consoleReflowListener) {
             this.consoleReflowListener.destroy();
             this.consoleReflowListener = null;
-          }
-          stoppedListeners.push(listener);
-          break;
-        case "ServerLogging":
-          if (this.serverLoggingListener) {
-            this.serverLoggingListener.destroy();
-            this.serverLoggingListener = null;
           }
           stoppedListeners.push(listener);
           break;
@@ -1794,39 +1771,6 @@ WebConsoleActor.prototype =
       sourceURL: reflowInfo.sourceURL,
       sourceLine: reflowInfo.sourceLine,
       functionName: reflowInfo.functionName
-    };
-
-    this.conn.send(packet);
-  },
-
-  /**
-   * Handler for server logging. This method forwards log events to the
-   * remote Web Console client.
-   *
-   * @see ServerLoggingListener
-   * @param object message
-   *        The console API call on the server we need to send to the remote client.
-   */
-  onServerLogCall: function(message) {
-    // Clone all data into the content scope (that's where
-    // passed arguments comes from).
-    let msg = Cu.cloneInto(message, this.window);
-
-    // All arguments within the message need to be converted into
-    // debuggees to properly send it to the client side.
-    // Use the default target: this.window as the global object
-    // since that's the correct scope for data in the message.
-    // The 'false' argument passed into prepareConsoleMessageForRemote()
-    // ensures that makeDebuggeeValue uses content debuggee.
-    // See also:
-    // * makeDebuggeeValue()
-    // * prepareConsoleMessageForRemote()
-    msg = this.prepareConsoleMessageForRemote(msg, false);
-
-    let packet = {
-      from: this.actorID,
-      type: "serverLogCall",
-      message: msg,
     };
 
     this.conn.send(packet);
