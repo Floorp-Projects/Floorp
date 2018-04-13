@@ -6,19 +6,13 @@
 ChromeUtils.import("resource:///modules/SitePermissions.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const STORAGE_MANAGER_ENABLED = Services.prefs.getBoolPref("browser.storageManager.enabled");
 const RESIST_FINGERPRINTING_ENABLED = Services.prefs.getBoolPref("privacy.resistFingerprinting");
 const MIDI_ENABLED = Services.prefs.getBoolPref("dom.webmidi.enabled");
 
 add_task(async function testPermissionsListing() {
   let expectedPermissions = ["camera", "cookie", "desktop-notification", "focus-tab-by-prompt",
-     "geo", "image", "install", "microphone", "plugin:flash", "popup", "screen", "shortcuts"];
-  if (STORAGE_MANAGER_ENABLED) {
-    // The persistent-storage permission is still only pref-on on Nightly
-    // so we add it only when it's pref-on.
-    // Should remove this checking and add it as default after it is fully pref-on.
-    expectedPermissions.push("persistent-storage");
-  }
+     "geo", "image", "install", "microphone", "plugin:flash", "popup", "screen", "shortcuts",
+     "persistent-storage"];
   if (RESIST_FINGERPRINTING_ENABLED) {
     // Canvas permission should be hidden unless privacy.resistFingerprinting
     // is true.
@@ -113,13 +107,7 @@ add_task(async function testExactHostMatch() {
   let subUri = Services.io.newURI("https://test1.example.com");
 
   let exactHostMatched = ["desktop-notification", "focus-tab-by-prompt", "camera",
-                          "microphone", "screen", "geo"];
-  if (STORAGE_MANAGER_ENABLED) {
-    // The persistent-storage permission is still only pref-on on Nightly
-    // so we add it only when it's pref-on.
-    // Should remove this checking and add it as default after it is fully pref-on.
-    exactHostMatched.push("persistent-storage");
-  }
+                          "microphone", "screen", "geo", "persistent-storage"];
   if (RESIST_FINGERPRINTING_ENABLED) {
     // Canvas permission should be hidden unless privacy.resistFingerprinting
     // is true.

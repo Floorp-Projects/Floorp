@@ -8,12 +8,12 @@
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
 const promise = require("promise");
+const Services = require("Services");
 const Store = require("devtools/client/responsive.html/store");
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-const flags = require("devtools/shared/flags");
-flags.testing = true;
+Services.prefs.setBoolPref("devtools.testing", true);
 registerCleanupFunction(() => {
-  flags.testing = false;
+  Services.prefs.clearUserPref("devtools.testing");
 });

@@ -6,9 +6,9 @@ const TEST_URI = "http://example.com/browser/devtools/client/webide/test/doc_tab
 
 function test() {
   waitForExplicitFinish();
-  requestCompleteLog();
+  SimpleTest.requestCompleteLog();
 
-  (async function () {
+  (async function() {
     // Since we test the connections set below, destroy the server in case it
     // was left open.
     DebuggerServer.destroy();
@@ -73,7 +73,7 @@ function connectToLocal(win, docRuntime) {
 }
 
 function selectTabProject(win, docProject) {
-  return (async function () {
+  return (async function() {
     await waitForUpdate(win, "runtime-targets");
     let tabsNode = docProject.querySelector("#project-panel-tabs");
     let tabNode = tabsNode.querySelectorAll(".panel-item")[1];

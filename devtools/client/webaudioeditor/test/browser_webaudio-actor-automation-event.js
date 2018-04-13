@@ -6,7 +6,7 @@
  * with correct arguments from the content.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, front } = await initBackend(AUTOMATION_URL);
   let events = [];
 

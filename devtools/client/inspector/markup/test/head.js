@@ -19,12 +19,6 @@ var {ActorRegistryFront} = require("devtools/shared/fronts/actor-registry");
 // lines.
 SimpleTest.requestCompleteLog();
 
-// Set the testing flag on DevToolsUtils and reset it when the test ends
-flags.testing = true;
-registerCleanupFunction(() => {
-  flags.testing = false;
-});
-
 // Toggle this pref on to see all DevTools event communication. This is hugely
 // useful for fixing race conditions.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);

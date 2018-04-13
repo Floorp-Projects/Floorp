@@ -7,7 +7,6 @@
 const {Ci} = require("chrome");
 const Services = require("Services");
 const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
-const {Connection} = require("devtools/shared/client/connection-manager");
 const {DebuggerServer} = require("devtools/server/main");
 const discovery = require("devtools/shared/discovery/discovery");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -214,7 +213,7 @@ var LazyAdbScanner = {
     return promise.resolve();
   },
 
-  listRuntimes: function () {
+  listRuntimes: function() {
     return [];
   }
 
@@ -263,7 +262,7 @@ var WiFiScanner = {
     return promise.resolve();
   },
 
-  listRuntimes: function () {
+  listRuntimes: function() {
     return this._runtimes;
   },
 
@@ -299,7 +298,9 @@ exports.WiFiScanner = WiFiScanner;
 var StaticScanner = {
   enable() {},
   disable() {},
-  scan() { return promise.resolve(); },
+  scan() {
+    return promise.resolve();
+  },
   listRuntimes() {
     let runtimes = [gRemoteRuntime];
     if (Services.prefs.getBoolPref("devtools.webide.enableLocalRuntime")) {
@@ -332,7 +333,7 @@ WiFiRuntime.prototype = {
   type: RuntimeTypes.WIFI,
   // Mark runtime as taking a long time to connect
   prolongedConnection: true,
-  connect: function (connection) {
+  connect: function(connection) {
     let service = discovery.getRemoteService("devtools", this.deviceName);
     if (!service) {
       return promise.reject(new Error("Can't find device: " + this.name));
@@ -392,7 +393,7 @@ WiFiRuntime.prototype = {
       onOpenWindow(xulWindow) {
         let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindow);
-        win.addEventListener("load", function () {
+        win.addEventListener("load", function() {
           if (win.document.documentElement.getAttribute("id") != WINDOW_ID) {
             return;
           }
@@ -435,7 +436,7 @@ exports._WiFiRuntime = WiFiRuntime;
 
 var gLocalRuntime = {
   type: RuntimeTypes.LOCAL,
-  connect: function (connection) {
+  connect: function(connection) {
     DebuggerServer.init();
     DebuggerServer.registerAllActors();
     DebuggerServer.allowChromeProcess = true;
@@ -457,7 +458,7 @@ exports._gLocalRuntime = gLocalRuntime;
 
 var gRemoteRuntime = {
   type: RuntimeTypes.REMOTE,
-  connect: function (connection) {
+  connect: function(connection) {
     let win = Services.wm.getMostRecentWindow("devtools:webide");
     if (!win) {
       return promise.reject(new Error("No WebIDE window found"));

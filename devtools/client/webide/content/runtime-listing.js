@@ -7,7 +7,7 @@ const RuntimeList = require("devtools/client/webide/modules/runtime-list");
 
 var runtimeList = new RuntimeList(window, window.parent);
 
-window.addEventListener("load", function () {
+window.addEventListener("load", function() {
   document.getElementById("runtime-screenshot").onclick = TakeScreenshot;
   document.getElementById("runtime-details").onclick = ShowRuntimeDetails;
   document.getElementById("runtime-disconnect").onclick = DisconnectRuntime;
@@ -20,7 +20,7 @@ window.addEventListener("load", function () {
   runtimeList.updateCommands();
 }, {capture: true, once: true});
 
-window.addEventListener("unload", function () {
+window.addEventListener("unload", function() {
   runtimeList.destroy();
 }, {once: true});
 

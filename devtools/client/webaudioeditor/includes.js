@@ -84,8 +84,12 @@ EventEmitter.decorate(this);
 /**
  * DOM query helper.
  */
-function $(selector, target = document) { return target.querySelector(selector); }
-function $$(selector, target = document) { return target.querySelectorAll(selector); }
+function $(selector, target = document) {
+  return target.querySelector(selector);
+}
+function $$(selector, target = document) {
+  return target.querySelectorAll(selector);
+}
 
 /**
  * Takes an iterable collection, and a hash. Return the first

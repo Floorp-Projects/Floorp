@@ -16,7 +16,7 @@
       let ctx = new AudioContext();
       let osc = ctx.createOscillator();
 
-      function throwError () {
+      function throwError() {
         try {
           osc.connect({});
         } catch (e) {
@@ -28,11 +28,11 @@
             instanceof: e instanceof TypeError,
             stringified: e.toString(),
             name: e.name
-          }
+          };
         }
       }
 
-      function throwDOMException () {
+      function throwDOMException() {
         try {
           osc.frequency.setValueAtTime(0, -1);
         } catch (e) {
@@ -46,10 +46,9 @@
             instanceof: e instanceof DOMException,
             stringified: e.toString(),
             name: e.name
-          }
+          };
         }
       }
-
 
     </script>
   </body>

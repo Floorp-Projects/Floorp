@@ -2,15 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cu} = require("chrome");
-
 const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
 var ConfigView;
 
-module.exports = ConfigView = function (window) {
+module.exports = ConfigView = function(window) {
   EventEmitter.decorate(this);
   this._doc = window.document;
   this._keys = [];
@@ -18,7 +16,7 @@ module.exports = ConfigView = function (window) {
 };
 
 ConfigView.prototype = {
-  _renderByType: function (input, name, value, customType) {
+  _renderByType: function(input, name, value, customType) {
     value = customType || typeof value;
 
     switch (value) {
@@ -62,7 +60,7 @@ ConfigView.prototype = {
     this._includeTypeName = include;
   },
 
-  search: function (event) {
+  search: function(event) {
     if (event.target.value.length) {
       let stringMatch = new RegExp(event.target.value, "i");
 
@@ -76,7 +74,7 @@ ConfigView.prototype = {
         }
       }
     } else {
-      var trs = this._doc.getElementById("device-fields").querySelectorAll("tr");
+      let trs = this._doc.getElementById("device-fields").querySelectorAll("tr");
 
       for (let i = 0; i < trs.length; i++) {
         trs[i].classList.remove("hide");
@@ -84,7 +82,7 @@ ConfigView.prototype = {
     }
   },
 
-  generateDisplay: function (json) {
+  generateDisplay: function(json) {
     let deviceItems = Object.keys(json);
     deviceItems.sort();
     this.keys = deviceItems;
@@ -94,7 +92,7 @@ ConfigView.prototype = {
     }
   },
 
-  generateField: function (name, value, hasUserValue, customType, newRow) {
+  generateField: function(name, value, hasUserValue, customType, newRow) {
     let table = this._doc.querySelector("table");
     let sResetDefault = Strings.GetStringFromName("device_reset_default");
 
@@ -160,18 +158,18 @@ ConfigView.prototype = {
     }
   },
 
-  resetTable: function () {
+  resetTable: function() {
     let table = this._doc.querySelector("table");
     let trs = table.querySelectorAll("tr:not(#add-custom-field)");
 
-    for (var i = 0; i < trs.length; i++) {
+    for (let i = 0; i < trs.length; i++) {
       table.removeChild(trs[i]);
     }
 
     return table;
   },
 
-  _getCallType: function (type, name) {
+  _getCallType: function(type, name) {
     let frontName = "get";
 
     if (this._includeTypeName) {
@@ -181,7 +179,7 @@ ConfigView.prototype = {
     return this._front[frontName + this._kind](name);
   },
 
-  _setCallType: function (type, name, value) {
+  _setCallType: function(type, name, value) {
     let frontName = "set";
 
     if (this._includeTypeName) {
@@ -191,7 +189,7 @@ ConfigView.prototype = {
     return this._front[frontName + this._kind](name, value);
   },
 
-  _saveByType: function (options) {
+  _saveByType: function(options) {
     let fieldName = options.id;
     let inputType = options.type;
     let value = options.value;
@@ -216,7 +214,7 @@ ConfigView.prototype = {
     }
   },
 
-  updateField: function (event) {
+  updateField: function(event) {
     if (event.target) {
       let inputType = event.target.getAttribute("data-type");
       let inputValue = event.target.checked || event.target.value;
@@ -243,7 +241,7 @@ ConfigView.prototype = {
     }
   },
 
-  _resetToDefault: function (name, input, button) {
+  _resetToDefault: function(name, input, button) {
     this._front["clearUser" + this._kind](name);
     let dataType = input.getAttribute("data-type");
     let tr = this._doc.getElementById("row-" + name);
@@ -287,7 +285,7 @@ ConfigView.prototype = {
     button.classList.add("hide");
   },
 
-  checkReset: function (event) {
+  checkReset: function(event) {
     if (event.target.classList.contains("reset")) {
       let btnId = event.target.getAttribute("data-id");
       let input = this._doc.getElementById(btnId);
@@ -295,11 +293,10 @@ ConfigView.prototype = {
     }
   },
 
-  updateFieldType: function () {
+  updateFieldType: function() {
     let table = this._doc.querySelector("table");
     let customValueType = table.querySelector("#custom-value-type").value;
     let customTextEl = table.querySelector("#custom-value-text");
-    let customText = customTextEl.value;
 
     if (customValueType.length === 0) {
       return false;
@@ -308,10 +305,8 @@ ConfigView.prototype = {
     switch (customValueType) {
       case "boolean":
         customTextEl.type = "checkbox";
-        customText = customTextEl.checked;
         break;
       case "number":
-        customText = parseInt(customText, 10) || 0;
         customTextEl.type = "number";
         break;
       default:
@@ -322,7 +317,7 @@ ConfigView.prototype = {
     return customValueType;
   },
 
-  clearNewFields: function () {
+  clearNewFields: function() {
     let table = this._doc.querySelector("table");
     let customTextEl = table.querySelector("#custom-value-text");
     if (customTextEl.checked) {
@@ -334,7 +329,7 @@ ConfigView.prototype = {
     this.updateFieldType();
   },
 
-  updateNewField: function () {
+  updateNewField: function() {
     let table = this._doc.querySelector("table");
     let customValueType = this.updateFieldType();
 
@@ -365,7 +360,7 @@ ConfigView.prototype = {
     }
   },
 
-  checkNewFieldSubmit: function (event) {
+  checkNewFieldSubmit: function(event) {
     if (event.keyCode === 13) {
       this._doc.getElementById("custom-value").click();
     }

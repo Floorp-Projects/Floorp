@@ -21,7 +21,7 @@
         let win;
 
         SimpleTest.registerCleanupFunction(() => {
-          (async function () {
+          (async function() {
             if (win) {
               await closeWebIDE(win);
             }
@@ -30,7 +30,7 @@
           })();
         });
 
-        (async function () {
+        (async function() {
           function isPlayActive() {
             return !win.document.querySelector("#cmd_play").hasAttribute("disabled");
           }
@@ -165,7 +165,7 @@
           ok(win.document.querySelector("window").className, "busy", "UI is busy");
 
           // Wait for error message since connection never completes
-          let errorDeferred = new Promise(resolve => {
+          await new Promise(resolve => {
             win.UI.reportError = errorName => {
               if (errorName === "error_operationTimeout") {
                 resolve();
@@ -190,9 +190,11 @@
             }, 1000);
           });
 
+          await noErrorDeferred;
+
           SimpleTest.finish();
         })();
-      }
+      };
     </script>
   </body>
 </html>

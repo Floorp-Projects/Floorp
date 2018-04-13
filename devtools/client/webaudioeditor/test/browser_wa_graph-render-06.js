@@ -7,7 +7,7 @@
 
 const BUG_1141261_URL = EXAMPLE_URL + "doc_bug_1141261.html";
 
-add_task(async function () {
+add_task(async function() {
   let { target, panel } = await initWebAudioEditor(BUG_1141261_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;

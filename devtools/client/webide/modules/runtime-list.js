@@ -4,18 +4,14 @@
 
 "use strict";
 
-const Services = require("Services");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {RuntimeScanners, WiFiScanner} = require("devtools/client/webide/modules/runtimes");
 const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
-const utils = require("devtools/client/webide/modules/utils");
-
-const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
 var RuntimeList;
 
-module.exports = RuntimeList = function (window, parentWindow) {
+module.exports = RuntimeList = function(window, parentWindow) {
   EventEmitter.decorate(this);
   this._doc = window.document;
   this._UI = parentWindow.UI;
@@ -37,7 +33,7 @@ RuntimeList.prototype = {
     return this._doc;
   },
 
-  appManagerUpdate: function (what, details) {
+  appManagerUpdate: function(what, details) {
     // Got a message from app-manager.js
     // See AppManager.update() for descriptions of what these events mean.
     switch (what) {
@@ -51,41 +47,41 @@ RuntimeList.prototype = {
     }
   },
 
-  onWebIDEUpdate: function (what, details) {
+  onWebIDEUpdate: function(what, details) {
     if (what == "busy" || what == "unbusy") {
       this.updateCommands();
     }
   },
 
-  takeScreenshot: function () {
+  takeScreenshot: function() {
     this._Cmds.takeScreenshot();
   },
 
-  showRuntimeDetails: function () {
+  showRuntimeDetails: function() {
     this._Cmds.showRuntimeDetails();
   },
 
-  showDevicePreferences: function () {
+  showDevicePreferences: function() {
     this._Cmds.showDevicePrefs();
   },
 
-  showSettings: function () {
+  showSettings: function() {
     this._Cmds.showSettings();
   },
 
-  showTroubleShooting: function () {
+  showTroubleShooting: function() {
     this._Cmds.showTroubleShooting();
   },
 
-  showAddons: function () {
+  showAddons: function() {
     this._Cmds.showAddons();
   },
 
-  refreshScanners: function () {
+  refreshScanners: function() {
     RuntimeScanners.scan();
   },
 
-  updateCommands: function () {
+  updateCommands: function() {
     let doc = this._doc;
 
     // Runtime commands
@@ -113,7 +109,7 @@ RuntimeList.prototype = {
     }
   },
 
-  update: function () {
+  update: function() {
     let doc = this._doc;
     let wifiHeaderNode = doc.querySelector("#runtime-header-wifi");
 
@@ -182,7 +178,7 @@ RuntimeList.prototype = {
     }
   },
 
-  destroy: function () {
+  destroy: function() {
     this._doc = null;
     AppManager.off("app-manager-update", this.appManagerUpdate);
     this._UI.off("webide-update", this.onWebIDEUpdate);

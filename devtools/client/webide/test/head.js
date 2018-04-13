@@ -10,8 +10,6 @@ const Services = require("Services");
 const { AppProjects } = require("devtools/client/webide/modules/app-projects");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { DebuggerServer } = require("devtools/server/main");
-const flags = require("devtools/shared/flags");
-flags.testing = true;
 
 var TEST_BASE;
 if (window.location === "chrome://browser/content/browser.xul") {
@@ -30,7 +28,6 @@ Services.prefs.setCharPref("devtools.devices.url", TEST_BASE + "browser_devices.
 var registerCleanupFunction = registerCleanupFunction ||
                               SimpleTest.registerCleanupFunction;
 registerCleanupFunction(() => {
-  flags.testing = false;
   Services.prefs.clearUserPref("devtools.webide.enabled");
   Services.prefs.clearUserPref("devtools.webide.enableLocalRuntime");
   Services.prefs.clearUserPref("devtools.webide.autoinstallADBHelper");
@@ -39,16 +36,16 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webide.lastConnectedRuntime");
 });
 
-var openWebIDE = async function (autoInstallAddons) {
+var openWebIDE = async function(autoInstallAddons) {
   info("opening WebIDE");
 
   Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", !!autoInstallAddons);
 
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
-  let win = ww.openWindow(null, "chrome://webide/content/", "webide", "chrome,centerscreen,resizable", null);
+  let win = Services.ww.openWindow(null, "chrome://webide/content/", "webide",
+                                   "chrome,centerscreen,resizable", null);
 
   await new Promise(resolve => {
-    win.addEventListener("load", function () {
+    win.addEventListener("load", function() {
       SimpleTest.requestCompleteLog();
       SimpleTest.executeSoon(resolve);
     }, {once: true});
@@ -63,7 +60,7 @@ function closeWebIDE(win) {
   info("Closing WebIDE");
 
   return new Promise(resolve => {
-    win.addEventListener("unload", function () {
+    win.addEventListener("unload", function() {
       info("WebIDE closed");
       SimpleTest.executeSoon(resolve);
     }, {once: true});
@@ -73,7 +70,7 @@ function closeWebIDE(win) {
 }
 
 function removeAllProjects() {
-  return (async function () {
+  return (async function() {
     await AppProjects.load();
     // use a new array so we're not iterating over the same
     // underlying array that's being modified by AppProjects
@@ -127,7 +124,7 @@ function documentIsLoaded(doc) {
 
 function lazyIframeIsLoaded(iframe) {
   return new Promise(resolve => {
-    iframe.addEventListener("load", function () {
+    iframe.addEventListener("load", function() {
       resolve(nextTick());
     }, {capture: true, once: true});
   });
@@ -144,7 +141,7 @@ function addTab(aUrl, aWindow) {
     let tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
     let linkedBrowser = tab.linkedBrowser;
 
-    BrowserTestUtils.browserLoaded(linkedBrowser).then(function () {
+    BrowserTestUtils.browserLoaded(linkedBrowser).then(function() {
       info("Tab added and finished loading: " + aUrl);
       resolve(tab);
     });
@@ -159,7 +156,7 @@ function removeTab(aTab, aWindow) {
     let targetBrowser = targetWindow.gBrowser;
     let tabContainer = targetBrowser.tabContainer;
 
-    tabContainer.addEventListener("TabClose", function (aEvent) {
+    tabContainer.addEventListener("TabClose", function(aEvent) {
       info("Tab removed and finished closing.");
       resolve();
     }, {once: true});

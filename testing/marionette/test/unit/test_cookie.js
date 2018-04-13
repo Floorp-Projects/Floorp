@@ -7,25 +7,25 @@ ChromeUtils.import("chrome://marionette/content/cookie.js");
 cookie.manager = {
   cookies: [],
 
-  add: function (domain, path, name, value, secure, httpOnly, session, expiry, originAttributes) {
+  add(domain, path, name, value, secure, httpOnly, session, expiry, originAttributes) {
     if (name === "fail") {
       throw new Error("An error occurred while adding cookie");
     }
     let newCookie = {
       host: domain,
-      path: path,
-      name: name,
-      value: value,
+      path,
+      name,
+      value,
       isSecure: secure,
       isHttpOnly: httpOnly,
       isSession: session,
-      expiry: expiry,
-      originAttributes: originAttributes,
+      expiry,
+      originAttributes,
     };
     cookie.manager.cookies.push(newCookie);
   },
 
-  remove: function (host, name, path, blocked, originAttributes) {
+  remove(host, name, path) {
     for (let i = 0; i < this.cookies.length; ++i) {
       let candidate = this.cookies[i];
       if (candidate.host === host &&
@@ -37,17 +37,17 @@ cookie.manager = {
     return false;
   },
 
-  getCookiesFromHost(host, originAttributes = {}) {
+  getCookiesFromHost(host) {
     let hostCookies = this.cookies.filter(cookie => cookie.host === host ||
        cookie.host === "." + host);
     let nextIndex = 0;
 
     return {
-      hasMoreElements () {
+      hasMoreElements() {
         return nextIndex < hostCookies.length;
       },
 
-      getNext () {
+      getNext() {
         return {
           QueryInterface() {
             return hostCookies[nextIndex++];
@@ -72,59 +72,59 @@ add_test(function test_fromJSON() {
 
   // domain
   for (let invalidType of [42, true, [], {}, null]) {
-    let test = {
+    let domainTest = {
       name: "foo",
       value: "bar",
-      domain: invalidType
+      domain: invalidType,
     };
-    Assert.throws(() => cookie.fromJSON(test), /Cookie domain must be string/);
+    Assert.throws(() => cookie.fromJSON(domainTest), /Cookie domain must be string/);
   }
-  let test = {
+  let domainTest = {
     name: "foo",
     value: "bar",
-    domain: "domain"
+    domain: "domain",
   };
-  let parsedCookie = cookie.fromJSON(test);
+  let parsedCookie = cookie.fromJSON(domainTest);
   equal(parsedCookie.domain, "domain");
 
   // path
   for (let invalidType of [42, true, [], {}, null]) {
-    let test = {
+    let pathTest = {
       name: "foo",
       value: "bar",
       path: invalidType,
     };
-    Assert.throws(() => cookie.fromJSON(test), /Cookie path must be string/);
+    Assert.throws(() => cookie.fromJSON(pathTest), /Cookie path must be string/);
   }
 
   // secure
   for (let invalidType of ["foo", 42, [], {}, null]) {
-    let test = {
+    let secureTest = {
       name: "foo",
       value: "bar",
       secure: invalidType,
     };
-    Assert.throws(() => cookie.fromJSON(test), /Cookie secure flag must be boolean/);
+    Assert.throws(() => cookie.fromJSON(secureTest), /Cookie secure flag must be boolean/);
   }
 
   // httpOnly
   for (let invalidType of ["foo", 42, [], {}, null]) {
-    let test = {
+    let httpOnlyTest = {
       name: "foo",
       value: "bar",
       httpOnly: invalidType,
     };
-    Assert.throws(() => cookie.fromJSON(test), /Cookie httpOnly flag must be boolean/);
+    Assert.throws(() => cookie.fromJSON(httpOnlyTest), /Cookie httpOnly flag must be boolean/);
   }
 
   // expiry
   for (let invalidType of [-1, Number.MAX_SAFE_INTEGER + 1, "foo", true, [], {}, null]) {
-    let test = {
+    let expiryTest = {
       name: "foo",
       value: "bar",
       expiry: invalidType,
     };
-    Assert.throws(() => cookie.fromJSON(test), /Cookie expiry must be a positive integer/);
+    Assert.throws(() => cookie.fromJSON(expiryTest), /Cookie expiry must be a positive integer/);
   }
 
   // bare requirements
@@ -213,12 +213,12 @@ add_test(function test_add() {
   cookie.add({
     name: "name6",
     value: "value",
-    domain: ".domain"
+    domain: ".domain",
   });
   equal(".domain", cookie.manager.cookies[4].host);
 
   Assert.throws(() => {
-    cookie.add({name: "fail", value: "value6", domain: "domain6"})
+    cookie.add({name: "fail", value: "value6", domain: "domain6"});
   }, /UnableToSetCookieError/);
 
   run_next_test();
@@ -231,7 +231,7 @@ add_test(function test_remove() {
     name: "test_remove",
     value: "value",
     domain: "domain",
-    path: "/custom/path"
+    path: "/custom/path",
   };
 
   equal(0, cookie.manager.cookies.length);

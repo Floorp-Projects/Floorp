@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// These files are loaded via webide.xul
+/* import-globals-from project-panel.js */
+/* import-globals-from runtime-panel.js */
+
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
@@ -14,14 +18,12 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const {GetAvailableAddons} = require("devtools/client/webide/modules/addons");
 const {getJSON} = require("devtools/client/shared/getjson");
-const utils = require("devtools/client/webide/modules/utils");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
 const {showDoorhanger} = require("devtools/client/shared/doorhanger");
 
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
-const HTML = "http://www.w3.org/1999/xhtml";
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/WebIDE/Troubleshooting";
 
 const MAX_ZOOM = 1.4;
@@ -41,16 +43,16 @@ const MIN_ZOOM = 0.6;
 getJSON("devtools.webide.templatesURL");
 getJSON("devtools.devices.url");
 
-window.addEventListener("load", function () {
+window.addEventListener("load", function() {
   UI.init();
 }, {once: true});
 
-window.addEventListener("unload", function () {
+window.addEventListener("unload", function() {
   UI.destroy();
 }, {once: true});
 
 var UI = {
-  init: function () {
+  init: function() {
     this._telemetry = new Telemetry();
     this._telemetry.toolOpened("webide");
 
@@ -95,7 +97,7 @@ var UI = {
     gDevToolsBrowser.isWebIDEInitialized.resolve();
   },
 
-  destroy: function () {
+  destroy: function() {
     window.removeEventListener("focus", this.onfocus, true);
     AppManager.off("app-manager-update", this.appManagerUpdate);
     AppManager.destroy();
@@ -104,7 +106,7 @@ var UI = {
     this._telemetry.destroy();
   },
 
-  onfocus: function () {
+  onfocus: function() {
     // Because we can't track the activity in the folder project,
     // we need to validate the project regularly. Let's assume that
     // if a modification happened, it happened when the window was
@@ -122,7 +124,7 @@ var UI = {
     showDoorhanger({ window, type: "deveditionpromo", anchor: document.querySelector("#deck") });
   },
 
-  appManagerUpdate: function (what, details) {
+  appManagerUpdate: function(what, details) {
     // Got a message from app-manager.js
     // See AppManager.update() for descriptions of what these events mean.
     switch (what) {
@@ -135,7 +137,7 @@ var UI = {
         this.updateConnectionTelemetry();
         break;
       case "project":
-        this._updatePromise = (async function () {
+        this._updatePromise = (async function() {
           UI.updateTitle();
           await UI.destroyToolbox();
           UI.updateCommands();
@@ -178,18 +180,18 @@ var UI = {
     this._updatePromise = promise.resolve();
   },
 
-  openInBrowser: function (url) {
+  openInBrowser: function(url) {
     // Open a URL in a Firefox window
     let mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     if (mainWindow) {
       mainWindow.openWebLinkIn(url, "tab");
-      mainWindow.focus()
+      mainWindow.focus();
     } else {
       window.open(url);
     }
   },
 
-  updateTitle: function () {
+  updateTitle: function() {
     let project = AppManager.selectedProject;
     if (project) {
       window.document.title = Strings.formatStringFromName("title_app", [project.name], 1);
@@ -204,7 +206,7 @@ var UI = {
   _busyOperationDescription: null,
   _busyPromise: null,
 
-  busy: function () {
+  busy: function() {
     let win = document.querySelector("window");
     win.classList.add("busy");
     win.classList.add("busy-undetermined");
@@ -212,7 +214,7 @@ var UI = {
     this.update("busy");
   },
 
-  unbusy: function () {
+  unbusy: function() {
     let win = document.querySelector("window");
     win.classList.remove("busy");
     win.classList.remove("busy-determined");
@@ -222,7 +224,7 @@ var UI = {
     this._busyPromise = null;
   },
 
-  setupBusyTimeout: function () {
+  setupBusyTimeout: function() {
     this.cancelBusyTimeout();
     this._busyTimeout = setTimeout(() => {
       this.unbusy();
@@ -230,11 +232,11 @@ var UI = {
     }, Services.prefs.getIntPref("devtools.webide.busyTimeout"));
   },
 
-  cancelBusyTimeout: function () {
+  cancelBusyTimeout: function() {
     clearTimeout(this._busyTimeout);
   },
 
-  busyWithProgressUntil: function (promise, operationDescription) {
+  busyWithProgressUntil: function(promise, operationDescription) {
     let busy = this.busyUntil(promise, operationDescription);
     let win = document.querySelector("window");
     let progress = document.querySelector("#action-busy-determined");
@@ -244,7 +246,7 @@ var UI = {
     return busy;
   },
 
-  busyUntil: function (promise, operationDescription) {
+  busyUntil: function(promise, operationDescription) {
     // Freeze the UI until the promise is resolved. A timeout will unfreeze the
     // UI, just in case the promise never gets resolved.
     this._busyPromise = promise;
@@ -276,7 +278,7 @@ var UI = {
     return promise;
   },
 
-  reportError: function (l10nProperty, ...l10nArgs) {
+  reportError: function(l10nProperty, ...l10nArgs) {
     let text;
 
     if (l10nArgs.length > 0) {
@@ -290,7 +292,7 @@ var UI = {
     let buttons = [{
       label: Strings.GetStringFromName("notification_showTroubleShooting_label"),
       accessKey: Strings.GetStringFromName("notification_showTroubleShooting_accesskey"),
-      callback: function () {
+      callback: function() {
         Cmds.showTroubleShooting();
       }
     }];
@@ -301,7 +303,7 @@ var UI = {
                             nbox.PRIORITY_WARNING_LOW, buttons);
   },
 
-  dismissErrorNotification: function () {
+  dismissErrorNotification: function() {
     let nbox = document.querySelector("#notificationbox");
     nbox.removeAllNotifications(true);
   },
@@ -317,11 +319,11 @@ var UI = {
    *   unbusy:
    *     The window is not busy and certain UI functions may be re-enabled.
    */
-  update: function (what, details) {
+  update: function(what, details) {
     this.emit("webide-update", what, details);
   },
 
-  updateCommands: function () {
+  updateCommands: function() {
     // Action commands
     let playCmd = document.querySelector("#cmd_play");
     let stopCmd = document.querySelector("#cmd_stop");
@@ -362,13 +364,11 @@ var UI = {
       } else if (AppManager.selectedProject.type == "mainProcess") {
         playCmd.setAttribute("disabled", "true");
         stopCmd.setAttribute("disabled", "true");
-      } else {
-        if (AppManager.selectedProject.errorsCount == 0 &&
+      } else if (AppManager.selectedProject.errorsCount == 0 &&
             AppManager.runtimeCanHandleApps()) {
-          playCmd.removeAttribute("disabled");
-        } else {
-          playCmd.setAttribute("disabled", "true");
-        }
+        playCmd.removeAttribute("disabled");
+      } else {
+        playCmd.setAttribute("disabled", "true");
       }
     }
 
@@ -409,7 +409,7 @@ var UI = {
     projectPanelCmd.removeAttribute("disabled");
   },
 
-  updateRemoveProjectButton: function () {
+  updateRemoveProjectButton: function() {
     // Remove command
     let removeCmdNode = document.querySelector("#cmd_removeProject");
     if (AppManager.selectedProject) {
@@ -429,7 +429,7 @@ var UI = {
     Services.prefs.setCharPref("devtools.webide.lastConnectedRuntime", runtime);
   },
 
-  autoConnectRuntime: function () {
+  autoConnectRuntime: function() {
     // Automatically reconnect to the previously selected runtime,
     // if available and has an ID and feature is enabled
     if (AppManager.selectedRuntime ||
@@ -437,7 +437,7 @@ var UI = {
         !this.lastConnectedRuntime) {
       return;
     }
-    let [_, type, id] = this.lastConnectedRuntime.match(/^(\w+):(.+)$/);
+    let [ , type, id] = this.lastConnectedRuntime.match(/^(\w+):(.+)$/);
 
     type = type.toLowerCase();
 
@@ -461,7 +461,7 @@ var UI = {
     }
   },
 
-  connectToRuntime: function (runtime) {
+  connectToRuntime: function(runtime) {
     let name = runtime.name;
     let promise = AppManager.connectToRuntime(runtime);
     promise.then(() => this.initConnectionTelemetry())
@@ -479,7 +479,7 @@ var UI = {
     return promise;
   },
 
-  updateRuntimeButton: function () {
+  updateRuntimeButton: function() {
     let labelNode = document.querySelector("#runtime-panel-button > .panel-button-label");
     if (!AppManager.selectedRuntime) {
       labelNode.setAttribute("value", Strings.GetStringFromName("runtimeButton_label"));
@@ -489,7 +489,7 @@ var UI = {
     }
   },
 
-  saveLastConnectedRuntime: function () {
+  saveLastConnectedRuntime: function() {
     if (AppManager.selectedRuntime &&
         AppManager.selectedRuntime.id !== undefined) {
       this.lastConnectedRuntime = AppManager.selectedRuntime.type + ":" +
@@ -508,7 +508,7 @@ var UI = {
    * one value is collected for each button, even if they are used multiple
    * times during a connection.
    */
-  initConnectionTelemetry: function () {
+  initConnectionTelemetry: function() {
     this._actionsToLog.add("play");
     this._actionsToLog.add("debug");
   },
@@ -517,7 +517,7 @@ var UI = {
    * Action occurred.  Log that it happened, and remove it from the loggable
    * set.
    */
-  onAction: function (action) {
+  onAction: function(action) {
     if (!this._actionsToLog.has(action)) {
       return;
     }
@@ -529,14 +529,14 @@ var UI = {
    * Connection status changed or we are shutting down.  Record any loggable
    * actions as having not occurred.
    */
-  updateConnectionTelemetry: function () {
+  updateConnectionTelemetry: function() {
     for (let action of this._actionsToLog.values()) {
       this.logActionState(action, false);
     }
     this._actionsToLog.clear();
   },
 
-  logActionState: function (action, state) {
+  logActionState: function(action, state) {
     let histogramId = "DEVTOOLS_WEBIDE_CONNECTION_" +
                       action.toUpperCase() + "_USED";
     this._telemetry.log(histogramId, state);
@@ -544,7 +544,7 @@ var UI = {
 
   /** ******** PROJECTS **********/
 
-  openProject: function () {
+  openProject: function() {
     let project = AppManager.selectedProject;
 
     if (!project) {
@@ -611,7 +611,7 @@ var UI = {
   },
 
   // Remember the last selected project on the runtime
-  saveLastSelectedProject: function () {
+  saveLastSelectedProject: function() {
     let shouldRestore = Services.prefs.getBoolPref("devtools.webide.restoreLastProject");
     if (!shouldRestore) {
       return;
@@ -644,7 +644,7 @@ var UI = {
     }
   },
 
-  autoSelectProject: function () {
+  autoSelectProject: function() {
     if (AppManager.selectedProject) {
       return;
     }
@@ -660,7 +660,7 @@ var UI = {
     if (!m) {
       return;
     }
-    let [_, type, project] = m;
+    let [ , type, project] = m;
 
     if (type == "local") {
       let lastProject = AppProjects.get(project);
@@ -695,18 +695,18 @@ var UI = {
 
   /** ******** DECK **********/
 
-  setupDeck: function () {
+  setupDeck: function() {
     let iframes = document.querySelectorAll("#deck > iframe");
     for (let iframe of iframes) {
       iframe.tooltip = "aHTMLTooltip";
     }
   },
 
-  resetFocus: function () {
+  resetFocus: function() {
     document.commandDispatcher.focusedElement = document.documentElement;
   },
 
-  selectDeckPanel: function (id) {
+  selectDeckPanel: function(id) {
     let deck = document.querySelector("#deck");
     if (deck.selectedPanel && deck.selectedPanel.id === "deck-panel-" + id) {
       // This panel is already displayed.
@@ -722,7 +722,7 @@ var UI = {
     deck.selectedPanel = panel;
   },
 
-  resetDeck: function () {
+  resetDeck: function() {
     this.resetFocus();
     let deck = document.querySelector("#deck");
     deck.selectedPanel = null;
@@ -756,7 +756,7 @@ var UI = {
    * |toolboxPromise| since someone must be destroying it to reach here,
    * and call our own close method.
    */
-  _onToolboxClosed: function (promise, iframe) {
+  _onToolboxClosed: function(promise, iframe) {
     // Only save toolbox size, disable wrench button, workaround focus issue...
     // if we are closing the last toolbox:
     //  - toolboxPromise is nullified by destroyToolbox and is still null here
@@ -777,7 +777,7 @@ var UI = {
     iframe.remove();
   },
 
-  destroyToolbox: function () {
+  destroyToolbox: function() {
     // Only have a live toolbox if |this.toolboxPromise| exists
     if (this.toolboxPromise) {
       let toolboxPromise = this.toolboxPromise;
@@ -787,7 +787,7 @@ var UI = {
     return promise.resolve();
   },
 
-  createToolbox: function () {
+  createToolbox: function() {
     // If |this.toolboxPromise| exists, there is already a live toolbox
     if (this.toolboxPromise) {
       return this.toolboxPromise;
@@ -815,7 +815,7 @@ var UI = {
     return this.busyUntil(this.toolboxPromise, "opening toolbox");
   },
 
-  _showToolbox: function (target, iframe) {
+  _showToolbox: function(target, iframe) {
     let splitter = document.querySelector(".devtools-horizontal-splitter");
     splitter.removeAttribute("hidden");
 
@@ -832,29 +832,29 @@ var UI = {
 EventEmitter.decorate(UI);
 
 var Cmds = {
-  quit: function () {
+  quit: function() {
     window.close();
   },
 
-  showProjectPanel: function () {
+  showProjectPanel: function() {
     ProjectPanel.toggleSidebar();
     return promise.resolve();
   },
 
-  showRuntimePanel: function () {
+  showRuntimePanel: function() {
     RuntimeScanners.scan();
     RuntimePanel.toggleSidebar();
   },
 
-  disconnectRuntime: function () {
-    let disconnecting = (async function () {
+  disconnectRuntime: function() {
+    let disconnecting = (async function() {
       await UI.destroyToolbox();
       await AppManager.disconnectRuntime();
     })();
     return UI.busyUntil(disconnecting, "disconnecting from runtime");
   },
 
-  takeScreenshot: function () {
+  takeScreenshot: function() {
     let url = AppManager.deviceFront.screenshotToDataURL();
     return UI.busyUntil(url.then(longstr => {
       return longstr.string().then(dataURL => {
@@ -864,11 +864,11 @@ var Cmds = {
     }), "taking screenshot");
   },
 
-  showRuntimeDetails: function () {
+  showRuntimeDetails: function() {
     UI.selectDeckPanel("runtimedetails");
   },
 
-  showDevicePrefs: function () {
+  showDevicePrefs: function() {
     UI.selectDeckPanel("devicepreferences");
   },
 
@@ -897,51 +897,50 @@ var Cmds = {
     return busy;
   },
 
-  stop: function () {
+  stop: function() {
     return UI.busyUntil(AppManager.stopRunningApp(), "stopping app");
   },
 
-  toggleToolbox: function () {
+  toggleToolbox: function() {
     UI.onAction("debug");
     if (UI.toolboxPromise) {
       UI.destroyToolbox();
       return promise.resolve();
-    } else {
-      return UI.createToolbox();
     }
+    return UI.createToolbox();
   },
 
-  removeProject: function () {
+  removeProject: function() {
     AppManager.removeSelectedProject();
   },
 
-  showTroubleShooting: function () {
+  showTroubleShooting: function() {
     UI.openInBrowser(HELP_URL);
   },
 
-  showAddons: function () {
+  showAddons: function() {
     UI.selectDeckPanel("addons");
   },
 
-  showPrefs: function () {
+  showPrefs: function() {
     UI.selectDeckPanel("prefs");
   },
 
-  zoomIn: function () {
+  zoomIn: function() {
     if (UI.contentViewer.fullZoom < MAX_ZOOM) {
       UI.contentViewer.fullZoom += 0.1;
       Services.prefs.setCharPref("devtools.webide.zoom", UI.contentViewer.fullZoom);
     }
   },
 
-  zoomOut: function () {
+  zoomOut: function() {
     if (UI.contentViewer.fullZoom > MIN_ZOOM) {
       UI.contentViewer.fullZoom -= 0.1;
       Services.prefs.setCharPref("devtools.webide.zoom", UI.contentViewer.fullZoom);
     }
   },
 
-  resetZoom: function () {
+  resetZoom: function() {
     UI.contentViewer.fullZoom = 1;
     Services.prefs.setCharPref("devtools.webide.zoom", 1);
   }

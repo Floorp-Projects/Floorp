@@ -28,7 +28,7 @@ var InspectorView = {
   /**
    * Initialization function called when the tool starts up.
    */
-  initialize: function () {
+  initialize: function() {
     // Set up view controller
     this.el = $("#web-audio-inspector");
     this.splitter = $("#inspector-splitter");
@@ -56,7 +56,7 @@ var InspectorView = {
   /**
    * Destruction function called when the tool cleans up.
    */
-  destroy: function () {
+  destroy: function() {
     this.unbindToggle();
     this.splitter.removeEventListener("mouseup", this._onResize);
 
@@ -85,9 +85,8 @@ var InspectorView = {
       $("#web-audio-editor-details-pane-empty").removeAttribute("hidden");
       $("#web-audio-editor-tabs").setAttribute("hidden", "true");
       window.emit(EVENTS.UI_INSPECTOR_NODE_SET, null);
-    }
-    // Otherwise load up the tabs view and hide the empty placeholder
-    else {
+    } else {
+      // Otherwise load up the tabs view and hide the empty placeholder
       $("#web-audio-editor-details-pane-empty").setAttribute("hidden", "true");
       $("#web-audio-editor-tabs").removeAttribute("hidden");
       this._buildToolbar();
@@ -98,14 +97,14 @@ var InspectorView = {
   /**
    * Returns the current AudioNodeView.
    */
-  getCurrentAudioNode: function () {
+  getCurrentAudioNode: function() {
     return this._currentNode;
   },
 
   /**
    * Empties out the props view.
    */
-  resetUI: function () {
+  resetUI: function() {
     // Set current node to empty to load empty view
     this.setCurrentAudioNode();
 
@@ -113,7 +112,7 @@ var InspectorView = {
     this.hideImmediately();
   },
 
-  _buildToolbar: function () {
+  _buildToolbar: function() {
     let node = this.getCurrentAudioNode();
 
     let bypassable = node.bypassable;
@@ -141,14 +140,14 @@ var InspectorView = {
    * Called on EVENTS.UI_SELECT_NODE, and takes an actorID `id`
    * and calls `setCurrentAudioNode` to scaffold the inspector view.
    */
-  _onNodeSelect: function (id) {
+  _onNodeSelect: function(id) {
     this.setCurrentAudioNode(gAudioNodes.get(id));
 
     // Ensure inspector is visible when selecting a new node
     this.show();
   },
 
-  _onResize: function () {
+  _onResize: function() {
     if (this.el.getAttribute("width") < MIN_INSPECTOR_WIDTH) {
       this.el.setAttribute("width", MIN_INSPECTOR_WIDTH);
     }
@@ -160,13 +159,13 @@ var InspectorView = {
    * Called when `DESTROY_NODE` is fired to remove the node from props view if
    * it's currently selected.
    */
-  _onDestroyNode: function (node) {
+  _onDestroyNode: function(node) {
     if (this._currentNode && this._currentNode.id === node.id) {
       this.setCurrentAudioNode(null);
     }
   },
 
-  _onCommandClick: function (e) {
+  _onCommandClick: function(e) {
     let node = this.getCurrentAudioNode();
     let button = e.target;
     let command = button.getAttribute("data-command");
