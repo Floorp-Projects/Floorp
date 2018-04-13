@@ -88,6 +88,7 @@ EXPORTS.mozilla = [
     'Span.h',
     'SplayTree.h',
     'Sprintf.h',
+    'SPSCQueue.h',
     'StaticAnalysisFunctions.h',
     'TaggedAnonymousMemory.h',
     'TemplateLib.h',
