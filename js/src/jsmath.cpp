@@ -17,6 +17,7 @@
 #include "mozilla/WrappingOperations.h"
 
 #include <algorithm>  // for std::max
+#include <cmath>
 #include <fcntl.h>
 #ifdef XP_UNIX
 # include <unistd.h>
@@ -852,7 +853,7 @@ js::math_round_impl(double x)
         return x;
 
     double add = (x >= 0) ? GetBiggestNumberLessThan(0.5) : 0.5;
-    return js_copysign(fdlibm::floor(x + add), x);
+    return std::copysign(fdlibm::floor(x + add), x);
 }
 
 float
@@ -869,7 +870,7 @@ js::math_roundf_impl(float x)
         return x;
 
     float add = (x >= 0) ? GetBiggestNumberLessThan(0.5f) : 0.5f;
-    return js_copysign(fdlibm::floorf(x + add), x);
+    return std::copysign(fdlibm::floorf(x + add), x);
 }
 
 bool /* ES5 15.8.2.15. */
