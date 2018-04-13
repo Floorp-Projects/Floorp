@@ -11,15 +11,13 @@ Test the basic-card-form element
   <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script src="sinon-2.3.2.js"></script>
   <script src="payments_common.js"></script>
-  <script src="custom-elements.min.js"></script>
-  <script src="unprivileged-fallbacks.js"></script>
-  <script src="PaymentsStore.js"></script>
-  <script src="PaymentStateSubscriberMixin.js"></script>
+  <script src="../../res/vendor/custom-elements.min.js"></script>
+  <script src="../../res/unprivileged-fallbacks.js"></script>
   <script src="autofillEditForms.js"></script>
-  <script src="basic-card-form.js"></script>
-  <script src="paymentRequest.js"></script>
+  <script src="../../res/paymentRequest.js"></script>
+
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <link rel="stylesheet" type="text/css" href="paymentRequest.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/paymentRequest.css"/>
 </head>
 <body>
   <p id="display">
@@ -29,12 +27,13 @@ Test the basic-card-form element
 </div>
 <pre id="test">
 </pre>
-<script type="application/javascript">
+<script type="module">
 /** Test the basic-card-form element **/
 
 /* global sinon */
 /* import-globals-from payments_common.js */
-/* import-globals-from ../../res/mixins/PaymentStateSubscriberMixin.js */
+
+import BasicCardForm from "../../res/containers/basic-card-form.js";
 
 let display = document.getElementById("display");
 
@@ -54,7 +53,7 @@ function checkCCForm(customEl, expectedCard) {
 }
 
 add_task(async function test_initialState() {
-  let form = document.createElement("basic-card-form");
+  let form = new BasicCardForm();
   let {page} = form.requestStore.getState();
   is(page.id, "payment-summary", "Check initial page");
   await form.promiseReady;
@@ -65,7 +64,7 @@ add_task(async function test_initialState() {
 });
 
 add_task(async function test_backButton() {
-  let form = document.createElement("basic-card-form");
+  let form = new BasicCardForm();
   form.dataset.backButtonLabel = "Back";
   await form.requestStore.setState({
     page: {
@@ -87,7 +86,7 @@ add_task(async function test_backButton() {
 });
 
 add_task(async function test_saveButton() {
-  let form = document.createElement("basic-card-form");
+  let form = new BasicCardForm();
   form.dataset.saveButtonLabel = "Save";
   form.dataset.errorGenericSave = "Generic error";
   await form.promiseReady;
@@ -138,7 +137,7 @@ add_task(async function test_saveButton() {
 });
 
 add_task(async function test_genericError() {
-  let form = document.createElement("basic-card-form");
+  let form = new BasicCardForm();
   await form.requestStore.setState({
     page: {
       id: "test-page",
@@ -155,7 +154,7 @@ add_task(async function test_genericError() {
 });
 
 add_task(async function test_record() {
-  let form = document.createElement("basic-card-form");
+  let form = new BasicCardForm();
   await form.promiseReady;
   display.appendChild(form);
   await asyncElementRendered();

@@ -8,6 +8,7 @@ module.exports = {
         "res/containers/*.js",
         "res/mixins/*.js",
         "res/PaymentsStore.js",
+        "test/mochitest/test_*.html",
       ],
       parserOptions: {
         sourceType: "module",

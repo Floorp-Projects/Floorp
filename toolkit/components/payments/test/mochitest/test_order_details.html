@@ -9,10 +9,8 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script src="payments_common.js"></script>
-  <script src="custom-elements.min.js"></script>
-  <script src="PaymentsStore.js"></script>
-  <script src="PaymentStateSubscriberMixin.js"></script>
-  <script src="order-details.js"></script>
+  <script src="../../res/vendor/custom-elements.min.js"></script>
+
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <template id="order-details-template">
@@ -34,12 +32,13 @@
 </div>
 <pre id="test">
 </pre>
-<script type="application/javascript">
+<script type="module">
 /** Test the order-details component **/
 
 /* import-globals-from payments_common.js */
-/* import-globals-from ../../res/mixins/PaymentStateSubscriberMixin.js */
-/* import-globals-from ../../res/containers/order-details.js */
+
+import OrderDetails from "../../res/containers/order-details.js";
+import {requestStore} from "../../res/mixins/PaymentStateSubscriberMixin.js";
 
 let orderDetails = document.querySelector("order-details");
 let emptyState = requestStore.getState();
@@ -65,7 +64,7 @@ add_task(async function test_initial_state() {
   setup();
   is(orderDetails.mainItemsList.childElementCount, 0, "main items list is initially empty");
   is(orderDetails.footerItemsList.childElementCount, 0, "footer items list is initially empty");
-  is(orderDetails.totalAmountElem.value, 0, "total amount is 0");
+  is(orderDetails.totalAmountElem.value, "0", "total amount is 0");
 });
 
 add_task(async function test_list_population() {
@@ -118,7 +117,7 @@ add_task(async function test_total() {
   requestStore.setState({ paymentDetails });
   await asyncElementRendered();
 
-  is(orderDetails.totalAmountElem.value, 5, "total amount gets updated");
+  is(orderDetails.totalAmountElem.value, "5", "total amount gets updated");
   is(orderDetails.totalAmountElem.currency, "JPY", "total currency gets updated");
 });
 
