@@ -9,7 +9,6 @@
 #include "nsError.h"
 #include <new>
 #include "nsIContent.h"
-#include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsINode.h"
 #include "nsPIDOMWindow.h"
