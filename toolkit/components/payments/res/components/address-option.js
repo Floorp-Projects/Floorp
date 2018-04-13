@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import ObservedPropertiesMixin from "../mixins/ObservedPropertiesMixin.js";
+import RichOption from "./rich-option.js";
+
 /**
  * <rich-select>
  *  <address-option guid="98hgvnbmytfc"
@@ -18,9 +21,7 @@
  * Attribute names follow FormAutofillStorage.jsm.
  */
 
-/* global ObservedPropertiesMixin, RichOption */
-
-class AddressOption extends ObservedPropertiesMixin(RichOption) {
+export default class AddressOption extends ObservedPropertiesMixin(RichOption) {
   static get recordAttributes() {
     return [
       "address-level1",

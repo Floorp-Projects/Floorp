@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * <ul>
  *  <payment-details-item
@@ -13,9 +11,10 @@
  * </ul>
  */
 
-/* global ObservedPropertiesMixin */
+import CurrencyAmount from "./currency-amount.js";
+import ObservedPropertiesMixin from "../mixins/ObservedPropertiesMixin.js";
 
-class PaymentDetailsItem extends ObservedPropertiesMixin(HTMLElement) {
+export default class PaymentDetailsItem extends ObservedPropertiesMixin(HTMLElement) {
   static get observedAttributes() {
     return [
       "label",
@@ -28,7 +27,7 @@ class PaymentDetailsItem extends ObservedPropertiesMixin(HTMLElement) {
     super();
     this._label = document.createElement("span");
     this._label.classList.add("label");
-    this._currencyAmount = document.createElement("currency-amount");
+    this._currencyAmount = new CurrencyAmount();
   }
 
   connectedCallback() {
