@@ -81,6 +81,21 @@ IsAsciiAlpha(Char aChar)
 }
 
 /**
+ * Returns true iff |aChar| matches [0-9].
+ *
+ * This function is basically what you thought isdigit was, except its behavior
+ * doesn't depend on the user's current locale.
+ */
+template<typename Char>
+constexpr bool
+IsAsciiDigit(Char aChar)
+{
+  using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
+  auto uc = static_cast<UnsignedChar>(aChar);
+  return '0' <= uc && uc <= '9';
+}
+
+/**
  * Returns true iff |aChar| matches [a-zA-Z0-9].
  *
  * This function is basically what you thought isalnum was, except its behavior
@@ -90,9 +105,7 @@ template<typename Char>
 constexpr bool
 IsAsciiAlphanumeric(Char aChar)
 {
-  using UnsignedChar = typename detail::MakeUnsignedChar<Char>::Type;
-  auto uc = static_cast<UnsignedChar>(aChar);
-  return ('0' <= uc && uc <= '9') || IsAsciiAlpha(uc);
+  return IsAsciiDigit(aChar) || IsAsciiAlpha(aChar);
 }
 
 /**
