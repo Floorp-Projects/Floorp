@@ -108,8 +108,6 @@ var Utils = Object.freeze({
     return retval;
   },
 
-  _serializedPrincipals: new WeakMap(),
-
   /**
    * Serialize principal data.
    *
@@ -121,14 +119,7 @@ var Utils = Object.freeze({
 
     try {
       if (principal) {
-        let cached = this._serializedPrincipals.get(principal);
-
-        if (cached) {
-          serializedPrincipal = cached;
-        } else {
-          serializedPrincipal = serializationHelper.serializeToString(principal);
-          this._serializedPrincipals.set(principal, serializedPrincipal);
-        }
+        serializedPrincipal = serializationHelper.serializeToString(principal);
       }
     } catch (e) {
       debug(`Failed to serialize principal '${principal}' ${e}`);
