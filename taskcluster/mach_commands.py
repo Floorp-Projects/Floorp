@@ -212,6 +212,8 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('taskgraph', 'action-callback',
                 description='Run action callback used by action tasks')
+    @CommandArgument('--root', '-r', default='taskcluster/ci',
+                     help="root of the taskgraph definition relative to topsrcdir")
     def action_callback(self, **options):
         import taskgraph.actions
         try:
@@ -223,6 +225,7 @@ class MachCommands(MachCommandBase):
             input = json.loads(os.environ.get('ACTION_INPUT', 'null'))
             callback = os.environ.get('ACTION_CALLBACK', None)
             parameters = json.loads(os.environ.get('ACTION_PARAMETERS', '{}'))
+            root = options['root']
 
             return taskgraph.actions.trigger_action_callback(
                     task_group_id=task_group_id,
@@ -231,6 +234,7 @@ class MachCommands(MachCommandBase):
                     input=input,
                     callback=callback,
                     parameters=parameters,
+                    root=root,
                     test=False)
         except Exception:
             traceback.print_exc()
@@ -238,6 +242,8 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('taskgraph', 'test-action-callback',
                 description='Run an action callback in a testing mode')
+    @CommandArgument('--root', '-r', default='taskcluster/ci',
+                     help="root of the taskgraph definition relative to topsrcdir")
     @CommandArgument('--parameters', '-p', default='project=mozilla-central',
                      help='parameters file (.yml or .json; see '
                           '`taskcluster/docs/parameters.rst`)`')
@@ -285,6 +291,8 @@ class MachCommands(MachCommandBase):
             parameters = taskgraph.parameters.load_parameters_file(options['parameters'])
             parameters.check()
 
+            root = options['root']
+
             return taskgraph.actions.trigger_action_callback(
                     task_group_id=options['task_group_id'],
                     task_id=task_id,
@@ -292,6 +300,7 @@ class MachCommands(MachCommandBase):
                     input=input,
                     callback=options['callback'],
                     parameters=parameters,
+                    root=root,
                     test=True)
         except Exception:
             traceback.print_exc()

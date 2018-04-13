@@ -18,6 +18,7 @@
 
 #include <fontconfig/fontconfig.h>
 #include "gfxPlatformGtk.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "ScreenHelperGTK.h"
 
 #include "gtkdrawing.h"
@@ -722,7 +723,8 @@ GetSystemFontInfo(GtkStyleContext *aStyle,
     NS_ConvertUTF8toUTF16 family(pango_font_description_get_family(desc));
     *aFontName = quote + family + quote;
 
-    aFontStyle->weight = pango_font_description_get_weight(desc);
+    aFontStyle->weight =
+        mozilla::FontWeight(pango_font_description_get_weight(desc));
 
     // FIXME: Set aFontStyle->stretch correctly!
     aFontStyle->stretch = NS_FONT_STRETCH_NORMAL;

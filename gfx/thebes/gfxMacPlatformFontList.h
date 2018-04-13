@@ -8,6 +8,7 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
@@ -30,13 +31,13 @@ class MacOSFontEntry : public gfxFontEntry
 public:
     friend class gfxMacPlatformFontList;
 
-    MacOSFontEntry(const nsAString& aPostscriptName, int32_t aWeight,
+    MacOSFontEntry(const nsAString& aPostscriptName, FontWeight aWeight,
                    bool aIsStandardFace = false,
                    double aSizeHint = 0.0);
 
     // for use with data fonts
     MacOSFontEntry(const nsAString& aPostscriptName, CGFontRef aFontRef,
-                   uint16_t aWeight, uint16_t aStretch, uint8_t aStyle,
+                   FontWeight aWeight, uint16_t aStretch, uint8_t aStyle,
                    bool aIsDataUserFont, bool aIsLocal);
 
     virtual ~MacOSFontEntry() {
@@ -130,12 +131,12 @@ public:
     bool GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName) override;
 
     gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                  uint16_t aWeight,
+                                  FontWeight aWeight,
                                   int16_t aStretch,
                                   uint8_t aStyle) override;
 
     gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                   uint16_t aWeight,
+                                   FontWeight aWeight,
                                    int16_t aStretch,
                                    uint8_t aStyle,
                                    const uint8_t* aFontData,

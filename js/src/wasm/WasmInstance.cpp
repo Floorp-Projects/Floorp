@@ -133,6 +133,10 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
           case ValType::F64:
             args[i].set(JS::CanonicalizedDoubleValue(*(double*)&argv[i]));
             break;
+          case ValType::AnyRef: {
+            args[i].set(ObjectOrNullValue(*(JSObject**)&argv[i]));
+            break;
+          }
           case ValType::I64:
           case ValType::I8x16:
           case ValType::I16x8:
@@ -188,23 +192,28 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     if (!TypeScript::ThisTypes(script)->hasType(TypeSet::UndefinedType()))
         return true;
 
+    // Functions with anyref in signature don't have a jit exit at the moment.
+    if (fi.sig().temporarilyUnsupportedAnyRef())
+        return true;
+
     const ValTypeVector& importArgs = fi.sig().args();
 
     size_t numKnownArgs = Min(importArgs.length(), importFun->nargs());
     for (uint32_t i = 0; i < numKnownArgs; i++) {
         TypeSet::Type type = TypeSet::UnknownType();
         switch (importArgs[i]) {
-          case ValType::I32:   type = TypeSet::Int32Type(); break;
-          case ValType::F32:   type = TypeSet::DoubleType(); break;
-          case ValType::F64:   type = TypeSet::DoubleType(); break;
-          case ValType::I64:   MOZ_CRASH("NYI");
-          case ValType::I8x16: MOZ_CRASH("NYI");
-          case ValType::I16x8: MOZ_CRASH("NYI");
-          case ValType::I32x4: MOZ_CRASH("NYI");
-          case ValType::F32x4: MOZ_CRASH("NYI");
-          case ValType::B8x16: MOZ_CRASH("NYI");
-          case ValType::B16x8: MOZ_CRASH("NYI");
-          case ValType::B32x4: MOZ_CRASH("NYI");
+          case ValType::I32:    type = TypeSet::Int32Type(); break;
+          case ValType::F32:    type = TypeSet::DoubleType(); break;
+          case ValType::F64:    type = TypeSet::DoubleType(); break;
+          case ValType::AnyRef: MOZ_CRASH("case guarded above");
+          case ValType::I64:    MOZ_CRASH("NYI");
+          case ValType::I8x16:  MOZ_CRASH("NYI");
+          case ValType::I16x8:  MOZ_CRASH("NYI");
+          case ValType::I32x4:  MOZ_CRASH("NYI");
+          case ValType::F32x4:  MOZ_CRASH("NYI");
+          case ValType::B8x16:  MOZ_CRASH("NYI");
+          case ValType::B16x8:  MOZ_CRASH("NYI");
+          case ValType::B32x4:  MOZ_CRASH("NYI");
         }
         if (!TypeScript::ArgTypes(script, i)->hasType(type))
             return true;
@@ -263,6 +272,31 @@ Instance::callImport_f64(Instance* instance, int32_t funcImportIndex, int32_t ar
         return false;
 
     return ToNumber(cx, rval, (double*)argv);
+}
+
+static bool
+ToRef(JSContext* cx, HandleValue val, void* addr)
+{
+    if (val.isNull()) {
+        *(JSObject**)addr = nullptr;
+        return true;
+    }
+
+    JSObject* obj = ToObject(cx, val);
+    if (!obj)
+        return false;
+    *(JSObject**)addr = obj;
+    return true;
+}
+
+/* static */ int32_t
+Instance::callImport_ref(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
+{
+    JSContext* cx = TlsContext.get();
+    RootedValue rval(cx);
+    if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
+        return false;
+    return ToRef(cx, rval, argv);
 }
 
 /* static */ uint32_t
@@ -672,6 +706,11 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
             if (!ToNumber(cx, v, (double*)&exportArgs[i]))
                 return false;
             break;
+          case ValType::AnyRef: {
+            if (!ToRef(cx, v, &exportArgs[i]))
+                return false;
+            break;
+          }
           case ValType::I8x16: {
             SimdConstant simd;
             if (!ToSimdConstant<Int8x16>(cx, v, &simd))
@@ -755,6 +794,8 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
     }
 
     void* retAddr = &exportArgs[0];
+
+    bool expectsObject = false;
     JSObject* retObj = nullptr;
     switch (func.sig().ret()) {
       case ExprType::Void:
@@ -770,6 +811,10 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
         break;
       case ExprType::F64:
         args.rval().set(NumberValue(*(double*)retAddr));
+        break;
+      case ExprType::AnyRef:
+        retObj = *(JSObject**)retAddr;
+        expectsObject = true;
         break;
       case ExprType::I8x16:
         retObj = CreateSimd<Int8x16>(cx, (int8_t*)retAddr);
@@ -810,7 +855,9 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
         MOZ_CRASH("Limit");
     }
 
-    if (retObj)
+    if (expectsObject)
+        args.rval().set(ObjectOrNullValue(retObj));
+    else if (retObj)
         args.rval().set(ObjectValue(*retObj));
 
     return true;

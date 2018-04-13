@@ -6,6 +6,7 @@
 #ifndef GFX_PLATFORM_H
 #define GFX_PLATFORM_H
 
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/gfx/Types.h"
 #include "nsTArray.h"
@@ -158,6 +159,7 @@ class gfxPlatform {
     friend class SRGBOverrideObserver;
 
 public:
+    typedef mozilla::FontWeight FontWeight;
     typedef mozilla::gfx::Color Color;
     typedef mozilla::gfx::DataSourceSurface DataSourceSurface;
     typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -391,7 +393,7 @@ public:
      * who must either AddRef() or delete.
      */
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
-                                          uint16_t aWeight,
+                                          FontWeight aWeight,
                                           int16_t aStretch,
                                           uint8_t aStyle);
 
@@ -404,7 +406,7 @@ public:
      * who must either AddRef() or delete.
      */
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
-                                           uint16_t aWeight,
+                                           FontWeight aWeight,
                                            int16_t aStretch,
                                            uint8_t aStyle,
                                            const uint8_t* aFontData,

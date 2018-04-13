@@ -65,6 +65,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
@@ -363,7 +364,7 @@ MacOSFontEntry::IsCFF()
 }
 
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
-                               int32_t aWeight,
+                               FontWeight aWeight,
                                bool aIsStandardFace,
                                double aSizeHint)
     : gfxFontEntry(aPostscriptName, aIsStandardFace),
@@ -387,7 +388,8 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
 
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
                                CGFontRef aFontRef,
-                               uint16_t aWeight, uint16_t aStretch,
+                               FontWeight aWeight,
+                               uint16_t aStretch,
                                uint8_t aStyle,
                                bool aIsDataUserFont,
                                bool aIsLocalUserFont)
@@ -902,7 +904,8 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 
         // create a font entry
         MacOSFontEntry *fontEntry =
-            new MacOSFontEntry(postscriptFontName, cssWeight, isStandardFace, mSizeHint);
+            new MacOSFontEntry(postscriptFontName, FontWeight(cssWeight),
+                               isStandardFace, mSizeHint);
         if (!fontEntry) {
             break;
         }
@@ -1530,7 +1533,7 @@ gfxMacPlatformFontList::AppleWeightToCSSWeight(int32_t aAppleWeight)
 
 gfxFontEntry*
 gfxMacPlatformFontList::LookupLocalFont(const nsAString& aFontName,
-                                        uint16_t aWeight,
+                                        FontWeight aWeight,
                                         int16_t aStretch,
                                         uint8_t aStyle)
 {
@@ -1545,8 +1548,8 @@ gfxMacPlatformFontList::LookupLocalFont(const nsAString& aFontName,
         return nullptr;
     }
 
-    NS_ASSERTION(aWeight >= 100 && aWeight <= 900,
-                 "bogus font weight value!");
+    MOZ_ASSERT(aWeight >= FontWeight(100) && aWeight <= FontWeight(900),
+               "bogus font weight value!");
 
     newFontEntry =
         new MacOSFontEntry(aFontName, fontRef, aWeight, aStretch, aStyle,
@@ -1563,7 +1566,7 @@ static void ReleaseData(void *info, const void *data, size_t size)
 
 gfxFontEntry*
 gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
-                                         uint16_t aWeight,
+                                         FontWeight aWeight,
                                          int16_t aStretch,
                                          uint8_t aStyle,
                                          const uint8_t* aFontData,
@@ -1571,7 +1574,8 @@ gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
 {
     NS_ASSERTION(aFontData, "MakePlatformFont called with null data");
 
-    NS_ASSERTION(aWeight >= 100 && aWeight <= 900, "bogus font weight value!");
+    MOZ_ASSERT(aWeight >= FontWeight(100) && aWeight <= FontWeight(900),
+               "bogus font weight value!");
 
     // create the font entry
     nsAutoString uniqueName;
@@ -1701,7 +1705,7 @@ gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
     aFontStyle.style =
         (traits & NSFontItalicTrait) ?  NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL;
     aFontStyle.weight =
-        (traits & NSFontBoldTrait) ? NS_FONT_WEIGHT_BOLD : NS_FONT_WEIGHT_NORMAL;
+        (traits & NSFontBoldTrait) ? FontWeight::Bold() : FontWeight::Normal();
     aFontStyle.stretch =
         (traits & NSFontExpandedTrait) ?
             NS_FONT_STRETCH_EXPANDED : (traits & NSFontCondensedTrait) ?

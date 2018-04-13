@@ -26,6 +26,7 @@
 #include "base/task.h"
 #include "base/thread.h"
 #include "base/message_loop.h"
+#include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/Logging.h"
 
 #include "mozilla/gfx/2D.h"
@@ -274,7 +275,7 @@ gfxPlatformGtk::CreateFontGroup(const FontFamilyList& aFontFamilyList,
 
 gfxFontEntry*
 gfxPlatformGtk::LookupLocalFont(const nsAString& aFontName,
-                                uint16_t aWeight,
+                                FontWeight aWeight,
                                 int16_t aStretch,
                                 uint8_t aStyle)
 {
@@ -285,7 +286,7 @@ gfxPlatformGtk::LookupLocalFont(const nsAString& aFontName,
 
 gfxFontEntry*
 gfxPlatformGtk::MakePlatformFont(const nsAString& aFontName,
-                                 uint16_t aWeight,
+                                 FontWeight aWeight,
                                  int16_t aStretch,
                                  uint8_t aStyle,
                                  const uint8_t* aFontData,

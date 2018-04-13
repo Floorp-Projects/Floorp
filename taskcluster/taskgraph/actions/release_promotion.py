@@ -212,7 +212,7 @@ def is_release_promotion_available(parameters):
         "required": ['release_promotion_flavor', 'build_number'],
     }
 )
-def release_promotion_action(parameters, input, task_group_id, task_id, task):
+def release_promotion_action(parameters, graph_config, input, task_group_id, task_id, task):
     release_promotion_flavor = input['release_promotion_flavor']
     promotion_config = RELEASE_PROMOTION_CONFIG[release_promotion_flavor]
     release_history = {}
@@ -262,8 +262,8 @@ def release_promotion_action(parameters, input, task_group_id, task_id, task):
     if not previous_graph_ids:
         revision = input.get('revision')
         parameters['pushlog_id'] = parameters['pushlog_id'] or \
-            find_hg_revision_pushlog_id(parameters, revision)
-        previous_graph_ids = [find_decision_task(parameters)]
+            find_hg_revision_pushlog_id(parameters, graph_config, revision)
+        previous_graph_ids = [find_decision_task(parameters, graph_config)]
 
     # Download parameters from the first decision task
     parameters = get_artifact(previous_graph_ids[0], "public/parameters.yml")

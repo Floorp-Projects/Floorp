@@ -840,6 +840,7 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     // Copy over data from the ModuleEnvironment.
 
     metadata_->memoryUsage = env_->memoryUsage;
+    metadata_->temporaryHasGcTypes = env_->gcTypesEnabled;
     metadata_->minMemoryLength = env_->minMemoryLength;
     metadata_->maxMemoryLength = env_->maxMemoryLength;
     metadata_->startFuncIndex = env_->startFuncIndex;

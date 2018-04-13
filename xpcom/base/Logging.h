@@ -191,7 +191,6 @@ void log_print(const LogModule* aModule,
 
 } // namespace mozilla
 
-
 // Helper macro used convert MOZ_LOG's third parameter, |_args|, from a
 // parenthesized form to a varargs form. For example:
 //   ("%s", "a message") => "%s", "a message"
