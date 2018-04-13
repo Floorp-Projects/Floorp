@@ -1914,14 +1914,8 @@ enum ZoneSpecifier {
     // Use a particular existing zone.
     ExistingZone,
 
-    // Create a new zone with its own new zone group.
-    NewZoneInNewZoneGroup,
-
-    // Create a new zone in the same zone group as the system zone.
-    NewZoneInSystemZoneGroup,
-
-    // Create a new zone in the same zone group as another existing zone.
-    NewZoneInExistingZoneGroup
+    // Create a new zone.
+    NewZone
 };
 
 /**
@@ -1937,8 +1931,8 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
   public:
     CompartmentCreationOptions()
       : traceGlobal_(nullptr),
-        zoneSpec_(NewZoneInSystemZoneGroup),
-        zonePointer_(nullptr),
+        zoneSpec_(NewZone),
+        zone_(nullptr),
         invisibleToDebugger_(false),
         mergeable_(false),
         preserveJitCode_(false),
@@ -1956,15 +1950,13 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         return *this;
     }
 
-    void* zonePointer() const { return zonePointer_; }
+    JS::Zone* zone() const { return zone_; }
     ZoneSpecifier zoneSpecifier() const { return zoneSpec_; }
 
     // Set the zone to use for the compartment. See ZoneSpecifier above.
     CompartmentCreationOptions& setSystemZone();
     CompartmentCreationOptions& setExistingZone(JSObject* obj);
-    CompartmentCreationOptions& setNewZoneInNewZoneGroup();
-    CompartmentCreationOptions& setNewZoneInSystemZoneGroup();
-    CompartmentCreationOptions& setNewZoneInExistingZoneGroup(JSObject* obj);
+    CompartmentCreationOptions& setNewZone();
 
     // Certain scopes (i.e. XBL compilation scopes) are implementation details
     // of the embedding, and references to them should never leak out to script.
@@ -2022,7 +2014,7 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
   private:
     JSTraceOp traceGlobal_;
     ZoneSpecifier zoneSpec_;
-    void* zonePointer_; // Per zoneSpec_, either a Zone, ZoneGroup, or null.
+    JS::Zone* zone_;
     bool invisibleToDebugger_;
     bool mergeable_;
     bool preserveJitCode_;

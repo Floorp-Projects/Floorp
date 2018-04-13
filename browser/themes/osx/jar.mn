@@ -58,8 +58,6 @@ browser.jar:
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabbrowser/tabDragIndicator@2x.png                (tabbrowser/tabDragIndicator@2x.png)
-  skin/classic/browser/sync-desktopIcon.svg  (../shared/sync-desktopIcon.svg)
-  skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
   skin/classic/browser/e10s-64@2x.png                                  (../shared/e10s-64@2x.png)
 
 [extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:

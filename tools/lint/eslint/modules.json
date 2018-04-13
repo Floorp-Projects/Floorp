@@ -24,7 +24,7 @@
   "BootstrapMonitor.jsm": ["monitor"],
   "browser-loader.js": ["BrowserLoader"],
   "browserid_identity.js": ["BrowserIDManager", "AuthenticationError"],
-  "CertUtils.jsm": ["BadCertHandler", "checkCert", "readCertPrefs", "validateCert"],
+  "CertUtils.jsm": ["CertUtils"],
   "clients.js": ["ClientEngine", "ClientsRec"],
   "collection_repair.js": ["getRepairRequestor", "getAllRepairRequestors", "CollectionRepairRequestor", "getRepairResponder", "CollectionRepairResponder"],
   "collection_validator.js": ["CollectionValidator", "CollectionProblemData"],

@@ -24,45 +24,46 @@ using namespace js::gc;
 
 Zone * const Zone::NotOnList = reinterpret_cast<Zone*>(1);
 
-JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
+JS::Zone::Zone(JSRuntime* rt)
   : JS::shadow::Zone(rt, &rt->gc.marker),
-    group_(group),
-    debuggers(group, nullptr),
-    uniqueIds_(group),
-    suppressAllocationMetadataBuilder(group, false),
-    arenas(rt, group),
+    debuggers(this, nullptr),
+    uniqueIds_(this),
+    suppressAllocationMetadataBuilder(this, false),
+    arenas(rt, this),
     types(this),
-    gcWeakMapList_(group),
+    gcWeakMapList_(this),
     compartments_(),
-    gcGrayRoots_(group),
-    gcWeakRefs_(group),
-    weakCaches_(group),
-    gcWeakKeys_(group, SystemAllocPolicy(), rt->randomHashCodeScrambler()),
-    typeDescrObjects_(group, this),
+    gcGrayRoots_(this),
+    gcWeakRefs_(this),
+    weakCaches_(this),
+    gcWeakKeys_(this, SystemAllocPolicy(), rt->randomHashCodeScrambler()),
+    typeDescrObjects_(this, this),
     regExps(this),
-    markedAtoms_(group),
-    atomCache_(group),
-    externalStringCache_(group),
-    functionToStringCache_(group),
+    markedAtoms_(this),
+    atomCache_(this),
+    externalStringCache_(this),
+    functionToStringCache_(this),
     usage(&rt->gc.usage),
     threshold(),
     gcDelayBytes(0),
-    tenuredStrings(group, 0),
-    allocNurseryStrings(group, true),
-    propertyTree_(group, this),
-    baseShapes_(group, this),
-    initialShapes_(group, this),
-    nurseryShapes_(group),
-    data(group, nullptr),
-    isSystem(group, false),
+    tenuredStrings(this, 0),
+    allocNurseryStrings(this, true),
+    propertyTree_(this, this),
+    baseShapes_(this, this),
+    initialShapes_(this, this),
+    nurseryShapes_(this),
+    data(this, nullptr),
+    isSystem(this, false),
+    helperThreadOwnerContext_(nullptr),
+    helperThreadUse(HelperThreadUse::None),
 #ifdef DEBUG
-    gcLastSweepGroupIndex(group, 0),
+    gcLastSweepGroupIndex(this, 0),
 #endif
-    jitZone_(group, nullptr),
+    jitZone_(this, nullptr),
     gcScheduled_(false),
     gcScheduledSaved_(false),
-    gcPreserveCode_(group, false),
-    keepShapeTables_(group, false),
+    gcPreserveCode_(this, false),
+    keepShapeTables_(this, false),
     listNext_(NotOnList)
 {
     /* Ensure that there are no vtables to mess us up here. */
@@ -77,6 +78,8 @@ JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
 
 Zone::~Zone()
 {
+    MOZ_ASSERT(helperThreadUse == HelperThreadUse::None);
+
     JSRuntime* rt = runtimeFromAnyThread();
     if (this == rt->gc.systemZone)
         rt->gc.systemZone = nullptr;
@@ -135,7 +138,7 @@ Zone::getOrCreateDebuggers(JSContext* cx)
 void
 Zone::sweepBreakpoints(FreeOp* fop)
 {
-    if (!group() || fop->runtime()->debuggerList().isEmpty())
+    if (fop->runtime()->debuggerList().isEmpty())
         return;
 
     /*
@@ -308,7 +311,7 @@ Zone::canCollect()
 
     // Zones that will be or are currently used by other threads cannot be
     // collected.
-    return !group()->createdForHelperThread();
+    return !createdForHelperThread();
 }
 
 void
@@ -397,6 +400,21 @@ Zone::deleteEmptyCompartment(JSCompartment* comp)
         }
     }
     MOZ_CRASH("Compartment not found");
+}
+
+void
+Zone::setHelperThreadOwnerContext(JSContext* cx)
+{
+    MOZ_ASSERT_IF(cx, TlsContext.get() == cx);
+    helperThreadOwnerContext_ = cx;
+}
+
+bool
+Zone::ownedByCurrentHelperThread()
+{
+    MOZ_ASSERT(usedByHelperThread());
+    MOZ_ASSERT(TlsContext.get());
+    return helperThreadOwnerContext_ == TlsContext.get();
 }
 
 ZoneList::ZoneList()

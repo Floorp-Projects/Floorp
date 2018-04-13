@@ -72,12 +72,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PromptUtils: "resource://gre/modules/SharedPromptUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
-  let certUtils = {};
-  ChromeUtils.import("resource://gre/modules/CertUtils.jsm", certUtils);
-  return certUtils;
-});
-
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       PREF_WEBEXT_PERM_PROMPTS, false);
 
