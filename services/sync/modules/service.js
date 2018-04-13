@@ -53,17 +53,12 @@ function getEngineModules() {
       symbol: "CreditCardsEngine",
     };
   }
-  if (Svc.Prefs.get("engine.bookmarks.buffer", false)) {
-    result.Bookmarks = {
-      module: "bookmarks.js",
-      symbol: "BufferedBookmarksEngine",
-    };
-  } else {
-    result.Bookmarks = {
-      module: "bookmarks.js",
-      symbol: "BookmarksEngine",
-    };
-  }
+  result.Bookmarks = {
+    module: "bookmarks.js",
+    controllingPref: "services.sync.engine.bookmarks.buffer",
+    whenFalse: "BookmarksEngine",
+    whenTrue: "BufferedBookmarksEngine",
+  };
   return result;
 }
 
@@ -387,19 +382,32 @@ Sync11Service.prototype = {
         this._log.info("Do not know about engine: " + name);
         continue;
       }
-      let {module, symbol} = engineModules[name];
-      if (!module.includes(":")) {
-        module = "resource://services-sync/engines/" + module;
+      let modInfo = engineModules[name];
+      if (!modInfo.module.includes(":")) {
+        modInfo.module = "resource://services-sync/engines/" + modInfo.module;
       }
       let ns = {};
       try {
-        ChromeUtils.import(module, ns);
-        if (!(symbol in ns)) {
-          this._log.warn("Could not find exported engine instance: " + symbol);
-          continue;
+        ChromeUtils.import(modInfo.module, ns);
+        if (modInfo.symbol) {
+          let symbol = modInfo.symbol;
+          if (!(symbol in ns)) {
+            this._log.warn("Could not find exported engine instance: " + symbol);
+            continue;
+          }
+          await this.engineManager.register(ns[symbol]);
+        } else {
+          let {whenTrue, whenFalse, controllingPref} = modInfo;
+          if (!(whenTrue in ns) || !(whenFalse in ns)) {
+            this._log.warn("Could not find all exported engine instances",
+                           { whenTrue, whenFalse });
+            continue;
+          }
+          await this.engineManager.registerAlternatives(name.toLowerCase(),
+                                                        controllingPref,
+                                                        ns[whenTrue],
+                                                        ns[whenFalse]);
         }
-
-        await this.engineManager.register(ns[symbol]);
       } catch (ex) {
         this._log.warn("Could not register engine " + name, ex);
       }

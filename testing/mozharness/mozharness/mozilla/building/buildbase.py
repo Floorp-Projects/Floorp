@@ -1258,6 +1258,15 @@ or run without that action (ie: --no-{action})"
 
     def build(self):
         """builds application."""
+
+        # This will error on non-0 exit code.
+        self._run_mach_command_in_build_env(['build', '-v'])
+
+        self.generate_build_props(console_output=True, halt_on_failure=True)
+        self._generate_build_stats()
+
+    def _run_mach_command_in_build_env(self, args):
+        """Run a mach command in a build context."""
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
 
@@ -1284,21 +1293,19 @@ or run without that action (ie: --no-{action})"
             mach = [sys.executable, 'mach']
 
         return_code = self.run_command(
-            command=mach + ['--log-no-times', 'build', '-v'],
+            command=mach + ['--log-no-times'] + args,
             cwd=dirs['abs_src_dir'],
             env=env,
             output_timeout=self.config.get('max_build_output_timeout', 60 * 40)
         )
+
         if return_code:
             self.return_code = self.worst_level(
-                EXIT_STATUS_DICT[TBPL_FAILURE],  self.return_code,
+                EXIT_STATUS_DICT[TBPL_FAILURE], self.return_code,
                 AUTOMATION_EXIT_CODES[::-1]
             )
-            self.fatal("'mach build' did not run successfully. Please check "
-                       "log for errors.")
-
-        self.generate_build_props(console_output=True, halt_on_failure=True)
-        self._generate_build_stats()
+            self.fatal("'mach %s' did not run successfully. Please check "
+                       "log for errors." % ' '.join(args))
 
     def multi_l10n(self):
         if not self.query_is_nightly():

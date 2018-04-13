@@ -141,4 +141,67 @@ more detail in :ref:`lifecycle`.
 
 WebExtensions Experiments
 -------------------------
-(*This section left blank pending some coming experiments changes*)
+A new API may also be implemented within an extension. An API implemented
+this way is called a WebExtension Experiment.  Experiments can be useful
+when actively developing a new API, as they do not require building
+Firefox locally. Note that extensions that include experiments cannot be
+signed by addons.mozilla.org.  They may be installed temporarily via
+``about:debugging`` or, on browser that support it (current Nightly and
+Developer Edition), by setting the preference
+``xpinstall.signatures.required`` to ``false``.
+
+Experimental APIs have a few limitations compared with built-in APIs:
+
+- Experimental APIs can (currently) only be exposed to extension pages,
+  not to devtools pages or to content scripts.
+- Experimental APIs cannot handle manifest keys (since the extension manifest
+  needs to be parsed and validated before experimental APIs are loaded).
+- Experimental APIs cannot use the static ``"update"`` and ``"uninstall"``
+  lifecycle events (since in general those may occur when an affected
+  extension is not active or installed).
+
+Experimental APIs are declared in the ``experiment_apis`` property in a
+WebExtension's ``manifest.json`` file.  For example:
+
+.. code-block:: js
+
+  {
+    "manifest_version": 2,
+    "name": "Extension containing an experimental API",
+    "experiment_apis": {
+      "apiname": {
+        "schema": "schema.json",
+        "parent": {
+          "scopes": ["addon_parent"],
+          "paths": [["myapi"]],
+          "script": "implementation.js"
+        },
+
+        "child": {
+          "scopes": ["addon_child"],
+          "paths": [["myapi"]],
+          "script" "child-implementation.js"
+        }
+      }
+    }
+  }
+
+This is essentially the same information required for built-in APIs,
+just organized differently.  The ``schema`` property is a relative path
+to a file inside the extension containing the API schema.  The actual
+implementation details for the parent process and for child processes
+are defined in the ``parent`` and ``child`` properties of the API
+definition respectively.  Inside these sections, the ``scope`` and ``paths``
+properties have the same meaning as those properties in the definition
+of a built-in API (though see the note above about limitations; the
+only currently valid values for ``scope`` are ``"addon_parent"`` and
+``"addon_child"``).  The ``script`` property is a relative path to a file
+inside the extension containing the implementation of the API.
+
+The extension that includes an experiment defined in this way automatically
+gets access to the experimental API.  An extension may also use an
+experimental API implemented in a different extension by including the
+string ``experiments.name`` in the ``permissions``` property in its
+``manifest.json`` file.  In this case, the string name must be replace by
+the name of the API from the extension that defined it (e.g., ``apiname``
+in the example above.

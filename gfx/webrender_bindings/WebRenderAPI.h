@@ -77,6 +77,7 @@ public:
 
   void UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
                                const nsTArray<wr::WrTransformProperty>& aTransformArray);
+  void AppendTransformProperties(const nsTArray<wr::WrTransformProperty>& aTransformArray);
 
   void SetWindowParameters(const LayoutDeviceIntSize& aWindowSize,
                            const LayoutDeviceIntRect& aDocRect);

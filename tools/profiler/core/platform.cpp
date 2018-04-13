@@ -3145,7 +3145,11 @@ void
 profiler_unregister_thread()
 {
   MOZ_ASSERT_IF(NS_IsMainThread(), Scheduler::IsCooperativeThread());
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  if (!CorePS::Exists()) {
+    // This function can be called after the main thread has already shut down.
+    return;
+  }
 
   PSAutoLock lock(gPSMutex);
 
@@ -3345,6 +3349,11 @@ profiler_add_marker_for_thread(int aThreadId,
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  PSAutoLock lock(gPSMutex);
+  if (!ActivePS::Exists(lock)) {
+    return;
+  }
+
   // Create the ProfilerMarker which we're going to store.
   TimeStamp origin = (aPayload && !aPayload->GetStartTime().IsNull())
                    ? aPayload->GetStartTime()
@@ -3353,8 +3362,6 @@ profiler_add_marker_for_thread(int aThreadId,
   ProfilerMarker* marker =
     new ProfilerMarker(aMarkerName, aThreadId, Move(aPayload),
                        delta.ToMilliseconds());
-
-  PSAutoLock lock(gPSMutex);
 
 #ifdef DEBUG
   // Assert that our thread ID makes sense

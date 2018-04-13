@@ -1066,8 +1066,6 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
     transform_array: *const WrTransformProperty,
     transform_count: usize,
 ) {
-    debug_assert!(transform_count > 0 || opacity_count > 0);
-
     let mut properties = DynamicProperties {
         transforms: Vec::new(),
         floats: Vec::new(),
@@ -1099,6 +1097,35 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
     }
 
     txn.update_dynamic_properties(properties);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_append_transform_properties(
+    txn: &mut Transaction,
+    transform_array: *const WrTransformProperty,
+    transform_count: usize,
+) {
+    if transform_count == 0 {
+        return;
+    }
+
+    let mut properties = DynamicProperties {
+        transforms: Vec::new(),
+        floats: Vec::new(),
+    };
+
+    let transform_slice = make_slice(transform_array, transform_count);
+
+    for element in transform_slice.iter() {
+        let prop = PropertyValue {
+            key: PropertyBindingKey::new(element.id),
+            value: element.transform.into(),
+        };
+
+        properties.transforms.push(prop);
+    }
+
+    txn.append_dynamic_properties(properties);
 }
 
 #[no_mangle]

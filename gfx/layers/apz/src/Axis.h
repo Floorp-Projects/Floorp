@@ -8,11 +8,13 @@
 #define mozilla_layers_Axis_h
 
 #include <sys/types.h>                  // for int32_t
+
 #include "APZUtils.h"
 #include "AxisPhysicsMSDModel.h"
-#include "Units.h"
+#include "mozilla/gfx/Types.h"          // for Side
 #include "mozilla/TimeStamp.h"          // for TimeDuration
 #include "nsTArray.h"                   // for nsTArray
+#include "Units.h"
 
 namespace mozilla {
 namespace layers {
@@ -313,6 +315,7 @@ public:
   virtual CSSToParentLayerScale GetScaleForAxis(const CSSToParentLayerScale2D& aScale) const override;
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const override;
   virtual const char* Name() const override;
+  bool CanScrollTo(Side aSide) const;
 private:
   virtual OverscrollBehavior GetOverscrollBehavior() const override;
 };
@@ -326,6 +329,7 @@ public:
   virtual CSSToParentLayerScale GetScaleForAxis(const CSSToParentLayerScale2D& aScale) const override;
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const override;
   virtual const char* Name() const override;
+  bool CanScrollTo(Side aSide) const;
 private:
   virtual OverscrollBehavior GetOverscrollBehavior() const override;
 };

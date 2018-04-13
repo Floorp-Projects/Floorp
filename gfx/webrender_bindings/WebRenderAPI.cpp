@@ -206,13 +206,21 @@ void
 TransactionBuilder::UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
                                      const nsTArray<wr::WrTransformProperty>& aTransformArray)
 {
-  wr_transaction_update_dynamic_properties(mTxn,
-                                           aOpacityArray.IsEmpty() ?
-                                             nullptr : aOpacityArray.Elements(),
-                                           aOpacityArray.Length(),
-                                           aTransformArray.IsEmpty() ?
-                                             nullptr : aTransformArray.Elements(),
-                                           aTransformArray.Length());
+  wr_transaction_update_dynamic_properties(
+      mTxn,
+      aOpacityArray.IsEmpty() ?  nullptr : aOpacityArray.Elements(),
+      aOpacityArray.Length(),
+      aTransformArray.IsEmpty() ?  nullptr : aTransformArray.Elements(),
+      aTransformArray.Length());
+}
+
+void
+TransactionBuilder::AppendTransformProperties(const nsTArray<wr::WrTransformProperty>& aTransformArray)
+{
+  wr_transaction_append_transform_properties(
+      mTxn,
+      aTransformArray.IsEmpty() ? nullptr : aTransformArray.Elements(),
+      aTransformArray.Length());
 }
 
 bool
