@@ -273,11 +273,8 @@ class AsyncFromSyncIteratorObject : public NativeObject
         Slots
     };
 
-    void setIterator(HandleObject iterator) {
+    void init(JSObject* iterator, const Value& nextMethod) {
         setFixedSlot(Slot_Iterator, ObjectValue(*iterator));
-    }
-
-    void setNextMethod(HandleValue nextMethod) {
         setFixedSlot(Slot_NextMethod, nextMethod);
     }
 
