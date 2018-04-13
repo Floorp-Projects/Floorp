@@ -50,7 +50,6 @@ class NativeObject;
 class Nursery;
 struct NurseryChunk;
 class HeapSlot;
-class ZoneGroup;
 class JSONPrinter;
 
 void SetGCZeal(JSRuntime*, uint8_t, uint32_t);

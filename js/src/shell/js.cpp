@@ -5046,7 +5046,7 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
     JS::CompartmentBehaviors& behaviors = options.behaviors();
 
     SetStandardCompartmentOptions(options);
-    options.creationOptions().setNewZoneInExistingZoneGroup(cx->global());
+    options.creationOptions().setNewZone();
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 1 && args[0].isObject()) {
