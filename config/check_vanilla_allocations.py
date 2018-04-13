@@ -143,6 +143,11 @@ def main():
         if "Fuzzer" in filename:
             continue
 
+        # Ignore the profiling pseudo-stack, since it needs to run even when
+        # SpiderMonkey's allocator isn't initialized.
+        if "ProfilingStack" in filename:
+            continue
+
         fn = m.group(2)
         if filename == 'jsutil.o':
             jsutil_cpp.add(fn)

@@ -521,27 +521,33 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       }
 
       const pausePoints = newLocation.originalSourceActor.pausePoints;
+      const lineChanged = startLocation.originalLine !== newLocation.originalLine;
+      const columnChanged = startLocation.originalColumn !== newLocation.originalColumn;
 
       if (!pausePoints) {
         // Case 1.4
-        if (startLocation.originalLine !== newLocation.originalLine) {
+        if (lineChanged) {
           return pauseAndRespond(this);
         }
+
         return undefined;
       }
 
       // Case 1.3
-      if (
-        startLocation.originalLine === newLocation.originalLine
-        && startLocation.originalColumn === newLocation.originalColumn
-      ) {
+      if (!lineChanged && !columnChanged) {
         return undefined;
       }
 
       // When pause points are specified for the source,
       // we should pause when we are at a stepOver pause point
       const pausePoint = findPausePointForLocation(pausePoints, newLocation);
-      if (pausePoint && pausePoint.types.stepOver) {
+      if (pausePoint) {
+        if (pausePoint.step) {
+          return pauseAndRespond(this);
+        }
+      } else if (lineChanged) {
+        // NOTE: if we do not find a pause point we want to
+        // fall back on the old behavior (1.3)
         return pauseAndRespond(this);
       }
 
@@ -1928,10 +1934,8 @@ function findEntryPointsForLine(scripts, line) {
 }
 
 function findPausePointForLocation(pausePoints, location) {
-  return pausePoints.find(pausePoint =>
-    pausePoint.location.line === location.originalLine
-    && pausePoint.location.column === location.originalColumn
-  );
+  const { originalLine: line, originalColumn: column } = location;
+  return pausePoints[line] && pausePoints[line][column];
 }
 
 /**
