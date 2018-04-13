@@ -99,7 +99,7 @@ UNIFIED_SOURCES += [
     'testThreadingExclusiveData.cpp',
     'testThreadingMutex.cpp',
     'testThreadingThread.cpp',
-    'testToSignedOrUnsignedInteger.cpp',
+    'testToIntWidth.cpp',
     'testTypedArrays.cpp',
     'testUbiNode.cpp',
     'testUncaughtSymbol.cpp',
