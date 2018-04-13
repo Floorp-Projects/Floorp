@@ -160,7 +160,7 @@
 </groupbox>
 
 <!-- Site Data -->
-<groupbox id="siteDataGroup" hidden="true" data-category="panePrivacy" data-hidden-from-search="true">
+<groupbox id="siteDataGroup" data-category="panePrivacy">
   <caption><label data-l10n-id="sitedata-header"/></caption>
 
   <hbox data-subcategory="sitedata" align="baseline">

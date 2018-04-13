@@ -5,7 +5,7 @@
  * Test basic communication of Web Audio actor
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, front } = await initBackend(SIMPLE_CONTEXT_URL);
   let [_, __, [destNode, oscNode, gainNode], [connect1, connect2]] = await Promise.all([
     front.setup({ reload: true }),

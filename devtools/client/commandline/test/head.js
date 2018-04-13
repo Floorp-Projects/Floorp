@@ -19,11 +19,6 @@ var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "/helpers.js", this);
 Services.scriptloader.loadSubScript(testDir + "/mockCommands.js", this, "UTF-8");
 
-flags.testing = true;
-SimpleTest.registerCleanupFunction(() => {
-  flags.testing = false;
-});
-
 function whenDelayedStartupFinished(aWindow, aCallback) {
   Services.obs.addObserver(function observer(aSubject, aTopic) {
     if (aWindow == aSubject) {

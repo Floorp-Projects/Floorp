@@ -684,12 +684,6 @@ var gPermissionObject = {
   }
 };
 
-// Delete this entry while being pre-off
-// or the persistent-storage permission would appear in Page info's Permission section
-if (!Services.prefs.getBoolPref("browser.storageManager.enabled")) {
-  delete gPermissionObject["persistent-storage"];
-}
-
 if (!Services.prefs.getBoolPref("dom.webmidi.enabled")) {
   // ESLint gets angry about array versus dot notation here, but some permission
   // names use hyphens. Disabling rule for line to keep things consistent.

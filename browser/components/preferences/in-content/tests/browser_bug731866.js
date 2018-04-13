@@ -4,7 +4,6 @@
 ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-const storageManagerDisabled = !SpecialPowers.getBoolPref("browser.storageManager.enabled");
 const browserContainersGroupDisabled = !SpecialPowers.getBoolPref("privacy.userContext.ui.enabled");
 
 function test() {
@@ -22,14 +21,7 @@ function checkElements(expectedPane) {
         element.id === "drmGroup") {
       continue;
     }
-    // The siteDataGroup in the Storage Management project is currently only pref-on on Nightly for testing purpose.
-    // During the test and the transition period, we have to check the pref to see if the siteDataGroup
-    // should be hidden always. This would be a bit bothersome, same as the offlineGroup as below.
-    // However, this checking is necessary to make sure we don't leak the siteDataGroup into beta/release build
-    if (element.id == "siteDataGroup" && storageManagerDisabled) {
-      is_element_hidden(element, "Disabled siteDataGroup should be hidden");
-      continue;
-    }
+
     // The browserContainersGroup is still only pref-on on Nightly
     if (element.id == "browserContainersGroup" && browserContainersGroupDisabled) {
       is_element_hidden(element, "Disabled browserContainersGroup should be hidden");

@@ -32,11 +32,6 @@ const {LocalizationHelper} = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
       new LocalizationHelper("devtools/client/locales/inspector.properties");
 
-flags.testing = true;
-registerCleanupFunction(() => {
-  flags.testing = false;
-});
-
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
 });

@@ -20,79 +20,78 @@
 
         let {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
-        (async function () {
-            let win = await openWebIDE();
-            let winProject = getProjectWindow(win);
-            let AppManager = win.AppManager;
+        (async function() {
+          let win = await openWebIDE();
+          let winProject = getProjectWindow(win);
+          let AppManager = win.AppManager;
 
-            function isProjectMarkedAsValid() {
-              let details = win.frames[1];
-              return !details.document.body.classList.contains("error");
-            }
+          function isProjectMarkedAsValid() {
+            let details = win.frames[1];
+            return !details.document.body.classList.contains("error");
+          }
 
-            let packagedAppLocation = getTestFilePath("app");
+          let packagedAppLocation = getTestFilePath("app");
 
-            let onValidated = waitForUpdate(win, "project-validated");
-            let onDetails = waitForUpdate(win, "details");
-            await winProject.projectList.importPackagedApp(packagedAppLocation);
-            await onValidated;
-            await onDetails;
+          let onValidated = waitForUpdate(win, "project-validated");
+          let onDetails = waitForUpdate(win, "details");
+          await winProject.projectList.importPackagedApp(packagedAppLocation);
+          await onValidated;
+          await onDetails;
 
-            let project = win.AppManager.selectedProject;
+          let project = win.AppManager.selectedProject;
 
-            ok("name" in project.manifest, "manifest includes name");
-            is(project.name, project.manifest.name, "Display name uses manifest name");
-            ok(isProjectMarkedAsValid(), "project is marked as valid");
+          ok("name" in project.manifest, "manifest includes name");
+          is(project.name, project.manifest.name, "Display name uses manifest name");
+          ok(isProjectMarkedAsValid(), "project is marked as valid");
 
             // Change the name
-            let originalName = project.manifest.name;
+          let originalName = project.manifest.name;
 
-            project.manifest.name = "xxx";
+          project.manifest.name = "xxx";
 
             // Write to disk
-            await AppManager.writeManifest(project);
+          await AppManager.writeManifest(project);
 
             // Read file
-            let manifestPath = OS.Path.join(packagedAppLocation, "manifest.webapp");
-            let Decoder = new TextDecoder();
-            let data = await OS.File.read(manifestPath);
-            data = new TextDecoder().decode(data);
-            let json = JSON.parse(data);
-            is(json.name, "xxx", "manifest written on disc");
+          let manifestPath = OS.Path.join(packagedAppLocation, "manifest.webapp");
+          let data = await OS.File.read(manifestPath);
+          data = new TextDecoder().decode(data);
+          let json = JSON.parse(data);
+          is(json.name, "xxx", "manifest written on disc");
 
             // Make the manifest invalid on disk
-            delete json.name;
-            let Encoder = new TextEncoder();
-            data = Encoder.encode(JSON.stringify(json));
-            await OS.File.writeAtomic(manifestPath, data , {tmpPath: manifestPath + ".tmp"});
+          delete json.name;
+          let Encoder = new TextEncoder();
+          data = Encoder.encode(JSON.stringify(json));
+          await OS.File.writeAtomic(manifestPath, data, {tmpPath: manifestPath + ".tmp"});
 
             // Trigger validation
-            await AppManager.validateAndUpdateProject(AppManager.selectedProject);
-            await nextTick();
+          await AppManager.validateAndUpdateProject(AppManager.selectedProject);
+          await nextTick();
 
-            ok(!("name" in project.manifest), "manifest has been updated");
-            is(project.name, "--", "Placeholder is used for display name");
-            ok(!isProjectMarkedAsValid(), "project is marked as invalid");
+          ok(!("name" in project.manifest), "manifest has been updated");
+          is(project.name, "--", "Placeholder is used for display name");
+          ok(!isProjectMarkedAsValid(), "project is marked as invalid");
 
             // Make the manifest valid on disk
-            project.manifest.name = originalName;
-            await AppManager.writeManifest(project);
+          project.manifest.name = originalName;
+          await AppManager.writeManifest(project);
 
             // Trigger validation
-            await AppManager.validateAndUpdateProject(AppManager.selectedProject);
-            await nextTick();
+          await AppManager.validateAndUpdateProject(AppManager.selectedProject);
+          await nextTick();
 
-            ok("name" in project.manifest, "manifest includes name");
-            is(project.name, originalName, "Display name uses original manifest name");
-            ok(isProjectMarkedAsValid(), "project is marked as valid");
+          ok("name" in project.manifest, "manifest includes name");
+          is(project.name, originalName, "Display name uses original manifest name");
+          ok(isProjectMarkedAsValid(), "project is marked as valid");
 
-            await closeWebIDE(win);
+          await closeWebIDE(win);
 
-            await removeAllProjects();
+          await removeAllProjects();
 
-            SimpleTest.finish();
+          SimpleTest.finish();
         })();
-      }
+      };
     </script>
   </body>
 </html>

@@ -6,7 +6,7 @@
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
-window.addEventListener("load", function () {
+window.addEventListener("load", function() {
   // Listen to preference changes
   let inputs = document.querySelectorAll("[data-pref]");
   for (let i of inputs) {
@@ -22,10 +22,9 @@ window.addEventListener("load", function () {
 
   // Initialize the controls
   FillForm();
-
 }, {capture: true, once: true});
 
-window.addEventListener("unload", function () {
+window.addEventListener("unload", function() {
   let inputs = document.querySelectorAll("[data-pref]");
   for (let i of inputs) {
     let pref = i.dataset.pref;

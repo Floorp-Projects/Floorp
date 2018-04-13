@@ -21,7 +21,7 @@
         let win;
 
         SimpleTest.registerCleanupFunction(() => {
-          (async function () {
+          (async function() {
             if (win) {
               await closeWebIDE(win);
             }
@@ -30,7 +30,7 @@
           })();
         });
 
-        (async function () {
+        (async function() {
           DebuggerServer.init();
           DebuggerServer.registerAllActors();
 
@@ -41,7 +41,7 @@
           win.AppManager.update("runtime-list");
 
           let deferred = new Promise(resolve => {
-             win.AppManager.connection.once(
+            win.AppManager.connection.once(
                  win.Connection.Events.CONNECTED,
                  resolve);
           });
@@ -50,6 +50,8 @@
 
           ok(win.document.querySelector("window").className, "busy", "UI is busy");
           await win.UI._busyPromise;
+
+          await deferred;
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
 
@@ -86,7 +88,7 @@
 
           SimpleTest.finish();
         })();
-      }
+      };
     </script>
   </body>
 </html>

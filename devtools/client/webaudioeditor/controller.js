@@ -83,7 +83,7 @@ var WebAudioEditorController = {
   /**
    * Remove events emitted by the current tab target.
    */
-  destroy: function () {
+  destroy: function() {
     gTarget.off("will-navigate", this._onTabWillNavigate);
     gFront.off("start-context", this._onStartContext);
     gFront.off("create-node", this._onCreateNode);
@@ -100,7 +100,7 @@ var WebAudioEditorController = {
    * Called when page is reloaded to show the reload notice and waiting
    * for an audio context notice.
    */
-  reset: function () {
+  reset: function() {
     $("#content").hidden = true;
     ContextView.resetUI();
     InspectorView.resetUI();
@@ -110,7 +110,7 @@ var WebAudioEditorController = {
   // Since node events (create, disconnect, connect) are all async,
   // we have to make sure to wait that the node has finished creating
   // before performing an operation on it.
-  getNode: async function (nodeActor) {
+  getNode: async function(nodeActor) {
     let id = nodeActor.actorID;
     let node = gAudioNodes.get(id);
 
@@ -132,7 +132,7 @@ var WebAudioEditorController = {
    * so that the graph can update marker styling, as that
    * cannot currently be done with CSS.
    */
-  _onThemeChange: function () {
+  _onThemeChange: function() {
     let newValue = Services.prefs.getCharPref("devtools.theme");
     window.emit(EVENTS.THEME_CHANGE, newValue);
   },
@@ -167,7 +167,7 @@ var WebAudioEditorController = {
    * Called after the first audio node is created in an audio context,
    * signaling that the audio context is being used.
    */
-  _onStartContext: function () {
+  _onStartContext: function() {
     $("#reload-notice").hidden = true;
     $("#waiting-notice").hidden = true;
     $("#content").hidden = false;
@@ -178,7 +178,7 @@ var WebAudioEditorController = {
    * Called when a new node is created. Creates an `AudioNodeView` instance
    * for tracking throughout the editor.
    */
-  _onCreateNode: function (nodeActor) {
+  _onCreateNode: function(nodeActor) {
     gAudioNodes.add(nodeActor);
   },
 
@@ -186,7 +186,7 @@ var WebAudioEditorController = {
    * Called on `destroy-node` when an AudioNode is GC'd. Removes
    * from the AudioNode array and fires an event indicating the removal.
    */
-  _onDestroyNode: function (nodeActor) {
+  _onDestroyNode: function(nodeActor) {
     gAudioNodes.remove(gAudioNodes.get(nodeActor.actorID));
   },
 

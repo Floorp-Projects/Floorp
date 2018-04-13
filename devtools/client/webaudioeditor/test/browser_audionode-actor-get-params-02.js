@@ -6,7 +6,7 @@
  * from the AudioNode actors.
  */
 
-add_task(async function () {
+add_task(async function() {
   let { target, front } = await initBackend(SIMPLE_NODES_URL);
   let [_, nodes] = await Promise.all([
     front.setup({ reload: true }),
@@ -39,8 +39,7 @@ function compare(actual, expected, type) {
     value = getGripValue(value);
     if (typeof expected[param] === "function") {
       ok(expected[param](value), type + " has a passing value for " + param);
-    }
-    else {
+    } else {
       is(value, expected[param], type + " has correct default value and type for " + param);
     }
   });

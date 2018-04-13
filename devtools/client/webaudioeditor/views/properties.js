@@ -23,7 +23,7 @@ var PropertiesView = {
   /**
    * Initialization function called when the tool starts up.
    */
-  initialize: function () {
+  initialize: function() {
     this._onEval = this._onEval.bind(this);
     this._onNodeSet = this._onNodeSet.bind(this);
 
@@ -35,7 +35,7 @@ var PropertiesView = {
   /**
    * Destruction function called when the tool cleans up.
    */
-  destroy: function () {
+  destroy: function() {
     window.off(EVENTS.UI_INSPECTOR_NODE_SET, this._onNodeSet);
     this._propsView = null;
   },
@@ -43,7 +43,7 @@ var PropertiesView = {
   /**
    * Empties out the props view.
    */
-  resetUI: function () {
+  resetUI: function() {
     this._propsView.empty();
     this._currentNode = null;
   },
@@ -52,7 +52,7 @@ var PropertiesView = {
    * Internally sets the current audio node and rebuilds appropriate
    * views.
    */
-  _setAudioNode: function (node) {
+  _setAudioNode: function(node) {
     this._currentNode = node;
     if (this._currentNode) {
       this._buildPropertiesView();
@@ -95,7 +95,7 @@ var PropertiesView = {
    * Toggles the display of the "empty" properties view when
    * node has no properties to display.
    */
-  _togglePropertiesView: function (show) {
+  _togglePropertiesView: function(show) {
     let propsView = $("#properties-content");
     let emptyView = $("#properties-empty");
     (show ? propsView : emptyView).removeAttribute("hidden");
@@ -108,7 +108,7 @@ var PropertiesView = {
    *
    * @return Scope
    */
-  _getAudioPropertiesScope: function () {
+  _getAudioPropertiesScope: function() {
     return this._propsView.getScopeAtIndex(0);
   },
 
@@ -119,7 +119,7 @@ var PropertiesView = {
   /**
    * Called when the inspector view determines a node is selected.
    */
-  _onNodeSet: function (id) {
+  _onNodeSet: function(id) {
     this._setAudioNode(gAudioNodes.get(id));
   },
 
@@ -144,8 +144,7 @@ var PropertiesView = {
           value = JSON.parse(value);
         }
         error = await node.actor.setParam(propName, value);
-      }
-      catch (e) {
+      } catch (e) {
         error = e;
       }
     }

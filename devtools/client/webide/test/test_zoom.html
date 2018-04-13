@@ -18,60 +18,60 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        (async function () {
-            let win = await openWebIDE();
-            let viewer = win.QueryInterface(Ci.nsIInterfaceRequestor)
+        (async function() {
+          let win = await openWebIDE();
+          let viewer = win.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIWebNavigation)
                             .QueryInterface(Ci.nsIDocShell)
                             .contentViewer;
 
-            win.Cmds.zoomOut();
-            win.Cmds.zoomOut();
-            win.Cmds.zoomOut();
-            win.Cmds.zoomOut();
-            win.Cmds.zoomOut();
-            win.Cmds.zoomOut();
-            win.Cmds.zoomOut();
+          win.Cmds.zoomOut();
+          win.Cmds.zoomOut();
+          win.Cmds.zoomOut();
+          win.Cmds.zoomOut();
+          win.Cmds.zoomOut();
+          win.Cmds.zoomOut();
+          win.Cmds.zoomOut();
 
-            let roundZoom = Math.round(10 * viewer.fullZoom) / 10;
-            is(roundZoom, 0.6, "Reach min zoom");
+          let roundZoom = Math.round(10 * viewer.fullZoom) / 10;
+          is(roundZoom, 0.6, "Reach min zoom");
 
-            win.Cmds.zoomIn();
-            win.Cmds.zoomIn();
-            win.Cmds.zoomIn();
-            win.Cmds.zoomIn();
-            win.Cmds.zoomIn();
-            win.Cmds.zoomIn();
-            win.Cmds.zoomIn();
-            win.Cmds.zoomIn();
-            win.Cmds.zoomIn();
-            win.Cmds.zoomIn();
-            win.Cmds.zoomIn();
-            win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
+          win.Cmds.zoomIn();
 
-            roundZoom = Math.round(10 * viewer.fullZoom) / 10;
-            is(roundZoom, 1.4, "Reach max zoom");
+          roundZoom = Math.round(10 * viewer.fullZoom) / 10;
+          is(roundZoom, 1.4, "Reach max zoom");
 
-            await closeWebIDE(win);
+          await closeWebIDE(win);
 
-            win = await openWebIDE();
-            viewer = win.QueryInterface(Ci.nsIInterfaceRequestor)
+          win = await openWebIDE();
+          viewer = win.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIWebNavigation)
                         .QueryInterface(Ci.nsIDocShell)
                         .contentViewer;
 
-            roundZoom = Math.round(10 * viewer.fullZoom) / 10;
-            is(roundZoom, 1.4, "Zoom restored");
+          roundZoom = Math.round(10 * viewer.fullZoom) / 10;
+          is(roundZoom, 1.4, "Zoom restored");
 
-            win.Cmds.resetZoom();
+          win.Cmds.resetZoom();
 
-            is(viewer.fullZoom, 1, "Zoom reset");
+          is(viewer.fullZoom, 1, "Zoom reset");
 
-            await closeWebIDE(win);
+          await closeWebIDE(win);
 
-            SimpleTest.finish();
+          SimpleTest.finish();
         })();
-      }
+      };
     </script>
   </body>
 </html>

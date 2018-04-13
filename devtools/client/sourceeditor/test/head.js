@@ -16,11 +16,6 @@ const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const Editor = require("devtools/client/sourceeditor/editor");
 const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
 
-flags.testing = true;
-SimpleTest.registerCleanupFunction(() => {
-  flags.testing = false;
-});
-
 function promiseWaitForFocus() {
   return new Promise(resolve =>
     waitForFocus(resolve));

@@ -15,11 +15,6 @@ Services.scriptloader.loadSubScript(
 const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
-flags.testing = true;
-registerCleanupFunction(() => {
-  flags.testing = false;
-});
-
 async function openAboutDebugging(page, win) {
   info("opening about:debugging");
   let url = "about:debugging";
