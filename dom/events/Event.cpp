@@ -27,7 +27,6 @@
 #include "nsGlobalWindow.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
-#include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"

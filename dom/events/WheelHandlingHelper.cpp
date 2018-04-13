@@ -16,8 +16,6 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
-#include "nsIContentInlines.h"
-#include "nsIDocument.h"
 #include "nsIDocumentInlines.h"         // for nsIDocument and HTMLBodyElement
 #include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"
