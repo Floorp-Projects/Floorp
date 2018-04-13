@@ -13,6 +13,9 @@ import pytest
 
 @pytest.mark.parametrize('logger', [True, False])
 def test_crash_count_with_or_without_logger(runner, logger):
+    if runner.app == 'chrome':
+        pytest.xfail("crash checking not implemented for ChromeRunner")
+
     if not logger:
         runner.logger = None
         fn = 'check_for_crashes'
