@@ -174,11 +174,6 @@ DebuggerClient.prototype = {
    */
   connect: function(onConnected) {
     let deferred = promise.defer();
-    this.emit("connect");
-
-    // Also emit the event on the |DebuggerClient| object (not on the instance),
-    // so it's possible to track all instances.
-    EventEmitter.emit(DebuggerClient, "connect", this);
 
     this.addOneTimeListener("connected", (name, applicationType, traits) => {
       this.traits = traits;
