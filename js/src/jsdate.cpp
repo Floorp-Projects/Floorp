@@ -3319,10 +3319,10 @@ const Class DateObject::protoClass_ = {
 JSObject*
 js::NewDateObjectMsec(JSContext* cx, ClippedTime t, HandleObject proto /* = nullptr */)
 {
-    JSObject* obj = NewObjectWithClassProto(cx, &DateObject::class_, proto);
+    DateObject* obj = NewObjectWithClassProto<DateObject>(cx, proto);
     if (!obj)
         return nullptr;
-    obj->as<DateObject>().setUTCTime(t);
+    obj->setUTCTime(t);
     return obj;
 }
 

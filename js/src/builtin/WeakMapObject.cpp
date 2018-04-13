@@ -190,7 +190,7 @@ WeakCollection_finalize(FreeOp* fop, JSObject* obj)
 JS_PUBLIC_API(JSObject*)
 JS::NewWeakMapObject(JSContext* cx)
 {
-    return NewBuiltinClassInstance(cx, &WeakMapObject::class_);
+    return NewBuiltinClassInstance<WeakMapObject>(cx);
 }
 
 JS_PUBLIC_API(bool)

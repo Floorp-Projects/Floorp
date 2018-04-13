@@ -23,12 +23,11 @@ const Class SymbolObject::class_ = {
 SymbolObject*
 SymbolObject::create(JSContext* cx, JS::HandleSymbol symbol)
 {
-    JSObject* obj = NewBuiltinClassInstance(cx, &class_);
+    SymbolObject* obj = NewBuiltinClassInstance<SymbolObject>(cx);
     if (!obj)
         return nullptr;
-    SymbolObject& symobj = obj->as<SymbolObject>();
-    symobj.setPrimitiveValue(symbol);
-    return &symobj;
+    obj->setPrimitiveValue(symbol);
+    return obj;
 }
 
 const JSPropertySpec SymbolObject::properties[] = {
