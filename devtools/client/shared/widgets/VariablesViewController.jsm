@@ -616,7 +616,7 @@ VariablesViewController.prototype = {
       return this._populateFromEntries(aTarget, aSource);
     }
 
-    if (aSource.type === "mapEntry") {
+    if (aSource.type === "mapEntry" || aSource.type === "storageEntry") {
       aTarget.addItems({
         key: { value: aSource.preview.key },
         value: { value: aSource.preview.value }

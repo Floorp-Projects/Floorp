@@ -19,7 +19,9 @@ loader.lazyRequireGetter(this, "stringify", "devtools/server/actors/object/strin
 const {
   getArrayLength,
   getPromiseState,
+  getStorageLength,
   isArray,
+  isStorage,
   isTypedArray,
 } = require("devtools/server/actors/object/utils");
 /**
@@ -131,6 +133,8 @@ ObjectActor.prototype = {
     if (isTypedArray(g)) {
       // Bug 1348761: getOwnPropertyNames is unnecessary slow on TypedArrays
       g.ownPropertyLength = getArrayLength(this.obj);
+    } else if (isStorage(g)) {
+      g.ownPropertyLength = getStorageLength(this.obj);
     } else {
       try {
         g.ownPropertyLength = this.obj.getOwnPropertyNames().length;
@@ -555,6 +559,18 @@ ObjectActor.prototype = {
         writable: false,
         enumerable: false,
         value: e.name
+      };
+    }
+
+    if (isStorage(this.obj)) {
+      if (name === "length") {
+        return undefined;
+      }
+      return {
+        configurable: true,
+        writable: true,
+        enumerable: true,
+        value: name
       };
     }
 
