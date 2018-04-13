@@ -76,9 +76,6 @@ JS_NewObjectWithUniqueType(JSContext* cx, const JSClass* clasp, JS::HandleObject
 extern JS_FRIEND_API(JSObject*)
 JS_NewObjectWithoutMetadata(JSContext* cx, const JSClass* clasp, JS::Handle<JSObject*> proto);
 
-extern JS_FRIEND_API(uint32_t)
-JS_ObjectCountDynamicSlots(JS::HandleObject obj);
-
 extern JS_FRIEND_API(bool)
 JS_NondeterministicGetWeakMapKeys(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject ret);
 
@@ -227,9 +224,6 @@ extern JS_FRIEND_API(bool)
 JS_InitializePropertiesFromCompatibleNativeObject(JSContext* cx,
                                                   JS::HandleObject dst,
                                                   JS::HandleObject src);
-
-extern JS_FRIEND_API(JSString*)
-JS_BasicObjectToString(JSContext* cx, JS::HandleObject obj);
 
 namespace js {
 
