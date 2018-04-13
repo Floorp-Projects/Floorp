@@ -187,36 +187,6 @@ PopupBoxObject::SetAutoPosition(bool aShouldAutoPosition)
 }
 
 void
-PopupBoxObject::EnableRollup(bool aShouldRollup)
-{
-  // this does nothing now
-}
-
-void
-PopupBoxObject::SetConsumeRollupEvent(uint32_t aConsume)
-{
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
-  if (menuPopupFrame) {
-    menuPopupFrame->SetConsumeRollupEvent(aConsume);
-  }
-}
-
-void
-PopupBoxObject::EnableKeyboardNavigator(bool aEnableKeyboardNavigator)
-{
-  if (!mContent)
-    return;
-
-  // Use ignorekeys="true" on the popup instead of using this function.
-  if (aEnableKeyboardNavigator)
-    mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys,
-                                     true);
-  else
-    mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys,
-                                   NS_LITERAL_STRING("true"), true);
-}
-
-void
 PopupBoxObject::GetPopupState(nsString& aState)
 {
   // set this here in case there's no frame for the popup

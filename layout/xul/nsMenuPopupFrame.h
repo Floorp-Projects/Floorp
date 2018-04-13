@@ -219,9 +219,6 @@ public:
 
   nsIWidget* GetWidget();
 
-  // The dismissal listener gets created and attached to the window.
-  void AttachedDismissalListener();
-
   // Overridden methods
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
@@ -377,7 +374,6 @@ public:
 
   bool GetAutoPosition();
   void SetAutoPosition(bool aShouldAutoPosition);
-  void SetConsumeRollupEvent(uint32_t aConsumeMode);
 
   nsIScrollableFrame* GetScrollFrame(nsIFrame* aStart);
 
@@ -610,8 +606,6 @@ protected:
   int8_t mPopupAnchor;
   int8_t mPosition;
 
-  // One of PopupBoxObject::ROLLUP_DEFAULT/ROLLUP_CONSUME/ROLLUP_NO_CONSUME
-  uint8_t mConsumeRollupEvent;
   FlipType mFlip; // Whether to flip
 
   struct ReflowCallbackData {

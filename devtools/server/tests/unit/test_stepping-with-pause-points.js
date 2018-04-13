@@ -62,12 +62,22 @@ async function test_simple_stepping() {
   equal(gDebuggee.a, undefined);
   equal(gDebuggee.b, undefined);
 
+  dumpn("Step Over to line 4");
+  const step2 = await stepOver(gClient, threadClient);
+  equal(step2.type, "paused");
+  equal(step2.why.type, "resumeLimit");
+  equal(step2.frame.where.line, 4);
+  equal(step2.frame.where.column, 8);
+
+  equal(gDebuggee.a, 1);
+  equal(gDebuggee.b, undefined);
+
   dumpn("Step Over to the end of line 4");
-  const step4 = await stepOver(gClient, threadClient);
-  equal(step4.type, "paused");
-  equal(step4.why.type, "resumeLimit");
-  equal(step4.frame.where.line, 4);
-  equal(step4.frame.where.column, 14);
+  const step3 = await stepOver(gClient, threadClient);
+  equal(step3.type, "paused");
+  equal(step3.why.type, "resumeLimit");
+  equal(step3.frame.where.line, 4);
+  equal(step3.frame.where.column, 14);
   equal(gDebuggee.a, 1);
   equal(gDebuggee.b, 2);
 
