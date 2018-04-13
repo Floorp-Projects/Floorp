@@ -7,11 +7,9 @@
   <script>
     function insertShadowMathML() {
       var x = document.getElementById("x");
-      if (x.createShadowRoot) {
-        x.createShadowRoot();
-        x.shadowRoot.innerHTML =
-          '<math><msup><mi>X</mi><mi>X</mi></msup></math>';
-      }
+      x.attachShadow({ mode: "open" });
+      x.shadowRoot.innerHTML =
+        '<math><msup><mi>X</mi><mi>X</mi></msup></math>';
       document.documentElement.removeAttribute("class");
     }
     window.addEventListener("MozReftestInvalidate", insertShadowMathML);

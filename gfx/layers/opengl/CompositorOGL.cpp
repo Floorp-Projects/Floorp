@@ -44,6 +44,8 @@
 #include "GLReadTexImageHelper.h"
 #include "GLBlitTextureImageHelper.h"
 #include "HeapCopyOfStackArray.h"
+#include "GLBlitHelper.h"
+#include "mozilla/gfx/Swizzle.h"
 
 #if MOZ_WIDGET_ANDROID
 #include "GeneratedJNIWrappers.h"
@@ -62,6 +64,87 @@ using namespace mozilla::gl;
 
 static const GLuint kCoordinateAttributeIndex = 0;
 static const GLuint kTexCoordinateAttributeIndex = 1;
+
+class AsyncReadbackBufferOGL final : public AsyncReadbackBuffer
+{
+public:
+  AsyncReadbackBufferOGL(GLContext* aGL, const IntSize& aSize);
+
+  bool MapAndCopyInto(DataSourceSurface* aSurface,
+                      const IntSize& aReadSize) const override;
+
+  void Bind() const
+  {
+    mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, mBufferHandle);
+    mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 1);
+  }
+
+protected:
+  ~AsyncReadbackBufferOGL() override;
+
+private:
+  GLContext* mGL;
+  GLuint mBufferHandle;
+};
+
+AsyncReadbackBufferOGL::AsyncReadbackBufferOGL(GLContext* aGL,
+                                               const IntSize& aSize)
+  : AsyncReadbackBuffer(aSize)
+  , mGL(aGL)
+{
+  size_t bufferByteCount = mSize.width * mSize.height * 4;
+  mGL->fGenBuffers(1, &mBufferHandle);
+
+  ScopedPackState scopedPackState(mGL);
+  Bind();
+  mGL->fBufferData(LOCAL_GL_PIXEL_PACK_BUFFER, bufferByteCount, nullptr,
+                   LOCAL_GL_STREAM_READ);
+}
+
+AsyncReadbackBufferOGL::~AsyncReadbackBufferOGL()
+{
+  if (mGL && mGL->MakeCurrent()) {
+    mGL->fDeleteBuffers(1, &mBufferHandle);
+  }
+}
+
+bool
+AsyncReadbackBufferOGL::MapAndCopyInto(DataSourceSurface* aSurface,
+                                       const IntSize& aReadSize) const
+{
+  MOZ_RELEASE_ASSERT(aReadSize <= aSurface->GetSize());
+
+  if (!mGL || !mGL->MakeCurrent()) {
+    return false;
+  }
+
+  ScopedPackState scopedPackState(mGL);
+  Bind();
+  uint8_t* srcData = static_cast<uint8_t*>(
+    mGL->fMapBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, LOCAL_GL_READ_ONLY));
+
+  if (!srcData) {
+    return false;
+  }
+
+  int32_t srcStride = mSize.width * 4; // Bind() sets an alignment of 1
+  DataSourceSurface::ScopedMap map(aSurface, DataSourceSurface::WRITE);
+  uint8_t* destData = map.GetData();
+  int32_t destStride = map.GetStride();
+  SurfaceFormat destFormat = aSurface->GetFormat();
+  for (int32_t destRow = 0; destRow < aReadSize.height; destRow++) {
+    // Turn srcData upside down during the copy.
+    int32_t srcRow = aReadSize.height - 1 - destRow;
+    uint8_t* src = &srcData[srcRow * srcStride];
+    uint8_t* dest = &destData[destRow * destStride];
+    SwizzleData(src, srcStride, SurfaceFormat::R8G8B8A8,
+                dest, destStride, destFormat, IntSize(aReadSize.width, 1));
+  }
+
+  mGL->fUnmapBuffer(LOCAL_GL_PIXEL_PACK_BUFFER);
+
+  return true;
+}
 
 static void
 BindMaskForProgram(ShaderProgramOGL* aProgram, TextureSourceOGL* aSourceMask,
@@ -599,6 +682,60 @@ CompositorOGL::GetCurrentRenderTarget() const
   return mCurrentRenderTarget;
 }
 
+CompositingRenderTarget*
+CompositorOGL::GetWindowRenderTarget() const
+{
+  return mWindowRenderTarget;
+}
+
+already_AddRefed<AsyncReadbackBuffer>
+CompositorOGL::CreateAsyncReadbackBuffer(const IntSize& aSize)
+{
+  return MakeAndAddRef<AsyncReadbackBufferOGL>(mGLContext, aSize);
+}
+
+bool
+CompositorOGL::ReadbackRenderTarget(CompositingRenderTarget* aSource,
+                                    AsyncReadbackBuffer* aDest)
+{
+  IntSize size = aSource->GetSize();
+  MOZ_RELEASE_ASSERT(aDest->GetSize() == size);
+
+  RefPtr<CompositingRenderTarget> previousTarget = GetCurrentRenderTarget();
+  if (previousTarget != aSource) {
+    SetRenderTarget(aSource);
+  }
+
+  ScopedPackState scopedPackState(mGLContext);
+  static_cast<AsyncReadbackBufferOGL*>(aDest)->Bind();
+
+  mGLContext->fReadPixels(0, 0, size.width, size.height,
+                          LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, 0);
+
+  if (previousTarget != aSource) {
+    SetRenderTarget(previousTarget);
+  }
+  return true;
+}
+
+bool
+CompositorOGL::BlitRenderTarget(CompositingRenderTarget* aSource,
+                                const gfx::IntSize& aSourceSize,
+                                const gfx::IntSize& aDestSize)
+{
+  if (!mGLContext->IsSupported(GLFeature::framebuffer_blit)) {
+    return false;
+  }
+  CompositingRenderTargetOGL* source =
+    static_cast<CompositingRenderTargetOGL*>(aSource);
+  GLuint srcFBO = source->GetFBO();
+  GLuint destFBO = mCurrentRenderTarget->GetFBO();
+  mGLContext->BlitHelper()->
+    BlitFramebufferToFramebuffer(srcFBO, destFBO, aSourceSize, aDestSize,
+                                 LOCAL_GL_LINEAR);
+  return true;
+}
+
 static GLenum
 GetFrameBufferInternalFormat(GLContext* gl,
                              GLuint aFrameBuffer,
@@ -685,10 +822,7 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     CompositingRenderTargetOGL::RenderTargetForWindow(this,
                                                       IntSize(width, height));
   SetRenderTarget(rt);
-
-#ifdef DEBUG
   mWindowRenderTarget = mCurrentRenderTarget;
-#endif
 
   if (aClipRectOut && !aClipRectIn) {
     aClipRectOut->SetRect(0, 0, width, height);
@@ -1621,11 +1755,13 @@ CompositorOGL::EndFrame()
   if (mTarget) {
     CopyToTarget(mTarget, mTargetBounds.TopLeft(), Matrix());
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+    mWindowRenderTarget = nullptr;
     mCurrentRenderTarget = nullptr;
     Compositor::EndFrame();
     return;
   }
 
+  mWindowRenderTarget = nullptr;
   mCurrentRenderTarget = nullptr;
 
   if (mTexturePool) {

@@ -3,7 +3,7 @@
 <script>
 // requires: user_pref("dom.webcomponents.shadowdom.enabled", true);
 addEventListener("DOMContentLoaded", function(){
-  let o_0 = document.createElement("span").createShadowRoot();
+  let o_0 = document.createElement("span").attachShadow({ mode: "open" });
   let o_1 = document.createElementNS("http://www.mozilla.org/xbl", "binding");
   let o_2 = document.createElementNS("http://www.mozilla.org/xbl", "children");
   let o_3 = document.createTextNode("");

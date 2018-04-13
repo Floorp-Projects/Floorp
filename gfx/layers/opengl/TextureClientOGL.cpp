@@ -91,13 +91,13 @@ AndroidSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 
 AndroidNativeWindowTextureData*
 AndroidNativeWindowTextureData::Create(gfx::IntSize aSize,
-                                       SurfaceFormat aFormat)
+                                       gfx::SurfaceFormat aFormat)
 {
-  if (aFormat != SurfaceFormat::R8G8B8A8 &&
-      aFormat != SurfaceFormat::R8G8B8X8 &&
-      aFormat != SurfaceFormat::B8G8R8A8 &&
-      aFormat != SurfaceFormat::B8G8R8X8 &&
-      aFormat != SurfaceFormat::R5G6B5_UINT16) {
+  if (aFormat != gfx::SurfaceFormat::R8G8B8A8 &&
+      aFormat != gfx::SurfaceFormat::R8G8B8X8 &&
+      aFormat != gfx::SurfaceFormat::B8G8R8A8 &&
+      aFormat != gfx::SurfaceFormat::B8G8R8X8 &&
+      aFormat != gfx::SurfaceFormat::R5G6B5_UINT16) {
     return nullptr;
   }
 
@@ -113,7 +113,7 @@ AndroidNativeWindowTextureData::Create(gfx::IntSize aSize,
 
 AndroidNativeWindowTextureData::AndroidNativeWindowTextureData(java::GeckoSurface::Param aSurface,
                                                                gfx::IntSize aSize,
-                                                               SurfaceFormat aFormat)
+                                                               gfx::SurfaceFormat aFormat)
 : mSurface(aSurface)
 , mIsLocked(false)
 , mSize(aSize)
@@ -126,17 +126,17 @@ AndroidNativeWindowTextureData::AndroidNativeWindowTextureData(java::GeckoSurfac
   // SurfaceTextures don't technically support BGR, but we can just pretend to be RGB.
   int32_t format = WINDOW_FORMAT_RGBA_8888;
   switch (aFormat) {
-  case SurfaceFormat::R8G8B8A8:
-  case SurfaceFormat::B8G8R8A8:
+  case gfx::SurfaceFormat::R8G8B8A8:
+  case gfx::SurfaceFormat::B8G8R8A8:
     format = WINDOW_FORMAT_RGBA_8888;
     break;
 
-  case SurfaceFormat::R8G8B8X8:
-  case SurfaceFormat::B8G8R8X8:
+  case gfx::SurfaceFormat::R8G8B8X8:
+  case gfx::SurfaceFormat::B8G8R8X8:
     format = WINDOW_FORMAT_RGBX_8888;
     break;
 
-  case SurfaceFormat::R5G6B5_UINT16:
+  case gfx::SurfaceFormat::R5G6B5_UINT16:
     format = WINDOW_FORMAT_RGB_565;
     break;
 
@@ -213,15 +213,15 @@ AndroidNativeWindowTextureData::Forget(LayersIPCChannel*)
   mSurface = nullptr;
 }
 
-already_AddRefed<DrawTarget>
+already_AddRefed<gfx::DrawTarget>
 AndroidNativeWindowTextureData::BorrowDrawTarget()
 {
-  const int bpp = (mFormat == SurfaceFormat::R5G6B5_UINT16) ? 2 : 4;
+  const int bpp = (mFormat == gfx::SurfaceFormat::R5G6B5_UINT16) ? 2 : 4;
 
   return gfx::Factory::CreateDrawTargetForData(
       gfx::BackendType::SKIA,
       static_cast<unsigned char*>(mBuffer.bits),
-      IntSize(mBuffer.width, mBuffer.height),
+      gfx::IntSize(mBuffer.width, mBuffer.height),
       mBuffer.stride * bpp,
       mFormat,
       true);

@@ -53,25 +53,39 @@ class GeckoViewModule {
       }, "GeckoView:Unregister"
     );
 
-    this.init();
-    this.onSettingsUpdate();
+    this.onInitBrowser();
   }
 
-  // Override this with module initialization.
-  init() {}
+  // Override to initialize the browser before it is bound to the window.
+  onInitBrowser() {}
 
-  // Called when settings have changed. Access settings via this.settings.
+  // Override to initialize module.
+  onInit() {}
+
+  // Override to detect settings change. Access settings via this.settings.
   onSettingsUpdate() {}
+
+  // Override to enable module after setting a Java delegate.
+  onEnable() {}
+
+  // Override to disable module after clearing the Java delegate.
+  onDisable() {}
 
   _register() {
     if (this.isRegistered) {
       return;
     }
-    this.register();
+    this.onEnable();
     this.isRegistered = true;
   }
 
-  register() {}
+  _unregister() {
+    if (!this.isRegistered) {
+      return;
+    }
+    this.onDisable();
+    this.isRegistered = false;
+  }
 
   registerContent(aUri) {
     if (this._isContentLoaded) {
@@ -88,8 +102,8 @@ class GeckoViewModule {
         }
         self.messageManager.removeMessageListener("GeckoView:ContentRegistered",
                                                   listener);
-        self._eventProxy.dispatchQueuedEvents();
         self._eventProxy.enableQueuing(false);
+        self._eventProxy.dispatchQueuedEvents();
     });
     this.messageManager.loadFrameScript(aUri, true);
   }
@@ -98,16 +112,9 @@ class GeckoViewModule {
     this._eventProxy.registerListener(aEventList);
   }
 
-  _unregister() {
-    if (!this.isRegistered) {
-      return;
-    }
+  unregisterListener() {
     this._eventProxy.unregisterListener();
-    this.unregister();
-    this.isRegistered = false;
   }
-
-  unregister() {}
 
   get settings() {
     let view = this.window.arguments[0].QueryInterface(Ci.nsIAndroidView);
@@ -148,7 +155,7 @@ class EventProxy {
       debug("queue " + aEvent + ", aData=" + JSON.stringify(aData));
       this._eventQueue.unshift(arguments);
     } else {
-      this._dispatch.apply(this, arguments);
+      this._dispatch(...arguments);
     }
   }
 
@@ -159,14 +166,18 @@ class EventProxy {
 
   _dispatch(aEvent, aData, aCallback) {
     debug("dispatch " + aEvent + ", aData=" + JSON.stringify(aData));
-    this.listener.onEvent.apply(this.listener, arguments);
+    if (this.listener.onEvent) {
+      this.listener.onEvent(...arguments);
+    } else {
+      this.listener(...arguments);
+    }
   }
 
   dispatchQueuedEvents() {
     debug("dispatchQueued");
     while (this._eventQueue.length) {
-      const e = this._eventQueue.pop();
-      this._dispatch.apply(this, e);
+      const args = this._eventQueue.pop();
+      this._dispatch(...args);
     }
   }
 }

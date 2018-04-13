@@ -2760,6 +2760,10 @@ Toolbox.prototype = {
     let win = this.win;
 
     this._telemetry.toolClosed("toolbox");
+    this._telemetry.recordEvent("devtools.main", "close", "tools", null, {
+      host: this._getTelemetryHostString(),
+      width: Math.ceil(win.outerWidth / 50) * 50
+    });
     this._telemetry.destroy();
 
     // Finish all outstanding tasks (which means finish destroying panels and

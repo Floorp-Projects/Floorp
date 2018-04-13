@@ -99,14 +99,8 @@ Tools.webConsole = {
   id: "webconsole",
   accesskey: l10n("webConsoleCmd.accesskey"),
   ordinal: 2,
-  oldWebConsoleURL: "chrome://devtools/content/webconsole/old/webconsole.xul",
-  newWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.html",
-  get browserConsoleURL() {
-    if (Services.prefs.getBoolPref("devtools.browserconsole.new-frontend-enabled")) {
-      return "chrome://devtools/content/webconsole/browserconsole.xul";
-    }
-    return Tools.webConsole.oldWebConsoleURL;
-  },
+  url: "chrome://devtools/content/webconsole/webconsole.html",
+  browserConsoleURL: "chrome://devtools/content/webconsole/browserconsole.xul",
   icon: "chrome://devtools/skin/images/tool-webconsole.svg",
   label: l10n("ToolboxTabWebconsole.label"),
   menuLabel: l10n("MenuWebconsole.label"),
@@ -136,19 +130,6 @@ Tools.webConsole = {
     return new WebConsolePanel(iframeWindow, toolbox);
   }
 };
-function switchWebconsole() {
-  if (Services.prefs.getBoolPref("devtools.webconsole.new-frontend-enabled")) {
-    Tools.webConsole.url = Tools.webConsole.newWebConsoleURL;
-  } else {
-    Tools.webConsole.url = Tools.webConsole.oldWebConsoleURL;
-  }
-}
-switchWebconsole();
-
-Services.prefs.addObserver(
-  "devtools.webconsole.new-frontend-enabled",
-  { observe: switchWebconsole }
-);
 
 Tools.jsdebugger = {
   id: "jsdebugger",

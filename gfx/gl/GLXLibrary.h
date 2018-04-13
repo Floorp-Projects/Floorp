@@ -13,6 +13,7 @@ typedef realGLboolean GLboolean;
 // stuff from glx.h
 #include "X11/Xlib.h"
 #include "X11/Xutil.h" // for XVisualInfo
+#include "X11UndefineNone.h"
 typedef struct __GLXcontextRec* GLXContext;
 typedef XID GLXPixmap;
 typedef XID GLXDrawable;

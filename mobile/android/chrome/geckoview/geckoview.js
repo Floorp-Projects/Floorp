@@ -27,23 +27,25 @@ XPCOMUtils.defineLazyGetter(this, "dump", () =>
 var ModuleManager = {
   init: function(aBrowser) {
     this.browser = aBrowser;
-    this.modules = {};
+    this.modules = new Map();
   },
 
   add: function(aResource, aType, ...aArgs) {
     this.remove(aType);
     let scope = {};
     ChromeUtils.import(aResource, scope);
-    this.modules[aType] = new scope[aType](
+
+    this.modules.set(aType, new scope[aType](
       aType, window, this.browser, WindowEventDispatcher, ...aArgs
-    );
+    ));
   },
 
   remove: function(aType) {
-    if (!(aType in this.modules)) {
-      return;
-    }
-    delete this.modules[aType];
+    this.modules.delete(aType);
+  },
+
+  forEach: function(aCallback) {
+    this.modules.forEach(aCallback, this);
   }
 };
 
@@ -52,13 +54,6 @@ function createBrowser() {
   browser.setAttribute("type", "content");
   browser.setAttribute("primary", "true");
   browser.setAttribute("flex", "1");
-
-  // There may be a GeckoViewNavigation module in another window waiting for us to
-  // create a browser so it can call presetOpenerWindow(), so allow them to do that now.
-  Services.obs.notifyObservers(window, "geckoview-window-created");
-  window.document.getElementById("main-window").appendChild(browser);
-
-  browser.stop();
   return browser;
 }
 
@@ -66,8 +61,6 @@ function startup() {
   const browser = createBrowser();
   ModuleManager.init(browser);
 
-  // GeckoViewNavigation needs to go first because nsIDOMBrowserWindow must set up
-  // before the first remote browser. Bug 1365364.
   ModuleManager.add("resource://gre/modules/GeckoViewNavigation.jsm",
                     "GeckoViewNavigation");
   ModuleManager.add("resource://gre/modules/GeckoViewSettings.jsm",
@@ -88,6 +81,13 @@ function startup() {
                     "GeckoViewSelectionAction");
   ModuleManager.add("resource://gre/modules/GeckoViewAccessibility.jsm",
                     "GeckoViewAccessibility");
+
+  window.document.documentElement.appendChild(browser);
+
+  ModuleManager.forEach(module => {
+    module.onInit();
+    module.onSettingsUpdate();
+  });
 
   // Move focus to the content window at the end of startup,
   // so things like text selection can work properly.

@@ -3,13 +3,8 @@
 <head>
   <script>
     function tweak() {
-      if (!document.body.createShadowRoot) {
-        document.documentElement.className = "";
-        return;
-      }
-
       var host = document.getElementById("host");
-      var shadow = host.createShadowRoot();
+      var shadow = host.attachShadow({ mode: "open" });
 
       var textNode = document.createTextNode(" World");
       shadow.appendChild(textNode);

@@ -15,11 +15,11 @@
   <script>
     'use strict';
     var host = document.getElementById('host');
-    var root = host.createShadowRoot();
+    var root = host.attachShadow({ mode: "open" });
     root.innerHTML = '<button id="button">Foo</button>' +
       '<div id="inner-host"></div>';
     var innerHost = host.shadowRoot.getElementById('inner-host');
-    var innerRoot = innerHost.createShadowRoot();
+    var innerRoot = innerHost.attachShadow({ mode: "open" });
     innerRoot.innerHTML = '<button id="inner-button">Bar</button>';
   </script>
 </body>

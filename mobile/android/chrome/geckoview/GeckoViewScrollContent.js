@@ -15,13 +15,13 @@ function debug(aMsg) {
 }
 
 class GeckoViewScrollContent extends GeckoViewContentModule {
-  register() {
-    debug("register");
+  onEnable() {
+    debug("onEnable");
     addEventListener("scroll", this, false);
   }
 
-  unregister() {
-    debug("unregister");
+  onDisable() {
+    debug("onDisable");
     removeEventListener("scroll", this);
   }
 

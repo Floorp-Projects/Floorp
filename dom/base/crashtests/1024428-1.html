@@ -5,8 +5,7 @@
 <body>
 <div id="host"></div>
 <script>
-var s = host.createShadowRoot();
-s.innerHTML = '<input type="range" />';
+  host.attachShadow({ mode: "open" }).innerHTML = '<input type="range" />';
 </script>
 </body>
 </html>

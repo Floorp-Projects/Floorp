@@ -3,7 +3,7 @@
 <script>
 window.onload = function() {
   var div = document.querySelector("div");
-  var shadow = div.createShadowRoot();
+  var shadow = div.attachShadow({ mode: "open" });
   shadow.innerHTML = "<p style='display: none'><span><i>x</i></span></p>";
   var p = shadow.lastChild;
   var span = p.firstChild;

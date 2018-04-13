@@ -3,7 +3,7 @@
 <body>
 <script>
   var x = document.createElement('span');
-  x.createShadowRoot();
+  x.attachShadow({ mode: "open" });
   x.id = 'a';
 </script>
 </body>
