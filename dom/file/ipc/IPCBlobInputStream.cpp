@@ -380,8 +380,20 @@ IPCBlobInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 
   // We have the remote inputStream, let's check if we can execute the callback.
   case eRunning: {
-    MutexAutoLock lock(mMutex);
-    return MaybeExecuteInputStreamCallback(aCallback, aEventTarget, lock);
+    {
+      MutexAutoLock lock(mMutex);
+      mInputStreamCallback = aCallback;
+      mInputStreamCallbackEventTarget = aEventTarget;
+    }
+
+    nsresult rv = EnsureAsyncRemoteStream();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(mAsyncRemoteStream);
+    return mAsyncRemoteStream->AsyncWait(aCallback ? this : nullptr,
+                                         0, 0, aEventTarget);
   }
 
   // Stream is closed.
@@ -435,64 +447,28 @@ IPCBlobInputStream::StreamReady(already_AddRefed<nsIInputStream> aInputStream)
                                           this);
   }
 
+  nsCOMPtr<nsIInputStreamCallback> inputStreamCallback = this;
+  nsCOMPtr<nsIEventTarget> inputStreamCallbackEventTarget;
   {
     MutexAutoLock lock(mMutex);
-
-    nsCOMPtr<nsIInputStreamCallback> inputStreamCallback;
-    inputStreamCallback.swap(mInputStreamCallback);
-
-    nsCOMPtr<nsIEventTarget> inputStreamCallbackEventTarget;
-    inputStreamCallbackEventTarget.swap(mInputStreamCallbackEventTarget);
-
-    if (inputStreamCallback) {
-      MaybeExecuteInputStreamCallback(inputStreamCallback,
-                                      inputStreamCallbackEventTarget,
-                                      lock);
+    inputStreamCallbackEventTarget = mInputStreamCallbackEventTarget;
+    if (!mInputStreamCallback) {
+      inputStreamCallback = nullptr;
     }
   }
-}
 
-nsresult
-IPCBlobInputStream::MaybeExecuteInputStreamCallback(nsIInputStreamCallback* aCallback,
-                                                    nsIEventTarget* aCallbackEventTarget,
-                                                    const MutexAutoLock& aProofOfLock)
-{
-  MOZ_ASSERT(mState == eRunning);
-  MOZ_ASSERT(mRemoteStream || mAsyncRemoteStream);
-
-  // If the callback has been already set, we return an error.
-  if (mInputStreamCallback && aCallback) {
-    return NS_ERROR_FAILURE;
-  }
-
-  bool hadCallback = !!mInputStreamCallback;
-
-  mInputStreamCallback = aCallback;
-  mInputStreamCallbackEventTarget = aCallbackEventTarget;
-
-  nsCOMPtr<nsIInputStreamCallback> callback = this;
-
-  if (!mInputStreamCallback) {
-    if (!hadCallback) {
-      // Nothing was pending.
-      return NS_OK;
+  if (inputStreamCallback) {
+    nsresult rv = EnsureAsyncRemoteStream();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
     }
 
-    // Let's set a null callback in order to abort the current operation.
-    callback = nullptr;
+    MOZ_ASSERT(mAsyncRemoteStream);
+
+    rv = mAsyncRemoteStream->AsyncWait(inputStreamCallback, 0, 0,
+                                       inputStreamCallbackEventTarget);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
-
-  // We don't need to be locked anymore.
-  MutexAutoUnlock unlock(mMutex);
-
-  nsresult rv = EnsureAsyncRemoteStream();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(mAsyncRemoteStream);
-
-  return mAsyncRemoteStream->AsyncWait(callback, 0, 0, aCallbackEventTarget);
 }
 
 void
