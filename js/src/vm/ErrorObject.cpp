@@ -149,7 +149,7 @@ js::ErrorObject::getOrCreateErrorReport(JSContext* cx)
     if (!message->ensureFlat(cx))
         return nullptr;
 
-    UniquePtr<char[], JS::FreePolicy> utf8 = StringToNewUTF8CharsZ(cx, *message);
+    UniqueChars utf8 = StringToNewUTF8CharsZ(cx, *message);
     if (!utf8)
         return nullptr;
     report.initOwnedMessage(utf8.release());
