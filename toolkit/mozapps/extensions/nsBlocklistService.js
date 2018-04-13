@@ -19,6 +19,8 @@ try {
 } catch (e) {
 }
 
+ChromeUtils.defineModuleGetter(this, "CertUtils",
+                               "resource://gre/modules/CertUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils",
@@ -130,13 +132,6 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function() {
     osVersion = encodeURIComponent(osVersion);
   }
   return osVersion;
-});
-
-// shared code for suppressing bad cert dialogs
-XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
-  let temp = { };
-  ChromeUtils.import("resource://gre/modules/CertUtils.jsm", temp);
-  return temp;
 });
 
 /**
@@ -536,7 +531,7 @@ Blocklist.prototype = {
     LOG("Blocklist::notify: Requesting " + uri.spec);
     let request = new ServiceRequest();
     request.open("GET", uri.spec, true);
-    request.channel.notificationCallbacks = new gCertUtils.BadCertHandler();
+    request.channel.notificationCallbacks = new CertUtils.BadCertHandler();
     request.overrideMimeType("text/xml");
 
     // The server will return a `304 Not Modified` response if the blocklist was
@@ -569,7 +564,7 @@ Blocklist.prototype = {
   async onXMLLoad(aEvent) {
     let request = aEvent.target;
     try {
-      gCertUtils.checkCert(request.channel);
+      CertUtils.checkCert(request.channel);
     } catch (e) {
       LOG("Blocklist::onXMLLoad: " + e);
       return;

@@ -121,7 +121,7 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
 {
     MOZ_ASSERT(!global->isStandardClassResolved(key));
 
-    if (global->zone()->group()->createdForHelperThread())
+    if (global->zone()->createdForHelperThread())
         return resolveOffThreadConstructor(cx, global, key);
 
     MOZ_ASSERT(!cx->helperThread());
@@ -280,7 +280,7 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
 /* static */ JSObject*
 GlobalObject::createObject(JSContext* cx, Handle<GlobalObject*> global, unsigned slot, ObjectInitOp init)
 {
-    if (global->zone()->group()->createdForHelperThread())
+    if (global->zone()->createdForHelperThread())
         return createOffThreadObject(cx, global, slot);
 
     MOZ_ASSERT(!cx->helperThread());
@@ -324,7 +324,7 @@ GlobalObject::resolveOffThreadConstructor(JSContext* cx,
     // prototype when the off-thread compartment is merged back into the target
     // compartment.
 
-    MOZ_ASSERT(global->zone()->group()->createdForHelperThread());
+    MOZ_ASSERT(global->zone()->createdForHelperThread());
     MOZ_ASSERT(key == JSProto_Object ||
                key == JSProto_Function ||
                key == JSProto_Array ||
@@ -354,7 +354,7 @@ GlobalObject::createOffThreadObject(JSContext* cx, Handle<GlobalObject*> global,
     // when the off-thread compartment is merged back into the target
     // compartment.
 
-    MOZ_ASSERT(global->zone()->group()->createdForHelperThread());
+    MOZ_ASSERT(global->zone()->createdForHelperThread());
     MOZ_ASSERT(slot == GENERATOR_FUNCTION_PROTO ||
                slot == MODULE_PROTO ||
                slot == IMPORT_ENTRY_PROTO ||

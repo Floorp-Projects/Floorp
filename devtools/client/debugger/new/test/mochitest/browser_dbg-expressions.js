@@ -10,6 +10,7 @@
  */
 
 const expressionSelectors = {
+  plusIcon: ".watch-expressions-pane button.plus",
   input: "input.input-expression"
 };
 
@@ -33,6 +34,7 @@ function assertEmptyValue(dbg, index) {
 
 async function addExpression(dbg, input) {
   info("Adding an expression");
+  findElementWithSelector(dbg, expressionSelectors.plusIcon).click();
   findElementWithSelector(dbg, expressionSelectors.input).focus();
   type(dbg, input);
   pressKey(dbg, "Enter");

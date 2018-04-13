@@ -86,6 +86,8 @@ function startup() {
                     "GeckoViewTrackingProtection");
   ModuleManager.add("resource://gre/modules/GeckoViewSelectionAction.jsm",
                     "GeckoViewSelectionAction");
+  ModuleManager.add("resource://gre/modules/GeckoViewAccessibility.jsm",
+                    "GeckoViewAccessibility");
 
   // Move focus to the content window at the end of startup,
   // so things like text selection can work properly.

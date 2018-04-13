@@ -179,7 +179,7 @@ we only record the search engine name when:
 
 accessibilityServices
 ~~~~~~~~~~~~~~~~~~~~~
-This describes which accessibility services are currently enabled on user's device and could be interacting with out
+This describes which accessibility services are currently enabled on user's device and could be interacting with our
 products. This is optional because users often do not have any accessibility services enabled. If present, the value is
 a list of accessibility service ids.
 

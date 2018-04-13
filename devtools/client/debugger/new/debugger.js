@@ -3640,7 +3640,7 @@ function update(state = initialSourcesState(), action) {
     case "BLACKBOX":
       if (action.status === "done") {
         const url = action.source.url;
-        const isBlackBoxed = action.value.isBlackBoxed;
+        const { isBlackBoxed } = action.value;
         updateBlackBoxList(url, isBlackBoxed);
         return state.setIn(["sources", action.source.id, "isBlackBoxed"], isBlackBoxed);
       }
@@ -6035,13 +6035,11 @@ function enableBreakpoint(location) {
       return;
     }
 
-    const action = {
+    return dispatch({
       type: "ENABLE_BREAKPOINT",
       breakpoint,
       [_promise.PROMISE]: (0, _addBreakpoint2.default)(getState, client, sourceMaps, breakpoint)
-    };
-
-    return dispatch(action);
+    });
   };
 }
 
@@ -6062,12 +6060,10 @@ function disableBreakpoint(location) {
     await client.removeBreakpoint(bp.generatedLocation);
     const newBreakpoint = _extends({}, bp, { disabled: true });
 
-    const action = {
+    return dispatch({
       type: "DISABLE_BREAKPOINT",
       breakpoint: newBreakpoint
-    };
-
-    return dispatch(action);
+    });
   };
 }
 
@@ -6386,7 +6382,7 @@ function clearExpressionError() {
 
 function updateExpression(input, expression) {
   return async ({ dispatch, getState }) => {
-    if (!input || input == expression.input) {
+    if (!input) {
       return;
     }
 
@@ -9743,6 +9739,7 @@ exports.resizeToggleButton = resizeToggleButton;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+
 /* Checks to see if the root element is available and
  * if the element is visible. We check the width of the element
  * because it is more reliable than either checking a focus state or
@@ -12699,6 +12696,11 @@ async function fetchSources() {
  */
 async function checkServerSupportsListWorkers() {
   const root = await tabTarget.root;
+  // root is not available on all debug targets.
+  if (!root) {
+    return false;
+  }
+
   const deviceFront = await (0, _frontsDevice.getDeviceFront)(debuggerClient, root);
   const description = await deviceFront.getDescription();
 
@@ -15203,9 +15205,11 @@ const svg = {
   coffeescript: __webpack_require__(2250),
   dojo: __webpack_require__(806),
   domain: __webpack_require__(353),
+  extension: __webpack_require__(3632),
   file: __webpack_require__(354),
   folder: __webpack_require__(355),
   globe: __webpack_require__(356),
+  help: __webpack_require__(3633),
   home: __webpack_require__(3604),
   javascript: __webpack_require__(2251),
   jquery: __webpack_require__(999),
@@ -16917,7 +16921,8 @@ class SourcesTree extends _react.Component {
   renderItemName(name) {
     const hosts = {
       "ng://": "Angular",
-      "webpack://": "Webpack"
+      "webpack://": "Webpack",
+      "moz-extension://": L10N.getStr("extensionsText")
     };
 
     return hosts[name] || name;
@@ -17065,9 +17070,10 @@ var _initialiseProps = function () {
 
     if (item.path === "webpack://") {
       return _react2.default.createElement(_Svg2.default, { name: "webpack" });
-    }
-    if (item.path === "/Angular") {
+    } else if (item.path === "ng://") {
       return _react2.default.createElement(_Svg2.default, { name: "angular" });
+    } else if (item.path === "moz-extension://") {
+      return _react2.default.createElement("img", { className: "extension" });
     }
 
     if (depth === 0 && projectRoot === "") {
@@ -22810,6 +22816,18 @@ function debugBtn(onClick, type, className, tooltip) {
 }
 
 class SecondaryPanes extends _react.Component {
+  constructor(props) {
+    super(props);
+
+    this.onExpressionAdded = () => {
+      this.setState({ showExpressionsInput: false });
+    };
+
+    this.state = {
+      showExpressionsInput: false
+    };
+  }
+
   renderBreakpointsToggle() {
     const {
       toggleAllBreakpoints,
@@ -22850,7 +22868,10 @@ class SecondaryPanes extends _react.Component {
     return [debugBtn(evt => {
       evt.stopPropagation();
       this.props.evaluateExpressions();
-    }, "refresh", "refresh", L10N.getStr("watchExpressions.refreshButton"))];
+    }, "refresh", "refresh", L10N.getStr("watchExpressions.refreshButton")), debugBtn(evt => {
+      evt.stopPropagation();
+      this.setState({ showExpressionsInput: true });
+    }, "plus", "plus", L10N.getStr("expressions.placeholder"))];
   }
 
   getScopeItem() {
@@ -22884,7 +22905,10 @@ class SecondaryPanes extends _react.Component {
       header: L10N.getStr("watchExpressions.header"),
       className: "watch-expressions-pane",
       buttons: this.watchExpressionHeaderButtons(),
-      component: _react2.default.createElement(_Expressions2.default, null),
+      component: _react2.default.createElement(_Expressions2.default, {
+        showInput: this.state.showExpressionsInput,
+        onExpressionAdded: this.onExpressionAdded
+      }),
       opened: _prefs.prefs.expressionsVisible,
       onToggle: opened => {
         _prefs.prefs.expressionsVisible = opened;
@@ -23101,9 +23125,9 @@ var _reselect = __webpack_require__(993);
 
 var _lodash = __webpack_require__(2);
 
-var _BreakpointItem = __webpack_require__(3630);
+var _Breakpoint = __webpack_require__(3634);
 
-var _BreakpointItem2 = _interopRequireDefault(_BreakpointItem);
+var _Breakpoint2 = _interopRequireDefault(_Breakpoint);
 
 var _actions = __webpack_require__(1354);
 
@@ -23169,7 +23193,7 @@ class Breakpoints extends _react.Component {
   }
 
   renderBreakpoint(breakpoint) {
-    return _react2.default.createElement(_BreakpointItem2.default, {
+    return _react2.default.createElement(_Breakpoint2.default, {
       key: breakpoint.locationId,
       breakpoint: breakpoint,
       onClick: () => this.selectBreakpoint(breakpoint),
@@ -23293,11 +23317,16 @@ class Expressions extends _react.Component {
       }
     };
 
+    this.hideInput = () => {
+      this.props.onExpressionAdded();
+    };
+
     this.handleExistingSubmit = async (e, expression) => {
       e.preventDefault();
       e.stopPropagation();
 
       this.props.updateExpression(this.state.inputValue, expression);
+      this.hideInput();
     };
 
     this.handleNewSubmit = async e => {
@@ -23312,6 +23341,10 @@ class Expressions extends _react.Component {
         editIndex: -1,
         inputValue: this.props.expressionError ? inputValue : ""
       });
+
+      if (!this.props.expressionError) {
+        this.hideInput();
+      }
     };
 
     this.renderExpression = (expression, index) => {
@@ -23364,7 +23397,11 @@ class Expressions extends _react.Component {
       );
     };
 
-    this.state = { editing: false, editIndex: -1, inputValue: "" };
+    this.state = {
+      editing: false,
+      editIndex: -1,
+      inputValue: ""
+    };
   }
 
   componentDidMount() {
@@ -23382,8 +23419,9 @@ class Expressions extends _react.Component {
 
   shouldComponentUpdate(nextProps, nextState) {
     const { editing, inputValue } = this.state;
-    const { expressions, expressionError } = this.props;
-    return expressions !== nextProps.expressions || expressionError !== nextProps.expressionError || editing !== nextState.editing || inputValue !== nextState.inputValue;
+    const { expressions, expressionError, showInput } = this.props;
+
+    return expressions !== nextProps.expressions || expressionError !== nextProps.expressionError || editing !== nextState.editing || inputValue !== nextState.inputValue || nextProps.showInput !== showInput;
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -23408,6 +23446,11 @@ class Expressions extends _react.Component {
     deleteExpression(expression);
   }
 
+  onBlur() {
+    this.clear();
+    this.hideInput();
+  }
+
   renderNewExpressionInput() {
     const { expressionError } = this.props;
     const { editing, inputValue } = this.state;
@@ -23424,8 +23467,9 @@ class Expressions extends _react.Component {
           type: "text",
           placeholder: placeholder,
           onChange: this.handleChange,
-          onBlur: this.clear,
+          onBlur: this.hideInput,
           onKeyDown: this.handleKeyDown,
+          autoFocus: "true",
           value: !editing ? inputValue : ""
         }),
         _react2.default.createElement("input", { type: "submit", style: { display: "none" } })
@@ -23461,12 +23505,13 @@ class Expressions extends _react.Component {
   }
 
   render() {
-    const { expressions } = this.props;
+    const { expressions, showInput } = this.props;
+
     return _react2.default.createElement(
       "ul",
       { className: "pane expressions-list" },
       expressions.map(this.renderExpression),
-      this.renderNewExpressionInput()
+      showInput && this.renderNewExpressionInput()
     );
   }
 }
@@ -24001,7 +24046,9 @@ class EventListeners extends _react.Component {
 
   removeBreakpoint(event, breakpoint) {
     event.stopPropagation();
-    this.props.removeBreakpoint(breakpoint.location);
+    if (breakpoint) {
+      this.props.removeBreakpoint(breakpoint.location);
+    }
   }
 
   render() {
@@ -24200,6 +24247,7 @@ exports.default = Accordion;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.debugBtn = debugBtn;
 
 var _propTypes = __webpack_require__(20);
 
@@ -24526,10 +24574,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
@@ -24538,29 +24582,19 @@ var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
+var _CommandBar = __webpack_require__(1608);
+
 __webpack_require__(1295);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function debugBtn(onClick, type, className, tooltip, disabled = false) {
-  const props = {
-    onClick,
-    key: type,
-    "aria-label": tooltip,
-    title: tooltip,
-    disabled
-  };
-
-  return _react2.default.createElement(
-    "button",
-    _extends({ className: (0, _classnames2.default)(type, className) }, props),
-    "?"
-  );
-}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class UtilsBar extends _react.Component {
   renderUtilButtons() {
-    return [debugBtn(this.props.toggleShortcutsModal, "shortcut", "active", L10N.getStr("shortcuts.buttonName"), false)];
+    return [(0, _CommandBar.debugBtn)(this.props.toggleShortcutsModal, "shortcuts", "active", L10N.getStr("shortcuts.buttonName"), false)];
   }
 
   render() {
@@ -25923,6 +25957,8 @@ var _locColumn = __webpack_require__(2349);
 
 var _findGeneratedBindingFromPosition = __webpack_require__(2358);
 
+var _firefox = __webpack_require__(1500);
+
 var _prefs = __webpack_require__(226);
 
 var _log = __webpack_require__(2359);
@@ -26164,11 +26200,13 @@ function buildGeneratedBindingList(scopes, generatedAstScopes, thisBinding) {
   // the normal binding data we are working with.
   const frameThisOwner = generatedAstScopes.find(generated => "this" in generated.bindings);
 
+  let globalScope = null;
   const clientScopes = [];
   for (let s = scopes; s; s = s.parent) {
     const bindings = s.bindings ? Object.assign({}, ...s.bindings.arguments, s.bindings.variables) : {};
 
     clientScopes.push(bindings);
+    globalScope = s;
   }
 
   const generatedMainScopes = generatedAstScopes.slice(0, -2);
@@ -26194,7 +26232,7 @@ function buildGeneratedBindingList(scopes, generatedAstScopes, thisBinding) {
         acc.push({
           name,
           loc,
-          desc: bindings[name] || null
+          desc: () => Promise.resolve(bindings[name] || null)
         });
       }
     }
@@ -26208,15 +26246,29 @@ function buildGeneratedBindingList(scopes, generatedAstScopes, thisBinding) {
   for (const generated of generatedGlobalScopes) {
     for (const name of Object.keys(generated.bindings)) {
       const { refs } = generated.bindings[name];
-      for (const loc of refs) {
-        const bindings = clientGlobalScopes.find(b => (0, _lodash.has)(b, name));
+      const bindings = clientGlobalScopes.find(b => (0, _lodash.has)(b, name));
 
+      for (const loc of refs) {
         if (bindings) {
           generatedBindings.push({
             name,
             loc,
-            desc: bindings[name]
+            desc: () => Promise.resolve(bindings[name])
           });
+        } else {
+          const globalGrip = globalScope && globalScope.object;
+          if (globalGrip) {
+            // Should always exist, just checking to keep Flow happy.
+
+            generatedBindings.push({
+              name,
+              loc,
+              desc: async () => {
+                const objectClient = (0, _firefox.createObjectClient)(globalGrip);
+                return (await objectClient.getProperty(name)).descriptor;
+              }
+            });
+          }
         }
       }
     }
@@ -31367,7 +31419,9 @@ function createPrettySource(sourceId) {
     const prettySource = {
       url,
       id,
+      isBlackBoxed: false,
       isPrettyPrinted: true,
+      isWasm: false,
       contentType: "text/javascript",
       loadedState: "loading"
     };
@@ -31906,8 +31960,7 @@ function selectSourceURL(url, options = {}) {
       dispatch({
         type: "SELECT_SOURCE_URL",
         url: url,
-        tabIndex: options.tabIndex,
-        location: options.location
+        line: options.location ? options.location.line : null
       });
     }
   };
@@ -34910,7 +34963,7 @@ async function mapBindingReferenceToDescriptor(binding, mapped) {
   if (mapped.start.line === binding.loc.start.line && (0, _locColumn.locColumn)(mapped.start) >= (0, _locColumn.locColumn)(binding.loc.start) - 1 && (0, _locColumn.locColumn)(mapped.start) <= (0, _locColumn.locColumn)(binding.loc.end)) {
     return {
       name: binding.name,
-      desc: binding.desc,
+      desc: await binding.desc(),
       expression: binding.name
     };
   }
@@ -34932,7 +34985,7 @@ async function mapImportDeclarationToDescriptor(binding, mapped) {
     return null;
   }
 
-  const desc = await readDescriptorProperty(binding.desc, mapped.importName,
+  const desc = await readDescriptorProperty((await binding.desc()), mapped.importName,
   // If the value was optimized out or otherwise unavailable, we skip it
   // entirely because there is a good chance that this means that this
   // isn't the right binding. This allows us to catch cases like
@@ -34994,7 +35047,7 @@ async function mapImportReferenceToDescriptor(binding, mapped) {
   }
 
   let expression = binding.name;
-  let desc = binding.desc;
+  let desc = await binding.desc();
 
   if (binding.loc.type === "ref") {
     const { meta } = binding.loc;
@@ -35062,12 +35115,31 @@ async function readDescriptorProperty(desc, property, requireValidObject = false
 }
 
 function mappingContains(mapped, item) {
-  return (item.start.line > mapped.start.line || item.start.line === mapped.start.line && (0, _locColumn.locColumn)(item.start) >= (0, _locColumn.locColumn)(mapped.start)) && (item.end.line < mapped.end.line || item.end.line === mapped.end.line && (0, _locColumn.locColumn)(item.end) <= (0, _locColumn.locColumn)(mapped.end));
+  return positionCmp(item.start, mapped.start) >= 0 && positionCmp(item.end, mapped.end) <= 0;
+}
+
+/**
+ * * === 0 - Positions are equal.
+ * * < 0 - first position before second position
+ * * > 0 - first position after second position
+ */
+function positionCmp(p1, p2) {
+  if (p1.line === p2.line) {
+    const l1 = (0, _locColumn.locColumn)(p1);
+    const l2 = (0, _locColumn.locColumn)(p2);
+
+    if (l1 === l2) {
+      return 0;
+    }
+    return l1 < l2 ? -1 : 1;
+  }
+
+  return p1.line < p2.line ? -1 : 1;
 }
 
 async function getGeneratedLocationRange(pos, source, sourceMaps) {
-  const start = await sourceMaps.getGeneratedLocation(pos.start, source);
-  const end = await sourceMaps.getGeneratedLocation(pos.end, source);
+  const start = await getGeneratedLocation(sourceMaps, pos.start, source);
+  const end = await getGeneratedLocation(sourceMaps, pos.end, source);
 
   // Since the map takes the closest location, sometimes mapping a
   // binding's location can point at the start of a binding listed after
@@ -35078,6 +35150,21 @@ async function getGeneratedLocationRange(pos, source, sourceMaps) {
   }
 
   return { start, end };
+}
+
+async function getGeneratedLocation(sourceMaps, pos, source) {
+  const all = await sourceMaps.getAllGeneratedLocations(pos, source);
+  if (all.length > 0) {
+    // Grab the earliest mapping since generally if there are multiple
+    // mappings, the later mappings are for random punctuation marks.
+    return all.reduce((acc, p) => {
+      return !acc || positionCmp(p, acc) < 0 ? p : acc;
+    });
+  }
+
+  // Fall back to the standard logic to take the mapping closest to the
+  // target location.
+  return await sourceMaps.getGeneratedLocation(pos, source);
 }
 
 /***/ }),
@@ -39125,7 +39212,28 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 
 /***/ }),
 
-/***/ 3630:
+/***/ 3631:
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 28 28\"><path fill=\"context-fill\" d=\"M15 11h-1V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v6H1a1 1 0 0 0 0 2h14a1 1 0 1 0 0-2z\"></path></svg>"
+
+/***/ }),
+
+/***/ 3632:
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\"><path fill=\"context-fill\" d=\"M14.5 8c-.971 0-1 1-1.75 1a.765.765 0 0 1-.75-.75V5a1 1 0 0 0-1-1H7.75A.765.765 0 0 1 7 3.25c0-.75 1-.779 1-1.75C8 .635 7.1 0 6 0S4 .635 4 1.5c0 .971 1 1 1 1.75a.765.765 0 0 1-.75.75H1a1 1 0 0 0-1 1v2.25A.765.765 0 0 0 .75 8c.75 0 .779-1 1.75-1C3.365 7 4 7.9 4 9s-.635 2-1.5 2c-.971 0-1-1-1.75-1a.765.765 0 0 0-.75.75V15a1 1 0 0 0 1 1h3.25a.765.765 0 0 0 .75-.75c0-.75-1-.779-1-1.75 0-.865.9-1.5 2-1.5s2 .635 2 1.5c0 .971-1 1-1 1.75a.765.765 0 0 0 .75.75H11a1 1 0 0 0 1-1v-3.25a.765.765 0 0 1 .75-.75c.75 0 .779 1 1.75 1 .865 0 1.5-.9 1.5-2s-.635-2-1.5-2z\"></path></svg>"
+
+/***/ }),
+
+/***/ 3633:
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\"><path fill=\"context-fill\" d=\"M8 1a7 7 0 1 0 7 7 7.008 7.008 0 0 0-7-7zm0 13a6 6 0 1 1 6-6 6.007 6.007 0 0 1-6 6zM8 3.125A2.7 2.7 0 0 0 5.125 6a.875.875 0 0 0 1.75 0c0-1 .6-1.125 1.125-1.125a1.105 1.105 0 0 1 1.13.744.894.894 0 0 1-.53 1.016A2.738 2.738 0 0 0 7.125 9v.337a.875.875 0 0 0 1.75 0v-.37a1.041 1.041 0 0 1 .609-.824A2.637 2.637 0 0 0 10.82 5.16 2.838 2.838 0 0 0 8 3.125zm0 7.625A1.25 1.25 0 1 0 9.25 12 1.25 1.25 0 0 0 8 10.75z\"></path></svg>"
+
+/***/ }),
+
+/***/ 3634:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -39169,11 +39277,12 @@ function getBreakpointLocation(source, line, column) {
   return bpLocation;
 }
 
-class BreakpointItem extends _react.Component {
+class Breakpoint extends _react.Component {
 
   componentDidMount() {
     this.setupEditor();
   }
+
   componentDidUpdate() {
     this.setupEditor();
   }
@@ -39191,13 +39300,17 @@ class BreakpointItem extends _react.Component {
     return !prevBreakpoint || prevBreakpoint.text != nextBreakpoint.text || prevBreakpoint.disabled != nextBreakpoint.disabled || prevBreakpoint.condition != nextBreakpoint.condition || prevBreakpoint.hidden != nextBreakpoint.hidden || prevBreakpoint.isCurrentlyPaused != nextBreakpoint.isCurrentlyPaused;
   }
 
-  setupEditor() {
+  getBreakpointText() {
     const { breakpoint } = this.props;
+    return breakpoint.condition || breakpoint.text;
+  }
+
+  setupEditor() {
     if (this.editor) {
       return;
     }
 
-    this.editor = (0, _breakpoint.createEditor)(breakpoint.text);
+    this.editor = (0, _breakpoint.createEditor)(this.getBreakpointText());
 
     // disables the default search shortcuts
     // $FlowIgnore
@@ -39215,18 +39328,52 @@ class BreakpointItem extends _react.Component {
     }
   }
 
+  renderCheckbox() {
+    const { onChange, breakpoint } = this.props;
+    const { disabled } = breakpoint;
+
+    return _react2.default.createElement("input", {
+      type: "checkbox",
+      className: "breakpoint-checkbox",
+      checked: !disabled,
+      onChange: onChange,
+      onClick: ev => ev.stopPropagation()
+    });
+  }
+
+  renderText() {
+    const text = this.getBreakpointText();
+
+    return _react2.default.createElement(
+      "label",
+      { className: "breakpoint-label", title: text },
+      text
+    );
+  }
+
+  renderLineClose() {
+    const { breakpoint, onCloseClick } = this.props;
+    const { line, column } = breakpoint.location;
+
+    return _react2.default.createElement(
+      "div",
+      { className: "breakpoint-line-close" },
+      _react2.default.createElement(
+        "div",
+        { className: "breakpoint-line" },
+        getBreakpointLocation(breakpoint.source, line, column)
+      ),
+      _react2.default.createElement(_Close2.default, {
+        handleClick: onCloseClick,
+        tooltip: L10N.getStr("breakpoints.removeBreakpointTooltip")
+      })
+    );
+  }
+
   render() {
-    const {
-      breakpoint,
-      onClick,
-      onChange,
-      onContextMenu,
-      onCloseClick
-    } = this.props;
+    const { breakpoint, onClick, onContextMenu } = this.props;
 
     const locationId = breakpoint.locationId;
-    const line = breakpoint.location.line;
-    const column = breakpoint.location.column;
     const isCurrentlyPaused = breakpoint.isCurrentlyPaused;
     const isDisabled = breakpoint.disabled;
     const isConditional = !!breakpoint.condition;
@@ -39244,43 +39391,14 @@ class BreakpointItem extends _react.Component {
         onClick: onClick,
         onContextMenu: onContextMenu
       },
-      _react2.default.createElement("input", {
-        type: "checkbox",
-        className: "breakpoint-checkbox",
-        checked: !isDisabled,
-        onChange: onChange,
-        onClick: ev => ev.stopPropagation()
-      }),
-      _react2.default.createElement(
-        "label",
-        { className: "breakpoint-label", title: breakpoint.text },
-        breakpoint.text
-      ),
-      _react2.default.createElement(
-        "div",
-        { className: "breakpoint-line-close" },
-        _react2.default.createElement(
-          "div",
-          { className: "breakpoint-line" },
-          getBreakpointLocation(breakpoint.source, line, column)
-        ),
-        _react2.default.createElement(_Close2.default, {
-          handleClick: onCloseClick,
-          tooltip: L10N.getStr("breakpoints.removeBreakpointTooltip")
-        })
-      )
+      this.renderCheckbox(),
+      this.renderText(),
+      this.renderLineClose()
     );
   }
 }
 
-exports.default = BreakpointItem;
-
-/***/ }),
-
-/***/ 3631:
-/***/ (function(module, exports) {
-
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 28 28\"><path fill=\"context-fill\" d=\"M15 11h-1V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v6H1a1 1 0 0 0 0 2h14a1 1 0 1 0 0-2z\"></path></svg>"
+exports.default = Breakpoint;
 
 /***/ }),
 

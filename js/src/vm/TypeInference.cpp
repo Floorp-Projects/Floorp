@@ -4484,14 +4484,14 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 
 TypeZone::TypeZone(Zone* zone)
   : zone_(zone),
-    typeLifoAlloc_(zone->group(), (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    currentCompilationId_(zone->group()),
-    generation(zone->group(), 0),
-    sweepTypeLifoAlloc(zone->group(), (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    sweepReleaseTypes(zone->group(), false),
-    sweepingTypes(zone->group(), false),
-    keepTypeScripts(zone->group(), false),
-    activeAnalysis(zone->group(), nullptr)
+    typeLifoAlloc_(zone, (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    currentCompilationId_(zone),
+    generation(zone, 0),
+    sweepTypeLifoAlloc(zone, (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    sweepReleaseTypes(zone, false),
+    sweepingTypes(zone, false),
+    keepTypeScripts(zone, false),
+    activeAnalysis(zone, nullptr)
 {
 }
 
