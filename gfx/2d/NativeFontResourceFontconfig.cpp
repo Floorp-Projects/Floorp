@@ -32,7 +32,10 @@ NativeFontResourceFontconfig::Create(uint8_t *aFontData, uint32_t aDataLength, F
   if (!aFontData || !aDataLength) {
     return nullptr;
   }
-  UniquePtr<uint8_t[]> fontData(new uint8_t[aDataLength]);
+  UniquePtr<uint8_t[]> fontData(new (fallible) uint8_t[aDataLength]);
+  if (!fontData) {
+    return nullptr;
+  }
   memcpy(fontData.get(), aFontData, aDataLength);
 
   FT_Face face = Factory::NewFTFaceFromData(aFTLibrary, fontData.get(), aDataLength, 0);
