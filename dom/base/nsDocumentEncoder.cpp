@@ -208,7 +208,6 @@ NS_IMPL_CYCLE_COLLECTION(nsDocumentEncoder,
 
 nsDocumentEncoder::nsDocumentEncoder()
   : mEncoding(nullptr)
-  , mIsCopying{ false }
   , mCachedBuffer(nullptr)
 {
   Initialize();

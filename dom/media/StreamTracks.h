@@ -249,13 +249,8 @@ public:
     /**
      * Iterate through the tracks of aBuffer in order of ID.
      */
-    explicit TrackIter(const StreamTracks& aBuffer)
-      : mBuffer(&aBuffer.mTracks)
-      , mIndex(0)
-      , mType{ static_cast<MediaSegment::Type>(0) }
-      , mMatchType(false)
-    {
-    }
+    explicit TrackIter(const StreamTracks& aBuffer) :
+      mBuffer(&aBuffer.mTracks), mIndex(0), mMatchType(false) {}
     /**
      * Iterate through the tracks of aBuffer with type aType, in order of ID.
      */

@@ -62,7 +62,6 @@ class Transaction
 public:
   Transaction()
     : mTargetRotation(ROTATION_0)
-    , mTargetOrientation{}
     , mOpen(false)
     , mRotationChanged(false)
   {}

@@ -61,9 +61,6 @@ public:
     : mTotalOut(0)
     , mStatus(NS_OK)
     , mBrotliStateIsStreamEnd(false)
-    , mRequest{ nullptr }
-    , mContext{ nullptr }
-    , mSourceOffset{}
   {
     BrotliDecoderStateInit(&mState);
   }

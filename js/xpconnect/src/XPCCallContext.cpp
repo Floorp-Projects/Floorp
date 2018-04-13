@@ -20,77 +20,70 @@ static inline bool IsTearoffClass(const js::Class* clazz)
     return clazz == &XPC_WN_Tearoff_JSClass;
 }
 
-XPCCallContext::XPCCallContext(
-  JSContext* cx,
-  HandleObject obj /* = nullptr               */,
-  HandleObject funobj /* = nullptr               */,
-  HandleId name /* = JSID_VOID             */,
-  unsigned argc /* = NO_ARGS               */,
-  Value* argv /* = nullptr               */,
-  Value* rval /* = nullptr               */)
-  : mAr(cx)
-  , mState(INIT_FAILED)
-  , mXPC(nsXPConnect::XPConnect())
-  , mXPCJSContext(nullptr)
-  , mJSContext(cx)
-  , mWrapper(nullptr)
-  , mTearOff(nullptr)
-  , mMember{ nullptr }
-  , mName(cx)
-  , mStaticMemberIsLocal{ false }
-  , mArgc{}
-  , mArgv{ nullptr }
-  , mRetVal{ nullptr }
+XPCCallContext::XPCCallContext(JSContext* cx,
+                               HandleObject obj    /* = nullptr               */,
+                               HandleObject funobj /* = nullptr               */,
+                               HandleId name       /* = JSID_VOID             */,
+                               unsigned argc       /* = NO_ARGS               */,
+                               Value* argv         /* = nullptr               */,
+                               Value* rval         /* = nullptr               */)
+    :   mAr(cx),
+        mState(INIT_FAILED),
+        mXPC(nsXPConnect::XPConnect()),
+        mXPCJSContext(nullptr),
+        mJSContext(cx),
+        mWrapper(nullptr),
+        mTearOff(nullptr),
+        mName(cx)
 {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
 
-  if (!mXPC)
-    return;
+    if (!mXPC)
+        return;
 
-  mXPCJSContext = XPCJSContext::Get();
+    mXPCJSContext = XPCJSContext::Get();
 
-  // hook into call context chain.
-  mPrevCallContext = mXPCJSContext->SetCallContext(this);
+    // hook into call context chain.
+    mPrevCallContext = mXPCJSContext->SetCallContext(this);
 
-  mState = HAVE_CONTEXT;
+    mState = HAVE_CONTEXT;
 
-  if (!obj)
-    return;
+    if (!obj)
+        return;
 
-  mMethodIndex = 0xDEAD;
+    mMethodIndex = 0xDEAD;
 
-  mState = HAVE_OBJECT;
+    mState = HAVE_OBJECT;
 
-  mTearOff = nullptr;
+    mTearOff = nullptr;
 
-  JSObject* unwrapped = js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
-  if (!unwrapped) {
-    JS_ReportErrorASCII(mJSContext,
-                        "Permission denied to call method on |this|");
-    mState = INIT_FAILED;
-    return;
-  }
-  const js::Class* clasp = js::GetObjectClass(unwrapped);
-  if (IS_WN_CLASS(clasp)) {
-    mWrapper = XPCWrappedNative::Get(unwrapped);
-  } else if (IsTearoffClass(clasp)) {
-    mTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(unwrapped);
-    mWrapper = XPCWrappedNative::Get(
-      &js::GetReservedSlot(unwrapped, XPC_WN_TEAROFF_FLAT_OBJECT_SLOT)
-         .toObject());
-  }
-  if (mWrapper && !mTearOff) {
-    mScriptable = mWrapper->GetScriptable();
-  }
+    JSObject* unwrapped = js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
+    if (!unwrapped) {
+        JS_ReportErrorASCII(mJSContext, "Permission denied to call method on |this|");
+        mState = INIT_FAILED;
+        return;
+    }
+    const js::Class* clasp = js::GetObjectClass(unwrapped);
+    if (IS_WN_CLASS(clasp)) {
+        mWrapper = XPCWrappedNative::Get(unwrapped);
+    } else if (IsTearoffClass(clasp)) {
+        mTearOff = (XPCWrappedNativeTearOff*)js::GetObjectPrivate(unwrapped);
+        mWrapper = XPCWrappedNative::Get(
+          &js::GetReservedSlot(unwrapped,
+                               XPC_WN_TEAROFF_FLAT_OBJECT_SLOT).toObject());
+    }
+    if (mWrapper && !mTearOff) {
+        mScriptable = mWrapper->GetScriptable();
+    }
 
-  if (!JSID_IS_VOID(name))
-    SetName(name);
+    if (!JSID_IS_VOID(name))
+        SetName(name);
 
-  if (argc != NO_ARGS)
-    SetArgsAndResultPtr(argc, argv, rval);
+    if (argc != NO_ARGS)
+        SetArgsAndResultPtr(argc, argv, rval);
 
-  CHECK_STATE(HAVE_OBJECT);
+    CHECK_STATE(HAVE_OBJECT);
 }
 
 void

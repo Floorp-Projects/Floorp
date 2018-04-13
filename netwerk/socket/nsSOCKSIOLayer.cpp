@@ -226,50 +226,31 @@ private:
 };
 
 nsSOCKSSocketInfo::nsSOCKSSocketInfo()
-  : mState(SOCKS_INITIAL)
-  , mDataIoPtr(nullptr)
-  , mDataLength(0)
-  , mReadOffset(0)
-  , mAmountToRead(0)
-  , mLookupStatus{ NS_ERROR_NOT_INITIALIZED }
-  , mFD{ nullptr }
-  , mVersion(-1)
-  , mDestinationFamily(AF_INET)
-  , mFlags(0)
-  , mTlsFlags(0)
-  , mTimeout(PR_INTERVAL_NO_TIMEOUT)
+    : mState(SOCKS_INITIAL)
+    , mDataIoPtr(nullptr)
+    , mDataLength(0)
+    , mReadOffset(0)
+    , mAmountToRead(0)
+    , mFD(nullptr)
+    , mVersion(-1)
+    , mDestinationFamily(AF_INET)
+    , mFlags(0)
+    , mTlsFlags(0)
+    , mTimeout(PR_INTERVAL_NO_TIMEOUT)
 {
-  this->mInternalProxyAddr.inet.family = {};
-  this->mInternalProxyAddr.inet6.family = {};
-  this->mInternalProxyAddr.inet6.port = {};
-  this->mInternalProxyAddr.inet6.flowinfo = {};
-  this->mInternalProxyAddr.inet6.scope_id = {};
-  this->mInternalProxyAddr.local.family = {};
-  this->mExternalProxyAddr.inet.family = {};
-  this->mExternalProxyAddr.inet6.family = {};
-  this->mExternalProxyAddr.inet6.port = {};
-  this->mExternalProxyAddr.inet6.flowinfo = {};
-  this->mExternalProxyAddr.inet6.scope_id = {};
-  this->mExternalProxyAddr.local.family = {};
-  this->mDestinationAddr.inet.family = {};
-  this->mDestinationAddr.inet6.family = {};
-  this->mDestinationAddr.inet6.port = {};
-  this->mDestinationAddr.inet6.flowinfo = {};
-  this->mDestinationAddr.inet6.scope_id = {};
-  this->mDestinationAddr.local.family = {};
-  mData = new uint8_t[BUFFER_SIZE];
+    mData = new uint8_t[BUFFER_SIZE];
 
-  mInternalProxyAddr.raw.family = AF_INET;
-  mInternalProxyAddr.inet.ip = htonl(INADDR_ANY);
-  mInternalProxyAddr.inet.port = htons(0);
+    mInternalProxyAddr.raw.family = AF_INET;
+    mInternalProxyAddr.inet.ip = htonl(INADDR_ANY);
+    mInternalProxyAddr.inet.port = htons(0);
 
-  mExternalProxyAddr.raw.family = AF_INET;
-  mExternalProxyAddr.inet.ip = htonl(INADDR_ANY);
-  mExternalProxyAddr.inet.port = htons(0);
+    mExternalProxyAddr.raw.family = AF_INET;
+    mExternalProxyAddr.inet.ip = htonl(INADDR_ANY);
+    mExternalProxyAddr.inet.port = htons(0);
 
-  mDestinationAddr.raw.family = AF_INET;
-  mDestinationAddr.inet.ip = htonl(INADDR_ANY);
-  mDestinationAddr.inet.port = htons(0);
+    mDestinationAddr.raw.family = AF_INET;
+    mDestinationAddr.inet.ip = htonl(INADDR_ANY);
+    mDestinationAddr.inet.port = htons(0);
 }
 
 /* Helper template class to statically check that writes to a fixed-size

@@ -304,17 +304,16 @@ bool HangMonitorParent::sShouldForcePaint = true;
 /* HangMonitorChild implementation */
 
 HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
-  : mHangMonitor(aMonitor)
-  , mMonitor("HangMonitorChild lock")
-  , mSentReport(false)
-  , mTerminateScript(false)
-  , mTerminateGlobal(false)
-  , mStartDebugger(false)
-  , mFinishedStartingDebugger(false)
-  , mForcePaint(false)
-  , mForcePaintEpoch{}
-  , mShutdownDone(false)
-  , mIPCOpen(true)
+ : mHangMonitor(aMonitor),
+   mMonitor("HangMonitorChild lock"),
+   mSentReport(false),
+   mTerminateScript(false),
+   mTerminateGlobal(false),
+   mStartDebugger(false),
+   mFinishedStartingDebugger(false),
+   mForcePaint(false),
+   mShutdownDone(false),
+   mIPCOpen(true)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   mContext = danger::GetJSContext();

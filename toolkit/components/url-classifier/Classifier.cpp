@@ -148,8 +148,7 @@ Classifier::GetPrivateStoreDirectory(nsIFile* aRootStoreDirectory,
 }
 
 Classifier::Classifier()
-  : mHashKey{}
-  , mIsTableRequestResultOutdated(true)
+  : mIsTableRequestResultOutdated(true)
   , mUpdateInterrupted(true)
 {
   NS_NewNamedThread(NS_LITERAL_CSTRING("Classifier Update"),

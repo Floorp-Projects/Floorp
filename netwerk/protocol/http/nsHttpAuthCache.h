@@ -39,15 +39,13 @@ public:
         , mDomain(nullptr)
     {
     }
-    nsHttpAuthIdentity(const char16_t* domain,
-                       const char16_t* user,
-                       const char16_t* password)
-      : mUser(nullptr)
-      , mPass{ nullptr }
-      , mDomain{ nullptr }
+    nsHttpAuthIdentity(const char16_t *domain,
+                       const char16_t *user,
+                       const char16_t *password)
+        : mUser(nullptr)
     {
-      DebugOnly<nsresult> rv = Set(domain, user, password);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
+        DebugOnly<nsresult> rv = Set(domain, user, password);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
    ~nsHttpAuthIdentity()
     {
@@ -99,21 +97,18 @@ public:
     nsCOMPtr<nsISupports> mMetaData;
 
 private:
-  nsHttpAuthEntry(const char* path,
-                  const char* realm,
-                  const char* creds,
-                  const char* challenge,
-                  const nsHttpAuthIdentity* ident,
-                  nsISupports* metadata)
-    : mRoot(nullptr)
-    , mTail(nullptr)
-    , mRealm(nullptr)
-    , mCreds{ nullptr }
-    , mChallenge{ nullptr }
-  {
-    DebugOnly<nsresult> rv =
-      Set(path, realm, creds, challenge, ident, metadata);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    nsHttpAuthEntry(const char *path,
+                    const char *realm,
+                    const char *creds,
+                    const char *challenge,
+                    const nsHttpAuthIdentity *ident,
+                    nsISupports *metadata)
+        : mRoot(nullptr)
+        , mTail(nullptr)
+        , mRealm(nullptr)
+    {
+        DebugOnly<nsresult> rv = Set(path, realm, creds, challenge, ident, metadata);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
    ~nsHttpAuthEntry();
 

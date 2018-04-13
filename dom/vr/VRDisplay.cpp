@@ -270,9 +270,6 @@ VRPose::VRPose(nsISupports* aParent, const gfx::VRHMDSensorState& aState)
 VRPose::VRPose(nsISupports* aParent)
   : Pose(aParent)
 {
-  this->mVRState.inputFrameID = {};
-  this->mVRState.timestamp = { 0.0 };
-  this->mVRState.flags = { gfx::VRDisplayCapabilityFlags::Cap_None };
   mFrameId = 0;
   mozilla::HoldJSObjects(this);
 }
@@ -928,9 +925,6 @@ VRFrameInfo::Update(const gfx::VRDisplayInfo& aInfo,
 VRFrameInfo::VRFrameInfo()
  : mTimeStampOffset(0.0f)
 {
-  this->mVRState.inputFrameID = {};
-  this->mVRState.timestamp = { 0.0 };
-  this->mVRState.flags = { gfx::VRDisplayCapabilityFlags::Cap_None };
 }
 
 bool

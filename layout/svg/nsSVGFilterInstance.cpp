@@ -28,23 +28,19 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::SVGUnitTypesBinding;
 using namespace mozilla::gfx;
 
-nsSVGFilterInstance::nsSVGFilterInstance(
-  const nsStyleFilter& aFilter,
-  nsIFrame* aTargetFrame,
-  nsIContent* aTargetContent,
-  const UserSpaceMetrics& aMetrics,
-  const gfxRect& aTargetBBox,
-  const gfxSize& aUserSpaceToFilterSpaceScale)
-  : mFilter(aFilter)
-  , mTargetContent(aTargetContent)
-  , mMetrics(aMetrics)
-  , mTargetBBox(aTargetBBox)
-  , mUserSpaceToFilterSpaceScale(aUserSpaceToFilterSpaceScale)
-  , mSourceGraphicIndex{}
-  , mSourceAlphaIndex{}
-  , mSourceAlphaAvailable(false)
-  , mInitialized(false)
-{
+nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,
+                                         nsIFrame* aTargetFrame,
+                                         nsIContent* aTargetContent,
+                                         const UserSpaceMetrics& aMetrics,
+                                         const gfxRect& aTargetBBox,
+                                         const gfxSize& aUserSpaceToFilterSpaceScale) :
+  mFilter(aFilter),
+  mTargetContent(aTargetContent),
+  mMetrics(aMetrics),
+  mTargetBBox(aTargetBBox),
+  mUserSpaceToFilterSpaceScale(aUserSpaceToFilterSpaceScale),
+  mSourceAlphaAvailable(false),
+  mInitialized(false) {
 
   // Get the filter frame.
   mFilterFrame = GetFilterFrame(aTargetFrame);

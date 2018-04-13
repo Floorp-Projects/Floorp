@@ -44,15 +44,6 @@ nsServerSocket::nsServerSocket()
   , mAttached(false)
   , mKeepWhenOffline(false)
 {
-  this->mAddr.raw.family = {};
-  this->mAddr.inet.family = {};
-  this->mAddr.inet.port = {};
-  this->mAddr.inet.ip = {};
-  this->mAddr.ipv6.family = {};
-  this->mAddr.ipv6.port = {};
-  this->mAddr.ipv6.flowinfo = {};
-  this->mAddr.ipv6.scope_id = {};
-  this->mAddr.local.family = {};
   // we want to be able to access the STS directly, and it may not have been
   // constructed yet.  the STS constructor sets gSocketTransportService.
   if (!gSocketTransportService)

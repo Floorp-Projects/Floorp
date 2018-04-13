@@ -147,9 +147,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mEarlyDataDisposition(EARLY_NONE)
     , mFastOpenStatus(TFO_NOT_TRIED)
 {
-  this->mSelfAddr.inet = {};
-  this->mPeerAddr.inet = {};
-  LOG(("Creating nsHttpTransaction @%p\n", this));
+    LOG(("Creating nsHttpTransaction @%p\n", this));
 
 #ifdef MOZ_VALGRIND
     memset(&mSelfAddr, 0, sizeof(NetAddr));

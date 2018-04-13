@@ -238,10 +238,9 @@ GetAndInitDisplay(GLLibraryEGL& egl, void* displayType)
 
 class AngleErrorReporting {
 public:
-  AngleErrorReporting()
-    : mFailureId{ nullptr }
-  {
-    // No static constructor
+    AngleErrorReporting()
+    {
+      // No static constructor
     }
 
     void SetFailureId(nsACString* const aFailureId)

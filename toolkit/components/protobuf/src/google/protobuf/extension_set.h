@@ -90,22 +90,10 @@ typedef bool EnumValidityFuncWithArg(const void* arg, int number);
 
 // Information about a registered extension.
 struct ExtensionInfo {
-  inline ExtensionInfo()
-    : type{ '\0' }
-    , is_repeated{ false }
-    , is_packed{ false }
-    , enum_validity_check{}
-    , descriptor{ nullptr }
-  {
-  }
+  inline ExtensionInfo() {}
   inline ExtensionInfo(FieldType type_param, bool isrepeated, bool ispacked)
-    : type(type_param)
-    , is_repeated(isrepeated)
-    , is_packed(ispacked)
-    , enum_validity_check{}
-    , descriptor(NULL)
-  {
-  }
+      : type(type_param), is_repeated(isrepeated), is_packed(ispacked),
+        descriptor(NULL) {}
 
   FieldType type;
   bool is_repeated;

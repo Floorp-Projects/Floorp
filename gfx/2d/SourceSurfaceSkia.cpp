@@ -19,9 +19,7 @@ namespace mozilla {
 namespace gfx {
 
 SourceSurfaceSkia::SourceSurfaceSkia()
-  : mFormat{ SurfaceFormat::UNKNOWN }
-  , mStride{}
-  , mDrawTarget(nullptr)
+  : mDrawTarget(nullptr)
   , mChangeMutex("SourceSurfaceSkia::mChangeMutex")
 {
 }
