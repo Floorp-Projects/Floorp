@@ -701,7 +701,7 @@ GlobalObject::createConstructor(JSContext* cx, Native ctor, JSAtom* nameArg, uns
 }
 
 static NativeObject*
-CreateBlankProto(JSContext* cx, const Class* clasp, HandleObject proto, HandleObject global)
+CreateBlankProto(JSContext* cx, const Class* clasp, HandleObject proto)
 {
     MOZ_ASSERT(clasp != &JSFunction::class_);
 
@@ -720,14 +720,14 @@ GlobalObject::createBlankPrototype(JSContext* cx, Handle<GlobalObject*> global, 
     if (!objectProto)
         return nullptr;
 
-    return CreateBlankProto(cx, clasp, objectProto, global);
+    return CreateBlankProto(cx, clasp, objectProto);
 }
 
 /* static */ NativeObject*
-GlobalObject::createBlankPrototypeInheriting(JSContext* cx, Handle<GlobalObject*> global,
-                                             const Class* clasp, HandleObject proto)
+GlobalObject::createBlankPrototypeInheriting(JSContext* cx, const Class* clasp,
+                                             HandleObject proto)
 {
-    return CreateBlankProto(cx, clasp, proto, global);
+    return CreateBlankProto(cx, clasp, proto);
 }
 
 bool
