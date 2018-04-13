@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import json
 import os
 import platform
 import tempfile
@@ -13,12 +14,14 @@ from abc import ABCMeta, abstractmethod
 from shutil import copytree
 
 import mozfile
+from six import string_types
 
 from .addons import AddonManager
 from .permissions import Permissions
 from .prefs import Preferences
 
 __all__ = ['BaseProfile',
+           'ChromeProfile',
            'Profile',
            'FirefoxProfile',
            'ThunderbirdProfile',
@@ -443,7 +446,43 @@ class ThunderbirdProfile(Profile):
                    }
 
 
+class ChromeProfile(BaseProfile):
+    class AddonManager(list):
+        def install(self, addons):
+            if isinstance(addons, string_types):
+                addons = [addons]
+            self.extend(addons)
+
+    def __init__(self, **kwargs):
+        super(ChromeProfile, self).__init__(**kwargs)
+
+        if self.create_new:
+            self.profile = os.path.join(self.profile, 'Default')
+        self._reset()
+
+    def _reset(self):
+        if not os.path.isdir(self.profile):
+            os.makedirs(self.profile)
+
+        if self._preferences:
+            pref_file = os.path.join(self.profile, 'Preferences')
+
+            prefs = {}
+            if os.path.isfile(pref_file):
+                with open(pref_file, 'r') as fh:
+                    prefs.update(json.load(fh))
+
+            prefs.update(self._preferences)
+            with open(pref_file, 'w') as fh:
+                json.dump(prefs, fh)
+
+        self.addons = self.AddonManager()
+        if self._addons:
+            self.addons.install(self._addons)
+
+
 profile_class = {
+    'chrome': ChromeProfile,
     'firefox': FirefoxProfile,
     'thunderbird': ThunderbirdProfile,
 }

@@ -12,6 +12,7 @@ import posixpath
 from mozdevice import DeviceManagerADB, DroidADB
 from mozprofile import (
     Profile,
+    ChromeProfile,
     FirefoxProfile,
     ThunderbirdProfile
 )
@@ -134,10 +135,6 @@ class FirefoxContext(object):
 
 class ThunderbirdContext(object):
     profile_class = ThunderbirdProfile
-
-
-class ChromeProfile(object):
-    """Dummy profile class until a proper one is implemented in mozprofile"""
 
 
 class ChromeContext(object):
