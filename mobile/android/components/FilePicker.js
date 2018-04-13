@@ -222,6 +222,9 @@ FilePicker.prototype = {
       msg.mode = "mimeType";
       msg.mimeType = this._mimeTypeFilter;
     }
+    if (this._mode) {
+        msg.modeOpenAttribute = this._mode;
+    }
 
     EventDispatcher.instance.sendRequestForResult(msg).then(file => {
       this._filePath = file || null;
