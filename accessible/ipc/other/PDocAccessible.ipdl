@@ -10,6 +10,7 @@ include protocol PBrowser;
 include "mozilla/GfxMessageUtils.h";
 
 using nsIntRect from "nsRect.h";
+using mozilla::a11y::role from "mozilla/a11y/Role.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
 
@@ -19,7 +20,7 @@ namespace a11y {
 struct AccessibleData
 {
   uint64_t ID;
-  uint32_t Role;
+  role Role;
   uint32_t ChildrenCount;
   uint32_t Interfaces;
 };
@@ -63,7 +64,7 @@ parent:
   async TextChangeEvent(uint64_t aID, nsString aStr, int32_t aStart, uint32_t aLen,
                         bool aIsInsert, bool aFromUser);
   async SelectionEvent(uint64_t aID, uint64_t aWidgetID, uint32_t aType);
-  async RoleChangedEvent(uint32_t aRole);
+  async RoleChangedEvent(role aRole);
 
   /*
    * Tell the parent document to bind the existing document as a new child
@@ -93,7 +94,7 @@ child:
   nested(inside_sync) sync Relations(uint64_t aID) returns(RelationTargets[] relations);
   nested(inside_sync) sync IsSearchbox(uint64_t aID) returns(bool retval);
   nested(inside_sync) sync LandmarkRole(uint64_t aID) returns(nsString landmark);
-  nested(inside_sync) sync ARIARoleAtom(uint64_t aID) returns(nsString role);
+  nested(inside_sync) sync ARIARoleAtom(uint64_t aID) returns(nsString ariaRole);
   nested(inside_sync) sync GetLevelInternal(uint64_t aID) returns(int32_t aLevel);
   async ScrollTo(uint64_t aID, uint32_t aScrollType);
   async ScrollToPoint(uint64_t aID, uint32_t aScrollType, int32_t aX,
