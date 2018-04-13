@@ -12,7 +12,7 @@ import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 import mozilla.components.engine.EngineView
 import mozilla.components.feature.session.SessionFeature
-import mozilla.components.feature.session.ToolbarFeature
+import mozilla.components.feature.toolbar.ToolbarFeature
 
 class MainActivity : AppCompatActivity() {
     private var sessionFeature : SessionFeature? = null
