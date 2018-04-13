@@ -458,7 +458,7 @@ var gMainPane = {
 
     document.l10n.setAttributes(
       document.getElementById("updateAppInfo"),
-      "update-application-version",
+      "update-application-info",
       { version }
     );
 
