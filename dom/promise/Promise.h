@@ -111,23 +111,26 @@ public:
     return mGlobal;
   }
 
-  // Do the equivalent of Promise.resolve in the current compartment of aCx.
-  // Errorrs are reported on the ErrorResult; if aRv comes back !Failed(), this
-  // function MUST return a non-null value.
+  // Do the equivalent of Promise.resolve in the compartment of aGlobal.  The
+  // compartment of aCx is ignored.  Errors are reported on the ErrorResult; if
+  // aRv comes back !Failed(), this function MUST return a non-null value.
   static already_AddRefed<Promise>
   Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,
           JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
-  // Do the equivalent of Promise.reject in the current compartment of aCx.
-  // Errorrs are reported on the ErrorResult; if aRv comes back !Failed(), this
-  // function MUST return a non-null value.
+  // Do the equivalent of Promise.reject in the compartment of aGlobal.  The
+  // compartment of aCx is ignored.  Errors are reported on the ErrorResult; if
+  // aRv comes back !Failed(), this function MUST return a non-null value.
   static already_AddRefed<Promise>
   Reject(nsIGlobalObject* aGlobal, JSContext* aCx,
          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
+  // Do the equivalent of Promise.all in the current compartment of aCx.  Errors
+  // are reported on the ErrorResult; if aRv comes back !Failed(), this function
+  // MUST return a non-null value.
   static already_AddRefed<Promise>
-  All(const GlobalObject& aGlobal,
-      const nsTArray<RefPtr<Promise>>& aPromiseList, ErrorResult& aRv);
+  All(JSContext* aCx, const nsTArray<RefPtr<Promise>>& aPromiseList,
+      ErrorResult& aRv);
 
   void
   Then(JSContext* aCx,
