@@ -59,7 +59,7 @@ public:
 
   void
   GetPropertyChangeClosure(DeclarationBlockMutationClosure* aClosure,
-                           MutationClosureData* aClosureData) final
+                           mozilla::MutationClosureData* aClosureData) final
   {
     aClosure->function = MutationClosureFunction;
     aClosure->data = aClosureData;
@@ -71,7 +71,7 @@ protected:
   ~nsDOMCSSAttributeDeclaration();
 
   virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock* aDecl,
-                                     MutationClosureData* aClosureData) override;
+                                     mozilla::MutationClosureData* aClosureData) override;
   virtual nsIDocument* DocToUpdate() override;
 
   RefPtr<Element> mElement;
