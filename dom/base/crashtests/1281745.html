@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<!--
+user_pref("dom.webcomponents.enabled", true);
+-->
+<script>
+
+function boom() {
+  var x = document.createElementNS("http://www.mozilla.org/xbl", "children");
+  x.appendChild(document.createTextNode("t"));
+  document.body.attachShadow({ mode: "open" }).appendChild(x);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
