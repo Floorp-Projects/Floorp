@@ -9,9 +9,8 @@ Test the currency-amount component
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script src="payments_common.js"></script>
-  <script src="custom-elements.min.js"></script>
-  <script src="ObservedPropertiesMixin.js"></script>
-  <script src="currency-amount.js"></script>
+  <script src="../../res/vendor/custom-elements.min.js"></script>
+
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -23,8 +22,10 @@ Test the currency-amount component
 </div>
 <pre id="test">
 </pre>
-<script type="application/javascript">
+<script type="module">
 /** Test the currency-amount component **/
+
+import "../../res/components/currency-amount.js";
 
 /* import-globals-from payments_common.js */
 

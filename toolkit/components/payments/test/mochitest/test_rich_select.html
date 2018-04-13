@@ -10,15 +10,11 @@ Test the rich-select component
   <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script src="payments_common.js"></script>
-  <script src="custom-elements.min.js"></script>
-  <script src="ObservedPropertiesMixin.js"></script>
-  <script src="rich-select.js"></script>
-  <script src="rich-option.js"></script>
-  <script src="address-option.js"></script>
-  <script src="basic-card-option.js"></script>
-  <link rel="stylesheet" type="text/css" href="rich-select.css"/>
-  <link rel="stylesheet" type="text/css" href="address-option.css"/>
-  <link rel="stylesheet" type="text/css" href="basic-card-option.css"/>
+  <script src="../../res/vendor/custom-elements.min.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="../../res/components/rich-select.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/components/address-option.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/components/basic-card-option.css"/>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -82,12 +78,14 @@ Test the rich-select component
 </div>
 <pre id="test">
 </pre>
-<script type="application/javascript">
+<script type="module">
 /** Test the rich-select address-option component **/
 
 /* import-globals-from payments_common.js */
-/* import-globals-from ../../res/components/address-option.js */
-/* import-globals-from ../../res/components/basic-card-option.js */
+
+import AddressOption from "../../res/components/address-option.js";
+import BasicCardOption from "../../res/components/basic-card-option.js";
+import RichSelect from "../../res/components/rich-select.js";
 
 let select1 = document.getElementById("select1");
 let option1 = document.getElementById("option1");
@@ -332,7 +330,7 @@ add_task(async function test_basic_card_simple() {
 
 add_task(async function test_option_appended_after_creation() {
   let select2 = document.getElementById("select2");
-  let select3 = document.createElement("rich-select");
+  let select3 = new RichSelect();
   select3.id = "select3";
   select2.parentNode.insertBefore(select3, select2.nextElementSibling);
 
@@ -341,7 +339,7 @@ add_task(async function test_option_appended_after_creation() {
   ok(popupBox, "The popup box should exist");
   is(popupBox.childElementCount, 0, "The popup should not have any children");
 
-  let newOption = document.createElement("address-option");
+  let newOption = new AddressOption();
   newOption.name = "Jared FooBar";
   select3.appendChild(newOption);
   await asyncElementRendered();

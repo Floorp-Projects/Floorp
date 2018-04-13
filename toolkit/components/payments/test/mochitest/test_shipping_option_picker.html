@@ -10,17 +10,11 @@ Test the shipping-option-picker component
   <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script src="payments_common.js"></script>
-  <script src="custom-elements.min.js"></script>
-  <script src="PaymentsStore.js"></script>
-  <script src="ObservedPropertiesMixin.js"></script>
-  <script src="PaymentStateSubscriberMixin.js"></script>
-  <script src="rich-select.js"></script>
-  <script src="shipping-option-picker.js"></script>
-  <script src="rich-option.js"></script>
-  <script src="shipping-option.js"></script>
-  <script src="currency-amount.js"></script>
-  <link rel="stylesheet" type="text/css" href="rich-select.css"/>
-  <link rel="stylesheet" type="text/css" href="shipping-option.css"/>
+
+  <script src="../../res/vendor/custom-elements.min.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="../../res/components/rich-select.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/components/shipping-option.css"/>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -32,11 +26,12 @@ Test the shipping-option-picker component
 </div>
 <pre id="test">
 </pre>
-<script type="application/javascript">
+<script type="module">
 /** Test the shipping-option-picker component **/
 
 /* import-globals-from payments_common.js */
-/* import-globals-from ../../res/components/shipping-option.js */
+
+import "../../res/containers/shipping-option-picker.js";
 
 let picker1 = document.getElementById("picker1");
 

@@ -10,35 +10,28 @@ Test the paymentOptions address-picker
   <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script src="payments_common.js"></script>
 
-  <script src="custom-elements.min.js"></script>
-  <script src="PaymentsStore.js"></script>
-  <script src="ObservedPropertiesMixin.js"></script>
-  <script src="PaymentStateSubscriberMixin.js"></script>
-  <script src="payment-dialog.js"></script>
+  <script src="../../res/vendor/custom-elements.min.js"></script>
 
-  <script src="rich-select.js"></script>
-  <script src="address-picker.js"></script>
-  <script src="rich-option.js"></script>
-  <script src="address-option.js"></script>
-  <script src="currency-amount.js"></script>
-  <link rel="stylesheet" type="text/css" href="rich-select.css"/>
-  <link rel="stylesheet" type="text/css" href="address-option.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/components/rich-select.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/components/address-option.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/paymentRequest.css"/>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <link rel="stylesheet" type="text/css" href="paymentRequest.css"/>
 </head>
 <body>
   <p id="display">
-    <iframe id="templateFrame" src="paymentRequest.xhtml" width="0" height="0"></iframe>
+    <iframe id="templateFrame" src="../../res/paymentRequest.xhtml" width="0" height="0"></iframe>
   </p>
 <div id="content" style="display: none">
 
 </div>
 <pre id="test">
 </pre>
-<script type="application/javascript">
+<script type="module">
 /** Test the payer requested details functionality **/
 
 /* import-globals-from payments_common.js */
+
+import PaymentDialog from "../../res/containers/payment-dialog.js";
 
 function getVisiblePickerOptions(picker) {
   let select = picker.querySelector(":scope > rich-select");
@@ -143,7 +136,7 @@ add_task(async function setup_once() {
     displayEl.appendChild(imported);
   }
 
-  elDialog = document.createElement("payment-dialog");
+  elDialog = new PaymentDialog();
   displayEl.appendChild(elDialog);
   elPicker = elDialog.querySelector("address-picker.payer-related");
 
