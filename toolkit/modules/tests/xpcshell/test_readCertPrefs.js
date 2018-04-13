@@ -42,7 +42,7 @@ add_test(function test_singleCert() {
   Services.prefs.setCharPref(PREF_PREFIX + "1.attribute1", "foo");
   Services.prefs.setCharPref(PREF_PREFIX + "1.attribute2", "bar");
 
-  var certs = readCertPrefs(PREF_PREFIX);
+  var certs = CertUtils.readCertPrefs(PREF_PREFIX);
   test_results(certs, [{
     attribute1: "foo",
     attribute2: "bar"
@@ -58,7 +58,7 @@ add_test(function test_multipleCert() {
   Services.prefs.setCharPref(PREF_PREFIX + "2.md5Fingerprint", "9441051b7eb50e5ca2226095af710c1a");
   Services.prefs.setCharPref(PREF_PREFIX + "2.nickname", "2nd cert");
 
-  var certs = readCertPrefs(PREF_PREFIX);
+  var certs = CertUtils.readCertPrefs(PREF_PREFIX);
   test_results(certs, [{
     md5Fingerprint: "cf84a9a2a804e021f27cb5128fe151f4",
     nickname: "1st cert"
@@ -79,7 +79,7 @@ add_test(function test_skippedCert() {
   Services.prefs.setCharPref(PREF_PREFIX + "4.issuerName", "Unknown CA");
   Services.prefs.setCharPref(PREF_PREFIX + "4.nickname", "Ignored cert");
 
-  var certs = readCertPrefs(PREF_PREFIX);
+  var certs = CertUtils.readCertPrefs(PREF_PREFIX);
   test_results(certs, [{
     issuerName: "Mozilla",
     nickname: "1st cert"

@@ -71,25 +71,16 @@ CheckZoneGroup<Helper>::check() const
         return;
 
     JSContext* cx = TlsContext.get();
-    if (group) {
-        if (group->usedByHelperThread()) {
-            MOZ_ASSERT(group->ownedByCurrentHelperThread());
-        } else {
-            // In a cooperatively scheduled runtime the active thread is
-            // permitted access to all zone groups --- even those it has not
-            // entered --- for GC and similar purposes. Since all other
-            // cooperative threads are suspended, these accesses are threadsafe
-            // if the zone group is not in use by a helper thread.
-            //
-            // A corollary to this is that suspended cooperative threads may
-            // not access anything in a zone group, even zone groups they own,
-            // because they're not allowed to interact with the JS API.
-            MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-        }
-    } else {
-        // |group| will be null for data in the atoms zone. This is protected
-        // by the exclusive access lock.
+    if (zone->isAtomsZone()) {
+        // The atoms zone is protected by the exclusive access lock.
         MOZ_ASSERT(cx->runtime()->currentThreadHasExclusiveAccess());
+    } else if (zone->usedByHelperThread()) {
+        // This may only be accessed by the helper thread using this zone.
+        MOZ_ASSERT(zone->ownedByCurrentHelperThread());
+    } else {
+        // The main thread is permitted access to all zones. These accesses
+        // are threadsafe if the zone is not in use by a helper thread.
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
     }
 }
 
