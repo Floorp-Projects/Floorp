@@ -372,11 +372,6 @@ OptionsPanel.prototype = {
     // Labels for these new buttons are nightly only and mostly intended for working on
     // devtools.
     let prefDefinitions = [{
-      pref: "devtools.webconsole.new-frontend-enabled",
-      label: L10N.getStr("toolbox.options.enableNewConsole.label"),
-      id: "devtools-new-webconsole",
-      parentId: "webconsole-options"
-    }, {
       pref: "devtools.debugger.new-debugger-frontend",
       label: L10N.getStr("toolbox.options.enableNewDebugger.label"),
       id: "devtools-new-debugger",
