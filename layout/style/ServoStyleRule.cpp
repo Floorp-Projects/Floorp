@@ -206,9 +206,23 @@ ServoStyleRule::GetSelectorText(nsAString& aSelectorText)
 void
 ServoStyleRule::SetSelectorText(const nsAString& aSelectorText)
 {
-  // XXX We need to implement this... But Gecko doesn't have this either
-  //     so it's probably okay to leave it unimplemented currently?
-  //     See bug 37468 and mozilla::css::StyleRule::SetSelectorText.
+  if (RefPtr<StyleSheet> sheet = GetStyleSheet()) {
+    ServoStyleSheet* servoSheet = sheet->AsServo();
+    nsIDocument* doc = sheet->GetAssociatedDocument();
+
+    mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);
+
+    // StyleRule lives inside of the Inner, it is unsafe to call WillDirty
+    // if sheet does not already have a unique Inner.
+    sheet->AssertHasUniqueInner();
+    sheet->WillDirty();
+
+    const RawServoStyleSheetContents* contents = servoSheet->RawContents();
+    if (Servo_StyleRule_SetSelectorText(contents, mRawRule, &aSelectorText)) {
+      sheet->DidDirty();
+      sheet->RuleChanged(this);
+    }
+  }
 }
 
 uint32_t

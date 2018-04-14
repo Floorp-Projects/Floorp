@@ -134,6 +134,12 @@ StyleSheet::HasUniqueInner() const
   return mInner->mSheets.Length() == 1;
 }
 
+void
+StyleSheet::AssertHasUniqueInner() const
+{
+  MOZ_ASSERT(HasUniqueInner());
+}
+
 }
 
 #endif // mozilla_StyleSheetInlines_h
