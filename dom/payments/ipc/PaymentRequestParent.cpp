@@ -76,7 +76,8 @@ PaymentRequestParent::RecvRequestPayment(const IPCPaymentActionRequest& aRequest
                                      request.topLevelPrincipal(),
                                      methodData,
                                      details,
-                                     options);
+                                     options,
+				     request.shippingOption());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return IPC_FAIL_NO_REASON(this);
       }
@@ -142,7 +143,8 @@ PaymentRequestParent::RecvRequestPayment(const IPCPaymentActionRequest& aRequest
         do_CreateInstance(NS_PAYMENT_UPDATE_ACTION_REQUEST_CONTRACT_ID);
       rv = updateAction->InitRequest(request.requestId(),
                                      callback,
-                                     details);
+                                     details,
+				     request.shippingOption());
       action = do_QueryInterface(updateAction);
       MOZ_ASSERT(action);
       break;
