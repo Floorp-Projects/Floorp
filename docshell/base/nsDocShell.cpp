@@ -6159,8 +6159,13 @@ nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
   nsIScrollableFrame* sf = GetRootScrollFrame();
   NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
-  sf->ScrollTo(nsPoint(aCurHorizontalPos, aCurVerticalPos),
-               nsIScrollableFrame::INSTANT);
+  nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
+  if (sf->GetScrollbarStyles().mScrollBehavior ==
+        NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
+    scrollMode = nsIScrollableFrame::SMOOTH_MSD;
+  }
+
+  sf->ScrollTo(nsPoint(aCurHorizontalPos, aCurVerticalPos), scrollMode);
   return NS_OK;
 }
 
