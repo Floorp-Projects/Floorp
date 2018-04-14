@@ -690,11 +690,9 @@ bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport = false);
 bool NS_IsSafeTopLevelNav(nsIChannel* aChannel);
 
 /**
- * Returns true if the channel is a foreign with respect to the host-uri.
- * For loads of TYPE_DOCUMENT, this function returns true if it's a
- * cross origin navigation.
+ * Returns true if the channel is a foreign navigation.
  */
-bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI);
+bool NS_IsTopLevelForeign(nsIChannel* aChannel);
 
 // Constants duplicated from nsIScriptSecurityManager so we avoid having necko
 // know about script security manager.
