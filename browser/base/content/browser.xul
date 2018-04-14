@@ -332,12 +332,18 @@
     </panel>
 
     <menupopup id="toolbar-context-menu"
-               onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator'));">
+               onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator')); UpdateDownloadsAutoHide(this)">
       <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
                 accesskey="&customizeMenu.pinToOverflowMenu.accesskey;"
                 label="&customizeMenu.pinToOverflowMenu.label;"
                 contexttype="toolbaritem"
                 class="customize-context-moveToPanel"/>
+      <menuitem oncommand="onDownloadsAutoHideChange(event)"
+                type="checkbox"
+                accesskey="&customizeMenu.autoHideDownloadsButton.accesskey;"
+                label="&customizeMenu.autoHideDownloadsButton.label;"
+                contexttype="toolbaritem"
+                class="customize-context-autoHide"/>
       <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
                 accesskey="&customizeMenu.removeFromToolbar.accesskey;"
                 label="&customizeMenu.removeFromToolbar.label;"
