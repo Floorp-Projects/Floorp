@@ -83,7 +83,7 @@ EnableHandleCloseMonitoring()
 static bool
 ShouldDisableHandleVerifier()
 {
-#if defined(_X86_) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
+#if defined(_X86_) && (defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG))
   // Chromium only has the verifier enabled for 32-bit and our close monitoring
   // hooks cause debug assertions for 64-bit anyway.
   // For x86 keep the verifier enabled by default only for Nightly or debug.
