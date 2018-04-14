@@ -467,7 +467,8 @@ PaymentRequestManager::CreatePayment(JSContext* aCx,
                                        IPC::Principal(aTopLevelPrincipal),
                                        methodData,
                                        details,
-                                       options);
+                                       options,
+				       shippingOption);
 
   rv = SendRequestPayment(request, action, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -573,7 +574,7 @@ PaymentRequestManager::UpdatePayment(JSContext* aCx,
   }
 
   nsAutoString requestId(aRequestId);
-  IPCPaymentUpdateActionRequest action(requestId, details);
+  IPCPaymentUpdateActionRequest action(requestId, details, shippingOption);
   return SendRequestPayment(request, action);
 }
 

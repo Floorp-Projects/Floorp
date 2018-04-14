@@ -85,7 +85,9 @@ interface nsIPaymentRequest : nsISupports
   readonly attribute nsIArray paymentMethods;
   readonly attribute nsIPaymentDetails paymentDetails;
   readonly attribute nsIPaymentOptions paymentOptions;
+  readonly attribute AString shippingOption;
 
   [noscript] void setCompleteStatus(in AString aCompleteStatus);
-  void updatePaymentDetails(in nsIPaymentDetails aDetails);
+  void updatePaymentDetails(in nsIPaymentDetails aDetails,
+                            in AString aShippingOption);
 };
