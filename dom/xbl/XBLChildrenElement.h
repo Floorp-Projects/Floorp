@@ -40,22 +40,22 @@ public:
 
   void AppendInsertedChild(nsIContent* aChild)
   {
-    mInsertedChildren.AppendElement(aChild);
-    aChild->SetXBLInsertionPoint(this);
-
     // Appending an inserted child causes the inserted
     // children to be projected instead of default content.
     MaybeRemoveDefaultContent();
+
+    mInsertedChildren.AppendElement(aChild);
+    aChild->SetXBLInsertionPoint(this);
   }
 
   void InsertInsertedChildAt(nsIContent* aChild, uint32_t aIndex)
   {
-    mInsertedChildren.InsertElementAt(aIndex, aChild);
-    aChild->SetXBLInsertionPoint(this);
-
     // Inserting an inserted child causes the inserted
     // children to be projected instead of default content.
     MaybeRemoveDefaultContent();
+
+    mInsertedChildren.InsertElementAt(aIndex, aChild);
+    aChild->SetXBLInsertionPoint(this);
   }
 
   void RemoveInsertedChild(nsIContent* aChild)
