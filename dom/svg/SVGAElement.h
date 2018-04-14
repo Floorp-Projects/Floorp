@@ -8,6 +8,7 @@
 #define mozilla_dom_SVGAElement_h
 
 #include "Link.h"
+#include "nsDOMTokenList.h"
 #include "nsSVGString.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
 
@@ -27,6 +28,8 @@ class SVGAElement final : public SVGAElementBase,
                           public Link
 {
 protected:
+  using Element::GetText;
+
   explicit SVGAElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   friend nsresult (::NS_NewSVGAElement(nsIContent **aResult,
                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
@@ -34,6 +37,8 @@ protected:
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGAElement, SVGAElementBase)
 
   // nsINode interface methods
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
@@ -67,8 +72,21 @@ public:
   // WebIDL
   already_AddRefed<SVGAnimatedString> Href();
   already_AddRefed<SVGAnimatedString> Target();
-  void GetDownload(nsAString & aDownload);
-  void SetDownload(const nsAString & aDownload, ErrorResult& rv);
+  void GetDownload(nsAString& aDownload);
+  void SetDownload(const nsAString& aDownload, ErrorResult& rv);
+  void GetPing(nsAString& aPing);
+  void SetPing(const nsAString& aPing, mozilla::ErrorResult& rv);
+  void GetRel(nsAString& aRel);
+  void SetRel(const nsAString& aRel, mozilla::ErrorResult& rv);
+  void SetReferrerPolicy(const nsAString& aReferrerPolicy, mozilla::ErrorResult& rv);
+  void GetReferrerPolicy(nsAString& aReferrerPolicy);
+  nsDOMTokenList* RelList();
+  void GetHreflang(nsAString& aHreflang);
+  void SetHreflang(const nsAString& aHreflang, mozilla::ErrorResult& rv);
+  void GetType(nsAString& aType);
+  void SetType(const nsAString& aType, mozilla::ErrorResult& rv);
+  void GetText(nsAString& aText, mozilla::ErrorResult& rv);
+  void SetText(const nsAString& aText, mozilla::ErrorResult& rv);
 
   void NodeInfoChanged(nsIDocument* aOldDoc) final
   {
@@ -84,6 +102,9 @@ protected:
   enum { HREF, XLINK_HREF, TARGET };
   nsSVGString mStringAttributes[3];
   static StringInfo sStringInfo[3];
+
+  RefPtr<nsDOMTokenList> mRelList;
+  static DOMTokenListSupportedToken sSupportedRelValues[];
 };
 
 } // namespace dom
