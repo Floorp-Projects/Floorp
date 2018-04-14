@@ -272,7 +272,10 @@ let gSiteDataSettings = {
   },
 
   onClickRemoveSelected() {
-    this._removeSiteItems(this._list.selectedItems);
+    let selected = this._list.selectedItem;
+    if (selected) {
+      this._removeSiteItems([selected]);
+    }
     this._list.clearSelection();
   },
 
