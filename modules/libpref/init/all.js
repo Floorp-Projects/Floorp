@@ -2239,6 +2239,7 @@ pref("network.cookie.cookieBehavior",       0); // Keep the old default of accep
 pref("network.cookie.thirdparty.sessionOnly", false);
 pref("network.cookie.thirdparty.nonsecureSessionOnly", false);
 pref("network.cookie.leave-secure-alone",   true);
+pref("network.cookie.same-site.enabled",    true); // Honor the SameSite cookie attribute
 pref("network.cookie.ipc.sync",             false);
 pref("network.cookie.lifetimePolicy",       0); // 0-accept, 1-dontUse 2-acceptForSession, 3-acceptForNDays
 pref("network.cookie.prefsMigrated",        false);

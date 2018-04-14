@@ -242,6 +242,8 @@ class nsCookieService final : public nsICookieService
   private:
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+    static bool sSameSiteEnabled; // cached pref
+
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
@@ -264,6 +266,7 @@ class nsCookieService final : public nsICookieService
   static nsresult GetBaseDomain(nsIEffectiveTLDService *aTLDService, nsIURI *aHostURI, nsCString &aBaseDomain, bool &aRequireHostMatch);
   static nsresult GetBaseDomainFromHost(nsIEffectiveTLDService *aTLDService, const nsACString &aHost, nsCString &aBaseDomain);
   static bool DomainMatches(nsCookie* aCookie, const nsACString& aHost);
+  static bool IsSameSiteEnabled();
   static bool PathMatches(nsCookie* aCookie, const nsACString& aPath);
   static bool CanSetCookie(nsIURI *aHostURI, const nsCookieKey& aKey, nsCookieAttributes &aCookieAttributes, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel, bool aLeaveSercureAlone, bool &aSetCookie, mozIThirdPartyUtil* aThirdPartyUtil);
   static CookieStatus CheckPrefs(nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior, bool aThirdPartySession, bool aThirdPartyNonsecureSession, nsIURI *aHostURI, bool aIsForeign, const char *aCookieHeader, const int aNumOfCookies, const OriginAttributes& aOriginAttrs);
