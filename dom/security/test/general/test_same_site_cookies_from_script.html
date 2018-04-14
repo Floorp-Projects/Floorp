@@ -23,6 +23,9 @@
  *    (a) same site cookie has been discarded in a cross origin context.
  */
 
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.clearUserPref("network.cookie.same-site.enabled");
+});
 SimpleTest.waitForExplicitFinish();
 
 const SAME_ORIGIN = "http://mochi.test:8888/";
@@ -36,13 +39,29 @@ var tests = [
     description: "same-site cookie inline script within same-site context",
     setCookieSrc: SAME_ORIGIN + PATH + "?setSameSiteCookieUsingInlineScript",
     getCookieSrc: SAME_ORIGIN + PATH + "?getCookieFrame",
+    sameSiteEnabled: true,
     result: "myKey=sameSiteCookieInlineScript",
   },
   {
     description: "same-site cookie inline script within cross-site context",
     setCookieSrc: CROSS_ORIGIN + PATH + "?setSameSiteCookieUsingInlineScript",
     getCookieSrc: CROSS_ORIGIN + PATH + "?getCookieFrame",
+    sameSiteEnabled: true,
     result: "", // same-site cookie should be discarded in cross site context
+  },
+  {
+    description: "same-site cookie inline script within same-site context",
+    setCookieSrc: SAME_ORIGIN + PATH + "?setSameSiteCookieUsingInlineScript",
+    getCookieSrc: SAME_ORIGIN + PATH + "?getCookieFrame",
+    sameSiteEnabled: false,
+    result: "myKey=sameSiteCookieInlineScript",
+  },
+  {
+    description: "same-site cookie inline script within cross-site context",
+    setCookieSrc: CROSS_ORIGIN + PATH + "?setSameSiteCookieUsingInlineScript",
+    getCookieSrc: CROSS_ORIGIN + PATH + "?getCookieFrame",
+    sameSiteEnabled: false,
+    result: "myKey=sameSiteCookieInlineScript",
   },
 ];
 
@@ -67,6 +86,7 @@ function setupQueryResultAndRunTest() {
 }
 
 function setCookieAndInitTest() {
+  SpecialPowers.setBoolPref("network.cookie.same-site.enabled", tests[curTest].sameSiteEnabled);
   var cookieFrame = document.getElementById("setCookieFrame");
   setCookieFrame.onload = function() {
     ok(true, "trying to set cookie for test (" + tests[curTest].description + ")");
