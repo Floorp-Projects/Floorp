@@ -2041,9 +2041,9 @@ nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
   }
 
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
-  bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
+  bool isTopLevelForeign = NS_IsTopLevelForeign(aChannel);
   nsAutoCString result;
-  GetCookieStringInternal(aHostURI, isForeign, isSafeTopLevelNav, isSameSiteForeign,
+  GetCookieStringInternal(aHostURI, isForeign, isSafeTopLevelNav, isTopLevelForeign,
                           aHttpBound, attrs, result);
   *aCookie = result.IsEmpty() ? nullptr : ToNewCString(result);
   return NS_OK;
@@ -3112,7 +3112,7 @@ void
 nsCookieService::GetCookiesForURI(nsIURI *aHostURI,
                                   bool aIsForeign,
                                   bool aIsSafeTopLevelNav,
-                                  bool aIsSameSiteForeign,
+                                  bool aIsTopLevelForeign,
                                   bool aHttpBound,
                                   const OriginAttributes& aOriginAttrs,
                                   nsTArray<nsCookie*>& aCookieList)
@@ -3204,7 +3204,7 @@ nsCookieService::GetCookiesForURI(nsIURI *aHostURI,
 
     int32_t sameSiteAttr = 0;
     cookie->GetSameSite(&sameSiteAttr);
-    if (aIsSameSiteForeign) {
+    if (aIsForeign || aIsTopLevelForeign) {
       // it if's a cross origin request and the cookie is same site only (strict)
       // don't send it
       if (sameSiteAttr == nsICookie2::SAMESITE_STRICT) {
@@ -3285,13 +3285,13 @@ void
 nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
                                          bool aIsForeign,
                                          bool aIsSafeTopLevelNav,
-                                         bool aIsSameSiteForeign,
+                                         bool aIsTopLevelForeign,
                                          bool aHttpBound,
                                          const OriginAttributes& aOriginAttrs,
                                          nsCString &aCookieString)
 {
   AutoTArray<nsCookie*, 8> foundCookieList;
-  GetCookiesForURI(aHostURI, aIsForeign, aIsSafeTopLevelNav, aIsSameSiteForeign,
+  GetCookiesForURI(aHostURI, aIsForeign, aIsSafeTopLevelNav, aIsTopLevelForeign,
                    aHttpBound, aOriginAttrs, foundCookieList);
 
   nsCookie* cookie;
@@ -3467,17 +3467,6 @@ nsCookieService::CanSetCookie(nsIURI*             aHostURI,
     Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
                           BLOCKED_SECURE_SET_FROM_HTTP);
     return newCookie;
-  }
-
-  // If the new cookie is same-site but in a cross site context,
-  // browser must ignore the cookie.
-  if (aCookieAttributes.sameSite != nsICookie2::SAMESITE_UNSET) {
-    bool isThirdParty = NS_IsSameSiteForeign(aChannel, aHostURI);
-    if (isThirdParty) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
-                        "failed the samesite tests");
-      return newCookie;
-    }
   }
 
   aSetCookie = true;

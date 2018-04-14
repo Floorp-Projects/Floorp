@@ -133,9 +133,9 @@ CookieServiceChild::TrackCookieLoad(nsIChannel *aChannel)
   URIParams uriParams;
   SerializeURI(uri, uriParams);
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
-  bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, uri);
+  bool isTopLevelForeign = NS_IsTopLevelForeign(aChannel);
   SendPrepareCookieList(uriParams, isForeign, isSafeTopLevelNav,
-                        isSameSiteForeign, attrs);
+                        isTopLevelForeign, attrs);
 }
 
 mozilla::ipc::IPCResult
@@ -261,7 +261,7 @@ void
 CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *aHostURI,
                                                        bool                   aIsForeign,
                                                        bool                   aIsSafeTopLevelNav,
-                                                       bool                   aIsSameSiteForeign,
+                                                       bool                   aIsTopLevelForeign,
                                                        const OriginAttributes &aOriginAttrs,
                                                        nsCString              &aCookieString)
 {
@@ -314,7 +314,7 @@ CookieServiceChild::GetCookieStringFromCookieHashTable(nsIURI                 *a
 
     int32_t sameSiteAttr = 0;
     cookie->GetSameSite(&sameSiteAttr);
-    if (aIsSameSiteForeign) {
+    if (aIsForeign || aIsTopLevelForeign) {
       // it if's a cross origin request and the cookie is same site only (strict)
       // don't send it
       if (sameSiteAttr == nsICookie2::SAMESITE_STRICT) {
@@ -355,14 +355,14 @@ void
 CookieServiceChild::GetCookieStringSyncIPC(nsIURI                 *aHostURI,
                                            bool                   aIsForeign,
                                            bool                   aIsSafeTopLevelNav,
-                                           bool                   aIsSameSiteForeign,
+                                           bool                   aIsTopLevelForeign,
                                            const OriginAttributes &aAttrs,
                                            nsAutoCString          &aCookieString)
 {
   URIParams uriParams;
   SerializeURI(aHostURI, uriParams);
 
-  SendGetCookieString(uriParams, aIsForeign, aIsSafeTopLevelNav, aIsSameSiteForeign, aAttrs, &aCookieString);
+  SendGetCookieString(uriParams, aIsForeign, aIsSafeTopLevelNav, aIsTopLevelForeign, aAttrs, &aCookieString);
 }
 
 uint32_t
@@ -487,18 +487,18 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
     mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
 
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
-  bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
+  bool isTopLevelForeign = NS_IsTopLevelForeign(aChannel);
 
   nsAutoCString result;
   if (!mIPCSync) {
     GetCookieStringFromCookieHashTable(aHostURI, !!isForeign, isSafeTopLevelNav,
-                                       isSameSiteForeign, attrs, result);
+                                       isTopLevelForeign, attrs, result);
   } else {
     if (!mIPCOpen) {
       return NS_ERROR_NOT_AVAILABLE;
     }
     GetCookieStringSyncIPC(aHostURI, !!isForeign, isSafeTopLevelNav,
-                           isSameSiteForeign, attrs, result);
+                           isTopLevelForeign, attrs, result);
   }
 
   if (!result.IsEmpty())
@@ -534,13 +534,8 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   if (aServerTime)
     stringServerTime.Rebind(aServerTime);
 
-  URIParams hostURIParams;
-  SerializeURI(aHostURI, hostURIParams);
-
-  nsCOMPtr<nsIURI> channelURI;
-  aChannel->GetURI(getter_AddRefs(channelURI));
-  URIParams channelURIParams;
-  SerializeURI(channelURI, channelURIParams);
+  URIParams uriParams;
+  SerializeURI(aHostURI, uriParams);
 
   mozilla::OriginAttributes attrs;
   if (aChannel) {
@@ -552,8 +547,7 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
 
   // Asynchronously call the parent.
   if (mIPCOpen) {
-    SendSetCookieString(hostURIParams, channelURIParams,
-                        !!isForeign, cookieString,
+    SendSetCookieString(uriParams, !!isForeign, cookieString,
                         stringServerTime, attrs, aFromHttp);
   }
 
