@@ -310,11 +310,11 @@ let buttonActions = {
   },
 
   setRequest1() {
-    requestStore.setState({request: REQUEST_1});
+    paymentDialog.setStateFromParent({request: REQUEST_1});
   },
 
   setRequest2() {
-    requestStore.setState({request: REQUEST_2});
+    paymentDialog.setStateFromParent({request: REQUEST_2});
   },
 
   setRequestPayerName() {
