@@ -6,11 +6,11 @@
 #include <string.h>
 
 #include "mozilla/RangedPtr.h"
+#include "mozilla/TextUtils.h"
 
 #include "nsURLParsers.h"
 #include "nsURLHelper.h"
 #include "nsString.h"
-#include "nsCRT.h"
 
 using namespace mozilla;
 
@@ -387,7 +387,7 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, int32_t specLen,
                 // [a-zA-Z][:|]{/\}
                 // i.e one of:   c:   c:\foo  c:/foo  c|  c|\foo  c|/foo
                 if ((specLen > 3) && (spec[3] == ':' || spec[3] == '|') &&
-                    nsCRT::IsAsciiAlpha(spec[2]) &&
+                    IsAsciiAlpha(spec[2]) &&
                     ((specLen == 4) || (spec[4] == '/') || (spec[4] == '\\'))) {
                     pos = 1;
                     break;
@@ -434,7 +434,7 @@ nsNoAuthURLParser::ParseFilePath(const char *filepath, int32_t filepathLen,
         const char *p = filepath;
         if (*p == '/')
             p++;
-        if ((end-p == 2) && (p[1]==':' || p[1]=='|') && nsCRT::IsAsciiAlpha(*p)) {
+        if ((end-p == 2) && (p[1]==':' || p[1]=='|') && IsAsciiAlpha(*p)) {
             // filepath = <drive-number>:
             SET_RESULT(directory, 0, filepathLen);
             SET_RESULT(basename, 0, -1);

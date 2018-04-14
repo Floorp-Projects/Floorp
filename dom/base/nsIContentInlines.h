@@ -176,6 +176,31 @@ nsIContent::IsActiveChildrenElement() const
     return false;
   }
 
+  // We reuse the binding parent machinery for Shadow DOM too, so prevent that
+  // from getting us confused in this case.
+  return !bindingParent->GetShadowRoot();
+}
+
+inline bool
+nsIContent::IsInAnonymousSubtree() const
+{
+  NS_ASSERTION(!IsInNativeAnonymousSubtree() || GetBindingParent() ||
+               (!IsInUncomposedDoc() &&
+                static_cast<nsIContent*>(SubtreeRoot())->IsInNativeAnonymousSubtree()),
+               "Must have binding parent when in native anonymous subtree which is in document.\n"
+               "Native anonymous subtree which is not in document must have native anonymous root.");
+
+  if (IsInNativeAnonymousSubtree()) {
+    return true;
+  }
+
+  nsIContent* bindingParent = GetBindingParent();
+  if (!bindingParent) {
+    return false;
+  }
+
+  // We reuse the binding parent machinery for Shadow DOM too, so prevent that
+  // from getting us confused in this case.
   return !bindingParent->GetShadowRoot();
 }
 
