@@ -30,3 +30,4 @@ asserts(0-1) fuzzy-if(Android,8,3216) == display-contents-fieldset.html display-
 == display-contents-writing-mode-2.html display-contents-writing-mode-2-ref.html
 needs-focus == display-contents-state-change.html display-contents-state-change-ref.html
 == display-flow-root-001.html display-flow-root-001-ref.html
+== display-contents-suppression-dynamic.html display-contents-suppression-dynamic-ref.html
