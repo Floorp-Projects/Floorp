@@ -236,7 +236,7 @@ class ArenaLists
     // Arena) so the JITs can fall back gracefully.
     static FreeSpan placeholder;
 
-    ZoneGroupOrGCTaskData<AllAllocKindArray<ArenaList>> arenaLists_;
+    ZoneOrGCTaskData<AllAllocKindArray<ArenaList>> arenaLists_;
     ArenaList& arenaLists(AllocKind i) { return arenaLists_.ref()[i]; }
     const ArenaList& arenaLists(AllocKind i) const { return arenaLists_.ref()[i]; }
 
@@ -256,8 +256,8 @@ class ArenaLists
     Arena* arenaListsToSweep(AllocKind i) const { return arenaListsToSweep_.ref()[i]; }
 
     /* During incremental sweeping, a list of the arenas already swept. */
-    ZoneGroupOrGCTaskData<AllocKind> incrementalSweptArenaKind;
-    ZoneGroupOrGCTaskData<ArenaList> incrementalSweptArenas;
+    ZoneOrGCTaskData<AllocKind> incrementalSweptArenaKind;
+    ZoneOrGCTaskData<ArenaList> incrementalSweptArenas;
 
     // Arena lists which have yet to be swept, but need additional foreground
     // processing before they are swept.
