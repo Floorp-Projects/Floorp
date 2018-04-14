@@ -630,7 +630,7 @@ Cache::AddAll(const GlobalObject& aGlobal,
     new FetchHandler(mActor->GetWorkerHolder(), this,
                      Move(aRequestList), promise);
 
-  RefPtr<Promise> fetchPromise = Promise::All(aGlobal.Context(), fetchList, aRv);
+  RefPtr<Promise> fetchPromise = Promise::All(aGlobal, fetchList, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
