@@ -34,12 +34,12 @@ function handleRequest(request, response)
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
-  if (request.queryString === "setSameSiteCookieUsingInlineScript") {
+  if (request.queryString.includes("setSameSiteCookieUsingInlineScript")) {
     response.write(SET_COOKIE_FRAME);
     return;
   }
 
-  if (request.queryString === "getCookieFrame") {
+  if (request.queryString.includes("getCookieFrame")) {
     response.write(GET_COOKIE_FRAME);
     return;
   }

@@ -34,14 +34,14 @@ function handleRequest(request, response)
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
-  if (request.queryString === "setStrictSameSiteCookie") {
+  if (request.queryString.includes("setStrictSameSiteCookie")) {
     response.setHeader("Set-Cookie", "myKey=strictSameSiteCookie; samesite=strict", true);
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
     return;
   }
 
-  if (request.queryString === "setLaxSameSiteCookie") {
+  if (request.queryString.includes("setLaxSameSiteCookie")) {
     response.setHeader("Set-Cookie", "myKey=laxSameSiteCookie; samesite=lax", true);
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
@@ -50,18 +50,18 @@ function handleRequest(request, response)
 
   // save the object state of the initial request, which returns
   // async once the server has processed the img request.
-  if (request.queryString === "queryresult") {
+  if (request.queryString.includes("queryresult")) {
     response.processAsync();
     setObjectState("queryResult", response);
     return;
   }
 
-  if (request.queryString === "loadFrame") {
+  if (request.queryString.includes("loadFrame")) {
     response.write(FRAME);
     return;
   }
 
-  if (request.queryString === "loadWin") {
+  if (request.queryString.includes("loadWin")) {
     var cookie = "unitialized";
     if (request.hasHeader("Cookie")) {
       cookie = request.getHeader("Cookie");
