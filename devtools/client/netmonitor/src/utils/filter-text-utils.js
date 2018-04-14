@@ -32,6 +32,7 @@
 
 const { FILTER_FLAGS } = require("../constants");
 const { getFormattedIPAndPort } = require("./format-utils");
+const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 
 /*
   The function `parseFilters` is from:
@@ -217,7 +218,7 @@ function isSizeMatch(value, size) {
 }
 
 function isTextFilterMatch({ url }, text) {
-  let lowerCaseUrl = url.toLowerCase();
+  let lowerCaseUrl = getUnicodeUrl(url).toLowerCase();
   let lowerCaseText = text.toLowerCase();
   let textLength = text.length;
   // Support negative filtering
