@@ -1259,25 +1259,14 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
-   * If a layer is a scroll thumb container layer, set the scroll identifier
-   * of the scroll frame scrolled by the thumb, and other data related to the
-   * thumb.
+   * If a layer is a scroll thumb container layer or a scrollbar container
+   * layer, set the scroll identifier of the scroll frame scrolled by
+   * the scrollbar, and other data related to the scrollbar.
    */
   void SetScrollbarData(const ScrollbarData& aThumbData)
   {
     if (mSimpleAttrs.SetScrollbarData(aThumbData)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrollbarData", this));
-      MutatedSimple();
-    }
-  }
-
-  // Set during construction for the container layer of scrollbar components.
-  // |aScrollId| holds the scroll identifier of the scrollable content that
-  // the scrollbar is for.
-  void SetScrollbarContainer(FrameMetrics::ViewID aScrollId,
-                             ScrollDirection aDirection)
-  {
-    if (mSimpleAttrs.SetScrollbarContainer(aScrollId, aDirection)) {
       MutatedSimple();
     }
   }
