@@ -135,40 +135,37 @@ Promise::Reject(nsIGlobalObject* aGlobal, JSContext* aCx,
 
 // static
 already_AddRefed<Promise>
-Promise::All(JSContext* aCx,
+Promise::All(const GlobalObject& aGlobal,
              const nsTArray<RefPtr<Promise>>& aPromiseList, ErrorResult& aRv)
 {
-  JS::Rooted<JSObject*> globalObj(aCx, JS::CurrentGlobalOrNull(aCx));
-  if (!globalObj) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIGlobalObject> global = xpc::NativeGlobal(globalObj);
+  nsCOMPtr<nsIGlobalObject> global;
+  global = do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  JS::AutoObjectVector promises(aCx);
+  JSContext* cx = aGlobal.Context();
+
+  JS::AutoObjectVector promises(cx);
   if (!promises.reserve(aPromiseList.Length())) {
-    aRv.NoteJSContextException(aCx);
+    aRv.NoteJSContextException(cx);
     return nullptr;
   }
 
   for (auto& promise : aPromiseList) {
-    JS::Rooted<JSObject*> promiseObj(aCx, promise->PromiseObj());
+    JS::Rooted<JSObject*> promiseObj(cx, promise->PromiseObj());
     // Just in case, make sure these are all in the context compartment.
-    if (!JS_WrapObject(aCx, &promiseObj)) {
-      aRv.NoteJSContextException(aCx);
+    if (!JS_WrapObject(cx, &promiseObj)) {
+      aRv.NoteJSContextException(cx);
       return nullptr;
     }
     promises.infallibleAppend(promiseObj);
   }
 
-  JS::Rooted<JSObject*> result(aCx, JS::GetWaitForAllPromise(aCx, promises));
+  JS::Rooted<JSObject*> result(cx, JS::GetWaitForAllPromise(cx, promises));
   if (!result) {
-    aRv.NoteJSContextException(aCx);
+    aRv.NoteJSContextException(cx);
     return nullptr;
   }
 
