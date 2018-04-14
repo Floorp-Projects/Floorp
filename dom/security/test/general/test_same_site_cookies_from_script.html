@@ -63,7 +63,7 @@ function receiveMessage(event) {
 
 function setupQueryResultAndRunTest() {
   let getCookieFrame = document.getElementById("getCookieFrame");
-  getCookieFrame.src = tests[curTest].getCookieSrc;
+  getCookieFrame.src = tests[curTest].getCookieSrc + curTest;
 }
 
 function setCookieAndInitTest() {
@@ -75,7 +75,7 @@ function setCookieAndInitTest() {
   setCookieFrame.onerror = function() {
     ok(false, "could not load image for test (" + tests[curTest].description + ")");
   }
-  cookieFrame.src =  tests[curTest].setCookieSrc;
+  cookieFrame.src =  tests[curTest].setCookieSrc + curTest;
 }
 
 // fire up the test
