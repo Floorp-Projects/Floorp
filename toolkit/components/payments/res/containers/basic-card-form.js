@@ -78,6 +78,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
       page,
       savedAddresses,
       savedBasicCards,
+      selectedShippingAddress,
     } = state;
 
     this.genericErrorText.textContent = page.error;
@@ -91,6 +92,8 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
       if (!record) {
         throw new Error("Trying to edit a non-existing card: " + page.guid);
       }
+    } else if (selectedShippingAddress) {
+      record.billingAddressGUID = selectedShippingAddress;
     }
 
     this.formHandler.loadRecord(record, savedAddresses);
