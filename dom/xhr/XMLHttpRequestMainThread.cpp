@@ -247,20 +247,6 @@ XMLHttpRequestMainThread::~XMLHttpRequestMainThread()
   mozilla::DropJSObjects(this);
 }
 
-/**
- * This Init method should only be called by C++ consumers.
- */
-nsresult
-XMLHttpRequestMainThread::Init(nsIPrincipal* aPrincipal,
-                               nsIGlobalObject* aGlobalObject,
-                               nsIURI* aBaseURI,
-                               nsILoadGroup* aLoadGroup)
-{
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-  Construct(aPrincipal, aGlobalObject, aBaseURI, aLoadGroup);
-  return NS_OK;
-}
-
 void
 XMLHttpRequestMainThread::InitParameters(bool aAnon, bool aSystem)
 {

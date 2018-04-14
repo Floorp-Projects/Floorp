@@ -1010,22 +1010,13 @@ ComputeBinary(ParseNodeKind kind, double left, double right)
         return left * right;
 
     if (kind == ParseNodeKind::Mod)
-        return right == 0 ? GenericNaN() : fmod(left, right);
+        return NumberMod(left, right);
 
     if (kind == ParseNodeKind::Ursh)
         return ToUint32(left) >> (ToUint32(right) & 31);
 
-    if (kind == ParseNodeKind::Div) {
-        if (right == 0) {
-            if (left == 0 || IsNaN(left))
-                return GenericNaN();
-            if (IsNegative(left) != IsNegative(right))
-                return NegativeInfinity<double>();
-            return PositiveInfinity<double>();
-        }
-
-        return left / right;
-    }
+    if (kind == ParseNodeKind::Div)
+        return NumberDiv(left, right);
 
     MOZ_ASSERT(kind == ParseNodeKind::Lsh || kind == ParseNodeKind::Rsh);
 

@@ -1367,10 +1367,9 @@ const Class ScriptSourceObject::class_ = {
 ScriptSourceObject*
 ScriptSourceObject::create(JSContext* cx, ScriptSource* source)
 {
-    RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, nullptr));
-    if (!object)
+    RootedScriptSource sourceObject(cx, NewObjectWithGivenProto<ScriptSourceObject>(cx, nullptr));
+    if (!sourceObject)
         return nullptr;
-    RootedScriptSource sourceObject(cx, &object->as<ScriptSourceObject>());
 
     source->incref();    // The matching decref is in ScriptSourceObject::finalize.
     sourceObject->initReservedSlot(SOURCE_SLOT, PrivateValue(source));
@@ -1447,7 +1446,7 @@ JSScript::loadSource(JSContext* cx, ScriptSource* ss, bool* worked)
         return false;
     if (!src)
         return true;
-    if (!ss->setSource(cx, mozilla::UniquePtr<char16_t[], JS::FreePolicy>(src), length))
+    if (!ss->setSource(cx, UniqueTwoByteChars(src), length))
         return false;
 
     *worked = true;
@@ -1796,9 +1795,7 @@ ScriptSource::functionBodyString(JSContext* cx)
 }
 
 MOZ_MUST_USE bool
-ScriptSource::setSource(JSContext* cx,
-                        mozilla::UniquePtr<char16_t[], JS::FreePolicy>&& source,
-                        size_t length)
+ScriptSource::setSource(JSContext* cx, UniqueTwoByteChars&& source, size_t length)
 {
     auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
     auto deduped = cache.getOrCreate(mozilla::Move(source), length);
@@ -1862,9 +1859,7 @@ ScriptSource::tryCompressOffThread(JSContext* cx)
 }
 
 MOZ_MUST_USE bool
-ScriptSource::setCompressedSource(JSContext* cx,
-                                  mozilla::UniquePtr<char[], JS::FreePolicy>&& raw,
-                                  size_t rawLength,
+ScriptSource::setCompressedSource(JSContext* cx, UniqueChars&& raw, size_t rawLength,
                                   size_t sourceLength)
 {
     MOZ_ASSERT(raw);
@@ -1899,7 +1894,7 @@ ScriptSource::setSourceCopy(JSContext* cx, SourceBufferHolder& srcBuf)
     auto& cache = runtime->sharedImmutableStrings();
     auto deduped = cache.getOrCreate(srcBuf.get(), srcBuf.length(), [&]() {
         return srcBuf.ownsChars()
-               ? mozilla::UniquePtr<char16_t[], JS::FreePolicy>(srcBuf.take())
+               ? UniqueTwoByteChars(srcBuf.take())
                : DuplicateString(srcBuf.get(), srcBuf.length());
     });
     if (!deduped) {
@@ -1912,7 +1907,7 @@ ScriptSource::setSourceCopy(JSContext* cx, SourceBufferHolder& srcBuf)
 }
 
 static MOZ_MUST_USE bool
-reallocUniquePtr(UniquePtr<char[], JS::FreePolicy>& unique, size_t size)
+reallocUniquePtr(UniqueChars& unique, size_t size)
 {
     auto newPtr = static_cast<char*>(js_realloc(unique.get(), size));
     if (!newPtr)
@@ -1937,7 +1932,7 @@ SourceCompressionTask::work()
     // size of the string, first.
     size_t inputBytes = source->length() * sizeof(char16_t);
     size_t firstSize = inputBytes / 2;
-    mozilla::UniquePtr<char[], JS::FreePolicy> compressed(js_pod_malloc<char>(firstSize));
+    UniqueChars compressed(js_pod_malloc<char>(firstSize));
     if (!compressed)
         return;
 
@@ -2147,8 +2142,7 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
 
         size_t byteLen = compressedLength ? compressedLength : (len * sizeof(char16_t));
         if (mode == XDR_DECODE) {
-            mozilla::UniquePtr<char[], JS::FreePolicy> bytes(
-                xdr->cx()->template pod_malloc<char>(Max<size_t>(byteLen, 1)));
+            UniqueChars bytes(xdr->cx()->template pod_malloc<char>(Max<size_t>(byteLen, 1)));
             if (!bytes)
                 return xdr->fail(JS::TranscodeResult_Throw);
             MOZ_TRY(xdr->codeBytes(bytes.get(), byteLen));
@@ -2157,8 +2151,7 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
                 if (!setCompressedSource(xdr->cx(), mozilla::Move(bytes), byteLen, len))
                     return xdr->fail(JS::TranscodeResult_Throw);
             } else {
-                mozilla::UniquePtr<char16_t[], JS::FreePolicy> source(
-                    reinterpret_cast<char16_t*>(bytes.release()));
+                UniqueTwoByteChars source(reinterpret_cast<char16_t*>(bytes.release()));
                 if (!setSource(xdr->cx(), mozilla::Move(source), len))
                     return xdr->fail(JS::TranscodeResult_Throw);
             }

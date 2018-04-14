@@ -36,12 +36,10 @@ GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
         if (!proto)
             return nullptr;
     }
-    RootedNativeObject obj(cx,
-                           NewNativeObjectWithGivenProto(cx, &GeneratorObject::class_, proto));
-    if (!obj)
+    Rooted<GeneratorObject*> genObj(cx, NewObjectWithGivenProto<GeneratorObject>(cx, proto));
+    if (!genObj)
         return nullptr;
 
-    GeneratorObject* genObj = &obj->as<GeneratorObject>();
     genObj->setCallee(*frame.callee());
     genObj->setNewTarget(frame.newTarget());
     genObj->setEnvironmentChain(*frame.environmentChain());
@@ -49,7 +47,7 @@ GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
         genObj->setArgsObj(frame.argsObj());
     genObj->clearExpressionStack();
 
-    return obj;
+    return genObj;
 }
 
 bool
@@ -213,7 +211,7 @@ GlobalObject::initGenerators(JSContext* cx, Handle<GlobalObject*> global)
     if (!iteratorProto)
         return false;
 
-    RootedObject genObjectProto(cx, GlobalObject::createBlankPrototypeInheriting(cx, global,
+    RootedObject genObjectProto(cx, GlobalObject::createBlankPrototypeInheriting(cx,
                                                                                  &PlainObject::class_,
                                                                                  iteratorProto));
     if (!genObjectProto)

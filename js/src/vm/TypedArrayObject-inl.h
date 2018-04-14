@@ -12,6 +12,7 @@
 #include "vm/TypedArrayObject.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Compiler.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
@@ -264,7 +265,7 @@ class ElementSpecific
         }
 
         // Inhibit unaligned accesses on ARM (bug 1097253, a compiler bug).
-#if defined(__arm__) && defined(__GNUC__) && !defined(__clang__)
+#if defined(__arm__) && MOZ_IS_GCC
 #  define JS_VOLATILE_ARM volatile
 #else
 #  define JS_VOLATILE_ARM

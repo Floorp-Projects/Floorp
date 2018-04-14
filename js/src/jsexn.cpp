@@ -589,8 +589,7 @@ ErrorObject::createProto(JSContext* cx, JSProtoKey key)
     if (!protoProto)
         return nullptr;
 
-    return GlobalObject::createBlankPrototypeInheriting(cx, cx->global(),
-                                                        &ErrorObject::protoClasses[type],
+    return GlobalObject::createBlankPrototypeInheriting(cx, &ErrorObject::protoClasses[type],
                                                         protoProto);
 }
 

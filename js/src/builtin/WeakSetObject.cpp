@@ -150,9 +150,8 @@ const JSFunctionSpec WeakSetObject::methods[] = {
 };
 
 JSObject*
-WeakSetObject::initClass(JSContext* cx, HandleObject obj)
+WeakSetObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedPlainObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!proto)
         return nullptr;
@@ -238,9 +237,9 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
 
 JSObject*
-js::InitWeakSetClass(JSContext* cx, HandleObject obj)
+js::InitWeakSetClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    return WeakSetObject::initClass(cx, obj);
+    return WeakSetObject::initClass(cx, global);
 }
 
 JS_FRIEND_API(bool)

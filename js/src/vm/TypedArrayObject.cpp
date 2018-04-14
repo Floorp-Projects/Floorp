@@ -341,7 +341,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return nullptr;
 
         const Class* clasp = TypedArrayObject::protoClassForType(ArrayTypeID());
-        return GlobalObject::createBlankPrototypeInheriting(cx, global, clasp, typedArrayProto);
+        return GlobalObject::createBlankPrototypeInheriting(cx, clasp, typedArrayProto);
     }
 
     static JSObject*
@@ -403,7 +403,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     {
         MOZ_ASSERT(proto);
 
-        JSObject* obj = NewObjectWithClassProto(cx, instanceClass(), proto, allocKind);
+        JSObject* obj = NewObjectWithGivenProto(cx, instanceClass(), proto, allocKind);
         return obj ? &obj->as<TypedArrayObject>() : nullptr;
     }
 
@@ -1405,35 +1405,10 @@ JS_FOR_EACH_TYPED_ARRAY(CHECK_TYPED_ARRAY_CONSTRUCTOR)
     return true;
 }
 
-/*
- * These next 3 functions are brought to you by the buggy GCC we use to build
- * B2G ICS. Older GCC versions have a bug in which they fail to compile
- * reinterpret_casts of templated functions with the message: "insufficient
- * contextual information to determine type". JS_PSG needs to
- * reinterpret_cast<JSGetterOp>, so this causes problems for us here.
- *
- * We could restructure all this code to make this nicer, but since ICS isn't
- * going to be around forever (and since this bug is fixed with the newer GCC
- * versions we use on JB and KK), the workaround here is designed for ease of
- * removal. When you stop seeing ICS Emulator builds on TBPL, remove these 3
- * JSNatives and insert the templated callee directly into the JS_PSG below.
- */
 static bool
 TypedArray_lengthGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     return TypedArrayObject::Getter<TypedArrayObject::lengthValue>(cx, argc, vp);
-}
-
-static bool
-TypedArray_byteLengthGetter(JSContext* cx, unsigned argc, Value* vp)
-{
-    return TypedArrayObject::Getter<TypedArrayObject::byteLengthValue>(cx, argc, vp);
-}
-
-static bool
-TypedArray_byteOffsetGetter(JSContext* cx, unsigned argc, Value* vp)
-{
-    return TypedArrayObject::Getter<TypedArrayObject::byteOffsetValue>(cx, argc, vp);
 }
 
 bool
@@ -1458,8 +1433,8 @@ js::TypedArray_bufferGetter(JSContext* cx, unsigned argc, Value* vp)
 TypedArrayObject::protoAccessors[] = {
     JS_PSG("length", TypedArray_lengthGetter, 0),
     JS_PSG("buffer", TypedArray_bufferGetter, 0),
-    JS_PSG("byteLength", TypedArray_byteLengthGetter, 0),
-    JS_PSG("byteOffset", TypedArray_byteOffsetGetter, 0),
+    JS_PSG("byteLength", TypedArrayObject::Getter<TypedArrayObject::byteLengthValue>, 0),
+    JS_PSG("byteOffset", TypedArrayObject::Getter<TypedArrayObject::byteOffsetValue>, 0),
     JS_SELF_HOSTED_SYM_GET(toStringTag, "TypedArrayToStringTag", 0),
     JS_PS_END
 };

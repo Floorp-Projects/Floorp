@@ -23,12 +23,11 @@ const Class SymbolObject::class_ = {
 SymbolObject*
 SymbolObject::create(JSContext* cx, JS::HandleSymbol symbol)
 {
-    JSObject* obj = NewBuiltinClassInstance(cx, &class_);
+    SymbolObject* obj = NewBuiltinClassInstance<SymbolObject>(cx);
     if (!obj)
         return nullptr;
-    SymbolObject& symobj = obj->as<SymbolObject>();
-    symobj.setPrimitiveValue(symbol);
-    return &symobj;
+    obj->setPrimitiveValue(symbol);
+    return obj;
 }
 
 const JSPropertySpec SymbolObject::properties[] = {
@@ -49,10 +48,8 @@ const JSFunctionSpec SymbolObject::staticMethods[] = {
 };
 
 JSObject*
-SymbolObject::initClass(JSContext* cx, HandleObject obj, bool defineMembers)
+SymbolObject::initClass(JSContext* cx, Handle<GlobalObject*> global, bool defineMembers)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
-
     // This uses &JSObject::class_ because: "The Symbol prototype object is an
     // ordinary object. It is not a Symbol instance and does not have a
     // [[SymbolData]] internal slot." (ES6 rev 24, 19.4.3)
@@ -235,13 +232,13 @@ SymbolObject::toPrimitive(JSContext* cx, unsigned argc, Value* vp)
 }
 
 JSObject*
-js::InitSymbolClass(JSContext* cx, HandleObject obj)
+js::InitSymbolClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    return SymbolObject::initClass(cx, obj, true);
+    return SymbolObject::initClass(cx, global, true);
 }
 
 JSObject*
-js::InitBareSymbolCtor(JSContext* cx, HandleObject obj)
+js::InitBareSymbolCtor(JSContext* cx, Handle<GlobalObject*> global)
 {
-    return SymbolObject::initClass(cx, obj, false);
+    return SymbolObject::initClass(cx, global, false);
 }

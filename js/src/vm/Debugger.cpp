@@ -7485,9 +7485,8 @@ ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame, ResumeMode
 };
 
 /* static */ NativeObject*
-DebuggerFrame::initClass(JSContext* cx, HandleObject dbgCtor, HandleObject obj)
+DebuggerFrame::initClass(JSContext* cx, HandleObject dbgCtor, Handle<GlobalObject*> global)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedObject objProto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
 
     return InitClass(cx, dbgCtor, objProto, &class_, construct, 0, properties_,
@@ -7498,20 +7497,18 @@ DebuggerFrame::initClass(JSContext* cx, HandleObject dbgCtor, HandleObject obj)
 DebuggerFrame::create(JSContext* cx, HandleObject proto, const FrameIter& iter,
                       HandleNativeObject debugger)
 {
-    JSObject* obj = NewObjectWithGivenProto(cx, &DebuggerFrame::class_, proto);
-    if (!obj)
+    DebuggerFrame* frame = NewObjectWithGivenProto<DebuggerFrame>(cx, proto);
+    if (!frame)
         return nullptr;
-
-    DebuggerFrame& frame = obj->as<DebuggerFrame>();
 
     FrameIter::Data* data = iter.copyData();
     if (!data)
         return nullptr;
-    frame.setPrivate(data);
+    frame->setPrivate(data);
 
-    frame.setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*debugger));
+    frame->setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*debugger));
 
-    return &frame;
+    return frame;
 }
 
 /* static */ bool
@@ -8374,7 +8371,7 @@ DebuggerArguments::create(JSContext* cx, HandleObject proto, HandleDebuggerFrame
 {
     AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
 
-    RootedNativeObject obj(cx, NewNativeObjectWithGivenProto(cx, &DebuggerArguments::class_, proto));
+    Rooted<DebuggerArguments*> obj(cx, NewObjectWithGivenProto<DebuggerArguments>(cx, proto));
     if (!obj)
         return nullptr;
 
@@ -8407,7 +8404,7 @@ DebuggerArguments::create(JSContext* cx, HandleObject proto, HandleDebuggerFrame
         getobj->setExtendedSlot(0, Int32Value(i));
     }
 
-    return &obj->as<DebuggerArguments>();
+    return obj;
 }
 
 /* static */ bool
@@ -9783,9 +9780,8 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
 };
 
 /* static */ NativeObject*
-DebuggerObject::initClass(JSContext* cx, HandleObject obj, HandleObject debugCtor)
+DebuggerObject::initClass(JSContext* cx, Handle<GlobalObject*> global, HandleObject debugCtor)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedObject objProto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
 
     RootedNativeObject objectProto(cx, InitClass(cx, debugCtor, objProto, &class_,
@@ -9806,15 +9802,14 @@ DebuggerObject::create(JSContext* cx, HandleObject proto, HandleObject referent,
                        HandleNativeObject debugger)
 {
     NewObjectKind newKind = IsInsideNursery(referent) ? GenericObject : TenuredObject;
-    JSObject* obj = NewObjectWithGivenProto(cx, &DebuggerObject::class_, proto, newKind);
+    DebuggerObject* obj = NewObjectWithGivenProto<DebuggerObject>(cx, proto, newKind);
     if (!obj)
         return nullptr;
 
-    DebuggerObject& object = obj->as<DebuggerObject>();
-    object.setPrivateGCThing(referent);
-    object.setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*debugger));
+    obj->setPrivateGCThing(referent);
+    obj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*debugger));
 
-    return &object;
+    return obj;
 }
 
 bool
@@ -11037,9 +11032,8 @@ const JSFunctionSpec DebuggerEnvironment::methods_[] = {
 };
 
 /* static */ NativeObject*
-DebuggerEnvironment::initClass(JSContext* cx, HandleObject dbgCtor, HandleObject obj)
+DebuggerEnvironment::initClass(JSContext* cx, HandleObject dbgCtor, Handle<GlobalObject*> global)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedObject objProto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
 
     return InitClass(cx, dbgCtor, objProto, &DebuggerEnvironment::class_, construct, 0,
@@ -11051,15 +11045,14 @@ DebuggerEnvironment::create(JSContext* cx, HandleObject proto, HandleObject refe
                             HandleNativeObject debugger)
 {
     NewObjectKind newKind = IsInsideNursery(referent) ? GenericObject : TenuredObject;
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &DebuggerEnvironment::class_, proto, newKind));
+    DebuggerEnvironment* obj = NewObjectWithGivenProto<DebuggerEnvironment>(cx, proto, newKind);
     if (!obj)
         return nullptr;
 
-    DebuggerEnvironment& environment = obj->as<DebuggerEnvironment>();
-    environment.setPrivateGCThing(referent);
-    environment.setReservedSlot(OWNER_SLOT, ObjectValue(*debugger));
+    obj->setPrivateGCThing(referent);
+    obj->setReservedSlot(OWNER_SLOT, ObjectValue(*debugger));
 
-    return &environment;
+    return obj;
 }
 
 /* static */ DebuggerEnvironmentType
@@ -11416,14 +11409,14 @@ JS_DefineDebuggerObject(JSContext* cx, HandleObject obj)
     objProto = GlobalObject::getOrCreateObjectPrototype(cx, global);
     if (!objProto)
         return false;
-    debugProto = InitClass(cx, obj,
+    debugProto = InitClass(cx, global,
                            objProto, &Debugger::class_, Debugger::construct,
                            1, Debugger::properties, Debugger::methods, nullptr,
                            Debugger::static_methods, debugCtor.address());
     if (!debugProto)
         return false;
 
-    frameProto = DebuggerFrame::initClass(cx, debugCtor, obj);
+    frameProto = DebuggerFrame::initClass(cx, debugCtor, global);
     if (!frameProto)
         return false;
 
@@ -11441,11 +11434,11 @@ JS_DefineDebuggerObject(JSContext* cx, HandleObject obj)
     if (!sourceProto)
         return false;
 
-    objectProto = DebuggerObject::initClass(cx, obj, debugCtor);
+    objectProto = DebuggerObject::initClass(cx, global, debugCtor);
     if (!objectProto)
         return false;
 
-    envProto = DebuggerEnvironment::initClass(cx, debugCtor, obj);
+    envProto = DebuggerEnvironment::initClass(cx, debugCtor, global);
     if (!envProto)
         return false;
 
@@ -11478,7 +11471,7 @@ JS::dbg::IsDebugger(JSObject& obj)
 {
     JSObject* unwrapped = CheckedUnwrap(&obj);
     return unwrapped &&
-           js::GetObjectClass(unwrapped) == &Debugger::class_ &&
+           unwrapped->getClass() == &Debugger::class_ &&
            js::Debugger::fromJSObject(unwrapped) != nullptr;
 }
 

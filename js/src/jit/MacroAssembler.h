@@ -2255,6 +2255,9 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void initGCThing(Register obj, Register temp, JSObject* templateObj,
                      bool initContents = true, bool convertDoubleElements = false);
+
+    enum class TypedArrayLength { Fixed, Dynamic };
+
     void initTypedArraySlots(Register obj, Register temp, Register lengthReg,
                              LiveRegisterSet liveRegs, Label* fail,
                              TypedArrayObject* templateObj, TypedArrayLength lengthKind);

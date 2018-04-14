@@ -6267,7 +6267,7 @@ PropertyReadNeedsTypeBarrier(CompilerConstraintList* constraints,
     }
 
     if (!name && IsTypedArrayClass(key->clasp())) {
-        Scalar::Type arrayType = Scalar::Type(key->clasp() - &TypedArrayObject::classes[0]);
+        Scalar::Type arrayType = GetTypedArrayClassType(key->clasp());
         MIRType type = MIRTypeForTypedArrayRead(arrayType, true);
         if (observed->mightBeMIRType(type))
             return BarrierKind::NoBarrier;

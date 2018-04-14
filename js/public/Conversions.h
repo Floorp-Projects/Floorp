@@ -10,6 +10,7 @@
 #define js_Conversions_h
 
 #include "mozilla/Casting.h"
+#include "mozilla/Compiler.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TypeTraits.h"
@@ -398,7 +399,7 @@ ToInt32(double d)
 {
     // clang crashes compiling this when targeting arm:
     // https://llvm.org/bugs/show_bug.cgi?id=22974
-#if defined (__arm__) && defined (__GNUC__) && !defined(__clang__)
+#if defined (__arm__) && MOZ_IS_GCC
     int32_t i;
     uint32_t    tmp0;
     uint32_t    tmp1;
