@@ -347,7 +347,10 @@ nsXBLBinding::GenerateAnonymousContent()
     if (mDefaultInsertionPoint && mInsertionPoints.IsEmpty()) {
       ExplicitChildIterator iter(mBoundElement);
       for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
-        mDefaultInsertionPoint->AppendInsertedChild(child);
+        // Pass aNotify = false because we're just setting up the whole thing.
+        // Furthermore we do it from frame construction, so passing true here
+        // would reenter into it which is... not great.
+        mDefaultInsertionPoint->AppendInsertedChild(child, false);
       }
     } else {
       // It is odd to come into this code if mInsertionPoints is not empty, but
@@ -357,7 +360,9 @@ nsXBLBinding::GenerateAnonymousContent()
       for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
         XBLChildrenElement* point = FindInsertionPointForInternal(child);
         if (point) {
-          point->AppendInsertedChild(child);
+          // Pass aNotify = false because we're just setting up the whole thing.
+          // (see the similar call above for more details).
+          point->AppendInsertedChild(child, false);
         } else {
           NodeInfo *ni = child->NodeInfo();
           if (ni->NamespaceID() != kNameSpaceID_XUL ||
