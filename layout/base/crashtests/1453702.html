@@ -1,0 +1,16 @@
+<style></style>
+<script id='script'>
+  function start() {
+    try { o1 = document.createElement('p') } catch (e) {}
+    try { o2 = document.createElement('l') } catch (e) {}
+    try { o3 = document.createElement('c') } catch (e) {}
+    try { o4 = document.createElement('textarea') } catch (e) {}
+    try { document.documentElement.appendChild(o4) } catch (e) {}
+    try { o4.scrollLeft = 8 } catch (e) {}
+    try { o4.appendChild(document.getElementById('script')) } catch (e) {}
+    try { document.styleSheets[0].insertRule("* { display:contents !important }", 0) } catch (e) {}
+    try { o3.convertPointFromNode({ }, o1, { }) } catch (e) {}
+    try { document.getElementById('script').appendChild(o2) } catch (e) {}
+  }
+  document.addEventListener('DOMContentLoaded', start)
+</script>

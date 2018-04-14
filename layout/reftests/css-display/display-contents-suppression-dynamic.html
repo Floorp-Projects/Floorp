@@ -1,0 +1,16 @@
+<!doctype html>
+<body>
+<script>
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  let g = document.createElementNS(SVG_NS, "g");
+  g.style.display = "contents";
+  document.body.appendChild(g);
+  // The only difference between this test and the ref is this flush, this
+  // tests we're consistent.
+  g.offsetTop;
+  let div = document.createElement('div');
+  div.style.width = div.style.height = "100px";
+  div.style.backgroundColor = "green";
+  g.appendChild(div);
+</script>
+</body>

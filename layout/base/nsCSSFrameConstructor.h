@@ -810,8 +810,7 @@ private:
     FindDataByTag(nsAtom* aTag, Element* aElement,
                   ComputedStyle* aComputedStyle,
                   const FrameConstructionDataByTag* aDataPtr,
-                  uint32_t aDataLength,
-                  bool* aTagFound = nullptr);
+                  uint32_t aDataLength);
 
   /* A class representing a list of FrameConstructionItems.  Instances of this
      class are only created as AutoFrameConstructionItemList, or as a member
