@@ -340,7 +340,7 @@ class GCSchedulingTunables
     /*
      * JSGC_MAX_NURSERY_BYTES
      *
-     * Maximum nursery size for each zone group.
+     * Maximum nursery size for each runtime.
      */
     ActiveThreadData<size_t> gcMaxNurseryBytes_;
 

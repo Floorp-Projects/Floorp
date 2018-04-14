@@ -1348,7 +1348,7 @@ class TypeZone
 
   public:
     // Current generation for sweeping.
-    ZoneGroupOrGCTaskOrIonCompileData<uint32_t> generation;
+    ZoneOrGCTaskOrIonCompileData<uint32_t> generation;
 
     // During incremental sweeping, allocator holding the old type information
     // for the zone.

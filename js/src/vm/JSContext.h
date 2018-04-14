@@ -208,9 +208,7 @@ struct JSContext : public JS::RootingContext,
 
   private:
     // We distinguish between entering the atoms compartment and all other
-    // compartments. Entering the atoms compartment requires a lock. Also, we
-    // don't call enterZoneGroup when entering the atoms compartment since that
-    // can induce GC hazards.
+    // compartments. Entering the atoms compartment requires a lock.
     inline void enterNonAtomsCompartment(JSCompartment* c);
     inline void enterAtomsCompartment(JSCompartment* c,
                                       const js::AutoLockForExclusiveAccess& lock);
@@ -306,25 +304,9 @@ struct JSContext : public JS::RootingContext,
     friend class js::jit::DebugModeOSRVolatileJitFrameIter;
     friend void js::ReportOverRecursed(JSContext*, unsigned errorNumber);
 
-    // Returns to the embedding to allow other cooperative threads to run. We
-    // may do this if we need access to a ZoneGroup that is in use by another
-    // thread.
-    void yieldToEmbedding() {
-        (*yieldCallback_)(this);
-    }
-
-    void setYieldCallback(js::YieldCallback callback) {
-        yieldCallback_ = callback;
-    }
-
   private:
     static JS::Error reportedError;
     static JS::OOM reportedOOM;
-
-    // This callback is used to ask the embedding to allow other cooperative
-    // threads to run. We may do this if we need access to a ZoneGroup that is
-    // in use by another thread.
-    js::ThreadLocalData<js::YieldCallback> yieldCallback_;
 
   public:
     inline JS::Result<> boolToResult(bool ok);
