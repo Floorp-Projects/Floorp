@@ -281,7 +281,6 @@ if test -n "$_WIN32_MSVC"; then
     # Common to all MSVC environments:
 
     AC_DEFINE(HAVE_LOCALECONV)
-    AC_DEFINE(HAVE_HYPOT)
     AC_CHECK_FUNCS([_getc_nolock])
 fi
 

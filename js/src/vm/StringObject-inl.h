@@ -32,13 +32,12 @@ StringObject::init(JSContext* cx, Handle<StringObject*> obj, HandleString str)
 /* static */ inline StringObject*
 StringObject::create(JSContext* cx, HandleString str, HandleObject proto, NewObjectKind newKind)
 {
-    JSObject* obj = NewObjectWithClassProto(cx, &class_, proto, newKind);
+    Rooted<StringObject*> obj(cx, NewObjectWithClassProto<StringObject>(cx, proto, newKind));
     if (!obj)
         return nullptr;
-    Rooted<StringObject*> strobj(cx, &obj->as<StringObject>());
-    if (!StringObject::init(cx, strobj, str))
+    if (!StringObject::init(cx, obj, str))
         return nullptr;
-    return strobj;
+    return obj;
 }
 
 } // namespace js

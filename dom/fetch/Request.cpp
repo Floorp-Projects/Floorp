@@ -209,26 +209,19 @@ GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
     return;
   }
   nsString username;
-  url->GetUsername(username, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  url->GetUsername(username);
 
   nsString password;
-  url->GetPassword(password, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  url->GetPassword(password);
+
   if (!username.IsEmpty() || !password.IsEmpty()) {
     aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(aInput);
     return;
   }
+
   // Get the fragment from URL.
   nsAutoString fragment;
-  url->GetHash(fragment, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  url->GetHash(fragment);
 
   // Note: URL::GetHash() includes the "#" and we want the fragment with out
   // the hash symbol.
@@ -236,14 +229,8 @@ GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
     CopyUTF16toUTF8(Substring(fragment, 1), aURLfragment);
   }
 
-  url->SetHash(EmptyString(), aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-  url->Stringify(aRequestURL, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  url->SetHash(EmptyString());
+  url->Stringify(aRequestURL);
 }
 
 class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable
@@ -399,11 +386,7 @@ Request::Constructor(const GlobalObject& aGlobal,
           aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
           return nullptr;
         }
-        url->Stringify(referrerURL, aRv);
-        if (NS_WARN_IF(aRv.Failed())) {
-          aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
-          return nullptr;
-        }
+        url->Stringify(referrerURL);
         if (!referrerURL.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
           WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
           nsresult rv = NS_OK;

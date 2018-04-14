@@ -26,11 +26,7 @@
     macro(double, Float64) \
     macro(uint8_clamped, Uint8Clamped)
 
-typedef struct JSProperty JSProperty;
-
 namespace js {
-
-enum class TypedArrayLength { Fixed, Dynamic };
 
 /*
  * TypedArrayObject
@@ -314,6 +310,13 @@ IsTypedArrayClass(const Class* clasp)
            clasp < &TypedArrayObject::classes[Scalar::MaxTypedArrayViewType];
 }
 
+inline Scalar::Type
+GetTypedArrayClassType(const Class* clasp)
+{
+    MOZ_ASSERT(IsTypedArrayClass(clasp));
+    return static_cast<Scalar::Type>(clasp - &TypedArrayObject::classes[0]);
+}
+
 bool
 IsTypedArrayConstructor(HandleValue v, uint32_t type);
 
@@ -325,8 +328,7 @@ IsBufferSource(JSObject* object, SharedMem<uint8_t*>* dataPointer, size_t* byteL
 inline Scalar::Type
 TypedArrayObject::type() const
 {
-    MOZ_ASSERT(IsTypedArrayClass(getClass()));
-    return static_cast<Scalar::Type>(getClass() - &classes[0]);
+    return GetTypedArrayClassType(getClass());
 }
 
 inline size_t

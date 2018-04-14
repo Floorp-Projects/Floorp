@@ -984,10 +984,8 @@ static const JSFunctionSpec json_static_methods[] = {
 };
 
 JSObject*
-js::InitJSONClass(JSContext* cx, HandleObject obj)
+js::InitJSONClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
-
     RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
     if (!proto)
         return nullptr;

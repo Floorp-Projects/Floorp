@@ -13,25 +13,148 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 public final class GeckoRuntimeSettings implements Parcelable {
-    private boolean mUseContentProcess;
-    private String[] mArgs;
-    private Bundle mExtras;
-
     /**
-     * Initialize default settings.
+     * Settings builder used to construct the settings object.
      */
-    public  GeckoRuntimeSettings() {
+    public static final class Builder {
+        private final GeckoRuntimeSettings mSettings;
+
+        public Builder() {
+            mSettings = new GeckoRuntimeSettings();
+        }
+
+        public Builder(final GeckoRuntimeSettings settings) {
+            mSettings = new GeckoRuntimeSettings(settings);
+        }
+
+        /**
+         * Finalize and return the settings.
+         *
+         * @return The constructed settings.
+         */
+        public @NonNull GeckoRuntimeSettings build() {
+            return new GeckoRuntimeSettings(mSettings);
+        }
+
+        /**
+         * Set the content process hint flag.
+         *
+         * @param use If true, this will reload the content process for future use.
+         */
+        public @NonNull Builder useContentProcessHint(final boolean use) {
+            mSettings.mUseContentProcess = use;
+            return this;
+        }
+
+        /**
+         * Set the custom Gecko process arguments.
+         *
+         * @param args The Gecko process arguments.
+         */
+        public @NonNull Builder arguments(final @NonNull String[] args) {
+            mSettings.mArgs = args;
+            return this;
+        }
+
+        /**
+         * Set the custom Gecko intent extras.
+         *
+         * @param extras The Gecko intent extras.
+         */
+        public @NonNull Builder extras(final @NonNull Bundle extras) {
+            mSettings.mExtras = extras;
+            return this;
+        }
+
+        /**
+         * Set whether JavaScript support should be enabled.
+         *
+         * @param flag A flag determining whether JavaScript should be enabled.
+         */
+        public @NonNull Builder javaScriptEnabled(final boolean flag) {
+            mSettings.mJavaScript.set(flag);
+            return this;
+        }
+
+        /**
+         * Set whether support for web fonts should be enabled.
+         *
+         * @param flag A flag determining whether web fonts should be enabled.
+         */
+        public @NonNull Builder webFontsEnabled(final boolean flag) {
+            mSettings.mWebFonts.set(flag);
+            return this;
+        }
+    }
+
+    /* package */ GeckoRuntime runtime;
+    /* package */ boolean mUseContentProcess;
+    /* package */ String[] mArgs;
+    /* package */ Bundle mExtras;
+    /* package */ int prefCount;
+
+    private class Pref<T> {
+        public final String name;
+        public final T defaultValue;
+        private T value;
+
+        public Pref(final String name, final T defaultValue) {
+            GeckoRuntimeSettings.this.prefCount++;
+
+            this.name = name;
+            this.defaultValue = defaultValue;
+            value = defaultValue;
+        }
+
+        public void set(T newValue) {
+            value = newValue;
+            flush();
+        }
+
+        public T get() {
+            return value;
+        }
+
+        public void flush() {
+            if (GeckoRuntimeSettings.this.runtime != null) {
+                GeckoRuntimeSettings.this.runtime.setPref(name, value);
+            }
+        }
+    }
+
+    /* package */ Pref<Boolean> mJavaScript = new Pref<Boolean>(
+        "javascript.enabled", true);
+    /* package */ Pref<Boolean> mWebFonts = new Pref<Boolean>(
+        "browser.display.use_document_fonts", true);
+
+    private final Pref<?>[] mPrefs = new Pref<?>[] {
+        mJavaScript, mWebFonts
+    };
+
+    /* package */ GeckoRuntimeSettings() {
         this(null);
     }
 
     /* package */ GeckoRuntimeSettings(final @Nullable GeckoRuntimeSettings settings) {
-        if (settings != null) {
-            mUseContentProcess = settings.mUseContentProcess;
-            mArgs = settings.mArgs.clone();
-            mExtras = new Bundle(settings.mExtras);
-        } else {
+        if (BuildConfig.DEBUG && prefCount != mPrefs.length) {
+            throw new AssertionError("Add new pref to prefs list");
+        }
+
+        if (settings == null) {
             mArgs = new String[0];
             mExtras = new Bundle();
+        } else {
+            mUseContentProcess = settings.getUseContentProcessHint();
+            mArgs = settings.getArguments().clone();
+            mExtras = new Bundle(settings.getExtras());
+            mJavaScript.set(settings.mJavaScript.get());
+            mWebFonts.set(settings.mWebFonts.get());
+        }
+    }
+
+    /* package */ void flush() {
+        for (final Pref<?> pref: mPrefs) {
+            pref.flush();
         }
     }
 
@@ -63,30 +186,41 @@ public final class GeckoRuntimeSettings implements Parcelable {
     }
 
     /**
-     * Set the content process hint flag.
+     * Get whether JavaScript support is enabled.
      *
-     * @param use If true, this will reload the content process for future use.
+     * @return Whether JavaScript support is enabled.
      */
-    public void setUseContentProcessHint(boolean use) {
-        mUseContentProcess = use;
+    public boolean getJavaScriptEnabled() {
+        return mJavaScript.get();
     }
 
     /**
-     * Set the custom Gecko process arguments.
+     * Set whether JavaScript support should be enabled.
      *
-     * @param args The Gecko process arguments.
+     * @param flag A flag determining whether JavaScript should be enabled.
      */
-    public void setArguments(final @NonNull String[] args) {
-        mArgs = args;
+    public @NonNull GeckoRuntimeSettings setJavaScriptEnabled(final boolean flag) {
+        mJavaScript.set(flag);
+        return this;
     }
 
     /**
-     * Set the custom Gecko intent extras.
+     * Get whether web fonts support is enabled.
      *
-     * @param extras The Gecko intent extras.
+     * @return Whether web fonts support is enabled.
      */
-    public void setExtras(final @NonNull Bundle extras) {
-        mExtras = extras;
+    public boolean getWebFontsEnabled() {
+        return mWebFonts.get();
+    }
+
+    /**
+     * Set whether support for web fonts should be enabled.
+     *
+     * @param flag A flag determining whether web fonts should be enabled.
+     */
+    public @NonNull GeckoRuntimeSettings setWebFontsEnabled(final boolean flag) {
+        mWebFonts.set(flag);
+        return this;
     }
 
     @Override // Parcelable
@@ -99,6 +233,8 @@ public final class GeckoRuntimeSettings implements Parcelable {
         out.writeByte((byte) (mUseContentProcess ? 1 : 0));
         out.writeStringArray(mArgs);
         mExtras.writeToParcel(out, flags);
+        out.writeByte((byte) (mJavaScript.get() ? 1 : 0));
+        out.writeByte((byte) (mWebFonts.get() ? 1 : 0));
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -106,6 +242,8 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mUseContentProcess = source.readByte() == 1;
         mArgs = source.createStringArray();
         mExtras.readFromParcel(source);
+        mJavaScript.set(source.readByte() == 1);
+        mWebFonts.set(source.readByte() == 1);
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR

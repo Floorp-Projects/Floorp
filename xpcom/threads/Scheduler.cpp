@@ -685,7 +685,6 @@ SchedulerImpl::ThreadController::OnStartThread(size_t aIndex, const nsACString& 
   if (sPrefPreemption) {
     JS_AddInterruptCallback(cx, SchedulerImpl::InterruptCallback);
   }
-  js::SetCooperativeYieldCallback(cx, SchedulerImpl::YieldCallback);
   Servo_InitializeCooperativeThread();
 }
 

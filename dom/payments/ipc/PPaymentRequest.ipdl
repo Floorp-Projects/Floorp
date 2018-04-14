@@ -76,6 +76,7 @@ struct IPCPaymentCreateActionRequest
   IPCPaymentMethodData[] methodData;
   IPCPaymentDetails details;
   IPCPaymentOptions options;
+  nsString shippingOption;
 };
 
 struct IPCPaymentCanMakeActionRequest
@@ -103,6 +104,7 @@ struct IPCPaymentUpdateActionRequest
 {
   nsString requestId;
   IPCPaymentDetails details;
+  nsString shippingOption;
 };
 
 union IPCPaymentActionRequest

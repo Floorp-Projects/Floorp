@@ -16,6 +16,7 @@ import android.util.Log;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -95,6 +96,9 @@ public final class GeckoRuntime implements Parcelable {
 
             // Bug 1453062 -- the EventDispatcher should really live here (or in GeckoThread)
             EventDispatcher.getInstance().registerUiThreadListener(mEventListener, "Gecko:Exited");
+
+            mSettings.runtime = this;
+            mSettings.flush();
             return true;
         }
         Log.d(LOGTAG, "init failed (could not initiate GeckoThread)");
@@ -180,6 +184,14 @@ public final class GeckoRuntime implements Parcelable {
      */
     public @Nullable Delegate getDelegate() {
         return mDelegate;
+    }
+
+    public GeckoRuntimeSettings getSettings() {
+        return mSettings;
+    }
+
+    /* package */ void setPref(final String name, final Object value) {
+        PrefsHelper.setPref(name, value, /* flush */ false);
     }
 
     @Override // Parcelable

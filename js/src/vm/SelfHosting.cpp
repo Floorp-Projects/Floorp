@@ -3083,7 +3083,7 @@ CloneValue(JSContext* cx, HandleValue selfHostedValue, MutableHandleValue vp)
         // Well-known symbols are shared.
         mozilla::DebugOnly<JS::Symbol*> sym = selfHostedValue.toSymbol();
         MOZ_ASSERT(sym->isWellKnownSymbol());
-        MOZ_ASSERT(cx->wellKnownSymbols().get(size_t(sym->code())) == sym);
+        MOZ_ASSERT(cx->wellKnownSymbols().get(sym->code()) == sym);
         vp.set(selfHostedValue);
     } else {
         MOZ_CRASH("Self-hosting CloneValue can't clone given value.");

@@ -272,6 +272,9 @@ js::Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details)
 
 /*** PropertyDescriptor operations and DefineProperties ******************************************/
 
+static const char js_getter_str[] = "getter";
+static const char js_setter_str[] = "setter";
+
 static Result<>
 CheckCallable(JSContext* cx, JSObject* obj, const char* fieldName)
 {
@@ -995,7 +998,7 @@ CreateThisForFunctionWithGroup(JSContext* cx, HandleObjectGroup group,
 
     if (newKind == SingletonObject) {
         Rooted<TaggedProto> protoRoot(cx, group->proto());
-        return NewObjectWithGivenTaggedProto(cx, &PlainObject::class_, protoRoot, allocKind, newKind);
+        return NewObjectWithGivenTaggedProto<PlainObject>(cx, protoRoot, allocKind, newKind);
     }
     return NewObjectWithGroup<PlainObject>(cx, group, allocKind, newKind);
 }
@@ -1815,7 +1818,7 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
                               Native constructor, unsigned nargs,
                               const JSPropertySpec* ps, const JSFunctionSpec* fs,
                               const JSPropertySpec* static_ps, const JSFunctionSpec* static_fs,
-                              NativeObject** ctorp, AllocKind ctorKind)
+                              NativeObject** ctorp)
 {
     /*
      * Create a prototype object for this class.
@@ -1871,7 +1874,7 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
 
         ctor = proto;
     } else {
-        RootedFunction fun(cx, NewNativeConstructor(cx, constructor, nargs, atom, ctorKind));
+        RootedFunction fun(cx, NewNativeConstructor(cx, constructor, nargs, atom));
         if (!fun)
             goto bad;
 
@@ -1936,7 +1939,7 @@ js::InitClass(JSContext* cx, HandleObject obj, HandleObject protoProto_,
               const Class* clasp, Native constructor, unsigned nargs,
               const JSPropertySpec* ps, const JSFunctionSpec* fs,
               const JSPropertySpec* static_ps, const JSFunctionSpec* static_fs,
-              NativeObject** ctorp, AllocKind ctorKind)
+              NativeObject** ctorp)
 {
     RootedObject protoProto(cx, protoProto_);
 
@@ -1961,7 +1964,7 @@ js::InitClass(JSContext* cx, HandleObject obj, HandleObject protoProto_,
     }
 
     return DefineConstructorAndPrototype(cx, obj, key, atom, protoProto, clasp, constructor, nargs,
-                                         ps, fs, static_ps, static_fs, ctorp, ctorKind);
+                                         ps, fs, static_ps, static_fs, ctorp);
 }
 
 void
@@ -4066,9 +4069,9 @@ MOZ_MUST_USE JSObject*
 js::SpeciesConstructor(JSContext* cx, HandleObject obj, JSProtoKey ctorKey,
                        bool (*isDefaultSpecies)(JSContext*, JSFunction*))
 {
-    if (!GlobalObject::ensureConstructor(cx, cx->global(), ctorKey))
+    RootedObject defaultCtor(cx, GlobalObject::getOrCreateConstructor(cx, ctorKey));
+    if (!defaultCtor)
         return nullptr;
-    RootedObject defaultCtor(cx, &cx->global()->getConstructor(ctorKey).toObject());
     return SpeciesConstructor(cx, obj, defaultCtor, isDefaultSpecies);
 }
 
