@@ -256,9 +256,6 @@ with Files('edit*'):
 with Files('globalOverlay.*'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
-with Files('menulist.css'):
-    BUG_COMPONENT = ('Toolkit', 'XUL Widgets')
-
 with Files('minimal-xul.css'):
     BUG_COMPONENT = ('Toolkit', 'XUL Widgets')
 

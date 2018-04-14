@@ -823,6 +823,12 @@ menulist > menupopup > menuitem {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic-noaccel");
 }
 
+html|*.menulist-editable-input {
+  -moz-appearance: none !important;
+  background: transparent ! important;
+  -moz-box-flex: 1;
+}
+
 dropmarker {
   -moz-binding: url("chrome://global/content/bindings/general.xml#dropmarker");
 }

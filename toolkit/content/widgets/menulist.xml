@@ -10,15 +10,8 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="menulist-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
-    <resources>
-      <stylesheet src="chrome://global/content/menulist.css"/>
-      <stylesheet src="chrome://global/skin/menulist.css"/>
-    </resources>
-  </binding>
-
   <binding id="menulist" display="xul:menu"
-           extends="chrome://global/content/bindings/menulist.xml#menulist-base">
+           extends="chrome://global/content/bindings/general.xml#basecontrol">
     <content sizetopopup="pref">
       <xul:hbox class="menulist-label-box" flex="1">
         <xul:image class="menulist-icon" xbl:inherits="src=image,src"/>
