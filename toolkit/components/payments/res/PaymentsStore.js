@@ -13,6 +13,7 @@ export default class PaymentsStore {
    * @param {object} [defaultState = {}] The initial state of the store.
    */
   constructor(defaultState = {}) {
+    this._defaultState = Object.assign({}, defaultState);
     this._state = defaultState;
     this._nextNotifification = 0;
     this._subscribers = new Set();
@@ -27,6 +28,14 @@ export default class PaymentsStore {
    */
   getState() {
     return Object.freeze(Object.assign({}, this._state));
+  }
+
+  /**
+   * Used for testing to reset to the default state from the constructor.
+   * @returns {Promise} returned by setState.
+   */
+  async reset() {
+    return this.setState(this._defaultState);
   }
 
   /**
