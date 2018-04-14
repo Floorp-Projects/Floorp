@@ -626,6 +626,11 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
       aResult.ParseAtomArray(aValue);
       return true;
     }
+
+    if (aAttribute == nsGkAtoms::rel) {
+      aResult.ParseAtomArray(aValue);
+      return true;
+    }
   }
 
   if (!foundMatch) {

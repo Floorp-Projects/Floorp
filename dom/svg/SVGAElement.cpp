@@ -34,15 +34,25 @@ nsSVGElement::StringInfo SVGAElement::sStringInfo[3] =
   { &nsGkAtoms::target, kNameSpaceID_None, true }
 };
 
+// static
+const DOMTokenListSupportedToken SVGAElement::sSupportedRelValues[] = {
+  "noreferrer",
+  "noopener",
+  nullptr
+};
 
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_INTERFACE_MAP_BEGIN(SVGAElement)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
   NS_INTERFACE_MAP_ENTRY(Link)
 NS_INTERFACE_MAP_END_INHERITING(SVGAElementBase)
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(SVGAElement,
+                                   SVGAElementBase,
+                                   mRelList)
 
 NS_IMPL_ADDREF_INHERITED(SVGAElement, SVGAElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGAElement, SVGAElementBase)
@@ -116,6 +126,86 @@ void
 SVGAElement::SetDownload(const nsAString& aDownload, ErrorResult& rv)
 {
   SetAttr(nsGkAtoms::download, aDownload, rv);
+}
+
+void
+SVGAElement::GetPing(nsAString& aPing)
+{
+  GetAttr(nsGkAtoms::ping, aPing);
+}
+
+void
+SVGAElement::SetPing(const nsAString& aPing, ErrorResult& rv)
+{
+  SetAttr(nsGkAtoms::ping, aPing, rv);
+}
+
+void
+SVGAElement::GetRel(nsAString& aRel)
+{
+  GetAttr(nsGkAtoms::rel, aRel);
+}
+
+void
+SVGAElement::SetRel(const nsAString& aRel, ErrorResult& rv)
+{
+  SetAttr(nsGkAtoms::rel, aRel, rv);
+}
+
+void
+SVGAElement::GetReferrerPolicy(nsAString& aPolicy)
+{
+  GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aPolicy);
+}
+
+void
+SVGAElement::SetReferrerPolicy(const nsAString& aPolicy,
+                               mozilla::ErrorResult& rv)
+{
+  SetAttr(nsGkAtoms::referrerpolicy, aPolicy, rv);
+}
+
+nsDOMTokenList*
+SVGAElement:: RelList()
+{
+  if (!mRelList) {
+    mRelList = new nsDOMTokenList(this, nsGkAtoms::rel, sSupportedRelValues);
+  }
+  return mRelList;
+}
+
+void
+SVGAElement::GetHreflang(nsAString& aHreflang)
+{
+  GetAttr(nsGkAtoms::hreflang, aHreflang);
+}
+
+void
+SVGAElement::SetHreflang(const nsAString& aHreflang, mozilla::ErrorResult& rv)
+{
+  SetAttr(nsGkAtoms::hreflang, aHreflang, rv);
+}
+
+void SVGAElement::GetType(nsAString& aType)
+{
+  GetAttr(nsGkAtoms::type, aType);
+}
+
+void SVGAElement::SetType(const nsAString& aType, mozilla::ErrorResult& rv)
+{
+  SetAttr(nsGkAtoms::type, aType, rv);
+}
+
+void SVGAElement::GetText(nsAString& aText, mozilla::ErrorResult& rv)
+{
+  if (NS_WARN_IF(!nsContentUtils::GetNodeTextContent(this, true, aText, fallible))) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+  }
+}
+
+void SVGAElement::SetText(const nsAString& aText, mozilla::ErrorResult& rv)
+{
+  rv = nsContentUtils::SetNodeTextContent(this, aText, false);
 }
 
 //----------------------------------------------------------------------
