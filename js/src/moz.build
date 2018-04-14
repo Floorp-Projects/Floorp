@@ -230,7 +230,6 @@ UNIFIED_SOURCES += [
     'gc/WeakMap.cpp',
     'gc/WeakMapPtr.cpp',
     'gc/Zone.cpp',
-    'gc/ZoneGroup.cpp',
     'irregexp/NativeRegExpMacroAssembler.cpp',
     'irregexp/RegExpAST.cpp',
     'irregexp/RegExpCharacters.cpp',

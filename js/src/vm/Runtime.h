@@ -27,7 +27,6 @@
 #include "frontend/NameCollections.h"
 #include "gc/GCRuntime.h"
 #include "gc/Tracer.h"
-#include "gc/ZoneGroup.h"
 #include "irregexp/RegExpStack.h"
 #include "js/Debug.h"
 #include "js/GCVector.h"
