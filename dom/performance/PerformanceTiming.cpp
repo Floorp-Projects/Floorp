@@ -86,15 +86,6 @@ PerformanceTiming::PerformanceTiming(Performance* aPerformance,
     : nsRFPService::ReduceTimePrecisionAsMSecs(aZeroTime,
         aPerformance->GetRandomTimelineSeed())));
 
-#ifdef DEBUG
-  if (mTimingData->ResponseStartHighRes(aPerformance) - mTimingData->ZeroTime() < 0) {
-    MOZ_CRASH_UNSAFE_PRINTF("Heisenbug Reproduced: Please file line in 1436778. %s %f - %f (%f)",
-      (aPerformance->IsSystemPrincipal() ? "System" : "Not-System"),
-      mTimingData->ResponseStartHighRes(aPerformance),
-      mTimingData->ZeroTime(), aZeroTime);
-  }
-#endif
-
   // Non-null aHttpChannel implies that this PerformanceTiming object is being
   // used for subresources, which is irrelevant to this probe.
   if (!aHttpChannel &&
