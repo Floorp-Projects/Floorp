@@ -7,11 +7,6 @@ var testGenerator = testSteps();
 
 function* testSteps()
 {
-  Services.prefs.setBoolPref("dom.indexedDB.storageOption.enabled", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("dom.indexedDB.storageOption.enabled");
-  });
-
   const openParams = [
     // This one lives in storage/permanent/chrome
     // The .metadata-v2 file was intentionally removed for this origin directory

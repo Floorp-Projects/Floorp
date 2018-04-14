@@ -693,27 +693,11 @@ IDBFactory::OpenInternal(JSContext* aCx,
     isInternal = QuotaManager::IsOriginInternal(origin);
   }
 
-  // Allow storage attributes for add-ons independent of the pref.
-  // This works in the main thread only, workers don't have the principal.
-  bool isAddon = false;
-  if (NS_IsMainThread()) {
-    // aPrincipal is passed inconsistently, so even when we are already on
-    // the main thread, we may have been passed a null aPrincipal.
-    nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(principalInfo);
-    if (principal) {
-      nsAutoString addonId;
-      Unused << NS_WARN_IF(NS_FAILED(principal->GetAddonId(addonId)));
-      isAddon = !addonId.IsEmpty();
-    }
-  }
-
   if (isInternal) {
     // Chrome privilege and internal origins always get persistent storage.
     persistenceType = PERSISTENCE_TYPE_PERSISTENT;
-  } else if (isAddon || DOMPrefs::IndexedDBStorageOptionsEnabled()) {
-    persistenceType = PersistenceTypeFromStorage(aStorageType);
   } else {
-    persistenceType = PERSISTENCE_TYPE_DEFAULT;
+    persistenceType = PersistenceTypeFromStorage(aStorageType);
   }
 
   DatabaseMetadata& metadata = commonParams.metadata();

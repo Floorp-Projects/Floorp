@@ -138,8 +138,6 @@ pref("dom.indexedDB.logging.enabled", true);
 pref("dom.indexedDB.logging.details", true);
 // Enable profiler marks for indexedDB events.
 pref("dom.indexedDB.logging.profiler-marks", false);
-// Enable passing the "storage" option to indexedDB.open.
-pref("dom.indexedDB.storageOption.enabled", false);
 
 // Whether or not File Handle is enabled.
 pref("dom.fileHandle.enabled", true);

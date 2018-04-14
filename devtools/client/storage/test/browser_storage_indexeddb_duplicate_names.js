@@ -8,10 +8,6 @@
 "use strict";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.indexedDB.storageOption.enabled", true]]
-  });
-
   const TESTPAGE = MAIN_DOMAIN + "storage-indexeddb-duplicate-names.html";
 
   setPermission(TESTPAGE, "indexedDB");
