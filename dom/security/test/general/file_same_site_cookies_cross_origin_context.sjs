@@ -26,21 +26,21 @@ function handleRequest(request, response)
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
-  if (request.queryString === "setSameSiteCookie") {
+  if (request.queryString.includes("setSameSiteCookie")) {
     response.setHeader("Set-Cookie", "myKey=strictSameSiteCookie; samesite=strict", true);
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
     return;
   }
 
-  if (request.queryString === "setRegularCookie") {
+  if (request.queryString.includes("setRegularCookie")) {
     response.setHeader("Set-Cookie", "myKey=regularCookie;", true);
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
     return;
   }
 
-  if (request.queryString === "loadFrame") {
+  if (request.queryString.includes("loadFrame")) {
     response.write(FRAME);
     return;
   }

@@ -77,7 +77,7 @@ function checkResult(aCookieVal) {
 
 function setupQueryResultAndRunTest() {
   var myXHR = new XMLHttpRequest();
-  myXHR.open("GET", "file_same_site_cookies_subrequest.sjs?queryresult");
+  myXHR.open("GET", "file_same_site_cookies_subrequest.sjs?queryresult" + curTest);
   myXHR.onload = function(e) {
     checkResult(myXHR.responseText);
   }
@@ -89,7 +89,7 @@ function setupQueryResultAndRunTest() {
   // give it some time and load the test frame
   SimpleTest.executeSoon(function() {
     let testframe = document.getElementById("testframe");
-    testframe.src = tests[curTest].frameSRC;
+    testframe.src = tests[curTest].frameSRC + curTest;
   });
 }
 
@@ -102,7 +102,7 @@ function setCookieAndInitTest() {
   cookieImage.onerror = function() {
     ok(false, "could not set cookie for test (" + tests[curTest].description + ")");
   }
-  cookieImage.src = tests[curTest].imgSRC;
+  cookieImage.src = tests[curTest].imgSRC + curTest;
 }
 
 // fire up the test

@@ -52,7 +52,7 @@ function receiveMessage(event) {
   is(event.data.result, tests[curTest].result, tests[curTest].description);
   curTest += 1;
 
-  // // lets see if we ran all the tests
+  // lets see if we ran all the tests
   if (curTest == tests.length) {
     window.removeEventListener("message", receiveMessage);
     SimpleTest.finish();
@@ -64,7 +64,7 @@ function receiveMessage(event) {
 
 function setupQueryResultAndRunTest() {
   let testframe = document.getElementById("testframe");
-  testframe.src = tests[curTest].frameSRC;
+  testframe.src = tests[curTest].frameSRC + curTest;
 }
 
 function setCookieAndInitTest() {
@@ -76,7 +76,7 @@ function setCookieAndInitTest() {
   cookieImage.onerror = function() {
     ok(false, "could not load image for test (" + tests[curTest].description + ")");
   }
-  cookieImage.src =  tests[curTest].imgSRC;
+  cookieImage.src =  tests[curTest].imgSRC + curTest;
 }
 
 // fire up the test
