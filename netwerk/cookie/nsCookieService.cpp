@@ -76,6 +76,7 @@ using namespace mozilla::net;
  ******************************************************************************/
 
 static StaticRefPtr<nsCookieService> gCookieService;
+bool nsCookieService::sSameSiteEnabled = false;
 
 // XXX_hack. See bug 178993.
 // This is a hack to hide HttpOnly cookies from older browsers
@@ -3075,6 +3076,18 @@ nsCookieService::DomainMatches(nsCookie* aCookie,
 }
 
 bool
+nsCookieService::IsSameSiteEnabled()
+{
+  static bool prefInitialized = false;
+  if (!prefInitialized) {
+    Preferences::AddBoolVarCache(&sSameSiteEnabled,
+                                 "network.cookie.same-site.enabled", false);
+    prefInitialized = true;
+  }
+  return sSameSiteEnabled;
+}
+
+bool
 nsCookieService::PathMatches(nsCookie* aCookie,
                              const nsACString& aPath)
 {
@@ -3204,7 +3217,7 @@ nsCookieService::GetCookiesForURI(nsIURI *aHostURI,
 
     int32_t sameSiteAttr = 0;
     cookie->GetSameSite(&sameSiteAttr);
-    if (aIsSameSiteForeign) {
+    if (aIsSameSiteForeign && IsSameSiteEnabled()) {
       // it if's a cross origin request and the cookie is same site only (strict)
       // don't send it
       if (sameSiteAttr == nsICookie2::SAMESITE_STRICT) {
@@ -3471,7 +3484,8 @@ nsCookieService::CanSetCookie(nsIURI*             aHostURI,
 
   // If the new cookie is same-site but in a cross site context,
   // browser must ignore the cookie.
-  if (aCookieAttributes.sameSite != nsICookie2::SAMESITE_UNSET) {
+  if ((aCookieAttributes.sameSite != nsICookie2::SAMESITE_UNSET) &&
+      IsSameSiteEnabled()) {
     bool isThirdParty = NS_IsSameSiteForeign(aChannel, aHostURI);
     if (isThirdParty) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
