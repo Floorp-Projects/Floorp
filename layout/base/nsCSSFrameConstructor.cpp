@@ -3499,20 +3499,13 @@ nsCSSFrameConstructor::FindDataByTag(nsAtom* aTag,
                                      Element* aElement,
                                      ComputedStyle* aComputedStyle,
                                      const FrameConstructionDataByTag* aDataPtr,
-                                     uint32_t aDataLength,
-                                     bool* aTagFound)
+                                     uint32_t aDataLength)
 {
-  if (aTagFound) {
-    *aTagFound = false;
-  }
   for (const FrameConstructionDataByTag *curData = aDataPtr,
          *endData = aDataPtr + aDataLength;
        curData != endData;
        ++curData) {
     if (*curData->mTag == aTag) {
-      if (aTagFound) {
-        *aTagFound = true;
-      }
       const FrameConstructionData* data = &curData->mData;
       if (data->mBits & FCDATA_FUNC_IS_DATA_GETTER) {
         return data->mFunc.mDataGetter(aElement, aComputedStyle);
@@ -3616,29 +3609,8 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     COMPLEX_TAG_CREATE(details, &nsCSSFrameConstructor::ConstructDetailsFrame)
   };
 
-  bool tagFound;
-  const FrameConstructionData* data =
-    FindDataByTag(aTag, aElement, aComputedStyle, sHTMLData,
-                  ArrayLength(sHTMLData), &tagFound);
-
-  // https://drafts.csswg.org/css-display/#unbox-html
-  if (tagFound &&
-      MOZ_UNLIKELY(aComputedStyle->StyleDisplay()->mDisplay ==
-                   StyleDisplay::Contents)) {
-    // <button>, <legend>, <details> and <fieldset> don’t have any special
-    // behavior; display: contents simply removes their principal box, and their
-    // contents render as normal.
-    if (aTag != nsGkAtoms::button &&
-        aTag != nsGkAtoms::legend &&
-        aTag != nsGkAtoms::details &&
-        aTag != nsGkAtoms::fieldset) {
-      // On the rest of unusual HTML elements, display: contents creates no box.
-      static const FrameConstructionData sSuppressData = SUPPRESS_FCDATA();
-      return &sSuppressData;
-    }
-  }
-
-  return data;
+  return FindDataByTag(aTag, aElement, aComputedStyle, sHTMLData,
+                       ArrayLength(sHTMLData));
 }
 
 /* static */
@@ -4343,24 +4315,10 @@ nsCSSFrameConstructor::FindXULTagData(Element* aElement,
     SIMPLE_XUL_CREATE(slider, NS_NewSliderFrame),
     SIMPLE_XUL_CREATE(scrollbar, NS_NewScrollbarFrame),
     SIMPLE_XUL_CREATE(scrollbarbutton, NS_NewScrollbarButtonFrame)
-};
+  };
 
-  bool tagFound;
-  const FrameConstructionData* data =
-    FindDataByTag(aTag, aElement, aComputedStyle, sXULTagData,
-                  ArrayLength(sXULTagData), &tagFound);
-
-  // There's no spec that says what display: contents means for special XUL
-  // elements, but we do the same as for HTML "Unusual Elements", i.e. treat it
-  // as display:none.
-  if (tagFound &&
-      MOZ_UNLIKELY(aComputedStyle->StyleDisplay()->mDisplay ==
-                   StyleDisplay::Contents)) {
-    static const FrameConstructionData sSuppressData = SUPPRESS_FCDATA();
-    return &sSuppressData;
-  }
-
-  return data;
+  return FindDataByTag(aTag, aElement, aComputedStyle, sXULTagData,
+                       ArrayLength(sXULTagData));
 }
 
 #ifdef MOZ_XUL
@@ -5315,23 +5273,6 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     return &sSuppressData;
   }
 
-  // https://drafts.csswg.org/css-display/#unbox-svg
-  if (aComputedStyle->StyleDisplay()->mDisplay == StyleDisplay::Contents) {
-    // For root <svg> elements, display: contents behaves as display: none.
-    if (aTag == nsGkAtoms::svg && !parentIsSVG) {
-      return &sSuppressData;
-    }
-
-    // For nested <svg>, <g>, <use> and <tspan> behave normally, but any other
-    // element behaves as display: none as well.
-    if (aTag != nsGkAtoms::g &&
-        aTag != nsGkAtoms::use &&
-        aTag != nsGkAtoms::svg &&
-        aTag != nsGkAtoms::tspan) {
-      return &sSuppressData;
-    }
-  }
-
   if (aTag == nsGkAtoms::svg && !parentIsSVG) {
     // We need outer <svg> elements to have an nsSVGOuterSVGFrame regardless
     // of whether they fail conditional processing attributes, since various
@@ -5611,6 +5552,74 @@ nsCSSFrameConstructor::SetAsUndisplayedContent(nsFrameConstructorState& aState,
   MOZ_ASSERT(!aIsGeneratedContent, "Should have had pseudo type");
 }
 
+// Whether we should suppress frames for a child under a <select> frame.
+//
+// Never create frames for non-option/optgroup kids of <select> and non-option
+// kids of <optgroup> inside a <select>.
+// XXXbz it's not clear how this should best work with XBL.
+static bool
+ShouldSuppressFrameInSelect(const nsIContent* aParent,
+                            const nsIContent* aChild)
+{
+  if (!aParent ||
+      !aParent->IsAnyOfHTMLElements(nsGkAtoms::select, nsGkAtoms::optgroup)) {
+    return false;
+  }
+
+  // If we're in any display: contents subtree, just suppress the frame.
+  //
+  // We can't be regular NAC, since display: contents has no frame to generate
+  // them off.
+  if (aChild->GetParent() != aParent) {
+    return true;
+  }
+
+  // Option is always fine.
+  if (aChild->IsHTMLElement(nsGkAtoms::option)) {
+    return false;
+  }
+
+  // <optgroup> is OK in <select> but not in <optgroup>.
+  if (aChild->IsHTMLElement(nsGkAtoms::optgroup) &&
+      aParent->IsHTMLElement(nsGkAtoms::select)) {
+    return false;
+  }
+
+  // Allow native anonymous content no matter what.
+  if (aChild->IsRootOfAnonymousSubtree()) {
+    return false;
+  }
+
+  return true;
+}
+
+static bool
+ShouldSuppressFrameInNonOpenDetails(const HTMLDetailsElement* aDetails,
+                                    const nsIContent* aChild)
+{
+  if (!aDetails || aDetails->Open()) {
+    return false;
+  }
+
+  if (aChild->GetParent() != aDetails) {
+    return true;
+  }
+
+  auto* summary = HTMLSummaryElement::FromNode(aChild);
+  if (summary && summary->IsMainSummary()) {
+    return false;
+  }
+
+  // Don't suppress NAC, unless it's ::before or ::after.
+  if (aChild->IsRootOfAnonymousSubtree() &&
+      !aChild->IsGeneratedContentContainerForBefore() &&
+      !aChild->IsGeneratedContentContainerForAfter()) {
+    return false;
+  }
+
+  return true;
+}
+
 void
 nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
                                                          nsIContent* aContent,
@@ -5683,35 +5692,49 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
   // Pre-check for display "none" - if we find that, don't create
   // any frame at all
-  if (StyleDisplay::None == display->mDisplay) {
+  if (display->mDisplay == StyleDisplay::None) {
     SetAsUndisplayedContent(aState, aItems, aContent, computedStyle,
                             isGeneratedContent);
     return;
   }
 
+  if (display->mDisplay == StyleDisplay::Contents) {
+    if (aParentFrame) {
+      // FIXME(emilio): Pretty sure aParentFrame can't be null here.
+      aParentFrame->AddStateBits(NS_FRAME_MAY_HAVE_GENERATED_CONTENT);
+    }
+    CreateGeneratedContentItem(aState, aParentFrame, aContent->AsElement(),
+                               computedStyle, CSSPseudoElementType::before,
+                               aItems);
+
+    FlattenedChildIterator iter(aContent);
+    for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
+      if (!ShouldCreateItemsForChild(aState, child, aParentFrame)) {
+        continue;
+      }
+
+      RefPtr<ComputedStyle> childContext = ResolveComputedStyle(child);
+      DoAddFrameConstructionItems(aState, child, childContext,
+                                  aSuppressWhiteSpaceOptimizations,
+                                  aParentFrame, aAnonChildren, aItems);
+    }
+    aItems.SetParentHasNoXBLChildren(!iter.XBLInvolved());
+
+    CreateGeneratedContentItem(aState, aParentFrame, aContent->AsElement(),
+                               computedStyle, CSSPseudoElementType::after,
+                               aItems);
+    return;
+  }
+
   bool isText = !aContent->IsElement();
 
-  // never create frames for non-option/optgroup kids of <select> and
-  // non-option kids of <optgroup> inside a <select>.
-  // XXXbz it's not clear how this should best work with XBL.
-  nsIContent *parent = aContent->GetParent();
-  if (parent) {
-    // Check tag first, since that check will usually fail
-    if (parent->IsAnyOfHTMLElements(nsGkAtoms::select, nsGkAtoms::optgroup) &&
-        // <option> is ok no matter what
-        !aContent->IsHTMLElement(nsGkAtoms::option) &&
-        // <optgroup> is OK in <select> but not in <optgroup>
-        (!aContent->IsHTMLElement(nsGkAtoms::optgroup) ||
-         !parent->IsHTMLElement(nsGkAtoms::select)) &&
-        // Allow native anonymous content no matter what
-        !aContent->IsRootOfNativeAnonymousSubtree()) {
-      // No frame for aContent
-      if (!isText) {
-        SetAsUndisplayedContent(aState, aItems, aContent, computedStyle,
-                                isGeneratedContent);
-      }
-      return;
+  nsIContent* parent = aParentFrame ? aParentFrame->GetContent() : nullptr;
+  if (ShouldSuppressFrameInSelect(parent, aContent)) {
+    if (!isText) {
+      SetAsUndisplayedContent(aState, aItems, aContent, computedStyle,
+                              isGeneratedContent);
     }
+    return;
   }
 
   // When constructing a child of a non-open <details>, create only the frame
@@ -5720,20 +5743,13 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   // ::before and ::after); we always want to create "internal" anonymous
   // content.
   auto* details = HTMLDetailsElement::FromNodeOrNull(parent);
-  if (details && !details->Open() &&
-      (!aContent->IsRootOfNativeAnonymousSubtree() ||
-       aContent->IsGeneratedContentContainerForBefore() ||
-       aContent->IsGeneratedContentContainerForAfter())) {
-    auto* summary = HTMLSummaryElement::FromNodeOrNull(aContent);
-    if (!summary || !summary->IsMainSummary()) {
-      SetAsUndisplayedContent(aState, aItems, aContent, computedStyle,
-                              isGeneratedContent);
-      return;
-    }
+  if (ShouldSuppressFrameInNonOpenDetails(details, aContent)) {
+    SetAsUndisplayedContent(aState, aItems, aContent, computedStyle,
+                            isGeneratedContent);
+    return;
   }
 
   bool isPopup = false;
-  bool foundMathMLData = false;
   // Try to find frame construction data for this content
   const FrameConstructionData* data;
   if (isText) {
@@ -5763,7 +5779,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     }
     if (!data) {
       data = FindMathMLData(element, tag, namespaceId, computedStyle);
-      foundMathMLData = !!data;
     }
     if (!data) {
       data = FindSVGData(element, tag, namespaceId, aParentFrame,
@@ -5782,7 +5797,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       data = FindDisplayData(display, element, computedStyle);
     }
 
-    NS_ASSERTION(data, "Should have frame construction data now");
+    MOZ_ASSERT(data, "Should have frame construction data now");
 
     if (data->mBits & FCDATA_SUPPRESS_FRAME) {
       SetAsUndisplayedContent(aState, aItems, element, computedStyle, isGeneratedContent);
@@ -5825,43 +5840,9 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     AddPageBreakItem(aContent, aItems);
   }
 
-  // FIXME(emilio, https://github.com/w3c/csswg-drafts/issues/2167):
-  //
-  // Figure out what should happen for display: contents in MathML.
-  if (display->mDisplay == StyleDisplay::Contents &&
-      !foundMathMLData) {
-    if (aParentFrame) {
-      aParentFrame->AddStateBits(NS_FRAME_MAY_HAVE_GENERATED_CONTENT);
-    }
-    CreateGeneratedContentItem(aState, aParentFrame, aContent->AsElement(),
-                               computedStyle, CSSPseudoElementType::before,
-                               aItems);
-
-    FlattenedChildIterator iter(aContent);
-    for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
-      if (!ShouldCreateItemsForChild(aState, child, aParentFrame)) {
-        continue;
-      }
-
-      RefPtr<ComputedStyle> childContext = ResolveComputedStyle(child);
-      DoAddFrameConstructionItems(aState, child, childContext,
-                                  aSuppressWhiteSpaceOptimizations,
-                                  aParentFrame, aAnonChildren, aItems);
-    }
-    aItems.SetParentHasNoXBLChildren(!iter.XBLInvolved());
-
-    CreateGeneratedContentItem(aState, aParentFrame, aContent->AsElement(),
-                               computedStyle, CSSPseudoElementType::after,
-                               aItems);
-    if (canHavePageBreak && display->mBreakAfter) {
-      AddPageBreakItem(aContent, aItems);
-    }
-    return;
-  }
-
   FrameConstructionItem* item = nullptr;
   if (details && details->Open()) {
-    auto* summary = HTMLSummaryElement::FromNodeOrNull(aContent);
+    auto* summary = HTMLSummaryElement::FromNode(aContent);
     if (summary && summary->IsMainSummary()) {
       // If details is open, the main summary needs to be rendered as if it is
       // the first child, so add the item to the front of the item list.
