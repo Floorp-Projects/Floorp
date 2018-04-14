@@ -176,6 +176,8 @@ nsIContent::IsActiveChildrenElement() const
     return false;
   }
 
+  // We reuse the binding parent machinery for Shadow DOM too, so prevent that
+  // from getting us confused in this case.
   return !bindingParent->GetShadowRoot();
 }
 
@@ -197,6 +199,8 @@ nsIContent::IsInAnonymousSubtree() const
     return false;
   }
 
+  // We reuse the binding parent machinery for Shadow DOM too, so prevent that
+  // from getting us confused in this case.
   return !bindingParent->GetShadowRoot();
 }
 
