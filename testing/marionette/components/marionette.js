@@ -414,7 +414,7 @@ class MarionetteMainProcess {
 
     switch (topic) {
       case "nsPref:changed":
-        if (Services.prefs.getBoolPref(PREF_ENABLED)) {
+        if (this.enabled) {
           this.init();
         } else {
           this.uninit();
