@@ -1967,7 +1967,7 @@ AttachFinishedCompilations(JSContext* cx)
     // Incorporate any off thread compilations for the runtime which have
     // finished, failed or have been cancelled.
     while (true) {
-        // Find a finished builder for the zone group.
+        // Find a finished builder for the runtime.
         IonBuilder* builder = GetFinishedBuilder(rt, finished, lock);
         if (!builder)
             break;
@@ -1977,7 +1977,7 @@ AttachFinishedCompilations(JSContext* cx)
         script->baselineScript()->setPendingIonBuilder(rt, script, builder);
         rt->jitRuntime()->ionLazyLinkListAdd(rt, builder);
 
-        // Don't keep more than 100 lazy link builders in a zone group.
+        // Don't keep more than 100 lazy link builders in a runtime.
         // Link the oldest ones immediately.
         while (rt->jitRuntime()->ionLazyLinkListSize() > 100) {
             jit::IonBuilder* builder = rt->jitRuntime()->ionLazyLinkList(rt).getLast();

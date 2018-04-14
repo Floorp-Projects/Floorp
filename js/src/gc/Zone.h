@@ -269,7 +269,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
     // Side map for storing a unique ids for cells, independent of address.
-    js::ZoneGroupOrGCTaskData<js::gc::UniqueIdMap> uniqueIds_;
+    js::ZoneOrGCTaskData<js::gc::UniqueIdMap> uniqueIds_;
 
     js::gc::UniqueIdMap& uniqueIds() { return uniqueIds_.ref(); }
 
@@ -299,7 +299,7 @@ struct Zone : public JS::shadow::Zone,
 
   private:
     /* Live weakmaps in this zone. */
-    js::ZoneGroupOrGCTaskData<mozilla::LinkedList<js::WeakMapBase>> gcWeakMapList_;
+    js::ZoneOrGCTaskData<mozilla::LinkedList<js::WeakMapBase>> gcWeakMapList_;
   public:
     mozilla::LinkedList<js::WeakMapBase>& gcWeakMapList() { return gcWeakMapList_.ref(); }
 
@@ -314,7 +314,7 @@ struct Zone : public JS::shadow::Zone,
     // This zone's gray roots.
     typedef js::Vector<js::gc::Cell*, 0, js::SystemAllocPolicy> GrayRootVector;
   private:
-    js::ZoneGroupOrGCTaskData<GrayRootVector> gcGrayRoots_;
+    js::ZoneOrGCTaskData<GrayRootVector> gcGrayRoots_;
   public:
     GrayRootVector& gcGrayRoots() { return gcGrayRoots_.ref(); }
 
@@ -322,13 +322,13 @@ struct Zone : public JS::shadow::Zone,
     // preserved for re-scanning during sweeping.
     using WeakEdges = js::Vector<js::gc::TenuredCell**, 0, js::SystemAllocPolicy>;
   private:
-    js::ZoneGroupOrGCTaskData<WeakEdges> gcWeakRefs_;
+    js::ZoneOrGCTaskData<WeakEdges> gcWeakRefs_;
   public:
     WeakEdges& gcWeakRefs() { return gcWeakRefs_.ref(); }
 
   private:
     // List of non-ephemeron weak containers to sweep during beginSweepingSweepGroup.
-    js::ZoneGroupOrGCTaskData<mozilla::LinkedList<detail::WeakCacheBase>> weakCaches_;
+    js::ZoneOrGCTaskData<mozilla::LinkedList<detail::WeakCacheBase>> weakCaches_;
   public:
     mozilla::LinkedList<detail::WeakCacheBase>& weakCaches() { return weakCaches_.ref(); }
     void registerWeakCache(detail::WeakCacheBase* cachep) {
@@ -340,7 +340,7 @@ struct Zone : public JS::shadow::Zone,
      * Mapping from not yet marked keys to a vector of all values that the key
      * maps to in any live weak map.
      */
-    js::ZoneGroupOrGCTaskData<js::gc::WeakKeyTable> gcWeakKeys_;
+    js::ZoneOrGCTaskData<js::gc::WeakKeyTable> gcWeakKeys_;
   public:
     js::gc::WeakKeyTable& gcWeakKeys() { return gcWeakKeys_.ref(); }
 
@@ -440,16 +440,16 @@ struct Zone : public JS::shadow::Zone,
 
   private:
     // Bitmap of atoms marked by this zone.
-    js::ZoneGroupOrGCTaskData<js::SparseBitmap> markedAtoms_;
+    js::ZoneOrGCTaskData<js::SparseBitmap> markedAtoms_;
 
     // Set of atoms recently used by this Zone. Purged on GC.
-    js::ZoneGroupOrGCTaskData<js::AtomSet> atomCache_;
+    js::ZoneOrGCTaskData<js::AtomSet> atomCache_;
 
     // Cache storing allocated external strings. Purged on GC.
-    js::ZoneGroupOrGCTaskData<js::ExternalStringCache> externalStringCache_;
+    js::ZoneOrGCTaskData<js::ExternalStringCache> externalStringCache_;
 
     // Cache for Function.prototype.toString. Purged on GC.
-    js::ZoneGroupOrGCTaskData<js::FunctionToStringCache> functionToStringCache_;
+    js::ZoneOrGCTaskData<js::FunctionToStringCache> functionToStringCache_;
 
   public:
     js::SparseBitmap& markedAtoms() { return markedAtoms_.ref(); }
