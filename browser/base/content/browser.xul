@@ -1109,7 +1109,7 @@
                                    BookmarkingUI.attachPlacesView(event, this);"
                    tooltip="bhTooltip" popupsinherittooltip="true">
           <menuitem id="BMB_viewBookmarksSidebar"
-                    class="subviewbutton"
+                    class="menuitem-iconic subviewbutton"
                     label-show="&viewBookmarksSidebar2.label;"
                     label-hide="&hideBookmarksSidebar.label;"
                     oncommand="SidebarUI.toggle('viewBookmarksSidebar');"/>
@@ -1131,7 +1131,7 @@
                                          new PlacesMenu(event, 'place:folder=TOOLBAR',
                                                         PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);">
               <menuitem id="BMB_viewBookmarksToolbar"
-                        class="subviewbutton"
+                        class="menuitem-iconic subviewbutton"
                         label-show="&viewBookmarksToolbar.label;"
                         label-hide="&hideBookmarksToolbar.label;"
                         oncommand="BookmarkingUI.toggleBookmarksToolbar();"/>
