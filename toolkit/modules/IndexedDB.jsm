@@ -123,19 +123,51 @@ function forwardMethods(cls, target, methods) {
 }
 
 class Cursor {
-  constructor(cursor, source) {
-    this.cursor = cursor;
+  constructor(cursorRequest, source) {
+    this.cursorRequest = cursorRequest;
     this.source = source;
+    this.cursor = null;
+  }
+
+  get done() {
+    return !this.cursor;
+  }
+
+  // This method is used internally to wait the cursor's IDBRequest to have been
+  // completed and the internal cursor has been updated (used when we initially
+  // create the cursor from Cursed.openCursor/openKeyCursor, and in the method
+  // of this class defined by defineCursorUpdateMethods).
+  async awaitRequest() {
+    this.cursor = await wrapRequest(this.cursorRequest);
+    return this;
   }
 }
 
+/**
+ * Define the Cursor class methods that update the cursor (continue, continuePrimaryKey
+ * and advance) as async functions that call the related IDBCursor methods and
+ * await the cursor's IDBRequest to be completed.
+ *
+ * @param {function} cls
+ *        The class constructor for which to define the cursor update methods.
+ * @param {Array<string>} methods
+ *        A list of "cursor update" method names to define.
+ */
+function defineCursorUpdateMethods(cls, methods) {
+  for (let method of methods) {
+    cls.prototype[method] = async function(...args) {
+      const promise = this.awaitRequest();
+      this.cursor[method](...args);
+      await promise;
+    };
+  }
+}
+
+defineCursorUpdateMethods(Cursor, ["advance", "continue", "continuePrimaryKey"]);
+
 forwardGetters(Cursor, "cursor",
                ["direction", "key", "primaryKey"]);
-
 wrapMethods(Cursor, "cursor", ["delete", "update"]);
-
-forwardMethods(Cursor, "cursor",
-               ["advance", "continue", "continuePrimaryKey"]);
 
 class CursorWithValue extends Cursor {}
 
@@ -147,15 +179,13 @@ class Cursed {
   }
 
   openCursor(...args) {
-    return wrapRequest(this.cursed.openCursor(...args)).then(cursor => {
-      return new CursorWithValue(cursor, this);
-    });
+    const cursor = new CursorWithValue(this.cursed.openCursor(...args), this);
+    return cursor.awaitRequest();
   }
 
   openKeyCursor(...args) {
-    return wrapRequest(this.cursed.openKeyCursor(...args)).then(cursor => {
-      return new Cursor(cursor, this);
-    });
+    const cursor = new Cursor(this.cursed.openKeyCursor(...args), this);
+    return cursor.awaitRequest();
   }
 }
 
@@ -252,7 +282,37 @@ class IndexedDB {
    */
   static open(dbName, options, onupgradeneeded = null) {
     let request = indexedDB.open(dbName, options);
+    return this._wrapOpenRequest(request, onupgradeneeded);
+  }
 
+  /**
+   * Opens the database for a given principal and with the given name, returns
+   * a Promise which resolves to an IndexedDB instance when the operation completes.
+   *
+   * @param {nsIPrincipal} principal
+   *        The principal to open the database for.
+   * @param {string} dbName
+   *        The name of the database to open.
+   * @param {object} options
+   *        The options with which to open the database.
+   * @param {integer} options.version
+   *        The schema version with which the database needs to be opened. If
+   *        the database does not exist, or its current schema version does
+   *        not match, the `onupgradeneeded` function will be called.
+   * @param {function} [onupgradeneeded]
+   *        A function which will be called with an IndexedDB object as its
+   *        first parameter when the database needs to be created, or its
+   *        schema needs to be upgraded. If this function is not provided, the
+   *        {@link #onupgradeneeded} method will be called instead.
+   *
+   * @returns {Promise<IndexedDB>}
+   */
+  static openForPrincipal(principal, dbName, options, onupgradeneeded = null) {
+    const request = indexedDB.openForPrincipal(principal, dbName, options);
+    return this._wrapOpenRequest(request, onupgradeneeded);
+  }
+
+  static _wrapOpenRequest(request, onupgradeneeded = null) {
     request.onupgradeneeded = event => {
       let db = new this(request.result);
       if (onupgradeneeded) {
@@ -262,7 +322,7 @@ class IndexedDB {
       }
     };
 
-    return wrapRequest(request).then(db => new IndexedDB(db));
+    return wrapRequest(request).then(db => new this(db));
   }
 
   constructor(db) {
