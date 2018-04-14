@@ -18,7 +18,10 @@ const {
   getFormattedIPAndPort,
   getFormattedTime,
 } = require("devtools/client/netmonitor/src/utils/format-utils");
-const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
+const {
+  getUnicodeUrl,
+  getUnicodeHostname,
+} = require("devtools/client/shared/unicode-url");
 const {
   getFormattedProtocol,
   getUrlBaseName,
@@ -413,7 +416,7 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   let unicodeUrl = getUnicodeUrl(url.split("#")[0]);
   let name = getUrlBaseName(url);
   let query = getUrlQuery(url);
-  let host = getUrlHost(url);
+  let host = getUnicodeHostname(getUrlHost(url));
   let scheme = getUrlScheme(url);
   let {
     remoteAddress,
