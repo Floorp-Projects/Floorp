@@ -8,6 +8,7 @@
 :root {
   --panelui-subview-transition-duration: 150ms;
   --lwt-additional-images: none;
+  --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
 }
 
@@ -17,11 +18,13 @@
 
 :root:-moz-lwtheme {
   background-color: var(--lwt-accent-color) !important;
+  background-image: var(--lwt-additional-images) !important;
+  background-position: var(--lwt-background-alignment) !important;
+  background-repeat: var(--lwt-background-tiling) !important;
 }
 
 :root:-moz-lwtheme[lwtheme-image] {
-  background-image: var(--lwt-header-image) !important;
-  background-position: right top !important;
+  background-image: var(--lwt-header-image), var(--lwt-additional-images) !important;
 }
 
 :root:-moz-lwtheme:-moz-window-inactive {
@@ -357,14 +360,6 @@ toolbarpaletteitem {
 #navigator-toolbox[fullscreenShouldAnimate] {
   transition: 1.5s margin-top ease-out;
 }
-
-/* Set additional backgrounds alignment relative to toolbox*/
-#navigator-toolbox:-moz-lwtheme {
-  background-image: var(--lwt-additional-images);
-  background-position: var(--lwt-background-alignment);
-  background-repeat: var(--lwt-background-tiling);
-}
-
 
 /* Rules to help integrate WebExtension buttons */
 
