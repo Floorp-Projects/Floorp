@@ -48,7 +48,6 @@ class ImportEntryObject : public NativeObject
     };
 
     static const Class class_;
-    static JSObject* initClass(JSContext* cx, HandleObject obj);
     static bool isInstance(HandleValue value);
     static ImportEntryObject* create(JSContext* cx,
                                      HandleAtom moduleRequest,
@@ -81,7 +80,6 @@ class ExportEntryObject : public NativeObject
     };
 
     static const Class class_;
-    static JSObject* initClass(JSContext* cx, HandleObject obj);
     static bool isInstance(HandleValue value);
     static ExportEntryObject* create(JSContext* cx,
                                      HandleAtom maybeExportName,
@@ -113,7 +111,6 @@ class RequestedModuleObject : public NativeObject
     };
 
     static const Class class_;
-    static JSObject* initClass(JSContext* cx, HandleObject obj);
     static bool isInstance(HandleValue value);
     static RequestedModuleObject* create(JSContext* cx,
                                          HandleAtom moduleSpecifier,

@@ -6087,7 +6087,7 @@ CodeGenerator::visitNewTypedArray(LNewTypedArray* lir)
                         ool->entry(), /*initContents*/true, /*convertDoubleElements*/false);
 
     masm.initTypedArraySlots(objReg, tempReg, lengthReg, liveRegs, ool->entry(),
-                             ttemplate, TypedArrayLength::Fixed);
+                             ttemplate, MacroAssembler::TypedArrayLength::Fixed);
 
     masm.bind(ool->rejoin());
 }
@@ -6113,7 +6113,7 @@ CodeGenerator::visitNewTypedArrayDynamicLength(LNewTypedArrayDynamicLength* lir)
                         ool->entry(), /*initContents*/true, /*convertDoubleElements*/false);
 
     masm.initTypedArraySlots(objReg, tempReg, lengthReg, liveRegs, ool->entry(),
-                             ttemplate, TypedArrayLength::Dynamic);
+                             ttemplate, MacroAssembler::TypedArrayLength::Dynamic);
 
     masm.bind(ool->rejoin());
 }
@@ -12068,9 +12068,6 @@ CodeGenerator::emitInstanceOf(LInstruction* ins, JSObject* prototypeObject)
     masm.bind(&done);
     masm.bind(ool->rejoin());
 }
-
-typedef bool (*HasInstanceFn)(JSContext*, HandleObject, HandleValue, bool*);
-static const VMFunction HasInstanceInfo = FunctionInfo<HasInstanceFn>(js::HasInstance, "HasInstance");
 
 void
 CodeGenerator::visitInstanceOfCache(LInstanceOfCache* ins)

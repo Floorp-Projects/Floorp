@@ -609,13 +609,15 @@ PaymentRequest::PaymentRequest(const uint64_t aTabId,
                                nsIPrincipal* aTopLevelPrincipal,
                                nsIArray* aPaymentMethods,
                                nsIPaymentDetails* aPaymentDetails,
-                               nsIPaymentOptions* aPaymentOptions)
+                               nsIPaymentOptions* aPaymentOptions,
+			       const nsAString& aShippingOption)
   : mTabId(aTabId)
   , mRequestId(aRequestId)
   , mTopLevelPrincipal(aTopLevelPrincipal)
   , mPaymentMethods(aPaymentMethods)
   , mPaymentDetails(aPaymentDetails)
   , mPaymentOptions(aPaymentOptions)
+  , mShippingOption(aShippingOption)
 {
 }
 
@@ -675,7 +677,15 @@ PaymentRequest::GetPaymentOptions(nsIPaymentOptions** aPaymentOptions)
 }
 
 NS_IMETHODIMP
-PaymentRequest::UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails)
+PaymentRequest::GetShippingOption(nsAString& aShippingOption)
+{
+  aShippingOption = mShippingOption;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentRequest::UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails,
+                                     const nsAString& aShippingOption)
 {
   MOZ_ASSERT(aPaymentDetails);
   bool requestShipping;
@@ -683,6 +693,7 @@ PaymentRequest::UpdatePaymentDetails(nsIPaymentDetails* aPaymentDetails)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+  mShippingOption = aShippingOption;
   return mPaymentDetails->Update(aPaymentDetails, requestShipping);
 }
 

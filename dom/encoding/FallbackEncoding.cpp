@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/FallbackEncoding.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/Preferences.h"

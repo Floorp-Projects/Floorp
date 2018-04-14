@@ -27,7 +27,6 @@
 #include "frontend/NameCollections.h"
 #include "gc/GCRuntime.h"
 #include "gc/Tracer.h"
-#include "gc/ZoneGroup.h"
 #include "irregexp/RegExpStack.h"
 #include "js/Debug.h"
 #include "js/GCVector.h"
@@ -112,11 +111,11 @@ class Simulator;
 //
 // - Helper threads do not run JS, and are controlled or triggered by activity
 //   on the main thread (or main threads, since all runtimes in a process share
-//   helper threads). Helper threads may have exclusive access to zone groups
-//   created for them, for parsing and similar tasks, but their activities do
-//   not cause observable changes in script behaviors. Activity on helper
-//   threads may be referred to as happening 'off thread' or on a background
-//   thread in some parts of the VM.
+//   helper threads). Helper threads may have exclusive access to zones created
+//   for them, for parsing and similar tasks, but their activities do not cause
+//   observable changes in script behaviors. Activity on helper threads may be
+//   referred to as happening 'off thread' or on a background thread in some
+//   parts of the VM.
 
 } /* namespace js */
 

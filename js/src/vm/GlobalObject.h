@@ -191,18 +191,6 @@ class GlobalObject : public NativeObject
         setSlot(prototypeSlot(key), value);
     }
 
-    bool classIsInitialized(JSProtoKey key) const {
-        bool inited = !getConstructor(key).isUndefined();
-        MOZ_ASSERT(inited == !getPrototype(key).isUndefined());
-        return inited;
-    }
-
-    bool functionObjectClassesInitialized() const {
-        bool inited = classIsInitialized(JSProto_Function);
-        MOZ_ASSERT(inited == classIsInitialized(JSProto_Object));
-        return inited;
-    }
-
     /*
      * Lazy standard classes need a way to indicate they have been initialized.
      * Otherwise, when we delete them, we might accidentally recreate them via
@@ -222,22 +210,19 @@ class GlobalObject : public NativeObject
         return !value.isUndefined();
     }
 
-    /*
-     * Using a Handle<GlobalObject*> as a Handle<Object*> is always safe as
-     * GlobalObject derives JSObject. However, with C++'s semantics, Handle<T>
-     * is not related to Handle<S>, independent of how S and T are related.
-     * Further, Handle stores an indirect pointer and, again because of C++'s
-     * semantics, T** is not related to S**, independent of how S and T are
-     * related. Since we know that this specific case is safe, we provide a
-     * manual upcast operation here to do the reinterpret_cast in a known-safe
-     * manner.
-     */
-    static HandleObject upcast(Handle<GlobalObject*> global) {
-        return HandleObject::fromMarkedLocation(
-                reinterpret_cast<JSObject * const*>(global.address()));
+  private:
+    bool classIsInitialized(JSProtoKey key) const {
+        bool inited = !getConstructor(key).isUndefined();
+        MOZ_ASSERT(inited == !getPrototype(key).isUndefined());
+        return inited;
     }
 
-  private:
+    bool functionObjectClassesInitialized() const {
+        bool inited = classIsInitialized(JSProto_Function);
+        MOZ_ASSERT(inited == classIsInitialized(JSProto_Object));
+        return inited;
+    }
+
     bool arrayClassInitialized() const {
         return classIsInitialized(JSProto_Array);
     }
@@ -303,8 +288,7 @@ class GlobalObject : public NativeObject
      * of the returned blank prototype.
      */
     static NativeObject*
-    createBlankPrototypeInheriting(JSContext* cx, Handle<GlobalObject*> global,
-                                   const js::Class* clasp, HandleObject proto);
+    createBlankPrototypeInheriting(JSContext* cx, const js::Class* clasp, HandleObject proto);
 
     template <typename T>
     static T*
@@ -920,7 +904,7 @@ GenericCreatePrototype(JSContext* cx, JSProtoKey key)
     if (!GlobalObject::ensureConstructor(cx, cx->global(), protoKey))
         return nullptr;
     RootedObject parentProto(cx, &cx->global()->getPrototype(protoKey).toObject());
-    return GlobalObject::createBlankPrototypeInheriting(cx, cx->global(), clasp, parentProto);
+    return GlobalObject::createBlankPrototypeInheriting(cx, clasp, parentProto);
 }
 
 inline JSProtoKey

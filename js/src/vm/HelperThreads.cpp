@@ -757,10 +757,10 @@ StartOffThreadParseTask(JSContext* cx, ParseTask* task, const ReadOnlyCompileOpt
     if (!global)
         return false;
 
-    // Mark the global's zone group as created for a helper thread. This
-    // prevents it from being collected until clearUsedByHelperThread() is
-    // called after parsing is complete. If this function exits due to error
-    // this state is cleared automatically.
+    // Mark the global's zone as created for a helper thread. This prevents it
+    // from being collected until clearUsedByHelperThread() is called after
+    // parsing is complete. If this function exits due to error this state is
+    // cleared automatically.
     AutoSetCreatedForHelperThread createdForHelper(global);
 
     if (!task->init(cx, options, global))

@@ -17,6 +17,7 @@
 #include "mozilla/WrappingOperations.h"
 
 #include <algorithm>  // for std::max
+#include <cmath>
 #include <fcntl.h>
 #ifdef XP_UNIX
 # include <unistd.h>
@@ -852,7 +853,7 @@ js::math_round_impl(double x)
         return x;
 
     double add = (x >= 0) ? GetBiggestNumberLessThan(0.5) : 0.5;
-    return js_copysign(fdlibm::floor(x + add), x);
+    return std::copysign(fdlibm::floor(x + add), x);
 }
 
 float
@@ -869,7 +870,7 @@ js::math_roundf_impl(float x)
         return x;
 
     float add = (x >= 0) ? GetBiggestNumberLessThan(0.5f) : 0.5f;
-    return js_copysign(fdlibm::floorf(x + add), x);
+    return std::copysign(fdlibm::floorf(x + add), x);
 }
 
 bool /* ES5 15.8.2.15. */
@@ -1254,7 +1255,6 @@ js::math_atanh(JSContext* cx, unsigned argc, Value* vp)
     return math_function<math_atanh_impl>(cx, argc, vp);
 }
 
-/* Consistency wrapper for platform deviations in hypot() */
 double
 js::ecmaHypot(double x, double y)
 {
@@ -1280,9 +1280,7 @@ js::hypot4(double x, double y, double z, double w)
 {
     AutoUnsafeCallWithABI unsafe;
 
-    /* Check for infinity or NaNs so that we can return immediatelly.
-     * Does not need to be WIN_XP specific as ecmaHypot
-     */
+    // Check for infinities or NaNs so that we can return immediately.
     if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y) ||
             mozilla::IsInfinite(z) || mozilla::IsInfinite(w))
         return mozilla::PositiveInfinity<double>();
@@ -1319,7 +1317,7 @@ js::math_hypot(JSContext* cx, unsigned argc, Value* vp)
 bool
 js::math_hypot_handle(JSContext* cx, HandleValueArray args, MutableHandleValue res)
 {
-    // IonMonkey calls the system hypot function directly if two arguments are
+    // IonMonkey calls the ecmaHypot function directly if two arguments are
     // given. Do that here as well to get the same results.
     if (args.length() == 2) {
         double x, y;
@@ -1476,9 +1474,8 @@ static const JSFunctionSpec math_static_methods[] = {
 };
 
 JSObject*
-js::InitMathClass(JSContext* cx, HandleObject obj)
+js::InitMathClass(JSContext* cx, Handle<GlobalObject*> global)
 {
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
     if (!proto)
         return nullptr;
@@ -1486,7 +1483,7 @@ js::InitMathClass(JSContext* cx, HandleObject obj)
     if (!Math)
         return nullptr;
 
-    if (!JS_DefineProperty(cx, obj, js_Math_str, Math, JSPROP_RESOLVING))
+    if (!JS_DefineProperty(cx, global, js_Math_str, Math, JSPROP_RESOLVING))
         return nullptr;
     if (!JS_DefineFunctions(cx, Math, math_static_methods))
         return nullptr;
@@ -1495,7 +1492,7 @@ js::InitMathClass(JSContext* cx, HandleObject obj)
     if (!DefineToStringTag(cx, Math, cx->names().Math))
         return nullptr;
 
-    obj->as<GlobalObject>().setConstructor(JSProto_Math, ObjectValue(*Math));
+    global->setConstructor(JSProto_Math, ObjectValue(*Math));
 
     return Math;
 }

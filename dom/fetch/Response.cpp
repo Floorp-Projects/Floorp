@@ -129,11 +129,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
       return nullptr;
     }
 
-    url->Stringify(parsedURL, aRv);
-  }
-
-  if (aRv.Failed()) {
-    return nullptr;
+    url->Stringify(parsedURL);
   }
 
   if (aStatus != 301 && aStatus != 302 && aStatus != 303 && aStatus != 307 && aStatus != 308) {

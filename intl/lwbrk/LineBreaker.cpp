@@ -9,6 +9,7 @@
 #include "nsComplexBreaker.h"
 #include "nsTArray.h"
 #include "nsUnicodeProperties.h"
+#include "mozilla/ArrayUtils.h"
 
 using namespace mozilla::unicode;
 using namespace mozilla::intl;

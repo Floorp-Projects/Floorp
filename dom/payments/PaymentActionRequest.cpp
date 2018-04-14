@@ -78,7 +78,8 @@ PaymentCreateActionRequest::InitRequest(const nsAString& aRequestId,
                                         nsIPrincipal* aTopLevelPrincipal,
                                         nsIArray* aMethodData,
                                         nsIPaymentDetails* aDetails,
-                                        nsIPaymentOptions* aOptions)
+                                        nsIPaymentOptions* aOptions,
+					const nsAString& aShippingOption)
 {
   NS_ENSURE_ARG_POINTER(aCallback);
   NS_ENSURE_ARG_POINTER(aTopLevelPrincipal);
@@ -94,6 +95,7 @@ PaymentCreateActionRequest::InitRequest(const nsAString& aRequestId,
   mMethodData = aMethodData;
   mDetails = aDetails;
   mOptions = aOptions;
+  mShippingOption = aShippingOption;
   return NS_OK;
 }
 
@@ -142,6 +144,13 @@ PaymentCreateActionRequest::GetOptions(nsIPaymentOptions** aOptions)
   MOZ_ASSERT(mOptions);
   nsCOMPtr<nsIPaymentOptions> options = mOptions;
   options.forget(aOptions);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentCreateActionRequest::GetShippingOption(nsAString& aShippingOption)
+{
+  aShippingOption = mShippingOption;
   return NS_OK;
 }
 
@@ -194,9 +203,17 @@ PaymentUpdateActionRequest::GetDetails(nsIPaymentDetails** aDetails)
 }
 
 NS_IMETHODIMP
+PaymentUpdateActionRequest::GetShippingOption(nsAString& aShippingOption)
+{
+  aShippingOption = mShippingOption;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PaymentUpdateActionRequest::InitRequest(const nsAString& aRequestId,
                                         nsIPaymentActionCallback* aCallback,
-                                        nsIPaymentDetails* aDetails)
+                                        nsIPaymentDetails* aDetails,
+					const nsAString& aShippingOption)
 {
   NS_ENSURE_ARG_POINTER(aCallback);
   NS_ENSURE_ARG_POINTER(aDetails);
@@ -205,6 +222,7 @@ PaymentUpdateActionRequest::InitRequest(const nsAString& aRequestId,
     return rv;
   }
   mDetails = aDetails;
+  mShippingOption = aShippingOption;
   return NS_OK;
 }
 

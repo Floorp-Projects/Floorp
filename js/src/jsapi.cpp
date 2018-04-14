@@ -962,8 +962,6 @@ JS_InitStandardClasses(JSContext* cx, HandleObject obj)
     return GlobalObject::initStandardClasses(cx, global);
 }
 
-#define EAGER_ATOM(name)            NAME_OFFSET(name)
-
 typedef struct JSStdName {
     size_t      atomOffset;     /* offset of atom pointer in JSAtomState */
     JSProtoKey  key;
@@ -991,7 +989,7 @@ LookupStdName(const JSAtomState& names, JSAtom* name, const JSStdName* table)
  * JSProtoKey does not correspond to a class with a meaningful constructor, we
  * insert a null entry into the table.
  */
-#define STD_NAME_ENTRY(name, init, clasp) { EAGER_ATOM(name), JSProto_##name },
+#define STD_NAME_ENTRY(name, init, clasp) { NAME_OFFSET(name), JSProto_##name },
 #define STD_DUMMY_ENTRY(name, init, dummy) { 0, JSProto_Null },
 static const JSStdName standard_class_names[] = {
   JS_FOR_PROTOTYPES(STD_NAME_ENTRY, STD_DUMMY_ENTRY)
@@ -1003,29 +1001,27 @@ static const JSStdName standard_class_names[] = {
  * standard class that initializes them.
  */
 static const JSStdName builtin_property_names[] = {
-    { EAGER_ATOM(eval), JSProto_Object },
+    { NAME_OFFSET(eval), JSProto_Object },
 
     /* Global properties and functions defined by the Number class. */
-    { EAGER_ATOM(NaN), JSProto_Number },
-    { EAGER_ATOM(Infinity), JSProto_Number },
-    { EAGER_ATOM(isNaN), JSProto_Number },
-    { EAGER_ATOM(isFinite), JSProto_Number },
-    { EAGER_ATOM(parseFloat), JSProto_Number },
-    { EAGER_ATOM(parseInt), JSProto_Number },
+    { NAME_OFFSET(NaN), JSProto_Number },
+    { NAME_OFFSET(Infinity), JSProto_Number },
+    { NAME_OFFSET(isNaN), JSProto_Number },
+    { NAME_OFFSET(isFinite), JSProto_Number },
+    { NAME_OFFSET(parseFloat), JSProto_Number },
+    { NAME_OFFSET(parseInt), JSProto_Number },
 
     /* String global functions. */
-    { EAGER_ATOM(escape), JSProto_String },
-    { EAGER_ATOM(unescape), JSProto_String },
-    { EAGER_ATOM(decodeURI), JSProto_String },
-    { EAGER_ATOM(encodeURI), JSProto_String },
-    { EAGER_ATOM(decodeURIComponent), JSProto_String },
-    { EAGER_ATOM(encodeURIComponent), JSProto_String },
-    { EAGER_ATOM(uneval), JSProto_String },
+    { NAME_OFFSET(escape), JSProto_String },
+    { NAME_OFFSET(unescape), JSProto_String },
+    { NAME_OFFSET(decodeURI), JSProto_String },
+    { NAME_OFFSET(encodeURI), JSProto_String },
+    { NAME_OFFSET(decodeURIComponent), JSProto_String },
+    { NAME_OFFSET(encodeURIComponent), JSProto_String },
+    { NAME_OFFSET(uneval), JSProto_String },
 
     { 0, JSProto_LIMIT }
 };
-
-#undef EAGER_ATOM
 
 JS_PUBLIC_API(bool)
 JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* resolved)
@@ -1333,7 +1329,7 @@ JS_PUBLIC_API(bool)
 JS::detail::ComputeThis(JSContext* cx, Value* vp, MutableHandleObject thisObject)
 {
     AssertHeapIsIdle();
-    assertSameCompartment(cx, JSValueArray(vp, 2));
+    assertSameCompartment(cx, vp[0], vp[1]);
 
     MutableHandleValue thisv = MutableHandleValue::fromMarkedLocation(&vp[1]);
     if (!BoxNonStrictThis(cx, thisv, thisv))
@@ -6239,7 +6235,7 @@ JS::GetSymbolCode(Handle<Symbol*> symbol)
 JS_PUBLIC_API(JS::Symbol*)
 JS::GetWellKnownSymbol(JSContext* cx, JS::SymbolCode which)
 {
-    return cx->wellKnownSymbols().get(uint32_t(which));
+    return cx->wellKnownSymbols().get(which);
 }
 
 #ifdef DEBUG

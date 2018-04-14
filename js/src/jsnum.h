@@ -7,6 +7,7 @@
 #ifndef jsnum_h
 #define jsnum_h
 
+#include "mozilla/Compiler.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Range.h"
 
@@ -19,8 +20,8 @@
 
 // This macro is should be `one' if current compiler supports builtin functions
 // like __builtin_sadd_overflow.
-#if __GNUC__ >= 5
-    // GCC 5 and above supports these functions.
+#if MOZ_IS_GCC
+    // GCC supports these functions.
     #define BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(x) 1
 #else
     // For CLANG, we use its own function to check for this.
@@ -34,6 +35,7 @@
 
 namespace js {
 
+class GlobalObject;
 class StringBuffer;
 
 extern MOZ_MUST_USE bool
@@ -46,7 +48,7 @@ FinishRuntimeNumberState(JSRuntime* rt);
 
 /* Initialize the Number class, returning its prototype object. */
 extern JSObject*
-InitNumberClass(JSContext* cx, HandleObject obj);
+InitNumberClass(JSContext* cx, Handle<GlobalObject*> global);
 
 /*
  * When base == 10, this function implements ToString() as specified by

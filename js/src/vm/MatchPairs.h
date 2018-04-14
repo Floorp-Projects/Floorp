@@ -35,13 +35,7 @@ struct MatchPair
     { }
 
     size_t length()      const { MOZ_ASSERT(!isUndefined()); return limit - start; }
-    bool isEmpty()       const { return length() == 0; }
     bool isUndefined()   const { return start < 0; }
-
-    void displace(size_t amount) {
-        start += (start < 0) ? 0 : amount;
-        limit += (limit < 0) ? 0 : amount;
-    }
 
     inline bool check() const {
         MOZ_ASSERT(limit >= start);
@@ -63,7 +57,7 @@ class MatchPairs
     MatchPair* pairs_;
 
   protected:
-    /* Not used directly: use ScopedMatchPairs or VectorMatchPairs. */
+    /* Not used directly: use VectorMatchPairs. */
     MatchPairs()
       : pairCount_(0), pairs_(nullptr)
     { }
@@ -91,7 +85,6 @@ class MatchPairs
     /* Querying functions in the style of RegExpStatics. */
     bool   empty() const           { return pairCount_ == 0; }
     size_t pairCount() const       { MOZ_ASSERT(pairCount_ > 0); return pairCount_; }
-    size_t parenCount() const      { return pairCount_ - 1; }
 
     static size_t offsetOfPairs() { return offsetof(MatchPairs, pairs_); }
     static size_t offsetOfPairCount() { return offsetof(MatchPairs, pairCount_); }

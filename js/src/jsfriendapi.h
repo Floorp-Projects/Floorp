@@ -76,9 +76,6 @@ JS_NewObjectWithUniqueType(JSContext* cx, const JSClass* clasp, JS::HandleObject
 extern JS_FRIEND_API(JSObject*)
 JS_NewObjectWithoutMetadata(JSContext* cx, const JSClass* clasp, JS::Handle<JSObject*> proto);
 
-extern JS_FRIEND_API(uint32_t)
-JS_ObjectCountDynamicSlots(JS::HandleObject obj);
-
 extern JS_FRIEND_API(bool)
 JS_NondeterministicGetWeakMapKeys(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject ret);
 
@@ -227,9 +224,6 @@ extern JS_FRIEND_API(bool)
 JS_InitializePropertiesFromCompatibleNativeObject(JSContext* cx,
                                                   JS::HandleObject dst,
                                                   JS::HandleObject src);
-
-extern JS_FRIEND_API(JSString*)
-JS_BasicObjectToString(JSContext* cx, JS::HandleObject obj);
 
 namespace js {
 
@@ -387,9 +381,6 @@ extern JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext* cx, JS::HandleObject obj, const JSFunctionSpecWithHelp* fs);
 
 namespace js {
-
-extern JS_FRIEND_API(JSObject*)
-proxy_WeakmapKeyDelegate(JSObject* obj);
 
 /**
  * A class of objects that return source code on demand.
@@ -3134,15 +3125,6 @@ EnableAccessValidation(JSContext* cx, bool enabled);
 // should be made from whichever thread owns |global| at a given time.
 extern JS_FRIEND_API(void)
 SetCompartmentValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp);
-
-// If the JS engine wants to block so that other cooperative threads can run, it
-// will call the yield callback. It may do this if it needs to access a ZoneGroup
-// that is held by another thread (such as the system zone group).
-typedef void
-(* YieldCallback)(JSContext* cx);
-
-extern JS_FRIEND_API(void)
-SetCooperativeYieldCallback(JSContext* cx, YieldCallback callback);
 
 // Returns true if the system zone is available (i.e., if no cooperative contexts
 // are using it now).

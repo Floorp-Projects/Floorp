@@ -447,9 +447,6 @@ typedef void
                                       JS::PromiseRejectionHandlingState state,
                                       void* data);
 
-typedef void
-(* JSProcessPromiseCallback)(JSContext* cx, JS::HandleObject promise);
-
 /**
  * Possible exception types. These types are part of a JSErrorFormatString
  * structure. They define which error to throw in case of a runtime error.

@@ -78,7 +78,7 @@ public:
              ErrorResult& aRv);
 
   virtual void
-  GetHref(nsAString& aHref, ErrorResult& aRv) const = 0;
+  GetHref(nsAString& aHref) const = 0;
 
   virtual void
   SetHref(const nsAString& aHref, ErrorResult& aRv) = 0;
@@ -87,70 +87,70 @@ public:
   GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const = 0;
 
   virtual void
-  GetProtocol(nsAString& aProtocol, ErrorResult& aRv) const = 0;
+  GetProtocol(nsAString& aProtocol) const = 0;
 
   virtual void
   SetProtocol(const nsAString& aProtocol, ErrorResult& aRv) = 0;
 
   virtual void
-  GetUsername(nsAString& aUsername, ErrorResult& aRv) const = 0;
+  GetUsername(nsAString& aUsername) const = 0;
 
   virtual void
-  SetUsername(const nsAString& aUsername, ErrorResult& aRv) = 0;
+  SetUsername(const nsAString& aUsername) = 0;
 
   virtual void
-  GetPassword(nsAString& aPassword, ErrorResult& aRv) const = 0;
+  GetPassword(nsAString& aPassword) const = 0;
 
   virtual void
-  SetPassword(const nsAString& aPassword, ErrorResult& aRv) = 0;
+  SetPassword(const nsAString& aPassword) = 0;
 
   virtual void
-  GetHost(nsAString& aHost, ErrorResult& aRv) const = 0;
+  GetHost(nsAString& aHost) const = 0;
 
   virtual void
-  SetHost(const nsAString& aHost, ErrorResult& aRv) = 0;
+  SetHost(const nsAString& aHost) = 0;
 
   virtual void
-  GetHostname(nsAString& aHostname, ErrorResult& aRv) const = 0;
+  GetHostname(nsAString& aHostname) const = 0;
 
   virtual void
-  SetHostname(const nsAString& aHostname, ErrorResult& aRv) = 0;
+  SetHostname(const nsAString& aHostname) = 0;
 
   virtual void
-  GetPort(nsAString& aPort, ErrorResult& aRv) const = 0;
+  GetPort(nsAString& aPort) const = 0;
 
   virtual void
-  SetPort(const nsAString& aPort, ErrorResult& aRv) = 0;
+  SetPort(const nsAString& aPort) = 0;
 
   virtual void
-  GetPathname(nsAString& aPathname, ErrorResult& aRv) const = 0;
+  GetPathname(nsAString& aPathname) const = 0;
 
   virtual void
-  SetPathname(const nsAString& aPathname, ErrorResult& aRv) = 0;
+  SetPathname(const nsAString& aPathname) = 0;
 
   virtual void
-  GetSearch(nsAString& aSearch, ErrorResult& aRv) const = 0;
+  GetSearch(nsAString& aSearch) const = 0;
 
   virtual void
-  SetSearch(const nsAString& aSearch, ErrorResult& aRv);
+  SetSearch(const nsAString& aSearch);
 
   URLSearchParams* SearchParams();
 
   virtual void
-  GetHash(nsAString& aHost, ErrorResult& aRv) const = 0;
+  GetHash(nsAString& aHost) const = 0;
 
   virtual void
-  SetHash(const nsAString& aHash, ErrorResult& aRv) = 0;
+  SetHash(const nsAString& aHash) = 0;
 
-  void Stringify(nsAString& aRetval, ErrorResult& aRv) const
+  void Stringify(nsAString& aRetval) const
   {
-    GetHref(aRetval, aRv);
+    GetHref(aRetval);
   }
 
   void
-  ToJSON(nsAString& aResult, ErrorResult& aRv) const
+  ToJSON(nsAString& aResult) const
   {
-    GetHref(aResult, aRv);
+    GetHref(aResult);
   }
 
   // URLSearchParamsObserver
@@ -165,7 +165,7 @@ protected:
   UpdateURLSearchParams() = 0;
 
   virtual void
-  SetSearchInternal(const nsAString& aSearch, ErrorResult& aRv) = 0;
+  SetSearchInternal(const nsAString& aSearch) = 0;
 
   void CreateSearchParamsIfNeeded();
 

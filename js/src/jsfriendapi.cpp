@@ -130,8 +130,7 @@ JS_NewObjectWithUniqueType(JSContext* cx, const JSClass* clasp, HandleObject pro
      * ObjectGroup attached to our proto with information about our object, since
      * we're not going to be using that ObjectGroup anyway.
      */
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, (const js::Class*)clasp, nullptr,
-                                                 SingletonObject));
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, Valueify(clasp), nullptr, SingletonObject));
     if (!obj)
         return nullptr;
     if (!JS_SplicePrototype(cx, obj, proto))
@@ -1533,12 +1532,6 @@ JS_FRIEND_API(void)
 js::SetCompartmentValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp)
 {
     global->compartment()->setValidAccessPtr(accessp);
-}
-
-JS_FRIEND_API(void)
-js::SetCooperativeYieldCallback(JSContext* cx, YieldCallback callback)
-{
-    cx->setYieldCallback(callback);
 }
 
 JS_FRIEND_API(bool)

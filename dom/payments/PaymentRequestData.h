@@ -184,7 +184,8 @@ public:
                  nsIPrincipal* aPrincipal,
                  nsIArray* aPaymentMethods,
                  nsIPaymentDetails* aPaymentDetails,
-                 nsIPaymentOptions* aPaymentOptions);
+                 nsIPaymentOptions* aPaymentOptions,
+		 const nsAString& aShippingOption);
 
 private:
   ~PaymentRequest() = default;
@@ -196,6 +197,7 @@ private:
   nsCOMPtr<nsIArray> mPaymentMethods;
   nsCOMPtr<nsIPaymentDetails> mPaymentDetails;
   nsCOMPtr<nsIPaymentOptions> mPaymentOptions;
+  nsString mShippingOption;
 };
 
 class PaymentAddress final : public nsIPaymentAddress

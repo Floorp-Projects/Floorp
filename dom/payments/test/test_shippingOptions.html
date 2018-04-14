@@ -1,0 +1,208 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1440041
+https://bugzilla.mozilla.org/show_bug.cgi?id=1443914
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for shippingOptions related bugs</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="./DefaultData.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  var gUrl = SimpleTest.getTestFileURL('ShippingOptionsChromeScript.js');
+  var gScript = SpecialPowers.loadChromeScript(gUrl);
+
+  function testFailHandler(message) {
+    ok(false, message);
+  }
+  function testPassHandler(message) {
+    ok(true, message);
+  }
+  gScript.addMessageListener("test-fail", testFailHandler);
+  gScript.addMessageListener("test-pass", testPassHandler);
+
+  let shippingOptions = [{
+    id: "NormalShipping",
+    label: "NormalShipping",
+    amount: {
+      currency: "USD",
+      value: "10.00",
+    },
+    selected: true,
+  },{
+    id: "FastShipping",
+    label: "FastShipping",
+    amount: {
+      currency: "USD",
+      value: "5.00",
+    },
+    selected: false,
+  }]
+
+  // testing function main body
+  function testShippingOptionsTemplate(initDetails,
+				       optionUpdateDetails,
+                                       expectedRequestOption,
+				       expectedOptionChangeOption,
+				       expectedResponseOption) {
+    const expectedResults = {requestResult: expectedRequestOption,
+                             changeOptionResult: expectedOptionChangeOption,
+                             responseResult: expectedResponseOption,};
+    gScript.sendAsyncMessage("set-expected-results", expectedResults);
+    return new Promise((resolve, reject) => {
+      const request = new PaymentRequest(defaultMethods, initDetails, defaultOptions);
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+      is(request.shippingOption, expectedRequestOption,
+         "request.shippingOption should be " + expectedRequestOption +
+	 " after created, but got " + request.shippingOption + ".");
+      if (optionUpdateDetails) {
+	request.addEventListener("shippingoptionchange", event => {
+	  is(request.shippingOption, expectedOptionChangeOption,
+             "request.shippingOption should be " + expectedOptionChangeOption +
+	     " in shippingoptionchange event, but got " + request.shippingOption + ".");
+          event.updateWith(optionUpdateDetails);
+	});
+      }
+      request.show().then(response => {
+        is(response.shippingOption, expectedResponseOption,
+	"response.shippingOption should be " + expectedResponseOption +
+	 ", but got " + response.shippingOption + ".");
+	response.complete("success").then(() => {
+	  resolve();
+	}).catch(error => {
+	  ok(false, "Unexpected error: " + error.name);
+	  resolve();
+	})
+      }, response => {
+      }).catch(error => {
+        ok(false, "Unexpected error: " + error.name);
+	resolve();
+      }).finally(handler.destruct);
+    });
+  }
+
+  // test no selected shipping option in default
+  function testNoSelectedShippingOptions() {
+    return testShippingOptionsTemplate(defaultDetails,   // initial details
+				       null,             // update details for optionchange
+				       null,             // expected request.shippintOption after create
+				       null,             // expected request.shippingOption after optionchange
+				       null);            // expected response.shippingOption
+  }
+
+  // test select one shipping option in default
+  function testSelectedOneShippingOption() {
+    let details = Object.assign({}, defaultDetails);
+    details.shippingOptions = shippingOptions;
+    details.shippingOptions[0].selected = true;
+    details.shippingOptions[1].selected = false;
+    const expectedOption = details.shippingOptions[0].id;
+    return testShippingOptionsTemplate(details,          // initial details
+				       null,             // update details for optionchange
+				       expectedOption,   // expected request.shippintOption after create
+				       null,             // expected request.shippingOption after optionchange
+				       expectedOption);  // expected response.shippingOption
+  }
+
+  // test select multiple shipping options in default
+  function testMultiSelectedShippingOptions() {
+    let details = Object.assign({}, defaultDetails);
+    details.shippingOptions = shippingOptions;
+    details.shippingOptions[0].selected = true;
+    details.shippingOptions[1].selected = true;
+    const expectedOption = details.shippingOptions[1].id;
+    return testShippingOptionsTemplate(details,          // initial details
+				       null,             // update details for optionchange
+				       expectedOption,   // expected request.shippintOption after create
+				       null,             // expected request.shippingOption after optionchange
+				       expectedOption);  // expected response.shippingOption
+  }
+
+  // test no selected shipping option in default, but selected by user
+  function testSelectedByUser() {
+    let updateDetails = Object.assign({}, defaultDetails);
+    updateDetails.shippingOptions = shippingOptions;
+    updateDetails.shippingOptions[0].selected = true;
+    updateDetails.shippingOptions[1].selected = false;
+    const expectedOption = updateDetails.shippingOptions[0].id;
+    return testShippingOptionsTemplate(defaultDetails,   // initial details
+				       updateDetails,    // update details for optionchange
+				       null,             // expected request.shippintOption after create
+				       expectedOption,   // expected request.shippingOption after optionchange
+				       expectedOption);  // expected response.shippingOption
+  }
+
+  // test no selected shipping option in default, but selected by user then updated
+  // by merchant to the other.
+  function testUpdateSelectedByMerchant() {
+    let updateDetails = Object.assign({}, defaultDetails);
+    updateDetails.shippingOptions = shippingOptions;
+    updateDetails.shippingOptions[0].selected = false;
+    updateDetails.shippingOptions[1].selected = true;
+    const expectedOption = updateDetails.shippingOptions[0].id;
+    const expectedResponse = updateDetails.shippingOptions[1].id;
+    return testShippingOptionsTemplate(defaultDetails,   // initial details
+				       updateDetails,    // update details for optionchange
+				       null,             // expected request.shippintOption after create
+				       expectedOption,   // expected request.shippingOption after optionchange
+				       expectedResponse);// expected response.shippingOption
+  }
+
+  // test update shipping options to null
+  function testUpdateShippingOptionsToNull() {
+    let updateDetails = Object.assign({}, defaultDetails);
+    delete updateDetails.shippingOptions;
+    const expectedOption = defaultDetails.shippingOptions[0].id;
+    return testShippingOptionsTemplate(defaultDetails,   // initial details
+				       updateDetails,    // update details for optionchange
+				       null,             // expected request.shippintOption after create
+				       expectedOption,   // expected request.shippingOption after optionchange
+				       null);            // expected response.shippingOption
+  }
+
+  function teardown() {
+    gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+      gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+      gScript.removeMessageListener("test-fail", testFailHandler);
+      gScript.removeMessageListener("test-pass", testPassHandler);
+      gScript.destroy();
+      SimpleTest.finish();
+    });
+    gScript.sendAsyncMessage("teardown");
+  }
+
+  function runTests() {
+    testNoSelectedShippingOptions()
+    .then(testSelectedOneShippingOption)
+    .then(testMultiSelectedShippingOptions)
+    .then(testSelectedByUser)
+    .then(testUpdateSelectedByMerchant)
+    .then(testUpdateShippingOptionsToNull)
+    .then(teardown)
+    .catch( e => {
+      ok(false, "Unexpected error: " + e.name);
+      SimpleTest.finish();
+    });
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1440041">Mozilla Bug 1440041</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1443914">Mozilla Bug 1443914</a>
+</body>
+</html>

@@ -54,17 +54,18 @@ public class GeckoViewActivity extends Activity {
             getIntent().getBooleanExtra(USE_MULTIPROCESS_EXTRA, true);
 
         if (sGeckoRuntime == null) {
-            final GeckoRuntimeSettings geckoSettings = new GeckoRuntimeSettings();
+            final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
+                new GeckoRuntimeSettings.Builder();
 
             if (BuildConfig.DEBUG) {
                 // In debug builds, we want to load JavaScript resources fresh with
                 // each build.
-                geckoSettings.setArguments(new String[] { "-purgecaches" });
+                runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" });
             }
 
-            geckoSettings.setUseContentProcessHint(useMultiprocess);
-            geckoSettings.setExtras(getIntent().getExtras());
-            sGeckoRuntime = GeckoRuntime.create(this, geckoSettings);
+            runtimeSettingsBuilder.useContentProcessHint(useMultiprocess)
+                                  .extras(getIntent().getExtras());
+            sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
         }
 
         final GeckoSessionSettings sessionSettings = new GeckoSessionSettings();

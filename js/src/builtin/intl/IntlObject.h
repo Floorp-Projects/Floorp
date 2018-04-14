@@ -14,12 +14,17 @@
 
 namespace js {
 
+struct Class;
+class GlobalObject;
+
+extern const Class IntlClass;
+
 /**
  * Initializes the Intl Object and its standard built-in properties.
  * Spec: ECMAScript Internationalization API Specification, 8.0, 8.1
  */
 extern JSObject*
-InitIntlClass(JSContext* cx, JS::Handle<JSObject*> obj);
+InitIntlClass(JSContext* cx, JS::Handle<GlobalObject*> global);
 
 /**
  * Returns a plain object with calendar information for a single valid locale

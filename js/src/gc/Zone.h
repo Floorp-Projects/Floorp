@@ -260,7 +260,7 @@ struct Zone : public JS::shadow::Zone,
     using DebuggerVector = js::Vector<js::Debugger*, 0, js::SystemAllocPolicy>;
 
   private:
-    js::ZoneGroupData<DebuggerVector*> debuggers;
+    js::ZoneData<DebuggerVector*> debuggers;
 
     js::jit::JitZone* createJitZone(JSContext* cx);
 
@@ -269,7 +269,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
     // Side map for storing a unique ids for cells, independent of address.
-    js::ZoneGroupOrGCTaskData<js::gc::UniqueIdMap> uniqueIds_;
+    js::ZoneOrGCTaskData<js::gc::UniqueIdMap> uniqueIds_;
 
     js::gc::UniqueIdMap& uniqueIds() { return uniqueIds_.ref(); }
 
@@ -291,7 +291,7 @@ struct Zone : public JS::shadow::Zone,
      *   is silly
      * And so on.
      */
-    js::ZoneGroupData<bool> suppressAllocationMetadataBuilder;
+    js::ZoneData<bool> suppressAllocationMetadataBuilder;
 
     js::gc::ArenaLists arenas;
 
@@ -299,7 +299,7 @@ struct Zone : public JS::shadow::Zone,
 
   private:
     /* Live weakmaps in this zone. */
-    js::ZoneGroupOrGCTaskData<mozilla::LinkedList<js::WeakMapBase>> gcWeakMapList_;
+    js::ZoneOrGCTaskData<mozilla::LinkedList<js::WeakMapBase>> gcWeakMapList_;
   public:
     mozilla::LinkedList<js::WeakMapBase>& gcWeakMapList() { return gcWeakMapList_.ref(); }
 
@@ -314,7 +314,7 @@ struct Zone : public JS::shadow::Zone,
     // This zone's gray roots.
     typedef js::Vector<js::gc::Cell*, 0, js::SystemAllocPolicy> GrayRootVector;
   private:
-    js::ZoneGroupOrGCTaskData<GrayRootVector> gcGrayRoots_;
+    js::ZoneOrGCTaskData<GrayRootVector> gcGrayRoots_;
   public:
     GrayRootVector& gcGrayRoots() { return gcGrayRoots_.ref(); }
 
@@ -322,13 +322,13 @@ struct Zone : public JS::shadow::Zone,
     // preserved for re-scanning during sweeping.
     using WeakEdges = js::Vector<js::gc::TenuredCell**, 0, js::SystemAllocPolicy>;
   private:
-    js::ZoneGroupOrGCTaskData<WeakEdges> gcWeakRefs_;
+    js::ZoneOrGCTaskData<WeakEdges> gcWeakRefs_;
   public:
     WeakEdges& gcWeakRefs() { return gcWeakRefs_.ref(); }
 
   private:
     // List of non-ephemeron weak containers to sweep during beginSweepingSweepGroup.
-    js::ZoneGroupOrGCTaskData<mozilla::LinkedList<detail::WeakCacheBase>> weakCaches_;
+    js::ZoneOrGCTaskData<mozilla::LinkedList<detail::WeakCacheBase>> weakCaches_;
   public:
     mozilla::LinkedList<detail::WeakCacheBase>& weakCaches() { return weakCaches_.ref(); }
     void registerWeakCache(detail::WeakCacheBase* cachep) {
@@ -340,7 +340,7 @@ struct Zone : public JS::shadow::Zone,
      * Mapping from not yet marked keys to a vector of all values that the key
      * maps to in any live weak map.
      */
-    js::ZoneGroupOrGCTaskData<js::gc::WeakKeyTable> gcWeakKeys_;
+    js::ZoneOrGCTaskData<js::gc::WeakKeyTable> gcWeakKeys_;
   public:
     js::gc::WeakKeyTable& gcWeakKeys() { return gcWeakKeys_.ref(); }
 
@@ -365,7 +365,7 @@ struct Zone : public JS::shadow::Zone,
                                              js::MovableCellHasher<JSObject*>,
                                              js::SystemAllocPolicy>;
   private:
-    js::ZoneGroupData<JS::WeakCache<TypeDescrObjectSet>> typeDescrObjects_;
+    js::ZoneData<JS::WeakCache<TypeDescrObjectSet>> typeDescrObjects_;
 
     // Malloc counter to measure memory pressure for GC scheduling. This
     // counter should be used only when it's not possible to know the size of
@@ -440,16 +440,16 @@ struct Zone : public JS::shadow::Zone,
 
   private:
     // Bitmap of atoms marked by this zone.
-    js::ZoneGroupOrGCTaskData<js::SparseBitmap> markedAtoms_;
+    js::ZoneOrGCTaskData<js::SparseBitmap> markedAtoms_;
 
     // Set of atoms recently used by this Zone. Purged on GC.
-    js::ZoneGroupOrGCTaskData<js::AtomSet> atomCache_;
+    js::ZoneOrGCTaskData<js::AtomSet> atomCache_;
 
     // Cache storing allocated external strings. Purged on GC.
-    js::ZoneGroupOrGCTaskData<js::ExternalStringCache> externalStringCache_;
+    js::ZoneOrGCTaskData<js::ExternalStringCache> externalStringCache_;
 
     // Cache for Function.prototype.toString. Purged on GC.
-    js::ZoneGroupOrGCTaskData<js::FunctionToStringCache> functionToStringCache_;
+    js::ZoneOrGCTaskData<js::FunctionToStringCache> functionToStringCache_;
 
   public:
     js::SparseBitmap& markedAtoms() { return markedAtoms_.ref(); }
@@ -470,18 +470,18 @@ struct Zone : public JS::shadow::Zone,
     // the current GC.
     js::UnprotectedData<size_t> gcDelayBytes;
 
-    js::ZoneGroupData<uint32_t> tenuredStrings;
-    js::ZoneGroupData<bool> allocNurseryStrings;
+    js::ZoneData<uint32_t> tenuredStrings;
+    js::ZoneData<bool> allocNurseryStrings;
 
   private:
     // Shared Shape property tree.
-    js::ZoneGroupData<js::PropertyTree> propertyTree_;
+    js::ZoneData<js::PropertyTree> propertyTree_;
   public:
     js::PropertyTree& propertyTree() { return propertyTree_.ref(); }
 
   private:
     // Set of all unowned base shapes in the Zone.
-    js::ZoneGroupData<js::BaseShapeSet> baseShapes_;
+    js::ZoneData<js::BaseShapeSet> baseShapes_;
   public:
     js::BaseShapeSet& baseShapes() { return baseShapes_.ref(); }
 
@@ -490,14 +490,14 @@ struct Zone : public JS::shadow::Zone,
     // those of various builtin classes -- there are two entries: one for a
     // lookup via TaggedProto, and one for a lookup via JSProtoKey. See
     // InitialShapeProto.
-    js::ZoneGroupData<js::InitialShapeSet> initialShapes_;
+    js::ZoneData<js::InitialShapeSet> initialShapes_;
   public:
     js::InitialShapeSet& initialShapes() { return initialShapes_.ref(); }
 
   private:
     // List of shapes that may contain nursery pointers.
     using NurseryShapeVector = js::Vector<js::AccessorShape*, 0, js::SystemAllocPolicy>;
-    js::ZoneGroupData<NurseryShapeVector> nurseryShapes_;
+    js::ZoneData<NurseryShapeVector> nurseryShapes_;
   public:
     NurseryShapeVector& nurseryShapes() { return nurseryShapes_.ref(); }
 
@@ -509,9 +509,9 @@ struct Zone : public JS::shadow::Zone,
     void fixupAfterMovingGC();
 
     // Per-zone data for use by an embedder.
-    js::ZoneGroupData<void*> data;
+    js::ZoneData<void*> data;
 
-    js::ZoneGroupData<bool> isSystem;
+    js::ZoneData<bool> isSystem;
 
   private:
     // The helper thread context with exclusive access to this zone, if
@@ -556,7 +556,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
 #ifdef DEBUG
-    js::ZoneGroupData<unsigned> gcLastSweepGroupIndex;
+    js::ZoneData<unsigned> gcLastSweepGroupIndex;
 #endif
 
     static js::HashNumber UniqueIdToHash(uint64_t uid) {
@@ -703,12 +703,12 @@ struct Zone : public JS::shadow::Zone,
     }
 
   private:
-    js::ZoneGroupData<js::jit::JitZone*> jitZone_;
+    js::ZoneData<js::jit::JitZone*> jitZone_;
 
     js::ActiveThreadData<bool> gcScheduled_;
     js::ActiveThreadData<bool> gcScheduledSaved_;
-    js::ZoneGroupData<bool> gcPreserveCode_;
-    js::ZoneGroupData<bool> keepShapeTables_;
+    js::ZoneData<bool> gcPreserveCode_;
+    js::ZoneData<bool> keepShapeTables_;
 
     // Allow zones to be linked into a list
     friend class js::gc::ZoneList;

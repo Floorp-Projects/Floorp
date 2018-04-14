@@ -157,7 +157,6 @@ class DataViewObject : public NativeObject
     static bool setFloat64Impl(JSContext* cx, const CallArgs& args);
     static bool fun_setFloat64(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool initClass(JSContext* cx);
     template<typename NativeType>
     static bool read(JSContext* cx, Handle<DataViewObject*> obj, const CallArgs& args,
                      NativeType* val);

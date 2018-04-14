@@ -11,8 +11,6 @@
 #include "mozilla/FastBernoulliTrial.h"
 #include "mozilla/Maybe.h"
 
-#include "jsmath.h"
-
 #include "js/HashTable.h"
 #include "js/Wrapper.h"
 #include "vm/JSContext.h"

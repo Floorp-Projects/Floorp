@@ -184,29 +184,17 @@ enum JSWhyMagic
     /** exception value thrown when closing a generator */
     JS_GENERATOR_CLOSING,
 
-    /** compiler sentinel value */
-    JS_NO_CONSTANT,
-
-    /** used in debug builds to catch tracing errors */
-    JS_THIS_POISON,
-
     /** used in debug builds to catch tracing errors */
     JS_ARG_POISON,
 
     /** an empty subnode in the AST serializer */
     JS_SERIALIZE_NO_NODE,
 
-    /** lazy arguments value on the stack */
-    JS_LAZY_ARGUMENTS,
-
     /** optimized-away 'arguments' value */
     JS_OPTIMIZED_ARGUMENTS,
 
     /** magic value passed to natives to indicate construction */
     JS_IS_CONSTRUCTING,
-
-    /** value of static block object slot */
-    JS_BLOCK_NEEDS_CLONE,
 
     /** see class js::HashableValue */
     JS_HASH_KEY_EMPTY,
