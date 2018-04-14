@@ -11,6 +11,10 @@ XPCOMUtils.defineLazyServiceGetter(
     this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
 ChromeUtils.defineModuleGetter(this, "Log",
     "resource://gre/modules/Log.jsm");
+const {
+  EnvironmentPrefs,
+  MarionettePrefs,
+} = ChromeUtils.import("chrome://marionette/content/prefs.js", {});
 ChromeUtils.defineModuleGetter(this, "Preferences",
     "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -19,20 +23,13 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return log;
 });
 
-const PREF_ENABLED = "marionette.enabled";
-const PREF_LOG_LEVEL_FALLBACK = "marionette.logging";
-const PREF_LOG_LEVEL = "marionette.log.level";
-const PREF_PORT_FALLBACK = "marionette.defaultPrefs.port";
-const PREF_PORT = "marionette.port";
-const PREF_RECOMMENDED = "marionette.prefs.recommended";
-
-const DEFAULT_LOG_LEVEL = "info";
 const NOTIFY_RUNNING = "remote-active";
 
 // Complements -marionette flag for starting the Marionette server.
 // We also set this if Marionette is running in order to start the server
 // again after a Firefox restart.
 const ENV_ENABLED = "MOZ_MARIONETTE";
+const PREF_ENABLED = "marionette.enabled";
 
 // Besides starting based on existing prefs in a profile and a command
 // line flag, we also support inheriting prefs out of an env var, and to
@@ -274,97 +271,6 @@ const RECOMMENDED_PREFS = new Map([
 const isRemote = Services.appinfo.processType ==
     Services.appinfo.PROCESS_TYPE_CONTENT;
 
-const LogLevel = {
-  get(level) {
-    let levels = new Map([
-      ["fatal", Log.Level.Fatal],
-      ["error", Log.Level.Error],
-      ["warn", Log.Level.Warn],
-      ["info", Log.Level.Info],
-      ["config", Log.Level.Config],
-      ["debug", Log.Level.Debug],
-      ["trace", Log.Level.Trace],
-    ]);
-
-    let s = String(level).toLowerCase();
-    if (!levels.has(s)) {
-      return DEFAULT_LOG_LEVEL;
-    }
-    return levels.get(s);
-  },
-};
-
-function getPrefVal(pref) {
-  const {PREF_STRING, PREF_BOOL, PREF_INT, PREF_INVALID} = Ci.nsIPrefBranch;
-
-  let type = Services.prefs.getPrefType(pref);
-  switch (type) {
-    case PREF_STRING:
-      return Services.prefs.getStringPref(pref);
-
-    case PREF_BOOL:
-      return Services.prefs.getBoolPref(pref);
-
-    case PREF_INT:
-      return Services.prefs.getIntPref(pref);
-
-    case PREF_INVALID:
-      return undefined;
-
-    default:
-      throw new TypeError(`Unexpected preference type (${type}) for ${pref}`);
-  }
-}
-
-// Get preference value of |preferred|, falling back to |fallback|
-// if |preferred| is not user-modified and |fallback| exists.
-function getPref(preferred, fallback) {
-  if (!Services.prefs.prefHasUserValue(preferred) &&
-      Services.prefs.getPrefType(fallback) != Ci.nsIPrefBranch.PREF_INVALID) {
-    return getPrefVal(fallback, getPrefVal(preferred));
-  }
-  return getPrefVal(preferred);
-}
-
-// Marionette preferences recently changed names.  This is an abstraction
-// that first looks for the new name, but falls back to using the old name
-// if the new does not exist.
-//
-// This shim can be removed when Firefox 55 ships.
-const prefs = {
-  get port() {
-    return getPref(PREF_PORT, PREF_PORT_FALLBACK);
-  },
-
-  get logLevel() {
-    let s = getPref(PREF_LOG_LEVEL, PREF_LOG_LEVEL_FALLBACK);
-    return LogLevel.get(s);
-  },
-
-  readFromEnvironment(key) {
-    const env = Cc["@mozilla.org/process/environment;1"]
-        .getService(Ci.nsIEnvironment);
-
-    if (env.exists(key)) {
-      let prefs;
-      try {
-        prefs = JSON.parse(env.get(key));
-      } catch (e) {
-        Cu.reportError(
-            "Invalid Marionette preferences in environment; " +
-            "preferences will not have been applied");
-        Cu.reportError(e);
-      }
-
-      if (prefs) {
-        for (let prefName of Object.keys(prefs)) {
-          Preferences.set(prefName, prefs[prefName]);
-        }
-      }
-    }
-  },
-};
-
 class MarionetteMainProcess {
   constructor() {
     this.server = null;
@@ -377,7 +283,7 @@ class MarionetteMainProcess {
     // and that we are ready to start the Marionette server
     this.finalUIStartup = false;
 
-    log.level = prefs.logLevel;
+    log.level = MarionettePrefs.logLevel;
 
     this.enabled = env.exists(ENV_ENABLED);
     this.alteredPrefs = new Set();
@@ -391,11 +297,11 @@ class MarionetteMainProcess {
   }
 
   set enabled(value) {
-    Services.prefs.setBoolPref(PREF_ENABLED, value);
+    MarionettePrefs.enabled = value;
   }
 
   get enabled() {
-    return Services.prefs.getBoolPref(PREF_ENABLED);
+    return MarionettePrefs.enabled;
   }
 
   receiveMessage({name}) {
@@ -425,7 +331,9 @@ class MarionetteMainProcess {
         Services.obs.addObserver(this, "command-line-startup");
         Services.obs.addObserver(this, "sessionstore-windows-restored");
 
-        prefs.readFromEnvironment(ENV_PRESERVE_PREFS);
+        for (let [pref, value] of EnvironmentPrefs.from(ENV_PRESERVE_PREFS)) {
+          Preferences.set(pref, value);
+        }
         break;
 
       // In safe mode the command line handlers are getting parsed after the
@@ -521,7 +429,7 @@ class MarionetteMainProcess {
       }
       await startupRecorder;
 
-      if (Preferences.get(PREF_RECOMMENDED)) {
+      if (MarionettePrefs.recommendedPrefs) {
         for (let [k, v] of RECOMMENDED_PREFS) {
           if (!Preferences.isSet(k)) {
             log.debug(`Setting recommended pref ${k} to ${v}`);
@@ -533,7 +441,7 @@ class MarionetteMainProcess {
 
       try {
         ChromeUtils.import("chrome://marionette/content/server.js");
-        let listener = new server.TCPListener(prefs.port);
+        let listener = new server.TCPListener(MarionettePrefs.port);
         listener.start();
         this.server = listener;
       } catch (e) {
