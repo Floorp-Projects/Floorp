@@ -1889,25 +1889,40 @@ static const CellRenderSettings spinnerSettings = {
   }
 };
 
+HIThemeButtonDrawInfo
+nsNativeThemeCocoa::SpinButtonDrawInfo(ThemeButtonKind aKind,
+                                       const SpinButtonParams& aParams)
+{
+  HIThemeButtonDrawInfo bdi;
+  bdi.version = 0;
+  bdi.kind = aKind;
+  bdi.value = kThemeButtonOff;
+  bdi.adornment = kThemeAdornmentNone;
+
+  if (aParams.disabled) {
+    bdi.state = kThemeStateUnavailable;
+  } else if (aParams.insideActiveWindow && aParams.pressedButton) {
+    if (*aParams.pressedButton == SpinButton::eUp) {
+      bdi.state = kThemeStatePressedUp;
+    } else {
+      bdi.state = kThemeStatePressedDown;
+    }
+  } else {
+    bdi.state = kThemeStateActive;
+  }
+
+  return bdi;
+}
+
 void
-nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKind,
-                                    const HIRect& inBoxRect, ThemeDrawState inDrawState,
-                                    ThemeButtonAdornment inAdornment,
-                                    EventStates inState, nsIFrame* aFrame)
+nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext,
+                                    const HIRect& inBoxRect,
+                                    const SpinButtonParams& aParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  HIThemeButtonDrawInfo bdi;
-  bdi.version = 0;
-  bdi.kind = inKind;
-  bdi.value = kThemeButtonOff;
-  bdi.adornment = inAdornment;
-
-  if (IsDisabled(aFrame, inState))
-    bdi.state = kThemeStateUnavailable;
-  else
-    bdi.state = FrameIsInActiveWindow(aFrame) ? inDrawState : kThemeStateActive;
-
+  HIThemeButtonDrawInfo bdi =
+    SpinButtonDrawInfo(kThemeIncDecButton, aParams);
   HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -1915,29 +1930,14 @@ nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKi
 
 void
 nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext,
-                                   ThemeButtonKind inKind,
                                    const HIRect& inBoxRect,
-                                   ThemeDrawState inDrawState,
-                                   ThemeButtonAdornment inAdornment,
-                                   EventStates inState,
-                                   nsIFrame* aFrame,
-                                   uint8_t aWidgetType)
+                                   SpinButton aDrawnButton,
+                                   const SpinButtonParams& aParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  MOZ_ASSERT(aWidgetType == NS_THEME_SPINNER_UPBUTTON ||
-             aWidgetType == NS_THEME_SPINNER_DOWNBUTTON);
-
-  HIThemeButtonDrawInfo bdi;
-  bdi.version = 0;
-  bdi.kind = inKind;
-  bdi.value = kThemeButtonOff;
-  bdi.adornment = inAdornment;
-
-  if (IsDisabled(aFrame, inState))
-    bdi.state = kThemeStateUnavailable;
-  else
-    bdi.state = FrameIsInActiveWindow(aFrame) ? inDrawState : kThemeStateActive;
+  HIThemeButtonDrawInfo bdi =
+    SpinButtonDrawInfo(kThemeIncDecButtonMini, aParams);
 
   // Cocoa only allows kThemeIncDecButton to paint the up and down spin buttons
   // together as a single unit (presumably because when one button is active,
@@ -1945,7 +1945,7 @@ nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext,
   // both buttons, using clip to hide the one we don't want to paint.
   HIRect drawRect = inBoxRect;
   drawRect.size.height *= 2;
-  if (aWidgetType == NS_THEME_SPINNER_DOWNBUTTON) {
+  if (aDrawnButton == SpinButton::eDown) {
     drawRect.origin.y -= inBoxRect.size.height;
   }
 
@@ -2834,19 +2834,20 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
         // their spinner parent as it is for XUL.
         break;
       }
-      ThemeDrawState state = kThemeStateActive;
+      SpinButtonParams params;
       if (content->IsElement()) {
         if (content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state,
                                               NS_LITERAL_STRING("up"), eCaseMatters)) {
-          state = kThemeStatePressedUp;
+          params.pressedButton = Some(SpinButton::eUp);
         } else if (content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state,
                                                      NS_LITERAL_STRING("down"), eCaseMatters)) {
-          state = kThemeStatePressedDown;
+          params.pressedButton = Some(SpinButton::eDown);
         }
       }
+      params.disabled = IsDisabled(aFrame, eventState);
+      params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
 
-      DrawSpinButtons(cgContext, kThemeIncDecButton, macRect, state,
-                      kThemeAdornmentNone, eventState, aFrame);
+      DrawSpinButtons(cgContext, macRect, params);
     }
       break;
 
@@ -2855,14 +2856,19 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       nsNumberControlFrame* numberControlFrame =
         nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
       if (numberControlFrame) {
-        ThemeDrawState state = kThemeStateActive;
+        SpinButtonParams params;
         if (numberControlFrame->SpinnerUpButtonIsDepressed()) {
-          state = kThemeStatePressedUp;
+          params.pressedButton = Some(SpinButton::eUp);
         } else if (numberControlFrame->SpinnerDownButtonIsDepressed()) {
-          state = kThemeStatePressedDown;
+          params.pressedButton = Some(SpinButton::eDown);
         }
-        DrawSpinButton(cgContext, kThemeIncDecButtonMini, macRect, state,
-                       kThemeAdornmentNone, eventState, aFrame, aWidgetType);
+        params.disabled = IsDisabled(aFrame, eventState);
+        params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
+        if (aWidgetType == NS_THEME_SPINNER_UPBUTTON) {
+          DrawSpinButton(cgContext, macRect, SpinButton::eUp, params);
+        } else {
+          DrawSpinButton(cgContext, macRect, SpinButton::eDown, params);
+        }
       }
     }
       break;
