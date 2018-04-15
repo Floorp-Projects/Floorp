@@ -22,47 +22,45 @@ function end_test() {
   });
 }
 
-add_test(function() {
-  AddonManager.getAddonsByTypes(["plugin"], function(plugins) {
-    let testPluginId;
-    for (let plugin of plugins) {
-      if (plugin.name == "Test Plug-in") {
-        testPluginId = plugin.id;
-        break;
-      }
+add_test(async function() {
+  let plugins = await AddonManager.getAddonsByTypes(["plugin"]);
+  let testPluginId;
+  for (let plugin of plugins) {
+    if (plugin.name == "Test Plug-in") {
+      testPluginId = plugin.id;
+      break;
     }
-    ok(testPluginId, "Test Plug-in should exist");
+  }
+  ok(testPluginId, "Test Plug-in should exist");
 
-    AddonManager.getAddonByID(testPluginId, function(testPlugin) {
-      let pluginEl = get_addon_element(gManagerWindow, testPluginId);
-      is(pluginEl.mAddon.optionsType, AddonManager.OPTIONS_TYPE_INLINE_BROWSER, "Options should be inline type");
-      pluginEl.parentNode.ensureElementIsVisible(pluginEl);
+  let testPlugin = await AddonManager.getAddonByID(testPluginId);
+  let pluginEl = get_addon_element(gManagerWindow, testPluginId);
+  is(pluginEl.mAddon.optionsType, AddonManager.OPTIONS_TYPE_INLINE_BROWSER, "Options should be inline type");
+  pluginEl.parentNode.ensureElementIsVisible(pluginEl);
 
-      let button = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "preferences-btn");
-      is_element_visible(button, "Preferences button should be visible");
+  let button = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "preferences-btn");
+  is_element_visible(button, "Preferences button should be visible");
 
-      button = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
-      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+  button = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
+  EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
-      Services.obs.addObserver(function observer(subject, topic, data) {
-        Services.obs.removeObserver(observer, topic);
+  Services.obs.addObserver(function observer(subject, topic, data) {
+    Services.obs.removeObserver(observer, topic);
 
-        // Wait for PluginProvider to do its stuff.
-        executeSoon(function() {
-          let doc = gManagerWindow.document.getElementById("addon-options").contentDocument;
+    // Wait for PluginProvider to do its stuff.
+    executeSoon(function() {
+      let doc = gManagerWindow.document.getElementById("addon-options").contentDocument;
 
-          let pluginLibraries = doc.getElementById("pluginLibraries");
-          ok(pluginLibraries, "Plugin file name row should be displayed");
-          // the file name depends on the platform
-          ok(pluginLibraries.textContent, testPlugin.pluginLibraries, "Plugin file name should be displayed");
+      let pluginLibraries = doc.getElementById("pluginLibraries");
+      ok(pluginLibraries, "Plugin file name row should be displayed");
+      // the file name depends on the platform
+      ok(pluginLibraries.textContent, testPlugin.pluginLibraries, "Plugin file name should be displayed");
 
-          let pluginMimeTypes = doc.getElementById("pluginMimeTypes");
-          ok(pluginMimeTypes, "Plugin mime type row should be displayed");
-          ok(pluginMimeTypes.textContent, "application/x-test (tst)", "Plugin mime type should be displayed");
+      let pluginMimeTypes = doc.getElementById("pluginMimeTypes");
+      ok(pluginMimeTypes, "Plugin mime type row should be displayed");
+      ok(pluginMimeTypes.textContent, "application/x-test (tst)", "Plugin mime type should be displayed");
 
-          run_next_test();
-        });
-      }, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
+      run_next_test();
     });
-  });
+  }, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
 });

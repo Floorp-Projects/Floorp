@@ -514,14 +514,13 @@ function promiseAddonsByIDs(aIDs) {
  * The callback will receive the Addon for the installed add-on.
  */
 function install_addon(path, cb, pathPrefix = TESTROOT) {
-  let p = new Promise((resolve, reject) => {
-    AddonManager.getInstallForURL(pathPrefix + path, (install) => {
-      install.addListener({
-        onInstallEnded: () => resolve(install.addon),
-      });
+  let p = new Promise(async (resolve, reject) => {
+    let install = await AddonManager.getInstallForURL(pathPrefix + path, null, "application/x-xpinstall");
+    install.addListener({
+      onInstallEnded: () => resolve(install.addon),
+    });
 
-      install.install();
-    }, "application/x-xpinstall");
+    install.install();
   });
 
   return log_callback(p, cb);

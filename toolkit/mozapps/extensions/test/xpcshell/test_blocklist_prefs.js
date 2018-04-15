@@ -65,7 +65,7 @@ function end_test() {
   do_test_finished();
 }
 
-function run_test() {
+async function run_test() {
   do_test_pending();
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
@@ -104,37 +104,35 @@ function run_test() {
   startupManager();
 
   // Before blocklist is loaded.
-  AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
-                               "block2@tests.mozilla.org"], function([a1, a2]) {
-    Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-    Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+  let [a1, a2] = await AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
+                                                    "block2@tests.mozilla.org"]);
+  Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+  Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 
-    Assert.equal(Services.prefs.getIntPref("test.blocklist.pref1"), 15);
-    Assert.equal(Services.prefs.getIntPref("test.blocklist.pref2"), 15);
-    Assert.equal(Services.prefs.getBoolPref("test.blocklist.pref3"), true);
-    Assert.equal(Services.prefs.getBoolPref("test.blocklist.pref4"), true);
-    run_test_1();
-  });
+  Assert.equal(Services.prefs.getIntPref("test.blocklist.pref1"), 15);
+  Assert.equal(Services.prefs.getIntPref("test.blocklist.pref2"), 15);
+  Assert.equal(Services.prefs.getBoolPref("test.blocklist.pref3"), true);
+  Assert.equal(Services.prefs.getBoolPref("test.blocklist.pref4"), true);
+  run_test_1();
 }
 
 function run_test_1() {
-  load_blocklist("test_blocklist_prefs_1.xml", function() {
+  load_blocklist("test_blocklist_prefs_1.xml", async function() {
     restartManager();
 
     // Blocklist changes should have applied and the prefs must be reset.
-    AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
-                                 "block2@tests.mozilla.org"], function([a1, a2]) {
-      Assert.notEqual(a1, null);
-      Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-      Assert.notEqual(a2, null);
-      Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
+    let [a1, a2] = await AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
+                                                      "block2@tests.mozilla.org"]);
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
+    Assert.notEqual(a2, null);
+    Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
 
-      // All these prefs must be reset to defaults.
-      Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref1"), false);
-      Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref2"), false);
-      Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref3"), false);
-      Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref4"), false);
-      end_test();
-    });
+    // All these prefs must be reset to defaults.
+    Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref1"), false);
+    Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref2"), false);
+    Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref3"), false);
+    Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref4"), false);
+    end_test();
   });
 }

@@ -1339,7 +1339,7 @@ CustomizeMode.prototype = {
     this._onUIChange();
   },
 
-  onLWThemesMenuShowing(aEvent) {
+  async onLWThemesMenuShowing(aEvent) {
     const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
     const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
     const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
@@ -1363,102 +1363,101 @@ CustomizeMode.prototype = {
       panel.hidePopup();
     };
 
-    AddonManager.getAddonByID(DEFAULT_THEME_ID, aDefaultTheme => {
-      let doc = this.window.document;
+    let aDefaultTheme = await AddonManager.getAddonByID(DEFAULT_THEME_ID);
+    let doc = this.window.document;
 
-      function buildToolbarButton(aTheme) {
-        let tbb = doc.createElement("toolbarbutton");
-        tbb.theme = aTheme;
-        tbb.setAttribute("label", aTheme.name);
-        if (aDefaultTheme == aTheme) {
-          // The actual icon is set up so it looks nice in about:addons, but
-          // we'd like the version that's correct for the OS we're on, so we set
-          // an attribute that our styling will then use to display the icon.
-          tbb.setAttribute("defaulttheme", "true");
-        } else {
-          tbb.setAttribute("image", aTheme.iconURL);
-        }
-        if (aTheme.description)
-          tbb.setAttribute("tooltiptext", aTheme.description);
-        tbb.setAttribute("tabindex", "0");
-        tbb.classList.add("customization-lwtheme-menu-theme");
-        let isActive = activeThemeID == aTheme.id;
-        tbb.setAttribute("aria-checked", isActive);
-        tbb.setAttribute("role", "menuitemradio");
-        if (isActive) {
-          tbb.setAttribute("active", "true");
-        }
-        tbb.addEventListener("focus", previewTheme);
-        tbb.addEventListener("mouseover", previewTheme);
-        tbb.addEventListener("blur", resetPreview);
-        tbb.addEventListener("mouseout", resetPreview);
-
-        return tbb;
+    function buildToolbarButton(aTheme) {
+      let tbb = doc.createElement("toolbarbutton");
+      tbb.theme = aTheme;
+      tbb.setAttribute("label", aTheme.name);
+      if (aDefaultTheme == aTheme) {
+        // The actual icon is set up so it looks nice in about:addons, but
+        // we'd like the version that's correct for the OS we're on, so we set
+        // an attribute that our styling will then use to display the icon.
+        tbb.setAttribute("defaulttheme", "true");
+      } else {
+        tbb.setAttribute("image", aTheme.iconURL);
       }
-
-      let themes = [aDefaultTheme];
-      let lwts = LightweightThemeManager.usedThemes;
-      let currentLwt = LightweightThemeManager.currentTheme;
-
-      let activeThemeID = currentLwt ? currentLwt.id : DEFAULT_THEME_ID;
-
-      // Move the current theme (if any) and the light/dark themes to the start:
-      let importantThemes = [LIGHT_THEME_ID, DARK_THEME_ID];
-      if (currentLwt && !importantThemes.includes(currentLwt.id)) {
-        importantThemes.push(currentLwt.id);
+      if (aTheme.description)
+        tbb.setAttribute("tooltiptext", aTheme.description);
+      tbb.setAttribute("tabindex", "0");
+      tbb.classList.add("customization-lwtheme-menu-theme");
+      let isActive = activeThemeID == aTheme.id;
+      tbb.setAttribute("aria-checked", isActive);
+      tbb.setAttribute("role", "menuitemradio");
+      if (isActive) {
+        tbb.setAttribute("active", "true");
       }
-      for (let importantTheme of importantThemes) {
-        let themeIndex = lwts.findIndex(theme => theme.id == importantTheme);
-        if (themeIndex > -1) {
-          themes.push(...lwts.splice(themeIndex, 1));
-        }
-      }
-      themes = themes.concat(lwts);
-      if (themes.length > MAX_THEME_COUNT)
-        themes.length = MAX_THEME_COUNT;
+      tbb.addEventListener("focus", previewTheme);
+      tbb.addEventListener("mouseover", previewTheme);
+      tbb.addEventListener("blur", resetPreview);
+      tbb.addEventListener("mouseout", resetPreview);
 
-      let footer = doc.getElementById("customization-lwtheme-menu-footer");
-      let panel = footer.parentNode;
-      let recommendedLabel = doc.getElementById("customization-lwtheme-menu-recommended");
-      for (let theme of themes) {
-        let button = buildToolbarButton(theme);
-        button.addEventListener("command", () => {
-          if ("userDisabled" in button.theme)
-            button.theme.userDisabled = false;
-          else
-            LightweightThemeManager.currentTheme = button.theme;
-          onThemeSelected(panel);
-        });
-        panel.insertBefore(button, recommendedLabel);
-      }
+      return tbb;
+    }
 
-      let lwthemePrefs = Services.prefs.getBranch("lightweightThemes.");
-      let recommendedThemes = lwthemePrefs.getStringPref("recommendedThemes");
-      recommendedThemes = JSON.parse(recommendedThemes);
-      let sb = Services.strings.createBundle("chrome://browser/locale/lightweightThemes.properties");
-      for (let theme of recommendedThemes) {
-        try {
-          theme.name = sb.GetStringFromName("lightweightThemes." + theme.id + ".name");
-          theme.description = sb.GetStringFromName("lightweightThemes." + theme.id + ".description");
-        } catch (ex) {
-          // If finding strings for this failed, just don't build it. This can
-          // happen for users with 'older' recommended themes lists, some of which
-          // have since been removed from Firefox.
-          continue;
-        }
-        let button = buildToolbarButton(theme);
-        button.addEventListener("command", () => {
-          LightweightThemeManager.setLocalTheme(button.theme);
-          recommendedThemes = recommendedThemes.filter((aTheme) => { return aTheme.id != button.theme.id; });
-          lwthemePrefs.setStringPref("recommendedThemes",
-                                     JSON.stringify(recommendedThemes));
-          onThemeSelected(panel);
-        });
-        panel.insertBefore(button, footer);
+    let themes = [aDefaultTheme];
+    let lwts = LightweightThemeManager.usedThemes;
+    let currentLwt = LightweightThemeManager.currentTheme;
+
+    let activeThemeID = currentLwt ? currentLwt.id : DEFAULT_THEME_ID;
+
+    // Move the current theme (if any) and the light/dark themes to the start:
+    let importantThemes = [LIGHT_THEME_ID, DARK_THEME_ID];
+    if (currentLwt && !importantThemes.includes(currentLwt.id)) {
+      importantThemes.push(currentLwt.id);
+    }
+    for (let importantTheme of importantThemes) {
+      let themeIndex = lwts.findIndex(theme => theme.id == importantTheme);
+      if (themeIndex > -1) {
+        themes.push(...lwts.splice(themeIndex, 1));
       }
-      let hideRecommendedLabel = (footer.previousSibling == recommendedLabel);
-      recommendedLabel.hidden = hideRecommendedLabel;
-    });
+    }
+    themes = themes.concat(lwts);
+    if (themes.length > MAX_THEME_COUNT)
+      themes.length = MAX_THEME_COUNT;
+
+    let footer = doc.getElementById("customization-lwtheme-menu-footer");
+    let panel = footer.parentNode;
+    let recommendedLabel = doc.getElementById("customization-lwtheme-menu-recommended");
+    for (let theme of themes) {
+      let button = buildToolbarButton(theme);
+      button.addEventListener("command", () => {
+        if ("userDisabled" in button.theme)
+          button.theme.userDisabled = false;
+        else
+          LightweightThemeManager.currentTheme = button.theme;
+        onThemeSelected(panel);
+      });
+      panel.insertBefore(button, recommendedLabel);
+    }
+
+    let lwthemePrefs = Services.prefs.getBranch("lightweightThemes.");
+    let recommendedThemes = lwthemePrefs.getStringPref("recommendedThemes");
+    recommendedThemes = JSON.parse(recommendedThemes);
+    let sb = Services.strings.createBundle("chrome://browser/locale/lightweightThemes.properties");
+    for (let theme of recommendedThemes) {
+      try {
+        theme.name = sb.GetStringFromName("lightweightThemes." + theme.id + ".name");
+        theme.description = sb.GetStringFromName("lightweightThemes." + theme.id + ".description");
+      } catch (ex) {
+        // If finding strings for this failed, just don't build it. This can
+        // happen for users with 'older' recommended themes lists, some of which
+        // have since been removed from Firefox.
+        continue;
+      }
+      let button = buildToolbarButton(theme);
+      button.addEventListener("command", () => {
+        LightweightThemeManager.setLocalTheme(button.theme);
+        recommendedThemes = recommendedThemes.filter((aTheme) => { return aTheme.id != button.theme.id; });
+        lwthemePrefs.setStringPref("recommendedThemes",
+                                   JSON.stringify(recommendedThemes));
+        onThemeSelected(panel);
+      });
+      panel.insertBefore(button, footer);
+    }
+    let hideRecommendedLabel = (footer.previousSibling == recommendedLabel);
+    recommendedLabel.hidden = hideRecommendedLabel;
   },
 
   _clearLWThemesMenu(panel) {

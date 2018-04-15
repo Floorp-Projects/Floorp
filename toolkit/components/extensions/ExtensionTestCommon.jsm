@@ -106,19 +106,18 @@ class MockExtension {
         return this._readyPromise;
       });
     } else if (this.installType == "permanent") {
-      return new Promise((resolve, reject) => {
-        AddonManager.getInstallForFile(this.file, install => {
-          let listener = {
-            onInstallFailed: reject,
-            onInstallEnded: (install, newAddon) => {
-              this.addon = newAddon;
-              resolve(this._readyPromise);
-            },
-          };
+      return new Promise(async (resolve, reject) => {
+        let install = await AddonManager.getInstallForFile(this.file);
+        let listener = {
+          onInstallFailed: reject,
+          onInstallEnded: (install, newAddon) => {
+            this.addon = newAddon;
+            resolve(this._readyPromise);
+          },
+        };
 
-          install.addListener(listener);
-          install.install();
-        });
+        install.addListener(listener);
+        install.install();
       });
     }
     throw new Error("installType must be one of: temporary, permanent");

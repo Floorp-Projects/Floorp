@@ -80,42 +80,38 @@ function test_install_lwtheme() {
 }
 ];
 
-function runNextTest() {
-  AddonManager.getAllInstalls(function(aInstalls) {
-    is(aInstalls.length, 0, "Should be no active installs");
+async function runNextTest() {
+  let aInstalls = await AddonManager.getAllInstalls();
+  is(aInstalls.length, 0, "Should be no active installs");
 
-    if (TESTS.length == 0) {
-      AddonManager.getAddonByID("theme-xpi@tests.mozilla.org", function(aAddon) {
-        aAddon.uninstall();
+  if (TESTS.length == 0) {
+    let aAddon = await AddonManager.getAddonByID("theme-xpi@tests.mozilla.org");
+    aAddon.uninstall();
 
-        Services.prefs.setBoolPref("extensions.logging.enabled", false);
+    Services.prefs.setBoolPref("extensions.logging.enabled", false);
 
-        finish();
-      });
-      return;
-    }
+    finish();
+    return;
+  }
 
-    info("Running " + TESTS[0].name);
-    TESTS.shift()();
-  });
+  info("Running " + TESTS[0].name);
+  TESTS.shift()();
 }
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref("extensions.logging.enabled", true);
 
-  AddonManager.getInstallForURL(TESTROOT + "theme.xpi", function(aInstall) {
-    aInstall.addListener({
-      onInstallEnded() {
-        AddonManager.getAddonByID("theme-xpi@tests.mozilla.org", function(aAddon) {
-          isnot(aAddon, null, "Should have installed the test theme.");
+  let aInstall = await AddonManager.getInstallForURL(TESTROOT + "theme.xpi", null, "application/x-xpinstall");
+  aInstall.addListener({
+    async onInstallEnded() {
+      let aAddon = await AddonManager.getAddonByID("theme-xpi@tests.mozilla.org");
+      isnot(aAddon, null, "Should have installed the test theme.");
 
-          runNextTest();
-        });
-      }
-    });
+      runNextTest();
+    }
+  });
 
-    aInstall.install();
-  }, "application/x-xpinstall");
+  aInstall.install();
 }

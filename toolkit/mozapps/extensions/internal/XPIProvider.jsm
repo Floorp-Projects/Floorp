@@ -5973,7 +5973,7 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
   /**
    * Resets the add-on set so on the next startup the default set will be used.
    */
-  resetAddonSet() {
+  async resetAddonSet() {
     logger.info("Removing all system add-on upgrades.");
 
     // remove everything from the pref first, if uninstall
@@ -5990,12 +5990,11 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
     // removed restartlessly, for instance if they are no longer
     // part of the latest update set.
     if (this._addonSet) {
-      for (let id of Object.keys(this._addonSet.addons)) {
-        AddonManager.getAddonByID(id, addon => {
-          if (addon) {
-            addon.uninstall();
-          }
-        });
+      let ids = Object.keys(this._addonSet.addons);
+      for (let addon of await AddonManager.getAddonsByIDs(ids)) {
+        if (addon) {
+          addon.uninstall();
+        }
       }
     }
   }
