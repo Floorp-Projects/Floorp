@@ -414,8 +414,6 @@ public:
   enum {
     /** nsIAttribute nodes */
     eATTRIBUTE           = 1 << 2,
-    /** xml processing instructions */
-    ePROCESSING_INSTRUCTION = 1 << 4,
     /** form control elements */
     eHTML_FORM_CONTROL   = 1 << 6,
     /** animation elements */

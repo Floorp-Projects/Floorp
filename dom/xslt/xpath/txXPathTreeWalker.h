@@ -231,8 +231,7 @@ txXPathNodeUtils::isAttribute(const txXPathNode& aNode)
 inline bool
 txXPathNodeUtils::isProcessingInstruction(const txXPathNode& aNode)
 {
-    return aNode.isContent() &&
-           aNode.Content()->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION);
+    return aNode.isContent() && aNode.Content()->IsProcessingInstruction();
 }
 
 /* static */
