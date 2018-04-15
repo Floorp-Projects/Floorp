@@ -59,6 +59,11 @@ private:
                             nsRect* aOutDirty,
                             AnimatedGeometryRoot** aOutModifiedAGR,
                             nsTArray<nsIFrame*>& aOutFramesWithProps);
+  bool ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
+                    nsIFrame* aStopAtFrame, nsTArray<nsIFrame*>& aOutFramesWithProps,
+                    const bool aStopAtStackingContext,
+                    nsRect* aOutDirty,
+                    AnimatedGeometryRoot** aOutModifiedAGR);
 
   void IncrementSubDocPresShellPaintCount(nsDisplayItem* aItem);
 
