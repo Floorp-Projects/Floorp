@@ -418,6 +418,36 @@ Logger.prototype = {
     this.log(level, params._message, params);
   },
 
+  _unpackTemplateLiteral(string, params) {
+    if (!Array.isArray(params)) {
+      // Regular log() call.
+      return [string, params];
+    }
+
+    if (!Array.isArray(string)) {
+      // Not using template literal. However params was packed into an array by
+      // the this.[level] call, so we need to unpack it here.
+      return [string, params[0]];
+    }
+
+    // We're using template literal format (logger.warn `foo ${bar}`). Turn the
+    // template strings into one string containing "${0}"..."${n}" tokens, and
+    // feed it to the basic formatter. The formatter will treat the numbers as
+    // indices into the params array, and convert the tokens to the params.
+
+    if (!params.length) {
+      // No params; we need to set params to undefined, so the formatter
+      // doesn't try to output the params array.
+      return [string[0], undefined];
+    }
+
+    let concat = string[0];
+    for (let i = 0; i < params.length; i++) {
+      concat += `\${${i}}${string[i + 1]}`;
+    }
+    return [concat, params];
+  },
+
   log(level, string, params) {
     if (this.level > level)
       return;
@@ -431,31 +461,32 @@ Logger.prototype = {
         continue;
       }
       if (!message) {
+        [string, params] = this._unpackTemplateLiteral(string, params);
         message = new LogMessage(this._name, level, string, params);
       }
       appender.append(message);
     }
   },
 
-  fatal(string, params) {
+  fatal(string, ...params) {
     this.log(Log.Level.Fatal, string, params);
   },
-  error(string, params) {
+  error(string, ...params) {
     this.log(Log.Level.Error, string, params);
   },
-  warn(string, params) {
+  warn(string, ...params) {
     this.log(Log.Level.Warn, string, params);
   },
-  info(string, params) {
+  info(string, ...params) {
     this.log(Log.Level.Info, string, params);
   },
-  config(string, params) {
+  config(string, ...params) {
     this.log(Log.Level.Config, string, params);
   },
-  debug(string, params) {
+  debug(string, ...params) {
     this.log(Log.Level.Debug, string, params);
   },
-  trace(string, params) {
+  trace(string, ...params) {
     this.log(Log.Level.Trace, string, params);
   }
 };
@@ -548,7 +579,16 @@ LoggerRepository.prototype = {
     let log = this.getLogger(name);
 
     let proxy = Object.create(log);
-    proxy.log = (level, string, params) => log.log(level, prefix + string, params);
+    proxy.log = (level, string, params) => {
+      if (Array.isArray(string) && Array.isArray(params)) {
+        // Template literal.
+        // We cannot change the original array, so create a new one.
+        string = [prefix + string[0]].concat(string.slice(1));
+      } else {
+        string = prefix + string; // Regular string.
+      }
+      return log.log(level, string, params);
+    };
     return proxy;
   },
 };
@@ -597,7 +637,7 @@ BasicFormatter.prototype = {
       // have we successfully substituted any parameters into the message?
       // in the log message
       let subDone = false;
-      let regex = /\$\{(\S*)\}/g;
+      let regex = /\$\{(\S*?)\}/g;
       let textParts = [];
       if (message.message) {
         textParts.push(message.message.replace(regex, (_, sub) => {
