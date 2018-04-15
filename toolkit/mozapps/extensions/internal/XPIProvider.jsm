@@ -811,11 +811,6 @@ function isUsableAddon(aAddon) {
     return false;
   }
 
-  // If we can't read it, it's not usable:
-  if (aAddon.brokenManifest) {
-    return false;
-  }
-
   // Experiments are installed through an external mechanism that
   // limits target audience to compatible clients. We trust it knows what
   // it's doing and skip compatibility checks.
@@ -922,11 +917,11 @@ function getAllAliasesForTypes(aTypes) {
  * A synchronous method for loading an add-on's manifest. This should only ever
  * be used during startup or a sync load of the add-ons DB
  */
-function syncLoadManifestFromFile(aFile, aInstallLocation, aOldAddon) {
+function syncLoadManifestFromFile(aFile, aInstallLocation) {
   let success = undefined;
   let result = null;
 
-  loadManifestFromFile(aFile, aInstallLocation, aOldAddon).then(val => {
+  loadManifestFromFile(aFile, aInstallLocation).then(val => {
     success = true;
     result = val;
   }, val => {
@@ -4511,7 +4506,7 @@ AddonInternal.prototype = {
     return app;
   },
 
-  async findBlocklistEntry() {
+  findBlocklistEntry() {
     let staticItem = findMatchingStaticBlocklistItem(this);
     if (staticItem) {
       let url = Services.urlFormatter.formatURLPref(PREF_BLOCKLIST_ITEM_URL);
@@ -4524,7 +4519,7 @@ AddonInternal.prototype = {
     return Blocklist.getAddonBlocklistEntry(this.wrapper);
   },
 
-  async updateBlocklistState(options = {}) {
+  updateBlocklistState(options = {}) {
     let {applySoftBlock = true, oldAddon = null, updateDatabase = true} = options;
 
     if (oldAddon) {
@@ -4534,7 +4529,7 @@ AddonInternal.prototype = {
     }
     let oldState = this.blocklistState;
 
-    let entry = await this.findBlocklistEntry();
+    let entry = this.findBlocklistEntry();
     let newState = entry ? entry.state : Blocklist.STATE_NOT_BLOCKED;
 
     this.blocklistState = newState;
@@ -4962,7 +4957,7 @@ AddonWrapper.prototype = {
   },
 
   updateBlocklistState(applySoftBlock = true) {
-    return addonFor(this).updateBlocklistState({applySoftBlock});
+    addonFor(this).updateBlocklistState({applySoftBlock});
   },
 
   get userDisabled() {

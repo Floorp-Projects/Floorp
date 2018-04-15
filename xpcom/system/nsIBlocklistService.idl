@@ -64,10 +64,9 @@ interface nsIBlocklistService : nsISupports
                                         [optional] in AString toolkitVersion);
 
   /**
-   * Returns a promise that resolves to the blocklist entry.
-   * The blocklist entry is an object with `state` and `url`
+   * Returns the blocklist entry, as an object with `state` and `url`
    * properties, if a blocklist entry for the add-on exists, or null
-   * otherwise.
+   * othereise.
 
    * @param   addon
    *          The addon object to match.
