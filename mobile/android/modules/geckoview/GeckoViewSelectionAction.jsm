@@ -9,18 +9,10 @@ var EXPORTED_SYMBOLS = ["GeckoViewSelectionAction"];
 ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
-                       {}).AndroidLog.d.bind(null, "ViewSelectionAction"));
-
-function debug(aMsg) {
-  // dump(aMsg);
-}
-
 // Handles inter-op between accessible carets and GeckoSession.
 class GeckoViewSelectionAction extends GeckoViewModule {
   onEnable() {
-    debug("onEnable");
+    debug `onEnable`;
     this.registerContent("chrome://geckoview/content/GeckoViewSelectionActionContent.js");
   }
 }
