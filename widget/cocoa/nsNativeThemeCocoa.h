@@ -46,6 +46,22 @@ public:
     eThemeGeometryTypeActiveSourceListSelection
   };
 
+  struct ControlParams {
+    ControlParams()
+      : disabled(false)
+      , insideActiveWindow(false)
+      , pressed(false)
+      , focused(false)
+      , rtl(false)
+    {}
+
+    bool disabled : 1;
+    bool insideActiveWindow : 1;
+    bool pressed : 1;
+    bool focused : 1;
+    bool rtl : 1;
+  };
+
   nsNativeThemeCocoa();
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -109,6 +125,8 @@ protected:
   CGRect SeparatorAdjustedRect(CGRect aRect, nsIFrame* aLeft,
                                nsIFrame* aCurrent, nsIFrame* aRight);
   bool IsWindowSheet(nsIFrame* aFrame);
+  ControlParams ComputeControlParams(nsIFrame* aFrame,
+                                     mozilla::EventStates aEventState);
 
   // HITheme drawing routines
   void DrawFrame(CGContextRef context, HIThemeFrameKind inKind,
@@ -129,9 +147,16 @@ protected:
                            mozilla::EventStates inState, nsIFrame* aFrame);
   void DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect,
                        nsIFrame* aFrame, mozilla::EventStates inState);
-  void DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
-                      mozilla::EventStates inState, uint8_t aWidgetType,
-                      nsIFrame* aFrame, float aOriginalHeight);
+  void DrawRoundedBezelPushButton(CGContextRef cgContext,
+                                  const HIRect& inBoxRect,
+                                  ControlParams aControlParams);
+  void DrawSquareBezelPushButton(CGContextRef cgContext,
+                                 const HIRect& inBoxRect,
+                                 ControlParams aControlParams);
+  void DrawHelpButton(CGContextRef cgContext, const HIRect& inBoxRect,
+                      ControlParams aControlParams);
+  void DrawDisclosureButton(CGContextRef cgContext, const HIRect& inBoxRect,
+                            ControlParams aControlParams, NSCellStateValue aState);
   void DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
                     mozilla::EventStates inState, nsIFrame* aFrame,
                     const NSSize& aIconSize, NSString* aImageName,
