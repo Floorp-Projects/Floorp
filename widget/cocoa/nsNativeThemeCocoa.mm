@@ -1225,32 +1225,78 @@ static NSString* kMenuDownScrollArrowImage = @"MenuScrollDown";
 static NSString* kMenuUpScrollArrowImage = @"MenuScrollUp";
 static const CGFloat kMenuIconIndent = 6.0f;
 
+NSString*
+nsNativeThemeCocoa::GetMenuIconName(const MenuIconParams& aParams)
+{
+  switch (aParams.icon) {
+    case MenuIcon::eCheckmark:
+      return kCheckmarkImage;
+    case MenuIcon::eMenuArrow:
+      return aParams.rtl ? kMenuarrowLeftImage : kMenuarrowRightImage;
+    case MenuIcon::eMenuDownScrollArrow:
+      return kMenuDownScrollArrowImage;
+    case MenuIcon::eMenuUpScrollArrow:
+      return kMenuUpScrollArrowImage;
+  }
+}
+
+NSSize
+nsNativeThemeCocoa::GetMenuIconSize(MenuIcon aIcon)
+{
+  switch (aIcon) {
+    case MenuIcon::eCheckmark:
+      return kCheckmarkSize;
+    case MenuIcon::eMenuArrow:
+      return kMenuarrowSize;
+    case MenuIcon::eMenuDownScrollArrow:
+    case MenuIcon::eMenuUpScrollArrow:
+      return kMenuScrollArrowSize;
+  }
+}
+
+nsNativeThemeCocoa::MenuIconParams
+nsNativeThemeCocoa::ComputeMenuIconParams(nsIFrame* aFrame,
+                                          EventStates aEventState,
+                                          MenuIcon aIcon)
+{
+  bool isDisabled = IsDisabled(aFrame, aEventState);
+
+  MenuIconParams params;
+  params.icon = aIcon;
+  params.disabled = isDisabled;
+  params.insideActiveMenuItem =
+    !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
+  params.centerHorizontally = true;
+  params.rtl = IsFrameRTL(aFrame);
+  return params;
+}
+
 void
 nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
-                                 EventStates inState, nsIFrame* aFrame,
-                                 const NSSize& aIconSize, NSString* aImageName,
-                                 bool aCenterHorizontally)
+                                 const MenuIconParams& aParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  NSSize size = GetMenuIconSize(aParams.icon);
+
   // Adjust size and position of our drawRect.
-  CGFloat paddingX = std::max(CGFloat(0.0), aRect.size.width - aIconSize.width);
-  CGFloat paddingY = std::max(CGFloat(0.0), aRect.size.height - aIconSize.height);
+  CGFloat paddingX = std::max(CGFloat(0.0), aRect.size.width - size.width);
+  CGFloat paddingY = std::max(CGFloat(0.0), aRect.size.height - size.height);
   CGFloat paddingStartX = std::min(paddingX, kMenuIconIndent);
   CGFloat paddingEndX = std::max(CGFloat(0.0), paddingX - kMenuIconIndent);
   CGRect drawRect = CGRectMake(
-    aRect.origin.x + (aCenterHorizontally ? ceil(paddingX / 2) :
-                      IsFrameRTL(aFrame) ? paddingEndX : paddingStartX),
+    aRect.origin.x + (aParams.centerHorizontally ? ceil(paddingX / 2) :
+                      aParams.rtl ? paddingEndX : paddingStartX),
     aRect.origin.y + ceil(paddingY / 2),
-    aIconSize.width, aIconSize.height);
+    size.width, size.height);
 
-  NSString* state = IsDisabled(aFrame, inState) ? @"disabled" :
-    (CheckBooleanAttr(aFrame, nsGkAtoms::menuactive) ? @"pressed" : @"normal");
+  NSString* state = aParams.disabled ? @"disabled" :
+    (aParams.insideActiveMenuItem ? @"pressed" : @"normal");
 
-  NSString* imageName = aImageName;
+  NSString* imageName = GetMenuIconName(aParams);
   if (!nsCocoaFeatures::OnElCapitanOrLater()) {
     // Pre-10.11, image names are prefixed with "image."
-    imageName = [@"image." stringByAppendingString:aImageName];
+    imageName = [@"image." stringByAppendingString:imageName];
   }
 
   RenderWithCoreUI(drawRect, cgContext,
@@ -1268,6 +1314,67 @@ nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
 #endif
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+nsNativeThemeCocoa::MenuItemParams
+nsNativeThemeCocoa::ComputeMenuItemParams(nsIFrame* aFrame,
+                                          EventStates aEventState,
+                                          bool aIsChecked)
+{
+  bool isDisabled = IsDisabled(aFrame, aEventState);
+
+  MenuItemParams params;
+  if (VibrancyManager::SystemSupportsVibrancy()) {
+    ThemeGeometryType type =
+      ThemeGeometryTypeForWidget(aFrame, NS_THEME_MENUITEM);
+    params.vibrancyColor = Some(VibrancyFillColor(aFrame, type));
+  }
+  params.checked = aIsChecked;
+  params.disabled = isDisabled;
+  params.selected =
+    !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
+  params.rtl = IsFrameRTL(aFrame);
+  return params;
+}
+
+static void
+SetCGContextFillColor(CGContextRef cgContext, const Color& aColor)
+{
+  CGContextSetRGBFillColor(cgContext, aColor.r, aColor.g, aColor.b, aColor.a);
+}
+
+void
+nsNativeThemeCocoa::DrawMenuItem(CGContextRef cgContext,
+                                 const CGRect& inBoxRect,
+                                 const MenuItemParams& aParams)
+{
+  if (aParams.vibrancyColor) {
+    SetCGContextFillColor(cgContext, *aParams.vibrancyColor);
+    CGContextFillRect(cgContext, inBoxRect);
+  } else {
+    HIThemeMenuItemDrawInfo drawInfo;
+    memset(&drawInfo, 0, sizeof(drawInfo));
+    drawInfo.version = 0;
+    drawInfo.itemType = kThemeMenuItemPlain;
+    drawInfo.state = (aParams.disabled ?
+                        static_cast<ThemeMenuState>(kThemeMenuDisabled) :
+                        aParams.selected ?
+                          static_cast<ThemeMenuState>(kThemeMenuSelected) :
+                          static_cast<ThemeMenuState>(kThemeMenuActive));
+
+    HIRect ignored;
+    HIThemeDrawMenuItem(&inBoxRect, &inBoxRect, &drawInfo, cgContext,
+                        HITHEME_ORIENTATION, &ignored);
+  }
+
+  if (aParams.checked) {
+    MenuIconParams params;
+    params.disabled = aParams.disabled;
+    params.insideActiveMenuItem = aParams.selected;
+    params.rtl = aParams.rtl;
+    params.icon = MenuIcon::eCheckmark;
+    DrawMenuIcon(cgContext, inBoxRect, params);
+  }
 }
 
 nsNativeThemeCocoa::ControlParams
@@ -2456,12 +2563,6 @@ IsHiDPIContext(nsDeviceContext* aContext)
     2 * aContext->AppUnitsPerDevPixelAtUnitFullZoom();
 }
 
-static void
-SetCGContextFillColor(CGContextRef cgContext, const Color& aColor)
-{
-  CGContextSetRGBFillColor(cgContext, aColor.r, aColor.g, aColor.b, aColor.a);
-}
-
 static const Color kTooltipBackgroundColor(0.996, 1.000, 0.792, 0.950);
 static const Color kMultilineTextFieldTopBorderColor(0.4510, 0.4510, 0.4510, 1.0);
 static const Color kMultilineTextFieldSidesAndBottomBorderColor(0.6, 0.6, 0.6, 1.0);
@@ -2570,41 +2671,17 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
                          ComputeMenuBackgroundParams(aFrame, eventState));
       break;
 
-    case NS_THEME_MENUARROW: {
-      bool isRTL = IsFrameRTL(aFrame);
-      DrawMenuIcon(cgContext, macRect, eventState, aFrame, kMenuarrowSize,
-                   isRTL ? kMenuarrowLeftImage : kMenuarrowRightImage, true);
-    }
+    case NS_THEME_MENUARROW:
+      DrawMenuIcon(cgContext, macRect,
+                   ComputeMenuIconParams(aFrame, eventState,
+                                         MenuIcon::eMenuArrow));
       break;
 
     case NS_THEME_MENUITEM:
-    case NS_THEME_CHECKMENUITEM: {
-      if (VibrancyManager::SystemSupportsVibrancy()) {
-        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
-        DrawVibrancyBackground(cgContext, macRect, aFrame, type);
-      } else {
-        bool isDisabled = IsDisabled(aFrame, eventState);
-        bool isSelected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
-        // maybe use kThemeMenuItemHierBackground or PopUpBackground instead of just Plain?
-        HIThemeMenuItemDrawInfo drawInfo;
-        memset(&drawInfo, 0, sizeof(drawInfo));
-        drawInfo.version = 0;
-        drawInfo.itemType = kThemeMenuItemPlain;
-        drawInfo.state = (isDisabled ?
-                           static_cast<ThemeMenuState>(kThemeMenuDisabled) :
-                           isSelected ?
-                             static_cast<ThemeMenuState>(kThemeMenuSelected) :
-                             static_cast<ThemeMenuState>(kThemeMenuActive));
-
-        // XXX pass in the menu rect instead of always using the item rect
-        HIRect ignored;
-        HIThemeDrawMenuItem(&macRect, &macRect, &drawInfo, cgContext, HITHEME_ORIENTATION, &ignored);
-      }
-
-      if (aWidgetType == NS_THEME_CHECKMENUITEM) {
-        DrawMenuIcon(cgContext, macRect, eventState, aFrame, kCheckmarkSize, kCheckmarkImage, false);
-      }
-    }
+    case NS_THEME_CHECKMENUITEM:
+      DrawMenuItem(cgContext, macRect,
+                   ComputeMenuItemParams(aFrame, eventState,
+                                         aWidgetType == NS_THEME_CHECKMENUITEM));
       break;
 
     case NS_THEME_MENUSEPARATOR: {
@@ -2623,10 +2700,13 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_BUTTON_ARROW_UP:
-    case NS_THEME_BUTTON_ARROW_DOWN:
-      DrawMenuIcon(cgContext, macRect, eventState, aFrame, kMenuScrollArrowSize,
-                   aWidgetType == NS_THEME_BUTTON_ARROW_UP ?
-                   kMenuUpScrollArrowImage : kMenuDownScrollArrowImage, true);
+    case NS_THEME_BUTTON_ARROW_DOWN: {
+      MenuIcon icon =
+        aWidgetType == NS_THEME_BUTTON_ARROW_UP ? MenuIcon::eMenuUpScrollArrow
+                                                : MenuIcon::eMenuDownScrollArrow;
+      DrawMenuIcon(cgContext, macRect,
+                   ComputeMenuIconParams(aFrame, eventState, icon));
+    }
       break;
 
     case NS_THEME_TOOLTIP:
