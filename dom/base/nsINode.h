@@ -420,8 +420,6 @@ public:
     eCOMMENT             = 1 << 5,
     /** form control elements */
     eHTML_FORM_CONTROL   = 1 << 6,
-    /** document fragments */
-    eDOCUMENT_FRAGMENT   = 1 << 7,
     /** character data nodes (comments, PIs, text). */
     eDATA_NODE           = 1 << 8,
     /** HTMLMediaElement */
