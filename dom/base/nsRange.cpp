@@ -983,7 +983,7 @@ nsRange::DoSetRange(const RawRangeBoundary& aStart,
                   (!aRoot->GetParentNode() &&
                    (aRoot->IsDocument() ||
                     aRoot->IsNodeOfType(nsINode::eATTRIBUTE) ||
-                    aRoot->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
+                    aRoot->IsDocumentFragment() ||
                      /*For backward compatibility*/
                     aRoot->IsContent())),
                   "Bad root");
