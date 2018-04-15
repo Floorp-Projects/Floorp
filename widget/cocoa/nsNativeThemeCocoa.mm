@@ -2842,14 +2842,12 @@ IsHiDPIContext(nsDeviceContext* aContext)
     2 * aContext->AppUnitsPerDevPixelAtUnitFullZoom();
 }
 
-NS_IMETHODIMP
-nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
-                                         nsIFrame* aFrame,
-                                         uint8_t aWidgetType,
-                                         const nsRect& aRect,
-                                         const nsRect& aDirtyRect)
+Maybe<nsNativeThemeCocoa::WidgetInfo>
+nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
+                                      uint8_t aWidgetType,
+                                      const nsRect& aRect)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   // setup to draw into the correct port
   int32_t p2a = aFrame->PresContext()->AppUnitsPerDevPixel();
@@ -2858,8 +2856,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
   nativeWidgetRect.Scale(1.0 / gfxFloat(p2a));
   float originalHeight = nativeWidgetRect.Height();
   nativeWidgetRect.Round();
-  if (nativeWidgetRect.IsEmpty())
-    return NS_OK; // Don't attempt to draw invisible widgets.
+  if (nativeWidgetRect.IsEmpty()) {
+    return Nothing(); // Don't attempt to draw invisible widgets.
+  }
 
   bool hidpi = IsHiDPIContext(aFrame->PresContext()->DeviceContext());
   if (hidpi) {
@@ -2868,8 +2867,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
     originalHeight *= 0.5f;
   }
 
-  Maybe<WidgetInfo> widgetInfo;
-
   EventStates eventState = GetContentState(aFrame, aWidgetType);
 
   switch (aWidgetType) {
@@ -2877,56 +2874,46 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       if (IsWindowSheet(aFrame)) {
         if (VibrancyManager::SystemSupportsVibrancy()) {
           ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
-          widgetInfo = Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
-        } else {
-          widgetInfo = Some(WidgetInfo::SheetBackground());
+          return Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
         }
-      } else {
-        widgetInfo = Some(WidgetInfo::DialogBackground());
+        return Some(WidgetInfo::SheetBackground());
       }
-      break;
+      return Some(WidgetInfo::DialogBackground());
 
     case NS_THEME_MENUPOPUP:
-      widgetInfo = Some(WidgetInfo::MenuBackground(
+      return Some(WidgetInfo::MenuBackground(
         ComputeMenuBackgroundParams(aFrame, eventState)));
-      break;
 
     case NS_THEME_MENUARROW:
-      widgetInfo = Some(WidgetInfo::MenuIcon(
+      return Some(WidgetInfo::MenuIcon(
         ComputeMenuIconParams(aFrame, eventState,
                               MenuIcon::eMenuArrow)));
-      break;
 
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM:
-      widgetInfo = Some(WidgetInfo::MenuItem(
+      return Some(WidgetInfo::MenuItem(
         ComputeMenuItemParams(aFrame, eventState,
                               aWidgetType == NS_THEME_CHECKMENUITEM)));
-      break;
 
     case NS_THEME_MENUSEPARATOR:
-      widgetInfo = Some(WidgetInfo::MenuSeparator(
+      return Some(WidgetInfo::MenuSeparator(
         ComputeMenuItemParams(aFrame, eventState, false)));
-      break;
 
     case NS_THEME_BUTTON_ARROW_UP:
     case NS_THEME_BUTTON_ARROW_DOWN: {
       MenuIcon icon =
         aWidgetType == NS_THEME_BUTTON_ARROW_UP ? MenuIcon::eMenuUpScrollArrow
                                                 : MenuIcon::eMenuDownScrollArrow;
-      widgetInfo = Some(WidgetInfo::MenuIcon(
+      return Some(WidgetInfo::MenuIcon(
         ComputeMenuIconParams(aFrame, eventState, icon)));
     }
-      break;
 
     case NS_THEME_TOOLTIP:
       if (VibrancyManager::SystemSupportsVibrancy()) {
         ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
-        widgetInfo = Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
-      } else {
-        widgetInfo = Some(WidgetInfo::Tooltip());
+        return Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
       }
-      break;
+      return Some(WidgetInfo::Tooltip());
 
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO: {
@@ -2942,12 +2929,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       params.controlParams = ComputeControlParams(aFrame, eventState);
       params.verticalAlignFactor = VerticalAlignFactor(aFrame);
       if (isCheckbox) {
-        widgetInfo = Some(WidgetInfo::Checkbox(params));
-      } else {
-        widgetInfo = Some(WidgetInfo::Radio(params));
+        return Some(WidgetInfo::Checkbox(params));
       }
+      return Some(WidgetInfo::Radio(params));
     }
-      break;
 
     case NS_THEME_BUTTON:
       if (IsDefaultButton(aFrame)) {
@@ -2973,8 +2958,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
                                : ButtonType::eRegularPushButton;
         ControlParams params = ComputeControlParams(aFrame, eventState);
         params.insideActiveWindow = isInActiveWindow;
-        widgetInfo = Some(WidgetInfo::Button(ButtonParams{params, buttonType}));
-      } else if (IsButtonTypeMenu(aFrame)) {
+        return Some(WidgetInfo::Button(ButtonParams{params, buttonType}));
+      }
+      if (IsButtonTypeMenu(aFrame)) {
         ControlParams controlParams = ComputeControlParams(aFrame, eventState);
         controlParams.focused = controlParams.focused || IsFocused(aFrame);
         controlParams.pressed = IsOpenButton(aFrame);
@@ -2982,54 +2968,49 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
         params.controlParams = controlParams;
         params.pullsDown = true;
         params.editable = false;
-        widgetInfo = Some(WidgetInfo::Dropdown(params));
-      } else if (originalHeight > DO_SQUARE_BUTTON_HEIGHT) {
+        return Some(WidgetInfo::Dropdown(params));
+      }
+      if (originalHeight > DO_SQUARE_BUTTON_HEIGHT) {
         // If the button is tall enough, draw the square button style so that
         // buttons with non-standard content look good. Otherwise draw normal
         // rounded aqua buttons.
         // This comparison is done based on the height that is calculated without
         // the top, because the snapped height can be affected by the top of the
         // rect and that may result in different height depending on the top value.
-        widgetInfo = Some(WidgetInfo::Button(
+        return Some(WidgetInfo::Button(
           ButtonParams{ComputeControlParams(aFrame, eventState),
                        ButtonType::eSquareBezelPushButton}));
-      } else {
-        widgetInfo = Some(WidgetInfo::Button(
-          ButtonParams{ComputeControlParams(aFrame, eventState),
-                       ButtonType::eRoundedBezelPushButton}));
       }
-      break;
+      return Some(WidgetInfo::Button(
+        ButtonParams{ComputeControlParams(aFrame, eventState),
+                     ButtonType::eRoundedBezelPushButton}));
 
     case NS_THEME_FOCUS_OUTLINE:
-      widgetInfo = Some(WidgetInfo::FocusOutline());
-      break;
+      return Some(WidgetInfo::FocusOutline());
 
     case NS_THEME_MAC_HELP_BUTTON:
-      widgetInfo = Some(WidgetInfo::Button(
+      return Some(WidgetInfo::Button(
         ButtonParams{ComputeControlParams(aFrame, eventState),
-                      ButtonType::eHelpButton}));
-      break;
+                     ButtonType::eHelpButton}));
 
     case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
     case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED: {
       ButtonType buttonType = (aWidgetType == NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED)
         ? ButtonType::eDisclosureButtonClosed : ButtonType::eDisclosureButtonOpen;
-      widgetInfo = Some(WidgetInfo::Button(
+      return Some(WidgetInfo::Button(
         ButtonParams{ComputeControlParams(aFrame, eventState),
-                    buttonType}));
+                     buttonType}));
     }
-      break;
 
     case NS_THEME_BUTTON_BEVEL: {
       bool isDefaultButton = IsDefaultButton(aFrame);
       ButtonType buttonType =
         isDefaultButton ? ButtonType::eDefaultBevelButton
                         : ButtonType::eRegularBevelButton;
-      widgetInfo = Some(WidgetInfo::Button(
+      return Some(WidgetInfo::Button(
         ButtonParams{ComputeControlParams(aFrame, eventState),
-                    buttonType}));
+                     buttonType}));
     }
-      break;
 
     case NS_THEME_INNER_SPIN_BUTTON: {
     case NS_THEME_SPINNER:
@@ -3054,9 +3035,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       params.disabled = IsDisabled(aFrame, eventState);
       params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
 
-      widgetInfo = Some(WidgetInfo::SpinButtons(params));
+      return Some(WidgetInfo::SpinButtons(params));
     }
-      break;
 
     case NS_THEME_SPINNER_UPBUTTON:
     case NS_THEME_SPINNER_DOWNBUTTON: {
@@ -3072,10 +3052,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
         params.disabled = IsDisabled(aFrame, eventState);
         params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
         if (aWidgetType == NS_THEME_SPINNER_UPBUTTON) {
-          widgetInfo = Some(WidgetInfo::SpinButtonUp(params));
-        } else {
-          widgetInfo = Some(WidgetInfo::SpinButtonDown(params));
+          return Some(WidgetInfo::SpinButtonUp(params));
         }
+        return Some(WidgetInfo::SpinButtonDown(params));
       }
     }
       break;
@@ -3084,13 +3063,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       SegmentParams params =
         ComputeSegmentParams(aFrame, eventState, SegmentType::eToolbarButton);
       params.insideActiveWindow = [NativeWindowForFrame(aFrame) isMainWindow];
-      widgetInfo = Some(WidgetInfo::Segment(params));
+      return Some(WidgetInfo::Segment(params));
     }
-      break;
 
     case NS_THEME_SEPARATOR:
-      widgetInfo = Some(WidgetInfo::Separator());
-      break;
+      return Some(WidgetInfo::Separator());
 
     case NS_THEME_TOOLBAR: {
       NSWindow* win = NativeWindowForFrame(aFrame);
@@ -3099,27 +3076,23 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
         float unifiedHeight =
           std::max(float([(ToolbarWindow*)win unifiedToolbarHeight]),
                    nativeWidgetRect.Height());
-        widgetInfo = Some(WidgetInfo::UnifiedToolbar(
+        return Some(WidgetInfo::UnifiedToolbar(
           UnifiedToolbarParams{unifiedHeight, isMain}));
-      } else {
-        widgetInfo = Some(WidgetInfo::Toolbar(isMain));
       }
+      return Some(WidgetInfo::Toolbar(isMain));
     }
-      break;
 
     case NS_THEME_WINDOW_TITLEBAR: {
       NSWindow* win = NativeWindowForFrame(aFrame);
       bool isMain = [win isMainWindow];
       float unifiedToolbarHeight = [win isKindOfClass:[ToolbarWindow class]] ?
         [(ToolbarWindow*)win unifiedToolbarHeight] : nativeWidgetRect.Height();
-      widgetInfo = Some(WidgetInfo::NativeTitlebar(
+      return Some(WidgetInfo::NativeTitlebar(
         UnifiedToolbarParams{unifiedToolbarHeight, isMain}));
     }
-      break;
 
     case NS_THEME_STATUSBAR:
-      widgetInfo = Some(WidgetInfo::StatusBar(IsActive(aFrame, YES)));
-      break;
+      return Some(WidgetInfo::StatusBar(IsActive(aFrame, YES)));
 
     case NS_THEME_MENULIST:
     case NS_THEME_MENULIST_TEXTFIELD: {
@@ -3130,19 +3103,16 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       params.controlParams = controlParams;
       params.pullsDown = false;
       params.editable = aWidgetType == NS_THEME_MENULIST_TEXTFIELD;
-      widgetInfo = Some(WidgetInfo::Dropdown(params));
+      return Some(WidgetInfo::Dropdown(params));
     }
-      break;
 
     case NS_THEME_MENULIST_BUTTON:
-      widgetInfo = Some(WidgetInfo::Button(
+      return Some(WidgetInfo::Button(
         ButtonParams{ComputeControlParams(aFrame, eventState),
-                    ButtonType::eArrowButton}));
-      break;
+                     ButtonType::eArrowButton}));
 
     case NS_THEME_GROUPBOX:
-      widgetInfo = Some(WidgetInfo::GroupBox());
-      break;
+      return Some(WidgetInfo::GroupBox());
 
     case NS_THEME_TEXTFIELD:
     case NS_THEME_NUMBER_INPUT: {
@@ -3157,14 +3127,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       }
 
       bool isDisabled = IsDisabled(aFrame, eventState) || IsReadOnly(aFrame);
-      widgetInfo = Some(WidgetInfo::TextBox(TextBoxParams{isDisabled, isFocused}));
-      break;
+      return Some(WidgetInfo::TextBox(TextBoxParams{isDisabled, isFocused}));
     }
 
     case NS_THEME_SEARCHFIELD:
-      widgetInfo = Some(WidgetInfo::SearchField(
+      return Some(WidgetInfo::SearchField(
         ComputeSearchFieldParams(aFrame, eventState)));
-      break;
 
     case NS_THEME_PROGRESSBAR:
     {
@@ -3174,20 +3142,17 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
           NS_WARNING("Unable to animate progressbar!");
         }
       }
-      widgetInfo = Some(WidgetInfo::ProgressBar(
+      return Some(WidgetInfo::ProgressBar(
         ComputeProgressParams(aFrame, eventState,
                               !IsVerticalProgress(aFrame))));
-      break;
     }
 
     case NS_THEME_PROGRESSBAR_VERTICAL:
-      widgetInfo = Some(WidgetInfo::ProgressBar(
+      return Some(WidgetInfo::ProgressBar(
         ComputeProgressParams(aFrame, eventState, false)));
-      break;
 
     case NS_THEME_METERBAR:
-      widgetInfo = Some(WidgetInfo::Meter(ComputeMeterParams(aFrame)));
-      break;
+      return Some(WidgetInfo::Meter(ComputeMeterParams(aFrame)));
 
     case NS_THEME_PROGRESSCHUNK:
     case NS_THEME_PROGRESSCHUNK_VERTICAL:
@@ -3196,26 +3161,22 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_TREETWISTY:
-      widgetInfo = Some(WidgetInfo::Button(
+      return Some(WidgetInfo::Button(
         ButtonParams{ComputeControlParams(aFrame, eventState),
                      ButtonType::eTreeTwistyPointingRight}));
-      break;
 
     case NS_THEME_TREETWISTYOPEN:
-      widgetInfo = Some(WidgetInfo::Button(
+      return Some(WidgetInfo::Button(
         ButtonParams{ComputeControlParams(aFrame, eventState),
                      ButtonType::eTreeTwistyPointingDown}));
-      break;
 
     case NS_THEME_TREEHEADERCELL:
-      widgetInfo = Some(WidgetInfo::TreeHeaderCell(
+      return Some(WidgetInfo::TreeHeaderCell(
         ComputeTreeHeaderCellParams(aFrame, eventState)));
-      break;
 
     case NS_THEME_TREEITEM:
     case NS_THEME_TREEVIEW:
-      widgetInfo = Some(WidgetInfo::ColorFill(Color(1.0, 1.0, 1.0, 1.0)));
-      break;
+      return Some(WidgetInfo::ColorFill(Color(1.0, 1.0, 1.0, 1.0)));
 
     case NS_THEME_TREEHEADER:
       // do nothing, taken care of by individual header cells
@@ -3227,10 +3188,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
 
     case NS_THEME_SCALE_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL:
-      widgetInfo = Some(WidgetInfo::Scale(
+      return Some(WidgetInfo::Scale(
         ComputeXULScaleParams(aFrame, eventState,
                               aWidgetType == NS_THEME_SCALE_HORIZONTAL)));
-      break;
 
     case NS_THEME_SCALETHUMB_HORIZONTAL:
     case NS_THEME_SCALETHUMB_VERTICAL:
@@ -3240,7 +3200,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
     case NS_THEME_RANGE: {
       Maybe<ScaleParams> params = ComputeHTMLScaleParams(aFrame, eventState);
       if (params) {
-        widgetInfo = Some(WidgetInfo::Scale(*params));
+        return Some(WidgetInfo::Scale(*params));
       }
       break;
     }
@@ -3250,10 +3210,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
     case NS_THEME_SCROLLBARTHUMB_VERTICAL:
     case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
-      widgetInfo = Some(WidgetInfo::ScrollbarThumb(
+      return Some(WidgetInfo::ScrollbarThumb(
         ComputeScrollbarParams(
           aFrame, aWidgetType == NS_THEME_SCROLLBARTHUMB_HORIZONTAL)));
-      break;
 
     case NS_THEME_SCROLLBARBUTTON_UP:
     case NS_THEME_SCROLLBARBUTTON_LEFT:
@@ -3263,29 +3222,24 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
 
     case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
     case NS_THEME_SCROLLBARTRACK_VERTICAL:
-      widgetInfo = Some(WidgetInfo::ScrollbarTrack(
+      return Some(WidgetInfo::ScrollbarTrack(
         ComputeScrollbarParams(
           aFrame, aWidgetType == NS_THEME_SCROLLBARTRACK_HORIZONTAL)));
-      break;
 
     case NS_THEME_TEXTFIELD_MULTILINE:
-      widgetInfo = Some(WidgetInfo::MultilineTextField(
+      return Some(WidgetInfo::MultilineTextField(
         eventState.HasState(NS_EVENT_STATE_FOCUS)));
-      break;
 
     case NS_THEME_LISTBOX:
-      widgetInfo = Some(WidgetInfo::ListBox());
-      break;
+      return Some(WidgetInfo::ListBox());
 
     case NS_THEME_MAC_SOURCE_LIST: {
       if (VibrancyManager::SystemSupportsVibrancy()) {
         ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
-        widgetInfo = Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
-      } else {
-        widgetInfo = Some(WidgetInfo::SourceList(FrameIsInActiveWindow(aFrame)));
+        return Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
       }
+      return Some(WidgetInfo::SourceList(FrameIsInActiveWindow(aFrame)));
     }
-      break;
 
     case NS_THEME_MAC_SOURCE_LIST_SELECTION:
     case NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION: {
@@ -3296,54 +3250,68 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       // if we're in a source list.
       if (VibrancyManager::SystemSupportsVibrancy() && IsInSourceList(aFrame)) {
         ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
-        widgetInfo = Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
-      } else {
-        bool isInActiveWindow = FrameIsInActiveWindow(aFrame);
-        if (aWidgetType == NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION) {
-          widgetInfo = Some(WidgetInfo::ActiveSourceListSelection(isInActiveWindow));
-        } else {
-          widgetInfo = Some(WidgetInfo::InactiveSourceListSelection(isInActiveWindow));
-        }
+        return Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
       }
+      bool isInActiveWindow = FrameIsInActiveWindow(aFrame);
+      if (aWidgetType == NS_THEME_MAC_ACTIVE_SOURCE_LIST_SELECTION) {
+        return Some(WidgetInfo::ActiveSourceListSelection(isInActiveWindow));
+      }
+      return Some(WidgetInfo::InactiveSourceListSelection(isInActiveWindow));
     }
-      break;
 
     case NS_THEME_TAB: {
       SegmentParams params =
         ComputeSegmentParams(aFrame, eventState, SegmentType::eTab);
       params.pressed = params.pressed && !params.selected;
-      widgetInfo = Some(WidgetInfo::Segment(params));
+      return Some(WidgetInfo::Segment(params));
     }
-      break;
 
     case NS_THEME_TABPANELS:
-      widgetInfo = Some(WidgetInfo::TabPanel(FrameIsInActiveWindow(aFrame)));
-      break;
+      return Some(WidgetInfo::TabPanel(FrameIsInActiveWindow(aFrame)));
 
     case NS_THEME_RESIZER:
-      widgetInfo = Some(WidgetInfo::Resizer(IsFrameRTL(aFrame)));
-      break;
+      return Some(WidgetInfo::Resizer(IsFrameRTL(aFrame)));
 
     case NS_THEME_MAC_VIBRANCY_LIGHT:
     case NS_THEME_MAC_VIBRANCY_DARK:
     case NS_THEME_MAC_VIBRANT_TITLEBAR_LIGHT:
     case NS_THEME_MAC_VIBRANT_TITLEBAR_DARK: {
       ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
-      widgetInfo = Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
-      break;
+      return Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
     }
   }
 
-  if (hidpi) {
-    // Restore device pixel nativeWidgetRect.
-    nativeWidgetRect.Scale(2.0f);
+  return Nothing();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(Nothing());
+}
+
+NS_IMETHODIMP
+nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
+                                         nsIFrame* aFrame,
+                                         uint8_t aWidgetType,
+                                         const nsRect& aRect,
+                                         const nsRect& aDirtyRect)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  Maybe<WidgetInfo> widgetInfo = ComputeWidgetInfo(aFrame, aWidgetType, aRect);
+
+  if (!widgetInfo) {
+    return NS_OK;
   }
 
-  if (widgetInfo) {
-    RenderWidget(*widgetInfo, *aContext->GetDrawTarget(),
-                 nativeWidgetRect, NSRectToRect(aDirtyRect, p2a),
-                 hidpi ? 2.0f : 1.0f);
-  }
+  int32_t p2a = aFrame->PresContext()->AppUnitsPerDevPixel();
+
+  gfx::Rect nativeWidgetRect = NSRectToRect(aRect, p2a);
+  nativeWidgetRect.Round();
+
+  bool hidpi = IsHiDPIContext(aFrame->PresContext()->DeviceContext());
+
+  RenderWidget(*widgetInfo, *aContext->GetDrawTarget(),
+               nativeWidgetRect, NSRectToRect(aDirtyRect, p2a),
+               hidpi ? 2.0f : 1.0f);
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
