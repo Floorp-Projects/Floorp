@@ -859,7 +859,7 @@ nsFind::SkipNode(nsIContent* aContent)
 #ifdef HAVE_BIDI_ITERATOR
   // We may not need to skip comment nodes, now that IsTextNode distinguishes
   // them from real text nodes.
-  return aContent->IsNodeOfType(nsINode::eCOMMENT) ||
+  return aContent->IsComment() ||
          aContent->IsAnyOfHTMLElements(sScriptAtom, sNoframesAtom, sSelectAtom);
 
 #else /* HAVE_BIDI_ITERATOR */
@@ -869,7 +869,7 @@ nsFind::SkipNode(nsIContent* aContent)
 
   nsIContent* content = aContent;
   while (content) {
-    if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
+    if (aContent->IsComment() ||
         content->IsAnyOfHTMLElements(nsGkAtoms::script,
                                      nsGkAtoms::noframes,
                                      nsGkAtoms::select)) {

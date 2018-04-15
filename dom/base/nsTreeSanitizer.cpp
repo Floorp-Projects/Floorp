@@ -1499,7 +1499,7 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
     }
     NS_ASSERTION(!node->GetFirstChild(), "How come non-element node had kids?");
     nsIContent* next = node->GetNextNonChildNode(aRoot);
-    if (!mAllowComments && node->IsNodeOfType(nsINode::eCOMMENT)) {
+    if (!mAllowComments && node->IsComment()) {
       node->RemoveFromParent();
     }
     node = next;

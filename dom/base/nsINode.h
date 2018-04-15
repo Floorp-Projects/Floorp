@@ -416,8 +416,6 @@ public:
     eATTRIBUTE           = 1 << 2,
     /** xml processing instructions */
     ePROCESSING_INSTRUCTION = 1 << 4,
-    /** comment nodes */
-    eCOMMENT             = 1 << 5,
     /** form control elements */
     eHTML_FORM_CONTROL   = 1 << 6,
     /** animation elements */
@@ -576,6 +574,14 @@ public:
            nodeType == CDATA_SECTION_NODE ||
            nodeType == PROCESSING_INSTRUCTION_NODE ||
            nodeType == COMMENT_NODE;
+  }
+
+  /**
+   * Return whether the node is a Comment node.
+   */
+  bool IsComment() const
+  {
+    return NodeType() == COMMENT_NODE;
   }
 
   virtual nsIDOMNode* AsDOMNode() = 0;

@@ -5516,7 +5516,7 @@ nsCSSFrameConstructor::ShouldCreateItemsForChild(nsFrameConstructorState& aState
   }
 
   // never create frames for comments or PIs
-  if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
+  if (aContent->IsComment() ||
       aContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
     return false;
   }
@@ -6380,7 +6380,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
     // if we haven't already, resolve a style to find the display type of
     // aContent.
     if (UNSET_DISPLAY == aDisplay) {
-      if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
+      if (aContent->IsComment() ||
           aContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
         // Comments and processing instructions never have frames, so we should
         // not try to generate styles for them.
@@ -10137,7 +10137,7 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
                "Should not be marked as needing frames");
     MOZ_ASSERT(!content->GetPrimaryFrame(),
                "Should have no existing frame");
-    MOZ_ASSERT(!content->IsNodeOfType(nsINode::eCOMMENT) &&
+    MOZ_ASSERT(!content->IsComment() &&
                !content->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION),
                "Why is someone creating garbage anonymous content");
 
@@ -11484,7 +11484,7 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
       // AddFrameConstructionItems.  We know our parent is a non-replaced inline,
       // so there is no need to do the NeedFrameFor check.
       content->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
-      if (content->IsNodeOfType(nsINode::eCOMMENT) ||
+      if (content->IsComment() ||
           content->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
         continue;
       }
