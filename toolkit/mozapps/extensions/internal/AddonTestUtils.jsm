@@ -126,8 +126,7 @@ class MockBlocklist {
     return this.addons.get(addon.id, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   }
 
-  async getAddonBlocklistEntry(addon, appVersion, toolkitVersion) {
-    await Promise.resolve();
+  getAddonBlocklistEntry(addon, appVersion, toolkitVersion) {
     let state = this.getAddonBlocklistState(addon, appVersion, toolkitVersion);
     if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
       return {
