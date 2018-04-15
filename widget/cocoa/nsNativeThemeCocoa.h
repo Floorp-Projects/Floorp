@@ -77,6 +77,12 @@ public:
     bool rtl : 1;
   };
 
+  struct MenuBackgroundParams {
+    mozilla::Maybe<mozilla::gfx::Color> vibrancyColor;
+    bool disabled = false;
+    bool submenuRightOfParent = false;
+  };
+
   struct ButtonParams {
     ControlParams controlParams;
     ButtonType button = ButtonType::eRegularPushButton;
@@ -153,6 +159,8 @@ protected:
   bool IsWindowSheet(nsIFrame* aFrame);
   ControlParams ComputeControlParams(nsIFrame* aFrame,
                                      mozilla::EventStates aEventState);
+  MenuBackgroundParams ComputeMenuBackgroundParams(nsIFrame* aFrame,
+                                                   mozilla::EventStates aEventState);
   TreeHeaderCellParams ComputeTreeHeaderCellParams(nsIFrame* aFrame,
                                                    mozilla::EventStates aEventState);
 
@@ -185,6 +193,8 @@ protected:
                       ControlParams aControlParams);
   void DrawDisclosureButton(CGContextRef cgContext, const HIRect& inBoxRect,
                             ControlParams aControlParams, NSCellStateValue aState);
+  void DrawMenuBackground(CGContextRef cgContext, const CGRect& inBoxRect,
+                          const MenuBackgroundParams& aParams);
   void DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
                     mozilla::EventStates inState, nsIFrame* aFrame,
                     const NSSize& aIconSize, NSString* aImageName,
