@@ -79,6 +79,11 @@ public:
     eDown
   };
 
+  enum class SegmentType : uint8_t {
+    eToolbarButton,
+    eTab
+  };
+
   struct ControlParams {
     ControlParams()
       : disabled(false)
@@ -138,6 +143,19 @@ public:
     mozilla::Maybe<SpinButton> pressedButton;
     bool disabled = false;
     bool insideActiveWindow = false;
+  };
+
+  struct SegmentParams {
+    SegmentType segmentType = SegmentType::eToolbarButton;
+    bool insideActiveWindow = false;
+    bool pressed = false;
+    bool selected = false;
+    bool focused = false;
+    bool atLeftEnd = false;
+    bool atRightEnd = false;
+    bool drawsLeftSeparator = false;
+    bool drawsRightSeparator = false;
+    bool rtl = false;
   };
 
   struct TreeHeaderCellParams {
@@ -206,8 +224,6 @@ protected:
 
   nsIntMargin DirectionAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame);
   nsIFrame* SeparatorResponsibility(nsIFrame* aBefore, nsIFrame* aAfter);
-  CGRect SeparatorAdjustedRect(CGRect aRect, nsIFrame* aLeft,
-                               nsIFrame* aCurrent, nsIFrame* aRight);
   bool IsWindowSheet(nsIFrame* aFrame);
   ControlParams ComputeControlParams(nsIFrame* aFrame,
                                      mozilla::EventStates aEventState);
@@ -219,6 +235,9 @@ protected:
   MenuItemParams ComputeMenuItemParams(nsIFrame* aFrame,
                                        mozilla::EventStates aEventState,
                                        bool aIsChecked);
+  SegmentParams ComputeSegmentParams(nsIFrame* aFrame,
+                                     mozilla::EventStates aEventState,
+                                     SegmentType aSegmentType);
   TreeHeaderCellParams ComputeTreeHeaderCellParams(nsIFrame* aFrame,
                                                    mozilla::EventStates aEventState);
 
@@ -229,8 +248,7 @@ protected:
   void DrawMeter(CGContextRef context, const HIRect& inBoxRect,
                  nsIFrame* aFrame);
   void DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
-                   mozilla::EventStates inState, nsIFrame* aFrame,
-                   const SegmentedControlRenderSettings& aSettings);
+                   const SegmentParams& aParams);
   void DrawTabPanel(CGContextRef context, const HIRect& inBoxRect, nsIFrame* aFrame);
   void DrawScale(CGContextRef context, const HIRect& inBoxRect,
                  mozilla::EventStates inState, bool inDirection,
