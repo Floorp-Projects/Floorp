@@ -3424,10 +3424,9 @@ var XPIProvider = {
    * @param  aCallback
    *         A callback to pass the Addon to
    */
-  getAddonByID(aId, aCallback) {
-    XPIDatabase.getVisibleAddonForID(aId, function(aAddon) {
-      aCallback(aAddon ? aAddon.wrapper : null);
-    });
+  async getAddonByID(aId, aCallback) {
+    let aAddon = await XPIDatabase.getVisibleAddonForID(aId);
+    aCallback(aAddon ? aAddon.wrapper : null);
   },
 
   /**
@@ -3438,16 +3437,15 @@ var XPIProvider = {
    * @param  aCallback
    *         A callback to pass an array of Addons to
    */
-  getAddonsByTypes(aTypes, aCallback) {
+  async getAddonsByTypes(aTypes, aCallback) {
     let typesToGet = getAllAliasesForTypes(aTypes);
     if (typesToGet && !typesToGet.some(type => ALL_EXTERNAL_TYPES.has(type))) {
       aCallback([]);
       return;
     }
 
-    XPIDatabase.getVisibleAddons(typesToGet, function(aAddons) {
-      aCallback(aAddons.map(a => a.wrapper));
-    });
+    let aAddons = await XPIDatabase.getVisibleAddons(typesToGet);
+    aCallback(aAddons.map(a => a.wrapper));
   },
 
   /**
@@ -3509,10 +3507,9 @@ var XPIProvider = {
    * @param  aCallback
    *         A callback to pass the Addon to. Receives null if not found.
    */
-  getAddonBySyncGUID(aGUID, aCallback) {
-    XPIDatabase.getAddonBySyncGUID(aGUID, function(aAddon) {
-      aCallback(aAddon ? aAddon.wrapper : null);
-    });
+  async getAddonBySyncGUID(aGUID, aCallback) {
+    let aAddon = await XPIDatabase.getAddonBySyncGUID(aGUID);
+    aCallback(aAddon ? aAddon.wrapper : null);
   },
 
   /**
@@ -3523,18 +3520,17 @@ var XPIProvider = {
    * @param  aCallback
    *         A callback to pass an array of Addons to
    */
-  getAddonsWithOperationsByTypes(aTypes, aCallback) {
+  async getAddonsWithOperationsByTypes(aTypes, aCallback) {
     let typesToGet = getAllAliasesForTypes(aTypes);
 
-    XPIDatabase.getVisibleAddonsWithPendingOperations(typesToGet, function(aAddons) {
-      let results = aAddons.map(a => a.wrapper);
-      for (let install of XPIProvider.installs) {
-        if (install.state == AddonManager.STATE_INSTALLED &&
-            !(install.addon.inDatabase))
-          results.push(install.addon.wrapper);
-      }
-      aCallback(results);
-    });
+    let aAddons = await XPIDatabase.getVisibleAddonsWithPendingOperations(typesToGet);
+    let results = aAddons.map(a => a.wrapper);
+    for (let install of XPIProvider.installs) {
+      if (install.state == AddonManager.STATE_INSTALLED &&
+          !(install.addon.inDatabase))
+        results.push(install.addon.wrapper);
+    }
+    aCallback(results);
   },
 
   /**
@@ -3597,32 +3593,31 @@ var XPIProvider = {
    * @param  aCallback
    *         Function to call when operation is complete.
    */
-  updateAddonRepositoryData(aCallback) {
-    XPIDatabase.getVisibleAddons(null, aAddons => {
-      let pending = aAddons.length;
-      logger.debug("updateAddonRepositoryData found " + pending + " visible add-ons");
-      if (pending == 0) {
+  async updateAddonRepositoryData(aCallback) {
+    let aAddons = await XPIDatabase.getVisibleAddons(null);
+    let pending = aAddons.length;
+    logger.debug("updateAddonRepositoryData found " + pending + " visible add-ons");
+    if (pending == 0) {
+      aCallback();
+      return;
+    }
+
+    function notifyComplete() {
+      if (--pending == 0)
         aCallback();
-        return;
-      }
+    }
 
-      function notifyComplete() {
-        if (--pending == 0)
-          aCallback();
-      }
+    for (let addon of aAddons) {
+      AddonRepository.getCachedAddonByID(addon.id).then(aRepoAddon => {
+        if (aRepoAddon || AddonRepository.getCompatibilityOverridesSync(addon.id)) {
+          logger.debug("updateAddonRepositoryData got info for " + addon.id);
+          addon._repositoryAddon = aRepoAddon;
+          this.updateAddonDisabledState(addon);
+        }
 
-      for (let addon of aAddons) {
-        AddonRepository.getCachedAddonByID(addon.id).then(aRepoAddon => {
-          if (aRepoAddon || AddonRepository.getCompatibilityOverridesSync(addon.id)) {
-            logger.debug("updateAddonRepositoryData got info for " + addon.id);
-            addon._repositoryAddon = aRepoAddon;
-            this.updateAddonDisabledState(addon);
-          }
-
-          notifyComplete();
-        });
-      }
-    });
+        notifyComplete();
+      });
+    }
   },
 
   onDebugConnectionChange({what, connection}) {
@@ -4059,7 +4054,7 @@ var XPIProvider = {
    * @throws if the addon cannot be uninstalled because it is in an install
    *         location that does not allow it
    */
-  uninstallAddon(aAddon, aForcePending) {
+  async uninstallAddon(aAddon, aForcePending) {
     if (!(aAddon.inDatabase))
       throw new Error("Cannot uninstall addon " + aAddon.id + " because it is not installed");
 
@@ -4145,31 +4140,30 @@ var XPIProvider = {
       AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
 
       if (existingAddon) {
-        XPIDatabase.getAddonInLocation(aAddon.id, existingAddon.location.name, existing => {
-          XPIDatabase.makeAddonVisible(existing);
+        let existing = await XPIDatabase.getAddonInLocation(aAddon.id, existingAddon.location.name);
+        XPIDatabase.makeAddonVisible(existing);
 
-          let wrappedAddon = existing.wrapper;
-          AddonManagerPrivate.callAddonListeners("onInstalling", wrappedAddon, false);
+        let wrappedAddon = existing.wrapper;
+        AddonManagerPrivate.callAddonListeners("onInstalling", wrappedAddon, false);
 
-          if (!existing.disabled) {
-            XPIDatabase.updateAddonActive(existing, true);
-          }
+        if (!existing.disabled) {
+          XPIDatabase.updateAddonActive(existing, true);
+        }
 
-          if (aAddon.bootstrap) {
-            let method = callUpdate ? "update" : "install";
+        if (aAddon.bootstrap) {
+          let method = callUpdate ? "update" : "install";
+          XPIProvider.callBootstrapMethod(existing, existing._sourceBundle,
+                                          method, reason);
+
+          if (existing.active) {
             XPIProvider.callBootstrapMethod(existing, existing._sourceBundle,
-                                            method, reason);
-
-            if (existing.active) {
-              XPIProvider.callBootstrapMethod(existing, existing._sourceBundle,
-                                              "startup", reason);
-            } else {
-              XPIProvider.unloadBootstrapScope(existing.id);
-            }
+                                            "startup", reason);
+          } else {
+            XPIProvider.unloadBootstrapScope(existing.id);
           }
+        }
 
-          AddonManagerPrivate.callAddonListeners("onInstalled", wrappedAddon);
-        });
+        AddonManagerPrivate.callAddonListeners("onInstalled", wrappedAddon);
       }
     } else if (aAddon.bootstrap && aAddon.active) {
       this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown", reason);
