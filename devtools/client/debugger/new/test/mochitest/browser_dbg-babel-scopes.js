@@ -63,6 +63,22 @@ add_task(async function() {
 
   await breakpointScopes(
     dbg,
+    "line-start-bindings-es6",
+    { line: 19, column: 4 },
+    [
+      "Block",
+      ["<this>", '{\u2026}'],
+      ["one", "1"],
+      ["two", "2"],
+      "root",
+      ["aFunc", "(optimized away)"],
+      "Module",
+      "root()"
+    ]
+  );
+
+  await breakpointScopes(
+    dbg,
     "this-arguments-bindings",
     { line: 4, column: 4 },
     [
@@ -87,7 +103,7 @@ add_task(async function() {
     { line: 8, column: 6 },
     [
       "arrow",
-      ["argArrow", "(unmapped)"],
+      ["argArrow", "(optimized away)"],
       "Block",
       "arrow()",
       "fn",
