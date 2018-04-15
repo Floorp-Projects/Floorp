@@ -1081,9 +1081,15 @@ nsDisplayListBuilder::MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFra
 }
 
 void
-nsDisplayListBuilder::MarkFrameForDisplayIfVisible(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
+nsDisplayListBuilder::AddFrameMarkedForDisplayIfVisible(nsIFrame* aFrame)
 {
   mFramesMarkedForDisplayIfVisible.AppendElement(aFrame);
+}
+
+void
+nsDisplayListBuilder::MarkFrameForDisplayIfVisible(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
+{
+  AddFrameMarkedForDisplayIfVisible(aFrame);
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
     if (f->ForceDescendIntoIfVisible())
@@ -1294,13 +1300,16 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   state->mFirstFrameWithOOFData = mFramesWithOOFData.Length();
 
   nsIScrollableFrame* sf = state->mPresShell->GetRootScrollFrameAsScrollable();
-  if (sf) {
+  if (sf && IsInSubdocument()) {
     // We are forcing a rebuild of nsDisplayCanvasBackgroundColor to make sure
     // that the canvas background color will be set correctly, and that only one
     // unscrollable item will be created.
     // This is done to avoid, for example, a case where only scrollbar frames
     // are invalidated - we would skip creating nsDisplayCanvasBackgroundColor
     // and possibly end up with an extra nsDisplaySolidColor item.
+    // We skip this for the root document, since we don't want to use
+    // MarkFrameForDisplayIfVisible before ComputeRebuildRegion. We'll
+    // do it manually there.
     nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
     if (canvasFrame) {
       MarkFrameForDisplayIfVisible(canvasFrame, aReferenceFrame);
