@@ -1382,63 +1382,44 @@ RenderButton(CGContextRef cgContext, const HIRect& aRenderRect, void* aData)
   HIThemeDrawButton(&aRenderRect, bdi, cgContext, kHIThemeOrientationNormal, NULL);
 }
 
+static ThemeDrawState
+ToThemeDrawState(const nsNativeThemeCocoa::ControlParams& aParams)
+{
+  if (aParams.disabled) {
+    return kThemeStateUnavailable;
+  }
+  if (aParams.pressed) {
+    return kThemeStatePressed;
+  }
+  return kThemeStateActive;
+}
+
 void
-nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
-                               const HIRect& inBoxRect, bool inIsDefault,
-                               ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
-                               EventStates inState, nsIFrame* aFrame)
+nsNativeThemeCocoa::DrawHIThemeButton(CGContextRef cgContext, const HIRect& aRect,
+                                      ThemeButtonKind aKind, ThemeButtonValue aValue,
+                                      ThemeDrawState aState, ThemeButtonAdornment aAdornment,
+                                      const ControlParams& aParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  BOOL isActive = FrameIsInActiveWindow(aFrame);
-  BOOL isDisabled = IsDisabled(aFrame, inState);
-
   HIThemeButtonDrawInfo bdi;
   bdi.version = 0;
-  bdi.kind = inKind;
-  bdi.value = inValue;
-  bdi.adornment = inAdornment;
+  bdi.kind = aKind;
+  bdi.value = aValue;
+  bdi.state = aState;
+  bdi.adornment = aAdornment;
 
-  if (isDisabled) {
-    bdi.state = kThemeStateUnavailable;
-  }
-  else if (inState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER)) {
-    bdi.state = kThemeStatePressed;
-  }
-  else {
-    if (inKind == kThemeArrowButton)
-      bdi.state = kThemeStateUnavailable; // these are always drawn as unavailable
-    else
-      bdi.state = kThemeStateActive;
-  }
-
-  if (inState.HasState(NS_EVENT_STATE_FOCUS) && isActive)
+  if (aParams.focused && aParams.insideActiveWindow) {
     bdi.adornment |= kThemeAdornmentFocus;
+  }
 
-  if (inIsDefault && !isDisabled &&
-      !inState.HasState(NS_EVENT_STATE_ACTIVE)) {
-    bdi.adornment |= kThemeAdornmentDefault;
+  if ((aAdornment & kThemeAdornmentDefault) && !aParams.disabled) {
     bdi.animation.time.start = 0;
     bdi.animation.time.current = CFAbsoluteTimeGetCurrent();
   }
 
-  HIRect drawFrame = inBoxRect;
-
-  if (inKind == kThemePushButton) {
-    drawFrame.size.height -= 2;
-    if (inBoxRect.size.height < pushButtonSettings.naturalSizes[smallControlSize].height) {
-      bdi.kind = kThemePushButtonMini;
-    }
-    else if (inBoxRect.size.height < pushButtonSettings.naturalSizes[regularControlSize].height) {
-      bdi.kind = kThemePushButtonSmall;
-      drawFrame.origin.y -= 1;
-      drawFrame.origin.x += 1;
-      drawFrame.size.width -= 2;
-    }
-  }
-
-  RenderTransformedHIThemeControl(cgContext, drawFrame, RenderButton, &bdi,
-                                  IsFrameRTL(aFrame));
+  RenderTransformedHIThemeControl(cgContext, aRect, RenderButton, &bdi,
+                                  aParams.rtl);
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
@@ -1446,6 +1427,63 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
 #endif
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void
+nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, const HIRect& inBoxRect,
+                               const ButtonParams& aParams)
+{
+
+  ControlParams controlParams = aParams.controlParams;
+
+  switch (aParams.button) {
+    case ButtonType::eRegularPushButton:
+    case ButtonType::eDefaultPushButton: {
+      ThemeButtonAdornment adornment =
+        aParams.button == ButtonType::eDefaultPushButton ? kThemeAdornmentDefault
+                                                         : kThemeAdornmentNone;
+      HIRect drawFrame = inBoxRect;
+      drawFrame.size.height -= 2;
+      if (inBoxRect.size.height >= pushButtonSettings.naturalSizes[regularControlSize].height) {
+        DrawHIThemeButton(cgContext, drawFrame, kThemePushButton, kThemeButtonOff,
+                          ToThemeDrawState(controlParams), adornment, controlParams);
+        return;
+      }
+      if (inBoxRect.size.height >= pushButtonSettings.naturalSizes[smallControlSize].height) {
+        drawFrame.origin.y -= 1;
+        drawFrame.origin.x += 1;
+        drawFrame.size.width -= 2;
+        DrawHIThemeButton(cgContext, drawFrame, kThemePushButtonSmall, kThemeButtonOff,
+                          ToThemeDrawState(controlParams), adornment, controlParams);
+        return;
+      }
+      DrawHIThemeButton(cgContext, drawFrame, kThemePushButtonMini, kThemeButtonOff,
+                        ToThemeDrawState(controlParams), adornment, controlParams);
+      return;
+    }
+    case ButtonType::eRegularBevelButton:
+    case ButtonType::eDefaultBevelButton: {
+      ThemeButtonAdornment adornment =
+        aParams.button == ButtonType::eDefaultBevelButton ? kThemeAdornmentDefault
+                                                          : kThemeAdornmentNone;
+      DrawHIThemeButton(cgContext, inBoxRect, kThemeMediumBevelButton, kThemeButtonOff,
+                        ToThemeDrawState(controlParams), adornment, controlParams);
+      return;
+    }
+    case ButtonType::eArrowButton:
+      DrawHIThemeButton(cgContext, inBoxRect, kThemeArrowButton, kThemeButtonOn,
+                        kThemeStateUnavailable, kThemeAdornmentArrowDownArrow,
+                        controlParams);
+      return;
+    case ButtonType::eTreeTwistyPointingRight:
+      DrawHIThemeButton(cgContext, inBoxRect, kThemeDisclosureButton, kThemeDisclosureRight,
+                        ToThemeDrawState(controlParams), kThemeAdornmentNone, controlParams);
+      return;
+    case ButtonType::eTreeTwistyPointingDown:
+      DrawHIThemeButton(cgContext, inBoxRect, kThemeDisclosureButton, kThemeDisclosureDown,
+                        ToThemeDrawState(controlParams), kThemeAdornmentNone, controlParams);
+      return;
+  }
 }
 
 nsNativeThemeCocoa::TreeHeaderCellParams
@@ -2573,8 +2611,14 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
             !QueueAnimatedContentForRefresh(aFrame->GetContent(), 10)) {
           NS_WARNING("Unable to animate button!");
         }
-        DrawButton(cgContext, kThemePushButton, macRect, isInActiveWindow,
-                   kThemeButtonOff, kThemeAdornmentNone, eventState, aFrame);
+        bool hasDefaultButtonLook =
+          isInActiveWindow && !eventState.HasState(NS_EVENT_STATE_ACTIVE);
+        ButtonType buttonType =
+          hasDefaultButtonLook ? ButtonType::eDefaultPushButton
+                               : ButtonType::eRegularPushButton;
+        ControlParams params = ComputeControlParams(aFrame, eventState);
+        params.insideActiveWindow = isInActiveWindow;
+        DrawButton(cgContext, macRect, ButtonParams{params, buttonType});
       } else if (IsButtonTypeMenu(aFrame)) {
         DrawDropdown(cgContext, macRect, eventState, aWidgetType, aFrame);
       } else if (nativeWidgetHeight > DO_SQUARE_BUTTON_HEIGHT) {
@@ -2610,10 +2654,15 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
     }
       break;
 
-    case NS_THEME_BUTTON_BEVEL:
-      DrawButton(cgContext, kThemeMediumBevelButton, macRect,
-                 IsDefaultButton(aFrame), kThemeButtonOff, kThemeAdornmentNone,
-                 eventState, aFrame);
+    case NS_THEME_BUTTON_BEVEL: {
+      bool isDefaultButton = IsDefaultButton(aFrame);
+      ButtonType buttonType =
+        isDefaultButton ? ButtonType::eDefaultBevelButton
+                        : ButtonType::eRegularBevelButton;
+      DrawButton(cgContext, macRect,
+                 ButtonParams{ComputeControlParams(aFrame, eventState),
+                              buttonType});
+    }
       break;
 
     case NS_THEME_INNER_SPIN_BUTTON: {
@@ -2713,8 +2762,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_MENULIST_BUTTON:
-      DrawButton(cgContext, kThemeArrowButton, macRect, false, kThemeButtonOn,
-                 kThemeAdornmentArrowDownArrow, eventState, aFrame);
+      DrawButton(cgContext, macRect,
+                 ButtonParams{ComputeControlParams(aFrame, eventState),
+                              ButtonType::eArrowButton});
       break;
 
     case NS_THEME_GROUPBOX: {
@@ -2779,13 +2829,15 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_TREETWISTY:
-      DrawButton(cgContext, kThemeDisclosureButton, macRect, false,
-                 kThemeDisclosureRight, kThemeAdornmentNone, eventState, aFrame);
+      DrawButton(cgContext, macRect,
+                 ButtonParams{ComputeControlParams(aFrame, eventState),
+                              ButtonType::eTreeTwistyPointingRight});
       break;
 
     case NS_THEME_TREETWISTYOPEN:
-      DrawButton(cgContext, kThemeDisclosureButton, macRect, false,
-                 kThemeDisclosureDown, kThemeAdornmentNone, eventState, aFrame);
+      DrawButton(cgContext, macRect,
+                 ButtonParams{ComputeControlParams(aFrame, eventState),
+                              ButtonType::eTreeTwistyPointingDown});
       break;
 
     case NS_THEME_TREEHEADERCELL:
