@@ -25,12 +25,6 @@ Comment::~Comment()
 
 NS_IMPL_ISUPPORTS_INHERITED(Comment, CharacterData, nsIDOMNode)
 
-bool
-Comment::IsNodeOfType(uint32_t aFlags) const
-{
-  return !(aFlags & ~eCOMMENT);
-}
-
 already_AddRefed<CharacterData>
 Comment::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
