@@ -208,6 +208,35 @@ public:
     bool lastTreeHeaderCell = false;
   };
 
+  struct ScaleParams {
+    int32_t value = 0;
+    int32_t min = 0;
+    int32_t max = 0;
+    bool insideActiveWindow = false;
+    bool disabled = false;
+    bool focused = false;
+    bool horizontal = true;
+    bool reverse = false;
+  };
+
+  struct ScrollbarParams {
+    ScrollbarParams()
+      : overlay(false)
+      , rolledOver(false)
+      , small(false)
+      , horizontal(false)
+      , rtl(false)
+      , onDarkBackground(false)
+    {}
+
+    bool overlay : 1;
+    bool rolledOver : 1;
+    bool small : 1;
+    bool horizontal : 1;
+    bool rtl : 1;
+    bool onDarkBackground : 1;
+  };
+
   nsNativeThemeCocoa();
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -289,6 +318,12 @@ protected:
   MeterParams ComputeMeterParams(nsIFrame* aFrame);
   TreeHeaderCellParams ComputeTreeHeaderCellParams(nsIFrame* aFrame,
                                                    mozilla::EventStates aEventState);
+  ScaleParams ComputeXULScaleParams(nsIFrame* aFrame,
+                                    mozilla::EventStates aEventState,
+                                    bool aIsHorizontal);
+  mozilla::Maybe<ScaleParams> ComputeHTMLScaleParams(nsIFrame* aFrame,
+                                                     mozilla::EventStates aEventState);
+  ScrollbarParams ComputeScrollbarParams(nsIFrame* aFrame, bool aIsHorizontal);
 
   // HITheme drawing routines
   void DrawTextBox(CGContextRef context, const HIRect& inBoxRect,
@@ -299,9 +334,7 @@ protected:
                    const SegmentParams& aParams);
   void DrawTabPanel(CGContextRef context, const HIRect& inBoxRect, nsIFrame* aFrame);
   void DrawScale(CGContextRef context, const HIRect& inBoxRect,
-                 mozilla::EventStates inState, bool inDirection,
-                 bool inIsReverse, int32_t inCurrentValue, int32_t inMinValue,
-                 int32_t inMaxValue, nsIFrame* aFrame);
+                 const ScaleParams& aParams);
   void DrawCheckboxOrRadio(CGContextRef cgContext, bool inCheckbox,
                            const HIRect& inBoxRect,
                            const CheckboxOrRadioParams& aParams);
@@ -350,6 +383,10 @@ protected:
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
                      nsIFrame *aFrame);
   void DrawResizer(CGContextRef cgContext, const HIRect& aRect, nsIFrame *aFrame);
+  void DrawScrollbarThumb(CGContextRef cgContext, const CGRect& inBoxRect,
+                          ScrollbarParams aParams);
+  void DrawScrollbarTrack(CGContextRef cgContext, const CGRect& inBoxRect,
+                          ScrollbarParams aParams);
 
   // Scrollbars
   nsIFrame* GetParentScrollbarFrame(nsIFrame *aFrame);
