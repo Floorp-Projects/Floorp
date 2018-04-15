@@ -23,10 +23,10 @@ async function useBroadcastChannel(contentWindow) {
   count += 1;
   const name = `test_event_listener_leaks-${count}`;
 
-  let bc = new contentWindow.BroadcastChannel(name);
   let outer = new BroadcastChannel(name);
   outer.postMessage('foo');
 
+  let bc = new contentWindow.BroadcastChannel(name);
   await new Promise(resolve => {
     bc.onmessage = e => {
       contentWindow.messageCount += 1;
