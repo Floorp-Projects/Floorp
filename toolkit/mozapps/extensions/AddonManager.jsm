@@ -174,48 +174,6 @@ function safeCall(aCallback, ...aArgs) {
 }
 
 /**
- * Creates a function that will call the passed callback catching and logging
- * any exceptions.
- *
- * @param  aCallback
- *         The callback method to call
- */
-function makeSafe(aCallback) {
-  return function(...aArgs) {
-    safeCall(aCallback, ...aArgs);
-  };
-}
-
-/**
- * Given a promise and an optional callback, either:
- *
- * 1) Returns the promise, if no callback was provided, or,
- * 2) Calls the callback with the promise resolution value, and reports
- *    any errors.
- *
- * @param {Promise} promise
- *        The promise to return, or report to the callback function.
- * @param {function | null} callback
- *        The optional callback function to call with the promise
- *        resolution.
- * @returns {Promise?}
- */
-function promiseOrCallback(promise, callback) {
-  if (!callback)
-    return promise;
-
-  if (typeof callback !== "function")
-    throw Components.Exception("Callback must be a function",
-                               Cr.NS_ERROR_INVALID_ARG);
-
-  promise.then(makeSafe(callback)).catch(error => {
-    logger.error(error);
-  });
-
-  return undefined;
-}
-
-/**
  * Report an exception thrown by a provider API method.
  */
 function reportProviderError(aProvider, aMethod, aError) {
@@ -3386,19 +3344,14 @@ var AddonManager = {
     return err ? this._errorToString.get(err) : null;
   },
 
-  getInstallForURL(aUrl, aCallback, aMimetype,
-                                                 aHash, aName, aIcons,
-                                                 aVersion, aBrowser) {
-    return promiseOrCallback(
-      AddonManagerInternal.getInstallForURL(aUrl, aMimetype, aHash,
-                                            aName, aIcons, aVersion, aBrowser),
-      aCallback);
+  getInstallForURL(aUrl, aMimetype, aHash, aName, aIcons,
+                   aVersion, aBrowser) {
+    return AddonManagerInternal.getInstallForURL(aUrl, aMimetype, aHash,
+                                                 aName, aIcons, aVersion, aBrowser);
   },
 
-  getInstallForFile(aFile, aCallback, aMimetype) {
-    return promiseOrCallback(
-      AddonManagerInternal.getInstallForFile(aFile, aMimetype),
-      aCallback);
+  getInstallForFile(aFile, aMimetype) {
+      return AddonManagerInternal.getInstallForFile(aFile, aMimetype);
   },
 
   /**

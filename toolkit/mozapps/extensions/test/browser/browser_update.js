@@ -18,7 +18,7 @@ function test() {
 
 // Install a first version
 add_test(async function() {
-  let aInstall = await AddonManager.getInstallForURL(TESTROOT + "addons/browser_update1_1.xpi", null, "application/x-xpinstall");
+  let aInstall = await AddonManager.getInstallForURL(TESTROOT + "addons/browser_update1_1.xpi", "application/x-xpinstall");
   aInstall.install();
 
   Services.ppmm.addMessageListener("my-addon-1", function messageListener() {
@@ -30,7 +30,7 @@ add_test(async function() {
 
 // Update to a second version and verify that content gets updated
 add_test(async function() {
-  let aInstall = await AddonManager.getInstallForURL(TESTROOT + "addons/browser_update1_2.xpi", null, "application/x-xpinstall");
+  let aInstall = await AddonManager.getInstallForURL(TESTROOT + "addons/browser_update1_2.xpi", "application/x-xpinstall");
   aInstall.install();
 
   Services.ppmm.addMessageListener("my-addon-2", function messageListener() {

@@ -103,7 +103,7 @@ async function test() {
 
   Services.prefs.setBoolPref("extensions.logging.enabled", true);
 
-  let aInstall = await AddonManager.getInstallForURL(TESTROOT + "theme.xpi", null, "application/x-xpinstall");
+  let aInstall = await AddonManager.getInstallForURL(TESTROOT + "theme.xpi", "application/x-xpinstall");
   aInstall.addListener({
     async onInstallEnded() {
       let aAddon = await AddonManager.getAddonByID("theme-xpi@tests.mozilla.org");

@@ -95,7 +95,7 @@ add_test(async function test_fetch_by_guid_unknown_guid() {
 });
 
 // Ensure setting an extension to an existing syncGUID results in error.
-add_test(function test_error_on_duplicate_syncguid_insert() {
+add_test(async function test_error_on_duplicate_syncguid_insert() {
   const installNames = ["test_install1", "test_install2_1"];
   const installIDs = ["addon1@tests.mozilla.org", "addon2@tests.mozilla.org"];
 
@@ -130,10 +130,10 @@ add_test(function test_error_on_duplicate_syncguid_insert() {
   };
 
   AddonManager.addInstallListener(listener);
-  let getInstallCB = function(install) { install.install(); };
 
   for (let xpi of XPIS) {
-    AddonManager.getInstallForFile(xpi, getInstallCB);
+    let install = await AddonManager.getInstallForFile(xpi);
+    install.install();
   }
 });
 

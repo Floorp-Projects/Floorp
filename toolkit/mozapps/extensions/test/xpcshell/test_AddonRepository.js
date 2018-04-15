@@ -185,15 +185,12 @@ add_task(async function setup() {
   await promiseRestartManager();
 
   // Create an active AddonInstall so can check that it isn't returned in the results
-  let install = await AddonManager.getInstallForURL(BASE_URL + INSTALL_URL2,
-                                                    undefined,
-                                                    "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(BASE_URL + INSTALL_URL2, "application/x-xpinstall");
   let promise = promiseCompleteInstall(install);
   registerCleanupFunction(() => promise);
 
   // Create a non-active AddonInstall so can check that it is returned in the results
-  await AddonManager.getInstallForURL(BASE_URL + INSTALL_URL3,
-                                      undefined, "application/x-xpinstall");
+  await AddonManager.getInstallForURL(BASE_URL + INSTALL_URL3, "application/x-xpinstall");
 });
 
 // Tests homepageURL and getSearchURL()

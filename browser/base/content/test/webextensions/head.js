@@ -73,7 +73,7 @@ function promiseInstallEvent(addon, event) {
  *          object as the resolution value.
  */
 async function promiseInstallAddon(url) {
-  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
   install.install();
 
   let addon = await new Promise(resolve => {

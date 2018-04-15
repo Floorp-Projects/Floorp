@@ -524,7 +524,7 @@ function promiseAddonsByIDs(aIDs) {
  */
 function install_addon(path, cb, pathPrefix = TESTROOT) {
   let p = new Promise(async (resolve, reject) => {
-    let install = await AddonManager.getInstallForURL(pathPrefix + path, null, "application/x-xpinstall");
+    let install = await AddonManager.getInstallForURL(pathPrefix + path, "application/x-xpinstall");
     install.addListener({
       onInstallEnded: () => resolve(install.addon),
     });

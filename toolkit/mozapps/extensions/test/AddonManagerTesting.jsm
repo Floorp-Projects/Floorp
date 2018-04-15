@@ -89,7 +89,7 @@ var AddonManagerTesting = {
   installXPIFromURL(url, hash, name, iconURL, version) {
     return new Promise(async (resolve, reject) => {
 
-      let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", hash, name, iconURL, version);
+      let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall", hash, name, iconURL, version);
       let fail = () => { reject(new Error("Add-on install failed.")); };
 
       let listener = {

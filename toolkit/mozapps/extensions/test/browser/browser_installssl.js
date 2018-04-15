@@ -80,7 +80,7 @@ function run_install_tests(callback) {
                 mainURL;
     }
 
-    let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+    let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
     gPendingInstall = install;
     install.addListener({
       onDownloadEnded(install) {

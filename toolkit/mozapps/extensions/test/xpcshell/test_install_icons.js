@@ -21,7 +21,7 @@ function run_test() {
 }
 
 async function test_1() {
-  let aInstall = await AddonManager.getInstallForURL(addon_url, null, "application/x-xpinstall", null, null, null, null, null);
+  let aInstall = await AddonManager.getInstallForURL(addon_url, "application/x-xpinstall", null, null, null, null, null);
   Assert.equal(aInstall.iconURL, null);
   Assert.notEqual(aInstall.icons, null);
   Assert.equal(aInstall.icons[32], undefined);
@@ -30,7 +30,7 @@ async function test_1() {
 }
 
 async function test_2() {
-  let aInstall = await AddonManager.getInstallForURL(addon_url, null, "application/x-xpinstall", null, null, icon32_url, null, null);
+  let aInstall = await AddonManager.getInstallForURL(addon_url, "application/x-xpinstall", null, null, icon32_url, null, null);
   Assert.equal(aInstall.iconURL, icon32_url);
   Assert.notEqual(aInstall.icons, null);
   Assert.equal(aInstall.icons[32], icon32_url);
@@ -39,7 +39,7 @@ async function test_2() {
 }
 
 async function test_3() {
-  let aInstall = await AddonManager.getInstallForURL(addon_url, null, "application/x-xpinstall", null, null, { "32": icon32_url }, null, null);
+  let aInstall = await AddonManager.getInstallForURL(addon_url, "application/x-xpinstall", null, null, { "32": icon32_url }, null, null);
   Assert.equal(aInstall.iconURL, icon32_url);
   Assert.notEqual(aInstall.icons, null);
   Assert.equal(aInstall.icons[32], icon32_url);
@@ -48,7 +48,7 @@ async function test_3() {
 }
 
 async function test_4() {
-  let aInstall = await AddonManager.getInstallForURL(addon_url, null, "application/x-xpinstall", null, null, { "32": icon32_url, "64": icon64_url }, null, null);
+  let aInstall = await AddonManager.getInstallForURL(addon_url, "application/x-xpinstall", null, null, { "32": icon32_url, "64": icon64_url }, null, null);
   Assert.equal(aInstall.iconURL, icon32_url);
   Assert.notEqual(aInstall.icons, null);
   Assert.equal(aInstall.icons[32], icon32_url);

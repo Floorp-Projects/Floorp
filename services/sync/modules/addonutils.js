@@ -38,13 +38,7 @@ AddonUtilsInternal.prototype = {
     // of sourceURI rewriting, we can avoid having to reconstruct the
     // AddonInstall.
     return AddonManager.getInstallForURL(
-      addon.sourceURI.spec,
-      null,
-      "application/x-xpinstall",
-      undefined,
-      addon.name,
-      addon.iconURL,
-      addon.version
+      addon.sourceURI.spec, "application/x-xpinstall", undefined, addon.name, addon.iconURL, addon.version
     );
   },
 

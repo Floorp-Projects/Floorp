@@ -126,7 +126,7 @@ add_task(async function test_addon_over_pointer() {
   testserver.registerFile("/addons/test_filepointer.xpi", xpi);
 
   let url = "http://example.com/addons/test_filepointer.xpi";
-  let install = await AddonManager.getInstallForURL(url, undefined, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
   await new Promise(resolve => {
     ensure_test_completed();
 
