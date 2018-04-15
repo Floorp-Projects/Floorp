@@ -498,18 +498,15 @@ public:
    * Return this node as an Element.  Should only be used for nodes
    * for which IsElement() is true.  This is defined inline in Element.h.
    */
-  mozilla::dom::Element* AsElement();
-  const mozilla::dom::Element* AsElement() const;
+  inline mozilla::dom::Element* AsElement();
+  inline const mozilla::dom::Element* AsElement() const;
 
   /**
    * Return this node as nsIContent.  Should only be used for nodes for which
    * IsContent() is true.  This is defined inline in nsIContent.h.
    */
-  nsIContent* AsContent();
-  const nsIContent* AsContent() const
-  {
-    return const_cast<nsINode*>(this)->AsContent();
-  }
+  inline nsIContent* AsContent();
+  inline const nsIContent* AsContent() const;
 
   /*
    * Return whether the node is a Text node (which might be an actual
@@ -525,15 +522,15 @@ public:
    * Return this node as Text if it is one, otherwise null.  This is defined
    * inline in Text.h.
    */
-  mozilla::dom::Text* GetAsText();
-  const mozilla::dom::Text* GetAsText() const;
+  inline mozilla::dom::Text* GetAsText();
+  inline const mozilla::dom::Text* GetAsText() const;
 
   /**
    * Return this node as Text.  Asserts IsText().  This is defined inline in
    * Text.h.
    */
-  mozilla::dom::Text* AsText();
-  const mozilla::dom::Text* AsText() const;
+  inline mozilla::dom::Text* AsText();
+  inline const mozilla::dom::Text* AsText() const;
 
   /*
    * Return whether the node is a ProcessingInstruction node.
@@ -1011,12 +1008,12 @@ public:
 
   /**
    * Get the parent nsINode for this node if it is an Element.
+   *
+   * Defined inline in Element.h
+   *
    * @return the parent node
    */
-  mozilla::dom::Element* GetParentElement() const
-  {
-    return mParent && mParent->IsElement() ? mParent->AsElement() : nullptr;
-  }
+  inline mozilla::dom::Element* GetParentElement() const;
 
   /**
    * Get the parent Element of this node, traversing over a ShadowRoot
