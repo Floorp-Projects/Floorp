@@ -10,9 +10,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(this, "dump", () =>
+    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
+                       {}).AndroidLog.d.bind(null, "ViewContent"));
+
+function debug(aMsg) {
+  // dump(aMsg);
+}
+
 class GeckoViewContent extends GeckoViewContentModule {
   onEnable() {
-    debug `onEnable`;
+    debug("onEnable");
 
     addEventListener("DOMTitleChanged", this, false);
     addEventListener("DOMWindowFocus", this, false);
@@ -32,7 +40,7 @@ class GeckoViewContent extends GeckoViewContentModule {
   }
 
   onDisable() {
-    debug `onDisable`;
+    debug("onDisable");
 
     removeEventListener("DOMTitleChanged", this);
     removeEventListener("DOMWindowFocus", this);
@@ -52,7 +60,7 @@ class GeckoViewContent extends GeckoViewContentModule {
   }
 
   receiveMessage(aMsg) {
-    debug `receiveMessage: ${aMsg.name}`;
+    debug("receiveMessage " + aMsg.name);
 
     switch (aMsg.name) {
       case "GeckoView:DOMFullscreenEntered":
@@ -117,7 +125,7 @@ class GeckoViewContent extends GeckoViewContentModule {
   }
 
   handleEvent(aEvent) {
-    debug `handleEvent: ${aEvent.type}`;
+    debug("handleEvent " + aEvent.type);
 
     switch (aEvent.type) {
       case "contextmenu":
@@ -189,5 +197,4 @@ class GeckoViewContent extends GeckoViewContentModule {
   }
 }
 
-let {debug, warn} = GeckoViewContent.initLogging("GeckoViewContent");
-let module = GeckoViewContent.create(this);
+var contentListener = new GeckoViewContent("GeckoViewContent", this);

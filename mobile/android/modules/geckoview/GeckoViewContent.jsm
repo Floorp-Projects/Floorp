@@ -9,6 +9,14 @@ var EXPORTED_SYMBOLS = ["GeckoViewContent"];
 ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "dump", () =>
+    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
+                       {}).AndroidLog.d.bind(null, "ViewContent"));
+
+function debug(aMsg) {
+  // dump(aMsg);
+}
+
 class GeckoViewContent extends GeckoViewModule {
   onInit() {
     this.eventDispatcher.registerListener(this, [
@@ -47,8 +55,7 @@ class GeckoViewContent extends GeckoViewModule {
 
   // Bundle event handler.
   onEvent(aEvent, aData, aCallback) {
-    debug `onEvent: event=${aEvent}, data=${aData}`;
-
+    debug("onEvent: " + aEvent);
     switch (aEvent) {
       case "GeckoViewContent:ExitFullScreen":
         this.messageManager.sendAsyncMessage("GeckoView:DOMFullscreenExited");
@@ -72,7 +79,7 @@ class GeckoViewContent extends GeckoViewModule {
 
   // DOM event handler
   handleEvent(aEvent) {
-    debug `handleEvent: ${aEvent.type}`;
+    debug("handleEvent: aEvent.type=" + aEvent.type);
 
     switch (aEvent.type) {
       case "MozDOMFullscreen:Entered":
@@ -89,7 +96,7 @@ class GeckoViewContent extends GeckoViewModule {
 
   // Message manager event handler.
   receiveMessage(aMsg) {
-    debug `receiveMessage: ${aMsg.name}`;
+    debug("receiveMessage " + aMsg.name);
 
     switch (aMsg.name) {
       case "GeckoView:DOMFullscreenExit":

@@ -10,17 +10,25 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(this, "dump", () =>
+    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
+                       {}).AndroidLog.d.bind(null, "ViewSettings[C]"));
+
+function debug(aMsg) {
+  // dump(aMsg);
+}
+
 // Handles GeckoView content settings including:
 // * tracking protection
 // * desktop mode
 class GeckoViewContentSettings extends GeckoViewContentModule {
   onInit() {
-    debug `onInit`;
+    debug("onInit");
     this._useDesktopMode = false;
   }
 
   onSettingsUpdate() {
-    debug `onSettingsUpdate`;
+    debug("onSettingsUpdate");
 
     this.displayMode = this.settings.displayMode;
     this.useTrackingProtection = !!this.settings.useTrackingProtection;
@@ -63,5 +71,4 @@ class GeckoViewContentSettings extends GeckoViewContentModule {
   }
 }
 
-let {debug, warn} = GeckoViewContentSettings.initLogging("GeckoViewSettings");
-let module = GeckoViewContentSettings.create(this);
+var settings = new GeckoViewContentSettings("GeckoViewSettings", this);
