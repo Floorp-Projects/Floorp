@@ -391,8 +391,7 @@ HTMLEditor::FindSelectionRoot(nsINode* aNode)
     return nullptr;
   }
 
-  NS_PRECONDITION(aNode->IsNodeOfType(nsINode::eDOCUMENT) ||
-                  aNode->IsContent(),
+  NS_PRECONDITION(aNode->IsDocument() || aNode->IsContent(),
                   "aNode must be content or document node");
 
   nsCOMPtr<nsIDocument> doc = aNode->GetComposedDoc();

@@ -364,7 +364,7 @@ IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
   } else {
     mRootContent = mEditableNode->GetSelectionRootContent(presShell);
   }
-  if (!mRootContent && mEditableNode->IsNodeOfType(nsINode::eDOCUMENT)) {
+  if (!mRootContent && mEditableNode->IsDocument()) {
     // The document node is editable, but there are no contents, this document
     // is not editable.
     return false;

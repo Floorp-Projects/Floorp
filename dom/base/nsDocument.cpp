@@ -4160,7 +4160,7 @@ nsIDocument::FindContentForSubDocument(nsIDocument *aDocument) const
 bool
 nsIDocument::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~eDOCUMENT);
+  return false;
 }
 
 Element*

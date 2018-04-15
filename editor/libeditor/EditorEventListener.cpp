@@ -1073,8 +1073,7 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
 
   // If the target is a document node but it's not editable, we should ignore
   // it because actual focused element's event is going to come.
-  if (node->IsNodeOfType(nsINode::eDOCUMENT) &&
-      !node->HasFlag(NODE_IS_EDITABLE)) {
+  if (node->IsDocument() && !node->HasFlag(NODE_IS_EDITABLE)) {
     return NS_OK;
   }
 
