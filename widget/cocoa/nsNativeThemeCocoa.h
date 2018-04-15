@@ -62,6 +62,12 @@ public:
     bool rtl : 1;
   };
 
+  struct TreeHeaderCellParams {
+    ControlParams controlParams;
+    TreeSortDirection sortDirection = eTreeSortDirection_Natural;
+    bool lastTreeHeaderCell = false;
+  };
+
   nsNativeThemeCocoa();
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -127,6 +133,8 @@ protected:
   bool IsWindowSheet(nsIFrame* aFrame);
   ControlParams ComputeControlParams(nsIFrame* aFrame,
                                      mozilla::EventStates aEventState);
+  TreeHeaderCellParams ComputeTreeHeaderCellParams(nsIFrame* aFrame,
+                                                   mozilla::EventStates aEventState);
 
   // HITheme drawing routines
   void DrawFrame(CGContextRef context, HIThemeFrameKind inKind,
@@ -165,6 +173,8 @@ protected:
                   const HIRect& inBoxRect, bool inIsDefault, 
                   ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
                   mozilla::EventStates inState, nsIFrame* aFrame);
+  void DrawTreeHeaderCell(CGContextRef context, const HIRect& inBoxRect,
+                          const TreeHeaderCellParams& aParams);
   void DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect,
                         mozilla::EventStates inState, uint8_t aWidgetType,
                         nsIFrame* aFrame);
