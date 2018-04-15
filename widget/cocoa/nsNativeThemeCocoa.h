@@ -74,6 +74,11 @@ public:
     eDisclosureButtonOpen
   };
 
+  enum class SpinButton : uint8_t {
+    eUp,
+    eDown
+  };
+
   struct ControlParams {
     ControlParams()
       : disabled(false)
@@ -127,6 +132,12 @@ public:
     ControlParams controlParams;
     bool pullsDown = false;
     bool editable = false;
+  };
+
+  struct SpinButtonParams {
+    mozilla::Maybe<SpinButton> pressedButton;
+    bool disabled = false;
+    bool insideActiveWindow = false;
   };
 
   struct TreeHeaderCellParams {
@@ -261,15 +272,13 @@ protected:
                         nsIFrame* aFrame);
   void DrawDropdown(CGContextRef context, const HIRect& inBoxRect,
                     const DropdownParams& aParams);
-  void DrawSpinButtons(CGContextRef context, ThemeButtonKind inKind,
-                       const HIRect& inBoxRect, ThemeDrawState inDrawState,
-                       ThemeButtonAdornment inAdornment,
-                       mozilla::EventStates inState, nsIFrame* aFrame);
-  void DrawSpinButton(CGContextRef context, ThemeButtonKind inKind,
-                      const HIRect& inBoxRect, ThemeDrawState inDrawState,
-                      ThemeButtonAdornment inAdornment,
-                      mozilla::EventStates inState,
-                      nsIFrame* aFrame, uint8_t aWidgetType);
+  HIThemeButtonDrawInfo SpinButtonDrawInfo(ThemeButtonKind aKind,
+                                           const SpinButtonParams& aParams);
+  void DrawSpinButtons(CGContextRef context, const HIRect& inBoxRect,
+                       const SpinButtonParams& aParams);
+  void DrawSpinButton(CGContextRef context,
+                      const HIRect& inBoxRect, SpinButton aDrawnButton,
+                      const SpinButtonParams& aParams);
   void DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                           NSWindow* aWindow);
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
