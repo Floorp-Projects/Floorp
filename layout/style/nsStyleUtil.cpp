@@ -746,8 +746,7 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild,
 {
   bool isText = aChild->IsText();
 
-  if (!isText && !aChild->IsComment() &&
-      !aChild->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
+  if (!isText && !aChild->IsComment() && !aChild->IsProcessingInstruction()) {
     return true;
   }
 
@@ -762,8 +761,7 @@ nsStyleUtil::ThreadSafeIsSignificantChild(const nsIContent* aChild,
 {
   bool isText = aChild->IsText();
 
-  if (!isText && !aChild->IsComment() &&
-      !aChild->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
+  if (!isText && !aChild->IsComment() && !aChild->IsProcessingInstruction()) {
     return true;
   }
 
