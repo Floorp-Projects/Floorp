@@ -298,15 +298,14 @@ add_test(function() {
   gManagerWindow.loadView("addons://detail/4@personas.mozilla.org");
   wait_for_view_load(gManagerWindow, function() {
 
-    gContextMenu.addEventListener("popupshown", function() {
+    gContextMenu.addEventListener("popupshown", async function() {
       check_contextmenu(true, false, false, true, false);
 
       gContextMenu.hidePopup();
 
-      AddonManager.getAddonByID("4@personas.mozilla.org", function(aAddon) {
-        aAddon.uninstall();
-        run_next_test();
-      });
+      let aAddon = await AddonManager.getAddonByID("4@personas.mozilla.org");
+      aAddon.uninstall();
+      run_next_test();
     }, {once: true});
 
     info("Opening context menu on disabled LW theme, in detail view");

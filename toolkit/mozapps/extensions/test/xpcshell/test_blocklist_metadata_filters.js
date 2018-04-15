@@ -65,7 +65,7 @@ function end_test() {
   do_test_finished();
 }
 
-function run_test() {
+async function run_test() {
   do_test_pending();
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
@@ -118,28 +118,26 @@ function run_test() {
 
   startupManager();
 
-  AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
-                               "block2@tests.mozilla.org",
-                               "block3@tests.mozilla.org"], function([a1, a2, a3]) {
-    Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-    Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-    Assert.equal(a3.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+  let [a1, a2, a3] = await AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
+                                                        "block2@tests.mozilla.org",
+                                                        "block3@tests.mozilla.org"]);
+  Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+  Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+  Assert.equal(a3.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 
-    run_test_1();
-  });
+  run_test_1();
 }
 
 function run_test_1() {
-  load_blocklist("test_blocklist_metadata_filters_1.xml", function() {
+  load_blocklist("test_blocklist_metadata_filters_1.xml", async function() {
     restartManager();
 
-    AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
-                                 "block2@tests.mozilla.org",
-                                 "block3@tests.mozilla.org"], function([a1, a2, a3]) {
-      Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-      Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
-      Assert.equal(a3.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-      end_test();
-    });
+    let [a1, a2, a3] = await AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
+                                                          "block2@tests.mozilla.org",
+                                                          "block3@tests.mozilla.org"]);
+    Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
+    Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
+    Assert.equal(a3.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+    end_test();
   });
 }

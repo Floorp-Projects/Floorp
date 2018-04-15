@@ -382,7 +382,7 @@ BrowserGlue.prototype = {
   },
 
   // nsIObserver implementation
-  observe: function BG_observe(subject, topic, data) {
+  observe: async function BG_observe(subject, topic, data) {
     switch (topic) {
       case "notifications-open-settings":
         this._openPreferences("privacy", { origin: "notifOpenSettings" });
@@ -553,14 +553,10 @@ BrowserGlue.prototype = {
         break;
       case "xpi-signature-changed":
         let disabledAddons = JSON.parse(data).disabled;
-        AddonManager.getAddonsByIDs(disabledAddons, (addons) => {
-          for (let addon of addons) {
-            if (addon.type != "experiment") {
-              this._notifyUnsignedAddonsDisabled();
-              break;
-            }
-          }
-        });
+        let addons = await AddonManager.getAddonsByIDs(disabledAddons);
+        if (addons.some(addon => addon)) {
+          this._notifyUnsignedAddonsDisabled();
+        }
         break;
       case "sync-ui-state:update":
         this._updateFxaBadges();
@@ -1102,11 +1098,8 @@ BrowserGlue.prototype = {
 
     if (signingRequired) {
       let disabledAddons = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
-      AddonManager.getAddonsByIDs(disabledAddons, (addons) => {
+      AddonManager.getAddonsByIDs(disabledAddons).then(addons => {
         for (let addon of addons) {
-          if (addon.type == "experiment")
-            continue;
-
           if (addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
             this._notifyUnsignedAddonsDisabled();
             break;

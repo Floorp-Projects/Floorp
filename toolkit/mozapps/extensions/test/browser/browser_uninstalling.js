@@ -87,46 +87,45 @@ add_test(function() {
   var list = gDocument.getElementById("addon-list");
 
   // Select the extensions category
-  gCategoryUtilities.openType("extension", function() {
+  gCategoryUtilities.openType("extension", async function() {
     is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
-    AddonManager.getAddonByID(ID, function(aAddon) {
-      ok(aAddon.isActive, "Add-on should be active");
-      ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+    let aAddon = await AddonManager.getAddonByID(ID);
+    ok(aAddon.isActive, "Add-on should be active");
+    ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
+    ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
 
-      var item = get_item_in_list(ID, list);
-      isnot(item, null, "Should have found the add-on in the list");
+    var item = get_item_in_list(ID, list);
+    isnot(item, null, "Should have found the add-on in the list");
 
-      var button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
-      isnot(button, null, "Should have a remove button");
-      ok(!button.disabled, "Button should not be disabled");
+    var button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
+    isnot(button, null, "Should have a remove button");
+    ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
-      // Force XBL to apply
-      item.clientTop;
+    // Force XBL to apply
+    item.clientTop;
 
-      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
+    is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-      ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
-      ok(!aAddon.isActive, "Add-on should be inactive");
+    ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
+    ok(!aAddon.isActive, "Add-on should be inactive");
 
-      button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
-      isnot(button, null, "Should have an undo button");
+    button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
+    isnot(button, null, "Should have an undo button");
 
-      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
-      // Force XBL to apply
-      item.clientTop;
+    // Force XBL to apply
+    item.clientTop;
 
-      ok(aAddon.isActive, "Add-on should be active");
-      button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
-      isnot(button, null, "Should have a remove button");
-      ok(!button.disabled, "Button should not be disabled");
+    ok(aAddon.isActive, "Add-on should be active");
+    button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
+    isnot(button, null, "Should have a remove button");
+    ok(!button.disabled, "Button should not be disabled");
 
-      run_next_test();
-    });
+    run_next_test();
   });
 });
 
@@ -137,51 +136,50 @@ add_test(function() {
   var list = gDocument.getElementById("addon-list");
 
   // Select the extensions category
-  gCategoryUtilities.openType("extension", function() {
+  gCategoryUtilities.openType("extension", async function() {
     is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
-    AddonManager.getAddonByID(ID, function(aAddon) {
-      aAddon.userDisabled = true;
+    let aAddon = await AddonManager.getAddonByID(ID);
+    aAddon.userDisabled = true;
 
-      ok(!aAddon.isActive, "Add-on should be inactive");
-      ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+    ok(!aAddon.isActive, "Add-on should be inactive");
+    ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
+    ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
 
-      var item = get_item_in_list(ID, list);
-      isnot(item, null, "Should have found the add-on in the list");
+    var item = get_item_in_list(ID, list);
+    isnot(item, null, "Should have found the add-on in the list");
 
-      var button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
-      isnot(button, null, "Should have a remove button");
-      ok(!button.disabled, "Button should not be disabled");
+    var button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
+    isnot(button, null, "Should have a remove button");
+    ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
-      // Force XBL to apply
-      item.clientTop;
+    // Force XBL to apply
+    item.clientTop;
 
-      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
+    is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-      ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
-      ok(!aAddon.isActive, "Add-on should be inactive");
+    ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
+    ok(!aAddon.isActive, "Add-on should be inactive");
 
-      button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
-      isnot(button, null, "Should have an undo button");
+    button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
+    isnot(button, null, "Should have an undo button");
 
-      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
-      // Force XBL to apply
-      item.clientTop;
+    // Force XBL to apply
+    item.clientTop;
 
-      ok(!aAddon.isActive, "Add-on should be inactive");
-      button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
-      isnot(button, null, "Should have a remove button");
-      ok(!button.disabled, "Button should not be disabled");
+    ok(!aAddon.isActive, "Add-on should be inactive");
+    button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
+    isnot(button, null, "Should have a remove button");
+    ok(!button.disabled, "Button should not be disabled");
 
-      aAddon.userDisabled = false;
-      ok(aAddon.isActive, "Add-on should be active");
+    aAddon.userDisabled = false;
+    ok(aAddon.isActive, "Add-on should be active");
 
-      run_next_test();
-    });
+    run_next_test();
   });
 });
 
@@ -192,56 +190,55 @@ add_test(function() {
   var list = gDocument.getElementById("addon-list");
 
   // Select the extensions category
-  gCategoryUtilities.openType("extension", function() {
+  gCategoryUtilities.openType("extension", async function() {
     is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
-    AddonManager.getAddonByID(ID, function(aAddon) {
-      ok(aAddon.isActive, "Add-on should be active");
-      ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+    let aAddon = await AddonManager.getAddonByID(ID);
+    ok(aAddon.isActive, "Add-on should be active");
+    ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
+    ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
 
-      var item = get_item_in_list(ID, list);
-      isnot(item, null, "Should have found the add-on in the list");
+    var item = get_item_in_list(ID, list);
+    isnot(item, null, "Should have found the add-on in the list");
 
-      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
-      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
+    wait_for_view_load(gManagerWindow, function() {
+      is(get_current_view(gManagerWindow).id, "detail-view", "Should be in the detail view");
+
+      var button = gDocument.getElementById("detail-uninstall-btn");
+      isnot(button, null, "Should have a remove button");
+      ok(!button.disabled, "Button should not be disabled");
+
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
+
       wait_for_view_load(gManagerWindow, function() {
-        is(get_current_view(gManagerWindow).id, "detail-view", "Should be in the detail view");
+        is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
-        var button = gDocument.getElementById("detail-uninstall-btn");
-        isnot(button, null, "Should have a remove button");
-        ok(!button.disabled, "Button should not be disabled");
+        var item = get_item_in_list(ID, list);
+        isnot(item, null, "Should have found the add-on in the list");
+        is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
+
+        ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
+        ok(!aAddon.isActive, "Add-on should be inactive");
+
+        // Force XBL to apply
+        item.clientTop;
+
+        button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
+        isnot(button, null, "Should have an undo button");
 
         EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
-        wait_for_view_load(gManagerWindow, function() {
-          is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
+        // Force XBL to apply
+        item.clientTop;
 
-          var item = get_item_in_list(ID, list);
-          isnot(item, null, "Should have found the add-on in the list");
-          is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
+        ok(aAddon.isActive, "Add-on should be active");
+        button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
+        isnot(button, null, "Should have a remove button");
+        ok(!button.disabled, "Button should not be disabled");
 
-          ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
-          ok(!aAddon.isActive, "Add-on should be inactive");
-
-          // Force XBL to apply
-          item.clientTop;
-
-          button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
-          isnot(button, null, "Should have an undo button");
-
-          EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
-
-          // Force XBL to apply
-          item.clientTop;
-
-          ok(aAddon.isActive, "Add-on should be active");
-          button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
-          isnot(button, null, "Should have a remove button");
-          ok(!button.disabled, "Button should not be disabled");
-
-          run_next_test();
-        });
+        run_next_test();
       });
     });
   });
@@ -254,61 +251,60 @@ add_test(function() {
   var list = gDocument.getElementById("addon-list");
 
   // Select the extensions category
-  gCategoryUtilities.openType("extension", function() {
+  gCategoryUtilities.openType("extension", async function() {
     is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
-    AddonManager.getAddonByID(ID, function(aAddon) {
-      aAddon.userDisabled = true;
+    let aAddon = await AddonManager.getAddonByID(ID);
+    aAddon.userDisabled = true;
 
-      ok(!aAddon.isActive, "Add-on should be inactive");
-      ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+    ok(!aAddon.isActive, "Add-on should be inactive");
+    ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
+    ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
 
-      var item = get_item_in_list(ID, list);
-      isnot(item, null, "Should have found the add-on in the list");
+    var item = get_item_in_list(ID, list);
+    isnot(item, null, "Should have found the add-on in the list");
 
-      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
-      EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
+    wait_for_view_load(gManagerWindow, function() {
+      is(get_current_view(gManagerWindow).id, "detail-view", "Should be in the detail view");
+
+      var button = gDocument.getElementById("detail-uninstall-btn");
+      isnot(button, null, "Should have a remove button");
+      ok(!button.disabled, "Button should not be disabled");
+
+      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
+
       wait_for_view_load(gManagerWindow, function() {
-        is(get_current_view(gManagerWindow).id, "detail-view", "Should be in the detail view");
+        is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
-        var button = gDocument.getElementById("detail-uninstall-btn");
-        isnot(button, null, "Should have a remove button");
-        ok(!button.disabled, "Button should not be disabled");
+        var item = get_item_in_list(ID, list);
+        isnot(item, null, "Should have found the add-on in the list");
+        is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
+
+        ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
+        ok(!aAddon.isActive, "Add-on should be inactive");
+
+        // Force XBL to apply
+        item.clientTop;
+
+        button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
+        isnot(button, null, "Should have an undo button");
 
         EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
-        wait_for_view_load(gManagerWindow, function() {
-          is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
+        // Force XBL to apply
+        item.clientTop;
 
-          var item = get_item_in_list(ID, list);
-          isnot(item, null, "Should have found the add-on in the list");
-          is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
+        ok(!aAddon.isActive, "Add-on should be inactive");
+        button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
+        isnot(button, null, "Should have a remove button");
+        ok(!button.disabled, "Button should not be disabled");
 
-          ok(!!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should be pending uninstall");
-          ok(!aAddon.isActive, "Add-on should be inactive");
+        aAddon.userDisabled = false;
+        ok(aAddon.isActive, "Add-on should be active");
 
-          // Force XBL to apply
-          item.clientTop;
-
-          button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
-          isnot(button, null, "Should have an undo button");
-
-          EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
-
-          // Force XBL to apply
-          item.clientTop;
-
-          ok(!aAddon.isActive, "Add-on should be inactive");
-          button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
-          isnot(button, null, "Should have a remove button");
-          ok(!button.disabled, "Button should not be disabled");
-
-          aAddon.userDisabled = false;
-          ok(aAddon.isActive, "Add-on should be active");
-
-          run_next_test();
-        });
+        run_next_test();
       });
     });
   });
@@ -322,60 +318,58 @@ add_test(function() {
   var list = gDocument.getElementById("addon-list");
 
   // Select the extensions category
-  gCategoryUtilities.openType("extension", function() {
+  gCategoryUtilities.openType("extension", async function() {
     is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
-    AddonManager.getAddonByID(ID, function(aAddon) {
-      ok(aAddon.isActive, "Add-on should be active");
-      ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+    let aAddon = await AddonManager.getAddonByID(ID);
+    ok(aAddon.isActive, "Add-on should be active");
+    ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
+    ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
 
-      var item = get_item_in_list(ID, list);
-      isnot(item, null, "Should have found the add-on in the list");
+    var item = get_item_in_list(ID, list);
+    isnot(item, null, "Should have found the add-on in the list");
 
-      var button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
-      isnot(button, null, "Should have a remove button");
-      ok(!button.disabled, "Button should not be disabled");
+    var button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
+    isnot(button, null, "Should have a remove button");
+    ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
-      // Force XBL to apply
-      item.clientTop;
+    // Force XBL to apply
+    item.clientTop;
 
-      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
-      ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
-      ok(!aAddon.isActive, "Add-on should be inactive");
+    is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
+    ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
+    ok(!aAddon.isActive, "Add-on should be inactive");
 
-      button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
-      isnot(button, null, "Should have an undo button");
+    button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
+    isnot(button, null, "Should have an undo button");
 
-      item = get_item_in_list(ID2, list);
-      isnot(item, null, "Should have found the add-on in the list");
+    item = get_item_in_list(ID2, list);
+    isnot(item, null, "Should have found the add-on in the list");
 
-      button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
-      isnot(button, null, "Should have a remove button");
-      ok(!button.disabled, "Button should not be disabled");
+    button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
+    isnot(button, null, "Should have a remove button");
+    ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
-      gCategoryUtilities.openType("plugin", function() {
-        is(gCategoryUtilities.selectedCategory, "plugin", "View should have changed to extension");
+    gCategoryUtilities.openType("plugin", async function() {
+      is(gCategoryUtilities.selectedCategory, "plugin", "View should have changed to extension");
 
-        AddonManager.getAddonsByIDs([ID, ID2], function([aAddon, aAddon2]) {
-          is(aAddon, null, "Add-on should no longer be installed");
-          is(aAddon2, null, "Second add-on should no longer be installed");
+      let [aAddon, aAddon2] = await AddonManager.getAddonsByIDs([ID, ID2]);
+      is(aAddon, null, "Add-on should no longer be installed");
+      is(aAddon2, null, "Second add-on should no longer be installed");
 
-          gCategoryUtilities.openType("extension", function() {
-            is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
+      gCategoryUtilities.openType("extension", function() {
+        is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
-            var item = get_item_in_list(ID, list);
-            is(item, null, "Should not have found the add-on in the list");
-            item = get_item_in_list(ID2, list);
-            is(item, null, "Should not have found the second add-on in the list");
+        var item = get_item_in_list(ID, list);
+        is(item, null, "Should not have found the add-on in the list");
+        item = get_item_in_list(ID2, list);
+        is(item, null, "Should not have found the second add-on in the list");
 
-            run_next_test();
-          });
-        });
+        run_next_test();
       });
     });
   });
@@ -389,64 +383,62 @@ add_test(function() {
   var list = gDocument.getElementById("addon-list");
 
   // Select the extensions category
-  gCategoryUtilities.openType("extension", function() {
+  gCategoryUtilities.openType("extension", async function() {
     is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
-    AddonManager.getAddonByID(ID, function(aAddon) {
-      ok(aAddon.isActive, "Add-on should be active");
-      ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
-      ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
+    let aAddon = await AddonManager.getAddonByID(ID);
+    ok(aAddon.isActive, "Add-on should be active");
+    ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
+    ok(!(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL), "Add-on should not be pending uninstall");
 
-      var item = get_item_in_list(ID, list);
-      isnot(item, null, "Should have found the add-on in the list");
+    var item = get_item_in_list(ID, list);
+    isnot(item, null, "Should have found the add-on in the list");
 
-      var button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
-      isnot(button, null, "Should have a remove button");
-      ok(!button.disabled, "Button should not be disabled");
+    var button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
+    isnot(button, null, "Should have a remove button");
+    ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
-      // Force XBL to apply
-      item.clientTop;
+    // Force XBL to apply
+    item.clientTop;
 
-      is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
+    is(item.getAttribute("pending"), "uninstall", "Add-on should be uninstalling");
 
-      ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
-      ok(!aAddon.isActive, "Add-on should be inactive");
+    ok(aAddon.pendingOperations & AddonManager.PENDING_UNINSTALL, "Add-on should be pending uninstall");
+    ok(!aAddon.isActive, "Add-on should be inactive");
 
-      button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
-      isnot(button, null, "Should have an undo button");
+    button = gDocument.getAnonymousElementByAttribute(item, "anonid", "undo-btn");
+    isnot(button, null, "Should have an undo button");
 
-      item = get_item_in_list(ID2, list);
-      isnot(item, null, "Should have found the add-on in the list");
+    item = get_item_in_list(ID2, list);
+    isnot(item, null, "Should have found the add-on in the list");
 
-      button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
-      isnot(button, null, "Should have a remove button");
-      ok(!button.disabled, "Button should not be disabled");
+    button = gDocument.getAnonymousElementByAttribute(item, "anonid", "remove-btn");
+    isnot(button, null, "Should have a remove button");
+    ok(!button.disabled, "Button should not be disabled");
 
-      EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
+    EventUtils.synthesizeMouseAtCenter(button, { }, gManagerWindow);
 
-      close_manager(gManagerWindow, function() {
-        AddonManager.getAddonsByIDs([ID, ID2], function([aAddon, aAddon2]) {
-          is(aAddon, null, "Add-on should no longer be installed");
-          is(aAddon2, null, "Second add-on should no longer be installed");
+    close_manager(gManagerWindow, async function() {
+      let [aAddon, aAddon2] = await AddonManager.getAddonsByIDs([ID, ID2]);
+      is(aAddon, null, "Add-on should no longer be installed");
+      is(aAddon2, null, "Second add-on should no longer be installed");
 
-          open_manager(null, function(aWindow) {
-            gManagerWindow = aWindow;
-            gDocument = gManagerWindow.document;
-            gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-            var list = gDocument.getElementById("addon-list");
+      open_manager(null, function(aWindow) {
+        gManagerWindow = aWindow;
+        gDocument = gManagerWindow.document;
+        gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+        var list = gDocument.getElementById("addon-list");
 
-            is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
+        is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
-            var item = get_item_in_list(ID, list);
-            is(item, null, "Should not have found the add-on in the list");
-            item = get_item_in_list(ID2, list);
-            is(item, null, "Should not have found the second add-on in the list");
+        var item = get_item_in_list(ID, list);
+        is(item, null, "Should not have found the add-on in the list");
+        item = get_item_in_list(ID2, list);
+        is(item, null, "Should not have found the second add-on in the list");
 
-            run_next_test();
-          });
-        });
+        run_next_test();
       });
     });
   });

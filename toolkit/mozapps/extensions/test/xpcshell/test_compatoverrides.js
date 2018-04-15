@@ -334,77 +334,74 @@ function end_test() {
   gServer.stop(do_test_finished);
 }
 
-function check_compat_status(aCallback) {
-  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                               "addon2@tests.mozilla.org",
-                               "addon3@tests.mozilla.org",
-                               "addon4@tests.mozilla.org",
-                               "addon5@tests.mozilla.org",
-                               "addon6@tests.mozilla.org",
-                               "addon7@tests.mozilla.org",
-                               "addon8@tests.mozilla.org",
-                               "addon9@tests.mozilla.org"],
-                              function([a1, a2, a3, a4, a5, a6, a7, a8, a9]) {
+async function check_compat_status(aCallback) {
+  let [a1, a2, a3, a4, a5, a6, a7, a8, a9] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                                                                                "addon2@tests.mozilla.org",
+                                                                                "addon3@tests.mozilla.org",
+                                                                                "addon4@tests.mozilla.org",
+                                                                                "addon5@tests.mozilla.org",
+                                                                                "addon6@tests.mozilla.org",
+                                                                                "addon7@tests.mozilla.org",
+                                                                                "addon8@tests.mozilla.org",
+                                                                                "addon9@tests.mozilla.org"]);
+  Assert.notEqual(a1, null);
+  Assert.equal(AddonRepository.getCompatibilityOverridesSync(a1.id), null);
+  Assert.ok(a1.isCompatible);
+  Assert.ok(!a1.appDisabled);
 
-    Assert.notEqual(a1, null);
-    Assert.equal(AddonRepository.getCompatibilityOverridesSync(a1.id), null);
-    Assert.ok(a1.isCompatible);
-    Assert.ok(!a1.appDisabled);
+  Assert.notEqual(a2, null);
+  Assert.equal(AddonRepository.getCompatibilityOverridesSync(a2.id), null);
+  Assert.ok(a2.isCompatible);
+  Assert.ok(!a2.appDisabled);
 
-    Assert.notEqual(a2, null);
-    Assert.equal(AddonRepository.getCompatibilityOverridesSync(a2.id), null);
-    Assert.ok(a2.isCompatible);
-    Assert.ok(!a2.appDisabled);
+  Assert.notEqual(a3, null);
+  let overrides = AddonRepository.getCompatibilityOverridesSync(a3.id);
+  Assert.notEqual(overrides, null);
+  Assert.equal(overrides.length, 1);
+  Assert.ok(!a3.isCompatible);
+  Assert.ok(a3.appDisabled);
 
-    Assert.notEqual(a3, null);
-    let overrides = AddonRepository.getCompatibilityOverridesSync(a3.id);
-    Assert.notEqual(overrides, null);
-    Assert.equal(overrides.length, 1);
-    Assert.ok(!a3.isCompatible);
-    Assert.ok(a3.appDisabled);
+  Assert.notEqual(a4, null);
+  overrides = AddonRepository.getCompatibilityOverridesSync(a4.id);
+  Assert.notEqual(overrides, null);
+  Assert.equal(overrides.length, 1);
+  Assert.ok(!a4.isCompatible);
+  Assert.ok(a4.appDisabled);
 
-    Assert.notEqual(a4, null);
-    overrides = AddonRepository.getCompatibilityOverridesSync(a4.id);
-    Assert.notEqual(overrides, null);
-    Assert.equal(overrides.length, 1);
-    Assert.ok(!a4.isCompatible);
-    Assert.ok(a4.appDisabled);
+  Assert.notEqual(a5, null);
+  Assert.equal(AddonRepository.getCompatibilityOverridesSync(a5.id), null);
+  Assert.ok(a5.isCompatible);
+  Assert.ok(!a5.appDisabled);
 
-    Assert.notEqual(a5, null);
-    Assert.equal(AddonRepository.getCompatibilityOverridesSync(a5.id), null);
-    Assert.ok(a5.isCompatible);
-    Assert.ok(!a5.appDisabled);
+  Assert.notEqual(a6, null);
+  overrides = AddonRepository.getCompatibilityOverridesSync(a6.id);
+  Assert.notEqual(overrides, null);
+  Assert.equal(overrides.length, 1);
+  Assert.ok(a6.isCompatible);
+  Assert.ok(!a6.appDisabled);
 
-    Assert.notEqual(a6, null);
-    overrides = AddonRepository.getCompatibilityOverridesSync(a6.id);
-    Assert.notEqual(overrides, null);
-    Assert.equal(overrides.length, 1);
-    Assert.ok(a6.isCompatible);
-    Assert.ok(!a6.appDisabled);
+  Assert.notEqual(a7, null);
+  overrides = AddonRepository.getCompatibilityOverridesSync(a7.id);
+  Assert.notEqual(overrides, null);
+  Assert.equal(overrides.length, 1);
+  Assert.ok(a7.isCompatible);
+  Assert.ok(!a7.appDisabled);
 
-    Assert.notEqual(a7, null);
-    overrides = AddonRepository.getCompatibilityOverridesSync(a7.id);
-    Assert.notEqual(overrides, null);
-    Assert.equal(overrides.length, 1);
-    Assert.ok(a7.isCompatible);
-    Assert.ok(!a7.appDisabled);
+  Assert.notEqual(a8, null);
+  overrides = AddonRepository.getCompatibilityOverridesSync(a8.id);
+  Assert.notEqual(overrides, null);
+  Assert.equal(overrides.length, 3);
+  Assert.ok(!a8.isCompatible);
+  Assert.ok(a8.appDisabled);
 
-    Assert.notEqual(a8, null);
-    overrides = AddonRepository.getCompatibilityOverridesSync(a8.id);
-    Assert.notEqual(overrides, null);
-    Assert.equal(overrides.length, 3);
-    Assert.ok(!a8.isCompatible);
-    Assert.ok(a8.appDisabled);
+  Assert.notEqual(a9, null);
+  overrides = AddonRepository.getCompatibilityOverridesSync(a9.id);
+  Assert.notEqual(overrides, null);
+  Assert.equal(overrides.length, 1);
+  Assert.ok(!a9.isCompatible);
+  Assert.ok(a9.appDisabled);
 
-    Assert.notEqual(a9, null);
-    overrides = AddonRepository.getCompatibilityOverridesSync(a9.id);
-    Assert.notEqual(overrides, null);
-    Assert.equal(overrides.length, 1);
-    Assert.ok(!a9.isCompatible);
-    Assert.ok(a9.appDisabled);
-
-    executeSoon(aCallback);
-  });
+  executeSoon(aCallback);
 }
 
 function run_test_1() {

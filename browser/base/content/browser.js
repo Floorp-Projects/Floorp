@@ -974,10 +974,10 @@ function handleUriInChrome(aBrowser, aUri) {
                                               .getTypeFromURI(aUri);
       if (mimeType == "application/x-xpinstall") {
         let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-        AddonManager.getInstallForURL(aUri.spec, install => {
+        AddonManager.getInstallForURL(aUri.spec, null, mimeType).then(install => {
           AddonManager.installAddonFromWebpage(mimeType, aBrowser, systemPrincipal,
                                                install);
-        }, mimeType);
+        });
         return true;
       }
     } catch (e) {

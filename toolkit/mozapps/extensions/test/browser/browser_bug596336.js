@@ -26,16 +26,14 @@ function get_class_node(parent, cls) {
 }
 
 function install_addon(aXpi) {
-  return new Promise(resolve => {
-    AddonManager.getInstallForURL(TESTROOT + "addons/" + aXpi + ".xpi",
-                                  function(aInstall) {
-      aInstall.addListener({
-        onInstallEnded(aInstall) {
-          resolve();
-        }
-      });
-      aInstall.install();
-    }, "application/x-xpinstall");
+  return new Promise(async resolve => {
+    let aInstall = await AddonManager.getInstallForURL(TESTROOT + "addons/" + aXpi + ".xpi", null, "application/x-xpinstall");
+    aInstall.addListener({
+      onInstallEnded(aInstall) {
+        resolve();
+      }
+    });
+    aInstall.install();
   });
 }
 

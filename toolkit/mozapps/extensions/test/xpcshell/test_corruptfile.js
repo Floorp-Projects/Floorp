@@ -20,7 +20,7 @@ function run_test() {
 
 // When installing packed we won't detect corruption in the XPI until we attempt
 // to load bootstrap.js so everything will look normal from the outside.
-function run_test_packed() {
+async function run_test_packed() {
   do_test_pending();
 
   prepare_test({
@@ -34,20 +34,18 @@ function run_test_packed() {
     "onInstallEnded"
   ]);
 
-  installAllFiles([do_get_file("data/corruptfile.xpi")], function() {
-    ensure_test_completed();
+  await promiseInstallAllFiles([do_get_file("data/corruptfile.xpi")]);
+  ensure_test_completed();
 
-    AddonManager.getAddonByID("corrupt@tests.mozilla.org", function(addon) {
-      Assert.notEqual(addon, null);
+  let addon = await AddonManager.getAddonByID("corrupt@tests.mozilla.org");
+  Assert.notEqual(addon, null);
 
-      do_test_finished();
-    });
-  });
+  do_test_finished();
 }
 
 // When extracting the corruption will be detected and the add-on fails to
 // install
-function run_test_unpacked() {
+async function run_test_unpacked() {
   do_test_pending();
 
   prepare_test({
@@ -61,23 +59,21 @@ function run_test_unpacked() {
     "onInstallFailed"
   ]);
 
-  installAllFiles([do_get_file("data/corruptfile.xpi")], function() {
-    ensure_test_completed();
+  await promiseInstallAllFiles([do_get_file("data/corruptfile.xpi")]);
+  ensure_test_completed();
 
-    // Check the add-on directory isn't left over
-    var addonDir = profileDir.clone();
-    addonDir.append("corrupt@tests.mozilla.org");
-    pathShouldntExist(addonDir);
+  // Check the add-on directory isn't left over
+  var addonDir = profileDir.clone();
+  addonDir.append("corrupt@tests.mozilla.org");
+  pathShouldntExist(addonDir);
 
-    // Check the staging directory isn't left over
-    var stageDir = profileDir.clone();
-    stageDir.append("staged");
-    pathShouldntExist(stageDir);
+  // Check the staging directory isn't left over
+  var stageDir = profileDir.clone();
+  stageDir.append("staged");
+  pathShouldntExist(stageDir);
 
-    AddonManager.getAddonByID("corrupt@tests.mozilla.org", function(addon) {
-      Assert.equal(addon, null);
+  let addon = await AddonManager.getAddonByID("corrupt@tests.mozilla.org");
+  Assert.equal(addon, null);
 
-      do_test_finished();
-    });
-  });
+  do_test_finished();
 }

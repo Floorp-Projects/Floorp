@@ -20,28 +20,26 @@
       const message = "woohoo";
 
       var observer = {
-        observe: function(subject, topic, data) {
+        observe: async function(subject, topic, data) {
           is(topic, "message", "Correct type of event");
           is(data, message, "Correct message");
 
-          AddonManager.getAddonByID("workerbootstrap-test@mozilla.org",
-                                    function(addon) {
-            addon.uninstall();
+          let addon = await AddonManager.getAddonByID("workerbootstrap-test@mozilla.org");
+          addon.uninstall();
 
-            const stages = [ "install", "startup", "shutdown", "uninstall" ];
-            const symbols = [ "Worker", "ChromeWorker" ];
+          const stages = [ "install", "startup", "shutdown", "uninstall" ];
+          const symbols = [ "Worker", "ChromeWorker" ];
 
-            for (var stage of stages) {
-              for (var symbol of symbols) {
-                is(Services.prefs.getBoolPref("workertest.bootstrap." + stage +
-                                              "." + symbol),
-                   true,
-                   "Symbol '" + symbol + "' present during '" + stage + "'");
-              }
+          for (var stage of stages) {
+            for (var symbol of symbols) {
+              is(Services.prefs.getBoolPref("workertest.bootstrap." + stage +
+                                            "." + symbol),
+                 true,
+                 "Symbol '" + symbol + "' present during '" + stage + "'");
             }
+          }
 
-            SimpleTest.finish();
-          });
+          SimpleTest.finish();
         },
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
       };

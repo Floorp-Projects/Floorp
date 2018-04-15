@@ -100,14 +100,13 @@ function getHash(aBrowser) {
   return null;
 }
 
-function testHash(aBrowser, aTestAddonVisible, aCallback) {
+async function testHash(aBrowser, aTestAddonVisible) {
   var hash = getHash(aBrowser);
   isnot(hash, null, "There should be a hash");
   try {
     var data = JSON.parse(hash);
   } catch (e) {
     ok(false, "Hash should have been valid JSON: " + e);
-    aCallback();
     return;
   }
   is(typeof data, "object", "Hash should be a JS object");
@@ -128,26 +127,24 @@ function testHash(aBrowser, aTestAddonVisible, aCallback) {
 
   // Test against all the add-ons the manager knows about since plugins and
   // app extensions may exist
-  AddonManager.getAllAddons(function(aAddons) {
-    for (let addon of aAddons) {
-      if (!(addon.id in data)) {
-        // Test add-ons will have shown an error if necessary above
-        if (addon.id.substring(6) != "@tests.mozilla.org")
-          ok(false, "Add-on " + addon.id + " was not included in the data");
-        continue;
-      }
-
-      info("Testing data for add-on " + addon.id);
-      var addonData = data[addon.id];
-      is(addonData.name, addon.name, "Name should be correct");
-      is(addonData.version, addon.version, "Version should be correct");
-      is(addonData.type, addon.type, "Type should be correct");
-      is(addonData.userDisabled, addon.userDisabled, "userDisabled should be correct");
-      is(addonData.isBlocklisted, addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED, "blocklisted should be correct");
-      is(addonData.isCompatible, addon.isCompatible, "isCompatible should be correct");
+  let aAddons = await AddonManager.getAllAddons();
+  for (let addon of aAddons) {
+    if (!(addon.id in data)) {
+      // Test add-ons will have shown an error if necessary above
+      if (addon.id.substring(6) != "@tests.mozilla.org")
+        ok(false, "Add-on " + addon.id + " was not included in the data");
+      continue;
     }
-    aCallback();
-  });
+
+    info("Testing data for add-on " + addon.id);
+    var addonData = data[addon.id];
+    is(addonData.name, addon.name, "Name should be correct");
+    is(addonData.version, addon.version, "Version should be correct");
+    is(addonData.type, addon.type, "Type should be correct");
+    is(addonData.userDisabled, addon.userDisabled, "userDisabled should be correct");
+    is(addonData.isBlocklisted, addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED, "blocklisted should be correct");
+    is(addonData.isCompatible, addon.isCompatible, "isCompatible should be correct");
+  }
 }
 
 function isLoading() {
@@ -188,13 +185,12 @@ add_test(function() {
     gManagerWindow = aWindow;
     gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
-    gCategoryUtilities.openType("discover", function() {
+    gCategoryUtilities.openType("discover", async function() {
       var browser = gManagerWindow.document.getElementById("discover-browser");
       is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-      testHash(browser, [true, true, true], function() {
-        close_manager(gManagerWindow, run_next_test);
-      });
+      await testHash(browser, [true, true, true]);
+      close_manager(gManagerWindow, run_next_test);
     });
 
     ok(isLoading(), "Should be loading at first");
@@ -208,16 +204,15 @@ add_test(function() {
   Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", false);
   Services.prefs.setBoolPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled", true);
 
-  open_manager(null, function(aWindow) {
+  open_manager(null, async function(aWindow) {
     gCategoryUtilities = new CategoryUtilities(gManagerWindow);
     is(gCategoryUtilities.selectedCategory, "discover", "Should have loaded the right view");
 
     var browser = gManagerWindow.document.getElementById("discover-browser");
     is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-    testHash(browser, [true, false, true], function() {
-      close_manager(gManagerWindow, run_next_test);
-    });
+    await testHash(browser, [true, false, true]);
+    close_manager(gManagerWindow, run_next_test);
   }, function(aWindow) {
     gManagerWindow = aWindow;
     ok(isLoading(), "Should be loading at first");
@@ -235,17 +230,16 @@ add_test(function() {
     gCategoryUtilities = new CategoryUtilities(gManagerWindow);
     gCategoryUtilities.openType("extension", function() {
       close_manager(gManagerWindow, function() {
-        open_manager("addons://discover/", function(aWindow) {
+        open_manager("addons://discover/", async function(aWindow) {
           gCategoryUtilities = new CategoryUtilities(gManagerWindow);
           is(gCategoryUtilities.selectedCategory, "discover", "Should have loaded the right view");
 
           var browser = gManagerWindow.document.getElementById("discover-browser");
           is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
-          testHash(browser, [true, true, false], function() {
-            Services.prefs.clearUserPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled");
-            close_manager(gManagerWindow, run_next_test);
-          });
+          await testHash(browser, [true, true, false]);
+          Services.prefs.clearUserPref("extensions.addon3@tests.mozilla.org.getAddons.cache.enabled");
+          close_manager(gManagerWindow, run_next_test);
         }, function(aWindow) {
           gManagerWindow = aWindow;
           ok(isLoading(), "Should be loading at first");

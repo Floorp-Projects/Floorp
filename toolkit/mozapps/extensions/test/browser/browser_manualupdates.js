@@ -216,7 +216,7 @@ add_test(function() {
 });
 
 add_test(function() {
-  gAvailableCategory.addEventListener("CategoryBadgeUpdated", function() {
+  gAvailableCategory.addEventListener("CategoryBadgeUpdated", async function() {
     is(gCategoryUtilities.isVisible(gAvailableCategory), true, "Available Updates category should now be visible");
     is(gAvailableCategory.badgeCount, 1, "Badge for Available Updates should now be 1");
 
@@ -226,9 +226,8 @@ add_test(function() {
       run_next_test();
     }, {once: true});
 
-    AddonManager.getAddonByID("addon2@tests.mozilla.org", function(aAddon) {
-      aAddon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
-    });
+    let aAddon = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+    aAddon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
   }, {once: true});
 
   gProvider.createInstalls([{

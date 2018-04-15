@@ -19,72 +19,66 @@ function run_test() {
 }
 
 // Checks that a local file validates ok
-function run_test_1() {
-  AddonManager.getInstallForFile(do_get_file("data/unsigned.xpi"), function(install) {
-    Assert.notEqual(install, null);
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
-    Assert.equal(install.error, 0);
+async function run_test_1() {
+  let install = await AddonManager.getInstallForFile(do_get_file("data/unsigned.xpi"));
+  Assert.notEqual(install, null);
+  Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
+  Assert.equal(install.error, 0);
 
-    install.cancel();
+  install.cancel();
 
-    run_test_2();
-  });
+  run_test_2();
 }
 
 // Checks that a corrupt file shows an error
-function run_test_2() {
-  AddonManager.getInstallForFile(do_get_file("data/corrupt.xpi"), function(install) {
-    Assert.notEqual(install, null);
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-    Assert.equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
+async function run_test_2() {
+  let install = await AddonManager.getInstallForFile(do_get_file("data/corrupt.xpi"));
+  Assert.notEqual(install, null);
+  Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+  Assert.equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
 
-    run_test_3();
-  });
+  run_test_3();
 }
 
 // Checks that an empty file shows an error
-function run_test_3() {
-  AddonManager.getInstallForFile(do_get_file("data/empty.xpi"), function(install) {
-    Assert.notEqual(install, null);
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-    Assert.equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
+async function run_test_3() {
+  let install = await AddonManager.getInstallForFile(do_get_file("data/empty.xpi"));
+  Assert.notEqual(install, null);
+  Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+  Assert.equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
 
-    run_test_4();
-  });
+  run_test_4();
 }
 
 // Checks that a file that doesn't match its hash shows an error
-function run_test_4() {
+async function run_test_4() {
   let url = Services.io.newFileURI(do_get_file("data/unsigned.xpi")).spec;
-  AddonManager.getInstallForURL(url, function(install) {
-    Assert.notEqual(install, null);
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-    Assert.equal(install.error, AddonManager.ERROR_INCORRECT_HASH);
+  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", "sha1:foo");
+  Assert.notEqual(install, null);
+  Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+  Assert.equal(install.error, AddonManager.ERROR_INCORRECT_HASH);
 
-    run_test_5();
-  }, "application/x-xpinstall", "sha1:foo");
+  run_test_5();
 }
 
 // Checks that a file that doesn't exist shows an error
-function run_test_5() {
+async function run_test_5() {
   let file = do_get_file("data");
   file.append("missing.xpi");
-  AddonManager.getInstallForFile(file, function(install) {
-    Assert.notEqual(install, null);
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-    Assert.equal(install.error, AddonManager.ERROR_NETWORK_FAILURE);
+  let install = await AddonManager.getInstallForFile(file);
+  Assert.notEqual(install, null);
+  Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+  Assert.equal(install.error, AddonManager.ERROR_NETWORK_FAILURE);
 
-    run_test_6();
-  });
+  run_test_6();
 }
 
 // Checks that an add-on with an illegal ID shows an error
-function run_test_6() {
-  AddonManager.getInstallForFile(do_get_addon("test_bug567173"), function(install) {
-    Assert.notEqual(install, null);
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-    Assert.equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
+async function run_test_6() {
+  let install = await AddonManager.getInstallForFile(do_get_addon("test_bug567173"));
+  Assert.notEqual(install, null);
+  Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+  Assert.equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
 
-    executeSoon(do_test_finished);
-  });
+  executeSoon(do_test_finished);
 }

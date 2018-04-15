@@ -62,7 +62,7 @@ function add_install_test(mainURL, redirectURL, expectedStatus) {
 }
 
 function run_install_tests(callback) {
-  function run_next_install_test() {
+  async function run_next_install_test() {
     if (gTests.length == 0) {
       callback();
       return;
@@ -80,28 +80,27 @@ function run_install_tests(callback) {
                 mainURL;
     }
 
-    AddonManager.getInstallForURL(url, function(install) {
-      gPendingInstall = install;
-      install.addListener({
-        onDownloadEnded(install) {
-          is(SUCCESS, expectedStatus, message);
-          info("Install test ran in " + (Date.now() - gLast) + "ms");
-          // Don't proceed with the install
-          install.cancel();
-          gPendingInstall = null;
-          run_next_install_test();
-          return false;
-        },
+    let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+    gPendingInstall = install;
+    install.addListener({
+      onDownloadEnded(install) {
+        is(SUCCESS, expectedStatus, message);
+        info("Install test ran in " + (Date.now() - gLast) + "ms");
+        // Don't proceed with the install
+        install.cancel();
+        gPendingInstall = null;
+        run_next_install_test();
+        return false;
+      },
 
-        onDownloadFailed(install) {
-          is(install.error, expectedStatus, message);
-          info("Install test ran in " + (Date.now() - gLast) + "ms");
-          gPendingInstall = null;
-          run_next_install_test();
-        }
-      });
-      install.install();
-    }, "application/x-xpinstall");
+      onDownloadFailed(install) {
+        is(install.error, expectedStatus, message);
+        info("Install test ran in " + (Date.now() - gLast) + "ms");
+        gPendingInstall = null;
+        run_next_install_test();
+      }
+    });
+    install.install();
   }
 
   run_next_install_test();

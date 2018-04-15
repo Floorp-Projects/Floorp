@@ -177,12 +177,6 @@ function setupRedirect(aSettings) {
   req.send(null);
 }
 
-function getInstalls() {
-  return new Promise(resolve => {
-    AddonManager.getAllInstalls(installs => resolve(installs));
-  });
-}
-
 var TESTS = [
 async function test_disabledInstall() {
   Services.prefs.setBoolPref("xpinstall.enabled", false);
@@ -211,7 +205,7 @@ async function test_disabledInstall() {
   }
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  let installs = await getInstalls();
+  let installs = await AddonManager.getAllInstalls();
   is(installs.length, 0, "Shouldn't be any pending installs");
 },
 
@@ -245,7 +239,7 @@ async function test_blockedInstall() {
   installDialog.button.click();
   panel = await notificationPromise;
 
-  let installs = await getInstalls();
+  let installs = await AddonManager.getAllInstalls();
   is(installs.length, 0, "Should be no pending installs");
 
   let addon = await AddonManager.getAddonByID("amosigned-xpi@tests.mozilla.org");
@@ -279,7 +273,7 @@ async function test_whitelistedInstall() {
   acceptInstallDialog(installDialog);
   await notificationPromise;
 
-  let installs = await getInstalls();
+  let installs = await AddonManager.getAllInstalls();
   is(installs.length, 0, "Should be no pending installs");
 
   let addon = await AddonManager.getAddonByID("amosigned-xpi@tests.mozilla.org");
@@ -375,14 +369,10 @@ async function test_restartless() {
   acceptInstallDialog(installDialog);
   await notificationPromise;
 
-  let installs = await getInstalls();
+  let installs = await AddonManager.getAllInstalls();
   is(installs.length, 0, "Should be no pending installs");
 
-  let addon = await new Promise(resolve => {
-    AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", result => {
-      resolve(result);
-    });
-  });
+  let addon = await AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org");
   addon.uninstall();
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
@@ -496,11 +486,7 @@ async function test_allUnverified() {
   acceptInstallDialog(installDialog);
   await notificationPromise;
 
-  let addon = await new Promise(resolve => {
-    AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", function(result) {
-      resolve(result);
-    });
-  });
+  let addon = await AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org");
   addon.uninstall();
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
@@ -549,12 +535,12 @@ async function test_tabClose() {
   await progressPromise;
   await dialogPromise;
 
-  let installs = await getInstalls();
+  let installs = await AddonManager.getAllInstalls();
   is(installs.length, 1, "Should be one pending install");
 
   await removeTabAndWaitForNotificationClose(gBrowser.selectedTab);
 
-  installs = await getInstalls();
+  installs = await AddonManager.getAllInstalls();
   is(installs.length, 0, "Should be no pending install since the tab is closed");
 },
 
@@ -585,7 +571,7 @@ async function test_tabNavigate() {
   // onLocationChange listeners are performed.
   await waitForTick();
 
-  let installs = await getInstalls();
+  let installs = await AddonManager.getAllInstalls();
   is(installs.length, 0, "Should be no pending install");
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
@@ -611,7 +597,7 @@ async function test_urlBar() {
   installDialog.button.click();
   await notificationPromise;
 
-  let installs = await getInstalls();
+  let installs = await AddonManager.getAllInstalls();
   is(installs.length, 0, "Should be no pending installs");
 
   let addon = await AddonManager.getAddonByID("amosigned-xpi@tests.mozilla.org");
@@ -664,12 +650,12 @@ async function test_renotifyBlocked() {
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
   await notificationPromise;
 
-  let installs = await getInstalls();
+  let installs = await AddonManager.getAllInstalls();
   is(installs.length, 2, "Should be two pending installs");
 
   await removeTabAndWaitForNotificationClose(gBrowser.selectedTab);
 
-  installs = await getInstalls();
+  installs = await AddonManager.getAllInstalls();
   is(installs.length, 0, "Should have cancelled the installs");
 },
 
@@ -713,7 +699,7 @@ async function test_cancel() {
 
   ok(!PopupNotifications.isPanelOpen, "Notification should be closed");
 
-  let installs = await getInstalls();
+  let installs = await AddonManager.getAllInstalls();
   is(installs.length, 0, "Should be no pending install");
 
   Services.perms.remove(makeURI("http://example.com/"), "install");
@@ -787,14 +773,13 @@ add_task(async function() {
   Services.obs.addObserver(XPInstallObserver, "addon-install-blocked");
   Services.obs.addObserver(XPInstallObserver, "addon-install-failed");
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(async function() {
     // Make sure no more test parts run in case we were timed out
     TESTS = [];
 
-    AddonManager.getAllInstalls(function(aInstalls) {
-      aInstalls.forEach(function(aInstall) {
-        aInstall.cancel();
-      });
+    let aInstalls = await AddonManager.getAllInstalls();
+    aInstalls.forEach(function(aInstall) {
+      aInstall.cancel();
     });
 
     Services.prefs.clearUserPref("extensions.logging.enabled");
@@ -813,11 +798,7 @@ add_task(async function() {
 
     ok(!PopupNotifications.isPanelOpen, "Notification should be closed");
 
-    let installs = await new Promise(resolve => {
-      AddonManager.getAllInstalls(function(aInstalls) {
-        resolve(aInstalls);
-      });
-    });
+    let installs = await AddonManager.getAllInstalls();
 
     is(installs.length, 0, "Should be no active installs");
     info("Running " + TESTS[i].name);

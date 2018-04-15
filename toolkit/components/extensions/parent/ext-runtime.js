@@ -88,15 +88,14 @@ this.runtime = class extends ExtensionAPI {
           },
         }).api(),
 
-        reload: () => {
+        reload: async () => {
           if (extension.upgrade) {
             // If there is a pending update, install it now.
             extension.upgrade.install();
           } else {
             // Otherwise, reload the current extension.
-            AddonManager.getAddonByID(extension.id, addon => {
-              addon.reload();
-            });
+            let addon = await AddonManager.getAddonByID(extension.id);
+            addon.reload();
           }
         },
 

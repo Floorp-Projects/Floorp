@@ -62,38 +62,34 @@ Addon.prototype = {
     return this._status;
   },
 
-  updateInstallStatus: function() {
-    AddonManager.getAddonByID(this.addonID, (addon) => {
-      if (addon && !addon.userDisabled) {
-        this.status = "installed";
-      } else {
-        this.status = "uninstalled";
-      }
-    });
+  updateInstallStatus: async function() {
+    let addon = await AddonManager.getAddonByID(this.addonID);
+    if (addon && !addon.userDisabled) {
+      this.status = "installed";
+    } else {
+      this.status = "uninstalled";
+    }
   },
 
-  install: function() {
-    AddonManager.getAddonByID(this.addonID, (addon) => {
-      if (addon && !addon.userDisabled) {
-        this.status = "installed";
-        return;
-      }
-      this.status = "preparing";
-      if (addon && addon.userDisabled) {
-        addon.userDisabled = false;
-      } else {
-        AddonManager.getInstallForURL(this.xpiLink, (install) => {
-          install.addListener(this);
-          install.install();
-        }, "application/x-xpinstall");
-      }
-    });
+  install: async function() {
+    let addon = await AddonManager.getAddonByID(this.addonID);
+    if (addon && !addon.userDisabled) {
+      this.status = "installed";
+      return;
+    }
+    this.status = "preparing";
+    if (addon && addon.userDisabled) {
+      addon.userDisabled = false;
+    } else {
+      let install = await AddonManager.getInstallForURL(this.xpiLink, null, "application/x-xpinstall");
+      install.addListener(this);
+      install.install();
+    }
   },
 
-  uninstall: function() {
-    AddonManager.getAddonByID(this.addonID, (addon) => {
-      addon.uninstall();
-    });
+  uninstall: async function() {
+    let addon = await AddonManager.getAddonByID(this.addonID);
+    addon.uninstall();
   },
 
   installFailureHandler: function(install, message) {

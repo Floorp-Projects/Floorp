@@ -22,20 +22,19 @@ function getSupportsFile(path) {
 
 function installAddon(xpiName) {
   let filePath = getSupportsFile(`addons/${xpiName}`).file;
-  return new Promise((resolve, reject) => {
-    AddonManager.getInstallForFile(filePath, install => {
-      if (!install) {
-        throw new Error(`An install was not created for ${filePath}`);
-      }
-      install.addListener({
-        onDownloadFailed: reject,
-        onDownloadCancelled: reject,
-        onInstallFailed: reject,
-        onInstallCancelled: reject,
-        onInstallEnded: resolve
-      });
-      install.install();
+  return new Promise(async (resolve, reject) => {
+    let install = await AddonManager.getInstallForFile(filePath);
+    if (!install) {
+      throw new Error(`An install was not created for ${filePath}`);
+    }
+    install.addListener({
+      onDownloadFailed: reject,
+      onDownloadCancelled: reject,
+      onInstallFailed: reject,
+      onInstallCancelled: reject,
+      onInstallEnded: resolve
     });
+    install.install();
   });
 }
 

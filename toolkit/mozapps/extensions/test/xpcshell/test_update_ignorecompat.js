@@ -63,7 +63,7 @@ add_test(function() {
 
 // Test that the update check correctly observes when an addon opts-in to
 // strict compatibility checking.
-add_test(function() {
+add_test(async function() {
   writeInstallRDFForExtension({
     id: "addon11@tests.mozilla.org",
     version: "1.0",
@@ -78,21 +78,20 @@ add_test(function() {
 
   restartManager();
 
-  AddonManager.getAddonByID("addon11@tests.mozilla.org", function(a11) {
-    Assert.notEqual(a11, null);
+  let a11 = await AddonManager.getAddonByID("addon11@tests.mozilla.org");
+  Assert.notEqual(a11, null);
 
-    a11.findUpdates({
-      onCompatibilityUpdateAvailable() {
-        do_throw("Should not have seen compatibility information");
-      },
+  a11.findUpdates({
+    onCompatibilityUpdateAvailable() {
+      do_throw("Should not have seen compatibility information");
+    },
 
-      onUpdateAvailable() {
-        do_throw("Should not have seen an available update");
-      },
+    onUpdateAvailable() {
+      do_throw("Should not have seen an available update");
+    },
 
-      onUpdateFinished() {
-        run_next_test();
-      }
-    }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
-  });
+    onUpdateFinished() {
+      run_next_test();
+    }
+  }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 });
