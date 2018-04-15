@@ -239,8 +239,7 @@ txXPathNodeUtils::isProcessingInstruction(const txXPathNode& aNode)
 inline bool
 txXPathNodeUtils::isComment(const txXPathNode& aNode)
 {
-    return aNode.isContent() &&
-           aNode.Content()->IsNodeOfType(nsINode::eCOMMENT);
+    return aNode.isContent() && aNode.Content()->IsComment();
 }
 
 /* static */
