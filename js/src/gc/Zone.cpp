@@ -272,7 +272,7 @@ Zone::gcNumber()
 {
     // Zones in use by exclusive threads are not collected, and threads using
     // them cannot access the main runtime's gcNumber without racing.
-    return usedByHelperThread() ? 0 : runtimeFromActiveCooperatingThread()->gc.gcNumber();
+    return usedByHelperThread() ? 0 : runtimeFromMainThread()->gc.gcNumber();
 }
 
 js::jit::JitZone*
@@ -317,7 +317,7 @@ Zone::canCollect()
 void
 Zone::notifyObservingDebuggers()
 {
-    JSRuntime* rt = runtimeFromActiveCooperatingThread();
+    JSRuntime* rt = runtimeFromMainThread();
     JSContext* cx = rt->mainContextFromOwnThread();
 
     for (CompartmentsInZoneIter comps(this); !comps.done(); comps.next()) {
@@ -395,7 +395,7 @@ Zone::deleteEmptyCompartment(JSCompartment* comp)
     for (auto& i : compartments()) {
         if (i == comp) {
             compartments().erase(&i);
-            comp->destroy(runtimeFromActiveCooperatingThread()->defaultFreeOp());
+            comp->destroy(runtimeFromMainThread()->defaultFreeOp());
             return;
         }
     }
