@@ -4607,4 +4607,18 @@ nsINode::GetParentObject() const
   return p;
 }
 
+inline nsIDocument*
+nsINode::AsDocument()
+{
+  MOZ_ASSERT(IsDocument());
+  return static_cast<nsIDocument*>(this);
+}
+
+inline const nsIDocument*
+nsINode::AsDocument() const
+{
+  MOZ_ASSERT(IsDocument());
+  return static_cast<const nsIDocument*>(this);
+}
+
 #endif /* nsIDocument_h___ */
