@@ -176,6 +176,16 @@ public:
     bool rtl = false;
   };
 
+  struct ProgressParams {
+    double value = 0.0;
+    double max = 0.0;
+    float verticalAlignFactor = 0.5f;
+    bool insideActiveWindow = false;
+    bool indeterminate = false;
+    bool horizontal = false;
+    bool rtl = false;
+  };
+
   struct TreeHeaderCellParams {
     ControlParams controlParams;
     TreeSortDirection sortDirection = eTreeSortDirection_Natural;
@@ -231,8 +241,7 @@ public:
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType) override;
 
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
-                    bool inIsIndeterminate, bool inIsHorizontal,
-                    double inValue, double inMaxValue, nsIFrame* aFrame);
+                    const ProgressParams& aParams);
 
   static void DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
                                  CGFloat aUnifiedHeight, BOOL aIsMain, BOOL aIsFlipped);
@@ -258,6 +267,9 @@ protected:
                                      SegmentType aSegmentType);
   SearchFieldParams ComputeSearchFieldParams(nsIFrame* aFrame,
                                              mozilla::EventStates aEventState);
+  ProgressParams ComputeProgressParams(nsIFrame* aFrame,
+                                       mozilla::EventStates aEventState,
+                                       bool aIsHorizontal);
   TreeHeaderCellParams ComputeTreeHeaderCellParams(nsIFrame* aFrame,
                                                    mozilla::EventStates aEventState);
 

@@ -2110,27 +2110,40 @@ static const CellRenderSettings progressSettings[2][2] = {
   }
 };
 
+nsNativeThemeCocoa::ProgressParams
+nsNativeThemeCocoa::ComputeProgressParams(nsIFrame* aFrame,
+                                          EventStates aEventState,
+                                          bool aIsHorizontal)
+{
+  ProgressParams params;
+  params.value = GetProgressValue(aFrame);
+  params.max = GetProgressMaxValue(aFrame);
+  params.verticalAlignFactor = VerticalAlignFactor(aFrame);
+  params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
+  params.indeterminate = IsIndeterminateProgress(aFrame, aEventState);
+  params.horizontal = aIsHorizontal;
+  params.rtl = IsFrameRTL(aFrame);
+  return params;
+}
+
 void
 nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect,
-                                 bool inIsIndeterminate, bool inIsHorizontal,
-                                 double inValue, double inMaxValue,
-                                 nsIFrame* aFrame)
+                                 const ProgressParams& aParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSProgressBarCell* cell = mProgressBarCell;
 
-  [cell setValue:inValue];
-  [cell setMax:inMaxValue];
-  [cell setIndeterminate:inIsIndeterminate];
-  [cell setHorizontal:inIsHorizontal];
-  [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint]
-                                                      : NSClearControlTint)];
+  [cell setValue:aParams.value];
+  [cell setMax:aParams.max];
+  [cell setIndeterminate:aParams.indeterminate];
+  [cell setHorizontal:aParams.horizontal];
+  [cell setControlTint:(aParams.insideActiveWindow ? [NSColor currentControlTint]
+                                                   : NSClearControlTint)];
 
   DrawCellWithSnapping(cell, cgContext, inBoxRect,
-                       progressSettings[inIsHorizontal][inIsIndeterminate],
-                       VerticalAlignFactor(aFrame), mCellDrawView,
-                       IsFrameRTL(aFrame));
+                       progressSettings[aParams.horizontal][aParams.indeterminate],
+                       aParams.verticalAlignFactor, mCellDrawView, aParams.rtl);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3005,24 +3018,21 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
 
     case NS_THEME_PROGRESSBAR:
     {
-      double value = GetProgressValue(aFrame);
-      double maxValue = GetProgressMaxValue(aFrame);
       // Don't request repaints for scrollbars at 100% because those don't animate.
-      if (value < maxValue) {
+      if (GetProgressValue(aFrame) < GetProgressMaxValue(aFrame)) {
         if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
           NS_WARNING("Unable to animate progressbar!");
         }
       }
-      DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame, eventState),
-                   !IsVerticalProgress(aFrame),
-                   value, maxValue, aFrame);
+      DrawProgress(cgContext, macRect,
+                   ComputeProgressParams(aFrame, eventState,
+                                         !IsVerticalProgress(aFrame)));
       break;
     }
 
     case NS_THEME_PROGRESSBAR_VERTICAL:
-      DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame, eventState),
-                   false, GetProgressValue(aFrame),
-                   GetProgressMaxValue(aFrame), aFrame);
+      DrawProgress(cgContext, macRect,
+                   ComputeProgressParams(aFrame, eventState, false));
       break;
 
     case NS_THEME_METERBAR:
