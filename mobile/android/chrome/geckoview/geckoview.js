@@ -4,13 +4,14 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
-  "resource://gre/modules/Messaging.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
+
 XPCOMUtils.defineLazyGetter(this, "WindowEventDispatcher",
   () => EventDispatcher.for(window));
 
@@ -32,8 +33,11 @@ var ModuleManager = {
 
   add: function(aResource, aType, ...aArgs) {
     this.remove(aType);
-    let scope = {};
-    ChromeUtils.import(aResource, scope);
+
+    const scope = {};
+    const global = ChromeUtils.import(aResource, scope);
+    const tag = aType.replace("GeckoView", "GeckoView.");
+    GeckoViewUtils.initLogging(tag, global);
 
     this.modules.set(aType, new scope[aType](
       aType, window, this.browser, WindowEventDispatcher, ...aArgs
@@ -58,6 +62,8 @@ function createBrowser() {
 }
 
 function startup() {
+  GeckoViewUtils.initLogging("GeckoView.XUL", window);
+
   const browser = createBrowser();
   ModuleManager.init(browser);
 
