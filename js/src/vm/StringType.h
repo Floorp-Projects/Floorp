@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
+#include "mozilla/TextUtils.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -890,10 +891,10 @@ class JSFlatString : public JSLinearString
         JS::AutoCheckCannotGC nogc;
         if (hasLatin1Chars()) {
             const JS::Latin1Char* s = latin1Chars(nogc);
-            return JS7_ISDEC(*s) && isIndexSlow(s, length(), indexp);
+            return mozilla::IsAsciiDigit(*s) && isIndexSlow(s, length(), indexp);
         }
         const char16_t* s = twoByteChars(nogc);
-        return JS7_ISDEC(*s) && isIndexSlow(s, length(), indexp);
+        return mozilla::IsAsciiDigit(*s) && isIndexSlow(s, length(), indexp);
     }
 
     /*

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/RangedPtr.h"
+#include "mozilla/TextUtils.h"
 
 #include <algorithm>
 #include <iterator>
@@ -477,14 +478,10 @@ net_ResolveRelativePath(const nsACString &relativePath,
 // scheme fu
 //----------------------------------------------------------------------------
 
-static bool isAsciiAlpha(char c) {
-    return nsCRT::IsAsciiAlpha(c);
-}
-
 static bool
 net_IsValidSchemeChar(const char aChar)
 {
-    if (nsCRT::IsAsciiAlpha(aChar) || nsCRT::IsAsciiDigit(aChar) ||
+    if (IsAsciiAlpha(aChar) || IsAsciiDigit(aChar) ||
         aChar == '+' || aChar == '.' || aChar == '-') {
         return true;
     }
@@ -510,7 +507,7 @@ net_ExtractURLScheme(const nsACString &inURI,
 
     Tokenizer p(Substring(start, end), "\r\n\t");
     p.Record();
-    if (!p.CheckChar(isAsciiAlpha)) {
+    if (!p.CheckChar(IsAsciiAlpha)) {
         // First char must be alpha
         return NS_ERROR_MALFORMED_URI;
     }
@@ -533,13 +530,13 @@ bool
 net_IsValidScheme(const char *scheme, uint32_t schemeLen)
 {
     // first char must be alpha
-    if (!nsCRT::IsAsciiAlpha(*scheme))
+    if (!IsAsciiAlpha(*scheme))
         return false;
 
     // nsCStrings may have embedded nulls -- reject those too
     for (; schemeLen; ++scheme, --schemeLen) {
-        if (!(nsCRT::IsAsciiAlpha(*scheme) ||
-              nsCRT::IsAsciiDigit(*scheme) ||
+        if (!(IsAsciiAlpha(*scheme) ||
+              IsAsciiDigit(*scheme) ||
               *scheme == '+' ||
               *scheme == '.' ||
               *scheme == '-'))
@@ -567,7 +564,7 @@ net_IsAbsoluteURL(const nsACString& uri)
     Tokenizer p(Substring(start, end), "\r\n\t");
 
     // First char must be alpha
-    if (!p.CheckChar(isAsciiAlpha)) {
+    if (!p.CheckChar(IsAsciiAlpha)) {
         return false;
     }
 

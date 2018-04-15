@@ -3843,13 +3843,25 @@ static inline void
 AssertNoStaleServoDataIn(const nsINode& aSubtreeRoot)
 {
 #ifdef DEBUG
-  for (const nsINode* node = aSubtreeRoot.GetFirstChild();
+  for (const nsINode* node = &aSubtreeRoot;
        node;
-       node = node->GetNextNode()) {
-    if (node->IsElement()) {
-      MOZ_ASSERT(!node->AsElement()->HasServoData());
-      if (auto* shadow = node->AsElement()->GetShadowRoot()) {
-        AssertNoStaleServoDataIn(*shadow);
+       node = node->GetNextNode(&aSubtreeRoot)) {
+    if (!node->IsElement()) {
+      continue;
+    }
+    MOZ_ASSERT(!node->AsElement()->HasServoData());
+    if (auto* shadow = node->AsElement()->GetShadowRoot()) {
+      AssertNoStaleServoDataIn(*shadow);
+    }
+    if (nsXBLBinding* binding = node->AsElement()->GetXBLBinding()) {
+      if (nsXBLBinding* bindingWithContent = binding->GetBindingWithContent()) {
+        nsIContent* content = bindingWithContent->GetAnonymousContent();
+        MOZ_ASSERT(!content->AsElement()->HasServoData());
+        for (nsINode* child = content->GetFirstChild();
+             child;
+             child = child->GetNextSibling()) {
+          AssertNoStaleServoDataIn(*child);
+        }
       }
     }
   }

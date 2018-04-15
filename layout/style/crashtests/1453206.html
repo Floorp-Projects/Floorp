@@ -1,0 +1,8 @@
+<!doctype html>
+<div id="host"></div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  let shadow = host.attachShadow({ mode: 'open' });
+  shadow.appendChild(document.createElement('marquee'));
+});
+</script>
