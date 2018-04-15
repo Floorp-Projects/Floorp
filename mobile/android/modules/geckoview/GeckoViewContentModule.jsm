@@ -14,14 +14,6 @@ GeckoViewUtils.initLogging("GeckoView.Module.[C]", this);
 ChromeUtils.defineModuleGetter(this, "EventDispatcher",
   "resource://gre/modules/Messaging.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
-                       {}).AndroidLog.d.bind(null, "ViewContentModule"));
-
-// function debug(aMsg) {
-//   dump(aMsg);
-// }
-
 class GeckoViewContentModule {
   static initLogging(aModuleName) {
     this._moduleName = aModuleName;

@@ -13,14 +13,6 @@ GeckoViewUtils.initLogging("GeckoView.ExternalAppService", this);
 ChromeUtils.defineModuleGetter(this, "EventDispatcher",
   "resource://gre/modules/Messaging.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
-                       {}).AndroidLog.d.bind(null, "ViewContent"));
-
-function debug(aMsg) {
-  // dump(aMsg);
-}
-
 function ExternalAppService() {
   this.wrappedJSObject = this;
 }
@@ -33,7 +25,8 @@ ExternalAppService.prototype = {
     const channel = request.QueryInterface(Ci.nsIChannel);
     const mm = context.QueryInterface(Ci.nsIDocShell).tabChild.messageManager;
 
-    debug(`doContent() URI=${channel.URI.displaySpec}, contentType=${channel.contentType}`);
+    debug `doContent: uri=${ channel.URI.displaySpec
+                    } contentType=${ channel.contentType }`;
 
     EventDispatcher.forMessageManager(mm).sendRequest({
       type: "GeckoView:ExternalResponse",
@@ -48,7 +41,8 @@ ExternalAppService.prototype = {
   },
 
   applyDecodingForExtension(ext, encoding) {
-    debug(`applyDecodingForExtension() extension=${ext}, encoding=${encoding}`);
+    debug `applyDecodingForExtension: extension=${ ext
+                                    } encoding=${ encoding }`;
 
     // This doesn't matter for us right now because
     // we shouldn't end up reading the stream.
