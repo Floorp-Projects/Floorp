@@ -409,7 +409,9 @@ public:
   virtual ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame* aFrame,
                                                        uint8_t aWidgetType) override;
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType) override;
-
+  mozilla::Maybe<WidgetInfo> ComputeWidgetInfo(nsIFrame* aFrame,
+                                               uint8_t aWidgetType,
+                                               const nsRect& aRect);
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
                     const ProgressParams& aParams);
 
