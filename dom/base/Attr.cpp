@@ -262,7 +262,7 @@ Attr::SetTextContentInternal(const nsAString& aTextContent,
 bool
 Attr::IsNodeOfType(uint32_t aFlags) const
 {
-    return !(aFlags & ~eATTRIBUTE);
+    return false;
 }
 
 uint32_t
