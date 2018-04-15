@@ -43,7 +43,7 @@ add_task(async function() {
   await toolbox.switchHost(Toolbox.HostType.BOTTOM);
   await closeDebuggerAndFinish(panel);
 
-  function* testPause() {
+  async function testPause() {
     is(panelWin.gThreadClient.paused, false,
       "Should be running after starting the test.");
 
@@ -68,37 +68,37 @@ add_task(async function() {
     // Evaluate a script to fully pause the debugger
     evalInTab(tab, "debugger;");
 
-    yield onPaused;
-    yield onFocus;
-    yield onTabSelect;
+    await onPaused;
+    await onFocus;
+    await onTabSelect;
 
     if (toolbox.hostType != Toolbox.HostType.WINDOW) {
       is(gBrowser.selectedTab, tab,
         "Debugger's tab got selected.");
     }
 
-    yield toolbox.selectTool("webconsole");
+    await toolbox.selectTool("webconsole");
     ok(toolboxTab.classList.contains("highlighted"),
       "The highlighted class is present");
     ok(!toolboxTab.classList.contains("selected"),
       "The tab is not selected");
-    yield toolbox.selectTool("jsdebugger");
+    await toolbox.selectTool("jsdebugger");
     ok(toolboxTab.classList.contains("highlighted"),
       "The highlighted class is present");
     ok(toolboxTab.classList.contains("selected"),
       "...and the tab is selected, so the glow will not be present.");
   }
 
-  function* testResume() {
+  async function testResume() {
     let onPaused = waitForEvent(panelWin.gThreadClient, "resumed");
 
     EventUtils.sendMouseEvent({ type: "mousedown" },
       panelWin.document.getElementById("resume"),
       panelWin);
 
-    yield onPaused;
+    await onPaused;
 
-    yield toolbox.selectTool("webconsole");
+    await toolbox.selectTool("webconsole");
     ok(!toolboxTab.classList.contains("highlighted"),
       "The highlighted class is not present now after the resume");
     ok(!toolboxTab.classList.contains("selected"),
