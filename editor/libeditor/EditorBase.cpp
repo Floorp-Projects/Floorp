@@ -4594,9 +4594,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
 
     // there is a priorNode, so delete its last child (if chardata, delete the
     // last char). if it has no children, delete it
-    if (priorNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-      RefPtr<CharacterData> priorNodeAsCharData =
-        static_cast<CharacterData*>(priorNode.get());
+    if (RefPtr<CharacterData> priorNodeAsCharData =
+          CharacterData::FromNode(priorNode)) {
       uint32_t length = priorNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       if (NS_WARN_IF(!length)) {
@@ -4634,9 +4633,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
 
     // there is a nextNode, so delete its first child (if chardata, delete the
     // first char). if it has no children, delete it
-    if (nextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-      RefPtr<CharacterData> nextNodeAsCharData =
-        static_cast<CharacterData*>(nextNode.get());
+    if (RefPtr<CharacterData> nextNodeAsCharData =
+          CharacterData::FromNode(nextNode)) {
       uint32_t length = nextNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       if (NS_WARN_IF(!length)) {
@@ -4664,12 +4662,10 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     return deleteNodeTransaction.forget();
   }
 
-  if (node->IsNodeOfType(nsINode::eDATA_NODE)) {
+  if (RefPtr<CharacterData> nodeAsCharData = CharacterData::FromNode(node)) {
     if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
       return nullptr;
     }
-    RefPtr<CharacterData> nodeAsCharData =
-      static_cast<CharacterData*>(node.get());
     // We have chardata, so delete a char at the proper offset
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
       aAction == ePrevious ?
@@ -4697,7 +4693,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   }
 
   while (selectedNode &&
-         selectedNode->IsNodeOfType(nsINode::eDATA_NODE) &&
+         selectedNode->IsCharacterData() &&
          !selectedNode->Length()) {
     // Can't delete an empty chardata node (bug 762183)
     if (aAction == ePrevious) {
@@ -4711,12 +4707,11 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     return nullptr;
   }
 
-  if (selectedNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+  if (RefPtr<CharacterData> selectedNodeAsCharData =
+        CharacterData::FromNode(selectedNode)) {
     if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
       return nullptr;
     }
-    RefPtr<CharacterData> selectedNodeAsCharData =
-      static_cast<CharacterData*>(selectedNode.get());
     // we are deleting from a chardata node, so do a character deletion
     uint32_t position = 0;
     if (aAction == ePrevious) {
