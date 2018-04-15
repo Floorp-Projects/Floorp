@@ -1683,7 +1683,7 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
   MOZ_ASSERT_IF(aIsReplace, aRefChild);
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(aParent->IsDocument() ||
-             aParent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
+             aParent->IsDocumentFragment() ||
              aParent->IsElement(),
              "Nodes that are not documents, document fragments or elements "
              "can't be parents!");
@@ -1845,9 +1845,7 @@ void
 nsINode::EnsurePreInsertionValidity1(nsINode& aNewChild, nsINode* aRefChild,
                                      ErrorResult& aError)
 {
-  if ((!IsDocument() &&
-       !IsNodeOfType(eDOCUMENT_FRAGMENT) &&
-       !IsElement()) ||
+  if ((!IsDocument() && !IsDocumentFragment() && !IsElement()) ||
       !aNewChild.IsContent()) {
     aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
     return;
@@ -2362,12 +2360,11 @@ nsINode::Contains(const nsINode* aOther) const
     return !other->IsInAnonymousSubtree();
   }
 
-  if (!IsElement() && !IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT)) {
+  if (!IsElement() && !IsDocumentFragment()) {
     return false;
   }
 
-  const nsIContent* thisContent = static_cast<const nsIContent*>(this);
-  if (thisContent->GetBindingParent() != other->GetBindingParent()) {
+  if (AsContent()->GetBindingParent() != other->GetBindingParent()) {
     return false;
   }
 
@@ -2523,7 +2520,7 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
 Element*
 nsINode::GetElementById(const nsAString& aId)
 {
-  MOZ_ASSERT(IsElement() || IsNodeOfType(eDOCUMENT_FRAGMENT),
+  MOZ_ASSERT(IsElement() || IsDocumentFragment(),
              "Bogus this object for GetElementById call");
   if (IsInUncomposedDoc()) {
     ElementHolder holder;

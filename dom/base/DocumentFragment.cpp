@@ -33,7 +33,7 @@ DocumentFragment::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 bool
 DocumentFragment::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~eDOCUMENT_FRAGMENT);
+  return false;
 }
 
 #ifdef DEBUG
