@@ -422,8 +422,6 @@ public:
     eHTML_FORM_CONTROL   = 1 << 6,
     /** character data nodes (comments, PIs, text). */
     eDATA_NODE           = 1 << 8,
-    /** HTMLMediaElement */
-    eMEDIA               = 1 << 9,
     /** animation elements */
     eANIMATION           = 1 << 10,
     /** filter elements that implement SVGFilterPrimitiveStandardAttributes */

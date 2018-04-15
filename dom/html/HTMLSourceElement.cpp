@@ -8,6 +8,7 @@
 #include "mozilla/dom/HTMLSourceElementBinding.h"
 
 #include "mozilla/dom/HTMLImageElement.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/ResponsiveImageSelector.h"
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/MediaSource.h"
@@ -152,8 +153,7 @@ HTMLSourceElement::BindToTree(nsIDocument *aDocument,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aParent && aParent->IsNodeOfType(nsINode::eMEDIA)) {
-    HTMLMediaElement* media = static_cast<HTMLMediaElement*>(aParent);
+  if (auto* media = HTMLMediaElement::FromNodeOrNull(aParent)) {
     media->NotifyAddedSource();
   }
 
