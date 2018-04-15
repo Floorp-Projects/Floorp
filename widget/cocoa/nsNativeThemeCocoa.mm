@@ -1841,24 +1841,25 @@ static const CellRenderSettings editableMenulistSettings = {
 
 void
 nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect,
-                                 EventStates inState, uint8_t aWidgetType,
-                                 nsIFrame* aFrame)
+                                 const DropdownParams& aParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  [mDropdownCell setPullsDown:(aWidgetType == NS_THEME_BUTTON)];
+  [mDropdownCell setPullsDown:aParams.pullsDown];
+  NSCell* cell = aParams.editable ? (NSCell*)mComboBoxCell : (NSCell*)mDropdownCell;
 
-  BOOL isEditable = (aWidgetType == NS_THEME_MENULIST_TEXTFIELD);
-  NSCell* cell = isEditable ? (NSCell*)mComboBoxCell : (NSCell*)mDropdownCell;
+  ApplyControlParamsToNSCell(aParams.controlParams, cell);
 
-  [cell setEnabled:!IsDisabled(aFrame, inState)];
-  [cell setShowsFirstResponder:(IsFocused(aFrame) || inState.HasState(NS_EVENT_STATE_FOCUS))];
-  [cell setHighlighted:IsOpenButton(aFrame)];
-  [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
+  if (aParams.controlParams.insideActiveWindow) {
+    [cell setControlTint:[NSColor currentControlTint]];
+   } else {
+    [cell setControlTint:NSClearControlTint];
+   }
 
-  const CellRenderSettings& settings = isEditable ? editableMenulistSettings : dropdownSettings;
+  const CellRenderSettings& settings =
+    aParams.editable ? editableMenulistSettings : dropdownSettings;
   DrawCellWithSnapping(cell, cgContext, inBoxRect, settings,
-                       0.5f, mCellDrawView, IsFrameRTL(aFrame));
+                       0.5f, mCellDrawView, aParams.controlParams.rtl);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2767,7 +2768,14 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
         params.insideActiveWindow = isInActiveWindow;
         DrawButton(cgContext, macRect, ButtonParams{params, buttonType});
       } else if (IsButtonTypeMenu(aFrame)) {
-        DrawDropdown(cgContext, macRect, eventState, aWidgetType, aFrame);
+        ControlParams controlParams = ComputeControlParams(aFrame, eventState);
+        controlParams.focused = controlParams.focused || IsFocused(aFrame);
+        controlParams.pressed = IsOpenButton(aFrame);
+        DropdownParams params;
+        params.controlParams = controlParams;
+        params.pullsDown = true;
+        params.editable = false;
+        DrawDropdown(cgContext, macRect, params);
       } else if (nativeWidgetHeight > DO_SQUARE_BUTTON_HEIGHT) {
         // If the button is tall enough, draw the square button style so that
         // buttons with non-standard content look good. Otherwise draw normal
@@ -2908,8 +2916,16 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_MENULIST:
-    case NS_THEME_MENULIST_TEXTFIELD:
-      DrawDropdown(cgContext, macRect, eventState, aWidgetType, aFrame);
+    case NS_THEME_MENULIST_TEXTFIELD: {
+      ControlParams controlParams = ComputeControlParams(aFrame, eventState);
+      controlParams.focused = controlParams.focused || IsFocused(aFrame);
+      controlParams.pressed = IsOpenButton(aFrame);
+      DropdownParams params;
+      params.controlParams = controlParams;
+      params.pullsDown = false;
+      params.editable = aWidgetType == NS_THEME_MENULIST_TEXTFIELD;
+      DrawDropdown(cgContext, macRect, params);
+    }
       break;
 
     case NS_THEME_MENULIST_BUTTON:
