@@ -413,11 +413,9 @@ nsINode::ChildNodes()
 {
   nsSlots* slots = Slots();
   if (!slots->mChildNodes) {
-    // Check |!IsElement()| first to catch the common case
-    // without virtual call |IsNodeOfType|
-    slots->mChildNodes = !IsElement() && IsNodeOfType(nsINode::eATTRIBUTE) ?
-                           new nsAttrChildContentList(this) :
-                           new nsParentNodeChildContentList(this);
+    slots->mChildNodes = IsAttr()
+      ? new nsAttrChildContentList(this)
+      : new nsParentNodeChildContentList(this);
   }
 
   return slots->mChildNodes;
@@ -426,7 +424,7 @@ nsINode::ChildNodes()
 void
 nsINode::InvalidateChildNodes()
 {
-  MOZ_ASSERT(IsElement() || !IsNodeOfType(nsINode::eATTRIBUTE));
+  MOZ_ASSERT(!IsAttr());
 
   nsSlots* slots = GetExistingSlots();
   if (!slots || !slots->mChildNodes) {
@@ -741,12 +739,12 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
 
   AutoTArray<const nsINode*, 32> parents1, parents2;
 
-  const nsINode *node1 = &aOtherNode, *node2 = this;
+  const nsINode* node1 = &aOtherNode;
+  const nsINode* node2 = this;
 
   // Check if either node is an attribute
-  const Attr* attr1 = nullptr;
-  if (node1->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    attr1 = static_cast<const Attr*>(node1);
+  const Attr* attr1 = Attr::FromNode(node1);
+  if (attr1) {
     const Element* elem = attr1->GetElement();
     // If there is an owner element add the attribute
     // to the chain and walk up to the element
@@ -755,8 +753,7 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
       parents1.AppendElement(attr1);
     }
   }
-  if (node2->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    const Attr* attr2 = static_cast<const Attr*>(node2);
+  if (auto* attr2 = Attr::FromNode(node2)) {
     const Element* elem = attr2->GetElement();
     if (elem == node1 && attr1) {
       // Both nodes are attributes on the same element.
@@ -1295,7 +1292,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
                          bool aNotify, nsAttrAndChildArray& aChildArray)
 {
   MOZ_ASSERT(!aKid->GetParentNode(), "Inserting node that already has parent");
-  MOZ_ASSERT(!IsNodeOfType(nsINode::eATTRIBUTE));
+  MOZ_ASSERT(!IsAttr());
 
   // The id-handling code, and in the future possibly other code, need to
   // react to unexpected attribute changes.
@@ -1649,7 +1646,7 @@ nsINode::doRemoveChildAt(uint32_t aIndex, bool aNotify,
   MOZ_ASSERT(aKid && aKid->GetParentNode() == this &&
              aKid == GetChildAt_Deprecated(aIndex) &&
              ComputeIndexOf(aKid) == (int32_t)aIndex, "Bogus aKid");
-  MOZ_ASSERT(!IsNodeOfType(nsINode::eATTRIBUTE));
+  MOZ_ASSERT(!IsAttr());
 
   nsMutationGuard::DidMutate();
   mozAutoDocUpdate updateBatch(GetComposedDoc(), UPDATE_CONTENT_MODEL, aNotify);

@@ -412,8 +412,6 @@ public:
    * Bit-flags to pass (or'ed together) to IsNodeOfType()
    */
   enum {
-    /** nsIAttribute nodes */
-    eATTRIBUTE           = 1 << 2,
     /** form control elements */
     eHTML_FORM_CONTROL   = 1 << 6,
     /** animation elements */
@@ -580,6 +578,14 @@ public:
   bool IsComment() const
   {
     return NodeType() == COMMENT_NODE;
+  }
+
+  /**
+   * Return whether the node is an Attr node.
+   */
+  bool IsAttr() const
+  {
+    return NodeType() == ATTRIBUTE_NODE;
   }
 
   virtual nsIDOMNode* AsDOMNode() = 0;
