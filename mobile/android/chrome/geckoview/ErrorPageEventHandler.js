@@ -4,10 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
-
-/* global debug:false, warn:false */
-GeckoViewUtils.initLogging("GeckoView.ErrorPageEventHandler", this);
 
 ChromeUtils.defineModuleGetter(this, "SSLExceptions",
                                "resource://gre/modules/SSLExceptions.jsm");
@@ -46,7 +42,7 @@ var ErrorPageEventHandler = {
               else
                 sslExceptions.addTemporaryException(uri, errorDoc.defaultView);
             } catch (e) {
-              warn `Failed to set cert exception: ${e}`;
+              dump("Failed to set cert exception: " + e + "\n");
             }
             errorDoc.location.reload();
           } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {

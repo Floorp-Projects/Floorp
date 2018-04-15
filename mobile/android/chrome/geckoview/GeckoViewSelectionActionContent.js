@@ -10,6 +10,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(this, "dump", () =>
+    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
+                       {}).AndroidLog.d.bind(null, "ViewSelectionActionContent"));
+
+function debug(aMsg) {
+  // dump(aMsg);
+}
+
 // Dispatches GeckoView:ShowSelectionAction and GeckoView:HideSelectionAction to
 // the GeckoSession on accessible caret changes.
 class GeckoViewSelectionActionContent extends GeckoViewContentModule {
@@ -121,12 +129,12 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
   }
 
   onEnable() {
-    debug `onEnable`;
+    debug("onEnable");
     addEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
   }
 
   onDisable() {
-    debug `onDisable`;
+    debug("onDisable");
     removeEventListener("mozcaretstatechanged", this, { mozSystemGroup: true });
   }
 
@@ -153,7 +161,7 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
       reason = "visibilitychange";
     }
 
-    debug `handleEvent: ${reason}`;
+    debug("handleEvent " + reason + " " + aEvent);
 
     if (["longpressonemptycontent",
          "releasecaret",
@@ -199,6 +207,8 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
       this._isActive = true;
       this._previousMessage = JSON.stringify(msg);
 
+      debug("onShowSelectionAction " + JSON.stringify(msg));
+
       // This event goes to GeckoViewSelectionAction.jsm, where the data is
       // further transformed and then sent to GeckoSession.
       this.eventDispatcher.sendRequest(msg, {
@@ -211,7 +221,7 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
           if (action) {
             action.perform.call(this, aEvent, response);
           } else {
-            warn `Invalid action ${response.id}`;
+            dump("Invalid action " + response.id);
           }
         },
         onError: _ => {
@@ -243,11 +253,10 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
       });
 
     } else {
-      warn `Unknown reason: ${reason}`;
+      dump("Unknown reason: " + reason);
     }
   }
 }
 
-let {debug, warn} =
-    GeckoViewSelectionActionContent.initLogging("GeckoViewSelectionAction");
-let module = GeckoViewSelectionActionContent.create(this);
+var selectionActionListener =
+    new GeckoViewSelectionActionContent("GeckoViewSelectionAction", this);
