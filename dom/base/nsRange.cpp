@@ -982,7 +982,7 @@ nsRange::DoSetRange(const RawRangeBoundary& aStart,
                     static_cast<nsIContent*>(aEnd.Container())->GetBindingParent()) ||
                   (!aRoot->GetParentNode() &&
                    (aRoot->IsDocument() ||
-                    aRoot->IsNodeOfType(nsINode::eATTRIBUTE) ||
+                    aRoot->IsAttr() ||
                     aRoot->IsDocumentFragment() ||
                      /*For backward compatibility*/
                     aRoot->IsContent())),

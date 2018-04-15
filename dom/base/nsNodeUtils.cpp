@@ -613,7 +613,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     }
   }
 
-  if (aDeep && (!aClone || !aNode->IsNodeOfType(nsINode::eATTRIBUTE))) {
+  if (aDeep && (!aClone || !aNode->IsAttr())) {
     // aNode's children.
     for (nsIContent* cloneChild = aNode->GetFirstChild();
          cloneChild;
