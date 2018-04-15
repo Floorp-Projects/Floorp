@@ -414,7 +414,7 @@ var Policies = {
               }
               url = Services.io.newFileURI(xpiFile).spec;
             }
-            AddonManager.getInstallForURL(url, null, "application/x-xpinstall").then(install => {
+            AddonManager.getInstallForURL(url, "application/x-xpinstall").then(install => {
               if (install.addon && install.addon.appDisabled) {
                 log.error(`Incompatible add-on - ${location}`);
                 install.cancel();

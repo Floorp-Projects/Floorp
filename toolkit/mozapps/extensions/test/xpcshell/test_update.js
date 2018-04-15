@@ -874,7 +874,7 @@ add_task(async function test_14() {
 
 add_task(async function test_16() {
   let url = "http://example.com/addons/test_install2_1.xpi";
-  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
   await promiseCompleteInstall(install);
 
   let a1 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
@@ -882,7 +882,7 @@ add_task(async function test_16() {
   let oldGUID = a1.syncGUID;
 
   let url_2 = "http://example.com/addons/test_install2_2.xpi";
-  let install_2 = await AddonManager.getInstallForURL(url_2, null, "application/x-xpinstall");
+  let install_2 = await AddonManager.getInstallForURL(url_2, "application/x-xpinstall");
   await promiseCompleteInstall(install_2);
 
   let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");

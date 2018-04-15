@@ -78,7 +78,7 @@ amManager.prototype = {
       retval = false;
     }
 
-    AddonManager.getInstallForURL(aUri, null, aMimetype, aHash, aName, aIcon, null, aBrowser).then(aInstall => {
+    AddonManager.getInstallForURL(aUri, aMimetype, aHash, aName, aIcon, null, aBrowser).then(aInstall => {
       function callCallback(uri, status) {
         try {
           aCallback.onInstallEnded(uri, status);

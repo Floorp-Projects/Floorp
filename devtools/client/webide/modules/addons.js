@@ -81,7 +81,7 @@ Addon.prototype = {
     if (addon && addon.userDisabled) {
       addon.userDisabled = false;
     } else {
-      let install = await AddonManager.getInstallForURL(this.xpiLink, null, "application/x-xpinstall");
+      let install = await AddonManager.getInstallForURL(this.xpiLink, "application/x-xpinstall");
       install.addListener(this);
       install.install();
     }
