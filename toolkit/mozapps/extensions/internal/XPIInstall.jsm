@@ -2288,33 +2288,32 @@ var DownloadAddonInstall = class extends AddonInstall {
   /**
    * Notify listeners that the download completed.
    */
-  downloadCompleted() {
-    XPIDatabase.getVisibleAddonForID(this.addon.id, async aAddon => {
-      if (aAddon)
-        this.existingAddon = aAddon;
+  async downloadCompleted() {
+    let aAddon = await XPIDatabase.getVisibleAddonForID(this.addon.id);
+    if (aAddon)
+      this.existingAddon = aAddon;
 
-      this.state = AddonManager.STATE_DOWNLOADED;
-      this.addon.updateDate = Date.now();
+    this.state = AddonManager.STATE_DOWNLOADED;
+    this.addon.updateDate = Date.now();
 
-      if (this.existingAddon) {
-        this.addon.existingAddonID = this.existingAddon.id;
-        this.addon.installDate = this.existingAddon.installDate;
-      } else {
-        this.addon.installDate = this.addon.updateDate;
-      }
-      await this.addon.updateBlocklistState({oldAddon: this.existingAddon});
+    if (this.existingAddon) {
+      this.addon.existingAddonID = this.existingAddon.id;
+      this.addon.installDate = this.existingAddon.installDate;
+    } else {
+      this.addon.installDate = this.addon.updateDate;
+    }
+    await this.addon.updateBlocklistState({oldAddon: this.existingAddon});
 
-      if (AddonManagerPrivate.callInstallListeners("onDownloadEnded",
-                                                   this.listeners,
-                                                   this.wrapper)) {
-        // If a listener changed our state then do not proceed with the install
-        if (this.state != AddonManager.STATE_DOWNLOADED)
-          return;
+    if (AddonManagerPrivate.callInstallListeners("onDownloadEnded",
+                                                 this.listeners,
+                                                 this.wrapper)) {
+      // If a listener changed our state then do not proceed with the install
+      if (this.state != AddonManager.STATE_DOWNLOADED)
+        return;
 
-        // proceed with the install state machine.
-        this.install();
-      }
-    });
+      // proceed with the install state machine.
+      this.install();
+    }
   }
 
   getInterface(iid) {
