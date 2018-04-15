@@ -6,8 +6,9 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  Log: "resource://gre/modules/Log.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["GeckoViewUtils"];
@@ -251,6 +252,90 @@ var GeckoViewUtils = {
       }
     }
     return null;
+  },
+
+  /**
+   * Add logging functions to the specified scope that forward to the given
+   * Log.jsm logger. Currently "debug" and "warn" functions are supported. To
+   * log something, call the function through a template literal:
+   *
+   *   function foo(bar, baz) {
+   *     debug `hello world`;
+   *     debug `foo called with ${bar} as bar`;
+   *     warn `this is a warning for ${baz}`;
+   *   }
+   *
+   * An inline format can also be used for logging:
+   *
+   *   let bar = 42;
+   *   do_something(bar); // No log.
+   *   do_something(debug.foo = bar); // Output "foo = 42" to the log.
+   *
+   * @param tag Name of the Log.jsm logger to forward logs to.
+   * @param scope Scope to add the logging functions to.
+   */
+  initLogging: function(tag, scope) {
+    // Only provide two levels for simplicity.
+    // For "info", use "debug" instead.
+    // For "error", throw an actual JS error instead.
+    for (const level of ["debug", "warn"]) {
+      const log = (strings, ...exprs) =>
+          this._log(log.logger, level, strings, exprs);
+
+      XPCOMUtils.defineLazyGetter(log, "logger", _ => {
+        const logger = Log.repository.getLogger(tag);
+        logger.parent = this.rootLogger;
+        return logger;
+      });
+
+      scope[level] = new Proxy(log, {
+        set: (obj, prop, value) => obj([prop + " = ", ""], value) || true,
+      });
+    }
+    return scope;
+  },
+
+  get rootLogger() {
+    if (!this._rootLogger) {
+      this._rootLogger = Log.repository.getLogger("GeckoView");
+      this._rootLogger.addAppender(new Log.AndroidAppender());
+    }
+    return this._rootLogger;
+  },
+
+  _log: function(logger, level, strings, exprs) {
+    if (!Array.isArray(strings)) {
+      const [, file, line] =
+          (new Error()).stack.match(/.*\n.*\n.*@(.*):(\d+):/);
+      throw Error(`Expecting template literal: ${level} \`foo \${bar}\``,
+                  file, +line);
+    }
+
+    // Do some GeckoView-specific formatting:
+    // 1) Heuristically format flags as hex.
+    // 2) Heuristically format nsresult as string name or hex.
+    for (let i = 0; i < exprs.length; i++) {
+      const expr = exprs[i];
+      switch (typeof expr) {
+        case "number":
+          if (expr > 0 && /\ba?[fF]lags?[\s=:]+$/.test(strings[i])) {
+            // Likely a flag; display in hex.
+            exprs[i] = `0x${expr.toString(0x10)}`;
+          } else if (expr >= 0 && /\b(a?[sS]tatus|rv)[\s=:]+$/.test(strings[i])) {
+            // Likely an nsresult; display in name or hex.
+            exprs[i] = `0x${expr.toString(0x10)}`;
+            for (const name in Cr) {
+              if (expr === Cr[name]) {
+                exprs[i] = name;
+                break;
+              }
+            }
+          }
+          break;
+      }
+    }
+
+    return logger[level](strings, ...exprs);
   },
 };
 
