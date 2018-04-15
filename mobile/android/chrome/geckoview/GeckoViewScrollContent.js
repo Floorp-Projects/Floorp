@@ -4,15 +4,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ChromeUtils.import("resource://gre/modules/GeckoViewContentModule.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "dump", () =>
+    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
+                       {}).AndroidLog.d.bind(null, "ViewScrollContent"));
+
+function debug(aMsg) {
+  // dump(aMsg);
+}
 
 class GeckoViewScrollContent extends GeckoViewContentModule {
   onEnable() {
-    debug `onEnable`;
+    debug("onEnable");
     addEventListener("scroll", this, false);
   }
 
   onDisable() {
-    debug `onDisable`;
+    debug("onDisable");
     removeEventListener("scroll", this);
   }
 
@@ -21,7 +30,7 @@ class GeckoViewScrollContent extends GeckoViewContentModule {
       return;
     }
 
-    debug `handleEvent: ${aEvent.type}`;
+    debug("handleEvent " + aEvent.type);
 
     switch (aEvent.type) {
       case "scroll":
@@ -34,6 +43,4 @@ class GeckoViewScrollContent extends GeckoViewContentModule {
     }
   }
 }
-
-let {debug, warn} = GeckoViewScrollContent.initLogging("GeckoViewScroll");
-let module = GeckoViewScrollContent.create(this);
+var scrollListener = new GeckoViewScrollContent("GeckoViewScroll", this);

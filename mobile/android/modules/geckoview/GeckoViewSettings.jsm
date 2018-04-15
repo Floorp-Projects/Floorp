@@ -29,6 +29,14 @@ XPCOMUtils.defineLazyGetter(
            .replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
   });
 
+XPCOMUtils.defineLazyGetter(this, "dump", () =>
+    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
+                       {}).AndroidLog.d.bind(null, "ViewSettings"));
+
+function debug(aMsg) {
+  // dump(aMsg);
+}
+
 // Handles GeckoView settings including:
 // * multiprocess
 // * user agent override
@@ -48,12 +56,11 @@ class GeckoViewSettings extends GeckoViewModule {
   }
 
   onSettingsUpdate() {
-    const settings = this.settings;
-    debug `onSettingsUpdate: ${settings}`;
+    debug("onSettingsUpdate: " + JSON.stringify(this.settings));
 
-    this.displayMode = settings.displayMode;
-    this.useTrackingProtection = !!settings.useTrackingProtection;
-    this.useDesktopMode = !!settings.useDesktopMode;
+    this.displayMode = this.settings.displayMode;
+    this.useTrackingProtection = !!this.settings.useTrackingProtection;
+    this.useDesktopMode = !!this.settings.useDesktopMode;
   }
 
   get useMultiprocess() {
@@ -70,7 +77,7 @@ class GeckoViewSettings extends GeckoViewModule {
   }
 
   onUserAgentRequest(aSubject, aTopic, aData) {
-    debug `onUserAgentRequest`;
+    debug("onUserAgentRequest");
 
     let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
 
