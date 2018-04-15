@@ -2210,11 +2210,11 @@ nsContentUtils::InProlog(nsINode *aNode)
   NS_PRECONDITION(aNode, "missing node to nsContentUtils::InProlog");
 
   nsINode* parent = aNode->GetParentNode();
-  if (!parent || !parent->IsNodeOfType(nsINode::eDOCUMENT)) {
+  if (!parent || !parent->IsDocument()) {
     return false;
   }
 
-  nsIDocument* doc = static_cast<nsIDocument*>(parent);
+  nsIDocument* doc = parent->AsDocument();
   nsIContent* root = doc->GetRootElement();
 
   return !root || doc->ComputeIndexOf(aNode) < doc->ComputeIndexOf(root);
@@ -2412,10 +2412,11 @@ nsContentUtils::GetCrossDocParentNode(nsINode* aChild)
     parent = aChild->AsContent()->GetFlattenedTreeParent();
   }
 
-  if (parent || !aChild->IsNodeOfType(nsINode::eDOCUMENT))
+  if (parent || !aChild->IsDocument()) {
     return parent;
+  }
 
-  nsIDocument* doc = static_cast<nsIDocument*>(aChild);
+  nsIDocument* doc = aChild->AsDocument();
   nsIDocument* parentDoc = doc->GetParentDocument();
   return parentDoc ? parentDoc->FindContentForSubDocument(doc) : nullptr;
 }

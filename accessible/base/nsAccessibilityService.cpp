@@ -1044,11 +1044,10 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
   MOZ_ASSERT(!document->GetAccessible(aNode),
              "We already have an accessible for this node.");
 
-  if (aNode->IsNodeOfType(nsINode::eDOCUMENT)) {
+  if (aNode->IsDocument()) {
     // If it's document node then ask accessible document loader for
     // document accessible, otherwise return null.
-    nsCOMPtr<nsIDocument> document(do_QueryInterface(aNode));
-    return GetDocAccessible(document);
+    return GetDocAccessible(aNode->AsDocument());
   }
 
   // We have a content node.
