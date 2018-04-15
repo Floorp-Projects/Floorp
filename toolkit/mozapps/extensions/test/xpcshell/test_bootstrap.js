@@ -1134,7 +1134,7 @@ add_task(async function test_23() {
   ]);
 
   let url = "http://example.com/addons/test_bootstrap1_1.xpi";
-  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
 
   ensure_test_completed();
 

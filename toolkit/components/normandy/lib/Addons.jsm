@@ -62,7 +62,7 @@ var Addons = {
    *   add-on with a matching ID is already installed.
    */
   async install(addonUrl, options) {
-    const installObj = await AddonManager.getInstallForURL(addonUrl, null, "application/x-xpinstall");
+    const installObj = await AddonManager.getInstallForURL(addonUrl, "application/x-xpinstall");
     return this.applyInstall(installObj, options);
   },
 

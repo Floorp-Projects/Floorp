@@ -59,7 +59,7 @@
       let { AddonManager } = SpecialPowers.Cu.import("resource://gre/modules/AddonManager.jsm", {});
       const INSTALL_URI =
         "http://mochi.test:8888/tests/toolkit/mozapps/extensions/test/mochitest/file_bug687194.xpi";
-      let install = await AddonManager.getInstallForURL(INSTALL_URI, null, "application/x-xpinstall");
+      let install = await AddonManager.getInstallForURL(INSTALL_URI, "application/x-xpinstall");
       install = SpecialPowers.wrap(install);
       install.addListener(SpecialPowers.wrapCallbackObject({
         /* eslint no-shadow: 0 */

@@ -3472,7 +3472,7 @@ var gDragDrop = {
       }
 
       if (url) {
-        let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+        let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
         AddonManager.installAddonFromAOM(browser, document.documentURIObject, install);
       }
     }

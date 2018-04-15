@@ -629,8 +629,7 @@ function Pmanual_update(aVersion) {
   for (let name of ["soft1", "soft2", "soft3", "soft4", "hard1", "regexp1"]) {
     Pinstalls.push(
       AddonManager.getInstallForURL(
-        `http://example.com/addons/blocklist_${name}_${aVersion}.xpi`,
-        null, "application/x-xpinstall"));
+        `http://example.com/addons/blocklist_${name}_${aVersion}.xpi`, "application/x-xpinstall"));
   }
 
   return Promise.all(Pinstalls).then(installs => {
