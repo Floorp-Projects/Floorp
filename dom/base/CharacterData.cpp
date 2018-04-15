@@ -663,7 +663,7 @@ CharacterData::DoGetXBLBinding() const
 bool
 CharacterData::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~eDATA_NODE);
+  return false;
 }
 
 void

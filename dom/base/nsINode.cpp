@@ -529,7 +529,7 @@ nsINode::GetNodeValueInternal(nsAString& aNodeValue)
 nsINode*
 nsINode::RemoveChild(nsINode& aOldChild, ErrorResult& aError)
 {
-  if (IsNodeOfType(eDATA_NODE)) {
+  if (IsCharacterData()) {
     // aOldChild can't be one of our children.
     aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
     return nullptr;
