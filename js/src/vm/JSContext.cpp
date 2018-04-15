@@ -884,7 +884,7 @@ void
 js::ReportIsNotDefined(JSContext* cx, HandleId id)
 {
     JSAutoByteString printable;
-    if (!ValueToPrintable(cx, IdToValue(id), &printable))
+    if (!ValueToPrintableLatin1(cx, IdToValue(id), &printable))
         return;
     JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_DEFINED, printable.ptr());
 }
