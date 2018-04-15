@@ -1599,6 +1599,12 @@ ValueToPrintableLatin1(JSContext* cx, const Value&, JSAutoByteString* bytes,
                        bool asSource = false);
 
 /*
+ * Convert a value to a printable C string encoded in UTF-8.
+ */
+extern const char*
+ValueToPrintableUTF8(JSContext* cx, const Value&, JSAutoByteString* bytes, bool asSource = false);
+
+/*
  * Convert a non-string value to a string, returning null after reporting an
  * error, otherwise returning a new string reference.
  */
