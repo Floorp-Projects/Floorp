@@ -2312,20 +2312,20 @@ nsNativeThemeCocoa::SeparatorResponsibility(nsIFrame* aBefore, nsIFrame* aAfter)
   return aAfter;
 }
 
-CGRect
-nsNativeThemeCocoa::SeparatorAdjustedRect(CGRect aRect, nsIFrame* aLeft,
-                                          nsIFrame* aCurrent, nsIFrame* aRight)
+static CGRect
+SeparatorAdjustedRect(CGRect aRect, nsNativeThemeCocoa::SegmentParams aParams)
 {
   // A separator between two segments should always be located in the leftmost
   // pixel column of the segment to the right of the separator, regardless of
   // who ends up drawing it.
   // CoreUI draws the separators inside the drawing rect.
-  if (aLeft && SeparatorResponsibility(aLeft, aCurrent) == aLeft) {
-    // The left button draws the separator, so we need to make room for it.
+  if (!aParams.atLeftEnd && !aParams.drawsLeftSeparator) {
+    // The segment to the left of us draws the separator, so we need to make
+    // room for it.
     aRect.origin.x += 1;
     aRect.size.width -= 1;
   }
-  if (SeparatorResponsibility(aCurrent, aRight) == aCurrent) {
+  if (aParams.drawsRightSeparator) {
     // We draw the right separator, so we need to extend the draw rect into the
     // segment to our right.
     aRect.size.width += 1;
@@ -2348,56 +2348,86 @@ static NSString* ToolbarButtonPosition(BOOL aIsFirst, BOOL aIsLast)
 struct SegmentedControlRenderSettings {
   const CGFloat* heights;
   const NSString* widgetName;
-  const BOOL ignoresPressedWhenSelected;
-  const BOOL isToolbarControl;
 };
 
 static const CGFloat tabHeights[3] = { 17, 20, 23 };
 
 static const SegmentedControlRenderSettings tabRenderSettings = {
-  tabHeights, @"tab", YES, NO
+  tabHeights, @"tab"
 };
 
 static const CGFloat toolbarButtonHeights[3] = { 15, 18, 22 };
 
 static const SegmentedControlRenderSettings toolbarButtonRenderSettings = {
-  toolbarButtonHeights, @"kCUIWidgetButtonSegmentedSCurve", NO, YES
+  toolbarButtonHeights, @"kCUIWidgetButtonSegmentedSCurve"
 };
+
+nsNativeThemeCocoa::SegmentParams
+nsNativeThemeCocoa::ComputeSegmentParams(nsIFrame* aFrame,
+                                         EventStates aEventState,
+                                         SegmentType aSegmentType)
+{
+  SegmentParams params;
+  params.segmentType = aSegmentType;
+  params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
+  params.pressed = IsPressedButton(aFrame);
+  params.selected = IsSelectedButton(aFrame);
+  params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUS);
+  bool isRTL = IsFrameRTL(aFrame);
+  nsIFrame* left = GetAdjacentSiblingFrameWithSameAppearance(aFrame, isRTL);
+  nsIFrame* right = GetAdjacentSiblingFrameWithSameAppearance(aFrame, !isRTL);
+  params.atLeftEnd = !left;
+  params.atRightEnd = !right;
+  params.drawsLeftSeparator = SeparatorResponsibility(left, aFrame) == aFrame;
+  params.drawsRightSeparator = SeparatorResponsibility(aFrame, right) == aFrame;
+  params.rtl = isRTL;
+  return params;
+}
+
+static SegmentedControlRenderSettings
+RenderSettingsForSegmentType(nsNativeThemeCocoa::SegmentType aSegmentType)
+{
+  switch (aSegmentType) {
+    case nsNativeThemeCocoa::SegmentType::eToolbarButton:
+      return toolbarButtonRenderSettings;
+    case nsNativeThemeCocoa::SegmentType::eTab:
+      return tabRenderSettings;
+  }
+}
 
 void
 nsNativeThemeCocoa::DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
-                                EventStates inState, nsIFrame* aFrame,
-                                const SegmentedControlRenderSettings& aSettings)
+                                const SegmentParams& aParams)
 {
-  BOOL isActive = IsActive(aFrame, aSettings.isToolbarControl);
-  BOOL isFocused = inState.HasState(NS_EVENT_STATE_FOCUS);
-  BOOL isSelected = IsSelectedButton(aFrame);
-  BOOL isPressed = IsPressedButton(aFrame);
-  if (isSelected && aSettings.ignoresPressedWhenSelected) {
-    isPressed = NO;
-  }
+  SegmentedControlRenderSettings renderSettings =
+    RenderSettingsForSegmentType(aParams.segmentType);
 
-  BOOL isRTL = IsFrameRTL(aFrame);
-  nsIFrame* left = GetAdjacentSiblingFrameWithSameAppearance(aFrame, isRTL);
-  nsIFrame* right = GetAdjacentSiblingFrameWithSameAppearance(aFrame, !isRTL);
-  CGRect drawRect = SeparatorAdjustedRect(inBoxRect, left, aFrame, right);
-  BOOL drawLeftSeparator = SeparatorResponsibility(left, aFrame) == aFrame;
-  BOOL drawRightSeparator = SeparatorResponsibility(aFrame, right) == aFrame;
-  NSControlSize controlSize = FindControlSize(drawRect.size.height, aSettings.heights, 4.0f);
+  NSControlSize controlSize =
+    FindControlSize(inBoxRect.size.height, renderSettings.heights, 4.0f);
+  CGRect drawRect = SeparatorAdjustedRect(inBoxRect, aParams);
 
-  RenderWithCoreUI(drawRect, cgContext, [NSDictionary dictionaryWithObjectsAndKeys:
-            aSettings.widgetName, @"widget",
-            (isActive ? @"kCUIPresentationStateActiveKey" : @"kCUIPresentationStateInactive"), @"kCUIPresentationStateKey",
-            ToolbarButtonPosition(!left, !right), @"kCUIPositionKey",
-            [NSNumber numberWithBool:drawLeftSeparator], @"kCUISegmentLeadingSeparatorKey",
-            [NSNumber numberWithBool:drawRightSeparator], @"kCUISegmentTrailingSeparatorKey",
-            [NSNumber numberWithBool:isSelected], @"value",
-            (isPressed ? @"pressed" : (isActive ? @"normal" : @"inactive")), @"state",
-            [NSNumber numberWithBool:isFocused], @"focus",
-            CUIControlSizeForCocoaSize(controlSize), @"size",
-            [NSNumber numberWithBool:YES], @"is.flipped",
-            @"up", @"direction",
-            nil]);
+  NSDictionary* dict = @{
+    @"widget": renderSettings.widgetName,
+    @"kCUIPresentationStateKey":
+      (aParams.insideActiveWindow ? @"kCUIPresentationStateActiveKey"
+                                  : @"kCUIPresentationStateInactive"),
+    @"kCUIPositionKey":
+      ToolbarButtonPosition(aParams.atLeftEnd, aParams.atRightEnd),
+    @"kCUISegmentLeadingSeparatorKey":
+      [NSNumber numberWithBool:aParams.drawsLeftSeparator],
+    @"kCUISegmentTrailingSeparatorKey":
+      [NSNumber numberWithBool:aParams.drawsRightSeparator],
+    @"value": [NSNumber numberWithBool:aParams.selected],
+    @"state": (aParams.pressed ? @"pressed"
+                               : (aParams.insideActiveWindow ? @"normal"
+                                                             : @"inactive")),
+    @"focus": [NSNumber numberWithBool:aParams.focused],
+    @"size": CUIControlSizeForCocoaSize(controlSize),
+    @"is.flipped": [NSNumber numberWithBool:YES],
+    @"direction": @"up"
+  };
+
+  RenderWithCoreUI(drawRect, cgContext, dict);
 }
 
 nsIFrame*
@@ -2873,8 +2903,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
     }
       break;
 
-    case NS_THEME_TOOLBARBUTTON:
-      DrawSegment(cgContext, macRect, eventState, aFrame, toolbarButtonRenderSettings);
+    case NS_THEME_TOOLBARBUTTON: {
+      SegmentParams params =
+        ComputeSegmentParams(aFrame, eventState, SegmentType::eToolbarButton);
+      params.insideActiveWindow = [NativeWindowForFrame(aFrame) isMainWindow];
+      DrawSegment(cgContext, macRect, params);
+    }
       break;
 
     case NS_THEME_SEPARATOR: {
@@ -3246,8 +3280,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
     }
       break;
 
-    case NS_THEME_TAB:
-      DrawSegment(cgContext, macRect, eventState, aFrame, tabRenderSettings);
+    case NS_THEME_TAB: {
+      SegmentParams params =
+        ComputeSegmentParams(aFrame, eventState, SegmentType::eTab);
+      params.pressed = params.pressed && !params.selected;
+      DrawSegment(cgContext, macRect, params);
+    }
       break;
 
     case NS_THEME_TABPANELS:
