@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <style>
+    div {
+      width: 200px;
+      height: 200px;
+      background-color: blue;
+      filter: greyscale(50%);
+      position: relative;
+    }
+    #second {
+      width: 600px;
+      height: 500px;
+      background-color: green;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="top" style="z-index:-4;"></div>
+    <div style="top: 10px;"></div>
+    <div style="top: 20px;">
+        <div id="second" style="top: -400px;"></div>
+    </div>
+  </body>
+</html>
+
