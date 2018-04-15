@@ -1926,6 +1926,20 @@ js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, JSAutoByteString* b
     return bytes->encodeLatin1(cx, str);
 }
 
+const char*
+js::ValueToPrintableUTF8(JSContext* cx, const Value& vArg, JSAutoByteString* bytes, bool asSource)
+{
+    RootedValue v(cx, vArg);
+    JSString* str;
+    if (asSource)
+        str = ValueToSource(cx, v);
+    else
+        str = ToString<CanGC>(cx, v);
+    if (!str)
+        return nullptr;
+    return bytes->encodeUtf8(cx, RootedString(cx, str));
+}
+
 template <AllowGC allowGC>
 JSString*
 js::ToStringSlow(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType arg)
