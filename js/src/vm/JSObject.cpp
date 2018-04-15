@@ -3888,7 +3888,7 @@ JSObject::sizeOfIncludingThisInNursery() const
 
     MOZ_ASSERT(!isTenured());
 
-    const Nursery& nursery = runtimeFromActiveCooperatingThread()->gc.nursery();
+    const Nursery& nursery = runtimeFromMainThread()->gc.nursery();
     size_t size = Arena::thingSize(allocKindForTenure(nursery));
 
     if (is<NativeObject>()) {

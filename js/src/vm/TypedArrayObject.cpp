@@ -198,7 +198,7 @@ TypedArrayObject::objectMoved(JSObject* obj, JSObject* old)
         return 0;
     }
 
-    Nursery& nursery = obj->runtimeFromActiveCooperatingThread()->gc.nursery();
+    Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
     void* buf = oldObj->elements();
 
     if (!nursery.isInside(buf)) {

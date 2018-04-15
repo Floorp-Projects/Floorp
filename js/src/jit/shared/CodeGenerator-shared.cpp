@@ -1062,7 +1062,7 @@ CodeGeneratorShared::verifyCompactTrackedOptimizationsMap(JitCode* code, uint32_
             // decoded. This is disabled for now if the types table might
             // contain nursery pointers, in which case the types might not
             // match, see bug 1175761.
-            JSRuntime* rt = code->runtimeFromActiveCooperatingThread();
+            JSRuntime* rt = code->runtimeFromMainThread();
             if (!rt->gc.storeBuffer().cancelIonCompilations()) {
                 IonTrackedOptimizationsTypeInfo typeInfo = typesTable->entry(index);
                 TempOptimizationTypeInfoVector tvec(alloc());

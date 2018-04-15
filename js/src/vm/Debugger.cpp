@@ -3267,7 +3267,7 @@ Debugger::findZoneEdges(Zone* zone, js::gc::ZoneComponentFinder& finder)
      * This ensure that debuggers and their debuggees are finalized in the same
      * group.
      */
-    JSRuntime* rt = zone->runtimeFromActiveCooperatingThread();
+    JSRuntime* rt = zone->runtimeFromMainThread();
     for (Debugger* dbg : rt->debuggerList()) {
         Zone* w = dbg->object->zone();
         if (w == zone || !w->isGCMarking())
