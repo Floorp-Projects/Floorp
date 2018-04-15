@@ -71,19 +71,6 @@ MarkFramesWithItemsAndImagesModified(nsDisplayList* aList)
   }
 }
 
-static bool
-IsAnyAncestorModified(nsIFrame* aFrame)
-{
-  nsIFrame* f = aFrame;
-  while (f) {
-    if (f->IsFrameModified()) {
-      return true;
-    }
-    f = nsLayoutUtils::GetCrossDocParentFrame(f);
-  }
-  return false;
-}
-
 static AnimatedGeometryRoot*
 SelectAGRForFrame(nsIFrame* aFrame, AnimatedGeometryRoot* aParentAGR)
 {
@@ -197,6 +184,24 @@ RetainedDisplayListBuilder::IncrementSubDocPresShellPaintCount(nsDisplayItem* aI
   mBuilder.IncrementPresShellPaintCount(presShell);
 }
 
+static bool
+AnyContentAncestorModified(nsIFrame* aFrame,
+                           nsIFrame* aStopAtFrame = nullptr)
+{
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
+    if (f->IsFrameModified()) {
+      return true;
+    }
+
+    if (aStopAtFrame && f == aStopAtFrame) {
+      break;
+    }
+  }
+
+  return false;
+}
+
 static void
 UpdateASR(nsDisplayItem* aItem,
           Maybe<const ActiveScrolledRoot*>& aContainerASR)
@@ -305,7 +310,7 @@ public:
 
   bool IsChanged(nsDisplayItem* aItem) {
     return aItem->HasDeletedFrame() || !aItem->CanBeReused() ||
-           IsAnyAncestorModified(aItem->FrameForInvalidation());
+           AnyContentAncestorModified(aItem->FrameForInvalidation());
   }
 
   void UpdateContainerASR(nsDisplayItem* aItem)
