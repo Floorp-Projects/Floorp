@@ -14,8 +14,8 @@ gTestserver.registerDirectory("/data/", do_get_file("data"));
 const PREF_BLOCKLIST_ITEM_URL = "extensions.blocklist.itemURL";
 Services.prefs.setCharPref(PREF_BLOCKLIST_ITEM_URL, "http://example.com/blocklist/%blockID%");
 
-async function getAddonBlocklistURL(addon) {
-  let entry = await Services.blocklist.getAddonBlocklistEntry(addon);
+function getAddonBlocklistURL(addon) {
+  let entry = Services.blocklist.getAddonBlocklistEntry(addon);
   return entry && entry.url;
 }
 
@@ -366,11 +366,11 @@ add_task(async function test_pt3() {
   checkAddonState(addons[3], {userDisabled: false, softDisabled: false, appDisabled: true});
 
   // Check blockIDs are correct
-  equal(await getAddonBlocklistURL(addons[0]), create_blocklistURL(addons[0].id));
-  equal(await getAddonBlocklistURL(addons[1]), create_blocklistURL(addons[1].id));
-  equal(await getAddonBlocklistURL(addons[2]), create_blocklistURL(addons[2].id));
-  equal(await getAddonBlocklistURL(addons[3]), create_blocklistURL(addons[3].id));
-  equal(await getAddonBlocklistURL(addons[4]), create_blocklistURL(addons[4].id));
+  equal(getAddonBlocklistURL(addons[0]), create_blocklistURL(addons[0].id));
+  equal(getAddonBlocklistURL(addons[1]), create_blocklistURL(addons[1].id));
+  equal(getAddonBlocklistURL(addons[2]), create_blocklistURL(addons[2].id));
+  equal(getAddonBlocklistURL(addons[3]), create_blocklistURL(addons[3].id));
+  equal(getAddonBlocklistURL(addons[4]), create_blocklistURL(addons[4].id));
 
   // All plugins have the same blockID on the test
   equal(Services.blocklist.getPluginBlocklistURL(PLUGINS[0]), create_blocklistURL("test_bug455906_plugin"));
