@@ -9,17 +9,9 @@ var EXPORTED_SYMBOLS = ["GeckoViewTrackingProtection"];
 ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
-              {}).AndroidLog.d.bind(null, "ViewTrackingProtection"));
-
-function debug(aMsg) {
-  // dump(aMsg);
-}
-
 class GeckoViewTrackingProtection extends GeckoViewModule {
   onEnable() {
-    debug("onEnable");
+    debug `onEnable`;
 
     const flags = Ci.nsIWebProgress.NOTIFY_SECURITY;
     this.progressFilter =
@@ -30,7 +22,7 @@ class GeckoViewTrackingProtection extends GeckoViewModule {
   }
 
   onSecurityChange(aWebProgress, aRequest, aState) {
-    debug("onSecurityChange");
+    debug `onSecurityChange`;
 
     if (!(aState & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) ||
         !aRequest || !(aRequest instanceof Ci.nsIClassifiedChannel)) {
