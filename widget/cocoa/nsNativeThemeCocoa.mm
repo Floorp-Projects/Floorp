@@ -1408,8 +1408,6 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   else {
     if (inKind == kThemeArrowButton)
       bdi.state = kThemeStateUnavailable; // these are always drawn as unavailable
-    else if (!isActive && inKind == kThemeListHeaderButton)
-      bdi.state = kThemeStateInactive;
     else
       bdi.state = kThemeStateActive;
   }
@@ -1438,22 +1436,81 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
       drawFrame.size.width -= 2;
     }
   }
-  else if (inKind == kThemeListHeaderButton) {
-    CGContextClipToRect(cgContext, inBoxRect);
-    // Always remove the top border.
-    drawFrame.origin.y -= 1;
-    drawFrame.size.height += 1;
-    // Remove the left border in LTR mode and the right border in RTL mode.
-    drawFrame.size.width += 1;
-    bool isLast = IsLastTreeHeaderCell(aFrame);
-    if (isLast)
-      drawFrame.size.width += 1; // Also remove the other border.
-    if (!IsFrameRTL(aFrame) || isLast)
-      drawFrame.origin.x -= 1;
-  }
 
   RenderTransformedHIThemeControl(cgContext, drawFrame, RenderButton, &bdi,
                                   IsFrameRTL(aFrame));
+
+#if DRAW_IN_FRAME_DEBUG
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
+  CGContextFillRect(cgContext, inBoxRect);
+#endif
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+nsNativeThemeCocoa::TreeHeaderCellParams
+nsNativeThemeCocoa::ComputeTreeHeaderCellParams(nsIFrame* aFrame,
+                                                EventStates aEventState)
+{
+  TreeHeaderCellParams params;
+  params.controlParams = ComputeControlParams(aFrame, aEventState);
+  params.sortDirection = GetTreeSortDirection(aFrame);
+  params.lastTreeHeaderCell = IsLastTreeHeaderCell(aFrame);
+  return params;
+}
+
+void
+nsNativeThemeCocoa::DrawTreeHeaderCell(CGContextRef cgContext,
+                                       const HIRect& inBoxRect,
+                                       const TreeHeaderCellParams& aParams)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  HIThemeButtonDrawInfo bdi;
+  bdi.version = 0;
+  bdi.kind = kThemeListHeaderButton;
+  bdi.value = kThemeButtonOff;
+  bdi.adornment = kThemeAdornmentNone;
+
+  switch (aParams.sortDirection) {
+    case eTreeSortDirection_Natural:
+      break;
+    case eTreeSortDirection_Ascending:
+      bdi.value = kThemeButtonOn;
+      bdi.adornment = kThemeAdornmentHeaderButtonSortUp;
+      break;
+    case eTreeSortDirection_Descending:
+      bdi.value = kThemeButtonOn;
+      break;
+  }
+
+  if (aParams.controlParams.disabled) {
+    bdi.state = kThemeStateUnavailable;
+  } else if (aParams.controlParams.pressed) {
+    bdi.state = kThemeStatePressed;
+  } else if (!aParams.controlParams.insideActiveWindow) {
+    bdi.state = kThemeStateInactive;
+  } else {
+    bdi.state = kThemeStateActive;
+  }
+
+  CGContextClipToRect(cgContext, inBoxRect);
+
+  HIRect drawFrame = inBoxRect;
+  // Always remove the top border.
+  drawFrame.origin.y -= 1;
+  drawFrame.size.height += 1;
+  // Remove the left border in LTR mode and the right border in RTL mode.
+  drawFrame.size.width += 1;
+  if (aParams.lastTreeHeaderCell) {
+    drawFrame.size.width += 1; // Also remove the other border.
+  }
+  if (!aParams.controlParams.rtl || aParams.lastTreeHeaderCell) {
+    drawFrame.origin.x -= 1;
+  }
+
+  RenderTransformedHIThemeControl(cgContext, drawFrame, RenderButton, &bdi,
+                                  aParams.controlParams.rtl);
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
@@ -2731,13 +2788,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
                  kThemeDisclosureDown, kThemeAdornmentNone, eventState, aFrame);
       break;
 
-    case NS_THEME_TREEHEADERCELL: {
-      TreeSortDirection sortDirection = GetTreeSortDirection(aFrame);
-      DrawButton(cgContext, kThemeListHeaderButton, macRect, false,
-                 sortDirection == eTreeSortDirection_Natural ? kThemeButtonOff : kThemeButtonOn,
-                 sortDirection == eTreeSortDirection_Ascending ?
-                 kThemeAdornmentHeaderButtonSortUp : kThemeAdornmentNone, eventState, aFrame);
-    }
+    case NS_THEME_TREEHEADERCELL:
+      DrawTreeHeaderCell(cgContext, macRect,
+                         ComputeTreeHeaderCellParams(aFrame, eventState));
       break;
 
     case NS_THEME_TREEITEM:
