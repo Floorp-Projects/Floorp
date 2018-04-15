@@ -14,6 +14,7 @@
 #include "mozilla/ServoUtils.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsWrapperCache.h"
+#include "StyleSheetInfo.h"
 
 class nsIDocument;
 class nsINode;
@@ -149,6 +150,7 @@ public:
 
   inline bool HasUniqueInner() const;
   void EnsureUniqueInner();
+  inline void AssertHasUniqueInner() const;
 
   // Append all of this sheet's child sheets to aArray.
   void AppendAllChildSheets(nsTArray<StyleSheet*>& aArray);
