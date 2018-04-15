@@ -411,8 +411,6 @@ public:
    * Bit-flags to pass (or'ed together) to IsNodeOfType()
    */
   enum {
-    /** nsIDocument nodes */
-    eDOCUMENT            = 1 << 1,
     /** nsIAttribute nodes */
     eATTRIBUTE           = 1 << 2,
     /** xml processing instructions */

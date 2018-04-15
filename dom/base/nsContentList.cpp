@@ -993,13 +993,9 @@ nsContentList::AssertInSync()
 
   // XXX This code will need to change if nsContentLists can ever match
   // elements that are outside of the document element.
-  nsIContent *root;
-  if (mRootNode->IsNodeOfType(nsINode::eDOCUMENT)) {
-    root = static_cast<nsIDocument*>(mRootNode)->GetRootElement();
-  }
-  else {
-    root = static_cast<nsIContent*>(mRootNode);
-  }
+  nsIContent* root = mRootNode->IsDocument()
+    ? mRootNode->AsDocument()->GetRootElement()
+    : mRootNode->AsContent();
 
   nsCOMPtr<nsIContentIterator> iter;
   if (mDeep) {

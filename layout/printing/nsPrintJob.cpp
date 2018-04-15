@@ -2540,7 +2540,7 @@ GetCorrespondingNodeInDocument(const nsINode* aNode, nsIDocument* aDoc)
     indexArray.AppendElement(index);
     child = parent;
   }
-  MOZ_ASSERT(child->IsNodeOfType(nsINode::eDOCUMENT));
+  MOZ_ASSERT(child->IsDocument());
 
   nsINode* correspondingNode = aDoc;
   for (int32_t i = indexArray.Length() - 1; i >= 0; --i) {
