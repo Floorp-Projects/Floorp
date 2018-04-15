@@ -123,6 +123,12 @@ public:
     ButtonType button = ButtonType::eRegularPushButton;
   };
 
+  struct DropdownParams {
+    ControlParams controlParams;
+    bool pullsDown = false;
+    bool editable = false;
+  };
+
   struct TreeHeaderCellParams {
     ControlParams controlParams;
     TreeSortDirection sortDirection = eTreeSortDirection_Natural;
@@ -254,8 +260,7 @@ protected:
                         mozilla::EventStates inState, uint8_t aWidgetType,
                         nsIFrame* aFrame);
   void DrawDropdown(CGContextRef context, const HIRect& inBoxRect,
-                    mozilla::EventStates inState, uint8_t aWidgetType,
-                    nsIFrame* aFrame);
+                    const DropdownParams& aParams);
   void DrawSpinButtons(CGContextRef context, ThemeButtonKind inKind,
                        const HIRect& inBoxRect, ThemeDrawState inDrawState,
                        ThemeButtonAdornment inAdornment,
