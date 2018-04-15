@@ -11,6 +11,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
@@ -27,6 +28,7 @@
 
 using namespace js;
 
+using mozilla::IsAsciiDigit;
 using mozilla::IsNegativeZero;
 using mozilla::IsSame;
 using mozilla::PodCopy;
@@ -925,7 +927,7 @@ JSFlatString::isIndexSlow(const CharT* s, size_t length, uint32_t* indexp)
 {
     CharT ch = *s;
 
-    if (!JS7_ISDEC(ch))
+    if (!IsAsciiDigit(ch))
         return false;
 
     if (length > UINT32_CHAR_BUFFER_LENGTH)
@@ -943,7 +945,7 @@ JSFlatString::isIndexSlow(const CharT* s, size_t length, uint32_t* indexp)
     uint32_t c = 0;
 
     if (index != 0) {
-        while (JS7_ISDEC(*cp)) {
+        while (IsAsciiDigit(*cp)) {
             oldIndex = index;
             c = JS7_UNDEC(*cp);
             index = 10 * index + c;

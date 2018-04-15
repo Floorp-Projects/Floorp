@@ -4087,7 +4087,7 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
             socketTransport->SetTimeout(nsISocketTransport::TIMEOUT_CONNECT,
                                         fallbackTimeout);
         }
-    } else if (isBackup) {
+    } else if (isBackup && gHttpHandler->FastFallbackToIPv4()) {
         // For backup connections, we disable IPv6. That's because some users have
         // broken IPv6 connectivity (leading to very long timeouts), and disabling
         // IPv6 on the backup connection gives them a much better user experience

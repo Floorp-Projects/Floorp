@@ -15,6 +15,21 @@ interface SVGAElement : SVGGraphicsElement {
 
   [SetterThrows]
   attribute DOMString download;
+  [SetterThrows]
+  attribute DOMString ping;
+  [SetterThrows]
+  attribute DOMString rel;
+  [SetterThrows]
+  attribute DOMString referrerPolicy;
+  [PutForwards=value]
+  readonly attribute DOMTokenList relList;
+  [SetterThrows]
+  attribute DOMString hreflang;
+  [SetterThrows]
+  attribute DOMString type;
+
+  [Throws]
+  attribute DOMString text;
 };
 
 SVGAElement implements SVGURIReference;

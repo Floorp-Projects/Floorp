@@ -224,14 +224,13 @@ AnimationSurfaceProvider::Run()
       FinishDecoding();
 
       // Even if it is the last frame, we may not have enough frames buffered
-      // ahead of the current. If we are shutting down, we want to ensure we
-      // release the thread as soon as possible. The animation may advance even
-      // during shutdown, which keeps us decoding, and thus blocking the decode
-      // pool during teardown.
-      if (!mDecoder || !continueDecoding ||
-          DecodePool::Singleton()->IsShuttingDown()) {
-        return;
+      // ahead of the current.
+      if (continueDecoding) {
+        MOZ_ASSERT(mDecoder);
+        continue;
       }
+
+      return;
     }
 
     // Notify for the progress we've made so far.
@@ -246,13 +245,9 @@ AnimationSurfaceProvider::Run()
     }
 
     // There's new output available - a new frame! Grab it. If we don't need any
-    // more for the moment we can break out of the loop. If we are shutting
-    // down, we want to ensure we release the thread as soon as possible. The
-    // animation may advance even during shutdown, which keeps us decoding, and
-    // thus blocking the decode pool during teardown.
+    // more for the moment we can break out of the loop.
     MOZ_ASSERT(result == LexerResult(Yield::OUTPUT_AVAILABLE));
-    if (!CheckForNewFrameAtYield() ||
-        DecodePool::Singleton()->IsShuttingDown()) {
+    if (!CheckForNewFrameAtYield()) {
       return;
     }
   }
@@ -299,7 +294,10 @@ AnimationSurfaceProvider::CheckForNewFrameAtYield()
     AnnounceSurfaceAvailable();
   }
 
-  return continueDecoding;
+  // If we are shutting down, we want to ensure we release the thread as soon
+  // as possible. The animation may advance even during shutdown, which keeps
+  // us decoding, and thus blocking the decode pool during teardown.
+  return continueDecoding && !DecodePool::Singleton()->IsShuttingDown();
 }
 
 bool
@@ -349,7 +347,10 @@ AnimationSurfaceProvider::CheckForNewFrameAtTerminalState()
     AnnounceSurfaceAvailable();
   }
 
-  return continueDecoding;
+  // If we are shutting down, we want to ensure we release the thread as soon
+  // as possible. The animation may advance even during shutdown, which keeps
+  // us decoding, and thus blocking the decode pool during teardown.
+  return continueDecoding && !DecodePool::Singleton()->IsShuttingDown();
 }
 
 void
@@ -377,15 +378,15 @@ AnimationSurfaceProvider::FinishDecoding()
     NotifyDecodeComplete(WrapNotNull(mImage), WrapNotNull(mDecoder));
   }
 
-  // Determine if we need to recreate the decoder, in case we are discarding
-  // frames and need to loop back to the beginning.
-  bool recreateDecoder;
+  // Destroy our decoder; we don't need it anymore.
+  bool mayDiscard;
   {
     MutexAutoLock lock(mFramesMutex);
-    recreateDecoder = !mFrames.HasRedecodeError() && mFrames.MayDiscard();
+    mayDiscard = mFrames.MayDiscard();
   }
 
-  if (recreateDecoder) {
+  if (mayDiscard) {
+    // Recreate the decoder so we can regenerate the frames again.
     mDecoder = DecoderFactory::CloneAnimationDecoder(mDecoder);
     MOZ_ASSERT(mDecoder);
   } else {

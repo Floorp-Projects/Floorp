@@ -787,7 +787,7 @@ nsBindingManager::ContentAppended(nsIContent* aFirstNewContent)
       first = false;
       for (nsIContent* child = aFirstNewContent; child;
            child = child->GetNextSibling()) {
-        point->AppendInsertedChild(child);
+        point->AppendInsertedChild(child, true);
       }
     } else {
       InsertAppendedContent(point, aFirstNewContent);
