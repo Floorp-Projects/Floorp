@@ -12,6 +12,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsViewManager.h"
+#include "nsCanvasFrame.h"
 
 /**
  * Code for doing display list building for a modified subset of the window,
@@ -890,6 +891,43 @@ RetainedDisplayListBuilder::ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder&
   return true;
 }
 
+static void
+AddFramesForContainingBlock(nsIFrame* aBlock,
+                            const nsFrameList& aFrames,
+                            nsTArray<nsIFrame*>& aExtraFrames)
+{
+  for (nsIFrame* f : aFrames) {
+    if (!f->IsFrameModified() &&
+        AnyContentAncestorModified(f, aBlock)) {
+      CRR_LOG("Adding invalid OOF %p\n", f);
+      aExtraFrames.AppendElement(f);
+    }
+  }
+}
+
+// Placeholder descendants of aFrame don't contribute to aFrame's overflow area.
+// Find all the containing blocks that might own placeholders under us, walk
+// their OOF frames list, and manually invalidate any frames that are descendants
+// of a modified frame (us, or another frame we'll get to soon).
+// This is combined with the work required for MarkFrameForDisplayIfVisible,
+// so that we can avoid an extra ancestor walk, and we can reuse the flag
+// to detect when we've already visited an ancestor (and thus all further ancestors
+// must also be visited).
+void FindContainingBlocks(nsIFrame* aFrame,
+                          nsTArray<nsIFrame*>& aExtraFrames)
+{
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
+    if (f->ForceDescendIntoIfVisible())
+      return;
+    f->SetForceDescendIntoIfVisible(true);
+    CRR_LOG("Considering OOFs for %p\n", f);
+
+    AddFramesForContainingBlock(f, f->GetChildList(nsIFrame::kFloatList), aExtraFrames);
+    AddFramesForContainingBlock(f, f->GetChildList(f->GetAbsoluteListID()), aExtraFrames);
+  }
+}
+
 /**
  * Given a list of frames that has been modified, computes the region that we need to
  * do display list building for in order to build all modified display items.
@@ -927,7 +965,18 @@ RetainedDisplayListBuilder::ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedF
   for (nsIFrame* f : aModifiedFrames) {
     MOZ_ASSERT(f);
 
-    aBuilder.MarkFrameForDisplayIfVisible(aFrame, aBuilder.RootReferenceFrame());
+    mBuilder.AddFrameMarkedForDisplayIfVisible(f);
+    FindContainingBlocks(f, extraFrames);
+
+    if (!ProcessFrame(f, mBuilder, mBuilder.RootReferenceFrame(),
+                      aOutFramesWithProps, true,
+                      aOutDirty, aOutModifiedAGR)) {
+      return false;
+    }
+  }
+
+  for (nsIFrame* f : extraFrames) {
+    mBuilder.MarkFrameModifiedDuringBuilding(f);
 
     if (!ProcessFrame(f, mBuilder, mBuilder.RootReferenceFrame(),
                       aOutFramesWithProps, true,
@@ -1069,6 +1118,16 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(
     mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), List());
     mList.ClearDAG();
     return PartialUpdateResult::Failed;
+  }
+
+  // This is normally handled by EnterPresShell, but we skipped it so that we
+  // didn't call MarkFrameForDisplayIfVisible before ComputeRebuildRegion.
+  nsIScrollableFrame* sf = mBuilder.RootReferenceFrame()->PresShell()->GetRootScrollFrameAsScrollable();
+  if (sf) {
+    nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
+    if (canvasFrame) {
+      mBuilder.MarkFrameForDisplayIfVisible(canvasFrame, mBuilder.RootReferenceFrame());
+    }
   }
 
   modifiedDirty.IntersectRect(modifiedDirty, mBuilder.RootReferenceFrame()->GetVisualOverflowRectRelativeToSelf());
