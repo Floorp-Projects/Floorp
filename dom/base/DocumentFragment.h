@@ -110,5 +110,18 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
+inline mozilla::dom::DocumentFragment*
+nsINode::AsDocumentFragment()
+{
+  MOZ_ASSERT(IsDocumentFragment());
+  return static_cast<mozilla::dom::DocumentFragment*>(this);
+}
+
+inline const mozilla::dom::DocumentFragment*
+nsINode::AsDocumentFragment() const
+{
+  MOZ_ASSERT(IsDocumentFragment());
+  return static_cast<const mozilla::dom::DocumentFragment*>(this);
+}
 
 #endif // mozilla_dom_DocumentFragment_h__

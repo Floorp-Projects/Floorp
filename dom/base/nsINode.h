@@ -77,6 +77,7 @@ class AccessibleNode;
 struct BoxQuadOptions;
 struct ConvertCoordinateOptions;
 class DocGroup;
+class DocumentFragment;
 class DOMPoint;
 class DOMQuad;
 class DOMRectReadOnly;
@@ -469,6 +470,22 @@ public:
   inline nsIDocument* AsDocument();
   inline const nsIDocument* AsDocument() const;
 
+  /**
+   * Returns true if this is a document fragment node.
+   */
+  bool IsDocumentFragment() const
+  {
+    return NodeType() == DOCUMENT_FRAGMENT_NODE;
+  }
+
+  /**
+   * Return this node as a document fragment. Asserts IsDocumentFragment().
+   *
+   * This is defined inline in DocumentFragment.h.
+   */
+  inline mozilla::dom::DocumentFragment* AsDocumentFragment();
+  inline const mozilla::dom::DocumentFragment* AsDocumentFragment() const;
+
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   /**
@@ -791,7 +808,7 @@ public:
   bool IsShadowRoot() const
   {
     const bool isShadowRoot = IsInShadowTree() && !GetParentNode();
-    MOZ_ASSERT_IF(isShadowRoot, NodeType() == DOCUMENT_FRAGMENT_NODE);
+    MOZ_ASSERT_IF(isShadowRoot, IsDocumentFragment());
     return isShadowRoot;
   }
 
