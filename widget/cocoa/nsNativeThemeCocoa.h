@@ -46,6 +46,16 @@ public:
     eThemeGeometryTypeActiveSourceListSelection
   };
 
+  enum class ButtonType : uint8_t {
+    eRegularPushButton,
+    eDefaultPushButton,
+    eRegularBevelButton,
+    eDefaultBevelButton,
+    eArrowButton,
+    eTreeTwistyPointingRight,
+    eTreeTwistyPointingDown
+  };
+
   struct ControlParams {
     ControlParams()
       : disabled(false)
@@ -60,6 +70,11 @@ public:
     bool pressed : 1;
     bool focused : 1;
     bool rtl : 1;
+  };
+
+  struct ButtonParams {
+    ControlParams controlParams;
+    ButtonType button = ButtonType::eRegularPushButton;
   };
 
   struct TreeHeaderCellParams {
@@ -169,10 +184,12 @@ protected:
                     mozilla::EventStates inState, nsIFrame* aFrame,
                     const NSSize& aIconSize, NSString* aImageName,
                     bool aCenterHorizontally);
-  void DrawButton(CGContextRef context, ThemeButtonKind inKind,
-                  const HIRect& inBoxRect, bool inIsDefault, 
-                  ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
-                  mozilla::EventStates inState, nsIFrame* aFrame);
+  void DrawHIThemeButton(CGContextRef cgContext, const HIRect& aRect,
+                         ThemeButtonKind aKind, ThemeButtonValue aValue,
+                         ThemeDrawState aState, ThemeButtonAdornment aAdornment,
+                         const ControlParams& aParams);
+  void DrawButton(CGContextRef context, const HIRect& inBoxRect,
+                  const ButtonParams& aParams);
   void DrawTreeHeaderCell(CGContextRef context, const HIRect& inBoxRect,
                           const TreeHeaderCellParams& aParams);
   void DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect,
