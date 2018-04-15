@@ -28,7 +28,7 @@ NS_IMPL_ISUPPORTS_INHERITED(Comment, CharacterData, nsIDOMNode)
 bool
 Comment::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~(eCOMMENT | eDATA_NODE));
+  return !(aFlags & ~eCOMMENT);
 }
 
 already_AddRefed<CharacterData>

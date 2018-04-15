@@ -136,7 +136,8 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(
   }
 
   // see what kind of node we have
-  if (aStart.Container()->IsNodeOfType(nsINode::eDATA_NODE)) {
+  if (RefPtr<CharacterData> charDataNode =
+        CharacterData::FromNode(aStart.Container())) {
     // if the node is a chardata node, then delete chardata content
     int32_t numToDel;
     if (aStart == aEnd) {
@@ -145,9 +146,6 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(
       numToDel = aEnd.Offset() - aStart.Offset();
       MOZ_DIAGNOSTIC_ASSERT(numToDel > 0);
     }
-
-    RefPtr<CharacterData> charDataNode =
-      static_cast<CharacterData*>(aStart.Container());
 
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
       DeleteTextTransaction::MaybeCreate(*mEditorBase, *charDataNode,
@@ -193,7 +191,8 @@ DeleteRangeTransaction::CreateTxnsToDeleteContent(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (!aPoint.Container()->IsNodeOfType(nsINode::eDATA_NODE)) {
+  RefPtr<CharacterData> dataNode = CharacterData::FromNode(aPoint.Container());
+  if (!dataNode) {
     return NS_OK;
   }
 
@@ -211,8 +210,6 @@ DeleteRangeTransaction::CreateTxnsToDeleteContent(
     return NS_OK;
   }
 
-  RefPtr<CharacterData> dataNode =
-    static_cast<CharacterData*>(aPoint.Container());
   RefPtr<DeleteTextTransaction> deleteTextTransaction =
     DeleteTextTransaction::MaybeCreate(*mEditorBase, *dataNode,
                                        startOffset, numToDelete);
