@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body>
+
+<div id="empty" style="position:relative; z-index: 4; left:192px; top:192px; width: 0px">
+  <div style="position:fixed; width:400px; height: 400px; background-color:green; top: 200px; left: 200px"></div>
+</div>
+<div style="width:400px; height: 400px; background-color:blue"></div>
+
+<script>
+  function doTest() {
+    document.getElementById("empty").style.left = "193px";
+    document.documentElement.removeAttribute("class");
+  }
+  document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>
