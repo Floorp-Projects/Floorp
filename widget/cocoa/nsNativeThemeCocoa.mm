@@ -2286,12 +2286,59 @@ nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+nsNativeThemeCocoa::ScaleParams
+nsNativeThemeCocoa::ComputeXULScaleParams(nsIFrame* aFrame,
+                                          EventStates aEventState,
+                                          bool aIsHorizontal)
+{
+  ScaleParams params;
+  params.value = CheckIntAttr(aFrame, nsGkAtoms::curpos, 0);
+  params.min = CheckIntAttr(aFrame, nsGkAtoms::minpos, 0);
+  params.max = CheckIntAttr(aFrame, nsGkAtoms::maxpos, 100);
+  if (!params.max) {
+    params.max = 100;
+  }
+
+  params.reverse =
+    aFrame->GetContent()->IsElement() &&
+    aFrame->GetContent()->AsElement()->AttrValueIs(
+      kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("reverse"),
+      eCaseMatters);
+  params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
+  params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUS);
+  params.disabled = IsDisabled(aFrame, aEventState);
+  params.horizontal = aIsHorizontal;
+  return params;
+}
+
+Maybe<nsNativeThemeCocoa::ScaleParams>
+nsNativeThemeCocoa::ComputeHTMLScaleParams(nsIFrame* aFrame,
+                                           EventStates aEventState)
+{
+  nsRangeFrame *rangeFrame = do_QueryFrame(aFrame);
+  if (!rangeFrame) {
+    return Nothing();
+  }
+
+  bool isHorizontal = IsRangeHorizontal(aFrame);
+
+  // ScaleParams requires integer min, max and value. This is purely for
+  // drawing, so we normalize to a range 0-1000 here.
+  ScaleParams params;
+  params.value = int32_t(rangeFrame->GetValueAsFractionOfRange() * 1000);
+  params.min = 0;
+  params.max = 1000;
+  params.reverse = !isHorizontal || rangeFrame->IsRightToLeft();
+  params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
+  params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUS);
+  params.disabled = IsDisabled(aFrame, aEventState);
+  params.horizontal = isHorizontal;
+  return Some(params);
+}
+
 void
 nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
-                              EventStates inState, bool inIsVertical,
-                              bool inIsReverse, int32_t inCurrentValue,
-                              int32_t inMinValue, int32_t inMaxValue,
-                              nsIFrame* aFrame)
+                              const ScaleParams& aParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -2300,20 +2347,25 @@ nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
   tdi.version = 0;
   tdi.kind = kThemeMediumSlider;
   tdi.bounds = inBoxRect;
-  tdi.min = inMinValue;
-  tdi.max = inMaxValue;
-  tdi.value = inCurrentValue;
+  tdi.min = aParams.min;
+  tdi.max = aParams.max;
+  tdi.value = aParams.value;
   tdi.attributes = kThemeTrackShowThumb;
-  if (!inIsVertical)
+  if (aParams.horizontal) {
     tdi.attributes |= kThemeTrackHorizontal;
-  if (inIsReverse)
+  }
+  if (aParams.reverse) {
     tdi.attributes |= kThemeTrackRightToLeft;
-  if (inState.HasState(NS_EVENT_STATE_FOCUS))
+  }
+  if (aParams.focused) {
     tdi.attributes |= kThemeTrackHasFocus;
-  if (IsDisabled(aFrame, inState))
+  }
+  if (aParams.disabled) {
     tdi.enableState = kThemeTrackDisabled;
-  else
-    tdi.enableState = FrameIsInActiveWindow(aFrame) ? kThemeTrackActive : kThemeTrackInactive;
+  } else {
+    tdi.enableState =
+      aParams.insideActiveWindow ? kThemeTrackActive : kThemeTrackInactive;
+  }
   tdi.trackInfo.slider.thumbDir = kThemeThumbPlain;
   tdi.trackInfo.slider.pressState = 0;
 
@@ -2596,6 +2648,81 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
                                   IsFrameRTL(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+nsNativeThemeCocoa::ScrollbarParams
+nsNativeThemeCocoa::ComputeScrollbarParams(nsIFrame* aFrame, bool aIsHorizontal)
+{
+  ScrollbarParams params;
+  params.overlay = nsLookAndFeel::UseOverlayScrollbars();
+  params.rolledOver = IsParentScrollbarRolledOver(aFrame);
+  nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
+  params.small =
+    (scrollbarFrame &&
+     scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
+  params.rtl = aFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+  params.horizontal = aIsHorizontal;
+  params.onDarkBackground = IsDarkBackground(aFrame);
+  return params;
+}
+
+void
+nsNativeThemeCocoa::DrawScrollbarThumb(CGContextRef cgContext,
+                                       const CGRect& inBoxRect,
+                                       ScrollbarParams aParams)
+{
+  CGRect drawRect = inBoxRect;
+  if (aParams.overlay && !aParams.rolledOver) {
+    if (aParams.horizontal) {
+      drawRect.origin.y += 4;
+      drawRect.size.height -= 4;
+    } else {
+      if (!aParams.rtl) {
+        drawRect.origin.x += 4;
+      }
+      drawRect.size.width -= 4;
+    }
+  }
+  NSDictionary* options = @{
+    @"widget": (aParams.overlay ? @"kCUIWidgetOverlayScrollBar" : @"scrollbar"),
+    @"size": (aParams.small ? @"small" : @"regular"),
+    @"kCUIOrientationKey":
+      (aParams.horizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"),
+    @"kCUIVariantKey":
+      (aParams.overlay && aParams.onDarkBackground ? @"kCUIVariantWhite" : @""),
+    @"indiconly": [NSNumber numberWithBool:YES],
+    @"kCUIThumbProportionKey": [NSNumber numberWithBool:YES],
+    @"is.flipped": [NSNumber numberWithBool:YES],
+  };
+  if (aParams.rolledOver) {
+    NSMutableDictionary* mutableOptions = [options mutableCopy];
+    [mutableOptions setObject:@"rollover" forKey:@"state"];
+    options = mutableOptions;
+  }
+  RenderWithCoreUI(drawRect, cgContext, options, true);
+}
+
+void
+nsNativeThemeCocoa::DrawScrollbarTrack(CGContextRef cgContext,
+                                       const CGRect& inBoxRect,
+                                       ScrollbarParams aParams)
+{
+  if (aParams.overlay && !aParams.rolledOver) {
+    // Non-hovered overlay scrollbars don't have a track. Draw nothing.
+    return;
+  }
+
+  RenderWithCoreUI(inBoxRect, cgContext,
+          [NSDictionary dictionaryWithObjectsAndKeys:
+            (aParams.overlay ? @"kCUIWidgetOverlayScrollBar" : @"scrollbar"), @"widget",
+            (aParams.small ? @"small" : @"regular"), @"size",
+            (aParams.horizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"), @"kCUIOrientationKey",
+            (aParams.onDarkBackground ? @"kCUIVariantWhite" : @""), @"kCUIVariantKey",
+            [NSNumber numberWithBool:YES], @"noindicator",
+            [NSNumber numberWithBool:YES], @"kCUIThumbProportionKey",
+            [NSNumber numberWithBool:YES], @"is.flipped",
+            nil],
+          true);
 }
 
 static void
@@ -3091,21 +3218,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_SCALE_HORIZONTAL:
-    case NS_THEME_SCALE_VERTICAL: {
-      int32_t curpos = CheckIntAttr(aFrame, nsGkAtoms::curpos, 0);
-      int32_t minpos = CheckIntAttr(aFrame, nsGkAtoms::minpos, 0);
-      int32_t maxpos = CheckIntAttr(aFrame, nsGkAtoms::maxpos, 100);
-      if (!maxpos)
-        maxpos = 100;
-
-      bool reverse =
-        aFrame->GetContent()->IsElement() &&
-        aFrame->GetContent()->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
-                                                       NS_LITERAL_STRING("reverse"), eCaseMatters);
-      DrawScale(cgContext, macRect, eventState,
-                (aWidgetType == NS_THEME_SCALE_VERTICAL), reverse,
-                curpos, minpos, maxpos, aFrame);
-    }
+    case NS_THEME_SCALE_VERTICAL:
+      DrawScale(cgContext, macRect,
+                ComputeXULScaleParams(aFrame, eventState,
+                                      aWidgetType == NS_THEME_SCALE_HORIZONTAL));
       break;
 
     case NS_THEME_SCALETHUMB_HORIZONTAL:
@@ -3114,19 +3230,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_RANGE: {
-      nsRangeFrame *rangeFrame = do_QueryFrame(aFrame);
-      if (!rangeFrame) {
-        break;
+      Maybe<ScaleParams> params = ComputeHTMLScaleParams(aFrame, eventState);
+      if (params) {
+        DrawScale(cgContext, macRect, *params);
       }
-      // DrawScale requires integer min, max and value. This is purely for
-      // drawing, so we normalize to a range 0-1000 here.
-      int32_t value = int32_t(rangeFrame->GetValueAsFractionOfRange() * 1000);
-      int32_t min = 0;
-      int32_t max = 1000;
-      bool isVertical = !IsRangeHorizontal(aFrame);
-      bool reverseDir = isVertical || rangeFrame->IsRightToLeft();
-      DrawScale(cgContext, macRect, eventState, isVertical, reverseDir,
-                value, min, max, aFrame);
       break;
     }
 
@@ -3134,40 +3241,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
     case NS_THEME_SCROLLBAR:
       break;
     case NS_THEME_SCROLLBARTHUMB_VERTICAL:
-    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL: {
-      BOOL isOverlay = nsLookAndFeel::UseOverlayScrollbars();
-      BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTHUMB_HORIZONTAL);
-      BOOL isRolledOver = IsParentScrollbarRolledOver(aFrame);
-      nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
-      bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
-      if (isOverlay && !isRolledOver) {
-        if (isHorizontal) {
-          macRect.origin.y += 4;
-          macRect.size.height -= 4;
-        } else {
-          if (aFrame->StyleVisibility()->mDirection !=
-              NS_STYLE_DIRECTION_RTL) {
-            macRect.origin.x += 4;
-          }
-          macRect.size.width -= 4;
-        }
-      }
-      const BOOL isOnTopOfDarkBackground = IsDarkBackground(aFrame);
-      NSMutableDictionary* options = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-        (isOverlay ? @"kCUIWidgetOverlayScrollBar" : @"scrollbar"), @"widget",
-        (isSmall ? @"small" : @"regular"), @"size",
-        (isHorizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"), @"kCUIOrientationKey",
-        (isOverlay && isOnTopOfDarkBackground ? @"kCUIVariantWhite" : @""),
-          @"kCUIVariantKey",
-        [NSNumber numberWithBool:YES], @"indiconly",
-        [NSNumber numberWithBool:YES], @"kCUIThumbProportionKey",
-        [NSNumber numberWithBool:YES], @"is.flipped",
-        nil];
-      if (isRolledOver) {
-        [options setObject:@"rollover" forKey:@"state"];
-      }
-      RenderWithCoreUI(macRect, cgContext, options, true);
-    }
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
+      DrawScrollbarThumb(cgContext, macRect,
+        ComputeScrollbarParams(
+          aFrame, aWidgetType == NS_THEME_SCROLLBARTHUMB_HORIZONTAL));
       break;
 
     case NS_THEME_SCROLLBARBUTTON_UP:
@@ -3185,26 +3262,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
 #endif
     break;
     case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
-    case NS_THEME_SCROLLBARTRACK_VERTICAL: {
-      BOOL isOverlay = nsLookAndFeel::UseOverlayScrollbars();
-      if (!isOverlay || IsParentScrollbarRolledOver(aFrame)) {
-        BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTRACK_HORIZONTAL);
-        nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
-        bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
-        const BOOL isOnTopOfDarkBackground = IsDarkBackground(aFrame);
-        RenderWithCoreUI(macRect, cgContext,
-                [NSDictionary dictionaryWithObjectsAndKeys:
-                  (isOverlay ? @"kCUIWidgetOverlayScrollBar" : @"scrollbar"), @"widget",
-                  (isSmall ? @"small" : @"regular"), @"size",
-                  (isHorizontal ? @"kCUIOrientHorizontal" : @"kCUIOrientVertical"), @"kCUIOrientationKey",
-                  (isOnTopOfDarkBackground ? @"kCUIVariantWhite" : @""), @"kCUIVariantKey",
-                  [NSNumber numberWithBool:YES], @"noindicator",
-                  [NSNumber numberWithBool:YES], @"kCUIThumbProportionKey",
-                  [NSNumber numberWithBool:YES], @"is.flipped",
-                  nil],
-                true);
-      }
-    }
+    case NS_THEME_SCROLLBARTRACK_VERTICAL:
+      DrawScrollbarTrack(cgContext, macRect,
+        ComputeScrollbarParams(
+          aFrame, aWidgetType == NS_THEME_SCROLLBARTRACK_HORIZONTAL));
       break;
 
     case NS_THEME_TEXTFIELD_MULTILINE: {
