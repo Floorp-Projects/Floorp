@@ -880,22 +880,20 @@ js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback call
     return warning;
 }
 
-bool
+void
 js::ReportIsNotDefined(JSContext* cx, HandleId id)
 {
     JSAutoByteString printable;
-    if (ValueToPrintable(cx, IdToValue(id), &printable)) {
-        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_DEFINED,
-                                   printable.ptr());
-    }
-    return false;
+    if (!ValueToPrintable(cx, IdToValue(id), &printable))
+        return;
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_DEFINED, printable.ptr());
 }
 
-bool
+void
 js::ReportIsNotDefined(JSContext* cx, HandlePropertyName name)
 {
     RootedId id(cx, NameToId(name));
-    return ReportIsNotDefined(cx, id);
+    ReportIsNotDefined(cx, id);
 }
 
 bool

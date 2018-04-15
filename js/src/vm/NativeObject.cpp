@@ -2311,8 +2311,10 @@ GetNonexistentProperty(JSContext* cx, HandleId id, IsNameLookup nameLookup, Muta
     vp.setUndefined();
 
     // If we are doing a name lookup, this is a ReferenceError.
-    if (nameLookup)
-        return ReportIsNotDefined(cx, id);
+    if (nameLookup) {
+        ReportIsNotDefined(cx, id);
+        return false;
+    }
 
     // Give a strict warning if foo.bar is evaluated by a script for an object
     // foo with no property named 'bar'.
@@ -2381,8 +2383,10 @@ GeneralizedGetProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue
         bool found;
         if (!HasProperty(cx, obj, id, &found))
             return false;
-        if (!found)
-            return ReportIsNotDefined(cx, id);
+        if (!found) {
+            ReportIsNotDefined(cx, id);
+            return false;
+        }
     }
 
     return GetProperty(cx, obj, receiver, id, vp);
