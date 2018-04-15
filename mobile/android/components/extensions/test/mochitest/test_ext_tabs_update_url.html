@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-function* testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
+async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -54,9 +54,9 @@ function* testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  let mozExtTabURL = yield extension.awaitMessage("ready");
+  let mozExtTabURL = await extension.awaitMessage("ready");
 
   if (tabsUpdateURL == "self") {
     tabsUpdateURL = mozExtTabURL;
@@ -67,10 +67,10 @@ function* testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
   let tab1 = window.open(existentTabURL);
 
   extension.sendMessage("start", tabsUpdateURL, isErrorExpected);
-  yield extension.awaitMessage("done");
+  await extension.awaitMessage("done");
 
   tab1.close();
-  yield extension.unload();
+  await extension.unload();
 }
 
 add_task(async function() {

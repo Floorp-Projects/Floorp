@@ -37,10 +37,10 @@ add_task(async function() {
 /**
  * Just check current page
  */
-function* navigate(usage, options) {
+async function navigate(usage, options) {
   ok(!usage.isRunning(), "csscoverage is not running");
 
-  yield usage.oneshot();
+  await usage.oneshot();
 
   ok(!usage.isRunning(), "csscoverage is still not running");
 }
@@ -48,24 +48,24 @@ function* navigate(usage, options) {
 /**
  * Check the expected pages have been visited
  */
-function* checkPages(usage) {
+async function checkPages(usage) {
   let expectedVisited = [ PAGE_3 ];
-  let actualVisited = yield usage._testOnlyVisitedPages();
+  let actualVisited = await usage._testOnlyVisitedPages();
   isEqualJson(actualVisited, expectedVisited, "Visited");
 }
 
 /**
  * Check that createEditorReport returns the expected JSON
  */
-function* checkEditorReport(usage) {
+async function checkEditorReport(usage) {
   // Page1
   let expectedPage1 = { reports: [] };
-  let actualPage1 = yield usage.createEditorReport(PAGE_1 + " \u2192 <style> index 0");
+  let actualPage1 = await usage.createEditorReport(PAGE_1 + " \u2192 <style> index 0");
   isEqualJson(actualPage1, expectedPage1, "Page1");
 
   // Page2
   let expectedPage2 = { reports: [] };
-  let actualPage2 = yield usage.createEditorReport(PAGE_2 + " \u2192 <style> index 0");
+  let actualPage2 = await usage.createEditorReport(PAGE_2 + " \u2192 <style> index 0");
   isEqualJson(actualPage2, expectedPage2, "Page2");
 
   // Page3a
@@ -77,7 +77,7 @@ function* checkEditorReport(usage) {
       }
     ]
   };
-  let actualPage3a = yield usage.createEditorReport(PAGE_3 + " \u2192 <style> index 0");
+  let actualPage3a = await usage.createEditorReport(PAGE_3 + " \u2192 <style> index 0");
   isEqualJson(actualPage3a, expectedPage3a, "Page3a");
 
   // Page3b
@@ -89,7 +89,7 @@ function* checkEditorReport(usage) {
       }
     ]
   };
-  let actualPage3b = yield usage.createEditorReport(PAGE_3 + " \u2192 <style> index 1");
+  let actualPage3b = await usage.createEditorReport(PAGE_3 + " \u2192 <style> index 1");
   isEqualJson(actualPage3b, expectedPage3b, "Page3b");
 
   // SheetA
@@ -109,7 +109,7 @@ function* checkEditorReport(usage) {
       }
     ]
   };
-  let actualSheetA = yield usage.createEditorReport(SHEET_A);
+  let actualSheetA = await usage.createEditorReport(SHEET_A);
   isEqualJson(actualSheetA, expectedSheetA, "SheetA");
 
   // SheetB
@@ -129,7 +129,7 @@ function* checkEditorReport(usage) {
       }
     ]
   };
-  let actualSheetB = yield usage.createEditorReport(SHEET_B);
+  let actualSheetB = await usage.createEditorReport(SHEET_B);
   isEqualJson(actualSheetB, expectedSheetB, "SheetB");
 
   // SheetC
@@ -149,7 +149,7 @@ function* checkEditorReport(usage) {
       }
     ]
   };
-  let actualSheetC = yield usage.createEditorReport(SHEET_C);
+  let actualSheetC = await usage.createEditorReport(SHEET_C);
   isEqualJson(actualSheetC, expectedSheetC, "SheetC");
 
   // SheetD
@@ -169,15 +169,15 @@ function* checkEditorReport(usage) {
       }
     ]
   };
-  let actualSheetD = yield usage.createEditorReport(SHEET_D);
+  let actualSheetD = await usage.createEditorReport(SHEET_D);
   isEqualJson(actualSheetD, expectedSheetD, "SheetD");
 }
 
 /**
  * Check that checkPageReport returns the expected JSON
  */
-function* checkPageReport(usage) {
-  let actualReport = yield usage.createPageReport();
+async function checkPageReport(usage) {
+  let actualReport = await usage.createPageReport();
 
   // Quick check on trivial things. See doc comment for checkRuleProperties
   actualReport.preload.forEach(page => page.rules.forEach(checkRuleProperties));
