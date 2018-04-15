@@ -2837,17 +2837,50 @@ debug-expression-error {
   padding: 0.5em 1em 0.5em 0.5em;
 }
 
-.breakpoints-list .breakpoint {
+.breakpoints-list .breakpoint-heading,
+.breakpoints-list .breakpoint,
+.breakpoints-exceptions {
+  padding: 0.5em 1em 0.5em 0.5em;
+}
+
+.breakpoints-exceptions-caught {
+  padding: 0 1em 0.5em 2em;
+}
+
+.breakpoints-exceptions-options:not(.empty) {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.breakpoints-exceptions input,
+.breakpoints-exceptions-caught input {
+  padding-inline-start: 2px;
+  margin-inline-start: 0;
+  vertical-align: text-bottom;
+}
+
+.breakpoint-exceptions-label {
+  padding-top: 2px;
+  display: inline-block;
+  padding-inline-start: 2px;
+  padding-inline-end: 8px;
+  cursor: default;
+}
+
+.breakpoints-list .breakpoint,
+.breakpoints-exceptions,
+.breakpoints-exceptions-caught {
   display: flex;
 }
 
 html[dir="rtl"] .breakpoints-list .breakpoint,
-html[dir="rtl"] .breakpoints-list .breakpoint-heading {
+html[dir="rtl"] .breakpoints-list .breakpoint-heading,
+html[dir="rtl"] .breakpoints-exceptions {
   border-right: 4px solid transparent;
 }
 
 html:not([dir="rtl"]) .breakpoints-list .breakpoint,
-html:not([dir="rtl"]) .breakpoints-list .breakpoint-heading {
+html:not([dir="rtl"]) .breakpoints-list .breakpoint-heading,
+html:not([dir="rtl"]) .breakpoints-exceptions {
   border-left: 4px solid transparent;
 }
 
@@ -2967,7 +3000,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   opacity: 0.5;
 }
 
-.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-line span[role=presentation] {
+.CodeMirror.cm-s-mozilla-breakpoint .CodeMirror-line span[role="presentation"] {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3512,23 +3545,6 @@ img.shortcuts {
   transform: scaleX(-1);
 }
 
-.command-bar > .pause-exceptions.uncaught.enabled > img.pause-exceptions {
-  background-color: var(--theme-highlight-purple);
-}
-
-.command-bar > .pause-exceptions.all.enabled > img.pause-exceptions {
-  background-color: var(--theme-highlight-blue);
-}
-
-.command-bar > .pause-exceptions.enabled > img.pause-exceptions {
-  background-color: var(--theme-body-color);
-}
-
-.command-bar img.pause-exceptions {
-  mask: url("chrome://devtools/skin/images/debugger/pause-exceptions.svg") no-repeat;
-  margin-inline-start: 0.2em;
-}
-
 .command-bar .filler {
   flex-grow: 1;
 }
@@ -3591,149 +3607,6 @@ img.shortcuts {
   background: var(--theme-splitter-color);
   height: 10px;
   margin: 11px 6px 0 6px;
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-.dropdown {
-  --width: 150px;
-  background: var(--theme-body-background);
-  border: 1px solid var(--theme-splitter-color);
-  box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
-  max-height: 300px;
-  position: absolute;
-  right: 0;
-  top: 23px;
-  width: var(--width);
-  z-index: 1000;
-  overflow: auto;
-}
-
-html[dir="rtl"] .dropdown {
-  right: calc((var(--width) - 11px) * (-1));
-}
-
-.dropdown-block {
-  padding: 0px 2px;
-  position: relative;
-  align-self: center;
-  height: 100%;
-}
-
-.dropdown-button {
-  color: var(--theme-comment);
-  background: none;
-  border: none;
-  padding: 0;
-  font-weight: 100;
-  font-size: 14px;
-  height: 100%;
-  width: 24px;
-}
-
-.dropdown li {
-  transition: all 0.25s ease;
-  padding: 2px 10px 10px 5px;
-  overflow: hidden;
-  height: 30px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dropdown li:hover {
-  background-color: var(--search-overlays-semitransparent);
-}
-
-.dropdown-icon {
-  width: var(--icon-size);
-  height: var(--icon-size);
-  margin-right: 5px;
-  vertical-align: middle;
-  display: inline-block;
-}
-
-.dropdown-icon.prettyPrint {
-  mask: url("chrome://devtools/skin/images/debugger/prettyPrint.svg") no-repeat;
-  mask-size: 100%;
-  background: var(--theme-highlight-blue);
-}
-
-.dropdown-icon.blackBox {
-  mask: url("chrome://devtools/skin/images/debugger/blackBox.svg") no-repeat;
-  mask-size: 100%;
-  background: var(--theme-highlight-blue);
-}
-
-.dropdown-icon.file {
-  mask: url("chrome://devtools/skin/images/debugger/file.svg") no-repeat;
-  mask-size: 100%;
-}
-
-.dropdown ul {
-  list-style: none;
-  line-height: 2em;
-  font-size: 1em;
-  margin: 0;
-  padding: 0;
-}
-
-.dropdown-mask {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  z-index: 999;
-  left: 0;
-  top: 0;
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-.dropdown span.icon-spacer {
-  margin-left: 8px;
-}
-
-.dropdown li.first {
-  border-bottom: 1px solid var(--theme-toolbar-background-hover);
-}
-
-img.pause-next,
-img.pause-on-exceptions,
-img.pause-uncaught-exceptions,
-img.ignore-exceptions {
-  vertical-align: middle;
-  width: 16px;
-  height: 20px;
-  display: inline-block;
-}
-
-.dropdown div > img.pause-next {
-  mask: url("chrome://devtools/skin/images/debugger/pause.svg") no-repeat;
-  background-color: var(--theme-body-color);
-}
-
-.dropdown div > img.ignore-exceptions {
-  mask: url("chrome://devtools/skin/images/debugger/pause-exceptions.svg") no-repeat;
-  background-color: var(--theme-body-color);
-}
-
-.dropdown div > img.pause-uncaught-exceptions {
-  mask: url("chrome://devtools/skin/images/debugger/pause-exceptions.svg") no-repeat;
-  background-color: var(--theme-highlight-purple);
-}
-
-.dropdown div > img.pause-on-exceptions {
-  mask: url("chrome://devtools/skin/images/debugger/pause-exceptions.svg") no-repeat;
-  background-color: var(--theme-highlight-blue);
-}
-
-.dropdown div.pause-next.active,
-.dropdown div.pause-on-exceptions.active,
-.dropdown div.pause-uncaught-exceptions.active,
-.dropdown div.ignore-exceptions.active > span.icon-spacer {
-  color: var(--theme-highlight-blue);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4065,6 +3938,101 @@ html .welcomebox .toggle-button-end.collapsed {
 
 .source-tab:hover .close-btn {
   visibility: visible;
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.dropdown {
+  --width: 150px;
+  background: var(--theme-body-background);
+  border: 1px solid var(--theme-splitter-color);
+  box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
+  max-height: 300px;
+  position: absolute;
+  right: 0;
+  top: 23px;
+  width: var(--width);
+  z-index: 1000;
+  overflow: auto;
+}
+
+html[dir="rtl"] .dropdown {
+  right: calc((var(--width) - 11px) * (-1));
+}
+
+.dropdown-block {
+  padding: 0px 2px;
+  position: relative;
+  align-self: center;
+  height: 100%;
+}
+
+.dropdown-button {
+  color: var(--theme-comment);
+  background: none;
+  border: none;
+  padding: 0;
+  font-weight: 100;
+  font-size: 14px;
+  height: 100%;
+  width: 24px;
+}
+
+.dropdown li {
+  transition: all 0.25s ease;
+  padding: 2px 10px 10px 5px;
+  overflow: hidden;
+  height: 30px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown li:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.dropdown-icon {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  margin-right: 5px;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+.dropdown-icon.prettyPrint {
+  mask: url("chrome://devtools/skin/images/debugger/prettyPrint.svg") no-repeat;
+  mask-size: 100%;
+  background: var(--theme-highlight-blue);
+}
+
+.dropdown-icon.blackBox {
+  mask: url("chrome://devtools/skin/images/debugger/blackBox.svg") no-repeat;
+  mask-size: 100%;
+  background: var(--theme-highlight-blue);
+}
+
+.dropdown-icon.file {
+  mask: url("chrome://devtools/skin/images/debugger/file.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.dropdown ul {
+  list-style: none;
+  line-height: 2em;
+  font-size: 1em;
+  margin: 0;
+  padding: 0;
+}
+
+.dropdown-mask {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: 999;
+  left: 0;
+  top: 0;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
