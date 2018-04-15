@@ -1964,46 +1964,33 @@ nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext,
 }
 
 void
-nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
-                              const HIRect& inBoxRect, bool inDisabled,
-                              EventStates inState)
+nsNativeThemeCocoa::DrawTextBox(CGContextRef cgContext, const HIRect& inBoxRect,
+                                TextBoxParams aParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
+  CGContextFillRect(cgContext, inBoxRect);
+
   HIThemeFrameDrawInfo fdi;
   fdi.version = 0;
-  fdi.kind = inKind;
+  fdi.kind = kHIThemeFrameTextFieldSquare;
 
   // We don't ever set an inactive state for this because it doesn't
   // look right (see other apps).
-  fdi.state = inDisabled ? kThemeStateUnavailable : kThemeStateActive;
-
-  // for some reason focus rings on listboxes draw incorrectly
-  if (inKind == kHIThemeFrameListBox)
-    fdi.isFocused = 0;
-  else
-    fdi.isFocused = inState.HasState(NS_EVENT_STATE_FOCUS);
+  fdi.state = aParams.disabled ? kThemeStateUnavailable : kThemeStateActive;
+  fdi.isFocused = aParams.focused;
 
   // HIThemeDrawFrame takes the rect for the content area of the frame, not
   // the bounding rect for the frame. Here we reduce the size of the rect we
   // will pass to make it the size of the content.
   HIRect drawRect = inBoxRect;
-  if (inKind == kHIThemeFrameTextFieldSquare) {
-    SInt32 frameOutset = 0;
-    ::GetThemeMetric(kThemeMetricEditTextFrameOutset, &frameOutset);
-    drawRect.origin.x += frameOutset;
-    drawRect.origin.y += frameOutset;
-    drawRect.size.width -= frameOutset * 2;
-    drawRect.size.height -= frameOutset * 2;
-  }
-  else if (inKind == kHIThemeFrameListBox) {
-    SInt32 frameOutset = 0;
-    ::GetThemeMetric(kThemeMetricListBoxFrameOutset, &frameOutset);
-    drawRect.origin.x += frameOutset;
-    drawRect.origin.y += frameOutset;
-    drawRect.size.width -= frameOutset * 2;
-    drawRect.size.height -= frameOutset * 2;
-  }
+  SInt32 frameOutset = 0;
+  ::GetThemeMetric(kThemeMetricEditTextFrameOutset, &frameOutset);
+  drawRect.origin.x += frameOutset;
+  drawRect.origin.y += frameOutset;
+  drawRect.size.width -= frameOutset * 2;
+  drawRect.size.height -= frameOutset * 2;
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
@@ -2983,23 +2970,21 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
     }
 
     case NS_THEME_TEXTFIELD:
-    case NS_THEME_NUMBER_INPUT:
-      // HIThemeSetFill is not available on 10.3
-      CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
-      CGContextFillRect(cgContext, macRect);
-
+    case NS_THEME_NUMBER_INPUT: {
+      bool isFocused = eventState.HasState(NS_EVENT_STATE_FOCUS);
       // XUL textboxes set the native appearance on the containing box, while
       // concrete focus is set on the html:input element within it. We can
       // though, check the focused attribute of xul textboxes in this case.
       // On Mac, focus rings are always shown for textboxes, so we do not need
       // to check the window's focus ring state here
       if (aFrame->GetContent()->IsXULElement() && IsFocused(aFrame)) {
-        eventState |= NS_EVENT_STATE_FOCUS;
+        isFocused = true;
       }
 
-      DrawFrame(cgContext, kHIThemeFrameTextFieldSquare, macRect,
-                IsDisabled(aFrame, eventState) || IsReadOnly(aFrame), eventState);
+      bool isDisabled = IsDisabled(aFrame, eventState) || IsReadOnly(aFrame);
+      DrawTextBox(cgContext, macRect, TextBoxParams{isDisabled, isFocused});
       break;
+    }
 
     case NS_THEME_SEARCHFIELD:
       DrawSearchField(cgContext, macRect, aFrame, eventState);

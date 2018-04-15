@@ -163,6 +163,11 @@ public:
     bool isMain = false;
   };
 
+  struct TextBoxParams {
+    bool disabled = false;
+    bool focused = false;
+  };
+
   struct TreeHeaderCellParams {
     ControlParams controlParams;
     TreeSortDirection sortDirection = eTreeSortDirection_Natural;
@@ -247,9 +252,8 @@ protected:
                                                    mozilla::EventStates aEventState);
 
   // HITheme drawing routines
-  void DrawFrame(CGContextRef context, HIThemeFrameKind inKind,
-                 const HIRect& inBoxRect, bool inReadOnly,
-                 mozilla::EventStates inState);
+  void DrawTextBox(CGContextRef context, const HIRect& inBoxRect,
+                   TextBoxParams aParams);
   void DrawMeter(CGContextRef context, const HIRect& inBoxRect,
                  nsIFrame* aFrame);
   void DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
