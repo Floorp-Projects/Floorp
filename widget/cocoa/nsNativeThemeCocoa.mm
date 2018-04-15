@@ -939,6 +939,16 @@ static float VerticalAlignFactor(nsIFrame *aFrame)
   }
 }
 
+static void
+ApplyControlParamsToNSCell(nsNativeThemeCocoa::ControlParams aControlParams, NSCell* aCell)
+{
+  [aCell setEnabled:!aControlParams.disabled];
+  [aCell setShowsFirstResponder:(aControlParams.focused &&
+                                 !aControlParams.disabled &&
+                                 aControlParams.insideActiveWindow)];
+  [aCell setHighlighted:aControlParams.pressed];
+}
+
 // These are the sizes that Gecko needs to request to draw if it wants
 // to get a standard-sized Aqua radio button drawn. Note that the rects
 // that draw these are actually a little bigger.
@@ -1157,6 +1167,18 @@ nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+nsNativeThemeCocoa::ControlParams
+nsNativeThemeCocoa::ComputeControlParams(nsIFrame* aFrame, EventStates aEventState)
+{
+  ControlParams params;
+  params.disabled = IsDisabled(aFrame, aEventState);
+  params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
+  params.pressed = aEventState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER);
+  params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUS);
+  params.rtl = IsFrameRTL(aFrame);
+  return params;
+}
+
 static const NSSize kHelpButtonSize = NSMakeSize(20, 20);
 static const NSSize kDisclosureButtonSize = NSMakeSize(21, 21);
 
@@ -1191,57 +1213,62 @@ static const CellRenderSettings pushButtonSettings = {
 #define DO_SQUARE_BUTTON_HEIGHT 26
 
 void
-nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
-                                   EventStates inState, uint8_t aWidgetType,
-                                   nsIFrame* aFrame, float aOriginalHeight)
+nsNativeThemeCocoa::DrawRoundedBezelPushButton(CGContextRef cgContext,
+                                               const HIRect& inBoxRect,
+                                               ControlParams aControlParams)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  BOOL isActive = FrameIsInActiveWindow(aFrame);
-  BOOL isDisabled = IsDisabled(aFrame, inState);
+  ApplyControlParamsToNSCell(aControlParams, mPushButtonCell);
+  [mPushButtonCell setBezelStyle:NSRoundedBezelStyle];
+  DrawCellWithSnapping(mPushButtonCell, cgContext, inBoxRect, pushButtonSettings,
+                       0.5f, mCellDrawView, aControlParams.rtl, 1.0f);
 
-  NSButtonCell* cell = (aWidgetType == NS_THEME_BUTTON) ? mPushButtonCell :
-    (aWidgetType == NS_THEME_MAC_HELP_BUTTON) ? mHelpButtonCell : mDisclosureButtonCell;
-  [cell setEnabled:!isDisabled];
-  [cell setHighlighted:isActive &&
-                       inState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER)];
-  [cell setShowsFirstResponder:inState.HasState(NS_EVENT_STATE_FOCUS) && !isDisabled && isActive];
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
 
-  if (aWidgetType != NS_THEME_BUTTON) { // Help button or disclosure button.
-    NSSize buttonSize = NSMakeSize(0, 0);
-    if (aWidgetType == NS_THEME_MAC_HELP_BUTTON) {
-      buttonSize = kHelpButtonSize;
-    } else { // Disclosure button.
-      buttonSize = kDisclosureButtonSize;
-      [cell setState:(aWidgetType == NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED) ? NSOffState : NSOnState];
-    }
+void
+nsNativeThemeCocoa::DrawSquareBezelPushButton(CGContextRef cgContext,
+                                              const HIRect& inBoxRect,
+                                              ControlParams aControlParams)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-    DrawCellWithScaling(cell, cgContext, inBoxRect, NSRegularControlSize,
-                        NSZeroSize, buttonSize, NULL, mCellDrawView,
-                        false); // Don't mirror icon in RTL.
-  } else {
-    // If the button is tall enough, draw the square button style so that
-    // buttons with non-standard content look good. Otherwise draw normal
-    // rounded aqua buttons.
-    // This comparison is done based on the height that is calculated without
-    // the top, because the snapped height can be affected by the top of the
-    // rect and that may result in different height depending on the top value.
-    if (aOriginalHeight > DO_SQUARE_BUTTON_HEIGHT) {
-      [cell setBezelStyle:NSShadowlessSquareBezelStyle];
-      DrawCellWithScaling(cell, cgContext, inBoxRect, NSRegularControlSize,
-                          NSZeroSize, NSMakeSize(14, 0), NULL, mCellDrawView,
-                          IsFrameRTL(aFrame));
-    } else {
-      [cell setBezelStyle:NSRoundedBezelStyle];
-      DrawCellWithSnapping(cell, cgContext, inBoxRect, pushButtonSettings, 0.5f,
-                           mCellDrawView, IsFrameRTL(aFrame), 1.0f);
-    }
-  }
+  ApplyControlParamsToNSCell(aControlParams, mPushButtonCell);
+  [mPushButtonCell setBezelStyle:NSShadowlessSquareBezelStyle];
+  DrawCellWithScaling(mPushButtonCell, cgContext, inBoxRect, NSRegularControlSize,
+                      NSZeroSize, NSMakeSize(14, 0), NULL, mCellDrawView,
+                      aControlParams.rtl);
 
-#if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
-  CGContextFillRect(cgContext, inBoxRect);
-#endif
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void
+nsNativeThemeCocoa::DrawHelpButton(CGContextRef cgContext, const HIRect& inBoxRect,
+                                   ControlParams aControlParams)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  ApplyControlParamsToNSCell(aControlParams, mHelpButtonCell);
+  DrawCellWithScaling(mHelpButtonCell, cgContext, inBoxRect, NSRegularControlSize,
+                      NSZeroSize, kHelpButtonSize, NULL, mCellDrawView,
+                      false); // Don't mirror icon in RTL.
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void
+nsNativeThemeCocoa::DrawDisclosureButton(CGContextRef cgContext, const HIRect& inBoxRect,
+                                         ControlParams aControlParams,
+                                         NSCellStateValue aCellState)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  ApplyControlParamsToNSCell(aControlParams, mDisclosureButtonCell);
+  [mDisclosureButtonCell setState:aCellState];
+  DrawCellWithScaling(mDisclosureButtonCell, cgContext, inBoxRect, NSRegularControlSize,
+                      NSZeroSize, kDisclosureButtonSize, NULL, mCellDrawView,
+                      false); // Don't mirror icon in RTL.
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2493,9 +2520,18 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
                    kThemeButtonOff, kThemeAdornmentNone, eventState, aFrame);
       } else if (IsButtonTypeMenu(aFrame)) {
         DrawDropdown(cgContext, macRect, eventState, aWidgetType, aFrame);
+      } else if (nativeWidgetHeight > DO_SQUARE_BUTTON_HEIGHT) {
+        // If the button is tall enough, draw the square button style so that
+        // buttons with non-standard content look good. Otherwise draw normal
+        // rounded aqua buttons.
+        // This comparison is done based on the height that is calculated without
+        // the top, because the snapped height can be affected by the top of the
+        // rect and that may result in different height depending on the top value.
+        DrawSquareBezelPushButton(cgContext, macRect,
+                                  ComputeControlParams(aFrame, eventState));
       } else {
-        DrawPushButton(cgContext, macRect, eventState, aWidgetType, aFrame,
-                       nativeWidgetHeight);
+        DrawRoundedBezelPushButton(cgContext, macRect,
+                                   ComputeControlParams(aFrame, eventState));
       }
       break;
 
@@ -2504,10 +2540,17 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_MAC_HELP_BUTTON:
+      DrawHelpButton(cgContext, macRect,
+                     ComputeControlParams(aFrame, eventState));
+      break;
+
     case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
-    case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED:
-      DrawPushButton(cgContext, macRect, eventState, aWidgetType, aFrame,
-                     nativeWidgetHeight);
+    case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED: {
+      NSCellStateValue value = (aWidgetType == NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED)
+        ? NSOffState : NSOnState;
+      DrawDisclosureButton(cgContext, macRect,
+                           ComputeControlParams(aFrame, eventState), value);
+    }
       break;
 
     case NS_THEME_BUTTON_BEVEL:
