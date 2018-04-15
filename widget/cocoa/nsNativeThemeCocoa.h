@@ -9,6 +9,8 @@
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/Variant.h"
+
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
@@ -235,6 +237,126 @@ public:
     bool horizontal : 1;
     bool rtl : 1;
     bool onDarkBackground : 1;
+  };
+
+  enum Widget : uint8_t {
+    eColorFill,                    // mozilla::gfx::Color
+    eSheetBackground,
+    eDialogBackground,
+    eMenuBackground,               // MenuBackgroundParams
+    eMenuIcon,                     // MenuIconParams
+    eMenuItem,                     // MenuItemParams
+    eMenuSeparator,                // MenuItemParams
+    eTooltip,
+    eCheckbox,                     // CheckboxOrRadioParams
+    eRadio,                        // CheckboxOrRadioParams
+    eButton,                       // ButtonParams
+    eDropdown,                     // DropdownParams
+    eFocusOutline,
+    eSpinButtons,                  // SpinButtonParams
+    eSpinButtonUp,                 // SpinButtonParams
+    eSpinButtonDown,               // SpinButtonParams
+    eSegment,                      // SegmentParams
+    eSeparator,
+    eUnifiedToolbar,               // UnifiedToolbarParams
+    eToolbar,                      // bool
+    eNativeTitlebar,               // UnifiedToolbarParams
+    eStatusBar,                    // bool
+    eGroupBox,
+    eTextBox,                      // TextBoxParams
+    eSearchField,                  // SearchFieldParams
+    eProgressBar,                  // ProgressParams
+    eMeter,                        // MeterParams
+    eTreeHeaderCell,               // TreeHeaderCellParams
+    eScale,                        // ScaleParams
+    eScrollbarThumb,               // ScrollbarParams
+    eScrollbarTrack,               // ScrollbarParams
+    eMultilineTextField,           // bool
+    eListBox,
+    eSourceList,                   // bool
+    eActiveSourceListSelection,    // bool
+    eInactiveSourceListSelection,  // bool
+    eTabPanel,
+    eResizer
+  };
+
+  struct WidgetInfo {
+    static WidgetInfo ColorFill(const mozilla::gfx::Color& aParams) { return WidgetInfo(Widget::eColorFill, aParams); }
+    static WidgetInfo SheetBackground() { return WidgetInfo(Widget::eSheetBackground, false); }
+    static WidgetInfo DialogBackground() { return WidgetInfo(Widget::eDialogBackground, false); }
+    static WidgetInfo MenuBackground(const MenuBackgroundParams& aParams) { return WidgetInfo(Widget::eMenuBackground, aParams); }
+    static WidgetInfo MenuIcon(const MenuIconParams& aParams) { return WidgetInfo(Widget::eMenuIcon, aParams); }
+    static WidgetInfo MenuItem(const MenuItemParams& aParams) { return WidgetInfo(Widget::eMenuItem, aParams); }
+    static WidgetInfo MenuSeparator(const MenuItemParams& aParams) { return WidgetInfo(Widget::eMenuSeparator, aParams); }
+    static WidgetInfo Tooltip() { return WidgetInfo(Widget::eTooltip, false); }
+    static WidgetInfo Checkbox(const CheckboxOrRadioParams& aParams) { return WidgetInfo(Widget::eCheckbox, aParams); }
+    static WidgetInfo Radio(const CheckboxOrRadioParams& aParams) { return WidgetInfo(Widget::eRadio, aParams); }
+    static WidgetInfo Button(const ButtonParams& aParams) { return WidgetInfo(Widget::eButton, aParams); }
+    static WidgetInfo Dropdown(const DropdownParams& aParams) { return WidgetInfo(Widget::eDropdown, aParams); }
+    static WidgetInfo FocusOutline() { return WidgetInfo(Widget::eFocusOutline, false); }
+    static WidgetInfo SpinButtons(const SpinButtonParams& aParams) { return WidgetInfo(Widget::eSpinButtons, aParams); }
+    static WidgetInfo SpinButtonUp(const SpinButtonParams& aParams) { return WidgetInfo(Widget::eSpinButtonUp, aParams); }
+    static WidgetInfo SpinButtonDown(const SpinButtonParams& aParams) { return WidgetInfo(Widget::eSpinButtonDown, aParams); }
+    static WidgetInfo Segment(const SegmentParams& aParams) { return WidgetInfo(Widget::eSegment, aParams); }
+    static WidgetInfo Separator() { return WidgetInfo(Widget::eSeparator, false); }
+    static WidgetInfo UnifiedToolbar(const UnifiedToolbarParams& aParams) { return WidgetInfo(Widget::eUnifiedToolbar, aParams); }
+    static WidgetInfo Toolbar(bool aParams) { return WidgetInfo(Widget::eToolbar, aParams); }
+    static WidgetInfo NativeTitlebar(const UnifiedToolbarParams& aParams) { return WidgetInfo(Widget::eNativeTitlebar, aParams); }
+    static WidgetInfo StatusBar(bool aParams) { return WidgetInfo(Widget::eStatusBar, aParams); }
+    static WidgetInfo GroupBox() { return WidgetInfo(Widget::eGroupBox, false); }
+    static WidgetInfo TextBox(const TextBoxParams& aParams) { return WidgetInfo(Widget::eTextBox, aParams); }
+    static WidgetInfo SearchField(const SearchFieldParams& aParams) { return WidgetInfo(Widget::eSearchField, aParams); }
+    static WidgetInfo ProgressBar(const ProgressParams& aParams) { return WidgetInfo(Widget::eProgressBar, aParams); }
+    static WidgetInfo Meter(const MeterParams& aParams) { return WidgetInfo(Widget::eMeter, aParams); }
+    static WidgetInfo TreeHeaderCell(const TreeHeaderCellParams& aParams) { return WidgetInfo(Widget::eTreeHeaderCell, aParams); }
+    static WidgetInfo Scale(const ScaleParams& aParams) { return WidgetInfo(Widget::eScale, aParams); }
+    static WidgetInfo ScrollbarThumb(const ScrollbarParams& aParams) { return WidgetInfo(Widget::eScrollbarThumb, aParams); }
+    static WidgetInfo ScrollbarTrack(const ScrollbarParams& aParams) { return WidgetInfo(Widget::eScrollbarTrack, aParams); }
+    static WidgetInfo MultilineTextField(bool aParams) { return WidgetInfo(Widget::eMultilineTextField, aParams); }
+    static WidgetInfo ListBox() { return WidgetInfo(Widget::eListBox, false); }
+    static WidgetInfo SourceList(bool aParams) { return WidgetInfo(Widget::eSourceList, aParams); }
+    static WidgetInfo ActiveSourceListSelection(bool aParams) { return WidgetInfo(Widget::eActiveSourceListSelection, aParams); }
+    static WidgetInfo InactiveSourceListSelection(bool aParams) { return WidgetInfo(Widget::eInactiveSourceListSelection, aParams); }
+    static WidgetInfo TabPanel(bool aParams) { return WidgetInfo(Widget::eTabPanel, aParams); }
+    static WidgetInfo Resizer(bool aParams) { return WidgetInfo(Widget::eResizer, aParams); }
+
+    template<typename T>
+    T Params() const
+    {
+      MOZ_RELEASE_ASSERT(mVariant.is<T>());
+      return mVariant.as<T>();
+    }
+
+    enum Widget Widget() const { return mWidget; }
+
+  private:
+    template<typename T> WidgetInfo(enum Widget aWidget, const T& aParams)
+      : mVariant(aParams)
+      , mWidget(aWidget)
+    {}
+
+    mozilla::Variant<
+      mozilla::gfx::Color,
+      MenuBackgroundParams,
+      MenuIconParams,
+      MenuItemParams,
+      CheckboxOrRadioParams,
+      ButtonParams,
+      DropdownParams,
+      SpinButtonParams,
+      SegmentParams,
+      UnifiedToolbarParams,
+      TextBoxParams,
+      SearchFieldParams,
+      ProgressParams,
+      MeterParams,
+      TreeHeaderCellParams,
+      ScaleParams,
+      ScrollbarParams,
+      bool
+    > mVariant;
+
+    enum Widget mWidget;
   };
 
   nsNativeThemeCocoa();
