@@ -7,19 +7,24 @@
 var EXPORTED_SYMBOLS = ["GeckoViewContentModule"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
+
+GeckoViewUtils.initLogging("GeckoView.Module.[C]", this);
 
 ChromeUtils.defineModuleGetter(this, "EventDispatcher",
   "resource://gre/modules/Messaging.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
-                       {}).AndroidLog.d.bind(null, "ViewContentModule"));
-
-// function debug(aMsg) {
-//   dump(aMsg);
-// }
-
 class GeckoViewContentModule {
+  static initLogging(aModuleName) {
+    this._moduleName = aModuleName;
+    const tag = aModuleName.replace("GeckoView", "GeckoView.") + ".[C]";
+    return GeckoViewUtils.initLogging(tag, {});
+  }
+
+  static create(aGlobal, aModuleName) {
+    return new this(aModuleName || this._moduleName, aGlobal);
+  }
+
   constructor(aModuleName, aMessageManager) {
     this.moduleName = aModuleName;
     this.messageManager = aMessageManager;

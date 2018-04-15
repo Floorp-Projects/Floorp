@@ -70,11 +70,11 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   // Ensure the functions work when the tag length is greater than the maximum
   // tag length.
   let tag = "X".repeat(AndroidLog.MAX_TAG_LENGTH + 1);
-  is(AndroidLog.MAX_TAG_LENGTH + 54, AndroidLog.v(tag, "This is a verbose message with a too-long tag."), "verbose message with too-long tag");
-  is(AndroidLog.MAX_TAG_LENGTH + 52, AndroidLog.d(tag, "This is a debug message with a too-long tag."), "debug message with too-long tag");
-  is(AndroidLog.MAX_TAG_LENGTH + 52, AndroidLog.i(tag, "This is an info message with a too-long tag."), "info message with too-long tag");
-  is(AndroidLog.MAX_TAG_LENGTH + 54, AndroidLog.w(tag, "This is a warning message with a too-long tag."), "warning message with too-long tag");
-  is(AndroidLog.MAX_TAG_LENGTH + 53, AndroidLog.e(tag, "This is an error message with a too-long tag."), "error message with too-long tag");
+  is(AndroidLog.MAX_TAG_LENGTH + 55, AndroidLog.v(tag, "This is a verbose message with a too-long tag."), "verbose message with too-long tag");
+  is(AndroidLog.MAX_TAG_LENGTH + 53, AndroidLog.d(tag, "This is a debug message with a too-long tag."), "debug message with too-long tag");
+  is(AndroidLog.MAX_TAG_LENGTH + 53, AndroidLog.i(tag, "This is an info message with a too-long tag."), "info message with too-long tag");
+  is(AndroidLog.MAX_TAG_LENGTH + 55, AndroidLog.w(tag, "This is a warning message with a too-long tag."), "warning message with too-long tag");
+  is(AndroidLog.MAX_TAG_LENGTH + 54, AndroidLog.e(tag, "This is an error message with a too-long tag."), "error message with too-long tag");
 
   // We should also ensure that the module is accessible from a ChromeWorker,
   // but there doesn't seem to be a way to load a ChromeWorker from this test.
