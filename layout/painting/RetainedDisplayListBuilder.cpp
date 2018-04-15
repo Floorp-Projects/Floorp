@@ -666,14 +666,12 @@ HandlePreserve3D(nsIFrame* aFrame, nsRect& aOverflow)
 }
 
 static void
-ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
-             AnimatedGeometryRoot** aAGR, nsRect& aOverflow,
-             nsIFrame* aStopAtFrame, nsTArray<nsIFrame*>& aOutFramesWithProps,
-             const bool aStopAtStackingContext)
+ProcessFrameInternal(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
+                     AnimatedGeometryRoot** aAGR, nsRect& aOverflow,
+                     nsIFrame* aStopAtFrame, nsTArray<nsIFrame*>& aOutFramesWithProps,
+                     const bool aStopAtStackingContext)
 {
   nsIFrame* currentFrame = aFrame;
-
-  aBuilder.MarkFrameForDisplayIfVisible(aFrame, aBuilder.RootReferenceFrame());
 
   while (currentFrame != aStopAtFrame) {
     CRR_LOG("currentFrame: %p (placeholder=%d), aOverflow: %d %d %d %d\n",
@@ -714,8 +712,8 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
         nsLayoutUtils::FindNearestCommonAncestorFrame(currentFrame->GetParent(),
                                                       placeholder->GetParent());
 
-      ProcessFrame(placeholder, aBuilder, &dummyAGR, placeholderOverflow,
-                   ancestor, aOutFramesWithProps, false);
+      ProcessFrameInternal(placeholder, aBuilder, &dummyAGR, placeholderOverflow,
+                           ancestor, aOutFramesWithProps, false);
     }
 
     // Convert 'aOverflow' into the coordinate space of the nearest stacking context
@@ -833,6 +831,65 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
   }
 }
 
+bool
+RetainedDisplayListBuilder::ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
+             nsIFrame* aStopAtFrame, nsTArray<nsIFrame*>& aOutFramesWithProps,
+             const bool aStopAtStackingContext,
+             nsRect* aOutDirty,
+             AnimatedGeometryRoot** aOutModifiedAGR)
+{
+  if (aFrame->HasOverrideDirtyRegion()) {
+    aOutFramesWithProps.AppendElement(aFrame);
+  }
+
+  if (aFrame->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
+    return true;
+  }
+
+  // TODO: There is almost certainly a faster way of doing this, probably can be combined with the ancestor
+  // walk for TransformFrameRectToAncestor.
+  AnimatedGeometryRoot* agr = aBuilder.FindAnimatedGeometryRootFor(aFrame)->GetAsyncAGR();
+
+  CRR_LOG("Processing frame %p with agr %p\n", aFrame, agr->mFrame);
+
+  // Convert the frame's overflow rect into the coordinate space
+  // of the nearest stacking context that has an existing display item.
+  // We store that as a dirty rect on that stacking context so that we build
+  // all items that intersect the changed frame within the stacking context,
+  // and then we use MarkFrameForDisplayIfVisible to make sure the stacking
+  // context itself gets built. We don't need to build items that intersect outside
+  // of the stacking context, since we know the stacking context item exists in
+  // the old list, so we can trivially merge without needing other items.
+  nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
+
+  // If the modified frame is also a caret frame, include the caret area.
+  // This is needed because some frames (for example text frames without text)
+  // might have an empty overflow rect.
+  if (aFrame == aBuilder.GetCaretFrame()) {
+    overflow.UnionRect(overflow, aBuilder.GetCaretRect());
+  }
+
+  ProcessFrameInternal(aFrame, aBuilder, &agr, overflow, aStopAtFrame,
+                       aOutFramesWithProps, aStopAtStackingContext);
+
+  if (!overflow.IsEmpty()) {
+    aOutDirty->UnionRect(*aOutDirty, overflow);
+    CRR_LOG("Adding area to root draw area: %d %d %d %d\n",
+            overflow.x, overflow.y, overflow.width, overflow.height);
+
+    // If we get changed frames from multiple AGRS, then just give up as it gets really complex to
+    // track which items would need to be marked in MarkFramesForDifferentAGR.
+    if (!*aOutModifiedAGR) {
+      CRR_LOG("Setting %p as root stacking context AGR\n", agr);
+      *aOutModifiedAGR = agr;
+    } else if (agr && *aOutModifiedAGR != agr) {
+      CRR_LOG("Found multiple AGRs in root stacking context, giving up\n");
+      return false;
+    }
+  }
+  return true;
+}
+
 /**
  * Given a list of frames that has been modified, computes the region that we need to
  * do display list building for in order to build all modified display items.
@@ -866,57 +923,16 @@ RetainedDisplayListBuilder::ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedF
                                                  nsTArray<nsIFrame*>& aOutFramesWithProps)
 {
   CRR_LOG("Computing rebuild regions for %zu frames:\n", aModifiedFrames.Length());
+  nsTArray<nsIFrame*> extraFrames;
   for (nsIFrame* f : aModifiedFrames) {
     MOZ_ASSERT(f);
 
-    if (f->HasOverrideDirtyRegion()) {
-      aOutFramesWithProps.AppendElement(f);
-    }
+    aBuilder.MarkFrameForDisplayIfVisible(aFrame, aBuilder.RootReferenceFrame());
 
-    if (f->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
-      continue;
-    }
-
-    // TODO: There is almost certainly a faster way of doing this, probably can be combined with the ancestor
-    // walk for TransformFrameRectToAncestor.
-    AnimatedGeometryRoot* agr = mBuilder.FindAnimatedGeometryRootFor(f)->GetAsyncAGR();
-
-    CRR_LOG("Processing frame %p with agr %p\n", f, agr->mFrame);
-
-    // Convert the frame's overflow rect into the coordinate space
-    // of the nearest stacking context that has an existing display item.
-    // We store that as a dirty rect on that stacking context so that we build
-    // all items that intersect the changed frame within the stacking context,
-    // and then we use MarkFrameForDisplayIfVisible to make sure the stacking
-    // context itself gets built. We don't need to build items that intersect outside
-    // of the stacking context, since we know the stacking context item exists in
-    // the old list, so we can trivially merge without needing other items.
-    nsRect overflow = f->GetVisualOverflowRectRelativeToSelf();
-
-    // If the modified frame is also a caret frame, include the caret area.
-    // This is needed because some frames (for example text frames without text)
-    // might have an empty overflow rect.
-    if (f == mBuilder.GetCaretFrame()) {
-      overflow.UnionRect(overflow, mBuilder.GetCaretRect());
-    }
-
-    ProcessFrame(f, mBuilder, &agr, overflow, mBuilder.RootReferenceFrame(),
-                 aOutFramesWithProps, true);
-
-    if (!overflow.IsEmpty()) {
-      aOutDirty->UnionRect(*aOutDirty, overflow);
-      CRR_LOG("Adding area to root draw area: %d %d %d %d\n",
-              overflow.x, overflow.y, overflow.width, overflow.height);
-
-      // If we get changed frames from multiple AGRS, then just give up as it gets really complex to
-      // track which items would need to be marked in MarkFramesForDifferentAGR.
-      if (!*aOutModifiedAGR) {
-        CRR_LOG("Setting %p as root stacking context AGR\n", agr);
-        *aOutModifiedAGR = agr;
-      } else if (agr && *aOutModifiedAGR != agr) {
-        CRR_LOG("Found multiple AGRs in root stacking context, giving up\n");
-        return false;
-      }
+    if (!ProcessFrame(f, mBuilder, mBuilder.RootReferenceFrame(),
+                      aOutFramesWithProps, true,
+                      aOutDirty, aOutModifiedAGR)) {
+      return false;
     }
   }
 
