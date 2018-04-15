@@ -46,6 +46,13 @@ public:
     eThemeGeometryTypeActiveSourceListSelection
   };
 
+  enum class MenuIcon : uint8_t {
+    eCheckmark,
+    eMenuArrow,
+    eMenuDownScrollArrow,
+    eMenuUpScrollArrow
+  };
+
   enum class ButtonType : uint8_t {
     eRegularPushButton,
     eDefaultPushButton,
@@ -81,6 +88,22 @@ public:
     mozilla::Maybe<mozilla::gfx::Color> vibrancyColor;
     bool disabled = false;
     bool submenuRightOfParent = false;
+  };
+
+  struct MenuIconParams {
+    MenuIcon icon = MenuIcon::eCheckmark;
+    bool disabled = false;
+    bool insideActiveMenuItem = false;
+    bool centerHorizontally = false;
+    bool rtl = false;
+  };
+
+  struct MenuItemParams {
+    mozilla::Maybe<mozilla::gfx::Color> vibrancyColor;
+    bool checked = false;
+    bool disabled = false;
+    bool selected = false;
+    bool rtl = false;
   };
 
   struct ButtonParams {
@@ -161,6 +184,12 @@ protected:
                                      mozilla::EventStates aEventState);
   MenuBackgroundParams ComputeMenuBackgroundParams(nsIFrame* aFrame,
                                                    mozilla::EventStates aEventState);
+  MenuIconParams ComputeMenuIconParams(nsIFrame* aParams,
+                                       mozilla::EventStates aEventState,
+                                       MenuIcon aIcon);
+  MenuItemParams ComputeMenuItemParams(nsIFrame* aFrame,
+                                       mozilla::EventStates aEventState,
+                                       bool aIsChecked);
   TreeHeaderCellParams ComputeTreeHeaderCellParams(nsIFrame* aFrame,
                                                    mozilla::EventStates aEventState);
 
@@ -195,10 +224,12 @@ protected:
                             ControlParams aControlParams, NSCellStateValue aState);
   void DrawMenuBackground(CGContextRef cgContext, const CGRect& inBoxRect,
                           const MenuBackgroundParams& aParams);
+  NSString* GetMenuIconName(const MenuIconParams& aParams);
+  NSSize GetMenuIconSize(MenuIcon aIcon);
   void DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
-                    mozilla::EventStates inState, nsIFrame* aFrame,
-                    const NSSize& aIconSize, NSString* aImageName,
-                    bool aCenterHorizontally);
+                    const MenuIconParams& aParams);
+  void DrawMenuItem(CGContextRef cgContext, const CGRect& inBoxRect,
+                    const MenuItemParams& aParams);
   void DrawHIThemeButton(CGContextRef cgContext, const HIRect& aRect,
                          ThemeButtonKind aKind, ThemeButtonValue aValue,
                          ThemeDrawState aState, ThemeButtonAdornment aAdornment,
