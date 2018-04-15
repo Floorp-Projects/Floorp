@@ -509,8 +509,7 @@ class GCRuntime
     template <typename T>
     static void checkIncrementalZoneState(JSContext* cx, T* t);
     static TenuredCell* refillFreeListFromAnyThread(JSContext* cx, AllocKind thingKind);
-    static TenuredCell* refillFreeListFromActiveCooperatingThread(JSContext* cx,
-                                                                  AllocKind thingKind);
+    static TenuredCell* refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind);
     static TenuredCell* refillFreeListFromHelperThread(JSContext* cx, AllocKind thingKind);
 
     /*

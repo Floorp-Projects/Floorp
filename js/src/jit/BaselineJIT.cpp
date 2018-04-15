@@ -55,7 +55,7 @@ ICStubSpace::freeAllAfterMinorGC(Zone* zone)
     if (zone->isAtomsZone())
         MOZ_ASSERT(allocator_.isEmpty());
     else
-        zone->runtimeFromActiveCooperatingThread()->gc.freeAllLifoBlocksAfterMinorGC(&allocator_);
+        zone->runtimeFromMainThread()->gc.freeAllLifoBlocksAfterMinorGC(&allocator_);
 }
 
 BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
