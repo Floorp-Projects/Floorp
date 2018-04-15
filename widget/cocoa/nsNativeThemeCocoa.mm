@@ -1112,6 +1112,109 @@ nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxR
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+static Color
+NSColorToColor(NSColor* aColor)
+{
+  NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+  return Color([deviceColor redComponent],
+               [deviceColor greenComponent],
+               [deviceColor blueComponent],
+               [deviceColor alphaComponent]);
+}
+
+static Color
+VibrancyFillColor(nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType)
+{
+  ChildView* childView = ChildViewForFrame(aFrame);
+  if (childView) {
+    return NSColorToColor(
+      [childView vibrancyFillColorForThemeGeometryType:aThemeGeometryType]);
+  }
+  return Color();
+}
+
+static void
+DrawVibrancyBackground(CGContextRef cgContext, CGRect inBoxRect,
+                       const Color& aColor, int aCornerRadiusIfOpaque = 0)
+{
+  NSRect rect = NSRectFromCGRect(inBoxRect);
+  NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
+  NSGraphicsContext* context =
+    [NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES];
+  [NSGraphicsContext setCurrentContext:context];
+  [NSGraphicsContext saveGraphicsState];
+
+  NSColor* fillColor = [NSColor colorWithDeviceRed:aColor.r
+                                             green:aColor.g
+                                              blue:aColor.b
+                                             alpha:aColor.a];
+
+  if ([fillColor alphaComponent] == 1.0 && aCornerRadiusIfOpaque > 0) {
+    // The fillColor being opaque means that the system-wide pref "reduce
+    // transparency" is set. In that scenario, we still go through all the
+    // vibrancy rendering paths (VibrancyManager::SystemSupportsVibrancy()
+    // will still return true), but the result just won't look "vibrant".
+    // However, there's one unfortunate change of behavior that this pref
+    // has: It stops the window server from applying window masks. We use
+    // a window mask to get rounded corners on menus. So since the mask
+    // doesn't work in "reduce vibrancy" mode, we need to do our own rounded
+    // corner clipping here.
+    [[NSBezierPath bezierPathWithRoundedRect:rect
+                                     xRadius:aCornerRadiusIfOpaque
+                                     yRadius:aCornerRadiusIfOpaque] addClip];
+  }
+
+  [fillColor set];
+  NSRectFill(rect);
+
+  [NSGraphicsContext restoreGraphicsState];
+  [NSGraphicsContext setCurrentContext:savedContext];
+}
+
+nsNativeThemeCocoa::MenuBackgroundParams
+nsNativeThemeCocoa::ComputeMenuBackgroundParams(nsIFrame* aFrame,
+                                                EventStates aEventState)
+{
+  MenuBackgroundParams params;
+  if (VibrancyManager::SystemSupportsVibrancy()) {
+    params.vibrancyColor = Some(VibrancyFillColor(aFrame, eThemeGeometryTypeMenu));
+  } else {
+    params.disabled = IsDisabled(aFrame, aEventState);
+    bool isLeftOfParent = false;
+    params.submenuRightOfParent =
+      IsSubmenu(aFrame, &isLeftOfParent) && !isLeftOfParent;
+  }
+  return params;
+}
+
+void
+nsNativeThemeCocoa::DrawMenuBackground(CGContextRef cgContext,
+                                       const CGRect& inBoxRect,
+                                       const MenuBackgroundParams& aParams)
+{
+  if (aParams.vibrancyColor) {
+    DrawVibrancyBackground(cgContext, inBoxRect, *aParams.vibrancyColor, 4);
+  } else {
+    HIThemeMenuDrawInfo mdi;
+    memset(&mdi, 0, sizeof(mdi));
+    mdi.version = 0;
+    mdi.menuType = aParams.disabled ?
+                      static_cast<ThemeMenuType>(kThemeMenuTypeInactive) :
+                      static_cast<ThemeMenuType>(kThemeMenuTypePopUp);
+
+    if (aParams.submenuRightOfParent) {
+      mdi.menuType = kThemeMenuTypeHierarchical;
+    }
+
+    // The rounded corners draw outside the frame.
+    CGRect deflatedRect =
+      CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y + 4,
+                 inBoxRect.size.width, inBoxRect.size.height - 8);
+    HIThemeDrawMenuBackground(&deflatedRect, &mdi, cgContext,
+                              HITHEME_ORIENTATION);
+  }
+}
+
 static const NSSize kCheckmarkSize = NSMakeSize(11, 11);
 static const NSSize kMenuarrowSize = NSMakeSize(9, 10);
 static const NSSize kMenuScrollArrowSize = NSMakeSize(10, 8);
@@ -2329,60 +2432,12 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static Color
-NSColorToColor(NSColor* aColor)
-{
-  NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
-  return Color([deviceColor redComponent],
-               [deviceColor greenComponent],
-               [deviceColor blueComponent],
-               [deviceColor alphaComponent]);
-}
-
-static Color
-VibrancyFillColor(nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType)
-{
-  ChildView* childView = ChildViewForFrame(aFrame);
-  if (childView) {
-    return NSColorToColor([childView vibrancyFillColorForThemeGeometryType:aThemeGeometryType]);
-  }
-  return Color();
-}
-
 static void
 DrawVibrancyBackground(CGContextRef cgContext, CGRect inBoxRect,
-                       nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType,
-                       int aCornerRadiusIfOpaque = 0)
+                       nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType)
 {
-  ChildView* childView = ChildViewForFrame(aFrame);
-  if (childView) {
-    NSRect rect = NSRectFromCGRect(inBoxRect);
-    NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
-    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
-    [NSGraphicsContext saveGraphicsState];
-
-    NSColor* fillColor = [childView vibrancyFillColorForThemeGeometryType:aThemeGeometryType];
-    if ([fillColor alphaComponent] == 1.0 && aCornerRadiusIfOpaque > 0) {
-      // The fillColor being opaque means that the system-wide pref "reduce
-      // transparency" is set. In that scenario, we still go through all the
-      // vibrancy rendering paths (VibrancyManager::SystemSupportsVibrancy()
-      // will still return true), but the result just won't look "vibrant".
-      // However, there's one unfortunate change of behavior that this pref
-      // has: It stops the window server from applying window masks. We use
-      // a window mask to get rounded corners on menus. So since the mask
-      // doesn't work in "reduce vibrancy" mode, we need to do our own rounded
-      // corner clipping here.
-      [[NSBezierPath bezierPathWithRoundedRect:rect
-                                       xRadius:aCornerRadiusIfOpaque
-                                       yRadius:aCornerRadiusIfOpaque] addClip];
-    }
-
-    [fillColor set];
-    NSRectFill(rect);
-
-    [NSGraphicsContext restoreGraphicsState];
-    [NSGraphicsContext setCurrentContext:savedContext];
-  }
+  DrawVibrancyBackground(cgContext, inBoxRect,
+                         VibrancyFillColor(aFrame, aThemeGeometryType), 0);
 }
 
 bool
@@ -2511,26 +2566,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       break;
 
     case NS_THEME_MENUPOPUP:
-      if (VibrancyManager::SystemSupportsVibrancy()) {
-        DrawVibrancyBackground(cgContext, macRect, aFrame, eThemeGeometryTypeMenu, 4);
-      } else {
-        HIThemeMenuDrawInfo mdi;
-        memset(&mdi, 0, sizeof(mdi));
-        mdi.version = 0;
-        mdi.menuType = IsDisabled(aFrame, eventState) ?
-                         static_cast<ThemeMenuType>(kThemeMenuTypeInactive) :
-                         static_cast<ThemeMenuType>(kThemeMenuTypePopUp);
-
-        bool isLeftOfParent = false;
-        if (IsSubmenu(aFrame, &isLeftOfParent) && !isLeftOfParent) {
-          mdi.menuType = kThemeMenuTypeHierarchical;
-        }
-
-        // The rounded corners draw outside the frame.
-        CGRect deflatedRect = CGRectMake(macRect.origin.x, macRect.origin.y + 4,
-                                         macRect.size.width, macRect.size.height - 8);
-        HIThemeDrawMenuBackground(&deflatedRect, &mdi, cgContext, HITHEME_ORIENTATION);
-      }
+      DrawMenuBackground(cgContext, macRect,
+                         ComputeMenuBackgroundParams(aFrame, eventState));
       break;
 
     case NS_THEME_MENUARROW: {
