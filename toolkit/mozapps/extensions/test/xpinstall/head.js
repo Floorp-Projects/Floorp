@@ -122,7 +122,7 @@ var Harness = {
       window.addEventListener("popupshown", this);
 
       var self = this;
-      registerCleanupFunction(function() {
+      registerCleanupFunction(async function() {
         Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
         Services.prefs.clearUserPref(PREF_INSTALL_REQUIRESECUREORIGIN);
         Services.obs.removeObserver(self, "addon-install-started");
@@ -139,12 +139,11 @@ var Harness = {
 
         window.removeEventListener("popupshown", self);
 
-        AddonManager.getAllInstalls(function(aInstalls) {
-          is(aInstalls.length, 0, "Should be no active installs at the end of the test");
-          aInstalls.forEach(function(aInstall) {
-            info("Install for " + aInstall.sourceURI + " is in state " + aInstall.state);
-            aInstall.cancel();
-          });
+        let aInstalls = await AddonManager.getAllInstalls();
+        is(aInstalls.length, 0, "Should be no active installs at the end of the test");
+        aInstalls.forEach(function(aInstall) {
+          info("Install for " + aInstall.sourceURI + " is in state " + aInstall.state);
+          aInstall.cancel();
         });
       });
     }

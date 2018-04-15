@@ -29,19 +29,18 @@ function end_test() {
 
 // Verify that with no add-ons installed the background update notifications get
 // called
-function run_test_1() {
-  AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(aAddons) {
-    Assert.equal(aAddons.length, 0);
+async function run_test_1() {
+  let aAddons = await AddonManager.getAddonsByTypes(["extension", "theme", "locale"]);
+  Assert.equal(aAddons.length, 0);
 
-    Services.obs.addObserver(function observer() {
-      Services.obs.removeObserver(observer, "addons-background-update-complete");
+  Services.obs.addObserver(function observer() {
+    Services.obs.removeObserver(observer, "addons-background-update-complete");
 
-      executeSoon(run_test_2);
-    }, "addons-background-update-complete");
+    executeSoon(run_test_2);
+  }, "addons-background-update-complete");
 
-    // Trigger the background update timer handler
-    gInternalManager.notify(null);
-  });
+  // Trigger the background update timer handler
+  gInternalManager.notify(null);
 }
 
 // Verify that with two add-ons installed both of which claim to have updates

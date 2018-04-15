@@ -76,23 +76,22 @@ function sortAddons(addons) {
 }
 
 // Basic check that the mock object works
-function run_test_1() {
-  AddonManager.getAddonsByTypes(["plugin"], function(addons) {
-    sortAddons(addons);
+async function run_test_1() {
+  let addons = await AddonManager.getAddonsByTypes(["plugin"]);
+  sortAddons(addons);
 
-    Assert.equal(addons.length, 2);
+  Assert.equal(addons.length, 2);
 
-    Assert.equal(addons[0].name, "Flash");
-    Assert.ok(!addons[0].userDisabled);
-    Assert.equal(addons[1].name, "Java");
-    Assert.ok(!addons[1].userDisabled);
+  Assert.equal(addons[0].name, "Flash");
+  Assert.ok(!addons[0].userDisabled);
+  Assert.equal(addons[1].name, "Java");
+  Assert.ok(!addons[1].userDisabled);
 
-    run_test_2();
-  });
+  run_test_2();
 }
 
 // No change to the list should not trigger any events or changes in the API
-function run_test_2() {
+async function run_test_2() {
   // Reorder the list a bit
   let tag = PLUGINS[0];
   PLUGINS[0] = PLUGINS[2];
@@ -101,22 +100,21 @@ function run_test_2() {
 
   Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
 
-  AddonManager.getAddonsByTypes(["plugin"], function(addons) {
-    sortAddons(addons);
+  let addons = await AddonManager.getAddonsByTypes(["plugin"]);
+  sortAddons(addons);
 
-    Assert.equal(addons.length, 2);
+  Assert.equal(addons.length, 2);
 
-    Assert.equal(addons[0].name, "Flash");
-    Assert.ok(!addons[0].userDisabled);
-    Assert.equal(addons[1].name, "Java");
-    Assert.ok(!addons[1].userDisabled);
+  Assert.equal(addons[0].name, "Flash");
+  Assert.ok(!addons[0].userDisabled);
+  Assert.equal(addons[1].name, "Java");
+  Assert.ok(!addons[1].userDisabled);
 
-    run_test_3();
-  });
+  run_test_3();
 }
 
 // Tests that a newly detected plugin shows up in the API and sends out events
-function run_test_3() {
+async function run_test_3() {
   let tag = new PluginTag("Quicktime", "A mock Quicktime plugin");
   PLUGINS.push(tag);
   let id = tag.name + tag.description;
@@ -135,24 +133,23 @@ function run_test_3() {
 
   ensure_test_completed();
 
-  AddonManager.getAddonsByTypes(["plugin"], function(addons) {
-    sortAddons(addons);
+  let addons = await AddonManager.getAddonsByTypes(["plugin"]);
+  sortAddons(addons);
 
-    Assert.equal(addons.length, 3);
+  Assert.equal(addons.length, 3);
 
-    Assert.equal(addons[0].name, "Flash");
-    Assert.ok(!addons[0].userDisabled);
-    Assert.equal(addons[1].name, "Java");
-    Assert.ok(!addons[1].userDisabled);
-    Assert.equal(addons[2].name, "Quicktime");
-    Assert.ok(!addons[2].userDisabled);
+  Assert.equal(addons[0].name, "Flash");
+  Assert.ok(!addons[0].userDisabled);
+  Assert.equal(addons[1].name, "Java");
+  Assert.ok(!addons[1].userDisabled);
+  Assert.equal(addons[2].name, "Quicktime");
+  Assert.ok(!addons[2].userDisabled);
 
-    run_test_4();
-  });
+  run_test_4();
 }
 
 // Tests that a removed plugin disappears from in the API and sends out events
-function run_test_4() {
+async function run_test_4() {
   let tag = PLUGINS.splice(1, 1)[0];
   let id = tag.name + tag.description;
 
@@ -168,44 +165,42 @@ function run_test_4() {
 
   ensure_test_completed();
 
-  AddonManager.getAddonsByTypes(["plugin"], function(addons) {
-    sortAddons(addons);
+  let addons = await AddonManager.getAddonsByTypes(["plugin"]);
+  sortAddons(addons);
 
-    Assert.equal(addons.length, 2);
+  Assert.equal(addons.length, 2);
 
-    Assert.equal(addons[0].name, "Flash");
-    Assert.ok(!addons[0].userDisabled);
-    Assert.equal(addons[1].name, "Quicktime");
-    Assert.ok(!addons[1].userDisabled);
+  Assert.equal(addons[0].name, "Flash");
+  Assert.ok(!addons[0].userDisabled);
+  Assert.equal(addons[1].name, "Quicktime");
+  Assert.ok(!addons[1].userDisabled);
 
-    run_test_5();
-  });
+  run_test_5();
 }
 
 // Removing part of the flash plugin should have no effect
-function run_test_5() {
+async function run_test_5() {
   PLUGINS.splice(0, 1);
 
   Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
 
   ensure_test_completed();
 
-  AddonManager.getAddonsByTypes(["plugin"], function(addons) {
-    sortAddons(addons);
+  let addons = await AddonManager.getAddonsByTypes(["plugin"]);
+  sortAddons(addons);
 
-    Assert.equal(addons.length, 2);
+  Assert.equal(addons.length, 2);
 
-    Assert.equal(addons[0].name, "Flash");
-    Assert.ok(!addons[0].userDisabled);
-    Assert.equal(addons[1].name, "Quicktime");
-    Assert.ok(!addons[1].userDisabled);
+  Assert.equal(addons[0].name, "Flash");
+  Assert.ok(!addons[0].userDisabled);
+  Assert.equal(addons[1].name, "Quicktime");
+  Assert.ok(!addons[1].userDisabled);
 
-    run_test_6();
-  });
+  run_test_6();
 }
 
 // Replacing flash should be detected
-function run_test_6() {
+async function run_test_6() {
   let oldTag = PLUGINS.splice(0, 1)[0];
   let newTag = new PluginTag("Flash 2", "A new crash-free Flash!");
   newTag.disabled = true;
@@ -229,23 +224,22 @@ function run_test_6() {
 
   ensure_test_completed();
 
-  AddonManager.getAddonsByTypes(["plugin"], function(addons) {
-    sortAddons(addons);
+  let addons = await AddonManager.getAddonsByTypes(["plugin"]);
+  sortAddons(addons);
 
-    Assert.equal(addons.length, 2);
+  Assert.equal(addons.length, 2);
 
-    Assert.equal(addons[0].name, "Flash 2");
-    Assert.ok(addons[0].userDisabled);
-    Assert.equal(addons[1].name, "Quicktime");
-    Assert.ok(!addons[1].userDisabled);
+  Assert.equal(addons[0].name, "Flash 2");
+  Assert.ok(addons[0].userDisabled);
+  Assert.equal(addons[1].name, "Quicktime");
+  Assert.ok(!addons[1].userDisabled);
 
-    run_test_7();
-  });
+  run_test_7();
 }
 
 // If new tags are detected and the disabled state changes then we should send
 // out appropriate notifications
-function run_test_7() {
+async function run_test_7() {
   PLUGINS[0] = new PluginTag("Quicktime", "A mock Quicktime plugin");
   PLUGINS[0].disabled = true;
   PLUGINS[1] = new PluginTag("Flash 2", "A new crash-free Flash!");
@@ -266,16 +260,15 @@ function run_test_7() {
 
   ensure_test_completed();
 
-  AddonManager.getAddonsByTypes(["plugin"], function(addons) {
-    sortAddons(addons);
+  let addons = await AddonManager.getAddonsByTypes(["plugin"]);
+  sortAddons(addons);
 
-    Assert.equal(addons.length, 2);
+  Assert.equal(addons.length, 2);
 
-    Assert.equal(addons[0].name, "Flash 2");
-    Assert.ok(!addons[0].userDisabled);
-    Assert.equal(addons[1].name, "Quicktime");
-    Assert.ok(addons[1].userDisabled);
+  Assert.equal(addons[0].name, "Flash 2");
+  Assert.ok(!addons[0].userDisabled);
+  Assert.equal(addons[1].name, "Quicktime");
+  Assert.ok(addons[1].userDisabled);
 
-    end_test();
-  });
+  end_test();
 }

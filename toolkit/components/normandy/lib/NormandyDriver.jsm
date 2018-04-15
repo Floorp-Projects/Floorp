@@ -103,16 +103,14 @@ var NormandyDriver = function(sandboxManager) {
         });
       });
 
-      const pluginsPromise = new Promise(resolve => {
-        AddonManager.getAddonsByTypes(["plugin"], plugins => {
-          plugins.forEach(plugin => appinfo.plugins[plugin.name] = {
-            name: plugin.name,
-            description: plugin.description,
-            version: plugin.version,
-          });
-          resolve();
+      const pluginsPromise = (async () => {
+        let plugins = await AddonManager.getAddonsByTypes(["plugin"]);
+        plugins.forEach(plugin => appinfo.plugins[plugin.name] = {
+          name: plugin.name,
+          description: plugin.description,
+          version: plugin.version,
         });
-      });
+      })();
 
       return new sandbox.Promise(resolve => {
         Promise.all([searchEnginePromise, pluginsPromise]).then(() => {

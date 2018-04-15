@@ -4,7 +4,7 @@
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-function run_test() {
+async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -24,44 +24,41 @@ function run_test() {
 
   AddonManager.strictCompatibility = false;
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
-    Assert.notEqual(aAddon, null);
-    aAddon.userDisabled = true;
-    executeSoon(run_test_1);
-  });
+  let aAddon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  Assert.notEqual(aAddon, null);
+  aAddon.userDisabled = true;
+  executeSoon(run_test_1);
 }
 
-function run_test_1() {
+async function run_test_1() {
   restartManager();
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
-    Assert.notEqual(aAddon, null);
-    Assert.ok(aAddon.userDisabled);
-    Assert.ok(!aAddon.isActive);
-    Assert.ok(!aAddon.appDisabled);
+  let aAddon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  Assert.notEqual(aAddon, null);
+  Assert.ok(aAddon.userDisabled);
+  Assert.ok(!aAddon.isActive);
+  Assert.ok(!aAddon.appDisabled);
 
-    prepare_test({
-      "addon1@tests.mozilla.org": [
-        ["onPropertyChanged", ["appDisabled"]]
-      ]
-    }, [], run_test_2);
+  prepare_test({
+    "addon1@tests.mozilla.org": [
+      ["onPropertyChanged", ["appDisabled"]]
+    ]
+  }, [], run_test_2);
 
-    AddonManager.strictCompatibility = true;
-  });
+  AddonManager.strictCompatibility = true;
 }
 
-function run_test_2() {
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
-    Assert.notEqual(aAddon, null);
-    Assert.ok(aAddon.userDisabled);
-    Assert.ok(!aAddon.isActive);
-    Assert.ok(aAddon.appDisabled);
+async function run_test_2() {
+  let aAddon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  Assert.notEqual(aAddon, null);
+  Assert.ok(aAddon.userDisabled);
+  Assert.ok(!aAddon.isActive);
+  Assert.ok(aAddon.appDisabled);
 
-    prepare_test({
-      "addon1@tests.mozilla.org": [
-        ["onPropertyChanged", ["appDisabled"]]
-      ]
-    }, [], callback_soon(do_test_finished));
+  prepare_test({
+    "addon1@tests.mozilla.org": [
+      ["onPropertyChanged", ["appDisabled"]]
+    ]
+  }, [], callback_soon(do_test_finished));
 
-    AddonManager.strictCompatibility = false;
-  });
+  AddonManager.strictCompatibility = false;
 }

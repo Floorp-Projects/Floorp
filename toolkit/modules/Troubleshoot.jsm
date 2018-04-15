@@ -228,31 +228,30 @@ var dataProviders = {
     done(data);
   },
 
-  extensions: function extensions(done) {
-    AddonManager.getAddonsByTypes(["extension"], function(extensions) {
-      extensions = extensions.filter(e => !e.isSystem);
-      extensions.sort(function(a, b) {
-        if (a.isActive != b.isActive)
-          return b.isActive ? 1 : -1;
+  extensions: async function extensions(done) {
+    let extensions = await AddonManager.getAddonsByTypes(["extension"]);
+    extensions = extensions.filter(e => !e.isSystem);
+    extensions.sort(function(a, b) {
+      if (a.isActive != b.isActive)
+        return b.isActive ? 1 : -1;
 
-        // In some unfortunate cases addon names can be null.
-        let aname = a.name || null;
-        let bname = b.name || null;
-        let lc = aname.localeCompare(bname);
-        if (lc != 0)
-          return lc;
-        if (a.version != b.version)
-          return a.version > b.version ? 1 : -1;
-        return 0;
-      });
-      let props = ["name", "version", "isActive", "id"];
-      done(extensions.map(function(ext) {
-        return props.reduce(function(extData, prop) {
-          extData[prop] = ext[prop];
-          return extData;
-        }, {});
-      }));
+      // In some unfortunate cases addon names can be null.
+      let aname = a.name || null;
+      let bname = b.name || null;
+      let lc = aname.localeCompare(bname);
+      if (lc != 0)
+        return lc;
+      if (a.version != b.version)
+        return a.version > b.version ? 1 : -1;
+      return 0;
     });
+    let props = ["name", "version", "isActive", "id"];
+    done(extensions.map(function(ext) {
+      return props.reduce(function(extData, prop) {
+        extData[prop] = ext[prop];
+        return extData;
+      }, {});
+    }));
   },
 
   securitySoftware: function securitySoftware(done) {
@@ -276,28 +275,27 @@ var dataProviders = {
     done(data);
   },
 
-  features: function features(done) {
-    AddonManager.getAddonsByTypes(["extension"], function(features) {
-      features = features.filter(f => f.isSystem);
-      features.sort(function(a, b) {
-        // In some unfortunate cases addon names can be null.
-        let aname = a.name || null;
-        let bname = b.name || null;
-        let lc = aname.localeCompare(bname);
-        if (lc != 0)
-          return lc;
-        if (a.version != b.version)
-          return a.version > b.version ? 1 : -1;
-        return 0;
-      });
-      let props = ["name", "version", "id"];
-      done(features.map(function(f) {
-        return props.reduce(function(fData, prop) {
-          fData[prop] = f[prop];
-          return fData;
-        }, {});
-      }));
+  features: async function features(done) {
+    let features = await AddonManager.getAddonsByTypes(["extension"]);
+    features = features.filter(f => f.isSystem);
+    features.sort(function(a, b) {
+      // In some unfortunate cases addon names can be null.
+      let aname = a.name || null;
+      let bname = b.name || null;
+      let lc = aname.localeCompare(bname);
+      if (lc != 0)
+        return lc;
+      if (a.version != b.version)
+        return a.version > b.version ? 1 : -1;
+      return 0;
     });
+    let props = ["name", "version", "id"];
+    done(features.map(function(f) {
+      return props.reduce(function(fData, prop) {
+        fData[prop] = f[prop];
+        return fData;
+      }, {});
+    }));
   },
 
   modifiedPreferences: function modifiedPreferences(done) {

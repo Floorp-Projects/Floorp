@@ -71,14 +71,14 @@ amManager.prototype = {
   },
 
   installAddonFromWebpage(aMimetype, aBrowser, aInstallingPrincipal,
-                                    aUri, aHash, aName, aIcon, aCallback) {
+                          aUri, aHash, aName, aIcon, aCallback) {
     let retval = true;
     if (!AddonManager.isInstallAllowed(aMimetype, aInstallingPrincipal)) {
       aCallback = null;
       retval = false;
     }
 
-    AddonManager.getInstallForURL(aUri, function(aInstall) {
+    AddonManager.getInstallForURL(aUri, null, aMimetype, aHash, aName, aIcon, null, aBrowser).then(aInstall => {
       function callCallback(uri, status) {
         try {
           aCallback.onInstallEnded(uri, status);
@@ -116,7 +116,7 @@ amManager.prototype = {
       }
 
       AddonManager.installAddonFromWebpage(aMimetype, aBrowser, aInstallingPrincipal, aInstall);
-    }, aMimetype, aHash, aName, aIcon, null, aBrowser);
+    });
 
     return retval;
   },

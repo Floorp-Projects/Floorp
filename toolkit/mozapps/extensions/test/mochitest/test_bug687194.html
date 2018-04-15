@@ -44,7 +44,7 @@
     }
 
     let test;
-    function* testStructure(mm) {
+    async function* testStructure(mm) {
       let lastResult;
 
       mm.addMessageListener("test687194:resolveChromeURI:Answer", SpecialPowers.wrapCallback(function(msg) {
@@ -59,16 +59,15 @@
       let { AddonManager } = SpecialPowers.Cu.import("resource://gre/modules/AddonManager.jsm", {});
       const INSTALL_URI =
         "http://mochi.test:8888/tests/toolkit/mozapps/extensions/test/mochitest/file_bug687194.xpi";
-      AddonManager.getInstallForURL(INSTALL_URI, (install) => {
-        install = SpecialPowers.wrap(install);
-        install.addListener(SpecialPowers.wrapCallbackObject({
-          /* eslint no-shadow: 0 */
-          onInstallEnded(install, addon) {
-            SimpleTest.executeSoon(() => test.next(addon));
-          }
-        }));
-        install.install();
-      }, "application/x-xpinstall");
+      let install = await AddonManager.getInstallForURL(INSTALL_URI, null, "application/x-xpinstall");
+      install = SpecialPowers.wrap(install);
+      install.addListener(SpecialPowers.wrapCallbackObject({
+        /* eslint no-shadow: 0 */
+        onInstallEnded(install, addon) {
+          SimpleTest.executeSoon(() => test.next(addon));
+        }
+      }));
+      install.install();
 
       let addon = SpecialPowers.wrap(yield);
 

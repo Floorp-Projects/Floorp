@@ -21,7 +21,7 @@ function hasPermission(aAddon, aPerm) {
   return !!(aAddon.permissions & perm);
 }
 
-function run_test() {
+async function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
   startupManager();
 
@@ -534,53 +534,47 @@ function run_test() {
 
   do_test_pending();
 
-  AddonManager.getAddonByID("builtInTheme0@personas.mozilla.org", builtInThemeAddon => {
-    // App specific theme can't be uninstalled or disabled,
-    // but can be enabled (since it isn't already applied).
-    Assert.equal(hasPermission(builtInThemeAddon, "uninstall"), false);
-    Assert.equal(hasPermission(builtInThemeAddon, "disable"), false);
-    Assert.equal(hasPermission(builtInThemeAddon, "enable"), true);
+  let builtInThemeAddon = await AddonManager.getAddonByID("builtInTheme0@personas.mozilla.org");
+  Assert.equal(hasPermission(builtInThemeAddon, "uninstall"), false);
+  Assert.equal(hasPermission(builtInThemeAddon, "disable"), false);
+  Assert.equal(hasPermission(builtInThemeAddon, "enable"), true);
 
-    ltm.currentTheme = dummy("x0");
-    Assert.equal([...ltm._builtInThemes].length, 2);
-    Assert.equal(ltm.usedThemes.length, 3);
-    Assert.equal(ltm.usedThemes[0].id, "x0");
-    Assert.equal(ltm.currentTheme.id, "x0");
-    Assert.equal(ltm.usedThemes[1].id, "builtInTheme0");
-    Assert.equal(ltm.usedThemes[2].id, "builtInTheme1");
+  ltm.currentTheme = dummy("x0");
+  Assert.equal([...ltm._builtInThemes].length, 2);
+  Assert.equal(ltm.usedThemes.length, 3);
+  Assert.equal(ltm.usedThemes[0].id, "x0");
+  Assert.equal(ltm.currentTheme.id, "x0");
+  Assert.equal(ltm.usedThemes[1].id, "builtInTheme0");
+  Assert.equal(ltm.usedThemes[2].id, "builtInTheme1");
 
-    Assert.throws(() => { ltm.addBuiltInTheme(dummy("builtInTheme0")); },
-      "Exception is thrown adding a duplicate theme");
-    Assert.throws(() => { ltm.addBuiltInTheme("not a theme object"); },
-      "Exception is thrown adding an invalid theme");
+  Assert.throws(() => { ltm.addBuiltInTheme(dummy("builtInTheme0")); },
+    "Exception is thrown adding a duplicate theme");
+  Assert.throws(() => { ltm.addBuiltInTheme("not a theme object"); },
+    "Exception is thrown adding an invalid theme");
 
-    AddonManager.getAddonByID("x0@personas.mozilla.org", x0Addon => {
-      // Currently applied (non-app-specific) can be uninstalled or disabled,
-      // but can't be enabled (since it's already applied).
-      Assert.equal(hasPermission(x0Addon, "uninstall"), true);
-      Assert.equal(hasPermission(x0Addon, "disable"), true);
-      Assert.equal(hasPermission(x0Addon, "enable"), false);
+  let x0Addon = await AddonManager.getAddonByID("x0@personas.mozilla.org");
+  Assert.equal(hasPermission(x0Addon, "uninstall"), true);
+  Assert.equal(hasPermission(x0Addon, "disable"), true);
+  Assert.equal(hasPermission(x0Addon, "enable"), false);
 
-      ltm.forgetUsedTheme("x0");
-      Assert.equal(ltm.currentTheme, null);
+  ltm.forgetUsedTheme("x0");
+  Assert.equal(ltm.currentTheme, null);
 
-      // Removing the currently applied app specific theme should unapply it
-      ltm.currentTheme = ltm.getUsedTheme("builtInTheme0");
-      Assert.equal(ltm.currentTheme.id, "builtInTheme0");
-      Assert.ok(ltm.forgetBuiltInTheme("builtInTheme0"));
-      Assert.equal(ltm.currentTheme, null);
+  // Removing the currently applied app specific theme should unapply it
+  ltm.currentTheme = ltm.getUsedTheme("builtInTheme0");
+  Assert.equal(ltm.currentTheme.id, "builtInTheme0");
+  Assert.ok(ltm.forgetBuiltInTheme("builtInTheme0"));
+  Assert.equal(ltm.currentTheme, null);
 
-      Assert.equal([...ltm._builtInThemes].length, 1);
-      Assert.equal(ltm.usedThemes.length, 1);
+  Assert.equal([...ltm._builtInThemes].length, 1);
+  Assert.equal(ltm.usedThemes.length, 1);
 
-      Assert.ok(ltm.forgetBuiltInTheme("builtInTheme1"));
-      Assert.ok(!ltm.forgetBuiltInTheme("not-an-existing-theme-id"));
+  Assert.ok(ltm.forgetBuiltInTheme("builtInTheme1"));
+  Assert.ok(!ltm.forgetBuiltInTheme("not-an-existing-theme-id"));
 
-      Assert.equal([...ltm._builtInThemes].length, 0);
-      Assert.equal(ltm.usedThemes.length, 0);
-      Assert.equal(ltm.currentTheme, null);
+  Assert.equal([...ltm._builtInThemes].length, 0);
+  Assert.equal(ltm.usedThemes.length, 0);
+  Assert.equal(ltm.currentTheme, null);
 
-      do_test_finished();
-    });
-  });
+  do_test_finished();
 }
