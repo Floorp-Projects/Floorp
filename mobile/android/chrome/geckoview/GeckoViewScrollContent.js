@@ -43,4 +43,6 @@ class GeckoViewScrollContent extends GeckoViewContentModule {
     }
   }
 }
-var scrollListener = new GeckoViewScrollContent("GeckoViewScroll", this);
+
+let {debug, warn} = GeckoViewScrollContent.initLogging("GeckoViewScroll");
+let module = GeckoViewScrollContent.create(this);

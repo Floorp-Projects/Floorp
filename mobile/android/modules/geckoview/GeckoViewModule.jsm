@@ -7,6 +7,9 @@
 var EXPORTED_SYMBOLS = ["GeckoViewModule"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
+
+GeckoViewUtils.initLogging("GeckoView.Module", this);
 
 XPCOMUtils.defineLazyGetter(this, "dump", () =>
     ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",

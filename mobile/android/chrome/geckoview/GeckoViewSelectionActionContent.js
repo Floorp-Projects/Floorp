@@ -258,5 +258,6 @@ class GeckoViewSelectionActionContent extends GeckoViewContentModule {
   }
 }
 
-var selectionActionListener =
-    new GeckoViewSelectionActionContent("GeckoViewSelectionAction", this);
+let {debug, warn} =
+    GeckoViewSelectionActionContent.initLogging("GeckoViewSelectionAction");
+let module = GeckoViewSelectionActionContent.create(this);
