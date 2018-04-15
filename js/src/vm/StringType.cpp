@@ -1909,7 +1909,8 @@ JSString::fillWithRepresentatives(JSContext* cx, HandleArrayObject array)
 /*** Conversions *********************************************************************************/
 
 const char*
-js::ValueToPrintable(JSContext* cx, const Value& vArg, JSAutoByteString* bytes, bool asSource)
+js::ValueToPrintableLatin1(JSContext* cx, const Value& vArg, JSAutoByteString* bytes,
+                           bool asSource)
 {
     RootedValue v(cx, vArg);
     JSString* str;

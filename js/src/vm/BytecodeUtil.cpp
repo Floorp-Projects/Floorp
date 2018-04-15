@@ -1177,7 +1177,7 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
         }
     }
 
-    return !!ValueToPrintable(cx, v, bytes, true);
+    return !!ValueToPrintableLatin1(cx, v, bytes, true);
 }
 
 static bool
