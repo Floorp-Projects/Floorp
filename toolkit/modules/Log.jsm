@@ -14,12 +14,12 @@ const STREAM_SEGMENT_SIZE = 4096;
 const PR_UINT32_MAX = 0xffffffff;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "Task",
-                               "resource://gre/modules/Task.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AndroidLog: "resource://gre/modules/AndroidLog.jsm", // Only used on Android.
+  OS: "resource://gre/modules/osfile.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  Task: "resource://gre/modules/Task.jsm",
+});
 const INTERNAL_FIELDS = new Set(["_level", "_message", "_time", "_namespace"]);
 
 
@@ -86,6 +86,7 @@ var Log = {
   DumpAppender,
   ConsoleAppender,
   StorageStreamAppender,
+  AndroidAppender,
 
   FileAppender,
   BoundedFileAppender,
@@ -677,6 +678,21 @@ StructuredFormatter.prototype = {
 };
 
 /**
+ * A formatter that does not prepend time/name/level information to messages,
+ * because those fields are logged separately when using the Android logger.
+ */
+function AndroidFormatter() {
+  BasicFormatter.call(this);
+}
+AndroidFormatter.prototype = Object.freeze({
+  __proto__: BasicFormatter.prototype,
+
+  format(message) {
+    return this.formatText(message);
+  },
+});
+
+/**
  * Test an object to see if it is a Mozilla JS Error.
  */
 function isError(aObj) {
@@ -1006,4 +1022,39 @@ BoundedFileAppender.prototype = {
       return OS.File.remove(this._path);
     });
   }
+};
+
+/*
+ * AndroidAppender
+ * Logs to Android logcat using AndroidLog.jsm
+ */
+function AndroidAppender(aFormatter) {
+  Appender.call(this, aFormatter || new AndroidFormatter());
+  this._name = "AndroidAppender";
+}
+AndroidAppender.prototype = {
+  __proto__: Appender.prototype,
+
+  // Map log level to AndroidLog.foo method.
+  _mapping: {
+    [Log.Level.Fatal]:  "e",
+    [Log.Level.Error]:  "e",
+    [Log.Level.Warn]:   "w",
+    [Log.Level.Info]:   "i",
+    [Log.Level.Config]: "d",
+    [Log.Level.Debug]:  "d",
+    [Log.Level.Trace]:  "v",
+  },
+
+  append(aMessage) {
+    if (!aMessage) {
+      return;
+    }
+
+    // AndroidLog.jsm always prepends "Gecko" to the tag, so we strip any
+    // leading "Gecko" here. Also strip dots to save space.
+    const tag = aMessage.loggerName.replace(/^Gecko|\./g, "");
+    const msg = this._formatter.format(aMessage);
+    AndroidLog[this._mapping[aMessage.level]](tag, msg);
+  },
 };
