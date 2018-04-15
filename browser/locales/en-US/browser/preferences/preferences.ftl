@@ -175,6 +175,20 @@ containers-disable-alert-ok-button =
     }
 containers-disable-alert-cancel-button = Keep enabled
 
+containers-remove-alert-title = Remove This Container?
+
+# Variables:
+#   $count (Number) - Number of tabs that will be closed.
+containers-remove-alert-msg =
+    { $count ->
+        [one] If you remove this Container now, { $count } container tab will be closed. Are you sure you want to remove this Container?
+       *[other] If you remove this Container now, { $count } container tabs will be closed. Are you sure you want to remove this Container?
+    }
+
+containers-remove-ok-button = Remove this Container
+containers-remove-cancel-button = Don’t remove this Container
+
+
 ## General Section - Language & Appearance
 
 language-and-appearance-header = Language and Appearance
