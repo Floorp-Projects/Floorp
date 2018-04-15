@@ -11,14 +11,6 @@ ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
 GeckoViewUtils.initLogging("GeckoView.Module", this);
 
-XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
-                       {}).AndroidLog.d.bind(null, "ViewModule"));
-
-// function debug(aMsg) {
-//   dump(aMsg);
-// }
-
 class GeckoViewModule {
   constructor(aModuleName, aWindow, aBrowser, aEventDispatcher) {
     this.isRegistered = false;
@@ -139,13 +131,13 @@ class EventProxy {
   }
 
   registerListener(aEventList) {
-    debug("register " + aEventList);
+    debug `registerListener ${aEventList}`;
     this.eventDispatcher.registerListener(this, aEventList);
     this._registeredEvents = this._registeredEvents.concat(aEventList);
   }
 
   unregisterListener() {
-    debug("unregister");
+    debug `unregisterListener`;
     if (this._registeredEvents.length === 0) {
       return;
     }
@@ -155,7 +147,7 @@ class EventProxy {
 
   onEvent(aEvent, aData, aCallback) {
     if (this._enableQueuing) {
-      debug("queue " + aEvent + ", aData=" + JSON.stringify(aData));
+      debug `queue ${aEvent}, data=${aData}`;
       this._eventQueue.unshift(arguments);
     } else {
       this._dispatch(...arguments);
@@ -163,12 +155,12 @@ class EventProxy {
   }
 
   enableQueuing(aEnable) {
-    debug("enableQueuing " + aEnable);
+    debug `enableQueuing ${aEnable}`;
     this._enableQueuing = aEnable;
   }
 
   _dispatch(aEvent, aData, aCallback) {
-    debug("dispatch " + aEvent + ", aData=" + JSON.stringify(aData));
+    debug `dispatch ${aEvent}, data=${aData}`;
     if (this.listener.onEvent) {
       this.listener.onEvent(...arguments);
     } else {
@@ -177,7 +169,7 @@ class EventProxy {
   }
 
   dispatchQueuedEvents() {
-    debug("dispatchQueued");
+    debug `dispatchQueued`;
     while (this._eventQueue.length) {
       const args = this._eventQueue.pop();
       this._dispatch(...args);

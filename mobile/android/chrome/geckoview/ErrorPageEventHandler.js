@@ -46,7 +46,7 @@ var ErrorPageEventHandler = {
               else
                 sslExceptions.addTemporaryException(uri, errorDoc.defaultView);
             } catch (e) {
-              dump("Failed to set cert exception: " + e + "\n");
+              warn `Failed to set cert exception: ${e}`;
             }
             errorDoc.location.reload();
           } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
