@@ -2118,17 +2118,6 @@ private:
   void QuotesDirty();
   void CountersDirty();
 
-  /**
-   * Add the pair (aContent, aComputedStyle) to the undisplayed items
-   * in aList as needed.  This method enforces the invariant that all
-   * styles in the undisplayed content map must be non-pseudo contexts and also
-   * handles unbinding undisplayed generated content as needed.
-   */
-  void SetAsUndisplayedContent(nsFrameConstructorState& aState,
-                               FrameConstructionItemList& aList,
-                               nsIContent* aContent,
-                               ComputedStyle* aComputedStyle,
-                               bool aIsGeneratedContent);
   // Create touch caret frame.
   void ConstructAnonymousContentForCanvas(nsFrameConstructorState& aState,
                                           nsIFrame* aFrame,

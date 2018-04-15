@@ -5536,22 +5536,6 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
                               nullptr, aItems);
 }
 
-void
-nsCSSFrameConstructor::SetAsUndisplayedContent(nsFrameConstructorState& aState,
-                                               FrameConstructionItemList& aList,
-                                               nsIContent* aContent,
-                                               ComputedStyle* aComputedStyle,
-                                               bool aIsGeneratedContent)
-{
-  if (aComputedStyle->GetPseudo()) {
-    if (aIsGeneratedContent) {
-      aContent->UnbindFromTree();
-    }
-    return;
-  }
-  MOZ_ASSERT(!aIsGeneratedContent, "Should have had pseudo type");
-}
-
 // Whether we should suppress frames for a child under a <select> frame.
 //
 // Never create frames for non-option/optgroup kids of <select> and non-option
@@ -5689,12 +5673,22 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   }
 
   const bool isGeneratedContent = !!(aFlags & ITEM_IS_GENERATED_CONTENT);
+  MOZ_ASSERT(!isGeneratedContent || computedStyle->GetPseudo(),
+             "Generated content should be a pseudo-element");
+
+  FrameConstructionItem* item = nullptr;
+  auto cleanupGeneratedContent = mozilla::MakeScopeExit([&]() {
+    if (isGeneratedContent && !item) {
+      MOZ_ASSERT(!IsDisplayContents(aContent),
+                 "This would need to change if we support display: contents "
+                 "in generated content");
+      aContent->UnbindFromTree();
+    }
+  });
 
   // Pre-check for display "none" - if we find that, don't create
   // any frame at all
   if (display->mDisplay == StyleDisplay::None) {
-    SetAsUndisplayedContent(aState, aItems, aContent, computedStyle,
-                            isGeneratedContent);
     return;
   }
 
@@ -5726,14 +5720,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     return;
   }
 
-  bool isText = !aContent->IsElement();
-
   nsIContent* parent = aParentFrame ? aParentFrame->GetContent() : nullptr;
   if (ShouldSuppressFrameInSelect(parent, aContent)) {
-    if (!isText) {
-      SetAsUndisplayedContent(aState, aItems, aContent, computedStyle,
-                              isGeneratedContent);
-    }
     return;
   }
 
@@ -5744,12 +5732,11 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   // content.
   auto* details = HTMLDetailsElement::FromNodeOrNull(parent);
   if (ShouldSuppressFrameInNonOpenDetails(details, aContent)) {
-    SetAsUndisplayedContent(aState, aItems, aContent, computedStyle,
-                            isGeneratedContent);
     return;
   }
 
   bool isPopup = false;
+  const bool isText = !aContent->IsElement();
   // Try to find frame construction data for this content
   const FrameConstructionData* data;
   if (isText) {
@@ -5767,8 +5754,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
           IsFrameForSVG(aParentFrame) &&
           !aParentFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)) ||
          (aFlags & ITEM_IS_WITHIN_SVG_TEXT))) {
-      SetAsUndisplayedContent(aState, aItems, element, computedStyle,
-                              isGeneratedContent);
       return;
     }
 
@@ -5800,7 +5785,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     MOZ_ASSERT(data, "Should have frame construction data now");
 
     if (data->mBits & FCDATA_SUPPRESS_FRAME) {
-      SetAsUndisplayedContent(aState, aItems, element, computedStyle, isGeneratedContent);
       return;
     }
 
@@ -5810,8 +5794,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
          !aParentFrame->IsMenuFrame())) {
       if (!aState.mPopupItems.containingBlock &&
           !aState.mHavePendingPopupgroup) {
-        SetAsUndisplayedContent(aState, aItems, element, computedStyle,
-                                isGeneratedContent);
         return;
       }
 
@@ -5826,7 +5808,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   if (aParentFrame && aParentFrame->IsTableColGroupFrame() &&
       (!(bits & FCDATA_IS_TABLE_PART) ||
        display->mDisplay != StyleDisplay::TableColumn)) {
-    SetAsUndisplayedContent(aState, aItems, aContent, computedStyle, isGeneratedContent);
     return;
   }
 
@@ -5840,7 +5821,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     AddPageBreakItem(aContent, aItems);
   }
 
-  FrameConstructionItem* item = nullptr;
   if (details && details->Open()) {
     auto* summary = HTMLSummaryElement::FromNode(aContent);
     if (summary && summary->IsMainSummary()) {
