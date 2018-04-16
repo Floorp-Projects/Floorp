@@ -955,14 +955,15 @@ HeapTypeSet::newPropertyState(JSContext* cx)
     checkMagic();
 
     /* Propagate the change to all constraints. */
+    AutoAssertNoTISweeping nosweeping(cx->zone()->types);
     if (!cx->helperThread()) {
-        TypeConstraint* constraint = constraintList();
+        TypeConstraint* constraint = constraintList(nosweeping);
         while (constraint) {
             constraint->newPropertyState(cx, this);
             constraint = constraint->next();
         }
     } else {
-        MOZ_ASSERT(!constraintList());
+        MOZ_ASSERT(!constraintList(nosweeping));
     }
 }
 
@@ -1108,6 +1109,7 @@ ObjectGroup::getProperty(JSContext* cx, JSObject* obj, jsid id)
     MOZ_ASSERT(!unknownProperties());
     MOZ_ASSERT_IF(obj, obj->group() == this);
     MOZ_ASSERT_IF(singleton(), obj);
+    MOZ_ASSERT(cx->compartment() == compartment());
 
     if (HeapTypeSet* types = maybeGetProperty(id))
         return types;
