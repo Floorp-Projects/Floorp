@@ -252,6 +252,27 @@ TransactionBuilder::UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
   wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollPosition);
 }
 
+TransactionWrapper::TransactionWrapper(Transaction* aTxn)
+  : mTxn(aTxn)
+{
+}
+
+void
+TransactionWrapper::AppendTransformProperties(const nsTArray<wr::WrTransformProperty>& aTransformArray)
+{
+  wr_transaction_append_transform_properties(
+      mTxn,
+      aTransformArray.IsEmpty() ? nullptr : aTransformArray.Elements(),
+      aTransformArray.Length());
+}
+
+void
+TransactionWrapper::UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
+                                         const layers::FrameMetrics::ViewID& aScrollId,
+                                         const wr::LayoutPoint& aScrollPosition)
+{
+  wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollPosition);
+}
 
 /*static*/ void
 WebRenderAPI::InitExternalLogHandler()

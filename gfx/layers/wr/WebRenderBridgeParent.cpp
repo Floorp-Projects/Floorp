@@ -548,7 +548,11 @@ WebRenderBridgeParent::PushAPZStateToWR(wr::TransactionBuilder& aTxn)
     if (frameInterval != TimeDuration::Forever()) {
       animationTime += frameInterval;
     }
-    return apz->PushStateToWR(aTxn, animationTime);
+    // The TransactionWrapper shares the underlying transaction object with
+    // aTxn. When we exit this scope the TransactionWrapper is destroyed but
+    // the underlying transaction lives on in aTxn.
+    wr::TransactionWrapper txn(aTxn.Raw());
+    return apz->PushStateToWR(txn, animationTime);
   }
   return false;
 }
