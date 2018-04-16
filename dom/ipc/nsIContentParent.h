@@ -44,7 +44,7 @@ namespace dom {
 class Blob;
 class BlobConstructorParams;
 class BlobImpl;
-class ChromeMessageSender;
+class ProcessMessageManager;
 class ContentParent;
 class ContentBridgeParent;
 class IPCTabContext;
@@ -89,7 +89,7 @@ public:
 
   ContentBridgeParent* AsContentBridgeParent();
 
-  mozilla::dom::ChromeMessageSender* GetMessageManager() const { return mMessageManager; }
+  mozilla::dom::ProcessMessageManager* GetMessageManager() const { return mMessageManager; }
 
   virtual bool SendActivate(PBrowserParent* aTab) = 0;
 
@@ -162,7 +162,7 @@ protected: // IPDL methods
                                                    const ClonedMessageData& aData);
 
 protected: // members
-  RefPtr<mozilla::dom::ChromeMessageSender> mMessageManager;
+  RefPtr<mozilla::dom::ProcessMessageManager> mMessageManager;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentParent, NS_ICONTENTPARENT_IID)
