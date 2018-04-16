@@ -85,8 +85,6 @@ static int g_log_level = GL_CRIT;
     } while(0)
 
 
-GMPPlatformAPI* g_platform_api = nullptr;
-
 class FakeVideoEncoder;
 class FakeVideoDecoder;
 
@@ -124,21 +122,6 @@ template <typename T> class SelfDestruct {
 
  private:
   T* t_;
-};
-
-class FakeEncoderTask : public GMPTask {
- public:
-  FakeEncoderTask(FakeVideoEncoder* encoder,
-                  GMPVideoi420Frame* frame,
-                  GMPVideoFrameType type)
-      : encoder_(encoder), frame_(frame), type_(type) {}
-
-  void Run() override;
-  void Destroy() override { delete this; }
-
-  FakeVideoEncoder* encoder_;
-  GMPVideoi420Frame* frame_;
-  GMPVideoFrameType type_;
 };
 
 class FakeVideoEncoder : public GMPVideoEncoder {
@@ -256,14 +239,8 @@ class FakeVideoEncoder : public GMPVideoEncoder {
             << inputImage->Width() << "x" << inputImage->Height());
 
     assert (aFrameTypesLength != 0);
+    GMPVideoFrameType frame_type = aFrameTypes[0];
 
-    g_platform_api->runonmainthread(new FakeEncoderTask(this,
-                                                        inputImage,
-                                                        aFrameTypes[0]));
-  }
-
-  void Encode_m (GMPVideoi420Frame* inputImage,
-                 GMPVideoFrameType frame_type) {
     SelfDestruct<GMPVideoi420Frame> ifd (inputImage);
 
     if (frame_type  == kGMPKeyFrame) {
@@ -315,26 +292,6 @@ class FakeVideoEncoder : public GMPVideoEncoder {
   uint32_t frames_encoded_;
 };
 
-void FakeEncoderTask::Run() {
-  encoder_->Encode_m(frame_, type_);
-  frame_ = nullptr; // Encode_m() destroys the frame
-}
-
-class FakeDecoderTask : public GMPTask {
- public:
-  FakeDecoderTask(FakeVideoDecoder* decoder,
-                  GMPVideoEncodedFrame* frame,
-                  int64_t time)
-      : decoder_(decoder), frame_(frame), time_(time) {}
-
-  void Run() override;
-  void Destroy() override { delete this; }
-
-  FakeVideoDecoder* decoder_;
-  GMPVideoEncodedFrame* frame_;
-  int64_t time_;
-};
-
 class FakeVideoDecoder : public GMPVideoDecoder {
  public:
   explicit FakeVideoDecoder (GMPVideoHost* hostAPI) :
@@ -365,22 +322,7 @@ class FakeVideoDecoder : public GMPVideoDecoder {
     GMPLOG (GL_DEBUG, __FUNCTION__
             << "Decoding frame size=" << inputFrame->Size()
             << " timestamp=" << inputFrame->TimeStamp());
-    g_platform_api->runonmainthread(new FakeDecoderTask(this, inputFrame, renderTimeMs));
-  }
 
-  void Reset() override {
-  }
-
-  void Drain() override {
-  }
-
-  void DecodingComplete() override {
-    delete this;
-  }
-
-  // Return the decoded data back to the parent.
-  void Decode_m (GMPVideoEncodedFrame* inputFrame,
-                 int64_t renderTimeMs) {
     // Attach a self-destructor so that the input frame is destroyed on return.
     SelfDestruct<GMPVideoEncodedFrame> ifd (inputFrame);
 
@@ -452,20 +394,24 @@ class FakeVideoDecoder : public GMPVideoDecoder {
     callback_->Decoded (frame);
   }
 
+  void Reset() override {
+  }
+
+  void Drain() override {
+  }
+
+  void DecodingComplete() override {
+    delete this;
+  }
+
   GMPVideoHost* host_;
   GMPVideoDecoderCallback* callback_;
 };
-
-void FakeDecoderTask::Run() {
-  decoder_->Decode_m(frame_, time_);
-  frame_ = nullptr; // Decode_m() destroys the frame
-}
 
 extern "C" {
 
   PUBLIC_FUNC GMPErr
   GMPInit (GMPPlatformAPI* aPlatformAPI) {
-    g_platform_api = aPlatformAPI;
     return GMPNoErr;
   }
 
@@ -484,7 +430,6 @@ extern "C" {
 
   PUBLIC_FUNC void
   GMPShutdown (void) {
-    g_platform_api = nullptr;
   }
 
 } // extern "C"
