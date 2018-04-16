@@ -23,8 +23,6 @@ config = {
     "exes": {
         'python': sys.executable,
         'hg': 'c:/mozilla-build/hg/hg',
-        'mozinstall': ['%s/build/venv/scripts/python' % os.getcwd(),
-                       '%s/build/venv/scripts/mozinstall-script.py' % os.getcwd()],
     },
 
     "find_links": [
