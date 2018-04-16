@@ -241,7 +241,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         verbose = False
         if options['log_tbpl_level'] == 'debug' or options['log_mach_level'] == 'debug':
             verbose = True
-        self.device = ADBAndroid(adb=options['adbPath'],
+        self.device = ADBAndroid(adb=options['adbPath'] or 'adb',
                                  device=options['deviceSerial'],
                                  test_root=options['remoteTestRoot'],
                                  verbose=verbose)
