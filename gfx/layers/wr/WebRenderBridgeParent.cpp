@@ -532,12 +532,12 @@ WebRenderBridgeParent::UpdateAPZScrollData(const wr::Epoch& aEpoch,
   }
 }
 
-bool
-WebRenderBridgeParent::PushAPZStateToWR(wr::TransactionBuilder& aTxn)
+void
+WebRenderBridgeParent::SetAPZSampleTime()
 {
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (!cbp) {
-    return false;
+    return;
   }
   if (RefPtr<APZSampler> apz = cbp->GetAPZSampler()) {
     TimeStamp animationTime = cbp->GetTestingTimeStamp().valueOr(
@@ -549,13 +549,7 @@ WebRenderBridgeParent::PushAPZStateToWR(wr::TransactionBuilder& aTxn)
       animationTime += frameInterval;
     }
     apz->SetSampleTime(animationTime);
-    // The TransactionWrapper shares the underlying transaction object with
-    // aTxn. When we exit this scope the TransactionWrapper is destroyed but
-    // the underlying transaction lives on in aTxn.
-    wr::TransactionWrapper txn(aTxn.Raw());
-    return apz->PushStateToWR(txn);
   }
-  return false;
 }
 
 mozilla::ipc::IPCResult
@@ -1248,15 +1242,10 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     ScheduleGenerateFrame();
   }
   // We do this even if the arrays are empty, because it will clear out any
-  // previous properties stored on the WR side, which is desirable. Also, we
-  // must do this before the PushAPZStateToWR call which will append more
-  // properties, If we did this after that call, this would clobber those
-  // properties.
+  // previous properties store on the WR side, which is desirable.
   txn.UpdateDynamicProperties(opacityArray, transformArray);
 
-  if (PushAPZStateToWR(txn)) {
-    ScheduleGenerateFrame();
-  }
+  SetAPZSampleTime();
 
   wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId());
 
