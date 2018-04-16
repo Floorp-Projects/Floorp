@@ -18,12 +18,12 @@ def get_properties(preprocessorHeader):
                    "flags":p[3], "pref":p[4], "proptype":p[5]}
                   for (i, p) in enumerate(eval(preprocessed))]
 
-    # Sort the list so that longhand and logical properties are intermingled
-    # first, shorthand properties follow, then aliases appear last.  This matches
-    # the order of the nsCSSPropertyID enum.
+    # Sort the list so that longhand properties are intermingled first,
+    # shorthand properties follow, then aliases appear last.
+    # This matches the order of the nsCSSPropertyID enum.
 
     def property_compare(x, y):
-        property_order = {"longhand": 0, "logical": 0, "shorthand": 1, "alias": 2}
+        property_order = {"longhand": 0, "shorthand": 1, "alias": 2}
         return property_order[x["proptype"]] - property_order[y["proptype"]]
 
     properties = sorted(properties, cmp=property_compare)

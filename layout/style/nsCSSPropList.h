@@ -18,7 +18,7 @@
   It is recommended (but not strictly necessary) to keep all entries in
   alphabetical order.
 
-  The arguments to CSS_PROP, CSS_PROP_LOGICAL and CSS_PROP_* are:
+  The arguments to CSS_PROP are:
 
   -. 'name' entries represent a CSS property name and *must* use only
   lowercase characters.
@@ -52,18 +52,10 @@
   keyword table member of class nsCSSProps, for use in
   nsCSSProps::LookupPropertyValue.
 
-  -. 'stylestruct_' [used only for CSS_PROP and CSS_PROP_LOGICAL, not
-  CSS_PROP_*] gives the name of the style struct.  Can be used to make
-  nsStyle##stylestruct_ and eStyleStruct_##stylestruct_
-
   -. 'animtype_' gives the animation type (see nsStyleAnimType) of this
   property.
 
   CSS_PROP_SHORTHAND only takes 1-5.
-
-  CSS_PROP_LOGICAL should be used instead of CSS_PROP_struct when
-  defining logical properties.  Logical shorthand properties should
-  still be defined with CSS_PROP_SHORTHAND.
 
  ******/
 
@@ -87,26 +79,6 @@
 // #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL section must have the
 // CSS_PROPERTY_INTERNAL flag set.
 
-// When capturing all properties by defining CSS_PROP, callers must also
-// define one of the following three macros:
-//
-//   CSS_PROP_LIST_EXCLUDE_LOGICAL
-//     Does not include logical properties (defined with CSS_PROP_LOGICAL,
-//     such as margin-inline-start) when capturing properties to CSS_PROP.
-//
-//   CSS_PROP_LIST_INCLUDE_LOGICAL
-//     Does include logical properties when capturing properties to
-//     CSS_PROP.
-//
-//   CSS_PROP_LOGICAL
-//     Captures logical properties separately to CSS_PROP_LOGICAL.
-//
-// (CSS_PROP_LIST_EXCLUDE_LOGICAL is used for example to ensure
-// gPropertyCountInStruct and gPropertyIndexInStruct do not allocate any
-// storage to logical properties, since the result of the cascade, stored
-// in an nsRuleData, does not need to store both logical and physical
-// property values.)
-
 // Callers may also define CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
 // to exclude properties that are not considered to be components of the 'all'
 // shorthand property.  Currently this excludes 'direction' and 'unicode-bidi',
@@ -125,42 +97,13 @@
 // a chance to be expanded.
 #define CSS_PROP_(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, animtype_)
 
-// And similarly for logical properties.  An includer can define
-// CSS_PROP_LOGICAL to capture all logical properties, but otherwise they
-// are included in CSS_PROP (as long as CSS_PROP_LIST_INCLUDE_LOGICAL is
-// defined).
-#if defined(CSS_PROP_LOGICAL) && defined(CSS_PROP_LIST_EXCLUDE_LOGICAL) || defined(CSS_PROP_LOGICAL) && defined(CSS_PROP_LIST_INCLUDE_LOGICAL) || defined(CSS_PROP_LIST_EXCLUDE_LOGICAL) && defined(CSS_PROP_LIST_INCLUDE_LOGICAL)
-#error Do not define more than one of CSS_PROP_LOGICAL, CSS_PROP_LIST_EXCLUDE_LOGICAL and CSS_PROP_LIST_INCLUDE_LOGICAL when capturing properties using CSS_PROP.
-#endif
-
-#ifndef CSS_PROP_LOGICAL
-#ifdef CSS_PROP_LIST_INCLUDE_LOGICAL
-#define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, animtype_)
-#else
-#ifndef CSS_PROP_LIST_EXCLUDE_LOGICAL
-#error Must define exactly one of CSS_PROP_LOGICAL, CSS_PROP_LIST_EXCLUDE_LOGICAL and CSS_PROP_LIST_INCLUDE_LOGICAL when capturing properties using CSS_PROP.
-#endif
-#define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, animtype_) /* nothing */
-#endif
-#define DEFINED_CSS_PROP_LOGICAL
-#endif
-
 #else /* !defined(CSS_PROP) */
 
 // An includer who does not define CSS_PROP can define any or all of the
 // per-struct macros that are equivalent to it, and the rest will be
 // ignored.
 
-#if defined(CSS_PROP_LIST_EXCLUDE_LOGICAL) || defined(CSS_PROP_LIST_INCLUDE_LOGICAL)
-#error Do not define CSS_PROP_LIST_EXCLUDE_LOGICAL or CSS_PROP_LIST_INCLUDE_LOGICAL when not capturing properties using CSS_PROP.
-#endif
-
 #define CSS_PROP_(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, animtype_) /* nothing */
-
-#ifndef CSS_PROP_LOGICAL
-#define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, animtype_) /* nothing */
-#define DEFINED_CSS_PROP_LOGICAL
-#endif
 
 #endif /* !defined(CSS_PROP) */
 
@@ -443,7 +386,7 @@ CSS_PROP_(
     VARIANT_HUO,
     nullptr,
     eStyleAnimType_None) // XXX bug 3935
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     block-size,
     block_size,
     BlockSize,
@@ -464,7 +407,7 @@ CSS_PROP_SHORTHAND(
     BorderBlockEnd,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-block-end-color,
     border_block_end_color,
     BorderBlockEndColor,
@@ -473,7 +416,7 @@ CSS_PROP_LOGICAL(
     VARIANT_HC,
     nullptr,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-block-end-style,
     border_block_end_style,
     BorderBlockEndStyle,
@@ -482,7 +425,7 @@ CSS_PROP_LOGICAL(
     VARIANT_HK,
     kBorderStyleKTable,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-block-end-width,
     border_block_end_width,
     BorderBlockEndWidth,
@@ -497,7 +440,7 @@ CSS_PROP_SHORTHAND(
     BorderBlockStart,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-block-start-color,
     border_block_start_color,
     BorderBlockStartColor,
@@ -506,7 +449,7 @@ CSS_PROP_LOGICAL(
     VARIANT_HC,
     nullptr,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-block-start-style,
     border_block_start_style,
     BorderBlockStartStyle,
@@ -515,7 +458,7 @@ CSS_PROP_LOGICAL(
     VARIANT_HK,
     kBorderStyleKTable,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-block-start-width,
     border_block_start_width,
     BorderBlockStartWidth,
@@ -647,7 +590,7 @@ CSS_PROP_SHORTHAND(
     BorderInlineEnd,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-inline-end-color,
     border_inline_end_color,
     BorderInlineEndColor,
@@ -656,7 +599,7 @@ CSS_PROP_LOGICAL(
     VARIANT_HC,
     nullptr,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-inline-end-style,
     border_inline_end_style,
     BorderInlineEndStyle,
@@ -665,7 +608,7 @@ CSS_PROP_LOGICAL(
     VARIANT_HK,
     kBorderStyleKTable,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-inline-end-width,
     border_inline_end_width,
     BorderInlineEndWidth,
@@ -680,7 +623,7 @@ CSS_PROP_SHORTHAND(
     BorderInlineStart,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-inline-start-color,
     border_inline_start_color,
     BorderInlineStartColor,
@@ -689,7 +632,7 @@ CSS_PROP_LOGICAL(
     VARIANT_HC,
     nullptr,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-inline-start-style,
     border_inline_start_style,
     BorderInlineStartStyle,
@@ -698,7 +641,7 @@ CSS_PROP_LOGICAL(
     VARIANT_HK,
     kBorderStyleKTable,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     border-inline-start-width,
     border_inline_start_width,
     BorderInlineStartWidth,
@@ -1771,7 +1714,7 @@ CSS_PROP_(
     VARIANT_HK,
     kIMEModeKTable,
     eStyleAnimType_Discrete)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     inline-size,
     inline_size,
     InlineSize,
@@ -1906,7 +1849,7 @@ CSS_PROP_SHORTHAND(
     Margin,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     margin-block-end,
     margin_block_end,
     MarginBlockEnd,
@@ -1915,7 +1858,7 @@ CSS_PROP_LOGICAL(
     VARIANT_AHLP | VARIANT_CALC,
     nullptr,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     margin-block-start,
     margin_block_start,
     MarginBlockStart,
@@ -1933,7 +1876,7 @@ CSS_PROP_(
     VARIANT_AHLP | VARIANT_CALC,
     nullptr,
     eStyleAnimType_Sides_Bottom)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     margin-inline-end,
     margin_inline_end,
     MarginInlineEnd,
@@ -1942,7 +1885,7 @@ CSS_PROP_LOGICAL(
     VARIANT_AHLP | VARIANT_CALC,
     nullptr,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     margin-inline-start,
     margin_inline_start,
     MarginInlineStart,
@@ -2141,7 +2084,7 @@ CSS_PROP_(
     eStyleAnimType_None)
 #endif // CSS_PROP_LIST_EXCLUDE_INTERNAL
 #endif // CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     max-block-size,
     max_block_size,
     MaxBlockSize,
@@ -2159,7 +2102,7 @@ CSS_PROP_(
     VARIANT_HKLPO | VARIANT_CALC,
     kWidthKTable,
     eStyleAnimType_Coord)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     max-inline-size,
     max_inline_size,
     MaxInlineSize,
@@ -2177,7 +2120,7 @@ CSS_PROP_(
     VARIANT_HKLPO | VARIANT_CALC,
     kWidthKTable,
     eStyleAnimType_Coord)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     min-block-size,
     min_block_size,
     MinBlockSize,
@@ -2207,7 +2150,7 @@ CSS_PROP_(
     VARIANT_AHKLP | VARIANT_CALC,
     kWidthKTable,
     eStyleAnimType_Coord)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     min-inline-size,
     min_inline_size,
     MinInlineSize,
@@ -2252,7 +2195,7 @@ CSS_PROP_(
     VARIANT_CALC,
     kImageLayerPositionKTable,
     eStyleAnimType_Custom)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     offset-block-end,
     offset_block_end,
     OffsetBlockEnd,
@@ -2261,7 +2204,7 @@ CSS_PROP_LOGICAL(
     VARIANT_AHLP | VARIANT_CALC,
     nullptr,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     offset-block-start,
     offset_block_start,
     OffsetBlockStart,
@@ -2270,7 +2213,7 @@ CSS_PROP_LOGICAL(
     VARIANT_AHLP | VARIANT_CALC,
     nullptr,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     offset-inline-end,
     offset_inline_end,
     OffsetInlineEnd,
@@ -2279,7 +2222,7 @@ CSS_PROP_LOGICAL(
     VARIANT_AHLP | VARIANT_CALC,
     nullptr,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     offset-inline-start,
     offset_inline_start,
     OffsetInlineStart,
@@ -2463,7 +2406,7 @@ CSS_PROP_SHORTHAND(
     Padding,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     padding-block-end,
     padding_block_end,
     PaddingBlockEnd,
@@ -2472,7 +2415,7 @@ CSS_PROP_LOGICAL(
     VARIANT_HLP | VARIANT_CALC,
     nullptr,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     padding-block-start,
     padding_block_start,
     PaddingBlockStart,
@@ -2490,7 +2433,7 @@ CSS_PROP_(
     VARIANT_HLP | VARIANT_CALC,
     nullptr,
     eStyleAnimType_Sides_Bottom)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     padding-inline-end,
     padding_inline_end,
     PaddingInlineEnd,
@@ -2499,7 +2442,7 @@ CSS_PROP_LOGICAL(
     VARIANT_HLP | VARIANT_CALC,
     nullptr,
     eStyleAnimType_None)
-CSS_PROP_LOGICAL(
+CSS_PROP_(
     padding-inline-start,
     padding_inline_start,
     PaddingInlineStart,
@@ -3541,10 +3484,6 @@ CSS_PROP_(
 #ifdef DEFINED_CSS_PROP_SHORTHAND
 #undef CSS_PROP_SHORTHAND
 #undef DEFINED_CSS_PROP_SHORTHAND
-#endif
-#ifdef DEFINED_CSS_PROP_LOGICAL
-#undef CSS_PROP_LOGICAL
-#undef DEFINED_CSS_PROP_LOGICAL
 #endif
 
 #undef CSS_PROP_DOMPROP_PREFIXED
