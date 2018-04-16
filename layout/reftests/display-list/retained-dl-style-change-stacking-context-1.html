@@ -17,14 +17,10 @@
   <div style="transform:translateZ(1px)">
     <div id="second" style="background-color:red"></div>
   </div>
-  <div style="position:fixed; left:100px">
-    <div id="third" style="background-color:red"></div>
-  </div>
 </body>
 <script>
 function doTest() {
   document.getElementById("second").style.backgroundColor = "green";
-  document.getElementById("third").style.backgroundColor = "green";
   document.documentElement.removeAttribute("class");
 }
 
