@@ -464,7 +464,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
              firstChild;
              firstChild = curNode->GetFirstChild()) {
           EditorDOMPoint insertedPoint =
-            InsertNodeIntoProperAncestor(
+            InsertNodeIntoProperAncestorWithTransaction(
               *firstChild, pointToInsert,
               SplitAtEdges::eDoNotCreateEmptyContainer);
           if (NS_WARN_IF(!insertedPoint.IsSet())) {
@@ -506,7 +506,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
               }
             }
             EditorDOMPoint insertedPoint =
-              InsertNodeIntoProperAncestor(
+              InsertNodeIntoProperAncestorWithTransaction(
                 *firstChild, pointToInsert,
                 SplitAtEdges::eDoNotCreateEmptyContainer);
             if (NS_WARN_IF(!insertedPoint.IsSet())) {
@@ -535,7 +535,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
              firstChild;
              firstChild = curNode->GetFirstChild()) {
           EditorDOMPoint insertedPoint =
-            InsertNodeIntoProperAncestor(
+            InsertNodeIntoProperAncestorWithTransaction(
               *firstChild, pointToInsert,
               SplitAtEdges::eDoNotCreateEmptyContainer);
           if (NS_WARN_IF(!insertedPoint.IsSet())) {
@@ -554,7 +554,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
       if (!bDidInsert || NS_FAILED(rv)) {
         // Try to insert.
         EditorDOMPoint insertedPoint =
-          InsertNodeIntoProperAncestor(
+          InsertNodeIntoProperAncestorWithTransaction(
             *curNode->AsContent(), pointToInsert,
             SplitAtEdges::eDoNotCreateEmptyContainer);
         if (insertedPoint.IsSet()) {
@@ -574,7 +574,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
           }
           nsCOMPtr<nsINode> oldParent = content->GetParentNode();
           insertedPoint =
-            InsertNodeIntoProperAncestor(
+            InsertNodeIntoProperAncestorWithTransaction(
               *content->GetParent(), pointToInsert,
               SplitAtEdges::eDoNotCreateEmptyContainer);
           if (insertedPoint.IsSet()) {

@@ -89,12 +89,12 @@ IsNamedAnchorTag(const nsString& s)
 }
 
 template EditorDOMPoint
-HTMLEditor::InsertNodeIntoProperAncestor(
+HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
               nsIContent& aNode,
               const EditorDOMPoint& aPointToInsert,
               SplitAtEdges aSplitAtEdges);
 template EditorDOMPoint
-HTMLEditor::InsertNodeIntoProperAncestor(
+HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
               nsIContent& aNode,
               const EditorRawDOMPoint& aPointToInsert,
               SplitAtEdges aSplitAtEdges);
@@ -1578,7 +1578,7 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
       }
 
       EditorDOMPoint insertedPoint =
-        InsertNodeIntoProperAncestor(
+        InsertNodeIntoProperAncestorWithTransaction(
           *element, pointToInsert, SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(!insertedPoint.IsSet())) {
         return NS_ERROR_FAILURE;
@@ -1611,7 +1611,7 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
 
 template<typename PT, typename CT>
 EditorDOMPoint
-HTMLEditor::InsertNodeIntoProperAncestor(
+HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
               nsIContent& aNode,
               const EditorDOMPointBase<PT, CT>& aPointToInsert,
               SplitAtEdges aSplitAtEdges)
