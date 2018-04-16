@@ -99,34 +99,25 @@ DOMEventTargetHelper::~DOMEventTargetHelper()
 void
 DOMEventTargetHelper::BindToOwner(nsPIDOMWindowInner* aOwner)
 {
-  BindToOwner(aOwner ? aOwner->AsGlobal() : nullptr);
+  // Make sure to bind via BindToOwner(nsIGlobalObject*) so
+  // subclasses can override the method to perform additional
+  // actions.
+  nsIGlobalObject* global = aOwner ? aOwner->AsGlobal() : nullptr;
+  BindToOwner(global);
 }
 
 void
 DOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner)
 {
-  if (mParentObject) {
-    mParentObject->RemoveEventTargetObject(this);
-    if (mOwnerWindow) {
-      mOwnerWindow = nullptr;
-    }
-    mParentObject = nullptr;
-    mHasOrHasHadOwnerWindow = false;
-  }
-  if (aOwner) {
-    mParentObject = aOwner;
-    aOwner->AddEventTargetObject(this);
-    // Let's cache the result of this QI for fast access and off main thread usage
-    mOwnerWindow = nsCOMPtr<nsPIDOMWindowInner>(do_QueryInterface(aOwner)).get();
-    if (mOwnerWindow) {
-      mHasOrHasHadOwnerWindow = true;
-    }
-  }
+  BindToOwnerInternal(aOwner);
 }
 
 void
 DOMEventTargetHelper::BindToOwner(DOMEventTargetHelper* aOther)
 {
+  // Make sure to bind via BindToOwner(nsIGlobalObject*) so
+  // subclasses can override the method to perform additional
+  // actions.
   if (!aOther) {
     BindToOwner(static_cast<nsIGlobalObject*>(nullptr));
     return;
@@ -352,6 +343,28 @@ DOMEventTargetHelper::MaybeDontKeepAlive()
   if (mIsKeptAlive) {
     mIsKeptAlive = false;
     Release();
+  }
+}
+
+void
+DOMEventTargetHelper::BindToOwnerInternal(nsIGlobalObject* aOwner)
+{
+  if (mParentObject) {
+    mParentObject->RemoveEventTargetObject(this);
+    if (mOwnerWindow) {
+      mOwnerWindow = nullptr;
+    }
+    mParentObject = nullptr;
+    mHasOrHasHadOwnerWindow = false;
+  }
+  if (aOwner) {
+    mParentObject = aOwner;
+    aOwner->AddEventTargetObject(this);
+    // Let's cache the result of this QI for fast access and off main thread usage
+    mOwnerWindow = nsCOMPtr<nsPIDOMWindowInner>(do_QueryInterface(aOwner)).get();
+    if (mOwnerWindow) {
+      mHasOrHasHadOwnerWindow = true;
+    }
   }
 }
 
