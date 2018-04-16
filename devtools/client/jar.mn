@@ -150,6 +150,7 @@ devtools.jar:
     skin/images/command-eyedropper.svg (themes/images/command-eyedropper.svg)
     skin/images/command-rulers.svg (themes/images/command-rulers.svg)
     skin/images/command-measure.svg (themes/images/command-measure.svg)
+    skin/images/command-chevron.svg (themes/images/command-chevron.svg)
     skin/markup.css (themes/markup.css)
     skin/images/editor-error.png (themes/images/editor-error.png)
     skin/images/breakpoint.svg (themes/images/breakpoint.svg)

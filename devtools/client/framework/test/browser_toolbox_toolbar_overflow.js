@@ -12,8 +12,8 @@ let { Toolbox } = require("devtools/client/framework/toolbox");
 add_task(async function() {
   let tab = await addTab("about:blank");
 
-  info("Open devtools on the Inspector in a separate window");
-  let toolbox = await openToolboxForTab(tab, "inspector", Toolbox.HostType.WINDOW);
+  info("Open devtools on the Inspector in a bottom dock");
+  let toolbox = await openToolboxForTab(tab, "inspector", Toolbox.HostType.BOTTOM);
 
   let hostWindow = toolbox.win.parent;
   let originalWidth = hostWindow.outerWidth;
@@ -21,66 +21,53 @@ add_task(async function() {
 
   info("Resize devtools window to a width that should not trigger any overflow");
   let onResize = once(hostWindow, "resize");
-  hostWindow.resizeTo(640, 300);
+  hostWindow.resizeTo(1350, 300);
   await onResize;
+  waitUntil(() => {
+    // Wait for all buttons are displayed.
+    return toolbox.panelDefinitions.length !==
+      toolbox.doc.querySelectorAll(".devtools-tab").length;
+  });
 
-  let allToolsButton = toolbox.doc.querySelector(".all-tools-menu");
-  ok(!allToolsButton, "The all tools button is not displayed");
+  let chevronMenuButton = toolbox.doc.querySelector(".tools-chevron-menu");
+  ok(!chevronMenuButton, "The chevron menu button is not displayed");
 
   info("Resize devtools window to a width that should trigger an overflow");
   onResize = once(hostWindow, "resize");
-  hostWindow.resizeTo(300, 300);
+  hostWindow.resizeTo(800, 300);
   await onResize;
+  waitUntil(() => !toolbox.doc.querySelector(".tools-chevron-menu"));
 
-  info("Wait until the all tools button is available");
-  await waitUntil(() => toolbox.doc.querySelector(".all-tools-menu"));
+  info("Wait until the chevron menu button is available");
+  await waitUntil(() => toolbox.doc.querySelector(".tools-chevron-menu"));
 
-  allToolsButton = toolbox.doc.querySelector(".all-tools-menu");
-  ok(allToolsButton, "The all tools button is displayed");
+  chevronMenuButton = toolbox.doc.querySelector(".tools-chevron-menu");
+  ok(chevronMenuButton, "The chevron menu button is displayed");
 
-  info("Open the all-tools-menupopup and verify that the inspector button is checked");
-  let menuPopup = await openAllToolsMenu(toolbox);
+  info("Open the tools-chevron-menupopup and verify that the inspector button is checked");
+  let menuPopup = await openChevronMenu(toolbox);
 
-  let inspectorButton = toolbox.doc.querySelector("#all-tools-menupopup-inspector");
-  ok(inspectorButton, "The inspector button is available");
-  ok(inspectorButton.getAttribute("checked"), "The inspector button is checked");
+  let inspectorButton = toolbox.doc.querySelector("#tools-chevron-menupopup-inspector");
+  ok(!inspectorButton, "The chevron menu doesn't have the inspector button.");
 
-  let consoleButton = toolbox.doc.querySelector("#all-tools-menupopup-webconsole");
-  ok(consoleButton, "The console button is available");
-  ok(!consoleButton.getAttribute("checked"), "The console button is not checked");
+  let consoleButton = toolbox.doc.querySelector("#tools-chevron-menupopup-webconsole");
+  ok(!consoleButton, "The chevron menu doesn't have the console button.");
 
-  info("Switch to the webconsole using the all-tools-menupopup popup");
-  let onSelected = toolbox.once("webconsole-selected");
-  consoleButton.click();
+  let storageButton = toolbox.doc.querySelector("#tools-chevron-menupopup-storage");
+  ok(storageButton, "The chevron menu has the storage button.");
+
+  info("Switch to the performance using the tools-chevron-menupopup popup");
+  let onSelected = toolbox.once("storage-selected");
+  storageButton.click();
   await onSelected;
 
-  info("Closing the all-tools-menupopup popup");
+  info("Closing the tools-chevron-menupopup popup");
   let onPopupHidden = once(menuPopup, "popuphidden");
   menuPopup.hidePopup();
   await onPopupHidden;
 
-  info("Re-open the all-tools-menupopup and verify that the console button is checked");
-  menuPopup = await openAllToolsMenu(toolbox);
-
-  inspectorButton = toolbox.doc.querySelector("#all-tools-menupopup-inspector");
-  ok(!inspectorButton.getAttribute("checked"), "The inspector button is not checked");
-
-  consoleButton = toolbox.doc.querySelector("#all-tools-menupopup-webconsole");
-  ok(consoleButton.getAttribute("checked"), "The console button is checked");
-
   info("Restore the original window size");
+  onResize = once(hostWindow, "resize");
   hostWindow.resizeTo(originalWidth, originalHeight);
+  await onResize;
 });
-
-async function openAllToolsMenu(toolbox) {
-  let allToolsButton = toolbox.doc.querySelector(".all-tools-menu");
-  EventUtils.synthesizeMouseAtCenter(allToolsButton, {}, toolbox.win);
-
-  let menuPopup = toolbox.doc.querySelector("#all-tools-menupopup");
-  ok(menuPopup, "all-tools-menupopup is available");
-
-  info("Waiting for the menu popup to be displayed");
-  await waitUntil(() => menuPopup && menuPopup.state === "open");
-
-  return menuPopup;
-}
