@@ -46,6 +46,7 @@ mozilla.pth:testing/marionette/client
 mozilla.pth:testing/marionette/harness
 mozilla.pth:testing/marionette/harness/marionette_harness/runner/mixins/browsermob-proxy-py
 mozilla.pth:testing/marionette/puppeteer/firefox
+mozilla.pth:testing/raptor
 mozilla.pth:testing/talos
 packages.txt:testing/mozbase/packages.txt
 mozilla.pth:tools
