@@ -1546,7 +1546,7 @@ fuzzy-if(Android,2,48) == 563584-11.html 563584-11-ref.html
 fails-if(Android) random-if(layersGPUAccelerated) fuzzy-if(skiaContent,1,1200) == 564991-1.html 564991-1-ref.html
 == 565819-1.html 565819-ref.html
 == 565819-2.html 565819-ref.html
-needs-focus == 568441.html 568441-ref.html
+fuzzy-if(Android,1,1) needs-focus == 568441.html 568441-ref.html
 == 569006-1.html 569006-1-ref.html
 == 571281-1a.html 571281-1-ref.html
 == 571281-1b.html 571281-1-ref.html
