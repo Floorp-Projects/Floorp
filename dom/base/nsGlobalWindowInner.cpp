@@ -1226,7 +1226,10 @@ nsGlobalWindowInner::FreeInnerObjects()
     mApplicationCache = nullptr;
   }
 
-  mIndexedDB = nullptr;
+  if (mIndexedDB) {
+    mIndexedDB->DisconnectFromWindow(this);
+    mIndexedDB = nullptr;
+  }
 
   UnlinkHostObjectURIs();
 
@@ -1520,7 +1523,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
     static_cast<nsDOMOfflineResourceList*>(tmp->mApplicationCache.get())->Disconnect();
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplicationCache)
   }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
+  if (tmp->mIndexedDB) {
+    tmp->mIndexedDB->DisconnectFromWindow(tmp);
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
@@ -2467,6 +2473,32 @@ nsGlobalWindowInner::NoteCalledRegisterForServiceWorkerScope(const nsACString& a
   }
 
   mClientSource->NoteCalledRegisterForServiceWorkerScope(aScope);
+}
+
+void
+nsGlobalWindowInner::MigrateStateForDocumentOpen(nsGlobalWindowInner* aOldInner)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aOldInner);
+  MOZ_DIAGNOSTIC_ASSERT(aOldInner != this);
+  MOZ_DIAGNOSTIC_ASSERT(mDoc);
+
+  // Rebind DETH objects to the new global created by document.open().
+  // XXX: Is this correct?  We should consider if the spec and our
+  //      implementation should change to match other browsers by
+  //      just reusing the current window.  (Bug 1449992)
+  aOldInner->ForEachEventTargetObject(
+    [&] (DOMEventTargetHelper* aDETH, bool* aDoneOut) {
+      aDETH->BindToOwner(this->AsInner());
+    });
+
+  // Move the old Performance object from the old window to the new window.
+  // The Performance object was also rebound in the DETH loop above.
+  mPerformance = aOldInner->mPerformance.forget();
+
+  if (aOldInner->mIndexedDB) {
+    aOldInner->mIndexedDB->RebindToNewWindow(this);
+    mIndexedDB = aOldInner->mIndexedDB.forget();
+  }
 }
 
 void

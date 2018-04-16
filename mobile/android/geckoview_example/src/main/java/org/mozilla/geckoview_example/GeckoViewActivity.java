@@ -63,8 +63,11 @@ public class GeckoViewActivity extends Activity {
                 runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" });
             }
 
-            runtimeSettingsBuilder.useContentProcessHint(useMultiprocess)
-                                  .extras(getIntent().getExtras());
+            final Bundle extras = getIntent().getExtras();
+            if (extras != null) {
+                runtimeSettingsBuilder.extras(extras);
+            }
+            runtimeSettingsBuilder.useContentProcessHint(useMultiprocess);
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
         }
 

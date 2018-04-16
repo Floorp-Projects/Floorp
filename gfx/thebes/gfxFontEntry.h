@@ -142,7 +142,7 @@ public:
     virtual nsString RealFaceName();
 
     FontWeight Weight() const { return mWeight; }
-    int16_t Stretch() const { return mStretch; }
+    uint16_t Stretch() const { return mStretch; }
 
     bool IsUserFont() const { return mIsDataUserFont || mIsLocalUserFont; }
     bool IsLocalUserFont() const { return mIsLocalUserFont; }
@@ -150,7 +150,7 @@ public:
     bool IsItalic() const { return mStyle == NS_FONT_STYLE_ITALIC; }
     bool IsOblique() const { return mStyle == NS_FONT_STYLE_OBLIQUE; }
     bool IsUpright() const { return mStyle == NS_FONT_STYLE_NORMAL; }
-    bool IsBold() const { return mWeight >= FontWeight(600); } // bold == weights 600 and above
+    bool IsBold() const { return mWeight.IsBold(); } // bold == weights 600 and above
     bool IgnoreGDEF() const { return mIgnoreGDEF; }
     bool IgnoreGSUB() const { return mIgnoreGSUB; }
 
@@ -405,7 +405,7 @@ public:
     uint32_t         mNonDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
 
     FontWeight       mWeight;
-    int16_t          mStretch;
+    uint16_t         mStretch;
 
     RefPtr<gfxCharacterMap> mCharacterMap;
     uint32_t         mUVSOffset;

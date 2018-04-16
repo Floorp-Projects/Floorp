@@ -1534,7 +1534,7 @@ gfxMacPlatformFontList::AppleWeightToCSSWeight(int32_t aAppleWeight)
 gfxFontEntry*
 gfxMacPlatformFontList::LookupLocalFont(const nsAString& aFontName,
                                         FontWeight aWeight,
-                                        int16_t aStretch,
+                                        uint16_t aStretch,
                                         uint8_t aStyle)
 {
     nsAutoreleasePool localPool;
@@ -1567,7 +1567,7 @@ static void ReleaseData(void *info, const void *data, size_t size)
 gfxFontEntry*
 gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
                                          FontWeight aWeight,
-                                         int16_t aStretch,
+                                         uint16_t aStretch,
                                          uint8_t aStyle,
                                          const uint8_t* aFontData,
                                          uint32_t aLength)

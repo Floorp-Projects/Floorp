@@ -300,7 +300,7 @@ public:
     // Get the default content backend that will be used with the default
     // compositor. If the compositor is known when calling this function,
     // GetContentBackendFor() should be called instead.
-    mozilla::gfx::BackendType GetDefaultContentBackend() {
+    mozilla::gfx::BackendType GetDefaultContentBackend() const {
       return mContentBackend;
     }
 
@@ -394,7 +394,7 @@ public:
      */
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           FontWeight aWeight,
-                                          int16_t aStretch,
+                                          uint16_t aStretch,
                                           uint8_t aStyle);
 
     /**
@@ -407,7 +407,7 @@ public:
      */
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            FontWeight aWeight,
-                                           int16_t aStretch,
+                                           uint16_t aStretch,
                                            uint8_t aStyle,
                                            const uint8_t* aFontData,
                                            uint32_t aLength);

@@ -10,13 +10,32 @@
 
 import sys
 import argparse
+import fnmatch
 import subprocess
 import os
 import platform
+import tempfile
+
 from hashlib import sha256
 
+DEVNULL = open(os.devnull, 'wb')
 cwd = os.path.dirname(os.path.abspath(__file__))
 
+def run_tests(test, cycles="standard", env={}, silent=False):
+    domsuf = os.getenv('DOMSUF', "localdomain")
+    host = os.getenv('HOST', "localhost")
+    env = env.copy()
+    env.update({
+        "NSS_TESTS": test,
+        "NSS_CYCLES": cycles,
+        "DOMSUF": domsuf,
+        "HOST": host
+    })
+    os_env = os.environ
+    os_env.update(env)
+    command = cwd + "/tests/all.sh"
+    stdout = stderr = DEVNULL if silent else None
+    subprocess.check_call(command, env=os_env, stdout=stdout, stderr=stderr)
 
 class cfAction(argparse.Action):
     docker_command = ["docker"]
@@ -127,29 +146,63 @@ class cfAction(argparse.Action):
 class buildAction(argparse.Action):
 
     def __call__(self, parser, args, values, option_string=None):
-        cwd = os.path.dirname(os.path.abspath(__file__))
         subprocess.check_call([cwd + "/build.sh"] + values)
 
 
 class testAction(argparse.Action):
 
-    def runTest(self, test, cycles="standard"):
-        cwd = os.path.dirname(os.path.abspath(__file__))
-        domsuf = os.getenv('DOMSUF', "localdomain")
-        host = os.getenv('HOST', "localhost")
+    def __call__(self, parser, args, values, option_string=None):
+        run_tests(values)
+
+
+class covAction(argparse.Action):
+
+    def runSslGtests(self, outdir):
         env = {
-            "NSS_TESTS": test,
-            "NSS_CYCLES": cycles,
-            "DOMSUF": domsuf,
-            "HOST": host
+            "GTESTFILTER": "*", # Prevent parallel test runs.
+            "ASAN_OPTIONS": "coverage=1:coverage_dir=" + outdir
         }
-        os_env = os.environ
-        os_env.update(env)
-        command = cwd + "/tests/all.sh"
-        subprocess.check_call(command, env=os_env)
+
+        run_tests("ssl_gtests", env=env, silent=True)
+
+    def findSanCovFile(self, outdir):
+        for file in os.listdir(outdir):
+            if fnmatch.fnmatch(file, 'ssl_gtest.*.sancov'):
+                return os.path.join(outdir, file)
+
+        return None
 
     def __call__(self, parser, args, values, option_string=None):
-        self.runTest(values)
+        outdir = args.outdir
+        print("Output directory: " + outdir)
+
+        print("\nBuild with coverage sanitizers...\n")
+        sancov_args = "edge,no-prune,trace-pc-guard,trace-cmp"
+        subprocess.check_call([
+            os.path.join(cwd, "build.sh"), "-c", "--clang", "--asan",
+            "--sancov=" + sancov_args
+        ])
+
+        print("\nRun ssl_gtests to get a coverage report...")
+        self.runSslGtests(outdir)
+        print("Done.")
+
+        sancov_file = self.findSanCovFile(outdir)
+        if not sancov_file:
+            print("Couldn't find .sancov file.")
+            sys.exit(1)
+
+        symcov_file = os.path.join(outdir, "ssl_gtest.symcov")
+        out = open(symcov_file, 'wb')
+        subprocess.check_call([
+            "sancov",
+            "-blacklist=" + os.path.join(cwd, ".sancov-blacklist"),
+            "-symbolize", sancov_file,
+            os.path.join(cwd, "../dist/Debug/bin/ssl_gtest")
+        ], stdout=out)
+        out.close()
+
+        print("\nCoverage report: " + symcov_file)
 
 
 class commandsAction(argparse.Action):
@@ -198,6 +251,16 @@ def parse_arguments():
     ]
     parser_test.add_argument(
         'test', choices=tests, help="Available tests", action=testAction)
+
+    parser_cov = subparsers.add_parser(
+        'coverage', help='Generate coverage report')
+    cov_modules = ["ssl_gtests"]
+    parser_cov.add_argument(
+        '--outdir', help='Output directory for coverage report data.',
+        default=tempfile.mkdtemp())
+    parser_cov.add_argument(
+        'module', choices=cov_modules, help="Available coverage modules",
+        action=covAction)
 
     parser_commands = subparsers.add_parser(
         'mach-commands',

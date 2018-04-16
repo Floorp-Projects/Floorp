@@ -559,6 +559,67 @@ TEST_P(TlsConnectGenericPre13, ConnectECDHEmptyClientPoint) {
   server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_KEY_EXCH);
 }
 
+// Damage ECParams/ECPoint of a SKE.
+class ECCServerKEXDamager : public TlsHandshakeFilter {
+ public:
+  ECCServerKEXDamager(const std::shared_ptr<TlsAgent> &server, ECType ec_type,
+                      SSLNamedGroup named_curve)
+      : TlsHandshakeFilter(server, {kTlsHandshakeServerKeyExchange}),
+        ec_type_(ec_type),
+        named_curve_(named_curve) {}
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader &header,
+                                               const DataBuffer &input,
+                                               DataBuffer *output) {
+    size_t offset = 0;
+    output->Allocate(5);
+    offset = output->Write(offset, ec_type_, 1);
+    offset = output->Write(offset, named_curve_, 2);
+    // Write a point with fmt != EC_POINT_FORM_UNCOMPRESSED.
+    offset = output->Write(offset, 1U, 1);
+    (void)output->Write(offset, 0x02, 1);  // EC_POINT_FORM_COMPRESSED_Y0
+    return CHANGE;
+  }
+
+ private:
+  ECType ec_type_;
+  SSLNamedGroup named_curve_;
+};
+
+TEST_P(TlsConnectGenericPre13, ConnectUnsupportedCurveType) {
+  EnsureTlsSetup();
+  client_->DisableAllCiphers();
+  client_->EnableCiphersByKeyExchange(ssl_kea_ecdh);
+
+  MakeTlsFilter<ECCServerKEXDamager>(server_, ec_type_explicitPrime,
+                                     ssl_grp_none);
+  ConnectExpectAlert(client_, kTlsAlertHandshakeFailure);
+  client_->CheckErrorCode(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+}
+
+TEST_P(TlsConnectGenericPre13, ConnectUnsupportedCurve) {
+  EnsureTlsSetup();
+  client_->DisableAllCiphers();
+  client_->EnableCiphersByKeyExchange(ssl_kea_ecdh);
+
+  MakeTlsFilter<ECCServerKEXDamager>(server_, ec_type_named,
+                                     ssl_grp_ffdhe_2048);
+  ConnectExpectAlert(client_, kTlsAlertHandshakeFailure);
+  client_->CheckErrorCode(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+}
+
+TEST_P(TlsConnectGenericPre13, ConnectUnsupportedPointFormat) {
+  EnsureTlsSetup();
+  client_->DisableAllCiphers();
+  client_->EnableCiphersByKeyExchange(ssl_kea_ecdh);
+
+  MakeTlsFilter<ECCServerKEXDamager>(server_, ec_type_named,
+                                     ssl_grp_ec_secp256r1);
+  ConnectExpectAlert(client_, kTlsAlertHandshakeFailure);
+  client_->CheckErrorCode(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM);
+}
+
 INSTANTIATE_TEST_CASE_P(KeyExchangeTest, TlsKeyExchangeTest,
                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV11Plus));

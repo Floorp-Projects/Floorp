@@ -49,7 +49,7 @@ module.exports = [
 ].concat(
   tests.map(({ name, dirname, input, output }) => {
     const babelEnabled = name !== "webpackStandalone";
-    const babelEnv = name !== "webpackModulesEs6";
+    const babelEnv = !name.match(/Es6/);
     const babelModules = name !== "webpackModules";
     const devtool =
       name === "evalSourceMaps" ? "eval-source-map" : "source-map";

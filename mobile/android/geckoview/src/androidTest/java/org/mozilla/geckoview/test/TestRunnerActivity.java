@@ -112,8 +112,11 @@ public class TestRunnerActivity extends Activity {
         if (sRuntime == null) {
             final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
                 new GeckoRuntimeSettings.Builder();
-            runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" })
-                                  .extras(intent.getExtras());
+            runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" });
+            final Bundle extras = intent.getExtras();
+            if (extras != null) {
+                runtimeSettingsBuilder.extras(extras);
+            }
 
             sRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
             sRuntime.setDelegate(new GeckoRuntime.Delegate() {
