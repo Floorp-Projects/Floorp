@@ -3584,7 +3584,7 @@ tls13_HandleEncryptedExtensions(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
     SECStatus rv;
     PRUint32 innerLength;
-    SECItem oldNpn = { siBuffer, NULL, 0 };
+    SECItem oldAlpn = { siBuffer, NULL, 0 };
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
@@ -3608,11 +3608,11 @@ tls13_HandleEncryptedExtensions(sslSocket *ss, PRUint8 *b, PRUint32 length)
         return SECFailure;
     }
 
-    /* If we are doing 0-RTT, then we already have an NPN value. Stash
+    /* If we are doing 0-RTT, then we already have an ALPN value. Stash
      * it for comparison. */
     if (ss->ssl3.hs.zeroRttState == ssl_0rtt_sent &&
         ss->xtnData.nextProtoState == SSL_NEXT_PROTO_EARLY_VALUE) {
-        oldNpn = ss->xtnData.nextProto;
+        oldAlpn = ss->xtnData.nextProto;
         ss->xtnData.nextProto.data = NULL;
         ss->xtnData.nextProtoState = SSL_NEXT_PROTO_NO_SUPPORT;
     }
@@ -3632,8 +3632,8 @@ tls13_HandleEncryptedExtensions(sslSocket *ss, PRUint8 *b, PRUint32 length)
         ss->ssl3.hs.zeroRttState = ssl_0rtt_accepted;
 
         /* Check that the server negotiated the same ALPN (if any). */
-        if (SECITEM_CompareItem(&oldNpn, &ss->xtnData.nextProto)) {
-            SECITEM_FreeItem(&oldNpn, PR_FALSE);
+        if (SECITEM_CompareItem(&oldAlpn, &ss->xtnData.nextProto)) {
+            SECITEM_FreeItem(&oldAlpn, PR_FALSE);
             FATAL_ERROR(ss, SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID,
                         illegal_parameter);
             return SECFailure;
@@ -3655,7 +3655,7 @@ tls13_HandleEncryptedExtensions(sslSocket *ss, PRUint8 *b, PRUint32 length)
                      ss->ssl3.hs.zeroRttState == ssl_0rtt_ignored));
     }
 
-    SECITEM_FreeItem(&oldNpn, PR_FALSE);
+    SECITEM_FreeItem(&oldAlpn, PR_FALSE);
     if (ss->ssl3.hs.kea_def->authKeyType == ssl_auth_psk) {
         TLS13_SET_HS_STATE(ss, wait_finished);
     } else {
