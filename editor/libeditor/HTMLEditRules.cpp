@@ -7598,13 +7598,16 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
           return NS_OK;
         }
 
-        nsCOMPtr<Element> brNode;
-        rv = htmlEditor->CopyLastEditableChildStyles(prevItem,
-                                                     &aListItem,
-                                                     getter_AddRefs(brNode));
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (brNode) {
-          EditorRawDOMPoint atBrNode(brNode);
+        RefPtr<Element> brElement;
+        nsresult rv =
+          htmlEditor->CopyLastEditableChildStylesWithTransaction(
+                        *prevItem->AsElement(), aListItem,
+                        address_of(brElement));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NS_ERROR_FAILURE;
+        }
+        if (brElement) {
+          EditorRawDOMPoint atBrNode(brElement);
           if (NS_WARN_IF(!atBrNode.IsSetAndValid())) {
             return NS_ERROR_FAILURE;
           }
