@@ -78,7 +78,7 @@ public:
     mMessageManager->SendAsyncMessage(aCx, aMessageName, aObj, aObjects,
                                       aPrincipal, aTransfers, aError);
   }
-  already_AddRefed<ChromeMessageSender> GetProcessMessageManager(mozilla::ErrorResult& aError)
+  already_AddRefed<ProcessMessageManager> GetProcessMessageManager(mozilla::ErrorResult& aError)
   {
     if (!mMessageManager) {
       aError.Throw(NS_ERROR_NULL_POINTER);
