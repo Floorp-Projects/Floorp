@@ -1744,12 +1744,14 @@ HTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 NS_IMETHODIMP
 HTMLEditor::SetParagraphFormat(const nsAString& aParagraphFormat)
 {
-  nsAutoString tag; tag.Assign(aParagraphFormat);
-  ToLowerCase(tag);
-  if (tag.EqualsLiteral("dd") || tag.EqualsLiteral("dt")) {
-    return MakeDefinitionItem(tag);
+  nsAutoString lowerCaseTagName(aParagraphFormat);
+  ToLowerCase(lowerCaseTagName);
+  RefPtr<nsAtom> tagName = NS_Atomize(lowerCaseTagName);
+  MOZ_ASSERT(tagName);
+  if (tagName == nsGkAtoms::dd || tagName == nsGkAtoms::dt) {
+    return MakeDefinitionListItemWithTransaction(*tagName);
   }
-  return InsertBasicBlock(tag);
+  return InsertBasicBlockWithTransaction(*tagName);
 }
 
 NS_IMETHODIMP
@@ -2111,11 +2113,14 @@ HTMLEditor::RemoveList(const nsAString& aListType)
 }
 
 nsresult
-HTMLEditor::MakeDefinitionItem(const nsAString& aItemType)
+HTMLEditor::MakeDefinitionListItemWithTransaction(nsAtom& aTagName)
 {
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+
+  MOZ_ASSERT(&aTagName == nsGkAtoms::dt ||
+             &aTagName == nsGkAtoms::dd);
 
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
@@ -2128,9 +2133,12 @@ HTMLEditor::MakeDefinitionItem(const nsAString& aItemType)
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsDependentAtomString tagName(&aTagName);
   RulesInfo ruleInfo(EditAction::makeDefListItem);
-  ruleInfo.blockType = &aItemType;
+  ruleInfo.blockType = &tagName;
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
@@ -2144,11 +2152,14 @@ HTMLEditor::MakeDefinitionItem(const nsAString& aItemType)
 }
 
 nsresult
-HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
+HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName)
 {
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+
+  MOZ_ASSERT(&aTagName != nsGkAtoms::dd &&
+             &aTagName != nsGkAtoms::dt);
 
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
@@ -2162,8 +2173,9 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
   // pre-process
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  nsDependentAtomString tagName(&aTagName);
   RulesInfo ruleInfo(EditAction::makeBasicBlock);
-  ruleInfo.blockType = &aBlockType;
+  ruleInfo.blockType = &tagName;
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
@@ -2184,8 +2196,7 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
     // Have to find a place to put the block.
     EditorDOMPoint pointToInsertBlock(atStartOfSelection);
 
-    RefPtr<nsAtom> blockAtom = NS_Atomize(aBlockType);
-    while (!CanContainTag(*pointToInsertBlock.GetContainer(), *blockAtom)) {
+    while (!CanContainTag(*pointToInsertBlock.GetContainer(), aTagName)) {
       pointToInsertBlock.Set(pointToInsertBlock.GetContainer());
       if (NS_WARN_IF(!pointToInsertBlock.IsSet()) ||
           NS_WARN_IF(!pointToInsertBlock.GetContainerAsContent())) {
@@ -2213,7 +2224,7 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
     // parents of start of selection above, or just start of selection
     // otherwise.
     RefPtr<Element> newBlock =
-      CreateNodeWithTransaction(*blockAtom, pointToInsertBlock);
+      CreateNodeWithTransaction(aTagName, pointToInsertBlock);
     if (NS_WARN_IF(!newBlock)) {
       return NS_ERROR_FAILURE;
     }
