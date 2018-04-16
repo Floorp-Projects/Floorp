@@ -53,10 +53,10 @@ DOMQuad::Constructor(const GlobalObject& aGlobal,
                      ErrorResult& aRV)
 {
   RefPtr<DOMQuad> obj = new DOMQuad(aGlobal.GetAsSupports());
-  obj->mPoints[0] = DOMPoint::FromPoint(aGlobal, aP1);
-  obj->mPoints[1] = DOMPoint::FromPoint(aGlobal, aP2);
-  obj->mPoints[2] = DOMPoint::FromPoint(aGlobal, aP3);
-  obj->mPoints[3] = DOMPoint::FromPoint(aGlobal, aP4);
+  obj->mPoints[0] = DOMPoint::Constructor(aGlobal, aP1, aRV);
+  obj->mPoints[1] = DOMPoint::Constructor(aGlobal, aP2, aRV);
+  obj->mPoints[2] = DOMPoint::Constructor(aGlobal, aP3, aRV);
+  obj->mPoints[3] = DOMPoint::Constructor(aGlobal, aP4, aRV);
   return obj.forget();
 }
 
