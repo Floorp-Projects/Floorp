@@ -271,10 +271,14 @@ public:
       The caller owns the <code>CGImageRef</code>. 
       @param aFrame the frame to convert
       @param aResult the resulting CGImageRef
+      @param aIsEntirelyBlack an outparam that, if non-null, will be set to a
+                              bool that indicates whether the RGB values on all
+                              pixels are zero
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
   static nsresult CreateCGImageFromSurface(SourceSurface* aSurface,
-                                           CGImageRef* aResult);
+                                           CGImageRef* aResult,
+                                           bool* aIsEntirelyBlack = nullptr);
   
   /** Creates a Cocoa <code>NSImage</code> from a <code>CGImageRef</code>.
       Copies the pixel data from the <code>CGImageRef</code> into a new <code>NSImage</code>.
