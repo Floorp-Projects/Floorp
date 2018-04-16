@@ -23,6 +23,9 @@ std::unordered_map<uint64_t, APZSampler*> APZSampler::sWindowIdMap;
 
 APZSampler::APZSampler(const RefPtr<APZCTreeManager>& aApz)
   : mApz(aApz)
+#ifdef DEBUG
+  , mSamplerThreadQueried(false)
+#endif
 {
   MOZ_ASSERT(aApz);
   mApz->SetSampler(this);
@@ -45,6 +48,16 @@ APZSampler::SetWebRenderWindowId(const wr::WindowId& aWindowId)
   MOZ_ASSERT(!mWindowId);
   mWindowId = Some(aWindowId);
   sWindowIdMap[wr::AsUint64(aWindowId)] = this;
+}
+
+/*static*/ void
+APZSampler::SetSamplerThread(const wr::WrWindowId& aWindowId)
+{
+  if (RefPtr<APZSampler> sampler = GetSampler(aWindowId)) {
+    // Ensure nobody tried to use the updater thread before this point.
+    MOZ_ASSERT(!sampler->mSamplerThreadQueried);
+    sampler->mSamplerThreadId = Some(PlatformThread::CurrentId());
+  }
 }
 
 bool
@@ -173,7 +186,27 @@ APZSampler::AssertOnSamplerThread() const
 bool
 APZSampler::IsSamplerThread() const
 {
+  if (UsingWebRenderSamplerThread()) {
+    return PlatformThread::CurrentId() == *mSamplerThreadId;
+  }
   return CompositorThreadHolder::IsInCompositorThread();
+}
+
+bool
+APZSampler::UsingWebRenderSamplerThread() const
+{
+  // If mSamplerThreadId is not set at the point that this is called, then
+  // that means that either (a) WebRender is not enabled for the compositor
+  // to which this APZSampler is attached or (b) we are attempting to do
+  // something sampler-related before WebRender is up and running. In case
+  // (a) falling back to the compositor thread is correct, and in case (b)
+  // we should stop doing the sampler-related thing so early. We catch this
+  // case by setting the mSamplerThreadQueried flag and asserting on WR
+  // initialization.
+#ifdef DEBUG
+  mSamplerThreadQueried = true;
+#endif
+  return mSamplerThreadId.isSome();
 }
 
 /*static*/ already_AddRefed<APZSampler>
