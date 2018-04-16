@@ -591,7 +591,7 @@ APZCTreeManager::UpdateHitTestingTree(LayersId aRootLayerTreeId,
 }
 
 bool
-APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
+APZCTreeManager::PushStateToWR(wr::TransactionWrapper& aTxn,
                                const TimeStamp& aSampleTime)
 {
   AssertOnSamplerThread();

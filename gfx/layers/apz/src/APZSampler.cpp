@@ -62,7 +62,7 @@ APZSampler::SetSamplerThread(const wr::WrWindowId& aWindowId)
 }
 
 bool
-APZSampler::PushStateToWR(wr::TransactionBuilder& aTxn,
+APZSampler::PushStateToWR(wr::TransactionWrapper& aTxn,
                           const TimeStamp& aSampleTime)
 {
   // This function will be removed eventually since we'll have WR pull
