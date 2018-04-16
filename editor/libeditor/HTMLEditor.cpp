@@ -2765,7 +2765,7 @@ HTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 }
 
 nsresult
-HTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
+HTMLEditor::SetHTMLBackgroundColorWithTransaction(const nsAString& aColor)
 {
   MOZ_ASSERT(IsInitialized(), "The HTMLEditor hasn't been initialized yet");
 
@@ -4336,7 +4336,7 @@ HTMLEditor::SetIsCSSEnabled(bool aIsCSSPrefChecked)
 
 // Set the block background color
 nsresult
-HTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
+HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
 {
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
   CommitComposition();
@@ -4492,11 +4492,11 @@ HTMLEditor::SetBackgroundColor(const nsAString& aColor)
     // if we are in CSS mode, we have to apply the background color to the
     // containing block (or the body if we have no block-level element in
     // the document)
-    return SetCSSBackgroundColor(aColor);
+    return SetCSSBackgroundColorWithTransaction(aColor);
   }
 
   // but in HTML mode, we can only set the document's background color
-  return SetHTMLBackgroundColor(aColor);
+  return SetHTMLBackgroundColorWithTransaction(aColor);
 }
 
 /**
