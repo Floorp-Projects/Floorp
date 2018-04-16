@@ -35,6 +35,9 @@ project(':browser-engine-system').projectDir = new File(rootDir, 'components/bro
 include ':browser-errorpages'
 project(':browser-errorpages').projectDir = new File(rootDir, 'components/browser/errorpages')
 
+include ':browser-search'
+project(':browser-search').projectDir = new File(rootDir, 'components/browser/search')
+
 include ':browser-session'
 project(':browser-session').projectDir = new File(rootDir, 'components/browser/session')
 
