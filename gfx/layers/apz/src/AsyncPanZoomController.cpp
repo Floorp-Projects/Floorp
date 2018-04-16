@@ -3667,14 +3667,11 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
   // since the tasks are allowed to call APZCTreeManager methods which can grab
   // the tree lock.
   for (uint32_t i = 0; i < deferredTasks.Length(); ++i) {
-    deferredTasks[i]->Run();
-    deferredTasks[i] = nullptr;
+    APZThreadUtils::RunOnControllerThread(deferredTasks[i].forget());
   }
 
-  // One of the deferred tasks may have started a new animation. In this case,
-  // we want to ask the compositor to schedule a new composite.
-  requestAnimationFrame |= (mAnimation != nullptr);
-
+  // If any of the deferred tasks starts a new animation, it will request a
+  // new composite directly, so we can just return requestAnimationFrame here.
   return requestAnimationFrame;
 }
 
