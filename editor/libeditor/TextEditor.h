@@ -226,28 +226,9 @@ protected:
                                          const nsACString& aCharset);
 
   /**
-   * CreateBR() creates new <br> element and inserts it before aPointToInsert,
-   * and collapse selection if it's necessary.
-   *
-   * @param aPointToInsert  The point to insert new <br> element.
-   * @param aSelect         If eNone, this won't change selection.
-   *                        If eNext, selection will be collapsed after the
-   *                        <br> element.
-   *                        If ePrevious, selection will be collapsed at the
-   *                        <br> element.
-   * @return                The new <br> node.  If failed to create new <br>
-   *                        node, returns nullptr.
-   */
-  template<typename PT, typename CT>
-  already_AddRefed<Element>
-  CreateBR(const EditorDOMPointBase<PT, CT>& aPointToInsert,
-           EDirection aSelect = eNone);
-
-  /**
-   * CreateBRImpl() creates a <br> element and inserts it before aPointToInsert.
-   * Then, tries to collapse selection at or after the new <br> node if
-   * aSelect is not eNone.
-   * XXX Perhaps, this should be merged with CreateBR().
+   * InsertBrElementWithTransaction() creates a <br> element and inserts it
+   * before aPointToInsert.  Then, tries to collapse selection at or after the
+   * new <br> node if aSelect is not eNone.
    *
    * @param aSelection          The selection of this editor.
    * @param aPointToInsert      The DOM point where should be <br> node inserted
@@ -262,9 +243,10 @@ protected:
    */
   template<typename PT, typename CT>
   already_AddRefed<Element>
-  CreateBRImpl(Selection& aSelection,
-               const EditorDOMPointBase<PT, CT>& aPointToInsert,
-               EDirection aSelect);
+  InsertBrElementWithTransaction(
+    Selection& aSelection,
+    const EditorDOMPointBase<PT, CT>& aPointToInsert,
+    EDirection aSelect = eNone);
 
   /**
    * Factored methods for handling insertion of data from transferables

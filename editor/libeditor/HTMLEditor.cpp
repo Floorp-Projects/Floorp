@@ -1156,10 +1156,11 @@ HTMLEditor::InsertBR()
     return NS_ERROR_FAILURE;
   }
 
-  // CreateBRImpl() will set selection after the new <br> element.
-  RefPtr<Element> newBRElement =
-    CreateBRImpl(*selection, atStartOfSelection, nsIEditor::eNext);
-  if (NS_WARN_IF(!newBRElement)) {
+  // InsertBrElementWithTransaction() will set selection after the new <br>
+  // element.
+  RefPtr<Element> newBrElement =
+    InsertBrElementWithTransaction(*selection, atStartOfSelection, eNext);
+  if (NS_WARN_IF(!newBrElement)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -1608,9 +1609,9 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
         NS_WARNING_ASSERTION(advanced,
           "Failed to advance offset from inserted point");
         // Collapse selection to the new <br> element node after creating it.
-        RefPtr<Element> newBRElement =
-          CreateBRImpl(*selection, insertedPoint, ePrevious);
-        if (NS_WARN_IF(!newBRElement)) {
+        RefPtr<Element> newBrElement =
+          InsertBrElementWithTransaction(*selection, insertedPoint, ePrevious);
+        if (NS_WARN_IF(!newBrElement)) {
           return NS_ERROR_FAILURE;
         }
       }
@@ -3747,6 +3748,11 @@ HTMLEditor::SetSelectionAtDocumentStart(Selection* aSelection)
 nsresult
 HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement)
 {
+  RefPtr<Selection> selection = GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Two possibilities: the container could be empty of editable content.  If
   // that is the case, we need to compare what is before and after aNode to
   // determine if we need a br.
@@ -3768,7 +3774,9 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement)
     if (sibling && !IsBlockNode(sibling) &&
         !sibling->IsHTMLElement(nsGkAtoms::br) && !IsBlockNode(child)) {
       // Insert br node
-      RefPtr<Element> brElement = CreateBR(EditorRawDOMPoint(&aElement, 0));
+      RefPtr<Element> brElement =
+        InsertBrElementWithTransaction(*selection,
+                                       EditorRawDOMPoint(&aElement, 0));
       if (NS_WARN_IF(!brElement)) {
         return NS_ERROR_FAILURE;
       }
@@ -3788,7 +3796,8 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement)
         // Insert br node
         EditorRawDOMPoint endOfNode;
         endOfNode.SetToEndOf(&aElement);
-        RefPtr<Element> brElement = CreateBR(endOfNode);
+        RefPtr<Element> brElement =
+          InsertBrElementWithTransaction(*selection, endOfNode);
         if (NS_WARN_IF(!brElement)) {
           return NS_ERROR_FAILURE;
         }
@@ -3808,7 +3817,9 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement)
       if (sibling && !IsBlockNode(sibling) &&
           !sibling->IsHTMLElement(nsGkAtoms::br)) {
         // Insert br node
-        RefPtr<Element> brElement = CreateBR(EditorRawDOMPoint(&aElement, 0));
+        RefPtr<Element> brElement =
+          InsertBrElementWithTransaction(*selection,
+                                         EditorRawDOMPoint(&aElement, 0));
         if (NS_WARN_IF(!brElement)) {
           return NS_ERROR_FAILURE;
         }
@@ -4570,9 +4581,17 @@ HTMLEditor::CopyLastEditableChildStyles(nsINode* aPreviousBlock,
     childElement = childElement->GetParentElement();
   }
   if (deepestStyle) {
-    RefPtr<Element> retVal = CreateBR(EditorRawDOMPoint(deepestStyle, 0));
-    retVal.forget(aOutBrNode);
-    NS_ENSURE_STATE(*aOutBrNode);
+    RefPtr<Selection> selection = GetSelection();
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
+    RefPtr<Element> brElement =
+      InsertBrElementWithTransaction(*selection,
+                                     EditorRawDOMPoint(deepestStyle, 0));
+    if (NS_WARN_IF(!brElement)) {
+      return NS_ERROR_FAILURE;
+    }
+    brElement.forget(aOutBrNode);
   }
   return NS_OK;
 }

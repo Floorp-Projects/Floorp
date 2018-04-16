@@ -1676,7 +1676,13 @@ TextEditRules::CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
   }
   RefPtr<TextEditor> textEditor = mTextEditor;
 
-  RefPtr<Element> brElement = textEditor->CreateBR(aPointToInsert);
+  RefPtr<Selection> selection = textEditor->GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return nullptr;
+  }
+
+  RefPtr<Element> brElement =
+    textEditor->InsertBrElementWithTransaction(*selection, aPointToInsert);
   if (NS_WARN_IF(!brElement)) {
     return nullptr;
   }

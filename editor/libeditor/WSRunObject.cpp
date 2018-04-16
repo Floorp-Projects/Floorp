@@ -264,12 +264,13 @@ WSRunObject::InsertBreak(Selection& aSelection,
     }
   }
 
-  RefPtr<Element> newBRElement =
-    mHTMLEditor->CreateBRImpl(aSelection, pointToInsert, aSelect);
-  if (NS_WARN_IF(!newBRElement)) {
+  RefPtr<Element> newBrElement =
+    mHTMLEditor->InsertBrElementWithTransaction(aSelection, pointToInsert,
+                                                aSelect);
+  if (NS_WARN_IF(!newBrElement)) {
     return nullptr;
   }
-  return newBRElement.forget();
+  return newBrElement.forget();
 }
 
 template<typename PT, typename CT>
@@ -1848,6 +1849,11 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
       }
       if ((aRun->mRightType & WSType::block) &&
           IsBlockNode(GetWSBoundingParent())) {
+        RefPtr<Selection> selection = htmlEditor->GetSelection();
+        if (NS_WARN_IF(!selection)) {
+          return NS_ERROR_FAILURE;
+        }
+
         // We are at a block boundary.  Insert a <br>.  Why?  Well, first note
         // that the br will have no visible effect since it is up against a
         // block boundary.  |foo<br><p>bar| renders like |foo<p>bar| and
@@ -1869,8 +1875,10 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
         // beginning of soft wrapped lines, and lets the user see 2 spaces when
         // they type 2 spaces.
 
-        RefPtr<Element> brNode = htmlEditor->CreateBR(aRun->EndPoint());
-        if (NS_WARN_IF(!brNode)) {
+        RefPtr<Element> brElement =
+          htmlEditor->InsertBrElementWithTransaction(*selection,
+                                                     aRun->EndPoint());
+        if (NS_WARN_IF(!brElement)) {
           return NS_ERROR_FAILURE;
         }
 

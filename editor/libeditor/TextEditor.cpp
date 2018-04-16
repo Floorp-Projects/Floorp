@@ -65,11 +65,15 @@ namespace mozilla {
 using namespace dom;
 
 template already_AddRefed<Element>
-TextEditor::CreateBR(const EditorDOMPoint& aPointToInsert,
-                     EDirection aSelect);
+TextEditor::InsertBrElementWithTransaction(
+              Selection& aSelection,
+              const EditorDOMPoint& aPointToInsert,
+              EDirection aSelect);
 template already_AddRefed<Element>
-TextEditor::CreateBR(const EditorRawDOMPoint& aPointToInsert,
-                     EDirection aSelect);
+TextEditor::InsertBrElementWithTransaction(
+              Selection& aSelection,
+              const EditorRawDOMPoint& aPointToInsert,
+              EDirection aSelect);
 
 TextEditor::TextEditor()
   : mWrapColumn(0)
@@ -437,22 +441,10 @@ TextEditor::TypedText(const nsAString& aString, ETypingAction aAction)
 
 template<typename PT, typename CT>
 already_AddRefed<Element>
-TextEditor::CreateBR(const EditorDOMPointBase<PT, CT>& aPointToInsert,
-                     EDirection aSelect /* = eNone */)
-{
-  RefPtr<Selection> selection = GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return nullptr;
-  }
-  // We assume everything is fine if newBRElement is not null.
-  return CreateBRImpl(*selection, aPointToInsert, aSelect);
-}
-
-template<typename PT, typename CT>
-already_AddRefed<Element>
-TextEditor::CreateBRImpl(Selection& aSelection,
-                         const EditorDOMPointBase<PT, CT>& aPointToInsert,
-                         EDirection aSelect)
+TextEditor::InsertBrElementWithTransaction(
+              Selection& aSelection,
+              const EditorDOMPointBase<PT, CT>& aPointToInsert,
+              EDirection aSelect /* = eNone */)
 {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return nullptr;
