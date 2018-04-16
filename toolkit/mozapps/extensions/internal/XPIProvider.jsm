@@ -201,12 +201,10 @@ const TYPE_ALIASES = {
 
 const CHROME_TYPES = new Set([
   "extension",
-  "experiment",
 ]);
 
 const SIGNED_TYPES = new Set([
   "extension",
-  "experiment",
   "webextension",
   "webextension-langpack",
   "webextension-theme",
@@ -220,7 +218,6 @@ const LEGACY_TYPES = new Set([
 const ALL_EXTERNAL_TYPES = new Set([
   "dictionary",
   "extension",
-  "experiment",
   "locale",
   "theme",
 ]);
@@ -811,16 +808,6 @@ function isUsableAddon(aAddon) {
     return false;
   }
 
-  // Experiments are installed through an external mechanism that
-  // limits target audience to compatible clients. We trust it knows what
-  // it's doing and skip compatibility checks.
-  //
-  // This decision does forfeit defense in depth. If the experiments system
-  // is ever wrong about targeting an add-on to a specific application
-  // or platform, the client will likely see errors.
-  if (aAddon.type == "experiment")
-    return true;
-
   if (AddonManager.checkUpdateSecurity && !aAddon.providesUpdatesSecurely) {
     logger.warn(`Updates for add-on ${aAddon.id} must be provided over HTTPS.`);
     return false;
@@ -1291,9 +1278,7 @@ class XPIStateLocation extends Map {
     }
 
     for (let [id, addon] of this.entries()) {
-      if (addon.type != "experiment") {
-        json.addons[id] = addon;
-      }
+      json.addons[id] = addon;
     }
     return json;
   }
@@ -3473,12 +3458,9 @@ var XPIProvider = {
     if (this.isDBLoaded) {
       return new Promise(resolve => {
         this.getAddonsByTypes(aTypes, addons => {
-          // The thing with experiments is an ugly hack but we want
-          // Experiments.jsm to use this interface instead of getAddonsByTypes.
-          // They'll go away at some point and we can forget this ever happened.
-          resolve({addons: addons.filter(addon => addon.isActive ||
-                                       (addon.type == "experiment" && !addon.appDisabled)),
-                   fullData: true
+          resolve({
+            addons: addons.filter(addon => addon.isActive),
+            fullData: true,
           });
         });
       });
@@ -4658,12 +4640,10 @@ AddonInternal.prototype = {
     // Add-ons that are in locked install locations, or are pending uninstall
     // cannot be upgraded or uninstalled
     if (!this._installLocation.locked && !this.pendingUninstall) {
-      // Experiments cannot be upgraded.
       // System add-on upgrades are triggered through a different mechanism (see updateSystemAddons())
       let isSystem = this._installLocation.isSystem;
       // Add-ons that are installed by a file link cannot be upgraded.
-      if (this.type != "experiment" &&
-          !this._installLocation.isLinkedAddon(this.id) && !isSystem) {
+      if (!this._installLocation.isLinkedAddon(this.id) && !isSystem) {
         permissions |= AddonManager.PERM_CAN_UPGRADE;
       }
 
@@ -4840,11 +4820,6 @@ AddonWrapper.prototype = {
   },
   set applyBackgroundUpdates(val) {
     let addon = addonFor(this);
-    if (this.type == "experiment") {
-      logger.warn("Setting applyBackgroundUpdates on an experiment is not supported.");
-      return addon.applyBackgroundUpdates;
-    }
-
     if (val != AddonManager.AUTOUPDATE_DEFAULT &&
         val != AddonManager.AUTOUPDATE_DISABLE &&
         val != AddonManager.AUTOUPDATE_ENABLE) {
@@ -5059,14 +5034,6 @@ AddonWrapper.prototype = {
   },
 
   findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
-    // Short-circuit updates for experiments because updates are handled
-    // through the Experiments Manager.
-    if (this.type == "experiment") {
-      AddonManagerPrivate.callNoUpdateListeners(this, aListener, aReason,
-                                                aAppVersion, aPlatformVersion);
-      return;
-    }
-
     new UpdateChecker(addonFor(this), aListener, aReason, aAppVersion, aPlatformVersion);
   },
 
@@ -6431,18 +6398,5 @@ var addonTypes = [
                                     AddonManager.VIEW_TYPE_LIST, 8000,
                                     AddonManager.TYPE_UI_HIDE_EMPTY | AddonManager.TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL),
 ];
-
-// We only register experiments support if the application supports them.
-// Ideally, we would install an observer to watch the pref. Installing
-// an observer for this pref is not necessary here and may be buggy with
-// regards to registering this XPIProvider twice.
-if (Services.prefs.getBoolPref("experiments.supported", false)) {
-  addonTypes.push(
-    new AddonManagerPrivate.AddonType("experiment",
-                                      URI_EXTENSION_STRINGS,
-                                      "type.experiment.name",
-                                      AddonManager.VIEW_TYPE_LIST, 11000,
-                                      AddonManager.TYPE_UI_HIDE_EMPTY | AddonManager.TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL));
-}
 
 AddonManagerPrivate.registerProvider(XPIProvider, addonTypes);

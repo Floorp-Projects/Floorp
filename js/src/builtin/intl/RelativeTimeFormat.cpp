@@ -117,7 +117,7 @@ RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp)
 void
 js::RelativeTimeFormatObject::finalize(FreeOp* fop, JSObject* obj)
 {
-    MOZ_ASSERT(fop->onActiveCooperatingThread());
+    MOZ_ASSERT(fop->onMainThread());
 
     constexpr auto RT_FORMAT_SLOT = RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT;
     const Value& slot = obj->as<RelativeTimeFormatObject>().getReservedSlot(RT_FORMAT_SLOT);

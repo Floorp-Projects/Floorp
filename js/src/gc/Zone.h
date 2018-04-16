@@ -176,7 +176,7 @@ struct Zone : public JS::shadow::Zone,
                                      void* reallocPtr = nullptr) {
         if (!js::CurrentThreadCanAccessRuntime(runtime_))
             return nullptr;
-        return runtimeFromActiveCooperatingThread()->onOutOfMemory(allocFunc, nbytes, reallocPtr);
+        return runtimeFromMainThread()->onOutOfMemory(allocFunc, nbytes, reallocPtr);
     }
     void reportAllocationOverflow() { js::ReportAllocationOverflow(nullptr); }
 
@@ -203,7 +203,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
     bool isCollecting() const {
-        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtimeFromActiveCooperatingThread()));
+        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtimeFromMainThread()));
         return isCollectingFromAnyThread();
     }
 
@@ -232,7 +232,7 @@ struct Zone : public JS::shadow::Zone,
     bool compileBarriers() const { return compileBarriers(needsIncrementalBarrier()); }
     bool compileBarriers(bool needsIncrementalBarrier) const {
         return needsIncrementalBarrier ||
-               runtimeFromActiveCooperatingThread()->hasZealMode(js::gc::ZealMode::VerifierPre);
+               runtimeFromMainThread()->hasZealMode(js::gc::ZealMode::VerifierPre);
     }
 
     void setNeedsIncrementalBarrier(bool needs);
@@ -609,7 +609,7 @@ struct Zone : public JS::shadow::Zone,
         // tell the nursery about it so that it can sweep the uid if the thing
         // does not get tenured.
         if (IsInsideNursery(cell) &&
-            !runtimeFromActiveCooperatingThread()->gc.nursery().addedUniqueIdToCell(cell))
+            !runtimeFromMainThread()->gc.nursery().addedUniqueIdToCell(cell))
         {
             uniqueIds().remove(cell);
             return false;
@@ -641,7 +641,7 @@ struct Zone : public JS::shadow::Zone,
     void transferUniqueId(js::gc::Cell* tgt, js::gc::Cell* src) {
         MOZ_ASSERT(src != tgt);
         MOZ_ASSERT(!IsInsideNursery(tgt));
-        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtimeFromActiveCooperatingThread()));
+        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtimeFromMainThread()));
         MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
         MOZ_ASSERT(!uniqueIds().has(tgt));
         uniqueIds().rekeyIfMoved(src, tgt);
@@ -694,7 +694,7 @@ struct Zone : public JS::shadow::Zone,
             reportAllocationOverflow();
             return nullptr;
         }
-        JSRuntime* rt = runtimeFromActiveCooperatingThread();
+        JSRuntime* rt = runtimeFromMainThread();
         p = static_cast<T*>(rt->onOutOfMemoryCanGC(js::AllocFunction::Calloc, bytes));
         if (!p)
             return nullptr;

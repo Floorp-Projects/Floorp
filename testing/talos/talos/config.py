@@ -193,8 +193,6 @@ DEFAULTS = dict(
         'browser.snippets.enabled': False,
         'browser.snippets.syncPromo.enabled': False,
         'toolkit.telemetry.server': 'https://127.0.0.1/telemetry-dummy/',
-        'experiments.manifest.uri':
-            'https://127.0.0.1/experiments-dummy/manifest',
         'network.http.speculative-parallel-limit': 0,
         'lightweightThemes.selectedThemeID': "",
         'devtools.chrome.enabled': False,
