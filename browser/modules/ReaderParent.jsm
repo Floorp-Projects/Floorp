@@ -22,16 +22,21 @@ var ReaderParent = {
     switch (message.name) {
       case "Reader:FaviconRequest": {
         if (message.target.messageManager) {
-          let faviconUrl = PlacesUtils.promiseFaviconLinkUrl(message.data.url);
-          faviconUrl.then(function onResolution(favicon) {
-            message.target.messageManager.sendAsyncMessage("Reader:FaviconReturn", {
-              url: message.data.url,
-              faviconUrl: favicon.pathQueryRef.replace(/^favicon:/, "")
-            });
-          },
-          function onRejection(reason) {
-            Cu.reportError("Error requesting favicon URL for about:reader content: " + reason);
-          }).catch(Cu.reportError);
+          try {
+            let preferredWidth = message.data.preferredWidth || 0;
+            let uri = Services.io.newURI(message.data.url);
+            PlacesUtils.favicons.getFaviconURLForPage(uri, iconUri => {
+              if (iconUri) {
+                iconUri = PlacesUtils.favicons.getFaviconLinkForIcon(iconUri);
+                message.target.messageManager.sendAsyncMessage("Reader:FaviconReturn", {
+                  url: message.data.url,
+                  faviconUrl: iconUri.pathQueryRef.replace(/^favicon:/, "")
+                });
+              }
+            }, preferredWidth);
+          } catch (ex) {
+            Cu.reportError("Error requesting favicon URL for about:reader content: " + ex);
+          }
         }
         break;
       }
