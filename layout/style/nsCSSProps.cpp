@@ -41,11 +41,9 @@ typedef nsCSSProps::KTableEntry KTableEntry;
   static_assert(!((flags_) & CSS_PROPERTY_ENABLED_MASK) || pref_[0], \
                 "Internal-only property '" #name_ "' should be wrapped in " \
                 "#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL");
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 
 #define CSS_PROP(name_, id_, method_, flags_, pref_, ...) \
@@ -53,9 +51,7 @@ typedef nsCSSProps::KTableEntry KTableEntry;
                 ((flags_) & CSS_PROPERTY_ENABLED_IN_UA_SHEETS), \
                 "Property '" #name_ "' is enabled in chrome, so it should " \
                 "also be enabled in UA sheets");
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 
 // required to make the symbol external, so that TestCSSPropertyLookup.cpp can link with it
@@ -64,9 +60,7 @@ extern const char* const kCSSRawProperties[];
 // define an array of all CSS properties
 const char* const kCSSRawProperties[eCSSProperty_COUNT_with_aliases] = {
 #define CSS_PROP(name_, ...) #name_,
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) #name_,
 #include "nsCSSPropList.h"
@@ -189,9 +183,7 @@ nsCSSProps::AddRefTable(void)
 
       #define CSS_PROP(name_, id_, method_, flags_, pref_, ...) \
         OBSERVE_PROP(pref_, eCSSProperty_##id_)
-      #define CSS_PROP_LIST_INCLUDE_LOGICAL
       #include "nsCSSPropList.h"
-      #undef CSS_PROP_LIST_INCLUDE_LOGICAL
       #undef CSS_PROP
 
       #define  CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
@@ -242,11 +234,9 @@ nsCSSProps::AddRefTable(void)
       static nsCSSPropertyID nonInternalProperties[] = {
         #define CSS_PROP(name_, id_, ...)           eCSSProperty_##id_,
         #define CSS_PROP_SHORTHAND(name_, id_, ...) eCSSProperty_##id_,
-        #define CSS_PROP_LIST_INCLUDE_LOGICAL
         #define CSS_PROP_LIST_EXCLUDE_INTERNAL
         #include "nsCSSPropList.h"
         #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
-        #undef CSS_PROP_LIST_INCLUDE_LOGICAL
         #undef CSS_PROP_SHORTHAND
         #undef CSS_PROP
       };
@@ -2228,9 +2218,7 @@ nsCSSProps::ValueToKeyword(int32_t aValue, const KTableEntry aTable[])
 nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
   #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
                    kwtable_, ...) kwtable_,
-  #define CSS_PROP_LIST_INCLUDE_LOGICAL
   #include "nsCSSPropList.h"
-  #undef CSS_PROP_LIST_INCLUDE_LOGICAL
   #undef CSS_PROP
 };
 
@@ -2277,17 +2265,13 @@ nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
 #define CSS_PROP(name_, id_, method_, flags_, pref_, \
                  parsevariant_, kwtable_, animtype_) \
   animtype_,
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 };
 
 const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #define CSS_PROP(name_, id_, method_, flags_, ...) flags_,
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) flags_,
 #include "nsCSSPropList.h"
@@ -2296,11 +2280,9 @@ const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 
 static const nsCSSPropertyID gAllSubpropTable[] = {
 #define CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 #define CSS_PROP(name_, id_, ...) eCSSProperty_##id_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
   eCSSProperty_UNKNOWN
 };
@@ -2754,9 +2736,7 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
 
   #define CSS_PROP(name_, id_, method_, flags_, ...) \
     IS_ENABLED_BY_DEFAULT(flags_),
-  #define CSS_PROP_LIST_INCLUDE_LOGICAL
   #include "nsCSSPropList.h"
-  #undef CSS_PROP_LIST_INCLUDE_LOGICAL
   #undef CSS_PROP
 
   #define  CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
@@ -2777,12 +2757,10 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
 /* static */ const UseCounter
 nsCSSProps::gPropertyUseCounter[eCSSProperty_COUNT_no_shorthands] = {
   #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) privatename_
-  #define CSS_PROP_LIST_INCLUDE_LOGICAL
   #define CSS_PROP(name_, id_, method_, ...) \
     static_cast<UseCounter>(USE_COUNTER_FOR_CSS_PROPERTY_##method_),
   #include "nsCSSPropList.h"
   #undef CSS_PROP
-  #undef CSS_PROP_LIST_INCLUDE_LOGICAL
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
 };
 
@@ -2790,9 +2768,7 @@ const uint32_t
 nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
 #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, ...) \
   parsevariant_,
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 };
 

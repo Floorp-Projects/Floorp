@@ -21,11 +21,9 @@ const PropertyInfo gLonghandProperties[] = {
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
 #define CSS_PROP(name_, id_, method_, flags_, pref_, ...) \
     { #name_, #method_, pref_ },
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 
 #include "nsCSSPropList.h"
 
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 
@@ -40,11 +38,9 @@ const char* gLonghandPropertiesWithDOMProp[] = {
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
 #define CSS_PROP(name_, ...) #name_,
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 
 #include "nsCSSPropList.h"
 
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 

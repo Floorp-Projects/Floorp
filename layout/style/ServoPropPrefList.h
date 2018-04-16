@@ -13,17 +13,13 @@ namespace mozilla {
     const bool SERVO_PREF_ENABLED_##id_ = !(sizeof(pref_) == 1);
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_)  \
     const bool SERVO_PREF_ENABLED_##id_ = !(sizeof(pref_) == 1);
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 #undef CSS_PROP_SHORTHAND
 
 #define CSS_PROP_ALIAS(aliasname_, aliasid_, id_, method_, pref_)  \
     const bool SERVO_PREF_ENABLED_##aliasid_ = !(sizeof(pref_) == 1);
-#define CSS_PROP_ALIAS_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropAliasList.h"
-#undef CSS_PROP_ALIAS_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP_ALIAS
 
 }
