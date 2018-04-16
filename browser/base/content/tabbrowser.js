@@ -97,6 +97,8 @@ window._gBrowser = {
 
   _contentWaitingCount: 0,
 
+  _tabLayerCache: [],
+
   tabAnimationsInProgress: 0,
 
   _XUL_NS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
@@ -2754,6 +2756,13 @@ window._gBrowser = {
       if (aTab.closing || (!timedOut && !permitUnload)) {
         return false;
       }
+    }
+
+    // this._switcher would normally cover removing a tab from this
+    // cache, but we may not have one at this time.
+    let tabCacheIndex = this._tabLayerCache.indexOf(aTab);
+    if (tabCacheIndex != -1) {
+      this._tabLayerCache.splice(tabCacheIndex, 1);
     }
 
     this._blurTab(aTab);
