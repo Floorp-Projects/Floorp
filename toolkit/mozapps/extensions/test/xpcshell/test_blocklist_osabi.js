@@ -286,16 +286,17 @@ add_task(async function test_1() {
   await loadBlocklist("test_bug393285.xml");
 
   let addons = await getAddons(ADDON_IDS);
-  function isBlocklisted(addon, appVer, toolkitVer) {
-    return Services.blocklist.getAddonBlocklistState(addon, appVer, toolkitVer) != Services.blocklist.STATE_NOT_BLOCKED;
+  async function isBlocklisted(addon, appVer, toolkitVer) {
+    let state = await Services.blocklist.getAddonBlocklistState(addon, appVer, toolkitVer);
+    return state != Services.blocklist.STATE_NOT_BLOCKED;
   }
   for (let [id, options] of Object.entries(ADDONS)) {
     for (let blocklisted of options.blocklisted || []) {
-      ok(isBlocklisted(addons.get(id), ...blocklisted),
+      ok(await isBlocklisted(addons.get(id), ...blocklisted),
          `Add-on ${id} should be blocklisted in app/platform version ${blocklisted}`);
     }
     for (let notBlocklisted of options.notBlocklisted || []) {
-      ok(!isBlocklisted(addons.get(id), ...notBlocklisted),
+      ok(!(await isBlocklisted(addons.get(id), ...notBlocklisted)),
          `Add-on ${id} should not be blocklisted in app/platform version ${notBlocklisted}`);
     }
   }

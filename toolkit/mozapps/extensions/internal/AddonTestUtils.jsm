@@ -17,6 +17,7 @@ ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
@@ -136,13 +137,13 @@ class MockBlocklist {
     this._reLazifyService();
   }
 
-  getAddonBlocklistState(addon, appVersion, toolkitVersion) {
+  async getAddonBlocklistState(addon, appVersion, toolkitVersion) {
+    await new Promise(r => setTimeout(r, 0));
     return this.addons.get(addon.id) || Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   }
 
   async getAddonBlocklistEntry(addon, appVersion, toolkitVersion) {
-    await Promise.resolve();
-    let state = this.getAddonBlocklistState(addon, appVersion, toolkitVersion);
+    let state = await this.getAddonBlocklistState(addon, appVersion, toolkitVersion);
     if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
       return {
         state,
