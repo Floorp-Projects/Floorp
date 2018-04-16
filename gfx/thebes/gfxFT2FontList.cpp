@@ -371,7 +371,7 @@ FTFaceGetWeight(FT_Face aFace)
 
     NS_ASSERTION(result >= 100 && result <= 900, "Invalid weight in font!");
 
-    return FontWeight(result);
+    return FontWeight(int(result));
 }
 
 // Used to create the font entry for installed faces on the device,

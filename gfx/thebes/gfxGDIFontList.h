@@ -115,7 +115,7 @@ public:
     nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr) override;
 
     void FillLogFont(LOGFONTW *aLogFont,
-                     FontWeight aWeight,
+                     LONG aWeight,
                      gfxFloat aSize);
 
     static gfxWindowsFontType DetermineFontType(const NEWTEXTMETRICW& metrics, 

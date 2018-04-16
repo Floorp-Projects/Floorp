@@ -121,7 +121,7 @@ gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
       mLoader(nullptr),
       mFontSet(aFontSet)
 {
-    MOZ_ASSERT(aWeight != FontWeight(0),
+    MOZ_ASSERT(aWeight.ToFloat() != 0.0f,
                "aWeight must not be 0; use FontWeight::Normal() instead");
     mIsUserFontContainer = true;
     mSrcList = aFontFaceSrcList;
@@ -1006,7 +1006,7 @@ gfxUserFontSet::FindExistingUserFontEntry(
                                gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay)
 {
-    MOZ_ASSERT(aWeight != FontWeight(0),
+    MOZ_ASSERT(aWeight.ToFloat() != 0.0f,
                "aWeight must not be 0; use FontWeight::Normal() instead");
 
     nsTArray<RefPtr<gfxFontEntry>>& fontList = aFamily->GetFontList();
