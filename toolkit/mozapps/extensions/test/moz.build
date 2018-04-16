@@ -9,10 +9,6 @@ DIRS += ['browser']
 BROWSER_CHROME_MANIFESTS += ['xpinstall/browser.ini']
 MOCHITEST_MANIFESTS += ['mochitest/mochitest.ini']
 
-TESTING_JS_MODULES += [
-    'AddonManagerTesting.jsm',
-]
-
 XPCSHELL_TESTS_MANIFESTS += [
     'xpcshell/xpcshell-unpack.ini',
     'xpcshell/xpcshell.ini',
