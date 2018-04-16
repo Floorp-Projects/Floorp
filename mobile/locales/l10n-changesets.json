@@ -243,7 +243,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "92d79806b5ca"
+        "revision": "046df78889bb"
     }, 
     "hu": {
         "platforms": [
@@ -351,7 +351,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "5c61724cef95"
+        "revision": "998c2f01926a"
     }, 
     "my": {
         "platforms": [
@@ -477,7 +477,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "c8a1ae0637fe"
+        "revision": "44add728826c"
     }, 
     "th": {
         "platforms": [
