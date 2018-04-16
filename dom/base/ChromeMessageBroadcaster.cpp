@@ -7,33 +7,10 @@
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
 #include "AccessCheck.h"
 #include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 
 namespace mozilla {
 namespace dom {
-
-ChromeMessageBroadcaster::ChromeMessageBroadcaster(ChromeMessageBroadcaster* aParentManager,
-                                                   MessageManagerFlags aFlags)
-  : MessageListenerManager(nullptr, aParentManager,
-                           aFlags |
-                           MessageManagerFlags::MM_BROADCASTER |
-                           MessageManagerFlags::MM_CHROME)
-{
-  if (mIsProcessManager) {
-    mozilla::HoldJSObjects(this);
-  }
-  if (aParentManager) {
-    aParentManager->AddChildManager(this);
-  }
-}
-
-ChromeMessageBroadcaster::~ChromeMessageBroadcaster()
-{
-  if (mIsProcessManager) {
-    mozilla::DropJSObjects(this);
-  }
-}
 
 JSObject*
 ChromeMessageBroadcaster::WrapObject(JSContext* aCx,
@@ -42,29 +19,6 @@ ChromeMessageBroadcaster::WrapObject(JSContext* aCx,
   MOZ_ASSERT(nsContentUtils::IsSystemCaller(aCx));
 
   return ChromeMessageBroadcasterBinding::Wrap(aCx, this, aGivenProto);
-}
-
-void
-ChromeMessageBroadcaster::ReleaseCachedProcesses()
-{
-  ContentParent::ReleaseCachedProcesses();
-}
-
-void
-ChromeMessageBroadcaster::AddChildManager(MessageListenerManager* aManager)
-{
-  mChildManagers.AppendElement(aManager);
-
-  RefPtr<nsFrameMessageManager> kungfuDeathGrip = this;
-  RefPtr<nsFrameMessageManager> kungfuDeathGrip2 = aManager;
-
-  LoadPendingScripts(this, aManager);
-}
-
-void
-ChromeMessageBroadcaster::RemoveChildManager(MessageListenerManager* aManager)
-{
-  mChildManagers.RemoveElement(aManager);
 }
 
 } // namespace dom
