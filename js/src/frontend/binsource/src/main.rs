@@ -100,9 +100,6 @@ struct GlobalRules {
     /// Documentation for the `BinField` class enum.
     hpp_tokens_field_doc: Option<String>,
 
-    /// Documentation for the `BinVariant` class enum.
-    hpp_tokens_variants_doc: Option<String>,
-
     /// Per-node rules.
     per_node: HashMap<NodeName, NodeRules>,
 }
@@ -118,7 +115,6 @@ impl GlobalRules {
         let mut hpp_tokens_footer = None;
         let mut hpp_tokens_kind_doc = None;
         let mut hpp_tokens_field_doc = None;
-        let mut hpp_tokens_variants_doc = None;
         let mut per_node = HashMap::new();
 
         for (node_key, node_entries) in rules.iter() {
@@ -144,8 +140,6 @@ impl GlobalRules {
                         .unwrap_or_else(|_| panic!("Rule hpp.tokens.kind.doc must be a string"));
                     update_rule(&mut hpp_tokens_field_doc, &node_entries["tokens"]["field"]["doc"])
                         .unwrap_or_else(|_| panic!("Rule hpp.tokens.field.doc must be a string"));
-                    update_rule(&mut hpp_tokens_variants_doc, &node_entries["tokens"]["variants"]["doc"])
-                        .unwrap_or_else(|_| panic!("Rule hpp.tokens.variants.doc must be a string"));
                     continue;
                 }
                 _ => {}
@@ -251,7 +245,6 @@ impl GlobalRules {
             hpp_tokens_footer,
             hpp_tokens_kind_doc,
             hpp_tokens_field_doc,
-            hpp_tokens_variants_doc,
             per_node,
         }
     }
@@ -259,7 +252,7 @@ impl GlobalRules {
         let mut rules = self.per_node.get(name)
             .cloned()
             .unwrap_or_default();
-        if let Some(ref parent) = rules.inherits {
+        if let Some(ref parent) = rule.inherits {
             let NodeRules {
                 inherits: _,
                 type_ok,
@@ -323,11 +316,6 @@ struct CPPExporter {
 
     /// All parsers of options.
     option_parsers_to_generate: Vec<OptionParserData>,
-
-    /// A mapping from symbol (e.g. `+`, `-`, `instanceof`, ...) to the
-    /// name of the symbol as part of `enum class BinVariant`
-    /// (e.g. `UnaryOperatorDelete`).
-    variants_by_symbol: HashMap<String, String>,
 }
 
 impl CPPExporter {
@@ -349,7 +337,7 @@ impl CPPExporter {
                     elements: content_node_name
                 });
             } else if let TypeSpec::Array { ref contents, ref supports_empty } = *typedef.spec() {
-                let content_name = TypeName::type_(&**contents);
+                let content_name = TypeName::type_(&**contents); // FIXME: Wait, do we have an implementation of type names in two places?
                 let content_node_name = syntax.get_node_name(&content_name)
                     .unwrap_or_else(|| panic!("While generating an array parser, could not find node name {}", content_name))
                     .clone();
@@ -363,37 +351,11 @@ impl CPPExporter {
         list_parsers_to_generate.sort_by(|a, b| str::cmp(a.name.to_str(), b.name.to_str()));
         option_parsers_to_generate.sort_by(|a, b| str::cmp(a.name.to_str(), b.name.to_str()));
 
-        // Prepare variant_by_symbol, which will let us lookup the BinVariant name of
-        // a symbol. Since some symbols can appear in several enums (e.g. "+"
-        // is both a unary and a binary operator), we need to collect all the
-        // string enums that contain each symbol and come up with a unique name
-        // (note that there is no guarantee of unicity – if collisions show up,
-        // we may need to tweak the name generation algorithm).
-        let mut enum_by_string : HashMap<String, Vec<NodeName>> = HashMap::new();
-        for (name, enum_) in syntax.string_enums_by_name().iter() {
-            for string in enum_.strings().iter() {
-                let vec = enum_by_string.entry(string.clone())
-                    .or_insert_with(|| vec![]);
-                vec.push(name.clone());
-            }
-        }
-        let variants_by_symbol = enum_by_string.drain()
-            .map(|(string, names)| {
-                let expanded = format!("{names}{symbol}",
-                    names = names.iter()
-                        .map(NodeName::to_str)
-                        .format("Or"),
-                    symbol = string.to_cpp_enum_case());
-                (string, expanded)
-            })
-            .collect();
-
         CPPExporter {
             syntax,
             rules,
             list_parsers_to_generate,
             option_parsers_to_generate,
-            variants_by_symbol,
         }
     }
 
@@ -423,7 +385,7 @@ impl CPPExporter {
     fn get_method_definition_start(&self, name: &NodeName, default_type_ok: &str, prefix: &str, args: &str) -> String {
         let type_ok = self.get_type_ok(name, default_type_ok);
         let kind = name.to_class_cases();
-        format!("template<typename Tok> JS::Result<{type_ok}>\nBinASTParser<Tok>::parse{prefix}{kind}({args})",
+        format!("JS::Result<{type_ok}>\nBinASTParser::parse{prefix}{kind}({args})",
             prefix = prefix,
             type_ok = type_ok,
             kind = kind,
@@ -444,11 +406,10 @@ impl CPPExporter {
         let node_names = self.syntax.node_names()
             .keys()
             .sorted();
-        buffer.push_str(&format!("\n#define FOR_EACH_BIN_KIND(F) \\\n{nodes}\n",
+        buffer.push_str(&format!("\n#define FOR_EACH_BIN_KIND(F) \\\n{nodes}\n\n",
             nodes = node_names.iter()
-                .map(|name| format!("    F({enum_name}, \"{spec_name}\")",
-                    enum_name = name.to_cpp_enum_case(),
-                    spec_name = name))
+                .map(|name| format!("    F({name}, {name})",
+                    name = name))
                 .format(" \\\n")));
         buffer.push_str("
 enum class BinKind {
@@ -458,7 +419,7 @@ enum class BinKind {
 };
 ");
 
-        buffer.push_str(&format!("\n// The number of distinct values of BinKind.\nconst size_t BINKIND_LIMIT = {};\n\n\n", self.syntax.node_names().len()));
+        buffer.push_str(&format!("\n// The number of distinct values of BinKind.\nconst size_t BINKIND_LIMIT = {};\n", self.syntax.node_names().len()));
         buffer.push_str("\n\n");
         if self.rules.hpp_tokens_field_doc.is_some() {
             buffer.push_str(&self.rules.hpp_tokens_field_doc.reindent(""));
@@ -467,9 +428,9 @@ enum class BinKind {
         let field_names = self.syntax.field_names()
             .keys()
             .sorted();
-        buffer.push_str(&format!("\n#define FOR_EACH_BIN_FIELD(F) \\\n{nodes}\n",
+        buffer.push_str(&format!("\n#define FOR_EACH_BIN_FIELD(F) \\\n{nodes}\n\n",
             nodes = field_names.iter()
-                .map(|name| format!("    F({enum_name}, \"{spec_name}\")",
+                .map(|name| format!("    F({enum_name}, {spec_name})",
                     spec_name = name,
                     enum_name = name.to_cpp_enum_case()))
                 .format(" \\\n")));
@@ -480,34 +441,7 @@ enum class BinField {
 #undef EMIT_ENUM
 };
 ");
-        buffer.push_str(&format!("\n// The number of distinct values of BinField.\nconst size_t BINFIELD_LIMIT = {};\n\n\n", self.syntax.field_names().len()));
-
-        if self.rules.hpp_tokens_variants_doc.is_some() {
-            buffer.push_str(&self.rules.hpp_tokens_variants_doc.reindent(""));
-        }
-        let enum_variants : Vec<_> = self.variants_by_symbol
-            .iter()
-            .sorted_by(|&(ref symbol_1, ref name_1), &(ref symbol_2, ref name_2)| {
-                Ord::cmp(name_1, name_2)
-                    .then_with(|| Ord::cmp(symbol_1, symbol_2))
-            });
-
-        buffer.push_str(&format!("\n#define FOR_EACH_BIN_VARIANT(F) \\\n{nodes}\n",
-            nodes = enum_variants.into_iter()
-                .map(|(symbol, name)| format!("    F({variant_name}, \"{spec_name}\")",
-                    spec_name = symbol,
-                    variant_name = name))
-                .format(" \\\n")));
-
-        buffer.push_str("
-enum class BinVariant {
-#define EMIT_ENUM(name, _) name,
-    FOR_EACH_BIN_VARIANT(EMIT_ENUM)
-#undef EMIT_ENUM
-};
-");
-        buffer.push_str(&format!("\n// The number of distinct values of BinVariant.\nconst size_t BINVARIANT_LIMIT = {};\n\n\n",
-            self.variants_by_symbol.len()));
+        buffer.push_str(&format!("\n// The number of distinct values of BinField.\nconst size_t BINFIELD_LIMIT = {};\n", self.syntax.field_names().len()));
 
         buffer.push_str(&self.rules.hpp_tokens_footer.reindent(""));
         buffer.push_str("\n");
@@ -586,7 +520,7 @@ enum class BinVariant {
             .iter()
             .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()));
         for (kind, _) in string_enums_by_name {
-            let type_ok = format!("typename BinASTParser<Tok>::{kind}", kind = kind.to_class_cases());
+            let type_ok = format!("BinASTParser::{kind}", kind = kind.to_class_cases());
             let rendered = self.get_method_signature(kind, &type_ok, "", "");
             buffer.push_str(&rendered.reindent(""));
             buffer.push_str("\n");
@@ -672,11 +606,11 @@ impl CPPExporter {
     AutoTaggedTuple guard(*tokenizer_);
     const auto start = tokenizer_->offset();
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
 
-    BINJS_MOZ_TRY_DECL(result, parseSum{kind}(start, kind, fields));
+    MOZ_TRY_DECL(result, parseSum{kind}(start, kind, fields));
 
-    MOZ_TRY(guard.done());
+    TRY(guard.done());
     return result;
 }}\n",
                 bnf = rendered_bnf,
@@ -688,11 +622,10 @@ impl CPPExporter {
         let mut buffer_cases = String::new();
         for node in nodes {
             buffer_cases.push_str(&format!("
-      case BinKind::{variant_name}:
-        MOZ_TRY_VAR(result, parseInterface{class_name}(start, kind, fields));
+      case BinKind::{kind}:
+        MOZ_TRY_VAR(result, parseInterface{kind}(start, kind, fields));
         break;",
-                class_name = node.to_class_cases(),
-                variant_name = node.to_cpp_enum_case()));
+                kind = node.to_class_cases()));
         }
         buffer.push_str(&format!("\n{first_line}
 {{
@@ -758,15 +691,15 @@ impl CPPExporter {
     AutoList guard(*tokenizer_);
 
     const auto start = tokenizer_->offset();
-    MOZ_TRY(tokenizer_->enterList(length, guard));{empty_check}
+    TRY(tokenizer_->enterList(length, guard));{empty_check}
 {init}
 
     for (uint32_t i = 0; i < length; ++i) {{
-        BINJS_MOZ_TRY_DECL(item, parse{inner}());
+        MOZ_TRY_DECL(item, parse{inner}());
 {append}
     }}
 
-    MOZ_TRY(guard.done());
+    TRY(guard.done());
     return result;
 }}\n",
             first_line = first_line,
@@ -833,7 +766,7 @@ impl CPPExporter {
     BinFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
     {type_ok} result;
     if (kind == BinKind::{null}) {{
         result = {default_value};
@@ -841,14 +774,14 @@ impl CPPExporter {
         const auto start = tokenizer_->offset();
         MOZ_TRY_VAR(result, parseInterface{contents}(start, kind, fields));
     }}
-    MOZ_TRY(guard.done());
+    TRY(guard.done());
 
     return result;
 }}
 
 ",
                     first_line = self.get_method_definition_start(&parser.name, "ParseNode*", "", ""),
-                    null = self.syntax.get_null_name().to_cpp_enum_case(),
+                    null = self.syntax.get_null_name().to_str(),
                     contents = parser.elements.to_class_cases(),
                     type_ok = type_ok,
                     default_value = default_value,
@@ -863,15 +796,15 @@ impl CPPExporter {
     BinFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
     {type_ok} result;
-    if (kind == BinKind::{null}) {{
+    if (kind == BinKind::_Null) {{
         result = {default_value};
     }} else {{
         const auto start = tokenizer_->offset();
         MOZ_TRY_VAR(result, parseSum{contents}(start, kind, fields));
     }}
-    MOZ_TRY(guard.done());
+    TRY(guard.done());
 
     return result;
 }}
@@ -881,36 +814,31 @@ impl CPPExporter {
                             contents = parser.elements.to_class_cases(),
                             type_ok = type_ok,
                             default_value = default_value,
-                            null = self.syntax.get_null_name().to_cpp_enum_case(),
                         ));
                     }
                     &TypeSpec::String => {
                         let build_result = rules_for_this_node.init.reindent("    ");
-                        let first_line = self.get_method_definition_start(&parser.name, "ParseNode*", "", "");
-                        if build_result.len() == 0 {
-                            buffer.push_str(&format!("{first_line}
-{{
-    return raiseError(\"FIXME: Not implemented yet ({kind})\");
-}}
 
-",
-                                first_line = first_line,
-                                kind = parser.name.to_str()));
-                        } else {
-                            buffer.push_str(&format!("{first_line}
+                        buffer.push_str(&format!("{first_line}
 {{
-    BINJS_MOZ_TRY_DECL(result, tokenizer_->readMaybeAtom());
+    RootedAtom string(cx_);
+    MOZ_TRY(readMaybeString(&string));
 
 {build}
 
-    return result;
+    {return_}
 }}
 
 ",
-                                first_line = first_line,
-                                build = build_result,
-                            ));
-                        }
+                            first_line = self.get_method_definition_start(&parser.name, "ParseNode*", "", ""),
+                            build = build_result,
+                            return_ = if build_result.len() == 0 {
+                                format!("return raiseError(\"FIXME: Not implemented yet ({kind})\");\n",
+                                    kind = parser.name.to_str())
+                            } else {
+                                "return result;".to_string()
+                            }
+                        ));
                     }
                     _else => unimplemented!("{:?}", _else)
                 }
@@ -944,11 +872,11 @@ impl CPPExporter {
     BinFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
     const auto start = tokenizer_->offset();
 
-    BINJS_MOZ_TRY_DECL(result, parseInterface{kind}(start, kind, fields));
-    MOZ_TRY(guard.done());
+    MOZ_TRY_DECL(result, parseInterface{kind}(start, kind, fields));
+    TRY(guard.done());
 
     return result;
 }}
@@ -980,28 +908,19 @@ impl CPPExporter {
                 Some(IsNullable { is_nullable: false, content: Primitive::Number }) => {
                     if needs_block {
                         (Some(format!("double {var_name};", var_name = var_name)),
-                            Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readDouble());", var_name = var_name)))
+                            Some(format!("MOZ_TRY_VAR({var_name}, readNumber());", var_name = var_name)))
                     } else {
                         (None,
-                            Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readDouble());", var_name = var_name)))
+                            Some(format!("MOZ_TRY_DECL({var_name}, readNumber());", var_name = var_name)))
                     }
                 }
                 Some(IsNullable { is_nullable: false, content: Primitive::Boolean }) => {
                     if needs_block {
                         (Some(format!("bool {var_name};", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readBool());", var_name = var_name)))
+                        Some(format!("MOZ_TRY_VAR({var_name}, readBool());", var_name = var_name)))
                     } else {
                         (None,
-                        Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readBool());", var_name = var_name)))
-                    }
-                }
-                Some(IsNullable { is_nullable: false, content: Primitive::Offset }) => {
-                    if needs_block {
-                        (Some(format!("uint32_t {var_name};", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readOffset());", var_name = var_name)))
-                    } else {
-                        (None,
-                        Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readOffset());", var_name = var_name)))
+                        Some(format!("MOZ_TRY_DECL({var_name}, readBool());", var_name = var_name)))
                     }
                 }
                 Some(IsNullable { content: Primitive::Void, .. }) => {
@@ -1011,7 +930,7 @@ impl CPPExporter {
                 }
                 Some(IsNullable { is_nullable: false, content: Primitive::String }) => {
                     (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readAtom());", var_name = var_name)))
+                        Some(format!("MOZ_TRY(readString(&{var_name}));", var_name = var_name)))
                 }
                 Some(IsNullable { content: Primitive::Interface(ref interface), ..})
                     if &self.get_type_ok(interface.name(), "?") == "Ok" =>
@@ -1034,7 +953,7 @@ impl CPPExporter {
                         ))
                     } else {
                         (None,
-                            Some(format!("BINJS_MOZ_TRY_DECL({var_name}, parse{typename}());",
+                            Some(format!("MOZ_TRY_DECL({var_name}, parse{typename}());",
                             var_name = var_name,
                             typename = typename)))
                     }
@@ -1112,9 +1031,9 @@ impl CPPExporter {
             ));
         } else {
             let check_fields = if number_of_fields == 0 {
-                format!("MOZ_TRY(tokenizer_->checkFields0(kind, fields));")
+                format!("MOZ_TRY(checkFields0(kind, fields));")
             } else {
-                format!("MOZ_TRY(tokenizer_->checkFields(kind, fields, {fields_type_list}));",
+                format!("MOZ_TRY(checkFields(kind, fields, {fields_type_list}));",
                     fields_type_list = fields_type_list)
             };
             buffer.push_str(&format!("{first_line}
@@ -1124,8 +1043,7 @@ impl CPPExporter {
 
     {check_fields}
 {pre}{fields_implem}
-{post}
-    return result;
+{post}return result;
 }}
 
 ",
@@ -1133,7 +1051,7 @@ impl CPPExporter {
                 fields_implem = fields_implem,
                 pre = init,
                 post = build_result,
-                kind = name.to_cpp_enum_case(),
+                kind = kind,
                 first_line = first_line,
             ));
         }
@@ -1179,21 +1097,18 @@ impl CPPExporter {
                 .iter()
                 .sorted_by(|a, b| str::cmp(a.0.to_str(), b.0.to_str()));
             for (kind, enum_) in string_enums_by_name {
-                let convert = format!("    switch (variant) {{
-{cases}
-      default:
-        return raiseInvalidVariant(\"{kind}\", variant);
-    }}",
+                let convert = format!("{cases}
+
+    return raiseInvalidEnum(\"{kind}\", chars);",
                     kind = kind,
                     cases = enum_.strings()
                         .iter()
-                        .map(|symbol| {
-                            format!("    case BinVariant::{binvariant_variant}:
-        return {kind}::{specialized_variant};",
+                        .map(|string| {
+                            format!("    if (chars == \"{string}\")
+        return {kind}::{variant};",
+                                string = string,
                                 kind = kind,
-                                specialized_variant = symbol.to_cpp_enum_case(),
-                                binvariant_variant  = self.variants_by_symbol.get(symbol)
-                                    .unwrap()
+                                variant = string.to_cpp_enum_case()
                             )
                         })
                         .format("\n")
@@ -1208,7 +1123,9 @@ impl CPPExporter {
                 );
                 buffer.push_str(&format!("{rendered_doc}{first_line}
 {{
-    BINJS_MOZ_TRY_DECL(variant, tokenizer_->readVariant());
+    // Unoptimized implementation.
+    Chars chars(cx_);
+    MOZ_TRY(readString(chars));
 
 {convert}
 }}
@@ -1216,7 +1133,7 @@ impl CPPExporter {
 ",
                     rendered_doc = rendered_doc,
                     convert = convert,
-                    first_line = self.get_method_definition_start(kind, &format!("typename BinASTParser<Tok>::{kind}", kind = kind), "", "")
+                    first_line = self.get_method_definition_start(kind, &format!("BinASTParser::{kind}", kind = kind), "", "")
                 ));
             }
         }
@@ -1299,8 +1216,8 @@ fn main() {
 
     println!("...verifying grammar");
     let mut builder = Importer::import(&ast);
-    let fake_root = builder.node_name("@@ROOT@@"); // Unused
-    let null = builder.node_name(""); // Used
+    let fake_root = builder.node_name("");
+    let null = builder.node_name("_Null");
     builder.add_interface(&null)
         .unwrap();
     let syntax = builder.into_spec(SpecOptions {

@@ -13,7 +13,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Vector.h"
 
-#include "frontend/BinSource-macros.h"
 #include "frontend/BinTokenReaderTester.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/Parser.h"
@@ -69,23 +68,68 @@
 //
 // They should be treated lazily (whenever we open a subscope), like bindings.
 
+// Evaluate an expression, checking that the result is not 0.
+//
+// Throw `cx->alreadyReportedError()` if it returns 0/nullptr.
+#define TRY(EXPR) \
+    do { \
+        if (!EXPR) \
+            return cx_->alreadyReportedError(); \
+    } while(false)
+
+
+#define TRY_VAR(VAR, EXPR) \
+    do { \
+        VAR = EXPR; \
+        if (!VAR) \
+            return cx_->alreadyReportedError(); \
+    } while (false)
+
+#define TRY_DECL(VAR, EXPR) \
+    auto VAR = EXPR; \
+    if (!VAR) \
+       return cx_->alreadyReportedError();
+
+#define TRY_EMPL(VAR, EXPR) \
+    do { \
+        auto _tryEmplResult = EXPR; \
+        if (!_tryEmplResult) \
+            return cx_->alreadyReportedError(); \
+        VAR.emplace(_tryEmplResult.unwrap()); \
+    } while (false)
+
+#define MOZ_TRY_EMPLACE(VAR, EXPR) \
+    do { \
+        auto _tryEmplResult = EXPR; \
+        if (_tryEmplResult.isErr()) \
+            return ::mozilla::Err(_tryEmplResult.unwrapErr()); \
+        VAR.emplace(_tryEmplResult.unwrap()); \
+    } while (false)
+
 using namespace mozilla;
 
 namespace js {
 namespace frontend {
 
+using AutoList = BinTokenReaderTester::AutoList;
+using AutoTaggedTuple = BinTokenReaderTester::AutoTaggedTuple;
+using AutoTuple = BinTokenReaderTester::AutoTuple;
+using BinFields = BinTokenReaderTester::BinFields;
+using Chars = BinTokenReaderTester::Chars;
+using NameBag = GCHashSet<JSString*>;
+using Names = GCVector<JSString*, 8>;
 using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 
 // ------------- Toplevel constructions
 
-template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parse(const Vector<uint8_t>& data)
+JS::Result<ParseNode*>
+BinASTParser::parse(const Vector<uint8_t>& data)
 {
     return parse(data.begin(), data.length());
 }
 
-template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parse(const uint8_t* start, const size_t length)
+JS::Result<ParseNode*>
+BinASTParser::parse(const uint8_t* start, const size_t length)
 {
     auto result = parseAux(start, length);
     poison(); // Make sure that the parser is never used again accidentally.
@@ -93,8 +137,8 @@ BinASTParser<Tok>::parse(const uint8_t* start, const size_t length)
 }
 
 
-template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::parseAux(const uint8_t* start, const size_t length)
+JS::Result<ParseNode*>
+BinASTParser::parseAux(const uint8_t* start, const size_t length)
 {
     tokenizer_.emplace(cx_, start, length);
 
@@ -109,8 +153,6 @@ BinASTParser<Tok>::parseAux(const uint8_t* start, const size_t length)
     if (!varScope.init(&globalpc))
         return cx_->alreadyReportedError();
 
-    MOZ_TRY(tokenizer_->readHeader());
-
     ParseNode* result(nullptr);
     MOZ_TRY_VAR(result, parseProgram());
 
@@ -122,12 +164,12 @@ BinASTParser<Tok>::parseAux(const uint8_t* start, const size_t length)
     return result; // Magic conversion to Ok.
 }
 
-template<typename Tok> JS::Result<FunctionBox*>
-BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind functionAsyncKind)
+JS::Result<FunctionBox*>
+BinASTParser::buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind functionAsyncKind)
 {
     // Allocate the function before walking down the tree.
     RootedFunction fun(cx_);
-    BINJS_TRY_VAR(fun, NewFunctionWithProto(cx_,
+    TRY_VAR(fun, NewFunctionWithProto(cx_,
             /* native = */ nullptr,
             /* nargs placeholder = */ 0,
             JSFunction::INTERPRETED_NORMAL,
@@ -137,7 +179,7 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKi
             gc::AllocKind::FUNCTION,
             TenuredObject
     ));
-    BINJS_TRY_DECL(funbox, alloc_.new_<FunctionBox>(cx_,
+    TRY_DECL(funbox, alloc_.new_<FunctionBox>(cx_,
         traceListHead_,
         fun,
         /* toStringStart = */ 0,
@@ -154,8 +196,8 @@ BinASTParser<Tok>::buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKi
     return funbox;
 }
 
-template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNode* name,
+JS::Result<ParseNode*>
+BinASTParser::buildFunction(const size_t start, const BinKind kind, ParseNode* name,
                             ParseNode* params, ParseNode* body, FunctionBox* funbox)
 {
     TokenPos pos = tokenizer_->pos(start);
@@ -171,7 +213,7 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
     // ParseNode represents the body as concatenated after the params.
     params->appendWithoutOrderAssumption(body);
 
-    BINJS_TRY_DECL(result, kind == BinKind::FunctionDeclaration
+    TRY_DECL(result, kind == BinKind::FunctionDeclaration
                      ? factory_.newFunctionStatement(pos)
                      : factory_.newFunctionExpression(pos));
 
@@ -187,12 +229,12 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
         ParseContext::Scope& funScope = parseContext_->functionScope();
         ParseContext::Scope::AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotThis);
         MOZ_ASSERT(!p);
-        BINJS_TRY(funScope.addDeclaredName(parseContext_, p, dotThis, DeclarationKind::Var,
+        TRY(funScope.addDeclaredName(parseContext_, p, dotThis, DeclarationKind::Var,
                                      DeclaredNameInfo::npos));
         funbox->setHasThisBinding();
     }
 
-    BINJS_TRY_DECL(bindings,
+    TRY_DECL(bindings,
              NewFunctionScopeData(cx_, parseContext_->functionScope(),
                                   /* hasParameterExprs = */ false, alloc_, parseContext_));
 
@@ -201,48 +243,48 @@ BinASTParser<Tok>::buildFunction(const size_t start, const BinKind kind, ParseNo
     return result;
 }
 
-template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::parseAndUpdateCapturedNames()
+JS::Result<Ok>
+BinASTParser::parseAndUpdateCapturedNames()
 {
     // For the moment, we do not attempt to validate the list of captured names.
     AutoList guard(*tokenizer_);
     uint32_t length = 0;
 
-    MOZ_TRY(tokenizer_->enterList(length, guard));
+    TRY(tokenizer_->enterList(length, guard));
     RootedAtom name(cx_);
     for (uint32_t i = 0; i < length; ++i) {
         name = nullptr;
 
-        MOZ_TRY_VAR(name, tokenizer_->readAtom());
+        MOZ_TRY(readString(&name));
     }
-    MOZ_TRY(guard.done());
+    TRY(guard.done());
     return Ok();
 }
 
-template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::parseAndUpdateScopeNames(ParseContext::Scope& scope, DeclarationKind kind)
+JS::Result<Ok>
+BinASTParser::parseAndUpdateScopeNames(ParseContext::Scope& scope, DeclarationKind kind)
 {
     AutoList guard(*tokenizer_);
     uint32_t length = 0;
 
-    MOZ_TRY(tokenizer_->enterList(length, guard));
+    TRY(tokenizer_->enterList(length, guard));
     RootedAtom name(cx_);
     for (uint32_t i = 0; i < length; ++i) {
         name = nullptr;
 
-        MOZ_TRY_VAR(name, tokenizer_->readAtom());
+        MOZ_TRY(readString(&name));
         auto ptr = scope.lookupDeclaredNameForAdd(name);
         if (ptr)
             return raiseError("Variable redeclaration");
 
-        BINJS_TRY(scope.addDeclaredName(parseContext_, ptr, name.get(), kind, tokenizer_->offset()));
+        TRY(scope.addDeclaredName(parseContext_, ptr, name.get(), kind, tokenizer_->offset()));
     }
-    MOZ_TRY(guard.done());
+    TRY(guard.done());
     return Ok();
 }
 
-template<typename Tok> JS::Result<Ok>
-BinASTParser<Tok>::checkBinding(JSAtom* name)
+JS::Result<Ok>
+BinASTParser::checkBinding(JSAtom* name)
 {
     // Check that the variable appears in the corresponding scope.
     ParseContext::Scope& scope =
@@ -257,17 +299,17 @@ BinASTParser<Tok>::checkBinding(JSAtom* name)
     return Ok();
 }
 
-template<typename Tok> JS::Result<ParseNode*>
-BinASTParser<Tok>::appendDirectivesToBody(ParseNode* body, ParseNode* directives)
+JS::Result<ParseNode*>
+BinASTParser::appendDirectivesToBody(ParseNode* body, ParseNode* directives)
 {
     ParseNode* result = body;
     if (directives && directives->pn_count >= 1) {
         MOZ_ASSERT(directives->isArity(PN_LIST));
 
         // Convert directive list to a list of strings.
-        BINJS_TRY_DECL(prefix, factory_.newStatementList(directives->pn_head->pn_pos));
+        TRY_DECL(prefix, factory_.newStatementList(directives->pn_head->pn_pos));
         for (ParseNode* iter = directives->pn_head; iter != nullptr; iter = iter->pn_next) {
-            BINJS_TRY_DECL(statement, factory_.newExprStatement(iter, iter->pn_pos.end));
+            TRY_DECL(statement, factory_.newExprStatement(iter, iter->pn_pos.end));
             prefix->appendWithoutOrderAssumption(statement);
         }
 
@@ -289,88 +331,177 @@ BinASTParser<Tok>::appendDirectivesToBody(ParseNode* body, ParseNode* directives
     return result;
 }
 
-template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseMissingVariableInAssertedScope(JSAtom* name)
+JS::Result<Ok>
+BinASTParser::readString(MutableHandleAtom out)
+{
+    MOZ_ASSERT(!out);
+
+    Maybe<Chars> string;
+    MOZ_TRY(readMaybeString(string));
+    MOZ_ASSERT(string);
+
+    RootedAtom atom(cx_);
+    TRY_VAR(atom, AtomizeUTF8Chars(cx_, (const char*)string->begin(), string->length()));
+
+    out.set(Move(atom));
+    return Ok();
+}
+
+JS::Result<Ok>
+BinASTParser::readMaybeString(MutableHandleAtom out)
+{
+    MOZ_ASSERT(!out);
+
+    Maybe<Chars> string;
+    MOZ_TRY(readMaybeString(string));
+    if (!string) {
+        return Ok();
+    }
+
+    RootedAtom atom(cx_);
+    TRY_VAR(atom, AtomizeUTF8Chars(cx_, (const char*)string->begin(), string->length()));
+
+    out.set(Move(atom));
+    return Ok();
+}
+
+
+JS::Result<Ok>
+BinASTParser::readString(Chars& result)
+{
+    TRY(tokenizer_->readChars(result));
+    return Ok();
+}
+
+JS::Result<Ok>
+BinASTParser::readMaybeString(Maybe<Chars>& out)
+{
+    MOZ_ASSERT(out.isNothing());
+    TRY(tokenizer_->readMaybeChars(out));
+    return Ok();
+}
+
+JS::Result<double>
+BinASTParser::readNumber()
+{
+    double result;
+    TRY(tokenizer_->readDouble(result));
+
+    return result;
+}
+
+JS::Result<bool>
+BinASTParser::readBool()
+{
+    bool result;
+    TRY(tokenizer_->readBool(result));
+
+    return result;
+}
+
+mozilla::GenericErrorResult<JS::Error&>
+BinASTParser::raiseMissingVariableInAssertedScope(JSAtom* name)
 {
     // For the moment, we don't trust inputs sufficiently to put the name
     // in an error message.
     return raiseError("Missing variable in AssertedScope");
 }
 
-template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseMissingDirectEvalInAssertedScope()
+mozilla::GenericErrorResult<JS::Error&>
+BinASTParser::raiseMissingDirectEvalInAssertedScope()
 {
     return raiseError("Direct call to `eval` was not declared in AssertedScope");
 }
 
-template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseInvalidKind(const char* superKind, const BinKind kind)
+mozilla::GenericErrorResult<JS::Error&>
+BinASTParser::raiseInvalidKind(const char* superKind, const BinKind kind)
 {
     Sprinter out(cx_);
-    BINJS_TRY(out.init());
-    BINJS_TRY(out.printf("In %s, invalid kind %s", superKind, describeBinKind(kind)));
+    TRY(out.init());
+    TRY(out.printf("In %s, invalid kind %s", superKind, describeBinKind(kind)));
     return raiseError(out.string());
 }
 
-template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseInvalidVariant(const char* kind, const BinVariant value)
+mozilla::GenericErrorResult<JS::Error&>
+BinASTParser::raiseInvalidField(const char* kind, const BinField field)
 {
     Sprinter out(cx_);
-    BINJS_TRY(out.init());
-    BINJS_TRY(out.printf("In %s, invalid variant '%s'", kind, describeBinVariant(value)));
+    TRY(out.init());
+    TRY(out.printf("In %s, invalid field '%s'", kind, describeBinField(field)));
+    return raiseError(out.string());
+}
+
+mozilla::GenericErrorResult<JS::Error&>
+BinASTParser::raiseInvalidNumberOfFields(const BinKind kind, const uint32_t expected, const uint32_t got)
+{
+    Sprinter out(cx_);
+    TRY(out.init());
+    TRY(out.printf("In %s, invalid number of fields: expected %u, got %u",
+        describeBinKind(kind), expected, got));
+    return raiseError(out.string());
+}
+
+mozilla::GenericErrorResult<JS::Error&>
+BinASTParser::raiseInvalidEnum(const char* kind, const Chars& value)
+{
+    // We don't trust the actual chars of `value` to be properly formatted anything, so let's not use
+    // them anywhere.
+    return raiseError("Invalid enum");
+}
+
+mozilla::GenericErrorResult<JS::Error&>
+BinASTParser::raiseMissingField(const char* kind, const BinField field)
+{
+    Sprinter out(cx_);
+    TRY(out.init());
+    TRY(out.printf("In %s, missing field '%s'", kind, describeBinField(field)));
 
     return raiseError(out.string());
 }
 
-template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseMissingField(const char* kind, const BinField field)
+mozilla::GenericErrorResult<JS::Error&>
+BinASTParser::raiseEmpty(const char* description)
 {
     Sprinter out(cx_);
-    BINJS_TRY(out.init());
-    BINJS_TRY(out.printf("In %s, missing field '%s'", kind, describeBinField(field)));
+    TRY(out.init());
+    TRY(out.printf("Empty %s", description));
 
     return raiseError(out.string());
 }
 
-template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseEmpty(const char* description)
+mozilla::GenericErrorResult<JS::Error&>
+BinASTParser::raiseOOM()
+{
+    ReportOutOfMemory(cx_);
+    return cx_->alreadyReportedError();
+}
+
+mozilla::GenericErrorResult<JS::Error&>
+BinASTParser::raiseError(BinKind kind, const char* description)
 {
     Sprinter out(cx_);
-    BINJS_TRY(out.init());
-    BINJS_TRY(out.printf("Empty %s", description));
+    TRY(out.init());
+    TRY(out.printf("In %s, ", description));
+    MOZ_ALWAYS_FALSE(tokenizer_->raiseError(out.string()));
 
-    return raiseError(out.string());
+    return cx_->alreadyReportedError();
 }
 
-template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseOOM()
+mozilla::GenericErrorResult<JS::Error&>
+BinASTParser::raiseError(const char* description)
 {
-    return tokenizer_->raiseOOM();
+    MOZ_ALWAYS_FALSE(tokenizer_->raiseError(description));
+    return cx_->alreadyReportedError();
 }
 
-template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseError(BinKind kind, const char* description)
-{
-    Sprinter out(cx_);
-    BINJS_TRY(out.init());
-    BINJS_TRY(out.printf("In %s, ", description));
-    return tokenizer_->raiseError(out.string());
-}
-
-template<typename Tok> mozilla::GenericErrorResult<JS::Error&>
-BinASTParser<Tok>::raiseError(const char* description)
-{
-    return tokenizer_->raiseError(description);
-}
-
-template<typename Tok> void
-BinASTParser<Tok>::poison()
+void
+BinASTParser::poison()
 {
     tokenizer_.reset();
 }
 
-template<typename Tok> void
-BinASTParser<Tok>::reportErrorNoOffsetVA(unsigned errorNumber, va_list args)
+void
+BinASTParser::reportErrorNoOffsetVA(unsigned errorNumber, va_list args)
 {
     ErrorMetadata metadata;
     metadata.filename = getFilename();
@@ -380,7 +511,7 @@ BinASTParser<Tok>::reportErrorNoOffsetVA(unsigned errorNumber, va_list args)
 }
 
 bool
-BinASTParserBase::hasUsedName(HandlePropertyName name)
+BinASTParser::hasUsedName(HandlePropertyName name)
 {
     if (UsedNamePtr p = usedNames_.lookup(name))
         return p->value().isUsedInScript(parseContext_->scriptId());
@@ -391,16 +522,18 @@ BinASTParserBase::hasUsedName(HandlePropertyName name)
 void
 TraceBinParser(JSTracer* trc, AutoGCRooter* parser)
 {
-    static_cast<BinASTParserBase*>(parser)->trace(trc);
+    static_cast<BinASTParser*>(parser)->trace(trc);
 }
-
-
-// Force class instantiation.
-// This ensures that the symbols are built, without having to export all our
-// code (and its baggage of #include and macros) in the header.
-template class BinASTParser<BinTokenReaderMultipart>;
-template class BinASTParser<BinTokenReaderTester>;
 
 } // namespace frontend
 } // namespace js
+
+
+// #undef everything, to avoid collisions with unified builds.
+
+#undef TRY
+#undef TRY_VAR
+#undef TRY_DECL
+#undef TRY_EMPL
+#undef MOZ_TRY_EMPLACE
 
