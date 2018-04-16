@@ -1212,7 +1212,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 #customization-panelHolder {
   flex-direction: column;
   display: flex;
-  min-height: calc(174px + 8em);
+  min-height: calc(174px + 9em);
 }
 
 #customization-panelWrapper {
