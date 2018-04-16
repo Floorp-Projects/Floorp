@@ -63,6 +63,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    '!ServoCSSPropList.h',
     'AnimationCollection.h',
     'BindingStyleRule.h',
     'CachedInheritingStyles.h',
@@ -274,10 +275,28 @@ CONTENT_ACCESSIBLE_FILES += [
     'TopLevelVideoDocument.css',
 ]
 
+GENERATED_FILES += [
+    'ServoCSSPropList.h',
+    'ServoCSSPropList.py',
+]
+
+servo_props = GENERATED_FILES['ServoCSSPropList.h']
+servo_props.script = 'GenerateServoCSSPropList.py:generate_header'
+servo_props.inputs = [
+    '!ServoCSSPropList.py',
+]
+
+servo_props = GENERATED_FILES['ServoCSSPropList.py']
+servo_props.script = 'GenerateServoCSSPropList.py:generate_data'
+servo_props.inputs = [
+    'ServoCSSPropList.mako.py',
+]
+
 if CONFIG['COMPILE_ENVIRONMENT']:
     GENERATED_FILES += [
         'nsCSSPropsGenerated.inc',
     ]
+
     css_props = GENERATED_FILES['nsCSSPropsGenerated.inc']
     css_props.script = 'GenerateCSSPropsGenerated.py:generate'
     css_props.inputs = [
