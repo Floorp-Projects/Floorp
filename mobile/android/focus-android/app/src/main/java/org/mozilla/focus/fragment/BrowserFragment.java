@@ -1093,6 +1093,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     }
 
     private void showSecurityPopUp() {
+        // Don't show Security Popup if the page is loading
+        if (session.getLoading().getValue()) {
+            return;
+        }
         final PopupWindow securityPopup = PopupUtils.INSTANCE.createSecurityPopup(getContext(), session);
         if (securityPopup != null) {
             securityPopup.setOnDismissListener(new PopupWindow.OnDismissListener() {
