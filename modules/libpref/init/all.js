@@ -3196,7 +3196,7 @@ pref("layout.display-list.dump-parent", false);
 
 // Toggle retaining display lists between paints
 #if !defined(ANDROID)
-pref("layout.display-list.retain", true);
+pref("layout.display-list.retain", false);
 #else
 pref("layout.display-list.retain", false);
 #endif
