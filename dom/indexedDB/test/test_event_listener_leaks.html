@@ -1,0 +1,64 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1450358 - Test IDB event listener leak conditions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/events/test/event_leak_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+/* global checkForEventListenerLeaks */
+
+// Manipulate IDB objects in the frame's context.
+// Its important here that we create a listener callback from
+// the DOM objects back to the frame's global in order to
+// exercise the leak condition.
+let count = 0;
+async function useIDB(contentWindow) {
+  count += 1;
+  let db = await new Promise(resolve => {
+    let r = contentWindow.indexedDB.open("idb-leak-test-" + count, 1.0);
+    r.onupgradeneeded = evt => {
+      evt.target.result.createObjectStore("looped");
+    };
+    r.onsuccess = evt => {
+      resolve(evt.target.result);
+    };
+  });
+
+  let tx = db.transaction("looped", "readwrite");
+  let store = tx.objectStore("looped");
+
+  function spin() {
+    contentWindow.spinCount += 1;
+    store.get(0).onsuccess = spin;
+  }
+
+  store.put(0, "purgatory").onsuccess = e => {
+    contentWindow.putCount += 1;
+    spin();
+  };
+}
+
+async function runTest() {
+  try {
+    await checkForEventListenerLeaks("IDB", useIDB);
+  } catch (e) {
+    ok(false, e);
+  } finally {
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+addEventListener("load", runTest, { once: true });
+</script>
+</pre>
+</body>
+</html>
+
