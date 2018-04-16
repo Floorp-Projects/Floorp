@@ -10,7 +10,7 @@
 #include "mozilla/Maybe.h"
 
 #include "frontend/BinToken.h"
-#include "frontend/BinTokenReaderBase.h"
+#include "frontend/TokenStream.h"
 
 #include "js/TypeDecls.h"
 
@@ -49,7 +49,7 @@ using namespace JS;
  * - it does not support any form of look ahead, push back;
  * - it does not support any form of error recovery.
  */
-class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
+class MOZ_STACK_CLASS BinTokenReaderTester
 {
   public:
     // A list of fields, in the order in which they appear in the stream.
@@ -79,11 +79,6 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
      */
     BinTokenReaderTester(JSContext* cx, const Vector<uint8_t>& chars);
 
-    /**
-     * Read the header of the file.
-     */
-    MOZ_MUST_USE JS::Result<Ok> readHeader();
-
     // --- Primitive values.
     //
     // Note that the underlying format allows for a `null` value for primitive
@@ -99,9 +94,12 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
      *
      * @param out Set to `Nothing` if the data specifies that the value is `null`.
      * Otherwise, `Some(true)` or `Some(false)`.
+     *
+     * @return false If a boolean could not be read. In this case, an error
+     * has been raised.
      */
-    MOZ_MUST_USE JS::Result<Maybe<bool>> readMaybeBool();
-    MOZ_MUST_USE JS::Result<bool> readBool();
+    MOZ_MUST_USE bool readMaybeBool(Maybe<bool>& out);
+    MOZ_MUST_USE bool readBool(bool& out);
 
     /**
      * Read a single `number | null` value.
@@ -113,40 +111,22 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
      * @return false If a double could not be read. In this case, an error
      * has been raised.
      */
-    MOZ_MUST_USE JS::Result<Maybe<double>> readMaybeDouble();
-    MOZ_MUST_USE JS::Result<double> readDouble();
+    MOZ_MUST_USE bool readMaybeDouble(Maybe<double>& out);
+    MOZ_MUST_USE bool readDouble(double& out);
 
     /**
      * Read a single `string | null` value.
      *
-     * Fails if that string is not valid UTF-8.
+     * @param out Set to `Nothing` if the data specifies that the value is `null`.
+     * Otherwise, `Some(x)`, where `x` is a `string`.
      *
-     * The returned `JSAtom*` may be `nullptr`.
-     */
-    MOZ_MUST_USE JS::Result<JSAtom*> readMaybeAtom();
-
-    /**
-     * Read a single `string` value.
+     * WARNING: At this stage, the `string` encoding has NOT been validated.
      *
-     * Fails if that string is not valid UTF-8 or in case of `null` string.
-     *
-     * The returned `JSAtom*` is never `nullptr`.
+     * @return false If a string could not be read. In this case, an error
+     * has been raised.
      */
-    MOZ_MUST_USE JS::Result<JSAtom*> readAtom();
-
-
-    /**
-     * Read a single `string | null` value.
-     *
-     * There is no guarantee that the string is valid UTF-8.
-     */
-    MOZ_MUST_USE JS::Result<Ok> readChars(Chars&);
-
-    /**
-     * Read a single `BinVariant | null` value.
-     */
-    MOZ_MUST_USE JS::Result<Maybe<BinVariant>> readMaybeVariant();
-    MOZ_MUST_USE JS::Result<BinVariant> readVariant();
+    MOZ_MUST_USE bool readMaybeChars(Maybe<Chars>& out);
+    MOZ_MUST_USE bool readChars(Chars& out);
 
     // --- Composite values.
     //
@@ -170,7 +150,7 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
      *
      * @return out If the header of the list is invalid.
      */
-    MOZ_MUST_USE JS::Result<Ok> enterList(uint32_t& length, AutoList& guard);
+    MOZ_MUST_USE bool enterList(uint32_t& length, AutoList& guard);
 
     /**
      * Start reading a tagged tuple.
@@ -187,7 +167,7 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
      *
      * @return out If the header of the tuple is invalid.
      */
-    MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(BinKind& tag, BinTokenReaderTester::BinFields& fields, AutoTaggedTuple& guard);
+    MOZ_MUST_USE bool enterTaggedTuple(BinKind& tag, BinTokenReaderTester::BinFields& fields, AutoTaggedTuple& guard);
 
     /**
      * Start reading an untagged tuple.
@@ -202,12 +182,98 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
      *
      * @return out If the header of the tuple is invalid.
      */
-    MOZ_MUST_USE JS::Result<Ok> enterUntaggedTuple(AutoTuple& guard);
+    MOZ_MUST_USE bool enterUntaggedTuple(AutoTuple& guard);
+
+    /**
+     * Return the position of the latest token.
+     */
+    TokenPos pos();
+    TokenPos pos(size_t startOffset);
+    size_t offset() const;
+
+    /**
+     * Raise an error.
+     *
+     * Once `raiseError` has been called, the tokenizer is poisoned.
+     */
+    MOZ_MUST_USE bool raiseError(const char* description);
+
+     /**
+      * Poison this tokenizer.
+      */
+    void poison();
+
+  private:
+    /**
+     * Read a single byte.
+     */
+    MOZ_MUST_USE bool readByte(uint8_t* byte);
+
+    /**
+     * Read several bytes.
+     *
+     * If there is not enough data, or if the tokenizer has previously been
+     * poisoned, return `false` and report an exception.
+     */
+    MOZ_MUST_USE bool readBuf(uint8_t* bytes, uint32_t len);
 
     /**
      * Read a single uint32_t.
      */
-    MOZ_MUST_USE JS::Result<uint32_t> readInternalUint32();
+    MOZ_MUST_USE bool readInternalUint32(uint32_t*);
+
+    /**
+     * Read a sequence of chars, ensuring that they match an expected
+     * sequence of chars.
+     *
+     * @param value The sequence of chars to expect, NUL-terminated. The NUL
+     * is not expected in the stream.
+     */
+     template <size_t N>
+     MOZ_MUST_USE bool readConst(const char (&value)[N]);
+
+     /**
+     * Read a sequence of chars, consuming the bytes only if they match an expected
+     * sequence of chars.
+     *
+     * @param value The sequence of chars to expect, NUL-terminated. The NUL
+     * is not expected in the stream.
+     * @return true if `value` (minus NUL) represents the next few chars in the
+     * internal buffer, false otherwise. If `true`, the chars are consumed,
+     * otherwise there is no side-effect.
+     */
+    template <size_t N>
+    MOZ_MUST_USE bool matchConst(const char (&value)[N]);
+
+    /**
+     * Update the "latest known good" position, which is used during error
+     * reporting.
+     */
+    void updateLatestKnownGood();
+
+  private:
+    JSContext* cx_;
+
+    // `true` if we have encountered an error. Errors are non recoverable.
+    // Attempting to read from a poisoned tokenizer will cause assertion errors.
+    bool poisoned_;
+
+    // The first byte of the buffer. Not owned.
+    const uint8_t* start_;
+
+    // The current position.
+    const uint8_t* current_;
+
+    // The last+1 byte of the buffer.
+    const uint8_t* stop_;
+
+
+    // Latest known good position. Used for error reporting.
+    size_t latestKnownGoodPos_;
+
+    BinTokenReaderTester(const BinTokenReaderTester&) = delete;
+    BinTokenReaderTester(BinTokenReaderTester&&) = delete;
+    BinTokenReaderTester& operator=(BinTokenReaderTester&) = delete;
 
   public:
     // The following classes are used whenever we encounter a tuple/tagged tuple/list
@@ -230,7 +296,7 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
         ~AutoBase();
 
         // Raise an error if we are not in the expected position.
-        MOZ_MUST_USE JS::Result<Ok> checkPosition(const uint8_t* expectedPosition);
+        MOZ_MUST_USE bool checkPosition(const uint8_t* expectedPosition);
 
         friend BinTokenReaderTester;
         void init();
@@ -248,10 +314,12 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
         explicit AutoList(BinTokenReaderTester& reader);
 
         // Check that we have properly read to the end of the list.
-        MOZ_MUST_USE JS::Result<Ok> done();
+        MOZ_MUST_USE bool done();
       protected:
         friend BinTokenReaderTester;
-        void init();
+        void init(const uint8_t* expectedEnd);
+      private:
+        const uint8_t* expectedEnd_;
     };
 
     // Guard class used to ensure that `enterTaggedTuple` is used properly.
@@ -261,7 +329,7 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
         explicit AutoTaggedTuple(BinTokenReaderTester& reader);
 
         // Check that we have properly read to the end of the tuple.
-        MOZ_MUST_USE JS::Result<Ok> done();
+        MOZ_MUST_USE bool done();
     };
 
     // Guard class used to ensure that `readTuple` is used properly.
@@ -271,7 +339,7 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
         explicit AutoTuple(BinTokenReaderTester& reader);
 
         // Check that we have properly read to the end of the tuple.
-        MOZ_MUST_USE JS::Result<Ok> done();
+        MOZ_MUST_USE bool done();
     };
 
     // Compare a `Chars` and a string literal (ONLY a string literal).
@@ -286,31 +354,6 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
           return false;
 
         return true;
-    }
-
-    // Ensure that we are visiting the right fields.
-    template<size_t N>
-    JS::Result<Ok, JS::Error&> checkFields(const BinKind kind, const BinFields& actual,
-                                                  const BinField (&expected)[N])
-    {
-        if (actual.length() != N)
-            return raiseInvalidNumberOfFields(kind, N, actual.length());
-
-        for (size_t i = 0; i < N; ++i) {
-            if (actual[i] != expected[i])
-                return raiseInvalidField(describeBinKind(kind), actual[i]);
-        }
-
-        return Ok();
-    }
-
-    // Special case for N=0, as empty arrays are not permitted in C++
-    JS::Result<Ok, JS::Error&> checkFields0(const BinKind kind, const BinFields& actual)
-    {
-        if (actual.length() != 0)
-            return raiseInvalidNumberOfFields(kind, 0, actual.length());
-
-        return Ok();
     }
 };
 
