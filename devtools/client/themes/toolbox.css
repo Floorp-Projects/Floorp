@@ -127,10 +127,9 @@
   margin: 0 4px;
 }
 
-.devtools-tab > img,
-.tools-chevron-menu > img {
+.devtools-tab > img {
   -moz-context-properties: fill;
-  fill: var(--theme-toolbar-photon-icon-color);
+  fill: var(--theme-toolbar-color);
 }
 
 .devtools-tab.selected > img {
@@ -139,6 +138,11 @@
 
 .devtools-tab.highlighted > img {
   fill: var(--theme-toolbar-highlighted-color);
+}
+
+#devtools-chevron-menu-button::before {
+  -moz-context-properties: fill;
+  fill: var(--theme-toolbar-photon-icon-color);
 }
 
 /* Toolbox controls */
