@@ -141,8 +141,7 @@ row[unsupported="true"] {
 }
 
 #addons-page .view-pane:not([type="theme"]) #getthemes-container,
-#addons-page .view-pane:not([type="plugin"]) #plugindeprecation-notice,
-#addons-page .view-pane:not([type="experiment"]) .experiment-info-container {
+#addons-page .view-pane:not([type="plugin"]) #plugindeprecation-notice {
   display: none;
 }
 
@@ -176,39 +175,6 @@ richlistitem:not([selected]) * {
   display: none;
 }
 
-#experiments-learn-more[disabled="true"] {
-  display: none;
-}
-
-#experiments-change-telemetry[disabled="true"] {
-  display: none;
-}
-
 .view-pane:not(#legacy-view) .addon-control.replacement {
-  display: none;
-}
-
-.view-pane[type="experiment"] .error,
-.view-pane[type="experiment"] .warning,
-.view-pane[type="experiment"] .addon:not([pending="uninstall"]) .pending,
-.view-pane[type="experiment"] .disabled-postfix,
-.view-pane[type="experiment"] .update-postfix,
-.view-pane[type="experiment"] .addon-control.enable,
-.view-pane[type="experiment"] .addon-control.disable,
-#detail-view[type="experiment"] .alert-container,
-#detail-view[type="experiment"] #detail-version,
-#detail-view[type="experiment"] #detail-creator,
-#detail-view[type="experiment"] #detail-enable-btn,
-#detail-view[type="experiment"] #detail-disable-btn {
-  display: none;
-}
-
-.view-pane:not([type="experiment"]) .experiment-container,
-.view-pane:not([type="experiment"]) #detail-experiment-container {
-  display: none;
-}
-
-.addon[type="experiment"][status="installing"] .experiment-time,
-.addon[type="experiment"][status="installing"] .experiment-state {
   display: none;
 }

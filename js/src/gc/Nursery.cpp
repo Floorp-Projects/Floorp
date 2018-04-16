@@ -982,7 +982,7 @@ js::Nursery::freeMallocedBuffers()
     }
 
     if (!started)
-        freeMallocedBuffersTask->runFromActiveCooperatingThread(runtime());
+        freeMallocedBuffersTask->runFromMainThread(runtime());
 
     MOZ_ASSERT(mallocedBuffers.empty());
 }

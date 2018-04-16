@@ -59,17 +59,20 @@ you could add the following line to the lint.whitelist file.
 
 %s: %s"""
 
-def all_filesystem_paths(repo_root):
-    path_filter = PathFilter(repo_root, extras=[".git/*"])
-    for dirpath, dirnames, filenames in os.walk(repo_root):
+def all_filesystem_paths(repo_root, subdir=None):
+    path_filter = PathFilter(repo_root, extras=[".git/"])
+    if subdir:
+        expanded_path = subdir
+    else:
+        expanded_path = repo_root
+    for dirpath, dirnames, filenames in os.walk(expanded_path):
         for filename in filenames:
             path = os.path.relpath(os.path.join(dirpath, filename), repo_root)
             if path_filter(path):
                 yield path
         dirnames[:] = [item for item in dirnames if
                        path_filter(os.path.relpath(os.path.join(dirpath, item) + "/",
-                                                   repo_root))]
-
+                                                   repo_root)+"/")]
 
 def _all_files_equal(paths):
     """
@@ -148,7 +151,7 @@ def check_git_ignore(repo_root, paths):
                 _, _, filter_string = match_filter.split(':')
                 # If the matching filter reported by check-ignore is a special-case exception,
                 # that's fine. Otherwise, it requires a new special-case exception.
-                if filter_string != '!' + path:
+                if filter_string[0] != '!':
                     errors += [("IGNORED PATH", "%s matches an ignore filter in .gitignore - "
                                 "please add a .gitignore exception" % path, path, None)]
         except subprocess.CalledProcessError as e:
@@ -747,14 +750,20 @@ def changed_files(wpt_root):
 
 def lint_paths(kwargs, wpt_root):
     if kwargs.get("paths"):
-        r = os.path.realpath(wpt_root)
-        paths = [os.path.relpath(os.path.realpath(x), r) for x in kwargs["paths"]]
+        paths = []
+        for path in kwargs.get("paths"):
+            if os.path.isdir(path):
+                path_dir = list(all_filesystem_paths(wpt_root, path))
+                paths.extend(path_dir)
+            elif os.path.isfile(path):
+                paths.append(os.path.relpath(os.path.abspath(path), wpt_root))
+
+
     elif kwargs["all"]:
         paths = list(all_filesystem_paths(wpt_root))
     else:
         changed_paths = changed_files(wpt_root)
         force_all = False
-        # If we changed the lint itself ensure that we retest everything
         for path in changed_paths:
             path = path.replace(os.path.sep, "/")
             if path == "lint.whitelist" or path.startswith("tools/lint/"):

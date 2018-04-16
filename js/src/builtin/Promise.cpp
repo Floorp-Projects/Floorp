@@ -3484,7 +3484,7 @@ OffThreadPromiseTask::OffThreadPromiseTask(JSContext* cx, Handle<PromiseObject*>
     promise_(cx, promise),
     registered_(false)
 {
-    MOZ_ASSERT(runtime_ == promise_->zone()->runtimeFromActiveCooperatingThread());
+    MOZ_ASSERT(runtime_ == promise_->zone()->runtimeFromMainThread());
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
     MOZ_ASSERT(cx->runtime()->offThreadPromiseState.ref().initialized());
 }

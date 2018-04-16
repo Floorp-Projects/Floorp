@@ -2326,8 +2326,7 @@ const sourceTypes = exports.sourceTypes = {
   coffee: "coffeescript",
   js: "javascript",
   jsx: "react",
-  ts: "typescript",
-  css: "css"
+  ts: "typescript"
 };
 
 /**
@@ -7073,18 +7072,9 @@ class ManagedTree extends _react.Component {
     if (expanded.has(this.props.getPath(highlightItems[0]))) {
       this.focusItem(highlightItems[0]);
     } else {
-      // Look at folders starting from the top-level and expand all the items
-      // which lie in the path of the item to be highlighted
-      highlightItems.reverse();
-      let index = highlightItems.findIndex(item => !expanded.has(this.props.getPath(item)));
-
-      if (this.props.autoExpandOnHighlight) {
-        while (index < highlightItems.length - 1) {
-          this.setExpanded(highlightItems[index], true, false);
-          index++;
-        }
-      }
-
+      // Look at folders starting from the top-level until finds a
+      // closed folder and highlights this folder
+      const index = highlightItems.reverse().findIndex(item => !expanded.has(this.props.getPath(item)));
       this.focusItem(highlightItems[index]);
     }
   }
@@ -10218,7 +10208,7 @@ var _initialiseProps = function () {
     return _react2.default.createElement(
       "li",
       props,
-      _react2.default.createElement(
+      item.icon && _react2.default.createElement(
         "div",
         null,
         _react2.default.createElement("img", { className: item.icon })
@@ -10599,7 +10589,8 @@ function supportsObject(object, noGrip = false) {
 
 module.exports = {
   rep: wrapRender(StringRep),
-  supportsObject
+  supportsObject,
+  isLongString
 };
 
 /***/ }),
@@ -16994,7 +16985,6 @@ class SourcesTree extends _react.Component {
     const treeProps = {
       autoExpandAll: false,
       autoExpandDepth: expanded ? 0 : 1,
-      autoExpandOnHighlight: true,
       expanded,
       getChildren: item => (0, _sourcesTree.nodeHasChildren)(item) ? item.contents : [],
       getParent: item => parentMap.get(item),
@@ -18654,7 +18644,10 @@ class Popup extends _react.Component {
       setPopupObjectProperties,
       popupObjectProperties
     } = this.props;
-    const root = createNode(null, expression, expression, { value });
+    const root = createNode({
+      name: expression,
+      contents: { value }
+    });
 
     if (!nodeIsPrimitive(root) && value && value.actor && !popupObjectProperties[value.actor]) {
       const onLoadItemProperties = loadItemProperties(root, _firefox.createObjectClient);
@@ -18768,7 +18761,7 @@ class Popup extends _react.Component {
       )
     );
 
-    const roots = [createNode(null, "entries", "entries", { value: immutable.entries })];
+    const roots = [createNode({ name: "entries", contents: { value: immutable.entries } })];
 
     return _react2.default.createElement(
       "div",
@@ -20475,10 +20468,12 @@ const {
   wrapRender
 } = __webpack_require__(1353);
 const { cleanFunctionName } = __webpack_require__(1573);
+const { isLongString } = __webpack_require__(1447);
 const { MODE } = __webpack_require__(1357);
 
 const dom = __webpack_require__(1758);
 const { span } = dom;
+const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
 /**
  * Renders Error objects.
@@ -20518,7 +20513,7 @@ function ErrorRep(props) {
   }
 
   if (preview.stack && props.mode !== MODE.TINY) {
-    content.push("\n", getStacktraceElements(preview));
+    content.push("\n", getStacktraceElements(props, preview));
   }
 
   return span({
@@ -20543,10 +20538,17 @@ function ErrorRep(props) {
  * asdf       (<anonymous>:2:10)
  *            (<anonymous>:11:1)
  */
-function getStacktraceElements(preview) {
+function getStacktraceElements(props, preview) {
   const stack = [];
-  preview.stack.split("\n").forEach((line, index) => {
-    if (!line) {
+  if (!preview.stack) {
+    return stack;
+  }
+
+  const isStacktraceALongString = isLongString(preview.stack);
+  const stackString = isStacktraceALongString ? preview.stack.initial : preview.stack;
+
+  stackString.split("\n").forEach((frame, index) => {
+    if (!frame) {
       // Skip any blank lines
       return;
     }
@@ -20557,7 +20559,7 @@ function getStacktraceElements(preview) {
     // Given the input: "functionName@scriptLocation:2:100"
     // Result:
     // ["functionName@scriptLocation:2:100", "functionName", "scriptLocation:2:100"]
-    const result = line.match(/^(.*)@(.*)$/);
+    const result = frame.match(/^(.*)@(.*)$/);
     if (result && result.length === 3) {
       functionName = result[1];
 
@@ -20571,14 +20573,41 @@ function getStacktraceElements(preview) {
       functionName = "<anonymous>";
     }
 
+    let onLocationClick;
+    // Given the input: "scriptLocation:2:100"
+    // Result:
+    // ["scriptLocation:2:100", "scriptLocation", "2", "100"]
+    const locationParts = location.match(/^(.*):(\d+):(\d+)$/);
+    if (props.onViewSourceInDebugger && location && !IGNORED_SOURCE_URLS.includes(locationParts[1]) && locationParts) {
+      let [, url, line, column] = locationParts;
+      onLocationClick = e => {
+        // Don't trigger ObjectInspector expand/collapse.
+        e.stopPropagation();
+        props.onViewSourceInDebugger({
+          url,
+          line: Number(line),
+          column: Number(column)
+        });
+      };
+    }
+
     stack.push(span({
       key: "fn" + index,
       className: "objectBox-stackTrace-fn"
     }, cleanFunctionName(functionName)), span({
       key: "location" + index,
-      className: "objectBox-stackTrace-location"
-    }, ` (${location})`));
+      className: "objectBox-stackTrace-location",
+      onClick: onLocationClick,
+      title: onLocationClick ? "View source in debugger → " + location : undefined
+    }, location));
   });
+
+  if (isStacktraceALongString) {
+    // Remove the last frame (i.e. 2 last elements in the array, the function name and the
+    // location) which is certainly incomplete.
+    // Can be removed when https://bugzilla.mozilla.org/show_bug.cgi?id=1448833 is fixed.
+    stack.splice(-2);
+  }
 
   return span({
     key: "stack",
@@ -21032,6 +21061,11 @@ const { createElement, createFactory, PureComponent } = __webpack_require__(0);
 const { Provider } = __webpack_require__(3592);
 const ObjectInspector = createFactory(__webpack_require__(3615));
 const createStore = __webpack_require__(3618);
+const Utils = __webpack_require__(1938);
+const {
+  renderRep,
+  shouldRenderRootsInReps
+} = Utils;
 
 class OI extends PureComponent {
 
@@ -21049,7 +21083,13 @@ class OI extends PureComponent {
   }
 }
 
-module.exports = OI;
+module.exports = props => {
+  let { roots } = props;
+  if (shouldRenderRootsInReps(roots)) {
+    return renderRep(roots[0], props);
+  }
+  return new OI(props);
+};
 
 /***/ }),
 
@@ -24247,7 +24287,6 @@ exports.default = Accordion;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.debugBtn = debugBtn;
 
 var _propTypes = __webpack_require__(20);
 
@@ -24276,8 +24315,6 @@ var _actions = __webpack_require__(1354);
 var _actions2 = _interopRequireDefault(_actions);
 
 var _CommandBarButton = __webpack_require__(1764);
-
-var _CommandBarButton2 = _interopRequireDefault(_CommandBarButton);
 
 __webpack_require__(1295);
 
@@ -24340,21 +24377,6 @@ function formatKey(action) {
   return (0, _text.formatKeyShortcut)(key);
 }
 
-function debugBtn(onClick, type, className, tooltip, disabled = false, ariaPressed = false) {
-  return _react2.default.createElement(
-    _CommandBarButton2.default,
-    {
-      className: (0, _classnames2.default)(type, className),
-      disabled: disabled,
-      key: type,
-      onClick: onClick,
-      pressed: ariaPressed,
-      title: tooltip
-    },
-    _react2.default.createElement("img", { className: type })
-  );
-}
-
 class CommandBar extends _react.Component {
   componentWillUnmount() {
     const shortcuts = this.context.shortcuts;
@@ -24396,7 +24418,7 @@ class CommandBar extends _react.Component {
       return;
     }
 
-    return [debugBtn(this.props.stepOver, "stepOver", className, L10N.getFormatStr("stepOverTooltip", formatKey("stepOver")), isDisabled), debugBtn(this.props.stepIn, "stepIn", className, L10N.getFormatStr("stepInTooltip", formatKey("stepIn")), isDisabled), debugBtn(this.props.stepOut, "stepOut", className, L10N.getFormatStr("stepOutTooltip", formatKey("stepOut")), isDisabled)];
+    return [(0, _CommandBarButton.debugBtn)(this.props.stepOver, "stepOver", className, L10N.getFormatStr("stepOverTooltip", formatKey("stepOver")), isDisabled), (0, _CommandBarButton.debugBtn)(this.props.stepIn, "stepIn", className, L10N.getFormatStr("stepInTooltip", formatKey("stepIn")), isDisabled), (0, _CommandBarButton.debugBtn)(this.props.stepOut, "stepOut", className, L10N.getFormatStr("stepOutTooltip", formatKey("stepOut")), isDisabled)];
   }
 
   resume() {
@@ -24412,7 +24434,7 @@ class CommandBar extends _react.Component {
     }
 
     if (isPaused) {
-      return debugBtn(() => this.resume(), "resume", "active", L10N.getFormatStr("resumeButtonTooltip", formatKey("resume")));
+      return (0, _CommandBarButton.debugBtn)(() => this.resume(), "resume", "active", L10N.getFormatStr("resumeButtonTooltip", formatKey("resume")));
     }
 
     if (_prefs.features.removeCommandBarOptions && !this.props.canRewind) {
@@ -24420,10 +24442,10 @@ class CommandBar extends _react.Component {
     }
 
     if (isWaitingOnBreak) {
-      return debugBtn(null, "pause", "disabled", L10N.getStr("pausePendingButtonTooltip"), true);
+      return (0, _CommandBarButton.debugBtn)(null, "pause", "disabled", L10N.getStr("pausePendingButtonTooltip"), true);
     }
 
-    return debugBtn(breakOnNext, "pause", "active", L10N.getFormatStr("pauseButtonTooltip", formatKey("pause")));
+    return (0, _CommandBarButton.debugBtn)(breakOnNext, "pause", "active", L10N.getFormatStr("pauseButtonTooltip", formatKey("pause")));
   }
 
   /*
@@ -24445,14 +24467,14 @@ class CommandBar extends _react.Component {
     }
 
     if (!shouldPauseOnExceptions && !shouldIgnoreCaughtExceptions) {
-      return debugBtn(() => pauseOnExceptions(true, true), "pause-exceptions", "enabled", L10N.getStr("ignoreExceptions"), false, false);
+      return (0, _CommandBarButton.debugBtn)(() => pauseOnExceptions(true, true), "pause-exceptions", "enabled", L10N.getStr("ignoreExceptions"), false, false);
     }
 
     if (shouldPauseOnExceptions && shouldIgnoreCaughtExceptions) {
-      return debugBtn(() => pauseOnExceptions(true, false), "pause-exceptions", "uncaught enabled", L10N.getStr("pauseOnUncaughtExceptions"), false, true);
+      return (0, _CommandBarButton.debugBtn)(() => pauseOnExceptions(true, false), "pause-exceptions", "uncaught enabled", L10N.getStr("pauseOnUncaughtExceptions"), false, true);
     }
 
-    return debugBtn(() => pauseOnExceptions(false, false), "pause-exceptions", "all enabled", L10N.getStr("pauseOnExceptions"), false, true);
+    return (0, _CommandBarButton.debugBtn)(() => pauseOnExceptions(false, false), "pause-exceptions", "all enabled", L10N.getStr("pauseOnExceptions"), false, true);
   }
 
   renderTimeTravelButtons() {
@@ -24464,7 +24486,7 @@ class CommandBar extends _react.Component {
 
     const isDisabled = !isPaused;
 
-    return [debugBtn(this.props.rewind, "rewind", "active", "Rewind Execution"), debugBtn(() => this.props.resume, "resume", "active", L10N.getFormatStr("resumeButtonTooltip", formatKey("resume"))), _react2.default.createElement("div", { className: "divider" }), debugBtn(this.props.reverseStepOver, "reverseStepOver", "active", "Reverse step over"), debugBtn(this.props.stepOver, "stepOver", "active", L10N.getFormatStr("stepOverTooltip", formatKey("stepOver")), isDisabled), _react2.default.createElement("div", { className: "divider" }), debugBtn(this.props.stepOut, "stepOut", "active", L10N.getFormatStr("stepOutTooltip", formatKey("stepOut")), isDisabled), debugBtn(this.props.stepIn, "stepIn", "active", L10N.getFormatStr("stepInTooltip", formatKey("stepIn")), isDisabled)];
+    return [(0, _CommandBarButton.debugBtn)(this.props.rewind, "rewind", "active", "Rewind Execution"), (0, _CommandBarButton.debugBtn)(() => this.props.resume, "resume", "active", L10N.getFormatStr("resumeButtonTooltip", formatKey("resume"))), _react2.default.createElement("div", { className: "divider" }), (0, _CommandBarButton.debugBtn)(this.props.reverseStepOver, "reverseStepOver", "active", "Reverse step over"), (0, _CommandBarButton.debugBtn)(this.props.stepOver, "stepOver", "active", L10N.getFormatStr("stepOverTooltip", formatKey("stepOver")), isDisabled), _react2.default.createElement("div", { className: "divider" }), (0, _CommandBarButton.debugBtn)(this.props.stepOut, "stepOut", "active", L10N.getFormatStr("stepOutTooltip", formatKey("stepOut")), isDisabled), (0, _CommandBarButton.debugBtn)(this.props.stepIn, "stepIn", "active", L10N.getFormatStr("stepInTooltip", formatKey("stepIn")), isDisabled)];
   }
 
   replayPreviousButton() {
@@ -24477,7 +24499,7 @@ class CommandBar extends _react.Component {
 
     const enabled = historyPosition === 0;
     const activeClass = enabled ? "replay-inactive" : "";
-    return debugBtn(() => this.setHistory(-1), `replay-previous ${activeClass}`, "active", L10N.getStr("replayPrevious"), enabled);
+    return (0, _CommandBarButton.debugBtn)(() => this.setHistory(-1), `replay-previous ${activeClass}`, "active", L10N.getStr("replayPrevious"), enabled);
   }
 
   replayNextButton() {
@@ -24490,7 +24512,7 @@ class CommandBar extends _react.Component {
 
     const enabled = historyPosition + 1 === historyLength;
     const activeClass = enabled ? "replay-inactive" : "";
-    return debugBtn(() => this.setHistory(1), `replay-next ${activeClass}`, "active", L10N.getStr("replayNext"), enabled);
+    return (0, _CommandBarButton.debugBtn)(() => this.setHistory(1), `replay-next ${activeClass}`, "active", L10N.getStr("replayNext"), enabled);
   }
 
   renderStepPosition() {
@@ -24582,7 +24604,7 @@ var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _CommandBar = __webpack_require__(1608);
+var _CommandBarButton = __webpack_require__(1764);
 
 __webpack_require__(1295);
 
@@ -24594,7 +24616,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 class UtilsBar extends _react.Component {
   renderUtilButtons() {
-    return [(0, _CommandBar.debugBtn)(this.props.toggleShortcutsModal, "shortcuts", "active", L10N.getStr("shortcuts.buttonName"), false)];
+    return [(0, _CommandBarButton.debugBtn)(this.props.toggleShortcutsModal, "shortcuts", "active", L10N.getStr("shortcuts.buttonName"), false)];
   }
 
   render() {
@@ -26277,7 +26299,7 @@ function buildGeneratedBindingList(scopes, generatedAstScopes, thisBinding) {
   // Sort so we can binary-search.
   return generatedBindings.sort((a, b) => {
     const aStart = a.loc.start;
-    const bStart = a.loc.start;
+    const bStart = b.loc.start;
 
     if (aStart.line === bStart.line) {
       return (0, _locColumn.locColumn)(aStart) - (0, _locColumn.locColumn)(bStart);
@@ -29237,6 +29259,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+exports.debugBtn = debugBtn;
+
 var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -29252,6 +29276,21 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; } /* This Source Code Form is subject to the terms of the Mozilla Public
                                                                                                                                                                                                                               * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                                                                                                                                                                                               * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function debugBtn(onClick, type, className, tooltip, disabled = false, ariaPressed = false) {
+  return _react2.default.createElement(
+    CommandBarButton,
+    {
+      className: (0, _classnames2.default)(type, className),
+      disabled: disabled,
+      key: type,
+      onClick: onClick,
+      pressed: ariaPressed,
+      title: tooltip
+    },
+    _react2.default.createElement("img", { className: type })
+  );
+}
 
 const CommandBarButton = props => {
   const { children, className, pressed = false } = props,
@@ -32547,13 +32586,44 @@ module.exports = ReactPropTypesSecret;
 const client = __webpack_require__(1939);
 const loadProperties = __webpack_require__(2017);
 const node = __webpack_require__(1940);
+const { nodeIsError, nodeIsPrimitive } = node;
 const selection = __webpack_require__(3616);
+
+const { MODE } = __webpack_require__(1357);
+const {
+  REPS: {
+    Rep,
+    Grip
+  }
+} = __webpack_require__(1372);
+
+
+function shouldRenderRootsInReps(roots) {
+  if (roots.length > 1) {
+    return false;
+  }
+
+  const root = roots[0];
+  const name = root && root.name;
+  return (name === null || typeof name === "undefined") && (nodeIsPrimitive(root) || nodeIsError(root));
+}
+
+function renderRep(item, props) {
+  return Rep({
+    ...props,
+    object: node.getValue(item),
+    mode: props.mode || MODE.TINY,
+    defaultRep: Grip
+  });
+}
 
 module.exports = {
   client,
   loadProperties,
   node,
-  selection
+  renderRep,
+  selection,
+  shouldRenderRootsInReps
 };
 
 /***/ }),
@@ -32650,11 +32720,12 @@ const ArrayRep = __webpack_require__(1448);
 const GripArrayRep = __webpack_require__(1450);
 const GripMap = __webpack_require__(1584);
 const GripMapEntryRep = __webpack_require__(1451);
+const ErrorRep = __webpack_require__(1580);
 
 const MAX_NUMERICAL_PROPERTIES = 100;
 
 const NODE_TYPES = {
-  BUCKET: Symbol("[n…n]"),
+  BUCKET: Symbol("[n…m]"),
   DEFAULT_PROPERTIES: Symbol("<default properties>"),
   ENTRIES: Symbol("<entries>"),
   GET: Symbol("<get>"),
@@ -32676,8 +32747,6 @@ let WINDOW_PROPERTIES = {};
 if (typeof window === "object") {
   WINDOW_PROPERTIES = Object.getOwnPropertyNames(window);
 }
-
-const SAFE_PATH_PREFIX = "##-";
 
 function getType(item) {
   return item.type;
@@ -32820,6 +32889,10 @@ function nodeIsBlock(item) {
   return getType(item) === NODE_TYPES.BLOCK;
 }
 
+function nodeIsError(item) {
+  return ErrorRep.supportsObject(getValue(item));
+}
+
 function nodeHasAccessors(item) {
   return !!getNodeGetter(item) || !!getNodeSetter(item);
 }
@@ -32869,15 +32942,30 @@ function makeNodesForPromiseProperties(item) {
   const properties = [];
 
   if (state) {
-    properties.push(createNode(item, "<state>", `${item.path}/${SAFE_PATH_PREFIX}state`, { value: state }, NODE_TYPES.PROMISE_STATE));
+    properties.push(createNode({
+      parent: item,
+      name: "<state>",
+      contents: { value: state },
+      type: NODE_TYPES.PROMISE_STATE
+    }));
   }
 
   if (reason) {
-    properties.push(createNode(item, "<reason>", `${item.path}/${SAFE_PATH_PREFIX}reason`, { value: reason }, NODE_TYPES.PROMISE_REASON));
+    properties.push(createNode({
+      parent: item,
+      name: "<reason>",
+      contents: { value: reason },
+      type: NODE_TYPES.PROMISE_REASON
+    }));
   }
 
   if (value) {
-    properties.push(createNode(item, "<value>", `${item.path}/${SAFE_PATH_PREFIX}value`, { value: value }, NODE_TYPES.PROMISE_VALUE));
+    properties.push(createNode({
+      parent: item,
+      name: "<value>",
+      contents: { value: value },
+      type: NODE_TYPES.PROMISE_VALUE
+    }));
   }
 
   return properties;
@@ -32889,31 +32977,58 @@ function makeNodesForProxyProperties(item) {
     proxyTarget
   } = getValue(item);
 
-  return [createNode(item, "<target>", `${item.path}/${SAFE_PATH_PREFIX}target`, { value: proxyTarget }, NODE_TYPES.PROXY_TARGET), createNode(item, "<handler>", `${item.path}/${SAFE_PATH_PREFIX}handler`, { value: proxyHandler }, NODE_TYPES.PROXY_HANDLER)];
+  return [createNode({
+    parent: item,
+    name: "<target>",
+    contents: { value: proxyTarget },
+    type: NODE_TYPES.PROXY_TARGET
+  }), createNode({
+    parent: item,
+    name: "<handler>",
+    contents: { value: proxyHandler },
+    type: NODE_TYPES.PROXY_HANDLER
+  })];
 }
 
 function makeNodesForEntries(item) {
-  const { path } = item;
   const nodeName = "<entries>";
-  const entriesPath = `${path}/${SAFE_PATH_PREFIX}entries`;
+  const entriesPath = "<entries>";
 
   if (nodeHasAllEntriesInPreview(item)) {
     let entriesNodes = [];
     const { preview } = getValue(item);
     if (preview.entries) {
       entriesNodes = preview.entries.map(([key, value], index) => {
-        return createNode(item, index, `${entriesPath}/${index}`, {
-          value: GripMapEntryRep.createGripMapEntry(key, value)
+        return createNode({
+          parent: item,
+          name: index,
+          path: `${entriesPath}/${index}`,
+          contents: { value: GripMapEntryRep.createGripMapEntry(key, value) }
         });
       });
     } else if (preview.items) {
       entriesNodes = preview.items.map((value, index) => {
-        return createNode(item, index, `${entriesPath}/${index}`, { value });
+        return createNode({
+          parent: item,
+          name: index,
+          path: `${entriesPath}/${index}`,
+          contents: { value }
+        });
       });
     }
-    return createNode(item, nodeName, entriesPath, entriesNodes, NODE_TYPES.ENTRIES);
+    return createNode({
+      parent: item,
+      name: nodeName,
+      contents: entriesNodes,
+      type: NODE_TYPES.ENTRIES
+    });
   }
-  return createNode(item, nodeName, entriesPath, null, NODE_TYPES.ENTRIES);
+  return createNode({
+    parent: item,
+    name: nodeName,
+    contents: null,
+    type: NODE_TYPES.ENTRIES
+  });
 }
 
 function makeNodesForMapEntry(item) {
@@ -32923,9 +33038,18 @@ function makeNodesForMapEntry(item) {
   }
 
   const { key, value } = nodeValue.preview;
-  const path = item.path;
 
-  return [createNode(item, "<key>", `${path}/##key`, { value: key }, NODE_TYPES.MAP_ENTRY_KEY), createNode(item, "<value>", `${path}/##value`, { value }, NODE_TYPES.MAP_ENTRY_VALUE)];
+  return [createNode({
+    parent: item,
+    name: "<key>",
+    contents: { value: key },
+    type: NODE_TYPES.MAP_ENTRY_KEY
+  }), createNode({
+    parent: item,
+    name: "<value>",
+    contents: { value },
+    type: NODE_TYPES.MAP_ENTRY_VALUE
+  })];
 }
 
 function getNodeGetter(item) {
@@ -32941,12 +33065,22 @@ function makeNodesForAccessors(item) {
 
   const getter = getNodeGetter(item);
   if (getter && getter.type !== "undefined") {
-    accessors.push(createNode(item, "<get>", `${item.path}/${SAFE_PATH_PREFIX}get`, { value: getter }, NODE_TYPES.GET));
+    accessors.push(createNode({
+      parent: item,
+      name: "<get>",
+      contents: { value: getter },
+      type: NODE_TYPES.GET
+    }));
   }
 
   const setter = getNodeSetter(item);
   if (setter && setter.type !== "undefined") {
-    accessors.push(createNode(item, "<set>", `${item.path}/${SAFE_PATH_PREFIX}set`, { value: setter }, NODE_TYPES.SET));
+    accessors.push(createNode({
+      parent: item,
+      name: "<set>",
+      contents: { value: setter },
+      type: NODE_TYPES.SET
+    }));
   }
 
   return accessors;
@@ -32967,7 +33101,6 @@ function sortProperties(properties) {
 }
 
 function makeNumericalBuckets(parent) {
-  const parentPath = parent.path;
   const numProperties = getNumericalPropertiesCount(parent);
 
   // We want to have at most a hundred slices.
@@ -32981,20 +33114,23 @@ function makeNumericalBuckets(parent) {
     const startIndex = nodeIsBucket(parent) ? parent.meta.startIndex : 0;
     const minIndex = startIndex + minKey;
     const maxIndex = startIndex + maxKey;
-    const bucketKey = `${SAFE_PATH_PREFIX}bucket_${minIndex}-${maxIndex}`;
     const bucketName = `[${minIndex}…${maxIndex}]`;
 
-    buckets.push(createNode(parent, bucketName, `${parentPath}/${bucketKey}`, null, NODE_TYPES.BUCKET, {
-      startIndex: minIndex,
-      endIndex: maxIndex
+    buckets.push(createNode({
+      parent,
+      name: bucketName,
+      contents: null,
+      type: NODE_TYPES.BUCKET,
+      meta: {
+        startIndex: minIndex,
+        endIndex: maxIndex
+      }
     }));
   }
   return buckets;
 }
 
 function makeDefaultPropsBucket(propertiesNames, parent, ownProperties) {
-  const parentPath = parent.path;
-
   const userPropertiesNames = [];
   const defaultProperties = [];
 
@@ -33009,17 +33145,30 @@ function makeDefaultPropsBucket(propertiesNames, parent, ownProperties) {
   let nodes = makeNodesForOwnProps(userPropertiesNames, parent, ownProperties);
 
   if (defaultProperties.length > 0) {
-    const defaultPropertiesNode = createNode(parent, "<default properties>", `${parentPath}/${SAFE_PATH_PREFIX}default`, null, NODE_TYPES.DEFAULT_PROPERTIES);
+    const defaultPropertiesNode = createNode({
+      parent,
+      name: "<default properties>",
+      contents: null,
+      type: NODE_TYPES.DEFAULT_PROPERTIES
+    });
 
-    const defaultNodes = defaultProperties.map((name, index) => createNode(defaultPropertiesNode, maybeEscapePropertyName(name), `${parentPath}/${SAFE_PATH_PREFIX}bucket${index}/${name}`, ownProperties[name]));
+    const defaultNodes = defaultProperties.map((name, index) => createNode({
+      parent: defaultPropertiesNode,
+      name: maybeEscapePropertyName(name),
+      path: `${index}/${name}`,
+      contents: ownProperties[name]
+    }));
     nodes.push(setNodeChildren(defaultPropertiesNode, defaultNodes));
   }
   return nodes;
 }
 
 function makeNodesForOwnProps(propertiesNames, parent, ownProperties) {
-  const parentPath = parent.path;
-  return propertiesNames.map(name => createNode(parent, maybeEscapePropertyName(name), `${parentPath}/${name}`, ownProperties[name]));
+  return propertiesNames.map(name => createNode({
+    parent,
+    name: maybeEscapePropertyName(name),
+    contents: ownProperties[name]
+  }));
 }
 
 function makeNodesForProperties(objProps, parent) {
@@ -33030,7 +33179,6 @@ function makeNodesForProperties(objProps, parent) {
     safeGetterValues
   } = objProps;
 
-  const parentPath = parent.path;
   const parentValue = getValue(parent);
 
   let allProperties = { ...ownProperties, ...safeGetterValues };
@@ -33054,7 +33202,12 @@ function makeNodesForProperties(objProps, parent) {
 
   if (Array.isArray(ownSymbols)) {
     ownSymbols.forEach((ownSymbol, index) => {
-      nodes.push(createNode(parent, ownSymbol.name, `${parentPath}/${SAFE_PATH_PREFIX}symbol-${index}`, ownSymbol.descriptor || null));
+      nodes.push(createNode({
+        parent,
+        name: ownSymbol.name,
+        path: `symbol-${index}`,
+        contents: ownSymbol.descriptor || null
+      }));
     }, this);
   }
 
@@ -33081,30 +33234,49 @@ function makeNodeForPrototype(objProps, parent) {
 
   // Add the prototype if it exists and is not null
   if (prototype && prototype.type !== "null") {
-    return createNode(parent, "<prototype>", `${parent.path}/<prototype>`, { value: prototype }, NODE_TYPES.PROTOTYPE);
+    return createNode({
+      parent,
+      name: "<prototype>",
+      contents: { value: prototype },
+      type: NODE_TYPES.PROTOTYPE
+    });
   }
 
   return null;
 }
 
-function createNode(parent, name, path, contents, type = NODE_TYPES.GRIP, meta) {
+function createNode(options) {
+  const {
+    parent,
+    name,
+    path,
+    contents,
+    type = NODE_TYPES.GRIP,
+    meta
+  } = options;
+
   if (contents === undefined) {
     return null;
   }
 
   // The path is important to uniquely identify the item in the entire
   // tree. This helps debugging & optimizes React's rendering of large
-  // lists. The path will be separated by property name,
-  // i.e. `{ foo: { bar: { baz: 5 }}}` will have a path of `foo/bar/baz`
+  // lists. The path will be separated by property name, wrapped in a Symbol to avoid
+  // name clashing,
+  // i.e. `{ foo: { bar: { baz: 5 }}}` will have a path of Symbol(`foo/bar/baz`)
   // for the inner object.
   return {
     parent,
     name,
-    path,
+    path: parent ? Symbol(`${getSymbolDescriptor(parent.path)}/${path || name}`) : Symbol(path || name),
     contents,
     type,
     meta
   };
+}
+
+function getSymbolDescriptor(symbol) {
+  return symbol.toString().replace(/^(Symbol\()(.*)(\))$/, "$2");
 }
 
 function setNodeChildren(node, children) {
@@ -33125,13 +33297,7 @@ function getChildren(options) {
   }
 
   const loadedProps = loadedProperties.get(key);
-  const {
-    ownProperties,
-    ownSymbols,
-    safeGetterValues,
-    prototype
-  } = loadedProps || {};
-  const hasLoadedProps = ownProperties || ownSymbols || safeGetterValues || prototype;
+  const hasLoadedProps = loadedProperties.has(key);
 
   // Because we are dynamically creating the tree as the user
   // expands it (not precalculated tree structure), we cache child
@@ -33163,25 +33329,14 @@ function getChildren(options) {
   }
 
   if (nodeIsProxy(item)) {
-    const nodes = makeNodesForProxyProperties(item);
-    const protoNode = makeNodeForPrototype(loadedProps, item);
-    if (protoNode) {
-      return addToCache(nodes.concat(protoNode));
-    }
-    return nodes;
+    return addToCache(makeNodesForProxyProperties(item));
   }
 
-  if (nodeNeedsNumericalBuckets(item)) {
-    const bucketNodes = makeNumericalBuckets(item);
-    // Even if we have numerical buckets, we might have loaded non indexed properties,
+  if (nodeNeedsNumericalBuckets(item) && hasLoadedProps) {
+    // Even if we have numerical buckets, we should have loaded non indexed properties,
     // like length for example.
-    if (hasLoadedProps) {
-      return addToCache(bucketNodes.concat(makeNodesForProperties(loadedProps, item)));
-    }
-
-    // We don't cache the result here so we can have the prototype, properties and symbols
-    // when they are loaded.
-    return bucketNodes;
+    const bucketNodes = makeNumericalBuckets(item);
+    return addToCache(bucketNodes.concat(makeNodesForProperties(loadedProps, item)));
   }
 
   if (!nodeIsEntries(item) && !nodeIsBucket(item) && !nodeHasProperties(item)) {
@@ -33274,6 +33429,7 @@ module.exports = {
   nodeIsBucket,
   nodeIsDefaultProperties,
   nodeIsEntries,
+  nodeIsError,
   nodeIsFunction,
   nodeIsGetter,
   nodeIsMapEntry,
@@ -33293,9 +33449,7 @@ module.exports = {
   nodeSupportsNumericalBucketing,
   setNodeChildren,
   sortProperties,
-  NODE_TYPES,
-  // Export for testing purpose.
-  SAFE_PATH_PREFIX
+  NODE_TYPES
 };
 
 /***/ }),
@@ -34470,7 +34624,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 /***/ 2252:
 /***/ (function(module, exports) {
 
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 128 128\"><path xmlns=\"http://www.w3.org/2000/svg\" class=\"cls-2\" id=\"original-2\" d=\"M 1.5 63.91 v 62.5 h 125 V 1.41 H 1.5 Z m 100.73 -5 a 15.56 15.56 0 0 1 7.82 4.5 a 20.58 20.58 0 0 1 3 4 c 0 0.16 -5.4 3.81 -8.69 5.85 c -0.12 0.08 -0.6 -0.44 -1.13 -1.23 a 7.09 7.09 0 0 0 -5.87 -3.53 c -3.79 -0.26 -6.23 1.73 -6.21 5 a 4.58 4.58 0 0 0 0.54 2.34 c 0.83 1.73 2.38 2.76 7.24 4.86 c 8.95 3.85 12.78 6.39 15.16 10 c 2.66 4 3.25 10.46 1.45 15.24 c -2 5.2 -6.9 8.73 -13.83 9.9 a 38.32 38.32 0 0 1 -9.52 -0.1 a 23 23 0 0 1 -12.72 -6.63 c -1.15 -1.27 -3.39 -4.58 -3.25 -4.82 a 9.34 9.34 0 0 1 1.15 -0.73 L 82 101 l 3.59 -2.08 l 0.75 1.11 a 16.78 16.78 0 0 0 4.74 4.54 c 4 2.1 9.46 1.81 12.16 -0.62 a 5.43 5.43 0 0 0 0.69 -6.92 c -1 -1.39 -3 -2.56 -8.59 -5 c -6.45 -2.78 -9.23 -4.5 -11.77 -7.24 a 16.48 16.48 0 0 1 -3.43 -6.25 a 25 25 0 0 1 -0.22 -8 c 1.33 -6.23 6 -10.58 12.82 -11.87 A 31.66 31.66 0 0 1 102.23 58.93 Z M 72.89 64.15 l 0 5.12 H 56.66 V 115.5 H 45.15 V 69.26 H 28.88 v -5 A 49.19 49.19 0 0 1 29 59.09 C 29.08 59 39 59 51 59 L 72.83 59 Z\" data-name=\"original\"></path></svg>"
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 128 128\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M 1.5 63.91 v 62.5 h 125 V 1.41 H 1.5 Z m 100.73 -5 a 15.56 15.56 0 0 1 7.82 4.5 a 20.58 20.58 0 0 1 3 4 c 0 0.16 -5.4 3.81 -8.69 5.85 c -0.12 0.08 -0.6 -0.44 -1.13 -1.23 a 7.09 7.09 0 0 0 -5.87 -3.53 c -3.79 -0.26 -6.23 1.73 -6.21 5 a 4.58 4.58 0 0 0 0.54 2.34 c 0.83 1.73 2.38 2.76 7.24 4.86 c 8.95 3.85 12.78 6.39 15.16 10 c 2.66 4 3.25 10.46 1.45 15.24 c -2 5.2 -6.9 8.73 -13.83 9.9 a 38.32 38.32 0 0 1 -9.52 -0.1 a 23 23 0 0 1 -12.72 -6.63 c -1.15 -1.27 -3.39 -4.58 -3.25 -4.82 a 9.34 9.34 0 0 1 1.15 -0.73 L 82 101 l 3.59 -2.08 l 0.75 1.11 a 16.78 16.78 0 0 0 4.74 4.54 c 4 2.1 9.46 1.81 12.16 -0.62 a 5.43 5.43 0 0 0 0.69 -6.92 c -1 -1.39 -3 -2.56 -8.59 -5 c -6.45 -2.78 -9.23 -4.5 -11.77 -7.24 a 16.48 16.48 0 0 1 -3.43 -6.25 a 25 25 0 0 1 -0.22 -8 c 1.33 -6.23 6 -10.58 12.82 -11.87 A 31.66 31.66 0 0 1 102.23 58.93 Z M 72.89 64.15 l 0 5.12 H 56.66 V 115.5 H 45.15 V 69.26 H 28.88 v -5 A 49.19 49.19 0 0 1 29 59.09 C 29.08 59 39 59 51 59 L 72.83 59 Z\" data-name=\"original\"></path></svg>"
 
 /***/ }),
 
@@ -34880,9 +35034,9 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 exports.findGeneratedBindingFromPosition = findGeneratedBindingFromPosition;
 
-var _lodash = __webpack_require__(2);
-
 var _locColumn = __webpack_require__(2349);
+
+var _filtering = __webpack_require__(3635);
 
 var _firefox = __webpack_require__(1500);
 
@@ -34890,9 +35044,16 @@ async function findGeneratedBindingFromPosition(sourceMaps, client, source, pos,
   const range = await getGeneratedLocationRange(pos, source, sourceMaps);
 
   if (range) {
-    const result = await findGeneratedReference(type, generatedAstBindings, _extends({
-      type: pos.type
-    }, range));
+    let result;
+    if (type === "import") {
+      result = await findGeneratedImportReference(type, generatedAstBindings, _extends({
+        type: pos.type
+      }, range));
+    } else {
+      result = await findGeneratedReference(type, generatedAstBindings, _extends({
+        type: pos.type
+      }, range));
+    }
 
     if (result) {
       return result;
@@ -34926,18 +35087,60 @@ async function findGeneratedBindingFromPosition(sourceMaps, client, source, pos,
   return null;
 }
 
+function filterApplicableBindings(bindings, mapped) {
+  // Any binding overlapping a part of the mapping range.
+  return (0, _filtering.filterSortedArray)(bindings, binding => {
+    if (positionCmp(binding.loc.end, mapped.start) < 0) {
+      return -1;
+    }
+
+    // Currently we allow ranges to count if they start 1 character before,
+    // so we allow that when filtering here.
+    // See mapBindingReferenceToDescriptor for more info.
+    if (positionCmp(_extends({}, binding.loc.start, {
+      column: (0, _locColumn.locColumn)(binding.loc.start) - 1
+    }), mapped.end) > 0) {
+      return 1;
+    }
+
+    return 0;
+  });
+}
+
 /**
  * Given a mapped range over the generated source, attempt to resolve a real
  * binding descriptor that can be used to access the value.
  */
 async function findGeneratedReference(type, generatedAstBindings, mapped) {
-  return generatedAstBindings.reduce(async (acc, val) => {
+  const bindings = filterApplicableBindings(generatedAstBindings, mapped);
+
+  return bindings.reduce(async (acc, val) => {
     const accVal = await acc;
     if (accVal) {
       return accVal;
     }
 
-    return type === "import" ? await mapImportReferenceToDescriptor(val, mapped) : await mapBindingReferenceToDescriptor(val, mapped);
+    return mapBindingReferenceToDescriptor(val, mapped);
+  }, null);
+}
+
+async function findGeneratedImportReference(type, generatedAstBindings, mapped) {
+  let bindings = filterApplicableBindings(generatedAstBindings, mapped);
+
+  // When wrapped, for instance as `Object(ns.default)`, the `Object` binding
+  // will be the first in the list. To avoid resolving `Object` as the
+  // value of the import itself, we potentially skip the first binding.
+  if (bindings.length > 1 && !bindings[0].loc.meta && bindings[1].loc.meta) {
+    bindings = bindings.slice(1);
+  }
+
+  return bindings.reduce(async (acc, val) => {
+    const accVal = await acc;
+    if (accVal) {
+      return accVal;
+    }
+
+    return mapImportReferenceToDescriptor(val, mapped);
   }, null);
 }
 
@@ -34947,7 +35150,9 @@ async function findGeneratedReference(type, generatedAstBindings, mapped) {
  * the import's value.
  */
 async function findGeneratedImportDeclaration(generatedAstBindings, mapped) {
-  return generatedAstBindings.reduce(async (acc, val) => {
+  const bindings = filterApplicableBindings(generatedAstBindings, mapped);
+
+  return bindings.reduce(async (acc, val) => {
     const accVal = await acc;
     if (accVal) {
       return accVal;
@@ -35152,8 +35357,19 @@ async function getGeneratedLocationRange(pos, source, sourceMaps) {
   // binding's location can point at the start of a binding listed after
   // it, so we need to make sure it maps to a location that actually has
   // a size in order to avoid picking up the wrong descriptor.
-  if ((0, _lodash.isEqual)(start, end)) {
+  if (positionCmp(start, end) === 0) {
     return null;
+  }
+  if (positionCmp(start, end) > 0) {
+    // This will be fixed in future range work, but right now it is
+    // possible for the start to be after the end because of the way we
+    // map ranges. For now we create a placeholder single-character range.
+    return {
+      start,
+      end: _extends({}, start, {
+        column: start.column + 1
+      })
+    };
   }
 
   return { start, end };
@@ -38216,13 +38432,6 @@ const Tree = createFactory(_devtoolsComponents2.default.Tree);
 __webpack_require__(1325);
 
 const classnames = __webpack_require__(175);
-
-const {
-  REPS: {
-    Rep,
-    Grip
-  }
-} = __webpack_require__(1372);
 const {
   MODE
 } = __webpack_require__(1357);
@@ -38307,7 +38516,11 @@ class ObjectInspector extends Component {
       return true;
     }
 
-    return expandedPaths.size !== nextProps.expandedPaths.size || loadedProperties.size !== nextProps.loadedProperties.size || [...expandedPaths].some(key => !nextProps.expandedPaths.has(key));
+    // We should update if:
+    // - there are new loaded properties
+    // - OR the expanded paths number changed, and all of them have properties loaded
+    // - OR the expanded paths number did not changed, but old and new sets differ
+    return loadedProperties.size !== nextProps.loadedProperties.size || expandedPaths.size !== nextProps.expandedPaths.size && [...nextProps.expandedPaths].every(path => nextProps.loadedProperties.has(path)) || expandedPaths.size === nextProps.expandedPaths.size && [...nextProps.expandedPaths].some(key => !expandedPaths.has(key));
   }
 
   componentWillUnmount() {
@@ -38340,7 +38553,7 @@ class ObjectInspector extends Component {
   }
 
   getNodeKey(item) {
-    return item.path || JSON.stringify(item);
+    return item.path && typeof item.path.toString === "function" ? item.path.toString() : JSON.stringify(item);
   }
 
   setExpanded(item, expand) {
@@ -38432,7 +38645,7 @@ class ObjectInspector extends Component {
 
     if (nodeIsFunction(item) && !nodeIsGetter(item) && !nodeIsSetter(item) && (this.props.mode === MODE.TINY || !this.props.mode)) {
       return {
-        label: this.renderGrip(item, {
+        label: Utils.renderRep(item, {
           ...this.props,
           functionName: label
         })
@@ -38450,7 +38663,7 @@ class ObjectInspector extends Component {
 
       return {
         label,
-        value: this.renderGrip(item, repsProp)
+        value: Utils.renderRep(item, repsProp)
       };
     }
 
@@ -38534,16 +38747,6 @@ class ObjectInspector extends Component {
     return dom.div(this.getTreeTopElementProps(item, depth, focused, expanded), arrow, labelElement, delimiter, value);
   }
 
-  renderGrip(item, props) {
-    const object = getValue(item);
-    return Rep({
-      ...props,
-      object,
-      mode: props.mode || MODE.TINY,
-      defaultRep: Grip
-    });
-  }
-
   render() {
     const {
       autoExpandAll = true,
@@ -38555,15 +38758,6 @@ class ObjectInspector extends Component {
       inline
     } = this.props;
 
-    let roots = this.getRoots();
-    if (roots.length === 1) {
-      const root = roots[0];
-      const name = root && root.name;
-      if (nodeIsPrimitive(root) && (name === null || typeof name === "undefined")) {
-        return this.renderGrip(root, this.props);
-      }
-    }
-
     return Tree({
       className: classnames({
         inline,
@@ -38574,7 +38768,7 @@ class ObjectInspector extends Component {
       autoExpandDepth,
       disabledFocus,
 
-      isExpanded: item => expandedPaths && expandedPaths.has(this.getNodeKey(item)),
+      isExpanded: item => expandedPaths && expandedPaths.has(item.path),
       isExpandable: item => nodeIsPrimitive(item) === false,
       focused: focusedItem,
 
@@ -38670,7 +38864,10 @@ function nodeExpand(node, actor, loadedProperties, createObjectClient) {
       type: "NODE_EXPAND",
       data: { node }
     });
-    dispatch(nodeLoadProperties(node, actor, loadedProperties, createObjectClient));
+
+    if (!loadedProperties.has(node.path)) {
+      dispatch(nodeLoadProperties(node, actor, loadedProperties, createObjectClient));
+    }
   };
 }
 
@@ -38695,9 +38892,7 @@ function nodeLoadProperties(item, actor, loadedProperties, createObjectClient) {
   return async ({ dispatch }) => {
     try {
       const properties = await loadItemProperties(item, createObjectClient, loadedProperties);
-      if (Object.keys(properties).length > 0) {
-        dispatch(nodePropertiesLoaded(item, actor, properties));
-      }
+      dispatch(nodePropertiesLoaded(item, actor, properties));
     } catch (e) {
       console.error(e);
     }
@@ -39011,7 +39206,7 @@ class FrameworkComponent extends _react.PureComponent {
     const { selectedFrame, setPopupObjectProperties } = this.props;
     const value = selectedFrame.this;
 
-    const root = createNode(null, expression, expression, { value });
+    const root = createNode({ name: expression, contents: { value } });
     const properties = await loadItemProperties(root, _firefox.createObjectClient);
     if (properties) {
       setPopupObjectProperties(value, properties);
@@ -39029,6 +39224,9 @@ class FrameworkComponent extends _react.PureComponent {
     };
 
     const loadedRootProperties = popupObjectProperties[value.actor];
+    if (!loadedRootProperties) {
+      return null;
+    }
 
     let roots = getChildren({
       item: root,
@@ -39422,6 +39620,56 @@ class Breakpoint extends _react.Component {
 }
 
 exports.default = Breakpoint;
+
+/***/ }),
+
+/***/ 3635:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.filterSortedArray = filterSortedArray;
+function findInsertionLocation(array, callback) {
+  let left = 0;
+  let right = array.length;
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+    const item = array[mid];
+
+    const result = callback(item);
+    if (result === 0) {
+      left = mid;
+      break;
+    }
+    if (result >= 0) {
+      right = mid;
+    } else {
+      left = mid + 1;
+    }
+  }
+
+  // Ensure the value is the start of any set of matches.
+  let i = left;
+  while (i > 0 && callback(array[i]) >= 0) {
+    i--;
+  }
+  return i + 1;
+}
+
+function filterSortedArray(array, callback) {
+  const start = findInsertionLocation(array, callback);
+
+  const results = [];
+  for (let i = start; i < array.length && callback(array[i]) === 0; i++) {
+    results.push(array[i]);
+  }
+
+  return results;
+}
 
 /***/ }),
 

@@ -158,14 +158,15 @@ const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
 
 // Map new string type identifiers to old style nsIUpdateItem types.
 // Retired values:
+// 8 = locale
 // 32 = multipackage xpi file
 // 8 = locale
 // 256 = apiextension
+// 128 = experiment
 const TYPES = {
   extension: 2,
   theme: 4,
   dictionary: 64,
-  experiment: 128,
 };
 
 const COMPATIBLE_BY_DEFAULT_TYPES = {
@@ -175,7 +176,6 @@ const COMPATIBLE_BY_DEFAULT_TYPES = {
 
 const RESTARTLESS_TYPES = new Set([
   "dictionary",
-  "experiment",
   "webextension",
   "webextension-theme",
 ]);
@@ -807,23 +807,12 @@ async function loadManifestFromRDF(aUri, aData) {
   if (isTheme(addon.type)) {
     addon.userDisabled = !!LightweightThemeManager.currentTheme ||
                          addon.internalName != DEFAULT_SKIN;
-  } else if (addon.type == "experiment") {
-    // Experiments are disabled by default. It is up to the Experiments Manager
-    // to enable them (it drives installation).
-    addon.userDisabled = true;
   } else {
     addon.userDisabled = false;
   }
 
   addon.softDisabled = addon.blocklistState == nsIBlocklistService.STATE_SOFTBLOCKED;
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
-
-  // Experiments are managed and updated through an external "experiments
-  // manager." So disable some built-in mechanisms.
-  if (addon.type == "experiment") {
-    addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
-    addon.updateURL = null;
-  }
 
   // icons will be filled by the calling function
   addon.icons = {};
