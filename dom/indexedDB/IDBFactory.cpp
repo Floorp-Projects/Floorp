@@ -74,6 +74,8 @@ IDBFactory::IDBFactory()
   : mOwningObject(nullptr)
   , mBackgroundActor(nullptr)
   , mInnerWindowID(0)
+  , mActiveTransactionCount(0)
+  , mActiveDatabaseCount(0)
   , mBackgroundActorFailed(false)
   , mPrivateBrowsingMode(false)
 {
@@ -396,6 +398,9 @@ void
 IDBFactory::UpdateActiveTransactionCount(int32_t aDelta)
 {
   AssertIsOnOwningThread();
+  MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 ||
+                        (mActiveTransactionCount + aDelta) < mActiveTransactionCount);
+  mActiveTransactionCount += aDelta;
   if (mWindow) {
     mWindow->UpdateActiveIndexedDBTransactionCount(aDelta);
   }
@@ -405,6 +410,9 @@ void
 IDBFactory::UpdateActiveDatabaseCount(int32_t aDelta)
 {
   AssertIsOnOwningThread();
+  MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 ||
+                        (mActiveDatabaseCount + aDelta) < mActiveDatabaseCount);
+  mActiveDatabaseCount += aDelta;
   if (mWindow) {
     mWindow->UpdateActiveIndexedDBDatabaseCount(aDelta);
   }
@@ -868,6 +876,23 @@ IDBFactory::InitiateRequest(IDBOpenDBRequest* aRequest,
     "The event target shall be inherited from its manager actor.");
 
   return NS_OK;
+}
+
+void
+IDBFactory::RebindToNewWindow(nsPIDOMWindowInner* aNewWindow)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aNewWindow);
+  MOZ_DIAGNOSTIC_ASSERT(mWindow);
+  MOZ_DIAGNOSTIC_ASSERT(aNewWindow != mWindow);
+
+  mWindow->UpdateActiveIndexedDBTransactionCount(-1 * mActiveTransactionCount);
+  mWindow->UpdateActiveIndexedDBDatabaseCount(-1 * mActiveDatabaseCount);
+
+  mWindow = aNewWindow;
+
+  mInnerWindowID = aNewWindow->WindowID();
+  mWindow->UpdateActiveIndexedDBTransactionCount(mActiveTransactionCount);
+  mWindow->UpdateActiveIndexedDBDatabaseCount(mActiveDatabaseCount);
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBFactory)
