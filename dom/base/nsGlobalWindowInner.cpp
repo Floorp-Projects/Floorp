@@ -1230,7 +1230,10 @@ nsGlobalWindowInner::FreeInnerObjects()
     mApplicationCache = nullptr;
   }
 
-  mIndexedDB = nullptr;
+  if (mIndexedDB) {
+    mIndexedDB->DisconnectFromWindow(this);
+    mIndexedDB = nullptr;
+  }
 
   UnlinkHostObjectURIs();
 
@@ -1524,7 +1527,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
     static_cast<nsDOMOfflineResourceList*>(tmp->mApplicationCache.get())->Disconnect();
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mApplicationCache)
   }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
+  if (tmp->mIndexedDB) {
+    tmp->mIndexedDB->DisconnectFromWindow(tmp);
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTabChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)

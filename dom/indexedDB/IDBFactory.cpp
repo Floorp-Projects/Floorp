@@ -895,6 +895,16 @@ IDBFactory::RebindToNewWindow(nsPIDOMWindowInner* aNewWindow)
   mWindow->UpdateActiveIndexedDBDatabaseCount(mActiveDatabaseCount);
 }
 
+void
+IDBFactory::DisconnectFromWindow(nsPIDOMWindowInner* aOldWindow)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aOldWindow);
+  // If CC unlinks us first, then mWindow might be nullptr
+  MOZ_DIAGNOSTIC_ASSERT(!mWindow || mWindow == aOldWindow);
+
+  mWindow = nullptr;
+}
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IDBFactory)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBFactory)
 

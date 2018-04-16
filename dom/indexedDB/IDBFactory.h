@@ -230,6 +230,9 @@ public:
   void
   RebindToNewWindow(nsPIDOMWindowInner* aNewWindow);
 
+  void
+  DisconnectFromWindow(nsPIDOMWindowInner* aOldWindow);
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBFactory)
 
