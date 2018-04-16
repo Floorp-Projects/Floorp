@@ -19,8 +19,6 @@ config = {
     "virtualenv_modules": ['pywin32', 'talos', 'mozinstall'],
     "exes": {
         'python': PYTHON,
-        'mozinstall': ['%s/scripts/python' % VENV_PATH,
-                       '%s/scripts/mozinstall-script.py' % VENV_PATH],
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg'),
         'tooltool.py': [PYTHON, os.path.join(os.environ['MOZILLABUILD'], 'tooltool.py')],
     },
