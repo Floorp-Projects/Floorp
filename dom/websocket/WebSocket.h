@@ -65,6 +65,9 @@ public:
 
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
+  // DOMEventTargetHelper
+  void BindToOwner(nsIGlobalObject* aNew) override;
+
 public: // static helpers:
 
   // Determine if preferences allow WebSocket
