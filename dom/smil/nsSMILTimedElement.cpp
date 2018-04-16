@@ -630,7 +630,7 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly)
          : STATE_POSTACTIVE;
         stateChanged = true;
         if (mElementState == STATE_WAITING) {
-          mCurrentInterval = new nsSMILInterval(firstInterval);
+          mCurrentInterval = MakeUnique<nsSMILInterval>(firstInterval);
           NotifyNewInterval();
         }
       }
@@ -673,7 +673,7 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly)
         if (mCurrentInterval->End()->Time() <= sampleTime) {
           nsSMILInterval newInterval;
           mElementState =
-            GetNextInterval(mCurrentInterval, nullptr, nullptr, newInterval)
+            GetNextInterval(mCurrentInterval.get(), nullptr, nullptr, newInterval)
             ? STATE_WAITING
             : STATE_POSTACTIVE;
           if (mClient) {
@@ -684,15 +684,15 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly)
             FireTimeEventAsync(eSMILEndEvent, 0);
           }
           mCurrentRepeatIteration = 0;
-          mOldIntervals.AppendElement(mCurrentInterval.forget());
+          mOldIntervals.AppendElement(Move(mCurrentInterval));
           SampleFillValue();
           if (mElementState == STATE_WAITING) {
-            mCurrentInterval = new nsSMILInterval(newInterval);
+            mCurrentInterval = MakeUnique<nsSMILInterval>(newInterval);
           }
           // We are now in a consistent state to dispatch notifications
           if (didApplyEarlyEnd) {
             NotifyChangedInterval(
-                mOldIntervals[mOldIntervals.Length() - 1], false, true);
+                mOldIntervals[mOldIntervals.Length() - 1].get(), false, true);
           }
           if (mElementState == STATE_WAITING) {
             NotifyNewInterval();
@@ -768,7 +768,7 @@ nsSMILTimedElement::HandleContainerTimeChange()
   // the nsSMILTimeValueSpec we'll check if anything has changed and if not, we
   // won't go any further.
   if (mElementState == STATE_WAITING || mElementState == STATE_ACTIVE) {
-    NotifyChangedInterval(mCurrentInterval, false, false);
+    NotifyChangedInterval(mCurrentInterval.get(), false, false);
   }
 }
 
@@ -1613,7 +1613,7 @@ nsSMILTimedElement::FilterIntervals()
         (i < threshold || !interval->IsDependencyChainLink())) {
       interval->Unlink(true /*filtered, not deleted*/);
     } else {
-      filteredList.AppendElement(mOldIntervals[i].forget());
+      filteredList.AppendElement(Move(mOldIntervals[i]));
     }
   }
   mOldIntervals.Clear();
@@ -2089,14 +2089,14 @@ nsSMILTimedElement::UpdateCurrentInterval(bool aForceChangeNotice)
                                       ? mCurrentInterval->Begin()
                                       : nullptr;
   nsSMILInterval updatedInterval;
-  if (GetNextInterval(GetPreviousInterval(), mCurrentInterval,
+  if (GetNextInterval(GetPreviousInterval(), mCurrentInterval.get(),
                       beginTime, updatedInterval)) {
 
     if (mElementState == STATE_POSTACTIVE) {
 
       MOZ_ASSERT(!mCurrentInterval,
                  "In postactive state but the interval has been set");
-      mCurrentInterval = new nsSMILInterval(updatedInterval);
+      mCurrentInterval = MakeUnique<nsSMILInterval>(updatedInterval);
       mElementState = STATE_WAITING;
       NotifyNewInterval();
 
@@ -2118,7 +2118,7 @@ nsSMILTimedElement::UpdateCurrentInterval(bool aForceChangeNotice)
       }
 
       if (beginChanged || endChanged || aForceChangeNotice) {
-        NotifyChangedInterval(mCurrentInterval, beginChanged, endChanged);
+        NotifyChangedInterval(mCurrentInterval.get(), beginChanged, endChanged);
       }
     }
 
@@ -2132,7 +2132,7 @@ nsSMILTimedElement::UpdateCurrentInterval(bool aForceChangeNotice)
       if (!mCurrentInterval->End()->SameTimeAndBase(*mCurrentInterval->Begin()))
       {
         mCurrentInterval->SetEnd(*mCurrentInterval->Begin());
-        NotifyChangedInterval(mCurrentInterval, false, true);
+        NotifyChangedInterval(mCurrentInterval.get(), false, true);
       }
       // The transition to the postactive state will take place on the next
       // sample (along with firing end events, clearing intervals etc.)
@@ -2340,7 +2340,7 @@ nsSMILTimedElement::NotifyNewInterval()
   }
 
   for (auto iter = mTimeDependents.Iter(); !iter.Done(); iter.Next()) {
-    nsSMILInterval* interval = mCurrentInterval;
+    nsSMILInterval* interval = mCurrentInterval.get();
     // It's possible that in notifying one new time dependent of a new interval
     // that a chain reaction is triggered which results in the original
     // interval disappearing. If that's the case we can skip sending further
