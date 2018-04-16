@@ -19,8 +19,6 @@ toolkit.jar:
   content/mozapps/extensions/update.css                         (content/update.css)
   content/mozapps/extensions/eula.xul                           (content/eula.xul)
   content/mozapps/extensions/eula.js                            (content/eula.js)
-  content/mozapps/extensions/newaddon.xul                       (content/newaddon.xul)
-  content/mozapps/extensions/newaddon.js                        (content/newaddon.js)
   content/mozapps/extensions/pluginPrefs.xul                    (content/pluginPrefs.xul)
   content/mozapps/extensions/pluginPrefs.js                     (content/pluginPrefs.js)
   content/mozapps/extensions/OpenH264-license.txt               (content/OpenH264-license.txt)
