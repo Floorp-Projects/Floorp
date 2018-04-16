@@ -65,11 +65,7 @@ function testPreferenceAndUIStateIsConsistent() {
     "#enabled-toolbox-buttons-box input[type=checkbox]")];
   let toolboxButtonNodes = [...doc.querySelectorAll(".command-button")];
 
-  // The noautohide button is only displayed in the browser toolbox
-  let toolbarButtons = toolbox.toolbarButtons.filter(
-    tool => tool.id != "command-button-noautohide");
-
-  for (let tool of toolbarButtons) {
+  for (let tool of toolbox.toolbarButtons) {
     let isVisible = getBoolPref(tool.visibilityswitch);
 
     let button = toolboxButtonNodes.find(toolboxButton => toolboxButton.id === tool.id);
@@ -86,22 +82,16 @@ function testToggleToolboxButtons() {
   let checkNodes = [...panelWin.document.querySelectorAll(
     "#enabled-toolbox-buttons-box input[type=checkbox]")];
 
-  // The noautohide button is only displayed in the browser toolbox, and the element
-  // picker button is not toggleable.
-  let toolbarButtons = toolbox.toolbarButtons.filter(
-    tool => tool.id != "command-button-noautohide");
-
   let visibleToolbarButtons = toolbox.toolbarButtons.filter(tool => tool.isVisible);
 
-  let toolbarButtonNodes = [...doc.querySelectorAll(".command-button")].filter(
-    btn => btn.id != "command-button-noautohide");
+  let toolbarButtonNodes = [...doc.querySelectorAll(".command-button")];
 
-  is(checkNodes.length, toolbarButtons.length,
+  is(checkNodes.length, toolbox.toolbarButtons.length,
     "All of the buttons are toggleable.");
   is(visibleToolbarButtons.length, toolbarButtonNodes.length,
     "All of the DOM buttons are toggleable.");
 
-  for (let tool of toolbarButtons) {
+  for (let tool of toolbox.toolbarButtons) {
     let id = tool.id;
     let matchedCheckboxes = checkNodes.filter(node => node.id === id);
     let matchedButtons = toolbarButtonNodes.filter(button => button.id === id);
@@ -122,14 +112,14 @@ function testToggleToolboxButtons() {
   }
 
   // Store modified pref names so that they can be cleared on error.
-  for (let tool of toolbarButtons) {
+  for (let tool of toolbox.toolbarButtons) {
     let pref = tool.visibilityswitch;
     modifiedPrefs.push(pref);
   }
 
   // Try checking each checkbox, making sure that it changes the preference
   for (let node of checkNodes) {
-    let tool = toolbarButtons.filter(
+    let tool = toolbox.toolbarButtons.filter(
       commandButton => commandButton.id === node.id)[0];
     let isVisible = getBoolPref(tool.visibilityswitch);
 
