@@ -21,14 +21,6 @@ add_task(async function() {
   let target = TargetFactory.forTab(tab);
   toolbox = await gDevTools.showToolbox(target);
 
-  info("In order to ensure display the chevron menu, increase the width of " +
-       "the toolbox");
-  let hostWindow = toolbox.win.parent;
-  let originalWidth = hostWindow.outerWidth;
-  let onResize = once(hostWindow, "resize");
-  hostWindow.resizeTo(1350, hostWindow.outerHeight);
-  await onResize;
-
   doc = toolbox.doc;
   await registerNewPerToolboxTool();
   await testSelectTool();
@@ -42,7 +34,7 @@ add_task(async function() {
   await registerNewWebExtensions();
   await testToggleWebExtensions();
 
-  await cleanup(hostWindow, originalWidth);
+  await cleanup();
 });
 
 function registerNewTool() {
@@ -438,11 +430,11 @@ function checkUnregistered(toolId, deferred, data) {
   deferred.resolve();
 }
 
-function checkRegistered(toolId, deferred, data) {
+async function checkRegistered(toolId, deferred, data) {
   if (data == toolId) {
     ok(true, "Correct tool added back");
     // checking tab on the toolbox
-    let button = doc.getElementById("toolbox-tab-" + toolId);
+    let button = await lookupButtonForToolId(toolId);
     ok(button, "Tab added back for " + toolId);
   } else {
     ok(false, "Something went wrong, " + toolId + " was not registered");
@@ -464,7 +456,27 @@ function GetPref(name) {
   }
 }
 
-async function cleanup(win, winWidth) {
+/**
+ * Find the button from specified toolId.
+ * Generally, button which access to the tool panel is in toolbox or
+ * tools menu(in the Chevron menu).
+ */
+async function lookupButtonForToolId(toolId) {
+  let button = doc.getElementById("toolbox-tab-" + toolId);
+  if (!button) {
+    // search from the tools menu.
+    let menuPopup = await openChevronMenu(toolbox);
+    button = doc.querySelector("#tools-chevron-menupopup-" + toolId);
+
+    info("Closing the tools-chevron-menupopup popup");
+    let onPopupHidden = once(menuPopup, "popuphidden");
+    menuPopup.hidePopup();
+    await onPopupHidden;
+  }
+  return button;
+}
+
+async function cleanup() {
   gDevTools.unregisterTool("test-tool");
   await toolbox.destroy();
   gBrowser.removeCurrentTab();
@@ -472,5 +484,4 @@ async function cleanup(win, winWidth) {
     Services.prefs.clearUserPref(pref);
   }
   toolbox = doc = panelWin = modifiedPrefs = null;
-  win.resizeTo(winWidth, win.outerHeight);
 }
