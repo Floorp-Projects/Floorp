@@ -1,0 +1,3 @@
+include raptor/preferences/*.json
+include raptor/tests/*.ini
+include requirements.txt

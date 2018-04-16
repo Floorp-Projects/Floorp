@@ -10,6 +10,7 @@ PYTHON_UNITTEST_MANIFESTS += [
     '/layout/tools/reftest/selftest/python.ini',
     '/testing/marionette/harness/marionette_harness/tests/harness_unit/python.ini',
     '/testing/mochitest/tests/python/python.ini',
+    '/testing/raptor/test/python.ini',
     '/testing/talos/talos/unittests/python.ini'
 ]
 
