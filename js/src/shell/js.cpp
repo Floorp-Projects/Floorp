@@ -8862,6 +8862,8 @@ main(int argc, char** argv, char** envp)
                                    "instantiation on completion of tier2")
 #ifdef ENABLE_WASM_GC
         || !op.addBoolOption('\0', "wasm-gc", "Enable wasm GC features")
+#else
+        || !op.addBoolOption('\0', "wasm-gc", "No-op")
 #endif
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addBoolOption('\0', "no-unboxed-objects", "Disable creating unboxed plain objects")
