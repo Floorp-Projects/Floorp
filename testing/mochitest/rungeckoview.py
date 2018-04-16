@@ -39,7 +39,7 @@ class GeckoviewOptions(OptionParser):
                         help="serial ID of remote device to test")
         self.add_option("--adbpath",
                         action="store", type="string", dest="adbPath",
-                        default="adb",
+                        default=None,
                         help="Path to adb binary.")
         self.add_option("--remoteTestRoot",
                         action="store", type="string", dest="remoteTestRoot",
@@ -56,7 +56,7 @@ class GeckoviewTestRunner:
 
     def __init__(self, log, options):
         self.log = log
-        self.device = ADBAndroid(adb=options.adbPath,
+        self.device = ADBAndroid(adb=options.adbPath or 'adb',
                                  device=options.deviceSerial,
                                  test_root=options.remoteTestRoot)
         self.options = options

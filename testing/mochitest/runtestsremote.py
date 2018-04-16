@@ -40,7 +40,7 @@ class MochiRemote(MochitestDesktop):
         self.chromePushed = False
         self.mozLogName = "moz.log"
 
-        self.device = ADBAndroid(adb=options.adbPath,
+        self.device = ADBAndroid(adb=options.adbPath or 'adb',
                                  device=options.deviceSerial,
                                  test_root=options.remoteTestRoot,
                                  verbose=verbose)

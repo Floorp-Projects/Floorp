@@ -149,7 +149,7 @@ class RemoteReftest(RefTest):
         if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
             verbose = True
             print "set verbose!"
-        self.device = ADBAndroid(adb=options.adb_path,
+        self.device = ADBAndroid(adb=options.adb_path or 'adb',
                                  device=options.deviceSerial,
                                  test_root=options.remoteTestRoot,
                                  verbose=verbose)
