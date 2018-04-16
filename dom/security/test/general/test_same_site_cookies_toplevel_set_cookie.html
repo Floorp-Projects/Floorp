@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1454242: Setting samesite cookie should not rely on NS_IsSameSiteForeign</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<img id="cookieImage">
+<iframe id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * 1) We load a window from example.com which loads a window from mochi.test
+ *    which then sets a same-site cookie for mochi.test.
+ * 2) We load an iframe from mochi.test.
+ * 3) We observe that the cookie within (1) was allowed to be set and
+ *    is available for mochi.test.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const SAME_ORIGIN = "http://mochi.test:8888/"
+const CROSS_ORIGIN = "http://example.com/";
+const PATH = "tests/dom/security/test/general/file_same_site_cookies_toplevel_set_cookie.sjs";
+
+let testWin = null;
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  // once the second window (which sets the cookie) loaded, we get a notification
+  // that the test setup is correct and we can now try to query the same-site cookie
+  if (event.data.value === "testSetupComplete") {
+    ok(true, "cookie setup worked");
+    let testframe = document.getElementById("testframe");
+    testframe.src = SAME_ORIGIN + PATH + "?checkCookie";
+    return;
+  }
+
+  // thie second message is the cookie value from verifying the
+  // cookie has been set correctly.
+  is(event.data.value, "myKey=laxSameSiteCookie",
+     "setting same-site cookie on cross origin top-level page");
+
+  window.removeEventListener("message", receiveMessage);
+  testWin.close();
+  SimpleTest.finish();
+}
+
+// fire up the test
+testWin = window.open(CROSS_ORIGIN + PATH + "?loadWin");
+
+</script>
+</body>
+</html>
