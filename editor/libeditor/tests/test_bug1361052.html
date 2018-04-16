@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for Bug 1361052</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1361052">Mozilla Bug 1361052</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(() => {
+  var strike = document.createElement('strike');
+  strike.contentEditable = true;
+  document.documentElement.appendChild(strike);
+
+  var textarea = document.createElement('textarea');
+  document.documentElement.appendChild(textarea);
+
+  var h5 = document.createElement('h5');
+  strike.appendChild(h5);
+
+  textarea.setCustomValidity("A");
+  document.documentElement.dir = "rtl";
+  document.designMode = "on";
+  document.execCommand("styleWithCSS", false, true);
+  document.designMode = "off";
+  textarea.reportValidity();
+  document.documentElement.dir = "ltr";
+
+  var range = document.createRange();
+  range.selectNode(h5);
+  window.getSelection().addRange(range);
+
+  document.execCommand("inserthorizontalrule", false, null);
+  ok(true, "No crash");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
