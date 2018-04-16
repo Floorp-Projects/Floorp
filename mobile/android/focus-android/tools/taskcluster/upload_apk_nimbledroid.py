@@ -22,7 +22,7 @@ def uploadApk(apk,key):
 
 	if response.status_code != 201:
 		print('Status:', response.status_code, 'Headers:', response.headers, 'Error Response:',response.json())
-		exit()
+		exit(1)
 
 	# Print Response Details
 	print 'Response Status Code:', response.status_code
@@ -31,13 +31,12 @@ def uploadApk(apk,key):
 	print('Reponse Payload:')
 	print json.dumps(response.json(), indent=4)
 
-
 # Get JSON data from taskcluster secrets service
 secrets = taskcluster.Secrets({'baseUrl': 'http://taskcluster/secrets/v1'})
-api_key = secrets.get('project/focus/nimbledroid')
+data = secrets.get('project/focus/nimbledroid')
 
 klar_file = {'apk': open('app/build/outputs/apk/klarGeckoArm/debug/app-klar-gecko-arm-debug.apk')}
 focus_file = {'apk': open('app/build/outputs/apk/focusWebviewUniversal/debug/app-focus-webview-universal-debug.apk')}
 
-uploadApk(klar_file, api_key)
-uploadApk(focus_file, api_key)
+uploadApk(klar_file, data['secret']['api_key'])
+uploadApk(focus_file, data['secret']['api_key'])
