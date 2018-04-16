@@ -7,7 +7,7 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {div, button} = dom;
-const {openTrustedLink} = require("devtools/client/shared/link");
+const {openWebLink} = require("devtools/client/shared/link");
 
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
@@ -394,19 +394,19 @@ function showMeatballMenu(
 
   // Getting started
   menu.append(new MenuItem({
-    id: "toolbox-meatball-menu-gettingstarted",
-    label: L10N.getStr("toolbox.meatballMenu.gettingStarted.label"),
+    id: "toolbox-meatball-menu-documentation",
+    label: L10N.getStr("toolbox.meatballMenu.documentation.label"),
     click: () => {
-      openTrustedLink("https://developer.mozilla.org/docs/Tools", toolbox);
+      openWebLink("https://developer.mozilla.org/docs/Tools", toolbox);
     },
   }));
 
   // Give feedback
   menu.append(new MenuItem({
-    id: "toolbox-meatball-menu-feedback",
-    label: L10N.getStr("toolbox.meatballMenu.giveFeedback.label"),
+    id: "toolbox-meatball-menu-community",
+    label: L10N.getStr("toolbox.meatballMenu.community.label"),
     click: () => {
-      openTrustedLink("https://discourse.mozilla.org/c/devtools", toolbox);
+      openWebLink("https://discourse.mozilla.org/c/devtools", toolbox);
     },
   }));
 
