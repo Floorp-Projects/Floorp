@@ -247,7 +247,7 @@ public:
 
   mozilla::RestyleManager* RestyleManager() {
     MOZ_ASSERT(mRestyleManager);
-    return mRestyleManager;
+    return mRestyleManager.get();
   }
 
   mozilla::CounterStyleManager* CounterStyleManager() const {
@@ -1300,7 +1300,7 @@ protected:
   RefPtr<mozilla::EffectCompositor> mEffectCompositor;
   RefPtr<nsTransitionManager> mTransitionManager;
   RefPtr<nsAnimationManager> mAnimationManager;
-  RefPtr<mozilla::RestyleManager> mRestyleManager;
+  mozilla::UniquePtr<mozilla::RestyleManager> mRestyleManager;
   RefPtr<mozilla::CounterStyleManager> mCounterStyleManager;
   nsAtom* MOZ_UNSAFE_REF("always a static atom") mMedium; // initialized by subclass ctors
   RefPtr<nsAtom> mMediaEmulated;
