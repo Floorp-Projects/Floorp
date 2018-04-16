@@ -752,8 +752,7 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
     }
 
     if (currentFrame != aBuilder.RootReferenceFrame() &&
-        currentFrame->IsStackingContext() &&
-        currentFrame->IsFixedPosContainingBlock()) {
+        currentFrame->IsStackingContext()) {
       CRR_LOG("Frame belongs to stacking context frame %p\n", currentFrame);
       // If we found an intermediate stacking context with an existing display item
       // then we can store the dirty rect there and stop. If we couldn't find one then
