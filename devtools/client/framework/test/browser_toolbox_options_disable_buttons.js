@@ -5,8 +5,13 @@
 
 "use strict";
 
-const TEST_URL = "data:text/html;charset=utf8,test for dynamically " +
-                 "registering and unregistering tools";
+let TEST_URL = "data:text/html;charset=utf8,test for dynamically " +
+               "registering and unregistering tools";
+
+// The frames button is only shown if the page has at least one iframe so we
+// need to add one to the test page.
+TEST_URL += "<iframe src=\"data:text/plain,iframe\"></iframe>";
+
 var doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
 
 function test() {
