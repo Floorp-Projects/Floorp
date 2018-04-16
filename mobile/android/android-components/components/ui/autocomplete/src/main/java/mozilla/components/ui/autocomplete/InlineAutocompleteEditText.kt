@@ -62,7 +62,12 @@ typealias TextFormatter = (String) -> String
  * {@link setOnSelectionChangedListener}, {@link setOnWindowsFocusChangeListener}).
  */
 open class InlineAutocompleteEditText(val ctx: Context, attrs: AttributeSet) : AppCompatEditText(ctx, attrs) {
-    data class AutocompleteResult(val text: String, val source: String, val totalItems: Int, val textFormatter: TextFormatter? = null) {
+    data class AutocompleteResult(
+        val text: String,
+        val source: String,
+        val totalItems: Int,
+        private val textFormatter: TextFormatter? = null
+    ) {
         val isEmpty: Boolean = this.text.isEmpty()
         val length: Int = this.text.length
         val formattedText: String

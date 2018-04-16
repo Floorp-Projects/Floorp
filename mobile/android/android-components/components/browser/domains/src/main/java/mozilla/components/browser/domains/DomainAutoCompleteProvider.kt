@@ -35,7 +35,7 @@ class DomainAutoCompleteProvider {
 
             private val urlMatcher = Regex("""(https?://)?(www.)?(.+)?""")
 
-            internal fun create(url: String): Domain {
+            fun create(url: String): Domain {
                 val result = urlMatcher.find(url)
 
                 return result?.let {
