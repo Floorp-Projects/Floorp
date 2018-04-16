@@ -978,6 +978,8 @@ extern void AddNativeFontHandle(WrFontKey aKey,
 
 extern void DeleteFontData(WrFontKey aKey);
 
+extern void apz_deregister_sampler(WrWindowId aWindowId);
+
 extern void apz_deregister_updater(WrWindowId aWindowId);
 
 extern void apz_post_scene_swap(WrWindowId aWindowId,
@@ -985,9 +987,14 @@ extern void apz_post_scene_swap(WrWindowId aWindowId,
 
 extern void apz_pre_scene_swap(WrWindowId aWindowId);
 
+extern void apz_register_sampler(WrWindowId aWindowId);
+
 extern void apz_register_updater(WrWindowId aWindowId);
 
 extern void apz_run_updater(WrWindowId aWindowId);
+
+extern void apz_sample_transforms(WrWindowId aWindowId,
+                                  Transaction *aTransaction);
 
 extern void gecko_printf_stderr_output(const char *aMsg);
 
