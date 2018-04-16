@@ -4125,7 +4125,7 @@ gfxFontStyle::gfxFontStyle() :
 
 gfxFontStyle::gfxFontStyle(uint8_t aStyle,
                            FontWeight aWeight,
-                           int16_t aStretch,
+                           uint16_t aStretch,
                            gfxFloat aSize,
                            nsAtom *aLanguage, bool aExplicitLanguage,
                            float aSizeAdjust, bool aSystemFont,

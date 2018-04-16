@@ -142,7 +142,7 @@ public:
     virtual nsString RealFaceName();
 
     FontWeight Weight() const { return mWeight; }
-    int16_t Stretch() const { return mStretch; }
+    uint16_t Stretch() const { return mStretch; }
 
     bool IsUserFont() const { return mIsDataUserFont || mIsLocalUserFont; }
     bool IsLocalUserFont() const { return mIsLocalUserFont; }
@@ -405,7 +405,7 @@ public:
     uint32_t         mNonDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
 
     FontWeight       mWeight;
-    int16_t          mStretch;
+    uint16_t         mStretch;
 
     RefPtr<gfxCharacterMap> mCharacterMap;
     uint32_t         mUVSOffset;

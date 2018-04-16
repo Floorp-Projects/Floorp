@@ -21,7 +21,7 @@
 #include <dwrite.h>
 
 static inline DWRITE_FONT_STRETCH
-DWriteFontStretchFromStretch(int16_t aStretch) 
+DWriteFontStretchFromStretch(uint16_t aStretch)
 {
     switch (aStretch) {
         case NS_FONT_STRETCH_ULTRA_CONDENSED:
@@ -47,8 +47,8 @@ DWriteFontStretchFromStretch(int16_t aStretch)
     }
 }
 
-static inline int16_t
-FontStretchFromDWriteStretch(DWRITE_FONT_STRETCH aStretch) 
+static inline uint16_t
+FontStretchFromDWriteStretch(DWRITE_FONT_STRETCH aStretch)
 {
     switch (aStretch) {
         case DWRITE_FONT_STRETCH_ULTRA_CONDENSED:

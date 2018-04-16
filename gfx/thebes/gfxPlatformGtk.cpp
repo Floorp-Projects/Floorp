@@ -276,7 +276,7 @@ gfxPlatformGtk::CreateFontGroup(const FontFamilyList& aFontFamilyList,
 gfxFontEntry*
 gfxPlatformGtk::LookupLocalFont(const nsAString& aFontName,
                                 FontWeight aWeight,
-                                int16_t aStretch,
+                                uint16_t aStretch,
                                 uint8_t aStyle)
 {
     gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
@@ -287,7 +287,7 @@ gfxPlatformGtk::LookupLocalFont(const nsAString& aFontName,
 gfxFontEntry*
 gfxPlatformGtk::MakePlatformFont(const nsAString& aFontName,
                                  FontWeight aWeight,
-                                 int16_t aStretch,
+                                 uint16_t aStretch,
                                  uint8_t aStyle,
                                  const uint8_t* aFontData,
                                  uint32_t aLength)

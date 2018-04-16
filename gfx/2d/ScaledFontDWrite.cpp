@@ -93,7 +93,7 @@ DoGrayscale(IDWriteFontFace *aDWFace, Float ppem)
 }
 
 static inline DWRITE_FONT_STRETCH
-DWriteFontStretchFromStretch(int16_t aStretch)
+DWriteFontStretchFromStretch(uint16_t aStretch)
 {
     switch (aStretch) {
         case NS_FONT_STRETCH_ULTRA_CONDENSED:
