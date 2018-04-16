@@ -300,6 +300,7 @@ nsHostRecord::ResolveComplete()
 
     switch(mResolverMode) {
     case MODE_NATIVEONLY:
+    case MODE_TRROFF:
         AccumulateCategorical(Telemetry::LABELS_DNS_LOOKUP_ALGORITHM::nativeOnly);
         break;
     case MODE_PARALLEL:
@@ -313,9 +314,6 @@ nsHostRecord::ResolveComplete()
         break;
     case MODE_SHADOW:
         AccumulateCategorical(Telemetry::LABELS_DNS_LOOKUP_ALGORITHM::trrShadow);
-        break;
-    case MODE_TRROFF:
-        AccumulateCategorical(Telemetry::LABELS_DNS_LOOKUP_ALGORITHM::trrOff);
         break;
     }
 

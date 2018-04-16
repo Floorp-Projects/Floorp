@@ -3302,7 +3302,7 @@
     "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
-    "labels": ["nativeOnly", "trrRace", "trrFirst", "trrOnly", "trrShadow", "trrOff"],
+    "labels": ["nativeOnly", "trrRace", "trrFirst", "trrOnly", "trrShadow"],
     "bug_numbers": [1434852],
     "description": "DNS: lookup algorithm"
   },
