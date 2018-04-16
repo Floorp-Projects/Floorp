@@ -344,9 +344,8 @@ Blocklist.prototype = {
    *        is used.
    * @returns {integer} The STATE constant.
    */
-  getAddonBlocklistState(addon, appVersion, toolkitVersion) {
-    if (!this.isLoaded)
-      this._loadBlocklist();
+  async getAddonBlocklistState(addon, appVersion, toolkitVersion) {
+    await this.loadBlocklistAsync();
     return this._getAddonBlocklistState(addon, this._addonEntries,
                                         appVersion, toolkitVersion);
   },
