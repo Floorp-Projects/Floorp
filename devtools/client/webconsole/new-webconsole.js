@@ -255,6 +255,7 @@ NewWebConsoleFrame.prototype = {
       shortcuts.on("Esc", event => {
         if (!this.jsterm.autocompletePopup || !this.jsterm.autocompletePopup.isOpen) {
           this.newConsoleOutput.dispatchSidebarClose();
+          this.jsterm.focus();
         }
       });
     }
