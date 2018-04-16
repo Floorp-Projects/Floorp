@@ -36,13 +36,14 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ChildProcessMessageManager.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
-#include "mozilla/dom/ChromeMessageSender.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/ProcessGlobal.h"
+#include "mozilla/dom/ProcessMessageManager.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -162,7 +163,7 @@ MessageManagerCallback::DoGetRemoteType(nsAString& aRemoteType,
                                         ErrorResult& aError) const
 {
   aRemoteType.Truncate();
-  mozilla::dom::ChromeMessageSender* parent = GetProcessMessageManager();
+  mozilla::dom::ProcessMessageManager* parent = GetProcessMessageManager();
   if (!parent) {
     return;
   }
@@ -916,8 +917,7 @@ nsFrameMessageManager::Close()
   if (!mClosed) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
-      obs->NotifyObservers(NS_ISUPPORTS_CAST(nsIContentFrameMessageManager*, this),
-                            "message-manager-close", nullptr);
+      obs->NotifyObservers(this, "message-manager-close", nullptr);
     }
   }
   mClosed = true;
@@ -934,8 +934,7 @@ nsFrameMessageManager::Disconnect(bool aRemoveFromParent)
   if (!mDisconnected) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
-       obs->NotifyObservers(NS_ISUPPORTS_CAST(nsIContentFrameMessageManager*, this),
-                            "message-manager-disconnect", nullptr);
+       obs->NotifyObservers(this, "message-manager-disconnect", nullptr);
     }
   }
 
@@ -1000,10 +999,10 @@ nsFrameMessageManager::GetInitialProcessData(JSContext* aCx,
   aInitialProcessData.set(init);
 }
 
-already_AddRefed<ChromeMessageSender>
+already_AddRefed<ProcessMessageManager>
 nsFrameMessageManager::GetProcessMessageManager(ErrorResult& aError)
 {
-  RefPtr<ChromeMessageSender> pmm;
+  RefPtr<ProcessMessageManager> pmm;
   if (mCallback) {
     pmm = mCallback->GetProcessMessageManager();
   }
@@ -1442,7 +1441,7 @@ nsMessageManagerScriptExecutor::MarkScopesForCC()
 NS_IMPL_ISUPPORTS(nsScriptCacheCleaner, nsIObserver)
 
 ChildProcessMessageManager* nsFrameMessageManager::sChildProcessManager = nullptr;
-ChromeMessageBroadcaster* nsFrameMessageManager::sParentProcessManager = nullptr;
+ParentProcessMessageManager* nsFrameMessageManager::sParentProcessManager = nullptr;
 nsFrameMessageManager* nsFrameMessageManager::sSameProcessParentManager = nullptr;
 
 class nsAsyncMessageToSameProcessChild : public nsSameProcessAsyncMessageBase,
@@ -1457,7 +1456,7 @@ public:
   NS_IMETHOD Run() override
   {
     nsFrameMessageManager* ppm = nsFrameMessageManager::GetChildProcessManager();
-    ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), nullptr, ppm);
+    ReceiveMessage(ppm, nullptr, ppm);
     return NS_OK;
   }
 };
@@ -1594,7 +1593,7 @@ public:
   nsresult HandleMessage() override
   {
     nsFrameMessageManager* ppm = nsFrameMessageManager::sSameProcessParentManager;
-    ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), nullptr, ppm);
+    ReceiveMessage(ppm, nullptr, ppm);
     return NS_OK;
   }
 };
@@ -1662,8 +1661,7 @@ NS_NewParentProcessMessageManager(nsISupports** aResult)
 {
   NS_ASSERTION(!nsFrameMessageManager::sParentProcessManager,
                "Re-creating sParentProcessManager");
-  RefPtr<ChromeMessageBroadcaster> mm =
-    new ChromeMessageBroadcaster(MessageManagerFlags::MM_PROCESSMANAGER);
+  RefPtr<ParentProcessMessageManager> mm = new ParentProcessMessageManager();
   nsFrameMessageManager::sParentProcessManager = mm;
   nsFrameMessageManager::NewProcessMessageManager(false); // Create same process message manager.
   mm.forget(aResult);
@@ -1671,7 +1669,7 @@ NS_NewParentProcessMessageManager(nsISupports** aResult)
 }
 
 
-ChromeMessageSender*
+ProcessMessageManager*
 nsFrameMessageManager::NewProcessMessageManager(bool aIsRemote)
 {
   if (!nsFrameMessageManager::sParentProcessManager) {
@@ -1681,18 +1679,16 @@ nsFrameMessageManager::NewProcessMessageManager(bool aIsRemote)
 
   MOZ_ASSERT(nsFrameMessageManager::sParentProcessManager,
              "parent process manager not created");
-  ChromeMessageSender* mm;
+  ProcessMessageManager* mm;
   if (aIsRemote) {
     // Callback is set in ContentParent::InitInternal so that the process has
     // already started when we send pending scripts.
-    mm = new ChromeMessageSender(nullptr,
-                                 nsFrameMessageManager::sParentProcessManager,
-                                 MessageManagerFlags::MM_PROCESSMANAGER);
+    mm = new ProcessMessageManager(nullptr,
+                                   nsFrameMessageManager::sParentProcessManager);
   } else {
-    mm = new ChromeMessageSender(new SameParentProcessMessageManagerCallback(),
-                                 nsFrameMessageManager::sParentProcessManager,
-                                 MessageManagerFlags::MM_PROCESSMANAGER |
-                                 MessageManagerFlags::MM_OWNSCALLBACK);
+    mm = new ProcessMessageManager(new SameParentProcessMessageManagerCallback(),
+                                   nsFrameMessageManager::sParentProcessManager,
+                                   MessageManagerFlags::MM_OWNSCALLBACK);
     sSameProcessParentManager = mm;
   }
   return mm;
