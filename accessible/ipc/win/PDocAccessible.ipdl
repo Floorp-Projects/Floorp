@@ -7,7 +7,6 @@
 include protocol PFileDescriptorSet;
 include protocol PBrowser;
 
-using mozilla::a11y::role from "mozilla/a11y/Role.h";
 using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::a11y::IDispatchHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
@@ -20,7 +19,7 @@ struct AccessibleData
 {
   uint64_t ID;
   int32_t MsaaID;
-  role Role;
+  uint32_t Role;
   uint32_t ChildrenCount;
   uint32_t Interfaces;
 };
@@ -61,7 +60,7 @@ parent:
   sync SyncTextChangeEvent(uint64_t aID, nsString aStr, int32_t aStart,
                            uint32_t aLen, bool aIsInsert, bool aFromUser);
   async SelectionEvent(uint64_t aID, uint64_t aWidgetID, uint32_t aType);
-  async RoleChangedEvent(role aRole);
+  async RoleChangedEvent(uint32_t aRole);
   async FocusEvent(uint64_t aID, LayoutDeviceIntRect aCaretRect);
 
   /*

@@ -106,7 +106,7 @@ public:
                                                      const uint64_t& aWidgetID,
                                                      const uint32_t& aType) override;
 
-  mozilla::ipc::IPCResult RecvRoleChangedEvent(const a11y::role& aRole) final;
+  mozilla::ipc::IPCResult RecvRoleChangedEvent(const uint32_t& aRole) final;
 
   virtual mozilla::ipc::IPCResult RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID) override;
 
