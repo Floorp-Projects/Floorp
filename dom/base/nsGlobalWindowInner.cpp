@@ -2480,18 +2480,6 @@ nsGlobalWindowInner::MigrateStateForDocumentOpen(nsGlobalWindowInner* aOldInner)
   MOZ_DIAGNOSTIC_ASSERT(aOldInner != this);
   MOZ_DIAGNOSTIC_ASSERT(mDoc);
 
-  // Make a copy of the old window's performance object on document.open.
-  // Note that we have to force eager creation of it here, because we need
-  // to grab the current document channel and whatnot before that changes.
-  aOldInner->CreatePerformanceObjectIfNeeded();
-  if (aOldInner->mPerformance) {
-    mPerformance =
-      Performance::CreateForMainThread(this,
-                                       mDoc->NodePrincipal(),
-                                       aOldInner->mPerformance->GetDOMTiming(),
-                                       aOldInner->mPerformance->GetChannel());
-  }
-
   // Rebind DETH objects to the new global created by document.open().
   // XXX: Is this correct?  We should consider if the spec and our
   //      implementation should change to match other browsers by
@@ -2500,6 +2488,10 @@ nsGlobalWindowInner::MigrateStateForDocumentOpen(nsGlobalWindowInner* aOldInner)
     [&] (DOMEventTargetHelper* aDETH, bool* aDoneOut) {
       aDETH->BindToOwner(this->AsInner());
     });
+
+  // Move the old Performance object from the old window to the new window.
+  // The Performance object was also rebound in the DETH loop above.
+  mPerformance = aOldInner->mPerformance.forget();
 }
 
 void
