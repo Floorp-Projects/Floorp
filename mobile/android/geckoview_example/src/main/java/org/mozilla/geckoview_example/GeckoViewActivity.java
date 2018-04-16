@@ -17,9 +17,9 @@ import android.view.WindowManager;
 
 import java.util.Locale;
 
+import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
-import org.mozilla.geckoview.GeckoSession.Response;
 import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.GeckoRuntime;
@@ -364,13 +364,13 @@ public class GeckoViewActivity extends Activity {
 
         @Override
         public void onLoadRequest(final GeckoSession session, final String uri,
-                                  final int target, Response<Boolean> response) {
+                                  final int target, GeckoResponse<Boolean> response) {
             Log.d(LOGTAG, "onLoadRequest=" + uri + " where=" + target);
             response.respond(false);
         }
 
         @Override
-        public void onNewSession(final GeckoSession session, final String uri, Response<GeckoSession> response) {
+        public void onNewSession(final GeckoSession session, final String uri, GeckoResponse<GeckoSession> response) {
             response.respond(null);
         }
     }
