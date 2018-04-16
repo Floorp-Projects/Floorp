@@ -2492,6 +2492,11 @@ nsGlobalWindowInner::MigrateStateForDocumentOpen(nsGlobalWindowInner* aOldInner)
   // Move the old Performance object from the old window to the new window.
   // The Performance object was also rebound in the DETH loop above.
   mPerformance = aOldInner->mPerformance.forget();
+
+  if (aOldInner->mIndexedDB) {
+    aOldInner->mIndexedDB->RebindToNewWindow(this);
+    mIndexedDB = aOldInner->mIndexedDB.forget();
+  }
 }
 
 void
