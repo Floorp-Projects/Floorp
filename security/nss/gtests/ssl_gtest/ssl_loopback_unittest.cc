@@ -149,12 +149,60 @@ TEST_P(TlsConnectGeneric, ConnectAlpn) {
   CheckAlpn("a");
 }
 
+TEST_P(TlsConnectGeneric, ConnectAlpnPriorityA) {
+  // "alpn" "npn"
+  // alpn is the fallback here. npn has the highest priority and should be
+  // picked.
+  const std::vector<uint8_t> alpn = {0x04, 0x61, 0x6c, 0x70, 0x6e,
+                                     0x03, 0x6e, 0x70, 0x6e};
+  EnableAlpn(alpn);
+  Connect();
+  CheckAlpn("npn");
+}
+
+TEST_P(TlsConnectGeneric, ConnectAlpnPriorityB) {
+  // "alpn" "npn" "http"
+  // npn has the highest priority and should be picked.
+  const std::vector<uint8_t> alpn = {0x04, 0x61, 0x6c, 0x70, 0x6e, 0x03, 0x6e,
+                                     0x70, 0x6e, 0x04, 0x68, 0x74, 0x74, 0x70};
+  EnableAlpn(alpn);
+  Connect();
+  CheckAlpn("npn");
+}
+
 TEST_P(TlsConnectGeneric, ConnectAlpnClone) {
   EnsureModelSockets();
   client_model_->EnableAlpn(alpn_dummy_val_, sizeof(alpn_dummy_val_));
   server_model_->EnableAlpn(alpn_dummy_val_, sizeof(alpn_dummy_val_));
   Connect();
   CheckAlpn("a");
+}
+
+TEST_P(TlsConnectGeneric, ConnectAlpnWithCustomCallbackA) {
+  // "ab" "alpn"
+  const std::vector<uint8_t> client_alpn = {0x02, 0x61, 0x62, 0x04,
+                                            0x61, 0x6c, 0x70, 0x6e};
+  EnableAlpnWithCallback(client_alpn, "alpn");
+  Connect();
+  CheckAlpn("alpn");
+}
+
+TEST_P(TlsConnectGeneric, ConnectAlpnWithCustomCallbackB) {
+  // "ab" "alpn"
+  const std::vector<uint8_t> client_alpn = {0x02, 0x61, 0x62, 0x04,
+                                            0x61, 0x6c, 0x70, 0x6e};
+  EnableAlpnWithCallback(client_alpn, "ab");
+  Connect();
+  CheckAlpn("ab");
+}
+
+TEST_P(TlsConnectGeneric, ConnectAlpnWithCustomCallbackC) {
+  // "cd" "npn" "alpn"
+  const std::vector<uint8_t> client_alpn = {0x02, 0x63, 0x64, 0x03, 0x6e, 0x70,
+                                            0x6e, 0x04, 0x61, 0x6c, 0x70, 0x6e};
+  EnableAlpnWithCallback(client_alpn, "npn");
+  Connect();
+  CheckAlpn("npn");
 }
 
 TEST_P(TlsConnectDatagram, ConnectSrtp) {

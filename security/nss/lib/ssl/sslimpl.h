@@ -251,7 +251,6 @@ typedef struct sslOptionsStr {
     unsigned int enableFalseStart : 1;
     unsigned int cbcRandomIV : 1;
     unsigned int enableOCSPStapling : 1;
-    unsigned int enableNPN : 1;
     unsigned int enableALPN : 1;
     unsigned int reuseServerECDHEKey : 1;
     unsigned int enableFallbackSCSV : 1;
@@ -443,7 +442,7 @@ struct sslSessionIDStr {
             */
             SECItem signedCertTimestamps;
 
-            /* The NPN/ALPN value negotiated in the original connection.
+            /* The ALPN value negotiated in the original connection.
              * Used for TLS 1.3. */
             SECItem alpnSelection;
 
@@ -1547,8 +1546,8 @@ SECStatus ssl_GetSelfEncryptKeys(sslSocket *ss, unsigned char *keyName,
                                  PK11SymKey **encKey, PK11SymKey **macKey);
 void ssl_ResetSelfEncryptKeys();
 
-extern SECStatus ssl3_ValidateNextProtoNego(const unsigned char *data,
-                                            unsigned int length);
+extern SECStatus ssl3_ValidateAppProtocol(const unsigned char *data,
+                                          unsigned int length);
 
 /* Construct a new NSPR socket for the app to use */
 extern PRFileDesc *ssl_NewPRSocket(sslSocket *ss, PRFileDesc *fd);

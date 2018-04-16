@@ -110,7 +110,9 @@ class TlsConnectTestBase : public ::testing::Test {
   void ConfigureSessionCache(SessionResumptionMode client,
                              SessionResumptionMode server);
   void EnableAlpn();
-  void EnableAlpn(const uint8_t* val, size_t len);
+  void EnableAlpnWithCallback(const std::vector<uint8_t>& client,
+                              std::string server_choice);
+  void EnableAlpn(const std::vector<uint8_t>& vals);
   void EnsureModelSockets();
   void CheckAlpn(const std::string& val);
   void EnableSrtp();

@@ -599,22 +599,20 @@ void TlsAgent::ExpectResumption() { expect_resumption_ = true; }
 
 void TlsAgent::EnableAlpn(const uint8_t* val, size_t len) {
   EXPECT_TRUE(EnsureTlsSetup());
-
-  SetOption(SSL_ENABLE_ALPN, PR_TRUE);
   EXPECT_EQ(SECSuccess, SSL_SetNextProtoNego(ssl_fd(), val, len));
 }
 
 void TlsAgent::CheckAlpn(SSLNextProtoState expected_state,
                          const std::string& expected) const {
-  SSLNextProtoState npn_state;
+  SSLNextProtoState alpn_state;
   char chosen[10];
   unsigned int chosen_len;
-  SECStatus rv = SSL_GetNextProto(ssl_fd(), &npn_state,
+  SECStatus rv = SSL_GetNextProto(ssl_fd(), &alpn_state,
                                   reinterpret_cast<unsigned char*>(chosen),
                                   &chosen_len, sizeof(chosen));
   EXPECT_EQ(SECSuccess, rv);
-  EXPECT_EQ(expected_state, npn_state);
-  if (npn_state == SSL_NEXT_PROTO_NO_SUPPORT) {
+  EXPECT_EQ(expected_state, alpn_state);
+  if (alpn_state == SSL_NEXT_PROTO_NO_SUPPORT) {
     EXPECT_EQ("", expected);
   } else {
     EXPECT_NE("", expected);

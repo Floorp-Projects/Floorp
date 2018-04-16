@@ -345,8 +345,8 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttNoAlpnClient) {
 TEST_P(TlsConnectTls13, TestTls13ZeroRttAlpnChangeBoth) {
   EnableAlpn();
   SetupForZeroRtt();
-  static const uint8_t alpn[] = {0x01, 0x62};  // "b"
-  EnableAlpn(alpn, sizeof(alpn));
+  static const std::vector<uint8_t> alpn({0x01, 0x62});  // "b"
+  EnableAlpn(alpn);
   client_->Set0RttEnabled(true);
   server_->Set0RttEnabled(true);
   ExpectResumption(RESUME_TICKET);

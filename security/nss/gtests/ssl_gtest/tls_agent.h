@@ -268,6 +268,8 @@ class TlsAgent : public PollTarget {
   void ExpectReceiveAlert(uint8_t alert, uint8_t level = 0);
   void ExpectSendAlert(uint8_t alert, uint8_t level = 0);
 
+  std::string alpn_value_to_use_ = "";
+
  private:
   const static char* states[];
 
