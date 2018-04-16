@@ -141,7 +141,7 @@ public:
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFont *aFont,
                               FontWeight aWeight,
-                              int16_t aStretch,
+                              uint16_t aStretch,
                               uint8_t aStyle)
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
         mIsSystemFont(false), mForceGDIClassic(false),
@@ -168,7 +168,7 @@ public:
                               IDWriteFontFile *aFontFile,
                               IDWriteFontFileStream *aFontFileStream,
                               FontWeight aWeight,
-                              int16_t aStretch,
+                              uint16_t aStretch,
                               uint8_t aStyle)
       : gfxFontEntry(aFaceName), mFont(nullptr),
         mFontFile(aFontFile), mFontFileStream(aFontFileStream),
@@ -405,12 +405,12 @@ public:
 
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           FontWeight aWeight,
-                                          int16_t aStretch,
+                                          uint16_t aStretch,
                                           uint8_t aStyle);
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            FontWeight aWeight,
-                                           int16_t aStretch,
+                                           uint16_t aStretch,
                                            uint8_t aStyle,
                                            const uint8_t* aFontData,
                                            uint32_t aLength);
