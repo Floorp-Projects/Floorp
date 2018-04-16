@@ -75,6 +75,25 @@ struct ScrollThumbData;
  * The interpretation of the lock ordering is that if lock A precedes lock B
  * in the ordering sequence, then you must NOT wait on A while holding B.
  *
+ * In addition, the WR hit-testing codepath acquires the tree lock and then
+ * blocks on the render backend thread to do the hit-test. Similar operations
+ * elsewhere mean that we need to be careful with which threads are allowed
+ * to acquire which locks and the order they do so. At the time of this writing,
+ * https://bug1391318.bmoattachments.org/attachment.cgi?id=8965040 contains
+ * the most complete description we have of the situation. The total dependency
+ * ordering including both threads and locks is as follows:
+ *
+ * UI main thread
+ *  -> GPU main thread          // only if GPU enabled
+ *  -> Compositor thread
+ *  -> SceneBuilder thread      // only if WR enabled
+ *  -> APZ tree lock
+ *  -> RenderBackend thread     // only if WR enabled
+ *  -> APZC map lock
+ *  -> APZC instance lock
+ *  -> APZC test lock
+ *
+ * where the -> annotation means the same as described above.
  * **************************************************************************
  */
 
@@ -733,15 +752,57 @@ private:
   mutable mozilla::RecursiveMutex mTreeLock;
   RefPtr<HitTestingTreeNode> mRootNode;
 
-  /* A map for quick access to get APZC instances by guid, without having to
+  /** A lock that protects mApzcMap and mScrollThumbInfo. */
+  mutable mozilla::Mutex mMapLock;
+  /**
+   * A map for quick access to get APZC instances by guid, without having to
    * acquire the tree lock. mMapLock must be acquired while accessing or
    * modifying mApzcMap.
    */
-  mutable mozilla::Mutex mMapLock;
   std::unordered_map<ScrollableLayerGuid,
                      RefPtr<AsyncPanZoomController>,
                      ScrollableLayerGuid::HashIgnoringPresShellFn,
                      ScrollableLayerGuid::EqualIgnoringPresShellFn> mApzcMap;
+  /**
+   * A helper structure to store all the information needed to compute the
+   * async transform for a scrollthumb on the sampler thread.
+   */
+  struct ScrollThumbInfo {
+    uint64_t mThumbAnimationId;
+    CSSTransformMatrix mThumbTransform;
+    ScrollbarData mThumbData;
+    ScrollableLayerGuid mTargetGuid;
+    CSSTransformMatrix mTargetTransform;
+    bool mTargetIsAncestor;
+
+    ScrollThumbInfo(const uint64_t& aThumbAnimationId,
+                    const CSSTransformMatrix& aThumbTransform,
+                    const ScrollbarData& aThumbData,
+                    const ScrollableLayerGuid& aTargetGuid,
+                    const CSSTransformMatrix& aTargetTransform,
+                    bool aTargetIsAncestor)
+      : mThumbAnimationId(aThumbAnimationId)
+      , mThumbTransform(aThumbTransform)
+      , mThumbData(aThumbData)
+      , mTargetGuid(aTargetGuid)
+      , mTargetTransform(aTargetTransform)
+      , mTargetIsAncestor(aTargetIsAncestor)
+    {
+      MOZ_ASSERT(mTargetGuid.mScrollId == mThumbData.mTargetViewId);
+    }
+  };
+  /**
+   * If this APZCTreeManager is being used with WebRender, this vector gets
+   * populated during a layers update. It holds a package of information needed
+   * to compute and set the async transforms on scroll thumbs. This information
+   * is extracted from the HitTestingTreeNodes for the WebRender case because
+   * accessing the HitTestingTreeNodes requires holding the tree lock which
+   * we cannot do on the WR sampler thread. mScrollThumbInfo, however, can
+   * be accessed while just holding the mMapLock which is safe to do on the
+   * sampler thread.
+   * mMapLock must be acquired while accessing or modifying mScrollThumbInfo.
+   */
+  std::vector<ScrollThumbInfo> mScrollThumbInfo;
 
   /* Holds the zoom constraints for scrollable layers, as determined by the
    * the main-thread gecko code. This can only be accessed on the updater
