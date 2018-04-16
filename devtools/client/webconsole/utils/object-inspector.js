@@ -6,6 +6,7 @@
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const ObjectClient = require("devtools/shared/client/object-client");
+const LongStringClient = require("devtools/shared/client/long-string-client");
 
 const reps = require("devtools/client/shared/components/reps/reps");
 const { REPS, MODE } = reps;
@@ -57,6 +58,8 @@ function getObjectInspector(grip, serviceContainer, override) {
     }],
     createObjectClient: object =>
       new ObjectClient(serviceContainer.hudProxy.client, object),
+    createLongStringClient: object =>
+      new LongStringClient(serviceContainer.hudProxy.client, object),
     releaseActor: actor => {
       if (!actor || !serviceContainer.hudProxy.releaseActor) {
         return;
