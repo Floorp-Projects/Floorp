@@ -95,7 +95,11 @@ TextEditor::InsertTextAt(const nsAString& aStringToInsert,
     }
   }
 
-  return InsertText(aStringToInsert);
+  nsresult rv = InsertTextAsAction(aStringToInsert);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult

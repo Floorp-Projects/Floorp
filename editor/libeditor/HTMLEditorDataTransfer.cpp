@@ -1756,7 +1756,9 @@ HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
       rv = InsertAsPlaintextQuotation(curHunk, false,
                                       getter_AddRefs(dummyNode));
     } else {
-      rv = InsertText(curHunk);
+      rv = InsertTextAsAction(curHunk);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+        "Failed to insert a line of the quoted text");
     }
     if (!found) {
       break;
@@ -1846,7 +1848,9 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   if (aAddCites) {
     rv = TextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
   } else {
-    rv = TextEditor::InsertText(aQuotedText);
+    rv = InsertTextAsAction(aQuotedText);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to insert the quoted text as plain text");
   }
   // Note that if !aAddCites, aNodeInserted isn't set.
   // That's okay because the routines that use aAddCites
@@ -1928,7 +1932,8 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
   if (aInsertHTML) {
     rv = LoadHTML(aQuotedText);
   } else {
-    rv = InsertText(aQuotedText);  // XXX ignore charset
+    rv = InsertTextAsAction(aQuotedText);  // XXX ignore charset
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the quoted text");
   }
 
   if (aNodeInserted && NS_SUCCEEDED(rv)) {

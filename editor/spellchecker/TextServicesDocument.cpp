@@ -1259,7 +1259,7 @@ TextServicesDocument::InsertText(const nsString* aText)
     return rv;
   }
 
-  rv = textEditor->InsertText(*aText);
+  rv = textEditor->InsertTextAsAction(*aText);
   if (NS_FAILED(rv)) {
     textEditor->EndTransaction();
     UNLOCK_DOC(this);

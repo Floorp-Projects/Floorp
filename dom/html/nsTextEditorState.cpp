@@ -2428,7 +2428,10 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
               NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                 "Failed to remove the text");
             } else {
-              textEditor->InsertText(insertValue);
+              DebugOnly<nsresult> rv =
+                textEditor->InsertTextAsAction(insertValue);
+              NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                "Failed to insert the new value");
             }
           } else {
             AutoDisableUndo disableUndo(textEditor);

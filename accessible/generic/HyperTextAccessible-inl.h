@@ -70,7 +70,8 @@ HyperTextAccessible::ReplaceText(const nsAString& aText)
   // select all again and replace whole contents.
   textEditor->SelectAll();
 
-  textEditor->InsertText(aText);
+  DebugOnly<nsresult> rv = textEditor->InsertTextAsAction(aText);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the new text");
 }
 
 inline void
@@ -79,7 +80,8 @@ HyperTextAccessible::InsertText(const nsAString& aText, int32_t aPosition)
   RefPtr<TextEditor> textEditor = GetEditor();
   if (textEditor) {
     SetSelectionRange(aPosition, aPosition);
-    textEditor->InsertText(aText);
+    DebugOnly<nsresult> rv = textEditor->InsertTextAsAction(aText);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the text");
   }
 }
 

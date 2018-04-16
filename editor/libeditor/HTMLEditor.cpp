@@ -773,7 +773,7 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
         return NS_OK; // don't type text for shift tabs
       }
       aKeyboardEvent->PreventDefault();
-      return TypedText(NS_LITERAL_STRING("\t"), eTypedText);
+      return OnInputText(NS_LITERAL_STRING("\t"));
     }
     case NS_VK_RETURN:
       if (!aKeyboardEvent->IsInputtingLineBreak()) {
@@ -781,11 +781,11 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
       }
       aKeyboardEvent->PreventDefault(); // consumed
       if (aKeyboardEvent->IsShift()) {
-        // only inserts a br node
-        return TypedText(EmptyString(), eTypedBR);
+        // Only inserts a <br> element.
+        return OnInputLineBreak();
       }
       // uses rules to figure out what to insert
-      return TypedText(EmptyString(), eTypedBreak);
+      return OnInputParagraphSeparator();
   }
 
   if (!aKeyboardEvent->IsInputtingText()) {
@@ -794,7 +794,7 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
   }
   aKeyboardEvent->PreventDefault();
   nsAutoString str(aKeyboardEvent->mCharCode);
-  return TypedText(str, eTypedText);
+  return OnInputText(str);
 }
 
 /**
@@ -1037,27 +1037,15 @@ HTMLEditor::UpdateBaseURL()
   return NS_OK;
 }
 
-/**
- * This routine is needed to provide a bottleneck for typing for logging
- * purposes.  Can't use HandleKeyPress() (above) for that since it takes
- * a WidgetKeyboardEvent* parameter.  So instead we pass enough info through
- * to TypedText() to determine what action to take, but without passing
- * an event.
- */
-NS_IMETHODIMP
-HTMLEditor::TypedText(const nsAString& aString,
-                      ETypingAction aAction)
+nsresult
+HTMLEditor::OnInputLineBreak()
 {
-  MOZ_ASSERT(!aString.IsEmpty() || aAction != eTypedText);
-
   AutoPlaceholderBatch batch(this, nsGkAtoms::TypingTxnName);
-
-  if (aAction == eTypedBR) {
-    // only inserts a br node
-    return InsertBR();
+  nsresult rv = InsertBrElementAtSelectionWithTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
-
-  return TextEditor::TypedText(aString, aAction);
+  return NS_OK;
 }
 
 nsresult
@@ -1136,7 +1124,7 @@ HTMLEditor::TabInTable(bool inIsShift,
 }
 
 nsresult
-HTMLEditor::InsertBR()
+HTMLEditor::InsertBrElementAtSelectionWithTransaction()
 {
   // calling it text insertion to trigger moz br treatment by rules
   AutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
@@ -2323,13 +2311,20 @@ HTMLEditor::Indent(const nsAString& aIndent)
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
-    rv = InsertText(NS_LITERAL_STRING(" "));
-    NS_ENSURE_SUCCESS(rv, rv);
-    // reposition selection to before the space character
-    NS_ENSURE_STATE(selection->GetRangeAt(0));
-    rv = selection->Collapse(selection->GetRangeAt(0)->GetStartContainer(),
-                             0);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = InsertTextAsAction(NS_LITERAL_STRING(" "));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    // Reposition selection to before the space character.
+    firstRange = selection->GetRangeAt(0);
+    if (NS_WARN_IF(!firstRange)) {
+      return NS_ERROR_FAILURE;
+    }
+    selection->Collapse(RawRangeBoundary(firstRange->GetStartContainer(), 0),
+                        error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
   }
   return rules->DidDoAction(selection, &ruleInfo, rv);
 }

@@ -436,9 +436,11 @@ public:
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet,
                               bool aWasAlternate, nsresult aStatus) override;
 
-  // Utility Routines, not part of public API
-  NS_IMETHOD TypedText(const nsAString& aString,
-                       ETypingAction aAction) override;
+  /**
+   * OnInputLineBreak() is called when user inputs a line break with
+   * Shift + Enter or something.
+   */
+  nsresult OnInputLineBreak();
 
   /**
    * InsertNodeIntoProperAncestor() attempts to insert aNode into the document,
@@ -654,10 +656,11 @@ protected:
   nsresult TabInTable(bool inIsShift, bool* outHandled);
 
   /**
-   * InsertBR() inserts a new <br> element at selection.  If there is
-   * non-collapsed selection ranges, the selected ranges is deleted first.
+   * InsertBrElementAtSelectionWithTransaction() inserts a new <br> element at
+   * selection.  If there is non-collapsed selection ranges, the selected
+   * ranges is deleted first.
    */
-  nsresult InsertBR();
+  nsresult InsertBrElementAtSelectionWithTransaction();
 
   // Table Editing (implemented in nsTableEditor.cpp)
 
