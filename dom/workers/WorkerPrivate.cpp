@@ -3340,9 +3340,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
       runnable->Release();
 
       CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
-      if (ccjs) {
-        ccjs->PerformDebuggerMicroTaskCheckpoint();
-      }
+      ccjs->PerformDebuggerMicroTaskCheckpoint();
 
       if (debuggerRunnablesPending) {
         WorkerDebuggerGlobalScope* globalScope = DebuggerGlobalScope();
@@ -4440,9 +4438,7 @@ WorkerPrivate::EnterDebuggerEventLoop()
       // XXXkhuey should we abort JS on the stack here if we got Abort above?
     }
     CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
-    if (context) {
-      context->PerformDebuggerMicroTaskCheckpoint();
-    }
+    context->PerformDebuggerMicroTaskCheckpoint();
     if (debuggerRunnablesPending) {
       // Start the periodic GC timer if it is not already running.
       SetGCTimerMode(PeriodicTimer);
@@ -4460,9 +4456,7 @@ WorkerPrivate::EnterDebuggerEventLoop()
       runnable->Release();
 
       CycleCollectedJSContext* ccjs = CycleCollectedJSContext::Get();
-      if (ccjs) {
-        ccjs->PerformDebuggerMicroTaskCheckpoint();
-      }
+      ccjs->PerformDebuggerMicroTaskCheckpoint();
 
       // Now *might* be a good time to GC. Let the JS engine make the decision.
       if (JS::CurrentGlobalOrNull(cx)) {
