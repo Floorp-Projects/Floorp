@@ -16,15 +16,17 @@ XPCOMUtils.defineLazyGetter(this, "wcStrings", function() {
     "chrome://webcompat-reporter/locale/webcompat.properties");
 });
 
-// Gather values for prefs we want to appear in reports.
-let prefs = {};
-XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.all", "gfx.webrender.all", false);
-XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.blob-images", "gfx.webrender.blob-images", true);
-XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.enabled", "gfx.webrender.enabled", false);
-XPCOMUtils.defineLazyPreferenceGetter(prefs, "image.mem.shared", "image.mem.shared", true);
+// Gather values for interesting details we want to appear in reports.
+let details = {};
+XPCOMUtils.defineLazyPreferenceGetter(details, "gfx.webrender.all", "gfx.webrender.all", false);
+XPCOMUtils.defineLazyPreferenceGetter(details, "gfx.webrender.blob-images", "gfx.webrender.blob-images", 1);
+XPCOMUtils.defineLazyPreferenceGetter(details, "gfx.webrender.enabled", "gfx.webrender.enabled", false);
+XPCOMUtils.defineLazyPreferenceGetter(details, "image.mem.shared", "image.mem.shared", 2);
+details.buildID = Services.appinfo.appBuildID;
+details.channel = AppConstants.MOZ_UPDATE_CHANNEL;
 
 if (AppConstants.platform == "linux") {
-  XPCOMUtils.defineLazyPreferenceGetter(prefs, "layers.acceleration.force-enabled", "layers.acceleration.force-enabled", false);
+  XPCOMUtils.defineLazyPreferenceGetter(details, "layers.acceleration.force-enabled", "layers.acceleration.force-enabled", false);
 }
 
 let WebCompatReporter = {
@@ -91,9 +93,9 @@ let WebCompatReporter = {
     let params = new URLSearchParams();
     params.append("url", `${tabData.url}`);
     params.append("src", "desktop-reporter");
-    params.append("details", JSON.stringify(prefs));
+    params.append("details", JSON.stringify(details));
 
-    if (prefs["gfx.webrender.all"] || prefs["gfx.webrender.enabled"]) {
+    if (details["gfx.webrender.all"] || details["gfx.webrender.enabled"]) {
       params.append("label", "type-webrender-enabled");
     }
 
