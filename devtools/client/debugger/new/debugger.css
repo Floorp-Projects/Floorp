@@ -1364,8 +1364,9 @@ html[dir="rtl"] .tree-node img.arrow {
   width: 13px;
   height: 13px;
   display: inline-block;
-  margin-inline-end: 5px;
-  margin-bottom: -2px;
+  margin-inline-end: 6px;
+  margin-inline-start: 1px;
+  margin-top: 2px;
 }
 
 .sources-list .managed-tree .tree .node.focused img {
@@ -1948,7 +1949,6 @@ html .toggle-button.end.vertical svg {
   --node-color: var(--theme-highlight-purple);
   --reference-color: var(--theme-highlight-blue);
   --comment-node-color: var(--theme-comment);
-  --stack-function-color: var(--theme-highlight-red);
 }
 
 .theme-firebug {
@@ -2010,9 +2010,12 @@ html .toggle-button.end.vertical svg {
 }
 
 .objectBox-function,
-.objectBox-stackTrace,
 .objectBox-profile {
   color: var(--object-color);
+}
+
+.objectBox-stackTrace {
+  color: var(--error-color);
 }
 
 .objectBox-stackTrace-grid {
@@ -2023,14 +2026,34 @@ html .toggle-button.end.vertical svg {
 
 .objectBox-stackTrace-fn::before {
   content: "\3BB"; /* The "lambda" symbol */
-  color: var(--theme-body-color);
   display: inline-block;
   margin: 0 0.3em;
 }
 
 .objectBox-stackTrace-fn {
-  color: var(--stack-function-color);
+  color: var(--console-output-color);
   padding-inline-start: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-inline-end: 5px;
+}
+
+.objectBox-stackTrace-location {
+  color: var(--frame-link-source, currentColor);
+  direction: rtl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: end;
+}
+
+.objectBox-stackTrace-location:hover {
+  text-decoration: underline;
+}
+
+.objectBox-stackTrace-location {
+  cursor: pointer;
 }
 
 .objectBox-Location,
@@ -2958,6 +2981,10 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.watch-expressions-pane .plus {
+  margin-top: -2px;
+}
 
 .expression-input-form {
   width: 100%;

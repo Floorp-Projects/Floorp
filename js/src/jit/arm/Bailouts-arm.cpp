@@ -88,7 +88,7 @@ BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
     }
 
     // Compute the snapshot offset from the bailout ID.
-    JSRuntime* rt = activation->compartment()->runtimeFromActiveCooperatingThread();
+    JSRuntime* rt = activation->compartment()->runtimeFromMainThread();
     TrampolinePtr code = rt->jitRuntime()->getBailoutTable(bailout->frameClass());
 #ifdef DEBUG
     uint32_t tableSize = rt->jitRuntime()->getBailoutTableSize(bailout->frameClass());

@@ -156,7 +156,7 @@ GetterSetterWriteBarrierPost(AccessorShape* shape)
             oomUnsafe.crash("GetterSetterWriteBarrierPost");
     }
 
-    auto& storeBuffer = shape->runtimeFromActiveCooperatingThread()->gc.storeBuffer();
+    auto& storeBuffer = shape->runtimeFromMainThread()->gc.storeBuffer();
     if (nurseryShapes.length() == 1) {
         storeBuffer.putGeneric(NurseryShapesRef(shape->zone()));
     } else if (nurseryShapes.length() == MaxShapeVectorLength) {

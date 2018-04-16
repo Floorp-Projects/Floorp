@@ -24,23 +24,6 @@ function getLabel(dbg, index) {
 
 add_task(async function() {
   const dbg = await initDebugger("doc-sources.html");
-  const { selectors: { getSelectedSource, getExpandedState }, getState } = dbg;
-
-  await waitForSources(dbg, "nested-source");
-  await selectSource(dbg, "nested-source");
-
-  const expanded = getExpandedState(getState());
-
-  ok(
-    expanded.has(
-      `example.com/browser/devtools/client/debugger/new/test/mochitest/examples/nested/nested/`
-    ),
-    "Nodes in path are automatically expanded"
-  );
-});
-
-add_task(async function() {
-  const dbg = await initDebugger("doc-sources.html");
   const { selectors: { getSelectedSource }, getState } = dbg;
 
   await waitForSources(dbg, "simple1", "simple2", "nested-source", "long.js");

@@ -71,7 +71,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     objectMetadataTable(nullptr),
     innerViews(zone),
     lazyArrayBuffers(nullptr),
-    wasm(zone->runtimeFromActiveCooperatingThread()),
+    wasm(zone->runtimeFromMainThread()),
     nonSyntacticLexicalEnvironments_(nullptr),
     gcIncomingGrayPointers(nullptr),
     debugModeBits(0),
@@ -99,7 +99,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
 JSCompartment::~JSCompartment()
 {
     // Write the code coverage information in a file.
-    JSRuntime* rt = runtimeFromActiveCooperatingThread();
+    JSRuntime* rt = runtimeFromMainThread();
     if (rt->lcovOutput().isEnabled())
         rt->lcovOutput().writeLCovResult(lcovOutput);
 
@@ -1166,7 +1166,7 @@ JSCompartment::updateDebuggerObservesFlag(unsigned flag)
                flag == DebuggerObservesAsmJS ||
                flag == DebuggerObservesBinarySource);
 
-    GlobalObject* global = zone()->runtimeFromActiveCooperatingThread()->gc.isForegroundSweeping()
+    GlobalObject* global = zone()->runtimeFromMainThread()->gc.isForegroundSweeping()
                            ? unsafeUnbarrieredMaybeGlobal()
                            : maybeGlobal();
     const GlobalObject::DebuggerVector* v = global->getDebuggers();

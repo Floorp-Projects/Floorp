@@ -786,7 +786,7 @@ function checkActiveGMPlugin(data) {
 
 function checkAddonsSection(data, expectBrokenAddons, partialAddonsRecords) {
   const EXPECTED_FIELDS = [
-    "activeAddons", "theme", "activePlugins", "activeGMPlugins", "activeExperiment",
+    "activeAddons", "theme", "activePlugins", "activeGMPlugins",
     "persona",
   ];
 
@@ -819,10 +819,6 @@ function checkAddonsSection(data, expectBrokenAddons, partialAddonsRecords) {
   for (let gmPlugin in activeGMPlugins) {
     checkActiveGMPlugin(activeGMPlugins[gmPlugin]);
   }
-
-  // Check that we don't send Experiment Telemetry
-  let experiment = data.addons.activeExperiment;
-  Assert.equal(Object.keys(experiment).length, 0);
 
   // Check persona
   Assert.ok(checkNullOrString(data.addons.persona));
@@ -860,7 +856,6 @@ function checkEnvironmentData(data, options = {}) {
   checkPartnerSection(data, isInitial);
   checkSystemSection(data);
   checkAddonsSection(data, expectBrokenAddons);
-  checkExperimentsSection(data);
 }
 
 add_task(async function setup() {

@@ -24,8 +24,8 @@ def pytest_configure(config):
     config.driver = webdriver.Firefox(firefox_binary=config.getoption("--binary"))
     config.server = WPTServer(WPT_ROOT)
     config.server.start()
-    config.add_cleanup(lambda: config.server.stop())
-    config.add_cleanup(lambda: config.driver.quit())
+    config.add_cleanup(config.server.stop)
+    config.add_cleanup(config.driver.quit)
 
 class HTMLItem(pytest.Item, pytest.Collector):
     def __init__(self, filename, parent):
@@ -87,7 +87,8 @@ class HTMLItem(pytest.Item, pytest.Collector):
 
     @staticmethod
     def _assert_sequence(nums):
-        assert nums == range(1, nums[-1] + 1)
+        if nums and len(nums) > 0:
+            assert nums == range(1, nums[-1] + 1)
 
     @staticmethod
     def _scrub_stack(test_obj):
