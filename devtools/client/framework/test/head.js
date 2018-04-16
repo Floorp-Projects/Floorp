@@ -247,3 +247,16 @@ DevToolPanel.prototype = {
 function createTestPanel(iframeWindow, toolbox) {
   return new DevToolPanel(iframeWindow, toolbox);
 }
+
+async function openChevronMenu(toolbox) {
+  let chevronMenuButton = toolbox.doc.querySelector(".tools-chevron-menu");
+  EventUtils.synthesizeMouseAtCenter(chevronMenuButton, {}, toolbox.win);
+
+  let menuPopup = toolbox.doc.querySelector("#tools-chevron-menupopup");
+  ok(menuPopup, "tools-chevron-menupopup is available");
+
+  info("Waiting for the menu popup to be displayed");
+  await waitUntil(() => menuPopup && menuPopup.state === "open");
+
+  return menuPopup;
+}

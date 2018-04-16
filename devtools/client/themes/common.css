@@ -263,7 +263,6 @@ checkbox:-moz-focusring {
 .devtools-button:empty::before {
   content: "";
   display: inline-block;
-  background-size: cover;
   background-repeat: no-repeat;
   vertical-align: middle;
 }

@@ -20,6 +20,15 @@ add_task(async function() {
   let tab = await addTab(URL);
   let target = TargetFactory.forTab(tab);
   toolbox = await gDevTools.showToolbox(target);
+
+  info("In order to ensure display the chevron menu, increase the width of " +
+       "the toolbox");
+  let hostWindow = toolbox.win.parent;
+  let originalWidth = hostWindow.outerWidth;
+  let onResize = once(hostWindow, "resize");
+  hostWindow.resizeTo(1350, hostWindow.outerHeight);
+  await onResize;
+
   doc = toolbox.doc;
   await registerNewPerToolboxTool();
   await testSelectTool();
@@ -33,7 +42,7 @@ add_task(async function() {
   await registerNewWebExtensions();
   await testToggleWebExtensions();
 
-  await cleanup();
+  await cleanup(hostWindow, originalWidth);
 });
 
 function registerNewTool() {
@@ -455,7 +464,7 @@ function GetPref(name) {
   }
 }
 
-async function cleanup() {
+async function cleanup(win, winWidth) {
   gDevTools.unregisterTool("test-tool");
   await toolbox.destroy();
   gBrowser.removeCurrentTab();
@@ -463,4 +472,5 @@ async function cleanup() {
     Services.prefs.clearUserPref(pref);
   }
   toolbox = doc = panelWin = modifiedPrefs = null;
+  win.resizeTo(winWidth, win.outerHeight);
 }

@@ -1,0 +1,106 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+// This test will:
+//
+// * Confirm that currently selected button to access tools will not hide due to overflow.
+//   In this case, a button which is located on the left of a currently selected will hide.
+// * Confirm that a button to access tool will hide when registering a new panel.
+//
+// Note that this test is based on the tab ordinal is fixed.
+// i.e. After changed by Bug 1226272, this test might fail.
+
+let { Toolbox } = require("devtools/client/framework/toolbox");
+
+add_task(async function() {
+  let tab = await addTab("about:blank");
+
+  info("Open devtools on the Storage in a sidebar.");
+  let toolbox = await openToolboxForTab(tab, "storage", Toolbox.HostType.BOTTOM);
+
+  info("Waiting for the window to be resized");
+  let {hostWin, originalWidth, originalHeight} = await resizeWindow(toolbox, 800);
+
+  info("Wait until the tools menu button is available");
+  await waitUntil(() => toolbox.doc.querySelector(".tools-chevron-menu"));
+
+  let toolsMenuButton = toolbox.doc.querySelector(".tools-chevron-menu");
+  ok(toolsMenuButton, "The tools menu button is displayed");
+
+  info("Confirm that selected tab is not hidden.");
+  let storageButton = toolbox.doc.querySelector("#toolbox-tab-storage");
+  ok(storageButton, "The storage tab is on toolbox.");
+
+  await resizeWindow(toolbox, originalWidth, originalHeight);
+});
+
+add_task(async function() {
+  let tab = await addTab("about:blank");
+
+  info("Open devtools on the Storage in a sidebar.");
+  let toolbox = await openToolboxForTab(tab, "storage", Toolbox.HostType.BOTTOM);
+
+  info("Resize devtools window to a width that should trigger an overflow");
+  let {hostWin, originalWidth, originalHeight} = await resizeWindow(toolbox, 800);
+
+  info("Regist a new tab");
+  let onRegistered = toolbox.once("tool-registered");
+  gDevTools.registerTool({
+    id: "test-tools",
+    label: "Test Tools",
+    isMenu: true,
+    isTargetSupported: () => true,
+    build: function() {},
+  });
+  await onRegistered;
+
+  info("Open the tools menu button.");
+  let popup = await openChevronMenu(toolbox);
+
+  info("The registered new tool tab should be in the tools menu.");
+  let testToolsButton = toolbox.doc.querySelector("#tools-chevron-menupopup-test-tools");
+  ok(testToolsButton, "The tools menu has a registered new tool button.");
+
+  info("Closing the tools-chevron-menupopup popup");
+  let onPopupHidden = once(popup, "popuphidden");
+  popup.hidePopup();
+  await onPopupHidden;
+
+  info("Unregistering test-tools");
+  let onUnregistered = toolbox.once("tool-unregistered");
+  gDevTools.unregisterTool("test-tools");
+  await onUnregistered;
+
+  info("Open the tools menu button.");
+  popup = await openChevronMenu(toolbox);
+
+  info("An unregistered new tool tab should not be in the tools menu.");
+  testToolsButton = toolbox.doc.querySelector("#tools-chevron-menupopup-test-tools");
+  ok(!testToolsButton, "The tools menu doesn't have a unregistered new tool button.");
+
+  info("Closing the tools-chevron-menupopup popup");
+  onPopupHidden = once(popup, "popuphidden");
+  popup.hidePopup();
+  await onPopupHidden;
+
+  await resizeWindow(toolbox, originalWidth, originalHeight);
+});
+
+async function resizeWindow(toolbox, width, height) {
+  let hostWindow = toolbox.win.parent;
+  let originalWidth = hostWindow.outerWidth;
+  let originalHeight = hostWindow.outerHeight;
+  let toWidth = width || originalWidth;
+  let toHeight = height || originalHeight;
+
+  info("Resize devtools window to a width that should trigger an overflow");
+  let onResize = once(hostWindow, "resize");
+  hostWindow.resizeTo(toWidth, toHeight);
+  await onResize;
+
+  return {hostWindow, originalWidth, originalHeight};
+}

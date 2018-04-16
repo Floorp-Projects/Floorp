@@ -16,6 +16,7 @@
   --command-frames-image: url(images/command-frames.svg);
   --command-rulers-image: url(images/command-rulers.svg);
   --command-measure-image: url(images/command-measure.svg);
+  --command-chevron-image: url(images/command-chevron.svg);
 }
 
 /* Toolbox tabbar */
@@ -35,8 +36,7 @@
   flex: 1;
 }
 
-.toolbox-tabs-wrapper .all-tools-menu {
-  border-inline-end: 1px solid var(--theme-splitter-color);
+.toolbox-tabs-wrapper .tools-chevron-menu {
   border-top-width: 0;
   border-bottom-width: 0;
 }
@@ -68,7 +68,6 @@
   position: relative;
   display: flex;
   align-items: center;
-  min-width: 32px;
   min-height: 24px;
   margin: 0;
   padding: 0;
@@ -77,6 +76,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   background-color: transparent;
+  flex-shrink: 0;
 }
 
 .devtools-tab-label {
@@ -89,23 +89,6 @@
 
 .devtools-tab-label:-moz-locale-dir(rtl) {
   mask-image: linear-gradient(to right, transparent 0, black 6px);
-}
-
-/* Hide tab icons when the viewport width is limited */
-@media (max-width: 700px) {
-  .devtools-tab-label {
-    /* Set the end padding on the label to make sure the label gets faded out properly */
-    padding-inline-end: 5px;
-  }
-
-  .devtools-tab:not(.devtools-tab-icon-only) {
-    padding-inline-start: 5px !important;
-  }
-
-  /* Hide the icons */
-  .devtools-tab:not(.devtools-tab-icon-only) > img {
-    display: none;
-  }
 }
 
 .devtools-tab-icon-only {
@@ -144,9 +127,10 @@
   margin: 0 4px;
 }
 
-.devtools-tab > img {
+.devtools-tab > img,
+.tools-chevron-menu > img {
   -moz-context-properties: fill;
-  fill: var(--theme-toolbar-color);
+  fill: var(--theme-toolbar-photon-icon-color);
 }
 
 .devtools-tab.selected > img {
@@ -158,6 +142,13 @@
 }
 
 /* Toolbox controls */
+
+#tools-chevron-menu-button::before {
+  top: 0;
+  offset-inline-end: 0;
+  background-image: var(--command-chevron-image);
+  background-position: center;
+}
 
 #toolbox-controls {
   margin-right: 3px;
