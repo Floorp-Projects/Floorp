@@ -13,6 +13,7 @@
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/SynchronousTask.h"
 #include "TreeTraversal.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 
 namespace mozilla {
 namespace layers {
@@ -223,3 +224,19 @@ APZSampler::GetSampler(const wr::WrWindowId& aWindowId)
 
 } // namespace layers
 } // namespace mozilla
+
+void
+apz_register_sampler(mozilla::wr::WrWindowId aWindowId)
+{
+}
+
+void
+apz_sample_transforms(mozilla::wr::WrWindowId aWindowId,
+                      mozilla::wr::Transaction *aTransaction)
+{
+}
+
+void
+apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId)
+{
+}
