@@ -7,7 +7,10 @@
 #ifndef mozilla_layers_APZSampler_h
 #define mozilla_layers_APZSampler_h
 
+#include <unordered_map>
+
 #include "mozilla/layers/AsyncCompositionManager.h" // for AsyncTransform
+#include "mozilla/StaticMutex.h"
 #include "nsTArray.h"
 #include "Units.h"
 
@@ -18,6 +21,7 @@ class TimeStamp;
 namespace wr {
 class TransactionBuilder;
 struct WrTransformProperty;
+struct WrWindowId;
 } // namespace wr
 
 namespace layers {
@@ -36,6 +40,8 @@ class APZSampler {
 
 public:
   explicit APZSampler(const RefPtr<APZCTreeManager>& aApz);
+
+  void SetWebRenderWindowId(const wr::WindowId& aWindowId);
 
   bool PushStateToWR(wr::TransactionBuilder& aTxn,
                      const TimeStamp& aSampleTime);
@@ -84,8 +90,18 @@ public:
 protected:
   virtual ~APZSampler();
 
+  static already_AddRefed<APZSampler> GetSampler(const wr::WrWindowId& aWindowId);
+
 private:
   RefPtr<APZCTreeManager> mApz;
+
+  // Used to manage the mapping from a WR window id to APZSampler. These are only
+  // used if WebRender is enabled. Both sWindowIdMap and mWindowId should only
+  // be used while holding the sWindowIdLock.
+  static StaticMutex sWindowIdLock;
+  static std::unordered_map<uint64_t, APZSampler*> sWindowIdMap;
+  Maybe<wr::WrWindowId> mWindowId;
+
 };
 
 } // namespace layers
