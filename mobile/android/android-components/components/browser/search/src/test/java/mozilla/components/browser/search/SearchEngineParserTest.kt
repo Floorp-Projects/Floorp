@@ -18,7 +18,7 @@ class SearchEngineParserTest {
     fun `SearchEngine can be parsed from assets`() {
         val searchEngine = SearchEngineParser().load(
                 RuntimeEnvironment.application.assets,
-                "google", "search/default/google-nocodes.xml")
+                "google", "searchplugins/google-nocodes.xml")
 
         assertEquals("google", searchEngine.identifier)
         assertEquals("Google", searchEngine.name)

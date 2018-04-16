@@ -18,12 +18,12 @@ import java.util.ArrayList
 import java.util.UUID
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
-class ParseSearchPluginsTest(private val searchPluginPath: String, private val searchEngineIdentifier: String) {
+class ParseSearchPluginsTest(private val searchEngineIdentifier: String) {
 
     @Test
     @Throws(Exception::class)
     fun testParser() {
-        val stream = FileInputStream(searchPluginPath)
+        val stream = FileInputStream(File(basePath, searchEngineIdentifier))
         val searchEngine = SearchEngineParser().load(searchEngineIdentifier, stream)
         assertEquals(searchEngineIdentifier, searchEngine.identifier)
 
@@ -44,36 +44,19 @@ class ParseSearchPluginsTest(private val searchPluginPath: String, private val s
 
     companion object {
         @JvmStatic
-        @ParameterizedRobolectricTestRunner.Parameters(name = "{1}")
+        @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
         fun searchPlugins(): Collection<Array<Any>> {
             val searchPlugins = ArrayList<Array<Any>>()
-            collectSearchPlugins(searchPlugins, basePath)
+            basePath.list().forEach {
+                searchPlugins.add(arrayOf(it))
+            }
             return searchPlugins
-        }
-
-        private fun collectSearchPlugins(searchPlugins: MutableCollection<Array<Any>>, path: File) {
-            if (!path.isDirectory) {
-                throw AssertionError("Not a directory: " + path.absolutePath)
-            }
-
-            val entries = path.list()
-                    ?: throw AssertionError("No files in directory " + path.absolutePath)
-
-            for (entry in entries) {
-                val file = File(path, entry)
-
-                if (file.isDirectory) {
-                    collectSearchPlugins(searchPlugins, file)
-                } else if (entry.endsWith(".xml")) {
-                    searchPlugins.add(arrayOf(file.absolutePath, entry.substring(0, entry.length - 4)))
-                }
-            }
         }
 
         private val basePath: File
             get() {
                 val classLoader = ParseSearchPluginsTest::class.java.classLoader
-                return File(classLoader.getResource("search").file)
+                return File(classLoader.getResource("searchplugins").file)
             }
     }
 }
