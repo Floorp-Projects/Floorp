@@ -145,6 +145,7 @@ public:
   }
 
   virtual void DisconnectFromOwner() override;
+  virtual void BindToOwner(nsIGlobalObject* aNew) override;
 
   void Shutdown(); // idempotent
 
