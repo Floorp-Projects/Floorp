@@ -1,0 +1,58 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1450358 - Test WebSocket event listener leak conditions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/events/test/event_leak_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+// Manipulate WebSocket objects in the frame's context.
+// Its important here that we create a listener callback from
+// the DOM objects back to the frame's global in order to
+// exercise the leak condition.
+async function useWebSocket(contentWindow) {
+  const url = "ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_bigBlob";
+  let ws = new contentWindow.WebSocket(url);
+
+  ws.onmessage = _ => {
+    contentWindow.messageCount += 1;
+  };
+
+  contentWindow.openCount = 0;
+  await new Promise((resolve, reject) => {
+    ws.onopen = _ => {
+      contentWindow.openCount += 1;
+      resolve();
+    };
+    ws.onerror = e => {
+      contentWindow.errorCount += 1;
+      reject("websocket error");
+    };
+  });
+
+  is(contentWindow.openCount, 1, "open should be received");
+}
+
+async function runTest() {
+  try {
+    await checkForEventListenerLeaks("WebSocket", useWebSocket);
+  } catch (e) {
+    ok(false, e);
+  } finally {
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+addEventListener("load", runTest, { once: true });
+</script>
+</pre>
+</body>
+</html>
+
