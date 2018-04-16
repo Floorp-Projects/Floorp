@@ -158,23 +158,18 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 #define SSL_CBC_RANDOM_IV 23
 #define SSL_ENABLE_OCSP_STAPLING 24 /* Request OCSP stapling (client) */
 
-/* SSL_ENABLE_NPN controls whether the NPN extension is enabled for the initial
- * handshake when application layer protocol negotiation is used.
- * SSL_SetNextProtoCallback or SSL_SetNextProtoNego must be used to control the
- * application layer protocol negotiation; otherwise, the NPN extension will
- * not be negotiated. SSL_ENABLE_NPN is currently enabled by default but this
- * may change in future versions.
- */
+/* SSL_ENABLE_NPN is defunct and defaults to false.
+ * Using this option will not have any effect but won't produce an error. */
 #define SSL_ENABLE_NPN 25
 
 /* SSL_ENABLE_ALPN controls whether the ALPN extension is enabled for the
  * initial handshake when application layer protocol negotiation is used.
- * SSL_SetNextProtoNego (not SSL_SetNextProtoCallback) must be used to control
- * the application layer protocol negotiation; otherwise, the ALPN extension
- * will not be negotiated. ALPN is not negotiated for renegotiation handshakes,
- * even though the ALPN specification defines a way to use ALPN during
- * renegotiations. SSL_ENABLE_ALPN is currently disabled by default, but this
- * may change in future versions.
+ * SSL_SetNextProtoNego or SSL_SetNextProtoCallback can be used to control
+ * the application layer protocol negotiation;
+ * ALPN is not negotiated for renegotiation handshakes, even though the ALPN
+ * specification defines a way to use ALPN during renegotiations.
+ * SSL_ENABLE_ALPN is currently enabled by default, but this may change in
+ * future versions.
  */
 #define SSL_ENABLE_ALPN 26
 
@@ -283,10 +278,10 @@ SSL_IMPORT SECStatus SSL_OptionSetDefault(PRInt32 option, PRIntn val);
 SSL_IMPORT SECStatus SSL_OptionGetDefault(PRInt32 option, PRIntn *val);
 SSL_IMPORT SECStatus SSL_CertDBHandleSet(PRFileDesc *fd, CERTCertDBHandle *dbHandle);
 
-/* SSLNextProtoCallback is called during the handshake for the client, when a
- * Next Protocol Negotiation (NPN) extension has been received from the server.
- * |protos| and |protosLen| define a buffer which contains the server's
- * advertisement. This data is guaranteed to be well formed per the NPN spec.
+/* SSLNextProtoCallback is called during the handshake for the server, when an
+ * Application-Layer Protocol Negotiation (ALPN) extension has been received
+ * from the client. |protos| and |protosLen| define a buffer which contains the
+ * client's advertisement.
  * |protoOut| is a buffer provided by the caller, of length 255 (the maximum
  * allowed by the protocol). On successful return, the protocol to be announced
  * to the server will be in |protoOut| and its length in |*protoOutLen|.
@@ -302,27 +297,24 @@ typedef SECStatus(PR_CALLBACK *SSLNextProtoCallback)(
     unsigned int *protoOutLen,
     unsigned int protoMaxOut);
 
-/* SSL_SetNextProtoCallback sets a callback function to handle Next Protocol
- * Negotiation. It causes a client to advertise NPN. */
+/* SSL_SetNextProtoCallback sets a callback function to handle ALPN Negotiation.
+ * It causes a client to advertise ALPN. */
 SSL_IMPORT SECStatus SSL_SetNextProtoCallback(PRFileDesc *fd,
                                               SSLNextProtoCallback callback,
                                               void *arg);
 
 /* SSL_SetNextProtoNego can be used as an alternative to
- * SSL_SetNextProtoCallback. It also causes a client to advertise NPN and
- * installs a default callback function which selects the first supported
- * protocol in server-preference order. If no matching protocol is found it
- * selects the first supported protocol.
+ * SSL_SetNextProtoCallback.
  *
- * Using this function also allows the client to transparently support ALPN.
+ * Using this function allows client and server to transparently support ALPN.
  * The same set of protocols will be advertised via ALPN and, if the server
  * uses ALPN to select a protocol, SSL_GetNextProto will return
  * SSL_NEXT_PROTO_SELECTED as the state.
  *
- * Since NPN uses the first protocol as the fallback protocol, when sending an
- * ALPN extension, the first protocol is moved to the end of the list. This
- * indicates that the fallback protocol is the least preferred. The other
- * protocols should be in preference order.
+ * Because the predecessor to ALPN, NPN, used the first protocol as the fallback
+ * protocol, when sending an ALPN extension, the first protocol is moved to the
+ * end of the list. This indicates that the fallback protocol is the least
+ * preferred. The other protocols should be in preference order.
  *
  * The supported protocols are specified in |data| in wire-format (8-bit
  * length-prefixed). For example: "\010http/1.1\006spdy/2". */
