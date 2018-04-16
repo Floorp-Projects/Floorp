@@ -95,7 +95,7 @@ public:
     // of the font data and the FT_Face
     explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
                                     FontWeight aWeight,
-                                    int16_t aStretch,
+                                    uint16_t aStretch,
                                     uint8_t aStyle,
                                     const uint8_t *aData,
                                     uint32_t aLength,
@@ -105,7 +105,7 @@ public:
     explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
                                     FcPattern* aFontPattern,
                                     FontWeight aWeight,
-                                    int16_t aStretch,
+                                    uint16_t aStretch,
                                     uint8_t aStyle);
 
     gfxFontEntry* Clone() const override;
@@ -290,12 +290,12 @@ public:
     gfxFontEntry*
     LookupLocalFont(const nsAString& aFontName,
                     FontWeight aWeight,
-                    int16_t aStretch, uint8_t aStyle) override;
+                    uint16_t aStretch, uint8_t aStyle) override;
 
     gfxFontEntry*
     MakePlatformFont(const nsAString& aFontName,
                      FontWeight aWeight,
-                     int16_t aStretch,
+                     uint16_t aStretch,
                      uint8_t aStyle,
                      const uint8_t* aFontData,
                      uint32_t aLength) override;

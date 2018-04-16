@@ -9,6 +9,7 @@
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/Move.h"
+#include "mozilla/UniquePtr.h"
 #include "nsSMILInterval.h"
 #include "nsSMILInstanceTime.h"
 #include "nsSMILMilestone.h"
@@ -352,9 +353,9 @@ public:
 
 protected:
   // Typedefs
-  typedef nsTArray<nsAutoPtr<nsSMILTimeValueSpec> > TimeValueSpecList;
+  typedef nsTArray<mozilla::UniquePtr<nsSMILTimeValueSpec>> TimeValueSpecList;
   typedef nsTArray<RefPtr<nsSMILInstanceTime> >   InstanceTimeList;
-  typedef nsTArray<nsAutoPtr<nsSMILInterval> >      IntervalList;
+  typedef nsTArray<mozilla::UniquePtr<nsSMILInterval>> IntervalList;
   typedef nsPtrHashKey<nsSMILTimeValueSpec> TimeValueSpecPtrKey;
   typedef nsTHashtable<TimeValueSpecPtrKey> TimeValueSpecHashSet;
 
@@ -557,7 +558,7 @@ protected:
   {
     if (mCurrentInterval) {
       // Transfer ownership to temp var. (This sets mCurrentInterval to null.)
-      nsAutoPtr<nsSMILInterval> interval(mozilla::Move(mCurrentInterval));
+      auto interval = mozilla::Move(mCurrentInterval);
       interval->Unlink();
     }
   }
@@ -600,7 +601,7 @@ protected:
   uint32_t                        mInstanceSerialIndex;
 
   nsSMILAnimationFunction*        mClient;
-  nsAutoPtr<nsSMILInterval>       mCurrentInterval;
+  mozilla::UniquePtr<nsSMILInterval> mCurrentInterval;
   IntervalList                    mOldIntervals;
   uint32_t                        mCurrentRepeatIteration;
   nsSMILMilestone                 mPrevRegisteredMilestone;

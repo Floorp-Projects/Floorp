@@ -207,7 +207,7 @@ FontFaceSet::ParseFontShorthandForMatching(
                             const nsAString& aFont,
                             RefPtr<SharedFontList>& aFamilyList,
                             FontWeight& aWeight,
-                            int32_t& aStretch,
+                            uint32_t& aStretch,
                             uint8_t& aStyle,
                             ErrorResult& aRv)
 {
@@ -254,7 +254,7 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
 {
   RefPtr<SharedFontList> familyList;
   FontWeight weight;
-  int32_t stretch;
+  uint32_t stretch;
   uint8_t italicStyle;
   ParseFontShorthandForMatching(aFont, familyList, weight, stretch, italicStyle,
                                 aRv);
@@ -346,17 +346,7 @@ FontFaceSet::Load(JSContext* aCx,
     }
   }
 
-  nsIGlobalObject* globalObject = GetParentObject();
-  if (!globalObject) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JS::Rooted<JSObject*> jsGlobal(aCx, globalObject->GetGlobalJSObject());
-  GlobalObject global(aCx, jsGlobal);
-
-  RefPtr<Promise> result = Promise::All(global, promises, aRv);
-  return result.forget();
+  return Promise::All(aCx, promises, aRv);
 }
 
 bool
@@ -979,7 +969,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   nsCSSUnit unit;
 
   FontWeight weight = FontWeight::Normal();
-  int32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  uint32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
   uint8_t italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
   uint8_t fontDisplay = NS_FONT_DISPLAY_AUTO;
@@ -997,9 +987,6 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
     MOZ_ASSERT(unit == eCSSUnit_Null, "@font-face weight has unexpected unit");
   }
 
-  if (weight == FontWeight(0)) {
-    weight = FontWeight::Normal();
-  }
   // set up stretch
   aFontFace->GetDesc(eCSSFontDesc_Stretch, val);
   unit = val.GetUnit();
@@ -1930,7 +1917,7 @@ FontFaceSet::UserFontSet::DoRebuildUserFontSet()
 FontFaceSet::UserFontSet::CreateUserFontEntry(
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                FontWeight aWeight,
-                               int32_t aStretch,
+                               uint32_t aStretch,
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,

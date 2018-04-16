@@ -39,7 +39,6 @@ static const ssl3ExtensionHandler clientHelloHandlers[] = {
     { ssl_ec_point_formats_xtn, &ssl3_HandleSupportedPointFormatsXtn },
     { ssl_session_ticket_xtn, &ssl3_ServerHandleSessionTicketXtn },
     { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
-    { ssl_next_proto_nego_xtn, &ssl3_ServerHandleNextProtoNegoXtn },
     { ssl_app_layer_protocol_xtn, &ssl3_ServerHandleAppProtoXtn },
     { ssl_use_srtp_xtn, &ssl3_ServerHandleUseSRTPXtn },
     { ssl_cert_status_xtn, &ssl3_ServerHandleStatusRequestXtn },
@@ -61,7 +60,6 @@ static const ssl3ExtensionHandler serverHelloHandlersTLS[] = {
     /* TODO: add a handler for ssl_ec_point_formats_xtn */
     { ssl_session_ticket_xtn, &ssl3_ClientHandleSessionTicketXtn },
     { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
-    { ssl_next_proto_nego_xtn, &ssl3_ClientHandleNextProtoNegoXtn },
     { ssl_app_layer_protocol_xtn, &ssl3_ClientHandleAppProtoXtn },
     { ssl_use_srtp_xtn, &ssl3_ClientHandleUseSRTPXtn },
     { ssl_cert_status_xtn, &ssl3_ClientHandleStatusRequestXtn },
@@ -122,7 +120,6 @@ static const sslExtensionBuilder clientHelloSendersTLS[] =
       { ssl_supported_groups_xtn, &ssl_SendSupportedGroupsXtn },
       { ssl_ec_point_formats_xtn, &ssl3_SendSupportedPointFormatsXtn },
       { ssl_session_ticket_xtn, &ssl3_ClientSendSessionTicketXtn },
-      { ssl_next_proto_nego_xtn, &ssl3_ClientSendNextProtoNegoXtn },
       { ssl_app_layer_protocol_xtn, &ssl3_ClientSendAppProtoXtn },
       { ssl_use_srtp_xtn, &ssl3_ClientSendUseSRTPXtn },
       { ssl_cert_status_xtn, &ssl3_ClientSendStatusRequestXtn },
@@ -183,7 +180,6 @@ static const struct {
     { ssl_tls13_psk_key_exchange_modes_xtn, ssl_ext_native_only },
     { ssl_tls13_ticket_early_data_info_xtn, ssl_ext_native_only },
     { ssl_tls13_certificate_authorities_xtn, ssl_ext_native },
-    { ssl_next_proto_nego_xtn, ssl_ext_none },
     { ssl_renegotiation_info_xtn, ssl_ext_native }
 };
 

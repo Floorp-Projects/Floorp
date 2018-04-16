@@ -424,14 +424,12 @@ BinaryExpression:
 
 Block:
     init: |
-        fprintf(stderr, "Block: PUSH parse context\n");
         ParseContext::Statement stmt(parseContext_, StatementKind::Block);
         ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
         TRY(currentScope.init(parseContext_));
     build: |
         TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
         TRY_DECL(result, factory_.newLexicalScope(*bindings, statements));
-        fprintf(stderr, "Block: POP parse context\n");
 
 BreakStatement:
     fields:

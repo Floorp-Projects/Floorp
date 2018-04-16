@@ -72,7 +72,8 @@ async function _eventListenerLeakStep(target, name, extra) {
   frame.remove();
   frame = null;
 
-  // Perform two GC'd to avoid intermittent delayed collection.
+  // Perform many GC's to avoid intermittent delayed collection.
+  await new Promise(resolve => SpecialPowers.exactGC(resolve));
   await new Promise(resolve => SpecialPowers.exactGC(resolve));
   await new Promise(resolve => SpecialPowers.exactGC(resolve));
 

@@ -258,7 +258,7 @@ FT2FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold
 FT2FontEntry*
 FT2FontEntry::CreateFontEntry(const nsAString& aFontName,
                               FontWeight aWeight,
-                              int16_t aStretch,
+                              uint16_t aStretch,
                               uint8_t aStyle,
                               const uint8_t* aFontData,
                               uint32_t aLength)
@@ -371,7 +371,7 @@ FTFaceGetWeight(FT_Face aFace)
 
     NS_ASSERTION(result >= 100 && result <= 900, "Invalid weight in font!");
 
-    return FontWeight(result);
+    return FontWeight(int(result));
 }
 
 // Used to create the font entry for installed faces on the device,
@@ -968,7 +968,7 @@ gfxFT2FontList::AppendFacesFromCachedFaceList(
         if (!(end = strchr(beginning, ','))) {
             break;
         }
-        int32_t stretch = strtol(beginning, nullptr, 10);
+        uint32_t stretch = strtoul(beginning, nullptr, 10);
 
         FontListEntry fle(familyName, faceName, aFileName,
                           weight, stretch, italic, index);
@@ -1465,7 +1465,7 @@ gfxFT2FontList::InitFontListForPlatform()
 gfxFontEntry*
 gfxFT2FontList::LookupLocalFont(const nsAString& aFontName,
                                 FontWeight aWeight,
-                                int16_t aStretch,
+                                uint16_t aStretch,
                                 uint8_t aStyle)
 {
     // walk over list of names
@@ -1547,7 +1547,7 @@ gfxFT2FontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle)
 gfxFontEntry*
 gfxFT2FontList::MakePlatformFont(const nsAString& aFontName,
                                  FontWeight aWeight,
-                                 int16_t aStretch,
+                                 uint16_t aStretch,
                                  uint8_t aStyle,
                                  const uint8_t* aFontData,
                                  uint32_t aLength)

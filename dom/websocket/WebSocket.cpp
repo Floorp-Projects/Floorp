@@ -954,6 +954,30 @@ WebSocket::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
   return WebSocketBinding::Wrap(cx, this, aGivenProto);
 }
 
+void
+WebSocket::BindToOwner(nsIGlobalObject* aNew)
+{
+  auto scopeExit = MakeScopeExit([&] {
+    DOMEventTargetHelper::BindToOwner(aNew);
+  });
+
+  // If we're disconnected, then there is no state to update.
+  if (!mImpl || mImpl->mDisconnectingOrDisconnected) {
+    return;
+  }
+
+  // Update state on the old window.
+  if (GetOwner()) {
+    GetOwner()->UpdateWebSocketCount(-1);
+  }
+
+  // Update state on the new window
+  nsCOMPtr<nsPIDOMWindowInner> newWindow = do_QueryInterface(aNew);
+  if (newWindow) {
+    newWindow->UpdateWebSocketCount(1);
+  }
+}
+
 //---------------------------------------------------------------------------
 // WebIDL
 //---------------------------------------------------------------------------

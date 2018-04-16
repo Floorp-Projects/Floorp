@@ -118,7 +118,6 @@ MultiTiledContentClient::UpdatedBuffer(TiledBufferType aType)
   MOZ_ASSERT(aType != LOW_PRECISION_TILED_BUFFER || mHasLowPrecision);
 
   mForwarder->UseTiledLayerBuffer(this, buffer->GetSurfaceDescriptorTiles());
-  buffer->ClearPaintedRegion();
 }
 
 SharedFrameMetricsHelper::SharedFrameMetricsHelper()
@@ -522,6 +521,7 @@ CopyFrontToBack(TextureClient* aFront,
 
 void
 TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
+                                        const nsIntRegion& aVisibleRegion,
                                         nsIntRegion& aAddPaintedRegion,
                                         TilePaintFlags aFlags,
                                         std::vector<CapturedTiledPaintState::Copy>* aCopies,
@@ -540,6 +540,7 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
       nsIntRegion regionToCopy = mInvalidBack;
 
       regionToCopy.Sub(regionToCopy, aDirtyRegion);
+      regionToCopy.And(regionToCopy, aVisibleRegion);
 
       aAddPaintedRegion = regionToCopy;
 
@@ -557,10 +558,10 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
         if (mBackBufferOnWhite) {
           MOZ_ASSERT(mFrontBufferOnWhite);
           if (CopyFrontToBack(mFrontBufferOnWhite, mBackBufferOnWhite, gfxRectToCopy, aFlags, aCopies, aClients)) {
-            mInvalidBack.SetEmpty();
+            mInvalidBack.Sub(mInvalidBack, aVisibleRegion);
           }
         } else {
-          mInvalidBack.SetEmpty();
+          mInvalidBack.Sub(mInvalidBack, aVisibleRegion);
         }
       }
     }
@@ -653,6 +654,7 @@ CreateBackBufferTexture(TextureClient* aCurrentTexture,
 TextureClient*
 TileClient::GetBackBuffer(CompositableClient& aCompositable,
                           const nsIntRegion& aDirtyRegion,
+                          const nsIntRegion& aVisibleRegion,
                           gfxContentType aContent,
                           SurfaceMode aMode,
                           nsIntRegion& aAddPaintedRegion,
@@ -684,9 +686,15 @@ TileClient::GetBackBuffer(CompositableClient& aCompositable,
       !mFrontBuffer->IsReadLocked() &&
       (aMode != SurfaceMode::SURFACE_COMPONENT_ALPHA || (
         mFrontBufferOnWhite && !mFrontBufferOnWhite->IsReadLocked()))) {
-    // If we had a backbuffer we no longer care about it since we'll
-    // re-use the front buffer.
-    DiscardBackBuffer();
+    // If we had a backbuffer we no longer need it since we can re-use the
+    // front buffer here. It can be worth it to hold on to the back buffer
+    // so we don't need to pay the cost of initializing a new back buffer
+    // later (copying pixels and texture upload). But this could increase
+    // our memory usage and lead to OOM more frequently from spikes in usage,
+    // so we have this behavior behind a pref.
+    if (!gfxPrefs::LayersTileRetainBackBuffer()) {
+      DiscardBackBuffer();
+    }
     Flip();
   } else {
     if (!mBackBuffer || mBackBuffer->IsReadLocked()) {
@@ -714,7 +722,7 @@ TileClient::GetBackBuffer(CompositableClient& aCompositable,
       mInvalidBack = IntRect(IntPoint(), mBackBufferOnWhite->GetSize());
     }
 
-    ValidateBackBufferFromFront(aDirtyRegion, aAddPaintedRegion, aFlags, aCopies, aClients);
+    ValidateBackBufferFromFront(aDirtyRegion, aVisibleRegion, aAddPaintedRegion, aFlags, aCopies, aClients);
   }
 
   OpenMode lockMode = aFlags & TilePaintFlags::Async ? OpenMode::OPEN_READ_WRITE_ASYNC
@@ -1092,7 +1100,6 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
 
   mTiles = newTiles;
   mValidRegion = newValidRegion;
-  mPaintedRegion.OrWith(paintRegion);
 }
 
 bool
@@ -1120,8 +1127,11 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     MOZ_ASSERT(aTile.mAllocator);
   }
 
-  nsIntRegion offsetScaledDirtyRegion = aDirtyRegion.MovedBy(-aTileOrigin);
-  offsetScaledDirtyRegion.ScaleRoundOut(mResolution, mResolution);
+  nsIntRegion tileDirtyRegion = aDirtyRegion.MovedBy(-aTileOrigin);
+  tileDirtyRegion.ScaleRoundOut(mResolution, mResolution);
+
+  nsIntRegion tileVisibleRegion = mNewValidRegion.MovedBy(-aTileOrigin);
+  tileVisibleRegion.ScaleRoundOut(mResolution, mResolution);
 
   std::vector<CapturedTiledPaintState::Copy> asyncPaintCopies;
   std::vector<RefPtr<TextureClient>> asyncPaintClients;
@@ -1130,7 +1140,8 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   RefPtr<TextureClient> backBufferOnWhite;
   RefPtr<TextureClient> backBuffer =
     aTile.GetBackBuffer(mCompositableClient,
-                        offsetScaledDirtyRegion,
+                        tileDirtyRegion,
+                        tileVisibleRegion,
                         content, mode,
                         extraPainted,
                         aFlags,
@@ -1140,22 +1151,28 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
 
   // Mark the area we need to paint in the back buffer as invalid in the
   // front buffer as they will become out of sync.
-  aTile.mInvalidFront.OrWith(offsetScaledDirtyRegion);
+  aTile.mInvalidFront.OrWith(tileDirtyRegion);
 
-  // Add backbuffer's invalid region to the dirty region to be painted.
-  // This will be empty if we were able to copy from the front in to the back.
-  nsIntRegion invalidBack = aTile.mInvalidBack;
-  invalidBack.MoveBy(aTileOrigin);
-  invalidBack.ScaleInverseRoundOut(mResolution, mResolution);
-  invalidBack.AndWith(mNewValidRegion);
-  aDirtyRegion.OrWith(invalidBack);
-  offsetScaledDirtyRegion.OrWith(aTile.mInvalidBack);
+  // Add the backbuffer's invalid region intersected with the visible region to the
+  // dirty region we will be painting. This will be empty if we are able to copy
+  // from the front into the back.
+  nsIntRegion tileInvalidRegion = aTile.mInvalidBack;
+  tileInvalidRegion.AndWith(tileVisibleRegion);
 
-  aTile.mUpdateRect = offsetScaledDirtyRegion.GetBounds().Union(extraPainted.GetBounds());
+  nsIntRegion invalidRegion = tileInvalidRegion;
+  invalidRegion.MoveBy(aTileOrigin);
+  invalidRegion.ScaleInverseRoundOut(mResolution, mResolution);
 
+  tileDirtyRegion.OrWith(tileInvalidRegion);
+  aDirtyRegion.OrWith(invalidRegion);
+
+  // Mark the region we will be painting and the region we copied from the front buffer as
+  // needing to be uploaded to the compositor
+  aTile.mUpdateRect = tileDirtyRegion.GetBounds().Union(extraPainted.GetBounds());
+
+  // Add the region we copied from the front buffer into the painted region
   extraPainted.MoveBy(aTileOrigin);
   extraPainted.And(extraPainted, mNewValidRegion);
-  mPaintedRegion.Or(mPaintedRegion, extraPainted);
 
   if (!backBuffer) {
     return false;
@@ -1182,7 +1199,7 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   auto clear = CapturedTiledPaintState::Clear{
     dt,
     dtOnWhite,
-    offsetScaledDirtyRegion
+    tileDirtyRegion
   };
 
   gfx::Tile paintTile;
@@ -1220,7 +1237,7 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   mTilingOrigin.y = std::min(mTilingOrigin.y, paintTile.mTileOrigin.y);
 
   // The new buffer is now validated, remove the dirty region from it.
-  aTile.mInvalidBack.SubOut(offsetScaledDirtyRegion);
+  aTile.mInvalidBack.SubOut(tileDirtyRegion);
 
   aTile.Flip();
 

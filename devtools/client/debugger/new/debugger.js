@@ -2939,7 +2939,7 @@ const {
   isOriginalId
 } = __webpack_require__(1389);
 
-const { workerUtils: { WorkerDispatcher } } = __webpack_require__(1363);
+const { workerUtils: { WorkerDispatcher } } = __webpack_require__(1390);
 
 const dispatcher = new WorkerDispatcher();
 
@@ -3383,53 +3383,81 @@ WorkerDispatcher.prototype = {
     this.worker = null;
   },
 
-  task(method) {
-    return (...args) => {
+  task(method, { queue = false } = {}) {
+    const calls = [];
+    const push = args => {
       return new Promise((resolve, reject) => {
-        const id = this.msgId++;
-        this.worker.postMessage({ id, method, args });
+        if (queue && calls.length === 0) {
+          Promise.resolve().then(flush);
+        }
 
-        const listener = ({ data: result }) => {
-          if (result.id !== id) {
-            return;
-          }
+        calls.push([args, resolve, reject]);
 
-          if (!this.worker) {
-            return;
-          }
-
-          this.worker.removeEventListener("message", listener);
-          if (result.error) {
-            reject(result.error);
-          } else {
-            resolve(result.response);
-          }
-        };
-
-        this.worker.addEventListener("message", listener);
+        if (!queue) {
+          flush();
+        }
       });
     };
+
+    const flush = () => {
+      const items = calls.slice();
+      calls.length = 0;
+
+      const id = this.msgId++;
+      this.worker.postMessage({ id, method, calls: items.map(item => item[0]) });
+
+      const listener = ({ data: result }) => {
+        if (result.id !== id) {
+          return;
+        }
+
+        if (!this.worker) {
+          return;
+        }
+
+        this.worker.removeEventListener("message", listener);
+
+        result.results.forEach((resultData, i) => {
+          const [, resolve, reject] = items[i];
+
+          if (resultData.error) {
+            reject(resultData.error);
+          } else {
+            resolve(resultData.response);
+          }
+        });
+      };
+
+      this.worker.addEventListener("message", listener);
+    };
+
+    return (...args) => push(args);
   }
 };
 
 function workerHandler(publicInterface) {
   return function (msg) {
-    const { id, method, args } = msg.data;
-    try {
-      const response = publicInterface[method].apply(undefined, args);
-      if (response instanceof Promise) {
-        response.then(val => self.postMessage({ id, response: val }),
-        // Error can't be sent via postMessage, so be sure to
-        // convert to string.
-        err => self.postMessage({ id, error: err.toString() }));
-      } else {
-        self.postMessage({ id, response });
+    const { id, method, calls } = msg.data;
+
+    Promise.all(calls.map(args => {
+      try {
+        const response = publicInterface[method].apply(undefined, args);
+        if (response instanceof Promise) {
+          return response.then(val => ({ response: val }),
+          // Error can't be sent via postMessage, so be sure to
+          // convert to string.
+          err => ({ error: err.toString() }));
+        } else {
+          return { response };
+        }
+      } catch (error) {
+        // Error can't be sent via postMessage, so be sure to convert to
+        // string.
+        return { error: error.toString() };
       }
-    } catch (error) {
-      // Error can't be sent via postMessage, so be sure to convert to
-      // string.
-      self.postMessage({ id, error: error.toString() });
-    }
+    })).then(results => {
+      self.postMessage({ id, results });
+    });
   };
 }
 
@@ -5422,6 +5450,184 @@ module.exports = {
 
 /***/ }),
 
+/***/ 1390:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const networkRequest = __webpack_require__(1391);
+const workerUtils = __webpack_require__(1392);
+
+module.exports = {
+  networkRequest,
+  workerUtils
+};
+
+/***/ }),
+
+/***/ 1391:
+/***/ (function(module, exports) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+function networkRequest(url, opts) {
+  return fetch(url, {
+    cache: opts.loadFromCache ? "default" : "no-cache"
+  }).then(res => {
+    if (res.status >= 200 && res.status < 300) {
+      return res.text().then(text => ({ content: text }));
+    }
+    return Promise.reject(`request failed with status ${res.status}`);
+  });
+}
+
+module.exports = networkRequest;
+
+/***/ }),
+
+/***/ 1392:
+/***/ (function(module, exports) {
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function WorkerDispatcher() {
+  this.msgId = 1;
+  this.worker = null;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+WorkerDispatcher.prototype = {
+  start(url) {
+    this.worker = new Worker(url);
+    this.worker.onerror = () => {
+      console.error(`Error in worker ${url}`);
+    };
+  },
+
+  stop() {
+    if (!this.worker) {
+      return;
+    }
+
+    this.worker.terminate();
+    this.worker = null;
+  },
+
+  task(method) {
+    return (...args) => {
+      return new Promise((resolve, reject) => {
+        const id = this.msgId++;
+        this.worker.postMessage({ id, method, args });
+
+        const listener = ({ data: result }) => {
+          if (result.id !== id) {
+            return;
+          }
+
+          if (!this.worker) {
+            return;
+          }
+
+          this.worker.removeEventListener("message", listener);
+          if (result.error) {
+            reject(result.error);
+          } else {
+            resolve(result.response);
+          }
+        };
+
+        this.worker.addEventListener("message", listener);
+      });
+    };
+  }
+};
+
+function workerHandler(publicInterface) {
+  return function (msg) {
+    const { id, method, args } = msg.data;
+    try {
+      const response = publicInterface[method].apply(undefined, args);
+      if (response instanceof Promise) {
+        response.then(val => self.postMessage({ id, response: val }),
+        // Error can't be sent via postMessage, so be sure to
+        // convert to string.
+        err => self.postMessage({ id, error: err.toString() }));
+      } else {
+        self.postMessage({ id, response });
+      }
+    } catch (error) {
+      // Error can't be sent via postMessage, so be sure to convert to
+      // string.
+      self.postMessage({ id, error: error.toString() });
+    }
+  };
+}
+
+function streamingWorkerHandler(publicInterface, { timeout = 100 } = {}, worker = self) {
+  let streamingWorker = (() => {
+    var _ref = _asyncToGenerator(function* (id, tasks) {
+      let isWorking = true;
+
+      const intervalId = setTimeout(function () {
+        isWorking = false;
+      }, timeout);
+
+      const results = [];
+      while (tasks.length !== 0 && isWorking) {
+        const { callback, context, args } = tasks.shift();
+        const result = yield callback.call(context, args);
+        results.push(result);
+      }
+      worker.postMessage({ id, status: "pending", data: results });
+      clearInterval(intervalId);
+
+      if (tasks.length !== 0) {
+        yield streamingWorker(id, tasks);
+      }
+    });
+
+    return function streamingWorker(_x, _x2) {
+      return _ref.apply(this, arguments);
+    };
+  })();
+
+  return (() => {
+    var _ref2 = _asyncToGenerator(function* (msg) {
+      const { id, method, args } = msg.data;
+      const workerMethod = publicInterface[method];
+      if (!workerMethod) {
+        console.error(`Could not find ${method} defined in worker.`);
+      }
+      worker.postMessage({ id, status: "start" });
+
+      try {
+        const tasks = workerMethod(args);
+        yield streamingWorker(id, tasks);
+        worker.postMessage({ id, status: "done" });
+      } catch (error) {
+        worker.postMessage({ id, status: "error", error });
+      }
+    });
+
+    return function (_x3) {
+      return _ref2.apply(this, arguments);
+    };
+  })();
+}
+
+module.exports = {
+  WorkerDispatcher,
+  workerHandler,
+  streamingWorkerHandler
+};
+
+/***/ }),
+
 /***/ 1393:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -6541,7 +6747,7 @@ function setSymbols(sourceId) {
     });
 
     if ((0, _selectors.isPaused)(getState())) {
-      await dispatch((0, _pause.setExtra)());
+      await dispatch((0, _pause.fetchExtra)());
       await dispatch((0, _pause.mapFrames)());
     }
 
@@ -8280,7 +8486,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.getEventListeners = getEventListeners;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /**
  * Event listeners reducer
@@ -13186,7 +13392,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /**
  * Reducer index
@@ -13225,7 +13431,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /**
  * Async request reducer
@@ -14152,7 +14358,7 @@ var _waitService = __webpack_require__(1659);
 // delay is in ms
 const FETCH_EVENT_LISTENERS_DELAY = 200; /* This Source Code Form is subject to the terms of the Mozilla Public
                                           * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                          * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+                                          * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /* global window gThreadClient setNamedTimeout EVENTS */
 /* eslint no-shadow: 0  */
@@ -22818,29 +23024,21 @@ var _UtilsBar = __webpack_require__(1609);
 
 var _UtilsBar2 = _interopRequireDefault(_UtilsBar);
 
-var _BreakpointsDropdown = __webpack_require__(1790);
-
-var _BreakpointsDropdown2 = _interopRequireDefault(_BreakpointsDropdown);
-
 var _FrameworkComponent = __webpack_require__(3623);
 
 var _FrameworkComponent2 = _interopRequireDefault(_FrameworkComponent);
 
-var _ChromeScopes = __webpack_require__(1610);
+var _Scopes = __webpack_require__(1611);
 
-var _ChromeScopes2 = _interopRequireDefault(_ChromeScopes);
-
-var _Scopes2 = __webpack_require__(1611);
-
-var _Scopes3 = _interopRequireDefault(_Scopes2);
+var _Scopes2 = _interopRequireDefault(_Scopes);
 
 __webpack_require__(1342);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const Scopes = _prefs.features.chromeScopes ? _ChromeScopes2.default : _Scopes3.default; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                          * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                          * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function debugBtn(onClick, type, className, tooltip) {
   return _react2.default.createElement(
@@ -22918,7 +23116,7 @@ class SecondaryPanes extends _react.Component {
     return {
       header: L10N.getStr("scopes.header"),
       className: "scopes-pane",
-      component: _react2.default.createElement(Scopes, null),
+      component: _react2.default.createElement(_Scopes2.default, null),
       opened: _prefs.prefs.scopesVisible,
       onToggle: opened => {
         _prefs.prefs.scopesVisible = opened;
@@ -22981,32 +23179,26 @@ class SecondaryPanes extends _react.Component {
   }
 
   getBreakpointsItem() {
+    const {
+      shouldPauseOnExceptions,
+      shouldIgnoreCaughtExceptions,
+      pauseOnExceptions
+    } = this.props;
+
     return {
       header: L10N.getStr("breakpoints.header"),
       className: "breakpoints-pane",
-      buttons: [this.breakpointDropdown(), this.renderBreakpointsToggle()],
-      component: _react2.default.createElement(_Breakpoints2.default, null),
+      buttons: [this.renderBreakpointsToggle()],
+      component: _react2.default.createElement(_Breakpoints2.default, {
+        shouldPauseOnExceptions: shouldPauseOnExceptions,
+        shouldIgnoreCaughtExceptions: shouldIgnoreCaughtExceptions,
+        pauseOnExceptions: pauseOnExceptions
+      }),
       opened: _prefs.prefs.breakpointsVisible,
       onToggle: opened => {
         _prefs.prefs.breakpointsVisible = opened;
       }
     };
-  }
-
-  breakpointDropdown() {
-    if (!_prefs.features.breakpointsDropdown) {
-      return;
-    }
-
-    const {
-      breakOnNext,
-      pauseOnExceptions,
-      shouldPauseOnExceptions,
-      shouldIgnoreCaughtExceptions,
-      isWaitingOnBreak
-    } = this.props;
-
-    return (0, _BreakpointsDropdown2.default)(breakOnNext, pauseOnExceptions, shouldPauseOnExceptions, shouldIgnoreCaughtExceptions, isWaitingOnBreak);
   }
 
   getStartItems() {
@@ -23153,6 +23345,10 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
+var _classnames = __webpack_require__(175);
+
+var _classnames2 = _interopRequireDefault(_classnames);
+
 var _redux = __webpack_require__(3593);
 
 var _reactRedux = __webpack_require__(3592);
@@ -23205,13 +23401,25 @@ function getBreakpointFilename(source) {
   return source ? (0, _source.getFilename)(source) : "";
 }
 
-class Breakpoints extends _react.Component {
-  shouldComponentUpdate(nextProps, nextState) {
-    const { breakpoints } = this.props;
-    return breakpoints !== nextProps.breakpoints;
-  }
+function createExceptionOption(label, value, onChange, className) {
+  return _react2.default.createElement(
+    "div",
+    { className: className, onClick: onChange },
+    _react2.default.createElement("input", {
+      type: "checkbox",
+      checked: value ? "checked" : "",
+      onChange: e => e.stopPropagation() && onChange()
+    }),
+    _react2.default.createElement(
+      "div",
+      { className: "breakpoint-exceptions-label" },
+      label
+    )
+  );
+}
 
-  handleCheckbox(breakpoint) {
+class Breakpoints extends _react.Component {
+  handleBreakpointCheckbox(breakpoint) {
     if (breakpoint.loading) {
       return;
     }
@@ -23238,21 +23446,42 @@ class Breakpoints extends _react.Component {
       breakpoint: breakpoint,
       onClick: () => this.selectBreakpoint(breakpoint),
       onContextMenu: e => (0, _BreakpointsContextMenu2.default)(_extends({}, this.props, { breakpoint, contextMenuEvent: e })),
-      onChange: () => this.handleCheckbox(breakpoint),
+      onChange: () => this.handleBreakpointCheckbox(breakpoint),
       onCloseClick: ev => this.removeBreakpoint(ev, breakpoint)
     });
   }
 
-  renderEmpty() {
+  renderExceptionsOptions() {
+    const {
+      breakpoints,
+      shouldPauseOnExceptions,
+      shouldIgnoreCaughtExceptions,
+      pauseOnExceptions
+    } = this.props;
+
+    const isEmpty = breakpoints.size == 0;
+
+    const exceptionsBox = createExceptionOption(L10N.getStr("pauseOnExceptionsItem2"), shouldPauseOnExceptions, () => pauseOnExceptions(!shouldPauseOnExceptions, false), "breakpoints-exceptions");
+
+    const ignoreCaughtBox = createExceptionOption(L10N.getStr("ignoreCaughtExceptionsItem"), shouldIgnoreCaughtExceptions, () => pauseOnExceptions(true, !shouldIgnoreCaughtExceptions), "breakpoints-exceptions-caught");
+
     return _react2.default.createElement(
       "div",
-      { className: "pane-info" },
-      L10N.getStr("breakpoints.none")
+      {
+        className: (0, _classnames2.default)("breakpoints-exceptions-options", {
+          empty: isEmpty
+        })
+      },
+      exceptionsBox,
+      shouldPauseOnExceptions ? ignoreCaughtBox : null
     );
   }
 
   renderBreakpoints() {
     const { breakpoints } = this.props;
+    if (breakpoints.size == 0) {
+      return;
+    }
 
     const groupedBreakpoints = (0, _lodash.groupBy)((0, _lodash.sortBy)([...breakpoints.valueSeq()], bp => bp.location.line), bp => getBreakpointFilename(bp.source));
 
@@ -23266,12 +23495,11 @@ class Breakpoints extends _react.Component {
   }
 
   render() {
-    const { breakpoints } = this.props;
-
     return _react2.default.createElement(
       "div",
       { className: "pane breakpoints-list" },
-      breakpoints.size ? this.renderBreakpoints() : this.renderEmpty()
+      this.renderExceptionsOptions(),
+      this.renderBreakpoints()
     );
   }
 }
@@ -24448,35 +24676,6 @@ class CommandBar extends _react.Component {
     return (0, _CommandBarButton.debugBtn)(breakOnNext, "pause", "active", L10N.getFormatStr("pauseButtonTooltip", formatKey("pause")));
   }
 
-  /*
-   * The pause on exception button has three states in this order:
-   *  1. don't pause on exceptions      [false, false]
-   *  2. pause on uncaught exceptions   [true, true]
-   *  3. pause on all exceptions        [true, false]
-  */
-  renderPauseOnExceptions() {
-    const {
-      shouldPauseOnExceptions,
-      shouldIgnoreCaughtExceptions,
-      pauseOnExceptions,
-      canRewind
-    } = this.props;
-
-    if (canRewind || _prefs.features.breakpointsDropdown) {
-      return;
-    }
-
-    if (!shouldPauseOnExceptions && !shouldIgnoreCaughtExceptions) {
-      return (0, _CommandBarButton.debugBtn)(() => pauseOnExceptions(true, true), "pause-exceptions", "enabled", L10N.getStr("ignoreExceptions"), false, false);
-    }
-
-    if (shouldPauseOnExceptions && shouldIgnoreCaughtExceptions) {
-      return (0, _CommandBarButton.debugBtn)(() => pauseOnExceptions(true, false), "pause-exceptions", "uncaught enabled", L10N.getStr("pauseOnUncaughtExceptions"), false, true);
-    }
-
-    return (0, _CommandBarButton.debugBtn)(() => pauseOnExceptions(false, false), "pause-exceptions", "all enabled", L10N.getStr("pauseOnExceptions"), false, true);
-  }
-
   renderTimeTravelButtons() {
     const { isPaused, canRewind } = this.props;
 
@@ -24558,7 +24757,6 @@ class CommandBar extends _react.Component {
       },
       this.renderPauseButton(),
       this.renderStepButtons(),
-      this.renderPauseOnExceptions(),
       this.renderTimeTravelButtons(),
       _react2.default.createElement("div", { className: "filler" }),
       this.replayPreviousButton(),
@@ -24578,8 +24776,6 @@ exports.default = (0, _reactRedux.connect)(state => {
     history: (0, _selectors.getHistory)(state),
     historyPosition: (0, _selectors.getHistoryPosition)(state),
     isWaitingOnBreak: (0, _selectors.getIsWaitingOnBreak)(state),
-    shouldPauseOnExceptions: (0, _selectors.getShouldPauseOnExceptions)(state),
-    shouldIgnoreCaughtExceptions: (0, _selectors.getShouldIgnoreCaughtExceptions)(state),
     canRewind: (0, _selectors.getCanRewind)(state)
   };
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(CommandBar);
@@ -24752,244 +24948,6 @@ exports.default = UtilsBar;
 }).call(this);
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(120)))
-
-/***/ }),
-
-/***/ 1610:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _redux = __webpack_require__(3593);
-
-var _reactRedux = __webpack_require__(3592);
-
-var _classnames = __webpack_require__(175);
-
-var _classnames2 = _interopRequireDefault(_classnames);
-
-var _actions = __webpack_require__(1354);
-
-var _actions2 = _interopRequireDefault(_actions);
-
-var _selectors = __webpack_require__(3590);
-
-var _Svg = __webpack_require__(1359);
-
-var _Svg2 = _interopRequireDefault(_Svg);
-
-var _ManagedTree = __webpack_require__(1404);
-
-var _ManagedTree2 = _interopRequireDefault(_ManagedTree);
-
-__webpack_require__(1296);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// check to see if its an object with propertie
-function nodeHasProperties(item) {
-  return !nodeHasChildren(item) && item.contents.value.type === "object";
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function nodeIsPrimitive(item) {}
-
-function nodeHasChildren(item) {
-  return Array.isArray(item.contents);
-}
-
-function createNode(name, path, contents) {
-  // The path is important to uniquely identify the item in the entire
-  // tree. This helps debugging & optimizes React's rendering of large
-  // lists. The path will be separated by property name,
-  // i.e. `{ foo: { bar: { baz: 5 }}}` will have a path of `foo/bar/baz`
-  // for the inner object.
-  return { name, path, contents };
-}
-
-class Scopes extends _react.Component {
-
-  constructor(...args) {
-    super(...args);
-
-    // Cache of dynamically built nodes. We shouldn't need to clear
-    // this out ever, since we don't ever "switch out" the object
-    // being inspected.
-
-    this.renderItem = (item, depth, focused, _, expanded, { setExpanded }) => {
-      const notEnumberable = false;
-      const objectValue = "";
-
-      return _react2.default.createElement(
-        "div",
-        {
-          className: (0, _classnames2.default)("node object-node", {
-            focused: false,
-            "not-enumerable": notEnumberable
-          }),
-          style: { marginLeft: depth * 15 },
-          key: item.path,
-          onClick: e => {
-            e.stopPropagation();
-            setExpanded(item, !expanded);
-          }
-        },
-        _react2.default.createElement(_Svg2.default, {
-          name: "arrow",
-          className: (0, _classnames2.default)({
-            expanded,
-            hidden: nodeIsPrimitive(item)
-          })
-        }),
-        _react2.default.createElement(
-          "span",
-          { className: "object-label" },
-          item.name
-        ),
-        _react2.default.createElement(
-          "span",
-          { className: "object-delimiter" },
-          objectValue ? ": " : ""
-        ),
-        _react2.default.createElement(
-          "span",
-          { className: "object-value" },
-          objectValue || ""
-        )
-      );
-    };
-
-    this.getChildren = item => {
-      const obj = item.contents;
-
-      // Nodes can either have children already, or be an object with
-      // properties that we need to go and fetch.
-      if (nodeHasChildren(item)) {
-        return item.contents;
-      } else if (nodeHasProperties(item)) {
-        const objectId = obj.value.objectId;
-
-        // Because we are dynamically creating the tree as the user
-        // expands it (not precalcuated tree structure), we cache child
-        // arrays. This not only helps performance, but is necessary
-        // because the expanded state depends on instances of nodes
-        // being the same across renders. If we didn't do this, each
-        // node would be a new instance every render.
-        const key = item.path;
-        if (this.objectCache[key]) {
-          return this.objectCache[key];
-        }
-
-        const loadedProps = this.getObjectProperties(item);
-        if (loadedProps) {
-          const children = this.makeNodesForProperties(loadedProps, item.path);
-          this.objectCache[objectId] = children;
-          return children;
-        }
-        return [];
-      }
-      return [];
-    };
-
-    this.onExpand = item => {
-      const { loadObjectProperties } = this.props;
-
-      if (nodeHasProperties(item)) {
-        loadObjectProperties(item.contents.value);
-      }
-    };
-
-    this.objectCache = {};
-  }
-
-  makeNodesForProperties(objProps, parentPath) {
-    const { ownProperties, prototype } = objProps;
-
-    const nodes = Object.keys(ownProperties).sort()
-    // Ignore non-concrete values like getters and setters
-    // for now by making sure we have a value.
-    .filter(name => "value" in ownProperties[name]).map(name => createNode(name, `${parentPath}/${name}`, ownProperties[name]));
-
-    // Add the prototype if it exists and is not null
-    if (prototype && prototype.type !== "null") {
-      nodes.push(createNode("__proto__", `${parentPath}/__proto__`, {
-        value: prototype
-      }));
-    }
-
-    return nodes;
-  }
-
-  getObjectProperties(item) {
-    this.props.loadedObjects[item.contents.value.objectId];
-  }
-
-  getRoots() {
-    return this.props.scopes.map(scope => {
-      const name = scope.name || (scope.type == "global" ? "Window" : "");
-
-      return {
-        name: name,
-        path: name,
-        contents: { value: scope.object }
-      };
-    });
-  }
-
-  render() {
-    const { isPaused } = this.props;
-
-    if (!isPaused) {
-      return _react2.default.createElement(
-        "div",
-        { className: (0, _classnames2.default)("pane", "scopes-list") },
-        _react2.default.createElement(
-          "div",
-          { className: "pane-info" },
-          L10N.getStr("scopes.notPaused")
-        )
-      );
-    }
-
-    const roots = this.getRoots();
-
-    return _react2.default.createElement(
-      "div",
-      { className: (0, _classnames2.default)("pane", "scopes-list") },
-      _react2.default.createElement(_ManagedTree2.default, {
-        itemHeight: 20,
-        getParent: item => null,
-        getChildren: this.getChildren,
-        getRoots: () => roots,
-        getPath: item => item.path,
-        autoExpand: 0,
-        autoExpandDepth: 1,
-        autoExpandAll: false,
-        disabledFocus: true,
-        onExpand: this.onExpand,
-        renderItem: this.renderItem
-      })
-    );
-  }
-}
-
-exports.default = (0, _reactRedux.connect)(state => ({
-  isPaused: (0, _selectors.isPaused)(state),
-  loadedObjects: () => {
-    throw new Error("This is not implemented.");
-  },
-  scopes: (0, _selectors.getChromeScopes)(state)
-}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Scopes);
 
 /***/ }),
 
@@ -26018,6 +25976,54 @@ function mapScopes(scopes, frame) {
   };
 }
 
+function batchScopeMappings(originalAstScopes, source, sourceMaps) {
+  const precalculatedRanges = new Map();
+  const precalculatedLocations = new Map();
+
+  // Explicitly dispatch all of the sourcemap requests synchronously up front so
+  // that they will be batched into a single request for the worker to process.
+  for (const item of originalAstScopes) {
+    for (const name of Object.keys(item.bindings)) {
+      for (const ref of item.bindings[name].refs) {
+        const locs = [ref];
+        if (ref.type === "decl") {
+          locs.push(ref.declaration);
+        }
+
+        for (const loc of locs) {
+          precalculatedRanges.set(buildLocationKey(loc.start), sourceMaps.getGeneratedRanges(loc.start, source));
+          precalculatedLocations.set(buildLocationKey(loc.start), sourceMaps.getGeneratedLocation(loc.start, source));
+          precalculatedLocations.set(buildLocationKey(loc.end), sourceMaps.getGeneratedLocation(loc.end, source));
+        }
+      }
+    }
+  }
+
+  return {
+    async getGeneratedRanges(pos, s) {
+      const key = buildLocationKey(pos);
+
+      if (s !== source || !precalculatedRanges.has(key)) {
+        (0, _log.log)("Bad precalculated mapping");
+        return sourceMaps.getGeneratedRanges(pos, s);
+      }
+      return precalculatedRanges.get(key);
+    },
+    async getGeneratedLocation(pos, s) {
+      const key = buildLocationKey(pos);
+
+      if (s !== source || !precalculatedLocations.has(key)) {
+        (0, _log.log)("Bad precalculated mapping");
+        return sourceMaps.getGeneratedLocation(pos, s);
+      }
+      return precalculatedLocations.get(key);
+    }
+  };
+}
+function buildLocationKey(loc) {
+  return `${loc.line}:${(0, _locColumn.locColumn)(loc)}`;
+}
+
 async function buildMappedScopes(source, frame, scopes, sourceMaps, client) {
   const originalAstScopes = await (0, _parser.getScopes)(frame.location);
   const generatedAstScopes = await (0, _parser.getScopes)(frame.generatedLocation);
@@ -26031,13 +26037,15 @@ async function buildMappedScopes(source, frame, scopes, sourceMaps, client) {
   const expressionLookup = {};
   const mappedOriginalScopes = [];
 
+  const cachedSourceMaps = batchScopeMappings(originalAstScopes, source, sourceMaps);
+
   for (const item of originalAstScopes) {
     const generatedBindings = {};
 
     for (const name of Object.keys(item.bindings)) {
       const binding = item.bindings[name];
 
-      const result = await findGeneratedBinding(sourceMaps, client, source, name, binding, generatedAstBindings);
+      const result = await findGeneratedBinding(cachedSourceMaps, client, source, name, binding, generatedAstBindings);
 
       if (result) {
         generatedBindings[name] = result.grip;
@@ -26335,7 +26343,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /**
  * Quick Open reducer
@@ -26951,12 +26959,18 @@ Object.defineProperty(exports, "mapFrames", {
   }
 });
 
-var _setExtra = __webpack_require__(3627);
+var _extra = __webpack_require__(3636);
 
-Object.defineProperty(exports, "setExtra", {
+Object.defineProperty(exports, "fetchExtra", {
   enumerable: true,
   get: function () {
-    return _setExtra.setExtra;
+    return _extra.fetchExtra;
+  }
+});
+Object.defineProperty(exports, "getExtra", {
+  enumerable: true,
+  get: function () {
+    return _extra.getExtra;
   }
 });
 
@@ -28035,7 +28049,7 @@ var _mapScopes = __webpack_require__(1634);
 
 var _promise = __webpack_require__(1653);
 
-var _setExtra = __webpack_require__(3627);
+var _extra = __webpack_require__(3636);
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -28054,7 +28068,7 @@ function fetchScopes() {
       [_promise.PROMISE]: client.getFrameScopes(frame)
     });
 
-    await dispatch((0, _setExtra.setExtra)());
+    await dispatch((0, _extra.fetchExtra)());
     await dispatch((0, _mapScopes.mapScopes)(scopes, frame));
   };
 }
@@ -28510,7 +28524,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
                                                                                                                                                                                                                                                                    * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 /* global window */
 
 exports.log = log;
@@ -28686,7 +28700,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.timing = timing;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /* global window */
 
@@ -30631,16 +30645,15 @@ function createLocation({
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getExtra = getExtra;
 exports.updatePreview = updatePreview;
 exports.setPreview = setPreview;
 exports.clearPreview = clearPreview;
 
+var _preview = __webpack_require__(1807);
+
 var _ast = __webpack_require__(1638);
 
 var _editor = __webpack_require__(1358);
-
-var _preview = __webpack_require__(1807);
 
 var _devtoolsSourceMap = __webpack_require__(1360);
 
@@ -30652,55 +30665,13 @@ var _selectors = __webpack_require__(3590);
 
 var _expressions = __webpack_require__(1398);
 
+var _pause = __webpack_require__(1639);
+
 var _lodash = __webpack_require__(2);
 
-async function getReactProps(evaluate) {
-  const reactDisplayName = await evaluate("this.hasOwnProperty('_reactInternalFiber') ? " + "this._reactInternalFiber.type.name : " + "this._reactInternalInstance.getName()");
-
-  return {
-    displayName: reactDisplayName.result
-  };
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-async function getImmutableProps(expression, evaluate) {
-  const immutableEntries = await evaluate((exp => `${exp}.toJS()`)(expression));
-
-  const immutableType = await evaluate((exp => `${exp}.constructor.name`)(expression));
-
-  return {
-    type: immutableType.result,
-    entries: immutableEntries.result
-  };
-}
-
-async function getExtraProps(getState, expression, result, evaluate) {
-  const props = {};
-  if ((0, _preview.isReactComponent)(result)) {
-    const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
-    const source = (0, _selectors.getSource)(getState(), selectedFrame.location.sourceId);
-    const symbols = (0, _selectors.getSymbols)(getState(), source);
-
-    if (symbols && symbols.classes) {
-      const originalClass = (0, _ast.findClosestClass)(symbols, selectedFrame.location);
-
-      if (originalClass) {
-        props.react = { displayName: originalClass.name };
-      }
-    }
-
-    if (!props.react) {
-      props.react = await getReactProps(evaluate);
-    }
-  }
-
-  if ((0, _preview.isImmutable)(result)) {
-    props.immutable = await getImmutableProps(expression, evaluate);
-  }
-
-  return props;
-}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function isInvalidTarget(target) {
   if (!target || !target.innerText) {
@@ -30720,19 +30691,6 @@ function isInvalidTarget(target) {
   const invalidTarget = target.parentElement && !target.parentElement.closest(".CodeMirror-line") || cursorPos.top == 0;
 
   return invalidTarget || invalidToken || invalidType;
-}
-
-function getExtra(expression, result) {
-  return async ({ dispatch, getState, client, sourceMaps }) => {
-    const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
-    if (!selectedFrame) {
-      return;
-    }
-
-    const extra = await getExtraProps(getState, expression, result, expr => client.evaluateInFrame(expr, selectedFrame.id));
-
-    return extra;
-  };
 }
 
 function updatePreview(target, editor) {
@@ -30813,7 +30771,7 @@ function setPreview(expression, location, tokenPos, cursorPos) {
           return;
         }
 
-        const extra = await dispatch(getExtra(expression, result));
+        const extra = await dispatch((0, _pause.getExtra)(expression, result));
 
         return {
           expression,
@@ -30844,177 +30802,6 @@ function clearPreview() {
 /***/ }),
 
 /***/ 1788:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
-/***/ 1790:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = renderBreakpointsDropdown;
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _Svg = __webpack_require__(1359);
-
-var _Svg2 = _interopRequireDefault(_Svg);
-
-var _Dropdown = __webpack_require__(1615);
-
-var _Dropdown2 = _interopRequireDefault(_Dropdown);
-
-var _classnames = __webpack_require__(175);
-
-var _classnames2 = _interopRequireDefault(_classnames);
-
-__webpack_require__(1791);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function renderPause(isWaitingOnBreak) {
-  const active = isWaitingOnBreak;
-  return _react2.default.createElement(
-    "div",
-    {
-      className: (0, _classnames2.default)("pause-next", {
-        active: active,
-        inactive: !active
-      })
-    },
-    _react2.default.createElement("img", { className: "pause-next" }),
-    _react2.default.createElement(
-      "span",
-      { className: "icon-spacer" },
-      L10N.getStr("pauseButtonItem")
-    )
-  );
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function renderPauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions) {
-  const active = (shouldPauseOnExceptions || shouldIgnoreCaughtExceptions) && (!shouldPauseOnExceptions || !shouldIgnoreCaughtExceptions);
-  return _react2.default.createElement(
-    "div",
-    {
-      className: (0, _classnames2.default)("pause-on-exceptions", {
-        active: active,
-        inactive: !active
-      })
-    },
-    _react2.default.createElement("img", { className: "pause-on-exceptions" }),
-    _react2.default.createElement(
-      "span",
-      { className: "icon-spacer" },
-      L10N.getStr("pauseOnExceptionsItem")
-    )
-  );
-}
-
-function renderPauseOnUncaughtExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions) {
-  const active = shouldPauseOnExceptions && shouldIgnoreCaughtExceptions;
-  return _react2.default.createElement(
-    "div",
-    {
-      className: (0, _classnames2.default)("pause-uncaught-exceptions", {
-        active: active,
-        inactive: !active
-      })
-    },
-    _react2.default.createElement("img", { className: "pause-uncaught-exceptions" }),
-    _react2.default.createElement(
-      "span",
-      { className: "icon-spacer" },
-      L10N.getStr("pauseOnUncaughtExceptionsItem")
-    )
-  );
-}
-
-function renderIgnoreExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions) {
-  const active = !shouldPauseOnExceptions && !shouldIgnoreCaughtExceptions;
-  return _react2.default.createElement(
-    "div",
-    {
-      className: (0, _classnames2.default)("ignore-exceptions", {
-        active: active,
-        inactive: !active
-      })
-    },
-    _react2.default.createElement("img", { className: "ignore-exceptions" }),
-    _react2.default.createElement(
-      "span",
-      { className: "icon-spacer" },
-      L10N.getStr("ignoreExceptionsItem")
-    )
-  );
-}
-
-function handleClick(e) {
-  e.stopPropagation();
-}
-
-function renderBreakpointsDropdown(breakOnNext, pauseOnExceptions, shouldPauseOnExceptions, shouldIgnoreCaughtExceptions, isWaitingOnBreak) {
-  const Panel = _react2.default.createElement(
-    "ul",
-    null,
-    _react2.default.createElement(
-      "li",
-      { onClick: () => breakOnNext(), className: "first" },
-      renderPause(isWaitingOnBreak)
-    ),
-    _react2.default.createElement(
-      "li",
-      { onClick: () => pauseOnExceptions(false, false) },
-      renderIgnoreExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions)
-    ),
-    _react2.default.createElement(
-      "li",
-      { onClick: () => pauseOnExceptions(true, true) },
-      renderPauseOnUncaughtExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions)
-    ),
-    _react2.default.createElement(
-      "li",
-      { onClick: () => pauseOnExceptions(true, false) },
-      renderPauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions)
-    )
-  );
-
-  const active = shouldPauseOnExceptions || shouldIgnoreCaughtExceptions || isWaitingOnBreak;
-
-  return _react2.default.createElement(
-    "div",
-    {
-      className: "breakpoints-dropdown",
-      onClick: e => handleClick(e),
-      key: "breakpoints-dropdown"
-    },
-    _react2.default.createElement(_Dropdown2.default, {
-      className: "dropdown",
-      panel: Panel,
-      icon: _react2.default.createElement(_Svg2.default, {
-        name: "plus",
-        className: (0, _classnames2.default)("plus", {
-          active: active,
-          inactive: !active
-        })
-      })
-    })
-  );
-}
-
-/***/ }),
-
-/***/ 1791:
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
@@ -34684,9 +34471,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.shortcuts", true);
   pref("devtools.debugger.features.root", true);
   pref("devtools.debugger.features.column-breakpoints", false);
-  pref("devtools.debugger.features.chrome-scopes", false);
   pref("devtools.debugger.features.map-scopes", true);
-  pref("devtools.debugger.features.breakpoints-dropdown", true);
   pref("devtools.debugger.features.remove-command-bar-options", true);
   pref("devtools.debugger.features.code-coverage", false);
   pref("devtools.debugger.features.event-listeners", false);
@@ -34731,9 +34516,7 @@ const features = new PrefsHelper("devtools.debugger.features", {
   shortcuts: ["Bool", "shortcuts"],
   root: ["Bool", "root"],
   columnBreakpoints: ["Bool", "column-breakpoints"],
-  chromeScopes: ["Bool", "chrome-scopes"],
   mapScopes: ["Bool", "map-scopes"],
-  breakpointsDropdown: ["Bool", "breakpoints-dropdown"],
   removeCommandBarOptions: ["Bool", "remove-command-bar-options"],
   workers: ["Bool", "workers"],
   codeCoverage: ["Bool", "code-coverage"],
@@ -35041,7 +34824,7 @@ var _filtering = __webpack_require__(3635);
 var _firefox = __webpack_require__(1500);
 
 async function findGeneratedBindingFromPosition(sourceMaps, client, source, pos, name, type, generatedAstBindings) {
-  const range = await getGeneratedLocationRange(pos, source, sourceMaps);
+  const range = await getGeneratedLocationRange(pos, source, type, sourceMaps);
 
   if (range) {
     let result;
@@ -35066,7 +34849,11 @@ async function findGeneratedBindingFromPosition(sourceMaps, client, source, pos,
       // If the imported name itself does not map to a useful range, fall back
       // to resolving the bindinding using the location of the overall
       // import declaration.
-      importRange = await getGeneratedLocationRange(pos.declaration, source, sourceMaps);
+      importRange = await getGeneratedLocationRange({
+        type: pos.type,
+        start: pos.declaration.start,
+        end: pos.declaration.end
+      }, source, type, sourceMaps);
 
       if (!importRange) {
         return null;
@@ -35093,13 +34880,7 @@ function filterApplicableBindings(bindings, mapped) {
     if (positionCmp(binding.loc.end, mapped.start) < 0) {
       return -1;
     }
-
-    // Currently we allow ranges to count if they start 1 character before,
-    // so we allow that when filtering here.
-    // See mapBindingReferenceToDescriptor for more info.
-    if (positionCmp(_extends({}, binding.loc.start, {
-      column: (0, _locColumn.locColumn)(binding.loc.start) - 1
-    }), mapped.end) > 0) {
+    if (positionCmp(binding.loc.start, mapped.end) > 0) {
       return 1;
     }
 
@@ -35114,13 +34895,23 @@ function filterApplicableBindings(bindings, mapped) {
 async function findGeneratedReference(type, generatedAstBindings, mapped) {
   const bindings = filterApplicableBindings(generatedAstBindings, mapped);
 
-  return bindings.reduce(async (acc, val) => {
+  let lineStart = true;
+  let line = -1;
+
+  return bindings.reduce(async (acc, val, i) => {
     const accVal = await acc;
     if (accVal) {
       return accVal;
     }
 
-    return mapBindingReferenceToDescriptor(val, mapped);
+    if (val.loc.start.line === line) {
+      lineStart = false;
+    } else {
+      line = val.loc.start.line;
+      lineStart = true;
+    }
+
+    return mapBindingReferenceToDescriptor(val, mapped, lineStart);
   }, null);
 }
 
@@ -35166,13 +34957,17 @@ async function findGeneratedImportDeclaration(generatedAstBindings, mapped) {
  * Given a generated binding, and a range over the generated code, statically
  * check if the given binding matches the range.
  */
-async function mapBindingReferenceToDescriptor(binding, mapped) {
+async function mapBindingReferenceToDescriptor(binding, mapped, isFirst) {
   // Allow the mapping to point anywhere within the generated binding
   // location to allow for less than perfect sourcemaps. Since you also
   // need at least one character between identifiers, we also give one
   // characters of space at the front the generated binding in order
   // to increase the probability of finding the right mapping.
-  if (mapped.start.line === binding.loc.start.line && (0, _locColumn.locColumn)(mapped.start) >= (0, _locColumn.locColumn)(binding.loc.start) - 1 && (0, _locColumn.locColumn)(mapped.start) <= (0, _locColumn.locColumn)(binding.loc.end)) {
+  if (mapped.start.line === binding.loc.start.line && (
+  // If a binding is the first on a line, Babel will extend the mapping to
+  // include the whitespace between the newline and the binding. To handle
+  // that, we skip the range requirement for starting location.
+  isFirst || (0, _locColumn.locColumn)(mapped.start) >= (0, _locColumn.locColumn)(binding.loc.start)) && (0, _locColumn.locColumn)(mapped.start) <= (0, _locColumn.locColumn)(binding.loc.end)) {
     return {
       name: binding.name,
       desc: await binding.desc(),
@@ -35349,45 +35144,56 @@ function positionCmp(p1, p2) {
   return p1.line < p2.line ? -1 : 1;
 }
 
-async function getGeneratedLocationRange(pos, source, sourceMaps) {
-  const start = await getGeneratedLocation(sourceMaps, pos.start, source);
-  const end = await getGeneratedLocation(sourceMaps, pos.end, source);
-
-  // Since the map takes the closest location, sometimes mapping a
-  // binding's location can point at the start of a binding listed after
-  // it, so we need to make sure it maps to a location that actually has
-  // a size in order to avoid picking up the wrong descriptor.
-  if (positionCmp(start, end) === 0) {
+async function getGeneratedLocationRange(pos, source, type, sourceMaps) {
+  const endPosition = await sourceMaps.getGeneratedLocation(pos.end, source);
+  const startPosition = await sourceMaps.getGeneratedLocation(pos.start, source);
+  const ranges = await sourceMaps.getGeneratedRanges(pos.start, source);
+  if (ranges.length === 0) {
     return null;
   }
-  if (positionCmp(start, end) > 0) {
-    // This will be fixed in future range work, but right now it is
-    // possible for the start to be after the end because of the way we
-    // map ranges. For now we create a placeholder single-character range.
-    return {
-      start,
-      end: _extends({}, start, {
-        column: start.column + 1
-      })
-    };
+
+  // If the stand and end positions collapse into eachother, it means that
+  // the range in the original content didn't _start_ at the start position.
+  // Since this likely means that the range doesn't logically apply to this
+  // binding location, we skip it.
+  if (positionCmp(startPosition, endPosition) === 0) {
+    return null;
+  }
+
+  const start = {
+    line: ranges[0].line,
+    column: ranges[0].columnStart
+  };
+  const end = {
+    line: ranges[0].line,
+    // SourceMapConsumer's 'lastColumn' is inclusive, so we add 1 to make
+    // it exclusive like all other locations.
+    column: ranges[0].columnEnd + 1
+  };
+
+  // Expand the range over any following ranges if they are contiguous.
+  for (let i = 1; i < ranges.length; i++) {
+    const range = ranges[i];
+    if (end.column !== Infinity || range.line !== end.line + 1 || range.columnStart !== 0) {
+      break;
+    }
+    end.line = range.line;
+    end.column = range.columnEnd + 1;
+  }
+
+  // When searching for imports, we expand the range to up to the next available
+  // mapping to allow for import declarations that are composed of multiple
+  // variable statements, where the later ones are entirely unmapped.
+  // Babel 6 produces imports in this style, e.g.
+  //
+  // var _mod = require("mod"); // mapped from import statement
+  // var _mod2 = interop(_mod); // entirely unmapped
+  if (type === "import" && pos.type === "decl" && endPosition.line > end.line) {
+    end.line = endPosition.line;
+    end.column = endPosition.column;
   }
 
   return { start, end };
-}
-
-async function getGeneratedLocation(sourceMaps, pos, source) {
-  const all = await sourceMaps.getAllGeneratedLocations(pos, source);
-  if (all.length > 0) {
-    // Grab the earliest mapping since generally if there are multiple
-    // mappings, the later mappings are for random punctuation marks.
-    return all.reduce((acc, p) => {
-      return !acc || positionCmp(p, acc) < 0 ? p : acc;
-    });
-  }
-
-  // Fall back to the standard logic to take the mapping closest to the
-  // target location.
-  return await sourceMaps.getGeneratedLocation(pos, source);
 }
 
 /***/ }),
@@ -38294,8 +38100,8 @@ var _react = __webpack_require__(0);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /**
  * Helper class to disable panel rendering when it is in background.
@@ -39322,39 +39128,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_3626__;
 
 /***/ }),
 
-/***/ 3627:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.setExtra = setExtra;
-
-var _selectors = __webpack_require__(3590);
-
-var _fetchExtra = __webpack_require__(3629);
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function setExtra() {
-  return async function ({ dispatch, getState, sourceMaps }) {
-    const frame = (0, _selectors.getSelectedFrame)(getState());
-    const source = (0, _selectors.getSource)(getState(), frame.location.sourceId);
-    const symbols = (0, _selectors.getSymbols)(getState(), source);
-
-    if (symbols && symbols.classes) {
-      dispatch((0, _fetchExtra.fetchExtra)());
-    }
-  };
-}
-
-/***/ }),
-
 /***/ 3628:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -39391,38 +39164,6 @@ function createEditor(value) {
 } /* This Source Code Form is subject to the terms of the Mozilla Public
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-/***/ }),
-
-/***/ 3629:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.fetchExtra = fetchExtra;
-
-var _selectors = __webpack_require__(3590);
-
-var _preview = __webpack_require__(1786);
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function fetchExtra() {
-  return async function ({ dispatch, getState }) {
-    const frame = (0, _selectors.getSelectedFrame)(getState());
-    const extra = await dispatch((0, _preview.getExtra)("this;", frame.this));
-    dispatch({
-      type: "ADD_EXTRA",
-      extra: extra
-    });
-  };
-}
 
 /***/ }),
 
@@ -39633,6 +39374,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.filterSortedArray = filterSortedArray;
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function findInsertionLocation(array, callback) {
   let left = 0;
   let right = array.length;
@@ -39669,6 +39414,98 @@ function filterSortedArray(array, callback) {
   }
 
   return results;
+}
+
+/***/ }),
+
+/***/ 3636:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.fetchExtra = fetchExtra;
+exports.getExtra = getExtra;
+
+var _selectors = __webpack_require__(3590);
+
+var _preview = __webpack_require__(1807);
+
+var _ast = __webpack_require__(1638);
+
+async function getReactProps(evaluate) {
+  const reactDisplayName = await evaluate("this.hasOwnProperty('_reactInternalFiber') ? " + "this._reactInternalFiber.type.name : " + "this._reactInternalInstance.getName()");
+
+  return {
+    displayName: reactDisplayName.result
+  };
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+async function getImmutableProps(expression, evaluate) {
+  const immutableEntries = await evaluate((exp => `${exp}.toJS()`)(expression));
+
+  const immutableType = await evaluate((exp => `${exp}.constructor.name`)(expression));
+
+  return {
+    type: immutableType.result,
+    entries: immutableEntries.result
+  };
+}
+
+async function getExtraProps(getState, expression, result, evaluate) {
+  const props = {};
+  if ((0, _preview.isReactComponent)(result)) {
+    const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
+    const source = (0, _selectors.getSource)(getState(), selectedFrame.location.sourceId);
+    const symbols = (0, _selectors.getSymbols)(getState(), source);
+
+    if (symbols && symbols.classes) {
+      const originalClass = (0, _ast.findClosestClass)(symbols, selectedFrame.location);
+
+      if (originalClass) {
+        props.react = { displayName: originalClass.name };
+      }
+    }
+
+    if (!props.react) {
+      props.react = await getReactProps(evaluate);
+    }
+  }
+
+  if ((0, _preview.isImmutable)(result)) {
+    props.immutable = await getImmutableProps(expression, evaluate);
+  }
+
+  return props;
+}
+
+function fetchExtra() {
+  return async function ({ dispatch, getState }) {
+    const frame = (0, _selectors.getSelectedFrame)(getState());
+    const extra = await dispatch(getExtra("this;", frame.this));
+    dispatch({
+      type: "ADD_EXTRA",
+      extra: extra
+    });
+  };
+}
+
+function getExtra(expression, result) {
+  return async ({ dispatch, getState, client, sourceMaps }) => {
+    const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
+    if (!selectedFrame) {
+      return;
+    }
+
+    const extra = await getExtraProps(getState, expression, result, expr => client.evaluateInFrame(expr, selectedFrame.id));
+
+    return extra;
+  };
 }
 
 /***/ }),

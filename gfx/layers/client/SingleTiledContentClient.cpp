@@ -33,7 +33,6 @@ void
 SingleTiledContentClient::UpdatedBuffer(TiledBufferType aType)
 {
   mForwarder->UseTiledLayerBuffer(this, mTiledBuffer->GetSurfaceDescriptorTiles());
-  mTiledBuffer->ClearPaintedRegion();
 }
 
 /* static */ bool
@@ -142,6 +141,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   }
 
   // The dirty region relative to the top-left of the tile.
+  nsIntRegion tileVisibleRegion = aNewValidRegion.MovedBy(-mTilingOrigin);
   nsIntRegion tileDirtyRegion = paintRegion.MovedBy(-mTilingOrigin);
 
   std::vector<RefPtr<TextureClient>> paintClients;
@@ -153,6 +153,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   RefPtr<TextureClient> backBuffer =
     mTile.GetBackBuffer(mCompositableClient,
                         tileDirtyRegion,
+                        tileVisibleRegion,
                         content, mode,
                         extraPainted,
                         aFlags,
@@ -166,15 +167,18 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
   // Add backbuffer's invalid region to the dirty region to be painted.
   // This will be empty if we were able to copy from the front in to the back.
-  paintRegion.OrWith(mTile.mInvalidBack.MovedBy(mTilingOrigin));
-  tileDirtyRegion.OrWith(mTile.mInvalidBack);
+  nsIntRegion tileInvalidRegion = mTile.mInvalidBack;
+  tileInvalidRegion.AndWith(tileVisibleRegion);
 
+  paintRegion.OrWith(tileInvalidRegion.MovedBy(mTilingOrigin));
+  tileDirtyRegion.OrWith(tileInvalidRegion);
+
+  // Mark the region we will be painting and the region we copied from the front buffer as
+  // needing to be uploaded to the compositor
   mTile.mUpdateRect = tileDirtyRegion.GetBounds().Union(extraPainted.GetBounds());
 
   extraPainted.MoveBy(mTilingOrigin);
   extraPainted.And(extraPainted, aNewValidRegion);
-  mPaintedRegion.OrWith(paintRegion);
-  mPaintedRegion.OrWith(extraPainted);
 
   if (!backBuffer) {
     return;
@@ -188,10 +192,8 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
   // If the old frontbuffer was discarded then attempt to copy what we
   // can from it to the new backbuffer.
-  bool copiedFromDiscarded = false;
-  nsIntRegion copyableRegion;
-
   if (discardedFrontBuffer) {
+    nsIntRegion copyableRegion;
     copyableRegion.And(aNewValidRegion, discardedValidRegion);
     copyableRegion.SubOut(aDirtyRegion);
 
@@ -254,22 +256,17 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
         // We don't need to repaint valid content that was just copied.
         paintRegion.SubOut(copyableRegion);
-        copiedFromDiscarded = true;
+        copyableRegion.MoveBy(-mTilingOrigin);
+        tileDirtyRegion.SubOut(copyableRegion);
       }
     }
   }
 
   if (mode != SurfaceMode::SURFACE_OPAQUE) {
-    nsIntRegion regionToClear = tileDirtyRegion;
-    if (copiedFromDiscarded) {
-      copyableRegion.MoveBy(-mTilingOrigin);
-      regionToClear.SubOut(copyableRegion);
-    }
-
     auto clear = CapturedTiledPaintState::Clear{
       dt,
       dtOnWhite,
-      regionToClear,
+      tileDirtyRegion,
     };
 
     if (asyncPaint) {

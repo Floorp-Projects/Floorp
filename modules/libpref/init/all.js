@@ -4862,6 +4862,7 @@ pref("layers.low-precision-buffer", false);
 pref("layers.progressive-paint", false);
 pref("layers.tile-width", 256);
 pref("layers.tile-height", 256);
+pref("layers.tiles.retain-back-buffer", true);
 pref("layers.child-process-shutdown", true);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
@@ -5866,6 +5867,7 @@ pref("layers.omtp.paint-workers", -1);
 #else
 pref("layers.omtp.paint-workers", 1);
 #endif
+pref("layers.enable-tiles-if-skia-pomtp", false);
 pref("layers.omtp.release-capture-on-main-thread", false);
 pref("layers.omtp.dump-capture", false);
 

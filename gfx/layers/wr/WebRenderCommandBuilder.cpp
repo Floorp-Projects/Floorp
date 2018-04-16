@@ -584,15 +584,6 @@ struct DIGroup
 
     PaintItemRange(aGrouper, aStartItem, aEndItem, context, recorder);
 
-    if (aStartItem->Frame()->PresContext()->GetPaintFlashing()) {
-      context->SetMatrix(Matrix());
-      float r = float(rand()) / RAND_MAX;
-      float g = float(rand()) / RAND_MAX;
-      float b = float(rand()) / RAND_MAX;
-      dt->FillRect(gfx::Rect(0, 0, dtSize.width, dtSize.height), gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
-      dt->FlushItem(IntRect(IntPoint(0, 0), dtSize));
-    }
-
     // XXX: set this correctly perhaps using aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);?
     bool isOpaque = false;
 

@@ -312,7 +312,7 @@ CreateFaceForPattern(FcPattern* aPattern)
 
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                FontWeight aWeight,
-                                               int16_t aStretch,
+                                               uint16_t aStretch,
                                                uint8_t aStyle,
                                                const uint8_t *aData,
                                                uint32_t aLength,
@@ -335,7 +335,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                FcPattern* aFontPattern,
                                                FontWeight aWeight,
-                                               int16_t aStretch,
+                                               uint16_t aStretch,
                                                uint8_t aStyle)
         : gfxFontEntry(aFaceName), mFontPattern(aFontPattern),
           mFTFace(nullptr), mFTFaceInitialized(false),
@@ -1858,7 +1858,7 @@ gfxFcPlatformFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle)
 gfxFontEntry*
 gfxFcPlatformFontList::LookupLocalFont(const nsAString& aFontName,
                                        FontWeight aWeight,
-                                       int16_t aStretch,
+                                       uint16_t aStretch,
                                        uint8_t aStyle)
 {
     nsAutoString keyName(aFontName);
@@ -1877,7 +1877,7 @@ gfxFcPlatformFontList::LookupLocalFont(const nsAString& aFontName,
 gfxFontEntry*
 gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
                                         FontWeight aWeight,
-                                        int16_t aStretch,
+                                        uint16_t aStretch,
                                         uint8_t aStyle,
                                         const uint8_t* aFontData,
                                         uint32_t aLength)

@@ -589,6 +589,7 @@ private:
   DECL_GFX_PREF(Live, "layers.effect.grayscale",               LayersEffectGrayscale, bool, false);
   DECL_GFX_PREF(Live, "layers.effect.invert",                  LayersEffectInvert, bool, false);
   DECL_GFX_PREF(Once, "layers.enable-tiles",                   LayersTilesEnabled, bool, false);
+  DECL_GFX_PREF(Once, "layers.enable-tiles-if-skia-pomtp",     LayersTilesEnabledIfSkiaPOMTP, bool, false);
   DECL_GFX_PREF(Live, "layers.flash-borders",                  FlashLayerBorders, bool, false);
   DECL_GFX_PREF(Once, "layers.force-shmem-tiles",              ForceShmemTiles, bool, false);
   DECL_GFX_PREF(Once, "layers.gpu-process.allow-software",     GPUProcessAllowSoftware, bool, false);
@@ -634,6 +635,7 @@ private:
   DECL_GFX_PREF(Once, "layers.tile-pool-shrink-timeout",       LayersTilePoolShrinkTimeout, uint32_t, (uint32_t)50);
   DECL_GFX_PREF(Once, "layers.tile-pool-clear-timeout",        LayersTilePoolClearTimeout, uint32_t, (uint32_t)5000);
   DECL_GFX_PREF(Once, "layers.tiles.adjust",                   LayersTilesAdjust, bool, true);
+  DECL_GFX_PREF(Live, "layers.tiles.retain-back-buffer",       LayersTileRetainBackBuffer, bool, true);
   DECL_GFX_PREF(Once, "layers.tiles.edge-padding",             TileEdgePaddingEnabled, bool, true);
   DECL_GFX_PREF(Live, "layers.tiles.fade-in.enabled",          LayerTileFadeInEnabled, bool, false);
   DECL_GFX_PREF(Live, "layers.tiles.fade-in.duration-ms",      LayerTileFadeInDuration, uint32_t, 250);
