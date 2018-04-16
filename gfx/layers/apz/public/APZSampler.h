@@ -20,7 +20,7 @@ namespace mozilla {
 class TimeStamp;
 
 namespace wr {
-class TransactionBuilder;
+class TransactionWrapper;
 struct WrTransformProperty;
 struct WrWindowId;
 } // namespace wr
@@ -52,7 +52,7 @@ public:
    */
   static void SetSamplerThread(const wr::WrWindowId& aWindowId);
 
-  bool PushStateToWR(wr::TransactionBuilder& aTxn,
+  bool PushStateToWR(wr::TransactionWrapper& aTxn,
                      const TimeStamp& aSampleTime);
 
   bool SampleAnimations(const LayerMetricsWrapper& aLayer,

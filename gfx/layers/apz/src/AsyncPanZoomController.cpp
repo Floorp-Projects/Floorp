@@ -3573,12 +3573,14 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
 {
   AssertOnSamplerThread();
 
-  // This function may get called multiple with the same sample time, because
-  // there may be multiple layers with this APZC, and each layer invokes this
-  // function during composition. However we only want to do one animation step
-  // per composition so we need to deduplicate these calls first.
+  // This function may get called multiple with the same sample time, for two
+  // reasons: (1) there may be multiple layers with this APZC, and each layer
+  // invokes this function during composition, and (2) we might composite
+  // multiple times at the same timestamp.
+  // However we only want to do one animation step per composition so we need
+  // to deduplicate these calls first.
   if (mLastSampleTime == aSampleTime) {
-    return false;
+    return (mAnimation != nullptr);
   }
 
   // Sample the composited async transform once per composite. Note that we
