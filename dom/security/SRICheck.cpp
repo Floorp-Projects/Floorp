@@ -182,7 +182,8 @@ SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
 /* static */ nsresult
 SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
                           nsIChannel* aChannel,
-                          const nsACString& aBytes,
+                          const nsACString& aFirst,
+                          const nsACString& aSecond,
                           const nsACString& aSourceFileURI,
                           nsIConsoleReportCollector* aReporter)
 {
@@ -201,7 +202,10 @@ SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
 
   SRICheckDataVerifier verifier(aMetadata, aSourceFileURI, aReporter);
   nsresult rv =
-    verifier.Update(aBytes.Length(), (const uint8_t*)aBytes.BeginReading());
+    verifier.Update(aFirst.Length(), (const uint8_t*)aFirst.BeginReading());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv =
+    verifier.Update(aSecond.Length(), (const uint8_t*)aSecond.BeginReading());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return verifier.Verify(aMetadata, aChannel, aSourceFileURI, aReporter);

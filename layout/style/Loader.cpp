@@ -579,7 +579,8 @@ SheetLoadData::GetReferrerURI()
  */
 nsresult
 SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
-                                       const nsACString& aBytes,
+                                       const nsACString& aBytes1,
+                                       const nsACString& aBytes2,
                                        nsIChannel* aChannel)
 {
   LOG(("SheetLoadData::OnStreamComplete"));
@@ -772,7 +773,7 @@ SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
       mLoader->mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
     }
     nsresult rv = SRICheck::VerifyIntegrity(
-      sriMetadata, aChannel, aBytes, sourceUri, mLoader->mReporter);
+      sriMetadata, aChannel, aBytes1, aBytes2, sourceUri, mLoader->mReporter);
 
     nsCOMPtr<nsILoadGroup> loadGroup;
     aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
