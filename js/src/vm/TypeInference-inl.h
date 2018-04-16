@@ -122,9 +122,9 @@ inline JSCompartment*
 TypeSet::ObjectKey::maybeCompartment()
 {
     if (isSingleton())
-        return singleton()->compartment();
+        return singletonNoBarrier()->compartment();
 
-    return group()->compartment();
+    return groupNoBarrier()->compartment();
 }
 
 /* static */ inline TypeSet::Type
