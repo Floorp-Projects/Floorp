@@ -1779,6 +1779,10 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
     // that the callback from the updater thread can find the right APZUpdater.
     mApzUpdater->SetWebRenderWindowId(windowId);
   }
+  if (mApzSampler) {
+    // Same as for mApzUpdater, but for the sampler thread.
+    mApzSampler->SetWebRenderWindowId(windowId);
+  }
   RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(this, Move(widget), windowId, aSize);
   if (!api) {
     mWrBridge = WebRenderBridgeParent::CreateDestroyed(aPipelineId);
