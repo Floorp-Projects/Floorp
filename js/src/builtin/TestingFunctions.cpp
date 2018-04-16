@@ -3098,9 +3098,7 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_StructuredCloneHasTransferables(*obj->data(), &hasTransferable))
         return false;
 
-    if (obj->isSynthetic() &&
-        (scope != JS::StructuredCloneScope::DifferentProcess || hasTransferable))
-    {
+    if (obj->isSynthetic() && scope != JS::StructuredCloneScope::DifferentProcess) {
         JS_ReportErrorASCII(cx, "clone buffer data is synthetic but may contain pointers");
         return false;
     }
