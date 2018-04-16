@@ -216,7 +216,6 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["dom.ipc.plugins.enabled", {what: RECORD_PREF_VALUE}],
   ["dom.ipc.processCount", {what: RECORD_PREF_VALUE}],
   ["dom.max_script_run_time", {what: RECORD_PREF_VALUE}],
-  ["experiments.manifest.uri", {what: RECORD_PREF_VALUE}],
   ["extensions.autoDisableScopes", {what: RECORD_PREF_VALUE}],
   ["extensions.enabledScopes", {what: RECORD_PREF_VALUE}],
   ["extensions.blocklist.enabled", {what: RECORD_PREF_VALUE}],
@@ -276,7 +275,6 @@ const PREF_SEARCH_COHORT = "browser.search.cohort";
 const COMPOSITOR_CREATED_TOPIC = "compositor:created";
 const COMPOSITOR_PROCESS_ABORTED_TOPIC = "compositor:process-aborted";
 const DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC = "distribution-customization-complete";
-const EXPERIMENTS_CHANGED_TOPIC = "experiments-changed";
 const GFX_FEATURES_READY_TOPIC = "gfx-features-ready";
 const SEARCH_ENGINE_MODIFIED_TOPIC = "browser-search-engine-modified";
 const SEARCH_SERVICE_TOPIC = "browser-search-service";
@@ -549,7 +547,6 @@ EnvironmentAddonBuilder.prototype = {
   watchForChanges() {
     this._loaded = true;
     AddonManager.addAddonListener(this);
-    Services.obs.addObserver(this, EXPERIMENTS_CHANGED_TOPIC);
   },
 
   // AddonListener
@@ -574,9 +571,7 @@ EnvironmentAddonBuilder.prototype = {
   // nsIObserver
   observe(aSubject, aTopic, aData) {
     this._environment._log.trace("observe - Topic " + aTopic);
-    if (aTopic == "experiment-changed") {
-      this._checkForChanges("experiment-changed");
-    } else if (aTopic == BLOCKLIST_LOADED_TOPIC) {
+    if (aTopic == BLOCKLIST_LOADED_TOPIC) {
       Services.obs.removeObserver(this, BLOCKLIST_LOADED_TOPIC);
       this._blocklistObserverAdded = false;
       let plugins = this._getActivePlugins();
@@ -613,7 +608,6 @@ EnvironmentAddonBuilder.prototype = {
   _shutdownBlocker() {
     if (this._loaded) {
       AddonManager.removeAddonListener(this);
-      Services.obs.removeObserver(this, EXPERIMENTS_CHANGED_TOPIC);
       if (this._blocklistObserverAdded) {
         Services.obs.removeObserver(this, BLOCKLIST_LOADED_TOPIC);
       }
@@ -650,7 +644,7 @@ EnvironmentAddonBuilder.prototype = {
       theme: await this._getActiveTheme(),
       activePlugins: this._getActivePlugins(),
       activeGMPlugins: await this._getActiveGMPlugins(),
-      activeExperiment: this._getActiveExperiment(),
+      activeExperiment: {},
       persona: personaId,
     };
 
@@ -849,14 +843,6 @@ EnvironmentAddonBuilder.prototype = {
     }
 
     return activeGMPlugins;
-  },
-
-  /**
-   * Get the active experiment data in object form.
-   * @return Object containing the active experiment data.
-   */
-  _getActiveExperiment() {
-    return {};
   },
 };
 

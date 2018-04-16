@@ -3,7 +3,6 @@ codespell:
     description: Check code for common misspellings
     include:
         - browser/base/content/docs/
-        - browser/experiments/docs
         - build/docs
         - mobile/android/docs
         - python/docs

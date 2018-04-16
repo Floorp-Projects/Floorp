@@ -2143,7 +2143,7 @@ InlineTypedObject::obj_moved(JSObject* dst, JSObject* src)
         // but they will not set any direct forwarding pointers.
         uint8_t* oldData = reinterpret_cast<uint8_t*>(src) + offsetOfDataStart();
         uint8_t* newData = dst->as<InlineTypedObject>().inlineTypedMem();
-        auto& nursery = dst->runtimeFromActiveCooperatingThread()->gc.nursery();
+        auto& nursery = dst->runtimeFromMainThread()->gc.nursery();
         bool direct = descr.size() >= sizeof(uintptr_t);
         nursery.setForwardingPointerWhileTenuring(oldData, newData, direct);
     }

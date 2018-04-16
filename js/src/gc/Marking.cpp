@@ -3624,7 +3624,7 @@ JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr thing)
     MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
     MOZ_ASSERT(!JS::CurrentThreadIsHeapCycleCollecting());
 
-    JSRuntime* rt = thing.asCell()->runtimeFromActiveCooperatingThread();
+    JSRuntime* rt = thing.asCell()->runtimeFromMainThread();
     gcstats::AutoPhase outerPhase(rt->gc.stats(), gcstats::PhaseKind::BARRIER);
     return UnmarkGrayGCThing(rt, thing);
 }

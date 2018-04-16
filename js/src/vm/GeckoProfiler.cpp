@@ -235,7 +235,7 @@ GeckoProfilerThread::exit(JSScript* script, JSFunction* maybeFun)
     /* Sanity check to make sure push/pop balanced */
     uint32_t sp = pseudoStack_->stackPointer;
     if (sp < pseudoStack_->stackCapacity()) {
-        JSRuntime* rt = script->runtimeFromActiveCooperatingThread();
+        JSRuntime* rt = script->runtimeFromMainThread();
         const char* dynamicString = rt->geckoProfiler().profileString(script, maybeFun);
         /* Can't fail lookup because we should already be in the set */
         MOZ_ASSERT(dynamicString);
