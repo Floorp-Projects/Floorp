@@ -308,11 +308,10 @@ public:
   {
   }
 
-  NS_INLINE_DECL_REFCOUNTING(nsTransitionManager)
+  ~nsTransitionManager() final = default;
 
   typedef mozilla::AnimationCollection<mozilla::dom::CSSTransition>
     CSSTransitionCollection;
-
 
   /**
    * Update transitions for stylo.
@@ -323,9 +322,7 @@ public:
     const mozilla::ComputedStyle& aOldStyle,
     const mozilla::ComputedStyle& aNewStyle);
 
-
 protected:
-  virtual ~nsTransitionManager() {}
 
   typedef nsTArray<RefPtr<mozilla::dom::CSSTransition>>
     OwningCSSTransitionPtrArray;
