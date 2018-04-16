@@ -256,7 +256,7 @@ GDIFontEntry::LookupUnscaledFont(HFONT aFont)
 
 void
 GDIFontEntry::FillLogFont(LOGFONTW *aLogFont,
-                          FontWeight aWeight,
+                          LONG aWeight,
                           gfxFloat aSize)
 {
     memcpy(aLogFont, &mLogFont, sizeof(LOGFONTW));
@@ -272,8 +272,8 @@ GDIFontEntry::FillLogFont(LOGFONTW *aLogFont,
     // for installed families with no bold face, and for downloaded fonts
     // (but NOT for local user fonts, because it could cause a different,
     // glyph-incompatible face to be used)
-    if (aWeight.ToFloat() != 0.0f) {
-        aLogFont->lfWeight = LONG(aWeight.ToFloat());
+    if (aWeight != 0) {
+        aLogFont->lfWeight = aWeight;
     }
 
     // for non-local() user fonts, we never want to apply italics here;
@@ -737,7 +737,7 @@ gfxGDIFontList::LookupLocalFont(const nsAString& aFontName,
     fe->mIsLocalUserFont = true;
 
     // make the new font entry match the userfont entry style characteristics
-    fe->mWeight = (aWeight == FontWeight(0) ? FontWeight(400) : aWeight);
+    fe->mWeight = aWeight;
     fe->mStyle = aStyle;
 
     return fe;
@@ -867,11 +867,9 @@ gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
 
     // make a new font entry using the unique name
     WinUserFontData *winUserFontData = new WinUserFontData(fontRef);
-    FontWeight w = (aWeight == FontWeight(0) ? FontWeight(400) : aWeight);
-
     GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(uniqueName,
         gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/,
-        aStyle, w, aStretch, winUserFontData);
+        aStyle, aWeight, aStretch, winUserFontData);
 
     if (fe) {
       fe->mIsDataUserFont = true;

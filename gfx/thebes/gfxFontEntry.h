@@ -150,7 +150,7 @@ public:
     bool IsItalic() const { return mStyle == NS_FONT_STYLE_ITALIC; }
     bool IsOblique() const { return mStyle == NS_FONT_STYLE_OBLIQUE; }
     bool IsUpright() const { return mStyle == NS_FONT_STYLE_NORMAL; }
-    bool IsBold() const { return mWeight >= FontWeight(600); } // bold == weights 600 and above
+    bool IsBold() const { return mWeight.IsBold(); } // bold == weights 600 and above
     bool IgnoreGDEF() const { return mIgnoreGDEF; }
     bool IgnoreGSUB() const { return mIgnoreGSUB; }
 

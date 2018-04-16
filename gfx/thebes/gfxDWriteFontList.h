@@ -7,6 +7,7 @@
 #define GFX_DWRITEFONTLIST_H
 
 #include "mozilla/FontPropertyTypes.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "gfxDWriteCommon.h"
 #include "dwrite_3.h"
@@ -118,10 +119,9 @@ public:
                   (dwriteStyle == DWRITE_FONT_STYLE_OBLIQUE ?
                    NS_FONT_STYLE_OBLIQUE : NS_FONT_STYLE_NORMAL));
         mStretch = FontStretchFromDWriteStretch(aFont->GetStretch());
-        uint16_t weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
+        int weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
 
-        weight = std::max<uint16_t>(100, weight);
-        weight = std::min<uint16_t>(900, weight);
+        weight = mozilla::Clamp(weight, 100, 900);
         mWeight = FontWeight(weight);
 
         mIsCJK = UNINITIALIZED_VALUE;
