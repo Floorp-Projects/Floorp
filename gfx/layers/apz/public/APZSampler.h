@@ -52,8 +52,8 @@ public:
    */
   static void SetSamplerThread(const wr::WrWindowId& aWindowId);
 
-  bool PushStateToWR(wr::TransactionWrapper& aTxn,
-                     const TimeStamp& aSampleTime);
+  void SetSampleTime(const TimeStamp& aSampleTime);
+  bool PushStateToWR(wr::TransactionWrapper& aTxn);
 
   bool SampleAnimations(const LayerMetricsWrapper& aLayer,
                         const TimeStamp& aSampleTime);
@@ -125,6 +125,9 @@ private:
   mutable bool mSamplerThreadQueried;
 #endif
 
+  Mutex mSampleTimeLock;
+  // Can only be accessed or modified while holding mSampleTimeLock.
+  TimeStamp mSampleTime;
 };
 
 } // namespace layers
