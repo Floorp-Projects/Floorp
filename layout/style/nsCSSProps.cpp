@@ -147,6 +147,94 @@ CreateStaticTable(const char* const aRawTable[], int32_t aLength)
   return table;
 }
 
+#ifdef DEBUG
+static void
+CheckServoCSSPropList()
+{
+  struct PropData {
+    nsCSSPropertyID mID;
+    uint32_t mFlags;
+    const char* mPref;
+  };
+  const PropData sGeckoProps[eCSSProperty_COUNT_with_aliases] = {
+#define CSS_PROP(name_, id_, method_, flags_, pref_, ...) \
+    { eCSSProperty_##id_, flags_, pref_ },
+#include "nsCSSPropList.h"
+#undef CSS_PROP
+
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
+    { eCSSProperty_##id_, flags_, pref_ },
+#include "nsCSSPropList.h"
+#undef CSS_PROP_SHORTHAND
+
+#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_) \
+    { eCSSPropertyAlias_##aliasid_, 0, pref_ },
+#include "nsCSSPropAliasList.h"
+#undef CSS_PROP_ALIAS
+  };
+  const PropData sServoProps[eCSSProperty_COUNT_with_aliases] = {
+#define CSS_PROP_LONGHAND(name_, id_, method_, flags_, pref_) \
+    { eCSSProperty_##id_, flags_, pref_ },
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
+    { eCSSProperty_##id_, flags_, pref_ },
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
+    { eCSSPropertyAlias_##aliasid_, 0, pref_ },
+#include "mozilla/ServoCSSPropList.h"
+#undef CSS_PROP_ALIAS
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP_LONGHAND
+  };
+
+  const uint32_t kServoFlags =
+    CSS_PROPERTY_ENABLED_MASK | CSS_PROPERTY_INTERNAL |
+    CSS_PROPERTY_PARSE_INACCESSIBLE;
+  bool mismatch = false;
+  for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; i++) {
+    auto& geckoData = sGeckoProps[i];
+    auto& servoData = sServoProps[i];
+    const char* name = nsCSSProps::GetStringValue(geckoData.mID).get();
+    if (geckoData.mID != servoData.mID) {
+      printf_stderr("Order mismatches: gecko: %s, servo: %s\n",
+                    name, nsCSSProps::GetStringValue(servoData.mID).get());
+      mismatch = true;
+      continue;
+    }
+    if ((geckoData.mFlags & kServoFlags) != servoData.mFlags) {
+      printf_stderr("Enabled flags of %s mismatch\n", name);
+      mismatch = true;
+    }
+    if (strcmp(geckoData.mPref, servoData.mPref) != 0) {
+      printf_stderr("Pref of %s mismatches\n", name);
+      mismatch = true;
+    }
+  }
+
+  const nsCSSPropertyID sGeckoAliases[eCSSAliasCount] = {
+#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_) \
+    eCSSProperty_##propid_,
+#include "nsCSSPropAliasList.h"
+#undef CSS_PROP_ALIAS
+  };
+  const nsCSSPropertyID sServoAliases[eCSSAliasCount] = {
+#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_) \
+    eCSSProperty_##propid_,
+#include "mozilla/ServoCSSPropList.h"
+#undef CSS_PROP_ALIAS
+  };
+  for (size_t i = 0; i < eCSSAliasCount; i++) {
+    if (sGeckoAliases[i] == sServoAliases[i]) {
+      continue;
+    }
+    nsCSSPropertyID aliasid = nsCSSPropertyID(eCSSProperty_COUNT + i);
+    printf_stderr("Original property of alias %s mismatches\n",
+                  nsCSSProps::GetStringValue(aliasid).get());
+    mismatch = true;
+  }
+
+  MOZ_ASSERT(!mismatch);
+}
+#endif
+
 void
 nsCSSProps::AddRefTable(void)
 {
@@ -170,6 +258,10 @@ nsCSSProps::AddRefTable(void)
         gPropertyIDLNameTable->Put(nsDependentCString(kIDLNameTable[p]), p);
       }
     }
+
+#ifdef DEBUG
+    CheckServoCSSPropList();
+#endif
 
     static bool prefObserversInited = false;
     if (!prefObserversInited) {
