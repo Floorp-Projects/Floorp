@@ -238,7 +238,7 @@ checkbox:-moz-focusring {
   border: 1px solid var(--toolbarbutton-border-color);
   border-radius: 2px;
   color: var(--theme-body-color);
-  transition: background 0.05s ease-in-out;
+  transition: background-color 0.05s ease-in-out;
   -moz-box-align: center;
   text-shadow: none;
   padding: 1px;
