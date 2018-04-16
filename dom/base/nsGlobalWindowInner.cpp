@@ -2474,6 +2474,35 @@ nsGlobalWindowInner::NoteCalledRegisterForServiceWorkerScope(const nsACString& a
 }
 
 void
+nsGlobalWindowInner::MigrateStateForDocumentOpen(nsGlobalWindowInner* aOldInner)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aOldInner);
+  MOZ_DIAGNOSTIC_ASSERT(aOldInner != this);
+  MOZ_DIAGNOSTIC_ASSERT(mDoc);
+
+  // Make a copy of the old window's performance object on document.open.
+  // Note that we have to force eager creation of it here, because we need
+  // to grab the current document channel and whatnot before that changes.
+  aOldInner->CreatePerformanceObjectIfNeeded();
+  if (aOldInner->mPerformance) {
+    mPerformance =
+      Performance::CreateForMainThread(this,
+                                       mDoc->NodePrincipal(),
+                                       aOldInner->mPerformance->GetDOMTiming(),
+                                       aOldInner->mPerformance->GetChannel());
+  }
+
+  // Rebind DETH objects to the new global created by document.open().
+  // XXX: Is this correct?  We should consider if the spec and our
+  //      implementation should change to match other browsers by
+  //      just reusing the current window.  (Bug 1449992)
+  aOldInner->ForEachEventTargetObject(
+    [&] (DOMEventTargetHelper* aDETH, bool* aDoneOut) {
+      aDETH->BindToOwner(this->AsInner());
+    });
+}
+
+void
 nsGlobalWindowInner::UpdateTopInnerWindow()
 {
   if (IsTopInnerWindow() || !mTopInnerWindow) {
