@@ -125,7 +125,6 @@ class EventListenerManager;
 class HTMLEditor;
 
 namespace dom {
-class ChromeMessageBroadcaster;
 struct CustomElementDefinition;
 class DocumentFragment;
 class Element;
@@ -136,6 +135,7 @@ class IPCDataTransfer;
 class IPCDataTransferItem;
 struct LifecycleCallbackArgs;
 struct LifecycleAdoptedCallbackArgs;
+class MessageBroadcaster;
 class NodeInfo;
 class nsIContentChild;
 class nsIContentParent;
@@ -3329,7 +3329,7 @@ private:
                                                                       mozilla::dom::AutocompleteInfo& aInfo,
                                                                       bool aGrantAllValidValue = false);
 
-  static bool CallOnAllRemoteChildren(mozilla::dom::ChromeMessageBroadcaster* aManager,
+  static bool CallOnAllRemoteChildren(mozilla::dom::MessageBroadcaster* aManager,
                                       CallOnRemoteChildFunction aCallback,
                                       void* aArg);
 

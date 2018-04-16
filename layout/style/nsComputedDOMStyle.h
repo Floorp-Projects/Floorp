@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/StyleComplexColor.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/Element.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nscore.h"
