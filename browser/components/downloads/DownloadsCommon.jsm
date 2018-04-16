@@ -347,8 +347,8 @@ var DownloadsCommon = {
     }
 
     if (summary.totalSize != 0) {
-      summary.percentComplete = (summary.totalTransferred /
-                                 summary.totalSize) * 100;
+      summary.percentComplete =
+        Math.floor((summary.totalTransferred / summary.totalSize) * 100);
     }
 
     if (summary.slowestSpeed == Infinity) {
