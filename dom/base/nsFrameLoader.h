@@ -53,6 +53,7 @@ class ChromeMessageSender;
 class ContentParent;
 class MessageSender;
 class PBrowserParent;
+class ProcessMessageManager;
 class Promise;
 class TabParent;
 class MutableTabContext;
@@ -333,7 +334,7 @@ public:
   // Properly retrieves documentSize of any subdocument type.
   nsresult GetWindowDimensions(nsIntRect& aRect);
 
-  virtual mozilla::dom::ChromeMessageSender* GetProcessMessageManager() const override;
+  virtual mozilla::dom::ProcessMessageManager* GetProcessMessageManager() const override;
 
   // public because a callback needs these.
   RefPtr<mozilla::dom::ChromeMessageSender> mMessageManager;
