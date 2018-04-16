@@ -27,6 +27,7 @@ APZSampler::APZSampler(const RefPtr<APZCTreeManager>& aApz)
 #ifdef DEBUG
   , mSamplerThreadQueried(false)
 #endif
+  , mSampleTimeLock("APZSampler::mSampleTimeLock")
 {
   MOZ_ASSERT(aApz);
   mApz->SetSampler(this);
@@ -61,13 +62,31 @@ APZSampler::SetSamplerThread(const wr::WrWindowId& aWindowId)
   }
 }
 
+void
+APZSampler::SetSampleTime(const TimeStamp& aSampleTime)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  MutexAutoLock lock(mSampleTimeLock);
+  mSampleTime = aSampleTime;
+}
+
 bool
-APZSampler::PushStateToWR(wr::TransactionWrapper& aTxn,
-                          const TimeStamp& aSampleTime)
+APZSampler::PushStateToWR(wr::TransactionWrapper& aTxn)
 {
   // This function will be removed eventually since we'll have WR pull
   // the transforms from APZ instead.
-  return mApz->PushStateToWR(aTxn, aSampleTime);
+  AssertOnSamplerThread();
+  TimeStamp sampleTime;
+  { // scope lock
+    MutexAutoLock lock(mSampleTimeLock);
+
+    // If mSampleTime is null we're in a startup phase where the
+    // WebRenderBridgeParent hasn't yet provided us with a sample time.
+    // If we're that early there probably aren't any APZ animations happening
+    // anyway, so using Timestamp::Now() should be fine.
+    sampleTime = mSampleTime.IsNull() ? TimeStamp::Now() : mSampleTime;
+  }
+  return mApz->PushStateToWR(aTxn, sampleTime);
 }
 
 bool
