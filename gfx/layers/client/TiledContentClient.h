@@ -128,6 +128,7 @@ struct TileClient
   */
   TextureClient* GetBackBuffer(CompositableClient&,
                                const nsIntRegion& aDirtyRegion,
+                               const nsIntRegion& aVisibleRegion,
                                gfxContentType aContent, SurfaceMode aMode,
                                nsIntRegion& aAddPaintedRegion,
                                TilePaintFlags aFlags,
@@ -170,6 +171,7 @@ private:
   // Copies dirty pixels from the front buffer into the back buffer,
   // and records the copied region in aAddPaintedRegion.
   void ValidateBackBufferFromFront(const nsIntRegion &aDirtyRegion,
+                                   const nsIntRegion& aVisibleRegion,
                                    nsIntRegion& aAddPaintedRegion,
                                    TilePaintFlags aFlags,
                                    std::vector<CapturedTiledPaintState::Copy>* aCopies,
@@ -382,7 +384,6 @@ public:
                          void* aCallbackData) override;
   
   void ResetPaintedAndValidState() override {
-    mPaintedRegion.SetEmpty();
     mValidRegion.SetEmpty();
     mTiles.mSize.width = 0;
     mTiles.mSize.height = 0;

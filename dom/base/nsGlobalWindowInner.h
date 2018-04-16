@@ -1151,6 +1151,8 @@ private:
   CallState ShouldReportForServiceWorkerScopeInternal(const nsACString& aScope,
                                                       bool* aResultOut);
 
+  void
+  MigrateStateForDocumentOpen(nsGlobalWindowInner* aOldInner);
 
 public:
   // Timeout Functions

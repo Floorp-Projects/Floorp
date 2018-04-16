@@ -7321,10 +7321,6 @@ ssl3_SendClientSecondRound(sslSocket *ss)
      * certificate to an attacker that does not have a valid cert for the
      * domain we are connecting to.
      *
-     * XXX: We should do the same for the NPN extension, but for that we
-     * need an option to give the application the ability to leak the NPN
-     * information to get better performance.
-     *
      * During the initial handshake on a connection, we never send/receive
      * application data until we have authenticated the server's certificate;
      * i.e. we have fully authenticated the handshake before using the cipher
@@ -7398,14 +7394,6 @@ ssl3_SendClientSecondRound(sslSocket *ss)
     ss->enoughFirstHsDone = PR_TRUE;
 
     if (!ss->firstHsDone) {
-        /* XXX: If the server's certificate hasn't been authenticated by this
-         * point, then we may be leaking this NPN message to an attacker.
-         */
-        rv = ssl3_SendNextProto(ss);
-        if (rv != SECSuccess) {
-            goto loser; /* err code was set. */
-        }
-
         if (ss->opt.enableFalseStart) {
             if (!ss->ssl3.hs.authCertificatePending) {
                 /* When we fix bug 589047, we will need to know whether we are

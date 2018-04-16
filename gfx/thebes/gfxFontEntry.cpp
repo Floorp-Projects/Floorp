@@ -1190,18 +1190,18 @@ StyleDistance(uint32_t aFontStyle, uint32_t aTargetStyle)
     return 1; // neither is normal; must be italic vs oblique ==> 1
 }
 
-#define REVERSE_STRETCH_DISTANCE 5
+#define REVERSE_STRETCH_DISTANCE 200
 
-// stretch distance ==> [0,13]
+// stretch distance ==> [0,350]
 static inline uint32_t
-StretchDistance(int16_t aFontStretch, int16_t aTargetStretch)
+StretchDistance(int32_t aFontStretch, int32_t aTargetStretch)
 {
     int32_t distance = 0;
     if (aTargetStretch != aFontStretch) {
-        // stretch values are in the range -4 .. +4
-        // if aTargetStretch is positive, we prefer more-positive values;
-        // if zero or negative, prefer more-negative
-        if (aTargetStretch > 0) {
+        // stretch values are in the range 50 .. 200
+        // if aTargetStretch is >100, we prefer larger values;
+        // if <=100, prefer smaller
+        if (aTargetStretch > 100) {
             distance = (aFontStretch - aTargetStretch);
         } else {
             distance = (aTargetStretch - aFontStretch);
@@ -1209,7 +1209,7 @@ StretchDistance(int16_t aFontStretch, int16_t aTargetStretch)
         // if the computed "distance" here is negative, it means that
         // aFontEntry lies in the "non-preferred" direction from aTargetStretch,
         // so we treat that as larger than any preferred-direction distance
-        // (max possible is 4) by adding an extra 5 to the absolute value
+        // (max possible is 150) by adding an extra 200 to the absolute value
         if (distance < 0) {
             distance = -distance + REVERSE_STRETCH_DISTANCE;
         }
@@ -1435,7 +1435,7 @@ gfxFontFamily::CheckForSimpleFamily()
         return;
     }
 
-    int16_t firstStretch = mAvailableFonts[0]->Stretch();
+    uint16_t firstStretch = mAvailableFonts[0]->Stretch();
 
     gfxFontEntry *faces[4] = { 0 };
     for (uint8_t i = 0; i < count; ++i) {

@@ -277,7 +277,6 @@ devtools.jar:
     skin/images/debugger/folder.svg (themes/images/debugger/folder.svg)
     skin/images/debugger/forward.svg (themes/images/debugger/forward.svg)
     skin/images/debugger/javascript.svg (themes/images/debugger/javascript.svg)
-    skin/images/debugger/pause-exceptions.svg (themes/images/debugger/pause-exceptions.svg)
     skin/images/debugger/pause.svg (themes/images/debugger/pause.svg)
     skin/images/debugger/prettyPrint.svg (themes/images/debugger/prettyPrint.svg)
     skin/images/debugger/react.svg (themes/images/debugger/react.svg)

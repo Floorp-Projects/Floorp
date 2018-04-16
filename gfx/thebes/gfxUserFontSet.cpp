@@ -106,7 +106,7 @@ private:
 gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
              const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
              FontWeight aWeight,
-             int32_t aStretch,
+             uint32_t aStretch,
              uint8_t aStyle,
              const nsTArray<gfxFontFeature>& aFeatureSettings,
              const nsTArray<gfxFontVariation>& aVariationSettings,
@@ -121,7 +121,7 @@ gfxUserFontEntry::gfxUserFontEntry(gfxUserFontSet* aFontSet,
       mLoader(nullptr),
       mFontSet(aFontSet)
 {
-    MOZ_ASSERT(aWeight != FontWeight(0),
+    MOZ_ASSERT(aWeight.ToFloat() != 0.0f,
                "aWeight must not be 0; use FontWeight::Normal() instead");
     mIsUserFontContainer = true;
     mSrcList = aFontFaceSrcList;
@@ -146,7 +146,7 @@ gfxUserFontEntry::~gfxUserFontEntry()
 bool
 gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                           FontWeight aWeight,
-                          int32_t aStretch,
+                          uint32_t aStretch,
                           uint8_t aStyle,
                           const nsTArray<gfxFontFeature>& aFeatureSettings,
                           const nsTArray<gfxFontVariation>& aVariationSettings,
@@ -937,7 +937,7 @@ gfxUserFontSet::FindOrCreateUserFontEntry(
                                const nsAString& aFamilyName,
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                FontWeight aWeight,
-                               int32_t aStretch,
+                               uint32_t aStretch,
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
@@ -977,7 +977,7 @@ already_AddRefed<gfxUserFontEntry>
 gfxUserFontSet::CreateUserFontEntry(
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                FontWeight aWeight,
-                               int32_t aStretch,
+                               uint32_t aStretch,
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
@@ -998,7 +998,7 @@ gfxUserFontSet::FindExistingUserFontEntry(
                                gfxUserFontFamily* aFamily,
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                FontWeight aWeight,
-                               int32_t aStretch,
+                               uint32_t aStretch,
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
@@ -1006,7 +1006,7 @@ gfxUserFontSet::FindExistingUserFontEntry(
                                gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay)
 {
-    MOZ_ASSERT(aWeight != FontWeight(0),
+    MOZ_ASSERT(aWeight.ToFloat() != 0.0f,
                "aWeight must not be 0; use FontWeight::Normal() instead");
 
     nsTArray<RefPtr<gfxFontEntry>>& fontList = aFamily->GetFontList();

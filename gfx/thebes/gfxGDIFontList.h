@@ -115,7 +115,7 @@ public:
     nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr) override;
 
     void FillLogFont(LOGFONTW *aLogFont,
-                     FontWeight aWeight,
+                     LONG aWeight,
                      gfxFloat aSize);
 
     static gfxWindowsFontType DetermineFontType(const NEWTEXTMETRICW& metrics, 
@@ -170,13 +170,13 @@ public:
                                          gfxWindowsFontType aFontType,
                                          uint8_t aStyle,
                                          FontWeight aWeight,
-                                         int16_t aStretch,
+                                         uint16_t aStretch,
                                          gfxUserFontData* aUserFontData);
 
     // create a font entry for a font referenced by its fullname
     static GDIFontEntry* LoadLocalFont(const nsAString& aFontName,
                                        FontWeight aWeight,
-                                       int16_t aStretch,
+                                       uint16_t aStretch,
                                        uint8_t aStyle);
 
     gfxWindowsFontType mFontType;
@@ -188,7 +188,7 @@ protected:
     friend class gfxGDIFont;
 
     GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
-                 uint8_t aStyle, FontWeight aWeight, int16_t aStretch,
+                 uint8_t aStyle, FontWeight aWeight, uint16_t aStretch,
                  gfxUserFontData *aUserFontData);
 
     void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
@@ -339,12 +339,12 @@ public:
 
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           FontWeight aWeight,
-                                          int16_t aStretch,
+                                          uint16_t aStretch,
                                           uint8_t aStyle);
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            FontWeight aWeight,
-                                           int16_t aStretch,
+                                           uint16_t aStretch,
                                            uint8_t aStyle,
                                            const uint8_t* aFontData,
                                            uint32_t aLength);

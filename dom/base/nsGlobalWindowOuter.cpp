@@ -1721,7 +1721,7 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
 
   mContext->WillInitializeContext();
 
-  nsGlobalWindowInner *currentInner = GetCurrentInnerWindowInternal();
+  RefPtr<nsGlobalWindowInner> currentInner = GetCurrentInnerWindowInternal();
 
   if (currentInner && currentInner->mNavigator) {
     currentInner->mNavigator->OnNavigation();
@@ -1734,6 +1734,9 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
 
   nsCOMPtr<WindowStateHolder> wsh = do_QueryInterface(aState);
   NS_ASSERTION(!aState || wsh, "What kind of weird state are you giving me here?");
+
+  bool handleDocumentOpen = false;
+  bool doomCurrentInner = false;
 
   JS::Rooted<JSObject*> newInnerGlobal(cx);
   if (reUseInnerWindow) {
@@ -1818,32 +1821,13 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
 
     if (currentInner && currentInner->GetWrapperPreserveColor()) {
       if (oldDoc == aDocument) {
-        // Make a copy of the old window's performance object on document.open.
-        // Note that we have to force eager creation of it here, because we need
-        // to grab the current document channel and whatnot before that changes.
-        currentInner->AsInner()->CreatePerformanceObjectIfNeeded();
-        if (currentInner->mPerformance) {
-          newInnerWindow->mPerformance =
-            Performance::CreateForMainThread(newInnerWindow->AsInner(),
-                                             aDocument->NodePrincipal(),
-                                             currentInner->mPerformance->GetDOMTiming(),
-                                             currentInner->mPerformance->GetChannel());
-        }
-
-        // Rebind DETH objects to the new global created by document.open().
-        // XXX: Is this correct?  We should consider if the spec and our
-        //      implementation should change to match other browsers by
-        //      just reusing the current window.  (Bug 1449992)
-        currentInner->ForEachEventTargetObject(
-          [&] (DOMEventTargetHelper* aDETH, bool* aDoneOut) {
-            aDETH->BindToOwner(newInnerWindow->AsGlobal());
-          });
+        handleDocumentOpen = true;
       }
 
       // Don't free objects on our current inner window if it's going to be
       // held in the bfcache.
       if (!currentInner->IsFrozen()) {
-        currentInner->FreeInnerObjects();
+        doomCurrentInner = true;
       }
     }
 
@@ -1993,6 +1977,19 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
     // doesn't have one).
     newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
+
+  // Handle any document.open() logic after we setup the new inner window
+  // so that any bound DETH objects can see the top window, document, etc.
+  if (handleDocumentOpen) {
+    newInnerWindow->MigrateStateForDocumentOpen(currentInner);
+  }
+
+  // We no longer need the old inner window.  Start its destruction if
+  // its not being reused and clear our reference.
+  if (doomCurrentInner) {
+    currentInner->FreeInnerObjects();
+  }
+  currentInner = nullptr;
 
   // Ask the JS engine to assert that it's valid to access our DocGroup whenever
   // it runs JS code for this compartment. We skip the check if this window is
