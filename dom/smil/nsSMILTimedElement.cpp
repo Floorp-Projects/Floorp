@@ -10,7 +10,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/TaskCategory.h"
-#include "nsAutoPtr.h"
 #include "nsSMILTimedElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsSMILAnimationFunction.h"
@@ -1259,7 +1258,7 @@ nsSMILTimedElement::Traverse(nsCycleCollectionTraversalCallback* aCallback)
 {
   uint32_t count = mBeginSpecs.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    nsSMILTimeValueSpec* beginSpec = mBeginSpecs[i];
+    nsSMILTimeValueSpec* beginSpec = mBeginSpecs[i].get();
     MOZ_ASSERT(beginSpec,
                "null nsSMILTimeValueSpec in list of begin specs");
     beginSpec->Traverse(aCallback);
@@ -1267,7 +1266,7 @@ nsSMILTimedElement::Traverse(nsCycleCollectionTraversalCallback* aCallback)
 
   count = mEndSpecs.Length();
   for (uint32_t j = 0; j < count; ++j) {
-    nsSMILTimeValueSpec* endSpec = mEndSpecs[j];
+    nsSMILTimeValueSpec* endSpec = mEndSpecs[j].get();
     MOZ_ASSERT(endSpec, "null nsSMILTimeValueSpec in list of end specs");
     endSpec->Traverse(aCallback);
   }
@@ -1281,7 +1280,7 @@ nsSMILTimedElement::Unlink()
   // Remove dependencies on other elements
   uint32_t count = mBeginSpecs.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    nsSMILTimeValueSpec* beginSpec = mBeginSpecs[i];
+    nsSMILTimeValueSpec* beginSpec = mBeginSpecs[i].get();
     MOZ_ASSERT(beginSpec,
                "null nsSMILTimeValueSpec in list of begin specs");
     beginSpec->Unlink();
@@ -1289,7 +1288,7 @@ nsSMILTimedElement::Unlink()
 
   count = mEndSpecs.Length();
   for (uint32_t j = 0; j < count; ++j) {
-    nsSMILTimeValueSpec* endSpec = mEndSpecs[j];
+    nsSMILTimeValueSpec* endSpec = mEndSpecs[j].get();
     MOZ_ASSERT(endSpec, "null nsSMILTimeValueSpec in list of end specs");
     endSpec->Unlink();
   }
@@ -1323,11 +1322,10 @@ nsSMILTimedElement::SetBeginOrEndSpec(const nsAString& aSpec,
 
   bool hadFailure = false;
   while (tokenizer.hasMoreTokens()) {
-    nsAutoPtr<nsSMILTimeValueSpec>
-      spec(new nsSMILTimeValueSpec(*this, aIsBegin));
+    auto spec = MakeUnique<nsSMILTimeValueSpec>(*this, aIsBegin);
     nsresult rv = spec->SetSpec(tokenizer.nextToken(), aContextNode);
     if (NS_SUCCEEDED(rv)) {
-      timeSpecsList.AppendElement(spec.forget());
+      timeSpecsList.AppendElement(Move(spec));
     } else {
       hadFailure = true;
     }

@@ -353,7 +353,7 @@ public:
 
 protected:
   // Typedefs
-  typedef nsTArray<nsAutoPtr<nsSMILTimeValueSpec> > TimeValueSpecList;
+  typedef nsTArray<mozilla::UniquePtr<nsSMILTimeValueSpec>> TimeValueSpecList;
   typedef nsTArray<RefPtr<nsSMILInstanceTime> >   InstanceTimeList;
   typedef nsTArray<mozilla::UniquePtr<nsSMILInterval>> IntervalList;
   typedef nsPtrHashKey<nsSMILTimeValueSpec> TimeValueSpecPtrKey;
