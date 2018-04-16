@@ -177,16 +177,16 @@ function renderToolboxButtons({focusedButton, toolboxButtons, focusButton}, isSt
   // Add the appropriate separator, if needed.
   let children = renderedButtons;
   if (renderedButtons.length) {
+    if (isStart) {
+      children.push(renderSeparator());
     // For the end group we add a separator *before* the RDM button if it
-    // exists.
-    if (rdmIndex !== -1) {
+    // exists, but only if it is not the only button.
+    } else if (rdmIndex !== -1 && visibleButtons.length > 1) {
       children.splice(
         children.length - 1,
         0,
         renderSeparator()
       );
-    } else {
-      children.push(renderSeparator());
     }
   }
 
