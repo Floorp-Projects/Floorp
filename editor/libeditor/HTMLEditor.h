@@ -891,10 +891,22 @@ protected:
                              const EditorRawDOMPoint& aPointToInsert);
 
   /**
-   * Helpers for block transformations.
+   * MakeDefinitionListItemWithTransaction() replaces parent list of current
+   * selection with <dl> or create new <dl> element and creates a definition
+   * list item whose name is aTagName.
+   *
+   * @param aTagName            Must be nsGkAtoms::dt or nsGkAtoms::dd.
    */
-  nsresult MakeDefinitionItem(const nsAString& aItemType);
-  nsresult InsertBasicBlock(const nsAString& aBlockType);
+  nsresult MakeDefinitionListItemWithTransaction(nsAtom& aTagName);
+
+  /**
+   * InsertBasicBlockWithTransaction() inserts a block element whose name
+   * is aTagName at selection.
+   *
+   * @param aTagName            A block level element name.  Must NOT be
+   *                            nsGkAtoms::dt nor nsGkAtoms::dd.
+   */
+  nsresult InsertBasicBlockWithTransaction(nsAtom& aTagName);
 
   /**
    * Increase/decrease the font size of selection.
