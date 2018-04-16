@@ -987,9 +987,6 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
     MOZ_ASSERT(unit == eCSSUnit_Null, "@font-face weight has unexpected unit");
   }
 
-  if (weight == FontWeight(0)) {
-    weight = FontWeight::Normal();
-  }
   // set up stretch
   aFontFace->GetDesc(eCSSFontDesc_Stretch, val);
   unit = val.GetUnit();
