@@ -450,6 +450,18 @@ CompositorBridgeParent::StopAndClearResources()
 
   mPaused = true;
 
+  // We need to clear the APZ tree before we destroy the WebRender API below,
+  // because in the case of async scene building that will shut down the updater
+  // thread and we need to run the task before that happens.
+  MOZ_ASSERT((mApzSampler != nullptr) == (mApzcTreeManager != nullptr));
+  MOZ_ASSERT((mApzUpdater != nullptr) == (mApzcTreeManager != nullptr));
+  if (mApzUpdater) {
+    mApzSampler = nullptr;
+    mApzUpdater->ClearTree(mRootLayerTreeID);
+    mApzUpdater = nullptr;
+    mApzcTreeManager = nullptr;
+  }
+
   // Ensure that the layer manager is destroyed before CompositorBridgeChild.
   if (mLayerManager) {
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
@@ -638,15 +650,6 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
   RemoveCompositor(mCompositorBridgeID);
 
   mCompositionManager = nullptr;
-
-  MOZ_ASSERT((mApzSampler != nullptr) == (mApzcTreeManager != nullptr));
-  MOZ_ASSERT((mApzUpdater != nullptr) == (mApzcTreeManager != nullptr));
-  if (mApzUpdater) {
-    mApzSampler = nullptr;
-    mApzUpdater->ClearTree(mRootLayerTreeID);
-    mApzUpdater = nullptr;
-    mApzcTreeManager = nullptr;
-  }
 
   { // scope lock
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
