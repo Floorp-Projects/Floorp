@@ -177,3 +177,9 @@ subinclude:servo/.hgignore
 
 # https://bz.mercurial-scm.org/show_bug.cgi?id=5322
 ^comm/
+
+# Ignore various raptor performance framework files
+^testing/raptor/.raptor-venv
+^testing/raptor/raptor-venv
+^testing/raptor/raptor/tests/.*.json
+^testing/raptor/webext/raptor/auto_gen_test_config.js

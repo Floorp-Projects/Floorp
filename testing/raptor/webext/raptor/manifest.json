@@ -1,0 +1,30 @@
+{
+  "applications": {
+    "gecko": {
+      "id": "raptor@mozilla.org"
+    }
+  },
+  "manifest_version": 2,
+  "name": "Raptor",
+  "version": "0.1",
+  "description": "Performance measurement framework prototype",
+  "background": {
+    "scripts": ["auto_gen_test_config.js", "runner.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/tp6/tp6-*.html", "http://*/heroes/*"],
+      "js": ["measure.js"]
+    },
+    {
+      "matches": ["http://*/Speedometer/index.html*"],
+      "js": ["benchmark-relay.js"]
+    }
+  ],
+  "permissions": [
+    "http://127.0.0.1:8000/",
+    "tabs",
+    "storage",
+    "alarms"
+  ]
+}
