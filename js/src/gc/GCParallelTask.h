@@ -66,7 +66,7 @@ class GCParallelTask
     void joinWithLockHeld(AutoLockHelperThreadState& locked);
 
     // Instead of dispatching to a helper, run the task on the current thread.
-    void runFromActiveCooperatingThread(JSRuntime* rt);
+    void runFromMainThread(JSRuntime* rt);
 
     // Dispatch a cancelation request.
     enum CancelMode { CancelNoWait, CancelAndWait};
