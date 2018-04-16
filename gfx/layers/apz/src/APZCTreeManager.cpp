@@ -590,9 +590,9 @@ APZCTreeManager::UpdateHitTestingTree(LayersId aRootLayerTreeId,
                            aOriginatingLayersId, aPaintSequenceNumber);
 }
 
-bool
-APZCTreeManager::PushStateToWR(wr::TransactionWrapper& aTxn,
-                               const TimeStamp& aSampleTime)
+void
+APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
+                                    const TimeStamp& aSampleTime)
 {
   AssertOnSamplerThread();
   MutexAutoLock lock(mMapLock);
@@ -648,7 +648,16 @@ APZCTreeManager::PushStateToWR(wr::TransactionWrapper& aTxn,
   }
   aTxn.AppendTransformProperties(scrollbarTransforms);
 
-  return activeAnimations;
+  if (activeAnimations) {
+    RefPtr<CompositorController> controller;
+    CompositorBridgeParent::CallWithIndirectShadowTree(mRootLayersId,
+      [&](LayerTreeState& aState) -> void {
+        controller = aState.GetCompositorController();
+      });
+    if (controller) {
+      controller->ScheduleRenderOnCompositorThread();
+    }
+  }
 }
 
 // Compute the clip region to be used for a layer with an APZC. This function

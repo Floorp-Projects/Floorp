@@ -62,6 +62,16 @@ APZSampler::SetSamplerThread(const wr::WrWindowId& aWindowId)
   }
 }
 
+/*static*/ void
+APZSampler::SampleForWebRender(const wr::WrWindowId& aWindowId,
+                               wr::Transaction* aTransaction)
+{
+  if (RefPtr<APZSampler> sampler = GetSampler(aWindowId)) {
+    wr::TransactionWrapper txn(aTransaction);
+    sampler->SampleForWebRender(txn);
+  }
+}
+
 void
 APZSampler::SetSampleTime(const TimeStamp& aSampleTime)
 {
@@ -70,11 +80,9 @@ APZSampler::SetSampleTime(const TimeStamp& aSampleTime)
   mSampleTime = aSampleTime;
 }
 
-bool
-APZSampler::PushStateToWR(wr::TransactionWrapper& aTxn)
+void
+APZSampler::SampleForWebRender(wr::TransactionWrapper& aTxn)
 {
-  // This function will be removed eventually since we'll have WR pull
-  // the transforms from APZ instead.
   AssertOnSamplerThread();
   TimeStamp sampleTime;
   { // scope lock
@@ -86,7 +94,7 @@ APZSampler::PushStateToWR(wr::TransactionWrapper& aTxn)
     // anyway, so using Timestamp::Now() should be fine.
     sampleTime = mSampleTime.IsNull() ? TimeStamp::Now() : mSampleTime;
   }
-  return mApz->PushStateToWR(aTxn, sampleTime);
+  mApz->SampleForWebRender(aTxn, sampleTime);
 }
 
 bool
@@ -247,12 +255,14 @@ APZSampler::GetSampler(const wr::WrWindowId& aWindowId)
 void
 apz_register_sampler(mozilla::wr::WrWindowId aWindowId)
 {
+  mozilla::layers::APZSampler::SetSamplerThread(aWindowId);
 }
 
 void
 apz_sample_transforms(mozilla::wr::WrWindowId aWindowId,
                       mozilla::wr::Transaction *aTransaction)
 {
+  mozilla::layers::APZSampler::SampleForWebRender(aWindowId, aTransaction);
 }
 
 void

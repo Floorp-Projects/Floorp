@@ -20,6 +20,7 @@ namespace mozilla {
 class TimeStamp;
 
 namespace wr {
+struct Transaction;
 class TransactionWrapper;
 struct WrTransformProperty;
 struct WrWindowId;
@@ -51,9 +52,11 @@ public:
    * which thread it is.
    */
   static void SetSamplerThread(const wr::WrWindowId& aWindowId);
+  static void SampleForWebRender(const wr::WrWindowId& aWindowId,
+                                 wr::Transaction* aTxn);
 
   void SetSampleTime(const TimeStamp& aSampleTime);
-  bool PushStateToWR(wr::TransactionWrapper& aTxn);
+  void SampleForWebRender(wr::TransactionWrapper& aTxn);
 
   bool SampleAnimations(const LayerMetricsWrapper& aLayer,
                         const TimeStamp& aSampleTime);

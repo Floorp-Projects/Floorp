@@ -220,11 +220,8 @@ private:
 
   CompositorBridgeParent* GetRootCompositorBridgeParent() const;
 
-  // Have APZ push the async scroll state to WR. Returns true if an APZ
-  // animation is in effect and we need to schedule another composition.
-  // If scrollbars need their transforms updated, the transaction builder
-  // is populated with the property update details via AppendTransformProperties
-  bool PushAPZStateToWR(wr::TransactionBuilder& aTxn);
+  // Tell APZ what the subsequent sampling's timestamp should be.
+  void SetAPZSampleTime();
 
   wr::Epoch GetNextWrEpoch();
 

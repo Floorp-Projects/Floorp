@@ -215,17 +215,14 @@ public:
 
   /**
    * Called when webrender is enabled, from the sampler thread. This function
-   * walks through the tree of APZC instances and tells webrender about the
-   * async scroll position. It also advances APZ animations to the specified
-   * sample time. In effect it is the webrender equivalent of (part of) the
-   * code in AsyncCompositionManager. If scrollbar transforms need updating
-   * to reflect the async scroll position, the updated transforms are appended
-   * to the provided transaction as well.
-   * Returns true if any APZ animations are in progress and we need to keep
-   * compositing.
+   * populates the provided transaction with any async scroll offsets needed.
+   * It also advances APZ animations to the specified sample time, and requests
+   * another composite if there are still active animations.
+   * In effect it is the webrender equivalent of (part of) the code in
+   * AsyncCompositionManager.
    */
-  bool PushStateToWR(wr::TransactionWrapper& aTxn,
-                     const TimeStamp& aSampleTime);
+  void SampleForWebRender(wr::TransactionWrapper& aTxn,
+                          const TimeStamp& aSampleTime);
 
   /**
    * Walk the tree of APZCs and flushes the repaint requests for all the APZCS
