@@ -43,12 +43,14 @@ class nsIContentParent;
 class nsIContentChild;
 class ChildProcessMessageManager;
 class ChromeMessageBroadcaster;
-class ChromeMessageSender;
 class ClonedMessageData;
+class MessageBroadcaster;
 class MessageListener;
 class MessageListenerManager;
 class MessageManagerReporter;
 template<typename T> class Optional;
+class ParentProcessMessageManager;
+class ProcessMessageManager;
 
 namespace ipc {
 
@@ -96,7 +98,7 @@ public:
     return NS_OK;
   }
 
-  virtual mozilla::dom::ChromeMessageSender* GetProcessMessageManager() const
+  virtual mozilla::dom::ProcessMessageManager* GetProcessMessageManager() const
   {
     return nullptr;
   }
@@ -202,7 +204,7 @@ public:
     DispatchAsyncMessage(aCx, aMessageName, aObj, aObjects, aPrincipal, aTransfers,
                          aError);
   }
-  already_AddRefed<mozilla::dom::ChromeMessageSender>
+  already_AddRefed<mozilla::dom::ProcessMessageManager>
     GetProcessMessageManager(mozilla::ErrorResult& aError);
   void GetRemoteType(nsAString& aRemoteType, mozilla::ErrorResult& aError) const;
 
@@ -234,8 +236,7 @@ public:
   NS_DECL_NSIMESSAGESENDER
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
 
-  static mozilla::dom::ChromeMessageSender*
-  NewProcessMessageManager(bool aIsRemote);
+  static mozilla::dom::ProcessMessageManager* NewProcessMessageManager(bool aIsRemote);
 
   void ReceiveMessage(nsISupports* aTarget, nsFrameLoader* aTargetFrameLoader,
                       const nsAString& aMessage, bool aIsSync,
@@ -269,7 +270,7 @@ public:
   // GetGlobalMessageManager creates the global message manager if it hasn't been yet.
   static already_AddRefed<mozilla::dom::ChromeMessageBroadcaster>
     GetGlobalMessageManager();
-  static mozilla::dom::ChromeMessageBroadcaster* GetParentProcessManager()
+  static mozilla::dom::ParentProcessMessageManager* GetParentProcessManager()
   {
     return sParentProcessManager;
   }
@@ -289,7 +290,7 @@ public:
 protected:
   friend class MMListenerRemover;
 
-  virtual mozilla::dom::ChromeMessageBroadcaster* GetParentManager()
+  virtual mozilla::dom::MessageBroadcaster* GetParentManager()
   {
     return nullptr;
   }
@@ -343,7 +344,7 @@ protected:
   void LoadPendingScripts(nsFrameMessageManager* aManager,
                           nsFrameMessageManager* aChildMM);
 public:
-  static mozilla::dom::ChromeMessageBroadcaster* sParentProcessManager;
+  static mozilla::dom::ParentProcessMessageManager* sParentProcessManager;
   static nsFrameMessageManager* sSameProcessParentManager;
   static nsTArray<nsCOMPtr<nsIRunnable> >* sPendingSameProcessAsyncMessages;
 private:
