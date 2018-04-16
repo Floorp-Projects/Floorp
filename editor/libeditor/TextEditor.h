@@ -44,13 +44,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextEditor, EditorBase)
 
-  enum ETypingAction
-  {
-    eTypedText,  /* user typed text */
-    eTypedBR,    /* user typed shift-enter to get a br */
-    eTypedBreak  /* user typed enter */
-  };
-
   TextEditor();
 
   // nsIPlaintextEditor methods
@@ -163,8 +156,36 @@ public:
   DeleteSelectionWithTransaction(EDirection aAction,
                                  EStripWrappers aStripWrappers);
 
-  // Utility Routines, not part of public API
-  NS_IMETHOD TypedText(const nsAString& aString, ETypingAction aAction);
+  /**
+   * OnInputText() is called when user inputs text with keyboard or something.
+   *
+   * @param aStringToInsert     The string to insert.
+   */
+  nsresult OnInputText(const nsAString& aStringToInsert);
+
+  /**
+   * OnInputParagraphSeparator() is called when user tries to separate current
+   * paragraph with Enter key press or something.
+   */
+  nsresult OnInputParagraphSeparator();
+
+  /**
+   * InsertTextAsAction() inserts aStringToInsert at selection.
+   * Although this method is implementation of nsIPlaintextEditor.insertText(),
+   * this treats the input is an edit action.
+   *
+   * @param aStringToInsert     The string to insert.
+   */
+  nsresult InsertTextAsAction(const nsAString& aStringToInsert);
+
+  /**
+   * InsertParagraphSeparatorAsAction() inserts a line break if it's TextEditor
+   * or inserts new paragraph if it's HTMLEditor and it's possible.
+   * Although, this method is implementation of
+   * nsIPlaintextEditor.insertLineBreak(), this treats the input is an edit
+   * action.
+   */
+  nsresult InsertParagraphSeparatorAsAction();
 
   nsresult InsertTextAt(const nsAString& aStringToInsert,
                         nsINode* aDestinationNode,
