@@ -1406,7 +1406,8 @@ Inspector.prototype = {
   },
 
   _onContextMenu: function(e) {
-    if (e.originalTarget.closest("input[type=text]") ||
+    if (!(e.originalTarget instanceof Element) ||
+        e.originalTarget.closest("input[type=text]") ||
         e.originalTarget.closest("input:not([type])") ||
         e.originalTarget.closest("textarea")) {
       return;

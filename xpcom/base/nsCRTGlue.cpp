@@ -216,43 +216,6 @@ NS_IsLower(char aChar)
   return aChar != (char)nsLowerUpperUtils::kLower2Upper[(unsigned char)aChar];
 }
 
-bool
-NS_IsAscii(const char16_t* aString)
-{
-  while (*aString) {
-    if (0x0080 <= *aString) {
-      return false;
-    }
-    aString++;
-  }
-  return true;
-}
-
-bool
-NS_IsAscii(const char* aString)
-{
-  while (*aString) {
-    if (0x80 & *aString) {
-      return false;
-    }
-    aString++;
-  }
-  return true;
-}
-
-bool
-NS_IsAscii(const char* aString, uint32_t aLength)
-{
-  const char* end = aString + aLength;
-  while (aString < end) {
-    if (0x80 & *aString) {
-      return false;
-    }
-    ++aString;
-  }
-  return true;
-}
-
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
 void

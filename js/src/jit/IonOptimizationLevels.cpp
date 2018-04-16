@@ -42,7 +42,7 @@ OptimizationInfo::initNormalOptimizationInfo()
 
     registerAllocator_ = RegisterAllocator_Backtracking;
 
-    inlineMaxBytecodePerCallSiteActiveCooperatingThread_ = 550;
+    inlineMaxBytecodePerCallSiteMainThread_ = 550;
     inlineMaxBytecodePerCallSiteHelperThread_ = 1100;
     inlineMaxCalleeInlinedBytecodeLength_ = 3550;
     inlineMaxTotalBytecodeLength_ = 85000;

@@ -35,7 +35,7 @@ Wrapper::finalizeInBackground(const Value& priv) const
     JSObject* wrapped = MaybeForwarded(&priv.toObject());
     gc::AllocKind wrappedKind;
     if (IsInsideNursery(wrapped)) {
-        JSRuntime *rt = wrapped->runtimeFromActiveCooperatingThread();
+        JSRuntime* rt = wrapped->runtimeFromMainThread();
         wrappedKind = wrapped->allocKindForTenure(rt->gc.nursery());
     } else {
         wrappedKind = wrapped->asTenured().getAllocKind();

@@ -517,9 +517,6 @@ with Files("tests/shadow-dom/**"):
 with Files("tests/speech-api/**"):
     BUG_COMPONENT = ("Core", "Web Speech")
 
-with Files("tests/staticrange/**"):
-    BUG_COMPONENT = ("Core", "DOM")
-
 with Files("tests/storage/**"):
     BUG_COMPONENT = ("Core", "DOM")
 

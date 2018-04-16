@@ -134,7 +134,7 @@ js::intl_Collator(JSContext* cx, unsigned argc, Value* vp)
 void
 js::CollatorObject::finalize(FreeOp* fop, JSObject* obj)
 {
-    MOZ_ASSERT(fop->onActiveCooperatingThread());
+    MOZ_ASSERT(fop->onMainThread());
 
     const Value& slot = obj->as<CollatorObject>().getReservedSlot(CollatorObject::UCOLLATOR_SLOT);
     if (UCollator* coll = static_cast<UCollator*>(slot.toPrivate()))
