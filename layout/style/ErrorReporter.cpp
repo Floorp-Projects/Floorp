@@ -146,6 +146,7 @@ ErrorReporter::ErrorReporter(const StyleSheet* aSheet,
 
 ErrorReporter::~ErrorReporter()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   // Schedule deferred cleanup for cached data. We want to strike a
   // balance between performance and memory usage, so we only allow
   // short-term caching.
