@@ -9,6 +9,7 @@
 
 #include <unordered_map>
 
+#include "base/platform_thread.h" // for PlatformThreadId
 #include "mozilla/layers/AsyncCompositionManager.h" // for AsyncTransform
 #include "mozilla/StaticMutex.h"
 #include "nsTArray.h"
@@ -42,6 +43,14 @@ public:
   explicit APZSampler(const RefPtr<APZCTreeManager>& aApz);
 
   void SetWebRenderWindowId(const wr::WindowId& aWindowId);
+
+  /**
+   * This function is invoked from rust on the render backend thread when it
+   * is created. It effectively tells the APZSampler "the current thread is
+   * the sampler thread for this window id" and allows APZSampler to remember
+   * which thread it is.
+   */
+  static void SetSamplerThread(const wr::WrWindowId& aWindowId);
 
   bool PushStateToWR(wr::TransactionBuilder& aTxn,
                      const TimeStamp& aSampleTime);
@@ -90,6 +99,7 @@ public:
 protected:
   virtual ~APZSampler();
 
+  bool UsingWebRenderSamplerThread() const;
   static already_AddRefed<APZSampler> GetSampler(const wr::WrWindowId& aWindowId);
 
 private:
@@ -101,6 +111,19 @@ private:
   static StaticMutex sWindowIdLock;
   static std::unordered_map<uint64_t, APZSampler*> sWindowIdMap;
   Maybe<wr::WrWindowId> mWindowId;
+
+  // If WebRender is enabled, this holds the thread id of the render backend
+  // thread (which is the sampler thread) for the compositor associated with
+  // this APZSampler instance.
+  // This is written to once during init and never cleared, and so reading it
+  // from multiple threads during normal operation (after initialization)
+  // without locking should be fine.
+  Maybe<PlatformThreadId> mSamplerThreadId;
+#ifdef DEBUG
+  // This flag is used to ensure that we don't ever try to do sampler-thread
+  // stuff before the updater thread has been properly initialized.
+  mutable bool mSamplerThreadQueried;
+#endif
 
 };
 
