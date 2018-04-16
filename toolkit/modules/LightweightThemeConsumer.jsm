@@ -113,7 +113,7 @@ LightweightThemeConsumer.prototype = {
       return;
 
     let root = this._doc.documentElement;
-    let active = !!aData.accentcolor;
+    let active = aData.accentcolor || aData.headerURL;
 
     // We need to clear these either way: either because the theme is being removed,
     // or because we are applying a new theme and the data might be bogus CSS,
