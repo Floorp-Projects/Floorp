@@ -1135,10 +1135,42 @@ struct ScrollableLayerGuid {
     return false;
   }
 
-  PLDHashNumber Hash() const
+  // Helper structs to use as hash/equality functions in std::unordered_map. e.g.
+  // std::unordered_map<ScrollableLayerGuid,
+  //                    ValueType,
+  //                    ScrollableLayerGuid::HashFn> myMap;
+  // std::unordered_map<ScrollableLayerGuid,
+  //                    ValueType,
+  //                    ScrollableLayerGuid::HashIgnoringPresShellFn,
+  //                    ScrollableLayerGuid::EqualIgnoringPresShellFn> myMap;
+
+  struct HashFn
   {
-    return HashGeneric(uint64_t(mLayersId), mPresShellId, mScrollId);
-  }
+    std::size_t operator()(const ScrollableLayerGuid& aGuid) const
+    {
+      return HashGeneric(uint64_t(aGuid.mLayersId),
+                         aGuid.mPresShellId,
+                         aGuid.mScrollId);
+    }
+  };
+
+  struct HashIgnoringPresShellFn
+  {
+    std::size_t operator()(const ScrollableLayerGuid& aGuid) const
+    {
+      return HashGeneric(uint64_t(aGuid.mLayersId),
+                         aGuid.mScrollId);
+    }
+  };
+
+  struct EqualIgnoringPresShellFn
+  {
+    bool operator()(const ScrollableLayerGuid& lhs, const ScrollableLayerGuid& rhs) const
+    {
+      return lhs.mLayersId == rhs.mLayersId
+          && lhs.mScrollId == rhs.mScrollId;
+    }
+  };
 };
 
 template <int LogLevel>
@@ -1196,14 +1228,6 @@ struct ZoomConstraints {
   bool operator!=(const ZoomConstraints& other) const
   {
     return !(*this == other);
-  }
-};
-
-struct ScrollableLayerGuidHash
-{
-  std::size_t operator()(const ScrollableLayerGuid& Guid) const
-  {
-    return Guid.Hash();
   }
 };
 

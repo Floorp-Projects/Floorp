@@ -102,7 +102,9 @@ struct APZCTreeManager::TreeBuildingState {
   // This map is populated as we place APZCs into the new tree. Its purpose is
   // to facilitate re-using the same APZC for different layers that scroll
   // together (and thus have the same ScrollableLayerGuid).
-  std::unordered_map<ScrollableLayerGuid, AsyncPanZoomController*, ScrollableLayerGuidHash> mApzcMap;
+  std::unordered_map<ScrollableLayerGuid,
+                     AsyncPanZoomController*,
+                     ScrollableLayerGuid::HashFn> mApzcMap;
 
   // As the tree is traversed, the top element of this stack tracks whether
   // the parent scroll node has a perspective transform.
@@ -543,7 +545,12 @@ APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
   // such as the one below to generate scrollbar transforms. Without this, perf
   // could end up being O(n^2) instead of O(n log n) because we'd have to search
   // the tree to find the corresponding APZC every time we hit a thumb node.
-  std::unordered_map<ScrollableLayerGuid, HitTestingTreeNode*, ScrollableLayerGuidHash> httnMap;
+  // We use the presShell-ignoring map because when we do a lookup in the map
+  // for the scrollbar, we don't have (or care about) the presShellId.
+  std::unordered_map<ScrollableLayerGuid,
+                     HitTestingTreeNode*,
+                     ScrollableLayerGuid::HashIgnoringPresShellFn,
+                     ScrollableLayerGuid::EqualIgnoringPresShellFn> httnMap;
 
   bool activeAnimations = false;
   LayersId lastLayersId{(uint64_t)-1};
@@ -582,10 +589,7 @@ APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
           lastLayersId = aNode->GetLayersId();
         }
 
-        // Use a 0 presShellId because when we do a lookup in this map for the
-        // scrollbar below we don't have (or care about) the presShellId.
-        ScrollableLayerGuid guid(lastLayersId, 0, apzc->GetGuid().mScrollId);
-        httnMap.emplace(guid, aNode);
+        httnMap.emplace(apzc->GetGuid(), aNode);
 
         ParentLayerPoint layerTranslation = apzc->GetCurrentAsyncTransform(
             AsyncPanZoomController::eForCompositing).mTranslation;
