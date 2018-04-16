@@ -159,10 +159,6 @@ public:
   NS_DECL_NSIHTMLINLINETABLEEDITOR
 
   // XXX Following methods are not overriding but defined here...
-  nsresult CopyLastEditableChildStyles(nsINode* aPreviousBlock,
-                                       nsINode* aNewBlock,
-                                       Element** aOutBrNode);
-
   nsresult LoadHTML(const nsAString& aInputString);
 
   nsresult GetCSSBackgroundColorState(bool* aMixed, nsAString& aOutColor,
@@ -465,6 +461,23 @@ public:
     nsIContent& aNode,
     const EditorDOMPointBase<PT, CT>& aPointToInsert,
     SplitAtEdges aSplitAtEdges);
+
+  /**
+   * CopyLastEditableChildStyles() clones inline container elements into
+   * aPreviousBlock to aNewBlock to keep using same style in it.
+   *
+   * @param aPreviousBlock      The previous block element.  All inline
+   *                            elements which are last sibling of each level
+   *                            are cloned to aNewBlock.
+   * @param aNewBlock           New block container element.
+   * @param aNewBrElement       If this method creates a new <br> element for
+   *                            placeholder, this is set to the new <br>
+   *                            element.
+   */
+  nsresult
+  CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
+                                             Element& aNewBlock,
+                                             RefPtr<Element>* aNewBrElement);
 
   /**
    * Use this to assure that selection is set after attribute nodes when
