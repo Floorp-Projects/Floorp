@@ -2595,12 +2595,9 @@ UpdateChecker.prototype = {
                           null :
                           await AddonRepository.getCompatibilityOverrides(this.addon.id);
 
-    let update = AUC.getNewestCompatibleUpdate(aUpdates,
-                                           this.appVersion,
-                                           this.platformVersion,
-                                           ignoreMaxVersion,
-                                           ignoreStrictCompat,
-                                           compatOverrides);
+    let update = await AUC.getNewestCompatibleUpdate(
+      aUpdates, this.appVersion, this.platformVersion,
+      ignoreMaxVersion, ignoreStrictCompat, compatOverrides);
 
     if (update && Services.vc.compare(this.addon.version, update.version) < 0
         && !this.addon._installLocation.locked) {
