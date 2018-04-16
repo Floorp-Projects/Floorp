@@ -939,9 +939,8 @@ var Actor = function(conn) {
   if (this._actorSpec && this._actorSpec.events) {
     for (let key of this._actorSpec.events.keys()) {
       let name = key;
-      let sendEvent = this._sendEvent.bind(this, name);
       this.on(name, (...args) => {
-        sendEvent.apply(null, args);
+        this._sendEvent(name, ...args);
       });
     }
   }
@@ -1166,7 +1165,7 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
           return p
             .then(() => ret)
             .then(sendReturn)
-            .catch(this.writeError.bind(this));
+            .catch(e => this.writeError(e));
         });
       } catch (e) {
         this._queueResponse(p => {
