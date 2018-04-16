@@ -189,8 +189,8 @@ public:
    * This sets background on the appropriate container element (table, cell,)
    * or calls into nsTextEditor to set the page background.
    */
-  nsresult SetCSSBackgroundColor(const nsAString& aColor);
-  nsresult SetHTMLBackgroundColor(const nsAString& aColor);
+  nsresult SetCSSBackgroundColorWithTransaction(const nsAString& aColor);
+  nsresult SetHTMLBackgroundColorWithTransaction(const nsAString& aColor);
 
   /**
    * GetBlockNodeParent() returns parent or nearest ancestor of aNode if
