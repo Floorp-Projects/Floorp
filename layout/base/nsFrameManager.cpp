@@ -102,9 +102,6 @@ void
 nsFrameManager::RemoveFrame(ChildListID     aListID,
                             nsIFrame*       aOldFrame)
 {
-  bool wasDestroyingFrames = mIsDestroyingFrames;
-  mIsDestroyingFrames = true;
-
   // In case the reflow doesn't invalidate anything since it just leaves
   // a gap where the old frame was, we invalidate it here.  (This is
   // reasonably likely to happen when removing a last child in a way
@@ -128,8 +125,6 @@ nsFrameManager::RemoveFrame(ChildListID     aListID,
   } else {
     parentFrame->RemoveFrame(aListID, aOldFrame);
   }
-
-  mIsDestroyingFrames = wasDestroyingFrames;
 }
 
 //----------------------------------------------------------------------
