@@ -368,7 +368,7 @@ fuzzy-if(OSX,1,100) fuzzy-if(skiaContent,1,14) == mfrac-D-1.html mfrac-D-1-ref.h
 == mfrac-D-4.html mfrac-D-4-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
 test-pref(dom.webcomponents.shadowdom.enabled,true) == shadow-dom-1.html shadow-dom-1-ref.html
-pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,25) == font-inflation-1.html font-inflation-1-ref.html
+pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,25) fuzzy-if(webrender&&winWidget,0-255,0-220) == font-inflation-1.html font-inflation-1-ref.html
 test-pref(font.minimum-size.x-math,40) == default-font.html default-font-ref.html
 != radicalbar-1.html about:blank
 != radicalbar-1a.html about:blank
