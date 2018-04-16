@@ -1,0 +1,47 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1450358 - Test AudioContext event listener leak conditions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/events/test/event_leak_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+// Manipulate AudioContext objects in the frame's context.
+// Its important here that we create a listener callback from
+// the DOM objects back to the frame's global in order to
+// exercise the leak condition.
+async function useAudioContext(contentWindow) {
+  let ctx = new contentWindow.AudioContext();
+  ctx.onstatechange = e => {
+    contentWindow.stateChangeCount += 1;
+  };
+
+  let osc = ctx.createOscillator();
+  osc.type = "sine";
+  osc.frequency.value = 440;
+  osc.start();
+}
+
+async function runTest() {
+  try {
+    await checkForEventListenerLeaks("AudioContext", useAudioContext);
+  } catch (e) {
+    ok(false, e);
+  } finally {
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+addEventListener("load", runTest, { once: true });
+</script>
+</pre>
+</body>
+</html>
+
