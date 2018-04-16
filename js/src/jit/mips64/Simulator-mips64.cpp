@@ -2109,25 +2109,25 @@ typedef int64_t (*Prototype_General7)(int64_t arg0, int64_t arg1, int64_t arg2, 
                                       int64_t arg4, int64_t arg5, int64_t arg6);
 typedef int64_t (*Prototype_General8)(int64_t arg0, int64_t arg1, int64_t arg2, int64_t arg3,
                                       int64_t arg4, int64_t arg5, int64_t arg6, int64_t arg7);
-typedef int64_t (*Prototype_GeneralGeneralGeneralInt64)(int64_t arg0, int64_t arg1, int64_t arg2,
+typedef int32_t (*Prototype_Int_GeneralGeneralGeneralInt64)(int64_t arg0, int64_t arg1, int64_t arg2,
                                                         int64_t arg3);
-typedef int64_t (*Prototype_GeneralGeneralInt64Int64)(int64_t arg0, int64_t arg1, int64_t arg2,
+typedef int32_t (*Prototype_Int_GeneralGeneralInt64Int64)(int64_t arg0, int64_t arg1, int64_t arg2,
                                                       int64_t arg3);
 typedef double (*Prototype_Double_None)();
 typedef double (*Prototype_Double_Double)(double arg0);
-typedef double (*Prototype_Double_Int)(int64_t arg0);
-typedef int64_t (*Prototype_Int_Double)(double arg0);
-typedef int64_t (*Prototype_Int_DoubleIntInt)(double arg0, int64_t arg1, int64_t arg2);
-typedef int64_t (*Prototype_Int_IntDoubleIntInt)(int64_t arg0, double arg1, int64_t arg2,
-                                                 int64_t arg3);
+typedef double (*Prototype_Double_Int)(int32_t arg0);
+typedef int32_t (*Prototype_Int_Double)(double arg0);
+typedef int32_t (*Prototype_Int_DoubleIntInt)(double arg0, int32_t arg1, int32_t arg2);
+typedef int32_t (*Prototype_Int_IntDoubleIntInt)(int32_t arg0, double arg1, int32_t arg2,
+                                                 int32_t arg3);
 typedef float (*Prototype_Float32_Float32)(float arg0);
 typedef float (*Prototype_Float32_Float32Float32)(float arg0, float arg1);
-typedef float (*Prototype_Float32_IntInt)(int arg0, int arg1);
+typedef float (*Prototype_Float32_IntInt)(int32_t arg0, int32_t arg1);
 
-typedef double (*Prototype_DoubleInt)(double arg0, int64_t arg1);
-typedef double (*Prototype_Double_IntDouble)(int64_t arg0, double arg1);
+typedef double (*Prototype_Double_DoubleInt)(double arg0, int32_t arg1);
+typedef double (*Prototype_Double_IntDouble)(int32_t arg0, double arg1);
 typedef double (*Prototype_Double_DoubleDouble)(double arg0, double arg1);
-typedef int64_t (*Prototype_Int_IntDouble)(int64_t arg0, double arg1);
+typedef int32_t (*Prototype_Int_IntDouble)(int32_t arg0, double arg1);
 
 typedef double (*Prototype_Double_DoubleDoubleDouble)(double arg0, double arg1, double arg2);
 typedef double (*Prototype_Double_DoubleDoubleDoubleDouble)(double arg0, double arg1,
@@ -2238,41 +2238,35 @@ Simulator::softwareInterrupt(SimInstruction* instr)
           case Args_Int_Double: {
             double dval0 = getFpuRegisterDouble(12);
             Prototype_Int_Double target = reinterpret_cast<Prototype_Int_Double>(external);
-            int64_t res = target(dval0);
+            int32_t res = target(dval0);
             setRegister(v0, res);
             break;
           }
           case Args_Int_GeneralGeneralGeneralInt64: {
-            Prototype_GeneralGeneralGeneralInt64 target =
-                reinterpret_cast<Prototype_GeneralGeneralGeneralInt64>(external);
-            int64_t result = target(arg0, arg1, arg2, arg3);
-            if(external == intptr_t(&js::wasm::Instance::wait_i32)) {
-                result = int32_t(result);
-            }
-            setCallResult(result);
+            Prototype_Int_GeneralGeneralGeneralInt64 target =
+                reinterpret_cast<Prototype_Int_GeneralGeneralGeneralInt64>(external);
+            int32_t res = target(arg0, arg1, arg2, arg3);
+            setRegister(v0, res);
             break;
           }
           case Args_Int_GeneralGeneralInt64Int64: {
-            Prototype_GeneralGeneralInt64Int64 target =
-                reinterpret_cast<Prototype_GeneralGeneralInt64Int64>(external);
-            int64_t result = target(arg0, arg1, arg2, arg3);
-            if(external == intptr_t(&js::wasm::Instance::wait_i64)) {
-                result = int32_t(result);
-            }
-            setCallResult(result);
+            Prototype_Int_GeneralGeneralInt64Int64 target =
+                reinterpret_cast<Prototype_Int_GeneralGeneralInt64Int64>(external);
+            int32_t res = target(arg0, arg1, arg2, arg3);
+            setRegister(v0, res);
             break;
           }
           case Args_Int_DoubleIntInt: {
             double dval = getFpuRegisterDouble(12);
             Prototype_Int_DoubleIntInt target = reinterpret_cast<Prototype_Int_DoubleIntInt>(external);
-            int64_t res = target(dval, arg1, arg2);
+            int32_t res = target(dval, int32_t(arg1), int32_t(arg2));
             setRegister(v0, res);
             break;
           }
           case Args_Int_IntDoubleIntInt: {
             double dval = getFpuRegisterDouble(13);
             Prototype_Int_IntDoubleIntInt target = reinterpret_cast<Prototype_Int_IntDoubleIntInt>(external);
-            int64_t res = target(arg0, dval, arg2, arg3);
+            int32_t res = target(int32_t(arg0), dval, int32_t(arg2), int32_t(arg3));
             setRegister(v0, res);
             break;
           }
@@ -2303,20 +2297,20 @@ Simulator::softwareInterrupt(SimInstruction* instr)
           }
           case Args_Float32_IntInt: {
             Prototype_Float32_IntInt target = reinterpret_cast<Prototype_Float32_IntInt>(external);
-            float fresult = target(arg0, arg1);
+            float fresult = target(int32_t(arg0), int32_t(arg1));
             setCallResultFloat(fresult);
             break;
           }
           case Args_Double_Int: {
             Prototype_Double_Int target = reinterpret_cast<Prototype_Double_Int>(external);
-            double dresult = target(arg0);
+            double dresult = target(int32_t(arg0));
             setCallResultDouble(dresult);
             break;
           }
           case Args_Double_DoubleInt: {
             double dval0 = getFpuRegisterDouble(12);
-            Prototype_DoubleInt target = reinterpret_cast<Prototype_DoubleInt>(external);
-            double dresult = target(dval0, arg1);
+            Prototype_Double_DoubleInt target = reinterpret_cast<Prototype_Double_DoubleInt>(external);
+            double dresult = target(dval0, int32_t(arg1));
             setCallResultDouble(dresult);
             break;
           }
@@ -2331,14 +2325,14 @@ Simulator::softwareInterrupt(SimInstruction* instr)
           case Args_Double_IntDouble: {
             double dval1 = getFpuRegisterDouble(13);
             Prototype_Double_IntDouble target = reinterpret_cast<Prototype_Double_IntDouble>(external);
-            double dresult = target(arg0, dval1);
+            double dresult = target(int32_t(arg0), dval1);
             setCallResultDouble(dresult);
             break;
           }
           case Args_Int_IntDouble: {
             double dval1 = getFpuRegisterDouble(13);
             Prototype_Int_IntDouble target = reinterpret_cast<Prototype_Int_IntDouble>(external);
-            int64_t result = target(arg0, dval1);
+            int32_t result = target(int32_t(arg0), dval1);
             setRegister(v0, result);
             break;
           }

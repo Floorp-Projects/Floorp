@@ -21,21 +21,22 @@
 
 #ifdef JS_SIMULATOR
 // Call into cross-jitted code by following the ABI of the simulated architecture.
-#define CALL_GENERATED_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7)     \
-    (js::jit::Simulator::Current()->call(                              \
-        JS_FUNC_TO_DATA_PTR(uint8_t*, entry), 8, p0, p1, p2, p3, p4, p5, p6, p7))
+#define CALL_GENERATED_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7)                         \
+    (js::jit::Simulator::Current()->call(                                                  \
+        JS_FUNC_TO_DATA_PTR(uint8_t*, entry), 8, intptr_t(p0), intptr_t(p1), intptr_t(p2), \
+                            intptr_t(p3), intptr_t(p4), intptr_t(p5), intptr_t(p6), intptr_t(p7)))
 
 #define CALL_GENERATED_1(entry, p0)                     \
     (js::jit::Simulator::Current()->call(               \
-        JS_FUNC_TO_DATA_PTR(uint8_t*, entry), 1, p0))
+        JS_FUNC_TO_DATA_PTR(uint8_t*, entry), 1, intptr_t(p0)))
 
 #define CALL_GENERATED_2(entry, p0, p1)                                 \
     (js::jit::Simulator::Current()->call(                               \
-        JS_FUNC_TO_DATA_PTR(uint8_t*, entry), 2, p0, p1))
+        JS_FUNC_TO_DATA_PTR(uint8_t*, entry), 2, intptr_t(p0), intptr_t(p1)))
 
 #define CALL_GENERATED_3(entry, p0, p1, p2)                             \
     (js::jit::Simulator::Current()->call(                               \
-        JS_FUNC_TO_DATA_PTR(uint8_t*, entry), 3, p0, p1, p2))
+        JS_FUNC_TO_DATA_PTR(uint8_t*, entry), 3, intptr_t(p0), intptr_t(p1), intptr_t(p2)))
 
 #else
 
