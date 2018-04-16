@@ -1,0 +1,85 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package mozilla.components.browser.search
+
+import android.graphics.Bitmap
+import android.net.Uri
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.robolectric.RobolectricTestRunner
+import java.util.UUID
+
+@RunWith(RobolectricTestRunner::class)
+class SearchEngineTest {
+    @Test
+    fun `Build and verify basic search URL for search engine`() {
+        val resultUri = Uri.parse("https://www.mozilla.org/?q={searchTerms}")
+
+        val searchEngine = SearchEngine(
+                "mozsearch",
+                "Mozilla Search",
+                mock(Bitmap::class.java),
+                listOf(resultUri))
+
+        assertEquals(
+                "https://www.mozilla.org/?q=hello%20world",
+                searchEngine.buildSearchUrl("hello world"))
+    }
+
+    @Test
+    fun `Build search URL with all possible parameters`() {
+        val resultUri = Uri.parse(
+                "https://mozilla.org/?" +
+                    "locale={moz:locale}" +
+                    "&dist={moz:distributionID}" +
+                    "&official={moz:official}" +
+                    "&q={searchTerms}" +
+                    "&input={inputEncoding}" +
+                    "&output={outputEncoding}" +
+                    "&lang={language}" +
+                    "&random={random}" +
+                    "&foo={foo:bar}")
+
+        val searchEngine = SearchEngine(
+                "mozsearch",
+                "Mozilla Search",
+                mock(Bitmap::class.java),
+                listOf(resultUri))
+
+        assertEquals(
+                "https://mozilla.org/?locale=en_US&dist=&official=unofficial&q=hello%20world&input=UTF-8&output=UTF-8&lang=en_US&random=&foo=",
+                searchEngine.buildSearchUrl("hello world"))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `constructor throws if list of uris is empty`() {
+        SearchEngine(
+                "mozsearch",
+                "Mozilla Search",
+                mock(Bitmap::class.java),
+                emptyList())
+    }
+
+    @Test
+    fun `result url will be normalized`() {
+        val resultUri = Uri.parse("   mozilla.org/?q={searchTerms}   ")
+
+        val searchEngine = SearchEngine(
+                "mozsearch",
+                "Mozilla Search",
+                mock(Bitmap::class.java),
+                listOf(resultUri))
+
+        assertEquals(
+                "http://mozilla.org/?q=hello%20world",
+                searchEngine.buildSearchUrl("hello world"))
+    }
+
+    private fun mockResultUriList(): List<Uri> = listOf(
+            Uri.parse("http://${UUID.randomUUID()}).mozilla.org/q?={searchTerms}")
+    )
+}

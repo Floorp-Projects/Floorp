@@ -25,12 +25,6 @@ android {
         }
     }
 
-    testOptions {
-        unitTests {
-            includeAndroidResources = true
-        }
-    }
-
     sourceSets {
         test {
             resources {
@@ -56,4 +50,4 @@ apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
         'search',
-        '...')
+        'Search plugins and companion code to load, parse and use them.')
