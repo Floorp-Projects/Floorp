@@ -670,13 +670,21 @@ class TypeSetRef : public BufferableRef
 {
     Zone* zone;
     ConstraintTypeSet* types;
+#ifdef DEBUG
+    uint64_t minorGCNumberAtCreation;
+#endif
 
   public:
     TypeSetRef(Zone* zone, ConstraintTypeSet* types)
-      : zone(zone), types(types)
+      : zone(zone)
+      , types(types)
+#ifdef DEBUG
+      , minorGCNumberAtCreation(zone->runtimeFromMainThread()->gc.minorGCCount())
+#endif
     {}
 
     void trace(JSTracer* trc) override {
+        MOZ_ASSERT(trc->runtime()->gc.minorGCCount() == minorGCNumberAtCreation);
         types->trace(zone, trc);
     }
 };
@@ -4144,6 +4152,33 @@ ConstraintTypeSet::trace(Zone* zone, JSTracer* trc)
     } else {
         MOZ_RELEASE_ASSERT(!objectSet);
     }
+
+#ifdef DEBUG
+    MOZ_ASSERT(objectCount == baseObjectCount());
+    if (objectCount >= 2) {
+        unsigned capacity = TypeHashSet::Capacity(objectCount);
+        MOZ_ASSERT(uintptr_t(objectSet[-1]) == capacity);
+        for (unsigned i = 0; i < capacity; i++) {
+            ObjectKey* key = objectSet[i];
+            if (!key)
+                continue;
+            if (key->isGroup())
+                CheckGCThingAfterMovingGC(key->groupNoBarrier());
+            else
+                CheckGCThingAfterMovingGC(key->singletonNoBarrier());
+            JSCompartment* compartment = key->maybeCompartment();
+            MOZ_ASSERT_IF(compartment, compartment->zone() == zone);
+        }
+    } else if (objectCount == 1) {
+        ObjectKey* key = (ObjectKey*) objectSet;
+        if (key->isGroup())
+            CheckGCThingAfterMovingGC(key->groupNoBarrier());
+        else
+            CheckGCThingAfterMovingGC(key->singletonNoBarrier());
+        JSCompartment* compartment = key->maybeCompartment();
+        MOZ_ASSERT_IF(compartment, compartment->zone() == zone);
+    }
+#endif
 }
 
 static inline void
