@@ -198,6 +198,10 @@ processes_data.inputs = processes_files
 # which files to include. As a consequence, we can simply only
 # include the GeckoView files on all Android builds.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    SOURCES += [
+        'geckoview/TelemetryGeckoViewPersistence.cpp'
+    ]
+
     EXTRA_JS_MODULES += [
         'geckoview/GeckoViewTelemetryController.jsm',
     ]
