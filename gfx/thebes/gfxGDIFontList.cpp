@@ -117,7 +117,7 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
                            gfxWindowsFontType aFontType,
                            uint8_t aStyle,
                            FontWeight aWeight,
-                           int16_t aStretch,
+                           uint16_t aStretch,
                            gfxUserFontData *aUserFontData)
     : gfxFontEntry(aFaceName),
       mFontType(aFontType),
@@ -396,7 +396,7 @@ GDIFontEntry::CreateFontEntry(const nsAString& aName,
                               gfxWindowsFontType aFontType,
                               uint8_t aStyle,
                               FontWeight aWeight,
-                              int16_t aStretch,
+                              uint16_t aStretch,
                               gfxUserFontData* aUserFontData)
 {
     // jtdfix - need to set charset, unicode ranges, pitch/family
@@ -711,7 +711,7 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
 gfxFontEntry* 
 gfxGDIFontList::LookupLocalFont(const nsAString& aFontName,
                                 FontWeight aWeight,
-                                int16_t aStretch,
+                                uint16_t aStretch,
                                 uint8_t aStyle)
 {
     gfxFontEntry *lookup;
@@ -803,7 +803,7 @@ FixupSymbolEncodedFont(uint8_t* aFontData, uint32_t aLength)
 gfxFontEntry*
 gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
                                  FontWeight aWeight,
-                                 int16_t aStretch,
+                                 uint16_t aStretch,
                                  uint8_t aStyle,
                                  const uint8_t* aFontData,
                                  uint32_t aLength)

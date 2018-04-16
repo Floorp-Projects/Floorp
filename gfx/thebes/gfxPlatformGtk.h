@@ -67,7 +67,7 @@ public:
      */
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           FontWeight aWeight,
-                                          int16_t aStretch,
+                                          uint16_t aStretch,
                                           uint8_t aStyle) override;
 
     /**
@@ -76,7 +76,7 @@ public:
      */
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            FontWeight aWeight,
-                                           int16_t aStretch,
+                                           uint16_t aStretch,
                                            uint8_t aStyle,
                                            const uint8_t* aFontData,
                                            uint32_t aLength) override;

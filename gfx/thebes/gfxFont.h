@@ -79,7 +79,7 @@ struct gfxFontStyle {
     typedef mozilla::FontWeight FontWeight;
 
     gfxFontStyle();
-    gfxFontStyle(uint8_t aStyle, FontWeight aWeight, int16_t aStretch,
+    gfxFontStyle(uint8_t aStyle, FontWeight aWeight, uint16_t aStretch,
                  gfxFloat aSize, nsAtom *aLanguage, bool aExplicitLanguage,
                  float aSizeAdjust, bool aSystemFont,
                  bool aPrinterFont,
@@ -142,9 +142,8 @@ struct gfxFontStyle {
     // The weight of the font: 100, 200, ... 900.
     FontWeight weight;
 
-    // The stretch of the font (the sum of various NS_FONT_STRETCH_*
-    // constants; see gfxFontConstants.h).
-    int8_t stretch;
+    // The stretch of the font (NS_FONT_STRETCH_*, see gfxFontConstants.h).
+    uint8_t stretch;
 
     // The style of font (normal, italic, oblique)
     uint8_t style;

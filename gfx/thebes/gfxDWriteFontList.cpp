@@ -958,7 +958,7 @@ gfxDWriteFontList::GetDefaultFontForPlatform(const gfxFontStyle *aStyle)
 gfxFontEntry *
 gfxDWriteFontList::LookupLocalFont(const nsAString& aFontName,
                                    FontWeight aWeight,
-                                   int16_t aStretch,
+                                   uint16_t aStretch,
                                    uint8_t aStyle)
 {
     gfxFontEntry *lookup;
@@ -982,7 +982,7 @@ gfxDWriteFontList::LookupLocalFont(const nsAString& aFontName,
 gfxFontEntry *
 gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
                                     FontWeight aWeight,
-                                    int16_t aStretch,
+                                    uint16_t aStretch,
                                     uint8_t aStyle,
                                     const uint8_t* aFontData,
                                     uint32_t aLength)

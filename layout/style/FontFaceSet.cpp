@@ -207,7 +207,7 @@ FontFaceSet::ParseFontShorthandForMatching(
                             const nsAString& aFont,
                             RefPtr<SharedFontList>& aFamilyList,
                             FontWeight& aWeight,
-                            int32_t& aStretch,
+                            uint32_t& aStretch,
                             uint8_t& aStyle,
                             ErrorResult& aRv)
 {
@@ -254,7 +254,7 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
 {
   RefPtr<SharedFontList> familyList;
   FontWeight weight;
-  int32_t stretch;
+  uint32_t stretch;
   uint8_t italicStyle;
   ParseFontShorthandForMatching(aFont, familyList, weight, stretch, italicStyle,
                                 aRv);
@@ -979,7 +979,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   nsCSSUnit unit;
 
   FontWeight weight = FontWeight::Normal();
-  int32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  uint32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
   uint8_t italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
   uint8_t fontDisplay = NS_FONT_DISPLAY_AUTO;
@@ -1930,7 +1930,7 @@ FontFaceSet::UserFontSet::DoRebuildUserFontSet()
 FontFaceSet::UserFontSet::CreateUserFontEntry(
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                FontWeight aWeight,
-                               int32_t aStretch,
+                               uint32_t aStretch,
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                const nsTArray<gfxFontVariation>& aVariationSettings,
