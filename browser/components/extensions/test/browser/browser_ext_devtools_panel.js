@@ -2,6 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+// Like most of the mochitest-browser devtools test,
+// on debug test slave, it takes about 50s to run the test.
+requestLongerTimeout(4);
+
 ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
 
