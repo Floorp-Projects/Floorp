@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=513194
 // The use of document.write is deliberate.  We are testing for the
 // HTML parser to call the CSS parser once and only once when it
 // encounters a new <style> element.
-
+SpecialPowers.wrap(document).docShell.cssErrorReportingEnabled = true;
 SimpleTest.runTestExpectingConsoleMessages(
   function () { document.write("<style>qux { foo : bar; }<\/style>") },
   [{ errorMessage: /Unknown property/ }]
