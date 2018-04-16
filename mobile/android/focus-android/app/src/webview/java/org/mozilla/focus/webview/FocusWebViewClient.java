@@ -218,7 +218,7 @@ import org.mozilla.focus.web.IWebView;
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
         // If this is an internal URL like focus:about then we load the content ourselves here.
-        if (LocalizedContent.handleInternalContent(url, view)) {
+        if (LocalizedContent.handleInternalContent(url, (IWebView) view, view.getContext())) {
             return true;
         }
 

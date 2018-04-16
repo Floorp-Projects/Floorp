@@ -10,14 +10,13 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.v4.util.ArrayMap;
-import android.support.v4.view.ViewCompat;
 import android.view.View;
-import android.webkit.WebView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.utils.HtmlLoader;
 import org.mozilla.focus.utils.SupportUtils;
+import org.mozilla.focus.web.IWebView;
 
 import java.util.Map;
 
@@ -27,12 +26,12 @@ public class LocalizedContent {
     public static final String URL_ABOUT = "focus:about";
     public static final String URL_RIGHTS = "focus:rights";
 
-    public static boolean handleInternalContent(String url, WebView webView) {
+    public static boolean handleInternalContent(String url, IWebView webView, Context context) {
         if (URL_ABOUT.equals(url)) {
-            loadAbout(webView);
+            loadAbout(webView, context);
             return true;
         } else if (URL_RIGHTS.equals(url)) {
-            loadRights(webView);
+            loadRights(webView, context);
             return true;
         }
 
@@ -42,8 +41,7 @@ public class LocalizedContent {
     /**
      * Load the content for focus:about
      */
-    private static void loadAbout(@NonNull final WebView webView) {
-        final Context context = webView.getContext();
+    private static void loadAbout(@NonNull final IWebView webView, Context context) {
         final Resources resources = Locales.getLocalizedResources(context);
 
         final Map<String, String> substitutionMap = new ArrayMap<>();
@@ -65,18 +63,17 @@ public class LocalizedContent {
         final String wordmark = HtmlLoader.loadPngAsDataURI(context, R.drawable.wordmark);
         substitutionMap.put("%wordmark%", wordmark);
 
-        putLayoutDirectionIntoMap(webView, substitutionMap);
+        putLayoutDirectionIntoMap(substitutionMap, context);
 
         final String data = HtmlLoader.loadResourceFile(context, R.raw.about, substitutionMap);
-        // We use a file:/// base URL so that we have the right origin to load file:/// css and image resources.
-        webView.loadDataWithBaseURL(URL_ABOUT, data, "text/html", "UTF-8", URL_ABOUT);
+
+        webView.loadData("resource://android/resources/raw/about.html", data, "text/html", "UTF-8");
     }
 
     /**
      * Load the content for focus:rights
      */
-    private static void loadRights(@NonNull final WebView webView) {
-        final Context context = webView.getContext();
+    private static void loadRights(@NonNull final IWebView webView, Context context) {
         final Resources resources = Locales.getLocalizedResources(context);
 
         final Map<String, String> substitutionMap = new ArrayMap<>();
@@ -103,17 +100,14 @@ public class LocalizedContent {
         final String content5 = resources.getString(R.string.your_rights_content5, appName, gplUrl, trackingProtectionUrl);
         substitutionMap.put("%your-rights-content5%", content5);
 
-        putLayoutDirectionIntoMap(webView, substitutionMap);
+        putLayoutDirectionIntoMap(substitutionMap, context);
 
         final String data = HtmlLoader.loadResourceFile(context, R.raw.rights, substitutionMap);
-        // We use a file:/// base URL so that we have the right origin to load file:/// css and image resources.
-        webView.loadDataWithBaseURL(URL_RIGHTS, data, "text/html", "UTF-8", URL_RIGHTS);
+        webView.loadData("resource://android/resources/raw/rights.html", data, "text/html", "UTF-8");
     }
 
-    private static void putLayoutDirectionIntoMap(WebView webView, Map<String, String> substitutionMap) {
-        ViewCompat.setLayoutDirection(webView, View.LAYOUT_DIRECTION_LOCALE);
-        final int layoutDirection = ViewCompat.getLayoutDirection(webView);
-
+    private static void putLayoutDirectionIntoMap(Map<String, String> substitutionMap, Context context) {
+        final int layoutDirection = context.getResources().getConfiguration().getLayoutDirection();
         final String direction;
 
         if (layoutDirection == View.LAYOUT_DIRECTION_LTR) {

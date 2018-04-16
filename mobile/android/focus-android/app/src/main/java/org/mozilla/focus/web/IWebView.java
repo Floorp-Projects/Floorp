@@ -118,6 +118,8 @@ public interface IWebView {
 
     void exitFullscreen();
 
+    void loadData(String baseURL, String data, String mimeType, String encoding);
+
     /**
      * Get the title of the currently displayed website.
      */

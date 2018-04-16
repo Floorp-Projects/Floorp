@@ -44,6 +44,11 @@ class Settings private constructor(context: Context) {
                     false); */
             false
 
+    fun shouldBlockWebFonts(): Boolean =
+        preferences.getBoolean(
+            getPreferenceKey(R.string.pref_key_performance_block_webfonts),
+            false)
+
     fun shouldBlockJavaScript(): Boolean =
             preferences.getBoolean(
                 getPreferenceKey(R.string.pref_key_performance_block_javascript),

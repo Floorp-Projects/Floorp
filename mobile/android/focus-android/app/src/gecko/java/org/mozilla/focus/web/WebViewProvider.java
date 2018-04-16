@@ -16,6 +16,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
+import org.mozilla.focus.browser.LocalizedContent;
 import org.mozilla.focus.session.Session;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.IntentUtils;
@@ -26,11 +27,13 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 
+import kotlin.text.Charsets;
+
 /**
  * WebViewProvider implementation for creating a Gecko based implementation of IWebView.
  */
 public class WebViewProvider {
-    private static GeckoRuntime geckoRuntime;
+    private static volatile GeckoRuntime geckoRuntime;
 
     public static void preload(final Context context) {
         createGeckoRuntimeIfNeeded(context);
@@ -50,9 +53,10 @@ public class WebViewProvider {
 
     private static void createGeckoRuntimeIfNeeded(Context context) {
         if (geckoRuntime == null) {
-            final GeckoRuntimeSettings geckoRuntimeSettings = new GeckoRuntimeSettings();
-            geckoRuntimeSettings.setUseContentProcessHint(true);
-            geckoRuntime = GeckoRuntime.create(context, geckoRuntimeSettings);
+            final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
+                    new GeckoRuntimeSettings.Builder();
+            runtimeSettingsBuilder.useContentProcessHint(true);
+            geckoRuntime = GeckoRuntime.create(context.getApplicationContext(), runtimeSettingsBuilder.build());
         }
     }
 
@@ -69,8 +73,6 @@ public class WebViewProvider {
         public GeckoWebView(Context context, AttributeSet attrs) {
             super(context, attrs);
 
-            createGeckoRuntimeIfNeeded(context);
-
             final GeckoSessionSettings settings = new GeckoSessionSettings();
             settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
             settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
@@ -80,6 +82,7 @@ public class WebViewProvider {
             PreferenceManager.getDefaultSharedPreferences(context)
                     .registerOnSharedPreferenceChangeListener(this);
 
+            applyAppSettings();
             updateBlocking();
 
             geckoSession.setContentDelegate(createContentDelegate());
@@ -152,9 +155,12 @@ public class WebViewProvider {
         public void setBlockingEnabled(boolean enabled) {
             if (enabled) {
                 updateBlocking();
+                applyAppSettings();
             } else {
                 if (geckoSession != null) {
                     geckoSession.disableTrackingProtection();
+                    geckoRuntime.getSettings().setJavaScriptEnabled(true);
+                    geckoRuntime.getSettings().setWebFontsEnabled(true);
                 }
             }
             if (callback != null) {
@@ -165,6 +171,12 @@ public class WebViewProvider {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String prefName) {
             updateBlocking();
+            applyAppSettings();
+        }
+
+        private void applyAppSettings() {
+            geckoRuntime.getSettings().setJavaScriptEnabled(!Settings.getInstance(getContext()).shouldBlockJavaScript());
+            geckoRuntime.getSettings().setWebFontsEnabled(!Settings.getInstance(getContext()).shouldBlockWebFonts());
         }
 
         private void updateBlocking() {
@@ -211,7 +223,7 @@ public class WebViewProvider {
 
                 @Override
                 public void onContextMenu(GeckoSession session, int screenX, int screenY, String uri, @ElementType int elementType, String elementSrc) {
-                    if (elementSrc != null && uri != null) {
+                    if (elementSrc != null && uri != null && elementType == ELEMENT_TYPE_IMAGE) {
                         callback.onLongPress(new HitTarget(true, uri, true, elementSrc));
                     } else if (elementSrc != null && elementType == ELEMENT_TYPE_IMAGE) {
                         callback.onLongPress(new HitTarget(false, null, true, elementSrc));
@@ -236,6 +248,7 @@ public class WebViewProvider {
                     }
 
                     if (callback != null) {
+                        // TODO: get user agent from GeckoView #2470
                         final Download download = new Download(response.uri, "Mozilla/5.0 (Android 8.1.0; Mobile; rv:60.0) Gecko/60.0 Firefox/60.0",
                                 response.filename, response.contentType, response.contentLength,
                                 Environment.DIRECTORY_DOWNLOADS);
@@ -312,7 +325,7 @@ public class WebViewProvider {
                     }
 
                     // Check if we should handle an internal link
-                    if (LocalizedContentGecko.INSTANCE.handleInternalContent(uri, session, getContext())) {
+                    if (LocalizedContent.handleInternalContent(uri, GeckoWebView.this, getContext())) {
                         response.respond(true);
                     }
 
@@ -324,7 +337,7 @@ public class WebViewProvider {
                     }
 
                     if (uri.equals("about:neterror") || uri.equals("about:certerror")) {
-                        // TODO: Error Page Handling
+                        // TODO: Error Page handling with Components ErrorPages #2471
                         response.respond(true);
                     }
 
@@ -382,6 +395,11 @@ public class WebViewProvider {
         @Override
         public void exitFullscreen() {
             geckoSession.exitFullScreen();
+        }
+
+        @Override
+        public void loadData(String baseURL, String data, String mimeType, String encoding) {
+            geckoSession.loadData(data.getBytes(Charsets.UTF_8), mimeType, baseURL);
         }
 
         @Override
