@@ -1232,6 +1232,13 @@ class AddonInstall {
     this.promptHandler = options.promptHandler || (() => Promise.resolve());
     this.releaseNotesURI = null;
 
+    this._installPromise = new Promise(resolve => {
+      this._resolveInstallPromise = resolve;
+    });
+    // Ignore uncaught rejections for this promise, since they're
+    // handled by install listeners.
+    this._installPromise.catch(() => {});
+
     this.listeners = [];
     this.icons = options.icons || {};
     this.error = 0;
@@ -1282,10 +1289,11 @@ class AddonInstall {
     case AddonManager.STATE_CHECKING:
     case AddonManager.STATE_INSTALLING:
       // Installation is already running
-      return;
+      break;
     default:
       throw new Error("Cannot start installing from this state");
     }
+    return this._installPromise;
   }
 
   /**
@@ -1315,8 +1323,7 @@ class AddonInstall {
       logger.debug("Cancelling download of " + this.sourceURI.spec);
       this.state = AddonManager.STATE_CANCELLED;
       XPIProvider.removeActiveInstall(this);
-      AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
-                                               this.listeners, this.wrapper);
+      this._callInstallListeners("onDownloadCancelled");
       this.removeTemporaryFile();
       break;
     case AddonManager.STATE_INSTALLED:
@@ -1334,15 +1341,13 @@ class AddonInstall {
 
       AddonManagerPrivate.callAddonListeners("onOperationCancelled", this.addon.wrapper);
 
-      AddonManagerPrivate.callInstallListeners("onInstallCancelled",
-                                               this.listeners, this.wrapper);
+      this._callInstallListeners("onInstallCancelled");
       break;
     case AddonManager.STATE_POSTPONED:
       logger.debug(`Cancelling postponed install of ${this.addon.id}`);
       this.state = AddonManager.STATE_CANCELLED;
       XPIProvider.removeActiveInstall(this);
-      AddonManagerPrivate.callInstallListeners("onInstallCancelled",
-                                               this.listeners, this.wrapper);
+      this._callInstallListeners("onInstallCancelled");
       this.removeTemporaryFile();
 
       let stagingDir = this.installLocation.getStagingDir();
@@ -1534,8 +1539,7 @@ class AddonInstall {
           logger.info(`Install of ${this.addon.id} cancelled by user`);
           this.state = AddonManager.STATE_CANCELLED;
           XPIProvider.removeActiveInstall(this);
-          AddonManagerPrivate.callInstallListeners("onInstallCancelled",
-                                                   this.listeners, this.wrapper);
+          this._callInstallListeners("onInstallCancelled");
           return;
         }
       }
@@ -1576,13 +1580,11 @@ class AddonInstall {
    */
   startInstall() {
     this.state = AddonManager.STATE_INSTALLING;
-    if (!AddonManagerPrivate.callInstallListeners("onInstallStarted",
-                                                  this.listeners, this.wrapper)) {
+    if (!this._callInstallListeners("onInstallStarted")) {
       this.state = AddonManager.STATE_DOWNLOADED;
       this.removeTemporaryFile();
       XPIProvider.removeActiveInstall(this);
-      AddonManagerPrivate.callInstallListeners("onInstallCancelled",
-                                               this.listeners, this.wrapper);
+      this._callInstallListeners("onInstallCancelled");
       return;
     }
 
@@ -1699,9 +1701,7 @@ class AddonInstall {
 
       logger.debug("Install of " + this.sourceURI.spec + " completed.");
       this.state = AddonManager.STATE_INSTALLED;
-      AddonManagerPrivate.callInstallListeners("onInstallEnded",
-                                               this.listeners, this.wrapper,
-                                               this.addon.wrapper);
+      this._callInstallListeners("onInstallEnded", this.addon.wrapper);
 
       if (this.addon.bootstrap) {
         if (this.addon.active) {
@@ -1728,9 +1728,7 @@ class AddonInstall {
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callAddonListeners("onOperationCancelled",
                                              this.addon.wrapper);
-      AddonManagerPrivate.callInstallListeners("onInstallFailed",
-                                               this.listeners,
-                                               this.wrapper);
+      this._callInstallListeners("onInstallFailed");
     }).then(() => {
       this.removeTemporaryFile();
       return this.installLocation.releaseStagingDir();
@@ -1800,8 +1798,7 @@ class AddonInstall {
 
     await this.stageInstall(true, stagedAddon, true);
 
-    AddonManagerPrivate.callInstallListeners("onInstallPostponed",
-                                             this.listeners, this.wrapper);
+    this._callInstallListeners("onInstallPostponed");
 
     // upgrade has been staged for restart, provide a way for it to call the
     // resume function.
@@ -1827,6 +1824,24 @@ class AddonInstall {
     // it will not be removed until resumed or installed by restart.
     // See also cleanStagingDir()
     this.installLocation.releaseStagingDir();
+  }
+
+  _callInstallListeners(event, ...args) {
+    switch (event) {
+      case "onDownloadCancelled":
+      case "onDownloadFailed":
+      case "onInstallCancelled":
+      case "onInstallFailed":
+        let rej = Promise.reject(new Error(`Install failed: ${event}`));
+        rej.catch(() => {});
+        this._resolveInstallPromise(rej);
+        break;
+      case "onInstallEnded":
+        this._resolveInstallPromise(args[0]);
+        break;
+    }
+    return AddonManagerPrivate.callInstallListeners(event, this.listeners, this.wrapper,
+                                                    ...args);
   }
 }
 
@@ -1886,9 +1901,7 @@ var LocalAddonInstall = class extends AddonInstall {
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = error;
       XPIProvider.removeActiveInstall(this);
-      AddonManagerPrivate.callInstallListeners("onNewInstall",
-                                               this.listeners,
-                                               this.wrapper);
+      this._callInstallListeners("onNewInstall");
       flushJarCache(this.file);
       return;
     }
@@ -1907,17 +1920,13 @@ var LocalAddonInstall = class extends AddonInstall {
         new UpdateChecker(this.addon, {
           onUpdateFinished: aAddon => {
             this.state = AddonManager.STATE_DOWNLOADED;
-            AddonManagerPrivate.callInstallListeners("onNewInstall",
-                                                     this.listeners,
-                                                     this.wrapper);
+            this._callInstallListeners("onNewInstall");
             resolve();
           }
         }, AddonManager.UPDATE_WHEN_ADDON_INSTALLED);
       });
     } else {
-      AddonManagerPrivate.callInstallListeners("onNewInstall",
-                                               this.listeners,
-                                               this.wrapper);
+      this._callInstallListeners("onNewInstall");
 
     }
   }
@@ -1929,11 +1938,10 @@ var LocalAddonInstall = class extends AddonInstall {
       // were invalid).  It doesn't make sense to retry anything in this
       // case but we have callers who don't know if their AddonInstall
       // object is a local file or a download so accommodate them here.
-      AddonManagerPrivate.callInstallListeners("onDownloadFailed",
-                                               this.listeners, this.wrapper);
-      return;
+      this._callInstallListeners("onDownloadFailed");
+      return this._installPromise;
     }
-    super.install();
+    return super.install();
   }
 };
 
@@ -1977,8 +1985,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     this.badCertHandler = null;
     this.restartDownload = false;
 
-    AddonManagerPrivate.callInstallListeners("onNewInstall", this.listeners,
-                                            this.wrapper);
+    this._callInstallListeners("onNewInstall", this.listeners, this.wrapper);
   }
 
   install() {
@@ -1998,8 +2005,9 @@ var DownloadAddonInstall = class extends AddonInstall {
       this.startDownload();
       break;
     default:
-      super.install();
+      return super.install();
     }
+    return this._installPromise;
   }
 
   cancel() {
@@ -2023,13 +2031,11 @@ var DownloadAddonInstall = class extends AddonInstall {
    */
   startDownload() {
     this.state = AddonManager.STATE_DOWNLOADING;
-    if (!AddonManagerPrivate.callInstallListeners("onDownloadStarted",
-                                                  this.listeners, this.wrapper)) {
+    if (!this._callInstallListeners("onDownloadStarted")) {
       logger.debug("onDownloadStarted listeners cancelled installation of addon " + this.sourceURI.spec);
       this.state = AddonManager.STATE_CANCELLED;
       XPIProvider.removeActiveInstall(this);
-      AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
-                                               this.listeners, this.wrapper);
+      this._callInstallListeners("onDownloadCancelled");
       return;
     }
 
@@ -2063,8 +2069,7 @@ var DownloadAddonInstall = class extends AddonInstall {
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = AddonManager.ERROR_FILE_ACCESS;
       XPIProvider.removeActiveInstall(this);
-      AddonManagerPrivate.callInstallListeners("onDownloadFailed",
-                                               this.listeners, this.wrapper);
+      this._callInstallListeners("onDownloadFailed");
       return;
     }
 
@@ -2093,8 +2098,7 @@ var DownloadAddonInstall = class extends AddonInstall {
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = AddonManager.ERROR_NETWORK_FAILURE;
       XPIProvider.removeActiveInstall(this);
-      AddonManagerPrivate.callInstallListeners("onDownloadFailed",
-                                               this.listeners, this.wrapper);
+      this._callInstallListeners("onDownloadFailed");
     }
   }
 
@@ -2106,8 +2110,7 @@ var DownloadAddonInstall = class extends AddonInstall {
   onDataAvailable(aRequest, aContext, aInputstream, aOffset, aCount) {
     this.crypto.updateFromStream(aInputstream, aCount);
     this.progress += aCount;
-    if (!AddonManagerPrivate.callInstallListeners("onDownloadProgress",
-                                                  this.listeners, this.wrapper)) {
+    if (!this._callInstallListeners("onDownloadProgress")) {
       // TODO cancel the download and make it available again (bug 553024)
     }
   }
@@ -2156,8 +2159,7 @@ var DownloadAddonInstall = class extends AddonInstall {
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
         this.error = AddonManager.ERROR_INCORRECT_HASH;
         XPIProvider.removeActiveInstall(this);
-        AddonManagerPrivate.callInstallListeners("onDownloadFailed",
-                                                 this.listeners, this.wrapper);
+        this._callInstallListeners("onDownloadFailed");
         aRequest.cancel(Cr.NS_BINDING_ABORTED);
         return;
       }
@@ -2195,8 +2197,7 @@ var DownloadAddonInstall = class extends AddonInstall {
         logger.debug("Cancelled download of " + this.sourceURI.spec);
         this.state = AddonManager.STATE_CANCELLED;
         XPIProvider.removeActiveInstall(this);
-        AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
-                                                 this.listeners, this.wrapper);
+        this._callInstallListeners("onDownloadCancelled");
         // If a listener restarted the download then there is no need to
         // remove the temporary file
         if (this.state != AddonManager.STATE_CANCELLED)
@@ -2272,8 +2273,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     this.state = AddonManager.STATE_DOWNLOAD_FAILED;
     this.error = aReason;
     XPIProvider.removeActiveInstall(this);
-    AddonManagerPrivate.callInstallListeners("onDownloadFailed", this.listeners,
-                                             this.wrapper);
+    this._callInstallListeners("onDownloadFailed");
 
     // If the listener hasn't restarted the download then remove any temporary
     // file
@@ -2304,9 +2304,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     }
     await this.addon.updateBlocklistState({oldAddon: this.existingAddon});
 
-    if (AddonManagerPrivate.callInstallListeners("onDownloadEnded",
-                                                 this.listeners,
-                                                 this.wrapper)) {
+    if (this._callInstallListeners("onDownloadEnded")) {
       // If a listener changed our state then do not proceed with the install
       if (this.state != AddonManager.STATE_DOWNLOADED)
         return;
@@ -2425,7 +2423,7 @@ AddonInstallWrapper.prototype = {
   },
 
   install() {
-    installFor(this).install();
+    return installFor(this).install();
   },
 
   cancel() {
