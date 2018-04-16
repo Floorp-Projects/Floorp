@@ -3471,8 +3471,10 @@ nsCookieService::CanSetCookie(nsIURI*             aHostURI,
 
   // If the new cookie is same-site but in a cross site context,
   // browser must ignore the cookie.
-  if (aCookieAttributes.sameSite != nsICookie2::SAMESITE_UNSET) {
-    bool isThirdParty = NS_IsSameSiteForeign(aChannel, aHostURI);
+  if (aCookieAttributes.sameSite != nsICookie2::SAMESITE_UNSET &&
+      aThirdPartyUtil) {
+    bool isThirdParty = false;
+    aThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isThirdParty);
     if (isThirdParty) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
                         "failed the samesite tests");
