@@ -107,10 +107,16 @@ public class SessionAccessibility {
                             // can get to by traversing down.
                             onInitializeAccessibilityNodeInfo(mView, info);
                             info.setClassName("android.webkit.WebView"); // TODO: WTF
-                            Bundle bundle = info.getExtras();
-                            bundle.putCharSequence(
-                                "ACTION_ARGUMENT_HTML_ELEMENT_STRING_VALUES",
-                                "ARTICLE,BUTTON,CHECKBOX,COMBOBOX,CONTROL,FOCUSABLE,FRAME,GRAPHIC,H1,H2,H3,H4,H5,H6,HEADING,LANDMARK,LINK,LIST,LIST_ITEM,MAIN,MEDIA,RADIO,SECTION,TABLE,TEXT_FIELD,UNVISITED_LINK,VISITED_LINK");
+                            if (Build.VERSION.SDK_INT >= 19) {
+                                Bundle bundle = info.getExtras();
+                                bundle.putCharSequence(
+                                    "ACTION_ARGUMENT_HTML_ELEMENT_STRING_VALUES",
+                                    "ARTICLE,BUTTON,CHECKBOX,COMBOBOX,CONTROL," +
+                                    "FOCUSABLE,FRAME,GRAPHIC,H1,H2,H3,H4,H5,H6," +
+                                    "HEADING,LANDMARK,LINK,LIST,LIST_ITEM,MAIN," +
+                                    "MEDIA,RADIO,SECTION,TABLE,TEXT_FIELD," +
+                                    "UNVISITED_LINK,VISITED_LINK");
+                            }
                             info.addAction(AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT);
                             info.addChild(hostView, VIRTUAL_CONTENT_ID);
                             break;
