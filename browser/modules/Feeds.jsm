@@ -74,7 +74,7 @@ var Feeds = {
 
     if (aIsFeed) {
       try {
-        let href = BrowserUtils.makeURI(aLink.href, aLink.ownerDocument.characterSet);
+        let href = Services.io.newURI(aLink.href, aLink.ownerDocument.characterSet);
         BrowserUtils.urlSecurityCheck(href, aPrincipal,
                                       Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
         return type || "application/rss+xml";
