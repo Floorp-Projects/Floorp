@@ -283,7 +283,7 @@ runTestFromPath(JSContext* cx, const char* path)
             MOZ_CRASH("Got distinct ASTs");
         }
 
-        fprintf(stderr, "Got the same AST when parsing %s\n%s\n", txtPath.begin(), binPrinter.string());
+        fprintf(stderr, "Got the same AST when parsing %s\n", txtPath.begin());
 #endif // defined(DEBUG)
     }
 

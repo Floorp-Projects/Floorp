@@ -3065,7 +3065,6 @@ BinASTParser::parseInterfaceBlock(const size_t start, const BinKind kind, const 
     CheckRecursionLimit(cx_);
 
     MOZ_TRY(checkFields(kind, fields, { BinField::Scope, BinField::Statements }));
-    fprintf(stderr, "Block: PUSH parse context\n");
     ParseContext::Statement stmt(parseContext_, StatementKind::Block);
     ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
     TRY(currentScope.init(parseContext_));
@@ -3081,7 +3080,7 @@ BinASTParser::parseInterfaceBlock(const size_t start, const BinKind kind, const 
 
     TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
     TRY_DECL(result, factory_.newLexicalScope(*bindings, statements));
-    fprintf(stderr, "Block: POP parse context\n");return result;
+    return result;
 }
 
 
