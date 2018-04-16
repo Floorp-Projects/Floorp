@@ -478,7 +478,7 @@
         <item name="android:textSelectHandleLeft">@drawable/handle_start</item>
         <item name="android:textSelectHandleRight">@drawable/handle_end</item>
         <item name="android:textCursorDrawable">@null</item>
-        <item name="android:singleLine">true</item>
+        <item name="android:maxLines">1</item>
         <item name="android:gravity">center_vertical|left|start</item>
         <item name="android:hint">@string/url_bar_default_text</item>
     </style>
