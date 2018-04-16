@@ -98,7 +98,6 @@ EXPORTS.mozilla += [
     'ServoMediaRule.h',
     'ServoNamespaceRule.h',
     'ServoPageRule.h',
-    'ServoPropPrefList.h',
     'ServoSpecifiedValues.h',
     'ServoStyleRule.h',
     'ServoStyleSet.h',
