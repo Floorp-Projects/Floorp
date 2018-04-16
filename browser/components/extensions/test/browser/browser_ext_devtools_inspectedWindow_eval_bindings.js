@@ -120,59 +120,46 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
     const {hud} = toolbox.getPanel("webconsole");
     let {jsterm} = hud;
 
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1386221.
-    if (jsterm.hud.NEW_CONSOLE_OUTPUT_ENABLED === true) {
-      // Wait for the message to appear on the console.
-      const messageNode = await new Promise(resolve => {
-        jsterm.hud.on("new-messages", function onThisMessage(messages) {
-          for (let m of messages) {
-            resolve(m.node);
-            jsterm.hud.off("new-messages", onThisMessage);
-            return;
-          }
-        });
+    // Wait for the message to appear on the console.
+    const messageNode = await new Promise(resolve => {
+      jsterm.hud.on("new-messages", function onThisMessage(messages) {
+        for (let m of messages) {
+          resolve(m.node);
+          jsterm.hud.off("new-messages", onThisMessage);
+          return;
+        }
       });
-      let objectInspectors = [...messageNode.querySelectorAll(".tree")];
-      is(objectInspectors.length, 1, "There is the expected number of object inspectors");
+    });
+    let objectInspectors = [...messageNode.querySelectorAll(".tree")];
+    is(objectInspectors.length, 1, "There is the expected number of object inspectors");
 
-      // We need to wait for the object to be expanded so we don't call the server on a closed connection.
-      const [oi] = objectInspectors;
-      let nodes = oi.querySelectorAll(".node");
+    // We need to wait for the object to be expanded so we don't call the server on a closed connection.
+    const [oi] = objectInspectors;
+    let nodes = oi.querySelectorAll(".node");
 
-      ok(nodes.length >= 1, "The object preview is rendered as expected");
+    ok(nodes.length >= 1, "The object preview is rendered as expected");
 
-      // The tree can still be collapsed since the properties are fetched asynchronously.
-      if (nodes.length === 1) {
-        info("Waiting for the object properties to be displayed");
-        // If this is the case, we wait for the properties to be fetched and displayed.
-        await new Promise(resolve => {
-          const observer = new MutationObserver(mutations => {
-            resolve();
-            observer.disconnect();
-          });
-          observer.observe(oi, {childList: true});
+    // The tree can still be collapsed since the properties are fetched asynchronously.
+    if (nodes.length === 1) {
+      info("Waiting for the object properties to be displayed");
+      // If this is the case, we wait for the properties to be fetched and displayed.
+      await new Promise(resolve => {
+        const observer = new MutationObserver(mutations => {
+          resolve();
+          observer.disconnect();
         });
-
-        // Retrieve the new nodes.
-        nodes = oi.querySelectorAll(".node");
-      }
-
-      // We should have 3 nodes :
-      //   ▼ Object { testkey: "testvalue" }
-      //   |  testkey: "testvalue"
-      //   |  ▶︎ __proto__: Object { … }
-      is(nodes.length, 3, "The object preview has the expected number of nodes");
-    } else {
-      const options = await new Promise(resolve => {
-        jsterm.once("variablesview-open", (view, options) => resolve(options));
+        observer.observe(oi, {childList: true});
       });
 
-      const objectType = options.objectActor.type;
-      const objectPreviewProperties = options.objectActor.preview.ownProperties;
-      is(objectType, "object", "The inspected object has the expected type");
-      Assert.deepEqual(Object.keys(objectPreviewProperties), ["testkey"],
-                       "The inspected object has the expected preview properties");
+      // Retrieve the new nodes.
+      nodes = oi.querySelectorAll(".node");
     }
+
+    // We should have 3 nodes :
+    //   ▼ Object { testkey: "testvalue" }
+    //   |  testkey: "testvalue"
+    //   |  ▶︎ __proto__: Object { … }
+    is(nodes.length, 3, "The object preview has the expected number of nodes");
   })();
 
   const inspectJSObjectPromise = extension.awaitMessage(`inspectedWindow-eval-result`);
