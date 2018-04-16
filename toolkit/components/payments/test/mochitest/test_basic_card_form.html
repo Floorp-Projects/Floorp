@@ -39,7 +39,6 @@ let display = document.getElementById("display");
 
 function checkCCForm(customEl, expectedCard) {
   const CC_PROPERTY_NAMES = [
-    "billingAddressGUID",
     "cc-number",
     "cc-name",
     "cc-exp-month",
@@ -154,82 +153,7 @@ add_task(async function test_genericError() {
   form.remove();
 });
 
-add_task(async function test_add_selectedShippingAddress() {
-  let form = new BasicCardForm();
-  await form.promiseReady;
-  display.appendChild(form);
-  await asyncElementRendered();
-
-  info("have an existing card in storage");
-  let card1 = deepClone(PTU.BasicCards.JohnDoe);
-  card1.guid = "9864798564";
-  card1["cc-exp-year"] = 2011;
-
-  let address1 = deepClone(PTU.Addresses.TimBL);
-  address1.guid = "TimBLGUID";
-
-  await form.requestStore.setState({
-    page: {
-      id: "basic-card-page",
-    },
-    savedAddresses: {
-      [address1.guid]: deepClone(address1),
-    },
-    savedBasicCards: {
-      [card1.guid]: deepClone(card1),
-    },
-    selectedShippingAddress: address1.guid,
-  });
-  await asyncElementRendered();
-  checkCCForm(form, {
-    billingAddressGUID: address1.guid,
-  });
-
-  form.remove();
-  await form.requestStore.reset();
-});
-
-add_task(async function test_add_noSelectedShippingAddress() {
-  let form = new BasicCardForm();
-  await form.promiseReady;
-  display.appendChild(form);
-  await asyncElementRendered();
-
-  info("have an existing card in storage but unused");
-  let card1 = deepClone(PTU.BasicCards.JohnDoe);
-  card1.guid = "9864798564";
-  card1["cc-exp-year"] = 2011;
-
-  let address1 = deepClone(PTU.Addresses.TimBL);
-  address1.guid = "TimBLGUID";
-
-  await form.requestStore.setState({
-    page: {
-      id: "basic-card-page",
-    },
-    savedAddresses: {
-      [address1.guid]: deepClone(address1),
-    },
-    savedBasicCards: {
-      [card1.guid]: deepClone(card1),
-    },
-    selectedShippingAddress: null,
-  });
-  await asyncElementRendered();
-  checkCCForm(form, {});
-
-  info("now test with a missing selectedShippingAddress");
-  await form.requestStore.setState({
-    selectedShippingAddress: "some-missing-guid",
-  });
-  await asyncElementRendered();
-  checkCCForm(form, {});
-
-  form.remove();
-  await form.requestStore.reset();
-});
-
-add_task(async function test_edit() {
+add_task(async function test_record() {
   let form = new BasicCardForm();
   await form.promiseReady;
   display.appendChild(form);

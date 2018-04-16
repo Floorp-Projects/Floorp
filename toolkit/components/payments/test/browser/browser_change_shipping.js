@@ -143,7 +143,6 @@ add_task(async function test_address_edit() {
         methodData: [PTU.MethodData.basicCard],
         details: PTU.Details.twoShippingOptions,
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
-        options: PTU.Options.requestShippingOption,
       }
     );
 
@@ -197,7 +196,6 @@ add_task(async function test_address_removal() {
         methodData: [PTU.MethodData.basicCard],
         details: PTU.Details.twoShippingOptions,
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
-        options: PTU.Options.requestShippingOption,
       }
     );
 

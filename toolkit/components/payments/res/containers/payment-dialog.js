@@ -14,7 +14,6 @@ import "./payment-method-picker.js";
 import "./shipping-option-picker.js";
 
 /* global paymentRequest */
-/* import-globals-from ../unprivileged-fallbacks.js */
 
 /**
  * <payment-dialog></payment-dialog>
@@ -122,7 +121,6 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     // Check if any foreign-key constraints were invalidated.
     state = this.requestStore.getState();
     let {
-      request: {paymentOptions: {requestShipping: requestShipping}},
       savedAddresses,
       savedBasicCards,
       selectedPayerAddress,
@@ -148,13 +146,8 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     } else {
       // assign selectedShippingAddress as value if it is undefined,
       // or if the address it pointed to was removed from storage
-      let defaultShippingAddress = null;
-      if (requestShipping) {
-        defaultShippingAddress = Object.keys(savedAddresses)[0];
-        log.debug("selecting the default shipping address");
-      }
       this.requestStore.setState({
-        selectedShippingAddress: defaultShippingAddress || null,
+        selectedShippingAddress: Object.keys(savedAddresses)[0] || null,
       });
     }
 
