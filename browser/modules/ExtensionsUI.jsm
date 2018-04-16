@@ -97,13 +97,6 @@ var ExtensionsUI = {
         this.sideloaded.add(addon);
       }
         this._updateNotifications();
-    } else {
-      // This and all the accompanying about:newaddon code can eventually
-      // be removed.  See bug 1331521.
-      let win = RecentWindow.getMostRecentBrowserWindow();
-      for (let addon of sideloaded) {
-        win.openTrustedLinkIn(`about:newaddon?id=${addon.id}`, "tab");
-      }
     }
   },
 

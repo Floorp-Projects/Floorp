@@ -6,7 +6,6 @@ toolkit.jar:
 #include ../../shared/mozapps.inc.mn
 * skin/classic/mozapps/extensions/extensions.css             (extensions/extensions.css)
   skin/classic/mozapps/extensions/heart.png                  (extensions/heart.png)
-* skin/classic/mozapps/extensions/newaddon.css               (extensions/newaddon.css)
   skin/classic/mozapps/profile/profileicon.png               (profile/profileicon.png)
   skin/classic/mozapps/update/updates.css                    (update/updates.css)
 
