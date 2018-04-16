@@ -289,7 +289,7 @@ GMPChild::RecvPreloadLibs(const nsCString& aLibs)
     u"msmpeg2vdec.dll", // H.264 decoder
     u"psapi.dll", // For GetMappedFileNameW, see bug 1383611
   };
-  constexpr static bool (*IsASCII)(const char16_t*) = NS_IsAscii;
+  constexpr static bool (*IsASCII)(const char16_t*) = NS_ConstExprIsAscii;
   static_assert(AllOf(std::begin(whitelist), std::end(whitelist), IsASCII),
                 "Items in the whitelist must not contain non-ASCII "
                 "characters!");
