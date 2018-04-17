@@ -976,6 +976,49 @@ public:
   virtual bool Notify(WorkerStatus aStatus) override { return true; }
 };
 
+// A runnable to cancel the worker from the parent thread when self.close() is
+// called. This runnable is executed on the parent process in order to cancel
+// the current runnable. It uses a normal WorkerRunnable in order to be sure
+// that all the pending WorkerRunnables are executed before this.
+class CancelingOnParentRunnable final : public WorkerRunnable
+{
+public:
+  explicit CancelingOnParentRunnable(WorkerPrivate* aWorkerPrivate)
+    : WorkerRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount)
+  {}
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    aWorkerPrivate->Cancel();
+    return true;
+  }
+};
+
+// This runnable starts the canceling of a worker after a self.close().
+class CancelingRunnable final : public Runnable
+{
+public:
+  CancelingRunnable()
+    : Runnable("CancelingRunnable")
+  {}
+
+  NS_IMETHOD
+  Run() override
+  {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+    workerPrivate->AssertIsOnWorkerThread();
+
+    // Now we can cancel the this worker from the parent process.
+    RefPtr<CancelingOnParentRunnable> r =
+      new CancelingOnParentRunnable(workerPrivate);
+    r->Dispatch();
+
+    return NS_OK;
+  }
+};
+
 } /* anonymous namespace */
 
 class WorkerPrivate::EventTarget final : public nsISerialEventTarget
@@ -3609,6 +3652,13 @@ WorkerPrivate::InterruptCallback(JSContext* aCx)
   return true;
 }
 
+void
+WorkerPrivate::CloseInternal()
+{
+  AssertIsOnWorkerThread();
+  NotifyInternal(Closing);
+}
+
 bool
 WorkerPrivate::IsOnCurrentThread()
 {
@@ -4478,8 +4528,17 @@ WorkerPrivate::NotifyInternal(WorkerStatus aStatus)
     return true;
   }
 
-  // Don't abort the script.
+  // Don't abort the script now, but we dispatch a runnable to do it when the
+  // current JS frame is executed.
   if (aStatus == Closing) {
+    if (mSyncLoopStack.IsEmpty()) {
+      // Here we use a normal runnable to know when the current JS chunk of code
+      // is finished. We cannot use a WorkerRunnable because they are not
+      // accepted any more by the worker, and we do not want to use a
+      // WorkerControlRunnable because they are immediately executed.
+      RefPtr<CancelingRunnable> r = new CancelingRunnable();
+      mThread->nsThread::Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+    }
     return true;
   }
 
