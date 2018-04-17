@@ -957,7 +957,7 @@
     "description": "Total Memory Across All Processes (KB)"
   },
   "MEMORY_DISTRIBUTION_AMONG_CONTENT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1344174],
     "expires_in_version": "never",
@@ -11349,6 +11349,15 @@
     "n_buckets": 100,
     "description": "720p VP9 decode benchmark measurement in frames per second",
     "releaseChannelCollection": "opt-out"
+  },
+  "MEDIA_PLAY_PROMISE_RESOLUTION": {
+    "record_in_processes": ["main", "content"],
+    "bug_numbers": [1453176],
+    "alert_emails": ["cpearce@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "72",
+    "kind": "categorical",
+    "labels": ["Resolved", "NotAllowedErr", "SrcNotSupportedErr", "PauseAbortErr", "AbortErr", "UnknownErr"],
+    "description": "Records whether promise returned by HTMLMediaElement.play() successfully resolved, or the error code which it was rejected with."
   },
   "MEDIA_CODEC_USED": {
     "record_in_processes": ["main", "content"],

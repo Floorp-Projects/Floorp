@@ -17,11 +17,11 @@ This command will run all tests which contains "console" in their name.
 ## How to run it on try?
 
 ```bash
-./mach try -b o -p linux64 -u none -t g2-e10s --rebuild-talos 6
+./mach try -b o -p linux64 -u none -t damp-e10s --rebuild-talos 6
 ```
 * Linux appears to build and run quickly, and offers quite stable results over the other OSes.
 The vast majority of performance issues for DevTools are OS agnostic, so it doesn't really matter which one you run them on.
-* "g2-e10s" is the talos bucket in which we run DAMP.
+* "damp-e10s" is the talos bucket in which we run DAMP.
 * And 6 is the number of times we run DAMP tests. That's to do averages between all the 6 runs and helps filtering out the noise.
 
 ## What does it do?
@@ -50,8 +50,8 @@ so that all next interactions will be significantly faster.
 First, open TreeHerder. A link is displayed in your console when executing `./mach try`.
 You should also receive a mail with a link to it.
 
-Look for "T-e10s(+6)", click on "+6", then click on "g2":
-![TreeHerder jobs](perfherder-g2.png)
+Look for "T-e10s(+6)", click on "+6", then click on "damp":
+![TreeHerder jobs](perfherder-damp.png)
 
 On the bottom panel that just opened, click on "Compare result against another revision".
 ![TreeHerder panel](perfherder-compare-link.png)

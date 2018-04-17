@@ -34,7 +34,7 @@ function test() {
 
     function expectEvent(evt, cb) {
       promiseList.push(new Promise((resolve, reject) => {
-        monitor.panelWin.once(evt, _ => {
+        monitor.panelWin.api.once(evt, _ => {
           cb().then(resolve, reject);
         });
       }));
@@ -151,7 +151,7 @@ function test() {
       );
     });
 
-    monitor.panelWin.once(EVENTS.RECEIVED_REQUEST_POST_DATA, () => {
+    monitor.panelWin.api.once(EVENTS.RECEIVED_REQUEST_POST_DATA, () => {
       ok(false, "Trap listener: this request doesn't have any post data.");
     });
 

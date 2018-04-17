@@ -4019,40 +4019,36 @@ EditorBase::GetEndChildNode(Selection* aSelection,
  * IsPreformatted() checks the style info for the node for the preformatted
  * text style.
  */
-nsresult
-EditorBase::IsPreformatted(nsIDOMNode* aNode,
-                           bool* aResult)
+// static
+bool
+EditorBase::IsPreformatted(nsINode* aNode)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-
-  NS_ENSURE_TRUE(aResult && content, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
-
+  if (NS_WARN_IF(!aNode)) {
+    return false;
+  }
   // Look at the node (and its parent if it's not an element), and grab its
   // ComputedStyle.
   RefPtr<ComputedStyle> elementStyle;
-  if (!content->IsElement()) {
-    content = content->GetParent();
-  }
-  if (content && content->IsElement()) {
-    elementStyle =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(content->AsElement(), nullptr);
+  Element* element = aNode->IsElement() ? aNode->AsElement() : nullptr;
+  if (!element) {
+    element = aNode->GetParentElement();
+    if (!element) {
+      return false;
+    }
   }
 
+  elementStyle =
+    nsComputedDOMStyle::GetComputedStyleNoFlush(element, nullptr);
   if (!elementStyle) {
     // Consider nodes without a ComputedStyle to be NOT preformatted:
     // For instance, this is true of JS tags inside the body (which show
     // up as #text nodes but have no ComputedStyle).
-    *aResult = false;
-    return NS_OK;
+    return false;
   }
 
   const nsStyleText* styleText = elementStyle->StyleText();
 
-  *aResult = styleText->WhiteSpaceIsSignificant();
-  return NS_OK;
+  return styleText->WhiteSpaceIsSignificant();
 }
 
 template<typename PT, typename CT>

@@ -908,7 +908,7 @@ WSRunObject::GetRuns()
   ClearRuns();
 
   // handle some easy cases first
-  mHTMLEditor->IsPreformatted(GetAsDOMNode(mNode), &mPRE);
+  mPRE = EditorBase::IsPreformatted(mNode);
   // if it's preformatedd, or if we are surrounded by text or special, it's all one
   // big normal ws run
   if (mPRE ||

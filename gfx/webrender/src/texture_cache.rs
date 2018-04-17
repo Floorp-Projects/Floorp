@@ -83,6 +83,9 @@ enum EntryKind {
     },
 }
 
+#[derive(Debug)]
+pub enum CacheEntryMarker {}
+
 // Stores information related to a single entry in the texture
 // cache. This is stored for each item whether it's in the shared
 // cache or a standalone texture.
@@ -163,7 +166,7 @@ impl CacheEntry {
     }
 }
 
-type WeakCacheEntryHandle = WeakFreeListHandle<CacheEntry>;
+type WeakCacheEntryHandle = WeakFreeListHandle<CacheEntryMarker>;
 
 // A texture cache handle is a weak reference to a cache entry.
 // If the handle has not been inserted into the cache yet, the
@@ -240,17 +243,17 @@ pub struct TextureCache {
 
     // Maintains the list of all current items in
     // the texture cache.
-    entries: FreeList<CacheEntry>,
+    entries: FreeList<CacheEntry, CacheEntryMarker>,
 
     // A list of the strong handles of items that were
     // allocated in the standalone texture pool. Used
     // for evicting old standalone textures.
-    standalone_entry_handles: Vec<FreeListHandle<CacheEntry>>,
+    standalone_entry_handles: Vec<FreeListHandle<CacheEntryMarker>>,
 
     // A list of the strong handles of items that were
     // allocated in the shared texture cache. Used
     // for evicting old cache items.
-    shared_entry_handles: Vec<FreeListHandle<CacheEntry>>,
+    shared_entry_handles: Vec<FreeListHandle<CacheEntryMarker>>,
 }
 
 impl TextureCache {
