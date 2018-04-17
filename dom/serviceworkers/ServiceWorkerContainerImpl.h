@@ -18,6 +18,8 @@ class ServiceWorkerContainerImpl final : public ServiceWorkerContainer::Inner
   ~ServiceWorkerContainerImpl() = default;
 
 public:
+  ServiceWorkerContainerImpl() = default;
+
   RefPtr<ServiceWorkerRegistrationPromise>
   Register(const nsAString& aScriptURL,
            const RegistrationOptions& aOptions) override;
@@ -29,7 +31,7 @@ public:
   GetRegistrations() override;
 
   RefPtr<ServiceWorkerRegistrationPromise>
-  GetReady() override;
+  GetReady(const ClientInfo& aClientInfo) const override;
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerContainerImpl, override)
 };

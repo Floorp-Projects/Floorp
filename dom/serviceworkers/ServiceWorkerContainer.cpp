@@ -289,12 +289,6 @@ ServiceWorkerContainer::GetReady(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
   mReadyPromise = Promise::Create(GetParentObject(), aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -303,7 +297,7 @@ ServiceWorkerContainer::GetReady(ErrorResult& aRv)
   RefPtr<ServiceWorkerContainer> self = this;
   RefPtr<Promise> outer = mReadyPromise;
 
-  swm->WhenReady(clientInfo.ref())->Then(
+  mInner->GetReady(clientInfo.ref())->Then(
     global->EventTargetFor(TaskCategory::Other), __func__,
     [self, outer] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
       self->mReadyPromiseHolder.Complete();

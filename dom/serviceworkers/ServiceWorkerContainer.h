@@ -37,7 +37,7 @@ public:
     GetRegistrations() = 0;
 
     virtual RefPtr<ServiceWorkerRegistrationPromise>
-    GetReady() = 0;
+    GetReady(const ClientInfo& aClientInfo) const = 0;
 
     NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   };
