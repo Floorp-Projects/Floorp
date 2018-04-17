@@ -349,29 +349,9 @@ pref("mathml.disabled",    false);
 // Enable scale transform for stretchy MathML operators. See bug 414277.
 pref("mathml.scale_stretchy_operators.enabled", true);
 
-pref("media.dormant-on-pause-timeout-ms", 5000);
-
 // Used by ChannelMediaResource to run data callbacks from HTTP channel
 // off the main thread.
 pref("media.omt_data_delivery.enabled", true);
-
-// File-backed MediaCache size in kilobytes
-pref("media.cache_size", 512000);
-// When a network connection is suspended, don't resume it until the
-// amount of buffered data falls below this threshold (in seconds).
-pref("media.cache_resume_threshold", 30);
-// Stop reading ahead when our buffered data is this many seconds ahead
-// of the current playback position. This limit can stop us from using arbitrary
-// amounts of network bandwidth prefetching huge videos.
-pref("media.cache_readahead_limit", 60);
-// If a resource is known to be smaller than this size (in kilobytes), a
-// memory-backed MediaCache may be used; otherwise the (single shared
-// global) file-backed MediaCache is used.
-pref("media.memory_cache_max_size", 8192);
-// Don't create more memory-backed MediaCaches if their combined size would go
-// above the lowest limit (in kilobytes or in percent of physical memory size).
-pref("media.memory_caches_combined_limit_kb", 524288);
-pref("media.memory_caches_combined_limit_pc_sysmem", 5);
 
 // We'll throttle the download if the download rate is throttle-factor times
 // the estimated playback rate, AND we satisfy the cache readahead_limit
@@ -395,21 +375,11 @@ pref("media.play-stand-alone", true);
 pref("media.hardware-video-decoding.enabled", true);
 pref("media.hardware-video-decoding.force-enabled", false);
 
-#ifdef MOZ_FMP4
-pref("media.mp4.enabled", true);
-// Specifies whether the PDMFactory can create a test decoder that
-#endif
-// just outputs blank frames/audio instead of actually decoding. The blank
-// decoder works on all platforms.
-pref("media.use-blank-decoder", false);
 #ifdef MOZ_WMF
-pref("media.wmf.enabled", true);
 pref("media.wmf.dxva.enabled", true);
 pref("media.wmf.dxva.d3d11.enabled", true);
 pref("media.wmf.dxva.max-videos", 8);
 pref("media.wmf.low-latency.enabled", false);
-pref("media.wmf.skip-blacklist", false);
-pref("media.wmf.vp9.enabled", true);
 pref("media.wmf.amd.vp9.enabled", true);
 pref("media.wmf.amd.highres.enabled", true);
 pref("media.wmf.allow-unsupported-resolutions", false);
@@ -420,29 +390,11 @@ pref("media.wmf.deblacklisting-for-telemetry-in-gpu-process", true);
 pref("media.wmf.play-stand-alone", true);
 pref("media.wmf.use-sync-texture", true);
 #endif
-#if defined(MOZ_FFMPEG)
-#if defined(XP_MACOSX)
-pref("media.ffmpeg.enabled", false);
-#else
-pref("media.ffmpeg.enabled", true);
-#endif
-pref("media.libavcodec.allow-obsolete", false);
-#endif
-#if defined(MOZ_FFVPX)
-pref("media.ffvpx.enabled", true);
-#endif
-#if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
-pref("media.ffmpeg.low-latency.enabled", false);
-#endif
-pref("media.gmp.decoder.enabled", false);
 pref("media.gmp.decoder.aac", 0);
 pref("media.gmp.decoder.h264", 0);
-pref("media.ogg.enabled", true);
 pref("media.opus.enabled", true);
 pref("media.wave.enabled", true);
 pref("media.webm.enabled", true);
-
-pref("media.eme.chromium-api.video-shmems", 6);
 
 // GMP storage version number. At startup we check the version against
 // media.gmp.storage.version.observed, and if the versions don't match,
@@ -462,22 +414,8 @@ pref("media.decoder-doctor.decode-errors-allowed", "");
 pref("media.decoder-doctor.decode-warnings-allowed", "");
 // Whether we report partial failures.
 pref("media.decoder-doctor.verbose", false);
-// Whether DD should consider WMF-disabled a WMF failure, useful for testing.
-pref("media.decoder-doctor.wmf-disabled-is-failure", false);
 // URL to report decode issues
 pref("media.decoder-doctor.new-issue-endpoint", "https://webcompat.com/issues/new");
-
-// Whether to suspend decoding of videos in background tabs.
-pref("media.suspend-bkgnd-video.enabled", true);
-// Delay, in ms, from time window goes to background to suspending
-// video decoders. Defaults to 10 seconds.
-pref("media.suspend-bkgnd-video.delay-ms", 10000);
-// Resume video decoding when the cursor is hovering on a background tab to
-// reduce the resume latency and improve the user experience.
-pref("media.resume-bkgnd-video-on-tabhover", true);
-
-// Whether to enable media seamless looping.
-pref("media.seamless-looping", true);
 
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
@@ -571,15 +509,9 @@ pref("media.peerconnection.capture_delay", 50);
 pref("media.peerconnection.capture_delay", 50);
 #elif defined(ANDROID)
 pref("media.peerconnection.capture_delay", 100);
-pref("media.navigator.hardware.vp8_encode.acceleration_enabled", true);
-pref("media.navigator.hardware.vp8_encode.acceleration_remote_enabled", true);
-pref("media.navigator.hardware.vp8_decode.acceleration_enabled", false);
 #else
 pref("media.peerconnection.capture_delay", 70);
 #endif
-// Use MediaDataDecoder API for WebRTC, this includes hardware acceleration for
-// decoding.
-pref("media.navigator.mediadatadecoder_enabled", false);
 #endif
 
 pref("dom.webaudio.enabled", true);
@@ -614,18 +546,11 @@ pref("media.mediasource.webm.enabled", true);
 #endif
 pref("media.mediasource.webm.audio.enabled", true);
 
-pref("media.av1.enabled", false);
-
-// Use new MediaFormatReader architecture for plain ogg.
-pref("media.flac.enabled", true);
-pref("media.ogg.flac.enabled", true);
-
 pref("media.benchmark.vp9.threshold", 150);
 pref("media.benchmark.frames", 300);
 pref("media.benchmark.timeout", 1000);
 
 #ifdef MOZ_WEBSPEECH
-pref("media.webspeech.recognition.enable", false);
 pref("media.webspeech.synth.enabled", false);
 #endif
 #ifdef MOZ_WEBM_ENCODER
@@ -660,12 +585,6 @@ pref("media.video-queue.send-to-compositor-size", 9999);
 // Whether to disable the video stats to prevent fingerprinting
 pref("media.video_stats.enabled", true);
 
-// Whether to check the decoder supports recycling.
-pref("media.decoder.recycle.enabled", false);
-
-//Weather MFR should try to skip to next key frame or not.
-pref("media.decoder.skip-to-next-key-frame.enabled", true);
-
 // Log level for cubeb, the audio input/output system. Valid values are
 // "verbose", "normal" and "" (log disabled).
 pref("media.cubeb.logging_level", "");
@@ -681,9 +600,6 @@ pref("media.cubeb.sandbox", false);
 #endif
 
 pref("media.webaudio.audiocontextoptions-samplerate.enabled", true);
-
-// Set to true to force demux/decode warnings to be treated as errors.
-pref("media.playback.warnings-as-errors", false);
 
 // Weather we allow AMD switchable graphics
 pref("layers.amd-switchable-gfx.enabled", true);
@@ -4815,7 +4731,6 @@ pref("layers.bench.enabled", false);
 
 #if defined(XP_WIN)
 pref("layers.gpu-process.enabled", true);
-pref("media.gpu-process-decoder", true);
 pref("layers.gpu-process.allow-software", true);
 #ifdef NIGHTLY_BUILD
 pref("layers.gpu-process.max_restarts", 3);
@@ -5702,13 +5617,6 @@ pref("narrate.rate", 0);
 pref("narrate.voice", " { \"default\": \"automatic\" }");
 // Only make voices that match content language available.
 pref("narrate.filter-voices", true);
-
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-// Whether to allow, on a Linux system that doesn't support the necessary sandboxing
-// features, loading Gecko Media Plugins unsandboxed.  However, EME CDMs will not be
-// loaded without sandboxing even if this pref is changed.
-pref("media.gmp.insecure.allow", false);
-#endif
 
 // HTML <dialog> element
 pref("dom.dialog_element.enabled", false);

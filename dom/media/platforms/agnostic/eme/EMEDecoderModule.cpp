@@ -12,11 +12,11 @@
 #include "GMPDecoderModule.h"
 #include "GMPService.h"
 #include "MediaInfo.h"
-#include "MediaPrefs.h"
 #include "PDMFactory.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/EMEUtils.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "nsAutoPtr.h"
@@ -409,7 +409,7 @@ EMEDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
   MOZ_ASSERT(aParams.mConfig.mCrypto.mValid);
 
-  if (MediaPrefs::EMEBlankVideo()) {
+  if (StaticPrefs::MediaEmeVideoBlank()) {
     EME_LOG("EMEDecoderModule::CreateVideoDecoder() creating a blank decoder.");
     RefPtr<PlatformDecoderModule> m(CreateBlankDecoderModule());
     return m->CreateVideoDecoder(aParams);
@@ -445,7 +445,7 @@ EMEDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   MOZ_ASSERT(!SupportsMimeType(aParams.mConfig.mMimeType, nullptr));
   MOZ_ASSERT(mPDM);
 
-  if (MediaPrefs::EMEBlankAudio()) {
+  if (StaticPrefs::MediaEmeAudioBlank()) {
     EME_LOG("EMEDecoderModule::CreateAudioDecoder() creating a blank decoder.");
     RefPtr<PlatformDecoderModule> m(CreateBlankDecoderModule());
     return m->CreateAudioDecoder(aParams);

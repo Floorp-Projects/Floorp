@@ -26,7 +26,6 @@
 #endif
 #include "CDMStorageIdProvider.h"
 #include "GMPContentParent.h"
-#include "MediaPrefs.h"
 #include "VideoUtils.h"
 
 using mozilla::ipc::GeckoChildProcessHost;

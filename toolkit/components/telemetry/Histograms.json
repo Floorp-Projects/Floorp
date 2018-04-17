@@ -9467,6 +9467,39 @@
     "description": "Number of times a custom developer tool has been opened.",
     "releaseChannelCollection": "opt-out"
   },
+  "DEVTOOLS_ACCESSIBILITY_TIME_ACTIVE_SECONDS": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "65",
+    "kind": "exponential",
+    "high": 86400,
+    "n_buckets": 100,
+    "bug_numbers": [1447302],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "yzenevich@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "description": "How long has the accessibility panel been active (seconds)."
+  },
+  "DEVTOOLS_ACCESSIBILITY_PICKER_TIME_ACTIVE_SECONDS": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "65",
+    "kind": "exponential",
+    "high": 86400,
+    "n_buckets": 100,
+    "bug_numbers": [1447302],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "yzenevich@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "description": "How long has the picker tool in accessibility panel been active (seconds)."
+  },
+  "DEVTOOLS_ACCESSIBILITY_SERVICE_TIME_ACTIVE_SECONDS": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "65",
+    "kind": "exponential",
+    "high": 86400,
+    "n_buckets": 100,
+    "bug_numbers": [1447302],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "yzenevich@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "description": "How long has the platform accessibility been active (seconds) in accessibility panel."
+  },
   "DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

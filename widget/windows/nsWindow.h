@@ -223,6 +223,7 @@ public:
 
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
   virtual uint32_t        GetMaxTouchPoints() const override;
+  virtual void            SetWindowClass(const nsAString& xulWinType) override;
 
   /**
    * Event helpers
@@ -548,6 +549,7 @@ protected:
   bool                  mMousePresent;
   bool                  mDestroyCalled;
   bool                  mOpeningAnimationSuppressed;
+  bool                  mIsEarlyBlankWindow;
   uint32_t              mBlurSuppressLevel;
   DWORD_PTR             mOldStyle;
   DWORD_PTR             mOldExStyle;

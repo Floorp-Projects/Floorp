@@ -8,6 +8,7 @@ import os
 import posixpath
 import re
 import shutil
+import signal
 import subprocess
 import tempfile
 import time
@@ -24,7 +25,7 @@ class ADBProcess(object):
         #: command argument argument list.
         self.args = args
         #: Temporary file handle to be used for stdout.
-        self.stdout_file = tempfile.TemporaryFile()
+        self.stdout_file = tempfile.TemporaryFile(mode='w+b')
         #: boolean indicating if the command timed out.
         self.timedout = None
         #: exitcode of the process.
@@ -977,7 +978,8 @@ class ADBDevice(ADBCommand):
 
     # Device Shell methods
 
-    def shell(self, cmd, env=None, cwd=None, timeout=None, root=False):
+    def shell(self, cmd, env=None, cwd=None, timeout=None, root=False,
+              stdout_callback=None):
         """Executes a shell command on the device.
 
         :param str cmd: The command to be executed.
@@ -994,6 +996,7 @@ class ADBDevice(ADBCommand):
         :type timeout: integer or None
         :param bool root: Flag specifying if the command should
             be executed as root.
+        :param stdout_callback: Function called for each line of output.
         :returns: :class:`mozdevice.ADBProcess`
         :raises: ADBRootError
 
@@ -1032,6 +1035,31 @@ class ADBDevice(ADBCommand):
         the stdout temporary files.
 
         """
+        def _timed_read_line_handler(signum, frame):
+            raise IOError('ReadLineTimeout')
+
+        def _timed_read_line(filehandle, timeout=None):
+            """
+            Attempt to readline from filehandle. If readline does not return
+            within timeout seconds, raise IOError('ReadLineTimeout').
+            On Windows, required signal facilities are usually not available;
+            as a result, the timeout is not respected and some reads may
+            block on Windows.
+            """
+            if not hasattr(signal, 'SIGALRM'):
+                return filehandle.readline().rstrip()
+            if timeout is None:
+                timeout = 5
+            default_alarm_handler = signal.getsignal(signal.SIGALRM)
+            signal.signal(signal.SIGALRM, _timed_read_line_handler)
+            signal.alarm(timeout)
+            try:
+                line = filehandle.readline().rstrip()
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, default_alarm_handler)
+            return line
+
         if root and not self._have_root_shell:
             # If root was requested and we do not already have a root
             # shell, then use the appropriate version of su to invoke
@@ -1068,7 +1096,23 @@ class ADBDevice(ADBCommand):
 
         start_time = time.time()
         exitcode = adb_process.proc.poll()
+        if stdout_callback:
+            stdout_dup = os.fdopen(os.dup(adb_process.stdout_file.fileno()))
+            offset = 0
         while ((time.time() - start_time) <= timeout) and exitcode is None:
+            if stdout_callback:
+                while True:
+                    try:
+                        stdout_dup.seek(offset, os.SEEK_SET)
+                        line = _timed_read_line(stdout_dup)
+                        offset = stdout_dup.tell()
+                        if line and len(line) > 0:
+                            stdout_callback(line)
+                        else:
+                            # no new output, so sleep and poll
+                            break
+                    except IOError:
+                        pass
             time.sleep(self._polling_interval)
             exitcode = adb_process.proc.poll()
         if exitcode is None:

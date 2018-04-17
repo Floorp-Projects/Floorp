@@ -48,7 +48,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
-#include "MediaPrefs.h"
 #include "WidgetUtils.h"
 
 #include "FennecJNIWrappers.h"
@@ -130,8 +129,6 @@ AndroidBridge::ConstructBridge()
 
     MOZ_ASSERT(!sBridge);
     sBridge = new AndroidBridge();
-
-    MediaPrefs::GetSingleton();
 }
 
 void

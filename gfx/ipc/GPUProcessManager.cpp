@@ -12,6 +12,7 @@
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
@@ -37,7 +38,6 @@
 #include "VsyncSource.h"
 #include "mozilla/dom/VideoDecoderManagerChild.h"
 #include "mozilla/dom/VideoDecoderManagerParent.h"
-#include "MediaPrefs.h"
 #include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
 
@@ -981,7 +981,7 @@ GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProces
                                                     ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndpoint)
 {
   if (!EnsureGPUReady() ||
-      !MediaPrefs::PDMUseGPUDecoder() ||
+      !StaticPrefs::MediaGpuProcessDecoder() ||
       !mDecodeVideoOnGpuProcess) {
     return;
   }
