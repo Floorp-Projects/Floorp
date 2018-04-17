@@ -4,24 +4,108 @@
 
 from __future__ import absolute_import
 
+import json
 import os
 import platform
-import time
 import tempfile
+import time
 import uuid
-
-from .addons import AddonManager
-import mozfile
-from .permissions import Permissions
-from .prefs import Preferences
+from abc import ABCMeta, abstractmethod
 from shutil import copytree
 
-__all__ = ['Profile',
+import mozfile
+from six import string_types
+
+from .addons import AddonManager
+from .permissions import Permissions
+from .prefs import Preferences
+
+__all__ = ['BaseProfile',
+           'ChromeProfile',
+           'Profile',
            'FirefoxProfile',
-           'ThunderbirdProfile']
+           'ThunderbirdProfile',
+           'create_profile']
 
 
-class Profile(object):
+class BaseProfile(object):
+    __metaclass__ = ABCMeta
+
+    def __init__(self, profile=None, addons=None, preferences=None, restore=True):
+        self._addons = addons
+
+        # Prepare additional preferences
+        if preferences:
+            if isinstance(preferences, dict):
+                # unordered
+                preferences = preferences.items()
+
+            # sanity check
+            assert not [i for i in preferences if len(i) != 2]
+        else:
+            preferences = []
+        self._preferences = preferences
+
+        # Handle profile creation
+        self.restore = restore
+        self.create_new = not profile
+        if profile:
+            # Ensure we have a full path to the profile
+            self.profile = os.path.abspath(os.path.expanduser(profile))
+        else:
+            self.profile = tempfile.mkdtemp(suffix='.mozrunner')
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.cleanup()
+
+    def __del__(self):
+        self.cleanup()
+
+    def cleanup(self):
+        """Cleanup operations for the profile."""
+
+        if self.restore:
+            # If it's a temporary profile we have to remove it
+            if self.create_new:
+                mozfile.remove(self.profile)
+
+    @abstractmethod
+    def _reset(self):
+        pass
+
+    def reset(self):
+        """
+        reset the profile to the beginning state
+        """
+        self.cleanup()
+        self._reset()
+
+    @classmethod
+    def clone(cls, path_from, path_to=None, ignore=None, **kwargs):
+        """Instantiate a temporary profile via cloning
+        - path: path of the basis to clone
+        - ignore: callable passed to shutil.copytree
+        - kwargs: arguments to the profile constructor
+        """
+        if not path_to:
+            tempdir = tempfile.mkdtemp()  # need an unused temp dir name
+            mozfile.remove(tempdir)  # copytree requires that dest does not exist
+            path_to = tempdir
+        copytree(path_from, path_to, ignore=ignore)
+
+        c = cls(path_to, **kwargs)
+        c.create_new = True  # deletes a cloned profile when restore is True
+        return c
+
+    def exists(self):
+        """returns whether the profile exists or not"""
+        return os.path.exists(self.profile)
+
+
+class Profile(BaseProfile):
     """Handles all operations regarding profile.
 
     Creating new profiles, installing add-ons, setting preferences and
@@ -57,37 +141,17 @@ class Profile(object):
         :param whitelistpaths: List of paths to pass to Firefox to allow read
             access to from the content process sandbox.
         """
-        self._addons = addons
+        super(Profile, self).__init__(
+            profile=profile, addons=addons, preferences=preferences, restore=restore)
+
         self._locations = locations
         self._proxy = proxy
-
-        # Prepare additional preferences
-        if preferences:
-            if isinstance(preferences, dict):
-                # unordered
-                preferences = preferences.items()
-
-            # sanity check
-            assert not [i for i in preferences if len(i) != 2]
-        else:
-            preferences = []
-        self._preferences = preferences
         self._whitelistpaths = whitelistpaths
 
-        # Handle profile creation
-        self.create_new = not profile
-        if profile:
-            # Ensure we have a full path to the profile
-            self.profile = os.path.abspath(os.path.expanduser(profile))
-        else:
-            self.profile = tempfile.mkdtemp(suffix='.mozrunner')
-
-        self.restore = restore
-
         # Initialize all class members
-        self._internal_init()
+        self._reset()
 
-    def _internal_init(self):
+    def _reset(self):
         """Internal: Initialize all class members to their default value"""
 
         if not os.path.exists(self.profile):
@@ -135,17 +199,6 @@ class Profile(object):
         self.addons = AddonManager(self.profile, restore=self.restore)
         self.addons.install(self._addons)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.cleanup()
-
-    def __del__(self):
-        self.cleanup()
-
-    # cleanup
-
     def cleanup(self):
         """Cleanup operations for the profile."""
 
@@ -157,18 +210,7 @@ class Profile(object):
                 self.addons.clean()
             if getattr(self, 'permissions', None) is not None:
                 self.permissions.clean_db()
-
-            # If it's a temporary profile we have to remove it
-            if self.create_new:
-                mozfile.remove(self.profile)
-
-    def reset(self):
-        """
-        reset the profile to the beginning state
-        """
-        self.cleanup()
-
-        self._internal_init()
+        super(Profile, self).cleanup()
 
     def clean_preferences(self):
         """Removed preferences added by mozrunner."""
@@ -179,27 +221,6 @@ class Profile(object):
             while True:
                 if not self.pop_preferences(filename):
                     break
-
-    @classmethod
-    def clone(cls, path_from, path_to=None, ignore=None, **kwargs):
-        """Instantiate a temporary profile via cloning
-        - path: path of the basis to clone
-        - ignore: callable passed to shutil.copytree
-        - kwargs: arguments to the profile constructor
-        """
-        if not path_to:
-            tempdir = tempfile.mkdtemp()  # need an unused temp dir name
-            mozfile.remove(tempdir)  # copytree requires that dest does not exist
-            path_to = tempdir
-        copytree(path_from, path_to, ignore=ignore)
-
-        c = cls(path_to, **kwargs)
-        c.create_new = True  # deletes a cloned profile when restore is True
-        return c
-
-    def exists(self):
-        """returns whether the profile exists or not"""
-        return os.path.exists(self.profile)
 
     # methods for preferences
 
@@ -423,3 +444,61 @@ class ThunderbirdProfile(Profile):
                    # prevents the 'new e-mail address' wizard on new profile
                    'mail.provider.enabled': False,
                    }
+
+
+class ChromeProfile(BaseProfile):
+    class AddonManager(list):
+        def install(self, addons):
+            if isinstance(addons, string_types):
+                addons = [addons]
+            self.extend(addons)
+
+    def __init__(self, **kwargs):
+        super(ChromeProfile, self).__init__(**kwargs)
+
+        if self.create_new:
+            self.profile = os.path.join(self.profile, 'Default')
+        self._reset()
+
+    def _reset(self):
+        if not os.path.isdir(self.profile):
+            os.makedirs(self.profile)
+
+        if self._preferences:
+            pref_file = os.path.join(self.profile, 'Preferences')
+
+            prefs = {}
+            if os.path.isfile(pref_file):
+                with open(pref_file, 'r') as fh:
+                    prefs.update(json.load(fh))
+
+            prefs.update(self._preferences)
+            with open(pref_file, 'w') as fh:
+                json.dump(prefs, fh)
+
+        self.addons = self.AddonManager()
+        if self._addons:
+            self.addons.install(self._addons)
+
+
+profile_class = {
+    'chrome': ChromeProfile,
+    'firefox': FirefoxProfile,
+    'thunderbird': ThunderbirdProfile,
+}
+
+
+def create_profile(app, **kwargs):
+    """Create a profile given an application name.
+
+    :param app: String name of the application to create a profile for, e.g 'firefox'.
+    :param kwargs: Same as the arguments for the Profile class (optional).
+    :returns: An application specific Profile instance
+    :raises: NotImplementedError
+    """
+    cls = profile_class.get(app)
+
+    if not cls:
+        raise NotImplementedError("Profiles not supported for application '{}'".format(app))
+
+    return cls(**kwargs)

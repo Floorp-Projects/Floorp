@@ -168,14 +168,7 @@ panelview[mainview] > .panel-header {
   visibility: hidden;
 }
 
-.tab-close-button,
-.tabbrowser-tab::after,
-.tab-background {
-  /* Explicitly set the visibility to override the value (collapsed)
-   * we inherit from #TabsToolbar[collapsed] upon opening a browser window. */
-  visibility: visible;
-}
-
+.tab-icon-image[fadein],
 .tab-close-button[fadein],
 .tabbrowser-tab[fadein]::after,
 .tab-background[fadein] {
@@ -183,6 +176,7 @@ panelview[mainview] > .panel-header {
   transition: visibility 0ms 25ms;
 }
 
+.tab-icon-image:not([fadein]),
 .tab-close-button:not([fadein]),
 .tabbrowser-tab:not([fadein])::after,
 .tab-background:not([fadein]) {
@@ -191,8 +185,7 @@ panelview[mainview] > .panel-header {
 
 .tab-label:not([fadein]),
 .tab-throbber:not([fadein]),
-.tab-throbber-fallback:not([fadein]),
-.tab-icon-image:not([fadein]) {
+.tab-throbber-fallback:not([fadein]) {
   display: none;
 }
 
@@ -1220,7 +1213,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
 #customization-panelHolder {
   flex-direction: column;
   display: flex;
-  min-height: calc(174px + 8em);
+  min-height: calc(174px + 9em);
 }
 
 #customization-panelWrapper {

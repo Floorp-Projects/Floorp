@@ -15,7 +15,7 @@ from voluptuous import Optional, Required, Any
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_gecko_vcs_env_vars,
-    docker_worker_add_public_artifacts,
+    docker_worker_add_artifacts,
     docker_worker_add_tooltool,
     support_vcs_checkout,
 )
@@ -124,7 +124,7 @@ def docker_worker_toolchain(config, job, taskdesc):
     # public/build if it's not there already.
     artifacts = worker.setdefault('artifacts', [])
     if not any(artifact.get('name') == 'public/build' for artifact in artifacts):
-        docker_worker_add_public_artifacts(config, job, taskdesc)
+        docker_worker_add_artifacts(config, job, taskdesc)
 
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
     support_vcs_checkout(config, job, taskdesc, sparse=True)

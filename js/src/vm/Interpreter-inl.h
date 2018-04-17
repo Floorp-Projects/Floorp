@@ -180,7 +180,8 @@ FetchName(JSContext* cx, HandleObject receiver, HandleObject holder, HandlePrope
     if (!prop) {
         switch (mode) {
           case GetNameMode::Normal:
-            return ReportIsNotDefined(cx, name);
+            ReportIsNotDefined(cx, name);
+            return false;
           case GetNameMode::TypeOf:
             vp.setUndefined();
             return true;

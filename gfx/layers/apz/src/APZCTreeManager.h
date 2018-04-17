@@ -52,7 +52,6 @@ class OverscrollHandoffChain;
 struct OverscrollHandoffState;
 class FocusTarget;
 struct FlingHandoffState;
-struct ScrollableLayerGuidHash;
 class LayerMetricsWrapper;
 class InputQueue;
 class GeckoContentController;
@@ -66,11 +65,12 @@ struct ScrollThumbData;
  *
  * There are two main kinds of locks used by APZ: APZCTreeManager::mTreeLock
  * ("the tree lock") and AsyncPanZoomController::mRecursiveMutex ("APZC locks").
- * There is also the APZCTreeManager::mTestDataLock ("test lock").
+ * There is also the APZCTreeManager::mTestDataLock ("test lock") and
+ * APZCTreeManager::mMapLock ("map lock").
  *
  * To avoid deadlock, we impose a lock ordering between these locks, which is:
  *
- *      tree lock -> APZC locks -> test lock
+ *      tree lock -> map lock -> APZC locks -> test lock
  *
  * The interpretation of the lock ordering is that if lock A precedes lock B
  * in the ordering sequence, then you must NOT wait on A while holding B.
@@ -733,10 +733,22 @@ private:
   mutable mozilla::RecursiveMutex mTreeLock;
   RefPtr<HitTestingTreeNode> mRootNode;
 
+  /* A map for quick access to get APZC instances by guid, without having to
+   * acquire the tree lock. mMapLock must be acquired while accessing or
+   * modifying mApzcMap.
+   */
+  mutable mozilla::Mutex mMapLock;
+  std::unordered_map<ScrollableLayerGuid,
+                     RefPtr<AsyncPanZoomController>,
+                     ScrollableLayerGuid::HashIgnoringPresShellFn,
+                     ScrollableLayerGuid::EqualIgnoringPresShellFn> mApzcMap;
+
   /* Holds the zoom constraints for scrollable layers, as determined by the
    * the main-thread gecko code. This can only be accessed on the updater
    * thread. */
-  std::unordered_map<ScrollableLayerGuid, ZoomConstraints, ScrollableLayerGuidHash> mZoomConstraints;
+  std::unordered_map<ScrollableLayerGuid,
+                     ZoomConstraints,
+                     ScrollableLayerGuid::HashFn> mZoomConstraints;
   /* A list of keyboard shortcuts to use for translating keyboard inputs into
    * keyboard actions. This is gathered on the main thread from XBL bindings.
    * This must only be accessed on the controller thread.

@@ -69,7 +69,7 @@ add_connection_test("symantec-not-whitelisted-before-cutoff.example.com",
 
 // Load the wildcard *.google.com cert and its intermediate, then verify
 // it at a reasonable time and make sure the whitelists work
-function run_test() {
+add_task(async function() {
   addCertFromFile(certDB, "test_symantec_apple_google/real-google-g2-intermediate.pem", ",,");
   let whitelistedCert = constructCertFromFile("test_symantec_apple_google/real-googlecom.pem");
 
@@ -83,8 +83,6 @@ function run_test() {
   // (new Date("2018-02-16")).getTime() / 1000
   const VALIDATION_TIME = 1518739200;
 
-  checkCertErrorGenericAtTime(certDB, whitelistedCert, PRErrorCodeSuccess,
-                              certificateUsageSSLServer, VALIDATION_TIME);
-
-  run_next_test();
-}
+  await checkCertErrorGenericAtTime(certDB, whitelistedCert, PRErrorCodeSuccess,
+                                    certificateUsageSSLServer, VALIDATION_TIME);
+});

@@ -101,8 +101,14 @@ struct APZCTreeManager::TreeBuildingState {
 
   // This map is populated as we place APZCs into the new tree. Its purpose is
   // to facilitate re-using the same APZC for different layers that scroll
-  // together (and thus have the same ScrollableLayerGuid).
-  std::unordered_map<ScrollableLayerGuid, AsyncPanZoomController*, ScrollableLayerGuidHash> mApzcMap;
+  // together (and thus have the same ScrollableLayerGuid). The presShellId
+  // doesn't matter for this purpose, and we move the map to the APZCTreeManager
+  // after we're done building, so it's useful to have the presshell-ignoring
+  // map for that.
+  std::unordered_map<ScrollableLayerGuid,
+                     RefPtr<AsyncPanZoomController>,
+                     ScrollableLayerGuid::HashIgnoringPresShellFn,
+                     ScrollableLayerGuid::EqualIgnoringPresShellFn> mApzcMap;
 
   // As the tree is traversed, the top element of this stack tracks whether
   // the parent scroll node has a perspective transform.
@@ -229,6 +235,7 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
       mSampler(nullptr),
       mUpdater(nullptr),
       mTreeLock("APZCTreeLock"),
+      mMapLock("APZCMapLock"),
       mHitResultForInputBlock(CompositorHitTestInfo::eInvisibleToHitTest),
       mRetainedTouchIdentifier(-1),
       mInScrollbarTouchDrag(false),
@@ -473,6 +480,12 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
   // We do not support tree structures where the root node has siblings.
   MOZ_ASSERT(!(mRootNode && mRootNode->GetPrevSibling()));
 
+  { // scope lock and update our mApzcMap before we destroy all the unused
+    // APZC instances
+    MutexAutoLock lock(mMapLock);
+    mApzcMap = Move(state.mApzcMap);
+  }
+
   for (size_t i = 0; i < state.mNodesToDestroy.Length(); i++) {
     APZCTM_LOG("Destroying node at %p with APZC %p\n",
         state.mNodesToDestroy[i].get(),
@@ -543,7 +556,12 @@ APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
   // such as the one below to generate scrollbar transforms. Without this, perf
   // could end up being O(n^2) instead of O(n log n) because we'd have to search
   // the tree to find the corresponding APZC every time we hit a thumb node.
-  std::unordered_map<ScrollableLayerGuid, HitTestingTreeNode*, ScrollableLayerGuidHash> httnMap;
+  // We use the presShell-ignoring map because when we do a lookup in the map
+  // for the scrollbar, we don't have (or care about) the presShellId.
+  std::unordered_map<ScrollableLayerGuid,
+                     HitTestingTreeNode*,
+                     ScrollableLayerGuid::HashIgnoringPresShellFn,
+                     ScrollableLayerGuid::EqualIgnoringPresShellFn> httnMap;
 
   bool activeAnimations = false;
   LayersId lastLayersId{(uint64_t)-1};
@@ -582,10 +600,7 @@ APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
           lastLayersId = aNode->GetLayersId();
         }
 
-        // Use a 0 presShellId because when we do a lookup in this map for the
-        // scrollbar below we don't have (or care about) the presShellId.
-        ScrollableLayerGuid guid(lastLayersId, 0, apzc->GetGuid().mScrollId);
-        httnMap.emplace(guid, aNode);
+        httnMap.emplace(apzc->GetGuid(), aNode);
 
         ParentLayerPoint layerTranslation = apzc->GetCurrentAsyncTransform(
             AsyncPanZoomController::eForCompositing).mTranslation;
@@ -2344,11 +2359,10 @@ already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetTargetAPZC(const LayersId& aLayersId,
                                const FrameMetrics::ViewID& aScrollId)
 {
-  RecursiveMutexAutoLock lock(mTreeLock);
+  MutexAutoLock lock(mMapLock);
   ScrollableLayerGuid guid(aLayersId, 0, aScrollId);
-  RefPtr<HitTestingTreeNode> node = GetTargetNode(guid, &GuidComparatorIgnoringPresShell);
-  MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
-  RefPtr<AsyncPanZoomController> apzc = node ? node->GetApzc() : nullptr;
+  auto it = mApzcMap.find(guid);
+  RefPtr<AsyncPanZoomController> apzc = (it != mApzcMap.end() ? it->second : nullptr);
   return apzc.forget();
 }
 
@@ -2430,11 +2444,7 @@ APZCTreeManager::GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
   }
 
   LayersId layersId = wr::AsLayersId(pipelineId);
-  RefPtr<HitTestingTreeNode> node = GetTargetNode(
-      ScrollableLayerGuid(layersId, 0, scrollId),
-      &GuidComparatorIgnoringPresShell);
-  MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
-  result = node ? node->GetApzc() : nullptr;
+  result = GetTargetAPZC(layersId, scrollId);
   if (!result) {
     // It falls back to the root
     // Re-enable these assertions once bug 1391318 is fixed. For now there are
@@ -2502,31 +2512,9 @@ APZCTreeManager::BuildOverscrollHandoffChain(const RefPtr<AsyncPanZoomController
     // Guard against a possible infinite-loop condition. If we hit this, the
     // layout code that generates the handoff parents did something wrong.
     MOZ_ASSERT(apzc->GetScrollHandoffParentId() != apzc->GetGuid().mScrollId);
-
-    // Find the AsyncPanZoomController instance with a matching layersId and
-    // the scroll id that matches apzc->GetScrollHandoffParentId().
-    // As an optimization, we start by walking up the APZC tree from 'apzc'
-    // until we reach the top of the layer subtree for this layers id.
-    AsyncPanZoomController* scrollParent = nullptr;
-    AsyncPanZoomController* parent = apzc;
-    while (!parent->HasNoParentWithSameLayersId()) {
-      parent = parent->GetParent();
-      // While walking up to find the root of the subtree, if we encounter the
-      // handoff parent, we don't actually need to do the search so we can
-      // just abort here.
-      if (parent->GetGuid().mScrollId == apzc->GetScrollHandoffParentId()) {
-        scrollParent = parent;
-        break;
-      }
-    }
-    // If that heuristic didn't turn up the scroll parent, do a full tree search.
-    if (!scrollParent) {
-      ScrollableLayerGuid guid(parent->GetGuid().mLayersId, 0, apzc->GetScrollHandoffParentId());
-      RefPtr<HitTestingTreeNode> node = GetTargetNode(guid, &GuidComparatorIgnoringPresShell);
-      MOZ_ASSERT(!node || node->GetApzc()); // any node returned must have an APZC
-      scrollParent = node ? node->GetApzc() : nullptr;
-    }
-    apzc = scrollParent;
+    RefPtr<AsyncPanZoomController> scrollParent =
+        GetTargetAPZC(apzc->GetGuid().mLayersId, apzc->GetScrollHandoffParentId());
+    apzc = scrollParent.get();
   }
 
   // Now adjust the chain to account for scroll grabbing. Sorting is a bit
@@ -2577,10 +2565,10 @@ APZCTreeManager::GetTargetApzcForNode(HitTestingTreeNode* aNode)
       return n->GetApzc();
     }
     if (n->GetFixedPosTarget() != FrameMetrics::NULL_SCROLL_ID) {
-      ScrollableLayerGuid guid(n->GetLayersId(), 0, n->GetFixedPosTarget());
-      RefPtr<HitTestingTreeNode> fpNode = GetTargetNode(guid, &GuidComparatorIgnoringPresShell);
-      APZCTM_LOG("Found target node %p using fixed-pos lookup on %" PRIu64 "\n", fpNode.get(), n->GetFixedPosTarget());
-      return fpNode ? fpNode->GetApzc() : nullptr;
+      RefPtr<AsyncPanZoomController> fpTarget =
+          GetTargetAPZC(n->GetLayersId(), n->GetFixedPosTarget());
+      APZCTM_LOG("Found target APZC %p using fixed-pos lookup on %" PRIu64 "\n", fpTarget.get(), n->GetFixedPosTarget());
+      return fpTarget.get();
     }
   }
   return nullptr;
@@ -2660,10 +2648,10 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
         // by the scrollbar. (The scrollbar itself doesn't scroll with the
         // scrolled content, so it doesn't carry the scrolled content's
         // scroll metadata).
-        ScrollableLayerGuid guid(n->GetLayersId(), 0, n->GetScrollTargetId());
-        if (RefPtr<HitTestingTreeNode> scrollTarget = GetTargetNode(guid, &GuidComparatorIgnoringPresShell)) {
-          MOZ_ASSERT(scrollTarget->GetApzc());
-          return scrollTarget->GetApzc();
+        RefPtr<AsyncPanZoomController> scrollTarget =
+            GetTargetAPZC(n->GetLayersId(), n->GetScrollTargetId());
+        if (scrollTarget) {
+          return scrollTarget.get();
         }
       }
     }

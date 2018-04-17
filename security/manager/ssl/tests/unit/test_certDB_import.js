@@ -68,15 +68,23 @@ function getCertAsByteArray(certPath) {
   return byteArray;
 }
 
-function findCertByCommonName(commonName) {
+function commonFindCertBy(propertyName, value) {
   let certEnumerator = gCertDB.getCerts().getEnumerator();
   while (certEnumerator.hasMoreElements()) {
     let cert = certEnumerator.getNext().QueryInterface(Ci.nsIX509Cert);
-    if (cert.commonName == commonName) {
+    if (cert[propertyName] == value) {
       return cert;
     }
   }
   return null;
+}
+
+function findCertByCommonName(commonName) {
+  return commonFindCertBy("commonName", commonName);
+}
+
+function findCertByEmailAddress(emailAddress) {
+  return commonFindCertBy("emailAddress", emailAddress);
 }
 
 function testImportCACert() {
@@ -107,8 +115,7 @@ function run_test() {
   });
 
   // Sanity check the e-mail cert is missing.
-  throws(() => gCertDB.findCertByEmailAddress(TEST_EMAIL_ADDRESS),
-         /NS_ERROR_FAILURE/,
+  equal(findCertByEmailAddress(TEST_EMAIL_ADDRESS), null,
          "E-mail cert should not be in the database before import");
 
   // Import the CA cert so that the e-mail import succeeds.
@@ -118,6 +125,6 @@ function run_test() {
   let emailArray = getCertAsByteArray("test_certDB_import/emailEE.pem");
   gCertDB.importEmailCertificate(emailArray, emailArray.length,
                                  gInterfaceRequestor);
-  notEqual(gCertDB.findCertByEmailAddress(TEST_EMAIL_ADDRESS), null,
+  notEqual(findCertByEmailAddress(TEST_EMAIL_ADDRESS), null,
            "E-mail cert should now be found in the database");
 }

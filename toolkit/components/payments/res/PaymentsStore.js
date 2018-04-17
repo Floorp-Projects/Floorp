@@ -2,21 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * The PaymentsStore class provides lightweight storage with an async publish/subscribe mechanism.
  * Synchronous state changes are batched to improve application performance and to reduce partial
  * state propagation.
  */
 
-/* exported PaymentsStore */
-
-class PaymentsStore {
+export default class PaymentsStore {
   /**
    * @param {object} [defaultState = {}] The initial state of the store.
    */
   constructor(defaultState = {}) {
+    this._defaultState = Object.assign({}, defaultState);
     this._state = defaultState;
     this._nextNotifification = 0;
     this._subscribers = new Set();
@@ -31,6 +28,14 @@ class PaymentsStore {
    */
   getState() {
     return Object.freeze(Object.assign({}, this._state));
+  }
+
+  /**
+   * Used for testing to reset to the default state from the constructor.
+   * @returns {Promise} returned by setState.
+   */
+  async reset() {
+    return this.setState(this._defaultState);
   }
 
   /**

@@ -39,8 +39,7 @@ var paymentRequest = {
         if (event.code != "KeyD" || !event.altKey || !event.ctrlKey) {
           break;
         }
-        let debuggingConsole = document.getElementById("debugging-console");
-        debuggingConsole.hidden = !debuggingConsole.hidden;
+        this.toggleDebuggingConsole();
         break;
       }
       case "unload": {
@@ -66,6 +65,14 @@ var paymentRequest = {
       }, detail),
     });
     document.dispatchEvent(event);
+  },
+
+  toggleDebuggingConsole() {
+    let debuggingConsole = document.getElementById("debugging-console");
+    if (!debuggingConsole.src) {
+      debuggingConsole.src = "debugging.html";
+    }
+    debuggingConsole.hidden = !debuggingConsole.hidden;
   },
 
   onChromeToContent({detail}) {
@@ -98,7 +105,7 @@ var paymentRequest = {
 
     // Automatically show the debugging console if loaded with a truthy `debug` query parameter.
     if (new URLSearchParams(location.search).get("debug")) {
-      document.getElementById("debugging-console").hidden = false;
+      this.toggleDebuggingConsole();
     }
   },
 

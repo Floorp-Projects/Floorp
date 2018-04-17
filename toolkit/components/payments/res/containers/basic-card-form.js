@@ -3,11 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from ../../../../../browser/extensions/formautofill/content/autofillEditForms.js*/
-/* import-globals-from ../mixins/PaymentStateSubscriberMixin.js */
+import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
 /* import-globals-from ../unprivileged-fallbacks.js */
 /* import-globals-from ../paymentRequest.js */
-
-"use strict";
 
 /**
  * <basic-card-form></basic-card-form>
@@ -16,7 +14,7 @@
  * as it will be much easier to share the logic once we switch to Fluent.
  */
 
-class BasicCardForm extends PaymentStateSubscriberMixin(HTMLElement) {
+export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLElement) {
   constructor() {
     super();
 
@@ -80,6 +78,7 @@ class BasicCardForm extends PaymentStateSubscriberMixin(HTMLElement) {
       page,
       savedAddresses,
       savedBasicCards,
+      selectedShippingAddress,
     } = state;
 
     this.genericErrorText.textContent = page.error;
@@ -93,6 +92,8 @@ class BasicCardForm extends PaymentStateSubscriberMixin(HTMLElement) {
       if (!record) {
         throw new Error("Trying to edit a non-existing card: " + page.guid);
       }
+    } else if (selectedShippingAddress) {
+      record.billingAddressGUID = selectedShippingAddress;
     }
 
     this.formHandler.loadRecord(record, savedAddresses);

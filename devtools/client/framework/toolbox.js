@@ -766,6 +766,8 @@ Toolbox.prototype = {
    * @property {Function} isTargetSupported - Function to automatically enable/disable
    *                      the button based on the target. If the target don't support
    *                      the button feature, this method should return false.
+   * @property {Function} isCurrentlyVisible - Function to automatically
+   *                      hide/show the button based on current state.
    * @property {Function} isChecked - Optional function called to known if the button
    *                      is toggled or not. The function should return true when
    *                      the button should be displayed as toggled on.
@@ -782,6 +784,7 @@ Toolbox.prototype = {
       setup,
       teardown,
       isTargetSupported,
+      isCurrentlyVisible,
       isChecked,
       onKeyDown
     } = options;
@@ -802,6 +805,7 @@ Toolbox.prototype = {
         }
       },
       isTargetSupported,
+      isCurrentlyVisible,
       get isChecked() {
         if (typeof isChecked == "function") {
           return isChecked(toolbox);
@@ -1240,6 +1244,9 @@ Toolbox.prototype = {
       isTargetSupported: target => {
         return target.activeTab && target.activeTab.traits.frames;
       },
+      isCurrentlyVisible: () => {
+        return this.frameMap.size > 1;
+      },
       onKeyDown: this.handleKeyDownOnFramesButton
     });
 
@@ -1381,16 +1388,23 @@ Toolbox.prototype = {
   _commandIsVisible: function(button) {
     const {
       isTargetSupported,
+      isCurrentlyVisible,
       visibilityswitch
     } = button;
 
-    let visible = Services.prefs.getBoolPref(visibilityswitch, true);
-
-    if (isTargetSupported) {
-      return visible && isTargetSupported(this.target);
+    if (!Services.prefs.getBoolPref(visibilityswitch, true)) {
+      return false;
     }
 
-    return visible;
+    if (isTargetSupported && !isTargetSupported(this.target)) {
+      return false;
+    }
+
+    if (isCurrentlyVisible && !isCurrentlyVisible()) {
+      return false;
+    }
+
+    return true;
   },
 
   /**
@@ -2252,10 +2266,6 @@ Toolbox.prototype = {
    *                                    for top level window)
    */
   _updateFrames: function(data) {
-    if (!Services.prefs.getBoolPref("devtools.command-button-frames.enabled")) {
-      return;
-    }
-
     // We may receive this event before the toolbox is ready.
     if (!this.isReady) {
       return;
@@ -2302,6 +2312,10 @@ Toolbox.prototype = {
     if (!topFrameSelected && this.selectedFrameId) {
       this._framesButtonChecked = false;
     }
+
+    // We may need to hide/show the frames button now.
+    this.frameButton.isVisible = this._commandIsVisible(this.frameButton);
+    this.component.setToolboxButtons(this.toolbarButtons);
   },
 
   /**

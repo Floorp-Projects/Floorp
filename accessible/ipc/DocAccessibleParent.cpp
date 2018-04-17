@@ -113,21 +113,14 @@ DocAccessibleParent::AddSubtree(ProxyAccessible* aParent,
   }
 
   const AccessibleData& newChild = aNewTree[aIdx];
-  if (newChild.Role() > roles::LAST_ROLE) {
-    NS_ERROR("invalid role");
-    return 0;
-  }
 
   if (mAccessibles.Contains(newChild.ID())) {
     NS_ERROR("ID already in use");
     return 0;
   }
 
-  auto role = static_cast<a11y::role>(newChild.Role());
-
-  ProxyAccessible* newProxy =
-    new ProxyAccessible(newChild.ID(), aParent, this, role,
-                        newChild.Interfaces());
+  ProxyAccessible* newProxy = new ProxyAccessible(
+    newChild.ID(), aParent, this, newChild.Role(), newChild.Interfaces());
 
   aParent->AddChildAt(aIdxInParent, newProxy);
   mAccessibles.PutEntry(newChild.ID())->mProxy = newProxy;
@@ -396,18 +389,14 @@ DocAccessibleParent::RecvSelectionEvent(const uint64_t& aID,
 }
 
 mozilla::ipc::IPCResult
-DocAccessibleParent::RecvRoleChangedEvent(const uint32_t& aRole)
+DocAccessibleParent::RecvRoleChangedEvent(const a11y::role& aRole)
 {
   if (mShutdown) {
     return IPC_OK();
   }
 
- if (aRole > roles::LAST_ROLE) {
-   return IPC_FAIL(this, "Child sent bad role in RoleChangedEvent");
- }
-
- mRole = static_cast<a11y::role>(aRole);
- return IPC_OK();
+  mRole = aRole;
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult

@@ -183,10 +183,6 @@
 #include "nsBindingManager.h"
 #include "nsXBLService.h"
 
-// used for popup blocking, needs to be converted to something
-// belonging to the back-end like nsIContentPolicy
-#include "nsIPopupWindowManager.h"
-
 #include "nsIDragService.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
@@ -5347,25 +5343,6 @@ nsGlobalWindowOuter::GetTopWindowRoot()
   return window.forget();
 }
 
-static
-bool IsPopupBlocked(nsIDocument* aDoc)
-{
-  nsCOMPtr<nsIPopupWindowManager> pm =
-    do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID);
-
-  if (!pm) {
-    return false;
-  }
-
-  if (!aDoc) {
-    return true;
-  }
-
-  uint32_t permission = nsIPopupWindowManager::ALLOW_POPUP;
-  pm->TestPermission(aDoc->NodePrincipal(), &permission);
-  return permission == nsIPopupWindowManager::DENY_POPUP;
-}
-
 void
 nsGlobalWindowOuter::FirePopupBlockedEvent(nsIDocument* aDoc,
                                            nsIURI* aPopupURI,
@@ -5413,8 +5390,10 @@ nsGlobalWindowOuter::CanSetProperty(const char *aPrefName)
 bool
 nsGlobalWindowOuter::PopupWhitelisted()
 {
-  if (!IsPopupBlocked(mDoc))
+  if (mDoc && nsContentUtils::CanShowPopup(mDoc->NodePrincipal()))
+  {
     return true;
+  }
 
   nsCOMPtr<nsPIDOMWindowOuter> parent = GetParent();
   if (parent == this)
