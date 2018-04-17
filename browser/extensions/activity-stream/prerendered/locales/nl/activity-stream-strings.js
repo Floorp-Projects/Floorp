@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} rij;{num} rijen",
   "prefs_search_header": "Zoeken op het web",
   "prefs_topsites_description": "De websites die u het vaakst bezoekt",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "Geweldige inhoud van het web, gepersonaliseerd voor u",
   "prefs_topstories_show_sponsored_label": "Gesponsorde verhalen van {provider}",
   "prefs_topstories_sponsored_learn_more": "Meer info",
   "prefs_highlights_description": "Een selectie van websites die u hebt opgeslagen of bezocht",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Topwebsite toevoegen",
   "section_menu_action_move_up": "Omhoog verplaatsen",
   "section_menu_action_move_down": "Omlaag verplaatsen",
-  "section_menu_action_privacy_notice": "Privacyverklaring",
-  "prefs_topstories_description": "Inhoud van hoge kwaliteit die u anders mogelijk mist"
+  "section_menu_action_privacy_notice": "Privacyverklaring"
 };

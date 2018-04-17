@@ -61,10 +61,10 @@ const PREFS_CONFIG = new Map([
       provider_icon: "pocket",
       provider_name: "Pocket",
       read_more_endpoint: "https://getpocket.com/explore/trending?src=fx_new_tab",
-      stories_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=3&consumer_key=$apiKey&locale_lang=${args.locale}`,
+      stories_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=3&consumer_key=$apiKey&locale_lang=${args.locale}&feed_variant=default`,
       stories_referrer: "https://getpocket.com/recommendations",
       topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
-      show_spocs: false,
+      show_spocs: true,
       personalized: true
     })
   }],

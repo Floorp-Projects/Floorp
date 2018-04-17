@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} ligne;{num} lignes",
   "prefs_search_header": "Recherche web",
   "prefs_topsites_description": "Les sites que vous visitez le plus",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "Du contenu intéressant en provenance du Web, personnalisé pour vous",
   "prefs_topstories_show_sponsored_label": "Articles sponsorisés par {provider}",
   "prefs_topstories_sponsored_learn_more": "En savoir plus",
   "prefs_highlights_description": "Une sélection de sites que vous avez sauvegardés ou visités",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Ajouter un site populaire",
   "section_menu_action_move_up": "Déplacer vers le haut",
   "section_menu_action_move_down": "Déplacer vers le bas",
-  "section_menu_action_privacy_notice": "Politique de confidentialité",
-  "prefs_topstories_description": "Contenu de grande qualité que vous pourriez rater"
+  "section_menu_action_privacy_notice": "Politique de confidentialité"
 };
