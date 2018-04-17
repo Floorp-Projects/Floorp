@@ -16,6 +16,8 @@ import android.util.Log;
 
 import java.lang.ref.WeakReference;
 
+import static org.mozilla.gecko.AppConstants.Versions;
+
 public class AudioFocusAgent implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "AudioFocusAgent";
 
@@ -201,6 +203,12 @@ public class AudioFocusAgent implements Tabs.OnTabsChangedListener {
     }
 
     private void notifyMediaControlService(String action) {
+        if (Versions.preLollipop) {
+            // The notification only works from Lollipop onwards (at least until we try using
+            // the support library version), so there's no point in starting the service.
+            return;
+        }
+
         Intent intent = new Intent(mContext, MediaControlService.class);
         intent.setAction(action);
         mContext.startService(intent);
