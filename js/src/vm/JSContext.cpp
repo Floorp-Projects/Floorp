@@ -100,7 +100,7 @@ bool
 JSContext::init(ContextKind kind)
 {
     // Skip most of the initialization if this thread will not be running JS.
-    if (kind == ContextKind::Cooperative) {
+    if (kind == ContextKind::MainThread) {
         if (!regexpStack.ref().init())
             return false;
 
@@ -153,7 +153,7 @@ js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRun
         return nullptr;
     }
 
-    if (!cx->init(ContextKind::Cooperative)) {
+    if (!cx->init(ContextKind::MainThread)) {
         runtime->destroyRuntime();
         js_delete(cx);
         js_delete(runtime);
@@ -1220,7 +1220,7 @@ JSContext::alreadyReportedError()
 
 JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
   : runtime_(runtime),
-    kind_(ContextKind::Background),
+    kind_(ContextKind::HelperThread),
     helperThread_(nullptr),
     options_(options),
     arenas_(nullptr),
@@ -1318,7 +1318,7 @@ JSContext::~JSContext()
 {
     // Clear the ContextKind first, so that ProtectedData checks will allow us to
     // destroy this context even if the runtime is already gone.
-    kind_ = ContextKind::Background;
+    kind_ = ContextKind::HelperThread;
 
     /* Free the stuff hanging off of cx. */
     MOZ_ASSERT(!resolvingList);
