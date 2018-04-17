@@ -414,11 +414,6 @@ class FirefoxConnector {
     if (this.owner) {
       this.owner.emit(type, data);
     }
-
-    // Consumed mainly by tests.
-    if (typeof window != "undefined") {
-      window.emit(type, data);
-    }
   }
 }
 
