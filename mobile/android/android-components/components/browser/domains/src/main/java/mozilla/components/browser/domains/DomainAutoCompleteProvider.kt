@@ -9,10 +9,9 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
-import mozilla.components.browser.domains.DomainAutoCompleteProvider.Domain
 import java.util.Locale
 
-typealias ResultCallback = (String, Domain?, String, Int) -> Unit
+typealias ResultCallback = (String, String, String, Int) -> Unit
 
 /**
  * Provides autocomplete functionality for domains, based on a provided list
@@ -25,7 +24,10 @@ class DomainAutoCompleteProvider {
         const val CUSTOM_LIST = "custom"
     }
 
-    data class Domain(val protocol: String, val hasWww: Boolean, val host: String) {
+    internal data class Domain(val protocol: String, val hasWww: Boolean, val host: String) {
+        internal val url: String
+            get() = "$protocol${if (hasWww) "www." else "" }$host"
+
         companion object {
             private const val PROTOCOL_INDEX = 1
             private const val WWW_INDEX = 2
@@ -35,7 +37,7 @@ class DomainAutoCompleteProvider {
 
             private val urlMatcher = Regex("""(https?://)?(www.)?(.+)?""")
 
-            fun create(url: String): Domain {
+            internal fun create(url: String): Domain {
                 val result = urlMatcher.find(url)
 
                 return result?.let {
@@ -73,7 +75,7 @@ class DomainAutoCompleteProvider {
             if (result != null) {
                 val (autocomplete, domain) = result
                 val resultText = getResultText(rawText, autocomplete)
-                resultCallback(resultText, domain, AutocompleteSource.CUSTOM_LIST, customDomains.size)
+                resultCallback(resultText, domain.url, AutocompleteSource.CUSTOM_LIST, customDomains.size)
                 return
             }
         }
@@ -83,12 +85,12 @@ class DomainAutoCompleteProvider {
             if (result != null) {
                 val (autocomplete, domain) = result
                 val resultText = getResultText(rawText, autocomplete)
-                resultCallback(resultText, domain, AutocompleteSource.DEFAULT_LIST, shippedDomains.size)
+                resultCallback(resultText, domain.url, AutocompleteSource.DEFAULT_LIST, shippedDomains.size)
                 return
             }
         }
 
-        resultCallback("", null, "", 0)
+        resultCallback("", "", "", 0)
     }
 
     /**
