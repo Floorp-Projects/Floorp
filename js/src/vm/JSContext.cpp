@@ -1071,11 +1071,11 @@ class MOZ_STACK_CLASS ReportExceptionClosure : public ScriptEnvironmentPreparer:
 } // anonymous namespace
 
 JS_FRIEND_API(bool)
-js::UseInternalJobQueues(JSContext* cx, bool cooperative)
+js::UseInternalJobQueues(JSContext* cx)
 {
     // Internal job queue handling must be set up very early. Self-hosting
     // initialization is as good a marker for that as any.
-    MOZ_RELEASE_ASSERT(cooperative || !cx->runtime()->hasInitializedSelfHosting(),
+    MOZ_RELEASE_ASSERT(!cx->runtime()->hasInitializedSelfHosting(),
                        "js::UseInternalJobQueues must be called early during runtime startup.");
     MOZ_ASSERT(!cx->jobQueue);
     auto* queue = js_new<PersistentRooted<JobQueue>>(cx, JobQueue(SystemAllocPolicy()));
@@ -1084,8 +1084,7 @@ js::UseInternalJobQueues(JSContext* cx, bool cooperative)
 
     cx->jobQueue = queue;
 
-    if (!cooperative)
-        cx->runtime()->offThreadPromiseState.ref().initInternalDispatchQueue();
+    cx->runtime()->offThreadPromiseState.ref().initInternalDispatchQueue();
     MOZ_ASSERT(cx->runtime()->offThreadPromiseState.ref().initialized());
 
     JS::SetEnqueuePromiseJobCallback(cx, InternalEnqueuePromiseJobCallback);
