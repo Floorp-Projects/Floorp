@@ -301,7 +301,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     css_props.script = 'GenerateCSSPropsGenerated.py:generate'
     css_props.inputs = [
         'nsCSSPropsGenerated.inc.in',
-        'PythonCSSProps.h',
+        '!ServoCSSPropList.py',
     ]
 
     CONFIGURE_SUBST_FILES += [

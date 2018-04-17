@@ -9434,10 +9434,6 @@ exports.PSEUDO_ELEMENTS = [
  */
 exports.PREFERENCES = [
   [
-    "all",
-    "layout.css.all-shorthand.enabled"
-  ],
-  [
     "background-blend-mode",
     "layout.css.background-blend-mode.enabled"
   ],
@@ -9486,20 +9482,12 @@ exports.PREFERENCES = [
     "layout.css.osx-font-smoothing.enabled"
   ],
   [
-    "overflow-clip-box",
-    "layout.css.overflow-clip-box.enabled"
-  ],
-  [
     "overflow-clip-box-block",
     "layout.css.overflow-clip-box.enabled"
   ],
   [
     "overflow-clip-box-inline",
     "layout.css.overflow-clip-box.enabled"
-  ],
-  [
-    "overscroll-behavior",
-    "layout.css.overscroll-behavior.enabled"
   ],
   [
     "overscroll-behavior-x",
@@ -9538,10 +9526,6 @@ exports.PREFERENCES = [
     "layout.css.scroll-snap.enabled"
   ],
   [
-    "scroll-snap-type",
-    "layout.css.scroll-snap.enabled"
-  ],
-  [
     "scroll-snap-type-x",
     "layout.css.scroll-snap.enabled"
   ],
@@ -9570,10 +9554,6 @@ exports.PREFERENCES = [
     "layout.css.text-justify.enabled"
   ],
   [
-    "-webkit-text-stroke",
-    "layout.css.prefixes.webkit"
-  ],
-  [
     "-webkit-text-stroke-color",
     "layout.css.prefixes.webkit"
   ],
@@ -9592,6 +9572,26 @@ exports.PREFERENCES = [
   [
     "translate",
     "layout.css.individual-transform.enabled"
+  ],
+  [
+    "all",
+    "layout.css.all-shorthand.enabled"
+  ],
+  [
+    "overflow-clip-box",
+    "layout.css.overflow-clip-box.enabled"
+  ],
+  [
+    "overscroll-behavior",
+    "layout.css.overscroll-behavior.enabled"
+  ],
+  [
+    "scroll-snap-type",
+    "layout.css.scroll-snap.enabled"
+  ],
+  [
+    "-webkit-text-stroke",
+    "layout.css.prefixes.webkit"
   ],
   [
     "-moz-animation",
