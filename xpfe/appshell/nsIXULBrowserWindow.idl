@@ -50,7 +50,6 @@ interface nsIXULBrowserWindow : nsISupports
    * This can be used to ensure that there is a browser in a new window of the
    * correct type when it first spawns.
    */
-  void forceInitialBrowserRemote(in AString aRemoteType);
   void forceInitialBrowserNonRemote(in mozIDOMWindowProxy openerWindow);
 
   /**
