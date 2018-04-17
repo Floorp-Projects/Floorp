@@ -193,3 +193,107 @@ async function exportToFile(parent, cert) {
     }
   }
 }
+
+const PRErrorCodeSuccess = 0;
+
+// Certificate usages we care about in the certificate viewer.
+const certificateUsageSSLClient              = 0x0001;
+const certificateUsageSSLServer              = 0x0002;
+const certificateUsageSSLCA                  = 0x0008;
+const certificateUsageEmailSigner            = 0x0010;
+const certificateUsageEmailRecipient         = 0x0020;
+
+// A map from the name of a certificate usage to the value of the usage.
+// Useful for printing debugging information and for enumerating all supported
+// usages.
+const certificateUsages = {
+  certificateUsageSSLClient,
+  certificateUsageSSLServer,
+  certificateUsageSSLCA,
+  certificateUsageEmailSigner,
+  certificateUsageEmailRecipient,
+};
+
+/**
+ * Returns a promise that will resolve with a results array (see
+ * `displayUsages` in certViewer.js) consisting of what usages the given
+ * certificate successfully verified for.
+ *
+ * @param {nsIX509Cert} cert
+ *        The certificate to determine valid usages for.
+ * @return {Promise}
+ *        A promise that will resolve with the results of the verifications.
+ */
+function asyncDetermineUsages(cert) {
+  let promises = [];
+  let now = Date.now() / 1000;
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
+                 .getService(Ci.nsIX509CertDB);
+  Object.keys(certificateUsages).forEach(usageString => {
+    promises.push(new Promise((resolve, reject) => {
+      let usage = certificateUsages[usageString];
+      certdb.asyncVerifyCertAtTime(cert, usage, 0, null, now,
+        (aPRErrorCode, aVerifiedChain, aHasEVPolicy) => {
+          resolve({ usageString,
+                    errorCode: aPRErrorCode,
+                    chain: aVerifiedChain });
+        });
+    }));
+  });
+  return Promise.all(promises);
+}
+
+/**
+ * Given a results array (see `displayUsages` in certViewer.js), returns the
+ * "best" verified certificate chain. Since the primary use case is for TLS
+ * server certificates in Firefox, such a verified chain will be returned if
+ * present. Otherwise, the priority is: TLS client certificate, email signer,
+ * email recipient, CA. Returns null if no usage verified successfully.
+ *
+ * @param {Array} results
+ *        An array of results from `asyncDetermineUsages`. See `displayUsages`.
+ * @param {Number} usage
+ *        A numerical value corresponding to a usage. See `certificateUsages`.
+ * @returns {Array} An array of `nsIX509Cert` representing the verified
+ *          certificate chain for the given usage, or null if there is none.
+ */
+function getBestChain(results) {
+  let usages = [ certificateUsageSSLServer, certificateUsageSSLClient,
+                 certificateUsageEmailSigner, certificateUsageEmailRecipient,
+                 certificateUsageSSLCA ];
+  for (let usage of usages) {
+    let chain = getChainForUsage(results, usage);
+    if (chain) {
+      return chain;
+    }
+  }
+  return null;
+}
+
+/**
+ * Given a results array (see `displayUsages` in certViewer.js), returns the
+ * chain corresponding to the desired usage, if verifying for that usage
+ * succeeded. Returns null otherwise.
+ *
+ * @param {Array} results
+ *        An array of results from `asyncDetermineUsages`. See `displayUsages`.
+ * @param {Number} usage
+ *        A numerical value corresponding to a usage. See `certificateUsages`.
+ * @returns {Array} An array of `nsIX509Cert` representing the verified
+ *          certificate chain for the given usage, or null if there is none.
+ */
+function getChainForUsage(results, usage) {
+  for (let result of results) {
+    if (certificateUsages[result.usageString] == usage &&
+        result.errorCode == PRErrorCodeSuccess) {
+      let array = [];
+      let enumerator = result.chain.getEnumerator();
+      while (enumerator.hasMoreElements()) {
+        let cert = enumerator.getNext().QueryInterface(Ci.nsIX509Cert);
+        array.push(cert);
+      }
+      return array;
+    }
+  }
+  return null;
+}
