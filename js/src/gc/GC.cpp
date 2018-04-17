@@ -1039,7 +1039,17 @@ const char* gc::ZealModeHelpText =
     "    16: (CheckNursery) Check nursery integrity on minor GC\n"
     "    17: (YieldBeforeSweepingAtoms) Incremental GC in two slices that yields\n"
     "        before sweeping the atoms table\n"
-    "    18: (CheckGrayMarking) Check gray marking invariants after every GC\n";
+    "    18: (CheckGrayMarking) Check gray marking invariants after every GC\n"
+    "    19: (YieldBeforeSweepingCaches) Incremental GC in two slices that yields\n"
+    "        before sweeping weak caches\n"
+    "    20: (YieldBeforeSweepingTypes) Incremental GC in two slices that yields\n"
+    "        before sweeping type information\n"
+    "    21: (YieldBeforeSweepingObjects) Incremental GC in two slices that yields\n"
+    "        before sweeping foreground finalized objects\n"
+    "    22: (YieldBeforeSweepingNonObjects) Incremental GC in two slices that yields\n"
+    "        before sweeping non-object GC things\n"
+    "    23: (YieldBeforeSweepingShapeTrees) Incremental GC in two slices that yields\n"
+    "        before sweeping shape trees\n";
 
 // The set of zeal modes that control incremental slices. These modes are
 // mutually exclusive.
@@ -1047,7 +1057,12 @@ static const mozilla::EnumSet<ZealMode> IncrementalSliceZealModes = {
     ZealMode::YieldBeforeMarking,
     ZealMode::YieldBeforeSweeping,
     ZealMode::IncrementalMultipleSlices,
-    ZealMode::YieldBeforeSweepingAtoms
+    ZealMode::YieldBeforeSweepingAtoms,
+    ZealMode::YieldBeforeSweepingCaches,
+    ZealMode::YieldBeforeSweepingTypes,
+    ZealMode::YieldBeforeSweepingObjects,
+    ZealMode::YieldBeforeSweepingNonObjects,
+    ZealMode::YieldBeforeSweepingShapeTrees
 };
 
 void
@@ -4991,12 +5006,10 @@ GCRuntime::groupZonesForSweeping(JS::gcreason::Reason reason)
         finder.useOneComponent();
 
 #ifdef JS_GC_ZEAL
-    // Use one component for YieldBeforeSweepingAtoms zeal mode.
-    if (isIncremental && reason == JS::gcreason::DEBUG_GC &&
-        hasZealMode(ZealMode::YieldBeforeSweepingAtoms))
-    {
+    // Use one component for two-slice zeal modes.
+    MOZ_ASSERT_IF(useZeal, isIncremental);
+    if (useZeal && hasIncrementalTwoSliceZealMode())
         finder.useOneComponent();
-    }
 #endif
 
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
@@ -6533,15 +6546,20 @@ GCRuntime::initSweepActions()
 #endif
                 MaybeYield(ZealMode::YieldBeforeSweepingAtoms,
                            Call(&GCRuntime::sweepAtomsTable)),
-                Call(&GCRuntime::sweepWeakCaches),
+                MaybeYield(ZealMode::YieldBeforeSweepingCaches,
+                           Call(&GCRuntime::sweepWeakCaches)),
                 ForEachZoneInSweepGroup(rt,
                     Sequence(
-                        Call(&GCRuntime::sweepTypeInformation),
-                        ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
-                                         Call(&GCRuntime::finalizeAllocKind)),
-                        ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
-                                         Call(&GCRuntime::finalizeAllocKind)),
-                        Call(&GCRuntime::sweepShapeTree),
+                        MaybeYield(ZealMode::YieldBeforeSweepingTypes,
+                                   Call(&GCRuntime::sweepTypeInformation)),
+                        MaybeYield(ZealMode::YieldBeforeSweepingObjects,
+                                   ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
+                                                    Call(&GCRuntime::finalizeAllocKind))),
+                        MaybeYield(ZealMode::YieldBeforeSweepingNonObjects,
+                                   ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
+                                                    Call(&GCRuntime::finalizeAllocKind))),
+                        MaybeYield(ZealMode::YieldBeforeSweepingShapeTrees,
+                                   Call(&GCRuntime::sweepShapeTree)),
                         Call(&GCRuntime::releaseSweptEmptyArenas))),
                 Call(&GCRuntime::endSweepingSweepGroup)));
 
