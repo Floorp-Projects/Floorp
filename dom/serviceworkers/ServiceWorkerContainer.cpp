@@ -9,6 +9,7 @@
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsIServiceWorkerManager.h"
+#include "nsIScriptError.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
@@ -249,25 +250,90 @@ ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
 }
 
 already_AddRefed<Promise>
-ServiceWorkerContainer::GetRegistration(const nsAString& aDocumentURL,
+ServiceWorkerContainer::GetRegistration(const nsAString& aURL,
                                         ErrorResult& aRv)
 {
-  nsresult rv;
-  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
+  nsPIDOMWindowInner* window = GetOwner();
+  if (NS_WARN_IF(!window)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
-  nsCOMPtr<nsISupports> promise;
-  aRv = swm->GetRegistration(GetOwner(), aDocumentURL, getter_AddRefs(promise));
+  // Don't allow a service worker to access service worker registrations
+  // from a window with storage disabled.  If these windows can access
+  // the registration it increases the chance they can bypass the storage
+  // block via postMessage(), etc.
+  auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
+  if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("Service Workers"), doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "ServiceWorkerGetRegistrationStorageError");
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  // Don't allow service workers to register when the *document* is chrome for
+  // now.
+  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(window->GetExtantDoc()->NodePrincipal()));
+
+  Maybe<ClientInfo> clientInfo = window->GetClientInfo();
+  if (clientInfo.isNothing()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsIDocument* doc = window->GetExtantDoc();
+  if (!doc) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
+  if (!baseURI) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  aRv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, baseURI);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  RefPtr<Promise> ret = static_cast<Promise*>(promise.get());
-  MOZ_ASSERT(ret);
-  return ret.forget();
+  nsCString spec;
+  aRv = uri->GetSpec(spec);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<Promise> outer = Promise::Create(window->AsGlobal(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<ServiceWorkerContainer> self = this;
+
+  mInner->GetRegistration(clientInfo.ref(), spec)->Then(
+    window->EventTargetFor(TaskCategory::Other), __func__,
+    [self, outer] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+      nsIGlobalObject* global = self->GetParentObject();
+      NS_ENSURE_TRUE_VOID(global);
+      RefPtr<ServiceWorkerRegistration> reg =
+        global->GetOrCreateServiceWorkerRegistration(aDescriptor);
+      outer->MaybeResolve(reg);
+    }, [self, outer] (nsresult aRv) {
+      nsIGlobalObject* global = self->GetParentObject();
+      NS_ENSURE_TRUE_VOID(global);
+      if (NS_SUCCEEDED(aRv)) {
+        outer->MaybeResolveWithUndefined();
+        return;
+      }
+      outer->MaybeReject(aRv);
+    });
+
+  return outer.forget();
 }
 
 Promise*

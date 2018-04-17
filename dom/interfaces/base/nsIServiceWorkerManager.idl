@@ -141,9 +141,6 @@ interface nsIServiceWorkerManager : nsISupports
   // Returns a Promise
   nsISupports getRegistrations(in mozIDOMWindow aWindow);
 
-  // Returns a Promise
-  nsISupports getRegistration(in mozIDOMWindow aWindow, in DOMString aScope);
-
   nsIServiceWorkerRegistrationInfo getRegistrationByPrincipal(in nsIPrincipal aPrincipal,
                                                               in DOMString aScope);
 

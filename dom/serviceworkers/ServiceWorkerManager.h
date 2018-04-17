@@ -193,6 +193,9 @@ public:
   void
   RemoveAll();
 
+  RefPtr<ServiceWorkerRegistrationPromise>
+  GetRegistration(const ClientInfo& aClientInfo, const nsACString& aURL) const;
+
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetRegistration(nsIPrincipal* aPrincipal, const nsACString& aScope) const;
 
