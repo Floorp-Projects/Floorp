@@ -263,12 +263,8 @@ public:
   bool
   IsOnCurrentThread();
 
-  bool
-  CloseInternal()
-  {
-    AssertIsOnWorkerThread();
-    return NotifyInternal(Closing);
-  }
+  void
+  CloseInternal();
 
   bool
   FreezeInternal();
