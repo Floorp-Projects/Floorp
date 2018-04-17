@@ -72,6 +72,8 @@
 // A shrinking GC will run five seconds after the last event is processed.
 #define IDLE_GC_TIMER_DELAY_SEC 5
 
+#define CANCELING_TIMEOUT 30000 // 30 seconds
+
 static mozilla::LazyLogModule sWorkerPrivateLog("WorkerPrivate");
 static mozilla::LazyLogModule sWorkerTimeoutsLog("WorkerTimeouts");
 
@@ -995,6 +997,50 @@ public:
   }
 };
 
+// A runnable to cancel the worker from the parent process.
+class CancelingWithTimeoutOnParentRunnable final : public WorkerControlRunnable
+{
+public:
+  explicit CancelingWithTimeoutOnParentRunnable(WorkerPrivate* aWorkerPrivate)
+    : WorkerControlRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount)
+  {}
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    aWorkerPrivate->AssertIsOnParentThread();
+    aWorkerPrivate->StartCancelingTimer();
+    return true;
+  }
+};
+
+class CancelingTimerCallback final : public nsITimerCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit CancelingTimerCallback(WorkerPrivate* aWorkerPrivate)
+    : mWorkerPrivate(aWorkerPrivate)
+  {}
+
+  NS_IMETHOD
+  Notify(nsITimer* aTimer) override
+  {
+    mWorkerPrivate->AssertIsOnParentThread();
+    mWorkerPrivate->Cancel();
+    return NS_OK;
+  }
+
+private:
+  ~CancelingTimerCallback() = default;
+
+  // Raw pointer here is OK because the timer is canceled during the shutdown
+  // steps.
+  WorkerPrivate* mWorkerPrivate;
+};
+
+NS_IMPL_ISUPPORTS(CancelingTimerCallback, nsITimerCallback)
+
 // This runnable starts the canceling of a worker after a self.close().
 class CancelingRunnable final : public Runnable
 {
@@ -1779,6 +1825,12 @@ WorkerPrivate::NotifyPrivate(WorkerStatus aStatus)
 
   // Anything queued will be discarded.
   mQueuedRunnables.Clear();
+
+  // No Canceling timeout is needed.
+  if (mCancelingTimer) {
+    mCancelingTimer->Cancel();
+    mCancelingTimer = nullptr;
+  }
 
   RefPtr<NotifyRunnable> runnable = new NotifyRunnable(this, aStatus);
   return runnable->Dispatch();
@@ -4538,6 +4590,13 @@ WorkerPrivate::NotifyInternal(WorkerStatus aStatus)
       // WorkerControlRunnable because they are immediately executed.
       RefPtr<CancelingRunnable> r = new CancelingRunnable();
       mThread->nsThread::Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+
+      // At the same time, we want to be sure that we interrupt infinite loops.
+      // The following runnable starts a timer that cancel the worker, from the
+      // parent thread, after CANCELING_TIMEOUT millseconds.
+      RefPtr<CancelingWithTimeoutOnParentRunnable> rr =
+        new CancelingWithTimeoutOnParentRunnable(this);
+      rr->Dispatch();
     }
     return true;
   }
@@ -4903,6 +4962,45 @@ WorkerPrivate::RescheduleTimeoutTimer(JSContext* aCx)
   }
 
   return true;
+}
+
+void
+WorkerPrivate::StartCancelingTimer()
+{
+  AssertIsOnParentThread();
+
+  auto raii = MakeScopeExit([&] {
+    mCancelingTimer = nullptr;
+  });
+
+  MOZ_ASSERT(!mCancelingTimer);
+
+  if (WorkerPrivate* parent = GetParent()) {
+    mCancelingTimer = NS_NewTimer(parent->ControlEventTarget());
+  } else {
+    mCancelingTimer = NS_NewTimer();
+  }
+
+  if (NS_WARN_IF(!mCancelingTimer)) {
+    return;
+  }
+
+  // This is not needed if we are already in an advanced shutdown state.
+  {
+    MutexAutoLock lock(mMutex);
+    if (ParentStatus() >= Terminating) {
+      return;
+    }
+  }
+
+  RefPtr<CancelingTimerCallback> callback = new CancelingTimerCallback(this);
+  nsresult rv = mCancelingTimer->InitWithCallback(callback, CANCELING_TIMEOUT,
+                                                  nsITimer::TYPE_ONE_SHOT);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  raii.release();
 }
 
 void
