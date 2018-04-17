@@ -15,6 +15,7 @@ from .util import (find_decision_task, find_existing_tasks_from_previous_kinds,
                    find_hg_revision_pushlog_id)
 from taskgraph.util.taskcluster import get_artifact
 from taskgraph.util.partials import populate_release_history
+from taskgraph.util.partners import fix_partner_config
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.decision import taskgraph_decision
 from taskgraph.parameters import Parameters
@@ -56,6 +57,18 @@ RELEASE_PROMOTION_CONFIG = {
         'product': 'firefox',
         'release_type': 'rc',
     },
+    'promote_firefox_partners': {
+        'target_tasks_method': 'promote_firefox',
+        'product': 'firefox',
+        'rebuild_kinds': [
+            'release-partner-repack',
+            'release-partner-beetmover',
+            'release-partner-repack-chunking-dummy',
+            'release-partner-repackage-signing',
+            'release-partner-repackage',
+            'release-partner-signing',
+        ],
+    },
     'promote_devedition': {
         'target_tasks_method': 'promote_devedition',
         'product': 'devedition',
@@ -87,6 +100,9 @@ PARTIAL_UPDATES_FLAVORS = (
     'ship_firefox_rc',
     'ship_devedition',
 )
+
+PARTNER_BRANCHES = ('mozilla-beta', 'mozilla-release', 'maple', 'birch', 'jamun')
+EMEFREE_BRANCHES = ('mozilla-beta', 'mozilla-release', 'maple', 'birch', 'jamun')
 
 
 def is_release_promotion_available(parameters):
@@ -203,10 +219,41 @@ def is_release_promotion_available(parameters):
                     'additionalProperties': False,
                 }
             },
-
             'release_eta': {
                 'type': 'string',
                 'default': '',
+            },
+            'release_enable_partners': {
+                'type': 'boolean',
+                'default': False,
+                'description': ('Toggle for creating partner repacks'),
+            },
+            'release_partner_build_number': {
+                'type': 'integer',
+                'default': 1,
+                'minimum': 1,
+                'description': ('The partner build number. This translates to, e.g. '
+                                '`v1` in the path. We generally only have to '
+                                'bump this on off-cycle partner rebuilds.'),
+            },
+            'release_partners': {
+                'type': 'array',
+                'description': ('A list of partners to repack, or if null or empty then use '
+                                'the current full set'),
+                'items': {
+                    'type': 'string',
+                }
+            },
+            'release_partner_config': {
+                'type': 'object',
+                'description': ('Partner configuration to use for partner repacks.'),
+                'properties': {},
+                'additionalProperties': True,
+            },
+            'release_enable_emefree': {
+                'type': 'boolean',
+                'default': False,
+                'description': ('Toggle for creating EME-free repacks'),
             },
         },
         "required": ['release_promotion_flavor', 'build_number'],
@@ -253,6 +300,14 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     do_not_optimize = input.get(
         'do_not_optimize', promotion_config.get('do_not_optimize', [])
     )
+    release_enable_partners = input.get(
+        'release_enable_partners',
+        parameters['project'] in PARTNER_BRANCHES and product in ('firefox',)
+    )
+    release_enable_emefree = input.get(
+        'release_enable_emefree',
+        parameters['project'] in EMEFREE_BRANCHES and product in ('firefox',)
+    )
 
     # make parameters read-write
     parameters = dict(parameters)
@@ -287,6 +342,12 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     parameters['release_history'] = release_history
     parameters['release_type'] = promotion_config.get('release_type', '')
     parameters['release_eta'] = input.get('release_eta', '')
+    parameters['release_enable_partners'] = release_enable_partners
+    parameters['release_partners'] = input.get('release_partners')
+    if input.get('release_partner_config'):
+        parameters['release_partner_config'] = fix_partner_config(input['release_partner_config'])
+    parameters['release_enable_emefree'] = release_enable_emefree
+
     if input['version']:
         parameters['version'] = input['version']
 
