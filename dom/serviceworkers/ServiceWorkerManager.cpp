@@ -2395,6 +2395,18 @@ ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
       StartControllingClient(clientInfo.ref(), registration);
     }
 
+    uint32_t redirectMode = nsIHttpChannelInternal::REDIRECT_MODE_MANUAL;
+    nsCOMPtr<nsIHttpChannelInternal> http = do_QueryInterface(internalChannel);
+    MOZ_ALWAYS_SUCCEEDS(http->GetRedirectMode(&redirectMode));
+
+    // Synthetic redirects for non-subresource requests with a "follow"
+    // redirect mode may switch controllers.  This is basically worker
+    // scripts right now.  In this case we need to explicitly clear the
+    // controller to avoid assertions on the SetController() below.
+    if (redirectMode == nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW) {
+      loadInfo->ClearController();
+    }
+
     // But we also note the reserved state on the LoadInfo.  This allows the
     // ClientSource to be updated immediately after the nsIChannel starts.
     // This is necessary to have the correct controller in place for immediate
