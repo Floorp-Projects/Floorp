@@ -6,13 +6,13 @@
 
 #include "FileBlockCache.h"
 #include "MediaCache.h"
-#include "MediaPrefs.h"
 #include "VideoUtils.h"
 #include "prio.h"
 #include <algorithm>
 #include "nsAnonymousTemporaryFile.h"
 #include "nsIThreadManager.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/SystemGroup.h"
 #include "nsXULAppAPI.h"
 
@@ -140,7 +140,7 @@ FileBlockCache::GetMaxBlocks() const
   // We look up the cache size every time. This means dynamic changes
   // to the pref are applied.
   const uint32_t cacheSizeKb =
-    std::min(MediaPrefs::MediaCacheSizeKb(), uint32_t(INT32_MAX) * 2);
+    std::min(StaticPrefs::MediaCacheSize(), uint32_t(INT32_MAX) * 2);
   // Ensure we can divide BLOCK_SIZE by 1024.
   static_assert(MediaCacheStream::BLOCK_SIZE % 1024 == 0,
                 "BLOCK_SIZE should be a multiple of 1024");
