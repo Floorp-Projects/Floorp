@@ -141,7 +141,7 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == 1158549-1-vertical-block-size-constraints.html 1158549-1-vertical-block-size-constraints-ref.html
 == 1163238-orthogonal-auto-margins.html 1163238-orthogonal-auto-margins-ref.html
 == 1174450-intrinsic-sizing.html 1174450-intrinsic-sizing-ref.html
-== 1175789-underline-overline-1.html 1175789-underline-overline-1-ref.html
+skip-if(winWidget&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1175789-underline-overline-1.html 1175789-underline-overline-1-ref.html # bug 1442637
 == 1188061-1-nsChangeHint_ClearAncestorIntrinsics.html 1188061-1-nsChangeHint_ClearAncestorIntrinsics-ref.html
 == 1188061-2-nsChangeHint_UpdateComputedBSize.html 1188061-2-nsChangeHint_UpdateComputedBSize-ref.html
 
