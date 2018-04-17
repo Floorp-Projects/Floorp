@@ -5735,6 +5735,14 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
 }
 
 #ifdef JS_GC_ZEAL
+
+bool
+GCRuntime::shouldYieldForZeal(ZealMode mode)
+{
+    MOZ_ASSERT_IF(useZeal, isIncremental);
+    return useZeal && hasZealMode(mode);
+}
+
 IncrementalProgress
 GCRuntime::maybeYieldForSweepingZeal(FreeOp* fop, SliceBudget& budget)
 {
@@ -5743,15 +5751,12 @@ GCRuntime::maybeYieldForSweepingZeal(FreeOp* fop, SliceBudget& budget)
      * in incremental multi-slice zeal mode so RunDebugGC can reset the slice
      * budget.
      */
-    if (isIncremental && useZeal && initialState != State::Sweep &&
-        (hasZealMode(ZealMode::IncrementalMultipleSlices) ||
-         hasZealMode(ZealMode::YieldBeforeSweepingAtoms)))
-    {
+    if (initialState != State::Sweep && shouldYieldForZeal(ZealMode::IncrementalMultipleSlices))
         return NotFinished;
-    }
 
     return Finished;
 }
+
 #endif
 
 IncrementalProgress
@@ -6282,6 +6287,38 @@ class SweepActionCall final : public SweepAction<GCRuntime*, Args...>
     void assertFinished() const override { }
 };
 
+#ifdef JS_GC_ZEAL
+// Implementation of the SweepAction interface that yields in a specified zeal
+// mode and then calls another action.
+template <typename... Args>
+class SweepActionMaybeYield final : public SweepAction<GCRuntime*, Args...>
+{
+    using Action = SweepAction<GCRuntime*, Args...>;
+
+    ZealMode mode;
+    UniquePtr<Action> action;
+    bool triggered;
+
+  public:
+    SweepActionMaybeYield(UniquePtr<Action> action, ZealMode mode)
+      : mode(mode), action(Move(action)), triggered(false) {}
+
+    IncrementalProgress run(GCRuntime* gc, Args... args) override {
+        if (!triggered && gc->shouldYieldForZeal(mode)) {
+            triggered = true;
+            return NotFinished;
+        }
+
+        triggered = false;
+        return action->run(gc, args...);
+    }
+
+    void assertFinished() const override {
+        MOZ_ASSERT(!triggered);
+    }
+};
+#endif
+
 // Implementation of the SweepAction interface that calls a list of actions in
 // sequence.
 template <typename... Args>
@@ -6418,7 +6455,17 @@ class RemoveLastTemplateParameter<Target<Args...>>
 template <typename... Args>
 static UniquePtr<SweepAction<GCRuntime*, Args...>>
 Call(IncrementalProgress (GCRuntime::*method)(Args...)) {
-    return MakeUnique<SweepActionCall<Args...>>(method);
+   return MakeUnique<SweepActionCall<Args...>>(method);
+}
+
+template <typename... Args>
+static UniquePtr<SweepAction<GCRuntime*, Args...>>
+MaybeYield(ZealMode zealMode, UniquePtr<SweepAction<GCRuntime*, Args...>> action) {
+#ifdef JS_GC_ZEAL
+    return js::MakeUnique<SweepActionMaybeYield<Args...>>(Move(action), zealMode);
+#else
+    return action;
+#endif
 }
 
 template <typename... Args, typename... Rest>
@@ -6484,7 +6531,8 @@ GCRuntime::initSweepActions()
 #ifdef JS_GC_ZEAL
                 Call(&GCRuntime::maybeYieldForSweepingZeal),
 #endif
-                Call(&GCRuntime::sweepAtomsTable),
+                MaybeYield(ZealMode::YieldBeforeSweepingAtoms,
+                           Call(&GCRuntime::sweepAtomsTable)),
                 Call(&GCRuntime::sweepWeakCaches),
                 ForEachZoneInSweepGroup(rt,
                     Sequence(
