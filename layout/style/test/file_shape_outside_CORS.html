@@ -28,19 +28,22 @@
 const DOMAIN = "http://mochi.test:8888";
 
 function sendResults() {
+  // Disable this first part until Bug 1454694.
+  /*
   let divAllow = document.getElementById("allow");
   let divAllowSib = divAllow.nextElementSibling;
   window.parent.postMessage({
     "result": (divAllowSib.getBoundingClientRect().left == divAllow.getBoundingClientRect().left),
-    "message": "Test 1: Sibling is at same left offset as div (shape-outside was allowed).",
+    "message": "Test 1: Sibling should be at same left offset as div (shape-outside should be allowed), and onload should only fire after layout is complete.",
     },
     DOMAIN);
+  */
 
   let divRefuse = document.getElementById("refuse");
   let divRefuseSib = divRefuse.nextElementSibling;
   window.parent.postMessage({
     "result": (divRefuseSib.getBoundingClientRect().left != divRefuse.getBoundingClientRect().left),
-    "message": "Test 2: Sibling is at different left offset from div (shape-outside was refused).",
+    "message": "Test 2: Sibling should be at different left offset from div (shape-outside should be refused).",
     },
     DOMAIN);
 

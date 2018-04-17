@@ -17,14 +17,14 @@ struct Epoch(u32);
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct FreeListHandle<T> {
+pub struct FreeListHandle<M> {
     index: u32,
     epoch: Epoch,
-    _marker: PhantomData<T>,
+    _marker: PhantomData<M>,
 }
 
-impl<T> FreeListHandle<T> {
-    pub fn weak(&self) -> WeakFreeListHandle<T> {
+impl<M> FreeListHandle<M> {
+    pub fn weak(&self) -> WeakFreeListHandle<M> {
         WeakFreeListHandle {
             index: self.index,
             epoch: self.epoch,
@@ -33,7 +33,7 @@ impl<T> FreeListHandle<T> {
     }
 }
 
-impl<T> Clone for WeakFreeListHandle<T> {
+impl<M> Clone for WeakFreeListHandle<M> {
     fn clone(&self) -> Self {
         WeakFreeListHandle {
             index: self.index,
@@ -46,10 +46,10 @@ impl<T> Clone for WeakFreeListHandle<T> {
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct WeakFreeListHandle<T> {
+pub struct WeakFreeListHandle<M> {
     index: u32,
     epoch: Epoch,
-    _marker: PhantomData<T>,
+    _marker: PhantomData<M>,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -62,31 +62,34 @@ struct Slot<T> {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct FreeList<T> {
+pub struct FreeList<T, M> {
     slots: Vec<Slot<T>>,
     free_list_head: Option<u32>,
     active_count: usize,
+    _marker: PhantomData<M>,
 }
 
-pub enum UpsertResult<T> {
+pub enum UpsertResult<T, M> {
     Updated(T),
-    Inserted(FreeListHandle<T>),
+    Inserted(FreeListHandle<M>),
 }
 
-impl<T> FreeList<T> {
+impl<T, M> FreeList<T, M> {
     pub fn new() -> Self {
         FreeList {
             slots: Vec::new(),
             free_list_head: None,
             active_count: 0,
+            _marker: PhantomData,
         }
     }
 
-    pub fn recycle(self) -> FreeList<T> {
+    pub fn recycle(self) -> FreeList<T, M> {
         FreeList {
             slots: recycle_vec(self.slots),
             free_list_head: None,
             active_count: 0,
+            _marker: PhantomData,
         }
     }
 
@@ -97,16 +100,16 @@ impl<T> FreeList<T> {
     }
 
     #[allow(dead_code)]
-    pub fn get(&self, id: &FreeListHandle<T>) -> &T {
+    pub fn get(&self, id: &FreeListHandle<M>) -> &T {
         self.slots[id.index as usize].value.as_ref().unwrap()
     }
 
     #[allow(dead_code)]
-    pub fn get_mut(&mut self, id: &FreeListHandle<T>) -> &mut T {
+    pub fn get_mut(&mut self, id: &FreeListHandle<M>) -> &mut T {
         self.slots[id.index as usize].value.as_mut().unwrap()
     }
 
-    pub fn get_opt(&self, id: &WeakFreeListHandle<T>) -> Option<&T> {
+    pub fn get_opt(&self, id: &WeakFreeListHandle<M>) -> Option<&T> {
         let slot = &self.slots[id.index as usize];
         if slot.epoch == id.epoch {
             slot.value.as_ref()
@@ -115,7 +118,7 @@ impl<T> FreeList<T> {
         }
     }
 
-    pub fn get_opt_mut(&mut self, id: &WeakFreeListHandle<T>) -> Option<&mut T> {
+    pub fn get_opt_mut(&mut self, id: &WeakFreeListHandle<M>) -> Option<&mut T> {
         let slot = &mut self.slots[id.index as usize];
         if slot.epoch == id.epoch {
             slot.value.as_mut()
@@ -128,7 +131,7 @@ impl<T> FreeList<T> {
     // handle is a valid entry, update the value and return the
     // previous data. If the provided handle is invalid, then
     // insert the data into a new slot and return the new handle.
-    pub fn upsert(&mut self, id: &WeakFreeListHandle<T>, data: T) -> UpsertResult<T> {
+    pub fn upsert(&mut self, id: &WeakFreeListHandle<M>, data: T) -> UpsertResult<T, M> {
         if self.slots[id.index as usize].epoch == id.epoch {
             let slot = &mut self.slots[id.index as usize];
             let result = UpsertResult::Updated(slot.value.take().unwrap());
@@ -139,7 +142,7 @@ impl<T> FreeList<T> {
         }
     }
 
-    pub fn insert(&mut self, item: T) -> FreeListHandle<T> {
+    pub fn insert(&mut self, item: T) -> FreeListHandle<M> {
         self.active_count += 1;
 
         match self.free_list_head {
@@ -176,7 +179,7 @@ impl<T> FreeList<T> {
         }
     }
 
-    pub fn free(&mut self, id: FreeListHandle<T>) -> T {
+    pub fn free(&mut self, id: FreeListHandle<M>) -> T {
         self.active_count -= 1;
         let slot = &mut self.slots[id.index as usize];
         slot.next = self.free_list_head;

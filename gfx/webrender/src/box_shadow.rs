@@ -10,7 +10,7 @@ use gpu_cache::GpuCacheHandle;
 use gpu_types::BoxShadowStretchMode;
 use prim_store::{BrushKind, BrushPrimitive, PrimitiveContainer};
 use prim_store::ScrollNodeAndClipChain;
-use resource_cache::CacheItem;
+use render_task::RenderTaskCacheEntryHandle;
 use util::RectHelpers;
 
 #[derive(Debug)]
@@ -25,7 +25,7 @@ pub struct BoxShadowClipSource {
     // The current cache key (in device-pixels), and handles
     // to the cached clip region and blurred texture.
     pub cache_key: Option<(DeviceIntSize, BoxShadowCacheKey)>,
-    pub cache_item: CacheItem,
+    pub cache_handle: Option<RenderTaskCacheEntryHandle>,
     pub clip_data_handle: GpuCacheHandle,
 
     // Local-space size of the required render task size.

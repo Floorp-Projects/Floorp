@@ -47,6 +47,8 @@ job-defaults:
          BUILD_NUMBER: "{release_config[build_number]}"
          CANDIDATES_DIR:
             by-project:
+               jamun:
+                  https://net-mozaws-stage-delivery-firefox.s3.amazonaws.com/pub/{task[shipping-product]}/candidates
                maple:
                   https://net-mozaws-stage-delivery-firefox.s3.amazonaws.com/pub/{task[shipping-product]}/candidates
                default:

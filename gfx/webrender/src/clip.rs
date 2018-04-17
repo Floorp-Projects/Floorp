@@ -14,14 +14,17 @@ use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use gpu_types::{BoxShadowStretchMode, ClipScrollNodeIndex};
 use prim_store::{ClipData, ImageMaskData};
 use render_task::to_cache_size;
-use resource_cache::{CacheItem, ImageRequest, ResourceCache};
+use resource_cache::{ImageRequest, ResourceCache};
 use util::{LayerToWorldFastTransform, MaxRect, calculate_screen_bounding_rect};
 use util::{extract_inner_rect_safe, pack_as_float};
 use std::sync::Arc;
 
-pub type ClipStore = FreeList<ClipSources>;
-pub type ClipSourcesHandle = FreeListHandle<ClipSources>;
-pub type ClipSourcesWeakHandle = WeakFreeListHandle<ClipSources>;
+#[derive(Debug)]
+pub enum ClipStoreMarker {}
+
+pub type ClipStore = FreeList<ClipSources, ClipStoreMarker>;
+pub type ClipSourcesHandle = FreeListHandle<ClipStoreMarker>;
+pub type ClipSourcesWeakHandle = WeakFreeListHandle<ClipStoreMarker>;
 
 #[derive(Debug)]
 pub struct LineDecorationClipSource {
@@ -237,7 +240,7 @@ impl ClipSource {
             clip_mode,
             stretch_mode_x,
             stretch_mode_y,
-            cache_item: CacheItem::invalid(),
+            cache_handle: None,
             cache_key: None,
             clip_data_handle: GpuCacheHandle::new(),
             minimal_shadow_rect,
@@ -558,6 +561,7 @@ pub struct ClipChain {
     pub combined_outer_screen_rect: DeviceIntRect,
     pub combined_inner_screen_rect: DeviceIntRect,
     pub nodes: ClipChainNodeRef,
+    pub has_non_root_coord_system: bool,
 }
 
 impl ClipChain {
@@ -567,6 +571,7 @@ impl ClipChain {
             combined_inner_screen_rect: *screen_rect,
             combined_outer_screen_rect: *screen_rect,
             nodes: None,
+            has_non_root_coord_system: false,
         }
     }
 
@@ -598,6 +603,8 @@ impl ClipChain {
         self.combined_inner_screen_rect =
             self.combined_inner_screen_rect.intersection(&new_node.screen_inner_rect)
             .unwrap_or_else(DeviceIntRect::zero);
+
+        self.has_non_root_coord_system |= new_node.work_item.coordinate_system_id != CoordinateSystemId::root();
 
         self.nodes = Some(Arc::new(new_node));
     }

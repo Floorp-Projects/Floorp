@@ -6,43 +6,43 @@
 
 from __future__ import absolute_import
 
-import mozfile
-import unittest
 import zipfile
 
 import mozunit
+import pytest
 
 from mozversion import get_version
 
 
-class ApkTest(unittest.TestCase):
-    """test getting version information from an android .apk"""
+"""test getting version information from an android .apk"""
 
-    application_changeset = 'a' * 40
-    platform_changeset = 'b' * 40
+application_changeset = 'a' * 40
+platform_changeset = 'b' * 40
 
-    def create_apk_zipfiles(self, zfile):
-        zfile.writestr('application.ini',
-                       """[App]\nSourceStamp=%s\n""" % self.application_changeset)
-        zfile.writestr('platform.ini',
-                       """[Build]\nSourceStamp=%s\n""" % self.platform_changeset)
-        zfile.writestr('AndroidManifest.xml', '')
 
-    def test_basic(self):
-        with mozfile.NamedTemporaryFile() as f:
-            with zipfile.ZipFile(f.name, 'w') as z:
-                self.create_apk_zipfiles(z)
-            v = get_version(f.name)
-            self.assertEqual(v.get('application_changeset'), self.application_changeset)
-            self.assertEqual(v.get('platform_changeset'), self.platform_changeset)
+@pytest.fixture(name='apk')
+def fixture_apk(tmpdir):
+    path = str(tmpdir.join('apk.zip'))
+    with zipfile.ZipFile(path, 'w') as z:
+        z.writestr('application.ini',
+                   """[App]\nSourceStamp=%s\n""" % application_changeset)
+        z.writestr('platform.ini',
+                   """[Build]\nSourceStamp=%s\n""" % platform_changeset)
+        z.writestr('AndroidManifest.xml', '')
+    return path
 
-    def test_with_package_name(self):
-        with mozfile.NamedTemporaryFile() as f:
-            with zipfile.ZipFile(f.name, 'w') as z:
-                self.create_apk_zipfiles(z)
-                z.writestr('package-name.txt', "org.mozilla.fennec")
-            v = get_version(f.name)
-            self.assertEqual(v.get('package_name'), "org.mozilla.fennec")
+
+def test_basic(apk):
+    v = get_version(apk)
+    assert v.get('application_changeset') == application_changeset
+    assert v.get('platform_changeset') == platform_changeset
+
+
+def test_with_package_name(apk):
+    with zipfile.ZipFile(apk, 'a') as z:
+        z.writestr('package-name.txt', 'org.mozilla.fennec')
+    v = get_version(apk)
+    assert v.get('package_name') == 'org.mozilla.fennec'
 
 
 if __name__ == '__main__':

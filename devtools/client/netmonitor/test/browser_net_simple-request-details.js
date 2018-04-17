@@ -161,7 +161,7 @@ add_task(async function() {
   }
 
   async function testCookiesTab() {
-    let onEvent = monitor.panelWin.once(EVENTS.TAB_UPDATED);
+    let onEvent = monitor.panelWin.api.once(EVENTS.TAB_UPDATED);
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll("#details-pane tab")[1]);
     await onEvent;
@@ -204,7 +204,7 @@ add_task(async function() {
   }
 
   async function testResponseTab() {
-    let onEvent = monitor.panelWin.once(EVENTS.TAB_UPDATED);
+    let onEvent = monitor.panelWin.api.once(EVENTS.TAB_UPDATED);
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll("#details-pane tab")[3]);
     await onEvent;
