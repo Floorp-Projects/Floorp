@@ -252,7 +252,7 @@ impl GlobalRules {
         let mut rules = self.per_node.get(name)
             .cloned()
             .unwrap_or_default();
-        if let Some(ref parent) = rule.inherits {
+        if let Some(ref parent) = rules.inherits {
             let NodeRules {
                 inherits: _,
                 type_ok,

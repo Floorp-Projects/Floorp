@@ -12,6 +12,7 @@
 <p>Test for cached messages</p>
 
 <script class="testbody" type="application/javascript">
+document.docShell.cssErrorReportingEnabled = true;
 var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                           .getService(Ci.nsIConsoleAPIStorage);
 let expectedConsoleCalls = [];

@@ -636,7 +636,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     options.setMutedErrors(lazy->mutedErrors())
            .setFileAndLine(lazy->filename(), lazy->lineno())
            .setColumn(lazy->column())
-           .setScriptSourceOffset(lazy->begin())
+           .setScriptSourceOffset(lazy->sourceStart())
            .setNoScriptRval(false)
            .setSelfHostingMode(false);
 
@@ -678,7 +678,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     MOZ_ASSERT(sourceObject);
 
     Rooted<JSScript*> script(cx, JSScript::Create(cx, options, sourceObject,
-                                                  lazy->begin(), lazy->end(),
+                                                  lazy->sourceStart(), lazy->sourceEnd(),
                                                   lazy->toStringStart(), lazy->toStringEnd()));
     if (!script)
         return false;

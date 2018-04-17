@@ -159,7 +159,7 @@ declare_args() {
 
   # Chromium uses its own IO handling, so the internal ADM is only built for
   # standalone WebRTC.
-  rtc_include_internal_audio_device = !build_with_chromium
+  rtc_include_internal_audio_device = !build_with_chromium && !build_with_mozilla
 
   # Include tests in standalone checkout.
   rtc_include_tests = !build_with_chromium && !build_with_mozilla

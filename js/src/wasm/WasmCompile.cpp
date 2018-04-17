@@ -24,9 +24,9 @@
 #include "jit/ProcessExecutableMemory.h"
 #include "util/Text.h"
 #include "wasm/WasmBaselineCompile.h"
-#include "wasm/WasmBinaryIterator.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmIonCompile.h"
+#include "wasm/WasmOpIter.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmValidate.h"
 
@@ -420,11 +420,12 @@ InitialCompileFlags(const CompileArgs& args, Decoder& d, CompileMode* mode, Tier
 }
 
 SharedModule
-wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, UniqueChars* error)
+wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, UniqueChars* error,
+                    UniqueCharsVector* warnings)
 {
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
-    Decoder d(bytecode.bytes, 0, error);
+    Decoder d(bytecode.bytes, 0, error, warnings);
 
     CompileMode mode;
     Tier tier;
@@ -486,8 +487,8 @@ class StreamingDecoder
   public:
     StreamingDecoder(const ModuleEnvironment& env, const Bytes& begin,
                      const ExclusiveStreamEnd& streamEnd, const Atomic<bool>& cancelled,
-                     UniqueChars* error)
-      : d_(begin, env.codeSection->start, error),
+                     UniqueChars* error, UniqueCharsVector* warnings)
+      : d_(begin, env.codeSection->start, error, warnings),
         streamEnd_(streamEnd),
         cancelled_(cancelled)
     {}
@@ -567,14 +568,15 @@ wasm::CompileStreaming(const CompileArgs& args,
                        const ExclusiveStreamEnd& codeStreamEnd,
                        const ExclusiveTailBytesPtr& tailBytesPtr,
                        const Atomic<bool>& cancelled,
-                       UniqueChars* error)
+                       UniqueChars* error,
+                       UniqueCharsVector* warnings)
 {
     MOZ_ASSERT(wasm::HaveSignalHandlers());
 
     Maybe<ModuleEnvironment> env;
 
     {
-        Decoder d(envBytes, 0, error);
+        Decoder d(envBytes, 0, error, warnings);
 
         CompileMode mode;
         Tier tier;
@@ -595,7 +597,7 @@ wasm::CompileStreaming(const CompileArgs& args,
 
     {
         MOZ_ASSERT(env->codeSection->size == codeBytes.length());
-        StreamingDecoder d(*env, codeBytes, codeStreamEnd, cancelled, error);
+        StreamingDecoder d(*env, codeBytes, codeStreamEnd, cancelled, error, warnings);
 
         if (!DecodeCodeSection(*env, d, mg))
             return nullptr;
@@ -615,7 +617,7 @@ wasm::CompileStreaming(const CompileArgs& args,
     const Bytes& tailBytes = *tailBytesPtr.lock();
 
     {
-        Decoder d(tailBytes, env->codeSection->end(), error);
+        Decoder d(tailBytes, env->codeSection->end(), error, warnings);
 
         if (!DecodeModuleTail(d, env.ptr()))
             return nullptr;
