@@ -322,7 +322,7 @@ class SyncedBookmarksMirror {
       bookmark: { id: 0, url: 0 },
       query: { id: 0, url: 0 },
       folder: { id: 0, root: 0 },
-      child: { id: 0, },
+      child: { id: 0, root: 0 },
       livemark: { id: 0, feed: 0 },
       separator: { id: 0 },
       tombstone: { id: 0, root: 0 },
@@ -780,6 +780,12 @@ class SyncedBookmarksMirror {
           ignoreCounts.child.id++;
           continue;
         }
+        if (childGuid == PlacesUtils.bookmarks.rootGuid ||
+            PlacesUtils.bookmarks.userContentRoots.includes(childGuid)) {
+          MirrorLog.warn("Ignoring move for root", childGuid);
+          ignoreCounts.child.root++;
+          continue;
+        }
         await this.db.executeCached(`
           REPLACE INTO structure(guid, parentGuid, position)
           VALUES(:childGuid, :parentGuid, :position)`,
@@ -790,9 +796,11 @@ class SyncedBookmarksMirror {
     // in the parent. However, this doesn't work for an item that is directly
     // under the root - such items are invalid, but we still want to store
     // them so we can ignore that entire sub-tree - so such items need special
-    // treatment.
+    // treatment. We ignore the four syncable roots, since they're already in
+    // the mirror.
     let parentGuid = validateGuid(record.parentid);
-    if (parentGuid == PlacesUtils.bookmarks.rootGuid) {
+    if (parentGuid == PlacesUtils.bookmarks.rootGuid &&
+        !PlacesUtils.bookmarks.userContentRoots.includes(guid)) {
         await this.db.executeCached(`
           INSERT OR IGNORE INTO structure(guid, parentGuid, position)
           VALUES(:guid, :parentGuid, -1)`,
@@ -861,8 +869,9 @@ class SyncedBookmarksMirror {
       return;
     }
 
-    if (PlacesUtils.bookmarks.userContentRoots.includes(guid)) {
-      MirrorLog.warn("Ignoring tombstone for syncable root", guid);
+    if (guid == PlacesUtils.bookmarks.rootGuid ||
+        PlacesUtils.bookmarks.userContentRoots.includes(guid)) {
+      MirrorLog.warn("Ignoring tombstone for root", guid);
       ignoreCounts.tombstone.root++;
       return;
     }
