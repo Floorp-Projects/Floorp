@@ -757,9 +757,7 @@ var PlacesDBUtils = {
       BEGIN
         UPDATE moz_bookmarks
         SET syncChangeCounter = syncChangeCounter + 1
-        WHERE id = NEW.parent OR
-              (OLD.parent <> NEW.parent AND
-                id = OLD.parent);
+        WHERE id IN (OLD.parent, NEW.parent);
       END`
     });
     cleanupStatements.unshift({
@@ -769,6 +767,10 @@ var PlacesDBUtils = {
       FOR EACH ROW WHEN OLD.guid NOT NULL AND
                         OLD.syncStatus <> 1
       BEGIN
+        UPDATE moz_bookmarks
+        SET syncChangeCounter = syncChangeCounter + 1
+        WHERE id = OLD.parent;
+
         INSERT INTO moz_bookmarks_deleted(guid, dateRemoved)
         VALUES(OLD.guid, STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000);
       END`
