@@ -3548,34 +3548,22 @@ WorkerMain(void* arg)
         js_delete(input);
     });
 
-    if (input->parentRuntime)
-        sc->isWorker = true;
+    sc->isWorker = true;
     JS_SetContextPrivate(cx, sc);
     SetWorkerContextOptions(cx);
     JS::SetBuildIdOp(cx, ShellBuildId);
 
-    Maybe<EnvironmentPreparer> environmentPreparer;
-    if (input->parentRuntime) {
-        JS_SetFutexCanWait(cx);
-        JS::SetWarningReporter(cx, WarningReporter);
-        js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
-        JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
+    JS_SetFutexCanWait(cx);
+    JS::SetWarningReporter(cx, WarningReporter);
+    js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
+    JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
 
-        js::UseInternalJobQueues(cx);
+    js::UseInternalJobQueues(cx);
 
-        if (!JS::InitSelfHostedCode(cx))
-            return;
+    if (!JS::InitSelfHostedCode(cx))
+        return;
 
-        environmentPreparer.emplace(cx);
-    } else {
-        JS_AddInterruptCallback(cx, ShellInterruptCallback);
-
-        js::UseInternalJobQueues(cx, /* cooperative = */true);
-
-        // The Gecko Profiler requires that all cooperating contexts have
-        // profiling stacks installed.
-        MOZ_ALWAYS_TRUE(EnsureGeckoProfilingStackInstalled(cx, sc));
-    }
+    EnvironmentPreparer environmentPreparer(cx);
 
     do {
         JSAutoRequest ar(cx);
