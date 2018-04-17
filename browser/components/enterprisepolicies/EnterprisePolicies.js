@@ -9,7 +9,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   WindowsGPOParser: "resource:///modules/policies/WindowsGPOParser.jsm",
   Policies: "resource:///modules/policies/Policies.jsm",
-  PoliciesValidator: "resource:///modules/policies/PoliciesValidator.jsm",
+  JsonSchemaValidator: "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
 });
 
 // This is the file that will be searched for in the
@@ -127,8 +127,7 @@ EnterprisePoliciesManager.prototype = {
       }
 
       let [parametersAreValid, parsedParameters] =
-        PoliciesValidator.validateAndParseParameters(policyParameters,
-                                                     policySchema);
+        JsonSchemaValidator.validateAndParseParameters(policyParameters, policySchema);
 
       if (!parametersAreValid) {
         log.error(`Invalid parameters specified for ${policyName}.`);
