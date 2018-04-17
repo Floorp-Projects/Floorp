@@ -1272,7 +1272,7 @@ CSS_PROP_(
     eStyleAnimType_Discrete)
 CSS_PROP_(
     float,
-    float_,
+    float,
     CSS_PROP_PUBLIC_OR_PRIVATE(CssFloat, Float),
     0,
     "",
