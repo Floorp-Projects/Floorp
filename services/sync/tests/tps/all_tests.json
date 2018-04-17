@@ -22,7 +22,7 @@
     "test_client_wipe.js",
     "test_special_tabs.js",
     "test_addon_restartless_xpi.js",
-    "test_addon_nonrestartless_xpi.js",
+    "test_addon_webext_xpi.js",
     "test_addon_reconciling.js",
     "test_addon_wipe.js",
     "test_existing_bookmarks.js",
