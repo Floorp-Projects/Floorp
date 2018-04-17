@@ -68,7 +68,6 @@ TrackUnionStream::TrackUnionStream()
   }
   void TrackUnionStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
   {
-    TRACE();
     if (IsFinishedOnGraphThread()) {
       return;
     }

@@ -25,13 +25,6 @@ class nsIRunnable;
 class nsIGlobalObject;
 class nsPIDOMWindowInner;
 
-namespace mozilla {
-  class AsyncLogger;
-};
-
-extern mozilla::AsyncLogger gMSGTraceLogger;
-
-
 template <>
 class nsAutoRefTraits<SpeexResamplerState> : public nsPointerRefTraits<SpeexResamplerState>
 {
