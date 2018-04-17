@@ -23,11 +23,13 @@ DOMPrefs::Initialize()
 
 #define DOM_PREF(name, pref) DOMPrefs::name();
 #define DOM_WEBIDL_PREF(name)
+#define DOM_UINT32_PREF(name, pref, defaultValue) DOMPrefs::name();
 
 #include "DOMPrefsInternal.h"
 
 #undef DOM_PREF
 #undef DOM_WEBIDL_PREF
+#undef DOM_UINT32_PREF
 }
 
 #define DOM_PREF(name, pref)                                         \
@@ -50,6 +52,19 @@ DOMPrefs::Initialize()
     return DOMPrefs::name();                     \
   }
 
+#define DOM_UINT32_PREF(name, pref, defaultValue)                             \
+  /* static */ uint32_t                                                       \
+  DOMPrefs::name()                                                            \
+  {                                                                           \
+      static bool initialized = false;                                        \
+      static Atomic<uint32_t> cachedValue;                                    \
+      if (!initialized) {                                                     \
+        initialized = true;                                                   \
+        Preferences::AddAtomicUintVarCache(&cachedValue, pref, defaultValue); \
+    }                                                                         \
+    return cachedValue;                                                       \
+  }
+
 #if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
 DOM_PREF(DumpEnabled, "browser.dom.window.dump.enabled")
 #else
@@ -64,6 +79,7 @@ DOMPrefs::DumpEnabled()
 
 #undef DOM_PREF
 #undef DOM_WEBIDL_PREF
+#undef DOM_UINT32_PREF
 
 } // dom namespace
 } // mozilla namespace
