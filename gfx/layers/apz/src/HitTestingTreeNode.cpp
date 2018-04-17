@@ -27,7 +27,6 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
   : mApzc(aApzc)
   , mIsPrimaryApzcHolder(aIsPrimaryHolder)
   , mLayersId(aLayersId)
-  , mScrollViewId(FrameMetrics::NULL_SCROLL_ID)
   , mScrollbarAnimationId(0)
   , mFixedPosTarget(FrameMetrics::NULL_SCROLL_ID)
   , mIsBackfaceHidden(false)
@@ -94,11 +93,9 @@ HitTestingTreeNode::SetLastChild(HitTestingTreeNode* aChild)
 }
 
 void
-HitTestingTreeNode::SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
-                                     const uint64_t& aScrollbarAnimationId,
+HitTestingTreeNode::SetScrollbarData(const uint64_t& aScrollbarAnimationId,
                                      const ScrollbarData& aScrollbarData)
 {
-  mScrollViewId = aScrollViewId;
   mScrollbarAnimationId = aScrollbarAnimationId;
   mScrollbarData = aScrollbarData;
 }
@@ -108,7 +105,7 @@ HitTestingTreeNode::MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetric
 {
   return IsScrollThumbNode() &&
          mScrollbarData.mDirection == aDragMetrics.mDirection &&
-         mScrollViewId == aDragMetrics.mViewId;
+         mScrollbarData.mTargetViewId == aDragMetrics.mViewId;
 }
 
 bool
@@ -134,7 +131,7 @@ HitTestingTreeNode::GetScrollbarDirection() const
 FrameMetrics::ViewID
 HitTestingTreeNode::GetScrollTargetId() const
 {
-  return mScrollViewId;
+  return mScrollbarData.mTargetViewId;
 }
 
 const uint64_t&
