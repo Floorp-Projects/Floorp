@@ -372,6 +372,7 @@ var currentStateObj = async function() {
       name: engine.name,
       iconBuffer: await arrayBufferFromDataURI(uri),
       hidden: false,
+      identifier: engine.identifier,
     });
   }
   return state;
