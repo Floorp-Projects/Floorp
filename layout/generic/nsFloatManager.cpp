@@ -636,77 +636,6 @@ protected:
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// RoundedBoxShapeInfo
-//
-// Implements shape-outside: <shape-box> and shape-outside: inset().
-//
-class nsFloatManager::RoundedBoxShapeInfo final : public nsFloatManager::ShapeInfo
-{
-public:
-  RoundedBoxShapeInfo(const nsRect& aRect,
-                      UniquePtr<nscoord[]> aRadii)
-    : mRect(aRect)
-    , mRadii(Move(aRadii))
-  {}
-
-  nscoord LineLeft(const nscoord aBStart,
-                   const nscoord aBEnd) const override;
-  nscoord LineRight(const nscoord aBStart,
-                    const nscoord aBEnd) const override;
-  nscoord BStart() const override { return mRect.y; }
-  nscoord BEnd() const override { return mRect.YMost(); }
-  bool IsEmpty() const override { return mRect.IsEmpty(); };
-
-  void Translate(nscoord aLineLeft, nscoord aBlockStart) override
-  {
-    mRect.MoveBy(aLineLeft, aBlockStart);
-  }
-
-private:
-  // The rect of the rounded box shape in the float manager's coordinate
-  // space.
-  nsRect mRect;
-  // The half corner radii of the reference box. It's an nscoord[8] array
-  // in the float manager's coordinate space. If there are no radii, it's
-  // nullptr.
-  UniquePtr<nscoord[]> mRadii;
-};
-
-nscoord
-nsFloatManager::RoundedBoxShapeInfo::LineLeft(const nscoord aBStart,
-                                              const nscoord aBEnd) const
-{
-  if (!mRadii) {
-    return mRect.x;
-  }
-
-  nscoord lineLeftDiff =
-    ComputeEllipseLineInterceptDiff(
-      mRect.y, mRect.YMost(),
-      mRadii[eCornerTopLeftX], mRadii[eCornerTopLeftY],
-      mRadii[eCornerBottomLeftX], mRadii[eCornerBottomLeftY],
-      aBStart, aBEnd);
-  return mRect.x + lineLeftDiff;
-}
-
-nscoord
-nsFloatManager::RoundedBoxShapeInfo::LineRight(const nscoord aBStart,
-                                               const nscoord aBEnd) const
-{
-  if (!mRadii) {
-    return mRect.XMost();
-  }
-
-  nscoord lineRightDiff =
-    ComputeEllipseLineInterceptDiff(
-      mRect.y, mRect.YMost(),
-      mRadii[eCornerTopRightX], mRadii[eCornerTopRightY],
-      mRadii[eCornerBottomRightX], mRadii[eCornerBottomRightY],
-      aBStart, aBEnd);
-  return mRect.XMost() - lineRightDiff;
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // EllipseShapeInfo
 //
 // Implements shape-outside: circle() and shape-outside: ellipse().
@@ -1071,6 +1000,77 @@ nsFloatManager::EllipseShapeInfo::LineRight(const nscoord aBStart,
                                             const nscoord aBEnd) const
 {
   return LineEdge(aBStart, aBEnd, false);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// RoundedBoxShapeInfo
+//
+// Implements shape-outside: <shape-box> and shape-outside: inset().
+//
+class nsFloatManager::RoundedBoxShapeInfo final : public nsFloatManager::ShapeInfo
+{
+public:
+  RoundedBoxShapeInfo(const nsRect& aRect,
+                      UniquePtr<nscoord[]> aRadii)
+    : mRect(aRect)
+    , mRadii(Move(aRadii))
+  {}
+
+  nscoord LineLeft(const nscoord aBStart,
+                   const nscoord aBEnd) const override;
+  nscoord LineRight(const nscoord aBStart,
+                    const nscoord aBEnd) const override;
+  nscoord BStart() const override { return mRect.y; }
+  nscoord BEnd() const override { return mRect.YMost(); }
+  bool IsEmpty() const override { return mRect.IsEmpty(); };
+
+  void Translate(nscoord aLineLeft, nscoord aBlockStart) override
+  {
+    mRect.MoveBy(aLineLeft, aBlockStart);
+  }
+
+private:
+  // The rect of the rounded box shape in the float manager's coordinate
+  // space.
+  nsRect mRect;
+  // The half corner radii of the reference box. It's an nscoord[8] array
+  // in the float manager's coordinate space. If there are no radii, it's
+  // nullptr.
+  UniquePtr<nscoord[]> mRadii;
+};
+
+nscoord
+nsFloatManager::RoundedBoxShapeInfo::LineLeft(const nscoord aBStart,
+                                              const nscoord aBEnd) const
+{
+  if (!mRadii) {
+    return mRect.x;
+  }
+
+  nscoord lineLeftDiff =
+    ComputeEllipseLineInterceptDiff(
+      mRect.y, mRect.YMost(),
+      mRadii[eCornerTopLeftX], mRadii[eCornerTopLeftY],
+      mRadii[eCornerBottomLeftX], mRadii[eCornerBottomLeftY],
+      aBStart, aBEnd);
+  return mRect.x + lineLeftDiff;
+}
+
+nscoord
+nsFloatManager::RoundedBoxShapeInfo::LineRight(const nscoord aBStart,
+                                               const nscoord aBEnd) const
+{
+  if (!mRadii) {
+    return mRect.XMost();
+  }
+
+  nscoord lineRightDiff =
+    ComputeEllipseLineInterceptDiff(
+      mRect.y, mRect.YMost(),
+      mRadii[eCornerTopRightX], mRadii[eCornerTopRightY],
+      mRadii[eCornerBottomRightX], mRadii[eCornerBottomRightY],
+      aBStart, aBEnd);
+  return mRect.XMost() - lineRightDiff;
 }
 
 /////////////////////////////////////////////////////////////////////////////
