@@ -189,7 +189,7 @@ class CheckThreadLocal
 
 // Data which may only be accessed by the thread on which it is created.
 template <typename T>
-using ThreadLocalData = ProtectedDataNoCheckArgs<CheckThreadLocal, T>;
+using ThreadData = ProtectedDataNoCheckArgs<CheckThreadLocal, T>;
 
 // Enum describing which helper threads (GC tasks or Ion compilations) may
 // access data even though they do not have exclusive access to any zone.
