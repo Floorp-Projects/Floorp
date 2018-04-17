@@ -31,10 +31,15 @@ ServiceWorkerContainerImpl::GetRegistration(const ClientInfo& aClientInfo,
 }
 
 RefPtr<ServiceWorkerRegistrationListPromise>
-ServiceWorkerContainerImpl::GetRegistrations()
+ServiceWorkerContainerImpl::GetRegistrations(const ClientInfo& aClientInfo) const
 {
-  // TODO
-  return nullptr;
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (NS_WARN_IF(!swm)) {
+    return ServiceWorkerRegistrationListPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                                                 __func__);
+  }
+
+  return swm->GetRegistrations(aClientInfo);
 }
 
 RefPtr<ServiceWorkerRegistrationPromise>

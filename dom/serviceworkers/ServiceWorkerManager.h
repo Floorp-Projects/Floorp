@@ -196,6 +196,9 @@ public:
   RefPtr<ServiceWorkerRegistrationPromise>
   GetRegistration(const ClientInfo& aClientInfo, const nsACString& aURL) const;
 
+  RefPtr<ServiceWorkerRegistrationListPromise>
+  GetRegistrations(const ClientInfo& aClientInfo) const;
+
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetRegistration(nsIPrincipal* aPrincipal, const nsACString& aScope) const;
 
