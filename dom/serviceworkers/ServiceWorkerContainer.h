@@ -35,7 +35,7 @@ public:
                     const nsACString& aURL) const = 0;
 
     virtual RefPtr<ServiceWorkerRegistrationListPromise>
-    GetRegistrations() = 0;
+    GetRegistrations(const ClientInfo& aClientInfo) const = 0;
 
     virtual RefPtr<ServiceWorkerRegistrationPromise>
     GetReady(const ClientInfo& aClientInfo) const = 0;

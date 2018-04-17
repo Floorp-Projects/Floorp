@@ -29,7 +29,7 @@ public:
                   const nsACString& aURL) const override;
 
   RefPtr<ServiceWorkerRegistrationListPromise>
-  GetRegistrations() override;
+  GetRegistrations(const ClientInfo& aClientInfo) const override;
 
   RefPtr<ServiceWorkerRegistrationPromise>
   GetReady(const ClientInfo& aClientInfo) const override;

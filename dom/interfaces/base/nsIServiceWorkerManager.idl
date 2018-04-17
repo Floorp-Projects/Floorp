@@ -138,9 +138,6 @@ interface nsIServiceWorkerManager : nsISupports
                   in nsIServiceWorkerUnregisterCallback aCallback,
                   in DOMString aScope);
 
-  // Returns a Promise
-  nsISupports getRegistrations(in mozIDOMWindow aWindow);
-
   nsIServiceWorkerRegistrationInfo getRegistrationByPrincipal(in nsIPrincipal aPrincipal,
                                                               in DOMString aScope);
 
