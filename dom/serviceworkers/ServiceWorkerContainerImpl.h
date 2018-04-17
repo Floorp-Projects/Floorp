@@ -25,7 +25,8 @@ public:
            const RegistrationOptions& aOptions) override;
 
   RefPtr<ServiceWorkerRegistrationPromise>
-  GetRegistration(const nsAString& aURL) override;
+  GetRegistration(const ClientInfo& aClientInfo,
+                  const nsACString& aURL) const override;
 
   RefPtr<ServiceWorkerRegistrationListPromise>
   GetRegistrations() override;

@@ -31,7 +31,8 @@ public:
              const RegistrationOptions& aOptions) = 0;
 
     virtual RefPtr<ServiceWorkerRegistrationPromise>
-    GetRegistration(const nsAString& aURL) = 0;
+    GetRegistration(const ClientInfo& aClientInfo,
+                    const nsACString& aURL) const = 0;
 
     virtual RefPtr<ServiceWorkerRegistrationListPromise>
     GetRegistrations() = 0;
