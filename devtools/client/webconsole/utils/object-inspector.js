@@ -48,7 +48,7 @@ function getObjectInspector(grip, serviceContainer, override) {
     mode: MODE.LONG,
     // TODO: we disable focus since it's not currently working well in ObjectInspector.
     // Let's remove the property below when problem are fixed in OI.
-    disabledFocus: true,
+    focusable: false,
     roots: [{
       path: (grip && grip.actor) || JSON.stringify(grip),
       contents: {
