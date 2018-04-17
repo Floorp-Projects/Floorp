@@ -147,7 +147,7 @@ def add_remote_arguments(parser):
                         help="serial ID of device")
 
     parser.add_argument("--adbPath", action="store", type=str, dest="adbPath",
-                        default="adb",
+                        default=None,
                         help="Path to adb")
 
     parser.add_argument("--noSetup", action="store_false", dest="setup", default=True,

@@ -9,7 +9,6 @@
 #include "ChannelMediaResource.h"
 #include "FileBlockCache.h"
 #include "MediaBlockCacheBase.h"
-#include "MediaPrefs.h"
 #include "MediaResource.h"
 #include "MemoryBlockCache.h"
 #include "mozilla/Attributes.h"
@@ -20,6 +19,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
@@ -784,7 +784,7 @@ MediaCache::GetMediaCache(int64_t aContentLength)
   }
 
   if (aContentLength > 0 &&
-      aContentLength <= int64_t(MediaPrefs::MediaMemoryCacheMaxSize()) * 1024) {
+      aContentLength <= int64_t(StaticPrefs::MediaMemoryCacheMaxSize()) * 1024) {
     // Small-enough resource, use a new memory-backed MediaCache.
     RefPtr<MediaBlockCacheBase> bc = new MemoryBlockCache(aContentLength);
     nsresult rv = bc->Init();
@@ -1376,8 +1376,8 @@ MediaCache::Update()
     }
   }
 
-  int32_t resumeThreshold = MediaPrefs::MediaCacheResumeThreshold();
-  int32_t readaheadLimit = MediaPrefs::MediaCacheReadaheadLimit();
+  int32_t resumeThreshold = StaticPrefs::MediaCacheResumeThreshold();
+  int32_t readaheadLimit = StaticPrefs::MediaCacheReadaheadLimit();
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     actions.AppendElement(StreamAction{});

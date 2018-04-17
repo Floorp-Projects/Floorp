@@ -12,7 +12,6 @@
 #include "GMPVideoDecoderProxy.h"
 #include "GMPVideoEncoderProxy.h"
 #include "GMPServiceParent.h"
-#include "MediaPrefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
@@ -27,7 +26,7 @@ struct GMPTestRunner
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPTestRunner)
 
-  GMPTestRunner() { MediaPrefs::GetSingleton(); }
+  GMPTestRunner() {}
   void DoTest(void (GMPTestRunner::*aTestMethod)(GMPTestMonitor&));
   void RunTestGMPTestCodec1(GMPTestMonitor& aMonitor);
   void RunTestGMPTestCodec2(GMPTestMonitor& aMonitor);

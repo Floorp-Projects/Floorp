@@ -31,7 +31,6 @@
 #include "gfxTextRun.h"
 #include "gfxUserFontSet.h"
 #include "gfxConfig.h"
-#include "MediaPrefs.h"
 #include "VRThread.h"
 
 #ifdef XP_WIN
@@ -657,7 +656,6 @@ gfxPlatform::Init()
 
     // Initialize the preferences by creating the singleton.
     gfxPrefs::GetSingleton();
-    MediaPrefs::GetSingleton();
     gfxVars::Initialize();
 
     gfxConfig::Init();

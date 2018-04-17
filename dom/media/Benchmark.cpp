@@ -8,7 +8,6 @@
 
 #include "BufferMediaResource.h"
 #include "MediaData.h"
-#include "MediaPrefs.h"
 #include "PDMFactory.h"
 #include "VideoUtils.h"
 #include "WebMDemuxer.h"
@@ -152,7 +151,6 @@ Benchmark::Init()
   MOZ_ASSERT(NS_IsMainThread());
   gfxVars::Initialize();
   gfxPrefs::GetSingleton();
-  MediaPrefs::GetSingleton();
 }
 
 BenchmarkPlayback::BenchmarkPlayback(Benchmark* aMainThreadState,

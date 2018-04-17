@@ -9,7 +9,6 @@
 #include "MFTDecoder.h"
 #include "MP4Decoder.h"
 #include "MediaInfo.h"
-#include "MediaPrefs.h"
 #include "VPXDecoder.h"
 #include "WMF.h"
 #include "WMFAudioMFTManager.h"
@@ -20,6 +19,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsAutoPtr.h"
@@ -55,7 +55,7 @@ WMFDecoderModule::Init()
     // If we're in the content process and the UseGPUDecoder pref is set, it
     // means that we've given up on the GPU process (it's been crashing) so we
     // should disable DXVA
-    sDXVAEnabled = !MediaPrefs::PDMUseGPUDecoder();
+    sDXVAEnabled = !StaticPrefs::MediaGpuProcessDecoder();
   } else if (XRE_IsGPUProcess()) {
     // Always allow DXVA in the GPU process.
     sDXVAEnabled = true;
@@ -213,7 +213,7 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
       CanCreateWMFDecoder<CLSID_CMP3DecMediaObject>()) {
     return true;
   }
-  if (MediaPrefs::PDMWMFVP9DecoderEnabled()) {
+  if (StaticPrefs::MediaWmfVp9Enabled()) {
     static const uint32_t VP8_USABLE_BUILD = 16287;
     if (VPXDecoder::IsVP8(aTrackInfo.mMimeType) &&
         IsWindowsBuildOrLater(VP8_USABLE_BUILD) &&

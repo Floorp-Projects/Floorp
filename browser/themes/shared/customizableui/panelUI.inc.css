@@ -765,6 +765,19 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   background-color: hsl(96,65%,75%);
 }
 
+:root[lwt-popup-brighttext] .panel-banner-item:not([disabled]) {
+  background-color: rgba(48,230,11,.1);
+  color: #F9F9FA;
+}
+
+:root[lwt-popup-brighttext] .panel-banner-item:not([disabled]):hover {
+  background-color: rgba(48,230,11,.15);
+}
+
+:root[lwt-popup-brighttext] .panel-banner-item:not([disabled]):active {
+  background-color: rgba(48,230,11,.2);
+}
+
 #customization-palette .toolbarbutton-multiline-text,
 #customization-palette .toolbarbutton-text {
   display: none;

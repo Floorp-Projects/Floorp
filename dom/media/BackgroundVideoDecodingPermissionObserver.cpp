@@ -6,8 +6,8 @@
 #include "BackgroundVideoDecodingPermissionObserver.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/StaticPrefs.h"
 #include "MediaDecoder.h"
-#include "MediaPrefs.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
 
@@ -26,7 +26,7 @@ BackgroundVideoDecodingPermissionObserver::Observe(nsISupports* aSubject,
                                                    const char* aTopic,
                                                    const char16_t* aData)
 {
-  if (!MediaPrefs::ResumeVideoDecodingOnTabHover()) {
+  if (!StaticPrefs::MediaResumeBkgndVideoOnTabhover()) {
     return NS_OK;
   }
 

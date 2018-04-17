@@ -11,7 +11,7 @@
 #include "FFmpegLibWrapper.h"
 #include "FFmpegAudioDecoder.h"
 #include "FFmpegVideoDecoder.h"
-#include "MediaPrefs.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 
@@ -42,7 +42,7 @@ public:
     }
     if (aParams.mOptions.contains(
           CreateDecoderParams::Option::LowLatency) &&
-        !MediaPrefs::PDMFFmpegLowLatencyEnabled()) {
+        !StaticPrefs::MediaFfmpegLowLatencyEnabled()) {
       return nullptr;
     }
     RefPtr<MediaDataDecoder> decoder = new FFmpegVideoDecoder<V>(

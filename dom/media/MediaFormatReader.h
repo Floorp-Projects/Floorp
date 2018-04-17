@@ -9,15 +9,15 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/StateMirroring.h"
-#include "mozilla/TaskQueue.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/StateMirroring.h"
+#include "mozilla/StaticPrefs.h"
+#include "mozilla/TaskQueue.h"
 
 #include "FrameStatistics.h"
 #include "MediaEventSource.h"
 #include "MediaDataDemuxer.h"
 #include "MediaMetadataManager.h"
-#include "MediaPrefs.h"
 #include "MediaPromiseDefs.h"
 #include "nsAutoPtr.h"
 #include "PDMFactory.h"
@@ -487,7 +487,7 @@ private:
         // Allow decode errors to be non-fatal, but give up
         // if we have too many, or if warnings should be treated as errors.
         return mNumOfConsecutiveError > mMaxConsecutiveError ||
-               MediaPrefs::MediaWarningsAsErrors();
+               StaticPrefs::MediaPlaybackWarningsAsErrors();
       } else if (mError.ref() == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER) {
         // If the caller asked for a new decoder we shouldn't treat
         // it as fatal.
