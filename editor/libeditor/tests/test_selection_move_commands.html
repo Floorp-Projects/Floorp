@@ -13,8 +13,8 @@ SimpleTest.requestFlakyTimeout("Legacy test, possibly no good reason");
 
 var winUtils = SpecialPowers.getDOMWindowUtils(window);
 
-function* setup() {
-  yield SpecialPowers.pushPrefEnv({set: [["general.smoothScroll", false]]});
+async function setup() {
+  await SpecialPowers.pushPrefEnv({set: [["general.smoothScroll", false]]});
   winUtils.advanceTimeAndRefresh(100);
 }
 
@@ -205,8 +205,8 @@ async function testRunner() {
   }
 }
 
-spawn_task(setup)
-  .then(() => spawn_task(testRunner))
-  .then(() => spawn_task(cleanup))
+setup()
+  .then(() => testRunner())
+  .then(() => cleanup())
   .catch(err => ok(false, err));
 </script>
