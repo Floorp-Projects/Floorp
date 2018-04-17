@@ -139,7 +139,7 @@ public:
     static mozilla::Atomic<js::Mutex*> lock_;
 
     // A flag that controls whether waiting is allowed.
-    ThreadLocalData<bool> canWait_;
+    ThreadData<bool> canWait_;
 };
 
 JSObject*
