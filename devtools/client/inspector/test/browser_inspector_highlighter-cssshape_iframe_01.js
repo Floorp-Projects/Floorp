@@ -35,7 +35,6 @@ async function testPolygonIframeMovePoint(config) {
 
   let onRuleViewChanged = view.once("ruleview-changed");
   info("Moving polygon point visible in iframe");
-  // Iframe has 10px margin. Element in iframe is 800px by 800px. First point is at 0 0%
   await mouse.down(10, 10);
   await mouse.move(20, 20);
   await mouse.up();
@@ -44,7 +43,7 @@ async function testPolygonIframeMovePoint(config) {
 
   let computedStyle = await inspector.pageStyle.getComputed(highlightedNode);
   let definition = computedStyle["clip-path"].value;
-  ok(definition.includes("10px 1.25%"), "Point moved to 10px 1.25%");
+  ok(definition.includes("10px 10px"), "Point moved to 10px 10px");
 
   onRuleViewChanged = view.once("ruleview-changed");
   info("Moving polygon point not visible in iframe");
@@ -57,7 +56,4 @@ async function testPolygonIframeMovePoint(config) {
   computedStyle = await inspector.pageStyle.getComputed(highlightedNode);
   definition = computedStyle["clip-path"].value;
   ok(definition.includes("110px 51.25%"), "Point moved to 110px 51.25%");
-
-  info(`Turn off shapes highlighter for ${selector}`);
-  await toggleShapesHighlighter(view, selector, property, false);
 }
