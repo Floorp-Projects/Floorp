@@ -133,7 +133,10 @@ getUpdateRequirements(const RefPtr<nsNavHistoryQuery>& aQuery,
   // and we are not a bookmark query we must requery. This
   // is because we can't generally know if any given addition/change causes
   // the item to be in the top N items in the database.
-  if (aOptions->MaxResults() > 0)
+  uint16_t sortingMode = aOptions->SortingMode();
+  if (aOptions->MaxResults() > 0 &&
+      sortingMode != nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING &&
+      sortingMode != nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING)
     return QUERYUPDATE_COMPLEX;
 
   if (domainBasedItems)
@@ -2436,6 +2439,10 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
 {
   if (aHidden && !mOptions->IncludeHidden())
     return NS_OK;
+  // Skip the notification if the query is filtered by specific transition types
+  // and this visit has a different one.
+  if (mTransitions.Length() > 0 && !mTransitions.Contains(aTransitionType))
+    return NS_OK;
 
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
@@ -2496,11 +2503,6 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
     }
 
     case QUERYUPDATE_SIMPLE: {
-      // If the query is filtered by some transitions, skip the
-      // update if aTransitionType doesn't match any of them.
-      if (mTransitions.Length() > 0 && !mTransitions.Contains(aTransitionType))
-        return NS_OK;
-
       // The history service can tell us whether the new item should appear
       // in the result.  We first have to construct a node for it to check.
       RefPtr<nsNavHistoryResultNode> addition;
@@ -2514,6 +2516,25 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
       addition->mTransitionType = aTransitionType;
       if (!evaluateQueryForNode(mQuery, mOptions, addition))
         return NS_OK; // don't need to include in our query
+
+      // Optimization for a common case: if the query has maxResults and is
+      // sorted by date, get the current boundaries and check if the added visit
+      // would fit.
+      // Later, we may have to remove the last child to respect maxResults.
+      if (mOptions->MaxResults() &&
+          static_cast<uint32_t>(mChildren.Count()) >= mOptions->MaxResults()) {
+        uint16_t sortType = GetSortType();
+        if (sortType == nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING &&
+            aTime > std::max(mChildren[0]->mTime,
+                             mChildren[mChildren.Count() -1]->mTime)) {
+          return NS_OK;
+        }
+        if (sortType == nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING &&
+            aTime < std::min(mChildren[0]->mTime,
+                             mChildren[mChildren.Count() -1]->mTime)) {
+          return NS_OK;
+        }
+      }
 
       if (mOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_VISIT) {
         // If this is a visit type query, just insert the new visit.  We never
@@ -2537,6 +2558,12 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
           rv = InsertSortedChild(addition);
           NS_ENSURE_SUCCESS(rv, rv);
         }
+      }
+
+      // Trim the children if necessary.
+      if (mOptions->MaxResults() &&
+          static_cast<uint32_t>(mChildren.Count()) > mOptions->MaxResults()) {
+        mChildren.RemoveObjectAt(mChildren.Count() - 1);
       }
 
       if (aAdded)
