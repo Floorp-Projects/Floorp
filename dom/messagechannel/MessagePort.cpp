@@ -297,8 +297,8 @@ MessagePort::Initialize(const nsID& aUUID,
       StrongWorkerRef::Create(workerPrivate, "MessagePort",
                               [self]() { self->CloseForced(); });
     if (NS_WARN_IF(!strongWorkerRef)) {
-      // The worker is shutting down.
-      aRv.Throw(NS_ERROR_FAILURE);
+      // The worker is shutting down. Let's return an already closed port.
+      mState = eStateDisentangledForClose;
       return;
     }
 
