@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} riga;{num} righe",
   "prefs_search_header": "Çerca into Web",
   "prefs_topsites_description": "I sciti che ti vixiti de ciù",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "I megio contegnui pigiæ in gio pe-a ræ, personalizæ pe ti",
   "prefs_topstories_show_sponsored_label": "Articoli sponsorizæ da {provider}",
   "prefs_topstories_sponsored_learn_more": "Atre informaçioin",
   "prefs_highlights_description": "'Na seleçion di sciti che t'ê sarvou ò vixitou",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Azonzi scito prinçipâ",
   "section_menu_action_move_up": "Mescia in sciù",
   "section_menu_action_move_down": "Mescia in zu",
-  "section_menu_action_privacy_notice": "Informativa in sciâ privacy",
-  "prefs_topstories_description": "Contegnui de erta qualitæ che atrimenti porieivi perdite"
+  "section_menu_action_privacy_notice": "Informativa in sciâ privacy"
 };

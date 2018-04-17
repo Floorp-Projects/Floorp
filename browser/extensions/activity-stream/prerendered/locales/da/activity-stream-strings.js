@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} række;{num} rækker",
   "prefs_search_header": "Søgning på internettet",
   "prefs_topsites_description": "Mest besøgte websider",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "Spændende indhold fra nettet, specielt udvalgt til dig",
   "prefs_topstories_show_sponsored_label": "Sponsorerede historier fra {provider}",
   "prefs_topstories_sponsored_learn_more": "Læs mere",
   "prefs_highlights_description": "Et afsnit med sider, du har gemt eller besøgt",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Tilføj ny webside",
   "section_menu_action_move_up": "Flyt op",
   "section_menu_action_move_down": "Flyt ned",
-  "section_menu_action_privacy_notice": "Privatlivspolitik",
-  "prefs_topstories_description": "Indhold af høj kvalitet, som du måske ellers kunne have overset"
+  "section_menu_action_privacy_notice": "Privatlivspolitik"
 };
