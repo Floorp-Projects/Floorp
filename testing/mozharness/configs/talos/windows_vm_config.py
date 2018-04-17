@@ -19,8 +19,6 @@ config = {
     "virtualenv_modules": ['pywin32', 'talos', 'mozinstall'],
     "exes": {
         'python': PYTHON,
-        'easy_install': ['%s/scripts/python' % VENV_PATH,
-                         '%s/scripts/easy_install-2.7-script.py' % VENV_PATH],
         'mozinstall': ['%s/scripts/python' % VENV_PATH,
                        '%s/scripts/mozinstall-script.py' % VENV_PATH],
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg'),

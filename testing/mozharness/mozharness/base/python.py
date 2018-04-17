@@ -242,10 +242,7 @@ class VirtualenvMixin(object):
                 # not understood by easy_install.
                 self.install_module(requirements=requirements,
                                     install_method='pip')
-            # Allow easy_install to be overridden by
-            # self.config['exes']['easy_install']
-            default = 'easy_install'
-            command = self.query_exe('easy_install', default=default, return_type="list")
+            command = [self.query_python_path(), '-m', 'easy_install']
         else:
             self.fatal("install_module() doesn't understand an install_method of %s!" % install_method)
 
