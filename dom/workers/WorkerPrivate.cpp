@@ -1525,8 +1525,8 @@ WorkerPrivate::Traverse(nsCycleCollectionTraversalCallback& aCb)
 }
 
 nsresult
-WorkerPrivate::DispatchPrivate(already_AddRefed<WorkerRunnable> aRunnable,
-                               nsIEventTarget* aSyncLoopTarget)
+WorkerPrivate::Dispatch(already_AddRefed<WorkerRunnable> aRunnable,
+                        nsIEventTarget* aSyncLoopTarget)
 {
   // May be called on any thread!
   RefPtr<WorkerRunnable> runnable(aRunnable);
@@ -5294,7 +5294,7 @@ WorkerPrivate::EventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
   }
 
   nsresult rv =
-    mWorkerPrivate->DispatchPrivate(workerRunnable.forget(), mNestedEventTarget);
+    mWorkerPrivate->Dispatch(workerRunnable.forget(), mNestedEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
