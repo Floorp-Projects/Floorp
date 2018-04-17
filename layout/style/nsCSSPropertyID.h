@@ -15,22 +15,22 @@
    Declare the enum list using the magic of preprocessing
    enum values are "eCSSProperty_foo" (where foo is the property)
 
-   To change the list of properties, see nsCSSPropList.h
+   To change the list of properties, see ServoCSSPropList.h
 
  */
 enum nsCSSPropertyID {
   eCSSProperty_UNKNOWN = -1,
 
-  #define CSS_PROP(name_, id_, ...) eCSSProperty_##id_,
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP
+  #define CSS_PROP_LONGHAND(name_, id_, ...) eCSSProperty_##id_,
+  #include "mozilla/ServoCSSPropList.h"
+  #undef CSS_PROP_LONGHAND
 
   eCSSProperty_COUNT_no_shorthands,
   // Make the count continue where it left off:
   eCSSProperty_COUNT_DUMMY = eCSSProperty_COUNT_no_shorthands - 1,
 
   #define CSS_PROP_SHORTHAND(name_, id_, ...) eCSSProperty_##id_,
-  #include "nsCSSPropList.h"
+  #include "mozilla/ServoCSSPropList.h"
   #undef CSS_PROP_SHORTHAND
 
   eCSSProperty_COUNT,
@@ -39,7 +39,7 @@ enum nsCSSPropertyID {
 
   #define CSS_PROP_ALIAS(aliasname_, aliasid_, id_, method_, pref_) \
     eCSSPropertyAlias_##aliasid_,
-  #include "nsCSSPropAliasList.h"
+  #include "mozilla/ServoCSSPropList.h"
   #undef CSS_PROP_ALIAS
 
   eCSSProperty_COUNT_with_aliases,
