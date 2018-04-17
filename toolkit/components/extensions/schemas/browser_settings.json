@@ -160,6 +160,10 @@
       "overrideDocumentColors": {
         "$ref": "types.Setting",
         "description": "This setting controls whether the user-chosen colors override the page's colors."
+      },
+      "useDocumentFonts": {
+        "$ref": "types.Setting",
+        "description": "This setting controls whether the document's fonts are used."
       }
     }
   }
