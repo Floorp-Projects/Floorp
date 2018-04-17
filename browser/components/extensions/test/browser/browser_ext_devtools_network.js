@@ -76,11 +76,15 @@ function devtools_page() {
 
     browser.devtools.network.onRequestFinished.removeListener(requestFinishedListener);
   };
+  browser.devtools.network.onRequestFinished.addListener(requestFinishedListener);
+}
 
-  browser.test.onMessage.addListener(msg => {
-    if (msg === "addOnRequestFinishedListener") {
-      browser.devtools.network.onRequestFinished.addListener(requestFinishedListener);
-    }
+function waitForRequestAdded(toolbox) {
+  return new Promise(resolve => {
+    let netPanel = toolbox.getPanel("netmonitor");
+    netPanel.panelWin.once("NetMonitor:RequestAdded", () => {
+      resolve();
+    });
   });
 }
 
@@ -103,26 +107,6 @@ let extData = {
     "devtools_page.js": devtools_page,
   },
 };
-
-function waitForRequestAdded(toolbox) {
-  return new Promise(async resolve => {
-    let netPanel = await toolbox.getNetMonitorAPI();
-    netPanel.once("NetMonitor:RequestAdded", () => {
-      resolve();
-    });
-  });
-}
-
-async function navigateToolboxTarget(extension, toolbox) {
-  extension.sendMessage("navigate");
-
-  // Wait till the navigation is complete.
-  await Promise.all([
-    extension.awaitMessage("tabUpdated"),
-    extension.awaitMessage("onNavigatedFired"),
-    waitForRequestAdded(toolbox),
-  ]);
-}
 
 /**
  * Test for `chrome.devtools.network.onNavigate()` API
@@ -178,31 +162,41 @@ add_task(async function test_devtools_network_get_har() {
   let toolbox = await gDevTools.showToolbox(target, "webconsole");
   info("Developer toolbox opened.");
 
-  // Get HAR, it should be empty since no data collected yet.
+  // Get HAR, it should be empty since the Net panel wasn't selected.
   const getHAREmptyPromise = extension.awaitMessage("getHAR-result");
   extension.sendMessage("getHAR");
   const getHAREmptyResult = await getHAREmptyPromise;
   is(getHAREmptyResult.entries.length, 0, "HAR log should be empty");
 
+  // Select the Net panel.
+  await toolbox.selectTool("netmonitor");
+
+  // Get HAR again, it should be empty because the Panel is selected
+  // but no data collected yet.
+  const getHAREmptyPromiseWithPanel = extension.awaitMessage("getHAR-result");
+  extension.sendMessage("getHAR");
+  const emptyResultWithPanel = await getHAREmptyPromiseWithPanel;
+  is(emptyResultWithPanel.entries.length, 0, "HAR log should be empty");
+
   // Reload the page to collect some HTTP requests.
-  await navigateToolboxTarget(extension, toolbox);
+  extension.sendMessage("navigate");
+
+  // Wait till the navigation is complete and request
+  // added into the net panel.
+  await Promise.all([
+    extension.awaitMessage("tabUpdated"),
+    extension.awaitMessage("onNavigatedFired"),
+    extension.awaitMessage("onRequestFinished"),
+    extension.awaitMessage("onRequestFinished-callbackExecuted"),
+    extension.awaitMessage("onRequestFinished-promiseResolved"),
+    waitForRequestAdded(toolbox),
+  ]);
 
   // Get HAR, it should not be empty now.
   const getHARPromise = extension.awaitMessage("getHAR-result");
   extension.sendMessage("getHAR");
   const getHARResult = await getHARPromise;
   is(getHARResult.entries.length, 1, "HAR log should not be empty");
-
-  // Select the Net panel and reload page again.
-  await toolbox.selectTool("netmonitor");
-  await navigateToolboxTarget(extension, toolbox);
-
-  // Get HAR again, it should not be empty even if
-  // the Network panel is selected now.
-  const getHAREmptyPromiseWithPanel = extension.awaitMessage("getHAR-result");
-  extension.sendMessage("getHAR");
-  const emptyResultWithPanel = await getHAREmptyPromiseWithPanel;
-  is(emptyResultWithPanel.entries.length, 1, "HAR log should not be empty");
 
   // Shutdown
   await gDevTools.closeToolbox(target);
@@ -223,23 +217,25 @@ add_task(async function test_devtools_network_on_request_finished() {
 
   await extension.startup();
   await extension.awaitMessage("ready");
+
   let target = gDevTools.getTargetForTab(tab);
 
   // Open the Toolbox
-  let toolbox = await gDevTools.showToolbox(target, "webconsole");
+  let toolbox = await gDevTools.showToolbox(target, "netmonitor");
   info("Developer toolbox opened.");
 
-  // Wait the extension to subscribe the onRequestFinished listener.
-  await extension.sendMessage("addOnRequestFinishedListener");
+  // Reload and wait for onRequestFinished event.
+  extension.sendMessage("navigate");
 
-  // Reload the page
-  await navigateToolboxTarget(extension, toolbox);
+  await Promise.all([
+    extension.awaitMessage("tabUpdated"),
+    extension.awaitMessage("onNavigatedFired"),
+    waitForRequestAdded(toolbox),
+  ]);
 
-  info("Wait for an onRequestFinished event");
   await extension.awaitMessage("onRequestFinished");
 
   // Wait for response content being fetched.
-  info("Wait for request.getBody results");
   let [callbackRes, promiseRes] = await Promise.all([
     extension.awaitMessage("onRequestFinished-callbackExecuted"),
     extension.awaitMessage("onRequestFinished-promiseResolved"),
@@ -249,6 +245,7 @@ add_task(async function test_devtools_network_on_request_finished() {
      "The expected content has been retrieved.");
   is(callbackRes[1], "text/html; charset=utf-8",
      "The expected content has been retrieved.");
+
   is(promiseRes[0], callbackRes[0],
      "The resolved value is equal to the one received in the callback API mode");
   is(promiseRes[1], callbackRes[1],
