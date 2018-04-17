@@ -1502,6 +1502,22 @@ JS_DefineProfilingFunctions(JSContext* cx, JS::HandleObject obj);
 extern JS_PUBLIC_API(bool)
 JS_DefineDebuggerObject(JSContext* cx, JS::HandleObject obj);
 
+namespace JS {
+
+/**
+ * Tell JS engine whether Profile Timeline Recording is enabled or not.
+ * If Profile Timeline Recording is enabled, data shown there like stack won't
+ * be optimized out.
+ * This is global state and not associated with specific runtime or context.
+ */
+extern JS_PUBLIC_API(void)
+SetProfileTimelineRecordingEnabled(bool enabled);
+
+extern JS_PUBLIC_API(bool)
+IsProfileTimelineRecordingEnabled();
+
+} // namespace JS
+
 #ifdef JS_HAS_CTYPES
 /**
  * Initialize the 'ctypes' object on a global variable 'obj'. The 'ctypes'
