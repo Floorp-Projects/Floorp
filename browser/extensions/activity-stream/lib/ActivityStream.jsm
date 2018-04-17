@@ -39,6 +39,12 @@ const DEFAULT_SITES = new Map([
 ]);
 const GEO_PREF = "browser.search.region";
 const REASON_ADDON_UNINSTALL = 6;
+const SPOCS_GEOS = ["US"];
+
+// Determine if spocs should be shown for a geo/locale
+function showSpocs({geo}) {
+  return SPOCS_GEOS.includes(geo);
+}
 
 // Configure default Activity Stream prefs with a plain `value` or a `getValue`
 // that computes a value. A `value_local_dev` is used for development defaults.
@@ -58,12 +64,12 @@ const PREFS_CONFIG = new Map([
       provider_icon: "pocket",
       provider_name: "Pocket",
       read_more_endpoint: "https://getpocket.com/explore/trending?src=fx_new_tab",
-      stories_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=3&consumer_key=$apiKey&locale_lang=${args.locale}`,
+      stories_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=3&consumer_key=$apiKey&locale_lang=${args.locale}&feed_variant=${showSpocs(args) ? "default_spocs_on" : "default_spocs_off"}`,
       stories_referrer: "https://getpocket.com/recommendations",
       privacy_notice_link: "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
       disclaimer_link: "https://getpocket.com/firefox/new_tab_learn_more",
       topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
-      show_spocs: false,
+      show_spocs: showSpocs(args),
       personalized: true
     })
   }],
