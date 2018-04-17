@@ -35,18 +35,28 @@ class FirefoxConnector {
     this.getNetworkRequest = this.getNetworkRequest.bind(this);
   }
 
+  /**
+   * Connect to the backend.
+   *
+   * @param {Object} connection object with e.g. reference to the Toolbox.
+   * @param {Object} actions (optional) is used to fire Redux actions to update store.
+   * @param {Object} getState (optional) is used to get access to the state.
+   */
   async connect(connection, actions, getState) {
     this.actions = actions;
     this.getState = getState;
     this.tabTarget = connection.tabConnection.tabTarget;
     this.toolbox = connection.toolbox;
-    this.panel = connection.panel;
+
+    // The owner object (NetMonitorAPI) received all events.
+    this.owner = connection.owner;
 
     this.webConsoleClient = this.tabTarget.activeConsole;
 
     this.dataProvider = new FirefoxDataProvider({
       webConsoleClient: this.webConsoleClient,
       actions: this.actions,
+      owner: this.owner,
     });
 
     await this.addListeners();
@@ -56,14 +66,21 @@ class FirefoxConnector {
     // these are used to pause/resume the connector.
     // Paused network panel should be automatically resumed when page
     // reload, so `will-navigate` listener needs to be there all the time.
-    this.tabTarget.on("will-navigate", this.willNavigate);
-    this.tabTarget.on("navigate", this.navigate);
+    if (this.tabTarget) {
+      this.tabTarget.on("will-navigate", this.willNavigate);
+      this.tabTarget.on("navigate", this.navigate);
+    }
 
-    this.displayCachedEvents();
+    // Displaying cache events is only intended for the UI panel.
+    if (this.actions) {
+      this.displayCachedEvents();
+    }
   }
 
   async disconnect() {
-    this.actions.batchReset();
+    if (this.actions) {
+      this.actions.batchReset();
+    }
 
     await this.removeListeners();
 
@@ -74,7 +91,6 @@ class FirefoxConnector {
 
     this.webConsoleClient = null;
     this.dataProvider = null;
-    this.panel = null;
   }
 
   async pause() {
@@ -132,18 +148,22 @@ class FirefoxConnector {
   }
 
   willNavigate() {
-    if (!Services.prefs.getBoolPref("devtools.netmonitor.persistlog")) {
-      this.actions.batchReset();
-      this.actions.clearRequests();
-    } else {
-      // If the log is persistent, just clear all accumulated timing markers.
-      this.actions.clearTimingMarkers();
+    if (this.actions) {
+      if (!Services.prefs.getBoolPref("devtools.netmonitor.persistlog")) {
+        this.actions.batchReset();
+        this.actions.clearRequests();
+      } else {
+        // If the log is persistent, just clear all accumulated timing markers.
+        this.actions.clearTimingMarkers();
+      }
     }
 
     // Resume is done automatically on page reload/navigation.
-    let state = this.getState();
-    if (!state.requests.recording) {
-      this.actions.toggleRecording();
+    if (this.actions && this.getState) {
+      let state = this.getState();
+      if (!state.requests.recording) {
+        this.actions.toggleRecording();
+      }
     }
   }
 
@@ -156,19 +176,20 @@ class FirefoxConnector {
       if (this.dataProvider && !this.dataProvider.isPayloadQueueEmpty()) {
         return;
       }
-      window.off(EVENTS.PAYLOAD_READY, listener);
+      this.owner.off(EVENTS.PAYLOAD_READY, listener);
       // Netmonitor may already be destroyed,
       // so do not try to notify the listeners
       if (this.dataProvider) {
         this.onReloaded();
       }
     };
-    window.on(EVENTS.PAYLOAD_READY, listener);
+    this.owner.on(EVENTS.PAYLOAD_READY, listener);
   }
 
   onReloaded() {
-    if (this.panel) {
-      this.panel.emit("reloaded");
+    let panel = this.toolbox.getPanel("netmonitor");
+    if (panel) {
+      panel.emit("reloaded");
     }
   }
 
@@ -204,8 +225,12 @@ class FirefoxConnector {
             "dom-interactive" : "dom-complete",
       time: marker.unixTime / 1000
     };
-    this.actions.addTimingMarker(event);
-    window.emit(EVENTS.TIMELINE_EVENT, event);
+
+    if (this.actions) {
+      this.actions.addTimingMarker(event);
+    }
+
+    this.emit(EVENTS.TIMELINE_EVENT, event);
   }
 
   /**
@@ -216,8 +241,11 @@ class FirefoxConnector {
    * @param {object} marker
    */
   onDocEvent(event) {
-    this.actions.addTimingMarker(event);
-    window.emit(EVENTS.TIMELINE_EVENT, event);
+    if (this.actions) {
+      this.actions.addTimingMarker(event);
+    }
+
+    this.emit(EVENTS.TIMELINE_EVENT, event);
   }
 
   /**
@@ -371,9 +399,27 @@ class FirefoxConnector {
   }
 
   getTimingMarker(name) {
+    if (!this.getState) {
+      return -1;
+    }
+
     let state = this.getState();
     return getDisplayedTimingMarker(state, name);
   }
+
+  /**
+   * Fire events for the owner object.
+   */
+  emit(type, data) {
+    if (this.owner) {
+      this.owner.emit(type, data);
+    }
+
+    // Consumed mainly by tests.
+    if (typeof window != "undefined") {
+      window.emit(type, data);
+    }
+  }
 }
 
-module.exports = new FirefoxConnector();
+module.exports = FirefoxConnector;
