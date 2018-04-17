@@ -10,8 +10,10 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/SystemGroup.h"
@@ -570,6 +572,39 @@ SheetLoadData::GetReferrerURI()
   return uri.forget();
 }
 
+static nsresult
+VerifySheetIntegrity(const SRIMetadata& aMetadata,
+                     nsIChannel* aChannel,
+                     const nsACString& aFirst,
+                     const nsACString& aSecond,
+                     const nsACString& aSourceFileURI,
+                     nsIConsoleReportCollector* aReporter)
+{
+  NS_ENSURE_ARG_POINTER(aReporter);
+
+  if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
+    nsAutoCString requestURL;
+    nsCOMPtr<nsIURI> originalURI;
+    if (aChannel &&
+        NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))) &&
+        originalURI) {
+      originalURI->GetAsciiSpec(requestURL);
+    }
+    MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
+            ("VerifySheetIntegrity (unichar stream)"));
+  }
+
+  SRICheckDataVerifier verifier(aMetadata, aSourceFileURI, aReporter);
+  nsresult rv =
+    verifier.Update(aFirst.Length(), (const uint8_t*)aFirst.BeginReading());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv =
+    verifier.Update(aSecond.Length(), (const uint8_t*)aSecond.BeginReading());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return verifier.Verify(aMetadata, aChannel, aSourceFileURI, aReporter);
+}
+
 /*
  * Stream completion code shared by Stylo and the old style system.
  *
@@ -772,7 +807,7 @@ SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     if (mLoader->mDocument && mLoader->mDocument->GetDocumentURI()) {
       mLoader->mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
     }
-    nsresult rv = SRICheck::VerifyIntegrity(
+    nsresult rv = VerifySheetIntegrity(
       sriMetadata, aChannel, aBytes1, aBytes2, sourceUri, mLoader->mReporter);
 
     nsCOMPtr<nsILoadGroup> loadGroup;
