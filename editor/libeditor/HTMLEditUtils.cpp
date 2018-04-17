@@ -435,7 +435,6 @@ HTMLEditUtils::IsFormWidget(nsINode* aNode)
                                     nsGkAtoms::select,
                                     nsGkAtoms::button,
                                     nsGkAtoms::output,
-                                    nsGkAtoms::keygen,
                                     nsGkAtoms::progress,
                                     nsGkAtoms::meter,
                                     nsGkAtoms::input);
@@ -660,7 +659,6 @@ static const ElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(input, false, false, GROUP_FORMCONTROL, GROUP_NONE),
   ELEM(ins, true, true, GROUP_PHRASE | GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(kbd, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
-  ELEM(keygen, false, false, GROUP_FORMCONTROL, GROUP_NONE),
   ELEM(label, true, false, GROUP_FORMCONTROL, GROUP_INLINE_ELEMENT),
   ELEM(legend, true, true, GROUP_NONE, GROUP_INLINE_ELEMENT),
   ELEM(li, true, false, GROUP_LI, GROUP_FLOW_ELEMENT),

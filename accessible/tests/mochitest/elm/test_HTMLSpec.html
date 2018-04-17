@@ -908,23 +908,6 @@
       testElm("kbd_container", obj);
 
       // ////////////////////////////////////////////////////////////////////////
-      // HTML:keygen
-
-      obj = {
-        role: ROLE_COMBOBOX,
-        states: STATE_COLLAPSED | STATE_HASPOPUP,
-        extraStates: EXT_STATE_EXPANDABLE,
-        actions: "open",
-        children: [
-          { COMBOBOX_LIST: [
-            { role: ROLE_COMBOBOX_OPTION }, // high grade
-            { role: ROLE_COMBOBOX_OPTION } // medium grade
-          ] }
-        ]
-      };
-      testElm("keygen", obj);
-
-      // ////////////////////////////////////////////////////////////////////////
       // HTML:label
 
       obj = {
