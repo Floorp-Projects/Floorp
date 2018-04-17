@@ -1374,11 +1374,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
 
   // is our text going to be PREformatted?
   // We remember this so that we know how to handle tabs.
-  bool isPRE;
-  NS_ENSURE_STATE(mHTMLEditor);
-  rv = mHTMLEditor->IsPreformatted(GetAsDOMNode(pointToInsert.GetContainer()),
-                                   &isPRE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool isPRE = EditorBase::IsPreformatted(pointToInsert.GetContainer());
 
   // turn off the edit listener: we know how to
   // build the "doc changed range" ourselves, and it's
@@ -5996,20 +5992,17 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
     }
 
     // Check for newlines in pre-formatted text nodes.
-    bool isPRE;
-    htmlEditor->IsPreformatted(nextNode->AsDOMNode(), &isPRE);
-    if (isPRE) {
-      if (EditorBase::IsTextNode(nextNode)) {
-        nsAutoString tempString;
-        nextNode->GetAsText()->GetData(tempString);
-        int32_t newlinePos = tempString.FindChar(nsCRT::LF);
-        if (newlinePos >= 0) {
-          if (static_cast<uint32_t>(newlinePos) + 1 == tempString.Length()) {
-            // No need for special processing if the newline is at the end.
-            break;
-          }
-          return EditorDOMPoint(nextNode, newlinePos + 1);
+    if (EditorBase::IsPreformatted(nextNode) &&
+        EditorBase::IsTextNode(nextNode)) {
+      nsAutoString tempString;
+      nextNode->GetAsText()->GetData(tempString);
+      int32_t newlinePos = tempString.FindChar(nsCRT::LF);
+      if (newlinePos >= 0) {
+        if (static_cast<uint32_t>(newlinePos) + 1 == tempString.Length()) {
+          // No need for special processing if the newline is at the end.
+          break;
         }
+        return EditorDOMPoint(nextNode, newlinePos + 1);
       }
     }
     nextNode = htmlEditor->GetNextEditableHTMLNodeInBlock(point);
