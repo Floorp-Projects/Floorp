@@ -45,6 +45,10 @@
   <string name="preference_privacy_block_analytics">వైశ్లేషిక ట్రాకర్లను నిరోధించు</string>
   <string name="preference_privacy_block_social">సామాజిక ట్రాకర్లను నిరోధించు</string>
   <string name="preference_privacy_block_content">ఇతర ట్రాకర్లను నిరోధించు</string>
+  <string name="preference_privacy_category_cookies">కుకీలను నిరోధించాలా</string>
+  <string name="preference_privacy_should_block_cookies_no_option">వద్దు</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">3-వ పక్షం కుకీలను మాత్రమే నిరోధించు</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">అవును</string>
   <string name="preference_privacy_secure_mode">గోప్యత</string>
   <string name="preference_privacy_stealth_summary">యాప్స్ మధ్య మారేప్పుడు జాలపేజీలు కనబడకుండా దాచిపెట్టు</string>
   <string name="preference_category_performance">పనితనం</string>
@@ -129,4 +133,10 @@
   <string name="dialog_opentab_action_open">తెరువు</string>
   <string name="tabs_tray_action_erase">విహరణ చరిత్రను తుడిచివేయి</string>
   <string name="download_firefox">Firefoxను దింపుకోండి</string>
+  <string name="gv_prompt_username_hint">వాడుకరి పేరు</string>
+  <string name="gv_prompt_password_hint">సంకేతపదం</string>
+  <string name="gv_prompt_clear">తుడిచివేయి</string>
+  <string name="security_popup_secure_connection">సురక్షిత అనుసంధానం</string>
+  <string name="security_popup_insecure_connection">అరక్షిత అనుసంధానం</string>
+  <string name="site_security_icon_content_description">సైటు భద్రత</string>
 </resources>

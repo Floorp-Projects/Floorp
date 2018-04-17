@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">Oanpaste URL\'s</string>
   <string name="preference_autocomplete_action_add">+ Oanpaste URL tafoegje</string>
   <string name="preference_autocomplete_title_add">Oanpaste URL tafoegje</string>
+  <string name="custom_autocomplete_quick_add">Oanpaste URL tafoegje</string>
   <string name="preference_autocomplete_title_remove">Oanpaste URL’s fuortsmite</string>
   <string name="preference_autocomplete_learn_more">Mear ynfo</string>
   <string name="preference_autocomplete_custom_summary">Eigen URL’s foar automatysk oanfoljen tafoegje en beheare.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Ynboud op websites om jo besiken te folgjen en funksjonaliteit as dielknoppen te toanen</string>
   <string name="preference_privacy_block_content">Oare ynhâldstrackers blokkearje</string>
   <string name="preference_privacy_block_content_summary2">Ynskeakeljen kin feroarsaakje dat guon siden ûnferwachts wurkje</string>
+  <string name="preference_privacy_category_cookies">Cookies blokkearje</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Nee</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Allinnich cookies fan tredden</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
   <string name="preference_privacy_stealth_summary">Websiden ferstopje by wikseljen fan apps</string>
   <string name="preference_category_performance">Prestaasjes</string>

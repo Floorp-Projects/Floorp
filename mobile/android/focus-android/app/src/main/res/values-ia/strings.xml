@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">URLs personalisate</string>
   <string name="preference_autocomplete_action_add">+ Adder URL personalisate</string>
   <string name="preference_autocomplete_title_add">Adder URL personalisate</string>
+  <string name="custom_autocomplete_quick_add">Adder URL personalisate</string>
   <string name="preference_autocomplete_title_remove">Remover URLs personalisate</string>
   <string name="preference_autocomplete_learn_more">Apprender plus</string>
   <string name="preference_autocomplete_custom_summary">Adde e gere le complementamento personalisate del URLs.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Integrate al sitos pro traciar tu visitas e monstrar functionalitates como buttones de compartir</string>
   <string name="preference_privacy_block_content">Blocar le altere traciatores de contento</string>
   <string name="preference_privacy_block_content_summary2">Activar isto pote facer le paginas se comportar de maniera inexpectate</string>
+  <string name="preference_privacy_category_cookies">Blocar le cookies</string>
+  <string name="preference_privacy_should_block_cookies_no_option">No</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloca solo le cookies de tertie partes</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Si</string>
   <string name="preference_privacy_secure_mode">Invisibile</string>
   <string name="preference_privacy_stealth_summary">Celar le paginas web quando on cambia de applicationes</string>
   <string name="preference_category_performance">Rendimento</string>

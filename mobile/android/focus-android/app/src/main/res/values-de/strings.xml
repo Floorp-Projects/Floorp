@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">Benutzerdefinierte Adressen</string>
   <string name="preference_autocomplete_action_add">+ Benutzerdefinierte Adresse hinzufügen</string>
   <string name="preference_autocomplete_title_add">Benutzerdefinierte Adresse hinzufügen</string>
+  <string name="custom_autocomplete_quick_add">Benutzerdefinierte Adresse hinzufügen</string>
   <string name="preference_autocomplete_title_remove">Benutzerdefinierte Adressen entfernen</string>
   <string name="preference_autocomplete_learn_more">Weitere Informationen</string>
   <string name="preference_autocomplete_custom_summary">Benutzerdefinierte Adressen für Autovervollständigung hinzufügen und verwalten.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Auf Websites eingebettet, um Ihre Besuche zu verfolgen und Funktionen wie Links zum Teilen anzuzeigen</string>
   <string name="preference_privacy_block_content">Andere Inhaltsverfolgung blockieren</string>
   <string name="preference_privacy_block_content_summary2">Dies kann dazu führen, dass manche Seiten sich ungewöhnlich verhalten</string>
+  <string name="preference_privacy_category_cookies">Cookies blockieren</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Nein</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Nur Cookies von Drittanbietern blockieren</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
   <string name="preference_privacy_secure_mode">Tarnung</string>
   <string name="preference_privacy_stealth_summary">Webseiten beim Wechseln von Apps verstecken</string>
   <string name="preference_category_performance">Leistung</string>

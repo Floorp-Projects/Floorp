@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">Таңдауыңызша URL-дер</string>
   <string name="preference_autocomplete_action_add">+ Таңдауыңызша URL қосу</string>
   <string name="preference_autocomplete_title_add">Таңдауыңызша URL қосу</string>
+  <string name="custom_autocomplete_quick_add">Таңдауыңызша URL қосу</string>
   <string name="preference_autocomplete_title_remove">Таңдауыңызша URL-дер өшіру</string>
   <string name="preference_autocomplete_learn_more">Көбірек білу</string>
   <string name="preference_autocomplete_custom_summary">Таңдауыңызша автотолықтыру URL-ді қосыңыз немесе басқарыңыз.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Шолуыңызды бақылау және бөлісу батырмалары сияқты мүмкіндіктерді көрсету мақсатымен сайттарға ендірілген</string>
   <string name="preference_privacy_block_content">Басқа құрама трекерлерін блоктау</string>
   <string name="preference_privacy_block_content_summary2">Бұны іске қосу кейбір сайттардың мінез-құлығын күтпегендей өзгертеді</string>
+  <string name="preference_privacy_category_cookies">Cookies файлдарын бұғаттау</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Жоқ</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Тек үшінші жақты cookies файлдарын бұғаттау</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Иә</string>
   <string name="preference_privacy_secure_mode">Жасырын</string>
   <string name="preference_privacy_stealth_summary">Қолданбаларды ауыстыру кезінде веб парақтарды жасыру</string>
   <string name="preference_category_performance">Өнімділік</string>

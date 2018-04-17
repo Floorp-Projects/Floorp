@@ -61,12 +61,17 @@
   <string name="preference_privacy_block_social_summary">Disematkan pada situs untuk melacak kunjungan Anda dan menampilkan fungsi seperti tombol berbagi</string>
   <string name="preference_privacy_block_content">Blokir pelacak konten lainnya</string>
   <string name="preference_privacy_block_content_summary2">Mengaktifkan fitur ini mungkin menyebabkan beberapa laman bertindak tidak terduga</string>
+  <string name="preference_privacy_category_cookies">Blokir kuki</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Tidak</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Hanya blokir kuki pihak ke-3</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Ya</string>
   <string name="preference_privacy_secure_mode">Mode Siluman</string>
   <string name="preference_privacy_stealth_summary">Sembunyikan laman web saat berpindah aplikasi</string>
   <string name="preference_category_performance">Kinerja</string>
   <string name="preference_performance_block_webfonts">Blokir fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
   <string name="preference_performance_block_images">Blokir gambar</string>
+  <string name="preference_performance_block_javascript">Blokir JavaScript</string>
   <string name="preference_default_browser2">Jadikan %1$s peramban baku</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Kirim data penggunaan</string>

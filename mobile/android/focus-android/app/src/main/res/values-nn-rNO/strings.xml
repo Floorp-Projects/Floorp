@@ -73,7 +73,7 @@
   <string name="preference_performance_block_webfonts">Blokker nettfontar</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilde manglar</string>
   <string name="preference_performance_block_images">Blokker bilde</string>
-  <string name="preference_performance_block_javascript">Blokker Javascript</string>
+  <string name="preference_performance_block_javascript">Blokker JavaScript</string>
   <string name="preference_performance_block_javascript_summary">Sider kan lastast raskare, men kan òg oppføre seg uventa</string>
   <string name="preference_default_browser2">Bruk %1$s som standard nettlesar</string>
   <string name="preference_category_mozilla">Mozilla</string>

@@ -74,6 +74,7 @@
   <string name="preference_performance_block_webfonts_summary">Lahko povzroči izginotje ikon ali slik</string>
   <string name="preference_performance_block_images">Zavračaj slike</string>
   <string name="preference_performance_block_javascript">Onemogoči JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Strani se bodo lahko nalagale hitreje, vendar morda ne bodo delovale pravilno</string>
   <string name="preference_default_browser2">Nastavi %1$s kot privzeti brskalnik</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Pošiljaj podatke o uporabi</string>

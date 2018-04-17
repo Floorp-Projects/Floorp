@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">Власні URL-адреси</string>
   <string name="preference_autocomplete_action_add">+ Додати власну URL-адресу</string>
   <string name="preference_autocomplete_title_add">Додати власну URL-адресу</string>
+  <string name="custom_autocomplete_quick_add">Додати власну URL-адресу</string>
   <string name="preference_autocomplete_title_remove">Вилучити власні URL-адреси</string>
   <string name="preference_autocomplete_learn_more">Докладніше</string>
   <string name="preference_autocomplete_custom_summary">Додавайте і керуйте автозавершенням власних URL-адрес.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Вбудовуються в сайти для відстеження ваших відвідувань та показу додаткових функцій, наприклад, кнопки \"Поділитися\"</string>
   <string name="preference_privacy_block_content">Блокувати інші елементи стеження</string>
   <string name="preference_privacy_block_content_summary2">Увімкнення цієї функції може викликати непередбачувану поведінку деяких сторінок</string>
+  <string name="preference_privacy_category_cookies">Блокувати куки</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Так</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Блокувати лише сторонні куки</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Так</string>
   <string name="preference_privacy_secure_mode">Під прикриттям</string>
   <string name="preference_privacy_stealth_summary">Приховувати веб-сторінки при перемиканні додатків</string>
   <string name="preference_category_performance">Швидкодія</string>

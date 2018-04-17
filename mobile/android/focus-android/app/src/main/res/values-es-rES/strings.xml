@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
   <string name="preference_autocomplete_action_add">+ Agregar URL personalizada</string>
   <string name="preference_autocomplete_title_add">Agregar URL personalizada</string>
+  <string name="custom_autocomplete_quick_add">Agregar URL personalizada</string>
   <string name="preference_autocomplete_title_remove">Eliminar URLs personalizadas</string>
   <string name="preference_autocomplete_learn_more">Descubrir más</string>
   <string name="preference_autocomplete_custom_summary">Agregar y gestionar autocompletado personalizado de URLs.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Incorporados en las páginas para rastrear tus visitas y mostrar funcionalidad, como botones para compartir</string>
   <string name="preference_privacy_block_content">Bloquear rastreadores de otros contenidos</string>
   <string name="preference_privacy_block_content_summary2">Si lo activas, puede que algunas páginas no funcionen correctamente</string>
+  <string name="preference_privacy_category_cookies">Bloquear cookies</string>
+  <string name="preference_privacy_should_block_cookies_no_option">No</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloquear sólo cookies de terceros</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
   <string name="preference_privacy_stealth_summary">Ocultar páginas web al intercambiar aplicaciones</string>
   <string name="preference_category_performance">Rendimiento</string>
