@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
     waitForLoad().then(function() {
         // Cookies are set up, disallow third-party cookies and start the test.
         SpecialPowers.pushPrefEnv({ set: [[ 'network.cookie.cookieBehavior', 1 ]] },
-                                  () => { spawn_task(continueTest); });
+                                  () => { continueTest(); });
     }).catch((e) => { ok(false, `Got exception: ${e}`) });
   }
 

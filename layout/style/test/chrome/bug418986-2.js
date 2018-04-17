@@ -286,8 +286,7 @@ var sleep = function (timeoutMs) {
 
 // __testMediaQueriesInPictureElements(resisting)__.
 // Test to see if media queries are properly spoofed in picture elements
-// when we are resisting fingerprinting. A generator function
-// to be used with SpawnTask.js.
+// when we are resisting fingerprinting.
 var testMediaQueriesInPictureElements = async function(resisting) {
   let picture = document.createElementNS(HTML_NS, "picture");
   for (let [key, offVal, onVal] of expected_values) {
@@ -327,8 +326,7 @@ var pushPref = function (key, value) {
 };
 
 // __test(isContent)__.
-// Run all tests. A generator function to be used
-// with SpawnTask.js.
+// Run all tests.
 var test = async function(isContent) {
   for (prefValue of [false, true]) {
     await pushPref("privacy.resistFingerprinting", prefValue);

@@ -324,8 +324,8 @@
                            false);
 
         // Chain testStructure to runTests's promise.
-        spawn_task(testStructure(mm, isPrivate)).then(deferred.resolve)
-                                                .catch((e) => { info(`caught failing test ${e}`); });
+        testStructure(mm, isPrivate).then(deferred.resolve)
+                                    .catch((e) => { info(`caught failing test ${e}`); });
       });
 
       document.body.appendChild(iframe);
