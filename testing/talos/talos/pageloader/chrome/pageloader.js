@@ -209,10 +209,11 @@ function plInit() {
         // pages should be able to load in the same mode as the initial page - due
         // to this reinitialization on the switch.
         let remoteType = E10SUtils.getRemoteTypeForURI(pageUrls[0], true);
+        let tabbrowser = browserWindow.gBrowser;
         if (remoteType) {
-          browserWindow.XULBrowserWindow.forceInitialBrowserRemote(remoteType);
+          tabbrowser.updateBrowserRemoteness(tabbrowser.initialBrowser, true, { remoteType });
         } else {
-          browserWindow.XULBrowserWindow.forceInitialBrowserNonRemote(null);
+          tabbrowser.updateBrowserRemoteness(tabbrowser.initialBrowser, false);
         }
 
         browserWindow.resizeTo(winWidth, winHeight);

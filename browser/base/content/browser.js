@@ -4525,10 +4525,6 @@ var XULBrowserWindow = {
     // unsupported
   },
 
-  forceInitialBrowserRemote(aRemoteType) {
-    gBrowser.updateBrowserRemoteness(gBrowser.initialBrowser, true, { remoteType: aRemoteType });
-  },
-
   forceInitialBrowserNonRemote(aOpener) {
     gBrowser.updateBrowserRemoteness(gBrowser.initialBrowser, false, { opener: aOpener });
   },
