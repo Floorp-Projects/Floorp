@@ -252,7 +252,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "d58b2c53ed99"
+        "revision": "b45a989089e6"
     }, 
     "da": {
         "platforms": [
@@ -267,7 +267,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "cefa940eb3f8"
+        "revision": "7a3788be5bf7"
     }, 
     "de": {
         "platforms": [
@@ -1112,7 +1112,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "a08db5555489"
+        "revision": "ea739fc8763d"
     }, 
     "pt-BR": {
         "platforms": [
