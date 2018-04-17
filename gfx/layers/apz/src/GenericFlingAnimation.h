@@ -30,7 +30,6 @@ namespace layers {
 class GenericFlingAnimation: public AsyncPanZoomAnimation {
 public:
   GenericFlingAnimation(AsyncPanZoomController& aApzc,
-                        PlatformSpecificStateBase* aPlatformSpecificState,
                         const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
                         bool aFlingIsHandedOff,
                         const RefPtr<const AsyncPanZoomController>& aScrolledApzc)
