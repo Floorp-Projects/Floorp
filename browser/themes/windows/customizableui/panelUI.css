@@ -43,23 +43,6 @@ menuitem.subviewbutton[disabled]:not(.menuitem-iconic) {
   min-height: 22px;
 }
 
-menu.subviewbutton > .menu-right {
-  -moz-appearance: none;
-  list-style-image: url(chrome://browser/skin/customizableui/menu-arrow.svg);
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  /* Reset the rect we inherit from the button: */
-  -moz-image-region: auto;
-}
-
-menu[disabled="true"].subviewbutton > .menu-right {
-  fill-opacity: 0.6;
-}
-
-menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
 /* Win8 and beyond. */
 @media not all and (-moz-os-version: windows-win7) {
   #BMB_bookmarksPopup menupopup[placespopup=true] > hbox,
