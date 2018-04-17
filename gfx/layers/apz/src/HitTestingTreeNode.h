@@ -95,8 +95,7 @@ public:
 
   /* Scrollbar info */
 
-  void SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
-                        const uint64_t& aScrollbarAnimationId,
+  void SetScrollbarData(const uint64_t& aScrollbarAnimationId,
                         const ScrollbarData& aScrollbarData);
   bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
   bool IsScrollbarNode() const;  // Scroll thumb or scrollbar container layer.
@@ -139,10 +138,6 @@ private:
   bool mIsPrimaryApzcHolder;
 
   LayersId mLayersId;
-
-  // This is set for both scroll track and scroll thumb Container layers, and
-  // represents the scroll id of the scroll frame scrolled by the scrollbar.
-  FrameMetrics::ViewID mScrollViewId;
 
   // This is only set to non-zero if WebRender is enabled, and only for HTTNs
   // where IsScrollThumbNode() returns true. It holds the animation id that we

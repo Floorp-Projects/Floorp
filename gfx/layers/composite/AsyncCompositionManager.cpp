@@ -755,7 +755,7 @@ MoveScrollbarForLayerMargin(Layer* aRoot, FrameMetrics::ViewID aRootScrollId,
     [aRootScrollId](Layer* aNode) {
       return (aNode->GetScrollbarData().mDirection.isSome() &&
               *aNode->GetScrollbarData().mDirection == ScrollDirection::eHorizontal &&
-              aNode->GetScrollbarTargetViewId() == aRootScrollId);
+              aNode->GetScrollbarData().mTargetViewId == aRootScrollId);
     });
   if (scrollbar) {
     // Shift the horizontal scrollbar down into the new space exposed by the
@@ -1050,7 +1050,7 @@ LayerIsScrollbarTarget(const LayerMetricsWrapper& aTarget, Layer* aScrollbar)
   }
   const FrameMetrics& metrics = aTarget.Metrics();
   MOZ_ASSERT(metrics.IsScrollable());
-  if (metrics.GetScrollId() != aScrollbar->GetScrollbarTargetViewId()) {
+  if (metrics.GetScrollId() != aScrollbar->GetScrollbarData().mTargetViewId) {
     return false;
   }
   return !metrics.IsScrollInfoLayer();

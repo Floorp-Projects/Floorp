@@ -426,19 +426,6 @@ public:
     return 0;
   }
 
-  FrameMetrics::ViewID GetScrollbarTargetContainerId() const
-  {
-    MOZ_ASSERT(IsValid());
-
-    return mLayer->GetScrollbarTargetViewId();
-  }
-
-  Maybe<ScrollDirection> GetScrollbarContainerDirection() const
-  {
-    MOZ_ASSERT(IsValid());
-    return mLayer->GetScrollbarContainerDirection();
-  }
-
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const
   {
     MOZ_ASSERT(IsValid());

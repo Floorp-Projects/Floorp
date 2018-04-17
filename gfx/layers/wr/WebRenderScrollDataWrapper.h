@@ -300,21 +300,6 @@ public:
     return mLayer->GetScrollbarAnimationId();
   }
 
-  FrameMetrics::ViewID GetScrollbarTargetContainerId() const
-  {
-    MOZ_ASSERT(IsValid());
-    return mLayer->GetScrollbarData().mTargetViewId;
-  }
-
-  Maybe<ScrollDirection> GetScrollbarContainerDirection() const
-  {
-    MOZ_ASSERT(IsValid());
-    const ScrollbarData& data = mLayer->GetScrollbarData();
-    return (data.mScrollbarLayerType == ScrollbarLayerType::Container)
-        ? data.mDirection
-        : Nothing();
-  }
-
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const
   {
     MOZ_ASSERT(IsValid());
