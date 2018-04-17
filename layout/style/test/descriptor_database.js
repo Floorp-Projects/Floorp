@@ -29,8 +29,13 @@ var gCSSFontFaceDescriptors = {
 	},
 	"font-weight": {
 		domProp: "fontWeight",
-		values: [ "normal", "400", "bold", "100", "200", "300", "500", "600", "700", "800", "900" ],
-		invalid_values: [ "107", "399", "401", "699", "710", "bolder", "lighter" ]
+		values: [
+			"normal", "400", "bold", "100", "200", "300", "500", "600",
+			"700", "800", "900", "107", "399", "401", "699", "710",
+			"calc(1001)", "calc(100 + 1)", "calc(1)", "100.6", "99",
+			"700 900", "300.4 500.4", "calc(200.4) calc(400.4)",
+		],
+		invalid_values: [ "bolder", "lighter", "1001", "0", "0 100", "100 1001" ]
 	},
 	"src": {
 		domProp: null,
