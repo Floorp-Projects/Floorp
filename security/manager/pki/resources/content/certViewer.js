@@ -79,12 +79,13 @@ function setWindowName() {
   //
 
   // Set initial dummy chain of just the cert itself. A more complete chain (if
-  // one can be found), will be set when asyncDetermineUsages finishes.
+  // one can be found), will be set when the promise chain beginning at
+  // asyncDetermineUsages finishes.
   AddCertChain("treesetDump", [cert]);
   DisplayGeneralDataFromCert(cert);
   BuildPrettyPrint(cert);
 
-  asyncDetermineUsages(cert);
+  asyncDetermineUsages(cert).then(displayUsages);
 }
 
 // Certificate usages we care about in the certificate viewer.
@@ -126,12 +127,14 @@ const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE              = SEC_ERROR_BASE + 30;
 const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED       = SEC_ERROR_BASE + 176;
 
 /**
- * Kicks off asynchronous verifications of the given certificate to determine
- * what usages it is currently valid for. Updates the usage display area when
- * complete.
+ * Returns a promise that will resolve with a results array (see
+ * `displayUsages`) consisting of what usages the given certificate successfully
+ * verified for.
  *
  * @param {nsIX509Cert} cert
  *        The certificate to determine valid usages for.
+ * @return {Promise}
+ *        A promise that will resolve with the results of the verifications.
  */
 function asyncDetermineUsages(cert) {
   let promises = [];
@@ -149,7 +152,7 @@ function asyncDetermineUsages(cert) {
         });
     }));
   });
-  Promise.all(promises).then(displayUsages);
+  return Promise.all(promises);
 }
 
 /**
