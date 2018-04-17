@@ -3256,7 +3256,7 @@ Parser<FullParseHandler, CharT>::skipLazyInnerFunction(ParseNode* funcNode, uint
 
     PropagateTransitiveParseFlags(lazy, pc->sc());
 
-    if (!tokenStream.advance(fun->lazyScript()->end()))
+    if (!tokenStream.advance(fun->lazyScript()->sourceEnd()))
         return false;
 
     // Append possible Annex B function box only upon successfully parsing.

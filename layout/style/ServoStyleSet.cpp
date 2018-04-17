@@ -869,10 +869,15 @@ ServoStyleSet::StyleSheetAt(SheetType aType, int32_t aIndex) const
 }
 
 void
-ServoStyleSet::AppendAllXBLStyleSheets(nsTArray<StyleSheet*>& aArray) const
+ServoStyleSet::AppendAllNonDocumentAuthorSheets(nsTArray<StyleSheet*>& aArray) const
 {
   if (mDocument) {
     mDocument->BindingManager()->AppendAllSheets(aArray);
+    EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
+      for (auto index : IntegerRange(aShadowRoot.SheetCount())) {
+        aArray.AppendElement(aShadowRoot.SheetAt(index));
+      }
+    });
   }
 }
 

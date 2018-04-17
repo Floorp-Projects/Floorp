@@ -155,7 +155,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._onPickerStopped = this._onPickerStopped.bind(this);
   this._onInspectObject = this._onInspectObject.bind(this);
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
-  this._updatePickerButton = this._updatePickerButton.bind(this);
+  this.updatePickerButton = this.updatePickerButton.bind(this);
   this.selectTool = this.selectTool.bind(this);
   this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
 
@@ -180,7 +180,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
 
   this.on("host-changed", this._refreshHostTitle);
   this.on("select", this._refreshHostTitle);
-  this.on("select", this._updatePickerButton);
+  this.on("select", this.updatePickerButton);
 
   this.on("ready", this._showDevEditionPromo);
 
@@ -1365,7 +1365,7 @@ Toolbox.prototype = {
    * update the visual state of the picker button such as disabled state,
    * additional CSS classes (className), and tooltip (description).
    */
-  _updatePickerButton() {
+  updatePickerButton() {
     const button = this.pickerButton;
     let currentPanel = this.getCurrentPanel();
 
@@ -2670,7 +2670,7 @@ Toolbox.prototype = {
     this._target.off("navigate", this._refreshHostTitle);
     this._target.off("frame-update", this._updateFrames);
     this.off("select", this._refreshHostTitle);
-    this.off("select", this._updatePickerButton);
+    this.off("select", this.updatePickerButton);
     this.off("host-changed", this._refreshHostTitle);
     this.off("ready", this._showDevEditionPromo);
 

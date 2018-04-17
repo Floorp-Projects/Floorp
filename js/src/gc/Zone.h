@@ -307,7 +307,7 @@ struct Zone : public JS::shadow::Zone,
 
   private:
     // The set of compartments in this zone.
-    js::ActiveThreadOrGCTaskData<CompartmentVector> compartments_;
+    js::MainThreadOrGCTaskData<CompartmentVector> compartments_;
   public:
     CompartmentVector& compartments() { return compartments_.ref(); }
 
@@ -349,7 +349,7 @@ struct Zone : public JS::shadow::Zone,
     //
     // This is used during GC while calculating sweep groups to record edges
     // that can't be determined by examining this zone by itself.
-    js::ActiveThreadData<ZoneSet> gcSweepGroupEdges_;
+    js::MainThreadData<ZoneSet> gcSweepGroupEdges_;
 
   public:
     ZoneSet& gcSweepGroupEdges() { return gcSweepGroupEdges_.ref(); }
@@ -705,15 +705,15 @@ struct Zone : public JS::shadow::Zone,
   private:
     js::ZoneData<js::jit::JitZone*> jitZone_;
 
-    js::ActiveThreadData<bool> gcScheduled_;
-    js::ActiveThreadData<bool> gcScheduledSaved_;
+    js::MainThreadData<bool> gcScheduled_;
+    js::MainThreadData<bool> gcScheduledSaved_;
     js::ZoneData<bool> gcPreserveCode_;
     js::ZoneData<bool> keepShapeTables_;
 
     // Allow zones to be linked into a list
     friend class js::gc::ZoneList;
     static Zone * const NotOnList;
-    js::ActiveThreadOrGCTaskData<Zone*> listNext_;
+    js::MainThreadOrGCTaskData<Zone*> listNext_;
     bool isOnList() const;
     Zone* nextZone() const;
 

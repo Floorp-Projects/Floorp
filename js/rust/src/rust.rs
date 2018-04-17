@@ -189,7 +189,7 @@ impl Runtime {
             });
 
             if use_internal_job_queue {
-                assert!(js::UseInternalJobQueues(js_context, false));
+                assert!(js::UseInternalJobQueues(js_context));
             }
 
             JS::InitSelfHostedCode(js_context);

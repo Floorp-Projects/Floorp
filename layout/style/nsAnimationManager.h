@@ -282,13 +282,12 @@ public:
   {
   }
 
-  NS_INLINE_DECL_REFCOUNTING(nsAnimationManager)
-
   typedef mozilla::AnimationCollection<mozilla::dom::CSSAnimation>
     CSSAnimationCollection;
   typedef nsTArray<RefPtr<mozilla::dom::CSSAnimation>>
     OwningCSSAnimationPtrArray;
 
+  ~nsAnimationManager() override = default;
 
   /**
    * This function does the same thing as the above UpdateAnimations()
@@ -298,6 +297,7 @@ public:
     mozilla::dom::Element* aElement,
     mozilla::CSSPseudoElementType aPseudoType,
     const mozilla::ComputedStyle* aComputedValues);
+
 
   // Utility function to walk through |aIter| to find the Keyframe with
   // matching offset and timing function but stopping as soon as the offset
@@ -336,9 +336,6 @@ public:
   {
     return mMaybeReferencedAnimations.Contains(aName);
   }
-
-protected:
-  ~nsAnimationManager() override = default;
 
 private:
   // This includes all animation names referenced regardless of whether a

@@ -112,7 +112,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
 
     DIRS += [
         "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
-        "/media/webrtc/trunk/webrtc/modules/audio_device/mac_portaudio_gn",
         "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",

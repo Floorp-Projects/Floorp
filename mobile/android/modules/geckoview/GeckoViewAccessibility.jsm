@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "dump", () =>
                        {}).AndroidLog.d.bind(null, "GeckoAccessibility"));
 
 class GeckoViewAccessibility extends GeckoViewModule {
-  init() {
+  onInit() {
     EventDispatcher.instance.dispatch("GeckoView:AccessibilityReady");
     EventDispatcher.instance.registerListener((aEvent, aData, aCallback) => {
       if (aData.enabled) {
