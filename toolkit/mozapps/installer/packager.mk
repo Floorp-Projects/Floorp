@@ -13,6 +13,20 @@ ifndef PACKAGER_NO_LIBS
 libs:: make-package
 endif
 
+installer-stage: prepare-package
+ifndef MOZ_PKG_MANIFEST
+	$(error MOZ_PKG_MANIFEST unspecified!)
+endif
+	@rm -rf $(DEPTH)/installer-stage $(DIST)/xpt
+	@echo 'Staging installer files...'
+	@$(NSINSTALL) -D $(DEPTH)/installer-stage/core
+	@cp -av $(DIST)/$(MOZ_PKG_DIR)$(_BINPATH)/. $(DEPTH)/installer-stage/core
+	@(cd $(DEPTH)/installer-stage/core && $(CREATE_PRECOMPLETE_CMD))
+ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
+# The && true is necessary to make sure Pymake spins a shell
+	$(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(DEPTH)/installer-stage && true
+endif
+
 export USE_ELF_HACK ELF_HACK_FLAGS
 
 # Override the value of OMNIJAR_NAME from config.status with the value
@@ -91,11 +105,6 @@ make-package-internal: prepare-package make-sourcestamp-file make-buildinfo-file
 
 make-package: FORCE
 	$(MAKE) make-package-internal
-ifeq (WINNT,$(OS_ARCH))
-ifeq ($(MOZ_PKG_FORMAT),ZIP)
-	$(MAKE) -C windows ZIP_IN='$(ABS_DIST)/$(PACKAGE)' installer
-endif
-endif
 	$(TOUCH) $@
 
 GARBAGE += make-package
