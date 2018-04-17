@@ -624,7 +624,10 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             two_pass=True,
             editable=True,
         )
-        super(Talos, self).create_virtualenv()
+        # require pip >= 1.5 so pip will prefer .whl files to install
+        super(Talos, self).create_virtualenv(
+            modules=['pip>=1.5']
+        )
         # talos in harness requires what else is
         # listed in talos requirements.txt file.
         self.install_module(
