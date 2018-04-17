@@ -224,7 +224,7 @@ GetWebRenderUserData(nsIFrame* aFrame, uint32_t aPerFrameKey)
   }
 
   WebRenderUserData* data = userDataTable->GetWeak(WebRenderUserDataKey(aPerFrameKey, T::Type()));
-  if (data && (data->GetType() == T::Type())) {
+  if (data) {
     RefPtr<T> result = static_cast<T*>(data);
     return result.forget();
   }
