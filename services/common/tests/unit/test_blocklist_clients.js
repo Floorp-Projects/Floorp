@@ -47,6 +47,9 @@ function run_test() {
   // Point the blocklist clients to use this local HTTP server.
   Services.prefs.setCharPref("services.settings.server",
                              `http://localhost:${server.identity.primaryPort}/v1`);
+  // Ensure that signature verification is disabled to prevent interference
+  // with basic certificate sync tests
+  Services.prefs.setBoolPref("services.settings.verify_signature", false);
 
   // This will initialize the remote settings clients for blocklists.
   BlocklistClients.initialize();

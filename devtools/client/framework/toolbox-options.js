@@ -184,7 +184,7 @@ OptionsPanel.prototype = {
       let checkboxInput = this.panelDoc.createElement("input");
       checkboxInput.setAttribute("type", "checkbox");
       checkboxInput.setAttribute("id", button.id);
-      if (button.isVisible) {
+      if (Services.prefs.getBoolPref(button.visibilityswitch, true)) {
         checkboxInput.setAttribute("checked", true);
       }
       checkboxInput.addEventListener("change",

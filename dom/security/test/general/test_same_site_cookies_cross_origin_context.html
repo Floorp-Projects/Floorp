@@ -24,6 +24,9 @@
  *    (b) the regular cookie is available.
  */
 
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.clearUserPref("network.cookie.same-site.enabled");
+});
 SimpleTest.waitForExplicitFinish();
 
 const CROSS_ORIGIN = "http://example.com/";
@@ -33,16 +36,32 @@ let curTest = 0;
 
 var tests = [
   {
-    description: "regular cookie in cross origin context",
+    description: "regular cookie in cross origin context (same-site: on)",
     imgSRC: CROSS_ORIGIN + PATH + "?setRegularCookie",
     frameSRC: CROSS_ORIGIN + PATH + "?loadFrame",
+    sameSiteEnabled: true,
     result: "myKey=regularCookie",
   },
   {
-    description: "same-site cookie in cross origin context",
+    description: "same-site cookie in cross origin context (same-site: on)",
     imgSRC: CROSS_ORIGIN + PATH + "?setSameSiteCookie",
     frameSRC: CROSS_ORIGIN + PATH + "?loadFrame",
+    sameSiteEnabled: true,
     result: "", // no cookie should be set
+  },
+  {
+    description: "regular cookie in cross origin context (same-site: off)",
+    imgSRC: CROSS_ORIGIN + PATH + "?setRegularCookie",
+    frameSRC: CROSS_ORIGIN + PATH + "?loadFrame",
+    sameSiteEnabled: false,
+    result: "myKey=regularCookie",
+  },
+  {
+    description: "same-site cookie in cross origin context (same-site: off)",
+    imgSRC: CROSS_ORIGIN + PATH + "?setSameSiteCookie",
+    frameSRC: CROSS_ORIGIN + PATH + "?loadFrame",
+    sameSiteEnabled: false,
+    result: "myKey=strictSameSiteCookie",
   },
 ];
 
@@ -52,7 +71,7 @@ function receiveMessage(event) {
   is(event.data.result, tests[curTest].result, tests[curTest].description);
   curTest += 1;
 
-  // // lets see if we ran all the tests
+  // lets see if we ran all the tests
   if (curTest == tests.length) {
     window.removeEventListener("message", receiveMessage);
     SimpleTest.finish();
@@ -64,10 +83,11 @@ function receiveMessage(event) {
 
 function setupQueryResultAndRunTest() {
   let testframe = document.getElementById("testframe");
-  testframe.src = tests[curTest].frameSRC;
+  testframe.src = tests[curTest].frameSRC + curTest;
 }
 
 function setCookieAndInitTest() {
+  SpecialPowers.setBoolPref("network.cookie.same-site.enabled", tests[curTest].sameSiteEnabled);
   var cookieImage = document.getElementById("cookieImage");
   cookieImage.onload = function() {
     ok(true, "trying to set cookie for test (" + tests[curTest].description + ")");
@@ -76,7 +96,7 @@ function setCookieAndInitTest() {
   cookieImage.onerror = function() {
     ok(false, "could not load image for test (" + tests[curTest].description + ")");
   }
-  cookieImage.src =  tests[curTest].imgSRC;
+  cookieImage.src =  tests[curTest].imgSRC + curTest;
 }
 
 // fire up the test

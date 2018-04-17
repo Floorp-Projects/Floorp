@@ -357,6 +357,11 @@ exports.isSafeJSObject = function(obj) {
   return true;
 };
 
+/**
+ * Dump with newline - This is a logging function that will only output when
+ * the preference "devtools.debugger.log" is set to true. Typically it is used
+ * for logging the remote debugging protocol calls.
+ */
 exports.dumpn = function(str) {
   if (flags.wantLogging) {
     dump("DBG-SERVER: " + str + "\n");
@@ -364,7 +369,10 @@ exports.dumpn = function(str) {
 };
 
 /**
- * A verbose logger for low-level tracing.
+ * Dump verbose - This is a verbose logger for low-level tracing, that is typically
+ * used to provide information about the remote debugging protocol's transport
+ * mechanisms. The logging can be enabled by changing the preferences
+ * "devtools.debugger.log" and "devtools.debugger.log.verbose" to true.
  */
 exports.dumpv = function(msg) {
   if (flags.wantVerbose) {

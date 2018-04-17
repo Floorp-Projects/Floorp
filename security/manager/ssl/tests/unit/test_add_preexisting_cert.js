@@ -25,20 +25,20 @@ function getDERString(cert) {
   return derString;
 }
 
-function run_test() {
+add_task(async function() {
   load_cert("ca", "CTu,CTu,CTu");
   let int_cert = load_cert("int-limited-depth", "CTu,CTu,CTu");
   let file = "test_intermediate_basic_usage_constraints/ee-int-limited-depth.pem";
   let cert_pem = readFile(do_get_file(file));
   let ee = certDB.constructX509FromBase64(pemToBase64(cert_pem));
-  checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
-                        certificateUsageSSLServer);
+  await checkCertErrorGeneric(certDB, ee, PRErrorCodeSuccess,
+                              certificateUsageSSLServer);
   // Change the already existing intermediate certificate's trust using
   // addCertFromBase64().
   notEqual(int_cert, null, "Intermediate cert should be in the cert DB");
   let base64_cert = btoa(getDERString(int_cert));
   let returnedEE = certDB.addCertFromBase64(base64_cert, "p,p,p");
   notEqual(returnedEE, null, "addCertFromBase64 should return a certificate");
-  checkCertErrorGeneric(certDB, ee, SEC_ERROR_UNTRUSTED_ISSUER,
-                        certificateUsageSSLServer);
-}
+  await checkCertErrorGeneric(certDB, ee, SEC_ERROR_UNTRUSTED_ISSUER,
+                              certificateUsageSSLServer);
+});

@@ -238,7 +238,9 @@ fn dump_blob_index(blob: &[u8], dirty_rect: Box2d) {
 
 fn check_result(result: &[u8]) -> () {
     let mut index = BlobReader::new(result);
-    assert!(index.reader.has_more(), "Unexpectedly empty result. This blob should just have been deleted");
+    // we might get an empty result here because sub groups are not tightly bound
+    // and we'll sometimes have display items that end up with empty bounds in
+    // the blob image.
     while index.reader.has_more() {
         let e = index.read_entry();
         dlog!("result bounds: {} {} {:?}", e.end, e.extra_end, e.bounds);

@@ -6,14 +6,10 @@ from __future__ import absolute_import
 
 import argparse
 import os
-import re
 from six.moves import configparser
 import sys
-import tempfile
-import xml.dom.minidom
 import zipfile
 
-import mozfile
 import mozlog
 
 from mozversion import errors
@@ -111,97 +107,21 @@ class LocalVersion(Version):
                 and os.path.exists(os.path.join(path, 'platform.ini')))
 
 
-class B2GVersion(Version):
-
-    def __init__(self, sources=None, **kwargs):
-        Version.__init__(self, **kwargs)
-
-        sources = sources or \
-            os.path.exists(os.path.join(os.getcwd(), 'sources.xml')) and \
-            os.path.join(os.getcwd(), 'sources.xml')
-
-        if sources and os.path.exists(sources):
-            sources_xml = xml.dom.minidom.parse(sources)
-            for element in sources_xml.getElementsByTagName('project'):
-                path = element.getAttribute('path')
-                changeset = element.getAttribute('revision')
-                if path in ['gaia', 'gecko', 'build']:
-                    if path == 'gaia' and self._info.get('gaia_changeset'):
-                        break
-                    self._info['_'.join([path, 'changeset'])] = changeset
-
-    def get_gaia_info(self, app_zip):
-        tempdir = tempfile.mkdtemp()
-        try:
-            gaia_commit = os.path.join(tempdir, 'gaia_commit.txt')
-            try:
-                zip_file = zipfile.ZipFile(app_zip.name)
-                with open(gaia_commit, 'w') as f:
-                    f.write(zip_file.read('resources/gaia_commit.txt'))
-            except zipfile.BadZipfile:
-                self._logger.info('Unable to unzip application.zip, falling '
-                                  'back to system unzip')
-                from subprocess import call
-                call(['unzip', '-j', app_zip.name, 'resources/gaia_commit.txt',
-                      '-d', tempdir])
-
-            with open(gaia_commit) as f:
-                changeset, date = f.read().splitlines()
-                self._info['gaia_changeset'] = re.match(
-                    '^\w{40}$', changeset) and changeset or None
-                self._info['gaia_date'] = date
-        except KeyError:
-            self._logger.warning(
-                'Unable to find resources/gaia_commit.txt in '
-                'application.zip')
-        finally:
-            mozfile.remove(tempdir)
-
-
-class LocalB2GVersion(B2GVersion):
-
-    def __init__(self, binary, sources=None, **kwargs):
-        B2GVersion.__init__(self, sources, **kwargs)
-
-        if binary:
-            if not os.path.exists(binary):
-                raise IOError('Binary path does not exist: %s' % binary)
-            path = os.path.dirname(binary)
-        else:
-            if os.path.exists(os.path.join(os.getcwd(), 'application.ini')):
-                path = os.getcwd()
-
-        self.get_gecko_info(path)
-
-        zip_path = os.path.join(
-            path, 'gaia', 'profile', 'webapps',
-            'settings.gaiamobile.org', 'application.zip')
-        if os.path.exists(zip_path):
-            with open(zip_path, 'rb') as zip_file:
-                self.get_gaia_info(zip_file)
-        else:
-            self._logger.warning('Error pulling gaia file')
-
-
-def get_version(binary=None, sources=None):
+def get_version(binary=None):
     """
     Returns the application version information as a dict. You can specify
     a path to the binary of the application or an Android APK file (to get
     version information for Firefox for Android). If this is omitted then the
     current directory is checked for the existance of an application.ini
-    file. If not found and that the binary path was not specified, then it is
-    assumed the target application is a remote Firefox OS instance.
+    file.
 
     :param binary: Path to the binary for the application or Android APK file
-    :param sources: Path to the sources.xml file (Firefox OS)
     """
     if binary and zipfile.is_zipfile(binary) and 'AndroidManifest.xml' in \
        zipfile.ZipFile(binary, 'r').namelist():
         version = LocalFennecVersion(binary)
     else:
         version = LocalVersion(binary)
-        if version._info.get('application_name') == 'B2G':
-            version = LocalB2GVersion(binary, sources=sources)
 
     for (key, value) in sorted(version._info.items()):
         if value:
@@ -216,10 +136,6 @@ def cli(args=sys.argv[1:]):
     parser.add_argument(
         '--binary',
         help='path to application binary or apk')
-    fxos = parser.add_argument_group('Firefox OS')
-    fxos.add_argument(
-        '--sources',
-        help='path to sources.xml')
     mozlog.commandline.add_logging_group(
         parser,
         include_formatters=mozlog.commandline.TEXT_FORMATTERS
@@ -230,8 +146,7 @@ def cli(args=sys.argv[1:]):
     mozlog.commandline.setup_logging(
         'mozversion', args, {'mach': sys.stdout})
 
-    get_version(binary=args.binary,
-                sources=args.sources)
+    get_version(binary=args.binary)
 
 
 if __name__ == '__main__':

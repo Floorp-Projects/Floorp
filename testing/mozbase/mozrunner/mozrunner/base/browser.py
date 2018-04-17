@@ -59,9 +59,6 @@ class GeckoRuntimeRunner(BaseRunner):
 
         # Bug 775416 - Ensure that binary options are passed in first
         command[1:1] = self.cmdargs
-
-        if hasattr(self.app_ctx, 'wrap_command'):
-            command = self.app_ctx.wrap_command(command)
         return command
 
     def start(self, *args, **kwargs):
@@ -80,3 +77,29 @@ class GeckoRuntimeRunner(BaseRunner):
             self.env["MOZ_CRASHREPORTER"] = "1"
 
         BaseRunner.start(self, *args, **kwargs)
+
+
+class BlinkRuntimeRunner(BaseRunner):
+    """A base runner class for running apps like Google Chrome or Chromium."""
+    def __init__(self, binary, cmdargs=None, **runner_args):
+        super(BlinkRuntimeRunner, self).__init__(**runner_args)
+        self.binary = binary
+        self.cmdargs = cmdargs or []
+
+        data_dir, name = os.path.split(self.profile.profile)
+        profile_args = [
+            '--user-data-dir={}'.format(data_dir),
+            '--profile-directory={}'.format(name),
+            '--no-first-run',
+        ]
+        self.cmdargs.extend(profile_args)
+
+    @property
+    def command(self):
+        cmd = self.cmdargs[:]
+        if self.profile.addons:
+            cmd.append('--load-extension={}'.format(','.join(self.profile.addons)))
+        return [self.binary] + cmd
+
+    def check_for_crashes(self, *args, **kwargs):
+        raise NotImplementedError
