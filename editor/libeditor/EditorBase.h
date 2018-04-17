@@ -1248,7 +1248,7 @@ public:
    */
   nsresult ClearSelection();
 
-  nsresult IsPreformatted(nsIDOMNode* aNode, bool* aResult);
+  static bool IsPreformatted(nsINode* aNode);
 
   /**
    * SplitNodeDeep() splits aMostAncestorToSplit deeply.
