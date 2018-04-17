@@ -159,6 +159,21 @@ Release Promotion
 ``release_eta``
    The time and date when a release is scheduled to live. This value is passed to Balrog.
 
+``release_enable_partners``
+   Boolean which controls repacking vanilla Firefox builds for partners.
+
+``release_partners``
+   List of partners to repack. A null value defaults to all.
+
+``release_partner_config``
+   Configuration for partner repacks.
+
+``release_partner_build_number``
+   The build number for partner repacks. We sometimes have multiple partner build numbers per release build number; this parameter lets us bump them independently. Defaults to 1.
+
+``release_enable_emefree``
+   Boolean which controls repacking vanilla Firefox builds into EME-free builds.
+
 Comm Push Information
 ---------------------
 
