@@ -176,7 +176,7 @@ Client::Focus(ErrorResult& aRv)
   // and also avoid invoking callbacks if the worker starts shutting
   // down.
   RefPtr<WorkerHolderToken> token =
-    WorkerHolderToken::Create(GetCurrentThreadWorkerPrivate(), Terminating);
+    WorkerHolderToken::Create(GetCurrentThreadWorkerPrivate(), Closing);
 
   EnsureHandle();
   RefPtr<ClientStatePromise> innerPromise = mHandle->Focus();
