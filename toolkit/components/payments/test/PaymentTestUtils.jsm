@@ -117,10 +117,10 @@ var PaymentTestUtils = {
       return {
         optionCount: popupBox.children.length,
         selectedOptionIndex,
-        selectedOptionValue: selectedOption.getAttribute("value"),
+        selectedOptionID: selectedOption.getAttribute("value"),
         selectedOptionLabel: selectedOption.getAttribute("label"),
         selectedOptionCurrency: currencyAmount.getAttribute("currency"),
-        selectedOptionAmount: currencyAmount.getAttribute("amount"),
+        selectedOptionValue: currencyAmount.getAttribute("value"),
       };
     },
 

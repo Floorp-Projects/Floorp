@@ -38,6 +38,7 @@ export let requestStore = new PaymentsStore({
       requestShipping: false,
       shippingType: "shipping",
     },
+    shippingOption: null,
   },
   selectedPayerAddress: null,
   selectedPaymentCard: null,
