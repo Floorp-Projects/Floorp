@@ -4,6 +4,7 @@
 
 "use strict";
 
+var promise = require("promise");
 var defer = require("devtools/shared/defer");
 const { extend } = require("devtools/shared/extend");
 var EventEmitter = require("devtools/shared/event-emitter");
@@ -982,7 +983,7 @@ Actor.prototype = extend(Pool.prototype, {
   },
 
   _queueResponse: function(create) {
-    let pending = this._pendingResponse || Promise.resolve(null);
+    let pending = this._pendingResponse || promise.resolve(null);
     let response = create(pending);
     this._pendingResponse = response;
   }
@@ -1247,7 +1248,7 @@ Front.prototype = extend(Pool.prototype, {
    * represents.
    */
   actor: function() {
-    return Promise.resolve(this.actorID);
+    return promise.resolve(this.actorID);
   },
 
   toString: function() {
@@ -1313,7 +1314,7 @@ Front.prototype = extend(Pool.prototype, {
         // Check to see if any of the preEvents returned a promise -- if so,
         // wait for their resolution before emitting. Otherwise, emit synchronously.
         if (results.some(result => result && typeof result.then === "function")) {
-          Promise.all(results).then(() => {
+          promise.all(results).then(() => {
             return EventEmitter.emit.apply(null, [this, event.name].concat(args));
           });
           return;
