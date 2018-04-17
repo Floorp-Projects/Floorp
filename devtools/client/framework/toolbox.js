@@ -74,6 +74,8 @@ loader.lazyRequireGetter(this, "buildHarLog",
   "devtools/client/netmonitor/src/har/har-builder-utils", true);
 loader.lazyRequireGetter(this, "getKnownDeviceFront",
   "devtools/shared/fronts/device", true);
+loader.lazyRequireGetter(this, "NetMonitorAPI",
+  "devtools/client/netmonitor/src/api", true);
 
 loader.lazyGetter(this, "domNodeConstants", () => {
   return require("devtools/shared/dom-node-constants");
@@ -116,13 +118,11 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._initInspector = null;
   this._inspector = null;
   this._styleSheets = null;
+  this._netMonitorAPI = null;
 
   // Map of frames (id => frame-info) and currently selected frame id.
   this.frameMap = new Map();
   this.selectedFrameId = null;
-
-  // List of listeners for `devtools.network.onRequestFinished` WebExt API
-  this._requestFinishedListeners = new Set();
 
   this._toolRegistered = this._toolRegistered.bind(this);
   this._toolUnregistered = this._toolUnregistered.bind(this);
@@ -2687,7 +2687,6 @@ Toolbox.prototype = {
       this._sourceMapURLService.destroy();
       this._sourceMapURLService = null;
     }
-
     if (this._sourceMapService) {
       this._sourceMapService.stopSourceMapWorker();
       this._sourceMapService = null;
@@ -2785,6 +2784,11 @@ Toolbox.prototype = {
     // target.
     deferred.resolve(settleAll(outstanding)
         .catch(console.error)
+        .then(() => {
+          let api = this._netMonitorAPI;
+          this._netMonitorAPI = null;
+          return api ? api.destroy() : null;
+        }, console.error)
         .then(() => {
           this._removeHostListeners();
 
@@ -3045,21 +3049,38 @@ Toolbox.prototype = {
   // Support for WebExtensions API (`devtools.network.*`)
 
   /**
+   * Return Netmonitor API object. This object offers Network monitor
+   * public API that can be consumed by other panels or WE API.
+   */
+  getNetMonitorAPI: async function() {
+    let netPanel = this.getPanel("netmonitor");
+
+    // Return Net panel if it exists.
+    if (netPanel) {
+      return netPanel.panelWin.Netmonitor.api;
+    }
+
+    if (this._netMonitorAPI) {
+      return this._netMonitorAPI;
+    }
+
+    // Create and initialize Network monitor API object.
+    // This object is only connected to the backend - not to the UI.
+    this._netMonitorAPI = new NetMonitorAPI();
+    await this._netMonitorAPI.connect(this);
+
+    return this._netMonitorAPI;
+  },
+
+  /**
    * Returns data (HAR) collected by the Network panel.
    */
   getHARFromNetMonitor: async function() {
-    let netPanel = this.getPanel("netmonitor");
+    let netMonitor = await this.getNetMonitorAPI();
+    let har = await netMonitor.getHar();
 
-    // The panel doesn't have to exist (it must be selected
-    // by the user at least once to be created).
-    // Return default empty HAR log in such case.
-    if (!netPanel) {
-      let har = await buildHarLog(Services.appinfo);
-      return har.log;
-    }
-
-    // Use Netmonitor object to get the current HAR log.
-    let har = await netPanel.panelWin.Netmonitor.getHar();
+    // Return default empty HAR file if needed.
+    har = har || buildHarLog(Services.appinfo);
 
     // Return the log directly to be compatible with
     // Chrome WebExtension API.
@@ -3074,24 +3095,26 @@ Toolbox.prototype = {
    *        a function that takes ({harEntry, requestId})
    *        as first argument.
    */
-  addRequestFinishedListener: function(listener) {
-    // Log console message informing the extension developer
-    // that the Network panel needs to be selected at least
-    // once in order to receive `onRequestFinished` events.
-    let message = "The Network panel needs to be selected at least" +
-      " once in order to receive 'onRequestFinished' events.";
-    this.target.logWarningInPage(message, "har");
-
-    // Add the listener into internal list.
-    this._requestFinishedListeners.add(listener);
+  addRequestFinishedListener: async function(listener) {
+    let netMonitor = await this.getNetMonitorAPI();
+    netMonitor.addRequestFinishedListener(listener);
   },
 
-  removeRequestFinishedListener: function(listener) {
-    this._requestFinishedListeners.delete(listener);
-  },
+  removeRequestFinishedListener: async function(listener) {
+    let netMonitor = await this.getNetMonitorAPI();
+    netMonitor.removeRequestFinishedListener(listener);
 
-  getRequestFinishedListeners: function() {
-    return this._requestFinishedListeners;
+    // Destroy Network monitor API object if the following is true:
+    // 1) there is no listener
+    // 2) the Net panel doesn't exist/use the API object (if the panel
+    //    exists it's also responsible for destroying it,
+    //    see `NetMonitorPanel.open` for more details)
+    let netPanel = this.getPanel("netmonitor");
+    let hasListeners = netMonitor.hasRequestFinishedListeners();
+    if (this._netMonitorAPI && !hasListeners && !netPanel) {
+      this._netMonitorAPI.destroy();
+      this._netMonitorAPI = null;
+    }
   },
 
   /**
@@ -3102,17 +3125,9 @@ Toolbox.prototype = {
    *        Id of the request for which the response content
    *        should be fetched.
    */
-  fetchResponseContent: function(requestId) {
-    let netPanel = this.getPanel("netmonitor");
-
-    // The panel doesn't have to exist (it must be selected
-    // by the user at least once to be created).
-    // Return undefined content in such case.
-    if (!netPanel) {
-      return Promise.resolve({content: {}});
-    }
-
-    return netPanel.panelWin.Netmonitor.fetchResponseContent(requestId);
+  fetchResponseContent: async function(requestId) {
+    let netMonitor = await this.getNetMonitorAPI();
+    return netMonitor.fetchResponseContent(requestId);
   },
 
   // Support management of installed WebExtensions that provide a devtools_page.
