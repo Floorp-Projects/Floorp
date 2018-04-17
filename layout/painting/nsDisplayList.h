@@ -5606,18 +5606,18 @@ public:
                     nsDisplayList* aList,
                     const ActiveScrolledRoot* aActiveScrolledRoot,
                     nsDisplayOwnLayerFlags aFlags = nsDisplayOwnLayerFlags::eNone,
-                    ViewID aScrollTarget = mozilla::layers::FrameMetrics::NULL_SCROLL_ID,
-                    const ScrollbarData& aThumbData = ScrollbarData{},
+                    const ScrollbarData& aScrollbarData = ScrollbarData{},
                     bool aForceActive = true,
                     bool aClearClipChain = false);
+
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
 #endif
+
   nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder, const nsDisplayOwnLayer& aOther)
     : nsDisplayWrapList(aBuilder, aOther)
     , mFlags(aOther.mFlags)
-    , mScrollTarget(aOther.mScrollTarget)
-    , mThumbData(aOther.mThumbData)
+    , mScrollbarData(aOther.mScrollbarData)
     , mForceActive(aOther.mForceActive)
     , mWrAnimationId(aOther.mWrAnimationId)
   {
@@ -5657,12 +5657,15 @@ public:
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
 protected:
   nsDisplayOwnLayerFlags mFlags;
-  ViewID mScrollTarget;
-  // If this nsDisplayOwnLayer represents a scroll thumb layer, mThumbData
-  // stores information about the scroll thumb. Otherwise, mThumbData will be
-  // default-constructed (in particular with mDirection == Nothing())
-  // and can be ignored.
-  ScrollbarData mThumbData;
+
+  /**
+   * If this nsDisplayOwnLayer represents a scroll thumb layer or a
+   * scrollbar container layer, mScrollbarData stores information
+   * about the scrollbar. Otherwise, mScrollbarData will be
+   * default-constructed (in particular with mDirection == Nothing())
+   * and can be ignored.
+   */
+  ScrollbarData mScrollbarData;
   bool mForceActive;
   uint64_t mWrAnimationId;
 };

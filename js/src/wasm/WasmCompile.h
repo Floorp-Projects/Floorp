@@ -86,7 +86,10 @@ EstimateCompiledCodeSize(Tier tier, size_t bytecodeSize);
 //  - *error is null and the caller should report out-of-memory.
 
 SharedModule
-CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, UniqueChars* error);
+CompileBuffer(const CompileArgs& args,
+              const ShareableBytes& bytecode,
+              UniqueChars* error,
+              UniqueCharsVector* warnings);
 
 // Attempt to compile the second tier of the given wasm::Module, returning whether
 // tier-2 compilation succeeded and Module::finishTier2 was called.
@@ -121,7 +124,8 @@ CompileStreaming(const CompileArgs& args,
                  const ExclusiveStreamEnd& codeStreamEnd,
                  const ExclusiveTailBytesPtr& tailBytesPtr,
                  const Atomic<bool>& cancelled,
-                 UniqueChars* error);
+                 UniqueChars* error,
+                 UniqueCharsVector* warnings);
 
 }  // namespace wasm
 }  // namespace js

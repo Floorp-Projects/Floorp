@@ -459,7 +459,7 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
       const ActiveScrolledRoot* ownLayerASR = contASRTracker.GetContainerASR();
       aLists.Content()->AppendToTop(
         MakeDisplayItem<nsDisplayOwnLayer>(aBuilder, this, &masterList, ownLayerASR,
-                                           flags, scrollTargetId,
+                                           flags,
                                            ScrollbarData{scrollDirection,
                                                          layers::ScrollbarLayerType::Thumb,
                                                          GetThumbRatio(),
@@ -467,7 +467,8 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                                          thumbLength,
                                                          isAsyncDraggable,
                                                          sliderTrackStart,
-                                                         sliderTrackLength}));
+                                                         sliderTrackLength,
+                                                         scrollTargetId}));
 
       return;
     }

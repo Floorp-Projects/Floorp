@@ -2224,7 +2224,7 @@ HelperThread::threadLoop()
     JSContext cx(nullptr, JS::ContextOptions());
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!cx.init(ContextKind::Background))
+        if (!cx.init(ContextKind::HelperThread))
             oomUnsafe.crash("HelperThread cx.init()");
     }
     cx.setHelperThread(this);

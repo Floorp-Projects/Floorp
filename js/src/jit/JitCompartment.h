@@ -62,9 +62,9 @@ class JitRuntime
     friend class JitCompartment;
 
     // Executable allocator for all code except wasm code.
-    ActiveThreadData<ExecutableAllocator> execAlloc_;
+    MainThreadData<ExecutableAllocator> execAlloc_;
 
-    ActiveThreadData<uint64_t> nextCompilationId_;
+    MainThreadData<uint64_t> nextCompilationId_;
 
     // Shared exception-handler tail.
     ExclusiveAccessLockWriteOnceData<uint32_t> exceptionTailOffset_;
@@ -138,7 +138,7 @@ class JitRuntime
 #ifdef DEBUG
     // The number of possible bailing places encounters before forcefully bailing
     // in that place. Zero means inactive.
-    ActiveThreadData<uint32_t> ionBailAfter_;
+    MainThreadData<uint32_t> ionBailAfter_;
 #endif
 
     // Number of Ion compilations which were finished off thread and are
@@ -148,8 +148,8 @@ class JitRuntime
 
     // List of Ion compilation waiting to get linked.
     using IonBuilderList = mozilla::LinkedList<js::jit::IonBuilder>;
-    ActiveThreadData<IonBuilderList> ionLazyLinkList_;
-    ActiveThreadData<size_t> ionLazyLinkListSize_;
+    MainThreadData<IonBuilderList> ionLazyLinkList_;
+    MainThreadData<size_t> ionLazyLinkListSize_;
 
   private:
     void generateLazyLinkStub(MacroAssembler& masm);

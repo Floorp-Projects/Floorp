@@ -28,7 +28,7 @@ class GCParallelTask
     UnprotectedData<TaskState> state;
 
     // Amount of time this task took to execute.
-    ActiveThreadOrGCTaskData<mozilla::TimeDuration> duration_;
+    MainThreadOrGCTaskData<mozilla::TimeDuration> duration_;
 
     explicit GCParallelTask(const GCParallelTask&) = delete;
 

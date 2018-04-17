@@ -189,8 +189,6 @@ public:
   typedef ServoElementSnapshotTable SnapshotTable;
   typedef mozilla::dom::Element Element;
 
-  NS_INLINE_DECL_REFCOUNTING(mozilla::RestyleManager)
-
   // Get an integer that increments every time we process pending restyles.
   // The value is never 0.
   uint64_t GetRestyleGeneration() const { return mRestyleGeneration; }
@@ -203,6 +201,13 @@ public:
   }
 
   void Disconnect() { mPresContext = nullptr; }
+
+  ~RestyleManager()
+  {
+    MOZ_ASSERT(!mAnimationsWithDestroyedFrame,
+               "leaving dangling pointers from AnimationsWithDestroyedFrame");
+    MOZ_ASSERT(!mReentrantChanges);
+  }
 
   static nsCString RestyleHintToString(nsRestyleHint aHint);
 
@@ -448,13 +453,6 @@ protected:
                                    ServoPostTraversalFlags aFlags);
 
   ServoStyleSet* StyleSet() const { return PresContext()->StyleSet(); }
-
-  ~RestyleManager()
-  {
-    MOZ_ASSERT(!mAnimationsWithDestroyedFrame,
-               "leaving dangling pointers from AnimationsWithDestroyedFrame");
-    MOZ_ASSERT(!mReentrantChanges);
-  }
 
   void RestyleForEmptyChange(Element* aContainer);
   void MaybeRestyleForEdgeChildChange(Element* aContainer, nsIContent* aChangedChild);

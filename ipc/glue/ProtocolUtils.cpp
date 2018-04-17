@@ -485,7 +485,7 @@ IProtocol::AllocShmem(size_t aSize,
     return false;
   }
 
-  *aOutMem = Shmem(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), rawmem, id);
+  *aOutMem = Shmem(Shmem::PrivateIPDLCaller(), rawmem, id);
   return true;
 }
 
@@ -500,7 +500,7 @@ IProtocol::AllocUnsafeShmem(size_t aSize,
     return false;
   }
 
-  *aOutMem = Shmem(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), rawmem, id);
+  *aOutMem = Shmem(Shmem::PrivateIPDLCaller(), rawmem, id);
   return true;
 }
 
@@ -518,7 +518,7 @@ IProtocol::DeallocShmem(Shmem& aMem)
     return false;
   }
 #endif // DEBUG
-  aMem.forget(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead());
+  aMem.forget(Shmem::PrivateIPDLCaller());
   return ok;
 }
 
@@ -747,13 +747,13 @@ IToplevelProtocol::CreateSharedMemory(size_t aSize,
                                       Shmem::id_t* aId)
 {
   RefPtr<Shmem::SharedMemory> segment(
-    Shmem::Alloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), aSize, aType, aUnsafe));
+    Shmem::Alloc(Shmem::PrivateIPDLCaller(), aSize, aType, aUnsafe));
   if (!segment) {
     return nullptr;
   }
   int32_t id = GetSide() == ParentSide ? ++mLastShmemId : --mLastShmemId;
   Shmem shmem(
-    Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(),
+    Shmem::PrivateIPDLCaller(),
     segment.get(),
     id);
 
@@ -768,13 +768,13 @@ IToplevelProtocol::CreateSharedMemory(size_t aSize,
 #endif
 
   Message* descriptor = shmem.ShareTo(
-    Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), pid, MSG_ROUTING_CONTROL);
+    Shmem::PrivateIPDLCaller(), pid, MSG_ROUTING_CONTROL);
   if (!descriptor) {
     return nullptr;
   }
   Unused << GetIPCChannel()->Send(descriptor);
 
-  *aId = shmem.Id(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead());
+  *aId = shmem.Id(Shmem::PrivateIPDLCaller());
   Shmem::SharedMemory* rawSegment = segment.get();
   mShmemMap.AddWithID(segment.forget().take(), *aId);
   return rawSegment;
@@ -795,17 +795,17 @@ IToplevelProtocol::IsTrackingSharedMemory(Shmem::SharedMemory* segment)
 bool
 IToplevelProtocol::DestroySharedMemory(Shmem& shmem)
 {
-  Shmem::id_t aId = shmem.Id(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead());
+  Shmem::id_t aId = shmem.Id(Shmem::PrivateIPDLCaller());
   Shmem::SharedMemory* segment = LookupSharedMemory(aId);
   if (!segment) {
     return false;
   }
 
   Message* descriptor = shmem.UnshareFrom(
-    Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), MSG_ROUTING_CONTROL);
+    Shmem::PrivateIPDLCaller(), MSG_ROUTING_CONTROL);
 
   mShmemMap.Remove(aId);
-  Shmem::Dealloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), segment);
+  Shmem::Dealloc(Shmem::PrivateIPDLCaller(), segment);
 
   if (!GetIPCChannel()->CanSend()) {
     delete descriptor;
@@ -819,7 +819,7 @@ void
 IToplevelProtocol::DeallocShmems()
 {
   for (IDMap<SharedMemory*>::const_iterator cit = mShmemMap.begin(); cit != mShmemMap.end(); ++cit) {
-    Shmem::Dealloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), cit->second);
+    Shmem::Dealloc(Shmem::PrivateIPDLCaller(), cit->second);
   }
   mShmemMap.Clear();
 }
@@ -828,7 +828,7 @@ bool
 IToplevelProtocol::ShmemCreated(const Message& aMsg)
 {
   Shmem::id_t id;
-  RefPtr<Shmem::SharedMemory> rawmem(Shmem::OpenExisting(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), aMsg, &id, true));
+  RefPtr<Shmem::SharedMemory> rawmem(Shmem::OpenExisting(Shmem::PrivateIPDLCaller(), aMsg, &id, true));
   if (!rawmem) {
     return false;
   }
@@ -849,7 +849,7 @@ IToplevelProtocol::ShmemDestroyed(const Message& aMsg)
   Shmem::SharedMemory* rawmem = LookupSharedMemory(id);
   if (rawmem) {
     mShmemMap.Remove(id);
-    Shmem::Dealloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), rawmem);
+    Shmem::Dealloc(Shmem::PrivateIPDLCaller(), rawmem);
   }
   return true;
 }
