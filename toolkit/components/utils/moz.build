@@ -13,5 +13,8 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES['components-utils'] = [
-    'ClientEnvironment.jsm'
+    'ClientEnvironment.jsm',
+    'JsonSchemaValidator.jsm',
 ]
+
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']

@@ -4,7 +4,7 @@
 
 ChromeUtils.defineModuleGetter(this, "LogManager", "resource://normandy/lib/LogManager.jsm");
 ChromeUtils.defineModuleGetter(this, "Uptake", "resource://normandy/lib/Uptake.jsm");
-ChromeUtils.defineModuleGetter(this, "PoliciesValidator", "resource:///modules/policies/PoliciesValidator.jsm");
+ChromeUtils.defineModuleGetter(this, "JsonSchemaValidator", "resource://gre/modules/components-utils/JsonSchemaValidator.jsm");
 
 var EXPORTED_SYMBOLS = ["BaseAction"];
 
@@ -72,7 +72,7 @@ class BaseAction {
       return;
     }
 
-    let [valid, validatedArguments] = PoliciesValidator.validateAndParseParameters(recipe.arguments, this.schema);
+    let [valid, validatedArguments] = JsonSchemaValidator.validateAndParseParameters(recipe.arguments, this.schema);
     if (!valid) {
       Cu.reportError(new Error(`Arguments do not match schema. arguments: ${JSON.stringify(recipe.arguments)}. schema: ${JSON.stringify(this.schema)}`));
       Uptake.reportRecipe(recipe.id, Uptake.RECIPE_EXECUTION_ERROR);
