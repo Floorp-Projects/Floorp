@@ -33,6 +33,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+// To check if we need to use flatpak portal for printing
+#include "nsIGIOService.h"
+
 using namespace mozilla;
 
 using mozilla::gfx::IntSize;
@@ -355,6 +358,20 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
     // If you're not familiar with umasks, they contain the bits of what NOT to set in the permissions
     // (thats because files and directories have different numbers of bits for their permissions)
     destFile->SetPermissions(0666 & ~(mask));
+
+    // Notify flatpak printing portal that file is completely written
+    nsCOMPtr<nsIGIOService> giovfs =
+      do_GetService(NS_GIOSERVICE_CONTRACTID);
+    bool shouldUsePortal;
+    if (giovfs) {
+      giovfs->ShouldUseFlatpakPortal(&shouldUsePortal);
+      if (shouldUsePortal) {
+        // Use the name of the file for printing to match with nsFlatpakPrintPortal
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        // Pass filename to be sure that observer process the right data
+        os->NotifyObservers(nullptr, "print-to-file-finished", targetPath.get());
+      }
+    }
   }
   return NS_OK;
 }

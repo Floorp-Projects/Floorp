@@ -21,6 +21,7 @@ job-defaults:
       by-project:
          mozilla-beta: ["project:releng:snapcraft:firefox:beta"]
          mozilla-release: ["project:releng:snapcraft:firefox:candidate"]
+         mozilla-esr60: ["project:releng:snapcraft:firefox:esr"]
          default: ["project:releng:snapcraft:firefox:mock"]
    treeherder:
       platform: linux64/opt
@@ -30,6 +31,7 @@ job-defaults:
       by-project:
          mozilla-beta: scriptworker-prov-v1/pushsnap-v1
          mozilla-release: scriptworker-prov-v1/pushsnap-v1
+         mozilla-esr60: scriptworker-prov-v1/pushsnap-v1
          default: scriptworker-prov-v1/dep-pushsnap
    worker:
       implementation: push-snap

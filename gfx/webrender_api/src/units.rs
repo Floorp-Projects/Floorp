@@ -35,6 +35,15 @@ pub type DevicePoint = TypedPoint2D<f32, DevicePixel>;
 pub type DeviceVector2D = TypedVector2D<f32, DevicePixel>;
 pub type DeviceSize = TypedSize2D<f32, DevicePixel>;
 
+/// Geometry in the coordinate system of a Picture (intermediate
+/// surface) in physical pixels.
+#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct PicturePixel;
+
+pub type PictureIntRect = TypedRect<i32, PicturePixel>;
+pub type PictureIntPoint = TypedPoint2D<i32, PicturePixel>;
+pub type PictureIntSize = TypedSize2D<i32, PicturePixel>;
+
 /// Geometry in a stacking context's local coordinate space (logical pixels).
 ///
 /// For now layout pixels are equivalent to layer pixels, but it may change.

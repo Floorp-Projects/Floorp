@@ -27,7 +27,8 @@ use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use internal_types::{FastHashMap, FastHashSet, SourceTexture, TextureUpdateList};
 use profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use render_backend::FrameId;
-use render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId, RenderTaskTree};
+use render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId};
+use render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle, RenderTaskTree};
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::cmp;
 use std::fmt::Debug;
@@ -146,6 +147,29 @@ pub struct ResourceClassCache<K: Hash + Eq, V, U: Default> {
     resources: FastHashMap<K, V>,
     pub user_data: U,
 }
+
+fn intersect_for_tile(
+    dirty: DeviceUintRect,
+    width: u32,
+    height: u32,
+    tile_size: TileSize,
+    tile_offset: TileOffset,
+
+) -> Option<DeviceUintRect> {
+        dirty.intersection(&DeviceUintRect::new(
+            DeviceUintPoint::new(
+                tile_offset.x as u32 * tile_size as u32,
+                tile_offset.y as u32 * tile_size as u32
+            ),
+            DeviceUintSize::new(width, height),
+        )).map(|mut r| {
+                // we can't translate by a negative size so do it manually
+                r.origin.x -= tile_offset.x as u32 * tile_size as u32;
+                r.origin.y -= tile_offset.y as u32 * tile_size as u32;
+                r
+            })
+}
+
 
 impl<K, V, U> ResourceClassCache<K, V, U>
 where
@@ -323,14 +347,16 @@ impl ResourceCache {
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
         user_data: Option<[f32; 3]>,
+        is_opaque: bool,
         mut f: F,
-    ) -> CacheItem where F: FnMut(&mut RenderTaskTree) -> (RenderTaskId, bool) {
+    ) -> RenderTaskCacheEntryHandle where F: FnMut(&mut RenderTaskTree) -> RenderTaskId {
         self.cached_render_tasks.request_render_task(
             key,
             &mut self.texture_cache,
             gpu_cache,
             render_tasks,
             user_data,
+            is_opaque,
             |render_task_tree| Ok(f(render_task_tree))
         ).expect("Failed to request a render task from the resource cache!")
     }
@@ -609,6 +635,7 @@ impl ResourceCache {
         //  - The blob hasn't already been requested this frame.
         if self.pending_image_requests.insert(request) && template.data.is_blob() {
             if let Some(ref mut renderer) = self.blob_image_renderer {
+                let mut dirty_rect = template.dirty_rect;
                 let (offset, w, h) = match template.tiling {
                     Some(tile_size) => {
                         let tile_offset = request.tile.unwrap();
@@ -621,6 +648,13 @@ impl ResourceCache {
                             tile_offset.x as f32 * tile_size as f32,
                             tile_offset.y as f32 * tile_size as f32,
                         );
+
+                        if let Some(dirty) = dirty_rect {
+                            dirty_rect = intersect_for_tile(dirty, w, h, tile_size, tile_offset);
+                            if dirty_rect.is_none() {
+                                return
+                            }
+                        }
 
                         (offset, w, h)
                     }
@@ -640,7 +674,7 @@ impl ResourceCache {
                         offset,
                         format: template.descriptor.format,
                     },
-                    template.dirty_rect,
+                    dirty_rect,
                 );
             }
         }
@@ -810,6 +844,17 @@ impl ResourceCache {
         }
     }
 
+    pub fn get_cached_render_task(
+        &self,
+        handle: &RenderTaskCacheEntryHandle,
+    ) -> &RenderTaskCacheEntry {
+        self.cached_render_tasks.get_cache_entry(handle)
+    }
+
+    pub fn get_texture_cache_item(&self, handle: &TextureCacheHandle) -> CacheItem {
+        self.texture_cache.get(handle)
+    }
+
     pub fn get_image_properties(&self, image_key: ImageKey) -> Option<ImageProperties> {
         let image_template = &self.resources.image_templates.get(image_key);
 
@@ -886,6 +931,12 @@ impl ResourceCache {
 
         // Apply any updates of new / updated images (incl. blobs) to the texture cache.
         self.update_texture_cache(gpu_cache);
+        render_tasks.prepare_for_render();
+        self.cached_render_tasks.update(
+            gpu_cache,
+            &mut self.texture_cache,
+            render_tasks,
+        );
         self.texture_cache.end_frame(texture_cache_profile);
     }
 
@@ -893,6 +944,7 @@ impl ResourceCache {
         for request in self.pending_image_requests.drain() {
             let image_template = self.resources.image_templates.get_mut(request.key).unwrap();
             debug_assert!(image_template.data.uses_texture_cache());
+            let mut dirty_rect = image_template.dirty_rect;
 
             let image_data = match image_template.data {
                 ImageData::Raw(..) | ImageData::External(..) => {
@@ -934,6 +986,13 @@ impl ResourceCache {
 
                 let (actual_width, actual_height) =
                     compute_tile_size(image_descriptor, tile_size, tile);
+
+                if let Some(dirty) = dirty_rect {
+                    dirty_rect = intersect_for_tile(dirty, actual_width, actual_height, tile_size, tile);
+                    if dirty_rect.is_none() {
+                        continue
+                    }
+                }
 
                 // The tiled image could be stored on the CPU as one large image or be
                 // already broken up into tiles. This affects the way we compute the stride
@@ -995,7 +1054,7 @@ impl ResourceCache {
                 filter,
                 Some(image_data),
                 [0.0; 3],
-                image_template.dirty_rect,
+                dirty_rect,
                 gpu_cache,
                 None,
             );

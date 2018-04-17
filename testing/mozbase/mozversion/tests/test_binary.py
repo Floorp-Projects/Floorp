@@ -8,21 +8,29 @@ from __future__ import absolute_import
 
 import os
 import sys
-import tempfile
 import shutil
-import unittest
 
 import mozunit
-
-import mozfile
+import pytest
+from moztest.selftest.fixtures import binary as real_binary  # noqa: F401
 
 from mozversion import errors, get_version
 
 
-class BinaryTest(unittest.TestCase):
-    """test getting application version information from a binary path"""
+"""test getting application version information from a binary path"""
 
-    application_ini = """[App]
+
+@pytest.fixture(name='binary')
+def fixure_binary(tmpdir):
+    binary = tmpdir.join('binary')
+    binary.write('foobar')
+    return str(binary)
+
+
+@pytest.fixture(name='application_ini')
+def fixture_application_ini(tmpdir):
+    ini = tmpdir.join('application.ini')
+    ini.write("""[App]
 ID = AppID
 Name = AppName
 CodeName = AppCodeName
@@ -30,151 +38,117 @@ Version = AppVersion
 BuildID = AppBuildID
 SourceRepository = AppSourceRepo
 SourceStamp = AppSourceStamp
-Vendor = AppVendor
-"""
-    platform_ini = """[Build]
+Vendor = AppVendor""")
+    return str(ini)
+
+
+@pytest.fixture(name='platform_ini')
+def fixture_platform_ini(tmpdir):
+    ini = tmpdir.join('platform.ini')
+    ini.write("""[Build]
 BuildID = PlatformBuildID
 Milestone = PlatformMilestone
 SourceStamp = PlatformSourceStamp
-SourceRepository = PlatformSourceRepo
-"""
+SourceRepository = PlatformSourceRepo""")
+    return str(ini)
 
-    def setUp(self):
-        self.cwd = os.getcwd()
-        self.tempdir = tempfile.mkdtemp()
 
-        self.binary = os.path.join(self.tempdir, 'binary')
-        with open(self.binary, 'w') as f:
-            f.write('foobar')
+def test_real_binary(real_binary):  # noqa: F811
+    if not real_binary:
+        pytest.skip('No binary found')
+    v = get_version(real_binary)
+    assert isinstance(v, dict)
 
-    def tearDown(self):
-        os.chdir(self.cwd)
-        mozfile.remove(self.tempdir)
 
-    @unittest.skipIf(not os.environ.get('BROWSER_PATH'),
-                     'No binary has been specified.')
-    def test_real_binary(self):
-        v = get_version(os.environ.get('BROWSER_PATH'))
-        self.assertTrue(isinstance(v, dict))
+def test_binary(binary, application_ini, platform_ini):
+    _check_version(get_version(binary))
 
-    def test_binary(self):
-        self._write_ini_files()
 
-        self._check_version(get_version(self.binary))
+@pytest.mark.skipif(
+    not hasattr(os, 'symlink'),
+    reason='os.symlink not supported on this platform')
+def test_symlinked_binary(binary, application_ini, platform_ini, tmpdir):
+    # create a symlink of the binary in another directory and check
+    # version against this symlink
+    symlink = str(tmpdir.join('symlink'))
+    os.symlink(binary, symlink)
+    _check_version(get_version(symlink))
 
-    @unittest.skipIf(not hasattr(os, 'symlink'),
-                     'os.symlink not supported on this platform')
-    def test_symlinked_binary(self):
-        self._write_ini_files()
 
-        # create a symlink of the binary in another directory and check
-        # version against this symlink
-        tempdir = tempfile.mkdtemp()
-        try:
-            browser_link = os.path.join(tempdir,
-                                        os.path.basename(self.binary))
-            os.symlink(self.binary, browser_link)
+def test_binary_in_current_path(binary, application_ini, platform_ini, tmpdir):
+    os.chdir(str(tmpdir))
+    _check_version(get_version())
 
-            self._check_version(get_version(browser_link))
-        finally:
-            mozfile.remove(tempdir)
 
-    def test_binary_in_current_path(self):
-        self._write_ini_files()
+def test_with_ini_files_on_osx(binary, application_ini, platform_ini, monkeypatch, tmpdir):
+    monkeypatch.setattr(sys, 'platform', 'darwin')
+    # get_version is working with ini files next to the binary
+    _check_version(get_version(binary=binary))
 
-        os.chdir(self.tempdir)
-        self._check_version(get_version())
+    # or if they are in the Resources dir
+    # in this case the binary must be in a Contents dir, next
+    # to the Resources dir
+    contents_dir = tmpdir.mkdir('Contents')
+    moved_binary = str(contents_dir.join(os.path.basename(binary)))
+    shutil.move(binary, moved_binary)
 
-    def test_with_ini_files_on_osx(self):
-        self._write_ini_files()
+    resources_dir = str(tmpdir.mkdir('Resources'))
+    shutil.move(application_ini, resources_dir)
+    shutil.move(platform_ini, resources_dir)
 
-        platform = sys.platform
-        sys.platform = 'darwin'
-        try:
-            # get_version is working with ini files next to the binary
-            self._check_version(get_version(binary=self.binary))
+    _check_version(get_version(binary=moved_binary))
 
-            # or if they are in the Resources dir
-            # in this case the binary must be in a Contents dir, next
-            # to the Resources dir
-            contents_dir = os.path.join(self.tempdir, 'Contents')
-            os.mkdir(contents_dir)
-            moved_binary = os.path.join(contents_dir,
-                                        os.path.basename(self.binary))
-            shutil.move(self.binary, moved_binary)
 
-            resources_dir = os.path.join(self.tempdir, 'Resources')
-            os.mkdir(resources_dir)
-            for ini_file in ('application.ini', 'platform.ini'):
-                shutil.move(os.path.join(self.tempdir, ini_file), resources_dir)
+def test_invalid_binary_path(tmpdir):
+    with pytest.raises(IOError):
+        get_version(str(tmpdir.join('invalid')))
 
-            self._check_version(get_version(binary=moved_binary))
-        finally:
-            sys.platform = platform
 
-    def test_invalid_binary_path(self):
-        self.assertRaises(IOError, get_version,
-                          os.path.join(self.tempdir, 'invalid'))
+def test_without_ini_files(binary):
+    """With missing ini files an exception should be thrown"""
+    with pytest.raises(errors.AppNotFoundError):
+        get_version(binary)
 
-    def test_without_ini_files(self):
-        """With missing ini files an exception should be thrown"""
-        self.assertRaises(errors.AppNotFoundError, get_version,
-                          self.binary)
 
-    def test_without_platform_ini_file(self):
-        """With a missing platform.ini file an exception should be thrown"""
-        self._write_ini_files(platform=False)
-        self.assertRaises(errors.AppNotFoundError, get_version,
-                          self.binary)
+def test_without_platform_ini_file(binary, application_ini):
+    """With a missing platform.ini file an exception should be thrown"""
+    with pytest.raises(errors.AppNotFoundError):
+        get_version(binary)
 
-    def test_without_application_ini_file(self):
-        """With a missing application.ini file an exception should be thrown"""
-        self._write_ini_files(application=False)
-        self.assertRaises(errors.AppNotFoundError, get_version,
-                          self.binary)
 
-    def test_with_exe(self):
-        """Test that we can resolve .exe files"""
-        self._write_ini_files()
+def test_without_application_ini_file(binary, platform_ini):
+    """With a missing application.ini file an exception should be thrown"""
+    with pytest.raises(errors.AppNotFoundError):
+        get_version(binary)
 
-        exe_name_unprefixed = self.binary + '1'
-        exe_name = exe_name_unprefixed + '.exe'
-        with open(exe_name, 'w') as f:
-            f.write('foobar')
-        self._check_version(get_version(exe_name_unprefixed))
 
-    def test_not_found_with_binary_specified(self):
-        self.assertRaises(errors.LocalAppNotFoundError, get_version, self.binary)
+def test_with_exe(application_ini, platform_ini, tmpdir):
+    """Test that we can resolve .exe files"""
+    binary = tmpdir.join('binary.exe')
+    binary.write('foobar')
+    _check_version(get_version(os.path.splitext(str(binary))[0]))
 
-    def _write_ini_files(self, application=True, platform=True):
-        if application:
-            with open(os.path.join(self.tempdir, 'application.ini'), 'w') as f:
-                f.writelines(self.application_ini)
-        if platform:
-            with open(os.path.join(self.tempdir, 'platform.ini'), 'w') as f:
-                f.writelines(self.platform_ini)
 
-    def _check_version(self, version):
-        self.assertEqual(version.get('application_id'), 'AppID')
-        self.assertEqual(version.get('application_name'), 'AppName')
-        self.assertEqual(
-            version.get('application_display_name'), 'AppCodeName')
-        self.assertEqual(version.get('application_version'), 'AppVersion')
-        self.assertEqual(version.get('application_buildid'), 'AppBuildID')
-        self.assertEqual(
-            version.get('application_repository'), 'AppSourceRepo')
-        self.assertEqual(
-            version.get('application_changeset'), 'AppSourceStamp')
-        self.assertEqual(version.get('application_vendor'), 'AppVendor')
-        self.assertIsNone(version.get('platform_name'))
-        self.assertEqual(version.get('platform_buildid'), 'PlatformBuildID')
-        self.assertEqual(
-            version.get('platform_repository'), 'PlatformSourceRepo')
-        self.assertEqual(
-            version.get('platform_changeset'), 'PlatformSourceStamp')
-        self.assertIsNone(version.get('invalid_key'))
-        self.assertEqual(
-            version.get('platform_version'), 'PlatformMilestone')
+def test_not_found_with_binary_specified(binary):
+    with pytest.raises(errors.LocalAppNotFoundError):
+        get_version(binary)
+
+
+def _check_version(version):
+    assert version.get('application_id') == 'AppID'
+    assert version.get('application_name') == 'AppName'
+    assert version.get('application_display_name') == 'AppCodeName'
+    assert version.get('application_version') == 'AppVersion'
+    assert version.get('application_buildid') == 'AppBuildID'
+    assert version.get('application_repository') == 'AppSourceRepo'
+    assert version.get('application_changeset') == 'AppSourceStamp'
+    assert version.get('application_vendor') == 'AppVendor'
+    assert version.get('platform_name') is None
+    assert version.get('platform_buildid') == 'PlatformBuildID'
+    assert version.get('platform_repository') == 'PlatformSourceRepo'
+    assert version.get('platform_changeset') == 'PlatformSourceStamp'
+    assert version.get('invalid_key') is None
+    assert version.get('platform_version') == 'PlatformMilestone'
 
 
 if __name__ == '__main__':
