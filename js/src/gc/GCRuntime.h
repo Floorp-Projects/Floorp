@@ -894,6 +894,8 @@ class GCRuntime
      * zeal_ value 14 performs periodic shrinking collections.
      */
 #ifdef JS_GC_ZEAL
+    static_assert(size_t(ZealMode::Count) <= 32,
+                  "Too many zeal modes to store in a uint32_t");
     ActiveThreadData<uint32_t> zealModeBits;
     ActiveThreadData<int> zealFrequency;
     ActiveThreadData<int> nextScheduled;
