@@ -32,10 +32,15 @@ ServiceWorkerContainerImpl::GetRegistrations()
 }
 
 RefPtr<ServiceWorkerRegistrationPromise>
-ServiceWorkerContainerImpl::GetReady()
+ServiceWorkerContainerImpl::GetReady(const ClientInfo& aClientInfo) const
 {
-  // TODO
-  return nullptr;
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (NS_WARN_IF(!swm)) {
+    return ServiceWorkerRegistrationPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                                             __func__);
+  }
+
+  return swm->WhenReady(aClientInfo);
 }
 
 } // namespace dom
