@@ -78,7 +78,7 @@ const DEFAULT_CERT_EXTENSION = "crt";
 
 /**
  * Generates a filename for a cert suitable to set as the |defaultString|
- * attribute on an nsIFilePicker.
+ * attribute on an Ci.nsIFilePicker.
  *
  * @param {nsIX509Cert} cert
  *        The cert to generate a filename for.
@@ -94,9 +94,9 @@ function certToFilename(cert) {
                      .replace(/\\/g, "")
                      .replace(/\//g, "");
 
-  // nsIFilePicker.defaultExtension is more of a suggestion to some
+  // Ci.nsIFilePicker.defaultExtension is more of a suggestion to some
   // implementations, so we include the extension in the file name as well. This
-  // is what the documentation for nsIFilePicker.defaultString says we should do
+  // is what the documentation for Ci.nsIFilePicker.defaultString says we should do
   // anyways.
   return `${filename}.${DEFAULT_CERT_EXTENSION}`;
 }
@@ -107,11 +107,14 @@ async function exportToFile(parent, cert) {
     return undefined;
   }
 
-  var nsIFilePicker = Ci.nsIFilePicker;
-  var fp = Cc["@mozilla.org/filepicker;1"].
-           createInstance(nsIFilePicker);
-  fp.init(parent, bundle.getString("SaveCertAs"),
-          nsIFilePicker.modeSave);
+  let results = await asyncDetermineUsages(cert);
+  let chain = getBestChain(results);
+  if (!chain) {
+    chain = [cert];
+  }
+
+  var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  fp.init(parent, bundle.getString("SaveCertAs"), Ci.nsIFilePicker.modeSave);
   fp.defaultString = certToFilename(cert);
   fp.defaultExtension = DEFAULT_CERT_EXTENSION;
   fp.appendFilter(bundle.getString("CertFormatBase64"), "*.crt; *.pem");
@@ -119,7 +122,7 @@ async function exportToFile(parent, cert) {
   fp.appendFilter(bundle.getString("CertFormatDER"), "*.der");
   fp.appendFilter(bundle.getString("CertFormatPKCS7"), "*.p7c");
   fp.appendFilter(bundle.getString("CertFormatPKCS7Chain"), "*.p7c");
-  fp.appendFilters(nsIFilePicker.filterAll);
+  fp.appendFilters(Ci.nsIFilePicker.filterAll);
   return new Promise(resolve => {
     fp.open(res => {
       resolve(fpCallback(res));
@@ -127,7 +130,8 @@ async function exportToFile(parent, cert) {
   });
 
   function fpCallback(res) {
-    if (res != nsIFilePicker.returnOK && res != nsIFilePicker.returnReplace) {
+    if (res != Ci.nsIFilePicker.returnOK &&
+        res != Ci.nsIFilePicker.returnReplace) {
       return;
     }
 
@@ -135,9 +139,8 @@ async function exportToFile(parent, cert) {
     switch (fp.filterIndex) {
       case 1:
         content = getPEMString(cert);
-        var chain = cert.getChain();
         for (let i = 1; i < chain.length; i++) {
-          content += getPEMString(chain.queryElementAt(i, Ci.nsIX509Cert));
+          content += getPEMString(chain[i]);
         }
         break;
       case 2:
