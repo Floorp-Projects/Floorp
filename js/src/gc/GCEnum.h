@@ -57,22 +57,27 @@ enum class AbortReason {
 #undef MAKE_REASON
 };
 
-#define JS_FOR_EACH_ZEAL_MODE(D)       \
-    D(RootsChange, 1)                  \
-    D(Alloc, 2)                        \
-    D(VerifierPre, 4)                  \
-    D(GenerationalGC, 7)               \
-    D(YieldBeforeMarking, 8)           \
-    D(YieldBeforeSweeping, 9)          \
-    D(IncrementalMultipleSlices, 10)   \
-    D(IncrementalMarkingValidator, 11) \
-    D(ElementsBarrier, 12)             \
-    D(CheckHashTablesOnMinorGC, 13)    \
-    D(Compact, 14)                     \
-    D(CheckHeapAfterGC, 15)            \
-    D(CheckNursery, 16)                \
-    D(YieldBeforeSweepingAtoms, 17)    \
-    D(CheckGrayMarking, 18)
+#define JS_FOR_EACH_ZEAL_MODE(D)         \
+    D(RootsChange, 1)                    \
+    D(Alloc, 2)                          \
+    D(VerifierPre, 4)                    \
+    D(GenerationalGC, 7)                 \
+    D(YieldBeforeMarking, 8)             \
+    D(YieldBeforeSweeping, 9)            \
+    D(IncrementalMultipleSlices, 10)     \
+    D(IncrementalMarkingValidator, 11)   \
+    D(ElementsBarrier, 12)               \
+    D(CheckHashTablesOnMinorGC, 13)      \
+    D(Compact, 14)                       \
+    D(CheckHeapAfterGC, 15)              \
+    D(CheckNursery, 16)                  \
+    D(YieldBeforeSweepingAtoms, 17)      \
+    D(CheckGrayMarking, 18)              \
+    D(YieldBeforeSweepingCaches, 19)     \
+    D(YieldBeforeSweepingTypes, 20)      \
+    D(YieldBeforeSweepingObjects, 21)    \
+    D(YieldBeforeSweepingNonObjects, 22) \
+    D(YieldBeforeSweepingShapeTrees, 23)
 
 enum class ZealMode {
 #define ZEAL_MODE(name, value) name = value,
