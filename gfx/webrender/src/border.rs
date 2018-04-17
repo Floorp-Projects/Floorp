@@ -94,6 +94,15 @@ impl BorderCornerKind {
         };
         BorderCornerKind::Mask(clip_data, radius, LayerSize::new(width0, width1), kind)
     }
+
+    fn get_radius(&self, original_radius: &LayerSize) -> LayerSize {
+        match *self {
+            BorderCornerKind::Solid => *original_radius,
+            BorderCornerKind::Clip(..) => *original_radius,
+            BorderCornerKind::Mask(_, ref radius, _, _) => *radius,
+            BorderCornerKind::None => *original_radius,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -168,14 +177,23 @@ fn get_corner(
             *radius,
             *border_rect,
         ),
-        (BorderStyle::Dotted, BorderStyle::Dotted) => BorderCornerKind::new_mask(
-            BorderCornerClipKind::Dot,
-            width0,
-            width1,
-            corner,
-            *radius,
-            *border_rect,
-        ),
+        (BorderStyle::Dotted, BorderStyle::Dotted) => {
+            let mut radius = *radius;
+            if radius.width < width0 {
+                radius.width = 0.0;
+            }
+            if radius.height < width1 {
+                radius.height = 0.0;
+            }
+            BorderCornerKind::new_mask(
+                BorderCornerClipKind::Dot,
+                width0,
+                width1,
+                corner,
+                radius,
+                *border_rect,
+             )
+        }
 
         // Draw border transitions with dots and/or dashes as
         // solid segments. The old border path didn't support
@@ -266,13 +284,13 @@ impl<'a> DisplayListFlattener<'a> {
         &mut self,
         info: &LayerPrimitiveInfo,
         border: &NormalBorder,
+        radius: &BorderRadius,
         widths: &BorderWidths,
         clip_and_scroll: ScrollNodeAndClipChain,
         corner_instances: [BorderCornerInstance; 4],
         edges: [BorderEdgeKind; 4],
         clip_sources: Vec<ClipSource>,
     ) {
-        let radius = &border.radius;
         let left = &border.left;
         let right = &border.right;
         let top = &border.top;
@@ -569,9 +587,17 @@ impl<'a> DisplayListFlattener<'a> {
             let mut extra_clips = Vec::new();
             let mut corner_instances = [BorderCornerInstance::Single; 4];
 
+            let radius = &border.radius;
+            let radius = BorderRadius {
+                top_left: corners[0].get_radius(&radius.top_left),
+                top_right: corners[1].get_radius(&radius.top_right),
+                bottom_right: corners[2].get_radius(&radius.bottom_right),
+                bottom_left: corners[3].get_radius(&radius.bottom_left),
+            };
+
             for (i, corner) in corners.iter().enumerate() {
                 match *corner {
-                    BorderCornerKind::Mask(corner_data, corner_radius, widths, kind) => {
+                    BorderCornerKind::Mask(corner_data, mut corner_radius, widths, kind) => {
                         let clip_source =
                             BorderCornerClipSource::new(corner_data, corner_radius, widths, kind);
                         extra_clips.push(ClipSource::BorderCorner(clip_source));
@@ -589,6 +615,7 @@ impl<'a> DisplayListFlattener<'a> {
             self.add_normal_border_primitive(
                 info,
                 &border,
+                &radius,
                 widths,
                 clip_and_scroll,
                 corner_instances,
@@ -690,23 +717,35 @@ impl BorderCornerClipSource {
                 (ellipse, 1 + desired_count.ceil() as usize)
             }
             BorderCornerClipKind::Dot => {
-                // The centers of dots follow an ellipse along the middle of the
-                // border radius.
-                let inner_radius = (corner_radius - widths * 0.5).abs();
-                let ellipse = Ellipse::new(inner_radius);
+                let mut corner_radius = corner_radius;
+                if corner_radius.width < (widths.width / 2.0) {
+                    corner_radius.width = 0.0;
+                }
+                if corner_radius.height < (widths.height / 2.0) {
+                    corner_radius.height = 0.0;
+                }
 
-                // Allocate a "worst case" number of dot clips. This can be
-                // calculated by taking the minimum edge radius, since that
-                // will result in the maximum number of dots along the path.
-                let min_diameter = widths.width.min(widths.height);
+                if corner_radius.width == 0. && corner_radius.height == 0. {
+                    (Ellipse::new(corner_radius), 1)
+                } else {
+                    // The centers of dots follow an ellipse along the middle of the
+                    // border radius.
+                    let inner_radius = (corner_radius - widths * 0.5).abs();
+                    let ellipse = Ellipse::new(inner_radius);
 
-                // Get the number of circles (assuming spacing of one diameter
-                // between dots).
-                let max_dot_count = 0.5 * ellipse.total_arc_length / min_diameter;
+                    // Allocate a "worst case" number of dot clips. This can be
+                    // calculated by taking the minimum edge radius, since that
+                    // will result in the maximum number of dots along the path.
+                    let min_diameter = widths.width.min(widths.height);
 
-                // Add space for one extra dot since they are centered at the
-                // start of the arc.
-                (ellipse, 1 + max_dot_count.ceil() as usize)
+                    // Get the number of circles (assuming spacing of one diameter
+                    // between dots).
+                    let max_dot_count = 0.5 * ellipse.total_arc_length / min_diameter;
+
+                    // Add space for one extra dot since they are centered at the
+                    // start of the arc.
+                    (ellipse, 1 + max_dot_count.ceil() as usize)
+                }
             }
         };
 
@@ -743,6 +782,16 @@ impl BorderCornerClipSource {
                 }
 
                 assert_eq!(request.close(), 2 + 2 * self.actual_clip_count);
+            }
+            BorderCornerClipKind::Dot if self.max_clip_count == 1 => {
+                let dot_diameter = lerp(self.widths.width, self.widths.height, 0.5);
+                let dot = BorderCornerDotClipData {
+                    center: LayerPoint::new(self.widths.width / 2.0, self.widths.height / 2.0),
+                    radius: 0.5 * dot_diameter,
+                };
+                self.actual_clip_count = 1;
+                dot.write(&mut request);
+                assert_eq!(request.close(), 3);
             }
             BorderCornerClipKind::Dot => {
                 let mut forward_dots = Vec::new();

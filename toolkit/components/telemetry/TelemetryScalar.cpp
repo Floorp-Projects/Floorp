@@ -928,16 +928,16 @@ internal_LogScalarError(const nsACString& aScalarName, ScalarResult aSr)
       errorMessage.AppendLiteral(u" - Attempted to set the scalar to an incompatible value.");
       break;
     case ScalarResult::StringTooLong:
-      errorMessage.AppendLiteral(u" - Truncating scalar value to 50 characters.");
+      AppendUTF8toUTF16(nsPrintfCString(" - Truncating scalar value to %d characters.", kMaximumStringValueLength), errorMessage);
       break;
     case ScalarResult::KeyIsEmpty:
       errorMessage.AppendLiteral(u" - The key must not be empty.");
       break;
     case ScalarResult::KeyTooLong:
-      errorMessage.AppendLiteral(u" - The key length must be limited to 72 characters.");
+      AppendUTF8toUTF16(nsPrintfCString(" - The key length must be limited to %d characters.", kMaximumKeyStringLength), errorMessage);
       break;
     case ScalarResult::TooManyKeys:
-      errorMessage.AppendLiteral(u" - Keyed scalars cannot have more than 100 keys.");
+      AppendUTF8toUTF16(nsPrintfCString(" - Keyed scalars cannot have more than %d keys.", kMaximumNumberOfKeys), errorMessage);
       break;
     case ScalarResult::UnsignedNegativeValue:
       errorMessage.AppendLiteral(u" - Trying to set an unsigned scalar to a negative number.");

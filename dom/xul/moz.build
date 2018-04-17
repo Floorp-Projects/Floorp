@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "XUL")
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
-    DEFINES['MOZ_CRASH_XUL_OVERLAYS'] = True
+    DEFINES['MOZ_BREAK_XUL_OVERLAYS'] = True
 
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 

@@ -37,10 +37,14 @@ function loadExtension() {
           }
         });
 
-        browser.runtime.onMessage.addListener((msg, sender) => {
-          browser.test.assertEq("disconnect-me", msg, "expected message");
-          port.disconnect();
-          // Now port.onDisconnect should fire in the content script.
+        browser.runtime.onMessage.addListener(async (msg, sender) => {
+          if (msg == "disconnect-me") {
+            port.disconnect();
+            // Now port.onDisconnect should fire in the content script.
+          } else if (msg == "close-tab") {
+            await browser.tabs.remove(sender.tab.id);
+            browser.test.sendMessage("closed_tab");
+          }
         });
       });
 
@@ -62,6 +66,7 @@ function loadExtension() {
           browser.test.sendMessage("port_ping_ponged_before_disconnect");
           port.onDisconnect.addListener(() => {
             browser.test.sendMessage("port_disconnected");
+            browser.runtime.sendMessage("close-tab");
           });
           browser.runtime.sendMessage("disconnect-me");
         });
@@ -77,10 +82,7 @@ add_task(async function contentscript_connect_and_move_tabs() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/?discoTest");
   await extension.awaitMessage("port_ping_ponged_before_disconnect");
   await extension.awaitMessage("port_disconnected");
-  // Must use gBrowser.selectedTab instead of the return value of
-  // BrowserTestUtils.openNewForegroundTab because the latter does not refer to
-  // the tab because the tab is moved between windows during the test.
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await extension.awaitMessage("closed_tab");
   await extension.unload();
 });
 
@@ -90,6 +92,6 @@ add_task(async function extension_tab_connect_and_move_tabs() {
   extension.sendMessage("open_extension_tab");
   await extension.awaitMessage("port_ping_ponged_before_disconnect");
   await extension.awaitMessage("port_disconnected");
-  // Upon unloading the extension, the extension tab is automatically removed.
+  await extension.awaitMessage("closed_tab");
   await extension.unload();
 });

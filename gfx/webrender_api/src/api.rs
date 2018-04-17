@@ -338,6 +338,11 @@ impl Transaction {
         self.frame_ops.push(FrameMsg::EnableFrameOutput(pipeline_id, enable));
     }
 
+    /// Consumes this object and just returns the frame ops.
+    pub fn get_frame_ops(self) -> Vec<FrameMsg> {
+        self.frame_ops
+    }
+
     fn finalize(self) -> (TransactionMsg, Vec<Payload>) {
         (
             TransactionMsg {
