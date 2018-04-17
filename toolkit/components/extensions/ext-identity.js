@@ -14,7 +14,7 @@ var {
 const checkRedirected = (url, redirectURI) => {
   return new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
-    xhr.open("HEAD", url);
+    xhr.open("GET", url);
     // We expect this if the user has not authenticated.
     xhr.onload = () => {
       reject(0);
