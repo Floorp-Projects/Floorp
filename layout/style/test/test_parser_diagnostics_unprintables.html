@@ -20,6 +20,8 @@
 
 const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
 
+SpecialPowers.wrap(document).docShell.cssErrorReportingEnabled = true;
+
 // There is one "pattern" for each code path through the error reporter
 // that might need to escape some kind of user-supplied text.
 // Each "pattern" is tested once with each of the "substitution"s below:
