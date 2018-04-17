@@ -93,6 +93,7 @@
           },
         };
         wdm.addListener(listener);
+
         worker = new SharedWorker(SHARED_WORKER_URL);
 
         info("Send a message to the shared worker to tell it to close " +
@@ -103,6 +104,21 @@
         ]);
         worker.port.start();
         worker.port.postMessage("close");
+        await promise;
+
+        promise = waitForRegister(SHARED_WORKER_URL);
+        worker = new SharedWorker(SHARED_WORKER_URL);
+        sharedDbg = await promise;
+
+        info("Send a message to the shared worker to tell it to close " +
+             "itself, then loop forever, and wait for its debugger to be closed.");
+        promise = waitForMultiple([
+          waitForUnregister(SHARED_WORKER_URL),
+          waitForDebuggerClose(sharedDbg)
+        ]);
+
+        worker.port.start();
+        worker.port.postMessage("close_loop");
         await promise;
 
         wdm.removeListener(listener);

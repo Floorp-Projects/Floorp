@@ -1209,6 +1209,9 @@ public:
   PrincipalIsValid() const;
 #endif
 
+  void
+  StartCancelingTimer();
+
 private:
   WorkerPrivate(WorkerPrivate* aParent,
                 const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -1420,6 +1423,8 @@ private:
 
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITimerCallback> mTimerRunnable;
+
+  nsCOMPtr<nsITimer> mCancelingTimer;
 
   nsCOMPtr<nsITimer> mGCTimer;
 
