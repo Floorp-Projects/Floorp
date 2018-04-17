@@ -4958,12 +4958,6 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, ReleaseAcquire>*,
                                    uint32_t,
                                    bool);
 
-template nsresult
-Preferences::AddAtomicUintVarCache(Atomic<uint32_t, SequentiallyConsistent>*,
-                                   const char*,
-                                   uint32_t,
-                                   bool);
-
 static void
 FloatVarChanged(const char* aPref, void* aClosure)
 {
