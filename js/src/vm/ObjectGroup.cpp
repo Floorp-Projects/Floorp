@@ -160,8 +160,8 @@ ObjectGroup::useSingletonForClone(JSFunction* fun)
     } else {
         if (!fun->lazyScript()->isLikelyConstructorWrapper())
             return false;
-        begin = fun->lazyScript()->begin();
-        end = fun->lazyScript()->end();
+        begin = fun->lazyScript()->sourceStart();
+        end = fun->lazyScript()->sourceEnd();
     }
 
     return end - begin <= 100;
