@@ -50,7 +50,7 @@ CheckThreadLocal::check() const
 
 template <AllowedHelperThread Helper>
 void
-CheckActiveThread<Helper>::check() const
+CheckMainThread<Helper>::check() const
 {
     if (OnHelperThread<Helper>())
         return;
@@ -59,9 +59,9 @@ CheckActiveThread<Helper>::check() const
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
 }
 
-template class CheckActiveThread<AllowedHelperThread::None>;
-template class CheckActiveThread<AllowedHelperThread::GCTask>;
-template class CheckActiveThread<AllowedHelperThread::IonCompile>;
+template class CheckMainThread<AllowedHelperThread::None>;
+template class CheckMainThread<AllowedHelperThread::GCTask>;
+template class CheckMainThread<AllowedHelperThread::IonCompile>;
 
 template <AllowedHelperThread Helper>
 void
