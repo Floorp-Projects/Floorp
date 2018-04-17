@@ -3054,11 +3054,39 @@ Promise_catch_impl(JSContext* cx, unsigned argc, Value* vp, bool rvalUsed)
     return Call(cx, thenVal, args.thisv(), iargs, args.rval());
 }
 
+static MOZ_ALWAYS_INLINE bool
+IsPromiseThenOrCatchRetValImplicitlyUsed(JSContext* cx)
+{
+    // The returned promise of Promise#then and Promise#catch contains
+    // stack info if async stack is enabled.  Even if their return value is not
+    // used explicitly in the script, the stack info is observable in devtools
+    // and profilers.  We shouldn't apply the optimization not to allocate the
+    // returned Promise object if the it's implicitly used by them.
+    //
+    // FIXME: Once bug 1280819 gets fixed, we can use ShouldCaptureDebugInfo.
+    if (!cx->options().asyncStack())
+        return false;
+
+    // If devtools is opened, the current compartment will become debuggee.
+    if (cx->compartment()->isDebuggee())
+        return true;
+
+    // There are 2 profilers, and they can be independently enabled.
+    if (cx->runtime()->geckoProfiler().enabled())
+        return true;
+    if (JS::IsProfileTimelineRecordingEnabled())
+        return true;
+
+    // The stack is also observable from Error#stack, but we don't care since
+    // it's nonstandard feature.
+    return false;
+}
+
 // ES2016, 25.4.5.3.
 static bool
 Promise_catch_noRetVal(JSContext* cx, unsigned argc, Value* vp)
 {
-    return Promise_catch_impl(cx, argc, vp, false);
+    return Promise_catch_impl(cx, argc, vp, IsPromiseThenOrCatchRetValImplicitlyUsed(cx));
 }
 
 // ES2016, 25.4.5.3.
@@ -3122,7 +3150,8 @@ bool
 Promise_then_noRetVal(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return Promise_then_impl(cx, args.thisv(), args.get(0), args.get(1), args.rval(), false);
+    return Promise_then_impl(cx, args.thisv(), args.get(0), args.get(1), args.rval(),
+                             IsPromiseThenOrCatchRetValImplicitlyUsed(cx));
 }
 
 // ES2016, 25.4.5.3.
