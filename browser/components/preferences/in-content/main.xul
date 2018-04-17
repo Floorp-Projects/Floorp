@@ -353,28 +353,24 @@
   <radiogroup id="saveWhere"
               preference="browser.download.useDownloadDir"
               onsyncfrompreference="return gMainPane.readUseDownloadDir();">
-    <hbox id="saveToRow">
+    <hbox>
       <radio id="saveTo"
-            value="true"
-            data-l10n-id="download-save-to"
-            aria-labelledby="saveTo downloadFolder"/>
-      <filefield id="downloadFolder"
-                flex="1"
-                preference="browser.download.folderList"
-                preference-editable="true"
-                aria-labelledby="saveTo"
-                onsyncfrompreference="return gMainPane.displayDownloadDirPref();"/>
+             value="true"
+             data-l10n-id="download-save-to"/>
+      <textbox id="downloadFolder" flex="1"
+               readonly="true"
+               aria-labelledby="saveTo"/>
       <button id="chooseFolder"
-              data-l10n-id="download-choose-folder"
-      />
+              class="accessory-button"
+              data-l10n-id="download-choose-folder"/>
     </hbox>
     <!-- Additional radio button added to support CloudStorage - Bug 1357171 -->
     <radio id="saveToCloud"
-          value="true"
-          hidden="true"/>
+           value="true"
+           hidden="true"/>
     <radio id="alwaysAsk"
-          value="false"
-          data-l10n-id="download-always-ask-where"/>
+           value="false"
+           data-l10n-id="download-always-ask-where"/>
   </radiogroup>
 </groupbox>
 
