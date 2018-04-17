@@ -2178,27 +2178,26 @@ gfxFcPlatformFontList::GetFTLibrary()
         // so use the hacky method below of making a font and extracting
         // the library pointer from that.
 
-        bool needsBold;
-        gfxFontStyle style;
-        gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
-        gfxFontFamily* family = pfl->GetDefaultFont(&style);
-        NS_ASSERTION(family, "couldn't find a default font family");
-        gfxFontEntry* fe = family->FindFontForStyle(style, needsBold, true);
-        if (!fe) {
-            return nullptr;
-        }
-        RefPtr<gfxFont> font = fe->FindOrMakeFont(&style, false);
-        if (!font) {
-            return nullptr;
-        }
+        FcPattern* pat =
+            FcPatternBuild(0, FC_FAMILY, FcTypeString, "serif", (char*)0);
+        cairo_font_face_t* face =
+            cairo_ft_font_face_create_for_pattern(pat, nullptr, 0);
+        FcPatternDestroy(pat);
 
-        gfxFT2FontBase* ft2Font = reinterpret_cast<gfxFT2FontBase*>(font.get());
-        gfxFT2LockedFace face(ft2Font);
-        if (!face.get()) {
-            return nullptr;
-        }
+        cairo_matrix_t identity;
+        cairo_matrix_init_identity(&identity);
+        cairo_font_options_t* options = cairo_font_options_create();
+        cairo_scaled_font_t* sf =
+            cairo_scaled_font_create(face, &identity, &identity, options);
+        cairo_font_options_destroy(options);
+        cairo_font_face_destroy(face);
 
-        sCairoFTLibrary = face.get()->glyph->library;
+        FT_Face ft = cairo_ft_scaled_font_lock_face(sf);
+
+        sCairoFTLibrary = ft->glyph->library;
+
+        cairo_ft_scaled_font_unlock_face(sf);
+        cairo_scaled_font_destroy(sf);
     }
 
     return sCairoFTLibrary;
