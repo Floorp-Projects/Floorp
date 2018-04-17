@@ -401,9 +401,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
     def release_to_esr(self, *args, **kwargs):
         """ mozilla-release -> mozilla-esrNN behavior. """
         dirs = self.query_abs_dirs()
-        for to_graft in self.config.get("graft_patches", []):
-            self.graft(repo=to_graft["repo"], changeset=to_graft["changeset"],
-                       cwd=dirs['abs_to_dir'])
         self.apply_replacements()
         self.touch_clobber_file(dirs['abs_to_dir'])
 
@@ -411,28 +408,6 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         dirs = self.query_abs_dirs()
         for f, from_, to in self.config["replacements"]:
             self.replace(os.path.join(dirs['abs_to_dir'], f), from_, to)
-
-    def graft(self, repo, changeset, cwd):
-        """Graft a Mercurial changeset from a remote repository."""
-        hg = self.query_exe("hg", return_type="list")
-        self.info("Pulling %s from %s" % (changeset, repo))
-        pull_cmd = hg + ["pull", "-r", changeset, repo]
-        status = self.run_command(
-            pull_cmd,
-            cwd=cwd,
-            error_list=HgErrorList,
-        )
-        if status != 0:
-            self.fatal("Cannot pull %s from %s properly" % (changeset, repo))
-        cmd = hg + ["graft", changeset]
-        self.info("Grafting %s from %s" % (changeset, repo))
-        status = self.run_command(
-            cmd,
-            cwd=cwd,
-            error_list=HgErrorList,
-        )
-        if status != 0:
-            self.fatal("Cannot graft %s from %s properly" % (changeset, repo))
 
     def pull_from_repo(self, from_dir, to_dir, revision=None, branch=None):
         """ Pull from one repo to another. """
