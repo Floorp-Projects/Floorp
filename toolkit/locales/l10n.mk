@@ -130,8 +130,6 @@ ifdef MOZ_CRASHREPORTER
 	$(RM) -rf '$(STAGEDIST)'/crashreporter.app
 endif
 endif
-	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/helper.exe
-	cp ../installer/windows/l10ngen/helper.exe $(STAGEDIST)/uninstall
 
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
 	(cd $(DIST)/l10n-stage; \

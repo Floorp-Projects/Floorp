@@ -44,6 +44,24 @@ else
 PPL_LOCALE_ARGS=$(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer
 endif
 
+OVERRIDE_DEFAULT_GOAL := installer
+installer::
+	$(MAKE) -C .. installer-stage
+	$(MAKE) $(CONFIG_DIR)/setup.exe
+
+# For building the uninstaller during the application build so it can be
+# included for mar file generation.
+uninstaller::
+	$(RM) -r $(CONFIG_DIR)
+	$(MKDIR) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/,$(BRANDING_FILES)) $(CONFIG_DIR)
+	$(call py_action,preprocessor,-Fsubstitution $(DEFINES) $(ACDEFINES) \
+	  $(srcdir)/nsis/defines.nsi.in -o $(CONFIG_DIR)/defines.nsi)
+	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+	  --preprocess-locale $(topsrcdir) \
+	  $(PPL_LOCALE_ARGS) $(AB_CD) $(CONFIG_DIR)
+
 # For building the maintenanceservice installer
 ifdef MOZ_MAINTENANCE_SERVICE
 maintenanceservice_installer::

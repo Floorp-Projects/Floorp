@@ -7,5 +7,9 @@ if [ "x$IS_NIGHTLY" = "xyes" ]; then
   MOZ_AUTOMATION_UPDATE_PACKAGING=${MOZ_AUTOMATION_UPDATE_PACKAGING-1}
 fi
 
+# Some builds (eg: Mulet) don't want the installer, so only set this if it
+# hasn't already been set.
+MOZ_AUTOMATION_INSTALLER=${MOZ_AUTOMATION_INSTALLER-1}
+
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 export MAKECAB=$TOOLTOOL_DIR/makecab.exe
