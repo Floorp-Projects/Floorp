@@ -230,6 +230,7 @@ class GCRuntime
     inline void clearZealMode(ZealMode mode);
     inline bool upcomingZealousGC();
     inline bool needZealousGC();
+    inline bool hasIncrementalTwoSliceZealMode();
 
     MOZ_MUST_USE bool addRoot(Value* vp, const char* name);
     void removeRoot(Value* vp);
@@ -1026,11 +1027,11 @@ GCRuntime::needZealousGC() {
     if (nextScheduled > 0 && --nextScheduled == 0) {
         if (hasZealMode(ZealMode::Alloc) ||
             hasZealMode(ZealMode::GenerationalGC) ||
-            hasZealMode(ZealMode::IncrementalRootsThenFinish) ||
-            hasZealMode(ZealMode::IncrementalMarkAllThenFinish) ||
+            hasZealMode(ZealMode::YieldBeforeMarking) ||
+            hasZealMode(ZealMode::YieldBeforeSweeping) ||
             hasZealMode(ZealMode::IncrementalMultipleSlices) ||
             hasZealMode(ZealMode::Compact) ||
-            hasZealMode(ZealMode::IncrementalSweepThenFinish))
+            hasZealMode(ZealMode::YieldBeforeSweepingAtoms))
         {
             nextScheduled = zealFrequency;
         }
@@ -1038,11 +1039,20 @@ GCRuntime::needZealousGC() {
     }
     return false;
 }
+
+inline bool
+GCRuntime::hasIncrementalTwoSliceZealMode() {
+    return hasZealMode(ZealMode::YieldBeforeMarking) ||
+           hasZealMode(ZealMode::YieldBeforeSweeping) ||
+           hasZealMode(ZealMode::YieldBeforeSweepingAtoms);
+}
+
 #else
 inline bool GCRuntime::hasZealMode(ZealMode mode) { return false; }
 inline void GCRuntime::clearZealMode(ZealMode mode) { }
 inline bool GCRuntime::upcomingZealousGC() { return false; }
 inline bool GCRuntime::needZealousGC() { return false; }
+inline bool GCRuntime::hasIncrementalTwoSliceZealMode() { return false; }
 #endif
 
 } /* namespace gc */
