@@ -94,6 +94,9 @@ private:
 
   ~ServiceWorkerContainer();
 
+  nsIGlobalObject*
+  GetGlobalIfValid(ErrorResult& aRv) const;
+
   RefPtr<Inner> mInner;
 
   // This only changes when a worker hijacks everything in its scope by calling
