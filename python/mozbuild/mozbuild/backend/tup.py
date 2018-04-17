@@ -65,6 +65,7 @@ class BackendTupfile(object):
         self.rules_included = False
         self.defines = []
         self.host_defines = []
+        self.outputs = set()
         self.delayed_generated_files = []
         self.delayed_installed_files = []
         self.per_source_flags = defaultdict(list)
@@ -115,6 +116,8 @@ class BackendTupfile(object):
             'outputs': ' '.join(outputs),
             'extra_outputs': ' | ' + ' '.join(extra_outputs) if extra_outputs else '',
         })
+
+        self.outputs.update(outputs)
 
     def symlink_rule(self, source, output=None, output_group=None):
         outputs = [output] if output else [mozpath.basename(source)]
@@ -172,6 +175,18 @@ class BackendTupfile(object):
     def close(self):
         return self.fh.close()
 
+    def requires_delay(self, inputs):
+        # We need to delay the generated file rule in the Tupfile until the
+        # generated inputs in the current directory are processed. We do this by
+        # checking all ObjDirPaths to make sure they are in
+        # self.outputs, or are in other directories.
+        for f in inputs:
+            if (isinstance(f, ObjDirPath) and
+                f.target_basename not in self.outputs and
+                mozpath.dirname(f.full_path) == self.objdir):
+                return True
+        return False
+
     @property
     def diff(self):
         return self.fh.diff
@@ -207,18 +222,6 @@ class TupOnly(CommonBackend, PartialBackend):
 
         self._built_in_addons = set()
         self._built_in_addons_file = 'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
-
-        # application.ini.h is a special case since we need to process
-        # the FINAL_TARGET_PP_FILES for application.ini before running
-        # the GENERATED_FILES script, and tup doesn't handle the rules
-        # out of order. Similarly, dependentlibs.list uses libxul as
-        # an input, so must be written after the rule for libxul.
-        self._delayed_files = (
-            'application.ini.h',
-            'dependentlibs.list',
-            'dependentlibs.list.gtest'
-        )
-
 
     def _get_backend_file(self, relobjdir):
         objdir = mozpath.normpath(mozpath.join(self.environment.topobjdir, relobjdir))
@@ -390,7 +393,7 @@ class TupOnly(CommonBackend, PartialBackend):
                 if any(mozpath.match(f, p) for p in skip_files):
                     return False
 
-            if any([f in obj.outputs for f in self._delayed_files]):
+            if backend_file.requires_delay(obj.inputs):
                 backend_file.delayed_generated_files.append(obj)
             else:
                 self._process_generated_file(backend_file, obj)
@@ -465,8 +468,8 @@ class TupOnly(CommonBackend, PartialBackend):
                     gen_method(backend_file)
             for obj in backend_file.delayed_generated_files:
                 self._process_generated_file(backend_file, obj)
-            for path, output in backend_file.delayed_installed_files:
-                backend_file.symlink_rule(path, output=output)
+            for path, output, output_group in backend_file.delayed_installed_files:
+                backend_file.symlink_rule(path, output=output, output_group=output_group)
             with self._write_file(fh=backend_file):
                 pass
 
@@ -625,8 +628,9 @@ class TupOnly(CommonBackend, PartialBackend):
                         output = mozpath.join('$(MOZ_OBJ_ROOT)', target, path,
                                               f.target_basename)
                         gen_backend_file = self._get_backend_file(f.context.relobjdir)
-                        if f.target_basename in self._delayed_files:
-                            gen_backend_file.delayed_installed_files.append((f.full_path, output))
+                        if gen_backend_file.requires_delay([f]):
+                            output_group = self._installed_files if f.target_basename.endswith('.h') else None
+                            gen_backend_file.delayed_installed_files.append((f.full_path, output, output_group))
                         else:
                             gen_backend_file.symlink_rule(f.full_path, output=output,
                                                           output_group=self._installed_files)
