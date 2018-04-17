@@ -815,11 +815,16 @@ Blocklist.prototype = {
 
     let text = await OS.File.read(path, { encoding: "utf-8" });
 
-    await new Promise(resolve => {
-      Services.tm.idleDispatchToMainThread(() => {
+    await new Promise((resolve, reject) => {
+      ChromeUtils.idleDispatch(() => {
         if (!this.isLoaded) {
           Services.telemetry.getHistogramById("BLOCKLIST_SYNC_FILE_LOAD").add(false);
-          this._loadBlocklistFromString(text);
+          try {
+            this._loadBlocklistFromString(text);
+          } catch (ex) {
+            // Loading the blocklist failed. Ensure the caller knows.
+            reject(ex);
+          }
         }
         resolve();
       });
@@ -827,19 +832,14 @@ Blocklist.prototype = {
   },
 
   _loadBlocklistFromString(text) {
-    try {
-      var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                   createInstance(Ci.nsIDOMParser);
-      var doc = parser.parseFromString(text, "text/xml");
-      if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
-        LOG("Blocklist::_loadBlocklistFromString: aborting due to incorrect " +
-            "XML Namespace.\r\nExpected: " + XMLURI_BLOCKLIST + "\r\n" +
-            "Received: " + doc.documentElement.namespaceURI);
-        return;
-      }
-    } catch (e) {
-      LOG("Blocklist::_loadBlocklistFromString: Error constructing blocklist " + e);
-      return;
+    var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
+                 createInstance(Ci.nsIDOMParser);
+    var doc = parser.parseFromString(text, "text/xml");
+    if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
+      LOG("Blocklist::_loadBlocklistFromString: aborting due to incorrect " +
+          "XML Namespace.\r\nExpected: " + XMLURI_BLOCKLIST + "\r\n" +
+          "Received: " + doc.documentElement.namespaceURI);
+      throw new Error("Couldn't find an XML doc with the right namespace!");
     }
     this._loadBlocklistFromXML(doc);
   },
