@@ -359,7 +359,7 @@ async function forceLayerTreeToCompositor() {
       utils.restoreNormalRefresh();
     }
   }
-  await promiseAllPaintsDone();
+  await promiseAllPaintsDone(null, true);
   await promiseApzRepaintsFlushed();
 }
 
