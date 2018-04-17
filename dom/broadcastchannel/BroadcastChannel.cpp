@@ -311,15 +311,15 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     // We are already shutting down the worker. Let's return a non-active
     // object.
     if (NS_WARN_IF(!workerRef)) {
-      bc->mState = StateClosed;
-      return bc.forget();
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
     }
 
     RefPtr<ThreadSafeWorkerRef> tsr = new ThreadSafeWorkerRef(workerRef);
 
     RefPtr<InitializeRunnable> runnable =
       new InitializeRunnable(tsr, origin, principalInfo, aRv);
-    runnable->Dispatch(Closing, aRv);
+    runnable->Dispatch(Canceling, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
