@@ -669,7 +669,6 @@ var EnvironmentData = {
     this.renderAddonsObject(addons.activeAddons, addonSection, "activeAddons");
     this.renderActivePlugins(addons.activePlugins, addonSection, "activePlugins");
     this.renderKeyValueObject(addons.theme, addonSection, "theme");
-    this.renderKeyValueObject(addons.activeExperiment, addonSection, "activeExperiment");
     this.renderAddonsObject(addons.activeGMPlugins, addonSection, "activeGMPlugins");
     this.renderPersona(addons, addonSection, "persona");
 
