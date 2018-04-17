@@ -339,6 +339,7 @@ add_task(async function checkAllTheCSS() {
   iframe.contentWindow.location = testFile;
   await iframeLoaded;
   let doc = iframe.contentWindow.document;
+  doc.docShell.cssErrorReportingEnabled = true;
 
   // Parse and remove all manifests from the list.
   // NOTE that this must be done before filtering out devtools paths
