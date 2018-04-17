@@ -160,7 +160,7 @@
     </vbox>
 
     <keyset>
-      <key data-l10n-id="focus-search" modifiers="accel" id="focusSearch1" oncommand="gSearchResultsPane.searchInput.focus();"/>
+      <key data-l10n-id="focus-search" key="" modifiers="accel" id="focusSearch1" oncommand="gSearchResultsPane.searchInput.focus();"/>
     </keyset>
 
     <vbox class="main-content" flex="1" align="start">
