@@ -32,7 +32,7 @@ add_task(async function() {
   });
 
   let onNetworkEvents = waitForNetworkEvents(monitor, 1);
-  let onEventTimings = waitFor(monitor.panelWin.api, EVENTS.RECEIVED_EVENT_TIMINGS);
+  let onEventTimings = waitFor(monitor.panelWin, EVENTS.RECEIVED_EVENT_TIMINGS);
   tab.linkedBrowser.reload();
   await Promise.all([onNetworkEvents, onEventTimings]);
 

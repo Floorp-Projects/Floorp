@@ -28,7 +28,7 @@ add_task(async function() {
   is(getSelectedRequest(store.getState()), null,
     "There should be no selected item in the requests menu.");
 
-  let networkEvent = monitor.panelWin.api.once(EVENTS.NETWORK_EVENT);
+  let networkEvent = monitor.panelWin.once(EVENTS.NETWORK_EVENT);
   tab.linkedBrowser.reload();
   await networkEvent;
 
