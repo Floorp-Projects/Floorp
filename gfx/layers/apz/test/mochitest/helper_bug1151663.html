@@ -16,6 +16,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
     var SimpleTest = window.opener.SimpleTest;
     var utils = SpecialPowers.getDOMWindowUtils(window);
 
+    function flushLayout() {
+      document.body.style.left = "1px";
+    }
+
     // --------------------------------------------------------------------
     // The actual logic for testing bug 1151663.
     //
@@ -54,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       window.opener.finishTest();
     }
 
-    waitUntilApzStable().then(forceLayerTreeToCompositor).then(testBug1151663);
+    waitUntilApzStable().then(flushLayout).then(forceLayerTreeToCompositor).then(testBug1151663);
   </script>
 </head>
 <body style="height: 500px; overflow: scroll">
