@@ -103,6 +103,13 @@ TabClient.prototype = {
   }, {}),
 
   /**
+   * Ensure relevant pages have error reporting enabled.
+   */
+  ensureCSSErrorReportingEnabled: DebuggerClient.requester({
+    type: "ensureCSSErrorReportingEnabled",
+  }, {}),
+
+  /**
    * Reload the page in this tab.
    *
    * @param [optional] object options

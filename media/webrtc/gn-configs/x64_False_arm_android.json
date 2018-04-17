@@ -81,7 +81,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -97,7 +96,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -170,7 +169,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -191,7 +189,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -264,7 +262,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -278,7 +275,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -349,7 +346,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -367,7 +363,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -445,7 +441,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -463,7 +458,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -537,7 +532,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -568,7 +562,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -579,8 +573,7 @@
                 "//webrtc/modules/include/"
             ],
             "libs": [
-                "log",
-                "OpenSLES"
+                "log"
             ],
             "sources": [
                 "//webrtc/audio/audio_receive_stream.cc",
@@ -659,7 +652,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -673,7 +665,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -744,7 +736,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -758,7 +749,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -917,7 +908,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -933,7 +923,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -1008,7 +998,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -1027,7 +1016,7 @@
                 "/ipc/chromium/src/third_party/libevent/include/",
                 "/ipc/chromium/src/third_party/libevent/linux/",
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -1108,7 +1097,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -1135,11 +1123,10 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
-                "log",
-                "OpenSLES"
+                "log"
             ],
             "sources": [
                 "//webrtc/call/bitrate_allocator.cc",
@@ -1212,7 +1199,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -1226,7 +1212,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1302,7 +1288,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -1320,7 +1305,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -1435,7 +1420,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -1449,7 +1433,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -1575,7 +1559,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -1591,7 +1574,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1663,7 +1646,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -1677,7 +1659,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1750,7 +1732,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -1772,7 +1753,7 @@
                 "//webrtc/modules/interface/",
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -1873,7 +1854,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -1887,7 +1867,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -1958,7 +1938,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -1978,7 +1957,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -2054,7 +2033,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -2068,7 +2046,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2146,7 +2124,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -2177,7 +2154,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/",
                 "//",
@@ -2276,7 +2253,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -2295,7 +2271,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -2368,7 +2344,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -2385,7 +2360,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -2461,7 +2436,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -2478,7 +2452,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -2552,7 +2526,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -2568,7 +2541,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -2640,7 +2613,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -2658,7 +2630,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -2732,7 +2704,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -2751,7 +2722,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -2848,7 +2819,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -2872,7 +2842,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -2956,7 +2926,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -2975,7 +2944,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -3056,7 +3025,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -3076,7 +3044,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/g711/include/"
             ],
@@ -3154,7 +3122,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -3170,7 +3137,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -3244,7 +3211,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -3264,7 +3230,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/g722/include/"
             ],
@@ -3342,7 +3308,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -3358,7 +3323,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -3433,7 +3398,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -3452,7 +3416,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/"
             ],
@@ -3528,7 +3492,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -3547,7 +3510,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -3676,7 +3639,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -3693,7 +3655,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -3769,7 +3731,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -3791,7 +3752,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/fix/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -3870,7 +3831,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -3892,7 +3852,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/fix/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -4015,7 +3975,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -4033,7 +3992,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/fix/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -4118,7 +4077,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -4149,7 +4107,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -4305,7 +4263,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -4326,7 +4283,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/pcm16b/include/",
                 "//",
@@ -4406,7 +4363,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -4422,7 +4378,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/pcm16b/include/"
             ],
@@ -4498,7 +4454,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -4522,7 +4477,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/cng/include/",
                 "//",
@@ -4609,7 +4564,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -4634,7 +4588,7 @@
             "include_dirs": [
                 "/include/opus/",
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -4713,7 +4667,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -4731,7 +4684,7 @@
             "include_dirs": [
                 "/media/libopus/include/",
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -4806,7 +4759,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -4826,7 +4778,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_conference_mixer/include/",
                 "//webrtc/modules/include/"
             ],
@@ -4895,6 +4847,7 @@
                 "-fno-builtin-sinf"
             ],
             "defines": [
+                "WEBRTC_DUMMY_AUDIO_BUILD",
                 "V8_DEPRECATION_WARNINGS",
                 "USE_OPENSSL_CERTS=1",
                 "NO_TCMALLOC",
@@ -4910,7 +4863,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -4932,11 +4884,8 @@
             ],
             "include_dirs": [
                 "//webrtc/modules/audio_device/android/",
-                "/config/external/nspr/",
-                "/nsprpub/lib/ds/",
-                "/nsprpub/pr/include/",
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/include/",
                 "//webrtc/modules/audio_device/include/",
                 "//webrtc/modules/audio_device/dummy/",
@@ -4945,8 +4894,7 @@
                 "//webrtc/common_audio/vad/include/"
             ],
             "libs": [
-                "log",
-                "OpenSLES"
+                "log"
             ],
             "sources": [
                 "//webrtc/modules/audio_device/audio_device_buffer.cc",
@@ -4964,23 +4912,6 @@
                 "//webrtc/modules/audio_device/include/audio_device_defines.h",
                 "//webrtc/modules/audio_device/opensl/single_rw_fifo.cc",
                 "//webrtc/modules/audio_device/opensl/single_rw_fifo.h",
-                "//webrtc/modules/audio_device/audio_device_impl.cc",
-                "//webrtc/modules/audio_device/audio_device_impl.h",
-                "//webrtc/modules/audio_device/android/audio_device_template.h",
-                "//webrtc/modules/audio_device/android/audio_manager.cc",
-                "//webrtc/modules/audio_device/android/audio_manager.h",
-                "//webrtc/modules/audio_device/android/audio_record_jni.cc",
-                "//webrtc/modules/audio_device/android/audio_record_jni.h",
-                "//webrtc/modules/audio_device/android/audio_track_jni.cc",
-                "//webrtc/modules/audio_device/android/audio_track_jni.h",
-                "//webrtc/modules/audio_device/android/build_info.cc",
-                "//webrtc/modules/audio_device/android/build_info.h",
-                "//webrtc/modules/audio_device/android/opensles_common.cc",
-                "//webrtc/modules/audio_device/android/opensles_common.h",
-                "//webrtc/modules/audio_device/android/opensles_player.cc",
-                "//webrtc/modules/audio_device/android/opensles_player.h",
-                "//webrtc/modules/audio_device/android/opensles_recorder.cc",
-                "//webrtc/modules/audio_device/android/opensles_recorder.h",
                 "//webrtc/modules/audio_device/dummy/file_audio_device_factory.cc",
                 "//webrtc/modules/audio_device/dummy/file_audio_device_factory.h"
             ],
@@ -5049,7 +4980,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -5066,7 +4996,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -5140,7 +5070,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -5162,7 +5091,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -5242,7 +5171,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -5266,7 +5194,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//",
                 "//webrtc/modules/audio_coding/codecs/isac/main/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -5493,7 +5421,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -5512,7 +5439,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -5599,7 +5526,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -5616,7 +5542,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -5695,7 +5621,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -5712,7 +5637,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -5786,7 +5711,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -5805,7 +5729,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -5883,7 +5807,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -5908,7 +5831,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -5996,7 +5919,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -6015,7 +5937,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -6096,7 +6018,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -6116,7 +6037,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -6197,7 +6118,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -6215,7 +6135,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -6308,7 +6228,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -6334,7 +6253,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -6557,7 +6476,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -6583,7 +6501,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -6668,7 +6586,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -6690,7 +6607,7 @@
                 "/nsprpub/lib/ds/",
                 "/nsprpub/pr/include/",
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -6764,7 +6681,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -6785,7 +6701,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -6869,7 +6785,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -6898,7 +6813,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7038,7 +6953,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -7059,7 +6973,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7149,7 +7063,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -7168,7 +7081,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -7242,7 +7155,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -7262,7 +7174,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7338,7 +7250,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -7360,7 +7271,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7448,7 +7359,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -7468,7 +7378,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/"
             ],
@@ -7549,7 +7459,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -7572,7 +7481,7 @@
             "include_dirs": [
                 "/media/libyuv/libyuv/include/",
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -7659,7 +7568,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -7673,7 +7581,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -7745,7 +7653,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -7759,7 +7666,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -7831,7 +7738,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -7845,7 +7751,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [
@@ -7918,7 +7824,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -7938,7 +7843,7 @@
                 "/nsprpub/lib/ds/",
                 "/nsprpub/pr/include/",
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [
                 "log"
@@ -8052,7 +7957,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -8085,15 +7989,14 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_video/include/",
                 "//webrtc/common_video/libyuv/include/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/"
             ],
             "libs": [
-                "log",
-                "OpenSLES"
+                "log"
             ],
             "sources": [
                 "//webrtc/video/call_stats.cc",
@@ -8200,7 +8103,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -8220,7 +8122,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/"
             ],
@@ -8296,7 +8198,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -8316,7 +8217,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -8393,7 +8294,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -8414,7 +8314,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -8491,7 +8391,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -8509,7 +8408,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/"
@@ -8586,7 +8485,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -8627,7 +8525,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/modules/audio_coding/include/",
                 "//webrtc/modules/include/",
                 "//webrtc/common_audio/resampler/include/",
@@ -8640,8 +8538,7 @@
                 "//webrtc/modules/audio_device/dummy/"
             ],
             "libs": [
-                "log",
-                "OpenSLES"
+                "log"
             ],
             "sources": [
                 "//webrtc/voice_engine/channel.cc",
@@ -8765,7 +8662,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -8798,7 +8694,7 @@
             ],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/",
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/",
                 "//webrtc/common_audio/resampler/include/",
                 "//webrtc/common_audio/signal_processing/include/",
                 "//webrtc/common_audio/vad/include/",
@@ -8813,8 +8709,7 @@
                 "//webrtc/modules/audio_device/dummy/"
             ],
             "libs": [
-                "log",
-                "OpenSLES"
+                "log"
             ],
             "sources": [
                 "//webrtc/build/no_op_function.cc",
@@ -8886,7 +8781,6 @@
                 "NVALGRIND",
                 "DYNAMIC_ANNOTATIONS_ENABLED=0",
                 "WEBRTC_RESTRICT_LOGGING",
-                "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE",
                 "EXPAT_RELATIVE_PATH",
                 "WEBRTC_ARCH_ARM",
                 "WEBRTC_ARCH_ARM_V7",
@@ -8900,7 +8794,7 @@
             "deps": [],
             "include_dirs": [
                 "//",
-                "/home/dminor/src/fennec/obj-arm-linux-androideabi/gn-output/gen/"
+                "/home/dminor/src/fennec/obj-arm-linux-androideabi/media/webrtc/trunk/gn-output/gen/"
             ],
             "libs": [],
             "sources": [

@@ -192,6 +192,7 @@
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypeTraits.h"
@@ -1019,30 +1020,49 @@ const char* gc::ZealModeHelpText =
     "  both modes 2 and 4. Modes can be specified by name or number.\n"
     "  \n"
     "  Values:\n"
-    "    0: (None) Normal amount of collection (resets all modes)\n"
-    "    1: (RootsChange) Collect when roots are added or removed\n"
-    "    2: (Alloc) Collect when every N allocations (default: 100)\n"
-    "    4: (VerifierPre) Verify pre write barriers between instructions\n"
-    "    7: (GenerationalGC) Collect the nursery every N nursery allocations\n"
-    "    8: (IncrementalRootsThenFinish) Incremental GC in two slices: 1) mark roots 2) finish collection\n"
-    "    9: (IncrementalMarkAllThenFinish) Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
-    "   10: (IncrementalMultipleSlices) Incremental GC in multiple slices\n"
-    "   11: (IncrementalMarkingValidator) Verify incremental marking\n"
-    "   12: (ElementsBarrier) Always use the individual element post-write barrier, regardless of elements size\n"
-    "   13: (CheckHashTablesOnMinorGC) Check internal hashtables on minor GC\n"
-    "   14: (Compact) Perform a shrinking collection every N allocations\n"
-    "   15: (CheckHeapAfterGC) Walk the heap to check its integrity after every GC\n"
-    "   16: (CheckNursery) Check nursery integrity on minor GC\n"
-    "   17: (IncrementalSweepThenFinish) Incremental GC in two slices: 1) start sweeping 2) finish collection\n"
-    "   18: (CheckGrayMarking) Check gray marking invariants after every GC\n";
+    "    0:  (None) Normal amount of collection (resets all modes)\n"
+    "    1:  (RootsChange) Collect when roots are added or removed\n"
+    "    2:  (Alloc) Collect when every N allocations (default: 100)\n"
+    "    4:  (VerifierPre) Verify pre write barriers between instructions\n"
+    "    7:  (GenerationalGC) Collect the nursery every N nursery allocations\n"
+    "    8:  (YieldBeforeMarking) Incremental GC in two slices that yields between\n"
+    "        the root marking and marking phases\n"
+    "    9:  (YieldBeforeSweeping) Incremental GC in two slices that yields between\n"
+    "        the marking and sweeping phases\n"
+    "    10: (IncrementalMultipleSlices) Incremental GC in many slices\n"
+    "    11: (IncrementalMarkingValidator) Verify incremental marking\n"
+    "    12: (ElementsBarrier) Use the individual element post-write barrier\n"
+    "        regardless of elements size\n"
+    "    13: (CheckHashTablesOnMinorGC) Check internal hashtables on minor GC\n"
+    "    14: (Compact) Perform a shrinking collection every N allocations\n"
+    "    15: (CheckHeapAfterGC) Walk the heap to check its integrity after every GC\n"
+    "    16: (CheckNursery) Check nursery integrity on minor GC\n"
+    "    17: (YieldBeforeSweepingAtoms) Incremental GC in two slices that yields\n"
+    "        before sweeping the atoms table\n"
+    "    18: (CheckGrayMarking) Check gray marking invariants after every GC\n"
+    "    19: (YieldBeforeSweepingCaches) Incremental GC in two slices that yields\n"
+    "        before sweeping weak caches\n"
+    "    20: (YieldBeforeSweepingTypes) Incremental GC in two slices that yields\n"
+    "        before sweeping type information\n"
+    "    21: (YieldBeforeSweepingObjects) Incremental GC in two slices that yields\n"
+    "        before sweeping foreground finalized objects\n"
+    "    22: (YieldBeforeSweepingNonObjects) Incremental GC in two slices that yields\n"
+    "        before sweeping non-object GC things\n"
+    "    23: (YieldBeforeSweepingShapeTrees) Incremental GC in two slices that yields\n"
+    "        before sweeping shape trees\n";
 
 // The set of zeal modes that control incremental slices. These modes are
 // mutually exclusive.
 static const mozilla::EnumSet<ZealMode> IncrementalSliceZealModes = {
-    ZealMode::IncrementalRootsThenFinish,
-    ZealMode::IncrementalMarkAllThenFinish,
+    ZealMode::YieldBeforeMarking,
+    ZealMode::YieldBeforeSweeping,
     ZealMode::IncrementalMultipleSlices,
-    ZealMode::IncrementalSweepThenFinish
+    ZealMode::YieldBeforeSweepingAtoms,
+    ZealMode::YieldBeforeSweepingCaches,
+    ZealMode::YieldBeforeSweepingTypes,
+    ZealMode::YieldBeforeSweepingObjects,
+    ZealMode::YieldBeforeSweepingNonObjects,
+    ZealMode::YieldBeforeSweepingShapeTrees
 };
 
 void
@@ -1089,66 +1109,108 @@ GCRuntime::setNextScheduled(uint32_t count)
     nextScheduled = count;
 }
 
+using CharRange = mozilla::Range<const char>;
+using CharRangeVector = Vector<CharRange, 0, SystemAllocPolicy>;
+
+static bool
+ParseZealModeName(CharRange text, uint32_t* modeOut)
+{
+    struct ModeInfo
+    {
+        const char* name;
+        size_t length;
+        uint32_t value;
+    };
+
+    static const ModeInfo zealModes[] = {
+        {"None", 0},
+#define ZEAL_MODE(name, value) {#name, strlen(#name), value},
+        JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
+#undef ZEAL_MODE
+    };
+
+    for (auto mode : zealModes) {
+        if (text.length() == mode.length &&
+            memcmp(text.begin().get(), mode.name, mode.length) == 0)
+        {
+            *modeOut = mode.value;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool
+ParseZealModeNumericParam(CharRange text, uint32_t* paramOut)
+{
+    if (text.length() == 0)
+        return false;
+
+    for (auto c : text) {
+        if (!isdigit(c))
+            return false;
+    }
+
+    *paramOut = atoi(text.begin().get());
+    return true;
+}
+
+static bool
+SplitStringBy(CharRange text, char delimiter, CharRangeVector* result)
+{
+    auto start = text.begin();
+    for (auto ptr = start; ptr != text.end(); ptr++) {
+        if (*ptr == delimiter) {
+            if (!result->emplaceBack(start, ptr))
+                return false;
+            start = ptr + 1;
+        }
+    }
+
+    return result->emplaceBack(start, text.end());
+}
+
+static bool
+PrintZealHelpAndFail()
+{
+    fprintf(stderr, "Format: JS_GC_ZEAL=level(;level)*[,N]\n");
+    fputs(ZealModeHelpText, stderr);
+    return false;
+}
+
 bool
 GCRuntime::parseAndSetZeal(const char* str)
 {
-    int frequency = -1;
-    bool foundFrequency = false;
-    mozilla::Vector<int, 0, SystemAllocPolicy> zeals;
+    // Set the zeal mode from a string consisting of one or more mode specifiers
+    // separated by ';', optionally followed by a ',' and the trigger frequency.
+    // The mode specifiers can by a mode name or its number.
 
-    static const struct {
-        const char* const zealMode;
-        size_t length;
-        uint32_t zeal;
-    } zealModes[] = {
-#define ZEAL_MODE(name, value) {#name, sizeof(#name) - 1, value},
-        JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
-#undef ZEAL_MODE
-        {"None", 4, 0}
-    };
+    auto text = CharRange(str, strlen(str));
 
-    do {
-        int zeal = -1;
+    CharRangeVector parts;
+    if (!SplitStringBy(text, ',', &parts))
+        return false;
 
-        const char* p = nullptr;
-        if (isdigit(str[0])) {
-            zeal = atoi(str);
+    if (parts.length() == 0 || parts.length() > 2)
+        return PrintZealHelpAndFail();
 
-            size_t offset = strspn(str, "0123456789");
-            p = str + offset;
-        } else {
-            for (auto z : zealModes) {
-                if (!strncmp(str, z.zealMode, z.length)) {
-                    zeal = z.zeal;
-                    p = str + z.length;
-                    break;
-                }
-            }
-        }
-        if (p) {
-            if (!*p || *p == ';') {
-                frequency = JS_DEFAULT_ZEAL_FREQ;
-            } else if (*p == ',') {
-                frequency = atoi(p + 1);
-                foundFrequency = true;
-            }
-        }
+    uint32_t frequency = JS_DEFAULT_ZEAL_FREQ;
+    if (parts.length() == 2 && !ParseZealModeNumericParam(parts[1], &frequency))
+        return PrintZealHelpAndFail();
 
-        if (zeal < 0 || zeal > int(ZealMode::Limit) || frequency <= 0) {
-            fprintf(stderr, "Format: JS_GC_ZEAL=level(;level)*[,N]\n");
-            fputs(ZealModeHelpText, stderr);
-            return false;
-        }
+    CharRangeVector modes;
+    if (!SplitStringBy(parts[0], ';', &modes))
+        return false;
 
-        if (!zeals.emplaceBack(zeal)) {
-            return false;
-        }
-    } while (!foundFrequency &&
-             (str = strchr(str, ';')) != nullptr &&
-             str++);
+    for (const auto& descr : modes) {
+        uint32_t mode;
+        if (!ParseZealModeName(descr, &mode) && !ParseZealModeNumericParam(descr, &mode))
+            return PrintZealHelpAndFail();
 
-    for (auto z : zeals)
-        setZeal(z, frequency);
+        setZeal(mode, frequency);
+    }
+
     return true;
 }
 
@@ -4944,12 +5006,10 @@ GCRuntime::groupZonesForSweeping(JS::gcreason::Reason reason)
         finder.useOneComponent();
 
 #ifdef JS_GC_ZEAL
-    // Use one component for IncrementalSweepThenFinish zeal mode.
-    if (isIncremental && reason == JS::gcreason::DEBUG_GC &&
-        hasZealMode(ZealMode::IncrementalSweepThenFinish))
-    {
+    // Use one component for two-slice zeal modes.
+    MOZ_ASSERT_IF(useZeal, isIncremental);
+    if (useZeal && hasIncrementalTwoSliceZealMode())
         finder.useOneComponent();
-    }
 #endif
 
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
@@ -5688,6 +5748,14 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
 }
 
 #ifdef JS_GC_ZEAL
+
+bool
+GCRuntime::shouldYieldForZeal(ZealMode mode)
+{
+    MOZ_ASSERT_IF(useZeal, isIncremental);
+    return useZeal && hasZealMode(mode);
+}
+
 IncrementalProgress
 GCRuntime::maybeYieldForSweepingZeal(FreeOp* fop, SliceBudget& budget)
 {
@@ -5696,15 +5764,12 @@ GCRuntime::maybeYieldForSweepingZeal(FreeOp* fop, SliceBudget& budget)
      * in incremental multi-slice zeal mode so RunDebugGC can reset the slice
      * budget.
      */
-    if (isIncremental && useZeal && initialState != State::Sweep &&
-        (hasZealMode(ZealMode::IncrementalMultipleSlices) ||
-         hasZealMode(ZealMode::IncrementalSweepThenFinish)))
-    {
+    if (initialState != State::Sweep && shouldYieldForZeal(ZealMode::IncrementalMultipleSlices))
         return NotFinished;
-    }
 
     return Finished;
 }
+
 #endif
 
 IncrementalProgress
@@ -6235,6 +6300,38 @@ class SweepActionCall final : public SweepAction<GCRuntime*, Args...>
     void assertFinished() const override { }
 };
 
+#ifdef JS_GC_ZEAL
+// Implementation of the SweepAction interface that yields in a specified zeal
+// mode and then calls another action.
+template <typename... Args>
+class SweepActionMaybeYield final : public SweepAction<GCRuntime*, Args...>
+{
+    using Action = SweepAction<GCRuntime*, Args...>;
+
+    ZealMode mode;
+    UniquePtr<Action> action;
+    bool triggered;
+
+  public:
+    SweepActionMaybeYield(UniquePtr<Action> action, ZealMode mode)
+      : mode(mode), action(Move(action)), triggered(false) {}
+
+    IncrementalProgress run(GCRuntime* gc, Args... args) override {
+        if (!triggered && gc->shouldYieldForZeal(mode)) {
+            triggered = true;
+            return NotFinished;
+        }
+
+        triggered = false;
+        return action->run(gc, args...);
+    }
+
+    void assertFinished() const override {
+        MOZ_ASSERT(!triggered);
+    }
+};
+#endif
+
 // Implementation of the SweepAction interface that calls a list of actions in
 // sequence.
 template <typename... Args>
@@ -6371,7 +6468,17 @@ class RemoveLastTemplateParameter<Target<Args...>>
 template <typename... Args>
 static UniquePtr<SweepAction<GCRuntime*, Args...>>
 Call(IncrementalProgress (GCRuntime::*method)(Args...)) {
-    return MakeUnique<SweepActionCall<Args...>>(method);
+   return MakeUnique<SweepActionCall<Args...>>(method);
+}
+
+template <typename... Args>
+static UniquePtr<SweepAction<GCRuntime*, Args...>>
+MaybeYield(ZealMode zealMode, UniquePtr<SweepAction<GCRuntime*, Args...>> action) {
+#ifdef JS_GC_ZEAL
+    return js::MakeUnique<SweepActionMaybeYield<Args...>>(Move(action), zealMode);
+#else
+    return action;
+#endif
 }
 
 template <typename... Args, typename... Rest>
@@ -6437,16 +6544,22 @@ GCRuntime::initSweepActions()
 #ifdef JS_GC_ZEAL
                 Call(&GCRuntime::maybeYieldForSweepingZeal),
 #endif
-                Call(&GCRuntime::sweepAtomsTable),
-                Call(&GCRuntime::sweepWeakCaches),
+                MaybeYield(ZealMode::YieldBeforeSweepingAtoms,
+                           Call(&GCRuntime::sweepAtomsTable)),
+                MaybeYield(ZealMode::YieldBeforeSweepingCaches,
+                           Call(&GCRuntime::sweepWeakCaches)),
                 ForEachZoneInSweepGroup(rt,
                     Sequence(
-                        Call(&GCRuntime::sweepTypeInformation),
-                        ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
-                                         Call(&GCRuntime::finalizeAllocKind)),
-                        ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
-                                         Call(&GCRuntime::finalizeAllocKind)),
-                        Call(&GCRuntime::sweepShapeTree),
+                        MaybeYield(ZealMode::YieldBeforeSweepingTypes,
+                                   Call(&GCRuntime::sweepTypeInformation)),
+                        MaybeYield(ZealMode::YieldBeforeSweepingObjects,
+                                   ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
+                                                    Call(&GCRuntime::finalizeAllocKind))),
+                        MaybeYield(ZealMode::YieldBeforeSweepingNonObjects,
+                                   ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
+                                                    Call(&GCRuntime::finalizeAllocKind))),
+                        MaybeYield(ZealMode::YieldBeforeSweepingShapeTrees,
+                                   Call(&GCRuntime::sweepShapeTree)),
                         Call(&GCRuntime::releaseSweptEmptyArenas))),
                 Call(&GCRuntime::endSweepingSweepGroup)));
 
@@ -6944,10 +7057,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
 
     isIncremental = !budget.isUnlimited();
 
-    if (useZeal && (hasZealMode(ZealMode::IncrementalRootsThenFinish) ||
-                    hasZealMode(ZealMode::IncrementalMarkAllThenFinish) ||
-                    hasZealMode(ZealMode::IncrementalSweepThenFinish)))
-    {
+    if (useZeal && hasIncrementalTwoSliceZealMode()) {
         /*
          * Yields between slices occurs at predetermined points in these modes;
          * the budget is not used.
@@ -6978,7 +7088,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
 
         incrementalState = State::Mark;
 
-        if (isIncremental && useZeal && hasZealMode(ZealMode::IncrementalRootsThenFinish))
+        if (isIncremental && useZeal && hasZealMode(ZealMode::YieldBeforeMarking))
             break;
 
         MOZ_FALLTHROUGH;
@@ -7004,16 +7114,16 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
          * the next slice, since the first slice of sweeping can be expensive.
          *
          * This is modified by the various zeal modes.  We don't yield in
-         * IncrementalRootsThenFinish mode and we always yield in
-         * IncrementalMarkAllThenFinish mode.
+         * YieldBeforeMarking mode and we always yield in YieldBeforeSweeping
+         * mode.
          *
          * We will need to mark anything new on the stack when we resume, so
          * we stay in Mark state.
          */
         if (!lastMarkSlice && isIncremental &&
             ((initialState == State::Mark &&
-              !(useZeal && hasZealMode(ZealMode::IncrementalRootsThenFinish))) ||
-             (useZeal && hasZealMode(ZealMode::IncrementalMarkAllThenFinish))))
+              !(useZeal && hasZealMode(ZealMode::YieldBeforeMarking))) ||
+             (useZeal && hasZealMode(ZealMode::YieldBeforeSweeping))))
         {
             lastMarkSlice = true;
             break;
@@ -8024,43 +8134,37 @@ GCRuntime::runDebugGC()
     PrepareForDebugGC(rt);
 
     auto budget = SliceBudget::unlimited();
-    if (hasZealMode(ZealMode::IncrementalRootsThenFinish) ||
-        hasZealMode(ZealMode::IncrementalMarkAllThenFinish) ||
-        hasZealMode(ZealMode::IncrementalMultipleSlices) ||
-        hasZealMode(ZealMode::IncrementalSweepThenFinish))
-    {
-        js::gc::State initialState = incrementalState;
-        if (hasZealMode(ZealMode::IncrementalMultipleSlices)) {
-            /*
-             * Start with a small slice limit and double it every slice. This
-             * ensure that we get multiple slices, and collection runs to
-             * completion.
-             */
-            if (!isIncrementalGCInProgress())
-                incrementalLimit = zealFrequency / 2;
-            else
-                incrementalLimit *= 2;
-            budget = SliceBudget(WorkBudget(incrementalLimit));
-        } else {
-            // This triggers incremental GC but is actually ignored by IncrementalMarkSlice.
-            budget = SliceBudget(WorkBudget(1));
-        }
+    if (hasZealMode(ZealMode::IncrementalMultipleSlices)) {
+        /*
+         * Start with a small slice limit and double it every slice. This
+         * ensure that we get multiple slices, and collection runs to
+         * completion.
+         */
+        if (!isIncrementalGCInProgress())
+            incrementalLimit = zealFrequency / 2;
+        else
+            incrementalLimit *= 2;
+        budget = SliceBudget(WorkBudget(incrementalLimit));
 
+        js::gc::State initialState = incrementalState;
         if (!isIncrementalGCInProgress())
             invocationKind = GC_SHRINK;
         collect(false, budget, JS::gcreason::DEBUG_GC);
 
-        /*
-         * For multi-slice zeal, reset the slice size when we get to the sweep
-         * or compact phases.
-         */
-        if (hasZealMode(ZealMode::IncrementalMultipleSlices)) {
-            if ((initialState == State::Mark && incrementalState == State::Sweep) ||
-                (initialState == State::Sweep && incrementalState == State::Compact))
-            {
-                incrementalLimit = zealFrequency / 2;
-            }
+        /* Reset the slice size when we get to the sweep or compact phases. */
+        if ((initialState == State::Mark && incrementalState == State::Sweep) ||
+            (initialState == State::Sweep && incrementalState == State::Compact))
+        {
+            incrementalLimit = zealFrequency / 2;
         }
+    } else if (hasIncrementalTwoSliceZealMode()) {
+        // These modes trigger incremental GC that happens in two slices and the
+        // supplied budget is ignored by incrementalCollectSlice.
+        budget = SliceBudget(WorkBudget(1));
+
+        if (!isIncrementalGCInProgress())
+            invocationKind = GC_NORMAL;
+        collect(false, budget, JS::gcreason::DEBUG_GC);
     } else if (hasZealMode(ZealMode::Compact)) {
         gc(GC_SHRINK, JS::gcreason::DEBUG_GC);
     } else {

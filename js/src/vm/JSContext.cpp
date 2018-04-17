@@ -100,7 +100,7 @@ bool
 JSContext::init(ContextKind kind)
 {
     // Skip most of the initialization if this thread will not be running JS.
-    if (kind == ContextKind::Cooperative) {
+    if (kind == ContextKind::MainThread) {
         if (!regexpStack.ref().init())
             return false;
 
@@ -153,7 +153,7 @@ js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRun
         return nullptr;
     }
 
-    if (!cx->init(ContextKind::Cooperative)) {
+    if (!cx->init(ContextKind::MainThread)) {
         runtime->destroyRuntime();
         js_delete(cx);
         js_delete(runtime);
@@ -1071,11 +1071,11 @@ class MOZ_STACK_CLASS ReportExceptionClosure : public ScriptEnvironmentPreparer:
 } // anonymous namespace
 
 JS_FRIEND_API(bool)
-js::UseInternalJobQueues(JSContext* cx, bool cooperative)
+js::UseInternalJobQueues(JSContext* cx)
 {
     // Internal job queue handling must be set up very early. Self-hosting
     // initialization is as good a marker for that as any.
-    MOZ_RELEASE_ASSERT(cooperative || !cx->runtime()->hasInitializedSelfHosting(),
+    MOZ_RELEASE_ASSERT(!cx->runtime()->hasInitializedSelfHosting(),
                        "js::UseInternalJobQueues must be called early during runtime startup.");
     MOZ_ASSERT(!cx->jobQueue);
     auto* queue = js_new<PersistentRooted<JobQueue>>(cx, JobQueue(SystemAllocPolicy()));
@@ -1084,8 +1084,7 @@ js::UseInternalJobQueues(JSContext* cx, bool cooperative)
 
     cx->jobQueue = queue;
 
-    if (!cooperative)
-        cx->runtime()->offThreadPromiseState.ref().initInternalDispatchQueue();
+    cx->runtime()->offThreadPromiseState.ref().initInternalDispatchQueue();
     MOZ_ASSERT(cx->runtime()->offThreadPromiseState.ref().initialized());
 
     JS::SetEnqueuePromiseJobCallback(cx, InternalEnqueuePromiseJobCallback);
@@ -1218,7 +1217,7 @@ JSContext::alreadyReportedError()
 
 JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
   : runtime_(runtime),
-    kind_(ContextKind::Background),
+    kind_(ContextKind::HelperThread),
     helperThread_(nullptr),
     options_(options),
     arenas_(nullptr),
@@ -1316,7 +1315,7 @@ JSContext::~JSContext()
 {
     // Clear the ContextKind first, so that ProtectedData checks will allow us to
     // destroy this context even if the runtime is already gone.
-    kind_ = ContextKind::Background;
+    kind_ = ContextKind::HelperThread;
 
     /* Free the stuff hanging off of cx. */
     MOZ_ASSERT(!resolvingList);

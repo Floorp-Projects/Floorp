@@ -37,13 +37,10 @@ public:
   explicit nsFrameManager(nsIPresShell* aPresShell)
     : mPresShell(aPresShell)
     , mRootFrame(nullptr)
-    , mIsDestroyingFrames(false)
   {
     MOZ_ASSERT(mPresShell, "need a pres shell");
   }
   ~nsFrameManager();
-
-  bool IsDestroyingFrames() const { return mIsDestroyingFrames; }
 
   /*
    * Gets and sets the root frame (typically the viewport). The lifetime of the
@@ -104,7 +101,6 @@ protected:
   // weak link, because the pres shell owns us
   nsIPresShell* MOZ_NON_OWNING_REF mPresShell;
   nsIFrame* mRootFrame;
-  bool mIsDestroyingFrames;  // The frame manager is destroying some frame(s).
 };
 
 #endif

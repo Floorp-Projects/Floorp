@@ -62,7 +62,7 @@ print_usage(){
 }
 
 upload_patch(){
-    if [ "$(stat -f "%z" "$2")" -lt ${CACHE_THRESHOLD} ]
+    if [ "$(stat -c "%s" "$2")" -lt ${CACHE_THRESHOLD} ]
     then
       return 0
     fi
@@ -94,7 +94,7 @@ upload_patch(){
 
 get_patch(){
     # $1 and $2 are the /path/to/filename
-    if [ "$(stat -f "%z" "$2")" -lt ${CACHE_THRESHOLD} ]
+    if [ "$(stat -c "%s" "$2")" -lt ${CACHE_THRESHOLD} ]
     then
       return 1
     fi

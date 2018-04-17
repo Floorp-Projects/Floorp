@@ -890,6 +890,11 @@ private: // member functions
     return (mObserveErrorPages ? sUseErrorPages : mUseErrorPages);
   }
 
+  bool CSSErrorReportingEnabled() const
+  {
+    return mCSSErrorReportingEnabled;
+  }
+
 private: // data members
   static nsIURIFixup* sURIFixup;
 
@@ -1108,6 +1113,7 @@ private: // data members
   bool mAllowContentRetargetingOnChildren : 1;
   bool mUseErrorPages : 1;
   bool mObserveErrorPages : 1;
+  bool mCSSErrorReportingEnabled : 1;
   bool mAllowAuth : 1;
   bool mAllowKeywordFixup : 1;
   bool mIsOffScreenBrowser : 1;

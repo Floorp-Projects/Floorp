@@ -61,6 +61,7 @@ namespace dom {
 /* static */ void
 InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
                                   nsIDocument& aDocument,
+                                  bool aDocumentOnly,
                                   nsTArray<RefPtr<StyleSheet>>& aResult)
 {
   // Get the agent, then user and finally xbl sheets in the style set.
@@ -68,19 +69,24 @@ InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
 
   if (presShell) {
     ServoStyleSet* styleSet = presShell->StyleSet();
-    SheetType sheetType = SheetType::Agent;
-    for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
-      aResult.AppendElement(styleSet->StyleSheetAt(sheetType, i));
-    }
-    sheetType = SheetType::User;
-    for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
-      aResult.AppendElement(styleSet->StyleSheetAt(sheetType, i));
+
+    if (!aDocumentOnly) {
+      SheetType sheetType = SheetType::Agent;
+      for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
+        aResult.AppendElement(styleSet->StyleSheetAt(sheetType, i));
+      }
+      sheetType = SheetType::User;
+      for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
+        aResult.AppendElement(styleSet->StyleSheetAt(sheetType, i));
+      }
     }
 
     AutoTArray<StyleSheet*, 32> xblSheetArray;
-    styleSet->AppendAllXBLStyleSheets(xblSheetArray);
+    styleSet->AppendAllNonDocumentAuthorSheets(xblSheetArray);
 
     // The XBL stylesheet array will quite often be full of duplicates. Cope:
+    //
+    // FIXME(emilio, bug 1454467): I think this is not true since bug 1452525.
     nsTHashtable<nsPtrHashKey<StyleSheet>> sheetSet;
     for (StyleSheet* sheet : xblSheetArray) {
       if (!sheetSet.Contains(sheet)) {
@@ -1048,16 +1054,8 @@ InspectorUtils::ParseStyleSheet(GlobalObject& aGlobalObject,
                                 ErrorResult& aRv)
 {
 
-  RefPtr<ServoStyleSheet> servoSheet = do_QueryObject(&aSheet);
-  if (servoSheet) {
-    nsresult rv = servoSheet->ReparseSheet(aInput);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-    }
-    return;
-  }
-
-  aRv.Throw(NS_ERROR_INVALID_POINTER);
+  RefPtr<ServoStyleSheet> servoSheet = aSheet.AsServo();
+  aRv = servoSheet->ReparseSheet(aInput);
 }
 
 void

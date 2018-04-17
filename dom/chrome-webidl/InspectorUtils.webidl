@@ -11,7 +11,8 @@
  */
 [ChromeOnly]
 namespace InspectorUtils {
-  sequence<StyleSheet> getAllStyleSheets(Document document);
+  // documentOnly tells whether user and UA sheets should get included.
+  sequence<StyleSheet> getAllStyleSheets(Document document, optional boolean documentOnly = false);
   sequence<CSSRule> getCSSStyleRules(
     Element element,
     [TreatNullAs=EmptyString] optional DOMString pseudo = "");

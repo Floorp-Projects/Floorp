@@ -370,9 +370,11 @@ class BuildingConfig(BaseConfig):
             all_config_dicts.append(
                 (variant_cfg_file, parse_config_file(variant_cfg_file))
             )
+        config_paths = options.config_paths or ['.']
         if branch_cfg_file:
             # take only the specific branch, if present
-            branch_configs = parse_config_file(branch_cfg_file)
+            branch_configs = parse_config_file(branch_cfg_file,
+                                               search_path=config_paths + [DEFAULT_CONFIG_PATH])
             if branch_configs.get(options.branch or ""):
                 all_config_dicts.append(
                     (branch_cfg_file, branch_configs[options.branch])
@@ -380,7 +382,8 @@ class BuildingConfig(BaseConfig):
         if pool_cfg_file:
             # take only the specific pool. If we are here, the pool
             # must be present
-            build_pool_configs = parse_config_file(pool_cfg_file)
+            build_pool_configs = parse_config_file(pool_cfg_file,
+                                                   search_path=config_paths + [DEFAULT_CONFIG_PATH])
             all_config_dicts.append(
                 (pool_cfg_file, build_pool_configs[options.build_pool])
             )

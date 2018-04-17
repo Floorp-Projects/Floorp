@@ -239,15 +239,15 @@ public:
   }
 
   mozilla::EffectCompositor* EffectCompositor() { return mEffectCompositor; }
-  nsTransitionManager* TransitionManager() { return mTransitionManager; }
-  nsAnimationManager* AnimationManager() { return mAnimationManager; }
-  const nsAnimationManager* AnimationManager() const { return mAnimationManager; }
+  nsTransitionManager* TransitionManager() { return mTransitionManager.get(); }
+  nsAnimationManager* AnimationManager() { return mAnimationManager.get(); }
+  const nsAnimationManager* AnimationManager() const { return mAnimationManager.get(); }
 
   nsRefreshDriver* RefreshDriver() { return mRefreshDriver; }
 
   mozilla::RestyleManager* RestyleManager() {
     MOZ_ASSERT(mRestyleManager);
-    return mRestyleManager;
+    return mRestyleManager.get();
   }
 
   mozilla::CounterStyleManager* CounterStyleManager() const {
@@ -1298,9 +1298,9 @@ protected:
   RefPtr<nsRefreshDriver> mRefreshDriver;
   RefPtr<mozilla::AnimationEventDispatcher> mAnimationEventDispatcher;
   RefPtr<mozilla::EffectCompositor> mEffectCompositor;
-  RefPtr<nsTransitionManager> mTransitionManager;
-  RefPtr<nsAnimationManager> mAnimationManager;
-  RefPtr<mozilla::RestyleManager> mRestyleManager;
+  mozilla::UniquePtr<nsTransitionManager> mTransitionManager;
+  mozilla::UniquePtr<nsAnimationManager> mAnimationManager;
+  mozilla::UniquePtr<mozilla::RestyleManager> mRestyleManager;
   RefPtr<mozilla::CounterStyleManager> mCounterStyleManager;
   nsAtom* MOZ_UNSAFE_REF("always a static atom") mMedium; // initialized by subclass ctors
   RefPtr<nsAtom> mMediaEmulated;

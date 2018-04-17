@@ -7,6 +7,7 @@
 #include "TimelineConsumers.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "jsapi.h"
 #include "nsAppRunner.h" // for XRE_IsContentProcess, XRE_IsParentProcess
 #include "nsDocShell.h"
 
@@ -126,6 +127,9 @@ TimelineConsumers::AddConsumer(nsDocShell* aDocShell)
   UniquePtr<ObservedDocShell>& observed = aDocShell->mObserved;
   MOZ_ASSERT(!observed);
 
+  if (mActiveConsumers == 0) {
+    JS::SetProfileTimelineRecordingEnabled(true);
+  }
   mActiveConsumers++;
 
   ObservedDocShell* obsDocShell = new ObservedDocShell(aDocShell);
@@ -145,6 +149,9 @@ TimelineConsumers::RemoveConsumer(nsDocShell* aDocShell)
   MOZ_ASSERT(observed);
 
   mActiveConsumers--;
+  if (mActiveConsumers == 0) {
+    JS::SetProfileTimelineRecordingEnabled(false);
+  }
 
   // Clear all markers from the `mTimelineMarkers` store.
   observed.get()->ClearMarkers();

@@ -23,7 +23,7 @@
 
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
-#include "wasm/WasmBinaryIterator.h"
+#include "wasm/WasmOpIter.h"
 #include "wasm/WasmValidate.h"
 
 using namespace js;
@@ -2277,7 +2277,7 @@ wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length, LifoAllo
         return false;
 
     UniqueChars error;
-    Decoder d(bytes, bytes + length, 0, &error, /* resilient */ true);
+    Decoder d(bytes, bytes + length, 0, &error, nullptr, /* resilient */ true);
     AstDecodeContext c(cx, lifo, d, *result, true);
 
     if (!AstDecodeEnvironment(c) ||

@@ -18,7 +18,6 @@
   _(TestMutex,                   100) \
   _(ShellContextWatchdog,        100) \
   _(ShellWorkerThreads,          100) \
-  _(ShellThreadCooperation,      100) \
   _(ShellArrayBufferMailbox,     100) \
                                       \
   _(RuntimeExclusiveAccess,      200) \

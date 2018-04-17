@@ -22,6 +22,8 @@ const {
   REMOVED_ACTORS_CLEAR,
   NETWORK_MESSAGE_UPDATE,
   PREFS,
+  INITIALIZE,
+  FILTER_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 const { reducers } = require("./reducers/index");
 const {
@@ -77,6 +79,7 @@ function configureStore(hud, options = {}) {
       enableBatching(),
       enableNetProvider(hud),
       enableMessagesCacheClearing(hud),
+      ensureCSSErrorReportingEnabled(hud),
     )
   );
 }
@@ -162,6 +165,34 @@ function enableActorReleaser(hud) {
     }
 
     return next(releaseActorsEnhancer, initialState, enhancer);
+  };
+}
+
+/**
+ * This is responsible for ensuring that error reporting is enabled if the CSS
+ * filter is toggled on.
+ */
+function ensureCSSErrorReportingEnabled(hud) {
+  return next => (reducer, initialState, enhancer) => {
+    function ensureErrorReportingEnhancer(state, action) {
+      let proxy = hud ? hud.proxy : null;
+      if (!proxy) {
+        return reducer(state, action);
+      }
+
+      state = reducer(state, action);
+      if (!state.filters.css) {
+        return state;
+      }
+
+      let cssFilterToggled =
+        action.type == FILTER_TOGGLE && action.filter == "css";
+      if (cssFilterToggled || action.type == INITIALIZE) {
+        proxy.target.activeTab.ensureCSSErrorReportingEnabled();
+      }
+      return state;
+    }
+    return next(ensureErrorReportingEnhancer, initialState, enhancer);
   };
 }
 

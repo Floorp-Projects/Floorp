@@ -42,7 +42,7 @@ class GCHelperState
     ConditionVariable done;
 
     // Activity for the helper to do, protected by the GC lock.
-    ActiveThreadOrGCTaskData<State> state_;
+    MainThreadOrGCTaskData<State> state_;
 
     // Whether work is being performed on some thread.
     GCLockData<bool> hasThread;

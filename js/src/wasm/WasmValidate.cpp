@@ -19,18 +19,20 @@
 #include "wasm/WasmValidate.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Unused.h"
 
 #include "jit/JitOptions.h"
 #include "js/Printf.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
-#include "wasm/WasmBinaryIterator.h"
+#include "wasm/WasmOpIter.h"
 
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::CheckedInt;
+using mozilla::Unused;
 
 // Decoder implementation.
 
@@ -45,6 +47,22 @@ Decoder::failf(const char* msg, ...)
         return false;
 
     return fail(str.get());
+}
+
+void
+Decoder::warnf(const char* msg, ...)
+{
+    if (!warnings_)
+        return;
+
+    va_list ap;
+    va_start(ap, msg);
+    UniqueChars str(JS_vsmprintf(msg, ap));
+    va_end(ap);
+    if (!str)
+        return;
+
+    Unused << warnings_->append(Move(str));
 }
 
 bool
@@ -192,7 +210,7 @@ Decoder::startCustomSection(const char* expected, size_t expectedLength, ModuleE
         }
 
         // Otherwise, blindly skip the custom section and keep looking.
-        finishCustomSection(**range);
+        skipAndFinishCustomSection(**range);
         range->reset();
     }
     MOZ_CRASH("unreachable");
@@ -207,7 +225,35 @@ Decoder::startCustomSection(const char* expected, size_t expectedLength, ModuleE
 }
 
 void
-Decoder::finishCustomSection(const SectionRange& range)
+Decoder::finishCustomSection(const char* name, const SectionRange& range)
+{
+    MOZ_ASSERT(cur_ >= beg_);
+    MOZ_ASSERT(cur_ <= end_);
+
+    if (error_ && *error_) {
+        warnf("in the '%s' custom section: %s", name, error_->get());
+        skipAndFinishCustomSection(range);
+        return;
+    }
+
+    uint32_t actualSize = currentOffset() - range.start;
+    if (range.size != actualSize) {
+        if (actualSize < range.size) {
+            warnf("in the '%s' custom section: %" PRIu32 " unconsumed bytes",
+                  name, uint32_t(range.size - actualSize));
+        } else {
+            warnf("in the '%s' custom section: %" PRIu32 " bytes consumed past the end",
+                  name, uint32_t(actualSize - range.size));
+        }
+        skipAndFinishCustomSection(range);
+        return;
+    }
+
+    // Nothing to do! (c.f. skipAndFinishCustomSection())
+}
+
+void
+Decoder::skipAndFinishCustomSection(const SectionRange& range)
 {
     MOZ_ASSERT(cur_ >= beg_);
     MOZ_ASSERT(cur_ <= end_);
@@ -225,7 +271,7 @@ Decoder::skipCustomSection(ModuleEnvironment* env)
     if (!range)
         return fail("expected custom section");
 
-    finishCustomSection(*range);
+    skipAndFinishCustomSection(*range);
     return true;
 }
 
@@ -234,29 +280,59 @@ Decoder::startNameSubsection(NameType nameType, Maybe<uint32_t>* endOffset)
 {
     MOZ_ASSERT(!*endOffset);
 
-    const uint8_t* initialPosition = cur_;
+    const uint8_t* const initialPosition = cur_;
 
     uint8_t nameTypeValue;
     if (!readFixedU8(&nameTypeValue))
-        return false;
+        goto rewind;
 
-    if (nameTypeValue != uint8_t(nameType)) {
-        cur_ = initialPosition;
-        return true;
-    }
+    if (nameTypeValue != uint8_t(nameType))
+        goto rewind;
 
     uint32_t payloadLength;
     if (!readVarU32(&payloadLength) || payloadLength > bytesRemain())
-        return false;
+        return fail("bad name subsection payload length");
 
     *endOffset = Some(currentOffset() + payloadLength);
+    return true;
+
+  rewind:
+    cur_ = initialPosition;
     return true;
 }
 
 bool
-Decoder::finishNameSubsection(uint32_t endOffset)
+Decoder::finishNameSubsection(uint32_t expected)
 {
-    return endOffset == uint32_t(currentOffset());
+    uint32_t actual = currentOffset();
+    if (expected != actual) {
+        return failf("bad name subsection length (expected: %" PRIu32 ", actual: %" PRIu32 ")",
+                     expected, actual);
+    }
+
+    return true;
+}
+
+bool
+Decoder::skipNameSubsection()
+{
+    uint8_t nameTypeValue;
+    if (!readFixedU8(&nameTypeValue))
+        return fail("unable to read name subsection id");
+
+    switch (nameTypeValue) {
+      case uint8_t(NameType::Module):
+      case uint8_t(NameType::Function):
+        return fail("out of order name subsections");
+      default:
+        break;
+    }
+
+    uint32_t payloadLength;
+    if (!readVarU32(&payloadLength) || !readBytes(payloadLength))
+        return fail("bad name subsection payload length");
+
+    return true;
 }
 
 // Misc helpers.
@@ -1885,11 +1961,11 @@ DecodeModuleNameSubsection(Decoder& d)
 
     uint32_t nameLength;
     if (!d.readVarU32(&nameLength))
-        return false;
+        return d.fail("failed to read module name length");
 
     const uint8_t* bytes;
     if (!d.readBytes(nameLength, &bytes))
-        return false;
+        return d.fail("failed to read module name bytes");
 
     // Do nothing with module name for now; a future patch will incorporate the
     // module name into the callstack format.
@@ -1908,22 +1984,22 @@ DecodeFunctionNameSubsection(Decoder& d, ModuleEnvironment* env)
 
     uint32_t nameCount = 0;
     if (!d.readVarU32(&nameCount) || nameCount > MaxFuncs)
-        return false;
+        return d.fail("bad function name count");
 
     NameInBytecodeVector funcNames;
 
     for (uint32_t i = 0; i < nameCount; ++i) {
         uint32_t funcIndex = 0;
         if (!d.readVarU32(&funcIndex))
-            return false;
+            return d.fail("unable to read function index");
 
         // Names must refer to real functions and be given in ascending order.
         if (funcIndex >= env->numFuncs() || funcIndex < funcNames.length())
-            return false;
+            return d.fail("invalid function index");
 
         uint32_t nameLength = 0;
         if (!d.readVarU32(&nameLength) || nameLength > MaxStringLength)
-            return false;
+            return d.fail("unable to read function name length");
 
         if (!nameLength)
             continue;
@@ -1934,7 +2010,7 @@ DecodeFunctionNameSubsection(Decoder& d, ModuleEnvironment* env)
         funcNames[funcIndex] = NameInBytecode(d.currentOffset(), nameLength);
 
         if (!d.readBytes(nameLength))
-            return false;
+            return d.fail("unable to read function name bytes");
     }
 
     if (!d.finishNameSubsection(*endOffset))
@@ -1963,12 +2039,13 @@ DecodeNameSection(Decoder& d, ModuleEnvironment* env)
     if (!DecodeFunctionNameSubsection(d, env))
         goto finish;
 
-    // The names we care about have already been extracted into 'env' so don't
-    // bother decoding the rest of the name section. finishCustomSection() will
-    // skip to the end of the name section (as it would for any other error).
+    while (d.currentOffset() < range->end()) {
+        if (!d.skipNameSubsection())
+            goto finish;
+    }
 
   finish:
-    d.finishCustomSection(*range);
+    d.finishCustomSection(NameSectionName, *range);
     return true;
 }
 

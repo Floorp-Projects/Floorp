@@ -135,8 +135,8 @@
 # include "jit/mips64/Assembler-mips64.h"
 #endif
 
-#include "wasm/WasmBinaryIterator.h"
 #include "wasm/WasmGenerator.h"
+#include "wasm/WasmOpIter.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmValidate.h"
 

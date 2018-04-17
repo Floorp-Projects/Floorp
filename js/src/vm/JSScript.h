@@ -2145,8 +2145,8 @@ class LazyScript : public gc::TenuredCell
 
     // Source location for the script.
     // See the comment in JSScript for the details
-    uint32_t begin_;
-    uint32_t end_;
+    uint32_t sourceStart_;
+    uint32_t sourceEnd_;
     uint32_t toStringStart_;
     uint32_t toStringEnd_;
     // Line and column of |begin_| position, that is the position where we
@@ -2352,11 +2352,11 @@ class LazyScript : public gc::TenuredCell
     const char* filename() const {
         return scriptSource()->filename();
     }
-    uint32_t begin() const {
-        return begin_;
+    uint32_t sourceStart() const {
+        return sourceStart_;
     }
-    uint32_t end() const {
-        return end_;
+    uint32_t sourceEnd() const {
+        return sourceEnd_;
     }
     uint32_t toStringStart() const {
         return toStringStart_;
@@ -2373,7 +2373,7 @@ class LazyScript : public gc::TenuredCell
 
     void setToStringEnd(uint32_t toStringEnd) {
         MOZ_ASSERT(toStringStart_ <= toStringEnd);
-        MOZ_ASSERT(toStringEnd_ >= end_);
+        MOZ_ASSERT(toStringEnd_ >= sourceEnd_);
         toStringEnd_ = toStringEnd;
     }
 

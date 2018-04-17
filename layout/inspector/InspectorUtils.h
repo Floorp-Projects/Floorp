@@ -37,6 +37,7 @@ class InspectorUtils
 public:
   static void GetAllStyleSheets(GlobalObject& aGlobal,
                                 nsIDocument& aDocument,
+                                bool aDocumentOnly,
                                 nsTArray<RefPtr<StyleSheet>>& aResult);
   static void GetCSSStyleRules(GlobalObject& aGlobal,
                                Element& aElement,

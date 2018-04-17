@@ -189,7 +189,7 @@ class CheckThreadLocal
 
 // Data which may only be accessed by the thread on which it is created.
 template <typename T>
-using ThreadLocalData = ProtectedDataNoCheckArgs<CheckThreadLocal, T>;
+using ThreadData = ProtectedDataNoCheckArgs<CheckThreadLocal, T>;
 
 // Enum describing which helper threads (GC tasks or Ion compilations) may
 // access data even though they do not have exclusive access to any zone.
@@ -202,26 +202,25 @@ enum class AllowedHelperThread
 };
 
 template <AllowedHelperThread Helper>
-class CheckActiveThread
+class CheckMainThread
 {
   public:
     void check() const;
 };
 
-// Data which may only be accessed by the runtime's cooperatively scheduled
-// active thread.
+// Data which may only be accessed by the runtime's main thread.
 template <typename T>
-using ActiveThreadData =
-    ProtectedDataNoCheckArgs<CheckActiveThread<AllowedHelperThread::None>, T>;
+using MainThreadData =
+    ProtectedDataNoCheckArgs<CheckMainThread<AllowedHelperThread::None>, T>;
 
-// Data which may only be accessed by the runtime's cooperatively scheduled
-// active thread, or by various helper thread tasks.
+// Data which may only be accessed by the runtime's main thread or by various
+// helper thread tasks.
 template <typename T>
-using ActiveThreadOrGCTaskData =
-    ProtectedDataNoCheckArgs<CheckActiveThread<AllowedHelperThread::GCTask>, T>;
+using MainThreadOrGCTaskData =
+    ProtectedDataNoCheckArgs<CheckMainThread<AllowedHelperThread::GCTask>, T>;
 template <typename T>
-using ActiveThreadOrIonCompileData =
-    ProtectedDataNoCheckArgs<CheckActiveThread<AllowedHelperThread::IonCompile>, T>;
+using MainThreadOrIonCompileData =
+    ProtectedDataNoCheckArgs<CheckMainThread<AllowedHelperThread::IonCompile>, T>;
 
 template <AllowedHelperThread Helper>
 class CheckZone

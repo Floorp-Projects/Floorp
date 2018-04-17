@@ -3042,21 +3042,21 @@ AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
   nsDisplayWrapList* newItem;
   const ActiveScrolledRoot* asr = aBuilder->CurrentActiveScrolledRoot();
   if (aFlags & APPEND_OWN_LAYER) {
-    FrameMetrics::ViewID scrollTarget = FrameMetrics::NULL_SCROLL_ID;
     nsDisplayOwnLayerFlags flags = aBuilder->GetCurrentScrollbarFlags();
     // The flags here should be at most one scrollbar direction and nothing else
     MOZ_ASSERT(flags == nsDisplayOwnLayerFlags::eNone ||
                flags == nsDisplayOwnLayerFlags::eVerticalScrollbar ||
                flags == nsDisplayOwnLayerFlags::eHorizontalScrollbar);
 
+    ScrollbarData scrollbarData;
     if (aFlags & APPEND_SCROLLBAR_CONTAINER) {
-      scrollTarget = aBuilder->GetCurrentScrollbarTarget();
+      scrollbarData.mTargetViewId = aBuilder->GetCurrentScrollbarTarget();
       // The flags here should be exactly one scrollbar direction
       MOZ_ASSERT(flags != nsDisplayOwnLayerFlags::eNone);
       flags |= nsDisplayOwnLayerFlags::eScrollbarContainer;
     }
 
-    newItem = MakeDisplayItem<nsDisplayOwnLayer>(aBuilder, aSourceFrame, aSource, asr, flags, scrollTarget);
+    newItem = MakeDisplayItem<nsDisplayOwnLayer>(aBuilder, aSourceFrame, aSource, asr, flags, scrollbarData);
   } else {
     newItem = MakeDisplayItem<nsDisplayWrapList>(aBuilder, aSourceFrame, aSource, asr);
   }

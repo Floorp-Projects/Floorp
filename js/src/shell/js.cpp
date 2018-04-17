@@ -3548,34 +3548,22 @@ WorkerMain(void* arg)
         js_delete(input);
     });
 
-    if (input->parentRuntime)
-        sc->isWorker = true;
+    sc->isWorker = true;
     JS_SetContextPrivate(cx, sc);
     SetWorkerContextOptions(cx);
     JS::SetBuildIdOp(cx, ShellBuildId);
 
-    Maybe<EnvironmentPreparer> environmentPreparer;
-    if (input->parentRuntime) {
-        JS_SetFutexCanWait(cx);
-        JS::SetWarningReporter(cx, WarningReporter);
-        js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
-        JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
+    JS_SetFutexCanWait(cx);
+    JS::SetWarningReporter(cx, WarningReporter);
+    js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
+    JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
 
-        js::UseInternalJobQueues(cx);
+    js::UseInternalJobQueues(cx);
 
-        if (!JS::InitSelfHostedCode(cx))
-            return;
+    if (!JS::InitSelfHostedCode(cx))
+        return;
 
-        environmentPreparer.emplace(cx);
-    } else {
-        JS_AddInterruptCallback(cx, ShellInterruptCallback);
-
-        js::UseInternalJobQueues(cx, /* cooperative = */true);
-
-        // The Gecko Profiler requires that all cooperating contexts have
-        // profiling stacks installed.
-        MOZ_ALWAYS_TRUE(EnsureGeckoProfilingStackInstalled(cx, sc));
-    }
+    EnvironmentPreparer environmentPreparer(cx);
 
     do {
         JSAutoRequest ar(cx);
@@ -8627,11 +8615,10 @@ SetWorkerContextOptions(JSContext* cx)
 
 #ifdef JS_GC_ZEAL
     if (gZealBits && gZealFrequency) {
-#define ZEAL_MODE(_, value)                        \
-        if (gZealBits & (1 << value))              \
-            cx->runtime()->gc.setZeal(value, gZealFrequency);
-        JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
-#undef ZEAL_MODE
+        for (size_t i = 0; i < size_t(gc::ZealMode::Count); i++) {
+            if (gZealBits & (1 << i))
+                cx->runtime()->gc.setZeal(i, gZealFrequency);
+        }
     }
 #endif
 
@@ -8863,6 +8850,8 @@ main(int argc, char** argv, char** envp)
                                    "instantiation on completion of tier2")
 #ifdef ENABLE_WASM_GC
         || !op.addBoolOption('\0', "wasm-gc", "Enable wasm GC features")
+#else
+        || !op.addBoolOption('\0', "wasm-gc", "No-op")
 #endif
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addBoolOption('\0', "no-unboxed-objects", "Disable creating unboxed plain objects")

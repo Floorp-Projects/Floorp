@@ -125,48 +125,6 @@ private:
   ErrorResult& mRv;
 };
 
-class BCPostMessageRunnable final : public nsIRunnable,
-                                    public nsICancelableRunnable
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  BCPostMessageRunnable(BroadcastChannelChild* aActor,
-                        BroadcastChannelMessage* aData)
-    : mActor(aActor)
-    , mData(aData)
-  {
-    MOZ_ASSERT(mActor);
-  }
-
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(mActor);
-    if (mActor->IsActorDestroyed()) {
-      return NS_OK;
-    }
-
-    ClonedMessageData message;
-    mData->BuildClonedMessageDataForBackgroundChild(mActor->Manager(), message);
-    mActor->SendPostMessage(message);
-    return NS_OK;
-  }
-
-  nsresult Cancel() override
-  {
-    mActor = nullptr;
-    return NS_OK;
-  }
-
-private:
-  ~BCPostMessageRunnable() {}
-
-  RefPtr<BroadcastChannelChild> mActor;
-  RefPtr<BroadcastChannelMessage> mData;
-};
-
-NS_IMPL_ISUPPORTS(BCPostMessageRunnable, nsICancelableRunnable, nsIRunnable)
-
 class CloseRunnable final : public nsIRunnable,
                             public nsICancelableRunnable
 {
@@ -398,14 +356,6 @@ BroadcastChannel::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  PostMessageInternal(aCx, aMessage, aRv);
-}
-
-void
-BroadcastChannel::PostMessageInternal(JSContext* aCx,
-                                      JS::Handle<JS::Value> aMessage,
-                                      ErrorResult& aRv)
-{
   RefPtr<BroadcastChannelMessage> data = new BroadcastChannelMessage();
 
   data->Write(aCx, aMessage, aRv);
@@ -413,20 +363,11 @@ BroadcastChannel::PostMessageInternal(JSContext* aCx,
     return;
   }
 
-  PostMessageData(data);
-}
-
-void
-BroadcastChannel::PostMessageData(BroadcastChannelMessage* aData)
-{
   RemoveDocFromBFCache();
 
-  RefPtr<BCPostMessageRunnable> runnable =
-    new BCPostMessageRunnable(mActor, aData);
-
-  if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
-    NS_WARNING("Failed to dispatch to the current thread!");
-  }
+  ClonedMessageData message;
+  data->BuildClonedMessageDataForBackgroundChild(mActor->Manager(), message);
+  mActor->SendPostMessage(message);
 }
 
 void
