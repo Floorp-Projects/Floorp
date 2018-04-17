@@ -19,7 +19,6 @@
 
   function done() {
     w.close();
-    SimpleTest.finish();
   }
   </script>
 

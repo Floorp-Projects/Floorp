@@ -41,7 +41,7 @@ function setupFormHistory(aCallback) {
     { op: "remove" },
     { op: "add", fieldname: "field1", value: "Sec" },
   ], () => {
-    spawn_task(aCallback);
+    aCallback();
   });
 }
 
