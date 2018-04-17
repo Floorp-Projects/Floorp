@@ -29,13 +29,13 @@ public:
   TimeStamp mLastFling;
 };
 
-class AndroidFlingAnimation: public AsyncPanZoomAnimation {
+class StackScrollerFlingAnimation: public AsyncPanZoomAnimation {
 public:
-  AndroidFlingAnimation(AsyncPanZoomController& aApzc,
-                        PlatformSpecificStateBase* aPlatformSpecificState,
-                        const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
-                        bool aFlingIsHandoff /* ignored */,
-                        const RefPtr<const AsyncPanZoomController>& aScrolledApzc);
+  StackScrollerFlingAnimation(AsyncPanZoomController& aApzc,
+                              PlatformSpecificStateBase* aPlatformSpecificState,
+                              const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                              bool aFlingIsHandoff /* ignored */,
+                              const RefPtr<const AsyncPanZoomController>& aScrolledApzc);
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
                         const TimeDuration& aDelta) override;
 private:

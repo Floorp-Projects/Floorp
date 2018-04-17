@@ -48,7 +48,7 @@ class MetricsSharingController;
 class GestureEventListener;
 struct AsyncTransform;
 class AsyncPanZoomAnimation;
-class AndroidFlingAnimation;
+class StackScrollerFlingAnimation;
 class GenericFlingAnimation;
 class InputBlockState;
 struct FlingHandoffState;
@@ -1160,7 +1160,7 @@ public:
   ParentLayerPoint AdjustHandoffVelocityForOverscrollBehavior(ParentLayerPoint& aHandoffVelocity) const;
 
 private:
-  friend class AndroidFlingAnimation;
+  friend class StackScrollerFlingAnimation;
   friend class AutoscrollAnimation;
   friend class GenericFlingAnimation;
   friend class OverscrollAnimation;
