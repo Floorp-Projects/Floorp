@@ -50,32 +50,17 @@ class MachCommands(MachCommandBase):
 
     def get_preferences(self):
         """Get all of the preferences associated with enabling and disabling a property."""
-        # Build the command to run the preprocessor on PythonCSSProps.h
-        headerPath = resolve_path(self.topsrcdir, 'layout/style/PythonCSSProps.h')
-
-        cpp = self.substs['CPP']
-
-        if not cpp:
-            print("Unable to find the cpp program. Please do a full, nonartifact")
-            print("build and try this again.")
-            sys.exit(1)
-
-        if type(cpp) is list:
-            cmd = cpp
-        else:
-            cmd = shellutil.split(cpp)
-        cmd += shellutil.split(self.substs['ACDEFINES'])
-        cmd.append(headerPath)
-
-        # The preprocessed list takes the following form:
+        # The data takes the following form:
         # [ (name, prop, id, flags, pref, proptype), ... ]
-        preprocessed = eval(subprocess.check_output(cmd))
+        dataPath = resolve_path(self.topobjdir, 'layout/style/ServoCSSPropList.py')
+        with open(dataPath, "r") as f:
+            data = eval(f.read())
 
         # Map this list
         # (name, prop, id, flags, pref, proptype) => (name, pref)
         preferences = [
             (name, pref)
-            for name, prop, id, flags, pref, proptype in preprocessed
+            for name, prop, id, flags, pref, proptype in data
             if 'CSS_PROPERTY_INTERNAL' not in flags and pref]
 
         return preferences
