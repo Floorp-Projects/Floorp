@@ -398,7 +398,7 @@ public class WebViewProvider {
         }
 
         @Override
-        public void loadData(String baseURL, String data, String mimeType, String encoding) {
+        public void loadData(String baseURL, String data, String mimeType, String encoding, String historyURL) {
             geckoSession.loadData(data.getBytes(Charsets.UTF_8), mimeType, baseURL);
         }
 
