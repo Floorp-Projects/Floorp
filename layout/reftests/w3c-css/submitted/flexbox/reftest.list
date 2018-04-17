@@ -134,6 +134,12 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-001.xhtml  flexbox-align
 == flexbox-intrinsic-ratio-006.html flexbox-intrinsic-ratio-006-ref.html
 == flexbox-intrinsic-ratio-006v.html flexbox-intrinsic-ratio-006-ref.html
 
+# Test for definite and indefinite sizes.
+== flexbox-definite-sizes-001.html flexbox-definite-sizes-001-ref.html
+== flexbox-definite-sizes-002.html flexbox-definite-sizes-001-ref.html
+== flexbox-definite-sizes-003.html flexbox-definite-sizes-001-ref.html
+== flexbox-definite-sizes-004.html flexbox-definite-sizes-001-ref.html
+
 # Tests for flex items as (pseudo) stacking contexts
 == flexbox-items-as-stacking-contexts-001.xhtml flexbox-items-as-stacking-contexts-001-ref.xhtml
 == flexbox-items-as-stacking-contexts-002.html flexbox-items-as-stacking-contexts-002-ref.html
