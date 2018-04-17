@@ -320,12 +320,11 @@
                 onsyncfrompreference="return gMainPane.updateButtons('translateButton',
                                               'browser.translation.detectLanguage');"/>
       <hbox id="bingAttribution" hidden="true" align="center">
-        <label>&translation.options.attribution.beforeLogo;</label>
-        <separator orient="vertical" class="thin"/>
-        <image id="translationAttributionImage" aria-label="Microsoft Translator"
-               src="chrome://browser/content/microsoft-translator-attribution.png"/>
-        <separator orient="vertical" class="thin"/>
-        <label>&translation.options.attribution.afterLogo;</label>
+        <label data-l10n-id="translate-attribution">
+          <html:img id="translationAttributionImage" aria-label="Microsoft Translator"
+            src="chrome://browser/content/microsoft-translator-attribution.png"
+            data-l10n-name="logo"/>
+        </label>
       </hbox>
     </hbox>
     <button id="translateButton"

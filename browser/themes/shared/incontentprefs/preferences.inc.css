@@ -627,16 +627,8 @@ button > hbox > label {
   margin-top: 2px !important;
 }
 
-.androidLink {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/logo-android.svg");
-}
-
-.iOSLink {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/logo-ios.svg");
-}
-
-.androidLink,
-.iOSLink {
+.androidIcon,
+.iOSIcon {
   margin-inline-start: 2px;
   margin-inline-end: 4px;
   width: 20px;
