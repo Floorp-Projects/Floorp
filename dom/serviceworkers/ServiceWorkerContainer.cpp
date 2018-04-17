@@ -231,22 +231,47 @@ ServiceWorkerContainer::GetController()
 already_AddRefed<Promise>
 ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
 {
-  nsresult rv;
-  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsISupports> promise;
-  aRv = swm->GetRegistrations(GetOwner(), getter_AddRefs(promise));
+  nsIGlobalObject* global = GetGlobalIfValid(aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  RefPtr<Promise> ret = static_cast<Promise*>(promise.get());
-  MOZ_ASSERT(ret);
-  return ret.forget();
+  Maybe<ClientInfo> clientInfo = global->GetClientInfo();
+  if (clientInfo.isNothing()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  RefPtr<Promise> outer = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<ServiceWorkerContainer> self = this;
+
+  mInner->GetRegistrations(clientInfo.ref())->Then(
+    global->EventTargetFor(TaskCategory::Other), __func__,
+    [self, outer] (const nsTArray<ServiceWorkerRegistrationDescriptor>& aDescList) {
+      ErrorResult rv;
+      nsIGlobalObject* global = self->GetGlobalIfValid(rv);
+      if (rv.Failed()) {
+        outer->MaybeReject(rv);
+        return;
+      }
+      nsTArray<RefPtr<ServiceWorkerRegistration>> regList;
+      for (auto& desc : aDescList) {
+        RefPtr<ServiceWorkerRegistration> reg =
+          global->GetOrCreateServiceWorkerRegistration(desc);
+        if (reg) {
+          regList.AppendElement(Move(reg));
+        }
+      }
+      outer->MaybeResolve(regList);
+    }, [self, outer] (nsresult aRv) {
+      outer->MaybeReject(aRv);
+    });
+
+  return outer.forget();
 }
 
 already_AddRefed<Promise>
