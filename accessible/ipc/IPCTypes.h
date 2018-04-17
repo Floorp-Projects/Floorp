@@ -7,6 +7,7 @@
 #ifndef mozilla_a11y_IPCTypes_h
 #define mozilla_a11y_IPCTypes_h
 
+#ifdef ACCESSIBILITY
 #include "mozilla/a11y/Role.h"
 
 namespace IPC {
@@ -18,7 +19,15 @@ struct ParamTraits<mozilla::a11y::role>
                                              mozilla::a11y::role::LAST_ROLE>
 {
 };
-};
+
+} // namespace IPC
+#else
+namespace mozilla {
+namespace a11y {
+typedef uint32_t role;
+} // namespace a11y
+} // namespace mozilla
+#endif // ACCESSIBILITY
 
 /**
  * Since IPDL does not support preprocessing, this header file allows us to
