@@ -24,6 +24,7 @@
 #include "mozilla/dom/ServiceWorkerContainerBinding.h"
 
 #include "ServiceWorker.h"
+#include "ServiceWorkerContainerImpl.h"
 
 namespace mozilla {
 namespace dom {
@@ -60,12 +61,16 @@ ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal)
 already_AddRefed<ServiceWorkerContainer>
 ServiceWorkerContainer::Create(nsIGlobalObject* aGlobal)
 {
-  RefPtr<ServiceWorkerContainer> ref = new ServiceWorkerContainer(aGlobal);
+  RefPtr<Inner> inner = new ServiceWorkerContainerImpl();
+  RefPtr<ServiceWorkerContainer> ref =
+    new ServiceWorkerContainer(aGlobal, inner.forget());
   return ref.forget();
 }
 
-ServiceWorkerContainer::ServiceWorkerContainer(nsIGlobalObject* aGlobal)
+ServiceWorkerContainer::ServiceWorkerContainer(nsIGlobalObject* aGlobal,
+                                               already_AddRefed<ServiceWorkerContainer::Inner> aInner)
   : DOMEventTargetHelper(aGlobal)
+  , mInner(aInner)
 {
   Maybe<ServiceWorkerDescriptor> controller = aGlobal->GetController();
   if (controller.isSome()) {

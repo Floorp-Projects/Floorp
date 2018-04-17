@@ -8,6 +8,7 @@
 
 #include "mozilla/MozPromise.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,6 +18,9 @@ class ServiceWorkerRegistrationDescriptor;
 
 typedef MozPromise<ServiceWorkerRegistrationDescriptor, nsresult, false>
         ServiceWorkerRegistrationPromise;
+
+typedef MozPromise<nsTArray<ServiceWorkerRegistrationDescriptor>, nsresult, false>
+        ServiceWorkerRegistrationListPromise;
 
 bool
 ServiceWorkerParentInterceptEnabled();
