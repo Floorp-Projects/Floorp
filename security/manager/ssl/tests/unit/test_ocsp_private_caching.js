@@ -23,12 +23,6 @@ function start_ocsp_responder(expectedCertNames, expectedPaths,
                             expectedPaths, expectedMethods);
 }
 
-function check_cert_err(cert_name, expected_error) {
-  let cert = constructCertFromFile("test_ocsp_fetch_method/" + cert_name + ".pem");
-  return checkCertErrorGeneric(certdb, cert, expected_error,
-                               certificateUsageSSLServer);
-}
-
 function add_flush_cache() {
   add_test(() => {
     // This appears to either fire multiple times or fire once for every

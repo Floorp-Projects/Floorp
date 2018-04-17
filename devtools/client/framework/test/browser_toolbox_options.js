@@ -20,6 +20,7 @@ add_task(async function() {
   let tab = await addTab(URL);
   let target = TargetFactory.forTab(tab);
   toolbox = await gDevTools.showToolbox(target);
+
   doc = toolbox.doc;
   await registerNewPerToolboxTool();
   await testSelectTool();
@@ -429,11 +430,11 @@ function checkUnregistered(toolId, deferred, data) {
   deferred.resolve();
 }
 
-function checkRegistered(toolId, deferred, data) {
+async function checkRegistered(toolId, deferred, data) {
   if (data == toolId) {
     ok(true, "Correct tool added back");
     // checking tab on the toolbox
-    let button = doc.getElementById("toolbox-tab-" + toolId);
+    let button = await lookupButtonForToolId(toolId);
     ok(button, "Tab added back for " + toolId);
   } else {
     ok(false, "Something went wrong, " + toolId + " was not registered");
@@ -453,6 +454,26 @@ function GetPref(name) {
     default:
       throw new Error("Unknown type");
   }
+}
+
+/**
+ * Find the button from specified toolId.
+ * Generally, button which access to the tool panel is in toolbox or
+ * tools menu(in the Chevron menu).
+ */
+async function lookupButtonForToolId(toolId) {
+  let button = doc.getElementById("toolbox-tab-" + toolId);
+  if (!button) {
+    // search from the tools menu.
+    let menuPopup = await openChevronMenu(toolbox);
+    button = doc.querySelector("#tools-chevron-menupopup-" + toolId);
+
+    info("Closing the tools-chevron-menupopup popup");
+    let onPopupHidden = once(menuPopup, "popuphidden");
+    menuPopup.hidePopup();
+    await onPopupHidden;
+  }
+  return button;
 }
 
 async function cleanup() {

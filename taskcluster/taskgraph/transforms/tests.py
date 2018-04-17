@@ -28,6 +28,7 @@ from taskgraph.util.schema import (
     optionally_keyed_by,
     Schema,
 )
+from taskgraph.util.taskcluster import get_artifact_path
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
 
 from voluptuous import (
@@ -499,6 +500,17 @@ def setup_talos(config, tests):
 
 
 @transforms.add
+def handle_artifact_prefix(config, tests):
+    """Handle translating `artifact_prefix` appropriately"""
+    for test in tests:
+        if test['build-attributes'].get('artifact_prefix'):
+            test.setdefault("attributes", {}).setdefault(
+                'artifact_prefix', test['build-attributes']['artifact_prefix']
+            )
+        yield test
+
+
+@transforms.add
 def set_target(config, tests):
     for test in tests:
         build_platform = test['build-platform']
@@ -515,7 +527,7 @@ def set_target(config, tests):
                 target = 'target.zip'
             else:
                 target = 'target.tar.bz2'
-        test['mozharness']['build-artifact-name'] = 'public/build/' + target
+        test['mozharness']['build-artifact-name'] = get_artifact_path(test, target)
 
         yield test
 

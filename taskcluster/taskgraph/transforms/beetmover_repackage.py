@@ -18,6 +18,7 @@ from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
                                          get_phase,
                                          get_worker_type_for_scope)
+from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
 
@@ -259,7 +260,7 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(build_task_ref, build_signing_task_ref,
+def generate_upstream_artifacts(job, build_task_ref, build_signing_task_ref,
                                 repackage_task_ref, repackage_signing_task_ref,
                                 platform, locale=None):
 
@@ -268,9 +269,9 @@ def generate_upstream_artifacts(build_task_ref, build_signing_task_ref,
     repackage_mapping = UPSTREAM_ARTIFACT_REPACKAGE_PATHS
     repackage_signing_mapping = UPSTREAM_ARTIFACT_SIGNED_REPACKAGE_PATHS
 
-    artifact_prefix = 'public/build'
+    artifact_prefix = get_artifact_prefix(job)
     if locale:
-        artifact_prefix = 'public/build/{}'.format(locale)
+        artifact_prefix = '{}/{}'.format(artifact_prefix, locale)
         platform = "{}-l10n".format(platform)
 
     upstream_artifacts = []
@@ -308,11 +309,10 @@ def generate_upstream_artifacts(build_task_ref, build_signing_task_ref,
     return upstream_artifacts
 
 
-def generate_partials_upstream_artifacts(artifacts, platform, locale=None):
-    if not locale or locale == 'en-US':
-        artifact_prefix = 'public/build'
-    else:
-        artifact_prefix = 'public/build/{}'.format(locale)
+def generate_partials_upstream_artifacts(job, artifacts, platform, locale=None):
+    artifact_prefix = get_artifact_prefix(job)
+    if locale and locale != 'en-US':
+        artifact_prefix = '{}/{}'.format(artifact_prefix, locale)
 
     upstream_artifacts = [{
         'taskId': {'task-reference': '<partials-signing>'},
@@ -386,7 +386,7 @@ def make_task_worker(config, jobs):
             'implementation': 'beetmover',
             'release-properties': craft_release_properties(config, job),
             'upstream-artifacts': generate_upstream_artifacts(
-                build_task_ref, build_signing_task_ref, repackage_task_ref,
+                job, build_task_ref, build_signing_task_ref, repackage_task_ref,
                 repackage_signing_task_ref, platform, locale
             ),
         }
@@ -428,7 +428,7 @@ def make_partials_artifacts(config, jobs):
                 continue
 
         upstream_artifacts = generate_partials_upstream_artifacts(
-            artifacts, balrog_platform, locale
+            job, artifacts, balrog_platform, locale
         )
 
         job['worker']['upstream-artifacts'].extend(upstream_artifacts)

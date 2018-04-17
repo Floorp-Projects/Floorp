@@ -716,7 +716,7 @@ BrowserGlue.prototype = {
       textcolor: "white",
       accentcolor: "black",
       popup: "#4a4a4f",
-      popup_text: "rgba(249, 249, 250, 0.8)",
+      popup_text: "rgb(249, 249, 250)",
       popup_border: "#27272b",
       author: vendorShortName,
     });

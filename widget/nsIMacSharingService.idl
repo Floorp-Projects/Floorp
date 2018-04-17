@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Allow applications to interface with the Mac OS X Sharing APIs.
+ */
+
+[scriptable, uuid(de59fe1a-46c8-490f-b04d-34545acb06c9)]
+interface nsIMacSharingService : nsISupports
+{
+  /**
+   * Get list of sharing providers
+   */
+  [implicit_jscontext] jsval getSharingProviders(in AString urlToShare);
+
+  /**
+   * Launch service with shareTitle with given url
+   */
+  void shareUrl(in AString shareTitle, in AString urlToShare);
+};

@@ -440,7 +440,8 @@
            copyURL-title="&pageAction.copyLink.label;"
            emailLink-title="&emailPageCmd.label;"
            sendToDevice-title="&pageAction.sendTabToDevice.label;"
-           sendToDevice-notReadyTitle="&sendToDevice.syncNotReady.label;">
+           sendToDevice-notReadyTitle="&sendToDevice.syncNotReady.label;"
+           shareURL-title="&pageAction.shareUrl.label;">
       <panelmultiview id="pageActionPanelMultiView"
                       mainViewId="pageActionPanelMainView"
                       viewCacheId="appMenu-viewCache">
@@ -639,8 +640,7 @@
              customizable="true"
              mode="icons"
              aria-label="&tabsToolbar.label;"
-             context="toolbar-context-menu"
-             collapsed="true">
+             context="toolbar-context-menu">
       <hbox class="titlebar-placeholder" type="pre-tabs"
             skipintoolbarset="true"/>
 

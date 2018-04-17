@@ -3291,6 +3291,8 @@ public:
   // Get the current number of inner or outer windows.
   static int32_t GetCurrentInnerOrOuterWindowCount() { return sInnerOrOuterWindowCount; }
 
+  static bool CanShowPopup(nsIPrincipal* aPrincipal);
+
 private:
   static bool InitializeEventTable();
 
@@ -3418,6 +3420,7 @@ private:
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
+  static bool sDisablePopups;
   static bool sIsFullScreenApiEnabled;
   static bool sIsUnprefixedFullscreenApiEnabled;
   static bool sTrustedFullScreenOnly;

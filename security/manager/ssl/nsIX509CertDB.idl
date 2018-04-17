@@ -78,17 +78,6 @@ interface nsIX509CertDB : nsISupports {
   nsIX509Cert findCertByDBKey(in ACString aDBkey);
 
   /**
-   *  Find a certificate by email address.
-   *
-   *  @param aEmailAddress The email address to be used as the key
-   *                       to find the certificate.
-   *
-   *  @return The matching certificate if found.
-   */
-  [must_use]
-  nsIX509Cert findCertByEmailAddress(in ACString aEmailAddress);
-
-  /**
    *  Use this to import a stream sent down as a mime type into
    *  the certificate database on the default token.
    *  The stream may consist of one or more certificates.
@@ -300,54 +289,28 @@ interface nsIX509CertDB : nsISupports {
   [must_use]
   nsIX509Cert addCert(in ACString certDER, in ACString trust);
 
-  // Flags for verifyCertNow (these must match the values in CertVerifier.cpp):
-  // Prevent network traffic. Doesn't work with classic verification.
+  // Flags for asyncVerifyCertAtTime (these must match the values in
+  // CertVerifier.cpp):
+  // Prevent network traffic.
   const uint32_t FLAG_LOCAL_ONLY = 1 << 0;
   // Do not fall back to DV verification after attempting EV validation.
-  // Actually does prevent network traffic, but can cause a valid EV
-  // certificate to not be considered valid.
   const uint32_t FLAG_MUST_BE_EV = 1 << 1;
 
-  /** Warning: This interface is inteded to use only for testing only as:
-   *    1. It can create IO on the main thread.
-   *    2. It is in constant change, so in/out can change at any release.
+  /*
+   * Asynchronously verify a certificate given a set of parameters. Calls the
+   * `verifyCertFinished` function on the provided `nsICertVerificationCallback`
+   * with the results of the verification operation.
+   * See the documentation for  nsICertVerificationCallback.
    *
-   *  Obtain the verification result for a cert given a particular usage.
-   *  On success, the call returns 0, the chain built during verification,
-   *  and whether the cert is good for EV usage.
-   *  On failure, the call returns the PRErrorCode for the verification failure
-   *
-   *  @param aCert Obtain the stored trust of this certificate
-   *  @param aUsage a integer representing the usage from NSS
-   *  @param aFlags flags as described above
-   *  @param aHostname the (optional) hostname to verify for
-   *  @param aTime the time at which to verify, in seconds since the epoch
-   *  @param aVerifiedChain chain of verification up to the root if success
-   *  @param aHasEVPolicy bool that signified that the cert was an EV cert
-   *  @return 0 if success or the value or the error code for the verification
-   *          failure
-   */
-  [must_use]
-  int32_t /*PRErrorCode*/
-    verifyCertAtTime(in nsIX509Cert aCert,
-                     in int64_t /*SECCertificateUsage*/ aUsage,
-                     in uint32_t aFlags,
-                     in ACString aHostname,
-                     in uint64_t aTime,
-                     out nsIX509CertList aVerifiedChain,
-                     out bool aHasEVPolicy);
-  [must_use]
-  int32_t /*PRErrorCode*/
-    verifyCertNow(in nsIX509Cert aCert,
-                  in int64_t /*SECCertificateUsage*/ aUsage,
-                  in uint32_t aFlags,
-                  in ACString aHostname,
-                  out nsIX509CertList aVerifiedChain,
-                  out bool aHasEVPolicy);
-
-  /**
-   * Similar to the above, but asynchronous. As a result, use of this API is not
-   * limited to tests.
+   * @param aCert the certificate to verify
+   * @param aUsage an integer representing the usage to verify for (see
+   *               SECCertificateUsage in certt.h from NSS)
+   * @param aFlags flags as described above
+   * @param aHostname the (optional) hostname to verify for
+   * @param aTime the time at which to verify, in seconds since the epoch
+   * @param aCallback the nsICertVerificationCallback that will receive the
+                      results of this verification
+   * @return a succeeding nsresult if the job was dispatched successfully
    */
   [must_use]
   void asyncVerifyCertAtTime(in nsIX509Cert aCert,

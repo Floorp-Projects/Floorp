@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from ../mixins/PaymentStateSubscriberMixin.js */
-/* import-globals-from ../components/basic-card-option.js */
-
-"use strict";
+import BasicCardOption from "../components/basic-card-option.js";
+import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
+import RichSelect from "../components/rich-select.js";
 
 /**
  * <payment-method-picker></payment-method-picker>
@@ -13,10 +12,10 @@
  * <basic-card-option> listening to savedBasicCards.
  */
 
-class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTMLElement) {
+export default class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTMLElement) {
   constructor() {
     super();
-    this.dropdown = document.createElement("rich-select");
+    this.dropdown = new RichSelect();
     this.dropdown.addEventListener("change", this);
     this.spacerText = document.createTextNode(" ");
     this.securityCodeInput = document.createElement("input");
@@ -49,7 +48,7 @@ class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTMLElement) {
     for (let [guid, basicCard] of Object.entries(savedBasicCards)) {
       let optionEl = this.dropdown.getOptionByValue(guid);
       if (!optionEl) {
-        optionEl = document.createElement("basic-card-option");
+        optionEl = new BasicCardOption();
         optionEl.value = guid;
       }
       for (let key of BasicCardOption.recordAttributes) {
