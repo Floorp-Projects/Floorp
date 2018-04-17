@@ -27,8 +27,8 @@ async function run_test_with_server(server) {
 }
 
 async function test_enum_symbols() {
-  await new Promise(function(resolve) {
-    gThreadClient.addOneTimeListener("paused", async function(event, packet) {
+  await new Promise(function (resolve) {
+    gThreadClient.addOneTimeListener("paused", async function (event, packet) {
       let [grip] = packet.frame.arguments;
       let objClient = gThreadClient.pauseGrip(grip);
       let {iterator} = await objClient.enumSymbols();
