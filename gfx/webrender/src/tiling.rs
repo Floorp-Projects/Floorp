@@ -623,17 +623,16 @@ impl RenderTarget for AlphaRenderTarget {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TextureCacheRenderTarget {
+    pub target_kind: RenderTargetKind,
     pub horizontal_blurs: Vec<BlurInstance>,
     pub blits: Vec<BlitJob>,
     pub glyphs: Vec<GlyphJob>,
 }
 
 impl TextureCacheRenderTarget {
-    fn new(
-        _size: Option<DeviceUintSize>,
-        _screen_size: DeviceIntSize,
-    ) -> Self {
+    fn new(target_kind: RenderTargetKind) -> Self {
         TextureCacheRenderTarget {
+            target_kind,
             horizontal_blurs: vec![],
             blits: vec![],
             glyphs: vec![],
@@ -826,25 +825,22 @@ impl RenderPass {
 
                         // Find a target to assign this task to, or create a new
                         // one if required.
-                        let (target_kind, texture_target) = match task.location {
+                        let texture_target = match task.location {
                             RenderTaskLocation::TextureCache(texture_id, layer, _) => {
-                                // TODO(gw): When we support caching color items, we will
-                                //           need to calculate that here to get the
-                                //           correct target kind.
-                                (RenderTargetKind::Alpha, Some((texture_id, layer)))
+                                Some((texture_id, layer))
                             }
                             RenderTaskLocation::Fixed(..) => {
-                                (RenderTargetKind::Color, None)
+                                None
                             }
                             RenderTaskLocation::Dynamic(ref mut origin, size) => {
+                                let size = size.expect("bug: size must be assigned by now");
                                 let alloc_size = DeviceUintSize::new(size.width as u32, size.height as u32);
                                 let (alloc_origin, target_index) =  match target_kind {
                                     RenderTargetKind::Color => color.allocate(alloc_size),
                                     RenderTargetKind::Alpha => alpha.allocate(alloc_size),
                                 };
                                 *origin = Some((alloc_origin.to_i32(), target_index));
-
-                                (target_kind, None)
+                                None
                             }
                         };
 
@@ -859,7 +855,7 @@ impl RenderPass {
 
                         // Give the render task an opportunity to add any
                         // information to the GPU cache, if appropriate.
-                        task.prepare_for_render(gpu_cache);
+                        task.write_gpu_blocks(gpu_cache);
 
                         (target_kind, texture_target)
                     };
@@ -869,7 +865,7 @@ impl RenderPass {
                             let texture = texture_cache
                                 .entry(texture_target)
                                 .or_insert(
-                                    TextureCacheRenderTarget::new(None, DeviceIntSize::zero())
+                                    TextureCacheRenderTarget::new(target_kind)
                                 );
                             texture.add_task(task_id, render_tasks);
                         }

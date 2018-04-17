@@ -30,10 +30,11 @@ fn render_blob(
     color: ColorU,
     descriptor: &BlobImageDescriptor,
     tile: Option<TileOffset>,
+    dirty_rect: Option<DeviceUintRect>,
 ) -> BlobImageResult {
     // Allocate storage for the result. Right now the resource cache expects the
     // tiles to have have no stride or offset.
-    let mut texels = Vec::with_capacity((descriptor.width * descriptor.height * 4) as usize);
+    let mut texels = vec![0u8; (descriptor.width * descriptor.height * descriptor.format.bytes_per_pixel()) as usize];
 
     // Generate a per-tile pattern to see it in the demo. For a real use case it would not
     // make sense for the rendered content to depend on its tile.
@@ -42,8 +43,12 @@ fn render_blob(
         None => true,
     };
 
-    for y in 0 .. descriptor.height {
-        for x in 0 .. descriptor.width {
+    let dirty_rect = dirty_rect.unwrap_or(DeviceUintRect::new(
+        DeviceUintPoint::new(0, 0),
+        DeviceUintSize::new(descriptor.width, descriptor.height)));
+
+    for y in dirty_rect.min_y() .. dirty_rect.max_y() {
+        for x in dirty_rect.min_x() .. dirty_rect.max_x() {
             // Apply the tile's offset. This is important: all drawing commands should be
             // translated by this offset to give correct results with tiled blob images.
             let x2 = x + descriptor.offset.x as u32;
@@ -60,13 +65,13 @@ fn render_blob(
 
             match descriptor.format {
                 ImageFormat::BGRA8 => {
-                    texels.push(color.b * checker + tc);
-                    texels.push(color.g * checker + tc);
-                    texels.push(color.r * checker + tc);
-                    texels.push(color.a * checker + tc);
+                    texels[((y * descriptor.width + x) * 4 + 0) as usize] = color.b * checker + tc;
+                    texels[((y * descriptor.width + x) * 4 + 1) as usize] = color.g * checker + tc;
+                    texels[((y * descriptor.width + x) * 4 + 2) as usize] = color.r * checker + tc;
+                    texels[((y * descriptor.width + x) * 4 + 3) as usize] = color.a * checker + tc;
                 }
                 ImageFormat::R8 => {
-                    texels.push(color.a * checker + tc);
+                    texels[(y * descriptor.width + x) as usize] = color.a * checker + tc;
                 }
                 _ => {
                     return Err(BlobImageError::Other(
@@ -135,7 +140,7 @@ impl BlobImageRenderer for CheckerboardRenderer {
         _resources: &BlobImageResources,
         request: BlobImageRequest,
         descriptor: &BlobImageDescriptor,
-        _dirty_rect: Option<DeviceUintRect>,
+        dirty_rect: Option<DeviceUintRect>,
     ) {
         (self.callbacks.lock().unwrap().request)(&request);
         assert!(!self.rendered_images.contains_key(&request));
@@ -146,7 +151,7 @@ impl BlobImageRenderer for CheckerboardRenderer {
         // Gather the input data to send to a worker thread.
         let cmds = self.image_cmds.get(&request.key).unwrap();
 
-        let result = render_blob(*cmds, descriptor, request.tile);
+        let result = render_blob(*cmds, descriptor, request.tile, dirty_rect);
 
         self.rendered_images.insert(request, result);
     }

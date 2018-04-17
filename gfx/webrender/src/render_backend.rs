@@ -24,7 +24,7 @@ use hit_test::{HitTest, HitTester};
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
-use renderer::PipelineInfo;
+use renderer::{AsyncPropertySampler, PipelineInfo};
 use resource_cache::ResourceCache;
 #[cfg(feature = "replay")]
 use resource_cache::PlainCacheOwn;
@@ -429,6 +429,7 @@ pub struct RenderBackend {
 
     notifier: Box<RenderNotifier>,
     recorder: Option<Box<ApiRecordingReceiver>>,
+    sampler: Option<Box<AsyncPropertySampler + Send>>,
 
     enable_render_on_scroll: bool,
 }
@@ -445,6 +446,7 @@ impl RenderBackend {
         notifier: Box<RenderNotifier>,
         frame_config: FrameBuilderConfig,
         recorder: Option<Box<ApiRecordingReceiver>>,
+        sampler: Option<Box<AsyncPropertySampler + Send>>,
         enable_render_on_scroll: bool,
     ) -> RenderBackend {
         // The namespace_id should start from 1.
@@ -464,6 +466,7 @@ impl RenderBackend {
             documents: FastHashMap::default(),
             notifier,
             recorder,
+            sampler,
             enable_render_on_scroll,
         }
     }
@@ -681,6 +684,10 @@ impl RenderBackend {
         let mut frame_counter: u32 = 0;
         let mut keep_going = true;
 
+        if let Some(ref sampler) = self.sampler {
+            sampler.register();
+        }
+
         while keep_going {
             profile_scope!("handle_msg");
 
@@ -741,6 +748,11 @@ impl RenderBackend {
 
         let _ = self.scene_tx.send(SceneBuilderRequest::Stop);
         self.notifier.shut_down();
+
+        if let Some(ref sampler) = self.sampler {
+            sampler.deregister();
+        }
+
     }
 
     fn process_api_msg(
@@ -944,6 +956,17 @@ impl RenderBackend {
 
             doc.build_scene(&mut self.resource_cache);
             doc.render_on_hittest = true;
+        }
+
+        // If we have a sampler, get more frame ops from it and add them
+        // to the transaction. This is a hook to allow the WR user code to
+        // fiddle with things after a potentially long scene build, but just
+        // before rendering. This is useful for rendering with the latest
+        // async transforms.
+        if transaction_msg.generate_frame {
+            if let Some(ref sampler) = self.sampler {
+                transaction_msg.frame_ops.append(&mut sampler.sample());
+            }
         }
 
         for frame_msg in transaction_msg.frame_ops {

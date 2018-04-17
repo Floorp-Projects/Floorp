@@ -163,6 +163,17 @@ impl<'a> RawtestHarness<'a> {
 
         self.submit_dl(&mut epoch, layout_size, builder, Some(resources));
 
+        let called = Arc::new(AtomicIsize::new(0));
+        let called_inner = Arc::clone(&called);
+
+        self.wrench.callbacks.lock().unwrap().request = Box::new(move |_| {
+            called_inner.fetch_add(1, Ordering::SeqCst);
+        });
+
+        let pixels_first = self.render_and_get_pixels(window_rect);
+
+        assert!(called.load(Ordering::SeqCst) == 1);
+
         // draw the blob image a second time at a different location
 
         // make a new display list that refers to the first image
@@ -178,16 +189,6 @@ impl<'a> RawtestHarness<'a> {
         );
 
         self.submit_dl(&mut epoch, layout_size, builder, None);
-
-        let called = Arc::new(AtomicIsize::new(0));
-        let called_inner = Arc::clone(&called);
-
-        self.wrench.callbacks.lock().unwrap().request = Box::new(move |_| {
-            called_inner.fetch_add(1, Ordering::SeqCst);
-        });
-
-        let pixels_first = self.render_and_get_pixels(window_rect);
-        assert!(called.load(Ordering::SeqCst) == 1);
 
         let pixels_second = self.render_and_get_pixels(window_rect);
 
