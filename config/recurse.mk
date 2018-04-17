@@ -171,6 +171,9 @@ widget/android/bindings/export: build/annotationProcessors/export
 # .xpt generation needs the xpidl lex/yacc files
 xpcom/xpidl/export: xpcom/idl-parser/xpidl/export
 
+# CSS2Properties.webidl needs ServoCSSPropList.py from layout/style
+dom/bindings/export: layout/style/export
+
 ifdef ENABLE_CLANG_PLUGIN
 $(filter-out config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets)): build/clang-plugin/target build/clang-plugin/tests/target
 build/clang-plugin/tests/target: build/clang-plugin/target
