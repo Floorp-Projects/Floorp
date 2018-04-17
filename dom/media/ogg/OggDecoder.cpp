@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OggDecoder.h"
-#include "MediaPrefs.h"
 #include "MediaContainerType.h"
 #include "MediaDecoder.h"
 #include "nsMimeTypes.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 
@@ -16,7 +16,7 @@ namespace mozilla {
 bool
 OggDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 {
-  if (!MediaPrefs::OggEnabled()) {
+  if (!StaticPrefs::MediaOggEnabled()) {
     return false;
   }
 
@@ -38,7 +38,8 @@ OggDecoder::IsSupportedType(const MediaContainerType& aContainerType)
   for (const auto& codec : codecs.Range()) {
     if ((MediaDecoder::IsOpusEnabled() && codec.EqualsLiteral("opus")) ||
         codec.EqualsLiteral("vorbis") ||
-        (MediaPrefs::FlacInOgg() && codec.EqualsLiteral("flac"))) {
+        (StaticPrefs::MediaOggFlacEnabled() &&
+         codec.EqualsLiteral("flac"))) {
       continue;
     }
     // Note: Only accept Theora in a video container type, not in an audio

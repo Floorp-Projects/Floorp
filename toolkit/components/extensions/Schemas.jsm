@@ -3057,7 +3057,7 @@ this.Schemas = {
         for (let [url, schema] of data) {
           this.schemaJSON.set(url, schema);
         }
-        if (this._rootScheam) {
+        if (this._rootSchema) {
           throw new Error("Schema loaded after root schema populated");
         }
         break;
@@ -3089,7 +3089,7 @@ this.Schemas = {
       this.schemaHook([[url, schema]]);
     }
 
-    if (this._rootScheam) {
+    if (this._rootSchema) {
       throw new Error("Schema loaded after root schema populated");
     }
   },

@@ -13,7 +13,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "MediaPrefs.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 
@@ -48,7 +48,7 @@ AudioSink::AudioSink(AbstractThread* aThread,
   , mIsAudioDataAudible(false)
   , mAudioQueue(aAudioQueue)
 {
-  bool resampling = MediaPrefs::AudioSinkResampling();
+  bool resampling = StaticPrefs::MediaResamplingEnabled();
 
   if (resampling) {
     mOutputRate = 48000;
@@ -195,7 +195,8 @@ AudioSink::InitializeAudioStream(const PlaybackParams& aParams)
                : AudioConfig::ChannelLayout(mOutputChannels).Map();
   // The layout map used here is already processed by mConverter with
   // mOutputChannels into SMPTE format, so there is no need to worry if
-  // MediaPrefs::MonoAudio() or MediaPrefs::AudioSinkForceStereo() is applied.
+  // StaticPrefs::accessibility_monoaudio_enable() or
+  // StaticPrefs::MediaForcestereoEnabled() is applied.
   nsresult rv = mAudioStream->Init(mOutputChannels, channelMap, mOutputRate);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();

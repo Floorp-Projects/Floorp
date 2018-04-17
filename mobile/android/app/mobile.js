@@ -563,11 +563,6 @@ pref("browser.meta_refresh_when_inactive.disabled", true);
 // prevent video elements from preloading too much data
 pref("media.preload.default", 1); // default to preload none
 pref("media.preload.auto", 2);    // preload metadata if preload=auto
-pref("media.cache_size", 32768);    // 32MB media cache
-// Try to save battery by not resuming reading from a connection until we fall
-// below 10s of buffered data.
-pref("media.cache_resume_threshold", 10);
-pref("media.cache_readahead_limit", 30);
 // On mobile we'll throttle the download once the readahead_limit is hit,
 // even if the download is slow. This is to preserve battery and data.
 pref("media.throttle-regardless-of-download-rate", true);
@@ -584,27 +579,10 @@ pref("media.video-queue.default-size", 3);
 // (the most recent) image data.
 pref("media.video-queue.send-to-compositor-size", 1);
 
-// Allow to check if the decoder supports recycling only on Fennec nightly build.
-pref("media.decoder.recycle.enabled", true);
-
-// Enable the MediaCodec PlatformDecoderModule by default.
-pref("media.android-media-codec.enabled", true);
-pref("media.android-media-codec.preferred", true);
-
 // Enable MSE
 pref("media.mediasource.enabled", true);
 
 pref("media.mediadrm-widevinecdm.visible", true);
-
-#ifdef NIGHTLY_BUILD
-// Enable EME (Encrypted Media Extensions)
-pref("media.eme.enabled", true);
-#endif
-
-pref("media.hls.enabled", true);
-
-// Whether to suspend decoding of videos in background tabs.
-pref("media.suspend-bkgnd-video.enabled", true);
 
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
@@ -899,8 +877,6 @@ pref("javascript.options.native_regexp", false);
 
 // Ask for permission when enumerating WebRTC devices.
 pref("media.navigator.permission.device", true);
-
-pref("media.videocontrols.lock-video-orientation", true);
 
 // Allow system add-on updates
 pref("extensions.systemAddon.update.url", "https://aus5.mozilla.org/update/3/SystemAddons/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");

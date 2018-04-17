@@ -4,7 +4,6 @@
 
 #include "GeneratedJNIWrappers.h"
 #include "MediaInfo.h"
-#include "MediaPrefs.h"
 #include "OpusDecoder.h"
 #include "RemoteDataDecoder.h"
 #include "VPXDecoder.h"

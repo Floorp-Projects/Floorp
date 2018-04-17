@@ -7,7 +7,6 @@
 #include "gtest/gtest.h"
 #include "GMPUtils.h"
 #include "nsString.h"
-#include "MediaPrefs.h"
 
 #include <string>
 #include <vector>
@@ -20,8 +19,6 @@ void TestSplitAt(const char* aInput,
                  size_t aNumExpectedTokens,
                  const char* aExpectedTokens[])
 {
-  // Initialize media preferences.
-  MediaPrefs::GetSingleton();
   nsCString input(aInput);
   nsTArray<nsCString> tokens;
   SplitAt(aDelims, input, tokens);

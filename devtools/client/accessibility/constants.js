@@ -61,3 +61,7 @@ exports.ACCESSIBLE_EVENTS = [
   "value-change",
   "index-in-parent-change"
 ];
+
+// Telemetry name constants.
+exports.A11Y_SERVICE_DURATION = "DEVTOOLS_ACCESSIBILITY_SERVICE_TIME_ACTIVE_SECONDS";
+exports.A11Y_SERVICE_ENABLED_COUNT = "devtools.accessibility.service_enabled_count";

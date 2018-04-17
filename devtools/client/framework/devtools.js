@@ -725,7 +725,7 @@ DevTools.prototype = {
     // tells us it has been done.
     let a11yPanel = toolbox.getCurrentPanel();
     let onSelected = a11yPanel.once("new-accessible-front-selected");
-    a11yPanel.selectAccessibleForNode(nodeFront);
+    a11yPanel.selectAccessibleForNode(nodeFront, "browser-context-menu");
     await onSelected;
   },
 

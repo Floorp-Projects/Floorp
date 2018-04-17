@@ -12,12 +12,12 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "MediaDataDemuxer.h"
 #include "nsAutoRef.h"
 #include "XiphExtradata.h"
-#include "MediaPrefs.h"
 
 #include <algorithm>
 
@@ -538,7 +538,7 @@ OggDemuxer::ReadMetadata()
           NS_WARNING("Opus decoding disabled."
                      " See media.opus.enabled in about:config");
         }
-      } else if (MediaPrefs::FlacInOgg() &&
+      } else if (StaticPrefs::MediaOggFlacEnabled() &&
                  s->GetType() == OggCodecState::TYPE_FLAC &&
                  ReadHeaders(TrackInfo::kAudioTrack, s)) {
         if (!mFlacState) {

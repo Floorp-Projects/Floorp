@@ -78,6 +78,16 @@
 // clang-format off
 
 //---------------------------------------------------------------------------
+// Accessibility prefs
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  "accessibility.monoaudio.enable",
+   accessibility_monoaudio_enable,
+  bool, false
+)
+
+//---------------------------------------------------------------------------
 // Full-screen prefs
 //---------------------------------------------------------------------------
 
@@ -293,6 +303,497 @@ VARCACHE_PREF(
   "javascript.options.mem.notify",
    javascript_options_mem_notify,
   bool, false
+)
+
+//---------------------------------------------------------------------------
+// Media prefs
+//---------------------------------------------------------------------------
+
+// These prefs use camel case instead of snake case for the getter because one
+// reviewer had an unshakeable preference for that.
+
+// File-backed MediaCache size.
+#ifdef ANDROID
+# define PREF_VALUE  32768  // Measured in KiB
+#else
+# define PREF_VALUE 512000  // Measured in KiB
+#endif
+VARCACHE_PREF(
+  "media.cache_size",
+   MediaCacheSize,
+  uint32_t, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// If a resource is known to be smaller than this size (in kilobytes), a
+// memory-backed MediaCache may be used; otherwise the (single shared global)
+// file-backed MediaCache is used.
+VARCACHE_PREF(
+  "media.memory_cache_max_size",
+   MediaMemoryCacheMaxSize,
+  uint32_t, 8192      // Measured in KiB
+)
+
+// Don't create more memory-backed MediaCaches if their combined size would go
+// above this absolute size limit.
+#ifdef ANDROID
+# define PREF_VALUE  32768    // Measured in KiB
+#else
+# define PREF_VALUE 524288    // Measured in KiB
+#endif
+VARCACHE_PREF(
+  "media.memory_caches_combined_limit_kb",
+   MediaMemoryCachesCombinedLimitKb,
+  uint32_t, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Don't create more memory-backed MediaCaches if their combined size would go
+// above this relative size limit (a percentage of physical memory).
+VARCACHE_PREF(
+  "media.memory_caches_combined_limit_pc_sysmem",
+   MediaMemoryCachesCombinedLimitPcSysmem,
+  uint32_t, 5         // A percentage
+)
+
+// When a network connection is suspended, don't resume it until the amount of
+// buffered data falls below this threshold (in seconds).
+#ifdef ANDROID
+# define PREF_VALUE 10  // Use a smaller limit to save battery.
+#else
+# define PREF_VALUE 30
+#endif
+VARCACHE_PREF(
+  "media.cache_resume_threshold",
+   MediaCacheResumeThreshold,
+  int32_t, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Stop reading ahead when our buffered data is this many seconds ahead of the
+// current playback position. This limit can stop us from using arbitrary
+// amounts of network bandwidth prefetching huge videos.
+#ifdef ANDROID
+# define PREF_VALUE 30  // Use a smaller limit to save battery.
+#else
+# define PREF_VALUE 60
+#endif
+VARCACHE_PREF(
+  "media.cache_readahead_limit",
+   MediaCacheReadaheadLimit,
+  int32_t, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// AudioSink
+VARCACHE_PREF(
+  "media.resampling.enabled",
+   MediaResamplingEnabled,
+  bool, false
+)
+
+#if defined(XP_WIN) || defined(XP_DARWIN) || defined(MOZ_PULSEAUDIO)
+// libcubeb backend implement .get_preferred_channel_layout
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "media.forcestereo.enabled",
+   MediaForcestereoEnabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// VideoSink
+VARCACHE_PREF(
+  "media.ruin-av-sync.enabled",
+   MediaRuinAvSyncEnabled,
+  bool, false
+)
+
+// Encrypted Media Extensions
+#if defined(ANDROID)
+# if defined(NIGHTLY_BUILD)
+#  define PREF_VALUE true
+# else
+#  define PREF_VALUE false
+# endif
+#elif defined(XP_LINUX)
+  // On Linux EME is visible but disabled by default. This is so that the "Play
+  // DRM content" checkbox in the Firefox UI is unchecked by default. DRM
+  // requires downloading and installing proprietary binaries, which users on
+  // an open source operating systems didn't opt into. The first time a site
+  // using EME is encountered, the user will be prompted to enable DRM,
+  // whereupon the EME plugin binaries will be downloaded if permission is
+  // granted.
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "media.eme.enabled",
+   MediaEmeEnabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+VARCACHE_PREF(
+  "media.clearkey.persistent-license.enabled",
+   MediaClearkeyPersistentLicenseEnabled,
+  bool, false
+)
+
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+// Whether to allow, on a Linux system that doesn't support the necessary
+// sandboxing features, loading Gecko Media Plugins unsandboxed.  However, EME
+// CDMs will not be loaded without sandboxing even if this pref is changed.
+VARCACHE_PREF(
+  "media.gmp.insecure.allow",
+   MediaGmpInsecureAllow,
+  bool, false
+)
+#endif
+
+// Specifies whether the PDMFactory can create a test decoder that just outputs
+// blank frames/audio instead of actually decoding. The blank decoder works on
+// all platforms.
+VARCACHE_PREF(
+  "media.use-blank-decoder",
+   MediaUseBlankDecoder,
+  bool, false
+)
+
+#if defined(XP_WIN)
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "media.gpu-process-decoder",
+   MediaGpuProcessDecoder,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+#ifdef ANDROID
+
+// Enable the MediaCodec PlatformDecoderModule by default.
+VARCACHE_PREF(
+  "media.android-media-codec.enabled",
+   MediaAndroidMediaCodecEnabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  "media.android-media-codec.preferred",
+   MediaAndroidMediaCodecPreferred,
+  bool, true
+)
+
+#endif // ANDROID
+
+// WebRTC
+#ifdef MOZ_WEBRTC
+#ifdef ANDROID
+
+VARCACHE_PREF(
+  "media.navigator.hardware.vp8_encode.acceleration_remote_enabled",
+   MediaNavigatorHardwareVp8encodeAccelerationRemoteEnabled,
+  bool, true
+)
+
+PREF("media.navigator.hardware.vp8_encode.acceleration_enabled", bool, true)
+
+PREF("media.navigator.hardware.vp8_decode.acceleration_enabled", bool, false)
+
+#endif // ANDROID
+
+// Use MediaDataDecoder API for WebRTC. This includes hardware acceleration for
+// decoding.
+VARCACHE_PREF(
+  "media.navigator.mediadatadecoder_enabled",
+   MediaNavigatorMediadatadecoderEnabled,
+  bool, false
+)
+#endif // MOZ_WEBRTC
+
+#ifdef MOZ_FFMPEG
+
+# if defined(XP_MACOSX)
+#  define PREF_VALUE false
+# else
+#  define PREF_VALUE true
+# endif
+VARCACHE_PREF(
+  "media.ffmpeg.enabled",
+   MediaFfmpegEnabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+VARCACHE_PREF(
+  "media.libavcodec.allow-obsolete",
+   MediaLibavcodecAllowObsolete,
+  bool, false
+)
+
+#endif // MOZ_FFMPEG
+
+#ifdef MOZ_FFVPX
+VARCACHE_PREF(
+  "media.ffvpx.enabled",
+   MediaFfvpxEnabled,
+  bool, true
+)
+#endif
+
+#if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
+VARCACHE_PREF(
+  "media.ffmpeg.low-latency.enabled",
+   MediaFfmpegLowLatencyEnabled,
+  bool, false
+)
+#endif
+
+#ifdef MOZ_WMF
+
+VARCACHE_PREF(
+  "media.wmf.enabled",
+   MediaWmfEnabled,
+  bool, true
+)
+
+// Whether DD should consider WMF-disabled a WMF failure, useful for testing.
+VARCACHE_PREF(
+  "media.decoder-doctor.wmf-disabled-is-failure",
+   MediaDecoderDoctorWmfDisabledIsFailure,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "media.wmf.vp9.enabled",
+   MediaWmfVp9Enabled,
+  bool, true
+)
+
+#endif // MOZ_WMF
+
+// Whether to check the decoder supports recycling.
+#ifdef ANDROID
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "media.decoder.recycle.enabled",
+   MediaDecoderRecycleEnabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Should MFR try to skip to the next key frame?
+VARCACHE_PREF(
+  "media.decoder.skip-to-next-key-frame.enabled",
+   MediaDecoderSkipToNextKeyFrameEnabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  "media.gmp.decoder.enabled",
+   MediaGmpDecoderEnabled,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "media.eme.audio.blank",
+   MediaEmeAudioBlank,
+  bool, false
+)
+VARCACHE_PREF(
+  "media.eme.video.blank",
+   MediaEmeVideoBlank,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "media.eme.chromium-api.video-shmems",
+   MediaEmeChromiumApiVideoShmems,
+  uint32_t, 6
+)
+
+// Whether to suspend decoding of videos in background tabs.
+VARCACHE_PREF(
+  "media.suspend-bkgnd-video.enabled",
+   MediaSuspendBkgndVideoEnabled,
+  bool, true
+)
+
+// Delay, in ms, from time window goes to background to suspending
+// video decoders. Defaults to 10 seconds.
+VARCACHE_PREF(
+  "media.suspend-bkgnd-video.delay-ms",
+   MediaSuspendBkgndVideoDelayMs,
+  RelaxedAtomicUint32, 10000
+)
+
+VARCACHE_PREF(
+  "media.dormant-on-pause-timeout-ms",
+   MediaDormantOnPauseTimeoutMs,
+  int32_t, 5000
+)
+
+VARCACHE_PREF(
+  "media.webspeech.synth.force_global_queue",
+   MediaWebspeechSynthForceGlobalQueue,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "media.webspeech.test.enable",
+   MediaWebspeechTestEnable,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "media.webspeech.test.fake_fsm_events",
+   MediaWebspeechTextFakeFsmEvents,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "media.webspeech.test.fake_recognition_service",
+   MediaWebspeechTextFakeRecognitionService,
+  bool, false
+)
+
+#ifdef MOZ_WEBSPEECH
+VARCACHE_PREF(
+  "media.webspeech.recognition.enable",
+   MediaWebspeechRecognitionEnable,
+  bool, false
+)
+#endif
+
+VARCACHE_PREF(
+  "media.webspeech.recognition.force_enable",
+   MediaWebspeechRecognitionForceEnable,
+  bool, false
+)
+
+#if defined(RELEASE_OR_BETA)
+# define PREF_VALUE 3
+#else
+  // Zero tolerance in pre-release builds to detect any decoder regression.
+# define PREF_VALUE 0
+#endif
+VARCACHE_PREF(
+  "media.audio-max-decode-error",
+   MediaAudioMaxDecodeError,
+  uint32_t, PREF_VALUE
+)
+#undef PREF_VALUE
+
+#if defined(RELEASE_OR_BETA)
+# define PREF_VALUE 2
+#else
+  // Zero tolerance in pre-release builds to detect any decoder regression.
+# define PREF_VALUE 0
+#endif
+VARCACHE_PREF(
+  "media.video-max-decode-error",
+   MediaVideoMaxDecodeError,
+  uint32_t, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Ogg
+VARCACHE_PREF(
+  "media.ogg.enabled",
+   MediaOggEnabled,
+  bool, true
+)
+
+// AV1
+VARCACHE_PREF(
+  "media.av1.enabled",
+   MediaAv1Enabled,
+  bool, true
+)
+
+// Flac
+// Use new MediaFormatReader architecture for plain ogg.
+VARCACHE_PREF(
+  "media.ogg.flac.enabled",
+   MediaOggFlacEnabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  "media.flac.enabled",
+   MediaFlacEnabled,
+  bool, true
+)
+
+// Hls
+#ifdef ANDROID
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "media.hls.enabled",
+   MediaHlsEnabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+#ifdef MOZ_FMP4
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "media.mp4.enabled",
+   mediaMp4Enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Error/warning handling, Decoder Doctor.
+//
+// Set to true to force demux/decode warnings to be treated as errors.
+VARCACHE_PREF(
+  "media.playback.warnings-as-errors",
+   MediaPlaybackWarningsAsErrors,
+  bool, false
+)
+
+// Resume video decoding when the cursor is hovering on a background tab to
+// reduce the resume latency and improve the user experience.
+VARCACHE_PREF(
+  "media.resume-bkgnd-video-on-tabhover",
+   MediaResumeBkgndVideoOnTabhover,
+  bool, true
+)
+
+#ifdef ANDROID
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "media.videocontrols.lock-video-orientation",
+   MediaVideocontrolsLockVideoOrientation,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+// Media Seamless Looping
+VARCACHE_PREF(
+  "media.seamless-looping",
+   MediaSeamlessLooping,
+  bool, true
 )
 
 //---------------------------------------------------------------------------

@@ -8,8 +8,8 @@
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "MediaContainerType.h"
-#include "MediaPrefs.h"
 #include "nsMimeTypes.h"
 #ifdef XP_WIN
 #include "WMFDecoderModule.h"
@@ -35,6 +35,7 @@
 #include "DecoderTraits.h"
 #ifdef MOZ_WIDGET_ANDROID
 #include "FennecJNIWrappers.h"
+#include "GeneratedJNIWrappers.h"
 #endif
 #include <functional>
 
@@ -133,7 +134,8 @@ MediaKeySystemStatus
 MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
                                          nsACString& aOutMessage)
 {
-  MOZ_ASSERT(MediaPrefs::EMEEnabled() || IsClearkeyKeySystem(aKeySystem));
+  MOZ_ASSERT(StaticPrefs::MediaEmeEnabled() ||
+             IsClearkeyKeySystem(aKeySystem));
 
   if (IsClearkeyKeySystem(aKeySystem)) {
     return EnsureCDMInstalled(aKeySystem, aOutMessage);
@@ -275,7 +277,7 @@ GetSupportedKeySystems()
       clearkey.mPersistentState = KeySystemFeatureSupport::Requestable;
       clearkey.mDistinctiveIdentifier = KeySystemFeatureSupport::Prohibited;
       clearkey.mSessionTypes.AppendElement(MediaKeySessionType::Temporary);
-      if (MediaPrefs::ClearKeyPersistentLicenseEnabled()) {
+      if (StaticPrefs::MediaClearkeyPersistentLicenseEnabled()) {
         clearkey.mSessionTypes.AppendElement(MediaKeySessionType::Persistent_license);
       }
 #if defined(XP_WIN)

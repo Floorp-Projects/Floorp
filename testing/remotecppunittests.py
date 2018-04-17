@@ -28,7 +28,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
     def __init__(self, options, progs):
         cppunittests.CPPUnitTests.__init__(self)
         self.options = options
-        self.device = ADBAndroid(adb=options.adb_path,
+        self.device = ADBAndroid(adb=options.adb_path or 'adb',
                                  device=options.device_serial,
                                  test_root=options.remote_test_root)
         self.remote_test_root = posixpath.join(self.device.test_root, "cppunittests")
@@ -175,7 +175,7 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
         self.add_option("--adbPath", action="store",
                         type="string", dest="adb_path",
                         help="Path to adb")
-        defaults["adb_path"] = "adb"
+        defaults["adb_path"] = None
 
         self.add_option("--noSetup", action="store_false",
                         dest="setup",

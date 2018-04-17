@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "MediaPrefs.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 
@@ -138,7 +138,7 @@ public:
 
   bool MozOrientationLockEnabled() const
   {
-    return MediaPrefs::VideoOrientationLockEnabled();
+    return StaticPrefs::MediaVideocontrolsLockVideoOrientation();
   }
 
   bool MozIsOrientationLocked() const
