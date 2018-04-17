@@ -2,27 +2,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* This file implements a not-quite standard JSON schema validator. It differs
+ * from the spec in a few ways:
+ *
+ *  - the spec doesn't allow custom types to be defined, but this validator
+ *    defines "URL", "URLorEmpty", "origin" etc.
+ * - Strings are automatically converted to nsIURIs for the appropriate types.
+ * - It doesn't support "pattern" when matching strings.
+ * - The boolean type accepts (and casts) 0 and 1 as valid values.
+ */
+
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const PREF_LOGLEVEL           = "browser.policies.loglevel";
-
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
   return new ConsoleAPI({
-    prefix: "PoliciesValidator.jsm",
+    prefix: "JsonSchemaValidator.jsm",
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
     // messages during development. See LOG_LEVELS in Console.jsm for details.
     maxLogLevel: "error",
-    maxLogLevelPref: PREF_LOGLEVEL,
   });
 });
 
-var EXPORTED_SYMBOLS = ["PoliciesValidator"];
+var EXPORTED_SYMBOLS = ["JsonSchemaValidator"];
 
-var PoliciesValidator = {
+var JsonSchemaValidator = {
   validateAndParseParameters(param, properties) {
     return validateAndParseParamRecursive(param, properties);
   }
@@ -37,6 +44,24 @@ function validateAndParseParamRecursive(param, properties) {
   }
 
   log.debug(`checking @${param}@ for type ${properties.type}`);
+
+  if (Array.isArray(properties.type)) {
+    log.debug("type is an array");
+    // For an array of types, the value is valid if it matches any of the listed
+    // types. To check this, make versions of the object definition that include
+    // only one type at a time, and check the value against each one.
+    for (const type of properties.type) {
+      let typeProperties = Object.assign({}, properties, {type});
+      log.debug(`checking subtype ${type}`);
+      let [valid, data] = validateAndParseParamRecursive(param, typeProperties);
+      if (valid) {
+        return [true, data];
+      }
+    }
+    // None of the types matched
+    return [false, null];
+  }
+
   switch (properties.type) {
     case "boolean":
     case "number":
