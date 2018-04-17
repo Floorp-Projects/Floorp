@@ -4,13 +4,24 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const {
   error,
   TimeoutError,
 } = ChromeUtils.import("chrome://marionette/content/error.js", {});
 
-/* exported PollPromise, TimedPromise */
-this.EXPORTED_SYMBOLS = ["PollPromise", "TimedPromise"];
+this.EXPORTED_SYMBOLS = [
+  /* exported PollPromise, TimedPromise */
+  "PollPromise",
+  "TimedPromise",
+
+  /* exported MessageManagerDestroyedPromise */
+  "MessageManagerDestroyedPromise",
+];
+
+const logger = Log.repository.getLogger("Marionette");
 
 const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
 
@@ -162,5 +173,45 @@ function TimedPromise(fn, {timeout = 1500, throws = TimeoutError} = {}) {
   }, err => {
     timer.cancel();
     throw err;
+  });
+}
+
+/**
+ * Detects when the specified message manager has been destroyed.
+ *
+ * One can observe the removal and detachment of a content browser
+ * (`<xul:browser>`) or a chrome window by its message manager
+ * disconnecting.
+ *
+ * When a browser is associated with a tab, this is safer than only
+ * relying on the event `TabClose` which signalises the _intent to_
+ * remove a tab and consequently would lead to the destruction of
+ * the content browser and its browser message manager.
+ *
+ * When closing a chrome window it is safer than only relying on
+ * the event 'unload' which signalises the _intent to_ close the
+ * chrome window and consequently would lead to the destruction of
+ * the window and its window message manager.
+ *
+ * @param {MessageListenerManager} messageManager
+ *     The message manager to observe for its disconnect state.
+ *     Use the browser message manager when closing a content browser,
+ *     and the window message manager when closing a chrome window.
+ *
+ * @return {Promise}
+ *     A promise that resolves when the message manager has been destroyed.
+ */
+function MessageManagerDestroyedPromise(messageManager) {
+  return new Promise(resolve => {
+    function observe(subject, topic) {
+      logger.debug(`Received observer notification ${topic}`);
+
+      if (subject == messageManager) {
+        Services.obs.removeObserver(this, "message-manager-disconnect");
+        resolve();
+      }
+    }
+
+    Services.obs.addObserver(observe, "message-manager-disconnect");
   });
 }
