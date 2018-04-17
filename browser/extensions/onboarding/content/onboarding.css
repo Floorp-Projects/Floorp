@@ -15,7 +15,7 @@
      z-index on original page */
   z-index: 20999;
   color: #4d4d4d;
-  background: rgb(245, 245, 247, 0.9); /* #f7f7f5, 0.9 opacity */
+  background: var(--newtab-overlay-color, rgb(245, 245, 247, 0.9)); /* #f7f7f5, 0.9 opacity */
   display: none;
 }
 
@@ -92,6 +92,11 @@
 
 #onboarding-overlay-button:dir(rtl)::after {
   box-shadow: 2px 0 5px 0 rgba(74, 74, 79, 0.25);
+}
+
+#onboarding-overlay-button-watermark-icon {
+  -moz-context-properties: fill;
+  fill: var(--newtab-icon-tertiary-color, #d7d7db);
 }
 
 #onboarding-overlay-button-watermark-icon,
