@@ -1291,11 +1291,11 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(const nsMappedAttributes* aAttr
   const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
   if (value && value->Type() == nsAttrValue::eEnum) {
     int32_t align = value->GetEnumValue();
-    if (!aData->PropertyIsSet(eCSSProperty_float_)) {
+    if (!aData->PropertyIsSet(eCSSProperty_float)) {
       if (align == NS_STYLE_TEXT_ALIGN_LEFT) {
-        aData->SetKeywordValue(eCSSProperty_float_, StyleFloat::Left);
+        aData->SetKeywordValue(eCSSProperty_float, StyleFloat::Left);
       } else if (align == NS_STYLE_TEXT_ALIGN_RIGHT) {
-        aData->SetKeywordValue(eCSSProperty_float_, StyleFloat::Right);
+        aData->SetKeywordValue(eCSSProperty_float, StyleFloat::Right);
       }
     }
     if (!aData->PropertyIsSet(eCSSProperty_vertical_align)) {
