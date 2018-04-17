@@ -85,7 +85,8 @@ class FirefoxConnector {
     await this.removeListeners();
 
     if (this.tabTarget) {
-      this.tabTarget.off("will-navigate");
+      this.tabTarget.off("will-navigate", this.willNavigate);
+      this.tabTarget.off("navigate", this.navigate);
       this.tabTarget = null;
     }
 
@@ -176,14 +177,18 @@ class FirefoxConnector {
       if (this.dataProvider && !this.dataProvider.isPayloadQueueEmpty()) {
         return;
       }
-      this.owner.off(EVENTS.PAYLOAD_READY, listener);
+      if (this.owner) {
+        this.owner.off(EVENTS.PAYLOAD_READY, listener);
+      }
       // Netmonitor may already be destroyed,
       // so do not try to notify the listeners
       if (this.dataProvider) {
         this.onReloaded();
       }
     };
-    this.owner.on(EVENTS.PAYLOAD_READY, listener);
+    if (this.owner) {
+      this.owner.on(EVENTS.PAYLOAD_READY, listener);
+    }
   }
 
   onReloaded() {
