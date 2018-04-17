@@ -136,7 +136,12 @@ class ProcessExecutionMixin(LoggingMixin):
                                     ignore_children=ignore_children)
             p.run()
             p.processOutput()
-            status = p.wait()
+            status = None
+            while status is None:
+                try:
+                    status = p.wait()
+                except KeyboardInterrupt:
+                    status = p.kill()
 
         if ensure_exit_code is False:
             return status
