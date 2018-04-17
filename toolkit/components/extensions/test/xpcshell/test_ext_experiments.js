@@ -107,35 +107,60 @@ async function testFooExperiment() {
                         "await foo.parent()");
 }
 
+async function testFooFailExperiment() {
+  browser.test.assertEq("object", typeof browser.experiments,
+                        "typeof browser.experiments");
+
+  browser.test.assertEq("undefined", typeof browser.experiments.foo,
+                        "typeof browser.experiments.foo");
+}
+
 add_task(async function test_bundled_experiments() {
-  async function background() {
-    await testFooExperiment();
+  let testCases = [
+    {isSystem: true, temporarilyInstalled: true, shouldHaveExperiments: true},
+    {isSystem: true, temporarilyInstalled: false, shouldHaveExperiments: true},
+    {isPrivileged: true, temporarilyInstalled: true, shouldHaveExperiments: true},
+    {isPrivileged: true, temporarilyInstalled: false, shouldHaveExperiments: true},
+    {isPrivileged: false, temporarilyInstalled: true, shouldHaveExperiments: true},
+    {isPrivileged: false, temporarilyInstalled: false, shouldHaveExperiments: false},
+  ];
+
+  async function background(shouldHaveExperiments) {
+    if (shouldHaveExperiments) {
+      await testFooExperiment();
+    } else {
+      await testFooFailExperiment();
+    }
 
     browser.test.notifyPass("background.experiments.foo");
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
-    isPrivileged: true,
+  for (let testCase of testCases) {
+    let extension = ExtensionTestUtils.loadExtension({
+      isPrivileged: testCase.isPrivileged,
+      isSystem: testCase.isSystem,
+      temporarilyInstalled: testCase.temporarilyInstalled,
 
-    manifest: {
-      experiment_apis: fooExperimentAPIs,
-    },
+      manifest: {
+        experiment_apis: fooExperimentAPIs,
+      },
 
-    background: `
-      ${testFooExperiment}
-      (${background})();
-    `,
+      background: `
+        ${testFooExperiment}
+        ${testFooFailExperiment}
+        (${background})(${testCase.shouldHaveExperiments});
+      `,
 
-    files: fooExperimentFiles,
-  });
+      files: fooExperimentFiles,
+    });
 
-  await extension.startup();
+    await extension.startup();
 
-  await extension.awaitFinish("background.experiments.foo");
+    await extension.awaitFinish("background.experiments.foo");
 
-  await extension.unload();
+    await extension.unload();
+  }
 });
-
 
 add_task(async function test_unbundled_experiments() {
   async function background() {
