@@ -24,11 +24,11 @@ add_task(async function() {
   assertRequestCount(store, 1);
 
   let noRequest = true;
-  monitor.panelWin.api.once(EVENTS.NETWORK_EVENT, () => {
+  monitor.panelWin.once(EVENTS.NETWORK_EVENT, () => {
     noRequest = false;
   });
 
-  monitor.panelWin.api.once(EVENTS.NETWORK_EVENT_UPDATED, () => {
+  monitor.panelWin.once(EVENTS.NETWORK_EVENT_UPDATED, () => {
     noRequest = false;
   });
 

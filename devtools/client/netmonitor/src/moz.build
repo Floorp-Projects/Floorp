@@ -15,8 +15,6 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'api.js',
-    'app.js',
     'constants.js',
     'create-store.js',
 )
