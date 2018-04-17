@@ -611,6 +611,7 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mFullscreenMode       = false;
   mMousePresent         = false;
   mDestroyCalled        = false;
+  mIsEarlyBlankWindow   = false;
   mHasTaskbarIconBeenCreated = false;
   mMouseTransparent     = false;
   mPickerDisplayCount   = 0;
@@ -4100,6 +4101,12 @@ uint32_t
 nsWindow::GetMaxTouchPoints() const
 {
   return WinUtils::GetMaxTouchPoints();
+}
+
+void
+nsWindow::SetWindowClass(const nsAString& xulWinType)
+{
+  mIsEarlyBlankWindow = xulWinType.EqualsLiteral("navigator:blank");
 }
 
 /**************************************************************

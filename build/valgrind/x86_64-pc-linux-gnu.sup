@@ -489,21 +489,9 @@
 # Suppressions rooted at *selectors*parser*SelectorList*Impl*parse*
 
 {
-   bug1447137-15
+   bug1454511
    Memcheck:Cond
    fun:*selectors*parser*SelectorList*Impl*parse*
-   fun:*style*parse_nested_rules*
-   fun:*style*parse_block*
-   fun:Servo_StyleSheet_FromUTF8Bytes
-}
-
-{
-   bug1447137-16
-   Memcheck:Cond
-   fun:*selectors*parser*SelectorList*Impl*parse*
-   fun:Servo_StyleSheet_FromUTF8Bytes
-   fun:*mozilla*ServoStyleSheet*ParseSheet*
-   fun:*mozilla*css*Loader*DoParseSheetServo*
 }
 
 ##########################################
