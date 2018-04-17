@@ -192,6 +192,7 @@
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypeTraits.h"
@@ -1089,66 +1090,108 @@ GCRuntime::setNextScheduled(uint32_t count)
     nextScheduled = count;
 }
 
+using CharRange = mozilla::Range<const char>;
+using CharRangeVector = Vector<CharRange, 0, SystemAllocPolicy>;
+
+static bool
+ParseZealModeName(CharRange text, uint32_t* modeOut)
+{
+    struct ModeInfo
+    {
+        const char* name;
+        size_t length;
+        uint32_t value;
+    };
+
+    static const ModeInfo zealModes[] = {
+        {"None", 0},
+#define ZEAL_MODE(name, value) {#name, strlen(#name), value},
+        JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
+#undef ZEAL_MODE
+    };
+
+    for (auto mode : zealModes) {
+        if (text.length() == mode.length &&
+            memcmp(text.begin().get(), mode.name, mode.length) == 0)
+        {
+            *modeOut = mode.value;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool
+ParseZealModeNumericParam(CharRange text, uint32_t* paramOut)
+{
+    if (text.length() == 0)
+        return false;
+
+    for (auto c : text) {
+        if (!isdigit(c))
+            return false;
+    }
+
+    *paramOut = atoi(text.begin().get());
+    return true;
+}
+
+static bool
+SplitStringBy(CharRange text, char delimiter, CharRangeVector* result)
+{
+    auto start = text.begin();
+    for (auto ptr = start; ptr != text.end(); ptr++) {
+        if (*ptr == delimiter) {
+            if (!result->emplaceBack(start, ptr))
+                return false;
+            start = ptr + 1;
+        }
+    }
+
+    return result->emplaceBack(start, text.end());
+}
+
+static bool
+PrintZealHelpAndFail()
+{
+    fprintf(stderr, "Format: JS_GC_ZEAL=level(;level)*[,N]\n");
+    fputs(ZealModeHelpText, stderr);
+    return false;
+}
+
 bool
 GCRuntime::parseAndSetZeal(const char* str)
 {
-    int frequency = -1;
-    bool foundFrequency = false;
-    mozilla::Vector<int, 0, SystemAllocPolicy> zeals;
+    // Set the zeal mode from a string consisting of one or more mode specifiers
+    // separated by ';', optionally followed by a ',' and the trigger frequency.
+    // The mode specifiers can by a mode name or its number.
 
-    static const struct {
-        const char* const zealMode;
-        size_t length;
-        uint32_t zeal;
-    } zealModes[] = {
-#define ZEAL_MODE(name, value) {#name, sizeof(#name) - 1, value},
-        JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
-#undef ZEAL_MODE
-        {"None", 4, 0}
-    };
+    auto text = CharRange(str, strlen(str));
 
-    do {
-        int zeal = -1;
+    CharRangeVector parts;
+    if (!SplitStringBy(text, ',', &parts))
+        return false;
 
-        const char* p = nullptr;
-        if (isdigit(str[0])) {
-            zeal = atoi(str);
+    if (parts.length() == 0 || parts.length() > 2)
+        return PrintZealHelpAndFail();
 
-            size_t offset = strspn(str, "0123456789");
-            p = str + offset;
-        } else {
-            for (auto z : zealModes) {
-                if (!strncmp(str, z.zealMode, z.length)) {
-                    zeal = z.zeal;
-                    p = str + z.length;
-                    break;
-                }
-            }
-        }
-        if (p) {
-            if (!*p || *p == ';') {
-                frequency = JS_DEFAULT_ZEAL_FREQ;
-            } else if (*p == ',') {
-                frequency = atoi(p + 1);
-                foundFrequency = true;
-            }
-        }
+    uint32_t frequency = JS_DEFAULT_ZEAL_FREQ;
+    if (parts.length() == 2 && !ParseZealModeNumericParam(parts[1], &frequency))
+        return PrintZealHelpAndFail();
 
-        if (zeal < 0 || zeal > int(ZealMode::Limit) || frequency <= 0) {
-            fprintf(stderr, "Format: JS_GC_ZEAL=level(;level)*[,N]\n");
-            fputs(ZealModeHelpText, stderr);
-            return false;
-        }
+    CharRangeVector modes;
+    if (!SplitStringBy(parts[0], ';', &modes))
+        return false;
 
-        if (!zeals.emplaceBack(zeal)) {
-            return false;
-        }
-    } while (!foundFrequency &&
-             (str = strchr(str, ';')) != nullptr &&
-             str++);
+    for (const auto& descr : modes) {
+        uint32_t mode;
+        if (!ParseZealModeName(descr, &mode) && !ParseZealModeNumericParam(descr, &mode))
+            return PrintZealHelpAndFail();
 
-    for (auto z : zeals)
-        setZeal(z, frequency);
+        setZeal(mode, frequency);
+    }
+
     return true;
 }
 
