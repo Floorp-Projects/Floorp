@@ -7,7 +7,6 @@ use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch, ExtendMode, Fon
 use api::{FilterOp, GlyphInstance, GlyphKey, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag};
 use api::{LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, LayerVector2D};
 use api::{PipelineId, PremultipliedColorF, Shadow, YuvColorSpace, YuvFormat};
-use batch::BrushImageSourceKind;
 use border::{BorderCornerInstance, BorderEdgeKind};
 use box_shadow::BLUR_SAMPLE_SCALE;
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, CoordinateSystemId};
@@ -20,11 +19,11 @@ use glyph_rasterizer::{FontInstance, FontTransform};
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
 use gpu_types::{ClipChainRectIndex};
-use picture::{PictureCompositeMode, PicturePrimitive};
+use picture::{PictureCompositeMode, PictureId, PicturePrimitive};
 use render_task::{BlitSource, RenderTask, RenderTaskCacheKey};
-use render_task::{RenderTaskCacheKeyKind, RenderTaskId};
+use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskCacheEntryHandle};
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
-use resource_cache::{CacheItem, ImageProperties, ImageRequest};
+use resource_cache::{ImageProperties, ImageRequest};
 use segment::SegmentBuilder;
 use std::{mem, usize};
 use std::sync::Arc;
@@ -202,12 +201,6 @@ pub enum BrushKind {
     Clear,
     Picture {
         pic_index: PictureIndex,
-        // What kind of texels to sample from the
-        // picture (e.g color or alpha mask).
-        source_kind: BrushImageSourceKind,
-        // A local space offset to apply when drawing
-        // this picture.
-        local_offset: LayerVector2D,
     },
     Image {
         request: ImageRequest,
@@ -331,16 +324,10 @@ impl BrushPrimitive {
         }
     }
 
-    pub fn new_picture(
-        pic_index: PictureIndex,
-        source_kind: BrushImageSourceKind,
-        local_offset: LayerVector2D,
-    ) -> BrushPrimitive {
+    pub fn new_picture(pic_index: PictureIndex) -> BrushPrimitive {
         BrushPrimitive {
             kind: BrushKind::Picture {
                 pic_index,
-                source_kind,
-                local_offset,
             },
             segment_desc: None,
         }
@@ -413,7 +400,7 @@ pub enum ImageSource {
     // via a render task.
     Cache {
         size: DeviceIntSize,
-        item: CacheItem,
+        handle: Option<RenderTaskCacheEntryHandle>,
     },
 }
 
@@ -1017,6 +1004,7 @@ pub struct PrimitiveStore {
     pub cpu_borders: Vec<BorderPrimitiveCpu>,
 
     pub pictures: Vec<PicturePrimitive>,
+    next_picture_id: u64,
 }
 
 impl PrimitiveStore {
@@ -1029,6 +1017,7 @@ impl PrimitiveStore {
             cpu_borders: Vec::new(),
 
             pictures: Vec::new(),
+            next_picture_id: 0,
         }
     }
 
@@ -1041,6 +1030,7 @@ impl PrimitiveStore {
             cpu_borders: recycle_vec(self.cpu_borders),
 
             pictures: recycle_vec(self.pictures),
+            next_picture_id: self.next_picture_id,
         }
     }
 
@@ -1054,6 +1044,7 @@ impl PrimitiveStore {
         apply_local_clip_rect: bool,
     ) -> PictureIndex {
         let picture = PicturePrimitive::new_image(
+            PictureId(self.next_picture_id),
             composite_mode,
             is_in_3d_context,
             pipeline_id,
@@ -1064,6 +1055,7 @@ impl PrimitiveStore {
 
         let picture_index = PictureIndex(self.pictures.len());
         self.pictures.push(picture);
+        self.next_picture_id += 1;
         picture_index
     }
 
@@ -1217,7 +1209,7 @@ impl PrimitiveStore {
                                 ImageSource::Cache {
                                     // Size in device-pixels we need to allocate in render task cache.
                                     size: texel_rect.size,
-                                    item: CacheItem::invalid(),
+                                    handle: None,
                                 }
                             }
                             None => {
@@ -1235,11 +1227,11 @@ impl PrimitiveStore {
                     // time through, and any time the render task output has been
                     // evicted from the texture cache.
                     match image_cpu.source {
-                        ImageSource::Cache { size, ref mut item } => {
+                        ImageSource::Cache { size, ref mut handle } => {
                             let key = image_cpu.key;
 
                             // Request a pre-rendered image task.
-                            *item = frame_state.resource_cache.request_render_task(
+                            *handle = Some(frame_state.resource_cache.request_render_task(
                                 RenderTaskCacheKey {
                                     size,
                                     kind: RenderTaskCacheKeyKind::Image(key),
@@ -1247,6 +1239,7 @@ impl PrimitiveStore {
                                 frame_state.gpu_cache,
                                 frame_state.render_tasks,
                                 None,
+                                image_properties.descriptor.is_opaque,
                                 |render_tasks| {
                                     // We need to render the image cache this frame,
                                     // so will need access to the source texture.
@@ -1279,9 +1272,9 @@ impl PrimitiveStore {
 
                                     // Pass the image opacity, so that the cached render task
                                     // item inherits the same opacity properties.
-                                    (target_to_cache_task_id, image_properties.descriptor.is_opaque)
+                                    target_to_cache_task_id
                                 }
-                            );
+                            ));
                         }
                         ImageSource::Default => {
                             // Normal images just reference the source texture each frame.
@@ -1322,7 +1315,7 @@ impl PrimitiveStore {
                                 *source = ImageSource::Cache {
                                     // Size in device-pixels we need to allocate in render task cache.
                                     size: rect.size,
-                                    item: CacheItem::invalid(),
+                                    handle: None,
                                 };
                             }
 
@@ -1333,14 +1326,14 @@ impl PrimitiveStore {
                             // time through, and any time the render task output has been
                             // evicted from the texture cache.
                             match *source {
-                                ImageSource::Cache { size, ref mut item } => {
+                                ImageSource::Cache { size, ref mut handle } => {
                                     let image_cache_key = ImageCacheKey {
                                         request,
                                         texel_rect: sub_rect,
                                     };
 
                                     // Request a pre-rendered image task.
-                                    *item = frame_state.resource_cache.request_render_task(
+                                    *handle = Some(frame_state.resource_cache.request_render_task(
                                         RenderTaskCacheKey {
                                             size,
                                             kind: RenderTaskCacheKeyKind::Image(image_cache_key),
@@ -1348,6 +1341,7 @@ impl PrimitiveStore {
                                         frame_state.gpu_cache,
                                         frame_state.render_tasks,
                                         None,
+                                        image_properties.descriptor.is_opaque,
                                         |render_tasks| {
                                             // We need to render the image cache this frame,
                                             // so will need access to the source texture.
@@ -1378,10 +1372,9 @@ impl PrimitiveStore {
 
                                             // Pass the image opacity, so that the cached render task
                                             // item inherits the same opacity properties.
-                                            (target_to_cache_task_id, image_properties.descriptor.is_opaque)
+                                            target_to_cache_task_id
                                         }
-                                    );
-
+                                    ));
                                 }
                                 ImageSource::Default => {
                                     // Normal images just reference the source texture each frame.
@@ -1438,42 +1431,16 @@ impl PrimitiveStore {
                             );
                         }
                     }
-                    BrushKind::Picture { pic_index, source_kind, .. } => {
+                    BrushKind::Picture { pic_index, .. } => {
                         let pic = &mut self.pictures[pic_index.0];
-                        // If this picture is referenced by multiple brushes,
-                        // we only want to prepare it once per frame. It
-                        // should be prepared for the main color pass.
-                        // TODO(gw): Make this a bit more explicit - perhaps
-                        //           we could mark which brush::picture is
-                        //           the owner of the picture, vs the shadow
-                        //           which is just referencing it.
-                        match source_kind {
-                            BrushImageSourceKind::Color => {
-                                pic.prepare_for_render(
-                                    prim_index,
-                                    metadata,
-                                    pic_state_for_children,
-                                    pic_state,
-                                    frame_context,
-                                    frame_state,
-                                );
-                            }
-                            BrushImageSourceKind::ColorAlphaMask => {
-                                // Since we will always visit the shadow
-                                // brush first, use this to clear out the
-                                // render tasks from the previous frame.
-                                // This ensures that if the primary brush
-                                // is found to be non-visible, then we
-                                // won't try to draw the drop-shadow either.
-                                // This isn't quite correct - it can result
-                                // in clipping artifacts if the image is
-                                // off-screen, but the drop-shadow is
-                                // partially visible - we can fix this edge
-                                // case as a follow up.
-                                pic.surface = None;
-                                pic.secondary_render_task_id = None;
-                            }
-                        }
+                        pic.prepare_for_render(
+                            prim_index,
+                            metadata,
+                            pic_state_for_children,
+                            pic_state,
+                            frame_context,
+                            frame_state,
+                        );
                     }
                     BrushKind::Solid { .. } |
                     BrushKind::Clear => {}
@@ -1932,7 +1899,7 @@ impl PrimitiveStore {
         // local space, which may force us to render this item on a larger
         // picture target, if being composited.
         if let PrimitiveKind::Brush = prim_kind {
-            if let BrushKind::Picture { pic_index, local_offset, .. } = self.cpu_brushes[cpu_prim_index.0].kind {
+            if let BrushKind::Picture { pic_index, .. } = self.cpu_brushes[cpu_prim_index.0].kind {
                 let pic_context_for_children = {
                     let pic = &mut self.pictures[pic_index.0];
 
@@ -1964,6 +1931,10 @@ impl PrimitiveStore {
                         .world_content_transform
                         .inverse();
 
+                    // Mark whether this picture has a complex coordinate system.
+                    pic_state_for_children.has_non_root_coord_system |=
+                        prim_run_context.scroll_node.coordinate_system_id != CoordinateSystemId::root();
+
                     PictureContext {
                         pipeline_id: pic.pipeline_id,
                         prim_runs: mem::replace(&mut pic.runs, Vec::new()),
@@ -1987,11 +1958,7 @@ impl PrimitiveStore {
                 pic.runs = pic_context_for_children.prim_runs;
 
                 let metadata = &mut self.cpu_metadata[prim_index.0];
-                // Store local rect of the picture for this brush,
-                // also applying any local offset for the instance.
-                metadata.local_rect = pic
-                    .update_local_rect(result)
-                    .translate(&local_offset);
+                metadata.local_rect = pic.update_local_rect(result);
             }
         }
 
@@ -2094,6 +2061,12 @@ impl PrimitiveStore {
             let clip_chain = frame_context
                 .clip_scroll_tree
                 .get_clip_chain(run.clip_and_scroll.clip_chain_index);
+
+            // Mark whether this picture contains any complex coordinate
+            // systems, due to either the scroll node or the clip-chain.
+            pic_state.has_non_root_coord_system |=
+                scroll_node.coordinate_system_id != CoordinateSystemId::root();
+            pic_state.has_non_root_coord_system |= clip_chain.has_non_root_coord_system;
 
             if !scroll_node.invertible {
                 debug!("{:?} {:?}: position not invertible", run.base_prim_index, pic_context.pipeline_id);

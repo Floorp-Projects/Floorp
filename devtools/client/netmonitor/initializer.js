@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* exported initialize */
 
 "use strict";
 
@@ -16,185 +17,52 @@ const require = window.windowRequire = BrowserLoader({
   window,
 }).require;
 
+const { NetMonitorAPI } = require("./src/api");
+const { NetMonitorApp } = require("./src/app");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { createFactory } = require("devtools/client/shared/vendor/react");
-const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
-const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
-const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
-const { Connector } = require("./src/connector/index");
-const { configureStore } = require("./src/create-store");
-const App = createFactory(require("./src/components/App"));
-const { EVENTS } = require("./src/constants");
-const {
-  getDisplayedRequestById,
-  getSortedRequests
-} = require("./src/selectors/index");
 
 // Inject EventEmitter into global window.
 EventEmitter.decorate(window);
 
-// Configure store/state object.
-let connector = new Connector();
-const store = configureStore(connector);
-const actions = bindActionCreators(require("./src/actions/index"), store.dispatch);
+/**
+ * This is the initialization point for the Network monitor.
+ *
+ * @param {Object} api Allows reusing existing API object.
+ */
+function initialize(api) {
+  const app = new NetMonitorApp(api);
 
-// Inject to global window for testing
-window.store = store;
-window.connector = connector;
-window.actions = actions;
+  // Inject to global window for testing
+  window.Netmonitor = app;
+  window.api = api;
+  window.store = app.api.store;
+  window.connector = app.api.connector;
+  window.actions = app.api.actions;
+
+  return app;
+}
 
 /**
- * Global Netmonitor object in this panel. This object can be consumed
- * by other panels (e.g. Console is using inspectRequest), by the
- * Launchpad (bootstrap), WebExtension API (getHAR), etc.
+ * The following code is used to open Network monitor in a tab.
+ * Like the Launchpad, but without Launchpad.
+ *
+ * For example:
+ * chrome://devtools/content/netmonitor/index.html?type=process
+ * loads the netmonitor for the parent process, exactly like the
+ * one in the browser toolbox
+ *
+ * It's also possible to connect to a tab.
+ * 1) go in about:debugging
+ * 2) In menu Tabs, click on a Debug button for particular tab
+ *
+ * This  will open an about:devtools-toolbox url, from which you can
+ * take type and id query parameters and reuse them for the chrome url
+ * of the netmonitor
+ *
+ * chrome://devtools/content/netmonitor/index.html?type=tab&id=1234 URLs
+ * where 1234 is the tab id, you can retrieve from about:debugging#tabs links.
+ * Simply copy the id from about:devtools-toolbox?type=tab&id=1234 URLs.
  */
-window.Netmonitor = {
-  bootstrap({ toolbox, panel }) {
-    this.mount = document.querySelector("#mount");
-    this.toolbox = toolbox;
-
-    const connection = {
-      tabConnection: {
-        tabTarget: toolbox.target,
-      },
-      toolbox,
-      panel,
-    };
-
-    const openLink = (link) => {
-      let parentDoc = toolbox.doc;
-      let iframe = parentDoc.getElementById("toolbox-panel-iframe-netmonitor");
-      let top = iframe.ownerDocument.defaultView.top;
-      top.openWebLinkIn(link, "tab");
-    };
-
-    const openSplitConsole = (err) => {
-      toolbox.openSplitConsole().then(() => {
-        toolbox.target.logErrorInPage(err, "har");
-      });
-    };
-
-    this.onRequestAdded = this.onRequestAdded.bind(this);
-    window.on(EVENTS.REQUEST_ADDED, this.onRequestAdded);
-
-    // Render the root Application component.
-    const sourceMapService = toolbox.sourceMapURLService;
-    const app = App({
-      actions,
-      connector,
-      openLink,
-      openSplitConsole,
-      sourceMapService
-    });
-    render(Provider({ store }, app), this.mount);
-
-    // Connect to the Firefox backend by default.
-    return connector.connectFirefox(connection, actions, store.getState);
-  },
-
-  destroy() {
-    unmountComponentAtNode(this.mount);
-    window.off(EVENTS.REQUEST_ADDED, this.onRequestAdded);
-    return connector.disconnect();
-  },
-
-  // Support for WebExtensions API
-
-  /**
-   * Support for `devtools.network.getHAR` (get collected data as HAR)
-   */
-  getHar() {
-    let { HarExporter } = require("devtools/client/netmonitor/src/har/har-exporter");
-    let state = store.getState();
-
-    let options = {
-      connector,
-      items: getSortedRequests(state),
-      // Always generate HAR log even if there are no requests.
-      forceExport: true,
-    };
-
-    return HarExporter.getHar(options);
-  },
-
-  /**
-   * Support for `devtools.network.onRequestFinished`. A hook for
-   * every finished HTTP request used by WebExtensions API.
-   */
-  onRequestAdded(requestId) {
-    let listeners = this.toolbox.getRequestFinishedListeners();
-    if (!listeners.size) {
-      return;
-    }
-
-    let { HarExporter } = require("devtools/client/netmonitor/src/har/har-exporter");
-    let options = {
-      connector,
-      includeResponseBodies: false,
-      items: [getDisplayedRequestById(store.getState(), requestId)],
-    };
-
-    // Build HAR for specified request only.
-    HarExporter.getHar(options).then(har => {
-      let harEntry = har.log.entries[0];
-      delete harEntry.pageref;
-      listeners.forEach(listener => listener({
-        harEntry,
-        requestId,
-      }));
-    });
-  },
-
-  /**
-   * Support for `Request.getContent` WebExt API (lazy loading response body)
-   */
-  fetchResponseContent(requestId) {
-    return connector.requestData(requestId, "responseContent");
-  },
-
-  /**
-   * Selects the specified request in the waterfall and opens the details view.
-   * This is a firefox toolbox specific API, which providing an ability to inspect
-   * a network request directly from other internal toolbox panel.
-   *
-   * @param {string} requestId The actor ID of the request to inspect.
-   * @return {object} A promise resolved once the task finishes.
-   */
-  inspectRequest(requestId) {
-    // Look for the request in the existing ones or wait for it to appear, if
-    // the network monitor is still loading.
-    return new Promise((resolve) => {
-      let request = null;
-      let inspector = () => {
-        request = getDisplayedRequestById(store.getState(), requestId);
-        if (!request) {
-          // Reset filters so that the request is visible.
-          actions.toggleRequestFilterType("all");
-          request = getDisplayedRequestById(store.getState(), requestId);
-        }
-
-        // If the request was found, select it. Otherwise this function will be
-        // called again once new requests arrive.
-        if (request) {
-          window.off(EVENTS.REQUEST_ADDED, inspector);
-          actions.selectRequest(request.id);
-          resolve();
-        }
-      };
-
-      inspector();
-
-      if (!request) {
-        window.on(EVENTS.REQUEST_ADDED, inspector);
-      }
-    });
-  }
-};
-
-// Implement support for:
-// chrome://devtools/content/netmonitor/index.html?type=tab&id=1234 URLs
-// where 1234 is the tab id, you can retrieve from about:debugging#tabs links.
-// Simply copy the id from about:devtools-toolbox?type=tab&id=1234 URLs.
 
 // URL constructor doesn't support chrome: scheme
 let href = window.location.href.replace(/chrome:/, "http://");
@@ -222,7 +90,13 @@ if (window.location.protocol === "chrome:" && url.search.length > 1) {
         }
       };
 
-      window.Netmonitor.bootstrap({ toolbox });
+      let api = new NetMonitorAPI();
+      await api.connect(toolbox);
+      let app = window.initialize(api);
+      app.bootstrap({
+        toolbox,
+        document: window.document,
+      });
     } catch (err) {
       window.alert("Unable to start the network monitor:" + err);
     }
