@@ -224,7 +224,7 @@ private:
 
   // The intrinsic size of the latest captured image, so we can feed black
   // images of the same size while stopped.
-  // Set under mMutex on the owning thread. Accessed under one of the two.
+  // Set under mMutex on the Cameras IPC thread. Accessed under one of the two.
   gfx::IntSize mImageSize = gfx::IntSize(0, 0);
 
   // The current settings of this source.
