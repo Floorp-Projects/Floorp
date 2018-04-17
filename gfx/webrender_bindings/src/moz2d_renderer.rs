@@ -421,6 +421,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         }
         {
             let mut index = BlobReader::new(&commands);
+            assert!(index.reader.pos < index.reader.buf.len());
             while index.reader.pos < index.reader.buf.len() {
                 let e  = index.read_entry();
                 process_fonts(BufReader::new(&commands[e.end..e.extra_end]), resources);
