@@ -46,7 +46,7 @@ ClientManager::ClientManager()
     MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
 
     workerHolderToken =
-      WorkerHolderToken::Create(workerPrivate, Closing,
+      WorkerHolderToken::Create(workerPrivate, Terminating,
                                 WorkerHolderToken::AllowIdleShutdownStart);
     if (NS_WARN_IF(!workerHolderToken)) {
       Shutdown();
