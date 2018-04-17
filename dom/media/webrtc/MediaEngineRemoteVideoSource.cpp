@@ -621,23 +621,20 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
             aProps.renderTimeMs()));
 #endif
 
-  bool sizeChanged = false;
-  {
-    MutexAutoLock lock(mMutex);
-    // implicitly releases last image
-    sizeChanged = (!mImage && image) ||
-                  (mImage && image && mImage->GetSize() != image->GetSize());
-    mImage = image.forget();
-    mImageSize = mImage->GetSize();
-  }
-
-  if (sizeChanged) {
+  if (mImageSize.width != dst_width || mImageSize.height != dst_height) {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "MediaEngineRemoteVideoSource::FrameSizeChange",
         [settings = mSettings, dst_width, dst_height]() mutable {
       settings->mWidth.Value() = dst_width;
       settings->mHeight.Value() = dst_height;
     }));
+  }
+
+  {
+    MutexAutoLock lock(mMutex);
+    // implicitly releases last image
+    mImage = image.forget();
+    mImageSize = mImage->GetSize();
   }
 
   // We'll push the frame into the MSG on the next Pull. This will avoid
