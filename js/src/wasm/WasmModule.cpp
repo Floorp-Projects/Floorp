@@ -603,7 +603,8 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, PRFileDesc* maybeCompiledFile,
     args->sharedMemoryEnabled = true;
 
     UniqueChars error;
-    return CompileBuffer(*args, *bytecode, &error);
+    UniqueCharsVector warnings;
+    return CompileBuffer(*args, *bytecode, &error, &warnings);
 }
 
 /* virtual */ void

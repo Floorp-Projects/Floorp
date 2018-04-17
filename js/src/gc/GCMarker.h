@@ -174,13 +174,13 @@ class MarkStack
     const TaggedPtr& peekPtr() const;
     MOZ_MUST_USE bool pushTaggedPtr(Tag tag, Cell* ptr);
 
-    ActiveThreadData<TaggedPtr*> stack_;
-    ActiveThreadData<TaggedPtr*> tos_;
-    ActiveThreadData<TaggedPtr*> end_;
+    MainThreadData<TaggedPtr*> stack_;
+    MainThreadData<TaggedPtr*> tos_;
+    MainThreadData<TaggedPtr*> end_;
 
     // The capacity we start with and reset() to.
-    ActiveThreadData<size_t> baseCapacity_;
-    ActiveThreadData<size_t> maxCapacity_;
+    MainThreadData<size_t> baseCapacity_;
+    MainThreadData<size_t> maxCapacity_;
 
 #ifdef DEBUG
     mutable size_t iteratorCount_;
@@ -349,29 +349,29 @@ class GCMarker : public JSTracer
     gc::MarkStack stack;
 
     /* The color is only applied to objects and functions. */
-    ActiveThreadData<gc::MarkColor> color;
+    MainThreadData<gc::MarkColor> color;
 
     /* Pointer to the top of the stack of arenas we are delaying marking on. */
-    ActiveThreadData<js::gc::Arena*> unmarkedArenaStackTop;
+    MainThreadData<js::gc::Arena*> unmarkedArenaStackTop;
 
     /*
      * If the weakKeys table OOMs, disable the linear algorithm and fall back
      * to iterating until the next GC.
      */
-    ActiveThreadData<bool> linearWeakMarkingDisabled_;
+    MainThreadData<bool> linearWeakMarkingDisabled_;
 
 #ifdef DEBUG
     /* Count of arenas that are currently in the stack. */
-    ActiveThreadData<size_t> markLaterArenas;
+    MainThreadData<size_t> markLaterArenas;
 
     /* Assert that start and stop are called with correct ordering. */
-    ActiveThreadData<bool> started;
+    MainThreadData<bool> started;
 
     /*
      * If this is true, all marked objects must belong to a compartment being
      * GCed. This is used to look for compartment bugs.
      */
-    ActiveThreadData<bool> strictCompartmentChecking;
+    MainThreadData<bool> strictCompartmentChecking;
 #endif // DEBUG
 };
 

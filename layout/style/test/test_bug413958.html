@@ -20,6 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=413958
    Style attr: <span id="setStyle">4</span>.
    Properties: <span id="setStyleProp" style="">5</span>.</p>
 <script>
+SpecialPowers.wrap(document).docShell.cssErrorReportingEnabled = true;
+
 var tests = [
   function() {
     var s = document.createTextNode(
@@ -39,23 +41,17 @@ var tests = [
     s.color = "black";
   },
 ];
-const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
 var results = [
   [ { errorMessage: /Unknown property \u2018nosuchprop\u2019/,
-      lineNumber: 1, columnNumber: isStylo ? 16 : 14,
-      sourceLine: isStylo ? "" : "#s1{nosuchprop:auto; color:black}" },
+      lineNumber: 1, columnNumber: 16, sourceLine: "" },
     { errorMessage: /Unknown property \u2018nosuchprop\u2019/,
-      lineNumber: 2, columnNumber: isStylo ? 16 : 14, sourceLine:
-      isStylo ? "" : "#s2{nosuchprop:auto; color:black}invalid?sel{}#s3{color:black}" },
+      lineNumber: 2, columnNumber: 16, sourceLine: "" },
     { errorMessage: /Ruleset ignored due to bad selector/,
-      lineNumber: 2, columnNumber: isStylo ? 41 : 40, sourceLine:
-      isStylo ? "" : "#s2{nosuchprop:auto; color:black}invalid?sel{}#s3{color:black}" } ],
+      lineNumber: 2, columnNumber: 41, sourceLine: "" } ],
   [ { errorMessage: /parsing value for \u2018width\u2019/,
-      lineNumber: 0, columnNumber: isStylo ? 7 : 6,
-      sourceLine: isStylo ? "" : "width:200;color:black" } ],
+      lineNumber: 0, columnNumber: 7, sourceLine: "" } ],
   [ { errorMessage: /parsing value for \u2018width\u2019/,
-      lineNumber: 0, columnNumber: isStylo ? 1 : 0,
-      sourceLine: isStylo ? "" : "200" } ],
+      lineNumber: 0, columnNumber: 1, sourceLine: "" } ],
 ];
 var curTest = -1;
 
