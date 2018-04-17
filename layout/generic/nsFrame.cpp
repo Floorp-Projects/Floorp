@@ -11368,7 +11368,13 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
   nsDisplayOwnLayerFlags flags = aBuilder->GetCurrentScrollbarFlags();
   if (flags != nsDisplayOwnLayerFlags::eNone) {
     if (GetContent()->IsXULElement(nsGkAtoms::thumb)) {
-      result |= CompositorHitTestInfo::eScrollbarThumb;
+      bool thumbGetsLayer = aBuilder->GetCurrentScrollbarTarget() !=
+          layers::FrameMetrics::NULL_SCROLL_ID;
+      if (thumbGetsLayer) {
+        result |= CompositorHitTestInfo::eScrollbarThumb;
+      } else {
+        result |= CompositorHitTestInfo::eDispatchToContent;
+      }
     }
     // The only flags that get set in nsDisplayListBuilder::mCurrentScrollbarFlags
     // are the scrollbar direction flags
