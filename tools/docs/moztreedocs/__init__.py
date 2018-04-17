@@ -31,16 +31,24 @@ def read_build_config(docdir):
     trees = {}
     python_package_dirs = set()
 
+    is_main = docdir == MAIN_DOC_PATH
+    relevant_mozbuild_path = None if is_main else docdir
+
     # Reading the Sphinx variables doesn't require a full build context.
     # Only define the parts we need.
     class fakeconfig(object):
         topsrcdir = build.topsrcdir
 
     reader = BuildReader(fakeconfig())
-    for path, name, key, value in reader.find_sphinx_variables():
+    for path, name, key, value in reader.find_sphinx_variables(relevant_mozbuild_path):
         reldir = os.path.join(os.path.dirname(path), value)
 
         if name == 'SPHINX_TREES':
+            # If we're building a subtree, only process that specific subtree.
+            absdir = os.path.join(build.topsrcdir, reldir)
+            if not is_main and absdir not in (docdir, MAIN_DOC_PATH):
+                continue
+
             assert key
             if key.startswith('/'):
                 key = key[1:]
