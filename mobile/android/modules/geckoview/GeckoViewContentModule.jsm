@@ -29,6 +29,13 @@ class GeckoViewContentModule {
     if (!aGlobal._gvEventDispatcher) {
       aGlobal._gvEventDispatcher =
           GeckoViewUtils.getDispatcherForWindow(aGlobal.content);
+      aGlobal.addEventListener("unload", event => {
+        if (event.target === this.messageManager) {
+          aGlobal._gvEventDispatcher.finalize();
+        }
+      }, {
+        mozSystemGroup: true,
+      });
     }
     this.eventDispatcher = aGlobal._gvEventDispatcher;
 
