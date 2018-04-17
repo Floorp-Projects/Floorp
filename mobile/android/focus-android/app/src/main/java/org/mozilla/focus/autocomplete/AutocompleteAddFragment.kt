@@ -60,16 +60,20 @@ class AutocompleteAddFragment : Fragment() {
                     .toLowerCase()
                     .removePrefixesIgnoreCase("http://", "https://", "www.")
 
-            launch(UI) {
-                when {
-                    domain.isEmpty()
-                    -> domainView.error = getString(R.string.preference_autocomplete_add_error)
-                    CustomDomains
-                            .load(activity.applicationContext)
-                            .contains(domain)
-                    -> domainView.error = getString(R.string.preference_autocomplete_duplicate_url_error)
-                    else
-                    -> saveDomainAndClose(activity.applicationContext, domain)
+            launch(CommonPool) {
+                val domains = CustomDomains.load(activity)
+                val error = when {
+                    domain.isEmpty() -> getString(R.string.preference_autocomplete_add_error)
+                    domains.contains(domain) -> getString(R.string.preference_autocomplete_duplicate_url_error)
+                    else -> null
+                }
+
+                launch(UI) {
+                    if (error != null) {
+                        domainView.error = error
+                    } else {
+                        saveDomainAndClose(activity.applicationContext, domain)
+                    }
                 }
             }
 
