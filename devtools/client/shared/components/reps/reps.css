@@ -402,3 +402,13 @@ html[dir="rtl"] .tree-node img.arrow {
   display: inline-block;
   vertical-align: middle;
 }
+
+/* Focused styles */
+.tree.object-inspector .tree-node.focused * {
+  color: inherit;
+}
+
+.tree-node.focused button.jump-definition,
+.tree-node.focused button.open-inspector {
+  background-color: currentColor;
+}
