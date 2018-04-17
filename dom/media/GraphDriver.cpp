@@ -55,7 +55,8 @@ void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
   MOZ_DIAGNOSTIC_ASSERT(GraphImpl()->CurrentDriver() == aPreviousDriver);
 
   LOG(LogLevel::Debug,
-      ("Setting previous driver: %p (%s)",
+      ("%p: Setting previous driver: %p (%s)",
+       GraphImpl(),
        aPreviousDriver,
        aPreviousDriver->AsAudioCallbackDriver() ? "AudioCallbackDriver"
                                                 : "SystemClockDriver"));
@@ -70,14 +71,16 @@ void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver)
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
 
   LOG(LogLevel::Debug,
-      ("Switching to new driver: %p (%s)",
+      ("%p: Switching to new driver: %p (%s)",
+       GraphImpl(),
        aNextDriver,
        aNextDriver->AsAudioCallbackDriver() ? "AudioCallbackDriver"
                                             : "SystemClockDriver"));
   if (mNextDriver &&
       mNextDriver != GraphImpl()->CurrentDriver()) {
     LOG(LogLevel::Debug,
-        ("Discarding previous next driver: %p (%s)",
+        ("%p: Discarding previous next driver: %p (%s)",
+         GraphImpl(),
          mNextDriver.get(),
          mNextDriver->AsAudioCallbackDriver() ? "AudioCallbackDriver"
                                               : "SystemClockDriver"));
@@ -88,12 +91,12 @@ void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver)
 GraphTime
 GraphDriver::StateComputedTime() const
 {
-  return mGraphImpl->mStateComputedTime;
+  return GraphImpl()->mStateComputedTime;
 }
 
 void GraphDriver::EnsureNextIteration()
 {
-  mGraphImpl->EnsureNextIteration();
+  GraphImpl()->EnsureNextIteration();
 }
 
 bool GraphDriver::Switching()
@@ -279,6 +282,7 @@ ThreadedDriver::Shutdown()
   LOG(LogLevel::Debug, ("Stopping threads for MediaStreamGraph %p", this));
 
   if (mThread) {
+    LOG(LogLevel::Debug, ("%p: Stopping ThreadedDriver's %p thread", GraphImpl(), this));
     mThread->Shutdown();
     mThread = nullptr;
   }
@@ -317,7 +321,7 @@ ThreadedDriver::RunThread()
 
     GraphTime stateComputedTime = StateComputedTime();
     if (stateComputedTime < mIterationEnd) {
-      LOG(LogLevel::Warning, ("Media graph global underrun detected"));
+      LOG(LogLevel::Warning, ("%p: Global underrun detected", GraphImpl()));
       mIterationEnd = stateComputedTime;
     }
 
@@ -325,18 +329,19 @@ ThreadedDriver::RunThread()
       NS_ASSERTION(mIterationStart == mIterationEnd ,
                    "Time can't go backwards!");
       // This could happen due to low clock resolution, maybe?
-      LOG(LogLevel::Debug, ("Time did not advance"));
+      LOG(LogLevel::Debug, ("%p: Time did not advance", GraphImpl()));
     }
 
     GraphTime nextStateComputedTime =
-      mGraphImpl->RoundUpToEndOfAudioBlock(
-        mIterationEnd + mGraphImpl->MillisecondsToMediaTime(AUDIO_TARGET_MS));
+      GraphImpl()->RoundUpToEndOfAudioBlock(
+        mIterationEnd + GraphImpl()->MillisecondsToMediaTime(AUDIO_TARGET_MS));
     if (nextStateComputedTime < stateComputedTime) {
       // A previous driver may have been processing further ahead of
       // iterationEnd.
       LOG(LogLevel::Warning,
-          ("Prevent state from going backwards. interval[%ld; %ld] state[%ld; "
+          ("%p: Prevent state from going backwards. interval[%ld; %ld] state[%ld; "
            "%ld]",
+           GraphImpl(),
            (long)mIterationStart,
            (long)mIterationEnd,
            (long)stateComputedTime,
@@ -344,23 +349,24 @@ ThreadedDriver::RunThread()
       nextStateComputedTime = stateComputedTime;
     }
     LOG(LogLevel::Verbose,
-        ("interval[%ld; %ld] state[%ld; %ld]",
+        ("%p: interval[%ld; %ld] state[%ld; %ld]",
+         GraphImpl(),
          (long)mIterationStart,
          (long)mIterationEnd,
          (long)stateComputedTime,
          (long)nextStateComputedTime));
 
-    bool stillProcessing = mGraphImpl->OneIteration(nextStateComputedTime);
+    bool stillProcessing = GraphImpl()->OneIteration(nextStateComputedTime);
 
     if (!stillProcessing) {
       // Enter shutdown mode. The stable-state handler will detect this
       // and complete shutdown if the graph does not get restarted.
-      mGraphImpl->SignalMainThreadCleanup();
+      GraphImpl()->SignalMainThreadCleanup();
       break;
     }
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
     if (NextDriver()) {
-      LOG(LogLevel::Debug, ("Switching to AudioCallbackDriver"));
+      LOG(LogLevel::Debug, ("%p: Switching to AudioCallbackDriver", GraphImpl()));
       SwitchToNextDriver();
       break;
     }
@@ -373,14 +379,15 @@ SystemClockDriver::GetIntervalForIteration()
 {
   TimeStamp now = TimeStamp::Now();
   MediaTime interval =
-    mGraphImpl->SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds());
+    GraphImpl()->SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds());
   mCurrentTimeStamp = now;
 
   MOZ_LOG(gMediaStreamGraphLog, LogLevel::Verbose,
-          ("Updating current time to %f (real %f, StateComputedTime() %f)",
-           mGraphImpl->MediaTimeToSeconds(IterationEnd() + interval),
+          ("%p: Updating current time to %f (real %f, StateComputedTime() %f)",
+           GraphImpl(),
+           GraphImpl()->MediaTimeToSeconds(IterationEnd() + interval),
            (now - mInitialTimeStamp).ToSeconds(),
-           mGraphImpl->MediaTimeToSeconds(StateComputedTime())));
+           GraphImpl()->MediaTimeToSeconds(StateComputedTime())));
 
   return interval;
 }
@@ -395,22 +402,22 @@ OfflineClockDriver::GetCurrentTimeStamp()
 void
 SystemClockDriver::WaitForNextIteration()
 {
-  mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
+  GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
 
   TimeDuration timeout = TimeDuration::Forever();
   TimeStamp now = TimeStamp::Now();
 
   // This lets us avoid hitting the Atomic twice when we know we won't sleep
-  bool another = mGraphImpl->mNeedAnotherIteration; // atomic
+  bool another = GraphImpl()->mNeedAnotherIteration; // atomic
   if (!another) {
-    mGraphImpl->mGraphDriverAsleep = true; // atomic
+    GraphImpl()->mGraphDriverAsleep = true; // atomic
     mWaitState = WAITSTATE_WAITING_INDEFINITELY;
   }
   // NOTE: mNeedAnotherIteration while also atomic may have changed before
   // we could set mGraphDriverAsleep, so we must re-test it.
   // (EnsureNextIteration sets mNeedAnotherIteration, then tests
   // mGraphDriverAsleep
-  if (another || mGraphImpl->mNeedAnotherIteration) { // atomic
+  if (another || GraphImpl()->mNeedAnotherIteration) { // atomic
     int64_t timeoutMS = MEDIA_GRAPH_TARGET_PERIOD_MS -
       int64_t((now - mCurrentTimeStamp).ToMilliseconds());
     // Make sure timeoutMS doesn't overflow 32 bits by waking up at
@@ -418,41 +425,43 @@ SystemClockDriver::WaitForNextIteration()
     timeoutMS = std::max<int64_t>(0, std::min<int64_t>(timeoutMS, 60*1000));
     timeout = TimeDuration::FromMilliseconds(timeoutMS);
     LOG(LogLevel::Verbose,
-        ("Waiting for next iteration; at %f, timeout=%f",
+        ("%p: Waiting for next iteration; at %f, timeout=%f",
+         GraphImpl(),
          (now - mInitialTimeStamp).ToSeconds(),
          timeoutMS / 1000.0));
     if (mWaitState == WAITSTATE_WAITING_INDEFINITELY) {
-      mGraphImpl->mGraphDriverAsleep = false; // atomic
+      GraphImpl()->mGraphDriverAsleep = false; // atomic
     }
     mWaitState = WAITSTATE_WAITING_FOR_NEXT_ITERATION;
   }
   if (!timeout.IsZero()) {
-    mGraphImpl->GetMonitor().Wait(timeout);
+    GraphImpl()->GetMonitor().Wait(timeout);
     LOG(LogLevel::Verbose,
-        ("Resuming after timeout; at %f, elapsed=%f",
+        ("%p: Resuming after timeout; at %f, elapsed=%f",
+         GraphImpl(),
          (TimeStamp::Now() - mInitialTimeStamp).ToSeconds(),
          (TimeStamp::Now() - now).ToSeconds()));
   }
 
   if (mWaitState == WAITSTATE_WAITING_INDEFINITELY) {
-    mGraphImpl->mGraphDriverAsleep = false; // atomic
+    GraphImpl()->mGraphDriverAsleep = false; // atomic
   }
   // Note: this can race against the EnsureNextIteration setting
   // WAITSTATE_RUNNING and setting mGraphDriverAsleep to false, so you can
   // have an iteration with WAITSTATE_WAKING_UP instead of RUNNING.
   mWaitState = WAITSTATE_RUNNING;
-  mGraphImpl->mNeedAnotherIteration = false; // atomic
+  GraphImpl()->mNeedAnotherIteration = false; // atomic
 }
 
 void SystemClockDriver::WakeUp()
 {
-  mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
+  GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
   // Note: this can race against the thread setting WAITSTATE_RUNNING and
   // setting mGraphDriverAsleep to false, so you can have an iteration
   // with WAITSTATE_WAKING_UP instead of RUNNING.
   mWaitState = WAITSTATE_WAKING_UP;
-  mGraphImpl->mGraphDriverAsleep = false; // atomic
-  mGraphImpl->GetMonitor().Notify();
+  GraphImpl()->mGraphDriverAsleep = false; // atomic
+  GraphImpl()->GetMonitor().Notify();
 }
 
 OfflineClockDriver::OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTime aSlice)
@@ -469,7 +478,7 @@ OfflineClockDriver::~OfflineClockDriver()
 MediaTime
 OfflineClockDriver::GetIntervalForIteration()
 {
-  return mGraphImpl->MillisecondsToMediaTime(mSlice);
+  return GraphImpl()->MillisecondsToMediaTime(mSlice);
 }
 
 void
@@ -507,7 +516,7 @@ AsyncCubebTask::Run()
   switch(mOperation) {
     case AsyncCubebOperation::INIT: {
       LOG(LogLevel::Debug,
-          ("AsyncCubebOperation::INIT driver=%p", mDriver.get()));
+          ("%p: AsyncCubebOperation::INIT driver=%p", mDriver->GraphImpl(), mDriver.get()));
       if (!mDriver->Init()) {
         LOG(LogLevel::Warning,
             ("AsyncCubebOperation::INIT failed for driver=%p", mDriver.get()));
@@ -518,7 +527,7 @@ AsyncCubebTask::Run()
     }
     case AsyncCubebOperation::SHUTDOWN: {
       LOG(LogLevel::Debug,
-          ("AsyncCubebOperation::SHUTDOWN driver=%p", mDriver.get()));
+          ("%p: AsyncCubebOperation::SHUTDOWN driver=%p", mDriver->GraphImpl(), mDriver.get()));
       mDriver->Stop();
 
       mDriver->CompleteAudioContextOperations(mOperation);
@@ -559,11 +568,12 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, uint3
   , mShouldFallbackIfError(false)
   , mFromFallback(false)
 {
-  LOG(LogLevel::Debug, ("AudioCallbackDriver ctor for graph %p", aGraphImpl));
+  LOG(LogLevel::Debug, ("%p: AudioCallbackDriver ctor", GraphImpl()));
 
   const uint32_t kIdleThreadTimeoutMs = 2000;
   mInitShutdownThread->
       SetIdleThreadTimeout(PR_MillisecondsToInterval(kIdleThreadTimeoutMs));
+
 #if defined(XP_WIN)
   if (XRE_IsContentProcess()) {
     audio::AudioNotificationReceiver::Register(this);
@@ -613,7 +623,6 @@ bool IsMacbookOrMacbookAir()
 bool
 AudioCallbackDriver::Init()
 {
-  MOZ_ASSERT(!IsStarted() && OnCubebOperationThread());
   cubeb* cubebContext = CubebUtils::GetCubebContext();
   if (!cubebContext) {
     NS_WARNING("Could not get cubeb context.");
@@ -707,7 +716,6 @@ AudioCallbackDriver::Init()
     FallbackToSystemClockDriver();
     return true;
   }
-  SetMicrophoneActive(mGraphImpl->mInputWanted);
 
 #ifdef XP_MACOSX
    PanOutputIfNeeded(inputWanted);
@@ -785,9 +793,9 @@ AudioCallbackDriver::Revive()
   MOZ_ASSERT(NS_IsMainThread() && !ThreadRunning());
   // Note: only called on MainThread, without monitor
   // We know were weren't in a running state
-  LOG(LogLevel::Debug, ("AudioCallbackDriver reviving."));
+  LOG(LogLevel::Debug, ("%p: AudioCallbackDriver reviving.", GraphImpl()));
   // If we were switching, switch now. Otherwise, start the audio thread again.
-  MonitorAutoLock mon(mGraphImpl->GetMonitor());
+  MonitorAutoLock mon(GraphImpl()->GetMonitor());
   if (NextDriver()) {
     SwitchToNextDriver();
   } else {
@@ -806,7 +814,7 @@ AudioCallbackDriver::RemoveMixerCallback()
   MOZ_ASSERT(OnThread() || !ThreadRunning());
 
   if (mAddedMixer) {
-    mGraphImpl->mMixer.RemoveCallback(this);
+    GraphImpl()->mMixer.RemoveCallback(this);
     mAddedMixer = false;
   }
 }
@@ -839,7 +847,7 @@ AudioCallbackDriver::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(LogLevel::Debug,
-      ("Releasing audio driver off main thread (GraphDriver::Shutdown)."));
+      ("%p: Releasing audio driver off main thread (GraphDriver::Shutdown).", GraphImpl()));
   RefPtr<AsyncCubebTask> releaseEvent =
     new AsyncCubebTask(this, AsyncCubebOperation::SHUTDOWN);
   releaseEvent->Dispatch(NS_DISPATCH_SYNC);
@@ -904,20 +912,23 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
 #endif
 
   // Don't add the callback until we're inited and ready
-  AddMixerCallback();
+  if (!mAddedMixer) {
+    GraphImpl()->mMixer.AddCallback(this);
+    mAddedMixer = true;
+  }
 
   GraphTime stateComputedTime = StateComputedTime();
   if (stateComputedTime == 0) {
-    MonitorAutoLock mon(mGraphImpl->GetMonitor());
+    MonitorAutoLock mon(GraphImpl()->GetMonitor());
     // Because this function is called during cubeb_stream_init (to prefill the
     // audio buffers), it can be that we don't have a message here (because this
     // driver is the first one for this graph), and the graph would exit. Simply
     // return here until we have messages.
-    if (!mGraphImpl->MessagesQueued()) {
+    if (!GraphImpl()->MessagesQueued()) {
       PodZero(aOutputBuffer, aFrames * mOutputChannels);
       return aFrames;
     }
-    mGraphImpl->SwapMessageQueues();
+    GraphImpl()->SwapMessageQueues();
   }
 
   uint32_t durationMS = aFrames * 1000 / mSampleRate;
@@ -940,7 +951,7 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // compute the iteration start and end from there, trying to keep the amount
   // of buffering in the graph constant.
   GraphTime nextStateComputedTime =
-    mGraphImpl->RoundUpToEndOfAudioBlock(
+    GraphImpl()->RoundUpToEndOfAudioBlock(
       stateComputedTime + mBuffer.Available());
 
   mIterationStart = mIterationEnd;
@@ -957,8 +968,9 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   mIterationEnd = mIterationStart + 0.8 * inGraph;
 
   LOG(LogLevel::Verbose,
-      ("interval[%ld; %ld] state[%ld; %ld] (frames: %ld) (durationMS: %u) "
+      ("%p: interval[%ld; %ld] state[%ld; %ld] (frames: %ld) (durationMS: %u) "
        "(duration ticks: %ld)",
+       GraphImpl(),
        (long)mIterationStart,
        (long)mIterationEnd,
        (long)stateComputedTime,
@@ -970,29 +982,26 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   mCurrentTimeStamp = TimeStamp::Now();
 
   if (stateComputedTime < mIterationEnd) {
-    LOG(LogLevel::Error, ("Media graph global underrun detected"));
+    LOG(LogLevel::Error, ("%p: Media graph global underrun detected", GraphImpl()));
     MOZ_ASSERT_UNREACHABLE("We should not underrun in full duplex");
     mIterationEnd = stateComputedTime;
   }
 
   // Process mic data if any/needed
-  if (aInputBuffer) {
-    if (mAudioInput) { // for this specific input-only or full-duplex stream
-      mAudioInput->NotifyInputData(mGraphImpl, aInputBuffer,
-                                   static_cast<size_t>(aFrames),
-                                   mSampleRate, mInputChannels);
-    }
+  if (aInputBuffer && mInputChannelCount > 0) {
+    GraphImpl()->NotifyInputData(aInputBuffer, static_cast<size_t>(aFrames),
+                                 mSampleRate, mInputChannelCount);
   }
 
   bool stillProcessing;
   if (mBuffer.Available()) {
     // We totally filled the buffer (and mScratchBuffer isn't empty).
     // We don't need to run an iteration and if we do so we may overflow.
-    stillProcessing = mGraphImpl->OneIteration(nextStateComputedTime);
+    stillProcessing = GraphImpl()->OneIteration(nextStateComputedTime);
   } else {
     LOG(LogLevel::Verbose,
-        ("DataCallback buffer filled entirely from scratch "
-         "buffer, skipping iteration."));
+        ("%p: DataCallback buffer filled entirely from scratch "
+         "buffer, skipping iteration.", GraphImpl()));
     stillProcessing = true;
   }
 
@@ -1003,8 +1012,8 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // data off separate cubeb callbacks.  Take care with how stuff is
   // removed/added to this list and TSAN issues, but input and output will
   // use separate callback methods.
-  mGraphImpl->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
-                               mSampleRate, mOutputChannels);
+  GraphImpl()->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
+                                mSampleRate, mOutputChannels);
 
   if (!stillProcessing) {
     // About to hand over control of the graph.  Do not start a new driver if
@@ -1022,7 +1031,7 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
 
   bool switching = false;
   {
-    MonitorAutoLock mon(mGraphImpl->GetMonitor());
+    MonitorAutoLock mon(GraphImpl()->GetMonitor());
     switching = !!NextDriver();
   }
 
@@ -1030,11 +1039,11 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     mShouldFallbackIfError = false;
     // If the audio stream has not been started by the previous driver or
     // the graph itself, keep it alive.
-    MonitorAutoLock mon(mGraphImpl->GetMonitor());
+    MonitorAutoLock mon(GraphImpl()->GetMonitor());
     if (!IsStarted()) {
       return aFrames;
     }
-    LOG(LogLevel::Debug, ("Switching to system driver."));
+    LOG(LogLevel::Debug, ("%p: Switching to system driver.", GraphImpl()));
     RemoveMixerCallback();
     SwitchToNextDriver();
     mAudioThreadRunning = false;
