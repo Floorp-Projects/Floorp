@@ -253,7 +253,7 @@ config = {
                 "--address=%(address)s",
                 "%(test_manifest)s",
                 "--disable-e10s",
-                "--gecko-log=%(gecko_log)s",
+                "--gecko-log=-",
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--symbols-path=%(symbols_path)s",
