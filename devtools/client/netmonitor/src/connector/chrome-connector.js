@@ -98,4 +98,4 @@ class ChromeConnector {
   }
 }
 
-module.exports = ChromeConnector;
+module.exports = new ChromeConnector();

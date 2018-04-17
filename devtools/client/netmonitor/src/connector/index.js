@@ -54,14 +54,12 @@ class Connector {
   }
 
   connectChrome(connection, actions, getState) {
-    let ChromeConnector = require("./chrome-connector");
-    this.connector = new ChromeConnector();
+    this.connector = require("./chrome-connector");
     return this.connector.connect(connection, actions, getState);
   }
 
   connectFirefox(connection, actions, getState) {
-    let FirefoxConnector = require("./firefox-connector");
-    this.connector = new FirefoxConnector();
+    this.connector = require("./firefox-connector");
     return this.connector.connect(connection, actions, getState);
   }
 
