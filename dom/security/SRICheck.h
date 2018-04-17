@@ -32,20 +32,6 @@ public:
                                     const nsACString& aSourceFileURI,
                                     nsIConsoleReportCollector* aReporter,
                                     SRIMetadata* outMetadata);
-
-  /**
-   * Process the integrity attribute of the element.  A result of false
-   * must prevent the resource from loading.
-   *
-   * For uninteresting reasons, the caller may have the data split into two
-   * strings, so we support that here.
-   */
-  static nsresult VerifyIntegrity(const SRIMetadata& aMetadata,
-                                  nsIChannel* aChannel,
-                                  const nsACString& aFirst,
-                                  const nsACString& aSecond,
-                                  const nsACString& aSourceFileURI,
-                                  nsIConsoleReportCollector* aReporter);
 };
 
 // The SRICheckDataVerifier can be used in 2 different mode:
