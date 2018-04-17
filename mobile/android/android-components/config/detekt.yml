@@ -49,8 +49,8 @@ output-reports:
   active: true
   exclude:
   #  - 'HtmlOutputReport'
-  #  - 'PlainOutputReport'
-  #  - 'XmlOutputReport'
+    - 'PlainOutputReport'
+    - 'XmlOutputReport'
 
 comments:
   active: true
@@ -286,7 +286,7 @@ potential-bugs:
 style:
   active: true
   CollapsibleIfStatements:
-    active: false
+    active: true
   DataClassContainsFunctions:
     active: false
     conversionFunctionPrefix: 'to'
@@ -323,7 +323,7 @@ style:
     excludePackageStatements: false
     excludeImportStatements: false
   MayBeConst:
-    active: false
+    active: true
   ModifierOrder:
     active: true
   NestedClassesVisibility:
@@ -331,7 +331,7 @@ style:
   NewLineAtEndOfFile:
     active: true
   NoTabs:
-    active: false
+    active: true
   OptionalAbstractKeyword:
     active: true
   OptionalUnit:
@@ -351,14 +351,14 @@ style:
   SerialVersionUIDInSerializableClass:
     active: false
   SpacingBetweenPackageAndImports:
-    active: false
+    active: true
   ThrowsCount:
     active: true
     max: 2
   TrailingWhitespace:
     active: false
   UnnecessaryAbstractClass:
-    active: false
+    active: true
   UnnecessaryInheritance:
     active: false
   UnnecessaryParentheses:
