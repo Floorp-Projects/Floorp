@@ -51,13 +51,18 @@ The list can optionally be filtered or ordered:
 Events
 ------
 
-The ``change`` event allows to be notified when the remote settings are changed. The event ``data`` attribute contains the whole new list of settings.
+The ``on()`` function registers handlers to be triggered when events occur.
+
+The ``sync`` event allows to be notified when the remote settings are changed on the server side. Your handler is given an ``event`` object that contains a ``data`` attribute that has information about the changes:
+
+- ``current``: current list of entries (after changes were applied);
+- ``created``, ``updated``, ``deleted``: list of entries that were created/updated/deleted respectively.
 
 .. code-block:: js
 
-    RemoteSettings("a-key").on("change", event => {
-      const { data } = event;
-      for(const entry of data) {
+    RemoteSettings("a-key").on("sync", event => {
+      const { data: { current } } = event;
+      for(const entry of current) {
         // Do something with entry...
         // await InternalAPI.reload(entry.id, entry.label, entry.weight);
       }
