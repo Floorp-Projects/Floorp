@@ -130,10 +130,10 @@ BEGIN_TEST(testBinTokenReaderTesterSimpleString)
     readFull("jsapi-tests/binast/tokenizer/tester/test-simple-string.binjs", contents);
     Tokenizer tokenizer(cx, contents);
 
-    Chars found(cx);
-    CHECK(tokenizer.readChars(found).isOk());
+    Maybe<Chars> found;
+    CHECK(tokenizer.readMaybeChars(found));
 
-    CHECK(Tokenizer::equals(found, "simple string")); // FIXME: Find a way to make CHECK_EQUAL use `Tokenizer::equals`.
+    CHECK(Tokenizer::equals(*found, "simple string")); // FIXME: Find a way to make CHECK_EQUAL use `Tokenizer::equals`.
 
     return true;
 }
@@ -146,10 +146,10 @@ BEGIN_TEST(testBinTokenReaderTesterStringWithEscapes)
     readFull("jsapi-tests/binast/tokenizer/tester/test-string-with-escapes.binjs", contents);
     Tokenizer tokenizer(cx, contents);
 
-    Chars found(cx);
-    CHECK(tokenizer.readChars(found).isOk());
+    Maybe<Chars> found;
+    CHECK(tokenizer.readMaybeChars(found));
 
-    CHECK(Tokenizer::equals(found, "string with escapes \0\1\0")); // FIXME: Find a way to make CHECK_EQUAL use `Tokenizer::equals`.
+    CHECK(Tokenizer::equals(*found, "string with escapes \0\1\0")); // FIXME: Find a way to make CHECK_EQUAL use `Tokenizer::equals`.
 
     return true;
 }
@@ -164,8 +164,8 @@ BEGIN_TEST(testBinTokenReaderTesterEmptyUntaggedTuple)
 
     {
         Tokenizer::AutoTuple guard(tokenizer);
-        CHECK(tokenizer.enterUntaggedTuple(guard).isOk());
-        CHECK(guard.done().isOk());
+        CHECK(tokenizer.enterUntaggedTuple(guard));
+        CHECK(guard.done());
     }
 
     return true;
@@ -181,17 +181,17 @@ BEGIN_TEST(testBinTokenReaderTesterTwoStringsInTuple)
 
     {
         Tokenizer::AutoTuple guard(tokenizer);
-        CHECK(tokenizer.enterUntaggedTuple(guard).isOk());
+        CHECK(tokenizer.enterUntaggedTuple(guard));
 
-        Chars found_0(cx);
-        CHECK(tokenizer.readChars(found_0).isOk());
-        CHECK(Tokenizer::equals(found_0, "foo")); // FIXME: Find a way to make CHECK_EQUAL use `Tokenizer::equals`.
+        Maybe<Chars> found_0;
+        CHECK(tokenizer.readMaybeChars(found_0));
+        CHECK(Tokenizer::equals(*found_0, "foo")); // FIXME: Find a way to make CHECK_EQUAL use `Tokenizer::equals`.
 
-        Chars found_1(cx);
-        CHECK(tokenizer.readChars(found_1).isOk());
-        CHECK(Tokenizer::equals(found_1, "bar")); // FIXME: Find a way to make CHECK_EQUAL use `Tokenizer::equals`.
+        Maybe<Chars> found_1;
+        CHECK(tokenizer.readMaybeChars(found_1));
+        CHECK(Tokenizer::equals(*found_1, "bar")); // FIXME: Find a way to make CHECK_EQUAL use `Tokenizer::equals`.
 
-        CHECK(guard.done().isOk());
+        CHECK(guard.done());
     }
 
     return true;
@@ -209,23 +209,23 @@ BEGIN_TEST(testBinTokenReaderTesterSimpleTaggedTuple)
         js::frontend::BinKind tag;
         Tokenizer::BinFields fields(cx);
         Tokenizer::AutoTaggedTuple guard(tokenizer);
-        CHECK(tokenizer.enterTaggedTuple(tag, fields, guard).isOk());
+        CHECK(tokenizer.enterTaggedTuple(tag, fields, guard));
 
         CHECK(tag == js::frontend::BinKind::BindingIdentifier);
 
-        Chars found_id(cx);
+        Maybe<Chars> found_id;
         const double EXPECTED_value = 3.1415;
+        Maybe<double> found_value;
 
         // Order of fields is deterministic.
         CHECK(fields[0] == js::frontend::BinField::Label);
         CHECK(fields[1] == js::frontend::BinField::Value);
-        CHECK(tokenizer.readChars(found_id).isOk());
-        Maybe<double> found_value = tokenizer.readMaybeDouble().unwrap();
-        CHECK(found_value.isSome());
+        CHECK(tokenizer.readMaybeChars(found_id));
+        CHECK(tokenizer.readMaybeDouble(found_value));
 
         CHECK(EXPECTED_value == *found_value); // Apparently, CHECK_EQUAL doesn't work on `double`.
-        CHECK(Tokenizer::equals(found_id, "foo"));
-        CHECK(guard.done().isOk());
+        CHECK(Tokenizer::equals(*found_id, "foo"));
+        CHECK(guard.done());
     }
 
     return true;
@@ -243,10 +243,10 @@ BEGIN_TEST(testBinTokenReaderTesterEmptyList)
     {
         uint32_t length;
         Tokenizer::AutoList guard(tokenizer);
-        CHECK(tokenizer.enterList(length, guard).isOk());
+        CHECK(tokenizer.enterList(length, guard));
 
         CHECK(length == 0);
-        CHECK(guard.done().isOk());
+        CHECK(guard.done());
     }
 
     return true;
@@ -263,19 +263,19 @@ BEGIN_TEST(testBinTokenReaderTesterSimpleList)
     {
         uint32_t length;
         Tokenizer::AutoList guard(tokenizer);
-        CHECK(tokenizer.enterList(length, guard).isOk());
+        CHECK(tokenizer.enterList(length, guard));
 
         CHECK(length == 2);
 
-        Chars found_0(cx);
-        CHECK(tokenizer.readChars(found_0).isOk());
-        CHECK(Tokenizer::equals(found_0, "foo"));
+        Maybe<Chars> found_0;
+        CHECK(tokenizer.readMaybeChars(found_0));
+        CHECK(Tokenizer::equals(*found_0, "foo"));
 
-        Chars found_1(cx);
-        CHECK(tokenizer.readChars(found_1).isOk());
-        CHECK(Tokenizer::equals(found_1, "bar"));
+        Maybe<Chars> found_1;
+        CHECK(tokenizer.readMaybeChars(found_1));
+        CHECK(Tokenizer::equals(*found_1, "bar"));
 
-        CHECK(guard.done().isOk());
+        CHECK(guard.done());
     }
 
     return true;
@@ -293,27 +293,27 @@ BEGIN_TEST(testBinTokenReaderTesterNestedList)
     {
         uint32_t outerLength;
         Tokenizer::AutoList outerGuard(tokenizer);
-        CHECK(tokenizer.enterList(outerLength, outerGuard).isOk());
-        CHECK_EQUAL(outerLength, (uint32_t)1);
+        CHECK(tokenizer.enterList(outerLength, outerGuard));
+        CHECK(outerLength == 1);
 
         {
             uint32_t innerLength;
             Tokenizer::AutoList innerGuard(tokenizer);
-            CHECK(tokenizer.enterList(innerLength, innerGuard).isOk());
-            CHECK_EQUAL(innerLength, (uint32_t)2);
+            CHECK(tokenizer.enterList(innerLength, innerGuard));
+            CHECK(innerLength == 2);
 
-            Chars found_0(cx);
-            CHECK(tokenizer.readChars(found_0).isOk());
-            CHECK(Tokenizer::equals(found_0, "foo"));
+            Maybe<Chars> found_0;
+            CHECK(tokenizer.readMaybeChars(found_0));
+            CHECK(Tokenizer::equals(*found_0, "foo"));
 
-            Chars found_1(cx);
-            CHECK(tokenizer.readChars(found_1).isOk());
-            CHECK(Tokenizer::equals(found_1, "bar"));
+            Maybe<Chars> found_1;
+            CHECK(tokenizer.readMaybeChars(found_1));
+            CHECK(Tokenizer::equals(*found_1, "bar"));
 
-            CHECK(innerGuard.done().isOk());
+            CHECK(innerGuard.done());
         }
 
-        CHECK(outerGuard.done().isOk());
+        CHECK(outerGuard.done());
     }
 
     return true;
