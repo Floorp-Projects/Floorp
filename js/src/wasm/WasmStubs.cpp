@@ -328,7 +328,7 @@ SuppressGC(MacroAssembler& masm, int32_t increment, Register scratch)
     masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, cx)), scratch);
     masm.add32(Imm32(increment),
                Address(scratch, offsetof(JSContext, suppressGC) +
-                                js::ThreadLocalData<int32_t>::offsetOfValue()));
+                                js::ThreadData<int32_t>::offsetOfValue()));
 }
 #endif
 

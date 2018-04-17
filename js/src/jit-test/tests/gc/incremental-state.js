@@ -56,11 +56,23 @@ while (gcstate() == "Finalize") { gcslice(1); }
 while (gcstate() == "Decommit") { gcslice(1); }
 assertEq(gcstate(), "NotActive");
 
-// Zeal mode 17: Incremental GC in two slices:
-//   1) mark everything and start sweeping
-//   2) finish sweeping
-gczeal(17, 0);
-gcslice(1);
-assertEq(gcstate(), "Sweep");
-gcslice(1);
-assertEq(gcstate(), "NotActive");
+// Two-slice zeal modes that yield once during sweeping.
+for (let mode of [ 17, 19 ]) {
+    print(mode);
+    gczeal(mode, 0);
+    gcslice(1);
+    assertEq(gcstate(), "Sweep");
+    gcslice(1);
+    assertEq(gcstate(), "NotActive");
+}
+
+// Two-slice zeal modes that yield per-zone during sweeping.
+const sweepingZealModes = [ 20, 21, 22, 23 ];
+for (let mode of sweepingZealModes) {
+    print(mode);
+    gczeal(mode, 0);
+    gcslice(1);
+    while (gcstate() === "Sweep")
+        gcslice(1);
+    assertEq(gcstate(), "NotActive");
+}

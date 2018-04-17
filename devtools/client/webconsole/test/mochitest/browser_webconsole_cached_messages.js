@@ -25,17 +25,18 @@ add_task(async function() {
 
   info("Open the console");
   let hud = await openConsole();
-  testMessagesVisibility(hud);
+
+  await testMessagesVisibility(hud, true);
 
   info("Close the toolbox");
   await closeToolbox();
 
   info("Open the console again");
   hud = await openConsole();
-  testMessagesVisibility(hud);
+  await testMessagesVisibility(hud, false);
 });
 
-function testMessagesVisibility(hud) {
+async function testMessagesVisibility(hud, waitForCSSMessage) {
   let message = findMessage(hud, "log Bazzle", ".message.log");
   ok(message, "console.log message is visible");
 
@@ -45,6 +46,11 @@ function testMessagesVisibility(hud) {
   message = findMessage(hud, "bazBug611032", ".message.error");
   ok(message, "exception message is visible");
 
+  // The CSS message arrives lazily, so spin a bit for it unless it should be
+  // cached.
+  if (waitForCSSMessage) {
+    await waitForMessage(hud, "cssColorBug611032");
+  }
   message = findMessage(hud, "cssColorBug611032", ".message.warn.css");
   ok(message, "css warning message is visible");
 }

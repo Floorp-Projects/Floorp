@@ -6922,14 +6922,13 @@ nsDisplayTableBlendContainer::CreateForBackgroundBlendMode(nsDisplayListBuilder*
 nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayList* aList,
                                      const ActiveScrolledRoot* aActiveScrolledRoot,
-                                     nsDisplayOwnLayerFlags aFlags, ViewID aScrollTarget,
-                                     const ScrollbarData& aThumbData,
+                                     nsDisplayOwnLayerFlags aFlags,
+                                     const ScrollbarData& aScrollbarData,
                                      bool aForceActive,
                                      bool aClearClipChain)
     : nsDisplayWrapList(aBuilder, aFrame, aList, aActiveScrolledRoot, aClearClipChain)
     , mFlags(aFlags)
-    , mScrollTarget(aScrollTarget)
-    , mThumbData(aThumbData)
+    , mScrollbarData(aScrollbarData)
     , mForceActive(aForceActive)
     , mWrAnimationId(0)
 {
@@ -6965,7 +6964,7 @@ nsDisplayOwnLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplayOwnLayer::IsScrollThumbLayer() const
 {
-  return mThumbData.mScrollbarLayerType == layers::ScrollbarLayerType::Thumb;
+  return mScrollbarData.mScrollbarLayerType == layers::ScrollbarLayerType::Thumb;
 }
 
 bool
@@ -6986,15 +6985,16 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            aContainerParameters, nullptr,
                            FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR);
+
   if (IsScrollThumbLayer()) {
-    mThumbData.mTargetViewId = mScrollTarget;
-    layer->SetScrollbarData(mThumbData);
-  }
-  if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
-    ScrollDirection dir = (mFlags & nsDisplayOwnLayerFlags::eVerticalScrollbar)
-                        ? ScrollDirection::eVertical
-                        : ScrollDirection::eHorizontal;
-    layer->SetScrollbarContainer(mScrollTarget, dir);
+    layer->SetScrollbarData(mScrollbarData);
+  } else if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
+    mScrollbarData.mScrollbarLayerType = ScrollbarLayerType::Container;
+    mScrollbarData.mDirection = (mFlags & nsDisplayOwnLayerFlags::eVerticalScrollbar)
+                                ? Some(ScrollDirection::eVertical)
+                                : Some(ScrollDirection::eHorizontal);
+
+    layer->SetScrollbarData(mScrollbarData);
   }
 
   if (mFlags & nsDisplayOwnLayerFlags::eGenerateSubdocInvalidations) {
@@ -7044,9 +7044,9 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
   if (IsScrollThumbLayer()) {
     ret = true;
     if (aLayerData) {
-      aLayerData->SetScrollbarData(mThumbData);
+      aLayerData->SetScrollbarData(mScrollbarData);
       aLayerData->SetScrollbarAnimationId(mWrAnimationId);
-      aLayerData->SetScrollbarTargetContainerId(mScrollTarget);
+      aLayerData->SetScrollbarTargetContainerId(mScrollbarData.mTargetViewId);
     }
   }
   if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
@@ -7056,7 +7056,7 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
                           ? ScrollDirection::eVertical
                           : ScrollDirection::eHorizontal;
       aLayerData->SetScrollbarContainerDirection(dir);
-      aLayerData->SetScrollbarTargetContainerId(mScrollTarget);
+      aLayerData->SetScrollbarTargetContainerId(mScrollbarData.mTargetViewId);
     }
   }
   return ret;
@@ -7065,7 +7065,7 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
 void
 nsDisplayOwnLayer::WriteDebugInfo(std::stringstream& aStream)
 {
-  aStream << nsPrintfCString(" (flags 0x%x) (scrolltarget %" PRIu64 ")", (int)mFlags, mScrollTarget).get();
+  aStream << nsPrintfCString(" (flags 0x%x) (scrolltarget %" PRIu64 ")", (int)mFlags, mScrollbarData.mTargetViewId).get();
 }
 
 nsDisplaySubDocument::nsDisplaySubDocument(nsDisplayListBuilder* aBuilder,

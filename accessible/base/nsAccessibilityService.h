@@ -51,7 +51,7 @@ SelectionManager* SelectionMgr();
 ApplicationAccessible* ApplicationAcc();
 xpcAccessibleApplication* XPCApplicationAcc();
 
-typedef Accessible* (New_Accessible)(nsIContent* aContent, Accessible* aContext);
+typedef Accessible* (New_Accessible)(Element* aElement, Accessible* aContext);
 
 struct MarkupAttrInfo {
   nsStaticAtom** name;

@@ -9,18 +9,13 @@
 "use strict";
 
 const TEST_URI = "data:text/html;charset=utf8,<p>hello world" +
-                 "<button onclick='foobar.explode()' " +
-                 "style='test-color: green-please'>click!</button>";
+                 "<button onclick='foobar.explode()'>click!</button>";
 
 add_task(async function() {
   await addTab(TEST_URI);
+
   let hud = await HUDService.toggleBrowserConsole();
   ok(hud, "browser console opened");
-
-  // Enable CSS warnings and errors.
-  await setFilterState(hud, {
-    css: true
-  });
 
   // On e10s, the exception is triggered in child process
   // and is ignored by test harness
@@ -36,9 +31,6 @@ add_task(async function() {
 
   await waitForMessageAndViewSource(hud,
     "ReferenceError: foobar is not defined");
-  await waitForMessageAndViewSource(hud,
-    "Unknown property \u2018test-color\u2019.");
-  await resetFilters(hud);
 });
 
 async function waitForMessageAndViewSource(hud, message) {
