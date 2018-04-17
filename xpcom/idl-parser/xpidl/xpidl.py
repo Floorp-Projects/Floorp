@@ -936,8 +936,8 @@ class Attribute(object):
                 getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Undefined' attribute can only be used on DOMString",
                            self.location)
-        if self.infallible and not self.realtype.kind == 'builtin':
-            raise IDLError('[infallible] only works on builtin types '
+        if self.infallible and not self.realtype.kind in ['builtin', 'interface', 'forward', 'webidl']:
+            raise IDLError('[infallible] only works on interfaces, domobjects, and builtin types '
                            '(numbers, booleans, and raw char types)',
                            self.location)
         if self.infallible and not iface.attributes.builtinclass:
