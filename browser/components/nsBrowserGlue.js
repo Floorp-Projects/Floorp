@@ -64,15 +64,16 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
     win.resizeTo(width, height);
   }
 
+  // Set this before showing the window so that graphics code can use it to
+  // decide to skip some expensive code paths (eg. starting the GPU process).
+  docElt.setAttribute("windowtype", "navigator:blank");
+
   // The window becomes visible after OnStopRequest, so make this happen now.
   win.stop();
 
   let { TelemetryTimestamps } =
     ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", {});
   TelemetryTimestamps.add("blankWindowShown");
-
-  // Used in nsBrowserContentHandler.js to close unwanted blank windows.
-  docElt.setAttribute("windowtype", "navigator:blank");
 })();
 
 Cu.importGlobalProperties(["fetch"]);
