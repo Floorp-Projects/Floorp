@@ -168,16 +168,10 @@ function test_get_unit() {
     expr: "0", expected: "px"
   }, {
     desc: "getUnit with 0%",
-    expr: "0%", expected: "%"
+    expr: "0%", expected: "px"
   }, {
-    desc: "getUnit with 0.00%",
-    expr: "0.00%", expected: "%"
-  }, {
-    desc: "getUnit with 0px",
-    expr: "0px", expected: "px"
-  }, {
-    desc: "getUnit with 0em",
-    expr: "0em", expected: "em"
+    desc: "getUnit with no unit",
+    expr: "30", expected: "px"
   }, {
     desc: "getUnit with calc",
     expr: "calc(30px + 5%)", expected: "px"

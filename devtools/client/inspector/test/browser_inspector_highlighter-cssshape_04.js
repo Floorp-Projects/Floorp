@@ -62,8 +62,7 @@ async function testPolygonMovePoint(config) {
   x = left + width * x / 100;
   y = top + height * y / 100;
   let dx = width / 10;
-  let dyPercent = 10;
-  let dy = height / dyPercent;
+  let dy = height / 10;
 
   let onRuleViewChanged = view.once("ruleview-changed");
   info("Moving first polygon point");
@@ -76,8 +75,7 @@ async function testPolygonMovePoint(config) {
   await onRuleViewChanged;
 
   let definition = await getComputedPropertyValue(selector, property, inspector);
-  ok(definition.includes(`${dx}px ${dyPercent}%`),
-    `Point moved to ${dx}px ${dyPercent}%`);
+  ok(definition.includes(`${dx}px ${dy}px`), `Point moved to ${dx}px ${dy}px`);
 
   await teardown({selector, property, ...config});
 }
