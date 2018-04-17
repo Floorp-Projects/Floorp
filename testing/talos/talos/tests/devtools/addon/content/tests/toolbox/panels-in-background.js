@@ -41,11 +41,11 @@ function waitForPayload(count, panelWin) {
 
     function maybeResolve() {
       if (payloadReady >= count) {
-        panelWin.off(EVENTS.PAYLOAD_READY, onPayloadReady);
+        panelWin.api.off(EVENTS.PAYLOAD_READY, onPayloadReady);
         resolve();
       }
     }
 
-    panelWin.on(EVENTS.PAYLOAD_READY, onPayloadReady);
+    panelWin.api.on(EVENTS.PAYLOAD_READY, onPayloadReady);
   });
 }

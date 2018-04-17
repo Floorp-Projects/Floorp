@@ -47,7 +47,7 @@ async function throttleUploadTest(actuallyThrottle) {
   });
 
   // Execute one POST request on the page and wait till its done.
-  let onEventTimings = monitor.panelWin.once(EVENTS.RECEIVED_EVENT_TIMINGS);
+  let onEventTimings = monitor.panelWin.api.once(EVENTS.RECEIVED_EVENT_TIMINGS);
   let wait = waitForNetworkEvents(monitor, 1);
   await ContentTask.spawn(tab.linkedBrowser, { size }, async function(args) {
     content.wrappedJSObject.executeTest2(args.size);
