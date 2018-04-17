@@ -78,7 +78,8 @@ enum class ZealMode {
 #define ZEAL_MODE(name, value) name = value,
     JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
 #undef ZEAL_MODE
-    Limit = 18
+    Count,
+    Limit = Count - 1
 };
 
 } /* namespace gc */

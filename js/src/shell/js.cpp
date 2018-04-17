@@ -8627,11 +8627,10 @@ SetWorkerContextOptions(JSContext* cx)
 
 #ifdef JS_GC_ZEAL
     if (gZealBits && gZealFrequency) {
-#define ZEAL_MODE(_, value)                        \
-        if (gZealBits & (1 << value))              \
-            cx->runtime()->gc.setZeal(value, gZealFrequency);
-        JS_FOR_EACH_ZEAL_MODE(ZEAL_MODE)
-#undef ZEAL_MODE
+        for (size_t i = 0; i < size_t(gc::ZealMode::Count); i++) {
+            if (gZealBits & (1 << i))
+                cx->runtime()->gc.setZeal(i, gZealFrequency);
+        }
     }
 #endif
 
