@@ -18,11 +18,7 @@
   <link rel="localization" href="branding/brand.ftl"/>
   <link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
   <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
-
   <script src="chrome://browser/content/preferences/clearSiteData.js"/>
-
-  <stringbundle id="bundlePreferences"
-                src="chrome://browser/locale/preferences/preferences.properties"/>
 
   <keyset>
     <key data-l10n-id="clear-site-data-close-key" modifiers="accel" oncommand="window.close();"/>
@@ -32,34 +28,22 @@
     <description control="url" data-l10n-id="clear-site-data-description"/>
     <separator class="thin"/>
     <vbox class="options-container">
-      <hbox class="option">
-        <checkbox id="clearSiteData" checked="true" />
-        <vbox>
-          <label for="clearSiteData"
-                 id="clearSiteDataLabel"
-                 control="clearSiteData"
-                 data-l10n-id="clear-site-data-cookies" />
-          <description class="option-description" data-l10n-id="clear-site-data-cookies-info" />
-        </vbox>
-      </hbox>
-      <hbox class="option">
-        <checkbox id="clearCache" checked="true" />
-        <vbox>
-          <label for="clearCache"
-                 id="clearCacheLabel"
-                 control="clearCache"
-                 data-l10n-id="clear-site-data-cache" />
-          <description class="option-description" data-l10n-id="clear-site-data-cache-info"/>
-        </vbox>
-      </hbox>
+      <vbox class="option">
+        <checkbox data-l10n-id="clear-site-data-cookies-empty" id="clearSiteData" checked="true"/>
+        <description class="option-description indent" data-l10n-id="clear-site-data-cookies-info"/>
+      </vbox>
+      <vbox class="option">
+        <checkbox data-l10n-id="clear-site-data-cache-empty" id="clearCache" checked="true"/>
+        <description class="option-description indent" data-l10n-id="clear-site-data-cache-info"/>
+      </vbox>
     </vbox>
   </vbox>
   <vbox>
     <hbox class="actionButtons" align="right" flex="1">
       <button id="cancelButton" icon="close"
-              data-l10n-id="clear-site-data-cancel" />
+              data-l10n-id="clear-site-data-cancel"/>
       <button id="clearButton" icon="save"
-              data-l10n-id="clear-site-data-clear" />
+              data-l10n-id="clear-site-data-clear"/>
     </hbox>
   </vbox>
 </window>

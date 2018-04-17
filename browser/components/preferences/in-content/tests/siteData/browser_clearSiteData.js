@@ -55,20 +55,18 @@ async function testClearData(clearSiteData, clearCache) {
   // since we've had cache intermittently changing under our feet.
   let [, convertedCacheUnit] = DownloadUtils.convertByteUnits(cacheUsage);
 
-  let clearSiteDataLabel = dialogWin.document.getElementById("clearSiteDataLabel");
-  let clearCacheLabel = dialogWin.document.getElementById("clearCacheLabel");
+  let clearSiteDataCheckbox = dialogWin.document.getElementById("clearSiteData");
+  let clearCacheCheckbox = dialogWin.document.getElementById("clearCache");
   // The usage details are filled asynchronously, so we assert that they're present by
   // waiting for them to be filled in.
   await Promise.all([
     TestUtils.waitForCondition(
-      () => clearSiteDataLabel.value && clearSiteDataLabel.value.includes(convertedTotalUsage), "Should show the quota usage"),
+      () => clearSiteDataCheckbox.label && clearSiteDataCheckbox.label.includes(convertedTotalUsage), "Should show the quota usage"),
     TestUtils.waitForCondition(
-      () => clearCacheLabel.value && clearCacheLabel.value.includes(convertedCacheUnit), "Should show the cache usage")
+      () => clearCacheCheckbox.label && clearCacheCheckbox.label.includes(convertedCacheUnit), "Should show the cache usage")
   ]);
 
   // Check the boxes according to our test input.
-  let clearSiteDataCheckbox = dialogWin.document.getElementById("clearSiteData");
-  let clearCacheCheckbox = dialogWin.document.getElementById("clearCache");
   clearSiteDataCheckbox.checked = clearSiteData;
   clearCacheCheckbox.checked = clearCache;
 
