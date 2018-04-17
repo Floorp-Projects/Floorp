@@ -16,8 +16,11 @@ from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 from taskgraph.task import Task
 
-_TC_ARTIFACT_LOCATION = \
+_PUBLIC_TC_ARTIFACT_LOCATION = \
         'https://queue.taskcluster.net/v1/task/{task_id}/artifacts/{artifact_prefix}/{postfix}'
+
+_PRIVATE_TC_ARTIFACT_LOCATION = \
+        'http://taskcluster/queue/v1/task/{task_id}/artifacts/{artifact_prefix}/{postfix}'
 
 logger = logging.getLogger(__name__)
 
@@ -192,12 +195,16 @@ def purge_cache(provisioner_id, worker_type, cache_name, use_proxy=False):
         _do_request(purge_cache_url, json={'cacheName': cache_name})
 
 
-def get_taskcluster_artifact_prefix(task, task_id, postfix='', locale=None):
+def get_taskcluster_artifact_prefix(task, task_id, postfix='', locale=None, force_private=False):
     if locale:
         postfix = '{}/{}'.format(locale, postfix)
 
     artifact_prefix = get_artifact_prefix(task)
+    if artifact_prefix == 'public/build' and not force_private:
+        tmpl = _PUBLIC_TC_ARTIFACT_LOCATION
+    else:
+        tmpl = _PRIVATE_TC_ARTIFACT_LOCATION
 
-    return _TC_ARTIFACT_LOCATION.format(
+    return tmpl.format(
         task_id=task_id, postfix=postfix, artifact_prefix=artifact_prefix
     )
