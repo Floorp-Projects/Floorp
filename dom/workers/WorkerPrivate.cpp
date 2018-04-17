@@ -8,6 +8,7 @@
 
 #include "js/MemoryMetrics.h"
 #include "MessageEventRunnable.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/ClientState.h"
@@ -71,8 +72,6 @@
 
 // A shrinking GC will run five seconds after the last event is processed.
 #define IDLE_GC_TIMER_DELAY_SEC 5
-
-#define CANCELING_TIMEOUT 30000 // 30 seconds
 
 static mozilla::LazyLogModule sWorkerPrivateLog("WorkerPrivate");
 static mozilla::LazyLogModule sWorkerTimeoutsLog("WorkerTimeouts");
@@ -4969,7 +4968,7 @@ WorkerPrivate::StartCancelingTimer()
 {
   AssertIsOnParentThread();
 
-  auto raii = MakeScopeExit([&] {
+  auto errorCleanup = MakeScopeExit([&] {
     mCancelingTimer = nullptr;
   });
 
@@ -4993,14 +4992,17 @@ WorkerPrivate::StartCancelingTimer()
     }
   }
 
+  uint32_t cancelingTimeoutMillis = DOMPrefs::WorkerCancelingTimeoutMillis();
+
   RefPtr<CancelingTimerCallback> callback = new CancelingTimerCallback(this);
-  nsresult rv = mCancelingTimer->InitWithCallback(callback, CANCELING_TIMEOUT,
+  nsresult rv = mCancelingTimer->InitWithCallback(callback,
+                                                  cancelingTimeoutMillis,
                                                   nsITimer::TYPE_ONE_SHOT);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
-  raii.release();
+  errorCleanup.release();
 }
 
 void
