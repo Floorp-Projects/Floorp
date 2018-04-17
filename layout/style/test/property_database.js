@@ -3743,8 +3743,11 @@ var gCSSProperties = {
     applies_to_first_line: true,
     applies_to_placeholder: true,
     initial_values: [ "normal", "400" ],
-    other_values: [ "bold", "100", "200", "300", "500", "600", "700", "800", "900", "bolder", "lighter" ],
-    invalid_values: [ "0", "100.0", "107", "399", "401", "699", "710", "1000" ]
+    other_values: [ "bold", "100", "200", "300", "500", "600", "700", "800",
+                    "900", "bolder", "lighter", "10.5", "calc(10 + 10)",
+                    "calc(10 - 99)", "100.0", "107", "399", "401", "699",
+                    "710", "1000" ],
+    invalid_values: [ "0", "1001", "calc(10%)" ]
   },
   "height": {
     domProp: "height",

@@ -2034,7 +2034,7 @@ function test_font_weight(prop) {
      "font-weight property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "900", "");
-  is(cs.getPropertyValue(prop), "500",
+  is(cs.getPropertyValue(prop), "525",
      "font-weight property " + prop + ": interpolation of font-weights");
   check_distance(prop, "400", "500", "800");
 
@@ -2050,20 +2050,20 @@ function test_font_weight(prop) {
 
   div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
   div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "100", "");
-  is(cs.getPropertyValue(prop), "100",
+  div.style.setProperty(prop, "1", "");
+  is(cs.getPropertyValue(prop), "1",
      "font-weight property " + prop + ": flush before clamping test");
   div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "900", "");
-  is(cs.getPropertyValue(prop), "100",
+  div.style.setProperty(prop, "1000", "");
+  is(cs.getPropertyValue(prop), "1",
      "font-weight property " + prop + ": clamping of values");
   div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "900", "");
-  is(cs.getPropertyValue(prop), "900",
+  div.style.setProperty(prop, "1000", "");
+  is(cs.getPropertyValue(prop), "1000",
      "font-weight property " + prop + ": flush before clamping test");
   div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "100", "");
-  is(cs.getPropertyValue(prop), "900",
+  div.style.setProperty(prop, "1", "");
+  is(cs.getPropertyValue(prop), "1000",
      "font-weight property " + prop + ": clamping of values");
   div.style.setProperty("transition-timing-function", "linear", "");
 }
