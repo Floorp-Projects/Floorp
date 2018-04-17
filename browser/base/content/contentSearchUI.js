@@ -9,6 +9,7 @@ this.ContentSearchUIController = (function() {
 const MAX_DISPLAYED_SUGGESTIONS = 6;
 const SUGGESTION_ID_PREFIX = "searchSuggestion";
 const ONE_OFF_ID_PREFIX = "oneOff";
+const DEFAULT_INPUT_ICON = "chrome://browser/skin/search-glass.svg";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -91,6 +92,7 @@ ContentSearchUIController.prototype = {
       icon,
     };
     this._updateDefaultEngineHeader();
+    this._updateDefaultEngineIcon();
 
     if (engine && document.activeElement == this.input) {
       this._speculativeConnect();
@@ -607,6 +609,14 @@ ContentSearchUIController.prototype = {
     this._updateSearchWithHeader();
     document.getElementById("contentSearchSettingsButton").textContent =
       this._strings.searchSettings;
+  },
+
+  _updateDefaultEngineIcon() {
+    let eng = this._engines.find(engine => engine.name === this.defaultEngine.name);
+    // We only show the engines icon for default engines, otherwise show
+    // a default; default engines have an identifier
+    let icon = eng.identifier ? this.defaultEngine.icon : DEFAULT_INPUT_ICON;
+    document.body.style.setProperty("--newtab-search-icon", "url(" + icon + ")");
   },
 
   _updateDefaultEngineHeader() {

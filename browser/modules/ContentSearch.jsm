@@ -339,6 +339,7 @@ var ContentSearch = {
         name: engine.name,
         iconBuffer,
         hidden: hiddenList.includes(engine.name),
+        identifier: engine.identifier
       });
     }
     return state;
