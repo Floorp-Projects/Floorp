@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} ред;{num} реда;{num} редова",
   "prefs_search_header": "Веб претрага",
   "prefs_topsites_description": "Сајтови које највише посећујете",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "Одличан садржај из целог света, персонализован за вас",
   "prefs_topstories_show_sponsored_label": "Чланци од спонзора {provider}",
   "prefs_topstories_sponsored_learn_more": "Сазнајте више",
   "prefs_highlights_description": "Изабрани сајтови које сте сачували или посетили",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Додај омиљени сајт",
   "section_menu_action_move_up": "Помери горе",
   "section_menu_action_move_down": "Помери доле",
-  "section_menu_action_privacy_notice": "Обавештење о приватности",
-  "prefs_topstories_description": "Веома квалитетан садржај који би вам можда промакао"
+  "section_menu_action_privacy_notice": "Обавештење о приватности"
 };

@@ -26,12 +26,6 @@ this.ThemeFeed = class ThemeFeed {
     }
   }
 
-  _parseRGB(colorString) {
-    let rgb = colorString.match(/^rgba?\((\d+), (\d+), (\d+)/);
-    rgb.shift();
-    return rgb.map(x => parseInt(x, 10));
-  }
-
   updateTheme(data) {
     if (data && data.window) {
       // We only update newtab theme if the theme activated isn't window specific.
@@ -39,15 +33,9 @@ this.ThemeFeed = class ThemeFeed {
       return;
     }
 
-    // Jump through some hoops to check if the current theme has light or dark
-    // text. If light, then we enable our dark (background) theme.
-    const textcolor = (data && data.textcolor) || "black";
-    const window = Services.wm.getMostRecentWindow("navigator:browser");
-    const dummy = window.document.createElement("dummy");
-    dummy.style.color = textcolor;
-    const [r, g, b] = this._parseRGB(window.getComputedStyle(dummy).color);
-    const luminance = 0.2125 * r + 0.7154 * g + 0.0721 * b;
-    const className = (luminance <= 110) ? "" : "dark-theme";
+    // If the theme is the built-in Dark theme, then activate our dark theme.
+    const isDarkTheme = data && data.id === "firefox-compact-dark@mozilla.org";
+    const className = isDarkTheme ? "dark-theme" : "";
     this.store.dispatch(ac.BroadcastToContent({type: at.THEME_UPDATE, data: {className}}));
   }
 

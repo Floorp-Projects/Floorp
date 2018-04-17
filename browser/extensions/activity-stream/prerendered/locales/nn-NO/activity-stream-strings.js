@@ -18,9 +18,9 @@ window.gActivityStreamStrings = {
   "menu_action_delete": "Slett frå historikk",
   "menu_action_pin": "Fest",
   "menu_action_unpin": "L:ys",
-  "confirm_history_delete_p1": "Er du sikker på at du vil sletta alle førekomstar av denne sida frå historikken din?",
+  "confirm_history_delete_p1": "Er du sikker på at du vil slette alle førekomstar av denne sida frå historikken din?",
   "confirm_history_delete_notice_p2": "Denne handlinga kan ikkje angrast.",
-  "menu_action_save_to_pocket": "Lagra til Pocket",
+  "menu_action_save_to_pocket": "Lagre til Pocket",
   "menu_action_delete_pocket": "Slett frå Pocket",
   "menu_action_archive_pocket": "Arkiver i Pocket",
   "search_button": "Søk",
@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} rekke;{num} rekkjer",
   "prefs_search_header": "Nettsøk",
   "prefs_topsites_description": "Sidene du besøker mest",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "Bra innhald frå heile nettet, tilpassa for deg",
   "prefs_topstories_show_sponsored_label": "Sponsa nyheiter frå {provider}",
   "prefs_topstories_sponsored_learn_more": "Les meir",
   "prefs_highlights_description": "Eit utval av nettsider som du har lagra eller besøkt",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Legg til mest besøkte",
   "section_menu_action_move_up": "Flytt opp",
   "section_menu_action_move_down": "Flytt ned",
-  "section_menu_action_privacy_notice": "Personvernmerknad",
-  "prefs_topstories_description": "Høgkvalitetsinnhald du kanskje elles ville ha oversett"
+  "section_menu_action_privacy_notice": "Personvernmerknad"
 };

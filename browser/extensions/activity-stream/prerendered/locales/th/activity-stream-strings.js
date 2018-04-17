@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} แถว",
   "prefs_search_header": "การค้นหาเว็บ",
   "prefs_topsites_description": "ไซต์ที่คุณเยี่ยมชมมากที่สุด",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "เนื้อหาที่ยอดเยี่ยมจากเว็บต่าง ๆ ปรับแต่งให้เป็นส่วนบุคคลเพื่อคุณ",
   "prefs_topstories_show_sponsored_label": "เรื่องราวที่สนับสนุนโดย {provider}",
   "prefs_topstories_sponsored_learn_more": "เรียนรู้เพิ่มเติม",
   "prefs_highlights_description": "การคัดเลือกไซต์ที่คุณได้บันทึกไว้หรือเยี่ยมชม",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "เพิ่มไซต์เด่น",
   "section_menu_action_move_up": "ย้ายขึ้น",
   "section_menu_action_move_down": "ย้ายลง",
-  "section_menu_action_privacy_notice": "ประกาศความเป็นส่วนตัว",
-  "prefs_topstories_description": "เนื้อหาคุณภาพสูงที่คุณอาจพลาดไป"
+  "section_menu_action_privacy_notice": "ประกาศความเป็นส่วนตัว"
 };

@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} eilutė;{num} eilutės;{num} eilučių",
   "prefs_search_header": "Paieška internete",
   "prefs_topsites_description": "Dažniausiai lankomos svetainės",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "Puikus turinys iš viso saityno, parinktas specialiai jums",
   "prefs_topstories_show_sponsored_label": "„{provider}“ siūlomi straipsniai",
   "prefs_topstories_sponsored_learn_more": "Sužinoti daugiau",
   "prefs_highlights_description": "Aplankytų bei išsaugotų svetainių rinkinys",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Pridėti lankomą svetainę",
   "section_menu_action_move_up": "Pakelti",
   "section_menu_action_move_down": "Nuleisti",
-  "section_menu_action_privacy_notice": "Privatumo nuostatai",
-  "prefs_topstories_description": "Įdomus turinys, kurį kitaip turbūt praleistumėte"
+  "section_menu_action_privacy_notice": "Privatumo nuostatai"
 };

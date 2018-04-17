@@ -44,6 +44,7 @@ body {
   --newtab-text-conditional-color: #4A4A4F;
   --newtab-text-primary-color: #0C0C0D;
   --newtab-text-secondary-color: #737373;
+  --newtab-text-tertiary-color: #737373;
   --newtab-textbox-background-color: #FFF;
   --newtab-textbox-border: rgba(12, 12, 13, 0.2);
   --newtab-textbox-focus-color: #0060DF;
@@ -51,7 +52,7 @@ body {
   --newtab-contextmenu-background-color: #F9F9FA;
   --newtab-contextmenu-button-color: #FFF;
   --newtab-modal-color: #FFF;
-  --newtab-overlay-color: #EDEDF0;
+  --newtab-overlay-color: rgba(237, 237, 240, 0.8);
   --newtab-section-header-text-color: #737373;
   --newtab-section-navigation-text-color: #737373;
   --newtab-section-active-contextmenu-color: #0C0C0D;
@@ -81,7 +82,8 @@ body {
   --newtab-link-secondary-color: #50BCB6;
   --newtab-text-conditional-color: #F9F9FA;
   --newtab-text-primary-color: #F9F9FA;
-  --newtab-text-secondary-color: rgba(249, 249, 250, 0.4);
+  --newtab-text-secondary-color: rgba(249, 249, 250, 0.8);
+  --newtab-text-tertiary-color: rgba(249, 249, 250, 0.4);
   --newtab-textbox-background-color: #38383D;
   --newtab-textbox-border: rgba(249, 249, 250, 0.2);
   --newtab-textbox-focus-color: #45A1FF;
@@ -89,7 +91,7 @@ body {
   --newtab-contextmenu-background-color: #4A4A4F;
   --newtab-contextmenu-button-color: #2A2A2E;
   --newtab-modal-color: #2A2A2E;
-  --newtab-overlay-color: #0C0C0D;
+  --newtab-overlay-color: rgba(12, 12, 13, 0.8);
   --newtab-section-header-text-color: rgba(249, 249, 250, 0.8);
   --newtab-section-navigation-text-color: rgba(249, 249, 250, 0.8);
   --newtab-section-active-contextmenu-color: #FFF;
@@ -897,14 +899,20 @@ main {
       transform: scaleX(-1); }
 
 .contentSearchSuggestionTable {
+  background-color: var(--newtab-search-dropdown-color);
   border: 0;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.2);
-  transform: translateY(3px); }
+  transform: translateY(4px); }
   .contentSearchSuggestionTable .contentSearchHeader {
     background-color: var(--newtab-search-dropdown-header-color);
     color: var(--newtab-text-secondary-color); }
-  .contentSearchSuggestionTable .contentSearchHeader, .contentSearchSuggestionTable .contentSearchSuggestionsList, .contentSearchSuggestionTable .contentSearchSettingsButton {
+  .contentSearchSuggestionTable .contentSearchHeader, .contentSearchSuggestionTable .contentSearchSettingsButton {
     border-color: var(--newtab-border-secondary-color); }
+  .contentSearchSuggestionTable .contentSearchSuggestionsList {
+    border: 0; }
+  .contentSearchSuggestionTable .contentSearchOneOffsTable {
+    background-color: var(--newtab-search-dropdown-header-color);
+    border-top: solid 1px var(--newtab-border-secondary-color); }
   .contentSearchSuggestionTable .contentSearchSearchWithHeaderSearchText {
     color: var(--newtab-text-primary-color); }
   .contentSearchSuggestionTable .contentSearchSuggestionsContainer {
@@ -918,6 +926,15 @@ main {
       fill: var(--newtab-icon-secondary-color); }
   .contentSearchSuggestionTable .contentSearchOneOffsTable .contentSearchSuggestionsContainer {
     background-color: var(--newtab-search-dropdown-header-color); }
+  .contentSearchSuggestionTable .contentSearchOneOffItem {
+    background-image: none;
+    border-right: solid 1px var(--newtab-border-secondary-color);
+    height: 22px;
+    margin: 5px 0; }
+    .contentSearchSuggestionTable .contentSearchOneOffItem.selected {
+      background: var(--newtab-element-hover-color); }
+    .contentSearchSuggestionTable .contentSearchOneOffItem:active {
+      background: var(--newtab-element-active-color); }
   .contentSearchSuggestionTable .contentSearchSettingsButton:hover {
     background: var(--newtab-element-hover-color);
     color: var(--newtab-text-primary-color); }
@@ -1001,7 +1018,6 @@ main {
   background: var(--newtab-overlay-color);
   height: 100%;
   left: 0;
-  opacity: 0.8;
   position: fixed;
   top: 0;
   width: 100%;
@@ -1135,7 +1151,7 @@ main {
     word-wrap: break-word; }
   .card-outer .card-context {
     bottom: 0;
-    color: var(--newtab-text-secondary-color);
+    color: var(--newtab-text-tertiary-color);
     display: flex;
     font-size: 11px;
     left: 0;
@@ -1143,7 +1159,7 @@ main {
     position: absolute;
     right: 0; }
   .card-outer .card-context-icon {
-    fill: var(--newtab-icon-secondary-color);
+    fill: var(--newtab-icon-tertiary-color);
     height: 22px;
     margin-inline-end: 6px; }
   .card-outer .card-context-label {
