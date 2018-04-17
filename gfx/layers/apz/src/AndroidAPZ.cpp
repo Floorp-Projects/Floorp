@@ -43,6 +43,17 @@ AndroidSpecificState::AndroidSpecificState() {
   mOverScroller = scroller;
 }
 
+AsyncPanZoomAnimation*
+AndroidSpecificState::CreateFlingAnimation(AsyncPanZoomController& aApzc,
+                                           const FlingHandoffState& aHandoffState) {
+  return new AndroidFlingAnimation(aApzc,
+      this,
+      aHandoffState.mChain,
+      aHandoffState.mIsHandoff,
+      aHandoffState.mScrolledApzc);
+}
+
+
 const float BOUNDS_EPSILON = 1.0f;
 
 // This function is used to convert the scroll offset from a float to an integer
