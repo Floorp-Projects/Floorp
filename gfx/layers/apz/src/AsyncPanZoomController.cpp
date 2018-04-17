@@ -118,11 +118,9 @@ using mozilla::gfx::PointTyped;
 #ifdef MOZ_WIDGET_ANDROID
 typedef WidgetOverscrollEffect OverscrollEffect;
 typedef AndroidSpecificState PlatformSpecificState;
-typedef AndroidFlingAnimation FlingAnimation;
 #else
 typedef GenericOverscrollEffect OverscrollEffect;
 typedef PlatformSpecificStateBase PlatformSpecificState;  // no extra state, just use the base class
-typedef GenericFlingAnimation FlingAnimation;
 #endif
 
 /**
@@ -515,6 +513,16 @@ static bool IsCloseToVertical(float aAngle, float aThreshold)
 
 // Counter used to give each APZC a unique id
 static uint32_t sAsyncPanZoomControllerCount = 0;
+
+AsyncPanZoomAnimation*
+PlatformSpecificStateBase::CreateFlingAnimation(AsyncPanZoomController& aApzc,
+                                                const FlingHandoffState& aHandoffState)
+{
+  return new GenericFlingAnimation(aApzc,
+      aHandoffState.mChain,
+      aHandoffState.mIsHandoff,
+      aHandoffState.mScrolledApzc);
+}
 
 TimeStamp
 AsyncPanZoomController::GetFrameTime() const
@@ -3011,11 +3019,7 @@ ParentLayerPoint AsyncPanZoomController::AttemptFling(const FlingHandoffState& a
   ScrollSnapToDestination();
   if (mState != SMOOTH_SCROLL) {
     SetState(FLING);
-    FlingAnimation *fling = new FlingAnimation(*this,
-        GetPlatformSpecificState(),
-        aHandoffState.mChain,
-        aHandoffState.mIsHandoff,
-        aHandoffState.mScrolledApzc);
+    AsyncPanZoomAnimation* fling = GetPlatformSpecificState()->CreateFlingAnimation(*this, aHandoffState);
     StartAnimation(fling);
   }
 
