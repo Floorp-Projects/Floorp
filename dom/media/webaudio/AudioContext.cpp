@@ -662,25 +662,26 @@ AudioContext::DestinationStream() const
   }
   return nullptr;
 }
-
 double
 AudioContext::CurrentTime()
 {
   MediaStream* stream = Destination()->Stream();
+  double rawTime = stream->StreamTimeToSeconds(stream->GetCurrentTime());
 
-  if (!mIsStarted &&
-    stream->StreamTimeToSeconds(stream->GetCurrentTime()) == 0) {
-      return 0;
+  // CurrentTime increments in intervals of 128/sampleRate. If the Timer
+  // Precision Reduction is smaller than this interval, the jittered time
+  // can always be reversed to the raw step of the interval. In that case
+  // we can simply return the un-reduced time; and avoid breaking tests.
+  // We have to convert each variable into a common magnitude, we choose ms.
+  if ((128/mSampleRate) * 1000.0 > nsRFPService::TimerResolution() / 1000.0) {
+    return rawTime;
   }
-
   // The value of a MediaStream's CurrentTime will always advance forward; it will never
   // reset (even if one rewinds a video.) Therefore we can use a single Random Seed
   // initialized at the same time as the object.
   return nsRFPService::ReduceTimePrecisionAsSecs(
-    stream->StreamTimeToSeconds(stream->GetCurrentTime()),
-    GetRandomTimelineSeed());
+    rawTime, GetRandomTimelineSeed());
 }
-
 void AudioContext::DisconnectFromOwner()
 {
   mIsDisconnecting = true;
