@@ -522,6 +522,12 @@ UsesExternalProtocolHandler(const char* aScheme)
         return false;
     }
 
+    for (unsigned int i = 0; i < NS_N(gForcedExternalSchemes); i++) {
+      if (!nsCRT::strcasecmp(gForcedExternalSchemes[i], aScheme)) {
+        return true;
+      }
+    }
+
     nsAutoCString pref("network.protocol-handler.external.");
     pref += aScheme;
 

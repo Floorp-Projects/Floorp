@@ -35,6 +35,9 @@ static const char gScheme[][sizeof("moz-safe-about")] =
     {"chrome", "file", "http", "https", "jar", "data", "about", "moz-safe-about", "resource",
      "moz-extension", "page-icon", "blob"};
 
+static const char gForcedExternalSchemes[][sizeof("moz-nullprincipal")] =
+    {"place", "fake-favicon-uri", "favicon", "moz-nullprincipal"};
+
 class nsINetworkLinkService;
 class nsIPrefBranch;
 class nsIProtocolProxyService2;
