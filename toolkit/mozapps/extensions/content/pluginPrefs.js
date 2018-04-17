@@ -7,16 +7,20 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 const PREFS = {
-  "pluginFlashBlockingCheckbox": "plugins.flashBlock.enabled",
-  "pluginEnableProtectedModeCheckbox": "dom.ipc.plugins.flash.disable-protected-mode",
+  "pluginFlashBlockingCheckbox":
+    { pref: "plugins.flashBlock.enabled", invert: false },
+  "pluginEnableProtectedModeCheckbox":
+    { pref: "dom.ipc.plugins.flash.disable-protected-mode", invert: true },
 };
 
 function init() {
   for (let id of Object.keys(PREFS)) {
     let checkbox = document.getElementById(id);
-    checkbox.checked = Services.prefs.getBoolPref(PREFS[id]);
+    var prefVal = Services.prefs.getBoolPref(PREFS[id].pref);
+    checkbox.checked = PREFS[id].invert ? !prefVal : prefVal;
     checkbox.addEventListener("command", () => {
-      Services.prefs.setBoolPref(PREFS[id], checkbox.checked);
+      Services.prefs.setBoolPref(PREFS[id].pref,
+                                 PREFS[id].invert ? !checkbox.checked : checkbox.checked);
     });
   }
 }
