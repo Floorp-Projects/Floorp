@@ -76,7 +76,7 @@ function run_test() {
       let stack = Components.stack;
       while (stack) {
         info(stack.name);
-        if (stack.name.includes("run_test/onConnect")) {
+        if (stack.name == "onConnect") {
           // Reached back to outer function before request
           ok(true, "Complete stack");
           return;
