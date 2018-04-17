@@ -196,10 +196,8 @@ public:
   /**
    * Sample animations based on a given time stamp for a element(layer) with
    * its animation data.
-   * Returns true if there exists compositor animation, and stores corresponding
-   * animated value in |aAnimationValue|.
    */
-  static bool
+  static void
   SampleAnimationForEachNode(TimeStamp aTime,
                              AnimationArray& aAnimations,
                              InfallibleTArray<AnimData>& aAnimationData,
