@@ -38,14 +38,9 @@ CheckThreadLocal::check() const
 {
     JSContext* cx = TlsContext.get();
     MOZ_ASSERT(cx);
-
-    // As for CheckZone, in a cooperatively scheduled runtime the active
-    // thread is permitted access to thread local state for other suspended
-    // threads in the same runtime.
-    if (cx->isCooperativelyScheduled())
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-    else
-        MOZ_ASSERT(id == ThisThread::GetId());
+    MOZ_ASSERT_IF(cx->isMainThreadContext(),
+                  CurrentThreadCanAccessRuntime(cx->runtime()));
+    MOZ_ASSERT(id == ThisThread::GetId());
 }
 
 template <AllowedHelperThread Helper>
