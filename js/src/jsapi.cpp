@@ -1339,6 +1339,20 @@ JS::detail::ComputeThis(JSContext* cx, Value* vp, MutableHandleObject thisObject
     return true;
 }
 
+static bool gProfileTimelineRecordingEnabled = false;
+
+JS_PUBLIC_API(void)
+JS::SetProfileTimelineRecordingEnabled(bool enabled)
+{
+    gProfileTimelineRecordingEnabled = enabled;
+}
+
+JS_PUBLIC_API(bool)
+JS::IsProfileTimelineRecordingEnabled()
+{
+    return gProfileTimelineRecordingEnabled;
+}
+
 JS_PUBLIC_API(void*)
 JS_malloc(JSContext* cx, size_t nbytes)
 {
