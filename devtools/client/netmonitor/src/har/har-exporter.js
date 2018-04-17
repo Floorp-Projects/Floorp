@@ -126,7 +126,9 @@ const HarExporter = {
    *        Configuration object, see save() for detailed description.
    */
   getHar: function(options) {
-    return this.fetchHarData(options).then(JSON.parse);
+    return this.fetchHarData(options).then(data => {
+      return data ? JSON.parse(data) : null;
+    });
   },
 
   // Helpers
