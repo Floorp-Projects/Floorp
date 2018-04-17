@@ -2160,13 +2160,25 @@ bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI)
     return false;
   }
 
-  bool isForeign = false;
-  thirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
-
+  bool isForeign = true;
+  nsresult rv = thirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
   // if we are dealing with a cross origin request, we can return here
   // because we already know the request is 'foreign'.
-  if (isForeign) {
+  if (NS_FAILED(rv) || isForeign) {
     return true;
+  }
+
+  // for loads of TYPE_SUBDOCUMENT we have to perform an additional test, because
+  // a cross-origin iframe might perform a navigation to a same-origin iframe which
+  // would send same-site cookies. Hence, if the iframe navigation was triggered
+  // by a cross-origin triggeringPrincipal, we treat the load as foreign.
+  if (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    nsCOMPtr<nsIURI> triggeringPrincipalURI;
+    loadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(triggeringPrincipalURI));
+    rv = thirdPartyUtil->IsThirdPartyChannel(aChannel, triggeringPrincipalURI, &isForeign);
+    if (NS_FAILED(rv) || isForeign) {
+      return true;
+    }
   }
 
   // for the purpose of same-site cookies we have to treat any cross-origin
@@ -2179,9 +2191,9 @@ bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI)
     entry->GetPrincipal(getter_AddRefs(redirectPrincipal));
     if (redirectPrincipal) {
       redirectPrincipal->GetURI(getter_AddRefs(redirectURI));
-      thirdPartyUtil->IsThirdPartyChannel(aChannel, redirectURI, &isForeign);
+      rv = thirdPartyUtil->IsThirdPartyChannel(aChannel, redirectURI, &isForeign);
       // if at any point we encounter a cross-origin redirect we can return.
-      if (isForeign) {
+      if (NS_FAILED(rv) || isForeign) {
         return true;
       }
     }
