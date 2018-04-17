@@ -16,6 +16,7 @@
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIDocShell.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 
@@ -125,17 +126,26 @@ class ClientChannelHelper final : public nsIInterfaceRequestor
       newLoadInfo->GiveReservedClientSource(Move(reservedClient));
     }
 
+    uint32_t redirectMode = nsIHttpChannelInternal::REDIRECT_MODE_MANUAL;
+    nsCOMPtr<nsIHttpChannelInternal> http = do_QueryInterface(aOldChannel);
+    if (http) {
+      MOZ_ALWAYS_SUCCEEDS(http->GetRedirectMode(&redirectMode));
+    }
+
     // Normally we keep the controller across channel redirects, but we must
-    // clear it when a non-subresource load redirects.  Only do this for real
+    // clear it when a document load redirects.  Only do this for real
     // redirects, however.
     //
-    // There is an open spec question about what to do in this case for
-    // worker script redirects.  For now we clear the controller as that
-    // seems most sane. See:
+    // This is effectively described in step 4.2 of:
     //
-    //  https://github.com/w3c/ServiceWorker/issues/1239
+    //  https://fetch.spec.whatwg.org/#http-fetch
     //
-    if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL)) {
+    // The spec sets the service-workers mode to none when the request is
+    // configured to *not* follow redirects.  This prevents any further
+    // service workers from intercepting.  The first service worker that
+    // had a shot at the FetchEvent remains the controller in this case.
+    if (!(aFlags & nsIChannelEventSink::REDIRECT_INTERNAL) &&
+        redirectMode != nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW) {
       newLoadInfo->ClearController();
     }
 
