@@ -5,7 +5,8 @@
 package mozilla.components.browser.domains
 
 import android.preference.PreferenceManager
-import mozilla.components.browser.domains.DomainAutoCompleteProvider.AutocompleteSource
+import mozilla.components.browser.domains.DomainAutoCompleteProvider.AutocompleteSource.CUSTOM_LIST
+import mozilla.components.browser.domains.DomainAutoCompleteProvider.AutocompleteSource.DEFAULT_LIST
 import mozilla.components.browser.domains.DomainAutoCompleteProvider.Domain
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -66,14 +67,16 @@ class DomainAutoCompleteProviderTest {
         val domains = listOf("mozilla.org", "google.com", "facebook.com")
         provider.onDomainsLoaded(domains, emptyList())
 
-        assertCompletion(provider, "m", AutocompleteSource.DEFAULT_LIST, domains.size, "mozilla.org", "http://mozilla.org")
-        assertCompletion(provider, "www", AutocompleteSource.DEFAULT_LIST, domains.size, "www.mozilla.org", "http://mozilla.org")
-        assertCompletion(provider, "www.face", AutocompleteSource.DEFAULT_LIST, domains.size, "www.facebook.com", "http://facebook.com")
-        assertCompletion(provider, "MOZ", AutocompleteSource.DEFAULT_LIST, domains.size, "MOZilla.org", "http://mozilla.org")
-        assertCompletion(provider, "www.GOO", AutocompleteSource.DEFAULT_LIST, domains.size, "www.GOOgle.com", "http://google.com")
-        assertCompletion(provider, "WWW.GOOGLE.", AutocompleteSource.DEFAULT_LIST, domains.size, "WWW.GOOGLE.com", "http://google.com")
-        assertCompletion(provider, "www.facebook.com", AutocompleteSource.DEFAULT_LIST, domains.size, "www.facebook.com", "http://facebook.com")
-        assertCompletion(provider, "facebook.com", AutocompleteSource.DEFAULT_LIST, domains.size, "facebook.com", "http://facebook.com")
+        val size = domains.size
+
+        assertCompletion(provider, "m", DEFAULT_LIST, size, "mozilla.org", "http://mozilla.org")
+        assertCompletion(provider, "www", DEFAULT_LIST, size, "www.mozilla.org", "http://mozilla.org")
+        assertCompletion(provider, "www.face", DEFAULT_LIST, size, "www.facebook.com", "http://facebook.com")
+        assertCompletion(provider, "MOZ", DEFAULT_LIST, size, "MOZilla.org", "http://mozilla.org")
+        assertCompletion(provider, "www.GOO", DEFAULT_LIST, size, "www.GOOgle.com", "http://google.com")
+        assertCompletion(provider, "WWW.GOOGLE.", DEFAULT_LIST, size, "WWW.GOOGLE.com", "http://google.com")
+        assertCompletion(provider, "www.facebook.com", DEFAULT_LIST, size, "www.facebook.com", "http://facebook.com")
+        assertCompletion(provider, "facebook.com", DEFAULT_LIST, size, "facebook.com", "http://facebook.com")
 
         assertNoCompletion(provider, "wwww")
         assertNoCompletion(provider, "yahoo")
@@ -88,18 +91,18 @@ class DomainAutoCompleteProviderTest {
         provider.initialize(RuntimeEnvironment.application, true, true, false)
         provider.onDomainsLoaded(domains, customDomains)
 
-        assertCompletion(provider, "f", AutocompleteSource.CUSTOM_LIST, customDomains.size, "fanfiction.com", "http://www.fanfiction.com")
-        assertCompletion(provider, "fa", AutocompleteSource.CUSTOM_LIST, customDomains.size, "fanfiction.com", "http://www.fanfiction.com")
-        assertCompletion(provider, "fac", AutocompleteSource.DEFAULT_LIST, domains.size, "facebook.com", "http://facebook.com")
+        assertCompletion(provider, "f", CUSTOM_LIST, customDomains.size, "fanfiction.com", "http://www.fanfiction.com")
+        assertCompletion(provider, "fa", CUSTOM_LIST, customDomains.size, "fanfiction.com", "http://www.fanfiction.com")
+        assertCompletion(provider, "fac", DEFAULT_LIST, domains.size, "facebook.com", "http://facebook.com")
 
-        assertCompletion(provider, "g", AutocompleteSource.CUSTOM_LIST, customDomains.size, "gap.com", "http://gap.com")
-        assertCompletion(provider, "go", AutocompleteSource.DEFAULT_LIST, domains.size, "google.com", "http://google.com")
-        assertCompletion(provider, "ga", AutocompleteSource.CUSTOM_LIST, customDomains.size, "gap.com", "http://gap.com")
+        assertCompletion(provider, "g", CUSTOM_LIST, customDomains.size, "gap.com", "http://gap.com")
+        assertCompletion(provider, "go", DEFAULT_LIST, domains.size, "google.com", "http://google.com")
+        assertCompletion(provider, "ga", CUSTOM_LIST, customDomains.size, "gap.com", "http://gap.com")
 
-        assertCompletion(provider, "m", AutocompleteSource.CUSTOM_LIST, customDomains.size, "mobile.de", "https://mobile.de")
-        assertCompletion(provider, "mo", AutocompleteSource.CUSTOM_LIST, customDomains.size, "mobile.de", "https://mobile.de")
-        assertCompletion(provider, "mob", AutocompleteSource.CUSTOM_LIST, customDomains.size, "mobile.de", "https://mobile.de")
-        assertCompletion(provider, "moz", AutocompleteSource.DEFAULT_LIST, domains.size, "mozilla.org", "http://mozilla.org")
+        assertCompletion(provider, "m", CUSTOM_LIST, customDomains.size, "mobile.de", "https://mobile.de")
+        assertCompletion(provider, "mo", CUSTOM_LIST, customDomains.size, "mobile.de", "https://mobile.de")
+        assertCompletion(provider, "mob", CUSTOM_LIST, customDomains.size, "mobile.de", "https://mobile.de")
+        assertCompletion(provider, "moz", DEFAULT_LIST, domains.size, "mozilla.org", "http://mozilla.org")
     }
 
     @Test
