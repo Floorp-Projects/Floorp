@@ -82,7 +82,7 @@ function devtools_page() {
 function waitForRequestAdded(toolbox) {
   return new Promise(resolve => {
     let netPanel = toolbox.getPanel("netmonitor");
-    netPanel.panelWin.once("NetMonitor:RequestAdded", () => {
+    netPanel.panelWin.api.once("NetMonitor:RequestAdded", () => {
       resolve();
     });
   });
