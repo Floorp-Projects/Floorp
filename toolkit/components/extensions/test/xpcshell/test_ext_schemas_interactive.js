@@ -91,6 +91,7 @@ function setHandlingUserInput(extension) {
 // proxied api implementations.
 add_task(async function test_proxy() {
   let extension = ExtensionTestUtils.loadExtension({
+    isPrivileged: true,
     background() {
       browser.test.onMessage.addListener(async () => {
         try {
@@ -128,6 +129,7 @@ add_task(async function test_proxy() {
 // non-proxied api implementations.
 add_task(async function test_local() {
   let extension = ExtensionTestUtils.loadExtension({
+    isPrivileged: true,
     background() {
       browser.test.onMessage.addListener(async () => {
         try {
