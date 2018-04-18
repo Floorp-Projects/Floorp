@@ -155,6 +155,8 @@ def make_task_description(config, jobs):
             'optimization': dep_job.optimization,
             'treeherder': treeherder,
             'routes': job.get('routes', []),
+            'shipping-product': job.get('shipping-product'),
+            'shipping-phase': job.get('shipping-phase'),
         }
 
         yield task
