@@ -518,9 +518,6 @@ interface nsIEditor  : nsISupports
   /* Run unit tests. Noop in optimized builds */
   void debugUnitTests(out long outNumTests, out long  outNumTestsFailed);
 
-  /* Set true if you want to suppress dispatching input event. */
-  attribute boolean suppressDispatchingInputEvent;
-
   /**
    * forceCompositionEnd() force the composition end
    */

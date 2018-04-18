@@ -5342,25 +5342,6 @@ EditorBase::OnFocus(nsIDOMEventTarget* aFocusEventTarget)
   }
 }
 
-NS_IMETHODIMP
-EditorBase::GetSuppressDispatchingInputEvent(bool* aSuppressed)
-{
-  // NOTE: If you need to override this method, you need to make
-  //       IsSuppressingDispatchingInputEvent() virtual.
-  if (NS_WARN_IF(aSuppressed)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aSuppressed = IsSuppressingDispatchingInputEvent();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EditorBase::SetSuppressDispatchingInputEvent(bool aSuppress)
-{
-  mDispatchInputEvent = !aSuppress;
-  return NS_OK;
-}
-
 int32_t
 EditorBase::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
 {
