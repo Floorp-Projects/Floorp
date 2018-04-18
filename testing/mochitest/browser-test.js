@@ -366,6 +366,10 @@ function takeInstrumentation() {
   });
 }
 
+function isGenerator(value) {
+  return value && typeof value === "object" && typeof value.next === "function";
+}
+
 function Tester(aTests, structuredLogger, aCallback) {
   this.structuredLogger = structuredLogger;
   this.tests = aTests;
@@ -660,7 +664,7 @@ Tester.prototype = {
     }
   },
 
-  nextTest: Task.async(function*() {
+  async nextTest() {
     if (this.currentTest) {
       if (this._coverageCollector) {
         this._coverageCollector.recordTestCoverage(this.currentTest.path);
@@ -672,7 +676,10 @@ Tester.prototype = {
       while (testScope.__cleanupFunctions.length > 0) {
         let func = testScope.__cleanupFunctions.shift();
         try {
-          yield func.apply(testScope);
+          let result = await func.apply(testScope);
+          if (isGenerator(result)) {
+            this.SimpleTest.ok(false, "Cleanup function returned a generator");
+          }
         }
         catch (ex) {
           this.currentTest.addResult(new testResult({
@@ -738,7 +745,7 @@ Tester.prototype = {
       // behavior of returning the last opened popup.
       document.popupNode = null;
 
-      yield new Promise(resolve => SpecialPowers.flushPrefEnv(resolve));
+      await new Promise(resolve => SpecialPowers.flushPrefEnv(resolve));
 
       if (gConfig.cleanupCrashes) {
         let gdir = Services.dirsvc.get("UAppData", Ci.nsIFile);
@@ -967,7 +974,7 @@ Tester.prototype = {
         this.execTest();
       }
     });
-  }),
+  },
 
   execTest: function Tester_execTest() {
     this.structuredLogger.testStart(this.currentTest.path);
@@ -1064,7 +1071,7 @@ Tester.prototype = {
           logger.activateBuffering();
         };
 
-        this.Task.spawn(function*() {
+        (async function() {
           let task;
           while ((task = this.__tasks.shift())) {
             if (task.__skipMe || (this.__runOnlyThisTask && task != this.__runOnlyThisTask)) {
@@ -1073,7 +1080,10 @@ Tester.prototype = {
             }
             this.SimpleTest.info("Entering test " + task.name);
             try {
-              yield task();
+              let result = await task();
+              if (isGenerator(result)) {
+                this.SimpleTest.ok(false, "Task returned a generator");
+              }
             } catch (ex) {
               if (currentTest.timedOut) {
                 currentTest.addResult(new testResult({
@@ -1099,7 +1109,7 @@ Tester.prototype = {
             this.SimpleTest.info("Leaving test " + task.name);
           }
           this.finish();
-        }.bind(currentScope));
+        }).call(currentScope);
       } else if (typeof scope.test == "function") {
         scope.test();
       } else {
@@ -1445,31 +1455,27 @@ testScope.prototype = {
   },
 
   /**
-   * Add a test function which is a Task function.
+   * Add a function which returns a promise (usually an async function)
+   * as a test task.
    *
-   * Task functions are functions fed into Task.jsm's Task.spawn(). They are
-   * generators that emit promises.
-   *
-   * If an exception is thrown, an assertion fails, or if a rejected
-   * promise is yielded, the test function aborts immediately and the test is
-   * reported as a failure. Execution continues with the next test function.
-   *
-   * To trigger premature (but successful) termination of the function, simply
-   * return or throw a Task.Result instance.
+   * The task ends when the promise returned by the function resolves or
+   * rejects. If the test function throws, or the promise it returns
+   * rejects, the test is reported as a failure. Execution continues
+   * with the next test function.
    *
    * Example usage:
    *
-   * add_task(function test() {
+   * add_task(async function test() {
    *   let result = yield Promise.resolve(true);
    *
    *   ok(result);
    *
-   *   let secondary = yield someFunctionThatReturnsAPromise(result);
+   *   let secondary = await someFunctionThatReturnsAPromise(result);
    *   is(secondary, "expected value");
    * });
    *
-   * add_task(function test_early_return() {
-   *   let result = yield somethingThatReturnsAPromise();
+   * add_task(async function test_early_return() {
+   *   let result = await somethingThatReturnsAPromise();
    *
    *   if (!result) {
    *     // Test is ended immediately, with success.
