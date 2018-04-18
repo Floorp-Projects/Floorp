@@ -488,7 +488,7 @@ var BrowserUtils = {
     if (!selectionStr && focusedElement instanceof Ci.nsIDOMNSEditableElement) {
       // Don't get the selection for password fields. See bug 565717.
       if (ChromeUtils.getClassName(focusedElement) === "HTMLTextAreaElement" ||
-          (focusedElement instanceof Ci.nsIDOMHTMLInputElement &&
+          (ChromeUtils.getClassName(focusedElement) === "HTMLInputElement" &&
            focusedElement.mozIsTextField(true))) {
         selection = focusedElement.editor.selection;
         selectionStr = selection.toString();
