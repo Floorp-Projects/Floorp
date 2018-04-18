@@ -12,6 +12,7 @@ import os
 
 logger = logging.getLogger('checksums.py')
 
+
 def digest_file(filename, digest, chunk_size=131072):
     '''Produce a checksum for the file specified by 'filename'.  'filename'
     is a string path to a file that is opened and read in this function.  The
@@ -36,9 +37,9 @@ def digest_file(filename, digest, chunk_size=131072):
     return hash
 
 
-def process_files(files, output_filename, digests, strip):
-    '''This function takes a list of file names, 'files'.  It will then
-    compute the checksum for each of the files by opening the files.
+def process_files(dirs, output_filename, digests):
+    '''This function takes a list of directory names, 'drs'. It will then
+    compute the checksum for each of the files in these by by opening the files.
     Once each file is read and its checksum is computed, this function
     will write the information to the file specified by 'output_filename'.
     The path written in the output file will have anything specified by 'strip'
@@ -58,18 +59,17 @@ def process_files(files, output_filename, digests, strip):
     else:
         logger.debug('Creating a new checksums file "%s"' % output_filename)
     with open(output_filename, 'w+') as output:
-        for file in files:
-            for digest in digests:
-                hash = digest_file(file, digest)
+        for d in dirs:
+            for root, dirs, files in os.walk(d):
+                for f in files:
+                    full = os.path.join(root, f)
+                    rel = os.path.relpath(full, d)
 
-                if file.startswith(strip):
-                    short_file = file[len(strip):]
-                    short_file = short_file.lstrip('/')
-                else:
-                    short_file = file
+                    for digest in digests:
+                        hash = digest_file(full, digest)
 
-                output.write('%s %s %s %s\n' % (
-                    hash, digest, os.path.getsize(file), short_file))
+                        output.write('%s %s %s %s\n' % (
+                            hash, digest, os.path.getsize(full), rel))
 
 
 def setup_logging(level=logging.DEBUG):
@@ -105,9 +105,7 @@ def main():
                       action='store_true', dest='verbose', default=False)
     parser.add_option('-q', '--quiet', help='Be quiet', action='store_true',
                       dest='quiet', default=False)
-    parser.add_option('-s', '--strip',
-                      help='strip this path from the filenames',
-                      dest='strip', default=os.getcwd())
+
     options, args = parser.parse_args()
 
     # Figure out which logging level to use
@@ -125,16 +123,12 @@ def main():
     if not options.digests:
         options.digests = ['sha1']
 
-    # Validate the files to checksum
-    files = []
     for i in args:
-        if os.path.isdir(i):
-            logger.warn('%s is a directory; ignoring' % i)
-        elif os.path.exists(i):
-            files.append(i)
-        else:
-            logger.info('File "%s" was not found on the filesystem' % i)
-    process_files(files, options.outfile, options.digests, options.strip)
+        if not os.path.isdir(i):
+            logger.error('%s is not a directory' % i)
+            exit(1)
+
+    process_files(args, options.outfile, options.digests)
 
 
 if __name__ == '__main__':
