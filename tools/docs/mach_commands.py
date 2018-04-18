@@ -24,6 +24,11 @@ here = os.path.abspath(os.path.dirname(__file__))
 class Documentation(MachCommandBase):
     """Helps manage in-tree documentation."""
 
+    def __init__(self, context):
+        super(Documentation, self).__init__(context)
+
+        self._manager = None
+
     @Command('doc', category='devenv',
              description='Generate and serve documentation from the tree.')
     @CommandArgument('path', default=None, metavar='DIRECTORY', nargs='?',
@@ -60,7 +65,7 @@ class Documentation(MachCommandBase):
         from moztreedocs.package import create_tarball
 
         outdir = outdir or os.path.join(self.topobjdir, 'docs')
-        format_outdir = os.path.join(outdir, fmt)
+        savedir = os.path.join(outdir, fmt)
 
         path = path or os.path.join(self.topsrcdir, 'tools')
         path = os.path.normpath(os.path.abspath(path))
@@ -71,10 +76,7 @@ class Documentation(MachCommandBase):
                        '%s: could not find docs at this location' % path)
 
         props = self._project_properties(docdir)
-        savedir = os.path.join(format_outdir, props['project'])
-
-        run_sphinx = partial(self._run_sphinx, docdir, savedir, fmt)
-        result = run_sphinx()
+        result = self._run_sphinx(docdir, savedir, fmt=fmt)
         if result != 0:
             return die('failed to generate documentation:\n'
                        '%s: sphinx return code %d' % (path, result))
@@ -105,23 +107,36 @@ class Documentation(MachCommandBase):
             return die('invalid address: %s' % http)
 
         server = Server()
-        server.watch(docdir, run_sphinx)
+
+        sphinx_trees = self.manager.trees or {savedir: docdir}
+        for dest, src in sphinx_trees.items():
+            run_sphinx = partial(self._run_sphinx, src, savedir, fmt=fmt)
+            server.watch(src, run_sphinx)
         server.serve(host=host, port=port, root=savedir,
                      open_url_delay=0.1 if auto_open else None)
 
-    def _run_sphinx(self, docdir, savedir, fmt='html'):
+    def _run_sphinx(self, docdir, savedir, config=None, fmt='html'):
         import sphinx
+        config = config or self.manager.conf_py_path
         args = [
             'sphinx',
             '-b', fmt,
+            '-c', os.path.dirname(config),
             docdir,
             savedir,
         ]
         return sphinx.build_main(args)
 
+    @property
+    def manager(self):
+        if not self._manager:
+            from moztreedocs import manager
+            self._manager = manager
+        return self._manager
+
     def _project_properties(self, path):
         import imp
-        path = os.path.join(path, 'conf.py')
+        path = os.path.normpath(self.manager.conf_py_path)
         with open(path, 'r') as fh:
             conf = imp.load_module('doc_conf', fh, path,
                                    ('.py', 'r', imp.PY_SOURCE))
@@ -138,10 +153,16 @@ class Documentation(MachCommandBase):
         }
 
     def _find_doc_dir(self, path):
-        search_dirs = ('doc', 'docs')
-        for d in search_dirs:
+        if os.path.isfile(path):
+            return
+
+        valid_doc_dirs = ('doc', 'docs')
+        if os.path.basename(path) in valid_doc_dirs:
+            return path
+
+        for d in valid_doc_dirs:
             p = os.path.join(path, d)
-            if os.path.isfile(os.path.join(p, 'conf.py')):
+            if os.path.isdir(p):
                 return p
 
     def _s3_upload(self, root, project, version=None):
