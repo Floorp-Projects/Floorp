@@ -108,7 +108,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsMemory.h"
 #include "nsIXPConnect.h"
-#include "nsIInterfaceInfo.h"
 #include "nsIXPCScriptable.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -244,7 +243,7 @@ public:
 
     static XPCJSRuntime* GetRuntimeInstance();
 
-    static bool IsISupportsDescendant(nsIInterfaceInfo* info);
+    static bool IsISupportsDescendant(const nsXPTInterfaceInfo* info);
 
     static nsIScriptSecurityManager* SecurityManager()
     {
@@ -268,8 +267,6 @@ public:
     static void ReleaseXPConnectSingleton();
 
     bool IsShuttingDown() const {return mShuttingDown;}
-
-    nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
 
     void RecordTraversal(void* p, nsISupports* s);
 
@@ -1142,12 +1139,12 @@ class XPCNativeInterface final
                                             DestroyInstance(this))
 
     static already_AddRefed<XPCNativeInterface> GetNewOrUsed(const nsIID* iid);
-    static already_AddRefed<XPCNativeInterface> GetNewOrUsed(nsIInterfaceInfo* info);
+    static already_AddRefed<XPCNativeInterface> GetNewOrUsed(const nsXPTInterfaceInfo* info);
     static already_AddRefed<XPCNativeInterface> GetNewOrUsed(const char* name);
     static already_AddRefed<XPCNativeInterface> GetISupports();
 
-    inline nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo.get();}
-    inline jsid              GetName()          const {return mName;}
+    inline const nsXPTInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
+    inline jsid                      GetName()          const {return mName;}
 
     inline const nsIID* GetIID() const;
     inline const char*  GetNameString() const;
@@ -1169,10 +1166,10 @@ class XPCNativeInterface final
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   protected:
-    static already_AddRefed<XPCNativeInterface> NewInstance(nsIInterfaceInfo* aInfo);
+    static already_AddRefed<XPCNativeInterface> NewInstance(const nsXPTInterfaceInfo* aInfo);
 
     XPCNativeInterface() = delete;
-    XPCNativeInterface(nsIInterfaceInfo* aInfo, jsid aName)
+    XPCNativeInterface(const nsXPTInterfaceInfo* aInfo, jsid aName)
       : mInfo(aInfo), mName(aName), mMemberCount(0)
     {}
     ~XPCNativeInterface();
@@ -1185,7 +1182,7 @@ class XPCNativeInterface final
     static void DestroyInstance(XPCNativeInterface* inst);
 
 private:
-    nsCOMPtr<nsIInterfaceInfo> mInfo;
+    const nsXPTInterfaceInfo*  mInfo;
     jsid                       mName;
     uint16_t                   mMemberCount;
     XPCNativeMember            mMembers[1]; // always last - object sized for array
@@ -1755,7 +1752,7 @@ public:
 
     REFNSIID GetIID() const {return mIID;}
     XPCJSRuntime* GetRuntime() const {return mRuntime;}
-    nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
+    const nsXPTInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     const char* GetInterfaceName();
 
     NS_IMETHOD DelegatedQueryInterface(nsXPCWrappedJS* self, REFNSIID aIID,
@@ -1792,7 +1789,7 @@ private:
 
     nsXPCWrappedJSClass() = delete;
     nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
-                        nsIInterfaceInfo* aInfo);
+                        const nsXPTInterfaceInfo* aInfo);
 
     bool IsReflectable(uint16_t i) const
         {return (bool)(mDescriptors[i/32] & (1 << (i%32)));}
@@ -1828,7 +1825,7 @@ private:
 
 private:
     XPCJSRuntime* mRuntime;
-    nsCOMPtr<nsIInterfaceInfo> mInfo;
+    const nsXPTInterfaceInfo* mInfo;
     char* mName;
     nsIID mIID;
     uint32_t* mDescriptors;
@@ -2191,15 +2188,15 @@ public:
     NS_DECL_NSIJSIID
     NS_DECL_NSIXPCSCRIPTABLE
 
-    static already_AddRefed<nsJSIID> NewID(nsIInterfaceInfo* aInfo);
+    static already_AddRefed<nsJSIID> NewID(const nsXPTInterfaceInfo* aInfo);
 
-    explicit nsJSIID(nsIInterfaceInfo* aInfo);
+    explicit nsJSIID(const nsXPTInterfaceInfo* aInfo);
     nsJSIID() = delete;
 
 private:
     virtual ~nsJSIID();
 
-    nsCOMPtr<nsIInterfaceInfo> mInfo;
+    const nsXPTInterfaceInfo* mInfo;
 };
 
 // nsJSCID

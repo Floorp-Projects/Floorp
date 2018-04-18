@@ -47,45 +47,45 @@ function* checkBrowserAction(extension, id, tab) {
   is(clickedTab.id, tab.id, "Got the expected tab id in the browserAction.onClicked event");
 }
 
-add_task(function* test_browserAction() {
+add_task(async function test_browserAction() {
   const extension = createExtension("BrowserAction Extension");
-  yield extension.startup();
-  const tab = yield extension.awaitMessage("ready");
+  await extension.startup();
+  const tab = await extension.awaitMessage("ready");
   let id = `{${extension.uuid}}`;
-  yield checkBrowserAction(extension, id, tab);
-  yield extension.unload();
+  await checkBrowserAction(extension, id, tab);
+  await extension.unload();
 
   ok(!BrowserActions.isShown(id), "The BrowserAction should be removed after the extension unloads");
 });
 
-add_task(function* test_multiple_browserActions() {
+add_task(async function test_multiple_browserActions() {
   const ext1 = createExtension("BrowserAction Extension 1");
   const ext2 = createExtension("BrowserAction Extension 2");
 
   // Start the first extension and test its browser action.
-  yield ext1.startup();
-  const tab1 = yield ext1.awaitMessage("ready");
+  await ext1.startup();
+  const tab1 = await ext1.awaitMessage("ready");
   let id1 = `{${ext1.uuid}}`;
-  yield checkBrowserAction(ext1, id1, tab1);
+  await checkBrowserAction(ext1, id1, tab1);
 
   // Start the second extension and test its browser action.
-  yield ext2.startup();
-  const tab2 = yield ext2.awaitMessage("ready");
+  await ext2.startup();
+  const tab2 = await ext2.awaitMessage("ready");
   let id2 = `{${ext2.uuid}}`;
-  yield checkBrowserAction(ext2, id2, tab2);
+  await checkBrowserAction(ext2, id2, tab2);
 
   // Verify that the first browser action is still active.
-  yield checkBrowserAction(ext1, id1, tab1);
+  await checkBrowserAction(ext1, id1, tab1);
 
   // Unload the first extension and verify that the browser action is removed.
-  yield ext1.unload();
+  await ext1.unload();
   ok(!BrowserActions.isShown(id1), "The first BrowserAction should be removed after ext1 unloads");
 
   // Verify that the second browser action is still active.
-  yield checkBrowserAction(ext2, id2, tab2);
+  await checkBrowserAction(ext2, id2, tab2);
 
   // Unload the second extension and verify that the browser action is removed.
-  yield ext2.unload();
+  await ext2.unload();
   ok(!BrowserActions.isShown(id2), "The second BrowserAction should be removed after ext2 unloads");
 });
 </script>

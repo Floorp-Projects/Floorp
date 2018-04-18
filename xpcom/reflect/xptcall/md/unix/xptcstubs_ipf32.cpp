@@ -7,7 +7,6 @@
 
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
 
 #include <stddef.h>
 #include <stdlib.h>

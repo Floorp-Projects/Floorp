@@ -5,8 +5,9 @@
 #include "nsISupports.idl"
 
 interface nsIDOMElement;
-interface nsIDOMDocumentFragment;
 interface nsIURI;
+
+webidl DocumentFragment;
 
 /**
  * Non-Web HTML parser functionality to Firefox extensions and XULRunner apps. 
@@ -120,11 +121,11 @@ interface nsIParserUtils : nsISupports
    * @param baseURI the base URL for this fragment
    * @param element the context node for the fragment parsing algorithm
    */
-  nsIDOMDocumentFragment parseFragment(in AString fragment,
-                                       in unsigned long flags,
-                                       in boolean isXML,
-                                       in nsIURI baseURI,
-                                       in nsIDOMElement element);
+  DocumentFragment parseFragment(in AString fragment,
+				 in unsigned long flags,
+				 in boolean isXML,
+				 in nsIURI baseURI,
+				 in nsIDOMElement element);
 
 };
 

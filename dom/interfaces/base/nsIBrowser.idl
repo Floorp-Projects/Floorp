@@ -5,6 +5,8 @@
 
 interface nsIPrincipal;
 
+webidl FrameLoader;
+
 [scriptable, uuid(14e5a0cb-e223-4202-95e8-fe53275193ea)]
 interface nsIBrowser : nsISupports
 {
@@ -14,11 +16,8 @@ interface nsIBrowser : nsISupports
    * this frame loader for any new tab parents.  For example, view source
    * browsers set this to the frame loader for the original content to ensure
    * they are loaded in the same process as the content.
-   *
-   * This returns a FrameLoader, but we have no good way to represent
-   * one in xpidl.  Fix this when bug 1444991 is fixed.
    */
-  readonly attribute nsISupports sameProcessAsFrameLoader;
+  readonly attribute FrameLoader sameProcessAsFrameLoader;
 
   /*
    * Called by the child to inform the parent that links are dropped into

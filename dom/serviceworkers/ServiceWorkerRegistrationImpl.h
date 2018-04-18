@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef mozilla_dom_serviceworkerregistrationimpl_h
+#define mozilla_dom_serviceworkerregistrationimpl_h
+
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/Unused.h"
 #include "nsCycleCollectionParticipant.h"
@@ -161,3 +164,5 @@ private:
 
 } // dom namespace
 } // mozilla namespace
+
+#endif // mozilla_dom_serviceworkerregistrationimpl_h

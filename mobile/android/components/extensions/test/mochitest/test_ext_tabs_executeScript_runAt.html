@@ -25,7 +25,7 @@
  * fail to load as early as expected, but don't load at any illegal time.
  */
 
-add_task(function* testExecuteScript() {
+add_task(async function testExecuteScript() {
   let win = window.open("about:blank");
 
   async function background(DEBUG) {
@@ -115,11 +115,11 @@ add_task(function* testExecuteScript() {
     background: `(${background})(${AppConstants.DEBUG})`,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("executeScript-runAt");
+  await extension.awaitFinish("executeScript-runAt");
 
-  yield extension.unload();
+  await extension.unload();
 
   win.close();
 });

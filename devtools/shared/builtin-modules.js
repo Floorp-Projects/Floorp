@@ -262,7 +262,6 @@ exports.globals = {
   define(factory) {
     factory(this.require, this.exports, this.module);
   },
-  DocumentFragment: Ci.nsIDOMDocumentFragment,
   Element: Ci.nsIDOMElement,
   FormData,
   isWorker: false,

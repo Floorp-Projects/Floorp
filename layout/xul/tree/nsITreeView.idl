@@ -9,6 +9,8 @@ interface nsITreeBoxObject;
 interface nsITreeSelection;
 interface nsITreeColumn;
 
+webidl DataTransfer;
+
 [scriptable, uuid(091116f0-0bdc-4b32-b9c8-c8d5a37cb088)]
 interface nsITreeView : nsISupports
 {
@@ -75,18 +77,14 @@ interface nsITreeView : nsISupports
    * the current location. To get the behavior where drops are only allowed on
    * items, such as the mailNews folder pane, always return false when
    * the orientation is not DROP_ON.
-   *
-   * @param dataTransfer should be a DataTransfer once bug 1444991 is fixed.
    */
-  boolean canDrop(in long index, in long orientation, in nsISupports dataTransfer);
+  boolean canDrop(in long index, in long orientation, in DataTransfer dataTransfer);
 
   /**
    * Called when the user drops something on this view. The |orientation| param
    * specifies before/on/after the given |row|.
-   *
-   * @param dataTransfer should be a DataTransfer once bug 1444991 is fixed.
    */
-  void drop(in long row, in long orientation, in nsISupports dataTransfer);
+  void drop(in long row, in long orientation, in DataTransfer dataTransfer);
 
   /**
    * Methods used by the tree to draw thread lines in the tree.

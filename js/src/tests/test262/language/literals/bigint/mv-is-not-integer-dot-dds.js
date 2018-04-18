@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- BigInt is not supported
+// |reftest| skip-if(!this.hasOwnProperty('BigInt')) error:SyntaxError -- BigInt is not enabled unconditionally
 // Copyright (C) 2017 The V8 Project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
