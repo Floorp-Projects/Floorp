@@ -107,6 +107,11 @@
 #define LMANNO_FEEDURI "livemark/feedURI"
 #define LMANNO_SITEURI "livemark/siteURI"
 
+#define ROOT_GUID "root________"
+#define MENU_ROOT_GUID "menu________"
+#define TOOLBAR_ROOT_GUID "toolbar_____"
+#define UNFILED_ROOT_GUID "unfiled_____"
+#define TAGS_ROOT_GUID "tags________"
 #define MOBILE_ROOT_GUID "mobile______"
 // This is no longer used & obsolete except for during migration.
 // Note: it may still be found in older places databases.
@@ -382,6 +387,12 @@ Database::Database()
   , mConnectionShutdown(new ConnectionShutdownBlocker(this))
   , mMaxUrlLength(0)
   , mCacheObservers(TOPIC_PLACES_INIT_COMPLETE)
+  , mRootId(-1)
+  , mMenuRootId(-1)
+  , mTagsRootId(-1)
+  , mUnfiledRootId(-1)
+  , mToolbarRootId(-1)
+  , mMobileRootId(-1)
 {
   MOZ_ASSERT(!XRE_IsContentProcess(),
              "Cannot instantiate Places in the content process");
@@ -648,6 +659,9 @@ Database::EnsureConnection()
     // considered corrupt if any of the following fails.
 
     rv = InitTempEntities();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = CheckRoots();
     NS_ENSURE_SUCCESS(rv, rv);
 
     initSucceeded = true;
@@ -1355,6 +1369,48 @@ Database::InitSchema(bool* aDatabaseMigrated)
   // AND TRY TO REPLACE IT.
   // DO NOT PUT HERE ANYTHING THAT IS NOT RELATED TO INITIALIZATION OR MODIFYING
   // THE DISK DATABASE.
+
+  return NS_OK;
+}
+
+nsresult
+Database::CheckRoots()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT guid, id FROM moz_bookmarks WHERE guid IN ( "
+      "'" ROOT_GUID "', '" MENU_ROOT_GUID "', '" TOOLBAR_ROOT_GUID "', "
+      "'" TAGS_ROOT_GUID "', '" UNFILED_ROOT_GUID "', '" MOBILE_ROOT_GUID "' )"
+    ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasResult;
+  nsAutoCString guid;
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    rv = stmt->GetUTF8String(0, guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (guid.EqualsLiteral(ROOT_GUID)) {
+      mRootId = stmt->AsInt64(1);
+    }
+    else if (guid.EqualsLiteral(MENU_ROOT_GUID)) {
+      mMenuRootId = stmt->AsInt64(1);
+    }
+    else if (guid.EqualsLiteral(TOOLBAR_ROOT_GUID)) {
+      mToolbarRootId = stmt->AsInt64(1);
+    }
+    else if (guid.EqualsLiteral(TAGS_ROOT_GUID)) {
+      mTagsRootId = stmt->AsInt64(1);
+    }
+    else if (guid.EqualsLiteral(UNFILED_ROOT_GUID)) {
+      mUnfiledRootId = stmt->AsInt64(1);
+    }
+    else if (guid.EqualsLiteral(MOBILE_ROOT_GUID)) {
+      mMobileRootId = stmt->AsInt64(1);
+    }
+  }
 
   return NS_OK;
 }
