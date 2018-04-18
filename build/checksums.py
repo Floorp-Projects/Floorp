@@ -61,10 +61,7 @@ def process_files(files, output_filename, digests, strip):
         for file in files:
             for digest in digests:
                 hash = digest_file(file, digest)
-                if hash is None:
-                    logger.warn('Unable to generate a hash for %s. ' +
-                                'Skipping.' % file)
-                    continue
+
                 if file.startswith(strip):
                     short_file = file[len(strip):]
                     short_file = short_file.lstrip('/')
