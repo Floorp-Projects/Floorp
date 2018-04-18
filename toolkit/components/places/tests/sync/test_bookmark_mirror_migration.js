@@ -11,11 +11,17 @@ add_task(async function test_migrate_from_1_to_2() {
       telemetryEvents.push({ object, method, value, extra });
     },
   });
+  let dbFileSize = Math.floor((await OS.File.stat(dbFile.path)).size / 1024);
   deepEqual(telemetryEvents, [{
     object: "mirror",
     method: "open",
     value: "retry",
     extra: { why: "corrupt" },
+  }, {
+    object: "mirror",
+    method: "open",
+    value: "success",
+    extra: { size: dbFileSize.toString(10) },
   }]);
   await buf.finalize();
 });
@@ -29,11 +35,18 @@ add_task(async function test_database_corrupt() {
       telemetryEvents.push({ object, method, value, extra });
     },
   });
+  let dbFileSize = Math.floor((
+    await OS.File.stat(corruptFile.path)).size / 1024);
   deepEqual(telemetryEvents, [{
     object: "mirror",
     method: "open",
     value: "retry",
     extra: { why: "corrupt" },
+  }, {
+    object: "mirror",
+    method: "open",
+    value: "success",
+    extra: { size: dbFileSize.toString(10) },
   }]);
   await buf.finalize();
 });
