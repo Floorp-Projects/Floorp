@@ -703,10 +703,7 @@ AboutReader.prototype = {
     };
 
     this._mm.addMessageListener("Reader:FaviconReturn", handleFaviconReturn);
-    this._mm.sendAsyncMessage("Reader:FaviconRequest", {
-      url: this._article.url,
-      preferredWidth: 16 * this._win.devicePixelRatio
-    });
+    this._mm.sendAsyncMessage("Reader:FaviconRequest", { url: this._article.url });
   },
 
   _loadFavicon(url, faviconUrl) {
