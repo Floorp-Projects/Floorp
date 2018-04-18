@@ -67,9 +67,9 @@ def process_files(files, output_filename, digests, strip):
                     short_file = short_file.lstrip('/')
                 else:
                     short_file = file
-                print >>output, '%s %s %s %s' % (hash, digest,
-                                                 os.path.getsize(file),
-                                                 short_file)
+
+                output.write('%s %s %s %s\n' % (
+                    hash, digest, os.path.getsize(file), short_file))
 
 
 def setup_logging(level=logging.DEBUG):
