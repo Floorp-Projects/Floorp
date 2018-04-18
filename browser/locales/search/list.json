@@ -173,6 +173,13 @@
         ]
       }
     },
+    "crh": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "ddg", "twitter", "wikipedia-crh"
+        ]
+      }
+    },
     "cs": {
       "default": {
         "visibleDefaultEngines": [
