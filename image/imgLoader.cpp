@@ -2940,7 +2940,10 @@ imgCacheValidator::imgCacheValidator(nsProgressNotificationProxy* progress,
 imgCacheValidator::~imgCacheValidator()
 {
   if (mRequest) {
-    mRequest->SetValidator(nullptr);
+    // If something went wrong, and we never unblocked the requests waiting on
+    // validation, now is our last chance. We will cancel the new request and
+    // switch the waiting proxies to it.
+    UpdateProxies(/* aCancelRequest */ true, /* aSyncNotify */ false);
   }
 }
 
@@ -2961,8 +2964,23 @@ imgCacheValidator::RemoveProxy(imgRequestProxy* aProxy)
 }
 
 void
-imgCacheValidator::UpdateProxies()
+imgCacheValidator::UpdateProxies(bool aCancelRequest, bool aSyncNotify)
 {
+  MOZ_ASSERT(mRequest);
+
+  // Clear the validator before updating the proxies. The notifications may
+  // clone an existing request, and its state could be inconsistent.
+  mRequest->SetValidator(nullptr);
+  mRequest = nullptr;
+
+  // If an error occurred, we will want to cancel the new request, and make the
+  // validating proxies point to it. Any proxies still bound to the original
+  // request which are not validating should remain untouched.
+  if (aCancelRequest) {
+    MOZ_ASSERT(mNewRequest);
+    mNewRequest->CancelAndAbort(NS_BINDING_ABORTED);
+  }
+
   // We have finished validating the request, so we can safely take ownership
   // of the proxy list. imgRequestProxy::SyncNotifyListener can mutate the list
   // if imgRequestProxy::CancelAndForgetObserver is called by its owner. Note
@@ -2985,10 +3003,19 @@ imgCacheValidator::UpdateProxies()
     proxy->ClearValidating();
   }
 
+  mNewRequest = nullptr;
+  mNewEntry = nullptr;
+
   for (auto& proxy : proxies) {
-    // Notify synchronously, because we're already in OnStartRequest, an
-    // asynchronously-called function.
-    proxy->SyncNotifyListener();
+    if (aSyncNotify) {
+      // Notify synchronously, because the caller knows we are already in an
+      // asynchronously-called function (e.g. OnStartRequest).
+      proxy->SyncNotifyListener();
+    } else {
+      // Notify asynchronously, because the caller does not know our current
+      // call state (e.g. ~imgCacheValidator).
+      proxy->NotifyListener();
+    }
   }
 }
 
@@ -3031,18 +3058,12 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
     if (isFromCache && sameURI) {
       // We don't need to load this any more.
       aRequest->Cancel(NS_BINDING_ABORTED);
+      mNewRequest = nullptr;
 
       // Clear the validator before updating the proxies. The notifications may
       // clone an existing request, and its state could be inconsistent.
       mRequest->SetLoadId(context);
-      mRequest->SetValidator(nullptr);
-
-      mRequest = nullptr;
-
-      mNewRequest = nullptr;
-      mNewEntry = nullptr;
-
-      UpdateProxies();
+      UpdateProxies(/* aCancelRequest */ false, /* aSyncNotify */ true);
       return NS_OK;
     }
   }
@@ -3069,11 +3090,6 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
   // Doom the old request's cache entry
   mRequest->RemoveFromCache();
 
-  // Clear the validator before updating the proxies. The notifications may
-  // clone an existing request, and its state could be inconsistent.
-  mRequest->SetValidator(nullptr);
-  mRequest = nullptr;
-
   // We use originalURI here to fulfil the imgIRequest contract on GetURI.
   nsCOMPtr<nsIURI> originalURI;
   channel->GetOriginalURI(getter_AddRefs(originalURI));
@@ -3081,6 +3097,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
     mNewRequest->Init(originalURI, uri, mHadInsecureRedirect, aRequest, channel,
                       mNewEntry, context, triggeringPrincipal, corsmode, refpol);
   if (NS_FAILED(rv)) {
+    UpdateProxies(/* aCancelRequest */ true, /* aSyncNotify */ true);
     return rv;
   }
 
@@ -3090,11 +3107,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
   // the cache before the proxies' ownership changes, because adding a proxy
   // changes the caching behaviour for imgRequests.
   mImgLoader->PutIntoCache(mNewRequest->CacheKey(), mNewEntry);
-
-  UpdateProxies();
-  mNewRequest = nullptr;
-  mNewEntry = nullptr;
-
+  UpdateProxies(/* aCancelRequest */ false, /* aSyncNotify */ true);
   return mDestListener->OnStartRequest(aRequest, ctxt);
 }
 

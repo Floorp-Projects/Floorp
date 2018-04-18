@@ -23,7 +23,7 @@
 const WIN_URL =
   "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_redirect_data_uri.html";
 
-add_task(function* test_webRequest_redirect_data_uri() {
+add_task(async function test_webRequest_redirect_data_uri() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
@@ -71,11 +71,11 @@ add_task(function* test_webRequest_redirect_data_uri() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
   let win = window.open(WIN_URL);
-  yield extension.awaitMessage("finished");
+  await extension.awaitMessage("finished");
   win.close();
-  yield extension.unload();
+  await extension.unload();
 });
 
 </script>

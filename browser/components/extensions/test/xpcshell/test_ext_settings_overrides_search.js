@@ -3,12 +3,24 @@
 
 "use strict";
 
+ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+
+let delay = () => new Promise(resolve => setTimeout(resolve, 0));
 
 const kSearchEngineURL = "https://example.com/?search={searchTerms}";
 const kSearchSuggestURL = "http://example.com/?suggest={searchTerms}";
 const kSearchTerm = "foo";
 const kSearchTermIntl = "日";
 const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
+
+AddonTestUtils.init(this);
+AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
+
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+  Services.search.init();
+});
 
 add_task(async function test_extension_adding_engine() {
   let ext1 = ExtensionTestUtils.loadExtension({
@@ -34,11 +46,12 @@ add_task(async function test_extension_adding_engine() {
   let submissionSuggest = engine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
   let encodedSubmissionURL = engine.getSubmission(kSearchTermIntl).uri.spec;
   let testSubmissionURL = kSearchEngineURL.replace("{searchTerms}", encodeURIComponent(kSearchTermIntl));
-  is(encodedSubmissionURL, testSubmissionURL, "Encoded UTF-8 URLs should match");
+  equal(encodedSubmissionURL, testSubmissionURL, "Encoded UTF-8 URLs should match");
 
-  is(submissionSuggest.uri.spec, expectedSuggestURL, "Suggest URLs should match");
+  equal(submissionSuggest.uri.spec, expectedSuggestURL, "Suggest URLs should match");
 
   await ext1.unload();
+  await delay();
 
   engine = Services.search.getEngineByName("MozSearch");
   ok(!engine, "Engine should not exist");
@@ -64,6 +77,7 @@ add_task(async function test_extension_adding_engine_with_spaces() {
   ok(engine, "Engine should exist.");
 
   await ext1.unload();
+  await delay();
 
   engine = Services.search.getEngineByName("MozSearch");
   ok(!engine, "Engine should not exist");
@@ -90,7 +104,13 @@ add_task(async function test_upgrade_default_position_engine() {
     useAddonManager: "temporary",
   });
 
-  let ext2 = ExtensionTestUtils.loadExtension({
+  await ext1.startup();
+
+  let engine = Services.search.getEngineByName("MozSearch");
+  Services.search.currentEngine = engine;
+  Services.search.moveEngine(engine, 1);
+
+  await ext1.upgrade({
     manifest: {
       "chrome_settings_overrides": {
         "search_provider": {
@@ -109,20 +129,12 @@ add_task(async function test_upgrade_default_position_engine() {
     useAddonManager: "temporary",
   });
 
-  await ext1.startup();
-
-  let engine = Services.search.getEngineByName("MozSearch");
-  Services.search.currentEngine = engine;
-  Services.search.moveEngine(engine, 1);
-
-  await ext2.startup();
-
   engine = Services.search.getEngineByName("MozSearch");
-  is(Services.search.currentEngine, engine, "Default engine should still be MozSearch");
-  is(Services.search.getEngines().indexOf(engine), 1, "Engine is in position 1");
+  equal(Services.search.currentEngine, engine, "Default engine should still be MozSearch");
+  equal(Services.search.getEngines().indexOf(engine), 1, "Engine is in position 1");
 
-  await ext2.unload();
   await ext1.unload();
+  await delay();
 
   engine = Services.search.getEngineByName("MozSearch");
   ok(!engine, "Engine should not exist");

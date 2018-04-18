@@ -68,7 +68,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
   // Outside of shutting down, clearing history will trigger an async delete
   // of the session files. To avoid any interference from that here, this test
   // therefore has to run first.
-  add_task(function* test_sessionStoreClearFiles() {
+  add_task(async function test_sessionStoreClearFiles() {
     // Temporarily set the session store to shutdown mode to test the
     // synchronous deletion code path.
     // This also means that nothing gets written to disk until explicitly
@@ -102,7 +102,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
     let notification = promiseNotification("sessionstore-state-purge-complete");
 
     BrowserApp.sanitize(sanitize);
-    yield notification;
+    await notification;
 
     ok(!sessionFile.exists(), "session file was deleted");
     ok(!sessionFileBackup.exists(), "backup file was deleted");
@@ -113,19 +113,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
     ss.setLoadState(STATE_RUNNING);
   });
 
-  add_task(function* test_sessionStoreClearTabHistory() {
+  add_task(async function test_sessionStoreClearTabHistory() {
     // Add a new tab with some content
     tabTest = BrowserApp.addTab(url1, { selected: true, parentId: BrowserApp.selectedTab.id });
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+    await promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
 
     // Navigate to create some history
     tabTest.browser.loadURI(url2);
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+    await promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
     tabTest.browser.loadURI(url3);
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+    await promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
     is(tabTest.browser.canGoBack, true, "can go back");
     tabTest.browser.goBack();
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+    await promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
 
     // Check that the session store has recorded this history
     let data = tabTest.browser.__SS_data;
@@ -138,7 +138,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
     let notification = promiseNotification("sessionstore-state-purge-complete");
 
     BrowserApp.sanitize(sanitize);
-    yield notification;
+    await notification;
 
     // Only the current session history entry should remain
     data = tabTest.browser.__SS_data;
@@ -149,19 +149,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
     cleanupTabs();
   });
 
-  add_task(function* test_sessionStoreClearZombieTabHistory() {
+  add_task(async function test_sessionStoreClearZombieTabHistory() {
     // Add a new tab with some content
     tabTest = BrowserApp.addTab(url1, { selected: true, parentId: BrowserApp.selectedTab.id });
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+    await promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
 
     // Navigate to create some history
     tabTest.browser.loadURI(url2);
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+    await promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
     tabTest.browser.loadURI(url3);
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+    await promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
     is(tabTest.browser.canGoBack, true, "can go back");
     tabTest.browser.goBack();
-    yield promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
+    await promiseBrowserEvent(tabTest.browser, "DOMTitleChanged");
 
     // Check that the session store has recorded this history
     let data = tabTest.browser.__SS_data;
@@ -171,7 +171,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
 
     // Open a new tab and zombify the original one
     tabBlank = BrowserApp.addTab("about:blank", { selected: true, parentId: BrowserApp.selectedTab.id });
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabBlank, "Test tab is in background.");
 
     // Zombify the backgrounded test tab
@@ -186,7 +186,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
     let notification = promiseNotification("sessionstore-state-purge-complete");
 
     BrowserApp.sanitize(sanitize);
-    yield notification;
+    await notification;
 
     // Only the current session history entry should remain
     data = tabTest.browser.__SS_data;

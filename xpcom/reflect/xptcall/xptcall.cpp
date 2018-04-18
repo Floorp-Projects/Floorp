@@ -6,8 +6,6 @@
 /* entry point wrappers. */
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
-#include "mozilla/XPTInterfaceInfoManager.h"
 #include "nsPrintfCString.h"
 
 using namespace mozilla;
@@ -44,22 +42,9 @@ NS_GetXPTCallStub(REFNSIID aIID, nsIXPTCProxy* aOuter,
     if (NS_WARN_IF(!aOuter) || NS_WARN_IF(!aResult))
         return NS_ERROR_INVALID_ARG;
 
-    XPTInterfaceInfoManager *iim =
-        XPTInterfaceInfoManager::GetSingleton();
-    if (NS_WARN_IF(!iim))
-        return NS_ERROR_NOT_INITIALIZED;
-
-    xptiInterfaceEntry *iie = iim->GetInterfaceEntryForIID(&aIID);
-    if (!iie || !iie->EnsureResolved() || iie->GetBuiltinClassFlag())
+    const nsXPTInterfaceInfo* iie = nsXPTInterfaceInfo::ByIID(aIID);
+    if (!iie || !iie->EnsureResolved() || iie->IsBuiltinClass())
         return NS_ERROR_FAILURE;
-
-    if (iie->GetHasNotXPCOMFlag()) {
-#ifdef DEBUG
-        nsPrintfCString msg("XPTCall will not implement interface %s because of [notxpcom] members.", iie->GetTheName());
-        NS_WARNING(msg.get());
-#endif
-        return NS_ERROR_FAILURE;
-    }
 
     *aResult = new nsXPTCStubBase(aOuter, iie);
     return NS_OK;

@@ -15,10 +15,10 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   ChromeUtils.import("resource://gre/modules/Accounts.jsm");
 
-  add_task(function* () {
-    let firefoxExists = yield Accounts.firefoxAccountsExist();
+  add_task(async function() {
+    let firefoxExists = await Accounts.firefoxAccountsExist();
     info("Firefox account exists? " + firefoxExists + "\n");
-    let anyExists = yield Accounts.anySyncAccountsExist();
+    let anyExists = await Accounts.anySyncAccountsExist();
     info("Any accounts exist? " + anyExists + "\n");
 
     is(anyExists, firefoxExists, "sync/firefox account existence consistent with any existence");

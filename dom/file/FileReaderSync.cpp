@@ -443,7 +443,7 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
-  AutoSyncLoopHolder syncLoop(workerPrivate, Closing);
+  AutoSyncLoopHolder syncLoop(workerPrivate, Terminating);
 
   nsCOMPtr<nsIEventTarget> syncLoopTarget = syncLoop.GetEventTarget();
   if (!syncLoopTarget) {

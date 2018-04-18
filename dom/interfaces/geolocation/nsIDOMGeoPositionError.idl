@@ -12,7 +12,7 @@
 #endif
 %}
 
-[uuid(85255CC3-07BA-49FD-BC9B-18D2963DAF7F)]
+[shim(PositionError), uuid(85255CC3-07BA-49FD-BC9B-18D2963DAF7F)]
 interface nsIDOMGeoPositionError : nsISupports
 {
   const unsigned short PERMISSION_DENIED  = 1;

@@ -42,9 +42,6 @@ import os
 import re
 import sys
 
-from mozversioncontrol import get_repository_from_env
-
-
 # We don't bother checking files in these directories, because they're (a) auxiliary or (b)
 # imported code that doesn't follow our coding style.
 ignored_js_src_dirs = [
@@ -258,23 +255,42 @@ def check_style(enable_fixup):
     non_js_inclnames = set()        # type: set(inclname)
     js_names = dict()               # type: dict(filename, inclname)
 
-    with get_repository_from_env() as repo:
-        # Select the appropriate files.
-        for filename in repo.get_files_in_working_directory():
-            for non_js_dir in non_js_dirnames:
-                if filename.startswith(non_js_dir) and filename.endswith('.h'):
-                    inclname = 'mozilla/' + filename.split('/')[-1]
+    # Process files in js/src.
+    js_src_root = os.path.join('js', 'src')
+    for dirpath, dirnames, filenames in os.walk(js_src_root):
+        if dirpath == js_src_root:
+            # Skip any subdirectories that contain a config.status file
+            # (likely objdirs).
+            builddirs = []
+            for dirname in dirnames:
+                path = os.path.join(dirpath, dirname, 'config.status')
+                if os.path.isfile(path):
+                    builddirs.append(dirname)
+            for dirname in builddirs:
+                dirnames.remove(dirname)
+        for filename in filenames:
+            filepath = os.path.join(dirpath, filename).replace('\\', '/')
+            if not filepath.startswith(tuple(ignored_js_src_dirs)) and \
+               filepath.endswith(('.c', '.cpp', '.h', '.tbl', '.msg')):
+                inclname = filepath[len('js/src/'):]
+                js_names[filepath] = inclname
+
+    # Look for header files in directories in non_js_dirnames.
+    for non_js_dir in non_js_dirnames:
+        for dirpath, dirnames, filenames in os.walk(non_js_dir):
+            for filename in filenames:
+                if filename.endswith('.h'):
+                    inclname = 'mozilla/' + filename
                     non_js_inclnames.add(inclname)
 
-            if filename.startswith('js/public/') and filename.endswith('.h'):
-                inclname = 'js/' + filename[len('js/public/'):]
-                js_names[filename] = inclname
-
-            if filename.startswith('js/src/') and \
-               not filename.startswith(tuple(ignored_js_src_dirs)) and \
-               filename.endswith(('.c', '.cpp', '.h', '.tbl', '.msg')):
-                inclname = filename[len('js/src/'):]
-                js_names[filename] = inclname
+    # Look for header files in js/public.
+    js_public_root = os.path.join('js', 'public')
+    for dirpath, dirnames, filenames in os.walk(js_public_root):
+        for filename in filenames:
+            if filename.endswith('.h'):
+                filepath = os.path.join(dirpath, filename).replace('\\', '/')
+                inclname = 'js/' + filepath[len('js/public/'):]
+                js_names[filepath] = inclname
 
     all_inclnames = non_js_inclnames | set(js_names.values())
 
@@ -293,15 +309,12 @@ def check_style(enable_fixup):
            file_kind == FileKind.H or file_kind == FileKind.INL_H:
             included_h_inclnames = set()    # type: set(inclname)
 
-            # This script is run in js/src/, so prepend '../../' to get to the root of the Mozilla
-            # source tree.
-            filepath = os.path.join(repo.path, filename)
-            with open(filepath) as f:
+            with open(filename) as f:
                 code = read_file(f)
 
             if enable_fixup:
                 code = code.sorted(inclname)
-                with open(filepath, 'w') as f:
+                with open(filename, 'w') as f:
                     f.write(code.to_source())
 
             check_file(filename, inclname, file_kind, code, all_inclnames, included_h_inclnames)

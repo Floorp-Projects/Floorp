@@ -26,7 +26,7 @@
 
 # RUN TESTS NOT AFFECTED BY DOWNSCALE-DURING-DECODE:
 # ==================================================
-fuzzy-if(skiaContent,14,416) fuzzy-if(webrender,102-102,396-472) == downscale-svg-1a.html downscale-svg-1-ref.html?80
+fuzzy-if(skiaContent,14,416) fuzzy-if(webrender,14-14,397-473) == downscale-svg-1a.html downscale-svg-1-ref.html?80
 fuzzy(80,468) fuzzy-if(webrender,65-65,579-580) == downscale-svg-1b.html downscale-svg-1-ref.html?72
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,62) fuzzy-if(skiaContent,8,292) fuzzy-if(webrender,14-14,316-316) == downscale-svg-1c.html downscale-svg-1-ref.html?64
 fuzzy(17,208) fuzzy-if(webrender,83-84,274-325) == downscale-svg-1d.html downscale-svg-1-ref.html?53

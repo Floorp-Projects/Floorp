@@ -12,8 +12,6 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 
-class xptiInterfaceEntry;
-
 #if !defined(__ia64) || (!defined(__hpux) && !defined(__linux__) && !defined(__FreeBSD__))
 #define STUB_ENTRY(n) NS_IMETHOD Stub##n() = 0;
 #else
@@ -46,11 +44,11 @@ public:
 
 #include "xptcstubsdef.inc"
 
-    nsXPTCStubBase(nsIXPTCProxy* aOuter, xptiInterfaceEntry *aEntry)
+    nsXPTCStubBase(nsIXPTCProxy* aOuter, const nsXPTInterfaceInfo *aEntry)
         : mOuter(aOuter), mEntry(aEntry) {}
 
-    nsIXPTCProxy*          mOuter;
-    xptiInterfaceEntry*    mEntry;
+    nsIXPTCProxy*             mOuter;
+    const nsXPTInterfaceInfo* mEntry;
 
     ~nsXPTCStubBase() {}
 };

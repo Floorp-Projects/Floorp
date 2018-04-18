@@ -979,7 +979,7 @@ HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
       nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver(
                       do_QueryInterface(inst));
       if (formSubmitObserver) {
-        rv = formSubmitObserver->Notify(static_cast<nsIContent*>(this),
+        rv = formSubmitObserver->Notify(this,
                                         window ? window->GetCurrentInnerWindow() : nullptr,
                                         aActionURL,
                                         aCancelSubmit);
@@ -1977,7 +1977,7 @@ HTMLFormElement::CheckValidFormSubmission()
         observer = do_QueryInterface(inst);
 
         if (observer) {
-          observer->NotifyInvalidSubmit(static_cast<nsIContent*>(this),
+          observer->NotifyInvalidSubmit(this,
                                         static_cast<nsIArray*>(invalidElements));
         }
       }

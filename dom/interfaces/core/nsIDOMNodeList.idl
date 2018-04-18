@@ -15,7 +15,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[uuid(450cf0ba-de90-4f86-85bf-e10cc8b8713f)]
+[shim(NodeList), uuid(450cf0ba-de90-4f86-85bf-e10cc8b8713f)]
 interface nsIDOMNodeList : nsISupports
 {
 };

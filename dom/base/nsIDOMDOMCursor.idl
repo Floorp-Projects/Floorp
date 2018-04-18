@@ -12,7 +12,7 @@ interface nsICursorContinueCallback : nsISupports
   void handleContinue();
 };
 
-[builtinclass, uuid(062ea35a-5158-425a-b7bc-3ae9daa84398)]
+[uuid(062ea35a-5158-425a-b7bc-3ae9daa84398)]
 interface nsIDOMDOMCursor : nsISupports
 {
   readonly attribute boolean done;

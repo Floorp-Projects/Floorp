@@ -152,12 +152,12 @@ function closeSelectionUI() {
 /**
  * Main test method.
  */
-add_task(function* testAccessibleCarets() {
+add_task(async function testAccessibleCarets() {
   // Wait to start loading our test page until after the initial browser tab is
   // completely loaded. This allows each tab to complete its layer initialization,
   // importantly, its viewport and zoomContraints info.
   let BrowserApp = gChromeWin.BrowserApp;
-  yield do_promiseTabChangeEvent(BrowserApp.selectedTab.id, TAB_STOP_EVENT);
+  await do_promiseTabChangeEvent(BrowserApp.selectedTab.id, TAB_STOP_EVENT);
 
   // Ensure Gecko Selection and Touch carets are enabled.
   Services.prefs.setBoolPref(ACCESSIBLECARET_PREF, true);
@@ -165,7 +165,7 @@ add_task(function* testAccessibleCarets() {
   // Load test page, wait for load completion, register cleanup.
   let browser = BrowserApp.addTab(BASE_TEST_URL).browser;
   let tab = BrowserApp.getTabForBrowser(browser);
-  yield do_promiseTabChangeEvent(tab.id, TAB_STOP_EVENT);
+  await do_promiseTabChangeEvent(tab.id, TAB_STOP_EVENT);
 
   do_register_cleanup(function cleanup() {
     BrowserApp.closeTab(tab);
@@ -278,7 +278,7 @@ add_task(function* testAccessibleCarets() {
 /**
  * DesignMode test method.
  */
-add_task(function* testAccessibleCarets_designMode() {
+add_task(async function testAccessibleCarets_designMode() {
   let BrowserApp = gChromeWin.BrowserApp;
 
   // Pre-populate the clipboard to ensure PASTE action available.
@@ -288,7 +288,7 @@ add_task(function* testAccessibleCarets_designMode() {
   // Load test page, wait for load completion.
   let browser = BrowserApp.addTab(DESIGNMODE_TEST_URL).browser;
   let tab = BrowserApp.getTabForBrowser(browser, { selected: true });
-  yield do_promiseTabChangeEvent(tab.id, TAB_STOP_EVENT);
+  await do_promiseTabChangeEvent(tab.id, TAB_STOP_EVENT);
 
   // References to test document elements, ActionBarHandler.
   let doc = browser.contentDocument;

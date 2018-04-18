@@ -3220,7 +3220,7 @@ TextServicesDocument::DidCreateNode(const nsAString& aTag,
 }
 
 NS_IMETHODIMP
-TextServicesDocument::DidInsertText(nsISupports* aTextNode,
+TextServicesDocument::DidInsertText(CharacterData* aTextNode,
                                     int32_t aOffset,
                                     const nsAString& aString,
                                     nsresult aResult)
@@ -3229,7 +3229,7 @@ TextServicesDocument::DidInsertText(nsISupports* aTextNode,
 }
 
 NS_IMETHODIMP
-TextServicesDocument::WillDeleteText(nsISupports* aTextNode,
+TextServicesDocument::WillDeleteText(CharacterData* aTextNode,
                                      int32_t aOffset,
                                      int32_t aLength)
 {
@@ -3237,7 +3237,7 @@ TextServicesDocument::WillDeleteText(nsISupports* aTextNode,
 }
 
 NS_IMETHODIMP
-TextServicesDocument::DidDeleteText(nsISupports* aTextNode,
+TextServicesDocument::DidDeleteText(CharacterData* aTextNode,
                                     int32_t aOffset,
                                     int32_t aLength,
                                     nsresult aResult)

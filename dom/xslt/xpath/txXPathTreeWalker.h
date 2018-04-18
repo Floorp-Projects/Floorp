@@ -95,12 +95,6 @@ class txXPathNativeNode
 public:
     static txXPathNode* createXPathNode(nsINode* aNode,
                                         bool aKeepRootAlive = false);
-    static txXPathNode* createXPathNode(nsIDOMNode* aNode,
-                                        bool aKeepRootAlive = false)
-    {
-        nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-        return createXPathNode(node, aKeepRootAlive);
-    }
     static txXPathNode* createXPathNode(nsIContent* aContent,
                                         bool aKeepRootAlive = false);
     static txXPathNode* createXPathNode(nsIDOMDocument* aDocument);

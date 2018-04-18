@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_onUpdated() {
+add_task(async function test_onUpdated() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -85,12 +85,12 @@ add_task(function* test_onUpdated() {
     },
   });
 
-  yield Promise.all([
+  await Promise.all([
     extension.startup(),
     extension.awaitFinish("tabs.onUpdated"),
   ]);
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 function* do_test_update(background, withPermissions = true) {
@@ -108,8 +108,8 @@ function* do_test_update(background, withPermissions = true) {
   yield extension.unload();
 }
 
-add_task(function* test_url() {
-  yield do_test_update(function background() {
+add_task(async function test_url() {
+  await do_test_update(function background() {
     // Create a new tab for testing update.
     browser.tabs.create({}, function(tab) {
       browser.tabs.onUpdated.addListener(async function onUpdated(tabId, changeInfo) {
@@ -130,8 +130,8 @@ add_task(function* test_url() {
   });
 });
 
-add_task(function* test_title() {
-  yield do_test_update(async function background() {
+add_task(async function test_title() {
+  await do_test_update(async function background() {
     const url = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
     const tab = await browser.tabs.create({url});
 
@@ -150,8 +150,8 @@ add_task(function* test_title() {
   });
 });
 
-add_task(function* test_without_tabs_permission() {
-  yield do_test_update(async function background() {
+add_task(async function test_without_tabs_permission() {
+  await do_test_update(async function background() {
     const url = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
     const tab = await browser.tabs.create({url});
     let count = 0;

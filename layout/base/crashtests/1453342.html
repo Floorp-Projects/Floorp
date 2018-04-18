@@ -1,0 +1,31 @@
+<html class="reftest-wait">
+<style id='style'>
+  :first-of-type {
+    scroll-snap-coordinate: 0 right top;
+    grid-column-gap: initial;
+    outline-width: 68.8101389898pc;
+    text-decoration: inherit;
+    font-variant-ligatures: inherit;
+    display: contents;
+    mix-blend-mode: color;
+    will-change: hyphens;
+  }
+</style>
+<script>
+  function frameLoader() {
+    this.contentDocument.writeln("<svg><set attributeName='w'>");
+    document.getElementById('style').type = document.getElementById('style').type;
+    document.documentElement.classList.remove("reftest-wait");
+  }
+
+  function start() {
+    // DDBEGIN
+    o1 = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mroot');
+    o2 = document.createElement('frame');
+    document.documentElement.appendChild(o1);
+    document.documentElement.appendChild(o2);
+    o2.addEventListener('load', frameLoader);
+  }
+  window.addEventListener('load', start)
+</script>
+</html>

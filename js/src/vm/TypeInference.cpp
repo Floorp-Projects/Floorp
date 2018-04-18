@@ -4327,7 +4327,7 @@ ObjectGroup::sweep(AutoClearTypeInferenceStateOnOOM* oom)
     MOZ_ASSERT(generation() != zoneFromAnyThread()->types.generation);
     setGeneration(zone()->types.generation);
 
-    MOZ_RELEASE_ASSERT(!zone()->types.assertNoTISweeping);
+    // Bug 1454398, MOZ_RELEASE_ASSERT(!zone()->types.assertNoTISweeping);
 
     AssertGCStateForSweep(zone());
 
@@ -4453,7 +4453,7 @@ JSScript::maybeSweepTypes(AutoClearTypeInferenceStateOnOOM* oom)
     if (!types_ || typesGeneration() == zone()->types.generation)
         return;
 
-    MOZ_RELEASE_ASSERT(!zone()->types.assertNoTISweeping);
+    // Bug 1454398, MOZ_RELEASE_ASSERT(!zone()->types.assertNoTISweeping);
 
     setTypesGeneration(zone()->types.generation);
 

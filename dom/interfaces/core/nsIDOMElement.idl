@@ -24,7 +24,7 @@ interface nsIDOMMozNamedAttrMap;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#interface-element
  */
 
-[uuid(6289999b-1008-4269-b42a-413ec5a9d3f4)]
+[shim(Element), uuid(6289999b-1008-4269-b42a-413ec5a9d3f4)]
 interface nsIDOMElement : nsIDOMNode
 {
 };

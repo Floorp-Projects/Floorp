@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
@@ -56,13 +56,13 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitMessage("background-finished");
-  yield extension.awaitMessage("tab-finished");
+  await extension.awaitMessage("background-finished");
+  await extension.awaitMessage("tab-finished");
 
   // The extension tab is automatically closed when the extension unloads.
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

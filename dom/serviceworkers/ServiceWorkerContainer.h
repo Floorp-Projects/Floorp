@@ -23,6 +23,26 @@ class ServiceWorker;
 class ServiceWorkerContainer final : public DOMEventTargetHelper
 {
 public:
+  class Inner
+  {
+  public:
+    virtual RefPtr<ServiceWorkerRegistrationPromise>
+    Register(const nsAString& aScriptURL,
+             const RegistrationOptions& aOptions) = 0;
+
+    virtual RefPtr<ServiceWorkerRegistrationPromise>
+    GetRegistration(const ClientInfo& aClientInfo,
+                    const nsACString& aURL) const = 0;
+
+    virtual RefPtr<ServiceWorkerRegistrationListPromise>
+    GetRegistrations(const ClientInfo& aClientInfo) const = 0;
+
+    virtual RefPtr<ServiceWorkerRegistrationPromise>
+    GetReady(const ClientInfo& aClientInfo) const = 0;
+
+    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+  };
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerContainer, DOMEventTargetHelper)
 
@@ -69,9 +89,15 @@ public:
   ControllerChanged(ErrorResult& aRv);
 
 private:
-  explicit ServiceWorkerContainer(nsIGlobalObject* aGlobal);
+  ServiceWorkerContainer(nsIGlobalObject* aGlobal,
+                         already_AddRefed<ServiceWorkerContainer::Inner> aInner);
 
   ~ServiceWorkerContainer();
+
+  nsIGlobalObject*
+  GetGlobalIfValid(ErrorResult& aRv) const;
+
+  RefPtr<Inner> mInner;
 
   // This only changes when a worker hijacks everything in its scope by calling
   // claim.

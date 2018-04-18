@@ -6,7 +6,6 @@
 /* Implement shared vtbl methods. */
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
 #include "xptc_gcc_x86_unix.h"
 
 extern "C" {

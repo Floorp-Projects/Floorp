@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* testTabEvents() {
+add_task(async function testTabEvents() {
   async function background() {
     let events = [];
     let eventPromise;
@@ -98,12 +98,12 @@ add_task(function* testTabEvents() {
     background,
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs-events");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs-events");
+  await extension.unload();
 });
 
-add_task(function* testTabRemovalEvent() {
+add_task(async function testTabRemovalEvent() {
   async function background() {
     function awaitLoad(tabId) {
       return new Promise(resolve => {
@@ -146,9 +146,9 @@ add_task(function* testTabRemovalEvent() {
     background,
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabs-events");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabs-events");
+  await extension.unload();
 });
 </script>
 

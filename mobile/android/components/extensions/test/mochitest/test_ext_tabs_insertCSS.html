@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* testExecuteScript() {
+add_task(async function testExecuteScript() {
   let win = window.open("http://mochi.test:8888/");
 
   async function background() {
@@ -103,11 +103,11 @@ add_task(function* testExecuteScript() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("insertCSS");
+  await extension.awaitFinish("insertCSS");
 
-  yield extension.unload();
+  await extension.unload();
 
   win.close();
 });

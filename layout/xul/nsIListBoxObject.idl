@@ -9,7 +9,7 @@
 
 interface nsIDOMElement;
 
-[uuid(AA9DEF4E-2E59-412d-A6DF-B76F52167795)]
+[shim(ListBoxObject), uuid(AA9DEF4E-2E59-412d-A6DF-B76F52167795)]
 interface nsIListBoxObject : nsISupports
 {
   long getRowCount();

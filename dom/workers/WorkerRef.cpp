@@ -70,6 +70,10 @@ public:
   {
     MOZ_ASSERT(mWorkerRef);
 
+    if (aStatus < Canceling) {
+      return true;
+    }
+
     // Let's keep this object alive for the whole Notify() execution.
     RefPtr<WorkerRef> workerRef;
     workerRef = mWorkerRef;
@@ -128,7 +132,7 @@ WeakWorkerRef::Create(WorkerPrivate* aWorkerPrivate,
   // This holder doesn't keep the worker alive.
   UniquePtr<Holder> holder(new Holder("WeakWorkerRef::Holder", ref,
                                       WorkerHolder::AllowIdleShutdownStart));
-  if (NS_WARN_IF(!holder->HoldWorker(aWorkerPrivate, Closing))) {
+  if (NS_WARN_IF(!holder->HoldWorker(aWorkerPrivate, Canceling))) {
     return nullptr;
   }
 
@@ -182,7 +186,7 @@ StrongWorkerRef::Create(WorkerPrivate* aWorkerPrivate,
   // The worker is kept alive by this holder.
   UniquePtr<Holder> holder(new Holder(aName, ref,
                                       WorkerHolder::PreventIdleShutdownStart));
-  if (NS_WARN_IF(!holder->HoldWorker(aWorkerPrivate, Closing))) {
+  if (NS_WARN_IF(!holder->HoldWorker(aWorkerPrivate, Canceling))) {
     return nullptr;
   }
 

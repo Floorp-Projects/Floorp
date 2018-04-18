@@ -155,6 +155,10 @@ configure:: $(configure-preqs)
 ifneq (,$(MAKEFILE))
 $(OBJDIR)/Makefile: $(OBJDIR)/config.status
 
+
+
+
+
 $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
 else
 $(OBJDIR)/Makefile: $(CONFIG_STATUS_DEPS)

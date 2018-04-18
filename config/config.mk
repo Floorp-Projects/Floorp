@@ -413,8 +413,6 @@ ifdef MOZ_DEBUG
 JAVAC_FLAGS += -g
 endif
 
-CREATE_PRECOMPLETE_CMD = $(PYTHON) $(abspath $(MOZILLA_DIR)/config/createprecomplete.py)
-
 # MDDEPDIR is the subdirectory where dependency files are stored
 MDDEPDIR := .deps
 
