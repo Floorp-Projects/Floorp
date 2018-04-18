@@ -603,7 +603,7 @@ var FormAutofillContent = {
   _markAsAutofillField(field) {
     // Since Form Autofill popup is only for input element, any non-Input
     // element should be excluded here.
-    if (!field || !(field instanceof Ci.nsIDOMHTMLInputElement)) {
+    if (!field || ChromeUtils.getClassName(field) !== "HTMLInputElement") {
       return;
     }
 

@@ -48,9 +48,8 @@ function do_promiseTabChangeEvent(tabId, eventType) {
 function isInputOrTextarea(element) {
   // ChromeUtils isn't included in robocop tests, so we have to use a different
   // way to test elements.
-  return ((element instanceof Ci.nsIDOMHTMLInputElement) ||
-          (element.localName === "textarea" &&
-           element.namespaceURI === "http://www.w3.org/1999/xhtml"));
+  return (element.namespaceURI === "http://www.w3.org/1999/xhtml" &&
+         (element.localName === "input" || element.localName === "textarea"));
 }
 
 /**
