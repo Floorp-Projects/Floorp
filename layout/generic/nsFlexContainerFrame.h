@@ -436,6 +436,12 @@ protected:
                           const mozilla::LogicalPoint& aContentBoxOrigin,
                           const nsSize& aContainerSize);
 
+  /**
+   * Helper for GetMinISize / GetPrefISize.
+   */
+  nscoord IntrinsicISize(gfxContext* aRenderingContext,
+                         nsLayoutUtils::IntrinsicISizeType aType);
+
   nscoord mBaselineFromLastReflow;
   // Note: the last baseline is a distance from our border-box end edge.
   nscoord mLastBaselineFromLastReflow;
