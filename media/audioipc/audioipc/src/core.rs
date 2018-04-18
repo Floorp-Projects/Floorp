@@ -47,7 +47,7 @@ impl CoreThread {
 
 impl Drop for CoreThread {
     fn drop(&mut self) {
-        trace!("Shutting down {:?}", self);
+        debug!("Shutting down {:?}", self);
         if let Some(inner) = self.inner.take() {
             let _ = inner.shutdown.send(());
             drop(inner.join.join());

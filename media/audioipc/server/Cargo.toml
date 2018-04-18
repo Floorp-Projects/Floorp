@@ -1,6 +1,6 @@
 [package]
 name = "audioipc-server"
-version = "0.2.2"
+version = "0.2.3"
 authors = [
         "Matthew Gregan <kinetik@flim.org>",
         "Dan Glastonbury <dan.glastonbury@gmail.com>"
@@ -9,7 +9,7 @@ description = "Remote cubeb server"
 
 [dependencies]
 audioipc = { path = "../audioipc" }
-cubeb = "0.5.2"
+cubeb-core = "0.5.1"
 bytes = "0.4"
 lazycell = "^0.4"
 libc = "0.2"
