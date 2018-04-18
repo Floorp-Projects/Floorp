@@ -386,7 +386,7 @@ private:
   /**
    * Cut or delete the range's contents.
    *
-   * @param aFragment nsIDOMDocumentFragment containing the nodes.
+   * @param aFragment DocumentFragment containing the nodes.
    *                  May be null to indicate the caller doesn't want a fragment.
    */
   nsresult CutContents(mozilla::dom::DocumentFragment** frag);

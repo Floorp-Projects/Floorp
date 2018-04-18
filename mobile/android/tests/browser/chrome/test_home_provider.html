@@ -56,10 +56,10 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     });
   }
 
-  add_task(function* test_save_and_delete() {
+  add_task(async function test_save_and_delete() {
     // Use the HomeProvider API to save some data.
     let storage = HomeProvider.getStorage(TEST_DATASET_ID);
-    yield storage.save([{
+    await storage.save([{
       title: TEST_TITLE,
       url: TEST_URL,
       background_url: TEST_BACKGROUND_URL,
@@ -67,13 +67,13 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     }]);
 
     // Peek in the DB to make sure we have the right data.
-    let db = yield Sqlite.openConnection({ path: DB_PATH });
+    let db = await Sqlite.openConnection({ path: DB_PATH });
 
     // Make sure the items table was created.
-    ok((yield db.tableExists("items")), "items table exists");
+    ok((await db.tableExists("items")), "items table exists");
 
     // Make sure the correct values for the item ended up in there.
-    let result = yield db.execute("SELECT * FROM items", null, function onRow(row) {
+    let result = await db.execute("SELECT * FROM items", null, function onRow(row) {
       is(row.getResultByName("dataset_id"), TEST_DATASET_ID, "expected dataset ID");
       is(row.getResultByName("url"), TEST_URL, "expected test url");
       is(row.getResultByName("background_url"), TEST_BACKGROUND_URL, "expected background url");
@@ -81,16 +81,16 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     });
 
     // Use the HomeProvider API to delete the data.
-    yield storage.deleteAll();
+    await storage.deleteAll();
 
     // Make sure the data was deleted.
-    result = yield db.execute("SELECT * FROM items");
+    result = await db.execute("SELECT * FROM items");
     is(result.length, 0, "length is 0");
 
     db.close();
   });
 
-  add_task(function* test_row_validation() {
+  add_task(async function test_row_validation() {
     // Use the HomeProvider API to save some data.
     let storage = HomeProvider.getStorage(TEST_DATASET_ID);
 
@@ -104,7 +104,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     // None of these save calls should save anything
     for (let row of invalidRows) {
       try {
-        yield storage.save([row]);
+        await storage.save([row]);
       } catch (e) {
         // Just catch and ignore validation errors
         if (!(e instanceof HomeProvider.ValidationError)) {
@@ -114,16 +114,16 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     }
 
     // Peek in the DB to make sure we have the right data.
-    let db = yield Sqlite.openConnection({ path: DB_PATH });
+    let db = await Sqlite.openConnection({ path: DB_PATH });
 
     // Make sure no data has been saved.
-    let result = yield db.execute("SELECT * FROM items");
+    let result = await db.execute("SELECT * FROM items");
     is(result.length, 0, "length is 0");
 
     db.close();
   });
 
-  add_task(function* test_save_transaction() {
+  add_task(async function test_save_transaction() {
     // Use the HomeProvider API to save some data.
     let storage = HomeProvider.getStorage(TEST_DATASET_ID);
 
@@ -135,7 +135,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
     // Try to save all the rows at once
     try {
-      yield storage.save(rows);
+      await storage.save(rows);
     } catch (e) {
       // Just catch and ignore validation errors
       if (!(e instanceof HomeProvider.ValidationError)) {
@@ -144,10 +144,10 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     }
 
     // Peek in the DB to make sure we have the right data.
-    let db = yield Sqlite.openConnection({ path: DB_PATH });
+    let db = await Sqlite.openConnection({ path: DB_PATH });
 
     // Make sure no data has been saved.
-    let result = yield db.execute("SELECT * FROM items");
+    let result = await db.execute("SELECT * FROM items");
     is(result.length, 0, "length is 0");
 
     db.close();

@@ -6,6 +6,12 @@ self.onconnect = function (event) {
     case "close":
       close();
       break;
+
+    case "close_loop":
+      close();
+      // Let's loop forever.
+      while(1) {}
+      break;
     }
   };
 };

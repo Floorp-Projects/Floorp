@@ -14,22 +14,22 @@ const IFRAME_URL = "data:text/html;charset=utf-8," +
   "<div onclick='fn()'>hello</div>";
 const TAB_URL = `data:text/html;charset=utf-8,<iframe src="${IFRAME_URL}"/>`;
 
-add_task(function* () {
-  let [,, panel] = yield initDebugger();
+add_task(async function() {
+  let [,, panel] = await initDebugger();
   let dbg = panel.panelWin;
   let newSource;
 
   newSource = waitForDebuggerEvents(panel, dbg.EVENTS.NEW_SOURCE);
   reload(panel, TAB_URL);
-  yield newSource;
+  await newSource;
   ok(true, "Source event fired on initial load");
 
   for (let i = 0; i < 5; i++) {
     newSource = waitForDebuggerEvents(panel, dbg.EVENTS.NEW_SOURCE);
     reload(panel);
-    yield newSource;
+    await newSource;
     ok(true, `Source event fired after ${i + 1} reloads`);
   }
 
-  yield closeDebuggerAndFinish(panel);
+  await closeDebuggerAndFinish(panel);
 });

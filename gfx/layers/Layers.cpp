@@ -619,6 +619,15 @@ Layer::GetLocalTransformTyped()
 }
 
 bool
+Layer::IsScrollbarContainer() const
+{
+  const ScrollbarData& data = GetScrollbarData();
+  return (data.mScrollbarLayerType == ScrollbarLayerType::Container)
+      ? data.mDirection.isSome()
+      : false;
+}
+
+bool
 Layer::HasOpacityAnimation() const
 {
   return mAnimationInfo.HasOpacityAnimation();
@@ -1813,15 +1822,17 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (Is3DContextLeaf()) {
     aStream << " [is3DContextLeaf]";
   }
-  if (GetScrollbarContainerDirection().isSome()) {
+  if (IsScrollbarContainer()) {
     aStream << " [scrollbar]";
   }
-  if (Maybe<ScrollDirection> thumbDirection = GetScrollbarData().mDirection) {
-    if (*thumbDirection == ScrollDirection::eVertical) {
-      aStream << nsPrintfCString(" [vscrollbar=%" PRIu64 "]", GetScrollbarTargetViewId()).get();
-    }
-    if (*thumbDirection == ScrollDirection::eHorizontal) {
-      aStream << nsPrintfCString(" [hscrollbar=%" PRIu64 "]", GetScrollbarTargetViewId()).get();
+  if (GetScrollbarData().IsThumb()) {
+    if (Maybe<ScrollDirection> thumbDirection = GetScrollbarData().mDirection) {
+      if (*thumbDirection == ScrollDirection::eVertical) {
+        aStream << nsPrintfCString(" [vscrollbar=%" PRIu64 "]", GetScrollbarData().mTargetViewId).get();
+      }
+      if (*thumbDirection == ScrollDirection::eHorizontal) {
+        aStream << nsPrintfCString(" [hscrollbar=%" PRIu64 "]", GetScrollbarData().mTargetViewId).get();
+      }
     }
   }
   if (GetIsFixedPosition()) {
@@ -1971,7 +1982,7 @@ Layer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
     layer->set_direct(*GetScrollbarData().mDirection == ScrollDirection::eVertical ?
                       LayersPacket::Layer::VERTICAL :
                       LayersPacket::Layer::HORIZONTAL);
-    layer->set_barid(GetScrollbarTargetViewId());
+    layer->set_barid(GetScrollbarData().mTargetViewId);
   }
 
   // Mask layer

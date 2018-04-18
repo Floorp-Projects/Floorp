@@ -19,7 +19,6 @@
 #include "nsIContent.h"
 #include "nsIContentSink.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentFragment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
@@ -110,7 +109,7 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
                              bool aIsXML,
                              nsIURI* aBaseURI,
                              nsIDOMElement* aContextElement,
-                             nsIDOMDocumentFragment** aReturn)
+                             DocumentFragment** aReturn)
 {
   return nsParserUtils::ParseFragment(
     aFragment, 0, aIsXML, aBaseURI, aContextElement, aReturn);
@@ -122,7 +121,7 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
                              bool aIsXML,
                              nsIURI* aBaseURI,
                              nsIDOMElement* aContextElement,
-                             nsIDOMDocumentFragment** aReturn)
+                             DocumentFragment** aReturn)
 {
   NS_ENSURE_ARG(aContextElement);
   *aReturn = nullptr;
@@ -149,16 +148,14 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
   // the fragment.
   nsresult rv = NS_OK;
   AutoTArray<nsString, 2> tagStack;
-  nsCOMPtr<nsIContent> fragment;
+  RefPtr<DocumentFragment> fragment;
   if (aIsXML) {
     // XHTML
     tagStack.AppendElement(NS_LITERAL_STRING(XHTML_DIV_TAG));
     rv = nsContentUtils::ParseFragmentXML(
-      aFragment, document, tagStack, true, aReturn);
-    fragment = do_QueryInterface(*aReturn);
+      aFragment, document, tagStack, true, getter_AddRefs(fragment));
   } else {
-    NS_ADDREF(*aReturn = new DocumentFragment(document->NodeInfoManager()));
-    fragment = do_QueryInterface(*aReturn);
+    fragment = new DocumentFragment(document->NodeInfoManager());
     rv = nsContentUtils::ParseFragmentHTML(
       aFragment, fragment, nsGkAtoms::body, kNameSpaceID_XHTML, false, true);
   }
@@ -171,5 +168,6 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
     loader->SetEnabled(true);
   }
 
+  fragment.forget(aReturn);
   return rv;
 }

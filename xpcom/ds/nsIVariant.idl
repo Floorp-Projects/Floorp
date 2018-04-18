@@ -11,9 +11,9 @@
 [scriptable,uuid(4d12e540-83d7-11d5-90ed-0010a4e73d9a)]
 interface nsIDataType : nsISupports
 {
-    // These MUST match the declarations in xpt_struct.h. 
-    // Otherwise the world is likely to explode.   
-                                                   // From xpt_struct.h ...
+    // These MUST match the declarations in xptinfo.h.
+    // Otherwise the world is likely to explode.
+                                                   // From xptinfo.h ...
     const uint16_t VTYPE_INT8                =  0; // TD_INT8              = 0,
     const uint16_t VTYPE_INT16               =  1; // TD_INT16             = 1,
     const uint16_t VTYPE_INT32               =  2; // TD_INT32             = 2,

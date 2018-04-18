@@ -9,7 +9,7 @@
 const {getColor, getTheme, setTheme} = require("devtools/client/shared/theme");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 
-add_task(function* () {
+add_task(async function() {
   testGetTheme();
   testSetTheme();
   testGetColor();

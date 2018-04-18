@@ -38,14 +38,14 @@ var TEST_PAGES = [
   },
 ];
 
-add_task(function* test_article_not_found() {
-  let article = yield ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
+add_task(async function test_article_not_found() {
+  let article = await ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
   do_check_eq(article, null);
 });
 
-add_task(function* test_store_article() {
+add_task(async function test_store_article() {
   // Create an article object to store in the cache.
-  yield ReaderMode.storeArticleInCache({
+  await ReaderMode.storeArticleInCache({
     url: TEST_PAGES[0].url,
     content: "Lorem ipsum",
     title: TEST_PAGES[0].expected.title,
@@ -53,26 +53,26 @@ add_task(function* test_store_article() {
     excerpt: TEST_PAGES[0].expected.excerpt,
   });
 
-  let article = yield ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
+  let article = await ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
   checkArticle(article, TEST_PAGES[0]);
 });
 
-add_task(function* test_remove_article() {
-  yield ReaderMode.removeArticleFromCache(TEST_PAGES[0].url);
-  let article = yield ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
+add_task(async function test_remove_article() {
+  await ReaderMode.removeArticleFromCache(TEST_PAGES[0].url);
+  let article = await ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
   do_check_eq(article, null);
 });
 
-add_task(function* test_parse_articles() {
+add_task(async function test_parse_articles() {
   for (let testcase of TEST_PAGES) {
-    let article = yield ReaderMode.downloadAndParseDocument(testcase.url);
+    let article = await ReaderMode.downloadAndParseDocument(testcase.url);
     checkArticle(article, testcase);
   }
 });
 
-add_task(function* test_migrate_cache() {
+add_task(async function test_migrate_cache() {
   // Store an article in the old indexedDB reader mode cache.
-  let cacheDB = yield new Promise((resolve, reject) => {
+  let cacheDB = await new Promise((resolve, reject) => {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     let request = win.indexedDB.open("about:reader", 1);
     request.onerror = event => reject(request.error);
@@ -86,7 +86,7 @@ add_task(function* test_migrate_cache() {
     request.onsuccess = event => resolve(event.target.result);
   });
 
-  yield new Promise((resolve, reject) => {
+  await new Promise((resolve, reject) => {
     let transaction = cacheDB.transaction(["articles"], "readwrite");
     let store = transaction.objectStore("articles");
 
@@ -102,10 +102,10 @@ add_task(function* test_migrate_cache() {
   });
 
   // Migrate the cache.
-  yield Reader.migrateCache();
+  await Reader.migrateCache();
 
   // Check to make sure the article made it into the new cache.
-  let article = yield ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
+  let article = await ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
   checkArticle(article, TEST_PAGES[0]);
 });
 

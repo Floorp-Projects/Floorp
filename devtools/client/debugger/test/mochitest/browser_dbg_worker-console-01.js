@@ -4,18 +4,18 @@
 var TAB_URL = EXAMPLE_URL + "doc_WorkerActor.attachThread-tab.html";
 var WORKER_URL = "code_WorkerActor.attachThread-worker.js";
 
-add_task(function* testNormalExecution() {
+add_task(async function testNormalExecution() {
   let {client, tab, tabClient, workerClient, toolbox, gDebugger} =
-    yield initWorkerDebugger(TAB_URL, WORKER_URL);
+    await initWorkerDebugger(TAB_URL, WORKER_URL);
 
-  let jsterm = yield getSplitConsole(toolbox);
-  let executed = yield jsterm.execute("this.location.toString()");
+  let jsterm = await getSplitConsole(toolbox);
+  let executed = await jsterm.execute("this.location.toString()");
   ok(executed.textContent.includes(WORKER_URL),
       "Evaluating the global's location works");
 
   terminateWorkerInTab(tab, WORKER_URL);
-  yield waitForWorkerClose(workerClient);
-  yield gDevTools.closeToolbox(TargetFactory.forWorker(workerClient));
-  yield close(client);
-  yield removeTab(tab);
+  await waitForWorkerClose(workerClient);
+  await gDevTools.closeToolbox(TargetFactory.forWorker(workerClient));
+  await close(client);
+  await removeTab(tab);
 });

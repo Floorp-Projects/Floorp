@@ -23,7 +23,7 @@ add_task(async function() {
   // debugger still turned on
   Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", true);
   Services.prefs.setBoolPref("devtools.webconsole.filter.log", true);
-  registerCleanupFunction(function* () {
+  registerCleanupFunction(async function() {
     Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
     Services.prefs.clearUserPref("devtools.webconsole.filter.log");
   });
