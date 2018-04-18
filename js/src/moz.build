@@ -704,7 +704,7 @@ if CONFIG['NIGHTLY_BUILD']:
 DEFINES['ENABLE_WASM_GLOBAL'] = True
 
 if CONFIG['JS_BUILD_BINAST']:
-    # Using SOURCES, as UNIFIED_SOURCES causes mysterious bugs on 32-bit platforms.
+    # Using SOURCES as UNIFIED_SOURCES causes mysterious bugs on 32-bit platforms.
     # These parts of BinAST are designed only to test evolutions of the
     # specification.
     SOURCES += ['frontend/BinTokenReaderTester.cpp']
@@ -712,9 +712,7 @@ if CONFIG['JS_BUILD_BINAST']:
     SOURCES += [
         'frontend/BinSource-auto.cpp',
         'frontend/BinSource.cpp',
-        'frontend/BinToken.cpp',
-        'frontend/BinTokenReaderBase.cpp',
-        'frontend/BinTokenReaderMultipart.cpp',
+        'frontend/BinToken.cpp'
     ]
 
     # Instrument BinAST files for fuzzing as we have a fuzzing target for BinAST.
