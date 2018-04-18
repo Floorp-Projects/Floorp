@@ -219,7 +219,7 @@
                        oncommand="close();"/>
     </content>
 
-    <implementation implements="nsIEditActionListener">
+    <implementation>
       <!-- Please keep in sync with toolkit/content/browser-content.js -->
       <field name="FIND_NORMAL">0</field>
       <field name="FIND_TYPEAHEAD">1</field>
