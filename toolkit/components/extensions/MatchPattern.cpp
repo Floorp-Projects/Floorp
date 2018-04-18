@@ -274,7 +274,8 @@ MatchPattern::Constructor(dom::GlobalObject& aGlobal,
                           ErrorResult& aRv)
 {
   RefPtr<MatchPattern> pattern = new MatchPattern(aGlobal.GetAsSupports());
-  pattern->Init(aGlobal.Context(), aPattern, aOptions.mIgnorePath, aRv);
+  pattern->Init(aGlobal.Context(), aPattern, aOptions.mIgnorePath,
+                aOptions.mRestrictSchemes, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -282,7 +283,8 @@ MatchPattern::Constructor(dom::GlobalObject& aGlobal,
 }
 
 void
-MatchPattern::Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath, ErrorResult& aRv)
+MatchPattern::Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath,
+                   bool aRestrictSchemes, ErrorResult& aRv)
 {
   RefPtr<AtomSet> permittedSchemes = AtomSet::Get<PERMITTED_SCHEMES>();
 
@@ -310,7 +312,9 @@ MatchPattern::Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath, 
   RefPtr<nsAtom> scheme = NS_AtomizeMainThread(StringHead(aPattern, index));
   if (scheme == nsGkAtoms::_asterisk) {
     mSchemes = AtomSet::Get<WILDCARD_SCHEMES>();
-  } else if (permittedSchemes->Contains(scheme) || scheme == nsGkAtoms::moz_extension) {
+  } else if (!aRestrictSchemes ||
+             permittedSchemes->Contains(scheme) ||
+             scheme == nsGkAtoms::moz_extension) {
     mSchemes = new AtomSet({scheme});
   } else {
     aRv.Throw(NS_ERROR_INVALID_ARG);
@@ -323,34 +327,40 @@ MatchPattern::Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath, 
   offset = index + 1;
   tail.Rebind(aPattern, offset);
 
-  if (!StringHead(tail, 2).EqualsLiteral("//")) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
-
-  offset += 2;
-  tail.Rebind(aPattern, offset);
-  index = tail.FindChar('/');
-  if (index < 0) {
-    index = tail.Length();
-  }
-
-  auto host = StringHead(tail, index);
-  if (host.IsEmpty() && scheme != nsGkAtoms::file) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
-
-  offset += index;
-  tail.Rebind(aPattern, offset);
-
-  if (host.EqualsLiteral("*")) {
-    mMatchSubdomain = true;
-  } else if (StringHead(host, 2).EqualsLiteral("*.")) {
-    mDomain = NS_ConvertUTF16toUTF8(Substring(host, 2));
+  if (scheme == nsGkAtoms::about) {
+    // about: URIs don't have hosts, so just treat the host as a wildcard and
+    // match on the path.
     mMatchSubdomain = true;
   } else {
-    mDomain = NS_ConvertUTF16toUTF8(host);
+    if (!StringHead(tail, 2).EqualsLiteral("//")) {
+      aRv.Throw(NS_ERROR_INVALID_ARG);
+      return;
+    }
+
+    offset += 2;
+    tail.Rebind(aPattern, offset);
+    index = tail.FindChar('/');
+    if (index < 0) {
+      index = tail.Length();
+    }
+
+    auto host = StringHead(tail, index);
+    if (host.IsEmpty() && scheme != nsGkAtoms::file) {
+      aRv.Throw(NS_ERROR_INVALID_ARG);
+      return;
+    }
+
+    offset += index;
+    tail.Rebind(aPattern, offset);
+
+    if (host.EqualsLiteral("*")) {
+      mMatchSubdomain = true;
+    } else if (StringHead(host, 2).EqualsLiteral("*.")) {
+      mDomain = NS_ConvertUTF16toUTF8(Substring(host, 2));
+      mMatchSubdomain = true;
+    } else {
+      mDomain = NS_ConvertUTF16toUTF8(host);
+    }
   }
 
   /***************************************************************************

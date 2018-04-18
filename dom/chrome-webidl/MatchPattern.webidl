@@ -125,4 +125,10 @@ dictionary MatchPatternOptions {
    * wildcard. The `pattern` property is updated to reflect this.
    */
   boolean ignorePath = false;
+
+  /**
+   * If true, the set of schemes this pattern can match is restricted to
+   * those accessible by WebExtensions.
+   */
+  boolean restrictSchemes = true;
 };

@@ -3,16 +3,16 @@
 "use strict";
 
 add_task(async function test_MatchPattern_matches() {
-  function test(url, pattern, normalized = pattern) {
+  function test(url, pattern, normalized = pattern, options = {}) {
     let uri = Services.io.newURI(url);
 
     pattern = Array.concat(pattern);
     normalized = Array.concat(normalized);
 
-    let patterns = pattern.map(pat => new MatchPattern(pat));
+    let patterns = pattern.map(pat => new MatchPattern(pat, options));
 
-    let set = new MatchPatternSet(pattern);
-    let set2 = new MatchPatternSet(patterns);
+    let set = new MatchPatternSet(pattern, options);
+    let set2 = new MatchPatternSet(patterns, options);
 
     deepEqual(set2.patterns, patterns, "Patterns in set should equal the input patterns");
 
@@ -29,12 +29,12 @@ add_task(async function test_MatchPattern_matches() {
     return set.matches(uri);
   }
 
-  function pass({url, pattern, normalized}) {
-    ok(test(url, pattern, normalized), `Expected match: ${JSON.stringify(pattern)}, ${url}`);
+  function pass({url, pattern, normalized, options}) {
+    ok(test(url, pattern, normalized, options), `Expected match: ${JSON.stringify(pattern)}, ${url}`);
   }
 
-  function fail({url, pattern, normalized}) {
-    ok(!test(url, pattern, normalized), `Expected no match: ${JSON.stringify(pattern)}, ${url}`);
+  function fail({url, pattern, normalized, options}) {
+    ok(!test(url, pattern, normalized, options), `Expected no match: ${JSON.stringify(pattern)}, ${url}`);
   }
 
   function invalid({pattern}) {
@@ -111,6 +111,17 @@ add_task(async function test_MatchPattern_matches() {
 
   // Match url with fragments.
   pass({url: "http://mozilla.org/base#some-fragment", pattern: "http://mozilla.org/base"});
+
+  // Privileged matchers:
+  invalid({pattern: "about:foo"});
+  invalid({pattern: "resource://foo/*"});
+
+  pass({url: "about:foo", pattern: ["about:foo", "about:foo*"], options: {restrictSchemes: false}});
+  pass({url: "about:foo", pattern: ["about:foo*"], options: {restrictSchemes: false}});
+  pass({url: "about:foobar", pattern: ["about:foo*"], options: {restrictSchemes: false}});
+  pass({url: "resource://foo/bar", pattern: ["resource://foo/bar"], options: {restrictSchemes: false}});
+  fail({url: "resource://fog/bar", pattern: ["resource://foo/bar"], options: {restrictSchemes: false}});
+  fail({url: "about:foo", pattern: ["about:meh"], options: {restrictSchemes: false}});
 });
 
 add_task(async function test_MatchPattern_overlaps() {
