@@ -129,6 +129,16 @@ mozversioncontrol:
         files-changed:
             - 'python/mozversioncontrol/**'
 
+raptor:
+    description: testing/raptor unit tests
+    treeherder:
+        symbol: py(rap)
+    run:
+        mach: python-test --subsuite raptor
+    when:
+        files-changed:
+            - 'testing/raptor/**'
+
 reftest-harness:
     description: layout/tools/reftest unittests
     platform:

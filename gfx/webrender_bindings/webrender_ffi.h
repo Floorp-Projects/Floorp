@@ -85,6 +85,7 @@ struct FontInstanceFlags {
   };
 };
 
+struct Transaction;
 struct WrWindowId;
 struct WrPipelineInfo;
 
@@ -97,6 +98,9 @@ void apz_post_scene_swap(mozilla::wr::WrWindowId aWindowId, mozilla::wr::WrPipel
 void apz_run_updater(mozilla::wr::WrWindowId aWindowId);
 void apz_deregister_updater(mozilla::wr::WrWindowId aWindowId);
 
+void apz_register_sampler(mozilla::wr::WrWindowId aWindowId);
+void apz_sample_transforms(mozilla::wr::WrWindowId aWindowId, mozilla::wr::Transaction *aTransaction);
+void apz_deregister_sampler(mozilla::wr::WrWindowId aWindowId);
 } // extern "C"
 
 // Some useful defines to stub out webrender binding functions for when we

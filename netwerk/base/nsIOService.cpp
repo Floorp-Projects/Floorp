@@ -522,6 +522,12 @@ UsesExternalProtocolHandler(const char* aScheme)
         return false;
     }
 
+    for (unsigned int i = 0; i < NS_N(gForcedExternalSchemes); i++) {
+      if (!nsCRT::strcasecmp(gForcedExternalSchemes[i], aScheme)) {
+        return true;
+      }
+    }
+
     nsAutoCString pref("network.protocol-handler.external.");
     pref += aScheme;
 
@@ -542,7 +548,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     if (NS_SUCCEEDED(rv))
         return rv;
 
-    if (!UsesExternalProtocolHandler(scheme)) {
+    if (scheme[0] != '\0' && !UsesExternalProtocolHandler(scheme)) {
         nsAutoCString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
         contractID += scheme;
         ToLowerCase(contractID);

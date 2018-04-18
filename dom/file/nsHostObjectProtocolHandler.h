@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
 #include "nsTArray.h"
+#include "nsWeakReference.h"
 
 #define BLOBURI_SCHEME "blob"
 #define FONTTABLEURI_SCHEME "moz-fonttable"
@@ -34,6 +35,7 @@ class MediaSource;
 
 class nsHostObjectProtocolHandler : public nsIProtocolHandler
                                   , public nsIProtocolHandlerWithDynamicFlags
+                                  , public nsSupportsWeakReference
 {
 public:
   nsHostObjectProtocolHandler();

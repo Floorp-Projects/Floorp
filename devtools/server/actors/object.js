@@ -264,7 +264,7 @@ ObjectActor.prototype = {
     let actor = new PropertyIteratorActor(this, request.options);
     this.registeredPool.addActor(actor);
     this.iterators.add(actor);
-    return { iterator: actor.grip() };
+    return { iterator: actor.form() };
   },
 
   /**
@@ -274,7 +274,7 @@ ObjectActor.prototype = {
     let actor = new PropertyIteratorActor(this, { enumEntries: true });
     this.registeredPool.addActor(actor);
     this.iterators.add(actor);
-    return { iterator: actor.grip() };
+    return { iterator: actor.form() };
   },
 
   /**

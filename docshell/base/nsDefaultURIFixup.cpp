@@ -288,8 +288,12 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
   // really know about.
   nsCOMPtr<nsIProtocolHandler> ourHandler, extHandler;
 
-  ioService->GetProtocolHandler(scheme.get(), getter_AddRefs(ourHandler));
   extHandler = do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "default");
+  if (!scheme.IsEmpty()) {
+    ioService->GetProtocolHandler(scheme.get(), getter_AddRefs(ourHandler));
+  } else {
+    ourHandler = extHandler;
+  }
 
   if (ourHandler != extHandler || !PossiblyHostPortUrl(uriString)) {
     // Just try to create an URL out of it
