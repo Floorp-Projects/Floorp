@@ -8,6 +8,8 @@
 
 const { Cu } = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const protocol = require("devtools/shared/protocol");
+const { propertyIteratorSpec } = require("devtools/shared/specs/property-iterator");
 loader.lazyRequireGetter(this, "ChromeUtils");
 loader.lazyRequireGetter(this, "ObjectUtils", "devtools/server/actors/object/utils");
 
@@ -37,43 +39,42 @@ loader.lazyRequireGetter(this, "ObjectUtils", "devtools/server/actors/object/uti
  *          Regarding value filtering it just compare to the stringification
  *          of the property value.
  */
-function PropertyIteratorActor(objectActor, options) {
-  if (!DevToolsUtils.isSafeDebuggerObject(objectActor.obj)) {
-    this.iterator = {
-      size: 0,
-      propertyName: index => undefined,
-      propertyDescription: index => undefined,
-    };
-  } else if (options.enumEntries) {
-    let cls = objectActor.obj.class;
-    if (cls == "Map") {
-      this.iterator = enumMapEntries(objectActor);
-    } else if (cls == "WeakMap") {
-      this.iterator = enumWeakMapEntries(objectActor);
-    } else if (cls == "Set") {
-      this.iterator = enumSetEntries(objectActor);
-    } else if (cls == "WeakSet") {
-      this.iterator = enumWeakSetEntries(objectActor);
+const PropertyIteratorActor  = protocol.ActorClassWithSpec(propertyIteratorSpec, {
+  initialize(objectActor, options) {
+    protocol.Actor.prototype.initialize.call(this);
+    if (!DevToolsUtils.isSafeDebuggerObject(objectActor.obj)) {
+      this.iterator = {
+        size: 0,
+        propertyName: index => undefined,
+        propertyDescription: index => undefined,
+      };
+    } else if (options.enumEntries) {
+      let cls = objectActor.obj.class;
+      if (cls == "Map") {
+        this.iterator = enumMapEntries(objectActor);
+      } else if (cls == "WeakMap") {
+        this.iterator = enumWeakMapEntries(objectActor);
+      } else if (cls == "Set") {
+        this.iterator = enumSetEntries(objectActor);
+      } else if (cls == "WeakSet") {
+        this.iterator = enumWeakSetEntries(objectActor);
+      } else {
+        throw new Error("Unsupported class to enumerate entries from: " + cls);
+      }
+    } else if (
+      ObjectUtils.isArray(objectActor.obj)
+      && options.ignoreNonIndexedProperties
+      && !options.query
+    ) {
+      this.iterator = enumArrayProperties(objectActor, options);
     } else {
-      throw new Error("Unsupported class to enumerate entries from: " + cls);
+      this.iterator = enumObjectProperties(objectActor, options);
     }
-  } else if (
-    ObjectUtils.isArray(objectActor.obj)
-    && options.ignoreNonIndexedProperties
-    && !options.query
-  ) {
-    this.iterator = enumArrayProperties(objectActor, options);
-  } else {
-    this.iterator = enumObjectProperties(objectActor, options);
-  }
-}
+  },
 
-PropertyIteratorActor.prototype = {
-  actorPrefix: "propertyIterator",
-
-  grip() {
+  form() {
     return {
-      type: this.actorPrefix,
+      type: this.typeName,
       actor: this.actorID,
       count: this.iterator.size
     };
@@ -95,6 +96,7 @@ PropertyIteratorActor.prototype = {
       let name = this.iterator.propertyName(i);
       ownProperties[name] = this.iterator.propertyDescription(i);
     }
+
     return {
       ownProperties
     };
@@ -103,13 +105,7 @@ PropertyIteratorActor.prototype = {
   all() {
     return this.slice({ start: 0, count: this.iterator.size });
   }
-};
-
-PropertyIteratorActor.prototype.requestTypes = {
-  "names": PropertyIteratorActor.prototype.names,
-  "slice": PropertyIteratorActor.prototype.slice,
-  "all": PropertyIteratorActor.prototype.all,
-};
+});
 
 /**
  * Helper function to create a grip from a Map/Set entry

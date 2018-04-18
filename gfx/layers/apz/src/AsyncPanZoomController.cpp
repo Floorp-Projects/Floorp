@@ -3577,12 +3577,14 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
 {
   AssertOnSamplerThread();
 
-  // This function may get called multiple with the same sample time, because
-  // there may be multiple layers with this APZC, and each layer invokes this
-  // function during composition. However we only want to do one animation step
-  // per composition so we need to deduplicate these calls first.
+  // This function may get called multiple with the same sample time, for two
+  // reasons: (1) there may be multiple layers with this APZC, and each layer
+  // invokes this function during composition, and (2) we might composite
+  // multiple times at the same timestamp.
+  // However we only want to do one animation step per composition so we need
+  // to deduplicate these calls first.
   if (mLastSampleTime == aSampleTime) {
-    return false;
+    return (mAnimation != nullptr);
   }
 
   // Sample the composited async transform once per composite. Note that we
@@ -3671,14 +3673,11 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
   // since the tasks are allowed to call APZCTreeManager methods which can grab
   // the tree lock.
   for (uint32_t i = 0; i < deferredTasks.Length(); ++i) {
-    deferredTasks[i]->Run();
-    deferredTasks[i] = nullptr;
+    APZThreadUtils::RunOnControllerThread(deferredTasks[i].forget());
   }
 
-  // One of the deferred tasks may have started a new animation. In this case,
-  // we want to ask the compositor to schedule a new composite.
-  requestAnimationFrame |= (mAnimation != nullptr);
-
+  // If any of the deferred tasks starts a new animation, it will request a
+  // new composite directly, so we can just return requestAnimationFrame here.
   return requestAnimationFrame;
 }
 

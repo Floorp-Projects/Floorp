@@ -16,6 +16,8 @@
 
 #include "mozilla/Maybe.h"
 
+#include "frontend/BinToken.h"
+#include "frontend/BinTokenReaderMultipart.h"
 #include "frontend/BinTokenReaderTester.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
@@ -29,38 +31,24 @@
 namespace js {
 namespace frontend {
 
-class BinASTParser;
-
-/**
- * The parser for a Binary AST.
- *
- * By design, this parser never needs to backtrack or look ahead. Errors are not
- * recoverable.
- */
-class BinASTParser : private JS::AutoGCRooter, public ErrorReporter
+class BinASTParserBase: private JS::AutoGCRooter
 {
-    using Tokenizer = BinTokenReaderTester;
-    using BinFields = Tokenizer::BinFields;
-    using Chars = Tokenizer::Chars;
-    using Names = JS::GCVector<JSString*, 8>;
-
   public:
-    BinASTParser(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames, const JS::ReadOnlyCompileOptions& options)
+    BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames)
         : AutoGCRooter(cx, BINPARSER)
-        , traceListHead_(nullptr)
-        , options_(options)
         , cx_(cx)
         , alloc_(alloc)
+        , traceListHead_(nullptr)
+        , usedNames_(usedNames)
         , nodeAlloc_(cx, alloc)
         , keepAtoms_(cx)
         , parseContext_(nullptr)
-        , usedNames_(usedNames)
         , factory_(cx, alloc, nullptr, SourceKind::Binary)
     {
-         cx_->frontendCollectionPool().addActiveCompilation();
+         cx->frontendCollectionPool().addActiveCompilation();
          tempPoolMark_ = alloc.mark();
     }
-    ~BinASTParser()
+    ~BinASTParserBase()
     {
         alloc_.release(tempPoolMark_);
 
@@ -73,90 +61,7 @@ class BinASTParser : private JS::AutoGCRooter, public ErrorReporter
 
         cx_->frontendCollectionPool().removeActiveCompilation();
     }
-
-    /**
-     * Parse a buffer, returning a node (which may be nullptr) in case of success
-     * or Nothing() in case of error.
-     *
-     * The instance of `ParseNode` MAY NOT survive the `BinASTParser`. Indeed,
-     * destruction of the `BinASTParser` will also destroy the `ParseNode`.
-     *
-     * In case of error, the parser reports the JS error.
-     */
-    JS::Result<ParseNode*> parse(const uint8_t* start, const size_t length);
-    JS::Result<ParseNode*> parse(const Vector<uint8_t>& data);
-
-  private:
-    MOZ_MUST_USE JS::Result<ParseNode*> parseAux(const uint8_t* start, const size_t length);
-
-    // --- Raise errors.
-    //
-    // These methods return a (failed) JS::Result for convenience.
-
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingVariableInAssertedScope(JSAtom* name);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingDirectEvalInAssertedScope();
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidKind(const char* superKind,
-        const BinKind kind);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidField(const char* kind,
-        const BinField field);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidNumberOfFields(
-        const BinKind kind, const uint32_t expected, const uint32_t got);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidEnum(const char* kind,
-        const Chars& value);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingField(const char* kind,
-        const BinField field);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseEmpty(const char* description);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseOOM();
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseError(const char* description);
-    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseError(BinKind kind,
-        const char* description);
-
-
-    // Ensure that this parser will never be used again.
-    void poison();
-
-    // Auto-generated methods
-#include "frontend/BinSource-auto.h"
-
-    // --- Auxiliary parsing functions
-    template<size_t N>
-    JS::Result<Ok, JS::Error&>
-    checkFields(const BinKind kind, const BinFields& actual, const BinField (&expected)[N]);
-    JS::Result<Ok, JS::Error&>
-    checkFields0(const BinKind kind, const BinFields& actual);
-
-    JS::Result<ParseNode*>
-    buildFunction(const size_t start, const BinKind kind, ParseNode* name, ParseNode* params,
-        ParseNode* body, FunctionBox* funbox);
-    JS::Result<FunctionBox*>
-    buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind functionAsyncKind);
-
-    // Parse full scope information to a specific var scope / let scope combination.
-    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScope(ParseContext::Scope& varScope,
-        ParseContext::Scope& letScope);
-    // Parse a list of names and add it to a given scope.
-    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScopeNames(ParseContext::Scope& scope,
-        DeclarationKind kind);
-    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateCapturedNames();
-    MOZ_MUST_USE JS::Result<Ok> checkBinding(JSAtom* name);
-
-    // --- Utilities.
-
-    MOZ_MUST_USE JS::Result<ParseNode*> appendDirectivesToBody(ParseNode* body,
-        ParseNode* directives);
-
-    // Read a string
-    MOZ_MUST_USE JS::Result<Ok> readString(Chars& out);
-    MOZ_MUST_USE JS::Result<Ok> readMaybeString(Maybe<Chars>& out);
-    MOZ_MUST_USE JS::Result<Ok> readString(MutableHandleAtom out);
-    MOZ_MUST_USE JS::Result<Ok> readMaybeString(MutableHandleAtom out);
-    MOZ_MUST_USE JS::Result<bool> readBool();
-    MOZ_MUST_USE JS::Result<double> readNumber();
-
-    const ReadOnlyCompileOptions& options() const override {
-        return this->options_;
-    }
-
+  public:
     // Names
 
 
@@ -199,7 +104,129 @@ class BinASTParser : private JS::AutoGCRooter, public ErrorReporter
 
     JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
 
+    // Needs access to AutoGCRooter.
+    friend void TraceBinParser(JSTracer* trc, AutoGCRooter* parser);
+
+  protected:
+    JSContext* cx_;
+
+    // ---- Memory-related stuff
+  protected:
+    LifoAlloc& alloc_;
+    ObjectBox* traceListHead_;
+    UsedNameTracker& usedNames_;
+  private:
+    LifoAlloc::Mark tempPoolMark_;
+    ParseNodeAllocator nodeAlloc_;
+
+    // Root atoms and objects allocated for the parse tree.
+    AutoKeepAtoms keepAtoms_;
+
+    // ---- Parsing-related stuff
+  protected:
+    ParseContext* parseContext_;
+    FullParseHandler factory_;
+
+    friend class BinParseContext;
+
+};
+
+/**
+ * The parser for a Binary AST.
+ *
+ * By design, this parser never needs to backtrack or look ahead. Errors are not
+ * recoverable.
+ */
+template<typename Tok>
+class BinASTParser : public BinASTParserBase, public ErrorReporter
+{
+  public:
+    using Tokenizer = Tok;
+
+    using AutoList = typename Tokenizer::AutoList;
+    using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
+    using AutoTuple = typename Tokenizer::AutoTuple;
+    using BinFields = typename Tokenizer::BinFields;
+    using Chars = typename Tokenizer::Chars;
+
+  public:
+    BinASTParser(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames, const JS::ReadOnlyCompileOptions& options)
+        : BinASTParserBase(cx, alloc, usedNames)
+        , options_(options)
+    {
+    }
+    ~BinASTParser()
+    {
+    }
+
+    /**
+     * Parse a buffer, returning a node (which may be nullptr) in case of success
+     * or Nothing() in case of error.
+     *
+     * The instance of `ParseNode` MAY NOT survive the `BinASTParser`. Indeed,
+     * destruction of the `BinASTParser` will also destroy the `ParseNode`.
+     *
+     * In case of error, the parser reports the JS error.
+     */
+    JS::Result<ParseNode*> parse(const uint8_t* start, const size_t length);
+    JS::Result<ParseNode*> parse(const Vector<uint8_t>& data);
+
+  private:
+    MOZ_MUST_USE JS::Result<ParseNode*> parseAux(const uint8_t* start, const size_t length);
+
+    // --- Raise errors.
+    //
+    // These methods return a (failed) JS::Result for convenience.
+
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingVariableInAssertedScope(JSAtom* name);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingDirectEvalInAssertedScope();
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidKind(const char* superKind,
+        const BinKind kind);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidVariant(const char* kind,
+        const BinVariant value);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingField(const char* kind,
+        const BinField field);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseEmpty(const char* description);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseOOM();
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseError(const char* description);
+    MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseError(BinKind kind,
+        const char* description);
+
+
+    // Ensure that this parser will never be used again.
+    void poison();
+
+    // Auto-generated methods
+#include "frontend/BinSource-auto.h"
+
+    // --- Auxiliary parsing functions
+    JS::Result<ParseNode*>
+    buildFunction(const size_t start, const BinKind kind, ParseNode* name, ParseNode* params,
+        ParseNode* body, FunctionBox* funbox);
+    JS::Result<FunctionBox*>
+    buildFunctionBox(GeneratorKind generatorKind, FunctionAsyncKind functionAsyncKind,
+        FunctionSyntaxKind syntax);
+
+    // Parse full scope information to a specific var scope / let scope combination.
+    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScope(ParseContext::Scope& varScope,
+        ParseContext::Scope& letScope);
+    // Parse a list of names and add it to a given scope.
+    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateScopeNames(ParseContext::Scope& scope,
+        DeclarationKind kind);
+    MOZ_MUST_USE JS::Result<Ok> parseAndUpdateCapturedNames();
+    MOZ_MUST_USE JS::Result<Ok> checkBinding(JSAtom* name);
+
+    // --- Utilities.
+
+    MOZ_MUST_USE JS::Result<ParseNode*> appendDirectivesToBody(ParseNode* body,
+        ParseNode* directives);
+
   private: // Implement ErrorReporter
+    const ReadOnlyCompileOptions& options_;
+
+    const ReadOnlyCompileOptions& options() const override {
+        return this->options_;
+    }
 
     virtual void lineAndColumnAt(size_t offset, uint32_t* line, uint32_t* column) const override {
         *line = 0;
@@ -223,40 +250,46 @@ class BinASTParser : private JS::AutoGCRooter, public ErrorReporter
         return this->options_.filename();
     }
 
-    ObjectBox* traceListHead_;
-    const ReadOnlyCompileOptions& options_;
-    JSContext* cx_;
-    LifoAlloc& alloc_;
-    LifoAlloc::Mark tempPoolMark_;
-    ParseNodeAllocator nodeAlloc_;
-
-    // Root atoms and objects allocated for the parse tree.
-    AutoKeepAtoms keepAtoms_;
-
-    // The current ParseContext, holding directives, etc.
-    ParseContext* parseContext_;
-    UsedNameTracker& usedNames_;
     Maybe<Tokenizer> tokenizer_;
-    FullParseHandler factory_;
     VariableDeclarationKind variableDeclarationKind_;
 
     friend class BinParseContext;
     friend class AutoVariableDeclarationKind;
 
-    // Needs access to AutoGCRooter.
-    friend void TraceBinParser(JSTracer* trc, AutoGCRooter* parser);
+    // Helper class: Restore field `variableDeclarationKind` upon leaving a scope.
+    class MOZ_RAII AutoVariableDeclarationKind {
+      public:
+        explicit AutoVariableDeclarationKind(BinASTParser<Tok>* parser
+                                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+            : parser_(parser)
+            , kind(parser->variableDeclarationKind_)
+        {
+            MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        }
+        ~AutoVariableDeclarationKind() {
+            parser_->variableDeclarationKind_ = kind;
+        }
+        private:
+        BinASTParser<Tok>* parser_;
+        BinASTParser<Tok>::VariableDeclarationKind kind;
+        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+    };
 };
 
 class BinParseContext : public ParseContext
 {
   public:
-    BinParseContext(JSContext* cx, BinASTParser* parser, SharedContext* sc,
+    template<typename Tok>
+    BinParseContext(JSContext* cx, BinASTParser<Tok>* parser, SharedContext* sc,
         Directives* newDirectives)
         : ParseContext(cx, parser->parseContext_, sc, *parser,
                        parser->usedNames_, newDirectives, /* isFull = */ true)
     { }
 };
 
+
+extern template class BinASTParser<BinTokenReaderMultipart>;
+extern template class BinASTParser<BinTokenReaderTester>;
 
 } // namespace frontend
 } // namespace js

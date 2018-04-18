@@ -147,6 +147,19 @@ protected:
   wr::ResourceUpdates* mResourceUpdates;
 };
 
+class TransactionWrapper
+{
+public:
+  explicit TransactionWrapper(Transaction* aTxn);
+
+  void AppendTransformProperties(const nsTArray<wr::WrTransformProperty>& aTransformArray);
+  void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
+                            const layers::FrameMetrics::ViewID& aScrollId,
+                            const wr::LayoutPoint& aScrollPosition);
+private:
+  Transaction* mTxn;
+};
+
 class WebRenderAPI
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderAPI);
