@@ -4,10 +4,10 @@
 
 /* global pref */
 
-// Marionette is the remote protocol that lets OOP programs communicate
-// with, instrument, and control Gecko.
+// Marionette is the remote protocol that lets OOP programs
+// communicate with, instrument, and control Gecko.
 
-// Controls whether the Marionette component is enabled.
+// Starts and stops the Marionette server.
 pref("marionette.enabled", false);
 
 // Delay server startup until a modal dialogue has been clicked to
