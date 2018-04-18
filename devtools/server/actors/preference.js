@@ -16,6 +16,16 @@ exports.register = function(handle) {
 exports.unregister = function(handle) {
 };
 
+/**
+ * Normally the preferences are set using Services.prefs, but this actor allows
+ * a debugger client to set preferences on the debuggee. This is particularly useful
+ * when remote debugging, and the preferences should persist to the remote target
+ * and not to the client. If used for a local target, it effectively behaves the same
+ * as using Services.prefs.
+ *
+ * This actor is used as a Root actor, targeting the entire browser, not an individual
+ * tab.
+ */
 var PreferenceActor = protocol.ActorClassWithSpec(preferenceSpec, {
 
   typeName: "preference",
