@@ -4125,6 +4125,8 @@ already_AddRefed<nsIEventTarget>
 WorkerPrivate::CreateNewSyncLoop(WorkerStatus aFailStatus)
 {
   AssertIsOnWorkerThread();
+  MOZ_ASSERT(aFailStatus >= Terminating,
+             "Sync loops can be created when the worker is in Running/Closing state!");
 
   {
     MutexAutoLock lock(mMutex);

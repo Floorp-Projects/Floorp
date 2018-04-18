@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for FileReaderSync when the worker is closing</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+// In order to exercise FileReaderSync::SyncRead's syncLoop-using AsyncWait()
+// path, we need to provide a stream that will both 1) not have all the data
+// immediately available (eliminating memory-backed Blobs) and 2) return
+// NS_BASE_STREAM_WOULD_BLOCK.  Under e10s, any Blob/File sourced from the
+// parent process (as loadChromeScript performs) will be backed by an
+// IPCBlobInputStream and will behave this way on first use (when it is in the
+// eInit state).  For ease of testing, we reuse script_createFile.js which
+// involves a file on disk, but a memory-backed Blob from the parent process
+// would be equally fine.  Under non-e10s, this File will not do the right
+// thing because a synchronous nsFileInputStream will be made directly
+// available and the AsyncWait path won't be taken, but the test will still
+// pass.
+
+var url = SimpleTest.getTestFileURL("script_createFile.js");
+var script = SpecialPowers.loadChromeScript(url);
+
+function onOpened(message) {
+  function workerCode() {
+    onmessage = function(e) {
+      self.close();
+      var fr = new FileReaderSync();
+      self.postMessage(fr.readAsText(e.data));
+    }
+  }
+
+  var b = new Blob([workerCode+'workerCode();']);
+  var w = new Worker(URL.createObjectURL(b));
+  w.onmessage = function(e) {
+    is(e.data, "Hello world!", "The blob content is OK!");
+    SimpleTest.finish();
+  }
+
+  w.postMessage(message.data);
+}
+
+script.addMessageListener("nonEmptyFile.opened", onOpened);
+script.sendAsyncMessage("nonEmptyFile.open");
+
+SimpleTest.waitForExplicitFinish();
+
+  </script>
+</body>
+</html>
