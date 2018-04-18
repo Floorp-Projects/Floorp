@@ -424,8 +424,16 @@ gfxMacFont::CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont,
                                                  CTFontDescriptorRef aFontDesc)
 {
     // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
-    // versions (see bug 1331683)
-    if (!nsCocoaFeatures::OnSierraOrLater()) {
+    // versions (see bug 1331683).
+    //
+    // And on HighSierra, CTFontCreateWithGraphicsFont properly carries over
+    // variation settings from the CGFont to CTFont, so we don't need to do
+    // the extra work here -- and this seems to avoid Core Text crashiness
+    // seen in bug 1454094.
+    //
+    // So we only need to do this "the hard way" on Sierra; on other releases,
+    // just let the standard CTFont function do its thing.
+    if (!nsCocoaFeatures::OnSierraExactly()) {
         return CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, aFontDesc);
     }
 

@@ -756,7 +756,7 @@ private:
 // work with non-system fonts. As a result, create the strike specific CTFonts from the underlying
 // CGFont.
 #ifdef MOZ_SKIA
-extern "C" bool Gecko_OnSierraOrLater();
+extern "C" bool Gecko_OnSierraExactly();
 #endif
 static UniqueCFRef<CTFontRef> ctfont_create_exact_copy(CTFontRef baseFont, CGFloat textSize,
                                                        const CGAffineTransform* transform)
@@ -774,8 +774,16 @@ static UniqueCFRef<CTFontRef> ctfont_create_exact_copy(CTFontRef baseFont, CGFlo
 
 #ifdef MOZ_SKIA
     // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
-    // versions (see bug 1331683)
-    if (Gecko_OnSierraOrLater())
+    // versions (see bug 1331683).
+    //
+    // And on HighSierra, CTFontCreateWithGraphicsFont properly carries over
+    // variation settings from the CGFont to CTFont, so we don't need to do
+    // the extra work here -- and this seems to avoid Core Text crashiness
+    // seen in bug 1454094.
+    //
+    // So we only need to do this "the hard way" on Sierra; on other releases,
+    // just let the standard CTFont function do its thing.
+    if (Gecko_OnSierraExactly())
 #endif
     {
         // Not UniqueCFRef<> because CGFontCopyVariations can return null!
