@@ -8,7 +8,7 @@ from taskgraph.loader.single_dep import loader as base_loader
 
 # XXX: This logic should rely in kind.yml. This hasn't been done in the original
 # patch because it required some heavy changes in single_dep.
-LABELS_WHICH_SHOULD_SIGN_CI_BUILDS = (
+NON_NIGHTLY_LABELS_WHICH_SHOULD_SIGN_BUILDS = (
     'build-win32/debug', 'build-win32/opt', 'build-win32/pgo',
     'build-win64/debug', 'build-win64/opt', 'build-win64/pgo',
     'build-win32-devedition/opt', 'build-win64-devedition/opt',
@@ -16,6 +16,8 @@ LABELS_WHICH_SHOULD_SIGN_CI_BUILDS = (
     'release-source-linux64-source/opt',
     'release-source-linux64-fennec-source/opt',
     'release-source-linux64-devedition-source/opt',
+    'release-eme-free-repack-macosx64-nightly',
+    'release-partner-repack-macosx64-nightly',
 )
 
 
@@ -25,5 +27,5 @@ def loader(kind, path, config, params, loaded_tasks):
     for job in jobs:
         dependent_task = job['dependent-task']
         if dependent_task.attributes.get('nightly') or \
-                dependent_task.label in LABELS_WHICH_SHOULD_SIGN_CI_BUILDS:
+                dependent_task.label in NON_NIGHTLY_LABELS_WHICH_SHOULD_SIGN_BUILDS:
             yield job

@@ -9,6 +9,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.util.taskcluster import get_artifact_path
 
 
+def is_partner_kind(kind):
+    if kind and kind.startswith(('release-partner', 'release-eme-free')):
+        return True
+
+
 def generate_specifications_of_artifacts_to_sign(
     task, keep_locale_template=True, kind=None
 ):
@@ -31,8 +36,12 @@ def generate_specifications_of_artifacts_to_sign(
     # XXX: Mars aren't signed here (on any platform) because internals will be
     # signed at after this stage of the release
     elif 'macosx' in build_platform:
+        if is_partner_kind(kind):
+            extension = 'tar.gz'
+        else:
+            extension = 'dmg'
         artifacts_specifications = [{
-            'artifacts': [get_artifact_path(task, '{locale}/target.dmg')],
+            'artifacts': [get_artifact_path(task, '{{locale}}/target.{}'.format(extension))],
             'formats': ['macapp', 'widevine'],
         }]
     elif 'win' in build_platform:
@@ -62,6 +71,9 @@ def generate_specifications_of_artifacts_to_sign(
     if not keep_locale_template:
         artifacts_specifications = _strip_locale_template(artifacts_specifications)
 
+    if is_partner_kind(kind):
+        artifacts_specifications = _strip_widevine_for_partners(artifacts_specifications)
+
     return artifacts_specifications
 
 
@@ -73,3 +85,14 @@ def _strip_locale_template(artifacts_without_locales):
             spec['artifacts'][index] = stripped_artifact
 
     return artifacts_without_locales
+
+
+def _strip_widevine_for_partners(artifacts_specifications):
+    """ Partner repacks should not resign that's previously signed for fear of breaking partial
+    updates
+    """
+    for spec in artifacts_specifications:
+        if 'widevine' in spec['formats']:
+            spec['formats'].remove('widevine')
+
+    return artifacts_specifications
