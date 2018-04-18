@@ -70,7 +70,6 @@ class nsIContentSecurityPolicy;
 class nsIDocShellTreeItem;
 class nsIDocumentLoaderFactory;
 class nsIDOMDocument;
-class nsIDOMDocumentFragment;
 class nsIDOMEvent;
 class nsIDOMNode;
 class nsIDragSession;
@@ -1630,10 +1629,6 @@ public:
    * @param aSanitize whether the fragment should be sanitized prior to
    *        injection
    */
-  static nsresult CreateContextualFragment(nsINode* aContextNode,
-                                           const nsAString& aFragment,
-                                           bool aPreventScriptExecution,
-                                           nsIDOMDocumentFragment** aReturn);
   static already_AddRefed<mozilla::dom::DocumentFragment>
   CreateContextualFragment(nsINode* aContextNode, const nsAString& aFragment,
                            bool aPreventScriptExecution,

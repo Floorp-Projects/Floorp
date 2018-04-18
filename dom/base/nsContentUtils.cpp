@@ -4929,19 +4929,6 @@ nsContentUtils::IsValidNodeName(nsAtom *aLocalName, nsAtom *aPrefix,
          (aNamespaceID == kNameSpaceID_XML || aPrefix != nsGkAtoms::xml);
 }
 
-/* static */
-nsresult
-nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
-                                         const nsAString& aFragment,
-                                         bool aPreventScriptExecution,
-                                         nsIDOMDocumentFragment** aReturn)
-{
-  ErrorResult rv;
-  *aReturn = CreateContextualFragment(aContextNode, aFragment,
-                                      aPreventScriptExecution, rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<DocumentFragment>
 nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
                                          const nsAString& aFragment,

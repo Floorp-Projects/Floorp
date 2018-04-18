@@ -18,7 +18,6 @@
 #include "nsGkAtoms.h"
 #include "txLog.h"
 #include "nsIConsoleService.h"
-#include "nsIDOMDocumentFragment.h"
 #include "nsNameSpaceManager.h"
 #include "txStringUtils.h"
 #include "txURIUtils.h"
@@ -28,6 +27,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/DocumentType.h"
+#include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/Encoding.h"
@@ -74,7 +74,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
 }
 
 txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
-                                       nsIDOMDocumentFragment* aFragment,
+                                       DocumentFragment* aFragment,
                                        bool aNoFixup)
     : mTreeDepth(0),
       mBadChildLevel(0),
@@ -88,7 +88,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
     mOutputFormat.merge(*aFormat);
     mOutputFormat.setFromDefaults();
 
-    mCurrentNode = do_QueryInterface(aFragment);
+    mCurrentNode = aFragment;
     mDocument = mCurrentNode->OwnerDoc();
     mNodeInfoManager = mDocument->NodeInfoManager();
 }
