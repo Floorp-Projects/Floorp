@@ -731,8 +731,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         if (sRuntime == null) {
             final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
                 new GeckoRuntimeSettings.Builder();
-            runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" });
-
+            runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" })
+                                  .extras(InstrumentationRegistry.getArguments());
             sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
                 runtimeSettingsBuilder.build());
