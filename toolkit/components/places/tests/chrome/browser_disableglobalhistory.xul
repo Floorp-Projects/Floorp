@@ -6,7 +6,7 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+          src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"></script>
 
   <browser id="inprocess_disabled" src="about:blank" type="content" disableglobalhistory="true" />
   <browser id="inprocess_enabled" src="about:blank" type="content" />
