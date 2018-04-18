@@ -56,7 +56,7 @@ def GetBaseRelativePath(path, local_file, base_path):
     return path + dir
 
 
-def CopyFilesLocally(path, files, verbose=False, base_path=None, package=None):
+def CopyFilesLocally(path, files, verbose=False, base_path=None):
     """Copy each file in the list of files to `path`.  The `base_path` argument is treated
     as it is by UploadFiles."""
     if not path.endswith("/"):
@@ -88,9 +88,6 @@ if __name__ == '__main__':
                       action="store",
                       help="Preserve file paths relative to this path when uploading. "
                       "If unset, all files will be uploaded directly to UPLOAD_PATH.")
-    parser.add_option("--package",
-                      action="store",
-                      help="Name of the main package.")
     (options, args) = parser.parse_args()
     if len(args) < 1:
         print("You must specify at least one file to upload")
@@ -98,7 +95,6 @@ if __name__ == '__main__':
 
     try:
         CopyFilesLocally(path, args, base_path=options.base_path,
-                         package=options.package,
                          verbose=True)
     except IOError as strerror:
         print(strerror)
