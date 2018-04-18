@@ -96,6 +96,7 @@ load 1405747.html
 load 1408170.html
 load 1414581.html
 load 1415231.html
+needs-focus load 1424450.html
 load 1425091.html
 load 1443664.html
 skip-if(Android) needs-focus load 1444630.html
