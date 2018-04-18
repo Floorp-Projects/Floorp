@@ -127,7 +127,31 @@ let REQUEST_2 = {
         selected: false,
       },
     ],
-    modifiers: null,
+    modifiers: [
+      {
+        supportedMethods: "basic-card",
+        total: {
+          label: "Total",
+          amount: {
+            currency: "CAD",
+            value: "28.75",
+          },
+          pending: false,
+        },
+        additionalDisplayItems: [
+          {
+            label: "Credit card fee",
+            amount: {
+              currency: "CAD",
+              value: "1.50",
+            },
+          },
+        ],
+        data: {
+          supportedTypes: "credit",
+        },
+      },
+    ],
     error: "",
   },
   paymentOptions: {

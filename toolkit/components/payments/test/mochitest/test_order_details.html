@@ -10,8 +10,10 @@
   <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
   <script src="payments_common.js"></script>
   <script src="../../res/vendor/custom-elements.min.js"></script>
+  <script src="../../res/unprivileged-fallbacks.js"></script>
 
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="../../res/containers/order-details.css"/>
 
   <template id="order-details-template">
     <ul class="main-list"></ul>
@@ -45,7 +47,14 @@ let emptyState = requestStore.getState();
 
 function setup() {
   let initialState = deepClone(emptyState);
-  requestStore.setState(initialState);
+  let cardGUID = "john-doe";
+  let johnDoeCard = deepClone(PTU.BasicCards.JohnDoe);
+  johnDoeCard.methodName = "basic-card";
+  let savedBasicCards = {
+    [cardGUID]: johnDoeCard,
+  };
+  initialState.selectedPaymentCard = cardGUID;
+  requestStore.setState(Object.assign(initialState, {savedBasicCards}));
 }
 
 add_task(async function isFooterItem() {
@@ -57,7 +66,7 @@ add_task(async function isFooterItem() {
   ok(!OrderDetails.isFooterItem({
     label: "Levis",
     amount: { currency: "USD", value: "1" },
-  }, "items without type of 'tax' arent footer items"));
+  }, "items without type of 'tax' aren't footer items"));
 });
 
 add_task(async function test_initial_state() {
@@ -69,7 +78,9 @@ add_task(async function test_initial_state() {
 
 add_task(async function test_list_population() {
   setup();
-  let paymentDetails = requestStore.getState().request.paymentDetails;
+  let state = requestStore.getState();
+  let request = state.request;
+  let paymentDetails = deepClone(request.paymentDetails);
   paymentDetails.displayItems = [
     {
       label: "One",
@@ -84,7 +95,11 @@ add_task(async function test_list_population() {
       amount: { currency: "USD", value: "7" },
     },
   ];
-  requestStore.setState({ paymentDetails });
+
+  requestStore.setState({
+    request: Object.assign(deepClone(request), { paymentDetails }),
+  });
+
   await asyncElementRendered();
   is(orderDetails.mainItemsList.childElementCount, 3, "main items list has correct # children");
   is(orderDetails.footerItemsList.childElementCount, 0, "footer items list has 0 children");
@@ -104,21 +119,78 @@ add_task(async function test_list_population() {
       amount: { currency: "USD", value: "7" },
     },
   ];
-  requestStore.setState({ paymentDetails });
+  Object.assign(request, { paymentDetails });
+  requestStore.setState({ request });
   await asyncElementRendered();
 
   is(orderDetails.mainItemsList.childElementCount, 2, "main list has correct # children");
   is(orderDetails.footerItemsList.childElementCount, 1, "footer list has correct # children");
 });
 
+add_task(async function test_additionalDisplayItems() {
+  setup();
+  let state = requestStore.getState();
+  let request = state.request;
+  let paymentDetails = request.paymentDetails;
+
+  paymentDetails.modifiers = [{
+    additionalDisplayItems: [
+      {
+        label: "Card fee",
+        amount: { currency: "USD", value: "1.50" },
+      },
+    ],
+    supportedMethods: "basic-card",
+    total: {
+      label: "Total due",
+      amount: { currency: "USD", value: "3.50" },
+    },
+  }];
+
+  Object.assign(request, { paymentDetails });
+  requestStore.setState(state);
+  await asyncElementRendered();
+
+  is(orderDetails.mainItemsList.childElementCount, 0,
+     "main list added 0 children from additionalDisplayItems");
+  is(orderDetails.footerItemsList.childElementCount, 1,
+     "footer list added children from additionalDisplayItems");
+});
+
+
 add_task(async function test_total() {
-  let paymentDetails = requestStore.getState().request.paymentDetails;
-  paymentDetails.totalItem = { label: "foo", amount: { currency: "JPY", value: 5 }};
-  requestStore.setState({ paymentDetails });
+  setup();
+  let request = requestStore.getState().request;
+  let paymentDetails = request.paymentDetails;
+  paymentDetails.totalItem = { label: "foo", amount: { currency: "JPY", value: "5" }};
+
+  Object.assign(request, { paymentDetails });
+  requestStore.setState({ request });
   await asyncElementRendered();
 
   is(orderDetails.totalAmountElem.value, "5", "total amount gets updated");
   is(orderDetails.totalAmountElem.currency, "JPY", "total currency gets updated");
+});
+
+add_task(async function test_modified_total() {
+  setup();
+  let state = requestStore.getState();
+  let request = state.request;
+  let paymentDetails = request.paymentDetails;
+  paymentDetails.totalItem = { label: "foo", amount: { currency: "JPY", value: "5" }};
+  paymentDetails.modifiers = [{
+    supportedMethods: "basic-card",
+    total: {
+      label: "Total due",
+      amount: { currency: "USD", value: "3.5" },
+    },
+  }];
+  Object.assign(request, { paymentDetails });
+  requestStore.setState(state);
+  await asyncElementRendered();
+
+  is(orderDetails.totalAmountElem.value, "3.5", "total amount uses modifier total");
+  is(orderDetails.totalAmountElem.currency, "USD", "total currency uses modifier currency");
 });
 
 </script>

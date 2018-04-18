@@ -294,7 +294,11 @@ var PaymentTestUtils = {
       displayItems: [
         {
           label: "First",
-          amount: { currency: "USD", value: "1" },
+          amount: { currency: "USD", value: "1.75" },
+        },
+        {
+          label: "Second",
+          amount: { currency: "USD", value: "0.25" },
         },
       ],
       modifiers: [
