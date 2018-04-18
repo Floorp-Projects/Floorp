@@ -670,6 +670,7 @@ class TupOnly(CommonBackend, PartialBackend):
                 '-I$(IDL_PARSER_CACHE_DIR)',
                 '$(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py',
                 '--cache-dir', '$(IDL_PARSER_CACHE_DIR)',
+                '--bindings-conf', '$(topsrcdir)/dom/bindings/Bindings.conf',
                 '$(DIST)/idl',
                 '$(DIST)/include',
                 '$(DIST)/xpcrs',
@@ -695,20 +696,19 @@ class TupOnly(CommonBackend, PartialBackend):
                 extra_outputs=[self._installed_files],
             )
 
-        cpp_backend_file = self._get_backend_file('xpcom/typelib/xpt')
+        cpp_backend_file = self._get_backend_file('xpcom/reflect/xptinfo')
         cpp_backend_file.export_shell()
         cpp_backend_file.rule(
             inputs=all_xpts,
-            display='XPIDL linkgen %o',
+            display='XPIDL xptcodegen.py %o',
             cmd=[
                 '$(PYTHON_PATH)',
                 '$(PLY_INCLUDE)',
-                '$(topsrcdir)/xpcom/typelib/xpt/tools/xpt.py',
-                'linkgen',
-                'XPTInfo.cpp',
+                '$(topsrcdir)/xpcom/reflect/xptinfo/xptcodegen.py',
+                '%o',
                 '%f',
             ],
-            outputs=['XPTInfo.cpp'],
+            outputs=['xptdata.cpp'],
         )
 
     def _preprocess(self, backend_file, input_file, destdir=None, target=None):
