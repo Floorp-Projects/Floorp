@@ -1514,3 +1514,33 @@ GetStyleContext(WidgetNodeType aNodeType, GtkTextDirection aDirection,
   }
   return style;
 }
+
+GtkStyleContext*
+CreateStyleContextWithStates(WidgetNodeType aNodeType, GtkTextDirection aDirection,
+                             GtkStateFlags aStateFlags)
+{
+  GtkStyleContext* style = GetStyleContext(aNodeType, aDirection, aStateFlags);
+  GtkWidgetPath *path = gtk_widget_path_copy(gtk_style_context_get_path(style));
+
+  if (gtk_check_version(3, 14, 0) == nullptr) {
+
+    static auto sGtkWidgetPathIterGetState =
+      (GtkStateFlags (*)(const GtkWidgetPath*, gint))
+      dlsym(RTLD_DEFAULT, "gtk_widget_path_iter_get_state");
+    static auto sGtkWidgetPathIterSetState =
+      (void (*)(GtkWidgetPath*, gint, GtkStateFlags))
+      dlsym(RTLD_DEFAULT, "gtk_widget_path_iter_set_state");
+
+    int pathLength = gtk_widget_path_length(path);
+    for(int i = 0; i < pathLength; i++) {
+      unsigned state = aStateFlags | sGtkWidgetPathIterGetState(path, i);
+      sGtkWidgetPathIterSetState(path, i, GtkStateFlags(state));
+    }
+  }
+
+  style = gtk_style_context_new();
+  gtk_style_context_set_path(style, path);
+  gtk_widget_path_unref(path);
+
+  return style;
+}
