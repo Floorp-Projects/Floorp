@@ -101,7 +101,6 @@ namespace mozilla {
 namespace dom {
 
 #define PURGE_DOMAIN_DATA "browser:purge-domain-data"
-#define PURGE_SESSION_HISTORY "browser:purge-session-history"
 #define CLEAR_ORIGIN_DATA "clear-origin-attributes-data"
 
 static_assert(nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN == static_cast<uint32_t>(RequestMode::Same_origin),
@@ -292,8 +291,6 @@ ServiceWorkerManager::Init(ServiceWorkerRegistrar* aRegistrar)
 
     if (obs) {
       DebugOnly<nsresult> rv;
-      rv = obs->AddObserver(this, PURGE_SESSION_HISTORY, false /* ownsWeak */);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
       rv = obs->AddObserver(this, PURGE_DOMAIN_DATA, false /* ownsWeak */);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
       rv = obs->AddObserver(this, CLEAR_ORIGIN_DATA, false /* ownsWeak */);
@@ -416,7 +413,6 @@ ServiceWorkerManager::MaybeStartShutdown()
     obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 
     if (XRE_IsParentProcess()) {
-      obs->RemoveObserver(this, PURGE_SESSION_HISTORY);
       obs->RemoveObserver(this, PURGE_DOMAIN_DATA);
       obs->RemoveObserver(this, CLEAR_ORIGIN_DATA);
     }
@@ -3183,13 +3179,6 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
                               const char* aTopic,
                               const char16_t* aData)
 {
-  if (strcmp(aTopic, PURGE_SESSION_HISTORY) == 0) {
-    MOZ_ASSERT(XRE_IsParentProcess());
-    RemoveAll();
-    PropagateRemoveAll();
-    return NS_OK;
-  }
-
   if (strcmp(aTopic, PURGE_DOMAIN_DATA) == 0) {
     MOZ_ASSERT(XRE_IsParentProcess());
     nsAutoString domain(aData);
