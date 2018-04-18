@@ -19,7 +19,7 @@ namespace mozilla {
 namespace layers {
 
 StaticMutex APZSampler::sWindowIdLock;
-std::unordered_map<uint64_t, APZSampler*> APZSampler::sWindowIdMap;
+StaticAutoPtr<std::unordered_map<uint64_t, APZSampler*>> APZSampler::sWindowIdMap;
 
 
 APZSampler::APZSampler(const RefPtr<APZCTreeManager>& aApz)
@@ -39,7 +39,8 @@ APZSampler::~APZSampler()
 
   StaticMutexAutoLock lock(sWindowIdLock);
   if (mWindowId) {
-    sWindowIdMap.erase(wr::AsUint64(*mWindowId));
+    MOZ_ASSERT(sWindowIdMap);
+    sWindowIdMap->erase(wr::AsUint64(*mWindowId));
   }
 }
 
@@ -49,7 +50,10 @@ APZSampler::SetWebRenderWindowId(const wr::WindowId& aWindowId)
   StaticMutexAutoLock lock(sWindowIdLock);
   MOZ_ASSERT(!mWindowId);
   mWindowId = Some(aWindowId);
-  sWindowIdMap[wr::AsUint64(aWindowId)] = this;
+  if (!sWindowIdMap) {
+    sWindowIdMap = new std::unordered_map<uint64_t, APZSampler*>();
+  }
+  (*sWindowIdMap)[wr::AsUint64(aWindowId)] = this;
 }
 
 /*static*/ void
@@ -242,9 +246,11 @@ APZSampler::GetSampler(const wr::WrWindowId& aWindowId)
 {
   RefPtr<APZSampler> sampler;
   StaticMutexAutoLock lock(sWindowIdLock);
-  auto it = sWindowIdMap.find(wr::AsUint64(aWindowId));
-  if (it != sWindowIdMap.end()) {
-    sampler = it->second;
+  if (sWindowIdMap) {
+    auto it = sWindowIdMap->find(wr::AsUint64(aWindowId));
+    if (it != sWindowIdMap->end()) {
+      sampler = it->second;
+    }
   }
   return sampler.forget();
 }

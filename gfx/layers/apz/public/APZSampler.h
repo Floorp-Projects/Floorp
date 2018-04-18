@@ -12,6 +12,7 @@
 #include "base/platform_thread.h" // for PlatformThreadId
 #include "mozilla/layers/AsyncCompositionManager.h" // for AsyncTransform
 #include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPtr.h"
 #include "nsTArray.h"
 #include "Units.h"
 
@@ -110,9 +111,12 @@ private:
 
   // Used to manage the mapping from a WR window id to APZSampler. These are only
   // used if WebRender is enabled. Both sWindowIdMap and mWindowId should only
-  // be used while holding the sWindowIdLock.
+  // be used while holding the sWindowIdLock. Note that we use a StaticAutoPtr
+  // wrapper on sWindowIdMap to avoid a static initializer for the unordered_map.
+  // This also avoids the initializer/memory allocation in cases where we're
+  // not using WebRender.
   static StaticMutex sWindowIdLock;
-  static std::unordered_map<uint64_t, APZSampler*> sWindowIdMap;
+  static StaticAutoPtr<std::unordered_map<uint64_t, APZSampler*>> sWindowIdMap;
   Maybe<wr::WrWindowId> mWindowId;
 
   // If WebRender is enabled, this holds the thread id of the render backend
