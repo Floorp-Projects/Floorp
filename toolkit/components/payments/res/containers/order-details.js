@@ -5,6 +5,7 @@
 // <currency-amount> is used in the <template>
 import "../components/currency-amount.js";
 import PaymentDetailsItem from "../components/payment-details-item.js";
+import paymentRequest from "../paymentRequest.js";
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
 
 /**
@@ -57,19 +58,27 @@ export default class OrderDetails extends PaymentStateSubscriberMixin(HTMLElemen
     return listEl;
   }
 
+  _getAdditionalDisplayItems(state) {
+    let methodId = state.selectedPaymentCard;
+    let modifier = paymentRequest.getModifierForPaymentMethod(state, methodId);
+    if (modifier && modifier.additionalDisplayItems) {
+      return modifier.additionalDisplayItems;
+    }
+    return [];
+  }
+
   render(state) {
-    let request = state.request;
-    let totalItem = request.paymentDetails.totalItem;
+    let totalItem = paymentRequest.getTotalItem(state);
 
     OrderDetails._emptyList(this.mainItemsList);
     OrderDetails._emptyList(this.footerItemsList);
 
-    let mainItems = OrderDetails._getMainListItems(request);
+    let mainItems = OrderDetails._getMainListItems(state);
     if (mainItems.length) {
       OrderDetails._populateList(this.mainItemsList, mainItems);
     }
 
-    let footerItems = OrderDetails._getFooterListItems(request);
+    let footerItems = OrderDetails._getFooterListItems(state);
     if (footerItems.length) {
       OrderDetails._populateList(this.footerItemsList, footerItems);
     }
@@ -90,7 +99,8 @@ export default class OrderDetails extends PaymentStateSubscriberMixin(HTMLElemen
     return item.type == "tax";
   }
 
-  static _getMainListItems(request) {
+  static _getMainListItems(state) {
+    let request = state.request;
     let items = request.paymentDetails.displayItems;
     if (Array.isArray(items) && items.length) {
       let predicate = item => !OrderDetails.isFooterItem(item);
@@ -99,13 +109,22 @@ export default class OrderDetails extends PaymentStateSubscriberMixin(HTMLElemen
     return [];
   }
 
-  static _getFooterListItems(request) {
+  static _getFooterListItems(state) {
+    let request = state.request;
     let items = request.paymentDetails.displayItems;
+    let footerItems = [];
+    let methodId = state.selectedPaymentCard;
+    if (methodId) {
+      let modifier = paymentRequest.getModifierForPaymentMethod(state, methodId);
+      if (modifier && Array.isArray(modifier.additionalDisplayItems)) {
+        footerItems.push(...modifier.additionalDisplayItems);
+      }
+    }
     if (Array.isArray(items) && items.length) {
       let predicate = OrderDetails.isFooterItem;
-      return request.paymentDetails.displayItems.filter(predicate);
+      footerItems.push(...request.paymentDetails.displayItems.filter(predicate));
     }
-    return [];
+    return footerItems;
   }
 }
 
