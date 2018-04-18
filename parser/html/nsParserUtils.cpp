@@ -19,7 +19,6 @@
 #include "nsIContent.h"
 #include "nsIContentSink.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentFragment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"

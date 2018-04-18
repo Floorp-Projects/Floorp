@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/FragmentOrElement.h"
-#include "nsIDOMDocumentFragment.h"
+#include "nsIDOMNode.h"
 #include "nsStringFwd.h"
 
 class nsAtom;
@@ -23,7 +23,7 @@ namespace dom {
 class Element;
 
 class DocumentFragment : public FragmentOrElement,
-                         public nsIDOMDocumentFragment
+                         public nsIDOMNode
 {
 private:
   void Init()
@@ -44,9 +44,6 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocumentFragment, FragmentOrElement)
-
-  // interface nsIDOMDocumentFragment
-  NS_DECL_NSIDOMDOCUMENTFRAGMENT
 
   explicit DocumentFragment(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : FragmentOrElement(aNodeInfo), mHost(nullptr)
