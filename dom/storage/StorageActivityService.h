@@ -60,7 +60,7 @@ private:
   MaybeStopTimer();
 
   // Activities grouped by origin (+OriginAttributes).
-  nsDataHashtable<nsCStringHashKey, TimeStamp> mActivities;
+  nsDataHashtable<nsCStringHashKey, PRTime> mActivities;
 
   nsCOMPtr<nsITimer> mTimer;
 };

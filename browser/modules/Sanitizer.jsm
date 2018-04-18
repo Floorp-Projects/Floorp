@@ -17,8 +17,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
+  OfflineAppCacheHelper: "resource:///modules/offlineAppCache.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "sas",
+                                   "@mozilla.org/storage/activity-service;1",
+                                   "nsIStorageActivityService");
 XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
                                    "@mozilla.org/dom/quota-manager-service;1",
                                    "nsIQuotaManagerService");
@@ -362,10 +366,39 @@ var Sanitizer = {
 
     offlineApps: {
       async clear(range) {
-        // AppCache
-        ChromeUtils.import("resource:///modules/offlineAppCache.jsm");
-        // This doesn't wait for the cleanup to be complete.
+        // AppCache: this doesn't wait for the cleanup to be complete.
         OfflineAppCacheHelper.clear();
+
+        if (range) {
+          let principals = sas.getActiveOrigins(range[0], range[1])
+                              .QueryInterface(Ci.nsIArray);
+
+          let promises = [];
+
+          for (let i = 0; i < principals.length; ++i) {
+            let principal = principals.queryElementAt(i, Ci.nsIPrincipal);
+
+            if (principal.URI.scheme != "http" &&
+                principal.URI.scheme != "https" &&
+                principal.URI.scheme != "file") {
+              continue;
+            }
+
+            // LocalStorage
+            Services.obs.notifyObservers(null, "browser:purge-domain-data", principal.URI.host);
+
+            // ServiceWorkers
+            await ServiceWorkerCleanUp.removeFromPrincipal(principal);
+
+            // QuotaManager
+            promises.push(new Promise(r => {
+              let req = quotaManagerService.clearStoragesForPrincipal(principal, null, false);
+              req.callback = () => { r(); };
+            }));
+          }
+
+          return Promise.all(promises);
+        }
 
         // LocalStorage
         Services.obs.notifyObservers(null, "extension:purge-localStorage");
