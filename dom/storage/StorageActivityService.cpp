@@ -278,6 +278,24 @@ StorageActivityService::GetActiveOrigins(PRTime aFrom, PRTime aTo,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+StorageActivityService::MoveOriginInTime(nsIPrincipal* aPrincipal,
+                                         PRTime aWhen)
+{
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString origin;
+  nsresult rv = aPrincipal->GetOrigin(origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mActivities.Put(origin, aWhen / PR_USEC_PER_SEC);
+  return NS_OK;
+}
+
 NS_INTERFACE_MAP_BEGIN(StorageActivityService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStorageActivityService)
   NS_INTERFACE_MAP_ENTRY(nsIStorageActivityService)
