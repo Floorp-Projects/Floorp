@@ -282,7 +282,16 @@ SubDialog.prototype = {
     let frameSizeDifference = (frameRect.top - boxRect.top) + (boxRect.bottom - frameRect.bottom);
 
     // Then determine and set a bunch of width stuff:
-    let frameMinWidth = docEl.style.width || docEl.scrollWidth + "px";
+    let frameMinWidth = docEl.style.width;
+    if (!frameMinWidth) {
+      if (docEl.ownerDocument.body) {
+        // HTML documents have a body but XUL documents don't
+        frameMinWidth = docEl.ownerDocument.body.scrollWidth;
+      } else {
+        frameMinWidth = docEl.scrollWidth;
+      }
+      frameMinWidth += "px";
+    }
     let frameWidth = docEl.getAttribute("width") ? docEl.getAttribute("width") + "px" :
                      frameMinWidth;
     this._frame.style.width = frameWidth;
