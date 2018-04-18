@@ -191,7 +191,8 @@ class CodeCoverageMixin(object):
                 os.path.join(self.grcov_dir, 'grcov'),
                 '-t', 'lcov',
                 '-p', self.prefix,
-                '--ignore-dir', 'gcc',
+                '--ignore-dir', 'gcc*',
+                '--ignore-dir', 'vs2017_*',
                 os.path.join(self.grcov_dir, 'target.code-coverage-gcno.zip'), file_path_gcda
             ]
 
