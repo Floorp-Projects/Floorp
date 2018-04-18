@@ -23,7 +23,6 @@
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
-#include "AsyncLogger.h"
 
 namespace mozilla {
 
