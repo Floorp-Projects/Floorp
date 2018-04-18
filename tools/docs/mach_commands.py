@@ -55,9 +55,9 @@ class Documentation(MachCommandBase):
         self.virtualenv_manager.install_pip_requirements(
             os.path.join(here, 'requirements.txt'), quiet=True)
 
-        import moztreedocs
         import webbrowser
         from livereload import Server
+        from moztreedocs.package import create_tarball
 
         outdir = outdir or os.path.join(self.topobjdir, 'docs')
         format_outdir = os.path.join(outdir, fmt)
@@ -84,7 +84,7 @@ class Documentation(MachCommandBase):
         if archive:
             archive_path = os.path.join(outdir,
                                         '%s.tar.gz' % props['project'])
-            moztreedocs.create_tarball(archive_path, savedir)
+            create_tarball(archive_path, savedir)
             print('Archived to %s' % archive_path)
 
         if upload:
@@ -147,7 +147,7 @@ class Documentation(MachCommandBase):
     def _s3_upload(self, root, project, version=None):
         self.virtualenv_manager.install_pip_package('boto3==1.4.4')
 
-        from moztreedocs import distribution_files
+        from moztreedocs.package import distribution_files
         from moztreedocs.upload import s3_upload
 
         # Files are uploaded to multiple locations:
