@@ -6,12 +6,9 @@
 from __future__ import with_statement
 
 from optparse import OptionParser
+import hashlib
 import logging
 import os
-try:
-    import hashlib
-except ImportError:
-    hashlib = None
 
 
 def digest_file(filename, digest, chunk_size=1024):
@@ -24,24 +21,19 @@ def digest_file(filename, digest, chunk_size=1024):
     'filename' can be specified by 'chunk_size', which defaults to 1K'''
     assert not os.path.isdir(filename), 'this function only works with files'
     logger = logging.getLogger('checksums.py')
-    if hashlib is not None:
-        logger.debug('Creating new %s object' % digest)
-        h = hashlib.new(digest)
-        with open(filename, 'rb') as f:
-            while True:
-                data = f.read(chunk_size)
-                if not data:
-                    logger.debug('Finished reading in file')
-                    break
-                h.update(data)
-        hash = h.hexdigest()
-        logger.debug('Hash for %s is %s' % (filename, hash))
-        return hash
-    else:
-        # In this case we could subprocess.Popen and .communicate with
-        # sha1sum or md5sum
-        logger.warn('The python module for hashlib is missing!')
-        return None
+
+    logger.debug('Creating new %s object' % digest)
+    h = hashlib.new(digest)
+    with open(filename, 'rb') as f:
+        while True:
+            data = f.read(chunk_size)
+            if not data:
+                logger.debug('Finished reading in file')
+                break
+            h.update(data)
+    hash = h.hexdigest()
+    logger.debug('Hash for %s is %s' % (filename, hash))
+    return hash
 
 
 def process_files(files, output_filename, digests, strip):
