@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1452673",
+    title: "Trackless RTCRtpSender.getStats()",
+    visible: true
+  });
+
+  // Calling getstats() on a trackless RTCRtpSender should yield an empty
+  // stats report.  When track stats are added in the future, the stats
+  // for the removed tracks should continue to appear.
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    test.chain.removeAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW");
+    test.chain.append(
+      async function PC_LOCAL_AND_REMOTE_TRACKLESS_SENDER_STATS(test) {
+        return Promise.all([test.pcLocal.waitForSyncedRtcp(),
+                  test.pcRemote.waitForSyncedRtcp()])
+          .then(async () => {
+            let senders = test.pcLocal.getSenders();
+            let receivers = test.pcRemote.getReceivers();
+            is(senders.length, 2, "Have exactly two senders.");
+            is(receivers.length, 2, "Have exactly two receivers.");
+            for(let kind of ["audio", "video"]) {
+              is(senders.filter(s => s.track.kind == kind).length, 1,
+                  "Exactly 1 sender of kind " + kind);
+              is(receivers.filter(r => r.track.kind == kind).length, 1,
+                  "Exactly 1 receiver of kind " + kind);
+            }
+            // Remove tracks from senders
+            senders.forEach(async sender => {
+              await sender.replaceTrack(null);
+              is(sender.track, null, "Sender track removed");
+              let stats = await sender.getStats();
+              ok(stats instanceof window.RTCStatsReport, "Stats is instance of RTCStatsReport");
+              // Number of stats in the report. This should be 0.
+              is(stats.size, 0, "Trackless sender stats report is empty");
+            });
+          })
+        });
+    test.setMediaConstraints([{audio: true}, {video: true}], []);
+    test.run();
+  });
+
+</script>
+</pre>
+</body>
+</html>

@@ -12,9 +12,9 @@
     visible: true
   });
 
-  var test;
-
   var checkStats = (sndReport, rcvReport, mediaType) => {
+    ok(sndReport instanceof window.RTCStatsReport, "sender stats are a RTCStatsReport");
+    ok(rcvReport instanceof window.RTCStatsReport, "receiver stats are a RTCStatsReport");
     // Returns SSRCs and checks that the tracks are of the correct mediaType
     let getSsrcs = (report, kind) => {
       return [...report.values()]
