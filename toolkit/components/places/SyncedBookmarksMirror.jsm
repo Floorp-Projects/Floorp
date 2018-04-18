@@ -147,7 +147,8 @@ class SyncedBookmarksMirror {
    * throws on failure.
    *
    * @param  {String} options.path
-   *         The full path to the mirror database file.
+   *         The path to the mirror database file, either absolute or relative
+   *         to the profile path.
    * @param  {Function} options.recordTelemetryEvent
    *         A function with the signature `(object: String, method: String,
    *         value: String?, extra: Object?)`, used to emit telemetry events.
@@ -163,11 +164,12 @@ class SyncedBookmarksMirror {
       connection: PlacesUtils.history.DBConnection,
       readOnly: false,
     });
+    let path = OS.Path.join(OS.Constants.Path.profileDir, options.path);
     let whyFailed = "initialize";
     try {
       await db.execute(`PRAGMA foreign_keys = ON`);
       try {
-        await attachAndInitMirrorDatabase(db, options.path);
+        await attachAndInitMirrorDatabase(db, path);
       } catch (ex) {
         if (isDatabaseCorrupt(ex)) {
           MirrorLog.warn("Error attaching mirror to Places; removing and " +
@@ -176,14 +178,22 @@ class SyncedBookmarksMirror {
                                        { why: "corrupt" });
 
           whyFailed = "remove";
-          await OS.File.remove(options.path);
+          await OS.File.remove(path);
 
           whyFailed = "replace";
-          await attachAndInitMirrorDatabase(db, options.path);
+          await attachAndInitMirrorDatabase(db, path);
         } else {
-          MirrorLog.warn("Unrecoverable error attaching mirror to Places", ex);
+          MirrorLog.error("Unrecoverable error attaching mirror to Places", ex);
           throw ex;
         }
+      }
+      try {
+        let info = await OS.File.stat(path);
+        let fileSize = Math.floor(info.size / 1024);
+        options.recordTelemetryEvent("mirror", "open", "success",
+                                     { size: fileSize.toString(10) });
+      } catch (ex) {
+        MirrorLog.warn("Error recording stats for mirror database size", ex);
       }
     } catch (ex) {
       options.recordTelemetryEvent("mirror", "open", "error",
