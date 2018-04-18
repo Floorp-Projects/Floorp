@@ -290,6 +290,9 @@ BackgroundParentImpl::RecvBroadcastLocalStorageChange(
                                             const PrincipalInfo& aPrincipalInfo,
                                             const bool& aIsPrivate)
 {
+  // Let's inform the StorageActivityService about this change.
+  dom::StorageActivityService::SendActivity(aPrincipalInfo);
+
   nsTArray<PBackgroundParent*> liveActorArray;
   if (NS_WARN_IF(!BackgroundParent::GetLiveActorArray(this, liveActorArray))) {
     return IPC_FAIL_NO_REASON(this);
