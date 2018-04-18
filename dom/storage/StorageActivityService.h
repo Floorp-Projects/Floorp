@@ -39,6 +39,10 @@ public:
   static void
   SendActivity(const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
+  // Thread-safe but for parent process only!
+  static void
+  SendActivity(const nsACString& aOrigin);
+
   // Used by XPCOM. Don't use it, use SendActivity() instead.
   static already_AddRefed<StorageActivityService>
   GetOrCreate();
@@ -49,6 +53,9 @@ private:
 
   void
   SendActivityInternal(nsIPrincipal* aPrincipal);
+
+  void
+  SendActivityInternal(const nsACString& aOrigin);
 
   void
   SendActivityToParent(nsIPrincipal* aPrincipal);
