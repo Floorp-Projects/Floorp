@@ -118,6 +118,8 @@ function convertESEError(errorCode) {
     case -1207 /* JET_errDatabaseLocked */:
     case -1302 /* JET_errTableLocked */:
       return "The database or table is locked, error code: " + errorCode;
+    case -1305 /* JET_errObjectNotFound */:
+      return "The table/object was not found.";
     case -1809 /* JET_errPermissionDenied*/:
     case -1907 /* JET_errAccessDenied */:
       return "Access or permission denied, error code: " + errorCode;
