@@ -10,6 +10,7 @@ import hashlib
 import logging
 import os
 
+logger = logging.getLogger('checksums.py')
 
 def digest_file(filename, digest, chunk_size=1024):
     '''Produce a checksum for the file specified by 'filename'.  'filename'
@@ -20,7 +21,6 @@ def digest_file(filename, digest, chunk_size=1024):
     that this function will read from the file object it opens based on
     'filename' can be specified by 'chunk_size', which defaults to 1K'''
     assert not os.path.isdir(filename), 'this function only works with files'
-    logger = logging.getLogger('checksums.py')
 
     logger.debug('Creating new %s object' % digest)
     h = hashlib.new(digest)
@@ -52,7 +52,6 @@ def process_files(files, output_filename, digests, strip):
         d1fa09a<snip>e4220 sha1 14250744 firefox-4.0b6pre.en-US.mac64.dmg
     '''
 
-    logger = logging.getLogger('checksums.py')
     if os.path.exists(output_filename):
         logger.debug('Overwriting existing checksums file "%s"' %
                      output_filename)
@@ -127,7 +126,6 @@ def main():
 
     # Set up logging
     setup_logging(loglevel)
-    logger = logging.getLogger('checksums.py')
 
     # Validate the digest type to use
     if not options.digests:
