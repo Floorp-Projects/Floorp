@@ -32,7 +32,8 @@ generate, and each entry includes the earlier (or 'from') version, and the most
 recent (or 'to') version, which for most releases will likely be a taskcluster
 artifact.
 
-.. code-block::
+.. code-block:: json
+
     {
        "to_mar": "https://queue.taskcluster.net/v1/task/EWtBFqVuT-WqG3tGLxWhmA/artifacts/public/build/ach/target.complete.mar",
        "product": "Firefox",
