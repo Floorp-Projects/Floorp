@@ -10,7 +10,6 @@ DIRS += [
     'aboutdebugging',
     'accessibility',
     'animationinspector',
-    'application',
     'canvasdebugger',
     'commandline',
     'debugger',
