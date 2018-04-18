@@ -56,6 +56,8 @@ using JS::ToInt8;
 using JS::ToInt16;
 using JS::ToInt32;
 using JS::ToInt64;
+using JS::ToUint8;
+using JS::ToUint16;
 using JS::ToUint32;
 using JS::ToUint64;
 
@@ -1634,7 +1636,7 @@ js::ToUint8Slow(JSContext *cx, const HandleValue v, uint8_t *out)
         if (!ToNumberSlow(cx, v, &d))
             return false;
     }
-    *out = ToInt8(d);
+    *out = ToUint8(d);
     return true;
 }
 
@@ -1735,26 +1737,7 @@ js::ToUint16Slow(JSContext* cx, const HandleValue v, uint16_t* out)
     } else if (!ToNumberSlow(cx, v, &d)) {
         return false;
     }
-
-    if (d == 0 || !mozilla::IsFinite(d)) {
-        *out = 0;
-        return true;
-    }
-
-    uint16_t u = (uint16_t) d;
-    if ((double)u == d) {
-        *out = u;
-        return true;
-    }
-
-    bool neg = (d < 0);
-    d = floor(neg ? -d : d);
-    d = neg ? -d : d;
-    unsigned m = JS_BIT(16);
-    d = fmod(d, (double) m);
-    if (d < 0)
-        d += m;
-    *out = (uint16_t) d;
+    *out = ToUint16(d);
     return true;
 }
 
