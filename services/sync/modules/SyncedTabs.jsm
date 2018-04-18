@@ -53,10 +53,12 @@ let SyncedTabsInternal = {
       icon = tab.icon;
     }
     if (!icon) {
-      // By not specifying a size the favicon service will pick the default,
-      // that is usually set through setDefaultIconURIPreferredSize by the
-      // first browser window. Commonly it's 16px at current dpi.
-      icon = "page-icon:" + url;
+      try {
+        icon = (await PlacesUtils.promiseFaviconLinkUrl(url)).spec;
+      } catch (ex) { /* no favicon avaiable */ }
+    }
+    if (!icon) {
+      icon = "";
     }
     return {
       type:  "tab",
