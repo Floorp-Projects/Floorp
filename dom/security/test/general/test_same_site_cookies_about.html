@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1454721 - Add same-site cookie test for about:blank and about:srcdoc</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<img id="cookieImage">
+<iframe id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * 1) We load an image from http://mochi.test which sets a same site cookie
+ * 2) We then load the following iframes:
+ *    (a) cross-origin iframe
+ *    (b) same-origin iframe
+ *    which both load a:
+ *     * nested about:srcdoc frame and nested about:blank frame
+ *     * navigate about:srcdoc frame and navigate about:blank frame
+ * 3) We evaluate that the same-site cookie is available in the same-origin case.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const SAME_ORIGIN = "http://mochi.test:8888/"
+const CROSS_ORIGIN = "http://example.com/";
+const PATH = "tests/dom/security/test/general/file_same_site_cookies_about.sjs";
+
+let curTest = 0;
+
+var tests = [
+  // NAVIGATION TESTS
+  {
+    description: "nested same origin iframe about:srcdoc navigation [mochi.test -> mochi.test -> about:srcdoc -> mochi.test]",
+    frameSRC: SAME_ORIGIN + PATH + "?loadsrcdocframeNav",
+    result: "myKey=mySameSiteAboutCookie", // cookie should be set for baseline test
+  },
+  {
+    description: "nested cross origin iframe about:srcdoc navigation [mochi.test -> example.com -> about:srcdoc -> mochi.test]",
+    frameSRC: CROSS_ORIGIN + PATH + "?loadsrcdocframeNav",
+    result: "", // no same-site cookie should be available
+  },
+  {
+    description: "nested same origin iframe about:blank navigation [mochi.test -> mochi.test -> about:blank -> mochi.test]",
+    frameSRC: SAME_ORIGIN + PATH + "?loadblankframeNav",
+    result: "myKey=mySameSiteAboutCookie", // cookie should be set for baseline test
+  },
+  {
+    description: "nested cross origin iframe about:blank navigation [mochi.test -> example.com -> about:blank -> mochi.test]",
+    frameSRC: CROSS_ORIGIN + PATH + "?loadblankframeNav",
+    result: "", // no same-site cookie should be available
+  },
+  // INCLUSION TESTS
+  {
+    description: "nested same origin iframe about:srcdoc inclusion [mochi.test -> mochi.test -> about:srcdoc -> mochi.test]",
+    frameSRC: SAME_ORIGIN + PATH + "?loadsrcdocframeInc",
+    result: "myKey=mySameSiteAboutCookie", // cookie should be set for baseline test
+  },
+  {
+    description: "nested cross origin iframe about:srcdoc inclusion [mochi.test -> example.com -> about:srcdoc -> mochi.test]",
+    frameSRC: CROSS_ORIGIN + PATH + "?loadsrcdocframeInc",
+    result: "", // no same-site cookie should be available
+  },
+  {
+    description: "nested same origin iframe about:blank inclusion [mochi.test -> mochi.test -> about:blank -> mochi.test]",
+    frameSRC: SAME_ORIGIN + PATH + "?loadblankframeInc",
+    result: "myKey=mySameSiteAboutCookie", // cookie should be set for baseline test
+  },
+  {
+    description: "nested cross origin iframe about:blank inclusion [mochi.test -> example.com -> about:blank -> mochi.test]",
+    frameSRC: CROSS_ORIGIN + PATH + "?loadblankframeInc",
+    result: "", // no same-site cookie should be available
+  },
+];
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  is(event.data.result, tests[curTest].result, tests[curTest].description);
+  curTest += 1;
+
+  // // lets see if we ran all the tests
+  if (curTest == tests.length) {
+    window.removeEventListener("message", receiveMessage);
+    SimpleTest.finish();
+    return;
+  }
+  // otherwise it's time to run the next test
+  setCookieAndInitTest();
+}
+
+function setupQueryResultAndRunTest() {
+  let testframe = document.getElementById("testframe");
+  testframe.src = tests[curTest].frameSRC;
+}
+
+function setCookieAndInitTest() {
+  var cookieImage = document.getElementById("cookieImage");
+  cookieImage.onload = function() {
+    ok(true, "trying to set cookie for test (" + tests[curTest].description + ")");
+    setupQueryResultAndRunTest();
+  }
+  cookieImage.onerror = function() {
+    ok(false, "could not load image for test (" + tests[curTest].description + ")");
+  }
+  // appending math.random to avoid any unexpected caching behavior
+  cookieImage.src = SAME_ORIGIN + PATH + "?setSameSiteCookie" + Math.random();
+}
+
+// fire up the test
+setCookieAndInitTest();
+
+</script>
+</body>
+</html>
