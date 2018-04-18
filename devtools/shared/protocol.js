@@ -940,10 +940,9 @@ var Actor = function(conn) {
 
   // Forward events to the connection.
   if (this._actorSpec && this._actorSpec.events) {
-    for (let key of this._actorSpec.events.keys()) {
-      let name = key;
+    for (let [name, request] of this._actorSpec.events.entries()) {
       this.on(name, (...args) => {
-        this._sendEvent(name, ...args);
+        this._sendEvent(name, request, ...args);
       });
     }
   }
@@ -960,12 +959,7 @@ Actor.prototype = extend(Pool.prototype, {
     return "[Actor " + this.typeName + "/" + this.actorID + "]";
   },
 
-  _sendEvent: function(name, ...args) {
-    if (!this._actorSpec.events.has(name)) {
-      // It's ok to emit events that don't go over the wire.
-      return;
-    }
-    let request = this._actorSpec.events.get(name);
+  _sendEvent: function(name, request, ...args) {
     let packet;
     try {
       packet = request.write(args, this);
