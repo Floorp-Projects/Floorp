@@ -5,7 +5,8 @@
 /**
  * This file defines fallback objects to be used during development outside
  * of the paymentDialogWrapper. When loaded in the wrapper, a frame script
- * overwrites these methods.
+ * overwrites these methods. Since these methods need to get overwritten in the
+ * global scope, it can't be converted into an ES module.
  */
 
 /* eslint-disable no-console */
@@ -14,18 +15,10 @@
 "use strict";
 
 var log = {
-  error(...args) {
-    console.error("log.js", ...args);
-  },
-  warn(...args) {
-    console.warn("log.js", ...args);
-  },
-  info(...args) {
-    console.info("log.js", ...args);
-  },
-  debug(...args) {
-    console.debug("log.js", ...args);
-  },
+  error: console.error.bind(console, "paymentRequest.xhtml:"),
+  warn: console.warn.bind(console, "paymentRequest.xhtml:"),
+  info: console.info.bind(console, "paymentRequest.xhtml:"),
+  debug: console.debug.bind(console, "paymentRequest.xhtml:"),
 };
 
 var PaymentDialogUtils = {

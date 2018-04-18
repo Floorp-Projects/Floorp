@@ -55,7 +55,7 @@ var paymentRequest = {
   },
 
   sendMessageToChrome(messageType, detail = {}) {
-    log.debug("sendMessageToChrome: ", messageType, detail);
+    log.debug("sendMessageToChrome:", messageType, detail);
     let event = new CustomEvent("paymentContentToChrome", {
       bubbles: true,
       detail: Object.assign({
@@ -67,7 +67,7 @@ var paymentRequest = {
 
   toggleDebuggingConsole() {
     let debuggingConsole = document.getElementById("debugging-console");
-    if (!debuggingConsole.src) {
+    if (debuggingConsole.hidden && !debuggingConsole.src) {
       debuggingConsole.src = "debugging.html";
     }
     debuggingConsole.hidden = !debuggingConsole.hidden;
@@ -75,7 +75,7 @@ var paymentRequest = {
 
   onChromeToContent({detail}) {
     let {messageType} = detail;
-    log.debug("onChromeToContent: ", messageType);
+    log.debug("onChromeToContent:", messageType);
 
     switch (messageType) {
       case "responseSent": {
@@ -96,8 +96,8 @@ var paymentRequest = {
     }
   },
 
-  onPaymentRequestLoad(requestId) {
-    log.debug("onPaymentRequestLoad:", requestId);
+  onPaymentRequestLoad() {
+    log.debug("onPaymentRequestLoad");
     window.addEventListener("unload", this, {once: true});
     this.sendMessageToChrome("paymentDialogReady");
 
