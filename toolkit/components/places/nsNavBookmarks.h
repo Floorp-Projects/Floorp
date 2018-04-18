@@ -265,7 +265,7 @@ private:
   nsresult InsertTombstone(const BookmarkData& aBookmark);
 
   // Inserts tombstones for removed synced items.
-  nsresult InsertTombstones(const nsTArray<TombstoneData>& aTombstones);
+  nsresult InsertTombstones(const nsTArray<mozilla::places::TombstoneData>& aTombstones);
 
   // Removes a stale synced bookmark tombstone.
   nsresult RemoveTombstone(const nsACString& aGUID);
