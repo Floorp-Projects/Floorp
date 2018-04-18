@@ -10,10 +10,6 @@
 #include <stdlib.h>
 #include "mozilla/ArrayUtils.h"
 
-// Need an extra level of macro nesting to force expansion of method_
-// params before they get pasted.
-#define STRINGIFY_METHOD(method_) #method_
-
 struct PropertyInfo {
     const char *propName;
     const char *domName;
@@ -23,12 +19,12 @@ struct PropertyInfo {
 const PropertyInfo gLonghandProperties[] = {
 
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
-#define CSS_PROP_LONGHAND(name_, id_, method_, flags_, pref_, ...) \
-    { #name_, STRINGIFY_METHOD(method_), pref_ },
+#define CSS_PROP(name_, id_, method_, flags_, pref_, ...) \
+    { #name_, #method_, pref_ },
 
-#include "mozilla/ServoCSSPropList.h"
+#include "nsCSSPropList.h"
 
-#undef CSS_PROP_LONGHAND
+#undef CSS_PROP
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 
 };
@@ -41,11 +37,11 @@ const PropertyInfo gLonghandProperties[] = {
 const char* gLonghandPropertiesWithDOMProp[] = {
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
-#define CSS_PROP_LONGHAND(name_, ...) #name_,
+#define CSS_PROP(name_, ...) #name_,
 
-#include "mozilla/ServoCSSPropList.h"
+#include "nsCSSPropList.h"
 
-#undef CSS_PROP_LONGHAND
+#undef CSS_PROP
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 
 };
@@ -53,16 +49,24 @@ const char* gLonghandPropertiesWithDOMProp[] = {
 const PropertyInfo gShorthandProperties[] = {
 
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
+// Need an extra level of macro nesting to force expansion of method_
+// params before they get pasted.
+#define LISTCSSPROPERTIES_INNER_MACRO(method_) #method_
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_)	\
-    { #name_, STRINGIFY_METHOD(method_), pref_ },
+    { #name_, LISTCSSPROPERTIES_INNER_MACRO(method_), pref_ },
+
+#include "nsCSSPropList.h"
+
+#undef CSS_PROP_SHORTHAND
+#undef LISTCSSPROPERTIES_INNER_MACRO
+#undef CSS_PROP_PUBLIC_OR_PRIVATE
+
 #define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
     { #name_, #method_, pref_ },
 
-#include "mozilla/ServoCSSPropList.h"
+#include "nsCSSPropAliasList.h"
 
 #undef CSS_PROP_ALIAS
-#undef CSS_PROP_SHORTHAND
-#undef CSS_PROP_PUBLIC_OR_PRIVATE
 
 };
 
@@ -72,18 +76,20 @@ const char* gShorthandPropertiesWithDOMProp[] = {
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_)	\
     #name_,
-#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
-    #name_,
 
-#include "mozilla/ServoCSSPropList.h"
+#include "nsCSSPropList.h"
 
-#undef CSS_PROP_ALIAS
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
 
-};
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
+    #name_,
 
-#undef STRINGIFY_METHOD
+#include "nsCSSPropAliasList.h"
+
+#undef CSS_PROP_ALIAS
+
+};
 
 const char *gInaccessibleProperties[] = {
     // Don't print the properties that aren't accepted by the parser, per
