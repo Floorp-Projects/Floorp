@@ -74,9 +74,7 @@ class AssetsSearchEngineProvider(
         parser: SearchEngineParser,
         identifier: String
     ): SearchEngine {
-        val fileName = "$identifier.xml"
-
-        return parser.load(assets, identifier, "searchplugins/$fileName")
+        return parser.load(assets, identifier, "searchplugins/$identifier.xml")
     }
 
     private fun loadAndFilterConfiguration(context: Context): List<String> {

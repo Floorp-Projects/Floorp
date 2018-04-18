@@ -93,6 +93,21 @@ class SearchEngineManagerTest {
     }
 
     @Test
+    fun `manager returns first engine as default if no identifier is specified`() {
+        runBlocking {
+            val provider = mockProvider(listOf(
+                    mockSearchEngine("mozsearch"),
+                    mockSearchEngine("google"),
+                    mockSearchEngine("bing")))
+
+            val manager = SearchEngineManager(listOf(provider))
+
+            val default = manager.getDefaultSearchEngine(RuntimeEnvironment.application)
+            assertEquals("mozsearch", default.identifier)
+        }
+    }
+
+    @Test
     fun `locale update broadcast will trigger reload`() {
         runBlocking {
             val provider = spy(mockProvider(listOf(
