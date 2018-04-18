@@ -28,7 +28,7 @@ public class SupportUtils {
         AUTOCOMPLETE("autofill-domain-android"),
         TRACKERS("trackers"),
         USAGE_DATA("usage-data"),
-        WHATS_NEW("whats-new-focus-android-4");
+        WHATS_NEW("new-focus-android-42");
 
         /** The final path segment for a SUMO URL - see {@see #getSumoURLForTopic} */
         @VisibleForTesting final String topicStr;
