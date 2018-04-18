@@ -80,6 +80,7 @@
  *   scope.
  */
 
+#include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Move.h"
 
@@ -124,7 +125,7 @@ private:
 };
 
 template <typename ExitFunction>
-ScopeExit<ExitFunction>
+MOZ_MUST_USE ScopeExit<ExitFunction>
 MakeScopeExit(ExitFunction&& exitFunction)
 {
   return ScopeExit<ExitFunction>(mozilla::Move(exitFunction));
