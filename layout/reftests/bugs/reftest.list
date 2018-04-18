@@ -728,8 +728,8 @@ fuzzy-if(skiaContent,2,5) == 381507-1.html 381507-1-ref.html
 == 384762-1.html about:blank
 == 384876-1.html 384876-1-ref.html
 == 385533-1.html about:blank # assertion test
-fuzzy-if(webrender&&winWidget,137-137,303-303) == 385569-1a.html 385569-1-ref.html
-fuzzy-if(webrender&&winWidget,137-137,303-303) == 385569-1b.html 385569-1-ref.html
+== 385569-1a.html 385569-1-ref.html
+== 385569-1b.html 385569-1-ref.html
 == 385607-1.html 385607-1-ref.html
 == 385823-1.html 385823-1-ref.html
 fuzzy-if(webrender,0-1,0-600) == 385823-2a.html 385823-2-ref.html
