@@ -1744,6 +1744,9 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
 /* virtual */ void
 nsFlexContainerFrame::MarkIntrinsicISizesDirty()
 {
+  mCachedMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mCachedPrefISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+
   for (nsIFrame* childFrame : mFrames) {
     childFrame->DeleteProperty(CachedFlexMeasuringReflow());
   }
@@ -5118,19 +5121,23 @@ nsFlexContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
 /* virtual */ nscoord
 nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext)
 {
-  nscoord minISize = 0;
-  DISPLAY_MIN_WIDTH(this, minISize);
+  DISPLAY_MIN_WIDTH(this, mCachedMinISize);
+  if (mCachedMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    mCachedMinISize = IntrinsicISize(aRenderingContext,
+                                     nsLayoutUtils::MIN_ISIZE);
+  }
 
-  minISize = IntrinsicISize(aRenderingContext, nsLayoutUtils::MIN_ISIZE);
-  return minISize;
+  return mCachedMinISize;
 }
 
 /* virtual */ nscoord
 nsFlexContainerFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
-  nscoord prefISize = 0;
-  DISPLAY_PREF_WIDTH(this, prefISize);
+  DISPLAY_PREF_WIDTH(this, mCachedPrefISize);
+  if (mCachedPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    mCachedPrefISize = IntrinsicISize(aRenderingContext,
+                                      nsLayoutUtils::PREF_ISIZE);
+  }
 
-  prefISize = IntrinsicISize(aRenderingContext, nsLayoutUtils::PREF_ISIZE);
-  return prefISize;
+  return mCachedPrefISize;
 }
