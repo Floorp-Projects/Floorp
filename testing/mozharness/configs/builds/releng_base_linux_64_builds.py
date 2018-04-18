@@ -54,7 +54,7 @@ config = {
         ## 64 bit specific
         'PATH': '/usr/local/bin:/usr/lib64/ccache:/bin:'
                 '/usr/bin:/usr/local/sbin:/usr/sbin:'
-                '/sbin:/tools/git/bin:'
+                '/sbin:'
                 '/home/cltbld/bin',
         ##
     },
