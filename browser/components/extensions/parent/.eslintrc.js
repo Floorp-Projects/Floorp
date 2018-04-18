@@ -20,9 +20,11 @@ module.exports = {
     "makeWidgetId": true,
     "openOptionsPage": true,
     "pageActionFor": true,
+    "replaceUrlInTab": true,
     "sidebarActionFor": true,
     "tabGetSender": true,
     "tabTracker": true,
+    "waitForTabLoaded": true,
     "windowTracker": true,
   },
 };

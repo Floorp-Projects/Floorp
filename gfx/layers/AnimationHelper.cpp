@@ -134,7 +134,7 @@ CompositorAnimationStorage::SetAnimations(uint64_t aId, const AnimationArray& aV
 }
 
 
-bool
+void
 AnimationHelper::SampleAnimationForEachNode(
   TimeStamp aTime,
   AnimationArray& aAnimations,
@@ -142,18 +142,12 @@ AnimationHelper::SampleAnimationForEachNode(
   AnimationValue& aAnimationValue,
   bool& aHasInEffectAnimations)
 {
-  bool activeAnimations = false;
-
-  if (aAnimations.IsEmpty()) {
-    return activeAnimations;
-  }
+  MOZ_ASSERT(!aAnimations.IsEmpty(), "Should be called with animations");
 
   // Process in order, since later aAnimations override earlier ones.
   for (size_t i = 0, iEnd = aAnimations.Length(); i < iEnd; ++i) {
     Animation& animation = aAnimations[i];
     AnimData& animData = aAnimationData[i];
-
-    activeAnimations = true;
 
     MOZ_ASSERT((!animation.originTime().IsNull() &&
                 animation.startTime().type() ==
@@ -258,7 +252,6 @@ AnimationHelper::SampleAnimationForEachNode(
                "All of members of TransformData should be the same");
   }
 #endif
-  return activeAnimations;
 }
 
 struct BogusAnimation {};
@@ -514,6 +507,10 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
        !iter.Done(); iter.Next()) {
     bool hasInEffectAnimations = false;
     AnimationArray* animations = iter.UserData();
+    if (animations->IsEmpty()) {
+      continue;
+    }
+
     AnimationValue animationValue;
     InfallibleTArray<AnimData> animationData;
     AnimationHelper::SetAnimations(*animations,

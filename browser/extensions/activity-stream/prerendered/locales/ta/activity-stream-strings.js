@@ -33,12 +33,12 @@ window.gActivityStreamStrings = {
   "prefs_home_description": "Choose what content you want on your Firefox Home screen.",
   "prefs_restore_defaults_button": "Restore Defaults",
   "prefs_section_rows_option": "{num} row;{num} rows",
-  "prefs_search_header": "வலை தேடல்",
-  "prefs_topsites_description": "அதிகம் பார்க்கும் தளம்",
+  "prefs_search_header": "வலைதள தேடல்",
+  "prefs_topsites_description": "நீங்கள் மிகவும் பார்வையிடும் தளங்கள்",
   "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "{provider} விளம்பரதாரர் செய்திகள்",
   "prefs_topstories_sponsored_learn_more": "மேலும் அறிய",
-  "prefs_highlights_description": "நீங்கள் சேமித்த பார்வையிட்ட தேர்ந்தெடுக்கப்பட்ட தளங்கள்",
+  "prefs_highlights_description": "நீங்கள் சேமித்த அல்லது பார்வையிட்ட தளங்களின் தேர்வு",
   "prefs_snippets_description": "மொசில்லா மற்றும் பயர்பாக்சிலிருந்து புதுப்பிப்புகள்",
   "settings_pane_button_label": "உங்கள் புதிய கீற்றுப் பக்கத்தை விருப்பமை",
   "settings_pane_header": "புதிய கீற்றின் முன்னுரிமைகள்",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "முதன்மை தளத்தைச் சேர்",
   "section_menu_action_move_up": "மேலே நகர்த்து",
   "section_menu_action_move_down": "கீழே நகர்த்து",
-  "section_menu_action_privacy_notice": "தனியுரிமை அறிவிப்பு",
-  "prefs_topstories_description": "நீங்கள் தவறவிடக்கூடிய உயர்தர உள்ளடக்கம்"
+  "section_menu_action_privacy_notice": "தனியுரிமை அறிவிப்பு"
 };

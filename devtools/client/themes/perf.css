@@ -22,6 +22,12 @@
   padding-inline-end: 4px;
 }
 
+.perf-button-container {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+}
+
 .perf-additional-message {
   margin: 10px;
   margin-top: 65px;

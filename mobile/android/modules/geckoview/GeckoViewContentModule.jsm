@@ -11,9 +11,6 @@ ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
 
 GeckoViewUtils.initLogging("GeckoView.Module.[C]", this);
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
-  "resource://gre/modules/Messaging.jsm");
-
 class GeckoViewContentModule {
   static initLogging(aModuleName) {
     this._moduleName = aModuleName;
@@ -25,10 +22,22 @@ class GeckoViewContentModule {
     return new this(aModuleName || this._moduleName, aGlobal);
   }
 
-  constructor(aModuleName, aMessageManager) {
+  constructor(aModuleName, aGlobal) {
     this.moduleName = aModuleName;
-    this.messageManager = aMessageManager;
-    this.eventDispatcher = EventDispatcher.forMessageManager(aMessageManager);
+    this.messageManager = aGlobal;
+
+    if (!aGlobal._gvEventDispatcher) {
+      aGlobal._gvEventDispatcher =
+          GeckoViewUtils.getDispatcherForWindow(aGlobal.content);
+      aGlobal.addEventListener("unload", event => {
+        if (event.target === this.messageManager) {
+          aGlobal._gvEventDispatcher.finalize();
+        }
+      }, {
+        mozSystemGroup: true,
+      });
+    }
+    this.eventDispatcher = aGlobal._gvEventDispatcher;
 
     this.messageManager.addMessageListener(
       "GeckoView:UpdateSettings",

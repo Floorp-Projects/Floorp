@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} řádek;{num} řádky;{num} řádků",
   "prefs_search_header": "Vyhledávání na webu",
   "prefs_topsites_description": "Nejnavštěvovanější stránky",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "Skvělý obsah z celého webu, vybraný speciálně pro vás",
   "prefs_topstories_show_sponsored_label": "Sponzorované příběhy ze služby {provider}",
   "prefs_topstories_sponsored_learn_more": "Zjistit více",
   "prefs_highlights_description": "Výběr z uložených nebo navštívených stránek",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Přidat mezi top stránky",
   "section_menu_action_move_up": "Posunout nahoru",
   "section_menu_action_move_down": "Posunout dolů",
-  "section_menu_action_privacy_notice": "Zásady ochrany soukromí",
-  "prefs_topstories_description": "Kvalitní obsah, o který byste jinak mohli přijít"
+  "section_menu_action_privacy_notice": "Zásady ochrany soukromí"
 };

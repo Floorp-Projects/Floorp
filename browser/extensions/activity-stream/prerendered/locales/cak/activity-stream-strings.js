@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} cholaj:{num} taq cholaj",
   "prefs_search_header": "Ajk'amaya'l Kanoxïk",
   "prefs_topsites_description": "Taq ruxaq yalan ye'atz'ët",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "Nïm rupam chijun ri ajk'amaya'l, ichinan awuma rat",
   "prefs_topstories_show_sponsored_label": "{provider} To'on taq B'anob'äl",
   "prefs_topstories_sponsored_learn_more": "Tetamäx ch'aqa' chik",
   "prefs_highlights_description": "Jun rucha'onem ruxaq, ri xayäk o xatz'ët",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Titz'aqatisäx K'ïy Ruwinaq Ruxaq K'amaya'l",
   "section_menu_action_move_up": "Tijotob'äx",
   "section_menu_action_move_down": "Tiqasäx qa",
-  "section_menu_action_privacy_notice": "Ichinan na'oj",
-  "prefs_topstories_description": "Etamab'äl nïm rub'anikil, we mani choj xtik'o"
+  "section_menu_action_privacy_notice": "Ichinan na'oj"
 };

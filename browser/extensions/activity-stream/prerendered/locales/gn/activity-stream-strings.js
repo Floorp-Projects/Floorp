@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} rysýi; {num} rysýi",
   "prefs_search_header": "Ñandutípe jeheka",
   "prefs_topsites_description": "Umi tenda ojeikeveha",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "Iporãvéva ñanduti retepy, oñemomba’éva ndéve g̃uarã",
   "prefs_topstories_show_sponsored_label": "{provider} Tembiasakue ñepytyvõpyre",
   "prefs_topstories_sponsored_learn_more": "Kuaave",
   "prefs_highlights_description": "Tenda jeporavopy eñongatu térã eike hague",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Embojuaju Tenda ojeikeveha",
   "section_menu_action_move_up": "Jupi",
   "section_menu_action_move_down": "Guejy",
-  "section_menu_action_privacy_notice": "Marandu’i ñemiguáva",
-  "prefs_topstories_description": "Tetepy iporã añetéva ha ndaha’éiramo péicha ehareikuaáva"
+  "section_menu_action_privacy_notice": "Marandu’i ñemiguáva"
 };

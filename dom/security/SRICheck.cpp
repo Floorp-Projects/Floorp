@@ -179,34 +179,6 @@ SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
   return NS_OK;
 }
 
-/* static */ nsresult
-SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
-                          nsIChannel* aChannel,
-                          const nsACString& aBytes,
-                          const nsACString& aSourceFileURI,
-                          nsIConsoleReportCollector* aReporter)
-{
-  NS_ENSURE_ARG_POINTER(aReporter);
-
-  if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
-    nsAutoCString requestURL;
-    nsCOMPtr<nsIURI> originalURI;
-    if (aChannel &&
-        NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))) &&
-        originalURI) {
-      originalURI->GetAsciiSpec(requestURL);
-    }
-    SRILOG(("SRICheck::VerifyIntegrity (unichar stream)"));
-  }
-
-  SRICheckDataVerifier verifier(aMetadata, aSourceFileURI, aReporter);
-  nsresult rv =
-    verifier.Update(aBytes.Length(), (const uint8_t*)aBytes.BeginReading());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return verifier.Verify(aMetadata, aChannel, aSourceFileURI, aReporter);
-}
-
 //////////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////////

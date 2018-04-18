@@ -173,6 +173,7 @@
     "url": "chrome://browser/content/parent/ext-url-overrides.js",
     "schema": "chrome://browser/content/schemas/url_overrides.json",
     "scopes": ["addon_parent"],
+    "events": ["uninstall"],
     "manifest": ["chrome_url_overrides"],
     "paths": [
       ["urlOverrides"]

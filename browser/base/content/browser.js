@@ -2213,6 +2213,7 @@ function BrowserGoHome(aEvent) {
   var homePage = gHomeButton.getHomePage();
   var where = whereToOpenLink(aEvent, false, true);
   var urls;
+  var notifyObservers;
 
   // Home page should open in a new tab when current tab is an app tab
   if (where == "current" &&
@@ -2225,19 +2226,34 @@ function BrowserGoHome(aEvent) {
   case "current":
     loadOneOrMoreURIs(homePage, Services.scriptSecurityManager.getSystemPrincipal());
     gBrowser.selectedBrowser.focus();
+    notifyObservers = true;
     break;
   case "tabshifted":
   case "tab":
     urls = homePage.split("|");
     var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground", false);
+    // The homepage observer event should only be triggered when the homepage opens
+    // in the foreground. This is mostly to support the homepage changed by extension
+    // doorhanger which doesn't currently support background pages. This may change in
+    // bug 1438396.
+    notifyObservers = !loadInBackground;
     gBrowser.loadTabs(urls, {
       inBackground: loadInBackground,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
     break;
   case "window":
+    // OpenBrowserWindow will trigger the observer event, so no need to do so here.
+    notifyObservers = false;
     OpenBrowserWindow();
     break;
+  }
+  if (notifyObservers) {
+    // A notification for when a user has triggered their homepage. This is used
+    // to display a doorhanger explaining that an extension has modified the
+    // homepage, if necessary. Observers are only notified if the homepage
+    // becomes the active page.
+    Services.obs.notifyObservers(null, "browser-open-homepage-start");
   }
 }
 
@@ -2322,6 +2338,9 @@ function BrowserOpenTab(event) {
   // expressed the intent to open a new tab.  Since there are a lot of
   // entry points, this won't catch every single tab created, but most
   // initiated by the user should go through here.
+  //
+  // This is also used to notify a user that an extension has changed the
+  // New Tab page.
   Services.obs.notifyObservers(null, "browser-open-newtab-start");
 
   let where = "tab";
@@ -4292,6 +4311,13 @@ function OpenBrowserWindow(options) {
 
   win.addEventListener("MozAfterPaint", () => {
     TelemetryStopwatch.finish("FX_NEW_WINDOW_MS", telemetryObj);
+    if (Services.prefs.getIntPref("browser.startup.page") == 1
+        && defaultArgs == handler.startPage) {
+      // A notification for when a user has triggered their homepage. This is used
+      // to display a doorhanger explaining that an extension has modified the
+      // homepage, if necessary.
+      Services.obs.notifyObservers(win, "browser-open-homepage-start");
+    }
   }, {once: true});
 
   return win;

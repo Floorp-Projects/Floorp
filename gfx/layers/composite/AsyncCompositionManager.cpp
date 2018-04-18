@@ -649,17 +649,20 @@ SampleAnimations(Layer* aLayer,
       aLayer,
       [&] (Layer* layer)
       {
+        AnimationArray& animations = layer->GetAnimations();
+        if (animations.IsEmpty()) {
+          return;
+        }
+        isAnimating = true;
         bool hasInEffectAnimations = false;
         AnimationValue animationValue = layer->GetBaseAnimationStyle();
-        if (AnimationHelper::SampleAnimationForEachNode(aTime,
-                                                        layer->GetAnimations(),
-                                                        layer->GetAnimationData(),
-                                                        animationValue,
-                                                        hasInEffectAnimations)) {
-          isAnimating = true;
-        }
+        AnimationHelper::SampleAnimationForEachNode(aTime,
+                                                    animations,
+                                                    layer->GetAnimationData(),
+                                                    animationValue,
+                                                    hasInEffectAnimations);
         if (hasInEffectAnimations) {
-          Animation& animation = layer->GetAnimations().LastElement();
+          Animation& animation = animations.LastElement();
           ApplyAnimatedValue(layer,
                              aStorage,
                              animation.property(),

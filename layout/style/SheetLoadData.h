@@ -80,8 +80,11 @@ public:
   NotNull<const Encoding*> DetermineNonBOMEncoding(nsACString const& aSegment,
                                                    nsIChannel* aChannel);
 
+  // The caller may have the bytes for the stylesheet split across two strings,
+  // so aBytes1 and aBytes2 refer to those pieces.
   nsresult VerifySheetReadyToParse(nsresult aStatus,
-                                   const nsACString& aBytes,
+                                   const nsACString& aBytes1,
+                                   const nsACString& aBytes2,
                                    nsIChannel* aChannel);
 
   NS_DECL_ISUPPORTS
