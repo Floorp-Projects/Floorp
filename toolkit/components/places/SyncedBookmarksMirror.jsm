@@ -619,6 +619,7 @@ class SyncedBookmarksMirror {
       await this.db.execute(`DELETE FROM itemsMoved`);
       await this.db.execute(`DELETE FROM annosChanged`);
       await this.db.execute(`DELETE FROM idsToWeaklyUpload`);
+      await this.db.execute(`DELETE FROM guidsToDeleteRemotely`);
       await this.db.execute(`DELETE FROM itemsToUpload`);
 
       return changeRecords;
@@ -1407,6 +1408,11 @@ class SyncedBookmarksMirror {
       SQLITE_MAX_VARIABLE_NUMBER)) {
 
       await this.db.execute(`
+        INSERT INTO guidsToDeleteRemotely(guid)
+        VALUES ${new Array(chunk.length).fill("(?)").join(",")}`,
+        chunk);
+
+      await this.db.execute(`
         UPDATE items SET
           needsMerge = 0
         WHERE needsMerge AND
@@ -1685,6 +1691,12 @@ class SyncedBookmarksMirror {
       INSERT INTO structureToUpload(guid, parentId, position)
       SELECT b.guid, b.parent, b.position FROM moz_bookmarks b
       JOIN itemsToUpload o ON o.id = b.parent`);
+
+    // Stage tombstones for items that we explicitly flagged for deletion.
+    await this.db.execute(`
+      REPLACE INTO itemsToUpload(guid, syncChangeCounter, isDeleted)
+      SELECT d.guid, 1, 1 FROM guidsToDeleteRemotely d
+      JOIN items v ON v.guid = d.guid`);
 
     // Finally, stage tombstones for deleted items. Ignore conflicts if we have
     // tombstones for undeleted items; Places Maintenance should clean these up.
@@ -2681,6 +2693,11 @@ async function initializeTempMirrorEntities(db) {
   await db.execute(`CREATE TEMP TABLE idsToWeaklyUpload(
     id INTEGER PRIMARY KEY
   )`);
+
+  // Stores GUIDs for items that should be deleted on the server.
+  await db.execute(`CREATE TEMP TABLE guidsToDeleteRemotely(
+    guid TEXT PRIMARY KEY
+  ) WITHOUT ROWID`);
 
   // Stores locally changed items staged for upload. See `stageItemsToUpload`
   // for an explanation of why these tables exists.

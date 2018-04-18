@@ -1127,6 +1127,87 @@ add_task(async function test_non_syncable_items() {
   let datesAdded = await promiseManyDatesAdded([PlacesUtils.bookmarks.menuGuid,
     PlacesUtils.bookmarks.unfiledGuid, "bookmarkBBBB", "bookmarkJJJJ"]);
   deepEqual(changesToUpload, {
+    folderAAAAAA: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "folderAAAAAA",
+        deleted: true,
+      },
+    },
+    folderDDDDDD: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "folderDDDDDD",
+        deleted: true,
+      },
+    },
+    folderLEFTPQ: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "folderLEFTPQ",
+        deleted: true,
+      },
+    },
+    folderLEFTPC: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "folderLEFTPC",
+        deleted: true,
+      },
+    },
+    folderLEFTPR: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "folderLEFTPR",
+        deleted: true,
+      },
+    },
+    folderLEFTPF: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "folderLEFTPF",
+        deleted: true,
+      },
+    },
+    rootHHHHHHHH: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "rootHHHHHHHH",
+        deleted: true,
+      },
+    },
+    bookmarkFFFF: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkFFFF",
+        deleted: true,
+      },
+    },
+    bookmarkIIII: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkIIII",
+        deleted: true,
+      },
+    },
     bookmarkBBBB: {
       tombstone: false,
       counter: 1,
@@ -1187,7 +1268,7 @@ add_task(async function test_non_syncable_items() {
         children: ["bookmarkJJJJ", "bookmarkGGGG"],
       },
     },
-  }, "Should upload new structure excluding non-syncable items");
+  }, "Should upload new structure and tombstones for non-syncable items");
 
   await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
     guid: PlacesUtils.bookmarks.rootGuid,
