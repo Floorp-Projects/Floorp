@@ -12,13 +12,18 @@ const { require } = BrowserLoaderModule.BrowserLoader({
   window
 });
 const Perf = require("devtools/client/performance-new/components/Perf");
-const Services = require("Services");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const React = require("devtools/client/shared/vendor/react");
 const createStore = require("devtools/client/shared/redux/create-store")();
+const selectors = require("devtools/client/performance-new/store/selectors");
 const reducers = require("devtools/client/performance-new/store/reducers");
 const actions = require("devtools/client/performance-new/store/actions");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
+const {
+  receiveProfile,
+  getRecordingPreferences,
+  setRecordingPreferences
+} = require("devtools/client/performance-new/browser");
 
 /**
  * Initialize the panel by creating a redux store, and render the root component.
@@ -26,39 +31,29 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
  * @param toolbox - The toolbox
  * @param perfFront - The Perf actor's front. Used to start and stop recordings.
  */
-function gInit(toolbox, perfFront) {
+async function gInit(toolbox, perfFront, preferenceFront) {
   const store = createStore(reducers);
+
+  // Do some initialization, especially with privileged things that are part of the
+  // the browser.
   store.dispatch(actions.initializeStore({
     toolbox,
     perfFront,
-    /**
-     * This function uses privileged APIs in order to take the profile, open up a new
-     * tab, and then inject it into perf.html. In order to provide a clear separation
-     * in the codebase between privileged and non-privileged code, this function is
-     * defined in initializer.js, and injected into the the normal component. All of
-     * the React components and Redux store behave as normal unprivileged web components.
-     */
-    receiveProfile: profile => {
-      // Open up a new tab and send a message with the profile.
-      let browser = top.gBrowser;
-      if (!browser) {
-        // Current isn't browser window. Looking for the recent browser.
-        const win = Services.wm.getMostRecentWindow("navigator:browser");
-        if (!win) {
-          throw new Error("No browser window");
-        }
-        browser = win.gBrowser;
-        Services.focus.activeWindow = win;
-      }
-      const tab = browser.addTab("https://perf-html.io/from-addon");
-      browser.selectedTab = tab;
-      const mm = tab.linkedBrowser.messageManager;
-      mm.loadFrameScript(
-        "chrome://devtools/content/performance-new/frame-script.js",
-        false
-      );
-      mm.sendAsyncMessage("devtools:perf-html-transfer-profile", profile);
-    }
+    receiveProfile,
+    // Pull the default recording settings from the reducer, and update them according
+    // to what's in the target's preferences. This way the preferences are stored
+    // on the target. This could be useful for something like Android where you might
+    // want to tweak the settings.
+    recordingSettingsFromPreferences: await getRecordingPreferences(
+      preferenceFront,
+      selectors.getRecordingSettings(store.getState())
+    ),
+    // Go ahead and hide the implementation details for the component on how the
+    // preference information is stored
+    setRecordingPreferences: () => setRecordingPreferences(
+      preferenceFront,
+      selectors.getRecordingSettings(store.getState())
+    )
   }));
 
   ReactDOM.render(

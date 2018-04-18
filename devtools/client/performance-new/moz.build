@@ -9,6 +9,7 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'browser.js',
     'panel.js',
     'utils.js',
 )
