@@ -665,6 +665,12 @@ function checkLoadURL(url, principal, options) {
   return true;
 }
 
+function makeWidgetId(id) {
+  id = id.toLowerCase();
+  // FIXME: This allows for collisions.
+  return id.replace(/[^a-z0-9_-]/g, "_");
+}
+
 var ExtensionUtils = {
   checkLoadURL,
   defineLazyGetter,
@@ -676,6 +682,7 @@ var ExtensionUtils = {
   filterStack,
   getWinUtils,
   instanceOf,
+  makeWidgetId,
   normalizeTime,
   promiseDocumentIdle,
   promiseDocumentLoaded,

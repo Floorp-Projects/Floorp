@@ -133,7 +133,7 @@ public:
     }
 
     RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(WebRenderUserDataKey(aItem->GetPerFrameKey(), T::Type()));
-    if (!data || (data->GetType() != T::Type())) {
+    if (!data) {
       // To recreate a new user data, we should remove the data from the table first.
       if (data) {
         data->RemoveFromTable();

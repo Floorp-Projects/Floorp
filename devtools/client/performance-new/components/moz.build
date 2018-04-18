@@ -4,7 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'Description.js',
     'Perf.js',
-    'PerfSettings.js',
     'Range.js',
+    'RecordingButton.js',
+    'Settings.js',
 )

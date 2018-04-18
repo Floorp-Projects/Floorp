@@ -21,38 +21,41 @@
        * Test the perf component for when the profiler is already started.
        */
       addPerfTest(async () => {
-        const Perf = require("devtools/client/performance-new/components/Perf");
-        const React = require("devtools/client/shared/vendor/react");
-        const ReactDOM = require("devtools/client/shared/vendor/react-dom");
-        const perfFront = new MockPerfFront();
-        const container = document.querySelector("#container");
+        const {
+          perfFront,
+          getRecordingState,
+          mountComponent,
+          getState,
+          selectors
+        } = createPerfComponent();
 
-        const receiveProfile = () => {};
-        const element = React.createElement(Perf, { perfFront, receiveProfile });
-        const perfComponent = ReactDOM.render(element, container);
+        mountComponent();
 
-        is(perfComponent.state.recordingState, "not-yet-known",
+        is(getRecordingState(), "not-yet-known",
           "The component at first is in an unknown state.");
 
         await perfFront.flushAsyncQueue();
-        is(perfComponent.state.recordingState, "available-to-record",
+        is(getRecordingState(), "available-to-record",
           "After talking to the actor, we're ready to record.");
 
         document.querySelector("button").click();
-        is(perfComponent.state.recordingState, "request-to-start-recording",
+        is(getRecordingState(), "request-to-start-recording",
           "Sent in a request to start recording.");
 
         await perfFront.flushAsyncQueue();
-        is(perfComponent.state.recordingState, "recording",
+        is(getRecordingState(), "recording",
           "The actor has started its recording");
 
         ok(true, "Simulate a third party stopping the profiler.");
+        ok(!selectors.getRecordingUnexpectedlyStopped(getState()),
+          "The profiler has not unexpectedly stopped.");
+
         perfFront.stopProfilerAndDiscardProfile();
         await perfFront.flushAsyncQueue();
 
-        ok(perfComponent.state.recordingUnexpectedlyStopped,
+        ok(selectors.getRecordingUnexpectedlyStopped(getState()),
           "The profiler unexpectedly stopped.");
-        is(perfComponent.state.recordingState, "available-to-record",
+        is(getRecordingState(), "available-to-record",
           "However, the profiler is available to record again.");
       });
     </script>

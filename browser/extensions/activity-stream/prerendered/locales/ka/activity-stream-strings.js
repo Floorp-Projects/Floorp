@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} რიგად;{num} რიგად",
   "prefs_search_header": "საძიებო ველი",
   "prefs_topsites_description": "ხშირად მონახულებული საიტები",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "მნიშვნელოვანი ამბები ინტერნეტ-სამყაროდან, შერჩეული თქვენი ინტერესების მიხედვით",
   "prefs_topstories_show_sponsored_label": "მასალის მომწოდებელი {provider}",
   "prefs_topstories_sponsored_learn_more": "იხილეთ ვრცლად",
   "prefs_highlights_description": "თქვენ მიერ შენახული ან ბოლოს მონახულებული საიტები",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "რჩეული საიტის დამატება",
   "section_menu_action_move_up": "აწევა",
   "section_menu_action_move_down": "ჩამოწევა",
-  "section_menu_action_privacy_notice": "პირადი მონაცემების დაცვის განაცხადი",
-  "prefs_topstories_description": "მაღალი ხარისხის მასალა, რომელიც შეიძლება გამოგრჩენოდათ"
+  "section_menu_action_privacy_notice": "პირადი მონაცემების დაცვის განაცხადი"
 };

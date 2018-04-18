@@ -22,6 +22,7 @@ ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   DefaultWeakMap,
+  makeWidgetId,
   promiseEvent,
 } = ExtensionUtils;
 
@@ -29,12 +30,6 @@ var {
 const POPUP_LOAD_TIMEOUT_MS = 200;
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-function makeWidgetId(id) {
-  id = id.toLowerCase();
-  // FIXME: This allows for collisions.
-  return id.replace(/[^a-z0-9_-]/g, "_");
-}
 
 function promisePopupShown(popup) {
   return new Promise(resolve => {

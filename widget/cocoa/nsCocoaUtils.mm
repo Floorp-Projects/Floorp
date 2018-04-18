@@ -361,8 +361,28 @@ void data_ss_release_callback(void *aDataSourceSurface,
   }
 }
 
+// This function assumes little endian byte order.
+static bool
+ComputeIsEntirelyBlack(const DataSourceSurface::MappedSurface& aMap,
+                       const IntSize& aSize)
+{
+  for (int32_t y = 0; y < aSize.height; y++) {
+    size_t rowStart = y * aMap.mStride;
+    for (int32_t x = 0; x < aSize.width; x++) {
+      size_t index = rowStart + x * 4;
+      if (aMap.mData[index + 0] != 0 ||
+          aMap.mData[index + 1] != 0 ||
+          aMap.mData[index + 2] != 0) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 nsresult nsCocoaUtils::CreateCGImageFromSurface(SourceSurface* aSurface,
-                                                CGImageRef* aResult)
+                                                CGImageRef* aResult,
+                                                bool* aIsEntirelyBlack)
 {
   RefPtr<DataSourceSurface> dataSurface;
 
@@ -389,6 +409,10 @@ nsresult nsCocoaUtils::CreateCGImageFromSurface(SourceSurface* aSurface,
     return NS_ERROR_FAILURE;
   }
   // The Unmap() call happens in data_ss_release_callback
+
+  if (aIsEntirelyBlack) {
+    *aIsEntirelyBlack = ComputeIsEntirelyBlack(map, dataSurface->GetSize());
+  }
 
   // Create a CGImageRef with the bits from the image, taking into account
   // the alpha ordering and endianness of the machine so we don't have to

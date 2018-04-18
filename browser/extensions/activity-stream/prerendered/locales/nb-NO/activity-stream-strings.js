@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} rekke;{num} rekker",
   "prefs_search_header": "Nettsøk",
   "prefs_topsites_description": "Mest besøkte nettsteder",
-  "prefs_topstories_description2": "Great content from around the web, personalized for you",
+  "prefs_topstories_description2": "Bra innhold fra hele nettet, tilpasset for deg",
   "prefs_topstories_show_sponsored_label": "Sponsede nyheter fra {provider}",
   "prefs_topstories_sponsored_learn_more": "Les mer",
   "prefs_highlights_description": "Et utvalg av nettsteder som du har lagret eller besøkt",
@@ -89,6 +89,5 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Legg til toppsted",
   "section_menu_action_move_up": "Flytt opp",
   "section_menu_action_move_down": "Flytt ned",
-  "section_menu_action_privacy_notice": "Personvernbestemmelser",
-  "prefs_topstories_description": "Høykvalitetsinnhold du kanskje ellers ville ha oversett"
+  "section_menu_action_privacy_notice": "Personvernbestemmelser"
 };

@@ -59,14 +59,6 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest,
 {
   // Decoded data
   nsCString utf8String;
-  // How many bytes of decoded data to skip (3 when skipping UTF-8 BOM needed,
-  // 0 otherwise)
-  size_t skip = 0;
-
-  const Encoding* encoding;
-
-  nsresult rv = NS_OK;
-
   {
     // Hold the nsStringBuffer for the bytes from the stack to ensure release
     // no matter which return branch is taken.
@@ -76,59 +68,56 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest,
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
     if (NS_FAILED(mStatus)) {
-      mSheetLoadData->VerifySheetReadyToParse(mStatus, EmptyCString(), channel);
+      mSheetLoadData->VerifySheetReadyToParse(mStatus, EmptyCString(), EmptyCString(), channel);
       return mStatus;
     }
 
     nsresult rv =
-      mSheetLoadData->VerifySheetReadyToParse(aStatus, bytes, channel);
+      mSheetLoadData->VerifySheetReadyToParse(aStatus, mBOMBytes, bytes, channel);
     if (rv != NS_OK_PARSE_SHEET) {
       return rv;
     }
-
     rv = NS_OK;
 
-    size_t bomLength;
-    Tie(encoding, bomLength) = Encoding::ForBOM(bytes);
+    // BOM detection generally happens during the write callback, but that won't
+    // have happened if fewer than three bytes were received.
+    if (mEncodingFromBOM.isNothing()) {
+      HandleBOM();
+      MOZ_ASSERT(mEncodingFromBOM.isSome());
+    }
+
+    // The BOM handling has happened, but we still may not have an encoding if
+    // there was no BOM. Ensure we have one.
+    const Encoding* encoding = mEncodingFromBOM.value();
     if (!encoding) {
       // No BOM
       encoding = mSheetLoadData->DetermineNonBOMEncoding(bytes, channel);
+    }
+    mSheetLoadData->mEncoding = encoding;
 
-      rv = encoding->DecodeWithoutBOMHandling(bytes, utf8String);
-    } else if (encoding == UTF_8_ENCODING) {
-      // UTF-8 BOM; handling this manually because mozilla::Encoding
-      // can't handle this without copying with C++ types and uses
-      // infallible allocation with Rust types (which could avoid
-      // the copy).
+    size_t validated = 0;
+    if (encoding == UTF_8_ENCODING) {
+      validated = Encoding::UTF8ValidUpTo(bytes);
+    }
 
-      // First, chop off the BOM.
-      auto tail = Span<const uint8_t>(bytes).From(bomLength);
-      size_t upTo = Encoding::UTF8ValidUpTo(tail);
-      if (upTo == tail.Length()) {
-        // No need to copy
-        skip = bomLength;
-        utf8String.Assign(bytes);
-      } else {
-        rv = encoding->DecodeWithoutBOMHandling(tail, utf8String, upTo);
-      }
+    if (validated == bytes.Length()) {
+     // Either this is UTF-8 and all valid, or it's not UTF-8 but is an
+     // empty string. This assumes that an empty string in any encoding
+     // decodes to empty string, which seems like a plausible assumption.
+      utf8String.Assign(bytes);
     } else {
-      // UTF-16LE or UTF-16BE
-      rv = encoding->DecodeWithBOMRemoval(bytes, utf8String);
+      rv = encoding->DecodeWithoutBOMHandling(bytes, utf8String, validated);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   } // run destructor for `bytes`
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   // For reasons I don't understand, factoring the below lines into
   // a method on SheetLoadData resulted in a linker error. Hence,
   // accessing fields of mSheetLoadData from here.
-  mSheetLoadData->mEncoding = encoding;
   bool dummy;
   return mSheetLoadData->mLoader->ParseSheet(
     EmptyString(),
-    Span<const uint8_t>(utf8String).From(skip),
+    utf8String,
     mSheetLoadData,
     /* aAllowAsync = */ true,
     dummy);
@@ -149,6 +138,24 @@ StreamLoader::OnDataAvailable(nsIRequest*,
   return aInputStream->ReadSegments(WriteSegmentFun, this, aCount, &dummy);
 }
 
+void
+StreamLoader::HandleBOM()
+{
+  MOZ_ASSERT(mEncodingFromBOM.isNothing());
+  MOZ_ASSERT(mBytes.IsEmpty());
+
+  const Encoding* encoding;
+  size_t bomLength;
+  Tie(encoding, bomLength) = Encoding::ForBOM(mBOMBytes);
+  mEncodingFromBOM.emplace(encoding); // Null means no BOM.
+
+  // BOMs are three bytes at most, but may be fewer. Copy over anything
+  // that wasn't part of the BOM to mBytes. Note that we need to track
+  // any BOM bytes as well for SRI handling.
+  mBytes.Append(Substring(mBOMBytes, bomLength));
+  mBOMBytes.Truncate(bomLength);
+}
+
 nsresult
 StreamLoader::WriteSegmentFun(nsIInputStream*,
                               void* aClosure,
@@ -157,15 +164,33 @@ StreamLoader::WriteSegmentFun(nsIInputStream*,
                               uint32_t aCount,
                               uint32_t* aWriteCount)
 {
+  *aWriteCount = 0;
   StreamLoader* self = static_cast<StreamLoader*>(aClosure);
   if (NS_FAILED(self->mStatus)) {
     return self->mStatus;
   }
+
+  // If we haven't done BOM detection yet, divert bytes into the special buffer.
+  if (self->mEncodingFromBOM.isNothing()) {
+    size_t bytesToCopy = std::min(3 - self->mBOMBytes.Length(), aCount);
+    self->mBOMBytes.Append(aSegment, bytesToCopy);
+    aSegment += bytesToCopy;
+    *aWriteCount += bytesToCopy;
+    aCount -= bytesToCopy;
+
+    if (self->mBOMBytes.Length() == 3) {
+      self->HandleBOM();
+    } else {
+      return NS_OK;
+    }
+  }
+
   if (!self->mBytes.Append(aSegment, aCount, mozilla::fallible_t())) {
     self->mBytes.Truncate();
     return (self->mStatus = NS_ERROR_OUT_OF_MEMORY);
   }
-  *aWriteCount = aCount;
+
+  *aWriteCount += aCount;
   return NS_OK;
 }
 

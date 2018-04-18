@@ -6,10 +6,10 @@
 
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-                               "resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "CustomizableUI",
                                "resource:///modules/CustomizableUI.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionControlledPopup",
+                               "resource:///modules/ExtensionControlledPopup.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
                                "resource://gre/modules/ExtensionSettingsStore.jsm");
 
@@ -21,163 +21,61 @@ const STORE_TYPE = "url_overrides";
 const NEW_TAB_SETTING_NAME = "newTabURL";
 const NEW_TAB_CONFIRMED_TYPE = "newTabNotification";
 
-XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
-  return Services.strings.createBundle("chrome://global/locale/extensions.properties");
-});
-
-function userWasNotified(extensionId) {
-  let setting = ExtensionSettingsStore.getSetting(NEW_TAB_CONFIRMED_TYPE, extensionId);
-  return setting && setting.value;
-}
-
-function getAddonDetails(doc, addon) {
-  const defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
-
-  let image = doc.createElement("image");
-  image.setAttribute("src", addon.iconURL || defaultIcon);
-  image.classList.add("extension-controlled-icon");
-
-  let addonDetails = doc.createDocumentFragment();
-  addonDetails.appendChild(image);
-  addonDetails.appendChild(doc.createTextNode(" " + addon.name));
-
-  return addonDetails;
-}
-
-function replaceUrlInTab(gBrowser, tab, url) {
-  let loaded = new Promise(resolve => {
-    windowTracker.addListener("progress", {
-      onLocationChange(browser, webProgress, request, locationURI, flags) {
-        if (webProgress.isTopLevel
-            && browser.ownerGlobal.gBrowser.getTabForBrowser(browser) == tab
-            && locationURI.spec == url) {
-          windowTracker.removeListener(this);
-          resolve();
-        }
-      },
-    });
-  });
-  gBrowser.loadURI(url, {
-    flags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
-  });
-  return loaded;
-}
-
-async function handleNewTabOpened() {
-  // We don't need to open the doorhanger again until the controlling add-on changes.
-  // eslint-disable-next-line no-use-before-define
-  removeNewTabObserver();
-
-  let item = ExtensionSettingsStore.getSetting(STORE_TYPE, NEW_TAB_SETTING_NAME);
-
-  if (!item || !item.id || userWasNotified(item.id)) {
-    return;
-  }
-
-  // Find the elements we need.
-  let win = windowTracker.getCurrentWindow({});
-  let doc = win.document;
-  let panel = doc.getElementById("extension-notification-panel");
-  let addon = await AddonManager.getAddonByID(item.id);
-
-  let description = doc.getElementById("extension-new-tab-notification-description");
-  while (description.firstChild) {
-    description.firstChild.remove();
-  }
-  let message = strBundle.GetStringFromName("newTabControlled.message2");
-  let addonDetails = getAddonDetails(doc, addon);
-  description.appendChild(
-    BrowserUtils.getLocalizedFragment(doc, message, addonDetails));
-
-  // Add the Learn more link to the description.
-  let link = doc.createElement("label");
-  link.setAttribute("class", "learnMore text-link");
-  link.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "extension-home";
-  link.textContent = strBundle.GetStringFromName("newTabControlled.learnMore");
-  description.appendChild(link);
-
-  // Setup the command handler.
-  let handleCommand = async (event) => {
-    if (event.originalTarget.getAttribute("anonid") == "button") {
-      // Main action is to keep changes.
-      await ExtensionSettingsStore.addSetting(
-        item.id, NEW_TAB_CONFIRMED_TYPE, item.id, true, () => false);
-    } else {
-      // Secondary action is to restore settings. Disabling an add-on should remove
-      // the tabs that it has open, but we want to open the new New Tab in this tab.
-      //   1. Replace the tab's URL with about:blank, wait for it to change
-      //   2. Now that this tab isn't associated with the add-on, disable the add-on
-      //   3. Replace the tab's URL with the new New Tab URL
-      ExtensionSettingsStore.removeSetting(NEW_TAB_CONFIRMED_TYPE, item.id);
+XPCOMUtils.defineLazyGetter(this, "newTabPopup", () => {
+  return new ExtensionControlledPopup({
+    confirmedType: NEW_TAB_CONFIRMED_TYPE,
+    observerTopic: "browser-open-newtab-start",
+    popupnotificationId: "extension-new-tab-notification",
+    settingType: STORE_TYPE,
+    settingKey: NEW_TAB_SETTING_NAME,
+    descriptionId: "extension-new-tab-notification-description",
+    descriptionMessageId: "newTabControlled.message2",
+    learnMoreMessageId: "newTabControlled.learnMore",
+    learnMoreLink: "extension-home",
+    onObserverAdded() {
+      aboutNewTabService.willNotifyUser = true;
+    },
+    onObserverRemoved() {
+      aboutNewTabService.willNotifyUser = false;
+    },
+    async beforeDisableAddon(popup, win) {
+      // ExtensionControlledPopup will disable the add-on once this function completes.
+      // Disabling an add-on should remove the tabs that it has open, but we want
+      // to open the new New Tab in this tab (which might get closed).
+      //   1. Replace the tab's URL with about:blank
+      //   2. Return control to ExtensionControlledPopup once about:blank has loaded
+      //   3. Once the New Tab URL has changed, replace the tab's URL with the new New Tab URL
       let gBrowser = win.gBrowser;
       let tab = gBrowser.selectedTab;
       await replaceUrlInTab(gBrowser, tab, "about:blank");
       Services.obs.addObserver({
         async observe() {
           await replaceUrlInTab(gBrowser, tab, aboutNewTabService.newTabURL);
-          handleNewTabOpened();
+          // Now that the New Tab is loading, try to open the popup again. This
+          // will only open the popup if a new extension is controlling the New Tab.
+          popup.open();
           Services.obs.removeObserver(this, "newtab-url-changed");
         },
       }, "newtab-url-changed");
-
-      addon.userDisabled = true;
-    }
-    panel.hidePopup();
-    win.gURLBar.focus();
-  };
-  panel.addEventListener("command", handleCommand);
-  panel.addEventListener("popuphidden", () => {
-    panel.removeEventListener("command", handleCommand);
-  }, {once: true});
-
-  // Look for a browserAction on the toolbar.
-  let action = CustomizableUI.getWidget(
-    `${global.makeWidgetId(item.id)}-browser-action`);
-  if (action) {
-    action = action.areaType == "toolbar" && action.forWindow(win).node;
-  }
-
-  // Anchor to a toolbar browserAction if found, otherwise use the menu button.
-  let anchor = doc.getAnonymousElementByAttribute(
-    action || doc.getElementById("PanelUI-menu-button"),
-    "class", "toolbarbutton-icon");
-  panel.hidden = false;
-  panel.openPopup(anchor);
-}
-
-let newTabOpenedListener = {
-  observe(subject, topic, data) {
-    // Do this work in an idle callback to avoid interfering with new tab performance tracking.
-    windowTracker
-      .getCurrentWindow({})
-      .requestIdleCallback(handleNewTabOpened);
-  },
-};
-
-function removeNewTabObserver() {
-  if (aboutNewTabService.willNotifyUser) {
-    Services.obs.removeObserver(newTabOpenedListener, "browser-open-newtab-start");
-    aboutNewTabService.willNotifyUser = false;
-  }
-}
-
-function addNewTabObserver(extensionId) {
-  if (!aboutNewTabService.willNotifyUser && extensionId && !userWasNotified(extensionId)) {
-    Services.obs.addObserver(newTabOpenedListener, "browser-open-newtab-start");
-    aboutNewTabService.willNotifyUser = true;
-  }
-}
+    },
+  });
+});
 
 function setNewTabURL(extensionId, url) {
   if (extensionId) {
-    addNewTabObserver(extensionId);
+    newTabPopup.addObserver(extensionId);
   } else {
-    removeNewTabObserver();
+    newTabPopup.removeObserver();
   }
   aboutNewTabService.newTabURL = url;
 }
 
 this.urlOverrides = class extends ExtensionAPI {
+  static onUninstall(id) {
+    // TODO: This can be removed once bug 1438364 is fixed and all data is cleaned up.
+    newTabPopup.clearConfirmation(id);
+  }
+
   processNewTabSetting(action) {
     let {extension} = this;
     let item = ExtensionSettingsStore[action](extension.id, STORE_TYPE, NEW_TAB_SETTING_NAME);
@@ -196,14 +94,10 @@ this.urlOverrides = class extends ExtensionAPI {
       // Set up the shutdown code for the setting.
       extension.callOnClose({
         close: () => {
-          if (extension.shutdownReason == "ADDON_DISABLE"
-              || extension.shutdownReason == "ADDON_UNINSTALL") {
-            ExtensionSettingsStore.removeSetting(
-              extension.id, NEW_TAB_CONFIRMED_TYPE, extension.id);
-          }
           switch (extension.shutdownReason) {
             case "ADDON_DISABLE":
               this.processNewTabSetting("disable");
+              newTabPopup.clearConfirmation(extension.id);
               break;
 
             // We can remove the setting on upgrade or downgrade because it will be

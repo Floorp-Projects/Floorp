@@ -642,7 +642,8 @@ webrtc.nicer:
     expires: "62"
     kind: uint
     notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com
+      - webrtc-ice-telemetry-alerts@mozilla.com
+      - nohlmeier@mozilla.com
     release_channel_collection: opt-in
     record_in_processes:
       - 'main'
@@ -663,7 +664,8 @@ webrtc.nicer:
     expires: "62"
     kind: uint
     notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com
+      - webrtc-ice-telemetry-alerts@mozilla.com
+      - nohlmeier@mozilla.com
     release_channel_collection: opt-in
     record_in_processes:
       - 'main'
@@ -683,7 +685,8 @@ webrtc.nicer:
     expires: "62"
     kind: uint
     notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com
+      - webrtc-ice-telemetry-alerts@mozilla.com
+      - nohlmeier@mozilla.com
     release_channel_collection: opt-in
     record_in_processes:
       - 'main'
@@ -702,7 +705,8 @@ webrtc.nicer:
     expires: "62"
     kind: uint
     notification_emails:
-      - webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com
+      - webrtc-ice-telemetry-alerts@mozilla.com
+      - nohlmeier@mozilla.com
     release_channel_collection: opt-in
     record_in_processes:
       - 'main'
@@ -903,7 +907,8 @@ devtools.aboutdevtools:
     expires: "63"
     kind: uint
     notification_emails:
-      - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com
+      - dev-developer-tools@lists.mozilla.org
+      - jdescottes@mozilla.com
     record_in_processes:
       - 'main'
   installed:
@@ -914,7 +919,8 @@ devtools.aboutdevtools:
     expires: "63"
     kind: uint
     notification_emails:
-      - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com
+      - dev-developer-tools@lists.mozilla.org
+      - jdescottes@mozilla.com
     record_in_processes:
       - 'main'
   noinstall_exits:
@@ -925,7 +931,8 @@ devtools.aboutdevtools:
     expires: "63"
     kind: uint
     notification_emails:
-      - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com
+      - dev-developer-tools@lists.mozilla.org
+      - jdescottes@mozilla.com
     record_in_processes:
       - 'main'
 
@@ -938,7 +945,8 @@ devtools.onboarding:
     expires: "63"
     kind: boolean
     notification_emails:
-      - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com
+      - dev-developer-tools@lists.mozilla.org
+      - jdescottes@mozilla.com
     record_in_processes:
       - 'main'
 
@@ -951,7 +959,8 @@ devtools.responsive:
     expires: never
     kind: uint
     notification_emails:
-      - dev-developer-tools@lists.mozilla.org, jryans@mozilla.com
+      - dev-developer-tools@lists.mozilla.org
+      - jryans@mozilla.com
     record_in_processes:
       - main
     release_channel_collection: opt-out
@@ -964,7 +973,8 @@ devtools.responsive:
     kind: uint
     keyed: true
     notification_emails:
-      - dev-developer-tools@lists.mozilla.org, jryans@mozilla.com
+      - dev-developer-tools@lists.mozilla.org
+      - jryans@mozilla.com
     record_in_processes:
       - main
     release_channel_collection: opt-out
