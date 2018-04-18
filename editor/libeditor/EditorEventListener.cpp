@@ -762,26 +762,6 @@ EditorEventListener::MouseDown(MouseEvent* aMouseEvent)
   return NS_OK;
 }
 
-nsresult
-EditorEventListener::HandleChangeComposition(
-                       WidgetCompositionEvent* aCompositionChangeEvent)
-{
-  MOZ_ASSERT(!aCompositionChangeEvent->DefaultPrevented(),
-             "eCompositionChange event shouldn't be cancelable");
-  RefPtr<EditorBase> editorBase(mEditorBase);
-  if (DetachedFromEditor() ||
-      !editorBase->IsAcceptableInputEvent(aCompositionChangeEvent)) {
-    return NS_OK;
-  }
-
-  // if we are readonly or disabled, then do nothing.
-  if (editorBase->IsReadonly() || editorBase->IsDisabled()) {
-    return NS_OK;
-  }
-
-  return editorBase->UpdateIMEComposition(aCompositionChangeEvent);
-}
-
 /**
  * Drag event implementation
  */
@@ -1018,6 +998,9 @@ nsresult
 EditorEventListener::HandleStartComposition(
                        WidgetCompositionEvent* aCompositionStartEvent)
 {
+  if (NS_WARN_IF(!aCompositionStartEvent)) {
+    return NS_ERROR_FAILURE;
+  }
   RefPtr<EditorBase> editorBase(mEditorBase);
   if (DetachedFromEditor() ||
       !editorBase->IsAcceptableInputEvent(aCompositionStartEvent)) {
@@ -1027,13 +1010,41 @@ EditorEventListener::HandleStartComposition(
   // eCompositionStart event coming from widget is not cancelable.
   MOZ_ASSERT(!aCompositionStartEvent->DefaultPrevented(),
              "eCompositionStart shouldn't be cancelable");
-  return editorBase->BeginIMEComposition(aCompositionStartEvent);
+  TextEditor* textEditor = editorBase->AsTextEditor();
+  return textEditor->OnCompositionStart(*aCompositionStartEvent);
+}
+
+nsresult
+EditorEventListener::HandleChangeComposition(
+                       WidgetCompositionEvent* aCompositionChangeEvent)
+{
+  if (NS_WARN_IF(!aCompositionChangeEvent)) {
+    return NS_ERROR_FAILURE;
+  }
+  MOZ_ASSERT(!aCompositionChangeEvent->DefaultPrevented(),
+             "eCompositionChange event shouldn't be cancelable");
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  if (DetachedFromEditor() ||
+      !editorBase->IsAcceptableInputEvent(aCompositionChangeEvent)) {
+    return NS_OK;
+  }
+
+  // if we are readonly or disabled, then do nothing.
+  if (editorBase->IsReadonly() || editorBase->IsDisabled()) {
+    return NS_OK;
+  }
+
+  TextEditor* textEditor = editorBase->AsTextEditor();
+  return textEditor->OnCompositionChange(*aCompositionChangeEvent);
 }
 
 void
 EditorEventListener::HandleEndComposition(
                        WidgetCompositionEvent* aCompositionEndEvent)
 {
+  if (NS_WARN_IF(!aCompositionEndEvent)) {
+    return;
+  }
   RefPtr<EditorBase> editorBase(mEditorBase);
   if (DetachedFromEditor() ||
       !editorBase->IsAcceptableInputEvent(aCompositionEndEvent)) {
@@ -1041,7 +1052,9 @@ EditorEventListener::HandleEndComposition(
   }
   MOZ_ASSERT(!aCompositionEndEvent->DefaultPrevented(),
              "eCompositionEnd shouldn't be cancelable");
-  editorBase->EndIMEComposition();
+
+  TextEditor* textEditor = editorBase->AsTextEditor();
+  textEditor->OnCompositionEnd(*aCompositionEndEvent);
 }
 
 nsresult

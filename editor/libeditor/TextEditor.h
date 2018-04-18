@@ -121,10 +121,6 @@ public:
 
   virtual dom::EventTarget* GetDOMEventTarget() override;
 
-  virtual nsresult BeginIMEComposition(WidgetCompositionEvent* aEvent) override;
-  virtual nsresult UpdateIMEComposition(
-                     WidgetCompositionEvent* aCompositionChangeEvet) override;
-
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
 
   /**
@@ -229,6 +225,29 @@ public:
    */
   nsresult SetText(const nsAString& aString);
 
+  /**
+   * OnCompositionStart() is called when editor receives eCompositionStart
+   * event which should be handled in this editor.
+   */
+  nsresult OnCompositionStart(WidgetCompositionEvent& aCompositionStartEvent);
+
+  /**
+   * OnCompositionChange() is called when editor receives an eCompositioChange
+   * event which should be handled in this editor.
+   *
+   * @param aCompositionChangeEvent     eCompositionChange event which should
+   *                                    be handled in this editor.
+   */
+  nsresult
+  OnCompositionChange(WidgetCompositionEvent& aCompositionChangeEvent);
+
+  /**
+   * OnCompositionEnd() is called when editor receives an eCompositionChange
+   * event and it's followed by eCompositionEnd event and after
+   * OnCompositionChange() is called.
+   */
+  void OnCompositionEnd(WidgetCompositionEvent& aCompositionEndEvent);
+
 protected:
   virtual ~TextEditor();
 
@@ -308,6 +327,18 @@ protected:
 
   bool UpdateMetaCharset(nsIDocument& aDocument,
                          const nsACString& aCharacterSet);
+
+  /**
+   * EnsureComposition() should be called by composition event handlers.  This
+   * tries to get the composition for the event and set it to mComposition.
+   * However, this may fail because the composition may be committed before
+   * the event comes to the editor.
+   *
+   * @return            true if there is a composition.  Otherwise, for example,
+   *                    a composition event handler in web contents moved focus
+   *                    for committing the composition, returns false.
+   */
+  bool EnsureComposition(WidgetCompositionEvent& aCompositionEvent);
 
 protected:
   nsCOMPtr<nsIDocumentEncoder> mCachedDocumentEncoder;
