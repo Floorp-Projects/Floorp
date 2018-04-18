@@ -2335,65 +2335,6 @@ EditorBase::StopPreservingSelection()
   mSavedSel.MakeEmpty();
 }
 
-bool
-EditorBase::EnsureComposition(WidgetCompositionEvent* aCompositionEvent)
-{
-  if (mComposition) {
-    return true;
-  }
-  // The compositionstart event must cause creating new TextComposition
-  // instance at being dispatched by IMEStateManager.
-  mComposition = IMEStateManager::GetTextCompositionFor(aCompositionEvent);
-  if (!mComposition) {
-    // However, TextComposition may be committed before the composition
-    // event comes here.
-    return false;
-  }
-  mComposition->StartHandlingComposition(this);
-  return true;
-}
-
-nsresult
-EditorBase::BeginIMEComposition(WidgetCompositionEvent* aCompositionEvent)
-{
-  MOZ_ASSERT(!mComposition, "There is composition already");
-  if (!EnsureComposition(aCompositionEvent)) {
-    return NS_OK;
-  }
-  return NS_OK;
-}
-
-void
-EditorBase::EndIMEComposition()
-{
-  NS_ENSURE_TRUE_VOID(mComposition); // nothing to do
-
-  // commit the IME transaction..we can get at it via the transaction mgr.
-  // Note that this means IME won't work without an undo stack!
-  if (mTransactionManager) {
-    nsCOMPtr<nsITransaction> txn = mTransactionManager->PeekUndoStack();
-    nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryInterface(txn);
-    if (plcTxn) {
-      DebugOnly<nsresult> rv = plcTxn->Commit();
-      NS_ASSERTION(NS_SUCCEEDED(rv),
-                   "nsIAbsorbingTransaction::Commit() failed");
-    }
-  }
-
-  // Composition string may have hidden the caret.  Therefore, we need to
-  // cancel it here.
-  HideCaret(false);
-
-  // FYI: mComposition still keeps storing container text node of committed
-  //      string, its offset and length.  However, they will be invalidated
-  //      soon since its Destroy() will be called by IMEStateManager.
-  mComposition->EndHandlingComposition(this);
-  mComposition = nullptr;
-
-  // notify editor observers of action
-  NotifyEditorObservers(eNotifyEditorObserversOfEnd);
-}
-
 NS_IMETHODIMP
 EditorBase::ForceCompositionEnd()
 {
