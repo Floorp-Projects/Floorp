@@ -62,7 +62,7 @@ convertRtfToNode(txIEvalContext *aContext, txResultTreeFragment *aRtf)
         return NS_ERROR_UNEXPECTED;
     }
 
-    nsCOMPtr<nsIDOMDocumentFragment> domFragment =
+    RefPtr<DocumentFragment> domFragment =
       new DocumentFragment(doc->NodeInfoManager());
 
     txOutputFormat format;
