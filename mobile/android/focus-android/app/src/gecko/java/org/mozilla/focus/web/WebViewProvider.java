@@ -22,6 +22,7 @@ import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.utils.UrlUtils;
+import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
@@ -74,7 +75,7 @@ public class WebViewProvider {
             super(context, attrs);
 
             final GeckoSessionSettings settings = new GeckoSessionSettings();
-            settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
+            settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, true);
             settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
 
             geckoSession = new GeckoSession(settings);
@@ -328,7 +329,7 @@ public class WebViewProvider {
                 }
 
                 @Override
-                public void onLoadRequest(GeckoSession session, String uri, int target, GeckoSession.Response<Boolean> response) {
+                public void onLoadRequest(GeckoSession session, String uri, int target, int flags, GeckoResponse<Boolean> response) {
                     // If this is trying to load in a new tab, just load it in the current one
                     if (target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
                         geckoSession.loadUri(uri);
@@ -357,7 +358,7 @@ public class WebViewProvider {
                 }
 
                 @Override
-                public void onNewSession(GeckoSession geckoSession, String s, GeckoSession.Response<GeckoSession> response) {
+                public void onNewSession(GeckoSession session, String uri, GeckoResponse<GeckoSession> response) {
                     // TODO: #2151
                 }
             };
