@@ -151,7 +151,6 @@ checksum:
 
 upload: checksum
 	$(PYTHON) -u $(MOZILLA_DIR)/build/upload.py --base-path $(DIST) \
-		--package '$(PACKAGE)' \
 		$(UPLOAD_FILES) \
 		$(CHECKSUM_FILES)
 
