@@ -1,0 +1,44 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.single_dep:loader
+
+transforms:
+   - taskgraph.transforms.chunk_partners:transforms
+   - taskgraph.transforms.name_sanity:transforms
+   # This transform sets build_platform to the same thing as the upstream task.
+   # We'd do it here, except single_dep doesn't pay attention to any
+   # per platform things that we set.
+   - taskgraph.transforms.copy_attributes_from_dependent_task:transforms
+   # This transform is needed because task.py doesn't allow "dependent-task" to be
+   # set, but the single_dep loader sets it (and we need it for chunk_partners,
+   # name_sanity, and copy_build_platform_from_dependent_task to work).
+   - taskgraph.transforms.strip_dependent_task:transforms
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.release_notifications:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - release-partner-repack
+
+only-for-build-platforms:
+   - linux-nightly/opt
+   - linux64-nightly/opt
+
+job-template:
+   shipping-phase: promote
+   shipping-product: firefox
+   name: release-partner-repack-chunking-dummy
+   description: Dummy task to deal with fanning out Linux partner repacks
+   run-on-projects: []
+   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker:
+      implementation: docker-worker
+      os: linux
+      docker-image: "ubuntu:16.10"
+      max-run-time: 600
+      command:
+         - /bin/bash
+         - -c
+         - echo "Dummy task"
