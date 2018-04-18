@@ -54,8 +54,7 @@ config = {
         'LC_ALL': 'C',
         # 32 bit specific
         'PATH': '/usr/local/bin:/usr/lib/ccache:\
-/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:\
-/home/cltbld/bin',
+/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin',
     },
     "check_test_env": {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux/minidump_stackwalk',
