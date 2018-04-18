@@ -12,7 +12,7 @@ import os
 
 logger = logging.getLogger('checksums.py')
 
-def digest_file(filename, digest, chunk_size=1024):
+def digest_file(filename, digest, chunk_size=131072):
     '''Produce a checksum for the file specified by 'filename'.  'filename'
     is a string path to a file that is opened and read in this function.  The
     checksum algorithm is specified by 'digest' and is a valid OpenSSL
