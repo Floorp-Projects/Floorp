@@ -1,0 +1,209 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "StorageActivityService.h"
+
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/StaticPtr.h"
+#include "nsXPCOM.h"
+
+// This const is used to know when origin activities should be purged because
+// too old. This value should be in sync with what the UI needs.
+#define TIME_MAX_SECS 86400 /* 24 hours */
+
+namespace mozilla {
+namespace dom {
+
+static StaticRefPtr<StorageActivityService> gStorageActivityService;
+static bool gStorageActivityShutdown = false;
+
+/* static */ void
+StorageActivityService::SendActivity(nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<StorageActivityService> service = GetOrCreate();
+  if (NS_WARN_IF(!service)) {
+    return;
+  }
+
+  service->SendActivityInternal(aPrincipal);
+}
+
+/* static */ void
+StorageActivityService::SendActivity(const mozilla::ipc::PrincipalInfo& aPrincipalInfo)
+{
+  RefPtr<Runnable> r = NS_NewRunnableFunction(
+    "StorageActivityService::SendActivity",
+    [aPrincipalInfo] () {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      nsCOMPtr<nsIPrincipal> principal =
+        mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalInfo);
+
+      StorageActivityService::SendActivity(principal);
+    });
+
+  SystemGroup::Dispatch(TaskCategory::Other, r.forget());
+}
+
+/* static */ already_AddRefed<StorageActivityService>
+StorageActivityService::GetOrCreate()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!gStorageActivityService && !gStorageActivityShutdown) {
+    RefPtr<StorageActivityService> service = new StorageActivityService();
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (NS_WARN_IF(!obs)) {
+      return nullptr;
+    }
+
+    nsresult rv = obs->AddObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+
+    gStorageActivityService = service;
+  }
+
+  RefPtr<StorageActivityService> service = gStorageActivityService;
+  return service.forget();
+}
+
+StorageActivityService::StorageActivityService()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+StorageActivityService::~StorageActivityService()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mTimer);
+}
+
+void
+StorageActivityService::SendActivityInternal(nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPrincipal);
+
+  if (!XRE_IsParentProcess()) {
+    SendActivityToParent(aPrincipal);
+    return;
+  }
+
+  nsAutoCString origin;
+  nsresult rv = aPrincipal->GetOrigin(origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  mActivities.Put(origin, TimeStamp::NowLoRes());
+
+  MaybeStartTimer();
+}
+
+void
+StorageActivityService::SendActivityToParent(nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!XRE_IsParentProcess());
+
+  PBackgroundChild* actor = BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!actor)) {
+    return;
+  }
+
+  mozilla::ipc::PrincipalInfo principalInfo;
+  nsresult rv =
+    mozilla::ipc::PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  actor->SendStorageActivity(principalInfo);
+}
+
+NS_IMETHODIMP
+StorageActivityService::Observe(nsISupports* aSubject, const char* aTopic,
+                                const char16_t* aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID));
+
+  MaybeStopTimer();
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  }
+
+  gStorageActivityShutdown = true;
+  gStorageActivityService = nullptr;
+  return NS_OK;
+}
+
+void
+StorageActivityService::MaybeStartTimer()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mTimer) {
+    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mTimer->InitWithCallback(this,
+                             1000 * 5 * 60 /* any 5 minutes */,
+                             nsITimer::TYPE_REPEATING_SLACK);
+  }
+}
+
+void
+StorageActivityService::MaybeStopTimer()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+}
+
+NS_IMETHODIMP
+StorageActivityService::Notify(nsITimer* aTimer)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mTimer == aTimer);
+
+  TimeStamp now = TimeStamp::NowLoRes();
+
+  for (auto iter = mActivities.Iter(); !iter.Done(); iter.Next()) {
+    if ((now - iter.UserData()).ToSeconds() > TIME_MAX_SECS) {
+      iter.Remove();
+    }
+  }
+
+  // If no activities, let's stop the timer.
+  if (mActivities.Count() == 0) {
+    MaybeStopTimer();
+  }
+
+  return NS_OK;
+}
+
+NS_INTERFACE_MAP_BEGIN(StorageActivityService)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStorageActivityService)
+  NS_INTERFACE_MAP_ENTRY(nsIStorageActivityService)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(StorageActivityService)
+NS_IMPL_RELEASE(StorageActivityService)
+
+} // dom namespace
+} // mozilla namespace
