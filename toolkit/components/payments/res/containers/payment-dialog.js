@@ -5,6 +5,7 @@
 import "../vendor/custom-elements.min.js";
 
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
+import paymentRequest from "../paymentRequest.js";
 
 import "../components/currency-amount.js";
 import "./address-picker.js";
@@ -13,7 +14,6 @@ import "./order-details.js";
 import "./payment-method-picker.js";
 import "./shipping-option-picker.js";
 
-/* global paymentRequest */
 /* import-globals-from ../unprivileged-fallbacks.js */
 
 /**

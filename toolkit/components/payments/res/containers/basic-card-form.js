@@ -4,8 +4,8 @@
 
 /* import-globals-from ../../../../../browser/extensions/formautofill/content/autofillEditForms.js*/
 import PaymentStateSubscriberMixin from "../mixins/PaymentStateSubscriberMixin.js";
+import paymentRequest from "../paymentRequest.js";
 /* import-globals-from ../unprivileged-fallbacks.js */
-/* import-globals-from ../paymentRequest.js */
 
 /**
  * <basic-card-form></basic-card-form>
