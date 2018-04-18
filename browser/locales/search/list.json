@@ -761,7 +761,7 @@
     "uk": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yandex-uk", "meta-ua", "ddg", "wikipedia-uk", "metamarket"
+          "google", "bing", "meta-ua", "ddg", "wikipedia-uk", "metamarket"
         ]
       }
     },
