@@ -3429,6 +3429,9 @@ class BaseCompiler final : public BaseCompilerInterface
           case ExprType::F32:
             masm.storeFloat32(RegF32(ReturnFloat32Reg), resultsAddress);
             break;
+          case ExprType::AnyRef:
+            masm.storePtr(RegPtr(ReturnReg), resultsAddress);
+            break;
           default:
             MOZ_CRASH("Function return type");
         }
@@ -3452,6 +3455,9 @@ class BaseCompiler final : public BaseCompilerInterface
             break;
           case ExprType::F32:
             masm.loadFloat32(resultsAddress, RegF32(ReturnFloat32Reg));
+            break;
+          case ExprType::AnyRef:
+            masm.loadPtr(resultsAddress, RegPtr(ReturnReg));
             break;
           default:
             MOZ_CRASH("Function return type");

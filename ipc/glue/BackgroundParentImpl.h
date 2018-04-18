@@ -284,6 +284,9 @@ protected:
 
   virtual bool
   DeallocPMIDIManagerParent(PMIDIManagerParent* aActor) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvStorageActivity(const PrincipalInfo& aPrincipalInfo) override;
 };
 
 } // namespace ipc

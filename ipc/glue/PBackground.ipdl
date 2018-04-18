@@ -148,6 +148,10 @@ parent:
   async PMIDIManager();
   async PMIDIPort(MIDIPortInfo portInfo, bool sysexEnabled);
 
+  // This method is used to propagate storage activities from the child actor
+  // to the parent actor. See StorageActivityService.
+  async StorageActivity(PrincipalInfo principalInfo);
+
 child:
   async PCache();
   async PCacheStreamControl();

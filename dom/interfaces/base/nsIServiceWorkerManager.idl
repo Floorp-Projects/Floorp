@@ -144,17 +144,6 @@ interface nsIServiceWorkerManager : nsISupports
   [notxpcom, nostdcall] bool StartControlling(in const_ClientInfoRef aClientInfo,
                                               in const_ServiceWorkerDescriptorRef aServiceWorker);
 
-  /*
-   * Clears ServiceWorker registrations from memory and disk for the specified
-   * host.
-   * - All ServiceWorker instances change their state to redundant.
-   * - Existing ServiceWorker instances handling fetches will keep running.
-   * - All documents will immediately stop being controlled.
-   * - Unregister jobs will be queued for all registrations.
-   *   This eventually results in the registration being deleted from disk too.
-   */
-  void removeAndPropagate(in AUTF8String aHost);
-
   // Testing
   DOMString getScopeForUrl(in nsIPrincipal aPrincipal, in DOMString aPath);
 

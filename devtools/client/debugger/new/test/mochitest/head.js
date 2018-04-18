@@ -173,6 +173,7 @@ function waitForState(dbg, predicate, msg) {
   return new Promise(resolve => {
     info(`Waiting for state change: ${msg || ""}`);
     if (predicate(dbg.store.getState())) {
+      info(`Finished waiting for state change: ${msg || ""}`);
       return resolve();
     }
 
@@ -1260,8 +1261,9 @@ async function assertPreviewPopup(dbg, { field, value, expression }) {
   const properties =
     preview.result.preview.ownProperties || preview.result.preview.items;
   const property = properties[field];
+  const propertyValue = property.value || property
 
-  is(`${property.value || property}`, value, "Preview.result");
+  is(`${propertyValue}`, value, "Preview.result");
   is(preview.updating, false, "Preview.updating");
   is(preview.expression, expression, "Preview.expression");
 }
@@ -1282,9 +1284,7 @@ async function assertPreviews(dbg, previews) {
       await assertPreviewTextValue(dbg, { expression, text: result });
     }
 
-    // Move to column 0 after to make sure that the preview created by this
-    // test does not affect later attempts to hover and preview.
-    hoverAtPos(dbg, { line: line, ch: 0 });
+    dbg.actions.clearPreview();
   }
 }
 

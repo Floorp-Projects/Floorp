@@ -185,7 +185,7 @@ already_AddRefed<nsIRunnable>
 PrioritizedEventQueue<InnerQueueT>::GetEvent(EventPriority* aPriority,
                                              const MutexAutoLock& aProofOfLock)
 {
-  MakeScopeExit([&] {
+  auto guard = MakeScopeExit([&] {
     mHasPendingEventsPromisedIdleEvent = false;
   });
 
