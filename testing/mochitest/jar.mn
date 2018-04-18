@@ -17,7 +17,7 @@ mochikit.jar:
   content/tests/SimpleTest/ChromePowers.js (tests/SimpleTest/ChromePowers.js)
   content/tests/SimpleTest/EventUtils.js (tests/SimpleTest/EventUtils.js)
   content/tests/SimpleTest/ExtensionTestUtils.js (tests/SimpleTest/ExtensionTestUtils.js)
-  content/tests/SimpleTest/SpawnTask.js (tests/SimpleTest/SpawnTask.js)
+  content/tests/SimpleTest/AddTask.js (tests/SimpleTest/AddTask.js)
   content/tests/SimpleTest/AsyncUtilsContent.js (tests/SimpleTest/AsyncUtilsContent.js)
   content/tests/SimpleTest/LogController.js (tests/SimpleTest/LogController.js)
   content/tests/SimpleTest/MemoryStats.js (tests/SimpleTest/MemoryStats.js)

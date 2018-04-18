@@ -35,12 +35,12 @@ var add_task = (function () {
           function skipTask(name) {
             let logger = parentRunner && parentRunner.structuredLogger;
             if (!logger) {
-              info("SpawnTask.js | Skipping test " + name);
+              info("AddTask.js | Skipping test " + name);
               return;
             }
             logger.deactivateBuffering();
             logger.testStatus(SimpleTest._getCurrentTestURL(), name, "SKIP");
-            logger.warning("SpawnTask.js | Skipping test " + name);
+            logger.warning("AddTask.js | Skipping test " + name);
             logger.activateBuffering();
           }
 
@@ -53,12 +53,12 @@ var add_task = (function () {
                 skipTask(name);
                 continue;
               }
-              info("SpawnTask.js | Entering test " + name);
+              info("AddTask.js | Entering test " + name);
               let result = await task();
               if (isGenerator(result)) {
                 ok(false, "Task returned a generator");
               }
-              info("SpawnTask.js | Leaving test " + name);
+              info("AddTask.js | Leaving test " + name);
             }
           } catch (ex) {
             try {
