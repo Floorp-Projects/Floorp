@@ -28,6 +28,8 @@ class Documentation(MachCommandBase):
         super(Documentation, self).__init__(context)
 
         self._manager = None
+        self._project = None
+        self._version = None
 
     @Command('doc', category='devenv',
              description='Generate and serve documentation from the tree.')
@@ -75,7 +77,6 @@ class Documentation(MachCommandBase):
             return die('failed to generate documentation:\n'
                        '%s: could not find docs at this location' % path)
 
-        props = self._project_properties(docdir)
         result = self._run_sphinx(docdir, savedir, fmt=fmt)
         if result != 0:
             return die('failed to generate documentation:\n'
@@ -84,13 +85,12 @@ class Documentation(MachCommandBase):
             print('\nGenerated documentation:\n%s' % savedir)
 
         if archive:
-            archive_path = os.path.join(outdir,
-                                        '%s.tar.gz' % props['project'])
+            archive_path = os.path.join(outdir, '%s.tar.gz' % self.project)
             create_tarball(archive_path, savedir)
             print('Archived to %s' % archive_path)
 
         if upload:
-            self._s3_upload(savedir, props['project'], props['version'])
+            self._s3_upload(savedir, self.project, self.version)
 
         if not serve:
             index_path = os.path.join(savedir, 'index.html')
@@ -134,7 +134,7 @@ class Documentation(MachCommandBase):
             self._manager = manager
         return self._manager
 
-    def _project_properties(self, path):
+    def _read_project_properties(self):
         import imp
         path = os.path.normpath(self.manager.conf_py_path)
         with open(path, 'r') as fh:
@@ -147,10 +147,20 @@ class Documentation(MachCommandBase):
         if not project:
             project = conf.project.replace(' ', '_')
 
-        return {
-            'project': project,
-            'version': getattr(conf, 'version', None)
-        }
+        self._project = project,
+        self._version = getattr(conf, 'version', None)
+
+    @property
+    def project(self):
+        if not self._project:
+            self._read_project_properties()
+        return self._project
+
+    @property
+    def version(self):
+        if not self._version:
+            self._read_project_properties()
+        return self._version
 
     def _find_doc_dir(self, path):
         if os.path.isfile(path):
