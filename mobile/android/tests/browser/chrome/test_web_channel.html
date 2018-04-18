@@ -34,7 +34,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   let gTests = [
     {
       desc: "WebChannel generic message",
-      run: function* () {
+      run() {
         return new Promise(function(resolve, reject) {
           let tab;
           let channel = new WebChannel("generic", Services.io.newURI(HTTP_PATH));
@@ -52,7 +52,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     },
     {
       desc: "WebChannel two way communication",
-      run: function* () {
+      run() {
         return new Promise(function(resolve, reject) {
           let tab;
           let channel = new WebChannel("twoway", Services.io.newURI(HTTP_PATH));
@@ -79,7 +79,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     },
     {
       desc: "WebChannel multichannel",
-      run: function* () {
+      run() {
         return new Promise(function(resolve, reject) {
           let tab;
           let channel = new WebChannel("multichannel", Services.io.newURI(HTTP_PATH));
