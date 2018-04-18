@@ -16,7 +16,6 @@ config = {
         "http://pypi.pvt.build.mozilla.org/pub",
         "http://pypi.pub.build.mozilla.org/pub",
     ],
-    "virtualenv_modules": ['pywin32', 'talos', 'mozinstall'],
     "exes": {
         'python': PYTHON,
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg'),
