@@ -184,6 +184,7 @@ async function testCircleMoveCenter(config) {
   const selector = "#circle";
   const property = "clip-path";
 
+  let onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
   await setup({selector, property, ...config});
 
   let cx = parseFloat(await testActor.getHighlighterNodeAttribute(
@@ -197,13 +198,13 @@ async function testCircleMoveCenter(config) {
   let dx = width / 10;
   let dy = height / 10;
 
-  let onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
   info("Moving circle center");
   let { mouse } = helper;
   await mouse.down(cxPixel, cyPixel, selector);
   await mouse.move(cxPixel + dx, cyPixel + dy, selector);
   await mouse.up(cxPixel + dx, cyPixel + dy, selector);
   await testActor.reflow();
+  info("Waiting for shape changes to apply");
   await onShapeChangeApplied;
 
   let definition = await getComputedPropertyValue(selector, property, inspector);
@@ -292,25 +293,31 @@ async function testInsetMoveEdges(config) {
   let { mouse } = helper;
 
   info("Moving inset top");
+  let onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
   await mouse.down(xCenter, top, selector);
   await mouse.move(xCenter, top + dy, selector);
   await mouse.up(xCenter, top + dy, selector);
   await testActor.reflow();
+  await onShapeChangeApplied;
 
   info("Moving inset bottom");
+  onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
   await mouse.down(xCenter, bottom, selector);
   await mouse.move(xCenter, bottom + dy, selector);
   await mouse.up(xCenter, bottom + dy, selector);
   await testActor.reflow();
+  await onShapeChangeApplied;
 
   info("Moving inset left");
+  onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
   await mouse.down(left, yCenter, selector);
   await mouse.move(left + dx, yCenter, selector);
   await mouse.up(left + dx, yCenter, selector);
   await testActor.reflow();
+  await onShapeChangeApplied;
 
   info("Moving inset right");
-  let onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
+  onShapeChangeApplied = highlighters.once("shapes-highlighter-changes-applied");
   await mouse.down(right, yCenter, selector);
   await mouse.move(right + dx, yCenter, selector);
   await mouse.up(right + dx, yCenter, selector);
