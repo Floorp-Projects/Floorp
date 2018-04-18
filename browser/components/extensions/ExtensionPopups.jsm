@@ -123,8 +123,8 @@ class BasePopup {
         panel.removeEventListener("popuppositioned", this, {capture: true});
       }
       if (panel && panel.id !== REMOTE_PANEL_ID) {
-        panel.style.removeProperty("--lwt-arrowpanel-background");
-        panel.style.removeProperty("--lwt-arrowpanel-border-color");
+        panel.style.removeProperty("--arrowpanel-background");
+        panel.style.removeProperty("--arrowpanel-border-color");
         panel.removeAttribute("remote");
       }
 
@@ -360,10 +360,10 @@ class BasePopup {
     if (!background) {
       background = "#fff";
     }
-    this.panel.style.setProperty("--lwt-arrowpanel-background", background);
+    this.panel.style.setProperty("--arrowpanel-background", background);
     if (background == "#fff") {
       // Set a usable default color that work with the default background-color.
-      this.panel.style.setProperty("--lwt-arrowpanel-border-color", "hsla(210,4%,10%,.15)");
+      this.panel.style.setProperty("--arrowpanel-border-color", "hsla(210,4%,10%,.15)");
     }
     this.background = background;
   }

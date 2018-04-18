@@ -15,25 +15,33 @@
   --date-picker-item-height: 2.5rem;
   --date-picker-item-width: 3.3rem;
 
-  --border: 0.1rem solid ThreeDShadow;
+  --border: 0.1rem solid #D6D6D6;
   --border-radius: 0.3rem;
-  --border-active-color: ButtonShadow;
+  --border-active-color: #B1B1B1;
 
-  --font-color: ButtonText;
-  --fill-color: ThreeDFace;
+  --font-color: #191919;
+  --fill-color: #EBEBEB;
 
-  --today-fill-color: ThreeDShadow;
+  --today-fill-color: rgb(212, 212, 212);
 
-  --selected-font-color: HighlightText;
-  --selected-fill-color: Highlight;
+  --selected-font-color: #FFFFFF;
+  --selected-fill-color: #0996F8;
 
-  --button-fill-color-active: ButtonFace;
+  --button-font-color: #858585;
+  --button-font-color-hover: #4D4D4D;
+  --button-font-color-active: #191919;
+  --button-fill-color-active: #D4D4D4;
 
-  /* Use -moz-activehyperlinktext to get a system color that
-     by default will be closest to Red */
-  --weekend-font-color: -moz-activehyperlinktext;
+  --weekday-header-font-color: #6C6C6C;
+  --weekend-header-font-color: rgb(218, 78, 68);
 
-  --disabled-fill-color: ButtonShadow;
+  --weekend-font-color: rgb(218, 78, 68);
+  --weekday-outside-font-color: rgb(153, 153, 153);
+  --weekend-outside-font-color: rgb(255, 152, 143);
+
+  --weekday-disabled-font-color: rgba(25, 25, 25, 0.2);
+  --weekend-disabled-font-color: rgba(218, 78, 68, 0.2);
+  --disabled-fill-color: rgba(235, 235, 235, 0.8);
 
   --disabled-opacity: 0.2;
 }
@@ -66,17 +74,16 @@ button {
 .nav > button {
   width: 3rem;
   height: var(--date-picker-item-height);
-  -moz-context-properties: fill, fill-opacity;
-  fill: var(--font-color);
-  fill-opacity: .5;
+  -moz-context-properties: fill;
+  fill: var(--button-font-color);
 }
 
 .nav > button:hover {
-  fill-opacity: .8;
+  fill: var(--button-font-color-hover);
 }
 
 .nav > button.active {
-  fill-opacity: 1;
+  fill: var(--button-font-color-active);
 }
 
 .nav > button.prev,
@@ -127,9 +134,8 @@ button.month-year::after {
   width: 2.6rem;
   height: 1.6rem;
   background: url("chrome://global/skin/icons/spinner-arrow-down.svg") no-repeat 50% 50%;
-  -moz-context-properties: fill, fill-opacity;
-  fill: var(--font-color);
-  fill-opacity: .5;
+  -moz-context-properties: fill;
+  fill: var(--button-font-color);
 }
 
 button.month-year.active::after {
@@ -202,7 +208,11 @@ button.month-year.active::after {
 }
 
 .week-header > div {
-  opacity: .5;
+  color: var(--weekday-header-font-color);
+}
+
+.week-header > div.weekend {
+  color: var(--weekend-header-font-color);
 }
 
 .days-viewport {
@@ -229,20 +239,26 @@ button.month-year.active::after {
 }
 
 .days-view > .outside {
-  opacity: .5;
+  color: var(--weekday-outside-font-color);
 }
 
-.weekend {
+.days-view > .weekend {
   color: var(--weekend-font-color);
 }
 
 .days-view > .weekend.outside {
-  opacity: .5;
+  color: var(--weekend-outside-font-color);
 }
 
 .days-view > .out-of-range,
 .days-view > .off-step {
+  color: var(--weekday-disabled-font-color);
   background: var(--disabled-fill-color);
+}
+
+.days-view > .out-of-range.weekend,
+.days-view > .off-step.weekend {
+  color: var(--weekend-disabled-font-color);
 }
 
 .days-view > .today {
@@ -278,17 +294,16 @@ button.month-year.active::after {
 
 .spinner-container > button {
   height: var(--spinner-button-height);
-  -moz-context-properties: fill, fill-opacity;
-  fill: var(--font-color);
-  fill-opacity: .5;
+  -moz-context-properties: fill;
+  fill: var(--button-font-color);
 }
 
 .spinner-container > button:hover {
-  fill-opacity: .8;
+  fill: var(--button-font-color-hover);
 }
 
 .spinner-container > button.active {
-  fill-opacity: 1;
+  fill: var(--button-font-color-active);
 }
 
 .spinner-container > button.up {
