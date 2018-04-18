@@ -5,13 +5,18 @@
 import sys
 import string
 import argparse
+import subprocess
+import buildconfig
+from mozbuild import shellutil
 
-def get_properties(dataFile):
-    with open(dataFile, "r") as f:
-        properties = eval(f.read())
+def get_properties(preprocessorHeader):
+    cpp = list(buildconfig.substs['CPP'])
+    cpp += shellutil.split(buildconfig.substs['ACDEFINES'])
+    cpp.append(preprocessorHeader)
+    preprocessed = subprocess.check_output(cpp)
     properties = [{"name":p[0], "prop":p[1], "id":p[2],
                    "flags":p[3], "pref":p[4], "proptype":p[5]}
-                  for (i, p) in enumerate(properties)]
+                  for (i, p) in enumerate(eval(preprocessed))]
 
     # Sort the list so that longhand properties are intermingled first,
     # shorthand properties follow, then aliases appear last.
@@ -52,7 +57,7 @@ def generate_idl_names(properties):
 def generate_assertions(properties):
     def enum(p):
         if p["proptype"] is "alias":
-            return "eCSSPropertyAlias_%s" % p["id"][0]
+            return "eCSSPropertyAlias_%s" % p["prop"]
         else:
             return "eCSSProperty_%s" % p["id"]
     msg = ('static_assert(%s == %d, "GenerateCSSPropsGenerated.py did not list '
@@ -74,12 +79,12 @@ def generate_idl_name_positions(properties):
 
     return ",\n".join(map(lambda (p, position): "  %d" % position, ps))
 
-def generate(output, cppTemplate, dataFile):
+def generate(output, cppTemplate, preprocessorHeader):
     cppFile = open(cppTemplate, "r")
     cppTemplate = cppFile.read()
     cppFile.close()
 
-    properties = get_properties(dataFile)
+    properties = get_properties(preprocessorHeader)
     substitutions = {
         "idl_names": generate_idl_names(properties),
         "assertions": generate_assertions(properties),

@@ -9,9 +9,11 @@ const NON_CONTENT_ACCESSIBLE_PROPERTIES = [
   "-x-lang",
   "-x-text-zoom",
   "-moz-window-shadow",
-  "-moz-window-opacity",
-  "-moz-window-transform",
-  "-moz-window-transform-origin",
+  // FIXME(bug 1419695): These should be hidden, but Gecko would refuse to
+  // transition them. We need to fix that.
+  // "-moz-window-opacity",
+  // "-moz-window-transform",
+  // "-moz-window-transform-origin",
   "-moz-top-layer",
   "-moz-script-size-multiplier",
   "-moz-script-level",

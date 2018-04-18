@@ -1670,6 +1670,15 @@ CSS_PROP_(
     kHyphensKTable,
     eStyleAnimType_Discrete)
 CSS_PROP_(
+    initial-letter,
+    initial_letter,
+    InitialLetter,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.initial-letter.enabled",
+    0,
+    nullptr,
+    eStyleAnimType_Discrete)
+CSS_PROP_(
     image-orientation,
     image_orientation,
     ImageOrientation,
@@ -1704,15 +1713,6 @@ CSS_PROP_(
     "",
     VARIANT_HK,
     kIMEModeKTable,
-    eStyleAnimType_Discrete)
-CSS_PROP_(
-    initial-letter,
-    initial_letter,
-    InitialLetter,
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.initial-letter.enabled",
-    0,
-    nullptr,
     eStyleAnimType_Discrete)
 CSS_PROP_(
     inline-size,
@@ -2383,15 +2383,6 @@ CSS_PROP_(
     kOverflowClipBoxKTable,
     eStyleAnimType_Discrete)
 CSS_PROP_(
-    overflow-wrap,
-    overflow_wrap,
-    OverflowWrap,
-    0,
-    "",
-    VARIANT_HK,
-    kOverflowWrapKTable,
-    eStyleAnimType_Discrete)
-CSS_PROP_(
     overflow-x,
     overflow_x,
     OverflowX,
@@ -2408,30 +2399,6 @@ CSS_PROP_(
     "",
     VARIANT_HK,
     kOverflowSubKTable,
-    eStyleAnimType_Discrete)
-CSS_PROP_SHORTHAND(
-    overscroll-behavior,
-    overscroll_behavior,
-    OverscrollBehavior,
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.overscroll-behavior.enabled")
-CSS_PROP_(
-    overscroll-behavior-x,
-    overscroll_behavior_x,
-    OverscrollBehaviorX,
-    0,
-    "layout.css.overscroll-behavior.enabled",
-    VARIANT_HK,
-    kOverscrollBehaviorKTable,
-    eStyleAnimType_Discrete)
-CSS_PROP_(
-    overscroll-behavior-y,
-    overscroll_behavior_y,
-    OverscrollBehaviorY,
-    0,
-    "layout.css.overscroll-behavior.enabled",
-    VARIANT_HK,
-    kOverscrollBehaviorKTable,
     eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     padding,
@@ -2658,16 +2625,6 @@ CSS_PROP_(
     VARIANT_HK,
     kRubyPositionKTable,
     eStyleAnimType_Discrete)
-CSS_PROP_(
-    scale,
-    scale,
-    Scale,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
-    "layout.css.individual-transform.enabled",
-    0,
-    nullptr,
-    eStyleAnimType_None)
 #ifndef CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_(
@@ -2716,6 +2673,30 @@ CSS_PROP_(
     "layout.css.scroll-behavior.property-enabled",
     VARIANT_HK,
     kScrollBehaviorKTable,
+    eStyleAnimType_Discrete)
+CSS_PROP_SHORTHAND(
+    overscroll-behavior,
+    overscroll_behavior,
+    OverscrollBehavior,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.overscroll-behavior.enabled")
+CSS_PROP_(
+    overscroll-behavior-x,
+    overscroll_behavior_x,
+    OverscrollBehaviorX,
+    0,
+    "layout.css.overscroll-behavior.enabled",
+    VARIANT_HK,
+    kOverscrollBehaviorKTable,
+    eStyleAnimType_Discrete)
+CSS_PROP_(
+    overscroll-behavior-y,
+    overscroll_behavior_y,
+    OverscrollBehaviorY,
+    0,
+    "layout.css.overscroll-behavior.enabled",
+    VARIANT_HK,
+    kOverscrollBehaviorKTable,
     eStyleAnimType_Discrete)
 CSS_PROP_(
     scroll-snap-coordinate,
@@ -3141,6 +3122,16 @@ CSS_PROP_(
     kBorderWidthKTable,
     eStyleAnimType_Discrete)
 CSS_PROP_(
+    scale,
+    scale,
+    Scale,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+    "layout.css.individual-transform.enabled",
+    0,
+    nullptr,
+    eStyleAnimType_None)
+CSS_PROP_(
     text-transform,
     text_transform,
     TextTransform,
@@ -3401,16 +3392,6 @@ CSS_PROP_(
     eStyleAnimType_Discrete)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_(
-    -moz-window-opacity,
-    _moz_window_opacity,
-    CSS_PROP_DOMPROP_PREFIXED(WindowOpacity),
-    CSS_PROPERTY_INTERNAL |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME,
-    "",
-    VARIANT_HN,
-    nullptr,
-    eStyleAnimType_float)
-CSS_PROP_(
     -moz-window-shadow,
     _moz_window_shadow,
     CSS_PROP_DOMPROP_PREFIXED(WindowShadow),
@@ -3421,12 +3402,20 @@ CSS_PROP_(
     kWindowShadowKTable,
     eStyleAnimType_None)
 CSS_PROP_(
+    -moz-window-opacity,
+    _moz_window_opacity,
+    CSS_PROP_DOMPROP_PREFIXED(WindowOpacity),
+    CSS_PROPERTY_INTERNAL | 0,
+    "",
+    VARIANT_HN,
+    nullptr,
+    eStyleAnimType_float)
+CSS_PROP_(
     -moz-window-transform,
     _moz_window_transform,
     CSS_PROP_DOMPROP_PREFIXED(WindowTransform),
     CSS_PROPERTY_INTERNAL |
         CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
     0,
@@ -3438,7 +3427,6 @@ CSS_PROP_(
     CSS_PROP_DOMPROP_PREFIXED(WindowTransformOrigin),
     CSS_PROPERTY_INTERNAL |
         CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
     "",
     0,
@@ -3463,6 +3451,15 @@ CSS_PROP_(
     VARIANT_HLP | VARIANT_NORMAL | VARIANT_CALC,
     nullptr,
     eStyleAnimType_Coord)
+CSS_PROP_(
+    overflow-wrap,
+    overflow_wrap,
+    OverflowWrap,
+    0,
+    "",
+    VARIANT_HK,
+    kOverflowWrapKTable,
+    eStyleAnimType_Discrete)
 CSS_PROP_(
     writing-mode,
     writing_mode,
