@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import os
 
+from mozbuild.base import MozbuildObject
 from mozbuild.frontend.reader import BuildReader
 from mozpack.copier import FileCopier
 from mozpack.files import FileFinder
@@ -14,18 +15,25 @@ from mozpack.manifests import InstallManifest
 import sphinx
 import sphinx.apidoc
 
+here = os.path.abspath(os.path.dirname(__file__))
+build = MozbuildObject.from_environment(cwd=here)
 
-class SphinxManager(object):
+MAIN_DOC_PATH = os.path.join(build.topsrcdir, 'tools', 'docs')
+
+
+class _SphinxManager(object):
     """Manages the generation of Sphinx documentation for the tree."""
 
-    def __init__(self, topsrcdir, main_path, output_dir):
-        self._topsrcdir = topsrcdir
-        self._output_dir = output_dir
-        self._docs_dir = os.path.join(output_dir, '_staging')
-        self._conf_py_path = os.path.join(main_path, 'conf.py')
-        self._index_path = os.path.join(main_path, 'index.rst')
+    def __init__(self, topsrcdir, main_path):
+        self.topsrcdir = topsrcdir
+        self.conf_py_path = os.path.join(main_path, 'conf.py')
+        self.index_path = os.path.join(main_path, 'index.rst')
+
         self._trees = {}
         self._python_package_dirs = set()
+
+        # Instance variables that get set in self.generate_docs()
+        self.staging_dir = None
 
     def read_build_config(self):
         """Read the active build config and add docs to this instance."""
@@ -36,12 +44,11 @@ class SphinxManager(object):
             def __init__(self, topsrcdir):
                 self.topsrcdir = topsrcdir
 
-        config = fakeconfig(self._topsrcdir)
+        config = fakeconfig(self.topsrcdir)
         reader = BuildReader(config)
 
         for path, name, key, value in reader.find_sphinx_variables():
             reldir = os.path.dirname(path)
-
             if name == 'SPHINX_TREES':
                 assert key
                 if key.startswith('/'):
@@ -70,6 +77,8 @@ class SphinxManager(object):
 
     def generate_docs(self, app):
         """Generate/stage documentation."""
+        self.staging_dir = os.path.join(app.outdir, '_staging')
+
         app.info('Reading Sphinx metadata from build configuration')
         self.read_build_config()
         app.info('Staging static documentation')
@@ -79,11 +88,11 @@ class SphinxManager(object):
 
     def _generate_python_api_docs(self):
         """Generate Python API doc files."""
-        out_dir = os.path.join(self._docs_dir, 'python')
+        out_dir = os.path.join(self.staging_dir, 'python')
         base_args = ['sphinx', '--no-toc', '-o', out_dir]
 
         for p in sorted(self._python_package_dirs):
-            full = os.path.join(self._topsrcdir, p)
+            full = os.path.join(self.topsrcdir, p)
 
             finder = FileFinder(full)
             dirs = {os.path.dirname(f[0]) for f in finder.find('**')}
@@ -99,10 +108,10 @@ class SphinxManager(object):
     def _synchronize_docs(self):
         m = InstallManifest()
 
-        m.add_link(self._conf_py_path, 'conf.py')
+        m.add_link(self.conf_py_path, 'conf.py')
 
         for dest, source in sorted(self._trees.items()):
-            source_dir = os.path.join(self._topsrcdir, source)
+            source_dir = os.path.join(self.topsrcdir, source)
             for root, dirs, files in os.walk(source_dir):
                 for f in files:
                     source_path = os.path.join(root, f)
@@ -112,9 +121,9 @@ class SphinxManager(object):
 
         copier = FileCopier()
         m.populate_registry(copier)
-        copier.copy(self._docs_dir)
+        copier.copy(self.staging_dir)
 
-        with open(self._index_path, 'rb') as fh:
+        with open(self.index_path, 'rb') as fh:
             data = fh.read()
 
         indexes = ['%s/index' % p for p in sorted(self._trees.keys())]
@@ -125,5 +134,8 @@ class SphinxManager(object):
         packages = '\n   '.join(sorted(packages))
         data = data.format(indexes=indexes, python_packages=packages)
 
-        with open(os.path.join(self._docs_dir, 'index.rst'), 'wb') as fh:
+        with open(os.path.join(self.staging_dir, 'index.rst'), 'wb') as fh:
             fh.write(data)
+
+
+manager = _SphinxManager(build.topsrcdir, MAIN_DOC_PATH)
