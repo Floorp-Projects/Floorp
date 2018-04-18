@@ -2207,8 +2207,6 @@ var _validate = __webpack_require__(1629);
 
 var _frameworks = __webpack_require__(1703);
 
-var _pauseLocation = __webpack_require__(2422);
-
 var _pausePoints = __webpack_require__(3612);
 
 var _mapOriginalExpression = __webpack_require__(3613);
@@ -2219,11 +2217,9 @@ var _devtoolsUtils = __webpack_require__(1363);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const { workerHandler } = _devtoolsUtils.workerUtils;
+const { workerHandler } = _devtoolsUtils.workerUtils; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                       * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                       * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 self.onmessage = workerHandler({
   findOutOfScopeLocations: _findOutOfScopeLocations2.default,
@@ -2235,7 +2231,6 @@ self.onmessage = workerHandler({
   hasSource: _sources.hasSource,
   setSource: _sources.setSource,
   clearSources: _sources.clearSources,
-  isInvalidPauseLocation: _pauseLocation.isInvalidPauseLocation,
   getNextStep: _steps.getNextStep,
   hasSyntaxError: _validate.hasSyntaxError,
   getFramework: _frameworks.getFramework,
@@ -19985,76 +19980,6 @@ function stripModuleScope(rootScope) {
 
 /***/ }),
 
-/***/ 2422:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.isInvalidPauseLocation = isInvalidPauseLocation;
-
-var _types = __webpack_require__(2268);
-
-var t = _interopRequireWildcard(_types);
-
-var _ast = __webpack_require__(1375);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const STOP = {};
-
-function isInvalidPauseLocation(location) {
-  const state = {
-    invalid: false,
-    location
-  };
-
-  try {
-    (0, _ast.traverseAst)(location.sourceId, { enter: invalidLocationVisitor }, state);
-  } catch (e) {
-    if (e !== STOP) {
-      throw e;
-    }
-  }
-
-  return state.invalid;
-}
-
-function invalidLocationVisitor(node, ancestors, state) {
-  const { location } = state;
-
-  if (node.loc.end.line < location.line) {
-    return;
-  }
-  if (node.loc.start.line > location.line) {
-    throw STOP;
-  }
-
-  if (location.line === node.loc.start.line && location.column >= node.loc.start.column && t.isFunction(node) && !t.isArrowFunctionExpression(node) && (location.line < node.body.loc.start.line || location.line === node.body.loc.start.line && location.column <= node.body.loc.start.column)) {
-    // Disallow pausing _inside_ in function arguments to avoid pausing inside
-    // of destructuring and other logic.
-    state.invalid = true;
-    throw STOP;
-  }
-
-  if (location.line === node.loc.start.line && location.column === node.loc.start.column && t.isBlockStatement(node)) {
-    // Disallow pausing directly before the opening curly of a block statement.
-    // Babel occasionally maps statements with unknown original positions to
-    // this location.
-    state.invalid = true;
-    throw STOP;
-  }
-}
-
-/***/ }),
-
 /***/ 248:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -21415,11 +21340,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-const isControlFlow = node => t.isForStatement(node) || t.isWhileStatement(node) || t.isIfStatement(node) || t.isSwitchCase(node) || t.isSwitchStatement(node); /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                 * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                 * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+const isForStatement = node => t.isForStatement(node) || t.isForOfStatement(node); /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                    * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const isAssignment = node => t.isVariableDeclarator(node) || t.isAssignmentExpression(node);
+const isControlFlow = node => isForStatement(node) || t.isWhileStatement(node) || t.isIfStatement(node) || t.isSwitchCase(node) || t.isSwitchStatement(node);
+
+const isAssignment = node => t.isVariableDeclarator(node) || t.isAssignmentExpression(node) || t.isAssignmentPattern(node);
 
 const isImport = node => t.isImport(node) || t.isImportDeclaration(node);
 const isReturn = node => t.isReturnStatement(node);
@@ -21449,13 +21376,21 @@ function onEnter(node, ancestors, state) {
   }
 
   if (isControlFlow(node)) {
-    addEmptyPoint(state, startLocation);
+    if (isForStatement(node)) {
+      addStopPoint(state, startLocation);
+    } else {
+      addEmptyPoint(state, startLocation);
+    }
 
     const test = node.test || node.discriminant;
     if (test) {
       addStopPoint(state, test.loc.start);
     }
     return;
+  }
+
+  if (t.isBlockStatement(node)) {
+    return addEmptyPoint(state, startLocation);
   }
 
   if (isReturn(node)) {
@@ -21469,7 +21404,10 @@ function onEnter(node, ancestors, state) {
   if (isAssignment(node)) {
     // We only want to pause at literal assignments `var a = foo()`
     const value = node.right || node.init;
-    if (!isCall(value)) {
+
+    if (isCall(value) || t.isFunction(parentNode)) {
+      return addEmptyPoint(state, startLocation);
+    } else {
       return addStopPoint(state, startLocation);
     }
   }
