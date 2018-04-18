@@ -1,0 +1,87 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps artifact locations to s3 key names for the en-US locale"
+    owner: "release@mozilla.com"
+
+mapping:
+{% for locale in locales %}
+  {{ locale }}:
+
+    buildinfo:
+      artifact: {{ artifact_base_url }}/target.json
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.json
+    mozinfo:
+      artifact: {{ artifact_base_url }}/target.mozinfo.json
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.mozinfo.json
+    socorroinfo:
+      artifact: {{ artifact_base_url }}/target.txt
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.txt
+    jsshell:
+      artifact: {{ artifact_base_url }}/target.jsshell.zip
+      s3_key: {{ s3_prefix }}jsshell/jsshell-{{ platform }}.zip
+    mozharness_package:
+      artifact: {{ artifact_base_url }}/mozharness.zip
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/mozharness.zip
+    xpi:
+      artifact: {{ artifact_base_url }}/target.langpack.xpi
+      s3_key: {{ s3_prefix }}{{ platform }}/xpi/{{ locale }}.xpi
+    symbols:
+      artifact: {{ artifact_base_url }}/target.crashreporter-symbols.zip
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.crashreporter-symbols.zip
+
+  {% if platform == "win32" %}
+    buildid_info:
+      artifact: {{ artifact_base_url }}/target_info.txt
+      s3_key: {{ s3_prefix }}win32_info.txt
+    mar_tools_mar:
+      artifact: {{ artifact_base_url }}/host/bin/mar.exe
+      s3_key: {{ s3_prefix }}mar-tools/win32/mar.exe
+    mar_tools_mbdiff:
+      artifact: {{ artifact_base_url }}/host/bin/mbsdiff.exe
+      s3_key: {{ s3_prefix }}mar-tools/win32/mbsdiff.exe
+  {% endif %}
+
+  {% if platform == "win64" %}
+    buildid_info:
+      artifact: {{ artifact_base_url }}/target_info.txt
+      s3_key: {{ s3_prefix }}win64_info.txt
+    mar_tools_mar:
+      artifact: {{ artifact_base_url }}/host/bin/mar.exe
+      s3_key: {{ s3_prefix }}mar-tools/win64/mar.exe
+    mar_tools_mbdiff:
+      artifact: {{ artifact_base_url }}/host/bin/mbsdiff.exe
+      s3_key: {{ s3_prefix }}mar-tools/win64/mbsdiff.exe
+  {% endif %}
+
+  {% if platform == "linux-i686" %}
+    buildid_info:
+      artifact: {{ artifact_base_url }}/target_info.txt
+      s3_key: {{ s3_prefix }}linux_info.txt
+    mar_tools_mar:
+      artifact: {{ artifact_base_url }}/host/bin/mar
+      s3_key: {{ s3_prefix }}mar-tools/linux/mar
+    mar_tools_mbdiff:
+      artifact: {{ artifact_base_url }}/host/bin/mbsdiff
+      s3_key: {{ s3_prefix }}mar-tools/linux/mbsdiff
+  {% endif %}
+
+  {% if platform == "linux-x86_64" %}
+    buildid_info:
+      artifact: {{ artifact_base_url }}/target_info.txt
+      s3_key: {{ s3_prefix }}linux64_info.txt
+    mar_tools_mar:
+      artifact: {{ artifact_base_url }}/host/bin/mar
+      s3_key: {{ s3_prefix }}mar-tools/linux64/mar
+    mar_tools_mbdiff:
+      artifact: {{ artifact_base_url }}/host/bin/mbsdiff
+      s3_key: {{ s3_prefix }}mar-tools/linux64/mbsdiff
+  {% endif %}
+
+  {% if platform == "mac" %}
+    buildid_info:
+      artifact: {{ artifact_base_url }}/target_info.txt
+      s3_key: {{ s3_prefix }}macosx64_info.txt
+  {% endif %}
+
+{% endfor %}

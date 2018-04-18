@@ -1,0 +1,14 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps artifact locations to s3 key names for source bundles"
+    owner: "release@mozilla.com"
+
+mapping:
+  all:
+    source_bundle:
+      artifact: {{ artifact_base_url }}/firefox-{{ version }}.bundle
+      s3_key: {{ s3_prefix }}source/firefox-{{ version }}.bundle
+    source_tar:
+      artifact: {{ artifact_base_url }}/firefox-{{ version }}.source.tar.xz
+      s3_key: {{ s3_prefix }}source/firefox-{{ version }}.source.tar.xz

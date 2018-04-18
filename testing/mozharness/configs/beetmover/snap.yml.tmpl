@@ -1,0 +1,11 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps artifact locations to s3 key names for snap iamge"
+    owner: "release@mozilla.com"
+
+mapping:
+  all:
+    snap:
+      artifact: {{ artifact_base_url }}/firefox-{{ version }}.snap
+      s3_key: {{ s3_prefix }}snap/firefox-{{ version }}.snap

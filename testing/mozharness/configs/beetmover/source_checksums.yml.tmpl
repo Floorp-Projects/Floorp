@@ -1,0 +1,14 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps artifact locations to s3 key names for source bundle checksums"
+    owner: "release@mozilla.com"
+
+mapping:
+  all:
+    source_checksum:
+      artifact: {{ artifact_base_url }}/firefox-{{ version }}.source.checksums
+      s3_key: {{ s3_prefix }}source/firefox-{{ version }}.source.checksums
+    source_checksum_asc:
+      artifact: {{ artifact_base_url }}/firefox-{{ version }}.source.checksums.asc
+      s3_key: {{ s3_prefix }}source/firefox-{{ version }}.source.checksums.asc
