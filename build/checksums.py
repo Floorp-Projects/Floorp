@@ -59,23 +59,20 @@ def process_files(files, output_filename, digests, strip):
         logger.debug('Creating a new checksums file "%s"' % output_filename)
     with open(output_filename, 'w+') as output:
         for file in files:
-            if os.path.isdir(file):
-                logger.warn('%s is a directory, skipping' % file)
-            else:
-                for digest in digests:
-                    hash = digest_file(file, digest)
-                    if hash is None:
-                        logger.warn('Unable to generate a hash for %s. ' +
-                                    'Skipping.' % file)
-                        continue
-                    if file.startswith(strip):
-                        short_file = file[len(strip):]
-                        short_file = short_file.lstrip('/')
-                    else:
-                        short_file = file
-                    print >>output, '%s %s %s %s' % (hash, digest,
-                                                     os.path.getsize(file),
-                                                     short_file)
+            for digest in digests:
+                hash = digest_file(file, digest)
+                if hash is None:
+                    logger.warn('Unable to generate a hash for %s. ' +
+                                'Skipping.' % file)
+                    continue
+                if file.startswith(strip):
+                    short_file = file[len(strip):]
+                    short_file = short_file.lstrip('/')
+                else:
+                    short_file = file
+                print >>output, '%s %s %s %s' % (hash, digest,
+                                                 os.path.getsize(file),
+                                                 short_file)
 
 
 def setup_logging(level=logging.DEBUG):
@@ -134,7 +131,9 @@ def main():
     # Validate the files to checksum
     files = []
     for i in args:
-        if os.path.exists(i):
+        if os.path.isdir(i):
+            logger.warn('%s is a directory; ignoring' % i)
+        elif os.path.exists(i):
             files.append(i)
         else:
             logger.info('File "%s" was not found on the filesystem' % i)
