@@ -330,10 +330,14 @@
 @RESPATH@/components/PeerConnection.manifest
 #endif
 
+; Remote control protocol
+#ifdef ENABLE_MARIONETTE
 @RESPATH@/chrome/marionette@JAREXT@
 @RESPATH@/chrome/marionette.manifest
 @RESPATH@/components/marionette.manifest
 @RESPATH@/components/marionette.js
+@RESPATH@/defaults/pref/marionette.js
+#endif
 
 @RESPATH@/components/nsAsyncShutdown.manifest
 @RESPATH@/components/nsAsyncShutdown.js
@@ -455,10 +459,6 @@
 ; Technically this is an app pref file, but we are keeping it in the original
 ; gre location for now.
 @RESPATH@/defaults/pref/channel-prefs.js
-
-; Remote control protocol prefs
-; defined in ../../testing/marionette/prefs/marionette.js
-@RESPATH@/defaults/pref/marionette.js
 
 ; Services (gre) prefs
 @RESPATH@/defaults/pref/services-sync.js
