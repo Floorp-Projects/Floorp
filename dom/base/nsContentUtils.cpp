@@ -5053,11 +5053,11 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     content = content->GetParent();
   }
 
-  nsCOMPtr<nsIDOMDocumentFragment> frag;
+  RefPtr<DocumentFragment> frag;
   aRv = ParseFragmentXML(aFragment, document, tagStack,
                          aPreventScriptExecution, getter_AddRefs(frag),
                          aSanitize);
-  return frag.forget().downcast<DocumentFragment>();
+  return frag.forget();
 }
 
 /* static */
@@ -5168,7 +5168,7 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
                                  nsIDocument* aDocument,
                                  nsTArray<nsString>& aTagStack,
                                  bool aPreventScriptExecution,
-                                 nsIDOMDocumentFragment** aReturn,
+                                 DocumentFragment** aReturn,
                                  SanitizeFragments aSanitize)
 {
   AutoTimelineMarker m(aDocument->GetDocShell(), "Parse XML");
@@ -5217,13 +5217,11 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
     // Don't fire mutation events for nodes removed by the sanitizer.
     nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
 
-    RefPtr<DocumentFragment> fragment = static_cast<DocumentFragment*>(*aReturn);
-
     nsTreeSanitizer sanitizer(nsIParserUtils::SanitizerAllowStyle |
                               nsIParserUtils::SanitizerAllowComments |
                               nsIParserUtils::SanitizerDropForms |
                               nsIParserUtils::SanitizerLogRemovals);
-    sanitizer.Sanitize(fragment);
+    sanitizer.Sanitize(*aReturn);
   }
 
   return rv;

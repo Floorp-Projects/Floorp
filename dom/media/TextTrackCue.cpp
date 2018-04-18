@@ -137,13 +137,13 @@ TextTrackCue::GetCueAsHTML()
     return mDocument->CreateDocumentFragment();
   }
 
-  nsCOMPtr<nsIDOMDocumentFragment> frag;
+  RefPtr<DocumentFragment> frag;
   sParserWrapper->ConvertCueToDOMTree(window, this,
                                       getter_AddRefs(frag));
   if (!frag) {
     return mDocument->CreateDocumentFragment();
   }
-  return frag.forget().downcast<DocumentFragment>();
+  return frag.forget();
 }
 
 void

@@ -1690,7 +1690,7 @@ public:
                                    nsIDocument* aDocument,
                                    nsTArray<nsString>& aTagStack,
                                    bool aPreventScriptExecution,
-                                   nsIDOMDocumentFragment** aReturn,
+                                   mozilla::dom::DocumentFragment** aReturn,
                                    SanitizeFragments aSanitize = SanitizeSystemPrivileged);
 
   /**
