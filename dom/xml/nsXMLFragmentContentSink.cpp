@@ -12,7 +12,6 @@
 #include "nsIExpatSink.h"
 #include "nsIDTD.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/NodeInfo.h"
@@ -69,7 +68,7 @@ public:
   // nsIXMLContentSink
 
   // nsIFragmentContentSink
-  NS_IMETHOD FinishFragmentParsing(nsIDOMDocumentFragment** aFragment) override;
+  NS_IMETHOD FinishFragmentParsing(DocumentFragment** aFragment) override;
   NS_IMETHOD SetTargetDocument(nsIDocument* aDocument) override;
   NS_IMETHOD WillBuildContent() override;
   NS_IMETHOD DidBuildContent() override;
@@ -112,7 +111,7 @@ protected:
 
   nsCOMPtr<nsIDocument> mTargetDocument;
   // the fragment
-  nsCOMPtr<nsIContent>  mRoot;
+  RefPtr<DocumentFragment> mRoot;
   bool                  mParseError;
 };
 
@@ -360,9 +359,8 @@ nsXMLFragmentContentSink::MaybeProcessXSLTLink(
 ////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsXMLFragmentContentSink::FinishFragmentParsing(nsIDOMDocumentFragment** aFragment)
+nsXMLFragmentContentSink::FinishFragmentParsing(DocumentFragment** aFragment)
 {
-  *aFragment = nullptr;
   mTargetDocument = nullptr;
   mNodeInfoManager = nullptr;
   mScriptLoader = nullptr;
@@ -376,14 +374,12 @@ nsXMLFragmentContentSink::FinishFragmentParsing(nsIDOMDocumentFragment** aFragme
     //XXX PARSE_ERR from DOM3 Load and Save would be more appropriate
     mRoot = nullptr;
     mParseError = false;
+    *aFragment = nullptr;
     return NS_ERROR_DOM_SYNTAX_ERR;
-  } else if (mRoot) {
-    nsresult rv = CallQueryInterface(mRoot, aFragment);
-    mRoot = nullptr;
-    return rv;
-  } else {
-    return NS_OK;
   }
+
+  mRoot.forget(aFragment);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
