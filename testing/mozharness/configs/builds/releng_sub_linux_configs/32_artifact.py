@@ -39,7 +39,7 @@ config = {
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
         'LC_ALL': 'C',
         # 32 bit specific
-        'PATH': '/usr/local/bin:/usr/lib/ccache:\
+        'PATH': '/usr/local/bin:\
 /bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:',
     },
     'mozconfig_variant': 'artifact',

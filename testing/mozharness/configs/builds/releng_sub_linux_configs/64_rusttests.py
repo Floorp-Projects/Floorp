@@ -21,7 +21,7 @@ config = {
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
         'LC_ALL': 'C',
         ## 64 bit specific
-        'PATH': '/tools/buildbot/bin:/usr/local/bin:/usr/lib64/ccache:/bin:\
+        'PATH': '/tools/buildbot/bin:/usr/local/bin:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin',
     },
     'mozconfig_variant': 'rusttests',

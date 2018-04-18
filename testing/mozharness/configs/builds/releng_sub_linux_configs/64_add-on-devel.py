@@ -20,7 +20,7 @@ config = {
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
         'LC_ALL': 'C',
         ## 64 bit specific
-        'PATH': '/builds/worker/workspace/build/src/gcc/bin:/usr/local/bin:/usr/lib64/ccache:/bin:\
+        'PATH': '/builds/worker/workspace/build/src/gcc/bin:/usr/local/bin:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin',
     },
     'mozconfig_variant': 'add-on-devel',
