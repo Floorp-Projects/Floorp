@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Несигурна веза</string>
   <string name="security_popup_security_verified">Проверио: %1$s</string>
   <string name="site_security_icon_content_description">Безбедност сајта</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL већ постоји</string>
 </resources>

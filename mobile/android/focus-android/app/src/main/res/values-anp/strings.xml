@@ -53,8 +53,9 @@
   <string name="preference_language_systemdefault">सिस्टम मूलभूत</string>
   <string name="preference_dialog_title_search_engine">मूलभूत खोज</string>
   <string name="preference_category_privacy">गोपनीयता</string>
-  <string name="preference_privacy_block_ads">विज्ञापन ट्रैकर्स के ब्लॉक करहोऽ</string>
-  <string name="preference_privacy_block_analytics">एनालेटिक ट्रैकर्स ब्लौक करऽ</string>
+  <string name="preference_privacy_block_ads">विज्ञापन ट्रैकर्स क ब्लॉक करयैऽ</string>
+  <string name="preference_privacy_block_ads_summary">कुछ विज्ञापन साइट विज़िट ट्रैक करै छ , भले तोय विज्ञापन पर क्लिक न करियैऽ</string>
+  <string name="preference_privacy_block_analytics">एनालेटिक ट्रैकर्स ब्लौक करियै</string>
   <string name="preference_privacy_block_social">सोसिअल ट्रैकर्स ब्लौक करऽ</string>
   <string name="preference_privacy_block_content">दोसरो कोंटेंट ट्रैकर्स ब्लौक करऽ</string>
   <string name="preference_privacy_category_cookies">सबऽ कुकिज ब्लोक करऽ</string>

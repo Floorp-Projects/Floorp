@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Sambungan Tidak Selamat</string>
   <string name="security_popup_security_verified">Disahkan oleh: %1$s</string>
   <string name="site_security_icon_content_description">Keselamatan Laman</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL sudah wujud</string>
 </resources>

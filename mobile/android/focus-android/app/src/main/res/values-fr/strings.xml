@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Connexion non sécurisée</string>
   <string name="security_popup_security_verified">Vérifié par : %1$s</string>
   <string name="site_security_icon_content_description">Sécurité du site</string>
+  <string name="preference_autocomplete_duplicate_url_error">L’adresse existe déjà</string>
 </resources>

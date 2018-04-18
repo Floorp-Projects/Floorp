@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Nem biztonságos kapcsolat</string>
   <string name="security_popup_security_verified">Ellenőrizte: %1$s</string>
   <string name="site_security_icon_content_description">Webhely biztonsága</string>
+  <string name="preference_autocomplete_duplicate_url_error">Az URL már létezik</string>
 </resources>

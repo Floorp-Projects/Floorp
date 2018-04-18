@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">不安全的連線</string>
   <string name="security_popup_security_verified">驗證機構: %1$s</string>
   <string name="site_security_icon_content_description">網站安全性</string>
+  <string name="preference_autocomplete_duplicate_url_error">網址已經存在</string>
 </resources>

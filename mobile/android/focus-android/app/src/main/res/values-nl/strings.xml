@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Niet-beveiligde verbinding</string>
   <string name="security_popup_security_verified">Geverifieerd door: %1$s</string>
   <string name="site_security_icon_content_description">Websitebeveiliging</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL bestaat al</string>
 </resources>

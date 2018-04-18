@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">安全でない接続</string>
   <string name="security_popup_security_verified">認証局: %1$s</string>
   <string name="site_security_icon_content_description">サイトセキュリティ</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL は既に存在します</string>
 </resources>

@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Хәвефсез булмаган бәйләнеш</string>
   <string name="security_popup_security_verified">Раслаучы: %1$s</string>
   <string name="site_security_icon_content_description">Сайт хәвефсезлеге</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL инде бар</string>
 </resources>
