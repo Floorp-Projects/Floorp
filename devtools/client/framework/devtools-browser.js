@@ -389,24 +389,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 
   /**
-   * Open a window-hosted toolbox to debug the worker associated to the provided
-   * worker actor.
-   *
-   * @param  {DebuggerClient} client
-   * @param  {Object} workerActor
-   *         worker actor form to debug
-   */
-  openWorkerToolbox(client, workerActor) {
-    client.attachWorker(workerActor, (response, workerClient) => {
-      let workerTarget = TargetFactory.forWorker(workerClient);
-      gDevTools.showToolbox(workerTarget, null, Toolbox.HostType.WINDOW)
-        .then(toolbox => {
-          toolbox.once("destroy", () => workerClient.detach());
-        });
-    });
-  },
-
-  /**
    * Install WebIDE widget
    */
   // Used by itself
