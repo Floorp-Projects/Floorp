@@ -17,7 +17,6 @@ var gIterator;
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.import("resource://gre/modules/accessibility/EventManager.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/Gestures.jsm");
 
 var AccessFuTest = {
 
@@ -99,14 +98,6 @@ var AccessFuTest = {
     // Disable the console service logging.
     Logger.test = false;
     Logger.logLevel = Logger.INFO;
-    // Reset Gesture Settings.
-    GestureSettings.dwellThreshold = this.dwellThreshold =
-      this.originalDwellThreshold;
-    GestureSettings.swipeMaxDuration = this.swipeMaxDuration =
-      this.originalSwipeMaxDuration;
-    GestureSettings.maxGestureResolveTimeout =
-      this.maxGestureResolveTimeout =
-      this.originalMaxGestureResolveTimeout;
     // Finish through idle callback to let AccessFu._disable complete.
     SimpleTest.executeSoon(function() {
       AccessFu.detach();
@@ -157,20 +148,6 @@ var AccessFuTest = {
 
     var prefs = [["accessibility.accessfu.notify_output", 1]];
     prefs.push.apply(prefs, aAdditionalPrefs);
-
-    this.originalDwellThreshold = GestureSettings.dwellThreshold;
-    this.originalSwipeMaxDuration = GestureSettings.swipeMaxDuration;
-    this.originalMaxGestureResolveTimeout =
-      GestureSettings.maxGestureResolveTimeout;
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1001945 - sometimes
-    // SimpleTest.executeSoon timeout is bigger than the timer settings in
-    // GestureSettings that causes intermittents.
-    this.dwellThreshold = GestureSettings.dwellThreshold =
-      GestureSettings.dwellThreshold * 10;
-    this.swipeMaxDuration = GestureSettings.swipeMaxDuration =
-      GestureSettings.swipeMaxDuration * 10;
-    this.maxGestureResolveTimeout = GestureSettings.maxGestureResolveTimeout =
-      GestureSettings.maxGestureResolveTimeout * 10;
 
     SpecialPowers.pushPrefEnv({ "set": prefs }, function() {
       if (AccessFuTest._waitForExplicitFinish) {
