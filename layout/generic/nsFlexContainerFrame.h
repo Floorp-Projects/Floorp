@@ -229,6 +229,8 @@ protected:
   // Protected constructor & destructor
   explicit nsFlexContainerFrame(ComputedStyle* aStyle)
     : nsContainerFrame(aStyle, kClassID)
+    , mCachedMinISize(NS_INTRINSIC_WIDTH_UNKNOWN)
+    , mCachedPrefISize(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mLastBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN)
   {}
@@ -441,6 +443,12 @@ protected:
    */
   nscoord IntrinsicISize(gfxContext* aRenderingContext,
                          nsLayoutUtils::IntrinsicISizeType aType);
+
+  /**
+   * Cached values to optimize GetMinISize/GetPrefISize.
+   */
+  nscoord mCachedMinISize;
+  nscoord mCachedPrefISize;
 
   nscoord mBaselineFromLastReflow;
   // Note: the last baseline is a distance from our border-box end edge.
