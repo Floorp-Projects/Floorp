@@ -16,8 +16,8 @@ kind-dependencies:
    - nightly-l10n-signing
 
 job-defaults:
-   name: partner-repack
-   description: Release Promotion partner repacks
+   name: eme-free-repack
+   description: Release Promotion eme-free repacks
    run-on-projects: []  # to make sure this never runs as part of CI
    shipping-product: firefox
    shipping-phase: promote
@@ -30,9 +30,9 @@ job-defaults:
       env:
          REPACK_MANIFESTS_URL:
             by-project:
-               mozilla-beta: "git@github.com:mozilla-partners/repack-manifests.git"
-               mozilla-release: "git@github.com:mozilla-partners/repack-manifests.git"
-               maple: "git@github.com:mozilla-partners/repack-manifests.git"
+               mozilla-beta: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
+               mozilla-release: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
+               maple: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
                default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
    run:
       using: mozharness
@@ -44,21 +44,12 @@ job-defaults:
       tooltool-downloads: false
 
 jobs:
-   linux-nightly:
-      attributes:
-         build_platform: linux-nightly
-         build_type: opt
-         artifact_prefix: releng/partner
-         nightly: true
-
-   linux64-nightly:
-      attributes:
-         build_platform: linux64-nightly
-         build_type: opt
-         artifact_prefix: releng/partner
-         nightly: true
-
    macosx64-nightly:
+      treeherder:
+         symbol: EME
+         platform: macosx64/opt
+         kind: test
+         tier: 1
       attributes:
          build_platform: macosx64-nightly
          build_type: opt
@@ -66,6 +57,11 @@ jobs:
          nightly: true
 
    win32-nightly:
+      treeherder:
+         symbol: EME
+         platform: win32/opt
+         kind: test
+         tier: 1
       attributes:
          build_platform: win32-nightly
          build_type: opt
@@ -73,6 +69,11 @@ jobs:
          nightly: true
 
    win64-nightly:
+      treeherder:
+         symbol: EME
+         platform: win64/opt
+         kind: test
+         tier: 1
       attributes:
          build_platform: win64-nightly
          build_type: opt
