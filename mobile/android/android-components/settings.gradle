@@ -57,6 +57,9 @@ project(':ui-autocomplete').projectDir = new File(rootDir, 'components/ui/autoco
 include ':ui-colors'
 project(':ui-colors').projectDir = new File(rootDir, 'components/ui/colors')
 
+include ':ui-fonts'
+project(':ui-fonts').projectDir = new File('components/ui/fonts')
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Support components
 ////////////////////////////////////////////////////////////////////////////////////////////////////
