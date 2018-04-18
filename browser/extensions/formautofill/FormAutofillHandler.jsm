@@ -270,7 +270,7 @@ class FormAutofillSection {
       element.previewValue = "";
       let value = profile[fieldDetail.fieldName];
 
-      if (element instanceof Ci.nsIDOMHTMLInputElement && value) {
+      if (ChromeUtils.getClassName(element) === "HTMLInputElement" && value) {
         // For the focused input element, it will be filled with a valid value
         // anyway.
         // For the others, the fields should be only filled when their values
@@ -379,7 +379,7 @@ class FormAutofillSection {
 
       // Only reset value for input element.
       if (fieldDetail.state == FIELD_STATES.AUTO_FILLED &&
-          element instanceof Ci.nsIDOMHTMLInputElement) {
+          ChromeUtils.getClassName(element) === "HTMLInputElement") {
         element.setUserInput("");
       }
     }
@@ -588,7 +588,7 @@ class FormAutofillAddressSection extends FormAutofillSection {
       profile["-moz-street-address-one-line"] = this._getOneLineStreetAddress(profile["street-address"]);
       let streetAddressDetail = this.getFieldDetailByName("street-address");
       if (streetAddressDetail &&
-          (streetAddressDetail.elementWeakRef.get() instanceof Ci.nsIDOMHTMLInputElement)) {
+          (ChromeUtils.getClassName(streetAddressDetail.elementWeakRef.get()) === "HTMLInputElement")) {
         profile["street-address"] = profile["-moz-street-address-one-line"];
       }
 

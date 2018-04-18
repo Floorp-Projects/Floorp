@@ -1422,7 +1422,7 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq) {
   this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq);
 
   this.invoke = function synthSelectAll_invoke() {
-    if (this.DOMNode instanceof Ci.nsIDOMHTMLInputElement ||
+    if (ChromeUtils.getClassName(this.DOMNode) === "HTMLInputElement" ||
         this.DOMNode.localName == "textbox") {
       this.DOMNode.select();
 
