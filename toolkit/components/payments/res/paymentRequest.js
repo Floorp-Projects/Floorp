@@ -10,8 +10,6 @@
 
 /* import-globals-from unprivileged-fallbacks.js */
 
-"use strict";
-
 var paymentRequest = {
   domReadyPromise: null,
 
@@ -170,3 +168,5 @@ var paymentRequest = {
 };
 
 paymentRequest.init();
+
+export default paymentRequest;
