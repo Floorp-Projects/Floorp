@@ -351,7 +351,7 @@ impl JS::Value {
     #[cfg(target_pointer_width = "64")]
     pub fn is_symbol(&self) -> bool {
         unsafe {
-            self.asBits() == ValueShiftedTag::SYMBOL as u64
+            (self.asBits() >> JSVAL_TAG_SHIFT) == ValueTag::SYMBOL as u64
         }
     }
 
