@@ -3714,6 +3714,9 @@ ContentParent::HasNotificationPermission(const IPC::Principal& aPrincipal)
 mozilla::ipc::IPCResult
 ContentParent::RecvShowAlert(nsIAlertNotification* aAlert)
 {
+  if (!aAlert) {
+    return IPC_FAIL_NO_REASON(this);
+  }
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = aAlert->GetPrincipal(getter_AddRefs(principal));
   if (NS_WARN_IF(NS_FAILED(rv)) ||
