@@ -5,6 +5,7 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  GeckoViewTelemetryController: "resource://gre/modules/GeckoViewTelemetryController.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -69,6 +70,11 @@ GeckoViewStartup.prototype = {
             "ContentPrefs:RemoveObserverForName",
           ],
         });
+
+        // This initializes Telemetry for GeckoView only in the parent process.
+        // The Telemetry initialization for the content process is performed in
+        // ContentProcessSingleton.js for consistency with Desktop Telemetry.
+        GeckoViewTelemetryController.setup();
         break;
       }
     }

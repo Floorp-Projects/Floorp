@@ -126,7 +126,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadData_html() {
-        var bytes = sessionRule.session.getTestBytes(HELLO_HTML_PATH)
+        val bytes = getTestBytes(HELLO_HTML_PATH)
         assertThat("test html should have data", bytes.size, greaterThan(0))
 
         sessionRule.session.loadData(bytes, "text/html");
@@ -151,7 +151,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     fun loadDataHelper(assetPath: String, mimeType: String? = null, baseUri: String? = null) {
-        var bytes = sessionRule.session.getTestBytes(assetPath)
+        val bytes = getTestBytes(assetPath)
         assertThat("test data should have bytes", bytes.size, greaterThan(0))
 
         sessionRule.session.loadData(bytes, mimeType, baseUri);

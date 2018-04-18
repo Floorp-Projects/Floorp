@@ -516,6 +516,17 @@ interface nsITelemetry : nsISupports
   void registerEvents(in ACString aCategory, in jsval aEventData);
 
   /**
+   * Parent process only. Register dynamic builtin events. The parameters
+   * have the same meaning as the usual |registerEvents| function.
+   *
+   * This function is only meant to be used to support the "artifact build"/
+   * "build faster" developers by allowing to add new events without rebuilding
+   * the C++ components including the headers files.
+  */
+  [implicit_jscontext]
+  void registerBuiltinEvents(in ACString aCategory, in jsval aEventData);
+
+  /**
    * Parent process only. Register new scalars to record them from addons. This
    * allows registering multiple scalars for a category. They will be valid only for
    * the current Firefox session.
@@ -547,7 +558,7 @@ interface nsITelemetry : nsISupports
    * have the same meaning as the usual |registerScalars| function.
    *
    * This function is only meant to be used to support the "artifact build"/
-   * "built faster" developers by allowing to add new scalars without rebuilding
+   * "build faster" developers by allowing to add new scalars without rebuilding
    * the C++ components including the headers files.
    */
   [implicit_jscontext]

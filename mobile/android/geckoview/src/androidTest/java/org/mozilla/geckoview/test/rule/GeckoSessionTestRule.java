@@ -403,9 +403,10 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             return !getEnvVar("MOZ_IN_AUTOMATION").isEmpty();
         }
 
-        public boolean isE10s() {
-            return mMainSession.getSettings().getBoolean(
-                    GeckoSessionSettings.USE_MULTIPROCESS);
+        public boolean isMultiprocess() {
+            return Boolean.valueOf(InstrumentationRegistry.getArguments()
+                                                          .getString("use_multiprocess",
+                                                                     "true"));
         }
 
         public boolean isDebugging() {
@@ -536,6 +537,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     public GeckoSessionTestRule() {
         mDefaultSettings = new GeckoSessionSettings();
+        mDefaultSettings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, env.isMultiprocess());
     }
 
     /**
@@ -729,8 +731,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         if (sRuntime == null) {
             final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
                 new GeckoRuntimeSettings.Builder();
-            runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" });
-
+            runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" })
+                                  .extras(InstrumentationRegistry.getArguments());
             sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
                 runtimeSettingsBuilder.build());

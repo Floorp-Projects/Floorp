@@ -109,6 +109,7 @@ PYTHON_UNITTEST_MANIFESTS += [
 ]
 
 GENERATED_FILES = [
+    'EventArtifactDefinitions.json',
     'ScalarArtifactDefinitions.json',
     'TelemetryEventData.h',
     'TelemetryEventEnums.h',
@@ -170,6 +171,15 @@ event_enums = GENERATED_FILES['TelemetryEventEnums.h']
 event_enums.script = 'gen_event_enum.py'
 event_enums.inputs = event_files
 
+# Generate the JSON event definitions. They will only be
+# used in artifact or "build faster" builds.
+event_json_data = GENERATED_FILES['EventArtifactDefinitions.json']
+event_json_data.script = 'gen_event_data.py:generate_JSON_definitions'
+event_json_data.inputs = event_files
+
+# Move the events JSON file to the directory where the Firefox binary is.
+FINAL_TARGET_FILES += ['!EventArtifactDefinitions.json']
+
 # Generate data from Processes.yaml
 processes_files = [
     'Processes.yaml',
@@ -182,6 +192,15 @@ processes_enum.inputs = processes_files
 processes_data = GENERATED_FILES['TelemetryProcessData.h']
 processes_data.script = 'gen_process_data.py'
 processes_data.inputs = processes_files
+
+# Add support for GeckoView: please note that building GeckoView
+# implies having an Android build. The packaging step decides
+# which files to include. As a consequence, we can simply only
+# include the GeckoView files on all Android builds.
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXTRA_JS_MODULES += [
+        'geckoview/GeckoViewTelemetryController.jsm',
+    ]
 
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Telemetry')
