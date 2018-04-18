@@ -75,9 +75,11 @@ Library::Name(JSContext* cx, unsigned argc, Value* vp)
   AppendString(cx, resultString, DLL_PREFIX);
   AppendString(cx, resultString, str);
   AppendString(cx, resultString, DLL_SUFFIX);
+  if (!resultString)
+    return false;
+  auto resultStr = resultString.finish();
 
-  JSString* result = JS_NewUCStringCopyN(cx, resultString.begin(),
-                                         resultString.length());
+  JSString* result = JS_NewUCStringCopyN(cx, resultStr.begin(), resultStr.length());
   if (!result)
     return false;
 
@@ -341,9 +343,11 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
     // Build the symbol, with mangling if necessary.
     FunctionType::BuildSymbolName(cx, nameStr, fnObj, symbol);
     AppendString(cx, symbol, "\0");
+    if (!symbol)
+      return false;
 
     // Look up the function symbol.
-    fnptr = PR_FindFunctionSymbol(library, symbol.begin());
+    fnptr = PR_FindFunctionSymbol(library, symbol.finish().begin());
     if (!fnptr) {
       JS_ReportErrorASCII(cx, "couldn't find function symbol in library");
       return false;
@@ -354,8 +358,10 @@ Library::Declare(JSContext* cx, unsigned argc, Value* vp)
     // 'typeObj' is another data type. Look up the data symbol.
     AppendString(cx, symbol, nameStr);
     AppendString(cx, symbol, "\0");
+    if (!symbol)
+      return false;
 
-    data = PR_FindSymbol(library, symbol.begin());
+    data = PR_FindSymbol(library, symbol.finish().begin());
     if (!data) {
       JS_ReportErrorASCII(cx, "couldn't find symbol in library");
       return false;
