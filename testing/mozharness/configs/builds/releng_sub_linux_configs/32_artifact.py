@@ -40,8 +40,7 @@ config = {
         'LC_ALL': 'C',
         # 32 bit specific
         'PATH': '/usr/local/bin:/usr/lib/ccache:\
-/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:\
-/home/cltbld/bin',
+/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:',
     },
     'mozconfig_variant': 'artifact',
     #########################################################################
