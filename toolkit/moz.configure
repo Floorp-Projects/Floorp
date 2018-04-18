@@ -419,6 +419,20 @@ set_config('MOZ_FMP4', fmp4)
 set_define('MOZ_FMP4', fmp4)
 add_old_configure_assignment('MOZ_FMP4', fmp4)
 
+# OpenMAX IL Decoding Support
+# ==============================================================
+option('--enable-openmax',
+       help='Enable OpenMAX IL for video/audio decoding')
+
+@depends('--enable-openmax')
+def openmax(value):
+    enabled = bool(value)
+    if enabled:
+        return True
+
+set_config('MOZ_OMX', openmax)
+set_define('MOZ_OMX', openmax)
+
 # EME Support
 # ==============================================================
 # Widevine is enabled by default in desktop browser builds.

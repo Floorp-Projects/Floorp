@@ -35,6 +35,7 @@ typedef nsFlexContainerFrame::FlexboxAxisTracker FlexboxAxisTracker;
 typedef nsFlexContainerFrame::StrutInfo StrutInfo;
 typedef nsFlexContainerFrame::CachedMeasuringReflowResult
           CachedMeasuringReflowResult;
+typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;
 
 static mozilla::LazyLogModule gFlexContainerLog("nsFlexContainerFrame");
 
@@ -1743,6 +1744,9 @@ nsFlexContainerFrame::MeasureAscentAndBSizeForFlexItem(
 /* virtual */ void
 nsFlexContainerFrame::MarkIntrinsicISizesDirty()
 {
+  mCachedMinISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+  mCachedPrefISize = NS_INTRINSIC_WIDTH_UNKNOWN;
+
   for (nsIFrame* childFrame : mFrames) {
     childFrame->DeleteProperty(CachedFlexMeasuringReflow());
   }
@@ -5073,12 +5077,11 @@ nsFlexContainerFrame::ReflowPlaceholders(nsPresContext* aPresContext,
   }
 }
 
-/* virtual */ nscoord
-nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext)
+nscoord
+nsFlexContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
+                                     IntrinsicISizeType aType)
 {
-  nscoord minISize = 0;
-  DISPLAY_MIN_WIDTH(this, minISize);
-
+  nscoord containerISize = 0;
   RenumberList();
 
   const nsStylePosition* stylePos = StylePosition();
@@ -5093,58 +5096,48 @@ nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext)
     if (!useMozBoxCollapseBehavior ||
         (NS_STYLE_VISIBILITY_COLLAPSE !=
          childFrame->StyleVisibility()->mVisible)) {
-      nscoord childMinISize =
+      nscoord childISize =
         nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
-                                             nsLayoutUtils::MIN_ISIZE);
-      // For a horizontal single-line flex container, the intrinsic min
-      // isize is the sum of its items' min isizes.
-      // For a column-oriented flex container, or for a multi-line row-
-      // oriented flex container, the intrinsic min isize is the max of
-      // its items' min isizes.
+                                             aType);
+      // * For a row-oriented single-line flex container, the intrinsic
+      // {min/pref}-isize is the sum of its items' {min/pref}-isizes.
+      // * For a column-oriented flex container, the intrinsic min isize
+      // is the max of its items' min isizes.
+      // * For a row-oriented multi-line flex container, the intrinsic
+      // pref isize is former (sum), and its min isize is the latter (max).
+      bool isSingleLine = (NS_STYLE_FLEX_WRAP_NOWRAP == stylePos->mFlexWrap);
       if (axisTracker.IsRowOriented() &&
-          NS_STYLE_FLEX_WRAP_NOWRAP == stylePos->mFlexWrap) {
-        minISize += childMinISize;
-      } else {
-        minISize = std::max(minISize, childMinISize);
+          (isSingleLine || aType == nsLayoutUtils::PREF_ISIZE)) {
+        containerISize += childISize;
+      } else { // (col-oriented, or MIN_ISIZE for multi-line row flex container)
+        containerISize = std::max(containerISize, childISize);
       }
     }
   }
-  return minISize;
+
+  return containerISize;
+}
+
+/* virtual */ nscoord
+nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext)
+{
+  DISPLAY_MIN_WIDTH(this, mCachedMinISize);
+  if (mCachedMinISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    mCachedMinISize = IntrinsicISize(aRenderingContext,
+                                     nsLayoutUtils::MIN_ISIZE);
+  }
+
+  return mCachedMinISize;
 }
 
 /* virtual */ nscoord
 nsFlexContainerFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
-  nscoord prefISize = 0;
-  DISPLAY_PREF_WIDTH(this, prefISize);
-
-  RenumberList();
-
-  // XXXdholbert Optimization: We could cache our intrinsic widths like
-  // nsBlockFrame does (and return it early from this function if it's set).
-  // Whenever anything happens that might change it, set it to
-  // NS_INTRINSIC_WIDTH_UNKNOWN (like nsBlockFrame::MarkIntrinsicISizesDirty
-  // does)
-  const FlexboxAxisTracker axisTracker(this, GetWritingMode());
-
-  const bool useMozBoxCollapseBehavior =
-    ShouldUseMozBoxCollapseBehavior(StyleDisplay());
-
-  for (nsIFrame* childFrame : mFrames) {
-    // If we're using legacy "visibility:collapse" behavior, then we don't
-    // care about the sizes of any collapsed children.
-    if (!useMozBoxCollapseBehavior ||
-        (NS_STYLE_VISIBILITY_COLLAPSE !=
-         childFrame->StyleVisibility()->mVisible)) {
-      nscoord childPrefISize =
-        nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
-                                             nsLayoutUtils::PREF_ISIZE);
-      if (axisTracker.IsRowOriented()) {
-        prefISize += childPrefISize;
-      } else {
-        prefISize = std::max(prefISize, childPrefISize);
-      }
-    }
+  DISPLAY_PREF_WIDTH(this, mCachedPrefISize);
+  if (mCachedPrefISize == NS_INTRINSIC_WIDTH_UNKNOWN) {
+    mCachedPrefISize = IntrinsicISize(aRenderingContext,
+                                      nsLayoutUtils::PREF_ISIZE);
   }
-  return prefISize;
+
+  return mCachedPrefISize;
 }

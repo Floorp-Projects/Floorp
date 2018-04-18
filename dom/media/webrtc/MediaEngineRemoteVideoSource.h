@@ -224,8 +224,17 @@ private:
 
   // The intrinsic size of the latest captured image, so we can feed black
   // images of the same size while stopped.
-  // Set under mMutex on the owning thread. Accessed under one of the two.
+  // Set under mMutex on the Cameras IPC thread. Accessed under one of the two.
   gfx::IntSize mImageSize = gfx::IntSize(0, 0);
+
+  struct AtomicBool {
+    Atomic<bool> mValue;
+  };
+
+  // True when resolution settings have been updated from a real frame's
+  // resolution. Threadsafe.
+  // TODO: This can be removed in bug 1453269.
+  const RefPtr<media::Refcountable<AtomicBool>> mSettingsUpdatedByFrame;
 
   // The current settings of this source.
   // Note that these may be different from the settings of the underlying device

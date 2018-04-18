@@ -2086,7 +2086,11 @@ Toolbox.prototype = {
     });
   },
 
-  // Returns an instance of the preference actor
+  /**
+   * Returns an instance of the preference actor. This is a lazily initialized root
+   * actor that persists preferences to the debuggee, instead of just to the DevTools
+   * client. See the definition of the preference actor for more information.
+   */
   get preferenceFront() {
     if (this._preferenceFront) {
       return Promise.resolve(this._preferenceFront);

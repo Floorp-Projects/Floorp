@@ -575,22 +575,7 @@ var Impl = {
     // Unified Telemetry makes it opt-out. If extended Telemetry is enabled, base recording
     // is always on as well.
     if (IS_UNIFIED_TELEMETRY) {
-      // Enable extended Telemetry on pre-release channels and disable it
-      // on Release/ESR.
-      let prereleaseChannels = ["nightly", "aurora", "beta"];
-      if (!AppConstants.MOZILLA_OFFICIAL) {
-        // Turn extended telemetry for local developer builds.
-        prereleaseChannels.push("default");
-      }
-      const isPrereleaseChannel =
-        prereleaseChannels.includes(AppConstants.MOZ_UPDATE_CHANNEL);
-      const isReleaseCandidateOnBeta =
-        AppConstants.MOZ_UPDATE_CHANNEL === "release" &&
-        Services.prefs.getCharPref("app.update.channel", null) === "beta";
-      Telemetry.canRecordBase = true;
-      Telemetry.canRecordExtended = isPrereleaseChannel ||
-        isReleaseCandidateOnBeta ||
-        Services.prefs.getBoolPref(TelemetryUtils.Preferences.OverridePreRelease, false);
+      TelemetryUtils.setTelemetryRecordingFlags();
     } else {
       // We're not on unified Telemetry, stick to the old behaviour for
       // supporting Fennec.
@@ -1015,19 +1000,29 @@ var Impl = {
 
     this._log.trace("registerJsProbes - registering builtin JS probes");
 
-    // Load the scalar probes JSON file.
-    const scalarProbeFilename = "ScalarArtifactDefinitions.json";
-    let scalarProbeFile = Services.dirsvc.get("GreD", Ci.nsIFile);
-    scalarProbeFile.append(scalarProbeFilename);
-    if (!scalarProbeFile.exists()) {
-      this._log.trace("registerJsProbes - no scalar builtin JS probes");
-      return;
+    await this.registerScalarProbes();
+    await this.registerEventProbes();
+  },
+
+  _loadProbeDefinitions(filename) {
+    let probeFile = Services.dirsvc.get("GreD", Ci.nsIFile);
+    probeFile.append(filename);
+    if (!probeFile.exists()) {
+      this._log.trace(`loadProbeDefinitions - no builtin JS probe file ${filename}`);
+      return null;
     }
 
-    // Load the file off the disk.
+    return OS.File.read(probeFile.path, { encoding: "utf-8" });
+  },
+
+  async registerScalarProbes() {
+    this._log.trace("registerScalarProbes - registering scalar builtin JS probes");
+
+    // Load the scalar probes JSON file.
+    const scalarProbeFilename = "ScalarArtifactDefinitions.json";
     let scalarJSProbes = {};
     try {
-      let fileContent = await OS.File.read(scalarProbeFile.path, { encoding: "utf-8" });
+      let fileContent = await this._loadProbeDefinitions(scalarProbeFilename);
       scalarJSProbes = JSON.parse(fileContent, (property, value) => {
         // Fixup the "kind" property: it's a string, and we need the constant
         // coming from nsITelemetry.
@@ -1050,13 +1045,33 @@ var Impl = {
         return newValue;
       });
     } catch (ex) {
-      this._log.error(`registerJsProbes - there was an error loading {$scalarProbeFilename}`,
+      this._log.error(`registerScalarProbes - there was an error loading ${scalarProbeFilename}`,
                       ex);
     }
 
     // Register the builtin probes.
     for (let category in scalarJSProbes) {
       Telemetry.registerBuiltinScalars(category, scalarJSProbes[category]);
+    }
+  },
+
+  async registerEventProbes() {
+    this._log.trace("registerEventProbes - registering builtin JS Event probes");
+
+    // Load the event probes JSON file.
+    const eventProbeFilename = "EventArtifactDefinitions.json";
+    let eventJSProbes = {};
+    try {
+      let fileContent = await this._loadProbeDefinitions(eventProbeFilename);
+      eventJSProbes = JSON.parse(fileContent);
+    } catch (ex) {
+      this._log.error(`registerEventProbes - there was an error loading ${eventProbeFilename}`,
+                      ex);
+    }
+
+    // Register the builtin probes.
+    for (let category in eventJSProbes) {
+      Telemetry.registerBuiltinEvents(category, eventJSProbes[category]);
     }
   },
 };

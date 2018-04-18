@@ -42,6 +42,7 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
   , mMutex("MediaEngineRemoteVideoSource::mMutex")
   , mRescalingBufferPool(/* zero_initialize */ false,
                          /* max_number_of_buffers */ 1)
+  , mSettingsUpdatedByFrame(MakeAndAddRef<media::Refcountable<AtomicBool>>())
   , mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>())
 {
   MOZ_ASSERT(aMediaSource != MediaSourceEnum::Other);
@@ -300,6 +301,8 @@ MediaEngineRemoteVideoSource::Start(const RefPtr<const AllocationHandle>& aHandl
     mState = kStarted;
   }
 
+  mSettingsUpdatedByFrame->mValue = false;
+
   if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture,
                               mCapEngine, mCaptureIndex, mCapability, this)) {
     LOG(("StartCapture failed"));
@@ -310,7 +313,10 @@ MediaEngineRemoteVideoSource::Start(const RefPtr<const AllocationHandle>& aHandl
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MediaEngineRemoteVideoSource::SetLastCapability",
-      [settings = mSettings, source = mMediaSource, cap = mCapability]() mutable {
+      [settings = mSettings,
+       updated = mSettingsUpdatedByFrame,
+       source = mMediaSource,
+       cap = mCapability]() mutable {
     switch (source) {
       case dom::MediaSourceEnum::Screen:
       case dom::MediaSourceEnum::Window:
@@ -326,8 +332,10 @@ MediaEngineRemoteVideoSource::Start(const RefPtr<const AllocationHandle>& aHandl
         break;
     }
 
-    settings->mWidth.Value() = cap.width;
-    settings->mHeight.Value() = cap.height;
+    if (!updated->mValue) {
+      settings->mWidth.Value() = cap.width;
+      settings->mHeight.Value() = cap.height;
+    }
     settings->mFrameRate.Value() = cap.maxFPS;
   }));
 
@@ -621,23 +629,24 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
             aProps.renderTimeMs()));
 #endif
 
-  bool sizeChanged = false;
+  if (mImageSize.width != dst_width || mImageSize.height != dst_height) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "MediaEngineRemoteVideoSource::FrameSizeChange",
+        [settings = mSettings,
+         updated = mSettingsUpdatedByFrame,
+         dst_width,
+         dst_height]() mutable {
+      settings->mWidth.Value() = dst_width;
+      settings->mHeight.Value() = dst_height;
+      updated->mValue = true;
+    }));
+  }
+
   {
     MutexAutoLock lock(mMutex);
     // implicitly releases last image
-    sizeChanged = (!mImage && image) ||
-                  (mImage && image && mImage->GetSize() != image->GetSize());
     mImage = image.forget();
     mImageSize = mImage->GetSize();
-  }
-
-  if (sizeChanged) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "MediaEngineRemoteVideoSource::FrameSizeChange",
-        [settings = mSettings, dst_width, dst_height]() mutable {
-      settings->mWidth.Value() = dst_width;
-      settings->mHeight.Value() = dst_height;
-    }));
   }
 
   // We'll push the frame into the MSG on the next Pull. This will avoid
