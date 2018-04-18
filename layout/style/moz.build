@@ -23,6 +23,7 @@ DIRS += ['xbl-marquee']
 TEST_DIRS += ['test']
 
 EXPORTS += [
+    '!nsCSSPropertyID.h',
     'AnimationCommon.h',
     'CounterStyleManager.h',
     'nsAnimationManager.h',
@@ -35,7 +36,6 @@ EXPORTS += [
     'nsCSSKeywords.h',
     'nsCSSParser.h',
     'nsCSSPropAliasList.h',
-    'nsCSSPropertyID.h',
     'nsCSSPropertyIDSet.h',
     'nsCSSPropList.h',
     'nsCSSProps.h',
@@ -276,8 +276,16 @@ CONTENT_ACCESSIBLE_FILES += [
 ]
 
 GENERATED_FILES += [
+    'nsCSSPropertyID.h',
     'ServoCSSPropList.h',
     'ServoCSSPropList.py',
+]
+
+prop_id = GENERATED_FILES['nsCSSPropertyID.h']
+prop_id.script = 'GenerateCSSPropertyID.py:generate'
+prop_id.inputs = [
+    'nsCSSPropertyID.h.in',
+    '!ServoCssPropList.py',
 ]
 
 servo_props = GENERATED_FILES['ServoCSSPropList.h']

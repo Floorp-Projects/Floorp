@@ -21,30 +21,7 @@
 enum nsCSSPropertyID {
   eCSSProperty_UNKNOWN = -1,
 
-  #define CSS_PROP_LONGHAND(name_, id_, ...) eCSSProperty_##id_,
-  #include "mozilla/ServoCSSPropList.h"
-  #undef CSS_PROP_LONGHAND
-
-  eCSSProperty_COUNT_no_shorthands,
-  // Make the count continue where it left off:
-  eCSSProperty_COUNT_DUMMY = eCSSProperty_COUNT_no_shorthands - 1,
-
-  #define CSS_PROP_SHORTHAND(name_, id_, ...) eCSSProperty_##id_,
-  #include "mozilla/ServoCSSPropList.h"
-  #undef CSS_PROP_SHORTHAND
-
-  eCSSProperty_COUNT,
-  // Make the count continue where it left off:
-  eCSSProperty_COUNT_DUMMY2 = eCSSProperty_COUNT - 1,
-
-  #define CSS_PROP_ALIAS(aliasname_, aliasid_, id_, method_, pref_) \
-    eCSSPropertyAlias_##aliasid_,
-  #include "mozilla/ServoCSSPropList.h"
-  #undef CSS_PROP_ALIAS
-
-  eCSSProperty_COUNT_with_aliases,
-  // Make the count continue where it left off:
-  eCSSProperty_COUNT_DUMMY3 = eCSSProperty_COUNT_with_aliases - 1,
+$property_ids
 
   // Some of the values below could probably overlap with each other
   // if we had a need for them to do so.
@@ -54,16 +31,16 @@ enum nsCSSPropertyID {
   eCSSPropertyExtra_no_properties,
   eCSSPropertyExtra_all_properties,
 
-  // Extra dummy values for nsCSSParser internal use.
-  eCSSPropertyExtra_x_none_value,
-  eCSSPropertyExtra_x_auto_value,
-
   // Extra value to represent custom properties (--*).
   eCSSPropertyExtra_variable,
-
-  // Extra value for use in the DOM API's
-  eCSSProperty_DOM
 };
+
+const nsCSSPropertyID
+  eCSSProperty_COUNT_no_shorthands = $longhand_count;
+const nsCSSPropertyID
+  eCSSProperty_COUNT = $shorthand_count;
+const nsCSSPropertyID
+  eCSSProperty_COUNT_with_aliases = eCSSPropertyExtra_no_properties;
 
 namespace mozilla {
 
