@@ -10,8 +10,9 @@ const kWhitelist = new Set([
 ]);
 
 const kESModuleList = new Set([
-  /toolkit\/res\/payments\/(components|containers|mixins)\/.*.js$/,
-  /toolkit\/res\/payments\/PaymentsStore.js$/,
+  /toolkit\/res\/payments\/(components|containers|mixins)\/.*\.js$/,
+  /toolkit\/res\/payments\/paymentRequest\.js$/,
+  /toolkit\/res\/payments\/PaymentsStore\.js$/,
 ]);
 
 // Normally we would use reflect.jsm to get Reflect.parse. However, if

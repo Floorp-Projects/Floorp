@@ -7,6 +7,7 @@ module.exports = {
         "res/components/*.js",
         "res/containers/*.js",
         "res/mixins/*.js",
+        "res/paymentRequest.js",
         "res/PaymentsStore.js",
         "test/mochitest/test_*.html",
       ],
