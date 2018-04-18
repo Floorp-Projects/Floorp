@@ -29,7 +29,6 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.util.ContextUtils;
 
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -50,7 +49,7 @@ public class MmaDelegate {
     public static final String RESUMED_FROM_BACKGROUND = "E_Resumed_From_Background";
     public static final String NEW_TAB = "E_Opened_New_Tab";
     public static final String DISMISS_ONBOARDING = "E_Dismiss_Onboarding";
-
+    public static final String CHANGED_DEFAULT_TO_FENNEC = "E_Changed_Default_To_Fennec";
 
     public static final String USER_ATT_FOCUS_INSTALLED = "Focus Installed";
     public static final String USER_ATT_KLAR_INSTALLED = "Klar Installed";
@@ -66,13 +65,15 @@ public class MmaDelegate {
     private static final String TAG = "MmaDelegate";
 
     public static final String KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID = "android.not_a_preference.leanplum.device_id";
+    private static final String KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT = "android.not_a_preference.fennec.default.browser.status";
+
     private static final String DEBUG_LEANPLUM_DEVICE_ID = "8effda84-99df-11e7-abc4-cec278b6b50a";
 
     private static final MmaInterface mmaHelper = MmaConstants.getMma();
-    private static WeakReference<Context> applicationContext;
+    private static Context applicationContext;
 
     public static void init(Activity activity) {
-        applicationContext = new WeakReference<>(activity.getApplicationContext());
+        applicationContext = activity.getApplicationContext();
         // Since user attributes are gathered in Fennec, not in MMA implementation,
         // we gather the information here then pass to mmaHelper.init()
         // Note that generateUserAttribute always return a non null HashMap.
@@ -110,15 +111,35 @@ public class MmaDelegate {
         return attributes;
     }
 
+    public static void notifyDefaultBrowserStatus(Activity activity) {
+        if (!isMmaEnabled(activity)) {
+            return;
+        }
+
+        final SharedPreferences sharedPreferences = activity.getPreferences(Context.MODE_PRIVATE);
+        final boolean isFennecDefaultBrowser = isDefaultBrowser(activity);
+
+        // Only if this is not the first run of LeanPlum and we previously tracked default browser status
+        // we can check for changes
+        if (sharedPreferences.contains(KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT)) {
+            // Will only inform LeanPlum of the event if Fennec was not previously the default browser
+            if (!sharedPreferences.getBoolean(KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT, true) && isFennecDefaultBrowser) {
+                track(CHANGED_DEFAULT_TO_FENNEC);
+            }
+        }
+
+        sharedPreferences.edit().putBoolean(KEY_ANDROID_PREF_BOOLEAN_FENNEC_IS_DEFAULT, isFennecDefaultBrowser).apply();
+    }
+
     public static void track(String event) {
-        if (applicationContext != null && isMmaEnabled(applicationContext.get())) {
+        if (applicationContext != null && isMmaEnabled(applicationContext)) {
             mmaHelper.event(event);
         }
     }
 
 
     public static void track(String event, long value) {
-        if (applicationContext != null && isMmaEnabled(applicationContext.get())) {
+        if (applicationContext != null && isMmaEnabled(applicationContext)) {
             mmaHelper.event(event, value);
         }
     }
