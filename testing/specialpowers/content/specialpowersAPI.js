@@ -20,6 +20,7 @@ ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/ServiceWorkerCleanUp.jsm");
 
 // We're loaded with "this" not set to the global in some cases, so we
 // have to play some games to get at the global object here.  Normally
@@ -1961,11 +1962,11 @@ SpecialPowersAPI.prototype = {
   },
 
   removeAllServiceWorkerData() {
-    this.notifyObserversInParentProcess(null, "browser:purge-session-history", "");
+    return wrapIfUnwrapped(ServiceWorkerCleanUp.removeAll());
   },
 
   removeServiceWorkerDataForExampleDomain() {
-    this.notifyObserversInParentProcess(null, "browser:purge-domain-data", "example.com");
+    return wrapIfUnwrapped(ServiceWorkerCleanUp.removeFromHost("example.com"));
   },
 
   cleanUpSTSData(origin, flags) {

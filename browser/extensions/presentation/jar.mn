@@ -1,5 +1,0 @@
-[features/presentation@mozilla.org] chrome.jar:
-% content presentation %content/
-  content/  (content/*)
-% skin presentation-shared classic/1.0 %skin/shared/
-  skin/  (skin/*)
