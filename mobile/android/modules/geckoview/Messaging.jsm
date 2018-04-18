@@ -112,11 +112,36 @@ DispatcherDelegate.prototype = {
       const type = aMsg.type;
       aMsg.type = undefined;
 
-      this.dispatch(type, aMsg, {
-        onSuccess: resolve,
-        onError: reject,
-      });
+      // Manually release the resolve/reject functions after one callback is
+      // received, so the JS GC is not tied up with the Java GC.
+      const onCallback = (callback, ...args) => {
+        if (callback) {
+          callback(...args);
+        }
+        resolve = undefined;
+        reject = undefined;
+      };
+      const callback = {
+        onSuccess: result => onCallback(resolve, result),
+        onError: error => onCallback(reject, error),
+        onFinalize: _ => onCallback(reject),
+      };
+      this.dispatch(type, aMsg, callback, callback);
     });
+  },
+
+  finalize: function() {
+    if (!this._replies) {
+      return;
+    }
+    this._replies.forEach(reply => {
+      if (typeof reply.finalizer === "function") {
+        reply.finalizer();
+      } else if (reply.finalizer) {
+        reply.finalizer.onFinalize();
+      }
+    });
+    this._replies.clear();
   },
 
   receiveMessage: function(aMsg) {
@@ -187,10 +212,19 @@ var EventDispatcher = {
     let callback;
     if (aMsg.data.uuid) {
       let reply = (type, response) => {
-        let mm = aMsg.data.global ? aMsg.target : aMsg.target.messageManager;
+        const mm = aMsg.data.global ? aMsg.target : aMsg.target.messageManager;
+        if (!mm) {
+          if (type === "finalize") {
+            // It's normal for the finalize call to come after the browser has
+            // been destroyed. We can gracefully handle that case despite
+            // having no message manager.
+            return;
+          }
+          throw Error(`No message manager for ${aMsg.data.event}:${type} reply`);
+        }
         mm.sendAsyncMessage("GeckoView:MessagingReply", {
-          type: type,
-          response: response,
+          type,
+          response,
           uuid: aMsg.data.uuid,
         });
       };

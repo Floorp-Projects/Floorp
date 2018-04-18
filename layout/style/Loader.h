@@ -572,22 +572,13 @@ private:
   // sheet had an @import).  If aCompleted is true when this returns, then
   // ParseSheet also called SheetComplete on aLoadData.
   nsresult ParseSheet(const nsAString& aUTF16,
-                      Span<const uint8_t> aUTF8,
+                      const nsACString& aUTF8,
                       SheetLoadData* aLoadData,
                       bool aAllowAsync,
                       bool& aCompleted);
 
-  //
-  // Separate parsing paths for the old and new style systems, so that we can
-  // make parsing asynchronous in the new style system without touching the old
-  // one. Once we drop the old style system, this can be simplified.
-  //
-
-
-
   nsresult DoParseSheetServo(ServoStyleSheet* aSheet,
-                             const nsAString& aUTF16,
-                             Span<const uint8_t> aUTF8,
+                             const nsACString& aBytes,
                              SheetLoadData* aLoadData,
                              bool aAllowAsync,
                              bool& aCompleted);

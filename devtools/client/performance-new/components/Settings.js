@@ -6,6 +6,10 @@ const { PureComponent, createFactory } = require("devtools/client/shared/vendor/
 const { div, details, summary, label, input, span, h2, section } = require("devtools/client/shared/vendor/react-dom-factories");
 const Range = createFactory(require("devtools/client/performance-new/components/Range"));
 const { makeExponentialScale, formatFileSize, calculateOverhead } = require("devtools/client/performance-new/utils");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const actions = require("devtools/client/performance-new/store/actions");
+const selectors = require("devtools/client/performance-new/store/selectors");
 
 // sizeof(double) + sizeof(char)
 // http://searchfox.org/mozilla-central/rev/e8835f52eff29772a57dca7bcc86a9a312a23729/tools/profiler/core/ProfileEntry.h#73
@@ -120,60 +124,45 @@ const featureCheckboxes = [
 ];
 
 /**
- * This component manages the settings for recording a performance profile. In addition
- * to rendering the UI, it also manages the state of the settings. In order to not
- * introduce the complexity of adding Redux to a relatively simple UI, this
- * component expects to be accessed via the `ref`, and then calling
- * `settings.getRecordingSettings()` to get out the settings. If the recording panel
- * takes on new responsibilities, then this decision should be revisited.
+ * This component manages the settings for recording a performance profile.
  */
-class PerfSettings extends PureComponent {
+class Settings extends PureComponent {
   static get propTypes() {
-    return {};
+    return {
+      // StateProps
+      interval: PropTypes.number.isRequired,
+      entries: PropTypes.number.isRequired,
+      features: PropTypes.array.isRequired,
+      threads: PropTypes.array.isRequired,
+      threadsString: PropTypes.string.isRequired,
+
+      // DispatchProps
+      changeInterval: PropTypes.func.isRequired,
+      changeEntries: PropTypes.func.isRequired,
+      changeFeatures: PropTypes.func.isRequired,
+      changeThreads: PropTypes.func.isRequired,
+    };
   }
 
   constructor(props) {
     super(props);
-    // Right now the defaults are reset every time the panel is opened. These should
-    // be persisted between sessions. See Bug 1453014.
     this.state = {
-      interval: 1,
-      entries: 10000000, // 90MB
-      features: {
-        js: true,
-        stackwalk: true,
-      },
-      threads: "GeckoMain,Compositor",
-      threadListFocused: false,
+      // Allow the textbox to have a temporary tracked value.
+      temporaryThreadText: null
     };
+
     this._handleThreadCheckboxChange = this._handleThreadCheckboxChange.bind(this);
     this._handleFeaturesCheckboxChange = this._handleFeaturesCheckboxChange.bind(this);
-    this._handleThreadTextChange = this._handleThreadTextChange.bind(this);
+    this._setThreadTextFromInput = this._setThreadTextFromInput.bind(this);
     this._handleThreadTextCleanup = this._handleThreadTextCleanup.bind(this);
     this._renderThreadsColumns = this._renderThreadsColumns.bind(this);
-    this._onChangeInterval = this._onChangeInterval.bind(this);
-    this._onChangeEntries = this._onChangeEntries.bind(this);
+
     this._intervalExponentialScale = makeExponentialScale(0.01, 100);
     this._entriesExponentialScale = makeExponentialScale(100000, 100000000);
   }
 
-  getRecordingSettings() {
-    const features = [];
-    for (const [name, isSet] of Object.entries(this.state.features)) {
-      if (isSet) {
-        features.push(name);
-      }
-    }
-    return {
-      entries: this.state.entries,
-      interval: this.state.interval,
-      features,
-      threads: _threadStringToList(this.state.threads)
-    };
-  }
-
   _renderNotches() {
-    const { interval, entries, features } = this.state;
+    const { interval, entries, features } = this.props;
     const overhead = calculateOverhead(interval, entries, features);
     const notchCount = 22;
     const notches = [];
@@ -200,44 +189,45 @@ class PerfSettings extends PureComponent {
   }
 
   _handleThreadCheckboxChange(event) {
+    const { threads, changeThreads } = this.props;
     const { checked, value }  = event.target;
 
-    this.setState(state => {
-      let threadsList = _threadStringToList(state.threads);
-      if (checked) {
-        if (!threadsList.includes(value)) {
-          threadsList.push(value);
-        }
-      } else {
-        threadsList = threadsList.filter(thread => thread !== value);
+    if (checked) {
+      if (!threads.includes(value)) {
+        changeThreads([...threads, value]);
       }
-      return { threads: threadsList.join(",") };
-    });
+    } else {
+      changeThreads(threads.filter(thread => thread !== value));
+    }
   }
 
   _handleFeaturesCheckboxChange(event) {
+    const { features, changeFeatures } = this.props;
     const { checked, value }  = event.target;
 
-    this.setState(state => ({
-      features: {...state.features, [value]: checked}
-    }));
+    if (checked) {
+      if (!features.includes(value)) {
+        changeFeatures([value, ...features]);
+      }
+    } else {
+      changeFeatures(features.filter(feature => feature !== value));
+    }
   }
 
-  _handleThreadTextChange(event) {
-    this.setState({ threads: event.target.value });
+  _setThreadTextFromInput(event) {
+    this.setState({ temporaryThreadText: event.target.value });
   }
 
-  _handleThreadTextCleanup() {
-    this.setState(state => {
-      const threadsList = _threadStringToList(state.threads);
-      return { threads: threadsList.join(",") };
-    });
+  _handleThreadTextCleanup(event) {
+    this.setState({ temporaryThreadText: null });
+    this.props.changeThreads(_threadTextToList(event.target.value));
   }
 
-  _renderThreadsColumns(threads, index) {
+  _renderThreadsColumns(threadDisplay, index) {
+    const { threads } = this.props;
     return div(
       { className: "perf-settings-thread-column", key: index },
-      threads.map(({name, title}) => label(
+      threadDisplay.map(({name, title}) => label(
         {
           className: "perf-settings-checkbox-label",
           key: name,
@@ -247,7 +237,7 @@ class PerfSettings extends PureComponent {
           className: "perf-settings-checkbox",
           type: "checkbox",
           value: name,
-          checked: this.state.threads.includes(name),
+          checked: threads.includes(name),
           onChange: this._handleThreadCheckboxChange
         }),
         name
@@ -283,9 +273,12 @@ class PerfSettings extends PureComponent {
               input({
                 className: "perf-settings-text-input",
                 type: "text",
-                value: this.state.threads,
-                onChange: this._handleThreadTextChange,
+                value: this.state.temporaryThreadText === null
+                  ? this.props.threads
+                  : this.state.temporaryThreadText,
                 onBlur: this._handleThreadTextCleanup,
+                onFocus: this._setThreadTextFromInput,
+                onChange: this._setThreadTextFromInput,
               })
             )
           )
@@ -311,7 +304,7 @@ class PerfSettings extends PureComponent {
               className: "perf-settings-checkbox",
               type: "checkbox",
               value,
-              checked: this.state.features[value],
+              checked: this.props.features.includes(value),
               onChange: this._handleFeaturesCheckboxChange
             }),
             div({ className: "perf-settings-feature-name" }, name),
@@ -331,14 +324,6 @@ class PerfSettings extends PureComponent {
     );
   }
 
-  _onChangeInterval(interval) {
-    this.setState({ interval });
-  }
-
-  _onChangeEntries(entries) {
-    this.setState({ entries });
-  }
-
   render() {
     return section(
       { className: "perf-settings" },
@@ -353,19 +338,19 @@ class PerfSettings extends PureComponent {
       ),
       Range({
         label: "Sampling interval:",
-        value: this.state.interval,
+        value: this.props.interval,
         id: "perf-range-interval",
         scale: this._intervalExponentialScale,
         display: _intervalTextDisplay,
-        onChange: this._onChangeInterval
+        onChange: this.props.changeInterval
       }),
       Range({
         label: "Buffer size:",
-        value: this.state.entries,
+        value: this.props.entries,
         id: "perf-range-entries",
         scale: this._entriesExponentialScale,
         display: _entriesTextDisplay,
-        onChange: this._onChangeEntries
+        onChange: this.props.changeEntries,
       }),
       this._renderThreads(),
       this._renderFeatures()
@@ -378,7 +363,7 @@ class PerfSettings extends PureComponent {
  * @param string threads, comma separated values.
  * @return Array list of thread names
  */
-function _threadStringToList(threads) {
+function _threadTextToList(threads) {
   return threads
     // Split on commas
     .split(",")
@@ -406,4 +391,21 @@ function _entriesTextDisplay(value) {
   return formatFileSize(value * PROFILE_ENTRY_SIZE);
 }
 
-module.exports = PerfSettings;
+function mapStateToProps(state) {
+  return {
+    interval: selectors.getInterval(state),
+    entries: selectors.getEntries(state),
+    features: selectors.getFeatures(state),
+    threads: selectors.getThreads(state),
+    threadsString: selectors.getThreadsString(state),
+  };
+}
+
+const mapDispatchToProps = {
+  changeInterval: actions.changeInterval,
+  changeEntries: actions.changeEntries,
+  changeFeatures: actions.changeFeatures,
+  changeThreads: actions.changeThreads,
+};
+
+module.exports = connect(mapStateToProps, mapDispatchToProps)(Settings);

@@ -10,8 +10,10 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/SystemGroup.h"
@@ -570,6 +572,39 @@ SheetLoadData::GetReferrerURI()
   return uri.forget();
 }
 
+static nsresult
+VerifySheetIntegrity(const SRIMetadata& aMetadata,
+                     nsIChannel* aChannel,
+                     const nsACString& aFirst,
+                     const nsACString& aSecond,
+                     const nsACString& aSourceFileURI,
+                     nsIConsoleReportCollector* aReporter)
+{
+  NS_ENSURE_ARG_POINTER(aReporter);
+
+  if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
+    nsAutoCString requestURL;
+    nsCOMPtr<nsIURI> originalURI;
+    if (aChannel &&
+        NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))) &&
+        originalURI) {
+      originalURI->GetAsciiSpec(requestURL);
+    }
+    MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
+            ("VerifySheetIntegrity (unichar stream)"));
+  }
+
+  SRICheckDataVerifier verifier(aMetadata, aSourceFileURI, aReporter);
+  nsresult rv =
+    verifier.Update(aFirst.Length(), (const uint8_t*)aFirst.BeginReading());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv =
+    verifier.Update(aSecond.Length(), (const uint8_t*)aSecond.BeginReading());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return verifier.Verify(aMetadata, aChannel, aSourceFileURI, aReporter);
+}
+
 /*
  * Stream completion code shared by Stylo and the old style system.
  *
@@ -579,7 +614,8 @@ SheetLoadData::GetReferrerURI()
  */
 nsresult
 SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
-                                       const nsACString& aBytes,
+                                       const nsACString& aBytes1,
+                                       const nsACString& aBytes2,
                                        nsIChannel* aChannel)
 {
   LOG(("SheetLoadData::OnStreamComplete"));
@@ -771,8 +807,8 @@ SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     if (mLoader->mDocument && mLoader->mDocument->GetDocumentURI()) {
       mLoader->mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
     }
-    nsresult rv = SRICheck::VerifyIntegrity(
-      sriMetadata, aChannel, aBytes, sourceUri, mLoader->mReporter);
+    nsresult rv = VerifySheetIntegrity(
+      sriMetadata, aChannel, aBytes1, aBytes2, sourceUri, mLoader->mReporter);
 
     nsCOMPtr<nsILoadGroup> loadGroup;
     aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
@@ -1567,7 +1603,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
  */
 nsresult
 Loader::ParseSheet(const nsAString& aUTF16,
-                   Span<const uint8_t> aUTF8,
+                   const nsACString& aUTF8,
                    SheetLoadData* aLoadData,
                    bool aAllowAsync,
                    bool& aCompleted)
@@ -1576,17 +1612,20 @@ Loader::ParseSheet(const nsAString& aUTF16,
   NS_PRECONDITION(aLoadData, "Must have load data");
   NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
   aCompleted = false;
-  if (ServoStyleSheet* sheet = aLoadData->mSheet->GetAsServo()) {
-    return DoParseSheetServo(sheet, aUTF16, aUTF8, aLoadData, aAllowAsync, aCompleted);
+  ServoStyleSheet* sheet = aLoadData->mSheet->AsServo();
+  MOZ_ASSERT(aUTF16.IsEmpty() || aUTF8.IsEmpty());
+  if (!aUTF16.IsEmpty()) {
+    return DoParseSheetServo(sheet, NS_ConvertUTF16toUTF8(aUTF16),
+                             aLoadData, aAllowAsync, aCompleted);
+  } else {
+    return DoParseSheetServo(sheet, aUTF8,
+                             aLoadData, aAllowAsync, aCompleted);
   }
-    MOZ_CRASH("old style system disabled");
 }
-
 
 nsresult
 Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
-                          const nsAString& aUTF16,
-                          Span<const uint8_t> aUTF8,
+                          const nsACString& aBytes,
                           SheetLoadData* aLoadData,
                           bool aAllowAsync,
                           bool& aCompleted)
@@ -1598,7 +1637,7 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
   if (aLoadData->mSyncLoad || !aAllowAsync) {
     aSheet->ParseSheetSync(
       this,
-      aUTF8.IsEmpty() ? NS_ConvertUTF16toUTF8(aUTF16) : aUTF8,
+      aBytes,
       aSheet->GetSheetURI(),
       aSheet->GetBaseURI(),
       aSheet->Principal(),
@@ -1627,7 +1666,7 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
   nsCOMPtr<nsISerialEventTarget> target = DispatchTarget();
   aSheet->ParseSheet(
     this,
-    aUTF8.IsEmpty() ? NS_ConvertUTF16toUTF8(aUTF16) : aUTF8,
+    aBytes,
     aSheet->GetSheetURI(),
     aSheet->GetBaseURI(),
     aSheet->Principal(),
@@ -1920,8 +1959,8 @@ Loader::LoadInlineStyle(nsIContent* aElement,
   //
   // Note that we need to parse synchronously, since the web expects that the
   // effects of inline stylesheets are visible immediately (aside from @imports).
-  rv = ParseSheet(aBuffer, Span<const uint8_t>(), data,
-                  /* aAllowAsync = */ false, *aCompleted);
+  rv = ParseSheet(aBuffer, EmptyCString(),
+                  data, /* aAllowAsync = */ false, *aCompleted);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If aCompleted is true, |data| may well be deleted by now.

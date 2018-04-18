@@ -98,6 +98,29 @@ global.makeWidgetId = id => {
   return id.replace(/[^a-z0-9_-]/g, "_");
 };
 
+global.waitForTabLoaded = (tab, url) => {
+  return new Promise(resolve => {
+    windowTracker.addListener("progress", {
+      onLocationChange(browser, webProgress, request, locationURI, flags) {
+        if (webProgress.isTopLevel
+            && browser.ownerGlobal.gBrowser.getTabForBrowser(browser) == tab
+            && (!url || locationURI.spec == url)) {
+          windowTracker.removeListener("progress", this);
+          resolve();
+        }
+      },
+    });
+  });
+};
+
+global.replaceUrlInTab = (gBrowser, tab, url) => {
+  let loaded = waitForTabLoaded(tab, url);
+  gBrowser.loadURI(url, {
+    flags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
+  });
+  return loaded;
+};
+
 // Manages tab-specific context data, and dispatching tab select events
 // across all windows.
 global.TabContext = class extends EventEmitter {

@@ -49,32 +49,31 @@ describe("ThemeFeed", () => {
     assert.notCalled(feed.updateTheme);
   });
   describe("#updateTheme", () => {
-    it("should switch to dark theme if the current theme has light text", () => {
+    it("should switch to dark theme if the current theme is the builtin Dark theme", () => {
       const dispatch = sinon.spy();
       feed.store.dispatch = dispatch;
-      feed.updateTheme({textcolor: "#f1f1f1"});
-      assert.calledOnce(dispatch);
-      assert.equal(dispatch.firstCall.args[0].data.className, "dark-theme");
-      dispatch.reset();
-      feed.updateTheme({textcolor: "yellow"});
+      feed.updateTheme({id: "firefox-compact-dark@mozilla.org"});
       assert.calledOnce(dispatch);
       assert.equal(dispatch.firstCall.args[0].data.className, "dark-theme");
     });
-    it("should switch to default theme if the current theme has dark text", () => {
+    it("should switch to default theme if the current theme has an id that isn't Dark theme", () => {
       const dispatch = sinon.spy();
       feed.store.dispatch = dispatch;
-      feed.updateTheme({textcolor: "#111"});
-      assert.calledOnce(dispatch);
-      assert.equal(dispatch.firstCall.args[0].data.className, "");
-      dispatch.reset();
-      feed.updateTheme({textcolor: "brown"});
+      feed.updateTheme({id: "firefox-compact-light@mozilla.org"});
       assert.calledOnce(dispatch);
       assert.equal(dispatch.firstCall.args[0].data.className, "");
     });
-    it("should switch to default theme by default (missing textcolor on theme)", () => {
+    it("should switch to default theme if the current theme has an undefined id", () => {
       const dispatch = sinon.spy();
       feed.store.dispatch = dispatch;
-      feed.updateTheme();
+      feed.updateTheme({id: undefined});
+      assert.calledOnce(dispatch);
+      assert.equal(dispatch.firstCall.args[0].data.className, "");
+    });
+    it("should switch to default theme if the current theme is undefined (Default)", () => {
+      const dispatch = sinon.spy();
+      feed.store.dispatch = dispatch;
+      feed.updateTheme(undefined);
       assert.calledOnce(dispatch);
       assert.equal(dispatch.firstCall.args[0].data.className, "");
     });
