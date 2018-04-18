@@ -50,7 +50,7 @@ endif
 endif
 
 check-style::
-	(cd $(srcdir) && $(PYTHON) $(topsrcdir)/config/check_spidermonkey_style.py);
+	(cd $(topsrcdir) && $(PYTHON) $(topsrcdir)/config/check_spidermonkey_style.py);
 
 check-masm::
 	(cd $(srcdir) && $(PYTHON) $(topsrcdir)/config/check_macroassembler_style.py);

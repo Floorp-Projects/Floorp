@@ -300,7 +300,7 @@ class Include(object):
                 continue
 
             self.IDL = parent.parser.parse(open(file).read(), filename=file)
-            self.IDL.resolve(parent.incdirs, parent.parser)
+            self.IDL.resolve(parent.incdirs, parent.parser, parent.webidlconfig)
             for type in self.IDL.getNames():
                 parent.setName(type)
             parent.deps.extend(self.IDL.deps)
@@ -332,10 +332,11 @@ class IDL(object):
     def __str__(self):
         return "".join([str(p) for p in self.productions])
 
-    def resolve(self, incdirs, parser):
+    def resolve(self, incdirs, parser, webidlconfig):
         self.namemap = NameMap()
         self.incdirs = incdirs
         self.parser = parser
+        self.webidlconfig = webidlconfig
         for p in self.productions:
             p.resolve(self)
 
@@ -564,6 +565,50 @@ class Native(object):
         return "native %s(%s)\n" % (self.name, self.nativename)
 
 
+class WebIDL(object):
+    kind = 'webidl'
+
+    def __init__(self, name, location):
+        self.name = name
+        self.location = location
+
+    def __eq__(self, other):
+        return other.kind == 'webidl' and self.name == other.name
+
+    def resolve(self, parent):
+        # XXX(nika): We don't handle _every_ kind of webidl object here (as that
+        # would be hard). For example, we don't support nsIDOM*-defaulting
+        # interfaces.
+        # TODO: More explicit compile-time checks?
+
+        assert parent.webidlconfig is not None, \
+            "WebIDL declarations require passing webidlconfig to resolve."
+
+        # Resolve our native name according to the WebIDL configs.
+        config = parent.webidlconfig.get(self.name, {})
+        self.native = config.get('nativeType')
+        if self.native is None:
+            self.native = "mozilla::dom::%s" % self.name
+        self.headerFile = config.get('headerFile')
+        if self.headerFile is None:
+            self.headerFile = self.native.replace('::', '/') + '.h'
+
+        parent.setName(self)
+
+    def isScriptable(self):
+        return True  # All DOM objects are script exposed.
+
+    def nativeType(self, calltype):
+        return "%s %s" % (self.native, calltype != 'in' and '* *' or '*')
+
+    def rustType(self, calltype):
+        # Just expose the type as a void* - we can't do any better.
+        return "%s*const libc::c_void" % (calltype != 'in' and '*mut ' or '')
+
+    def __str__(self):
+        return "webidl %s\n" % self.name
+
+
 class Interface(object):
     kind = 'interface'
 
@@ -576,10 +621,19 @@ class Interface(object):
         self.namemap = NameMap()
         self.doccomments = doccomments
         self.nativename = name
+        self.implicit_builtinclass = False
 
         for m in members:
             if not isinstance(m, CDATA):
                 self.namemap.set(m)
+
+            if m.kind == 'method' and m.notxpcom and name != 'nsISupports':
+                # An interface cannot be implemented by JS if it has a
+                # notxpcom method. Such a type is an "implicit builtinclass".
+                #
+                # XXX(nika): Why does nostdcall not imply builtinclass?
+                # It could screw up the shims as well...
+                self.implicit_builtinclass = True
 
     def __eq__(self, other):
         return self.name == other.name and self.location == other.location
@@ -616,6 +670,9 @@ class Interface(object):
 
             if self.attributes.scriptable and realbase.attributes.builtinclass and not self.attributes.builtinclass:
                 raise IDLError("interface '%s' is not builtinclass but derives from builtinclass '%s'" % (self.name, self.base), self.location)
+
+            if realbase.implicit_builtinclass:
+                self.implicit_builtinclass = True # Inherit implicit builtinclass from base
 
         for member in self.members:
             member.resolve(self)
@@ -691,6 +748,8 @@ class InterfaceAttributes(object):
     function = False
     noscript = False
     main_process_scriptable_only = False
+    shim = None
+    shimfile = None
 
     def setuuid(self, value):
         self.uuid = value.lower()
@@ -710,6 +769,12 @@ class InterfaceAttributes(object):
     def setmain_process_scriptable_only(self):
         self.main_process_scriptable_only = True
 
+    def setshim(self, value):
+        self.shim = value
+
+    def setshimfile(self, value):
+        self.shimfile = value
+
     actions = {
         'uuid':       (True, setuuid),
         'scriptable': (False, setscriptable),
@@ -718,6 +783,8 @@ class InterfaceAttributes(object):
         'noscript':   (False, setnoscript),
         'object':     (False, lambda self: True),
         'main_process_scriptable_only': (False, setmain_process_scriptable_only),
+        'shim':    (True, setshim),
+        'shimfile': (True, setshimfile),
         }
 
     def __init__(self, attlist, location):
@@ -754,6 +821,10 @@ class InterfaceAttributes(object):
             l.append("\tfunction\n")
         if self.main_process_scriptable_only:
             l.append("\tmain_process_scriptable_only\n")
+        if self.shim:
+            l.append("\tshim: %s\n" % self.shim)
+        if self.shimfile:
+            l.append("\tshimfile: %s\n" % self.shimfile)
         return "".join(l)
 
 
@@ -1138,6 +1209,7 @@ class IDLParser(object):
         'readonly': 'READONLY',
         'native': 'NATIVE',
         'typedef': 'TYPEDEF',
+        'webidl': 'WEBIDL',
         }
 
     tokens = [
@@ -1252,7 +1324,8 @@ class IDLParser(object):
     def p_productions_interface(self, p):
         """productions : interface productions
                        | typedef productions
-                       | native productions"""
+                       | native productions
+                       | webidl productions"""
         p[0] = list(p[2])
         p[0].insert(0, p[1])
 
@@ -1275,6 +1348,10 @@ class IDLParser(object):
         # this is a place marker: we switch the lexer into literal identifier
         # mode here, to slurp up everything until the closeparen
         self.lexer.begin('nativeid')
+
+    def p_webidl(self, p):
+        """webidl : WEBIDL IDENTIFIER ';'"""
+        p[0] = WebIDL(name=p[2], location=self.getLocation(p, 2))
 
     def p_anyident(self, p):
         """anyident : IDENTIFIER

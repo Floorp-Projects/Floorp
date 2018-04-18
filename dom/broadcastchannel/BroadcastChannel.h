@@ -68,11 +68,6 @@ private:
 
   ~BroadcastChannel();
 
-  void PostMessageData(BroadcastChannelMessage* aData);
-
-  void PostMessageInternal(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                           ErrorResult& aRv);
-
   void RemoveDocFromBFCache();
 
   void DisconnectFromOwner() override;

@@ -8,8 +8,8 @@
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsIContent.h"
-#include "nsIDOMDocumentFragment.h"
 #include "nsIDocument.h"
+#include "mozilla/dom/DocumentFragment.h"
 
 NS_IMPL_ISUPPORTS0(nsHtml5StringParser)
 
@@ -45,9 +45,8 @@ nsHtml5StringParser::ParseFragment(const nsAString& aSourceBuffer,
     NS_ASSERTION(!aTargetNode->IsInUncomposedDoc(),
                  "If script execution isn't prevented, "
                  "the target node must not be in doc.");
-    nsCOMPtr<nsIDOMDocumentFragment> domFrag = do_QueryInterface(aTargetNode);
     NS_ASSERTION(
-      domFrag,
+      aTargetNode->NodeType() == nsINode::DOCUMENT_FRAGMENT_NODE,
       "If script execution isn't prevented, must parse to DOM fragment.");
   }
 #endif

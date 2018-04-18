@@ -91,6 +91,10 @@ struct ScrollbarData {
   bool operator!=(const ScrollbarData& aOther) const {
     return !(*this == aOther);
   }
+
+  bool IsThumb() const {
+    return mScrollbarLayerType == ScrollbarLayerType::Thumb;
+  }
 };
 
 /**
@@ -277,18 +281,8 @@ public:
     return mIsFixedPosition;
   }
 
-  FrameMetrics::ViewID GetScrollbarTargetViewId() const {
-    return mScrollbarData.mTargetViewId;
-  }
-
   const ScrollbarData& GetScrollbarData() const {
     return mScrollbarData;
-  }
-
-  Maybe<ScrollDirection> GetScrollbarContainerDirection() const {
-    return (mScrollbarData.mScrollbarLayerType == ScrollbarLayerType::Container)
-      ? mScrollbarData.mDirection
-      : Nothing();
   }
 
   gfx::CompositionOp GetMixBlendMode() const {

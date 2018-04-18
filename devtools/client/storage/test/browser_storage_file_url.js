@@ -8,7 +8,7 @@
 
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   const TESTPAGE = "storage-file-url.html";
 
   // We need to load TESTPAGE using a file:// path so we need to get that from
@@ -23,7 +23,7 @@ add_task(function* () {
   const uriString = Services.io.newFileURI(dir).spec;
 
   // Now we have a valid file:// URL pointing to TESTPAGE.
-  yield openTabAndSetupStorage(uriString);
+  await openTabAndSetupStorage(uriString);
 
   // uriString points to the test inside objdir e.g.
   // `/path/to/fx/objDir/_tests/testing/mochitest/browser/devtools/client/
@@ -35,13 +35,13 @@ add_task(function* () {
   // The easiest way to get the actual path is to request it from the content
   // process.
   let browser = gBrowser.selectedBrowser;
-  let actualPath = yield ContentTask.spawn(browser, null, () => {
+  let actualPath = await ContentTask.spawn(browser, null, () => {
     return content.document.location.href;
   });
 
   const cookiePath = actualPath.substr(0, actualPath.lastIndexOf("/") + 1)
                                .replace(/file:\/\//g, "");
-  yield checkState([
+  await checkState([
     [
       ["cookies", actualPath],
       [
@@ -60,5 +60,5 @@ add_task(function* () {
     ]
   ]);
 
-  yield finishTests();
+  await finishTests();
 });

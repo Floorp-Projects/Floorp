@@ -7046,17 +7046,15 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
     if (aLayerData) {
       aLayerData->SetScrollbarData(mScrollbarData);
       aLayerData->SetScrollbarAnimationId(mWrAnimationId);
-      aLayerData->SetScrollbarTargetContainerId(mScrollbarData.mTargetViewId);
     }
-  }
-  if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
+  } else if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
     ret = true;
     if (aLayerData) {
-      ScrollDirection dir = (mFlags & nsDisplayOwnLayerFlags::eVerticalScrollbar)
-                          ? ScrollDirection::eVertical
-                          : ScrollDirection::eHorizontal;
-      aLayerData->SetScrollbarContainerDirection(dir);
-      aLayerData->SetScrollbarTargetContainerId(mScrollbarData.mTargetViewId);
+      mScrollbarData.mScrollbarLayerType = ScrollbarLayerType::Container;
+      mScrollbarData.mDirection = (mFlags & nsDisplayOwnLayerFlags::eVerticalScrollbar)
+                                  ? Some(ScrollDirection::eVertical)
+                                  : Some(ScrollDirection::eHorizontal);
+      aLayerData->SetScrollbarData(mScrollbarData);
     }
   }
   return ret;

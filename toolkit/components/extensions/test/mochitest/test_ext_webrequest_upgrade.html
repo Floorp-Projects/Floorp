@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* test_webRequest_upgrade() {
+add_task(async function test_webRequest_upgrade() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
@@ -46,14 +46,14 @@ add_task(function* test_webRequest_upgrade() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
   let win = window.open("http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_mixed.html");
-  yield extension.awaitMessage("finished");
+  await extension.awaitMessage("finished");
   win.close();
-  yield extension.unload();
+  await extension.unload();
 });
 
-add_task(function* test_webRequest_redirect_wins() {
+add_task(async function test_webRequest_redirect_wins() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
@@ -78,11 +78,11 @@ add_task(function* test_webRequest_redirect_wins() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
   let win = window.open("http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_mixed.html");
-  yield extension.awaitMessage("finished");
+  await extension.awaitMessage("finished");
   win.close();
-  yield extension.unload();
+  await extension.unload();
 });
 </script>
 

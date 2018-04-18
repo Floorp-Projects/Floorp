@@ -9,7 +9,7 @@ pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(webrender&&winWid
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectfill-solid.svg svg-glyph-objectfill-solid-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(skiaContent,2,200) == svg-glyph-objectstroke-solid.svg svg-glyph-objectstroke-solid-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy(1,7) fuzzy-if(gtkWidget&&/^Linux\x20x86_64/.test(http.oscpu),1,79) fuzzy-if(skiaContent,1,300) == svg-glyph-objectgradient.svg svg-glyph-objectgradient-ref.svg # see bug 871961#c5
-pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(cocoaWidget,1,7028) fuzzy-if(gtkWidget&&/^Linux\x20x86_64/.test(http.oscpu),1,23) fuzzy-if(skiaContent,1,250) fuzzy-if(webrender,128-128,90-94) == svg-glyph-objectgradient-zoom.svg svg-glyph-objectgradient-zoom-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(cocoaWidget,1,7028) fuzzy-if(gtkWidget&&/^Linux\x20x86_64/.test(http.oscpu),1,23) fuzzy-if(skiaContent,1,250) == svg-glyph-objectgradient-zoom.svg svg-glyph-objectgradient-zoom-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(gtkWidget,1,1438) fuzzy-if(winWidget,1,1954) fuzzy-if(Android,8,3795) fuzzy-if(skiaContent,14,13000) == svg-glyph-objectpattern.svg svg-glyph-objectpattern-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == clip.html clip-ref.html
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy(1,13) fuzzy-if(gtkWidget&&/^Linux\x20x86_64/.test(http.oscpu),1,62) fuzzy-if(skiaContent,1,350) == svg-glyph-objectopacity.svg svg-glyph-objectopacity-ref.svg # see bug 871961#c5

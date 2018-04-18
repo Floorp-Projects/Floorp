@@ -23,7 +23,6 @@ WebRenderLayerScrollData::WebRenderLayerScrollData()
   , mTransformIsPerspective(false)
   , mEventRegionsOverride(EventRegionsOverride::NoOverride)
   , mScrollbarAnimationId(0)
-  , mScrollbarTargetContainerId(FrameMetrics::NULL_SCROLL_ID)
   , mFixedPosScrollContainerId(FrameMetrics::NULL_SCROLL_ID)
 {
 }
@@ -125,8 +124,6 @@ WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const
   }
   //printf_stderr("  scroll thumb: %s animation: %" PRIu64 "\n",
   //  Stringify(mScrollThumbData).c_str(), mScrollbarAnimationId);
-  printf_stderr("  scroll container: %d target: %" PRIu64 "\n",
-    mScrollbarContainerDirection.isSome(), mScrollbarTargetContainerId);
   printf_stderr("  fixed pos container: %" PRIu64 "\n",
     mFixedPosScrollContainerId);
 }

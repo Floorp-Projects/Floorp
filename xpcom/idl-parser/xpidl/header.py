@@ -233,6 +233,9 @@ def print_header(idl, fd, filename):
             fd.write(p.data)
             continue
 
+        if p.kind == 'webidl':
+            write_webidl(p, fd)
+            continue
         if p.kind == 'forward':
             fd.write(forward_decl % {'name': p.name})
             continue
@@ -245,6 +248,17 @@ def print_header(idl, fd, filename):
                                              p.name))
 
     fd.write(footer % {'basename': idl_basename(filename)})
+
+
+def write_webidl(p, fd):
+    path = p.native.split('::')
+    for seg in path[:-1]:
+        fd.write("namespace %s {\n" % seg)
+    fd.write("class %s; /* webidl %s */\n" % (path[-1], p.name))
+    for seg in reversed(path[:-1]):
+        fd.write("} // namespace %s\n" % seg)
+    fd.write("\n")
+
 
 iface_header = r"""
 /* starting interface:    %(name)s */

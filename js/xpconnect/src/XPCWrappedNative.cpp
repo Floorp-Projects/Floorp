@@ -1136,7 +1136,7 @@ class MOZ_STACK_CLASS CallMethodHelper
 {
     XPCCallContext& mCallContext;
     nsresult mInvokeResult;
-    nsIInterfaceInfo* const mIFaceInfo;
+    const nsXPTInterfaceInfo* const mIFaceInfo;
     const nsXPTMethodInfo* mMethodInfo;
     nsISupports* const mCallee;
     const uint16_t mVTableIndex;
@@ -1399,9 +1399,10 @@ bool
 CallMethodHelper::GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp) const
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
+    bool isRetval = &paramInfo == mMethodInfo->GetRetval();
 
     MOZ_ASSERT(!paramInfo.IsDipper(), "Dipper params are handled separately");
-    if (paramInfo.IsOut() && !paramInfo.IsRetval()) {
+    if (paramInfo.IsOut() && !isRetval) {
         MOZ_ASSERT(paramIndex < mArgc || paramInfo.IsOptional(),
                    "Expected either enough arguments or an optional argument");
         Value arg = paramIndex < mArgc ? mArgv[paramIndex] : JS::NullValue();
@@ -1488,7 +1489,7 @@ CallMethodHelper::GatherAndConvertResults()
             }
         }
 
-        if (paramInfo.IsRetval()) {
+        if (&paramInfo == mMethodInfo->GetRetval()) {
             mCallContext.SetRetVal(v);
         } else if (i < mArgc) {
             // we actually assured this before doing the invoke
@@ -1541,7 +1542,7 @@ CallMethodHelper::QueryInterfaceFastPath()
     nsresult err;
     bool success =
         XPCConvert::NativeData2JS(&v, &qiresult,
-                                  nsXPTType::T_INTERFACE_IS,
+                                  { nsXPTType::T_INTERFACE_IS },
                                   iid, &err);
     NS_IF_RELEASE(qiresult);
 
@@ -1564,7 +1565,7 @@ CallMethodHelper::InitializeDispatchParams()
     uint8_t hasRetval = 0;
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
-    if (paramCount && mMethodInfo->GetParam(paramCount-1).IsRetval()) {
+    if (mMethodInfo->HasRetval()) {
         hasRetval = 1;
         requiredArgs--;
     }
@@ -1894,6 +1895,9 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
         case nsXPTType::T_INTERFACE_IS:
             ((nsISupports*)param.val.p)->Release();
             break;
+        case nsXPTType::T_DOMOBJECT:
+            type.GetDOMObjectInfo().Cleanup(param.val.p);
+            break;
         case nsXPTType::T_ASTRING:
         case nsXPTType::T_DOMSTRING:
             mCallContext.GetContext()->mScratchStrings.Destroy((nsString*)param.val.p);
@@ -2072,7 +2076,7 @@ static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper)
     for (uint16_t i = 0; i < count; i++) {
         nsIClassInfo* clsInfo = wrapper->GetClassInfo();
         XPCNativeInterface* iface = set->GetInterfaceAt(i);
-        nsIInterfaceInfo* info = iface->GetInterfaceInfo();
+        const nsXPTInterfaceInfo* info = iface->GetInterfaceInfo();
         const nsIID* iid;
         nsISupports* ptr;
 

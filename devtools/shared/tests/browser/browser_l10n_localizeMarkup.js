@@ -7,7 +7,7 @@
 
 const { localizeMarkup, LocalizationHelper } = require("devtools/shared/l10n");
 
-add_task(function* () {
+add_task(async function() {
   info("Check that the strings used for this test are still valid");
   let STARTUP_L10N = new LocalizationHelper("devtools/client/locales/startup.properties");
   let TOOLBOX_L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");

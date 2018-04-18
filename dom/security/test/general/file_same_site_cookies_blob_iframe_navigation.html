@@ -1,0 +1,30 @@
+<html>
+<body>
+<iframe id="testframe"></iframe>
+<script type="application/javascript">
+
+  // simply passing on the message from the child to parent
+  window.addEventListener("message", receiveMessage);
+  function receiveMessage(event) {
+    window.removeEventListener("message", receiveMessage);
+    window.parent.postMessage({result: event.data.result}, '*');
+  }
+
+  const NESTED_IFRAME_NAVIGATION = `
+    <html>
+    <body>
+      <a id="testlink" href="http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_iframe.html"></a>
+      <script type="application/javascript">
+        let link = document.getElementById("testlink");
+        link.click();
+      <\/script>
+    </body>
+  </html>`;
+  let NESTED_BLOB_IFRAME_NAVIGATION = new Blob([NESTED_IFRAME_NAVIGATION], {type:'text/html'});
+
+  // query the testframe and set blob URL
+  let testframe = document.getElementById("testframe");
+  testframe.src = window.URL.createObjectURL(NESTED_BLOB_IFRAME_NAVIGATION);
+</script>
+</body>
+</html>

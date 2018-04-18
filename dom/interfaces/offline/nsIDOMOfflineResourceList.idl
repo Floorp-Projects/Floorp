@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[uuid(6044702d-e4a9-420c-b711-558b7d6a3b9f)]
+[shim(OfflineResourceList), uuid(6044702d-e4a9-420c-b711-558b7d6a3b9f)]
 interface nsIDOMOfflineResourceList : nsISupports
 {
   /**

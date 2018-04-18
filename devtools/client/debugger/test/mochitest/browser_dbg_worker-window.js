@@ -11,33 +11,33 @@ PromiseTestUtils.expectUncaughtRejection(/[object Object]/);
 var TAB_URL = EXAMPLE_URL + "doc_WorkerActor.attachThread-tab.html";
 var WORKER_URL = "code_WorkerActor.attachThread-worker.js";
 
-add_task(function* () {
-  yield pushPrefs(["devtools.scratchpad.enabled", true]);
+add_task(async function() {
+  await pushPrefs(["devtools.scratchpad.enabled", true]);
 
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
-  yield connect(client);
+  await connect(client);
 
-  let tab = yield addTab(TAB_URL);
-  let { tabs } = yield listTabs(client);
-  let [, tabClient] = yield attachTab(client, findTab(tabs, TAB_URL));
+  let tab = await addTab(TAB_URL);
+  let { tabs } = await listTabs(client);
+  let [, tabClient] = await attachTab(client, findTab(tabs, TAB_URL));
 
-  yield listWorkers(tabClient);
-  yield createWorkerInTab(tab, WORKER_URL);
+  await listWorkers(tabClient);
+  await createWorkerInTab(tab, WORKER_URL);
 
-  let { workers } = yield listWorkers(tabClient);
-  let [, workerClient] = yield attachWorker(tabClient,
+  let { workers } = await listWorkers(tabClient);
+  let [, workerClient] = await attachWorker(tabClient,
                                              findWorker(workers, WORKER_URL));
 
-  let toolbox = yield gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
+  let toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
                                             "jsdebugger",
                                             Toolbox.HostType.WINDOW);
 
   is(toolbox.hostType, "window", "correct host");
 
-  yield new Promise(done => {
+  await new Promise(done => {
     toolbox.win.parent.addEventListener("message", function onmessage(event) {
       if (event.data.name == "set-host-title") {
         toolbox.win.parent.removeEventListener("message", onmessage);
@@ -55,8 +55,8 @@ add_task(function* () {
     "Correct set of tools supported by worker");
 
   terminateWorkerInTab(tab, WORKER_URL);
-  yield waitForWorkerClose(workerClient);
-  yield close(client);
+  await waitForWorkerClose(workerClient);
+  await close(client);
 
-  yield toolbox.destroy();
+  await toolbox.destroy();
 });

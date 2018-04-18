@@ -8,17 +8,17 @@
 
 "use strict";
 
-add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-blank.html");
-  yield selectTreeItem(["localStorage", "http://test1.example.org"]);
+add_task(async function() {
+  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-blank.html");
+  await selectTreeItem(["localStorage", "http://test1.example.org"]);
 
   ok(isTableEmpty(), "Table empty on init");
 
   for (let i = 0; i < 10; i++) {
-    yield addRemove(`test${i}`);
+    await addRemove(`test${i}`);
   }
 
-  yield finishTests();
+  await finishTests();
 });
 
 function* addRemove(name) {
