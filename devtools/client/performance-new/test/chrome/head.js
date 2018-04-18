@@ -159,6 +159,8 @@ function createPerfComponent() {
       toolbox: toolboxMock,
       perfFront,
       receiveProfile: receiveProfileMock,
+      recordingSettingsFromPreferences: selectors.getRecordingSettings(store.getState()),
+      setRecordingPreferences: () => {}
     }));
 
     return ReactDOM.render(
