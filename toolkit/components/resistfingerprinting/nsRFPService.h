@@ -158,15 +158,17 @@ class nsRFPService final : public nsIObserver
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+
   static nsRFPService* GetOrCreate();
   static bool IsResistFingerprintingEnabled();
   static bool IsTimerPrecisionReductionEnabled(TimerPrecisionType aType);
-  static double TimerResolution();
+
   enum TimeScale {
     Seconds      = 1,
     MilliSeconds = 1000,
     MicroSeconds = 1000000
   };
+
   // The following Reduce methods can be called off main thread.
   static double ReduceTimePrecisionAsUSecs(
     double aTime,
