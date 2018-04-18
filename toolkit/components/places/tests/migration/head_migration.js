@@ -14,29 +14,3 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 }
 
 // Put any other stuff relative to this test folder below.
-
-const DB_FILENAME = "places.sqlite";
-
-/**
- * Sets the database to use for the given test.  This should be the very first
- * thing in the test, otherwise this database will not be used!
- *
- * @param aFileName
- *        The filename of the database to use.  This database must exist in
- *        toolkit/components/places/tests/migration!
- * @return {Promise}
- */
-var setupPlacesDatabase = async function(aFileName, aDestFileName = DB_FILENAME) {
-  let currentDir = await OS.File.getCurrentDirectory();
-
-  let src = OS.Path.join(currentDir, aFileName);
-  Assert.ok((await OS.File.exists(src)), "Database file found");
-
-  // Ensure that our database doesn't already exist.
-  let dest = OS.Path.join(OS.Constants.Path.profileDir, aDestFileName);
-  Assert.ok(!(await OS.File.exists(dest)), "Database file should not exist yet");
-
-  await OS.File.copy(src, dest);
-};
-
-// This works provided all tests in this folder use add_task.
