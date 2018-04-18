@@ -19,7 +19,7 @@ namespace mozilla {
 namespace layers {
 
 StaticMutex APZUpdater::sWindowIdLock;
-std::unordered_map<uint64_t, APZUpdater*> APZUpdater::sWindowIdMap;
+StaticAutoPtr<std::unordered_map<uint64_t, APZUpdater*>> APZUpdater::sWindowIdMap;
 
 
 APZUpdater::APZUpdater(const RefPtr<APZCTreeManager>& aApz)
@@ -39,8 +39,9 @@ APZUpdater::~APZUpdater()
 
   StaticMutexAutoLock lock(sWindowIdLock);
   if (mWindowId) {
+    MOZ_ASSERT(sWindowIdMap);
     // Ensure that ClearTree was called and the task got run
-    MOZ_ASSERT(sWindowIdMap.find(wr::AsUint64(*mWindowId)) == sWindowIdMap.end());
+    MOZ_ASSERT(sWindowIdMap->find(wr::AsUint64(*mWindowId)) == sWindowIdMap->end());
   }
 }
 
@@ -56,7 +57,10 @@ APZUpdater::SetWebRenderWindowId(const wr::WindowId& aWindowId)
   StaticMutexAutoLock lock(sWindowIdLock);
   MOZ_ASSERT(!mWindowId);
   mWindowId = Some(aWindowId);
-  sWindowIdMap[wr::AsUint64(aWindowId)] = this;
+  if (!sWindowIdMap) {
+    sWindowIdMap = new std::unordered_map<uint64_t, APZUpdater*>();
+  }
+  (*sWindowIdMap)[wr::AsUint64(aWindowId)] = this;
 }
 
 /*static*/ void
@@ -147,7 +151,8 @@ APZUpdater::ClearTree(LayersId aRootLayersId)
       // and avoid leaving a dangling pointer to this object.
       StaticMutexAutoLock lock(sWindowIdLock);
       if (self->mWindowId) {
-        sWindowIdMap.erase(wr::AsUint64(*(self->mWindowId)));
+        MOZ_ASSERT(sWindowIdMap);
+        sWindowIdMap->erase(wr::AsUint64(*(self->mWindowId)));
       }
     }
   ));
@@ -416,9 +421,11 @@ APZUpdater::GetUpdater(const wr::WrWindowId& aWindowId)
 {
   RefPtr<APZUpdater> updater;
   StaticMutexAutoLock lock(sWindowIdLock);
-  auto it = sWindowIdMap.find(wr::AsUint64(aWindowId));
-  if (it != sWindowIdMap.end()) {
-    updater = it->second;
+  if (sWindowIdMap) {
+    auto it = sWindowIdMap->find(wr::AsUint64(aWindowId));
+    if (it != sWindowIdMap->end()) {
+      updater = it->second;
+    }
   }
   return updater.forget();
 }
