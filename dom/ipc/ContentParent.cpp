@@ -3110,10 +3110,12 @@ ContentParent::KillHard(const char* aReason)
   mCalledKillHard = true;
   mForceKillTimer = nullptr;
 
+#ifdef NIGHTLY_BUILD
   MessageChannel* channel = GetIPCChannel();
   if (channel) {
     channel->SetInKillHardShutdown();
   }
+#endif
 
   // We're about to kill the child process associated with this content.
   // Something has gone wrong to get us here, so we generate a minidump
