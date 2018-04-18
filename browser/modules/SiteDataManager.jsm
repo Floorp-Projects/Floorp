@@ -5,9 +5,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "OfflineAppCacheHelper",
                                "resource:///modules/offlineAppCache.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
-                                   "@mozilla.org/serviceworkers/manager;1",
-                                   "nsIServiceWorkerManager");
+ChromeUtils.defineModuleGetter(this, "ServiceWorkerCleanUp",
+                               "resource://gre/modules/ServiceWorkerCleanUp.jsm");
 
 var EXPORTED_SYMBOLS = [
   "SiteDataManager"
@@ -315,27 +314,11 @@ var SiteDataManager = {
     site.cookies = [];
   },
 
-  _unregisterServiceWorker(serviceWorker) {
-    return new Promise(resolve => {
-      let unregisterCallback = {
-        unregisterSucceeded: resolve,
-        unregisterFailed: resolve, // We don't care about failures.
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIServiceWorkerUnregisterCallback])
-      };
-      serviceWorkerManager.propagateUnregister(serviceWorker.principal, unregisterCallback, serviceWorker.scope);
-    });
-  },
-
   _removeServiceWorkersForSites(sites) {
     let promises = [];
-    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    for (let i = 0; i < serviceWorkers.length; i++) {
-      let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
-      // Sites are grouped and removed by host so we unregister service workers by the same host as well
-      if (sites.has(sw.principal.URI.host)) {
-        promises.push(this._unregisterServiceWorker(sw));
-      }
-    }
+    sites.forEach(s => {
+      promises.push(ServiceWorkerCleanUp.removeFromHost(s.principals[0].URI.host));
+    });
     return Promise.all(promises);
   },
 
@@ -448,14 +431,7 @@ var SiteDataManager = {
     Services.cookies.removeAll();
     OfflineAppCacheHelper.clear();
 
-    // Iterate through the service workers and remove them.
-    let promises = [];
-    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    for (let i = 0; i < serviceWorkers.length; i++) {
-      let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
-      promises.push(this._unregisterServiceWorker(sw));
-    }
-    await Promise.all(promises);
+    await ServiceWorkerCleanUp.removeAll();
 
     // Refresh sites using quota usage again.
     // This is for the case:
@@ -469,7 +445,7 @@ var SiteDataManager = {
     // see https://bugzilla.mozilla.org/show_bug.cgi?id=1312361#c9
     this._sites.clear();
     await this._getQuotaUsage();
-    promises = [];
+    let promises = [];
     for (let site of this._sites.values()) {
       this._removePermission(site);
       promises.push(this._removeQuotaUsage(site));
