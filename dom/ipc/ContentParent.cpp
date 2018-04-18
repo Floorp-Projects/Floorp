@@ -3110,6 +3110,11 @@ ContentParent::KillHard(const char* aReason)
   mCalledKillHard = true;
   mForceKillTimer = nullptr;
 
+  MessageChannel* channel = GetIPCChannel();
+  if (channel) {
+    channel->SetInKillHardShutdown();
+  }
+
   // We're about to kill the child process associated with this content.
   // Something has gone wrong to get us here, so we generate a minidump
   // of the parent and child for submission to the crash server.
