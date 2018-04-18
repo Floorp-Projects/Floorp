@@ -354,9 +354,17 @@ release-partner-repack
 ----------------------
 Generates customized versions of releases for partners.
 
+release-partner-repack-signing
+------------------------------
+Internal signing of partner repacks.
+
 release-eme-free-repack
 ----------------------
 Generates customized versions of releases for eme-free repacks.
+
+release-eme-free-repack-signing
+------------------------------
+Internal signing of eme-free repacks
 
 repackage
 ---------
