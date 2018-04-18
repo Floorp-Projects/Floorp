@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
 const STORE_TYPE = "url_overrides";
 const NEW_TAB_SETTING_NAME = "newTabURL";
 const NEW_TAB_CONFIRMED_TYPE = "newTabNotification";
+const PREF_BRANCH_INSTALLED_ADDON = "extensions.installedDistroAddon.";
 
 XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
   return Services.strings.createBundle("chrome://global/locale/extensions.properties");
@@ -63,6 +64,16 @@ function replaceUrlInTab(gBrowser, tab, url) {
   return loaded;
 }
 
+let gDistributionAddonsList;
+
+function isDistributionAddon(id) {
+  if (!gDistributionAddonsList) {
+    gDistributionAddonsList = Services.prefs.getChildList(PREF_BRANCH_INSTALLED_ADDON)
+                                      .map(id => id.replace(PREF_BRANCH_INSTALLED_ADDON, ""));
+  }
+  return gDistributionAddonsList.includes(id);
+}
+
 async function handleNewTabOpened() {
   // We don't need to open the doorhanger again until the controlling add-on changes.
   // eslint-disable-next-line no-use-before-define
@@ -70,7 +81,7 @@ async function handleNewTabOpened() {
 
   let item = ExtensionSettingsStore.getSetting(STORE_TYPE, NEW_TAB_SETTING_NAME);
 
-  if (!item || !item.id || userWasNotified(item.id)) {
+  if (!item || !item.id || userWasNotified(item.id) || isDistributionAddon(item.id)) {
     return;
   }
 
