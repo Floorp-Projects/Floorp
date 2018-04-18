@@ -24,6 +24,7 @@ static gboolean checkbox_check_state;
 static gboolean notebook_has_tab_gap;
 
 static ScrollbarGTKMetrics sScrollbarMetrics[2];
+static ScrollbarGTKMetrics sScrollbarMetricsActive[2];
 static ToggleGTKMetrics sCheckboxMetrics;
 static ToggleGTKMetrics sRadioMetrics;
 static ToolbarGTKMetrics sToolbarMetrics;
@@ -182,6 +183,8 @@ moz_gtk_refresh()
 
     sScrollbarMetrics[GTK_ORIENTATION_HORIZONTAL].initialized = false;
     sScrollbarMetrics[GTK_ORIENTATION_VERTICAL].initialized = false;
+    sScrollbarMetricsActive[GTK_ORIENTATION_HORIZONTAL].initialized = false;
+    sScrollbarMetricsActive[GTK_ORIENTATION_VERTICAL].initialized = false;
     sCheckboxMetrics.initialized = false;
     sRadioMetrics.initialized = false;
     sToolbarMetrics.initialized = false;
@@ -740,10 +743,9 @@ GetMinContentBox(GtkStyleContext* style)
  * min-width/min-height.
  */
 static void
-moz_gtk_get_widget_min_size(WidgetNodeType aGtkWidgetType, int* width,
+moz_gtk_get_widget_min_size(GtkStyleContext* style, int* width,
                             int* height)
 {
-  GtkStyleContext* style = GetStyleContext(aGtkWidgetType);
   GtkStateFlags state_flags = gtk_style_context_get_state(style);
   gtk_style_context_get(style, state_flags,
                         "min-height", height,
@@ -762,10 +764,10 @@ moz_gtk_get_widget_min_size(WidgetNodeType aGtkWidgetType, int* width,
 }
 
 static MozGtkSize
-GetMinMarginBox(WidgetNodeType aNodeType)
+GetMinMarginBox(GtkStyleContext* style)
 {
     gint width, height;
-    moz_gtk_get_widget_min_size(aNodeType, &width, &height);
+    moz_gtk_get_widget_min_size(style, &width, &height);
     return {width, height};
 }
 
@@ -947,7 +949,7 @@ moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
         WidgetNodeType thumb = widget == MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL ?
             MOZ_GTK_SCROLLBAR_THUMB_VERTICAL :
             MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL;
-        MozGtkSize thumbSize = GetMinMarginBox(thumb);
+        MozGtkSize thumbSize = GetMinMarginBox(GetStyleContext(thumb));
         style = GetStyleContext(widget, direction);
         MozGtkSize trackSize = GetMinContentBox(style);
         trackSize.Include(thumbSize);
@@ -2765,7 +2767,8 @@ moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
       WidgetNodeType widget = (orient == GTK_ORIENTATION_HORIZONTAL) ?
                                MOZ_GTK_SCALE_TROUGH_HORIZONTAL :
                                MOZ_GTK_SCALE_TROUGH_VERTICAL;
-      moz_gtk_get_widget_min_size(widget, scale_width, scale_height);
+      moz_gtk_get_widget_min_size(GetStyleContext(widget),
+                                  scale_width, scale_height);
   }
 }
 
@@ -2884,9 +2887,10 @@ GetToggleMetrics(bool isRadio)
 }
 
 const ScrollbarGTKMetrics*
-GetScrollbarMetrics(GtkOrientation aOrientation)
+GetScrollbarMetrics(GtkOrientation aOrientation, bool aActive)
 {
-    auto metrics = &sScrollbarMetrics[aOrientation];
+    auto metrics = aActive ? &sScrollbarMetricsActive[aOrientation] :
+                             &sScrollbarMetrics[aOrientation];
     if (metrics->initialized)
         return metrics;
 
@@ -2896,7 +2900,9 @@ GetScrollbarMetrics(GtkOrientation aOrientation)
         MOZ_GTK_SCROLLBAR_HORIZONTAL : MOZ_GTK_SCROLLBAR_VERTICAL;
 
     gboolean backward, forward, secondary_backward, secondary_forward;
-    GtkStyleContext* style = GetStyleContext(scrollbar);
+    GtkStyleContext* style = GetStyleContext(scrollbar, GTK_TEXT_DIR_NONE,
+                             aActive ? GTK_STATE_FLAG_PRELIGHT :
+                                       GTK_STATE_FLAG_NORMAL);
     gtk_style_context_get_style(style,
                                 "has-backward-stepper", &backward,
                                 "has-forward-stepper", &forward,
@@ -2963,16 +2969,48 @@ GetScrollbarMetrics(GtkOrientation aOrientation)
         track = MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL;
         thumb = MOZ_GTK_SCROLLBAR_THUMB_VERTICAL;
     }
+
+    /* GetStyleContext() sets GtkStateFlags to the latest widget name
+     * in css selector string. When we call:
+     *
+     *     GetStyleContext(thumb, GTK_STATE_FLAG_PRELIGHT)
+     *
+     * we get:
+     *
+     *    "scrollbar contents trough slider:hover"
+     *
+     * Some themes (Ubuntu Ambiance) styles trough/thumb by scrollbar,
+     * the Gtk+ css rule looks like:
+     *
+     *    "scrollbar:hover contents trough slider"
+     *
+     *  So we need to apply GtkStateFlags to each widgets in style path.
+     */
+
     // thumb
-    metrics->size.thumb = GetMinMarginBox(thumb);
+    style = CreateStyleContextWithStates(thumb, GTK_TEXT_DIR_NONE,
+                                         aActive ? GTK_STATE_FLAG_PRELIGHT :
+                                                   GTK_STATE_FLAG_NORMAL);
+    metrics->size.thumb = GetMinMarginBox(style);
+    g_object_unref(style);
+
     // track
-    style = GetStyleContext(track);
+    style = CreateStyleContextWithStates(track, GTK_TEXT_DIR_NONE,
+                                         aActive ? GTK_STATE_FLAG_PRELIGHT :
+                                                   GTK_STATE_FLAG_NORMAL);
     metrics->border.track = GetMarginBorderPadding(style);
     MozGtkSize trackMinSize = GetMinContentBox(style) + metrics->border.track;
     MozGtkSize trackSizeForThumb = metrics->size.thumb + metrics->border.track;
+    g_object_unref(style);
+
     // button
     if (hasButtons) {
-        metrics->size.button = GetMinMarginBox(MOZ_GTK_SCROLLBAR_BUTTON);
+        style = CreateStyleContextWithStates(MOZ_GTK_SCROLLBAR_BUTTON,
+                                             GTK_TEXT_DIR_NONE,
+                                             aActive ? GTK_STATE_FLAG_PRELIGHT :
+                                                       GTK_STATE_FLAG_NORMAL);
+        metrics->size.button = GetMinMarginBox(style);
+        g_object_unref(style);
     } else {
         metrics->size.button = {0, 0};
     }
@@ -3006,8 +3044,11 @@ GetScrollbarMetrics(GtkOrientation aOrientation)
         }
     }
 
-    style = GetStyleContext(contents);
+    style = CreateStyleContextWithStates(contents, GTK_TEXT_DIR_NONE,
+                                            aActive ? GTK_STATE_FLAG_PRELIGHT :
+                                                      GTK_STATE_FLAG_NORMAL);
     GtkBorder contentsBorder = GetMarginBorderPadding(style);
+    g_object_unref(style);
 
     metrics->size.scrollbar =
         trackSizeForThumb + contentsBorder + metrics->border.scrollbar;
