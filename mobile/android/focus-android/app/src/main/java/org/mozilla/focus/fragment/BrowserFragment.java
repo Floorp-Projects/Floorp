@@ -843,13 +843,15 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 break;
 
             case R.id.display_url:
-                final Fragment urlFragment = UrlInputFragment
-                        .createWithSession(session, urlView);
+                if (SessionManager.getInstance().hasSessionWithUUID(session.getUUID())) {
+                    final Fragment urlFragment = UrlInputFragment
+                            .createWithSession(session, urlView);
 
-                getActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .add(R.id.container, urlFragment, UrlInputFragment.FRAGMENT_TAG)
-                        .commit();
+                    getActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .add(R.id.container, urlFragment, UrlInputFragment.FRAGMENT_TAG)
+                            .commit();
+                }
                 break;
 
             case R.id.erase: {

@@ -44,8 +44,8 @@ import org.mozilla.focus.whatsnew.WhatsNew
 // Therefore we ignore those violations for now.
 @Suppress("LargeClass", "TooManyFunctions")
 class UrlInputFragment :
-        LocaleAwareFragment(),
-        View.OnClickListener {
+    LocaleAwareFragment(),
+    View.OnClickListener {
     companion object {
         @JvmField
         val FRAGMENT_TAG = "url_input"
@@ -126,7 +126,8 @@ class UrlInputFragment :
 
         // Get session from session manager if there's a session UUID in the fragment's arguments
         arguments?.getString(ARGUMENT_SESSION_UUID)?.let {
-            session = SessionManager.getInstance().getSessionByUUID(it)
+            session = if (SessionManager.getInstance().hasSessionWithUUID(it)) SessionManager
+                .getInstance().getSessionByUUID(it) else null
         }
     }
 
@@ -137,7 +138,8 @@ class UrlInputFragment :
             val settings = Settings.getInstance(it.applicationContext)
             val useCustomDomains = settings.shouldAutocompleteFromCustomDomainList()
             val useShippedDomains = settings.shouldAutocompleteFromShippedDomainList()
-            autoCompleteProvider.initialize(it.applicationContext, useShippedDomains, useCustomDomains)
+            autoCompleteProvider.initialize(it.applicationContext, useShippedDomains,
+                useCustomDomains)
         }
 
         StatusBarUtils.getStatusBarHeight(keyboardLinearLayout, {
@@ -160,43 +162,50 @@ class UrlInputFragment :
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? =
             inflater.inflate(R.layout.fragment_urlinput, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         listOf(dismissView, clearView, searchView).forEach { it.setOnClickListener(this) }
 
-        urlView.setOnFilterListener(::onFilter)
-        urlView.imeOptions = urlView.imeOptions or ViewUtils.IME_FLAG_NO_PERSONALIZED_LEARNING
+        urlView?.setOnFilterListener(::onFilter)
+        urlView?.imeOptions = urlView.imeOptions or ViewUtils.IME_FLAG_NO_PERSONALIZED_LEARNING
 
-        urlInputContainerView.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
-            override fun onPreDraw(): Boolean {
-                urlInputContainerView.viewTreeObserver.removeOnPreDrawListener(this)
+        if (urlInputContainerView != null) {
+            urlInputContainerView.viewTreeObserver.addOnPreDrawListener(object :
+                ViewTreeObserver.OnPreDrawListener {
+                override fun onPreDraw(): Boolean {
+                    if (urlInputContainerView != null) {
+                        urlInputContainerView.viewTreeObserver.removeOnPreDrawListener(this)
+                    }
 
-                animateFirstDraw()
+                    animateFirstDraw()
 
-                return true
-            }
-        })
-
-        if (isOverlay) {
-            keyboardLinearLayout.visibility = View.GONE
-        } else {
-            backgroundView.setBackgroundResource(R.drawable.background_gradient)
-
-            dismissView.visibility = View.GONE
-            toolbarBackgroundView.visibility = View.GONE
-
-            menuView.visibility = View.VISIBLE
-            menuView.setOnClickListener(this)
+                    return true
+                }
+            })
         }
 
-        urlView.setOnCommitListener(::onCommit)
+        if (isOverlay) {
+            keyboardLinearLayout?.visibility = View.GONE
+        } else {
+            backgroundView?.setBackgroundResource(R.drawable.background_gradient)
+
+            dismissView?.visibility = View.GONE
+            toolbarBackgroundView?.visibility = View.GONE
+
+            menuView?.visibility = View.VISIBLE
+            menuView?.setOnClickListener(this)
+        }
+
+        urlView?.setOnCommitListener(::onCommit)
 
         session?.let {
-            urlView.setText(if (it.isSearch && Features.SEARCH_TERMS_OR_URL) it.searchTerms else it.url.value)
-            clearView.visibility = View.VISIBLE
-            searchViewContainer.visibility = View.GONE
+            urlView?.setText(if (it.isSearch && Features.SEARCH_TERMS_OR_URL) it.searchTerms else
+                it.url.value)
+            clearView?.visibility = View.VISIBLE
+            searchViewContainer?.visibility = View.GONE
         }
     }
 
@@ -244,7 +253,7 @@ class UrlInputFragment :
         super.onStop()
 
         // Reset the keyboard layout to avoid a jarring animation when the view is started again. (#1135)
-        keyboardLinearLayout.reset()
+        keyboardLinearLayout?.reset()
     }
 
     fun showKeyboard() {
@@ -278,7 +287,7 @@ class UrlInputFragment :
                 WhatsNew.userViewedWhatsNew(it)
 
                 SessionManager.getInstance().createSession(Source.MENU,
-                        SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.WHATS_NEW))
+                    SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.WHATS_NEW))
             }
 
             R.id.settings -> (activity as LocaleAwareAppCompatActivity).openPreferences()
@@ -292,8 +301,8 @@ class UrlInputFragment :
     }
 
     private fun clear() {
-        urlView.setText("")
-        urlView.requestFocus()
+        urlView?.setText("")
+        urlView?.requestFocus()
     }
 
     override fun onDetach() {
@@ -323,7 +332,7 @@ class UrlInputFragment :
         // but we don't want to restart animations and/or trigger hiding again (which could potentially
         // cause crashes since we don't know what state we're in). Ignoring further clicks is the simplest
         // solution, since dismissView is about to disappear anyway.
-        dismissView.isClickable = false
+        dismissView?.isClickable = false
 
         if (ANIMATION_BROWSER_SCREEN == arguments?.getString(ARGUMENT_ANIMATION)) {
             playVisibilityAnimation(true)
@@ -350,36 +359,37 @@ class UrlInputFragment :
         isAnimating = true
 
         val xyOffset = (if (isOverlay)
-            (urlInputContainerView.layoutParams as FrameLayout.LayoutParams).bottomMargin
+            (urlInputContainerView?.layoutParams as FrameLayout.LayoutParams).bottomMargin
         else
             0).toFloat()
 
-        val width = urlInputBackgroundView.width.toFloat()
-        val height = urlInputBackgroundView.height.toFloat()
+        if (urlInputBackgroundView != null) {
+            val width = urlInputBackgroundView.width.toFloat()
+            val height = urlInputBackgroundView.height.toFloat()
 
-        val widthScale = if (isOverlay)
-            (width + 2 * xyOffset) / width
-        else
-            1f
+            val widthScale = if (isOverlay)
+                (width + 2 * xyOffset) / width
+            else
+                1f
 
-        val heightScale = if (isOverlay)
-            (height + 2 * xyOffset) / height
-        else
-            1f
+            val heightScale = if (isOverlay)
+                (height + 2 * xyOffset) / height
+            else
+                1f
 
-        if (!reverse) {
-            urlInputBackgroundView.pivotX = 0f
-            urlInputBackgroundView.pivotY = 0f
-            urlInputBackgroundView.scaleX = widthScale
-            urlInputBackgroundView.scaleY = heightScale
-            urlInputBackgroundView.translationX = -xyOffset
-            urlInputBackgroundView.translationY = -xyOffset
+            if (!reverse) {
+                urlInputBackgroundView?.pivotX = 0f
+                urlInputBackgroundView?.pivotY = 0f
+                urlInputBackgroundView?.scaleX = widthScale
+                urlInputBackgroundView?.scaleY = heightScale
+                urlInputBackgroundView?.translationX = -xyOffset
+                urlInputBackgroundView?.translationY = -xyOffset
 
-            clearView.alpha = 0f
-        }
+                clearView?.alpha = 0f
+            }
 
-        // Let the URL input use the full width/height and then shrink to the actual size
-        urlInputBackgroundView.animate()
+            // Let the URL input use the full width/height and then shrink to the actual size
+            urlInputBackgroundView.animate()
                 .setDuration(ANIMATION_DURATION.toLong())
                 .scaleX(if (reverse) widthScale else 1f)
                 .scaleY(if (reverse) heightScale else 1f)
@@ -405,33 +415,37 @@ class UrlInputFragment :
                         isAnimating = false
                     }
                 })
+        }
 
         // We only need to animate the toolbar if we are an overlay.
         if (isOverlay) {
             val screenLocation = IntArray(2)
-            urlView.getLocationOnScreen(screenLocation)
+            urlView?.getLocationOnScreen(screenLocation)
 
             val leftDelta = arguments!!.getInt(ARGUMENT_X) - screenLocation[0] - urlView.paddingLeft
 
             if (!reverse) {
-                urlView.pivotX = 0f
-                urlView.pivotY = 0f
-                urlView.translationX = leftDelta.toFloat()
+                urlView?.pivotX = 0f
+                urlView?.pivotY = 0f
+                urlView?.translationX = leftDelta.toFloat()
             }
 
-            // The URL moves from the right (at least if the lock is visible) to it's actual position
-            urlView.animate()
+            if (urlView != null) {
+                // The URL moves from the right (at least if the lock is visible) to it's actual position
+                urlView.animate()
                     .setDuration(ANIMATION_DURATION.toLong())
                     .translationX((if (reverse) leftDelta else 0).toFloat())
+            }
         }
 
         if (!reverse) {
-            toolbarBackgroundView.alpha = 0f
-            clearView.alpha = 0f
+            toolbarBackgroundView?.alpha = 0f
+            clearView?.alpha = 0f
         }
 
-        // The darker background appears with an alpha animation
-        toolbarBackgroundView.animate()
+        if (toolbarBackgroundView != null) {
+            // The darker background appears with an alpha animation
+            toolbarBackgroundView.animate()
                 .setDuration(ANIMATION_DURATION.toLong())
                 .alpha((if (reverse) 0 else 1).toFloat())
                 .setListener(object : AnimatorListenerAdapter() {
@@ -450,6 +464,7 @@ class UrlInputFragment :
                         }
                     }
                 })
+        }
     }
 
     private fun dismiss() {
@@ -459,13 +474,13 @@ class UrlInputFragment :
         // this transaction is committed. To avoid this we commit while allowing a state loss here.
         // We do not save any state in this fragment (It's getting destroyed) so this should not be a problem.
         activity?.supportFragmentManager
-                ?.beginTransaction()
-                ?.remove(this)
-                ?.commitAllowingStateLoss()
+            ?.beginTransaction()
+            ?.remove(this)
+            ?.commitAllowingStateLoss()
     }
 
     private fun onCommit() {
-        val input = urlView.text.toString()
+        val input = urlView?.text.toString()
 
         if (!input.trim { it <= ' ' }.isEmpty()) {
             ViewUtils.hideKeyboard(urlView)
@@ -489,7 +504,7 @@ class UrlInputFragment :
     }
 
     private fun onSearch() {
-        val searchTerms = urlView.originalText
+        val searchTerms = urlView?.originalText
         val searchUrl = UrlUtils.createSearchUrl(context, searchTerms)
 
         openUrl(searchUrl, searchTerms)
@@ -515,11 +530,12 @@ class UrlInputFragment :
 
             // And this fragment can be removed again.
             fragmentManager.beginTransaction()
-                    .remove(this)
-                    .commit()
+                .remove(this)
+                .commit()
         } else {
             if (!TextUtils.isEmpty(searchTerms)) {
-                SessionManager.getInstance().createSearchSession(Source.USER_ENTERED, url, searchTerms)
+                SessionManager.getInstance()
+                    .createSearchSession(Source.USER_ENTERED, url, searchTerms)
             } else {
                 SessionManager.getInstance().createSession(Source.USER_ENTERED, url)
             }
@@ -542,19 +558,19 @@ class UrlInputFragment :
         }
 
         if (searchText.trim { it <= ' ' }.isEmpty()) {
-            clearView.visibility = View.GONE
-            searchViewContainer.visibility = View.GONE
+            clearView?.visibility = View.GONE
+            searchViewContainer?.visibility = View.GONE
 
             if (!isOverlay) {
                 playVisibilityAnimation(true)
             }
         } else {
-            clearView.visibility = View.VISIBLE
-            menuView.visibility = View.GONE
+            clearView?.visibility = View.VISIBLE
+            menuView?.visibility = View.GONE
 
-            if (!isOverlay && dismissView.visibility != View.VISIBLE) {
+            if (!isOverlay && dismissView?.visibility != View.VISIBLE) {
                 playVisibilityAnimation(false)
-                dismissView.visibility = View.VISIBLE
+                dismissView?.visibility = View.VISIBLE
             }
 
             // LTR languages sometimes have grammar where the search terms are displayed to the left
@@ -566,8 +582,8 @@ class UrlInputFragment :
             val content = SpannableString(hint.replace(PLACEHOLDER, searchText))
             content.setSpan(StyleSpan(Typeface.BOLD), start, start + searchText.length, 0)
 
-            searchView.text = content
-            searchViewContainer.visibility = View.VISIBLE
+            searchView?.text = content
+            searchViewContainer?.visibility = View.VISIBLE
         }
     }
 }
