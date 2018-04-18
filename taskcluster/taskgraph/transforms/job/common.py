@@ -51,10 +51,10 @@ def docker_worker_add_artifacts(config, job, taskdesc):
 
 def generic_worker_add_artifacts(config, job, taskdesc):
     """ Adds an artifact directory to the task """
-    # This ``public/build`` is the location on disk; it doesn't necessarily
-    # mean the artifacts will be public; that is set via the ``artifact_prefix``
-    # attribute.
-    add_artifacts(config, job, taskdesc, path=r'public/build')
+    # The path is the location on disk; it doesn't necessarily
+    # mean the artifacts will be public or private; that is set via the name
+    # attribute in add_artifacts.
+    add_artifacts(config, job, taskdesc, path=get_artifact_prefix(taskdesc))
 
 
 def docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc):

@@ -354,6 +354,10 @@ release-partner-repack
 ----------------------
 Generates customized versions of releases for partners.
 
+release-eme-free-repack
+----------------------
+Generates customized versions of releases for eme-free repacks.
+
 repackage
 ---------
 Repackage tasks take a signed output and package them up into something suitable
