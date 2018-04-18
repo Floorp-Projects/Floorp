@@ -132,13 +132,6 @@ def main():
     # Validate the digest type to use
     if not options.digests:
         options.digests = ['sha1']
-    try:
-        for digest in options.digests:
-            hashlib.new(digest)
-    except ValueError as ve:
-        logger.error('Could not create a "%s" hash object (%s)' %
-                     (digest, ve.args[0]))
-        exit(1)
 
     # Validate the files to checksum
     files = []
