@@ -55,7 +55,7 @@ config = {
         # 32 bit specific
         'PATH': '/usr/local/bin:/usr/lib/ccache:\
 /bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:\
-/tools/python27/bin:/home/cltbld/bin',
+/home/cltbld/bin',
     },
     "check_test_env": {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux/minidump_stackwalk',
