@@ -32,7 +32,6 @@
 #include "mozilla/Unused.h"
 #include "mtransport/runnable_utils.h"
 #include "VideoUtils.h"
-#include "Tracing.h"
 
 #include "webaudio/blink/DenormalDisabler.h"
 #include "webaudio/blink/HRTFDatabaseLoader.h"
@@ -41,8 +40,6 @@ using namespace mozilla::layers;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::media;
-
-mozilla::AsyncLogger gMSGTraceLogger("MSGTracing");
 
 namespace mozilla {
 
@@ -71,10 +68,6 @@ MediaStreamGraphImpl::~MediaStreamGraphImpl()
              "All streams should have been destroyed by messages from the main thread");
   LOG(LogLevel::Debug, ("MediaStreamGraph %p destroyed", this));
   LOG(LogLevel::Debug, ("MediaStreamGraphImpl::~MediaStreamGraphImpl"));
-
-#ifdef TRACING
-  gMSGTraceLogger.Stop();
-#endif
 }
 
 void
@@ -1129,7 +1122,6 @@ MediaStreamGraphImpl::RunMessageAfterProcessing(UniquePtr<ControlMessage> aMessa
 void
 MediaStreamGraphImpl::RunMessagesInQueue()
 {
-  TRACE_AUDIO_CALLBACK();
   MOZ_ASSERT(OnGraphThread());
   // Calculate independent action times for each batch of messages (each
   // batch corresponding to an event loop task). This isolates the performance
@@ -1147,7 +1139,6 @@ MediaStreamGraphImpl::RunMessagesInQueue()
 void
 MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
 {
-  TRACE_AUDIO_CALLBACK();
   MOZ_ASSERT(OnGraphThread());
   MOZ_ASSERT(aEndBlockingDecisions >= mProcessedTime);
   // The next state computed time can be the same as the previous: it
@@ -1243,7 +1234,6 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
 void
 MediaStreamGraphImpl::Process()
 {
-  TRACE_AUDIO_CALLBACK();
   MOZ_ASSERT(OnGraphThread());
   // Play stream contents.
   bool allBlockedForever = true;
@@ -1348,7 +1338,6 @@ MediaStreamGraphImpl::UpdateMainThreadState()
 bool
 MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 {
-  TRACE_AUDIO_CALLBACK();
   // Changes to LIFECYCLE_RUNNING occur before starting or reviving the graph
   // thread, and so the monitor need not be held to check mLifecycleState.
   // LIFECYCLE_THREAD_NOT_STARTED is possible when shutting down offline
@@ -1555,7 +1544,6 @@ public:
   }
   NS_IMETHOD Run() override
   {
-    TRACE();
     if (mGraph) {
       mGraph->RunInStableState(mSourceIsMSG);
     }
@@ -2777,7 +2765,6 @@ SourceMediaStream::PullNewData(
   StreamTime aDesiredUpToTime,
   nsTArray<RefPtr<SourceMediaStream::NotifyPullPromise>>& aPromises)
 {
-  TRACE_AUDIO_CALLBACK();
   MutexAutoLock lock(mMutex);
   if (!mPullEnabled || mFinished) {
     return false;
@@ -3627,12 +3614,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
     } else {
       mDriver = new SystemClockDriver(this);
     }
-
-#ifdef TRACING
-    // This is a noop if the logger has not been enabled.
-    gMSGTraceLogger.Start();
-    gMSGTraceLogger.Log("[");
-#endif
   } else {
     mDriver = new OfflineClockDriver(this, MEDIA_GRAPH_TARGET_PERIOD_MS);
   }
