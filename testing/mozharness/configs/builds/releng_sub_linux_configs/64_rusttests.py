@@ -23,7 +23,7 @@ config = {
         ## 64 bit specific
         'PATH': '/tools/buildbot/bin:/usr/local/bin:/usr/lib64/ccache:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:/tools/python27/bin:\
-/tools/python27-mercurial/bin:/home/cltbld/bin',
+/home/cltbld/bin',
     },
     'mozconfig_variant': 'rusttests',
     'artifact_flag_build_variant_in_try': None,

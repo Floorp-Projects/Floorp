@@ -20,7 +20,7 @@ config = {
         # 32 bit specific
         'PATH': '/usr/local/bin:/usr/lib/ccache:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:/tools/python27/bin:\
-/tools/python27-mercurial/bin:/home/cltbld/bin',
+/home/cltbld/bin',
         'LD_LIBRARY_PATH': '%(abs_obj_dir)s/dist/bin',
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         'TINDERBOX_OUTPUT': '1',

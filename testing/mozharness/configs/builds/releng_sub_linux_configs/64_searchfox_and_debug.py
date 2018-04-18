@@ -36,7 +36,7 @@ config = {
         ## 64 bit specific
         'PATH': '/usr/local/bin:/usr/lib64/ccache:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:/tools/python27/bin:\
-/tools/python27-mercurial/bin:/home/cltbld/bin',
+/home/cltbld/bin',
         ##
     },
     # This doesn't actually inherit from anything.
