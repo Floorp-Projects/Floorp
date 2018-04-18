@@ -35,7 +35,7 @@ config = {
         'SCCACHE_DISABLE': '1',
         ## 64 bit specific
         'PATH': '/usr/local/bin:/usr/lib64/ccache:/bin:\
-/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:\
+/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:\
 /home/cltbld/bin',
         ##
     },
