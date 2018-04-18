@@ -18,7 +18,7 @@ config = {
         'LC_ALL': 'C',
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         # 64 bit specific
-        'PATH': '/tools/buildbot/bin:/usr/local/bin:/usr/lib64/ccache:/bin:\
+        'PATH': '/tools/buildbot/bin:/usr/local/bin:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin',
         'LD_LIBRARY_PATH': '%(abs_obj_dir)s/dist/bin',
         'TINDERBOX_OUTPUT': '1',
