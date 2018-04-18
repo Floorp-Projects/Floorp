@@ -18,6 +18,13 @@ xpidl_cachedir = mozpath.join(buildconfig.topobjdir, 'xpcom', 'idl-parser',
 sys.path.extend([xpidl_dir, xpidl_cachedir])
 import xpidl
 
+# Load the webidl configuration file.
+glbl = {}
+execfile(mozpath.join(buildconfig.topsrcdir,
+                      'dom', 'bindings', 'Bindings.conf'),
+         glbl)
+webidlconfig = glbl['DOMInterfaces']
+
 # Instantiate the parser.
 p = xpidl.IDLParser()
 
@@ -34,7 +41,7 @@ def loadEventIDL(parser, includePath, eventname):
     eventidl = ("nsIAccessible%s.idl" % eventname)
     idlFile = findIDL(includePath, eventidl)
     idl = p.parse(open(idlFile).read(), idlFile)
-    idl.resolve(includePath, p)
+    idl.resolve(includePath, p, webidlconfig)
     return idl, idlFile
 
 class Configuration:

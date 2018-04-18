@@ -29,6 +29,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     'ServiceWorker.cpp',
     'ServiceWorkerContainer.cpp',
+    'ServiceWorkerContainerImpl.cpp',
     'ServiceWorkerDescriptor.cpp',
     'ServiceWorkerEvents.cpp',
     'ServiceWorkerInfo.cpp',

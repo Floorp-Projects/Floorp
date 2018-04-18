@@ -323,12 +323,6 @@ def get_counters(config):
 def get_active_tests(config):
     activeTests = config.pop('activeTests').strip().split(':')
 
-    # on osx, ARES6 crashes about 50% of the time, bug 1437425
-    if mozinfo.os not in ['linux', 'win'] and \
-       'ARES6' in activeTests and \
-       not config['develop']:
-        activeTests.remove('ARES6')
-
     # ensure tests are available
     availableTests = test.test_dict()
     if not set(activeTests).issubset(availableTests):

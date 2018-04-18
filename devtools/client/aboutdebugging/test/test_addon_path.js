@@ -5,7 +5,7 @@
 const { parseFileUri } =
   require("devtools/client/aboutdebugging/modules/addon");
 
-add_task(function* testParseFileUri() {
+add_task(async function testParseFileUri() {
   equal(
     parseFileUri("file:///home/me/my-extension/"),
     "/home/me/my-extension/",

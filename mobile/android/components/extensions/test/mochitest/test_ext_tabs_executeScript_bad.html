@@ -77,19 +77,19 @@ function* testHasNoPermission(params) {
   yield extension.unload();
 }
 
-add_task(function* testBadPermissions() {
+add_task(async function testBadPermissions() {
   let win1 = window.open("http://example.com/");
   let win2 = window.open("http://mochi.test:8888/");
 
-  yield new Promise(resolve => setTimeout(resolve, 0));
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   info("Test no special permissions");
-  yield testHasNoPermission({
+  await testHasNoPermission({
     manifest: {"permissions": ["http://example.com/"]},
   });
 
   info("Test tabs permissions");
-  yield testHasNoPermission({
+  await testHasNoPermission({
     manifest: {"permissions": ["http://example.com/", "tabs"]},
   });
 
@@ -97,7 +97,7 @@ add_task(function* testBadPermissions() {
   win1.close();
 });
 
-add_task(function* testBadURL() {
+add_task(async function testBadURL() {
   async function background() {
     let promises = [
       new Promise(resolve => {
@@ -157,11 +157,11 @@ add_task(function* testBadURL() {
     background,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("executeScript-lastError");
+  await extension.awaitFinish("executeScript-lastError");
 
-  yield extension.unload();
+  await extension.unload();
 });
 
 // TODO: Test that |executeScript| fails if the tab has navigated to a

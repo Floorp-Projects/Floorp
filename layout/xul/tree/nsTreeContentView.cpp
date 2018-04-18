@@ -368,7 +368,7 @@ nsTreeContentView::CanDrop(int32_t aRow, int32_t aOrientation,
 
 NS_IMETHODIMP
 nsTreeContentView::CanDrop(int32_t aIndex, int32_t aOrientation,
-                           nsISupports* aDataTransfer, bool *_retval)
+                           DataTransfer* aDataTransfer, bool *_retval)
 {
   ErrorResult rv;
   *_retval = CanDrop(aIndex, aOrientation, rv);
@@ -392,7 +392,7 @@ nsTreeContentView::Drop(int32_t aRow, int32_t aOrientation,
 
 NS_IMETHODIMP
 nsTreeContentView::Drop(int32_t aRow, int32_t aOrientation,
-                        nsISupports* aDataTransfer)
+                        DataTransfer* aDataTransfer)
 {
   ErrorResult rv;
   Drop(aRow, aOrientation, rv);

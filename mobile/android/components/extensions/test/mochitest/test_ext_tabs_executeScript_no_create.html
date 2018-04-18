@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* testExecuteScriptAtOnUpdated() {
+add_task(async function testExecuteScriptAtOnUpdated() {
   const BASE = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/";
   const URL = BASE + "file_iframe_document.html";
   // This is a regression test for bug 1325830.
@@ -65,15 +65,15 @@ add_task(function* testExecuteScriptAtOnUpdated() {
     background,
   });
 
-  yield extension.startup();
+  await extension.startup();
 
   extension.sendMessage(URL);
-  yield extension.awaitMessage("open-test-tab");
+  await extension.awaitMessage("open-test-tab");
 
   let tab = window.open(URL);
-  yield extension.awaitFinish("executeScript-at-onUpdated");
+  await extension.awaitFinish("executeScript-at-onUpdated");
 
-  yield extension.unload();
+  await extension.unload();
 
   tab.close();
 });

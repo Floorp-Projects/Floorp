@@ -68,6 +68,7 @@ EXPORTS += [
     'nsDOMString.h',
     'nsDOMTokenList.h',
     'nsFocusManager.h',
+    'nsFrameLoader.h',  # Because binding headers include it.
     'nsFrameMessageManager.h',
     'nsGlobalWindow.h',  # Because binding headers include it.
     'nsGlobalWindowInner.h',  # Because binding headers include it.

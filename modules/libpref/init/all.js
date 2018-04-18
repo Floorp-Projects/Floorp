@@ -855,7 +855,7 @@ pref("gfx.compositor.glcontext.opaque", false);
 
 pref("gfx.webrender.highlight-painted-layers", false);
 pref("gfx.webrender.blob-images", 1);
-pref("gfx.webrender.blob.invalidation", false);
+pref("gfx.webrender.blob.invalidation", true);
 pref("gfx.webrender.hit-test", true);
 
 // WebRender debugging utilities.

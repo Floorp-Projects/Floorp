@@ -10,7 +10,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_DEVTOOLS_THEME);
 });
 
-add_task(function* testDevtoolsTheme() {
+add_task(async function testDevtoolsTheme() {
   info("Checking stylesheet and :root attributes based on devtools theme.");
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "light");
   is(document.getElementById("browser-bottombox").getAttribute("devtoolstheme"), "light",

@@ -606,7 +606,7 @@ previewers.Object = [
 
     if (rawObj instanceof Ci.nsIDOMDocument && rawObj.location) {
       preview.location = hooks.createValueGrip(rawObj.location.href);
-    } else if (rawObj instanceof Ci.nsIDOMDocumentFragment) {
+    } else if (obj.class == "DocumentFragment") {
       preview.childNodesLength = rawObj.childNodes.length;
 
       if (hooks.getGripDepth() < 2) {

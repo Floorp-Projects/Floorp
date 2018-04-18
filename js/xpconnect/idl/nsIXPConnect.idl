@@ -12,6 +12,7 @@
 #include "jspubtd.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
+#include "xptinfo.h"
 #include "nsCOMPtr.h"
 
 class nsWrapperCache;
@@ -26,11 +27,11 @@ class nsWrapperCache;
 [ptr] native JSScriptPtr(JSScript);
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
       native JSHandleId(JS::Handle<jsid>);
+[ptr] native InterfaceInfoPtr(const nsXPTInterfaceInfo);
 
 /***************************************************************************/
 
 // forward declarations...
-interface nsIInterfaceInfo;
 interface nsIPrincipal;
 interface nsIClassInfo;
 interface nsIVariant;
@@ -87,7 +88,7 @@ do_QueryWrappedNative(nsIXPConnectWrappedNative *aWrappedNative,
 interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
-    readonly attribute nsIInterfaceInfo InterfaceInfo;
+    readonly attribute InterfaceInfoPtr InterfaceInfo;
     readonly attribute nsIIDPtr         InterfaceIID;
 
     void debugDump(in short depth);

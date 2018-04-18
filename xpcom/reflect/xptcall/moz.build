@@ -17,8 +17,4 @@ EXPORTS += [
     'xptcstubsdef.inc',
 ]
 
-LOCAL_INCLUDES += [
-    '/xpcom/reflect/xptinfo',
-]
-
 FINAL_LIBRARY = 'xul'
