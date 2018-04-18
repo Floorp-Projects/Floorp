@@ -34,13 +34,31 @@ High-level components for building browser(-like) apps.
 
 * **Toolbar** - A customizable toolbar for browsers.
 
+## Concept
+
+_API contracts and abstraction layers for browser components._
+
+* **Engine** - Abstraction layer that allows hiding the actual browser engine implementation.
+
+* **Toolbar** - Abstract definition of a browser toolbar component.
+
+## Feature
+
+_Combined components to implement feature-specific use cases._
+
+* **Session** - A component thats connects an (concept) engine implementation with the browser session module.
+
+* **Toolbar** - A component thats connects a (concept) toolbar implementation with the browser session module.
+
 ## UI
 
-_Generic UI components for building apps._
+_Generic low-level UI components for building apps._
+
+* **Autocomplete** - A set of components to provide autocomplete functionality.
 
 * **Colors** - The standard set of [Photon](https://design.firefox.com/photon/) colors.
 
-* **Autocomplete** - A set of components to provide autocomplete functionality.
+* **Fonts** - The standard set of fonts used by Mozilla Android products.
 
 ## Support
 
