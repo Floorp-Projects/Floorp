@@ -61,15 +61,10 @@ def generate_property_map(f, counters):
     print('''
 enum {
   #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) privatename_
-  // Need an extra level of macro nesting to force expansion of method_
-  // params before they get pasted.
-  #define CSS_PROP_USE_COUNTER(method_) \\
+  #define CSS_PROP(name_, id_, method_, ...) \\
     USE_COUNTER_FOR_CSS_PROPERTY_##method_ = eUseCounter_UNKNOWN,
-  #define CSS_PROP_LONGHAND(name_, id_, method_, ...) \\
-    CSS_PROP_USE_COUNTER(method_)
-  #include "mozilla/ServoCSSPropList.h"
-  #undef CSS_PROP_LONGHAND
-  #undef CSS_PROP_USE_COUNTER
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
 };
 ''', file=f)
