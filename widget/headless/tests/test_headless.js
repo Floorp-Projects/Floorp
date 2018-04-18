@@ -97,10 +97,10 @@ add_task(async function test_snapshot() {
   webNavigation.close();
 });
 
-add_task(function* test_snapshot_widget_layers() {
+add_task(async function test_snapshot_widget_layers() {
   let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
   let webNavigation = windowlessBrowser.QueryInterface(Ci.nsIWebNavigation);
-  let contentWindow = yield loadContentWindow(webNavigation, HEADLESS_URL);
+  let contentWindow = await loadContentWindow(webNavigation, HEADLESS_URL);
   const contentWidth = 1;
   const contentHeight = 2;
   // Verify dimensions.

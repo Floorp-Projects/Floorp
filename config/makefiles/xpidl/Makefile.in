@@ -30,8 +30,9 @@ dist_idl_dir := $(DIST)/idl
 dist_include_dir := $(DIST)/include
 dist_xpcrs_dir := $(DIST)/xpcrs
 process_py := $(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py
-generated_file := $(topobjdir)/xpcom/typelib/xpt/XPTInfo.cpp
-code_gen_py := $(topsrcdir)/xpcom/typelib/xpt/tools/xpt.py
+generated_file := $(topobjdir)/xpcom/reflect/xptinfo/xptdata.cpp
+code_gen_py := $(topsrcdir)/xpcom/reflect/xptinfo/xptcodegen.py
+code_gen_deps := $(topsrcdir)/xpcom/reflect/xptinfo/perfecthash.py
 
 # TODO we should use py_action, but that would require extra directories to be
 # in the virtualenv.
@@ -39,6 +40,7 @@ code_gen_py := $(topsrcdir)/xpcom/typelib/xpt/tools/xpt.py
 	$(REPORT_BUILD)
 	$(PYTHON_PATH) $(PLY_INCLUDE) -I$(topsrcdir)/xpcom/idl-parser -I$(DEPTH)/xpcom/idl-parser/xpidl \
 		$(process_py) --cache-dir $(DEPTH)/xpcom/idl-parser/xpidl --depsdir $(idl_deps_dir) \
+		--bindings-conf $(topsrcdir)/dom/bindings/Bindings.conf \
 		$(dist_idl_dir) $(dist_include_dir) $(dist_xpcrs_dir) $(@D) \
 		$(basename $(notdir $@)) $($(basename $(notdir $@))_deps)
 # When some IDL is added or removed, if the actual IDL file was already, or
@@ -65,11 +67,9 @@ endif
 
 $(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir) $(dist_xpcrs_dir))
 
-$(generated_file): $(xpt_files) $(code_gen_py)
+$(generated_file): $(xpt_files) $(code_gen_py) $(code_gen_deps)
 	$(REPORT_BUILD)
-	$(PYTHON_PATH) $(PLY_INCLUDE) \
-		$(code_gen_py) linkgen \
-		$(generated_file) $(xpt_files)
+	$(PYTHON_PATH) $(PLY_INCLUDE) $(code_gen_py) $(generated_file) $(xpt_files)
 
 -include $(depends_files)
 

@@ -83,14 +83,14 @@ add_test(function setup_browser() {
   }, {capture: true, once: true});
 });
 
-add_task(function* () {
+add_task(async function() {
   // Wait for any initial page loads to be saved to history
-  yield sleep(PENDING_VISIT_WAIT);
+  await sleep(PENDING_VISIT_WAIT);
 
   // Load a simple HTML page with no redirects
   gVisitURLs = [];
-  yield promiseLoadEvent(gBrowser, "http://example.org/tests/robocop/robocop_blank_01.html");
-  yield sleep(PENDING_VISIT_WAIT_LONG);
+  await promiseLoadEvent(gBrowser, "http://example.org/tests/robocop/robocop_blank_01.html");
+  await sleep(PENDING_VISIT_WAIT_LONG);
 
   do_print("visit counts: " + gVisitURLs.length);
   ok(gVisitURLs.length == 1, "Simple visit makes 1 history item");
@@ -100,8 +100,8 @@ add_task(function* () {
 
   // Load a simple HTML page via a 301 temporary redirect
   gVisitURLs = [];
-  yield promiseLoadEvent(gBrowser, "http://example.org/tests/robocop/simple_redirect.sjs?http://example.org/tests/robocop/robocop_blank_02.html");
-  yield sleep(PENDING_VISIT_WAIT);
+  await promiseLoadEvent(gBrowser, "http://example.org/tests/robocop/simple_redirect.sjs?http://example.org/tests/robocop/robocop_blank_02.html");
+  await sleep(PENDING_VISIT_WAIT);
 
   do_print("visit counts: " + gVisitURLs.length);
   ok(gVisitURLs.length == 1, "Simple 301 redirect makes 1 history item");
@@ -111,8 +111,8 @@ add_task(function* () {
 
   // Load a simple HTML page via a JavaScript redirect
   gVisitURLs = [];
-  yield promiseLoadEvent(gBrowser, "http://example.org/tests/robocop/javascript_redirect.sjs?http://example.org/tests/robocop/robocop_blank_03.html");
-  yield sleep(PENDING_VISIT_WAIT);
+  await promiseLoadEvent(gBrowser, "http://example.org/tests/robocop/javascript_redirect.sjs?http://example.org/tests/robocop/robocop_blank_03.html");
+  await sleep(PENDING_VISIT_WAIT);
 
   do_print("visit counts: " + gVisitURLs.length);
   ok(gVisitURLs.length == 2, "JavaScript redirect makes 2 history items");

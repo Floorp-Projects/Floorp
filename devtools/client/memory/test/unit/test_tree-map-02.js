@@ -5,7 +5,7 @@
 
 const { drawText } = require("devtools/client/memory/components/tree-map/draw");
 
-add_task(function* () {
+add_task(async function() {
   // Mock out the Canvas2dContext
   let ctx = {
     fillText: (...args) => fillTextValues.push(args),

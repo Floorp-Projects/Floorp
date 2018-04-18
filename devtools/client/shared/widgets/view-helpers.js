@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const {Cu} = require("chrome");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const PANE_APPEARANCE_DELAY = 50;
@@ -169,7 +170,7 @@ const ViewHelpers = exports.ViewHelpers = {
   isNode: function(object) {
     return object instanceof Node ||
            object instanceof Element ||
-           object instanceof DocumentFragment;
+           Cu.getClassName(object) == "DocumentFragment";
   },
 
   /**
@@ -787,12 +788,12 @@ const WidgetMethods = exports.WidgetMethods = {
     // If the two items were constructed with prebuilt nodes as
     // DocumentFragments, then those DocumentFragments are now
     // empty and need to be reassembled.
-    if (firstPrebuiltTarget instanceof DocumentFragment) {
+    if (Cu.getClassName(firstPrebuiltTarget) == "DocumentFragment") {
       for (let node of firstTarget.childNodes) {
         firstPrebuiltTarget.appendChild(node.cloneNode(true));
       }
     }
-    if (secondPrebuiltTarget instanceof DocumentFragment) {
+    if (Cu.getClassName(secondPrebuiltTarget) == "DocumentFragment") {
       for (let node of secondTarget.childNodes) {
         secondPrebuiltTarget.appendChild(node.cloneNode(true));
       }

@@ -6,8 +6,9 @@
 #include "nsISupports.idl"
 
 interface nsIDOMElement;
-interface nsIDOMDocumentFragment;
 interface nsIURI;
+
+webidl DocumentFragment;
 
 /**
  * This interface is OBSOLETE and exists solely for legacy extensions.
@@ -40,10 +41,10 @@ interface nsIScriptableUnescapeHTML : nsISupports
    * @param baseURI the base URL for this fragment
    * @param element the context node for the fragment parsing algorithm
    */
-  nsIDOMDocumentFragment parseFragment(in AString fragment,
-                                       in boolean isXML,
-                                       in nsIURI baseURI,
-                                       in nsIDOMElement element);
+  DocumentFragment parseFragment(in AString fragment,
+                                 in boolean isXML,
+                                 in nsIURI baseURI,
+                                 in nsIDOMElement element);
 };
 
 %{ C++

@@ -10,19 +10,14 @@
 
 %{ C++
 #include "nsSize.h"
-
-namespace mozilla {
-namespace dom {
-class DataTransfer;
-} // namespace dom
-} // namespace mozilla
 %}
 
 native nsSize (nsSize);
-[ptr] native DataTransferPtr(mozilla::dom::DataTransfer);
 
 interface nsIDOMDocument;
 interface nsIDOMNode;
+
+webidl DataTransfer;
 
 [scriptable, builtinclass, uuid(25bce737-73f0-43c7-bc20-c71044a73c5a)]
 interface nsIDragSession : nsISupports
@@ -75,13 +70,12 @@ interface nsIDragSession : nsISupports
   attribute AUTF8String triggeringPrincipalURISpec;
 
   /**
-   * The data transfer object for the current drag.  Should become a
-   * DataTransfer once bug 1444991 is fixed.
+   * The data transfer object for the current drag.
    */
   [binaryname(DataTransferXPCOM)]
-  attribute nsISupports dataTransfer;
-  [notxpcom, nostdcall] DataTransferPtr getDataTransfer();
-  [notxpcom, nostdcall] void setDataTransfer(in DataTransferPtr aDataTransfer);
+  attribute DataTransfer dataTransfer;
+  [notxpcom, nostdcall] DataTransfer getDataTransfer();
+  [notxpcom, nostdcall] void setDataTransfer(in DataTransfer aDataTransfer);
 
   /**
     * Get data from a Drag&Drop. Can be called while the drag is in process

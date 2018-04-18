@@ -2522,9 +2522,8 @@ GetContentParent(Element* aBrowser)
     return ReturnTuple(nullptr, nullptr);
   }
 
-  nsCOMPtr<nsISupports> otherLoaderAsSupports;
-  browser->GetSameProcessAsFrameLoader(getter_AddRefs(otherLoaderAsSupports));
-  RefPtr<nsFrameLoader> otherLoader = do_QueryObject(otherLoaderAsSupports);
+  RefPtr<nsFrameLoader> otherLoader;
+  browser->GetSameProcessAsFrameLoader(getter_AddRefs(otherLoader));
   if (!otherLoader) {
     return ReturnTuple(nullptr, nullptr);
   }

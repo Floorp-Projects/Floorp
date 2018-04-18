@@ -10,7 +10,6 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
-#include "xpt_struct.h"
 #include "xptinfo.h"
 #include "js/Value.h"
 #include "mozilla/MemoryReporting.h"
@@ -129,6 +128,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
               case nsXPTType::T_WCHAR_STR:         /* fall through */
               case nsXPTType::T_INTERFACE:         /* fall through */
               case nsXPTType::T_INTERFACE_IS:      /* fall through */
+              case nsXPTType::T_DOMOBJECT:         /* fall through */
               case nsXPTType::T_ARRAY:             /* fall through */
               case nsXPTType::T_PSTRING_SIZE_IS:   /* fall through */
               case nsXPTType::T_PWSTRING_SIZE_IS:  /* fall through */

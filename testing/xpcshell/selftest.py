@@ -162,9 +162,9 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
 
-add_task(function* test_task() {
-  yield Promise.resolve(true);
-  yield Promise.resolve(false);
+add_task(async function test_task() {
+  await Promise.resolve(true);
+  await Promise.resolve(false);
 });
 '''
 
@@ -173,12 +173,12 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 
 function run_test() { run_next_test(); }
 
-add_task(function* test_task() {
-  yield Promise.resolve(true);
+add_task(async function test_task() {
+  await Promise.resolve(true);
 });
 
-add_task(function* test_2() {
-  yield Promise.resolve(true);
+add_task(async function test_2() {
+  await Promise.resolve(true);
 });
 '''
 
@@ -425,12 +425,12 @@ add_task(function no_run_test_add_task_fail() {
 NO_RUN_TEST_ADD_TASK_MULTIPLE = '''
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
-add_task(function* test_task() {
-  yield Promise.resolve(true);
+add_task(async function test_task() {
+  await Promise.resolve(true);
 });
 
-add_task(function* test_2() {
-  yield Promise.resolve(true);
+add_task(async function test_2() {
+  await Promise.resolve(true);
 });
 '''
 

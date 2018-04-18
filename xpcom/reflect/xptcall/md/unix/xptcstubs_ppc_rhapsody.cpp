@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
 
 /* Under the Mac OS X PowerPC ABI, the first 8 integer and 13 floating point
  * parameters are delivered in registers and are not on the stack, although

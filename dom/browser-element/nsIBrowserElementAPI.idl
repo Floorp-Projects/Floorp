@@ -8,6 +8,8 @@
 
 interface nsIDOMDOMRequest;
 
+webidl FrameLoader;
+
 [scriptable, function, uuid(00d0e19d-bd67-491f-8e85-b9905224d3bb)]
 interface nsIBrowserElementNextPaintListener : nsISupports
 {
@@ -39,8 +41,7 @@ interface nsIBrowserElementAPI : nsISupports
    */
   void destroyFrameScripts();
 
-  // The argument should be a FrameLoader.  Fix that when bug 1444991 is fixed.
-  void setFrameLoader(in nsISupports frameLoader);
+  void setFrameLoader(in FrameLoader frameLoader);
 
   void sendMouseEvent(in DOMString type,
                       in uint32_t x,

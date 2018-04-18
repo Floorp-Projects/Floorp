@@ -8,6 +8,8 @@
 
 interface nsIDOMElement;
 
+webidl FrameLoader;
+
 /**
  * When a content process hangs, Gecko notifies "process-hang-report" observers
  * and passes an nsIHangReport for the subject parameter. There is at most one
@@ -65,6 +67,6 @@ interface nsIHangReport : nsISupports
   void endStartingDebugger();
 
   // Inquire whether the report is for a content process loaded by the given
-  // frameloader.  Make this take a FrameLoader once bug 1444991 is fixed.
-  bool isReportForBrowser(in nsISupports aFrameLoader);
+  // frameloader.
+  bool isReportForBrowser(in FrameLoader aFrameLoader);
 };

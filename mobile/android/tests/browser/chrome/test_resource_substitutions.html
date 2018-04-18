@@ -37,7 +37,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     return deferred.promise;
   }
 
-  add_task(function* () {
+  add_task(async function() {
     let protocolHandler = Services.io
        .getProtocolHandler("resource")
        .QueryInterface(Ci.nsIResProtocolHandler);
@@ -45,7 +45,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     ok(protocolHandler.hasSubstitution("android"));
 
     // This can be any file that we know exists in the root of every APK.
-    let packageName = yield readChannel("resource://android/package-name.txt");
+    let packageName = await readChannel("resource://android/package-name.txt");
     info(packageName);
 
     // It's difficult to fish ANDROID_PACKAGE_NAME from JavaScript, so we test the

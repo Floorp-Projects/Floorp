@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* () {
+add_task(async function() {
   let win = window.open("http://mochi.test:8888/");
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -77,9 +77,9 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitFinish("tabRuntimeConnect.pass");
-  yield extension.unload();
+  await extension.startup();
+  await extension.awaitFinish("tabRuntimeConnect.pass");
+  await extension.unload();
 
   win.close();
 });

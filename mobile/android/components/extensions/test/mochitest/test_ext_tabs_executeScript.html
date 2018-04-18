@@ -13,12 +13,12 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* testExecuteScript() {
+add_task(async function testExecuteScript() {
   const BASE = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/";
   const URL = BASE + "file_iframe_document.html";
 
   let win = window.open(URL);
-  yield new Promise(resolve => win.addEventListener("load", resolve, {once: true}));
+  await new Promise(resolve => win.addEventListener("load", resolve, {once: true}));
 
   async function background() {
     try {
@@ -232,11 +232,11 @@ add_task(function* testExecuteScript() {
     },
   });
 
-  yield extension.startup();
+  await extension.startup();
 
-  yield extension.awaitFinish("executeScript");
+  await extension.awaitFinish("executeScript");
 
-  yield extension.unload();
+  await extension.unload();
 
   win.close();
 });

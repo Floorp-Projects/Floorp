@@ -1,4 +1,4 @@
-// |reftest| skip -- BigInt is not supported
+// |reftest| skip-if(!this.hasOwnProperty('BigInt')) -- BigInt is not enabled unconditionally
 // Copyright 2017 Rick Waldron. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

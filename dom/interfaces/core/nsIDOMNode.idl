@@ -14,7 +14,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[uuid(cc35b412-009b-46a3-9be0-76448f12548d)]
+[shim(Node), uuid(cc35b412-009b-46a3-9be0-76448f12548d)]
 interface nsIDOMNode : nsISupports
 {
 };

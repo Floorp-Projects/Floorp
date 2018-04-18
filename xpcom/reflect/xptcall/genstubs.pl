@@ -16,9 +16,8 @@
 #    as a result of the limitations of immediate values in ARM assembly.
 #
 # This number is verified by the IDL parser in xpcom/idl-parser/xpidl.py, as
-# well as in xpcom/reflect/xptinfo/xptiInterfaceInfoManager.cpp, to
-# prevent generating interfaces or loading xpt files that would cause the
-# stubs to run off the entries.
+# well as in xpcom/reflect/xptinfo/xptinfo.cpp, to prevent generating interfaces
+# or loading xpt files that would cause the stubs to run off the entries.
 # If you change this number, please update that location.
 
 # 3 entries are already 'used' by the 3 methods of nsISupports.

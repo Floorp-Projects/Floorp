@@ -8,6 +8,7 @@
 
 interface nsISelection;
 
+webidl CharacterData;
 
 /*
 Editor Action Listener interface to outside world
@@ -79,37 +80,37 @@ interface nsIEditActionListener : nsISupports
 
   /**
    * Called after the editor inserts text.
-   * @param aTextNode   This node getting inserted text.  Should be a CharacterData after bug 1444991.
+   * @param aTextNode   This node getting inserted text.
    * @param aOffset     The offset in aTextNode to insert at.
    * @param aString     The string that gets inserted.
    * @param aResult     The result of the insert text operation.
    */
-  void DidInsertText(in nsISupports aTextNode,
+  void DidInsertText(in CharacterData       aTextNode,
                      in long                aOffset,
                      in DOMString           aString,
                      in nsresult            aResult);
 
   /**
    * Called before the editor deletes text.
-   * @param aTextNode   This node getting text deleted.  Should be a CharacterData after bug 1444991.
+   * @param aTextNode   This node getting text deleted.
    * @param aOffset     The offset in aTextNode to delete at.
    * @param aLength     The amount of text to delete.
    */
-  void WillDeleteText(in nsISupports aTextNode,
+  void WillDeleteText(in CharacterData       aTextNode,
                       in long                aOffset,
                       in long                aLength);
 
   /**
    * Called before the editor deletes text.
-   * @param aTextNode   This node getting text deleted.  Should be a CharacterData after bug 1444991.
+   * @param aTextNode   This node getting text deleted.
    * @param aOffset     The offset in aTextNode to delete at.
    * @param aLength     The amount of text to delete.
    * @param aResult     The result of the delete text operation.
    */
-  void DidDeleteText(in nsISupports aTextNode,
+  void DidDeleteText(in CharacterData       aTextNode,
                      in long                aOffset,
                      in long                aLength,
-                     in nsresult              aResult);
+                     in nsresult            aResult);
 
   /**
    * Called before the editor deletes the selection.

@@ -20,7 +20,6 @@ from itertools import chain, imap
 # Skip all tests which use features not supported in SpiderMonkey.
 UNSUPPORTED_FEATURES = set([
                             "tail-call-optimization",
-                            "BigInt",
                             "class-fields-public",
                             "class-fields-private",
                             "regexp-dotall",
@@ -31,6 +30,7 @@ UNSUPPORTED_FEATURES = set([
                        ])
 FEATURE_CHECK_NEEDED = {
                          "Atomics": "!this.hasOwnProperty('Atomics')",
+                         "BigInt": "!this.hasOwnProperty('BigInt')",
                          "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
                          "CannotSuspendMainAgent": "xulRuntime.shell",
                        }

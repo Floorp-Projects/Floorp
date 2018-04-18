@@ -65,7 +65,7 @@ void bar();
         i = self.p.parse("""[uuid(abc)] interface foo {
 long bar(in long a, in float b, [array] in long c);
 };""", filename='f')
-        i.resolve([], self.p)
+        i.resolve([], self.p, {})
         self.assertTrue(isinstance(i, xpidl.IDL))
         self.assertTrue(isinstance(i.productions[0], xpidl.Interface))
         iface = i.productions[0]

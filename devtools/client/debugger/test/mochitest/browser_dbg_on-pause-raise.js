@@ -9,41 +9,41 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
 
-add_task(function *() {
+add_task(async function() {
   let options = {
     source: TAB_URL,
     line: 1
   };
-  let [tab,, panel] = yield initDebugger(TAB_URL, options);
+  let [tab,, panel] = await initDebugger(TAB_URL, options);
   let panelWin = panel.panelWin;
   let toolbox = panel._toolbox;
   let toolboxTab = toolbox.doc.getElementById("toolbox-tab-jsdebugger");
 
-  let newTab = yield addTab(TAB_URL);
+  let newTab = await addTab(TAB_URL);
   isnot(newTab, tab,
     "The newly added tab is different from the debugger's tab.");
   is(gBrowser.selectedTab, newTab,
     "Debugger's tab is not the selected tab.");
 
   info("Run tests against bottom host.");
-  yield testPause();
-  yield testResume();
+  await testPause();
+  await testResume();
 
   // testResume selected the console, select back the debugger.
-  yield toolbox.selectTool("jsdebugger");
+  await toolbox.selectTool("jsdebugger");
 
   info("Switching to a toolbox window host.");
-  yield toolbox.switchHost(Toolbox.HostType.WINDOW);
+  await toolbox.switchHost(Toolbox.HostType.WINDOW);
 
   info("Run tests against window host.");
-  yield testPause();
-  yield testResume();
+  await testPause();
+  await testResume();
 
   info("Cleanup after the test.");
-  yield toolbox.switchHost(Toolbox.HostType.BOTTOM);
-  yield closeDebuggerAndFinish(panel);
+  await toolbox.switchHost(Toolbox.HostType.BOTTOM);
+  await closeDebuggerAndFinish(panel);
 
-  function* testPause() {
+  async function testPause() {
     is(panelWin.gThreadClient.paused, false,
       "Should be running after starting the test.");
 
@@ -68,37 +68,37 @@ add_task(function *() {
     // Evaluate a script to fully pause the debugger
     evalInTab(tab, "debugger;");
 
-    yield onPaused;
-    yield onFocus;
-    yield onTabSelect;
+    await onPaused;
+    await onFocus;
+    await onTabSelect;
 
     if (toolbox.hostType != Toolbox.HostType.WINDOW) {
       is(gBrowser.selectedTab, tab,
         "Debugger's tab got selected.");
     }
 
-    yield toolbox.selectTool("webconsole");
+    await toolbox.selectTool("webconsole");
     ok(toolboxTab.classList.contains("highlighted"),
       "The highlighted class is present");
     ok(!toolboxTab.classList.contains("selected"),
       "The tab is not selected");
-    yield toolbox.selectTool("jsdebugger");
+    await toolbox.selectTool("jsdebugger");
     ok(toolboxTab.classList.contains("highlighted"),
       "The highlighted class is present");
     ok(toolboxTab.classList.contains("selected"),
       "...and the tab is selected, so the glow will not be present.");
   }
 
-  function* testResume() {
+  async function testResume() {
     let onPaused = waitForEvent(panelWin.gThreadClient, "resumed");
 
     EventUtils.sendMouseEvent({ type: "mousedown" },
       panelWin.document.getElementById("resume"),
       panelWin);
 
-    yield onPaused;
+    await onPaused;
 
-    yield toolbox.selectTool("webconsole");
+    await toolbox.selectTool("webconsole");
     ok(!toolboxTab.classList.contains("highlighted"),
       "The highlighted class is not present now after the resume");
     ok(!toolboxTab.classList.contains("selected"),

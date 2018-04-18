@@ -344,6 +344,17 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         return NativeInterface2JSObject(d, helper, iid, true, pErr);
     }
 
+    case nsXPTType::T_DOMOBJECT:
+    {
+        void* ptr = *static_cast<void* const*>(s);
+        if (!ptr) {
+            d.setNull();
+            return true;
+        }
+
+        return type.GetDOMObjectInfo().Wrap(cx, ptr, d);
+    }
+
     default:
         NS_ERROR("bad type");
         return false;
@@ -705,6 +716,26 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         RootedObject src(cx, &s.toObject());
         return JSObject2NativeInterface((void**)d, src, iid, nullptr, pErr);
     }
+
+    case nsXPTType::T_DOMOBJECT:
+    {
+        if (s.isNullOrUndefined()) {
+            *((void**)d) = nullptr;
+            return true;
+        }
+
+        // Can't handle non-JSObjects
+        if (!s.isObject()) {
+            return false;
+        }
+
+        nsresult err = type.GetDOMObjectInfo().Unwrap(s, (void**)d);
+        if (pErr) {
+            *pErr = err;
+        }
+        return NS_SUCCEEDED(err);
+    }
+
     default:
         NS_ERROR("bad type");
         return false;
@@ -1261,6 +1292,7 @@ XPCConvert::NativeArray2JS(MutableHandleValue d, const void** s,
     case nsXPTType::T_WCHAR_STR     : POPULATE(char16_t*);      break;
     case nsXPTType::T_INTERFACE     : POPULATE(nsISupports*);   break;
     case nsXPTType::T_INTERFACE_IS  : POPULATE(nsISupports*);   break;
+    case nsXPTType::T_DOMOBJECT     : POPULATE(void*);          break;
     case nsXPTType::T_UTF8STRING    : NS_ERROR("bad type");     return false;
     case nsXPTType::T_CSTRING       : NS_ERROR("bad type");     return false;
     case nsXPTType::T_ASTRING       : NS_ERROR("bad type");     return false;
@@ -1365,7 +1397,7 @@ XPCConvert::JSTypedArray2Native(void** d,
 
     switch (JS_GetArrayBufferViewType(jsArray)) {
     case js::Scalar::Int8:
-        output = CheckTargetAndPopulate(nsXPTType::T_I8, type,
+        output = CheckTargetAndPopulate({ nsXPTType::T_I8 }, type,
                                         sizeof(int8_t), count,
                                         jsArray, pErr);
         if (!output) {
@@ -1375,7 +1407,7 @@ XPCConvert::JSTypedArray2Native(void** d,
 
     case js::Scalar::Uint8:
     case js::Scalar::Uint8Clamped:
-        output = CheckTargetAndPopulate(nsXPTType::T_U8, type,
+        output = CheckTargetAndPopulate({ nsXPTType::T_U8 }, type,
                                         sizeof(uint8_t), count,
                                         jsArray, pErr);
         if (!output) {
@@ -1384,7 +1416,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         break;
 
     case js::Scalar::Int16:
-        output = CheckTargetAndPopulate(nsXPTType::T_I16, type,
+        output = CheckTargetAndPopulate({ nsXPTType::T_I16 }, type,
                                         sizeof(int16_t), count,
                                         jsArray, pErr);
         if (!output) {
@@ -1393,7 +1425,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         break;
 
     case js::Scalar::Uint16:
-        output = CheckTargetAndPopulate(nsXPTType::T_U16, type,
+        output = CheckTargetAndPopulate({ nsXPTType::T_U16 }, type,
                                         sizeof(uint16_t), count,
                                         jsArray, pErr);
         if (!output) {
@@ -1402,7 +1434,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         break;
 
     case js::Scalar::Int32:
-        output = CheckTargetAndPopulate(nsXPTType::T_I32, type,
+        output = CheckTargetAndPopulate({ nsXPTType::T_I32 }, type,
                                         sizeof(int32_t), count,
                                         jsArray, pErr);
         if (!output) {
@@ -1411,7 +1443,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         break;
 
     case js::Scalar::Uint32:
-        output = CheckTargetAndPopulate(nsXPTType::T_U32, type,
+        output = CheckTargetAndPopulate({ nsXPTType::T_U32 }, type,
                                         sizeof(uint32_t), count,
                                         jsArray, pErr);
         if (!output) {
@@ -1420,7 +1452,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         break;
 
     case js::Scalar::Float32:
-        output = CheckTargetAndPopulate(nsXPTType::T_FLOAT, type,
+        output = CheckTargetAndPopulate({ nsXPTType::T_FLOAT }, type,
                                         sizeof(float), count,
                                         jsArray, pErr);
         if (!output) {
@@ -1429,7 +1461,7 @@ XPCConvert::JSTypedArray2Native(void** d,
         break;
 
     case js::Scalar::Float64:
-        output = CheckTargetAndPopulate(nsXPTType::T_DOUBLE, type,
+        output = CheckTargetAndPopulate({ nsXPTType::T_DOUBLE }, type,
                                         sizeof(double), count,
                                         jsArray, pErr);
         if (!output) {
@@ -1525,8 +1557,8 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
         }                                                                      \
     PR_END_MACRO
 
-    // No Action, FRee memory, RElease object
-    enum CleanupMode {na, fr, re};
+    // No Action, FRee memory, RElease object, CLeanup object
+    enum CleanupMode {na, fr, re, cl};
 
     CleanupMode cleanupMode;
 
@@ -1558,6 +1590,7 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
     case nsXPTType::T_WCHAR_STR     : POPULATE(fr, char16_t*);      break;
     case nsXPTType::T_INTERFACE     : POPULATE(re, nsISupports*);   break;
     case nsXPTType::T_INTERFACE_IS  : POPULATE(re, nsISupports*);   break;
+    case nsXPTType::T_DOMOBJECT     : POPULATE(cl, void*);          break;
     case nsXPTType::T_UTF8STRING    : NS_ERROR("bad type");         goto failure;
     case nsXPTType::T_CSTRING       : NS_ERROR("bad type");         goto failure;
     case nsXPTType::T_ASTRING       : NS_ERROR("bad type");         goto failure;
@@ -1583,6 +1616,12 @@ failure:
             for (uint32_t i = 0; i < initedCount; i++) {
                 void* p = a[i];
                 if (p) free(p);
+            }
+        } else if (cleanupMode == cl) {
+            void** a = (void**) array;
+            for (uint32_t i = 0; i < initedCount; i++) {
+                void* p = a[i];
+                if (p) type.GetDOMObjectInfo().Cleanup(p);
             }
         }
         free(array);

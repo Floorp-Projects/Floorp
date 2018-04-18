@@ -17,7 +17,6 @@ typedef unsigned long long nsViewID;
 
 // Core
 interface nsIDOMDocument;
-interface nsIDOMDocumentFragment;
 interface nsIDOMElement;
 interface nsIDOMNode;
 interface nsIDOMNodeList;

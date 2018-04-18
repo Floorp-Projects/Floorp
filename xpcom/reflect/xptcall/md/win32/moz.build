@@ -40,5 +40,4 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../..',
-    '/xpcom/reflect/xptinfo',
 ]

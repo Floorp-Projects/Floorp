@@ -263,12 +263,8 @@ public:
   bool
   IsOnCurrentThread();
 
-  bool
-  CloseInternal()
-  {
-    AssertIsOnWorkerThread();
-    return NotifyInternal(Closing);
-  }
+  void
+  CloseInternal();
 
   bool
   FreezeInternal();
@@ -1181,10 +1177,8 @@ public:
   OfflineStatusChangeEvent(bool aIsOffline);
 
   nsresult
-  Dispatch(already_AddRefed<WorkerRunnable> aRunnable)
-  {
-    return DispatchPrivate(Move(aRunnable), nullptr);
-  }
+  Dispatch(already_AddRefed<WorkerRunnable> aRunnable,
+           nsIEventTarget* aSyncLoopTarget = nullptr);
 
   nsresult
   DispatchControlRunnable(already_AddRefed<WorkerControlRunnable> aWorkerControlRunnable);
@@ -1213,6 +1207,9 @@ public:
   PrincipalIsValid() const;
 #endif
 
+  void
+  StartCancelingTimer();
+
 private:
   WorkerPrivate(WorkerPrivate* aParent,
                 const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -1221,10 +1218,6 @@ private:
                 WorkerLoadInfo& aLoadInfo);
 
   ~WorkerPrivate();
-
-  nsresult
-  DispatchPrivate(already_AddRefed<WorkerRunnable> aRunnable,
-                  nsIEventTarget* aSyncLoopTarget);
 
   bool
   NotifyPrivate(WorkerStatus aStatus);
@@ -1424,6 +1417,8 @@ private:
 
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITimerCallback> mTimerRunnable;
+
+  nsCOMPtr<nsITimer> mCancelingTimer;
 
   nsCOMPtr<nsITimer> mGCTimer;
 

@@ -45,14 +45,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
   const url1 = "data:text/html;charset=utf-8,It%20was%20a%20dark%20and%20stormy%20night.";
   const url2 = "data:text/html;charset=utf-8,Suddenly%2C%20a%20tab%20was%20zombified.";
 
-  add_task(function* test_sessionStoreZombify() {
+  add_task(async function test_sessionStoreZombify() {
     SimpleTest.registerCleanupFunction(function() {
       cleanupTabs();
     });
 
     // Add a new tab with some content
     tabTest = BrowserApp.addTab(url1, { selected: true, parentId: BrowserApp.selectedTab.id });
-    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+    await promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
 
     // Add a new tab with a blank page
     tabBlank = BrowserApp.addTab("about:blank", { selected: true, parentId: BrowserApp.selectedTab.id });
@@ -66,19 +66,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
 
     // Switch back to the test tab and wait for it to reload
     BrowserApp.selectTab(tabTest);
-    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+    await promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
 
     // Check that the test tab has loaded the correct url
     is(tabTest.browser.currentURI.spec, url1, "Test tab is showing the first URL.");
 
     // Navigate to some other content
     BrowserApp.loadURI(url2, tabTest.browser);
-    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+    await promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
     is(tabTest.browser.currentURI.spec, url2, "Test tab is showing the second URL.");
 
     // Switch to the other tab
     BrowserApp.selectTab(tabBlank);
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabBlank, "Test tab is in background.");
 
     // Zombify the backgrounded test tab again
@@ -89,7 +89,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
 
     // Test that the tab's own function for unzombifying works as well
     tabTest.unzombify();
-    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+    await promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
 
     // Check that the test tab has loaded the correct url
     is(tabTest.browser.currentURI.spec, url2, "Test tab is showing the second URL.");
@@ -97,7 +97,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
     cleanupTabs();
   });
 
-  add_task(function* test_sessionStoreKeepAsZombie() {
+  add_task(async function test_sessionStoreKeepAsZombie() {
     let observerService = Services.obs;
 
     SimpleTest.registerCleanupFunction(function() {
@@ -106,11 +106,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
 
     // Add a new tab with some content
     tabTest = BrowserApp.addTab(url1, { selected: true, parentId: BrowserApp.selectedTab.id });
-    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+    await promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
 
     // Add a new tab with a blank page
     tabBlank = BrowserApp.addTab("about:blank", { selected: true, parentId: BrowserApp.selectedTab.id });
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabBlank, "Test tab is in background.");
 
     // Zombify the backgrounded test tab
@@ -125,18 +125,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
 
     // Switch back to the test tab and check that it remains zombified
     BrowserApp.selectTab(tabTest);
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabTest, "Test tab is selected.");
     ok(tabTest.browser.__SS_restore, "Test tab is still set for delay loading.");
 
     // Switch to the other tab and back again
     BrowserApp.selectTab(tabBlank);
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabBlank, "Test tab is in background.");
     BrowserApp.selectTab(tabTest);
 
     // "Tab:KeepZombified should be good for one TabSelect only
-    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+    await promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
     is(BrowserApp.selectedTab, tabTest, "Test tab is selected.");
 
     // Check that the test tab is no longer a zombie and has loaded the correct url
@@ -145,7 +145,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
 
     // Zombify the test tab again
     BrowserApp.selectTab(tabBlank);
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabBlank, "Test tab is in background.");
     tabTest.zombify();
     ok(tabTest.browser.__SS_restore, "Test tab is set for delay loading.");
@@ -156,7 +156,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
 
     // Switch back to the test tab and check that it remains zombified
     BrowserApp.selectTab(tabTest);
-    yield promiseTabEvent(BrowserApp.deck, "TabSelect");
+    await promiseTabEvent(BrowserApp.deck, "TabSelect");
     is(BrowserApp.selectedTab, tabTest, "Test tab is selected.");
     ok(tabTest.browser.__SS_restore, "Test tab is still set for delay loading.");
 
@@ -164,7 +164,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
     observerService.notifyObservers(null, "application-foreground");
 
     // The test tab should now start reloading
-    yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
+    await promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
     ok(!tabTest.browser.__SS_restore, "Test tab is no longer set for delay loading.");
     is(tabTest.browser.currentURI.spec, url1, "Test tab is showing the test URL.");
 

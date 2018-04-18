@@ -9,7 +9,7 @@
 #include "prdtoa.h"
 #include <math.h>
 #include "nsCycleCollectionParticipant.h"
-#include "xpt_struct.h"
+#include "xptinfo.h"
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
 #include "nsString.h"
@@ -1645,7 +1645,7 @@ nsVariantBase::nsVariantBase()
 #ifdef DEBUG
   {
     // Assert that the nsIDataType consts match the values #defined in
-    // xpt_struct.h. Bad things happen somewhere if they don't.
+    // xptinfo.h. Bad things happen somewhere if they don't.
     struct THE_TYPES
     {
       uint16_t a;

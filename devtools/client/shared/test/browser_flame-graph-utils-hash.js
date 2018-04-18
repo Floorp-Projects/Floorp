@@ -7,7 +7,7 @@
 
 const {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
 
-add_task(function* () {
+add_task(async function() {
   let hash1 = FlameGraphUtils._getStringHash("abc");
   let hash2 = FlameGraphUtils._getStringHash("acb");
   let hash3 = FlameGraphUtils._getStringHash(Array.from(Array(100000)).join("a"));

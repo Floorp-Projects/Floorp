@@ -42,7 +42,7 @@ class EventTarget;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[builtinclass, uuid(f58daacf-4d1a-4002-8fd7-06b614dfbcf6)]
+[shim(Event), uuid(f58daacf-4d1a-4002-8fd7-06b614dfbcf6)]
 interface nsIDOMEvent : nsISupports
 {
   // PhaseType

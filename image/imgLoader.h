@@ -568,7 +568,7 @@ public:
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
 private:
-  void UpdateProxies();
+  void UpdateProxies(bool aCancelRequest, bool aSyncNotify);
   virtual ~imgCacheValidator();
 
   nsCOMPtr<nsIStreamListener> mDestListener;

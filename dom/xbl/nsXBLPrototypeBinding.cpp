@@ -28,7 +28,6 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLContentSink.h"
 #include "xptinfo.h"
-#include "nsIInterfaceInfoManager.h"
 #include "nsIDocumentObserver.h"
 #include "nsGkAtoms.h"
 #include "nsXBLProtoImpl.h"
@@ -36,7 +35,6 @@
 #include "nsContentUtils.h"
 #include "nsTextFragment.h"
 #include "nsTextNode.h"
-#include "nsIInterfaceInfo.h"
 #include "nsIScriptError.h"
 
 #include "nsXBLResourceLoader.h"
@@ -710,13 +708,6 @@ nsresult
 nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
 {
   if (!aImpls.IsEmpty()) {
-    // Obtain the interface info manager that can tell us the IID
-    // for a given interface name.
-    nsCOMPtr<nsIInterfaceInfoManager>
-      infoManager(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
-    if (!infoManager)
-      return NS_ERROR_FAILURE;
-
     // The user specified at least one attribute.
     NS_ConvertUTF16toUTF8 utf8impl(aImpls);
     char* str = utf8impl.BeginWriting();
@@ -727,8 +718,7 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
     char* token = nsCRT::strtok( str, ", ", &newStr );
     while( token != nullptr ) {
       // get the InterfaceInfo for the name
-      nsCOMPtr<nsIInterfaceInfo> iinfo;
-      infoManager->GetInfoForName(token, getter_AddRefs(iinfo));
+      const nsXPTInterfaceInfo* iinfo = nsXPTInterfaceInfo::ByName(token);
 
       if (iinfo) {
         // obtain an IID.
@@ -741,9 +731,9 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
 
           // this block adds the parent interfaces of each interface
           // defined in the xbl definition (implements="nsI...")
-          nsCOMPtr<nsIInterfaceInfo> parentInfo;
+          const nsXPTInterfaceInfo* parentInfo;
           // if it has a parent, add it to the table
-          while (NS_SUCCEEDED(iinfo->GetParent(getter_AddRefs(parentInfo))) && parentInfo) {
+          while (NS_SUCCEEDED(iinfo->GetParent(&parentInfo)) && parentInfo) {
             // get the iid
             parentInfo->GetIIDShared(&iid);
 
