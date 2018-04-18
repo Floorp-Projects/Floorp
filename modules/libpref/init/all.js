@@ -2675,11 +2675,7 @@ pref("mousewheel.min_line_scroll_amount", 5);
 // scroll is converted to a horizontal scroll for that target.
 // Note that auto-dir only takes effect for |mousewheel.*.action|s and
 // |mousewheel.*.action.override_x|s whose values are 1.
-#ifdef EARLY_BETA_OR_EARLIER
-pref("mousewheel.autodir.enabled", true);
-#else
 pref("mousewheel.autodir.enabled", false);
-#endif
 // When a wheel scroll is converted due to auto-dir, which side the converted
 // scroll goes towards is decided by one thing called "honoured target". If the
 // content of the honoured target horizontally starts from right to left, then
