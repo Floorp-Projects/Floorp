@@ -42,7 +42,6 @@ config = {
         'PATH': '/usr/local/bin:/usr/lib/ccache:\
 /bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:\
 /tools/python27/bin:/tools/python27-mercurial/bin:/home/cltbld/bin',
-        'LD_LIBRARY_PATH': "/tools/gcc-4.3.3/installed/lib",
     },
     'mozconfig_variant': 'artifact',
     #########################################################################
