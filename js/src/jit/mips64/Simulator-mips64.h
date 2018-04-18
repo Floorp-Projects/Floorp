@@ -75,6 +75,7 @@ const int kNumFPURegisters = 32;
 const int kFCSRRegister = 31;
 const int kInvalidFPUControlRegister = -1;
 const uint32_t kFPUInvalidResult = static_cast<uint32_t>(1 << 31) - 1;
+const uint64_t kFPUInvalidResult64 = static_cast<uint64_t>(1ULL << 63) - 1;
 
 // FCSR constants.
 const uint32_t kFCSRInexactFlagBit = 2;
@@ -197,6 +198,7 @@ class Simulator {
     double getFpuRegisterDouble(int fpureg) const;
     void setFCSRBit(uint32_t cc, bool value);
     bool testFCSRBit(uint32_t cc);
+    template <typename T>
     bool setFCSRRoundError(double original, double rounded);
 
     // Special case of set_register and get_register to access the raw PC value.
