@@ -1071,12 +1071,16 @@ var FindBar = {
 
   _passKeyToParent(event) {
     event.preventDefault();
+    // These are the properties required to dispatch another 'real' event
+    // to the findbar in the parent in _dispatchKeypressEvent in findbar.xml .
+    // If you make changes here, verify that that method can still do its job.
+    const kRequiredProps = [
+      "type", "bubbles", "cancelable", "ctrlKey", "altKey", "shiftKey",
+      "metaKey", "keyCode", "charCode",
+    ];
     let fakeEvent = {};
-    for (let k in event) {
-      if (typeof event[k] != "object" && typeof event[k] != "function" &&
-          !(k in content.KeyboardEvent)) {
-        fakeEvent[k] = event[k];
-      }
+    for (let prop of kRequiredProps) {
+      fakeEvent[prop] = event[prop];
     }
     sendAsyncMessage("Findbar:Keypress", fakeEvent);
   },
