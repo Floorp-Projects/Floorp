@@ -560,15 +560,6 @@ function checkSystemSection(data) {
   Assert.ok(Number.isFinite(cpuData.count), "CPU count must be a number.");
   Assert.ok(Array.isArray(cpuData.extensions), "CPU extensions must be available.");
 
-  // Device data is only available on Android.
-  if (gIsAndroid) {
-    let deviceData = data.system.device;
-    Assert.ok(checkNullOrString(deviceData.model));
-    Assert.ok(checkNullOrString(deviceData.manufacturer));
-    Assert.ok(checkNullOrString(deviceData.hardware));
-    Assert.ok(checkNullOrBool(deviceData.isTablet));
-  }
-
   let osData = data.system.os;
   Assert.ok(checkNullOrString(osData.name));
   Assert.ok(checkNullOrString(osData.version));
