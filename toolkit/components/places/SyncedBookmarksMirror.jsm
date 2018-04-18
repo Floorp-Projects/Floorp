@@ -189,9 +189,9 @@ class SyncedBookmarksMirror {
       }
       try {
         let info = await OS.File.stat(path);
-        let fileSize = Math.floor(info.size / 1024);
+        let size = Math.floor(info.size / 1024);
         options.recordTelemetryEvent("mirror", "open", "success",
-                                     { size: fileSize.toString(10) });
+                                     normalizeExtraTelemetryFields({ size }));
       } catch (ex) {
         MirrorLog.warn("Error recording stats for mirror database size", ex);
       }
@@ -376,15 +376,8 @@ class SyncedBookmarksMirror {
         this.recordTelemetryEvent("mirror", method, value, extra);
       }
       for (let kind in ignoreCounts) {
-        let reasons = ignoreCounts[kind];
-        let extra = {};
-        for (let reason in reasons) {
-          let count = reasons[reason];
-          if (count > 0) {
-            extra[reason] = String(count);
-          }
-        }
-        if (!ObjectUtils.isEmpty(extra)) {
+        let extra = normalizeExtraTelemetryFields(ignoreCounts[kind]);
+        if (extra) {
           this.recordTelemetryEvent("mirror", "ignore", kind, extra);
         }
       }
@@ -430,12 +423,12 @@ class SyncedBookmarksMirror {
       MirrorLog.warn("Temporarily reparenting remote items with missing " +
                      "parents to unfiled", missingParents);
       this.recordTelemetryEvent("mirror", "orphans", "parents",
-                                { count: String(missingParents.length) });
+        normalizeExtraTelemetryFields({ count: missingParents.length }));
     }
     if (missingChildren.length) {
       MirrorLog.warn("Remote tree missing items", missingChildren);
       this.recordTelemetryEvent("mirror", "orphans", "children",
-                                { count: String(missingChildren.length) });
+        normalizeExtraTelemetryFields({ count: missingChildren.length }));
     }
 
     let { missingLocal, missingRemote, wrongSyncStatus } =
@@ -444,26 +437,33 @@ class SyncedBookmarksMirror {
       MirrorLog.warn("Remote tree has merged items that don't exist locally",
                      missingLocal);
       this.recordTelemetryEvent("mirror", "inconsistencies", "local",
-                                { count: String(missingLocal.length) });
+        normalizeExtraTelemetryFields({ count: missingLocal.length }));
     }
     if (missingRemote.length) {
       MirrorLog.warn("Local tree has synced items that don't exist remotely",
                      missingRemote);
       this.recordTelemetryEvent("mirror", "inconsistencies", "remote",
-                                { count: String(missingRemote.length) });
+        normalizeExtraTelemetryFields({ count: missingRemote.length }));
     }
     if (wrongSyncStatus.length) {
       MirrorLog.warn("Local tree has wrong sync statuses for items that " +
                      "exist remotely", wrongSyncStatus);
       this.recordTelemetryEvent("mirror", "inconsistencies", "syncStatus",
-                                { count: String(wrongSyncStatus.length) });
+        normalizeExtraTelemetryFields({ count: wrongSyncStatus.length }));
     }
+
+    let applyStats = {};
 
     // It's safe to build the remote tree outside the transaction because
     // `fetchRemoteTree` doesn't join to Places, only Sync writes to the
     // mirror, and we're holding the Sync lock at this point.
     MirrorLog.debug("Building remote tree from mirror");
-    let remoteTree = await this.fetchRemoteTree(remoteTimeSeconds);
+    let { result: remoteTree, time: remoteTreeTiming } = await withTiming(
+      "Fetch remote tree",
+      () => this.fetchRemoteTree(remoteTimeSeconds)
+    );
+    applyStats.remoteTree = { time: remoteTreeTiming,
+                              count: remoteTree.guidCount };
     if (MirrorLog.level <= Log.Level.Trace) {
       MirrorLog.trace("Built remote tree from mirror\n" +
                       remoteTree.toASCIITreeString());
@@ -473,24 +473,50 @@ class SyncedBookmarksMirror {
 
     let changeRecords = await this.db.executeTransaction(async () => {
       MirrorLog.debug("Building local tree from Places");
-      let localTree = await this.fetchLocalTree(localTimeSeconds);
+      let { result: localTree, time: localTreeTiming } = await withTiming(
+        "Fetch local tree",
+        () => this.fetchLocalTree(localTimeSeconds)
+      );
+      applyStats.localTree = { time: localTreeTiming,
+                               count: localTree.guidCount };
       if (MirrorLog.level <= Log.Level.Trace) {
         MirrorLog.trace("Built local tree from Places\n" +
                         localTree.toASCIITreeString());
       }
 
       MirrorLog.debug("Fetching content info for new mirror items");
-      let newRemoteContents = await this.fetchNewRemoteContents();
+      let {
+        result: newRemoteContents,
+        time: remoteContentsTiming,
+      } = await withTiming(
+        "Fetch new remote contents",
+        () => this.fetchNewRemoteContents()
+      );
+      applyStats.remoteContents = { time: remoteContentsTiming,
+                                    count: newRemoteContents.size };
 
       MirrorLog.debug("Fetching content info for new Places items");
-      let newLocalContents = await this.fetchNewLocalContents();
+      let {
+        result: newLocalContents,
+        time: localContentsTiming,
+      } = await withTiming(
+        "Fetch new local contents",
+        () => this.fetchNewLocalContents()
+      );
+      applyStats.localContents = { time: localContentsTiming,
+                                   count: newLocalContents.size };
 
       MirrorLog.debug("Building complete merged tree");
       let merger = new BookmarkMerger(localTree, newLocalContents,
                                       remoteTree, newRemoteContents);
       let mergedRoot;
       try {
-        mergedRoot = await merger.merge();
+        let time;
+        ({ result: mergedRoot, time } = await withTiming(
+          "Build merged tree",
+          () => merger.merge()
+        ));
+        applyStats.merge = { time };
       } finally {
         for (let { value, extra } of merger.summarizeTelemetryEvents()) {
           this.recordTelemetryEvent("mirror", "merge", value, extra);
@@ -522,8 +548,12 @@ class SyncedBookmarksMirror {
         ({ guid, level: localTree.levelForGuid(guid) })
       );
       let remoteDeletions = Array.from(merger.deleteRemotely);
-      await this.updateLocalItemsInPlaces(mergedRoot, localDeletions,
-                                          remoteDeletions);
+      let { time: updateTiming } = await withTiming(
+        "Apply merged tree",
+        () => this.updateLocalItemsInPlaces(mergedRoot, localDeletions,
+                                            remoteDeletions)
+      );
+      applyStats.update = { time: updateTiming };
 
       // At this point, the database is consistent, and we can fetch info to
       // pass to observers. Note that we can't fetch observer info in the
@@ -534,11 +564,17 @@ class SyncedBookmarksMirror {
       MirrorLog.debug("Recording observer notifications");
       await this.noteObserverChanges(observersToNotify);
 
-      MirrorLog.debug("Staging locally changed items for upload");
-      await this.stageItemsToUpload(weakUpload);
+      let {
+        result: changeRecords,
+        time: stageTiming,
+      } = await withTiming("Stage outgoing items", async () => {
+        MirrorLog.debug("Staging locally changed items for upload");
+        await this.stageItemsToUpload(weakUpload);
 
-      MirrorLog.debug("Fetching records for local items to upload");
-      let changeRecords = await this.fetchLocalChangeRecords();
+        MirrorLog.debug("Fetching records for local items to upload");
+        return this.fetchLocalChangeRecords();
+      });
+      applyStats.stage = { time: stageTiming };
 
       await this.db.execute(`DELETE FROM mergeStates`);
       await this.db.execute(`DELETE FROM itemsAdded`);
@@ -558,6 +594,13 @@ class SyncedBookmarksMirror {
       await observersToNotify.notifyAll();
     } catch (ex) {
       MirrorLog.error("Error notifying Places observers", ex);
+    }
+
+    for (let value in applyStats) {
+      let extra = normalizeExtraTelemetryFields(applyStats[value]);
+      if (extra) {
+        this.recordTelemetryEvent("mirror", "apply", value, extra);
+      }
     }
 
     return changeRecords;
@@ -1000,7 +1043,6 @@ class SyncedBookmarksMirror {
    */
   async fetchRemoteTree(remoteTimeSeconds) {
     let remoteTree = new BookmarkTree(BookmarkNode.root());
-    let startTime = Cu.now();
 
     // First, build a flat mapping of parents to children. The `LEFT JOIN`
     // includes items orphaned by an interrupted upload on another device.
@@ -1058,12 +1100,6 @@ class SyncedBookmarksMirror {
       remoteTree.noteDeleted(guid);
     }
 
-    let elapsedTime = Cu.now() - startTime;
-    let totalRows = itemRows.length + tombstoneRows.length;
-    this.recordTelemetryEvent("mirror", "fetch", "remoteTree",
-                              { time: String(elapsedTime),
-                                count: String(totalRows) });
-
     return remoteTree;
   }
 
@@ -1077,7 +1113,6 @@ class SyncedBookmarksMirror {
    */
   async fetchNewRemoteContents() {
     let newRemoteContents = new Map();
-    let startTime = Cu.now();
 
     let rows = await this.db.execute(`
       SELECT v.guid, IFNULL(v.title, "") AS title, u.url, v.smartBookmarkName,
@@ -1099,11 +1134,6 @@ class SyncedBookmarksMirror {
       newRemoteContents.set(guid, content);
     }
 
-    let elapsedTime = Cu.now() - startTime;
-    this.recordTelemetryEvent("mirror", "fetch", "newRemoteContents",
-                              { time: String(elapsedTime),
-                                count: String(rows.length) });
-
     return newRemoteContents;
   }
 
@@ -1118,7 +1148,6 @@ class SyncedBookmarksMirror {
    */
   async fetchLocalTree(localTimeSeconds) {
     let localTree = new BookmarkTree(BookmarkNode.root());
-    let startTime = Cu.now();
 
     // This unsightly query collects all descendants and maps their Places types
     // to the Sync record kinds. We start with the roots, and work our way down.
@@ -1181,12 +1210,6 @@ class SyncedBookmarksMirror {
       localTree.noteDeleted(guid);
     }
 
-    let elapsedTime = Cu.now() - startTime;
-    let totalRows = itemRows.length + tombstoneRows.length;
-    this.recordTelemetryEvent("mirror", "fetch", "localTree",
-                              { time: String(elapsedTime),
-                                count: String(totalRows) });
-
     return localTree;
   }
 
@@ -1201,7 +1224,6 @@ class SyncedBookmarksMirror {
    */
   async fetchNewLocalContents() {
     let newLocalContents = new Map();
-    let startTime = Cu.now();
 
     let rows = await this.db.execute(`
       SELECT b.guid, IFNULL(b.title, "") AS title, h.url,
@@ -1226,11 +1248,6 @@ class SyncedBookmarksMirror {
       let content = BookmarkContent.fromRow(row);
       newLocalContents.set(guid, content);
     }
-
-    let elapsedTime = Cu.now() - startTime;
-    this.recordTelemetryEvent("mirror", "fetch", "newLocalContents",
-                              { time: String(elapsedTime),
-                                count: String(rows.length) });
 
     return newLocalContents;
   }
@@ -1907,6 +1924,28 @@ class DatabaseCorruptError extends Error {
     super(message);
     this.name = "DatabaseCorruptError";
   }
+}
+
+// Converts extra integer fields to strings, and rounds timings to nanosecond
+// precision.
+function normalizeExtraTelemetryFields(extra) {
+  let result = {};
+  for (let key in extra) {
+    let value = extra[key];
+    let type = typeof value;
+    if (type == "string") {
+      result[key] = value;
+    } else if (type == "number") {
+      if (value > 0) {
+        result[key] = Number.isInteger(value) ? value.toString(10) :
+                      value.toFixed(3);
+      }
+    } else if (type != "undefined") {
+      throw new TypeError(`Invalid type ${
+        type} for extra telemetry field ${key}`);
+    }
+  }
+  return ObjectUtils.isEmpty(result) ? undefined : result;
 }
 
 // Indicates if the mirror should be replaced because the database file is
@@ -2744,6 +2783,17 @@ async function inflateTree(tree, pseudoTree, parentGuid) {
   }
 }
 
+// Executes a function and returns a `{ result, time }` tuple, where `result` is
+// the function's return value, and `time` is the time taken to execute the
+// function.
+async function withTiming(name, func) {
+  let startTime = Cu.now();
+  let result = await func();
+  let elapsedTime = Cu.now() - startTime;
+  MirrorLog.debug(`${name} took ${elapsedTime.toFixed(3)}ms`);
+  return { result, time: elapsedTime };
+}
+
 /**
  * Content info for an item in the local or remote tree. This is used to dedupe
  * NEW local items to remote items that don't exist locally. See `makeDupeKey`
@@ -3113,6 +3163,10 @@ class BookmarkTree {
     this.byGuid.set(this.root.guid, this.root);
   }
 
+  get guidCount() {
+    return this.byGuid.size + this.deletedGuids.size;
+  }
+
   isDeleted(guid) {
     return this.deletedGuids.has(guid);
   }
@@ -3393,17 +3447,13 @@ class BookmarkMerger {
   summarizeTelemetryEvents() {
     let events = [...this.extraTelemetryEvents];
     if (this.dupeCount > 0) {
-      events.push({ value: "dupes",
-                    extra: { count: String(this.dupeCount) } });
+      events.push({
+        value: "dupes",
+        extra: normalizeExtraTelemetryFields({ count: this.dupeCount }),
+      });
     }
-    let structureExtra = {};
-    for (let key in this.structureCounts) {
-      let count = this.structureCounts[key];
-      if (count > 0) {
-        structureExtra[key] = String(count);
-      }
-    }
-    if (!ObjectUtils.isEmpty(structureExtra)) {
+    let structureExtra = normalizeExtraTelemetryFields(this.structureCounts);
+    if (structureExtra) {
       events.push({ value: "structure", extra: structureExtra });
     }
     return events;
