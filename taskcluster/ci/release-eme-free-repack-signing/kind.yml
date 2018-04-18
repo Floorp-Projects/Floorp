@@ -1,0 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.build_signing:loader
+
+transforms:
+   - taskgraph.transforms.name_sanity:transforms
+   - taskgraph.transforms.partner_signing:transforms
+   - taskgraph.transforms.signing:transforms
+   - taskgraph.transforms.release_notifications:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - release-eme-free-repack
+
+only-for-build-platforms:
+   - macosx64-nightly/opt
+
+job-template:
+   shipping-product: firefox
+   shipping-phase: promote
+   depname: release-eme-free-repack
+   max-run-time: 7200
+   treeherder:
+      symbol: EME-Sign
+      platform: macosx64/opt
+      kind: test
+      tier: 1
