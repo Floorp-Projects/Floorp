@@ -53,6 +53,11 @@ struct MozGtkSize {
     MozGtkSize result = *this;
     return result += aBorder;
   }
+  bool operator<(const MozGtkSize &aOther) const
+  {
+    return (width < aOther.width && height <= aOther.height) ||
+           (width <= aOther.width && height < aOther.height);
+  }
   void Include(MozGtkSize aOther)
   {
     width = std::max(width, aOther.width);
@@ -491,9 +496,12 @@ moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length, gint* 
 
 /**
  * Get the metrics in GTK pixels for a scrollbar.
+ * aOrientation:     [IN] the scrollbar orientation
+ * aActive:          [IN] Metricts for scrollbar with mouse pointer over it.
+ *
  */
 const ScrollbarGTKMetrics*
-GetScrollbarMetrics(GtkOrientation aOrientation);
+GetScrollbarMetrics(GtkOrientation aOrientation, bool aActive = false);
 
 /**
  * Get the desired size of a dropdown arrow button
