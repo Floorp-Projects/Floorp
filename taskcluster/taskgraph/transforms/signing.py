@@ -66,6 +66,9 @@ signing_description_schema = Schema({
 
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
+
+    # Optional control for how long a task may run (aka maxRunTime)
+    Optional('max-run-time'): int,
 })
 
 
@@ -144,7 +147,7 @@ def make_task_description(config, jobs):
             'worker-type': get_worker_type_for_scope(config, signing_cert_scope),
             'worker': {'implementation': 'scriptworker-signing',
                        'upstream-artifacts': job['upstream-artifacts'],
-                       'max-run-time': 3600},
+                       'max-run-time': job.get('max-run-time', 3600)},
             'scopes': [signing_cert_scope] + signing_format_scopes,
             'dependencies': {job['depname']: dep_job.label},
             'attributes': attributes,
