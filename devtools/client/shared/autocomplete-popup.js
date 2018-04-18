@@ -10,6 +10,7 @@ const Services = require("Services");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {PrefObserver} = require("devtools/client/shared/prefs");
+const {colorUtils} = require("devtools/shared/css/color");
 
 let itemIdCounter = 0;
 /**
@@ -461,8 +462,15 @@ AutocompletePopup.prototype = {
 
     if (item.postLabel) {
       let postDesc = this._document.createElementNS(HTML_NS, "span");
-      postDesc.textContent = item.postLabel;
       postDesc.className = "autocomplete-postlabel";
+      postDesc.textContent = item.postLabel;
+      // Determines if the postlabel is a valid colour or other value
+      if (this._isValidColor(item.postLabel)) {
+        let colorSwatch = this._document.createElementNS(HTML_NS, "span");
+        colorSwatch.className = "autocomplete-swatch autocomplete-colorswatch";
+        colorSwatch.style.cssText = "background-color: " + item.postLabel;
+        postDesc.insertBefore(colorSwatch, postDesc.childNodes[0]);
+      }
       listItem.appendChild(postDesc);
     }
 
@@ -601,6 +609,18 @@ AutocompletePopup.prototype = {
     this._list.classList.toggle(newValue + "-theme", true);
 
     this._currentTheme = newValue;
+  },
+
+  /**
+  * Determines if the specified colour object is a valid colour, and if
+  * it is not a "special value"
+  *
+  * @return {Boolean}
+  *         If the object represents a proper colour or not.
+  */
+  _isValidColor: function(color) {
+    let colorObj = new colorUtils.CssColor(color);
+    return (colorObj.valid && (!colorObj.specialValue));
   },
 
   /**
