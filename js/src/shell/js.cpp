@@ -4284,14 +4284,17 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
                                   "parse", "0", "s");
         return false;
     }
+
+    // Extract argument 1: ArrayBuffer.
+
     if (!args[0].isObject()) {
         const char* typeName = InformalValueTypeName(args[0]);
         JS_ReportErrorASCII(cx, "expected object (ArrayBuffer) to parse, got %s", typeName);
         return false;
     }
 
-    RootedObject obj(cx, &args[0].toObject());
-    if (!JS_IsArrayBufferObject(obj)) {
+    RootedObject objBuf(cx, &args[0].toObject());
+    if (!JS_IsArrayBufferObject(objBuf)) {
         const char* typeName = InformalValueTypeName(args[0]);
         JS_ReportErrorASCII(cx, "expected ArrayBuffer to parse, got %s", typeName);
         return false;
@@ -4300,8 +4303,49 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
     uint32_t buf_length = 0;
     bool buf_isSharedMemory = false;
     uint8_t* buf_data = nullptr;
-    GetArrayBufferViewLengthAndData(obj, &buf_length, &buf_isSharedMemory, &buf_data);
+    GetArrayBufferLengthAndData(objBuf, &buf_length, &buf_isSharedMemory, &buf_data);
     MOZ_ASSERT(buf_data);
+
+    // Extract argument 2: Options.
+
+    bool useMultipart = true;
+
+    if (args.length() >= 2) {
+        if (!args[1].isObject()) {
+            const char* typeName = InformalValueTypeName(args[1]);
+            JS_ReportErrorASCII(cx, "expected object (options) to parse, got %s", typeName);
+            return false;
+        }
+        RootedObject objOptions(cx, &args[1].toObject());
+
+        RootedValue optionFormat(cx);
+        if (!JS_GetProperty(cx, objOptions, "format", &optionFormat))
+            return false;
+
+        if (optionFormat.isUndefined()) {
+            // By default, `useMultipart` is `true`.
+            useMultipart = true;
+        } else if (optionFormat.isString()) {
+            RootedString stringFormat(cx);
+            stringFormat = optionFormat.toString();
+            JS::Rooted<JSLinearString*> linearFormat(cx);
+            linearFormat = stringFormat->ensureLinear(cx);
+            if (StringEqualsAscii(linearFormat, "multipart")) {
+                useMultipart = true;
+            } else if (StringEqualsAscii(linearFormat, "simple")) {
+                useMultipart = false;
+            } else {
+                JSAutoByteString printable;
+                JS_ReportErrorASCII(cx, "Unknown value for option `format`, expected 'multipart' or 'simple', got %s", ValueToPrintableUTF8(cx, optionFormat, &printable));
+                return false;
+            }
+        } else {
+            const char* typeName = InformalValueTypeName(optionFormat);
+            JS_ReportErrorASCII(cx, "option `format` should be a string, got %s", typeName);
+            return false;
+        }
+    }
+
 
     CompileOptions options(cx);
     options.setIntroductionType("js shell bin parse")
@@ -4311,16 +4355,35 @@ BinParse(JSContext* cx, unsigned argc, Value* vp)
     if (!usedNames.init())
         return false;
 
-    BinASTParser reader(cx, cx->tempLifoAlloc(), usedNames, options);
+    JS::Result<ParseNode*> parsed(nullptr);
+    if (useMultipart) {
+        // Note: We need to keep `reader` alive as long as we can use `parsed`.
+        BinASTParser<BinTokenReaderMultipart> reader(cx, cx->tempLifoAlloc(), usedNames, options);
 
-    JS::Result<ParseNode*> parsed = reader.parse(buf_data, buf_length);
-    if (parsed.isErr())
-        return false;
+        parsed = reader.parse(buf_data, buf_length);
+
+        if (parsed.isErr())
+            return false;
 
 #ifdef DEBUG
-    Fprinter out(stderr);
-    DumpParseTree(parsed.unwrap(), out);
+        Fprinter out(stderr);
+        DumpParseTree(parsed.unwrap(), out);
 #endif
+
+    } else {
+        // Note: We need to keep `reader` alive as long as we can use `parsed`.
+        BinASTParser<BinTokenReaderTester> reader(cx, cx->tempLifoAlloc(), usedNames, options);
+
+        parsed = reader.parse(buf_data, buf_length);
+
+        if (parsed.isErr())
+            return false;
+
+#ifdef DEBUG
+        Fprinter out(stderr);
+        DumpParseTree(parsed.unwrap(), out);
+#endif
+    }
 
     args.rval().setUndefined();
     return true;
@@ -4346,6 +4409,29 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
+    bool allowSyntaxParser = true;
+
+    if (args.length() >= 2) {
+        if (!args[1].isObject()) {
+            const char* typeName = InformalValueTypeName(args[1]);
+            JS_ReportErrorASCII(cx, "expected object (options) to parse, got %s", typeName);
+            return false;
+        }
+        RootedObject objOptions(cx, &args[1].toObject());
+
+        RootedValue optionAllowSyntaxParser(cx);
+        if (!JS_GetProperty(cx, objOptions, "allowSyntaxParser", &optionAllowSyntaxParser))
+            return false;
+
+        if (optionAllowSyntaxParser.isBoolean()) {
+            allowSyntaxParser = optionAllowSyntaxParser.toBoolean();
+        } else if (!optionAllowSyntaxParser.isUndefined()) {
+            const char* typeName = InformalValueTypeName(optionAllowSyntaxParser);
+            JS_ReportErrorASCII(cx, "option `allowSyntaxParser` should be a boolean, got %s", typeName);
+            return false;
+        }
+    }
+
     JSFlatString* scriptContents = args[0].toString()->ensureFlat(cx);
     if (!scriptContents)
         return false;
@@ -4359,7 +4445,8 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
 
     CompileOptions options(cx);
     options.setIntroductionType("js shell parse")
-           .setFileAndLine("<string>", 1);
+           .setFileAndLine("<string>", 1)
+           .setAllowSyntaxParser(allowSyntaxParser);
 
     UsedNameTracker usedNames(cx);
     if (!usedNames.init())

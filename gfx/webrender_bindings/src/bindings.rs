@@ -12,7 +12,7 @@ use webrender::{ReadPixelsFormat, Renderer, RendererOptions, ThreadListener};
 use webrender::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::DebugFlags;
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
-use webrender::{PipelineInfo, SceneBuilderHooks};
+use webrender::{AsyncPropertySampler, PipelineInfo, SceneBuilderHooks};
 use webrender::{ProgramCache, UploadMethod, VertexUsageHint};
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dImageRenderer;
@@ -684,7 +684,10 @@ pub unsafe extern "C" fn wr_pipeline_info_delete(_info: WrPipelineInfo) {
     // the underlying vec memory
 }
 
+#[allow(improper_ctypes)] // this is needed so that rustc doesn't complain about passing the &mut Transaction to an extern function
 extern "C" {
+    // These callbacks are invoked from the scene builder thread (aka the APZ
+    // updater thread)
     fn apz_register_updater(window_id: WrWindowId);
     fn apz_pre_scene_swap(window_id: WrWindowId);
     // This function takes ownership of the pipeline_info and is responsible for
@@ -692,6 +695,12 @@ extern "C" {
     fn apz_post_scene_swap(window_id: WrWindowId, pipeline_info: WrPipelineInfo);
     fn apz_run_updater(window_id: WrWindowId);
     fn apz_deregister_updater(window_id: WrWindowId);
+
+    // These callbacks are invoked from the render backend thread (aka the APZ
+    // sampler thread)
+    fn apz_register_sampler(window_id: WrWindowId);
+    fn apz_sample_transforms(window_id: WrWindowId, transaction: &mut Transaction);
+    fn apz_deregister_sampler(window_id: WrWindowId);
 }
 
 struct APZCallbacks {
@@ -726,6 +735,35 @@ impl SceneBuilderHooks for APZCallbacks {
 
     fn deregister(&self) {
         unsafe { apz_deregister_updater(self.window_id) }
+    }
+}
+
+struct SamplerCallback {
+    window_id: WrWindowId,
+}
+
+impl SamplerCallback {
+    pub fn new(window_id: WrWindowId) -> Self {
+        SamplerCallback {
+            window_id,
+        }
+    }
+}
+
+impl AsyncPropertySampler for SamplerCallback {
+    fn register(&self) {
+        unsafe { apz_register_sampler(self.window_id) }
+    }
+
+    fn sample(&self) -> Vec<FrameMsg> {
+        let mut transaction = Transaction::new();
+        unsafe { apz_sample_transforms(self.window_id, &mut transaction) };
+        // TODO: also omta_sample_transforms(...)
+        transaction.get_frame_ops()
+    }
+
+    fn deregister(&self) {
+        unsafe { apz_deregister_sampler(self.window_id) }
     }
 }
 
@@ -869,6 +907,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         renderer_id: Some(window_id.0),
         upload_method,
         scene_builder_hooks: Some(Box::new(APZCallbacks::new(window_id))),
+        sampler: Some(Box::new(SamplerCallback::new(window_id))),
         ..Default::default()
     };
 
@@ -1134,7 +1173,6 @@ pub extern "C" fn wr_transaction_scroll_layer(
     scroll_id: u64,
     new_scroll_origin: LayoutPoint
 ) {
-    assert!(unsafe { is_in_compositor_thread() });
     let scroll_id = ExternalScrollId(scroll_id, pipeline_id);
     txn.scroll_node_with_id(new_scroll_origin, scroll_id, ScrollClamping::NoClamping);
 }

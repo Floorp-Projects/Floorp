@@ -4,13 +4,26 @@
 
 "use strict";
 
-var promise = require("promise");
-var defer = require("devtools/shared/defer");
 const { extend } = require("devtools/shared/extend");
 var EventEmitter = require("devtools/shared/event-emitter");
 var {getStack, callFunctionWithAsyncStack} = require("devtools/shared/platform/stack");
 var {settleAll} = require("devtools/shared/DevToolsUtils");
 var {lazyLoadSpec, lazyLoadFront} = require("devtools/shared/specs/index");
+
+// Bug 1454373: devtools/shared/defer still uses Promise.jsm which is slower
+// than DOM Promises. So implement our own copy of `defer` based on DOM Promises.
+function defer() {
+  let resolve, reject;
+  let promise = new Promise(function() {
+    resolve = arguments[0];
+    reject = arguments[1];
+  });
+  return {
+    resolve: resolve,
+    reject: reject,
+    promise: promise
+  };
+}
 
 /**
  * Types: named marshallers/demarshallers.
@@ -983,7 +996,7 @@ Actor.prototype = extend(Pool.prototype, {
   },
 
   _queueResponse: function(create) {
-    let pending = this._pendingResponse || promise.resolve(null);
+    let pending = this._pendingResponse || Promise.resolve(null);
     let response = create(pending);
     this._pendingResponse = response;
   }
@@ -1248,7 +1261,7 @@ Front.prototype = extend(Pool.prototype, {
    * represents.
    */
   actor: function() {
-    return promise.resolve(this.actorID);
+    return Promise.resolve(this.actorID);
   },
 
   toString: function() {
@@ -1314,7 +1327,7 @@ Front.prototype = extend(Pool.prototype, {
         // Check to see if any of the preEvents returned a promise -- if so,
         // wait for their resolution before emitting. Otherwise, emit synchronously.
         if (results.some(result => result && typeof result.then === "function")) {
-          promise.all(results).then(() => {
+          Promise.all(results).then(() => {
             return EventEmitter.emit.apply(null, [this, event.name].concat(args));
           });
           return;

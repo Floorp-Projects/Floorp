@@ -21,6 +21,7 @@ cpp:
         #include "mozilla/PodOperations.h"
         #include "mozilla/Vector.h"
 
+        #include "frontend/BinSource-macros.h"
         #include "frontend/BinSource.h"
         #include "frontend/BinTokenReaderTester.h"
         #include "frontend/FullParseHandler.h"
@@ -35,115 +36,25 @@ cpp:
         namespace js {
         namespace frontend {
 
-        using AutoList = BinTokenReaderTester::AutoList;
-        using AutoTaggedTuple = BinTokenReaderTester::AutoTaggedTuple;
-        using AutoTuple = BinTokenReaderTester::AutoTuple;
-        using BinFields = BinTokenReaderTester::BinFields;
-        using Chars = BinTokenReaderTester::Chars;
-        using NameBag = GCHashSet<JSString*>;
-        using Names = GCVector<JSString*, 8>;
-        using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
-
-        // Evaluate an expression EXPR, checking that the result is not falsy.
-        //
-        // Throw `cx->alreadyReportedError()` if it returns 0/nullptr.
-        #define TRY(EXPR) \
-            do { \
-                if (!EXPR) \
-                    return cx_->alreadyReportedError(); \
-            } while(false)
-
-
-        // Evaluate an expression EXPR, checking that the result is not falsy.
-        // In case of success, assign the result to VAR.
-        //
-        // Throw `cx->alreadyReportedError()` if it returns 0/nullptr.
-        #define TRY_VAR(VAR, EXPR) \
-            do { \
-                VAR = EXPR; \
-                if (!VAR) \
-                    return cx_->alreadyReportedError(); \
-            } while (false)
-
-        // Evaluate an expression EXPR, checking that the result is not falsy.
-        // In case of success, assign the result to a new variable VAR.
-        //
-        // Throw `cx->alreadyReportedError()` if it returns 0/nullptr.
-        #define TRY_DECL(VAR, EXPR) \
-            auto VAR = EXPR; \
-            if (!VAR) \
-                return cx_->alreadyReportedError();
-
-        // Evaluate an expression EXPR, checking that the result is a success.
-        // In case of success, unwrap and assign the result to a new variable VAR.
-        //
-        // In case of error, propagate the error.
-        #define MOZ_TRY_DECL(VAR, EXPR) \
-            auto _##VAR = EXPR; \
-            if (_##VAR.isErr()) \
-                return ::mozilla::Err(_##VAR.unwrapErr()); \
-            auto VAR = _##VAR.unwrap();
-
-        // Ensure that we are visiting the right fields.
-        template<size_t N>
-        JS::Result<Ok, JS::Error&>
-        BinASTParser::checkFields(const BinKind kind, const BinFields& actual, const BinField (&expected)[N])
-        {
-            if (actual.length() != N)
-                return raiseInvalidNumberOfFields(kind, N, actual.length());
-
-            for (size_t i = 0; i < N; ++i) {
-                if (actual[i] != expected[i])
-                    return raiseInvalidField(describeBinKind(kind), actual[i]);
-            }
-
-            return Ok();
-        }
-
-        // Special case for N=0, as empty arrays are not permitted in C++
-        JS::Result<Ok, JS::Error&>
-        BinASTParser::checkFields0(const BinKind kind, const BinFields& actual)
-        {
-            if (actual.length() != 0)
-                return raiseInvalidNumberOfFields(kind, 0, actual.length());
-
-            return Ok();
-        }
-
         // Compare a bunch of `uint8_t` values (as returned by the tokenizer_) with
         // a string literal (and ONLY a string literal).
-        template<size_t N>
-        bool operator==(const Chars& left, const char (&right)[N]) {
-            return BinTokenReaderTester::equals(left, right);
+        template<typename Tok, size_t N>
+        bool operator==(const typename Tok::Chars& left, const char (&right)[N]) {
+            return Tok::equals(left, right);
         }
-
-        // Helper class: Restore field `variableDeclarationKind_` upon leaving a scope.
-        class MOZ_RAII AutoVariableDeclarationKind {
-          public:
-            explicit AutoVariableDeclarationKind(BinASTParser* parser
-                                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
-              parser_(parser),
-              kind(parser->variableDeclarationKind_)
-            {
-                MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-            }
-            ~AutoVariableDeclarationKind() {
-                parser_->variableDeclarationKind_ = kind;
-            }
-          private:
-            BinASTParser* parser_;
-            BinASTParser::VariableDeclarationKind kind;
-            MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-        };
 
     footer: |
 
-        #undef TRY
-        #undef TRY_VAR
-        #undef TRY_DECL
-        #undef MOZ_TRY_DECL
+        // Force class instantiation.
+        // This ensures that the symbols are built, without having to export all our
+        // code (and its baggage of #include and macros) in the header.
+        template class BinASTParser<BinTokenReaderMultipart>;
+        template class BinASTParser<BinTokenReaderTester>;
+
         } // namespace frontend
         } // namespace js
+
+
 
 hpp:
     # Rules for generating BinSource-class.h
@@ -192,6 +103,24 @@ hpp:
                  * ```c++
                  * #define WITH_FIELD(CPP_NAME, SPEC_NAME) ...
                  * FOR_EACH_BIN_FIELD(WITH_FIELD)
+                 * ```
+                 *
+                 * (sorted by alphabetical order)
+                 */
+        field:
+            doc: |
+                /**
+                 * The different variants of Binary AST string enums, as per
+                 * the specifications of Binary AST, as a single macro and
+                 * `enum class`.
+                 *
+                 * Separate enum classes are also defined in BinSource-auto.h.
+                 *
+                 * Usage:
+                 *
+                 * ```c++
+                 * #define WITH_VARIANT(CPP_NAME, SPEC_NAME) ...
+                 * FOR_EACH_BIN_VARIANT(WITH_VARIANT)
                  * ```
                  *
                  * (sorted by alphabetical order)
@@ -253,6 +182,11 @@ hpp:
              */
             const char* describeBinField(const BinField& kind);
 
+            /**
+             * Return a string describing a `BinVariant`.
+             */
+            const char* describeBinVariant(const BinVariant& kind);
+
             } // namespace frontend
             } // namespace js
 
@@ -260,7 +194,7 @@ hpp:
 
 Arguments:
     init:
-        TRY_DECL(result, factory_.newList(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newList(ParseNodeKind::ParamsBody, tokenizer_->pos(start)));
     append:
         factory_.addList(/* list = */ result, /* child = */ item);
 
@@ -312,19 +246,19 @@ AssertedVarScope:
 
 AssignmentExpression:
     build: |
-        TRY_DECL(result, factory_.newAssignment(ParseNodeKind::Assign, binding, expression));
+        BINJS_TRY_DECL(result, factory_.newAssignment(ParseNodeKind::Assign, binding, expression));
 
 AssignmentTargetIdentifier:
     build: |
         if (!IsIdentifier(name))
             return raiseError("Invalid identifier");
-        TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
+        BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
 
 BindingIdentifier:
     build: |
         if (!IsIdentifier(name))
             return raiseError("Invalid identifier");
-        TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
+        BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
 
 BinaryExpression:
     build: |
@@ -415,7 +349,7 @@ BinaryExpression:
             left->appendWithoutOrderAssumption(right);
             result = left;
         } else {
-            TRY_DECL(list, factory_.newList(pnk, tokenizer_->pos(start)));
+            BINJS_TRY_DECL(list, factory_.newList(pnk, tokenizer_->pos(start)));
 
             list->appendWithoutOrderAssumption(left);
             list->appendWithoutOrderAssumption(right);
@@ -426,10 +360,10 @@ Block:
     init: |
         ParseContext::Statement stmt(parseContext_, StatementKind::Block);
         ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
-        TRY(currentScope.init(parseContext_));
+        BINJS_TRY(currentScope.init(parseContext_));
     build: |
-        TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
-        TRY_DECL(result, factory_.newLexicalScope(*bindings, statements));
+        BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
+        BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, statements));
 
 BreakStatement:
     fields:
@@ -437,12 +371,13 @@ BreakStatement:
             block:
                 replace: |
                     RootedAtom label(cx_);
-                    MOZ_TRY(readMaybeString(&label));
+                    MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
 
-                    if (label && !IsIdentifier(label))
-                        return raiseError("Invalid identifier");
     build: |
         if (label) {
+            if (!IsIdentifier(label))
+                return raiseError("Invalid identifier");
+
             auto validity = parseContext_->checkBreakStatement(label->asPropertyName());
 
             if (validity.isErr()) {
@@ -454,7 +389,7 @@ BreakStatement:
                 }
             }
         }
-        TRY_DECL(result, factory_.newBreakStatement(label ? label->asPropertyName() : nullptr, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newBreakStatement(label ? label->asPropertyName() : nullptr, tokenizer_->pos(start)));
 
 CallExpression:
     build: |
@@ -480,17 +415,17 @@ CatchClause:
     init: |
         ParseContext::Statement stmt(parseContext_, StatementKind::Catch);
         ParseContext::Scope currentScope(cx_, parseContext_, usedNames_);
-        TRY(currentScope.init(parseContext_));
+        BINJS_TRY(currentScope.init(parseContext_));
     build: |
         // Export implicit variables to the scope.
         // FIXME: Handle cases other than Name.
         MOZ_ASSERT(binding->isKind(ParseNodeKind::Name));
         auto ptr = currentScope.lookupDeclaredNameForAdd(binding->name());
-        TRY(currentScope.addDeclaredName(parseContext_, ptr, binding->name(), DeclarationKind::Let, start));
+        BINJS_TRY(currentScope.addDeclaredName(parseContext_, ptr, binding->name(), DeclarationKind::Let, start));
 
-        TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
-        TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
-        TRY(factory_.setupCatchScope(result, binding, body));
+        BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, parseContext_));
+        BINJS_TRY_DECL(result, factory_.newLexicalScope(*bindings, body));
+        BINJS_TRY(factory_.setupCatchScope(result, binding, body));
 
 CompoundAssignmentExpression:
     build: |
@@ -533,19 +468,19 @@ CompoundAssignmentExpression:
             pnk = ParseNodeKind::BitAndAssign;
             break;
         }
-        TRY_DECL(result, factory_.newAssignment(pnk, binding, expression));
+        BINJS_TRY_DECL(result, factory_.newAssignment(pnk, binding, expression));
 
 ComputedMemberAssignmentTarget:
     build: |
-        TRY_DECL(result, factory_.newPropertyByValue(object, expression, start));
+        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, start));
 
 ComputedMemberExpression:
     build: |
-        TRY_DECL(result, factory_.newPropertyByValue(object, expression, start));
+        BINJS_TRY_DECL(result, factory_.newPropertyByValue(object, expression, start));
 
 ConditionalExpression:
     build: |
-        TRY_DECL(result, factory_.newConditional(test, consequent, alternate));
+        BINJS_TRY_DECL(result, factory_.newConditional(test, consequent, alternate));
 
 ContinueStatement:
     fields:
@@ -553,12 +488,13 @@ ContinueStatement:
             block:
                 replace: |
                     RootedAtom label(cx_);
-                    MOZ_TRY(readMaybeString(&label));
+                    MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
 
-                    if (label && !IsIdentifier(label))
-                        return raiseError("ContinueStatement - Label MUST be an identifier");
     build: |
         if (label) {
+            if (!IsIdentifier(label))
+                return raiseError("ContinueStatement - Label MUST be an identifier");
+
             auto validity = parseContext_->checkContinueStatement(label ? label->asPropertyName() : nullptr);
             if (validity.isErr()) {
                 switch (validity.unwrapErr()) {
@@ -570,33 +506,117 @@ ContinueStatement:
             }
         }
 
-        TRY_DECL(result, factory_.newContinueStatement(label ? label->asPropertyName() : nullptr, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newContinueStatement(label ? label->asPropertyName() : nullptr, tokenizer_->pos(start)));
 
 DataProperty:
     build: |
         if (!factory_.isUsableAsObjectPropertyName(name))
             return raiseError("DataProperty key kind");
 
-        TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
+        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, expression, AccessorType::None));
 
 Directive:
     build: |
         TokenPos pos = tokenizer_->pos(start);
-        TRY_DECL(result, factory_.newStringLiteral(rawValue, pos));
+        BINJS_TRY_DECL(result, factory_.newStringLiteral(rawValue, pos));
 
 DoWhileStatement:
     init:
         ParseContext::Statement stmt(parseContext_, StatementKind::DoLoop);
     build:
-        TRY_DECL(result, factory_.newDoWhileStatement(body, test, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newDoWhileStatement(body, test, tokenizer_->pos(start)));
+
+EagerFunctionDeclaration:
+    init: |
+        const auto syntax = FunctionSyntaxKind::Statement;
+    inherits: EagerFunctionExpression
+
+EagerFunctionExpression:
+    init: |
+        const auto syntax = FunctionSyntaxKind::Expression;
+    fields:
+        parameterScope:
+            before: |
+                BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
+                    isGenerator ? GeneratorKind::Generator
+                                : GeneratorKind::NotGenerator,
+                    isAsync ? FunctionAsyncKind::AsyncFunction
+                            : FunctionAsyncKind::SyncFunction,
+                    syntax));
+
+                // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
+                BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+                BINJS_TRY(funpc.init());
+                parseContext_->functionScope().useAsVarScope(parseContext_);
+                MOZ_ASSERT(parseContext_->isFunctionBox());
+
+                ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
+                BINJS_TRY(lexicalScope.init(parseContext_));
+    build: |
+        BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
+        BINJS_TRY_VAR(body, factory_.newLexicalScope(*lexicalScopeData, body));
+        BINJS_MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, body, funbox));
+
+EagerGetter:
+    fields:
+        body:
+            before: |
+                BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
+                    GeneratorKind::NotGenerator,
+                    FunctionAsyncKind::SyncFunction,
+                    FunctionSyntaxKind::Getter));
+
+                // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
+                BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+                BINJS_TRY(funpc.init());
+                parseContext_->functionScope().useAsVarScope(parseContext_);
+                MOZ_ASSERT(parseContext_->isFunctionBox());
+
+                ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
+                BINJS_TRY(lexicalScope.init(parseContext_));
+    build: |
+        ParseNode* params = new_<ListNode>(ParseNodeKind::ParamsBody, tokenizer_->pos(start));
+        BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
+        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::Getter));
+
+EagerMethod:
+    init: |
+        const auto syntax = FunctionSyntaxKind::Method;
+    inherits: EagerFunctionExpression
+    build: |
+        BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
+        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::None));
+
+EagerSetter:
+    fields:
+        body:
+            before: |
+                BINJS_MOZ_TRY_DECL(funbox, buildFunctionBox(
+                    GeneratorKind::NotGenerator,
+                    FunctionAsyncKind::SyncFunction,
+                    FunctionSyntaxKind::Setter));
+
+                // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
+                BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+                BINJS_TRY(funpc.init());
+                parseContext_->functionScope().useAsVarScope(parseContext_);
+                MOZ_ASSERT(parseContext_->isFunctionBox());
+
+                ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
+                BINJS_TRY(lexicalScope.init(parseContext_));
+    build: |
+        ParseNode* params = new_<ListNode>(ParseNodeKind::ParamsBody, param->pn_pos);
+        factory_.addList(params, param);
+        BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
+        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::Setter));
 
 EmptyStatement:
     build:
-        TRY_DECL(result, factory_.newEmptyStatement(tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newEmptyStatement(tokenizer_->pos(start)));
 
 ExpressionStatement:
     build:
-        TRY_DECL(result, factory_.newExprStatement(expression, tokenizer_->offset()));
+        BINJS_TRY_DECL(result, factory_.newExprStatement(expression, tokenizer_->offset()));
 
 ForInOfBinding:
     init:
@@ -609,7 +629,7 @@ ForInOfBinding:
             kind_ == VariableDeclarationKind::Let
                 ? ParseNodeKind::Let
                 : ParseNodeKind::Var;
-        TRY_DECL(result, factory_.newDeclarationList(pnk, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newDeclarationList(pnk, tokenizer_->pos(start)));
         factory_.addList(result, binding);
 
 
@@ -622,21 +642,21 @@ ForInStatement:
         // or `for (const x in ...)`-style declarations. Detail on the
         // declaration is stored as part of `scope`.
         ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-        TRY(scope.init(parseContext_));
+        BINJS_TRY(scope.init(parseContext_));
     build: |
-        TRY_DECL(forHead, factory_.newForInOrOfHead(ParseNodeKind::ForIn, left, right, tokenizer_->pos(start)));
-        TRY_DECL(result, factory_.newForStatement(start, forHead, body, /*flags*/ 0));
+        BINJS_TRY_DECL(forHead, factory_.newForInOrOfHead(ParseNodeKind::ForIn, left, right, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newForStatement(start, forHead, body, /*flags*/ 0));
 
         if (!scope.isEmpty()) {
-            TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
-            TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
+            BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
+            BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
         }
 
 FormalParameters:
     build: |
         auto result = items;
         if (rest) {
-            TRY_DECL(spread, factory_.newSpread(start, rest));
+            BINJS_TRY_DECL(spread, factory_.newSpread(start, rest));
             factory_.addList(result, spread);
         }
 
@@ -648,55 +668,30 @@ ForStatement:
         // or `for (const x; ...; ...)`-style declarations. Detail on the
         // declaration is stored as part of `BINJS_Scope`.
         ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-        TRY(scope.init(parseContext_));
+        BINJS_TRY(scope.init(parseContext_));
     build: |
-        TRY_DECL(forHead, factory_.newForHead(init, test, update, tokenizer_->pos(start)));
-        TRY_DECL(result, factory_.newForStatement(start, forHead, body, /* iflags = */ 0));
+        BINJS_TRY_DECL(forHead, factory_.newForHead(init, test, update, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newForStatement(start, forHead, body, /* iflags = */ 0));
 
         if (!scope.isEmpty()) {
-            TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
-            TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
+            BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, scope, alloc_, parseContext_));
+            BINJS_TRY_VAR(result, factory_.newLexicalScope(*bindings, result));
         }
 
 FunctionBody:
     build: |
-        MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
+        BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
 
-FunctionDeclaration:
-    inherits: FunctionExpression
-
-FunctionExpression:
-    fields:
-        parameterScope:
-            before: |
-                MOZ_TRY_DECL(funbox, buildFunctionBox(
-                    isGenerator ? GeneratorKind::Generator
-                                : GeneratorKind::NotGenerator,
-                    isAsync ? FunctionAsyncKind::AsyncFunction
-                            : FunctionAsyncKind::SyncFunction));
-
-                // Push a new ParseContext. It will be used to parse `scope`, the arguments, the function.
-                BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
-                TRY(funpc.init());
-                parseContext_->functionScope().useAsVarScope(parseContext_);
-                MOZ_ASSERT(parseContext_->isFunctionBox());
-
-                ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
-                TRY(lexicalScope.init(parseContext_));
-    build: |
-        TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
-        TRY_VAR(body, factory_.newLexicalScope(*lexicalScopeData, body));
-        MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, body, funbox));
 
 IdentifierExpression:
     build: |
         if (!IsIdentifier(name))
             return raiseError("Invalid identifier");
-        TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
+        BINJS_TRY_DECL(result, factory_.newName(name->asPropertyName(), tokenizer_->pos(start), cx_));
 
 IfStatement:
     build: |
-        TRY_DECL(result, factory_.newIfStatement(start, test, consequent, alternate));
+        BINJS_TRY_DECL(result, factory_.newIfStatement(start, test, consequent, alternate));
 
 LabelledStatement:
     fields:
@@ -706,26 +701,26 @@ LabelledStatement:
                     return raiseError("Invalid identifier");
                 ParseContext::LabelStatement stmt(parseContext_, label);
     build:
-        TRY_DECL(result, factory_.newLabeledStatement(label->asPropertyName(), body, start));
+        BINJS_TRY_DECL(result, factory_.newLabeledStatement(label->asPropertyName(), body, start));
 
 ListOfDirective:
     init:
-        TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
     append:
         factory_.addStatementToList(result, item);
 
 ListOfObjectProperty:
     init:
-        TRY_DECL(result, factory_.newObjectLiteral(start));
+        BINJS_TRY_DECL(result, factory_.newObjectLiteral(start));
 
 ListOfOptionalSpreadElementOrExpression:
     init:
-        TRY_DECL(result, factory_.newArrayLiteral(start));
+        BINJS_TRY_DECL(result, factory_.newArrayLiteral(start));
     append: |
         if (item)
             factory_.addArrayElement(result, item); // Infallible.
         else
-            TRY(factory_.addElision(result, tokenizer_->pos(start)));
+            BINJS_TRY(factory_.addElision(result, tokenizer_->pos(start)));
 
 ListOfParameter:
     init: |
@@ -735,7 +730,7 @@ ListOfParameter:
 
 ListOfStatement:
     init:
-        TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
     append:
         factory_.addStatementToList(result, item);
 
@@ -748,43 +743,43 @@ ListOfStatement:
 
 ListOfSwitchCase:
     init:
-        TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newStatementList(tokenizer_->pos(start)));
     append:
         factory_.addCaseStatementToList(result, item);
 
 ListOfVariableDeclarator:
     init: |
-        TRY_DECL(result, factory_.newDeclarationList(ParseNodeKind::Const /*Placeholder*/,
+        BINJS_TRY_DECL(result, factory_.newDeclarationList(ParseNodeKind::Const /*Placeholder*/,
             tokenizer_->pos(start)));
 
 LiteralBooleanExpression:
     build:
-        TRY_DECL(result, factory_.newBooleanLiteral(value, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newBooleanLiteral(value, tokenizer_->pos(start)));
 
 LiteralNumericExpression:
     build:
-        TRY_DECL(result, factory_.newNumber(value, DecimalPoint::HasDecimal, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newNumber(value, DecimalPoint::HasDecimal, tokenizer_->pos(start)));
 
 LiteralNullExpression:
     build:
-        TRY_DECL(result, factory_.newNullLiteral(tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newNullLiteral(tokenizer_->pos(start)));
 
 LiteralPropertyName:
     build: |
         ParseNode* result;
         uint32_t index;
         if (value->isIndex(&index))
-            TRY_VAR(result, factory_.newNumber(index, NoDecimal, TokenPos(start, tokenizer_->offset())));
+            BINJS_TRY_VAR(result, factory_.newNumber(index, NoDecimal, TokenPos(start, tokenizer_->offset())));
         else
-            TRY_VAR(result, factory_.newObjectLiteralPropertyName(value, tokenizer_->pos(start)));
+            BINJS_TRY_VAR(result, factory_.newObjectLiteralPropertyName(value, tokenizer_->pos(start)));
 
 LiteralRegExpExpression:
     fields:
         flags:
             block:
-                replace:
+                replace: |
                     Chars flags(cx_);
-                    MOZ_TRY(readString(flags));
+                    MOZ_TRY(tokenizer_->readChars(flags));
     build: |
         RegExpFlag reflags = NoFlags;
         for (auto c : flags) {
@@ -799,28 +794,22 @@ LiteralRegExpExpression:
             else if (c == 'u' && !(reflags & UnicodeFlag))
                 reflags = RegExpFlag(reflags | UnicodeFlag);
             else
-                return raiseInvalidEnum("RegExpLiteral", flags);
+                return raiseError("Invalid regexp flags");
         }
 
 
         Rooted<RegExpObject*> reobj(cx_);
-        TRY_VAR(reobj, RegExpObject::create(cx_,
+        BINJS_TRY_VAR(reobj, RegExpObject::create(cx_,
             pattern,
             reflags,
             alloc_,
             TenuredObject));
 
-        TRY_DECL(result, factory_.newRegExp(reobj, tokenizer_->pos(start), *this));
+        BINJS_TRY_DECL(result, factory_.newRegExp(reobj, tokenizer_->pos(start), *this));
 
 LiteralStringExpression:
     build:
-        TRY_DECL(result, factory_.newStringLiteral(value, tokenizer_->pos(start)));
-
-Method:
-    inherits: FunctionExpression
-    build: |
-        MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
-        TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::None));
+        BINJS_TRY_DECL(result, factory_.newStringLiteral(value, tokenizer_->pos(start)));
 
 NewExpression:
     build: |
@@ -853,11 +842,11 @@ ReturnStatement:
 
         parseContext_->functionBox()->usesReturn = true;
     build:
-        TRY_DECL(result, factory_.newReturnStatement(expression, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newReturnStatement(expression, tokenizer_->pos(start)));
 
 Script:
     build:
-        MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
+        BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
 
 Setter:
     inherits: Method
@@ -865,29 +854,29 @@ Setter:
         const auto isAsync = false;
         const auto isGenerator = false;
     build: |
-        TRY_DECL(params, factory_.newList(ParseNodeKind::ParamsBody, param));
-        MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
-        TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::Setter));
+        BINJS_TRY_DECL(params, factory_.newList(ParseNodeKind::ParamsBody, param));
+        BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
+        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, AccessorType::Setter));
 
 ShorthandProperty:
     build: |
         if (!factory_.isUsableAsObjectPropertyName(name))
-            TRY_VAR(name, factory_.newObjectLiteralPropertyName(name->name(), tokenizer_->pos(start)));
+            BINJS_TRY_VAR(name, factory_.newObjectLiteralPropertyName(name->name(), tokenizer_->pos(start)));
 
-        TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, name, AccessorType::None));
+        BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, name, AccessorType::None));
 
 SwitchCase:
     build: |
-        TRY_DECL(result, factory_.newCaseOrDefault(start, test, consequent));
+        BINJS_TRY_DECL(result, factory_.newCaseOrDefault(start, test, consequent));
 
 SwitchDefault:
     build: |
-        TRY_DECL(result, factory_.newCaseOrDefault(start, nullptr, consequent));
+        BINJS_TRY_DECL(result, factory_.newCaseOrDefault(start, nullptr, consequent));
 
 SwitchStatement:
     build: |
-        TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
-        TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope));
+        BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
+        BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope));
 
 SwitchStatementWithDefault:
     build: |
@@ -900,16 +889,16 @@ SwitchStatementWithDefault:
             factory_.addList(cases, iter);
             iter = next;
         }
-        TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
-        TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope));
+        BINJS_TRY_DECL(scope, factory_.newLexicalScope(nullptr, cases));
+        BINJS_TRY_DECL(result, factory_.newSwitchStatement(start, discriminant, scope));
 
 StaticMemberAssignmentTarget:
     build: |
-        TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
+        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
 
 StaticMemberExpression:
     build: |
-        TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
+        BINJS_TRY_DECL(result, factory_.newPropertyAccess(object, property->asPropertyName(), start));
 
 ThisExpression:
     build: |
@@ -919,13 +908,13 @@ ThisExpression:
         TokenPos pos = tokenizer_->pos(start);
         ParseNode* thisName(nullptr);
         if (parseContext_->sc()->thisBinding() == ThisBinding::Function)
-            TRY_VAR(thisName, factory_.newName(cx_->names().dotThis, pos, cx_));
+            BINJS_TRY_VAR(thisName, factory_.newName(cx_->names().dotThis, pos, cx_));
 
-        TRY_DECL(result, factory_.newThisLiteral(pos, thisName));
+        BINJS_TRY_DECL(result, factory_.newThisLiteral(pos, thisName));
 
 ThrowStatement:
     build:
-        TRY_DECL(result, factory_.newThrowStatement(expression, tokenizer_->pos(start)));
+        BINJS_TRY_DECL(result, factory_.newThrowStatement(expression, tokenizer_->pos(start)));
 
 TryCatchStatement:
     fields:
@@ -936,9 +925,9 @@ TryCatchStatement:
                 before: |
                     ParseContext::Statement stmt(parseContext_, StatementKind::Try);
                     ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-                    TRY(scope.init(parseContext_));
+                    BINJS_TRY(scope.init(parseContext_));
     build:
-        TRY_DECL(result, factory_.newTryStatement(start, body, catchClause, /* finally = */ nullptr));
+        BINJS_TRY_DECL(result, factory_.newTryStatement(start, body, catchClause, /* finally = */ nullptr));
 
 TryFinallyStatement:
     fields:
@@ -949,7 +938,7 @@ TryFinallyStatement:
                 before: |
                     ParseContext::Statement stmt(parseContext_, StatementKind::Try);
                     ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-                    TRY(scope.init(parseContext_));
+                    BINJS_TRY(scope.init(parseContext_));
         finalizer:
             block:
                 declare:
@@ -957,9 +946,9 @@ TryFinallyStatement:
                 before: |
                     ParseContext::Statement stmt(parseContext_, StatementKind::Finally);
                     ParseContext::Scope scope(cx_, parseContext_, usedNames_);
-                    TRY(scope.init(parseContext_));
+                    BINJS_TRY(scope.init(parseContext_));
     build:
-        TRY_DECL(result, factory_.newTryStatement(start, body, catchClause, finalizer));
+        BINJS_TRY_DECL(result, factory_.newTryStatement(start, body, catchClause, finalizer));
 
 UnaryExpression:
     build: |
@@ -1005,7 +994,7 @@ UnaryExpression:
             break;
           }
         }
-        TRY_DECL(result, factory_.newUnary(pnk, start, operand));
+        BINJS_TRY_DECL(result, factory_.newUnary(pnk, start, operand));
 
 UpdateExpression:
     build: |
@@ -1020,7 +1009,7 @@ UpdateExpression:
                            : ParseNodeKind::PostDecrement;
             break;
         }
-        TRY_DECL(result, factory_.newUnary(pnk, start, operand));
+        BINJS_TRY_DECL(result, factory_.newUnary(pnk, start, operand));
 
 VariableDeclaration:
     init:
@@ -1059,7 +1048,7 @@ VariableDeclarator:
             // `var foo [= bar]``
             MOZ_TRY(checkBinding(binding->pn_atom->asPropertyName()));
 
-            TRY_VAR(result, factory_.newName(binding->pn_atom->asPropertyName(), tokenizer_->pos(start), cx_));
+            BINJS_TRY_VAR(result, factory_.newName(binding->pn_atom->asPropertyName(), tokenizer_->pos(start), cx_));
             if (init)
                 result->pn_expr = init;
         } else {
@@ -1070,15 +1059,15 @@ VariableDeclarator:
             }
 
             MOZ_CRASH("Unimplemented: AssertedScope check for BindingPattern variable declaration");
-            TRY_VAR(result, factory_.newAssignment(ParseNodeKind::Assign, binding, init));
+            BINJS_TRY_VAR(result, factory_.newAssignment(ParseNodeKind::Assign, binding, init));
         }
 
 WhileStatement:
     init:
         ParseContext::Statement stmt(parseContext_, StatementKind::WhileLoop);
     build:
-        TRY_DECL(result, factory_.newWhileStatement(start, test, body));
+        BINJS_TRY_DECL(result, factory_.newWhileStatement(start, test, body));
 
 WithStatement:
     build:
-        TRY_DECL(result, factory_.newWithStatement(start, object, body));
+        BINJS_TRY_DECL(result, factory_.newWithStatement(start, object, body));

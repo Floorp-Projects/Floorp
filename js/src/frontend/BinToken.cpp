@@ -6,30 +6,122 @@
 
 #include "frontend/BinToken.h"
 
+#include "mozilla/Maybe.h"
+
 #include <sys/types.h>
+
+#include "jsapi.h"
+
+#include "frontend/BinSourceRuntimeSupport.h"
+#include "frontend/TokenStream.h"
+#include "gc/Zone.h"
+
 
 namespace js {
 namespace frontend {
 
-const char* BINKIND_DESCRIPTIONS[] = {
-#define WITH_KIND(_, SPEC_NAME) #SPEC_NAME,
-    FOR_EACH_BIN_KIND(WITH_KIND)
-#undef WITH_KIND
+const BinaryASTSupport::CharSlice BINKIND_DESCRIPTIONS[] = {
+#define WITH_VARIANT(_, SPEC_NAME) BinaryASTSupport::CharSlice(SPEC_NAME, sizeof(SPEC_NAME) - 1),
+    FOR_EACH_BIN_KIND(WITH_VARIANT)
+#undef WITH_VARIANT
 };
 
-const char* BINFIELD_DESCRIPTIONS[] = {
-    #define WITH_FIELD(_, SPEC_NAME) #SPEC_NAME,
-        FOR_EACH_BIN_FIELD(WITH_FIELD)
-    #undef WITH_FIELD
+const BinaryASTSupport::CharSlice BINFIELD_DESCRIPTIONS[] = {
+#define WITH_VARIANT(_, SPEC_NAME) BinaryASTSupport::CharSlice(SPEC_NAME, sizeof(SPEC_NAME) - 1),
+    FOR_EACH_BIN_FIELD(WITH_VARIANT)
+#undef WITH_VARIANT
 };
 
-const char* describeBinKind(const BinKind& kind) {
-    return BINKIND_DESCRIPTIONS[static_cast<size_t>(kind)];
+const BinaryASTSupport::CharSlice BINVARIANT_DESCRIPTIONS[] = {
+#define WITH_VARIANT(_, SPEC_NAME) BinaryASTSupport::CharSlice(SPEC_NAME, sizeof(SPEC_NAME) - 1),
+    FOR_EACH_BIN_VARIANT(WITH_VARIANT)
+#undef WITH_VARIANT
+};
+
+const BinaryASTSupport::CharSlice&
+getBinKind(const BinKind& variant)
+{
+    return BINKIND_DESCRIPTIONS[static_cast<size_t>(variant)];
 }
 
-const char* describeBinField(const BinField& field) {
-    return BINFIELD_DESCRIPTIONS[static_cast<size_t>(field)];
+const BinaryASTSupport::CharSlice&
+getBinVariant(const BinVariant& variant)
+{
+    return BINVARIANT_DESCRIPTIONS[static_cast<size_t>(variant)];
+}
+
+const BinaryASTSupport::CharSlice&
+getBinField(const BinField& variant)
+{
+    return BINFIELD_DESCRIPTIONS[static_cast<size_t>(variant)];
+}
+
+const char* describeBinKind(const BinKind& variant)
+{
+    return getBinKind(variant).begin();
+}
+
+const char* describeBinField(const BinField& variant)
+{
+    return getBinField(variant).begin();
+}
+
+const char* describeBinVariant(const BinVariant& variant)
+{
+    return getBinVariant(variant).begin();
 }
 
 } // namespace frontend
+
+
+JS::Result<const js::frontend::BinKind*>
+BinaryASTSupport::binKind(JSContext* cx, const CharSlice key)
+{
+    if (!binKindMap_.initialized()) {
+        // Initialize lazily.
+        if (!binKindMap_.init(frontend::BINKIND_LIMIT))
+            return cx->alreadyReportedError();
+
+        for (size_t i = 0; i < frontend::BINKIND_LIMIT; ++i) {
+            const BinKind variant = static_cast<BinKind>(i);
+            const CharSlice& key = getBinKind(variant);
+            auto ptr = binKindMap_.lookupForAdd(key);
+            MOZ_ASSERT(!ptr);
+            if (!binKindMap_.add(ptr, key, variant))
+                return cx->alreadyReportedError();
+        }
+    }
+
+    auto ptr = binKindMap_.lookup(key);
+    if (!ptr)
+        return nullptr;
+
+    return &ptr->value();
+}
+
+JS::Result<const js::frontend::BinVariant*>
+BinaryASTSupport::binVariant(JSContext* cx, const CharSlice key) {
+    if (!binVariantMap_.initialized()) {
+        // Initialize lazily.
+        if (!binVariantMap_.init(frontend::BINVARIANT_LIMIT))
+            return cx->alreadyReportedError();
+
+        for (size_t i = 0; i < frontend::BINVARIANT_LIMIT; ++i) {
+            const BinVariant variant = static_cast<BinVariant>(i);
+            const CharSlice& key = getBinVariant(variant);
+            auto ptr = binVariantMap_.lookupForAdd(key);
+            MOZ_ASSERT(!ptr);
+            if (!binVariantMap_.add(ptr, key, variant))
+                return cx->alreadyReportedError();
+        }
+    }
+
+
+    auto ptr = binVariantMap_.lookup(key);
+    if (!ptr)
+        return nullptr;
+
+    return &ptr->value();
+}
+
 } // namespace js

@@ -54,7 +54,7 @@ readFull(JSContext* cx, const char* path, js::Vector<char16_t>& buf)
 }
 
 // Invariant: `path` must end with directory separator.
-void
+template<typename Tok> void
 runTestFromPath(JSContext* cx, const char* path)
 {
     const char BIN_SUFFIX[] = ".binjs";
@@ -122,7 +122,7 @@ runTestFromPath(JSContext* cx, const char* path)
                 MOZ_CRASH();
             if (!subPath.append(0))
                 MOZ_CRASH();
-            runTestFromPath(cx, subPath.begin());
+            runTestFromPath<Tok>(cx, subPath.begin());
             continue;
         }
 
@@ -202,7 +202,7 @@ runTestFromPath(JSContext* cx, const char* path)
         if (!binUsedNames.init())
             MOZ_CRASH("Couldn't initialized binUsedNames");
 
-        js::frontend::BinASTParser binParser(cx, allocScope.alloc(), binUsedNames, binOptions);
+        js::frontend::BinASTParser<Tok> binParser(cx, allocScope.alloc(), binUsedNames, binOptions);
 
         auto binParsed = binParser.parse(binSource); // Will be deallocated once `reader` goes out of scope.
         RootedValue binExn(cx);
@@ -296,14 +296,25 @@ runTestFromPath(JSContext* cx, const char* path)
 #endif // defined(XP_WIN)
 }
 
-BEGIN_TEST(testBinASTReaderECMAScript2)
+BEGIN_TEST(testBinASTReaderSimpleECMAScript2)
 {
 #if defined(XP_WIN)
-    runTestFromPath(cx, "jsapi-tests\\binast\\parser\\tester\\");
+    runTestFromPath<js::frontend::BinTokenReaderTester>(cx, "jsapi-tests\\binast\\parser\\tester\\");
 #else
-    runTestFromPath(cx, "jsapi-tests/binast/parser/tester/");
+    runTestFromPath<js::frontend::BinTokenReaderTester>(cx, "jsapi-tests/binast/parser/tester/");
 #endif // defined(XP_XIN)
     return true;
 }
-END_TEST(testBinASTReaderECMAScript2)
+END_TEST(testBinASTReaderSimpleECMAScript2)
+
+BEGIN_TEST(testBinASTReaderMultipartECMAScript2)
+{
+#if defined(XP_WIN)
+    runTestFromPath<js::frontend::BinTokenReaderMultipart>(cx, "jsapi-tests\\binast\\parser\\multipart\\");
+#else
+    runTestFromPath<js::frontend::BinTokenReaderMultipart>(cx, "jsapi-tests/binast/parser/multipart/");
+#endif // defined(XP_XIN)
+    return true;
+}
+END_TEST(testBinASTReaderMultipartECMAScript2)
 

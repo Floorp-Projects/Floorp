@@ -441,7 +441,6 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin)
             'error_summary_file': error_summary_file,
             # marionette options
             'address': c.get('marionette_address'),
-            'gecko_log': os.path.join(dirs["abs_blob_upload_dir"], 'gecko.log'),
             'test_manifest': os.path.join(
                 dirs['abs_marionette_tests_dir'],
                 self.config.get('marionette_test_manifest', '')
