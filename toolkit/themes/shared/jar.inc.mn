@@ -36,6 +36,7 @@ toolkit.jar:
   skin/classic/global/icons/find-next-arrow.svg            (../../shared/icons/find-next-arrow.svg)
   skin/classic/global/icons/help.svg                       (../../shared/icons/help.svg)
   skin/classic/global/icons/info.svg                       (../../shared/incontent-icons/info.svg)
+  skin/classic/global/icons/input-clear.svg                (../../shared/icons/input-clear.svg)
   skin/classic/global/icons/loading.png                    (../../shared/icons/loading.png)
   skin/classic/global/icons/loading@2x.png                 (../../shared/icons/loading@2x.png)
   skin/classic/global/icons/spinner-arrow-down.svg         (../../shared/icons/spinner-arrow-down.svg)

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+ <!-- This Source Code Form is subject to the terms of the Mozilla Public
+    - License, v. 2.0. If a copy of the MPL was not distributed with this
+    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12">
+  <style>
+    .st0 {
+      fill: #858585;
+    }
+    .st1 {
+      fill: #FFFFFF;
+    }
+  </style>
+  <circle id="Combined-Shape" class="st0" cx="6" cy="6" r="6"/>
+  <polygon id="Close_Button_-_Normal-path" class="st1" points="9,8.1 8.1,9 6,6.9 3.9,9 3,8.1 5.1,6 3,3.9 3.9,3 6,5.1 8.1,3 9,3.9 6.9,6"/>
+</svg>

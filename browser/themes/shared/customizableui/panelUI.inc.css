@@ -105,7 +105,7 @@
 panelview {
   -moz-box-orient: vertical;
   -moz-box-flex: 1;
-  background: var(--lwt-arrowpanel-background, var(--arrowpanel-background));
+  background: var(--arrowpanel-background);
   padding: 0;
 }
 
