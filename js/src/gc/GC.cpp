@@ -2114,10 +2114,20 @@ ArenaLists::unmarkPreMarkedFreeCells()
 bool
 GCRuntime::shouldCompact()
 {
-    // Compact on shrinking GC if enabled, but skip compacting in incremental
-    // GCs if we are currently animating.
-    return invocationKind == GC_SHRINK && isCompactingGCEnabled() &&
-        (!isIncremental || rt->lastAnimationTime + PRMJ_USEC_PER_SEC < PRMJ_Now());
+    // Compact on shrinking GC if enabled.  Skip compacting in incremental GCs
+    // if we are currently animating, unless the user is inactive or we're
+    // responding to memory pressure.
+
+    if (invocationKind != GC_SHRINK || !isCompactingGCEnabled())
+        return false;
+
+    if (initialReason == JS::gcreason::USER_INACTIVE ||
+        initialReason == JS::gcreason::MEM_PRESSURE)
+    {
+        return true;
+    }
+
+    return !isIncremental || rt->lastAnimationTime + PRMJ_USEC_PER_SEC < PRMJ_Now();
 }
 
 bool
