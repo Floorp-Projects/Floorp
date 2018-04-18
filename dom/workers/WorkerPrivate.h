@@ -158,10 +158,7 @@ public:
 
   // Called on the parent thread.
   bool
-  Notify(WorkerStatus aStatus)
-  {
-    return NotifyPrivate(aStatus);
-  }
+  Notify(WorkerStatus aStatus);
 
   bool
   Cancel()
@@ -178,8 +175,7 @@ public:
   bool
   Terminate()
   {
-    AssertIsOnParentThread();
-    return TerminatePrivate();
+    return Notify(Terminating);
   }
 
   bool
@@ -291,10 +287,7 @@ public:
   PostMessageToParent(JSContext* aCx,
                       JS::Handle<JS::Value> aMessage,
                       const Sequence<JSObject*>& aTransferable,
-                      ErrorResult& aRv)
-  {
-    PostMessageToParentInternal(aCx, aMessage, aTransferable, aRv);
-  }
+                      ErrorResult& aRv);
 
   void
   PostMessageToParentMessagePort(JSContext* aCx,
@@ -1220,15 +1213,6 @@ private:
   ~WorkerPrivate();
 
   bool
-  NotifyPrivate(WorkerStatus aStatus);
-
-  bool
-  TerminatePrivate()
-  {
-    return NotifyPrivate(Terminating);
-  }
-
-  bool
   MayContinueRunning()
   {
     AssertIsOnWorkerThread();
@@ -1278,12 +1262,6 @@ private:
 
   void
   WaitForWorkerEvents();
-
-  void
-  PostMessageToParentInternal(JSContext* aCx,
-                              JS::Handle<JS::Value> aMessage,
-                              const Sequence<JSObject*>& aTransferable,
-                              ErrorResult& aRv);
 
   // If the worker shutdown status is equal or greater then aFailStatus, this
   // operation will fail and nullptr will be returned. See WorkerHolder.h for
