@@ -18,7 +18,7 @@ config = {
         'LC_ALL': 'C',
         # 32 bit specific
         'PATH': '/usr/local/bin:/usr/lib/ccache:/bin:\
-/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:\
+/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:\
 /home/cltbld/bin',
         'LD_LIBRARY_PATH': '%(abs_obj_dir)s/dist/bin',
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
