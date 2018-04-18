@@ -103,7 +103,7 @@ add_task(async function() {
     { line: 8, column: 6 },
     [
       "arrow",
-      ["argArrow", "(optimized away)"],
+      ["argArrow", "(unmapped)"],
       "Block",
       "arrow()",
       "fn",
@@ -220,9 +220,13 @@ add_task(async function() {
     ["val", "(optimized away)"],
     "Module",
 
-    // This value is currently unmapped because import declarations don't map
-    // very well and ones at the end of the file map especially badly.
-    ["aDefault", "(unmapped)"],
+    // This value is currently optimized away, which isn't 100% accurate.
+    // Because import declarations is the last thing in the file, our current
+    // logic doesn't cover _both_ 'var' statements that it generates,
+    // making us use the first, optimized-out binding. Given that imports
+    // are almost never the last thing in a file though, this is probably not
+    // a huge deal for now.
+    ["aDefault", "(optimized away)"],
     ["root", "(optimized away)"],
     ["val", "(optimized away)"],
   ]);

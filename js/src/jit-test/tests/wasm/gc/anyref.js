@@ -150,6 +150,12 @@ ref = exports.nested(baguette, 0);
 assertEq(ref, baguette);
 assertEq(ref.calories, baguette.calories);
 
+if (wasmDebuggingIsSupported()) {
+    let g = newGlobal();
+    let dbg = new Debugger(g);
+    g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (func (result anyref) (param anyref) get_local 0) (export "" 0))')));`);
+}
+
 // More interesting use cases about control flow joins.
 
 function assertJoin(body) {

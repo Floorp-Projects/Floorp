@@ -2136,31 +2136,35 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
   // first, and then get the delta values in parent-layer pixels based on the
   // adjusted values.
   bool adjustedByAutoDir = false;
+  auto deltaX = aEvent.mDeltaX;
+  auto deltaY = aEvent.mDeltaY;
   ParentLayerPoint delta;
   if (aEvent.IsAutoDir()) {
     // It's an auto-dir scroll, so check if its delta should be adjusted, if so,
     // adjust it.
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    auto deltaX = aEvent.mDeltaX;
-    auto deltaY = aEvent.mDeltaY;
     bool isRTL = IsContentOfHonouredTargetRightToLeft(aEvent.HonoursRoot());
     APZAutoDirWheelDeltaAdjuster adjuster(deltaX, deltaY, mX, mY, isRTL);
     if (adjuster.ShouldBeAdjusted()) {
       adjuster.Adjust();
-      // If the original delta values have been adjusted, we pass them to
-      // replace the original delta values in |aEvent| so that the delta values
-      // in parent-layer pixels are caculated based on the adjusted values, not
-      // the original ones.
-      // Pay special attention to the last two parameters. They are in a swaped
-      // order so that they still correspond to their delta after adjustment.
-      delta = GetScrollWheelDelta(aEvent,
-                                  deltaX, deltaY,
-                                  aEvent.mUserDeltaMultiplierY,
-                                  aEvent.mUserDeltaMultiplierX);
       adjustedByAutoDir = true;
     }
   }
-  if (!adjustedByAutoDir) {
+  // Ensure the calls to GetScrollWheelDelta are outside the mRecursiveMutex
+  // lock since these calls may acquire the APZ tree lock. Holding mRecursiveMutex
+  // while acquiring the APZ tree lock is lock ordering violation.
+  if (adjustedByAutoDir) {
+    // If the original delta values have been adjusted, we pass them to
+    // replace the original delta values in |aEvent| so that the delta values
+    // in parent-layer pixels are caculated based on the adjusted values, not
+    // the original ones.
+    // Pay special attention to the last two parameters. They are in a swaped
+    // order so that they still correspond to their delta after adjustment.
+    delta = GetScrollWheelDelta(aEvent,
+                                deltaX, deltaY,
+                                aEvent.mUserDeltaMultiplierY,
+                                aEvent.mUserDeltaMultiplierX);
+  } else {
     // If the original delta values haven't been adjusted by auto-dir, just pass
     // the |aEvent| and caculate the delta values in parent-layer pixels based
     // on the original delta values from |aEvent|.

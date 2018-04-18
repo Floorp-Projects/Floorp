@@ -3235,7 +3235,7 @@ function createPendingBreakpoint(bp) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.replaceOriginalVariableName = exports.getPausePoints = exports.getFramework = exports.mapOriginalExpression = exports.hasSyntaxError = exports.clearSources = exports.setSource = exports.hasSource = exports.isInvalidPauseLocation = exports.getNextStep = exports.clearASTs = exports.clearScopes = exports.clearSymbols = exports.findOutOfScopeLocations = exports.getScopes = exports.getSymbols = exports.getClosestExpression = exports.stopParserWorker = exports.startParserWorker = undefined;
+exports.replaceOriginalVariableName = exports.getPausePoints = exports.getFramework = exports.mapOriginalExpression = exports.hasSyntaxError = exports.clearSources = exports.setSource = exports.hasSource = exports.getNextStep = exports.clearASTs = exports.clearScopes = exports.clearSymbols = exports.findOutOfScopeLocations = exports.getScopes = exports.getSymbols = exports.getClosestExpression = exports.stopParserWorker = exports.startParserWorker = undefined;
 
 var _devtoolsUtils = __webpack_require__(1363);
 
@@ -3255,7 +3255,6 @@ const clearSymbols = exports.clearSymbols = dispatcher.task("clearSymbols");
 const clearScopes = exports.clearScopes = dispatcher.task("clearScopes");
 const clearASTs = exports.clearASTs = dispatcher.task("clearASTs");
 const getNextStep = exports.getNextStep = dispatcher.task("getNextStep");
-const isInvalidPauseLocation = exports.isInvalidPauseLocation = dispatcher.task("isInvalidPauseLocation");
 const hasSource = exports.hasSource = dispatcher.task("hasSource");
 const setSource = exports.setSource = dispatcher.task("setSource");
 const clearSources = exports.clearSources = dispatcher.task("clearSources");
@@ -4194,7 +4193,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function CloseButton({ handleClick, buttonClass, tooltip }) {
   return _react2.default.createElement(
-    "div",
+    "button",
     {
       className: buttonClass ? `close-btn ${buttonClass}` : "close-btn",
       onClick: handleClick,
@@ -4885,6 +4884,7 @@ exports.isSymbolsLoading = isSymbolsLoading;
 exports.isEmptyLineInSource = isEmptyLineInSource;
 exports.getEmptyLines = getEmptyLines;
 exports.getPausePoints = getPausePoints;
+exports.getPausePoint = getPausePoint;
 exports.hasPausePoints = hasPausePoints;
 exports.getOutOfScopeLocations = getOutOfScopeLocations;
 exports.getPreview = getPreview;
@@ -5036,6 +5036,21 @@ function getEmptyLines(state, source) {
 
 function getPausePoints(state, sourceId) {
   return state.ast.pausePoints.get(sourceId);
+}
+
+function getPausePoint(state, location) {
+  if (!location) {
+    return;
+  }
+
+  const { column, line, sourceId } = location;
+  const pausePoints = getPausePoints(state, sourceId);
+  if (!pausePoints) {
+    return;
+  }
+
+  const linePoints = pausePoints[line];
+  return linePoints && linePoints[column];
 }
 
 function hasPausePoints(state, sourceId) {
@@ -15406,7 +15421,6 @@ const svg = {
   file: __webpack_require__(354),
   folder: __webpack_require__(355),
   globe: __webpack_require__(356),
-  help: __webpack_require__(3633),
   home: __webpack_require__(3604),
   javascript: __webpack_require__(2251),
   jquery: __webpack_require__(999),
@@ -23485,7 +23499,7 @@ class Breakpoints extends _react.Component {
 
     const groupedBreakpoints = (0, _lodash.groupBy)((0, _lodash.sortBy)([...breakpoints.valueSeq()], bp => bp.location.line), bp => getBreakpointFilename(bp.source));
 
-    return [...Object.keys(groupedBreakpoints).map(filename => {
+    return [...Object.keys(groupedBreakpoints).sort().map(filename => {
       return [_react2.default.createElement(
         "div",
         { className: "breakpoint-heading", title: filename, key: filename },
@@ -24454,12 +24468,16 @@ class Accordion extends _react.Component {
         { className: item.className, key: i },
         _react2.default.createElement(
           "div",
-          { className: "_header", onClick: () => this.handleHeaderClick(i) },
+          {
+            className: "_header",
+            tabIndex: "0",
+            onClick: () => this.handleHeaderClick(i)
+          },
           _react2.default.createElement(_Svg2.default, { name: "arrow", className: opened ? "expanded" : "" }),
           item.header,
           item.buttons ? _react2.default.createElement(
             "div",
-            { className: "header-buttons" },
+            { className: "header-buttons", tabIndex: "-1" },
             item.buttons
           ) : null
         ),
@@ -27181,7 +27199,7 @@ function paused(pauseInfo) {
       // Ensure that the original file has loaded if there is one.
       await dispatch((0, _loadSourceText.loadSourceText)(source));
 
-      if (await (0, _pause.shouldStep)(mappedFrame, getState(), sourceMaps)) {
+      if ((0, _pause.shouldStep)(mappedFrame, getState(), sourceMaps)) {
         dispatch((0, _commands.command)("stepOver"));
         return;
       }
@@ -34877,10 +34895,10 @@ async function findGeneratedBindingFromPosition(sourceMaps, client, source, pos,
 function filterApplicableBindings(bindings, mapped) {
   // Any binding overlapping a part of the mapping range.
   return (0, _filtering.filterSortedArray)(bindings, binding => {
-    if (positionCmp(binding.loc.end, mapped.start) < 0) {
+    if (positionCmp(binding.loc.end, mapped.start) <= 0) {
       return -1;
     }
-    if (positionCmp(binding.loc.start, mapped.end) > 0) {
+    if (positionCmp(binding.loc.start, mapped.end) >= 0) {
       return 1;
     }
 
@@ -34943,14 +34961,48 @@ async function findGeneratedImportReference(type, generatedAstBindings, mapped) 
 async function findGeneratedImportDeclaration(generatedAstBindings, mapped) {
   const bindings = filterApplicableBindings(generatedAstBindings, mapped);
 
-  return bindings.reduce(async (acc, val) => {
-    const accVal = await acc;
-    if (accVal) {
-      return accVal;
+  let result = null;
+
+  for (const binding of bindings) {
+    if (binding.loc.type !== "decl") {
+      continue;
     }
 
-    return await mapImportDeclarationToDescriptor(val, mapped);
-  }, null);
+    const namespaceDesc = await binding.desc();
+    if (isPrimitiveValue(namespaceDesc)) {
+      continue;
+    }
+    if (!isObjectValue(namespaceDesc)) {
+      // We want to handle cases like
+      //
+      //   var _mod = require(...);
+      //   var _mod2 = _interopRequire(_mod);
+      //
+      // where "_mod" is optimized out because it is only referenced once. To
+      // allow that, we track the optimized-out value as a possible result,
+      // but allow later binding values to overwrite the result.
+      result = {
+        name: binding.name,
+        desc: namespaceDesc,
+        expression: binding.name
+      };
+      continue;
+    }
+
+    const desc = await readDescriptorProperty(namespaceDesc, mapped.importName);
+    const expression = `${binding.name}.${mapped.importName}`;
+
+    if (desc) {
+      result = {
+        name: binding.name,
+        desc,
+        expression
+      };
+      break;
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -34976,40 +35028,6 @@ async function mapBindingReferenceToDescriptor(binding, mapped, isFirst) {
   }
 
   return null;
-}
-
-/**
- * Given an generated binding, and a range over the generated code, statically
- * resolve the module namespace object and attempt to access the imported
- * property on the namespace.
- *
- * This is mostly hard-coded to work for Babel 6's imports.
- */
-async function mapImportDeclarationToDescriptor(binding, mapped) {
-  // When trying to map an actual import declaration binding, we can try
-  // to map it back to the namespace object in the original code.
-  if (!mappingContains(mapped, binding.loc)) {
-    return null;
-  }
-
-  const desc = await readDescriptorProperty((await binding.desc()), mapped.importName,
-  // If the value was optimized out or otherwise unavailable, we skip it
-  // entirely because there is a good chance that this means that this
-  // isn't the right binding. This allows us to catch cases like
-  //
-  //   var _mod = require(...);
-  //   var _mod2 = _interopRequire(_mod);
-  //
-  // where "_mod" is optimized out because it is only referenced once, and
-  // we want to continue searching to try to find "_mod2".
-  true);
-  const expression = `${binding.name}.${mapped.importName}`;
-
-  return desc ? {
-    name: binding.name,
-    desc,
-    expression
-  } : null;
 }
 
 /**
@@ -35086,16 +35104,22 @@ async function mapImportReferenceToDescriptor(binding, mapped) {
   } : null;
 }
 
-async function readDescriptorProperty(desc, property, requireValidObject = false) {
+function isPrimitiveValue(desc) {
+  return desc && (!desc.value || typeof desc.value !== "object");
+}
+function isObjectValue(desc) {
+  return desc && !isPrimitiveValue(desc) && desc.value.type === "object" &&
+  // Note: The check for `.type` might already cover the optimizedOut case
+  // but not 100% sure, so just being cautious.
+  !desc.value.optimizedOut;
+}
+
+async function readDescriptorProperty(desc, property) {
   if (!desc) {
     return null;
   }
 
   if (typeof desc.value !== "object" || !desc.value) {
-    if (requireValidObject) {
-      return null;
-    }
-
     // If accessing a property on a primitive type, just return 'undefined'
     // as the value.
     return {
@@ -35105,13 +35129,7 @@ async function readDescriptorProperty(desc, property, requireValidObject = false
     };
   }
 
-  // Note: The check for `.type` might already cover the optimizedOut case
-  // but not 100% sure, so just being cautious.
-  if (desc.value.type !== "object" || desc.value.optimizedOut) {
-    if (requireValidObject) {
-      return null;
-    }
-
+  if (!isObjectValue(desc)) {
     // If we got a non-primitive descriptor but it isn't an object, then
     // it's definitely not the namespace and it is probably an error.
     return desc;
@@ -35152,7 +35170,7 @@ async function getGeneratedLocationRange(pos, source, type, sourceMaps) {
     return null;
   }
 
-  // If the stand and end positions collapse into eachother, it means that
+  // If the start and end positions collapse into eachother, it means that
   // the range in the original content didn't _start_ at the start position.
   // Since this likely means that the range doesn't logically apply to this
   // binding location, we skip it.
@@ -35430,32 +35448,37 @@ var _devtoolsSourceMap = __webpack_require__(1360);
 
 var _selectors = __webpack_require__(3590);
 
-var _parser = __webpack_require__(1365);
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-async function shouldStep(rootFrame, state, sourceMaps) {
-  if (!rootFrame) {
-    return false;
+function getFrameLocation(source, frame) {
+  if (!frame) {
+    return null;
   }
 
+  return (0, _devtoolsSourceMap.isOriginalId)(source.id) ? frame.location : frame.generatedLocation;
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function shouldStep(rootFrame, state, sourceMaps) {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
   const previousFrameInfo = (0, _selectors.getPreviousPauseFrameLocation)(state);
 
-  let previousFrameLoc;
-  let currentFrameLoc;
-
-  if (selectedSource && (0, _devtoolsSourceMap.isOriginalId)(selectedSource.get("id"))) {
-    currentFrameLoc = rootFrame.location;
-    previousFrameLoc = previousFrameInfo && previousFrameInfo.location;
-  } else {
-    currentFrameLoc = rootFrame.generatedLocation;
-    previousFrameLoc = previousFrameInfo && previousFrameInfo.generatedLocation;
+  if (!rootFrame || !selectedSource) {
+    return false;
   }
 
-  return (0, _devtoolsSourceMap.isOriginalId)(currentFrameLoc.sourceId) && (previousFrameLoc && (0, _lodash.isEqual)(previousFrameLoc, currentFrameLoc) || (await (0, _parser.isInvalidPauseLocation)(currentFrameLoc)));
+  const previousFrameLoc = getFrameLocation(selectedSource, previousFrameInfo);
+  const frameLoc = getFrameLocation(selectedSource, rootFrame);
+
+  const sameLocation = previousFrameLoc && (0, _lodash.isEqual)(previousFrameLoc, frameLoc);
+  const pausePoint = (0, _selectors.getPausePoint)(state, frameLoc);
+  const invalidPauseLocation = pausePoint && !pausePoint.step;
+
+  // We always want to pause in generated locations
+  if (!frameLoc || (0, _devtoolsSourceMap.isGeneratedId)(frameLoc.sourceId)) {
+    return false;
+  }
+
+  return sameLocation || invalidPauseLocation;
 }
 
 /***/ }),
@@ -38938,8 +38961,8 @@ function insertStrtAt(string, index, newString) {
 
 function convertToList(pausePoints) {
   const list = [];
-  for (let line in pausePoints) {
-    for (let column in pausePoints[line]) {
+  for (const line in pausePoints) {
+    for (const column in pausePoints[line]) {
       const point = pausePoints[line][column];
       list.push({
         location: { line: parseInt(line, 10), column: parseInt(column, 10) },
@@ -39185,13 +39208,6 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\"><path fill=\"context-fill\" d=\"M14.5 8c-.971 0-1 1-1.75 1a.765.765 0 0 1-.75-.75V5a1 1 0 0 0-1-1H7.75A.765.765 0 0 1 7 3.25c0-.75 1-.779 1-1.75C8 .635 7.1 0 6 0S4 .635 4 1.5c0 .971 1 1 1 1.75a.765.765 0 0 1-.75.75H1a1 1 0 0 0-1 1v2.25A.765.765 0 0 0 .75 8c.75 0 .779-1 1.75-1C3.365 7 4 7.9 4 9s-.635 2-1.5 2c-.971 0-1-1-1.75-1a.765.765 0 0 0-.75.75V15a1 1 0 0 0 1 1h3.25a.765.765 0 0 0 .75-.75c0-.75-1-.779-1-1.75 0-.865.9-1.5 2-1.5s2 .635 2 1.5c0 .971-1 1-1 1.75a.765.765 0 0 0 .75.75H11a1 1 0 0 0 1-1v-3.25a.765.765 0 0 1 .75-.75c.75 0 .779 1 1.75 1 .865 0 1.5-.9 1.5-2s-.635-2-1.5-2z\"></path></svg>"
-
-/***/ }),
-
-/***/ 3633:
-/***/ (function(module, exports) {
-
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\"><path fill=\"context-fill\" d=\"M8 1a7 7 0 1 0 7 7 7.008 7.008 0 0 0-7-7zm0 13a6 6 0 1 1 6-6 6.007 6.007 0 0 1-6 6zM8 3.125A2.7 2.7 0 0 0 5.125 6a.875.875 0 0 0 1.75 0c0-1 .6-1.125 1.125-1.125a1.105 1.105 0 0 1 1.13.744.894.894 0 0 1-.53 1.016A2.738 2.738 0 0 0 7.125 9v.337a.875.875 0 0 0 1.75 0v-.37a1.041 1.041 0 0 1 .609-.824A2.637 2.637 0 0 0 10.82 5.16 2.838 2.838 0 0 0 8 3.125zm0 7.625A1.25 1.25 0 1 0 9.25 12 1.25 1.25 0 0 0 8 10.75z\"></path></svg>"
 
 /***/ }),
 
