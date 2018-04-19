@@ -14,6 +14,7 @@ this.clipboard = (function() {
       element.style.opacity = "0";
       element.style.width = "1px";
       element.style.height = "1px";
+      element.style.display = "block";
       element.addEventListener("load", catcher.watchFunction(() => {
         try {
           const doc = element.contentDocument;
