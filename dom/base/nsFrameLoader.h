@@ -233,6 +233,11 @@ public:
    */
   void Hide();
 
+  // Used when content is causing a FrameLoader to be created, and
+  // needs to try forcing layout to flush in order to get accurate
+  // dimensions for the content area.
+  void ForceLayoutIfNecessary();
+
   // The guts of an nsIFrameLoaderOwner::SwapFrameLoader implementation.  A
   // frame loader owner needs to call this, and pass in the two references to
   // nsRefPtrs for frame loaders that need to be swapped.
