@@ -563,6 +563,7 @@ public:
     nscoord aShapeMargin,
     nsIFrame* const aFrame,
     const LogicalRect& aShapeBoxRect,
+    const LogicalRect& aMarginRect,
     WritingMode aWM,
     const nsSize& aContainerSize);
 
@@ -584,7 +585,10 @@ public:
 
   static UniquePtr<ShapeInfo> CreatePolygon(
     const UniquePtr<StyleBasicShape>& aBasicShape,
+    nscoord aShapeMargin,
+    nsIFrame* const aFrame,
     const LogicalRect& aShapeBoxRect,
+    const LogicalRect& aMarginRect,
     WritingMode aWM,
     const nsSize& aContainerSize);
 
@@ -1221,6 +1225,10 @@ class nsFloatManager::PolygonShapeInfo final : public nsFloatManager::ShapeInfo
 {
 public:
   explicit PolygonShapeInfo(nsTArray<nsPoint>&& aVertices);
+  PolygonShapeInfo(nsTArray<nsPoint>&& aVertices,
+                   nscoord aShapeMargin,
+                   int32_t aAppUnitsPerDevPixel,
+                   const nsRect& aMarginRect);
 
   nscoord LineLeft(const nscoord aBStart,
                    const nscoord aBEnd) const override;
@@ -1233,6 +1241,10 @@ public:
   void Translate(nscoord aLineLeft, nscoord aBlockStart) override;
 
 private:
+  // Helper method for determining if the vertices define a float area at
+  // all, and to set mBStart and mBEnd based on the vertices' y extent.
+  void ComputeEmptinessAndExtent();
+
   // Helper method for implementing LineLeft() and LineRight().
   nscoord ComputeLineIntercept(
     const nscoord aBStart,
@@ -1250,6 +1262,15 @@ private:
   // The vertices of the polygon in the float manager's coordinate space.
   nsTArray<nsPoint> mVertices;
 
+  // An interval is slice of the float area defined by this PolygonShapeInfo.
+  // These are only generated and used in float area calculations for
+  // shape-margin > 0. Each interval is a rectangle that is one device pixel
+  // deep in the block axis. The values are stored as block edges in the y
+  // coordinates, and inline edges as the x coordinates.
+
+  // The intervals are stored in ascending order on y.
+  nsTArray<nsRect> mIntervals;
+
   // If mEmpty is true, that means the polygon encloses no area.
   bool mEmpty = false;
 
@@ -1265,6 +1286,78 @@ private:
 
 nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(nsTArray<nsPoint>&& aVertices)
   : mVertices(aVertices)
+{
+  ComputeEmptinessAndExtent();
+}
+
+nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(
+  nsTArray<nsPoint>&& aVertices,
+  nscoord aShapeMargin,
+  int32_t aAppUnitsPerDevPixel,
+  const nsRect& aMarginRect)
+  : mVertices(aVertices)
+{
+  MOZ_ASSERT(aShapeMargin > 0, "This constructor should only be used for a "
+                               "polygon with a positive shape-margin.");
+
+  ComputeEmptinessAndExtent();
+
+  // If we're empty, then the float area stays empty, even with a positive
+  // shape-margin.
+  if (mEmpty) {
+    return;
+  }
+
+  // Adjust our extents by aShapeMargin.
+  mBStart -= aShapeMargin;
+  mBEnd += aShapeMargin;
+
+  NS_ERROR("To be implemented for positive shape-margin.");
+}
+
+nscoord
+nsFloatManager::PolygonShapeInfo::LineLeft(const nscoord aBStart,
+                                           const nscoord aBEnd) const
+{
+  MOZ_ASSERT(!mEmpty, "Shouldn't be called if the polygon encloses no area.");
+
+  // Use intervals if we have them.
+  if (!mIntervals.IsEmpty()) {
+    return LineEdge(mIntervals, aBStart, aBEnd, true);
+  }
+
+  // We want the line-left-most inline-axis coordinate where the
+  // (block-axis) aBStart/aBEnd band crosses a line segment of the polygon.
+  // To get that, we start as line-right as possible (at nscoord_MAX). Then
+  // we iterate each line segment to compute its intersection point with the
+  // band (if any) and using std::min() successively to get the smallest
+  // inline-coordinates among those intersection points.
+  //
+  // Note: std::min<nscoord> means the function std::min() with template
+  // parameter nscoord, not the minimum value of nscoord.
+  return ComputeLineIntercept(aBStart, aBEnd, std::min<nscoord>, nscoord_MAX);
+}
+
+nscoord
+nsFloatManager::PolygonShapeInfo::LineRight(const nscoord aBStart,
+                                            const nscoord aBEnd) const
+{
+  MOZ_ASSERT(!mEmpty, "Shouldn't be called if the polygon encloses no area.");
+
+  // Use intervals if we have them.
+  if (!mIntervals.IsEmpty()) {
+    return LineEdge(mIntervals, aBStart, aBEnd, false);
+  }
+
+  // Similar to LineLeft(). Though here, we want the line-right-most
+  // inline-axis coordinate, so we instead start at nscoord_MIN and use
+  // std::max() to get the biggest inline-coordinate among those
+  // intersection points.
+  return ComputeLineIntercept(aBStart, aBEnd, std::max<nscoord>, nscoord_MIN);
+}
+
+void
+nsFloatManager::PolygonShapeInfo::ComputeEmptinessAndExtent()
 {
   // Polygons with fewer than three vertices result in an empty area.
   // https://drafts.csswg.org/css-shapes/#funcdef-polygon
@@ -1309,37 +1402,6 @@ nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(nsTArray<nsPoint>&& aVertices
     mBStart = std::min(mBStart, vertex.y);
     mBEnd = std::max(mBEnd, vertex.y);
   }
-}
-
-nscoord
-nsFloatManager::PolygonShapeInfo::LineLeft(const nscoord aBStart,
-                                           const nscoord aBEnd) const
-{
-  MOZ_ASSERT(!mEmpty, "Shouldn't be called if the polygon encloses no area.");
-
-  // We want the line-left-most inline-axis coordinate where the
-  // (block-axis) aBStart/aBEnd band crosses a line segment of the polygon.
-  // To get that, we start as line-right as possible (at nscoord_MAX). Then
-  // we iterate each line segment to compute its intersection point with the
-  // band (if any) and using std::min() successively to get the smallest
-  // inline-coordinates among those intersection points.
-  //
-  // Note: std::min<nscoord> means the function std::min() with template
-  // parameter nscoord, not the minimum value of nscoord.
-  return ComputeLineIntercept(aBStart, aBEnd, std::min<nscoord>, nscoord_MAX);
-}
-
-nscoord
-nsFloatManager::PolygonShapeInfo::LineRight(const nscoord aBStart,
-                                            const nscoord aBEnd) const
-{
-  MOZ_ASSERT(!mEmpty, "Shouldn't be called if the polygon encloses no area.");
-
-  // Similar to LineLeft(). Though here, we want the line-right-most
-  // inline-axis coordinate, so we instead start at nscoord_MIN and use
-  // std::max() to get the biggest inline-coordinate among those
-  // intersection points.
-  return ComputeLineIntercept(aBStart, aBEnd, std::max<nscoord>, nscoord_MIN);
 }
 
 nscoord
@@ -1400,6 +1462,9 @@ nsFloatManager::PolygonShapeInfo::Translate(nscoord aLineLeft,
 {
   for (nsPoint& vertex : mVertices) {
     vertex.MoveBy(aLineLeft, aBlockStart);
+  }
+  for (nsRect& interval : mIntervals) {
+    interval.MoveBy(aLineLeft, aBlockStart);
   }
   mBStart += aBlockStart;
   mBEnd += aBlockStart;
@@ -1971,7 +2036,7 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       LogicalRect shapeBoxRect =
         ShapeInfo::ComputeShapeBoxRect(shapeOutside, mFrame, aMarginRect, aWM);
       mShapeInfo = ShapeInfo::CreateBasicShape(basicShape, shapeMargin, mFrame,
-                                               shapeBoxRect, aWM,
+                                               shapeBoxRect, aMarginRect, aWM,
                                                aContainerSize);
       break;
     }
@@ -2154,12 +2219,14 @@ nsFloatManager::ShapeInfo::CreateBasicShape(
   nscoord aShapeMargin,
   nsIFrame* const aFrame,
   const LogicalRect& aShapeBoxRect,
+  const LogicalRect& aMarginRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
 {
   switch (aBasicShape->GetShapeType()) {
     case StyleBasicShapeType::Polygon:
-      return CreatePolygon(aBasicShape, aShapeBoxRect, aWM, aContainerSize);
+      return CreatePolygon(aBasicShape, aShapeMargin, aFrame, aShapeBoxRect,
+                           aMarginRect, aWM, aContainerSize);
     case StyleBasicShapeType::Circle:
     case StyleBasicShapeType::Ellipse:
       return CreateCircleOrEllipse(aBasicShape, aShapeMargin, aFrame,
@@ -2302,7 +2369,10 @@ nsFloatManager::ShapeInfo::CreateCircleOrEllipse(
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
 nsFloatManager::ShapeInfo::CreatePolygon(
   const UniquePtr<StyleBasicShape>& aBasicShape,
+  nscoord aShapeMargin,
+  nsIFrame* const aFrame,
   const LogicalRect& aShapeBoxRect,
+  const LogicalRect& aMarginRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
 {
@@ -2321,7 +2391,17 @@ nsFloatManager::ShapeInfo::CreatePolygon(
     vertex = ConvertToFloatLogical(vertex, aWM, aContainerSize);
   }
 
-  return MakeUnique<PolygonShapeInfo>(Move(vertices));
+  if (aShapeMargin == 0) {
+    return MakeUnique<PolygonShapeInfo>(Move(vertices));
+  }
+
+  nsRect marginRect = ConvertToFloatLogical(aMarginRect, aWM, aContainerSize);
+
+  // We have to use the full constructor for PolygonShapeInfo. This
+  // computes the float area using a rasterization method.
+  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+  return MakeUnique<PolygonShapeInfo>(Move(vertices), aShapeMargin,
+                                      appUnitsPerDevPixel, marginRect);
 }
 
 /* static */ UniquePtr<nsFloatManager::ShapeInfo>
