@@ -4,7 +4,14 @@
 
 from __future__ import absolute_import
 
+import urllib
+
+from marionette_driver.by import By
 from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
+
+
+def inline(doc):
+    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
 
 
 class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
@@ -63,6 +70,23 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
         window_handles = self.marionette.close()
         self.assertNotIn(tab, window_handles)
         self.assertListEqual(self.start_tabs, window_handles)
+
+    @skip_if_mobile("Needs application independent method to open a new tab")
+    def test_close_window_with_dismissed_beforeunload_prompt(self):
+        tab = self.open_tab()
+        self.marionette.switch_to_window(tab)
+
+        self.marionette.navigate(inline("""
+          <input type="text">
+          <script>
+            window.addEventListener("beforeunload", function (event) {
+              event.preventDefault();
+            });
+          </script>
+        """))
+
+        self.marionette.find_element(By.TAG_NAME, "input").send_keys("foo")
+        self.marionette.close()
 
     @skip_if_mobile("Interacting with chrome windows not available for Fennec")
     def test_close_window_for_browser_window_with_single_tab(self):

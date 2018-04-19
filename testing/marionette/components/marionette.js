@@ -170,6 +170,9 @@ const RECOMMENDED_PREFS = new Map([
   ["datareporting.policy.dataSubmissionPolicyAccepted", false],
   ["datareporting.policy.dataSubmissionPolicyBypassNotification", true],
 
+  // Automatically unload beforeunload alerts
+  ["dom.disable_beforeunload", true],
+
   // Disable popup-blocker
   ["dom.disable_open_during_load", false],
 
