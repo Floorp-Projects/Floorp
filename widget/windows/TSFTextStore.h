@@ -782,6 +782,17 @@ protected:
     RecordCompositionUpdateAction();
   }
 
+  void RemoveLastCompositionUpdateActions()
+  {
+    while (!mPendingActions.IsEmpty()) {
+      const PendingAction& lastAction = mPendingActions.LastElement();
+      if (lastAction.mType != PendingAction::Type::eCompositionUpdate) {
+        break;
+      }
+      mPendingActions.RemoveLastElement();
+    }
+  }
+
   // When On*Composition() is called without document lock, we need to flush
   // the recorded actions at quitting the method.
   // AutoPendingActionAndContentFlusher class is usedful for it.
