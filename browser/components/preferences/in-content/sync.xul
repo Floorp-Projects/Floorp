@@ -46,16 +46,23 @@
         </hbox>
       </vbox>
     </hbox>
-    <label class="fxaMobilePromo">
-        &mobilePromo3.start;<!-- We put these comments to avoid inserting white spaces
-        --><image class="androidLink"></image><label id="fxaMobilePromo-android"
-                  class="text-link"><!--
-        -->&mobilePromo3.androidLink;</label><!--
-        -->&mobilePromo3.iOSBefore;<!--
-        --><image class="iOSLink"></image><label id="fxaMobilePromo-ios"
-                  class="text-link"><!--
-        -->&mobilePromo3.iOSLink;</label><!--
-        -->&mobilePromo3.end;
+    <label class="fxaMobilePromo" data-l10n-id="sync-mobile-promo">
+      <html:img
+        src="chrome://browser/skin/preferences/in-content/logo-android.svg"
+        data-l10n-name="android-icon"
+        class="androidIcon"/>
+      <html:a
+        id="fxaMobilePromo-android"
+        data-l10n-name="android-link"
+        class="text-link" target="_blank"/>
+      <html:img
+        src="chrome://browser/skin/preferences/in-content/logo-ios.svg"
+        data-l10n-name="ios-icon"
+        class="iOSIcon"/>
+      <html:a
+        id="fxaMobilePromo-ios"
+        data-l10n-name="ios-link"
+        class="text-link" target="_blank"/>
     </label>
   </groupbox>
 

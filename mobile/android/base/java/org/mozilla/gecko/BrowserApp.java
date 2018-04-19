@@ -1374,6 +1374,7 @@ public class BrowserApp extends GeckoApp
         }
 
         MmaDelegate.track(MmaDelegate.RESUMED_FROM_BACKGROUND);
+        MmaDelegate.notifyDefaultBrowserStatus(this);
     }
 
     @Override

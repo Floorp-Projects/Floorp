@@ -365,8 +365,9 @@ const Preferences = window.Preferences = (function() {
           // it has to be set if the value is true and removed if the value
           // is false in order to be interpreted correctly by the element.
           if (value) {
-            // We can set it to anything; convention is to set it to itself.
-            element.setAttribute(attribute, attribute);
+            // In theory we can set it to anything; however xbl implementations
+            // of `checkbox` and `listitem` only work with "true".
+            element.setAttribute(attribute, "true");
           } else {
             element.removeAttribute(attribute);
           }

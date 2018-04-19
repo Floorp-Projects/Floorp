@@ -85,7 +85,7 @@ const SQLITE_MAX_VARIABLE_NUMBER = 999;
 
 // The current mirror database schema version. Bump for migrations, then add
 // migration code to `migrateMirrorSchema`.
-const MIRROR_SCHEMA_VERSION = 1;
+const MIRROR_SCHEMA_VERSION = 2;
 
 // Use a shared jankYielder in these functions
 XPCOMUtils.defineLazyGetter(this, "maybeYield", () => Async.jankYielder());
@@ -163,32 +163,31 @@ class SyncedBookmarksMirror {
       connection: PlacesUtils.history.DBConnection,
       readOnly: false,
     });
+    let whyFailed = "initialize";
     try {
+      await db.execute(`PRAGMA foreign_keys = ON`);
       try {
-        await db.execute(`ATTACH :mirrorPath AS mirror`,
-                         { mirrorPath: options.path });
+        await attachAndInitMirrorDatabase(db, options.path);
       } catch (ex) {
-        if (ex.errors && isDatabaseCorrupt(ex.errors[0])) {
+        if (isDatabaseCorrupt(ex)) {
           MirrorLog.warn("Error attaching mirror to Places; removing and " +
                          "recreating mirror", ex);
-          options.recordTelemetryEvent("mirror", "open", "error",
+          options.recordTelemetryEvent("mirror", "open", "retry",
                                        { why: "corrupt" });
+
+          whyFailed = "remove";
           await OS.File.remove(options.path);
-          await db.execute(`ATTACH :mirrorPath AS mirror`,
-                           { mirrorPath: options.path });
+
+          whyFailed = "replace";
+          await attachAndInitMirrorDatabase(db, options.path);
         } else {
           MirrorLog.warn("Unrecoverable error attaching mirror to Places", ex);
           throw ex;
         }
       }
-      await db.execute(`PRAGMA foreign_keys = ON`);
-      await db.executeTransaction(async function() {
-        await migrateMirrorSchema(db);
-        await initializeTempMirrorEntities(db);
-      });
     } catch (ex) {
       options.recordTelemetryEvent("mirror", "open", "error",
-                                   { why: "initialize" });
+                                   { why: whyFailed });
       await db.close();
       throw ex;
     }
@@ -648,28 +647,43 @@ class SyncedBookmarksMirror {
       return;
     }
 
+    // Legacy tag queries may use a `place:` URL with a `folder` param that
+    // points to the tag folder ID. We need to rewrite these queries to
+    // directly reference the tag.
+    let params = new URLSearchParams(url.pathname);
+    let type = +params.get("type");
+    if (type == Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
+      let tagFolderName = validateTag(record.folderName);
+      if (!tagFolderName) {
+        MirrorLog.warn("Ignoring tag query ${guid} with invalid tag name " +
+                       "${tagFolderName}", { guid, tagFolderName });
+        ignoreCounts.query.url++;
+        return;
+      }
+      url = new URL(`place:tag=${tagFolderName}`);
+    }
+
     await this.maybeStoreRemoteURL(url);
 
     let serverModified = determineServerModified(record);
     let dateAdded = determineDateAdded(record);
     let title = validateTitle(record.title);
-    let tagFolderName = validateTag(record.folderName);
     let description = validateDescription(record.description);
     let smartBookmarkName = typeof record.queryId == "string" ?
                             record.queryId : null;
 
     await this.db.executeCached(`
       REPLACE INTO items(guid, serverModified, needsMerge, kind,
-                         dateAdded, title, tagFolderName,
-                         urlId, description, smartBookmarkName)
+                         dateAdded, title, urlId, description,
+                         smartBookmarkName)
       VALUES(:guid, :serverModified, :needsMerge, :kind,
-             :dateAdded, NULLIF(:title, ""), :tagFolderName,
+             :dateAdded, NULLIF(:title, ""),
              (SELECT id FROM urls
               WHERE hash = hash(:url) AND
                     url = :url),
              :description, :smartBookmarkName)`,
       { guid, serverModified, needsMerge,
-        kind: SyncedBookmarksMirror.KIND.QUERY, dateAdded, title, tagFolderName,
+        kind: SyncedBookmarksMirror.KIND.QUERY, dateAdded, title,
         url: url.href, description, smartBookmarkName });
   }
 
@@ -1213,7 +1227,7 @@ class SyncedBookmarksMirror {
 
   /**
    * Builds a temporary table with the merge states of all nodes in the merged
-   * tree, rewrites tag queries, and updates Places to match the merged tree.
+   * tree and updates Places to match the merged tree.
    *
    * Conceptually, we examine the merge state of each item, and either keep the
    * complete local state, take the complete remote state, or apply a new
@@ -1246,9 +1260,6 @@ class SyncedBookmarksMirror {
                :level, :position, :valueState, :structureState)`,
         mergeStatesParams);
     }
-
-    MirrorLog.debug("Rewriting tag queries in mirror");
-    await this.rewriteRemoteTagQueries();
 
     MirrorLog.debug("Inserting new URLs into Places");
     await this.db.execute(`
@@ -1347,55 +1358,6 @@ class SyncedBookmarksMirror {
         WHERE needsMerge AND
               guid IN (${new Array(chunk.length).fill("?").join(",")})`,
         chunk);
-    }
-  }
-
-  /**
-   * Rewrites tag query URLs in the mirror to point to the tag.
-   *
-   * For example, an incoming tag query of, say, "place:type=7&folder=3" means
-   * it is a query for whatever tag was defined by the local record with id=3
-   * (and the incoming record has the actual tag in the folderName field).
-   */
-  async rewriteRemoteTagQueries() {
-    let queryRows = await this.db.execute(`
-      SELECT u.id AS urlId, u.url, v.tagFolderName
-      FROM urls u
-      JOIN items v ON v.urlId = u.id
-      JOIN mergeStates r ON r.mergedGuid = v.guid
-      WHERE r.valueState = :valueState AND
-            v.kind = :queryKind AND
-            v.tagFolderName NOT NULL AND
-            CAST(get_query_param(substr(u.url, 7), "type") AS INT) = :tagContentsType
-      `, { valueState: BookmarkMergeState.TYPE.REMOTE,
-           queryKind: SyncedBookmarksMirror.KIND.QUERY,
-           tagContentsType: Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS });
-
-    let urlsParams = [];
-    for (let row of queryRows) {
-      let url = new URL(row.getResultByName("url"));
-      let tagQueryParams = new URLSearchParams(url.pathname);
-
-      // Rewrite the query to directly reference the tag.
-      tagQueryParams.delete("queryType");
-      tagQueryParams.delete("type");
-      tagQueryParams.delete("folder");
-      tagQueryParams.set("tag", row.getResultByName("tagFolderName"));
-
-      let newURLHref = url.protocol + tagQueryParams;
-      urlsParams.push({
-        urlId: row.getResultByName("urlId"),
-        url: newURLHref,
-      });
-    }
-
-    if (urlsParams.length) {
-      await this.db.execute(`
-        UPDATE urls SET
-          url = :url,
-          hash = hash(:url)
-        WHERE id = :urlId`,
-        urlsParams);
     }
   }
 
@@ -1918,15 +1880,72 @@ SyncedBookmarksMirror.META_KEY = {
  * An error thrown when the merge can't proceed because the local or remote
  * tree is inconsistent.
  */
-SyncedBookmarksMirror.ConsistencyError =
-  class ConsistencyError extends Error {};
+class ConsistencyError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "ConsistencyError";
+  }
+}
+SyncedBookmarksMirror.ConsistencyError = ConsistencyError;
+
+/**
+ * An error thrown when the mirror database is corrupt, or can't be migrated to
+ * the latest schema version, and must be replaced.
+ */
+class DatabaseCorruptError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "DatabaseCorruptError";
+  }
+}
 
 // Indicates if the mirror should be replaced because the database file is
 // corrupt.
 function isDatabaseCorrupt(error) {
-  return error instanceof Ci.mozIStorageError &&
-         (error.result == Ci.mozIStorageError.CORRUPT ||
-          error.result == Ci.mozIStorageError.NOTADB);
+  if (error instanceof DatabaseCorruptError) {
+    return true;
+  }
+  if (error.errors) {
+    return error.errors.some(error =>
+      error instanceof Ci.mozIStorageError &&
+      (error.result == Ci.mozIStorageError.CORRUPT ||
+       error.result == Ci.mozIStorageError.NOTADB));
+  }
+  return false;
+}
+
+/**
+ * Attaches a cloned Places database connection to the mirror database,
+ * migrates the mirror schema to the latest version, and creates temporary
+ * tables, views, and triggers.
+ *
+ * @param {Sqlite.OpenedConnection} db
+ *        The Places database connection.
+ * @param {String} path
+ *        The full path to the mirror database file.
+ */
+async function attachAndInitMirrorDatabase(db, path) {
+  await db.execute(`ATTACH :path AS mirror`, { path });
+  try {
+    await db.executeTransaction(async function() {
+      let currentSchemaVersion = await db.getSchemaVersion("mirror");
+      if (currentSchemaVersion > 0) {
+        if (currentSchemaVersion < MIRROR_SCHEMA_VERSION) {
+          await migrateMirrorSchema(db, currentSchemaVersion);
+        }
+      } else {
+        await initializeMirrorDatabase(db);
+      }
+      // Downgrading from a newer profile to an older profile rolls back the
+      // schema version, but leaves all new columns in place. We'll run the
+      // migration logic again on the next upgrade.
+      await db.setSchemaVersion(MIRROR_SCHEMA_VERSION, "mirror");
+      await initializeTempMirrorEntities(db);
+    });
+  } catch (ex) {
+    await db.execute(`DETACH mirror`);
+    throw ex;
+  }
 }
 
 /**
@@ -1934,16 +1953,14 @@ function isDatabaseCorrupt(error) {
  *
  * @param {Sqlite.OpenedConnection} db
  *        The mirror database connection.
+ * @param {Number} currentSchemaVersion
+ *        The current mirror database schema version.
  */
-async function migrateMirrorSchema(db) {
-  let currentSchemaVersion = await db.getSchemaVersion("mirror");
-  if (currentSchemaVersion < 1) {
-    await initializeMirrorDatabase(db);
+async function migrateMirrorSchema(db, currentSchemaVersion) {
+  if (currentSchemaVersion < 2) {
+    throw new DatabaseCorruptError(`Can't migrate from schema version ${
+      currentSchemaVersion}; too old`);
   }
-  // Downgrading from a newer profile to an older profile rolls back the
-  // schema version, but leaves all new columns in place. We'll run the
-  // migration logic again on the next upgrade.
-  await db.setSchemaVersion(MIRROR_SCHEMA_VERSION, "mirror");
 }
 
 /**
@@ -1975,7 +1992,6 @@ async function initializeMirrorDatabase(db) {
     urlId INTEGER REFERENCES urls(id)
                   ON DELETE SET NULL,
     keyword TEXT,
-    tagFolderName TEXT,
     description TEXT,
     loadInSidebar BOOLEAN,
     smartBookmarkName TEXT,
@@ -2440,8 +2456,8 @@ async function initializeTempMirrorEntities(db) {
   // keywords, one tag may be associated with many different URLs. Tags are also
   // different because they're implemented as bookmarks under the hood. Each tag
   // is stored as a folder under the tags root, and tagged URLs are stored as
-  // untitled bookmarks under these folders. This complexity, along with tag
-  // query rewriting, can be removed once bug 424160 lands.
+  // untitled bookmarks under these folders. This complexity can be removed once
+  // bug 424160 lands.
   await db.execute(`
     CREATE TEMP VIEW localTags(tagEntryId, tagEntryGuid, tagFolderId,
                                tagFolderGuid, tagEntryPosition, tagEntryType,

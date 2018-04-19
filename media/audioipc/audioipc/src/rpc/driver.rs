@@ -90,6 +90,7 @@ where
                 Async::Ready(None) => {
                     trace!("  --> got None");
                     // The service is done with the connection.
+                    self.run = false;
                     break;
                 }
                 // Nothing to dispatch
@@ -139,6 +140,7 @@ where
         try!(self.flush());
 
         if self.is_done() {
+            trace!("  --> is done.");
             return Ok(().into());
         }
 

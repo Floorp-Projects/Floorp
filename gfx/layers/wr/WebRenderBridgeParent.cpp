@@ -796,6 +796,13 @@ WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
   }
   MOZ_ASSERT(!mPaused);
 
+  // This function should only get called in the root WRBP. If this function
+  // gets called in a non-root WRBP, we will set mForceRendering in this WRBP
+  // but it will have no effect because CompositeToTarget (which reads the
+  // flag) only gets invoked in the root WRBP. So we assert that this is the
+  // root WRBP (i.e. has a non-null mWidget) to catch violations of this rule.
+  MOZ_ASSERT(mWidget);
+
   RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
   if (!texture) {
     // We kill the content process rather than have it continue with an invalid
@@ -1199,6 +1206,9 @@ WebRenderBridgeParent::SampleAnimations(nsTArray<wr::WrOpacityProperty>& aOpacit
 void
 WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
+  // This function should only get called in the root WRBP
+  MOZ_ASSERT(mWidget);
+
   // The two arguments are part of the CompositorVsyncSchedulerOwner API but in
   // this implementation they should never be non-null.
   MOZ_ASSERT(aTarget == nullptr);

@@ -6,7 +6,7 @@ extern crate log;
 
 extern crate audioipc;
 extern crate bytes;
-extern crate cubeb;
+extern crate cubeb_core as cubeb;
 extern crate futures;
 extern crate lazycell;
 extern crate libc;
@@ -22,16 +22,19 @@ use audioipc::messages::{CallbackReq, CallbackResp, ClientMessage, Device, Devic
                          ServerMessage, StreamCreate, StreamInitParams, StreamParams};
 use audioipc::rpc;
 use audioipc::shm::{SharedMemReader, SharedMemWriter};
-use futures::Future;
+use cubeb::ffi;
 use futures::future::{self, FutureResult};
 use futures::sync::oneshot;
-use std::{ptr, slice};
+use futures::Future;
 use std::cell::RefCell;
 use std::convert::From;
 use std::error::Error;
-use std::os::raw::c_void;
+use std::ffi::{CStr, CString};
+use std::mem::{size_of, ManuallyDrop};
+use std::os::raw::{c_long, c_void};
 use std::os::unix::net;
 use std::os::unix::prelude::*;
+use std::{panic, ptr, slice};
 use tokio_core::reactor::Remote;
 use tokio_uds::UnixStream;
 
@@ -60,7 +63,8 @@ where
     CONTEXT_KEY.with(|k| {
         let mut context = k.borrow_mut();
         if context.is_none() {
-            *context = Some(cubeb::init("AudioIPC Server"));
+            let name = CString::new("AudioIPC Server").unwrap();
+            *context = Some(cubeb::Context::init(Some(name.as_c_str()), None));
         }
         f(context.as_ref().unwrap())
     })
@@ -80,7 +84,84 @@ impl rpc::Client for CallbackClient {
     type Transport = Framed<UnixStream, LengthDelimitedCodec<Self::Request, Self::Response>>;
 }
 
-type StreamSlab = slab::Slab<cubeb::Stream<u8>, usize>;
+struct ServerStreamCallbacks {
+    /// Size of input frame in bytes
+    input_frame_size: u16,
+    /// Size of output frame in bytes
+    output_frame_size: u16,
+    /// Shared memory buffer for sending input data to client
+    input_shm: SharedMemWriter,
+    /// Shared memory buffer for receiving output data from client
+    output_shm: SharedMemReader,
+    /// RPC interface to callback server running in client
+    rpc: rpc::ClientProxy<CallbackReq, CallbackResp>,
+}
+
+impl ServerStreamCallbacks {
+    fn data_callback(&mut self, input: &[u8], output: &mut [u8]) -> isize {
+        trace!("Stream data callback: {} {}", input.len(), output.len());
+
+        // len is of input and output is frame len. Turn these into the real lengths.
+        let real_input = unsafe {
+            let nbytes = input.len() * self.input_frame_size as usize;
+            slice::from_raw_parts(input.as_ptr(), nbytes)
+        };
+
+        self.input_shm.write(real_input).unwrap();
+
+        let r = self.rpc
+            .call(CallbackReq::Data(
+                output.len() as isize,
+                self.output_frame_size as usize,
+            ))
+            .wait();
+
+        match r {
+            Ok(CallbackResp::Data(frames)) => {
+                if frames >= 0 {
+                    let nbytes = frames as usize * self.output_frame_size as usize;
+                    let real_output = unsafe {
+                        trace!("Resize output to {}", nbytes);
+                        slice::from_raw_parts_mut(output.as_mut_ptr(), nbytes)
+                    };
+                    self.output_shm.read(&mut real_output[..nbytes]).unwrap();
+                }
+                frames
+            }
+            _ => {
+                debug!("Unexpected message {:?} during data_callback", r);
+                -1
+            }
+        }
+    }
+
+    fn state_callback(&mut self, state: cubeb::State) {
+        trace!("Stream state callback: {:?}", state);
+        let r = self.rpc.call(CallbackReq::State(state.into())).wait();
+        match r {
+            Ok(CallbackResp::State) => {}
+            _ => {
+                debug!("Unexpected message {:?} during callback", r);
+            }
+        }
+    }
+}
+
+struct ServerStream {
+    stream: ManuallyDrop<cubeb::Stream>,
+    cbs: ManuallyDrop<Box<ServerStreamCallbacks>>,
+}
+
+impl Drop for ServerStream {
+    fn drop(&mut self) {
+        unsafe {
+            ManuallyDrop::drop(&mut self.stream);
+            ManuallyDrop::drop(&mut self.cbs);
+        }
+    }
+}
+
+type StreamSlab = slab::Slab<ServerStream, usize>;
 
 pub struct CubebServer {
     cb_remote: Remote,
@@ -167,47 +248,55 @@ impl CubebServer {
             }
 
             ServerMessage::StreamStart(stm_tok) => self.streams[stm_tok]
+                .stream
                 .start()
                 .map(|_| ClientMessage::StreamStarted)
                 .unwrap_or_else(error),
 
             ServerMessage::StreamStop(stm_tok) => self.streams[stm_tok]
+                .stream
                 .stop()
                 .map(|_| ClientMessage::StreamStopped)
                 .unwrap_or_else(error),
 
             ServerMessage::StreamResetDefaultDevice(stm_tok) => self.streams[stm_tok]
+                .stream
                 .reset_default_device()
                 .map(|_| ClientMessage::StreamDefaultDeviceReset)
                 .unwrap_or_else(error),
 
             ServerMessage::StreamGetPosition(stm_tok) => self.streams[stm_tok]
+                .stream
                 .position()
                 .map(ClientMessage::StreamPosition)
                 .unwrap_or_else(error),
 
             ServerMessage::StreamGetLatency(stm_tok) => self.streams[stm_tok]
+                .stream
                 .latency()
                 .map(ClientMessage::StreamLatency)
                 .unwrap_or_else(error),
 
             ServerMessage::StreamSetVolume(stm_tok, volume) => self.streams[stm_tok]
+                .stream
                 .set_volume(volume)
                 .map(|_| ClientMessage::StreamVolumeSet)
                 .unwrap_or_else(error),
 
             ServerMessage::StreamSetPanning(stm_tok, panning) => self.streams[stm_tok]
+                .stream
                 .set_panning(panning)
                 .map(|_| ClientMessage::StreamPanningSet)
                 .unwrap_or_else(error),
 
             ServerMessage::StreamGetCurrentDevice(stm_tok) => self.streams[stm_tok]
+                .stream
                 .current_device()
                 .map(|device| ClientMessage::StreamCurrentDevice(Device::from(device)))
                 .unwrap_or_else(error),
         };
 
-        debug!("process_msg: req={:?}, resp={:?}", msg, resp);
+        trace!("process_msg: req={:?}, resp={:?}", msg, resp);
 
         resp
     }
@@ -236,17 +325,13 @@ impl CubebServer {
                 .unwrap_or(0u16)
         }
 
-        // TODO: Yuck!
-        let input_device = params.input_device as *const _;
-        let output_device = params.output_device as *const _;
-        let latency = params.latency_frames;
-
+        // Create the callback handling struct which is attached the cubeb stream.
         let input_frame_size = frame_size_in_bytes(params.input_stream_params.as_ref());
         let output_frame_size = frame_size_in_bytes(params.output_stream_params.as_ref());
 
         let (stm1, stm2) = net::UnixStream::pair()?;
         debug!("Created callback pair: {:?}-{:?}", stm1, stm2);
-        let (mut input_shm, input_file) =
+        let (input_shm, input_file) =
             SharedMemWriter::new(&audioipc::get_shm_path("input"), SHM_AREA_SIZE)?;
         let (output_shm, output_file) =
             SharedMemReader::new(&audioipc::get_shm_path("output"), SHM_AREA_SIZE)?;
@@ -270,112 +355,89 @@ impl CubebServer {
             Ok(())
         });
 
-        let rpc_data: rpc::ClientProxy<CallbackReq, CallbackResp> = match rx.wait() {
+        let rpc: rpc::ClientProxy<CallbackReq, CallbackResp> = match rx.wait() {
             Ok(rpc) => rpc,
             Err(_) => bail!("Failed to create callback rpc."),
         };
-        let rpc_state = rpc_data.clone();
 
-        let mut builder = cubeb::StreamBuilder::new();
+        let cbs = Box::new(ServerStreamCallbacks {
+            input_frame_size,
+            output_frame_size,
+            input_shm,
+            output_shm,
+            rpc,
+        });
 
-        if let Some(ref stream_name) = params.stream_name {
-            builder.name(stream_name.clone());
-        }
+        // Create cubeb stream from params
+        let stream_name = params
+            .stream_name
+            .as_ref()
+            .and_then(|name| CStr::from_bytes_with_nul(name).ok());
 
-        if let Some(ref isp) = params.input_stream_params {
-            let input_stream_params =
-                unsafe { cubeb::StreamParamsRef::from_ptr(isp as *const StreamParams as *mut _) };
-            builder.input(input_device, input_stream_params);
-        }
+        let input_device = params.input_device as *const _;
+        let input_stream_params = params.input_stream_params.as_ref().map(|isp| unsafe {
+            cubeb::StreamParamsRef::from_ptr(isp as *const StreamParams as *mut _)
+        });
 
-        if let Some(ref osp) = params.output_stream_params {
-            let output_stream_params =
-                unsafe { cubeb::StreamParamsRef::from_ptr(osp as *const StreamParams as *mut _) };
-            builder.output(output_device, output_stream_params);
-        }
+        let output_device = params.output_device as *const _;
+        let output_stream_params = params.output_stream_params.as_ref().map(|osp| unsafe {
+            cubeb::StreamParamsRef::from_ptr(osp as *const StreamParams as *mut _)
+        });
 
-        builder
-            .latency(latency)
-            .data_callback(move |input, output| {
-                trace!("Stream data callback: {} {}", input.len(), output.len());
+        let latency = params.latency_frames;
+        assert!(size_of::<Box<ServerStreamCallbacks>>() == size_of::<usize>());
+        let user_ptr = cbs.as_ref() as *const ServerStreamCallbacks as *mut c_void;
 
-                // len is of input and output is frame len. Turn these into the real lengths.
-                let real_input = unsafe {
-                    let nbytes = input.len() * input_frame_size as usize;
-                    slice::from_raw_parts(input.as_ptr(), nbytes)
-                };
+        unsafe {
+            context
+                .stream_init(
+                    stream_name,
+                    input_device,
+                    input_stream_params,
+                    output_device,
+                    output_stream_params,
+                    latency,
+                    Some(data_cb_c),
+                    Some(state_cb_c),
+                    user_ptr,
+                )
+                .and_then(|stream| {
+                    if !self.streams.has_available() {
+                        trace!(
+                            "server connection ran out of stream slots. reserving {} more.",
+                            STREAM_CONN_CHUNK_SIZE
+                        );
+                        self.streams.reserve_exact(STREAM_CONN_CHUNK_SIZE);
+                    }
 
-                input_shm.write(real_input).unwrap();
+                    let stm_tok = match self.streams.vacant_entry() {
+                        Some(entry) => {
+                            debug!("Registering stream {:?}", entry.index(),);
 
-                let r = rpc_data
-                    .call(CallbackReq::Data(
-                        output.len() as isize,
-                        output_frame_size as usize,
-                    ))
-                    .wait();
-
-                match r {
-                    Ok(CallbackResp::Data(frames)) => {
-                        if frames >= 0 {
-                            let nbytes = frames as usize * output_frame_size as usize;
-                            let real_output = unsafe {
-                                trace!("Resize output to {}", nbytes);
-                                slice::from_raw_parts_mut(output.as_mut_ptr(), nbytes)
-                            };
-                            output_shm.read(&mut real_output[..nbytes]).unwrap();
+                            entry
+                                .insert(ServerStream {
+                                    stream: ManuallyDrop::new(stream),
+                                    cbs: ManuallyDrop::new(cbs),
+                                })
+                                .index()
                         }
-                        frames
-                    }
-                    _ => {
-                        debug!("Unexpected message {:?} during data_callback", r);
-                        -1
-                    }
-                }
-            })
-            .state_callback(move |state| {
-                trace!("Stream state callback: {:?}", state);
-                let r = rpc_state.call(CallbackReq::State(state.into())).wait();
-                match r {
-                    Ok(CallbackResp::State) => {}
-                    _ => {
-                        debug!("Unexpected message {:?} during callback", r);
-                    }
-                }
-            });
+                        None => {
+                            // TODO: Turn into error
+                            panic!("Failed to insert stream into slab. No entries")
+                        }
+                    };
 
-        builder
-            .init(context)
-            .and_then(|stream| {
-                if !self.streams.has_available() {
-                    trace!(
-                        "server connection ran out of stream slots. reserving {} more.",
-                        STREAM_CONN_CHUNK_SIZE
-                    );
-                    self.streams.reserve_exact(STREAM_CONN_CHUNK_SIZE);
-                }
-
-                let stm_tok = match self.streams.vacant_entry() {
-                    Some(entry) => {
-                        debug!("Registering stream {:?}", entry.index(),);
-
-                        entry.insert(stream).index()
-                    }
-                    None => {
-                        // TODO: Turn into error
-                        panic!("Failed to insert stream into slab. No entries")
-                    }
-                };
-
-                Ok(ClientMessage::StreamCreated(StreamCreate {
-                    token: stm_tok,
-                    fds: [
-                        stm1.into_raw_fd(),
-                        input_file.into_raw_fd(),
-                        output_file.into_raw_fd(),
-                    ],
-                }))
-            })
-            .map_err(|e| e.into())
+                    Ok(ClientMessage::StreamCreated(StreamCreate {
+                        token: stm_tok,
+                        fds: [
+                            stm1.into_raw_fd(),
+                            input_file.into_raw_fd(),
+                            output_file.into_raw_fd(),
+                        ],
+                    }))
+                })
+                .map_err(|e| e.into())
+        }
     }
 }
 
@@ -466,4 +528,42 @@ pub extern "C" fn audioipc_server_stop(p: *mut c_void) {
 
 fn error(error: cubeb::Error) -> ClientMessage {
     ClientMessage::Error(error.raw_code())
+}
+
+// C callable callbacks
+unsafe extern "C" fn data_cb_c(
+    _: *mut ffi::cubeb_stream,
+    user_ptr: *mut c_void,
+    input_buffer: *const c_void,
+    output_buffer: *mut c_void,
+    nframes: c_long,
+) -> c_long {
+    let ok = panic::catch_unwind(|| {
+        let cbs = &mut *(user_ptr as *mut ServerStreamCallbacks);
+        let input = if input_buffer.is_null() {
+            &[]
+        } else {
+            slice::from_raw_parts(input_buffer as *const u8, nframes as usize)
+        };
+        let output: &mut [u8] = if output_buffer.is_null() {
+            &mut []
+        } else {
+            slice::from_raw_parts_mut(output_buffer as *mut u8, nframes as usize)
+        };
+        cbs.data_callback(input, output) as c_long
+    });
+    ok.unwrap_or(0)
+}
+
+unsafe extern "C" fn state_cb_c(
+    _: *mut ffi::cubeb_stream,
+    user_ptr: *mut c_void,
+    state: ffi::cubeb_state,
+) {
+    let ok = panic::catch_unwind(|| {
+        let state = cubeb::State::from(state);
+        let cbs = &mut *(user_ptr as *mut ServerStreamCallbacks);
+        cbs.state_callback(state);
+    });
+    ok.expect("State callback panicked");
 }
