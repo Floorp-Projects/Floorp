@@ -285,7 +285,7 @@ prop_id = GENERATED_FILES['nsCSSPropertyID.h']
 prop_id.script = 'GenerateCSSPropertyID.py:generate'
 prop_id.inputs = [
     'nsCSSPropertyID.h.in',
-    '!ServoCssPropList.py',
+    '!ServoCSSPropList.py',
 ]
 
 servo_props = GENERATED_FILES['ServoCSSPropList.h']
