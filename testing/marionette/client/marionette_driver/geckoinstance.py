@@ -50,6 +50,10 @@ class GeckoInstance(object):
         # Do not show datareporting policy notifications which can interfer with tests
         "datareporting.policy.dataSubmissionPolicyBypassNotification": True,
 
+        # Automatically unload beforeunload alerts
+        "dom.disable_beforeunload": True,
+
+        # Disable the ProcessHangMonitor
         "dom.ipc.reportProcessHangs": False,
 
         # No slow script dialogs
