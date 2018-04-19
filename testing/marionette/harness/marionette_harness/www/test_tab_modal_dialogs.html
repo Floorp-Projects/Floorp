@@ -20,17 +20,12 @@
       var promptText = window.prompt('Marionette prompt');
       document.getElementById('prompt-result').innerHTML = promptText === null ? 'null' : promptText;
     }
-
-    function onBeforeUnload () {
-      window.onbeforeunload = function () { return "Are you sure?"; }
-    }
   </script>
 </head>
 <body>
    <a href="#" id="tab-modal-alert" onclick="handleAlert()">Open an alert dialog.</a>
    <a href="#" id="tab-modal-confirm" onclick="handleConfirm()">Open a confirm dialog.</a>
    <a href="#" id="tab-modal-prompt" onclick="handlePrompt()">Open a prompt dialog.</a>
-   <a href="#" id="onbeforeunload-handler" onclick="onBeforeUnload()">Add an onbeforeunload handler.</a>
    <a href="#" id="click-handler" onclick="document.getElementById('click-result').innerHTML='result';">Make text appear.</a>
    <div id="confirm-result"></div>
    <div id="prompt-result"></div>
