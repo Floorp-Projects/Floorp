@@ -251,6 +251,12 @@ public:
         }
 
     }
+
+    static void Crash()
+    {
+        printf_stderr("Intentionally crashing...\n");
+        MOZ_CRASH("intentional crash");
+    }
 };
 
 int32_t GeckoThreadSupport::sPauseCount;
@@ -401,6 +407,7 @@ nsAppShell::nsAppShell()
     if (!XRE_IsParentProcess()) {
         if (jni::IsAvailable()) {
             GeckoAppShellSupport::Init();
+            GeckoThreadSupport::Init();
 
             // Set the corresponding state in GeckoThread.
             java::GeckoThread::SetState(java::GeckoThread::State::RUNNING());

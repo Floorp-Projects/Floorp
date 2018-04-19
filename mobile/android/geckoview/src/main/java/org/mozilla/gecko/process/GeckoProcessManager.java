@@ -167,6 +167,13 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
     }
 
+    public void crashChild() {
+        try {
+            mConnections.get("tab").bind().crash();
+        } catch (RemoteException e) {
+        }
+    }
+
     @WrapForJNI
     private static int start(final String type, final String[] args,
                              final int prefsFd, final int ipcFd,

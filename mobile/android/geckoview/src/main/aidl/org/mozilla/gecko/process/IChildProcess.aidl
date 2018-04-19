@@ -15,4 +15,6 @@ interface IChildProcess {
                   in ParcelFileDescriptor prefsPfd, in ParcelFileDescriptor ipcPfd,
                   in ParcelFileDescriptor crashReporterPfd,
                   in ParcelFileDescriptor crashAnnotationPfd);
+
+    void crash();
 }

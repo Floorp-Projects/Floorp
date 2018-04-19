@@ -91,6 +91,11 @@ public class GeckoServiceChildProcess extends Service {
             });
             return true;
         }
+
+        @Override
+        public void crash() {
+            GeckoThread.crash();
+        }
     };
 
     @Override
