@@ -67,6 +67,23 @@ add_task(async function test_removingSingleAndMultipleAddresses() {
   win.close();
 });
 
+add_task(async function test_removingAdressViaKeyboardDelete() {
+  await saveAddress(TEST_ADDRESS_1);
+  let win = window.openDialog(MANAGE_ADDRESSES_DIALOG_URL, null, DIALOG_SIZE);
+  await waitForFocusAndFormReady(win);
+
+  let selRecords = win.document.querySelector(TEST_SELECTORS.selRecords);
+
+  is(selRecords.length, 1, "One address");
+
+  EventUtils.synthesizeMouseAtCenter(selRecords.children[0], {}, win);
+  EventUtils.synthesizeKey("VK_DELETE", {}, win);
+  await BrowserTestUtils.waitForEvent(selRecords, "RecordsRemoved");
+  is(selRecords.length, 0, "No addresses left");
+
+  win.close();
+});
+
 add_task(async function test_addressesDialogWatchesStorageChanges() {
   let win = window.openDialog(MANAGE_ADDRESSES_DIALOG_URL, null, DIALOG_SIZE);
   await waitForFocusAndFormReady(win);
