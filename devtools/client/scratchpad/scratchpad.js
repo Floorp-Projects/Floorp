@@ -1982,7 +1982,7 @@ var Scratchpad = {
    */
   openDocumentationPage: function SP_openDocumentationPage() {
     let url = this.strings.GetStringFromName("help.openDocumentationPage");
-    this.browserWindow.openTrustedLinkIn(url, "tab");
+    this.browserWindow.openWebLinkIn(url, "tab");
     this.browserWindow.focus();
   },
 };
