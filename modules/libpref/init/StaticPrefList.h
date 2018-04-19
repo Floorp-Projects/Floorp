@@ -149,7 +149,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "layout.css.parsing.parallel",
    layout_css_parsing_parallel,
-  bool, true
+  bool, false
 )
 
 // Is support for the font-display @font-face descriptor enabled?
