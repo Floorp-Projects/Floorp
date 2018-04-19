@@ -28,6 +28,8 @@ name = "typedarray"
 [[test]]
 name = "stack_limit"
 [[test]]
+name = "value"
+[[test]]
 name = "vec_conversion"
 
 [lib]
