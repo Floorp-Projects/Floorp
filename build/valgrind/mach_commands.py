@@ -65,7 +65,7 @@ class MachCommands(MachCommandBase):
 
         with TemporaryDirectory() as profilePath:
             #TODO: refactor this into mozprofile
-            prefpath = os.path.join(self.topsrcdir, 'testing', 'profiles', 'prefs_general.js')
+            prefpath = os.path.join(self.topsrcdir, 'testing', 'profiles', 'common', 'user.js')
             prefs = {}
             prefs.update(Preferences.read_prefs(prefpath))
             interpolation = { 'server': '%s:%d' % httpd.httpd.server_address,
