@@ -131,7 +131,6 @@ function promiseSettingsDialogClose() {
 
 function assertSitesListed(doc, hosts) {
   let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
-  let removeBtn = frameDoc.getElementById("removeSelected");
   let removeAllBtn = frameDoc.getElementById("removeAll");
   let sitesList = frameDoc.getElementById("sitesList");
   let totalSitesNumber = sitesList.getElementsByTagName("richlistitem").length;
@@ -140,7 +139,6 @@ function assertSitesListed(doc, hosts) {
     let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
     ok(site, `Should list the site of ${host}`);
   });
-  is(removeBtn.disabled, true, "Should disable the removeSelected button");
   is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
 }
 
