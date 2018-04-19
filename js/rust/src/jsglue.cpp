@@ -916,7 +916,7 @@ WriteBytesToJSStructuredCloneData(const uint8_t* src, size_t len, JSStructuredCl
     assert(src != nullptr);
     assert(dest != nullptr);
 
-    return dest->WriteBytes(reinterpret_cast<const char*>(src), len);
+    return dest->AppendBytes(reinterpret_cast<const char*>(src), len);
 }
 
 } // extern "C"
