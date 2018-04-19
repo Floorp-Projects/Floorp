@@ -12,6 +12,7 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/NotNull.h"
 #include "nsIThreadInternal.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla {
 class StyleSheet;
@@ -202,7 +203,19 @@ private:
   void FireLoadEvent(nsIThreadInternal* aThread);
 };
 
+typedef nsMainThreadPtrHolder<SheetLoadData> SheetLoadDataHolder;
+
 } // namespace css
 } // namespace mozilla
+
+/**
+ * Casting SheetLoadData to nsISupports is ambiguous.
+ * This method handles that.
+ */
+inline nsISupports*
+ToSupports(mozilla::css::SheetLoadData* p)
+{
+  return NS_ISUPPORTS_CAST(nsIRunnable*, p);
+}
 
 #endif // mozilla_css_SheetLoadData_h

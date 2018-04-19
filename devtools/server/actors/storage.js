@@ -1168,10 +1168,20 @@ function getObjectForLocalOrSessionStorage(type) {
       if (!storage) {
         return [];
       }
-      return Object.keys(storage).map(key => ({
-        name: key,
-        value: storage.getItem(key)
-      }));
+
+      // local and session storage cannot be iterated over using Object.keys()
+      // because it skips keys that are duplicated on the prototype
+      // e.g. "key", "getKeys" so we need to gather the real keys using the
+      // storage.key() function.
+      const storageArray = [];
+      for (let i = 0; i < storage.length; i++) {
+        const key = storage.key(i);
+        storageArray.push({
+          name: key,
+          value: storage.getItem(key)
+        });
+      }
+      return storageArray;
     },
 
     populateStoresForHost(host, window) {

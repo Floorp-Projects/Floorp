@@ -42,6 +42,9 @@ macro_rules! t(
 
 pub const CLIENT_OPS: Ops = capi_new!(ClientContext, ClientStream);
 
+// ClientContext's layout *must* match cubeb.c's `struct cubeb` for the
+// common fields.
+#[repr(C)]
 pub struct ClientContext {
     _ops: *const Ops,
     rpc: rpc::ClientProxy<ServerMessage, ClientMessage>,
@@ -227,7 +230,7 @@ impl ContextOps for ClientContext {
         }
 
         let stream_name = match stream_name {
-            Some(s) => Some(s.to_bytes().to_vec()),
+            Some(s) => Some(s.to_bytes_with_nul().to_vec()),
             None => None,
         };
 
@@ -258,7 +261,7 @@ impl ContextOps for ClientContext {
 
 impl Drop for ClientContext {
     fn drop(&mut self) {
-        debug!("ClientContext drop...");
+        debug!("ClientContext dropped...");
         let _ = send_recv!(self.rpc(), ClientDisconnect => ClientDisconnected);
         unsafe {
             if G_SERVER_FD.is_some() {

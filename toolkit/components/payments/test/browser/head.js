@@ -255,3 +255,7 @@ add_task(async function setup_head() {
     cleanupFormAutofillStorage();
   });
 });
+
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}

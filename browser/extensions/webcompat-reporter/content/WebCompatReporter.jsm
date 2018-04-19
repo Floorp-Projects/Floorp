@@ -19,9 +19,9 @@ XPCOMUtils.defineLazyGetter(this, "wcStrings", function() {
 // Gather values for prefs we want to appear in reports.
 let prefs = {};
 XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.all", "gfx.webrender.all", false);
-XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.blob-images", "gfx.webrender.blob-images", 1);
+XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.blob-images", "gfx.webrender.blob-images", true);
 XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.enabled", "gfx.webrender.enabled", false);
-XPCOMUtils.defineLazyPreferenceGetter(prefs, "image.mem.shared", "image.mem.shared", 2);
+XPCOMUtils.defineLazyPreferenceGetter(prefs, "image.mem.shared", "image.mem.shared", true);
 
 if (AppConstants.platform == "linux") {
   XPCOMUtils.defineLazyPreferenceGetter(prefs, "layers.acceleration.force-enabled", "layers.acceleration.force-enabled", false);

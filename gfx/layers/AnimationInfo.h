@@ -7,8 +7,11 @@
 #ifndef GFX_ANIMATIONINFO_H
 #define GFX_ANIMATIONINFO_H
 
-#include "mozilla/StyleAnimationValue.h"
+#include "nsAutoPtr.h"
 #include "nsDisplayItemTypes.h"
+
+struct RawServoAnimationValue;
+class nsIFrame;
 
 namespace mozilla {
 namespace layers {
@@ -52,7 +55,10 @@ public:
   void TransferMutatedFlagToLayer(Layer* aLayer);
 
   uint64_t GetCompositorAnimationsId() { return mCompositorAnimationsId; }
-  AnimationValue GetBaseAnimationStyle() const { return mBaseAnimationStyle; }
+  RawServoAnimationValue* GetBaseAnimationStyle() const
+  {
+    return mBaseAnimationStyle;
+  }
   InfallibleTArray<AnimData>& GetAnimationData() { return mAnimationData; }
   AnimationArray& GetAnimations() { return mAnimations; }
   bool ApplyPendingUpdatesForThisTransaction();
@@ -71,7 +77,7 @@ protected:
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager
   uint64_t mAnimationGeneration;
-  AnimationValue mBaseAnimationStyle;
+  RefPtr<RawServoAnimationValue> mBaseAnimationStyle;
   bool mMutated;
 };
 

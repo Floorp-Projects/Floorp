@@ -15,7 +15,7 @@ var phases = {
 };
 
 const id1 = "restartless-xpi@tests.mozilla.org";
-const id2 = "unsigned-xpi@tests.mozilla.org";
+const id2 = "test-webext@quality.mozilla.org";
 
 Phase("phase01", [
   [Addons.install, [id1]],

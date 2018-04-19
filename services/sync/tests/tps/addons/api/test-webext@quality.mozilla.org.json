@@ -2,20 +2,20 @@
   "next": null,
   "results": [
     {
-      "name": "Unsigned Test XPI",
+      "name": "Tet Webext XPI",
       "type": "extension",
-      "guid": "unsigned-xpi@tests.mozilla.org",
+      "guid": "test-webext@quality.mozilla.org",
       "current_version": {
         "version": "1.0",
         "files": [
           {
             "platform": "all",
-            "size": 452,
-            "url": "http://127.0.0.1:4567/addons/unsigned.xpi"
+            "size": 3412,
+            "url": "http://127.0.0.1:4567/addons/webextension.xpi"
           }
         ]
       },
-      "last_updated": "2011-09-05T20:42:09Z"
+      "last_updated": "2018-04-17T18:24:42Z"
     }
   ]
 }

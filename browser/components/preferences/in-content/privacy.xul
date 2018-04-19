@@ -66,19 +66,18 @@
   <hbox align="center">
     <label id="historyModeLabel"
            control="historyMode"
-           accesskey="&historyHeader2.pre.accesskey;">&historyHeader2.pre.label;
-    </label>
+           data-l10n-id="history-remember-label"/>
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
       <menulist id="historyMode">
         <menupopup>
-          <menuitem label="&historyHeader.remember.label;"
+          <menuitem data-l10n-id="history-remember-option-all"
                     value="remember"
                     search-l10n-ids="history-remember-description"/>
-          <menuitem label="&historyHeader.dontremember.label;"
+          <menuitem data-l10n-id="history-remember-option-never"
                     value="dontremember"
                     search-l10n-ids="history-dontremember-description"/>
-          <menuitem label="&historyHeader.custom.label;"
+          <menuitem data-l10n-id="history-remember-option-custom"
                     value="custom"
                     search-l10n-ids="
                       history-private-browsing-permanent.label,
@@ -89,7 +88,6 @@
         </menupopup>
       </menulist>
     </hbox>
-    <label>&historyHeader.post.label;</label>
   </hbox>
   <hbox>
     <deck id="historyPane" flex="1">

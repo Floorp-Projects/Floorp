@@ -72,6 +72,7 @@ let REQUEST_1 = {
     requestShipping: true,
     shippingType: "shipping",
   },
+  shippingOption: "456",
 };
 
 let REQUEST_2 = {
@@ -136,6 +137,7 @@ let REQUEST_2 = {
     requestShipping: true,
     shippingType: "shipping",
   },
+  shippingOption: "123",
 };
 
 let ADDRESSES_1 = {

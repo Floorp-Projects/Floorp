@@ -239,6 +239,16 @@ ExtensionPreferencesManager.addSetting("overrideDocumentColors", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("useDocumentFonts", {
+  prefNames: [
+    "browser.display.use_document_fonts",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value};
+  },
+});
+
 this.browserSettings = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;
@@ -445,6 +455,24 @@ this.browserSettings = class extends ExtensionAPI {
               }
               return ExtensionPreferencesManager.setSetting(
                 extension.id, "overrideDocumentColors", prefValue);
+            },
+          }
+        ),
+        useDocumentFonts: Object.assign(
+          getSettingsAPI(
+            extension, "useDocumentFonts",
+            () => {
+              return Services.prefs.getIntPref("browser.display.use_document_fonts") !== 0;
+            }
+          ),
+          {
+            set: details => {
+              if (typeof details.value !== "boolean") {
+                throw new ExtensionError(
+                  `${details.value} is not a valid value for useDocumentFonts.`);
+              }
+              return ExtensionPreferencesManager.setSetting(
+                extension.id, "useDocumentFonts", Number(details.value));
             },
           }
         ),

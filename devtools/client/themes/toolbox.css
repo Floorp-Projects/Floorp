@@ -99,8 +99,14 @@
   color: var(--theme-toolbar-color);
 }
 
-.devtools-tab:hover {
+.devtools-tab:hover,
+.devtools-tab:focus {
   background-color: var(--theme-toolbar-hover);
+}
+
+/* Remove system control border from devtools-tab. */
+.devtools-tab::-moz-focus-inner {
+  border: 0;
 }
 
 .devtools-tab:hover:active {

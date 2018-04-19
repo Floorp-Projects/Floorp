@@ -51,6 +51,7 @@ add_task(async function test_browser_settings() {
     "browser.tabs.insertRelatedAfterCurrent": true,
     "browser.tabs.insertAfterCurrent": false,
     "browser.display.document_color_use": 1,
+    "browser.display.use_document_fonts": 1,
   };
 
   async function background() {
@@ -219,6 +220,13 @@ add_task(async function test_browser_settings() {
   await testSetting(
     "overrideDocumentColors", "always",
     {"browser.display.document_color_use": 2});
+
+  await testSetting(
+    "useDocumentFonts", false,
+    {"browser.display.use_document_fonts": 0});
+  await testSetting(
+    "useDocumentFonts", true,
+    {"browser.display.use_document_fonts": 1});
 
   async function testProxy(config, expectedPrefs) {
     // proxyConfig is not supported on Android.
