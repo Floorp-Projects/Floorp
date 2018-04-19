@@ -1146,7 +1146,7 @@ MBasicBlock::addPredecessorPopN(TempAllocator& alloc, MBasicBlock* pred, uint32_
     return predecessors_.append(pred);
 }
 
-void
+bool
 MBasicBlock::addPredecessorSameInputsAs(MBasicBlock* pred, MBasicBlock* existingPred)
 {
     MOZ_ASSERT(pred);
@@ -1162,12 +1162,13 @@ MBasicBlock::addPredecessorSameInputsAs(MBasicBlock* pred, MBasicBlock* existing
         size_t existingPosition = indexForPredecessor(existingPred);
         for (MPhiIterator iter = phisBegin(); iter != phisEnd(); iter++) {
             if (!iter->addInputSlow(iter->getOperand(existingPosition)))
-                oomUnsafe.crash("MBasicBlock::addPredecessorAdjustPhis");
+                return false;
         }
     }
 
     if (!predecessors_.append(pred))
-        oomUnsafe.crash("MBasicBlock::addPredecessorAdjustPhis");
+        return false;
+    return true;
 }
 
 bool
