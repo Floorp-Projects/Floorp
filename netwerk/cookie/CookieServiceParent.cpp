@@ -67,6 +67,7 @@ CookieServiceParent::CookieServiceParent()
   // Get the nsCookieService instance directly, so we can call internal methods.
   mCookieService = nsCookieService::GetSingleton();
   NS_ASSERTION(mCookieService, "couldn't get nsICookieService");
+  mProcessingCookie = false;
 }
 
 CookieServiceParent::~CookieServiceParent()
@@ -270,9 +271,14 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
 
   // NB: dummyChannel could be null if something failed in CreateDummyChannel.
   nsDependentCString cookieString(aCookieString, 0);
+
+  // We set this to true while processing this cookie update, to make sure
+  // we don't send it back to the same content process.
+  mProcessingCookie = true;
   mCookieService->SetCookieStringInternal(hostURI, aIsForeign, cookieString,
-                                          aServerTime, aFromHttp, true, aAttrs,
+                                          aServerTime, aFromHttp, aAttrs,
                                           dummyChannel);
+  mProcessingCookie = false;
   return IPC_OK();
 }
 
