@@ -151,7 +151,14 @@ class PastebinProvider(object):
             response = urllib2.urlopen(req)
             http_response_code = response.getcode()
             if http_response_code == 200:
-                print(response.geturl())
+                pasteurl = response.geturl()
+                if pasteurl == URL:
+                    if "Query failure: Data too long for column" in response.readline():
+                        print('ERROR. Request too large. Limit is 64KB.')
+                    else:
+                        print('ERROR. Unknown error')
+                else:
+                    print(pasteurl)
             else:
                 print('Could not upload the file, '
                       'HTTP Response Code %s' % (http_response_code))
