@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
   <string name="preference_autocomplete_action_add">+ Agregar URL personalizada</string>
   <string name="preference_autocomplete_title_add">Agregar URL personalizada</string>
+  <string name="custom_autocomplete_quick_add">Agregar URL personalizada</string>
   <string name="preference_autocomplete_title_remove">Borrar URL personalizada</string>
   <string name="preference_autocomplete_learn_more">Conocer más</string>
   <string name="preference_autocomplete_custom_summary">Agregar y administrar URLs personalizadas.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">Incrustados en sitios para rastrear visitas y mostrar funcionalidades como los botones de compartir</string>
   <string name="preference_privacy_block_content">Bloquear otros rastreadores de contenidos</string>
   <string name="preference_privacy_block_content_summary2">Habilitarlos puede causar que algunas páginas se comporten de forma inesperada</string>
+  <string name="preference_privacy_category_cookies">Bloquear las cookies</string>
+  <string name="preference_privacy_should_block_cookies_no_option">No</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloquear sólo cookies de terceros</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
   <string name="preference_privacy_secure_mode">Cautela</string>
   <string name="preference_privacy_stealth_summary">Ocultar páginas web al intercambiar aplicaciones</string>
   <string name="preference_category_performance">Rendimiento</string>
@@ -194,4 +199,5 @@
   <string name="security_popup_insecure_connection">Conexión insegura</string>
   <string name="security_popup_security_verified">Verificado por: %1$s</string>
   <string name="site_security_icon_content_description">Seguridad del sitio</string>
+  <string name="preference_autocomplete_duplicate_url_error">Ya existe la URL</string>
 </resources>

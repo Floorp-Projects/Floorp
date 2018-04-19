@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Conexión insegura</string>
   <string name="security_popup_security_verified">Verificado por: %1$s</string>
   <string name="site_security_icon_content_description">Seguridad del sitio</string>
+  <string name="preference_autocomplete_duplicate_url_error">La URL ya existe</string>
 </resources>

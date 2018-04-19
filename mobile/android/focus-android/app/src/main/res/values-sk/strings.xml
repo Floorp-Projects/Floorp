@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Nezabezpečené pripojenie</string>
   <string name="security_popup_security_verified">Overil ju %1$s</string>
   <string name="site_security_icon_content_description">Zabezpečenie stránky</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL adresa už existuje</string>
 </resources>

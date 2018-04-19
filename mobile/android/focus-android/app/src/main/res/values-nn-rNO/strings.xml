@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Utrygg tilkopling</string>
   <string name="security_popup_security_verified">Stadfesta av: %1$s</string>
   <string name="site_security_icon_content_description">Nettstadsikkerheit</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL-en finst allereie</string>
 </resources>

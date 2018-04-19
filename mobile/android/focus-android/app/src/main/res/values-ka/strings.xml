@@ -39,6 +39,7 @@
   <string name="preference_autocomplete_subitem_customlist">საკუთარი URL მისამართები</string>
   <string name="preference_autocomplete_action_add">+ საკუთარი URL მისამართის დამატება</string>
   <string name="preference_autocomplete_title_add">საკუთარი URL მისამართის დამატება</string>
+  <string name="custom_autocomplete_quick_add">საკუთარი URL-ს დამატება</string>
   <string name="preference_autocomplete_title_remove">საკუთარი URL მისამართების წაშლა</string>
   <string name="preference_autocomplete_learn_more">ვრცლად</string>
   <string name="preference_autocomplete_custom_summary">დაამატეთ და მართეთ საკუთარი URL მისამართები.</string>
@@ -62,6 +63,10 @@
   <string name="preference_privacy_block_social_summary">საიტებზე ჩაშენებულია, თქვენს გადაადგილებაზე თვალყურის მისადევნებლად ისეთი ელემენტების სახით, როგორიცაა მოწონების, ან გაზიარების ღილაკები</string>
   <string name="preference_privacy_block_content">სხვა მეთვალყურე ელემენტების შეზღუდვა</string>
   <string name="preference_privacy_block_content_summary2">ჩართვის შედეგად, ზოგიერთმა ვებგვერდმა, შესაძლოა გამართულად ვერ იმუშაოს</string>
+  <string name="preference_privacy_category_cookies">ფუნთუშების შეზღუდვა</string>
+  <string name="preference_privacy_should_block_cookies_no_option">არა</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">მხოლოდ მე-3 მხარის ფუნთუშების</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">დიახ</string>
   <string name="preference_privacy_secure_mode">ფარული რეჟიმი</string>
   <string name="preference_privacy_stealth_summary">ვებგვერდების დამალვა, პროგრამების გადართვისას</string>
   <string name="preference_category_performance">წარმადობა</string>
@@ -194,4 +199,5 @@
   <string name="security_popup_insecure_connection">დაუცველი კავშირი</string>
   <string name="security_popup_security_verified">დამმოწმებელი: %1$s</string>
   <string name="site_security_icon_content_description">საიტის უსაფრთხოება</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL უკვე არსებობს</string>
 </resources>

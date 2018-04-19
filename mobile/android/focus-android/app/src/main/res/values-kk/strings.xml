@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Қауіпсіз емес байланыс</string>
   <string name="security_popup_security_verified">Растаған: %1$s</string>
   <string name="site_security_icon_content_description">Сайт қауіпсіздігі</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL бар болып тұр</string>
 </resources>

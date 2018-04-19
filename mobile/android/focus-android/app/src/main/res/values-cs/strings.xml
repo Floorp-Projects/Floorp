@@ -35,9 +35,11 @@
   <string name="preference_category_autocomplete_preinstalled">Výchozí seznam URL adres</string>
   <string name="preference_autocomplete_preinstalled_summary">Povolením této možnosti umožníte aplikaci %1$s automaticky doplňovat více než 450 populárních URL adres.</string>
   <string name="preference_category_autocomplete_custom">Vlastní URL adresa</string>
+  <string name="preference_category_autocomplete_custom_urls">Vlastní URL adresy</string>
   <string name="preference_autocomplete_subitem_customlist">Vlastní URL adresy</string>
   <string name="preference_autocomplete_action_add">+ Přidat vlastní URL adresu</string>
   <string name="preference_autocomplete_title_add">Přidat vlastní URL adresu</string>
+  <string name="custom_autocomplete_quick_add">Přidat vlastní URL adresu</string>
   <string name="preference_autocomplete_title_remove">Odebrat vlastní URL adresy</string>
   <string name="preference_autocomplete_learn_more">Zjistit více</string>
   <string name="preference_autocomplete_custom_summary">Přidání a správa vlastních URL adres pro automatické doplňování.</string>
@@ -61,12 +63,18 @@
   <string name="preference_privacy_block_social_summary">Vloženo do stránek pro sledování vašich návštěv a zobrazování funkcí jako tlačítka pro sdílení</string>
   <string name="preference_privacy_block_content">Blokovat ostatní sledující prvky</string>
   <string name="preference_privacy_block_content_summary2">Zapnutí může způsobit, že se některé stránky budou chovat neočekávaně</string>
+  <string name="preference_privacy_category_cookies">Blokovat cookies</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokovat pouze cookies třetích stran</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Ano</string>
   <string name="preference_privacy_secure_mode">Nenápadnost</string>
   <string name="preference_privacy_stealth_summary">Skrýt webové stránky při přepínání aplikací</string>
   <string name="preference_category_performance">Výkon</string>
   <string name="preference_performance_block_webfonts">Blokovat webové fonty</string>
   <string name="preference_performance_block_webfonts_summary">Některé ikony nebo obrázky se nemusí zobrazovat</string>
   <string name="preference_performance_block_images">Blokovat obrázky</string>
+  <string name="preference_performance_block_javascript">Blokovat JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Stránky se mohou načítat rychleji, ale také nemusí správně fungovat</string>
   <string name="preference_default_browser2">Nastavit %1$s jako výchozí prohlížeč</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Odesílat údaje o používání</string>
@@ -191,4 +199,5 @@
   <string name="security_popup_insecure_connection">Nezabezpečené připojení</string>
   <string name="security_popup_security_verified">Ověřil: %1$s</string>
   <string name="site_security_icon_content_description">Zabezpečení stránky</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL adresa už existuje</string>
 </resources>

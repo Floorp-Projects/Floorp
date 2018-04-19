@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Tuqqna taraɣelsant</string>
   <string name="security_popup_security_verified">Isenqed-it: %1$s</string>
   <string name="site_security_icon_content_description">Taɣellist n usmel web</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL Yella yakan</string>
 </resources>
