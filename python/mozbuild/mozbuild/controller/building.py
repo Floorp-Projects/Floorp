@@ -97,7 +97,7 @@ and proceed with running tests. To do this run:
 
 
 BuildOutputResult = namedtuple('BuildOutputResult',
-    ('warning', 'state_changed', 'for_display'))
+    ('warning', 'state_changed', 'message'))
 
 
 class TierStatus(object):
@@ -229,6 +229,7 @@ class BuildMonitor(MozbuildObject):
                                                      objdir=self.topobjdir)
 
         self.build_objects = []
+        self.build_dirs = set()
 
     def start(self):
         """Record the start of the build."""
@@ -255,10 +256,11 @@ class BuildMonitor(MozbuildObject):
         this line. If the build system changed state, the caller may want to
         query this instance for the current state in order to update UI, etc.
 
-        for_display is a boolean indicating whether the line is relevant to the
-        user. This is typically used to filter whether the line should be
-        presented to the user.
+        message is either None, or the content of a message to be
+        displayed to the user.
         """
+        message = None
+
         if line.startswith('BUILDSTATUS'):
             args = line.split()[1:]
 
@@ -277,19 +279,26 @@ class BuildMonitor(MozbuildObject):
             elif action == 'OBJECT_FILE':
                 self.build_objects.append(args[0])
                 update_needed = False
+            elif action == 'BUILD_VERBOSE':
+                build_dir = args[0]
+                if build_dir not in self.build_dirs:
+                    self.build_dirs.add(build_dir)
+                    message = build_dir
+                update_needed = False
             else:
                 raise Exception('Unknown build status: %s' % action)
 
-            return BuildOutputResult(None, update_needed, False)
+            return BuildOutputResult(None, update_needed, message)
 
         warning = None
 
         try:
             warning = self._warnings_collector.process_line(line)
+            message = line
         except:
             pass
 
-        return BuildOutputResult(warning, False, True)
+        return BuildOutputResult(warning, False, message)
 
     def stop_resource_recording(self):
         if self._resources_started:
@@ -666,10 +675,10 @@ class BuildOutputManager(OutputManager):
 
 
     def on_line(self, line):
-        warning, state_changed, relevant = self.monitor.on_line(line)
+        warning, state_changed, message = self.monitor.on_line(line)
 
-        if relevant:
-            self.log(logging.INFO, 'build_output', {'line': line}, '{line}')
+        if message:
+            self.log(logging.INFO, 'build_output', {'line': message}, '{line}')
         elif state_changed:
             have_handler = hasattr(self, 'handler')
             if have_handler:
