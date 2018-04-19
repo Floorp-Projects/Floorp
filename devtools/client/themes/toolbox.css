@@ -296,3 +296,8 @@
 .toolbox-panel[selected] * {
   -moz-user-focus: normal;
 }
+
+/* Toolbox tabs reordering */
+#toolbox-container.tabs-reordering > .theme-body {
+  pointer-events: none;
+}
