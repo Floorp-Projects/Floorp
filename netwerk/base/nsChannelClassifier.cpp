@@ -803,6 +803,25 @@ nsChannelClassifier::SameLoadingURI(nsIDocument *aDoc, nsIChannel *aChannel)
 }
 
 // static
+nsPIDOMWindowOuter*
+nsChannelClassifier::GetWindowForChannel(nsIChannel *aChannel)
+{
+  nsCOMPtr<nsILoadContext> ctx;
+  NS_QueryNotificationCallbacks(aChannel, ctx);
+  if (!ctx) {
+    return nullptr;
+  }
+
+  nsCOMPtr<mozIDOMWindowProxy> window;
+  ctx->GetAssociatedWindow(getter_AddRefs(window));
+  if (!window) {
+    return nullptr;
+  }
+
+  return nsPIDOMWindowOuter::From(window);
+}
+
+// static
 nsresult
 nsChannelClassifier::SetBlockedContent(nsIChannel *channel,
                                        nsresult aErrorCode,
@@ -830,41 +849,59 @@ nsChannelClassifier::SetBlockedContent(nsIChannel *channel,
     classifiedChannel->SetMatchedInfo(aList, aProvider, aFullHash);
   }
 
-  nsCOMPtr<mozIDOMWindowProxy> win;
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-    do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-  rv = thirdPartyUtil->GetTopWindowForChannel(channel, getter_AddRefs(win));
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-  auto* pwin = nsPIDOMWindowOuter::From(win);
-  nsCOMPtr<nsIDocShell> docShell = pwin->GetDocShell();
-  if (!docShell) {
-    return NS_OK;
-  }
-  nsCOMPtr<nsIDocument> doc = docShell->GetDocument();
-  NS_ENSURE_TRUE(doc, NS_OK);
-
   // This event might come after the user has navigated to another page.
   // To prevent showing the TrackingProtection UI on the wrong page, we need to
   // check that the loading URI for the channel is the same as the URI currently
-  // loaded in the document.
-  if (!SameLoadingURI(doc, channel)) {
+  // loaded in the document that is associated with the channel (which may be
+  // different than the top-level document, so we avoid ignoring all iframes).
+  nsCOMPtr<nsPIDOMWindowOuter> win = GetWindowForChannel(channel);
+  if (!win) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIDocument> frameDoc = win->GetExtantDoc();
+
+  // If the blocked request is the document load request to an iframe that
+  // contains a tracking page, the window associated with the channel belongs
+  // to that iframe, not its loading parent. In this case we actually want to
+  // compare load URIs with the parent frame, so we step up one level.
+  bool isDocumentLoad = false;
+  Unused << NS_WARN_IF(NS_FAILED(channel->GetIsDocument(&isDocumentLoad)));
+  if (isDocumentLoad || !frameDoc) {
+    win = win->GetParent();
+    if (NS_WARN_IF(!win)) {
+      return NS_OK;
+    }
+    frameDoc = win->GetExtantDoc();
+  }
+
+  if (!frameDoc || !SameLoadingURI(frameDoc, channel)) {
+    return NS_OK;
+  }
+
+  // Get the root docshell for updating the security UI.
+  nsCOMPtr<nsPIDOMWindowOuter> topWin = win->GetScriptableTop();
+  nsCOMPtr<nsIDocShell> topDocShell = topWin->GetDocShell();
+  if (!topDocShell) {
     return NS_OK;
   }
 
   // Notify nsIWebProgressListeners of this security event.
   // Can be used to change the UI state.
-  nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(docShell, &rv);
+  nsCOMPtr<nsISecurityEventSink> eventSink = do_QueryInterface(topDocShell, &rv);
   NS_ENSURE_SUCCESS(rv, NS_OK);
   uint32_t state = 0;
   nsCOMPtr<nsISecureBrowserUI> securityUI;
-  docShell->GetSecurityUI(getter_AddRefs(securityUI));
+  topDocShell->GetSecurityUI(getter_AddRefs(securityUI));
   if (!securityUI) {
     return NS_OK;
   }
   securityUI->GetState(&state);
   if (aErrorCode == NS_ERROR_TRACKING_URI) {
-    doc->SetHasTrackingContentBlocked(true);
+    nsCOMPtr<nsIDocument> topLevelDoc = topDocShell->GetDocument();
+    if (!topLevelDoc) {
+      return NS_OK;
+    }
+    topLevelDoc->SetHasTrackingContentBlocked(true);
     state |= nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT;
   } else {
     state |= nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
@@ -885,7 +922,7 @@ nsChannelClassifier::SetBlockedContent(nsIChannel *channel,
 
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   category,
-                                  doc,
+                                  frameDoc,
                                   nsContentUtils::eNECKO_PROPERTIES,
                                   message,
                                   params, ArrayLength(params));

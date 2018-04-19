@@ -80,6 +80,8 @@ private:
     bool IsHostnameWhitelisted(nsIURI *aUri, const nsACString &aWhitelisted);
     // Checks that the channel was loaded by the URI currently loaded in aDoc
     static bool SameLoadingURI(nsIDocument *aDoc, nsIChannel *aChannel);
+    // Helper function to get the (not necessarily top-level) window from a channel.
+    static nsPIDOMWindowOuter* GetWindowForChannel(nsIChannel *aChannel);
     // Note this function will be also used to decide whether or not to enable
     // channel annotation. When |aAnnotationsOnly| is true, this function
     // is called by ShouldEnableTrackingAnnotation(). Otherwise, this is called
