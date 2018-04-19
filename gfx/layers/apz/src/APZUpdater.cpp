@@ -22,11 +22,11 @@ StaticMutex APZUpdater::sWindowIdLock;
 StaticAutoPtr<std::unordered_map<uint64_t, APZUpdater*>> APZUpdater::sWindowIdMap;
 
 
-APZUpdater::APZUpdater(const RefPtr<APZCTreeManager>& aApz)
+APZUpdater::APZUpdater(const RefPtr<APZCTreeManager>& aApz,
+                       bool aIsUsingWebRender)
   : mApz(aApz)
-#ifdef DEBUG
-  , mUpdaterThreadQueried(false)
-#endif
+  , mIsUsingWebRender(aIsUsingWebRender)
+  , mThreadIdLock("APZUpdater::ThreadIdLock")
   , mQueueLock("APZUpdater::QueueLock")
 {
   MOZ_ASSERT(aApz);
@@ -67,8 +67,7 @@ APZUpdater::SetWebRenderWindowId(const wr::WindowId& aWindowId)
 APZUpdater::SetUpdaterThread(const wr::WrWindowId& aWindowId)
 {
   if (RefPtr<APZUpdater> updater = GetUpdater(aWindowId)) {
-    // Ensure nobody tried to use the updater thread before this point.
-    MOZ_ASSERT(!updater->mUpdaterThreadQueried);
+    MutexAutoLock lock(updater->mThreadIdLock);
     updater->mUpdaterThreadId = Some(PlatformThread::CurrentId());
   }
 }
@@ -339,6 +338,13 @@ APZUpdater::RunOnUpdaterThread(LayersId aLayersId, already_AddRefed<Runnable> aT
 {
   RefPtr<Runnable> task = aTask;
 
+  // In the scenario where UsingWebRenderUpdaterThread() is true, this function
+  // might get called early (before mUpdaterThreadId is set). In that case
+  // IsUpdaterThread() will return false and we'll queue the task onto
+  // mUpdaterQueue. This is fine; the task is still guaranteed to run (barring
+  // catastrophic failure) because the WakeSceneBuilder call will still trigger
+  // the callback to run tasks.
+
   if (IsUpdaterThread()) {
     task->Run();
     return;
@@ -380,7 +386,12 @@ bool
 APZUpdater::IsUpdaterThread() const
 {
   if (UsingWebRenderUpdaterThread()) {
-    return PlatformThread::CurrentId() == *mUpdaterThreadId;
+    // If the updater thread id isn't set yet then we cannot be running on the
+    // updater thread (because we will have the thread id before we run any
+    // C++ code on it, and this function is only ever invoked from C++ code),
+    // so return false in that scenario.
+    MutexAutoLock lock(mThreadIdLock);
+    return mUpdaterThreadId && PlatformThread::CurrentId() == *mUpdaterThreadId;
   }
   return CompositorThreadHolder::IsInCompositorThread();
 }
@@ -399,21 +410,7 @@ APZUpdater::RunOnControllerThread(LayersId aLayersId, already_AddRefed<Runnable>
 bool
 APZUpdater::UsingWebRenderUpdaterThread() const
 {
-  if (!gfxPrefs::WebRenderAsyncSceneBuild()) {
-    return false;
-  }
-  // If mUpdaterThreadId is not set at the point that this is called, then
-  // that means that either (a) WebRender is not enabled for the compositor
-  // to which this APZUpdater is attached or (b) we are attempting to do
-  // something updater-related before WebRender is up and running. In case
-  // (a) falling back to the compositor thread is correct, and in case (b)
-  // we should stop doing the updater-related thing so early. We catch this
-  // case by setting the mUpdaterThreadQueried flag and asserting on WR
-  // initialization.
-#ifdef DEBUG
-  mUpdaterThreadQueried = true;
-#endif
-  return mUpdaterThreadId.isSome();
+  return (mIsUsingWebRender && gfxPrefs::WebRenderAsyncSceneBuild());
 }
 
 /*static*/ already_AddRefed<APZUpdater>

@@ -27,7 +27,7 @@ protected:
     APZThreadUtils::SetControllerThread(MessageLoop::current());
 
     manager = new TestAPZCTreeManager(mcc);
-    updater = new APZUpdater(manager);
+    updater = new APZUpdater(manager, false);
     sampler = new APZSampler(manager);
   }
 

@@ -44,7 +44,8 @@ class APZUpdater {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(APZUpdater)
 
 public:
-  explicit APZUpdater(const RefPtr<APZCTreeManager>& aApz);
+  APZUpdater(const RefPtr<APZCTreeManager>& aApz,
+             bool aIsUsingWebRender);
 
   bool HasTreeManager(const RefPtr<APZCTreeManager>& aApz);
   void SetWebRenderWindowId(const wr::WindowId& aWindowId);
@@ -145,6 +146,7 @@ protected:
 
 private:
   RefPtr<APZCTreeManager> mApz;
+  bool mIsUsingWebRender;
 
   // Map from layers id to WebRenderScrollData. This can only be touched on
   // the updater thread.
@@ -193,20 +195,14 @@ private:
   static StaticAutoPtr<std::unordered_map<uint64_t, APZUpdater*>> sWindowIdMap;
   Maybe<wr::WrWindowId> mWindowId;
 
+  // Lock used to protected mUpdaterThreadId;
+  mutable Mutex mThreadIdLock;
   // If WebRender and async scene building are enabled, this holds the thread id
   // of the scene builder thread (which is the updater thread) for the
   // compositor associated with this APZUpdater instance. It may be populated
   // even if async scene building is not enabled, but in that case we don't
   // care about the contents.
-  // This is written to once during init and never cleared, and so reading it
-  // from multiple threads during normal operation (after initialization)
-  // without locking should be fine.
   Maybe<PlatformThreadId> mUpdaterThreadId;
-#ifdef DEBUG
-  // This flag is used to ensure that we don't ever try to do updater-thread
-  // stuff before the updater thread has been properly initialized.
-  mutable bool mUpdaterThreadQueried;
-#endif
 
   // Helper struct that pairs each queued runnable with the layers id that it
   // is associated with. This allows us to easily implement the conceptual
