@@ -206,6 +206,11 @@ var RecipeRunner = {
     let recipes;
     try {
       recipes = await NormandyApi.fetchRecipes({enabled: true});
+      log.debug(
+        `Fetched ${recipes.length} recipes from the server: ` +
+        recipes.map(r => r.name).join(", ")
+      );
+
     } catch (e) {
       const apiUrl = Services.prefs.getCharPref(API_URL_PREF);
       log.error(`Could not fetch recipes from ${apiUrl}: "${e}"`);

@@ -7,8 +7,7 @@ toolkit.jar:
   res/normandy/Normandy.jsm (./Normandy.jsm)
   res/normandy/lib/ (./lib/*)
   res/normandy/skin/  (./skin/*)
-  res/normandy/actions/BaseAction.jsm (./actions/BaseAction.jsm)
-  res/normandy/actions/ConsoleLog.jsm (./actions/ConsoleLog.jsm)
+  res/normandy/actions/ (./actions/*.jsm)
   res/normandy/actions/schemas/index.js (./actions/schemas/index.js)
 
 % resource normandy-content %res/normandy/content/ contentaccessible=yes

@@ -3,9 +3,10 @@ ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ActionSandboxManager: "resource://normandy/lib/ActionSandboxManager.jsm",
-  ConsoleLog: "resource://normandy/actions/ConsoleLog.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   Uptake: "resource://normandy/lib/Uptake.jsm",
+  ConsoleLogAction: "resource://normandy/actions/ConsoleLogAction.jsm",
+  PreferenceRolloutAction: "resource://normandy/actions/PreferenceRolloutAction.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["ActionsManager"];
@@ -27,7 +28,8 @@ class ActionsManager {
     this.remoteActionSandboxes = {};
 
     this.localActions = {
-      "console-log": new ConsoleLog(),
+      "console-log": new ConsoleLogAction(),
+      "preference-rollout": new PreferenceRolloutAction(),
     };
   }
 
@@ -57,6 +59,9 @@ class ActionsManager {
         Uptake.reportAction(action.name, status);
       }
     }
+
+    const actionNames = Object.keys(this.remoteActionSandboxes);
+    log.debug(`Fetched ${actionNames.length} actions from the server: ${actionNames.join(", ")}`);
   }
 
   async preExecution() {

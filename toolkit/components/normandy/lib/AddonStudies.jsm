@@ -341,8 +341,6 @@ var AddonStudies = {
       throw new Error(`No study found for recipe ${recipeId}.`);
     }
     if (!study.active) {
-      dump(`@@@ Cannot stop study for recipe ${recipeId}; it is already inactive.\n`);
-      dump(`@@@\n${new Error().stack}\n@@@\n`);
       throw new Error(`Cannot stop study for recipe ${recipeId}; it is already inactive.`);
     }
 

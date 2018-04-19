@@ -130,11 +130,6 @@ var NormandyApi = {
       verifiedObjects.push(object);
     }
 
-    log.debug(
-      `Fetched ${verifiedObjects.length} ${type} from the server:`,
-      verifiedObjects.map(r => r.name).join(", ")
-    );
-
     return verifiedObjects;
   },
 
