@@ -106,6 +106,9 @@ with Files("WindowsJumpLists.jsm"):
 with Files("WindowsPreviewPerTab.jsm"):
     BUG_COMPONENT = ("Core", "Widget: Win32")
 
+with Files("offlineAppCache.jsm"):
+    BUG_COMPONENT = ("Firefox", "Preferences")
+
 with Files("UpdateTopLevelContentWindowIDHelper.jsm"):
     BUG_COMPONENT = ("Core", "Networking")
 
@@ -143,6 +146,7 @@ EXTRA_JS_MODULES += [
     'FormSubmitObserver.jsm',
     'FormValidationHandler.jsm',
     'LaterRun.jsm',
+    'offlineAppCache.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
     'PermissionUI.jsm',
