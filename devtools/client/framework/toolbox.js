@@ -160,6 +160,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
   this.updatePickerButton = this.updatePickerButton.bind(this);
   this.selectTool = this.selectTool.bind(this);
+  this._pingTelemetrySelectTool = this._pingTelemetrySelectTool.bind(this);
   this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
 
   this._target.on("close", this.destroy);
@@ -536,7 +537,7 @@ Toolbox.prototype = {
         this.component.setCanRender();
       }, {timeout: 16});
 
-      await this.selectTool(this._defaultToolId);
+      await this.selectTool(this._defaultToolId, "initial_panel");
 
       // Wait until the original tool is selected so that the split
       // console input will receive focus.
@@ -844,9 +845,9 @@ Toolbox.prototype = {
       // on the options panel.
       if (this.currentToolId === "options" &&
           gDevTools.getToolDefinition(this.lastUsedToolId)) {
-        this.selectTool(this.lastUsedToolId);
+        this.selectTool(this.lastUsedToolId, "toggle_settings_off");
       } else {
-        this.selectTool("options");
+        this.selectTool("options", "toggle_settings_on");
       }
     };
     this.shortcuts.on(L10N.getStr("toolbox.help.key"), selectOptions);
@@ -1016,7 +1017,7 @@ Toolbox.prototype = {
       // needed. See bug 371900
       key.setAttribute("oncommand", "void(0);");
       key.addEventListener("command", () => {
-        this.selectTool(toolId).then(() => this.fireCustomKey(toolId));
+        this.selectTool(toolId, "key_shortcut").then(() => this.fireCustomKey(toolId));
       }, true);
       doc.getElementById("toolbox-keyset").appendChild(key);
     }
@@ -1818,8 +1819,10 @@ Toolbox.prototype = {
    *
    * @param {string} id
    *        The id of the tool to switch to
+   * @param {string} reason
+   *        Reason the tool was opened
    */
-  selectTool: function(id) {
+  selectTool: function(id, reason = "unknown") {
     if (this.currentToolId == id) {
       let panel = this._toolPanels.get(id);
       if (panel) {
@@ -1847,7 +1850,8 @@ Toolbox.prototype = {
       if (this.currentToolId) {
         this._telemetry.toolClosed(this.currentToolId);
       }
-      this._telemetry.toolOpened(id);
+
+      this._pingTelemetrySelectTool(id, reason);
     } else {
       throw new Error("No tool found");
     }
@@ -1871,6 +1875,31 @@ Toolbox.prototype = {
       this.emit(id + "-selected", panel);
       return panel;
     });
+  },
+
+  _pingTelemetrySelectTool(id, reason) {
+    const width = Math.ceil(this.win.outerWidth / 50) * 50;
+
+    let panelName = id;
+    if (!/webconsole|inspector|jsdebugger|styleeditor|netmonitor|storage/.test(id)) {
+      panelName = "other";
+    }
+
+    this._telemetry.addEventProperties("devtools.main", "enter", panelName, null, {
+      "host": this._hostType,
+      "width": width,
+      "start_state": reason,
+      "panel_name": id,
+      "cold": !this.getPanel(id)
+    });
+
+    const pending = ["host", "width", "start_state", "panel_name", "cold"];
+    if (id === "webconsole") {
+      pending.push("message_count");
+    }
+    this._telemetry.preparePendingEvent(
+      "devtools.main", "enter", panelName, null, pending);
+    this._telemetry.toolOpened(id);
   },
 
   /**
@@ -1995,7 +2024,7 @@ Toolbox.prototype = {
     let definition = index === -1 || index >= definitions.length - 1
                      ? definitions[0]
                      : definitions[index + 1];
-    return this.selectTool(definition.id);
+    return this.selectTool(definition.id, "select_next_key");
   },
 
   /**
@@ -2007,7 +2036,7 @@ Toolbox.prototype = {
     let definition = index === -1 || index < 1
                      ? definitions[definitions.length - 1]
                      : definitions[index - 1];
-    return this.selectTool(definition.id);
+    return this.selectTool(definition.id, "select_prev_key");
   },
 
   /**
@@ -2470,7 +2499,7 @@ Toolbox.prototype = {
         toolNameToSelect = previousTool.id;
       }
       if (toolNameToSelect) {
-        this.selectTool(toolNameToSelect);
+        this.selectTool(toolNameToSelect, "tool_unloaded");
       }
     }
 
@@ -2581,7 +2610,7 @@ Toolbox.prototype = {
       const nodeFound = await inspector.inspectNodeActor(objectActor.actor,
                                                          inspectFromAnnotation);
       if (nodeFound) {
-        await this.selectTool("inspector");
+        await this.selectTool("inspector", "inspect_dom");
       }
     } else if (objectActor.type !== "null" &&
                objectActor.type !== "undefined") {
