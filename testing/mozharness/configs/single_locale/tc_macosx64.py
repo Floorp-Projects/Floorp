@@ -15,6 +15,7 @@ config = {
         'TOOLTOOL_CACHE': os.environ.get('TOOLTOOL_CACHE'),
     },
     "upload_env": {
+        'UPLOAD_HOST': 'localhost',
         'UPLOAD_PATH': '/builds/worker/artifacts/',
     },
 
