@@ -15,6 +15,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
   <title>&rights.title;</title>
   <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css"/>
 </head>
@@ -31,7 +32,7 @@
     - Point 3 discusses privacy policy, unbranded builds get a placeholder (for the vendor to replace)
     - Point 4 discusses web service terms, unbranded builds gets a placeholder (for the vendor to replace) -->
     <li>&rights.intro-point3-unbranded;</li>
-    <li>&rights.intro-point4a-unbranded;<a href="about:rights#webservices" onclick="showServices();">&rights.intro-point4b-unbranded;</a>&rights.intro-point4c-unbranded;</li>
+    <li>&rights.intro-point4a-unbranded;<a href="about:rights#webservices" id="showWebServices">&rights.intro-point4b-unbranded;</a>&rights.intro-point4c-unbranded;</li>
   </ul>
 
   <div id="webservices-container">
@@ -47,14 +48,6 @@
   </div>
 </div>
 
-<script type="application/javascript"><![CDATA[
-  var servicesDiv = document.getElementById("webservices-container");
-  servicesDiv.style.display = "none";
-
-  function showServices() {
-    servicesDiv.style.display = "";
-  }
-]]></script>
-
 </body>
+<script type="application/javascript" src="chrome://global/content/aboutRights.js"/>
 </html>
