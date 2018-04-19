@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Description from content of describedby element</title>
+    <title>Description 1.0 combobox-focusable</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/resources/testharness.css">
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
@@ -22,7 +22,7 @@
                   "property",
                   "description",
                   "is",
-                  "My name is Eli the weird. (QED) Where are my marbles?"
+                  ""
                ]
             ],
             "AXAPI" : [
@@ -30,7 +30,7 @@
                   "property",
                   "AXHelp",
                   "is",
-                  "My name is Eli the weird. (QED) Where are my marbles?"
+                  ""
                ]
             ],
             "IAccessible2" : [
@@ -38,7 +38,7 @@
                   "property",
                   "accDescription",
                   "is",
-                  "My name is Eli the weird. (QED) Where are my marbles?"
+                  ""
                ]
             ],
             "UIA" : [
@@ -46,7 +46,7 @@
                   "property",
                   "Description",
                   "is",
-                  "My name is Eli the weird. (QED) Where are my marbles?"
+                  ""
                ]
             ]
          },
@@ -54,38 +54,16 @@
          "type" : "test"
       }
    ],
-   "title" : "Description from content of describedby element"
+   "title" : "Description 1.0 combobox-focusable"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for Description from content of describedby element.</p>
-    <style>
-    .hidden { display: none; }
-  </style>
-  <input id="test" type="text" aria-label="Important stuff" aria-describedby="descId" />
-  <div>
-    <div id="descId">
-      <span aria-hidden="true"><i> Hello, </i></span>
-      <span>My</span> name is
-      <div><img src="file.jpg" title="Bryan" alt="" role="presentation" /></div>
-      <span role="presentation" aria-label="Eli">
-        <span aria-label="Garaventa">Zambino</span>
-      </span>
-      <span>the weird.</span>
-      (<span>Q</span><span>E</span><span>D</span>)
-      <span class="hidden"><i><b>and don't you forget it.</b></i></span>
-      <table>
-        <tr>
-          <td>Where</td>
-          <td style="visibility:hidden;"><div>in</div></td>
-          <td><div style="display:none;">the world</div></td>
-          <td>are my marbles?</td>
-        </tr>
-      </table>
-    </div>
+  <p>This test examines the ARIA properties for Description 1.0 combobox-focusable.</p>
+    <div id="test" role="combobox" tabindex="0" title="Choose your language.">
+    <span> English </span>
   </div>
 
   <div id="manualMode"></div>
