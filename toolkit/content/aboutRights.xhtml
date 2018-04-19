@@ -17,6 +17,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
   <title>&rights.title;</title>
   <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css"/>
   <link rel="stylesheet" href="chrome://global/skin/aboutRights.css" type="text/css"/>
@@ -40,7 +41,7 @@
     <li>&rights.intro-point2-a;<a href="http://www.mozilla.org/foundation/trademarks/policy.html">&rights.intro-point2-b;</a>&rights.intro-point2-c;</li>
     <li>&rights.intro-point2.5;</li>
     <li>&rights2.intro-point3a;<a href="https://www.mozilla.org/legal/privacy/firefox.html">&rights2.intro-point3b;</a>&rights.intro-point3c;</li>
-    <li>&rights2.intro-point4a;<a href="about:rights#webservices" onclick="showServices();">&rights.intro-point4b;</a>&rights.intro-point4c;</li>
+    <li>&rights2.intro-point4a;<a href="about:rights#webservices" id="showWebServices">&rights.intro-point4b;</a>&rights.intro-point4c;</li>
     <li>&rights.intro-point5;</li>
   </ul>
 
@@ -48,7 +49,7 @@
     <a name="webservices"/>
     <h3>&rights2.webservices-header;</h3>
 
-    <p>&rights2.webservices-a;<a href="about:rights#disabling-webservices" onclick="showDisablingServices();">&rights2.webservices-b;</a>&rights3.webservices-c;</p>
+    <p>&rights2.webservices-a;<a href="about:rights#disabling-webservices" id="showDisablingWebServices">&rights2.webservices-b;</a>&rights3.webservices-c;</p>
 
     <div id="disabling-webservices-container" style="margin-left:40px;">
       <a name="disabling-webservices"/>
@@ -82,21 +83,6 @@
   </div>
 </div>
 
-<script type="application/javascript"><![CDATA[
-  var servicesDiv = document.getElementById("webservices-container");
-  servicesDiv.style.display = "none";
-
-  function showServices() {
-    servicesDiv.style.display = "";
-  }
-
-  var disablingServicesDiv = document.getElementById("disabling-webservices-container");
-  disablingServicesDiv.style.display = "none";
-
-  function showDisablingServices() {
-    disablingServicesDiv.style.display = "";
-  }
-]]></script>
-
 </body>
+<script type="application/javascript" src="chrome://global/content/aboutRights.js"/>
 </html>
