@@ -302,11 +302,15 @@ var Utils = { // jshint ignore:line
     return res.value;
   },
 
-  getBounds: function getBounds(aAccessible) {
+  getBounds: function getBounds(aAccessible, aPreserveContentScale) {
     let objX = {}, objY = {}, objW = {}, objH = {};
     aAccessible.getBounds(objX, objY, objW, objH);
 
-    return new Rect(objX.value, objY.value, objW.value, objH.value);
+    let scale = aPreserveContentScale ? 1 :
+      this.getContentResolution(aAccessible);
+
+    return new Rect(objX.value, objY.value, objW.value, objH.value).scale(
+      scale, scale);
   },
 
   getTextBounds: function getTextBounds(aAccessible, aStart, aEnd,
@@ -316,7 +320,11 @@ var Utils = { // jshint ignore:line
     accText.getRangeExtents(aStart, aEnd, objX, objY, objW, objH,
       Ci.nsIAccessibleCoordinateType.COORDTYPE_SCREEN_RELATIVE);
 
-    return new Rect(objX.value, objY.value, objW.value, objH.value);
+    let scale = aPreserveContentScale ? 1 :
+      this.getContentResolution(aAccessible);
+
+    return new Rect(objX.value, objY.value, objW.value, objH.value).scale(
+      scale, scale);
   },
 
   /**

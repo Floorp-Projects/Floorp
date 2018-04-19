@@ -25,7 +25,6 @@ const GECKOVIEW_MESSAGE = {
   PREVIOUS: "GeckoView:AccessibilityPrevious",
   SCROLL_BACKWARD: "GeckoView:AccessibilityScrollBackward",
   SCROLL_FORWARD: "GeckoView:AccessibilityScrollForward",
-  EXPLORE_BY_TOUCH: "GeckoView:AccessibilityExploreByTouch"
 };
 
 var AccessFu = {
@@ -283,7 +282,7 @@ var AccessFu = {
         this.Input.activateCurrent(data);
         break;
       case GECKOVIEW_MESSAGE.LONG_PRESS:
-        // XXX: Advertize long press on supported objects and implement action
+        this.Input.sendContextMenuMessage();
         break;
       case GECKOVIEW_MESSAGE.SCROLL_FORWARD:
         this.Input.androidScroll("forward");
@@ -299,9 +298,6 @@ var AccessFu = {
         break;
       case GECKOVIEW_MESSAGE.BY_GRANULARITY:
         this.Input.moveByGranularity(data);
-        break;
-      case GECKOVIEW_MESSAGE.EXPLORE_BY_TOUCH:
-        this.Input.moveToPoint("Simple", ...data.coordinates);
         break;
     }
   },
@@ -379,19 +375,30 @@ var AccessFu = {
   _processedMessageManagers: [],
 
   /**
-   * Adjusts the given bounds that are defined in device display pixels
-   * to client-relative CSS pixels of the chrome window.
+   * Adjusts the given bounds relative to the given browser.
    * @param {Rect} aJsonBounds the bounds to adjust
+   * @param {browser} aBrowser the browser we want the bounds relative to
+   * @param {bool} aToCSSPixels whether to convert to CSS pixels (as opposed to
+   *               device pixels)
    */
-  screenToClientBounds(aJsonBounds) {
+  adjustContentBounds(aJsonBounds, aBrowser, aToCSSPixels) {
       let bounds = new Rect(aJsonBounds.left, aJsonBounds.top,
                             aJsonBounds.right - aJsonBounds.left,
                             aJsonBounds.bottom - aJsonBounds.top);
       let win = Utils.win;
       let dpr = win.devicePixelRatio;
+      let offset = { left: -win.mozInnerScreenX, top: -win.mozInnerScreenY };
 
-      bounds = bounds.scale(1 / dpr, 1 / dpr);
-      bounds = bounds.translate(-win.mozInnerScreenX, -win.mozInnerScreenY);
+      // Add the offset; the offset is in CSS pixels, so multiply the
+      // devicePixelRatio back in before adding to preserve unit consistency.
+      bounds = bounds.translate(offset.left * dpr, offset.top * dpr);
+
+      // If we want to get to CSS pixels from device pixels, this needs to be
+      // further divided by the devicePixelRatio due to widget scaling.
+      if (aToCSSPixels) {
+        bounds = bounds.scale(1 / dpr, 1 / dpr);
+      }
+
       return bounds.expandToIntegers();
     }
 };
@@ -510,7 +517,7 @@ var Output = {
         }
 
         let padding = aDetail.padding;
-        let r = AccessFu.screenToClientBounds(aDetail.bounds);
+        let r = AccessFu.adjustContentBounds(aDetail.bounds, aBrowser, true);
 
         // First hide it to avoid flickering when changing the style.
         highlightBox.classList.remove("show");
@@ -539,6 +546,10 @@ var Output = {
 
     for (let androidEvent of aDetails) {
       androidEvent.type = "GeckoView:AccessibilityEvent";
+      if (androidEvent.bounds) {
+        androidEvent.bounds = AccessFu.adjustContentBounds(
+          androidEvent.bounds, aBrowser);
+      }
 
       switch (androidEvent.eventType) {
         case ANDROID_VIEW_TEXT_CHANGED:
@@ -826,6 +837,11 @@ var Input = {
                         {offset, activateIfKey: aActivateIfKey});
   },
 
+  sendContextMenuMessage: function sendContextMenuMessage() {
+    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
+    mm.sendAsyncMessage("AccessFu:ContextMenu", {});
+  },
+
   setEditState: function setEditState(aEditState) {
     Logger.debug(() => { return ["setEditState", JSON.stringify(aEditState)]; });
     this.editState = aEditState;
@@ -846,7 +862,8 @@ var Input = {
   doScroll: function doScroll(aDetails) {
     let horizontal = aDetails.horizontal;
     let page = aDetails.page;
-    let p = AccessFu.screenToClientBounds(aDetails.bounds).center();
+    let p = AccessFu.adjustContentBounds(
+      aDetails.bounds, Utils.CurrentBrowser, true).center();
     Utils.winUtils.sendWheelEvent(p.x, p.y,
       horizontal ? page : 0, horizontal ? 0 : page, 0,
       Utils.win.WheelEvent.DOM_DELTA_PAGE, 0, 0, 0, 0);
