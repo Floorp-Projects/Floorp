@@ -53,7 +53,7 @@ check-style::
 	(cd $(topsrcdir) && $(PYTHON) $(topsrcdir)/config/check_spidermonkey_style.py);
 
 check-masm::
-	(cd $(srcdir) && $(PYTHON) $(topsrcdir)/config/check_macroassembler_style.py);
+	(cd $(topsrcdir) && $(PYTHON) $(topsrcdir)/config/check_macroassembler_style.py);
 
 check-js-msg::
 	(cd $(topsrcdir) && $(PYTHON) $(topsrcdir)/config/check_js_msg_encoding.py);
