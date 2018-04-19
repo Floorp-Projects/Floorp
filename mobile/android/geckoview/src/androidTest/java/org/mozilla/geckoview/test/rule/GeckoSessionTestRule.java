@@ -843,7 +843,10 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             final GeckoRuntimeSettings.Builder runtimeSettingsBuilder =
                 new GeckoRuntimeSettings.Builder();
             runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" })
-                                  .extras(InstrumentationRegistry.getArguments());
+                    .extras(InstrumentationRegistry.getArguments())
+                    .nativeCrashReportingEnabled(true)
+                    .javaCrashReportingEnabled(true);
+
             sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
                 runtimeSettingsBuilder.build());
