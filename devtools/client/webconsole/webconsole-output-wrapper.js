@@ -140,7 +140,7 @@ WebConsoleOutputWrapper.prototype = {
 
         const sidebarTogglePref = store.getState().prefs.sidebarToggle;
         const openSidebar = sidebarTogglePref ? (messageId) => {
-          store.dispatch(actions.showObjectInSidebar(rootActorId, messageId));
+          store.dispatch(actions.showMessageObjectInSidebar(rootActorId, messageId));
         } : null;
 
         const menu = createContextMenu(this.hud, this.parentNode, {
