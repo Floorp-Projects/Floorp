@@ -1858,12 +1858,7 @@ toolbar#nav-bar {
         extensions = self.getExtensionsToInstall(options)
 
         # preferences
-        preferences = [
-            os.path.join(
-                SCRIPT_DIR,
-                'profile_data',
-                'prefs_general.js')]
-
+        preferences = [os.path.join(SCRIPT_DIR, 'profile_data', 'common', 'user.js')]
         prefs = {}
         for path in preferences:
             prefs.update(Preferences.read_prefs(path))
