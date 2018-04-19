@@ -36,7 +36,7 @@ const uint32_t maxAllocsPerTest = 100;
     testName = name;                                                          \
     printf("Test %s: started\n", testName);                                   \
     for (oomAfter = 1; oomAfter < maxAllocsPerTest; ++oomAfter) {             \
-    js::oom::SimulateOOMAfter(oomAfter, js::THREAD_TYPE_COOPERATING, true)
+    js::oom::SimulateOOMAfter(oomAfter, js::THREAD_TYPE_MAIN, true)
 
 #define OOM_TEST_FINISHED                                                     \
     {                                                                         \
