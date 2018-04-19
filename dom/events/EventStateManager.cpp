@@ -284,11 +284,7 @@ TimeStamp EventStateManager::sHandlingInputStart;
 EventStateManager::WheelPrefs*
   EventStateManager::WheelPrefs::sInstance = nullptr;
 bool EventStateManager::WheelPrefs::sWheelEventsEnabledOnPlugins = true;
-#ifdef EARLY_BETA_OR_EARLIER
-bool EventStateManager::WheelPrefs::sIsAutoDirEnabled = true;
-#else
 bool EventStateManager::WheelPrefs::sIsAutoDirEnabled = false;
-#endif
 bool EventStateManager::WheelPrefs::sHonoursRootForAutoDir = false;
 EventStateManager::DeltaAccumulator*
   EventStateManager::DeltaAccumulator::sInstance = nullptr;

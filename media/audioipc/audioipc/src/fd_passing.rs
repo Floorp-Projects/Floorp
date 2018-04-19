@@ -85,7 +85,7 @@ where
 {
     // If there is a buffered frame, try to write it to `A`
     fn do_write(&mut self) -> Poll<(), io::Error> {
-        debug!("do_write...");
+        trace!("do_write...");
         // Create a frame from any pending message in `write_buf`.
         if !self.write_buf.is_empty() {
             self.set_frame(None);
@@ -141,8 +141,7 @@ where
                 _ => panic!(),
             }
         }
-        debug!("process {} frames", processed);
-
+        trace!("process {} frames", processed);
         trace!("pending frames: {:?}", self.frames);
 
         Ok(().into())

@@ -12,6 +12,7 @@
 #include "mozilla/dom/Nullable.h" // for dom::Nullable
 #include "mozilla/layers/CompositorThread.h" // for CompositorThreadHolder
 #include "mozilla/layers/LayerAnimationUtils.h" // for TimingFunctionToComputedTimingFunction
+#include "mozilla/ServoBindings.h" // for Servo_ComposeAnimationSegment, etc
 #include "mozilla/StyleAnimationValue.h" // for StyleAnimationValue, etc
 #include "nsDeviceContext.h"            // for AppUnitsPerCSSPixel
 #include "nsDisplayList.h"              // for nsDisplayTransform, etc
@@ -139,7 +140,7 @@ AnimationHelper::SampleAnimationForEachNode(
   TimeStamp aTime,
   AnimationArray& aAnimations,
   InfallibleTArray<AnimData>& aAnimationData,
-  AnimationValue& aAnimationValue,
+  RefPtr<RawServoAnimationValue>& aAnimationValue,
   bool& aHasInEffectAnimations)
 {
   MOZ_ASSERT(!aAnimations.IsEmpty(), "Should be called with animations");
@@ -206,8 +207,10 @@ AnimationHelper::SampleAnimationForEachNode(
     AnimationPropertySegment animSegment;
     animSegment.mFromKey = 0.0;
     animSegment.mToKey = 1.0;
-    animSegment.mFromValue = animData.mStartValues[segmentIndex];
-    animSegment.mToValue = animData.mEndValues[segmentIndex];
+    animSegment.mFromValue =
+      AnimationValue(animData.mStartValues[segmentIndex]);
+    animSegment.mToValue =
+      AnimationValue(animData.mEndValues[segmentIndex]);
     animSegment.mFromComposite =
       static_cast<dom::CompositeOperation>(segment->startComposite());
     animSegment.mToComposite =
@@ -218,11 +221,11 @@ AnimationHelper::SampleAnimationForEachNode(
         static_cast<dom::IterationCompositeOperation>(
           animation.iterationComposite());
 
-    aAnimationValue.mServo =
+    aAnimationValue =
       Servo_ComposeAnimationSegment(
         &animSegment,
-        aAnimationValue.mServo,
-        animData.mEndValues.LastElement().mServo,
+        aAnimationValue,
+        animData.mEndValues.LastElement(),
         iterCompositeOperation,
         portion,
         computedTiming.mCurrentIteration).Consume();
@@ -407,10 +410,10 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
   return new nsCSSValueSharedList(result.forget());
 }
 
-static AnimationValue
+static already_AddRefed<RawServoAnimationValue>
 ToAnimationValue(const Animatable& aAnimatable)
 {
-  AnimationValue result;
+  RefPtr<RawServoAnimationValue> result;
 
   switch (aAnimatable.type()) {
     case Animatable::Tnull_t:
@@ -422,23 +425,24 @@ ToAnimationValue(const Animatable& aAnimatable)
       if (listOrError.isOk()) {
         RefPtr<nsCSSValueSharedList> list = listOrError.unwrap();
         MOZ_ASSERT(list, "Transform list should be non null");
-        result = AnimationValue::Transform(*list);
+        result = Servo_AnimationValue_Transform(*list).Consume();
       }
       break;
     }
     case Animatable::Tfloat:
-      result = AnimationValue::Opacity(aAnimatable.get_float());
+      result = Servo_AnimationValue_Opacity(aAnimatable.get_float()).Consume();
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported type");
   }
-  return result;
+  return result.forget();
 }
 
 void
-AnimationHelper::SetAnimations(AnimationArray& aAnimations,
-                               InfallibleTArray<AnimData>& aAnimData,
-                               AnimationValue& aBaseAnimationStyle)
+AnimationHelper::SetAnimations(
+  AnimationArray& aAnimations,
+  InfallibleTArray<AnimData>& aAnimData,
+  RefPtr<RawServoAnimationValue>& aBaseAnimationStyle)
 {
   for (uint32_t i = 0; i < aAnimations.Length(); i++) {
     Animation& animation = aAnimations[i];
@@ -463,8 +467,10 @@ AnimationHelper::SetAnimations(AnimationArray& aAnimations,
     AnimData* data = aAnimData.AppendElement();
     InfallibleTArray<Maybe<ComputedTimingFunction>>& functions =
       data->mFunctions;
-    InfallibleTArray<AnimationValue>& startValues = data->mStartValues;
-    InfallibleTArray<AnimationValue>& endValues = data->mEndValues;
+    InfallibleTArray<RefPtr<RawServoAnimationValue>>& startValues =
+      data->mStartValues;
+    InfallibleTArray<RefPtr<RawServoAnimationValue>>& endValues =
+      data->mEndValues;
 
     const InfallibleTArray<AnimationSegment>& segments = animation.segments();
     for (const AnimationSegment& segment : segments) {
@@ -511,7 +517,7 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
       continue;
     }
 
-    AnimationValue animationValue;
+    RefPtr<RawServoAnimationValue> animationValue;
     InfallibleTArray<AnimData> animationData;
     AnimationHelper::SetAnimations(*animations,
                                    animationData,
@@ -530,12 +536,14 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
     Animation& animation = animations->LastElement();
     switch (animation.property()) {
       case eCSSProperty_opacity: {
-        aStorage->SetAnimatedValue(iter.Key(), animationValue.GetOpacity());
+        aStorage->SetAnimatedValue(
+          iter.Key(),
+          Servo_AnimationValue_GetOpacity(animationValue));
         break;
       }
       case eCSSProperty_transform: {
-        RefPtr<const nsCSSValueSharedList> list =
-          animationValue.GetTransformList();
+        RefPtr<nsCSSValueSharedList> list;
+        Servo_AnimationValue_GetTransform(animationValue, &list);
         const TransformData& transformData = animation.data().get_TransformData();
         nsPoint origin = transformData.origin();
         // we expect all our transform data to arrive in device pixels

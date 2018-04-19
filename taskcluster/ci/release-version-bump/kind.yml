@@ -33,11 +33,16 @@ job-defaults:
                     - "browser/config/version.txt"
                     - "browser/config/version_display.txt"
                     - "config/milestone.txt"
+                mozilla-esr60:
+                    - "browser/config/version.txt"
+                    - "browser/config/version_display.txt"
+                    - "config/milestone.txt"
         push:
             by-project:
                 mozilla-beta: true
                 mozilla-release: true
                 mozilla-esr52: true
+                mozilla-esr60: true
                 maple: true
                 birch: true
                 default: false

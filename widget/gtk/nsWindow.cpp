@@ -4160,6 +4160,8 @@ nsWindow::NativeResize()
          size.width, size.height));
 
     if (mIsTopLevel) {
+        MOZ_ASSERT(size.width > 0 && size.height > 0,
+                   "Can't resize window smaller than 1x1.");
         gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
     }
     else if (mContainer) {
@@ -4217,6 +4219,8 @@ nsWindow::NativeMoveResize()
         // x and y give the position of the window manager frame top-left.
         gtk_window_move(GTK_WINDOW(mShell), topLeft.x, topLeft.y);
         // This sets the client window size.
+        MOZ_ASSERT(size.width > 0 && size.height > 0,
+                   "Can't resize window smaller than 1x1.");
         gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
     }
     else if (mContainer) {
@@ -4940,6 +4944,8 @@ FullscreenTransitionWindow::FullscreenTransitionWindow(GtkWidget* aWidget)
     gdk_screen_get_monitor_geometry(screen, monitorNum, &monitorRect);
     gtk_window_set_screen(gtkWin, screen);
     gtk_window_move(gtkWin, monitorRect.x, monitorRect.y);
+    MOZ_ASSERT(monitorRect.width > 0 && monitorRect.height > 0,
+               "Can't resize window smaller than 1x1.");
     gtk_window_resize(gtkWin, monitorRect.width, monitorRect.height);
 
     GdkColor bgColor;

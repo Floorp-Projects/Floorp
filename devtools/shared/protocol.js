@@ -118,6 +118,13 @@ types.getType = function(type) {
 };
 
 /**
+ * Helper function to identify iterators. This will return false for Arrays.
+ */
+function isIterator(v) {
+  return v && typeof v === "object" && Symbol.iterator in v && !Array.isArray(v);
+}
+
+/**
  * Don't allow undefined when writing primitive types to packets.  If
  * you want to allow undefined, use a nullable type.
  */
@@ -127,7 +134,7 @@ function identityWrite(v) {
   }
   // This has to handle iterator->array conversion because arrays of
   // primitive types pass through here.
-  if (v && typeof (v) === "object" && Symbol.iterator in v) {
+  if (isIterator(v)) {
     return [...v];
   }
   return v;
@@ -215,8 +222,18 @@ types.addArrayType = function(subtype) {
   }
   return types.addType(name, {
     category: "array",
-    read: (v, ctx) => [...v].map(i => subtype.read(i, ctx)),
-    write: (v, ctx) => [...v].map(i => subtype.write(i, ctx))
+    read: (v, ctx) => {
+      if (isIterator(v)) {
+        v = [...v];
+      }
+      return v.map(i => subtype.read(i, ctx));
+    },
+    write: (v, ctx) => {
+      if (isIterator(v)) {
+        v = [...v];
+      }
+      return v.map(i => subtype.write(i, ctx));
+    }
   });
 };
 
@@ -932,9 +949,8 @@ var Actor = function(conn) {
   if (this._actorSpec && this._actorSpec.events) {
     for (let key of this._actorSpec.events.keys()) {
       let name = key;
-      let sendEvent = this._sendEvent.bind(this, name);
       this.on(name, (...args) => {
-        sendEvent.apply(null, args);
+        this._sendEvent(name, ...args);
       });
     }
   }
@@ -1159,7 +1175,7 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
           return p
             .then(() => ret)
             .then(sendReturn)
-            .catch(this.writeError.bind(this));
+            .catch(e => this.writeError(e));
         });
       } catch (e) {
         this._queueResponse(p => {

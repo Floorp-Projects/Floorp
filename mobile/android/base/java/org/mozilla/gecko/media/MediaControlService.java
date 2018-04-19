@@ -81,7 +81,6 @@ public class MediaControlService extends Service {
     @Override
     public void onCreate() {
         initialize();
-        mHeadSetStateReceiver = new HeadSetStateReceiver().registerReceiver(getApplicationContext());
     }
 
     @Override
@@ -110,8 +109,12 @@ public class MediaControlService extends Service {
     }
 
     private void initialize() {
-        if (mInitialize ||
-            !isAndroidVersionLollipopOrHigher()) {
+        if (mInitialize) {
+            return;
+        }
+
+        if (!isAndroidVersionLollipopOrHigher()) {
+            stopSelf();
             return;
         }
 
@@ -125,6 +128,8 @@ public class MediaControlService extends Service {
 
         coverSize = (int) getResources().getDimension(R.dimen.notification_media_cover);
         minCoverSize = getResources().getDimensionPixelSize(R.dimen.favicon_bg);
+
+        mHeadSetStateReceiver = new HeadSetStateReceiver().registerReceiver(getApplicationContext());
 
         mInitialize = true;
     }

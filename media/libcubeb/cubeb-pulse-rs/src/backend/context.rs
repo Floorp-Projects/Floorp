@@ -25,6 +25,7 @@ pub struct DefaultInfo {
 
 pub const PULSE_OPS: Ops = capi_new!(PulseContext, PulseStream);
 
+#[repr(C)]
 #[derive(Debug)]
 pub struct PulseContext {
     _ops: *const Ops,

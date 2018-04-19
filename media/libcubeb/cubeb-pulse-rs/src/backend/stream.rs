@@ -96,6 +96,7 @@ impl Drop for Device {
     }
 }
 
+#[repr(C)]
 #[derive(Debug)]
 pub struct PulseStream<'ctx> {
     context: &'ctx PulseContext,

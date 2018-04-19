@@ -27,8 +27,20 @@ document.cookie = "c4=foobar-3; expires=" +
 // ... and some local storage items ..
 localStorage.setItem("ls1", "foobar");
 localStorage.setItem("ls2", "foobar-2");
+
+// Because localStorage contains key() on the prototype and it can't be iterated
+// using object.keys() we check the the value "key" exists.
+// See bug 1451991 for details.
+localStorage.setItem("key", "value1");
+
 // ... and finally some session storage items too
 sessionStorage.setItem("ss1", "foobar-3");
+
+// Because sessionStorage contains key() on the prototype and it can't be
+// iterated using object.keys() we check the the value "key" exists.
+// See bug 1451991 for details.
+sessionStorage.setItem("key", "value2");
+
 dump("added cookies and storage from main page\n");
 
 let idbGenerator = async function () {

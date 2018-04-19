@@ -40,11 +40,15 @@ impl Drop for Device {
     }
 }
 
+// ClientStream's layout *must* match cubeb.c's `struct cubeb_stream` for the
+// common fields.
+#[repr(C)]
 #[derive(Debug)]
 pub struct ClientStream<'ctx> {
     // This must be a reference to Context for cubeb, cubeb accesses
     // stream methods via stream->context->ops
     context: &'ctx ClientContext,
+    user_ptr: *mut c_void,
     token: usize,
 }
 
@@ -66,9 +70,10 @@ impl rpc::Server for CallbackServer {
     fn process(&mut self, req: Self::Request) -> Self::Future {
         match req {
             CallbackReq::Data(nframes, frame_size) => {
-                debug!(
+                trace!(
                     "stream_thread: Data Callback: nframes={} frame_size={}",
-                    nframes, frame_size
+                    nframes,
+                    frame_size
                 );
 
                 // Clone values that need to be moved into the cpu pool thread.
@@ -104,7 +109,7 @@ impl rpc::Server for CallbackServer {
                 })
             }
             CallbackReq::State(state) => {
-                debug!("stream_thread: State Callback: {:?}", state);
+                trace!("stream_thread: State Callback: {:?}", state);
                 let user_ptr = self.user_ptr;
                 let cb = self.state_cb.unwrap();
                 self.cpu_pool.spawn_fn(move || {
@@ -134,7 +139,7 @@ impl<'ctx> ClientStream<'ctx> {
         let rpc = ctx.rpc();
         let data = try!(send_recv!(rpc, StreamInit(init_params) => StreamCreated()));
 
-        trace!("token = {}, fds = {:?}", data.token, data.fds);
+        debug!("token = {}, fds = {:?}", data.token, data.fds);
 
         let stm = data.fds[0];
         let stream = unsafe { net::UnixStream::from_raw_fd(stm) };
@@ -172,6 +177,7 @@ impl<'ctx> ClientStream<'ctx> {
 
         let stream = Box::into_raw(Box::new(ClientStream {
             context: ctx,
+            user_ptr: user_ptr,
             token: data.token,
         }));
         Ok(unsafe { Stream::from_ptr(stream as *mut _) })
@@ -180,7 +186,7 @@ impl<'ctx> ClientStream<'ctx> {
 
 impl<'ctx> Drop for ClientStream<'ctx> {
     fn drop(&mut self) {
-        trace!("ClientStream drop...");
+        debug!("ClientStream dropped...");
         let rpc = self.context.rpc();
         let _ = send_recv!(rpc, StreamDestroy(self.token) => StreamDestroyed);
     }
@@ -268,5 +274,13 @@ pub fn init(
     state_callback: ffi::cubeb_state_callback,
     user_ptr: *mut c_void,
 ) -> Result<Stream> {
-    ClientStream::init(ctx, init_params, data_callback, state_callback, user_ptr)
+    let stm = try!(ClientStream::init(
+        ctx,
+        init_params,
+        data_callback,
+        state_callback,
+        user_ptr
+    ));
+    debug_assert_eq!(stm.user_ptr(), user_ptr);
+    Ok(stm)
 }

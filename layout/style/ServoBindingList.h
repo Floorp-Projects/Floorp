@@ -62,6 +62,14 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes,
                    uint32_t line_number_offset,
                    nsCompatibility quirks_mode,
                    mozilla::css::LoaderReusableStyleSheets* reusable_sheets)
+SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8BytesAsync,
+                   void,
+                   mozilla::css::SheetLoadDataHolder* load_data,
+                   RawGeckoURLExtraData* extra_data,
+                   const nsACString* bytes,
+                   mozilla::css::SheetParsingMode parsing_mode,
+                   uint32_t line_number_offset,
+                   nsCompatibility quirks_mode)
 SERVO_BINDING_FUNC(Servo_StyleSheet_Empty, RawServoStyleSheetContentsStrong,
                    mozilla::css::SheetParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
@@ -296,6 +304,10 @@ SERVO_BINDING_FUNC(Servo_ImportRule_GetHref, void,
 SERVO_BINDING_FUNC(Servo_ImportRule_GetSheet,
                    const mozilla::ServoStyleSheet*,
                    RawServoImportRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_ImportRule_SetSheet,
+                   void,
+                   RawServoImportRuleBorrowed rule,
+                   mozilla::ServoStyleSheet* sheet);
 SERVO_BINDING_FUNC(Servo_Keyframe_GetKeyText, void,
                    RawServoKeyframeBorrowed keyframe, nsAString* result)
 // Returns whether it successfully changes the key text.

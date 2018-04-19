@@ -118,6 +118,7 @@ impl From<DeviceInfo> for ffi::cubeb_device_info {
     }
 }
 
+#[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct StreamParams {
     pub format: ffi::cubeb_sample_format,

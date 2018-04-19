@@ -99,8 +99,11 @@ public:
              nsIPrincipal* aSheetPrincipal,
              css::SheetLoadData* aLoadData,
              uint32_t aLineNumber,
-             nsCompatibility aCompatMode,
-             css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
+             nsCompatibility aCompatMode);
+
+  // Common code that needs to be called after servo finishes parsing. This is
+  // shared between the parallel and sequential paths.
+  void FinishAsyncParse(already_AddRefed<RawServoStyleSheetContents> aSheetContents);
 
   // Similar to the above, but guarantees that parsing will be performed
   // synchronously.

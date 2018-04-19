@@ -24,7 +24,7 @@ add_task(async function test_change_shipping() {
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingOptions);
     is(shippingOptions.selectedOptionCurrency, "USD", "Shipping options should be in USD");
     is(shippingOptions.optionCount, 2, "there should be two shipping options");
-    is(shippingOptions.selectedOptionValue, "2", "default selected should be '2'");
+    is(shippingOptions.selectedOptionID, "2", "default selected should be '2'");
 
     await spawnPaymentDialogTask(frame,
                                  PTU.DialogContentTasks.selectShippingOptionById,
@@ -33,12 +33,13 @@ add_task(async function test_change_shipping() {
     shippingOptions =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingOptions);
     is(shippingOptions.optionCount, 2, "there should be two shipping options");
-    is(shippingOptions.selectedOptionValue, "1", "selected should be '1'");
+    is(shippingOptions.selectedOptionID, "1", "selected should be '1'");
 
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-    }, PTU.ContentTasks.promisePaymentRequestEvent);
-    info("added shipping change handler");
+      details: PTU.Details.twoShippingOptionsEUR,
+    }, PTU.ContentTasks.updateWith);
+    info("added shipping change handler to change to EUR");
 
     await spawnPaymentDialogTask(frame,
                                  PTU.DialogContentTasks.selectShippingAddressByCountry,
@@ -52,8 +53,11 @@ add_task(async function test_change_shipping() {
 
     shippingOptions =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingOptions);
-    todo_is(shippingOptions.selectedOptionCurrency, "EUR",
-            "Shipping options should be in EUR when shippingaddresschange is implemented");
+    is(shippingOptions.selectedOptionCurrency, "EUR",
+       "Shipping options should be in EUR after the shippingaddresschange");
+    is(shippingOptions.selectedOptionID, "1", "id:1 should still be selected");
+    is(shippingOptions.selectedOptionValue, "1.01",
+       "amount should be '1.01' after the shippingaddresschange");
 
     info("clicking pay");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
@@ -85,6 +89,128 @@ add_task(async function test_change_shipping() {
     is(methodDetails.expiryMonth, "01", "Check expiryMonth");
     is(methodDetails.expiryYear, "9999", "Check expiryYear");
 
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+  });
+  await cleanupFormAutofillStorage();
+});
+
+add_task(async function test_default_shippingOptions_noneSelected() {
+  await setup();
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    let shippingOptionDetails = deepClone(PTU.Details.twoShippingOptions);
+    info("make sure no shipping options are selected");
+    shippingOptionDetails.shippingOptions.forEach(opt => delete opt.selected);
+
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: shippingOptionDetails,
+        options: PTU.Options.requestShippingOption,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
+
+    let shippingOptions =
+      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingOptions);
+    is(shippingOptions.selectedOptionCurrency, "USD", "Shipping options should be in USD");
+    is(shippingOptions.optionCount, 2, "there should be two shipping options");
+    is(shippingOptions.selectedOptionID, "1", "default selected should be the first");
+
+    let shippingOptionDetailsEUR = deepClone(PTU.Details.twoShippingOptionsEUR);
+    info("prepare EUR options by deselecting all and giving unique IDs");
+    shippingOptionDetailsEUR.shippingOptions.forEach(opt => {
+      opt.selected = false;
+      opt.id += "-EUR";
+    });
+
+    await ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+      details: shippingOptionDetailsEUR,
+    }, PTU.ContentTasks.updateWith);
+    info("added shipping change handler to change to EUR");
+
+    await spawnPaymentDialogTask(frame,
+                                 PTU.DialogContentTasks.selectShippingAddressByCountry,
+                                 "DE");
+    info("changed shipping address to DE country");
+
+    await ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    info("got shippingaddresschange event");
+
+    shippingOptions =
+      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingOptions);
+    is(shippingOptions.selectedOptionCurrency, "EUR", "Shipping options should be in EUR");
+    is(shippingOptions.optionCount, 2, "there should be two shipping options");
+    is(shippingOptions.selectedOptionID, "1-EUR",
+       "default selected should be the first");
+
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+  });
+  await cleanupFormAutofillStorage();
+});
+
+add_task(async function test_default_shippingOptions_allSelected() {
+  await setup();
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    let shippingOptionDetails = deepClone(PTU.Details.twoShippingOptions);
+    info("make sure no shipping options are selected");
+    shippingOptionDetails.shippingOptions.forEach(opt => opt.selected = true);
+
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: shippingOptionDetails,
+        options: PTU.Options.requestShippingOption,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      }
+    );
+
+    let shippingOptions =
+      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingOptions);
+    is(shippingOptions.selectedOptionCurrency, "USD", "Shipping options should be in USD");
+    is(shippingOptions.optionCount, 2, "there should be two shipping options");
+    is(shippingOptions.selectedOptionID, "2", "default selected should be the last selected=true");
+
+    let shippingOptionDetailsEUR = deepClone(PTU.Details.twoShippingOptionsEUR);
+    info("prepare EUR options by selecting all and giving unique IDs");
+    shippingOptionDetailsEUR.shippingOptions.forEach(opt => {
+      opt.selected = true;
+      opt.id += "-EUR";
+    });
+
+    await ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+      details: shippingOptionDetailsEUR,
+    }, PTU.ContentTasks.updateWith);
+    info("added shipping change handler to change to EUR");
+
+    await spawnPaymentDialogTask(frame,
+                                 PTU.DialogContentTasks.selectShippingAddressByCountry,
+                                 "DE");
+    info("changed shipping address to DE country");
+
+    await ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+    info("got shippingaddresschange event");
+
+    shippingOptions =
+      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingOptions);
+    is(shippingOptions.selectedOptionCurrency, "EUR", "Shipping options should be in EUR");
+    is(shippingOptions.optionCount, 2, "there should be two shipping options");
+    is(shippingOptions.selectedOptionID, "2-EUR",
+       "default selected should be the last selected=true");
+
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
   await cleanupFormAutofillStorage();

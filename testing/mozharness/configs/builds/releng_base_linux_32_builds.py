@@ -53,10 +53,8 @@ config = {
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
         'LC_ALL': 'C',
         # 32 bit specific
-        'PATH': '/usr/local/bin:/usr/lib/ccache:\
-/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:\
-/tools/python27/bin:/tools/python27-mercurial/bin:/home/cltbld/bin',
-        'LD_LIBRARY_PATH': "/tools/gcc-4.3.3/installed/lib",
+        'PATH': '/usr/local/bin:\
+/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin',
     },
     "check_test_env": {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux/minidump_stackwalk',
