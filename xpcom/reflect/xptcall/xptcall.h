@@ -134,6 +134,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
               case nsXPTType::T_INTERFACE:         /* fall through */
               case nsXPTType::T_INTERFACE_IS:      /* fall through */
               case nsXPTType::T_DOMOBJECT:         /* fall through */
+              case nsXPTType::T_PROMISE:           /* fall through */
               case nsXPTType::T_ARRAY:             /* fall through */
               case nsXPTType::T_PSTRING_SIZE_IS:   /* fall through */
               case nsXPTType::T_PWSTRING_SIZE_IS:  /* fall through */

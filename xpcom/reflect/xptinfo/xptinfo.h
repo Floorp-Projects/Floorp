@@ -190,7 +190,8 @@ enum nsXPTTypeTag : uint8_t
   TD_CSTRING           = 24,
   TD_ASTRING           = 25,
   TD_JSVAL             = 26,
-  TD_DOMOBJECT         = 27
+  TD_DOMOBJECT         = 27,
+  TD_PROMISE           = 28
 };
 
 
@@ -306,7 +307,8 @@ public:
     T_CSTRING           = TD_CSTRING          ,
     T_ASTRING           = TD_ASTRING          ,
     T_JSVAL             = TD_JSVAL            ,
-    T_DOMOBJECT         = TD_DOMOBJECT
+    T_DOMOBJECT         = TD_DOMOBJECT        ,
+    T_PROMISE           = TD_PROMISE
   };
 
   ////////////////////////////////////////////////////////////////
