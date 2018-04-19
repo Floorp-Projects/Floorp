@@ -44,6 +44,7 @@ ALLOWED_URL_PREFIXES = [
     "https://archive.mozilla.org/",
     "http://archive.mozilla.org/",
     "https://queue.taskcluster.net/v1/task/",
+    "http://ftp.stage.mozaws.net/",
 ]
 
 DEFAULT_FILENAME_TEMPLATE = "{appName}-{branch}-{version}-{platform}-" \
