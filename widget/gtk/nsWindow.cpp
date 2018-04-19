@@ -4207,6 +4207,8 @@ nsWindow::NativeMoveResize()
             NativeShow(false);
         }
         NativeMove();
+
+        return;
     }
 
     GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
