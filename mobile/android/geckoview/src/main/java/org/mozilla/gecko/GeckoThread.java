@@ -12,6 +12,7 @@ import org.mozilla.gecko.process.GeckoProcessManager;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.geckoview.BuildConfig;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -31,6 +32,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
@@ -381,6 +383,26 @@ public class GeckoThread extends Thread {
         }
     }
 
+    private static ArrayList<String> getEnvFromExtras(final Bundle extras) {
+        if (extras == null) {
+            return new ArrayList<>();
+        }
+
+        ArrayList<String> result = new ArrayList<>();
+        if (extras != null) {
+            String env = extras.getString("env0");
+            for (int c = 1; env != null; c++) {
+                if (BuildConfig.DEBUG) {
+                    Log.d(LOGTAG, "env var: " + env);
+                }
+                result.add(env);
+                env = extras.getString("env" + c);
+            }
+        }
+
+        return result;
+    }
+
     @Override
     public void run() {
         Log.i(LOGTAG, "preparing to run Gecko");
@@ -442,7 +464,8 @@ public class GeckoThread extends Thread {
             Log.i(LOGTAG, "RunGecko - args = " + TextUtils.join(" ", args));
         }
 
-        GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath(), mExtras);
+        final ArrayList<String> env = getEnvFromExtras(mExtras);
+        GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath(), env);
 
         // And go.
         GeckoLoader.nativeRun(args,
