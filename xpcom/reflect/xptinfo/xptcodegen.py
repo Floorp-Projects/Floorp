@@ -508,6 +508,14 @@ def link_and_write(files, outfile):
         with open(file, 'r') as fd:
             interfaces += json.load(fd)
 
+    iids = set()
+    names = set()
+    for interface in interfaces:
+        assert interface['uuid'] not in iids, "duplicated UUID %s" % interface['uuid']
+        assert interface['name'] not in names, "duplicated name %s" % interface['name']
+        iids.add(interface['uuid'])
+        names.add(interface['name'])
+
     link_to_cpp(interfaces, outfile)
 
 
