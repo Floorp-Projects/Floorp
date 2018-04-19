@@ -19,7 +19,6 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewParent;
 import android.view.accessibility.AccessibilityEvent;
@@ -367,17 +366,17 @@ public class SessionAccessibility {
 
         final GeckoBundle bounds = message.getBundle("bounds");
         if (bounds != null) {
-            Rect screenBounds = new Rect(bounds.getInt("left"), bounds.getInt("top"),
-                                         bounds.getInt("right"), bounds.getInt("bottom"));
-            node.setBoundsInScreen(screenBounds);
+            Rect relativeBounds = new Rect(bounds.getInt("left"), bounds.getInt("top"),
+                                           bounds.getInt("right"), bounds.getInt("bottom"));
+            node.setBoundsInParent(relativeBounds);
 
             final Matrix matrix = new Matrix();
             final float[] origin = new float[2];
             mSession.getClientToScreenMatrix(matrix);
             matrix.mapPoints(origin);
 
-            screenBounds.offset((int) -origin[0], (int) -origin[1]);
-            node.setBoundsInParent(screenBounds);
+            relativeBounds.offset((int) origin[0], (int) origin[1]);
+            node.setBoundsInScreen(relativeBounds);
         }
 
     }
@@ -419,11 +418,5 @@ public class SessionAccessibility {
         final AccessibilityEvent accessibilityEvent = obtainEvent(eventType, eventSource);
         populateEventFromJSON(accessibilityEvent, message);
         ((ViewParent) mView).requestSendAccessibilityEvent(mView, accessibilityEvent);
-    }
-
-    public void onExploreByTouch(final MotionEvent event) {
-      final GeckoBundle data = new GeckoBundle(2);
-      data.putDoubleArray("coordinates", new double[] {event.getRawX(), event.getRawY()});
-      mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityExploreByTouch", data);
     }
 }

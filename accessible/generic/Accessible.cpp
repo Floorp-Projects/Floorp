@@ -561,11 +561,6 @@ Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   nsRect screenRect = startFrame->GetScreenRectInAppUnits();
   nsPoint offset(presContext->DevPixelsToAppUnits(aX) - screenRect.X(),
                  presContext->DevPixelsToAppUnits(aY) - screenRect.Y());
-
-  // We need to take into account a non-1 resolution set on the presshell.
-  // This happens in mobile platforms with async pinch zooming.
-  offset = offset.RemoveResolution(presContext->PresShell()->GetResolution());
-
   nsIFrame* foundFrame = nsLayoutUtils::GetFrameForPoint(startFrame, offset);
 
   nsIContent* content = nullptr;
@@ -684,10 +679,6 @@ Accessible::Bounds() const
                      presContext->AppUnitsToDevPixels(unionRectTwips.Width()),
                      presContext->AppUnitsToDevPixels(unionRectTwips.Height()));
 
-  // We need to take into account a non-1 resolution set on the presshell.
-  // This happens in mobile platforms with async pinch zooming. Here we
-  // scale the bounds before adding the screen-relative offset.
-  screenRect.ScaleRoundOut(presContext->PresShell()->GetResolution());
   // We have the union of the rectangle, now we need to put it in absolute
   // screen coords.
   nsIntRect orgRectPixels = boundingFrame->GetScreenRectInAppUnits().
