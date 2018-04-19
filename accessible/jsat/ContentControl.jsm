@@ -44,7 +44,6 @@ this.ContentControl.prototype = {
     for (let message of this.messagesOfInterest) {
       cs.addMessageListener(message, this);
     }
-    cs.addEventListener("mousemove", this);
   },
 
   stop: function cc_stop() {
@@ -52,7 +51,6 @@ this.ContentControl.prototype = {
     for (let message of this.messagesOfInterest) {
       cs.removeMessageListener(message, this);
     }
-    cs.removeEventListener("mousemove", this);
   },
 
   get document() {
@@ -106,7 +104,7 @@ this.ContentControl.prototype = {
     }
 
     this._contentScope.get().sendAsyncMessage("AccessFu:DoScroll",
-      { bounds: Utils.getBounds(position, true),
+      { bounds: Utils.getBounds(position),
         page: aMessage.json.direction === "forward" ? 1 : -1,
         horizontal: false });
   },
@@ -158,24 +156,11 @@ this.ContentControl.prototype = {
     }
   },
 
-  handleEvent: function cc_handleEvent(aEvent) {
-    if (aEvent.type === "mousemove") {
-      this.handleMoveToPoint(
-        { json: { x: aEvent.screenX, y: aEvent.screenY, rule: "Simple" } });
-    }
-    if (!Utils.getMessageManager(aEvent.target)) {
-      aEvent.preventDefault();
-    } else {
-      aEvent.target.focus();
-    }
-  },
-
   handleMoveToPoint: function cc_handleMoveToPoint(aMessage) {
     let [x, y] = [aMessage.json.x, aMessage.json.y];
     let rule = TraversalRules[aMessage.json.rule];
 
-    let dpr = this.window.devicePixelRatio;
-    this.vc.moveToPoint(rule, x * dpr, y * dpr, true);
+    this.vc.moveToPoint(rule, x, y, true);
   },
 
   handleClearCursor: function cc_handleClearCursor(aMessage) {
