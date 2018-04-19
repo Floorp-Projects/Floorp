@@ -283,6 +283,22 @@ var PlacesDBUtils = {
         )`
       },
 
+      // C.1 Fix built-in folders with incorrect parents.
+      { query:
+        `UPDATE moz_bookmarks SET parent = :rootId
+         WHERE guid IN (
+           :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid, :mobileGuid
+         ) AND parent <> :rootId`,
+        params: {
+          rootId: PlacesUtils.placesRootId,
+          menuGuid: PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+          mobileGuid: PlacesUtils.bookmarks.mobileGuid,
+        }
+      },
+
       // D.1 remove items without a valid place
       // If fk IS NULL we fix them in D.7
       { query:

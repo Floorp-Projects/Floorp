@@ -375,6 +375,37 @@ tests.push({
   }
 });
 
+tests.push({
+  name: "C.1",
+  desc: "fix invalid parents for Places folders",
+
+  setup() {
+    // Reparent the roots to something invalid.
+    mDBConn.executeSimpleSQL(`
+      UPDATE moz_bookmarks SET parent = 2
+      WHERE parent = (SELECT id from moz_bookmarks WHERE guid = "${PlacesUtils.bookmarks.rootGuid}")
+    `);
+  },
+
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
+
+    let rows = await db.executeCached(`
+      SELECT guid FROM moz_bookmarks
+      WHERE parent = (SELECT id from moz_bookmarks WHERE guid = "${PlacesUtils.bookmarks.rootGuid}")
+    `);
+
+    let guids = rows.map(row => row.getResultByName("guid"));
+    Assert.deepEqual(guids, [
+      PlacesUtils.bookmarks.menuGuid,
+      PlacesUtils.bookmarks.toolbarGuid,
+      PlacesUtils.bookmarks.tagsGuid,
+      PlacesUtils.bookmarks.unfiledGuid,
+      PlacesUtils.bookmarks.mobileGuid,
+    ]);
+  }
+});
+
 // ------------------------------------------------------------------------------
 
 tests.push({
