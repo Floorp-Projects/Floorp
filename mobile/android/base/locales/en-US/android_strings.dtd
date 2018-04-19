@@ -282,13 +282,6 @@
 <!ENTITY pref_whats_new_notification "What\'s new in &brandShortName;">
 <!ENTITY pref_whats_new_notification_summary "Learn about new features after an update">
 
-<!-- Localization note (pref_feature_tips_notification): Title of a new toggleable setting in Settings-Notifications screen.
-     Similar to the already existing "pref_whats_new_notification"-->
-<!ENTITY pref_feature_tips_notification "Product and feature tips">
-<!-- Localization note (pref_feature_tips_notification_summary): Description of a new toggleable setting in Settings-Notifications screen.
-     Similar to the already existing "pref_whats_new_notification_summary"-->
-<!ENTITY pref_feature_tips_notification_summary "Learn more about using &brandShortName; and other &vendorShortName; products">
-
 <!-- Localization note (pref_category_experimental): Title of a sub category in the 'advanced' category
      for experimental features. -->
 <!ENTITY pref_category_experimental "Experimental features">
