@@ -406,7 +406,8 @@ public:
                                             HashFeatures(aKey->mFontEntry->mFeatureSettings),
                                             HashVariations(aKey->mFontEntry->mVariationSettings),
                                             mozilla::HashString(aKey->mFontEntry->mFamilyName),
-                                            aKey->mFontEntry->mWeight.ForHash(),
+                                            aKey->mFontEntry->Weight().Min().ForHash(),
+                                            aKey->mFontEntry->Weight().Max().ForHash(),
                                             (aKey->mFontEntry->mStyle |
                                              (aKey->mFontEntry->mStretch << 11) ) ^
                                              aKey->mFontEntry->mLanguageOverride);
