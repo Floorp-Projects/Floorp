@@ -28,6 +28,9 @@ BALROG_PLATFORM_MAP = {
     "linux64": [
         "Linux_x86_64-gcc3"
     ],
+    "linux64-asan-reporter": [
+        "Linux_x86_64-gcc3-asan"
+    ],
     "macosx64": [
         "Darwin_x86_64-gcc3-u-i386-x86_64",
         "Darwin_x86-gcc3-u-i386-x86_64",
@@ -52,6 +55,7 @@ FTP_PLATFORM_MAP = {
     "Darwin_x86_64-gcc3-u-i386-x86_64": "mac",
     "Linux_x86-gcc3": "linux-i686",
     "Linux_x86_64-gcc3": "linux-x86_64",
+    "Linux_x86_64-gcc3-asan": "linux-x86_64-asan-reporter",
     "WINNT_x86-msvc": "win32",
     "WINNT_x86-msvc-x64": "win32",
     "WINNT_x86-msvc-x86": "win32",
