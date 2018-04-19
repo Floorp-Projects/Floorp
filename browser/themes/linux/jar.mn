@@ -32,6 +32,7 @@ browser.jar:
   skin/classic/browser/places/allBookmarks.png        (places/allBookmarks.png)
   skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)
+  skin/classic/browser/places/bookmarks-menu-arrow.png           (places/bookmarks-menu-arrow.png)
 * skin/classic/browser/places/editBookmark.css (places/editBookmark.css)
   skin/classic/browser/places/livemark-item.png       (places/livemark-item.png)
 * skin/classic/browser/places/places.css              (places/places.css)
