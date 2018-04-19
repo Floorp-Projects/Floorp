@@ -99,12 +99,7 @@ class JUnitTestRunner(MochitestDesktop):
            Create a local profile with test prefs and proxy definitions and
            push it to the remote device.
         """
-        preferences = [
-            os.path.join(
-                here,
-                'profile_data',
-                'prefs_general.js')]
-
+        preferences = [os.path.join(here, 'profile_data', 'common', 'user.js')]
         prefs = {}
         for path in preferences:
             prefs.update(Preferences.read_prefs(path))

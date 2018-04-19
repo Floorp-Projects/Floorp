@@ -44,7 +44,7 @@ if __name__ == '__main__':
     with TemporaryDirectory() as profilePath:
         # TODO: refactor this into mozprofile
         prefpath = os.path.join(
-            build.topsrcdir, "testing", "profiles", "prefs_general.js")
+            build.topsrcdir, "testing", "profiles", "common", "user.js")
         overridepath = os.path.join(
             build.topsrcdir, "build", "pgo", "prefs_override.js")
 
