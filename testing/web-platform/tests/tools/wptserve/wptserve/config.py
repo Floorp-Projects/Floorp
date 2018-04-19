@@ -214,3 +214,12 @@ class Config(Mapping):
         return {"key_path": key_path,
                 "cert_path": cert_path,
                 "encrypt_after_connect": self.ssl["encrypt_after_connect"]}
+
+    def as_dict(self):
+        rv = {
+            "domains": list(self.domains),
+            "sundomains": list(self.subdomains),
+        }
+        for item in self._default.iterkeys():
+            rv[item] = getattr(self, item)
+        return rv
