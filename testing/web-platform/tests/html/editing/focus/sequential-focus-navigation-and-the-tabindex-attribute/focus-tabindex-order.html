@@ -2,17 +2,13 @@
 <meta charset="utf-8">
 <title>HTML Test: focus - the sequential focus navigation order</title>
 <link rel="author" title="Intel" href="http://www.intel.com/">
-<link rel="help" href="https://html.spec.whatwg.org/multipage/#sequential-focus-navigation-and-the-tabindex-attribute">
+<link rel="help" href="https://html.spec.whatwg.org/multipage/interaction.html#sequential-focus-navigation">
 <meta assert="flag" content="interact">
 <meta assert="assert" content="Check the sequential focus navigation order">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<h2>Steps:</h2>
-<ol>
-  <li>Press 'Tab' key at least 10 times in 20 seconds.(Long press the 'Tab' key will be better.)</li>
-</ol>
-<h2>Expect results:</h2>
-<p>PASS</p>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
 <div id="log"></div>
 <form id="fm">
   <button id="btn0">tabindex(omitted)</button>
@@ -28,32 +24,41 @@
 </form>
 <script>
 
-//This test can be automated once we have an uniform way to use webdriver.
 var i = 0,
     expectation = ["btn9", "btn6", "btn7", "btn8", "btn5", "btn0", "btn1", "btn2", "btn4"],
     results = [],
-    t = async_test("The element with a zero tabindex must be focused by press 'Tab' key");
+    t = async_test("Elements with different tabindex must be focused sequentially when pressing 'Tab' keys");
 
 setup(function () {
   document.body.focus();
 }, {timeout: 20000});
 
+
+
 document.forms.fm.addEventListener("focus", function (evt) {
   results.push(evt.target.id);
-  if (i >= 9) {
+  if (i >= 8) {
     t.step(function () {
       assert_array_equals(results, expectation);
     });
+    t.done();
+  } else {
+    t.step(function () {
+      // TAB = '\ue004'
+      test_driver.send_keys(document.body, "\ue004");
+    });
   }
+  i++;
 }, true);
 
 document.addEventListener("keydown", function (evt) {
-  if (evt.keyCode === 9) {
-    i += 1;
-    if (i === 10) {
-      t.done();
-    }
-  }
+  t.step(function () {
+    assert_equals(evt.keyCode, 9, "Please press 'Tab' key.");
+  });
 }, true);
 
+t.step(function () {
+  // TAB = '\ue004'
+  test_driver.send_keys(document.body, "\ue004");
+});
 </script>
