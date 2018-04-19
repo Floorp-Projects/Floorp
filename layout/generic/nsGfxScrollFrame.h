@@ -464,11 +464,13 @@ public:
   }
   bool WantAsyncScroll() const;
   Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-    Layer* aLayer,
     LayerManager* aLayerManager,
     const nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     const mozilla::DisplayItemClip* aClip) const;
+  void ClipLayerToDisplayPort(Layer* aLayer,
+                              const mozilla::DisplayItemClip* aClip,
+                              const ContainerLayerParameters& aParameters) const;
 
   // nsIScrollbarMediator
   void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
@@ -614,7 +616,7 @@ public:
   // will already have the necessary frame metrics.
   bool mIsScrollableLayerInRootContainer:1;
 
-  // If true, add clipping in ScrollFrameHelper::ComputeFrameMetrics.
+  // If true, add clipping in ScrollFrameHelper::ClipLayerToDisplayPort.
   bool mAddClipRectToLayer:1;
 
   // True if this frame has been scrolled at least once
@@ -970,16 +972,21 @@ public:
     return mHelper.WantAsyncScroll();
   }
   virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-    Layer* aLayer,
     LayerManager* aLayerManager,
     const nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     const mozilla::DisplayItemClip* aClip) const override
   {
-    return mHelper.ComputeScrollMetadata(aLayer, aLayerManager, aContainerReferenceFrame, aParameters, aClip);
+    return mHelper.ComputeScrollMetadata(aLayerManager, aContainerReferenceFrame, aParameters, aClip);
   }
-  virtual bool IsIgnoringViewportClipping() const override {
-    return mHelper.IsIgnoringViewportClipping();
+  virtual void ClipLayerToDisplayPort(Layer* aLayer,
+                                      const mozilla::DisplayItemClip* aClip,
+                                      const ContainerLayerParameters& aParameters) const override
+  {
+    mHelper.ClipLayerToDisplayPort(aLayer, aClip, aParameters);
+  }
+virtual bool IsIgnoringViewportClipping() const override {
+return mHelper.IsIgnoringViewportClipping();
   }
   virtual void MarkScrollbarsDirtyForReflow() const override {
     mHelper.MarkScrollbarsDirtyForReflow();
@@ -1413,16 +1420,20 @@ public:
     return mHelper.WantAsyncScroll();
   }
   virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-    Layer* aLayer,
     LayerManager* aLayerManager,
     const nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     const mozilla::DisplayItemClip* aClip) const override
   {
-    return mHelper.ComputeScrollMetadata(aLayer, aLayerManager, aContainerReferenceFrame, aParameters, aClip);
+    return mHelper.ComputeScrollMetadata(aLayerManager, aContainerReferenceFrame, aParameters, aClip);
   }
-  virtual bool IsIgnoringViewportClipping() const override {
-    return mHelper.IsIgnoringViewportClipping();
+  virtual void ClipLayerToDisplayPort(Layer* aLayer,
+                                      const mozilla::DisplayItemClip* aClip,
+                                      const ContainerLayerParameters& aParameters) const override {
+    mHelper.ClipLayerToDisplayPort(aLayer, aClip, aParameters);
+  }
+virtual bool IsIgnoringViewportClipping() const override {
+return mHelper.IsIgnoringViewportClipping();
   }
   virtual void MarkScrollbarsDirtyForReflow() const override {
     mHelper.MarkScrollbarsDirtyForReflow();
