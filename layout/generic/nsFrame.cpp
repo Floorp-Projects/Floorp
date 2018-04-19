@@ -2781,10 +2781,26 @@ ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder, nsIFrame* aMaskedFrame,
   return Nothing();
 }
 
+struct AutoCheckBuilder {
+  explicit AutoCheckBuilder(nsDisplayListBuilder* aBuilder)
+    : mBuilder(aBuilder)
+  {
+    aBuilder->Check();
+  }
+
+  ~AutoCheckBuilder()
+  {
+    mBuilder->Check();
+  }
+
+  nsDisplayListBuilder* mBuilder;
+};
+
 void
 nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                              nsDisplayList*        aList,
                                              bool*                 aCreatedContainerItem) {
+  AutoCheckBuilder check(aBuilder);
   if (GetStateBits() & NS_FRAME_TOO_DEEP_IN_FRAME_TREE)
     return;
 
@@ -3069,7 +3085,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                                  true);
 
     MarkAbsoluteFramesForDisplayList(aBuilder);
+    aBuilder->Check();
     BuildDisplayList(aBuilder, set);
+    aBuilder->Check();
 
     // Blend modes are a real pain for retained display lists. We build a blend
     // container item if the built list contains any blend mode items within
@@ -3117,7 +3135,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
         }
 
         MarkAbsoluteFramesForDisplayList(aBuilder);
+        aBuilder->Check();
         BuildDisplayList(aBuilder, set);
+        aBuilder->Check();
       }
     }
 
@@ -3515,6 +3535,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                                    nsIFrame*               aChild,
                                    const nsDisplayListSet& aLists,
                                    uint32_t                aFlags) {
+  AutoCheckBuilder check(aBuilder);
   // If painting is restricted to just the background of the top level frame,
   // then we have nothing to do here.
   if (aBuilder->IsBackgroundOnly())
@@ -3577,7 +3598,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
     child->MarkAbsoluteFramesForDisplayList(aBuilder);
     aBuilder->AdjustWindowDraggingRegion(child);
+    aBuilder->Check();
     child->BuildDisplayList(aBuilder, aLists);
+    aBuilder->Check();
     aBuilder->DisplayCaret(child, aLists.Content());
 #ifdef DEBUG
     DisplayDebugBorders(aBuilder, child, aLists);
@@ -3825,7 +3848,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                                                    differentAGR);
 
       aBuilder->AdjustWindowDraggingRegion(child);
+      aBuilder->Check();
       child->BuildDisplayList(aBuilder, aLists);
+      aBuilder->Check();
       aBuilder->DisplayCaret(child, aLists.Content());
 #ifdef DEBUG
       DisplayDebugBorders(aBuilder, child, aLists);
@@ -3845,7 +3870,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
     aBuilder->AdjustWindowDraggingRegion(child);
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
+    aBuilder->Check();
     child->BuildDisplayList(aBuilder, pseudoStack);
+    aBuilder->Check();
     if (aBuilder->DisplayCaret(child, pseudoStack.Content())) {
       canSkipWrapList = false;
     }

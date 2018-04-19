@@ -845,7 +845,7 @@ const KTableEntry nsCSSProps::kCaptionSideKTable[] = {
   { eCSSKeyword_UNKNOWN,              -1 }
 };
 
-KTableEntry nsCSSProps::kClearKTable[] = {
+const KTableEntry nsCSSProps::kClearKTable[] = {
   { eCSSKeyword_none, StyleClear::None },
   { eCSSKeyword_left, StyleClear::Left },
   { eCSSKeyword_right, StyleClear::Right },
@@ -1277,7 +1277,7 @@ const KTableEntry nsCSSProps::kHyphensKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-KTableEntry nsCSSProps::kFloatKTable[] = {
+const KTableEntry nsCSSProps::kFloatKTable[] = {
   { eCSSKeyword_none, StyleFloat::None },
   { eCSSKeyword_left, StyleFloat::Left },
   { eCSSKeyword_right, StyleFloat::Right },

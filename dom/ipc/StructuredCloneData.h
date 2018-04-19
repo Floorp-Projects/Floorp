@@ -55,7 +55,7 @@ public:
   CreateFromExternalData(const char* aData, size_t aDataLength)
   {
     JSStructuredCloneData buf;
-    buf.WriteBytes(aData, aDataLength);
+    buf.AppendBytes(aData, aDataLength);
     RefPtr<SharedJSAllocatedData> sharedData =
       new SharedJSAllocatedData(Move(buf));
     return sharedData.forget();
@@ -65,11 +65,7 @@ public:
   CreateFromExternalData(const JSStructuredCloneData& aData)
   {
     JSStructuredCloneData buf;
-    auto iter = aData.Iter();
-    while (!iter.Done()) {
-      buf.WriteBytes(iter.Data(), iter.RemainingInSegment());
-      iter.Advance(aData, iter.RemainingInSegment());
-    }
+    buf.Append(aData);
     RefPtr<SharedJSAllocatedData> sharedData =
       new SharedJSAllocatedData(Move(buf));
     return sharedData.forget();
@@ -238,7 +234,7 @@ public:
   // StructuredCloneData instance is destroyed before aData is destroyed.
   bool UseExternalData(const JSStructuredCloneData& aData)
   {
-    auto iter = aData.Iter();
+    auto iter = aData.Start();
     bool success = false;
     mExternalData =
       aData.Borrow<js::SystemAllocPolicy>(iter, aData.Size(), &success);

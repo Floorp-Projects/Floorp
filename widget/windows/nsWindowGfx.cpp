@@ -221,8 +221,13 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     return true;
   }
 
+  PAINTSTRUCT ps;
+
   // Avoid starting the GPU process for the initial navigator:blank window.
   if (mIsEarlyBlankWindow) {
+    // Call BeginPaint/EndPaint or Windows will keep sending us messages.
+    ::BeginPaint(mWnd, &ps);
+    ::EndPaint(mWnd, &ps);
     return true;
   }
 
@@ -232,8 +237,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     GetLayerManager()->ScheduleComposite();
   }
   mLastPaintBounds = mBounds;
-
-  PAINTSTRUCT ps;
 
 #ifdef MOZ_XUL
   if (!aDC && (eTransparencyTransparent == mTransparencyMode))
