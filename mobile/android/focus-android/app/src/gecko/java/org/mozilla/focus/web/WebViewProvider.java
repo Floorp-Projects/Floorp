@@ -131,7 +131,9 @@ public class WebViewProvider {
         @Override
         public void stopLoading() {
             geckoSession.stop();
-            callback.onPageFinished(isSecure);
+            if (callback != null) {
+                callback.onPageFinished(isSecure);
+            }
         }
 
         @Override
@@ -143,7 +145,9 @@ public class WebViewProvider {
         public void loadUrl(final String url) {
             currentUrl = url;
             geckoSession.loadUri(currentUrl);
-            callback.onProgress(10);
+            if (callback != null) {
+                callback.onProgress(10);
+            }
         }
 
         @Override
@@ -209,26 +213,31 @@ public class WebViewProvider {
 
                 @Override
                 public void onFullScreen(GeckoSession session, boolean fullScreen) {
-                    if (fullScreen) {
-                        callback.onEnterFullScreen(new FullscreenCallback() {
-                            @Override
-                            public void fullScreenExited() {
-                                geckoSession.exitFullScreen();
-                            }
-                        }, null);
-                    } else {
-                        callback.onExitFullScreen();
+                    if (callback != null) {
+                        if (fullScreen) {
+                            callback.onEnterFullScreen(new FullscreenCallback() {
+                                @Override
+                                public void fullScreenExited() {
+                                    geckoSession.exitFullScreen();
+                                }
+                            }, null);
+                        } else {
+                            callback.onExitFullScreen();
+                        }
                     }
                 }
 
                 @Override
                 public void onContextMenu(GeckoSession session, int screenX, int screenY, String uri, @ElementType int elementType, String elementSrc) {
-                    if (elementSrc != null && uri != null && elementType == ELEMENT_TYPE_IMAGE) {
-                        callback.onLongPress(new HitTarget(true, uri, true, elementSrc));
-                    } else if (elementSrc != null && elementType == ELEMENT_TYPE_IMAGE) {
-                        callback.onLongPress(new HitTarget(false, null, true, elementSrc));
-                    } else if (uri != null) {
-                        callback.onLongPress(new HitTarget(true, uri, false, null));
+                    if (callback != null) {
+                        if (elementSrc != null && uri != null && elementType ==
+                                ELEMENT_TYPE_IMAGE) {
+                            callback.onLongPress(new HitTarget(true, uri, true, elementSrc));
+                        } else if (elementSrc != null && elementType == ELEMENT_TYPE_IMAGE) {
+                            callback.onLongPress(new HitTarget(false, null, true, elementSrc));
+                        } else if (uri != null) {
+                            callback.onLongPress(new HitTarget(true, uri, false, null));
+                        }
                     }
                 }
 
@@ -294,7 +303,9 @@ public class WebViewProvider {
                 public void onSecurityChange(GeckoSession session,
                                              GeckoSession.ProgressDelegate.SecurityInformation securityInfo) {
                     isSecure = securityInfo.isSecure;
-                    callback.onSecurityChanged(isSecure, securityInfo.host, securityInfo.issuerOrganization);
+                    if (callback != null) {
+                        callback.onSecurityChanged(isSecure, securityInfo.host, securityInfo.issuerOrganization);
+                    }
                 }
             };
         }
