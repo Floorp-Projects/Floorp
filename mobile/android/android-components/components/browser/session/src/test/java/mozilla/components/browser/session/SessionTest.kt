@@ -56,7 +56,36 @@ class SessionTest {
 
         session.url = "http://www.firefox.com"
 
+        assertEquals("http://www.firefox.com", session.url)
         verify(observer).onUrlChanged()
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `observer is notified when progress changes`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        session.progress = 75
+
+        assertEquals(75, session.progress)
+        verify(observer).onProgress()
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `observer is notified when loading state changes`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        session.loading = true
+
+        assertEquals(true, session.loading)
+        verify(observer).onLoadingStateChanged()
         verifyNoMoreInteractions(observer)
     }
 

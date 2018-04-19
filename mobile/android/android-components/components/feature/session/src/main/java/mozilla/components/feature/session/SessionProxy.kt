@@ -15,11 +15,20 @@ class SessionProxy(
     private val session: Session,
     engineSession: EngineSession
 ) : EngineSession.Observer {
+
     init {
         engineSession.register(this)
     }
 
     override fun onLocationChange(url: String) {
         session.url = url
+    }
+
+    override fun onProgress(progress: Int) {
+        session.progress = progress
+    }
+
+    override fun onLoadingStateChange(loading: Boolean) {
+        session.loading = loading
     }
 }

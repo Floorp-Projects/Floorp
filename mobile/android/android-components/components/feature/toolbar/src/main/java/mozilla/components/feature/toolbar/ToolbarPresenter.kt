@@ -16,6 +16,7 @@ class ToolbarPresenter(
     private val sessionManager: SessionManager,
     private val toolbar: Toolbar
 ) : SessionManager.Observer, Session.Observer {
+
     var session: Session = sessionManager.selectedSession
 
     /**
@@ -57,4 +58,8 @@ class ToolbarPresenter(
     override fun onUrlChanged() {
         toolbar.displayUrl(session.url)
     }
+
+    override fun onProgress() { /* TODO display progress */ }
+
+    override fun onLoadingStateChanged() { /* TODO */ }
 }

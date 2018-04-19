@@ -5,7 +5,12 @@
 package mozilla.components.browser.engine.system
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.AttributeSet
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
@@ -50,10 +55,35 @@ class SystemEngineView @JvmOverloads constructor(
         val webView = WebView(context)
 
         webView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                url?.let {
+                    session?.internalNotifyObservers { onLoadingStateChange(true) }
+                }
+            }
+
             override fun onPageFinished(view: WebView?, url: String?) {
                 url?.let {
                     session?.internalNotifyObservers { onLocationChange(it) }
+                    session?.internalNotifyObservers { onLoadingStateChange(false) }
                 }
+            }
+
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                session?.internalNotifyObservers { onLoadingStateChange(false) }
+            }
+
+            override fun onReceivedHttpError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                errorResponse: WebResourceResponse?
+            ) {
+                session?.internalNotifyObservers { onLoadingStateChange(false) }
+            }
+        }
+
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                session?.internalNotifyObservers { onProgress(newProgress) }
             }
         }
 

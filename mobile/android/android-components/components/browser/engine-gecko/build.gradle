@@ -32,6 +32,11 @@ dependencies {
     api "org.mozilla:geckoview-nightly-armeabi-v7a:${rootProject.ext.gecko['version']}"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
+
+    testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
+    testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
+    testImplementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
 }
 
 archivesBaseName = "engine-gecko"

@@ -21,9 +21,15 @@ class EngineSessionTest {
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
+        session.notifyInternalObservers { onProgress(25) }
+        session.notifyInternalObservers { onProgress(100) }
+        session.notifyInternalObservers { onLoadingStateChange(true) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onLocationChange("https://www.firefox.com")
+        verify(observer).onProgress(25)
+        verify(observer).onProgress(100)
+        verify(observer).onLoadingStateChange(true)
         verifyNoMoreInteractions(observer)
     }
 
@@ -35,13 +41,20 @@ class EngineSessionTest {
         session.register(observer)
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
+        session.notifyInternalObservers { onProgress(25) }
+        session.notifyInternalObservers { onLoadingStateChange(true) }
 
         session.unregister(observer)
 
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
+        session.notifyInternalObservers { onProgress(100) }
+        session.notifyInternalObservers { onLoadingStateChange(false) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
+        verify(observer).onProgress(25)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
+        verify(observer, never()).onProgress(100)
+        verify(observer).onLoadingStateChange(true)
         verifyNoMoreInteractions(observer)
     }
 
@@ -53,13 +66,20 @@ class EngineSessionTest {
         session.register(observer)
 
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
+        session.notifyInternalObservers { onProgress(25) }
+        session.notifyInternalObservers { onLoadingStateChange(true) }
 
         session.close()
 
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
+        session.notifyInternalObservers { onProgress(100) }
+        session.notifyInternalObservers { onLoadingStateChange(false) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
+        verify(observer).onProgress(25)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
+        verify(observer, never()).onProgress(100)
+        verify(observer).onLoadingStateChange(true)
         verifyNoMoreInteractions(observer)
     }
 }

@@ -8,6 +8,9 @@ import mozilla.components.concept.engine.EngineSession
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 
+const val PROGRESS_START = 25
+const val PROGRESS_STOP = 100
+
 /**
  * Gecko-based EngineSession implementation.
  */
@@ -20,6 +23,7 @@ class GeckoEngineSession(
         geckoSession.open(runtime)
 
         geckoSession.navigationDelegate = createNavigationDelegate()
+        geckoSession.progressDelegate = createProgressDelegate()
     }
 
     /**
@@ -55,5 +59,27 @@ class GeckoEngineSession(
             uri: String?,
             response: GeckoSession.Response<GeckoSession>?
         ) {}
+    }
+
+    /**
+    * ProgressDelegate implementation for forwarding callbacks to observers of the session.
+    */
+    private fun createProgressDelegate() = object : GeckoSession.ProgressDelegate {
+        override fun onSecurityChange(
+            session: GeckoSession?,
+            securityInfo: GeckoSession.ProgressDelegate.SecurityInformation?
+        ) { }
+
+        override fun onPageStart(session: GeckoSession?, url: String?) {
+            notifyObservers { onProgress(PROGRESS_START) }
+            notifyObservers { onLoadingStateChange(true) }
+        }
+
+        override fun onPageStop(session: GeckoSession?, success: Boolean) {
+            if (success) {
+                notifyObservers { onProgress(PROGRESS_STOP) }
+                notifyObservers { onLoadingStateChange(false) }
+            }
+        }
     }
 }

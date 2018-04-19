@@ -17,7 +17,7 @@ class SessionFeature(
     engineView: EngineView,
     sessionMapping: SessionMapping = SessionMapping()
 ) {
-    private val presenter = EngineViewPresenter(sessionManager, engine, engineView, sessionMapping)
+    internal val presenter = EngineViewPresenter(sessionManager, engine, engineView, sessionMapping)
 
     /**
      * Start feature: App is in the foreground.

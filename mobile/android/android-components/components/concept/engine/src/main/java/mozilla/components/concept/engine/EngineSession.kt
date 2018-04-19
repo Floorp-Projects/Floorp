@@ -13,10 +13,12 @@ import android.support.annotation.CallSuper
  */
 abstract class EngineSession {
     /**
-     * Interface to be implemented by classes that want to observer this engine session.
+     * Interface to be implemented by classes that want to observe this engine session.
      */
     interface Observer {
         fun onLocationChange(url: String)
+        fun onProgress(progress: Int)
+        fun onLoadingStateChange(loading: Boolean)
     }
 
     private val observers = mutableListOf<Observer>()

@@ -15,6 +15,8 @@ class Session(
      */
     interface Observer {
         fun onUrlChanged()
+        fun onProgress()
+        fun onLoadingStateChanged()
     }
 
     private val observers = mutableListOf<Observer>()
@@ -26,6 +28,24 @@ class Session(
         set(value) {
             field = value
             notifyObservers { onUrlChanged() }
+        }
+
+    /**
+     * The progress loading the current URL.
+     */
+    var progress: Int = 0
+        set(value) {
+            field = value
+            notifyObservers { onProgress() }
+        }
+
+    /**
+     * True if this session's url is currently loading, otherwise false.
+     */
+    var loading: Boolean = false
+        set(value) {
+            field = value
+            notifyObservers { onLoadingStateChanged() }
         }
 
     /**
