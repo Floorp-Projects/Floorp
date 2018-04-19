@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html dir="ltr" xml:lang="en-US" lang="en-US">
+  <head>
+    <meta charset="utf8">
+    <script>
+      window.onunload = function() {
+        var img = new Image();
+        img.src = "http://tracking.example.com/";
+        document.body.appendChild(img);
+      };
+    </script>
+  </head>
+  <body>
+    Testing tracking requests onunload.
+  </body>
+</html>
