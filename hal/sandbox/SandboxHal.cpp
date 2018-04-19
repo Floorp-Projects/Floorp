@@ -217,19 +217,6 @@ SetProcessPrioritySupported()
 }
 
 void
-SetCurrentThreadPriority(ThreadPriority aThreadPriority)
-{
-  MOZ_CRASH("Setting current thread priority cannot be called from sandboxed contexts.");
-}
-
-void
-SetThreadPriority(PlatformThreadId aThreadId,
-                  ThreadPriority aThreadPriority)
-{
-  MOZ_CRASH("Setting thread priority cannot be called from sandboxed contexts.");
-}
-
-void
 StartDiskSpaceWatcher()
 {
   MOZ_CRASH("StartDiskSpaceWatcher() can't be called from sandboxed contexts.");
