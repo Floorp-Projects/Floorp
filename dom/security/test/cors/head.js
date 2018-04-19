@@ -19,12 +19,12 @@ let promise = require("promise");
  * @param {String} hostType Optional. The type of toolbox host to be used.
  * @return {Promise} Resolves with the toolbox, when it has been opened.
  */
-var openToolboxForTab = Task.async(function* (tab, toolId, hostType) {
+var openToolboxForTab = async function(tab, toolId, hostType) {
   info("Opening the toolbox");
 
   let toolbox;
   let target = TargetFactory.forTab(tab);
-  yield target.makeRemote();
+  await target.makeRemote();
 
   // Check if the toolbox is already loaded.
   toolbox = gDevTools.getToolbox(target);
@@ -36,15 +36,15 @@ var openToolboxForTab = Task.async(function* (tab, toolId, hostType) {
   }
 
   // If not, load it now.
-  toolbox = yield gDevTools.showToolbox(target, toolId, hostType);
+  toolbox = await gDevTools.showToolbox(target, toolId, hostType);
 
   // Make sure that the toolbox frame is focused.
-  yield new Promise(resolve => waitForFocus(resolve, toolbox.win));
+  await new Promise(resolve => waitForFocus(resolve, toolbox.win));
 
   info("Toolbox opened and focused");
 
   return toolbox;
-});
+};
 
 /**
  * Find multiple messages in the output.

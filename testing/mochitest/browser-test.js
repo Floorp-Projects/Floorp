@@ -5,7 +5,6 @@ var gConfig;
 var gSaveInstrumentationData = null;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Task.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -409,11 +408,9 @@ function Tester(aTests, structuredLogger, aCallback) {
   this.SimpleTest.harnessParameters = gConfig;
 
   this.MemoryStats = simpleTestScope.MemoryStats;
-  this.Task = Task;
   this.ContentTask = ChromeUtils.import("resource://testing-common/ContentTask.jsm", null).ContentTask;
   this.BrowserTestUtils = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm", null).BrowserTestUtils;
   this.TestUtils = ChromeUtils.import("resource://testing-common/TestUtils.jsm", null).TestUtils;
-  this.Task.Debugging.maintainStack = true;
   this.Promise = ChromeUtils.import("resource://gre/modules/Promise.jsm", null).Promise;
   this.PromiseTestUtils = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", null).PromiseTestUtils;
   this.Assert = ChromeUtils.import("resource://testing-common/Assert.jsm", null).Assert;
@@ -456,7 +453,6 @@ function Tester(aTests, structuredLogger, aCallback) {
 Tester.prototype = {
   EventUtils: {},
   SimpleTest: {},
-  Task: null,
   ContentTask: null,
   ExtensionTestUtils: null,
   Assert: null,
@@ -990,7 +986,6 @@ Tester.prototype = {
     scope.EventUtils = this.currentTest.usesUnsafeCPOWs ? this.cpowEventUtils : this.EventUtils;
     scope.SimpleTest = this.SimpleTest;
     scope.gTestPath = this.currentTest.path;
-    scope.Task = this.Task;
     scope.ContentTask = this.ContentTask;
     scope.BrowserTestUtils = this.BrowserTestUtils;
     scope.TestUtils = this.TestUtils;
@@ -1256,7 +1251,7 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
     } else {
       normalized = "" + stack;
     }
-    this.msg += Task.Debugging.generateReadableStack(normalized, "    ");
+    this.msg += normalized;
   }
 
   if (gConfig.debugOnFailure) {
@@ -1424,7 +1419,6 @@ testScope.prototype = {
 
   EventUtils: {},
   SimpleTest: {},
-  Task: null,
   ContentTask: null,
   BrowserTestUtils: null,
   TestUtils: null,
