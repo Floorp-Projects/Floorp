@@ -979,7 +979,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
   mRetainedTiles.SetLength(newTileCount);
 
   for (size_t oldIndex = 0; oldIndex < oldTileCount; oldIndex++) {
-    const TileIntPoint tilePosition = oldTiles.TilePosition(oldIndex);
+    const TileCoordIntPoint tilePosition = oldTiles.TilePosition(oldIndex);
     const size_t newIndex = newTiles.TileIndex(tilePosition);
     // First, get the already existing tiles to the right place in the new array.
     // Leave placeholders (default constructor) where there was no tile.
@@ -999,7 +999,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
   if (!paintRegion.IsEmpty()) {
     MOZ_ASSERT(mPaintStates.size() == 0);
     for (size_t i = 0; i < newTileCount; ++i) {
-      const TileIntPoint tilePosition = newTiles.TilePosition(i);
+      const TileCoordIntPoint tilePosition = newTiles.TilePosition(i);
 
       IntPoint tileOffset = GetTileOffset(tilePosition);
       nsIntRegion tileDrawRegion = IntRect(tileOffset, scaledTileSize);
@@ -1072,7 +1072,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       if (edgePaddingEnabled && mResolution == 1 &&
           tile.mFrontBuffer && tile.mFrontBuffer->IsLocked()) {
 
-        const TileIntPoint tilePosition = newTiles.TilePosition(i);
+        const TileCoordIntPoint tilePosition = newTiles.TilePosition(i);
         IntPoint tileOffset = GetTileOffset(tilePosition);
         // Strictly speakig we want the unscaled rect here, but it doesn't matter
         // because we only run this code when the resolution is equal to 1.
