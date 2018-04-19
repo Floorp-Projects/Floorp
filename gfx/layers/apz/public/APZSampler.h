@@ -42,7 +42,8 @@ class APZSampler {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(APZSampler)
 
 public:
-  explicit APZSampler(const RefPtr<APZCTreeManager>& aApz);
+  APZSampler(const RefPtr<APZCTreeManager>& aApz,
+             bool aIsUsingWebRender);
 
   void SetWebRenderWindowId(const wr::WindowId& aWindowId);
 
@@ -103,11 +104,11 @@ public:
 protected:
   virtual ~APZSampler();
 
-  bool UsingWebRenderSamplerThread() const;
   static already_AddRefed<APZSampler> GetSampler(const wr::WrWindowId& aWindowId);
 
 private:
   RefPtr<APZCTreeManager> mApz;
+  bool mIsUsingWebRender;
 
   // Used to manage the mapping from a WR window id to APZSampler. These are only
   // used if WebRender is enabled. Both sWindowIdMap and mWindowId should only
@@ -119,18 +120,12 @@ private:
   static StaticAutoPtr<std::unordered_map<uint64_t, APZSampler*>> sWindowIdMap;
   Maybe<wr::WrWindowId> mWindowId;
 
+  // Lock used to protected mSamplerThreadId
+  mutable Mutex mThreadIdLock;
   // If WebRender is enabled, this holds the thread id of the render backend
   // thread (which is the sampler thread) for the compositor associated with
   // this APZSampler instance.
-  // This is written to once during init and never cleared, and so reading it
-  // from multiple threads during normal operation (after initialization)
-  // without locking should be fine.
   Maybe<PlatformThreadId> mSamplerThreadId;
-#ifdef DEBUG
-  // This flag is used to ensure that we don't ever try to do sampler-thread
-  // stuff before the updater thread has been properly initialized.
-  mutable bool mSamplerThreadQueried;
-#endif
 
   Mutex mSampleTimeLock;
   // Can only be accessed or modified while holding mSampleTimeLock.
