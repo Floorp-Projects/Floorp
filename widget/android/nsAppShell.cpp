@@ -400,6 +400,8 @@ nsAppShell::nsAppShell()
 
     if (!XRE_IsParentProcess()) {
         if (jni::IsAvailable()) {
+            GeckoAppShellSupport::Init();
+
             // Set the corresponding state in GeckoThread.
             java::GeckoThread::SetState(java::GeckoThread::State::RUNNING());
         }
