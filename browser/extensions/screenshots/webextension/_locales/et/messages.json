@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "“ei säilita ajalugu” on lubatud"
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Sa kasutad Firefox ESRi."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Üleslaadimised on keelatud."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Link kopeeriti"
   },
@@ -57,6 +63,17 @@
   },
   "copyScreenshot": {
     "message": "Kopeeri"
+  },
+  "notificationImageCopiedTitle": {
+    "message": "Pilt kopeeriti"
+  },
+  "notificationImageCopiedDetails": {
+    "message": "Sinu pilt kopeeriti vahemällu. Asetamiseks vajuta $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
   },
   "imageCroppedWarning": {
     "message": "See pilt on vähendatud $PIXELS$-le pikslile.",

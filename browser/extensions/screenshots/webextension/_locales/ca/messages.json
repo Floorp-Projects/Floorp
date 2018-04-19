@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "S'ha activat l'opció «No recordarà mai l'historial»."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Feu servir el Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Les pujades estan inhabilitades."
+  },
   "notificationLinkCopiedTitle": {
     "message": "S'ha copiat l'enllaç"
   },
