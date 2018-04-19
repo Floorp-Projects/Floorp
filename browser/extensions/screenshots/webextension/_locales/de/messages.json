@@ -44,6 +44,12 @@
   "downloadOnlyDetailsNeverRemember": {
     "message": "„Chronik niemals anlegen“ ist aktiviert."
   },
+  "downloadOnlyDetailsESR": {
+    "message": "Sie verwenden Firefox ESR."
+  },
+  "downloadOnlyDetailsNoUploadPref": {
+    "message": "Uploads wurden deaktiviert."
+  },
   "notificationLinkCopiedTitle": {
     "message": "Link kopiert"
   },

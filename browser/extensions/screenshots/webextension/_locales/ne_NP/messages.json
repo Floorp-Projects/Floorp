@@ -1,0 +1,20 @@
+{
+  "addonDescription": {
+    "message": "वेबबाट फोटो र सिक्रिनसट या क्लिपहरू लिएर क्षणिक वा सदाको लागि सङ्ग्रह गर्न ।"
+  },
+  "contextMenuLabel": {
+    "message": "स्क्रिनसट लिनुहोस्"
+  },
+  "myShotsLink": {
+    "message": "मेरा सटहरू"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "सङ्ग्रह गर्नुहोस्"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "दृश्यात्मक सङ्ग्रह गर्नुहोस्"
+  },
+  "cancelScreenshot": {
+    "message": "रद्द गर्नुहोस"
+  }
+}

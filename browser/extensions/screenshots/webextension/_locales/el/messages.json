@@ -29,6 +29,9 @@
   "downloadScreenshot": {
     "message": "Λήψη"
   },
+  "downloadOnlyDetailsPrivate": {
+    "message": "Σε ένα παράθυρο ιδιωτικής περιήγησης."
+  },
   "downloadOnlyDetailsThirdParty": {
     "message": "Τα cookies τρίτων είναι απενεργοποιημένα."
   },
