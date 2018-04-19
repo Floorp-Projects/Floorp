@@ -5,7 +5,7 @@ function showServices() {
   servicesDiv.style.display = "";
 }
 let showWebServices = document.getElementById("showWebServices");
-showWebServices.addEventListener("click",showServices);
+showWebServices.addEventListener("click", showServices);
 
 var disablingServicesDiv = document.getElementById("disabling-webservices-container");
 
@@ -16,5 +16,5 @@ function showDisablingServices() {
 if (disablingServicesDiv != null) {
   disablingServicesDiv.style.display = "none";
   let showDisablingWebServices = document.getElementById("showDisablingWebServices");
-  showDisablingWebServices.addEventListener("click",showDisablingServices);
+  showDisablingWebServices.addEventListener("click", showDisablingServices);
 }
