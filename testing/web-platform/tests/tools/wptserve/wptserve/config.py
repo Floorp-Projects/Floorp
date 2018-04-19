@@ -41,12 +41,16 @@ class Config(Mapping):
                  subdomains=set(),
                  not_subdomains=set(),
                  **kwargs):
+
+        self.log_level = kwargs.get("log_level", "DEBUG")
+
         if logger is None:
-            logger = logging.getLogger("web-platform-tests")
-            logger.setLevel(getattr(logging, kwargs.get("log_level", "debug").upper()))
-            self.logger = logger
+            self._logger_name = "web-platform-tests"
         else:
-            self.logger = logger
+            level_name = logging.getLevelName(logger.level)
+            if level_name != "NOTSET":
+                self.log_level = level_name
+            self._logger_name = logger.name
 
         for k, v in self._default.iteritems():
             setattr(self, k, kwargs.pop(k, v))
@@ -214,6 +218,20 @@ class Config(Mapping):
         return {"key_path": key_path,
                 "cert_path": cert_path,
                 "encrypt_after_connect": self.ssl["encrypt_after_connect"]}
+
+    @property
+    def log_level(self):
+        return getattr(logging, self._log_level)
+
+    @log_level.setter
+    def log_level(self, value):
+        self._log_level = value.upper()
+
+    @property
+    def logger(self):
+        logger = logging.getLogger(self._logger_name)
+        logger.setLevel(self.log_level)
+        return logger
 
     def as_dict(self):
         rv = {

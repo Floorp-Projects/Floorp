@@ -1,5 +1,7 @@
 import logging
 import os
+import pickle
+from logging import handlers
 
 import pytest
 
@@ -55,7 +57,7 @@ def test_init_prefixed_prop():
 def test_init_renamed_host():
     logger = logging.getLogger("test_init_renamed_host")
     logger.setLevel(logging.DEBUG)
-    handler = logging.handlers.BufferingHandler(100)
+    handler = handlers.BufferingHandler(100)
     logger.addHandler(handler)
 
     c = config.Config(logger=logger, host="foo.bar")
@@ -114,7 +116,7 @@ def test_update_prefixed():
 def test_update_renamed_host():
     logger = logging.getLogger("test_update_renamed_host")
     logger.setLevel(logging.DEBUG)
-    handler = logging.handlers.BufferingHandler(100)
+    handler = handlers.BufferingHandler(100)
     logger.addHandler(handler)
 
     c = config.Config(logger=logger)
@@ -337,3 +339,8 @@ def test_ssl_env_bogus():
     c = config.Config(ssl={"type": "foobar"})
     with pytest.raises(ValueError):
         c.ssl_env
+
+
+def test_pickle():
+    # Ensure that the config object can be pickled
+    pickle.dumps(config.Config())
