@@ -15,15 +15,22 @@ const TelemetryEvents = {
     Services.telemetry.registerEvents(TELEMETRY_CATEGORY, {
       enroll: {
         methods: ["enroll"],
-        objects: ["preference_study", "addon_study"],
+        objects: ["preference_study", "addon_study", "preference_rollout"],
         extra_keys: ["experimentType", "branch", "addonId", "addonVersion"],
         record_on_release: true,
       },
 
       enroll_failure: {
         methods: ["enrollFailed"],
-        objects: ["addon_study"],
-        extra_keys: ["reason"],
+        objects: ["addon_study", "preference_rollout"],
+        extra_keys: ["reason", "preference"],
+        record_on_release: true,
+      },
+
+      update: {
+        methods: ["update"],
+        objects: ["preference_rollout"],
+        extra_keys: ["previousState"],
         record_on_release: true,
       },
 
@@ -31,6 +38,13 @@ const TelemetryEvents = {
         methods: ["unenroll"],
         objects: ["preference_study", "addon_study"],
         extra_keys: ["reason", "didResetValue", "addonId", "addonVersion"],
+        record_on_release: true,
+      },
+
+      graduated: {
+        methods: ["graduated"],
+        objects: ["preference_rollout"],
+        extra_keys: [],
         record_on_release: true,
       },
     });

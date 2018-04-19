@@ -10,8 +10,6 @@ ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
 
 var EXPORTED_SYMBOLS = ["ActionSandboxManager"];
 
-const log = LogManager.getLogger("recipe-sandbox-manager");
-
 /**
  * An extension to SandboxManager that prepares a sandbox for executing
  * Normandy actions.
@@ -66,7 +64,6 @@ var ActionSandboxManager = class extends SandboxManager {
   async runAsyncCallback(callbackName, ...args) {
     const callbackWasRegistered = this.evalInSandbox(`asyncCallbacks.has("${callbackName}")`);
     if (!callbackWasRegistered) {
-      log.debug(`Script did not register a callback with the name "${callbackName}"`);
       return undefined;
     }
 

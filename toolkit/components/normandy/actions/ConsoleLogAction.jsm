@@ -7,11 +7,11 @@
 ChromeUtils.import("resource://normandy/actions/BaseAction.jsm");
 ChromeUtils.defineModuleGetter(this, "ActionSchemas", "resource://normandy/actions/schemas/index.js");
 
-var EXPORTED_SYMBOLS = ["ConsoleLog"];
+var EXPORTED_SYMBOLS = ["ConsoleLogAction"];
 
-class ConsoleLog extends BaseAction {
+class ConsoleLogAction extends BaseAction {
   get schema() {
-    return ActionSchemas.consoleLog;
+    return ActionSchemas["console-log"];
   }
 
   async _run(recipe) {

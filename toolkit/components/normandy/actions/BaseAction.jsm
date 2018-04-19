@@ -28,7 +28,8 @@ class BaseAction {
       this._preExecution();
     } catch (err) {
       this.failed = true;
-      this.log.error(`Could not initialize action ${this.name}: ${err}`);
+      err.message = `Could not initialize action ${this.name}: ${err.message}`;
+      Cu.reportError(err);
       Uptake.reportAction(this.name, Uptake.ACTION_PRE_EXECUTION_ERROR);
     }
   }
@@ -85,7 +86,7 @@ class BaseAction {
     try {
       await this._run(recipe);
     } catch (err) {
-      this.log.error(`Could not execute recipe ${recipe.name}: ${err}`);
+      Cu.reportError(err);
       status = Uptake.RECIPE_EXECUTION_ERROR;
     }
     Uptake.reportRecipe(recipe.id, status);
@@ -117,10 +118,11 @@ class BaseAction {
 
     let status = Uptake.ACTION_SUCCESS;
     try {
-      this._finalize();
+      await this._finalize();
     } catch (err) {
       status = Uptake.ACTION_POST_EXECUTION_ERROR;
-      this.log.info(`Could not run postExecution hook for ${this.name}: ${err.message}`);
+      err.message = `Could not run postExecution hook for ${this.name}: ${err.message}`;
+      Cu.reportError(err);
     } finally {
       this.finalized = true;
       Uptake.reportAction(this.name, status);
@@ -132,7 +134,7 @@ class BaseAction {
    * here. It will be executed once after all recipes have been
    * processed.
    */
-  _finalize() {
+  async _finalize() {
     // Does nothing, may be overridden
   }
 }

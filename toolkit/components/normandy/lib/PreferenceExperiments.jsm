@@ -509,7 +509,7 @@ var PreferenceExperiments = {
     experiment.expired = true;
     store.saveSoon();
 
-    TelemetryEnvironment.setExperimentInactive(experimentName, experiment.branch);
+    TelemetryEnvironment.setExperimentInactive(experimentName);
     TelemetryEvents.sendEvent("unenroll", "preference_study", experimentName, {
       didResetValue: resetValue ? "true" : "false",
       reason,
@@ -552,9 +552,7 @@ var PreferenceExperiments = {
   * @resolves {Experiment[]}
   */
   async getAllActive() {
-    log.debug("PreferenceExperiments.getAllActive()");
     const store = await ensureStorage();
-
     // Return copies so mutating them doesn't affect the storage.
     return Object.values(store.data).filter(e => !e.expired).map(e => Object.assign({}, e));
   },

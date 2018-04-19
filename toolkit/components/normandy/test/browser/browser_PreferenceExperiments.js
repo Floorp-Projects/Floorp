@@ -718,7 +718,7 @@ decorate_task(
       "Experiment is registered by start()",
     );
     await PreferenceExperiments.stop("test", {reason: "test-reason"});
-    ok(setInactiveStub.calledWith("test", "branch"), "Experiment is unregistered by stop()");
+    Assert.deepEqual(setInactiveStub.args, [["test"]], "Experiment is unregistered by stop()");
 
     Assert.deepEqual(
       sendEventStub.getCall(0).args,
