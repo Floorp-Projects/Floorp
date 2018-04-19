@@ -36,7 +36,7 @@ REPORT_BUILD = $(info $(notdir $@))
 ifdef BUILD_VERBOSE_LOG
 REPORT_BUILD_VERBOSE = $(REPORT_BUILD)
 else
-REPORT_BUILD_VERBOSE =
+REPORT_BUILD_VERBOSE = $(call BUILDSTATUS,BUILD_VERBOSE $(relativesrcdir))
 endif
 
 endif
