@@ -22,7 +22,6 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Task.jsm");
-ChromeUtils.import("resource:///modules/RecentWindow.jsm");
 
 const ANIMATION_PREF = "toolkit.cosmeticAnimations.enabled";
 

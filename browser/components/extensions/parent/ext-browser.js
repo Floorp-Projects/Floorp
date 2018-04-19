@@ -8,8 +8,8 @@
 
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "RecentWindow",
-                               "resource:///modules/RecentWindow.jsm");
+ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
+                               "resource:///modules/BrowserWindowTracker.jsm");
 
 var {
   ExtensionError,
@@ -188,7 +188,7 @@ class WindowTracker extends WindowTrackerBase {
    *        @readonly
    */
   get topNormalWindow() {
-    return RecentWindow.getMostRecentBrowserWindow({allowPopups: false});
+    return BrowserWindowTracker.getTopWindow({allowPopups: false});
   }
 }
 

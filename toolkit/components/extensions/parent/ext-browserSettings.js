@@ -169,6 +169,16 @@ ExtensionPreferencesManager.addSetting("openSearchResultsInNewTabs", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("openUrlbarResultsInNewTabs", {
+  prefNames: [
+    "browser.urlbar.openintab",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value};
+  },
+});
+
 ExtensionPreferencesManager.addSetting("proxyConfig", {
   prefNames: [
     "network.proxy.type",
@@ -334,6 +344,11 @@ this.browserSettings = class extends ExtensionAPI {
           extension, "openSearchResultsInNewTabs",
           () => {
             return Services.prefs.getBoolPref("browser.search.openintab");
+          }),
+        openUrlbarResultsInNewTabs: getSettingsAPI(
+          extension, "openUrlbarResultsInNewTabs",
+          () => {
+            return Services.prefs.getBoolPref("browser.urlbar.openintab");
           }),
         proxyConfig: Object.assign(
           getSettingsAPI(

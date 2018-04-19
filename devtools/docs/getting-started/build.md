@@ -3,8 +3,6 @@
 These are the steps we're going to look at:
 
 * [Getting the code](#getting-the-code)
-  * [using Mercurial](#using-mercurial-hg)
-  * [using Git](#using-git)
 * [Building and running locally](#building-and-running-locally)
   * [Rebuilding](#rebuilding)
   * [Artifact builds](#building-even-faster-with-artifact-builds) for even faster builds
@@ -12,25 +10,25 @@ These are the steps we're going to look at:
 
 ## Getting the code
 
-The code is officially hosted on [a Mercurial repository](https://hg.mozilla.org/mozilla-central/). Despair not! There are ways of accessing this via git. We will explain this too.
-
-Either way takes a long time, because the repository is **B I G**. So be prepared to be patient.
-
-### Using Mercurial (hg)
+The code is officially hosted on [a Mercurial repository](https://hg.mozilla.org/mozilla-central/). It takes a long time to clone, because the repository is **B I G**. So be prepared to be patient.
 
 ```bash
 hg clone http://hg.mozilla.org/mozilla-central
 ```
 
-### Using git
-
-There is a tool called [git-cinnabar](https://github.com/glandium/git-cinnabar/) that lets you use git on top of a Mercurial repository. There's a bit of setup involved, so we've written [a script to automate](https://github.com/sole/cinnabarify) installing `git-cinnabar` and obtaining the code.
-
 ## Building and running locally
 
-Whatever method you used to obtain the code, the build step is the same. Fortunately, the Firefox team has made a very good job of automating this with bootstrap scripts and putting [documentation](https://developer.mozilla.org/En/Simple_Firefox_build) together.
+Fortunately, the Firefox team has made a very good job of automating the building process with bootstrap scripts and putting [documentation](https://developer.mozilla.org/En/Simple_Firefox_build) together.
 
-Run:
+The very first time you are building Firefox, run:
+
+```bash
+./mach bootstrap
+./mach configure
+./mach build
+```
+
+After that first successful build, you can just run:
 
 ```bash
 ./mach build
@@ -111,7 +109,6 @@ With pseudocode:
 ./mach run
 ```
 
-While not as fast as the average "save file and reload the website" *web development workflow*, or newer workflows such as React's reloading, this can still be quite fast. 
+While not as fast as the average "save file and reload the website" *web development workflow*, or newer workflows such as React's reloading, this can still be quite fast.
 
 And certainly faster than building each time, even with artifact builds.
-

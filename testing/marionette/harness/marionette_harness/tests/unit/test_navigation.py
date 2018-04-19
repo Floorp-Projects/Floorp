@@ -89,8 +89,8 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 win = Services.wm.getMostRecentWindow("navigator:browser");
               } else {
-                Components.utils.import("resource:///modules/RecentWindow.jsm");
-                win = RecentWindow.getMostRecentBrowserWindow();
+                Components.utils.import("resource:///modules/BrowserWindowTracker.jsm");
+                win = BrowserWindowTracker.getTopWindow();
               }
 
               let tabBrowser = null;

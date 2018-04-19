@@ -23,6 +23,7 @@ DIRS += ['xbl-marquee']
 TEST_DIRS += ['test']
 
 EXPORTS += [
+    '!nsCSSPropertyID.h',
     'AnimationCommon.h',
     'CounterStyleManager.h',
     'nsAnimationManager.h',
@@ -35,7 +36,6 @@ EXPORTS += [
     'nsCSSKeywords.h',
     'nsCSSParser.h',
     'nsCSSPropAliasList.h',
-    'nsCSSPropertyID.h',
     'nsCSSPropertyIDSet.h',
     'nsCSSPropList.h',
     'nsCSSProps.h',
@@ -63,6 +63,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    '!ServoCSSPropList.h',
     'AnimationCollection.h',
     'BindingStyleRule.h',
     'CachedInheritingStyles.h',
@@ -274,15 +275,41 @@ CONTENT_ACCESSIBLE_FILES += [
     'TopLevelVideoDocument.css',
 ]
 
+GENERATED_FILES += [
+    'nsCSSPropertyID.h',
+    'ServoCSSPropList.h',
+    'ServoCSSPropList.py',
+]
+
+prop_id = GENERATED_FILES['nsCSSPropertyID.h']
+prop_id.script = 'GenerateCSSPropertyID.py:generate'
+prop_id.inputs = [
+    'nsCSSPropertyID.h.in',
+    '!ServoCSSPropList.py',
+]
+
+servo_props = GENERATED_FILES['ServoCSSPropList.h']
+servo_props.script = 'GenerateServoCSSPropList.py:generate_header'
+servo_props.inputs = [
+    '!ServoCSSPropList.py',
+]
+
+servo_props = GENERATED_FILES['ServoCSSPropList.py']
+servo_props.script = 'GenerateServoCSSPropList.py:generate_data'
+servo_props.inputs = [
+    'ServoCSSPropList.mako.py',
+]
+
 if CONFIG['COMPILE_ENVIRONMENT']:
     GENERATED_FILES += [
         'nsCSSPropsGenerated.inc',
     ]
+
     css_props = GENERATED_FILES['nsCSSPropsGenerated.inc']
     css_props.script = 'GenerateCSSPropsGenerated.py:generate'
     css_props.inputs = [
         'nsCSSPropsGenerated.inc.in',
-        'PythonCSSProps.h',
+        '!ServoCSSPropList.py',
     ]
 
     CONFIGURE_SUBST_FILES += [

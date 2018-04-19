@@ -1288,7 +1288,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
       GtkOrientation orientation =
         aWidgetType == NS_THEME_SCROLLBAR_HORIZONTAL ?
         GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
-      const ScrollbarGTKMetrics* metrics = GetScrollbarMetrics(orientation);
+      const ScrollbarGTKMetrics* metrics = GetScrollbarMetrics(orientation, true);
 
       const GtkBorder& border = metrics->border.scrollbar;
       aResult->top = border.top;
@@ -1303,7 +1303,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
       GtkOrientation orientation =
         aWidgetType == NS_THEME_SCROLLBARTRACK_HORIZONTAL ?
         GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
-      const ScrollbarGTKMetrics* metrics = GetScrollbarMetrics(orientation);
+      const ScrollbarGTKMetrics* metrics = GetScrollbarMetrics(orientation, true);
 
       const GtkBorder& border = metrics->border.track;
       aResult->top = border.top;
@@ -1458,7 +1458,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case NS_THEME_SCROLLBARBUTTON_DOWN:
       {
         const ScrollbarGTKMetrics* metrics =
-          GetScrollbarMetrics(GTK_ORIENTATION_VERTICAL);
+          GetScrollbarMetrics(GTK_ORIENTATION_VERTICAL, true);
 
         aResult->width = metrics->size.button.width;
         aResult->height = metrics->size.button.height;
@@ -1469,7 +1469,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case NS_THEME_SCROLLBARBUTTON_RIGHT:
       {
         const ScrollbarGTKMetrics* metrics =
-          GetScrollbarMetrics(GTK_ORIENTATION_HORIZONTAL);
+          GetScrollbarMetrics(GTK_ORIENTATION_HORIZONTAL, true);
 
         aResult->width = metrics->size.button.width;
         aResult->height = metrics->size.button.height;
@@ -1502,7 +1502,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       GtkOrientation orientation =
         aWidgetType == NS_THEME_SCROLLBAR_HORIZONTAL ?
         GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
-      const ScrollbarGTKMetrics* metrics = GetScrollbarMetrics(orientation);
+      const ScrollbarGTKMetrics* metrics = GetScrollbarMetrics(orientation, true);
 
       aResult->width = metrics->size.scrollbar.width;
       aResult->height = metrics->size.scrollbar.height;
@@ -1514,7 +1514,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
         GtkOrientation orientation =
           aWidgetType == NS_THEME_SCROLLBARTHUMB_HORIZONTAL ?
           GTK_ORIENTATION_HORIZONTAL : GTK_ORIENTATION_VERTICAL;
-        const ScrollbarGTKMetrics* metrics = GetScrollbarMetrics(orientation);
+        const ScrollbarGTKMetrics* metrics = GetScrollbarMetrics(orientation, true);
 
         aResult->width = metrics->size.thumb.width;
         aResult->height = metrics->size.thumb.height;

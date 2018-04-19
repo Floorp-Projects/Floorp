@@ -137,12 +137,6 @@ interface nsIX509Cert : nsISupports {
   readonly attribute AString issuerOrganizationUnit;
 
   /**
-   *  The certificate used by the issuer to sign this certificate.
-   */
-  [must_use]
-  readonly attribute nsIX509Cert issuer;
-
-  /**
    *  This certificate's validity period.
    */
   readonly attribute nsIX509CertValidity validity;
@@ -187,16 +181,6 @@ interface nsIX509Cert : nsISupports {
   const unsigned long CMS_CHAIN_MODE_CertOnly = 1;
   const unsigned long CMS_CHAIN_MODE_CertChain = 2;
   const unsigned long CMS_CHAIN_MODE_CertChainWithRoot = 3;
-
-  /**
-   *  Obtain a list of certificates that contains this certificate
-   *  and the issuing certificates of all involved issuers,
-   *  up to the root issuer.
-   *
-   *  @return The chain of certifficates including the issuers.
-   */
-  [must_use]
-  nsIArray getChain();
 
   /**
    * A comma separated list of localized strings representing the contents of

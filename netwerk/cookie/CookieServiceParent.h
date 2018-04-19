@@ -32,6 +32,11 @@ public:
 
   void AddCookie(nsICookie *aCookie);
 
+  // This will return true if the CookieServiceParent is currently processing
+  // an update from the content process. This is used in ContentParent to make
+  // sure that we are only forwarding those cookie updates to other content
+  // processes, not the one they originated from.
+  bool ProcessingCookie() { return mProcessingCookie; }
 protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -62,6 +67,7 @@ protected:
                          nsIURI *aHostURI);
 
   RefPtr<nsCookieService> mCookieService;
+  bool mProcessingCookie;
 };
 
 } // namespace net

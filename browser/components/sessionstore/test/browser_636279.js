@@ -58,10 +58,10 @@ function countTabs() {
       continue;
 
     for (let i = 0; i < window.gBrowser.tabs.length; i++) {
-      let browser = window.gBrowser.tabs[i].linkedBrowser;
-      if (browser.__SS_restoreState == TAB_STATE_RESTORING)
+      let browserState = ss.getInternalObjectState(window.gBrowser.tabs[i].linkedBrowser);
+      if (browserState == TAB_STATE_RESTORING)
         isRestoring++;
-      else if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
+      else if (browserState == TAB_STATE_NEEDS_RESTORE)
         needsRestore++;
     }
   }
@@ -92,7 +92,7 @@ var TabsProgressListener = {
   },
 
   onRestored(browser) {
-    if (this.callback && browser.__SS_restoreState == TAB_STATE_RESTORING) {
+    if (this.callback && ss.getInternalObjectState(browser) == TAB_STATE_RESTORING) {
       this.callback.apply(null, countTabs());
     }
   }
