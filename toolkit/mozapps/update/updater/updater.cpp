@@ -3104,7 +3104,7 @@ int NS_main(int argc, NS_tchar **argv)
         return 1;
       }
 
-      wchar_t *cmdLine = MakeCommandLine(argc - 1, argv + 1);
+      auto cmdLine = mozilla::MakeCommandLine(argc - 1, argv + 1);
       if (!cmdLine) {
         CloseHandle(elevatedFileHandle);
         return 1;
@@ -3250,12 +3250,11 @@ int NS_main(int argc, NS_tchar **argv)
                              SEE_MASK_NOCLOSEPROCESS;
         sinfo.hwnd         = nullptr;
         sinfo.lpFile       = argv[0];
-        sinfo.lpParameters = cmdLine;
+        sinfo.lpParameters = cmdLine.get();
         sinfo.lpVerb       = L"runas";
         sinfo.nShow        = SW_SHOWNORMAL;
 
         bool result = ShellExecuteEx(&sinfo);
-        free(cmdLine);
 
         if (result) {
           WaitForSingleObject(sinfo.hProcess, INFINITE);
