@@ -6,7 +6,6 @@
 
 #include <algorithm>
 
-#include "PingPongRegion.h"
 #include "gtest/gtest.h"
 #include "nsRegion.h"
 #include "RegionBuilder.h"
@@ -1325,37 +1324,6 @@ TEST(Gfx, RegionVisitEdges) {
     r.Or(r, nsRect(115, 55, 99, 12));
 
     TestVisit(r);
-  }
-}
-
-TEST(Gfx, PingPongRegion) {
-  nsRect rects[] = {
-    nsRect(4, 1, 61, 49),
-    nsRect(115, 1, 99, 49),
-    nsRect(115, 49, 99, 1),
-    nsRect(12, 50, 11, 5),
-    nsRect(25, 50, 28, 5),
-    nsRect(115, 50, 99, 5),
-    nsRect(115, 55, 99, 12),
-  };
-
-  // Test accumulations of various sizes to make sure
-  // the ping-pong behavior of PingPongRegion is working.
-  for (size_t size = 0; size < mozilla::ArrayLength(rects); size++) {
-    // bug 1130978.
-    nsRegion r;
-    PingPongRegion<nsRegion> ar;
-    for (size_t i = 0; i < size; i++) {
-      r.Or(r, rects[i]);
-      ar.OrWith(rects[i]);
-      EXPECT_TRUE(ar.Region().IsEqual(r));
-    }
-
-    for (size_t i = 0; i < size; i++) {
-      ar.SubOut(rects[i]);
-      r.SubOut(rects[i]);
-      EXPECT_TRUE(ar.Region().IsEqual(r));
-    }
   }
 }
 
