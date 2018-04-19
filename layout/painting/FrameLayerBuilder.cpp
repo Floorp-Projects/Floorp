@@ -1574,6 +1574,19 @@ protected:
   // thing repeatly.
   AnimatedGeometryRoot* mLastDisplayPortAGR;
   nsRect mLastDisplayPortRect;
+
+  // Cache ScrollMetadata so it doesn't need recomputed if the ASR and clip are unchanged.
+  // If mASR == nullptr then mMetadata is not valid.
+  struct CachedScrollMetadata {
+    const ActiveScrolledRoot* mASR;
+    const DisplayItemClip* mClip;
+    Maybe<ScrollMetadata> mMetadata;
+
+    CachedScrollMetadata()
+      : mASR(nullptr), mClip(nullptr)
+    {}
+  };
+  CachedScrollMetadata mCachedScrollMetadata;
 };
 
 bool
@@ -5449,9 +5462,20 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
     const DisplayItemClip* clip =
       (clipChain && clipChain->mASR == asr->mParent) ? &clipChain->mClip : nullptr;
 
-    Maybe<ScrollMetadata> metadata =
-      scrollFrame->ComputeScrollMetadata(aEntry->mLayer, aEntry->mLayer->Manager(),
+    scrollFrame->ClipLayerToDisplayPort(aEntry->mLayer, clip, mParameters);
+
+    Maybe<ScrollMetadata> metadata;
+    if (mCachedScrollMetadata.mASR == asr &&
+        mCachedScrollMetadata.mClip == clip) {
+      metadata = mCachedScrollMetadata.mMetadata;
+    } else {
+      metadata = scrollFrame->ComputeScrollMetadata(aEntry->mLayer->Manager(),
             mContainerReferenceFrame, mParameters, clip);
+      mCachedScrollMetadata.mASR = asr;
+      mCachedScrollMetadata.mClip = clip;
+      mCachedScrollMetadata.mMetadata = metadata;
+    }
+
     if (!metadata) {
       continue;
     }
