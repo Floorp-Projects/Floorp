@@ -11,7 +11,7 @@
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
 #include "gfxPoint.h"                   // for gfxPoint, gfxSize
 #include "gfxPrefs.h"                   // for gfxPrefs
-#include "mozilla/StyleAnimationValue.h" // for StyleAnimationValue, etc
+#include "mozilla/ServoBindings.h"      // for Servo_AnimationValue_GetOpacity, etc
 #include "mozilla/WidgetUtils.h"        // for ComputeTransformForRotation
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
 #include "mozilla/gfx/Point.h"          // for RoundedToInt, PointTyped
@@ -580,9 +580,9 @@ ApplyAnimatedValue(Layer* aLayer,
                    CompositorAnimationStorage* aStorage,
                    nsCSSPropertyID aProperty,
                    const AnimationData& aAnimationData,
-                   const AnimationValue& aValue)
+                   const RefPtr<RawServoAnimationValue>& aValue)
 {
-  if (aValue.IsNull()) {
+  if (!aValue) {
     // Return gracefully if we have no valid AnimationValue.
     return;
   }
@@ -590,15 +590,16 @@ ApplyAnimatedValue(Layer* aLayer,
   HostLayer* layerCompositor = aLayer->AsHostLayer();
   switch (aProperty) {
     case eCSSProperty_opacity: {
-      layerCompositor->SetShadowOpacity(aValue.GetOpacity());
+      float opacity = Servo_AnimationValue_GetOpacity(aValue);
+      layerCompositor->SetShadowOpacity(opacity);
       layerCompositor->SetShadowOpacitySetByAnimation(true);
-      aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(),
-                                 aValue.GetOpacity());
+      aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(), opacity);
 
       break;
     }
     case eCSSProperty_transform: {
-      RefPtr<const nsCSSValueSharedList> list = aValue.GetTransformList();
+      RefPtr<nsCSSValueSharedList> list;
+      Servo_AnimationValue_GetTransform(aValue, &list);
       const TransformData& transformData = aAnimationData.get_TransformData();
       nsPoint origin = transformData.origin();
       // we expect all our transform data to arrive in device pixels
@@ -655,7 +656,8 @@ SampleAnimations(Layer* aLayer,
         }
         isAnimating = true;
         bool hasInEffectAnimations = false;
-        AnimationValue animationValue = layer->GetBaseAnimationStyle();
+        RefPtr<RawServoAnimationValue> animationValue =
+          layer->GetBaseAnimationStyle();
         AnimationHelper::SampleAnimationForEachNode(aTime,
                                                     animations,
                                                     layer->GetAnimationData(),

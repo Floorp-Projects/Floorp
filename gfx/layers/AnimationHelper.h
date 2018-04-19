@@ -20,8 +20,8 @@ class Animation;
 typedef InfallibleTArray<layers::Animation> AnimationArray;
 
 struct AnimData {
-  InfallibleTArray<mozilla::AnimationValue> mStartValues;
-  InfallibleTArray<mozilla::AnimationValue> mEndValues;
+  InfallibleTArray<RefPtr<RawServoAnimationValue>> mStartValues;
+  InfallibleTArray<RefPtr<RawServoAnimationValue>> mEndValues;
   InfallibleTArray<Maybe<mozilla::ComputedTimingFunction>> mFunctions;
 };
 
@@ -201,7 +201,7 @@ public:
   SampleAnimationForEachNode(TimeStamp aTime,
                              AnimationArray& aAnimations,
                              InfallibleTArray<AnimData>& aAnimationData,
-                             AnimationValue& aAnimationValue,
+                             RefPtr<RawServoAnimationValue>& aAnimationValue,
                              bool& aHasInEffectAnimations);
   /**
    * Populates AnimData stuctures into |aAnimData| and |aBaseAnimationStyle|
@@ -210,7 +210,7 @@ public:
   static void
   SetAnimations(AnimationArray& aAnimations,
                 InfallibleTArray<AnimData>& aAnimData,
-                AnimationValue& aBaseAnimationStyle);
+                RefPtr<RawServoAnimationValue>& aBaseAnimationStyle);
 
   /**
    * Get a unique id to represent the compositor animation between child
