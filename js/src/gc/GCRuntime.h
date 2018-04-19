@@ -105,7 +105,7 @@ class ChunkPool
 };
 
 // Performs extra allocation off thread so that when memory is required on the
-// active thread it will already be available and waiting.
+// main thread it will already be available and waiting.
 class BackgroundAllocTask : public GCParallelTask
 {
     // Guarded by the GC lock.
@@ -936,7 +936,7 @@ class GCRuntime
     MainThreadData<bool> arenasEmptyAtShutdown;
 #endif
 
-    /* Synchronize GC heap access among GC helper threads and active threads. */
+    /* Synchronize GC heap access among GC helper threads and the main thread. */
     friend class js::AutoLockGC;
     friend class js::AutoLockGCBgAlloc;
     js::Mutex lock;

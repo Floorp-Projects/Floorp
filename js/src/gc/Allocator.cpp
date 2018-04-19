@@ -375,7 +375,7 @@ GCRuntime::refillFreeListFromAnyThread(JSContext* cx, AllocKind thingKind)
 /* static */ TenuredCell*
 GCRuntime::refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind)
 {
-    // It should not be possible to allocate on the active thread while we are
+    // It should not be possible to allocate on the main thread while we are
     // inside a GC.
     Zone *zone = cx->zone();
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy(), "allocating while under GC");
@@ -386,7 +386,7 @@ GCRuntime::refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind)
 /* static */ TenuredCell*
 GCRuntime::refillFreeListFromHelperThread(JSContext* cx, AllocKind thingKind)
 {
-    // A GC may be happening on the active thread, but zones used by off thread
+    // A GC may be happening on the main thread, but zones used by off thread
     // tasks are never collected.
     Zone* zone = cx->zone();
     MOZ_ASSERT(!zone->wasGCStarted());

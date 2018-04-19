@@ -252,8 +252,8 @@ Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode)
 
     /*
      * Free all control flow graphs that are cached on BaselineScripts.
-     * Assuming this happens on the active thread and all control flow
-     * graph reads happen on the active thread, this is safe.
+     * Assuming this happens on the main thread and all control flow
+     * graph reads happen on the main thread, this is safe.
      */
     jitZone()->cfgSpace()->lifoAlloc().freeAll();
 }

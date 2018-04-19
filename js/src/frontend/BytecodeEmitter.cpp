@@ -3568,7 +3568,7 @@ void
 BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext* cx)
 {
     // Note: when parsing off thread the resulting scripts need to be handed to
-    // the debugger after rejoining to the active thread.
+    // the debugger after rejoining to the main thread.
     if (cx->helperThread())
         return;
 
