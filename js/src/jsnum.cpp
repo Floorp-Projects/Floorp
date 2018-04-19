@@ -1743,8 +1743,10 @@ js::ToUint16Slow(JSContext* cx, const HandleValue v, uint16_t* out)
 
 // ES2017 draft 7.1.17 ToIndex
 bool
-js::ToIndex(JSContext* cx, JS::HandleValue v, const unsigned errorNumber, uint64_t* index)
+js::ToIndexSlow(JSContext* cx, JS::HandleValue v, const unsigned errorNumber, uint64_t* index)
 {
+    MOZ_ASSERT_IF(v.isInt32(), v.toInt32() < 0);
+
     // Step 1.
     if (v.isUndefined()) {
         *index = 0;
