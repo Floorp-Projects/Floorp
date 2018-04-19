@@ -135,7 +135,7 @@ CrossProcessCompositorBridgeParent::AllocPAPZCTreeManagerParent(const LayersId& 
     // retain a reference to itself, through the checkerboard observer.
     LayersId dummyId{0};
     RefPtr<APZCTreeManager> temp = new APZCTreeManager(dummyId);
-    RefPtr<APZUpdater> tempUpdater = new APZUpdater(temp);
+    RefPtr<APZUpdater> tempUpdater = new APZUpdater(temp, false);
     tempUpdater->ClearTree(dummyId);
     return new APZCTreeManagerParent(aLayersId, temp, tempUpdater);
   }
