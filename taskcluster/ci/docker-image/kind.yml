@@ -95,6 +95,10 @@ jobs:
     symbol: I(uv)
   diffoscope:
     symbol: I(diff)
+  partner-repack:
+    symbol: I(PR)
+    parent: debian9-base
+    definition: partner-repack
   periodic-updates:
     symbol: I(file)
   firefox-snap:
