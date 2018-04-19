@@ -4737,6 +4737,12 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
       RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
       if (frameLoader) {
         aNewTabParent = frameLoader->GetTabParent();
+        // At this point, it's possible the inserted frameloader hasn't gone through
+        // layout yet. To ensure that the dimensions that we send down when telling the
+        // frameloader to display will be correct (instead of falling back to a 10x10
+        // default), we force layout if necessary to get the most up-to-date dimensions.
+        // See bug 1358712 for details.
+        frameLoader->ForceLayoutIfNecessary();
       }
     } else if (NS_SUCCEEDED(aResult) && !frameLoaderOwner) {
       // Fall through to the normal window opening code path when there is no
@@ -4768,6 +4774,26 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
   }
 
   MOZ_ASSERT(aNewTabParent);
+
+  // At this point, it's possible the inserted frameloader hasn't gone through
+  // layout yet. To ensure that the dimensions that we send down when telling the
+  // frameloader to display will be correct (instead of falling back to a 10x10
+  // default), we force layout if necessary to get the most up-to-date dimensions.
+  // See bug 1358712 for details.
+  //
+  // This involves doing a bit of gymnastics in order to get at the FrameLoader,
+  // so we scope this to avoid polluting the main function scope.
+  {
+    nsCOMPtr<Element> frameElement =
+      TabParent::GetFrom(aNewTabParent)->GetOwnerElement();
+    MOZ_ASSERT(frameElement);
+    nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(frameElement);
+    MOZ_ASSERT(frameLoaderOwner);
+    RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+    MOZ_ASSERT(frameLoader);
+    frameLoader->ForceLayoutIfNecessary();
+  }
+
   // If we were passed a name for the window which would override the default,
   // we should send it down to the new tab.
   if (nsContentUtils::IsOverridingWindowName(aName)) {
