@@ -25,6 +25,7 @@ bugzilla-components:
             - type: directory
               path: /builds/worker/artifacts
               name: public
+        max-run-time: 2700
     when:
         files-changed:
             - '**'
