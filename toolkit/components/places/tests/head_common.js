@@ -241,8 +241,11 @@ function clearDB() {
  * @param aName
  *        The name of the table or view to output.
  */
-function dump_table(aName) {
-  let stmt = DBConn().createStatement("SELECT * FROM " + aName);
+function dump_table(aName, dbConn) {
+  if (!dbConn) {
+    dbConn = DBConn();
+  }
+  let stmt = dbConn.createStatement("SELECT * FROM " + aName);
 
   print("\n*** Printing data from " + aName);
   let count = 0;
