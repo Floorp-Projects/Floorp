@@ -13,6 +13,7 @@ DIRS += [
     'libav54',
     'libav55',
     'ffmpeg57',
+    'ffmpeg58',
 ]
 
 UNIFIED_SOURCES += [
