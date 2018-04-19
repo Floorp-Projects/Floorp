@@ -29,9 +29,9 @@ add_task(async function() {
   // Wait for a notification sent by a script evaluated in the webconsole
   // of the browser toolbox.
   let onCustomMessage = new Promise(done => {
-    Services.obs.addObserver(function listener() {
+    Services.obs.addObserver(function listener(target, aTop, data) {
       Services.obs.removeObserver(listener, "browser-toolbox-console-works");
-      done();
+      done(data === "true");
     }, "browser-toolbox-console-works");
   });
 
@@ -41,8 +41,11 @@ add_task(async function() {
   let testScript = function() {
     toolbox.selectTool("webconsole")
       .then(console => {
+        // This is for checking Browser Toolbox doesn't have a close button.
+        let hasCloseButton = !!toolbox.doc.getElementById("toolbox-close");
         let { jsterm } = console.hud;
-        let js = "Services.obs.notifyObservers(null, 'browser-toolbox-console-works', null);";
+        let js = "Services.obs.notifyObservers(null, 'browser-toolbox-console-works', " +
+            hasCloseButton + ");";
         return jsterm.execute(js);
       })
       .then(() => toolbox.destroy());
@@ -65,8 +68,9 @@ add_task(async function() {
   ok(true, "Browser toolbox started\n");
   is(BrowserToolboxProcess.getBrowserToolboxSessionState(), true, "Has session state");
 
-  await onCustomMessage;
+  let hasCloseButton = await onCustomMessage;
   ok(true, "Received the custom message");
+  ok(!hasCloseButton, "Browser toolbox doesn't have a close button");
 
   await closePromise;
   ok(true, "Browser toolbox process just closed");
