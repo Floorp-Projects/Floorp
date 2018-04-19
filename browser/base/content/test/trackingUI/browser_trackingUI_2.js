@@ -4,14 +4,8 @@
  * See also Bugs 1175327, 1043801, 1178985.
  */
 
-const PREF = "privacy.trackingprotection.enabled";
-const PB_PREF = "privacy.trackingprotection.pbmode.enabled";
-const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/benignPage.html";
-const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/trackingPage.html";
 var TrackingProtection = null;
 var tabbrowser = null;
-
-var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 registerCleanupFunction(function() {
   TrackingProtection = tabbrowser = null;
