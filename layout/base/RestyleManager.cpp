@@ -3522,7 +3522,7 @@ RestyleManager::DoReparentComputedStyleForFirstLine(nsIFrame* aFrame,
   ReparentFrameDescendants(aFrame, providerChild, aStyleSet);
 
   // We do not need to do the equivalent of UpdateFramePseudoElementStyles,
-  // because those are hadled by our descendant walk.
+  // because those are handled by our descendant walk.
 }
 
 void
@@ -3530,6 +3530,12 @@ RestyleManager::ReparentFrameDescendants(nsIFrame* aFrame,
                                          nsIFrame* aProviderChild,
                                          ServoStyleSet& aStyleSet)
 {
+  if (aFrame->GetContent()->IsElement() &&
+      !aFrame->GetContent()->AsElement()->HasServoData()) {
+    // We're getting into a display: none subtree, avoid reparenting into stuff
+    // that is going to go away anyway in seconds.
+    return;
+  }
   nsIFrame::ChildListIterator lists(aFrame);
   for (; !lists.IsDone(); lists.Next()) {
     for (nsIFrame* child : lists.CurrentList()) {
