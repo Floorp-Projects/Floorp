@@ -296,22 +296,6 @@ bool SetProcessPrioritySupported();
  */
 void SetProcessPriority(int aPid, hal::ProcessPriority aPriority);
 
-
-/**
- * Set the current thread's priority to appropriate platform-specific value for
- * given functionality. Instead of providing arbitrary priority numbers you
- * must specify a type of function like THREAD_PRIORITY_COMPOSITOR.
- */
-void SetCurrentThreadPriority(hal::ThreadPriority aThreadPriority);
-
-/**
- * Set a thread priority to appropriate platform-specific value for
- * given functionality. Instead of providing arbitrary priority numbers you
- * must specify a type of function like THREAD_PRIORITY_COMPOSITOR.
- */
-void SetThreadPriority(PlatformThreadId aThreadId,
-                       hal::ThreadPriority aThreadPriority);
-
 /**
  * Start monitoring disk space for low space situations.
  *
