@@ -144,7 +144,8 @@ class TestEnvironment(object):
         config.ports = {
             "http": [8000, 8001],
             "https": [8443],
-            "ws": [8888]
+            "ws": [8888],
+            "wss": [8889],
         }
         config.check_subdomains = False
         config.ssl = {}
