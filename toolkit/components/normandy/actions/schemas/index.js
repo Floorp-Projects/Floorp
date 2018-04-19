@@ -47,6 +47,20 @@ const ActionSchemas = {
       },
     },
   },
+
+  "preference-rollback": {
+    $schema: "http://json-schema.org/draft-04/schema#",
+    title: "Undo a preference rollout",
+    type: "object",
+    required: ["rolloutSlug"],
+    properties: {
+      rolloutSlug: {
+        description: "Unique identifer for the rollout to undo",
+        type: "string",
+        pattern: "^[a-z0-9\\-_]+$",
+      },
+    },
+  },
 };
 
 // If running in Node.js, export the schemas.

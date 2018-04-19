@@ -41,6 +41,13 @@ const TelemetryEvents = {
         record_on_release: true,
       },
 
+      unenroll_failure: {
+        methods: ["unenrollFailed"],
+        objects: ["preference_rollout"],
+        extra_keys: ["reason"],
+        record_on_release: true,
+      },
+
       graduated: {
         methods: ["graduated"],
         objects: ["preference_rollout"],
