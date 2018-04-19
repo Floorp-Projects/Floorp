@@ -7,6 +7,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Uptake: "resource://normandy/lib/Uptake.jsm",
   ConsoleLogAction: "resource://normandy/actions/ConsoleLogAction.jsm",
   PreferenceRolloutAction: "resource://normandy/actions/PreferenceRolloutAction.jsm",
+  PreferenceRollbackAction: "resource://normandy/actions/PreferenceRollbackAction.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["ActionsManager"];
@@ -30,6 +31,7 @@ class ActionsManager {
     this.localActions = {
       "console-log": new ConsoleLogAction(),
       "preference-rollout": new PreferenceRolloutAction(),
+      "preference-rollback": new PreferenceRollbackAction(),
     };
   }
 
