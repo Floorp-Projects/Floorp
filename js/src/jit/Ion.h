@@ -63,7 +63,7 @@ class JitContext
     JitContext();
     ~JitContext();
 
-    // Running context when executing on the active thread. Not available during
+    // Running context when executing on the main thread. Not available during
     // compilation.
     JSContext* cx;
 

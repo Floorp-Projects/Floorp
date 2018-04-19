@@ -590,7 +590,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
     def install_app(self, app=None, target_dir=None, installer_path=None):
         """ Dependent on mozinstall """
         # install the application
-        cmd = self.query_exe("mozinstall", default=self.query_python_path("mozinstall"), return_type="list")
+        cmd = [self.query_python_path("mozinstall")]
         if app:
             cmd.extend(['--app', app])
         # Remove the below when we no longer need to support mozinstall 0.3

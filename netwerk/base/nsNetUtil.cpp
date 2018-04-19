@@ -2144,6 +2144,15 @@ bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI)
   if (!loadInfo) {
     return false;
   }
+
+  // Do not treat loads triggered by web extensions as foreign
+  nsCOMPtr<nsIURI> channelURI;
+  NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+  if (BasePrincipal::Cast(loadInfo->TriggeringPrincipal())->
+        AddonAllowsLoad(channelURI)) {
+    return false;
+  }
+
   nsCOMPtr<nsIURI> uri;
   if (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
     // for loads of TYPE_DOCUMENT we query the hostURI from the triggeringPricnipal

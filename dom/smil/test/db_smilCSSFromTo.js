@@ -312,7 +312,7 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("inherit", "200",
                            { fromComp: "400", midComp: "300" }),
     new AnimTestcaseFromTo("normal", "bold",
-                           { fromComp: "400", midComp: "600", toComp: "700" }),
+                           { fromComp: "400", midComp: "550", toComp: "700" }),
     new AnimTestcaseFromTo("lighter", "bolder", {},
                            "need support for animating between " +
                            "relative 'font-weight' values"),

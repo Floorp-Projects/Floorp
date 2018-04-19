@@ -775,6 +775,10 @@ gfxPlatform::Init()
     gPlatform->PopulateScreenInfo();
     gPlatform->ComputeTileSize();
 
+#ifdef MOZ_ENABLE_FREETYPE
+    Factory::SetFTLibrary(gPlatform->GetFTLibrary());
+#endif
+
     nsresult rv;
     rv = gfxPlatformFontList::Init();
     if (NS_FAILED(rv)) {
@@ -805,10 +809,6 @@ gfxPlatform::Init()
     if (NS_FAILED(rv)) {
         MOZ_CRASH("Could not initialize gfxFontCache");
     }
-
-#ifdef MOZ_ENABLE_FREETYPE
-    Factory::SetFTLibrary(gPlatform->GetFTLibrary());
-#endif
 
     /* Create and register our CMS Override observer. */
     gPlatform->mSRGBOverrideObserver = new SRGBOverrideObserver();

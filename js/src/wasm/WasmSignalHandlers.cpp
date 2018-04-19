@@ -1036,7 +1036,7 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     }
 
     // The faulting thread is suspended so we can access cx fields that can
-    // normally only be accessed by the cx's active thread.
+    // normally only be accessed by the cx's main thread.
     AutoNoteSingleThreadedRegion anstr;
 
     const CodeSegment* codeSegment = LookupCodeSegment(pc);
