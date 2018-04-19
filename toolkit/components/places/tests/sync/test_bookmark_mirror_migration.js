@@ -3,7 +3,7 @@
 
 // Migrations between 1 and 2 discard the entire database.
 add_task(async function test_migrate_from_1_to_2() {
-  let dbFile = do_get_file("mirror_v1.sqlite");
+  let dbFile = await setupFixtureFile("mirror_v1.sqlite");
   let telemetryEvents = [];
   let buf = await SyncedBookmarksMirror.open({
     path: dbFile.path,
@@ -21,7 +21,7 @@ add_task(async function test_migrate_from_1_to_2() {
 });
 
 add_task(async function test_database_corrupt() {
-  let corruptFile = do_get_file("mirror_corrupt.sqlite");
+  let corruptFile = await setupFixtureFile("mirror_corrupt.sqlite");
   let telemetryEvents = [];
   let buf = await SyncedBookmarksMirror.open({
     path: corruptFile.path,
@@ -39,7 +39,7 @@ add_task(async function test_database_corrupt() {
 });
 
 add_task(async function test_database_readonly() {
-  let dbFile = do_get_file("mirror_v1.sqlite");
+  let dbFile = await setupFixtureFile("mirror_v1.sqlite");
   try {
     await OS.File.setPermissions(dbFile.path, {
       unixMode: 0o400,
