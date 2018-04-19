@@ -210,16 +210,14 @@ add_task(async function() {
   function removeSelectedSite(hosts) {
     frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
     let removeBtn = frameDoc.getElementById("removeSelected");
-    is(removeBtn.disabled, true, "Should start with disabled removeSelected button");
     let sitesList = frameDoc.getElementById("sitesList");
     hosts.forEach(host => {
       let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
       if (site) {
         site.click();
-        let currentSelectedIndex = sitesList.selectedIndex;
         is(removeBtn.disabled, false, "Should enable the removeSelected button");
         removeBtn.doCommand();
-        is(sitesList.selectedIndex, currentSelectedIndex);
+        is(removeBtn.disabled, true, "Should disable the removeSelected button");
       } else {
         ok(false, `Should not select and remove inexistent site of ${host}`);
       }
