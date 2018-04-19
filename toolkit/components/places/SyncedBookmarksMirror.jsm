@@ -464,8 +464,8 @@ class SyncedBookmarksMirror {
     );
     applyStats.remoteTree = { time: remoteTreeTiming,
                               count: remoteTree.guidCount };
-    if (MirrorLog.level <= Log.Level.Trace) {
-      MirrorLog.trace("Built remote tree from mirror\n" +
+    if (MirrorLog.level <= Log.Level.Debug) {
+      MirrorLog.debug("Built remote tree from mirror\n" +
                       remoteTree.toASCIITreeString());
     }
 
@@ -479,8 +479,8 @@ class SyncedBookmarksMirror {
       );
       applyStats.localTree = { time: localTreeTiming,
                                count: localTree.guidCount };
-      if (MirrorLog.level <= Log.Level.Trace) {
-        MirrorLog.trace("Built local tree from Places\n" +
+      if (MirrorLog.level <= Log.Level.Debug) {
+        MirrorLog.debug("Built local tree from Places\n" +
                         localTree.toASCIITreeString());
       }
 
@@ -523,8 +523,8 @@ class SyncedBookmarksMirror {
         }
       }
 
-      if (MirrorLog.level <= Log.Level.Trace) {
-        MirrorLog.trace([
+      if (MirrorLog.level <= Log.Level.Debug) {
+        MirrorLog.debug([
           "Built new merged tree",
           mergedRoot.toASCIITreeString(),
           ...merger.deletionsToStrings(),
@@ -593,7 +593,7 @@ class SyncedBookmarksMirror {
     try {
       await observersToNotify.notifyAll();
     } catch (ex) {
-      MirrorLog.error("Error notifying Places observers", ex);
+      MirrorLog.warn("Error notifying Places observers", ex);
     }
 
     for (let value in applyStats) {
@@ -1286,7 +1286,7 @@ class SyncedBookmarksMirror {
    *        Remotely deleted GUIDs that should be flagged as merged.
    */
   async updateLocalItemsInPlaces(mergedRoot, localDeletions, remoteDeletions) {
-    MirrorLog.debug("Setting up merge states table");
+    MirrorLog.trace("Setting up merge states table");
     let mergeStatesParams = Array.from(mergedRoot.mergeStatesParams());
     if (mergeStatesParams.length) {
       await this.db.execute(`
@@ -1297,7 +1297,7 @@ class SyncedBookmarksMirror {
         mergeStatesParams);
     }
 
-    MirrorLog.debug("Inserting new URLs into Places");
+    MirrorLog.trace("Inserting new URLs into Places");
     await this.db.execute(`
       INSERT OR IGNORE INTO moz_places(url, url_hash, rev_host, hidden,
                                        frecency, guid)
@@ -1316,7 +1316,7 @@ class SyncedBookmarksMirror {
 
     // Deleting from `itemsToMerge` fires the `insertNewLocalItems` and
     // `updateExistingLocalItems` triggers.
-    MirrorLog.debug("Updating value states for local bookmarks");
+    MirrorLog.trace("Updating value states for local bookmarks");
     await this.db.execute(`DELETE FROM itemsToMerge`);
 
     // Update the structure. The mirror stores structure info in a separate
@@ -1325,10 +1325,10 @@ class SyncedBookmarksMirror {
     // diverge from the server if we're missing children, or moved children
     // without parents to "unfiled". In that case, we *don't* want to reupload
     // the new local structure to the server.
-    MirrorLog.debug("Updating structure states for local bookmarks");
+    MirrorLog.trace("Updating structure states for local bookmarks");
     await this.db.execute(`DELETE FROM structureToMerge`);
 
-    MirrorLog.debug("Removing remotely deleted items from Places");
+    MirrorLog.trace("Removing remotely deleted items from Places");
     for (let chunk of PlacesSyncUtils.chunkArray(localDeletions,
       SQLITE_MAX_VARIABLE_NUMBER)) {
 
@@ -1384,7 +1384,7 @@ class SyncedBookmarksMirror {
                        WHERE NOT isUntagging)`);
     }
 
-    MirrorLog.debug("Flagging remotely deleted items as merged");
+    MirrorLog.trace("Flagging remotely deleted items as merged");
     for (let chunk of PlacesSyncUtils.chunkArray(remoteDeletions,
       SQLITE_MAX_VARIABLE_NUMBER)) {
 
@@ -1404,7 +1404,7 @@ class SyncedBookmarksMirror {
    * @param {BookmarkObserverRecorder} observersToNotify
    */
   async noteObserverChanges(observersToNotify) {
-    MirrorLog.debug("Recording observer notifications for removed items");
+    MirrorLog.trace("Recording observer notifications for removed items");
     // `ORDER BY v.level DESC` sorts deleted children before parents, to ensure
     // that we update caches in the correct order (bug 1297941). We also order
     // by parent and position so that the notifications are well-ordered for
@@ -1429,7 +1429,7 @@ class SyncedBookmarksMirror {
       observersToNotify.noteItemRemoved(info);
     }
 
-    MirrorLog.debug("Recording observer notifications for changed GUIDs");
+    MirrorLog.trace("Recording observer notifications for changed GUIDs");
     let changedGuidRows = await this.db.execute(`
       SELECT b.id, b.lastModified, b.type, b.guid AS newGuid,
              c.oldGuid, p.id AS parentId, p.guid AS parentGuid
@@ -1450,7 +1450,7 @@ class SyncedBookmarksMirror {
       observersToNotify.noteGuidChanged(info);
     }
 
-    MirrorLog.debug("Recording observer notifications for new items");
+    MirrorLog.trace("Recording observer notifications for new items");
     let newItemRows = await this.db.execute(`
       SELECT b.id, p.id AS parentId, b.position, b.type, h.url,
              IFNULL(b.title, "") AS title, b.dateAdded, b.guid,
@@ -1476,7 +1476,7 @@ class SyncedBookmarksMirror {
       observersToNotify.noteItemAdded(info);
     }
 
-    MirrorLog.debug("Recording observer notifications for moved items");
+    MirrorLog.trace("Recording observer notifications for moved items");
     let movedItemRows = await this.db.execute(`
       SELECT b.id, b.guid, b.type, p.id AS newParentId, c.oldParentId,
              p.guid AS newParentGuid, c.oldParentGuid,
@@ -1500,7 +1500,7 @@ class SyncedBookmarksMirror {
       observersToNotify.noteItemMoved(info);
     }
 
-    MirrorLog.debug("Recording observer notifications for changed items");
+    MirrorLog.trace("Recording observer notifications for changed items");
     let changedItemRows = await this.db.execute(`
       SELECT b.id, b.guid, b.lastModified, b.type,
              IFNULL(b.title, "") AS newTitle,
@@ -1529,7 +1529,7 @@ class SyncedBookmarksMirror {
       observersToNotify.noteItemChanged(info);
     }
 
-    MirrorLog.debug("Recording observer notifications for changed annos");
+    MirrorLog.trace("Recording observer notifications for changed annos");
     let annoRows = await this.db.execute(`
       SELECT itemId, annoName, wasRemoved FROM annosChanged
       ORDER BY itemId`);
@@ -1543,7 +1543,7 @@ class SyncedBookmarksMirror {
       }
     }
 
-    MirrorLog.debug("Recording notifications for changed keywords");
+    MirrorLog.trace("Recording notifications for changed keywords");
     let keywordsChangedRows = await this.db.execute(`
       SELECT EXISTS(SELECT 1 FROM itemsAdded WHERE keywordChanged) OR
              EXISTS(SELECT 1 FROM itemsChanged WHERE keywordChanged)
@@ -2799,7 +2799,7 @@ async function withTiming(name, func) {
   let startTime = Cu.now();
   let result = await func();
   let elapsedTime = Cu.now() - startTime;
-  MirrorLog.debug(`${name} took ${elapsedTime.toFixed(3)}ms`);
+  MirrorLog.trace(`${name} took ${elapsedTime.toFixed(3)}ms`);
   return { result, time: elapsedTime };
 }
 
@@ -4582,7 +4582,7 @@ class BookmarkObserverRecorder {
   }
 
   async updateFrecencies() {
-    MirrorLog.debug("Recalculating frecencies for new URLs");
+    MirrorLog.trace("Recalculating frecencies for new URLs");
     await this.db.execute(`
       UPDATE moz_places SET
         frecency = CALCULATE_FRECENCY(id)
@@ -4675,7 +4675,7 @@ class BookmarkObserverRecorder {
   }
 
   async notifyBookmarkObservers() {
-    MirrorLog.debug("Notifying bookmark observers");
+    MirrorLog.trace("Notifying bookmark observers");
     let observers = PlacesUtils.bookmarks.getObservers();
     for (let observer of observers) {
       this.notifyObserver(observer, "onBeginUpdateBatch");
@@ -4690,7 +4690,7 @@ class BookmarkObserverRecorder {
   }
 
   async notifyAnnoObservers() {
-    MirrorLog.debug("Notifying anno observers");
+    MirrorLog.trace("Notifying anno observers");
     let observers = PlacesUtils.annotations.getObservers();
     for (let observer of observers) {
       let wrapped = yieldingIterator(this.annoObserverNotifications);
