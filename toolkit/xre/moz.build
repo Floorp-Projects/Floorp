@@ -30,13 +30,19 @@ EXPORTS += [
     'nsIAppStartupNotifier.h',
 ]
 
-EXPORTS.mozilla += ['AutoSQLiteLifetime.h', 'Bootstrap.h']
+EXPORTS.mozilla += [
+    'AutoSQLiteLifetime.h',
+    'Bootstrap.h',
+    'CmdLineAndEnvUtils.h',
+    'SafeMode.h',
+]
 
 if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
     EXPORTS += ['EventTracer.h']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS.mozilla += [
+        'PolicyChecks.h',
         'WinDllServices.h',
     ]
     SOURCES += [
