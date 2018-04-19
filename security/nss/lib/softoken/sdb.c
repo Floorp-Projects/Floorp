@@ -644,13 +644,18 @@ static int
 sdb_openDB(const char *name, sqlite3 **sqlDB, int flags)
 {
     int sqlerr;
-    /*
-     * in sqlite3 3.5.0, there is a new open call that allows us
-     * to specify read only. Most new OS's are still on 3.3.x (including
-     * NSS's internal version and the version shipped with Firefox).
-     */
+    int openFlags;
+
     *sqlDB = NULL;
-    sqlerr = sqlite3_open(name, sqlDB);
+
+    if (flags & SDB_RDONLY) {
+        openFlags = SQLITE_OPEN_READONLY;
+    } else {
+        openFlags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    }
+
+    /* Requires SQLite 3.5.0 or newer. */
+    sqlerr = sqlite3_open_v2(name, sqlDB, openFlags, NULL);
     if (sqlerr != SQLITE_OK) {
         return sqlerr;
     }
