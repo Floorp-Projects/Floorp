@@ -2251,8 +2251,9 @@ Detecting(JSContext* cx, JSScript* script, jsbytecode* pc)
 {
     MOZ_ASSERT(script->containsPC(pc));
 
-    // Skip jump target opcodes.
-    while (pc < script->codeEnd() && BytecodeIsJumpTarget(JSOp(*pc)))
+    // Skip jump target and dup opcodes.
+    while (pc < script->codeEnd() && (BytecodeIsJumpTarget(JSOp(*pc)) ||
+                                      JSOp(*pc) == JSOP_DUP))
         pc = GetNextPc(pc);
 
     MOZ_ASSERT(script->containsPC(pc));
@@ -2275,11 +2276,17 @@ Detecting(JSContext* cx, JSScript* script, jsbytecode* pc)
         return false;
     }
 
+    // Special case #2: don't warn about (obj.prop == undefined).
     if (op == JSOP_GETGNAME || op == JSOP_GETNAME) {
-        // Special case #2: don't warn about (obj.prop == undefined).
         JSAtom* atom = script->getAtom(GET_UINT32_INDEX(pc));
         if (atom == cx->names().undefined &&
             (pc += CodeSpec[op].length) < endpc) {
+            op = JSOp(*pc);
+            return op == JSOP_EQ || op == JSOP_NE || op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
+        }
+    }
+    if (op == JSOP_UNDEFINED) {
+        if ((pc += CodeSpec[op].length) < endpc) {
             op = JSOp(*pc);
             return op == JSOP_EQ || op == JSOP_NE || op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
         }
