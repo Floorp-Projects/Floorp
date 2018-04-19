@@ -1308,11 +1308,273 @@ nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(
     return;
   }
 
-  // Adjust our extents by aShapeMargin.
-  mBStart -= aShapeMargin;
-  mBEnd += aShapeMargin;
+  // With a positive aShapeMargin, we have to calculate a distance
+  // field from the opaque pixels, then build intervals based on
+  // them being within aShapeMargin distance to an opaque pixel.
 
-  NS_ERROR("To be implemented for positive shape-margin.");
+  // Roughly: for each pixel in the margin box, we need to determine the
+  // distance to the nearest opaque image-pixel.  If that distance is less
+  // than aShapeMargin, we consider this margin-box pixel as being part of
+  // the float area.
+
+  // Computing the distance field is a two-pass O(n) operation.
+  // We use a chamfer 5-7-11 5x5 matrix to compute minimum distance
+  // to an opaque pixel. This integer math computation is reasonably
+  // close to the true Euclidean distance. The distances will be
+  // approximately 5x the true distance, quantized in integer units.
+  // The 5x is factored away in the comparison used in the final
+  // pass which builds the intervals.
+  dfType usedMargin5X = CalcUsedShapeMargin5X(aShapeMargin,
+                                              aAppUnitsPerDevPixel);
+
+  // Allocate our distance field.  The distance field has to cover
+  // the entire aMarginRect, since aShapeMargin could bleed into it.
+  // Conveniently, our vertices have been converted into this same space,
+  // so if we cover the aMarginRect, we cover all the vertices.
+  const LayoutDeviceIntSize marginRectDevPixels =
+    LayoutDevicePixel::FromAppUnitsRounded(aMarginRect.Size(),
+                                           aAppUnitsPerDevPixel);
+
+  // Since our distance field is computed with a 5x5 neighborhood,
+  // we need to expand our distance field by a further 4 pixels in
+  // both axes, 2 on the leading edge and 2 on the trailing edge.
+  // We call this edge area the "expanded region".
+  static const uint32_t kiExpansionPerSide = 2;
+  static const uint32_t kbExpansionPerSide = 2;
+
+  // Clamp the size of our distance field sizes to prevent multiplication
+  // overflow.
+  static const uint32_t DF_SIDE_MAX =
+    floor(sqrt((double)(std::numeric_limits<int32_t>::max())));
+
+  // Clamp the margin plus 2X the expansion values between expansion + 1 and
+  // DF_SIDE_MAX. This ensures that the distance field allocation doesn't
+  // overflow during multiplication, and the reverse iteration doesn't
+  // underflow.
+  const uint32_t iSize = std::max(std::min(marginRectDevPixels.width +
+                                           (kiExpansionPerSide * 2),
+                                           DF_SIDE_MAX),
+                                  kiExpansionPerSide + 1);
+  const uint32_t bSize = std::max(std::min(marginRectDevPixels.height +
+                                           (kbExpansionPerSide * 2),
+                                           DF_SIDE_MAX),
+                                  kbExpansionPerSide + 1);
+
+  // Since the margin-box size is CSS controlled, and large values will
+  // generate large iSize and bSize values, we do a fallible allocation for
+  // the distance field. If allocation fails, we early exit and layout will
+  // be wrong, but we'll avoid aborting from OOM.
+  auto df = MakeUniqueFallible<dfType[]>(iSize * bSize);
+  if (!df) {
+    // Without a distance field, we can't reason about the float area.
+    return;
+  }
+
+  // First pass setting distance field, starting at top-left, three cases:
+  // 1) Expanded region pixel: set to MAX_MARGIN_5X.
+  // 2) Pixel within the polygon: set to 0.
+  // 3) Other pixel: set to minimum backward-looking neighborhood
+  //                 distance value, computed with 5-7-11 chamfer.
+
+  for (uint32_t b = 0; b < bSize; ++b) {
+    // Find the left and right i intercepts of the polygon edge for this
+    // block row, and adjust them to compensate for the expansion of the
+    // inline dimension. If we're in the expanded region, or if we're using
+    // a b that's less than the bStart of the polygon, the intercepts are
+    // the nscoord min and max limits.
+    nscoord bInAppUnits = (b - kbExpansionPerSide) * aAppUnitsPerDevPixel;
+    bool bIsInExpandedRegion(b < kbExpansionPerSide ||
+                             b >= bSize - kbExpansionPerSide);
+    bool bIsLessThanPolygonBStart(bInAppUnits < mBStart);
+    bool bIsMoreThanPolygonBEnd(bInAppUnits >= mBEnd);
+
+    // We now figure out the i values that correspond to the left edge and
+    // the right edge of the polygon at one-dev-pixel-thick strip of b. We
+    // have a ComputeLineIntercept function that takes and returns app unit
+    // coordinates in the space of aMarginRect. So to pass in b values, we
+    // first have to add the aMarginRect.y value. And for the values that we
+    // get out, we have to subtract away the aMarginRect.x value before
+    // converting the app units to dev pixels.
+    nscoord bInAppUnitsMarginRect = bInAppUnits + aMarginRect.y;
+
+    const int32_t iLeftEdge = (bIsInExpandedRegion ||
+                               bIsLessThanPolygonBStart ||
+                               bIsMoreThanPolygonBEnd) ? nscoord_MAX :
+      kiExpansionPerSide + NSAppUnitsToIntPixels(
+        ComputeLineIntercept(bInAppUnitsMarginRect,
+                             bInAppUnitsMarginRect + aAppUnitsPerDevPixel,
+                             std::min<nscoord>, nscoord_MAX) - aMarginRect.x,
+        aAppUnitsPerDevPixel);
+
+    const int32_t iRightEdge = (bIsInExpandedRegion ||
+                                bIsLessThanPolygonBStart ||
+                                bIsMoreThanPolygonBEnd) ? nscoord_MIN :
+      kiExpansionPerSide + NSAppUnitsToIntPixels(
+        ComputeLineIntercept(bInAppUnitsMarginRect,
+                             bInAppUnitsMarginRect + aAppUnitsPerDevPixel,
+                             std::max<nscoord>, nscoord_MIN) - aMarginRect.x,
+        aAppUnitsPerDevPixel);
+
+    for (uint32_t i = 0; i < iSize; ++i) {
+      const uint32_t index = i + b * iSize;
+      MOZ_ASSERT(index < (iSize * bSize),
+                 "Our distance field index should be in-bounds.");
+
+      // Handle our three cases, in order.
+      if (i < kiExpansionPerSide ||
+          i >= iSize - kiExpansionPerSide ||
+          bIsInExpandedRegion) {
+        // Case 1: Expanded pixel.
+        df[index] = MAX_MARGIN_5X;
+      } else if ((int32_t)i >= iLeftEdge && (int32_t)i < iRightEdge) {
+        // Case 2: Polygon pixel.
+        df[index] = 0;
+      } else {
+        // Case 3: Other pixel.
+
+        // Backward-looking neighborhood distance from target pixel X
+        // with chamfer 5-7-11 looks like:
+        //
+        // +--+--+--+--+--+
+        // |  |11|  |11|  |
+        // +--+--+--+--+--+
+        // |11| 7| 5| 7|11|
+        // +--+--+--+--+--+
+        // |  | 5| X|  |  |
+        // +--+--+--+--+--+
+        //
+        // X should be set to the minimum of MAX_MARGIN_5X and the
+        // values of all of the numbered neighbors summed with the
+        // value in that chamfer cell.
+        MOZ_ASSERT(index - (iSize * 2) - 1 < (iSize * bSize) &&
+                   index - iSize - 2 < (iSize * bSize),
+                   "Our distance field most extreme indices should be "
+                   "in-bounds.");
+
+        df[index] = std::min<dfType>(MAX_MARGIN_5X,
+                    std::min<dfType>(df[index - (iSize * 2) - 1] + 11,
+                    std::min<dfType>(df[index - (iSize * 2) + 1] + 11,
+                    std::min<dfType>(df[index - iSize - 2] + 11,
+                    std::min<dfType>(df[index - iSize - 1] + 7,
+                    std::min<dfType>(df[index - iSize] + 5,
+                    std::min<dfType>(df[index - iSize + 1] + 7,
+                    std::min<dfType>(df[index - iSize + 2] + 11,
+                                     df[index - 1] + 5))))))));
+      }
+    }
+  }
+
+  // Okay, time for the second pass. This pass is in reverse order from
+  // the first pass. All of our opaque pixels have been set to 0, and all
+  // of our expanded region pixels have been set to MAX_MARGIN_5X. Other
+  // pixels have been set to some value between those two (inclusive) but
+  // this hasn't yet taken into account the neighbors that were processed
+  // after them in the first pass. This time we reverse iterate so we can
+  // apply the forward-looking chamfer.
+
+  // This time, we constrain our outer and inner loop to ignore the
+  // expanded region pixels. For each pixel we iterate, we set the df value
+  // to the minimum forward-looking neighborhood distance value, computed
+  // with a 5-7-11 chamfer. We also check each df value against the
+  // usedMargin5X threshold, and use that to set the iMin and iMax values
+  // for the interval we'll create for that block axis value (b).
+
+  // At the end of each row, if any of the other pixels had a value less
+  // than usedMargin5X, we create an interval.
+  for (uint32_t b = bSize - kbExpansionPerSide - 1;
+       b >= kbExpansionPerSide; --b) {
+    // iMin tracks the first df pixel and iMax the last df pixel whose
+    // df[] value is less than usedMargin5X. Set iMin and iMax in
+    // preparation for this row or column.
+    int32_t iMin = iSize;
+    int32_t iMax = -1;
+
+    for (uint32_t i = iSize - kiExpansionPerSide - 1;
+         i >= kiExpansionPerSide; --i) {
+      const uint32_t index = i + b * iSize;
+      MOZ_ASSERT(index < (iSize * bSize),
+                 "Our distance field index should be in-bounds.");
+
+      // Only apply the chamfer calculation if the df value is not
+      // already 0, since the chamfer can only reduce the value.
+      if (df[index]) {
+        // Forward-looking neighborhood distance from target pixel X
+        // with chamfer 5-7-11 looks like:
+        //
+        // +--+--+--+--+--+
+        // |  |  | X| 5|  |
+        // +--+--+--+--+--+
+        // |11| 7| 5| 7|11|
+        // +--+--+--+--+--+
+        // |  |11|  |11|  |
+        // +--+--+--+--+--+
+        //
+        // X should be set to the minimum of its current value and
+        // the values of all of the numbered neighbors summed with
+        // the value in that chamfer cell.
+        MOZ_ASSERT(index + (iSize * 2) + 1 < (iSize * bSize) &&
+                   index + iSize + 2 < (iSize * bSize),
+                   "Our distance field most extreme indices should be "
+                   "in-bounds.");
+
+        df[index] = std::min<dfType>(df[index],
+                    std::min<dfType>(df[index + (iSize * 2) + 1] + 11,
+                    std::min<dfType>(df[index + (iSize * 2) - 1] + 11,
+                    std::min<dfType>(df[index + iSize + 2] + 11,
+                    std::min<dfType>(df[index + iSize + 1] + 7,
+                    std::min<dfType>(df[index + iSize] + 5,
+                    std::min<dfType>(df[index + iSize - 1] + 7,
+                    std::min<dfType>(df[index + iSize - 2] + 11,
+                                     df[index + 1] + 5))))))));
+      }
+
+      // Finally, we can check the df value and see if it's less than
+      // or equal to the usedMargin5X value.
+      if (df[index] <= usedMargin5X) {
+        if (iMax == -1) {
+          iMax = i;
+        }
+        MOZ_ASSERT(iMin > (int32_t)i);
+        iMin = i;
+      }
+    }
+
+    if (iMax != -1) {
+      // Our interval values, iMin, iMax, and b are all calculated from
+      // the expanded region, which is based on the margin rect. To create
+      // our interval, we have to subtract kiExpansionPerSide from iMin and
+      // iMax, and subtract kbExpansionPerSide from b to account for the
+      // expanded region edges.  This produces coords that are relative to
+      // our margin-rect.
+
+      // Origin for this interval is at the aMarginRect origin, adjusted in
+      // the block direction by b in app units, and in the inline direction
+      // by iMin in app units.
+      nsPoint origin(aMarginRect.x +
+                     (iMin - kiExpansionPerSide) * aAppUnitsPerDevPixel,
+                     aMarginRect.y +
+                     (b - kbExpansionPerSide) * aAppUnitsPerDevPixel);
+
+      // Size is the difference in iMax and iMin, plus 1 (to account for the
+      // whole pixel) dev pixels, by 1 block dev pixel. We don't bother
+      // subtracting kiExpansionPerSide from iMin and iMax in this case
+      // because we only care about the distance between them. We convert
+      // everything to app units.
+      nsSize size((iMax - iMin + 1) * aAppUnitsPerDevPixel,
+                  aAppUnitsPerDevPixel);
+
+      mIntervals.AppendElement(nsRect(origin, size));
+    }
+  }
+
+  // Reverse the intervals keep the array sorted on the block direction.
+  mIntervals.Reverse();
+
+  // Adjust our extents by aShapeMargin. This may cause overflow of some
+  // kind if aShapeMargin is large, so we do some clamping to maintain the
+  // invariant mBStart <= mBEnd.
+  mBStart = std::min(mBStart, mBStart - aShapeMargin);
+  mBEnd = std::max(mBEnd, mBEnd + aShapeMargin);
 }
 
 nscoord
@@ -2579,34 +2841,6 @@ nsFloatManager::ShapeInfo::ConvertToFloatLogical(
                  logicalPoint.B(aWM));
 }
 
-/* static */ nsFloatManager::ShapeInfo::dfType
-nsFloatManager::ShapeInfo::CalcUsedShapeMargin5X(
-  nscoord aShapeMargin,
-  int32_t aAppUnitsPerDevPixel)
-{
-  // Our distance field has to be able to hold values equal to the
-  // maximum shape-margin value that we care about faithfully rendering,
-  // times 5. A 16-bit unsigned int can represent up to ~ 65K which means
-  // we can handle a margin up to ~ 13K device pixels. That's good enough
-  // for practical usage. Any supplied shape-margin value higher than this
-  // maximum will be clamped.
-  static const float MAX_MARGIN_5X_FLOAT = (float)MAX_MARGIN_5X;
-
-  // Convert aShapeMargin to dev pixels, convert that into 5x-dev-pixel
-  // space, then clamp to MAX_MARGIN_5X_FLOAT.
-  float shapeMarginDevPixels5X = 5.0f *
-    NSAppUnitsToFloatPixels(aShapeMargin, aAppUnitsPerDevPixel);
-  NS_WARNING_ASSERTION(shapeMarginDevPixels5X <= MAX_MARGIN_5X_FLOAT,
-                       "shape-margin is too large and is being clamped.");
-
-  // We calculate a minimum in float space, which takes care of any overflow
-  // or infinity that may have occurred earlier from multiplication of
-  // too-large aShapeMargin values.
-  float usedMargin5XFloat = std::min(shapeMarginDevPixels5X,
-                                     MAX_MARGIN_5X_FLOAT);
-  return (dfType)NSToIntRound(usedMargin5XFloat);
-}
-
 /* static */ UniquePtr<nscoord[]>
 nsFloatManager::ShapeInfo::ConvertToFloatLogical(const nscoord aRadii[8],
                                                  WritingMode aWM)
@@ -2705,7 +2939,7 @@ nsFloatManager::ShapeInfo::LineEdge(const nsTArray<nsRect>& aIntervals,
     // interval.
     auto& interval = aIntervals[i];
     nscoord bCoord = interval.Y();
-    if (bCoord > aBEnd) {
+    if (bCoord >= aBEnd) {
       break;
     }
     // Get the edge from the interval point indicated by aLeft.
@@ -2717,6 +2951,34 @@ nsFloatManager::ShapeInfo::LineEdge(const nsTArray<nsRect>& aIntervals,
   }
 
   return lineEdge;
+}
+
+/* static */ nsFloatManager::ShapeInfo::dfType
+nsFloatManager::ShapeInfo::CalcUsedShapeMargin5X(
+  nscoord aShapeMargin,
+  int32_t aAppUnitsPerDevPixel)
+{
+  // Our distance field has to be able to hold values equal to the
+  // maximum shape-margin value that we care about faithfully rendering,
+  // times 5. A 16-bit unsigned int can represent up to ~ 65K which means
+  // we can handle a margin up to ~ 13K device pixels. That's good enough
+  // for practical usage. Any supplied shape-margin value higher than this
+  // maximum will be clamped.
+  static const float MAX_MARGIN_5X_FLOAT = (float)MAX_MARGIN_5X;
+
+  // Convert aShapeMargin to dev pixels, convert that into 5x-dev-pixel
+  // space, then clamp to MAX_MARGIN_5X_FLOAT.
+  float shapeMarginDevPixels5X = 5.0f *
+    NSAppUnitsToFloatPixels(aShapeMargin, aAppUnitsPerDevPixel);
+  NS_WARNING_ASSERTION(shapeMarginDevPixels5X <= MAX_MARGIN_5X_FLOAT,
+                       "shape-margin is too large and is being clamped.");
+
+  // We calculate a minimum in float space, which takes care of any overflow
+  // or infinity that may have occurred earlier from multiplication of
+  // too-large aShapeMargin values.
+  float usedMargin5XFloat = std::min(shapeMarginDevPixels5X,
+                                     MAX_MARGIN_5X_FLOAT);
+  return (dfType)NSToIntRound(usedMargin5XFloat);
 }
 
 //----------------------------------------------------------------------
