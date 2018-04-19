@@ -501,6 +501,7 @@ nsComputedDOMStyle::DoGetComputedStyleNoFlush(Element* aElement,
                                               StyleType aStyleType)
 {
   MOZ_ASSERT(aElement, "NULL element");
+
   // If the content has a pres shell, we must use it.  Otherwise we'd
   // potentially mix rule trees by using the wrong pres shell's style
   // set.  Using the pres shell from the content also means that any
@@ -518,6 +519,14 @@ nsComputedDOMStyle::DoGetComputedStyleNoFlush(Element* aElement,
 
   CSSPseudoElementType pseudoType = GetPseudoType(aPseudo);
   if (aPseudo && pseudoType >= CSSPseudoElementType::Count) {
+    return nullptr;
+  }
+
+  if (aElement->IsInNativeAnonymousSubtree() && !aElement->IsInComposedDoc()) {
+    // Normal web content can't access NAC, but Accessibility, DevTools and
+    // Editor use this same API and this may get called for anonymous content.
+    // Computing the style of a pseudo-element that doesn't have a parent doesn't
+    // really make sense.
     return nullptr;
   }
 
