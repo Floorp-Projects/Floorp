@@ -7,133 +7,74 @@ loader: taskgraph.loader.transform:loader
 transforms:
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.partner_repack:transforms
-   - taskgraph.transforms.job:transforms
    - taskgraph.transforms.release_notifications:transforms
+   - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - post-beetmover-dummy
+   - build-signing
+   - nightly-l10n-signing
 
 job-defaults:
+   name: partner-repack
    description: Release Promotion partner repacks
-   worker-type: buildbot-bridge/buildbot-bridge
-   run-on-projects: []
+   run-on-projects: []  # to make sure this never runs as part of CI
    shipping-product: firefox
    shipping-phase: promote
+   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker:
+      docker-image:
+         in-tree: "partner-repack"
+      chain-of-trust: true
+      max-run-time: 7200
+      env:
+         REPACK_MANIFESTS_URL:
+            by-project:
+               mozilla-beta: "git@github.com:mozilla-partners/repack-manifests.git"
+               mozilla-release: "git@github.com:mozilla-partners/repack-manifests.git"
+               maple: "git@github.com:mozilla-partners/repack-manifests.git"
+               default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
    run:
-      using: buildbot
-      release-promotion: true
-      product: firefox
+      using: mozharness
+      config:
+         - partner_repacks/release_mozilla-release_desktop.py
+      script: mozharness/scripts/desktop_partner_repacks.py
+      job-script: taskcluster/scripts/builder/repackage.sh
+      need-xvfb: false
+      tooltool-downloads: false
 
 jobs:
-   firefox-linux:
-      label: firefox linux partner repacks
+   linux-nightly:
       attributes:
          build_platform: linux-nightly
-      worker:
-         properties:
-            repack_manifests_url:
-               by-project:
-                  mozilla-beta: "git@github.com:mozilla-partners/repack-manifests.git"
-                  mozilla-release: "git@github.com:mozilla-partners/repack-manifests.git"
-                  default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
-      run:
-         buildername: release-{branch}-firefox-linux_partner_repacks
+         build_type: opt
+         artifact_prefix: releng/partner
+         nightly: true
 
-   firefox-linux64:
-      label: firefox linux64 partner repacks
+   linux64-nightly:
       attributes:
          build_platform: linux64-nightly
-      worker:
-         properties:
-            repack_manifests_url:
-               by-project:
-                  mozilla-beta: "git@github.com:mozilla-partners/repack-manifests.git"
-                  mozilla-release: "git@github.com:mozilla-partners/repack-manifests.git"
-                  default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
-      run:
-         buildername: release-{branch}-firefox-linux64_partner_repacks
+         build_type: opt
+         artifact_prefix: releng/partner
+         nightly: true
 
-   firefox-macosx:
-      label: firefox macosx64 partner repacks
+   macosx64-nightly:
       attributes:
          build_platform: macosx64-nightly
-      worker:
-         properties:
-            repack_manifests_url:
-               by-project:
-                  mozilla-beta: "git@github.com:mozilla-partners/repack-manifests.git"
-                  mozilla-release: "git@github.com:mozilla-partners/repack-manifests.git"
-                  default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
-      run:
-         buildername: release-{branch}-firefox-macosx64_partner_repacks
+         build_type: opt
+         artifact_prefix: releng/partner
+         nightly: true
 
-   firefox-win32:
-      label: firefox win32 partner repacks
+   win32-nightly:
       attributes:
          build_platform: win32-nightly
-      worker:
-         properties:
-            repack_manifests_url:
-               by-project:
-                  mozilla-beta: "git@github.com:mozilla-partners/repack-manifests.git"
-                  mozilla-release: "git@github.com:mozilla-partners/repack-manifests.git"
-                  default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
-      run:
-         buildername: release-{branch}-firefox-win32_partner_repacks
+         build_type: opt
+         artifact_prefix: releng/partner
+         nightly: true
 
-   firefox-win64:
-      label: firefox win64 partner repacks
+   win64-nightly:
       attributes:
          build_platform: win64-nightly
-      worker:
-         properties:
-            repack_manifests_url:
-               by-project:
-                  mozilla-beta: "git@github.com:mozilla-partners/repack-manifests.git"
-                  mozilla-release: "git@github.com:mozilla-partners/repack-manifests.git"
-                  default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
-      run:
-         buildername: release-{branch}-firefox-win64_partner_repacks
-
-   firefox-macosx-eme-free:
-      label: firefox macosx64 EME-free repacks
-      attributes:
-         build_platform: macosx64-nightly
-      worker:
-         properties:
-            repack_manifests_url:
-               by-project:
-                  mozilla-beta: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
-                  mozilla-release: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
-                  default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
-      run:
-         buildername: release-{branch}-firefox-macosx64_partner_repacks
-
-   firefox-win32-eme-free:
-      label: firefox win32 EME-free repacks
-      attributes:
-         build_platform: win32-nightly
-      worker:
-         properties:
-            repack_manifests_url:
-               by-project:
-                  mozilla-beta: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
-                  mozilla-release: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
-                  default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
-      run:
-         buildername: release-{branch}-firefox-win32_partner_repacks
-
-   firefox-win64-eme-free:
-      label: firefox win64 EME-free repacks
-      attributes:
-         build_platform: win64-nightly
-      worker:
-         properties:
-            repack_manifests_url:
-               by-project:
-                  mozilla-beta: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
-                  mozilla-release: "git@github.com:mozilla-partners/mozilla-EME-free-manifest"
-                  default: "git@github.com:mozilla-releng/staging-repack-manifests.git"
-      run:
-         buildername: release-{branch}-firefox-win64_partner_repacks
+         build_type: opt
+         artifact_prefix: releng/partner
+         nightly: true

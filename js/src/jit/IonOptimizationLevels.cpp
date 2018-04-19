@@ -93,17 +93,17 @@ OptimizationInfo::compilerWarmUpThreshold(JSScript* script, jsbytecode* pc) cons
             .valueOr(compilerSmallFunctionWarmUpThreshold_);
     }
 
-    // If the script is too large to compile on the active thread, we can still
+    // If the script is too large to compile on the main thread, we can still
     // compile it off thread. In these cases, increase the warm-up counter
     // threshold to improve the compilation's type information and hopefully
     // avoid later recompilation.
 
-    if (script->length() > MAX_ACTIVE_THREAD_SCRIPT_SIZE)
-        warmUpThreshold *= (script->length() / (double) MAX_ACTIVE_THREAD_SCRIPT_SIZE);
+    if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE)
+        warmUpThreshold *= (script->length() / double(MAX_MAIN_THREAD_SCRIPT_SIZE));
 
     uint32_t numLocalsAndArgs = NumLocalsAndArgs(script);
-    if (numLocalsAndArgs > MAX_ACTIVE_THREAD_LOCALS_AND_ARGS)
-        warmUpThreshold *= (numLocalsAndArgs / (double) MAX_ACTIVE_THREAD_LOCALS_AND_ARGS);
+    if (numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
+        warmUpThreshold *= (numLocalsAndArgs / double(MAX_MAIN_THREAD_LOCALS_AND_ARGS));
 
     if (!pc || JitOptions.eagerCompilation)
         return warmUpThreshold;

@@ -1286,6 +1286,9 @@ PresShell::Destroy()
   }
 
   // release our pref style sheet, if we have one still
+  //
+  // FIXME(emilio): Why do we need to do this? The stylist is getting nixed with
+  // us anyway.
   RemovePreferenceStyles();
 
   mIsDestroying = true;
@@ -1503,7 +1506,11 @@ PresShell::UpdatePreferenceStyles()
 
   RemovePreferenceStyles();
 
-  mStyleSet->AppendStyleSheet(SheetType::User, newPrefSheet->AsServo());
+  // NOTE(emilio): This sheet is added as an agent sheet, because we don't want
+  // it to be modifiable from devtools and similar, see bugs 1239336 and
+  // 1436782. I think it conceptually should be a user sheet, and could be
+  // without too much trouble I'd think.
+  mStyleSet->AppendStyleSheet(SheetType::Agent, newPrefSheet->AsServo());
   mPrefStyleSheet = newPrefSheet;
 
   mStyleSet->EndUpdate();
@@ -1513,7 +1520,7 @@ void
 PresShell::RemovePreferenceStyles()
 {
   if (mPrefStyleSheet) {
-    mStyleSet->RemoveStyleSheet(SheetType::User, mPrefStyleSheet->AsServo());
+    mStyleSet->RemoveStyleSheet(SheetType::Agent, mPrefStyleSheet->AsServo());
     mPrefStyleSheet = nullptr;
   }
 }

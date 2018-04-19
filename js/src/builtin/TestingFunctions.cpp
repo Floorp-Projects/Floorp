@@ -1542,7 +1542,7 @@ OOMThreadTypes(JSContext* cx, unsigned argc, Value* vp)
 static bool
 CheckCanSimulateOOM(JSContext* cx)
 {
-    if (js::oom::GetThreadType() != js::THREAD_TYPE_COOPERATING) {
+    if (js::oom::GetThreadType() != js::THREAD_TYPE_MAIN) {
         JS_ReportErrorASCII(cx, "Simulated OOM failure is only supported on the main thread");
         return false;
     }
@@ -1579,7 +1579,7 @@ SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc, Value* vp)
         return false;
     }
 
-    uint32_t targetThread = js::THREAD_TYPE_COOPERATING;
+    uint32_t targetThread = js::THREAD_TYPE_MAIN;
     if (args.length() > 1 && !ToUint32(cx, args[1], &targetThread))
         return false;
 

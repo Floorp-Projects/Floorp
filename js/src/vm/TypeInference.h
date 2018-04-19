@@ -1298,10 +1298,10 @@ FinishDefinitePropertiesAnalysis(JSContext* cx, CompilerConstraintList* constrai
 
 // Representation of a heap type property which may or may not be instantiated.
 // Heap properties for singleton types are instantiated lazily as they are used
-// by the compiler, but this is only done on the active thread. If we are
+// by the compiler, but this is only done on the main thread. If we are
 // compiling off thread and use a property which has not yet been instantiated,
 // it will be treated as empty and non-configured and will be instantiated when
-// rejoining to the active thread. If it is in fact not empty, the compilation
+// rejoining to the main thread. If it is in fact not empty, the compilation
 // will fail; to avoid this, we try to instantiate singleton property types
 // during generation of baseline caches.
 class HeapTypeSetKey

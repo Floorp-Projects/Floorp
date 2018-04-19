@@ -462,7 +462,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
      * be accessed simultaneously by multiple threads.
      *
      * Locking this only occurs if there is actually a thread other than the
-     * active thread which could access such data.
+     * main thread which could access such data.
      */
     js::Mutex exclusiveAccessLock;
 #ifdef DEBUG
@@ -474,7 +474,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
      * off-thread parsing.
      *
      * Locking this only occurs if there is actually a thread other than the
-     * active thread which could access this.
+     * main thread which could access this.
      */
     js::Mutex scriptDataLock;
 #ifdef DEBUG
