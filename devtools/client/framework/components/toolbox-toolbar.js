@@ -72,6 +72,8 @@ class ToolboxToolbar extends Component {
       L10N: PropTypes.object,
       // The devtools toolbox
       toolbox: PropTypes.object,
+      // Call back function to detect tabs order updated.
+      onTabsOrderUpdated: PropTypes.func.isRequired,
     };
   }
 

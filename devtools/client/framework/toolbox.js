@@ -76,6 +76,8 @@ loader.lazyRequireGetter(this, "getKnownDeviceFront",
   "devtools/shared/fronts/device", true);
 loader.lazyRequireGetter(this, "NetMonitorAPI",
   "devtools/client/netmonitor/src/api", true);
+loader.lazyRequireGetter(this, "sortPanelDefinitions",
+  "devtools/client/framework/toolbox-tabs-order-manager", true);
 
 loader.lazyGetter(this, "domNodeConstants", () => {
   return require("devtools/shared/dom-node-constants");
@@ -147,6 +149,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._showDevEditionPromo = this._showDevEditionPromo.bind(this);
   this._updateTextBoxMenuItems = this._updateTextBoxMenuItems.bind(this);
   this._onPerformanceFrontEvent = this._onPerformanceFrontEvent.bind(this);
+  this._onTabsOrderUpdated = this._onTabsOrderUpdated.bind(this);
   this._onToolbarFocus = this._onToolbarFocus.bind(this);
   this._onToolbarArrowKeypress = this._onToolbarArrowKeypress.bind(this);
   this._onPickerClick = this._onPickerClick.bind(this);
@@ -263,13 +266,8 @@ Toolbox.prototype = {
    * can be set by add-ons.
    */
   _combineAndSortPanelDefinitions() {
-    const definitions = [...this._panelDefinitions, ...this.getVisibleAdditionalTools()];
-    definitions.sort(definition => {
-      return -1 * (definition.ordinal == undefined || definition.ordinal < 0
-        ? MAX_ORDINAL
-        : definition.ordinal
-      );
-    });
+    let definitions = [...this._panelDefinitions, ...this.getVisibleAdditionalTools()];
+    definitions = sortPanelDefinitions(definitions);
     this.component.setPanelDefinitions(definitions);
   },
 
@@ -1150,7 +1148,8 @@ Toolbox.prototype = {
       toggleNoAutohide: this.toggleNoAutohide,
       closeToolbox: this.destroy,
       focusButton: this._onToolbarFocus,
-      toolbox: this
+      toolbox: this,
+      onTabsOrderUpdated: this._onTabsOrderUpdated,
     });
 
     this.component = this.ReactDOM.render(element, this._componentMount);
@@ -1914,6 +1913,10 @@ Toolbox.prototype = {
     }
 
     this._lastFocusedElement = originalTarget;
+  },
+
+  _onTabsOrderUpdated: function() {
+    this._combineAndSortPanelDefinitions();
   },
 
   /**

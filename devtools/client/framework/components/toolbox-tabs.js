@@ -12,7 +12,7 @@ const {button, div} = dom;
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 const ToolboxTab = createFactory(require("devtools/client/framework/components/toolbox-tab"));
-const ToolboxTabsOrderManager = require("devtools/client/framework/toolbox-tabs-order-manager");
+const { ToolboxTabsOrderManager } = require("devtools/client/framework/toolbox-tabs-order-manager");
 
 // 26px is chevron devtools button width.(i.e. tools-chevronmenu)
 const CHEVRON_BUTTON_WIDTH = 26;
@@ -29,6 +29,7 @@ class ToolboxTabs extends Component {
       selectTool: PropTypes.func,
       toolbox: PropTypes.object,
       L10N: PropTypes.object,
+      onTabsOrderUpdated: PropTypes.func.isRequired,
     };
   }
 
@@ -48,7 +49,7 @@ class ToolboxTabs extends Component {
     this._resizeTimerId = null;
     this.resizeHandler = this.resizeHandler.bind(this);
 
-    this._tabsOrderManager = new ToolboxTabsOrderManager();
+    this._tabsOrderManager = new ToolboxTabsOrderManager(props.onTabsOrderUpdated);
   }
 
   componentDidMount() {
