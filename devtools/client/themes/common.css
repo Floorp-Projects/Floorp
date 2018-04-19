@@ -108,6 +108,35 @@ html|button, html|select {
   text-align: end;
 }
 
+.devtools-autocomplete-listbox .autocomplete-swatch {
+  cursor: pointer;
+  border-radius: 50%;
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  /* align the swatch with its value */
+  margin-top: -1px;
+  margin-inline-end: 5px;
+  display: inline-block;
+  position: relative;
+}
+
+.devtools-autocomplete-listbox .autocomplete-colorswatch::before {
+  content: '';
+  background-color: #eee;
+  background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+                    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+  background-size: 12px 12px;
+  background-position: 0 0, 6px 6px;
+  position: absolute;
+  border-radius: 50%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
 /* Rest of the dark and light theme */
 
 .devtools-autocomplete-popup,

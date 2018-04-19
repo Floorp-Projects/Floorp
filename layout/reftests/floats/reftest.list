@@ -96,10 +96,10 @@ fuzzy-if(OSX==1010,28,7) == orthogonal-floats-1b.html orthogonal-floats-1-ref.ht
 fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,135,700) == orthogonal-floats-1c.html orthogonal-floats-1-ref.html
 fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,135,700) == orthogonal-floats-1d.html orthogonal-floats-1-ref.html
 
-pref(layout.css.float-logical-values.enabled,true) == logical-float-side-1.html logical-float-side-1-ref.html
-pref(layout.css.float-logical-values.enabled,true) == logical-float-side-2.html logical-float-side-2-ref.html
-pref(layout.css.float-logical-values.enabled,true) == logical-float-side-3.html logical-float-side-3-ref.html
-pref(layout.css.float-logical-values.enabled,true) == logical-float-side-4.html logical-float-side-4-ref.html
+== logical-float-side-1.html logical-float-side-1-ref.html
+== logical-float-side-2.html logical-float-side-2-ref.html
+== logical-float-side-3.html logical-float-side-3-ref.html
+== logical-float-side-4.html logical-float-side-4-ref.html
 
 == float-in-rtl-slr-1a.html float-in-rtl-slr-1-ref.html
 == float-in-rtl-slr-1b.html float-in-rtl-slr-1-ref.html

@@ -26,16 +26,95 @@ namespace ctypes {
 ** Utility classes
 *******************************************************************************/
 
-// String and AutoString classes, based on Vector.
-typedef Vector<char16_t,  0, SystemAllocPolicy> String;
-typedef Vector<char16_t, 64, SystemAllocPolicy> AutoString;
-typedef Vector<char,      0, SystemAllocPolicy> CString;
-typedef Vector<char,     64, SystemAllocPolicy> AutoCString;
+// CTypes builds a number of strings. StringBuilder allows repeated appending
+// with a single error check at the end. Only the Vector methods required for
+// building the string are exposed.
+
+template <class CharT, size_t N>
+class StringBuilder {
+  Vector<CharT, N, SystemAllocPolicy> v;
+
+  // Have any (OOM) errors been encountered while constructing this string?
+  bool errored { false };
+
+#ifdef DEBUG
+  // Have we finished building this string?
+  bool finished { false };
+
+  // Did we check for errors?
+  mutable bool checked { false };
+#endif
+
+ public:
+
+  explicit operator bool() const {
+#ifdef DEBUG
+    checked = true;
+#endif
+    return !errored;
+  }
+
+  // Handle the result of modifying the string, by remembering the persistent
+  // errored status.
+  bool handle(bool result) {
+    MOZ_ASSERT(!finished);
+    if (!result)
+      errored = true;
+    return result;
+  }
+
+  bool resize(size_t n) {
+    return handle(v.resize(n));
+  }
+
+  CharT& operator[](size_t index) { return v[index]; }
+  const CharT& operator[](size_t index) const { return v[index]; }
+  size_t length() const { return v.length(); }
+
+  template<typename U> MOZ_MUST_USE bool append(U&& u) {
+    return handle(v.append(u));
+  }
+
+  template<typename U> MOZ_MUST_USE bool append(const U* begin, const U* end) {
+    return handle(v.append(begin, end));
+  }
+
+  template<typename U> MOZ_MUST_USE bool append(const U* begin, size_t len) {
+    return handle(v.append(begin, len));
+  }
+
+  CharT* begin() {
+    MOZ_ASSERT(!finished);
+    return v.begin();
+  }
+
+  // finish() produces the results of the string building, and is required as
+  // the last thing before the string contents are used. The StringBuilder must
+  // be checked for errors before calling this, however.
+  Vector<CharT, N, SystemAllocPolicy>&& finish() {
+    MOZ_ASSERT(!errored);
+    MOZ_ASSERT(!finished);
+    MOZ_ASSERT(checked);
+#ifdef DEBUG
+    finished = true;
+#endif
+    return mozilla::Move(v);
+  }
+};
+
+// Note that these strings do not have any inline storage, because we use move
+// constructors to pass the data around and inline storage would necessitate
+// copying.
+typedef StringBuilder<char16_t, 0> AutoString;
+typedef StringBuilder<char,     0> AutoCString;
+
+typedef Vector<char16_t, 0, SystemAllocPolicy> AutoStringChars;
+typedef Vector<char,     0, SystemAllocPolicy> AutoCStringChars;
 
 // Convenience functions to append, insert, and compare Strings.
-template <class T, size_t N, class AP, size_t ArrayLength>
+template <class T, size_t N, size_t ArrayLength>
 void
-AppendString(mozilla::Vector<T, N, AP>& v, const char (&array)[ArrayLength])
+AppendString(JSContext* cx, StringBuilder<T, N>& v, const char (&array)[ArrayLength])
 {
   // Don't include the trailing '\0'.
   size_t alen = ArrayLength - 1;
@@ -47,9 +126,9 @@ AppendString(mozilla::Vector<T, N, AP>& v, const char (&array)[ArrayLength])
     v[i + vlen] = array[i];
 }
 
-template <class T, size_t N, class AP>
+template <class T, size_t N>
 void
-AppendChars(mozilla::Vector<T, N, AP>& v, const char c, size_t count)
+AppendChars(StringBuilder<T, N>& v, const char c, size_t count)
 {
   size_t vlen = v.length();
   if (!v.resize(vlen + count))
@@ -59,9 +138,9 @@ AppendChars(mozilla::Vector<T, N, AP>& v, const char c, size_t count)
     v[i + vlen] = c;
 }
 
-template <class T, size_t N, class AP>
+template <class T, size_t N>
 void
-AppendUInt(mozilla::Vector<T, N, AP>& v, unsigned n)
+AppendUInt(StringBuilder<T, N>& v, unsigned n)
 {
   char array[16];
   size_t alen = SprintfLiteral(array, "%u", n);
@@ -75,18 +154,18 @@ AppendUInt(mozilla::Vector<T, N, AP>& v, unsigned n)
 
 template <class T, size_t N, size_t M, class AP>
 void
-AppendString(mozilla::Vector<T, N, AP>& v, mozilla::Vector<T, M, AP>& w)
+AppendString(JSContext* cx, StringBuilder<T, N>& v, mozilla::Vector<T, M, AP>& w)
 {
   if (!v.append(w.begin(), w.length()))
     return;
 }
 
-template <size_t N, class AP>
+template <size_t N>
 void
-AppendString(mozilla::Vector<char16_t, N, AP>& v, JSString* str)
+AppendString(JSContext* cx, StringBuilder<char16_t, N>& v, JSString* str)
 {
   MOZ_ASSERT(str);
-  JSLinearString* linear = str->ensureLinear(nullptr);
+  JSLinearString* linear = str->ensureLinear(cx);
   if (!linear)
     return;
   JS::AutoCheckCannotGC nogc;
@@ -99,9 +178,9 @@ AppendString(mozilla::Vector<char16_t, N, AP>& v, JSString* str)
   }
 }
 
-template <size_t N, class AP>
+template <size_t N>
 void
-AppendString(mozilla::Vector<char, N, AP>& v, JSString* str)
+AppendString(JSContext* cx, StringBuilder<char, N>& v, JSString* str)
 {
   MOZ_ASSERT(str);
   size_t vlen = v.length();
@@ -109,7 +188,7 @@ AppendString(mozilla::Vector<char, N, AP>& v, JSString* str)
   if (!v.resize(vlen + alen))
     return;
 
-  JSLinearString* linear = str->ensureLinear(nullptr);
+  JSLinearString* linear = str->ensureLinear(cx);
   if (!linear)
     return;
 
@@ -125,9 +204,9 @@ AppendString(mozilla::Vector<char, N, AP>& v, JSString* str)
   }
 }
 
-template <class T, size_t N, class AP, size_t ArrayLength>
+template <class T, size_t N, size_t ArrayLength>
 void
-PrependString(mozilla::Vector<T, N, AP>& v, const char (&array)[ArrayLength])
+PrependString(JSContext* cx, StringBuilder<T, N>& v, const char (&array)[ArrayLength])
 {
   // Don't include the trailing '\0'.
   size_t alen = ArrayLength - 1;
@@ -143,9 +222,9 @@ PrependString(mozilla::Vector<T, N, AP>& v, const char (&array)[ArrayLength])
     v[i] = array[i];
 }
 
-template <size_t N, class AP>
+template <size_t N>
 void
-PrependString(mozilla::Vector<char16_t, N, AP>& v, JSString* str)
+PrependString(JSContext* cx, StringBuilder<char16_t, N>& v, JSString* str)
 {
   MOZ_ASSERT(str);
   size_t vlen = v.length();
@@ -153,7 +232,7 @@ PrependString(mozilla::Vector<char16_t, N, AP>& v, JSString* str)
   if (!v.resize(vlen + alen))
     return;
 
-  JSLinearString* linear = str->ensureLinear(nullptr);
+  JSLinearString* linear = str->ensureLinear(cx);
   if (!linear)
     return;
 
@@ -502,7 +581,7 @@ namespace FunctionType {
     JSObject* refObj, PRFuncPtr fnptr, JSObject* result);
 
   FunctionInfo* GetFunctionInfo(JSObject* obj);
-  void BuildSymbolName(JSString* name, JSObject* typeObj,
+  void BuildSymbolName(JSContext* cx, JSString* name, JSObject* typeObj,
     AutoCString& result);
 } // namespace FunctionType
 
