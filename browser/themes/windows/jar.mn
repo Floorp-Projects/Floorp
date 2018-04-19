@@ -18,6 +18,7 @@ browser.jar:
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/webRTC-indicator.css  (../shared/webRTC-indicator.css)
 * skin/classic/browser/controlcenter/panel.css                 (controlcenter/panel.css)
+  skin/classic/browser/customizableui/menu-arrow.svg           (customizableui/menu-arrow.svg)
 * skin/classic/browser/customizableui/panelUI.css       (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsView.css   (downloads/allDownloadsView.css)
 * skin/classic/browser/downloads/downloads.css                 (downloads/downloads.css)

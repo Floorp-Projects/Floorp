@@ -39,25 +39,18 @@ panelmultiview .toolbaritem-combined-buttons > spacer {
   display: none;
 }
 
-#BMB_bookmarksPopup menupopup[placespopup=true]:-moz-lwtheme {
-  -moz-appearance: none;
-  background: transparent;
-}
-
-#BMB_bookmarksPopup menupopup[placespopup=true] > hbox:-moz-lwtheme {
-  background: var(--arrowpanel-background);
-  border-radius: var(--arrowpanel-border-radius);
-  box-shadow: 0 0 0 1px var(--arrowpanel-border-color);
-  color: var(--arrowpanel-color);
-  border: none;
-  padding: var(-arrowpanel-padding);
-  margin: 1px;
-}
-
 /* Override OSX-specific toolkit styles for the bookmarks panel */
 menu.subviewbutton > .menu-right {
-  margin-inline-end: -4px;
+  margin-inline-end: 0;
   -moz-appearance: none;
+}
+
+menu.subviewbutton > .menu-right > image {
+ /* We don't want the arrow to highlight when the .subviewbutton is hovered,
+  * so we set the -moz-appearance rule on the image
+  * (which doesn't inherit the _moz-menuactive attribute) instead.
+  */
+  -moz-appearance: menuarrow;
 }
 
 .PanelUI-subView menuseparator,
