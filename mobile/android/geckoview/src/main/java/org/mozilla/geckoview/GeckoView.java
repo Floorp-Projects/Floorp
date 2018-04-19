@@ -516,15 +516,15 @@ public class GeckoView extends FrameLayout {
 
     @Override
     public boolean onHoverEvent(final MotionEvent event) {
-        // A touchscreen hover event is a screen reader doing explore-by-touch
-        if (SessionAccessibility.Settings.isEnabled() &&
-            event.getSource() == InputDevice.SOURCE_TOUCHSCREEN &&
-            mSession != null) {
-            mSession.getAccessibility().onExploreByTouch(event);
-            return true;
+        // If we get a touchscreen hover event, and accessibility is not enabled, don't
+        // send it to Gecko.
+        if (event.getSource() == InputDevice.SOURCE_TOUCHSCREEN &&
+            !SessionAccessibility.Settings.isEnabled()) {
+            return false;
         }
 
-        return false;
+        return mSession != null &&
+               mSession.getPanZoomController().onMotionEvent(event);
     }
 
     @Override
