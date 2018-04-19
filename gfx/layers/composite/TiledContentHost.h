@@ -115,7 +115,7 @@ public:
   mutable CompositableTextureSourceRef mTextureSource;
   mutable CompositableTextureSourceRef mTextureSourceOnWhite;
   // This is not strictly necessary but makes debugging whole lot easier.
-  TileIntPoint mTilePosition;
+  TileCoordIntPoint mTilePosition;
   TimeStamp mFadeStart;
 };
 
