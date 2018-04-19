@@ -23,8 +23,8 @@
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/WorkerHolder.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIScriptContext.h"
@@ -413,54 +413,6 @@ IDBRequest::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   aVisitor.SetParentTarget(mTransaction, false);
 }
 
-class IDBOpenDBRequest::WorkerHolder final
-  : public mozilla::dom::WorkerHolder
-{
-  WorkerPrivate* mWorkerPrivate;
-#ifdef DEBUG
-  // This is only here so that assertions work in the destructor even if
-  // NoteAddWorkerHolderFailed was called.
-  WorkerPrivate* mWorkerPrivateDEBUG;
-#endif
-
-public:
-  explicit
-  WorkerHolder(WorkerPrivate* aWorkerPrivate)
-    : mozilla::dom::WorkerHolder("IDBOpenDBRequest::WorkerHolder")
-    , mWorkerPrivate(aWorkerPrivate)
-#ifdef DEBUG
-    , mWorkerPrivateDEBUG(aWorkerPrivate)
-#endif
-  {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-
-    MOZ_COUNT_CTOR(IDBOpenDBRequest::WorkerHolder);
-  }
-
-  ~WorkerHolder()
-  {
-#ifdef DEBUG
-    mWorkerPrivateDEBUG->AssertIsOnWorkerThread();
-#endif
-
-    MOZ_COUNT_DTOR(IDBOpenDBRequest::WorkerHolder);
-  }
-
-  void
-  NoteAddWorkerHolderFailed()
-  {
-    MOZ_ASSERT(mWorkerPrivate);
-    mWorkerPrivate->AssertIsOnWorkerThread();
-
-    mWorkerPrivate = nullptr;
-  }
-
-private:
-  virtual bool
-  Notify(WorkerStatus aStatus) override;
-};
-
 IDBOpenDBRequest::IDBOpenDBRequest(IDBFactory* aFactory,
                                    nsPIDOMWindowInner* aOwner,
                                    bool aFileHandleDisabled)
@@ -530,13 +482,11 @@ IDBOpenDBRequest::CreateForJS(JSContext* aCx,
 
     workerPrivate->AssertIsOnWorkerThread();
 
-    nsAutoPtr<WorkerHolder> workerHolder(new WorkerHolder(workerPrivate));
-    if (NS_WARN_IF(!workerHolder->HoldWorker(workerPrivate, Canceling))) {
-      workerHolder->NoteAddWorkerHolderFailed();
+    request->mWorkerRef =
+      StrongWorkerRef::Create(workerPrivate, "IDBOpenDBRequest");
+    if (NS_WARN_IF(!request->mWorkerRef)) {
       return nullptr;
     }
-
-    request->mWorkerHolder = Move(workerHolder);
   }
 
   request->IncreaseActiveDatabaseCount();
@@ -586,14 +536,13 @@ void
 IDBOpenDBRequest::NoteComplete()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerHolder);
+  MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerRef);
 
   // Normally, we decrease the number of active IDBOpenRequests here.
   MaybeDecreaseActiveDatabaseCount();
 
-  // If we have a WorkerHolder installed on the worker then nulling this out
-  // will uninstall it from the worker.
-  mWorkerHolder = nullptr;
+  // If we have a WorkerRef, then nulling this out will release the worker.
+  mWorkerRef = nullptr;
 }
 
 void
@@ -659,20 +608,6 @@ IDBOpenDBRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   AssertIsOnOwningThread();
 
   return IDBOpenDBRequestBinding::Wrap(aCx, this, aGivenProto);
-}
-
-bool
-IDBOpenDBRequest::
-WorkerHolder::Notify(WorkerStatus aStatus)
-{
-  MOZ_ASSERT(mWorkerPrivate);
-  mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(aStatus > Running);
-
-  // There's nothing we can really do here at the moment...
-  NS_WARNING("Worker closing but IndexedDB is waiting to open a database!");
-
-  return true;
 }
 
 } // namespace dom

@@ -35,6 +35,7 @@ class IDBObjectStore;
 class IDBTransaction;
 template <typename> struct Nullable;
 class OwningIDBObjectStoreOrIDBIndexOrIDBCursor;
+class StrongWorkerRef;
 
 class IDBRequest
   : public IDBWrapperCache
@@ -215,12 +216,10 @@ protected:
 class IDBOpenDBRequest final
   : public IDBRequest
 {
-  class WorkerHolder;
-
   // Only touched on the owning thread.
   RefPtr<IDBFactory> mFactory;
 
-  nsAutoPtr<WorkerHolder> mWorkerHolder;
+  RefPtr<StrongWorkerRef> mWorkerRef;
 
   const bool mFileHandleDisabled;
   bool mIncreasedActiveDatabaseCount;
