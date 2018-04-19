@@ -3898,13 +3898,17 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
 
 
 Maybe<ScrollMetadata>
-ScrollFrameHelper::ComputeScrollMetadata(Layer* aLayer,
-                                         LayerManager* aLayerManager,
+ScrollFrameHelper::ComputeScrollMetadata(LayerManager* aLayerManager,
                                          const nsIFrame* aContainerReferenceFrame,
                                          const ContainerLayerParameters& aParameters,
                                          const DisplayItemClip* aClip) const
 {
   if (!mWillBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
+    return Nothing();
+  }
+
+  if (!nsLayoutUtils::UsesAsyncScrolling(mOuter)) {
+    // Return early, since if we don't use APZ we don't need FrameMetrics.
     return Nothing();
   }
 
@@ -3918,11 +3922,33 @@ ScrollFrameHelper::ComputeScrollMetadata(Layer* aLayer,
   }
 
   bool isRootContent = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
-  bool thisScrollFrameUsesAsyncScrolling = nsLayoutUtils::UsesAsyncScrolling(mOuter);
-  if (!thisScrollFrameUsesAsyncScrolling) {
+
+  MOZ_ASSERT(mScrolledFrame->GetContent());
+
+  nsRect scrollport = mScrollPort + toReferenceFrame;
+
+  return Some(nsLayoutUtils::ComputeScrollMetadata(
+    mScrolledFrame, mOuter, mOuter->GetContent(),
+    aContainerReferenceFrame, aLayerManager, mScrollParentID,
+    scrollport, parentLayerClip, isRootContent, aParameters));
+}
+
+void
+ScrollFrameHelper::ClipLayerToDisplayPort(Layer* aLayer,
+                                          const DisplayItemClip* aClip,
+                                          const ContainerLayerParameters& aParameters) const
+{
+  // If APZ is not enabled, we still need the displayport to be clipped
+  // in the compositor.
+  if (!nsLayoutUtils::UsesAsyncScrolling(mOuter)) {
+    Maybe<nsRect> parentLayerClip;
+    // For containerful frames, the clip is on the container layer.
+    if (aClip &&
+        (!gfxPrefs::LayoutUseContainersForRootFrames() || mAddClipRectToLayer)) {
+      parentLayerClip = Some(aClip->GetClipRect());
+    }
+
     if (parentLayerClip) {
-      // If APZ is not enabled, we still need the displayport to be clipped
-      // in the compositor.
       ParentLayerIntRect displayportClip =
         ViewAs<ParentLayerPixel>(
           parentLayerClip->ScaleToNearestPixels(
@@ -3938,19 +3964,7 @@ ScrollFrameHelper::ComputeScrollMetadata(Layer* aLayer,
       }
       aLayer->SetClipRect(Some(layerClip));
     }
-
-    // Return early, since if we don't use APZ we don't need FrameMetrics.
-    return Nothing();
   }
-
-  MOZ_ASSERT(mScrolledFrame->GetContent());
-
-  nsRect scrollport = mScrollPort + toReferenceFrame;
-
-  return Some(nsLayoutUtils::ComputeScrollMetadata(
-    mScrolledFrame, mOuter, mOuter->GetContent(),
-    aContainerReferenceFrame, aLayerManager, mScrollParentID,
-    scrollport, parentLayerClip, isRootContent, aParameters));
 }
 
 bool
