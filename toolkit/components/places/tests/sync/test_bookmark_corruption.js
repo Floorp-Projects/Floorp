@@ -7,6 +7,108 @@ async function getCountOfBookmarkRows(db) {
   return queryRows[0].getResultByIndex(0);
 }
 
+add_task(async function test_corrupt_roots() {
+  let telemetryEvents = [];
+  let buf = await openMirror("corrupt_roots", {
+    recordTelemetryEvent(object, method, value, extra) {
+      if (object == "mirror" && ["open", "apply"].includes(method)) {
+        // Ignore timings, mirror database file, and tree sizes.
+        return;
+      }
+      telemetryEvents.push({ object, method, value, extra });
+    },
+  });
+
+  info("Set up empty mirror");
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  info("Make remote changes: Menu > Unfiled");
+  await storeRecords(buf, [{
+    id: "menu",
+    type: "folder",
+    children: ["unfiled", "bookmarkAAAA"],
+  }, {
+    id: "unfiled",
+    type: "folder",
+    children: ["bookmarkBBBB"],
+  }, {
+    id: "bookmarkAAAA",
+    type: "bookmark",
+    title: "A",
+    bmkUri: "http://example.com/a",
+  }, {
+    id: "bookmarkBBBB",
+    type: "bookmark",
+    title: "B",
+    bmkUri: "http://example.com/b",
+  }, {
+    id: "toolbar",
+    deleted: true,
+  }]);
+
+  let changesToUpload = await buf.apply();
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(telemetryEvents, [{
+    object: "mirror",
+    method: "ignore",
+    value: "child",
+    extra: { root: "1" },
+  }, {
+    object: "mirror",
+    method: "ignore",
+    value: "tombstone",
+    extra: { root: "1" },
+  }], "Should record telemetry for ignored invalid roots");
+
+  deepEqual(changesToUpload, {}, "Should not reupload invalid roots");
+
+  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
+    guid: PlacesUtils.bookmarks.rootGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 0,
+    title: "",
+    children: [{
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: BookmarksMenuTitle,
+      children: [{
+        guid: "bookmarkAAAA",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "A",
+        url: "http://example.com/a",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 1,
+      title: BookmarksToolbarTitle,
+    }, {
+      guid: PlacesUtils.bookmarks.unfiledGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 3,
+      title: UnfiledBookmarksTitle,
+      children: [{
+        guid: "bookmarkBBBB",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "B",
+        url: "http://example.com/b",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.mobileGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 4,
+      title: MobileBookmarksTitle,
+    }],
+  }, "Should not corrupt local roots");
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
 add_task(async function test_missing_children() {
   let buf = await openMirror("missing_childen");
 

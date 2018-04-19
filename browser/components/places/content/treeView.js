@@ -1789,7 +1789,7 @@ PlacesTreeView.prototype = {
     // have no reason to disallow renaming a shortcut to the Bookmarks Toolbar,
     // except for the one under All Bookmarks.
     if (PlacesUtils.nodeIsSeparator(node) || PlacesUtils.isRootItem(itemGuid) ||
-        PlacesUtils.isQueryGeneratedFolder(itemGuid))
+        PlacesUtils.isQueryGeneratedFolder(node))
       return false;
 
     return true;

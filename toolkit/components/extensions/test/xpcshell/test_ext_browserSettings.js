@@ -212,6 +212,13 @@ add_task(async function test_browser_settings() {
     {"browser.search.openintab": false});
 
   await testSetting(
+    "openUrlbarResultsInNewTabs", true,
+    {"browser.urlbar.openintab": true});
+  await testSetting(
+    "openUrlbarResultsInNewTabs", false,
+    {"browser.urlbar.openintab": false});
+
+  await testSetting(
     "overrideDocumentColors", "high-contrast-only",
     {"browser.display.document_color_use": 0});
   await testSetting(

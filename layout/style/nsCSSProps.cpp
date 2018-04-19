@@ -59,15 +59,13 @@ extern const char* const kCSSRawProperties[];
 
 // define an array of all CSS properties
 const char* const kCSSRawProperties[eCSSProperty_COUNT_with_aliases] = {
-#define CSS_PROP(name_, ...) #name_,
-#include "nsCSSPropList.h"
-#undef CSS_PROP
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) #name_,
-#include "nsCSSPropList.h"
-#undef CSS_PROP_SHORTHAND
-#define CSS_PROP_ALIAS(aliasname_, aliasid_, id_, method_, pref_) #aliasname_,
-#include "nsCSSPropAliasList.h"
+#define CSS_PROP_LONGHAND(name_, ...) #name_,
+#define CSS_PROP_SHORTHAND(name_, ...) #name_,
+#define CSS_PROP_ALIAS(name_, ...) #name_,
+#include "mozilla/ServoCSSPropList.h"
 #undef CSS_PROP_ALIAS
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP_LONGHAND
 };
 
 using namespace mozilla;
@@ -128,7 +126,7 @@ enum {
 static nsCSSPropertyID gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
 #define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_)  \
   eCSSProperty_##propid_ ,
-#include "nsCSSPropAliasList.h"
+#include "mozilla/ServoCSSPropList.h"
 #undef CSS_PROP_ALIAS
 };
 
@@ -146,6 +144,94 @@ CreateStaticTable(const char* const aRawTable[], int32_t aLength)
 #endif
   return table;
 }
+
+#ifdef DEBUG
+static void
+CheckServoCSSPropList()
+{
+  struct PropData {
+    nsCSSPropertyID mID;
+    uint32_t mFlags;
+    const char* mPref;
+  };
+  const PropData sGeckoProps[eCSSProperty_COUNT_with_aliases] = {
+#define CSS_PROP(name_, id_, method_, flags_, pref_, ...) \
+    { eCSSProperty_##id_, flags_, pref_ },
+#include "nsCSSPropList.h"
+#undef CSS_PROP
+
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
+    { eCSSProperty_##id_, flags_, pref_ },
+#include "nsCSSPropList.h"
+#undef CSS_PROP_SHORTHAND
+
+#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_) \
+    { eCSSPropertyAlias_##aliasid_, 0, pref_ },
+#include "nsCSSPropAliasList.h"
+#undef CSS_PROP_ALIAS
+  };
+  const PropData sServoProps[eCSSProperty_COUNT_with_aliases] = {
+#define CSS_PROP_LONGHAND(name_, id_, method_, flags_, pref_) \
+    { eCSSProperty_##id_, flags_, pref_ },
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
+    { eCSSProperty_##id_, flags_, pref_ },
+#define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
+    { eCSSPropertyAlias_##aliasid_, 0, pref_ },
+#include "mozilla/ServoCSSPropList.h"
+#undef CSS_PROP_ALIAS
+#undef CSS_PROP_SHORTHAND
+#undef CSS_PROP_LONGHAND
+  };
+
+  const uint32_t kServoFlags =
+    CSS_PROPERTY_ENABLED_MASK | CSS_PROPERTY_INTERNAL |
+    CSS_PROPERTY_PARSE_INACCESSIBLE;
+  bool mismatch = false;
+  for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; i++) {
+    auto& geckoData = sGeckoProps[i];
+    auto& servoData = sServoProps[i];
+    const char* name = nsCSSProps::GetStringValue(geckoData.mID).get();
+    if (geckoData.mID != servoData.mID) {
+      printf_stderr("Order mismatches: gecko: %s, servo: %s\n",
+                    name, nsCSSProps::GetStringValue(servoData.mID).get());
+      mismatch = true;
+      continue;
+    }
+    if ((geckoData.mFlags & kServoFlags) != servoData.mFlags) {
+      printf_stderr("Enabled flags of %s mismatch\n", name);
+      mismatch = true;
+    }
+    if (strcmp(geckoData.mPref, servoData.mPref) != 0) {
+      printf_stderr("Pref of %s mismatches\n", name);
+      mismatch = true;
+    }
+  }
+
+  const nsCSSPropertyID sGeckoAliases[eCSSAliasCount] = {
+#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_) \
+    eCSSProperty_##propid_,
+#include "nsCSSPropAliasList.h"
+#undef CSS_PROP_ALIAS
+  };
+  const nsCSSPropertyID sServoAliases[eCSSAliasCount] = {
+#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_) \
+    eCSSProperty_##propid_,
+#include "mozilla/ServoCSSPropList.h"
+#undef CSS_PROP_ALIAS
+  };
+  for (size_t i = 0; i < eCSSAliasCount; i++) {
+    if (sGeckoAliases[i] == sServoAliases[i]) {
+      continue;
+    }
+    nsCSSPropertyID aliasid = nsCSSPropertyID(eCSSProperty_COUNT + i);
+    printf_stderr("Original property of alias %s mismatches\n",
+                  nsCSSProps::GetStringValue(aliasid).get());
+    mismatch = true;
+  }
+
+  MOZ_ASSERT(!mismatch);
+}
+#endif
 
 void
 nsCSSProps::AddRefTable(void)
@@ -171,6 +257,10 @@ nsCSSProps::AddRefTable(void)
       }
     }
 
+#ifdef DEBUG
+    CheckServoCSSPropList();
+#endif
+
     static bool prefObserversInited = false;
     if (!prefObserversInited) {
       prefObserversInited = true;
@@ -181,20 +271,16 @@ nsCSSProps::AddRefTable(void)
                                        pref_);                                \
         }
 
-      #define CSS_PROP(name_, id_, method_, flags_, pref_, ...) \
+      #define CSS_PROP_LONGHAND(name_, id_, method_, flags_, pref_) \
         OBSERVE_PROP(pref_, eCSSProperty_##id_)
-      #include "nsCSSPropList.h"
-      #undef CSS_PROP
-
-      #define  CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
+      #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
         OBSERVE_PROP(pref_, eCSSProperty_##id_)
-      #include "nsCSSPropList.h"
-      #undef CSS_PROP_SHORTHAND
-
-      #define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_)    \
-        OBSERVE_PROP(pref_, eCSSPropertyAlias_##aliasmethod_)
-      #include "nsCSSPropAliasList.h"
+      #define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, pref_) \
+        OBSERVE_PROP(pref_, eCSSPropertyAlias_##aliasid_)
+      #include "mozilla/ServoCSSPropList.h"
       #undef CSS_PROP_ALIAS
+      #undef CSS_PROP_SHORTHAND
+      #undef CSS_PROP_LONGHAND
 
       #undef OBSERVE_PROP
     }
@@ -2732,22 +2818,17 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
   // If the property has "ENABLED_IN" flags but doesn't have a pref,
   // it is an internal property which is disabled elsewhere.
   #define IS_ENABLED_BY_DEFAULT(flags_) \
-    (!((flags_) & CSS_PROPERTY_ENABLED_MASK))
+    (!((flags_) & (CSS_PROPERTY_ENABLED_MASK | CSS_PROPERTY_PARSE_INACCESSIBLE)))
 
-  #define CSS_PROP(name_, id_, method_, flags_, ...) \
+  #define CSS_PROP_LONGHAND(name_, id_, method_, flags_, ...) \
     IS_ENABLED_BY_DEFAULT(flags_),
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP
-
-  #define  CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
+  #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, ...) \
     IS_ENABLED_BY_DEFAULT(flags_),
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_SHORTHAND
-
-  #define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_) \
-    true,
-  #include "nsCSSPropAliasList.h"
+  #define CSS_PROP_ALIAS(...) true,
+  #include "mozilla/ServoCSSPropList.h"
   #undef CSS_PROP_ALIAS
+  #undef CSS_PROP_SHORTHAND
+  #undef CSS_PROP_LONGHAND
 
   #undef IS_ENABLED_BY_DEFAULT
 };
@@ -2757,10 +2838,15 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
 /* static */ const UseCounter
 nsCSSProps::gPropertyUseCounter[eCSSProperty_COUNT_no_shorthands] = {
   #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) privatename_
-  #define CSS_PROP(name_, id_, method_, ...) \
+  // Need an extra level of macro nesting to force expansion of method_
+  // params before they get pasted.
+  #define CSS_PROP_USE_COUNTER(method_) \
     static_cast<UseCounter>(USE_COUNTER_FOR_CSS_PROPERTY_##method_),
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP
+  #define CSS_PROP_LONGHAND(name_, id_, method_, ...) \
+    CSS_PROP_USE_COUNTER(method_)
+  #include "mozilla/ServoCSSPropList.h"
+  #undef CSS_PROP_LONGHAND
+  #undef CSS_PROP_USE_COUNTER
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
 };
 

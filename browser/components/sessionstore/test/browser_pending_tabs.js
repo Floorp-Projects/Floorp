@@ -26,7 +26,7 @@ add_task(async function() {
   await TabStateFlusher.flush(browser);
 
   // Check that the shistory index is the one we restored.
-  let tabState = TabState.collect(tab);
+  let tabState = TabState.collect(tab, ss.getInternalObjectState(tab));
   is(tabState.index, TAB_STATE.index, "correct shistory index");
 
   // Check we don't collect userTypedValue when we shouldn't.

@@ -14,6 +14,7 @@ const SESSION = {
 
 add_task(async function() {
   SessionStore.setBrowserState(JSON.stringify(SESSION));
+  await promiseWindowRestored(window);
   const tab = gBrowser.tabs[1];
 
   is(tab.getAttribute("pending"), "true", "The tab is pending restore");

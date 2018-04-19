@@ -112,7 +112,7 @@ var CaptivePortalWatcher = {
       return;
     }
 
-    let win = RecentWindow.getMostRecentBrowserWindow();
+    let win = BrowserWindowTracker.getTopWindow();
     // If no browser window has focus, open and show the tab when we regain focus.
     // This is so that if a different application was focused, when the user
     // (re-)focuses a browser window, we open the tab immediately in that window
@@ -135,7 +135,7 @@ var CaptivePortalWatcher = {
       return;
     }
 
-    let win = RecentWindow.getMostRecentBrowserWindow();
+    let win = BrowserWindowTracker.getTopWindow();
     if (win != Services.ww.activeWindow) {
       // The window that got focused was not a browser window.
       return;
