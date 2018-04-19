@@ -11,7 +11,7 @@ function test() {
     tabContent: "test closing toolbox and then reusing scratchpad"
   };
   openTabAndScratchpad(options)
-    .then(Task.async(runTests))
+    .then(runTests)
     .then(finish, console.error);
 }
 
