@@ -324,6 +324,11 @@ function testUnsupportedValue(propertyName, cssText) {
     element2.attributeStyleMap.set(propertyName, result);
     assert_equals(element2.style[propertyName], element1.style[propertyName],
       'Unsupported value can be set on different element');
+
+    const resultAll = element2.attributeStyleMap.getAll(propertyName);
+    assert_style_value_equals(resultAll[0], result,
+      `getAll() with single unsupported value returns single-item list ` +
+      `with same result as get()`);
   }, `'${propertyName}' does not supported '${cssText}'`);
 }
 
