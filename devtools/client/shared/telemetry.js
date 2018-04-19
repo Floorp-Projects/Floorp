@@ -557,6 +557,33 @@ class Telemetry {
   }
 
   /**
+   * Adds expected properties for either a current or future pending event.
+   * This means that if preparePendingEvent() is called before or after sending
+   * the event properties they will automatically added to the event.
+   *
+   * @param {String} category
+   *        The telemetry event category (a group name for events and helps to
+   *        avoid name conflicts) e.g. "devtools.main"
+   * @param {String} method
+   *        The telemetry event method (describes the type of event that
+   *        occurred e.g. "open")
+   * @param {String} object
+   *        The telemetry event object name (the name of the object the event
+   *        occurred on) e.g. "tools" or "setting"
+   * @param {String|null} value
+   *        The telemetry event value (a user defined value, providing context
+   *        for the event) e.g. "console"
+   * @param {String} pendingObject
+   *        An object containing key, value pairs that should be added to the
+   *        event as properties.
+   */
+  addEventProperties(category, method, object, value, pendingObject) {
+    for (let [key, val] of Object.entries(pendingObject)) {
+      this.addEventProperty(category, method, object, value, key, val);
+    }
+  }
+
+  /**
    * Send a telemetry event.
    *
    * @param {String} category

@@ -30,6 +30,7 @@ loader.lazyRequireGetter(this, "CONSOLE_WORKER_IDS", "devtools/server/actors/web
 loader.lazyRequireGetter(this, "WebConsoleUtils", "devtools/server/actors/webconsole/utils", true);
 loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 
 // Overwrite implemented listeners for workers so that we don't attempt
 // to load an unsupported module.
@@ -74,6 +75,8 @@ function WebConsoleActor(connection, parentActor) {
   this._gripDepth = 0;
   this._listeners = new Set();
   this._lastConsoleInputEvaluation = undefined;
+
+  this._telemetry = new Telemetry();
 
   this.objectGrip = this.objectGrip.bind(this);
   this._onWillNavigate = this._onWillNavigate.bind(this);
@@ -861,6 +864,9 @@ WebConsoleActor.prototype =
         }
       }
     }
+
+    this._telemetry.addEventProperty(
+      "devtools.main", "enter", "webconsole", null, "message_count", messages.length);
 
     return {
       from: this.actorID,
