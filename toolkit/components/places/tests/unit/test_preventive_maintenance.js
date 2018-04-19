@@ -346,34 +346,6 @@ tests.push({
 });
 
 // ------------------------------------------------------------------------------
-tests.push({
-  name: "C.1",
-  desc: "fix missing Places root",
-
-  setup() {
-    // Sanity check: ensure that roots are intact.
-    Assert.equal(bs.getFolderIdForItem(bs.placesRoot), 0);
-    Assert.equal(bs.getFolderIdForItem(bs.bookmarksMenuFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.tagsFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.unfiledBookmarksFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
-
-    // Remove the root.
-    mDBConn.executeSimpleSQL("DELETE FROM moz_bookmarks WHERE parent = 0");
-    let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE parent = 0");
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
-  },
-
-  check() {
-    // Ensure the roots have been correctly restored.
-    Assert.equal(bs.getFolderIdForItem(bs.placesRoot), 0);
-    Assert.equal(bs.getFolderIdForItem(bs.bookmarksMenuFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.tagsFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.unfiledBookmarksFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
-  }
-});
 
 tests.push({
   name: "C.1",
