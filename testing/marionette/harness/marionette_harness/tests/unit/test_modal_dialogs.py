@@ -41,8 +41,6 @@ class TestTabModalAlerts(BaseAlertTestCase):
         self.marionette.navigate(self.marionette.absolute_url("test_tab_modal_dialogs.html"))
 
     def tearDown(self):
-        self.marionette.execute_script("window.onbeforeunload = null;")
-
         # Ensure to close a possible remaining tab modal dialog
         try:
             alert = self.marionette.switch_to_alert()
@@ -172,33 +170,6 @@ class TestTabModalAlerts(BaseAlertTestCase):
         alert.dismiss()
         self.wait_for_condition(
             lambda mn: mn.find_element(By.ID, "prompt-result").text == "null")
-
-    def test_onbeforeunload_dismiss(self):
-        start_url = self.marionette.get_url()
-        self.marionette.find_element(By.ID, "onbeforeunload-handler").click()
-        self.wait_for_condition(
-            lambda mn: mn.execute_script("""
-              return window.onbeforeunload !== null;
-            """))
-        self.marionette.navigate("about:blank")
-        self.wait_for_alert()
-        alert = self.marionette.switch_to_alert()
-        self.assertTrue(alert.text.startswith("This page is asking you to confirm"))
-        alert.dismiss()
-        self.assertTrue(self.marionette.get_url().startswith(start_url))
-
-    def test_onbeforeunload_accept(self):
-        self.marionette.find_element(By.ID, "onbeforeunload-handler").click()
-        self.wait_for_condition(
-            lambda mn: mn.execute_script("""
-              return window.onbeforeunload !== null;
-            """))
-        self.marionette.navigate("about:blank")
-        self.wait_for_alert()
-        alert = self.marionette.switch_to_alert()
-        self.assertTrue(alert.text.startswith("This page is asking you to confirm"))
-        alert.accept()
-        self.wait_for_condition(lambda mn: mn.get_url() == "about:blank")
 
     def test_unrelated_command_when_alert_present(self):
         self.marionette.find_element(By.ID, "tab-modal-alert").click()

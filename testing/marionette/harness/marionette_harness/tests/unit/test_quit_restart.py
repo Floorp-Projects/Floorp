@@ -4,8 +4,15 @@
 
 from __future__ import absolute_import, print_function
 
+import urllib
+
 from marionette_driver import errors
+from marionette_driver.by import By
 from marionette_harness import MarionetteTestCase, skip
+
+
+def inline(doc):
+    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
 
 
 class TestServerQuitApplication(MarionetteTestCase):
@@ -284,6 +291,20 @@ class TestQuitRestart(MarionetteTestCase):
     def test_in_app_quit_with_callback_not_callable(self):
         with self.assertRaisesRegexp(ValueError, "is not callable"):
             self.marionette.restart(in_app=True, callback=4)
+
+    def test_in_app_quit_with_dismissed_beforeunload_prompt(self):
+        self.marionette.navigate(inline("""
+          <input type="text">
+          <script>
+            window.addEventListener("beforeunload", function (event) {
+              event.preventDefault();
+            });
+          </script>
+        """))
+
+        self.marionette.find_element(By.TAG_NAME, "input").send_keys("foo")
+        self.marionette.quit(in_app=True)
+        self.marionette.start_session()
 
     @skip("Bug 1363368 - Wrong window handles after in_app restarts")
     def test_reset_context_after_quit_by_set_context(self):
