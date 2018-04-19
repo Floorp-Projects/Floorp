@@ -13,6 +13,7 @@ const PREFERENCE_NAME = "devtools.toolbox.tabsOrder";
 class ToolboxTabsOrderManager {
   constructor(onOrderUpdated) {
     this.onOrderUpdated = onOrderUpdated;
+    this.overflowedTabIds = [];
 
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
@@ -25,6 +26,10 @@ class ToolboxTabsOrderManager {
   destroy() {
     Services.prefs.removeObserver(PREFERENCE_NAME, this.onOrderUpdated);
     this.onMouseUp();
+  }
+
+  setOverflowedTabs(overflowedTabIds) {
+    this.overflowedTabIds = overflowedTabIds;
   }
 
   onMouseDown(e) {
@@ -83,7 +88,9 @@ class ToolboxTabsOrderManager {
     let distance = e.pageX - this.dragStartX;
 
     if ((!this.dragTarget.previousSibling && distance < 0) ||
-        (!this.dragTarget.nextSibling && distance > 0)) {
+        ((!this.dragTarget.nextSibling ||
+          this.dragTarget.nextSibling.id === "tools-chevron-menu-button") &&
+          distance > 0)) {
       // If the drag target is already edge of the tabs and the mouse will make the
       // element to move to same direction more, keep the position.
       distance = 0;
@@ -111,7 +118,8 @@ class ToolboxTabsOrderManager {
     if (this.isOrderUpdated) {
       const ids =
         [...this.toolboxTabsElement.querySelectorAll(".devtools-tab")]
-          .map(tabElement => tabElement.dataset.id);
+          .map(tabElement => tabElement.dataset.id)
+          .concat(this.overflowedTabIds);
       const pref = ids.join(",");
       Services.prefs.setCharPref(PREFERENCE_NAME, pref);
     }
