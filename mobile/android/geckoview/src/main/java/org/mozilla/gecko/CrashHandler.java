@@ -297,7 +297,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
             final Context context = getAppContext();
             final String javaPkg = getJavaPackageName();
             final String pkg = getAppPackageName();
-            final String component = javaPkg + ".CrashReporter";
+            final String component = javaPkg + ".CrashReporterService";
             final String action = javaPkg + ".reportCrash";
             final ProcessBuilder pb;
 
@@ -305,8 +305,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
                 final Intent intent = new Intent(action);
                 intent.setComponent(new ComponentName(pkg, component));
                 intent.putExtra("minidumpPath", dumpFile);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
+                context.startService(intent);
                 return true;
             }
 
