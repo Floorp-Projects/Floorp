@@ -14,22 +14,13 @@ import mozinfo
 from manifestparser import TestManifest
 from mozharness.base.script import PostScriptAction
 
-verify_config_options = [
-    [["--verify"],
-     {"action": "store_true",
-      "dest": "verify",
-      "default": "False",
-      "help": "Run additional verification on modified tests."
-      }],
-]
 
-
-class VerifyToolsMixin(object):
-    """Utility functions for test verification."""
+class SingleTestMixin(object):
+    """Utility functions for per-test testing like test verification and per-test coverage."""
 
     def __init__(self):
-        self.verify_suites = {}
-        self.verify_downloaded = False
+        self.suites = {}
+        self.tests_downloaded = False
         self.reftest_test_dir = None
         self.jsreftest_test_dir = None
 
@@ -47,7 +38,7 @@ class VerifyToolsMixin(object):
                 man = TestManifest([path], strict=False)
                 active = man.active_tests(exists=False, disabled=True, filters=[], **mozinfo.info)
                 # Remove disabled tests. Also, remove tests with the same path as
-                # disabled tests, even if they are not disabled, since test-verify
+                # disabled tests, even if they are not disabled, since per-test mode
                 # specifies tests by path (it cannot distinguish between two or more
                 # tests with the same path specified in multiple manifests).
                 disabled = [t['relpath'] for t in active if 'disabled' in t]
@@ -55,7 +46,7 @@ class VerifyToolsMixin(object):
                                for t in active if 'disabled' not in t and \
                                t['relpath'] not in disabled}
                 tests_by_path.update(new_by_path)
-                self.info("Verification updated with manifest %s" % path)
+                self.info("Per-test run updated with manifest %s" % path)
 
         ref_manifests = [
             (os.path.join(dirs['abs_reftest_dir'], 'tests', 'layout', 'reftests', 'reftest.list'), 'reftest'),
@@ -69,7 +60,7 @@ class VerifyToolsMixin(object):
                 man = manifest.ReftestManifest()
                 man.load(path)
                 tests_by_path.update({os.path.relpath(t,self.reftest_test_dir):(suite,None) for t in man.files})
-                self.info("Verification updated with manifest %s" % path)
+                self.info("Per-test run updated with manifest %s" % path)
 
         suite = 'jsreftest'
         self.jsreftest_test_dir = os.path.join(dirs['abs_test_install_dir'], 'jsreftest', 'tests')
@@ -89,7 +80,7 @@ class VerifyToolsMixin(object):
                     tests_by_path.update({relpath:(suite,None)})
                 else:
                     self.warning("unexpected jsreftest test format: %s" % str(t))
-            self.info("Verification updated with manifest %s" % path)
+            self.info("Per-test run updated with manifest %s" % path)
 
         # for each changed file, determine if it is a test file, and what suite it is in
         for file in changed_files:
@@ -98,7 +89,7 @@ class VerifyToolsMixin(object):
             file = file.replace(posixpath.sep, os.sep)
             entry = tests_by_path.get(file)
             if entry:
-                self.info("Verification found test %s" % file)
+                self.info("Per-test run found test %s" % file)
                 subsuite_mapping = {
                     ('browser-chrome', 'clipboard') : 'browser-chrome-clipboard',
                     ('chrome', 'clipboard') : 'chrome-clipboard',
@@ -115,11 +106,11 @@ class VerifyToolsMixin(object):
                     suite = subsuite_mapping[entry]
                 else:
                     suite = entry[0]
-                suite_files = self.verify_suites.get(suite)
+                suite_files = self.suites.get(suite)
                 if not suite_files:
                     suite_files = []
                 suite_files.append(file)
-                self.verify_suites[suite] = suite_files
+                self.suites[suite] = suite_files
 
     def _find_wpt_tests(self, dirs, changed_files):
         # Setup sys.path to include all the dependencies required to import
@@ -146,31 +137,26 @@ class VerifyToolsMixin(object):
             repo_path = repo_path.replace(os.sep, posixpath.sep)
             if repo_path in changed_files:
                 self.info("found web-platform test file '%s', type %s" % (path, type))
-                suite_files = self.verify_suites.get(type)
+                suite_files = self.suites.get(type)
                 if not suite_files:
                     suite_files = []
                 path = os.path.join(tests_path, path)
                 suite_files.append(path)
-                self.verify_suites[type] = suite_files
+                self.suites[type] = suite_files
 
-    @PostScriptAction('download-and-extract')
-    def find_tests_for_verification(self, action, success=None):
+    def find_modified_tests(self):
         """
            For each file modified on this push, determine if the modified file
-           is a test, by searching test manifests. Populate self.verify_suites
+           is a test, by searching test manifests. Populate self.suites
            with test files, organized by suite.
 
            This depends on test manifests, so can only run after test zips have
            been downloaded and extracted.
         """
-
-        if self.config.get('verify') != True:
-            return
-
         repository = os.environ.get("GECKO_HEAD_REPOSITORY")
         revision = os.environ.get("GECKO_HEAD_REV")
         if not repository or not revision:
-            self.warning("unable to verify tests: no repo or revision!")
+            self.warning("unable to run tests in per-test mode: no repo or revision!")
             return []
 
         def get_automationrelevance():
@@ -186,7 +172,7 @@ class VerifyToolsMixin(object):
         # FIXME(emilio): Need to update test expectations.
         mozinfo.update({'stylo': True})
         mozinfo.update({'verify': True})
-        self.info("Verification using mozinfo: %s" % str(mozinfo.info))
+        self.info("Per-test run using mozinfo: %s" % str(mozinfo.info))
 
         # determine which files were changed on this push
         url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'), revision)
@@ -198,91 +184,93 @@ class VerifyToolsMixin(object):
                 desc=c['desc'].splitlines()[0].encode('ascii', 'ignore')))
             changed_files |= set(c['files'])
 
-        if self.config.get('verify_category') == "web-platform":
+        if self.config.get('per_test_category') == "web-platform":
             self._find_wpt_tests(dirs, changed_files)
         else:
             self._find_misc_tests(dirs, changed_files)
 
-        self.verify_downloaded = True
+        self.tests_downloaded = True
 
-    def query_verify_args(self, suite):
+    def query_args(self, suite):
         """
            For the specified suite, return an array of command line arguments to
-           be passed to test harnesses when running in verify mode.
+           be passed to test harnesses when running in per-test mode.
 
            Each array element is an array of command line arguments for a modified
            test in the suite.
         """
+        # not in verify or per-test coverage mode: run once, with no additional args
+        if not self.per_test_coverage and not self.verify_enabled:
+            return [[]]
 
-        # Limit each test harness run to 15 minutes, to avoid task timeouts
-        # when verifying long-running tests.
-        MAX_TIME_PER_TEST = 900
+        references = re.compile(r"(-ref|-notref|-noref|-noref.)\.")
+        files = []
+        jsreftest_extra_dir = os.path.join('js', 'src', 'tests')
+        # For some suites, the test path needs to be updated before passing to
+        # the test harness.
+        for file in self.suites.get(suite):
+            if (self.config.get('per_test_category') != "web-platform" and
+                suite in ['reftest', 'crashtest']):
+                file = os.path.join(self.reftest_test_dir, file)
+                if suite == 'reftest':
+                    # Special handling for modified reftest reference files:
+                    #  - if both test and reference modified, run the test file
+                    #  - if only reference modified, run the test file
+                    nonref = references.sub('.', file)
+                    if nonref != file:
+                        file = None
+                        if nonref not in files and os.path.exists(nonref):
+                            file = nonref
+            elif (self.config.get('per_test_category') != "web-platform" and
+                  suite == 'jsreftest'):
+                file = os.path.relpath(file, jsreftest_extra_dir)
+                file = os.path.join(self.jsreftest_test_dir, file)
 
-        if self.config.get('verify') != True:
-            # not in verify mode: run once, with no additional args
-            args = [[]]
-        else:
-            # in verify mode, run nothing by default (unsupported suite or no files modified)
-            args = []
-            # otherwise, run once for each file in requested suite
-            references = re.compile(r"(-ref|-notref|-noref|-noref.)\.")
-            files = []
-            jsreftest_extra_dir = os.path.join('js', 'src', 'tests')
-            # For some suites, the test path needs to be updated before passing to
-            # the test harness.
-            for file in self.verify_suites.get(suite):
-                if (self.config.get('verify_category') != "web-platform" and
-                    suite in ['reftest', 'crashtest']):
-                    file = os.path.join(self.reftest_test_dir, file)
-                elif (self.config.get('verify_category') != "web-platform" and
-                      suite == 'jsreftest'):
-                    file = os.path.relpath(file, jsreftest_extra_dir)
-                    file = os.path.join(self.jsreftest_test_dir, file)
-                file = file.replace(os.sep, posixpath.sep)
-                files.append(file)
-            for file in files:
-                if self.config.get('verify_category') == "web-platform":
-                    args.append(['--verify-log-full', '--verify', file])
-                else:
-                    if suite == 'reftest':
-                        # Special handling for modified reftest reference files:
-                        #  - if both test and reference modified, verify the test file
-                        #  - if only reference modified, verify the test file
-                        nonref = references.sub('.', file)
-                        if nonref != file:
-                            file = None
-                            if nonref not in files and os.path.exists(nonref):
-                                file = nonref
-                    if file:
-                        args.append(['--verify-max-time=%d' % MAX_TIME_PER_TEST, '--verify', file])
-            self.info("Verification file(s) for '%s': %s" % (suite, files))
+            if file is None:
+                continue
+
+            file = file.replace(os.sep, posixpath.sep)
+            files.append(file)
+
+        self.info("Per-test file(s) for '%s': %s" % (suite, files))
+
+        args = []
+        for file in files:
+            cur = []
+
+            cur.extend(self.coverage_args)
+            cur.extend(self.verify_args)
+
+            cur.append(file)
+            args.append(cur)
+
         return args
 
-    def query_verify_category_suites(self, category, all_suites):
+    def query_per_test_category_suites(self, category, all_suites):
         """
-           In verify mode, determine which suites are active, for the given
+           In per-test mode, determine which suites are active, for the given
            suite category.
         """
         suites = None
-        if self.config.get('verify') == True:
-            if self.config.get('verify_category') == "web-platform":
-                suites = self.verify_suites.keys()
-            elif all_suites and self.verify_downloaded:
+        if self.verify_enabled or self.per_test_coverage:
+            if self.config.get('per_test_category') == "web-platform":
+                suites = self.suites.keys()
+            elif all_suites and self.tests_downloaded:
                 suites = dict((key, all_suites.get(key)) for key in
-                    self.verify_suites if key in all_suites.keys())
+                    self.suites if key in all_suites.keys())
             else:
                 # Until test zips are downloaded, manifests are not available,
                 # so it is not possible to determine which suites are active/
-                # required for verification; assume all suites from supported
+                # required for per-test mode; assume all suites from supported
                 # suite categories are required.
                 if category in ['mochitest', 'xpcshell', 'reftest']:
                     suites = all_suites
         return suites
 
-    def log_verify_status(self, test_name, tbpl_status, log_level):
+    def log_per_test_status(self, test_name, tbpl_status, log_level):
         """
-           Log verification status of a single test. This will display in the
-           Job Details pane in treeherder - a convenient summary of verification.
+           Log status of a single test. This will display in the
+           Job Details pane in treeherder - a convenient summary of per-test mode.
            Special test name formatting is needed because treeherder truncates
            lines that are too long, and may remove duplicates after truncation.
         """
@@ -298,6 +286,6 @@ class VerifyToolsMixin(object):
                 new = os.path.join(tail, new)
             test_name = os.path.join('...', previous or new)
             test_name = test_name.rstrip(os.path.sep)
-        self.log("TinderboxPrint: Verification of %s<br/>: %s" %
+        self.log("TinderboxPrint: Per-test run of %s<br/>: %s" %
                  (test_name, tbpl_status), level=log_level)
 
