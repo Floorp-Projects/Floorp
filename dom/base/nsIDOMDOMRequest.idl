@@ -8,6 +8,7 @@
 
 interface mozIDOMWindow;
 interface nsICursorContinueCallback;
+webidl DOMRequest;
 
 [shim(DOMRequest), uuid(e39da69e-2232-4e49-9856-b8a4a6210336)]
 interface nsIDOMDOMRequest : nsIDOMEventTarget
@@ -23,10 +24,10 @@ interface nsIDOMDOMRequest : nsIDOMEventTarget
 [scriptable, builtinclass, uuid(9a57e5de-ce93-45fa-8145-755722834f7c)]
 interface nsIDOMRequestService : nsISupports
 {
-  nsIDOMDOMRequest createRequest(in mozIDOMWindow window);
+  DOMRequest createRequest(in mozIDOMWindow window);
 
-  void fireSuccess(in nsIDOMDOMRequest request, in jsval result);
-  void fireError(in nsIDOMDOMRequest request, in DOMString error);
-  void fireSuccessAsync(in nsIDOMDOMRequest request, in jsval result);
-  void fireErrorAsync(in nsIDOMDOMRequest request, in DOMString error);
+  void fireSuccess(in DOMRequest request, in jsval result);
+  void fireError(in DOMRequest request, in DOMString error);
+  void fireSuccessAsync(in DOMRequest request, in jsval result);
+  void fireErrorAsync(in DOMRequest request, in DOMString error);
 };
