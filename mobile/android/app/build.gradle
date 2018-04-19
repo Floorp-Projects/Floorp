@@ -122,7 +122,7 @@ android {
                 }
 
                 if (!mozconfig.substs.MOZ_CRASHREPORTER) {
-                    exclude 'org/mozilla/gecko/CrashReporter.java'
+                    exclude 'org/mozilla/gecko/CrashReporterActivity.java'
                 }
 
                 if (!mozconfig.substs.MOZ_NATIVE_DEVICES) {

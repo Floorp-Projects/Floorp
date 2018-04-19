@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.mozilla.geckoview">
+          package="org.mozilla.geckoview">
 
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
@@ -12,62 +13,88 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
     <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT"/>
-
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
 
-    <uses-feature android:name="android.hardware.location" android:required="false"/>
-    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
+    <uses-feature
+            android:name="android.hardware.location"
+            android:required="false"/>
+    <uses-feature
+            android:name="android.hardware.location.gps"
+            android:required="false"/>
     <uses-feature android:name="android.hardware.touchscreen"/>
 
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false"/>
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
 
-    <!--#ifdef MOZ_WEBRTC-->
-    <!-- TODO preprocess AndroidManifest.xml so that we can
-         conditionally include WebRTC permissions based on MOZ_WEBRTC. -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>-->
-    <uses-feature android:name="android.hardware.audio.low_latency" android:required="false"/>-->
-    <uses-feature android:name="android.hardware.microphone" android:required="false"/>-->
-    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>-->
-    <!--#endif-->
+    <uses-feature
+            android:name="android.hardware.camera"
+            android:required="false"/>
+    <uses-feature
+            android:name="android.hardware.camera.autofocus"
+            android:required="false"/>
+
+    <!-- #ifdef MOZ_WEBRTC -->
+    <!--
+         TODO preprocess AndroidManifest.xml so that we can
+         conditionally include WebRTC permissions based on MOZ_WEBRTC.
+    -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    -->
+    <uses-feature
+            android:name="android.hardware.audio.low_latency"
+            android:required="false"/>
+    -->
+    <uses-feature
+            android:name="android.hardware.microphone"
+            android:required="false"/>
+    -->
+    <uses-feature
+            android:name="android.hardware.camera.any"
+            android:required="false"/>
+    -->
+    <!-- #endif -->
+
 
     <!-- App requires OpenGL ES 2.0 -->
-    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+    <uses-feature
+            android:glEsVersion="0x00020000"
+            android:required="true"/>
 
     <application>
+
         <!-- New child services must also be added to the Fennec AndroidManifest.xml.in -->
         <service
-            android:name="org.mozilla.gecko.media.MediaManager"
-            android:enabled="true"
-            android:exported="false"
-            android:process=":media"
-            android:isolatedProcess="false">
+                android:name="org.mozilla.gecko.media.MediaManager"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false"
+                android:process=":media">
         </service>
-
         <service
-            android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$geckomediaplugin"
-            android:enabled="true"
-            android:exported="false"
-            android:process=":geckomediaplugin"
-            android:isolatedProcess="false">
+                android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$geckomediaplugin"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false"
+                android:process=":geckomediaplugin">
         </service>
-
         <service
-            android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$tab"
-            android:enabled="true"
-            android:exported="false"
-            android:process=":tab"
-            android:isolatedProcess="false">
+                android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$tab"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false"
+                android:process=":tab">
         </service>
-
         <service
-            android:name="org.mozilla.gecko.gfx.SurfaceAllocatorService"
-            android:enabled="true"
-            android:exported="false"
-            android:isolatedProcess="false">
+                android:name="org.mozilla.gecko.gfx.SurfaceAllocatorService"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false">
         </service>
-   </application>
+        <service
+                android:name="org.mozilla.gecko.CrashReporterService"
+                android:exported="false"
+                android:process=":crashreporter">
+        </service>
+    </application>
 
 </manifest>

@@ -64,7 +64,7 @@
     </issue>
 
     <!-- We fixed all "Registered" lint errors. However the current gradle plugin has a bug where
-         it ignores @SuppressLint annotations for this check. See CrashReporter class and
+         it ignores @SuppressLint annotations for this check. See CrashReporterActivity class and
          https://code.google.com/p/android/issues/detail?id=204846 -->
     <issue id="Registered" severity="warning" />
 
