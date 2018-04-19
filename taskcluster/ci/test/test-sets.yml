@@ -114,8 +114,6 @@ linux-qr-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
-    - test-verify
-    - test-verify-wpt
     - xpcshell
 
 linux-talos-profiling:
@@ -145,7 +143,6 @@ windows-qr-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
-    - test-verify
 
 windows-qr-talos:
     - talos-chrome

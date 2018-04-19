@@ -66,7 +66,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(DOMRequest,
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMRequest)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMRequest)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(DOMRequest, DOMEventTargetHelper)
@@ -76,38 +75,6 @@ NS_IMPL_RELEASE_INHERITED(DOMRequest, DOMEventTargetHelper)
 DOMRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return DOMRequestBinding::Wrap(aCx, this, aGivenProto);
-}
-
-NS_IMETHODIMP
-DOMRequest::GetReadyState(nsAString& aReadyState)
-{
-  DOMRequestReadyState readyState = ReadyState();
-  switch (readyState) {
-    case DOMRequestReadyState::Pending:
-      aReadyState.AssignLiteral("pending");
-      break;
-    case DOMRequestReadyState::Done:
-      aReadyState.AssignLiteral("done");
-      break;
-    default:
-      MOZ_CRASH("Unrecognized readyState.");
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMRequest::GetResult(JS::MutableHandle<JS::Value> aResult)
-{
-  GetResult(nullptr, aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMRequest::GetError(nsISupports** aError)
-{
-  NS_IF_ADDREF(*aError = static_cast<Exception*>(GetError()));
-  return NS_OK;
 }
 
 void
@@ -237,32 +204,33 @@ NS_IMPL_ISUPPORTS(DOMRequestService, nsIDOMRequestService)
 
 NS_IMETHODIMP
 DOMRequestService::CreateRequest(mozIDOMWindow* aWindow,
-                                 nsIDOMDOMRequest** aRequest)
+                                 DOMRequest** aRequest)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_STATE(aWindow);
   auto* win = nsPIDOMWindowInner::From(aWindow);
-  NS_ADDREF(*aRequest = new DOMRequest(win));
+  RefPtr<DOMRequest> req = new DOMRequest(win);
+  req.forget(aRequest);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMRequestService::FireSuccess(nsIDOMDOMRequest* aRequest,
+DOMRequestService::FireSuccess(DOMRequest* aRequest,
                                JS::Handle<JS::Value> aResult)
 {
   NS_ENSURE_STATE(aRequest);
-  static_cast<DOMRequest*>(aRequest)->FireSuccess(aResult);
+  aRequest->FireSuccess(aResult);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMRequestService::FireError(nsIDOMDOMRequest* aRequest,
+DOMRequestService::FireError(DOMRequest* aRequest,
                              const nsAString& aError)
 {
   NS_ENSURE_STATE(aRequest);
-  static_cast<DOMRequest*>(aRequest)->FireError(aError);
+  aRequest->FireError(aError);
 
   return NS_OK;
 }
@@ -326,20 +294,19 @@ private:
 };
 
 NS_IMETHODIMP
-DOMRequestService::FireSuccessAsync(nsIDOMDOMRequest* aRequest,
+DOMRequestService::FireSuccessAsync(DOMRequest* aRequest,
                                     JS::Handle<JS::Value> aResult)
 {
   NS_ENSURE_STATE(aRequest);
-  return FireSuccessAsyncTask::Dispatch(static_cast<DOMRequest*>(aRequest), aResult);
+  return FireSuccessAsyncTask::Dispatch(aRequest, aResult);
 }
 
 NS_IMETHODIMP
-DOMRequestService::FireErrorAsync(nsIDOMDOMRequest* aRequest,
+DOMRequestService::FireErrorAsync(DOMRequest* aRequest,
                                   const nsAString& aError)
 {
   NS_ENSURE_STATE(aRequest);
-  nsCOMPtr<nsIRunnable> asyncTask =
-    new FireErrorAsyncTask(static_cast<DOMRequest*>(aRequest), aError);
+  nsCOMPtr<nsIRunnable> asyncTask = new FireErrorAsyncTask(aRequest, aError);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(asyncTask));
   return NS_OK;
 }

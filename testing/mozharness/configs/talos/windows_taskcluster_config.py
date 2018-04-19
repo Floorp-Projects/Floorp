@@ -15,11 +15,8 @@ config = {
     "find_links": [
         "http://pypi.pub.build.mozilla.org/pub",
     ],
-    "virtualenv_modules": ['pypiwin32', 'talos', 'mozinstall'],
     "exes": {
         'python': PYTHON,
-        'mozinstall': ['%s/scripts/python' % VENV_PATH,
-                       '%s/scripts/mozinstall-script.py' % VENV_PATH],
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg'),
     },
     "title": socket.gethostname().split('.')[0],

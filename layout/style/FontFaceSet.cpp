@@ -958,6 +958,26 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(FontFace* aFontFace)
                                                SheetType::Doc);
 }
 
+static FontWeight
+GetWeightForDescriptor(const nsCSSValue& aVal)
+{
+  switch (aVal.GetUnit()) {
+    case eCSSUnit_FontWeight:
+      return aVal.GetFontWeight();
+    case eCSSUnit_Enumerated:
+      return FontWeight(aVal.GetIntValue());
+    case eCSSUnit_Normal:
+    case eCSSUnit_Null:
+      return FontWeight::Normal();
+    case eCSSUnit_Pair:
+      // TODO(jfkthame): Handle optional second value of the font descriptor.
+      return GetWeightForDescriptor(aVal.GetPairValue().mXValue);
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown font-weight descriptor value");
+      return FontWeight::Normal();
+  }
+}
+
 /* static */ already_AddRefed<gfxUserFontEntry>
 FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
                                                    FontFace* aFontFace,
@@ -968,7 +988,6 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   nsCSSValue val;
   nsCSSUnit unit;
 
-  FontWeight weight = FontWeight::Normal();
   uint32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
   uint8_t italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
@@ -976,16 +995,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
 
   // set up weight
   aFontFace->GetDesc(eCSSFontDesc_Weight, val);
-  unit = val.GetUnit();
-  if (unit == eCSSUnit_FontWeight) {
-    weight = val.GetFontWeight();
-  } else if (unit == eCSSUnit_Enumerated) {
-    weight = FontWeight(val.GetIntValue());
-  } else if (unit == eCSSUnit_Normal) {
-    weight = FontWeight::Normal();
-  } else {
-    MOZ_ASSERT(unit == eCSSUnit_Null, "@font-face weight has unexpected unit");
-  }
+  FontWeight weight = GetWeightForDescriptor(val);
 
   // set up stretch
   aFontFace->GetDesc(eCSSFontDesc_Stretch, val);
@@ -1237,13 +1247,15 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   nsAutoCString fontURI;
   aUserFontEntry->GetFamilyNameAndURIForLogging(familyName, fontURI);
 
+  nsAutoCString weightString;
+  aUserFontEntry->Weight().ToString(weightString);
   nsPrintfCString message
        ("downloadable font: %s "
-        "(font-family: \"%s\" style:%s weight:%g stretch:%s src index:%d)",
+        "(font-family: \"%s\" style:%s weight:%s stretch:%s src index:%d)",
         aMessage,
         familyName.get(),
         aUserFontEntry->IsItalic() ? "italic" : "normal",
-        aUserFontEntry->Weight().ToFloat(),
+        weightString.get(),
         nsCSSProps::ValueToKeyword(aUserFontEntry->Stretch(),
                                    nsCSSProps::kFontStretchKTable).get(),
         aUserFontEntry->GetSrcIndex());
