@@ -237,6 +237,9 @@ class ManageRecords {
     if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) {
       window.close();
     }
+    if (event.keyCode == KeyEvent.DOM_VK_DELETE) {
+      this.removeRecords(this._selectedOptions);
+    }
   }
 
   observe(subject, topic, data) {

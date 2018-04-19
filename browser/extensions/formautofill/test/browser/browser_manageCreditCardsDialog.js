@@ -74,6 +74,23 @@ add_task(async function test_removingSingleAndMultipleCreditCards() {
   win.close();
 });
 
+add_task(async function test_removingCreditCardsViaKeyboardDelete() {
+  await saveCreditCard(TEST_CREDIT_CARD_1);
+  let win = window.openDialog(MANAGE_CREDIT_CARDS_DIALOG_URL, null, DIALOG_SIZE);
+  await waitForFocusAndFormReady(win);
+
+  let selRecords = win.document.querySelector(TEST_SELECTORS.selRecords);
+
+  is(selRecords.length, 1, "One credit card");
+
+  EventUtils.synthesizeMouseAtCenter(selRecords.children[0], {}, win);
+  EventUtils.synthesizeKey("VK_DELETE", {}, win);
+  await BrowserTestUtils.waitForEvent(selRecords, "RecordsRemoved");
+  is(selRecords.length, 0, "No credit cards left");
+
+  win.close();
+});
+
 add_task(async function test_creditCardsDialogWatchesStorageChanges() {
   let win = window.openDialog(MANAGE_CREDIT_CARDS_DIALOG_URL, null, DIALOG_SIZE);
   await waitForFocusAndFormReady(win);
