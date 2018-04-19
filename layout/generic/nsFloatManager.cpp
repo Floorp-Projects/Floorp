@@ -637,6 +637,13 @@ protected:
   static size_t MinIntervalIndexContainingY(const nsTArray<nsRect>& aIntervals,
                                             const nscoord aTargetY);
 
+  // This interval function is designed to handle the arguments to ::LineLeft()
+  // and LineRight() and interpret them for the supplied aIntervals.
+  static nscoord LineEdge(const nsTArray<nsRect>& aIntervals,
+                          const nscoord aBStart,
+                          const nscoord aBEnd,
+                          bool aIsLineLeft);
+
   // These types, constants, and functions are useful for ShapeInfos that
   // allocate a distance field. Efficient distance field calculations use
   // integer values that are 5X the Euclidean distance. MAX_MARGIN_5X is the
@@ -1446,10 +1453,6 @@ public:
   void Translate(nscoord aLineLeft, nscoord aBlockStart) override;
 
 private:
-  nscoord LineEdge(const nscoord aBStart,
-                   const nscoord aBEnd,
-                   bool aLeft) const;
-
   // An interval is slice of the float area defined by this ImageShapeInfo.
   // Each interval is a rectangle that is one pixel deep in the block
   // axis. The values are stored as block edges in the y coordinates,
@@ -1869,57 +1872,17 @@ nsFloatManager::ImageShapeInfo::CreateInterval(
 }
 
 nscoord
-nsFloatManager::ImageShapeInfo::LineEdge(const nscoord aBStart,
-                                         const nscoord aBEnd,
-                                         bool aLeft) const
-{
-  MOZ_ASSERT(aBStart <= aBEnd,
-             "The band's block start is greater than its block end?");
-
-  // Find all the intervals whose rects overlap the aBStart to
-  // aBEnd range, and find the most constraining inline edge
-  // depending on the value of aLeft.
-
-  // Since the intervals are stored in block-axis order, we need
-  // to find the first interval that overlaps aBStart and check
-  // succeeding intervals until we get past aBEnd.
-
-  nscoord lineEdge = aLeft ? nscoord_MAX : nscoord_MIN;
-
-  size_t intervalCount = mIntervals.Length();
-  for (size_t i = MinIntervalIndexContainingY(mIntervals, aBStart);
-	   i < intervalCount; ++i) {
-    // We can always get the bCoord from the intervals' mLineLeft,
-    // since the y() coordinate is duplicated in both points in the
-    // interval.
-    auto& interval = mIntervals[i];
-    nscoord bCoord = interval.Y();
-    if (bCoord > aBEnd) {
-      break;
-    }
-    // Get the edge from the interval point indicated by aLeft.
-    if (aLeft) {
-      lineEdge = std::min(lineEdge, interval.X());
-    } else {
-      lineEdge = std::max(lineEdge, interval.XMost());
-    }
-  }
-
-  return lineEdge;
-}
-
-nscoord
 nsFloatManager::ImageShapeInfo::LineLeft(const nscoord aBStart,
                                          const nscoord aBEnd) const
 {
-  return LineEdge(aBStart, aBEnd, true);
+  return LineEdge(mIntervals, aBStart, aBEnd, true);
 }
 
 nscoord
 nsFloatManager::ImageShapeInfo::LineRight(const nscoord aBStart,
                                           const nscoord aBEnd) const
 {
-  return LineEdge(aBStart, aBEnd, false);
+  return LineEdge(mIntervals, aBStart, aBEnd, false);
 }
 
 void
@@ -2536,32 +2499,6 @@ nsFloatManager::ShapeInfo::ConvertToFloatLogical(
                  logicalPoint.B(aWM));
 }
 
-/* static */ size_t
-nsFloatManager::ShapeInfo::MinIntervalIndexContainingY(
-  const nsTArray<nsRect>& aIntervals,
-  const nscoord aTargetY)
-{
-  // Perform a binary search to find the minimum index of an interval
-  // that contains aTargetY. If no such interval exists, return a value
-  // equal to the number of intervals.
-  size_t startIdx = 0;
-  size_t endIdx = aIntervals.Length();
-  while (startIdx < endIdx) {
-    size_t midIdx = startIdx + (endIdx - startIdx) / 2;
-    if (aIntervals[midIdx].ContainsY(aTargetY)) {
-      return midIdx;
-    }
-    nscoord midY = aIntervals[midIdx].Y();
-    if (midY < aTargetY) {
-      startIdx = midIdx + 1;
-    } else {
-      endIdx = midIdx;
-    }
-  }
-
-  return endIdx;
-}
-
 /* static */ nsFloatManager::ShapeInfo::dfType
 nsFloatManager::ShapeInfo::CalcUsedShapeMargin5X(
   nscoord aShapeMargin,
@@ -2633,6 +2570,73 @@ nsFloatManager::ShapeInfo::ConvertToFloatLogical(const nscoord aRadii[8],
   }
 
   return logicalRadii;
+}
+
+/* static */ size_t
+nsFloatManager::ShapeInfo::MinIntervalIndexContainingY(
+  const nsTArray<nsRect>& aIntervals,
+  const nscoord aTargetY)
+{
+  // Perform a binary search to find the minimum index of an interval
+  // that contains aTargetY. If no such interval exists, return a value
+  // equal to the number of intervals.
+  size_t startIdx = 0;
+  size_t endIdx = aIntervals.Length();
+  while (startIdx < endIdx) {
+    size_t midIdx = startIdx + (endIdx - startIdx) / 2;
+    if (aIntervals[midIdx].ContainsY(aTargetY)) {
+      return midIdx;
+    }
+    nscoord midY = aIntervals[midIdx].Y();
+    if (midY < aTargetY) {
+      startIdx = midIdx + 1;
+    } else {
+      endIdx = midIdx;
+    }
+  }
+
+  return endIdx;
+}
+
+/* static */ nscoord
+nsFloatManager::ShapeInfo::LineEdge(const nsTArray<nsRect>& aIntervals,
+                                    const nscoord aBStart,
+                                    const nscoord aBEnd,
+                                    bool aIsLineLeft)
+{
+  MOZ_ASSERT(aBStart <= aBEnd,
+             "The band's block start is greater than its block end?");
+
+  // Find all the intervals whose rects overlap the aBStart to
+  // aBEnd range, and find the most constraining inline edge
+  // depending on the value of aLeft.
+
+  // Since the intervals are stored in block-axis order, we need
+  // to find the first interval that overlaps aBStart and check
+  // succeeding intervals until we get past aBEnd.
+
+  nscoord lineEdge = aIsLineLeft ? nscoord_MAX : nscoord_MIN;
+
+  size_t intervalCount = aIntervals.Length();
+  for (size_t i = MinIntervalIndexContainingY(aIntervals, aBStart);
+       i < intervalCount; ++i) {
+    // We can always get the bCoord from the intervals' mLineLeft,
+    // since the y() coordinate is duplicated in both points in the
+    // interval.
+    auto& interval = aIntervals[i];
+    nscoord bCoord = interval.Y();
+    if (bCoord > aBEnd) {
+      break;
+    }
+    // Get the edge from the interval point indicated by aLeft.
+    if (aIsLineLeft) {
+      lineEdge = std::min(lineEdge, interval.X());
+    } else {
+      lineEdge = std::max(lineEdge, interval.XMost());
+    }
+  }
+
+  return lineEdge;
 }
 
 //----------------------------------------------------------------------
