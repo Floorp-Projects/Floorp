@@ -785,7 +785,11 @@ nsCSSValue::AppendAlignJustifyValueToString(int32_t aValue, nsAString& aResult)
   auto legacy = aValue & NS_STYLE_ALIGN_LEGACY;
   if (legacy) {
     aValue &= ~legacy;
-    aResult.AppendLiteral("legacy ");
+    aResult.AppendLiteral("legacy");
+    if (!aValue) {
+      return;
+    }
+    aResult.AppendLiteral(" ");
   }
   // Don't serialize the 'unsafe' keyword; it's the default.
   auto overflowPos = aValue & (NS_STYLE_ALIGN_SAFE | NS_STYLE_ALIGN_UNSAFE);
