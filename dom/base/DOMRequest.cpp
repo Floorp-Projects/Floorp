@@ -66,7 +66,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(DOMRequest,
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMRequest)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMRequest)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(DOMRequest, DOMEventTargetHelper)
@@ -76,38 +75,6 @@ NS_IMPL_RELEASE_INHERITED(DOMRequest, DOMEventTargetHelper)
 DOMRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return DOMRequestBinding::Wrap(aCx, this, aGivenProto);
-}
-
-NS_IMETHODIMP
-DOMRequest::GetReadyState(nsAString& aReadyState)
-{
-  DOMRequestReadyState readyState = ReadyState();
-  switch (readyState) {
-    case DOMRequestReadyState::Pending:
-      aReadyState.AssignLiteral("pending");
-      break;
-    case DOMRequestReadyState::Done:
-      aReadyState.AssignLiteral("done");
-      break;
-    default:
-      MOZ_CRASH("Unrecognized readyState.");
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMRequest::GetResult(JS::MutableHandle<JS::Value> aResult)
-{
-  GetResult(nullptr, aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DOMRequest::GetError(nsISupports** aError)
-{
-  NS_IF_ADDREF(*aError = static_cast<Exception*>(GetError()));
-  return NS_OK;
 }
 
 void

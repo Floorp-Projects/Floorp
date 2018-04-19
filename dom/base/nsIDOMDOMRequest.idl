@@ -4,22 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEventTarget.idl"
+#include "nsISupports.idl"
 
 interface mozIDOMWindow;
 interface nsICursorContinueCallback;
 webidl DOMRequest;
-
-[shim(DOMRequest), uuid(e39da69e-2232-4e49-9856-b8a4a6210336)]
-interface nsIDOMDOMRequest : nsIDOMEventTarget
-{
-  readonly attribute DOMString readyState; // "pending" or "done"
-
-  readonly attribute jsval result;
-
-  // DOMException
-  readonly attribute nsISupports error;
-};
 
 [scriptable, builtinclass, uuid(9a57e5de-ce93-45fa-8145-755722834f7c)]
 interface nsIDOMRequestService : nsISupports
