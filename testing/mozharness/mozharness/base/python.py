@@ -59,7 +59,7 @@ virtualenv_config_options = [
     [["--find-links"], {
         "action": "extend",
         "dest": "find_links",
-        "default": ["http://pypi.pub.build.mozilla.org/pub"],
+        "default": ["https://pypi.pub.build.mozilla.org/pub"],
         "help": "URL to look for packages at"
     }],
     [["--pip-index"], {
