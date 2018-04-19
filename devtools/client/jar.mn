@@ -76,7 +76,6 @@ devtools.jar:
     content/performance/views/details-memory-flamegraph.js (performance/views/details-memory-flamegraph.js)
     content/performance/views/recordings.js (performance/views/recordings.js)
     content/memory/memory.xhtml (memory/memory.xhtml)
-    content/memory/initializer.js (memory/initializer.js)
     content/commandline/commandlineoutput.xhtml (commandline/commandlineoutput.xhtml)
     content/commandline/commandlinetooltip.xhtml (commandline/commandlinetooltip.xhtml)
     content/framework/toolbox-window.xul (framework/toolbox-window.xul)
