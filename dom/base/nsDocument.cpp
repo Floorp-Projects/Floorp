@@ -4852,6 +4852,10 @@ nsIDocument::SetContainer(nsDocShell* aContainer)
   }
 
   EnumerateActivityObservers(NotifyActivityChanged, nullptr);
+
+  // IsTopLevelWindowInactive depends on the docshell, so
+  // update the cached value now that it's available.
+  UpdateDocumentStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
   if (!aContainer) {
     return;
   }
