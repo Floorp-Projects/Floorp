@@ -655,9 +655,10 @@ TextAttrsMgr::FontWeightTextAttr::
   // which may not be the weight of the font face used to render the
   // characters. On Mac, font->GetStyle()->weight will just give the same
   // number as getComputedStyle(). fontEntry->Weight() will give the weight
-  // of the font face used.
+  // range supported by the font face used, so we clamp the weight that was
+  // requested by style to what is actually supported by the font.
   gfxFontEntry *fontEntry = font->GetFontEntry();
-  return fontEntry->Weight();
+  return fontEntry->Weight().Clamp(font->GetStyle()->weight);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

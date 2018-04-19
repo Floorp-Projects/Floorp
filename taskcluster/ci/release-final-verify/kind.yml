@@ -21,7 +21,8 @@ job-defaults:
    worker:
       implementation: docker-worker
       os: linux
-      docker-image: mozillareleases/python-test-runner@sha256:0729c2e6e7bc0d6a4cbccb2e66a78e1d8e8cbb5e44105d56e3c9c610230ebd69
+      docker-image:
+         in-tree: "update-verify"
       max-run-time: 7200
       retry-exit-status: [1]
       env:

@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_domrequest_h__
 #define mozilla_dom_domrequest_h__
 
-#include "nsIDOMDOMRequest.h"
+#include "nsIDOMRequestService.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/DOMException.h"
@@ -24,8 +24,7 @@ namespace dom {
 class AnyCallback;
 class Promise;
 
-class DOMRequest : public DOMEventTargetHelper,
-                   public nsIDOMDOMRequest
+class DOMRequest : public DOMEventTargetHelper
 {
 protected:
   JS::Heap<JS::Value> mResult;
@@ -35,7 +34,6 @@ protected:
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMDOMREQUEST
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(DOMRequest,
                                                          DOMEventTargetHelper)

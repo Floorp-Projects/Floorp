@@ -6225,8 +6225,11 @@ EnsureMarkBitObservers(JSContext* cx)
 {
     ShellContext* sc = GetShellContext(cx);
     if (!sc->markObservers) {
-        sc->markObservers.reset(cx->new_<MarkBitObservers>(cx->runtime(),
-                                                         NonshrinkingGCObjectVector()));
+        auto* observers =
+            cx->new_<MarkBitObservers>(cx->runtime(), NonshrinkingGCObjectVector());
+        if (!observers)
+            return nullptr;
+        sc->markObservers.reset(observers);
     }
     return sc->markObservers.get();
 }
@@ -6234,8 +6237,15 @@ EnsureMarkBitObservers(JSContext* cx)
 static bool
 ClearMarkObservers(JSContext* cx, unsigned argc, Value* vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     auto markObservers = EnsureMarkBitObservers(cx);
+    if (!markObservers)
+        return false;
+
     markObservers->get().clear();
+
+    args.rval().setUndefined();
     return true;
 }
 
@@ -6245,6 +6255,8 @@ AddMarkObservers(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     auto markObservers = EnsureMarkBitObservers(cx);
+    if (!markObservers)
+        return false;
 
     if (!args.get(0).isObject()) {
         JS_ReportErrorASCII(cx, "argument must be an Array of objects");
@@ -7099,6 +7111,34 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "Sets the callback to be invoked whenever a Promise rejection is unhandled\n"
 "or a previously-unhandled rejection becomes handled."),
 
+    JS_FN_HELP("dumpScopeChain", DumpScopeChain, 1, 0,
+"dumpScopeChain(obj)",
+"  Prints the scope chain of an interpreted function or a module."),
+
+    JS_FN_HELP("grayRoot", EnsureGrayRoot, 0, 0,
+"grayRoot()",
+"  Create a gray root Array, if needed, for the current compartment, and\n"
+"  return it."),
+
+    JS_FN_HELP("addMarkObservers", AddMarkObservers, 1, 0,
+"addMarkObservers(array_of_objects)",
+"  Register an array of objects whose mark bits will be tested by calls to\n"
+"  getMarks. The objects will be in calling compartment. Objects from\n"
+"  multiple compartments may be monitored by calling this function in\n"
+"  different compartments."),
+
+    JS_FN_HELP("clearMarkObservers", ClearMarkObservers, 1, 0,
+"clearMarkObservers()",
+"  Clear out the list of objects whose mark bits will be tested.\n"),
+
+    JS_FN_HELP("getMarks", GetMarks, 0, 0,
+"getMarks()",
+"  Return an array of strings representing the current state of the mark\n"
+"  bits ('gray' or 'black', or 'dead' if the object has been collected)\n"
+"  for the objects registered via addMarkObservers. Note that some of the\n"
+"  objects tested may be from different compartments than the one in which\n"
+"  this function runs."),
+
     JS_FN_HELP("bindToAsyncStack", BindToAsyncStack, 2, 0,
 "bindToAsyncStack(fn, { stack, cause, explicit })",
 "  Returns a new function that calls 'fn' with no arguments, passing\n"
@@ -7189,34 +7229,6 @@ TestAssertRecoveredOnBailout,
 "  Returns an object describing the tracked optimizations of |fun|, if\n"
 "  any. If |fun| is not a scripted function or has not been compiled by\n"
 "  Ion, null is returned."),
-
-    JS_FN_HELP("dumpScopeChain", DumpScopeChain, 1, 0,
-"dumpScopeChain(obj)",
-"  Prints the scope chain of an interpreted function or a module."),
-
-    JS_FN_HELP("grayRoot", EnsureGrayRoot, 0, 0,
-"grayRoot()",
-"  Create a gray root Array, if needed, for the current compartment, and\n"
-"  return it."),
-
-    JS_FN_HELP("addMarkObservers", AddMarkObservers, 1, 0,
-"addMarkObservers(array_of_objects)",
-"  Register an array of objects whose mark bits will be tested by calls to\n"
-"  getMarks. The objects will be in calling compartment. Objects from\n"
-"  multiple compartments may be monitored by calling this function in\n"
-"  different compartments."),
-
-    JS_FN_HELP("clearMarkObservers", ClearMarkObservers, 1, 0,
-"clearMarkObservers()",
-"  Clear out the list of objects whose mark bits will be tested.\n"),
-
-    JS_FN_HELP("getMarks", GetMarks, 0, 0,
-"getMarks()",
-"  Return an array of strings representing the current state of the mark\n"
-"  bits ('gray' or 'black', or 'dead' if the object has been collected)\n"
-"  for the objects registered via addMarkObservers. Note that some of the\n"
-"  objects tested may be from different compartments than the one in which\n"
-"  this function runs."),
 
     JS_FN_HELP("crash", Crash, 0, 0,
 "crash([message, [{disable_minidump:true}]])",

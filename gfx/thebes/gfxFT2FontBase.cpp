@@ -230,22 +230,13 @@ gfxFT2FontBase::InitMetrics()
     }
 
     if ((!mFontEntry->mVariationSettings.IsEmpty() ||
-         !mStyle.variationSettings.IsEmpty()) &&
+         !mStyle.variationSettings.IsEmpty() ||
+         !mFontEntry->Weight().IsSingle()) &&
          (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS)) {
         // Resolve variations from entry (descriptor) and style (property)
-        const nsTArray<gfxFontVariation>* settings;
-        AutoTArray<gfxFontVariation,8> mergedSettings;
-        if (mFontEntry->mVariationSettings.IsEmpty()) {
-            settings = &mStyle.variationSettings;
-        } else if (mStyle.variationSettings.IsEmpty()) {
-            settings = &mFontEntry->mVariationSettings;
-        } else {
-            gfxFontUtils::MergeVariations(mFontEntry->mVariationSettings,
-                                          mStyle.variationSettings,
-                                          &mergedSettings);
-            settings = &mergedSettings;
-        }
-        SetupVarCoords(face, *settings, &mCoords);
+        AutoTArray<gfxFontVariation,8> settings;
+        mFontEntry->GetVariationsForStyle(settings, mStyle);
+        SetupVarCoords(face, settings, &mCoords);
         if (!mCoords.IsEmpty()) {
 #if MOZ_TREE_FREETYPE
             FT_Set_Var_Design_Coordinates(face, mCoords.Length(), mCoords.Elements());

@@ -18,18 +18,18 @@ from mozharness.base.script import BaseScript
 from mozharness.mozilla.buildbot import BuildbotMixin
 from mozharness.mozilla.purge import PurgeMixin
 from mozharness.mozilla.release import ReleaseMixin
+from mozharness.mozilla.secrets import SecretsMixin
 from mozharness.base.python import VirtualenvMixin
 from mozharness.base.log import FATAL
 
 
 # DesktopPartnerRepacks {{{1
 class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
-                            BaseScript, VirtualenvMixin):
+                            BaseScript, VirtualenvMixin, SecretsMixin):
     """Manages desktop partner repacks"""
     actions = [
                 "clobber",
-                "create-virtualenv",
-                "activate-virtualenv",
+                "get-secrets",
                 "setup",
                 "repack",
                 "summary",
@@ -51,24 +51,11 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
           "dest": "partner",
           "help": "Limit repackaging to partners matching this string",
           }],
-        [["--s3cfg"], {
-          "dest": "s3cfg",
-          "help": "Configuration file for uploading to S3 using s3cfg",
-          }],
-        [["--hgroot"], {
-          "dest": "hgroot",
-          "help": "Use a different hg server for retrieving files",
-          }],
-        [["--hgrepo"], {
-          "dest": "hgrepo",
-          "help": "Use a different base repo for retrieving files",
-          }],
-        [["--require-buildprops"], {
-            "action": "store_true",
-            "dest": "require_buildprops",
-            "default": False,
-            "help": "Read in config options (like partner) from the buildbot properties file."
-          }],
+        [["--taskid", "-t"], {
+            "dest": "taskIds",
+            "action": "extend",
+            "help": "taskId(s) of upstream tasks for vanilla Firefox artifacts",
+        }],
     ]
 
     def __init__(self):
@@ -77,16 +64,8 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
             'all_actions': DesktopPartnerRepacks.actions,
             'default_actions': DesktopPartnerRepacks.actions,
             'config': {
-                'buildbot_json_path': 'buildprops.json',
                 "log_name": "partner-repacks",
                 "hashType": "sha512",
-                'virtualenv_modules': [
-                    'requests==2.2.1',
-                    'PyHawk-with-a-single-extra-commit==0.1.5',
-                    'taskcluster==0.0.15',
-                    's3cmd==1.6.0',
-                ],
-                'virtualenv_path': 'venv',
                 'workdir': 'partner-repacks',
             },
         }
@@ -99,20 +78,13 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
         )
 
     def _pre_config_lock(self, rw_config):
-        self.read_buildbot_config()
-        if not self.buildbot_config:
-            self.warning("Skipping buildbot properties overrides")
-        else:
-            if self.config.get('require_buildprops', False) is True:
-                if not self.buildbot_config:
-                    self.fatal("Unable to load properties from file: %s" %
-                               self.config.get('buildbot_json_path'))
-            props = self.buildbot_config["properties"]
-            for prop in ['version', 'build_number', 'revision', 'repo_file',
-                         'repo_url', 'repack_manifests_url', 'partner']:
-                if props.get(prop):
-                    self.info("Overriding %s with %s" % (prop, props[prop]))
-                    self.config[prop] = props.get(prop)
+        if os.getenv('REPACK_MANIFESTS_URL'):
+            self.info('Overriding repack_manifests_url to %s' % os.getenv('REPACK_MANIFESTS_URL'))
+            self.config['repack_manifests_url'] = os.getenv('REPACK_MANIFESTS_URL')
+        if os.getenv('UPSTREAM_TASKIDS'):
+            self.info('Overriding taskIds with %s' % os.getenv('UPSTREAM_TASKIDS'))
+            self.config['taskIds'] = os.getenv('UPSTREAM_TASKIDS').split()
+        self.config['scm_level'] = os.environ.get('MOZ_SCM_LEVEL', '1')
 
         if 'version' not in self.config:
             self.fatal("Version (-v) not supplied.")
@@ -120,10 +92,10 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
             self.fatal("Build number (-n) not supplied.")
         if 'repo_file' not in self.config:
             self.fatal("repo_file not supplied.")
-        if 'repo_url' not in self.config:
-            self.fatal("repo_url not supplied.")
         if 'repack_manifests_url' not in self.config:
-            self.fatal("repack_manifests_url not supplied.")
+            self.fatal("repack_manifests_url not supplied in config or via REPACK_MANIFESTS_URL")
+        if 'taskIds' not in self.config:
+            self.fatal('Need upstream taskIds from command line or in UPSTREAM_TASKIDS')
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -149,14 +121,18 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
         self.rmtree(self.query_abs_dirs()['abs_scripts_dir'])
 
     def _repo_init(self, repo):
+        partial_env = {
+            'GIT_SSH_COMMAND': 'ssh -oIdentityFile={}'.format(self.config['ssh_key'])
+        }
         status = self.run_command([repo, "init", "--no-repo-verify",
-                                   "--repo-url", self.config['repo_url'],
                                    "-u", self.config['repack_manifests_url']],
-                                  cwd=self.query_abs_dirs()['abs_work_dir'])
+                                  cwd=self.query_abs_dirs()['abs_work_dir'],
+                                  partial_env=partial_env)
         if status:
             return status
-        return self.run_command([repo, "sync"],
-                                cwd=self.query_abs_dirs()['abs_work_dir'])
+        return self.run_command([repo, "sync", "--current-branch", "--no-tags"],
+                                cwd=self.query_abs_dirs()['abs_work_dir'],
+                                partial_env=partial_env)
 
     def setup(self):
         """setup step"""
@@ -166,7 +142,7 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
                                   error_level=FATAL)
         if not os.path.exists(repo):
             self.fatal("Unable to download repo tool.")
-        self.chmod(repo, 0755)
+        self.chmod(repo, 0o755)
         self.retry(self._repo_init,
                    args=(repo,),
                    error_level=FATAL,
@@ -176,21 +152,16 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
 
     def repack(self):
         """creates the repacks"""
-        repack_cmd = [sys.executable, "partner-repacks.py",
+        repack_cmd = [sys.executable, "tc-partner-repacks.py",
                       "-v", self.config['version'],
                       "-n", str(self.config['build_number'])]
         if self.config.get('platform'):
             repack_cmd.extend(["--platform", self.config['platform']])
         if self.config.get('partner'):
             repack_cmd.extend(["--partner", self.config['partner']])
-        if self.config.get('s3cfg'):
-            repack_cmd.extend(["--s3cfg", self.config['s3cfg']])
-        if self.config.get('hgroot'):
-            repack_cmd.extend(["--hgroot", self.config['hgroot']])
-        if self.config.get('hgrepo'):
-            repack_cmd.extend(["--repo", self.config['hgrepo']])
-        if self.config.get('revision'):
-            repack_cmd.extend(["--tag", self.config["revision"]])
+        if self.config.get('taskIds'):
+            for taskId in self.config['taskIds']:
+                repack_cmd.extend(["--taskid", taskId])
 
         return self.run_command(repack_cmd,
                                 cwd=self.query_abs_dirs()['abs_scripts_dir'])

@@ -386,7 +386,7 @@ JitRuntime::IonBuilderList&
 JitRuntime::ionLazyLinkList(JSRuntime* rt)
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt),
-               "Should only be mutated by the active thread.");
+               "Should only be mutated by the main thread.");
     return ionLazyLinkList_.ref();
 }
 
@@ -394,7 +394,7 @@ void
 JitRuntime::ionLazyLinkListRemove(JSRuntime* rt, jit::IonBuilder* builder)
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt),
-               "Should only be mutated by the active thread.");
+               "Should only be mutated by the main thread.");
     MOZ_ASSERT(rt == builder->script()->runtimeFromMainThread());
     MOZ_ASSERT(ionLazyLinkListSize_ > 0);
 
@@ -408,7 +408,7 @@ void
 JitRuntime::ionLazyLinkListAdd(JSRuntime* rt, jit::IonBuilder* builder)
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt),
-               "Should only be mutated by the active thread.");
+               "Should only be mutated by the main thread.");
     MOZ_ASSERT(rt == builder->script()->runtimeFromMainThread());
     ionLazyLinkList(rt).insertFront(builder);
     ionLazyLinkListSize_++;
@@ -2310,8 +2310,8 @@ ScriptIsTooLarge(JSContext* cx, JSScript* script)
 
     uint32_t numLocalsAndArgs = NumLocalsAndArgs(script);
 
-    if (script->length() > MAX_ACTIVE_THREAD_SCRIPT_SIZE ||
-        numLocalsAndArgs > MAX_ACTIVE_THREAD_LOCALS_AND_ARGS)
+    if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE ||
+        numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
     {
         if (!OffThreadCompilationAvailable(cx)) {
             JitSpew(JitSpew_IonAbort, "Script too large (%zu bytes) (%u locals/args)",
@@ -2447,7 +2447,7 @@ bool
 jit::OffThreadCompilationAvailable(JSContext* cx)
 {
     // Even if off thread compilation is enabled, compilation must still occur
-    // on the active thread in some cases.
+    // on the main thread in some cases.
     //
     // Require cpuCount > 1 so that Ion compilation jobs and active-thread
     // execution are not competing for the same resources.

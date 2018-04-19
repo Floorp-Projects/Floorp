@@ -27,9 +27,6 @@ import os
 import re
 import sys
 
-from mozversioncontrol import get_repository_from_env
-
-
 architecture_independent = set(['generic'])
 all_unsupported_architectures_names = set(['mips32', 'mips64', 'mips_shared'])
 all_architecture_names = set(['x86', 'x64', 'arm', 'arm64'])
@@ -265,19 +262,20 @@ def check_style():
     # We infer from each file the signature of each MacroAssembler function.
     defs = dict()       # type: dict(signature => ['x86', 'x64'])
 
-    with get_repository_from_env() as repo:
-        # Select the appropriate files.
-        for filename in repo.get_files_in_working_directory():
-            if not filename.startswith('js/src/jit/'):
-                continue
+    root_dir = os.path.join('js', 'src', 'jit')
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        for filename in filenames:
             if 'MacroAssembler' not in filename:
                 continue
 
-            filename = os.path.join(repo.path, filename)
+            filepath = os.path.join(dirpath, filename).replace('\\', '/')
 
-            if filename.endswith('MacroAssembler.h'):
-                decls = append_signatures(decls, get_macroassembler_declaration(filename))
-            defs = append_signatures(defs, get_macroassembler_definitions(filename))
+            if filepath.endswith('MacroAssembler.h'):
+                decls = append_signatures(decls, get_macroassembler_declaration(filepath))
+            defs = append_signatures(defs, get_macroassembler_definitions(filepath))
+
+    if not decls or not defs:
+        raise Exception("Did not find any definitions or declarations")
 
     # Compare declarations and definitions output.
     difflines = difflib.unified_diff(generate_file_content(decls),

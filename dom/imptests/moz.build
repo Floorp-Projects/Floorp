@@ -8,13 +8,13 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 with Files("html/webgl/**"):
-    BUG_COMPONENT = ("Core", "Canvas 2D")
+    BUG_COMPONENT = ("Core", "Canvas: 2D")
 
 with Files("html/typedarrays/**"):
-    BUG_COMPONENT = ("Core", "Javascript: Standard Library")
+    BUG_COMPONENT = ("Core", "JavaScript: Standard Library")
 
 with Files("html/js/**"):
-    BUG_COMPONENT = ("Core", "Javascript: Standard Library")
+    BUG_COMPONENT = ("Core", "JavaScript: Standard Library")
 
 with Files("html/html/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")

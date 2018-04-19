@@ -15,7 +15,7 @@ inline bool
 ObjectGroup::needsSweep()
 {
     // Note: this can be called off thread during compacting GCs, in which case
-    // nothing will be running on the active thread.
+    // nothing will be running on the main thread.
     MOZ_ASSERT(!TlsContext.get()->inUnsafeCallWithABI);
     return generation() != zoneFromAnyThread()->types.generation;
 }
