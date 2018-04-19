@@ -36,7 +36,7 @@ add_task(async function() {
   Services.cookies.removeAll();
 
   // restore the window state
-  ss.setBrowserState(state);
+  await setBrowserState(state);
 
   // at this point, the cookie should be restored...
   enumerator = Services.cookies.enumerator;

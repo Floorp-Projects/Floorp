@@ -166,7 +166,7 @@ FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext()
   }
 
   if (mLowLatency) {
-    mCodecContext->flags |= CODEC_FLAG_LOW_DELAY;
+    mCodecContext->flags |= AV_CODEC_FLAG_LOW_DELAY;
     // ffvp9 and ffvp8 at this stage do not support slice threading, but it may
     // help with the h264 decoder if there's ever one.
     mCodecContext->thread_type = FF_THREAD_SLICE;

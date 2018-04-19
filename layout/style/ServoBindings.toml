@@ -190,9 +190,6 @@ rusty-enums = [
     "mozilla::StyleGeometryBox",
     "mozilla::SystemColor",
 ]
-constified-enum-variants = [
-    { enum = "nsCSSPropertyID", variants = ["eCSSProperty_COUNT.*"] },
-]
 whitelist-vars = [
     "NS_AUTHOR_SPECIFIED_.*",
     "NS_THEME_.*",

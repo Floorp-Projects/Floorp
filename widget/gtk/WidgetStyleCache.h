@@ -38,13 +38,30 @@ CreateCSSNode(const char*      aName,
 
 /*
  * Returns a pointer to a style context for the specified node and state.
- * The context is owned by WidgetStyleCache.  Do not unref.
+ * aStateFlags is applied only to last widget in css style path,
+ * for instance GetStyleContext(MOZ_GTK_BUTTON, .., GTK_STATE_FLAG_HOVER)
+ * you get "window button:hover" css selector.
+ * If you want aStateFlags applied to all path elements use
+ * CreateStyleContextWithStates().
+ *
+ * The context is owned by WidgetStyleCache. Do not unref.
  */
 GtkStyleContext*
 GetStyleContext(WidgetNodeType aNodeType,
                 GtkTextDirection aDirection = GTK_TEXT_DIR_NONE,
                 GtkStateFlags aStateFlags = GTK_STATE_FLAG_NORMAL,
                 StyleFlags aFlags = NO_STYLE_FLAGS);
+
+/*
+ * Returns a pointer to a style context for the specified node
+ * and state applied to all elements at widget style path.
+ *
+ * The context is owned by caller and must be released by g_object_unref().
+ */
+GtkStyleContext*
+CreateStyleContextWithStates(WidgetNodeType aNodeType,
+                             GtkTextDirection aDirection = GTK_TEXT_DIR_NONE,
+                             GtkStateFlags aStateFlags = GTK_STATE_FLAG_NORMAL);
 
 void
 ResetWidgetCache(void);

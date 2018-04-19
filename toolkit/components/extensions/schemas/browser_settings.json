@@ -149,6 +149,10 @@
         "$ref": "types.Setting",
         "description": "This boolean setting controls whether search results are opened in the current tab or in a new tab."
       },
+      "openUrlbarResultsInNewTabs": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether urlbar results are opened in the current tab or in a new tab."
+      },
       "proxyConfig": {
         "$ref": "types.Setting",
         "description": "Configures proxy settings. This setting's value is an object of type ProxyConfig."

@@ -25,12 +25,12 @@ var TabState = Object.freeze({
     TabStateInternal.update(browser, data);
   },
 
-  collect(tab) {
-    return TabStateInternal.collect(tab);
+  collect(tab, extData) {
+    return TabStateInternal.collect(tab, extData);
   },
 
-  clone(tab) {
-    return TabStateInternal.clone(tab);
+  clone(tab, extData) {
+    return TabStateInternal.clone(tab, extData);
   },
 
   copyFromCache(browser, tabData, options) {
@@ -51,13 +51,15 @@ var TabStateInternal = {
    *
    * @param tab
    *        tabbrowser tab
+   * @param [extData]
+   *        optional dictionary object, containing custom tab values.
    *
    * @returns {TabData} An object with the data for this tab.  If the
    * tab has not been invalidated since the last call to
    * collect(aTab), the same object is returned.
    */
-  collect(tab) {
-    return this._collectBaseTabData(tab);
+  collect(tab, extData) {
+    return this._collectBaseTabData(tab, {extData});
   },
 
   /**
@@ -66,13 +68,15 @@ var TabStateInternal = {
    *
    * @param tab
    *        tabbrowser tab
+   * @param [extData]
+   *        optional dictionary object, containing custom tab values.
    *
    * @returns {object} An object with the data for this tab. This data is never
    *                   cached, it will always be read from the tab and thus be
    *                   up-to-date.
    */
-  clone(tab) {
-    return this._collectBaseTabData(tab, {includePrivateData: true});
+  clone(tab, extData) {
+    return this._collectBaseTabData(tab, {extData, includePrivateData: true});
   },
 
   /**
@@ -81,6 +85,7 @@ var TabStateInternal = {
    * @param tab
    *        tabbrowser tab
    * @param options (object)
+   *        {extData: object} optional dictionary object, containing custom tab values
    *        {includePrivateData: true} to always include private data
    *
    * @returns {object} An object with the basic data for this tab.
@@ -105,8 +110,8 @@ var TabStateInternal = {
     // Save tab attributes.
     tabData.attributes = TabAttributes.get(tab);
 
-    if (tab.__SS_extdata) {
-      tabData.extData = tab.__SS_extdata;
+    if (options.extData) {
+      tabData.extData = options.extData;
     }
 
     // Copy data from the tab state cache only if the tab has fully finished

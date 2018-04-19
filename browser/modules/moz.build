@@ -49,6 +49,9 @@ with Files('AsyncTabSwitcher.jsm'):
 with Files("AttributionCode.jsm"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 
+with Files("BrowserWindowTracker.jsm"):
+    BUG_COMPONENT = ("Core", "Networking")
+
 with Files("*Telemetry.jsm"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 
@@ -106,12 +109,6 @@ with Files("WindowsJumpLists.jsm"):
 with Files("WindowsPreviewPerTab.jsm"):
     BUG_COMPONENT = ("Core", "Widget: Win32")
 
-with Files("offlineAppCache.jsm"):
-    BUG_COMPONENT = ("Firefox", "Preferences")
-
-with Files("UpdateTopLevelContentWindowIDHelper.jsm"):
-    BUG_COMPONENT = ("Core", "Networking")
-
 with Files("webrtcUI.jsm"):
     BUG_COMPONENT = ("Firefox", "Device Permissions")
 
@@ -133,6 +130,7 @@ EXTRA_JS_MODULES += [
     'BrowserErrorReporter.jsm',
     'BrowserUITelemetry.jsm',
     'BrowserUsageTelemetry.jsm',
+    'BrowserWindowTracker.jsm',
     'ContentClick.jsm',
     'ContentCrashHandlers.jsm',
     'ContentLinkHandler.jsm',
@@ -146,7 +144,6 @@ EXTRA_JS_MODULES += [
     'FormSubmitObserver.jsm',
     'FormValidationHandler.jsm',
     'LaterRun.jsm',
-    'offlineAppCache.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
     'PermissionUI.jsm',
@@ -154,7 +151,6 @@ EXTRA_JS_MODULES += [
     'PluginContent.jsm',
     'ProcessHangMonitor.jsm',
     'ReaderParent.jsm',
-    'RecentWindow.jsm',
     'RemotePrompt.jsm',
     'Sanitizer.jsm',
     'SchedulePressure.jsm',
@@ -162,7 +158,6 @@ EXTRA_JS_MODULES += [
     'SitePermissions.jsm',
     'ThemeVariableMap.jsm',
     'TransientPrefs.jsm',
-    'UpdateTopLevelContentWindowIDHelper.jsm',
     'webrtcUI.jsm',
     'ZoomUI.jsm',
 ]

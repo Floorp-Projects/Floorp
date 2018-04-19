@@ -120,9 +120,8 @@ class GeckoViewNavigation extends GeckoViewModule {
   }
 
   handleNewSession(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
-    debug `handleNewSession: uri=${ aUri && aUri.spec
-                           } where=${ aWhere
-                           } flags=${ aFlags }`;
+    debug `handleNewSession: uri=${aUri && aUri.spec}
+                             where=${aWhere} flags=${aFlags}`;
 
     if (!this.isRegistered) {
       return null;
@@ -150,9 +149,8 @@ class GeckoViewNavigation extends GeckoViewModule {
 
   // nsIBrowserDOMWindow.
   createContentWindow(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
-    debug `createContentWindow: uri=${ aUri && aUri.spec
-                              } where=${ aWhere
-                              } flags=${ aFlags }`;
+    debug `createContentWindow: uri=${aUri && aUri.spec}
+                                where=${aWhere} flags=${aFlags}`;
 
     if (LoadURIDelegate.load(this.eventDispatcher, aUri, aWhere, aFlags,
                              aTriggeringPrincipal)) {
@@ -174,12 +172,11 @@ class GeckoViewNavigation extends GeckoViewModule {
   // nsIBrowserDOMWindow.
   createContentWindowInFrame(aUri, aParams, aWhere, aFlags, aNextTabParentId,
                              aName) {
-    debug `createContentWindowInFrame: uri=${ aUri && aUri.spec
-                                     } params=${ aParams
-                                     } where=${ aWhere
-                                     } flags=${ aFlags
-                                     } nextTabParentId=${ aNextTabParentId
-                                     } name=${ aName }`;
+    debug `createContentWindowInFrame: uri=${aUri && aUri.spec}
+                                       params=${aParams} where=${aWhere}
+                                       flags=${aFlags}
+                                       nextTabParentId=${aNextTabParentId}
+                                       name=${aName}`;
 
     if (LoadURIDelegate.load(this.eventDispatcher, aUri, aWhere, aFlags, null)) {
       // The app has handled the load, abort open-window handling.
@@ -199,9 +196,8 @@ class GeckoViewNavigation extends GeckoViewModule {
 
   handleOpenUri(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal,
                 aNextTabParentId) {
-    debug `handleOpenUri: uri=${ aUri && aUri.spec
-                        } where=${ aWhere
-                        } flags=${ aFlags }`;
+    debug `handleOpenUri: uri=${aUri && aUri.spec}
+                          where=${aWhere} flags=${aFlags}`;
 
     if (LoadURIDelegate.load(this.eventDispatcher, aUri, aWhere, aFlags,
                              aTriggeringPrincipal)) {
