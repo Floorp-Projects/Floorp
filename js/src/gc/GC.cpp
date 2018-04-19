@@ -430,7 +430,7 @@ struct js::gc::FinalizePhase
 };
 
 /*
- * Finalization order for objects swept incrementally on the active thread.
+ * Finalization order for objects swept incrementally on the main thread.
  */
 static const FinalizePhase ForegroundObjectFinalizePhase = {
     gcstats::PhaseKind::SWEEP_OBJECT, {
@@ -444,7 +444,7 @@ static const FinalizePhase ForegroundObjectFinalizePhase = {
 };
 
 /*
- * Finalization order for GC things swept incrementally on the active thread.
+ * Finalization order for GC things swept incrementally on the main thread.
  */
 static const FinalizePhase ForegroundNonObjectFinalizePhase = {
     gcstats::PhaseKind::SWEEP_SCRIPT, {
@@ -2440,7 +2440,7 @@ bool
 ArenaLists::relocateArenas(Zone* zone, Arena*& relocatedListOut, JS::gcreason::Reason reason,
                            SliceBudget& sliceBudget, gcstats::Statistics& stats)
 {
-    // This is only called from the active thread while we are doing a GC, so
+    // This is only called from the main thread while we are doing a GC, so
     // there is no need to lock.
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
     MOZ_ASSERT(runtime_->gc.isHeapCompacting());
@@ -3305,7 +3305,7 @@ bool
 GCRuntime::triggerGC(JS::gcreason::Reason reason)
 {
     /*
-     * Don't trigger GCs if this is being called off the active thread from
+     * Don't trigger GCs if this is being called off the main thread from
      * onTooMuchMalloc().
      */
     if (!CurrentThreadCanAccessRuntime(rt))
@@ -3560,7 +3560,7 @@ GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks)
         AutoLockGC lock(rt);
 
         // Release any arenas that are now empty, dropping and reaquiring the GC
-        // lock every so often to avoid blocking the active thread from
+        // lock every so often to avoid blocking the main thread from
         // allocating chunks.
         static const size_t LockReleasePeriod = 32;
         size_t releaseCount = 0;
@@ -3730,7 +3730,7 @@ GCHelperState::waitBackgroundSweepEnd()
 void
 GCHelperState::doSweep(AutoLockGC& lock)
 {
-    // The active thread may call queueZonesForBackgroundSweep() while this is
+    // The main thread may call queueZonesForBackgroundSweep() while this is
     // running so we must check there is no more work to do before exiting.
 
     do {
@@ -4204,7 +4204,7 @@ ShouldCollectZone(Zone* zone, JS::gcreason::Reason reason)
     //
     // Off-thread parsing is inhibited after the start of GC which prevents
     // races between creating atoms during parsing and sweeping atoms on the
-    // active thread.
+    // main thread.
     //
     // Otherwise, we always schedule a GC in the atoms zone so that atoms which
     // the other collected zones are using are marked, and we can update the
@@ -7437,7 +7437,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
     if (!isIncrementalGCInProgress())
         incMajorGcNumber();
 
-    // It's ok if threads other than the active thread have suppressGC set, as
+    // It's ok if threads other than the main thread have suppressGC set, as
     // they are operating on zones which will not be collected from here.
     MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
@@ -9055,7 +9055,7 @@ js::gc::detail::CellIsMarkedGrayIfKnown(const Cell* cell)
     // that is not being collected. Gray targets of CCWs that are marked black
     // by a barrier will eventually be marked black in the next GC slice.
     //
-    // 3) When we are not on the runtime's active thread. Helper threads might
+    // 3) When we are not on the runtime's main thread. Helper threads might
     // call this while parsing, and they are not allowed to inspect the
     // runtime's incremental state. The objects being operated on are not able
     // to be collected and will not be marked any color.

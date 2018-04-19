@@ -25,10 +25,10 @@ with Files("talos/**"):
     SCHEDULES.exclusive = ['talos']
 
 with Files("talos/talos/tests/v8_7/**"):
-    BUG_COMPONENT = ("Core", "Javascript Engine")
+    BUG_COMPONENT = ("Core", "JavaScript Engine")
 
 with Files("talos/talos/tests/kraken/**"):
-    BUG_COMPONENT = ("Core", "Javascript Engine")
+    BUG_COMPONENT = ("Core", "JavaScript Engine")
 
 with Files("talos/talos/tests/a11y/**"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")

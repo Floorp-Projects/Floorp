@@ -45,7 +45,7 @@ class FreeOp : public JSFreeOp
     }
 
     bool maybeOnHelperThread() const {
-        // Sometimes background finalization happens on the active thread so
+        // Sometimes background finalization happens on the main thread so
         // runtime_ being null doesn't always mean we are off thread.
         return !runtime_;
     }
