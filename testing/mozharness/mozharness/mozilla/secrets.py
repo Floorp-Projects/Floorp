@@ -45,6 +45,8 @@ class SecretsMixin(object):
         The optional `min_scm_level` key gives a minimum SCM level at which this
         secret is required.  For lower levels, the value of the 'default` key
         is used, or no secret is written.
+
+        The optional 'mode' key allows a mode change (chmod) after the file is written
         """
         secret_files = self.config.get('secret_files', [])
 
@@ -68,3 +70,6 @@ class SecretsMixin(object):
                 secret = self._fetch_secret(secret_name)
 
             open(filename, "w").write(secret)
+
+            if sf.get('mode'):
+                os.chmod(filename, sf['mode'])
