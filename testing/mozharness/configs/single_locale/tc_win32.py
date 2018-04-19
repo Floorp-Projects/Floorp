@@ -22,6 +22,7 @@ config = {
         'EN_US_PKG_INST_BASENAME': 'target.installer',
     },
     "upload_env": {
+        'UPLOAD_HOST': 'localhost',
         'UPLOAD_PATH': os.path.join(os.getcwd(), 'public', 'build'),
     },
 
