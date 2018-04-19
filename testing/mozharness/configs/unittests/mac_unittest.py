@@ -9,10 +9,6 @@ ADJUST_MOUSE_AND_SCREEN = False
 #####
 config = {
     "buildbot_json_path": "buildprops.json",
-    "find_links": [
-        "http://pypi.pvt.build.mozilla.org/pub",
-        "http://pypi.pub.build.mozilla.org/pub",
-    ],
     ###
     "installer_path": INSTALLER_PATH,
     "xpcshell_name": XPCSHELL_NAME,

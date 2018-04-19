@@ -16,12 +16,6 @@ config = {
         "--certutil-binary=%(test_install_path)s/bin/certutil",
     ],
 
-    "find_links": [
-        "http://pypi.pvt.build.mozilla.org/pub",
-        "http://pypi.pub.build.mozilla.org/pub",
-    ],
-
-
     "buildbot_json_path": "buildprops.json",
 
     "default_blob_upload_servers": [

@@ -10,11 +10,6 @@ config = {
 
     "vcs_share_base": HG_SHARE_BASE_DIR,
 
-    "find_links": [
-        "http://pypi.pvt.build.mozilla.org/pub",
-        "http://pypi.pub.build.mozilla.org/pub",
-    ],
-
     "buildbot_json_path": "buildprops.json",
 
     "default_actions": [
