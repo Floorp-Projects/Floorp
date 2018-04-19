@@ -28,24 +28,6 @@ interface nsIBlocklistService : nsISupports
   const unsigned long STATE_VULNERABLE_NO_UPDATE = 5;
 
   /**
-   * Determine the blocklist state of an add-on
-   * @param   id
-   *          The addon item to be checked.
-   * @param   appVersion
-   *          The version of the application we are checking in the blocklist.
-   *          If this parameter is null, the version of the running application
-   *          is used.
-   * @param   toolkitVersion
-   *          The version of the toolkit we are checking in the blocklist.
-   *          If this parameter is null, the version of the running toolkit
-   *          is used.
-   * @returns The STATE constant.
-   */
-  unsigned long getAddonBlocklistState(in jsval addon,
-                                       [optional] in AString appVersion,
-                                       [optional] in AString toolkitVersion);
-
-  /**
    * Determine the blocklist state of a plugin
    * @param   plugin
    *          The plugin to get the state for
@@ -63,80 +45,5 @@ interface nsIBlocklistService : nsISupports
                                         [optional] in AString appVersion,
                                         [optional] in AString toolkitVersion);
 
-  /**
-   * Returns a promise that resolves to the blocklist entry.
-   * The blocklist entry is an object with `state` and `url`
-   * properties, if a blocklist entry for the add-on exists, or null
-   * otherwise.
-
-   * @param   addon
-   *          The addon object to match.
-   * @param   appVersion
-   *          The version of the application we are checking in the blocklist.
-   *          If this parameter is null, the version of the running application
-   *          is used.
-   * @param   toolkitVersion
-   *          The version of the toolkit we are checking in the blocklist.
-   *          If this parameter is null, the version of the running toolkit
-   *          is used.
-   */
-  jsval getAddonBlocklistEntry(in jsval addon,
-                               [optional] in AString appVersion,
-                               [optional] in AString toolkitVersion);
-
-  /**
-   * Determine the blocklist web page of a plugin.
-   * @param   plugin
-   *          The blocked plugin that we are determining the web page for.
-   * @returns The URL of the description page.
-   */
-  AString getPluginBlocklistURL(in nsIPluginTag plugin);
-
-  /**
-   * Determine the blocklist infoURL of a plugin.
-   * @param   plugin
-   *          The blocked plugin that we are determining the infoURL for.
-   * @returns The preferred URL to present the user, or |null| if
-   *          it is not available.
-   */
-  AString getPluginInfoURL(in nsIPluginTag plugin);
-
-  /**
-   * Whether or not we've finished loading the blocklist.
-   */
   readonly attribute boolean isLoaded;
-
-  /**
-   * Trigger loading the blocklist content asynchronously.
-   */
-  void loadBlocklistAsync();
-};
-
-/**
- * nsIBlocklistPrompt is used, if available, by the default implementation of 
- * nsIBlocklistService to display a confirmation UI to the user before blocking
- * extensions/plugins.
- */
-[scriptable, uuid(ba915921-b9c0-400d-8e4f-ca1b80c5699a)]
-interface nsIBlocklistPrompt : nsISupports
-{
-  /**
-   * Prompt the user about newly blocked addons. The prompt is then resposible
-   * for soft-blocking any addons that need to be afterwards
-   *
-   * @param  aAddons
-   *         An array of addons and plugins that are blocked. These are javascript
-   *         objects with properties:
-   *          name    - the plugin or extension name,
-   *          version - the version of the extension or plugin,
-   *          icon    - the plugin or extension icon,
-   *          disable - can be used by the nsIBlocklistPrompt to allows users to decide
-   *                    whether a soft-blocked add-on should be disabled,
-   *          blocked - true if the item is hard-blocked, false otherwise,
-   *          item    - the nsIPluginTag or Addon object
-   * @param  aCount
-   *         The number of addons
-   */
-  void prompt([array, size_is(aCount)] in nsIVariant aAddons,
-              [optional] in uint32_t aCount);
 };

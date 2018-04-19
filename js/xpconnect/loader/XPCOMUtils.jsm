@@ -258,7 +258,10 @@ var XPCOMUtils = {
                                                                  aInterfaceName)
   {
     this.defineLazyGetter(aObject, aName, function XPCU_serviceLambda() {
-      return Cc[aContract].getService(Ci[aInterfaceName]);
+      if (aInterfaceName) {
+        return Cc[aContract].getService(Ci[aInterfaceName]);
+      }
+      return Cc[aContract].getService().wrappedJSObject;
     });
   },
 
