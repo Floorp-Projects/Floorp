@@ -1,6 +1,6 @@
 <!-- This template is for features
 
-### Why
+### Why/User Benefit/User Problem
 
 ### What / Requirements
 
