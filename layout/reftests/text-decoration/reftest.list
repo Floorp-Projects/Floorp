@@ -1,5 +1,5 @@
-fails-if(webrender&&gtkWidget) == complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html
-fails-if(webrender&&gtkWidget) == complex-decoration-style-standards.html complex-decoration-style-standards-ref.html
+fuzzy-if(webrender&&gtkWidget,0-208,0-12) == complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html
+fuzzy-if(webrender&&gtkWidget,0-208,0-12) == complex-decoration-style-standards.html complex-decoration-style-standards-ref.html
 == decoration-color-quirks.html decoration-color-quirks-ref.html
 == decoration-color-standards.html decoration-color-standards-ref.html
 == decoration-style-quirks.html decoration-style-quirks-ref.html

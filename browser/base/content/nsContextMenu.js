@@ -886,7 +886,7 @@ nsContextMenu.prototype = {
       // (in the sidebar). Deal with those cases:
       if (!tabBrowser || !tabBrowser.loadOneTab || !window.toolbar.visible) {
         // This returns only non-popup browser windows by default.
-        let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+        let browserWindow = BrowserWindowTracker.getTopWindow();
         tabBrowser = browserWindow.gBrowser;
       }
       let relatedToCurrent = gBrowser && gBrowser.selectedBrowser == browser;

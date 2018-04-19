@@ -214,9 +214,8 @@ class GeckoViewProgress extends GeckoViewModule {
   }
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    debug `onStateChange: isTopLevel=${ aWebProgress.isTopLevel
-                       }, flags=${ aStateFlags
-                       }, status=${ aStatus }`;
+    debug `onStateChange: isTopLevel=${aWebProgress.isTopLevel},
+                          flags=${aStateFlags}, status=${aStatus}`;
 
     if (!aWebProgress.isTopLevel) {
       return;
@@ -265,8 +264,8 @@ class GeckoViewProgress extends GeckoViewModule {
   }
 
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
-    debug `onLocationChange: location=${ aLocationURI.displaySpec
-                          }, flags=${ aFlags }`;
+    debug `onLocationChange: location=${aLocationURI.displaySpec},
+                             flags=${aFlags}`;
 
     this._hostChanged = true;
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {

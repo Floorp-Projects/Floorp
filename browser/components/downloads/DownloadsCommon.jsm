@@ -39,6 +39,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DownloadHistory: "resource://gre/modules/DownloadHistory.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
   DownloadUIHelper: "resource://gre/modules/DownloadUIHelper.jsm",
@@ -46,7 +47,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  RecentWindow: "resource:///modules/RecentWindow.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
@@ -826,7 +826,7 @@ DownloadsDataCtor.prototype = {
     DownloadsCommon.log("Attempting to notify that a new download has started or finished.");
 
     // Show the panel in the most recent browser window, if present.
-    let browserWin = RecentWindow.getMostRecentBrowserWindow({ private: this._isPrivate });
+    let browserWin = BrowserWindowTracker.getTopWindow({ private: this._isPrivate });
     if (!browserWin) {
       return;
     }

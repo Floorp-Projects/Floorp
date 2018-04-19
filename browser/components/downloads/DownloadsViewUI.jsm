@@ -15,20 +15,15 @@ var EXPORTED_SYMBOLS = [
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Downloads",
-                               "resource://gre/modules/Downloads.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadUtils",
-                               "resource://gre/modules/DownloadUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadsCommon",
-                               "resource:///modules/DownloadsCommon.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "RecentWindow",
-                               "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  Downloads: "resource://gre/modules/Downloads.jsm",
+  DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
+  DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm"
+});
 
 var DownloadsViewUI = {
   /**
@@ -132,7 +127,7 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   get browserWindow() {
-    return RecentWindow.getMostRecentBrowserWindow();
+    return BrowserWindowTracker.getTopWindow();
   },
 
   /**

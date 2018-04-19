@@ -5,22 +5,16 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Downloads",
-                               "resource://gre/modules/Downloads.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadsCommon",
-                               "resource:///modules/DownloadsCommon.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadsViewUI",
-                               "resource:///modules/DownloadsViewUI.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "RecentWindow",
-                               "resource:///modules/RecentWindow.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  Downloads: "resource://gre/modules/Downloads.jsm",
+  DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
+  DownloadsViewUI: "resource:///modules/DownloadsViewUI.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Services: "resource://gre/modules/Services.jsm"
+});
 
 /**
  * A download element shell is responsible for handling the commands and the
@@ -572,7 +566,7 @@ DownloadsPlacesView.prototype = {
 
   _downloadURLFromClipboard() {
     let [url, name] = this._getURLFromClipboardData();
-    let browserWin = RecentWindow.getMostRecentBrowserWindow();
+    let browserWin = BrowserWindowTracker.getTopWindow();
     let initiatingDoc = browserWin ? browserWin.document : document;
     DownloadURL(url, name, initiatingDoc);
   },
@@ -752,7 +746,7 @@ DownloadsPlacesView.prototype = {
     let links = Services.droppedLinkHandler.dropLinks(aEvent);
     if (!links.length)
       return;
-    let browserWin = RecentWindow.getMostRecentBrowserWindow();
+    let browserWin = BrowserWindowTracker.getTopWindow();
     let initiatingDoc = browserWin ? browserWin.document : document;
     for (let link of links) {
       if (link.url.startsWith("about:"))

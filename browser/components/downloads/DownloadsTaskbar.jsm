@@ -17,13 +17,11 @@ var EXPORTED_SYMBOLS = [
 // Globals
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-ChromeUtils.defineModuleGetter(this, "Downloads",
-                               "resource://gre/modules/Downloads.jsm");
-ChromeUtils.defineModuleGetter(this, "RecentWindow",
-                               "resource:///modules/RecentWindow.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  Downloads: "resource://gre/modules/Downloads.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 XPCOMUtils.defineLazyGetter(this, "gWinTaskbar", function() {
   if (!("@mozilla.org/windows-taskbar;1" in Cc)) {
@@ -140,7 +138,7 @@ var DownloadsTaskbar = {
 
     aWindow.addEventListener("unload", () => {
       // Locate another browser window, excluding the one being closed.
-      let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+      let browserWindow = BrowserWindowTracker.getTopWindow();
       if (browserWindow) {
         // Move the progress indicator to the other browser window.
         this._attachIndicator(browserWindow);
@@ -169,7 +167,7 @@ var DownloadsTaskbar = {
 
     aWindow.addEventListener("unload", () => {
       // Locate another browser window, excluding the one being closed.
-      let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+      let browserWindow = BrowserWindowTracker.getTopWindow();
       if (browserWindow) {
         // Move the progress indicator to the other browser window.
         this._attachGtkTaskbarProgress(browserWindow);

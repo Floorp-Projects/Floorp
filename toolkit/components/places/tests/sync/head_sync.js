@@ -2,7 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/CanonicalJSON.jsm");
 
 // Import common head.
 {
@@ -14,10 +13,12 @@ ChromeUtils.import("resource://gre/modules/CanonicalJSON.jsm");
 
 // Put any other stuff relative to this test folder below.
 
+ChromeUtils.import("resource://gre/modules/CanonicalJSON.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
 ChromeUtils.import("resource://gre/modules/SyncedBookmarksMirror.jsm");
+ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 
 // These titles are defined in Database::CreateBookmarkRoots
@@ -164,9 +165,8 @@ async function fetchAllKeywords(info) {
 }
 
 async function openMirror(name, options = {}) {
-  let path = OS.Path.join(OS.Constants.Path.profileDir, `${name}_buf.sqlite`);
   let buf = await SyncedBookmarksMirror.open({
-    path,
+    path: `${name}_buf.sqlite`,
     recordTelemetryEvent(...args) {
       if (options.recordTelemetryEvent) {
         options.recordTelemetryEvent.call(this, ...args);
@@ -243,4 +243,13 @@ function expectBookmarkChangeNotifications(options) {
   let observer = new BookmarkObserver(options);
   PlacesUtils.bookmarks.addObserver(observer);
   return observer;
+}
+
+// Copies a support file to a temporary fixture file, allowing the support
+// file to be reused for multiple tests.
+async function setupFixtureFile(fixturePath) {
+  let fixtureFile = do_get_file(fixturePath);
+  let tempFile = FileTestUtils.getTempFile(fixturePath);
+  await OS.File.copy(fixtureFile.path, tempFile.path);
+  return tempFile;
 }

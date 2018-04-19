@@ -25,7 +25,6 @@ config = {
         'MSYSTEM': 'MINGW32',
     },
     'upload_env': {
-        'UPLOAD_HOST': 'localhost',
         'UPLOAD_PATH': os.path.join(os.getcwd(), 'public', 'build'),
     },
 }

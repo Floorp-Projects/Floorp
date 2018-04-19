@@ -27,9 +27,8 @@ class GeckoViewNavigationContent extends GeckoViewContentModule {
 
   // nsILoadURIDelegate.
   loadURI(aUri, aWhere, aFlags, aTriggeringPrincipal) {
-    debug `loadURI: uri=${ aUri && aUri.spec
-                  } where=${ aWhere
-                  } flags=${ aFlags }`;
+    debug `loadURI: uri=${aUri && aUri.spec}
+                    where=${aWhere} flags=${aFlags}`;
 
     // TODO: Remove this when we have a sensible error API.
     if (aUri && aUri.displaySpec.startsWith("about:certerror")) {

@@ -77,15 +77,21 @@ FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
     mCodecContext->extradata_size = mExtraData->Length();
     // FFmpeg may use SIMD instructions to access the data which reads the
     // data in 32 bytes block. Must ensure we have enough data to read.
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+    mExtraData->AppendElements(AV_INPUT_BUFFER_PADDING_SIZE);
+#else
     mExtraData->AppendElements(FF_INPUT_BUFFER_PADDING_SIZE);
+#endif
     mCodecContext->extradata = mExtraData->Elements();
   } else {
     mCodecContext->extradata_size = 0;
   }
 
+#if LIBAVCODEC_VERSION_MAJOR < 57
   if (codec->capabilities & CODEC_CAP_DR1) {
     mCodecContext->flags |= CODEC_FLAG_EMU_EDGE;
   }
+#endif
 
   if (mLib->avcodec_open2(mCodecContext, codec, nullptr) < 0) {
     mLib->avcodec_close(mCodecContext);

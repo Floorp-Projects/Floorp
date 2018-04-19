@@ -9,14 +9,12 @@ var EXPORTED_SYMBOLS = ["BrowserUITelemetry"];
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "RecentWindow",
-  "resource:///modules/RecentWindow.jsm");
-ChromeUtils.defineModuleGetter(this, "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm");
-ChromeUtils.defineModuleGetter(this, "UITour",
-  "resource:///modules/UITour.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  UITour: "resource:///modules/UITour.jsm",
+});
 XPCOMUtils.defineLazyGetter(this, "Timer", function() {
   let timer = {};
   ChromeUtils.import("resource://gre/modules/Timer.jsm", timer);
@@ -266,7 +264,7 @@ var BrowserUITelemetry = {
     // probably been closed, since the vast majority of saved-session
     // pings are gathered during shutdown.
     Services.search.init(rv => {
-      let win = RecentWindow.getMostRecentBrowserWindow({
+      let win = BrowserWindowTracker.getTopWindow({
         private: false,
         allowPopups: false,
       });

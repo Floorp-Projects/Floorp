@@ -74,8 +74,8 @@ var Translation = {
 
   openProviderAttribution() {
     let attribution = this.supportedEngines[this.translationEngine];
-    ChromeUtils.import("resource:///modules/RecentWindow.jsm");
-    RecentWindow.getMostRecentBrowserWindow().openTrustedLinkIn(attribution, "tab");
+    ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
+    BrowserWindowTracker.getTopWindow().openUILinkIn(attribution, "tab");
   },
 
   /**

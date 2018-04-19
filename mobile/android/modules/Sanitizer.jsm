@@ -13,10 +13,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   FormHistory: "resource://gre/modules/FormHistory.jsm",
+  OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
   Task: "resource://gre/modules/Task.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
 });
+
+XPCOMUtils.defineLazyServiceGetters(this, {
+  quotaManagerService: ["@mozilla.org/dom/quota-manager-service;1", "nsIQuotaManagerService"],
+});
+
 
 var EXPORTED_SYMBOLS = ["Sanitizer"];
 
@@ -60,7 +67,16 @@ Sanitizer.prototype = {
     }
   },
 
+  // This code is mostly based on the Sanitizer code for desktop Firefox
+  // (browser/modules/Sanitzer.jsm), however over the course of time some
+  // general differences have evolved:
+  // - async shutdown (and seenException handling) isn't implemented in Fennec
+  // - currently there is only limited support for range-based clearing of data
+
+  // Any further specific differences caused by architectural differences between
+  // Fennec and desktop Firefox are documented below for each item.
   items: {
+    // Same as desktop Firefox.
     cache: {
       clear: function() {
         return new Promise(function(resolve, reject) {
@@ -87,6 +103,8 @@ Sanitizer.prototype = {
       }
     },
 
+    // Compared to desktop, we don't clear plugin data, as plugins
+    // aren't supported on Android.
     cookies: {
       clear: function() {
         return new Promise(function(resolve, reject) {
@@ -96,6 +114,14 @@ Sanitizer.prototype = {
           Services.cookies.removeAll();
 
           TelemetryStopwatch.finish("FX_SANITIZE_COOKIES_2", refObj);
+
+          // Clear deviceIds. Done asynchronously (returns before complete).
+          try {
+            let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"]
+                             .getService(Ci.nsIMediaManagerService);
+            mediaMgr.sanitizeDeviceIds(0);
+          } catch (er) { }
+
           resolve();
         });
       },
@@ -105,6 +131,7 @@ Sanitizer.prototype = {
       }
     },
 
+    // Same as desktop Firefox.
     siteSettings: {
       clear: Task.async(function* () {
         let refObj = {};
@@ -144,16 +171,45 @@ Sanitizer.prototype = {
       }
     },
 
+    // Same as desktop Firefox.
     offlineApps: {
-      clear: function() {
-        return new Promise(function(resolve, reject) {
-          var appCacheStorage = Services.cache2.appCacheStorage(Services.loadContextInfo.default, null);
-          try {
-            appCacheStorage.asyncEvictStorage(null);
-          } catch (er) {}
+      async clear() {
+        // AppCache
+        // This doesn't wait for the cleanup to be complete.
+        OfflineAppCacheHelper.clear();
 
-          resolve();
+        // LocalStorage
+        Services.obs.notifyObservers(null, "extension:purge-localStorage");
+
+        // ServiceWorkers
+        await ServiceWorkerCleanUp.removeAll();
+
+        // QuotaManager
+        let promises = [];
+        await new Promise(resolve => {
+          quotaManagerService.getUsage(request => {
+            if (request.resultCode != Cr.NS_OK) {
+              // We are probably shutting down. We don't want to propagate the
+              // error, rejecting the promise.
+              resolve();
+              return;
+            }
+
+            for (let item of request.result) {
+              let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
+              let uri = principal.URI;
+              if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file") {
+                promises.push(new Promise(r => {
+                  let req = quotaManagerService.clearStoragesForPrincipal(principal, null, false);
+                  req.callback = () => { r(); };
+                }));
+              }
+            }
+            resolve();
+          });
         });
+
+        return Promise.all(promises);
       },
 
       get canClear() {
@@ -161,6 +217,8 @@ Sanitizer.prototype = {
       }
     },
 
+    // History on Android is implemented by the Java frontend and requires
+    // different handling. Everything else is the same as for desktop Firefox.
     history: {
       clear: function() {
         let refObj = {};
@@ -188,6 +246,8 @@ Sanitizer.prototype = {
       }
     },
 
+    // Equivalent to openWindows on desktop, but specific to Fennec's implementation
+    // of tabbed browsing and the session store.
     openTabs: {
       clear: function() {
         let refObj = {};
@@ -209,6 +269,7 @@ Sanitizer.prototype = {
       }
     },
 
+    // Specific to Fennec.
     searchHistory: {
       clear: function() {
         return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearHistory", clearSearchHistory: true })
@@ -220,6 +281,8 @@ Sanitizer.prototype = {
       }
     },
 
+    // Browser search is handled by searchHistory above and the find bar doesn't
+    // require extra handling. FormHistory itself is cleared like on desktop.
     formdata: {
       clear: function({ startTime = 0 } = {}) {
         return new Promise(function(resolve, reject) {
@@ -251,6 +314,7 @@ Sanitizer.prototype = {
       }
     },
 
+    // Adapted from desktop, but heavily modified - see comments below.
     downloadFiles: {
       clear: Task.async(function* ({ startTime = 0, deleteFiles = true} = {}) {
         let refObj = {};
@@ -300,6 +364,7 @@ Sanitizer.prototype = {
       }
     },
 
+    // Specific to Fennec.
     passwords: {
       clear: function() {
         return new Promise(function(resolve, reject) {
@@ -314,6 +379,7 @@ Sanitizer.prototype = {
       }
     },
 
+    // Same as desktop Firefox.
     sessions: {
       clear: function() {
         return new Promise(function(resolve, reject) {
@@ -337,6 +403,7 @@ Sanitizer.prototype = {
       }
     },
 
+    // Specific to Fennec.
     syncedTabs: {
       clear: function() {
         return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearSyncedTabs" })

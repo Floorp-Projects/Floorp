@@ -82,7 +82,7 @@ add_task(async function() {
   }
 
   // Set the test state.
-  ss.setBrowserState(JSON.stringify(state));
+  await setBrowserState(state);
 
   // Wait until the selected tab is restored and all others are pending.
   await Promise.all(Array.map(gBrowser.tabs, tab => {

@@ -413,6 +413,8 @@ TabTarget.prototype = {
       // to register custom actors.
       // TODO: the comment and implementation are out of sync here. See Bug 1420134.
       DebuggerServer.registerAllActors();
+      // Enable being able to get child process actors
+      DebuggerServer.allowChromeProcess = true;
 
       this._client = new DebuggerClient(DebuggerServer.connectPipe());
       // A local TabTarget will never perform chrome debugging.

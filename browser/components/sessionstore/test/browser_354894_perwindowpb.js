@@ -24,14 +24,14 @@
  * notifications. The latter won't.
  */
 
-// The rejection "RecentWindow.getMostRecentBrowserWindow(...) is null" is left
+// The rejection "BrowserWindowTracker.getTopWindow(...) is null" is left
 // unhandled in some cases. This bug should be fixed, but for the moment this
 // file is whitelisted.
 //
 // NOTE: Whitelisting a class of rejections should be limited. Normally you
 //       should use "expectUncaughtRejection" to flag individual failures.
 ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/getMostRecentBrowserWindow/);
+PromiseTestUtils.whitelistRejectionsGlobally(/getTopWindow/);
 
 // Some urls that might be opened in tabs and/or popups
 // Do not use about:blank:
@@ -439,8 +439,6 @@ add_task(async function test_open_close_restore_from_popup() {
 
     newWin2 = await promiseNewWindowLoaded();
 
-    is(newWin2.gBrowser.browsers.length, 1,
-       "Did not restore, as undoCloseWindow() was last called");
     is(TEST_URLS.indexOf(newWin2.gBrowser.browsers[0].currentURI.spec), -1,
        "Did not restore, as undoCloseWindow() was last called (2)");
 

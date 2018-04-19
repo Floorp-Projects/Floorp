@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarkValidator: "resource://services-sync/bookmark_validator.js",
   OS: "resource://gre/modules/osfile.jsm",
   PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
+  PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.jsm",
   PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Resource: "resource://services-sync/resource.js",
@@ -34,6 +35,8 @@ XPCOMUtils.defineLazyGetter(this, "ANNOS_TO_TRACK", () => [
   PlacesSyncUtils.bookmarks.SIDEBAR_ANNO, PlacesUtils.LMANNO_FEEDURI,
   PlacesUtils.LMANNO_SITEURI,
 ]);
+
+const PLACES_MAINTENANCE_INTERVAL_SECONDS = 4 * 60 * 60; // 4 hours.
 
 const FOLDER_SORTINDEX = 1000000;
 
@@ -388,6 +391,42 @@ BaseBookmarksEngine.prototype = {
     this._log.debug("Assigned new sync ID ${newSyncID}", { newSyncID });
     await super.ensureCurrentSyncID(newSyncID); // Remove in bug 1443021.
     return newSyncID;
+  },
+
+  async _sync() {
+    try {
+      await super._sync();
+      if (this._ranMaintenanceOnLastSync) {
+        // If the last sync failed, we ran maintenance, and this sync succeeded,
+        // maintenance likely fixed the issue.
+        this._ranMaintenanceOnLastSync = false;
+        this.service.recordTelemetryEvent("maintenance", "fix",
+          "bookmarks");
+      }
+    } catch (ex) {
+      if (Async.isShutdownException(ex) || ex.status > 0) {
+        // Don't run maintenance on shutdown or HTTP errors.
+        throw ex;
+      }
+      // Run Places maintenance periodically to try to recover from corruption
+      // that might have caused the sync to fail. We cap the interval because
+      // persistent failures likely indicate a problem that won't be fixed by
+      // running maintenance after every failed sync.
+      let elapsedSinceMaintenance = Date.now() / 1000 -
+        Services.prefs.getIntPref(
+        "places.database.lastMaintenance", 0);
+      if (elapsedSinceMaintenance >= PLACES_MAINTENANCE_INTERVAL_SECONDS) {
+        this._log.error("Bookmark sync failed, ${elapsedSinceMaintenance}s " +
+                        "elapsed since last run; running Places maintenance",
+                        { elapsedSinceMaintenance });
+        await PlacesDBUtils.maintenanceOnIdle();
+        this._ranMaintenanceOnLastSync = true;
+        this.service.recordTelemetryEvent("maintenance", "run", "bookmarks");
+      } else {
+        this._ranMaintenanceOnLastSync = false;
+      }
+      throw ex;
+    }
   },
 
   async _syncFinish() {

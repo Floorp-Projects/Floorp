@@ -11,13 +11,13 @@ ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
-  RecentWindow: "resource:///modules/RecentWindow.jsm",
   Weave: "resource://services-sync/main.js",
 });
 
@@ -607,7 +607,7 @@ var PlacesUIUtils = {
     var browserWindow = null;
     browserWindow =
       aWindow && aWindow.document.documentElement.getAttribute("windowtype") == "navigator:browser" ?
-      aWindow : RecentWindow.getMostRecentBrowserWindow();
+      aWindow : BrowserWindowTracker.getTopWindow();
 
     var urls = [];
     let skipMarking = browserWindow && PrivateBrowsingUtils.isWindowPrivate(browserWindow);
@@ -745,7 +745,7 @@ var PlacesUIUtils = {
       if (aWhere == "current" && isBookmark) {
         if (PlacesUtils.annotations
                        .itemHasAnnotation(aNode.itemId, this.LOAD_IN_SIDEBAR_ANNO)) {
-          let browserWin = RecentWindow.getMostRecentBrowserWindow();
+          let browserWin = BrowserWindowTracker.getTopWindow();
           if (browserWin) {
             browserWin.openWebPanel(aNode.title, aNode.uri);
             return;

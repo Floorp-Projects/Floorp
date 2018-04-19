@@ -737,11 +737,11 @@ Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect
         return;
       }
 
-      aContext->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacityItem->GetOpacity());
+      aContext->GetDrawTarget()->PushLayer(false, opacityItem->GetOpacity(), nullptr, mozilla::gfx::Matrix(), aItemBounds);
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(), aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
       aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext, aRecorder);
-      aContext->PopGroupAndBlend();
+      aContext->GetDrawTarget()->PopLayer();
       GP("endGroup %s %p-%d\n", aItem->Name(), aItem->Frame(), aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
       break;
@@ -749,7 +749,7 @@ Grouper::PaintContainerItem(DIGroup* aGroup, nsDisplayItem* aItem, const IntRect
     case DisplayItemType::TYPE_BLEND_MODE: {
       auto blendItem = static_cast<nsDisplayBlendMode*>(aItem);
       auto blendMode = blendItem->BlendMode();
-      aContext->GetDrawTarget()->PushLayerWithBlend(false, 1.0, nullptr, mozilla::gfx::Matrix(), IntRect(), false, blendMode);
+      aContext->GetDrawTarget()->PushLayerWithBlend(false, 1.0, nullptr, mozilla::gfx::Matrix(), aItemBounds, false, blendMode);
       GP("beginGroup %s %p-%d\n", aItem->Name(), aItem->Frame(), aItem->GetPerFrameKey());
       aContext->GetDrawTarget()->FlushItem(aItemBounds);
       aGroup->PaintItemRange(this, aChildren->GetBottom(), nullptr, aContext, aRecorder);
