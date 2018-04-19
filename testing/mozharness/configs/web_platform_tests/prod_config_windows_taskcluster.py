@@ -64,5 +64,5 @@ config = {
 
     "download_minidump_stackwalk": True,
 
-    "per_test_category": "web-platform",
+    "verify_category": "web-platform",
 }
