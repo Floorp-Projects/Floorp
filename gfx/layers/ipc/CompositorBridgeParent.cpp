@@ -318,11 +318,6 @@ CompositorBridgeParent::FinishShutdown()
   sIndirectLayerTrees.clear();
 }
 
-static void SetThreadPriority()
-{
-  hal::SetCurrentThreadPriority(hal::THREAD_PRIORITY_COMPOSITOR);
-}
-
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
 static int32_t
 CalculateCompositionFrameRate()
@@ -424,9 +419,6 @@ CompositorBridgeParent::Initialize()
   CompositorLoop()->PostTask(NewRunnableFunction("AddCompositorRunnable",
                                                  &AddCompositor,
                                                  this, &mCompositorBridgeID));
-
-  CompositorLoop()->PostTask(NewRunnableFunction("SetThreadPriorityRunnable",
-                                                 SetThreadPriority));
 
 
   { // scope lock
