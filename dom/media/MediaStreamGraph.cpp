@@ -3310,14 +3310,37 @@ SourceMediaStream::HasPendingAudioTrack()
 bool
 SourceMediaStream::OpenNewAudioCallbackDriver(AudioDataListener * aListener)
 {
+  // Can't AppendMessage except on Mainthread. This is an ungly trick
+  // to bounce the message in mainthread and then in MSG thread.
+  if (!NS_IsMainThread()) {
+    RefPtr<nsIRunnable> runnable =
+      WrapRunnable(this,
+                   &SourceMediaStream::OpenNewAudioCallbackDriver,
+                   aListener);
+    GraphImpl()->mAbstractMainThread->Dispatch(runnable.forget());
+    return true;
+  }
+
   AudioCallbackDriver* nextDriver = new AudioCallbackDriver(GraphImpl());
   nextDriver->SetInputListener(aListener);
-  {
-    MonitorAutoLock lock(GraphImpl()->GetMonitor());
-    MOZ_ASSERT(GraphImpl()->LifecycleStateRef() ==
-               MediaStreamGraphImpl::LifecycleState::LIFECYCLE_RUNNING);
-    GraphImpl()->CurrentDriver()->SwitchAtNextIteration(nextDriver);
-  }
+
+  class Message : public ControlMessage {
+  public:
+    Message(MediaStream* aStream, AudioCallbackDriver* aNextDriver)
+    : ControlMessage(aStream)
+    , mNextDriver(aNextDriver)
+    {MOZ_ASSERT(mNextDriver);}
+    void Run() override
+    {
+       MediaStreamGraphImpl* graphImpl = mNextDriver->GraphImpl();
+       MonitorAutoLock mon(graphImpl->GetMonitor());
+       MOZ_ASSERT(graphImpl->LifecycleStateRef() ==
+                  MediaStreamGraphImpl::LifecycleState::LIFECYCLE_RUNNING);
+       graphImpl->CurrentDriver()->SwitchAtNextIteration(mNextDriver);
+    }
+    AudioCallbackDriver* mNextDriver;
+  };
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, nextDriver));
 
   return true;
 }
