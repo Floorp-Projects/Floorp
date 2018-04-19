@@ -250,7 +250,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
     if (FcPatternGetInteger(aFontPattern, FC_WEIGHT, 0, &weight) != FcResultMatch) {
         weight = FC_WEIGHT_REGULAR;
     }
-    mWeight = MapFcWeight(weight);
+    mWeightRange = WeightRange(MapFcWeight(weight));
 
     // width
     int width;
@@ -322,7 +322,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
       mIgnoreFcCharmap(true),
       mAspect(0.0), mFontData(aData), mLength(aLength)
 {
-    mWeight = aWeight;
+    mWeightRange = WeightRange(aWeight);
     mStyle = aStyle;
     mStretch = aStretch;
     mIsDataUserFont = true;
@@ -341,7 +341,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
           mFTFace(nullptr), mFTFaceInitialized(false),
           mAspect(0.0), mFontData(nullptr), mLength(0)
 {
-    mWeight = aWeight;
+    mWeightRange = WeightRange(aWeight);
     mStyle = aStyle;
     mStretch = aStretch;
     mIsLocalUserFont = true;
@@ -764,22 +764,14 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
     }
 
     AutoTArray<FT_Fixed,8> coords;
-    if (!aStyle->variationSettings.IsEmpty() || !mVariationSettings.IsEmpty()) {
+    if (!aStyle->variationSettings.IsEmpty() ||
+        !mVariationSettings.IsEmpty() ||
+        !Weight().IsSingle()) {
         FT_Face ftFace = GetFTFace();
         if (ftFace) {
-            const nsTArray<gfxFontVariation>* settings;
-            AutoTArray<gfxFontVariation,8> mergedSettings;
-            if (mVariationSettings.IsEmpty()) {
-                settings = &aStyle->variationSettings;
-            } else if (aStyle->variationSettings.IsEmpty()) {
-                settings = &mVariationSettings;
-            } else {
-                gfxFontUtils::MergeVariations(mVariationSettings,
-                                              aStyle->variationSettings,
-                                              &mergedSettings);
-                settings = &mergedSettings;
-            }
-            gfxFT2FontBase::SetupVarCoords(ftFace, *settings, &coords);
+            AutoTArray<gfxFontVariation,8> settings;
+            GetVariationsForStyle(settings, *aStyle);
+            gfxFT2FontBase::SetupVarCoords(ftFace, settings, &coords);
         }
     }
 
@@ -1194,6 +1186,9 @@ gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 
         gfxFontconfigFontEntry *fontEntry =
             new gfxFontconfigFontEntry(faceName, face, mContainsAppFonts);
+
+        fontEntry->SetupVariationRanges();
+
         AddFontEntry(fontEntry);
 
         if (fontEntry->IsNormalStyle()) {
@@ -1201,14 +1196,17 @@ gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
         }
 
         if (LOG_FONTLIST_ENABLED()) {
+            nsAutoCString weightString;
+            fontEntry->Weight().ToString(weightString);
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
-                 " with style: %s weight: %g stretch: %d"
+                 " with style: %s weight: %s stretch: %d"
                  " psname: %s fullname: %s",
                  NS_ConvertUTF16toUTF8(fontEntry->Name()).get(),
                  NS_ConvertUTF16toUTF8(Name()).get(),
                  (fontEntry->IsItalic()) ?
                   "italic" : (fontEntry->IsOblique() ? "oblique" : "normal"),
-                 fontEntry->Weight().ToFloat(), fontEntry->Stretch(),
+                 weightString.get(),
+                 fontEntry->Stretch(),
                  NS_ConvertUTF16toUTF8(psname).get(),
                  NS_ConvertUTF16toUTF8(fullname).get()));
         }
@@ -1313,7 +1311,8 @@ gfxFontconfigFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
         if (dist < 0.0 ||
             !bestEntry ||
             bestEntry->Stretch() != entry->Stretch() ||
-            bestEntry->Weight() != entry->Weight() ||
+            bestEntry->Weight().Min() != entry->Weight().Min() ||
+            bestEntry->Weight().Max() != entry->Weight().Max() ||
             bestEntry->mStyle != entry->mStyle) {
             // If the best entry in this group is still outside the tolerance,
             // then skip the entire group.

@@ -126,7 +126,7 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
 {
     mUserFontData.reset(aUserFontData);
     mStyle = aStyle;
-    mWeight = aWeight;
+    mWeightRange = WeightRange(aWeight);
     mStretch = aStretch;
     if (IsType1())
         mForceGDI = true;
@@ -139,7 +139,9 @@ gfxFontEntry*
 GDIFontEntry::Clone() const
 {
     MOZ_ASSERT(!IsUserFont(), "we can only clone installed fonts!");
-    return new GDIFontEntry(Name(), mFontType, mStyle, mWeight, mStretch,
+    // GDI fonts don't support variations, so we don't need to worry about
+    // cloning the weight as a range.
+    return new GDIFontEntry(Name(), mFontType, mStyle, Weight().Min(), mStretch,
                             nullptr);
 }
 
@@ -305,7 +307,7 @@ GDIFontEntry::TestCharacterMap(uint32_t aCh)
         if (!IsUpright()) {
             fakeStyle.style = NS_FONT_STYLE_ITALIC;
         }
-        fakeStyle.weight = mWeight;
+        fakeStyle.weight = Weight().Min();
 
         RefPtr<gfxFont> tempFont = FindOrMakeFont(&fakeStyle, false);
         if (!tempFont || !tempFont->Valid())
@@ -384,7 +386,7 @@ GDIFontEntry::InitLogFont(const nsAString& aName,
     // it may give us a regular one based on weight.  Windows should
     // do fake italic for us in that case.
     mLogFont.lfItalic         = !IsUpright();
-    mLogFont.lfWeight         = int(mWeight.ToFloat());
+    mLogFont.lfWeight         = Weight().Min().ToIntRounded();
 
     int len = std::min<int>(aName.Length(), LF_FACESIZE - 1);
     memcpy(&mLogFont.lfFaceName, aName.BeginReading(), len * sizeof(char16_t));
@@ -467,7 +469,7 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     for (uint32_t i = 0; i < ff->mAvailableFonts.Length(); ++i) {
         fe = static_cast<GDIFontEntry*>(ff->mAvailableFonts[i].get());
         // check if we already know about this face
-        if (fe->mWeight == FontWeight(int32_t(logFont.lfWeight)) &&
+        if (fe->Weight().Min() == FontWeight(int32_t(logFont.lfWeight)) &&
             fe->IsItalic() == (logFont.lfItalic == 0xFF)) {
             // update the charset bit here since this could be different
             // XXX Can we still do this now that we store mCharset
@@ -729,7 +731,7 @@ gfxGDIFontList::LookupLocalFont(const nsAString& aFontName,
     // 'Arial Vet' which can be used as a key in GDI font lookups).
     GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(lookup->Name(), 
         gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/, 
-        lookup->mStyle, lookup->mWeight, aStretch, nullptr);
+        lookup->mStyle, lookup->Weight().Min(), aStretch, nullptr);
 
     if (!fe)
         return nullptr;
@@ -737,7 +739,7 @@ gfxGDIFontList::LookupLocalFont(const nsAString& aFontName,
     fe->mIsLocalUserFont = true;
 
     // make the new font entry match the userfont entry style characteristics
-    fe->mWeight = aWeight;
+    fe->mWeightRange = WeightRange(aWeight);
     fe->mStyle = aStyle;
 
     return fe;
