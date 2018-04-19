@@ -11,11 +11,9 @@ this.main = (function() {
   const manifest = browser.runtime.getManifest();
   let backend;
 
-  let hasSeenOnboarding;
-
-  browser.storage.local.get(["hasSeenOnboarding"]).then((result) => {
-    hasSeenOnboarding = !!result.hasSeenOnboarding;
-    if (!hasSeenOnboarding) {
+  let hasSeenOnboarding = browser.storage.local.get(["hasSeenOnboarding"]).then((result) => {
+    const onboarded = !!result.hasSeenOnboarding;
+    if (!onboarded) {
       setIconActive(false, null);
       // Note that the branded name 'Firefox Screenshots' is not localized:
       startBackground.photonPageActionPort.postMessage({
@@ -23,6 +21,8 @@ this.main = (function() {
         title: "Firefox Screenshots"
       });
     }
+    hasSeenOnboarding = Promise.resolve(onboarded);
+    return hasSeenOnboarding;
   }).catch((error) => {
     log.error("Error getting hasSeenOnboarding:", error);
   });
@@ -93,34 +93,36 @@ this.main = (function() {
 
   // This is called by startBackground.js, directly in response to clicks on the Photon page action
   exports.onClicked = catcher.watchFunction((tab) => {
-    if (shouldOpenMyShots(tab.url)) {
-      if (!hasSeenOnboarding) {
-        catcher.watchPromise(analytics.refreshTelemetryPref().then(() => {
-          sendEvent("goto-onboarding", "selection-button", {incognito: tab.incognito});
-          return forceOnboarding();
-        }));
-        return;
-      }
-      catcher.watchPromise(analytics.refreshTelemetryPref().then(() => {
-        sendEvent("goto-myshots", "about-newtab", {incognito: tab.incognito});
-      }));
-      catcher.watchPromise(
-        auth.authHeaders()
-        .then(() => browser.tabs.update({url: backend + "/shots"})));
-    } else {
-      catcher.watchPromise(
-        toggleSelector(tab)
-          .then(active => {
-            const event = active ? "start-shot" : "cancel-shot";
-            sendEvent(event, "toolbar-button", {incognito: tab.incognito});
-          }, (error) => {
-            if ((!hasSeenOnboarding) && error.popupMessage === "UNSHOOTABLE_PAGE") {
-              sendEvent("goto-onboarding", "selection-button", {incognito: tab.incognito});
-              return forceOnboarding();
-            }
-            throw error;
+    catcher.watchPromise(hasSeenOnboarding.then(onboarded => {
+      if (shouldOpenMyShots(tab.url)) {
+        if (!onboarded) {
+          catcher.watchPromise(analytics.refreshTelemetryPref().then(() => {
+            sendEvent("goto-onboarding", "selection-button", {incognito: tab.incognito});
+            return forceOnboarding();
           }));
-    }
+          return;
+        }
+        catcher.watchPromise(analytics.refreshTelemetryPref().then(() => {
+          sendEvent("goto-myshots", "about-newtab", {incognito: tab.incognito});
+        }));
+        catcher.watchPromise(
+          auth.authHeaders()
+          .then(() => browser.tabs.update({url: backend + "/shots"})));
+      } else {
+        catcher.watchPromise(
+          toggleSelector(tab)
+            .then(active => {
+              const event = active ? "start-shot" : "cancel-shot";
+              sendEvent(event, "toolbar-button", {incognito: tab.incognito});
+            }, (error) => {
+              if ((!onboarded) && error.popupMessage === "UNSHOOTABLE_PAGE") {
+                sendEvent("goto-onboarding", "selection-button", {incognito: tab.incognito});
+                return forceOnboarding();
+              }
+              throw error;
+            }));
+      }
+    }));
   });
 
   function forceOnboarding() {
@@ -273,8 +275,8 @@ this.main = (function() {
   });
 
   communication.register("hasSeenOnboarding", () => {
-    hasSeenOnboarding = true;
-    catcher.watchPromise(browser.storage.local.set({hasSeenOnboarding}));
+    hasSeenOnboarding = Promise.resolve(true);
+    catcher.watchPromise(browser.storage.local.set({hasSeenOnboarding: true}));
     setIconActive(false, null);
     startBackground.photonPageActionPort.postMessage({
       type: "setProperties",

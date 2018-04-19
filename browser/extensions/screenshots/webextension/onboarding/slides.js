@@ -24,6 +24,7 @@ this.slides = (function() {
       iframe.src = browser.extension.getURL("blank.html");
       iframe.id = "firefox-screenshots-onboarding-iframe";
       iframe.style.zIndex = "99999999999";
+      iframe.style.display = "block";
       iframe.style.border = "none";
       iframe.style.position = "fixed";
       iframe.style.top = "0";
