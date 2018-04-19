@@ -23,7 +23,7 @@ CanBeFinalizedInBackground(AllocKind kind, const Class* clasp)
     MOZ_ASSERT(IsObjectAllocKind(kind));
     /* If the class has no finalizer or a finalizer that is safe to call on
      * a different thread, we change the alloc kind. For example,
-     * AllocKind::OBJECT0 calls the finalizer on the active thread,
+     * AllocKind::OBJECT0 calls the finalizer on the main thread,
      * AllocKind::OBJECT0_BACKGROUND calls the finalizer on the gcHelperThread.
      * IsBackgroundFinalized is called to prevent recursively incrementing
      * the alloc kind; kind may already be a background finalize kind.

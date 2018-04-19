@@ -873,6 +873,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
     MOZ_ASSERT(!target->is<CrossCompartmentWrapperObject>());
     MOZ_ASSERT(origobj->getClass() == target->getClass());
     ReleaseAssertObjectHasNoWrappers(cx, target);
+    MOZ_ASSERT(JS::CellIsNotGray(target));
 
     RootedValue origv(cx, ObjectValue(*origobj));
     RootedObject newIdentity(cx);
@@ -889,7 +890,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
         // destination, then we know that we won't find a wrapper in the
         // destination's cross compartment map and that the same
         // object will continue to work.
-        AutoCompartment ac(cx, origobj);
+        AutoCompartmentUnchecked ac(cx, origobj->compartment());
         if (!JSObject::swap(cx, origobj, target))
             MOZ_CRASH();
         newIdentity = origobj;
@@ -923,7 +924,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
     // Lastly, update the original object to point to the new one.
     if (origobj->compartment() != destination) {
         RootedObject newIdentityWrapper(cx, newIdentity);
-        AutoCompartment ac(cx, origobj);
+        AutoCompartmentUnchecked ac(cx, origobj->compartment());
         if (!JS_WrapObject(cx, &newIdentityWrapper))
             MOZ_CRASH();
         MOZ_ASSERT(Wrapper::wrappedObject(newIdentityWrapper) == newIdentity);
@@ -935,6 +936,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
 
     // The new identity object might be one of several things. Return it to avoid
     // ambiguity.
+    MOZ_ASSERT(JS::CellIsNotGray(newIdentity));
     return newIdentity;
 }
 
@@ -4229,13 +4231,13 @@ CanDoOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t leng
     // These are heuristics which the caller may choose to ignore (e.g., for
     // testing purposes).
     if (!options.forceAsync) {
-        // Compiling off the active thread inolves creating a new Zone and other
+        // Compiling off the main thread inolves creating a new Zone and other
         // significant overheads.  Don't bother if the script is tiny.
         if (length < TINY_LENGTH)
             return false;
 
         // If the parsing task would have to wait for GC to complete, it'll probably
-        // be faster to just start it synchronously on the active thread unless the
+        // be faster to just start it synchronously on the main thread unless the
         // script is huge.
         if (OffThreadParsingMustWaitForGC(cx->runtime())) {
             if (what == OffThread::Compile && length < HUGE_SRC_LENGTH)

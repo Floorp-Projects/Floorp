@@ -8,7 +8,7 @@ skip-if(!asyncPan) == bg-fixed-child-clip-2.html bg-fixed-child-clip-ref.html
 fuzzy(1,246) fuzzy-if(skiaContent,2,170) fuzzy-if(browserIsRemote&&d2d,59,187) skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
 skip-if(!asyncPan) == bg-fixed-in-opacity.html bg-fixed-in-opacity-ref.html
 # Passing the test below without WebRender would require implementing CSS filters in the Gecko compositor.
-fails-if(!webrender) skip-if(!asyncPan) == bg-fixed-in-css-filter.html bg-fixed-in-css-filter-ref.html
+fails-if(!webrender) skip-if(!asyncPan) fuzzy-if(webrender&&gtkWidget,0-1,0-59) == bg-fixed-in-css-filter.html bg-fixed-in-css-filter-ref.html # bug 1454794 for webrender fuzziness
 skip-if(!asyncPan) == bg-fixed-child-no-culling-1.html bg-fixed-child-no-culling-1-ref.html
 skip-if(!asyncPan) == bg-fixed-child-no-culling-2.html bg-fixed-child-no-culling-2-ref.html
 skip-if(!asyncPan) == bg-fixed-child-no-culling-3.html bg-fixed-child-no-culling-3-ref.html

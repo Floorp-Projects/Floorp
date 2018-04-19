@@ -67,7 +67,7 @@ GetThreadType(void) {
 static inline bool
 IsHelperThreadType(uint32_t thread)
 {
-    return thread != THREAD_TYPE_NONE && thread != THREAD_TYPE_COOPERATING;
+    return thread != THREAD_TYPE_NONE && thread != THREAD_TYPE_MAIN;
 }
 
 void

@@ -393,8 +393,8 @@ class ScriptSource
     uint32_t refs;
 
     // Note: while ScriptSources may be compressed off thread, they are only
-    // modified by the active thread, and all members are always safe to access
-    // on the active thread.
+    // modified by the main thread, and all members are always safe to access
+    // on the main thread.
 
     // Indicate which field in the |data| union is active.
 

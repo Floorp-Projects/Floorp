@@ -79,7 +79,6 @@ class AntivirusScan(BaseScript, VirtualenvMixin):
                             require_config_file=False,
                             config={
                                 "virtualenv_modules": [
-                                    "pip==1.5.5",
                                     "boto",
                                     "redo",
                                     "mar",

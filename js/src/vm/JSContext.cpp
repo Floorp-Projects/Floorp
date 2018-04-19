@@ -132,7 +132,7 @@ js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRun
     MOZ_RELEASE_ASSERT(!TlsContext.get());
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
-    js::oom::SetThreadType(!parentRuntime ? js::THREAD_TYPE_COOPERATING
+    js::oom::SetThreadType(!parentRuntime ? js::THREAD_TYPE_MAIN
                                           : js::THREAD_TYPE_WORKER);
 #endif
 

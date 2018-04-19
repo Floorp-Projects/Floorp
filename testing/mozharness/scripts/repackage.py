@@ -61,7 +61,14 @@ class Repackage(BaseScript):
         locale_dir = ''
         if config.get('locale'):
             locale_dir = "{}{}".format(os.path.sep, config['locale'])
-        dirs['output_home'] = config['output_home'].format(locale=locale_dir, **abs_dirs)
+        repack_id_dir = ''
+        if config.get('repack_id'):
+            repack_id_dir = "{}{}".format(os.path.sep, config['repack_id'])
+        dirs['output_home'] = config['output_home'].format(
+            locale=locale_dir,
+            repack_id=repack_id_dir,
+            **abs_dirs
+        )
         for key in dirs.keys():
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]

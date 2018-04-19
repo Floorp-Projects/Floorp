@@ -95,7 +95,7 @@ JSObject::finalize(js::FreeOp* fop)
 #ifdef DEBUG
     MOZ_ASSERT(isTenured());
     if (!IsBackgroundFinalized(asTenured().getAllocKind())) {
-        /* Assert we're on the active thread. */
+        /* Assert we're on the main thread. */
         MOZ_ASSERT(CurrentThreadCanAccessZone(zone()));
     }
 #endif

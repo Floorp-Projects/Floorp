@@ -610,7 +610,7 @@ class JitCompartment
 
     // Perform the necessary read barriers on stubs and SIMD template object
     // described by the bitmasks passed in. This function can only be called
-    // from the active thread.
+    // from the main thread.
     //
     // The stub and template object pointers must still be valid by the time
     // these methods are called. This is arranged by cancelling off-thread Ion

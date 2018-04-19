@@ -376,6 +376,7 @@ task_description_schema = Schema({
 
         # optional features
         Required('chain-of-trust'): bool,
+        Optional('taskcluster-proxy'): bool,
     }, {
         Required('implementation'): 'buildbot-bridge',
 
@@ -460,6 +461,8 @@ task_description_schema = Schema({
 
         # locale key, if this is a locale beetmover job
         Optional('locale'): basestring,
+
+        Optional('partner-public'): bool,
 
         Required('release-properties'): {
             'app-name': basestring,
@@ -949,6 +952,9 @@ def build_generic_worker_payload(config, task, task_def):
     if worker.get('chain-of-trust'):
         features['chainOfTrust'] = True
 
+    if worker.get('taskcluster-proxy'):
+        features['taskclusterProxy'] = True
+
     if features:
         task_def['payload']['features'] = features
 
@@ -1009,6 +1015,8 @@ def build_beetmover_payload(config, task, task_def):
     }
     if worker.get('locale'):
         task_def['payload']['locale'] = worker['locale']
+    if worker.get('partner-public'):
+        task_def['payload']['is_partner_repack_public'] = worker['partner-public']
     if release_config:
         task_def['payload'].update(release_config)
 

@@ -10,7 +10,6 @@ config = {
     "virtualenv_path": 'venv',
     "exes": {
         'python': sys.executable,
-        'mozinstall': ['build/venv/scripts/python', 'build/venv/scripts/mozinstall-script.py'],
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg')
     },
 

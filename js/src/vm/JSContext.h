@@ -464,12 +464,12 @@ struct JSContext : public JS::RootingContext,
     js::ThreadData<bool> ionCompilingSafeForMinorGC;
 
     // Whether this thread is currently performing GC.  This thread could be the
-    // active thread or a helper thread while the active thread is running the
+    // main thread or a helper thread while the main thread is running the
     // collector.
     js::ThreadData<bool> performingGC;
 
     // Whether this thread is currently sweeping GC things.  This thread could
-    // be the active thread or a helper thread while the active thread is running
+    // be the main thread or a helper thread while the main thread is running
     // the mutator.  This is used to assert that destruction of GCPtr only
     // happens when we are sweeping.
     js::ThreadData<bool> gcSweeping;
@@ -541,7 +541,7 @@ struct JSContext : public JS::RootingContext,
 
     // Count of AutoKeepAtoms instances on the current thread's stack. When any
     // instances exist, atoms in the runtime will not be collected. Threads
-    // parsing off the active thread do not increment this value, but the presence
+    // parsing off the main thread do not increment this value, but the presence
     // of any such threads also inhibits collection of atoms. We don't scan the
     // stacks of exclusive threads, so we need to avoid collecting their
     // objects in another way. The only GC thing pointers they have are to

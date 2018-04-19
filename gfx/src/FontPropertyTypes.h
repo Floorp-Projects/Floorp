@@ -8,9 +8,13 @@
 #ifndef GFX_FONT_PROPERTY_TYPES_H
 #define GFX_FONT_PROPERTY_TYPES_H
 
+#include <algorithm>
 #include <cstdint>
 #include <cmath>
+#include <utility>
+
 #include "mozilla/Assertions.h"
+#include "nsString.h"
 
 /*
  * This file is separate from gfxFont.h so that layout can include it
@@ -330,7 +334,80 @@ private:
   static const int16_t kItalic = INT16_MAX;
 };
 
+
+/**
+ * Convenience type to hold a <min, max> pair representing a range of values.
+ *
+ * The min and max are both inclusive, so when min == max the range represents
+ * a single value (not an empty range).
+ */
+template<class T>
+class FontPropertyRange
+{
+public:
+  /**
+   * Construct a range from given minimum and maximum values (inclusive).
+   */
+  FontPropertyRange(T aMin, T aMax)
+    : mValues(aMin, aMax)
+  {
+    MOZ_ASSERT(aMin <= aMax);
+  }
+
+  /**
+   * Construct a range representing a single value (min==max).
+   */
+  explicit FontPropertyRange(T aValue)
+    : mValues(aValue, aValue)
+  {
+  }
+
+  T Min() const { return mValues.first; }
+  T Max() const { return mValues.second; }
+
+  /**
+   * Clamp the given value to this range.
+   *
+   * (We can't use mozilla::Clamp here because it only accepts integral types.)
+   */
+  T Clamp(T aValue) const
+  {
+    return aValue <= Min() ? Min() : (aValue >= Max() ? Max() : aValue);
+  }
+
+  /**
+   * Return whether the range consists of a single unique value.
+   */
+  bool IsSingle() const
+  {
+    return Min() == Max();
+  }
+
+  bool operator==(const FontPropertyRange& aOther) const
+  {
+    return mValues == aOther.mValues;
+  }
+  bool operator!=(const FontPropertyRange& aOther) const
+  {
+    return mValues != aOther.mValues;
+  }
+
+  void ToString(nsACString& aOutString, const char* aDelim = "..") const
+  {
+    aOutString.AppendPrintf("%g", Min().ToFloat());
+    if (!IsSingle()) {
+      aOutString.AppendPrintf("%s%g", aDelim, Max().ToFloat());
+    }
+  }
+
+private:
+  std::pair<T,T> mValues;
+};
+
+typedef FontPropertyRange<mozilla::FontWeight>  WeightRange;
+typedef FontPropertyRange<mozilla::FontStretch> StretchRange;
+typedef FontPropertyRange<mozilla::FontStyle>   StyleRange;
+
 } // namespace mozilla
 
 #endif // GFX_FONT_PROPERTY_TYPES_H
-
