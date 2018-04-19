@@ -16,10 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1166138
   <div id="content" style="display: none">
   </div>
 
-  <img srcset="file_bug1166138_1x.png 1x, file_bug1166138_2x.png 2x"
-       src="file_bug1166138_def.png"
-       onload="onLoad()">
-
   <script type="application/javascript">
     var img1x = "http://mochi.test:8888/tests/dom/html/test/file_bug1166138_1x.png";
     var img2x = "http://mochi.test:8888/tests/dom/html/test/file_bug1166138_2x.png";
@@ -126,5 +122,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1166138
       done = true;
     });
   </script>
+
+  <img srcset="file_bug1166138_1x.png 1x, file_bug1166138_2x.png 2x"
+       src="file_bug1166138_def.png"
+       onload="onLoad()">
+
 </body>
 </html>
