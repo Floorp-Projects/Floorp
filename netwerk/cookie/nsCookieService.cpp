@@ -3487,12 +3487,26 @@ nsCookieService::CanSetCookie(nsIURI*             aHostURI,
   if ((aCookieAttributes.sameSite != nsICookie2::SAMESITE_UNSET) &&
       aThirdPartyUtil &&
       IsSameSiteEnabled()) {
-    bool isThirdParty = false;
-    aThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isThirdParty);
-    if (isThirdParty) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
-                        "failed the samesite tests");
-      return newCookie;
+
+    // Do not treat loads triggered by web extensions as foreign
+    bool addonAllowsLoad = false;
+    if (aChannel) {
+      nsCOMPtr<nsIURI> channelURI;
+      NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
+      nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+      addonAllowsLoad = loadInfo &&
+        BasePrincipal::Cast(loadInfo->TriggeringPrincipal())->
+          AddonAllowsLoad(channelURI);
+    }
+
+    if (!addonAllowsLoad) {
+      bool isThirdParty = false;
+      nsresult rv = aThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isThirdParty);
+      if (NS_FAILED(rv) || isThirdParty) {
+        COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
+                          "failed the samesite tests");
+        return newCookie;
+      }
     }
   }
 
