@@ -163,22 +163,3 @@ test-verify-wpt:
     mozharness:
         extra-options:
             - --verify
-
-test-coverage-wpt:
-    description: "Per web-platform test coverage"
-    suite: test-coverage-wpt
-    treeherder-symbol: TCw
-    max-run-time: 10800
-    run-on-projects:
-        by-test-platform:
-            # do not run on beta or release: usually just confirms earlier results
-            linux64-ccov/.*: ['trunk', 'try']
-            windows10-64-ccov/debug: ['trunk', 'try']
-            default: []
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: 2
-    mozharness:
-        extra-options:
-            - --per-test-coverage
