@@ -144,7 +144,6 @@ test-packages-manifest:
       $(foreach pkg,$(TEST_PKGS_TARGZ),$(call PKG_ARG,$(pkg),tar.gz))
 
 package-tests-prepare-dest:
-	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 
 define package_archive
