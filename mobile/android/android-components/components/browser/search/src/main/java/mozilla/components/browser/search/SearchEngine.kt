@@ -44,15 +44,15 @@ class SearchEngine internal constructor(
         var result = template
         val locale = Locale.getDefault().toString()
 
-        result = result.replace(MOZ_PARAM_LOCALE.toRegex(), locale)
-        result = result.replace(MOZ_PARAM_DIST_ID.toRegex(), "")
-        result = result.replace(MOZ_PARAM_OFFICIAL.toRegex(), "unofficial")
+        result = result.replace(MOZ_PARAM_LOCALE, locale)
+        result = result.replace(MOZ_PARAM_DIST_ID, "")
+        result = result.replace(MOZ_PARAM_OFFICIAL, "unofficial")
 
-        result = result.replace(OS_PARAM_USER_DEFINED.toRegex(), query)
-        result = result.replace(OS_PARAM_INPUT_ENCODING.toRegex(), "UTF-8")
+        result = result.replace(OS_PARAM_USER_DEFINED, query)
+        result = result.replace(OS_PARAM_INPUT_ENCODING, "UTF-8")
 
-        result = result.replace(OS_PARAM_LANGUAGE.toRegex(), locale)
-        result = result.replace(OS_PARAM_OUTPUT_ENCODING.toRegex(), "UTF-8")
+        result = result.replace(OS_PARAM_LANGUAGE, locale)
+        result = result.replace(OS_PARAM_OUTPUT_ENCODING, "UTF-8")
 
         // Replace any optional parameters
         result = result.replace(OS_PARAM_OPTIONAL.toRegex(), "")
@@ -61,18 +61,23 @@ class SearchEngine internal constructor(
     }
 
     companion object {
+        // We are using string concatenation here to avoid the Kotlin compiler interpreting this
+        // as string templates. It is possible to escape the string accordingly. But this seems to
+        // be inconsistent between Kotlin versions. So to be safe we avoid this completely by
+        // constructing the strings manually.
+
         // Parameters copied from nsSearchService.js
-        private const val MOZ_PARAM_LOCALE = "\\{moz:locale}"
-        private const val MOZ_PARAM_DIST_ID = "\\{moz:distributionID}"
-        private const val MOZ_PARAM_OFFICIAL = "\\{moz:official}"
+        private const val MOZ_PARAM_LOCALE = "{" + "moz:locale" + "}"
+        private const val MOZ_PARAM_DIST_ID = "{" + "moz:distributionID" + "}"
+        private const val MOZ_PARAM_OFFICIAL = "{" + "moz:official" + "}"
 
         // Supported OpenSearch parameters
         // See http://opensearch.a9.com/spec/1.1/querysyntax/#core
-        private const val OS_PARAM_USER_DEFINED = "\\{searchTerms\\??}"
-        private const val OS_PARAM_INPUT_ENCODING = "\\{inputEncoding\\??}"
-        private const val OS_PARAM_LANGUAGE = "\\{language\\??}"
-        private const val OS_PARAM_OUTPUT_ENCODING = "\\{outputEncoding\\??}"
-        private const val OS_PARAM_OPTIONAL = "\\{(?:\\w+:)?\\w+?}"
+        private const val OS_PARAM_USER_DEFINED = "{" + "searchTerms" + "}"
+        private const val OS_PARAM_INPUT_ENCODING = "{" + "inputEncoding" + "}"
+        private const val OS_PARAM_LANGUAGE = "{" + "language" + "}"
+        private const val OS_PARAM_OUTPUT_ENCODING = "{" + "outputEncoding" + "}"
+        private const val OS_PARAM_OPTIONAL = "\\{" + "(?:\\w+:)?\\w+?" + "\\}"
 
         private fun normalize(input: String): String {
             val trimmedInput = input.trim { it <= ' ' }

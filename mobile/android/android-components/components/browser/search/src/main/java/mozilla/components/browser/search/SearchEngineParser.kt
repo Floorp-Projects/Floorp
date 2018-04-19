@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets
 /**
  * A very simple parser for search plugins.
  */
-internal class SearchEngineParser {
+class SearchEngineParser {
 
     private class SearchEngineBuilder(
         private val identifier: String
@@ -41,6 +41,10 @@ internal class SearchEngineParser {
         )
     }
 
+    /**
+     * Loads a <code>SearchEngine</code> from the given <code>path</code> in assets and assigns
+     * it the given <code>identifier</code>.
+     */
     @Throws(IOException::class)
     fun load(assetManager: AssetManager, identifier: String, path: String): SearchEngine {
         try {
@@ -50,8 +54,12 @@ internal class SearchEngineParser {
         }
     }
 
+    /**
+     * Loads a <code>SearchEngine</code> from the given <code>stream</code> and assigns it the given
+     * <code>identifier</code>.
+     */
     @Throws(IOException::class, XmlPullParserException::class)
-    internal fun load(identifier: String, stream: InputStream): SearchEngine {
+    fun load(identifier: String, stream: InputStream): SearchEngine {
         val builder = SearchEngineBuilder(identifier)
 
         val parser = XmlPullParserFactory.newInstance().newPullParser()

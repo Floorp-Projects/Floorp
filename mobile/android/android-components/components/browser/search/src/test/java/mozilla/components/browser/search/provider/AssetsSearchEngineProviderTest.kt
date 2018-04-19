@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.search.provider
 
+import android.content.Context
 import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
@@ -42,7 +43,7 @@ class AssetsSearchEngineProviderTest {
         val filter = object : SearchEngineFilter {
             private val exclude = listOf("yahoo", "bing", "ddg")
 
-            override fun filter(searchEngine: SearchEngine): Boolean {
+            override fun filter(cotext: Context, searchEngine: SearchEngine): Boolean {
                 return !exclude.contains(searchEngine.identifier)
             }
         }
@@ -132,6 +133,35 @@ class AssetsSearchEngineProviderTest {
         val searchEngines = searchEngineProvider.loadSearchEngines(RuntimeEnvironment.application)
 
         assertEquals(6, searchEngines.size)
+    }
+
+    @Test
+    fun `provider loads additional identifiers`() {
+        val usProvider = object : SearchLocalizationProvider() {
+            override val country: String = "US"
+            override val language = "en"
+            override val region: String? = null
+        }
+
+        // Loading "en-US" without additional identifiers
+        runBlocking {
+            val provider = AssetsSearchEngineProvider(usProvider)
+            val searchEngines = provider.loadSearchEngines(RuntimeEnvironment.application)
+
+            assertEquals(6, searchEngines.size)
+            assertContainsNotSearchEngine("duckduckgo", searchEngines)
+        }
+
+        // Load "en-US" with "duckduckgo" added
+        runBlocking {
+            val provider = AssetsSearchEngineProvider(
+                    usProvider,
+                    additionalIdentifiers = listOf("duckduckgo"))
+            val searchEngines = provider.loadSearchEngines(RuntimeEnvironment.application)
+
+            assertEquals(7, searchEngines.size)
+            assertContainsSearchEngine("duckduckgo", searchEngines)
+        }
     }
 
     private fun assertContainsSearchEngine(identifier: String, searchEngines: List<SearchEngine>) {

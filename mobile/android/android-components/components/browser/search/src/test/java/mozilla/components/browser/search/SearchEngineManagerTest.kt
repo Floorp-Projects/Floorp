@@ -81,13 +81,16 @@ class SearchEngineManagerTest {
     fun `manager returns default engine with identifier if it exists`() {
         runBlocking {
             val provider = mockProvider(listOf(
-                    mockSearchEngine("mozsearch"),
-                    mockSearchEngine("google"),
-                    mockSearchEngine("bing")))
+                    mockSearchEngine("mozsearch", "Mozilla Search"),
+                    mockSearchEngine("google", "Google Search"),
+                    mockSearchEngine("bing", "Bing Search")))
 
             val manager = SearchEngineManager(listOf(provider))
 
-            val default = manager.getDefaultSearchEngine(RuntimeEnvironment.application, "bing")
+            val default = manager.getDefaultSearchEngine(
+                    RuntimeEnvironment.application,
+                    "Bing Search")
+
             assertEquals("bing", default.identifier)
         }
     }
@@ -150,12 +153,15 @@ class SearchEngineManagerTest {
                 }
             }
 
-    private fun mockSearchEngine(identifier: String): SearchEngine {
+    private fun mockSearchEngine(
+        identifier: String,
+        name: String = UUID.randomUUID().toString()
+    ): SearchEngine {
         val uri = Uri.parse("https://${UUID.randomUUID()}.example.org")
 
         return SearchEngine(
             identifier,
-            UUID.randomUUID().toString(),
+            name,
             mock(Bitmap::class.java),
             listOf(uri))
     }

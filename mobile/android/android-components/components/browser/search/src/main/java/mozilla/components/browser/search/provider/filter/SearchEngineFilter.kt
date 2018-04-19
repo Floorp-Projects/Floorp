@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.search.provider.filter
 
+import android.content.Context
 import mozilla.components.browser.search.SearchEngine
 
 /**
@@ -15,5 +16,5 @@ interface SearchEngineFilter {
      * Returns true if the given search engine should be returned by the provider or false if this
      * search engine should be ignored.
      */
-    fun filter(searchEngine: SearchEngine): Boolean
+    fun filter(context: Context, searchEngine: SearchEngine): Boolean
 }

@@ -18,18 +18,32 @@ import org.json.JSONObject
 
 /**
  * SearchEngineProvider implementation to load the included search engines from assets.
+ *
+ * A SearchLocalizationProvider implementation is used to customize the returned search engines for
+ * the language and country of the user/device.
+ *
+ * Optionally SearchEngineFilter instances can be provided to remove unwanted search engines from
+ * the loaded list.
+ *
+ * Optionally <code>additionalIdentifiers</code> to be loaded can be specified. A search engine
+ * identifier corresponds to the search plugin XML file name (e.g. duckduckgo -> duckduckgo.xml).
  */
 class AssetsSearchEngineProvider(
     private val localizationProvider: SearchLocalizationProvider,
-    private val filters: List<SearchEngineFilter> = emptyList()
+    private val filters: List<SearchEngineFilter> = emptyList(),
+    private val additionalIdentifiers: List<String> = emptyList()
 ) : SearchEngineProvider {
 
     /**
      * Load search engines from this provider.
      */
     override suspend fun loadSearchEngines(context: Context): List<SearchEngine> {
-        val searchEngineIdentifiers = loadAndFilterConfiguration(context)
-        return loadSearchEnginesFromList(context, searchEngineIdentifiers)
+        val searchEngineIdentifiers = mutableListOf<String>().apply {
+            addAll(loadAndFilterConfiguration(context))
+            addAll(additionalIdentifiers)
+        }
+
+        return loadSearchEnginesFromList(context, searchEngineIdentifiers.distinct())
     }
 
     private suspend fun loadSearchEnginesFromList(
@@ -51,7 +65,7 @@ class AssetsSearchEngineProvider(
 
         deferredSearchEngines.forEach {
             val searchEngine = it.await()
-            if (shouldBeFiltered(searchEngine)) {
+            if (shouldBeFiltered(context, searchEngine)) {
                 searchEngines.add(searchEngine)
             }
         }
@@ -59,9 +73,9 @@ class AssetsSearchEngineProvider(
         return searchEngines
     }
 
-    private fun shouldBeFiltered(searchEngine: SearchEngine): Boolean {
+    private fun shouldBeFiltered(context: Context, searchEngine: SearchEngine): Boolean {
         filters.forEach {
-            if (!it.filter(searchEngine)) {
+            if (!it.filter(context, searchEngine)) {
                 return false
             }
         }
@@ -73,9 +87,7 @@ class AssetsSearchEngineProvider(
         assets: AssetManager,
         parser: SearchEngineParser,
         identifier: String
-    ): SearchEngine {
-        return parser.load(assets, identifier, "searchplugins/$identifier.xml")
-    }
+    ): SearchEngine = parser.load(assets, identifier, "searchplugins/$identifier.xml")
 
     private fun loadAndFilterConfiguration(context: Context): List<String> {
         val config = context.assets.readJSONObject("search/list.json")

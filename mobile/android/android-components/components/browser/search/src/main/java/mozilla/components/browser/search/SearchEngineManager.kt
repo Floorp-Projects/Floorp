@@ -12,6 +12,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
@@ -40,10 +41,10 @@ class SearchEngineManager(
      * will perform a load.
      */
     @Synchronized
-    suspend fun getSearchEngines(context: Context): List<SearchEngine> {
-        deferredSearchEngines?.let { return it.await() }
+    fun getSearchEngines(context: Context): List<SearchEngine> {
+        deferredSearchEngines?.let { return runBlocking { it.await() } }
 
-        return load(context).await()
+        return runBlocking { load(context).await() }
     }
 
     /**
@@ -52,16 +53,16 @@ class SearchEngineManager(
      * The default engine is the first engine loaded by the first provider passed to the
      * constructor of SearchEngineManager.
      *
-     * Optionally an identifier can be passed to this method (e.g. from the user's preferences). If
+     * Optionally a name can be passed to this method (e.g. from the user's preferences). If
      * a matching search engine was loaded then this search engine will be returned instead.
      */
     @Synchronized
-    suspend fun getDefaultSearchEngine(context: Context, identifier: String = EMPTY): SearchEngine {
+    fun getDefaultSearchEngine(context: Context, name: String = EMPTY): SearchEngine {
         val searchEngines = getSearchEngines(context)
 
-        return when (identifier) {
+        return when (name) {
             EMPTY -> searchEngines[0]
-            else -> searchEngines.find { it.identifier == identifier } ?: searchEngines[0]
+            else -> searchEngines.find { it.name == name } ?: searchEngines[0]
         }
     }
 
