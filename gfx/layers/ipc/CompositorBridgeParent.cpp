@@ -386,7 +386,7 @@ CompositorBridgeParent::Initialize()
     MOZ_ASSERT(!mApzUpdater);
     mApzcTreeManager = new APZCTreeManager(mRootLayerTreeID);
     mApzSampler = new APZSampler(mApzcTreeManager);
-    mApzUpdater = new APZUpdater(mApzcTreeManager);
+    mApzUpdater = new APZUpdater(mApzcTreeManager, mOptions.UseWebRender());
   }
 
   mCompositorBridgeID = 0;
