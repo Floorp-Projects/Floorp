@@ -522,8 +522,8 @@ UsesExternalProtocolHandler(const char* aScheme)
         return false;
     }
 
-    for (unsigned int i = 0; i < NS_N(gForcedExternalSchemes); i++) {
-      if (!nsCRT::strcasecmp(gForcedExternalSchemes[i], aScheme)) {
+    for (const auto & forcedExternalScheme : gForcedExternalSchemes) {
+      if (!nsCRT::strcasecmp(forcedExternalScheme, aScheme)) {
         return true;
       }
     }
