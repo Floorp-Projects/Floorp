@@ -11,10 +11,6 @@ config = {
     "log_name": "awsy",
     "installer_path": INSTALLER_PATH,
     "virtualenv_path": VENV_PATH,
-    "find_links": [
-        "http://pypi.pvt.build.mozilla.org/pub",
-        "http://pypi.pub.build.mozilla.org/pub",
-    ],
     "cmd_timeout": 6500,
     "exes": {
     },
