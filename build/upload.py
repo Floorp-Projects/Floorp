@@ -91,18 +91,12 @@ if __name__ == '__main__':
                       action="store",
                       help="Preserve file paths relative to this path when uploading. "
                       "If unset, all files will be uploaded directly to UPLOAD_PATH.")
-    parser.add_option("--properties-file",
-                      action="store",
-                      help="Path to the properties file to store the upload properties.")
     parser.add_option("--package",
                       action="store",
                       help="Name of the main package.")
     (options, args) = parser.parse_args()
     if len(args) < 1:
         print("You must specify at least one file to upload")
-        sys.exit(1)
-    if not options.properties_file:
-        print("You must specify a --properties-file")
         sys.exit(1)
 
     try:
