@@ -139,6 +139,14 @@ class Pickle {
   // telemetry probe.
   void EndRead(PickleIterator& iter, uint32_t ipcMessageType = 0) const;
 
+  // Returns true if the given iterator has at least |len| bytes remaining it,
+  // across all segments. If there is not that much data available, returns
+  // false. Generally used when reading a (len, data) pair from the message,
+  // before allocating |len| bytes of space, to ensure that reading |len| bytes
+  // will succeed.
+  bool HasBytesAvailable(const PickleIterator* iter, uint32_t len) const;
+
+
   // Methods for adding to the payload of the Pickle.  These values are
   // appended to the end of the Pickle's payload.  When reading values from a
   // Pickle, it is important to read them in the order in which they were added
