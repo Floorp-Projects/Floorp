@@ -95,7 +95,7 @@ struct BlobItemData
   float mOpacity; // only used with nsDisplayOpacity items to detect change to opacity
 
   IntRect mImageRect;
-  IntPoint mGroupOffset;
+  LayerIntPoint mGroupOffset;
 
   BlobItemData(DIGroup* aGroup, nsDisplayItem *aItem)
     : mGroup(aGroup)
@@ -287,7 +287,7 @@ struct DIGroup
   nsRect mGroupBounds;
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
-  IntPoint mGroupOffset;
+  LayerIntRect mLayerBounds;
   Maybe<wr::ImageKey> mKey;
 
   DIGroup() : mAppUnitsPerDevPixel(0) {}
@@ -316,9 +316,9 @@ struct DIGroup
   }
 
   static IntRect
-  ToDeviceSpace(nsRect aBounds, Matrix& aMatrix, int32_t aAppUnitsPerDevPixel, IntPoint aOffset)
+  ToDeviceSpace(nsRect aBounds, Matrix& aMatrix, int32_t aAppUnitsPerDevPixel, LayerIntPoint aOffset)
   {
-    return RoundedOut(aMatrix.TransformBounds(ToRect(nsLayoutUtils::RectToGfxRect(aBounds, aAppUnitsPerDevPixel)))) - aOffset;
+    return RoundedOut(aMatrix.TransformBounds(ToRect(nsLayoutUtils::RectToGfxRect(aBounds, aAppUnitsPerDevPixel)))) - aOffset.ToUnknownPoint();
   }
 
   void ComputeGeometryChange(nsDisplayItem* aItem, BlobItemData* aData, Matrix& aMatrix, nsDisplayListBuilder* aBuilder)
@@ -340,8 +340,7 @@ struct DIGroup
     LayoutDeviceIntPoint offset = RoundedToInt(bounds.TopLeft());
     GP("\n");
     GP("CGC offset %d %d\n", offset.x, offset.y);
-    IntSize size = mGroupBounds.Size().ScaleToNearestPixels(mScale.width, mScale.height, appUnitsPerDevPixel);
-    //MOZ_RELEASE_ASSERT(mGroupOffset.x == offset.x && mGroupOffset.y == offset.y);
+    LayerIntSize size = mLayerBounds.Size();
     IntRect imageRect(0, 0, size.width, size.height);
     GP("imageSize: %d %d\n", size.width, size.height);
     /*if (aItem->IsReused() && aData->mGeometry) {
@@ -357,16 +356,16 @@ struct DIGroup
       aData->mGeometry = Move(geometry);
       nsRect bounds = combined.GetBounds();
 
-      IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mGroupOffset);
+      IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
       aData->mRect = transformedRect.Intersect(imageRect);
       GP("CGC %s %d %d %d %d\n", aItem->Name(), bounds.x, bounds.y, bounds.width, bounds.height);
-      GP("%d %d,  %f %f\n", mGroupOffset.x, mGroupOffset.y, aMatrix._11, aMatrix._22);
+      GP("%d %d,  %f %f\n", mLayerBounds.TopLeft().x, mLayerBounds.TopLeft().y, aMatrix._11, aMatrix._22);
       GP("mRect %d %d %d %d\n", aData->mRect.x, aData->mRect.y, aData->mRect.width, aData->mRect.height);
       InvalidateRect(aData->mRect);
       aData->mInvalid = true;
     } else if (/*aData->mIsInvalid || XXX: handle image load invalidation */ (aItem->IsInvalid(invalid) && invalid.IsEmpty())) {
       MOZ_RELEASE_ASSERT(imageRect.IsEqualEdges(aData->mImageRect));
-      MOZ_RELEASE_ASSERT(mGroupOffset == aData->mGroupOffset);
+      MOZ_RELEASE_ASSERT(mLayerBounds.TopLeft() == aData->mGroupOffset);
       UniquePtr<nsDisplayItemGeometry> geometry(aItem->AllocateGeometry(aBuilder));
       /* Instead of doing this dance, let's just invalidate the old rect and the
        * new rect.
@@ -388,7 +387,7 @@ struct DIGroup
       InvalidateRect(aData->mRect.Intersect(imageRect));
       // We want to snap to outside pixels. When should we multiply by the matrix?
       // XXX: TransformBounds is expensive. We should avoid doing it if we have no transform
-      IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mGroupOffset);
+      IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
       aData->mRect = transformedRect.Intersect(imageRect);
       InvalidateRect(aData->mRect);
       GP("new rect: %d %d %d %d\n",
@@ -399,7 +398,7 @@ struct DIGroup
       aData->mInvalid = true;
     } else {
       MOZ_RELEASE_ASSERT(imageRect.IsEqualEdges(aData->mImageRect));
-      MOZ_RELEASE_ASSERT(mGroupOffset == aData->mGroupOffset);
+      MOZ_RELEASE_ASSERT(mLayerBounds.TopLeft() == aData->mGroupOffset);
       GP("else invalidate: %s\n", aItem->Name());
       aData->mGeometry->MoveBy(shift);
       // this includes situations like reflow changing the position
@@ -413,7 +412,7 @@ struct DIGroup
                                                    geometry ? geometry->ComputeInvalidationRegion() :
                                                    aData->mGeometry->ComputeInvalidationRegion(),
                                                    &combined);
-        IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mGroupOffset);
+        IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
         IntRect invalidRect = transformedRect.Intersect(imageRect);
         GP("combined not empty: mRect %d %d %d %d\n", invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
         // invalidate the invalidated area.
@@ -422,7 +421,7 @@ struct DIGroup
         aData->mGeometry = Move(geometry);
 
         combined = clip.ApplyNonRoundedIntersection(aData->mGeometry->ComputeInvalidationRegion());
-        transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mGroupOffset);
+        transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
         aData->mRect = transformedRect.Intersect(imageRect);
 
         aData->mInvalid = true;
@@ -438,7 +437,7 @@ struct DIGroup
             aData->mGeometry = Move(geometry);
           }
           combined = clip.ApplyNonRoundedIntersection(aData->mGeometry->ComputeInvalidationRegion());
-          IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mGroupOffset);
+          IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
           InvalidateRect(aData->mRect.Intersect(imageRect));
           aData->mRect = transformedRect.Intersect(imageRect);
           InvalidateRect(aData->mRect);
@@ -462,7 +461,7 @@ struct DIGroup
             aData->mGeometry = Move(geometry);
           }
           combined = clip.ApplyNonRoundedIntersection(aData->mGeometry->ComputeInvalidationRegion());
-          IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mGroupOffset);
+          IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
           InvalidateRect(aData->mRect.Intersect(imageRect));
           aData->mRect = transformedRect.Intersect(imageRect);
           InvalidateRect(aData->mRect);
@@ -476,7 +475,7 @@ struct DIGroup
               UpdateContainerLayerPropertiesAndDetectChange(aItem, aData)) {
             combined = clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion());
             aData->mGeometry = Move(geometry);
-            IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mGroupOffset);
+            IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
             InvalidateRect(aData->mRect.Intersect(imageRect));
             aData->mRect = transformedRect.Intersect(imageRect);
             InvalidateRect(aData->mRect);
@@ -484,7 +483,7 @@ struct DIGroup
           } else {
             // XXX: this code can eventually be deleted/made debug only
             combined = clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion());
-            IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mGroupOffset);
+            IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
             auto rect = transformedRect.Intersect(imageRect);
             MOZ_RELEASE_ASSERT(rect.IsEqualEdges(aData->mRect));
             GP("Layer NoChange: %s %d %d %d %d\n", aItem->Name(),
@@ -494,7 +493,7 @@ struct DIGroup
           // XXX: this code can eventually be deleted/made debug only
           UniquePtr<nsDisplayItemGeometry> geometry(aItem->AllocateGeometry(aBuilder));
           combined = clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion());
-          IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mGroupOffset);
+          IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
           auto rect = transformedRect.Intersect(imageRect);
           MOZ_RELEASE_ASSERT(rect.IsEqualEdges(aData->mRect));
           GP("NoChange: %s %d %d %d %d\n", aItem->Name(),
@@ -504,7 +503,7 @@ struct DIGroup
     }
     aData->mClip = clip;
     aData->mMatrix = aMatrix;
-    aData->mGroupOffset = mGroupOffset;
+    aData->mGroupOffset = mLayerBounds.TopLeft();
     aData->mImageRect = imageRect;
     GP("post mInvalidRect: %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y, mInvalidRect.width, mInvalidRect.height);
   }
@@ -632,7 +631,7 @@ struct DIGroup
                       nsDisplayItem* aEndItem,
                       gfxContext* aContext,
                       gfx::DrawEventRecorderMemory* aRecorder) {
-    IntSize size = mGroupBounds.Size().ScaleToNearestPixels(mScale.width, mScale.height, aGrouper->mAppUnitsPerDevPixel);
+    LayerIntSize size = mLayerBounds.Size();
     for (nsDisplayItem* item = aStartItem; item != aEndItem; item = item->GetAbove()) {
       IntRect bounds = ItemBounds(item);
       auto bottomRight = bounds.BottomRight();
@@ -916,15 +915,17 @@ Grouper::ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
         GP("Inner group size change\n");
         groupData->mFollowingGroup.ClearItems();
         if (groupData->mFollowingGroup.mKey) {
-          IntSize size = currentGroup->mGroupBounds.Size().ScaleToNearestPixels(currentGroup->mScale.width, currentGroup->mScale.height, mAppUnitsPerDevPixel);
-          groupData->mFollowingGroup.mInvalidRect = IntRect(IntPoint(0, 0), size);
+          LayerIntRect layerBounds = LayerIntRect::FromUnknownRect(currentGroup->mGroupBounds.ScaleToOutsidePixels(currentGroup->mScale.width,
+                                                                                                                   currentGroup->mScale.height,
+                                                                                                                   mAppUnitsPerDevPixel));
+          groupData->mFollowingGroup.mInvalidRect = IntRect(IntPoint(0, 0), layerBounds.Size().ToUnknownSize());
           aCommandBuilder->mManager->AddImageKeyForDiscard(groupData->mFollowingGroup.mKey.value());
           groupData->mFollowingGroup.mKey = Nothing();
         }
       }
       groupData->mFollowingGroup.mGroupBounds = currentGroup->mGroupBounds;
       groupData->mFollowingGroup.mAppUnitsPerDevPixel = currentGroup->mAppUnitsPerDevPixel;
-      groupData->mFollowingGroup.mGroupOffset = currentGroup->mGroupOffset;
+      groupData->mFollowingGroup.mLayerBounds = currentGroup->mLayerBounds;
       groupData->mFollowingGroup.mScale = currentGroup->mScale;
 
       currentGroup = &groupData->mFollowingGroup;
@@ -1059,7 +1060,7 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mGroupBounds = groupBounds;
   group.mScale = scale;
-  group.mGroupOffset = group.mGroupBounds.TopLeft().ScaleToNearestPixels(scale.width, scale.height, g.mAppUnitsPerDevPixel);
+  group.mLayerBounds = LayerIntRect::FromUnknownRect(group.mGroupBounds.ScaleToOutsidePixels(scale.width, scale.height, group.mAppUnitsPerDevPixel));
   group.mAnimatedGeometryRootOrigin = group.mGroupBounds.TopLeft();
   g.ConstructGroups(this, aBuilder, aResources, &group, aList, aSc);
   mScrollingHelper.EndList(aSc);
