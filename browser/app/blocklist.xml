@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1523286321447" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1523897202689" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2236,6 +2236,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
     <emItem blockID="36f97298-8bef-4372-a548-eb829413bee9" id="/(__TEMPLATE__APPLICATION__@ruta-mapa\.com)|(application-3@findizer\.fr)|(application2@allo-pages\.fr)|(application2@bilan-imc\.fr)|(application2@lettres\.net)|(application2@search-maps-finder\.com)|(application-imcpeso@imc-peso\.com)|(application-meuimc@meu-imc\.com)|(application-us2@factorlove)|(application-us@misterdirections)|(application-us@yummmi\.es)|(application@amiouze\.fr)|(application@astrolignes\.com)|(application@blotyn\.com)|(application@bmi-result\.com)|(application@bmi-tw\.com)|(application@calcolo-bmi\.com)|(application@cartes-itineraires\.com)|(application@convertisseur\.pro)|(application@de-findizer\.fr)|(application@de-super-rezepte\.com)|(application@dermabeauty\.fr)|(application@dev\.squel\.v2)|(application@eu-my-drivingdirections\.com)|(application@fr-allo-pages\.fr)|(application@fr-catizz\.com)|(application@fr-mr-traduction\.com)|(application@good-recettes\.com)|(application@horaires\.voyage)|(application@imc-calcular\.com)|(application@imc-peso\.com)|(application@it-mio-percorso\.com)|(application@iti-maps\.fr)|(application@itineraire\.info)|(application@lbc-search\.com)|(application@les-pages\.com)|(application@lovincalculator\.com)|(application@lovintest\.com)|(application@masowe\.com)|(application@matchs\.direct)|(application@mein-bmi\.com)|(application@mes-resultats\.com)|(application@mestaf\.com)|(application@meu-imc\.com)|(application@mon-calcul-imc\.fr)|(application@mon-juste-poids\.com)|(application@mon-trajet\.com)|(application@my-drivingdirections\.com)|(application@people-show\.com)|(application@plans-reduc\.fr)|(application@point-meteo\.fr)|(application@poulixo\.com)|(application@quipage\.fr)|(application@quizdeamor\.com)|(application@quizdoamor\.com)|(application@quotient-retraite\.fr)|(application@recettes\.net)|(application@routenplaner-karten\.com)|(application@ruta-mapa\.com)|(application@satellite\.dev\.squel\.v2)|(application@search-bilan-imc\.fr)|(application@search-maps-finder\.com)|(application@slimness\.fr)|(application@start-bmi\.com)|(application@tests-moi\.com)|(application@tousmesjeux\.fr)|(application@toutlannuaire\.fr)|(application@tuto-diy\.com)|(application@ubersetzung-app\.com)|(application@uk-cookyummy\.com)|(application@uk-howlogin\.me)|(application@uk-myloap\.com)|(application@voyagevoyage\.co)|(application@wikimot\.fr)|(application@www\.plans-reduc\.fr)|(application@yummmi\.es)|(application@yummmies\.be)|(application@yummmies\.ch)|(application@yummmies\.fr)|(application@yummmies\.lu)|(application@zikplay\.fr)|(applicationY@search-maps-finder\.com)|(cmesapps@findizer\.fr)|(findizer-shopping@jetpack)|(\{8aaebb36-1488-4022-b7ec-29b790d12c17\})/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="1e5f5cb2-346c-422a-9aaa-29d8760949d2" id="{872f20ea-196e-4d11-8835-1cc4c877b1b8}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
