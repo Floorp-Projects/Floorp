@@ -125,7 +125,7 @@ struct nsRect :
     *this = aRect1.Union(aRect2);
   }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
   // Only MSVC supports inlining intrinsics for archs you're not compiling for.
   MOZ_MUST_USE nsRect Intersect(const nsRect& aRect) const
   {
