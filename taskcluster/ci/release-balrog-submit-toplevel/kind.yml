@@ -21,8 +21,10 @@ job-defaults:
       by-project:
          maple: scriptworker-prov-v1/balrog-dev
          birch: scriptworker-prov-v1/balrog-dev
+         jamun: scriptworker-prov-v1/balrog-dev
          mozilla-beta: scriptworker-prov-v1/balrogworker-v1
          mozilla-release: scriptworker-prov-v1/balrogworker-v1
+         mozilla-esr60: scriptworker-prov-v1/balrogworker-v1
          default: invalid/invalid
    worker:
       implementation: balrog
@@ -40,32 +42,40 @@ jobs:
             by-project:
                mozilla-beta: archive.mozilla.org
                mozilla-release: archive.mozilla.org
+               mozilla-esr60: archive.mozilla.org
                default: ftp.stage.mozaws.net
          download-domain:
             by-project:
                mozilla-beta: download.mozilla.org
                mozilla-release: download.mozilla.org
+               mozilla-esr60: download.mozilla.org
                default: download.mozilla.org
          channel-names:
             by-project:
                maple: ["beta", "beta-localtest", "beta-cdntest"]
                birch: ["release", "release-localtest", "release-cdntest"]
+               jamun: ["esr", "esr-localtest", "esr-cdntest"]
                mozilla-beta: ["beta", "beta-localtest", "beta-cdntest"]
                mozilla-release: ["release", "release-localtest", "release-cdntest"]
+               mozilla-esr60: ["esr", "esr-localtest", "esr-cdntest"]
                default: []
          publish-rules:
             by-project:
                maple: [32]
                birch: [145]
+               jamun: [724]
                mozilla-beta: [32]
                mozilla-release: [145]
+               mozilla-esr60: []
                default: []
          rules-to-update:
             by-project:
                maple: ["firefox-beta-cdntest", "firefox-beta-localtest"]
                birch: ["firefox-release-cdntest", "firefox-release-localtest"]
+               jamun: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
                mozilla-beta: ["firefox-beta-cdntest", "firefox-beta-localtest"]
                mozilla-release: ["firefox-release-cdntest", "firefox-release-localtest"]
+               mozilla-esr60: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
                default: []
          platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
       treeherder:
