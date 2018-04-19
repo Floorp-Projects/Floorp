@@ -188,29 +188,7 @@ SVGSVGElement::Height()
 {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
-float
-SVGSVGElement::PixelUnitToMillimeterX()
-{
-  return MM_PER_INCH_FLOAT / 96;
-}
 
-float
-SVGSVGElement::PixelUnitToMillimeterY()
-{
-  return PixelUnitToMillimeterX();
-}
-
-float
-SVGSVGElement::ScreenPixelToMillimeterX()
-{
-  return MM_PER_INCH_FLOAT / 96;
-}
-
-float
-SVGSVGElement::ScreenPixelToMillimeterY()
-{
-  return ScreenPixelToMillimeterX();
-}
 bool
 SVGSVGElement::UseCurrentView()
 {
