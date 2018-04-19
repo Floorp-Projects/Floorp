@@ -259,19 +259,8 @@ let gSiteDataSettings = {
   },
 
   onClickRemoveSelected() {
-    let lastIndex = this._list.selectedItems.length - 1;
-    let lastSelectedItem = this._list.selectedItems[lastIndex];
-    let lastSelectedItemPosition = this._list.getIndexOfItem(lastSelectedItem);
-    let nextSelectedItem = this._list.getItemAtIndex(lastSelectedItemPosition + 1);
-
     this._removeSiteItems(this._list.selectedItems);
     this._list.clearSelection();
-
-    if (nextSelectedItem) {
-      this._list.selectedItem = nextSelectedItem;
-    } else {
-      this._list.selectedIndex = this._list.itemCount - 1;
-    }
   },
 
   onClickRemoveAll() {
