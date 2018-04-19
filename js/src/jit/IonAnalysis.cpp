@@ -714,7 +714,7 @@ BlockIsSingleTest(MBasicBlock* phiBlock, MBasicBlock* testBlock, MPhi** pphi, MT
 
 // Change block so that it ends in a goto to the specific target block.
 // existingPred is an existing predecessor of the block.
-static void
+static MOZ_MUST_USE bool
 UpdateGotoSuccessor(TempAllocator& alloc, MBasicBlock* block, MBasicBlock* target,
                      MBasicBlock* existingPred)
 {
@@ -726,7 +726,7 @@ UpdateGotoSuccessor(TempAllocator& alloc, MBasicBlock* block, MBasicBlock* targe
     MGoto* newGoto = MGoto::New(alloc, target);
     block->end(newGoto);
 
-    target->addPredecessorSameInputsAs(block, existingPred);
+    return target->addPredecessorSameInputsAs(block, existingPred);
 }
 
 // Change block so that it ends in a test of the specified value, going to
@@ -734,7 +734,7 @@ UpdateGotoSuccessor(TempAllocator& alloc, MBasicBlock* block, MBasicBlock* targe
 // or ifFalse with the same values incoming to ifTrue/ifFalse as block.
 // existingPred is not required to be a predecessor of ifTrue/ifFalse if block
 // already ends in a test going to that block on a true/false result.
-static void
+static MOZ_MUST_USE bool
 UpdateTestSuccessors(TempAllocator& alloc, MBasicBlock* block,
                      MDefinition* value, MBasicBlock* ifTrue, MBasicBlock* ifFalse,
                      MBasicBlock* existingPred)
@@ -746,19 +746,21 @@ UpdateTestSuccessors(TempAllocator& alloc, MBasicBlock* block,
 
         if (ifTrue != test->ifTrue()) {
             test->ifTrue()->removePredecessor(block);
-            ifTrue->addPredecessorSameInputsAs(block, existingPred);
+            if (!ifTrue->addPredecessorSameInputsAs(block, existingPred))
+                return false;
             MOZ_ASSERT(test->ifTrue() == test->getSuccessor(0));
             test->replaceSuccessor(0, ifTrue);
         }
 
         if (ifFalse != test->ifFalse()) {
             test->ifFalse()->removePredecessor(block);
-            ifFalse->addPredecessorSameInputsAs(block, existingPred);
+            if (!ifFalse->addPredecessorSameInputsAs(block, existingPred))
+                return false;
             MOZ_ASSERT(test->ifFalse() == test->getSuccessor(1));
             test->replaceSuccessor(1, ifFalse);
         }
 
-        return;
+        return true;
     }
 
     MOZ_ASSERT(ins->isGoto());
@@ -768,8 +770,11 @@ UpdateTestSuccessors(TempAllocator& alloc, MBasicBlock* block,
     MTest* test = MTest::New(alloc, value, ifTrue, ifFalse);
     block->end(test);
 
-    ifTrue->addPredecessorSameInputsAs(block, existingPred);
-    ifFalse->addPredecessorSameInputsAs(block, existingPred);
+    if (!ifTrue->addPredecessorSameInputsAs(block, existingPred))
+        return false;
+    if (!ifFalse->addPredecessorSameInputsAs(block, existingPred))
+        return false;
+    return true;
 }
 
 static bool
@@ -874,10 +879,14 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
         phiBlock->removePredecessor(trueBranch);
         graph.removeBlock(trueBranch);
     } else if (initialTest->input() == trueResult) {
-        UpdateGotoSuccessor(graph.alloc(), trueBranch, finalTest->ifTrue(), testBlock);
+        if (!UpdateGotoSuccessor(graph.alloc(), trueBranch, finalTest->ifTrue(), testBlock))
+            return false;
     } else {
-        UpdateTestSuccessors(graph.alloc(), trueBranch, trueResult,
-                             finalTest->ifTrue(), finalTest->ifFalse(), testBlock);
+        if (!UpdateTestSuccessors(graph.alloc(), trueBranch, trueResult,
+                                  finalTest->ifTrue(), finalTest->ifFalse(), testBlock))
+        {
+            return false;
+        }
     }
 
     MBasicBlock* falseTarget = falseBranch;
@@ -886,15 +895,22 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
         phiBlock->removePredecessor(falseBranch);
         graph.removeBlock(falseBranch);
     } else if (initialTest->input() == falseResult) {
-        UpdateGotoSuccessor(graph.alloc(), falseBranch, finalTest->ifFalse(), testBlock);
+        if (!UpdateGotoSuccessor(graph.alloc(), falseBranch, finalTest->ifFalse(), testBlock))
+            return false;
     } else {
-        UpdateTestSuccessors(graph.alloc(), falseBranch, falseResult,
-                             finalTest->ifTrue(), finalTest->ifFalse(), testBlock);
+        if (!UpdateTestSuccessors(graph.alloc(), falseBranch, falseResult,
+                                  finalTest->ifTrue(), finalTest->ifFalse(), testBlock))
+        {
+            return false;
+        }
     }
 
     // Short circuit the initial test to skip any constant branch eliminated above.
-    UpdateTestSuccessors(graph.alloc(), initialBlock, initialTest->input(),
-                         trueTarget, falseTarget, testBlock);
+    if (!UpdateTestSuccessors(graph.alloc(), initialBlock, initialTest->input(),
+                              trueTarget, falseTarget, testBlock))
+    {
+        return false;
+    }
 
     // Remove phiBlock, if different from testBlock.
     if (phiBlock != testBlock) {
@@ -950,7 +966,8 @@ jit::FoldEmptyBlocks(MIRGraph& graph)
 
         graph.removeBlock(block);
 
-        succ->addPredecessorSameInputsAs(pred, block);
+        if (!succ->addPredecessorSameInputsAs(pred, block))
+            return false;
         succ->removePredecessor(block);
     }
     return true;
