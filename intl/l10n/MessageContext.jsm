@@ -1838,7 +1838,10 @@ class MessageContext {
     const id = JSON.stringify(opts);
 
     if (!cache[id]) {
-      cache[id] = new ctor(this.locales, opts);
+      let locales = this.locales.map(locale => {
+        return locale === "ja-JP-mac" ? "ja-JP-macos" : locale;
+      });
+      cache[id] = new ctor(locales, opts);
       this._intls.set(ctor, cache);
     }
 
