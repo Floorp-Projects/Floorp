@@ -103,11 +103,13 @@ static bool NewTCPSocketPair(PRFileDesc *fd[], bool aSetRecvBuff)
       goto failed;
     }
   }
+  PR_SetFDInheritable(writer, false);
 
   reader = PR_Accept(listener, &listenAddr, PR_MillisecondsToInterval(200));
   if (!reader) {
     goto failed;
   }
+  PR_SetFDInheritable(reader, false);
   if (aSetRecvBuff) {
     PR_SetSocketOption(reader, &recvBufferOpt);
   }
