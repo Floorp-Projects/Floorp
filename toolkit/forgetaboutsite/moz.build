@@ -13,4 +13,4 @@ EXTRA_JS_MODULES += [
 ]
 
 with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'Forget About Site')
+    BUG_COMPONENT = ('Toolkit', 'Data Sanitization')
