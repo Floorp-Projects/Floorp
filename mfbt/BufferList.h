@@ -208,6 +208,22 @@ class BufferList : private AllocPolicy
       return mDataEnd - mData;
     }
 
+    bool HasBytesAvailable(const BufferList& aBuffers, uint32_t aBytes) const
+    {
+      if (RemainingInSegment() >= aBytes) {
+        return true;
+      }
+      aBytes -= RemainingInSegment();
+      for (size_t i = mSegment + 1; i < aBuffers.mSegments.length(); i++) {
+        if (aBuffers.mSegments[i].mSize >= aBytes) {
+          return true;
+        }
+        aBytes -= aBuffers.mSegments[i].mSize;
+      }
+
+      return false;
+    }
+
     // Advances the iterator by aBytes bytes. aBytes must be less than
     // RemainingInSegment(). If advancing by aBytes takes the iterator to the
     // end of a buffer, it will be moved to the beginning of the next buffer
