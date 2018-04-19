@@ -647,6 +647,9 @@ public class GeckoThread extends Thread {
     @WrapForJNI(dispatchTo = "gecko")
     public static native void forceQuit();
 
+    @WrapForJNI(dispatchTo = "gecko")
+    public static native void crash();
+
     @WrapForJNI
     private static void requestUiThreadCallback(long delay) {
         ThreadUtils.getUiHandler().postDelayed(UI_THREAD_CALLBACK, delay);
