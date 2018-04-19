@@ -50,13 +50,12 @@ add_task(async function() {
 
   // Test the initial state
   assertSitesListed(doc, fakeHosts);
-  let win = gBrowser.selectedBrowser.contentWindow;
-  let frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
-  let removeBtn = frameDoc.getElementById("removeSelected");
-  is(removeBtn.disabled, true, "Should start with disabled removeSelected button");
 
   let removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen("accept", REMOVE_DIALOG_URL);
   let settingsDialogClosePromise = promiseSettingsDialogClose();
+
+  let win = gBrowser.selectedBrowser.contentWindow;
+  let frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
 
   // Select some sites to remove.
   let sitesList = frameDoc.getElementById("sitesList");
@@ -65,9 +64,10 @@ add_task(async function() {
     sitesList.addItemToSelection(site);
   });
 
+  let removeBtn = frameDoc.getElementById("removeSelected");
   is(removeBtn.disabled, false, "Should enable the removeSelected button");
   removeBtn.doCommand();
-  is(sitesList.selectedIndex, 0, "Should select next item");
+  is(removeBtn.disabled, true, "Should disable the removeSelected button");
 
   let saveBtn = frameDoc.getElementById("save");
   assertSitesListed(doc, fakeHosts.slice(2));
