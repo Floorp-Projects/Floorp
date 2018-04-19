@@ -4,18 +4,26 @@
 
 "use strict";
 
+const Services = require("Services");
+const PREFERENCE_NAME = "devtools.toolbox.tabsOrder";
+
 /**
  * Manage the order of devtools tabs.
  */
 class ToolboxTabsOrderManager {
-  constructor() {
+  constructor(onOrderUpdated) {
+    this.onOrderUpdated = onOrderUpdated;
+
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseOut = this.onMouseOut.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
+
+    Services.prefs.addObserver(PREFERENCE_NAME, this.onOrderUpdated);
   }
 
   destroy() {
+    Services.prefs.removeObserver(PREFERENCE_NAME, this.onOrderUpdated);
     this.onMouseUp();
   }
 
@@ -29,6 +37,7 @@ class ToolboxTabsOrderManager {
     this.previousPageX = e.pageX;
     this.toolboxContainerElement = this.dragTarget.closest("#toolbox-container");
     this.toolboxTabsElement = this.dragTarget.closest(".toolbox-tabs");
+    this.isOrderUpdated = false;
 
     this.dragTarget.ownerDocument.addEventListener("mousemove", this.onMouseMove);
     this.dragTarget.ownerDocument.addEventListener("mouseout", this.onMouseOut);
@@ -65,6 +74,8 @@ class ToolboxTabsOrderManager {
 
         const xAfter = this.dragTarget.offsetLeft;
         this.dragStartX += xAfter - xBefore;
+
+        this.isOrderUpdated = true;
         break;
       }
     }
@@ -97,6 +108,14 @@ class ToolboxTabsOrderManager {
       return;
     }
 
+    if (this.isOrderUpdated) {
+      const ids =
+        [...this.toolboxTabsElement.querySelectorAll(".devtools-tab")]
+          .map(tabElement => tabElement.dataset.id);
+      const pref = ids.join(",");
+      Services.prefs.setCharPref(PREFERENCE_NAME, pref);
+    }
+
     this.dragTarget.ownerDocument.removeEventListener("mousemove", this.onMouseMove);
     this.dragTarget.ownerDocument.removeEventListener("mouseout", this.onMouseOut);
     this.dragTarget.ownerDocument.removeEventListener("mouseup", this.onMouseUp);
@@ -109,4 +128,28 @@ class ToolboxTabsOrderManager {
   }
 }
 
-module.exports = ToolboxTabsOrderManager;
+function sortPanelDefinitions(definitions) {
+  const pref = Services.prefs.getCharPref(PREFERENCE_NAME, "");
+
+  if (!pref) {
+    definitions.sort(definition => {
+      return -1 * (definition.ordinal == undefined || definition.ordinal < 0
+        ? Number.MAX_VALUE
+        : definition.ordinal
+      );
+    });
+  }
+
+  const toolIds = pref.split(",");
+
+  return definitions.sort((a, b) => {
+    let orderA = toolIds.indexOf(a.id);
+    let orderB = toolIds.indexOf(b.id);
+    orderA = orderA < 0 ? Number.MAX_VALUE : orderA;
+    orderB = orderB < 0 ? Number.MAX_VALUE : orderB;
+    return orderA - orderB;
+  });
+}
+
+module.exports.ToolboxTabsOrderManager = ToolboxTabsOrderManager;
+module.exports.sortPanelDefinitions = sortPanelDefinitions;
