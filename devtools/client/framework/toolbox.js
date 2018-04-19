@@ -1082,6 +1082,7 @@ Toolbox.prototype = {
   _buildDockOptions: function() {
     if (!this._target.isLocalTab) {
       this.component.setDockOptionsEnabled(false);
+      this.component.setCanCloseToolbox(false);
       return;
     }
 
