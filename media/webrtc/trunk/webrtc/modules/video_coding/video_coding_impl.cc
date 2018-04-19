@@ -242,12 +242,6 @@ class VideoCodingModuleImpl : public VideoCodingModule {
     return receiver_.SetDecodeErrorMode(decode_error_mode);
   }
 
-  virtual void SetCPULoadState(CPULoadState state) override {
-    /* TODO: fix CPULoadState stuff...
-    return sender_.SetCPULoadState(state);
-    */
-  }
-
   int SetMinReceiverDelay(int desired_delay_ms) override {
     return receiver_.SetMinReceiverDelay(desired_delay_ms);
   }

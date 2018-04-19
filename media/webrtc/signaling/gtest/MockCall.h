@@ -69,11 +69,6 @@ public:
   void SetSource(rtc::VideoSourceInterface<webrtc::VideoFrame>* source,
                  const DegradationPreference& degradation_preference) override {}
 
-  CPULoadStateObserver* LoadStateObserver() override
-  {
-    return nullptr;
-  }
-
   void ReconfigureVideoEncoder(VideoEncoderConfig config) override
   {
     mEncoderConfig = config.Copy();
