@@ -59,7 +59,7 @@ bool
 js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
                          unsigned flags, unsigned errorNumber, va_list args)
 {
-    // On the active thread, report the error immediately. When compiling off
+    // On the main thread, report the error immediately. When compiling off
     // thread, save the error so that the thread finishing the parse can report
     // it later.
     CompileError tempErr;
@@ -95,7 +95,7 @@ void
 js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
                        unsigned flags, unsigned errorNumber, va_list args)
 {
-    // On the active thread, report the error immediately. When compiling off
+    // On the main thread, report the error immediately. When compiling off
     // thread, save the error so that the thread finishing the parse can report
     // it later.
     CompileError tempErr;

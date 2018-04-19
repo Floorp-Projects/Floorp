@@ -4116,7 +4116,7 @@ JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape, js::gc::AllocKin
     }
 
     // Classes with a finalizer must specify whether instances will be finalized
-    // on the active thread or in the background, except proxies whose behaviour
+    // on the main thread or in the background, except proxies whose behaviour
     // depends on the target object.
     static const uint32_t FinalizeMask = JSCLASS_FOREGROUND_FINALIZE | JSCLASS_BACKGROUND_FINALIZE;
     uint32_t flags = clasp->flags;
