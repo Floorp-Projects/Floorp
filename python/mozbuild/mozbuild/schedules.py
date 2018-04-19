@@ -24,6 +24,8 @@ INCLUSIVE_COMPONENTS = [
     'jittest',
     'test-verify',
     'test-verify-wpt',
+    'test-coverage',
+    'test-coverage-wpt',
     'jsreftest',
 ]
 INCLUSIVE_COMPONENTS = sorted(INCLUSIVE_COMPONENTS)

@@ -97,3 +97,42 @@ test-verify:
         no-read-buildbot-config: true
         extra-options:
             - --verify
+
+test-coverage:
+    description: "Per-test coverage"
+    suite: test-coverage
+    treeherder-symbol: TC
+    loopback-video: true
+    instance-size: default
+    max-run-time: 10800
+    allow-software-gl-layers: false
+    run-on-projects:
+        by-test-platform:
+            # do not run on beta or release: usually just confirms earlier results
+            linux64-ccov/.*: ['trunk', 'try']
+            windows10-64-ccov/debug: ['trunk', 'try']
+            default: []
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: 2
+    mozharness:
+        script:
+            by-test-platform:
+                android.*: android_emulator_unittest.py
+                default: desktop_unittest.py
+        config:
+            by-test-platform:
+                android.*:
+                    - android/android_common.py
+                    - android/androidarm_4_3.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+                macosx.*:
+                    - unittests/mac_unittest.py
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+        no-read-buildbot-config: true
+        extra-options:
+            - --per-test-coverage

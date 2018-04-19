@@ -37,6 +37,8 @@ common-tests:
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
+    - test-coverage
+    - test-coverage-wpt
     - test-verify
     - test-verify-wpt
     - xpcshell
@@ -185,6 +187,8 @@ windows-tests:
     - mochitest-webgl
     - reftest
     - reftest-no-accel
+    - test-coverage
+    - test-coverage-wpt
     - test-verify
     - test-verify-wpt
     - web-platform-tests
