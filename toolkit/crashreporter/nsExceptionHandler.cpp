@@ -840,7 +840,7 @@ LaunchCrashReporterActivity(XP_CHAR* aProgramPath, XP_CHAR* aMinidumpPath,
     if (androidUserSerial) {
       Unused << execlp("/system/bin/am",
                        "/system/bin/am",
-                       "start",
+                       "startservice",
                        "--user", androidUserSerial,
                        "-a", "org.mozilla.gecko.reportCrash",
                        "-n", aProgramPath,
@@ -850,7 +850,7 @@ LaunchCrashReporterActivity(XP_CHAR* aProgramPath, XP_CHAR* aMinidumpPath,
     } else {
       Unused << execlp("/system/bin/am",
                        "/system/bin/am",
-                       "start",
+                       "startservice",
                        "-a", "org.mozilla.gecko.reportCrash",
                        "-n", aProgramPath,
                        "--es", "minidumpPath", aMinidumpPath,
@@ -1544,10 +1544,10 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
   const char* androidPackageName = PR_GetEnv("MOZ_ANDROID_PACKAGE_NAME");
   if (androidPackageName != nullptr) {
     nsCString package(androidPackageName);
-    package.AppendLiteral("/org.mozilla.gecko.CrashReporter");
+    package.AppendLiteral("/org.mozilla.gecko.CrashReporterService");
     crashReporterPath = ToNewCString(package);
   } else {
-    nsCString package(ANDROID_PACKAGE_NAME "/org.mozilla.gecko.CrashReporter");
+    nsCString package(ANDROID_PACKAGE_NAME "/org.mozilla.gecko.CrashReporterService");
     crashReporterPath = ToNewCString(package);
   }
 #endif // !defined(MOZ_WIDGET_ANDROID)
