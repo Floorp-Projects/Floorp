@@ -93,7 +93,7 @@ OptimizationInfo::compilerWarmUpThreshold(JSScript* script, jsbytecode* pc) cons
             .valueOr(compilerSmallFunctionWarmUpThreshold_);
     }
 
-    // If the script is too large to compile on the active thread, we can still
+    // If the script is too large to compile on the main thread, we can still
     // compile it off thread. In these cases, increase the warm-up counter
     // threshold to improve the compilation's type information and hopefully
     // avoid later recompilation.
