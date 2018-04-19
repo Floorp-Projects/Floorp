@@ -2833,13 +2833,13 @@ class CloneBufferObject : public NativeObject {
             return false;
         }
 
-        auto buf = js::MakeUnique<JSStructuredCloneData>(0, 0, nbytes);
-        if (!buf || !buf->Init(nbytes, nbytes)) {
+        auto buf = js::MakeUnique<JSStructuredCloneData>();
+        if (!buf || !buf->Init(nbytes)) {
             ReportOutOfMemory(cx);
             return false;
         }
 
-        js_memcpy(buf->Start(), data, nbytes);
+        MOZ_ALWAYS_TRUE(buf->AppendBytes((const char*)data, nbytes));
         obj->discard();
         obj->setData(buf.release(), true);
 
@@ -2893,7 +2893,7 @@ class CloneBufferObject : public NativeObject {
             ReportOutOfMemory(cx);
             return false;
         }
-        auto iter = data->Iter();
+        auto iter = data->Start();
         data->ReadBytes(iter, buffer.get(), size);
         JSString* str = JS_NewStringCopyN(cx, buffer.get(), size);
         if (!str)
@@ -2923,7 +2923,7 @@ class CloneBufferObject : public NativeObject {
             ReportOutOfMemory(cx);
             return false;
         }
-        auto iter = data->Iter();
+        auto iter = data->Start();
         data->ReadBytes(iter, buffer.get(), size);
         JSObject* arrayBuffer = JS_NewArrayBufferWithContents(cx, size, buffer.release());
         if (!arrayBuffer)
@@ -3098,9 +3098,7 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_StructuredCloneHasTransferables(*obj->data(), &hasTransferable))
         return false;
 
-    if (obj->isSynthetic() &&
-        (scope != JS::StructuredCloneScope::DifferentProcess || hasTransferable))
-    {
+    if (obj->isSynthetic() && scope != JS::StructuredCloneScope::DifferentProcess) {
         JS_ReportErrorASCII(cx, "clone buffer data is synthetic but may contain pointers");
         return false;
     }

@@ -8314,12 +8314,12 @@ class ObjectStoreAddOrPutRequestOp::SCInputStream final
   : public nsIInputStream
 {
   const JSStructuredCloneData& mData;
-  JSStructuredCloneData::IterImpl mIter;
+  JSStructuredCloneData::Iterator mIter;
 
 public:
   explicit SCInputStream(const JSStructuredCloneData& aData)
     : mData(aData)
-    , mIter(aData.Iter())
+    , mIter(aData.Start())
   { }
 
 private:
@@ -19695,7 +19695,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  if (!aInfo->mData.WriteBytes(uncompressedBuffer, uncompressed.Length())) {
+  if (!aInfo->mData.AppendBytes(uncompressedBuffer, uncompressed.Length())) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -19780,7 +19780,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
       break;
     }
 
-    if (NS_WARN_IF(!aInfo->mData.WriteBytes(buffer, numRead))) {
+    if (NS_WARN_IF(!aInfo->mData.AppendBytes(buffer, numRead))) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       break;
     }
@@ -26181,18 +26181,9 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       char keyPropBuffer[keyPropSize];
       LittleEndian::writeUint64(keyPropBuffer, keyPropValue);
 
-      auto iter = cloneData.Iter();
-      DebugOnly<bool> result =
-       iter.AdvanceAcrossSegments(cloneData, cloneInfo.offsetToKeyProp());
-      MOZ_ASSERT(result);
-
-      for (char index : keyPropBuffer) {
-        char* keyPropPointer = iter.Data();
-        *keyPropPointer = index;
-
-        result = iter.AdvanceAcrossSegments(cloneData, 1);
-        MOZ_ASSERT(result);
-      }
+      auto iter = cloneData.Start();
+      MOZ_ALWAYS_TRUE(cloneData.Advance(iter, cloneInfo.offsetToKeyProp()));
+      MOZ_ALWAYS_TRUE(cloneData.UpdateBytes(iter, keyPropBuffer, keyPropSize));
     }
   }
 
@@ -26218,7 +26209,7 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   } else {
     nsCString flatCloneData;
     flatCloneData.SetLength(cloneDataSize);
-    auto iter = cloneData.Iter();
+    auto iter = cloneData.Start();
     cloneData.ReadBytes(iter, flatCloneData.BeginWriting(), cloneDataSize);
 
     // Compress the bytes before adding into the database.
@@ -26478,7 +26469,7 @@ SCInputStream::ReadSegments(nsWriteSegmentFun aWriter,
     *_retval += count;
     aCount -= count;
 
-    mIter.Advance(mData, count);
+    mData.Advance(mIter, count);
   }
 
   return NS_OK;

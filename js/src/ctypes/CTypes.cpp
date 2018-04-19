@@ -934,7 +934,7 @@ MaybeUnwrapArrayWrapper(JSObject* obj)
 }
 
 static MOZ_ALWAYS_INLINE JSString*
-NewUCString(JSContext* cx, const AutoString& from)
+NewUCString(JSContext* cx, const AutoStringChars&& from)
 {
   return JS_NewUCStringCopyN(cx, from.begin(), from.length());
 }
@@ -982,7 +982,7 @@ GetErrorMessage(void* userRef, const unsigned errorNumber)
 static const char*
 EncodeLatin1(JSContext* cx, AutoString& str, JSAutoByteString& bytes)
 {
-  return bytes.encodeLatin1(cx, NewUCString(cx, str));
+  return bytes.encodeLatin1(cx, NewUCString(cx, str.finish()));
 }
 
 static const char*
@@ -1014,12 +1014,12 @@ BuildCStyleTypeSource(JSContext* cx, JSObject* typeObj_, AutoString& source)
   switch (CType::GetTypeCode(typeObj)) {
 #define BUILD_SOURCE(name, fromType, ffiType)                                  \
   case TYPE_##name:                                                            \
-    AppendString(source, #name);                                               \
+    AppendString(cx, source, #name);                                           \
     break;
   CTYPES_FOR_EACH_TYPE(BUILD_SOURCE)
 #undef BUILD_SOURCE
   case TYPE_void_t:
-    AppendString(source, "void");
+    AppendString(cx, source, "void");
     break;
   case TYPE_pointer: {
     unsigned ptrCount = 0;
@@ -1041,8 +1041,8 @@ BuildCStyleTypeSource(JSContext* cx, JSObject* typeObj_, AutoString& source)
   }
   case TYPE_struct: {
     RootedString name(cx, CType::GetName(cx, typeObj));
-    AppendString(source, "struct ");
-    AppendString(source, name);
+    AppendString(cx, source, "struct ");
+    AppendString(cx, source, name);
     break;
   }
   case TYPE_function:
@@ -1062,28 +1062,28 @@ BuildCStyleFunctionTypeSource(JSContext* cx, HandleObject typeObj,
 
   FunctionInfo* fninfo = FunctionType::GetFunctionInfo(typeObj);
   BuildCStyleTypeSource(cx, fninfo->mReturnType, source);
-  AppendString(source, " ");
+  AppendString(cx, source, " ");
   if (nameStr) {
     MOZ_ASSERT(ptrCount == 0);
-    AppendString(source, nameStr);
+    AppendString(cx, source, nameStr);
   } else if (ptrCount) {
-    AppendString(source, "(");
+    AppendString(cx, source, "(");
     AppendChars(source, '*', ptrCount);
-    AppendString(source, ")");
+    AppendString(cx, source, ")");
   }
-  AppendString(source, "(");
+  AppendString(cx, source, "(");
   if (fninfo->mArgTypes.length() > 0) {
     for (size_t i = 0; i < fninfo->mArgTypes.length(); ++i) {
       BuildCStyleTypeSource(cx, fninfo->mArgTypes[i], source);
       if (i != fninfo->mArgTypes.length() - 1 || fninfo->mIsVariadic) {
-          AppendString(source, ", ");
+          AppendString(cx, source, ", ");
       }
     }
     if (fninfo->mIsVariadic) {
-      AppendString(source, "...");
+      AppendString(cx, source, "...");
     }
   }
-  AppendString(source, ")");
+  AppendString(cx, source, ")");
 }
 
 static void
@@ -1108,10 +1108,10 @@ BuildFunctionTypeSource(JSContext* cx, HandleObject funObj, AutoString& source)
   RootedString funcStr(cx, JS_ValueToSource(cx, funVal));
   if (!funcStr) {
     JS_ClearPendingException(cx);
-    AppendString(source, "<<error converting function to string>>");
+    AppendString(cx, source, "<<error converting function to string>>");
     return;
   }
-  AppendString(source, funcStr);
+  AppendString(cx, source, funcStr);
 }
 
 enum class ConversionType {
@@ -1131,22 +1131,22 @@ BuildConversionPosition(JSContext* cx, ConversionType convType,
   case ConversionType::Argument: {
     MOZ_ASSERT(funObj);
 
-    AppendString(source, " at argument ");
+    AppendString(cx, source, " at argument ");
     AppendUInt(source, argIndex + 1);
-    AppendString(source, " of ");
+    AppendString(cx, source, " of ");
     BuildFunctionTypeSource(cx, funObj, source);
     break;
   }
   case ConversionType::Finalizer:
     MOZ_ASSERT(funObj);
 
-    AppendString(source, " at argument 1 of ");
+    AppendString(cx, source, " at argument 1 of ");
     BuildFunctionTypeSource(cx, funObj, source);
     break;
   case ConversionType::Return:
     MOZ_ASSERT(funObj);
 
-    AppendString(source, " at the return value of ");
+    AppendString(cx, source, " at the return value of ");
     BuildFunctionTypeSource(cx, funObj, source);
     break;
   default:
@@ -1195,6 +1195,8 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
       AutoString arrSource;
       JSAutoByteString arrBytes;
       BuildTypeSource(cx, arrObj, true, arrSource);
+      if (!arrSource)
+          return false;
       const char* arrStr = EncodeLatin1(cx, arrSource, arrBytes);
       if (!arrStr)
         return false;
@@ -1215,6 +1217,8 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
       AutoString structSource;
       JSAutoByteString structBytes;
       BuildTypeSource(cx, arrObj, true, structSource);
+      if (!structSource)
+          return false;
       const char* structStr = EncodeLatin1(cx, structSource, structBytes);
       if (!structStr)
         return false;
@@ -1224,6 +1228,8 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
       if (funObj) {
         AutoString posSource;
         BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
+        if (!posSource)
+            return false;
         posStr = EncodeLatin1(cx, posSource, posBytes);
         if (!posStr)
           return false;
@@ -1252,6 +1258,8 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     AutoString funSource;
     JSAutoByteString funBytes;
     BuildFunctionTypeSource(cx, funObj, funSource);
+    if (!funSource)
+        return false;
     const char* funStr = EncodeLatin1(cx, funSource, funBytes);
     if (!funStr)
       return false;
@@ -1267,6 +1275,8 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     AutoString funSource;
     JSAutoByteString funBytes;
     BuildFunctionTypeSource(cx, funObj, funSource);
+    if (!funSource)
+        return false;
     const char* funStr = EncodeLatin1(cx, funSource, funBytes);
     if (!funStr)
       return false;
@@ -1281,6 +1291,8 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
     AutoString funSource;
     JSAutoByteString funBytes;
     BuildFunctionTypeSource(cx, funObj, funSource);
+    if (!funSource)
+        return false;
     const char* funStr = EncodeLatin1(cx, funSource, funBytes);
     if (!funStr)
       return false;
@@ -1312,6 +1324,8 @@ ConvError(JSContext* cx, HandleObject expectedType, HandleValue actual,
   AutoString expectedSource;
   JSAutoByteString expectedBytes;
   BuildTypeSource(cx, expectedType, true, expectedSource);
+  if (!expectedSource)
+      return false;
   const char* expectedStr = EncodeLatin1(cx, expectedSource, expectedBytes);
   if (!expectedStr)
     return false;
@@ -1366,6 +1380,8 @@ ArrayLengthMismatch(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
   AutoString arrSource;
   JSAutoByteString arrBytes;
   BuildTypeSource(cx, arrObj, true, arrSource);
+  if (!arrSource)
+      return false;
   const char* arrStr = EncodeLatin1(cx, arrSource, arrBytes);
   if (!arrStr)
     return false;
@@ -1396,6 +1412,8 @@ ArrayLengthOverflow(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
   AutoString arrSource;
   JSAutoByteString arrBytes;
   BuildTypeSource(cx, arrObj, true, arrSource);
+  if (!arrSource)
+      return false;
   const char* arrStr = EncodeLatin1(cx, arrSource, arrBytes);
   if (!arrStr)
     return false;
@@ -1461,6 +1479,8 @@ EmptyFinalizerError(JSContext* cx, ConversionType convType,
   if (funObj) {
     AutoString posSource;
     BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
+    if (!posSource)
+        return false;
     posStr = EncodeLatin1(cx, posSource, posBytes);
     if (!posStr)
       return false;
@@ -1490,6 +1510,8 @@ FieldCountMismatch(JSContext* cx,
   AutoString structSource;
   JSAutoByteString structBytes;
   BuildTypeSource(cx, structObj, true, structSource);
+  if (!structSource)
+      return false;
   const char* structStr = EncodeLatin1(cx, structSource, structBytes);
   if (!structStr)
     return false;
@@ -1504,6 +1526,8 @@ FieldCountMismatch(JSContext* cx,
   if (funObj) {
     AutoString posSource;
     BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
+    if (!posSource)
+        return false;
     posStr = EncodeLatin1(cx, posSource, posBytes);
     if (!posStr)
       return false;
@@ -1633,6 +1657,8 @@ FinalizerSizeError(JSContext* cx, HandleObject funObj, HandleValue actual)
   AutoString funSource;
   JSAutoByteString funBytes;
   BuildFunctionTypeSource(cx, funObj, funSource);
+  if (!funSource)
+      return false;
   const char* funStr = EncodeLatin1(cx, funSource, funBytes);
   if (!funStr)
     return false;
@@ -1656,6 +1682,8 @@ FunctionArgumentLengthMismatch(JSContext* cx,
   } else {
     BuildFunctionTypeSource(cx, typeObj, funSource);
   }
+  if (!funSource)
+      return false;
   const char* funStr = EncodeLatin1(cx, funSource, funBytes);
   if (!funStr)
     return false;
@@ -1809,6 +1837,8 @@ NonPrimitiveError(JSContext* cx, HandleObject typeObj)
   AutoString typeSource;
   JSAutoByteString typeBytes;
   BuildTypeSource(cx, typeObj, true, typeSource);
+  if (!typeSource)
+      return false;
   const char* typeStr = EncodeLatin1(cx, typeSource, typeBytes);
   if (!typeStr)
     return false;
@@ -1866,6 +1896,8 @@ PropNameNonStringError(JSContext* cx, HandleId id, HandleValue actual,
   if (funObj) {
     AutoString posSource;
     BuildConversionPosition(cx, convType, funObj, argIndex, posSource);
+    if (!posSource)
+        return false;
     posStr = EncodeLatin1(cx, posSource, posBytes);
     if (!posStr)
       return false;
@@ -1918,8 +1950,9 @@ UndefinedSizeCastError(JSContext* cx, HandleObject targetTypeObj)
   AutoString targetTypeSource;
   JSAutoByteString targetTypeBytes;
   BuildTypeSource(cx, targetTypeObj, true, targetTypeSource);
-  const char* targetTypeStr = EncodeLatin1(cx, targetTypeSource,
-                                           targetTypeBytes);
+  if (!targetTypeSource)
+      return false;
+  const char* targetTypeStr = EncodeLatin1(cx, targetTypeSource, targetTypeBytes);
   if (!targetTypeStr)
     return false;
 
@@ -1936,16 +1969,18 @@ SizeMismatchCastError(JSContext* cx,
   AutoString sourceTypeSource;
   JSAutoByteString sourceTypeBytes;
   BuildTypeSource(cx, sourceTypeObj, true, sourceTypeSource);
-  const char* sourceTypeStr = EncodeLatin1(cx, sourceTypeSource,
-                                           sourceTypeBytes);
+  if (!sourceTypeSource)
+      return false;
+  const char* sourceTypeStr = EncodeLatin1(cx, sourceTypeSource, sourceTypeBytes);
   if (!sourceTypeStr)
     return false;
 
   AutoString targetTypeSource;
   JSAutoByteString targetTypeBytes;
   BuildTypeSource(cx, targetTypeObj, true, targetTypeSource);
-  const char* targetTypeStr = EncodeLatin1(cx, targetTypeSource,
-                                           targetTypeBytes);
+  if (!targetTypeSource)
+      return false;
+  const char* targetTypeStr = EncodeLatin1(cx, targetTypeSource, targetTypeBytes);
   if (!targetTypeStr)
     return false;
 
@@ -3192,9 +3227,9 @@ jsvalToPtrExplicit(JSContext* cx, HandleValue val, uintptr_t* result)
   return false;
 }
 
-template<class IntegerType, class CharType, size_t N, class AP>
+template<class IntegerType, class CharType, size_t N>
 void
-IntegerToString(IntegerType i, int radix, mozilla::Vector<CharType, N, AP>& result)
+IntegerToString(IntegerType i, int radix, StringBuilder<CharType, N>& result)
 {
   JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
 
@@ -3989,7 +4024,7 @@ BuildTypeName(JSContext* cx, JSObject* typeObj_)
     switch (currentGrouping) {
     case TYPE_pointer: {
       // Pointer types go on the left.
-      PrependString(result, "*");
+      PrependString(cx, result, "*");
 
       typeObj = PointerType::GetBaseType(typeObj);
       prevGrouping = currentGrouping;
@@ -3998,17 +4033,17 @@ BuildTypeName(JSContext* cx, JSObject* typeObj_)
     case TYPE_array: {
       if (prevGrouping == TYPE_pointer) {
         // Outer type is pointer, inner type is array. Grouping is required.
-        PrependString(result, "(");
-        AppendString(result, ")");
+        PrependString(cx, result, "(");
+        AppendString(cx, result, ")");
       }
 
       // Array types go on the right.
-      AppendString(result, "[");
+      AppendString(cx, result, "[");
       size_t length;
       if (ArrayType::GetSafeLength(typeObj, &length))
         IntegerToString(length, 10, result);
 
-      AppendString(result, "]");
+      AppendString(cx, result, "]");
 
       typeObj = ArrayType::GetBaseType(typeObj);
       prevGrouping = currentGrouping;
@@ -4024,34 +4059,34 @@ BuildTypeName(JSContext* cx, JSObject* typeObj_)
       // can't return functions.
       ABICode abi = GetABICode(fninfo->mABI);
       if (abi == ABI_STDCALL)
-        PrependString(result, "__stdcall");
+        PrependString(cx, result, "__stdcall");
       else if (abi == ABI_THISCALL)
-        PrependString(result, "__thiscall");
+        PrependString(cx, result, "__thiscall");
       else if (abi == ABI_WINAPI)
-        PrependString(result, "WINAPI");
+        PrependString(cx, result, "WINAPI");
 
       // Function application binds more tightly than dereferencing, so
       // wrap pointer types in parens. Functions can't return functions
       // (only pointers to them), and arrays can't hold functions
       // (similarly), so we don't need to address those cases.
       if (prevGrouping == TYPE_pointer) {
-        PrependString(result, "(");
-        AppendString(result, ")");
+        PrependString(cx, result, "(");
+        AppendString(cx, result, ")");
       }
 
       // Argument list goes on the right.
-      AppendString(result, "(");
+      AppendString(cx, result, "(");
       for (size_t i = 0; i < fninfo->mArgTypes.length(); ++i) {
         RootedObject argType(cx, fninfo->mArgTypes[i]);
         JSString* argName = CType::GetName(cx, argType);
-        AppendString(result, argName);
+        AppendString(cx, result, argName);
         if (i != fninfo->mArgTypes.length() - 1 ||
             fninfo->mIsVariadic)
-          AppendString(result, ", ");
+          AppendString(cx, result, ", ");
       }
       if (fninfo->mIsVariadic)
-        AppendString(result, "...");
-      AppendString(result, ")");
+        AppendString(cx, result, "...");
+      AppendString(cx, result, ")");
 
       // Set 'typeObj' to the return type, and let the loop process it.
       // 'prevGrouping' doesn't matter here, because functions cannot return
@@ -4069,12 +4104,14 @@ BuildTypeName(JSContext* cx, JSObject* typeObj_)
   // If prepending the base type name directly would splice two
   // identifiers, insert a space.
   if (IsAsciiAlpha(result[0]) || result[0] == '_')
-    PrependString(result, " ");
+    PrependString(cx, result, " ");
 
   // Stick the base type and derived type parts together.
   JSString* baseName = CType::GetName(cx, typeObj);
-  PrependString(result, baseName);
-  return NewUCString(cx, result);
+  PrependString(cx, result, baseName);
+  if (!result)
+      return nullptr;
+  return NewUCString(cx, result.finish());
 }
 
 // Given a CType 'typeObj', generate a string 'result' such that 'eval(result)'
@@ -4082,7 +4119,7 @@ BuildTypeName(JSContext* cx, JSObject* typeObj_)
 // StructType 't' is bound to an in-scope variable of name 't.name', and use
 // that variable in place of generating a string to construct the type 't'.
 // (This means the type comparison function CType::TypesEqual will return true
-// when comparing the input and output of BuildTypeSource, since struct
+// when comparing the input and output of AppendTypeSource, since struct
 // equality is determined by strict JSObject pointer equality.)
 static void
 BuildTypeSource(JSContext* cx,
@@ -4099,9 +4136,9 @@ BuildTypeSource(JSContext* cx,
   CTYPES_FOR_EACH_TYPE(CASE_FOR_TYPE)
 #undef CASE_FOR_TYPE
   {
-    AppendString(result, "ctypes.");
+    AppendString(cx, result, "ctypes.");
     JSString* nameStr = CType::GetName(cx, typeObj);
-    AppendString(result, nameStr);
+    AppendString(cx, result, nameStr);
     break;
   }
   case TYPE_pointer: {
@@ -4109,32 +4146,32 @@ BuildTypeSource(JSContext* cx,
 
     // Specialcase ctypes.voidptr_t.
     if (CType::GetTypeCode(baseType) == TYPE_void_t) {
-      AppendString(result, "ctypes.voidptr_t");
+      AppendString(cx, result, "ctypes.voidptr_t");
       break;
     }
 
     // Recursively build the source string, and append '.ptr'.
     BuildTypeSource(cx, baseType, makeShort, result);
-    AppendString(result, ".ptr");
+    AppendString(cx, result, ".ptr");
     break;
   }
   case TYPE_function: {
     FunctionInfo* fninfo = FunctionType::GetFunctionInfo(typeObj);
 
-    AppendString(result, "ctypes.FunctionType(");
+    AppendString(cx, result, "ctypes.FunctionType(");
 
     switch (GetABICode(fninfo->mABI)) {
     case ABI_DEFAULT:
-      AppendString(result, "ctypes.default_abi, ");
+      AppendString(cx, result, "ctypes.default_abi, ");
       break;
     case ABI_STDCALL:
-      AppendString(result, "ctypes.stdcall_abi, ");
+      AppendString(cx, result, "ctypes.stdcall_abi, ");
       break;
     case ABI_THISCALL:
-      AppendString(result, "ctypes.thiscall_abi, ");
+      AppendString(cx, result, "ctypes.thiscall_abi, ");
       break;
     case ABI_WINAPI:
-      AppendString(result, "ctypes.winapi_abi, ");
+      AppendString(cx, result, "ctypes.winapi_abi, ");
       break;
     case INVALID_ABI:
       MOZ_CRASH("invalid abi");
@@ -4145,19 +4182,19 @@ BuildTypeSource(JSContext* cx,
     BuildTypeSource(cx, fninfo->mReturnType, true, result);
 
     if (fninfo->mArgTypes.length() > 0) {
-      AppendString(result, ", [");
+      AppendString(cx, result, ", [");
       for (size_t i = 0; i < fninfo->mArgTypes.length(); ++i) {
         BuildTypeSource(cx, fninfo->mArgTypes[i], true, result);
         if (i != fninfo->mArgTypes.length() - 1 ||
             fninfo->mIsVariadic)
-          AppendString(result, ", ");
+          AppendString(cx, result, ", ");
       }
       if (fninfo->mIsVariadic)
-        AppendString(result, "\"...\"");
-      AppendString(result, "]");
+        AppendString(cx, result, "\"...\"");
+      AppendString(cx, result, "]");
     }
 
-    AppendString(result, ")");
+    AppendString(cx, result, ")");
     break;
   }
   case TYPE_array: {
@@ -4166,13 +4203,13 @@ BuildTypeSource(JSContext* cx,
     // is undefined.
     JSObject* baseType = ArrayType::GetBaseType(typeObj);
     BuildTypeSource(cx, baseType, makeShort, result);
-    AppendString(result, ".array(");
+    AppendString(cx, result, ".array(");
 
     size_t length;
     if (ArrayType::GetSafeLength(typeObj, &length))
       IntegerToString(length, 10, result);
 
-    AppendString(result, ")");
+    AppendString(cx, result, ")");
     break;
   }
   case TYPE_struct: {
@@ -4181,22 +4218,22 @@ BuildTypeSource(JSContext* cx,
     if (makeShort) {
       // Shorten the type declaration by assuming that StructType 't' is bound
       // to an in-scope variable of name 't.name'.
-      AppendString(result, name);
+      AppendString(cx, result, name);
       break;
     }
 
     // Write the full struct declaration.
-    AppendString(result, "ctypes.StructType(\"");
-    AppendString(result, name);
-    AppendString(result, "\"");
+    AppendString(cx, result, "ctypes.StructType(\"");
+    AppendString(cx, result, name);
+    AppendString(cx, result, "\"");
 
     // If it's an opaque struct, we're done.
     if (!CType::IsSizeDefined(typeObj)) {
-      AppendString(result, ")");
+      AppendString(cx, result, ")");
       break;
     }
 
-    AppendString(result, ", [");
+    AppendString(cx, result, ", [");
 
     const FieldInfoHash* fields = StructType::GetFieldInfo(typeObj);
     size_t length = fields->count();
@@ -4209,16 +4246,16 @@ BuildTypeSource(JSContext* cx,
 
     for (size_t i = 0; i < length; ++i) {
       const FieldInfoHash::Entry* entry = fieldsArray[i];
-      AppendString(result, "{ \"");
-      AppendString(result, entry->key());
-      AppendString(result, "\": ");
+      AppendString(cx, result, "{ \"");
+      AppendString(cx, result, entry->key());
+      AppendString(cx, result, "\": ");
       BuildTypeSource(cx, entry->value().mType, true, result);
-      AppendString(result, " }");
+      AppendString(cx, result, " }");
       if (i != length - 1)
-        AppendString(result, ", ");
+        AppendString(cx, result, ", ");
     }
 
-    AppendString(result, "])");
+    AppendString(cx, result, "])");
     break;
   }
   }
@@ -4234,7 +4271,7 @@ BuildTypeSource(JSContext* cx,
 // resulting string can ImplicitConvert successfully if passed to another data
 // constructor. (This is important when called recursively, since fields of
 // structs and arrays are converted with ImplicitConvert.)
-static bool
+static MOZ_MUST_USE bool
 BuildDataSource(JSContext* cx,
                 HandleObject typeObj,
                 void* data,
@@ -4245,9 +4282,9 @@ BuildDataSource(JSContext* cx,
   switch (type) {
   case TYPE_bool:
     if (*static_cast<bool*>(data))
-      AppendString(result, "true");
+      AppendString(cx, result, "true");
     else
-      AppendString(result, "false");
+      AppendString(cx, result, "false");
     break;
 #define INTEGRAL_CASE(name, type, ffiType)                                     \
   case TYPE_##name:                                                            \
@@ -4260,12 +4297,12 @@ BuildDataSource(JSContext* cx,
   case TYPE_##name:                                                            \
     /* Serialize as a wrapped decimal integer. */                              \
     if (!numeric_limits<type>::is_signed)                                      \
-      AppendString(result, "ctypes.UInt64(\"");                                \
+      AppendString(cx, result, "ctypes.UInt64(\"");                            \
     else                                                                       \
-      AppendString(result, "ctypes.Int64(\"");                                 \
+      AppendString(cx, result, "ctypes.Int64(\"");                             \
                                                                                \
     IntegerToString(*static_cast<type*>(data), 10, result);                    \
-    AppendString(result, "\")");                                               \
+    AppendString(cx, result, "\")");                                           \
     break;
   CTYPES_FOR_EACH_WRAPPED_INT_TYPE(WRAPPED_INT_CASE)
 #undef WRAPPED_INT_CASE
@@ -4302,7 +4339,7 @@ BuildDataSource(JSContext* cx,
     if (!src)
       return false;
 
-    AppendString(result, src);
+    AppendString(cx, result, src);
     break;
   }
   case TYPE_pointer:
@@ -4311,17 +4348,17 @@ BuildDataSource(JSContext* cx,
       // The result must be able to ImplicitConvert successfully.
       // Wrap in a type constructor, then serialize for ExplicitConvert.
       BuildTypeSource(cx, typeObj, true, result);
-      AppendString(result, "(");
+      AppendString(cx, result, "(");
     }
 
     // Serialize the pointer value as a wrapped hexadecimal integer.
     uintptr_t ptr = *static_cast<uintptr_t*>(data);
-    AppendString(result, "ctypes.UInt64(\"0x");
+    AppendString(cx, result, "ctypes.UInt64(\"0x");
     IntegerToString(ptr, 16, result);
-    AppendString(result, "\")");
+    AppendString(cx, result, "\")");
 
     if (isImplicit)
-      AppendString(result, ")");
+      AppendString(cx, result, ")");
 
     break;
   }
@@ -4329,7 +4366,7 @@ BuildDataSource(JSContext* cx,
     // Serialize each element of the array recursively. Each element must
     // be able to ImplicitConvert successfully.
     RootedObject baseType(cx, ArrayType::GetBaseType(typeObj));
-    AppendString(result, "[");
+    AppendString(cx, result, "[");
 
     size_t length = ArrayType::GetLength(typeObj);
     size_t elementSize = CType::GetSize(baseType);
@@ -4339,9 +4376,9 @@ BuildDataSource(JSContext* cx,
         return false;
 
       if (i + 1 < length)
-        AppendString(result, ", ");
+        AppendString(cx, result, ", ");
     }
-    AppendString(result, "]");
+    AppendString(cx, result, "]");
     break;
   }
   case TYPE_struct: {
@@ -4349,7 +4386,7 @@ BuildDataSource(JSContext* cx,
       // The result must be able to ImplicitConvert successfully.
       // Serialize the data as an object with properties, rather than
       // a sequence of arguments to the StructType constructor.
-      AppendString(result, "{");
+      AppendString(cx, result, "{");
     }
 
     // Serialize each field of the struct recursively. Each field must
@@ -4367,9 +4404,9 @@ BuildDataSource(JSContext* cx,
       const FieldInfoHash::Entry* entry = fieldsArray[i];
 
       if (isImplicit) {
-        AppendString(result, "\"");
-        AppendString(result, entry->key());
-        AppendString(result, "\": ");
+        AppendString(cx, result, "\"");
+        AppendString(cx, result, entry->key());
+        AppendString(cx, result, "\": ");
       }
 
       char* fieldData = static_cast<char*>(data) + entry->value().mOffset;
@@ -4378,11 +4415,11 @@ BuildDataSource(JSContext* cx,
         return false;
 
       if (i + 1 != length)
-        AppendString(result, ", ");
+        AppendString(cx, result, ", ");
     }
 
     if (isImplicit)
-      AppendString(result, "}");
+      AppendString(cx, result, "}");
 
     break;
   }
@@ -4997,9 +5034,11 @@ CType::ToString(JSContext* cx, unsigned argc, Value* vp)
   JSString* result;
   if (CType::IsCType(obj)) {
     AutoString type;
-    AppendString(type, "type ");
-    AppendString(type, GetName(cx, obj));
-    result = NewUCString(cx, type);
+    AppendString(cx, type, "type ");
+    AppendString(cx, type, GetName(cx, obj));
+    if (!type)
+        return false;
+    result = NewUCString(cx, type.finish());
   }
   else {
     result = JS_NewStringCopyZ(cx, "[CType proto object]");
@@ -5029,7 +5068,9 @@ CType::ToSource(JSContext* cx, unsigned argc, Value* vp)
   if (CType::IsCType(obj)) {
     AutoString source;
     BuildTypeSource(cx, obj, false, source);
-    result = NewUCString(cx, source);
+    if (!source)
+        return false;
+    result = NewUCString(cx, source.finish());
   } else {
     result = JS_NewStringCopyZ(cx, "[CType proto object]");
   }
@@ -6805,7 +6846,8 @@ PrepareCIF(JSContext* cx,
 }
 
 void
-FunctionType::BuildSymbolName(JSString* name,
+FunctionType::BuildSymbolName(JSContext* cx,
+                              JSString* name,
                               JSObject* typeObj,
                               AutoCString& result)
 {
@@ -6816,7 +6858,7 @@ FunctionType::BuildSymbolName(JSString* name,
   case ABI_THISCALL:
   case ABI_WINAPI:
     // For cdecl or WINAPI functions, no mangling is necessary.
-    AppendString(result, name);
+    AppendString(cx, result, name);
     break;
 
   case ABI_STDCALL: {
@@ -6825,9 +6867,9 @@ FunctionType::BuildSymbolName(JSString* name,
     //   _foo@40
     // where 'foo' is the function name, and '40' is the aligned size of the
     // arguments.
-    AppendString(result, "_");
-    AppendString(result, name);
-    AppendString(result, "@");
+    AppendString(cx, result, "_");
+    AppendString(cx, result, name);
+    AppendString(cx, result, "@");
 
     // Compute the suffix by aligning each argument to sizeof(ffi_arg).
     size_t size = 0;
@@ -6840,7 +6882,7 @@ FunctionType::BuildSymbolName(JSString* name,
 #elif defined(_WIN64)
     // On Win64, stdcall is an alias to the default ABI for compatibility, so no
     // mangling is done.
-    AppendString(result, name);
+    AppendString(cx, result, name);
 #endif
     break;
   }
@@ -8059,13 +8101,14 @@ CData::GetSourceString(JSContext* cx, HandleObject typeObj, void* data)
   // bound to a variable in the current scope.)
   AutoString source;
   BuildTypeSource(cx, typeObj, true, source);
-  AppendString(source, "(");
+  AppendString(cx, source, "(");
   if (!BuildDataSource(cx, typeObj, data, false, source))
+    source.handle(false);
+  AppendString(cx, source, ")");
+  if (!source)
     return nullptr;
 
-  AppendString(source, ")");
-
-  return NewUCString(cx, source);
+  return NewUCString(cx, source.finish());
 }
 
 bool
@@ -8143,13 +8186,13 @@ CDataFinalizer::Methods::ToSource(JSContext* cx, unsigned argc, Value* vp)
     }
 
     AutoString source;
-    AppendString(source, "ctypes.CDataFinalizer(");
+    AppendString(cx, source, "ctypes.CDataFinalizer(");
     JSString* srcValue = CData::GetSourceString(cx, objType, p->cargs);
     if (!srcValue) {
       return false;
     }
-    AppendString(source, srcValue);
-    AppendString(source, ", ");
+    AppendString(cx, source, srcValue);
+    AppendString(cx, source, ", ");
     Value valCodePtrType = JS_GetReservedSlot(objThis,
                                               SLOT_DATAFINALIZER_CODETYPE);
     if (valCodePtrType.isPrimitive()) {
@@ -8162,9 +8205,11 @@ CDataFinalizer::Methods::ToSource(JSContext* cx, unsigned argc, Value* vp)
       return false;
     }
 
-    AppendString(source, srcDispose);
-    AppendString(source, ")");
-    strMessage = NewUCString(cx, source);
+    AppendString(cx, source, srcDispose);
+    AppendString(cx, source, ")");
+    if (!source)
+        return false;
+    strMessage = NewUCString(cx, source.finish());
   }
 
   if (!strMessage) {
@@ -8744,7 +8789,9 @@ Int64Base::ToString(JSContext* cx,
     IntegerToString(static_cast<int64_t>(GetInt(obj)), radix, intString);
   }
 
-  JSString* result = NewUCString(cx, intString);
+  if (!intString)
+      return false;
+  JSString* result = NewUCString(cx, intString.finish());
   if (!result)
     return false;
 
@@ -8768,15 +8815,17 @@ Int64Base::ToSource(JSContext* cx,
   // Return a decimal string suitable for constructing the number.
   AutoString source;
   if (isUnsigned) {
-    AppendString(source, "ctypes.UInt64(\"");
+    AppendString(cx, source, "ctypes.UInt64(\"");
     IntegerToString(GetInt(obj), 10, source);
   } else {
-    AppendString(source, "ctypes.Int64(\"");
+    AppendString(cx, source, "ctypes.Int64(\"");
     IntegerToString(static_cast<int64_t>(GetInt(obj)), 10, source);
   }
-  AppendString(source, "\")");
+  AppendString(cx, source, "\")");
+  if (!source)
+    return false;
 
-  JSString* result = NewUCString(cx, source);
+  JSString* result = NewUCString(cx, source.finish());
   if (!result)
     return false;
 

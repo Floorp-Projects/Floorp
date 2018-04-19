@@ -125,14 +125,12 @@ public:
   }
 
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   void Check()
   {
-    for (auto arena = mHead.next; arena; arena = arena->next) {
-      arena->canary.Check();
+    if (mCurrent) {
+      mCurrent->canary.Check();
     }
   }
-#endif
 
 private:
   struct ArenaHeader

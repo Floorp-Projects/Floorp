@@ -887,12 +887,10 @@ GetLengthOfJSStructuredCloneData(JSStructuredCloneData* data)
 
     size_t len = 0;
 
-    auto iter = data->Iter();
-    while (!iter.Done()) {
-        size_t len_of_this_segment = iter.RemainingInSegment();
-        len += len_of_this_segment;
-        iter.Advance(*data, len_of_this_segment);
-    }
+    data->ForEachDataChunk([&](const char* bytes, size_t size) {
+        len += size;
+        return true;
+    });
 
     return len;
 }
@@ -905,13 +903,11 @@ CopyJSStructuredCloneData(JSStructuredCloneData* src, uint8_t* dest)
 
     size_t bytes_copied = 0;
 
-    auto iter = src->Iter();
-    while (!iter.Done()) {
-        size_t len_of_this_segment = iter.RemainingInSegment();
-        memcpy(dest + bytes_copied, iter.Data(), len_of_this_segment);
-        bytes_copied += len_of_this_segment;
-        iter.Advance(*src, len_of_this_segment);
-    }
+    src->ForEachDataChunk([&](const char* bytes, size_t size) {
+        memcpy(dest, bytes, size);
+        dest += size;
+        return true;
+    });
 }
 
 bool
@@ -920,7 +916,7 @@ WriteBytesToJSStructuredCloneData(const uint8_t* src, size_t len, JSStructuredCl
     assert(src != nullptr);
     assert(dest != nullptr);
 
-    return dest->WriteBytes(reinterpret_cast<const char*>(src), len);
+    return dest->AppendBytes(reinterpret_cast<const char*>(src), len);
 }
 
 } // extern "C"

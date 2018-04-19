@@ -1777,7 +1777,7 @@ WorkerPrivate::Start()
 
 // aCx is null when called from the finalizer
 bool
-WorkerPrivate::NotifyPrivate(WorkerStatus aStatus)
+WorkerPrivate::Notify(WorkerStatus aStatus)
 {
   AssertIsOnParentThread();
 
@@ -4345,7 +4345,7 @@ WorkerPrivate::AssertValidSyncLoop(nsIEventTarget* aSyncLoopTarget)
 #endif
 
 void
-WorkerPrivate::PostMessageToParentInternal(
+WorkerPrivate::PostMessageToParent(
                             JSContext* aCx,
                             JS::Handle<JS::Value> aMessage,
                             const Sequence<JSObject*>& aTransferable,

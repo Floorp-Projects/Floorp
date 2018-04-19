@@ -11,6 +11,7 @@
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const { editableField } = require("devtools/client/shared/inplace-editor");
+const {colorUtils} = require("devtools/shared/css/color");
 
 /**
  * Create an inplace editor linked to a span element and click on the span to
@@ -73,10 +74,12 @@ function createSpan(doc) {
  *        - {Number} index, the index of the selected suggestion in the popup
  *        - {Number} total, the total number of suggestions in the popup
  *        - {String} postLabel, the expected post label for the selected suggestion
+ *        - {Boolean} colorSwatch, if there is a swatch of color expected to be visible
  * @param {InplaceEditor} editor
  *        The InplaceEditor instance being tested
  */
-async function testCompletion([key, completion, index, total, postLabel], editor) {
+async function testCompletion([key, completion, index, total,
+    postLabel, colorSwatch], editor) {
   info("Pressing key " + key);
   info("Expecting " + completion);
 
@@ -112,6 +115,21 @@ async function testCompletion([key, completion, index, total, postLabel], editor
     let selectedElement = editor.popup.elements.get(selectedItem);
     ok(selectedElement.textContent.includes(postLabel),
       "Selected popup element contains the expected post-label");
+
+    // Determines if there is a color swatch attached to the label
+    // and if the color swatch's background color matches the post label
+    let swatchSpan = selectedElement.getElementsByClassName(
+      "autocomplete-swatch autocomplete-colorswatch");
+    if (colorSwatch) {
+      ok(swatchSpan.length === 1, "Displayed the expected color swatch");
+      let color = new colorUtils.CssColor(swatchSpan[0].style.backgroundColor);
+      let swatchColor = color.rgba;
+      color.newColor(postLabel);
+      let postColor = color.rgba;
+      ok(swatchColor == postColor, "Color swatch matches postLabel value");
+    } else {
+      ok(swatchSpan.length === 0, "As expected no swatches were available");
+    }
   }
 
   if (total === 0) {
