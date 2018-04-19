@@ -52,19 +52,25 @@ tasks:
             kind: 'action-callback'
 
       routes:
-        $if: 'tasks_for == "hg-push"'
-        then:
-          - "index.gecko.v2.${repository.project}.latest.firefox.decision"
-          - "index.gecko.v2.${repository.project}.revision.${push.revision}.firefox.decision"
-          - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision"
+        $flatten:
           - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
-          - "notify.email.${ownerEmail}.on-failed"
-          - "notify.email.${ownerEmail}.on-exception"
-        else:
-          - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
-          - $if: 'tasks_for == "action"'
-            then: "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
-            else: "index.gecko.v2.${repository.project}.latest.firefox.decision-${cron.job_name}"
+          - $if: 'tasks_for == "hg-push"'
+            then:
+              - "index.gecko.v2.${repository.project}.latest.taskgraph.decision"
+              - "index.gecko.v2.${repository.project}.revision.${push.revision}.taskgraph.decision"
+              - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision"
+              - "notify.email.${ownerEmail}.on-failed"
+              - "notify.email.${ownerEmail}.on-exception"
+              # These are the old index routes for the decision task.
+              # They are still here so external tools that referenced them continue to work.
+              - "index.gecko.v2.${repository.project}.latest.firefox.decision"
+              - "index.gecko.v2.${repository.project}.revision.${push.revision}.firefox.decision"
+            else:
+              $if: 'tasks_for == "action"'
+              then: "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
+              else:
+              - "index.gecko.v2.${repository.project}.latest.taskgraph.decision-${cron.job_name}"
+              - "index.gecko.v2.${repository.project}.latest.firefox.decision-${cron.job_name}"
 
       scopes:
         $if: 'tasks_for == "hg-push"'
