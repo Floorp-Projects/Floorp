@@ -26,7 +26,7 @@ var AboutNewTab = {
     if (this.isOverridden) {
       return;
     }
-    this.pageListener = pageListener || new RemotePages(["about:home", "about:newtab", "about:welcome"]);
+    this.pageListener = pageListener || new RemotePages(["about:home", "about:newtab"]);
     this.pageListener.addMessageListener("NewTab:Customize", this.customize);
     this.pageListener.addMessageListener("NewTab:MaybeShowMigrateMessage",
       this.maybeShowMigrateMessage);

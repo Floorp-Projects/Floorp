@@ -315,8 +315,7 @@ var gInitialPages = [
   "about:home",
   "about:privatebrowsing",
   "about:welcomeback",
-  "about:sessionrestore",
-  "about:welcome"
+  "about:sessionrestore"
 ];
 
 function isInitialPage(url) {
