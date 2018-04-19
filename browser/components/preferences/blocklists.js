@@ -12,7 +12,6 @@ const LISTS_PREF_BRANCH = "browser.safebrowsing.provider.mozilla.lists.";
 var gBlocklistManager = {
   _type: "",
   _blockLists: [],
-  _bundle: null,
   _tree: null,
 
   _view: {
@@ -23,10 +22,7 @@ var gBlocklistManager = {
     getCellText(row, column) {
       if (column.id == "listCol") {
         let list = gBlocklistManager._blockLists[row];
-        let desc = list.description ? list.description : "";
-        let text = gBlocklistManager._bundle.getFormattedString("mozNameTemplate",
-                                                                [list.name, desc]);
-        return text;
+        return list.name;
       }
       return "";
     },
@@ -62,7 +58,6 @@ var gBlocklistManager = {
   },
 
   onLoad() {
-    this._bundle = document.getElementById("bundlePreferences");
     let params = window.arguments[0];
     this.init(params);
   },
@@ -119,7 +114,7 @@ var gBlocklistManager = {
     window.close();
   },
 
-  _loadBlockLists() {
+  async _loadBlockLists() {
     this._blockLists = [];
 
     // Load blocklists into a table.
@@ -127,7 +122,8 @@ var gBlocklistManager = {
     let itemArray = branch.getChildList("");
     for (let itemName of itemArray) {
       try {
-        this._createOrUpdateBlockList(itemName);
+        let list = await this._createBlockList(itemName);
+        this._blockLists.push(list);
       } catch (e) {
         // Ignore bogus or missing list name.
         continue;
@@ -137,25 +133,21 @@ var gBlocklistManager = {
     this._updateTree();
   },
 
-  _createOrUpdateBlockList(itemName) {
+  async _createBlockList(id) {
     let branch = Services.prefs.getBranch(LISTS_PREF_BRANCH);
-    let key = branch.getCharPref(itemName);
-    let value = this._bundle.getString(key);
+    let l10nKey = branch.getCharPref(id);
+    let [listName, description] = await document.l10n.formatValues([
+      [`blocklist-item-${l10nKey}-name`],
+      [`blocklist-item-${l10nKey}-desc`],
+    ]);
+    let name = await document.l10n.formatValue(
+      "blocklist-item-list-template", {listName, description});
 
-    let suffix = itemName.slice(itemName.lastIndexOf("."));
-    let id = itemName.replace(suffix, "");
-    let list = this._blockLists.find(el => el.id === id);
-    if (!list) {
-      list = { id };
-      this._blockLists.push(list);
-    }
-    list.selected = this._getActiveList() === id;
-
-    // Get the property name from the suffix (e.g. ".name" -> "name").
-    let prop = suffix.slice(1);
-    list[prop] = value;
-
-    return list;
+    return {
+      id,
+      name,
+      selected: this._getActiveList() === id,
+    };
   },
 
   _updateTree() {
