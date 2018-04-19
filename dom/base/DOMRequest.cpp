@@ -237,32 +237,33 @@ NS_IMPL_ISUPPORTS(DOMRequestService, nsIDOMRequestService)
 
 NS_IMETHODIMP
 DOMRequestService::CreateRequest(mozIDOMWindow* aWindow,
-                                 nsIDOMDOMRequest** aRequest)
+                                 DOMRequest** aRequest)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_STATE(aWindow);
   auto* win = nsPIDOMWindowInner::From(aWindow);
-  NS_ADDREF(*aRequest = new DOMRequest(win));
+  RefPtr<DOMRequest> req = new DOMRequest(win);
+  req.forget(aRequest);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMRequestService::FireSuccess(nsIDOMDOMRequest* aRequest,
+DOMRequestService::FireSuccess(DOMRequest* aRequest,
                                JS::Handle<JS::Value> aResult)
 {
   NS_ENSURE_STATE(aRequest);
-  static_cast<DOMRequest*>(aRequest)->FireSuccess(aResult);
+  aRequest->FireSuccess(aResult);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DOMRequestService::FireError(nsIDOMDOMRequest* aRequest,
+DOMRequestService::FireError(DOMRequest* aRequest,
                              const nsAString& aError)
 {
   NS_ENSURE_STATE(aRequest);
-  static_cast<DOMRequest*>(aRequest)->FireError(aError);
+  aRequest->FireError(aError);
 
   return NS_OK;
 }
@@ -326,20 +327,19 @@ private:
 };
 
 NS_IMETHODIMP
-DOMRequestService::FireSuccessAsync(nsIDOMDOMRequest* aRequest,
+DOMRequestService::FireSuccessAsync(DOMRequest* aRequest,
                                     JS::Handle<JS::Value> aResult)
 {
   NS_ENSURE_STATE(aRequest);
-  return FireSuccessAsyncTask::Dispatch(static_cast<DOMRequest*>(aRequest), aResult);
+  return FireSuccessAsyncTask::Dispatch(aRequest, aResult);
 }
 
 NS_IMETHODIMP
-DOMRequestService::FireErrorAsync(nsIDOMDOMRequest* aRequest,
+DOMRequestService::FireErrorAsync(DOMRequest* aRequest,
                                   const nsAString& aError)
 {
   NS_ENSURE_STATE(aRequest);
-  nsCOMPtr<nsIRunnable> asyncTask =
-    new FireErrorAsyncTask(static_cast<DOMRequest*>(aRequest), aError);
+  nsCOMPtr<nsIRunnable> asyncTask = new FireErrorAsyncTask(aRequest, aError);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(asyncTask));
   return NS_OK;
 }

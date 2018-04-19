@@ -6,8 +6,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMDOMRequest;
-
+webidl DOMRequest;
 webidl FrameLoader;
 
 [scriptable, function, uuid(00d0e19d-bd67-491f-8e85-b9905224d3bb)]
@@ -63,16 +62,16 @@ interface nsIBrowserElementAPI : nsISupports
   void goForward();
   void reload(in boolean hardReload);
   void stop();
-  nsIDOMDOMRequest download(in DOMString url,
+  DOMRequest download(in DOMString url,
                             [optional] in jsval options);
-  nsIDOMDOMRequest purgeHistory();
-  nsIDOMDOMRequest getScreenshot(in uint32_t width,
+  DOMRequest purgeHistory();
+  DOMRequest getScreenshot(in uint32_t width,
                                  in uint32_t height,
                                  [optional] in DOMString mimeType);
   void zoom(in float zoom);
-  nsIDOMDOMRequest getCanGoBack();
-  nsIDOMDOMRequest getCanGoForward();
-  nsIDOMDOMRequest getContentDimensions();
+  DOMRequest getCanGoBack();
+  DOMRequest getCanGoForward();
+  DOMRequest getContentDimensions();
 
   void findAll(in DOMString searchString, in long caseSensitivity);
   void findNext(in long direction);
@@ -81,11 +80,11 @@ interface nsIBrowserElementAPI : nsISupports
   void addNextPaintListener(in nsIBrowserElementNextPaintListener listener);
   void removeNextPaintListener(in nsIBrowserElementNextPaintListener listener);
 
-  nsIDOMDOMRequest executeScript(in DOMString script, in jsval options);
+  DOMRequest executeScript(in DOMString script, in jsval options);
 
   /**
    * Returns an object that represents a Web Manifest:
    * http://w3c.github.io/manifest/
    */
-  nsIDOMDOMRequest getWebManifest();
+  DOMRequest getWebManifest();
 };
