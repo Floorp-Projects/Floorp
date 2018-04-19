@@ -171,9 +171,9 @@ test-coverage-wpt:
     max-run-time: 10800
     run-on-projects:
         by-test-platform:
-            # do not run on beta or release: usually just confirms earlier results
-            linux64-ccov/.*: ['trunk', 'try']
-            windows10-64-ccov/debug: ['trunk', 'try']
+            # only run on mozilla-central and try.
+            linux64-ccov/.*: ['mozilla-central', 'try']
+            windows10-64-ccov/debug: ['mozilla-central', 'try']
             default: []
     tier:
         by-test-platform:
