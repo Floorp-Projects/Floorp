@@ -595,11 +595,6 @@ VideoSendStream::~VideoSendStream() {
   RTC_DCHECK(!send_stream_);
 }
 
-CPULoadStateObserver* VideoSendStream::LoadStateObserver() {
-  //TODO: figure out CPULoadStateObserver stuff
-  return nullptr;
-}
-
 void VideoSendStream::Start() {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_LOG(LS_INFO) << "VideoSendStream::Start";

@@ -409,9 +409,6 @@ class VideoCodingModule : public Module {
   // Setting a desired delay to the VCM receiver. Video rendering will be
   // delayed by at least desired_delay_ms.
   virtual int SetMinReceiverDelay(int desired_delay_ms) = 0;
- 
-  // Set current load state of the CPU
-  virtual void SetCPULoadState(CPULoadState state) = 0;
 
   virtual void RegisterPostEncodeImageCallback(
       EncodedImageCallback* post_encode_callback) = 0;
