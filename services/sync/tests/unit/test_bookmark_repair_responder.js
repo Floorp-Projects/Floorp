@@ -15,8 +15,10 @@ Svc.Prefs.set("engine.bookmarks.validation.enabled", false);
 var recordedEvents = [];
 
 function checkRecordedEvents(expected) {
-  // Ignore event telemetry from the merger.
-  let repairEvents = recordedEvents.filter(event => event.object != "mirror");
+  // Ignore event telemetry from the merger and Places maintenance.
+  let repairEvents = recordedEvents.filter(event =>
+    !["mirror", "maintenance"].includes(event.object)
+  );
   deepEqual(repairEvents, expected);
   // and clear the list so future checks are easier to write.
   recordedEvents = [];

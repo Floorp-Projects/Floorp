@@ -70,7 +70,6 @@
     locale/browser/searchplugins/images/amazon.ico     (searchplugins/images/amazon.ico)
     locale/browser/searchplugins/images/ebay.ico       (searchplugins/images/ebay.ico)
     locale/browser/searchplugins/images/wikipedia.ico  (searchplugins/images/wikipedia.ico)
-    locale/browser/searchplugins/images/yahoo.ico      (searchplugins/images/yahoo.ico)
     locale/browser/searchplugins/images/yandex-en.ico  (searchplugins/images/yandex-en.ico)
     locale/browser/searchplugins/images/yandex-ru.ico  (searchplugins/images/yandex-ru.ico)
 % locale browser-region @AB_CD@ %locale/browser-region/

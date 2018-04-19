@@ -96,6 +96,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserErrorReporter: "resource:///modules/BrowserErrorReporter.jsm",
   BrowserUITelemetry: "resource:///modules/BrowserUITelemetry.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ContentClick: "resource:///modules/ContentClick.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
@@ -127,7 +128,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   ReaderParent: "resource:///modules/ReaderParent.jsm",
-  RecentWindow: "resource:///modules/RecentWindow.jsm",
   RemotePrompt: "resource:///modules/RemotePrompt.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
@@ -505,7 +505,7 @@ BrowserGlue.prototype = {
       case "handle-xul-text-link":
         let linkHandled = subject.QueryInterface(Ci.nsISupportsPRBool);
         if (!linkHandled.data) {
-          let win = RecentWindow.getMostRecentBrowserWindow();
+          let win = BrowserWindowTracker.getTopWindow();
           if (win) {
             data = JSON.parse(data);
             let where = win.whereToOpenLink(data);
@@ -534,7 +534,7 @@ BrowserGlue.prototype = {
         } catch (ex) {
           Cu.reportError(ex);
         }
-        let win = RecentWindow.getMostRecentBrowserWindow();
+        let win = BrowserWindowTracker.getTopWindow();
         win.BrowserSearch.recordSearchInTelemetry(engine, "urlbar");
         break;
       case "browser-search-engine-modified":
@@ -832,7 +832,7 @@ BrowserGlue.prototype = {
     if (profileAge < 90) // 3 months
       return;
 
-    let win = RecentWindow.getMostRecentBrowserWindow();
+    let win = BrowserWindowTracker.getTopWindow();
     if (!win)
       return;
 
@@ -870,7 +870,7 @@ BrowserGlue.prototype = {
    *        why a profile reset is offered.
    */
   _resetProfileNotification(reason) {
-    let win = RecentWindow.getMostRecentBrowserWindow();
+    let win = BrowserWindowTracker.getTopWindow();
     if (!win)
       return;
 
@@ -907,7 +907,7 @@ BrowserGlue.prototype = {
   },
 
   _notifyUnsignedAddonsDisabled() {
-    let win = RecentWindow.getMostRecentBrowserWindow();
+    let win = BrowserWindowTracker.getTopWindow();
     if (!win)
       return;
 
@@ -1481,7 +1481,7 @@ BrowserGlue.prototype = {
       let key = getNotifyString({propName: "notificationButtonAccessKey",
                                  stringName: "pu.notifyButton.accesskey"});
 
-      let win = RecentWindow.getMostRecentBrowserWindow();
+      let win = BrowserWindowTracker.getTopWindow();
       let notifyBox = win.document.getElementById("high-priority-global-notificationbox");
 
       let buttons = [
@@ -1516,7 +1516,7 @@ BrowserGlue.prototype = {
       // This callback will be called twice but only once with this topic
       if (topic != "alertclickcallback")
         return;
-      let win = RecentWindow.getMostRecentBrowserWindow();
+      let win = BrowserWindowTracker.getTopWindow();
       win.openTrustedLinkIn(data, "tab");
     }
 
@@ -1777,7 +1777,7 @@ BrowserGlue.prototype = {
     var url = Services.urlFormatter.formatURLPref("app.support.baseURL");
     url += helpTopic;
 
-    var win = RecentWindow.getMostRecentBrowserWindow();
+    var win = BrowserWindowTracker.getTopWindow();
 
     var buttons = [
                     {
@@ -2284,7 +2284,7 @@ BrowserGlue.prototype = {
     } catch (ex) { /* Don't break the default prompt if telemetry is broken. */ }
 
     if (willPrompt) {
-      DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
+      DefaultBrowserCheck.prompt(BrowserWindowTracker.getTopWindow());
     }
   },
 
@@ -2506,7 +2506,7 @@ BrowserGlue.prototype = {
       return;
     }
 
-    let chromeWindow = RecentWindow.getMostRecentBrowserWindow();
+    let chromeWindow = BrowserWindowTracker.getTopWindow();
     chromeWindow.openPreferences(...args);
   },
 
@@ -2531,7 +2531,7 @@ BrowserGlue.prototype = {
       const URIs = data.wrappedJSObject.object;
 
       // win can be null, but it's ok, we'll assign it later in openTab()
-      let win = RecentWindow.getMostRecentBrowserWindow({private: false});
+      let win = BrowserWindowTracker.getTopWindow({private: false});
 
       const openTab = async (URI) => {
         let tab;
@@ -2614,7 +2614,7 @@ BrowserGlue.prototype = {
     if (AppConstants.platform == "win") {
       imageURL = "chrome://branding/content/icon64.png";
     }
-    let win = RecentWindow.getMostRecentBrowserWindow({private: false});
+    let win = BrowserWindowTracker.getTopWindow({private: false});
     if (!win) {
       win = await this._openURLInNewWindow(url);
       let tabs = win.gBrowser.tabs;
@@ -2649,7 +2649,7 @@ BrowserGlue.prototype = {
       if (topic != "alertclickcallback")
         return;
       let url = await FxAccounts.config.promiseManageDevicesURI("device-connected-notification");
-      let win = RecentWindow.getMostRecentBrowserWindow({private: false});
+      let win = BrowserWindowTracker.getTopWindow({private: false});
       if (!win) {
         this._openURLInNewWindow(url);
       } else {
@@ -2699,7 +2699,7 @@ BrowserGlue.prototype = {
     Services.prefs.setBoolPref("dom.ipc.plugins.flash.disable-protected-mode", true);
     Services.prefs.setBoolPref("browser.flash-protected-mode-flip.done", true);
 
-    let win = RecentWindow.getMostRecentBrowserWindow();
+    let win = BrowserWindowTracker.getTopWindow();
     if (!win) {
       return;
     }
@@ -3066,7 +3066,7 @@ var JawsScreenReaderVersionCheck = {
       return;
     }
 
-    let win = RecentWindow.getMostRecentBrowserWindow();
+    let win = BrowserWindowTracker.getTopWindow();
     if (!win || !win.gBrowser || !win.gBrowser.selectedBrowser) {
       Services.console.logStringMessage(
           "Content access support for older versions of JAWS is disabled " +

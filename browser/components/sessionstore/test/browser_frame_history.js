@@ -101,14 +101,14 @@ add_task(async function() {
 // Now, test that we don't record history if the iframe is added dynamically
 add_task(async function() {
   // Start with an empty history
-    let blankState = JSON.stringify({
-      windows: [{
-        tabs: [{ entries: [{ url: "about:blank", triggeringPrincipal_base64 }] }],
-        _closedTabs: []
-      }],
-      _closedWindows: []
-    });
-    ss.setBrowserState(blankState);
+  let blankState = JSON.stringify({
+    windows: [{
+      tabs: [{ entries: [{ url: "about:blank", triggeringPrincipal_base64 }] }],
+      _closedTabs: []
+    }],
+    _closedWindows: []
+  });
+  await setBrowserState(blankState);
 
   let testURL = getRootDirectory(gTestPath) + "browser_frame_history_index_blank.html";
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);

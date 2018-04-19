@@ -22,7 +22,7 @@ function handleRequest(request, response)
   }
 
   // navigation tests
-  if (request.queryString === "loadsrcdocframeNav") {
+  if (request.queryString.includes("loadsrcdocframeNav")) {
     let FRAME = `
       <iframe srcdoc="foo"
        onload="document.location='http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_about_navigation.html'">
@@ -31,7 +31,7 @@ function handleRequest(request, response)
     return;
   }
 
-  if (request.queryString === "loadblankframeNav") {
+  if (request.queryString.includes("loadblankframeNav")) {
     let FRAME = `
       <iframe src="about:blank"
        onload="document.location='http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_about_navigation.html'">
@@ -41,12 +41,12 @@ function handleRequest(request, response)
   }
 
   // inclusion tets
-  if (request.queryString === "loadsrcdocframeInc") {
+  if (request.queryString.includes("loadsrcdocframeInc")) {
     response.write("<iframe srcdoc=\"" + IFRAME_INC + "\"></iframe>");
     return;
   }
 
-  if (request.queryString === "loadblankframeInc") {
+  if (request.queryString.includes("loadblankframeInc")) {
     let FRAME = `
       <iframe id="blankframe" src="about:blank"></iframe>
       <script>

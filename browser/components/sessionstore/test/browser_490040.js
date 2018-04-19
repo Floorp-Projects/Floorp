@@ -50,7 +50,7 @@ add_task(async function test_bug_490040() {
     let curClosedWindowCount = ss.getClosedWindowCount();
     let win = await BrowserTestUtils.openNewBrowserWindow();
 
-    ss.setWindowState(win, JSON.stringify(state.windowState), true);
+    await setWindowState(win, state.windowState, true);
     if (state.windowState.windows[0].tabs.length) {
       await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     }

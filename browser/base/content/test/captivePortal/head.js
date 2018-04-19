@@ -1,4 +1,4 @@
-ChromeUtils.import("resource:///modules/RecentWindow.jsm");
+ChromeUtils.import("resource:///modules/BrowserWindowTracker.jsm");
 
 ChromeUtils.defineModuleGetter(this, "CaptivePortalWatcher",
   "resource:///modules/CaptivePortalWatcher.jsm");
@@ -20,13 +20,13 @@ async function setupPrefsAndRecentWindowBehavior() {
   // We need to test behavior when a portal is detected when there is no browser
   // window, but we can't close the default window opened by the test harness.
   // Instead, we deactivate CaptivePortalWatcher in the default window and
-  // exclude it from RecentWindow.getMostRecentBrowserWindow in an attempt to
+  // exclude it from BrowserWindowTracker.getTopWindow in an attempt to
   // mask its presence.
   window.CaptivePortalWatcher.uninit();
-  let getMostRecentBrowserWindowCopy = RecentWindow.getMostRecentBrowserWindow;
+  let getTopWindowCopy = BrowserWindowTracker.getTopWindow;
   let defaultWindow = window;
-  RecentWindow.getMostRecentBrowserWindow = () => {
-    let win = getMostRecentBrowserWindowCopy();
+  BrowserWindowTracker.getTopWindow = () => {
+    let win = getTopWindowCopy();
     if (win == defaultWindow) {
       return null;
     }
@@ -34,7 +34,7 @@ async function setupPrefsAndRecentWindowBehavior() {
   };
 
   registerCleanupFunction(function cleanUp() {
-    RecentWindow.getMostRecentBrowserWindow = getMostRecentBrowserWindowCopy;
+    BrowserWindowTracker.getTopWindow = getTopWindowCopy;
     window.CaptivePortalWatcher.init();
   });
 }

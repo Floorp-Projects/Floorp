@@ -4921,7 +4921,12 @@ nsresult
 HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
                                         nsIDocument& aDoc)
 {
-  MOZ_ASSERT(mHTMLEditor->mTypeInState);
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+
+  MOZ_ASSERT(htmlEditor->mTypeInState);
 
   bool weDidSomething = false;
   NS_ENSURE_STATE(aSelection.GetRangeAt(0));
@@ -4933,33 +4938,35 @@ HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
 
   // process clearing any styles first
   UniquePtr<PropItem> item =
-    Move(mHTMLEditor->mTypeInState->TakeClearProperty());
-  while (item && node != rootElement) {
-    NS_ENSURE_STATE(mHTMLEditor);
-    // XXX If we redesign ClearStyle(), we can use EditorDOMPoint in this
-    //     method.
-    nsresult rv =
-      mHTMLEditor->ClearStyle(address_of(node), &offset,
-                              item->tag, item->attr);
-    NS_ENSURE_SUCCESS(rv, rv);
-    item = Move(mHTMLEditor->mTypeInState->TakeClearProperty());
-    weDidSomething = true;
+    Move(htmlEditor->mTypeInState->TakeClearProperty());
+
+  {
+    // Transactions may set selection, but we will set selection if necessary.
+    AutoTransactionsConserveSelection dontChangeMySelection(htmlEditor);
+
+    while (item && node != rootElement) {
+      // XXX If we redesign ClearStyle(), we can use EditorDOMPoint in this
+      //     method.
+      nsresult rv =
+        htmlEditor->ClearStyle(address_of(node), &offset,
+                               item->tag, item->attr);
+      NS_ENSURE_SUCCESS(rv, rv);
+      item = Move(htmlEditor->mTypeInState->TakeClearProperty());
+      weDidSomething = true;
+    }
   }
 
   // then process setting any styles
-  int32_t relFontSize = mHTMLEditor->mTypeInState->TakeRelativeFontSize();
-  item = Move(mHTMLEditor->mTypeInState->TakeSetProperty());
+  int32_t relFontSize = htmlEditor->mTypeInState->TakeRelativeFontSize();
+  item = Move(htmlEditor->mTypeInState->TakeSetProperty());
 
   if (item || relFontSize) {
     // we have at least one style to add; make a new text node to insert style
     // nodes above.
     if (RefPtr<Text> text = node->GetAsText()) {
-      if (NS_WARN_IF(!mHTMLEditor)) {
-        return NS_ERROR_FAILURE;
-      }
       // if we are in a text node, split it
       SplitNodeResult splitTextNodeResult =
-        mHTMLEditor->SplitNodeDeep(*text, EditorRawDOMPoint(text, offset),
+        htmlEditor->SplitNodeDeep(*text, EditorRawDOMPoint(text, offset),
                                    SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitTextNodeResult.Failed())) {
         return splitTextNodeResult.Rv();
@@ -4968,14 +4975,13 @@ HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
       node = splitPoint.GetContainer();
       offset = splitPoint.Offset();
     }
-    if (!mHTMLEditor->IsContainer(node)) {
+    if (!htmlEditor->IsContainer(node)) {
       return NS_OK;
     }
     OwningNonNull<Text> newNode =
       EditorBase::CreateTextNode(aDoc, EmptyString());
-    NS_ENSURE_STATE(mHTMLEditor);
     nsresult rv =
-      mHTMLEditor->InsertNode(*newNode, EditorRawDOMPoint(node, offset));
+      htmlEditor->InsertNode(*newNode, EditorRawDOMPoint(node, offset));
     NS_ENSURE_SUCCESS(rv, rv);
     node = newNode;
     offset = 0;
@@ -4986,19 +4992,17 @@ HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
       HTMLEditor::FontSize dir = relFontSize > 0 ?
         HTMLEditor::FontSize::incr : HTMLEditor::FontSize::decr;
       for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
-        NS_ENSURE_STATE(mHTMLEditor);
-        rv = mHTMLEditor->RelativeFontChangeOnTextNode(dir, newNode, 0, -1);
+        rv = htmlEditor->RelativeFontChangeOnTextNode(dir, newNode, 0, -1);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
 
     while (item) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      rv = mHTMLEditor->SetInlinePropertyOnNode(*node->AsContent(),
-                                                *item->tag, item->attr,
-                                                item->value);
+      rv = htmlEditor->SetInlinePropertyOnNode(*node->AsContent(),
+                                               *item->tag, item->attr,
+                                               item->value);
       NS_ENSURE_SUCCESS(rv, rv);
-      item = mHTMLEditor->mTypeInState->TakeSetProperty();
+      item = htmlEditor->mTypeInState->TakeSetProperty();
     }
   }
   if (weDidSomething) {
