@@ -7,7 +7,6 @@
 #include "nsISupports.idl"
 
 interface mozIDOMWindow;
-interface nsICursorContinueCallback;
 webidl DOMRequest;
 
 [scriptable, builtinclass, uuid(9a57e5de-ce93-45fa-8145-755722834f7c)]
