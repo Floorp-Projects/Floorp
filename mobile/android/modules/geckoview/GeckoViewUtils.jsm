@@ -271,28 +271,28 @@ var GeckoViewUtils = {
    *   do_something(bar); // No log.
    *   do_something(debug.foo = bar); // Output "foo = 42" to the log.
    *
-   * @param tag Name of the Log.jsm logger to forward logs to.
-   * @param scope Scope to add the logging functions to.
+   * @param aTag Name of the Log.jsm logger to forward logs to.
+   * @param aScope Scope to add the logging functions to.
    */
-  initLogging: function(tag, scope) {
+  initLogging: function(aTag, aScope) {
     // Only provide two levels for simplicity.
     // For "info", use "debug" instead.
     // For "error", throw an actual JS error instead.
-    for (const level of ["debug", "warn"]) {
+    for (const level of ["DEBUG", "WARN"]) {
       const log = (strings, ...exprs) =>
           this._log(log.logger, level, strings, exprs);
 
       XPCOMUtils.defineLazyGetter(log, "logger", _ => {
-        const logger = Log.repository.getLogger(tag);
+        const logger = Log.repository.getLogger(aTag);
         logger.parent = this.rootLogger;
         return logger;
       });
 
-      scope[level] = new Proxy(log, {
+      aScope[level.toLowerCase()] = new Proxy(log, {
         set: (obj, prop, value) => obj([prop + " = ", ""], value) || true,
       });
     }
-    return scope;
+    return aScope;
   },
 
   get rootLogger() {
@@ -303,30 +303,44 @@ var GeckoViewUtils = {
     return this._rootLogger;
   },
 
-  _log: function(logger, level, strings, exprs) {
-    if (!Array.isArray(strings)) {
+  _log: function(aLogger, aLevel, aStrings, aExprs) {
+    if (!Array.isArray(aStrings)) {
       const [, file, line] =
           (new Error()).stack.match(/.*\n.*\n.*@(.*):(\d+):/);
-      throw Error(`Expecting template literal: ${level} \`foo \${bar}\``,
+      throw Error(`Expecting template literal: ${aLevel} \`foo \${bar}\``,
                   file, +line);
     }
 
+    if (aLogger.level > Log.Level.Numbers[aLevel]) {
+      // Log disabled.
+      return;
+    }
+
     // Do some GeckoView-specific formatting:
-    // 1) Heuristically format flags as hex.
-    // 2) Heuristically format nsresult as string name or hex.
-    for (let i = 0; i < exprs.length; i++) {
-      const expr = exprs[i];
+    // * Remove newlines so long log lines can be put into multiple lines:
+    //   debug `foo=${foo}
+    //          bar=${bar}`;
+    const strs = Array.from(aStrings);
+    const regex = /\n\s*/g;
+    for (let i = 0; i < strs.length; i++) {
+      strs[i] = strs[i].replace(regex, " ");
+    }
+
+    // * Heuristically format flags as hex.
+    // * Heuristically format nsresult as string name or hex.
+    for (let i = 0; i < aExprs.length; i++) {
+      const expr = aExprs[i];
       switch (typeof expr) {
         case "number":
-          if (expr > 0 && /\ba?[fF]lags?[\s=:]+$/.test(strings[i])) {
+          if (expr > 0 && /\ba?[fF]lags?[\s=:]+$/.test(strs[i])) {
             // Likely a flag; display in hex.
-            exprs[i] = `0x${expr.toString(0x10)}`;
-          } else if (expr >= 0 && /\b(a?[sS]tatus|rv)[\s=:]+$/.test(strings[i])) {
+            aExprs[i] = `0x${expr.toString(0x10)}`;
+          } else if (expr >= 0 && /\b(a?[sS]tatus|rv)[\s=:]+$/.test(strs[i])) {
             // Likely an nsresult; display in name or hex.
-            exprs[i] = `0x${expr.toString(0x10)}`;
+            aExprs[i] = `0x${expr.toString(0x10)}`;
             for (const name in Cr) {
               if (expr === Cr[name]) {
-                exprs[i] = name;
+                aExprs[i] = name;
                 break;
               }
             }
@@ -335,7 +349,7 @@ var GeckoViewUtils = {
       }
     }
 
-    return logger[level](strings, ...exprs);
+    return aLogger[aLevel.toLowerCase()](strs, ...aExprs);
   },
 };
 
