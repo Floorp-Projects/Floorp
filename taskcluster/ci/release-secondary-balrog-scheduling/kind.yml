@@ -20,8 +20,10 @@ job-defaults:
       by-project:
          maple: scriptworker-prov-v1/balrog-dev
          birch: scriptworker-prov-v1/balrog-dev
+         jamun: scriptworker-prov-v1/balrog-dev
          mozilla-beta: scriptworker-prov-v1/balrogworker-v1
          mozilla-release: scriptworker-prov-v1/balrogworker-v1
+         mozilla-esr60: scriptworker-prov-v1/balrogworker-v1
          default: invalid/invalid
    run-on-projects: []
    shipping-phase: ship
@@ -39,7 +41,9 @@ jobs:
          channel-names:
             by-project:
                birch: ["beta", "beta-localtest", "beta-cdntest"]
+               jamun: ["esr", "esr-localtest", "esr-cdntest"]
                mozilla-release: ["beta", "beta-localtest", "beta-cdntest"]
+               mozilla-esr60: ["esr", "esr-localtest", "esr-cdntest"]
                default: []
          publish-rules:
             by-project:
@@ -49,7 +53,9 @@ jobs:
          rules-to-update:
             by-project:
                birch: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+               jamun: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
                mozilla-release: ["firefox-beta-cdntest", "firefox-beta-localtest"]
+               mozilla-esr60: ["firefox-esr60-cdntest", "firefox-esr60-localtest"]
                default: []
       treeherder:
          platform: linux64/opt

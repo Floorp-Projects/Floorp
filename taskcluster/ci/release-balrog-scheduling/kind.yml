@@ -18,8 +18,10 @@ job-defaults:
       by-project:
          maple: scriptworker-prov-v1/balrog-dev
          birch: scriptworker-prov-v1/balrog-dev
+         jamun: scriptworker-prov-v1/balrog-dev
          mozilla-beta: scriptworker-prov-v1/balrogworker-v1
          mozilla-release: scriptworker-prov-v1/balrogworker-v1
+         mozilla-esr60: scriptworker-prov-v1/balrogworker-v1
          default: invalid/invalid
    run-on-projects: []
    shipping-phase: ship
@@ -38,8 +40,10 @@ jobs:
             by-project:
                maple: [32]
                birch: [145]
+               jamun: [724]
                mozilla-beta: [32]
                mozilla-release: [145]
+               mozilla-esr60: []
                default: []
       treeherder:
          platform: linux64/opt
