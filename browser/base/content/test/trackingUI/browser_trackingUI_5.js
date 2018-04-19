@@ -4,11 +4,8 @@
 // Test that sites added to the Tracking Protection whitelist in private
 // browsing mode don't persist once the private browsing window closes.
 
-const PB_PREF = "privacy.trackingprotection.pbmode.enabled";
-const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/trackingPage.html";
 var TrackingProtection = null;
 var browser = null;
-var {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 registerCleanupFunction(function() {
   TrackingProtection = browser = null;
@@ -78,7 +75,7 @@ add_task(async function testExceptionAddition() {
   let tab = await BrowserTestUtils.openNewForegroundTab({ gBrowser: browser, waitForLoad: true, waitForStateStop: true });
 
   TrackingProtection = browser.ownerGlobal.TrackingProtection;
-  await pushPrefs([PB_PREF, true]);
+  await SpecialPowers.pushPrefEnv({"set": [[PB_PREF, true]]});
 
   ok(TrackingProtection.enabled, "TP is enabled after setting the pref");
 

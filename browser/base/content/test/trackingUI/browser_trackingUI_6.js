@@ -1,4 +1,4 @@
-const URL = "http://mochi.test:8888/browser/browser/base/content/test/general/file_trackingUI_6.html";
+const URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://mochi.test:8888") + "file_trackingUI_6.html";
 
 function waitForSecurityChange(numChanges = 1) {
   return new Promise(resolve => {
