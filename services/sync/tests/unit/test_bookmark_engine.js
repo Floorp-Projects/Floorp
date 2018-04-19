@@ -13,6 +13,16 @@ ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
 ChromeUtils.import("resource://services-sync/service.js");
 ChromeUtils.import("resource://services-sync/util.js");
 
+var recordedEvents = [];
+
+function checkRecordedEvents(object, expected, message) {
+  // Ignore event telemetry from the merger.
+  let repairEvents = recordedEvents.filter(event => event.object == object);
+  deepEqual(repairEvents, expected, message);
+  // and clear the list so future checks are easier to write.
+  recordedEvents = [];
+}
+
 async function fetchAllRecordIds() {
   let db = await PlacesUtils.promiseDBConnection();
   let rows = await db.executeCached(`
@@ -47,6 +57,10 @@ async function cleanup(engine, server) {
 add_task(async function setup() {
   await generateNewKeys(Service.collectionKeys);
   await Service.engineManager.unregister("bookmarks");
+
+  Service.recordTelemetryEvent = (object, method, value, extra = undefined) => {
+    recordedEvents.push({ object, method, value, extra });
+  };
 });
 
 function add_bookmark_test(task) {
@@ -70,6 +84,73 @@ function add_bookmark_test(task) {
     }
   });
 }
+
+add_bookmark_test(async function test_maintenance_after_failure(engine) {
+  _("Ensure we try to run maintenance if the engine fails to sync");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  try {
+    let syncStartup = engine._syncStartup;
+    let syncError = new Error("Something is rotten in the state of Places");
+    engine._syncStartup = function() {
+      throw syncError;
+    };
+
+    Services.prefs.clearUserPref("places.database.lastMaintenance");
+
+    _("Ensure the sync fails and we run maintenance");
+    await Assert.rejects(
+      sync_engine_and_validate_telem(engine, true),
+      ex => ex == syncError
+    );
+    checkRecordedEvents("maintenance", [{
+      object: "maintenance",
+      method: "run",
+      value: "bookmarks",
+      extra: undefined,
+    }], "Should record event for first maintenance run");
+
+    _("Sync again, but ensure maintenance doesn't run");
+    await Assert.rejects(
+      sync_engine_and_validate_telem(engine, true),
+      ex => ex == syncError
+    );
+    checkRecordedEvents("maintenance", [],
+      "Should not record event if maintenance didn't run");
+
+    _("Fast-forward last maintenance pref; ensure maintenance runs");
+    Services.prefs.setIntPref("places.database.lastMaintenance",
+      Date.now() / 1000 - 14400);
+    await Assert.rejects(
+      sync_engine_and_validate_telem(engine, true),
+      ex => ex == syncError
+    );
+    checkRecordedEvents("maintenance", [{
+      object: "maintenance",
+      method: "run",
+      value: "bookmarks",
+      extra: undefined,
+    }], "Should record event for second maintenance run");
+
+    _("Fix sync failure; ensure we report success after maintenance");
+    engine._syncStartup = syncStartup;
+    await sync_engine_and_validate_telem(engine, false);
+    checkRecordedEvents("maintenance", [{
+      object: "maintenance",
+      method: "fix",
+      value: "bookmarks",
+      extra: undefined,
+    }], "Should record event for successful sync after second maintenance");
+
+    await sync_engine_and_validate_telem(engine, false);
+    checkRecordedEvents("maintenance", [],
+      "Should not record maintenance events after successful sync");
+  } finally {
+    await cleanup(engine, server);
+  }
+});
 
 add_bookmark_test(async function test_delete_invalid_roots_from_server(engine) {
   _("Ensure that we delete the Places and Reading List roots from the server.");

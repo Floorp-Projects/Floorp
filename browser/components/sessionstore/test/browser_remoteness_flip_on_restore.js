@@ -134,7 +134,7 @@ async function runScenarios(scenarios) {
     let state = prepareState(scenario.stateToRestore,
                              scenario.selectedTab);
 
-    SessionStore.setWindowState(win, state, true);
+    await setWindowState(win, state, true);
 
     for (let i = 0; i < scenario.expectedRemoteness.length; ++i) {
       let expectedRemoteness = scenario.expectedRemoteness[i];

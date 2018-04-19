@@ -22,8 +22,6 @@ ChromeUtils.defineModuleGetter(this, "Pocket",
                                "chrome://pocket/content/Pocket.jsm");
 ChromeUtils.defineModuleGetter(this, "ReaderMode",
                                "resource://gre/modules/ReaderMode.jsm");
-ChromeUtils.defineModuleGetter(this, "RecentWindow",
-                               "resource:///modules/RecentWindow.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGetter(this, "gPocketBundle", function() {

@@ -11,22 +11,16 @@ var EXPORTED_SYMBOLS = [ "TabCrashHandler",
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "CrashSubmit",
-  "resource://gre/modules/CrashSubmit.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "RemotePages",
-  "resource://gre/modules/RemotePageManager.jsm");
-ChromeUtils.defineModuleGetter(this, "SessionStore",
-  "resource:///modules/sessionstore/SessionStore.jsm");
-ChromeUtils.defineModuleGetter(this, "RecentWindow",
-  "resource:///modules/RecentWindow.jsm");
-ChromeUtils.defineModuleGetter(this, "PluralForm",
-  "resource://gre/modules/PluralForm.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout",
-  "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "clearTimeout",
-  "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  clearTimeout: "resource://gre/modules/Timer.jsm",
+  CrashSubmit: "resource://gre/modules/CrashSubmit.jsm",
+  PluralForm: "resource://gre/modules/PluralForm.jsm",
+  RemotePages: "resource://gre/modules/RemotePageManager.jsm",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm"
+});
 
 XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
   const url = "chrome://browser/locale/browser.properties";
@@ -838,7 +832,7 @@ var UnsubmittedCrashHandler = {
    * @returns The <xul:notification> if one is shown. null otherwise.
    */
   show({ notificationID, message, reportIDs, onAction }) {
-    let chromeWin = RecentWindow.getMostRecentBrowserWindow();
+    let chromeWin = BrowserWindowTracker.getTopWindow();
     if (!chromeWin) {
       // Can't show a notification in this case. We'll hopefully
       // get another opportunity to have the user submit their

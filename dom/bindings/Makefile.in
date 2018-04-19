@@ -15,19 +15,6 @@ CPPSRCS += $(globalgen_sources) $(unified_binding_cpp_files)
 
 include $(topsrcdir)/config/rules.mk
 
-# TODO This list should be emitted to a .pp file via
-# GenerateCSS2PropertiesWebIDL.py (bug 1281614)
-css2properties_dependencies = \
-  $(topsrcdir)/layout/style/nsCSSPropList.h \
-  $(topsrcdir)/layout/style/nsCSSPropAliasList.h \
-  $(webidl_base)/CSS2Properties.webidl.in \
-  $(topsrcdir)/layout/style/PythonCSSProps.h \
-  $(srcdir)/GenerateCSS2PropertiesWebIDL.py \
-  $(GLOBAL_DEPS) \
-  $(NULL)
-
-CSS2Properties.webidl: $(css2properties_dependencies)
-
 # Most of the logic for dependencies lives inside Python so it can be
 # used by multiple build backends. We simply have rules to generate
 # and include the .pp file.

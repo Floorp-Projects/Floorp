@@ -592,7 +592,8 @@ static const char* sObserverTopics[] = {
   "cacheservice:empty-cache",
   "intl:app-locales-changed",
   "intl:requested-locales-changed",
-  "non-js-cookie-changed",
+  "cookie-changed",
+  "private-cookie-changed",
 };
 
 // PreallocateProcess is called by the PreallocatedProcessManager.
@@ -2940,7 +2941,8 @@ ContentParent::Observe(nsISupports* aSubject,
     LocaleService::GetInstance()->GetRequestedLocales(requestedLocales);
     Unused << SendUpdateRequestedLocales(requestedLocales);
   }
-  else if (!strcmp(aTopic, "non-js-cookie-changed")) {
+  else if (!strcmp(aTopic, "cookie-changed") ||
+           !strcmp(aTopic, "private-cookie-changed")) {
     if (!aData) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -2953,6 +2955,10 @@ ContentParent::Observe(nsISupports* aSubject,
       return NS_OK;
     }
     auto *cs = static_cast<CookieServiceParent*>(csParent);
+    // Do not push these cookie updates to the same process they originated from.
+    if (cs->ProcessingCookie()) {
+      return NS_OK;
+    }
     if (!nsCRT::strcmp(aData, u"batch-deleted")) {
       nsCOMPtr<nsIArray> cookieList = do_QueryInterface(aSubject);
       NS_ASSERTION(cookieList, "couldn't get cookie list");
@@ -3349,8 +3355,10 @@ PPrintingParent*
 ContentParent::AllocPPrintingParent()
 {
 #ifdef NS_PRINTING
-  MOZ_RELEASE_ASSERT(!mPrintingParent,
-                     "Only one PrintingParent should be created per process.");
+  if (mPrintingParent) {
+    // Only one PrintingParent should be created per process.
+    return nullptr;
+  }
 
   // Create the printing singleton for this process.
   mPrintingParent = new PrintingParent();
@@ -3708,6 +3716,9 @@ ContentParent::HasNotificationPermission(const IPC::Principal& aPrincipal)
 mozilla::ipc::IPCResult
 ContentParent::RecvShowAlert(nsIAlertNotification* aAlert)
 {
+  if (!aAlert) {
+    return IPC_FAIL_NO_REASON(this);
+  }
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = aAlert->GetPrincipal(getter_AddRefs(principal));
   if (NS_WARN_IF(NS_FAILED(rv)) ||

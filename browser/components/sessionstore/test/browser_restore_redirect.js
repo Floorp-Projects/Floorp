@@ -23,7 +23,7 @@ add_task(async function check_http_redirect() {
   is(data.entries.length, 1, "Should be one entry in session history");
   is(data.entries[0].url, TARGET, "Should be the right session history entry");
 
-  ok(!("__SS_data" in browser), "Temporary restore data should have been cleared");
+  ok(!ss.getInternalObjectState(browser), "Temporary restore data should have been cleared");
 
   // Cleanup.
   BrowserTestUtils.removeTab(tab);
@@ -62,7 +62,7 @@ add_task(async function check_js_redirect() {
   is(data.entries.length, 1, "Should be one entry in session history");
   is(data.entries[0].url, TARGET, "Should be the right session history entry");
 
-  ok(!("__SS_data" in browser), "Temporary restore data should have been cleared");
+  ok(!ss.getInternalObjectState(browser), "Temporary restore data should have been cleared");
 
   // Cleanup.
   BrowserTestUtils.removeTab(tab);
