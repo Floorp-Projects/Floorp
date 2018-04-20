@@ -185,7 +185,8 @@ CheckServoCSSPropList()
 
   const uint32_t kServoFlags =
     CSS_PROPERTY_ENABLED_MASK | CSS_PROPERTY_INTERNAL |
-    CSS_PROPERTY_PARSE_INACCESSIBLE | CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH;
+    CSS_PROPERTY_PARSE_INACCESSIBLE | CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+    CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR;
   bool mismatch = false;
   for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; i++) {
     auto& geckoData = sGeckoProps[i];
