@@ -19,7 +19,6 @@
 
 class nsAtom;
 class nsIContentIterator;
-class nsIDOMEvent;
 class nsISimpleEnumerator;
 class nsITransferable;
 class nsRange;
