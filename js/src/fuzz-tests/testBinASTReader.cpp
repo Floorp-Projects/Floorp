@@ -56,7 +56,7 @@ testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
         return 0;
     }
 
-    js::frontend::BinASTParser<js::frontend::BinTokenReaderMultipart> reader(gCx, gCx->tempLifoAlloc(), binUsedNames, options);
+    js::frontend::BinASTParser<js::frontend::BinTokenReaderTester> reader(gCx, gCx->tempLifoAlloc(), binUsedNames, options);
 
     // Will be deallocated once `reader` goes out of scope.
     auto binParsed = reader.parse(binSource);
