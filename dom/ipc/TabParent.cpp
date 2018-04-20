@@ -55,7 +55,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -3141,7 +3140,7 @@ TabParent::DeallocPPaymentRequestParent(PPaymentRequestParent* aActor)
 }
 
 nsresult
-TabParent::HandleEvent(nsIDOMEvent* aEvent)
+TabParent::HandleEvent(Event* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);

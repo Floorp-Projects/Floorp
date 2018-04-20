@@ -20,6 +20,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
@@ -70,7 +71,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsFocusManager.h"
@@ -282,7 +282,7 @@ TabChildBase::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
 }
 
 NS_IMETHODIMP
-ContentListener::HandleEvent(nsIDOMEvent* aEvent)
+ContentListener::HandleEvent(Event* aEvent)
 {
   RemoteDOMEvent remoteEvent;
   remoteEvent.mEvent = do_QueryInterface(aEvent);

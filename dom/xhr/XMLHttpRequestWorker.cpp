@@ -6,7 +6,6 @@
 
 #include "XMLHttpRequestWorker.h"
 
-#include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIRunnable.h"
 #include "nsIXPConnect.h"
@@ -16,6 +15,7 @@
 #include "js/GCPolicyAPI.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/Exceptions.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/ProgressEvent.h"
@@ -978,7 +978,7 @@ Proxy::AddRemoveEventListeners(bool aUpload, bool aAdd)
 NS_IMPL_ISUPPORTS(Proxy, nsIDOMEventListener)
 
 NS_IMETHODIMP
-Proxy::HandleEvent(nsIDOMEvent* aEvent)
+Proxy::HandleEvent(Event* aEvent)
 {
   AssertIsOnMainThread();
 
@@ -1087,7 +1087,7 @@ LoadStartDetectionRunnable::Run()
 }
 
 NS_IMETHODIMP
-LoadStartDetectionRunnable::HandleEvent(nsIDOMEvent* aEvent)
+LoadStartDetectionRunnable::HandleEvent(Event* aEvent)
 {
   AssertIsOnMainThread();
 

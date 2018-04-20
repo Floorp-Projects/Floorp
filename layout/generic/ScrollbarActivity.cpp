@@ -8,7 +8,6 @@
 #include "nsIScrollbarMediator.h"
 #include "nsIContent.h"
 #include "nsICSSDeclaration.h"
-#include "nsIDOMEvent.h"
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
 #include "nsAString.h"
@@ -16,6 +15,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsStyledElement.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 
@@ -107,7 +107,7 @@ ScrollbarActivity::ActivityStopped()
 }
 
 NS_IMETHODIMP
-ScrollbarActivity::HandleEvent(nsIDOMEvent* aEvent)
+ScrollbarActivity::HandleEvent(dom::Event* aEvent)
 {
   if (!mDisplayOnMouseMove && !mIsActive)
     return NS_OK;

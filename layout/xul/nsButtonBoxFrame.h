@@ -58,7 +58,7 @@ private:
       mButtonBoxFrame(aButtonBoxFrame)
       { }
 
-    NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
+    NS_DECL_NSIDOMEVENTLISTENER
 
     NS_DECL_ISUPPORTS
 

@@ -39,7 +39,7 @@ public:
   /**
    * nsIDOMEventListener interface method.
    */
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
+  NS_DECL_NSIDOMEVENTLISTENER
 
   /**
    * When mMenuBarFrame is being destroyed, this should be called.

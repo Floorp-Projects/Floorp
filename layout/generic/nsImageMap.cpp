@@ -9,7 +9,7 @@
 #include "nsImageMap.h"
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/UniquePtr.h"
@@ -977,7 +977,7 @@ nsImageMap::ParentChainChanged(nsIContent* aContent)
 }
 
 nsresult
-nsImageMap::HandleEvent(nsIDOMEvent* aEvent)
+nsImageMap::HandleEvent(Event* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);

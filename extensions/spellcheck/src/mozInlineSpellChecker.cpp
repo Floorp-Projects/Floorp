@@ -39,6 +39,7 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/MouseEvent.h"
@@ -53,7 +54,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMEvent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsRange.h"
 #include "nsIPlaintextEditor.h"
@@ -1834,7 +1834,7 @@ mozInlineSpellChecker::HandleNavigationEvent(bool aForceWordSpellCheck,
 }
 
 NS_IMETHODIMP
-mozInlineSpellChecker::HandleEvent(nsIDOMEvent* aEvent)
+mozInlineSpellChecker::HandleEvent(Event* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);

@@ -32,7 +32,6 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DragEvent.h"
-#include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIFocusManager.h"            // for nsIFocusManager
@@ -366,7 +365,7 @@ EditorEventListener::EnsureCommitCompoisition()
 }
 
 NS_IMETHODIMP
-EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
+EditorEventListener::HandleEvent(Event* aEvent)
 {
   // Let's handle each event with the message of the internal event of the
   // coming event.  If the DOM event was created with improper interface,

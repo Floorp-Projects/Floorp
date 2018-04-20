@@ -27,7 +27,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "mozilla/dom/BoxObject.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/TextEvents.h"
@@ -224,7 +224,7 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsXULTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
+nsXULTooltipListener::HandleEvent(Event* aEvent)
 {
   nsAutoString type;
   aEvent->GetType(type);

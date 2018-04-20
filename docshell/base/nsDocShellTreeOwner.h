@@ -141,7 +141,7 @@ public:
 
   ChromeTooltipListener(nsWebBrowser* aInBrowser, nsIWebBrowserChrome* aInChrome);
 
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
+  NS_DECL_NSIDOMEVENTLISTENER
   NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
 
   // Add/remove the relevant listeners, based on what interfaces the embedding

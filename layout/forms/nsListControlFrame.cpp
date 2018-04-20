@@ -21,6 +21,7 @@
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/dom/HTMLSelectElement.h"
@@ -2523,7 +2524,7 @@ nsListControlFrame::PostHandleKeyEvent(int32_t aNewIndex,
 NS_IMPL_ISUPPORTS(nsListEventListener, nsIDOMEventListener)
 
 NS_IMETHODIMP
-nsListEventListener::HandleEvent(nsIDOMEvent* aEvent)
+nsListEventListener::HandleEvent(dom::Event* aEvent)
 {
   if (!mFrame)
     return NS_OK;

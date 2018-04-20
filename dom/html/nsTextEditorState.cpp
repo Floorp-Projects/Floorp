@@ -39,6 +39,7 @@
 #include "nsIController.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
@@ -924,7 +925,7 @@ DoCommandCallback(Command aCommand, void* aData)
 }
 
 NS_IMETHODIMP
-TextInputListener::HandleEvent(nsIDOMEvent* aEvent)
+TextInputListener::HandleEvent(Event* aEvent)
 {
   bool defaultPrevented = false;
   nsresult rv = aEvent->GetDefaultPrevented(&defaultPrevented);

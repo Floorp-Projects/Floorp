@@ -17,6 +17,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/CanvasCaptureMediaStream.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
 #include "mozilla/dom/MediaStreamTrack.h"
@@ -375,7 +376,7 @@ HTMLCanvasElementObserver::Observe(nsISupports*, const char* aTopic, const char1
 }
 
 NS_IMETHODIMP
-HTMLCanvasElementObserver::HandleEvent(nsIDOMEvent* aEvent)
+HTMLCanvasElementObserver::HandleEvent(Event* aEvent)
 {
   nsAutoString type;
   aEvent->GetType(type);

@@ -24,6 +24,7 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/Event.h"
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -176,7 +177,7 @@ public:
   { }
 
   NS_IMETHOD
-  HandleEvent(nsIDOMEvent* aEvent) override
+  HandleEvent(dom::Event* aEvent) override
   {
     nsString type;
     if (NS_FAILED(aEvent->GetType(type))) {
