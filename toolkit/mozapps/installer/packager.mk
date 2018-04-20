@@ -77,11 +77,6 @@ ifdef MOZ_ASAN
 	$(PYTHON) $(MOZILLA_DIR)/build/unix/rewrite_asan_dylib.py $(DIST)/$(MOZ_PKG_DIR)$(_BINPATH)
 endif # MOZ_ASAN
 endif # Darwin
-ifndef MOZ_ARTIFACT_BUILDS
-	@echo 'Packing stylo binding files...'
-	cd '$(DIST)/rust_bindings/style' && \
-		zip -r5D '$(ABS_DIST)/$(PKG_PATH)$(STYLO_BINDINGS_PACKAGE)' .
-endif # MOZ_ARTIFACT_BUILDS
 
 prepare-package: stage-package
 
