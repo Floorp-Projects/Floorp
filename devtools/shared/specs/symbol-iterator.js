@@ -20,20 +20,6 @@ types.addDictType("symboliterator.ownsymbols", {
   descriptor: "nullable:object.descriptor",
 });
 
-// XXX Move to the object spec in Bug 1450944.
-types.addDictType("object.descriptor", {
-  configurable: "boolean",
-  enumerable: "boolean",
-  // Can be null if there is a getter for the property.
-  value: "nullable:json",
-  // Only set `value` exists.
-  writable: "nullable:boolean",
-  // Only set when `value` does not exist and there is a getter for the property.
-  get: "nullable:json",
-  // Only set when `value` does not exist and there is a setter for the property.
-  set: "nullable:json",
-});
-
 const symbolIteratorSpec = generateActorSpec({
   typeName: "symbolIterator",
 
