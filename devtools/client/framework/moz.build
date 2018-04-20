@@ -27,6 +27,7 @@ DevToolsModules(
     'toolbox-host-manager.js',
     'toolbox-hosts.js',
     'toolbox-options.js',
+    'toolbox-tabs-order-manager.js',
     'toolbox.js',
     'ToolboxProcess.jsm',
 )
