@@ -50,7 +50,7 @@ import static android.support.test.espresso.web.webdriver.DriverAtoms.webClick;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.endsWith;
-import mozilla.components.domains.CustomDomains;
+import mozilla.components.browser.domains.CustomDomains;
 import static org.mozilla.focus.helpers.EspressoHelper.assertToolbarMatchesText;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 

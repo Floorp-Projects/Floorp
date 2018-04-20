@@ -11,8 +11,8 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import org.mozilla.focus.R
+import org.mozilla.focus.search.CustomSearchEngineStore
 import org.mozilla.focus.search.RadioSearchEngineListPreference
-import org.mozilla.focus.search.SearchEngineManager
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
@@ -44,7 +44,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onPrepareOptionsMenu(menu: Menu?) {
         super.onPrepareOptionsMenu(menu)
         menu?.findItem(R.id.menu_restore_default_engines)?.let {
-            it.isEnabled = !SearchEngineManager.hasAllDefaultSearchEngines(getSearchEngineSharedPreferences())
+            it.isEnabled = !CustomSearchEngineStore.hasAllDefaultSearchEngines(context)
         }
     }
 
@@ -56,7 +56,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
                 true
             }
             R.id.menu_restore_default_engines -> {
-                SearchEngineManager.restoreDefaultSearchEngines(getSearchEngineSharedPreferences())
+                CustomSearchEngineStore.restoreDefaultSearchEngines(context)
                 refetchSearchEngines()
                 TelemetryWrapper.menuRestoreEnginesEvent()
                 true

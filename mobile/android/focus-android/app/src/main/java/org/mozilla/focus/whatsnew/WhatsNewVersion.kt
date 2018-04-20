@@ -5,7 +5,7 @@
 package org.mozilla.focus.whatsnew
 
 import android.content.Context
-import mozilla.components.ktx.android.content.appVersionName
+import mozilla.components.support.ktx.android.content.appVersionName
 
 /**
 * Convenience class to deal with the application version number

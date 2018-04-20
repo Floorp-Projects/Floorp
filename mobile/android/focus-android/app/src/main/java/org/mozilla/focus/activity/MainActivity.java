@@ -33,7 +33,7 @@ import org.mozilla.focus.web.WebViewProvider;
 
 import java.util.List;
 
-import mozilla.components.utils.SafeIntent;
+import mozilla.components.support.utils.SafeIntent;
 
 public class MainActivity extends LocaleAwareAppCompatActivity {
     public static final String ACTION_ERASE = "erase";

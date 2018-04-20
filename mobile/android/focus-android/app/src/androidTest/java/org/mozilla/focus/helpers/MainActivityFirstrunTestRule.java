@@ -13,7 +13,7 @@ import android.support.test.rule.ActivityTestRule;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.session.SessionManager;
 
-import mozilla.components.utils.ThreadUtils;
+import mozilla.components.support.utils.ThreadUtils;
 
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 

@@ -20,7 +20,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.web.Download;
 
-import mozilla.components.utils.DownloadUtils;
+import mozilla.components.support.utils.DownloadUtils;
 
 /**
  * Fragment displaying a download dialog

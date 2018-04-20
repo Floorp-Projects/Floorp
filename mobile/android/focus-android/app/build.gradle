@@ -350,10 +350,11 @@ dependencies {
     implementation "org.mozilla.components:utils:$mozilla_components_version"
     implementation "org.mozilla.components:domains:$mozilla_components_version"
     implementation "org.mozilla.components:autocomplete:$mozilla_components_version"
+    implementation "org.mozilla.components:search:$mozilla_components_version"
     implementation "org.mozilla.photon:colors:$mozilla_components_version"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.19.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.22.5"
 
     focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
     focusImplementation 'com.google.android.gms:play-services-analytics:10.2.6' // Required by Adjust

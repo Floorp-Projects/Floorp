@@ -71,8 +71,12 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) : P
 
     fun validateEngineNameAndShowError(engineName: String): Boolean {
         val errorMessage = when {
-            TextUtils.isEmpty(engineName) -> context.getString(R.string.search_add_error_empty_name)
-            !engineNameIsUnique(engineName) -> context.getString(R.string.search_add_error_duplicate_name)
+            TextUtils.isEmpty(engineName) ->
+                context.getString(R.string.search_add_error_empty_name)
+
+            !CustomSearchEngineStore.isSearchEngineNameUnique(context, engineName) ->
+                context.getString(R.string.search_add_error_duplicate_name)
+
             else -> null
         }
 
@@ -101,13 +105,6 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) : P
     private fun updateState() {
         if (engineNameEditText != null) engineNameEditText?.setText(savedSearchEngineName)
         if (searchQueryEditText != null) searchQueryEditText?.setText(savedSearchQuery)
-    }
-
-    private fun engineNameIsUnique(engineName: String): Boolean {
-        val sharedPreferences = context.getSharedPreferences(SearchEngineManager.PREF_FILE_SEARCH_ENGINES,
-                Context.MODE_PRIVATE)
-
-        return !sharedPreferences.contains(engineName)
     }
 
     private fun buildTextWatcherForErrorLayout(errorLayout: TextInputLayout): TextWatcher {

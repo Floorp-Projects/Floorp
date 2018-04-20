@@ -14,7 +14,7 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 
-import mozilla.components.utils.ThreadUtils;
+import mozilla.components.support.utils.ThreadUtils;
 
 /* package */ class BlockingItemViewHolder extends BrowserMenuViewHolder implements CompoundButton.OnCheckedChangeListener {
     /* package */ static final int LAYOUT_ID = R.layout.menu_blocking_switch;

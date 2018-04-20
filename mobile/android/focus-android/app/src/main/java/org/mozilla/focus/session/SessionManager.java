@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import mozilla.components.utils.SafeIntent;
-import mozilla.components.utils.WebURLFinder;
+import mozilla.components.support.utils.SafeIntent;
+import mozilla.components.support.utils.WebURLFinder;
 
 
 /**

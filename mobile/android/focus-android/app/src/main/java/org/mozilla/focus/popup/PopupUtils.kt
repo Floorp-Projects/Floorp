@@ -16,8 +16,8 @@ import android.webkit.URLUtil
 import android.widget.ImageView
 import android.widget.PopupWindow
 import android.widget.TextView
-import mozilla.components.ktx.android.graphics.drawable.toBitmap
-import mozilla.components.utils.DrawableUtils
+import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
+import mozilla.components.support.utils.DrawableUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.session.Session
 import java.net.MalformedURLException

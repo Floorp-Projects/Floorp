@@ -5,7 +5,7 @@
 package org.mozilla.focus.activity
 
 import android.os.Bundle
-import mozilla.components.utils.SafeIntent
+import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.customtabs.CustomTabConfig
 import org.mozilla.focus.session.Session
 import org.mozilla.focus.session.SessionManager

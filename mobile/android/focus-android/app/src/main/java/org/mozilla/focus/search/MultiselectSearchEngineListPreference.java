@@ -50,8 +50,8 @@ public class MultiselectSearchEngineListPreference extends SearchEngineListPrefe
     public Set<String> getCheckedEngineIds() {
         final Set<String> engineIdSet = new HashSet<>();
 
-        for (int i = 0; i < searchEngineGroup.getChildCount(); i++) {
-            final CompoundButton engineButton = (CompoundButton) searchEngineGroup.getChildAt(i);
+        for (int i = 0; i < getSearchEngineGroup().getChildCount(); i++) {
+            final CompoundButton engineButton = (CompoundButton) getSearchEngineGroup().getChildAt(i);
             if (engineButton.isChecked()) {
                 engineIdSet.add((String) engineButton.getTag());
             }
@@ -61,8 +61,8 @@ public class MultiselectSearchEngineListPreference extends SearchEngineListPrefe
 
     // Whenever an engine is checked or unchecked, we notify the menu
     protected void bindEngineCheckboxesToMenu() {
-        for (int i = 0; i < searchEngineGroup.getChildCount(); i++) {
-            final CompoundButton engineButton = (CompoundButton) searchEngineGroup.getChildAt(i);
+        for (int i = 0; i < getSearchEngineGroup().getChildCount(); i++) {
+            final CompoundButton engineButton = (CompoundButton) getSearchEngineGroup().getChildAt(i);
             engineButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -73,8 +73,8 @@ public class MultiselectSearchEngineListPreference extends SearchEngineListPrefe
     }
 
     public boolean atLeastOneEngineChecked() {
-        for (int i = 0; i < searchEngineGroup.getChildCount(); i++) {
-            final CompoundButton engineButton = (CompoundButton) searchEngineGroup.getChildAt(i);
+        for (int i = 0; i < getSearchEngineGroup().getChildCount(); i++) {
+            final CompoundButton engineButton = (CompoundButton) getSearchEngineGroup().getChildAt(i);
             if (engineButton.isChecked()) {
                return true;
             }

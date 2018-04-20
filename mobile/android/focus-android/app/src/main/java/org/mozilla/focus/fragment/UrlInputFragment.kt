@@ -17,10 +17,10 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import kotlinx.android.synthetic.main.fragment_urlinput.*
-import mozilla.components.domains.DomainAutoCompleteProvider
+import mozilla.components.browser.domains.DomainAutoCompleteProvider
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
-import mozilla.components.utils.ThreadUtils
+import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleAwareFragment
@@ -536,7 +536,7 @@ class UrlInputFragment :
         }
 
         view?.let {
-            autoCompleteProvider.autocomplete(searchText, { result, source, size ->
+            autoCompleteProvider.autocomplete(searchText, { result, _, source, size ->
                 view.onAutocomplete(AutocompleteResult(result, source, size))
             })
         }

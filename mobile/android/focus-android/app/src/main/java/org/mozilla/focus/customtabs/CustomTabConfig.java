@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import mozilla.components.utils.SafeBundle;
-import mozilla.components.utils.SafeIntent;
+import mozilla.components.support.utils.SafeBundle;
+import mozilla.components.support.utils.SafeIntent;
 
 public class CustomTabConfig {
     private static final String LOGTAG = "CustomTabConfig";

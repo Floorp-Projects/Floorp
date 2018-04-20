@@ -79,9 +79,9 @@ import org.mozilla.focus.widget.FloatingSessionsButton;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-import mozilla.components.utils.ColorUtils;
-import mozilla.components.utils.DownloadUtils;
-import mozilla.components.utils.DrawableUtils;
+import mozilla.components.support.utils.ColorUtils;
+import mozilla.components.support.utils.DownloadUtils;
+import mozilla.components.support.utils.DrawableUtils;
 
 /**
  * Fragment for displaying the browser UI.

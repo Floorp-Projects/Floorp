@@ -12,11 +12,12 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.webkit.URLUtil;
 
-import org.mozilla.focus.search.SearchEngine;
-import org.mozilla.focus.search.SearchEngineManager;
+import org.mozilla.focus.Components;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import mozilla.components.browser.search.SearchEngine;
 
 public class UrlUtils {
     public static String normalize(@NonNull String input) {
@@ -70,8 +71,10 @@ public class UrlUtils {
     }
 
     public static String createSearchUrl(Context context, String searchTerm) {
-        final SearchEngine searchEngine = SearchEngineManager.getInstance()
-                .getDefaultSearchEngine(context);
+        final String defaultIdentifier = Settings.getInstance(context).getDefaultSearchEngineName();
+
+        final SearchEngine searchEngine = Components.INSTANCE.getSearchEngineManager()
+                .getDefaultSearchEngine(context, defaultIdentifier);
 
         return searchEngine.buildSearchUrl(searchTerm);
     }

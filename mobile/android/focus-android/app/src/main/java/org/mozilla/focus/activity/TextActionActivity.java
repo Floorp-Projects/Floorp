@@ -15,7 +15,7 @@ import android.support.annotation.RequiresApi;
 
 import org.mozilla.focus.utils.UrlUtils;
 
-import mozilla.components.utils.SafeIntent;
+import mozilla.components.support.utils.SafeIntent;
 
 /**
  * Activity for receiving and processing an ACTION_PROCESS_TEXT intent.

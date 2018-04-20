@@ -10,12 +10,15 @@ import android.net.http.SslError
 import android.os.StrictMode
 import android.preference.PreferenceManager
 import android.support.annotation.CheckResult
+import kotlinx.coroutines.experimental.runBlocking
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.R
-import org.mozilla.focus.search.SearchEngineManager
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.utils.AppConstants
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
+import org.mozilla.focus.Components
+import org.mozilla.focus.search.CustomSearchEngineStore
+import org.mozilla.focus.utils.Settings
 import org.mozilla.telemetry.Telemetry
 import org.mozilla.telemetry.TelemetryHolder
 import org.mozilla.telemetry.config.TelemetryConfiguration
@@ -227,7 +230,9 @@ object TelemetryWrapper {
 
     private fun createDefaultSearchProvider(context: Context): DefaultSearchMeasurement.DefaultSearchEngineProvider {
         return DefaultSearchMeasurement.DefaultSearchEngineProvider {
-            getDefaultSearchEngineIdentifierForTelemetry(context)
+            runBlocking {
+                getDefaultSearchEngineIdentifierForTelemetry(context)
+            }
         }
     }
 
@@ -396,14 +401,17 @@ object TelemetryWrapper {
     }
 
     private fun getDefaultSearchEngineIdentifierForTelemetry(context: Context): String {
-        val searchEngine = SearchEngineManager.getInstance()
-                    .getDefaultSearchEngine(context).identifier
-            if (SearchEngineManager.getInstance().isCustomSearchEngine(searchEngine, context)) {
-                // Don't collect possibly sensitive info for custom search engines, send "custom" instead
-                return SearchEngineManager.ENGINE_TYPE_CUSTOM
-            } else {
-                return searchEngine
-            }
+        val searchEngine = Components.searchEngineManager.getDefaultSearchEngine(
+                context,
+                Settings.getInstance(context).defaultSearchEngineName
+        ).identifier
+
+        return if (CustomSearchEngineStore.isCustomSearchEngine(searchEngine, context)) {
+            // Don't collect possibly sensitive info for custom search engines, send "custom" instead
+            CustomSearchEngineStore.ENGINE_TYPE_CUSTOM
+        } else {
+            searchEngine
+        }
     }
 
     @JvmStatic

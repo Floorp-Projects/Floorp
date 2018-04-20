@@ -8,10 +8,10 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.preference.PreferenceManager
+import mozilla.components.browser.search.SearchEngine
 
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.FirstrunFragment
-import org.mozilla.focus.search.SearchEngine
 
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
@@ -34,8 +34,8 @@ class Settings private constructor(context: Context) {
     private val preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     private val resources: Resources = context.resources
 
-    val defaultSearchEngineName: String?
-        get() = preferences.getString(getPreferenceKey(R.string.pref_key_search_engine), null)
+    val defaultSearchEngineName: String
+        get() = preferences.getString(getPreferenceKey(R.string.pref_key_search_engine), "")
 
     fun shouldBlockImages(): Boolean =
             // Not shipping in v1 (#188)

@@ -16,8 +16,8 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.EditText
 import org.mozilla.focus.R
+import org.mozilla.focus.search.CustomSearchEngineStore
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
-import org.mozilla.focus.search.SearchEngineManager
 import org.mozilla.focus.session.SessionManager
 import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -199,8 +199,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             }
 
             if (isValidSearchQuery == true) {
-                val sharedPreferences = that.getSearchEngineSharedPreferences()
-                SearchEngineManager.addSearchEngine(sharedPreferences, that.activity, engineName, query)
+                CustomSearchEngineStore.addSearchEngine(that.activity, engineName, query)
                 Snackbar.make(that.view, R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
                 that.fragmentManager.popBackStack()
             } else {
