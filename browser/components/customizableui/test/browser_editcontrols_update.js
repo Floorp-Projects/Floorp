@@ -91,7 +91,7 @@ add_task(async function test_panelui_opened() {
 add_task(async function test_panelui_customize_to_toolbar() {
   await startCustomizing();
   let navbar = document.getElementById("nav-bar");
-  simulateItemDrag(document.getElementById("edit-controls"), navbar.customizationTarget);
+  simulateItemDrag(document.getElementById("edit-controls"), navbar.customizationTarget, "end");
   await endCustomizing();
 
   // updateEditUIVisibility should be called when customization ends but isn't. See bug 1359790.
@@ -125,7 +125,8 @@ add_task(async function test_panelui_customize_to_toolbar() {
   });
 
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await waitForCondition(() =>
+    navbar.hasAttribute("overflowing") && !navbar.querySelector("edit-controls"));
 
   // Mac will update the enabled state even when the buttons are overflowing,
   // so main menubar shortcuts will work properly.
