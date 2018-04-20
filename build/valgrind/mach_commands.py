@@ -43,7 +43,6 @@ class MachCommands(MachCommandBase):
             '--suppression multiple times to specify multiple suppression '
             'files.')
     def valgrind_test(self, suppressions):
-        import json
         import sys
         import tempfile
 
@@ -54,6 +53,7 @@ class MachCommands(MachCommandBase):
         from mozprofile.permissions import ServerLocations
         from mozrunner import FirefoxRunner
         from mozrunner.utils import findInPath
+        from six import string_types
         from valgrind.output_handler import OutputHandler
 
         build_dir = os.path.join(self.topsrcdir, 'build')
@@ -68,11 +68,13 @@ class MachCommands(MachCommandBase):
             prefpath = os.path.join(self.topsrcdir, 'testing', 'profiles', 'common', 'user.js')
             prefs = {}
             prefs.update(Preferences.read_prefs(prefpath))
-            interpolation = { 'server': '%s:%d' % httpd.httpd.server_address,
-                              'OOP': 'false'}
-            prefs = json.loads(json.dumps(prefs) % interpolation)
-            for pref in prefs:
-                prefs[pref] = Preferences.cast(prefs[pref])
+            interpolation = {
+                'server': '%s:%d' % httpd.httpd.server_address,
+            }
+            for k, v in prefs.items():
+                if isinstance(v, string_types):
+                    v = v.format(**interpolation)
+                prefs[k] = Preferences.cast(v)
 
             quitter = os.path.join(self.topsrcdir, 'tools', 'quitter', 'quitter@mozilla.org.xpi')
 

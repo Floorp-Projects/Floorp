@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-import json
 import os
 import posixpath
 import re
@@ -20,6 +19,7 @@ from mozdevice import ADBAndroid
 from mozprofile import Profile, Preferences, DEFAULT_PORTS
 from mozprofile.permissions import ServerLocations
 from runtests import MochitestDesktop, update_mozinfo
+from six import string_types
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -108,9 +108,10 @@ class JUnitTestRunner(MochitestDesktop):
             "server": "%s:%s" %
             (self.options.webServer, self.options.httpPort)}
 
-        prefs = json.loads(json.dumps(prefs) % interpolation)
-        for pref in prefs:
-            prefs[pref] = Preferences.cast(prefs[pref])
+        for k, v in prefs.items():
+            if isinstance(v, string_types):
+                v = v.format(**interpolation)
+            prefs[k] = Preferences.cast(v)
 
         proxy = {'remote': self.options.webServer,
                  'http': self.options.httpPort,
