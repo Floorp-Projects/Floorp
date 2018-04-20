@@ -70,7 +70,7 @@ class MachCommands(MachCommandBase):
             prefs.update(Preferences.read_prefs(prefpath))
             interpolation = { 'server': '%s:%d' % httpd.httpd.server_address,
                               'OOP': 'false'}
-            prefs = json.loads(json.dumps(prefs) % interpolation)
+            prefs = json.loads(json.dumps(prefs).format(**interpolation))
             for pref in prefs:
                 prefs[pref] = Preferences.cast(prefs[pref])
 
