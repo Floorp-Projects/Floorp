@@ -251,12 +251,6 @@ interface nsIEditor  : nsISupports
     */
   nsIInlineSpellChecker getInlineSpellChecker(in boolean autoCreate);
 
-  /** Resyncs spellchecking state (enabled/disabled).  This should be called
-    * when anything that affects spellchecking state changes, such as the
-    * spellcheck attribute value.
-    */
-  void syncRealTimeSpell();
-
   /** Called when the user manually overrides the spellchecking state for this
     * editor.
     * @param  enable  The new state of spellchecking in this editor, as
