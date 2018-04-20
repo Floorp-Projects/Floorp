@@ -327,7 +327,7 @@ EditorBase::Init(nsIDocument& aDocument,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 EditorBase::PostCreate()
 {
   // Synchronize some stuff for the flags.  SetFlags() will initialize

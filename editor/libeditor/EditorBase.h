@@ -986,6 +986,12 @@ protected:
 
 public:
   /**
+   * PostCreate should be called after Init, and is the time that the editor
+   * tells its documentStateObservers that the document has been created.
+   */
+  nsresult PostCreate();
+
+  /**
    * All editor operations which alter the doc should be prefaced
    * with a call to StartOperation, naming the action and direction.
    */
