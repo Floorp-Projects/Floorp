@@ -124,8 +124,6 @@
 
 // Flags for the kFlagsTable bitfield (flags_ in nsCSSPropList.h)
 
-#define CSS_PROPERTY_VALUE_LIST_USES_COMMAS       (1<<1) /* otherwise spaces */
-
 // Define what mechanism the CSS parser uses for parsing the property.
 // See CSSParserImpl::ParseProperty(nsCSSPropertyID).  Don't use 0 so that
 // we can verify that every property sets one of the values.

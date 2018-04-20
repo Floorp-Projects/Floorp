@@ -183,7 +183,7 @@ CSS_PROP_(
     animation-delay,
     animation_delay,
     AnimationDelay,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_TIME, // used by list parsing
     nullptr,
@@ -192,7 +192,7 @@ CSS_PROP_(
     animation-direction,
     animation_direction,
     AnimationDirection,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kAnimationDirectionKTable,
@@ -201,7 +201,7 @@ CSS_PROP_(
     animation-duration,
     animation_duration,
     AnimationDuration,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_TIME | VARIANT_NONNEGATIVE_DIMENSION, // used by list parsing
     nullptr,
@@ -210,7 +210,7 @@ CSS_PROP_(
     animation-fill-mode,
     animation_fill_mode,
     AnimationFillMode,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kAnimationFillModeKTable,
@@ -219,7 +219,7 @@ CSS_PROP_(
     animation-iteration-count,
     animation_iteration_count,
     AnimationIterationCount,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD | VARIANT_NUMBER, // used by list parsing
     kAnimationIterationCountKTable,
@@ -228,7 +228,7 @@ CSS_PROP_(
     animation-name,
     animation_name,
     AnimationName,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     // FIXME: The spec should say something about 'inherit' and 'initial'
     // not being allowed.
@@ -239,7 +239,7 @@ CSS_PROP_(
     animation-play-state,
     animation_play_state,
     AnimationPlayState,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kAnimationPlayStateKTable,
@@ -248,7 +248,7 @@ CSS_PROP_(
     animation-timing-function,
     animation_timing_function,
     AnimationTimingFunction,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD | VARIANT_TIMING_FUNCTION, // used by list parsing
     kTransitionTimingFunctionKTable,
@@ -281,7 +281,7 @@ CSS_PROP_(
     background-attachment,
     background_attachment,
     BackgroundAttachment,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerAttachmentKTable,
@@ -290,7 +290,7 @@ CSS_PROP_(
     background-blend-mode,
     background_blend_mode,
     BackgroundBlendMode,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "layout.css.background-blend-mode.enabled",
     VARIANT_KEYWORD, // used by list parsing
     kBlendModeKTable,
@@ -299,7 +299,7 @@ CSS_PROP_(
     background-clip,
     background_clip,
     BackgroundClip,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kBackgroundClipKTable,
@@ -317,7 +317,7 @@ CSS_PROP_(
     background-image,
     background_image,
     BackgroundImage,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_IMAGE, // used by list parsing
     nullptr,
@@ -326,7 +326,7 @@ CSS_PROP_(
     background-origin,
     background_origin,
     BackgroundOrigin,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kBackgroundOriginKTable,
@@ -341,8 +341,7 @@ CSS_PROP_(
     background-position-x,
     background_position_x,
     BackgroundPositionX,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
     kImageLayerPositionKTable,
@@ -351,8 +350,7 @@ CSS_PROP_(
     background-position-y,
     background_position_y,
     BackgroundPositionY,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
     kImageLayerPositionKTable,
@@ -361,8 +359,7 @@ CSS_PROP_(
     background-repeat,
     background_repeat,
     BackgroundRepeat,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerRepeatKTable,
@@ -371,8 +368,7 @@ CSS_PROP_(
     background-size,
     background_size,
     BackgroundSize,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
     kImageLayerSizeKTable,
@@ -870,8 +866,7 @@ CSS_PROP_(
     box-shadow,
     box_shadow,
     BoxShadow,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
         // NOTE: some components must be nonnegative
     "",
     VARIANT_COLOR | VARIANT_LENGTH | VARIANT_CALC | VARIANT_INHERIT | VARIANT_NONE,
@@ -1086,7 +1081,6 @@ CSS_PROP_(
     _moz_context_properties,
     CSS_PROP_DOMPROP_PREFIXED(ContextProperties),
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
         CSS_PROPERTY_INTERNAL,
     "",
     0,
@@ -1124,8 +1118,7 @@ CSS_PROP_(
     cursor,
     cursor,
     Cursor,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
     kCursorKTable,
@@ -1480,8 +1473,7 @@ CSS_PROP_(
     font-variation-settings,
     font_variation_settings,
     FontVariationSettings,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
     "layout.css.font-variations.enabled",
     0,
     nullptr,
@@ -1964,7 +1956,7 @@ CSS_PROP_(
     mask-clip,
     mask_clip,
     MaskClip,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kMaskClipKTable,
@@ -1973,7 +1965,7 @@ CSS_PROP_(
     mask-composite,
     mask_composite,
     MaskComposite,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerCompositeKTable,
@@ -1982,7 +1974,7 @@ CSS_PROP_(
     mask-image,
     mask_image,
     MaskImage,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_IMAGE, // used by list parsing
     nullptr,
@@ -1991,7 +1983,7 @@ CSS_PROP_(
     mask-mode,
     mask_mode,
     MaskMode,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerModeKTable,
@@ -2000,7 +1992,7 @@ CSS_PROP_(
     mask-origin,
     mask_origin,
     MaskOrigin,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kMaskOriginKTable,
@@ -2015,8 +2007,7 @@ CSS_PROP_(
     mask-position-x,
     mask_position_x,
     MaskPositionX,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
     kImageLayerPositionKTable,
@@ -2025,8 +2016,7 @@ CSS_PROP_(
     mask-position-y,
     mask_position_y,
     MaskPositionY,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
     kImageLayerPositionKTable,
@@ -2035,8 +2025,7 @@ CSS_PROP_(
     mask-repeat,
     mask_repeat,
     MaskRepeat,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerRepeatKTable,
@@ -2045,8 +2034,7 @@ CSS_PROP_(
     mask-size,
     mask_size,
     MaskSize,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
     kImageLayerSizeKTable,
@@ -2719,8 +2707,7 @@ CSS_PROP_(
     scroll-snap-coordinate,
     scroll_snap_coordinate,
     ScrollSnapCoordinate,
-    CSS_PROPERTY_VALUE_PARSER_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_VALUE_PARSER_FUNCTION,
     "layout.css.scroll-snap.enabled",
     0,
     kImageLayerPositionKTable,
@@ -2857,8 +2844,7 @@ CSS_PROP_(
     stroke-dasharray,
     stroke_dasharray,
     StrokeDasharray,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
         // NOTE: Internal values have range restrictions.
     "",
     0,
@@ -3098,8 +3084,7 @@ CSS_PROP_(
     text-shadow,
     text_shadow,
     TextShadow,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
         // NOTE: some components must be nonnegative
     "",
     VARIANT_COLOR | VARIANT_LENGTH | VARIANT_CALC | VARIANT_INHERIT | VARIANT_NONE,
@@ -3240,7 +3225,7 @@ CSS_PROP_(
     transition-delay,
     transition_delay,
     TransitionDelay,
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_TIME, // used by list parsing
     nullptr,
@@ -3249,7 +3234,7 @@ CSS_PROP_(
     transition-duration,
     transition_duration,
     TransitionDuration,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_TIME | VARIANT_NONNEGATIVE_DIMENSION, // used by list parsing
     nullptr,
@@ -3258,8 +3243,7 @@ CSS_PROP_(
     transition-property,
     transition_property,
     TransitionProperty,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     VARIANT_IDENTIFIER | VARIANT_NONE | VARIANT_ALL, // used only in shorthand
     nullptr,
@@ -3268,7 +3252,7 @@ CSS_PROP_(
     transition-timing-function,
     transition_timing_function,
     TransitionTimingFunction,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    0,
     "",
     VARIANT_KEYWORD | VARIANT_TIMING_FUNCTION, // used by list parsing
     kTransitionTimingFunctionKTable,
@@ -3382,8 +3366,7 @@ CSS_PROP_(
     will-change,
     will_change,
     WillChange,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
     0,
     nullptr,
@@ -3402,7 +3385,7 @@ CSS_PROP_(
     -moz-window-opacity,
     _moz_window_opacity,
     CSS_PROP_DOMPROP_PREFIXED(WindowOpacity),
-    CSS_PROPERTY_INTERNAL | 0,
+    CSS_PROPERTY_INTERNAL,
     "",
     VARIANT_HN,
     nullptr,
