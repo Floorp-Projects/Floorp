@@ -87,8 +87,7 @@ enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
 #ifdef HAVE_CPUID_H
 
 #if !(defined(__SSE2__) || defined(_M_X64) || \
-     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)) || \
-    !defined(__SSE4__)
+     (defined(_M_IX86_FP) && _M_IX86_FP >= 2))
 // cpuid.h is available on gcc 4.3 and higher on i386 and x86_64
 #include <cpuid.h>
 
@@ -278,29 +277,6 @@ Factory::HasSSE2()
     sDetectionState = HasCPUIDBit(1u, edx, (1u<<26)) ? HAS_SSE2 : NO_SSE2;
   }
   return sDetectionState == HAS_SSE2;
-#else
-  return false;
-#endif
-}
-
-bool
-Factory::HasSSE4()
-{
-#if defined(__SSE4__)
-  // gcc with -msse2 (default on OSX and x86-64)
-  // cl.exe with -arch:SSE2 (default on x64 compiler)
-  return true;
-#elif defined(HAVE_CPU_DETECTION)
-  static enum {
-    UNINITIALIZED,
-    NO_SSE4,
-    HAS_SSE4
-  } sDetectionState = UNINITIALIZED;
-
-  if (sDetectionState == UNINITIALIZED) {
-    sDetectionState = HasCPUIDBit(1u, ecx, (1u << 19)) ? HAS_SSE4 : NO_SSE4;
-  }
-  return sDetectionState == HAS_SSE4;
 #else
   return false;
 #endif
