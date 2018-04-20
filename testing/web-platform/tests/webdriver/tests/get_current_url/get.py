@@ -28,14 +28,6 @@ def test_get_current_url_no_browsing_context(session, create_window):
     result = get_current_url(session)
     assert_error(result, "no such window")
 
-
-def test_get_current_url_alert_prompt(session):
-    # 7.2 step 2
-    session.url = alert_doc
-
-    result = get_current_url(session)
-    assert_error(result, "unexpected alert open")
-
 def test_get_current_url_matches_location(session):
     # 7.2 step 3
     url = session.execute_script("return window.location.href")
