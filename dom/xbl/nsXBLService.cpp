@@ -266,7 +266,7 @@ nsXBLStreamListener::HasRequest(nsIURI* aURI, nsIContent* aElt)
 }
 
 nsresult
-nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
+nsXBLStreamListener::HandleEvent(Event* aEvent)
 {
   nsresult rv = NS_OK;
   uint32_t i;

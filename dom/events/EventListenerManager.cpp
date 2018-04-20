@@ -1118,7 +1118,8 @@ EventListenerManager::HandleEventSubType(Listener* aListener,
         HandleEvent(aCurrentTarget, *(aDOMEvent->InternalDOMEvent()), rv);
       result = rv.StealNSResult();
     } else {
-      result = listenerHolder.GetXPCOMCallback()->HandleEvent(aDOMEvent);
+      result = listenerHolder.GetXPCOMCallback()->
+        HandleEvent(aDOMEvent->InternalDOMEvent());
     }
   }
 

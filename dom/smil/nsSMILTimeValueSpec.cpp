@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/TimeEvent.h"
 #include "nsSMILTimeValueSpec.h"
@@ -26,7 +27,7 @@ using namespace mozilla::dom;
 NS_IMPL_ISUPPORTS(nsSMILTimeValueSpec::EventListener, nsIDOMEventListener)
 
 NS_IMETHODIMP
-nsSMILTimeValueSpec::EventListener::HandleEvent(nsIDOMEvent* aEvent)
+nsSMILTimeValueSpec::EventListener::HandleEvent(Event* aEvent)
 {
   if (mSpec) {
     mSpec->HandleEvent(aEvent);
@@ -337,7 +338,7 @@ nsSMILTimeValueSpec::UnregisterEventListener(Element* aTarget)
 }
 
 void
-nsSMILTimeValueSpec::HandleEvent(nsIDOMEvent* aEvent)
+nsSMILTimeValueSpec::HandleEvent(Event* aEvent)
 {
   MOZ_ASSERT(mEventListener, "Got event without an event listener");
   MOZ_ASSERT(IsEventBased(),

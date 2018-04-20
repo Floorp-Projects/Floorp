@@ -20,6 +20,10 @@ class nsSMILInstanceTime;
 class nsSMILInterval;
 
 namespace mozilla {
+namespace dom {
+class Event;
+} // namespace dom
+
 class EventListenerManager;
 } // namespace mozilla
 
@@ -38,6 +42,7 @@ class nsSMILTimeValueSpec
 {
 public:
   typedef mozilla::dom::Element Element;
+  typedef mozilla::dom::Event Event;
   typedef mozilla::dom::IDTracker IDTracker;
 
   nsSMILTimeValueSpec(nsSMILTimedElement& aOwner, bool aIsBegin);
@@ -70,7 +75,7 @@ protected:
   bool IsWhitelistedEvent();
   void RegisterEventListener(Element* aElement);
   void UnregisterEventListener(Element* aElement);
-  void HandleEvent(nsIDOMEvent* aEvent);
+  void HandleEvent(Event* aEvent);
   bool CheckRepeatEventDetail(nsIDOMEvent* aEvent);
   nsSMILTimeValue ConvertBetweenTimeContainers(const nsSMILTimeValue& aSrcTime,
                                       const nsSMILTimeContainer* aSrcContainer);

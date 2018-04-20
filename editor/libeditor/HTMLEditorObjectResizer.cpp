@@ -13,6 +13,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/EventTarget.h"
 #include "nsAString.h"
@@ -25,7 +26,6 @@
 #include "nsIContent.h"
 #include "nsID.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEvent.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsISupportsUtils.h"
@@ -55,7 +55,7 @@ DocumentResizeEventListener::DocumentResizeEventListener(
 }
 
 NS_IMETHODIMP
-DocumentResizeEventListener::HandleEvent(nsIDOMEvent* aMouseEvent)
+DocumentResizeEventListener::HandleEvent(Event* aMouseEvent)
 {
   RefPtr<HTMLEditor> htmlEditor = mHTMLEditorWeak.get();
   if (htmlEditor) {
@@ -76,7 +76,7 @@ ResizerMouseMotionListener::ResizerMouseMotionListener(HTMLEditor& aHTMLEditor)
 }
 
 NS_IMETHODIMP
-ResizerMouseMotionListener::HandleEvent(nsIDOMEvent* aMouseEvent)
+ResizerMouseMotionListener::HandleEvent(Event* aMouseEvent)
 {
   MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
   if (!mouseEvent) {

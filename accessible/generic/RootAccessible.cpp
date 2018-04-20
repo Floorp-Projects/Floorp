@@ -230,7 +230,7 @@ RootAccessible::DocumentActivated(DocAccessible* aDocument)
 // nsIDOMEventListener
 
 NS_IMETHODIMP
-RootAccessible::HandleEvent(nsIDOMEvent* aDOMEvent)
+RootAccessible::HandleEvent(Event* aDOMEvent)
 {
   MOZ_ASSERT(aDOMEvent);
   Event* event = aDOMEvent->InternalDOMEvent();

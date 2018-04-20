@@ -129,7 +129,7 @@ ZoomConstraintsClient::Init(nsIPresShell* aPresShell, nsIDocument* aDocument)
 }
 
 NS_IMETHODIMP
-ZoomConstraintsClient::HandleEvent(nsIDOMEvent* event)
+ZoomConstraintsClient::HandleEvent(dom::Event* event)
 {
   nsAutoString type;
   event->GetType(type);

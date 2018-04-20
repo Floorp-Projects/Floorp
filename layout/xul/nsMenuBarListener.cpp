@@ -7,7 +7,6 @@
 #include "nsMenuBarListener.h"
 #include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"
-#include "nsIDOMEvent.h"
 #include "nsPIWindowRoot.h"
 
 // Drag & Drop, Clipboard
@@ -22,10 +21,12 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 
 using namespace mozilla;
+using mozilla::dom::Event;
 using mozilla::dom::KeyboardEvent;
 
 /*
@@ -573,7 +574,7 @@ nsMenuBarListener::Fullscreen(nsIDOMEvent* aEvent)
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
-nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
+nsMenuBarListener::HandleEvent(Event* aEvent)
 {
   // If the menu bar is collapsed, don't do anything.
   if (!mMenuBarFrame->StyleVisibility()->IsVisible()) {

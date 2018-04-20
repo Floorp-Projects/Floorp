@@ -460,7 +460,7 @@ TextTrackManager::GetTextTracksOfKind(TextTrackKind aTextTrackKind,
 }
 
 NS_IMETHODIMP
-TextTrackManager::HandleEvent(nsIDOMEvent* aEvent)
+TextTrackManager::HandleEvent(Event* aEvent)
 {
   if (!mTextTracks) {
     return NS_OK;

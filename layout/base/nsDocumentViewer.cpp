@@ -119,6 +119,7 @@
 #include <stdio.h>
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ScriptLoader.h"
 
@@ -3705,7 +3706,7 @@ nsDocViewerFocusListener::nsDocViewerFocusListener()
 nsDocViewerFocusListener::~nsDocViewerFocusListener(){}
 
 nsresult
-nsDocViewerFocusListener::HandleEvent(nsIDOMEvent* aEvent)
+nsDocViewerFocusListener::HandleEvent(Event* aEvent)
 {
   NS_ENSURE_STATE(mDocViewer);
 

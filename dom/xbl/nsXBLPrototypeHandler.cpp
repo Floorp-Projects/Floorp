@@ -44,6 +44,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
@@ -250,7 +251,7 @@ nsXBLPrototypeHandler::InitAccessKeys()
 
 nsresult
 nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
-                                      nsIDOMEvent* aEvent)
+                                      Event* aEvent)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
