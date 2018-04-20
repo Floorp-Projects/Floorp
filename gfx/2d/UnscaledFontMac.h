@@ -40,6 +40,8 @@ public:
 
   bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton) override;
 
+  bool IsDataFont() const { return mIsDataFont; }
+
   already_AddRefed<ScaledFont>
     CreateScaledFont(Float aGlyphSize,
                      const uint8_t* aInstanceData,
