@@ -1160,11 +1160,16 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
     // both axes, 2 on the leading edge and 2 on the trailing edge.
     // We call this edge area the "expanded region".
 
+    // Our expansion amounts need to be the same, and non-negative for our
+    // math to work, but we don't want to deal with casting them from
+    // unsigned ints.
+    static int32_t kExpansionPerSide = 2;
+
     // Since dfOffset will be used in comparisons against expanded region
-    // pixel values, it's convenient to add 2 to dfOffset in both axes, to
-    // simplify comparison math later.
-    dfOffset.x += 2;
-    dfOffset.y += 2;
+    // pixel values, it's convenient to add expansion amounts to dfOffset in
+    // both axes, to simplify comparison math later.
+    dfOffset.x += kExpansionPerSide;
+    dfOffset.y += kExpansionPerSide;
 
     // In all these calculations, we purposely ignore aStride, because
     // we don't have to replicate the packing that we received in
@@ -1173,8 +1178,8 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
     const LayoutDeviceIntSize marginRectDevPixels =
       LayoutDevicePixel::FromAppUnitsRounded(aMarginRect.Size(),
                                              aAppUnitsPerDevPixel);
-    const int32_t wEx = marginRectDevPixels.width + 4;
-    const int32_t hEx = marginRectDevPixels.height + 4;
+    const int32_t wEx = marginRectDevPixels.width + (kExpansionPerSide * 2);
+    const int32_t hEx = marginRectDevPixels.height + (kExpansionPerSide * 2);
 
     // Since the margin-box size is CSS controlled, and large values will
     // generate large wEx and hEx values, we do a falliable allocation for
@@ -1204,12 +1209,14 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
         const int32_t col = aWM.IsVertical() ? b : i;
         const int32_t row = aWM.IsVertical() ? i : b;
         const int32_t index = col + row * wEx;
+        MOZ_ASSERT(index >= 0 && index < (wEx * hEx),
+                   "Our distance field index should be in-bounds.");
 
         // Handle our three cases, in order.
-        if (col < 2 ||
-            col >= wEx - 2 ||
-            row < 2 ||
-            row >= hEx - 2) {
+        if (col < kExpansionPerSide ||
+            col >= wEx - kExpansionPerSide ||
+            row < kExpansionPerSide ||
+            row >= hEx - kExpansionPerSide) {
           // Case 1: Expanded pixel.
           df[index] = MAX_MARGIN_5X;
         } else if (col >= dfOffset.x &&
@@ -1219,6 +1226,11 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
                    aAlphaPixels[col - dfOffset.x +
                                 (row - dfOffset.y) * aStride] > threshold) {
           // Case 2: Image pixel that is opaque.
+          DebugOnly<int32_t> alphaIndex = col - dfOffset.x +
+                                          (row - dfOffset.y) * aStride;
+          MOZ_ASSERT(alphaIndex >= 0 && alphaIndex < (aStride * h),
+            "Our aAlphaPixels index should be in-bounds.");
+
           df[index] = 0;
         } else {
           // Case 3: Other pixel.
@@ -1237,6 +1249,11 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
           // X should be set to the minimum of MAX_MARGIN_5X and the
           // values of all of the numbered neighbors summed with the
           // value in that chamfer cell.
+          MOZ_ASSERT(index - (wEx * 2) - 1 >= 0 &&
+                     index - wEx - 2 >= 0,
+                     "Our distance field most extreme indices should be "
+                     "in-bounds.");
+
           df[index] = std::min<dfType>(MAX_MARGIN_5X,
                       std::min<dfType>(df[index - (wEx * 2) - 1] + 11,
                       std::min<dfType>(df[index - (wEx * 2) + 1] + 11,
@@ -1267,18 +1284,25 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
 
     // At the end of each row (or column in vertical writing modes),
     // if any of the other pixels had a value less than usedMargin5X,
-    // we create an interval.
-    for (int32_t b = bSize - 3; b >= 2; --b) {
+    // we create an interval. Note: "bSize - kExpansionPerSide - 1" is the
+    // index of the final row of pixels before the trailing expanded region.
+    for (int32_t b = bSize - kExpansionPerSide - 1;
+         b >= kExpansionPerSide; --b) {
       // iMin tracks the first df pixel and iMax the last df pixel whose
       // df[] value is less than usedMargin5X. Set iMin and iMax in
       // preparation for this row or column.
       int32_t iMin = iSize;
       int32_t iMax = -1;
 
-      for (int32_t i = iSize - 3; i >= 2; --i) {
+      // Note: "iSize - kExpansionPerSide - 1" is the index of the final row
+      // of pixels before the trailing expanded region.
+      for (int32_t i = iSize - kExpansionPerSide - 1;
+           i >= kExpansionPerSide; --i) {
         const int32_t col = aWM.IsVertical() ? b : i;
         const int32_t row = aWM.IsVertical() ? i : b;
         const int32_t index = col + row * wEx;
+        MOZ_ASSERT(index >= 0 && index < (wEx * hEx),
+                   "Our distance field index should be in-bounds.");
 
         // Only apply the chamfer calculation if the df value is not
         // already 0, since the chamfer can only reduce the value.
@@ -1297,6 +1321,11 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
           // X should be set to the minimum of its current value and
           // the values of all of the numbered neighbors summed with
           // the value in that chamfer cell.
+          MOZ_ASSERT(index + (wEx * 2) + 1 < (wEx * hEx) &&
+                     index + wEx + 2 < (wEx * hEx),
+                     "Our distance field most extreme indices should be "
+                     "in-bounds.");
+
           df[index] = std::min<dfType>(df[index],
                       std::min<dfType>(df[index + (wEx * 2) + 1] + 11,
                       std::min<dfType>(df[index + (wEx * 2) - 1] + 11,
@@ -1322,12 +1351,13 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
       if (iMax != -1) {
         // Our interval values, iMin, iMax, and b are all calculated from
         // the expanded region, which is based on the margin rect. To create
-        // our interval, we have to subtract 2 from (iMin, iMax, and b) to
-        // account for the expanded region edges.  This produces coords that
-        // are relative to our margin-rect, so we pass in
-        // aMarginRect.TopLeft() to make CreateInterval convert to our
+        // our interval, we have to subtract kExpansionPerSide from (iMin,
+        // iMax, and b) to account for the expanded region edges. This
+        // produces coords that are relative to our margin-rect, so we pass
+        // in aMarginRect.TopLeft() to make CreateInterval convert to our
         // container's coordinate space.
-        CreateInterval(iMin - 2, iMax - 2, b - 2, aAppUnitsPerDevPixel,
+        CreateInterval(iMin - kExpansionPerSide, iMax - kExpansionPerSide,
+                       b - kExpansionPerSide, aAppUnitsPerDevPixel,
                        aMarginRect.TopLeft(), aWM, aContainerSize);
       }
     }
