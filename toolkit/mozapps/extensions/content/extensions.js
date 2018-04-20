@@ -3233,7 +3233,6 @@ var gUpdatesView = {
   node: null,
   _listBox: null,
   _emptyNotice: null,
-  _sorters: null,
   _updateSelected: null,
   _categoryItem: null,
 
@@ -3241,8 +3240,6 @@ var gUpdatesView = {
     this.node = document.getElementById("updates-view");
     this._listBox = document.getElementById("updates-list");
     this._emptyNotice = document.getElementById("updates-list-empty");
-    this._sorters = document.getElementById("updates-sorters");
-    this._sorters.handler = this;
 
     this._categoryItem = gCategories.get("addons://updates/available");
 
@@ -3299,7 +3296,7 @@ var gUpdatesView = {
 
       this.showEmptyNotice(elements.length == 0);
       if (elements.length > 0) {
-        sortElements(elements, [this._sorters.sortBy], this._sorters.ascending);
+        sortElements(elements, ["updateDate"], false);
         for (let element of elements)
           this._listBox.appendChild(element);
       }
@@ -3344,7 +3341,7 @@ var gUpdatesView = {
       this.showEmptyNotice(elements.length == 0);
       if (elements.length > 0) {
         this._updateSelected.hidden = false;
-        sortElements(elements, [this._sorters.sortBy], this._sorters.ascending);
+        sortElements(elements, ["updateDate"], false);
         for (let element of elements)
           this._listBox.appendChild(element);
       }

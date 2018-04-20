@@ -283,6 +283,22 @@ var PlacesDBUtils = {
         )`
       },
 
+      // C.1 Fix built-in folders with incorrect parents.
+      { query:
+        `UPDATE moz_bookmarks SET parent = :rootId
+         WHERE guid IN (
+           :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid, :mobileGuid
+         ) AND parent <> :rootId`,
+        params: {
+          rootId: PlacesUtils.placesRootId,
+          menuGuid: PlacesUtils.bookmarks.menuGuid,
+          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
+          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
+          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
+          mobileGuid: PlacesUtils.bookmarks.mobileGuid,
+        }
+      },
+
       // D.1 remove items without a valid place
       // If fk IS NULL we fix them in D.7
       { query:
@@ -693,41 +709,6 @@ var PlacesDBUtils = {
       },
     ];
 
-    // Check bookmarks roots
-    // Bug 477739 shows a case where the root could be wrongly removed
-    // due to an endianness issue.  We try to fix broken roots here.
-    let db = await PlacesUtils.promiseDBConnection();
-    let rows = await db.execute(
-      `SELECT id FROM moz_bookmarks WHERE id = :root`,
-      { root: PlacesUtils.placesRootId });
-    if (rows.length === 0) {
-      // Note: these must be unshifted in reverse order.
-      // Reparent other roots as children of the Places root.
-      cleanupStatements.unshift({
-        query:
-        `UPDATE moz_bookmarks SET parent = :places_root WHERE guid IN
-            ( :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid )`,
-        params: {
-          places_root: PlacesUtils.placesRootId,
-          menuGuid: PlacesUtils.bookmarks.menuGuid,
-          toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-          unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-          tagsGuid: PlacesUtils.bookmarks.tagsGuid,
-        }
-      });
-      // Try to recreate the root.
-      cleanupStatements.unshift({
-        query:
-        `INSERT INTO moz_bookmarks (id, type, fk, parent, position, title, guid)
-          VALUES (:places_root, 2, NULL, 0, 0, :title, :guid)`,
-        params: {
-          places_root: PlacesUtils.placesRootId,
-          title: "",
-          guid: PlacesUtils.bookmarks.rootGuid,
-        }
-      });
-    }
-
     // Create triggers for updating Sync metadata. The "sync change" trigger
     // bumps the parent's change counter when we update a GUID or move an item
     // to a different folder, since Sync stores the list of child GUIDs on the
@@ -741,9 +722,7 @@ var PlacesDBUtils = {
       BEGIN
         UPDATE moz_bookmarks
         SET syncChangeCounter = syncChangeCounter + 1
-        WHERE id = NEW.parent OR
-              (OLD.parent <> NEW.parent AND
-                id = OLD.parent);
+        WHERE id IN (OLD.parent, NEW.parent);
       END`
     });
     cleanupStatements.unshift({
@@ -753,6 +732,10 @@ var PlacesDBUtils = {
       FOR EACH ROW WHEN OLD.guid NOT NULL AND
                         OLD.syncStatus <> 1
       BEGIN
+        UPDATE moz_bookmarks
+        SET syncChangeCounter = syncChangeCounter + 1
+        WHERE id = OLD.parent;
+
         INSERT INTO moz_bookmarks_deleted(guid, dateRemoved)
         VALUES(OLD.guid, STRFTIME('%s', 'now', 'localtime', 'utc') * 1000000);
       END`

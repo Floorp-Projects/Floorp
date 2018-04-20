@@ -161,13 +161,6 @@
 <!ENTITY progress.pause.tooltip               "Pause">
 <!ENTITY progress.cancel.tooltip              "Cancel">
 
-
-<!-- list sorting -->
-<!ENTITY sort.name.label                      "Name">
-<!ENTITY sort.name.tooltip                    "Sort by name">
-<!ENTITY sort.dateUpdated.label               "Last Updated">
-<!ENTITY sort.dateUpdated.tooltip             "Sort by date updated">
-
 <!ENTITY addon.homepage                       "Homepage">
 <!ENTITY addon.details.label                  "More">
 <!ENTITY addon.details.tooltip                "Show more details about this add-on">

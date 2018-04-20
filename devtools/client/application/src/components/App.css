@@ -1,0 +1,44 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * The current layout of the application panel is
+ *
+ *  +---------------------------------------------+
+ *  | (header) "Service workers"                  |
+ *  +---------------------------------------------+
+ *  | Service worker 1                            |
+ *  |   (...)                                     |
+ *  | Service worker N           (see Worker.css) |
+ *  +---------------------------------------------+
+ *  |                     Link to about:debugging |
+ *  +---------------------------------------------+
+ */
+.application {
+  height: 100%;
+  padding: 0 0 0 20px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: normal;
+}
+
+a,
+a:hover,
+a:visited {
+  color: var(--blue-60) !important;
+  margin: 0 10px;
+  cursor: pointer;
+}
+
+a.disabled,
+a.disabled:hover,
+a.disabled:visited {
+  color: var(--grey-30) !important;
+  cursor: default;
+}

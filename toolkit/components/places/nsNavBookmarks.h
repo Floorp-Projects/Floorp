@@ -220,12 +220,6 @@ private:
    */
   bool IsLivemark(int64_t aFolderId);
 
-  /**
-   * Locates the root items in the bookmarks folder hierarchy assigning folder
-   * ids to the root properties that are exposed through the service interface.
-   */
-  nsresult EnsureRoots();
-
   nsresult AdjustIndices(int64_t aFolder,
                          int32_t aStartIndex,
                          int32_t aEndIndex,
@@ -271,7 +265,7 @@ private:
   nsresult InsertTombstone(const BookmarkData& aBookmark);
 
   // Inserts tombstones for removed synced items.
-  nsresult InsertTombstones(const nsTArray<TombstoneData>& aTombstones);
+  nsresult InsertTombstones(const nsTArray<mozilla::places::TombstoneData>& aTombstones);
 
   // Removes a stale synced bookmark tombstone.
   nsresult RemoveTombstone(const nsACString& aGUID);
@@ -288,24 +282,16 @@ private:
   nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;
 
   int64_t TagsRootId() {
-    nsresult rv = EnsureRoots();
-    NS_ENSURE_SUCCESS(rv, -1);
-    return mTagsRoot;
+    return mDB->GetTagsFolderId();
   }
 
-  // These are lazy loaded, so never access them directly, always use the
-  // XPIDL getters or TagsRootId().
-  int64_t mRoot;
-  int64_t mMenuRoot;
-  int64_t mTagsRoot;
-  int64_t mUnfiledRoot;
-  int64_t mToolbarRoot;
-  int64_t mMobileRoot;
-
   inline bool IsRoot(int64_t aFolderId) {
-    return aFolderId == mRoot || aFolderId == mMenuRoot ||
-           aFolderId == mTagsRoot || aFolderId == mUnfiledRoot ||
-           aFolderId == mToolbarRoot || aFolderId == mMobileRoot;
+    return aFolderId == mDB->GetRootFolderId() ||
+           aFolderId == mDB->GetMenuFolderId() ||
+           aFolderId == mDB->GetTagsFolderId() ||
+           aFolderId == mDB->GetUnfiledFolderId() ||
+           aFolderId == mDB->GetToolbarFolderId() ||
+           aFolderId == mDB->GetMobileFolderId();
   }
 
   nsresult SetItemDateInternal(enum mozilla::places::BookmarkDate aDateType,

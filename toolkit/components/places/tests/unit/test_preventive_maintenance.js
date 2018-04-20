@@ -346,32 +346,35 @@ tests.push({
 });
 
 // ------------------------------------------------------------------------------
+
 tests.push({
   name: "C.1",
-  desc: "fix missing Places root",
+  desc: "fix invalid parents for Places folders",
 
   setup() {
-    // Sanity check: ensure that roots are intact.
-    Assert.equal(bs.getFolderIdForItem(bs.placesRoot), 0);
-    Assert.equal(bs.getFolderIdForItem(bs.bookmarksMenuFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.tagsFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.unfiledBookmarksFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
-
-    // Remove the root.
-    mDBConn.executeSimpleSQL("DELETE FROM moz_bookmarks WHERE parent = 0");
-    let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE parent = 0");
-    Assert.ok(!stmt.executeStep());
-    stmt.finalize();
+    // Reparent the roots to something invalid.
+    mDBConn.executeSimpleSQL(`
+      UPDATE moz_bookmarks SET parent = 2
+      WHERE parent = (SELECT id from moz_bookmarks WHERE guid = "${PlacesUtils.bookmarks.rootGuid}")
+    `);
   },
 
-  check() {
-    // Ensure the roots have been correctly restored.
-    Assert.equal(bs.getFolderIdForItem(bs.placesRoot), 0);
-    Assert.equal(bs.getFolderIdForItem(bs.bookmarksMenuFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.tagsFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.unfiledBookmarksFolder), bs.placesRoot);
-    Assert.equal(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
+  async check() {
+    let db = await PlacesUtils.promiseDBConnection();
+
+    let rows = await db.executeCached(`
+      SELECT guid FROM moz_bookmarks
+      WHERE parent = (SELECT id from moz_bookmarks WHERE guid = "${PlacesUtils.bookmarks.rootGuid}")
+    `);
+
+    let guids = rows.map(row => row.getResultByName("guid"));
+    Assert.deepEqual(guids, [
+      PlacesUtils.bookmarks.menuGuid,
+      PlacesUtils.bookmarks.toolbarGuid,
+      PlacesUtils.bookmarks.tagsGuid,
+      PlacesUtils.bookmarks.unfiledGuid,
+      PlacesUtils.bookmarks.mobileGuid,
+    ]);
   }
 });
 
@@ -386,6 +389,9 @@ tests.push({
   _invalidSyncedItemId: null,
   placeId: null,
 
+  _changeCounterStmt: null,
+  _menuChangeCounter: -1,
+
   setup() {
     // Add a place to ensure place_id = 1 is valid
     this.placeId = addPlace();
@@ -395,8 +401,16 @@ tests.push({
     this._invalidItemId = addBookmark(1337);
     // Insert a synced bookmark with an invalid place. We should write a
     // tombstone when we remove it.
-    this._invalidSyncedItemId = addBookmark(1337, null, null, null, null, null,
-      "bookmarkAAAA", PlacesUtils.bookmarks.SYNC_STATUS.NORMAL);
+    this._invalidSyncedItemId = addBookmark(1337, null, bs.bookmarksMenuFolder,
+      null, null, null, "bookmarkAAAA",
+      PlacesUtils.bookmarks.SYNC_STATUS.NORMAL);
+
+    this._changeCounterStmt = mDBConn.createStatement(`
+      SELECT syncChangeCounter FROM moz_bookmarks WHERE id = :id`);
+    this._changeCounterStmt.params.id = bs.bookmarksMenuFolder;
+    Assert.ok(this._changeCounterStmt.executeStep());
+    this._menuChangeCounter = this._changeCounterStmt.row.syncChangeCounter;
+    this._changeCounterStmt.reset();
   },
 
   async check() {
@@ -412,6 +426,12 @@ tests.push({
     stmt.params.item_id = this._invalidSyncedItemId;
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
+
+    this._changeCounterStmt.params.id = bs.bookmarksMenuFolder;
+    Assert.ok(this._changeCounterStmt.executeStep());
+    Assert.equal(this._changeCounterStmt.row.syncChangeCounter,
+                 this._menuChangeCounter + 1);
+    this._changeCounterStmt.finalize();
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
     Assert.deepEqual(tombstones.map(info => info.guid), ["bookmarkAAAA"]);
