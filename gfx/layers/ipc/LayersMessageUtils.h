@@ -39,6 +39,11 @@ struct ParamTraits<mozilla::layers::LayersId>
 {};
 
 template <>
+struct ParamTraits<mozilla::layers::TransactionId>
+  : public PlainOldDataSerializer<mozilla::layers::TransactionId>
+{};
+
+template <>
 struct ParamTraits<mozilla::layers::LayersBackend>
   : public ContiguousEnumSerializer<
              mozilla::layers::LayersBackend,

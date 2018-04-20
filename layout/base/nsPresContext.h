@@ -135,6 +135,7 @@ public:
   typedef mozilla::LangGroupFontPrefs LangGroupFontPrefs;
   typedef mozilla::ScrollbarStyles ScrollbarStyles;
   typedef mozilla::StaticPresData StaticPresData;
+  using TransactionId = mozilla::layers::TransactionId;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsPresContext)
@@ -1036,12 +1037,13 @@ public:
   // by nsRefreshDriver::GetTransactionId).
   // Invalidated regions will be dispatched to MozAfterPaint events when
   // NotifyDidPaintForSubtree is called for the transaction id (or any higher id).
-  void NotifyInvalidation(uint64_t aTransactionId, const nsRect& aRect);
+  void NotifyInvalidation(TransactionId aTransactionId, const nsRect& aRect);
   // aRect is in device pixels
-  void NotifyInvalidation(uint64_t aTransactionId, const nsIntRect& aRect);
-  void NotifyDidPaintForSubtree(uint64_t aTransactionId = 0,
+  void NotifyInvalidation(TransactionId aTransactionId, const nsIntRect& aRect);
+  void NotifyDidPaintForSubtree(TransactionId aTransactionId = TransactionId{0},
                                 const mozilla::TimeStamp& aTimeStamp = mozilla::TimeStamp());
-  void FireDOMPaintEvent(nsTArray<nsRect>* aList, uint64_t aTransactionId,
+  void FireDOMPaintEvent(nsTArray<nsRect>* aList,
+                         TransactionId aTransactionId,
                          mozilla::TimeStamp aTimeStamp = mozilla::TimeStamp());
 
   // Callback for catching invalidations in ContainerLayers
@@ -1275,10 +1277,10 @@ protected:
                                          uint32_t aDelay);
 
   struct TransactionInvalidations {
-    uint64_t mTransactionId;
+    TransactionId mTransactionId;
     nsTArray<nsRect> mInvalidations;
   };
-  TransactionInvalidations* GetInvalidations(uint64_t aTransactionId);
+  TransactionInvalidations* GetInvalidations(TransactionId aTransactionId);
 
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -1531,13 +1533,13 @@ public:
    * Ensure that NotifyDidPaintForSubtree is eventually called on this
    * object after a timeout.
    */
-  void EnsureEventualDidPaintEvent(uint64_t aTransactionId);
+  void EnsureEventualDidPaintEvent(TransactionId aTransactionId);
 
   /**
    * Cancels any pending eventual did paint timer for transaction
    * ids up to and including aTransactionId.
    */
-  void CancelDidPaintTimers(uint64_t aTransactionId);
+  void CancelDidPaintTimers(TransactionId aTransactionId);
 
   /**
    * Cancel all pending eventual did paint timers.
@@ -1636,7 +1638,7 @@ protected:
   friend class nsPresContext;
 
   struct NotifyDidPaintTimer {
-    uint64_t mTransactionId;
+    TransactionId mTransactionId;
     nsCOMPtr<nsITimer> mTimer;
   };
   AutoTArray<NotifyDidPaintTimer, 4> mNotifyDidPaintTimers;
