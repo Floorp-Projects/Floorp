@@ -14,9 +14,9 @@ import time
 from collections import OrderedDict
 
 # We fix the number of entries in our intermediate table used by the perfect
-# hashes to 256. This number is constant in xptinfo, allowing the compiler to
+# hashes to 512. This number is constant in xptinfo, allowing the compiler to
 # generate a more efficient modulo due to it being a power of 2.
-PHFSIZE = 256
+PHFSIZE = 512
 
 def indented(s):
     return s.replace('\n', '\n  ')
