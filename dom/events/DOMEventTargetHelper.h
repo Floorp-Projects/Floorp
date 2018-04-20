@@ -80,8 +80,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(DOMEventTargetHelper)
 
-  NS_DECL_NSIDOMEVENTTARGET
-
   virtual EventListenerManager* GetExistingListenerManager() const override;
   virtual EventListenerManager* GetOrCreateListenerManager() override;
 

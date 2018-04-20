@@ -289,7 +289,7 @@ TextTrackManager::UpdateCueDisplay()
     RefPtr<nsVariantCC> jsCues = new nsVariantCC();
 
     jsCues->SetAsArray(nsIDataType::VTYPE_INTERFACE,
-                       &NS_GET_IID(nsIDOMEventTarget),
+                       &NS_GET_IID(EventTarget),
                        showingCues.Length(),
                        static_cast<void*>(showingCues.Elements()));
     nsPIDOMWindowInner* window = mMediaElement->OwnerDoc()->GetInnerWindow();
