@@ -8,7 +8,6 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
 XPIDL_SOURCES += [
-    'nsIDOMEvent.idl',
     'nsIDOMEventListener.idl',
 ]
 

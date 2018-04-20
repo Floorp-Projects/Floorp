@@ -8,7 +8,6 @@
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsIDocument.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
