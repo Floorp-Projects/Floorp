@@ -407,12 +407,12 @@ PresentationRequestParent::DoRequest(const StartSessionRequest& aRequest)
 
   mSessionId = aRequest.sessionId();
 
-  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  RefPtr<EventTarget> eventTarget;
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   RefPtr<TabParent> tp =
     cpm->GetTopLevelTabParentByProcessAndTabId(mChildId, aRequest.tabId());
   if (tp) {
-    eventTarget = do_QueryInterface(tp->GetOwnerElement());
+    eventTarget = tp->GetOwnerElement();
   }
 
   RefPtr<PresentationParent> parent = static_cast<PresentationParent*>(Manager());

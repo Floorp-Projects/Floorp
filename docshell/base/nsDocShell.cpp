@@ -1385,11 +1385,10 @@ nsDocShell::GetContentViewer(nsIContentViewer** aContentViewer)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
+nsDocShell::SetChromeEventHandler(EventTarget* aChromeEventHandler)
 {
   // Weak reference. Don't addref.
-  nsCOMPtr<EventTarget> handler = do_QueryInterface(aChromeEventHandler);
-  mChromeEventHandler = handler.get();
+  mChromeEventHandler = aChromeEventHandler;
 
   if (mScriptGlobal) {
     mScriptGlobal->SetChromeEventHandler(mChromeEventHandler);
@@ -1399,7 +1398,7 @@ nsDocShell::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetChromeEventHandler(nsIDOMEventTarget** aChromeEventHandler)
+nsDocShell::GetChromeEventHandler(EventTarget** aChromeEventHandler)
 {
   NS_ENSURE_ARG_POINTER(aChromeEventHandler);
   nsCOMPtr<EventTarget> handler = mChromeEventHandler;

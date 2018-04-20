@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 
 interface mozIDOMWindowProxy;
-interface nsIDOMEventTarget;
+webidl EventTarget;
 
 /**
  * A callback passed to nsISessionStoreUtils.forEachNonDynamicChildFrame().
@@ -43,11 +43,9 @@ interface nsISessionStoreUtils : nsISupports
    *
    * This is implemented as a native filter, rather than a JS-based one, for
    * performance reasons.
-   *
-   * Once bug 1444991 is fixed, this should start taking an EventTarget.
    */
   [implicit_jscontext]
-  nsISupports addDynamicFrameFilteredListener(in nsIDOMEventTarget target,
+  nsISupports addDynamicFrameFilteredListener(in EventTarget target,
                                               in AString type,
                                               in jsval listener,
                                               in boolean useCapture);
@@ -62,7 +60,7 @@ interface nsISessionStoreUtils : nsISupports
    * caller doesn't actually have something that WebIDL considers an
    * EventListener.
    */
-  void removeDynamicFrameFilteredListener(in nsIDOMEventTarget target,
+  void removeDynamicFrameFilteredListener(in EventTarget target,
                                           in AString type,
                                           in nsISupports listener,
                                           in boolean useCapture);

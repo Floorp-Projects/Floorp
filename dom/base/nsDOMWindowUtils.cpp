@@ -3705,14 +3705,14 @@ nsDOMWindowUtils::GetPaintFlashing(bool* aRetVal)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::DispatchEventToChromeOnly(nsIDOMEventTarget* aTarget,
+nsDOMWindowUtils::DispatchEventToChromeOnly(EventTarget* aTarget,
                                             nsIDOMEvent* aEvent,
                                             bool* aRetVal)
 {
   *aRetVal = false;
   NS_ENSURE_STATE(aTarget && aEvent);
   aEvent->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
-  *aRetVal = EventTarget::From(aTarget)->
+  *aRetVal = aTarget->
     DispatchEvent(*aEvent->InternalDOMEvent(), CallerType::System, IgnoreErrors());
   return NS_OK;
 }

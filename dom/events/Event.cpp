@@ -592,9 +592,9 @@ Event::DuplicatePrivateData()
 }
 
 NS_IMETHODIMP
-Event::SetTarget(nsIDOMEventTarget* aTarget)
+Event::SetTarget(EventTarget* aTarget)
 {
-  mEvent->mTarget = do_QueryInterface(aTarget);
+  mEvent->mTarget = aTarget;
   return NS_OK;
 }
 
