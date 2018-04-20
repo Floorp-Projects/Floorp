@@ -98,10 +98,20 @@ public:
     float friction = gfxPrefs::APZFlingFriction();
     float threshold = gfxPrefs::APZFlingStoppedThreshold();
 
-    bool shouldContinueFlingX = mApzc.mX.FlingApplyFrictionOrCancel(aDelta, friction, threshold),
-         shouldContinueFlingY = mApzc.mY.FlingApplyFrictionOrCancel(aDelta, friction, threshold);
+    // Save the velocity locally instead of just passing it directly into
+    // SetVelocityVector(), because AdjustDisplacement() (called below)
+    // zeroes out the Axis velocity if we're in overscroll, and we need to
+    // hand off the velocity to the tree manager in such a case.
+    ParentLayerPoint velocity(
+        ApplyFrictionOrCancel(mApzc.mX.GetVelocity(), aDelta, friction, threshold),
+        ApplyFrictionOrCancel(mApzc.mY.GetVelocity(), aDelta, friction, threshold));
+    FLING_LOG("%p reduced velocity to %s due to friction\n",
+      &mApzc, ToString(mApzc.GetVelocityVector()).c_str());
+
+    mApzc.SetVelocityVector(velocity);
+
     // If we shouldn't continue the fling, let's just stop and repaint.
-    if (!shouldContinueFlingX && !shouldContinueFlingY) {
+    if (IsZero(velocity)) {
       FLING_LOG("%p ending fling animation. overscrolled=%d\n", &mApzc, mApzc.IsOverscrolled());
       // This APZC or an APZC further down the handoff chain may be be overscrolled.
       // Start a snap-back animation on the overscrolled APZC.
@@ -117,12 +127,6 @@ public:
         &mApzc));
       return false;
     }
-
-    // AdjustDisplacement() zeroes out the Axis velocity if we're in overscroll.
-    // Since we need to hand off the velocity to the tree manager in such a case,
-    // we save it here. Would be ParentLayerVector instead of ParentLayerPoint
-    // if we had vector classes.
-    ParentLayerPoint velocity = mApzc.GetVelocityVector();
 
     ParentLayerPoint offset = velocity * aDelta.ToMilliseconds();
 
@@ -196,6 +200,29 @@ private:
   {
     return (aBase * gfxPrefs::APZFlingAccelBaseMultiplier())
          + (aSupplemental * gfxPrefs::APZFlingAccelSupplementalMultiplier());
+  }
+
+  /**
+   * Applies friction to the given velocity and returns the result, or
+   * returns zero if the velocity is too low.
+   * |aVelocity| is the incoming velocity.
+   * |aDelta| is the amount of time that has passed since the last time
+   * friction was applied.
+   * |aFriction| is the amount of friction to apply.
+   * |aThreshold| is the velocity below which the fling is cancelled.
+   */
+  static float ApplyFrictionOrCancel(float aVelocity, const TimeDuration& aDelta,
+                                     float aFriction, float aThreshold)
+  {
+    if (fabsf(aVelocity) <= aThreshold) {
+      // If the velocity is very low, just set it to 0 and stop the fling,
+      // otherwise we'll just asymptotically approach 0 and the user won't
+      // actually see any changes.
+      return 0.0f;
+    }
+
+    aVelocity *= pow(1.0f - aFriction, float(aDelta.ToMilliseconds()));
+    return aVelocity;
   }
 
   AsyncPanZoomController& mApzc;
