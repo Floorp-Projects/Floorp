@@ -7,7 +7,6 @@
  * This file contains utilities for creating elements for markers to be displayed,
  * and parsing out the blueprint to generate correct values for markers.
  */
-const { Ci } = require("chrome");
 const { L10N, PREFS } = require("devtools/client/performance/modules/global");
 
 // String used to fill in platform data when it should be hidden.
@@ -68,13 +67,13 @@ exports.Formatters = {
     if ("eventPhase" in marker) {
       let label;
       switch (marker.eventPhase) {
-        case Ci.nsIDOMEvent.AT_TARGET:
+        case Event.AT_TARGET:
           label = L10N.getStr("marker.value.DOMEventTargetPhase");
           break;
-        case Ci.nsIDOMEvent.CAPTURING_PHASE:
+        case Event.CAPTURING_PHASE:
           label = L10N.getStr("marker.value.DOMEventCapturingPhase");
           break;
-        case Ci.nsIDOMEvent.BUBBLING_PHASE:
+        case Event.BUBBLING_PHASE:
           label = L10N.getStr("marker.value.DOMEventBubblingPhase");
           break;
       }

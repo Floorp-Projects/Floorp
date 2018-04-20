@@ -3072,7 +3072,7 @@ Checker.prototype = {
   /**
    * The XMLHttpRequest succeeded and the document was loaded.
    * @param   event
-   *          The nsIDOMEvent for the load
+   *          The Event for the load
    */
   onLoad: function UC_onLoad(event) {
     LOG("Checker:onLoad - request completed downloading document");
@@ -3113,7 +3113,7 @@ Checker.prototype = {
   /**
    * There was an error of some kind during the XMLHttpRequest
    * @param   event
-   *          The nsIDOMEvent for the error
+   *          The Event for the error
    */
   onError: function UC_onError(event) {
     var request = event.target;

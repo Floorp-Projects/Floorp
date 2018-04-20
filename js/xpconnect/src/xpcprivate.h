@@ -2600,6 +2600,7 @@ struct GlobalProperties {
     bool CSS : 1;
     bool CSSRule : 1;
     bool Directory : 1;
+    bool Event : 1;
     bool File : 1;
     bool FileReader: 1;
     bool FormData : 1;

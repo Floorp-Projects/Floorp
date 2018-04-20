@@ -32,6 +32,7 @@ const {
   ChromeUtils,
   CSS,
   CSSRule,
+  Event,
   FileReader,
   FormData,
   indexedDB,
@@ -47,6 +48,7 @@ const {
     "ChromeUtils",
     "CSS",
     "CSSRule",
+    "Event",
     "FileReader",
     "FormData",
     "indexedDB",
@@ -263,6 +265,7 @@ exports.globals = {
     factory(this.require, this.exports, this.module);
   },
   Element: Ci.nsIDOMElement,
+  Event,
   FormData,
   isWorker: false,
   loader: {
