@@ -10,7 +10,7 @@ function test() {
     let tab2 = BrowserTestUtils.addTab(gBrowser);
     await FullZoomHelper.load(tab2, testPage);
 
-    FullZoom.enlarge();
+    await FullZoom.enlarge();
     let tab1Zoom = ZoomManager.getZoomForBrowser(tab1.linkedBrowser);
 
     await FullZoomHelper.selectTabAndWaitForLocationChange(tab2);
