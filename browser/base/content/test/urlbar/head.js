@@ -10,10 +10,6 @@ ChromeUtils.defineModuleGetter(this, "Preferences",
   "resource://gre/modules/Preferences.jsm");
 ChromeUtils.defineModuleGetter(this, "HttpServer",
   "resource://testing-common/httpd.js");
-ChromeUtils.defineModuleGetter(this, "SearchTestUtils",
-  "resource://testing-common/SearchTestUtils.jsm");
-
-SearchTestUtils.init(Assert, registerCleanupFunction);
 
 /**
  * Waits for the next top-level document load in the current browser.  The URI
@@ -206,6 +202,24 @@ function promiseAutocompleteResultPopup(inputText,
   }, win);
 
   return promiseSearchComplete(win, dontAnimate);
+}
+
+function promiseNewSearchEngine(basename) {
+  return new Promise((resolve, reject) => {
+    info("Waiting for engine to be added: " + basename);
+    let url = getRootDirectory(gTestPath) + basename;
+    Services.search.addEngine(url, null, "", false, {
+      onSuccess(engine) {
+        info("Search engine added: " + basename);
+        registerCleanupFunction(() => Services.search.removeEngine(engine));
+        resolve(engine);
+      },
+      onError(errCode) {
+        Assert.ok(false, "addEngine failed with error code " + errCode);
+        reject();
+      },
+    });
+  });
 }
 
 function promisePageActionPanelOpen() {

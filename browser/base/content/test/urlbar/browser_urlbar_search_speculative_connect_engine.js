@@ -29,8 +29,7 @@ add_task(async function setup() {
           ["network.dns.disableIPv6", true]],
   });
 
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
+  let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
 
@@ -54,3 +53,4 @@ add_task(async function connect_search_engine_tests() {
   await promiseSpeculativeConnection(gHttpServer);
   is(gHttpServer.connectionNumber, 1, `${gHttpServer.connectionNumber} speculative connection has been setup.`);
 });
+
