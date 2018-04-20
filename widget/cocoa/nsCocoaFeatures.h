@@ -45,6 +45,7 @@ private:
 // C-callable helper for cairo-quartz-font.c and SkFontHost_mac.cpp
 extern "C" {
     bool Gecko_OnSierraExactly();
+    bool Gecko_OnHighSierraOrLater();
 }
 
 #endif // nsCocoaFeatures_h_

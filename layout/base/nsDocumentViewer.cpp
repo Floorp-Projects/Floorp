@@ -104,7 +104,6 @@
 #endif // NS_PRINTING
 
 //focus
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
 #include "nsISelectionController.h"
 
@@ -119,6 +118,7 @@
 #include <stdio.h>
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ScriptLoader.h"
 
@@ -3705,7 +3705,7 @@ nsDocViewerFocusListener::nsDocViewerFocusListener()
 nsDocViewerFocusListener::~nsDocViewerFocusListener(){}
 
 nsresult
-nsDocViewerFocusListener::HandleEvent(nsIDOMEvent* aEvent)
+nsDocViewerFocusListener::HandleEvent(Event* aEvent)
 {
   NS_ENSURE_STATE(mDocViewer);
 

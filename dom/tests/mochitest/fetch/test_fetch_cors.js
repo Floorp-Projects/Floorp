@@ -64,9 +64,9 @@ function testSameOriginCredentials() {
                 withCred: "same-origin",
               },
               {
-                // Default mode is "omit".
+                // Default mode is "same-origin".
                 pass: 1,
-                noCookie: 1,
+                cookie: cookieStr,
               },
               {
                 pass: 1,

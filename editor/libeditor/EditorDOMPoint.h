@@ -222,7 +222,7 @@ public:
   bool
   IsInDataNode() const
   {
-    return mParent && mParent->IsNodeOfType(nsINode::eDATA_NODE);
+    return mParent && mParent->IsCharacterData();
   }
 
   /**

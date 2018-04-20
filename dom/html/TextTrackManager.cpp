@@ -289,7 +289,7 @@ TextTrackManager::UpdateCueDisplay()
     RefPtr<nsVariantCC> jsCues = new nsVariantCC();
 
     jsCues->SetAsArray(nsIDataType::VTYPE_INTERFACE,
-                       &NS_GET_IID(nsIDOMEventTarget),
+                       &NS_GET_IID(EventTarget),
                        showingCues.Length(),
                        static_cast<void*>(showingCues.Elements()));
     nsPIDOMWindowInner* window = mMediaElement->OwnerDoc()->GetInnerWindow();
@@ -460,7 +460,7 @@ TextTrackManager::GetTextTracksOfKind(TextTrackKind aTextTrackKind,
 }
 
 NS_IMETHODIMP
-TextTrackManager::HandleEvent(nsIDOMEvent* aEvent)
+TextTrackManager::HandleEvent(Event* aEvent)
 {
   if (!mTextTracks) {
     return NS_OK;

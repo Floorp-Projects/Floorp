@@ -115,10 +115,6 @@ public:
   already_AddRefed<SVGAnimatedLength> Y();
   already_AddRefed<SVGAnimatedLength> Width();
   already_AddRefed<SVGAnimatedLength> Height();
-  float PixelUnitToMillimeterX();
-  float PixelUnitToMillimeterY();
-  float ScreenPixelToMillimeterX();
-  float ScreenPixelToMillimeterY();
   bool UseCurrentView();
   float CurrentScale();
   void SetCurrentScale(float aCurrentScale);

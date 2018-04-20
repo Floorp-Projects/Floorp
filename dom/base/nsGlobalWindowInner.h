@@ -24,7 +24,6 @@
 
 // Interfaces Needed
 #include "nsIBrowserDOMWindow.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIScriptGlobalObject.h"
@@ -315,9 +314,6 @@ public:
   void Dump(const nsAString& aStr);
   void SetResizable(bool aResizable) const;
 
-  // nsIDOMEventTarget
-  NS_DECL_NSIDOMEVENTTARGET
-
   virtual mozilla::EventListenerManager*
     GetExistingListenerManager() const override;
 
@@ -481,7 +477,7 @@ public:
   friend class WindowStateHolder;
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsGlobalWindowInner,
-                                                                   nsIDOMEventTarget)
+                                                                   mozilla::dom::EventTarget)
 
 #ifdef DEBUG
   // Call Unlink on this window. This may cause bad things to happen, so use
@@ -1509,13 +1505,13 @@ protected:
 inline nsISupports*
 ToSupports(nsGlobalWindowInner *p)
 {
-    return static_cast<nsIDOMEventTarget*>(p);
+  return static_cast<mozilla::dom::EventTarget*>(p);
 }
 
 inline nsISupports*
 ToCanonicalSupports(nsGlobalWindowInner *p)
 {
-    return static_cast<nsIDOMEventTarget*>(p);
+  return static_cast<mozilla::dom::EventTarget*>(p);
 }
 
 // XXX: EWW - This is an awful hack - let's not do this

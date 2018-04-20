@@ -5,6 +5,8 @@
 
 #include "domstubs.idl"
 
+webidl Event;
+
 /**
  * The nsIDOMEventListener interface is a callback interface for
  * listening to events in the Document Object Model.
@@ -25,5 +27,5 @@ interface nsIDOMEventListener : nsISupports
    *              preventDefault methods which are used in determining the 
    *              event's flow and default action.
    */
-  void                      handleEvent(in nsIDOMEvent event);
+  void                      handleEvent(in Event event);
 };

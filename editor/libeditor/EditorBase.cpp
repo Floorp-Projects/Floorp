@@ -51,6 +51,7 @@
 #include "mozilla/TransactionManager.h" // for TransactionManager
 #include "mozilla/dom/CharacterData.h"  // for CharacterData
 #include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement
+#include "mozilla/dom/EventTarget.h"    // for EventTarget
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/Event.h"
@@ -74,9 +75,7 @@
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement
-#include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
-#include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc.
 #include "nsIDocumentStateListener.h"   // for nsIDocumentStateListener
 #include "nsIEditActionListener.h"      // for nsIEditActionListener
@@ -350,10 +349,7 @@ EditorBase::PostCreate()
   // update nsTextStateManager and caret if we have focus
   nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
   if (focusedContent) {
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(focusedContent);
-    if (target) {
-      InitializeSelection(target);
-    }
+    InitializeSelection(focusedContent);
 
     // If the text control gets reframed during focus, Focus() would not be
     // called, so take a chance here to see if we need to spell check the text
@@ -4594,9 +4590,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
 
     // there is a priorNode, so delete its last child (if chardata, delete the
     // last char). if it has no children, delete it
-    if (priorNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-      RefPtr<CharacterData> priorNodeAsCharData =
-        static_cast<CharacterData*>(priorNode.get());
+    if (RefPtr<CharacterData> priorNodeAsCharData =
+          CharacterData::FromNode(priorNode)) {
       uint32_t length = priorNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       if (NS_WARN_IF(!length)) {
@@ -4634,9 +4629,8 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
 
     // there is a nextNode, so delete its first child (if chardata, delete the
     // first char). if it has no children, delete it
-    if (nextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
-      RefPtr<CharacterData> nextNodeAsCharData =
-        static_cast<CharacterData*>(nextNode.get());
+    if (RefPtr<CharacterData> nextNodeAsCharData =
+          CharacterData::FromNode(nextNode)) {
       uint32_t length = nextNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       if (NS_WARN_IF(!length)) {
@@ -4664,12 +4658,10 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     return deleteNodeTransaction.forget();
   }
 
-  if (node->IsNodeOfType(nsINode::eDATA_NODE)) {
+  if (RefPtr<CharacterData> nodeAsCharData = CharacterData::FromNode(node)) {
     if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
       return nullptr;
     }
-    RefPtr<CharacterData> nodeAsCharData =
-      static_cast<CharacterData*>(node.get());
     // We have chardata, so delete a char at the proper offset
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
       aAction == ePrevious ?
@@ -4697,7 +4689,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   }
 
   while (selectedNode &&
-         selectedNode->IsNodeOfType(nsINode::eDATA_NODE) &&
+         selectedNode->IsCharacterData() &&
          !selectedNode->Length()) {
     // Can't delete an empty chardata node (bug 762183)
     if (aAction == ePrevious) {
@@ -4711,12 +4703,11 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
     return nullptr;
   }
 
-  if (selectedNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+  if (RefPtr<CharacterData> selectedNodeAsCharData =
+        CharacterData::FromNode(selectedNode)) {
     if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
       return nullptr;
     }
-    RefPtr<CharacterData> selectedNodeAsCharData =
-      static_cast<CharacterData*>(selectedNode.get());
     // we are deleting from a chardata node, so do a character deletion
     uint32_t position = 0;
     if (aAction == ePrevious) {
@@ -4945,7 +4936,7 @@ EditorBase::InitializeSelectionAncestorLimit(Selection& aSelection,
 }
 
 nsresult
-EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
+EditorBase::InitializeSelection(EventTarget* aFocusEventTarget)
 {
   nsCOMPtr<nsINode> targetNode = do_QueryInterface(aFocusEventTarget);
   NS_ENSURE_TRUE(targetNode, NS_ERROR_INVALID_ARG);
@@ -5223,7 +5214,7 @@ EditorBase::IsModifiableNode(nsINode* aNode)
 nsIContent*
 EditorBase::GetFocusedContent()
 {
-  nsIDOMEventTarget* piTarget = GetDOMEventTarget();
+  EventTarget* piTarget = GetDOMEventTarget();
   if (!piTarget) {
     return nullptr;
   }
@@ -5247,7 +5238,7 @@ EditorBase::GetFocusedContentForIME()
 bool
 EditorBase::IsActiveInDOMWindow()
 {
-  nsIDOMEventTarget* piTarget = GetDOMEventTarget();
+  EventTarget* piTarget = GetDOMEventTarget();
   if (!piTarget) {
     return false;
   }
@@ -5332,7 +5323,7 @@ EditorBase::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent)
 }
 
 void
-EditorBase::OnFocus(nsIDOMEventTarget* aFocusEventTarget)
+EditorBase::OnFocus(EventTarget* aFocusEventTarget)
 {
   InitializeSelection(aFocusEventTarget);
   mSpellCheckerDictionaryUpdated = false;

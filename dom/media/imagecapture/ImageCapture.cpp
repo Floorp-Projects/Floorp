@@ -7,6 +7,7 @@
 #include "ImageCapture.h"
 #include "mozilla/dom/BlobEvent.h"
 #include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ImageCaptureError.h"
 #include "mozilla/dom/ImageCaptureErrorEvent.h"
@@ -199,7 +200,7 @@ ImageCapture::PostErrorEvent(uint16_t aErrorCode, nsresult aReason)
   init.mCancelable = false;
   init.mImageCaptureError = error;
 
-  nsCOMPtr<nsIDOMEvent> event =
+  RefPtr<Event> event =
     ImageCaptureErrorEvent::Constructor(this, NS_LITERAL_STRING("error"), init);
 
   return DispatchTrustedEvent(event);

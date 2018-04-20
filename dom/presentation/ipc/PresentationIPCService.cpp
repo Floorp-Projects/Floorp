@@ -61,7 +61,7 @@ PresentationIPCService::StartSession(
                const nsAString& aOrigin,
                const nsAString& aDeviceId,
                uint64_t aWindowId,
-               nsIDOMEventTarget* aEventTarget,
+               EventTarget* aEventTarget,
                nsIPrincipal* aPrincipal,
                nsIPresentationServiceCallback* aCallback,
                nsIPresentationTransportBuilderConstructor* aBuilderConstructor)

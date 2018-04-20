@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/Event.h"
 #include "nsIDocument.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsString.h"

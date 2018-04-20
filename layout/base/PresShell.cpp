@@ -8100,7 +8100,7 @@ PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent,
 // See the method above.
 nsresult
 PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent,
-                                    nsIDOMEvent* aEvent,
+                                    Event* aEvent,
                                     nsEventStatus* aStatus)
 {
   nsresult rv = NS_OK;

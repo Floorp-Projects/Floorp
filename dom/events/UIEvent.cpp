@@ -264,7 +264,7 @@ UIEvent::GetLayerPoint() const
                     nsPresContext::AppUnitsToIntCSSPixels(pt.y));
 }
 
-NS_IMETHODIMP
+void
 UIEvent::DuplicatePrivateData()
 {
   mClientPoint =
@@ -277,16 +277,15 @@ UIEvent::DuplicatePrivateData()
   // GetScreenPoint converts mEvent->mRefPoint to right coordinates.
   CSSIntPoint screenPoint =
     Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint);
-  nsresult rv = Event::DuplicatePrivateData();
-  if (NS_SUCCEEDED(rv)) {
-    CSSToLayoutDeviceScale scale = mPresContext ? mPresContext->CSSToDevPixelScale()
-                                                : CSSToLayoutDeviceScale(1);
-    mEvent->mRefPoint = RoundedToInt(screenPoint * scale);
-  }
-  return rv;
+
+  Event::DuplicatePrivateData();
+
+  CSSToLayoutDeviceScale scale = mPresContext ? mPresContext->CSSToDevPixelScale()
+                                              : CSSToLayoutDeviceScale(1);
+  mEvent->mRefPoint = RoundedToInt(screenPoint * scale);
 }
 
-NS_IMETHODIMP_(void)
+void
 UIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 {
   if (aSerializeInterfaceType) {
@@ -298,7 +297,7 @@ UIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
   IPC::WriteParam(aMsg, Detail());
 }
 
-NS_IMETHODIMP_(bool)
+bool
 UIEvent::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   NS_ENSURE_TRUE(Event::Deserialize(aMsg, aIter), false);

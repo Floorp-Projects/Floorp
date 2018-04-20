@@ -510,7 +510,7 @@ let BrowserUsageTelemetry = {
   /**
    * Records the method by which the user selected a urlbar result.
    *
-   * @param {nsIDOMEvent} event
+   * @param {Event} event
    *        The event that triggered the selection.
    * @param {string} userSelectionBehavior
    *        How the user cycled through results before picking the current match.
@@ -534,7 +534,7 @@ let BrowserUsageTelemetry = {
   /**
    * Records the method by which the user selected a searchbar result.
    *
-   * @param {nsIDOMEvent} event
+   * @param {Event} event
    *        The event that triggered the selection.
    * @param {number} highlightedIndex
    *        The index that the user chose in the popup, or -1 if there wasn't a

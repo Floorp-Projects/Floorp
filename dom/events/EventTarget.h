@@ -9,12 +9,13 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
-#include "nsIDOMEventTarget.h"
+#include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "nsAtom.h"
 
 class nsPIDOMWindowOuter;
 class nsIGlobalObject;
+class nsIDOMEventListener;
 
 namespace mozilla {
 
@@ -39,16 +40,11 @@ class GlobalObject;
 { 0xde651c36, 0x0053, 0x4c67, \
   { 0xb1, 0x3d, 0x67, 0xb9, 0x40, 0xfc, 0x82, 0xe4 } }
 
-class EventTarget : public nsIDOMEventTarget,
+class EventTarget : public nsISupports,
                     public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_EVENTTARGET_IID)
-
-  static EventTarget* From(nsIDOMEventTarget* aTarget)
-  {
-    return static_cast<EventTarget*>(aTarget);
-  }
 
   // WebIDL API
   static already_AddRefed<EventTarget> Constructor(const GlobalObject& aGlobal,

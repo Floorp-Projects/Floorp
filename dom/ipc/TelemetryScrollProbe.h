@@ -10,13 +10,13 @@
 #include "nsIDOMEventListener.h"
 
 class nsIDocument;
-class nsIDOMEvent;
 class nsIPresShell;
 class nsIWebNavigation;
 
 namespace mozilla {
 namespace dom {
 
+class Event;
 class TabChildGlobal;
 
 /*
@@ -43,7 +43,7 @@ private:
   already_AddRefed<nsIDocument> GetDocument() const;
   already_AddRefed<nsIPresShell> GetPresShell() const;
 
-  bool ShouldIgnore(nsIDOMEvent* aEvent) const;
+  bool ShouldIgnore(Event* aEvent) const;
 
   nsWeakPtr mWebNav;
 };

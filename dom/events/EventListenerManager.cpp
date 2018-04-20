@@ -1093,7 +1093,7 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
 
 nsresult
 EventListenerManager::HandleEventSubType(Listener* aListener,
-                                         nsIDOMEvent* aDOMEvent,
+                                         Event* aDOMEvent,
                                          EventTarget* aCurrentTarget)
 {
   nsresult result = NS_OK;
@@ -1111,14 +1111,14 @@ EventListenerManager::HandleEventSubType(Listener* aListener,
   if (NS_SUCCEEDED(result)) {
     nsAutoMicroTask mt;
 
-    // nsIDOMEvent::currentTarget is set in EventDispatcher.
+    // Event::currentTarget is set in EventDispatcher.
     if (listenerHolder.HasWebIDLCallback()) {
       ErrorResult rv;
       listenerHolder.GetWebIDLCallback()->
-        HandleEvent(aCurrentTarget, *(aDOMEvent->InternalDOMEvent()), rv);
+        HandleEvent(aCurrentTarget, *aDOMEvent, rv);
       result = rv.StealNSResult();
     } else {
-      result = listenerHolder.GetXPCOMCallback()->HandleEvent(aDOMEvent);
+      result = listenerHolder.GetXPCOMCallback()-> HandleEvent(aDOMEvent);
     }
   }
 
@@ -1166,7 +1166,7 @@ EventListenerManager::GetLegacyEventMessage(EventMessage aEventMessage) const
 void
 EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                           WidgetEvent* aEvent,
-                                          nsIDOMEvent** aDOMEvent,
+                                          Event** aDOMEvent,
                                           EventTarget* aCurrentTarget,
                                           nsEventStatus* aEventStatus)
 {
@@ -1241,8 +1241,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                   needsEndEventMarker = true;
                   nsAutoString typeStr;
                   (*aDOMEvent)->GetType(typeStr);
-                  uint16_t phase;
-                  (*aDOMEvent)->GetEventPhase(&phase);
+                  uint16_t phase = (*aDOMEvent)->EventPhase();
                   timelines->AddMarkerForDocShell(docShell, Move(
                     MakeUnique<EventTimelineMarker>(
                       typeStr, phase, MarkerTracingType::START)));
@@ -1277,8 +1276,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
 
               TimeStamp endTime = TimeStamp::Now();
-              uint16_t phase;
-              (*aDOMEvent)->GetEventPhase(&phase);
+              uint16_t phase = (*aDOMEvent)->EventPhase();
               profiler_add_marker(
                 "DOMEvent",
                 MakeUnique<DOMEventMarkerPayload>(typeStr, phase,

@@ -10,7 +10,7 @@ const completions = ["toExponential", "toFixed", "toString"];
 function test() {
   const options = { tabContent: "test scratchpad autocomplete" };
   openTabAndScratchpad(options)
-    .then(Task.async(runTests))
+    .then(runTests)
     .then(finish, console.error);
 }
 

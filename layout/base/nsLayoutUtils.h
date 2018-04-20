@@ -44,7 +44,6 @@ class nsPresContext;
 class nsIContent;
 class nsAtom;
 class nsIScrollableFrame;
-class nsIDOMEvent;
 class nsRegion;
 class nsDisplayListBuilder;
 enum class nsDisplayListBuilderMode : uint8_t;
@@ -80,6 +79,7 @@ namespace dom {
 class CanvasRenderingContext2D;
 class DOMRectList;
 class Element;
+class Event;
 class HTMLImageElement;
 class HTMLCanvasElement;
 class HTMLVideoElement;
@@ -709,7 +709,7 @@ public:
    * for some reason the coordinates for the mouse are not known (e.g.,
    * the event is not a GUI event).
    */
-  static nsPoint GetDOMEventCoordinatesRelativeTo(nsIDOMEvent* aDOMEvent,
+  static nsPoint GetDOMEventCoordinatesRelativeTo(mozilla::dom::Event* aDOMEvent,
                                                   nsIFrame* aFrame);
 
   /**

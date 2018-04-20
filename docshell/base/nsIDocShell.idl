@@ -39,7 +39,6 @@ class ClientSource;
 interface nsIURI;
 interface nsIChannel;
 interface nsIContentViewer;
-interface nsIDOMEventTarget;
 interface nsIDocShellLoadInfo;
 interface nsIEditor;
 interface nsIEditingSession;
@@ -62,6 +61,8 @@ interface nsICommandManager;
 interface nsICommandParams;
 interface nsILoadURIDelegate;
 native TabChildRef(already_AddRefed<nsITabChild>);
+
+webidl EventTarget;
 
 [scriptable, builtinclass, uuid(049234fe-da10-478b-bc5d-bc6f9a1ba63d)]
 interface nsIDocShell : nsIDocShellTreeItem
@@ -286,7 +287,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * This attribute allows chrome to tie in to handle DOM events that may
    * be of interest to chrome.
    */
-  attribute nsIDOMEventTarget chromeEventHandler;
+  attribute EventTarget chromeEventHandler;
 
   /**
    * This allows chrome to set a custom User agent on a specific docshell

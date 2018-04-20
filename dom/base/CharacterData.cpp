@@ -23,7 +23,6 @@
 #include "nsReadableUtils.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "nsIURI.h"
-#include "nsIDOMEvent.h"
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
 #include "nsChangeHint.h"
@@ -663,7 +662,7 @@ CharacterData::DoGetXBLBinding() const
 bool
 CharacterData::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~eDATA_NODE);
+  return false;
 }
 
 void

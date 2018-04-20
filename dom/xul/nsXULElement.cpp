@@ -7,7 +7,6 @@
 #include "nsDOMCID.h"
 #include "nsError.h"
 #include "nsDOMString.h"
-#include "nsIDOMEvent.h"
 #include "nsAtom.h"
 #include "nsIBaseWindow.h"
 #include "nsIDOMDocument.h"
@@ -1300,18 +1299,16 @@ nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
         // pointed to by the command attribute. The new event's
         // sourceEvent will be the original command event that we're
         // handling.
-        nsCOMPtr<nsIDOMEvent> domEvent = aVisitor.mDOMEvent;
+        RefPtr<Event> event = aVisitor.mDOMEvent;
         uint16_t inputSource = MouseEventBinding::MOZ_SOURCE_UNKNOWN;
-        while (domEvent) {
-            Event* event = domEvent->InternalDOMEvent();
-            NS_ENSURE_STATE(!SameCOMIdentity(event->GetOriginalTarget(),
-                                             commandElt));
+        while (event) {
+            NS_ENSURE_STATE(event->GetOriginalTarget() != commandElt);
             RefPtr<XULCommandEvent> commandEvent = event->AsXULCommandEvent();
             if (commandEvent) {
-                domEvent = commandEvent->GetSourceEvent();
+                event = commandEvent->GetSourceEvent();
                 inputSource = commandEvent->InputSource();
             } else {
-                domEvent = nullptr;
+                event = nullptr;
             }
         }
         WidgetInputEvent* orig = aVisitor.mEvent->AsInputEvent();
@@ -1351,7 +1348,7 @@ nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
         // instead of on our content element.
         nsAutoString command;
         if (aVisitor.mDOMEvent &&
-            aVisitor.mDOMEvent->InternalDOMEvent()->AsXULCommandEvent() &&
+            aVisitor.mDOMEvent->AsXULCommandEvent() &&
             GetAttr(kNameSpaceID_None, nsGkAtoms::command, command) &&
             !command.IsEmpty()) {
             // Stop building the event target chain for the original event.

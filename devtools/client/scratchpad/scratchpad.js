@@ -1591,7 +1591,7 @@ var Scratchpad = {
    * The Scratchpad window load event handler. This method
    * initializes the Scratchpad window and source editor.
    *
-   * @param nsIDOMEvent aEvent
+   * @param Event aEvent
    */
   onLoad: function SP_onLoad(aEvent) {
     if (aEvent.target != document) {
@@ -1728,7 +1728,7 @@ var Scratchpad = {
    * The Scratchpad window unload event handler. This method unloads/destroys
    * the source editor.
    *
-   * @param nsIDOMEvent aEvent
+   * @param Event aEvent
    */
   onUnload: function SP_onUnload(aEvent) {
     if (aEvent.target != document) {
@@ -1822,7 +1822,7 @@ var Scratchpad = {
    * Handler for window close event. Prompts to save scratchpad if
    * there are unsaved changes.
    *
-   * @param nsIDOMEvent aEvent
+   * @param Event aEvent
    * @param function aCallback
    *        Optional function you want to call when file is saved/closed.
    *        Used mainly for tests.

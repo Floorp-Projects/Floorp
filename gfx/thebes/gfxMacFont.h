@@ -68,6 +68,7 @@ public:
     static CTFontRef
     CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont,
                                          CGFloat aSize,
+                                         bool aInstalledFont,
                                          CTFontDescriptorRef aFontDesc = nullptr);
 
 protected:

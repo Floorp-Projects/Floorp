@@ -193,14 +193,14 @@ SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   AssertIsOnMainThread();
 
   if (IsFrozen()) {
-    nsCOMPtr<nsIDOMEvent> event = aVisitor.mDOMEvent;
+    RefPtr<Event> event = aVisitor.mDOMEvent;
     if (!event) {
       event = EventDispatcher::CreateEvent(aVisitor.mEvent->mOriginalTarget,
                                            aVisitor.mPresContext,
                                            aVisitor.mEvent, EmptyString());
     }
 
-    QueueEvent(event->InternalDOMEvent());
+    QueueEvent(event);
 
     aVisitor.mCanHandle = false;
     aVisitor.SetParentTarget(nullptr, false);

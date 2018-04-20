@@ -137,7 +137,7 @@ Event::~Event()
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Event)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
+  NS_INTERFACE_MAP_ENTRY(Event)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Event)
@@ -222,29 +222,20 @@ Event::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return EventBinding::Wrap(aCx, this, aGivenProto);
 }
 
-// nsIDOMEventInterface
-NS_IMETHODIMP
-Event::GetType(nsAString& aType)
+void
+Event::GetType(nsAString& aType) const
 {
   if (!mIsMainThreadEvent) {
     aType = mEvent->mSpecifiedEventTypeString;
-    return NS_OK;
+    return;
   }
   GetWidgetEventType(mEvent, aType);
-  return NS_OK;
 }
 
 EventTarget*
 Event::GetTarget() const
 {
   return mEvent->GetDOMEventTarget();
-}
-
-NS_IMETHODIMP
-Event::GetTarget(nsIDOMEventTarget** aTarget)
-{
-  NS_IF_ADDREF(*aTarget = GetTarget());
-  return NS_OK;
 }
 
 bool
@@ -268,13 +259,6 @@ void
 Event::ComposedPath(nsTArray<RefPtr<EventTarget>>& aPath)
 {
   EventDispatcher::GetComposedPathFor(mEvent, aPath);
-}
-
-NS_IMETHODIMP
-Event::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
-{
-  NS_IF_ADDREF(*aCurrentTarget = GetCurrentTarget());
-  return NS_OK;
 }
 
 //
@@ -304,24 +288,10 @@ Event::GetExplicitOriginalTarget() const
   return GetTarget();
 }
 
-NS_IMETHODIMP
-Event::GetExplicitOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
-{
-  NS_IF_ADDREF(*aRealEventTarget = GetExplicitOriginalTarget());
-  return NS_OK;
-}
-
 EventTarget*
 Event::GetOriginalTarget() const
 {
   return mEvent->GetOriginalDOMEventTarget();
-}
-
-NS_IMETHODIMP
-Event::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
-{
-  NS_IF_ADDREF(*aOriginalTarget = GetOriginalTarget());
-  return NS_OK;
 }
 
 EventTarget*
@@ -338,7 +308,7 @@ Event::GetComposedTarget() const
     static_cast<EventTarget*>(content->GetComposedDoc());
 }
 
-NS_IMETHODIMP_(void)
+void
 Event::SetTrusted(bool aTrusted)
 {
   mEvent->mFlags.mIsTrusted = aTrusted;
@@ -398,80 +368,41 @@ Event::EventPhase() const
   if ((mEvent->mCurrentTarget &&
        mEvent->mCurrentTarget == mEvent->mTarget) ||
        mEvent->mFlags.InTargetPhase()) {
-    return nsIDOMEvent::AT_TARGET;
+    return EventBinding::AT_TARGET;
   }
   if (mEvent->mFlags.mInCapturePhase) {
-    return nsIDOMEvent::CAPTURING_PHASE;
+    return EventBinding::CAPTURING_PHASE;
   }
   if (mEvent->mFlags.mInBubblingPhase) {
-    return nsIDOMEvent::BUBBLING_PHASE;
+    return EventBinding::BUBBLING_PHASE;
   }
-  return nsIDOMEvent::NONE;
+  return EventBinding::NONE;
 }
 
-NS_IMETHODIMP
-Event::GetEventPhase(uint16_t* aEventPhase)
-{
-  *aEventPhase = EventPhase();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Event::GetBubbles(bool* aBubbles)
-{
-  *aBubbles = Bubbles();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Event::GetCancelable(bool* aCancelable)
-{
-  *aCancelable = Cancelable();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Event::GetTimeStamp(uint64_t* aTimeStamp)
-{
-  *aTimeStamp = mEvent->mTime;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 Event::StopPropagation()
 {
   mEvent->StopPropagation();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 Event::StopImmediatePropagation()
 {
   mEvent->StopImmediatePropagation();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 Event::StopCrossProcessForwarding()
 {
   mEvent->StopCrossProcessForwarding();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-Event::GetIsTrusted(bool* aIsTrusted)
-{
-  *aIsTrusted = IsTrusted();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 Event::PreventDefault()
 {
   // This method is called only from C++ code which must handle default action
   // of this event.  So, pass true always.
   PreventDefaultInternal(true);
-  return NS_OK;
 }
 
 void
@@ -603,45 +534,36 @@ Event::InitEvent(const nsAString& aEventTypeArg,
   mEvent->mOriginalTarget = nullptr;
 }
 
-NS_IMETHODIMP
+void
 Event::DuplicatePrivateData()
 {
   NS_ASSERTION(mEvent, "No WidgetEvent for Event duplication!");
   if (mEventIsInternal) {
-    return NS_OK;
+    return;
   }
 
   mEvent = mEvent->Duplicate();
   mPresContext = nullptr;
   mEventIsInternal = true;
   mPrivateDataDuplicated = true;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-Event::SetTarget(nsIDOMEventTarget* aTarget)
+void
+Event::SetTarget(EventTarget* aTarget)
 {
-  mEvent->mTarget = do_QueryInterface(aTarget);
-  return NS_OK;
+  mEvent->mTarget = aTarget;
 }
 
-NS_IMETHODIMP_(bool)
+bool
 Event::IsDispatchStopped()
 {
   return mEvent->PropagationStopped();
 }
 
-NS_IMETHODIMP_(WidgetEvent*)
+WidgetEvent*
 Event::WidgetEventPtr()
 {
   return mEvent;
-}
-
-NS_IMETHODIMP_(Event*)
-Event::InternalDOMEvent()
-{
-  return this;
 }
 
 // return true if eventName is contained within events, delimited by
@@ -686,13 +608,13 @@ PopupAllowedForEvent(const char *eventName)
 
 // static
 PopupControlState
-Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
+Event::GetEventPopupControlState(WidgetEvent* aEvent, Event* aDOMEvent)
 {
   // generally if an event handler is running, new windows are disallowed.
   // check for exceptions:
   PopupControlState abuse = openAbused;
 
-  if (aDOMEvent && aDOMEvent->InternalDOMEvent()->GetWantsPopupControlCheck()) {
+  if (aDOMEvent && aDOMEvent->GetWantsPopupControlCheck()) {
     nsAutoString type;
     aDOMEvent->GetType(type);
     if (PopupAllowedForEvent(NS_ConvertUTF16toUTF8(type).get())) {
@@ -1146,18 +1068,7 @@ Event::TimeStamp()
     workerPrivate->GetRandomTimelineSeed());
 }
 
-NS_IMETHODIMP
-Event::GetDefaultPrevented(bool* aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  // This method must be called by only event handlers implemented by C++.
-  // Then, the handlers must handle default action.  So, this method don't need
-  // to check if preventDefault() has been called by content or chrome.
-  *aReturn = DefaultPrevented();
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(void)
+void
 Event::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 {
   if (aSerializeInterfaceType) {
@@ -1176,7 +1087,7 @@ Event::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
   // No timestamp serialization for now!
 }
 
-NS_IMETHODIMP_(bool)
+bool
 Event::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   nsString type;
@@ -1201,7 +1112,7 @@ Event::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
   return true;
 }
 
-NS_IMETHODIMP_(void)
+void
 Event::SetOwner(EventTarget* aOwner)
 {
   mOwner = nullptr;
@@ -1256,23 +1167,6 @@ Event::GetWidgetEventType(WidgetEvent* aEvent, nsAString& aType)
   }
 
   aType.Truncate();
-}
-
-NS_IMETHODIMP
-Event::GetCancelBubble(bool* aCancelBubble)
-{
-  NS_ENSURE_ARG_POINTER(aCancelBubble);
-  *aCancelBubble = CancelBubble();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Event::SetCancelBubble(bool aCancelBubble)
-{
-  if (aCancelBubble) {
-    mEvent->StopPropagation();
-  }
-  return NS_OK;
 }
 
 } // namespace dom

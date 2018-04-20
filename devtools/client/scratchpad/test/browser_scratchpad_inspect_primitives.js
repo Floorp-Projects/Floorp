@@ -9,7 +9,7 @@ function test() {
     tabContent: "test inspecting primitive values"
   };
   openTabAndScratchpad(options)
-    .then(Task.async(runTests))
+    .then(runTests)
     .then(finish, console.error);
 }
 

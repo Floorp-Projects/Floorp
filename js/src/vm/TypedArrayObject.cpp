@@ -2140,6 +2140,7 @@ js::IsBufferSource(JSObject* object, SharedMem<uint8_t*>* dataPointer, size_t* b
         DataViewObject& view = object->as<DataViewObject>();
         *dataPointer = view.dataPointerEither().cast<uint8_t*>();
         *byteLength = view.byteLength();
+        return true;
     }
 
     if (object->is<ArrayBufferObject>()) {

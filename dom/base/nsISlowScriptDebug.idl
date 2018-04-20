@@ -5,7 +5,8 @@
 #include "nsISupports.idl"
 
 interface nsIDOMWindow;
-interface nsIDOMEventTarget;
+
+webidl EventTarget;
 
 [scriptable, function, uuid(f7dbb80c-5d1e-4fd9-b55c-a9ffda4a75b1)]
 interface nsISlowScriptDebugCallback : nsISupports
@@ -22,7 +23,7 @@ interface nsISlowScriptDebuggerStartupCallback : nsISupports
 [scriptable, function, uuid(dbee14b0-8fa0-11e4-b4a9-0800200c9a66)]
 interface nsISlowScriptDebugRemoteCallback : nsISupports
 {
-  void handleSlowScriptDebug(in nsIDOMEventTarget aBrowser,
+  void handleSlowScriptDebug(in EventTarget aBrowser,
                              in nsISlowScriptDebuggerStartupCallback aCallback);
 };
 

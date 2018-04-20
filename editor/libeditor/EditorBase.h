@@ -40,8 +40,6 @@ class mozInlineSpellChecker;
 class nsAtom;
 class nsIContent;
 class nsIDOMDocument;
-class nsIDOMEvent;
-class nsIDOMEventTarget;
 class nsIDOMNode;
 class nsIDocumentStateListener;
 class nsIEditActionListener;
@@ -1525,14 +1523,14 @@ public:
    * a host of the editor, i.e., the editor doesn't get focus, this does
    * nothing.
    */
-  nsresult InitializeSelection(nsIDOMEventTarget* aFocusEventTarget);
+  nsresult InitializeSelection(dom::EventTarget* aFocusEventTarget);
 
   /**
    * This method has to be called by EditorEventListener::Focus.
    * All actions that have to be done when the editor is focused needs to be
    * added here.
    */
-  void OnFocus(nsIDOMEventTarget* aFocusEventTarget);
+  void OnFocus(dom::EventTarget* aFocusEventTarget);
 
   /**
    * Used to insert content from a data transfer into the editable area.

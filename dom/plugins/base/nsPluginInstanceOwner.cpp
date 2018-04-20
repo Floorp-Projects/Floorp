@@ -1396,12 +1396,13 @@ nsPluginInstanceOwner::GetEventloopNestingLevel()
   return currentLevel;
 }
 
-nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
+nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(Event* aFocusEvent)
 {
 #ifndef XP_MACOSX
   if (!mPluginWindow || (mPluginWindow->type == NPWindowTypeWindow)) {
     // continue only for cases without child window
-    return aFocusEvent->PreventDefault(); // consume event
+    aFocusEvent->PreventDefault(); // consume event
+    return NS_OK;
   }
 #endif
 
@@ -1419,7 +1420,7 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
   return NS_OK;
 }
 
-nsresult nsPluginInstanceOwner::ProcessKeyPress(nsIDOMEvent* aKeyEvent)
+nsresult nsPluginInstanceOwner::ProcessKeyPress(Event* aKeyEvent)
 {
 #ifdef XP_MACOSX
   return DispatchKeyToPlugin(aKeyEvent);
@@ -1437,11 +1438,13 @@ nsresult nsPluginInstanceOwner::ProcessKeyPress(nsIDOMEvent* aKeyEvent)
 #endif
 }
 
-nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
+nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(Event* aKeyEvent)
 {
 #if !defined(XP_MACOSX)
-  if (!mPluginWindow || (mPluginWindow->type == NPWindowTypeWindow))
-    return aKeyEvent->PreventDefault(); // consume event
+  if (!mPluginWindow || (mPluginWindow->type == NPWindowTypeWindow)) {
+    aKeyEvent->PreventDefault(); // consume event
+    return NS_OK;
+  }
   // continue only for cases without child window
 #endif
 
@@ -1461,11 +1464,13 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 }
 
 nsresult
-nsPluginInstanceOwner::ProcessMouseDown(nsIDOMEvent* aMouseEvent)
+nsPluginInstanceOwner::ProcessMouseDown(Event* aMouseEvent)
 {
 #if !defined(XP_MACOSX)
-  if (!mPluginWindow || (mPluginWindow->type == NPWindowTypeWindow))
-    return aMouseEvent->PreventDefault(); // consume event
+  if (!mPluginWindow || (mPluginWindow->type == NPWindowTypeWindow)) {
+    aMouseEvent->PreventDefault(); // consume event
+    return NS_OK;
+  }
   // continue only for cases without child window
 #endif
 
@@ -1487,19 +1492,22 @@ nsPluginInstanceOwner::ProcessMouseDown(nsIDOMEvent* aMouseEvent)
     mLastMouseDownButtonType = mouseEvent->button;
     nsEventStatus rv = ProcessEvent(*mouseEvent);
     if (nsEventStatus_eConsumeNoDefault == rv) {
-      return aMouseEvent->PreventDefault(); // consume event
+      aMouseEvent->PreventDefault(); // consume event
+      return NS_OK;
     }
   }
 
   return NS_OK;
 }
 
-nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
+nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(Event* aMouseEvent,
                                                       bool aAllowPropagate)
 {
 #if !defined(XP_MACOSX)
-  if (!mPluginWindow || (mPluginWindow->type == NPWindowTypeWindow))
-    return aMouseEvent->PreventDefault(); // consume event
+  if (!mPluginWindow || (mPluginWindow->type == NPWindowTypeWindow)) {
+    aMouseEvent->PreventDefault(); // consume event
+    return NS_OK;
+  }
   // continue only for cases without child window
 #endif
   // don't send mouse events if we are hidden
@@ -1613,7 +1621,7 @@ nsPluginInstanceOwner::HandleNoConsumedCompositionMessage(
 #endif
 
 nsresult
-nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
+nsPluginInstanceOwner::DispatchCompositionToPlugin(Event* aEvent)
 {
 #ifdef XP_WIN
   if (!mPluginWindow) {
@@ -1704,7 +1712,7 @@ nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
 }
 
 nsresult
-nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
+nsPluginInstanceOwner::HandleEvent(Event* aEvent)
 {
   NS_ASSERTION(mInstance, "Should have a valid plugin instance or not receive events.");
 
@@ -1763,7 +1771,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
     return DispatchCompositionToPlugin(aEvent);
   }
 
-  DragEvent* dragEvent = aEvent->InternalDOMEvent()->AsDragEvent();
+  DragEvent* dragEvent = aEvent->AsDragEvent();
   if (dragEvent && mInstance) {
     WidgetEvent* ievent = aEvent->WidgetEventPtr();
     if (ievent && ievent->IsTrusted() &&
@@ -3386,7 +3394,7 @@ NS_IMPL_ISUPPORTS(nsPluginDOMContextMenuListener,
                   nsIDOMEventListener)
 
 NS_IMETHODIMP
-nsPluginDOMContextMenuListener::HandleEvent(nsIDOMEvent* aEvent)
+nsPluginDOMContextMenuListener::HandleEvent(Event* aEvent)
 {
   aEvent->PreventDefault(); // consume event
 

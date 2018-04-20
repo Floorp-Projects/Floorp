@@ -70,7 +70,6 @@ template<class E> class nsCOMArray;
 class AutoWeakFrame;
 class WeakFrame;
 class nsIScrollableFrame;
-class nsIDOMEvent;
 class nsDisplayList;
 class nsDisplayListBuilder;
 class nsPIDOMWindowOuter;
@@ -96,6 +95,7 @@ class EventStates;
 
 namespace dom {
 class Element;
+class Event;
 class HTMLSlotElement;
 class Touch;
 class Selection;
@@ -945,8 +945,8 @@ public:
    * @note The caller must have a strong reference to the PresShell.
    */
   virtual nsresult HandleDOMEventWithTarget(nsIContent* aTargetContent,
-                                                        nsIDOMEvent* aEvent,
-                                                        nsEventStatus* aStatus) = 0;
+                                            mozilla::dom::Event* aEvent,
+                                            nsEventStatus* aStatus) = 0;
 
   /**
    * Return whether or not the event is valid to be dispatched
