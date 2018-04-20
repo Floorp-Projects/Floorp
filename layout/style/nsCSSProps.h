@@ -174,56 +174,6 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // CSS_PROP_LIST_EXCLUDE_INTERNAL section of nsCSSPropList.h.
 #define CSS_PROPERTY_INTERNAL                     (1<<28)
 
-/**
- * Types of animatable values.
- */
-enum nsStyleAnimType {
-  // requires a custom implementation in
-  // StyleAnimationValue::ExtractComputedValue
-  eStyleAnimType_Custom,
-
-  // nsStyleCoord with animatable values
-  eStyleAnimType_Coord,
-
-  // same as Coord, except for one side of an nsStyleSides
-  // listed in the same order as the NS_STYLE_* constants
-  eStyleAnimType_Sides_Top,
-  eStyleAnimType_Sides_Right,
-  eStyleAnimType_Sides_Bottom,
-  eStyleAnimType_Sides_Left,
-
-  // similar, but for the *pair* of coord members of an nsStyleCorners
-  // for the relevant corner
-  eStyleAnimType_Corner_TopLeft,
-  eStyleAnimType_Corner_TopRight,
-  eStyleAnimType_Corner_BottomRight,
-  eStyleAnimType_Corner_BottomLeft,
-
-  // nscoord values
-  eStyleAnimType_nscoord,
-
-  // float values
-  eStyleAnimType_float,
-
-  // nscolor values
-  eStyleAnimType_Color,
-
-  // StyleComplexColor values
-  eStyleAnimType_ComplexColor,
-
-  // nsStyleSVGPaint values
-  eStyleAnimType_PaintServer,
-
-  // RefPtr<nsCSSShadowArray> values
-  eStyleAnimType_Shadow,
-
-  // discrete values
-  eStyleAnimType_Discrete,
-
-  // property not animatable
-  eStyleAnimType_None
-};
-
 class nsCSSProps {
 public:
   typedef mozilla::CSSEnabledState EnabledState;
@@ -338,7 +288,6 @@ public:
   }
 
   static const KTableEntry* const kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
-  static const nsStyleAnimType kAnimTypeTable[eCSSProperty_COUNT_no_shorthands];
 
 private:
   static const uint32_t        kFlagsTable[eCSSProperty_COUNT];
