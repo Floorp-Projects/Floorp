@@ -110,15 +110,6 @@ let searchDomains = [{
   "followOnSearch": "oq",
   "codes": ["firefox-b-ab", "firefox-b"],
   "sap": "google",
-}, {
-  // This is intended only for tests.
-  "domains": [ "mochi.test" ],
-  "search": "m",
-  "prefix": ["mt"],
-  "followOnSearch": "mtfo",
-  "reportPrefix": "form",
-  "codes": ["TEST"],
-  "sap": "mochitest"
 }];
 
 function getSearchDomainCodes(host) {

@@ -19,8 +19,7 @@ add_task(async function switchToTab() {
 });
 
 add_task(async function searchSuggestions() {
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
+  let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);

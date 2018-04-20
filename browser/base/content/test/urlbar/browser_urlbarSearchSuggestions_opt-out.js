@@ -9,8 +9,7 @@ const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 const ONEOFF_PREF = "browser.urlbar.oneOffSearches";
 
 add_task(async function prepare() {
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
-    getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
+  let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
