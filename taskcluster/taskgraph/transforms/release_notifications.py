@@ -18,9 +18,6 @@ EMAIL_DESTINATIONS = {
     'mozilla-beta': ["release-automation-notifications@mozilla.com"],
     'mozilla-release': ["release-automation-notifications@mozilla.com"],
     'mozilla-esr60': ["release-automation-notifications@mozilla.com"],
-    'maple': ["release+tcstaging@mozilla.com"],
-    'birch': ["release+tcstaging@mozilla.com"],
-    'jamun': ["release+tcstaging@mozilla.com"],
     # otherwise []
 }
 
