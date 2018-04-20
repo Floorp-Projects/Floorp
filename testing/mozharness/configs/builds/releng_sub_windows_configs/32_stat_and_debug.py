@@ -8,7 +8,6 @@ config = {
     ],
     'stage_platform': 'win32-st-an-debug',
     'debug_build': True,
-    'enable_signing': False,
     'tooltool_manifest_src': "browser/config/tooltool-manifests/win32/\
 releng.manifest",
     'perfherder_extra_options': ['static-analysis'],
