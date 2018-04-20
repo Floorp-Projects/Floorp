@@ -291,6 +291,9 @@ private:
   DECL_GFX_PREF(Live, "apz.allow_immediate_handoff",           APZAllowImmediateHandoff, bool, true);
   DECL_GFX_PREF(Live, "apz.allow_zooming",                     APZAllowZooming, bool, false);
   DECL_GFX_PREF(Live, "apz.android.chrome_fling_physics.enabled", APZUseChromeFlingPhysics, bool, false);
+  DECL_GFX_PREF(Live, "apz.android.chrome_fling_physics.friction", APZChromeFlingPhysicsFriction, float, 0.015f);
+  DECL_GFX_PREF(Live, "apz.android.chrome_fling_physics.inflexion", APZChromeFlingPhysicsInflexion, float, 0.35f);
+  DECL_GFX_PREF(Live, "apz.android.chrome_fling_physics.stop_threshold", APZChromeFlingPhysicsStopThreshold, float, 0.1f);
   DECL_GFX_PREF(Live, "apz.autoscroll.enabled",                APZAutoscrollEnabled, bool, false);
   DECL_GFX_PREF(Live, "apz.axis_lock.breakout_angle",          APZAxisBreakoutAngle, float, float(M_PI / 8.0) /* 22.5 degrees */);
   DECL_GFX_PREF(Live, "apz.axis_lock.breakout_threshold",      APZAxisBreakoutThreshold, float, 1.0f / 32.0f);
