@@ -41,12 +41,14 @@ var FontBuilder = {
     const popup = document.createElement("menupopup");
     let separator;
     if (fonts.length > 0) {
-      const bundlePreferences = document.getElementById("bundlePreferences");
-      let defaultLabel = defaultFont ?
-        bundlePreferences.getFormattedString("labelDefaultFont", [defaultFont]) :
-        bundlePreferences.getString("labelDefaultFontUnnamed");
       let menuitem = document.createElement("menuitem");
-      menuitem.setAttribute("label", defaultLabel);
+      if (defaultFont) {
+        document.l10n.setAttributes(menuitem, "fonts-label-default", {
+          name: defaultFont
+        });
+      } else {
+        document.l10n.setAttributes(menuitem, "fonts-label-default-unnamed");
+      }
       menuitem.setAttribute("value", ""); // Default Font has a blank value
       popup.appendChild(menuitem);
 
