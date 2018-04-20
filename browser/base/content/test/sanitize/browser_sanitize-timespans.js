@@ -1,5 +1,8 @@
 requestLongerTimeout(2);
 
+const {PlacesTestUtils} =
+  ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm", {});
+
 // Bug 453440 - Test the timespan-based logic of the sanitizer code
 var now_mSec = Date.now();
 var now_uSec = now_mSec * 1000;
@@ -426,46 +429,37 @@ async function onHistoryReady() {
   ok(!(await downloadExists(publicList, "fakefile-old")), "Year old download should now be deleted");
 }
 
-function setupHistory() {
-  return new Promise(resolve => {
+async function setupHistory() {
 
-    let places = [];
+  let places = [];
 
-    function addPlace(aURI, aTitle, aVisitDate) {
-      places.push({
-        uri: aURI,
-        title: aTitle,
-        visits: [{
-          visitDate: aVisitDate,
-          transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
-        }]
-      });
-    }
-
-    addPlace(makeURI("http://10minutes.com/"), "10 minutes ago", now_uSec - 10 * kUsecPerMin);
-    addPlace(makeURI("http://1hour.com/"), "Less than 1 hour ago", now_uSec - 45 * kUsecPerMin);
-    addPlace(makeURI("http://1hour10minutes.com/"), "1 hour 10 minutes ago", now_uSec - 70 * kUsecPerMin);
-    addPlace(makeURI("http://2hour.com/"), "Less than 2 hours ago", now_uSec - 90 * kUsecPerMin);
-    addPlace(makeURI("http://2hour10minutes.com/"), "2 hours 10 minutes ago", now_uSec - 130 * kUsecPerMin);
-    addPlace(makeURI("http://4hour.com/"), "Less than 4 hours ago", now_uSec - 180 * kUsecPerMin);
-    addPlace(makeURI("http://4hour10minutes.com/"), "4 hours 10 minutesago", now_uSec - 250 * kUsecPerMin);
-
-    let today = new Date();
-    today.setHours(0);
-    today.setMinutes(0);
-    today.setSeconds(1);
-    addPlace(makeURI("http://today.com/"), "Today", today.getTime() * 1000);
-
-    let lastYear = new Date();
-    lastYear.setFullYear(lastYear.getFullYear() - 1);
-    addPlace(makeURI("http://before-today.com/"), "Before Today", lastYear.getTime() * 1000);
-    PlacesUtils.asyncHistory.updatePlaces(places, {
-      handleError: () => ok(false, "Unexpected error in adding visit."),
-      handleResult: () => { },
-      handleCompletion: () => resolve()
+  function addPlace(aURI, aTitle, aVisitDate) {
+    places.push({
+      uri: aURI,
+      title: aTitle,
+      visitDate: aVisitDate,
+      transition: Ci.nsINavHistoryService.TRANSITION_LINK
     });
+  }
 
-  });
+  addPlace("http://10minutes.com/", "10 minutes ago", now_uSec - 10 * kUsecPerMin);
+  addPlace("http://1hour.com/", "Less than 1 hour ago", now_uSec - 45 * kUsecPerMin);
+  addPlace("http://1hour10minutes.com/", "1 hour 10 minutes ago", now_uSec - 70 * kUsecPerMin);
+  addPlace("http://2hour.com/", "Less than 2 hours ago", now_uSec - 90 * kUsecPerMin);
+  addPlace("http://2hour10minutes.com/", "2 hours 10 minutes ago", now_uSec - 130 * kUsecPerMin);
+  addPlace("http://4hour.com/", "Less than 4 hours ago", now_uSec - 180 * kUsecPerMin);
+  addPlace("http://4hour10minutes.com/", "4 hours 10 minutesago", now_uSec - 250 * kUsecPerMin);
+
+  let today = new Date();
+  today.setHours(0);
+  today.setMinutes(0);
+  today.setSeconds(1);
+  addPlace("http://today.com/", "Today", today.getTime() * 1000);
+
+  let lastYear = new Date();
+  lastYear.setFullYear(lastYear.getFullYear() - 1);
+  addPlace("http://before-today.com/", "Before Today", lastYear.getTime() * 1000);
+  await PlacesTestUtils.addVisits(places);
 }
 
 async function setupFormHistory() {
