@@ -29,6 +29,7 @@ const {Cu, Ci} = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const {Actor} = protocol;
 const {animationPlayerSpec, animationsSpec} = require("devtools/shared/specs/animation");
+const {ANIMATION_TYPE_FOR_LONGHANDS} = require("./animation-type-longhand");
 
 // Types of animations.
 const ANIMATION_TYPES = {
@@ -38,6 +39,16 @@ const ANIMATION_TYPES = {
   UNKNOWN: "unknown"
 };
 exports.ANIMATION_TYPES = ANIMATION_TYPES;
+
+function getAnimationTypeForLonghand(property) {
+  for (let [type, props] of ANIMATION_TYPE_FOR_LONGHANDS) {
+    if (props.has(property)) {
+      return type;
+    }
+  }
+  throw new Error("Unknown longhand property name");
+}
+exports.getAnimationTypeForLonghand = getAnimationTypeForLonghand;
 
 /**
  * The AnimationPlayerActor provides information about a given animation: its
@@ -515,7 +526,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
                                                       pseudo,
                                                       property.name,
                                                       DOMWindowUtils.FLUSH_NONE);
-          const animationType = DOMWindowUtils.getAnimationTypeForLonghand(property.name);
+          const animationType = getAnimationTypeForLonghand(property.name);
           underlyingValue = animationType === "float" ? parseFloat(value, 10) : value;
         }
         values.value = underlyingValue;
@@ -569,12 +580,9 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    * @return {Object} Returns animation types (e.g. {"background-color": "rgb(0, 0, 0)"}.
    */
   getAnimationTypes: function(propertyNames) {
-    const DOMWindowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIDOMWindowUtils);
     const animationTypes = {};
     for (let propertyName of propertyNames) {
-      animationTypes[propertyName] =
-        DOMWindowUtils.getAnimationTypeForLonghand(propertyName);
+      animationTypes[propertyName] = getAnimationTypeForLonghand(propertyName);
     }
     return animationTypes;
   },
