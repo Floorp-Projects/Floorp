@@ -460,10 +460,7 @@ gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize)
             weight = mNeedsBold ? 700 : 200;
         }
     } else {
-        // GDI doesn't support variation fonts, so for system fonts we know
-        // that the entry has only a single weight, not a range.
-        MOZ_ASSERT(fe->Weight().IsSingle());
-        weight = mNeedsBold ? 700 : fe->Weight().Min().ToIntRounded();
+        weight = mNeedsBold ? 700 : fe->Weight().ToIntRounded();
     }
 
     fe->FillLogFont(&aLogFont, weight, aSize);
