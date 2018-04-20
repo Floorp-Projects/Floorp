@@ -885,6 +885,9 @@ nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
   // effectively a 3x3 neighborhood. We need to expand our distance field
   // outwards by a further 2 pixels in both axes (on the minimum block edge
   // and the minimum inline edge). We call this edge area the expanded region.
+
+  // Our expansion amounts need to be non-negative for our math to work, but
+  // we don't want to deal with casting them from unsigned ints.
   static const int32_t iExpand = 2;
   static const int32_t bExpand = 2;
   const int32_t iSize = bounds.width + iExpand;
@@ -922,6 +925,8 @@ nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
 
     for (int32_t i = 0; i < iSize; ++i) {
       const int32_t index = i + b * iSize;
+      MOZ_ASSERT(index >= 0 && index < (iSize * bSize),
+                 "Our distance field index should be in-bounds.");
 
       // Handle our three cases, in order.
       if (i < iExpand ||
@@ -947,6 +952,11 @@ nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
         //
         // X should be set to the minimum of the values of all of the numbered
         // neighbors summed with the value in that chamfer cell.
+        MOZ_ASSERT(index - iSize - 2 >= 0 &&
+                   index - (iSize * 2) - 1 >= 0,
+                   "Our distance field most extreme indices should be "
+                   "in-bounds.");
+
         df[index] = std::min<dfType>(df[index - 1] + 5,
                     std::min<dfType>(df[index - iSize] + 5,
                     std::min<dfType>(df[index - iSize - 1] + 7,
