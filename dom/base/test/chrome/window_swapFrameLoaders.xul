@@ -7,7 +7,7 @@ Test swapFrameLoaders with different frame types and remoteness
 -->
 <window title="Mozilla Bug 1242644"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"></script>
 
   <script type="application/javascript"><![CDATA[
   ["SimpleTest", "SpecialPowers", "info", "is", "ok"].forEach(key => {

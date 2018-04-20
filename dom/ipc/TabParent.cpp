@@ -55,7 +55,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -572,7 +571,7 @@ TabParent::RecvDropLinks(nsTArray<nsString>&& aLinks)
 mozilla::ipc::IPCResult
 TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
 {
-  nsCOMPtr<nsIDOMEvent> event = do_QueryInterface(aEvent.mEvent);
+  RefPtr<Event> event = aEvent.mEvent;
   NS_ENSURE_TRUE(event, IPC_OK());
 
   nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(mFrameElement);
@@ -580,7 +579,7 @@ TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
 
   event->SetOwner(target);
 
-  target->DispatchEvent(*event->InternalDOMEvent());
+  target->DispatchEvent(*event);
   return IPC_OK();
 }
 
@@ -2152,7 +2151,7 @@ TabParent::RecvReplyKeyEvent(const WidgetKeyboardEvent& aEvent)
   WidgetKeyboardEvent localEvent(aEvent);
   localEvent.MarkAsHandledInRemoteProcess();
 
-  // Here we convert the WidgetEvent that we received to an nsIDOMEvent
+  // Here we convert the WidgetEvent that we received to an Event
   // to be able to dispatch it to the <browser> element as the target element.
   nsIDocument* doc = mFrameElement->OwnerDoc();
   nsPresContext* presContext = doc->GetPresContext();
@@ -2208,7 +2207,7 @@ TabParent::RecvAccessKeyNotHandled(const WidgetKeyboardEvent& aEvent)
   localEvent.MarkAsHandledInRemoteProcess();
   localEvent.mMessage = eAccessKeyNotFound;
 
-  // Here we convert the WidgetEvent that we received to an nsIDOMEvent
+  // Here we convert the WidgetEvent that we received to an Event
   // to be able to dispatch it to the <browser> element as the target element.
   nsIDocument* doc = mFrameElement->OwnerDoc();
   nsIPresShell* presShell = doc->GetShell();
@@ -3141,7 +3140,7 @@ TabParent::DeallocPPaymentRequestParent(PPaymentRequestParent* aActor)
 }
 
 nsresult
-TabParent::HandleEvent(nsIDOMEvent* aEvent)
+TabParent::HandleEvent(Event* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);

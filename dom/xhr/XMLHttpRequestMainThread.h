@@ -853,7 +853,7 @@ class nsXHRParseEndListener : public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_IMETHOD HandleEvent(nsIDOMEvent *event) override
+  NS_IMETHOD HandleEvent(Event *event) override
   {
     if (mXHR) {
       mXHR->OnBodyParseEnd();

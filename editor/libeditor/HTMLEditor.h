@@ -58,6 +58,7 @@ struct PropItem;
 template<class T> class OwningNonNull;
 namespace dom {
 class DocumentFragment;
+class Event;
 class MouseEvent;
 } // namespace dom
 namespace widget {
@@ -518,7 +519,7 @@ public:
    * @param aMouseEvent [IN] the event
    */
   nsresult OnMouseDown(int32_t aX, int32_t aY, nsIDOMElement* aTarget,
-                       nsIDOMEvent* aMouseEvent);
+                       dom::Event* aMouseEvent);
 
   /**
    * event callback when a mouse button is released

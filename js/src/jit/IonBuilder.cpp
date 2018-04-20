@@ -7796,6 +7796,11 @@ IonBuilder::jsop_getelem()
         if (emitted)
             return Ok();
 
+        trackOptimizationAttempt(TrackedStrategy::GetElem_CallSiteObject);
+        MOZ_TRY(getElemTryCallSiteObject(&emitted, obj, index));
+        if (emitted)
+            return Ok();
+
         trackOptimizationAttempt(TrackedStrategy::GetElem_Dense);
         MOZ_TRY(getElemTryDense(&emitted, obj, index));
         if (emitted)
@@ -8237,6 +8242,52 @@ IonBuilder::getElemTryTypedArray(bool* emitted, MDefinition* obj, MDefinition* i
 
     // Emit typed getelem variant.
     MOZ_TRY(jsop_getelem_typed(obj, index, arrayType));
+
+    trackOptimizationSuccess();
+    *emitted = true;
+    return Ok();
+}
+
+AbortReasonOr<Ok>
+IonBuilder::getElemTryCallSiteObject(bool* emitted, MDefinition* obj, MDefinition* index)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    if (!obj->isConstant() || obj->type() != MIRType::Object) {
+        trackOptimizationOutcome(TrackedOutcome::NotObject);
+        return Ok();
+    }
+
+    if (!index->isConstant() || index->type() != MIRType::Int32) {
+        trackOptimizationOutcome(TrackedOutcome::IndexType);
+        return Ok();
+    }
+
+    JSObject* cst = &obj->toConstant()->toObject();
+    if (!cst->is<ArrayObject>()) {
+        trackOptimizationOutcome(TrackedOutcome::GenericFailure);
+        return Ok();
+    }
+
+    // Technically this code would work with any kind of frozen array,
+    // in pratice only CallSiteObjects can be constant and frozen.
+
+    ArrayObject* array = &cst->as<ArrayObject>();
+    if (array->lengthIsWritable() || array->hasEmptyElements() || !array->denseElementsAreFrozen()) {
+        trackOptimizationOutcome(TrackedOutcome::GenericFailure);
+        return Ok();
+    }
+
+    int32_t idx = index->toConstant()->toInt32();
+    if (idx < 0 || !array->containsDenseElement(uint32_t(idx))) {
+        trackOptimizationOutcome(TrackedOutcome::OutOfBounds);
+        return Ok();
+    }
+
+    obj->setImplicitlyUsedUnchecked();
+    index->setImplicitlyUsedUnchecked();
+
+    pushConstant(array->getDenseElement(uint32_t(idx)));
 
     trackOptimizationSuccess();
     *emitted = true;

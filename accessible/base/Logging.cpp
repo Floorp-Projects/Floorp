@@ -829,7 +829,7 @@ logging::Node(const char* aDescr, nsINode* aNode)
     return;
   }
 
-  if (aNode->IsNodeOfType(nsINode::eDOCUMENT)) {
+  if (aNode->IsDocument()) {
     printf("%s: %p, document\n", aDescr, static_cast<void*>(aNode));
     return;
   }
@@ -908,7 +908,7 @@ logging::AccessibleInfo(const char* aDescr, Accessible* aAccessible)
   if (!node) {
     printf(", node: null\n");
   }
-  else if (node->IsNodeOfType(nsINode::eDOCUMENT)) {
+  else if (node->IsDocument()) {
     printf(", document node: %p\n", static_cast<void*>(node));
   }
   else if (node->IsText()) {

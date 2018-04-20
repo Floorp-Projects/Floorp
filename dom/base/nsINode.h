@@ -77,6 +77,7 @@ class AccessibleNode;
 struct BoxQuadOptions;
 struct ConvertCoordinateOptions;
 class DocGroup;
+class DocumentFragment;
 class DOMPoint;
 class DOMQuad;
 class DOMRectReadOnly;
@@ -411,22 +412,8 @@ public:
    * Bit-flags to pass (or'ed together) to IsNodeOfType()
    */
   enum {
-    /** nsIDocument nodes */
-    eDOCUMENT            = 1 << 1,
-    /** nsIAttribute nodes */
-    eATTRIBUTE           = 1 << 2,
-    /** xml processing instructions */
-    ePROCESSING_INSTRUCTION = 1 << 4,
-    /** comment nodes */
-    eCOMMENT             = 1 << 5,
     /** form control elements */
     eHTML_FORM_CONTROL   = 1 << 6,
-    /** document fragments */
-    eDOCUMENT_FRAGMENT   = 1 << 7,
-    /** character data nodes (comments, PIs, text). */
-    eDATA_NODE           = 1 << 8,
-    /** HTMLMediaElement */
-    eMEDIA               = 1 << 9,
     /** animation elements */
     eANIMATION           = 1 << 10,
     /** filter elements that implement SVGFilterPrimitiveStandardAttributes */
@@ -445,17 +432,48 @@ public:
    */
   virtual bool IsNodeOfType(uint32_t aFlags) const = 0;
 
-  bool
-  IsContainerNode() const
+  bool IsContainerNode() const
   {
     return IsElement() || !IsCharacterData();
   }
 
-  bool
-  IsSlotable() const
+  bool IsSlotable() const
   {
     return IsElement() || IsText();
   }
+
+  /**
+   * Returns true if this is a document node.
+   */
+  bool IsDocument() const
+  {
+    // One less pointer-chase than checking NodeType().
+    return !GetParentNode() && IsInUncomposedDoc();
+  }
+
+  /**
+   * Return this node as a document. Asserts IsDocument().
+   *
+   * This is defined inline in nsIDocument.h.
+   */
+  inline nsIDocument* AsDocument();
+  inline const nsIDocument* AsDocument() const;
+
+  /**
+   * Returns true if this is a document fragment node.
+   */
+  bool IsDocumentFragment() const
+  {
+    return NodeType() == DOCUMENT_FRAGMENT_NODE;
+  }
+
+  /**
+   * Return this node as a document fragment. Asserts IsDocumentFragment().
+   *
+   * This is defined inline in DocumentFragment.h.
+   */
+  inline mozilla::dom::DocumentFragment* AsDocumentFragment();
+  inline const mozilla::dom::DocumentFragment* AsDocumentFragment() const;
 
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -490,7 +508,8 @@ public:
   /**
    * Return whether the node is an Element node
    */
-  bool IsElement() const {
+  bool IsElement() const
+  {
     return GetBoolFlag(NodeIsElement);
   }
 
@@ -498,18 +517,15 @@ public:
    * Return this node as an Element.  Should only be used for nodes
    * for which IsElement() is true.  This is defined inline in Element.h.
    */
-  mozilla::dom::Element* AsElement();
-  const mozilla::dom::Element* AsElement() const;
+  inline mozilla::dom::Element* AsElement();
+  inline const mozilla::dom::Element* AsElement() const;
 
   /**
    * Return this node as nsIContent.  Should only be used for nodes for which
    * IsContent() is true.  This is defined inline in nsIContent.h.
    */
-  nsIContent* AsContent();
-  const nsIContent* AsContent() const
-  {
-    return const_cast<nsINode*>(this)->AsContent();
-  }
+  inline nsIContent* AsContent();
+  inline const nsIContent* AsContent() const;
 
   /*
    * Return whether the node is a Text node (which might be an actual
@@ -525,15 +541,15 @@ public:
    * Return this node as Text if it is one, otherwise null.  This is defined
    * inline in Text.h.
    */
-  mozilla::dom::Text* GetAsText();
-  const mozilla::dom::Text* GetAsText() const;
+  inline mozilla::dom::Text* GetAsText();
+  inline const mozilla::dom::Text* GetAsText() const;
 
   /**
    * Return this node as Text.  Asserts IsText().  This is defined inline in
    * Text.h.
    */
-  mozilla::dom::Text* AsText();
-  const mozilla::dom::Text* AsText() const;
+  inline mozilla::dom::Text* AsText();
+  inline const mozilla::dom::Text* AsText() const;
 
   /*
    * Return whether the node is a ProcessingInstruction node.
@@ -554,6 +570,22 @@ public:
            nodeType == CDATA_SECTION_NODE ||
            nodeType == PROCESSING_INSTRUCTION_NODE ||
            nodeType == COMMENT_NODE;
+  }
+
+  /**
+   * Return whether the node is a Comment node.
+   */
+  bool IsComment() const
+  {
+    return NodeType() == COMMENT_NODE;
+  }
+
+  /**
+   * Return whether the node is an Attr node.
+   */
+  bool IsAttr() const
+  {
+    return NodeType() == ATTRIBUTE_NODE;
   }
 
   virtual nsIDOMNode* AsDOMNode() = 0;
@@ -781,7 +813,7 @@ public:
   bool IsShadowRoot() const
   {
     const bool isShadowRoot = IsInShadowTree() && !GetParentNode();
-    MOZ_ASSERT_IF(isShadowRoot, NodeType() == DOCUMENT_FRAGMENT_NODE);
+    MOZ_ASSERT_IF(isShadowRoot, IsDocumentFragment());
     return isShadowRoot;
   }
 
@@ -1011,12 +1043,12 @@ public:
 
   /**
    * Get the parent nsINode for this node if it is an Element.
+   *
+   * Defined inline in Element.h
+   *
    * @return the parent node
    */
-  mozilla::dom::Element* GetParentElement() const
-  {
-    return mParent && mParent->IsElement() ? mParent->AsElement() : nullptr;
-  }
+  inline mozilla::dom::Element* GetParentElement() const;
 
   /**
    * Get the parent Element of this node, traversing over a ShadowRoot
@@ -1036,11 +1068,6 @@ public:
    * and context object's root otherwise.
    */
   nsINode* GetRootNode(const mozilla::dom::GetRootNodeOptions& aOptions);
-
-  /**
-   * See nsIDOMEventTarget
-   */
-  NS_DECL_NSIDOMEVENTTARGET
 
   virtual mozilla::EventListenerManager*
     GetExistingListenerManager() const override;

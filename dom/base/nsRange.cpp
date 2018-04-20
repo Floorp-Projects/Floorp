@@ -981,9 +981,9 @@ nsRange::DoSetRange(const RawRangeBoundary& aStart,
                    aRoot ==
                     static_cast<nsIContent*>(aEnd.Container())->GetBindingParent()) ||
                   (!aRoot->GetParentNode() &&
-                   (aRoot->IsNodeOfType(nsINode::eDOCUMENT) ||
-                    aRoot->IsNodeOfType(nsINode::eATTRIBUTE) ||
-                    aRoot->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
+                   (aRoot->IsDocument() ||
+                    aRoot->IsAttr() ||
+                    aRoot->IsDocumentFragment() ||
                      /*For backward compatibility*/
                     aRoot->IsContent())),
                   "Bad root");
@@ -1208,7 +1208,7 @@ nsRange::ComputeRootNode(nsINode* aNode, bool aMaySpanAnonymousSubtrees)
 
   root = aNode->SubtreeRoot();
 
-  NS_ASSERTION(!root->IsNodeOfType(nsINode::eDOCUMENT),
+  NS_ASSERTION(!root->IsDocument(),
                "GetUncomposedDoc should have returned a doc");
 
   // We allow this because of backward compatibility.

@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
   <meta charset="utf-8">
   <title>Test for Bug 1022869</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/AddTask.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <iframe src="about:blank"></iframe>
   <script type="text/javascript">
@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
     waitForLoad().then(function() {
         // Cookies are set up, disallow third-party cookies and start the test.
         SpecialPowers.pushPrefEnv({ set: [[ 'network.cookie.cookieBehavior', 1 ]] },
-                                  () => { spawn_task(continueTest); });
+                                  () => { continueTest(); });
     }).catch((e) => { ok(false, `Got exception: ${e}`) });
   }
 

@@ -31,7 +31,7 @@ function performChecks(target) {
 }
 
 function test() {
-  Task.spawn(async function() {
+  (async function() {
     toggleAllTools(true);
     let tab = await addTab("about:blank");
     let target = TargetFactory.forTab(tab);
@@ -40,5 +40,5 @@ function test() {
     gBrowser.removeCurrentTab();
     toggleAllTools(false);
     finish();
-  }, console.error);
+  })();
 }

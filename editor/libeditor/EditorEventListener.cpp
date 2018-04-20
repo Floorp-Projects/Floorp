@@ -32,8 +32,6 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DragEvent.h"
-#include "nsIDOMEvent.h"                // for nsIDOMEvent
-#include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIFocusManager.h"            // for nsIFocusManager
 #include "nsIFormControl.h"             // for nsIFormControl, etc.
@@ -366,7 +364,7 @@ EditorEventListener::EnsureCommitCompoisition()
 }
 
 NS_IMETHODIMP
-EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
+EditorEventListener::HandleEvent(Event* aEvent)
 {
   // Let's handle each event with the message of the internal event of the
   // coming event.  If the DOM event was created with improper interface,
@@ -382,19 +380,19 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
   switch (internalEvent->mMessage) {
     // dragenter
     case eDragEnter: {
-      return DragEnter(aEvent->InternalDOMEvent()->AsDragEvent());
+      return DragEnter(aEvent->AsDragEvent());
     }
     // dragover
     case eDragOver: {
-      return DragOver(aEvent->InternalDOMEvent()->AsDragEvent());
+      return DragOver(aEvent->AsDragEvent());
     }
     // dragexit
     case eDragExit: {
-      return DragExit(aEvent->InternalDOMEvent()->AsDragEvent());
+      return DragExit(aEvent->AsDragEvent());
     }
     // drop
     case eDrop: {
-      return Drop(aEvent->InternalDOMEvent()->AsDragEvent());
+      return Drop(aEvent->AsDragEvent());
     }
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
     // keydown
@@ -422,7 +420,7 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       if (mMouseDownOrUpConsumedByIME) {
         return NS_OK;
       }
-      MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+      MouseEvent* mouseEvent = aEvent->AsMouseEvent();
       return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseDown(mouseEvent);
     }
     // mouseup
@@ -443,12 +441,12 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       if (mMouseDownOrUpConsumedByIME) {
         return NS_OK;
       }
-      MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+      MouseEvent* mouseEvent = aEvent->AsMouseEvent();
       return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseUp(mouseEvent);
     }
     // click
     case eMouseClick: {
-      MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+      MouseEvent* mouseEvent = aEvent->AsMouseEvent();
       NS_ENSURE_TRUE(mouseEvent, NS_OK);
       // If the preceding mousedown event or mouseup event was consumed,
       // editor shouldn't handle this click event.
@@ -913,7 +911,7 @@ EditorEventListener::Drop(DragEvent* aDragEvent)
       // since someone else handling it might be unintentional and the
       // user could probably re-drag to be not over the disabled/readonly
       // editfields if that is what is desired.
-      return aDragEvent->StopPropagation();
+      aDragEvent->StopPropagation();
     }
     return NS_OK;
   }
@@ -1067,14 +1065,13 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
     return NS_OK;
   }
 
-  nsIDOMEventTarget* target = aFocusEvent->GetOriginalDOMEventTarget();
+  EventTarget* target = aFocusEvent->GetOriginalDOMEventTarget();
   nsCOMPtr<nsINode> node = do_QueryInterface(target);
   NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
 
   // If the target is a document node but it's not editable, we should ignore
   // it because actual focused element's event is going to come.
-  if (node->IsNodeOfType(nsINode::eDOCUMENT) &&
-      !node->HasFlag(NODE_IS_EDITABLE)) {
+  if (node->IsDocument() && !node->HasFlag(NODE_IS_EDITABLE)) {
     return NS_OK;
   }
 
@@ -1100,11 +1097,8 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
         return NS_OK;
       }
 
-      nsCOMPtr<nsIDOMEventTarget> originalTarget =
-        aFocusEvent->GetOriginalDOMEventTarget();
-
       nsCOMPtr<nsIContent> originalTargetAsContent =
-        do_QueryInterface(originalTarget);
+        do_QueryInterface(aFocusEvent->GetOriginalDOMEventTarget());
 
       if (!SameCOMIdentity(
             focusedContent->FindFirstNonChromeOnlyAccessContent(),
@@ -1193,8 +1187,8 @@ EditorEventListener::ShouldHandleNativeKeyBindings(
   // unnecessary.  IsAcceptableInputEvent currently makes a similar check for
   // mouse events.
 
-  nsIDOMEventTarget* target = aKeyboardEvent->GetDOMEventTarget();
-  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
+  nsCOMPtr<nsIContent> targetContent =
+    do_QueryInterface(aKeyboardEvent->GetDOMEventTarget());
   if (!targetContent) {
     return false;
   }

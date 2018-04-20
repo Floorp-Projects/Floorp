@@ -619,7 +619,7 @@ class JSTerm extends Component {
    * The inputNode "keypress" event handler.
    *
    * @private
-   * @param nsIDOMEvent event
+   * @param Event event
    */
   _keyPress(event) {
     let inputNode = this.inputNode;

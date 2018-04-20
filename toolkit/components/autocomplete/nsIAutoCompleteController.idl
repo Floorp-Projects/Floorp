@@ -5,7 +5,8 @@
 #include "nsISupports.idl"
 
 interface nsIAutoCompleteInput;
-interface nsIDOMEvent;
+
+webidl Event;
 
 [scriptable, uuid(ff9f8465-204a-47a6-b3c9-0628b3856684)]
 interface nsIAutoCompleteController : nsISupports
@@ -76,7 +77,7 @@ interface nsIAutoCompleteController : nsISupports
    *         default event.
    */
   boolean handleEnter(in boolean aIsPopupSelection,
-                      [optional] in nsIDOMEvent aEvent);
+                      [optional] in Event aEvent);
 
   /*
    * Notify the controller that the user wishes to revert autocomplete

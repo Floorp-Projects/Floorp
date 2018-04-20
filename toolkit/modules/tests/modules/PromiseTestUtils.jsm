@@ -150,8 +150,8 @@ var PromiseTestUtils = {
       // In some cases, the rejection stack from `PromiseDebugging` may be null.
       // If the rejection reason was an Error object, use its `stack` to recover
       // a meaningful value.
-      stack = "" + (PromiseDebugging.getRejectionStack(promise) ||
-                    (reason && reason.stack) ||
+      stack = "" + ((reason && reason.stack) ||
+                    PromiseDebugging.getRejectionStack(promise) ||
                     "(No stack available.)");
     } catch (ex) {}
 

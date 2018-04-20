@@ -14,6 +14,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Rule.h"
 #include "mozilla/dom/CSSRuleList.h"
+#include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "nsCSSParser.h"
 #include "nsCSSPropertyID.h"
@@ -1350,13 +1351,11 @@ nsTreeSanitizer::SanitizeURL(mozilla::dom::Element* aElement,
 }
 
 void
-nsTreeSanitizer::Sanitize(nsIContent* aFragment)
+nsTreeSanitizer::Sanitize(DocumentFragment* aFragment)
 {
   // If you want to relax these preconditions, be sure to check the code in
   // here that notifies / does not notify or that fires mutation events if
   // in tree.
-  NS_PRECONDITION(aFragment->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
-      "Argument was not DOM fragment.");
   NS_PRECONDITION(!aFragment->IsInUncomposedDoc(), "The fragment is in doc?");
 
   mFullDocument = false;
@@ -1500,7 +1499,7 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
     }
     NS_ASSERTION(!node->GetFirstChild(), "How come non-element node had kids?");
     nsIContent* next = node->GetNextNonChildNode(aRoot);
-    if (!mAllowComments && node->IsNodeOfType(nsINode::eCOMMENT)) {
+    if (!mAllowComments && node->IsComment()) {
       node->RemoveFromParent();
     }
     node = next;

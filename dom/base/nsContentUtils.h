@@ -70,7 +70,6 @@ class nsIContentSecurityPolicy;
 class nsIDocShellTreeItem;
 class nsIDocumentLoaderFactory;
 class nsIDOMDocument;
-class nsIDOMEvent;
 class nsIDOMNode;
 class nsIDragSession;
 class nsIEventTarget;
@@ -131,6 +130,7 @@ class ChromeMessageBroadcaster;
 struct CustomElementDefinition;
 class DocumentFragment;
 class Element;
+class Event;
 class EventTarget;
 class HTMLInputElement;
 class IPCDataTransfer;
@@ -1356,12 +1356,12 @@ public:
    * nsIDOMDocument::CreateEvent() with parameter "Events".
    * @param aDoc           The document which will be used to create the event.
    * @param aTarget        The target of the event, should be QIable to
-   *                       nsIDOMEventTarget.
+   *                       EventTarget.
    * @param aEventName     The name of the event.
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
    * @param aDefaultAction Set to true if default action should be taken,
-   *                       see nsIDOMEventTarget::DispatchEvent.
+   *                       see EventTarget::DispatchEvent.
    */
   static nsresult DispatchTrustedEvent(nsIDocument* aDoc,
                                        nsISupports* aTarget,
@@ -1379,7 +1379,7 @@ public:
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
    * @param aDefaultAction Set to true if default action should be taken,
-   *                       see nsIDOMEventTarget::DispatchEvent.
+   *                       see EventTarget::DispatchEvent.
    */
   template <class WidgetEventType>
   static nsresult DispatchTrustedEvent(nsIDocument* aDoc,
@@ -1403,12 +1403,12 @@ public:
    * nsIDOMDocument::CreateEvent() with parameter "Events".
    * @param aDoc           The document which will be used to create the event.
    * @param aTarget        The target of the event, should be QIable to
-   *                       nsIDOMEventTarget.
+   *                       EventTarget.
    * @param aEventName     The name of the event.
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
    * @param aDefaultAction Set to true if default action should be taken,
-   *                       see nsIDOMEventTarget::DispatchEvent.
+   *                       see EventTarget::DispatchEvent.
    */
   static nsresult DispatchUntrustedEvent(nsIDocument* aDoc,
                                          nsISupports* aTarget,
@@ -1427,7 +1427,7 @@ public:
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
    * @param aDefaultAction Set to true if default action should be taken,
-   *                       see nsIDOMEventTarget::DispatchEvent.
+   *                       see EventTarget::DispatchEvent.
    */
   template <class WidgetEventType>
   static nsresult DispatchUntrustedEvent(nsIDocument* aDoc,
@@ -1461,7 +1461,7 @@ public:
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
    * @param aDefaultAction Set to true if default action should be taken,
-   *                       see nsIDOMEventTarget::DispatchEvent.
+   *                       see EventTarget::DispatchEvent.
    */
   static nsresult DispatchChromeEvent(nsIDocument* aDoc,
                                       nsISupports* aTarget,
@@ -1489,12 +1489,12 @@ public:
    * nsIDOMDocument::CreateEvent() with parameter "Events".
    * @param aDoc           The document which will be used to create the event.
    * @param aTarget        The target of the event, should be QIable to
-   *                       nsIDOMEventTarget.
+   *                       EventTarget.
    * @param aEventName     The name of the event.
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
    * @param aDefaultAction Set to true if default action should be taken,
-   *                       see nsIDOMEventTarget::DispatchEvent.
+   *                       see EventTarget::DispatchEvent.
    */
   static nsresult DispatchEventOnlyToChrome(nsIDocument* aDoc,
                                             nsISupports* aTarget,
@@ -2104,7 +2104,7 @@ public:
    */
   static nsresult DispatchXULCommand(nsIContent* aTarget,
                                      bool aTrusted,
-                                     nsIDOMEvent* aSourceEvent = nullptr,
+                                     mozilla::dom::Event* aSourceEvent = nullptr,
                                      nsIPresShell* aShell = nullptr,
                                      bool aCtrl = false,
                                      bool aAlt = false,
