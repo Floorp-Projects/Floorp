@@ -210,6 +210,28 @@ private:
   mozilla::TimeStamp mVsyncTimestamp;
 };
 
+class NetworkMarkerPayload : public ProfilerMarkerPayload
+{
+public:
+  NetworkMarkerPayload(int64_t aID, const char* aURI,
+                       nsresult aStatus,
+                       const mozilla::TimeStamp& aStartTime,
+                       const mozilla::TimeStamp& aEndTime)
+    : ProfilerMarkerPayload(aStartTime, aEndTime)
+    , mID(aID)
+    , mURI(aURI ? strdup(aURI) : nullptr)
+    , mStatus(aStatus)
+  {
+  }
+
+  DECL_STREAM_PAYLOAD
+
+private:
+  int64_t mID;
+  mozilla::UniqueFreePtr<char> mURI;
+  nsresult mStatus;
+};
+
 class ScreenshotPayload : public ProfilerMarkerPayload
 {
 public:

@@ -130,6 +130,57 @@ VsyncMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("category", "VsyncTimestamp");
 }
 
+static const char *GetNetworkState(uint32_t aState)
+{
+  const struct NetworkState {
+    uint32_t mStatus;
+    const char *mName;
+  } NetworkStates[] = {
+    { 0, "STATUS_START" },
+    // it's unclear if these will occur; they're in network-monitor.js
+    { 0x5001, "REQUEST_HEADER" },
+    { 0x5002, "REQUEST_BODY_SENT" },
+    { 0x5003, "RESPONSE_START" },
+    { 0x5004, "RESPONSE_HEADER" },
+    { 0x5005, "RESPONSE_COMPLETE" },
+    { 0x5006, "TRANSACTION_CLOSE" },
+
+    { 0x804b0003, "STATUS_RESOLVING" },
+    { 0x804b000b, "STATUS_RESOLVED" },
+    { 0x804b0007, "STATUS_CONNECTING_TO" },
+    { 0x804b0004, "STATUS_CONNECTED_TO" },
+    { 0x804b0005, "STATUS_SENDING_TO" },
+    { 0x804b000a, "STATUS_WAITING_FOR" },
+    { 0x804b0006, "STATUS_RECEIVING_FROM" },
+    { 0x804b0008, "STATUS_READING" },
+    { 0x804b000c, "STATUS_TLS_STARTING" },
+    { 0x804b000d, "STATUS_TLS_ENDING" },
+  };
+
+  for (const NetworkState& entry : NetworkStates) {
+    if (aState == entry.mStatus) {
+      return entry.mName;
+    }
+  }
+  // XXX perhaps sprintf 0x* into a static buffer and return that?
+  return ""; // Shouldn't happen...
+}
+
+void
+NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                    const TimeStamp& aProcessStartTime,
+                                    UniqueStacks& aUniqueStacks)
+{
+  StreamCommonProps("Network", aWriter, aProcessStartTime, aUniqueStacks);
+  aWriter.IntProperty("id", mID);
+  const char *statusString = GetNetworkState(static_cast<uint32_t>(mStatus));
+  // want to use aUniqueStacks.mUniqueStrings->WriteElement(aWriter, statusString);
+  aWriter.StringProperty("status", statusString);
+  if (mURI) {
+    aWriter.StringProperty("URI", mURI.get());
+  }
+}
+
 void
 ScreenshotPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                   const TimeStamp& aProcessStartTime,
