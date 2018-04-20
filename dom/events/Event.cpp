@@ -658,13 +658,13 @@ PopupAllowedForEvent(const char *eventName)
 
 // static
 PopupControlState
-Event::GetEventPopupControlState(WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent)
+Event::GetEventPopupControlState(WidgetEvent* aEvent, Event* aDOMEvent)
 {
   // generally if an event handler is running, new windows are disallowed.
   // check for exceptions:
   PopupControlState abuse = openAbused;
 
-  if (aDOMEvent && aDOMEvent->InternalDOMEvent()->GetWantsPopupControlCheck()) {
+  if (aDOMEvent && aDOMEvent->GetWantsPopupControlCheck()) {
     nsAutoString type;
     aDOMEvent->GetType(type);
     if (PopupAllowedForEvent(NS_ConvertUTF16toUTF8(type).get())) {
