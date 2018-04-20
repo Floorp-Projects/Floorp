@@ -9,6 +9,7 @@
 #ifndef mozilla_dom_XULCommandEvent_h_
 #define mozilla_dom_XULCommandEvent_h_
 
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/XULCommandEventBinding.h"
 
@@ -43,8 +44,7 @@ public:
 
   already_AddRefed<Event> GetSourceEvent()
   {
-    RefPtr<Event> e =
-      mSourceEvent ? mSourceEvent->InternalDOMEvent() : nullptr;
+    RefPtr<Event> e = mSourceEvent;
     return e.forget();
   }
 
@@ -61,7 +61,7 @@ public:
 protected:
   ~XULCommandEvent() {}
 
-  nsCOMPtr<nsIDOMEvent> mSourceEvent;
+  RefPtr<Event> mSourceEvent;
   uint16_t mInputSource;
 };
 

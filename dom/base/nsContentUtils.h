@@ -70,7 +70,6 @@ class nsIContentSecurityPolicy;
 class nsIDocShellTreeItem;
 class nsIDocumentLoaderFactory;
 class nsIDOMDocument;
-class nsIDOMEvent;
 class nsIDOMNode;
 class nsIDragSession;
 class nsIEventTarget;
@@ -131,6 +130,7 @@ class ChromeMessageBroadcaster;
 struct CustomElementDefinition;
 class DocumentFragment;
 class Element;
+class Event;
 class EventTarget;
 class HTMLInputElement;
 class IPCDataTransfer;
@@ -2104,7 +2104,7 @@ public:
    */
   static nsresult DispatchXULCommand(nsIContent* aTarget,
                                      bool aTrusted,
-                                     nsIDOMEvent* aSourceEvent = nullptr,
+                                     mozilla::dom::Event* aSourceEvent = nullptr,
                                      nsIPresShell* aShell = nullptr,
                                      bool aCtrl = false,
                                      bool aAlt = false,
