@@ -228,6 +228,11 @@ public final class PanZoomController extends JNIObject {
         } else if ((action == MotionEvent.ACTION_HOVER_MOVE) ||
                    (action == MotionEvent.ACTION_HOVER_ENTER) ||
                    (action == MotionEvent.ACTION_HOVER_EXIT)) {
+            if (event.getSource() == InputDevice.SOURCE_TOUCHSCREEN) {
+                // A hover is not possible on a touchscreen unless via accessibility
+                // and we handle that elsewhere.
+                return false;
+            }
             return handleMouseEvent(event);
         } else {
             return false;

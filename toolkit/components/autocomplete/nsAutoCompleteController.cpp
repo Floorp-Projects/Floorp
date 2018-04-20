@@ -19,6 +19,7 @@
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
+#include "mozilla/dom/Event.h"
 
 static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?name=";
 
@@ -299,7 +300,7 @@ nsAutoCompleteController::HandleText(bool *_retval)
 
 NS_IMETHODIMP
 nsAutoCompleteController::HandleEnter(bool aIsPopupSelection,
-                                      nsIDOMEvent *aEvent,
+                                      dom::Event* aEvent,
                                       bool *_retval)
 {
   *_retval = false;
@@ -1183,7 +1184,7 @@ nsAutoCompleteController::ClearSearchTimer()
 
 nsresult
 nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
-                                     nsIDOMEvent *aEvent)
+                                     dom::Event* aEvent)
 {
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   nsCOMPtr<nsIAutoCompletePopup> popup;

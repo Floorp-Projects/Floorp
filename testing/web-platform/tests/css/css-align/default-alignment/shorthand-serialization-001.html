@@ -17,7 +17,7 @@ var initial_values = {
     alignItems: "normal",
     alignSelf: "auto",
     justifyContent: "normal",
-    justifyItems: "auto",
+    justifyItems: "legacy",
     justifySelf: "auto",
 };
 
@@ -52,11 +52,11 @@ var place_content_test_cases = [
 var place_items_test_cases = [
     {
         alignItems: "center",
-        shorthand: "center auto",
+        shorthand: "center legacy",
     },
     {
         alignItems: "baseline",
-        shorthand: "baseline auto",
+        shorthand: "baseline legacy",
     },
     {
         justifyItems: "safe start",

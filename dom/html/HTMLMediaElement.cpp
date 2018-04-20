@@ -6532,12 +6532,6 @@ void HTMLMediaElement::NotifyShutdownEvent()
   AddRemoveSelfReference();
 }
 
-bool
-HTMLMediaElement::IsNodeOfType(uint32_t aFlags) const
-{
-  return !(aFlags & ~eMEDIA);
-}
-
 void HTMLMediaElement::DispatchAsyncSourceError(nsIContent* aSourceElement)
 {
   LOG_EVENT(LogLevel::Debug, ("%p Queuing simple source error event", this));

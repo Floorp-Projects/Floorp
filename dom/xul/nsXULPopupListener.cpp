@@ -26,7 +26,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/FragmentOrElement.h"
 #include "mozilla/dom/MouseEvent.h"
@@ -93,7 +93,7 @@ NS_INTERFACE_MAP_END
 // nsIDOMEventListener
 
 nsresult
-nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
+nsXULPopupListener::HandleEvent(Event* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);
@@ -102,7 +102,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
        (eventType.EqualsLiteral("contextmenu") && mIsContext)))
     return NS_OK;
 
-  MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;

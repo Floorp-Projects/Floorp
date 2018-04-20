@@ -333,7 +333,7 @@ FinderHighlighter.prototype = {
    *                                 Optional, defaults to the finder window.
    * @param {nsIDOMRange}  skipRange A range that should not be removed from the
    *                                 find selection.
-   * @param {nsIDOMEvent}  event     When called from an event handler, this will
+   * @param {Event}        event     When called from an event handler, this will
    *                                 be the triggering event.
    */
   hide(window, skipRange = null, event = null) {

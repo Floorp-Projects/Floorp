@@ -16,6 +16,7 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DragEvent.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/HTMLButtonElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -233,16 +234,15 @@ AppendBlobImplAsDirectory(nsTArray<OwningFileOrDirectory>& aArray,
  * This is called when we receive a drop or a dragover.
  */
 NS_IMETHODIMP
-nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
+nsFileControlFrame::DnDListener::HandleEvent(Event* aEvent)
 {
   NS_ASSERTION(mFrame, "We should have been unregistered");
 
-  Event* event = aEvent->InternalDOMEvent();
-  if (event->DefaultPrevented()) {
+  if (aEvent->DefaultPrevented()) {
     return NS_OK;
   }
 
-  DragEvent* dragEvent = event->AsDragEvent();
+  DragEvent* dragEvent = aEvent->AsDragEvent();
   if (!dragEvent) {
     return NS_OK;
   }

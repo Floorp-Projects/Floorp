@@ -5810,13 +5810,6 @@ EnsureLatin1CharsLinearString(JSContext* cx, HandleValue value, JS::MutableHandl
 static bool
 ConsumeBufferSource(JSContext* cx, JS::HandleObject obj, JS::MimeType, JS::StreamConsumer* consumer)
 {
-    SharedMem<uint8_t*> dataPointer;
-    size_t byteLength;
-    if (!IsBufferSource(obj, &dataPointer, &byteLength)) {
-        JS_ReportErrorASCII(cx, "shell streaming consumes a buffer source (buffer or view)");
-        return false;
-    }
-
     {
         RootedValue url(cx);
         if (!JS_GetProperty(cx, obj, "url", &url))
@@ -5839,6 +5832,13 @@ ConsumeBufferSource(JSContext* cx, JS::HandleObject obj, JS::MimeType, JS::Strea
                                    mapUrlStr
                                    ? reinterpret_cast<const char*>(mapUrlStr->latin1Chars(nogc))
                                    : nullptr);
+    }
+
+    SharedMem<uint8_t*> dataPointer;
+    size_t byteLength;
+    if (!IsBufferSource(obj, &dataPointer, &byteLength)) {
+        JS_ReportErrorASCII(cx, "shell streaming consumes a buffer source (buffer or view)");
+        return false;
     }
 
     auto job = cx->make_unique<BufferStreamJob>(consumer);

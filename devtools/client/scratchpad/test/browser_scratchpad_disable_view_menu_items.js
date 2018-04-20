@@ -9,7 +9,7 @@ function test() {
     tabContent: 'test if view menu items "Larger Font" and "Smaller Font" are enabled/disabled.'
   };
   openTabAndScratchpad(options)
-    .then(Task.async(runTests))
+    .then(runTests)
     .then(finish, console.error);
 }
 

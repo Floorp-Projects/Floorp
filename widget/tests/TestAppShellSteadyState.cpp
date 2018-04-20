@@ -8,9 +8,7 @@
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsIDocument.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIInterfaceRequestor.h"
@@ -24,6 +22,8 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventTarget.h"
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -176,7 +176,7 @@ public:
   { }
 
   NS_IMETHOD
-  HandleEvent(nsIDOMEvent* aEvent) override
+  HandleEvent(dom::Event* aEvent) override
   {
     nsString type;
     if (NS_FAILED(aEvent->GetType(type))) {
@@ -187,13 +187,7 @@ public:
     if (type.EqualsLiteral("load")) {
       passed("Got load event");
 
-      nsCOMPtr<nsIDOMEventTarget> target;
-      if (NS_FAILED(aEvent->GetTarget(getter_AddRefs(target)))) {
-        fail("Failed to get event type");
-        return NS_ERROR_FAILURE;
-      }
-
-      nsCOMPtr<nsIDocument> document = do_QueryInterface(target);
+      nsCOMPtr<nsIDocument> document = do_QueryInterface(aEvent->GetTarget());
       if (!document) {
         fail("Failed to QI to nsIDocument!");
         return NS_ERROR_FAILURE;
@@ -420,9 +414,9 @@ Test4Internal(nsIAppShell* aAppShell)
     return false;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(window);
+  RefPTr<dom::EventTarget> target = do_QueryInterface(window);
   if (!target) {
-    fail("Can't QI to nsIDOMEventTarget!");
+    fail("Can't QI to EventTarget!");
     return false;
   }
 

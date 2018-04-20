@@ -21,6 +21,7 @@
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/dom/HTMLSelectElement.h"
@@ -843,10 +844,10 @@ nsListControlFrame::PerformSelection(int32_t aClickedIndex,
 
 //---------------------------------------------------------
 bool
-nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent,
+nsListControlFrame::HandleListSelection(dom::Event* aEvent,
                                         int32_t aClickedIndex)
 {
-  MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aEvent->AsMouseEvent();
   bool isControl;
 #ifdef XP_MACOSX
   isControl = mouseEvent->MetaKey();
@@ -1561,10 +1562,10 @@ nsListControlFrame::IsOptionDisabled(int32_t anIndex, bool &aIsDisabled)
 // helper
 //----------------------------------------------------------------------
 bool
-nsListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
+nsListControlFrame::IsLeftButton(dom::Event* aMouseEvent)
 {
   // only allow selection with the left button
-  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
   return mouseEvent && mouseEvent->Button() == 0;
 }
 
@@ -1602,11 +1603,11 @@ nsListControlFrame::CalcIntrinsicBSize(nscoord aBSizeOfARow,
 // nsIDOMMouseListener
 //----------------------------------------------------------------------
 nsresult
-nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
+nsListControlFrame::MouseUp(dom::Event* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent != nullptr, "aMouseEvent is null.");
 
-  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_ERROR_FAILURE);
 
   UpdateInListState(aMouseEvent);
@@ -1701,7 +1702,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 }
 
 void
-nsListControlFrame::UpdateInListState(nsIDOMEvent* aEvent)
+nsListControlFrame::UpdateInListState(dom::Event* aEvent)
 {
   if (!mComboboxFrame || !mComboboxFrame->IsDroppedDown())
     return;
@@ -1713,7 +1714,7 @@ nsListControlFrame::UpdateInListState(nsIDOMEvent* aEvent)
   }
 }
 
-bool nsListControlFrame::IgnoreMouseEventForSelection(nsIDOMEvent* aEvent)
+bool nsListControlFrame::IgnoreMouseEventForSelection(dom::Event* aEvent)
 {
   if (!mComboboxFrame)
     return false;
@@ -1744,8 +1745,8 @@ nsListControlFrame::FireMenuItemActiveEvent()
 #endif
 
 nsresult
-nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
-                                         int32_t&     aCurIndex)
+nsListControlFrame::GetIndexFromDOMEvent(dom::Event* aMouseEvent,
+                                         int32_t&    aCurIndex)
 {
   if (IgnoreMouseEventForSelection(aMouseEvent))
     return NS_ERROR_FAILURE;
@@ -1796,11 +1797,11 @@ FireShowDropDownEvent(nsIContent* aContent, bool aShow, bool aIsSourceTouchEvent
 }
 
 nsresult
-nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
+nsListControlFrame::MouseDown(dom::Event* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent != nullptr, "aMouseEvent is null.");
 
-  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_ERROR_FAILURE);
 
   UpdateInListState(aMouseEvent);
@@ -1845,9 +1846,8 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       // Ignore the click that occurs on the option element when one is
       // selected from the parent process popup.
       if (mComboboxFrame->IsOpenInParentProcess()) {
-        nsCOMPtr<nsIDOMEventTarget> etarget;
-        aMouseEvent->GetTarget(getter_AddRefs(etarget));
-        nsCOMPtr<nsIContent> econtent = do_QueryInterface(etarget);
+        nsCOMPtr<nsIContent> econtent =
+          do_QueryInterface(aMouseEvent->GetTarget());
         HTMLOptionElement* option = HTMLOptionElement::FromNodeOrNull(econtent);
         if (option) {
           return NS_OK;
@@ -1883,14 +1883,11 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-// nsIDOMMouseMotionListener
-//----------------------------------------------------------------------
 nsresult
-nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
+nsListControlFrame::MouseMove(dom::Event* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent, "aMouseEvent is null.");
-  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_ERROR_FAILURE);
 
   UpdateInListState(aMouseEvent);
@@ -1911,7 +1908,7 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
 }
 
 nsresult
-nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
+nsListControlFrame::DragMove(dom::Event* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent, "aMouseEvent is null.");
 
@@ -1924,7 +1921,7 @@ nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
       if (selectedIndex == mEndSelectionIndex) {
         return NS_OK;
       }
-      MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+      MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
       NS_ASSERTION(mouseEvent, "aMouseEvent is not a MouseEvent!");
       bool isControl;
 #ifdef XP_MACOSX
@@ -2093,7 +2090,7 @@ nsListControlFrame::Shutdown()
 }
 
 void
-nsListControlFrame::DropDownToggleKey(nsIDOMEvent* aKeyEvent)
+nsListControlFrame::DropDownToggleKey(dom::Event* aKeyEvent)
 {
   // Cocoa widgets do native popups, so don't try to show
   // dropdowns there.
@@ -2115,7 +2112,7 @@ nsListControlFrame::DropDownToggleKey(nsIDOMEvent* aKeyEvent)
 }
 
 nsresult
-nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
+nsListControlFrame::KeyDown(dom::Event* aKeyEvent)
 {
   MOZ_ASSERT(aKeyEvent, "aKeyEvent is null.");
 
@@ -2306,7 +2303,7 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
 }
 
 nsresult
-nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
+nsListControlFrame::KeyPress(dom::Event* aKeyEvent)
 {
   MOZ_ASSERT(aKeyEvent, "aKeyEvent is null.");
 
@@ -2523,7 +2520,7 @@ nsListControlFrame::PostHandleKeyEvent(int32_t aNewIndex,
 NS_IMPL_ISUPPORTS(nsListEventListener, nsIDOMEventListener)
 
 NS_IMETHODIMP
-nsListEventListener::HandleEvent(nsIDOMEvent* aEvent)
+nsListEventListener::HandleEvent(dom::Event* aEvent)
 {
   if (!mFrame)
     return NS_OK;
@@ -2537,9 +2534,7 @@ nsListEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return mFrame->nsListControlFrame::KeyPress(aEvent);
   }
   if (eventType.EqualsLiteral("mousedown")) {
-    bool defaultPrevented = false;
-    aEvent->GetDefaultPrevented(&defaultPrevented);
-    if (defaultPrevented) {
+    if (aEvent->DefaultPrevented()) {
       return NS_OK;
     }
     return mFrame->nsListControlFrame::MouseDown(aEvent);

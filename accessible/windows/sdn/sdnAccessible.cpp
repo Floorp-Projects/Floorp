@@ -223,7 +223,7 @@ sdnAccessible::get_computedStyle(unsigned short aMaxStyleProperties,
 
   *aNumStyleProperties = 0;
 
-  if (mNode->IsNodeOfType(nsINode::eDOCUMENT))
+  if (mNode->IsDocument())
     return S_FALSE;
 
   nsCOMPtr<nsICSSDeclaration> cssDecl =
@@ -266,7 +266,7 @@ sdnAccessible::get_computedStyleForProperties(unsigned short aNumStyleProperties
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  if (mNode->IsNodeOfType(nsINode::eDOCUMENT))
+  if (mNode->IsDocument())
     return S_FALSE;
 
   nsCOMPtr<nsICSSDeclaration> cssDecl =

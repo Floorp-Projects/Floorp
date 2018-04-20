@@ -6,7 +6,6 @@
 
 #include "XMLHttpRequestWorker.h"
 
-#include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIRunnable.h"
 #include "nsIXPConnect.h"
@@ -16,6 +15,7 @@
 #include "js/GCPolicyAPI.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/Exceptions.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/ProgressEvent.h"
@@ -978,7 +978,7 @@ Proxy::AddRemoveEventListeners(bool aUpload, bool aAdd)
 NS_IMPL_ISUPPORTS(Proxy, nsIDOMEventListener)
 
 NS_IMETHODIMP
-Proxy::HandleEvent(nsIDOMEvent* aEvent)
+Proxy::HandleEvent(Event* aEvent)
 {
   AssertIsOnMainThread();
 
@@ -987,20 +987,11 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  nsString type;
-  if (NS_FAILED(aEvent->GetType(type))) {
-    NS_WARNING("Failed to get event type!");
-    return NS_ERROR_FAILURE;
-  }
+  nsAutoString type;
+  aEvent->GetType(type);
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  if (NS_FAILED(aEvent->GetTarget(getter_AddRefs(target)))) {
-    NS_WARNING("Failed to get target!");
-    return NS_ERROR_FAILURE;
-  }
-
-  bool isUploadTarget = mXHR != target;
-  ProgressEvent* progressEvent = aEvent->InternalDOMEvent()->AsProgressEvent();
+  bool isUploadTarget = mXHR != aEvent->GetTarget();
+  ProgressEvent* progressEvent = aEvent->AsProgressEvent();
 
   if (mInOpen && type.EqualsASCII(sEventStrings[STRING_readystatechange])) {
     if (mXHR->ReadyState() == 1) {
@@ -1087,19 +1078,15 @@ LoadStartDetectionRunnable::Run()
 }
 
 NS_IMETHODIMP
-LoadStartDetectionRunnable::HandleEvent(nsIDOMEvent* aEvent)
+LoadStartDetectionRunnable::HandleEvent(Event* aEvent)
 {
   AssertIsOnMainThread();
 
 #ifdef DEBUG
   {
-    nsString type;
-    if (NS_SUCCEEDED(aEvent->GetType(type))) {
-      MOZ_ASSERT(type == mEventType);
-    }
-    else {
-      NS_WARNING("Failed to get event type!");
-    }
+    nsAutoString type;
+    aEvent->GetType(type);
+    MOZ_ASSERT(type == mEventType);
   }
 #endif
 

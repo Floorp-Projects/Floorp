@@ -1520,7 +1520,7 @@ ServoStyleSet::MayTraverseFrom(const Element* aElement)
   }
 
   if (!parent->IsElement()) {
-    MOZ_ASSERT(parent->IsNodeOfType(nsINode::eDOCUMENT));
+    MOZ_ASSERT(parent->IsDocument());
     return true;
   }
 

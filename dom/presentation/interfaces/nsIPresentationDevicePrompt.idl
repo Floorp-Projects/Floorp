@@ -5,9 +5,10 @@
 #include "nsISupports.idl"
 
 interface nsIArray;
-interface nsIDOMEventTarget;
 interface nsIPresentationDevice;
 interface nsIPrincipal;
+
+webidl EventTarget;
 
 %{C++
 #define PRESENTATION_DEVICE_PROMPT_CONTRACTID "@mozilla.org/presentation-device/prompt;1"
@@ -26,7 +27,7 @@ interface nsIPresentationDeviceRequest : nsISupports
   readonly attribute nsIArray requestURLs;
 
   // The XUL browser element that the request was originated in.
-  readonly attribute nsIDOMEventTarget chromeEventHandler;
+  readonly attribute EventTarget chromeEventHandler;
 
   // The principal of the request.
   readonly attribute nsIPrincipal principal;

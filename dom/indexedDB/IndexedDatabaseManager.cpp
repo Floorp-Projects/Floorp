@@ -517,22 +517,19 @@ IndexedDatabaseManager::CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
     return NS_OK;
   }
 
-  Event* internalEvent = aVisitor.mDOMEvent->InternalDOMEvent();
-  MOZ_ASSERT(internalEvent);
-
-  if (!internalEvent->IsTrusted()) {
+  if (!aVisitor.mDOMEvent->IsTrusted()) {
     return NS_OK;
   }
 
-  nsString type;
-  MOZ_ALWAYS_SUCCEEDS(internalEvent->GetType(type));
+  nsAutoString type;
+  aVisitor.mDOMEvent->GetType(type);
 
   MOZ_ASSERT(nsDependentString(kErrorEventType).EqualsLiteral("error"));
   if (!type.EqualsLiteral("error")) {
     return NS_OK;
   }
 
-  nsCOMPtr<EventTarget> eventTarget = internalEvent->GetTarget();
+  nsCOMPtr<EventTarget> eventTarget = aVisitor.mDOMEvent->GetTarget();
   MOZ_ASSERT(eventTarget);
 
   // Only mess with events that were originally targeted to an IDBRequest.

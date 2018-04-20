@@ -79,12 +79,6 @@ ProcessingInstruction::GetAttrValue(nsAtom *aName, nsAString& aValue)
   return nsContentUtils::GetPseudoAttributeValue(data, aName, aValue);
 }
 
-bool
-ProcessingInstruction::IsNodeOfType(uint32_t aFlags) const
-{
-  return !(aFlags & ~(ePROCESSING_INSTRUCTION | eDATA_NODE));
-}
-
 already_AddRefed<CharacterData>
 ProcessingInstruction::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
                                      bool aCloneText) const

@@ -16,6 +16,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
 
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
 
@@ -599,11 +600,11 @@ ScreenOrientation::ShouldResistFingerprinting() const
 NS_IMPL_ISUPPORTS(ScreenOrientation::VisibleEventListener, nsIDOMEventListener)
 
 NS_IMETHODIMP
-ScreenOrientation::VisibleEventListener::HandleEvent(nsIDOMEvent* aEvent)
+ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent)
 {
   // Document may have become visible, if the page is visible, run the steps
   // following the "now visible algorithm" as specified.
-  nsCOMPtr<EventTarget> target = aEvent->InternalDOMEvent()->GetCurrentTarget();
+  nsCOMPtr<EventTarget> target = aEvent->GetCurrentTarget();
   MOZ_ASSERT(target);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(target);
@@ -655,7 +656,7 @@ ScreenOrientation::VisibleEventListener::HandleEvent(nsIDOMEvent* aEvent)
 NS_IMPL_ISUPPORTS(ScreenOrientation::FullScreenEventListener, nsIDOMEventListener)
 
 NS_IMETHODIMP
-ScreenOrientation::FullScreenEventListener::HandleEvent(nsIDOMEvent* aEvent)
+ScreenOrientation::FullScreenEventListener::HandleEvent(Event* aEvent)
 {
 #ifdef DEBUG
   nsAutoString eventType;
@@ -664,7 +665,7 @@ ScreenOrientation::FullScreenEventListener::HandleEvent(nsIDOMEvent* aEvent)
   MOZ_ASSERT(eventType.EqualsLiteral("fullscreenchange"));
 #endif
 
-  nsCOMPtr<EventTarget> target = aEvent->InternalDOMEvent()->GetCurrentTarget();
+  nsCOMPtr<EventTarget> target = aEvent->GetCurrentTarget();
   MOZ_ASSERT(target);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(target);

@@ -13,8 +13,10 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsTextFragment.h"
-#include "nsIDOMEvent.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/dom/Event.h"
+
+using mozilla::dom::Event;
 
 //
 // <maction> -- bind actions to a subexpression - implementation
@@ -263,7 +265,7 @@ ShowStatus(nsPresContext* aPresContext, nsString& aStatusMsg)
 }
 
 NS_IMETHODIMP
-nsMathMLmactionFrame::MouseListener::HandleEvent(nsIDOMEvent* aEvent)
+nsMathMLmactionFrame::MouseListener::HandleEvent(Event* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);

@@ -249,10 +249,8 @@ XPathResult::Invalidate(const nsIContent* aChangeRoot)
         if (contextNode->IsContent()) {
             ctxBindingParent =
               contextNode->AsContent()->GetBindingParent();
-        } else if (contextNode->IsNodeOfType(nsINode::eATTRIBUTE)) {
-            Element* parent =
-              static_cast<Attr*>(contextNode.get())->GetElement();
-            if (parent) {
+        } else if (auto* attr = Attr::FromNode(contextNode)) {
+            if (Element* parent = attr->GetElement()) {
                 ctxBindingParent = parent->GetBindingParent();
             }
         }

@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMOfflineResourceList.h"
-#include "nsIDOMEvent.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsError.h"
 #include "mozilla/dom/DOMStringList.h"
@@ -515,10 +514,6 @@ nsDOMOfflineResourceList::SwapCache()
 
   return NS_OK;
 }
-
-//
-// nsDOMOfflineResourceList::nsIDOMEventTarget
-//
 
 void
 nsDOMOfflineResourceList::FirePendingEvents()

@@ -2210,11 +2210,11 @@ nsContentUtils::InProlog(nsINode *aNode)
   NS_PRECONDITION(aNode, "missing node to nsContentUtils::InProlog");
 
   nsINode* parent = aNode->GetParentNode();
-  if (!parent || !parent->IsNodeOfType(nsINode::eDOCUMENT)) {
+  if (!parent || !parent->IsDocument()) {
     return false;
   }
 
-  nsIDocument* doc = static_cast<nsIDocument*>(parent);
+  nsIDocument* doc = parent->AsDocument();
   nsIContent* root = doc->GetRootElement();
 
   return !root || doc->ComputeIndexOf(aNode) < doc->ComputeIndexOf(root);
@@ -2412,10 +2412,11 @@ nsContentUtils::GetCrossDocParentNode(nsINode* aChild)
     parent = aChild->AsContent()->GetFlattenedTreeParent();
   }
 
-  if (parent || !aChild->IsNodeOfType(nsINode::eDOCUMENT))
+  if (parent || !aChild->IsDocument()) {
     return parent;
+  }
 
-  nsIDocument* doc = static_cast<nsIDocument*>(aChild);
+  nsIDocument* doc = aChild->AsDocument();
   nsIDocument* parentDoc = doc->GetParentDocument();
   return parentDoc ? parentDoc->FindContentForSubDocument(doc) : nullptr;
 }
@@ -2447,9 +2448,9 @@ nsContentUtils::ContentIsHostIncludingDescendantOf(
   do {
     if (aPossibleDescendant == aPossibleAncestor)
       return true;
-    if (aPossibleDescendant->NodeType() == nsINode::DOCUMENT_FRAGMENT_NODE) {
+    if (aPossibleDescendant->IsDocumentFragment()) {
       aPossibleDescendant =
-        static_cast<const DocumentFragment*>(aPossibleDescendant)->GetHost();
+        aPossibleDescendant->AsDocumentFragment()->GetHost();
     } else {
       aPossibleDescendant = aPossibleDescendant->GetParentNode();
     }
@@ -4438,8 +4439,7 @@ nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
   event->InitEvent(aEventName, aCanBubble, aCancelable);
   event->SetTrusted(aTrusted);
 
-  nsresult rv = event->SetTarget(target);
-  NS_ENSURE_SUCCESS(rv, rv);
+  event->SetTarget(target);
 
   event.forget(aEvent);
   target.forget(aTargetOut);
@@ -6521,7 +6521,7 @@ nsContentUtils::CanAccessNativeAnon()
 /* static */ nsresult
 nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
                                    bool aTrusted,
-                                   nsIDOMEvent* aSourceEvent,
+                                   Event* aSourceEvent,
                                    nsIPresShell* aShell,
                                    bool aCtrl,
                                    bool aAlt,
@@ -6539,8 +6539,7 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
                                nsGlobalWindowInner::Cast(doc->GetInnerWindow()),
                                0, aCtrl, aAlt, aShift,
                                aMeta,
-                               aSourceEvent ?
-                                 aSourceEvent->InternalDOMEvent() : nullptr,
+                               aSourceEvent,
                                aInputSource, IgnoreErrors());
 
   if (aShell) {

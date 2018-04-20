@@ -25,7 +25,6 @@
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIHttpChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"
@@ -361,13 +360,14 @@ HTMLTrackElement::BindToTree(nsIDocument* aDocument,
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG(LogLevel::Debug, ("Track Element bound to tree."));
-  if (!aParent || !aParent->IsNodeOfType(nsINode::eMEDIA)) {
+  auto* parent = HTMLMediaElement::FromNodeOrNull(aParent);
+  if (!parent) {
     return NS_OK;
   }
 
   // Store our parent so we can look up its frame for display.
   if (!mMediaParent) {
-    mMediaParent = static_cast<HTMLMediaElement*>(aParent);
+    mMediaParent = parent;
 
     // TODO: separate notification for 'alternate' tracks?
     mMediaParent->NotifyAddedSource();

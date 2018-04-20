@@ -571,7 +571,7 @@ handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler)
         rv = aCompiler->characters(chars);
         NS_ENSURE_SUCCESS(rv, rv);
     }
-    else if (aNode->IsNodeOfType(nsINode::eDOCUMENT)) {
+    else if (aNode->IsDocument()) {
         for (nsIContent* child = aNode->GetFirstChild();
              child;
              child = child->GetNextSibling()) {
@@ -675,10 +675,9 @@ TX_CompileStylesheet(nsINode* aNode, txMozillaXSLTProcessor* aProcessor,
     nsCOMPtr<nsIURI> uri;
     if (aNode->IsContent()) {
       uri = aNode->AsContent()->GetBaseURI();
-    }
-    else {
-      NS_ASSERTION(aNode->IsNodeOfType(nsINode::eDOCUMENT), "not a doc");
-      uri = static_cast<nsIDocument*>(aNode)->GetBaseURI();
+    } else {
+      NS_ASSERTION(aNode->IsDocument(), "not a doc");
+      uri = aNode->AsDocument()->GetBaseURI();
     }
     NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 

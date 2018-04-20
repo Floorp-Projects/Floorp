@@ -25,9 +25,6 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsINode
-  virtual bool IsNodeOfType(uint32_t aFlags) const override;
-
   virtual already_AddRefed<CharacterData>
     CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
                   bool aCloneText) const override;

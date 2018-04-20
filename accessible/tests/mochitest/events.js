@@ -829,7 +829,7 @@ const kInvokerCanceled = 2;
 
 eventQueue.getEventTypeAsString =
   function eventQueue_getEventTypeAsString(aEventOrChecker) {
-  if (aEventOrChecker instanceof nsIDOMEvent)
+  if (Event.isInstance(aEventOrChecker))
     return aEventOrChecker.type;
 
   if (aEventOrChecker instanceof nsIAccessibleEvent)
@@ -841,10 +841,11 @@ eventQueue.getEventTypeAsString =
 
 eventQueue.getEventTargetDescr =
   function eventQueue_getEventTargetDescr(aEventOrChecker, aDontForceTarget) {
-  if (aEventOrChecker instanceof nsIDOMEvent)
+  if (Event.isInstance(aEventOrChecker))
     return prettyName(aEventOrChecker.originalTarget);
 
-  if (aEventOrChecker instanceof nsIDOMEvent)
+  // XXXbz this block doesn't seem to be reachable...
+  if (Event.isInstance(aEventOrChecker))
     return prettyName(aEventOrChecker.accessible);
 
   var descr = aEventOrChecker.targetDescr;
@@ -877,7 +878,7 @@ eventQueue.getEventTarget = function eventQueue_getEventTarget(aChecker) {
 
 eventQueue.compareEventTypes =
   function eventQueue_compareEventTypes(aChecker, aEvent) {
-  var eventType = (aEvent instanceof nsIDOMEvent) ?
+  var eventType = Event.isInstance(aEvent) ?
     aEvent.type : aEvent.eventType;
   return aChecker.type == eventType;
 };
@@ -893,7 +894,7 @@ eventQueue.compareEvents = function eventQueue_compareEvents(aChecker, aEvent) {
 
   var target1 = aChecker.target;
   if (target1 instanceof nsIAccessible) {
-    var target2 = (aEvent instanceof nsIDOMEvent) ?
+    var target2 = Event.isInstance(aEvent) ?
       getAccessible(aEvent.target) : aEvent.accessible;
 
     return target1 == target2;
@@ -901,7 +902,7 @@ eventQueue.compareEvents = function eventQueue_compareEvents(aChecker, aEvent) {
 
   // If original target isn't suitable then extend interface to support target
   // (original target is used in test_elm_media.html).
-  var target2 = (aEvent instanceof nsIDOMEvent) ?
+  var target2 = Event.isInstance(aEvent) ?
     aEvent.originalTarget : aEvent.DOMNode;
   return target1 == target2;
 };
@@ -942,7 +943,7 @@ eventQueue.logEvent = function eventQueue_logEvent(aOrigEvent, aMatchedChecker,
                                                    aInvokerStatus) {
   // Dump DOM event information. Skip a11y event since it is dumped by
   // gA11yEventObserver.
-  if (aOrigEvent instanceof nsIDOMEvent) {
+  if (Event.isInstance(aOrigEvent)) {
     var info = "Event type: " + eventQueue.getEventTypeAsString(aOrigEvent);
     info += ". Target: " + eventQueue.getEventTargetDescr(aOrigEvent);
     gLogger.logToDOM(info);

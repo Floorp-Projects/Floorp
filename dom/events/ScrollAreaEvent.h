@@ -26,8 +26,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ScrollAreaEvent, UIEvent)
 
-  NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) override;
-  NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) override;
+  void Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) override;
+  bool Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) override;
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {

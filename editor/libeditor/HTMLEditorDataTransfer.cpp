@@ -269,10 +269,12 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
 
   // make a list of what nodes in docFrag we need to move
   nsTArray<OwningNonNull<nsINode>> nodeList;
-  CreateListOfNodesToPaste(*static_cast<DocumentFragment*>(fragmentAsNode.get()),
+  CreateListOfNodesToPaste(*fragmentAsNode->AsDocumentFragment(),
                            nodeList,
-                           streamStartParent, streamStartOffset,
-                           streamEndParent, streamEndOffset);
+                           streamStartParent,
+                           streamStartOffset,
+                           streamEndParent,
+                           streamEndOffset);
 
   if (nodeList.IsEmpty()) {
     // We aren't inserting anything, but if aDeleteSelection is set, we do want
@@ -1991,9 +1993,9 @@ nsresult FindTargetNode(nsINode *aStart, nsCOMPtr<nsINode> &aResult)
 
   do {
     // Is this child the magical cookie?
-    if (child->IsNodeOfType(nsINode::eCOMMENT)) {
+    if (auto* comment = Comment::FromNode(child)) {
       nsAutoString data;
-      static_cast<Comment*>(child.get())->GetData(data);
+      comment->GetData(data);
 
       if (data.EqualsLiteral(kInsertCookie)) {
         // Yes it is! Return an error so we bubble out and short-circuit the

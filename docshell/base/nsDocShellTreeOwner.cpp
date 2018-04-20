@@ -32,7 +32,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/SVGTitleElement.h"
-#include "nsIDOMEvent.h"
 #include "nsIFormControl.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIWebNavigation.h"
@@ -57,7 +56,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/DragEvent.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "mozilla/dom/File.h" // for input type=file
 #include "mozilla/dom/FileList.h" // for input type=file
 #include "mozilla/TextEvents.h"
@@ -925,10 +924,9 @@ nsDocShellTreeOwner::RemoveChromeListeners()
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
+nsDocShellTreeOwner::HandleEvent(Event* aEvent)
 {
-  DragEvent* dragEvent =
-    aEvent ? aEvent->InternalDOMEvent()->AsDragEvent() : nullptr;
+  DragEvent* dragEvent = aEvent ? aEvent->AsDragEvent() : nullptr;
   if (NS_WARN_IF(!dragEvent)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -1150,7 +1148,7 @@ ChromeTooltipListener::RemoveTooltipListener()
 }
 
 NS_IMETHODIMP
-ChromeTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
+ChromeTooltipListener::HandleEvent(Event* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);
@@ -1179,9 +1177,9 @@ ChromeTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
 // If we're a tooltip, fire off a timer to see if a tooltip should be shown. If
 // the timer fires, we cache the node in |mPossibleTooltipNode|.
 nsresult
-ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::MouseMove(Event* aMouseEvent)
 {
-  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
   if (!mouseEvent) {
     return NS_OK;
   }
@@ -1215,8 +1213,7 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   if (!mShowingTooltip && !mTooltipShownOnce) {
     nsIEventTarget* target = nullptr;
 
-    nsCOMPtr<EventTarget> eventTarget =
-      aMouseEvent->InternalDOMEvent()->GetTarget();
+    nsCOMPtr<EventTarget> eventTarget = aMouseEvent->GetTarget();
     if (eventTarget) {
       mPossibleTooltipNode = do_QueryInterface(eventTarget);
       nsCOMPtr<nsIGlobalObject> global(eventTarget->GetOwnerGlobal());

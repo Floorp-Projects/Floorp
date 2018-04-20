@@ -19,7 +19,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "js/TypeDecls.h"
 
-class nsIDOMEvent;
 class nsIContent;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -31,6 +30,7 @@ struct IgnoreModifierState;
 
 namespace dom {
 class AutoJSAPI;
+class Event;
 class EventTarget;
 class KeyboardEvent;
 class MouseEvent;
@@ -51,7 +51,7 @@ class KeyboardShortcut;
 #define NS_HANDLER_TYPE_SYSTEM              (1 << 6)
 #define NS_HANDLER_TYPE_PREVENTDEFAULT      (1 << 7)
 
-// XXX Use nsIDOMEvent:: codes?
+// XXX Use EventBinding:: codes?
 #define NS_PHASE_CAPTURING          1
 #define NS_PHASE_TARGET             2
 #define NS_PHASE_BUBBLING           3
@@ -68,6 +68,7 @@ enum XBLReservedKey : uint8_t
 namespace mozilla {
 namespace dom {
 class Element;
+class Event;
 }
 }
 
@@ -131,7 +132,8 @@ public:
   nsXBLPrototypeHandler* GetNextHandler() { return mNextHandler; }
   void SetNextHandler(nsXBLPrototypeHandler* aHandler) { mNextHandler = aHandler; }
 
-  nsresult ExecuteHandler(mozilla::dom::EventTarget* aTarget, nsIDOMEvent* aEvent);
+  nsresult ExecuteHandler(mozilla::dom::EventTarget* aTarget,
+                          mozilla::dom::Event* aEvent);
 
   already_AddRefed<nsAtom> GetEventName();
   void SetEventName(nsAtom* aName) { mEventName = aName; }
@@ -194,8 +196,9 @@ protected:
   void GetEventType(nsAString& type);
   bool ModifiersMatchMask(mozilla::dom::UIEvent* aEvent,
                           const IgnoreModifierState& aIgnoreModifierState);
-  nsresult DispatchXBLCommand(mozilla::dom::EventTarget* aTarget, nsIDOMEvent* aEvent);
-  nsresult DispatchXULKeyCommand(nsIDOMEvent* aEvent);
+  nsresult DispatchXBLCommand(mozilla::dom::EventTarget* aTarget,
+                              mozilla::dom::Event* aEvent);
+  nsresult DispatchXULKeyCommand(mozilla::dom::Event* aEvent);
   nsresult EnsureEventHandler(mozilla::dom::AutoJSAPI& jsapi, nsAtom* aName,
                               JS::MutableHandle<JSObject*> aHandler);
 

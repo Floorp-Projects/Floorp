@@ -126,9 +126,8 @@ InspectorUtils::GetParentForNode(nsINode& aNode,
   // First do the special cases -- document nodes and anonymous content
   nsINode* parent = nullptr;
 
-  if (aNode.IsNodeOfType(nsINode::eDOCUMENT)) {
-    auto& doc = static_cast<nsIDocument&>(aNode);
-    parent = inLayoutUtils::GetContainerFor(doc);
+  if (aNode.IsDocument()) {
+    parent = inLayoutUtils::GetContainerFor(*aNode.AsDocument());
   } else if (aShowingAnonymousContent) {
     if (aNode.IsContent()) {
       parent = aNode.AsContent()->GetFlattenedTreeParent();

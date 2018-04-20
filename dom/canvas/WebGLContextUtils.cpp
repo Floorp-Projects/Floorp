@@ -12,7 +12,6 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
-#include "nsIDOMEvent.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIVariant.h"
 #include "nsPrintfCString.h"

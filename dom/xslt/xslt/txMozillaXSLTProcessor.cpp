@@ -593,8 +593,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsINode& aStyle,
         return;
     }
 
-    if (NS_WARN_IF(!aStyle.IsElement() &&
-                   !aStyle.IsNodeOfType(nsINode::eDOCUMENT))) {
+    if (NS_WARN_IF(!aStyle.IsElement() && !aStyle.IsDocument())) {
         aRv.Throw(NS_ERROR_INVALID_ARG);
         return;
     }

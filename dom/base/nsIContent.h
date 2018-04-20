@@ -940,6 +940,11 @@ inline nsIContent* nsINode::AsContent()
   return static_cast<nsIContent*>(this);
 }
 
+inline const nsIContent* nsINode::AsContent() const
+{
+  return const_cast<nsINode*>(this)->AsContent();
+}
+
 // Some checks are faster to do on nsIContent or Element than on
 // nsINode, so spit out FromNode versions taking those types too.
 #define NS_IMPL_FROMNODE_HELPER(_class, _check)                         \

@@ -9,9 +9,7 @@ EXTRA_JS_MODULES.accessibility += [
     'Constants.jsm',
     'ContentControl.jsm',
     'EventManager.jsm',
-    'Gestures.jsm',
     'OutputGenerator.jsm',
-    'PointerAdapter.jsm',
     'Presentation.jsm',
     'Traversal.jsm',
     'Utils.jsm'

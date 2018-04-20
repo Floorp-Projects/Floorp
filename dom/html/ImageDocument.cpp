@@ -8,6 +8,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/ImageDocumentBinding.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/MouseEvent.h"
@@ -17,7 +18,6 @@
 #include "nsDocShell.h"
 #include "nsIDocumentInlines.h"
 #include "nsDOMTokenList.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIFrame.h"
 #include "nsGkAtoms.h"
@@ -632,7 +632,7 @@ ImageDocument::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
 }
 
 NS_IMETHODIMP
-ImageDocument::HandleEvent(nsIDOMEvent* aEvent)
+ImageDocument::HandleEvent(Event* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);
@@ -644,7 +644,7 @@ ImageDocument::HandleEvent(nsIDOMEvent* aEvent)
     mShouldResize = true;
     if (mImageIsResized) {
       int32_t x = 0, y = 0;
-      MouseEvent* event = aEvent->InternalDOMEvent()->AsMouseEvent();
+      MouseEvent* event = aEvent->AsMouseEvent();
       if (event) {
         RefPtr<HTMLImageElement> img =
           HTMLImageElement::FromNode(mImageContent);

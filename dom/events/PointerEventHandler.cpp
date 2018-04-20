@@ -645,7 +645,7 @@ PointerEventHandler::DispatchGotOrLostPointerCaptureEvent(
     event = PointerEvent::Constructor(aCaptureTarget,
                                       NS_LITERAL_STRING("lostpointercapture"),
                                       init);
-    targetDoc->DispatchEvent(*event->InternalDOMEvent());
+    targetDoc->DispatchEvent(*event);
     return;
   }
   nsEventStatus status = nsEventStatus_eIgnore;

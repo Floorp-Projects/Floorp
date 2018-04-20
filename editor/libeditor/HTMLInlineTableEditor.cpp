@@ -12,7 +12,6 @@
 #include "nsError.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIContent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsIPresShell.h"
 #include "nsLiteralString.h"
