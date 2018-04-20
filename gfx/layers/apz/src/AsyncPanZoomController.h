@@ -49,7 +49,8 @@ class GestureEventListener;
 struct AsyncTransform;
 class AsyncPanZoomAnimation;
 class StackScrollerFlingAnimation;
-class GenericFlingAnimation;
+template <typename FlingPhysics> class GenericFlingAnimation;
+class DesktopFlingPhysics;
 class InputBlockState;
 struct FlingHandoffState;
 class TouchBlockState;
@@ -1162,7 +1163,8 @@ public:
 private:
   friend class StackScrollerFlingAnimation;
   friend class AutoscrollAnimation;
-  friend class GenericFlingAnimation;
+  template <typename FlingPhysics> friend class GenericFlingAnimation;
+  friend class DesktopFlingPhysics;
   friend class OverscrollAnimation;
   friend class SmoothScrollAnimation;
   friend class GenericScrollAnimation;
