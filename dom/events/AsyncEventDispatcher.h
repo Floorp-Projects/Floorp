@@ -8,9 +8,10 @@
 #define mozilla_AsyncEventDispatcher_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/Event.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
-#include "nsIDOMEvent.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
@@ -88,7 +89,7 @@ public:
     MOZ_ASSERT(mEventMessage != eUnidentifiedEvent);
   }
 
-  AsyncEventDispatcher(dom::EventTarget* aTarget, nsIDOMEvent* aEvent)
+  AsyncEventDispatcher(dom::EventTarget* aTarget, dom::Event* aEvent)
     : CancelableRunnable("AsyncEventDispatcher")
     , mTarget(aTarget)
     , mEvent(aEvent)
@@ -109,7 +110,7 @@ public:
   void RequireNodeInDocument();
 
   nsCOMPtr<dom::EventTarget> mTarget;
-  nsCOMPtr<nsIDOMEvent> mEvent;
+  RefPtr<dom::Event> mEvent;
   // If mEventType is set, mEventMessage will be eUnidentifiedEvent.
   // If mEventMessage is set, mEventType will be void.
   // They can never both be set at the same time.
@@ -136,7 +137,7 @@ public:
     }
   }
 
-  LoadBlockingAsyncEventDispatcher(nsINode* aEventNode, nsIDOMEvent* aEvent)
+  LoadBlockingAsyncEventDispatcher(nsINode* aEventNode, dom::Event* aEvent)
     : AsyncEventDispatcher(aEventNode, aEvent)
     , mBlockedDoc(aEventNode->OwnerDoc())
   {
