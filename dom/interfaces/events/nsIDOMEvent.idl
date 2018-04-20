@@ -5,8 +5,6 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMEventTarget;
-
 [ptr] native WidgetEvent(mozilla::WidgetEvent);
 [ptr] native DOMEventPtr(mozilla::dom::Event);
 [ptr] native IPCMessagePtr(IPC::Message);
@@ -32,6 +30,8 @@ class EventTarget;
 } // namespace dom
 } // namespace mozilla
 %}
+
+webidl EventTarget;
 
 /**
  * The nsIDOMEvent interface is the primary datatype for all events in
@@ -175,7 +175,7 @@ interface nsIDOMEvent : nsISupports
   attribute boolean cancelBubble;
 
   [noscript] void duplicatePrivateData();
-  [noscript] void setTarget(in nsIDOMEventTarget aTarget);
+  [noscript] void setTarget(in EventTarget aTarget);
   [notxpcom] boolean IsDispatchStopped();
   [notxpcom] WidgetEvent WidgetEventPtr();
   [noscript,notxpcom] void SetTrusted(in boolean aTrusted);
