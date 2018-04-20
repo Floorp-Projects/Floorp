@@ -37,6 +37,8 @@ def flags(prop):
         result.append("CSS_PROPERTY_INTERNAL")
     if prop.enabled_in == "":
         result.append("CSS_PROPERTY_PARSE_INACCESSIBLE")
+    if "GETCS_NEEDS_LAYOUT_FLUSH" in prop.flags:
+        result.append("CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH")
     return ", ".join('"{}"'.format(flag) for flag in result)
 
 def pref(prop):
