@@ -61,16 +61,21 @@ class FontAxis extends PureComponent {
 
     return dom.label(
       {
-        className: "font-axis",
+        className: "font-control",
       },
       dom.span(
         {
-          className: "font-axis-label",
+          className: "font-control-label",
         },
         this.props.label
       ),
-      range,
-      this.props.showInput ? input : null
+      dom.div(
+        {
+          className: "font-control-input"
+        },
+        range,
+        this.props.showInput ? input : null
+      )
     );
   }
 }

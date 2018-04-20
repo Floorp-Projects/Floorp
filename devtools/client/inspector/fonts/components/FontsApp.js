@@ -21,6 +21,7 @@ class FontsApp extends PureComponent {
       fontEditor: PropTypes.shape(Types.fontEditor).isRequired,
       fontOptions: PropTypes.shape(Types.fontOptions).isRequired,
       onAxisUpdate: PropTypes.func.isRequired,
+      onInstanceChange: PropTypes.func.isRequired,
       onPreviewFonts: PropTypes.func.isRequired,
     };
   }
@@ -31,6 +32,7 @@ class FontsApp extends PureComponent {
       fontEditor,
       fontOptions,
       onAxisUpdate,
+      onInstanceChange,
       onPreviewFonts,
     } = this.props;
 
@@ -43,6 +45,7 @@ class FontsApp extends PureComponent {
         FontEditor({
           fontEditor,
           onAxisUpdate,
+          onInstanceChange,
         })
         :
         FontOverview({
