@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {ActivityStreamStorage} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamStorage.jsm", {});
 const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 const {Prefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {PrerenderData} = ChromeUtils.import("resource://activity-stream/common/PrerenderData.jsm", {});
@@ -13,6 +12,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "AppConstants",
+  "resource://gre/modules/AppConstants.jsm");
 const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
 
 // List of prefs that require migration to indexedDB.
@@ -30,7 +31,6 @@ this.PrefsFeed = class PrefsFeed {
   constructor(prefMap) {
     this._prefMap = prefMap;
     this._prefs = new Prefs();
-    this._storage = new ActivityStreamStorage("sectionPrefs");
   }
 
   // If any prefs or the theme are set to something other than what the
@@ -90,6 +90,7 @@ this.PrefsFeed = class PrefsFeed {
 
   init() {
     this._prefs.observeBranch(this);
+    this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
 
     // Get the initial value of each activity stream pref
     const values = {};
@@ -97,8 +98,10 @@ this.PrefsFeed = class PrefsFeed {
       values[name] = this._prefs.get(name);
     }
 
-    // Not a pref, but we need this to determine whether to show private-browsing-related stuff
+    // These are not prefs, but are needed to determine stuff in content that can only be
+    // computed in main process
     values.isPrivateBrowsingEnabled = PrivateBrowsingUtils.enabled;
+    values.platform = AppConstants.platform;
 
     // Set the initial state of all prefs in redux
     this.store.dispatch(ac.BroadcastToContent({type: at.PREFS_INITIAL_VALUES, data: values}));
@@ -114,8 +117,12 @@ this.PrefsFeed = class PrefsFeed {
 
   async _setIndexedDBPref(id, value) {
     const name = id === "topsites" ? id : `feeds.section.${id}`;
-    await this._storage.set(name, value);
-    this._setPrerenderPref();
+    try {
+      await this._storage.set(name, value);
+      this._setPrerenderPref();
+    } catch (e) {
+      Cu.reportError("Could not set section preferences.");
+    }
   }
 
   onAction(action) {

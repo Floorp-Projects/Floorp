@@ -7,7 +7,7 @@ ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
-const {ActivityStreamStorage, getDefaultOptions} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamStorage.jsm", {});
+const {getDefaultOptions} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamStorage.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
 
@@ -24,7 +24,7 @@ const BUILT_IN_SECTIONS = {
       descString: {id: "prefs_topstories_description2"},
       nestedPrefs: options.show_spocs ? [{
         name: "showSponsored",
-        titleString: {id: "prefs_topstories_show_sponsored_label", values: {provider: options.provider_name}},
+        titleString: "prefs_topstories_options_sponsored_label",
         icon: "icon-info"
       }] : []
     },
@@ -54,7 +54,20 @@ const BUILT_IN_SECTIONS = {
     id: "highlights",
     pref: {
       titleString: {id: "settings_pane_highlights_header"},
-      descString: {id: "prefs_highlights_description"}
+      descString: {id: "prefs_highlights_description"},
+      nestedPrefs: [{
+        name: "section.highlights.includeVisited",
+        titleString: "prefs_highlights_options_visited_label"
+      }, {
+        name: "section.highlights.includeBookmarks",
+        titleString: "settings_pane_highlights_options_bookmarks"
+      }, {
+        name: "section.highlights.includeDownloads",
+        titleString: "prefs_highlights_options_download_label"
+      }, {
+        name: "section.highlights.includePocket",
+        titleString: "prefs_highlights_options_pocket_label"
+      }]
     },
     shouldHidePref:  false,
     eventSource: "HIGHLIGHTS",
@@ -75,12 +88,13 @@ const SectionsManager = {
   CONTEXT_MENU_OPTIONS_FOR_HIGHLIGHT_TYPES: {
     history: ["CheckBookmark", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"],
     bookmark: ["CheckBookmark", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"],
-    pocket: ["ArchiveFromPocket", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"]
+    pocket: ["ArchiveFromPocket", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
+    download: ["OpenFile", "ShowFile", "Separator", "GoToDownloadPage", "CopyDownloadLink", "Separator", "RemoveDownload", "BlockUrl"]
   },
   initialized: false,
   sections: new Map(),
-  async init(prefs = {}) {
-    this._storage = new ActivityStreamStorage("sectionPrefs");
+  async init(prefs = {}, storage) {
+    this._storage = storage;
 
     for (const feedPrefName of Object.keys(BUILT_IN_SECTIONS)) {
       const optionsPrefName = `${feedPrefName}.options`;
@@ -125,13 +139,19 @@ const SectionsManager = {
   },
   async addBuiltInSection(feedPrefName, optionsPrefValue = "{}") {
     let options;
+    let storedPrefs;
     try {
       options = JSON.parse(optionsPrefValue);
     } catch (e) {
       options = {};
       Cu.reportError(`Problem parsing options pref for ${feedPrefName}`);
     }
-    const storedPrefs = await this._storage.get(feedPrefName) || {};
+    try {
+      storedPrefs = await this._storage.get(feedPrefName) || {};
+    } catch (e) {
+      storedPrefs = {};
+      Cu.reportError(`Problem getting stored prefs for ${feedPrefName}`);
+    }
     const defaultSection = BUILT_IN_SECTIONS[feedPrefName](options);
     const section = Object.assign({}, defaultSection, {pref: Object.assign({}, defaultSection.pref, getDefaultOptions(storedPrefs))});
     section.pref.feed = feedPrefName;
@@ -405,7 +425,7 @@ class SectionsFeed {
         break;
       // Wait for pref values, as some sections have options stored in prefs
       case at.PREFS_INITIAL_VALUES:
-        SectionsManager.init(action.data);
+        SectionsManager.init(action.data, this.store.dbStorage.getDbTable("sectionPrefs"));
         break;
       case at.PREF_CHANGED: {
         if (action.data) {

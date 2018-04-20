@@ -17,11 +17,18 @@ describe("PrefsFeed", () => {
     sandbox = sinon.sandbox.create();
     FAKE_PREFS = new Map([["foo", 1], ["bar", 2]]);
     feed = new PrefsFeed(FAKE_PREFS);
+    const storage = {
+      getAll: sandbox.stub().resolves(),
+      set: sandbox.stub().resolves()
+    };
     feed.store = {
       dispatch: sinon.spy(),
       getState() { return this.state; },
-      state: {Theme: {className: ""}}
+      state: {Theme: {className: ""}},
+      dbStorage: {getDbTable: sandbox.stub().returns(storage)}
     };
+    // Setup for tests that don't call `init`
+    feed._storage = storage;
     feed._prefs = {
       get: sinon.spy(item => FAKE_PREFS.get(item)),
       set: sinon.spy((name, value) => FAKE_PREFS.set(name, value)),
@@ -31,17 +38,7 @@ describe("PrefsFeed", () => {
       ignoreBranch: sinon.spy(),
       reset: sinon.stub()
     };
-    const fakeDB = {
-      objectStore: sandbox.stub().returns({
-        get: sandbox.stub().returns(Promise.resolve()),
-        set: sandbox.stub().returns(Promise.resolve())
-      })
-    };
-    overrider.set({
-      PrivateBrowsingUtils: {enabled: true},
-      ActivityStreamStorage: function Fake() {},
-      IndexedDB: {open: () => Promise.resolve(fakeDB)}
-    });
+    overrider.set({PrivateBrowsingUtils: {enabled: true}});
   });
   afterEach(() => {
     overrider.restore();
@@ -65,6 +62,12 @@ describe("PrefsFeed", () => {
     assert.calledOnce(feed._prefs.observeBranch);
     assert.calledWith(feed._prefs.observeBranch, feed);
   });
+  it("should initialise the storage on init", () => {
+    feed.init();
+
+    assert.calledOnce(feed.store.dbStorage.getDbTable);
+    assert.calledWithExactly(feed.store.dbStorage.getDbTable, "sectionPrefs");
+  });
   it("should remove the branch observer on uninit", () => {
     feed.onAction({type: at.UNINIT});
     assert.calledOnce(feed._prefs.ignoreBranch);
@@ -84,7 +87,6 @@ describe("PrefsFeed", () => {
     });
     it("should set prerender pref to true if prefs match initial values", async () => {
       Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
-      sandbox.stub(feed._storage, "getAll").returns(Promise.resolve([]));
 
       await feed._setPrerenderPref();
 
@@ -93,7 +95,6 @@ describe("PrefsFeed", () => {
     it("should set prerender pref to false if a pref does not match its initial value", async () => {
       Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
       FAKE_PREFS.set("showSearch", false);
-      sandbox.stub(feed._storage, "getAll").returns(Promise.resolve([]));
 
       await feed._setPrerenderPref();
 
@@ -101,7 +102,7 @@ describe("PrefsFeed", () => {
     });
     it("should set prerender pref to true if indexedDB prefs are unchanged", async () => {
       Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
-      sandbox.stub(feed._storage, "getAll").returns(Promise.resolve([{collapsed: false}, {collapsed: false}]));
+      feed._storage.getAll.resolves([{collapsed: false}, {collapsed: false}]);
 
       await feed._setPrerenderPref();
 
@@ -110,7 +111,7 @@ describe("PrefsFeed", () => {
     it("should set prerender pref to false if a indexedDB pref changed value", async () => {
       Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
       FAKE_PREFS.set("showSearch", false);
-      sandbox.stub(feed._storage, "getAll").returns(Promise.resolve([{collapsed: false}, {collapsed: true}]));
+      feed._storage.getAll.resolves([{collapsed: false}, {collapsed: true}]);
 
       await feed._setPrerenderPref();
 
@@ -170,7 +171,6 @@ describe("PrefsFeed", () => {
       assert.calledOnce(feed._setIndexedDBPref);
     });
     it("should store the pref value", async () => {
-      sandbox.stub(feed._storage, "set").returns(Promise.resolve());
       sandbox.stub(feed, "_setPrerenderPref");
       await feed._setIndexedDBPref("topsites", "foo");
 
@@ -178,11 +178,19 @@ describe("PrefsFeed", () => {
       assert.calledWith(feed._storage.set, "topsites", "foo");
     });
     it("should call _setPrerenderPref", async () => {
-      sandbox.stub(feed._storage, "set").returns(Promise.resolve());
       sandbox.stub(feed, "_setPrerenderPref");
       await feed._setIndexedDBPref("topsites", "foo");
 
       assert.calledOnce(feed._setPrerenderPref);
+    });
+    it("should catch any save errors", () => {
+      const globals = new GlobalOverrider();
+      globals.sandbox.spy(global.Cu, "reportError");
+      feed._storage.set.throws(new Error());
+
+      assert.doesNotThrow(() => feed._setIndexedDBPref());
+      assert.calledOnce(Cu.reportError);
+      globals.restore();
     });
   });
   describe("onPrefChanged prerendering", () => {
@@ -212,7 +220,6 @@ describe("PrefsFeed", () => {
       FAKE_PREFS.set("showSearch", false);
       feed._prefs.set("showSearch", true);
       feed.onPrefChanged("showSearch", true);
-      sandbox.stub(feed._storage, "getAll").returns(Promise.resolve([]));
 
       await feed._setPrerenderPref();
 
@@ -223,7 +230,6 @@ describe("PrefsFeed", () => {
       FAKE_PREFS.set("showSearch", false);
       feed._prefs.set("showSearch", false);
       feed.onPrefChanged("showSearch", false);
-      sandbox.stub(feed._storage, "getAll").returns(Promise.resolve([]));
 
       await feed._setPrerenderPref();
 
@@ -266,16 +272,14 @@ describe("PrefsFeed", () => {
 
       assert.calledOnce(feed._setPrerenderPref);
     });
-    it("should should set the prerender pref to false if the theme is changed to be different than the default", async () => {
+    it("should set the prerender pref to false if the theme is changed to be different than the default", async () => {
       Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
-      sandbox.stub(feed._storage, "getAll").returns(Promise.resolve([]));
       await feed._setPrerenderPref({className: "dark-theme"});
       // feed.onAction({type: at.THEME_UPDATE, data: {className: "dark-theme"}});
       assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, false);
     });
-    it("should should set the prerender pref back to true if the theme is changed to the default", async () => {
+    it("should set the prerender pref back to true if the theme is changed to the default", async () => {
       Object.keys(initialPrefs).forEach(name => FAKE_PREFS.set(name, initialPrefs[name]));
-      sandbox.stub(feed._storage, "getAll").returns(Promise.resolve([]));
       feed.store.state.Theme.className = "dark-theme";
       await feed._setPrerenderPref({className: ""});
       assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, true);
