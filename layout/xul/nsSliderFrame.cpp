@@ -1162,7 +1162,7 @@ nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
 }
 
 nsresult
-nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
+nsSliderFrame::StartDrag(Event* aEvent)
 {
 #ifdef DEBUG_SLIDER
   printf("Begin dragging\n");

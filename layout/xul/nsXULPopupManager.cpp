@@ -2613,8 +2613,7 @@ nsXULPopupManager::IsValidMenuItem(nsIContent* aContent, bool aOnPopup)
 nsresult
 nsXULPopupManager::HandleEvent(Event* aEvent)
 {
-  RefPtr<KeyboardEvent> keyEvent =
-    aEvent->InternalDOMEvent()->AsKeyboardEvent();
+  RefPtr<KeyboardEvent> keyEvent = aEvent->AsKeyboardEvent();
   NS_ENSURE_TRUE(keyEvent, NS_ERROR_UNEXPECTED);
 
   //handlers shouldn't be triggered by non-trusted events.
