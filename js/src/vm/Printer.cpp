@@ -46,6 +46,11 @@ private:
 
 namespace js {
 
+GenericPrinter::GenericPrinter()
+  : hadOOM_(false)
+{
+}
+
 void
 GenericPrinter::reportOutOfMemory()
 {
@@ -392,12 +397,15 @@ Fprinter::Fprinter(FILE* fp)
     init(fp);
 }
 
-#ifdef DEBUG
+Fprinter::Fprinter()
+  : file_(nullptr),
+    init_(false)
+{ }
+
 Fprinter::~Fprinter()
 {
     MOZ_ASSERT_IF(init_, !file_);
 }
-#endif
 
 bool
 Fprinter::init(const char* path)
