@@ -50,6 +50,7 @@ struct AsyncTransform;
 class AsyncPanZoomAnimation;
 class StackScrollerFlingAnimation;
 template <typename FlingPhysics> class GenericFlingAnimation;
+class AndroidFlingPhysics;
 class DesktopFlingPhysics;
 class InputBlockState;
 struct FlingHandoffState;
@@ -1164,6 +1165,7 @@ private:
   friend class StackScrollerFlingAnimation;
   friend class AutoscrollAnimation;
   template <typename FlingPhysics> friend class GenericFlingAnimation;
+  friend class AndroidFlingPhysics;
   friend class DesktopFlingPhysics;
   friend class OverscrollAnimation;
   friend class SmoothScrollAnimation;

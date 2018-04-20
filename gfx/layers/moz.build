@@ -289,6 +289,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     UNIFIED_SOURCES += [
         'apz/src/AndroidAPZ.cpp',
         'apz/src/AndroidDynamicToolbarAnimator.cpp',
+        'apz/src/AndroidFlingPhysics.cpp',
     ]
     EXPORTS.mozilla.layers += [
         'apz/src/AndroidDynamicToolbarAnimator.h',
