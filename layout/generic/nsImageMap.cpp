@@ -986,8 +986,7 @@ nsImageMap::HandleEvent(Event* aEvent)
              "Unexpected event type");
 
   //Set which one of our areas changed focus
-  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(
-    aEvent->InternalDOMEvent()->GetTarget());
+  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(aEvent->GetTarget());
   if (!targetContent) {
     return NS_OK;
   }
