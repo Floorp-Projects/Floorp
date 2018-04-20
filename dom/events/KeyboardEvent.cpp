@@ -331,7 +331,7 @@ already_AddRefed<nsIDocument>
 KeyboardEvent::GetDocument()
 {
   nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<EventTarget> eventTarget = InternalDOMEvent()->GetTarget();
+  nsCOMPtr<EventTarget> eventTarget = GetTarget();
 
   if (eventTarget) {
     nsCOMPtr<nsPIDOMWindowInner> win =

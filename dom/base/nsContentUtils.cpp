@@ -6539,8 +6539,7 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
                                nsGlobalWindowInner::Cast(doc->GetInnerWindow()),
                                0, aCtrl, aAlt, aShift,
                                aMeta,
-                               aSourceEvent ?
-                                 aSourceEvent->InternalDOMEvent() : nullptr,
+                               aSourceEvent,
                                aInputSource, IgnoreErrors());
 
   if (aShell) {
