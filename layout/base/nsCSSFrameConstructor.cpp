@@ -7012,30 +7012,16 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
 
   for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
-    if (!child->IsElement()) {
-      continue;
+    if (child->IsElement() && !child->AsElement()->HasServoData()) {
+      Element* parent = child->AsElement()->GetFlattenedTreeParentElement();
+      // NB: Parent may be null if the content is appended to a shadow root, and
+      // isn't assigned to any insertion point.
+      if (MOZ_LIKELY(parent) && parent->HasServoData()) {
+        MOZ_ASSERT(IsFlattenedTreeChild(parent, child),
+                   "GetFlattenedTreeParent and ChildIterator don't agree, fix this!");
+        styleSet->StyleNewSubtree(child->AsElement());
+      }
     }
-
-    Element* childElement = child->AsElement();
-
-    // We only come in here from non-lazy frame construction, so the children
-    // should be unstyled.
-    MOZ_ASSERT(!childElement->HasServoData());
-
-#ifdef DEBUG
-    {
-      // Furthermore, all of them should have the same flattened tree parent
-      // (GetRangeInsertionPoint ensures it). And that parent should be styled,
-      // otherwise we would've never found an insertion point at all.
-      Element* parent = childElement->GetFlattenedTreeParentElement();
-      MOZ_ASSERT(parent);
-      MOZ_ASSERT(parent->HasServoData());
-      MOZ_ASSERT(IsFlattenedTreeChild(parent, child),
-                 "GetFlattenedTreeParent and ChildIterator don't agree, fix this!");
-    }
-#endif
-
-    styleSet->StyleNewSubtree(childElement);
   }
 }
 
