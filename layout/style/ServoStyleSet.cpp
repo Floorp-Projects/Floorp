@@ -1067,8 +1067,6 @@ ServoStyleSet::StyleNewSubtree(Element* aRoot)
 {
   MOZ_ASSERT(GetPresContext());
   MOZ_ASSERT(!aRoot->HasServoData());
-  MOZ_ASSERT(aRoot->GetFlattenedTreeParentNodeForStyle(),
-             "Not in the flat tree? Fishy!");
   PreTraverseSync();
   AutoPrepareTraversal guard(this);
 
