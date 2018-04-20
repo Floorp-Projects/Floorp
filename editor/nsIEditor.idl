@@ -57,12 +57,6 @@ interface nsIEditor  : nsISupports
                                    in boolean aSuppressTransaction);
 
   /**
-   * postCreate should be called after Init, and is the time that the editor
-   * tells its documentStateObservers that the document has been created.
-   */
-  void postCreate();
-
-  /**
    * preDestroy is called before the editor goes away, and gives the editor a
    * chance to tell its documentStateObservers that the document is going away.
    * @param aDestroyingFrames set to true when the frames being edited
