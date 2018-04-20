@@ -108,7 +108,7 @@ class JUnitTestRunner(MochitestDesktop):
             "server": "%s:%s" %
             (self.options.webServer, self.options.httpPort)}
 
-        prefs = json.loads(json.dumps(prefs) % interpolation)
+        prefs = json.loads(json.dumps(prefs).format(**interpolation))
         for pref in prefs:
             prefs[pref] = Preferences.cast(prefs[pref])
 
