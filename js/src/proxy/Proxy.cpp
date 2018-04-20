@@ -809,12 +809,10 @@ const ObjectOps js::ProxyObjectOps = {
     Proxy::fun_toString
 };
 
-const Class js::ProxyObject::proxyClass =
+const Class js::ProxyClass =
     PROXY_CLASS_DEF("Proxy",
                     JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy) |
                     JSCLASS_HAS_RESERVED_SLOTS(2));
-
-const Class* const js::ProxyClassPtr = &js::ProxyObject::proxyClass;
 
 JS_FRIEND_API(JSObject*)
 js::NewProxyObject(JSContext* cx, const BaseProxyHandler* handler, HandleValue priv, JSObject* proto_,
@@ -833,7 +831,7 @@ ProxyObject::renew(const BaseProxyHandler* handler, const Value& priv)
 {
     MOZ_ASSERT(!IsInsideNursery(this));
     MOZ_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
-    MOZ_ASSERT(getClass() == &ProxyObject::proxyClass);
+    MOZ_ASSERT(getClass() == &ProxyClass);
     MOZ_ASSERT(!IsWindowProxy(this));
     MOZ_ASSERT(hasDynamicPrototype());
 
