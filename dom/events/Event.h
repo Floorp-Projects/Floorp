@@ -24,6 +24,11 @@
 
 class nsIContent;
 class nsPresContext;
+class PickleIterator;
+
+namespace IPC {
+class Message;
+} // namespace IPC
 
 namespace mozilla {
 namespace dom {
@@ -146,6 +151,19 @@ public:
   // nsIDOMEvent Interface
   NS_DECL_NSIDOMEVENT
 
+  void InitEvent(const nsAString& aEventTypeArg,
+                 bool aCanBubbleArg,
+                 bool aCancelableArg);
+  void SetTarget(EventTarget* aTarget);
+  virtual void DuplicatePrivateData();
+  bool IsDispatchStopped();
+  WidgetEvent* WidgetEventPtr();
+  virtual void Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
+  virtual bool Deserialize(const IPC::Message* aMsg, PickleIterator* aIter);
+  void SetOwner(EventTarget* aOwner);
+  void StopCrossProcessForwarding();
+  void SetTrusted(bool aTrusted);
+
   void InitPresContextData(nsPresContext* aPresContext);
 
   // Returns true if the event should be trusted.
@@ -184,8 +202,7 @@ public:
                                              const EventInit& aParam,
                                              ErrorResult& aRv);
 
-  // Implemented as xpidl method
-  // void GetType(nsString& aRetval) {}
+  void GetType(nsAString& aType) const;
 
   EventTarget* GetTarget() const;
   static bool IsSrcElementEnabled(JSContext* /* unused */, JSObject* /* unused */);
@@ -195,11 +212,9 @@ public:
 
   uint16_t EventPhase() const;
 
-  // xpidl implementation
-  // void StopPropagation();
+  void StopPropagation();
 
-  // xpidl implementation
-  // void StopImmediatePropagation();
+  void StopImmediatePropagation();
 
   bool Bubbles() const
   {
@@ -220,9 +235,15 @@ public:
   {
     return mEvent->PropagationStopped();
   }
+  void SetCancelBubble(bool aCancelBubble)
+  {
+    if (aCancelBubble)  {
+      mEvent->StopPropagation();
+    }
+  }
 
-  // xpidl implementation
-  // void PreventDefault();
+  // For C++ consumers only!
+  void PreventDefault();
 
   // You MUST NOT call PreventDefault(JSContext*, CallerType) from C++ code.  A
   // call of this method always sets Event.defaultPrevented true for web
