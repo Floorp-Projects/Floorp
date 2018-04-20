@@ -329,7 +329,7 @@ Request::Constructor(const GlobalObject& aGlobal,
   RequestCache fallbackCache = RequestCache::EndGuard_;
   if (aInput.IsUSVString()) {
     fallbackMode = RequestMode::Cors;
-    fallbackCredentials = RequestCredentials::Omit;
+    fallbackCredentials = RequestCredentials::Same_origin;
     fallbackCache = RequestCache::Default;
   }
 
