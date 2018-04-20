@@ -38,7 +38,8 @@ public:
     mRequestedTables = aRequestTables;
   }
 
-  nsresult Begin();
+  nsresult Begin(const nsACString& aTable,
+                 const nsTArray<nsCString>& aUpdateTables);
   virtual nsresult AppendStream(const nsACString& aData) = 0;
 
   uint32_t UpdateWaitSec() { return mUpdateWaitSec; }

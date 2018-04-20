@@ -90,6 +90,25 @@ ProtocolParser::CleanupUpdates()
   mTableUpdates.Clear();
 }
 
+nsresult
+ProtocolParser::Begin(const nsACString& aTable,
+                      const nsTArray<nsCString>& aUpdateTables)
+{
+  // ProtocolParser objects should never be reused.
+  MOZ_ASSERT(mPending.IsEmpty());
+  MOZ_ASSERT(mTableUpdates.IsEmpty());
+  MOZ_ASSERT(mForwards.IsEmpty());
+  MOZ_ASSERT(mRequestedTables.IsEmpty());
+  MOZ_ASSERT(mTablesToReset.IsEmpty());
+
+  if (!aTable.IsEmpty()) {
+    SetCurrentTable(aTable);
+  }
+  SetRequestedTables(aUpdateTables);
+
+  return NS_OK;
+}
+
 TableUpdate *
 ProtocolParser::GetTableUpdate(const nsACString& aTable)
 {
