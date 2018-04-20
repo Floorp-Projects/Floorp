@@ -1348,7 +1348,7 @@ nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
         // instead of on our content element.
         nsAutoString command;
         if (aVisitor.mDOMEvent &&
-            aVisitor.mDOMEvent->InternalDOMEvent()->AsXULCommandEvent() &&
+            aVisitor.mDOMEvent->AsXULCommandEvent() &&
             GetAttr(kNameSpaceID_None, nsGkAtoms::command, command) &&
             !command.IsEmpty()) {
             // Stop building the event target chain for the original event.

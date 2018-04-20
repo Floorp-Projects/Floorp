@@ -66,5 +66,4 @@ interface nsIDOMEvent : nsISupports
   const long SHIFT_MASK   = 0x00000004;
   const long META_MASK    = 0x00000008;
 
-  [notxpcom] DOMEventPtr InternalDOMEvent();
 };

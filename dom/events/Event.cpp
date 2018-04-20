@@ -567,12 +567,6 @@ Event::WidgetEventPtr()
   return mEvent;
 }
 
-NS_IMETHODIMP_(Event*)
-Event::InternalDOMEvent()
-{
-  return this;
-}
-
 // return true if eventName is contained within events, delimited by
 // spaces
 static bool
