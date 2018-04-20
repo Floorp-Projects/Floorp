@@ -81,8 +81,7 @@ VisibilityChangeListener::HandleEvent(Event* aEvent)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDocument> doc =
-    do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aEvent->GetTarget());
   MOZ_ASSERT(doc);
 
   if (mCallback) {

@@ -644,7 +644,7 @@ ImageDocument::HandleEvent(Event* aEvent)
     mShouldResize = true;
     if (mImageIsResized) {
       int32_t x = 0, y = 0;
-      MouseEvent* event = aEvent->InternalDOMEvent()->AsMouseEvent();
+      MouseEvent* event = aEvent->AsMouseEvent();
       if (event) {
         RefPtr<HTMLImageElement> img =
           HTMLImageElement::FromNode(mImageContent);

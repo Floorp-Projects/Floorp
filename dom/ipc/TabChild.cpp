@@ -285,7 +285,7 @@ NS_IMETHODIMP
 ContentListener::HandleEvent(Event* aEvent)
 {
   RemoteDOMEvent remoteEvent;
-  remoteEvent.mEvent = do_QueryInterface(aEvent);
+  remoteEvent.mEvent = aEvent;
   NS_ENSURE_STATE(remoteEvent.mEvent);
   mTabChild->SendEvent(remoteEvent);
   return NS_OK;

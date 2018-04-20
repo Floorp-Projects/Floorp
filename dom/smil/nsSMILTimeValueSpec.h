@@ -76,7 +76,7 @@ protected:
   void RegisterEventListener(Element* aElement);
   void UnregisterEventListener(Element* aElement);
   void HandleEvent(Event* aEvent);
-  bool CheckRepeatEventDetail(nsIDOMEvent* aEvent);
+  bool CheckRepeatEventDetail(Event* aEvent);
   nsSMILTimeValue ConvertBetweenTimeContainers(const nsSMILTimeValue& aSrcTime,
                                       const nsSMILTimeContainer* aSrcContainer);
   bool ApplyOffset(nsSMILTimeValue& aTime) const;
