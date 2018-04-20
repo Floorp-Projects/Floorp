@@ -621,7 +621,7 @@ PresentationConnection::DispatchConnectionCloseEvent(
   }
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, static_cast<Event*>(closedEvent));
+    new AsyncEventDispatcher(this, closedEvent);
   return asyncDispatcher->PostDOMEvent();
 }
 
@@ -650,7 +650,7 @@ PresentationConnection::DispatchMessageEvent(JS::Handle<JS::Value> aData)
   messageEvent->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, static_cast<Event*>(messageEvent));
+    new AsyncEventDispatcher(this, messageEvent);
   return asyncDispatcher->PostDOMEvent();
 }
 
