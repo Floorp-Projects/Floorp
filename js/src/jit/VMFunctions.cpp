@@ -44,13 +44,6 @@ AutoDetectInvalidation::AutoDetectInvalidation(JSContext* cx, MutableHandleValue
     disabled_(false)
 { }
 
-void
-VMFunction::addToFunctions()
-{
-    this->next = functions;
-    functions = this;
-}
-
 bool
 InvokeFunction(JSContext* cx, HandleObject obj, bool constructing, bool ignoresReturnValue,
                uint32_t argc, Value* argv, MutableHandleValue rval)

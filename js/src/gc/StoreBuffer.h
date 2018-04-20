@@ -525,7 +525,13 @@ class ArenaCellSet
 #endif
 
     // Construct the empty sentinel object.
-    ArenaCellSet();
+    constexpr ArenaCellSet()
+      : arena(nullptr)
+      , next(nullptr)
+#ifdef DEBUG
+      , minorGCNumberAtCreation(0)
+#endif
+    {}
 
   public:
     ArenaCellSet(Arena* arena, ArenaCellSet* next);
