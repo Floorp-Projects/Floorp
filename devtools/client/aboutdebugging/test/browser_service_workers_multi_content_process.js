@@ -30,6 +30,11 @@ add_task(async function() {
   let serviceWorkerContainer =
     await waitUntilServiceWorkerContainer(SERVICE_WORKER, document);
 
+  info("Wait until the service worker is running and the Debug button appears");
+  await waitUntil(() => {
+    return !!getDebugButton(serviceWorkerContainer);
+  }, 100);
+
   info("Check that service worker buttons are disabled.");
   let debugButton = getDebugButton(serviceWorkerContainer);
   ok(debugButton.disabled, "Start/Debug button is disabled");
