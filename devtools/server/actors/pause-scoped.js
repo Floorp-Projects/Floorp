@@ -6,92 +6,68 @@
 
 "use strict";
 
-const { ObjectActor } = require("devtools/server/actors/object");
+const { extend } = require("devtools/shared/extend");
+const { ObjectActorProto } = require("devtools/server/actors/object");
+const protocol = require("devtools/shared/protocol");
+const { ActorClassWithSpec } = protocol;
+const { objectSpec } = require("devtools/shared/specs/object");
 
 /**
- * A base actor for any actors that should only respond receive messages in the
- * paused state. Subclasses may expose a `threadActor` which is used to help
- * determine when we are in a paused state. Subclasses should set their own
- * "constructor" property if they want better error messages. You should never
- * instantiate a PauseScopedActor directly, only through subclasses.
- */
-function PauseScopedActor() {
-}
+ * Protocol.js expects only the prototype object, and does not maintain the prototype
+ * chain when it constructs the ActorClass. For this reason we are using extend to
+ * maintain the properties of ObjectActorProto.
+ **/
+const proto = extend({}, ObjectActorProto);
 
-/**
- * A function decorator for creating methods to handle protocol messages that
- * should only be received while in the paused state.
- *
- * @param method Function
- *        The function we are decorating.
- */
-PauseScopedActor.withPaused = function(method) {
-  return function() {
-    if (this.isPaused()) {
-      return method.apply(this, arguments);
-    }
-    return this._wrongState();
-  };
-};
-
-PauseScopedActor.prototype = {
-
+Object.assign(proto, {
+  typeName: "pausedobj",
   /**
-   * Returns true if we are in the paused state.
+   * Creates a pause-scoped actor for the specified object.
+   * @see ObjectActor
    */
-  isPaused: function() {
-    // When there is not a ThreadActor available (like in the webconsole) we
-    // have to be optimistic and assume that we are paused so that we can
-    // respond to requests.
-    return this.threadActor ? this.threadActor.state === "paused" : true;
+  initialize: function(obj, hooks, conn) {
+    ObjectActorProto.initialize.call(this, obj, hooks, conn);
+    this.hooks.promote = hooks.promote;
+    this.hooks.isThreadLifetimePool = hooks.isThreadLifetimePool;
   },
 
-  /**
-   * Returns the wrongState response packet for this actor.
-   */
-  _wrongState: function() {
-    return {
-      error: "wrongState",
-      message: this.constructor.name +
-        " actors can only be accessed while the thread is paused."
+  isPaused: function() {
+    return this.threadActor
+      ? this.threadActor.state === "paused"
+      : true;
+  },
+
+  withPaused: function(method) {
+    return function() {
+      if (this.isPaused()) {
+        return method.apply(this, arguments);
+      }
+
+      return {
+        error: "wrongState",
+        message: this.constructor.name +
+          " actors can only be accessed while the thread is paused."
+      };
     };
   }
-};
+});
 
-/**
- * Creates a pause-scoped actor for the specified object.
- * @see ObjectActor
- */
-function PauseScopedObjectActor(obj, hooks) {
-  ObjectActor.call(this, obj, hooks);
-  this.hooks.promote = hooks.promote;
-  this.hooks.isThreadLifetimePool = hooks.isThreadLifetimePool;
-}
+const guardWithPaused = [
+  "decompile",
+  "displayString",
+  "ownPropertyNames",
+  "parameterNames",
+  "property",
+  "prototype",
+  "prototypeAndProperties",
+  "scope",
+];
 
-PauseScopedObjectActor.prototype = Object.create(PauseScopedActor.prototype);
+guardWithPaused.forEach(f => {
+  proto[f] = proto.withPaused(ObjectActorProto[f]);
+});
 
-Object.assign(PauseScopedObjectActor.prototype, ObjectActor.prototype);
-
-Object.assign(PauseScopedObjectActor.prototype, {
-  constructor: PauseScopedObjectActor,
-  actorPrefix: "pausedobj",
-
-  onOwnPropertyNames:
-    PauseScopedActor.withPaused(ObjectActor.prototype.onOwnPropertyNames),
-
-  onPrototypeAndProperties:
-    PauseScopedActor.withPaused(ObjectActor.prototype.onPrototypeAndProperties),
-
-  onPrototype: PauseScopedActor.withPaused(ObjectActor.prototype.onPrototype),
-  onProperty: PauseScopedActor.withPaused(ObjectActor.prototype.onProperty),
-  onDecompile: PauseScopedActor.withPaused(ObjectActor.prototype.onDecompile),
-
-  onDisplayString:
-    PauseScopedActor.withPaused(ObjectActor.prototype.onDisplayString),
-
-  onParameterNames:
-    PauseScopedActor.withPaused(ObjectActor.prototype.onParameterNames),
-
+Object.assign(proto, {
   /**
    * Handle a protocol request to promote a pause-lifetime grip to a
    * thread-lifetime grip.
@@ -99,7 +75,7 @@ Object.assign(PauseScopedObjectActor.prototype, {
    * @param request object
    *        The protocol request object.
    */
-  onThreadGrip: PauseScopedActor.withPaused(function(request) {
+  threadGrip: proto.withPaused(function(request) {
     this.hooks.promote();
     return {};
   }),
@@ -110,19 +86,16 @@ Object.assign(PauseScopedObjectActor.prototype, {
    * @param request object
    *        The protocol request object.
    */
-  onRelease: PauseScopedActor.withPaused(function(request) {
+  destroy: proto.withPaused(function(request) {
     if (this.hooks.isThreadLifetimePool()) {
       return { error: "notReleasable",
                message: "Only thread-lifetime actors can be released." };
     }
 
-    this.release();
-    return {};
+    return protocol.Actor.prototype.destroy.call(this);
   }),
 });
 
-Object.assign(PauseScopedObjectActor.prototype.requestTypes, {
-  "threadGrip": PauseScopedObjectActor.prototype.onThreadGrip,
-});
+exports.PauseScopedObjectActor = ActorClassWithSpec(objectSpec, proto);
+  // ActorClassWithSpec(objectSpec, {...ObjectActorProto, ...proto});
 
-exports.PauseScopedObjectActor = PauseScopedObjectActor;

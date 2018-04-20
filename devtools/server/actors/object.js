@@ -11,6 +11,9 @@ const { GeneratedLocation } = require("devtools/server/actors/common");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert } = DevToolsUtils;
 
+const protocol = require("devtools/shared/protocol");
+const { objectSpec } = require("devtools/shared/specs/object");
+
 loader.lazyRequireGetter(this, "PropertyIteratorActor", "devtools/server/actors/object/property-iterator", true);
 loader.lazyRequireGetter(this, "SymbolIteratorActor", "devtools/server/actors/object/symbol-iterator", true);
 loader.lazyRequireGetter(this, "previewers", "devtools/server/actors/object/previewers");
@@ -24,43 +27,33 @@ const {
   isStorage,
   isTypedArray,
 } = require("devtools/server/actors/object/utils");
-/**
- * Creates an actor for the specified object.
- *
- * @param obj Debugger.Object
- *        The debuggee object.
- * @param hooks Object
- *        A collection of abstract methods that are implemented by the caller.
- *        ObjectActor requires the following functions to be implemented by
- *        the caller:
- *          - createValueGrip
- *              Creates a value grip for the given object
- *          - sources
- *              TabSources getter that manages the sources of a thread
- *          - createEnvironmentActor
- *              Creates and return an environment actor
- *          - getGripDepth
- *              An actor's grip depth getter
- *          - incrementGripDepth
- *              Increment the actor's grip depth
- *          - decrementGripDepth
- *              Decrement the actor's grip depth
- *          - globalDebugObject
- *              The Debuggee Global Object as given by the ThreadActor
- */
-function ObjectActor(obj, {
-  createValueGrip: createValueGripHook,
-  sources,
-  createEnvironmentActor,
-  getGripDepth,
-  incrementGripDepth,
-  decrementGripDepth,
-  getGlobalDebugObject
-}) {
-  assert(!obj.optimizedOut,
-         "Should not create object actors for optimized out values!");
-  this.obj = obj;
-  this.hooks = {
+
+const proto = {
+  /**
+   * Creates an actor for the specified object.
+   *
+   * @param obj Debugger.Object
+   *        The debuggee object.
+   * @param Object
+   *        A collection of abstract methods that are implemented by the caller.
+   *        ObjectActor requires the following functions to be implemented by
+   *        the caller:
+   *          - createValueGrip
+   *              Creates a value grip for the given object
+   *          - sources
+   *              TabSources getter that manages the sources of a thread
+   *          - createEnvironmentActor
+   *              Creates and return an environment actor
+   *          - getGripDepth
+   *              An actor's grip depth getter
+   *          - incrementGripDepth
+   *              Increment the actor's grip depth
+   *          - decrementGripDepth
+   *              Decrement the actor's grip depth
+   *          - globalDebugObject
+   *              The Debuggee Global Object as given by the ThreadActor
+   */
+  initialize(obj, {
     createValueGrip: createValueGripHook,
     sources,
     createEnvironmentActor,
@@ -68,12 +61,23 @@ function ObjectActor(obj, {
     incrementGripDepth,
     decrementGripDepth,
     getGlobalDebugObject
-  };
-  this.iterators = new Set();
-}
+  }, conn) {
+    assert(!obj.optimizedOut,
+          "Should not create object actors for optimized out values!");
+    protocol.Actor.prototype.initialize.call(this, conn);
 
-ObjectActor.prototype = {
-  actorPrefix: "obj",
+    this.conn = conn;
+    this.obj = obj;
+    this.hooks = {
+      createValueGrip: createValueGripHook,
+      sources,
+      createEnvironmentActor,
+      getGripDepth,
+      incrementGripDepth,
+      decrementGripDepth,
+      getGlobalDebugObject
+    };
+  },
 
   rawValue: function() {
     return this.obj.unsafeDereference();
@@ -82,7 +86,7 @@ ObjectActor.prototype = {
   /**
    * Returns a grip for this actor for returning in a protocol message.
    */
-  grip: function() {
+  form: function() {
     const g = {
       "type": "object",
       "actor": this.actorID,
@@ -195,36 +199,16 @@ ObjectActor.prototype = {
   },
 
   /**
-   * Releases this actor from the pool.
-   */
-  release: function() {
-    if (this.registeredPool.objectActors) {
-      this.registeredPool.objectActors.delete(this.obj);
-    }
-    this.iterators.forEach(actor => this.registeredPool.removeActor(actor));
-    this.iterators.clear();
-    this.registeredPool.removeActor(this);
-  },
-
-  /**
    * Handle a protocol request to provide the definition site of this function
    * object.
    */
-  onDefinitionSite: function() {
+  definitionSite: function() {
     if (this.obj.class != "Function") {
-      return {
-        from: this.actorID,
-        error: "objectNotFunction",
-        message: this.actorID + " is not a function."
-      };
+      return this.throwError("objectNotFunction", this.actorID + " is not a function.");
     }
 
     if (!this.obj.script) {
-      return {
-        from: this.actorID,
-        error: "noScript",
-        message: this.actorID + " has no Debugger.Script"
-      };
+      return this.throwError("noScript", this.actorID + " has no Debugger.Script");
     }
 
     return this.hooks.sources().getOriginalLocation(new GeneratedLocation(
@@ -233,7 +217,7 @@ ObjectActor.prototype = {
       0 // TODO bug 901138: use Debugger.Script.prototype.startColumn
     )).then((originalLocation) => {
       return {
-        source: originalLocation.originalSourceActor.form(),
+        source: originalLocation.originalSourceActor,
         line: originalLocation.originalLine,
         column: originalLocation.originalColumn
       };
@@ -244,7 +228,7 @@ ObjectActor.prototype = {
    * Handle a protocol request to provide the names of the properties defined on
    * the object and not its prototype.
    */
-  onOwnPropertyNames: function() {
+  ownPropertyNames: function() {
     let props = [];
     if (DevToolsUtils.isSafeDebuggerObject(this.obj)) {
       try {
@@ -254,41 +238,31 @@ ObjectActor.prototype = {
         // compartment, or for some WrappedNatives like Cu.Sandbox.
       }
     }
-    return { from: this.actorID, ownPropertyNames: props };
+    return { ownPropertyNames: props };
   },
 
   /**
    * Creates an actor to iterate over an object property names and values.
    * See PropertyIteratorActor constructor for more info about options param.
    *
-   * @param request object
-   *        The protocol request object.
+   * @param options object
    */
-  onEnumProperties: function(request) {
-    const actor = new PropertyIteratorActor(this, request.options);
-    this.registeredPool.addActor(actor);
-    this.iterators.add(actor);
-    return { iterator: actor.form() };
+  enumProperties: function(options) {
+    return PropertyIteratorActor(this, options, this.conn);
   },
 
   /**
    * Creates an actor to iterate over entries of a Map/Set-like object.
    */
-  onEnumEntries: function() {
-    const actor = new PropertyIteratorActor(this, { enumEntries: true });
-    this.registeredPool.addActor(actor);
-    this.iterators.add(actor);
-    return { iterator: actor.form() };
+  enumEntries: function() {
+    return PropertyIteratorActor(this, { enumEntries: true }, this.conn);
   },
 
   /**
    * Creates an actor to iterate over an object symbols properties.
    */
-  onEnumSymbols: function() {
-    const actor = new SymbolIteratorActor(this);
-    this.registeredPool.addActor(actor);
-    this.iterators.add(actor);
-    return { iterator: actor.form() };
+  enumSymbols: function() {
+    return SymbolIteratorActor(this, this.conn);
   },
 
   /**
@@ -296,7 +270,6 @@ ObjectActor.prototype = {
    * the object.
    *
    * @returns {Object} An object containing the data of this.obj, of the following form:
-   *          - {string} from: this.obj's actorID.
    *          - {Object} prototype: The descriptor of this.obj's prototype.
    *          - {Object} ownProperties: an object where the keys are the names of the
    *                     this.obj's ownProperties, and the values the descriptors of
@@ -308,13 +281,13 @@ ObjectActor.prototype = {
    *          - {Object} safeGetterValues: an object that maps this.obj's property names
    *                     with safe getters descriptors.
    */
-  onPrototypeAndProperties: function() {
-    let proto = null;
+  prototypeAndProperties: function() {
+    let objProto = null;
     let names = [];
     let symbols = [];
     if (DevToolsUtils.isSafeDebuggerObject(this.obj)) {
       try {
-        proto = this.obj.proto;
+        objProto = this.obj.proto;
         names = this.obj.getOwnPropertyNames();
         symbols = this.obj.getOwnPropertySymbols();
       } catch (err) {
@@ -337,11 +310,12 @@ ObjectActor.prototype = {
       });
     }
 
-    return { from: this.actorID,
-             prototype: this.hooks.createValueGrip(proto),
-             ownProperties,
-             ownSymbols,
-             safeGetterValues: this._findSafeGetterValues(names) };
+    return {
+      prototype: this.hooks.createValueGrip(objProto),
+      ownProperties,
+      ownSymbols,
+      safeGetterValues: this._findSafeGetterValues(names)
+    };
   },
 
   /**
@@ -493,39 +467,36 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the prototype of the object.
    */
-  onPrototype: function() {
-    let proto = null;
+  prototype: function() {
+    let objProto = null;
     if (DevToolsUtils.isSafeDebuggerObject(this.obj)) {
-      proto = this.obj.proto;
+      objProto = this.obj.proto;
     }
-    return { from: this.actorID,
-             prototype: this.hooks.createValueGrip(proto) };
+    return { prototype: this.hooks.createValueGrip(objProto) };
   },
 
   /**
    * Handle a protocol request to provide the property descriptor of the
    * object's specified property.
    *
-   * @param request object
-   *        The protocol request object.
+   * @param name string
+   *        The property we want the description of.
    */
-  onProperty: function(request) {
-    if (!request.name) {
+  property: function(name) {
+    if (!name) {
       return { error: "missingParameter",
                message: "no property name was specified" };
     }
 
-    return { from: this.actorID,
-             descriptor: this._propertyDescriptor(request.name) };
+    return { descriptor: this._propertyDescriptor(name) };
   },
 
   /**
    * Handle a protocol request to provide the display string for the object.
    */
-  onDisplayString: function() {
+  displayString: function() {
     const string = stringify(this.obj);
-    return { from: this.actorID,
-             displayString: this.hooks.createValueGrip(string) };
+    return { displayString: this.hooks.createValueGrip(string) };
   },
 
   /**
@@ -600,24 +571,22 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the source code of a function.
    *
-   * @param request object
-   *        The protocol request object.
+   * @param pretty boolean
    */
-  onDecompile: function(request) {
+  decompile: function(pretty) {
     if (this.obj.class !== "Function") {
       return { error: "objectNotFunction",
                message: "decompile request is only valid for object grips " +
                         "with a 'Function' class." };
     }
 
-    return { from: this.actorID,
-             decompiledCode: this.obj.decompile(!!request.pretty) };
+    return { decompiledCode: this.obj.decompile(!!pretty) };
   },
 
   /**
    * Handle a protocol request to provide the parameters of a function.
    */
-  onParameterNames: function() {
+  parameterNames: function() {
     if (this.obj.class !== "Function") {
       return { error: "objectNotFunction",
                message: "'parameterNames' request is only valid for object " +
@@ -628,31 +597,29 @@ ObjectActor.prototype = {
   },
 
   /**
-   * Handle a protocol request to release a thread-lifetime grip.
-   */
-  onRelease: function() {
-    this.release();
-    return {};
-  },
-
-  /**
    * Handle a protocol request to provide the lexical scope of a function.
    */
-  onScope: function() {
+  scope: function() {
     if (this.obj.class !== "Function") {
-      return { error: "objectNotFunction",
-               message: "scope request is only valid for object grips with a" +
-                        " 'Function' class." };
+      return {
+        error: "objectNotFunction",
+        message: "scope request is only valid for object grips with a 'Function' class."
+      };
     }
 
-    const envActor = this.hooks.createEnvironmentActor(this.obj.environment,
-                                                     this.registeredPool);
+    const { createEnvironmentActor } = this.hooks;
+    const envActor = createEnvironmentActor(this.obj.environment, this.registeredPool);
+
     if (!envActor) {
-      return { error: "notDebuggee",
-               message: "cannot access the environment of this function." };
+      return {
+        error: "notDebuggee",
+        message: "cannot access the environment of this function."
+      };
     }
 
-    return { from: this.actorID, scope: envActor.form() };
+    return {
+      scope: envActor
+    };
   },
 
   /**
@@ -663,7 +630,7 @@ ObjectActor.prototype = {
    *         Returns an object containing an array of object grips of the
    *         dependent promises
    */
-  onDependentPromises: function() {
+  dependentPromises: function() {
     if (this.obj.class != "Promise") {
       return { error: "objectNotPromise",
                message: "'dependentPromises' request is only valid for " +
@@ -679,7 +646,7 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to get the allocation stack of a promise.
    */
-  onAllocationStack: function() {
+  allocationStack: function() {
     if (this.obj.class != "Promise") {
       return { error: "objectNotPromise",
                message: "'allocationStack' request is only valid for " +
@@ -700,15 +667,13 @@ ObjectActor.prototype = {
       stack = stack.parent;
     }
 
-    return Promise.all(allocationStacks).then(stacks => {
-      return { allocationStack: stacks };
-    });
+    return Promise.all(allocationStacks);
   },
 
   /**
    * Handle a protocol request to get the fulfillment stack of a promise.
    */
-  onFulfillmentStack: function() {
+  fulfillmentStack: function() {
     if (this.obj.class != "Promise") {
       return { error: "objectNotPromise",
                message: "'fulfillmentStack' request is only valid for " +
@@ -729,15 +694,13 @@ ObjectActor.prototype = {
       stack = stack.parent;
     }
 
-    return Promise.all(fulfillmentStacks).then(stacks => {
-      return { fulfillmentStack: stacks };
-    });
+    return Promise.all(fulfillmentStacks);
   },
 
   /**
    * Handle a protocol request to get the rejection stack of a promise.
    */
-  onRejectionStack: function() {
+  rejectionStack: function() {
     if (this.obj.class != "Promise") {
       return { error: "objectNotPromise",
                message: "'rejectionStack' request is only valid for " +
@@ -758,9 +721,7 @@ ObjectActor.prototype = {
       stack = stack.parent;
     }
 
-    return Promise.all(rejectionStacks).then(stacks => {
-      return { rejectionStack: stacks };
-    });
+    return Promise.all(rejectionStacks);
   },
 
   /**
@@ -792,33 +753,20 @@ ObjectActor.prototype = {
       stack.column
     )).then((originalLocation) => {
       return {
-        source: originalLocation.originalSourceActor.form(),
+        source: originalLocation.originalSourceActor,
         line: originalLocation.originalLine,
         column: originalLocation.originalColumn,
         functionDisplayName: stack.functionDisplayName
       };
     });
-  }
+  },
+
+  /**
+   * Release the actor, when it isn't needed anymore.
+   * Protocol.js uses this release method to call the destroy method.
+   */
+  release: function() {}
 };
 
-ObjectActor.prototype.requestTypes = {
-  "definitionSite": ObjectActor.prototype.onDefinitionSite,
-  "parameterNames": ObjectActor.prototype.onParameterNames,
-  "prototypeAndProperties": ObjectActor.prototype.onPrototypeAndProperties,
-  "enumProperties": ObjectActor.prototype.onEnumProperties,
-  "prototype": ObjectActor.prototype.onPrototype,
-  "property": ObjectActor.prototype.onProperty,
-  "displayString": ObjectActor.prototype.onDisplayString,
-  "ownPropertyNames": ObjectActor.prototype.onOwnPropertyNames,
-  "decompile": ObjectActor.prototype.onDecompile,
-  "release": ObjectActor.prototype.onRelease,
-  "scope": ObjectActor.prototype.onScope,
-  "dependentPromises": ObjectActor.prototype.onDependentPromises,
-  "allocationStack": ObjectActor.prototype.onAllocationStack,
-  "fulfillmentStack": ObjectActor.prototype.onFulfillmentStack,
-  "rejectionStack": ObjectActor.prototype.onRejectionStack,
-  "enumEntries": ObjectActor.prototype.onEnumEntries,
-  "enumSymbols": ObjectActor.prototype.onEnumSymbols,
-};
-
-exports.ObjectActor = ObjectActor;
+exports.ObjectActor = protocol.ActorClassWithSpec(objectSpec, proto);
+exports.ObjectActorProto = proto;
