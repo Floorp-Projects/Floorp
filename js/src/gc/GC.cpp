@@ -5168,6 +5168,7 @@ void
 js::gc::DelayCrossCompartmentGrayMarking(JSObject* src)
 {
     MOZ_ASSERT(IsGrayListObject(src));
+    MOZ_ASSERT(src->isMarkedGray());
 
     AutoTouchingGrayThings tgt;
 
@@ -5269,7 +5270,7 @@ RemoveFromGrayList(JSObject* wrapper)
         unsigned slot = ProxyObject::grayLinkReservedSlot(obj);
         JSObject* next = GetProxyReservedSlot(obj, slot).toObjectOrNull();
         if (next == wrapper) {
-            SetProxyReservedSlot(obj, slot, ObjectOrNullValue(tail));
+            js::detail::SetProxyReservedSlotUnchecked(obj, slot, ObjectOrNullValue(tail));
             return true;
         }
         obj = next;

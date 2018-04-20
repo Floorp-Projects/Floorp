@@ -463,6 +463,24 @@ GetProxyDataLayout(const JSObject* obj)
     return reinterpret_cast<const ProxyDataLayout*>(reinterpret_cast<const uint8_t*>(obj) +
                                                     ProxyDataOffset);
 }
+
+JS_FRIEND_API(void)
+SetValueInProxy(Value* slot, const Value& value);
+
+inline void
+SetProxyReservedSlotUnchecked(JSObject* obj, size_t n, const Value& extra)
+{
+    MOZ_ASSERT(n < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
+
+    Value* vp = &GetProxyDataLayout(obj)->reservedSlots->slots[n];
+
+    // Trigger a barrier before writing the slot.
+    if (vp->isGCThing() || extra.isGCThing())
+        SetValueInProxy(vp, extra);
+    else
+        *vp = extra;
+}
+
 } // namespace detail
 
 inline const BaseProxyHandler*
@@ -496,22 +514,11 @@ SetProxyHandler(JSObject* obj, const BaseProxyHandler* handler)
     detail::GetProxyDataLayout(obj)->handler = handler;
 }
 
-JS_FRIEND_API(void)
-SetValueInProxy(Value* slot, const Value& value);
-
 inline void
 SetProxyReservedSlot(JSObject* obj, size_t n, const Value& extra)
 {
-    MOZ_ASSERT(n < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
     MOZ_ASSERT_IF(gc::detail::ObjectIsMarkedBlack(obj), JS::ValueIsNotGray(extra));
-
-    Value* vp = &detail::GetProxyDataLayout(obj)->reservedSlots->slots[n];
-
-    // Trigger a barrier before writing the slot.
-    if (vp->isGCThing() || extra.isGCThing())
-        SetValueInProxy(vp, extra);
-    else
-        *vp = extra;
+    detail::SetProxyReservedSlotUnchecked(obj, n, extra);
 }
 
 inline void
@@ -523,7 +530,7 @@ SetProxyPrivate(JSObject* obj, const Value& value)
 
     // Trigger a barrier before writing the slot.
     if (vp->isGCThing() || value.isGCThing())
-        SetValueInProxy(vp, value);
+        detail::SetValueInProxy(vp, value);
     else
         *vp = value;
 }
