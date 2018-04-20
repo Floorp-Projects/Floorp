@@ -253,7 +253,7 @@ const TSymbol *TSymbolTable::findBuiltIn(const ImmutableString &name,
     return nullptr;
 }
 
-constexpr14 bool IsGenType(const TType *type)
+constexpr bool IsGenType(const TType *type)
 {
     if (type)
     {
@@ -265,7 +265,7 @@ constexpr14 bool IsGenType(const TType *type)
     return false;
 }
 
-constexpr14 bool IsVecType(const TType *type)
+constexpr bool IsVecType(const TType *type)
 {
     if (type)
     {
@@ -277,7 +277,7 @@ constexpr14 bool IsVecType(const TType *type)
     return false;
 }
 
-constexpr14 const TType *SpecificType(const TType *type, int size)
+constexpr const TType *SpecificType(const TType *type, int size)
 {
     ASSERT(size >= 1 && size <= 4);
 
@@ -307,7 +307,7 @@ constexpr14 const TType *SpecificType(const TType *type, int size)
     }
 }
 
-constexpr14 const TType *VectorType(const TType *type, int size)
+constexpr const TType *VectorType(const TType *type, int size)
 {
     ASSERT(size >= 2 && size <= 4);
 

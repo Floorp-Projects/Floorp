@@ -1,4 +1,4 @@
-commit 27cef491162bfa5d5d69cf65758bd9b85033d339
+commit fcbca0e873c3222f13578a07294349c03ce44ab4
 Author: Dzmitry Malyshau <kvark@mozilla.com>
 Date:   Fri Mar 9 16:37:22 2018 -0500
 
@@ -14,7 +14,7 @@ Date:   Fri Mar 9 16:37:22 2018 -0500
     Reviewed-by: Geoff Lang <geofflang@chromium.org>
     Commit-Queue: Geoff Lang <geofflang@chromium.org>
 
-commit 7edc21933ef15d10e5790e6bfb7f9fd62f13be58
+commit 17c34b476b3a941ee749165b6a360f8a3488960d
 Author: Frank Henigman <fjhenigman@chromium.org>
 Date:   Wed Feb 28 15:47:13 2018 -0500
 
@@ -31,7 +31,7 @@ Date:   Wed Feb 28 15:47:13 2018 -0500
     Reviewed-by: Yuly Novikov <ynovikov@chromium.org>
     Reviewed-by: Luc Ferron <lucferron@chromium.org>
 
-commit 1f7cc32a8d49ff3880660f32e3a4aca7bbc1f4e8
+commit eb0da26df7dc6cd45ee17455633bdec2efbaf322
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Thu Mar 1 17:08:35 2018 -0800
 
@@ -40,16 +40,6 @@ Date:   Thu Mar 1 17:08:35 2018 -0800
     Bug: angleproject:2385
     
     Change-Id: I555000f23314441084895e275824d2eb48ba7041
-
-commit bdc28a041ea0090438790756ff63d8944f57d4cc
-Author: Jeff Gilbert <jgilbert@mozilla.com>
-Date:   Wed Feb 28 17:46:39 2018 -0800
-
-    Support c++11 non-relaxed-constexpr with constexpr14.
-    
-    BUG=angleproject:2384
-    
-    Change-Id: I0448aef7184c9060db016dee512b5fec29960f46
 
 commit 7d510ab511cd502220f81507189a2861958e22fd
 Author: Jeff Gilbert <jgilbert@mozilla.com>
