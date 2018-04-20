@@ -6,6 +6,7 @@ describe("Store", () => {
   let Store;
   let sandbox;
   let store;
+  let dbStub;
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     function ActivityStreamMessageChannel(options) {
@@ -15,11 +16,18 @@ describe("Store", () => {
       this.middleware = sandbox.spy(s => next => action => next(action));
       this.simulateMessagesForExistingTabs = sandbox.stub();
     }
+    dbStub = sandbox.stub().resolves();
+    function FakeActivityStreamStorage() {
+      this.db = {};
+      sinon.stub(this, "db").get(dbStub);
+    }
     ({Store} = injector({
       "lib/ActivityStreamMessageChannel.jsm": {ActivityStreamMessageChannel},
-      "lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs}
+      "lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs},
+      "lib/ActivityStreamStorage.jsm": {ActivityStreamStorage: FakeActivityStreamStorage}
     }));
     store = new Store();
+    sandbox.stub(store, "_initIndexedDB").resolves();
   });
   afterEach(() => {
     sandbox.restore();
@@ -131,35 +139,47 @@ describe("Store", () => {
     });
   });
   describe("#init", () => {
-    it("should call .initFeed with each key", () => {
+    it("should call .initFeed with each key", async () => {
       sinon.stub(store, "initFeed");
       store._prefs.set("foo", true);
       store._prefs.set("bar", true);
-      store.init(new Map([["foo", () => {}], ["bar", () => {}]]));
+      await store.init(new Map([["foo", () => {}], ["bar", () => {}]]));
       assert.calledWith(store.initFeed, "foo");
       assert.calledWith(store.initFeed, "bar");
     });
-    it("should not initialize the feed if the Pref is set to false", () => {
+    it("should call _initIndexedDB", async () => {
+      await store.init(new Map());
+
+      assert.calledOnce(store._initIndexedDB);
+      assert.calledWithExactly(store._initIndexedDB, "feeds.telemetry");
+    });
+    it("should access the db property of indexedDB", async () => {
+      store._initIndexedDB.restore();
+      await store.init(new Map());
+
+      assert.calledOnce(dbStub);
+    });
+    it("should not initialize the feed if the Pref is set to false", async () => {
       sinon.stub(store, "initFeed");
       store._prefs.set("foo", false);
-      store.init(new Map([["foo", () => {}]]));
+      await store.init(new Map([["foo", () => {}]]));
       assert.notCalled(store.initFeed);
     });
-    it("should observe the pref branch", () => {
+    it("should observe the pref branch", async () => {
       sinon.stub(store._prefs, "observeBranch");
-      store.init(new Map());
+      await store.init(new Map());
       assert.calledOnce(store._prefs.observeBranch);
       assert.calledWith(store._prefs.observeBranch, store);
     });
-    it("should initialize the ActivityStreamMessageChannel channel", () => {
-      store.init(new Map());
+    it("should initialize the ActivityStreamMessageChannel channel", async () => {
+      await store.init(new Map());
       assert.calledOnce(store._messageChannel.createChannel);
     });
-    it("should emit an initial event if provided", () => {
+    it("should emit an initial event if provided", async () => {
       sinon.stub(store, "dispatch");
       const action = {type: "FOO"};
 
-      store.init(new Map(), action);
+      await store.init(new Map(), action);
 
       assert.calledOnce(store.dispatch);
       assert.calledWith(store.dispatch, action);
@@ -175,17 +195,17 @@ describe("Store", () => {
       store.init(feedFactories);
       assert.ok(telemetrySpy.calledBefore(fooSpy));
     });
-    it("should dispatch init/load events", () => {
-      store.init(new Map(), {type: "FOO"});
+    it("should dispatch init/load events", async () => {
+      await store.init(new Map(), {type: "FOO"});
 
       assert.calledOnce(store._messageChannel.simulateMessagesForExistingTabs);
     });
-    it("should dispatch INIT before LOAD", () => {
+    it("should dispatch INIT before LOAD", async () => {
       const init = {type: "INIT"};
       const load = {type: "TAB_LOAD"};
       sandbox.stub(store, "dispatch");
       store._messageChannel.simulateMessagesForExistingTabs.callsFake(() => store.dispatch(load));
-      store.init(new Map(), init);
+      await store.init(new Map(), init);
 
       assert.calledTwice(store.dispatch);
       assert.equal(store.dispatch.firstCall.args[0], init);
@@ -229,13 +249,13 @@ describe("Store", () => {
     });
   });
   describe("#dispatch", () => {
-    it("should call .onAction of each feed", () => {
+    it("should call .onAction of each feed", async () => {
       const {dispatch} = store;
       const sub = {onAction: sinon.spy()};
       const action = {type: "FOO"};
 
       store._prefs.set("sub", true);
-      store.init(new Map([["sub", () => sub]]));
+      await store.init(new Map([["sub", () => sub]]));
 
       dispatch(action);
 

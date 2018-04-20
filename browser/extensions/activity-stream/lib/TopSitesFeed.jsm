@@ -10,7 +10,7 @@ const {TippyTopProvider} = ChromeUtils.import("resource://activity-stream/lib/Ti
 const {insertPinned, TOP_SITES_MAX_SITES_PER_ROW} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm", {});
 const {Dedupe} = ChromeUtils.import("resource://activity-stream/common/Dedupe.jsm", {});
 const {shortURL} = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm", {});
-const {ActivityStreamStorage, getDefaultOptions} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamStorage.jsm", {});
+const {getDefaultOptions} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamStorage.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "filterAdult",
   "resource://activity-stream/lib/FilterAdult.jsm");
@@ -42,7 +42,14 @@ this.TopSitesFeed = class TopSitesFeed {
     this.pinnedCache = new LinksCache(NewTabUtils.pinnedLinks, "links",
       [...CACHED_LINK_PROPS_TO_MIGRATE, ...PINNED_FAVICON_PROPS_TO_MIGRATE]);
     PageThumbs.addExpirationFilter(this);
-    this._storage = new ActivityStreamStorage("sectionPrefs");
+  }
+
+  async init() {
+    await this._tippyTopProvider.init();
+    // If the feed was previously disabled PREFS_INITIAL_VALUES was never received
+    this.refreshDefaults(this.store.getState().Prefs.values[DEFAULT_SITES_PREF]);
+    this._storage = this.store.dbStorage.getDbTable("sectionPrefs");
+    this.refresh({broadcast: true});
   }
 
   uninit() {
@@ -165,14 +172,15 @@ this.TopSitesFeed = class TopSitesFeed {
    * @param {bool} options.broadcast Should the update be broadcasted.
    */
   async refresh(options = {}) {
-    if (!this._tippyTopProvider.initialized) {
-      await this._tippyTopProvider.init();
-    }
-
     const links = await this.getLinksWithDefaults();
     const newAction = {type: at.TOP_SITES_UPDATED, data: {links}};
-
-    const storedPrefs = await this._storage.get(SECTION_ID) || {};
+    let storedPrefs;
+    try {
+      storedPrefs = await this._storage.get(SECTION_ID) || {};
+    } catch (e) {
+      storedPrefs = {};
+      Cu.reportError("Problem getting stored prefs for TopSites");
+    }
     newAction.data.pref = getDefaultOptions(storedPrefs);
 
     if (options.broadcast) {
@@ -374,9 +382,7 @@ this.TopSitesFeed = class TopSitesFeed {
   onAction(action) {
     switch (action.type) {
       case at.INIT:
-        // If the feed was previously disabled PREFS_INITIAL_VALUES was never received
-        this.refreshDefaults(this.store.getState().Prefs.values[DEFAULT_SITES_PREF]);
-        this.refresh({broadcast: true});
+        this.init();
         break;
       case at.SYSTEM_TICK:
         this.refresh({broadcast: false});

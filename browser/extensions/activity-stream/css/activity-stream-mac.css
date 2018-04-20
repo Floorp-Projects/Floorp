@@ -60,6 +60,7 @@ body {
   --newtab-search-dropdown-color: #FFF;
   --newtab-search-dropdown-header-color: #F9F9FA;
   --newtab-search-icon-color: rgba(12, 12, 13, 0.4);
+  --newtab-topsites-background-color: #FFF;
   --newtab-topsites-label-color: inherit;
   --newtab-card-active-outline-color: #D7D7DB;
   --newtab-card-background-color: #FFF;
@@ -76,14 +77,14 @@ body {
   --newtab-element-hover-color: rgba(249, 249, 250, 0.1);
   --newtab-icon-primary-color: rgba(249, 249, 250, 0.8);
   --newtab-icon-secondary-color: rgba(249, 249, 250, 0.4);
-  --newtab-icon-tertiary-color: rgba(249, 249, 250, 0.2);
+  --newtab-icon-tertiary-color: rgba(249, 249, 250, 0.4);
   --newtab-inner-box-shadow-color: rgba(249, 249, 250, 0.2);
   --newtab-link-primary-color: #45A1FF;
   --newtab-link-secondary-color: #50BCB6;
   --newtab-text-conditional-color: #F9F9FA;
   --newtab-text-primary-color: #F9F9FA;
   --newtab-text-secondary-color: rgba(249, 249, 250, 0.8);
-  --newtab-text-tertiary-color: rgba(249, 249, 250, 0.4);
+  --newtab-text-tertiary-color: rgba(249, 249, 250, 0.6);
   --newtab-textbox-background-color: #38383D;
   --newtab-textbox-border: rgba(249, 249, 250, 0.2);
   --newtab-textbox-focus-color: #45A1FF;
@@ -99,6 +100,7 @@ body {
   --newtab-search-dropdown-color: #38383D;
   --newtab-search-dropdown-header-color: #4A4A4F;
   --newtab-search-icon-color: rgba(249, 249, 250, 0.6);
+  --newtab-topsites-background-color: #38383D;
   --newtab-topsites-label-color: rgba(249, 249, 250, 0.8);
   --newtab-card-active-outline-color: #4A4A4F;
   --newtab-card-background-color: #38383D;
@@ -128,6 +130,8 @@ body {
     background-image: url("../data/content/assets/glyph-cancel-16.svg"); }
   .icon.icon-delete {
     background-image: url("../data/content/assets/glyph-delete-16.svg"); }
+  .icon.icon-search {
+    background-image: url("chrome://browser/skin/search-glass.svg"); }
   .icon.icon-modal-delete {
     background-image: url("../data/content/assets/glyph-modal-delete-32.svg");
     background-size: 32px;
@@ -177,6 +181,15 @@ body {
       transform: scaleX(-1); }
   .icon.icon-check {
     background-image: url("chrome://browser/skin/check.svg"); }
+  .icon.icon-download {
+    background-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar"); }
+  .icon.icon-copy {
+    background-image: url("chrome://browser/skin/edit-copy.svg"); }
+  .icon.icon-open-file {
+    background-image: url("../data/content/assets/glyph-open-file-16.svg"); }
+  .icon.icon-download-folder {
+    background-image: url("../data/content/assets/glyph-download-icon.svg");
+    background-size: 100%; }
   .icon.icon-webextension {
     background-image: url("../data/content/assets/glyph-webextension-16.svg"); }
   .icon.icon-highlights {
@@ -506,7 +519,7 @@ main {
     .top-site-outer .screenshot.active {
       opacity: 1; }
   .top-site-outer .top-site-icon {
-    background-color: #FFF;
+    background-color: var(--newtab-topsites-background-color);
     background-position: center center;
     background-repeat: no-repeat;
     border-radius: 6px;
@@ -857,28 +870,24 @@ main {
   position: relative;
   width: 100%; }
   .search-wrapper input {
-    background: var(--newtab-textbox-background-color);
+    background: var(--newtab-textbox-background-color) var(--newtab-search-icon) 8px center/18px no-repeat;
     border: solid 1px var(--newtab-search-border-color);
     box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.15);
     font-size: 15px;
+    -moz-context-properties: fill;
+    fill: var(--newtab-search-icon-color);
     padding: 0;
     padding-inline-end: 36px;
-    padding-inline-start: 35px;
+    padding-inline-start: 34px;
     width: 100%; }
+    .search-wrapper input:dir(rtl) {
+      background-position-x: right 8px; }
   .search-wrapper:hover input {
     box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.25); }
   .search-wrapper:active input,
   .search-wrapper input:focus {
     border: solid 1px var(--newtab-textbox-focus-color);
     box-shadow: var(--newtab-textbox-focus-boxshadow); }
-  .search-wrapper .search-label {
-    background: url("chrome://browser/skin/search-glass.svg") no-repeat 12px center/16px;
-    -moz-context-properties: fill;
-    fill: var(--newtab-search-icon-color);
-    height: 100%;
-    offset-inline-start: 0;
-    position: absolute;
-    width: 35px; }
   .search-wrapper .search-button {
     background: url("chrome://browser/skin/forward.svg") no-repeat center center;
     background-size: 16px 16px;
@@ -928,13 +937,18 @@ main {
     background-color: var(--newtab-search-dropdown-header-color); }
   .contentSearchSuggestionTable .contentSearchOneOffItem {
     background-image: none;
-    border-right: solid 1px var(--newtab-border-secondary-color);
-    height: 22px;
-    margin: 5px 0; }
+    position: relative; }
     .contentSearchSuggestionTable .contentSearchOneOffItem.selected {
       background: var(--newtab-element-hover-color); }
     .contentSearchSuggestionTable .contentSearchOneOffItem:active {
       background: var(--newtab-element-active-color); }
+    .contentSearchSuggestionTable .contentSearchOneOffItem::after {
+      border-right: solid 1px var(--newtab-border-secondary-color);
+      content: '';
+      height: 22px;
+      offset-inline-end: 0;
+      position: absolute;
+      top: 5px; }
   .contentSearchSuggestionTable .contentSearchSettingsButton:hover {
     background: var(--newtab-element-hover-color);
     color: var(--newtab-text-primary-color); }
@@ -1089,6 +1103,10 @@ main {
       transform: scale(1); }
     .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .card-title {
       color: var(--newtab-link-primary-color); }
+    .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .alternate ~ .card-host-name {
+      display: none; }
+    .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .card-host-name.alternate {
+      display: block; }
   .card-outer .card-preview-image-outer {
     border-radius: 3px 3px 0 0;
     height: 122px;
@@ -1137,6 +1155,15 @@ main {
     padding-bottom: 4px;
     text-overflow: ellipsis;
     text-transform: uppercase; }
+  .card-outer .card-host-name.alternate {
+    display: none; }
+  .card-outer .card-download-icon {
+    float: inline-end;
+    margin-inline-start: 15px;
+    margin-top: 2px; }
+    .card-outer .card-download-icon.icon-download-folder {
+      height: 36px;
+      width: 36px; }
   .card-outer .card-title {
     font-size: 14px;
     font-weight: 600;
@@ -1181,6 +1208,9 @@ main {
     .wide-layout-enabled .card-outer .card-host-name {
       font-size: 12px;
       padding-bottom: 5px; }
+    .wide-layout-enabled .card-outer .card-download-icon.icon-download-folder {
+      height: 54px;
+      width: 54px; }
     .wide-layout-enabled .card-outer .card-title {
       font-size: 17px;
       line-height: 23px;
