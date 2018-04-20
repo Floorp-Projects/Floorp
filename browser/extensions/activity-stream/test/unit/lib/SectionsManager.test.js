@@ -15,29 +15,26 @@ describe("SectionsManager", () => {
   let fakeServices;
   let fakePlacesUtils;
   let sandbox;
+  let storage;
 
   beforeEach(async () => {
     sandbox = sinon.sandbox.create();
     globals = new GlobalOverrider();
     fakeServices = {prefs: {getBoolPref: sandbox.stub(), addObserver: sandbox.stub(), removeObserver: sandbox.stub()}};
     fakePlacesUtils = {history: {update: sinon.stub(), insert: sinon.stub()}};
-    const fakeDB = {
-      objectStore: sandbox.stub().returns({
-        get: sandbox.stub().returns(Promise.resolve()),
-        set: sandbox.stub().returns(Promise.resolve())
-      })
-    };
     globals.set({
       Services: fakeServices,
-      PlacesUtils: fakePlacesUtils,
-      ActivityStreamStorage: function Fake() {},
-      IndexedDB: {open: () => Promise.resolve(fakeDB)}
+      PlacesUtils: fakePlacesUtils
     });
+    // Redecorate SectionsManager to remove any listeners that have been added
+    EventEmitter.decorate(SectionsManager);
+    storage = {
+      get: sandbox.stub().resolves(),
+      set: sandbox.stub().resolves()
+    };
   });
 
   afterEach(() => {
-    // Redecorate SectionsManager to remove any listeners that have been added
-    EventEmitter.decorate(SectionsManager);
     globals.restore();
     sandbox.restore();
   });
@@ -46,7 +43,7 @@ describe("SectionsManager", () => {
     it("should initialise the sections map with the built in sections", async () => {
       SectionsManager.sections.clear();
       SectionsManager.initialized = false;
-      await SectionsManager.init();
+      await SectionsManager.init({}, storage);
       assert.equal(SectionsManager.sections.size, 2);
       assert.ok(SectionsManager.sections.has("topstories"));
       assert.ok(SectionsManager.sections.has("highlights"));
@@ -54,14 +51,19 @@ describe("SectionsManager", () => {
     it("should set .initialized to true", async () => {
       SectionsManager.sections.clear();
       SectionsManager.initialized = false;
-      await SectionsManager.init();
+      await SectionsManager.init({}, storage);
       assert.ok(SectionsManager.initialized);
     });
     it("should add observer for context menu prefs", async () => {
       SectionsManager.CONTEXT_MENU_PREFS = {"MENU_ITEM": "MENU_ITEM_PREF"};
-      await SectionsManager.init();
+      await SectionsManager.init({}, storage);
       assert.calledOnce(fakeServices.prefs.addObserver);
       assert.calledWith(fakeServices.prefs.addObserver, "MENU_ITEM_PREF", SectionsManager);
+    });
+    it("should save the reference to `storage` passed in", async () => {
+      await SectionsManager.init({}, storage);
+
+      assert.equal(SectionsManager._storage, storage);
     });
   });
   describe("#uninit", () => {
@@ -87,6 +89,20 @@ describe("SectionsManager", () => {
       SectionsManager._storage.get = sandbox.stub().returns(Promise.resolve());
       await SectionsManager.addBuiltInSection("feeds.section.topstories", "invalid");
 
+      assert.calledOnce(Cu.reportError);
+    });
+    it("should not throw if the indexedDB operation fails", async () => {
+      globals.sandbox.spy(global.Cu, "reportError");
+      storage.get.returns(new Error());
+      SectionsManager._storage = storage;
+
+      try {
+        await SectionsManager.addBuiltInSection("feeds.section.topstories");
+      } catch (e) {
+        assert.fail();
+      }
+
+      assert.calledOnce(storage.get);
       assert.calledOnce(Cu.reportError);
     });
   });
@@ -202,7 +218,7 @@ describe("SectionsManager", () => {
 
       SectionsManager.updateSections = sinon.spy();
       SectionsManager.CONTEXT_MENU_PREFS = {"MENU_ITEM": "MENU_ITEM_PREF"};
-      await SectionsManager.init();
+      await SectionsManager.init({}, storage);
       observer.observe("", "nsPref:changed", "MENU_ITEM_PREF");
 
       assert.calledOnce(SectionsManager.updateSections);
@@ -374,13 +390,17 @@ describe("SectionsManager", () => {
 
 describe("SectionsFeed", () => {
   let feed;
-  let globals = new GlobalOverrider();
   let sandbox;
+  let storage;
 
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
     SectionsManager.sections.clear();
     SectionsManager.initialized = false;
+    storage = {
+      get: sandbox.stub().resolves(),
+      set: sandbox.stub().resolves()
+    };
     feed = new SectionsFeed();
     feed.store = {dispatch: sinon.spy()};
     feed.store = {
@@ -394,22 +414,12 @@ describe("SectionsFeed", () => {
           }
         },
         Sections: [{initialized: false}]
-      }
+      },
+      dbStorage: {getDbTable: sandbox.stub().returns(storage)}
     };
-    const fakeDB = {
-      objectStore: sandbox.stub().returns({
-        get: sandbox.stub().returns(Promise.resolve()),
-        set: sandbox.stub().returns(Promise.resolve())
-      })
-    };
-    globals.set({
-      ActivityStreamStorage: function Fake() {},
-      IndexedDB: {open: () => Promise.resolve(fakeDB)}
-    });
   });
   afterEach(() => {
     feed.uninit();
-    globals.restore();
   });
   describe("#init", () => {
     it("should create a SectionsFeed", () => {
@@ -429,7 +439,7 @@ describe("SectionsFeed", () => {
       }
     });
     it("should call onAddSection for any already added sections in SectionsManager", async () => {
-      await SectionsManager.init();
+      await SectionsManager.init({}, storage);
       assert.ok(SectionsManager.sections.has("topstories"));
       assert.ok(SectionsManager.sections.has("highlights"));
       const topstories = SectionsManager.sections.get("topstories");
@@ -551,6 +561,8 @@ describe("SectionsFeed", () => {
       feed.onAction({type: "PREFS_INITIAL_VALUES", data: {foo: "bar"}});
       assert.calledOnce(SectionsManager.init);
       assert.calledWith(SectionsManager.init, {foo: "bar"});
+      assert.calledOnce(feed.store.dbStorage.getDbTable);
+      assert.calledWithExactly(feed.store.dbStorage.getDbTable, "sectionPrefs");
     });
     it("should call SectionsManager.addBuiltInSection on suitable PREF_CHANGED events", () => {
       sinon.spy(SectionsManager, "addBuiltInSection");

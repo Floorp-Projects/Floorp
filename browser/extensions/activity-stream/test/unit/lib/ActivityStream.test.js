@@ -34,7 +34,6 @@ describe("ActivityStream", () => {
     sandbox.stub(as.store, "uninit");
     sandbox.stub(as._defaultPrefs, "init");
     sandbox.stub(as._defaultPrefs, "reset");
-    sandbox.stub(as._storage, "_openDatabase");
   });
 
   afterEach(() => sandbox.restore());
@@ -58,14 +57,10 @@ describe("ActivityStream", () => {
     it("should call .store.init", () => {
       assert.calledOnce(as.store.init);
     });
-    it("should cause storage to open database", () => {
-      assert.calledOnce(as._storage._openDatabase);
-    });
     it("should pass to Store an INIT event with the right version", () => {
       as = new ActivityStream({version: "1.2.3"});
       sandbox.stub(as.store, "init");
       sandbox.stub(as._defaultPrefs, "init");
-      sandbox.stub(as._storage, "_openDatabase");
 
       as.init();
 

@@ -5,7 +5,6 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {actionTypes: at, actionCreators: ac} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
-const {ActivityStreamStorage} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamStorage.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
@@ -39,7 +38,6 @@ this.SnippetsFeed = class SnippetsFeed {
     this._refresh = this._refresh.bind(this);
     this._totalBookmarks = null;
     this._totalBookmarksLastUpdated = null;
-    this._storage = new ActivityStreamStorage("snippets");
   }
 
   get snippetsURL() {
@@ -169,6 +167,7 @@ this.SnippetsFeed = class SnippetsFeed {
   }
 
   async init() {
+    this._storage = this.store.dbStorage.getDbTable("snippets");
     Services.obs.addObserver(this, SEARCH_ENGINE_OBSERVER_TOPIC);
     this._previousSessionEnd = await this._storage.get("previousSessionEnd");
     await this._refresh();

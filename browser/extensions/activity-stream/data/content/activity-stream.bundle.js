@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 17);
+/******/ 	return __webpack_require__(__webpack_require__.s = 18);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -112,7 +112,7 @@ const actionTypes = {};
 /* harmony export (immutable) */ __webpack_exports__["b"] = actionTypes;
 
 
-for (const type of ["ARCHIVE_FROM_POCKET", "BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "THEME_UPDATE", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ARCHIVE_FROM_POCKET", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "DOWNLOAD_CHANGED", "GO_TO_DOWNLOAD_PAGE", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "THEME_UPDATE", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 }
 
@@ -865,7 +865,7 @@ var reducers = { TopSites, App, Snippets, Prefs, Dialog, Sections, Theme };
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_dom__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_dom__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__templates_SimpleSnippet__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__templates_SimpleSnippet__ = __webpack_require__(20);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -1045,33 +1045,33 @@ ErrorBoundary.defaultProps = { FallbackComponent: ErrorBoundaryFallback };
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-
-// EXTERNAL MODULE: ./system-addon/common/Actions.jsm
-var Actions = __webpack_require__(1);
-
-// EXTERNAL MODULE: external "ReactRedux"
-var external__ReactRedux_ = __webpack_require__(4);
-var external__ReactRedux__default = /*#__PURE__*/__webpack_require__.n(external__ReactRedux_);
-
-// EXTERNAL MODULE: ./system-addon/content-src/components/ContextMenu/ContextMenu.jsx
-var ContextMenu = __webpack_require__(11);
-
-// EXTERNAL MODULE: external "ReactIntl"
-var external__ReactIntl_ = __webpack_require__(2);
-var external__ReactIntl__default = /*#__PURE__*/__webpack_require__.n(external__ReactIntl_);
-
-// CONCATENATED MODULE: ./system-addon/content-src/lib/link-menu-options.js
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
 
 
 const _OpenInPrivateWindow = site => ({
   id: "menu_action_open_private_window",
   icon: "new-window-private",
-  action: Actions["a" /* actionCreators */].OnlyToMain({
-    type: Actions["b" /* actionTypes */].OPEN_PRIVATE_WINDOW,
+  action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({
+    type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].OPEN_PRIVATE_WINDOW,
     data: { url: site.url, referrer: site.referrer }
   }),
   userEvent: "OPEN_PRIVATE_WINDOW"
 });
+
+const GetPlatformString = platform => {
+  switch (platform) {
+    case "win":
+      return "menu_action_show_file_windows";
+    case "macosx":
+      return "menu_action_show_file_mac_os";
+    case "linux":
+      return "menu_action_show_file_linux";
+    default:
+      return "menu_action_show_file_default";
+  }
+};
+/* harmony export (immutable) */ __webpack_exports__["a"] = GetPlatformString;
+
 
 /**
  * List of functions that return items that can be included as menu options in a
@@ -1084,8 +1084,8 @@ const LinkMenuOptions = {
   RemoveBookmark: site => ({
     id: "menu_action_remove_bookmark",
     icon: "bookmark-added",
-    action: Actions["a" /* actionCreators */].AlsoToMain({
-      type: Actions["b" /* actionTypes */].DELETE_BOOKMARK_BY_ID,
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].DELETE_BOOKMARK_BY_ID,
       data: site.bookmarkGuid
     }),
     userEvent: "BOOKMARK_DELETE"
@@ -1093,8 +1093,8 @@ const LinkMenuOptions = {
   AddBookmark: site => ({
     id: "menu_action_bookmark",
     icon: "bookmark-hollow",
-    action: Actions["a" /* actionCreators */].AlsoToMain({
-      type: Actions["b" /* actionTypes */].BOOKMARK_URL,
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].BOOKMARK_URL,
       data: { url: site.url, title: site.title, type: site.type }
     }),
     userEvent: "BOOKMARK_ADD"
@@ -1102,8 +1102,8 @@ const LinkMenuOptions = {
   OpenInNewWindow: site => ({
     id: "menu_action_open_new_window",
     icon: "new-window",
-    action: Actions["a" /* actionCreators */].AlsoToMain({
-      type: Actions["b" /* actionTypes */].OPEN_NEW_WINDOW,
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].OPEN_NEW_WINDOW,
       data: { url: site.url, referrer: site.referrer }
     }),
     userEvent: "OPEN_NEW_WINDOW"
@@ -1111,11 +1111,11 @@ const LinkMenuOptions = {
   BlockUrl: (site, index, eventSource) => ({
     id: "menu_action_dismiss",
     icon: "dismiss",
-    action: Actions["a" /* actionCreators */].AlsoToMain({
-      type: Actions["b" /* actionTypes */].BLOCK_URL,
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].BLOCK_URL,
       data: { url: site.url, pocket_id: site.pocket_id }
     }),
-    impression: Actions["a" /* actionCreators */].ImpressionStats({
+    impression: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].ImpressionStats({
       source: eventSource,
       block: 0,
       tiles: [{ id: site.guid, pos: index }]
@@ -1129,7 +1129,7 @@ const LinkMenuOptions = {
     id: "menu_action_webext_dismiss",
     string_id: "menu_action_dismiss",
     icon: "dismiss",
-    action: Actions["a" /* actionCreators */].WebExtEvent(Actions["b" /* actionTypes */].WEBEXT_DISMISS, {
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].WebExtEvent(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].WEBEXT_DISMISS, {
       source: eventSource,
       url: site.url,
       action_position: index
@@ -1139,9 +1139,9 @@ const LinkMenuOptions = {
     id: "menu_action_delete",
     icon: "delete",
     action: {
-      type: Actions["b" /* actionTypes */].DIALOG_OPEN,
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].DIALOG_OPEN,
       data: {
-        onConfirm: [Actions["a" /* actionCreators */].AlsoToMain({ type: Actions["b" /* actionTypes */].DELETE_HISTORY_URL, data: { url: site.url, pocket_id: site.pocket_id, forceBlock: site.bookmarkGuid } }), Actions["a" /* actionCreators */].UserEvent(Object.assign({ event: "DELETE", source: eventSource, action_position: index }, siteInfo))],
+        onConfirm: [__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].DELETE_HISTORY_URL, data: { url: site.url, pocket_id: site.pocket_id, forceBlock: site.bookmarkGuid } }), __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].UserEvent(Object.assign({ event: "DELETE", source: eventSource, action_position: index }, siteInfo))],
         eventSource,
         body_string_id: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
         confirm_button_string_id: "menu_action_delete",
@@ -1151,11 +1151,52 @@ const LinkMenuOptions = {
     },
     userEvent: "DIALOG_OPEN"
   }),
+  ShowFile: (site, index, eventSource, isEnabled, siteInfo, platform) => ({
+    id: GetPlatformString(platform),
+    icon: "search",
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SHOW_DOWNLOAD_FILE,
+      data: { url: site.url }
+    })
+  }),
+  OpenFile: site => ({
+    id: "menu_action_open_file",
+    icon: "open-file",
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].OPEN_DOWNLOAD_FILE,
+      data: { url: site.url }
+    })
+  }),
+  CopyDownloadLink: site => ({
+    id: "menu_action_copy_download_link",
+    icon: "copy",
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].COPY_DOWNLOAD_LINK,
+      data: { url: site.url }
+    })
+  }),
+  GoToDownloadPage: site => ({
+    id: "menu_action_go_to_download_page",
+    icon: "download",
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].GO_TO_DOWNLOAD_PAGE,
+      data: { url: site.url }
+    }),
+    disabled: !site.referrer
+  }),
+  RemoveDownload: site => ({
+    id: "menu_action_remove_download",
+    icon: "delete",
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].OnlyToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].REMOVE_DOWNLOAD_FILE,
+      data: { url: site.url }
+    })
+  }),
   PinTopSite: (site, index) => ({
     id: "menu_action_pin",
     icon: "pin",
-    action: Actions["a" /* actionCreators */].AlsoToMain({
-      type: Actions["b" /* actionTypes */].TOP_SITES_PIN,
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].TOP_SITES_PIN,
       data: { site: { url: site.url }, index }
     }),
     userEvent: "PIN"
@@ -1163,8 +1204,8 @@ const LinkMenuOptions = {
   UnpinTopSite: site => ({
     id: "menu_action_unpin",
     icon: "unpin",
-    action: Actions["a" /* actionCreators */].AlsoToMain({
-      type: Actions["b" /* actionTypes */].TOP_SITES_UNPIN,
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].TOP_SITES_UNPIN,
       data: { site: { url: site.url } }
     }),
     userEvent: "UNPIN"
@@ -1172,11 +1213,11 @@ const LinkMenuOptions = {
   SaveToPocket: (site, index, eventSource) => ({
     id: "menu_action_save_to_pocket",
     icon: "pocket",
-    action: Actions["a" /* actionCreators */].AlsoToMain({
-      type: Actions["b" /* actionTypes */].SAVE_TO_POCKET,
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SAVE_TO_POCKET,
       data: { site: { url: site.url, title: site.title } }
     }),
-    impression: Actions["a" /* actionCreators */].ImpressionStats({
+    impression: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].ImpressionStats({
       source: eventSource,
       pocket: 0,
       tiles: [{ id: site.guid, pos: index }]
@@ -1186,8 +1227,8 @@ const LinkMenuOptions = {
   DeleteFromPocket: site => ({
     id: "menu_action_delete_pocket",
     icon: "delete",
-    action: Actions["a" /* actionCreators */].AlsoToMain({
-      type: Actions["b" /* actionTypes */].DELETE_FROM_POCKET,
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].DELETE_FROM_POCKET,
       data: { pocket_id: site.pocket_id }
     }),
     userEvent: "DELETE_FROM_POCKET"
@@ -1195,8 +1236,8 @@ const LinkMenuOptions = {
   ArchiveFromPocket: site => ({
     id: "menu_action_archive_pocket",
     icon: "check",
-    action: Actions["a" /* actionCreators */].AlsoToMain({
-      type: Actions["b" /* actionTypes */].ARCHIVE_FROM_POCKET,
+    action: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].AlsoToMain({
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].ARCHIVE_FROM_POCKET,
       data: { pocket_id: site.pocket_id }
     }),
     userEvent: "ARCHIVE_FROM_POCKET"
@@ -1205,7 +1246,7 @@ const LinkMenuOptions = {
     id: "edit_topsites_button_text",
     icon: "edit",
     action: {
-      type: Actions["b" /* actionTypes */].TOP_SITES_EDIT,
+      type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].TOP_SITES_EDIT,
       data: { index }
     }
   }),
@@ -1215,11 +1256,23 @@ const LinkMenuOptions = {
   CheckBookmarkOrArchive: site => site.pocket_id ? LinkMenuOptions.ArchiveFromPocket(site) : LinkMenuOptions.CheckBookmark(site),
   OpenInPrivateWindow: (site, index, eventSource, isEnabled) => isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem()
 };
-// EXTERNAL MODULE: external "React"
-var external__React_ = __webpack_require__(0);
-var external__React__default = /*#__PURE__*/__webpack_require__.n(external__React_);
+/* harmony export (immutable) */ __webpack_exports__["b"] = LinkMenuOptions;
 
-// CONCATENATED MODULE: ./system-addon/content-src/components/LinkMenu/LinkMenu.jsx
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_redux__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_redux__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ContextMenu_ContextMenu__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_intl__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react_intl__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_link_menu_options__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react__);
 
 
 
@@ -1229,15 +1282,15 @@ var external__React__default = /*#__PURE__*/__webpack_require__.n(external__Reac
 
 const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
 
-class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
+class _LinkMenu extends __WEBPACK_IMPORTED_MODULE_5_react___default.a.PureComponent {
   getOptions() {
     const { props } = this;
-    const { site, index, source, isPrivateBrowsingEnabled, siteInfo } = props;
+    const { site, index, source, isPrivateBrowsingEnabled, siteInfo, platform } = props;
 
     // Handle special case of default site
     const propOptions = !site.isDefault ? props.options : DEFAULT_SITE_MENU_OPTIONS;
 
-    const options = propOptions.map(o => LinkMenuOptions[o](site, index, source, isPrivateBrowsingEnabled, siteInfo)).map(option => {
+    const options = propOptions.map(o => __WEBPACK_IMPORTED_MODULE_4_content_src_lib_link_menu_options__["b" /* LinkMenuOptions */][o](site, index, source, isPrivateBrowsingEnabled, siteInfo, platform)).map(option => {
       const { action, impression, id, string_id, type, userEvent } = option;
       if (!type && id) {
         option.label = props.intl.formatMessage({ id: string_id || id });
@@ -1249,7 +1302,7 @@ class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
               source,
               action_position: index
             }, siteInfo);
-            props.dispatch(Actions["a" /* actionCreators */].UserEvent(userEventData));
+            props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].UserEvent(userEventData));
           }
           if (impression && props.shouldSendImpressionStats) {
             props.dispatch(impression);
@@ -1268,7 +1321,7 @@ class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
   }
 
   render() {
-    return external__React__default.a.createElement(ContextMenu["a" /* ContextMenu */], {
+    return __WEBPACK_IMPORTED_MODULE_5_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_2_content_src_components_ContextMenu_ContextMenu__["a" /* ContextMenu */], {
       onUpdate: this.props.onUpdate,
       options: this.getOptions() });
   }
@@ -1276,13 +1329,13 @@ class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
 /* unused harmony export _LinkMenu */
 
 
-const getState = state => ({ isPrivateBrowsingEnabled: state.Prefs.values.isPrivateBrowsingEnabled });
-const LinkMenu = Object(external__ReactRedux_["connect"])(getState)(Object(external__ReactIntl_["injectIntl"])(LinkMenu__LinkMenu));
+const getState = state => ({ isPrivateBrowsingEnabled: state.Prefs.values.isPrivateBrowsingEnabled, platform: state.Prefs.values.platform });
+const LinkMenu = Object(__WEBPACK_IMPORTED_MODULE_1_react_redux__["connect"])(getState)(Object(__WEBPACK_IMPORTED_MODULE_3_react_intl__["injectIntl"])(_LinkMenu));
 /* harmony export (immutable) */ __webpack_exports__["a"] = LinkMenu;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1382,7 +1435,7 @@ class ContextMenuItem extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.Pure
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1392,8 +1445,8 @@ class ContextMenuItem extends __WEBPACK_IMPORTED_MODULE_0_react___default.a.Pure
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ErrorBoundary_ErrorBoundary__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_SectionMenu_SectionMenu__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_lib_section_menu_options__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_SectionMenu_SectionMenu__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_lib_section_menu_options__ = __webpack_require__(14);
 
 
 
@@ -1641,7 +1694,7 @@ const CollapsibleSection = Object(__WEBPACK_IMPORTED_MODULE_0_react_intl__["inje
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1719,12 +1772,12 @@ const SectionMenuOptions = {
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react__);
 
@@ -1893,7 +1946,7 @@ class ComponentPerfTimer extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.C
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2027,7 +2080,7 @@ _PerfService.prototype = {
 var perfService = new _PerfService();
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2035,7 +2088,7 @@ var perfService = new _PerfService();
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_intl__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__TopSitesConstants__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_LinkMenu_LinkMenu__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_LinkMenu_LinkMenu__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_common_Reducers_jsm__ = __webpack_require__(6);
@@ -2479,16 +2532,16 @@ const TopSiteList = Object(__WEBPACK_IMPORTED_MODULE_1_react_intl__["injectIntl"
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_lib_snippets__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_Base_Base__ = __webpack_require__(20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__ = __webpack_require__(33);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_init_store__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_lib_snippets__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_Base_Base__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_init_store__ = __webpack_require__(35);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
@@ -2530,7 +2583,7 @@ Object(__WEBPACK_IMPORTED_MODULE_1_content_src_lib_snippets__["a" /* addSnippets
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2936,7 +2989,7 @@ function addSnippetsSubscriber(store) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3084,24 +3137,24 @@ const SimpleSnippet = props => external__React__default.a.createElement(
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_intl__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ConfirmDialog_ConfirmDialog__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_ConfirmDialog_ConfirmDialog__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_ErrorBoundary_ErrorBoundary__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_components_ManualMigration_ManualMigration__ = __webpack_require__(22);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_content_src_components_MessageCenterAdmin_MessageCenterAdmin__ = __webpack_require__(23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_common_PrerenderData_jsm__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_content_src_components_ManualMigration_ManualMigration__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_content_src_components_MessageCenterAdmin_MessageCenterAdmin__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_common_PrerenderData_jsm__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_content_src_components_Search_Search__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_content_src_components_Sections_Sections__ = __webpack_require__(27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_content_src_components_Search_Search__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_content_src_components_Sections_Sections__ = __webpack_require__(28);
 
 
 
@@ -3259,7 +3312,7 @@ const Base = Object(__WEBPACK_IMPORTED_MODULE_3_react_redux__["connect"])(state 
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3372,7 +3425,7 @@ const ConfirmDialog = Object(__WEBPACK_IMPORTED_MODULE_1_react_redux__["connect"
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3448,7 +3501,7 @@ const ManualMigration = Object(__WEBPACK_IMPORTED_MODULE_1_react_redux__["connec
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3575,7 +3628,7 @@ class MessageCenterAdmin extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.P
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3678,7 +3731,7 @@ var PrerenderData = new _PrerenderData({
 });
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3687,7 +3740,7 @@ var PrerenderData = new _PrerenderData({
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_Actions_jsm__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react_redux__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_constants__ = __webpack_require__(26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_constants__ = __webpack_require__(27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_react__);
 /* globals ContentSearchUIController */
@@ -3797,7 +3850,7 @@ const Search = Object(__WEBPACK_IMPORTED_MODULE_2_react_redux__["connect"])()(Ob
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3807,22 +3860,22 @@ const Search = Object(__WEBPACK_IMPORTED_MODULE_2_react_redux__["connect"])()(Ob
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__ = __webpack_require__(28);
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_intl__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_CollapsibleSection_CollapsibleSection__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_ComponentPerfTimer_ComponentPerfTimer__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_CollapsibleSection_CollapsibleSection__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_ComponentPerfTimer_ComponentPerfTimer__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_content_src_components_Topics_Topics__ = __webpack_require__(30);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_content_src_components_TopSites_TopSites__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_content_src_components_Topics_Topics__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_content_src_components_TopSites_TopSites__ = __webpack_require__(32);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -4070,7 +4123,7 @@ const Sections = Object(__WEBPACK_IMPORTED_MODULE_5_react_redux__["connect"])(st
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4099,20 +4152,33 @@ const cardContextTypes = {
   pocket: {
     intlID: "type_label_pocket",
     icon: "pocket"
+  },
+  download: {
+    intlID: "type_label_downloaded",
+    icon: "download"
   }
 };
+// EXTERNAL MODULE: external "ReactRedux"
+var external__ReactRedux_ = __webpack_require__(4);
+var external__ReactRedux__default = /*#__PURE__*/__webpack_require__.n(external__ReactRedux_);
+
 // EXTERNAL MODULE: external "ReactIntl"
 var external__ReactIntl_ = __webpack_require__(2);
 var external__ReactIntl__default = /*#__PURE__*/__webpack_require__.n(external__ReactIntl_);
 
-// EXTERNAL MODULE: ./system-addon/content-src/components/LinkMenu/LinkMenu.jsx + 1 modules
-var LinkMenu = __webpack_require__(10);
+// EXTERNAL MODULE: ./system-addon/content-src/lib/link-menu-options.js
+var link_menu_options = __webpack_require__(10);
+
+// EXTERNAL MODULE: ./system-addon/content-src/components/LinkMenu/LinkMenu.jsx
+var LinkMenu = __webpack_require__(11);
 
 // EXTERNAL MODULE: external "React"
 var external__React_ = __webpack_require__(0);
 var external__React__default = /*#__PURE__*/__webpack_require__.n(external__React_);
 
 // CONCATENATED MODULE: ./system-addon/content-src/components/Card/Card.jsx
+
+
 
 
 
@@ -4131,7 +4197,7 @@ const gImageLoading = new Map();
  * this class. Each card will then get a context menu which reflects the actions that
  * can be done on this Card.
  */
-class Card_Card extends external__React__default.a.PureComponent {
+class Card__Card extends external__React__default.a.PureComponent {
   constructor(props) {
     super(props);
     this.state = {
@@ -4197,12 +4263,18 @@ class Card_Card extends external__React__default.a.PureComponent {
 
   onLinkClick(event) {
     event.preventDefault();
-    const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
-    this.props.dispatch(Actions["a" /* actionCreators */].AlsoToMain({
-      type: Actions["b" /* actionTypes */].OPEN_LINK,
-      data: Object.assign(this.props.link, { event: { altKey, button, ctrlKey, metaKey, shiftKey } })
-    }));
-
+    if (this.props.link.type === "download") {
+      this.props.dispatch(Actions["a" /* actionCreators */].OnlyToMain({
+        type: Actions["b" /* actionTypes */].SHOW_DOWNLOAD_FILE,
+        data: this.props.link
+      }));
+    } else {
+      const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
+      this.props.dispatch(Actions["a" /* actionCreators */].OnlyToMain({
+        type: Actions["b" /* actionTypes */].OPEN_LINK,
+        data: Object.assign(this.props.link, { event: { altKey, button, ctrlKey, metaKey, shiftKey } })
+      }));
+    }
     if (this.props.isWebExtension) {
       this.props.dispatch(Actions["a" /* actionCreators */].WebExtEvent(Actions["b" /* actionTypes */].WEBEXT_CLICK, {
         source: this.props.eventSource,
@@ -4271,6 +4343,12 @@ class Card_Card extends external__React__default.a.PureComponent {
           external__React__default.a.createElement(
             "div",
             { className: `card-details${hasImage ? "" : " no-image"}` },
+            link.type === "download" && external__React__default.a.createElement("div", { className: "card-download-icon icon icon-download-folder" }),
+            link.type === "download" && external__React__default.a.createElement(
+              "div",
+              { className: "card-host-name alternate" },
+              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: Object(link_menu_options["a" /* GetPlatformString */])(this.props.platform) })
+            ),
             link.hostname && external__React__default.a.createElement(
               "div",
               { className: "card-host-name" },
@@ -4331,26 +4409,28 @@ class Card_Card extends external__React__default.a.PureComponent {
     );
   }
 }
-/* harmony export (immutable) */ __webpack_exports__["a"] = Card_Card;
+/* unused harmony export _Card */
 
-Card_Card.defaultProps = { link: {} };
+Card__Card.defaultProps = { link: {} };
+const Card = Object(external__ReactRedux_["connect"])(state => ({ platform: state.Prefs.values.platform }))(Card__Card);
+/* harmony export (immutable) */ __webpack_exports__["a"] = Card;
 
-const PlaceholderCard = () => external__React__default.a.createElement(Card_Card, { placeholder: true });
+const PlaceholderCard = () => external__React__default.a.createElement(Card, { placeholder: true });
 /* harmony export (immutable) */ __webpack_exports__["b"] = PlaceholderCard;
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_components_ContextMenu_ContextMenu__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_components_ContextMenu_ContextMenu__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react_intl__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_section_menu_options__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_section_menu_options__ = __webpack_require__(14);
 
 
 
@@ -4412,7 +4492,7 @@ const SectionMenu = Object(__WEBPACK_IMPORTED_MODULE_2_react_intl__["injectIntl"
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4468,14 +4548,14 @@ class Topics extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureComponent
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__TopSitesConstants__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_CollapsibleSection_CollapsibleSection__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_ComponentPerfTimer_ComponentPerfTimer__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_CollapsibleSection_CollapsibleSection__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_ComponentPerfTimer_ComponentPerfTimer__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react_redux__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_intl__ = __webpack_require__(2);
@@ -4483,8 +4563,8 @@ class Topics extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureComponent
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_common_Reducers_jsm__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__TopSiteForm__ = __webpack_require__(32);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__TopSite__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__TopSiteForm__ = __webpack_require__(33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__TopSite__ = __webpack_require__(17);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -4645,7 +4725,7 @@ const TopSites = Object(__WEBPACK_IMPORTED_MODULE_4_react_redux__["connect"])(st
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4740,7 +4820,7 @@ TopSiteFormInput_TopSiteFormInput.defaultProps = {
   validationError: false
 };
 // EXTERNAL MODULE: ./system-addon/content-src/components/TopSites/TopSite.jsx
-var TopSite = __webpack_require__(16);
+var TopSite = __webpack_require__(17);
 
 // CONCATENATED MODULE: ./system-addon/content-src/components/TopSites/TopSiteForm.jsx
 
@@ -5015,12 +5095,12 @@ TopSiteForm_TopSiteForm.defaultProps = {
 };
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__ = __webpack_require__(16);
 
 
 
@@ -5090,13 +5170,13 @@ class DetectUserSessionStart {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (immutable) */ __webpack_exports__["a"] = initStore;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_redux__);
 /* eslint-env mozilla/frame-script */
 
@@ -5248,7 +5328,7 @@ function initStore(reducers, initialState) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports) {
 
 module.exports = Redux;
