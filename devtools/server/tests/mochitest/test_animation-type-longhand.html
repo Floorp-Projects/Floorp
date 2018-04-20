@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<title>Test animation-type-longhand</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<body>
+<script>
+  "use strict";
+
+  // This test checks the content of animation type for longhands table that
+  // * every longhand property is included
+  // * nothing else is included
+  // * no property is mapped to more than one animation type
+  window.onload = function() {
+    const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+    const { ANIMATION_TYPE_FOR_LONGHANDS } =
+      require("devtools/server/actors/animation-type-longhand");
+    const InspectorUtils = SpecialPowers.InspectorUtils;
+
+    const all_longhands = InspectorUtils.getCSSPropertyNames({
+      includeShorthands: false,
+      includeExperimentals: true,
+    });
+
+    let unseen_longhands = new Set(all_longhands);
+    let seen_longhands = new Set();
+    for (let [, names] of ANIMATION_TYPE_FOR_LONGHANDS) {
+      for (let name of names) {
+        ok(!seen_longhands.has(name),
+           `${name} should have only one animation type`);
+        ok(unseen_longhands.has(name),
+           `${name} is an unseen longhand property`);
+        unseen_longhands.delete(name);
+        seen_longhands.add(name);
+      }
+    }
+    is(unseen_longhands.size, 0,
+       "All longhands should be mapped to some animation type");
+
+    SimpleTest.finish();
+  };
+</script>
+</body>

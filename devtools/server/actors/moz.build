@@ -21,6 +21,7 @@ DevToolsModules(
     'actor-registry.js',
     'addon.js',
     'addons.js',
+    'animation-type-longhand.js',
     'animation.js',
     'array-buffer.js',
     'breakpoint.js',
