@@ -109,9 +109,14 @@ class MOZ_STACK_CLASS BinTokenReaderBase
         if (current_ + N - 1 > stop_)
             return false;
 
+#ifndef FUZZING
         // Perform lookup, without side-effects.
+        // For fuzzing, we disable this check to avoid spending unnecessary
+        // time on getting the constants right. Instead, the constant fields
+        // may contain any data for such builds.
         if (!std::equal(current_, current_ + N + (expectNul ? 0 : -1)/*implicit NUL*/, value))
             return false;
+#endif
 
         // Looks like we have a match. Now perform side-effects
         current_ += N + (expectNul ? 0 : -1);
