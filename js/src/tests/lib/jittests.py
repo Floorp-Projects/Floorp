@@ -700,12 +700,19 @@ def push_libs(options, device):
         if file in required_libs:
             remote_file = posixpath.join(options.remote_test_root, file)
             device.push(os.path.join(options.local_lib, file), remote_file)
+            device.chmod(remote_file, root=True)
 
 def push_progs(options, device, progs):
     for local_file in progs:
         remote_file = posixpath.join(options.remote_test_root,
                                      os.path.basename(local_file))
         device.push(local_file, remote_file)
+        device.chmod(remote_file, root=True)
+
+def init_remote_dir(device, path, root=True):
+    device.rm(path, recursive=True, force=True, root=root)
+    device.mkdir(path, parents=True, root=root)
+    device.chmod(path, recursive=True, root=root)
 
 def run_tests_remote(tests, num_tests, prefix, options, slog):
     # Setup device with everything needed to run our tests.
@@ -713,25 +720,29 @@ def run_tests_remote(tests, num_tests, prefix, options, slog):
     device = ADBAndroid(device=options.device_serial,
                         test_root=options.remote_test_root)
 
+    init_remote_dir(device, options.remote_test_root)
+
     # Update the test root to point to our test directory.
     jit_tests_dir = posixpath.join(options.remote_test_root, 'jit-tests')
     options.remote_test_root = posixpath.join(jit_tests_dir, 'jit-tests')
 
     # Push js shell and libraries.
-    device.rm(jit_tests_dir, force=True, recursive=True)
-    device.mkdir(options.remote_test_root, parents=True)
+    init_remote_dir(device, jit_tests_dir)
     push_libs(options, device)
     push_progs(options, device, [prefix[0]])
     device.chmod(options.remote_test_root, recursive=True, root=True)
 
     JitTest.CacheDir = posixpath.join(options.remote_test_root, '.js-cache')
-    device.mkdir(JitTest.CacheDir)
+    init_remote_dir(device, JitTest.CacheDir)
 
-    device.push(JS_TESTS_DIR, posixpath.join(jit_tests_dir, 'tests'),
-                timeout=600)
+    jtd_tests = posixpath.join(jit_tests_dir, 'tests')
+    init_remote_dir(device, jtd_tests)
+    device.push(JS_TESTS_DIR, jtd_tests, timeout=600)
+    device.chmod(jtd_tests, recursive=True, root=True)
 
     device.push(os.path.dirname(TEST_DIR), options.remote_test_root,
                 timeout=600)
+    device.chmod(options.remote_test_root, recursive=True, root=True)
     prefix[0] = os.path.join(options.remote_test_root, 'js')
 
     # Run all tests.
