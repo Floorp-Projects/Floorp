@@ -176,7 +176,6 @@ public final class TestHelper {
             .resourceId("android:id/text")
             .enabled(true));
 
-
     /********* Main View Menu Item Locators ***********/
     public static UiObject whatsNewItem = mDevice.findObject(new UiSelector()
             .resourceId(getAppName() + ":id/whats_new")

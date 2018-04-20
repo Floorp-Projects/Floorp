@@ -6,7 +6,6 @@
 package org.mozilla.focus.activity;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
@@ -93,16 +92,6 @@ public class AddtoHSTest {
             .text("GOT IT")
             .enabled(true));
 
-    void removeWelcomeOverlay() throws UiObjectNotFoundException {
-        // Note: in case of some older simulators, the Welcome overlay covers
-        // where the shortcut icons should be!
-        mActivityTestRule.getActivity().finishAndRemoveTask();
-        if (welcomeBtn.exists()) {
-            welcomeBtn.click();
-        }
-        mActivityTestRule.launchActivity(new Intent(Intent.ACTION_MAIN));
-    }
-
     private void handleShortcutLayoutDialog() throws UiObjectNotFoundException {
         TestHelper.AddautoBtn.waitForExists(waitingTime);
         TestHelper.AddautoBtn.click();
@@ -127,8 +116,6 @@ public class AddtoHSTest {
                 .className("android.widget.TextView")
                 .description("For Testing Purpose")
                 .enabled(true));
-
-        removeWelcomeOverlay();
 
         // Open website, and click 'Add to homescreen'
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
@@ -162,6 +149,9 @@ public class AddtoHSTest {
         }
 
         //App is sent to background, in launcher now
+        if (welcomeBtn.exists()) {
+            welcomeBtn.click();
+        }
         shortcutIcon.waitForExists(waitingTime);
         Assert.assertTrue(shortcutIcon.isEnabled());
         shortcutIcon.click();
@@ -177,8 +167,6 @@ public class AddtoHSTest {
                 .className("android.widget.TextView")
                 .description("localhost")
                 .enabled(true));
-
-        removeWelcomeOverlay();
 
         // Open website, and click 'Add to homescreen'
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
@@ -211,7 +199,9 @@ public class AddtoHSTest {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             handleShortcutLayoutDialog();
         }
-
+        if (welcomeBtn.exists()) {
+            welcomeBtn.click();
+        }
         //App is sent to background, in launcher now
         shortcutIcon.waitForExists(waitingTime);
         Assert.assertTrue(shortcutIcon.isEnabled());
@@ -228,8 +218,6 @@ public class AddtoHSTest {
                 .className("android.widget.TextView")
                 .descriptionContains("helloworld")
                 .enabled(true));
-
-        removeWelcomeOverlay();
 
         // Open website, and click 'Add to homescreen'
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
@@ -254,6 +242,9 @@ public class AddtoHSTest {
             handleShortcutLayoutDialog();
         }
 
+        if (welcomeBtn.exists()) {
+            welcomeBtn.click();
+        }
         //App is sent to background, in launcher now
         shortcutIcon.waitForExists(waitingTime);
         Assert.assertTrue(shortcutIcon.isEnabled());

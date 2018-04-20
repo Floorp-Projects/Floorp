@@ -85,6 +85,10 @@ public class DownloadTest {
 
     @After
     public void tearDown() throws Exception {
+
+        // If notification is still up, this will take it off screen
+        TestHelper.pressBackKey();
+
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
@@ -119,7 +123,7 @@ public class DownloadTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.waitForWebSiteTitleLoad();
+        Assert.assertTrue(downloadIcon.waitForExists(waitingTime));
 
         // Find download icon tap it
         Assert.assertTrue(downloadIcon.isClickable());
@@ -136,9 +140,8 @@ public class DownloadTest {
         Assert.assertTrue(completedMsg.isEnabled());
         Assert.assertTrue(completedMsg.getText().contains("finished"));
         TestHelper.mDevice.openNotification();
-
+        TestHelper.mDevice.waitForIdle();
         TestHelper.savedNotification.waitForExists(waitingTime);
         TestHelper.savedNotification.swipeRight(50);
-        TestHelper.pressBackKey();
     }
 }

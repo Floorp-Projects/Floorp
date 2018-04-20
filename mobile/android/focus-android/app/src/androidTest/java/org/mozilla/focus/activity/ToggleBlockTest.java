@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
+import org.mozilla.focus.helpers.TestHelper;
 import org.mozilla.focus.utils.AppConstants;
 
 import static android.support.test.espresso.Espresso.onView;
@@ -100,6 +101,7 @@ public class ToggleBlockTest {
         onView(withId(R.id.blocking_switch))
                 .check(matches(isChecked()))
                 .perform(click());
+        TestHelper.waitForWebContent();
 
         // Now the blocking badge is visible
         onView(withId(R.id.block))

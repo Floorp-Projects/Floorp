@@ -212,7 +212,6 @@ public class URLCompletionTest {
         TestHelper.cleartextField.click();
     }
 
-
     private static void removeACSite() {
         DataInteraction CustomURLRow = onData(anything())
                 .inAdapterView(allOf(withId(android.R.id.list),
