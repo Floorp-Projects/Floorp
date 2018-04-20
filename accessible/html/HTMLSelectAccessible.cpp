@@ -320,8 +320,7 @@ HTMLSelectOptGroupAccessible::NativeInteractiveState() const
 bool
 HTMLSelectOptGroupAccessible::IsAcceptableChild(nsIContent* aEl) const
 {
-  return aEl->IsNodeOfType(nsINode::eDATA_NODE) ||
-    aEl->IsHTMLElement(nsGkAtoms::option);
+  return aEl->IsCharacterData() || aEl->IsHTMLElement(nsGkAtoms::option);
 }
 
 uint8_t

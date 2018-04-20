@@ -108,12 +108,8 @@ createTextNode(txIEvalContext *aContext, nsString& aValue,
 
 static nsresult
 createAndAddToResult(nsAtom* aName, const nsAString& aValue,
-                     txNodeSet* aResultSet, nsIContent* aResultHolder)
+                     txNodeSet* aResultSet, DocumentFragment* aResultHolder)
 {
-    NS_ASSERTION(aResultHolder->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) &&
-                 aResultHolder->OwnerDoc(),
-                 "invalid result-holder");
-
     nsIDocument* doc = aResultHolder->OwnerDoc();
     nsCOMPtr<Element> elem = doc->CreateElem(nsDependentAtomString(aName),
                                              nullptr, kNameSpaceID_None);

@@ -266,7 +266,7 @@ nsXBLStreamListener::HasRequest(nsIURI* aURI, nsIContent* aElt)
 }
 
 nsresult
-nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
+nsXBLStreamListener::HandleEvent(Event* aEvent)
 {
   nsresult rv = NS_OK;
   uint32_t i;
@@ -274,8 +274,7 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
 
   // Get the binding document; note that we don't hold onto it in this object
   // to avoid creating a cycle
-  Event* event = aEvent->InternalDOMEvent();
-  EventTarget* target = event->GetCurrentTarget();
+  EventTarget* target = aEvent->GetCurrentTarget();
   nsCOMPtr<nsIDocument> bindingDocument = do_QueryInterface(target);
   NS_ASSERTION(bindingDocument, "Event not targeted at document?!");
 

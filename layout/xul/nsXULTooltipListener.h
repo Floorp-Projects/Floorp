@@ -23,6 +23,7 @@ class nsIContent;
 
 namespace mozilla {
 namespace dom {
+class Event;
 class MouseEvent;
 } // namespace dom
 } // namespace mozilla
@@ -33,8 +34,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-  void MouseOut(nsIDOMEvent* aEvent);
-  void MouseMove(nsIDOMEvent* aEvent);
+  void MouseOut(mozilla::dom::Event* aEvent);
+  void MouseMove(mozilla::dom::Event* aEvent);
 
   void AddTooltipSupport(nsIContent* aNode);
   void RemoveTooltipSupport(nsIContent* aNode);

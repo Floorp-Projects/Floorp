@@ -8,6 +8,7 @@
 #include "nsIDocument.h"
 #include "mozilla/Sprintf.h"
 #include "nsGlobalWindow.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventDispatcher.h"
@@ -76,7 +77,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMEventTargetHelper)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(dom::EventTarget)
   NS_INTERFACE_MAP_ENTRY(DOMEventTargetHelper)
 NS_INTERFACE_MAP_END
@@ -200,12 +200,12 @@ DOMEventTargetHelper::DispatchTrustedEvent(const nsAString& aEventName)
 }
 
 nsresult
-DOMEventTargetHelper::DispatchTrustedEvent(nsIDOMEvent* event)
+DOMEventTargetHelper::DispatchTrustedEvent(Event* event)
 {
   event->SetTrusted(true);
 
   ErrorResult rv;
-  DispatchEvent(*event->InternalDOMEvent(), rv);
+  DispatchEvent(*event, rv);
   return rv.StealNSResult();
 }
 

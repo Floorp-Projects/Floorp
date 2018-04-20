@@ -9,7 +9,7 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"/>
+          src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"/>
 
         <script><![CDATA[
 SimpleTest.waitForExplicitFinish();

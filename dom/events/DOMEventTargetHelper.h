@@ -26,6 +26,10 @@ namespace mozilla {
 
 class ErrorResult;
 
+namespace dom {
+class Event;
+} // namespace dom
+
 #define NS_DOMEVENTTARGETHELPER_IID \
 { 0xa28385c6, 0x9451, 0x4d7e, \
   { 0xa3, 0xdd, 0xf4, 0xb6, 0x87, 0x2f, 0xa4, 0x76 } }
@@ -79,8 +83,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(DOMEventTargetHelper)
-
-  NS_DECL_NSIDOMEVENTTARGET
 
   virtual EventListenerManager* GetExistingListenerManager() const override;
   virtual EventListenerManager* GetOrCreateListenerManager() override;
@@ -202,7 +204,7 @@ protected:
 
   RefPtr<EventListenerManager> mListenerManager;
   // Make |event| trusted and dispatch |aEvent| to |this|.
-  nsresult DispatchTrustedEvent(nsIDOMEvent* aEvent);
+  nsresult DispatchTrustedEvent(dom::Event* aEvent);
 
   virtual void LastRelease() {}
 

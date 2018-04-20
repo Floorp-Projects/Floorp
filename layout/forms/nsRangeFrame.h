@@ -17,6 +17,12 @@
 
 class nsDisplayRangeFocusRing;
 
+namespace mozilla {
+namespace dom {
+class Event;
+} // namespace mozilla
+} // namespace dom
+
 class nsRangeFrame final : public nsContainerFrame,
                            public nsIAnonymousContentCreator
 {
@@ -195,7 +201,7 @@ private:
   public:
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override
+    NS_IMETHOD HandleEvent(mozilla::dom::Event* aEvent) override
     {
       return NS_OK;
     }

@@ -1272,7 +1272,7 @@ nsXMLContentSerializer::MaybeFlagNewlineForRootNode(nsINode* aNode)
 {
   nsINode* parent = aNode->GetParentNode();
   if (parent) {
-    mAddNewlineForRootNode = parent->IsNodeOfType(nsINode::eDOCUMENT);
+    mAddNewlineForRootNode = parent->IsDocument();
   }
 }
 

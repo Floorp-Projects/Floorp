@@ -55,9 +55,9 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFormFillController, nsIFormFillController)
 
-  nsresult Focus(nsIDOMEvent* aEvent);
-  nsresult KeyPress(nsIDOMEvent* aKeyEvent);
-  nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  nsresult Focus(mozilla::dom::Event* aEvent);
+  nsresult KeyPress(mozilla::dom::Event* aKeyEvent);
+  nsresult MouseDown(mozilla::dom::Event* aMouseEvent);
 
   nsFormFillController();
 
@@ -91,7 +91,6 @@ protected:
   void MaybeRemoveMutationObserver(nsINode* aNode);
 
   void RemoveForDocument(nsIDocument* aDoc);
-  bool IsEventTrusted(nsIDOMEvent *aEvent);
 
   bool IsTextControl(nsINode* aNode);
 

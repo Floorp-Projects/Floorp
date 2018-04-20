@@ -52,7 +52,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "Connection.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "nsGlobalWindow.h"
 #include "nsIIdleObserver.h"
 #include "nsIPermissionManager.h"
@@ -702,10 +702,10 @@ MayVibrate(nsIDocument* doc) {
 }
 
 NS_IMETHODIMP
-VibrateWindowListener::HandleEvent(nsIDOMEvent* aEvent)
+VibrateWindowListener::HandleEvent(Event* aEvent)
 {
   nsCOMPtr<nsIDocument> doc =
-    do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
+    do_QueryInterface(aEvent->GetTarget());
 
   if (!MayVibrate(doc)) {
     // It's important that we call CancelVibrate(), not Vibrate() with an

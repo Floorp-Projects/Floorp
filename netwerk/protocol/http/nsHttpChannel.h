@@ -544,9 +544,13 @@ private:
     uint32_t                          mOfflineCacheLastModifiedTime;
 
     mozilla::TimeStamp                mOnStartRequestTimestamp;
-    // Timestamp of the time the cnannel was suspended.
+    // Timestamp of the time the channel was suspended.
     mozilla::TimeStamp                mSuspendTimestamp;
     mozilla::TimeStamp                mOnCacheEntryCheckTimestamp;
+#ifdef MOZ_GECKO_PROFILER
+    // For the profiler markers
+    mozilla::TimeStamp                mLastStatusReported;
+#endif
     // Total time the channel spent suspended. This value is reported to
     // telemetry in nsHttpChannel::OnStartRequest().
     uint32_t                          mSuspendTotalTime;

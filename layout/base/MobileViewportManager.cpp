@@ -9,8 +9,8 @@
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
-#include "nsIDOMEvent.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
@@ -122,7 +122,7 @@ MobileViewportManager::ResolutionUpdated()
 }
 
 NS_IMETHODIMP
-MobileViewportManager::HandleEvent(nsIDOMEvent* event)
+MobileViewportManager::HandleEvent(dom::Event* event)
 {
   nsAutoString type;
   event->GetType(type);

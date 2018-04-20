@@ -16,7 +16,6 @@
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsPrintfCString.h"
 
 namespace mozilla {
