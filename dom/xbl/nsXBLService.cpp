@@ -274,8 +274,7 @@ nsXBLStreamListener::HandleEvent(Event* aEvent)
 
   // Get the binding document; note that we don't hold onto it in this object
   // to avoid creating a cycle
-  Event* event = aEvent->InternalDOMEvent();
-  EventTarget* target = event->GetCurrentTarget();
+  EventTarget* target = aEvent->GetCurrentTarget();
   nsCOMPtr<nsIDocument> bindingDocument = do_QueryInterface(target);
   NS_ASSERTION(bindingDocument, "Event not targeted at document?!");
 

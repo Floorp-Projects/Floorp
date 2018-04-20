@@ -19,7 +19,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "js/TypeDecls.h"
 
-class nsIDOMEvent;
 class nsIContent;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -31,6 +30,7 @@ struct IgnoreModifierState;
 
 namespace dom {
 class AutoJSAPI;
+class Event;
 class EventTarget;
 class KeyboardEvent;
 class MouseEvent;
@@ -196,8 +196,9 @@ protected:
   void GetEventType(nsAString& type);
   bool ModifiersMatchMask(mozilla::dom::UIEvent* aEvent,
                           const IgnoreModifierState& aIgnoreModifierState);
-  nsresult DispatchXBLCommand(mozilla::dom::EventTarget* aTarget, nsIDOMEvent* aEvent);
-  nsresult DispatchXULKeyCommand(nsIDOMEvent* aEvent);
+  nsresult DispatchXBLCommand(mozilla::dom::EventTarget* aTarget,
+                              mozilla::dom::Event* aEvent);
+  nsresult DispatchXULKeyCommand(mozilla::dom::Event* aEvent);
   nsresult EnsureEventHandler(mozilla::dom::AutoJSAPI& jsapi, nsAtom* aName,
                               JS::MutableHandle<JSObject*> aHandler);
 
