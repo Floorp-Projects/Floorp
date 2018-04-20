@@ -735,7 +735,7 @@ nsWindowMemoryReporter::Observe(nsISupports *aSubject, const char *aTopic,
 void
 nsWindowMemoryReporter::ObserveDOMWindowDetached(nsGlobalWindowInner* aWindow)
 {
-  nsWeakPtr weakWindow = do_GetWeakReference(static_cast<nsIDOMEventTarget*>(aWindow));
+  nsWeakPtr weakWindow = do_GetWeakReference(aWindow);
   if (!weakWindow) {
     NS_WARNING("Couldn't take weak reference to a window?");
     return;

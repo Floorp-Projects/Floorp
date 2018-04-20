@@ -116,13 +116,13 @@ public:
           }
 
           MOZ_ASSERT(globalScope->GetWrapperPreserveColor() == global);
-          nsIDOMEventTarget* target = static_cast<nsIDOMEventTarget*>(globalScope);
 
           RefPtr<ErrorEvent> event =
             ErrorEvent::Constructor(aTarget, NS_LITERAL_STRING("error"), init);
           event->SetTrusted(true);
 
-          if (NS_FAILED(EventDispatcher::DispatchDOMEvent(target, nullptr,
+          if (NS_FAILED(EventDispatcher::DispatchDOMEvent(ToSupports(globalScope),
+                                                          nullptr,
                                                           event, nullptr,
                                                           &status))) {
             NS_WARNING("Failed to dispatch worker thread error event!");
@@ -370,13 +370,13 @@ WorkerErrorReport::ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
         }
 
         MOZ_ASSERT(globalScope->GetWrapperPreserveColor() == global);
-        nsIDOMEventTarget* target = static_cast<nsIDOMEventTarget*>(globalScope);
 
         RefPtr<ErrorEvent> event =
           ErrorEvent::Constructor(aTarget, NS_LITERAL_STRING("error"), init);
         event->SetTrusted(true);
 
-        if (NS_FAILED(EventDispatcher::DispatchDOMEvent(target, nullptr,
+        if (NS_FAILED(EventDispatcher::DispatchDOMEvent(ToSupports(globalScope),
+                                                        nullptr,
                                                         event, nullptr,
                                                         &status))) {
           NS_WARNING("Failed to dispatch worker thread error event!");

@@ -1174,13 +1174,13 @@ protected:
 inline nsISupports*
 ToSupports(nsGlobalWindowOuter *p)
 {
-    return static_cast<nsIDOMEventTarget*>(p);
+  return static_cast<mozilla::dom::EventTarget*>(p);
 }
 
 inline nsISupports*
 ToCanonicalSupports(nsGlobalWindowOuter *p)
 {
-    return static_cast<nsIDOMEventTarget*>(p);
+  return static_cast<mozilla::dom::EventTarget*>(p);
 }
 
 inline nsIGlobalObject*

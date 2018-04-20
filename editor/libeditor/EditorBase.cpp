@@ -51,6 +51,7 @@
 #include "mozilla/TransactionManager.h" // for TransactionManager
 #include "mozilla/dom/CharacterData.h"  // for CharacterData
 #include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement
+#include "mozilla/dom/EventTarget.h"    // for EventTarget
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/Event.h"
@@ -76,7 +77,6 @@
 #include "nsIDOMElement.h"              // for nsIDOMElement
 #include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
-#include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc.
 #include "nsIDocumentStateListener.h"   // for nsIDocumentStateListener
 #include "nsIEditActionListener.h"      // for nsIEditActionListener
@@ -350,10 +350,7 @@ EditorBase::PostCreate()
   // update nsTextStateManager and caret if we have focus
   nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
   if (focusedContent) {
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(focusedContent);
-    if (target) {
-      InitializeSelection(target);
-    }
+    InitializeSelection(focusedContent);
 
     // If the text control gets reframed during focus, Focus() would not be
     // called, so take a chance here to see if we need to spell check the text
@@ -4940,7 +4937,7 @@ EditorBase::InitializeSelectionAncestorLimit(Selection& aSelection,
 }
 
 nsresult
-EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
+EditorBase::InitializeSelection(EventTarget* aFocusEventTarget)
 {
   nsCOMPtr<nsINode> targetNode = do_QueryInterface(aFocusEventTarget);
   NS_ENSURE_TRUE(targetNode, NS_ERROR_INVALID_ARG);
@@ -5218,7 +5215,7 @@ EditorBase::IsModifiableNode(nsINode* aNode)
 nsIContent*
 EditorBase::GetFocusedContent()
 {
-  nsIDOMEventTarget* piTarget = GetDOMEventTarget();
+  EventTarget* piTarget = GetDOMEventTarget();
   if (!piTarget) {
     return nullptr;
   }
@@ -5242,7 +5239,7 @@ EditorBase::GetFocusedContentForIME()
 bool
 EditorBase::IsActiveInDOMWindow()
 {
-  nsIDOMEventTarget* piTarget = GetDOMEventTarget();
+  EventTarget* piTarget = GetDOMEventTarget();
   if (!piTarget) {
     return false;
   }
@@ -5327,7 +5324,7 @@ EditorBase::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent)
 }
 
 void
-EditorBase::OnFocus(nsIDOMEventTarget* aFocusEventTarget)
+EditorBase::OnFocus(EventTarget* aFocusEventTarget)
 {
   InitializeSelection(aFocusEventTarget);
   mSpellCheckerDictionaryUpdated = false;
