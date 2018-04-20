@@ -6,8 +6,10 @@
 
 #include "AndroidAPZ.h"
 
+#include "AndroidFlingPhysics.h"
 #include "AsyncPanZoomController.h"
 #include "GeneratedJNIWrappers.h"
+#include "GenericFlingAnimation.h"
 #include "gfxPrefs.h"
 #include "OverscrollHandoffState.h"
 #include "ViewConfiguration.h"
@@ -46,11 +48,25 @@ AndroidSpecificState::AndroidSpecificState() {
 AsyncPanZoomAnimation*
 AndroidSpecificState::CreateFlingAnimation(AsyncPanZoomController& aApzc,
                                            const FlingHandoffState& aHandoffState) {
-  return new StackScrollerFlingAnimation(aApzc,
-      this,
-      aHandoffState.mChain,
-      aHandoffState.mIsHandoff,
-      aHandoffState.mScrolledApzc);
+  if (gfxPrefs::APZUseChromeFlingPhysics()) {
+    return new GenericFlingAnimation<AndroidFlingPhysics>(aApzc,
+            aHandoffState.mChain,
+            aHandoffState.mIsHandoff,
+            aHandoffState.mScrolledApzc);
+  } else {
+    return new StackScrollerFlingAnimation(aApzc,
+        this,
+        aHandoffState.mChain,
+        aHandoffState.mIsHandoff,
+        aHandoffState.mScrolledApzc);
+  }
+}
+
+/* static */ void
+AndroidSpecificState::InitializeGlobalState() {
+  // Not conditioned on gfxPrefs::APZUseChromeFlingPhysics() because
+  // the pref is live.
+  AndroidFlingPhysics::InitializeGlobalState();
 }
 
 
