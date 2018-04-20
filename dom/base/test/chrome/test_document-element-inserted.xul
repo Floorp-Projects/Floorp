@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1411707
+-->
+<window title="Mozilla Bug 1411707"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1411707"
+     target="_blank">Mozilla Bug 1411707</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    const OUTER_URL = "chrome://mochitests/content/chrome/dom/base/test/chrome/file_document-element-inserted.xul";
+    const INNER_URL = "chrome://mochitests/content/chrome/dom/base/test/chrome/file_document-element-inserted-inner.xul";
+
+    async function waitForEvent(url) {
+      return new Promise(resolve => {
+        SpecialPowers.addObserver(function inserted(document) {
+          is(document.documentURI, url, "Correct URL");
+          is(document.readyState, "uninitialized", "Correct readyState");
+          SpecialPowers.removeObserver(inserted, "document-element-inserted");
+          resolve();
+        }, "document-element-inserted");
+      })
+    }
+
+    // Load a XUL document that also has an iframe to a subdocument, and
+    // expect both events to fire with the docs in the correct state.
+    async function testEvents() {
+      info(`Waiting for events after loading ${OUTER_URL}`);
+      let win = window.openDialog(OUTER_URL, null, "chrome,dialog=no,all");
+      await waitForEvent(OUTER_URL);
+      await waitForEvent(INNER_URL);
+      win.close();
+    }
+
+    (async function() {
+      // Test the same document twice to make to make sure we are
+      // firing properly when loading the protype document.
+      await testEvents();
+      await testEvents();
+      SimpleTest.finish();
+    })();
+  ]]></script>
+</window>

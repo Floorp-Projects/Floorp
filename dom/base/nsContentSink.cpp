@@ -1645,6 +1645,8 @@ nsContentSink::WillBuildModelImpl()
 void
 nsContentSink::NotifyDocElementCreated(nsIDocument* aDoc)
 {
+  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
