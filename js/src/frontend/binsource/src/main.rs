@@ -1116,15 +1116,22 @@ impl CPPExporter {
             let check_fields = if number_of_fields == 0 {
                 format!("MOZ_TRY(tokenizer_->checkFields0(kind, fields));")
             } else {
-                format!("MOZ_TRY(tokenizer_->checkFields(kind, fields, {fields_type_list}));",
-                    fields_type_list = fields_type_list)
+                // The following strategy is designed for old versions of clang.
+                format!("
+#if defined(DEBUG)
+    const BinField expected_fields[{number_of_fields}] = {fields_type_list};
+    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
+#endif // defined(DEBUG)
+",
+                    fields_type_list = fields_type_list,
+                    number_of_fields = number_of_fields)
             };
             buffer.push_str(&format!("{first_line}
 {{
     MOZ_ASSERT(kind == BinKind::{kind});
     CheckRecursionLimit(cx_);
 
-    {check_fields}
+{check_fields}
 {pre}{fields_implem}
 {post}
     return result;
