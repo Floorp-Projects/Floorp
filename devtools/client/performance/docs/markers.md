@@ -22,7 +22,7 @@ main thread when debugging content.
 Triggered when a DOM event occurs, like a click or a keypress.
 
 * unsigned short eventPhase - a number indicating what phase this event is
-  in (target, bubbling, capturing, maps to Ci.nsIDOMEvent constants)
+  in (target, bubbling, capturing, maps to Event constants)
 * DOMString type - the type of event, like "keypress" or "click"
 
 ## Reflow
