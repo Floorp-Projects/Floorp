@@ -51,7 +51,7 @@ function testComment(aText)
     var types = [ Comment, CharacterData, Node ];
     checkTypes(comment, "comment", types);
 
-    var interfaces = [ "nsIDOMNode", "nsIDOMEventTarget" ];
+    var interfaces = [ "nsIDOMNode" ];
     checkInterfaces(comment, "comment", interfaces);
 
     testCharacterData(comment, aText);
@@ -81,7 +81,7 @@ function testPI(aTarget, aData, aShouldSucceed, aReason)
     var types = [ ProcessingInstruction, Node ];
     checkTypes(pi, "processing instruction", types);
 
-    var interfaces = [ "nsIDOMNode", "nsIDOMEventTarget" ];
+    var interfaces = [ "nsIDOMNode" ];
     checkInterfaces(pi, "processing instruction", interfaces);
 
     is(pi.target, aTarget, "Check target");

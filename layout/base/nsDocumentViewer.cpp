@@ -104,7 +104,6 @@
 #endif // NS_PRINTING
 
 //focus
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
 #include "nsISelectionController.h"
 
