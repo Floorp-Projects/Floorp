@@ -1,5 +1,4 @@
-from tests.support.asserts import assert_error, assert_dialog_handled, assert_same_element
-from tests.support.fixtures import create_dialog
+from tests.support.asserts import assert_error, assert_same_element
 from tests.support.inline import inline
 
 
@@ -30,9 +29,11 @@ def assert_is_active_element(session, response):
         assert_same_element(session, response.body["value"], from_js)
 
 
-# > 1. If the current browsing context is no longer open, return error with
-# >    error code no such window.
 def test_closed_context(session, create_window):
+    """
+    > 1. If the current browsing context is no longer open, return error with
+    >    error code no such window.
+    """
     new_window = create_window()
     session.window_handle = new_window
     session.close()
@@ -41,126 +42,14 @@ def test_closed_context(session, create_window):
     assert_error(response, "no such window")
 
 
-# [...]
-# 2. Handle any user prompts and return its value if it is an error.
-# [...]
-# In order to handle any user prompts a remote end must take the following
-# steps:
-# 2. Run the substeps of the first matching user prompt handler:
-#
-#    [...]
-#    - dismiss state
-#      1. Dismiss the current user prompt.
-#    [...]
-#
-# 3. Return success.
-def test_handle_prompt_dismiss(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "dismiss"})}})
-    session.url = inline("<body><p>Hello, World!</p></body>")
-
-    create_dialog(session)("alert", text="dismiss #1", result_var="dismiss1")
-
-    response = get_active_element(session)
-    assert_is_active_element(session, response)
-    assert_dialog_handled(session, "dismiss #1")
-    assert session.execute_script("return dismiss1") is None
-
-    create_dialog(session)("confirm", text="dismiss #2", result_var="dismiss2")
-
-    response = get_active_element(session)
-    assert_is_active_element(session, response)
-    assert_dialog_handled(session, "dismiss #2")
-    assert read_global(session, "dismiss2") is False
-
-    create_dialog(session)("prompt", text="dismiss #3", result_var="dismiss3")
-
-    response = get_active_element(session)
-    assert_is_active_element(session, response)
-    assert_dialog_handled(session, "dismiss #3")
-    assert read_global(session, "dismiss3") is None
-
-
-# [...]
-# 2. Handle any user prompts and return its value if it is an error.
-# [...]
-# In order to handle any user prompts a remote end must take the following
-# steps:
-# 2. Run the substeps of the first matching user prompt handler:
-#
-#    [...]
-#    - accept state
-#      1. Accept the current user prompt.
-#    [...]
-#
-# 3. Return success.
-def test_handle_prompt_accept(new_session, add_browser_capabilites):
-    _, session = new_session({"capabilities": {"alwaysMatch": add_browser_capabilites({"unhandledPromptBehavior": "accept"})}})
-    session.url = inline("<body><p>Hello, World!</p></body>")
-    create_dialog(session)("alert", text="accept #1", result_var="accept1")
-
-    response = get_active_element(session)
-    assert_is_active_element(session, response)
-    assert_dialog_handled(session, "accept #1")
-    assert read_global(session, "accept1") is None
-
-    create_dialog(session)("confirm", text="accept #2", result_var="accept2")
-
-    response = get_active_element(session)
-    assert_is_active_element(session, response)
-    assert_dialog_handled(session, "accept #2")
-    assert read_global(session, "accept2") is True
-
-    create_dialog(session)("prompt", text="accept #3", result_var="accept3")
-
-    response = get_active_element(session)
-    assert_is_active_element(session, response)
-    assert_dialog_handled(session, "accept #3")
-    assert read_global(session, "accept3") == "" or read_global(session, "accept3") == "undefined"
-
-
-# [...]
-# 2. Handle any user prompts and return its value if it is an error.
-# [...]
-# In order to handle any user prompts a remote end must take the following
-# steps:
-# 2. Run the substeps of the first matching user prompt handler:
-#
-#    [...]
-#    - missing value default state
-#    - not in the table of simple dialogs
-#      1. Dismiss the current user prompt.
-#      2. Return error with error code unexpected alert open.
-def test_handle_prompt_missing_value(session, create_dialog):
-    session.url = inline("<body><p>Hello, World!</p></body>")
-
-    create_dialog("alert", text="dismiss #1", result_var="dismiss1")
-
-    response = get_active_element(session)
-    assert_error(response, "unexpected alert open")
-    assert_dialog_handled(session, "dismiss #1")
-    assert session.execute_script("return dismiss1") is None
-
-    create_dialog("confirm", text="dismiss #2", result_var="dismiss2")
-
-    response = get_active_element(session)
-    assert_error(response, "unexpected alert open")
-    assert_dialog_handled(session, "dismiss #2")
-    assert session.execute_script("return dismiss2") is False
-
-    create_dialog("prompt", text="dismiss #3", result_var="dismiss3")
-
-    response = get_active_element(session)
-    assert_error(response, "unexpected alert open")
-    assert_dialog_handled(session, "dismiss #3")
-    assert session.execute_script("return dismiss3") is None
-
-
-# > [...]
-# > 3. Let active element be the active element of the current browsing
-# >    context's document element.
-# > 4. Let active web element be the JSON Serialization of active element.
-# > 5. Return success with data active web element.
 def test_success_document(session):
+    """
+    > [...]
+    > 3. Let active element be the active element of the current browsing
+    >    context's document element.
+    > 4. Let active web element be the JSON Serialization of active element.
+    > 5. Return success with data active web element.
+    """
     session.url = inline("""
         <body>
             <h1>Heading</h1>

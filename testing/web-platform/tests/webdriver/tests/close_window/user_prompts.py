@@ -1,5 +1,3 @@
-# META: timeout=long
-
 from tests.support.asserts import assert_error, assert_dialog_handled
 from tests.support.fixtures import create_dialog, create_window
 from tests.support.inline import inline
