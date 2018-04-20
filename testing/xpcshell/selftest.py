@@ -893,14 +893,13 @@ add_test({
         """
         Ensure a simple test with an uncaught rejection is reported.
         """
-        self.writeFile("test_simple_uncaught_rejection.js", SIMPLE_UNCAUGHT_REJECTION_TEST)
+        self.writeFile("test_simple_uncaught_rejection.js",
+                       SIMPLE_UNCAUGHT_REJECTION_TEST)
         self.writeManifest(["test_simple_uncaught_rejection.js"])
 
         self.assertTestResult(False)
         self.assertInLog(TEST_FAIL_STRING)
-        if not substs.get('RELEASE_OR_BETA'):
-            # async stacks are currently not enabled in release builds.
-            self.assertInLog("test_simple_uncaught_rejection.js:3:3")
+        self.assertInLog("test_simple_uncaught_rejection.js:3:18")
         self.assertInLog("Test rejection.")
         self.assertEquals(1, self.x.testCount)
         self.assertEquals(0, self.x.passCount)

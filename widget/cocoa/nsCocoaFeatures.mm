@@ -188,6 +188,12 @@ Gecko_OnSierraExactly()
     return nsCocoaFeatures::OnSierraExactly();
 }
 
+bool
+Gecko_OnHighSierraOrLater()
+{
+    return nsCocoaFeatures::OnHighSierraOrLater();
+}
+
 /* static */ bool
 nsCocoaFeatures::IsAtLeastVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix)
 {

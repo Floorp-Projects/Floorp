@@ -10,6 +10,7 @@
 #include "gfxFontSrcPrincipal.h"
 #include "gfxFontSrcURI.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
 #include "mozilla/dom/FontFaceSetIterator.h"
 #include "mozilla/dom/FontFaceSetLoadEvent.h"
@@ -1754,7 +1755,7 @@ FontFaceSet::DispatchLoadingFinishedEvent(
 // nsIDOMEventListener
 
 NS_IMETHODIMP
-FontFaceSet::HandleEvent(nsIDOMEvent* aEvent)
+FontFaceSet::HandleEvent(Event* aEvent)
 {
   nsString type;
   aEvent->GetType(type);

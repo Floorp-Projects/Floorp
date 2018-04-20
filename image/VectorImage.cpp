@@ -13,11 +13,11 @@
 #include "imgFrame.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
-#include "nsIDOMEvent.h"
 #include "nsIPresShell.h"
 #include "nsIStreamListener.h"
 #include "nsMimeTypes.h"
@@ -209,7 +209,7 @@ private:
   }
 
 public:
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override
+  NS_IMETHOD HandleEvent(Event* aEvent) override
   {
     MOZ_ASSERT(mDocument, "Need an SVG document. Received multiple events?");
 

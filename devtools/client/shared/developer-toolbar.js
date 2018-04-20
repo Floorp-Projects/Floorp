@@ -705,7 +705,7 @@ DeveloperToolbar.prototype._onPageError = function(tabId, pageError) {
  * a different page starts loading.
  *
  * @private
- * @param nsIDOMEvent ev the beforeunload DOM event.
+ * @param Event ev the beforeunload DOM event.
  */
 DeveloperToolbar.prototype._onPageBeforeUnload = function(ev) {
   let window = ev.target.defaultView;

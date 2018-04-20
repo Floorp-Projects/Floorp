@@ -99,7 +99,7 @@ MediaStreamAudioSourceNode::Init(DOMMediaStream* aMediaStream, ErrorResult& aRv)
   mInputStream = aMediaStream;
   AudioNodeEngine* engine = new MediaStreamAudioSourceNodeEngine(this);
   mStream = AudioNodeExternalInputStream::Create(graph, engine);
-  mInputStream->AddConsumerToKeepAlive(static_cast<nsIDOMEventTarget*>(this));
+  mInputStream->AddConsumerToKeepAlive(ToSupports(this));
 
   mInputStream->RegisterTrackListener(this);
   AttachToFirstTrack(mInputStream);

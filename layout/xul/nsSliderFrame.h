@@ -32,7 +32,7 @@ public:
 
   virtual void SetSlider(nsSliderFrame* aSlider) { mSlider = aSlider; }
 
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
+  NS_DECL_NSIDOMEVENTLISTENER
 
 protected:
   virtual ~nsSliderMediator() {}
@@ -93,7 +93,7 @@ public:
   virtual void RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame) override;
 
-  nsresult StartDrag(nsIDOMEvent* aEvent);
+  nsresult StartDrag(mozilla::dom::Event* aEvent);
   nsresult StopDrag();
 
   void StartAPZDrag(mozilla::WidgetGUIEvent* aEvent);

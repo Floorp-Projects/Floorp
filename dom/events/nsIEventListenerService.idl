@@ -5,7 +5,8 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMEventTarget;
+webidl EventTarget;
+
 interface nsIArray;
 
 /**
@@ -15,7 +16,7 @@ interface nsIArray;
 [scriptable, uuid(07222b02-da12-4cf4-b2f7-761da007a8d8)]
 interface nsIEventListenerChange : nsISupports
 {
-  readonly attribute nsIDOMEventTarget target;
+  readonly attribute EventTarget target;
 
   [noscript]
   readonly attribute uint32_t countOfEventListenerChangesAffectingAccessibility;
@@ -65,7 +66,7 @@ interface nsIEventListenerService : nsISupports
    * Returns an array of nsIEventListenerInfo objects.
    * If aEventTarget doesn't have any listeners, this returns null.
    */
-  void getListenerInfoFor(in nsIDOMEventTarget aEventTarget,
+  void getListenerInfoFor(in EventTarget aEventTarget,
                           [optional] out unsigned long aCount,
                           [retval, array, size_is(aCount)] out
                             nsIEventListenerInfo aOutArray);
@@ -78,23 +79,23 @@ interface nsIEventListenerService : nsISupports
    * @note Some events, especially 'load', may actually have a shorter
    *       event target chain than what this methods returns.
    */
-  void getEventTargetChainFor(in nsIDOMEventTarget aEventTarget,
+  void getEventTargetChainFor(in EventTarget aEventTarget,
                               in boolean composed,
                               [optional] out unsigned long aCount,
                               [retval, array, size_is(aCount)] out
-                                nsIDOMEventTarget aOutArray);
+                                EventTarget aOutArray);
 
   /**
    * Returns true if a event target has any listener for the given type.
    */
-  boolean hasListenersFor(in nsIDOMEventTarget aEventTarget,
+  boolean hasListenersFor(in EventTarget aEventTarget,
                           in DOMString aType);
 
   /**
    * Add a system-group eventlistener to a event target.
    */
   [implicit_jscontext]
-  void addSystemEventListener(in nsIDOMEventTarget target,
+  void addSystemEventListener(in EventTarget target,
                               in DOMString type,
                               in jsval listener,
                               in boolean useCapture);
@@ -103,20 +104,20 @@ interface nsIEventListenerService : nsISupports
    * Remove a system-group eventlistener from a event target.
    */
   [implicit_jscontext]
-  void removeSystemEventListener(in nsIDOMEventTarget target,
+  void removeSystemEventListener(in EventTarget target,
                                  in DOMString type,
                                  in jsval listener,
                                  in boolean useCapture);
 
   [implicit_jscontext]
-  void addListenerForAllEvents(in nsIDOMEventTarget target,
+  void addListenerForAllEvents(in EventTarget target,
                                in jsval listener,
                                [optional] in boolean aUseCapture,
                                [optional] in boolean aWantsUntrusted,
                                [optional] in boolean aSystemEventGroup);
 
   [implicit_jscontext]
-  void removeListenerForAllEvents(in nsIDOMEventTarget target,
+  void removeListenerForAllEvents(in EventTarget target,
                                   in jsval listener,
                                   [optional] in boolean aUseCapture,
                                   [optional] in boolean aSystemEventGroup);

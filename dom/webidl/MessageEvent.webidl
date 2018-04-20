@@ -35,14 +35,14 @@ interface MessageEvent : Event {
    */
   readonly attribute MessageEventSource? source;
 
-  /**
-   * Initializes this event with the given data, in a manner analogous to
-   * the similarly-named method on the nsIDOMEvent interface, also setting the
-   * data, origin, source, and lastEventId attributes of this appropriately.
-   */
   [Pure, Cached, Frozen]
   readonly attribute sequence<MessagePort> ports;
 
+  /**
+   * Initializes this event with the given data, in a manner analogous to
+   * the similarly-named method on the Event interface, also setting the
+   * data, origin, source, and lastEventId attributes of this appropriately.
+   */
   void initMessageEvent(DOMString type,
                         optional boolean bubbles = false,
                         optional boolean cancelable = false,

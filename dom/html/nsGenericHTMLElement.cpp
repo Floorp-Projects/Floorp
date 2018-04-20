@@ -57,7 +57,6 @@
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMEvent.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsITextControlFrame.h"
 #include "nsIForm.h"

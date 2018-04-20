@@ -17,6 +17,7 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/IdleRequest.h"
@@ -108,7 +109,6 @@
 #include "Crypto.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow.h"
@@ -1085,13 +1085,11 @@ nsGlobalWindowOuter::ClearControllers()
 // QueryInterface implementation for nsGlobalWindowOuter
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindowOuter)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  // Make sure this matches the cast in nsGlobalWindowOuter::FromWrapper()
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(mozilla::dom::EventTarget)
   if (aIID.Equals(NS_GET_IID(nsPIDOMWindowOuter))) {
     foundInterface = static_cast<nsPIDOMWindowOuter*>(this);
@@ -1219,7 +1217,7 @@ nsGlobalWindowOuter::IsBlackForCC(bool aTracingNeeded)
   return (nsCCUncollectableMarker::InGeneration(GetMarkedCCGeneration()) ||
           HasKnownLiveWrapper()) &&
          (!aTracingNeeded ||
-          HasNothingToTrace(static_cast<nsIDOMEventTarget*>(this)));
+          HasNothingToTrace(ToSupports(this)));
 }
 
 //*****************************************************************************
@@ -2134,7 +2132,7 @@ nsGlobalWindowOuter::SetDocShell(nsIDocShell* aDocShell)
 
   // Get our enclosing chrome shell and retrieve its global window impl, so
   // that we can do some forwarding to the chrome document.
-  nsCOMPtr<nsIDOMEventTarget> chromeEventHandler;
+  RefPtr<EventTarget> chromeEventHandler;
   mDocShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
   mChromeEventHandler = do_QueryInterface(chromeEventHandler);
   if (!mChromeEventHandler) {
@@ -6390,7 +6388,7 @@ nsGlobalWindowOuter::FindOuter(const nsAString& aString, bool aCaseSensitive,
 }
 
 //*****************************************************************************
-// nsGlobalWindowOuter::nsIDOMEventTarget
+// EventTarget
 //*****************************************************************************
 
 nsPIDOMWindowOuter*

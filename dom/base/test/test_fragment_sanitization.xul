@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1432966
 <window title="Mozilla Bug 1432966"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"/>
 
   <script type="application/javascript"><![CDATA[
 

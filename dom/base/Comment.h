@@ -39,11 +39,10 @@ public:
     Init();
   }
 
+  NS_IMPL_FROMNODE_HELPER(Comment, IsComment())
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsINode
-  virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
   virtual already_AddRefed<CharacterData>
     CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,

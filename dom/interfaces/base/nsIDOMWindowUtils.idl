@@ -34,14 +34,12 @@ interface nsICycleCollectorListener;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
 interface nsIDOMElement;
-interface nsIDOMEvent;
 interface nsIPreloadedStyleSheet;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 interface nsIDOMWindow;
 interface nsIFile;
 interface nsIURI;
-interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
@@ -50,6 +48,8 @@ interface nsIObserver;
 interface nsIDOMStorage;
 
 webidl DOMRect;
+webidl EventTarget;
+webidl Event;
 
 [scriptable, uuid(4d6732ca-9da7-4176-b8a1-8dde15cd0bf9)]
 interface nsIDOMWindowUtils : nsISupports {
@@ -318,7 +318,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aPressure touch input pressure: 0.0 -> 1.0
    * @param aInputSourceArg input source, see MouseEvent for values,
    *        defaults to mouse input.
-   * @param aIsDOMEventSynthesized controls nsIDOMEvent.isSynthesized value
+   * @param aIsDOMEventSynthesized controls Event.isSynthesized value
    *                               that helps identifying test related events,
    *                               defaults to true
    * @param aIsWidgetEventSynthesized controls WidgetMouseEvent.mReason value
@@ -937,7 +937,7 @@ interface nsIDOMWindowUtils : nsISupports {
    *       Also, aEvent should not be reused.
    */
   boolean dispatchDOMEventViaPresShell(in nsIDOMNode aTarget,
-                                       in nsIDOMEvent aEvent,
+                                       in Event aEvent,
                                        in boolean aTrusted);
 
   /**
@@ -946,8 +946,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * Event's .target property will be aTarget.
    * Returns the same value as what EventTarget.dispatchEvent does.
    */
-  boolean dispatchEventToChromeOnly(in nsIDOMEventTarget aTarget,
-                                    in nsIDOMEvent aEvent);
+  boolean dispatchEventToChromeOnly(in EventTarget aTarget,
+                                    in Event aEvent);
 
   /**
    * Returns the real classname (possibly of the mostly-transparent security

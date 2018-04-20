@@ -29,7 +29,7 @@ public:
   virtual int32_t TabIndexDefault() override;
 
 #ifdef XP_MACOSX
-  // nsIDOMEventTarget
+  // EventTarget
   NS_IMETHOD PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 #endif
 

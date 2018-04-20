@@ -44,6 +44,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
@@ -250,7 +251,7 @@ nsXBLPrototypeHandler::InitAccessKeys()
 
 nsresult
 nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
-                                      nsIDOMEvent* aEvent)
+                                      Event* aEvent)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -274,10 +275,7 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   // XUL handlers and commands shouldn't be triggered by non-trusted
   // events.
   if (isXULKey || isXBLCommand) {
-    bool trustedEvent = false;
-    aEvent->GetIsTrusted(&trustedEvent);
-
-    if (!trustedEvent)
+    if (!aEvent->IsTrusted())
       return NS_OK;
   }
 
@@ -456,16 +454,14 @@ nsXBLPrototypeHandler::EnsureEventHandler(AutoJSAPI& jsapi, nsAtom* aName,
 }
 
 nsresult
-nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, nsIDOMEvent* aEvent)
+nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, Event* aEvent)
 {
   // This is a special-case optimization to make command handling fast.
   // It isn't really a part of XBL, but it helps speed things up.
 
   if (aEvent) {
     // See if preventDefault has been set.  If so, don't execute.
-    bool preventDefault = false;
-    aEvent->GetDefaultPrevented(&preventDefault);
-    if (preventDefault) {
+    if (aEvent->DefaultPrevented()) {
       return NS_OK;
     }
     bool dispatchStopped = aEvent->IsDispatchStopped();
@@ -566,7 +562,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, nsIDOMEvent* aEv
 }
 
 nsresult
-nsXBLPrototypeHandler::DispatchXULKeyCommand(nsIDOMEvent* aEvent)
+nsXBLPrototypeHandler::DispatchXULKeyCommand(Event* aEvent)
 {
   nsCOMPtr<Element> handlerElement = GetHandlerElement();
   NS_ENSURE_STATE(handlerElement);
@@ -581,7 +577,7 @@ nsXBLPrototypeHandler::DispatchXULKeyCommand(nsIDOMEvent* aEvent)
   aEvent->PreventDefault();
 
   // Copy the modifiers from the key event.
-  RefPtr<KeyboardEvent> keyEvent = aEvent->InternalDOMEvent()->AsKeyboardEvent();
+  RefPtr<KeyboardEvent> keyEvent = aEvent->AsKeyboardEvent();
   if (!keyEvent) {
     NS_ERROR("Trying to execute a key handler for a non-key event!");
     return NS_ERROR_FAILURE;

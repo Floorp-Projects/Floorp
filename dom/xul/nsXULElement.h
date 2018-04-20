@@ -14,7 +14,6 @@
 
 #include "js/TracingAPI.h"
 #include "mozilla/Attributes.h"
-#include "nsIDOMEvent.h"
 #include "nsIServiceManager.h"
 #include "nsAtom.h"
 #include "mozilla/dom/NodeInfo.h"

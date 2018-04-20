@@ -29,10 +29,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(UIEvent, Event)
 
-  NS_IMETHOD DuplicatePrivateData() override;
-  NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) override;
-  NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) override;
-
+  void DuplicatePrivateData() override;
+  void Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) override;
+  bool Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) override;
 
   static already_AddRefed<UIEvent> Constructor(const GlobalObject& aGlobal,
                                                const nsAString& aType,

@@ -34,8 +34,8 @@ public:
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(NotifyPaintEvent, Event)
 
-  NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) override;
-  NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) override;
+  void Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) override;
+  bool Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) override;
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {

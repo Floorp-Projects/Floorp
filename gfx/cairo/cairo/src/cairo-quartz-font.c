@@ -353,6 +353,17 @@ CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize)
     //
     // So we only need to do this "the hard way" on Sierra; on other releases,
     // just let the standard CTFont function do its thing.
+    //
+    // NOTE in case this ever needs further adjustment: there is similar logic
+    // in four places in the tree (sadly):
+    //    CreateCTFontFromCGFontWithVariations in gfxMacFont.cpp
+    //    CreateCTFontFromCGFontWithVariations in ScaledFontMac.cpp
+    //    CreateCTFontFromCGFontWithVariations in cairo-quartz-font.c
+    //    ctfont_create_exact_copy in SkFontHost_mac.cpp
+    //
+    // XXX Does this need to behave differently for installed fonts on High
+    // Sierra, as in other similar places (bug 1455569)?
+
     if (!Gecko_OnSierraExactly()) {
         return CTFontCreateWithGraphicsFont(aCGFont, aSize, NULL, NULL);
     }
