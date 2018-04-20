@@ -187,6 +187,7 @@ pref("xpinstall.whitelist.directRequest", false);
 pref("xpinstall.whitelist.fileRequest", false);
 pref("xpinstall.whitelist.add", "https://addons.mozilla.org,https://testpilot.firefox.com");
 
+pref("extensions.langpacks.signatures.required", true);
 pref("xpinstall.signatures.required", true);
 
 pref("extensions.enabledScopes", 1);
