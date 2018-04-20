@@ -9,6 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const FontAxis = createFactory(require("./FontAxis"));
+const FontMeta = createFactory(require("./FontMeta"));
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
@@ -75,6 +76,26 @@ class FontEditor extends PureComponent {
     });
   }
 
+  renderFontFamily(font) {
+    return dom.label(
+      {
+        className: "font-control font-control-family",
+      },
+      dom.span(
+        {
+          className: "font-control-label",
+        },
+        getStr("fontinspector.fontFamilyLabel")
+      ),
+      dom.div(
+        {
+          className: "font-control-box",
+        },
+        FontMeta({ font })
+      )
+    );
+  }
+
   /**
    * Get a dropdown which allows selecting between variation instances defined by a font.
    *
@@ -128,7 +149,7 @@ class FontEditor extends PureComponent {
         {
           className: "font-control-label",
         },
-        "Instances"
+        getStr("fontinspector.fontInstanceLabel")
       ),
       instanceSelect
     );
@@ -146,7 +167,7 @@ class FontEditor extends PureComponent {
     // Future implementations will allow switching between multiple fonts.
     const font = fonts[0];
     const fontAxes = (font && font.variationAxes) ? font.variationAxes : null;
-    const fontInstances = (font && font.variationInstances) ?
+    const fontInstances = (font && font.variationInstances.length) ?
       font.variationInstances
       :
       null;
@@ -156,6 +177,7 @@ class FontEditor extends PureComponent {
         className: "theme-sidebar inspector-tabpanel",
         id: "sidebar-panel-fontinspector"
       },
+      this.renderFontFamily(font),
       fontInstances && this.renderInstances(fontInstances, instance),
       fontAxes ?
         this.renderAxes(fontAxes, axes)

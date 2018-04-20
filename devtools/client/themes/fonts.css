@@ -118,19 +118,30 @@
   padding: 5px 20px;
 }
 
+.font-control-family {
+  align-items: flex-start;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.font-control-box,
+.font-control-input {
+  flex: 4;
+  min-width: 100px;
+}
+
 .font-control-input {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  flex: 3;
-  max-width: 300px;
-  min-width: 100px;
 }
 
 .font-control-label {
   display: inline-block;
   flex: 1;
+  font-size: 12px;
   min-width: 80px;
+  margin-right: 10px;
 }
 
 .font-axis-input {
