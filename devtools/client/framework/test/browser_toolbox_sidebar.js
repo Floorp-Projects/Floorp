@@ -10,7 +10,6 @@ function test() {
   const tab2URL = "data:text/html;charset=utf8,<title>2</title><p>2</p>";
   const tab3URL = "data:text/html;charset=utf8,<title>3</title><p>3</p>";
 
-  let panelDoc;
   let tab1Selected = false;
   let registeredTabs = {};
   let readyTabs = {};

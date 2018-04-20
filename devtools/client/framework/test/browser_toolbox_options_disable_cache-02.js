@@ -9,6 +9,7 @@ requestLongerTimeout(2);
 
 // Tests that disabling the cache for a tab works as it should when toolboxes
 // are toggled.
+/* import-globals-from helper_disable_cache.js */
 loadHelperScript("helper_disable_cache.js");
 
 add_task(async function() {
