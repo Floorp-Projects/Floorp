@@ -326,10 +326,9 @@ DataTransferItem::GetAsEntry(nsIPrincipal& aSubjectPrincipal,
   if (target) {
     global = target->GetOwnerGlobal();
   } else {
-    nsCOMPtr<nsIDOMEvent> event =
-      do_QueryInterface(mDataTransfer->GetParentObject());
+    RefPtr<Event> event = do_QueryObject(mDataTransfer->GetParentObject());
     if (event) {
-      global = event->InternalDOMEvent()->GetParentObject();
+      global = event->GetParentObject();
     }
   }
 
@@ -469,8 +468,8 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
   if (parent && !global) {
     if (nsCOMPtr<dom::EventTarget> target = do_QueryInterface(parent)) {
       global = target->GetOwnerGlobal();
-    } else if (nsCOMPtr<nsIDOMEvent> event = do_QueryInterface(parent)) {
-      global = event->InternalDOMEvent()->GetParentObject();
+    } else if (RefPtr<Event> event = do_QueryObject(parent)) {
+      global = event->GetParentObject();
     }
   }
   if (global) {
