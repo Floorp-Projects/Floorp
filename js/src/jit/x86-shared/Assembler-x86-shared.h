@@ -1624,6 +1624,8 @@ class AssemblerX86Shared : public AssemblerShared
         masm.popcntl_rr(src.encoding(), dest.encoding());
     }
     void imull(Register multiplier) {
+        // Consumes eax as the other argument
+        // and clobbers edx, as result is in edx:eax
         masm.imull_r(multiplier.encoding());
     }
     void umull(Register multiplier) {
