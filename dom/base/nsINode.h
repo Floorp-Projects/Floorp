@@ -453,6 +453,7 @@ public:
    */
   bool IsDocument() const
   {
+    // One less pointer-chase than checking NodeType().
     return !GetParentNode() && IsInUncomposedDoc();
   }
 
