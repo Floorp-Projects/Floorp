@@ -10,11 +10,11 @@
 #include "Database.h"
 
 #include "nsIAnnotationService.h"
-#include "nsINavBookmarksService.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFile.h"
 #include "nsIWritablePropertyBag2.h"
 
+#include "nsNavBookmarks.h"
 #include "nsNavHistory.h"
 #include "nsPlacesTables.h"
 #include "nsPlacesIndexes.h"
@@ -107,6 +107,11 @@
 #define LMANNO_FEEDURI "livemark/feedURI"
 #define LMANNO_SITEURI "livemark/siteURI"
 
+#define ROOT_GUID "root________"
+#define MENU_ROOT_GUID "menu________"
+#define TOOLBAR_ROOT_GUID "toolbar_____"
+#define UNFILED_ROOT_GUID "unfiled_____"
+#define TAGS_ROOT_GUID "tags________"
 #define MOBILE_ROOT_GUID "mobile______"
 // This is no longer used & obsolete except for during migration.
 // Note: it may still be found in older places databases.
@@ -228,12 +233,9 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
 nsresult
 CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
            const nsCString& aRootName, const nsCString& aGuid,
-           const nsCString& titleString)
+           const nsCString& titleString, const int32_t position, int64_t& newId)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  // The position of the new item in its folder.
-  static int32_t itemPosition = 0;
 
   // A single creation timestamp for all roots so that the root folder's
   // last modification time isn't earlier than its childrens' creation time.
@@ -257,7 +259,7 @@ CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_type"),
                              nsINavBookmarksService::TYPE_FOLDER);
   if (NS_FAILED(rv)) return rv;
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_position"), itemPosition);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_position"), position);
   if (NS_FAILED(rv)) return rv;
   rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("item_title"),
                                   titleString);
@@ -274,11 +276,7 @@ CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
   rv = stmt->Execute();
   if (NS_FAILED(rv)) return rv;
 
-  // The 'places' root is a folder containing the other roots.
-  // The first bookmark in a folder has position 0.
-  if (!aRootName.EqualsLiteral("places"))
-    ++itemPosition;
-
+  newId = nsNavBookmarks::sLastInsertedItemId;
   return NS_OK;
 }
 
@@ -382,6 +380,12 @@ Database::Database()
   , mConnectionShutdown(new ConnectionShutdownBlocker(this))
   , mMaxUrlLength(0)
   , mCacheObservers(TOPIC_PLACES_INIT_COMPLETE)
+  , mRootId(-1)
+  , mMenuRootId(-1)
+  , mTagsRootId(-1)
+  , mUnfiledRootId(-1)
+  , mToolbarRootId(-1)
+  , mMobileRootId(-1)
 {
   MOZ_ASSERT(!XRE_IsContentProcess(),
              "Cannot instantiate Places in the content process");
@@ -648,6 +652,9 @@ Database::EnsureConnection()
     // considered corrupt if any of the following fails.
 
     rv = InitTempEntities();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = CheckRoots();
     NS_ENSURE_SUCCESS(rv, rv);
 
     initSucceeded = true;
@@ -1339,9 +1346,7 @@ Database::InitSchema(bool* aDatabaseMigrated)
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_META);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Initialize the bookmark roots in the new DB.
-    rv = CreateBookmarkRoots();
-    NS_ENSURE_SUCCESS(rv, rv);
+    // The bookmarks roots get initialized in CheckRoots().
   }
 
   // Set the schema version to the current one.
@@ -1360,74 +1365,145 @@ Database::InitSchema(bool* aDatabaseMigrated)
 }
 
 nsresult
-Database::CreateBookmarkRoots()
+Database::CheckRoots()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // The first root's title is an empty string.
-  nsresult rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("places"),
-                           NS_LITERAL_CSTRING("root________"), EmptyCString());
-  if (NS_FAILED(rv)) return rv;
+  // If the database has just been created, skip straight to the part where
+  // we create the roots.
+  if (mDatabaseStatus == nsINavHistoryService::DATABASE_STATUS_CREATE) {
+    return EnsureBookmarkRoots(0);
+  }
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT guid, id, position FROM moz_bookmarks WHERE guid IN ( "
+      "'" ROOT_GUID "', '" MENU_ROOT_GUID "', '" TOOLBAR_ROOT_GUID "', "
+      "'" TAGS_ROOT_GUID "', '" UNFILED_ROOT_GUID "', '" MOBILE_ROOT_GUID "' )"
+    ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool hasResult;
+  nsAutoCString guid;
+  int32_t maxPosition = 0;
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    rv = stmt->GetUTF8String(0, guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (guid.EqualsLiteral(ROOT_GUID)) {
+      mRootId = stmt->AsInt64(1);
+    }
+    else {
+      maxPosition = std::max(stmt->AsInt32(2), maxPosition);
+
+      if (guid.EqualsLiteral(MENU_ROOT_GUID)) {
+        mMenuRootId = stmt->AsInt64(1);
+      }
+      else if (guid.EqualsLiteral(TOOLBAR_ROOT_GUID)) {
+        mToolbarRootId = stmt->AsInt64(1);
+      }
+      else if (guid.EqualsLiteral(TAGS_ROOT_GUID)) {
+        mTagsRootId = stmt->AsInt64(1);
+      }
+      else if (guid.EqualsLiteral(UNFILED_ROOT_GUID)) {
+        mUnfiledRootId = stmt->AsInt64(1);
+      }
+      else if (guid.EqualsLiteral(MOBILE_ROOT_GUID)) {
+        mMobileRootId = stmt->AsInt64(1);
+      }
+    }
+  }
+
+  rv = EnsureBookmarkRoots(maxPosition + 1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Database::EnsureBookmarkRoots(const int32_t startPosition)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv;
+
+  // Note: If the root is missing, we recreate it but we don't fix any
+  // remaining built-in folder parent ids. We leave these to a maintenance task,
+  // so that we're not needing to do extra checks on startup.
+
+  if (mRootId < 1) {
+    // The first root's title is an empty string.
+    rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("places"),
+                    NS_LITERAL_CSTRING("root________"), EmptyCString(),
+                    0, mRootId);
+
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  int32_t position = startPosition;
 
   // For the other roots, the UI doesn't rely on the value in the database, so
   // just set it to something simple to make it easier for humans to read.
-
-  rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("menu"),
-                  NS_LITERAL_CSTRING("menu________"), NS_LITERAL_CSTRING("menu"));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("toolbar"),
-                  NS_LITERAL_CSTRING("toolbar_____"), NS_LITERAL_CSTRING("toolbar"));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("tags"),
-                  NS_LITERAL_CSTRING("tags________"), NS_LITERAL_CSTRING("tags"));
-  if (NS_FAILED(rv)) return rv;
-
-  if (NS_FAILED(rv)) return rv;
-  rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("unfiled"),
-                  NS_LITERAL_CSTRING("unfiled_____"), NS_LITERAL_CSTRING("unfiled"));
-  if (NS_FAILED(rv)) return rv;
-
-  int64_t mobileRootId = CreateMobileRoot();
-  if (mobileRootId <= 0) return NS_ERROR_FAILURE;
-  {
-    nsCOMPtr<mozIStorageStatement> mobileRootSyncStatusStmt;
-    rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
-      "UPDATE moz_bookmarks SET syncStatus = :sync_status WHERE id = :id"
-    ), getter_AddRefs(mobileRootSyncStatusStmt));
+  if (mMenuRootId < 1) {
+    rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("menu"),
+                    NS_LITERAL_CSTRING("menu________"), NS_LITERAL_CSTRING("menu"),
+                    position, mMenuRootId);
     if (NS_FAILED(rv)) return rv;
-    mozStorageStatementScoper mobileRootSyncStatusScoper(
-      mobileRootSyncStatusStmt);
-
-    rv = mobileRootSyncStatusStmt->BindInt32ByName(
-      NS_LITERAL_CSTRING("sync_status"),
-      nsINavBookmarksService::SYNC_STATUS_NEW
-    );
-    if (NS_FAILED(rv)) return rv;
-    rv = mobileRootSyncStatusStmt->BindInt64ByName(NS_LITERAL_CSTRING("id"),
-                                                   mobileRootId);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mobileRootSyncStatusStmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
+    position++;
   }
 
-#if DEBUG
-  nsCOMPtr<mozIStorageStatement> stmt;
-  rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT count(*), sum(position) FROM moz_bookmarks"
-  ), getter_AddRefs(stmt));
-  if (NS_FAILED(rv)) return rv;
+  if (mToolbarRootId < 1) {
+    rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("toolbar"),
+                    NS_LITERAL_CSTRING("toolbar_____"), NS_LITERAL_CSTRING("toolbar"),
+                    position, mToolbarRootId);
+    if (NS_FAILED(rv)) return rv;
+    position++;
+  }
 
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_FAILED(rv)) return rv;
-  MOZ_ASSERT(hasResult);
-  int32_t bookmarkCount = stmt->AsInt32(0);
-  int32_t positionSum = stmt->AsInt32(1);
-  MOZ_ASSERT(bookmarkCount == 6 && positionSum == 10);
-#endif
+  if (mTagsRootId < 1) {
+    rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("tags"),
+                    NS_LITERAL_CSTRING("tags________"), NS_LITERAL_CSTRING("tags"),
+                    position, mTagsRootId);
+    if (NS_FAILED(rv)) return rv;
+    position++;
+  }
+
+  if (mUnfiledRootId < 1) {
+    if (NS_FAILED(rv)) return rv;
+    rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("unfiled"),
+                    NS_LITERAL_CSTRING("unfiled_____"), NS_LITERAL_CSTRING("unfiled"),
+                    position, mUnfiledRootId);
+    if (NS_FAILED(rv)) return rv;
+    position++;
+  }
+
+  if (mMobileRootId < 1) {
+    int64_t mobileRootId = CreateMobileRoot();
+    if (mobileRootId <= 0) return NS_ERROR_FAILURE;
+    {
+      nsCOMPtr<mozIStorageStatement> mobileRootSyncStatusStmt;
+      rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+        "UPDATE moz_bookmarks SET syncStatus = :sync_status WHERE id = :id"
+      ), getter_AddRefs(mobileRootSyncStatusStmt));
+      if (NS_FAILED(rv)) return rv;
+      mozStorageStatementScoper mobileRootSyncStatusScoper(
+        mobileRootSyncStatusStmt);
+
+      rv = mobileRootSyncStatusStmt->BindInt32ByName(
+        NS_LITERAL_CSTRING("sync_status"),
+        nsINavBookmarksService::SYNC_STATUS_NEW
+      );
+      if (NS_FAILED(rv)) return rv;
+      rv = mobileRootSyncStatusStmt->BindInt64ByName(NS_LITERAL_CSTRING("id"),
+                                                     mobileRootId);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = mobileRootSyncStatusStmt->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mMobileRootId = mobileRootId;
+    }
+  }
 
   return NS_OK;
 }
@@ -2252,7 +2328,7 @@ Database::CreateMobileRoot()
     "INSERT OR IGNORE INTO moz_bookmarks "
       "(type, title, dateAdded, lastModified, guid, position, parent) "
     "SELECT :item_type, :item_title, :timestamp, :timestamp, :guid, "
-      "(SELECT COUNT(*) FROM moz_bookmarks p WHERE p.parent = b.id), b.id "
+      "IFNULL((SELECT MAX(position) + 1 FROM moz_bookmarks p WHERE p.parent = b.id), 0), b.id "
     "FROM moz_bookmarks b WHERE b.parent = 0"
   ), getter_AddRefs(createStmt));
   if (NS_FAILED(rv)) return -1;

@@ -185,7 +185,8 @@ CheckServoCSSPropList()
 
   const uint32_t kServoFlags =
     CSS_PROPERTY_ENABLED_MASK | CSS_PROPERTY_INTERNAL |
-    CSS_PROPERTY_PARSE_INACCESSIBLE;
+    CSS_PROPERTY_PARSE_INACCESSIBLE | CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
+    CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR;
   bool mismatch = false;
   for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; i++) {
     auto& geckoData = sGeckoProps[i];
@@ -198,7 +199,7 @@ CheckServoCSSPropList()
       continue;
     }
     if ((geckoData.mFlags & kServoFlags) != servoData.mFlags) {
-      printf_stderr("Enabled flags of %s mismatch\n", name);
+      printf_stderr("Flags of %s mismatch\n", name);
       mismatch = true;
     }
     if (strcmp(geckoData.mPref, servoData.mPref) != 0) {
@@ -2303,7 +2304,7 @@ nsCSSProps::ValueToKeyword(int32_t aValue, const KTableEntry aTable[])
 /* static */ const KTableEntry* const
 nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
   #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
-                   kwtable_, ...) kwtable_,
+                   kwtable_) kwtable_,
   #include "nsCSSPropList.h"
   #undef CSS_PROP
 };
@@ -2345,15 +2346,6 @@ bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
   }
   return rv;
 }
-
-const nsStyleAnimType
-nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, \
-                 parsevariant_, kwtable_, animtype_) \
-  animtype_,
-#include "nsCSSPropList.h"
-#undef CSS_PROP
-};
 
 const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #define CSS_PROP(name_, id_, method_, flags_, ...) flags_,

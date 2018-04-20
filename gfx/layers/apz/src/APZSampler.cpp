@@ -19,14 +19,14 @@ namespace mozilla {
 namespace layers {
 
 StaticMutex APZSampler::sWindowIdLock;
-std::unordered_map<uint64_t, APZSampler*> APZSampler::sWindowIdMap;
+StaticAutoPtr<std::unordered_map<uint64_t, APZSampler*>> APZSampler::sWindowIdMap;
 
 
-APZSampler::APZSampler(const RefPtr<APZCTreeManager>& aApz)
+APZSampler::APZSampler(const RefPtr<APZCTreeManager>& aApz,
+                       bool aIsUsingWebRender)
   : mApz(aApz)
-#ifdef DEBUG
-  , mSamplerThreadQueried(false)
-#endif
+  , mIsUsingWebRender(aIsUsingWebRender)
+  , mThreadIdLock("APZSampler::mThreadIdLock")
   , mSampleTimeLock("APZSampler::mSampleTimeLock")
 {
   MOZ_ASSERT(aApz);
@@ -39,7 +39,8 @@ APZSampler::~APZSampler()
 
   StaticMutexAutoLock lock(sWindowIdLock);
   if (mWindowId) {
-    sWindowIdMap.erase(wr::AsUint64(*mWindowId));
+    MOZ_ASSERT(sWindowIdMap);
+    sWindowIdMap->erase(wr::AsUint64(*mWindowId));
   }
 }
 
@@ -49,15 +50,17 @@ APZSampler::SetWebRenderWindowId(const wr::WindowId& aWindowId)
   StaticMutexAutoLock lock(sWindowIdLock);
   MOZ_ASSERT(!mWindowId);
   mWindowId = Some(aWindowId);
-  sWindowIdMap[wr::AsUint64(aWindowId)] = this;
+  if (!sWindowIdMap) {
+    sWindowIdMap = new std::unordered_map<uint64_t, APZSampler*>();
+  }
+  (*sWindowIdMap)[wr::AsUint64(aWindowId)] = this;
 }
 
 /*static*/ void
 APZSampler::SetSamplerThread(const wr::WrWindowId& aWindowId)
 {
   if (RefPtr<APZSampler> sampler = GetSampler(aWindowId)) {
-    // Ensure nobody tried to use the updater thread before this point.
-    MOZ_ASSERT(!sampler->mSamplerThreadQueried);
+    MutexAutoLock lock(sampler->mThreadIdLock);
     sampler->mSamplerThreadId = Some(PlatformThread::CurrentId());
   }
 }
@@ -214,27 +217,15 @@ APZSampler::AssertOnSamplerThread() const
 bool
 APZSampler::IsSamplerThread() const
 {
-  if (UsingWebRenderSamplerThread()) {
-    return PlatformThread::CurrentId() == *mSamplerThreadId;
+  if (mIsUsingWebRender) {
+    // If the sampler thread id isn't set yet then we cannot be running on the
+    // sampler thread (because we will have the thread id before we run any
+    // other C++ code on it, and this function is only ever invoked from C++
+    // code), so return false in that scenario.
+    MutexAutoLock lock(mThreadIdLock);
+    return mSamplerThreadId && PlatformThread::CurrentId() == *mSamplerThreadId;
   }
   return CompositorThreadHolder::IsInCompositorThread();
-}
-
-bool
-APZSampler::UsingWebRenderSamplerThread() const
-{
-  // If mSamplerThreadId is not set at the point that this is called, then
-  // that means that either (a) WebRender is not enabled for the compositor
-  // to which this APZSampler is attached or (b) we are attempting to do
-  // something sampler-related before WebRender is up and running. In case
-  // (a) falling back to the compositor thread is correct, and in case (b)
-  // we should stop doing the sampler-related thing so early. We catch this
-  // case by setting the mSamplerThreadQueried flag and asserting on WR
-  // initialization.
-#ifdef DEBUG
-  mSamplerThreadQueried = true;
-#endif
-  return mSamplerThreadId.isSome();
 }
 
 /*static*/ already_AddRefed<APZSampler>
@@ -242,9 +233,11 @@ APZSampler::GetSampler(const wr::WrWindowId& aWindowId)
 {
   RefPtr<APZSampler> sampler;
   StaticMutexAutoLock lock(sWindowIdLock);
-  auto it = sWindowIdMap.find(wr::AsUint64(aWindowId));
-  if (it != sWindowIdMap.end()) {
-    sampler = it->second;
+  if (sWindowIdMap) {
+    auto it = sWindowIdMap->find(wr::AsUint64(aWindowId));
+    if (it != sWindowIdMap->end()) {
+      sampler = it->second;
+    }
   }
   return sampler.forget();
 }

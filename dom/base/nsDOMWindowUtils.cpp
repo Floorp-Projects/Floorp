@@ -2743,60 +2743,6 @@ nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetAnimationTypeForLonghand(const nsAString& aProperty,
-                                              nsAString& aResult)
-{
-  nsCSSPropertyID propertyID =
-    nsCSSProps::LookupProperty(aProperty, CSSEnabledState::eForAllContent);
-  if (propertyID == eCSSProperty_UNKNOWN) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  if (nsCSSProps::IsShorthand(propertyID)) {
-    // The given property should be a longhand.
-    return NS_ERROR_INVALID_ARG;
-  }
-  switch (nsCSSProps::kAnimTypeTable[propertyID]) {
-    case eStyleAnimType_Custom:
-      aResult.AssignLiteral("custom");
-      break;
-    case eStyleAnimType_Coord:
-    case eStyleAnimType_Sides_Top:
-    case eStyleAnimType_Sides_Right:
-    case eStyleAnimType_Sides_Bottom:
-    case eStyleAnimType_Sides_Left:
-    case eStyleAnimType_Corner_TopLeft:
-    case eStyleAnimType_Corner_TopRight:
-    case eStyleAnimType_Corner_BottomRight:
-    case eStyleAnimType_Corner_BottomLeft:
-      aResult.AssignLiteral("coord");
-      break;
-    case eStyleAnimType_nscoord:
-      aResult.AssignLiteral("length");
-      break;
-    case eStyleAnimType_float:
-      aResult.AssignLiteral("float");
-      break;
-    case eStyleAnimType_Color:
-    case eStyleAnimType_ComplexColor:
-      aResult.AssignLiteral("color");
-      break;
-    case eStyleAnimType_PaintServer:
-      aResult.AssignLiteral("paintServer");
-      break;
-    case eStyleAnimType_Shadow:
-      aResult.AssignLiteral("shadow");
-      break;
-    case eStyleAnimType_Discrete:
-      aResult.AssignLiteral("discrete");
-      break;
-    case eStyleAnimType_None:
-      aResult.AssignLiteral("none");
-      break;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
                                              const nsAString& aPseudoElement,
                                              const nsAString& aProperty,

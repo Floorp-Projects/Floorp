@@ -758,7 +758,8 @@ MoveScrollbarForLayerMargin(Layer* aRoot, FrameMetrics::ViewID aRootScrollId,
   // adjustment on the layer tree.
   Layer* scrollbar = BreadthFirstSearch<ReverseIterator>(aRoot,
     [aRootScrollId](Layer* aNode) {
-      return (aNode->GetScrollbarData().mDirection.isSome() &&
+      return (aNode->GetScrollbarData().IsThumb() &&
+              aNode->GetScrollbarData().mDirection.isSome() &&
               *aNode->GetScrollbarData().mDirection == ScrollDirection::eHorizontal &&
               aNode->GetScrollbarData().mTargetViewId == aRootScrollId);
     });
