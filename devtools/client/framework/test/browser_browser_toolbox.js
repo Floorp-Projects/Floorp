@@ -38,6 +38,7 @@ add_task(async function() {
   // Be careful, this JS function is going to be executed in the addon toolbox,
   // which lives in another process. So do not try to use any scope variable!
   let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  /* global toolbox */
   let testScript = function() {
     toolbox.selectTool("webconsole")
       .then(console => {

@@ -5,6 +5,12 @@
 
 "use strict";
 
+// This file assumes we have head.js globals for the scope where this is loaded.
+/* import-globals-from head.js */
+
+/* exported initTab, checkCacheStateForAllTabs, setDisableCacheCheckboxChecked,
+            finishUp */
+
 // Common code shared by browser_toolbox_options_disable_cache-*.js
 const TEST_URI = URL_ROOT + "browser_toolbox_options_disable_cache.sjs";
 var tabs = [

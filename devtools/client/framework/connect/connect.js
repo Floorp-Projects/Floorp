@@ -47,6 +47,7 @@ window.addEventListener("DOMContentLoaded", function() {
 /**
  * Called when the "connect" button is clicked.
  */
+/* exported submit */
 var submit = async function() {
   // Show the "connecting" screen
   document.body.classList.add("connecting");
