@@ -91,6 +91,107 @@ RootClient.prototype = {
   listProcesses: DebuggerClient.requester({ type: "listProcesses" }),
 
   /**
+   * Retrieve all service worker registrations as well as workers from the parent
+   * and child processes. Listing service workers involves merging information coming from
+   * registrations and workers, this method will combine this information to present a
+   * unified array of serviceWorkers. If you are only interested in other workers, use
+   * listWorkers.
+   *
+   * @return {Object}
+   *         - {Array} service
+   *           array of form-like objects for serviceworkers
+   *         - {Array} shared
+   *           Array of WorkerActor forms, containing shared workers.
+   *         - {Array} other
+   *           Array of WorkerActor forms, containing other workers.
+   */
+  listAllWorkers: async function() {
+    let result = {
+      service: [],
+      shared: [],
+      other: []
+    };
+
+    try {
+      let registrations = [];
+      let workers = [];
+
+      // List service worker registrations
+      ({ registrations } = await this.listServiceWorkerRegistrations());
+
+      // List workers from the Parent process
+      ({ workers } = await this.listWorkers());
+
+      // And then from the Child processes
+      let { processes } = await this.listProcesses();
+      for (let process of processes) {
+        // Ignore parent process
+        if (process.parent) {
+          continue;
+        }
+        let { form } = await this._client.getProcess(process.id);
+        let processActor = form.actor;
+        let response = await this._client.request({
+          to: processActor,
+          type: "listWorkers"
+        });
+        workers = workers.concat(response.workers);
+      }
+
+      registrations.forEach(form => {
+        result.service.push({
+          name: form.url,
+          url: form.url,
+          scope: form.scope,
+          fetch: form.fetch,
+          registrationActor: form.actor,
+          active: form.active
+        });
+      });
+
+      workers.forEach(form => {
+        let worker = {
+          name: form.url,
+          url: form.url,
+          workerActor: form.actor
+        };
+        switch (form.type) {
+          case Ci.nsIWorkerDebugger.TYPE_SERVICE:
+            let registration = result.service.find(r => r.scope === form.scope);
+            if (registration) {
+              // XXX: Race, sometimes a ServiceWorkerRegistrationInfo doesn't
+              // have a scriptSpec, but its associated WorkerDebugger does.
+              if (!registration.url) {
+                registration.name = registration.url = form.url;
+              }
+              registration.workerActor = form.actor;
+            } else {
+              worker.fetch = form.fetch;
+
+              // If a service worker registration could not be found, this means we are in
+              // e10s, and registrations are not forwarded to other processes until they
+              // reach the activated state. Augment the worker as a registration worker to
+              // display it in aboutdebugging.
+              worker.scope = form.scope;
+              worker.active = false;
+              result.service.push(worker);
+            }
+            break;
+          case Ci.nsIWorkerDebugger.TYPE_SHARED:
+            result.shared.push(worker);
+            break;
+          default:
+            result.other.push(worker);
+        }
+      });
+    } catch (e) {
+      // Something went wrong, maybe our client is disconnected?
+    }
+
+    return result;
+  },
+
+  /**
    * Fetch the TabActor for the currently selected tab, or for a specific
    * tab given as first parameter.
    *
