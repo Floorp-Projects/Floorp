@@ -110,7 +110,7 @@ struct PhaseInfo
     Phase parent;
     Phase firstChild;
     Phase nextSibling;
-    Phase nextInPhase;
+    Phase nextWithPhaseKind;
     PhaseKind phaseKind;
     uint8_t depth;
     const char* name;
@@ -166,7 +166,7 @@ Statistics::lookupChildPhase(PhaseKind phaseKind) const
     Phase phase;
     for (phase = phaseKinds[phaseKind].firstPhase;
          phase != Phase::NONE;
-         phase = phases[phase].nextInPhase)
+         phase = phases[phase].nextWithPhaseKind)
     {
         if (phases[phase].parent == currentPhase())
             break;
@@ -769,10 +769,10 @@ Statistics::initialize()
             MOZ_ASSERT(parent == phases[nextSibling].parent);
             MOZ_ASSERT(phases[i].depth == phases[nextSibling].depth);
         }
-        auto nextInPhase = phases[i].nextInPhase;
-        if (nextInPhase != Phase::NONE) {
-            MOZ_ASSERT(phases[i].phaseKind == phases[nextInPhase].phaseKind);
-            MOZ_ASSERT(parent != phases[nextInPhase].parent);
+        auto nextWithPhaseKind = phases[i].nextWithPhaseKind;
+        if (nextWithPhaseKind != Phase::NONE) {
+            MOZ_ASSERT(phases[i].phaseKind == phases[nextWithPhaseKind].phaseKind);
+            MOZ_ASSERT(parent != phases[nextWithPhaseKind].parent);
         }
     }
     for (auto i : AllPhaseKinds()) {
@@ -825,7 +825,7 @@ SumPhase(PhaseKind phaseKind, const Statistics::PhaseTimeTable& times)
     TimeDuration sum = 0;
     for (Phase phase = phaseKinds[phaseKind].firstPhase;
          phase != Phase::NONE;
-         phase = phases[phase].nextInPhase)
+         phase = phases[phase].nextWithPhaseKind)
     {
         sum += times[phase];
     }
