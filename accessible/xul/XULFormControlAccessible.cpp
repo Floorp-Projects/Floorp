@@ -104,14 +104,9 @@ XULButtonAccessible::NativeState()
     if (type.EqualsLiteral("checkbox") || type.EqualsLiteral("radio")) {
       state |= states::CHECKABLE;
       bool checked = false;
-      int32_t checkState = 0;
       xulButtonElement->GetChecked(&checked);
       if (checked) {
         state |= states::PRESSED;
-        xulButtonElement->GetCheckState(&checkState);
-        if (checkState == nsIDOMXULButtonElement::CHECKSTATE_MIXED) {
-          state |= states::MIXED;
-        }
       }
     }
   }
@@ -341,10 +336,6 @@ XULCheckboxAccessible::NativeState()
     xulCheckboxElement->GetChecked(&checked);
     if (checked) {
       state |= states::CHECKED;
-      int32_t checkState = 0;
-      xulCheckboxElement->GetCheckState(&checkState);
-      if (checkState == nsIDOMXULCheckboxElement::CHECKSTATE_MIXED)
-        state |= states::MIXED;
     }
   }
 

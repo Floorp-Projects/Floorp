@@ -39,9 +39,7 @@
 
       <property name="checked" onget="return this.hasAttribute('checked');">
         <setter><![CDATA[
-          if (this.type == "checkbox") {
-            this.checkState = val ? 1 : 0;
-          } else if (this.type == "radio" && val) {
+          if (this.type == "radio" && val) {
             var sibs = this.parentNode.getElementsByAttribute("group", this.group);
             for (var i = 0; i < sibs.length; ++i)
               sibs[i].removeAttribute("checked");
@@ -52,23 +50,6 @@
           else
             this.removeAttribute("checked");
 
-          return val;
-        ]]></setter>
-      </property>
-
-      <property name="checkState">
-        <getter><![CDATA[
-          var state = this.getAttribute("checkState");
-          if (state == "")
-            return this.checked ? 1 : 0;
-          if (state == "0")
-            return 0;
-          if (state == "2")
-            return 2;
-          return 1;
-        ]]></getter>
-        <setter><![CDATA[
-          this.setAttribute("checkState", val);
           return val;
         ]]></setter>
       </property>
