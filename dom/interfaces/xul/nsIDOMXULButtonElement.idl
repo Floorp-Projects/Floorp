@@ -5,12 +5,8 @@
 
 #include "nsIDOMXULLabeledControlEl.idl"
 
-[scriptable, uuid(d56f1f8f-fc4e-4650-9a85-25108bbd1980)]
+[scriptable, uuid(6ed53cfb-9e59-424c-af8d-e74582381951)]
 interface nsIDOMXULButtonElement : nsIDOMXULLabeledControlElement {
-  const short CHECKSTATE_UNCHECKED = 0;
-  const short CHECKSTATE_CHECKED = 1;
-  const short CHECKSTATE_MIXED = 2;
-
   attribute DOMString type;
   attribute DOMString dlgType;
 
@@ -19,7 +15,6 @@ interface nsIDOMXULButtonElement : nsIDOMXULLabeledControlElement {
   
   // For buttons of type="checkbox" only.
   attribute boolean checked;
-  attribute long checkState;
   attribute boolean autoCheck;
 
   // For buttons of type="radio" only.
