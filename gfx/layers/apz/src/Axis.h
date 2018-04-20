@@ -156,19 +156,6 @@ public:
   ParentLayerCoord PanDistance(ParentLayerCoord aPos) const;
 
   /**
-   * Applies friction during a fling, or cancels the fling if the velocity is
-   * too low. Returns true if the fling should continue to another frame, or
-   * false if it should end.
-   * |aDelta| is the amount of time that has passed since the last time
-   * friction was applied.
-   * |aFriction| is the amount of friction to apply.
-   * |aThreshold| is the velocity below which the fling is cancelled.
-   */
-  bool FlingApplyFrictionOrCancel(const TimeDuration& aDelta,
-                                  float aFriction,
-                                  float aThreshold);
-
-  /**
    * Returns true if the page has room to be scrolled along this axis.
    */
   bool CanScroll() const;
