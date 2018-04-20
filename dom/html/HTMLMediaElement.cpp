@@ -4106,8 +4106,12 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
   UpdatePreloadAction();
   UpdateSrcMediaStreamPlaying();
 
-  // once media start playing, we would always allow it to autoplay
-  mIsBlessed = true;
+  // Once play() has been called in a user generated event handler,
+  // it is allowed to autoplay. Note: we can reach here when not in
+  // a user generated event handler if our readyState has not yet
+  // reached HAVE_METADATA.
+  mIsBlessed |= EventStateManager::IsHandlingUserInput();
+
 
   // TODO: If the playback has ended, then the user agent must set
   // seek to the effective start.
@@ -5965,8 +5969,9 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
         if (IsAllowedToPlay()) {
           mDecoder->Play();
         } else {
-          AsyncRejectPendingPlayPromises(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
           mPaused = true;
+          DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
+          AsyncRejectPendingPlayPromises(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
         }
       }
       NotifyAboutPlaying();
