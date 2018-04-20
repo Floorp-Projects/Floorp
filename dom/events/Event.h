@@ -46,10 +46,17 @@ class XULCommandEvent;
 #include "mozilla/dom/GeneratedEventList.h"
 #undef GENERATED_EVENT
 
+// IID for Event
+#define NS_EVENT_IID                                            \
+  { 0x71139716, 0x4d91, 0x4dee,                                 \
+      { 0xba, 0xf9, 0xe3, 0x3b, 0x80, 0xc1, 0x61, 0x61 } }
+
 class Event : public nsIDOMEvent,
               public nsWrapperCache
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_EVENT_IID)
+
   Event(EventTarget* aOwner,
         nsPresContext* aPresContext,
         WidgetEvent* aEvent);
@@ -392,6 +399,8 @@ private:
   Event* mEvent;
   bool mOriginalWantsPopupControlCheck;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(Event, NS_EVENT_IID)
 
 } // namespace dom
 } // namespace mozilla
