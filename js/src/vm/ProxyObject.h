@@ -18,6 +18,10 @@ namespace js {
  *
  * Proxy objects use ShapedObject::shape_ primarily to record flags.  Property
  * information, &c. is all dynamically computed.
+ *
+ * There is no class_ member to force specialization of JSObject::is<T>().
+ * The implementation in JSObject is incorrect for proxies since it doesn't
+ * take account of the handler type.
  */
 class ProxyObject : public ShapedObject
 {
@@ -127,11 +131,6 @@ class ProxyObject : public ShapedObject
     static void traceEdgeToTarget(JSTracer* trc, ProxyObject* obj);
 
     void nuke();
-
-    // There is no class_ member to force specialization of JSObject::is<T>().
-    // The implementation in JSObject is incorrect for proxies since it doesn't
-    // take account of the handler type.
-    static const Class proxyClass;
 };
 
 inline bool
