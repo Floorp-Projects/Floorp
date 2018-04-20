@@ -757,6 +757,7 @@ private:
 // CGFont.
 #ifdef MOZ_SKIA
 extern "C" bool Gecko_OnSierraExactly();
+extern "C" bool Gecko_OnHighSierraOrLater();
 #endif
 static UniqueCFRef<CTFontRef> ctfont_create_exact_copy(CTFontRef baseFont, CGFloat textSize,
                                                        const CGAffineTransform* transform)
@@ -781,9 +782,41 @@ static UniqueCFRef<CTFontRef> ctfont_create_exact_copy(CTFontRef baseFont, CGFlo
     // the extra work here -- and this seems to avoid Core Text crashiness
     // seen in bug 1454094.
     //
-    // So we only need to do this "the hard way" on Sierra; on other releases,
-    // just let the standard CTFont function do its thing.
-    if (Gecko_OnSierraExactly())
+    // However, for installed fonts it seems we DO need to copy the variations
+    // explicitly even on 10.13, otherwise fonts fail to render (as in bug
+    // 1455494) when non-default values are used. Fortunately, the crash
+    // mentioned above occurs with data fonts, not (AFAICT) with system-
+    // installed fonts.
+    //
+    // So we only need to do this "the hard way" on Sierra, and for installed
+    // fonts on HighSierra+; otherwise, just let the standard CTFont function
+    // do its thing.
+    //
+    // NOTE in case this ever needs further adjustment: there is similar logic
+    // in four places in the tree (sadly):
+    //    CreateCTFontFromCGFontWithVariations in gfxMacFont.cpp
+    //    CreateCTFontFromCGFontWithVariations in ScaledFontMac.cpp
+    //    CreateCTFontFromCGFontWithVariations in cairo-quartz-font.c
+    //    ctfont_create_exact_copy in SkFontHost_mac.cpp
+
+    // To figure out if a font is installed locally or used from a @font-face
+    // resource, we check whether its descriptor can provide a URL. This will
+    // be present for installed fonts, but not for those activated from an
+    // in-memory resource.
+    auto IsInstalledFont = [](CTFontRef aFont) {
+        CTFontDescriptorRef desc = CTFontCopyFontDescriptor(aFont);
+        CFTypeRef attr = CTFontDescriptorCopyAttribute(desc, kCTFontURLAttribute);
+        CFRelease(desc);
+        bool result = false;
+        if (attr) {
+            result = true;
+            CFRelease(attr);
+        }
+        return result;
+    };
+
+    if (Gecko_OnSierraExactly() ||
+        (Gecko_OnHighSierraOrLater() && IsInstalledFont(baseFont)))
 #endif
     {
         // Not UniqueCFRef<> because CGFontCopyVariations can return null!
