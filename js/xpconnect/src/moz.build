@@ -6,6 +6,7 @@
 
 EXPORTS += [
     'BackstagePass.h',
+    'qsObjectHelper.h',
     'XPCJSMemoryReporter.h',
     'xpcObjectHelper.h',
     'xpcpublic.h',

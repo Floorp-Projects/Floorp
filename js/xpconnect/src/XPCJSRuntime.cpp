@@ -2868,7 +2868,7 @@ XPCJSRuntime::DescribeCustomObjects(JSObject* obj, const js::Class* clasp,
                                     char (&name)[72]) const
 {
 
-    if (clasp != &XPC_WN_Proto_JSClass) {
+    if (!IS_PROTO_CLASS(clasp)) {
         return false;
     }
 
@@ -3047,15 +3047,7 @@ XPCJSRuntime::InitSingletonScopes()
 void
 XPCJSRuntime::DeleteSingletonScopes()
 {
-    // We're pretty late in shutdown, so we call ReleaseWrapper on the scopes. This way
-    // the GC can collect them immediately, and we don't rely on the CC to clean up.
-    RefPtr<SandboxPrivate> sandbox = SandboxPrivate::GetPrivate(mUnprivilegedJunkScope);
-    sandbox->ReleaseWrapper(sandbox);
     mUnprivilegedJunkScope = nullptr;
-    sandbox = SandboxPrivate::GetPrivate(mPrivilegedJunkScope);
-    sandbox->ReleaseWrapper(sandbox);
     mPrivilegedJunkScope = nullptr;
-    sandbox = SandboxPrivate::GetPrivate(mCompilationScope);
-    sandbox->ReleaseWrapper(sandbox);
     mCompilationScope = nullptr;
 }
