@@ -1,0 +1,11 @@
+TOOLTOOL_DIR=${topsrcdir}
+export MAKECAB=$TOOLTOOL_DIR/makecab.exe
+export LLVM_CONFIG="${TOOLTOOL_DIR}/clang/bin/llvm-config"
+
+RUSTC="${TOOLTOOL_DIR}/rustc/bin/rustc"
+CARGO="${TOOLTOOL_DIR}/rustc/bin/cargo"
+
+ac_add_options --target=x86_64-pc-mingw32
+ac_add_options --host=x86_64-pc-mingw32
+
+. $topsrcdir/build/win64/mozconfig.vs-latest
