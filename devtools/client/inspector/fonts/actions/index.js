@@ -8,8 +8,14 @@ const { createEnum } = require("devtools/client/shared/enum");
 
 createEnum([
 
+  // Update the custom font variation instance with the current axes values.
+  "UPDATE_CUSTOM_INSTANCE",
+
   // Reset font editor to intial state.
   "RESET_EDITOR",
+
+  // Apply the variation settings of a font instance.
+  "APPLY_FONT_VARIATION_INSTANCE",
 
   // Update the value of a variable font axis.
   "UPDATE_AXIS_VALUE",
