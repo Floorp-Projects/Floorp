@@ -63,13 +63,13 @@ public:
 protected:
   virtual ~nsMenuBarListener();
 
-  nsresult KeyUp(nsIDOMEvent* aMouseEvent);
-  nsresult KeyDown(nsIDOMEvent* aMouseEvent);
-  nsresult KeyPress(nsIDOMEvent* aMouseEvent);
-  nsresult Blur(nsIDOMEvent* aEvent);
-  nsresult OnWindowDeactivated(nsIDOMEvent* aEvent);
-  nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-  nsresult Fullscreen(nsIDOMEvent* aEvent);
+  nsresult KeyUp(mozilla::dom::Event* aMouseEvent);
+  nsresult KeyDown(mozilla::dom::Event* aMouseEvent);
+  nsresult KeyPress(mozilla::dom::Event* aMouseEvent);
+  nsresult Blur(mozilla::dom::Event* aEvent);
+  nsresult OnWindowDeactivated(mozilla::dom::Event* aEvent);
+  nsresult MouseDown(mozilla::dom::Event* aMouseEvent);
+  nsresult Fullscreen(mozilla::dom::Event* aEvent);
 
   static void InitAccessKey();
 
@@ -87,7 +87,7 @@ protected:
    * Call MarkAsReservedByChrome if the user's preferences indicate that
    * the key should be chrome-only.
    */
-  void ReserveKeyIfNeeded(nsIDOMEvent* aKeyEvent);
+  void ReserveKeyIfNeeded(mozilla::dom::Event* aKeyEvent);
 
   // This should only be called by the nsMenuBarListener during event dispatch,
   // thus ensuring that this doesn't get destroyed during the process.
