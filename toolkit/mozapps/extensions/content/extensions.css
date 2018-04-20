@@ -17,10 +17,6 @@ xhtml|link {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#category");
 }
 
-.sort-controls {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#sorters");
-}
-
 .addon[status="installed"] {
   -moz-box-orient: vertical;
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-generic");

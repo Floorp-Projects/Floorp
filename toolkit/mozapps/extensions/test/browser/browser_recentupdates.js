@@ -64,51 +64,6 @@ add_test(function() {
   EventUtils.synthesizeMouse(utilsBtn, 2, 2, { }, gManagerWindow);
 });
 
-
-add_test(function() {
-  var updatesList = gManagerWindow.document.getElementById("updates-list");
-  var sorters = gManagerWindow.document.getElementById("updates-sorters");
-  var dateSorter = gManagerWindow.document.getAnonymousElementByAttribute(sorters, "anonid", "date-btn");
-  var nameSorter = gManagerWindow.document.getAnonymousElementByAttribute(sorters, "anonid", "name-btn");
-
-  function check_order(expected) {
-    var items = updatesList.getElementsByTagName("richlistitem");
-    var possible = ["addon1@tests.mozilla.org", "addon2@tests.mozilla.org", "addon3@tests.mozilla.org"];
-    for (let item of items) {
-      let itemId = item.mAddon.id;
-      if (!possible.includes(itemId))
-        continue; // skip over any other addons, such as shipped addons that would update on every build
-      isnot(expected.length, 0, "Should be expecting more items");
-      is(itemId, expected.shift(), "Should get expected item based on sort order");
-      if (itemId == "addon1@tests.mozilla.org")
-        is_element_visible(item._relNotesToggle, "Release notes toggle should be visible for addon with release notes");
-      else
-        is_element_hidden(item._relNotesToggle, "Release notes toggle should be hidden for addon with no release notes");
-    }
-  }
-
-  is_element_visible(dateSorter);
-  is_element_visible(nameSorter);
-
-  // sorted by date, descending
-  check_order(["addon2@tests.mozilla.org", "addon1@tests.mozilla.org"]);
-
-  // sorted by date, ascending
-  EventUtils.synthesizeMouseAtCenter(dateSorter, { }, gManagerWindow);
-  check_order(["addon1@tests.mozilla.org", "addon2@tests.mozilla.org"]);
-
-  // sorted by name, ascending
-  EventUtils.synthesizeMouseAtCenter(nameSorter, { }, gManagerWindow);
-  check_order(["addon2@tests.mozilla.org", "addon1@tests.mozilla.org"]);
-
-  // sorted by name, descending
-  EventUtils.synthesizeMouseAtCenter(nameSorter, { }, gManagerWindow);
-  check_order(["addon1@tests.mozilla.org", "addon2@tests.mozilla.org"]);
-
-  run_next_test();
-});
-
-
 add_test(function() {
   close_manager(gManagerWindow, function() {
     open_manager(null, function(aWindow) {
