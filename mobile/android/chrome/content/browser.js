@@ -428,7 +428,7 @@ var BrowserApp = {
     XPInstallObserver.init();
     CharacterEncoding.init();
     ActivityObserver.init();
-    RemoteDebugger.init();
+    RemoteDebugger.init(window);
     DesktopUserAgent.init();
     Distribution.init();
     Tabs.init();
