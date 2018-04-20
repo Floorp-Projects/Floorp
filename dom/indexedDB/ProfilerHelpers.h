@@ -265,10 +265,10 @@ public:
   {
     MOZ_ASSERT(aDefault);
 
-    nsString eventType;
+    nsAutoString eventType;
 
     if (aEvent) {
-      MOZ_ALWAYS_SUCCEEDS(aEvent->GetType(eventType));
+      aEvent->GetType(eventType);
     } else {
       eventType = nsDependentString(aDefault);
     }

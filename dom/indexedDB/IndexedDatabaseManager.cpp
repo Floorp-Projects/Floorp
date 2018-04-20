@@ -521,8 +521,8 @@ IndexedDatabaseManager::CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
     return NS_OK;
   }
 
-  nsString type;
-  MOZ_ALWAYS_SUCCEEDS(aVisitor.mDOMEvent->GetType(type));
+  nsAutoString type;
+  aVisitor.mDOMEvent->GetType(type);
 
   MOZ_ASSERT(nsDependentString(kErrorEventType).EqualsLiteral("error"));
   if (!type.EqualsLiteral("error")) {

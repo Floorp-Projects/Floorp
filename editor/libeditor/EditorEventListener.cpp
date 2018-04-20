@@ -911,7 +911,7 @@ EditorEventListener::Drop(DragEvent* aDragEvent)
       // since someone else handling it might be unintentional and the
       // user could probably re-drag to be not over the disabled/readonly
       // editfields if that is what is desired.
-      return aDragEvent->StopPropagation();
+      aDragEvent->StopPropagation();
     }
     return NS_OK;
   }

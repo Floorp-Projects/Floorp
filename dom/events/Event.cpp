@@ -223,16 +223,14 @@ Event::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return EventBinding::Wrap(aCx, this, aGivenProto);
 }
 
-// nsIDOMEventInterface
-NS_IMETHODIMP
-Event::GetType(nsAString& aType)
+void
+Event::GetType(nsAString& aType) const
 {
   if (!mIsMainThreadEvent) {
     aType = mEvent->mSpecifiedEventTypeString;
-    return NS_OK;
+    return;
   }
   GetWidgetEventType(mEvent, aType);
-  return NS_OK;
 }
 
 EventTarget*
@@ -311,7 +309,7 @@ Event::GetComposedTarget() const
     static_cast<EventTarget*>(content->GetComposedDoc());
 }
 
-NS_IMETHODIMP_(void)
+void
 Event::SetTrusted(bool aTrusted)
 {
   mEvent->mFlags.mIsTrusted = aTrusted;
@@ -382,69 +380,30 @@ Event::EventPhase() const
   return EventBinding::NONE;
 }
 
-NS_IMETHODIMP
-Event::GetEventPhase(uint16_t* aEventPhase)
-{
-  *aEventPhase = EventPhase();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Event::GetBubbles(bool* aBubbles)
-{
-  *aBubbles = Bubbles();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Event::GetCancelable(bool* aCancelable)
-{
-  *aCancelable = Cancelable();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Event::GetTimeStamp(uint64_t* aTimeStamp)
-{
-  *aTimeStamp = mEvent->mTime;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 Event::StopPropagation()
 {
   mEvent->StopPropagation();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 Event::StopImmediatePropagation()
 {
   mEvent->StopImmediatePropagation();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 Event::StopCrossProcessForwarding()
 {
   mEvent->StopCrossProcessForwarding();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-Event::GetIsTrusted(bool* aIsTrusted)
-{
-  *aIsTrusted = IsTrusted();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 Event::PreventDefault()
 {
   // This method is called only from C++ code which must handle default action
   // of this event.  So, pass true always.
   PreventDefaultInternal(true);
-  return NS_OK;
 }
 
 void
@@ -576,36 +535,33 @@ Event::InitEvent(const nsAString& aEventTypeArg,
   mEvent->mOriginalTarget = nullptr;
 }
 
-NS_IMETHODIMP
+void
 Event::DuplicatePrivateData()
 {
   NS_ASSERTION(mEvent, "No WidgetEvent for Event duplication!");
   if (mEventIsInternal) {
-    return NS_OK;
+    return;
   }
 
   mEvent = mEvent->Duplicate();
   mPresContext = nullptr;
   mEventIsInternal = true;
   mPrivateDataDuplicated = true;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 Event::SetTarget(EventTarget* aTarget)
 {
   mEvent->mTarget = aTarget;
-  return NS_OK;
 }
 
-NS_IMETHODIMP_(bool)
+bool
 Event::IsDispatchStopped()
 {
   return mEvent->PropagationStopped();
 }
 
-NS_IMETHODIMP_(WidgetEvent*)
+WidgetEvent*
 Event::WidgetEventPtr()
 {
   return mEvent;
@@ -1119,18 +1075,7 @@ Event::TimeStamp()
     workerPrivate->GetRandomTimelineSeed());
 }
 
-NS_IMETHODIMP
-Event::GetDefaultPrevented(bool* aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  // This method must be called by only event handlers implemented by C++.
-  // Then, the handlers must handle default action.  So, this method don't need
-  // to check if preventDefault() has been called by content or chrome.
-  *aReturn = DefaultPrevented();
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(void)
+void
 Event::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 {
   if (aSerializeInterfaceType) {
@@ -1149,7 +1094,7 @@ Event::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
   // No timestamp serialization for now!
 }
 
-NS_IMETHODIMP_(bool)
+bool
 Event::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   nsString type;
@@ -1174,7 +1119,7 @@ Event::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
   return true;
 }
 
-NS_IMETHODIMP_(void)
+void
 Event::SetOwner(EventTarget* aOwner)
 {
   mOwner = nullptr;
@@ -1229,23 +1174,6 @@ Event::GetWidgetEventType(WidgetEvent* aEvent, nsAString& aType)
   }
 
   aType.Truncate();
-}
-
-NS_IMETHODIMP
-Event::GetCancelBubble(bool* aCancelBubble)
-{
-  NS_ENSURE_ARG_POINTER(aCancelBubble);
-  *aCancelBubble = CancelBubble();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Event::SetCancelBubble(bool aCancelBubble)
-{
-  if (aCancelBubble) {
-    mEvent->StopPropagation();
-  }
-  return NS_OK;
 }
 
 } // namespace dom

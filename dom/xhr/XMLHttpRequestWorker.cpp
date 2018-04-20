@@ -987,11 +987,8 @@ Proxy::HandleEvent(Event* aEvent)
     return NS_OK;
   }
 
-  nsString type;
-  if (NS_FAILED(aEvent->GetType(type))) {
-    NS_WARNING("Failed to get event type!");
-    return NS_ERROR_FAILURE;
-  }
+  nsAutoString type;
+  aEvent->GetType(type);
 
   bool isUploadTarget = mXHR != aEvent->GetTarget();
   ProgressEvent* progressEvent = aEvent->AsProgressEvent();
@@ -1087,13 +1084,9 @@ LoadStartDetectionRunnable::HandleEvent(Event* aEvent)
 
 #ifdef DEBUG
   {
-    nsString type;
-    if (NS_SUCCEEDED(aEvent->GetType(type))) {
-      MOZ_ASSERT(type == mEventType);
-    }
-    else {
-      NS_WARNING("Failed to get event type!");
-    }
+    nsAutoString type;
+    aEvent->GetType(type);
+    MOZ_ASSERT(type == mEventType);
   }
 #endif
 
