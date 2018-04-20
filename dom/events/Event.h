@@ -163,7 +163,7 @@ public:
   bool Init(EventTarget* aGlobal);
 
   static PopupControlState GetEventPopupControlState(WidgetEvent* aEvent,
-                                                     nsIDOMEvent* aDOMEvent = nullptr);
+                                                     Event* aDOMEvent = nullptr);
 
   static void PopupAllowedEventsChanged();
 
