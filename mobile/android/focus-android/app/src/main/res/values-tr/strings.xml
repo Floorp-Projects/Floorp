@@ -35,9 +35,11 @@
   <string name="preference_category_autocomplete_preinstalled">Varsayılan adres listesi</string>
   <string name="preference_autocomplete_preinstalled_summary">%1$s’un 450’den fazla popüler adresi adres çubuğunda tamamlaması için bunu etkinleştirin.</string>
   <string name="preference_category_autocomplete_custom">Özel adres</string>
+  <string name="preference_category_autocomplete_custom_urls">Özel adresler</string>
   <string name="preference_autocomplete_subitem_customlist">Özel adresler</string>
   <string name="preference_autocomplete_action_add">+ Özel adres ekle</string>
   <string name="preference_autocomplete_title_add">Özel adres ekle</string>
+  <string name="custom_autocomplete_quick_add">Özel adres ekle</string>
   <string name="preference_autocomplete_title_remove">Özel adresleri sil</string>
   <string name="preference_autocomplete_learn_more">Daha fazla bilgi al</string>
   <string name="preference_autocomplete_custom_summary">Otomatik tamamlanacak özel adresleri ekleyin ve yönetin.</string>
@@ -61,12 +63,18 @@
   <string name="preference_privacy_block_social_summary">Sosyal medyada paylaşım düğmeleri, ziyaret ettiğiniz siteleri de takip eder</string>
   <string name="preference_privacy_block_content">Diğer içerik takipçilerini engelle</string>
   <string name="preference_privacy_block_content_summary2">Bunu açarsanız bazı sayfalar olması gerektiği gibi çalışmayabilir</string>
+  <string name="preference_privacy_category_cookies">Çerezleri engelle</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Hayır</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Yalnızca 3. taraf çerezlerini engelle</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Evet</string>
   <string name="preference_privacy_secure_mode">Görünmezlik</string>
   <string name="preference_privacy_stealth_summary">Uygulama değiştirirken web sayfalarını gizle</string>
   <string name="preference_category_performance">Performans</string>
   <string name="preference_performance_block_webfonts">Web fontlarını engelle</string>
   <string name="preference_performance_block_webfonts_summary">Simge ve resimlerin görünmemesine yol açabilir</string>
   <string name="preference_performance_block_images">Resimleri engelle</string>
+  <string name="preference_performance_block_javascript">JavaScript’i engelle</string>
+  <string name="preference_performance_block_javascript_summary">Sayfaları daha hızlı yüklenebilir ama sorun da çıkarabilirler</string>
   <string name="preference_default_browser2">%1$s’u varsayılan tarayıcım yap</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Kullanım verilerini gönder</string>
@@ -191,4 +199,5 @@
   <string name="security_popup_insecure_connection">Güvensiz Bağlantı</string>
   <string name="security_popup_security_verified">Doğrulayan: %1$s</string>
   <string name="site_security_icon_content_description">Site güvenliği</string>
+  <string name="preference_autocomplete_duplicate_url_error">Adres zaten mevcut</string>
 </resources>

@@ -33,6 +33,7 @@
   <string name="preference_subitem_autocomplete">URL অটোকমপ্লিট</string>
   <string name="preference_switch_autocomplete">অটোকমপ্লিট</string>
   <string name="preference_category_autocomplete_preinstalled">ডিফল্ট URL লিস্ট</string>
+  <string name="preference_autocomplete_preinstalled_summary">অ্যাড্রেস বারে 450 টি জনপ্রিয় URLs এর উপরে %1$s স্বতঃপূর্ণ থাকতে সক্ষম।</string>
   <string name="preference_category_autocomplete_custom">কাস্টোম URL</string>
   <string name="preference_category_autocomplete_custom_urls">কাস্টোম URLs</string>
   <string name="preference_autocomplete_subitem_customlist">কাস্টোম URLs</string>
@@ -73,10 +74,12 @@
   <string name="preference_performance_block_webfonts_summary">ছবি অথবা আইকন দৃশ্যমান নাও হতে পারে</string>
   <string name="preference_performance_block_images">ইমেজ ব্লক করুন</string>
   <string name="preference_performance_block_javascript">JavaScript ব্লক কর</string>
+  <string name="preference_performance_block_javascript_summary">পাতা সম্ভবত দ্রুত লোড হচ্ছে, কিন্তু অনাকাঙ্খিত ভাল দেখাচ্ছে না</string>
   <string name="preference_default_browser2">%1$s কে ডিফল্ট ব্রাউজার করুন</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">ব্যবহারের তথ্য পাঠাও</string>
   <string name="preference_mozilla_telemetry_summary">আরও জানুন</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla কেবলমাত্র সংগ্রহ করা চেষ্টা করে যা প্রত্যেকের জন্য %1$s প্রদান এবং উন্নতি করতে হবে।</string>
   <string name="preference_privacy_notice">গোপনীয়তা নীতি</string>
   <string name="preference_about">%1$s সম্পর্কে</string>
   <string name="preference_search_installed_search_engines">ইন্সটল করা অনুসন্ধান ইঞ্জিন</string>
@@ -92,6 +95,7 @@
   <string name="tutorial_search_step3">3. সার্চ ইঞ্জিন যোগ করার জন্য কীবোর্ডের উপরে ম্যাগনিফিকেশনের আইকনটি আলতো চাপুন।</string>
   <string name="action_option_add_search_engine">অনুসন্ধান ইঞ্জিন যোগ</string>
   <string name="tutorial_search_step3_alternative">3. ট্যাপ %1$s</string>
+  <string name="tutorial_search_step4">4. যদি আপনি ম্যাগনিফিকেশনের আইকন দেখতে না পান, তাহলে সার্চ ইঞ্জিনটি ম্যানুয়ালি যোগ করার চেষ্টা করুন।</string>
   <string name="tutorial_search_finish">GET STARTED</string>
   <string name="search_add_manually_name">যে নাম দেখাবে</string>
   <string name="search_add_manually_name_hint">অনুসন্ধান ইঞ্জিন নাম</string>
@@ -181,4 +185,5 @@
   <string name="security_popup_insecure_connection">অনিরাপদ সংযোগ</string>
   <string name="security_popup_security_verified">যাচাইকারী: %1$s</string>
   <string name="site_security_icon_content_description">সাইট নিরাপত্তা</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL ইতোমধ্যেই আছে</string>
 </resources>

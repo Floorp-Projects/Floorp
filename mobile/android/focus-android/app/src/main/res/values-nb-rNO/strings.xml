@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Usikker tilkobling</string>
   <string name="security_popup_security_verified">Bekreftet av: %1$s</string>
   <string name="site_security_icon_content_description">Nettstedssikkerhet</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL-en finnes allerede</string>
 </resources>

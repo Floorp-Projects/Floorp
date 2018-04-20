@@ -199,4 +199,5 @@
   <string name="security_popup_insecure_connection">Net-befeilige ferbining</string>
   <string name="security_popup_security_verified">Ferifiearre troch: %1$s</string>
   <string name="site_security_icon_content_description">Sidefeilichheid</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL bestiet al</string>
 </resources>

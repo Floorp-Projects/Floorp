@@ -35,9 +35,11 @@
   <string name="preference_category_autocomplete_preinstalled">قائمة المسارات المبدئية</string>
   <string name="preference_autocomplete_preinstalled_summary">فعّله ليُكمل %1$s تلقائيا أكثر من ٤٥٠ عنوان وب في شريط العناوين.</string>
   <string name="preference_category_autocomplete_custom">مسار مخصص</string>
+  <string name="preference_category_autocomplete_custom_urls">مسارات مخصصة</string>
   <string name="preference_autocomplete_subitem_customlist">المسارات المخصصة</string>
   <string name="preference_autocomplete_action_add">+ أضِف مسارا مخصصا</string>
   <string name="preference_autocomplete_title_add">أضِف مسارا مخصصا</string>
+  <string name="custom_autocomplete_quick_add">أضِف مسارا مخصصا</string>
   <string name="preference_autocomplete_title_remove">أزِل المسارات المخصصة</string>
   <string name="preference_autocomplete_learn_more">اطّلع على المزيد</string>
   <string name="preference_autocomplete_custom_summary">أضِف وأدِر إكمال المسارات المخصصة تلقائيا.</string>
@@ -61,12 +63,18 @@
   <string name="preference_privacy_block_social_summary">تُضمّن في المواقع لتتعقب زياراتك ولعرض بعض الخصائص مثل أزرار المشاركة</string>
   <string name="preference_privacy_block_content">احجب متعقبات المحتوى الأخرى</string>
   <string name="preference_privacy_block_content_summary2">تفعيل الخيار قد يتسبب بألا تعمل بعض الصفحات كما يجب</string>
+  <string name="preference_privacy_category_cookies">احجب الكعكات</string>
+  <string name="preference_privacy_should_block_cookies_no_option">لا</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">احجب الكعكات من الأطراف الثالثة فحسب</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">نعم</string>
   <string name="preference_privacy_secure_mode">التخفّي</string>
   <string name="preference_privacy_stealth_summary">أخفِ صفحات الوب عند الانتقال بين التطبيقات</string>
   <string name="preference_category_performance">الأداء</string>
   <string name="preference_performance_block_webfonts">احجب خطوط الوب</string>
   <string name="preference_performance_block_webfonts_summary">قد يسبب اختفاء بعض الأيقونات أو الصور</string>
   <string name="preference_performance_block_images">احجب الصور</string>
+  <string name="preference_performance_block_javascript">احجب جافاسكرِبت</string>
+  <string name="preference_performance_block_javascript_summary">قد تتحمّل الصفحات بشكل أسرع، ولكنها قد لا تعمل كما ينبغي أيضا</string>
   <string name="preference_default_browser2">اجعل %1$s متصفّحك المبدئي</string>
   <string name="preference_category_mozilla">موزيلا</string>
   <string name="preference_mozilla_telemetry2">أرسل بيانات الاستخدام</string>
@@ -191,4 +199,5 @@
   <string name="security_popup_insecure_connection">اتّصال غير آمن</string>
   <string name="security_popup_security_verified">تثبّت منها: %1$s</string>
   <string name="site_security_icon_content_description">أمن الموقع</string>
+  <string name="preference_autocomplete_duplicate_url_error">المسار موجود بالفعل</string>
 </resources>
