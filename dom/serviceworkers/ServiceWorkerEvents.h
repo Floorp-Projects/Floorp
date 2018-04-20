@@ -184,7 +184,7 @@ public:
   already_AddRefed<Promise>
   Default();
 
-  // Pull in the nsIDOMEvent version of PreventDefault so we don't get
+  // Pull in the Event version of PreventDefault so we don't get
   // shadowing warnings.
   using Event::PreventDefault;
   void

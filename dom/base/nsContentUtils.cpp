@@ -6522,7 +6522,7 @@ nsContentUtils::CanAccessNativeAnon()
 /* static */ nsresult
 nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
                                    bool aTrusted,
-                                   nsIDOMEvent* aSourceEvent,
+                                   Event* aSourceEvent,
                                    nsIPresShell* aShell,
                                    bool aCtrl,
                                    bool aAlt,

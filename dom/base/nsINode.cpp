@@ -61,7 +61,6 @@
 #include "nsIControllers.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMNodeList.h"
 #include "nsILinkHandler.h"

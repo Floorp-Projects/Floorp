@@ -370,15 +370,15 @@ Event::EventPhase() const
   if ((mEvent->mCurrentTarget &&
        mEvent->mCurrentTarget == mEvent->mTarget) ||
        mEvent->mFlags.InTargetPhase()) {
-    return nsIDOMEvent::AT_TARGET;
+    return EventBinding::AT_TARGET;
   }
   if (mEvent->mFlags.mInCapturePhase) {
-    return nsIDOMEvent::CAPTURING_PHASE;
+    return EventBinding::CAPTURING_PHASE;
   }
   if (mEvent->mFlags.mInBubblingPhase) {
-    return nsIDOMEvent::BUBBLING_PHASE;
+    return EventBinding::BUBBLING_PHASE;
   }
-  return nsIDOMEvent::NONE;
+  return EventBinding::NONE;
 }
 
 NS_IMETHODIMP

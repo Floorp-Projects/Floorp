@@ -7,7 +7,6 @@
 
 interface nsIBrowserDOMWindow;
 interface nsIDOMElement;
-interface nsIDOMEvent;
 interface mozIDOMWindowProxy;
 
 // Scriptable only so Components.interfaces.nsIDOMChromeWindow works.

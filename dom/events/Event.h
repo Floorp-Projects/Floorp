@@ -64,24 +64,6 @@ private:
                        WidgetEvent* aEvent);
 
 public:
-  static Event* FromSupports(nsISupports* aSupports)
-  {
-    nsIDOMEvent* event =
-      static_cast<nsIDOMEvent*>(aSupports);
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsIDOMEvent> target_qi =
-        do_QueryInterface(aSupports);
-
-      // If this assertion fires the QI implementation for the object in
-      // question doesn't use the nsIDOMEvent pointer as the
-      // nsISupports pointer. That must be fixed, or we'll crash...
-      MOZ_ASSERT(target_qi == event, "Uh, fix QI!");
-    }
-#endif
-    return static_cast<Event*>(event);
-  }
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Event)
 
@@ -357,14 +339,14 @@ protected:
  * Notable requirements:
  *  - The original & overriding messages must be known (not eUnidentifiedEvent).
  *  - The original & overriding messages must be different.
- *  - The passed-in nsIDOMEvent must outlive this RAII helper.
+ *  - The passed-in Event must outlive this RAII helper.
  */
 class MOZ_RAII EventMessageAutoOverride
 {
 public:
-  explicit EventMessageAutoOverride(nsIDOMEvent* aEvent,
+  explicit EventMessageAutoOverride(Event* aEvent,
                                     EventMessage aOverridingMessage)
-    : mEvent(aEvent->InternalDOMEvent()),
+    : mEvent(aEvent),
       mOrigMessage(mEvent->mEvent->mMessage)
   {
     MOZ_ASSERT(aOverridingMessage != mOrigMessage,
@@ -394,8 +376,8 @@ protected:
 class MOZ_STACK_CLASS WantsPopupControlCheck
 {
 public:
-  explicit WantsPopupControlCheck(nsIDOMEvent* aEvent) :
-    mEvent(aEvent->InternalDOMEvent())
+  explicit WantsPopupControlCheck(Event* aEvent) :
+    mEvent(aEvent)
   {
     mOriginalWantsPopupControlCheck = mEvent->GetWantsPopupControlCheck();
     mEvent->SetWantsPopupControlCheck(mEvent->IsTrusted());

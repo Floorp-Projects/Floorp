@@ -40,7 +40,6 @@
 #include "nsError.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIConsoleService.h"
-#include "nsIDOMEvent.h"
 #include "nsIGfxInfo.h"
 #include "nsIObserverService.h"
 #include "nsIVariant.h"

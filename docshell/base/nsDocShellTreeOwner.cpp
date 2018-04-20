@@ -1177,9 +1177,9 @@ ChromeTooltipListener::HandleEvent(Event* aEvent)
 // If we're a tooltip, fire off a timer to see if a tooltip should be shown. If
 // the timer fires, we cache the node in |mPossibleTooltipNode|.
 nsresult
-ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
+ChromeTooltipListener::MouseMove(Event* aMouseEvent)
 {
-  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
   if (!mouseEvent) {
     return NS_OK;
   }
@@ -1213,8 +1213,7 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   if (!mShowingTooltip && !mTooltipShownOnce) {
     nsIEventTarget* target = nullptr;
 
-    nsCOMPtr<EventTarget> eventTarget =
-      aMouseEvent->InternalDOMEvent()->GetTarget();
+    nsCOMPtr<EventTarget> eventTarget = aMouseEvent->GetTarget();
     if (eventTarget) {
       mPossibleTooltipNode = do_QueryInterface(eventTarget);
       nsCOMPtr<nsIGlobalObject> global(eventTarget->GetOwnerGlobal());
