@@ -1656,7 +1656,7 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
   RefPtr<SheetLoadData> loadData = aLoadData;
   nsCOMPtr<nsISerialEventTarget> target = DispatchTarget();
   aSheet->ParseSheet(this, aBytes, aLoadData)->Then(target, __func__,
-    [loadData](bool aDummy) {
+    [loadData = Move(loadData)](bool aDummy) {
       MOZ_ASSERT(NS_IsMainThread());
       loadData->mIsBeingParsed = false;
       loadData->mLoader->UnblockOnload(/* aFireSync = */ false);
