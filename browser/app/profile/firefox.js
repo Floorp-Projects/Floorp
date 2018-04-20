@@ -76,9 +76,7 @@ pref("extensions.geckoProfiler.getSymbolRules", "localBreakpad,remoteBreakpad,du
 pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://* moz-extension: blob: filesystem:;");
 pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
 
-#if defined(XP_WIN)
-pref("extensions.webextensions.remote", true);
-#elif defined(XP_MACOSX) && !defined(RELEASE_OR_BETA)
+#if defined(XP_WIN) || defined(XP_MACOSX)
 pref("extensions.webextensions.remote", true);
 #endif
 
