@@ -831,7 +831,8 @@ private:
 // visibility from more than one .cpp file.
 
 extern const js::Class XPC_WN_NoHelper_JSClass;
-extern const js::Class XPC_WN_Proto_JSClass;
+extern const js::Class XPC_WN_NoMods_Proto_JSClass;
+extern const js::Class XPC_WN_ModsAllowed_Proto_JSClass;
 extern const js::Class XPC_WN_Tearoff_JSClass;
 #define XPC_WN_TEAROFF_RESERVED_SLOTS 1
 #define XPC_WN_TEAROFF_FLAT_OBJECT_SLOT 0
@@ -842,6 +843,15 @@ XPC_WN_CallMethod(JSContext* cx, unsigned argc, JS::Value* vp);
 
 extern bool
 XPC_WN_GetterSetter(JSContext* cx, unsigned argc, JS::Value* vp);
+
+// Maybe this macro should check for class->enumerate ==
+// XPC_WN_Shared_Proto_Enumerate or something rather than checking for
+// 4 classes?
+static inline bool IS_PROTO_CLASS(const js::Class* clazz)
+{
+    return clazz == &XPC_WN_NoMods_Proto_JSClass ||
+           clazz == &XPC_WN_ModsAllowed_Proto_JSClass;
+}
 
 /***************************************************************************/
 // XPCWrappedNativeScope is one-to-one with a JS global object.
@@ -1314,7 +1324,8 @@ public:
     static XPCWrappedNativeProto*
     GetNewOrUsed(XPCWrappedNativeScope* scope,
                  nsIClassInfo* classInfo,
-                 nsIXPCScriptable* scriptable);
+                 nsIXPCScriptable* scriptable,
+                 bool callPostCreatePrototype = true);
 
     XPCWrappedNativeScope*
     GetScope()   const {return mScope;}
@@ -1337,6 +1348,7 @@ public:
     nsIXPCScriptable*
     GetScriptable() const { return mScriptable; }
 
+    bool CallPostCreatePrototype();
     void JSProtoObjectFinalized(js::FreeOp* fop, JSObject* obj);
     void JSProtoObjectMoved(JSObject* obj, const JSObject* old);
 
@@ -1380,7 +1392,7 @@ protected:
                           nsIClassInfo* ClassInfo,
                           already_AddRefed<XPCNativeSet>&& Set);
 
-    bool Init(nsIXPCScriptable* scriptable);
+    bool Init(nsIXPCScriptable* scriptable, bool callPostCreatePrototype);
 
 private:
 #ifdef DEBUG

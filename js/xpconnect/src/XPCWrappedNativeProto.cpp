@@ -50,22 +50,52 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
 }
 
 bool
-XPCWrappedNativeProto::Init(nsIXPCScriptable* scriptable)
+XPCWrappedNativeProto::Init(nsIXPCScriptable* scriptable,
+                            bool callPostCreatePrototype)
 {
     AutoJSContext cx;
     mScriptable = scriptable;
 
+    const js::Class* jsclazz =
+        (mScriptable && mScriptable->AllowPropModsToPrototype())
+        ? &XPC_WN_ModsAllowed_Proto_JSClass
+        : &XPC_WN_NoMods_Proto_JSClass;
+
     JS::RootedObject global(cx, mScope->GetGlobalJSObject());
     JS::RootedObject proto(cx, JS_GetObjectPrototype(cx, global));
-    mJSProtoObject = JS_NewObjectWithUniqueType(cx, js::Jsvalify(&XPC_WN_Proto_JSClass),
+    mJSProtoObject = JS_NewObjectWithUniqueType(cx, js::Jsvalify(jsclazz),
                                                 proto);
 
     bool success = !!mJSProtoObject;
     if (success) {
         JS_SetPrivate(mJSProtoObject, this);
+        if (callPostCreatePrototype)
+            success = CallPostCreatePrototype();
     }
 
     return success;
+}
+
+bool
+XPCWrappedNativeProto::CallPostCreatePrototype()
+{
+    AutoJSContext cx;
+
+    // Nothing to do if we don't have a scriptable callback.
+    if (!mScriptable)
+        return true;
+
+    // Call the helper. This can handle being called if it's not implemented,
+    // so we don't have to check any sort of "want" here. See xpc_map_end.h.
+    nsresult rv = mScriptable->PostCreatePrototype(cx, mJSProtoObject);
+    if (NS_FAILED(rv)) {
+        JS_SetPrivate(mJSProtoObject, nullptr);
+        mJSProtoObject = nullptr;
+        XPCThrower::Throw(rv, cx);
+        return false;
+    }
+
+    return true;
 }
 
 void
@@ -108,7 +138,8 @@ XPCWrappedNativeProto::SystemIsBeingShutDown()
 XPCWrappedNativeProto*
 XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
                                     nsIClassInfo* classInfo,
-                                    nsIXPCScriptable* scriptable)
+                                    nsIXPCScriptable* scriptable,
+                                    bool callPostCreatePrototype)
 {
     AutoJSContext cx;
     MOZ_ASSERT(scope, "bad param");
@@ -128,7 +159,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
 
     proto = new XPCWrappedNativeProto(scope, classInfo, set.forget());
 
-    if (!proto || !proto->Init(scriptable)) {
+    if (!proto || !proto->Init(scriptable, callPostCreatePrototype)) {
         delete proto.get();
         return nullptr;
     }
