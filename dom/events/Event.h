@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
-#include "nsIDOMEvent.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsPIDOMWindow.h"
@@ -56,8 +55,8 @@ class XULCommandEvent;
   { 0x71139716, 0x4d91, 0x4dee,                                 \
       { 0xba, 0xf9, 0xe3, 0x3b, 0x80, 0xc1, 0x61, 0x61 } }
 
-class Event : public nsIDOMEvent,
-              public nsWrapperCache
+class Event : public nsISupports
+            , public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_EVENT_IID)
@@ -147,9 +146,6 @@ public:
   {
     return nullptr;
   }
-
-  // nsIDOMEvent Interface
-  NS_DECL_NSIDOMEVENT
 
   void InitEvent(const nsAString& aEventTypeArg,
                  bool aCanBubbleArg,

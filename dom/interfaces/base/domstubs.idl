@@ -35,7 +35,6 @@ interface nsIDOMWindow;
 interface nsIDOMWindowCollection;
 
 // Events
-interface nsIDOMEvent;
 interface nsIDOMEventListener;
 
 // HTML
