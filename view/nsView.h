@@ -388,7 +388,7 @@ public:
   virtual bool PaintWindow(nsIWidget* aWidget,
                            LayoutDeviceIntRegion aRegion) override;
   virtual void DidPaintWindow() override;
-  virtual void DidCompositeWindow(uint64_t aTransactionId,
+  virtual void DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
                                   const mozilla::TimeStamp& aCompositeStart,
                                   const mozilla::TimeStamp& aCompositeEnd) override;
   virtual void RequestRepaint() override;

@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/TimeStamp.h"
 
 #include "nsRegionFwd.h"
@@ -156,7 +157,7 @@ public:
    */
   virtual void DidPaintWindow();
 
-  virtual void DidCompositeWindow(uint64_t aTransactionId,
+  virtual void DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
                                   const mozilla::TimeStamp& aCompositeStart,
                                   const mozilla::TimeStamp& aCompositeEnd);
 

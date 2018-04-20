@@ -192,7 +192,7 @@ public:
   virtual void ScheduleComposite() override;
   virtual void GetFrameUniformity(FrameUniformityData* aFrameUniformityData) override;
 
-  virtual void DidComposite(uint64_t aTransactionId,
+  virtual void DidComposite(TransactionId aTransactionId,
                             const mozilla::TimeStamp& aCompositeStart,
                             const mozilla::TimeStamp& aCompositeEnd) override;
 
@@ -237,7 +237,7 @@ public:
 
   virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) override;
 
-  virtual uint64_t GetLastTransactionId() override { return mLatestTransactionId; }
+  virtual TransactionId GetLastTransactionId() override { return mLatestTransactionId; }
 
   float RequestProperty(const nsAString& aProperty) override;
 
@@ -332,7 +332,7 @@ private:
   RefPtr<gfxContext> mShadowTarget;
 
   RefPtr<TransactionIdAllocator> mTransactionIdAllocator;
-  uint64_t mLatestTransactionId;
+  TransactionId mLatestTransactionId;
   TimeDuration mLastPaintTime;
 
   // Sometimes we draw to targets that don't natively support

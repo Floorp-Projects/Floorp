@@ -3124,7 +3124,7 @@ TabChild::GetFrom(layers::LayersId aLayersId)
 }
 
 void
-TabChild::DidComposite(uint64_t aTransactionId,
+TabChild::DidComposite(mozilla::layers::TransactionId aTransactionId,
                        const TimeStamp& aCompositeStart,
                        const TimeStamp& aCompositeEnd)
 {
