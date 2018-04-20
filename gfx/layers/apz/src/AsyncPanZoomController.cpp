@@ -138,6 +138,10 @@ typedef PlatformSpecificStateBase PlatformSpecificState;  // no extra state, jus
  * a single input block. If set to false, a single input block can only
  * scroll one APZC.
  *
+ * \li\b apz.android.chrome_fling_physics.enabled
+ * If set to true, APZ uses a fling physical model similar to Chrome's
+ * on Android, rather than Android's StackScroller.
+ *
  * \li\b apz.autoscroll.enabled
  * If set to true, autoscrolling is driven by APZ rather than the content
  * process main thread.
@@ -782,6 +786,8 @@ AsyncPanZoomController::InitializeGlobalState()
   uint64_t sysmem = PR_GetPhysicalMemorySize();
   uint64_t threshold = 1LL << 32; // 4 GB in bytes
   gIsHighMemSystem = sysmem >= threshold;
+
+  PlatformSpecificState::InitializeGlobalState();
 }
 
 AsyncPanZoomController::AsyncPanZoomController(LayersId aLayersId,

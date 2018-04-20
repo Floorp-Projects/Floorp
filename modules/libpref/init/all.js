@@ -626,6 +626,7 @@ pref("layers.geometry.d3d11.enabled", true);
 pref("apz.allow_checkerboarding", true);
 pref("apz.allow_immediate_handoff", true);
 pref("apz.allow_zooming", false);
+pref("apz.android.chrome_fling_physics.enabled", false);
 pref("apz.autoscroll.enabled", true);
 
 // Whether to lock touch scrolling to one axis at a time

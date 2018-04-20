@@ -25,6 +25,8 @@ public:
   virtual AsyncPanZoomAnimation* CreateFlingAnimation(AsyncPanZoomController& aApzc,
                                                       const FlingHandoffState& aHandoffState) override;
 
+  static void InitializeGlobalState();
+
   java::StackScroller::GlobalRef mOverScroller;
   TimeStamp mLastFling;
 };

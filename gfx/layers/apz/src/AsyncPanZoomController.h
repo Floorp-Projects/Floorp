@@ -73,6 +73,8 @@ public:
   virtual AndroidSpecificState* AsAndroidSpecificState() { return nullptr; }
   virtual AsyncPanZoomAnimation* CreateFlingAnimation(AsyncPanZoomController& aApzc,
                                                       const FlingHandoffState& aHandoffState);
+
+  static void InitializeGlobalState() {}
 };
 
 /*
