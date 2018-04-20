@@ -296,3 +296,19 @@
 .toolbox-panel[selected] * {
   -moz-user-focus: normal;
 }
+
+/* Toolbox tabs reordering */
+#toolbox-container.tabs-reordering > .theme-body {
+  pointer-events: none;
+}
+
+#toolbox-container.tabs-reordering .devtools-tab:not(.selected):hover .devtools-tab-line {
+  background: transparent;
+  opacity: 0;
+  transition: none;
+}
+
+#toolbox-container.tabs-reordering .devtools-tab.selected {
+  background-color: var(--theme-toolbar-hover);
+  z-index: 1;
+}

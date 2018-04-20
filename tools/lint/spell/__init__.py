@@ -30,6 +30,8 @@ results = []
 
 CODESPELL_FORMAT_REGEX = re.compile(r'(.*):(.*): (.*) ==> (.*)$')
 
+here = os.path.abspath(os.path.dirname(__file__))
+
 
 class CodespellProcess(ProcessHandlerMixin):
     def __init__(self, config, *args, **kwargs):
@@ -98,6 +100,7 @@ def lint(paths, config, fix=None, **lintargs):
         return []
 
     config['root'] = lintargs['root']
+    exclude_list = os.path.join(here, 'exclude-list.txt')
     cmd_args = [binary,
                 '--disable-colors',
                 # Silence some warnings:
@@ -106,6 +109,8 @@ def lint(paths, config, fix=None, **lintargs):
                 # 4: shut down warnings about automatic fixes
                 #    that were disabled in dictionary.
                 '--quiet-level=4',
+                '--ignore-words=' + exclude_list,
+                '--skip=exclude-list.txt',
                 ]
 
 # Disabled for now because of

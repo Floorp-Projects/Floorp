@@ -143,15 +143,20 @@ test-packages-manifest:
       $(foreach pkg,$(TEST_PKGS_ZIP),$(call PKG_ARG,$(pkg),zip)) \
       $(foreach pkg,$(TEST_PKGS_TARGZ),$(call PKG_ARG,$(pkg),tar.gz))
 
+ifdef UPLOAD_PATH
+test_archive_dir = $(UPLOAD_PATH)
+else
+test_archive_dir = $(DIST)/$(PKG_PATH)
+endif
+
 package-tests-prepare-dest:
-	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
-	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
+	$(NSINSTALL) -D $(test_archive_dir)
 
 define package_archive
 package-tests-$(1): stage-all package-tests-prepare-dest
 	$$(call py_action,test_archive, \
 		$(1) \
-		'$$(abspath $$(DIST))/$$(PKG_PATH)/$$(PKG_BASENAME).$(1).tests.$(2)')
+		'$$(abspath $$(test_archive_dir))/$$(PKG_BASENAME).$(1).tests.$(2)')
 package-tests: package-tests-$(1)
 endef
 
