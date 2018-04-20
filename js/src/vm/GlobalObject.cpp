@@ -66,7 +66,7 @@ js::InitViaClassSpec(JSContext* cx, Handle<GlobalObject*> global)
     MOZ_CRASH("InitViaClassSpec() should not be called.");
 }
 
-static constexpr ProtoTableEntry protoTable[JSProto_LIMIT] = {
+static const ProtoTableEntry protoTable[JSProto_LIMIT] = {
 #define INIT_FUNC(name,init,clasp) { clasp, init },
 #define INIT_FUNC_DUMMY(name,init,clasp) { nullptr, nullptr },
     JS_FOR_PROTOTYPES(INIT_FUNC, INIT_FUNC_DUMMY)

@@ -115,6 +115,14 @@ StoreBuffer::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::GCSi
 
 ArenaCellSet ArenaCellSet::Empty;
 
+ArenaCellSet::ArenaCellSet()
+  : arena(nullptr)
+  , next(nullptr)
+#ifdef DEBUG
+  , minorGCNumberAtCreation(0)
+#endif
+{}
+
 ArenaCellSet::ArenaCellSet(Arena* arena, ArenaCellSet* next)
   : arena(arena)
   , next(next)
@@ -123,7 +131,7 @@ ArenaCellSet::ArenaCellSet(Arena* arena, ArenaCellSet* next)
 #endif
 {
     MOZ_ASSERT(arena);
-    MOZ_ASSERT(bits.isAllClear());
+    bits.clear(false);
 }
 
 ArenaCellSet*
