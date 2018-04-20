@@ -97,8 +97,8 @@ TiledLayerBufferComposite::AddAnimationInvalidation(nsIntRegion& aRegion)
   // process of fading in.
   for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
     if (!mRetainedTiles[i].mFadeStart.IsNull()) {
-      TileCoordIntPoint position = mTiles.TilePosition(i);
-      IntPoint offset = GetTileOffset(position);
+      TileCoordIntPoint coord = mTiles.TileCoord(i);
+      IntPoint offset = GetTileOffset(coord);
       nsIntRegion tileRegion = IntRect(offset, GetScaledTileSize());
       aRegion.OrWith(tileRegion);
     }
@@ -333,7 +333,7 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
       }
     }
 
-    tile.mTilePosition = newTiles.TilePosition(i);
+    tile.mTileCoord = newTiles.TileCoord(i);
 
     // If this same tile texture existed in the old tile set then this will move the texture
     // source into our new tile.
@@ -610,11 +610,11 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
       continue;
     }
 
-    TileCoordIntPoint tilePosition = aLayerBuffer.GetPlacement().TilePosition(i);
+    TileCoordIntPoint tileCoord = aLayerBuffer.GetPlacement().TileCoord(i);
     // A sanity check that catches a lot of mistakes.
-    MOZ_ASSERT(tilePosition.x == tile.mTilePosition.x && tilePosition.y == tile.mTilePosition.y);
+    MOZ_ASSERT(tileCoord.x == tile.mTileCoord.x && tileCoord.y == tile.mTileCoord.y);
 
-    IntPoint tileOffset = aLayerBuffer.GetTileOffset(tilePosition);
+    IntPoint tileOffset = aLayerBuffer.GetTileOffset(tileCoord);
     nsIntRegion tileDrawRegion = IntRect(tileOffset, aLayerBuffer.GetScaledTileSize());
     tileDrawRegion.AndWith(compositeRegion);
 
