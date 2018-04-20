@@ -10,7 +10,6 @@
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "nsPresContext.h"
 #include "nsError.h"
-#include "nsIDOMEvent.h"
 #include "nsQueryContentEventResult.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
@@ -19,6 +18,7 @@
 #include "nsRefreshDriver.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "nsIObjectLoadingContent.h"
@@ -1851,7 +1851,7 @@ nsDOMWindowUtils::GetFullZoom(float* aFullZoom)
 
 NS_IMETHODIMP
 nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
-                                               nsIDOMEvent* aEvent,
+                                               Event* aEvent,
                                                bool aTrusted,
                                                bool* aRetVal)
 {
@@ -3706,14 +3706,14 @@ nsDOMWindowUtils::GetPaintFlashing(bool* aRetVal)
 
 NS_IMETHODIMP
 nsDOMWindowUtils::DispatchEventToChromeOnly(EventTarget* aTarget,
-                                            nsIDOMEvent* aEvent,
+                                            Event* aEvent,
                                             bool* aRetVal)
 {
   *aRetVal = false;
   NS_ENSURE_STATE(aTarget && aEvent);
   aEvent->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
   *aRetVal = aTarget->
-    DispatchEvent(*aEvent->InternalDOMEvent(), CallerType::System, IgnoreErrors());
+    DispatchEvent(*aEvent, CallerType::System, IgnoreErrors());
   return NS_OK;
 }
 

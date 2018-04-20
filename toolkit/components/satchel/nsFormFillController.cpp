@@ -644,7 +644,7 @@ nsFormFillController::OnSearchComplete()
 }
 
 NS_IMETHODIMP
-nsFormFillController::OnTextEntered(nsIDOMEvent* aEvent,
+nsFormFillController::OnTextEntered(Event* aEvent,
                                     bool* aPrevent)
 {
   NS_ENSURE_ARG(aPrevent);
