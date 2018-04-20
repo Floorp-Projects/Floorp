@@ -155,7 +155,7 @@ class JS_FRIEND_API(Wrapper) : public ForwardingProxyHandler
     static const Wrapper singleton;
     static const Wrapper singletonWithPrototype;
 
-    static JSObject* const defaultProto;
+    static JSObject* defaultProto;
 };
 
 inline JSObject*
