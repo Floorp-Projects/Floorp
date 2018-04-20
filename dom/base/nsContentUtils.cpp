@@ -5544,8 +5544,8 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
 
     handler->OnLinkClick(aContent, aLinkURI,
                          fileName.IsVoid() ? aTargetSpec.get() : EmptyString().get(),
-                         fileName, nullptr, -1, nullptr, aIsTrusted,
-                         aContent->NodePrincipal());
+                         fileName, nullptr, -1, nullptr, EventStateManager::IsHandlingUserInput(),
+                         aIsTrusted, aContent->NodePrincipal());
   }
 }
 
