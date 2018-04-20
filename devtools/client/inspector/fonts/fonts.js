@@ -11,6 +11,7 @@ const { getColor } = require("devtools/client/shared/theme");
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const { throttle } = require("devtools/shared/throttle");
+const { debounce } = require("devtools/shared/debounce");
 
 const FontsApp = createFactory(require("./components/FontsApp"));
 
@@ -18,11 +19,19 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
+const { getStr } = require("./utils/l10n");
 const { updateFonts } = require("./actions/fonts");
+const {
+  applyInstance,
+  resetFontEditor,
+  toggleFontEditor,
+  updateAxis,
+  updateCustomInstance,
+  updateFontEditor,
+} = require("./actions/font-editor");
 const { updatePreviewText } = require("./actions/font-options");
-const { resetFontEditor, toggleFontEditor, updateAxis, updateFontEditor } =
-  require("./actions/font-editor");
 
+const CUSTOM_INSTANCE_NAME = getStr("fontinspector.customInstanceName");
 const FONT_EDITOR_ID = "fonteditor";
 const FONT_PROPERTIES = [
   "font-optical-sizing",
@@ -42,8 +51,10 @@ class FontInspector {
     this.selectedRule = null;
     this.store = this.inspector.store;
 
+    this.snapshotChanges = debounce(this.snapshotChanges, 100, this);
     this.syncChanges = throttle(this.syncChanges, 100, this);
     this.onAxisUpdate = this.onAxisUpdate.bind(this);
+    this.onInstanceChange = this.onInstanceChange.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
     this.onRuleSelected = this.onRuleSelected.bind(this);
@@ -61,8 +72,9 @@ class FontInspector {
     }
 
     let fontsApp = FontsApp({
-      onPreviewFonts: this.onPreviewFonts,
       onAxisUpdate: this.onAxisUpdate,
+      onInstanceChange: this.onInstanceChange,
+      onPreviewFonts: this.onPreviewFonts,
     });
 
     let provider = createElement(Provider, {
@@ -213,6 +225,22 @@ class FontInspector {
    */
   onAxisUpdate(tag, value) {
     this.store.dispatch(updateAxis(tag, value));
+    this.store.dispatch(applyInstance(CUSTOM_INSTANCE_NAME, null));
+    this.snapshotChanges();
+    this.applyChanges();
+  }
+
+  /**
+   * Handler for selecting a font variation instance. Dispatches an action which updates
+   * the axes and their values as defined by that variation instance.
+   *
+   * @param {String} name
+   *        Name of variation instance. (ex: Light, Regular, Ultrabold, etc.)
+   * @param {Array} values
+   *        Array of objects with axes and values defined by the variation instance.
+   */
+  onInstanceChange(name, values) {
+    this.store.dispatch(applyInstance(name, values));
     this.applyChanges();
   }
 
@@ -332,6 +360,15 @@ class FontInspector {
     if (JSON.stringify(properties) !== JSON.stringify(fontEditor.properties)) {
       this.store.dispatch(updateFontEditor(fonts, properties));
     }
+  }
+
+  /**
+   * Capture the state of all variation axes. Allows the user to return to this state with
+   * the "Custom" instance after they've selected a font-defined named variation instance.
+   * This method is debounced. See constructor.
+   */
+  snapshotChanges() {
+    this.store.dispatch(updateCustomInstance());
   }
 
   async update() {
