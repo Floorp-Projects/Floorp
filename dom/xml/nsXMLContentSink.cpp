@@ -19,6 +19,7 @@
 #include "mozilla/css/Loader.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
+#include "nsDocElementCreatedNotificationRunner.h"
 #include "nsIScriptContext.h"
 #include "nsNameSpaceManager.h"
 #include "nsIServiceManager.h"
@@ -1050,7 +1051,8 @@ nsXMLContentSink::HandleStartElement(const char16_t *aName,
 
   if (!mXSLTProcessor) {
     if (content == mDocElement) {
-      NotifyDocElementCreated(mDocument);
+      nsContentUtils::AddScriptRunner(
+          new nsDocElementCreatedNotificationRunner(mDocument));
 
       if (aInterruptable && NS_SUCCEEDED(result) && mParser && !mParser->IsParserEnabled()) {
         return NS_ERROR_HTMLPARSER_BLOCK;

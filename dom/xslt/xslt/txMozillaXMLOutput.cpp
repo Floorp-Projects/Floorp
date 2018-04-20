@@ -32,6 +32,7 @@
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/Encoding.h"
 #include "nsContentUtils.h"
+#include "nsDocElementCreatedNotificationRunner.h"
 #include "txXMLUtils.h"
 #include "nsContentSink.h"
 #include "nsINode.h"
@@ -578,7 +579,8 @@ txMozillaXMLOutput::closePrevious(bool aFlushText)
 
         if (currentIsDoc) {
             mRootContentCreated = true;
-            nsContentSink::NotifyDocElementCreated(mDocument);
+            nsContentUtils::AddScriptRunner(
+                  new nsDocElementCreatedNotificationRunner(mDocument));
         }
 
         mCurrentNode = mOpenedElement;

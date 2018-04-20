@@ -40,6 +40,7 @@
 #include "nsXULContentUtils.h"
 #include "nsIXULOverlayProvider.h"
 #include "nsIStringEnumerator.h"
+#include "nsDocElementCreatedNotificationRunner.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
 #include "nsPIBoxObject.h"
@@ -2026,6 +2027,9 @@ XULDocument::PrepareToWalk()
         // Block onload until we've finished building the complete
         // document content model.
         BlockOnload();
+
+        nsContentUtils::AddScriptRunner(
+            new nsDocElementCreatedNotificationRunner(this));
     }
 
     // There'd better not be anything on the context stack at this
