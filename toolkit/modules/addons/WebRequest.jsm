@@ -754,7 +754,9 @@ HttpObserverManager = {
         let data = Object.create(commonData);
 
         if (registerFilter && opts.blocking && opts.extension) {
-          channel.registerTraceableChannel(opts.extension, opts.tabParent);
+          data.registerTraceableChannel = (extension, tabParent) => {
+            channel.registerTraceableChannel(extension, tabParent);
+          };
         }
 
         if (opts.requestHeaders) {
