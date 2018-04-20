@@ -51,7 +51,7 @@ class KeyboardShortcut;
 #define NS_HANDLER_TYPE_SYSTEM              (1 << 6)
 #define NS_HANDLER_TYPE_PREVENTDEFAULT      (1 << 7)
 
-// XXX Use nsIDOMEvent:: codes?
+// XXX Use EventBinding:: codes?
 #define NS_PHASE_CAPTURING          1
 #define NS_PHASE_TARGET             2
 #define NS_PHASE_BUBBLING           3

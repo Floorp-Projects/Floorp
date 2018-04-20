@@ -31,6 +31,7 @@
 
 namespace mozilla {
 namespace dom {
+class Event;
 class EventTarget;
 } // namespace dom
 } // namespace mozilla
@@ -142,7 +143,7 @@ public:
   ChromeTooltipListener(nsWebBrowser* aInBrowser, nsIWebBrowserChrome* aInChrome);
 
   NS_DECL_NSIDOMEVENTLISTENER
-  NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseMove(mozilla::dom::Event* aMouseEvent);
 
   // Add/remove the relevant listeners, based on what interfaces the embedding
   // chrome implements.
