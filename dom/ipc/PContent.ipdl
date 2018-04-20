@@ -117,8 +117,7 @@ struct FontListEntry {
     nsString  familyName;
     nsString  faceName;
     nsCString filepath;
-    float     minWeight;
-    float     maxWeight;
+    float     weight;
     int16_t   stretch;
     uint8_t   italic;
     uint8_t   index;

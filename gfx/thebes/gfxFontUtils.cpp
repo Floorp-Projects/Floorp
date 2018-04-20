@@ -1944,6 +1944,24 @@ gfxFontUtils::GetVariationInstances(gfxFontEntry* aFontEntry,
     }
 }
 
+void
+gfxFontUtils::MergeVariations(const nsTArray<gfxFontVariation>& aEntrySettings,
+                              const nsTArray<gfxFontVariation>& aStyleSettings,
+                              nsTArray<gfxFontVariation>* aMerged)
+{
+    MOZ_ASSERT(!aEntrySettings.IsEmpty() &&
+               !aStyleSettings.IsEmpty() &&
+               aMerged->IsEmpty());
+    // Settings from the CSS style will take precedence over those from the
+    // font entry (i.e. from the @font-face descriptor).
+    aMerged->AppendElements(aStyleSettings);
+    for (auto& setting : aEntrySettings) {
+        if (!aMerged->Contains(setting.mTag, VariationTagComparator())) {
+            aMerged->AppendElement(setting);
+        }
+    }
+}
+
 #ifdef XP_WIN
 
 /* static */

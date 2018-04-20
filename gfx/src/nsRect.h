@@ -13,16 +13,12 @@
 #include <algorithm>                    // for min/max
 #include "mozilla/Likely.h"             // for MOZ_UNLIKELY
 #include "mozilla/gfx/Rect.h"
-#include "mozilla/gfx/2D.h"
 #include "nsCoord.h"                    // for nscoord, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsPoint.h"                    // for nsIntPoint, nsPoint
 #include "nsMargin.h"                   // for nsIntMargin, nsMargin
 #include "nsSize.h"                     // for IntSize, nsSize
 #include "nscore.h"                     // for NS_BUILD_REFCNT_LOGGING
-#if !defined(ANDROID) && !defined(MOZ_ASAN) && (defined(__SSE2__) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2))
-#include "smmintrin.h"
-#endif
 
 typedef mozilla::gfx::IntRect nsIntRect;
 
@@ -124,79 +120,6 @@ struct nsRect :
   {
     *this = aRect1.Union(aRect2);
   }
-
-#if defined(_MSC_VER) && !defined(__clang__)
-  // Only MSVC supports inlining intrinsics for archs you're not compiling for.
-  MOZ_MUST_USE nsRect Intersect(const nsRect& aRect) const
-  {
-    nsRect result;
-    if (mozilla::gfx::Factory::HasSSE4()) {
-      __m128i rect1 = _mm_loadu_si128((__m128i*)&aRect); // x1, y1, w1, h1
-      __m128i rect2 = _mm_loadu_si128((__m128i*)this); // x2, y2, w2, h2
-
-      __m128i resultRect = _mm_max_epi32(rect1, rect2); // xr, yr, zz, zz
-
-
-      // result.width = std::min<int32_t>(x - result.x + width, aRect.x - result.x + aRect.width);
-      // result.height = std::min<int32_t>(y - result.y + height, aRect.y - result.y + aRect.height);
-      __m128i widthheight = _mm_min_epi32(_mm_add_epi32(_mm_sub_epi32(rect1, resultRect), _mm_srli_si128(rect1, 8)),
-                                          _mm_add_epi32(_mm_sub_epi32(rect2, resultRect), _mm_srli_si128(rect2, 8))); // w, h, zz, zz
-      widthheight = _mm_slli_si128(widthheight, 8); // 00, 00, wr, hr
-
-      resultRect = _mm_blend_epi16(resultRect, widthheight, 0xF0); // xr, yr, wr, hr
-
-      if ((_mm_movemask_ps(_mm_castsi128_ps(_mm_cmpgt_epi32(resultRect, _mm_setzero_si128()))) & 0xC) != 0xC) {
-        // It's potentially more efficient to store all 0s. But the non SSE4 code leaves x/y intact
-        // so let's do the same here.
-        resultRect = _mm_and_si128(resultRect, _mm_set_epi32(0, 0, 0xFFFFFFFF, 0xFFFFFFFF));
-      }
-
-      _mm_storeu_si128((__m128i*)&result, resultRect);
-
-      return result;
-    }
-
-    result.x = std::max<int32_t>(x, aRect.x);
-    result.y = std::max<int32_t>(y, aRect.y);
-    result.width = std::min<int32_t>(x - result.x + width, aRect.x - result.x + aRect.width);
-    result.height = std::min<int32_t>(y - result.y + height, aRect.y - result.y + aRect.height);
-    if (result.width <= 0 || result.height <= 0) {
-      result.SizeTo(0, 0);
-    }
-    return result;
-  }
-
-  bool IntersectRect(const nsRect& aRect1, const nsRect& aRect2)
-  {
-    if (mozilla::gfx::Factory::HasSSE4()) {
-      __m128i rect1 = _mm_loadu_si128((__m128i*)&aRect1); // x1, y1, w1, h1
-      __m128i rect2 = _mm_loadu_si128((__m128i*)&aRect2); // x2, y2, w2, h2
-
-      __m128i resultRect = _mm_max_epi32(rect1, rect2); // xr, yr, zz, zz
-      // result.width = std::min<int32_t>(x - result.x + width, aRect.x - result.x + aRect.width);
-      // result.height = std::min<int32_t>(y - result.y + height, aRect.y - result.y + aRect.height);
-      __m128i widthheight = _mm_min_epi32(_mm_add_epi32(_mm_sub_epi32(rect1, resultRect), _mm_srli_si128(rect1, 8)),
-                                          _mm_add_epi32(_mm_sub_epi32(rect2, resultRect), _mm_srli_si128(rect2, 8))); // w, h, zz, zz
-      widthheight = _mm_slli_si128(widthheight, 8); // 00, 00, wr, hr
-
-      resultRect = _mm_blend_epi16(resultRect, widthheight, 0xF0); // xr, yr, wr, hr
-
-      if ((_mm_movemask_ps(_mm_castsi128_ps(_mm_cmpgt_epi32(resultRect, _mm_setzero_si128()))) & 0xC) != 0xC) {
-        // It's potentially more efficient to store all 0s. But the non SSE4 code leaves x/y intact
-        // so let's do the same here.
-        resultRect = _mm_and_si128(resultRect, _mm_set_epi32(0, 0, 0xFFFFFFFF, 0xFFFFFFFF));
-        _mm_storeu_si128((__m128i*)this, resultRect);
-        return false;
-      }
-
-      _mm_storeu_si128((__m128i*)this, resultRect);
-
-      return true;
-    }
-    *static_cast<nsRect*>(this) = aRect1.Intersect(aRect2);
-    return !IsEmpty();
-  }
-#endif
 #endif
 
   void SaturatingUnionRect(const nsRect& aRect1, const nsRect& aRect2)
@@ -297,44 +220,6 @@ nsRect::ScaleToNearestPixels(float aXScale, float aYScale,
                              nscoord aAppUnitsPerPixel) const
 {
   mozilla::gfx::IntRect rect;
-  // ASAN builds appear not to respect changes to the SSE rounding mode.
-  // Android x86 builds have bindgen issues.
-#if !defined(ANDROID) && !defined(MOZ_ASAN) && (defined(__SSE2__) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2))
-  __m128 appUnitsPacked = _mm_set_ps(aAppUnitsPerPixel, aAppUnitsPerPixel, aAppUnitsPerPixel, aAppUnitsPerPixel);
-  __m128 scalesPacked = _mm_set_ps(aYScale, aXScale, aYScale, aXScale);
-  __m128 biasesPacked = _mm_set_ps(0.5f, 0.5f, 0.5f, 0.5f);
-
-  // See Floor section.
-  _MM_SET_ROUNDING_MODE(_MM_ROUND_DOWN);
-
-  __m128i rectPacked = _mm_loadu_si128((__m128i*)this);
-  __m128i widthHeight = _mm_slli_si128(rectPacked, 8);
-
-  rectPacked = _mm_add_epi32(rectPacked, widthHeight); // X, Y, XMost(), YMost()
-
-  __m128 rectFloat = _mm_cvtepi32_ps(rectPacked);
-
-  // Scale, i.e. ([ x y xmost ymost ] / aAppUnitsPerPixel) * [ aXScale aYScale aXScale aYScale ]
-  rectFloat = _mm_div_ps(_mm_mul_ps(rectFloat, scalesPacked), appUnitsPacked);
-
-  // Floor
-  // Executed with bias and roundmode down, since round-nearest rounds 0.5 downward half the time.
-  rectFloat = _mm_add_ps(rectFloat, biasesPacked);
-  rectPacked = _mm_cvtps_epi32(rectFloat);
-
-  widthHeight = _mm_slli_si128(rectPacked, 8);
-  rectPacked = _mm_sub_epi32(rectPacked, widthHeight); // X, Y, Width, Height
-
-  // Avoid negative width/height due to overflow.
-  __m128i mask = _mm_or_si128(_mm_cmpgt_epi32(rectPacked, _mm_setzero_si128()),
-                              _mm_set_epi32(0, 0, 0xFFFFFFFF, 0xFFFFFFFF));
-  // Mask will now contain [ 0xFFFFFFFF 0xFFFFFFFF (width <= 0 ? 0 : 0xFFFFFFFF) (height <= 0 ? 0 : 0xFFFFFFFF) ]
-  rectPacked = _mm_and_si128(rectPacked, mask);
-
-  _mm_storeu_si128((__m128i*)&rect, rectPacked);
-
-  _MM_SET_ROUNDING_MODE(_MM_ROUND_NEAREST);
-#else
   rect.SetNonEmptyBox(NSToIntRoundUp(NSAppUnitsToDoublePixels(x,
                                      aAppUnitsPerPixel) * aXScale),
                       NSToIntRoundUp(NSAppUnitsToDoublePixels(y,
@@ -343,7 +228,6 @@ nsRect::ScaleToNearestPixels(float aXScale, float aYScale,
                                      aAppUnitsPerPixel) * aXScale),
                       NSToIntRoundUp(NSAppUnitsToDoublePixels(YMost(),
                                      aAppUnitsPerPixel) * aYScale));
-#endif
   return rect;
 }
 
@@ -353,49 +237,6 @@ nsRect::ScaleToOutsidePixels(float aXScale, float aYScale,
                              nscoord aAppUnitsPerPixel) const
 {
   mozilla::gfx::IntRect rect;
-  // ASAN builds appear not to respect changes to the SSE rounding mode.
-  // Android x86 builds have bindgen issues.
-#if !defined(ANDROID) && !defined(MOZ_ASAN) && (defined(__SSE2__) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2))
-  __m128 appUnitsPacked = _mm_set_ps(aAppUnitsPerPixel, aAppUnitsPerPixel, aAppUnitsPerPixel, aAppUnitsPerPixel);
-  __m128 scalesPacked = _mm_set_ps(aYScale, aXScale, aYScale, aXScale);
-
-  // This is a bit of a rough approximation, i.e. any value under x + (1 - FLT_EPSILON) will
-  // be rounded to x instead of x + 1, however this inaccuracy is much smaller than
-  // 1/256th (which would indicate any significant coverage of the pixel) and reduces
-  // the amount of cycles considerably.
-  __m128 biasesPacked = _mm_set_ps(1 - FLT_EPSILON, 1 - FLT_EPSILON, 0, 0);
-
-  // See Floor section.
-  _MM_SET_ROUNDING_MODE(_MM_ROUND_DOWN);
-
-  __m128i rectPacked = _mm_loadu_si128((__m128i*)this); // x, y, w, h
-  __m128i widthHeight = _mm_slli_si128(rectPacked, 8); // 0, 0, x, y
-
-  rectPacked = _mm_add_epi32(rectPacked, widthHeight); // X, Y, XMost(), YMost()
-
-  __m128 rectFloat = _mm_cvtepi32_ps(rectPacked);
-
-  // Scale i.e. ([ x y xmost ymost ] / aAppUnitsPerPixel) * [ aXScale aYScale aXScale aYScale ]
-  rectFloat = _mm_mul_ps(_mm_div_ps(rectFloat, appUnitsPacked), scalesPacked);
-
-  // Floor
-  // Executed with bias and roundmode down, since round-nearest rounds 0.5 downward half the time.
-  rectFloat = _mm_add_ps(rectFloat, biasesPacked);
-  rectPacked = _mm_cvtps_epi32(rectFloat); // r.x, r.y, r.XMost(), r.YMost()
-
-  widthHeight = _mm_slli_si128(rectPacked, 8); // 0, 0, r.x, r.y
-  rectPacked = _mm_sub_epi32(rectPacked, widthHeight); // r.x, r.y, r.w, r.h
-
-  // Avoid negative width/height due to overflow.
-  __m128i mask = _mm_or_si128(_mm_cmpgt_epi32(rectPacked, _mm_setzero_si128()),
-                              _mm_set_epi32(0, 0, 0xFFFFFFFF, 0xFFFFFFFF));
-  // Mask will now contain [ 0xFFFFFFFF 0xFFFFFFFF (width <= 0 ? 0 : 0xFFFFFFFF) (height <= 0 ? 0 : 0xFFFFFFFF) ]
-  rectPacked = _mm_and_si128(rectPacked, mask);
-
-  _mm_storeu_si128((__m128i*)&rect, rectPacked);
-
-  _MM_SET_ROUNDING_MODE(_MM_ROUND_NEAREST);
-#else
   rect.SetNonEmptyBox(NSToIntFloor(NSAppUnitsToFloatPixels(x,
                                    float(aAppUnitsPerPixel)) * aXScale),
                       NSToIntFloor(NSAppUnitsToFloatPixels(y,
@@ -404,7 +245,6 @@ nsRect::ScaleToOutsidePixels(float aXScale, float aYScale,
                                    float(aAppUnitsPerPixel)) * aXScale),
                       NSToIntCeil(NSAppUnitsToFloatPixels(YMost(),
                                    float(aAppUnitsPerPixel)) * aYScale));
-#endif
   return rect;
 }
 

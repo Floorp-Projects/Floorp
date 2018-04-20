@@ -1247,15 +1247,13 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   nsAutoCString fontURI;
   aUserFontEntry->GetFamilyNameAndURIForLogging(familyName, fontURI);
 
-  nsAutoCString weightString;
-  aUserFontEntry->Weight().ToString(weightString);
   nsPrintfCString message
        ("downloadable font: %s "
-        "(font-family: \"%s\" style:%s weight:%s stretch:%s src index:%d)",
+        "(font-family: \"%s\" style:%s weight:%g stretch:%s src index:%d)",
         aMessage,
         familyName.get(),
         aUserFontEntry->IsItalic() ? "italic" : "normal",
-        weightString.get(),
+        aUserFontEntry->Weight().ToFloat(),
         nsCSSProps::ValueToKeyword(aUserFontEntry->Stretch(),
                                    nsCSSProps::kFontStretchKTable).get(),
         aUserFontEntry->GetSrcIndex());
