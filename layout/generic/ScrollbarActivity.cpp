@@ -122,9 +122,8 @@ ScrollbarActivity::HandleEvent(dom::Event* aEvent)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aEvent->GetOriginalTarget(getter_AddRefs(target));
-  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
+  nsCOMPtr<nsIContent> targetContent =
+    do_QueryInterface(aEvent->GetOriginalTarget());
 
   HandleEventForScrollbar(type, targetContent, GetHorizontalScrollbar(),
                           &mHScrollbarHovered);

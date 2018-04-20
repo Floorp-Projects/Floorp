@@ -238,12 +238,11 @@ nsFileControlFrame::DnDListener::HandleEvent(Event* aEvent)
 {
   NS_ASSERTION(mFrame, "We should have been unregistered");
 
-  Event* event = aEvent->InternalDOMEvent();
-  if (event->DefaultPrevented()) {
+  if (aEvent->DefaultPrevented()) {
     return NS_OK;
   }
 
-  DragEvent* dragEvent = event->AsDragEvent();
+  DragEvent* dragEvent = aEvent->AsDragEvent();
   if (!dragEvent) {
     return NS_OK;
   }
