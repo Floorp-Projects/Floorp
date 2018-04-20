@@ -16,7 +16,6 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEvent.h"
 #include "nsISupportsImpl.h"
 #include "nsLiteralString.h"
 #include "nsQueryObject.h"

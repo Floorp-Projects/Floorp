@@ -521,7 +521,7 @@ nsresult
 HTMLEditor::OnMouseDown(int32_t aClientX,
                         int32_t aClientY,
                         nsIDOMElement* aTarget,
-                        nsIDOMEvent* aEvent)
+                        Event* aEvent)
 {
   nsCOMPtr<Element> element = do_QueryInterface(aTarget);
   NS_ENSURE_ARG_POINTER(element);
