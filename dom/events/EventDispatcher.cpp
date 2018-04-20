@@ -660,7 +660,7 @@ MayRetargetToChromeIfCanNotHandleEvent(
 EventDispatcher::Dispatch(nsISupports* aTarget,
                           nsPresContext* aPresContext,
                           WidgetEvent* aEvent,
-                          nsIDOMEvent* aDOMEvent,
+                          Event* aDOMEvent,
                           nsEventStatus* aEventStatus,
                           EventDispatchingCallback* aCallback,
                           nsTArray<EventTarget*>* aTargets)
@@ -809,7 +809,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
     return NS_ERROR_FAILURE;
   }
 
-  // Make sure that nsIDOMEvent::target and nsIDOMEvent::originalTarget
+  // Make sure that Event::target and Event::originalTarget
   // point to the last item in the chain.
   if (!aEvent->mTarget) {
     // Note, CurrentTarget() points always to the object returned by
@@ -987,7 +987,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
 /* static */ nsresult
 EventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
                                   WidgetEvent* aEvent,
-                                  nsIDOMEvent* aDOMEvent,
+                                  Event* aDOMEvent,
                                   nsPresContext* aPresContext,
                                   nsEventStatus* aEventStatus)
 {
@@ -1000,7 +1000,7 @@ EventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
       innerEvent->mTarget = nullptr;
       innerEvent->mOriginalTarget = nullptr;
     } else {
-      aDOMEvent->GetIsTrusted(&dontResetTrusted);
+      dontResetTrusted = aDOMEvent->IsTrusted();
     }
 
     if (!dontResetTrusted) {
