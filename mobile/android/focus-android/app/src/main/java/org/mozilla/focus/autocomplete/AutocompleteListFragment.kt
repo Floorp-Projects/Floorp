@@ -34,6 +34,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import java.util.Collections
 import org.mozilla.focus.utils.ViewUtils
 
+typealias DomainFormatter = (String) -> String
 /**
  * Fragment showing settings UI listing all custom autocomplete domains entered by the user.
  */
@@ -196,7 +197,8 @@ open class AutocompleteListFragment : Fragment() {
                                     LayoutInflater.from(parent!!.context).inflate(viewType, parent, false))
                     DomainViewHolder.LAYOUT_ID ->
                             DomainViewHolder(
-                                    LayoutInflater.from(parent!!.context).inflate(viewType, parent, false))
+                                    LayoutInflater.from(parent!!.context).inflate(viewType, parent, false),
+                                    { AutocompleteDomainFormatter.format(it) })
                     else -> throw IllegalArgumentException("Unknown view type: $viewType")
                 }
 
@@ -236,7 +238,8 @@ open class AutocompleteListFragment : Fragment() {
     /**
      * ViewHolder implementation for a domain item in the list.
      */
-    private class DomainViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    private class DomainViewHolder(
+            itemView: View, val domainFormatter: DomainFormatter? = null) : RecyclerView.ViewHolder(itemView) {
         val domainView: TextView = itemView.findViewById(R.id.domainView)
         val checkBoxView: CheckBox = itemView.findViewById(R.id.checkbox)
         val handleView: View = itemView.findViewById(R.id.handleView)
@@ -252,7 +255,7 @@ open class AutocompleteListFragment : Fragment() {
             itemTouchHelper: ItemTouchHelper,
             fragment: AutocompleteListFragment
         ) {
-            domainView.text = domain
+            domainView.text = domainFormatter?.invoke(domain) ?: domain
 
             checkBoxView.visibility = if (isSelectionMode) View.VISIBLE else View.GONE
             checkBoxView.isChecked = selectedDomains.contains(domain)

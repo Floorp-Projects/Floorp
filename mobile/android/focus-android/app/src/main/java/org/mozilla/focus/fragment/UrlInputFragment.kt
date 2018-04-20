@@ -31,10 +31,10 @@ import org.mozilla.focus.session.Source
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
-import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.whatsnew.WhatsNew
 
 /**
@@ -479,7 +479,9 @@ class UrlInputFragment :
     }
 
     private fun onCommit() {
-        val input = urlView?.text.toString()
+        val input = urlView.autocompleteResult.formattedText.let {
+            if (it.isEmpty()) urlView?.text.toString() else it
+        }
 
         if (!input.trim { it <= ' ' }.isEmpty()) {
             ViewUtils.hideKeyboard(urlView)
@@ -551,8 +553,9 @@ class UrlInputFragment :
         }
 
         view?.let {
-            autoCompleteProvider.autocomplete(searchText, { result, _, source, size ->
-                view.onAutocomplete(AutocompleteResult(result, source, size))
+
+            autoCompleteProvider.autocomplete(searchText, { result, domain, source, size ->
+                view.onAutocomplete(AutocompleteResult(result, source, size, { domain }))
             })
         }
 
