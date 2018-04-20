@@ -9812,42 +9812,63 @@
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [916804, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "Did WebIDE runtime connection succeed?"
   },
   "DEVTOOLS_WEBIDE_USB_CONNECTION_RESULT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [916804, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "Did WebIDE USB runtime connection succeed?"
   },
   "DEVTOOLS_WEBIDE_WIFI_CONNECTION_RESULT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [916804, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "Did WebIDE WiFi runtime connection succeed?"
   },
   "DEVTOOLS_WEBIDE_SIMULATOR_CONNECTION_RESULT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [916804, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "Did WebIDE simulator runtime connection succeed?"
   },
   "DEVTOOLS_WEBIDE_REMOTE_CONNECTION_RESULT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [916804, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "Did WebIDE remote runtime connection succeed?"
   },
   "DEVTOOLS_WEBIDE_LOCAL_CONNECTION_RESULT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [916804, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "Did WebIDE local runtime connection succeed?"
   },
   "DEVTOOLS_WEBIDE_OTHER_CONNECTION_RESULT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "bug_numbers": [1069552, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "Did WebIDE other runtime connection succeed?"
   },
   "DEVTOOLS_WEBIDE_CONNECTION_TIME_SECONDS": {
@@ -9875,6 +9896,9 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
+    "bug_numbers": [1159043, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "What runtime type did WebIDE connect to?"
   },
   "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_ID": {
@@ -9882,6 +9906,9 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
+    "bug_numbers": [1159043, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "What runtime ID did WebIDE connect to?"
   },
   "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PROCESSOR": {
@@ -9889,6 +9916,9 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
+    "bug_numbers": [1159043, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "What runtime processor did WebIDE connect to?"
   },
   "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_OS": {
@@ -9896,6 +9926,9 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
+    "bug_numbers": [1159043, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "What runtime OS did WebIDE connect to?"
   },
   "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PLATFORM_VERSION": {
@@ -9903,6 +9936,9 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
+    "bug_numbers": [1159043, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "What runtime platform version did WebIDE connect to?"
   },
   "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_APP_TYPE": {
@@ -9910,6 +9946,9 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
+    "bug_numbers": [1159043, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "What runtime app type did WebIDE connect to?"
   },
   "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_VERSION": {
@@ -9917,6 +9956,9 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
+    "bug_numbers": [1159043, 1448074],
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "description": "What runtime version did WebIDE connect to?"
   },
   "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER": {
