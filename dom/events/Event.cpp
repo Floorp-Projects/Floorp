@@ -240,13 +240,6 @@ Event::GetTarget() const
   return mEvent->GetDOMEventTarget();
 }
 
-NS_IMETHODIMP
-Event::GetTarget(nsIDOMEventTarget** aTarget)
-{
-  NS_IF_ADDREF(*aTarget = GetTarget());
-  return NS_OK;
-}
-
 bool
 Event::IsSrcElementEnabled(JSContext* /* unused */, JSObject* /* unused */)
 {
@@ -268,13 +261,6 @@ void
 Event::ComposedPath(nsTArray<RefPtr<EventTarget>>& aPath)
 {
   EventDispatcher::GetComposedPathFor(mEvent, aPath);
-}
-
-NS_IMETHODIMP
-Event::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
-{
-  NS_IF_ADDREF(*aCurrentTarget = GetCurrentTarget());
-  return NS_OK;
 }
 
 //
@@ -304,24 +290,10 @@ Event::GetExplicitOriginalTarget() const
   return GetTarget();
 }
 
-NS_IMETHODIMP
-Event::GetExplicitOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
-{
-  NS_IF_ADDREF(*aRealEventTarget = GetExplicitOriginalTarget());
-  return NS_OK;
-}
-
 EventTarget*
 Event::GetOriginalTarget() const
 {
   return mEvent->GetOriginalDOMEventTarget();
-}
-
-NS_IMETHODIMP
-Event::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
-{
-  NS_IF_ADDREF(*aOriginalTarget = GetOriginalTarget());
-  return NS_OK;
 }
 
 EventTarget*
