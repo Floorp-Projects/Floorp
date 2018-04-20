@@ -63,6 +63,7 @@ add_task(async function runTest() {
               .getService(Ci.nsIEnvironment);
   // First inject a very minimal head, with simplest assertion methods
   // and very common globals
+  /* eslint-disable no-unused-vars */
   let testHead = (function() {
     const info = msg => dump(msg + "\n");
     const is = (a, b, description) => {
@@ -116,9 +117,9 @@ add_task(async function runTest() {
       });
     }
   }).toSource().replace(/^\(function\(\) \{|\}\)$/g, "");
+  /* eslint-enable no-unused-vars */
   // Stringify testHead's function and remove `(function {` prefix and `})` suffix
   // to ensure inner symbols gets exposed to next pieces of code
-
   // Then inject new debugger head file
   let { content } = await fetch(debuggerHeadURL);
   let debuggerHead = content;
