@@ -18,6 +18,7 @@ class nsXBLPrototypeHandler;
 namespace mozilla {
 struct IgnoreModifierState;
 namespace dom {
+class Event;
 class KeyboardEvent;
 } // namespace dom
 } // namespace mozilla
@@ -37,7 +38,7 @@ protected:
 
 private:
   nsXBLEventHandler();
-  virtual bool EventMatched(nsIDOMEvent* aEvent)
+  virtual bool EventMatched(mozilla::dom::Event* aEvent)
   {
     return true;
   }
@@ -50,7 +51,7 @@ public:
   virtual ~nsXBLMouseEventHandler();
 
 private:
-  bool EventMatched(nsIDOMEvent* aEvent) override;
+  bool EventMatched(mozilla::dom::Event* aEvent) override;
 };
 
 class nsXBLKeyEventHandler : public nsIDOMEventListener

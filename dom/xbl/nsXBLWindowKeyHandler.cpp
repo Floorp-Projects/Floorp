@@ -33,6 +33,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/layers/KeyboardMap.h"
 
@@ -488,13 +489,10 @@ nsXBLWindowKeyHandler::ConvertEventToDOMEventType(
 NS_IMETHODIMP
 nsXBLWindowKeyHandler::HandleEvent(Event* aEvent)
 {
-  RefPtr<KeyboardEvent> keyEvent =
-    aEvent->InternalDOMEvent()->AsKeyboardEvent();
+  RefPtr<KeyboardEvent> keyEvent = aEvent->AsKeyboardEvent();
   NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
 
-  uint16_t eventPhase;
-  aEvent->GetEventPhase(&eventPhase);
-  if (eventPhase == nsIDOMEvent::CAPTURING_PHASE) {
+  if (aEvent->EventPhase() == EventBinding::CAPTURING_PHASE) {
     if (aEvent->WidgetEventPtr()->mFlags.mInSystemGroup) {
       HandleEventOnCaptureInSystemEventGroup(keyEvent);
     } else {
