@@ -138,8 +138,12 @@ public class GeckoViewActivity extends Activity {
     }
 
     private void loadSettings(final Intent intent) {
-        sGeckoRuntime.getSettings().setRemoteDebuggingEnabled(
+        final GeckoSessionSettings settings = mGeckoSession.getSettings();
+        settings.setBoolean(
+            GeckoSessionSettings.USE_REMOTE_DEBUGGER,
             intent.getBooleanExtra(USE_REMOTE_DEBUGGER_EXTRA, false));
+
+        Log.i(LOGTAG, "Load with settings " + settings);
     }
 
     @Override
