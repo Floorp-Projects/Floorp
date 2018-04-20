@@ -646,7 +646,7 @@ previewers.Object = [
   },
 
   function DOMEvent({obj, hooks}, grip, rawObj) {
-    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMEvent)) {
+    if (isWorker || !rawObj || !Event.isInstance(rawObj)) {
       return false;
     }
 

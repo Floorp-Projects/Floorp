@@ -1670,26 +1670,45 @@ nsFlexContainerFrame::
  */
 class nsFlexContainerFrame::CachedMeasuringReflowResult
 {
-  // Members that are part of the cache key:
-  const LogicalSize mAvailableSize;
-  const nscoord mComputedBSize;
+  struct Key
+  {
+    const LogicalSize mAvailableSize;
+    const nscoord mComputedBSize;
+    const nscoord mComputedMinBSize;
+    const nscoord mComputedMaxBSize;
 
-  // Members that are part of the cache value:
+    explicit Key(const ReflowInput& aRI)
+      : mAvailableSize(aRI.AvailableSize())
+      , mComputedBSize(aRI.ComputedBSize())
+      , mComputedMinBSize(aRI.ComputedMinBSize())
+      , mComputedMaxBSize(aRI.ComputedMaxBSize())
+    { }
+
+    bool operator==(const Key& aOther) const
+    {
+      return mAvailableSize == aOther.mAvailableSize &&
+        mComputedBSize == aOther.mComputedBSize &&
+        mComputedMinBSize == aOther.mComputedMinBSize &&
+        mComputedMaxBSize == aOther.mComputedMaxBSize;
+    }
+  };
+
+  const Key mKey;
+
   const nscoord mBSize;
   const nscoord mAscent;
 
 public:
   CachedMeasuringReflowResult(const ReflowInput& aReflowInput,
                               const ReflowOutput& aDesiredSize)
-    : mAvailableSize(aReflowInput.AvailableSize())
-    , mComputedBSize(aReflowInput.ComputedBSize())
+    : mKey(aReflowInput)
     , mBSize(aDesiredSize.BSize(aReflowInput.GetWritingMode()))
     , mAscent(aDesiredSize.BlockStartAscent())
-  {}
+  { }
 
-  bool IsValidFor(const ReflowInput& aReflowInput) const {
-    return mAvailableSize == aReflowInput.AvailableSize() &&
-      mComputedBSize == aReflowInput.ComputedBSize();
+  bool IsValidFor(const ReflowInput& aReflowInput) const
+  {
+    return mKey == Key(aReflowInput);
   }
 
   nscoord BSize() const { return mBSize; }

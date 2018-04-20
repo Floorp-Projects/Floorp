@@ -14,6 +14,7 @@
 namespace mozilla {
 namespace dom {
 
+class Event;
 class HTMLMediaElement;
 class TextTrackManager;
 class CompareTextTracks;
@@ -59,7 +60,7 @@ public:
   HTMLMediaElement* GetMediaElement();
   void SetTextTrackManager(TextTrackManager* aTextTrackManager);
 
-  nsresult DispatchTrackEvent(nsIDOMEvent* aEvent);
+  nsresult DispatchTrackEvent(Event* aEvent);
   void CreateAndDispatchChangeEvent();
   void SetCuesInactive();
 

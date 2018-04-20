@@ -231,8 +231,7 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
   // process. If it's in child process, the corresponding xul:browser element
   // will be obtained at PresentationRequestParent::DoRequest in its parent
   // process.
-  nsCOMPtr<nsIDOMEventTarget> handler =
-    do_QueryInterface(GetOwner()->GetChromeEventHandler());
+  nsCOMPtr<EventTarget> handler = GetOwner()->GetChromeEventHandler();
   nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
   nsCOMPtr<nsIPresentationServiceCallback> callback =
     new PresentationRequesterCallback(this, id, promise);

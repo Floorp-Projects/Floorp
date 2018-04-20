@@ -16,7 +16,6 @@
 #include "nscore.h"
 
 class nsIContent;
-class nsIDOMEvent;
 class nsIDocumentEncoder;
 class nsIOutputStream;
 class nsISelectionController;

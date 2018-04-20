@@ -30,12 +30,10 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
 
     /**
      * Sanitizes a disconnected DOM fragment freshly obtained from a parser.
-     * The argument must be of type nsINode::eDOCUMENT_FRAGMENT and,
-     * consequently, must not be in the document. Furthermore, the fragment
-     * must have just come from a parser so that it can't have mutation
-     * event listeners set on it.
+     * The fragment must have just come from a parser so that it can't have
+     * mutation event listeners set on it.
      */
-    void Sanitize(nsIContent* aFragment);
+    void Sanitize(mozilla::dom::DocumentFragment* aFragment);
 
     /**
      * Sanitizes a disconnected (not in a docshell) document freshly obtained

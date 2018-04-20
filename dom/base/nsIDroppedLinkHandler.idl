@@ -5,8 +5,6 @@
 #include "nsISupports.idl"
 #include "nsIPrincipal.idl"
 
-interface nsIDOMEvent;
-
 webidl DragEvent;
 webidl DataTransfer;
 

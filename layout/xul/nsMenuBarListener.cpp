@@ -7,7 +7,6 @@
 #include "nsMenuBarListener.h"
 #include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"
-#include "nsIDOMEvent.h"
 #include "nsPIWindowRoot.h"
 
 // Drag & Drop, Clipboard
@@ -22,10 +21,13 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 
 using namespace mozilla;
+using mozilla::dom::Event;
 using mozilla::dom::KeyboardEvent;
 
 /*
@@ -191,10 +193,9 @@ nsMenuBarListener::ToggleMenuActiveState()
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
-nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
+nsMenuBarListener::KeyUp(Event* aKeyEvent)
 {
-  RefPtr<KeyboardEvent> keyEvent =
-    aKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
+  RefPtr<KeyboardEvent> keyEvent = aKeyEvent->AsKeyboardEvent();
   if (!keyEvent) {
     return NS_OK;
   }
@@ -256,24 +257,15 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
-nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
+nsMenuBarListener::KeyPress(Event* aKeyEvent)
 {
   // if event has already been handled, bail
-  if (aKeyEvent) {
-    bool eventHandled = false;
-    aKeyEvent->GetDefaultPrevented(&eventHandled);
-    if (eventHandled) {
-      return NS_OK;       // don't consume event
-    }
+  if (!aKeyEvent || aKeyEvent->DefaultPrevented()) {
+    return NS_OK;       // don't consume event
   }
 
   //handlers shouldn't be triggered by non-trusted events.
-  bool trustedEvent = false;
-  if (aKeyEvent) {
-    aKeyEvent->GetIsTrusted(&trustedEvent);
-  }
-
-  if (!trustedEvent) {
+  if (!aKeyEvent->IsTrusted()) {
     return NS_OK;
   }
 
@@ -289,8 +281,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
       return NS_OK;
     }
 
-    RefPtr<KeyboardEvent> keyEvent =
-      aKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
+    RefPtr<KeyboardEvent> keyEvent = aKeyEvent->AsKeyboardEvent();
     uint32_t keyCode = keyEvent->KeyCode();
 
     // Cancel the access key flag unless we are pressing the access key.
@@ -418,7 +409,7 @@ nsMenuBarListener::GetMenuForKeyEvent(KeyboardEvent* aKeyEvent, bool aPeek)
 }
 
 void
-nsMenuBarListener::ReserveKeyIfNeeded(nsIDOMEvent* aKeyEvent)
+nsMenuBarListener::ReserveKeyIfNeeded(Event* aKeyEvent)
 {
   WidgetKeyboardEvent* nativeKeyEvent =
     aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
@@ -429,22 +420,16 @@ nsMenuBarListener::ReserveKeyIfNeeded(nsIDOMEvent* aKeyEvent)
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
-nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
+nsMenuBarListener::KeyDown(Event* aKeyEvent)
 {
   InitAccessKey();
 
   //handlers shouldn't be triggered by non-trusted events.
-  bool trustedEvent = false;
-  if (aKeyEvent) {
-    aKeyEvent->GetIsTrusted(&trustedEvent);
-  }
-
-  if (!trustedEvent) {
+  if (!aKeyEvent || !aKeyEvent->IsTrusted()) {
     return NS_OK;
   }
 
-  RefPtr<KeyboardEvent> keyEvent =
-    aKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
+  RefPtr<KeyboardEvent> keyEvent = aKeyEvent->AsKeyboardEvent();
   if (!keyEvent) {
     return NS_OK;
   }
@@ -452,7 +437,7 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
   uint32_t theChar = keyEvent->KeyCode();
 
   uint16_t eventPhase = keyEvent->EventPhase();
-  bool capturing = (eventPhase == nsIDOMEvent::CAPTURING_PHASE);
+  bool capturing = (eventPhase == dom::EventBinding::CAPTURING_PHASE);
 
 #ifndef XP_MACOSX
   if (capturing && !mAccessKeyDown && theChar == NS_VK_F10 &&
@@ -463,8 +448,7 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 
   if (mAccessKey && mAccessKeyFocuses)
   {
-    bool defaultPrevented = false;
-    aKeyEvent->GetDefaultPrevented(&defaultPrevented);
+    bool defaultPrevented = aKeyEvent->DefaultPrevented();
 
     // No other modifiers can be down.
     // Especially CTRL.  CTRL+ALT == AltGR, and we'll fuck up on non-US
@@ -511,7 +495,7 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
+nsMenuBarListener::Blur(Event* aEvent)
 {
   if (!mMenuBarFrame->IsMenuOpen() && mMenuBarFrame->IsActive()) {
     ToggleMenuActiveState();
@@ -524,7 +508,7 @@ nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsMenuBarListener::OnWindowDeactivated(nsIDOMEvent* aEvent)
+nsMenuBarListener::OnWindowDeactivated(Event* aEvent)
 {
   // Reset the accesskey state because we cannot receive the keyup event for
   // the pressing accesskey.
@@ -535,7 +519,7 @@ nsMenuBarListener::OnWindowDeactivated(nsIDOMEvent* aEvent)
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
-nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
+nsMenuBarListener::MouseDown(Event* aMouseEvent)
 {
   // NOTE: MouseDown method listens all phases
 
@@ -546,11 +530,8 @@ nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
     mAccessKeyDownCanceled = true;
   }
 
-  uint16_t phase = 0;
-  nsresult rv = aMouseEvent->GetEventPhase(&phase);
-  NS_ENSURE_SUCCESS(rv, rv);
   // Don't do anything at capturing phase, any behavior should be cancelable.
-  if (phase == nsIDOMEvent::CAPTURING_PHASE) {
+  if (aMouseEvent->EventPhase() == dom::EventBinding::CAPTURING_PHASE) {
     return NS_OK;
   }
 
@@ -563,7 +544,7 @@ nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsMenuBarListener::Fullscreen(nsIDOMEvent* aEvent)
+nsMenuBarListener::Fullscreen(Event* aEvent)
 {
   if (mMenuBarFrame->IsActive()) {
     ToggleMenuActiveState();
@@ -573,7 +554,7 @@ nsMenuBarListener::Fullscreen(nsIDOMEvent* aEvent)
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
-nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
+nsMenuBarListener::HandleEvent(Event* aEvent)
 {
   // If the menu bar is collapsed, don't do anything.
   if (!mMenuBarFrame->StyleVisibility()->IsVisible()) {

@@ -68,7 +68,7 @@ protected:
   nsresult PostSearchCleanup();
 
   nsresult EnterMatch(bool aIsPopupSelection,
-                      nsIDOMEvent *aEvent);
+                      mozilla::dom::Event* aEvent);
   nsresult RevertTextValue();
 
   nsresult CompleteDefaultIndex(int32_t aResultIndex);

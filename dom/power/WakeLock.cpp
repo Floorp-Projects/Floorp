@@ -6,13 +6,12 @@
 
 #include "WakeLock.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "mozilla/Hal.h"
 #include "mozilla/HalWakeLock.h"
 #include "nsError.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPropertyBag2.h"
 
@@ -224,14 +223,13 @@ WakeLock::GetTopic(nsAString &aTopic)
 }
 
 NS_IMETHODIMP
-WakeLock::HandleEvent(nsIDOMEvent *aEvent)
+WakeLock::HandleEvent(Event *aEvent)
 {
   nsAutoString type;
   aEvent->GetType(type);
 
   if (type.EqualsLiteral("visibilitychange")) {
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aEvent->GetTarget());
     NS_ENSURE_STATE(doc);
 
     bool oldHidden = mHidden;

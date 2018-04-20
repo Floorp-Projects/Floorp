@@ -18,7 +18,6 @@
 #include "nsTObserverArray.h"
 
 class nsIDocShell;
-class nsIDOMEvent;
 class nsIEventListenerInfo;
 class nsPIDOMWindowInner;
 class JSTracer;
@@ -33,6 +32,7 @@ class ELMCreationDetector;
 class EventListenerManager;
 
 namespace dom {
+class Event;
 class EventTarget;
 class Element;
 } // namespace dom
@@ -367,7 +367,7 @@ public:
 
   void HandleEvent(nsPresContext* aPresContext,
                    WidgetEvent* aEvent,
-                   nsIDOMEvent** aDOMEvent,
+                   dom::Event** aDOMEvent,
                    dom::EventTarget* aCurrentTarget,
                    nsEventStatus* aEventStatus)
   {
@@ -497,12 +497,12 @@ public:
 protected:
   void HandleEventInternal(nsPresContext* aPresContext,
                            WidgetEvent* aEvent,
-                           nsIDOMEvent** aDOMEvent,
+                           dom::Event** aDOMEvent,
                            dom::EventTarget* aCurrentTarget,
                            nsEventStatus* aEventStatus);
 
   nsresult HandleEventSubType(Listener* aListener,
-                              nsIDOMEvent* aDOMEvent,
+                              dom::Event* aDOMEvent,
                               dom::EventTarget* aCurrentTarget);
 
   /**

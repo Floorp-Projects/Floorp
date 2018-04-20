@@ -332,6 +332,32 @@ static int32_t FFWC_recursions=0;
 static int32_t FFWC_nextInFlows=0;
 #endif
 
+#ifdef MOZ_XUL
+
+static bool
+IsXULListBox(nsIContent* aContainer)
+{
+  return aContainer->IsXULElement(nsGkAtoms::listbox);
+}
+
+static
+nsListBoxBodyFrame*
+MaybeGetListBoxBodyFrame(nsIContent* aChild)
+{
+  if (aChild->IsXULElement(nsGkAtoms::listitem) && aChild->GetParent() &&
+      IsXULListBox(aChild->GetParent())) {
+    RefPtr<nsXULElement> xulElement =
+      nsXULElement::FromNode(aChild->GetParent());
+    nsCOMPtr<nsIBoxObject> boxObject = xulElement->GetBoxObject(IgnoreErrors());
+    nsCOMPtr<nsPIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
+    if (listBoxObject) {
+      return listBoxObject->GetListBoxBody(false);
+    }
+  }
+
+  return nullptr;
+}
+#endif // MOZ_XUL
 
 // Returns true if aFrame is an anonymous flex/grid item.
 static inline bool
@@ -5474,6 +5500,11 @@ nsCSSFrameConstructor::ShouldCreateItemsForChild(nsFrameConstructorState& aState
   if (aContent->GetPrimaryFrame() &&
       aContent->GetPrimaryFrame()->GetContent() == aContent &&
       !aState.mCreatingExtraFrames) {
+    // This condition is known to be reachable for listitems, assert fatally
+    // elsewhere.
+    MOZ_ASSERT(MaybeGetListBoxBodyFrame(aContent),
+               "asked to create frame construction item for a node that "
+               "already has a frame");
     NS_ERROR("asked to create frame construction item for a node that already "
              "has a frame");
     return false;
@@ -5485,8 +5516,7 @@ nsCSSFrameConstructor::ShouldCreateItemsForChild(nsFrameConstructorState& aState
   }
 
   // never create frames for comments or PIs
-  if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
-      aContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
+  if (aContent->IsComment() || aContent->IsProcessingInstruction()) {
     return false;
   }
 
@@ -6349,8 +6379,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
     // if we haven't already, resolve a style to find the display type of
     // aContent.
     if (UNSET_DISPLAY == aDisplay) {
-      if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
-          aContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
+      if (aContent->IsComment() || aContent->IsProcessingInstruction()) {
         // Comments and processing instructions never have frames, so we should
         // not try to generate styles for them.
         return false;
@@ -6694,33 +6723,6 @@ IsSpecialFramesetChild(nsIContent* aContent)
 
 static void
 InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node);
-
-#ifdef MOZ_XUL
-
-static bool
-IsXULListBox(nsIContent* aContainer)
-{
-  return aContainer->IsXULElement(nsGkAtoms::listbox);
-}
-
-static
-nsListBoxBodyFrame*
-MaybeGetListBoxBodyFrame(nsIContent* aChild)
-{
-  if (aChild->IsXULElement(nsGkAtoms::listitem) && aChild->GetParent() &&
-      IsXULListBox(aChild->GetParent())) {
-    RefPtr<nsXULElement> xulElement =
-      nsXULElement::FromNode(aChild->GetParent());
-    nsCOMPtr<nsIBoxObject> boxObject = xulElement->GetBoxObject(IgnoreErrors());
-    nsCOMPtr<nsPIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
-    if (listBoxObject) {
-      return listBoxObject->GetListBoxBody(false);
-    }
-  }
-
-  return nullptr;
-}
-#endif // MOZ_XUL
 
 void
 nsCSSFrameConstructor::AddTextItemIfNeeded(nsFrameConstructorState& aState,
@@ -7073,18 +7075,17 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
     return;
   }
 
-  if (aInsertionKind == InsertionKind::Async &&
-      MaybeConstructLazily(CONTENTAPPEND, aFirstNewContent)) {
-    LazilyStyleNewChildRange(aFirstNewContent, nullptr);
-    return;
-  }
-
-  // We couldn't construct lazily. Make Servo eagerly traverse the new content
-  // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
-  // styles are up-to-date already).
   if (aInsertionKind == InsertionKind::Async) {
+    if (MaybeConstructLazily(CONTENTAPPEND, aFirstNewContent)) {
+      LazilyStyleNewChildRange(aFirstNewContent, nullptr);
+      return;
+    }
+    // We couldn't construct lazily. Make Servo eagerly traverse the new content
+    // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
+    // styles are up-to-date already).
     StyleNewChildRange(aFirstNewContent, nullptr);
   }
+
 
   LAYOUT_PHASE_TEMP_EXIT();
   if (MaybeRecreateForFrameset(parentFrame, aFirstNewContent, nullptr)) {
@@ -7423,14 +7424,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   }
 #endif
 
-  auto styleNewChildRangeEagerly =
-    [this, aInsertionKind, aStartChild, aEndChild]() {
-      // When aInsertionKind == InsertionKind::Sync, we know that the
-      // styles are up-to-date already.
-      if (aInsertionKind == InsertionKind::Async) {
-        StyleNewChildRange(aStartChild, aEndChild);
-      }
-    };
 
   bool isSingleInsert = (aStartChild->GetNextSibling() == aEndChild);
   NS_ASSERTION(isSingleInsert ||
@@ -7441,8 +7434,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 
 #ifdef MOZ_XUL
   if (aStartChild->GetParent() && IsXULListBox(aStartChild->GetParent())) {
-    // For XUL list box, we need to style the new children eagerly.
-    styleNewChildRangeEagerly();
     if (isSingleInsert) {
       // The insert case in NotifyListBoxBody doesn't use "old next sibling".
       if (NotifyListBoxBody(mPresShell->GetPresContext(),
@@ -7528,15 +7519,16 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
     return;
   }
 
-  if (aInsertionKind == InsertionKind::Async &&
-      MaybeConstructLazily(CONTENTINSERT, aStartChild)) {
-    LazilyStyleNewChildRange(aStartChild, aEndChild);
-    return;
+  if (aInsertionKind == InsertionKind::Async) {
+    if (MaybeConstructLazily(CONTENTINSERT, aStartChild)) {
+      LazilyStyleNewChildRange(aStartChild, aEndChild);
+      return;
+    }
+    // We couldn't construct lazily. Make Servo eagerly traverse the new content
+    // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
+    // styles are up-to-date already).
+    StyleNewChildRange(aStartChild, aEndChild);
   }
-
-  // We couldn't construct lazily. Make Servo eagerly traverse the new content
-  // if needed.
-  styleNewChildRangeEagerly();
 
   bool isAppend, isRangeInsertSafe;
   nsIFrame* prevSibling = GetInsertionPrevSibling(&insertion, aStartChild,
@@ -10143,8 +10135,7 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
                "Should not be marked as needing frames");
     MOZ_ASSERT(!content->GetPrimaryFrame(),
                "Should have no existing frame");
-    MOZ_ASSERT(!content->IsNodeOfType(nsINode::eCOMMENT) &&
-               !content->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION),
+    MOZ_ASSERT(!content->IsComment() && !content->IsProcessingInstruction(),
                "Why is someone creating garbage anonymous content");
 
     // Make sure we eagerly performed the servo cascade when the anonymous
@@ -11118,6 +11109,10 @@ nsCSSFrameConstructor::CreateListBoxContent(nsContainerFrame*      aParentFrame,
                                   GetFloatContainingBlock(aParentFrame),
                                   do_AddRef(mTempFrameTreeState));
 
+    if (aChild->IsElement() && !aChild->AsElement()->HasServoData()) {
+      mPresShell->StyleSet()->StyleNewSubtree(aChild->AsElement());
+    }
+
     RefPtr<ComputedStyle> computedStyle = ResolveComputedStyle(aChild);
 
     // Pre-check for display "none" - only if we find that, do we create
@@ -11486,8 +11481,7 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
       // AddFrameConstructionItems.  We know our parent is a non-replaced inline,
       // so there is no need to do the NeedFrameFor check.
       content->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
-      if (content->IsNodeOfType(nsINode::eCOMMENT) ||
-          content->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
+      if (content->IsComment() || content->IsProcessingInstruction()) {
         continue;
       }
 

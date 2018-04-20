@@ -40,7 +40,7 @@ NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
   // If a leaf node contains an end point of the traversal range, it is
   // always in the traversal range.
   if (aNode == aStart.Container() || aNode == aEnd.Container()) {
-    if (aNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+    if (aNode->IsCharacterData()) {
       return true; // text node or something
     }
     if (!aNode->HasChildren()) {
@@ -317,7 +317,7 @@ nsContentIterator::InitInternal(const RawRangeBoundary& aStart,
     return NS_ERROR_FAILURE;
   }
 
-  bool startIsData = aStart.Container()->IsNodeOfType(nsINode::eDATA_NODE);
+  bool startIsData = aStart.Container()->IsCharacterData();
 
   // Check to see if we have a collapsed range, if so, there is nothing to
   // iterate over.
@@ -410,7 +410,7 @@ nsContentIterator::InitInternal(const RawRangeBoundary& aStart,
 
   // Find last node in range.
 
-  bool endIsData = aEnd.Container()->IsNodeOfType(nsINode::eDATA_NODE);
+  bool endIsData = aEnd.Container()->IsCharacterData();
 
   if (endIsData || !aEnd.Container()->HasChildren() || aEnd.IsStartOfContainer()) {
     if (mPre) {

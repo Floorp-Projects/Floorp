@@ -18,7 +18,6 @@
 #include "nsIURL.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
-#include "nsIDOMEvent.h"
 #include "nsIDocument.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"

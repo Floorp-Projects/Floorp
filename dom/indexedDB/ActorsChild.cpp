@@ -24,6 +24,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseFileChild.h"
@@ -40,7 +41,6 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIBFCacheEntry.h"
 #include "nsIDocument.h"
-#include "nsIDOMEvent.h"
 #include "nsIEventTarget.h"
 #include "nsIFileStreams.h"
 #include "nsNetCID.h"
@@ -724,7 +724,7 @@ void
 DispatchErrorEvent(IDBRequest* aRequest,
                    nsresult aErrorCode,
                    IDBTransaction* aTransaction = nullptr,
-                   nsIDOMEvent* aEvent = nullptr)
+                   Event* aEvent = nullptr)
 {
   MOZ_ASSERT(aRequest);
   aRequest->AssertIsOnOwningThread();
@@ -775,8 +775,7 @@ DispatchErrorEvent(IDBRequest* aRequest,
   }
 
   IgnoredErrorResult rv;
-  bool doDefault = request->DispatchEvent(*aEvent->InternalDOMEvent(),
-                                          CallerType::System, rv);
+  bool doDefault = request->DispatchEvent(*aEvent, CallerType::System, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return;
   }
@@ -801,7 +800,7 @@ DispatchErrorEvent(IDBRequest* aRequest,
 
 void
 DispatchSuccessEvent(ResultHelper* aResultHelper,
-                     nsIDOMEvent* aEvent = nullptr)
+                     Event* aEvent = nullptr)
 {
   MOZ_ASSERT(aResultHelper);
 
@@ -854,7 +853,7 @@ DispatchSuccessEvent(ResultHelper* aResultHelper,
                 transaction->IsOpen() && !transaction->IsAborted());
 
   IgnoredErrorResult rv;
-  request->DispatchEvent(*aEvent->InternalDOMEvent(), rv);
+  request->DispatchEvent(*aEvent, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return;
   }
@@ -1861,7 +1860,7 @@ BackgroundFactoryRequestChild::HandleResponse(
 
   ResultHelper helper(mRequest, nullptr, &JS::UndefinedHandleValue);
 
-  nsCOMPtr<nsIDOMEvent> successEvent =
+  RefPtr<Event> successEvent =
     IDBVersionChangeEvent::Create(mRequest,
                                   nsDependentString(kSuccessEventType),
                                   aResponse.previousVersion());
@@ -2267,7 +2266,7 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
 
   request->SetTransaction(transaction);
 
-  nsCOMPtr<nsIDOMEvent> upgradeNeededEvent =
+  RefPtr<Event> upgradeNeededEvent =
     IDBVersionChangeEvent::Create(request,
                                   nsDependentString(kUpgradeNeededEventType),
                                   aCurrentVersion,

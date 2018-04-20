@@ -27,7 +27,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "mozilla/dom/BoxObject.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/TextEvents.h"
@@ -75,7 +75,7 @@ nsXULTooltipListener::~nsXULTooltipListener()
 NS_IMPL_ISUPPORTS(nsXULTooltipListener, nsIDOMEventListener)
 
 void
-nsXULTooltipListener::MouseOut(nsIDOMEvent* aEvent)
+nsXULTooltipListener::MouseOut(Event* aEvent)
 {
   // reset flag so that tooltip will display on the next MouseMove
   mTooltipShownOnce = false;
@@ -100,8 +100,7 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aEvent)
   // hide the tooltip
   if (currentTooltip) {
     // which node did the mouse leave?
-    nsCOMPtr<nsINode> targetNode = do_QueryInterface(
-      aEvent->InternalDOMEvent()->GetTarget());
+    nsCOMPtr<nsINode> targetNode = do_QueryInterface(aEvent->GetTarget());
 
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
@@ -123,7 +122,7 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aEvent)
 }
 
 void
-nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
+nsXULTooltipListener::MouseMove(Event* aEvent)
 {
   if (!sShowTooltips)
     return;
@@ -132,7 +131,7 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
   // timer callback. On win32, we'll get a MouseMove event even when a popup goes away --
   // even when the mouse doesn't change position! To get around this, we make sure the
   // mouse has really moved before proceeding.
-  MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if (!mouseEvent) {
     return;
   }
@@ -154,8 +153,8 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
   mMouseScreenX = newMouseX;
   mMouseScreenY = newMouseY;
 
-  nsCOMPtr<nsIContent> sourceContent = do_QueryInterface(
-    aEvent->InternalDOMEvent()->GetCurrentTarget());
+  nsCOMPtr<nsIContent> sourceContent =
+    do_QueryInterface(aEvent->GetCurrentTarget());
   mSourceNode = do_GetWeakReference(sourceContent);
 #ifdef MOZ_XUL
   mIsSourceTree = sourceContent->IsXULElement(nsGkAtoms::treechildren);
@@ -172,7 +171,7 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
   // showing and the tooltip hasn't been displayed since the mouse entered
   // the node, then start the timer to show the tooltip.
   if (!currentTooltip && !mTooltipShownOnce) {
-    nsCOMPtr<EventTarget> eventTarget = aEvent->InternalDOMEvent()->GetTarget();
+    nsCOMPtr<EventTarget> eventTarget = aEvent->GetTarget();
 
     // don't show tooltips attached to elements outside of a menu popup
     // when hovering over an element inside it. The popupsinherittooltip
@@ -224,7 +223,7 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsXULTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
+nsXULTooltipListener::HandleEvent(Event* aEvent)
 {
   nsAutoString type;
   aEvent->GetType(type);

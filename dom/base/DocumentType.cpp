@@ -57,21 +57,16 @@ DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
 {
   MOZ_ASSERT(mNodeInfo->NodeType() == DOCUMENT_TYPE_NODE,
              "Bad NodeType in aNodeInfo");
+  MOZ_ASSERT(!IsCharacterData());
 }
 
-DocumentType::~DocumentType()
-{
-}
+DocumentType::~DocumentType() = default;
 
 NS_IMPL_ISUPPORTS_INHERITED(DocumentType, CharacterData, nsIDOMNode)
 
 bool
 DocumentType::IsNodeOfType(uint32_t aFlags) const
 {
-  // Don't claim to be eDATA_NODE since we're just inheriting
-  // CharacterData for convenience. Doctypes aren't really
-  // data nodes (they have a null .nodeValue and don't implement
-  // the DOM CharacterData interface)
   return false;
 }
 

@@ -18,6 +18,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
 
+using mozilla::dom::Event;
 using mozilla::dom::KeyboardEvent;
 using namespace mozilla::widget;
 
@@ -603,7 +604,7 @@ TextInputProcessor::PrepareKeyboardEventForComposition(
 }
 
 NS_IMETHODIMP
-TextInputProcessor::StartComposition(nsIDOMEvent* aDOMKeyEvent,
+TextInputProcessor::StartComposition(Event* aDOMKeyEvent,
                                      uint32_t aKeyFlags,
                                      uint8_t aOptionalArgc,
                                      bool* aSucceeded)
@@ -614,7 +615,7 @@ TextInputProcessor::StartComposition(nsIDOMEvent* aDOMKeyEvent,
 
   RefPtr<KeyboardEvent> keyEvent;
   if (aDOMKeyEvent) {
-    keyEvent = aDOMKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
+    keyEvent = aDOMKeyEvent->AsKeyboardEvent();
     if (NS_WARN_IF(!keyEvent)) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -701,7 +702,7 @@ TextInputProcessor::SetCaretInPendingComposition(uint32_t aOffset)
 }
 
 NS_IMETHODIMP
-TextInputProcessor::FlushPendingComposition(nsIDOMEvent* aDOMKeyEvent,
+TextInputProcessor::FlushPendingComposition(Event* aDOMKeyEvent,
                                             uint32_t aKeyFlags,
                                             uint8_t aOptionalArgc,
                                             bool* aSucceeded)
@@ -719,7 +720,7 @@ TextInputProcessor::FlushPendingComposition(nsIDOMEvent* aDOMKeyEvent,
 
   RefPtr<KeyboardEvent> keyEvent;
   if (aDOMKeyEvent) {
-    keyEvent = aDOMKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
+    keyEvent = aDOMKeyEvent->AsKeyboardEvent();
     if (NS_WARN_IF(!keyEvent)) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -761,7 +762,7 @@ TextInputProcessor::FlushPendingComposition(nsIDOMEvent* aDOMKeyEvent,
 }
 
 NS_IMETHODIMP
-TextInputProcessor::CommitComposition(nsIDOMEvent* aDOMKeyEvent,
+TextInputProcessor::CommitComposition(Event* aDOMKeyEvent,
                                       uint32_t aKeyFlags,
                                       uint8_t aOptionalArgc)
 {
@@ -769,7 +770,7 @@ TextInputProcessor::CommitComposition(nsIDOMEvent* aDOMKeyEvent,
 
   RefPtr<KeyboardEvent> keyEvent;
   if (aDOMKeyEvent) {
-    keyEvent = aDOMKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
+    keyEvent = aDOMKeyEvent->AsKeyboardEvent();
     if (NS_WARN_IF(!keyEvent)) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -788,7 +789,7 @@ TextInputProcessor::CommitComposition(nsIDOMEvent* aDOMKeyEvent,
 
 NS_IMETHODIMP
 TextInputProcessor::CommitCompositionWith(const nsAString& aCommitString,
-                                          nsIDOMEvent* aDOMKeyEvent,
+                                          Event* aDOMKeyEvent,
                                           uint32_t aKeyFlags,
                                           uint8_t aOptionalArgc,
                                           bool* aSucceeded)
@@ -798,7 +799,7 @@ TextInputProcessor::CommitCompositionWith(const nsAString& aCommitString,
 
   RefPtr<KeyboardEvent> keyEvent;
   if (aDOMKeyEvent) {
-    keyEvent = aDOMKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
+    keyEvent = aDOMKeyEvent->AsKeyboardEvent();
     if (NS_WARN_IF(!keyEvent)) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -860,7 +861,7 @@ TextInputProcessor::CommitCompositionInternal(
 }
 
 NS_IMETHODIMP
-TextInputProcessor::CancelComposition(nsIDOMEvent* aDOMKeyEvent,
+TextInputProcessor::CancelComposition(Event* aDOMKeyEvent,
                                       uint32_t aKeyFlags,
                                       uint8_t aOptionalArgc)
 {
@@ -868,7 +869,7 @@ TextInputProcessor::CancelComposition(nsIDOMEvent* aDOMKeyEvent,
 
   RefPtr<KeyboardEvent> keyEvent;
   if (aDOMKeyEvent) {
-    keyEvent = aDOMKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
+    keyEvent = aDOMKeyEvent->AsKeyboardEvent();
     if (NS_WARN_IF(!keyEvent)) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -1076,7 +1077,7 @@ TextInputProcessor::PrepareKeyboardEventToDispatch(
 }
 
 NS_IMETHODIMP
-TextInputProcessor::Keydown(nsIDOMEvent* aDOMKeyEvent,
+TextInputProcessor::Keydown(Event* aDOMKeyEvent,
                             uint32_t aKeyFlags,
                             uint8_t aOptionalArgc,
                             uint32_t* aConsumedFlags)
@@ -1090,7 +1091,7 @@ TextInputProcessor::Keydown(nsIDOMEvent* aDOMKeyEvent,
     return NS_ERROR_INVALID_ARG;
   }
   WidgetKeyboardEvent* originalKeyEvent =
-    aDOMKeyEvent->InternalDOMEvent()->WidgetEventPtr()->AsKeyboardEvent();
+    aDOMKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
   if (NS_WARN_IF(!originalKeyEvent)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -1169,7 +1170,7 @@ TextInputProcessor::KeydownInternal(const WidgetKeyboardEvent& aKeyboardEvent,
 }
 
 NS_IMETHODIMP
-TextInputProcessor::Keyup(nsIDOMEvent* aDOMKeyEvent,
+TextInputProcessor::Keyup(Event* aDOMKeyEvent,
                           uint32_t aKeyFlags,
                           uint8_t aOptionalArgc,
                           bool* aDoDefault)
@@ -1183,7 +1184,7 @@ TextInputProcessor::Keyup(nsIDOMEvent* aDOMKeyEvent,
     return NS_ERROR_INVALID_ARG;
   }
   WidgetKeyboardEvent* originalKeyEvent =
-    aDOMKeyEvent->InternalDOMEvent()->WidgetEventPtr()->AsKeyboardEvent();
+    aDOMKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
   if (NS_WARN_IF(!originalKeyEvent)) {
     return NS_ERROR_INVALID_ARG;
   }

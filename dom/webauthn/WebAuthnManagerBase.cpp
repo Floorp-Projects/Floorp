@@ -119,7 +119,7 @@ WebAuthnManagerBase::StopListeningForVisibilityEvents()
 }
 
 NS_IMETHODIMP
-WebAuthnManagerBase::HandleEvent(nsIDOMEvent* aEvent)
+WebAuthnManagerBase::HandleEvent(Event* aEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aEvent);
@@ -133,8 +133,7 @@ WebAuthnManagerBase::HandleEvent(nsIDOMEvent* aEvent)
   // The "deactivate" event on the root window has no
   // "current inner window" and thus GetTarget() is always null.
   if (type.Equals(kVisibilityChange)) {
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aEvent->GetTarget());
     if (NS_WARN_IF(!doc) || !doc->Hidden()) {
       return NS_OK;
     }

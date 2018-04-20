@@ -19,6 +19,7 @@
 #include "nsIDOMStorageManager.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/IdleRequest.h"
@@ -111,7 +112,6 @@
 #include "Crypto.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow.h"
@@ -1331,13 +1331,11 @@ nsGlobalWindowInner::FreeInnerObjects()
 // QueryInterface implementation for nsGlobalWindowInner
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindowInner)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  // Make sure this matches the cast in nsGlobalWindowInner::FromWrapper()
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(mozilla::dom::EventTarget)
   if (aIID.Equals(NS_GET_IID(nsPIDOMWindowInner))) {
     foundInterface = static_cast<nsPIDOMWindowInner*>(this);
@@ -1617,7 +1615,7 @@ nsGlobalWindowInner::IsBlackForCC(bool aTracingNeeded)
   return (nsCCUncollectableMarker::InGeneration(GetMarkedCCGeneration()) ||
           HasKnownLiveWrapper()) &&
          (!aTracingNeeded ||
-          HasNothingToTrace(static_cast<nsIDOMEventTarget*>(this)));
+          HasNothingToTrace(ToSupports(this)));
 }
 
 //*****************************************************************************
@@ -2046,7 +2044,7 @@ nsGlobalWindowInner::PostHandleEvent(EventChainPostVisitor& aVisitor)
   /* mChromeEventHandler and mContext go dangling in the middle of this
    function under some circumstances (events that destroy the window)
    without this addref. */
-  nsCOMPtr<nsIDOMEventTarget> kungFuDeathGrip1(mChromeEventHandler);
+  RefPtr<EventTarget> kungFuDeathGrip1(mChromeEventHandler);
   mozilla::Unused << kungFuDeathGrip1; // These aren't referred to through the function
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(GetContextInternal());
   mozilla::Unused << kungFuDeathGrip2; // These aren't referred to through the function
@@ -4486,7 +4484,7 @@ nsGlobalWindowInner::Btoa(const nsAString& aBinaryData,
 }
 
 //*****************************************************************************
-// nsGlobalWindowInner::nsIDOMEventTarget
+// EventTarget
 //*****************************************************************************
 
 nsPIDOMWindowOuter*

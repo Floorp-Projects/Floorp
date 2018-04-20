@@ -479,7 +479,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             if c.get('run_all_suites'):  # needed if you dont specify any suites
                 suites = all_suites
             else:
-                suites = self.query_verify_category_suites(category, all_suites)
+                suites = self.query_per_test_category_suites(category, all_suites)
 
         return suites
 
@@ -767,9 +767,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         abs_app_dir = self.query_abs_app_dir()
         abs_res_dir = self.query_abs_res_dir()
 
-        max_verify_time = timedelta(minutes=60)
-        max_verify_tests = 10
-        verified_tests = 0
+        max_per_test_time = timedelta(minutes=60)
+        max_per_test_tests = 10
+        executed_tests = 0
 
         if suites:
             self.info('#### Running %s suites' % suite_category)
@@ -789,7 +789,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 }
                 if isinstance(suites[suite], dict):
                     options_list = suites[suite].get('options', [])
-                    if self.config.get('verify') is True:
+                    if self.verify_enabled or self.per_test_coverage:
                         tests_list = []
                     else:
                         tests_list = suites[suite].get('tests', [])
@@ -848,32 +848,55 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 env = self.query_env(partial_env=env, log_level=INFO)
                 cmd_timeout = self.get_timeout_for_category(suite_category)
 
-                for verify_args in self.query_verify_args(suite):
-                    if (datetime.now() - self.start_time) > max_verify_time:
-                        # Verification has run out of time. That is okay! Stop running
-                        # tests so that a task timeout is not triggered, and so that
+                # Run basic startup/shutdown test to collect baseline coverage.
+                # This way, after we run a test, we can generate a diff between the
+                # full coverage of the test and the baseline coverage and only get
+                # the coverage data specific to the test.
+                if self.per_test_coverage:
+                    gcov_dir, jsvm_dir = self.set_coverage_env(env)
+                    # TODO: Run basic startup/shutdown test to collect baseline coverage.
+                    # grcov_file, jsvm_file = self.parse_coverage_artifacts(gcov_dir, jsvm_dir)
+                    # shutil.rmtree(gcov_dir)
+                    # shutil.rmtree(jsvm_dir)
+                    # TODO: Parse coverage report
+
+                for per_test_args in self.query_args(suite):
+                    if (datetime.now() - self.start_time) > max_per_test_time:
+                        # Running tests has run out of time. That is okay! Stop running
+                        # them so that a task timeout is not triggered, and so that
                         # (partial) results are made available in a timely manner.
-                        self.info("TinderboxPrint: Verification too long: Not all tests "
-                                  "were verified.<br/>")
-                        # Signal verify time exceeded, to break out of suites and
+                        self.info("TinderboxPrint: Running tests took too long: Not all tests "
+                                  "were executed.<br/>")
+                        # Signal per-test time exceeded, to break out of suites and
                         # suite categories loops also.
                         return False
-                    if verified_tests >= max_verify_tests:
+                    if executed_tests >= max_per_test_tests:
                         # When changesets are merged between trees or many tests are
                         # otherwise updated at once, there probably is not enough time
-                        # to verify all tests, and attempting to do so may cause other
+                        # to run all tests, and attempting to do so may cause other
                         # problems, such as generating too much log output.
                         self.info("TinderboxPrint: Too many modified tests: Not all tests "
-                                  "were verified.<br/>")
+                                  "were executed.<br/>")
                         return False
-                    verified_tests = verified_tests + 1
+                    executed_tests = executed_tests + 1
 
                     final_cmd = copy.copy(cmd)
-                    final_cmd.extend(verify_args)
+                    final_cmd.extend(per_test_args)
+
+                    if self.per_test_coverage:
+                        gcov_dir, jsvm_dir = self.set_coverage_env(env)
+
                     return_code = self.run_command(final_cmd, cwd=dirs['abs_work_dir'],
                                                    output_timeout=cmd_timeout,
                                                    output_parser=parser,
                                                    env=env)
+
+                    if self.per_test_coverage:
+                        grcov_file, jsvm_file = self.parse_coverage_artifacts(gcov_dir, jsvm_dir)
+                        shutil.rmtree(gcov_dir)
+                        shutil.rmtree(jsvm_dir)
+                        # TODO: Parse coverage report
+                        # TODO: Diff this coverage report with the baseline one
 
                     # mochitest, reftest, and xpcshell suites do not return
                     # appropriate return codes. Therefore, we must parse the output
@@ -895,8 +918,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     parser.append_tinderboxprint_line(suite_name)
 
                     self.buildbot_status(tbpl_status, level=log_level)
-                    if len(verify_args) > 0:
-                        self.log_verify_status(verify_args[-1], tbpl_status, log_level)
+                    if len(per_test_args) > 0:
+                        self.log_per_test_status(per_test_args[-1], tbpl_status, log_level)
                     else:
                         self.log("The %s suite: %s ran with return status: %s" %
                                  (suite_category, suite, tbpl_status), level=log_level)

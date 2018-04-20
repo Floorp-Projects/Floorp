@@ -291,7 +291,6 @@ public:
   void
   DisconnectFromOwner() override;
 
-  // nsIDOMEventTarget
   virtual void
   LastRelease() override;
 

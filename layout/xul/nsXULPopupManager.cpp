@@ -12,7 +12,6 @@
 #include "nsMenuBarListener.h"
 #include "nsContentUtils.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMEvent.h"
 #include "nsXULElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -34,7 +33,7 @@
 #include "nsIObserverService.h"
 #include "XULDocument.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/MouseEvent.h"
@@ -618,7 +617,7 @@ nsXULPopupManager::MouseLocationOffset()
 }
 
 void
-nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
+nsXULPopupManager::InitTriggerEvent(Event* aEvent, nsIContent* aPopup,
                                     nsIContent** aTriggerContent)
 {
   mCachedMousePoint = LayoutDeviceIntPoint(0, 0);
@@ -627,15 +626,14 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
     *aTriggerContent = nullptr;
     if (aEvent) {
       // get the trigger content from the event
-      nsCOMPtr<nsIContent> target = do_QueryInterface(
-        aEvent->InternalDOMEvent()->GetTarget());
+      nsCOMPtr<nsIContent> target = do_QueryInterface(aEvent->GetTarget());
       target.forget(aTriggerContent);
     }
   }
 
   mCachedModifiers = 0;
 
-  UIEvent* uiEvent = aEvent ? aEvent->InternalDOMEvent()->AsUIEvent() : nullptr;
+  UIEvent* uiEvent = aEvent ? aEvent->AsUIEvent() : nullptr;
   if (uiEvent) {
     mRangeParent = uiEvent->GetRangeParent();
     mRangeOffset = uiEvent->RangeOffset();
@@ -665,7 +663,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
                event->mClass == eWheelEventClass) &&
                !event->AsGUIEvent()->mWidget) {
             // no widget, so just use the client point if available
-            MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+            MouseEvent* mouseEvent = aEvent->AsMouseEvent();
             nsIntPoint clientPt(mouseEvent->ClientX(), mouseEvent->ClientY());
 
             // XXX this doesn't handle IFRAMEs in transforms
@@ -775,7 +773,7 @@ nsXULPopupManager::ShowPopup(nsIContent* aPopup,
                              bool aIsContextMenu,
                              bool aAttributesOverride,
                              bool aSelectFirstItem,
-                             nsIDOMEvent* aTriggerEvent)
+                             Event* aTriggerEvent)
 {
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
   if (!popupFrame || !MayShowPopup(popupFrame))
@@ -794,7 +792,7 @@ void
 nsXULPopupManager::ShowPopupAtScreen(nsIContent* aPopup,
                                      int32_t aXPos, int32_t aYPos,
                                      bool aIsContextMenu,
-                                     nsIDOMEvent* aTriggerEvent)
+                                     Event* aTriggerEvent)
 {
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
   if (!popupFrame || !MayShowPopup(popupFrame))
@@ -813,7 +811,7 @@ nsXULPopupManager::ShowPopupAtScreenRect(nsIContent* aPopup,
                                          const nsIntRect& aRect,
                                          bool aIsContextMenu,
                                          bool aAttributesOverride,
-                                         nsIDOMEvent* aTriggerEvent)
+                                         Event* aTriggerEvent)
 {
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
   if (!popupFrame || !MayShowPopup(popupFrame))
@@ -1113,7 +1111,7 @@ public:
   {
   }
 
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override
+  NS_IMETHOD HandleEvent(Event* aEvent) override
   {
     mContent->RemoveSystemEventListener(NS_LITERAL_STRING("transitionend"), this, false);
 
@@ -1427,7 +1425,7 @@ void
 nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
                                          bool aIsContextMenu,
                                          bool aSelectFirstItem,
-                                         nsIDOMEvent* aTriggerEvent)
+                                         Event* aTriggerEvent)
 {
   nsCOMPtr<nsIContent> popup = aPopup; // keep a strong reference to the popup
 
@@ -2612,10 +2610,9 @@ nsXULPopupManager::IsValidMenuItem(nsIContent* aContent, bool aOnPopup)
 }
 
 nsresult
-nsXULPopupManager::HandleEvent(nsIDOMEvent* aEvent)
+nsXULPopupManager::HandleEvent(Event* aEvent)
 {
-  RefPtr<KeyboardEvent> keyEvent =
-    aEvent->InternalDOMEvent()->AsKeyboardEvent();
+  RefPtr<KeyboardEvent> keyEvent = aEvent->AsKeyboardEvent();
   NS_ENSURE_TRUE(keyEvent, NS_ERROR_UNEXPECTED);
 
   //handlers shouldn't be triggered by non-trusted events.

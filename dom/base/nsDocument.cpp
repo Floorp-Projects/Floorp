@@ -60,6 +60,7 @@
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/FramingChecker.h"
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "nsGenericHTMLElement.h"
@@ -1740,7 +1741,6 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNode)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIScriptObjectPrincipal)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMEventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, mozilla::dom::EventTarget)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsISupportsWeakReference)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
@@ -4160,7 +4160,7 @@ nsIDocument::FindContentForSubDocument(nsIDocument *aDocument) const
 bool
 nsIDocument::IsNodeOfType(uint32_t aFlags) const
 {
-  return !(aFlags & ~eDOCUMENT);
+  return false;
 }
 
 Element*

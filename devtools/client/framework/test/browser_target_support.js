@@ -61,7 +61,7 @@ function test() {
       chrome: true
     };
 
-    TargetFactory.forRemoteTab(options).then(Task.async(testTarget).bind(null, client));
+    TargetFactory.forRemoteTab(options).then(testTarget.bind(null, client));
   });
 }
 

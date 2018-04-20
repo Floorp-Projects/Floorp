@@ -543,10 +543,8 @@ nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
 
         // Handle template element. If the parent is a template's content,
         // then adjust the parent to be the template element.
-        if (current && current != aNode &&
-            current->NodeType() == nsINode::DOCUMENT_FRAGMENT_NODE) {
-          DocumentFragment* frag = static_cast<DocumentFragment*>(current);
-          nsIContent* host = frag->GetHost();
+        if (current && current != aNode && current->IsDocumentFragment()) {
+          nsIContent* host = current->AsDocumentFragment()->GetHost();
           if (host && host->IsHTMLElement(nsGkAtoms::_template)) {
             current = host;
           }
