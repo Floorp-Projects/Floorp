@@ -23,59 +23,46 @@ const SCHEMES = {
   "javascript:": false,
 };
 
-var gRunner;
-function run_test() {
-  do_test_pending();
-  gRunner = step();
-  gRunner.next();
-}
-
-function* step() {
+add_task(async function test_isURIVisited() {
   let history = Cc["@mozilla.org/browser/history;1"]
                   .getService(Ci.mozIAsyncHistory);
+
+  function visitsPromise(uri) {
+    return new Promise(resolve => {
+      history.isURIVisited(uri, (receivedURI, visited) => {
+        resolve([receivedURI, visited]);
+      });
+    });
+  }
 
   for (let scheme in SCHEMES) {
     info("Testing scheme " + scheme);
     for (let t in PlacesUtils.history.TRANSITIONS) {
       info("With transition " + t);
-      let transition = PlacesUtils.history.TRANSITIONS[t];
+      let aTransition = PlacesUtils.history.TRANSITIONS[t];
 
-      let uri = NetUtil.newURI(scheme + "mozilla.org/");
+      let aURI = Services.io.newURI(scheme + "mozilla.org/");
 
-      history.isURIVisited(uri, function(aURI, aIsVisited) {
-        Assert.ok(uri.equals(aURI));
-        Assert.ok(!aIsVisited);
+      let [receivedURI1, visited1] = await visitsPromise(aURI);
+      Assert.ok(aURI.equals(receivedURI1));
+      Assert.ok(!visited1);
 
-        let callback = {
-          handleError() {},
-          handleResult() {},
-          handleCompletion() {
-            info("Added visit to " + uri.spec);
+      if (PlacesUtils.history.canAddURI(aURI)) {
+        await PlacesTestUtils.addVisits([{
+          uri: aURI,
+          transition: aTransition
+        }]);
+        info("Added visit for " + aURI.spec);
+      }
 
-            history.isURIVisited(uri, function(aURI2, aIsVisited2) {
-              Assert.ok(uri.equals(aURI2));
-              Assert.ok(SCHEMES[scheme] ? aIsVisited2 : !aIsVisited2);
+      let [receivedURI2, visited2] = await visitsPromise(aURI);
+      Assert.ok(aURI.equals(receivedURI2));
+      Assert.equal(SCHEMES[scheme], visited2);
 
-              PlacesUtils.history.clear().then(function() {
-                history.isURIVisited(uri, function(aURI3, aIsVisited3) {
-                  Assert.ok(uri.equals(aURI3));
-                  Assert.ok(!aIsVisited3);
-                  gRunner.next();
-                });
-              });
-            });
-          },
-        };
-
-        history.updatePlaces({ uri,
-                               visits: [ { transitionType: transition,
-                                           visitDate:      Date.now() * 1000
-                                         } ]
-                             }, callback);
-      });
-      yield undefined;
+      await PlacesUtils.history.clear();
+      let [receivedURI3, visited3] = await visitsPromise(aURI);
+      Assert.ok(aURI.equals(receivedURI3));
+      Assert.ok(!visited3);
     }
   }
-
-  do_test_finished();
-}
+});
