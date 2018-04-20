@@ -235,8 +235,7 @@ MacroAssembler::subFloat32(FloatRegister src, FloatRegister dest)
 void
 MacroAssembler::mul32(Register rhs, Register srcDest)
 {
-    MOZ_ASSERT(srcDest == eax);
-    imull(rhs, srcDest);        // Clobbers edx
+    imull(rhs, srcDest);
 }
 
 void
