@@ -32,7 +32,6 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DragEvent.h"
-#include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIFocusManager.h"            // for nsIFocusManager
 #include "nsIFormControl.h"             // for nsIFormControl, etc.
@@ -1066,7 +1065,7 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
     return NS_OK;
   }
 
-  nsIDOMEventTarget* target = aFocusEvent->GetOriginalDOMEventTarget();
+  EventTarget* target = aFocusEvent->GetOriginalDOMEventTarget();
   nsCOMPtr<nsINode> node = do_QueryInterface(target);
   NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
 
@@ -1098,11 +1097,8 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
         return NS_OK;
       }
 
-      nsCOMPtr<nsIDOMEventTarget> originalTarget =
-        aFocusEvent->GetOriginalDOMEventTarget();
-
       nsCOMPtr<nsIContent> originalTargetAsContent =
-        do_QueryInterface(originalTarget);
+        do_QueryInterface(aFocusEvent->GetOriginalDOMEventTarget());
 
       if (!SameCOMIdentity(
             focusedContent->FindFirstNonChromeOnlyAccessContent(),
@@ -1191,8 +1187,8 @@ EditorEventListener::ShouldHandleNativeKeyBindings(
   // unnecessary.  IsAcceptableInputEvent currently makes a similar check for
   // mouse events.
 
-  nsIDOMEventTarget* target = aKeyboardEvent->GetDOMEventTarget();
-  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
+  nsCOMPtr<nsIContent> targetContent =
+    do_QueryInterface(aKeyboardEvent->GetDOMEventTarget());
   if (!targetContent) {
     return false;
   }

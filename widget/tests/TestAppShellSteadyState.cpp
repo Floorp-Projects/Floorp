@@ -10,7 +10,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIInterfaceRequestor.h"
@@ -25,6 +24,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventTarget.h"
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -415,9 +415,9 @@ Test4Internal(nsIAppShell* aAppShell)
     return false;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(window);
+  RefPTr<dom::EventTarget> target = do_QueryInterface(window);
   if (!target) {
-    fail("Can't QI to nsIDOMEventTarget!");
+    fail("Can't QI to EventTarget!");
     return false;
   }
 
