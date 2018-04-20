@@ -188,13 +188,7 @@ public:
     if (type.EqualsLiteral("load")) {
       passed("Got load event");
 
-      nsCOMPtr<nsIDOMEventTarget> target;
-      if (NS_FAILED(aEvent->GetTarget(getter_AddRefs(target)))) {
-        fail("Failed to get event type");
-        return NS_ERROR_FAILURE;
-      }
-
-      nsCOMPtr<nsIDocument> document = do_QueryInterface(target);
+      nsCOMPtr<nsIDocument> document = do_QueryInterface(aEvent->GetTarget());
       if (!document) {
         fail("Failed to QI to nsIDocument!");
         return NS_ERROR_FAILURE;

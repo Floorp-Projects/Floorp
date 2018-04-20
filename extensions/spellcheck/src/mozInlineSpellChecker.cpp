@@ -1853,7 +1853,7 @@ mozInlineSpellChecker::HandleEvent(Event* aEvent)
 }
 
 nsresult
-mozInlineSpellChecker::OnBlur(nsIDOMEvent* aEvent)
+mozInlineSpellChecker::OnBlur(Event* aEvent)
 {
   // force spellcheck on blur, for instance when tabbing out of a textbox
   HandleNavigationEvent(true);
@@ -1861,9 +1861,9 @@ mozInlineSpellChecker::OnBlur(nsIDOMEvent* aEvent)
 }
 
 nsresult
-mozInlineSpellChecker::OnMouseClick(nsIDOMEvent *aMouseEvent)
+mozInlineSpellChecker::OnMouseClick(Event *aMouseEvent)
 {
-  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_OK);
 
   // ignore any errors from HandleNavigationEvent as we don't want to prevent
@@ -1873,10 +1873,9 @@ mozInlineSpellChecker::OnMouseClick(nsIDOMEvent *aMouseEvent)
 }
 
 nsresult
-mozInlineSpellChecker::OnKeyPress(nsIDOMEvent* aKeyEvent)
+mozInlineSpellChecker::OnKeyPress(Event* aKeyEvent)
 {
-  RefPtr<KeyboardEvent> keyEvent =
-    aKeyEvent->InternalDOMEvent()->AsKeyboardEvent();
+  RefPtr<KeyboardEvent> keyEvent = aKeyEvent->AsKeyboardEvent();
   NS_ENSURE_TRUE(keyEvent, NS_OK);
 
   uint32_t keyCode = keyEvent->KeyCode();

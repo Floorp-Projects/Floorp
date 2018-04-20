@@ -78,7 +78,7 @@ ResizerMouseMotionListener::ResizerMouseMotionListener(HTMLEditor& aHTMLEditor)
 NS_IMETHODIMP
 ResizerMouseMotionListener::HandleEvent(Event* aMouseEvent)
 {
-  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
   if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
