@@ -65,13 +65,13 @@ function test_gestureListener(evt) {
   is(evt.delta, test_expectedDelta,
      "evt.delta (" + evt.delta + ") does not match expected value");
 
-  is(evt.shiftKey, (test_expectedModifiers & Ci.nsIDOMEvent.SHIFT_MASK) != 0,
+  is(evt.shiftKey, (test_expectedModifiers & Event.SHIFT_MASK) != 0,
      "evt.shiftKey did not match expected value");
-  is(evt.ctrlKey, (test_expectedModifiers & Ci.nsIDOMEvent.CONTROL_MASK) != 0,
+  is(evt.ctrlKey, (test_expectedModifiers & Event.CONTROL_MASK) != 0,
      "evt.ctrlKey did not match expected value");
-  is(evt.altKey, (test_expectedModifiers & Ci.nsIDOMEvent.ALT_MASK) != 0,
+  is(evt.altKey, (test_expectedModifiers & Event.ALT_MASK) != 0,
      "evt.altKey did not match expected value");
-  is(evt.metaKey, (test_expectedModifiers & Ci.nsIDOMEvent.META_MASK) != 0,
+  is(evt.metaKey, (test_expectedModifiers & Event.META_MASK) != 0,
      "evt.metaKey did not match expected value");
 
   if (evt.type == "MozTapGesture") {
@@ -163,19 +163,19 @@ function test_TestEventListeners() {
   e("MozEdgeUICompleted", 0, 0, 0);
 
   // event.shiftKey
-  let modifier = Ci.nsIDOMEvent.SHIFT_MASK;
+  let modifier = Event.SHIFT_MASK;
   e("MozSwipeGesture", SimpleGestureEvent.DIRECTION_RIGHT, 0, modifier);
 
   // event.metaKey
-  modifier = Ci.nsIDOMEvent.META_MASK;
+  modifier = Event.META_MASK;
   e("MozSwipeGesture", SimpleGestureEvent.DIRECTION_RIGHT, 0, modifier);
 
   // event.altKey
-  modifier = Ci.nsIDOMEvent.ALT_MASK;
+  modifier = Event.ALT_MASK;
   e("MozSwipeGesture", SimpleGestureEvent.DIRECTION_RIGHT, 0, modifier);
 
   // event.ctrlKey
-  modifier = Ci.nsIDOMEvent.CONTROL_MASK;
+  modifier = Event.CONTROL_MASK;
   e("MozSwipeGesture", SimpleGestureEvent.DIRECTION_RIGHT, 0, modifier);
 }
 
