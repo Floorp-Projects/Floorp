@@ -75,7 +75,6 @@
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement
-#include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc.
 #include "nsIDocumentStateListener.h"   // for nsIDocumentStateListener

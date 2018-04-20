@@ -40,7 +40,6 @@ class mozInlineSpellChecker;
 class nsAtom;
 class nsIContent;
 class nsIDOMDocument;
-class nsIDOMEvent;
 class nsIDOMNode;
 class nsIDocumentStateListener;
 class nsIEditActionListener;
