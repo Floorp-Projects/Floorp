@@ -3063,19 +3063,8 @@ nsGlobalWindowOuter::SetStatusOuter(const nsAString& aStatus)
 {
   mStatus = aStatus;
 
-  /*
-   * If caller is not chrome, prevent propagating window.status to the UI by
-   * exiting early.
-   */
-  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-    return;
-  }
-
-  nsCOMPtr<nsIWebBrowserChrome> browserChrome = GetWebBrowserChrome();
-  if (browserChrome) {
-    browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT,
-                             PromiseFlatString(aStatus).get());
-  }
+  // We don't support displaying window.status in the UI, so there's nothing
+  // left to do here.
 }
 
 void

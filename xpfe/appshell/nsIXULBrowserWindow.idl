@@ -27,11 +27,6 @@ interface mozIDOMWindowProxy;
 interface nsIXULBrowserWindow : nsISupports
 {
   /**
-   * Sets the status according to JS' version of status.
-   */
-  void setJSStatus(in AString status);
-
-  /**
    * Tells the object implementing this function what link we are currently
    * over.
    */

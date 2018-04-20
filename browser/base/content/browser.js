@@ -4521,10 +4521,6 @@ var XULBrowserWindow = {
     return this.canViewSource = document.getElementById("canViewSource");
   },
 
-  setJSStatus() {
-    // unsupported
-  },
-
   forceInitialBrowserNonRemote(aOpener) {
     gBrowser.updateBrowserRemoteness(gBrowser.initialBrowser, false, { opener: aOpener });
   },
