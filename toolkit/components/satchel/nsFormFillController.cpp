@@ -881,8 +881,7 @@ nsFormFillController::HandleEvent(Event* aEvent)
     return KeyPress(aEvent);
   case eEditorInput:
     {
-      nsCOMPtr<nsINode> input = do_QueryInterface(
-        aEvent->InternalDOMEvent()->GetTarget());
+      nsCOMPtr<nsINode> input = do_QueryInterface(aEvent->GetTarget());
       if (!IsTextControl(input)) {
         return NS_OK;
       }
@@ -915,8 +914,7 @@ nsFormFillController::HandleEvent(Event* aEvent)
     return NS_OK;
   case ePageHide:
     {
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(
-        aEvent->InternalDOMEvent()->GetTarget());
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(aEvent->GetTarget());
       if (!doc) {
         return NS_OK;
       }
@@ -930,7 +928,7 @@ nsFormFillController::HandleEvent(Event* aEvent)
       // Only remove the observer notifications and marked autofill and password
       // manager fields if the page isn't going to be persisted (i.e. it's being
       // unloaded) so that appropriate autocomplete handling works with bfcache.
-      bool persisted = aEvent->InternalDOMEvent()->AsPageTransitionEvent()->Persisted();
+      bool persisted = aEvent->AsPageTransitionEvent()->Persisted();
       if (!persisted) {
         RemoveForDocument(doc);
       }
@@ -1028,10 +1026,9 @@ nsFormFillController::MaybeStartControllingInput(HTMLInputElement* aInput)
 }
 
 nsresult
-nsFormFillController::Focus(nsIDOMEvent* aEvent)
+nsFormFillController::Focus(Event* aEvent)
 {
-  nsCOMPtr<nsIContent> input = do_QueryInterface(
-    aEvent->InternalDOMEvent()->GetTarget());
+  nsCOMPtr<nsIContent> input = do_QueryInterface(aEvent->GetTarget());
   MaybeStartControllingInput(HTMLInputElement::FromNodeOrNull(input));
 
   // Bail if we didn't start controlling the input.
@@ -1068,15 +1065,14 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
 }
 
 nsresult
-nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
+nsFormFillController::KeyPress(Event* aEvent)
 {
   NS_ASSERTION(mController, "should have a controller!");
   if (!mFocusedInput || !mController) {
     return NS_OK;
   }
 
-  RefPtr<KeyboardEvent> keyEvent =
-    aEvent->InternalDOMEvent()->AsKeyboardEvent();
+  RefPtr<KeyboardEvent> keyEvent = aEvent->AsKeyboardEvent();
   if (!keyEvent) {
     return NS_ERROR_FAILURE;
   }
@@ -1177,15 +1173,15 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
 }
 
 nsresult
-nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
+nsFormFillController::MouseDown(Event* aEvent)
 {
-  MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if (!mouseEvent) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMHTMLInputElement> targetInput = do_QueryInterface(
-    aEvent->InternalDOMEvent()->GetTarget());
+  nsCOMPtr<nsIDOMHTMLInputElement> targetInput =
+    do_QueryInterface(aEvent->GetTarget());
   if (!targetInput) {
     return NS_OK;
   }

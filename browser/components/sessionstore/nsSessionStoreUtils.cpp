@@ -28,7 +28,7 @@ public:
   NS_IMETHODIMP HandleEvent(Event* aEvent) override
   {
     if (mListener && TargetInNonDynamicDocShell(aEvent)) {
-      mListener->HandleEvent(*aEvent->InternalDOMEvent());
+      mListener->HandleEvent(*aEvent);
     }
 
     return NS_OK;
@@ -37,9 +37,9 @@ public:
 private:
   ~DynamicFrameEventFilter() { }
 
-  bool TargetInNonDynamicDocShell(nsIDOMEvent* aEvent)
+  bool TargetInNonDynamicDocShell(Event* aEvent)
   {
-    EventTarget* target = aEvent->InternalDOMEvent()->GetTarget();
+    EventTarget* target = aEvent->GetTarget();
     if (!target) {
       return false;
     }

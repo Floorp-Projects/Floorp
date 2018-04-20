@@ -926,8 +926,7 @@ nsDocShellTreeOwner::RemoveChromeListeners()
 NS_IMETHODIMP
 nsDocShellTreeOwner::HandleEvent(Event* aEvent)
 {
-  DragEvent* dragEvent =
-    aEvent ? aEvent->InternalDOMEvent()->AsDragEvent() : nullptr;
+  DragEvent* dragEvent = aEvent ? aEvent->AsDragEvent() : nullptr;
   if (NS_WARN_IF(!dragEvent)) {
     return NS_ERROR_INVALID_ARG;
   }
