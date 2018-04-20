@@ -68,6 +68,8 @@ function LightweightThemeConsumer(aDocument) {
   var temp = {};
   ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
   this._update(temp.LightweightThemeManager.currentThemeForDisplay);
+
+  this._win.addEventListener("resolutionchange", this);
   this._win.addEventListener("unload", this, { once: true });
 }
 
@@ -113,8 +115,14 @@ LightweightThemeConsumer.prototype = {
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "resolutionchange":
+        if (this._active) {
+          this._update(this._lastData);
+        }
+        break;
       case "unload":
         Services.obs.removeObserver(this, "lightweight-theme-styling-update");
+        this._win.removeEventListener("resolutionchange", this);
         this._win = this._doc = null;
         break;
     }
