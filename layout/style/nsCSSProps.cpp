@@ -2304,7 +2304,7 @@ nsCSSProps::ValueToKeyword(int32_t aValue, const KTableEntry aTable[])
 /* static */ const KTableEntry* const
 nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
   #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
-                   kwtable_, ...) kwtable_,
+                   kwtable_) kwtable_,
   #include "nsCSSPropList.h"
   #undef CSS_PROP
 };
@@ -2346,15 +2346,6 @@ bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
   }
   return rv;
 }
-
-const nsStyleAnimType
-nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, \
-                 parsevariant_, kwtable_, animtype_) \
-  animtype_,
-#include "nsCSSPropList.h"
-#undef CSS_PROP
-};
 
 const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #define CSS_PROP(name_, id_, method_, flags_, ...) flags_,
