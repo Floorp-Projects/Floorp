@@ -45,11 +45,6 @@ class EventTarget : public nsIDOMEventTarget,
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_EVENTTARGET_IID)
 
-  static EventTarget* From(nsIDOMEventTarget* aTarget)
-  {
-    return static_cast<EventTarget*>(aTarget);
-  }
-
   // WebIDL API
   static already_AddRefed<EventTarget> Constructor(const GlobalObject& aGlobal,
                                                    ErrorResult& aRv);

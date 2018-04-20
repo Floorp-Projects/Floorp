@@ -68,6 +68,7 @@
 #include "nsXBLBinding.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/DOMStringList.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsDeckFrame.h"
@@ -375,7 +376,7 @@ nsAccessibilityService::ListenersChanged(nsIArray* aEventChanges)
   for (uint32_t i = 0 ; i < targetCount ; i++) {
     nsCOMPtr<nsIEventListenerChange> change = do_QueryElementAt(aEventChanges, i);
 
-    nsCOMPtr<nsIDOMEventTarget> target;
+    RefPtr<EventTarget> target;
     change->GetTarget(getter_AddRefs(target));
     nsCOMPtr<nsIContent> node(do_QueryInterface(target));
     if (!node || !node->IsHTMLElement()) {

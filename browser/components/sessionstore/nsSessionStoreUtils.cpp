@@ -117,7 +117,7 @@ nsSessionStoreUtils::ForEachNonDynamicChildFrame(mozIDOMWindowProxy* aWindow,
 }
 
 NS_IMETHODIMP
-nsSessionStoreUtils::AddDynamicFrameFilteredListener(nsIDOMEventTarget* aTarget,
+nsSessionStoreUtils::AddDynamicFrameFilteredListener(EventTarget* aTarget,
                                                      const nsAString& aType,
                                                      JS::Handle<JS::Value> aListener,
                                                      bool aUseCapture,
@@ -128,8 +128,7 @@ nsSessionStoreUtils::AddDynamicFrameFilteredListener(nsIDOMEventTarget* aTarget,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<EventTarget> target = do_QueryInterface(aTarget);
-  NS_ENSURE_TRUE(target, NS_ERROR_NO_INTERFACE);
+  NS_ENSURE_TRUE(aTarget, NS_ERROR_NO_INTERFACE);
 
   JS::Rooted<JSObject*> obj(aCx, &aListener.toObject());
   RefPtr<EventListener> listener =
@@ -137,7 +136,7 @@ nsSessionStoreUtils::AddDynamicFrameFilteredListener(nsIDOMEventTarget* aTarget,
 
   nsCOMPtr<nsIDOMEventListener> filter(new DynamicFrameEventFilter(listener));
 
-  nsresult rv = target->AddEventListener(aType, filter, aUseCapture);
+  nsresult rv = aTarget->AddEventListener(aType, filter, aUseCapture);
   NS_ENSURE_SUCCESS(rv, rv);
 
   filter.forget(aResult);
@@ -145,17 +144,16 @@ nsSessionStoreUtils::AddDynamicFrameFilteredListener(nsIDOMEventTarget* aTarget,
 }
 
 NS_IMETHODIMP
-nsSessionStoreUtils::RemoveDynamicFrameFilteredListener(nsIDOMEventTarget* aTarget,
+nsSessionStoreUtils::RemoveDynamicFrameFilteredListener(EventTarget* aTarget,
                                                         const nsAString& aType,
                                                         nsISupports* aListener,
                                                         bool aUseCapture)
 {
-  nsCOMPtr<EventTarget> target = do_QueryInterface(aTarget);
-  NS_ENSURE_TRUE(target, NS_ERROR_NO_INTERFACE);
+  NS_ENSURE_TRUE(aTarget, NS_ERROR_NO_INTERFACE);
 
   nsCOMPtr<nsIDOMEventListener> listener = do_QueryInterface(aListener);
   NS_ENSURE_TRUE(listener, NS_ERROR_NO_INTERFACE);
 
-  target->RemoveEventListener(aType, listener, aUseCapture);
+  aTarget->RemoveEventListener(aType, listener, aUseCapture);
   return NS_OK;
 }

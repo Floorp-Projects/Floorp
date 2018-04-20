@@ -41,7 +41,6 @@ interface nsIQueryContentEventResult;
 interface nsIDOMWindow;
 interface nsIFile;
 interface nsIURI;
-interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
@@ -50,6 +49,7 @@ interface nsIObserver;
 interface nsIDOMStorage;
 
 webidl DOMRect;
+webidl EventTarget;
 
 [scriptable, uuid(4d6732ca-9da7-4176-b8a1-8dde15cd0bf9)]
 interface nsIDOMWindowUtils : nsISupports {
@@ -946,7 +946,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * Event's .target property will be aTarget.
    * Returns the same value as what EventTarget.dispatchEvent does.
    */
-  boolean dispatchEventToChromeOnly(in nsIDOMEventTarget aTarget,
+  boolean dispatchEventToChromeOnly(in EventTarget aTarget,
                                     in nsIDOMEvent aEvent);
 
   /**
