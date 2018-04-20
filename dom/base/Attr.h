@@ -13,8 +13,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsIAttribute.h"
-#include "nsIContent.h" // For NS_IMPL_FROMNODE_HELPER, though looks like it
-                        // should live in nsINode.h?
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsString.h"
