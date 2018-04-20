@@ -291,7 +291,10 @@ const kEventConstructors = {
   RTCDataChannelEvent:                       { create: function (aName, aProps) {
                                                          let pc = new RTCPeerConnection();
                                                          aProps.channel = pc.createDataChannel("foo");
-                                                         return new RTCDataChannelEvent(aName, aProps);
+                                                         let e = new RTCDataChannelEvent(aName, aProps);
+                                                         aProps.channel.close();
+                                                         pc.close();
+                                                         return e;
                                                        },
                                              },
   RTCDTMFToneChangeEvent:                       { create: function (aName, aProps) {
