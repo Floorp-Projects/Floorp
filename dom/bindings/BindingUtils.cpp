@@ -1025,9 +1025,7 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
   }
 }
 
-// Only set aAllowNativeWrapper to false if you really know you need it; if in
-// doubt use true. Setting it to false disables security wrappers.
-static bool
+bool
 NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
                                          JS::Handle<JSObject*> aScope,
                                          JS::MutableHandle<JS::Value> aRetval,
@@ -1041,21 +1039,20 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
   // on all threads.
   nsWrapperCache *cache = aHelper.GetWrapperCache();
 
-  if (cache) {
+  if (cache && cache->IsDOMBinding()) {
       JS::Rooted<JSObject*> obj(aCx, cache->GetWrapper());
       if (!obj) {
         obj = cache->WrapObject(aCx, nullptr);
-        if (!obj) {
-          return Throw(aCx, NS_ERROR_UNEXPECTED);
-        }
       }
 
-      if (aAllowNativeWrapper && !JS_WrapObject(aCx, &obj)) {
+      if (obj && aAllowNativeWrapper && !JS_WrapObject(aCx, &obj)) {
         return false;
       }
 
-      aRetval.setObject(*obj);
-      return true;
+      if (obj) {
+        aRetval.setObject(*obj);
+        return true;
+      }
   }
 
   MOZ_ASSERT(NS_IsMainThread());
@@ -1103,7 +1100,7 @@ InstanceClassHasProtoAtDepth(const js::Class* clasp,
   return static_cast<uint32_t>(domClass->mInterfaceChain[depth]) == protoID;
 }
 
-// Only set allowNativeWrapper to false if you really know you need it; if in
+// Only set allowNativeWrapper to false if you really know you need it, if in
 // doubt use true. Setting it to false disables security wrappers.
 bool
 XPCOMObjectToJsval(JSContext* cx, JS::Handle<JSObject*> scope,

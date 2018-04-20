@@ -15111,6 +15111,8 @@ class CGJSImplClass(CGBindingImplClass):
             constructorBody = dedent("""
                 // Make sure we're an nsWrapperCache already
                 MOZ_ASSERT(static_cast<nsWrapperCache*>(this));
+                // And that our ancestor has not called SetIsNotDOMBinding()
+                MOZ_ASSERT(IsDOMBinding());
                 """)
             extradefinitions = fill(
                 """

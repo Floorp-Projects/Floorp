@@ -35,7 +35,7 @@
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
 #include "nsISupportsImpl.h"
-#include "xpcObjectHelper.h"
+#include "qsObjectHelper.h"
 #include "xpcpublic.h"
 #include "nsIVariant.h"
 #include "mozilla/dom/FakeString.h"
@@ -869,6 +869,18 @@ CheckWrapperCacheCast<T, true>
 };
 #endif
 
+MOZ_ALWAYS_INLINE bool
+CouldBeDOMBinding(void*)
+{
+  return true;
+}
+
+MOZ_ALWAYS_INLINE bool
+CouldBeDOMBinding(nsWrapperCache* aCache)
+{
+  return aCache->IsDOMBinding();
+}
+
 inline bool
 TryToOuterize(JS::MutableHandle<JS::Value> rval)
 {
@@ -1058,6 +1070,9 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
 {
   MOZ_ASSERT(value);
   MOZ_ASSERT_IF(givenProto, js::IsObjectInContextCompartment(givenProto, cx));
+  // We can get rid of this when we remove support for
+  // nsWrapperCache::SetIsNotDOMBinding.
+  bool couldBeDOMBinding = CouldBeDOMBinding(value);
   JSObject* obj = value->GetWrapper();
   if (obj) {
 #ifdef DEBUG
@@ -1067,6 +1082,11 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
     obj = value->GetWrapper();
 #endif
   } else {
+    // Inline this here while we have non-dom objects in wrapper caches.
+    if (!couldBeDOMBinding) {
+      return false;
+    }
+
     obj = value->WrapObject(cx, givenProto);
     if (!obj) {
       // At this point, obj is null, so just return false.
@@ -1100,7 +1120,9 @@ DoGetOrCreateDOMReflector(JSContext* cx, T* value,
 
   rval.set(JS::ObjectValue(*obj));
 
-  if (js::GetObjectCompartment(obj) == js::GetContextCompartment(cx)) {
+  bool sameCompartment =
+    js::GetObjectCompartment(obj) == js::GetContextCompartment(cx);
+  if (sameCompartment && couldBeDOMBinding) {
     return TypeNeedsOuterization<T>::value ? TryToOuterize(rval) : true;
   }
 
@@ -1279,6 +1301,65 @@ WrapNewBindingNonWrapperCachedObject(JSContext* cx, JS::Handle<JSObject*> scope,
                                               givenProto);
 }
 
+// Only set allowNativeWrapper to false if you really know you need it, if in
+// doubt use true. Setting it to false disables security wrappers.
+bool
+NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
+                                         JS::Handle<JSObject*> aScope,
+                                         JS::MutableHandle<JS::Value> aRetval,
+                                         xpcObjectHelper& aHelper,
+                                         const nsIID* aIID,
+                                         bool aAllowNativeWrapper);
+
+/**
+ * A method to handle new-binding wrap failure, by possibly falling back to
+ * wrapping as a non-new-binding object.
+ */
+template <class T>
+MOZ_ALWAYS_INLINE bool
+HandleNewBindingWrappingFailure(JSContext* cx, JS::Handle<JSObject*> scope,
+                                T* value, JS::MutableHandle<JS::Value> rval)
+{
+  if (JS_IsExceptionPending(cx)) {
+    return false;
+  }
+
+  qsObjectHelper helper(value, GetWrapperCache(value));
+  return NativeInterface2JSObjectAndThrowIfFailed(cx, scope, rval,
+                                                  helper, nullptr, true);
+}
+
+// Helper for calling HandleNewBindingWrappingFailure with smart pointers
+// (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
+
+template <class T, bool isSmartPtr=IsSmartPtr<T>::value>
+struct HandleNewBindingWrappingFailureHelper
+{
+  static inline bool Wrap(JSContext* cx, JS::Handle<JSObject*> scope,
+                          const T& value, JS::MutableHandle<JS::Value> rval)
+  {
+    return HandleNewBindingWrappingFailure(cx, scope, value.get(), rval);
+  }
+};
+
+template <class T>
+struct HandleNewBindingWrappingFailureHelper<T, false>
+{
+  static inline bool Wrap(JSContext* cx, JS::Handle<JSObject*> scope, T& value,
+                          JS::MutableHandle<JS::Value> rval)
+  {
+    return HandleNewBindingWrappingFailure(cx, scope, &value, rval);
+  }
+};
+
+template<class T>
+inline bool
+HandleNewBindingWrappingFailure(JSContext* cx, JS::Handle<JSObject*> scope,
+                                T& value, JS::MutableHandle<JS::Value> rval)
+{
+  return HandleNewBindingWrappingFailureHelper<T>::Wrap(cx, scope, value, rval);
+}
+
 template<bool Fatal>
 inline bool
 EnumValueNotFound(JSContext* cx, JS::HandleString str, const char* type,
@@ -1454,7 +1535,7 @@ bool
 InstanceClassHasProtoAtDepth(const js::Class* clasp,
                              uint32_t protoID, uint32_t depth);
 
-// Only set allowNativeWrapper to false if you really know you need it; if in
+// Only set allowNativeWrapper to false if you really know you need it, if in
 // doubt use true. Setting it to false disables security wrappers.
 bool
 XPCOMObjectToJsval(JSContext* cx, JS::Handle<JSObject*> scope,
@@ -1477,7 +1558,7 @@ WrapObject(JSContext* cx, T* p, nsWrapperCache* cache, const nsIID* iid,
 {
   if (xpc_FastGetCachedWrapper(cx, cache, rval))
     return true;
-  xpcObjectHelper helper(ToSupports(p), cache);
+  qsObjectHelper helper(p, cache);
   JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
   return XPCOMObjectToJsval(cx, scope, helper, iid, true, rval);
 }
@@ -1577,7 +1658,7 @@ template<typename T>
 static inline JSObject*
 WrapNativeISupports(JSContext* cx, T* p, nsWrapperCache* cache)
 {
-  xpcObjectHelper helper(ToSupports(p), cache);
+  qsObjectHelper helper(ToSupports(p), cache);
   JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
   JS::Rooted<JS::Value> v(cx);
   return XPCOMObjectToJsval(cx, scope, helper, nullptr, false, &v) ?
@@ -1586,7 +1667,29 @@ WrapNativeISupports(JSContext* cx, T* p, nsWrapperCache* cache)
 }
 
 
-// Wrapping of our native parent, for cases when it's a WebIDL object.
+// Fallback for when our parent is not a WebIDL binding object.
+template<typename T, bool isISupports=IsBaseOf<nsISupports, T>::value>
+struct WrapNativeFallback
+{
+  static inline JSObject* Wrap(JSContext* cx, T* parent, nsWrapperCache* cache)
+  {
+    return nullptr;
+  }
+};
+
+// Fallback for when our parent is not a WebIDL binding object but _is_ an
+// nsISupports object.
+template<typename T >
+struct WrapNativeFallback<T, true >
+{
+  static inline JSObject* Wrap(JSContext* cx, T* parent, nsWrapperCache* cache)
+  {
+    return WrapNativeISupports(cx, parent, cache);
+  }
+};
+
+// Wrapping of our native parent, for cases when it's a WebIDL object (though
+// possibly preffed off).
 template<typename T, bool hasWrapObject=NativeHasMember<T>::WrapObject>
 struct WrapNativeHelper
 {
@@ -1601,9 +1704,16 @@ struct WrapNativeHelper
       return obj;
     }
 
-    // WrapObject never returns a gray thing.
-    obj = parent->WrapObject(cx, nullptr);
-    MOZ_ASSERT(JS::ObjectIsNotGray(obj));
+    // Inline this here while we have non-dom objects in wrapper caches.
+    if (!CouldBeDOMBinding(parent)) {
+      // WrapNativeFallback never returns a gray thing.
+      obj = WrapNativeFallback<T>::Wrap(cx, parent, cache);
+      MOZ_ASSERT(JS::ObjectIsNotGray(obj));
+    } else {
+      // WrapObject never returns a gray thing.
+      obj = parent->WrapObject(cx, nullptr);
+      MOZ_ASSERT(JS::ObjectIsNotGray(obj));
+    }
 
     return obj;
   }

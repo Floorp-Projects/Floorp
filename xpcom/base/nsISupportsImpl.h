@@ -39,6 +39,12 @@ ToSupports(nsISupports* aSupports)
   return aSupports;
 }
 
+inline nsISupports*
+ToCanonicalSupports(nsISupports* aSupports)
+{
+  return nullptr;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Macros to help detect thread-safety:
 

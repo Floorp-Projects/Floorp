@@ -92,9 +92,7 @@ public:
 
   mozilla::dom::HTMLAllCollection* All();
 
-  // Returns whether an object was found for aName.
-  bool ResolveName(JSContext* aCx, const nsAString& aName,
-                   JS::MutableHandle<JS::Value> aRetval, mozilla::ErrorResult& aError);
+  nsISupports* ResolveName(const nsAString& aName, nsWrapperCache **aCache);
 
   virtual void AddedForm() override;
   virtual void RemovedForm() override;
@@ -166,13 +164,7 @@ public:
   void SetCookie(const nsAString& aCookie, mozilla::ErrorResult& rv);
   void NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
                    JS::MutableHandle<JSObject*> aRetval,
-                   mozilla::ErrorResult& rv)
-  {
-    JS::Rooted<JS::Value> v(cx);
-    if ((aFound = ResolveName(cx, aName, &v, rv))) {
-      aRetval.set(v.toObjectOrNull());
-    }
-  }
+                   mozilla::ErrorResult& rv);
   void GetSupportedNames(nsTArray<nsString>& aNames);
   already_AddRefed<nsIDocument> Open(JSContext* cx,
                                      const mozilla::dom::Optional<nsAString>& /* unused */,
