@@ -359,8 +359,7 @@ DocManager::HandleEvent(Event* aEvent)
   nsAutoString type;
   aEvent->GetType(type);
 
-  nsCOMPtr<nsIDocument> document =
-    do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(aEvent->GetTarget());
   NS_ASSERTION(document, "pagehide or DOMContentLoaded for non document!");
   if (!document)
     return NS_OK;
