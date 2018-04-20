@@ -1273,11 +1273,7 @@ pref("browser.newtabpage.enabled", true);
 // Activity Stream prefs that control to which page to redirect
 pref("browser.newtabpage.activity-stream.prerender", true);
 #ifndef RELEASE_OR_BETA
-#ifdef MOZILLA_OFFICIAL
 pref("browser.newtabpage.activity-stream.debug", false);
-#else
-pref("browser.newtabpage.activity-stream.debug", true);
-#endif
 #endif
 
 pref("browser.library.activity-stream.enabled", true);
