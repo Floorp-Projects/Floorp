@@ -383,7 +383,7 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mTrakValues(nullptr),
       mTrakSizeTable(nullptr)
 {
-    mWeightRange = WeightRange(aWeight);
+    mWeight = aWeight;
 }
 
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
@@ -413,7 +413,7 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
     mFontRefInitialized = true;
     ::CFRetain(mFontRef);
 
-    mWeightRange = WeightRange(aWeight);
+    mWeight = aWeight;
     mStretch = aStretch;
     mFixedPitch = false; // xxx - do we need this for downloaded fonts?
     mStyle = aStyle;
@@ -429,10 +429,9 @@ MacOSFontEntry::Clone() const
 {
     MOZ_ASSERT(!IsUserFont(), "we can only clone installed fonts!");
     MacOSFontEntry* fe =
-        new MacOSFontEntry(Name(), Weight().Min(), mStandardFace, mSizeHint);
+        new MacOSFontEntry(Name(), mWeight, mStandardFace, mSizeHint);
     fe->mStyle = mStyle;
     fe->mStretch = mStretch;
-    fe->mWeightRange = mWeightRange;
     fe->mFixedPitch = mFixedPitch;
     return fe;
 }
@@ -929,19 +928,14 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
             fontEntry->mFixedPitch = true;
         }
 
-        fontEntry->SetupVariationRanges();
-
         if (LOG_FONTLIST_ENABLED()) {
-            nsAutoCString weightString;
-            fontEntry->Weight().ToString(weightString);
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
-                 " with style: %s weight: %s stretch: %d"
+                 " with style: %s weight: %d stretch: %d"
                  " (apple-weight: %d macTraits: %8.8x)",
                  NS_ConvertUTF16toUTF8(fontEntry->Name()).get(), 
                  NS_ConvertUTF16toUTF8(Name()).get(), 
                  fontEntry->IsItalic() ? "italic" : "normal",
-                 weightString.get(),
-                 fontEntry->Stretch(),
+                 cssWeight, fontEntry->Stretch(),
                  appKitWeight, macTraits));
         }
 
@@ -1288,10 +1282,9 @@ gfxMacPlatformFontList::InitSingleFaceList()
             // We need a separate font entry, because its family name will
             // differ from the one we found in the main list.
             MacOSFontEntry* fontEntry =
-                new MacOSFontEntry(fe->Name(), fe->Weight().Min(), true,
+                new MacOSFontEntry(fe->Name(), fe->mWeight, true,
                                    static_cast<const MacOSFontEntry*>(fe)->
                                        mSizeHint);
-            fontEntry->mWeightRange = fe->mWeightRange;
             familyEntry->AddFontEntry(fontEntry);
             familyEntry->SetHasStyles(true);
             mFontFamilies.Put(key, familyEntry);
