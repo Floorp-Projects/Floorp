@@ -16,8 +16,7 @@
         persist="lastSelected screenX screenY"
         role="dialog"
         helpTopic="prefs-fonts-and-colors"
-        ondialoghelp="openPrefsHelp()"
-        onbeforeaccept="return gFontsDialog.onBeforeAccept();">
+        ondialoghelp="openPrefsHelp()">
 
   <link rel="localization" href="browser/preferences/fonts.ftl"/>
   <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
@@ -31,7 +30,6 @@
 
   <vbox id="FontsDialogPane" class="prefpane largeDialogContainer">
 
-    <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
     <script type="application/javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
     <script type="application/javascript" src="chrome://browser/content/preferences/fonts.js"/>
 
@@ -214,7 +212,7 @@
           <label data-l10n-id="fonts-minsize" control="minSize"/>
           <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
           <hbox>
-            <menulist id="minSize">
+            <menulist id="minSize" oncommand="gFontsDialog.confirmMinSizeChange();">
               <menupopup>
                 <menuitem value="0" data-l10n-id="fonts-minsize-none"/>
                 <menuitem value="9" label="9"/>

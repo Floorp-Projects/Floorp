@@ -90,27 +90,29 @@ var gFontsDialog = {
     return useDocumentFonts.checked ? 1 : 0;
   },
 
-  onBeforeAccept() {
-    // It would be good if we could avoid touching languages the pref pages won't use, but
-    // unfortunately the language group APIs (deducing language groups from language codes)
-    // are C++ - only. So we just check all the things the user touched:
-    // Don't care about anything up to 24px, or if this value is the same as set previously:
-    let preferences = Preferences.getAll().filter(pref => {
-      return pref.id.includes("font.minimum-size") && pref.value > 24 && pref.value != pref.valueFromPreferences;
-    });
-    if (!preferences.length) {
-      return true;
+  async confirmMinSizeChange() {
+    let menulist = document.getElementById("minSize");
+    let preference = menulist.getAttribute("preference");
+    let defaultValue = Preferences.get(preference).valueFromPreferences;
+    let oldValue = Preferences.get(preference).value;
+    let newValue = menulist.value;
+
+    if (newValue <= 24 || newValue == defaultValue) {
+      return;
     }
 
-    let strings = document.getElementById("bundlePreferences");
-    let title = strings.getString("veryLargeMinimumFontTitle");
-    let confirmLabel = strings.getString("acceptVeryLargeMinimumFont");
-    let warningMessage = strings.getString("veryLargeMinimumFontWarning");
+    let [title, warningMessage, confirmLabel] = await document.l10n.formatValues([
+      ["fonts-very-large-warning-title"],
+      ["fonts-very-large-warning-message"],
+      ["fonts-very-large-warning-accept"],
+    ]);
     let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
     let flags = Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL |
                 Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING |
                 Services.prompt.BUTTON_POS_1_DEFAULT;
     let buttonChosen = Services.prompt.confirmEx(window, title, warningMessage, flags, confirmLabel, null, "", "", {});
-    return buttonChosen == 0;
+    if (buttonChosen != 0) {
+      menulist.value = oldValue;
+    }
   },
 };
