@@ -210,6 +210,7 @@ public:
                          nsIInputStream* aPostDataStream,
                          int64_t aPostDataStreamLength,
                          nsIInputStream* aHeadersDataStream,
+                         bool aIsUserTriggered,
                          bool aIsTrusted,
                          nsIPrincipal* aTriggeringPrincipal) override;
   NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
@@ -222,6 +223,7 @@ public:
                              bool aNoOpenerImplied = false,
                              nsIDocShell** aDocShell = 0,
                              nsIRequest** aRequest = 0,
+                             bool aIsUserTriggered = false,
                              nsIPrincipal* aTriggeringPrincipal = nullptr) override;
   NS_IMETHOD OnOverLink(nsIContent* aContent,
                         nsIURI* aURI,

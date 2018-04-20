@@ -13358,6 +13358,7 @@ public:
                    int64_t aPostDataStreamLength,
                    nsIInputStream* aHeadersDataStream,
                    bool aNoOpenerImplied,
+                   bool aIsUserTriggered,
                    bool aIsTrusted,
                    nsIPrincipal* aTriggeringPrincipal);
 
@@ -13376,7 +13377,8 @@ public:
                                 mTargetSpec.get(), mFileName,
                                 mPostDataStream, mPostDataStreamLength,
                                 mHeadersDataStream, mNoOpenerImplied,
-                                nullptr, nullptr, mTriggeringPrincipal);
+                                nullptr, nullptr, mIsUserTriggered,
+                                mTriggeringPrincipal);
     }
     return NS_OK;
   }
@@ -13392,6 +13394,7 @@ private:
   nsCOMPtr<nsIContent> mContent;
   PopupControlState mPopupState;
   bool mNoOpenerImplied;
+  bool mIsUserTriggered;
   bool mIsTrusted;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
 };
@@ -13405,6 +13408,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
                                    int64_t aPostDataStreamLength,
                                    nsIInputStream* aHeadersDataStream,
                                    bool aNoOpenerImplied,
+                                   bool aIsUserTriggered,
                                    bool aIsTrusted,
                                    nsIPrincipal* aTriggeringPrincipal)
   : mozilla::Runnable("OnLinkClickEvent")
@@ -13418,6 +13422,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
   , mContent(aContent)
   , mPopupState(mHandler->mScriptGlobal->GetPopupControlState())
   , mNoOpenerImplied(aNoOpenerImplied)
+  , mIsUserTriggered(aIsUserTriggered)
   , mIsTrusted(aIsTrusted)
   , mTriggeringPrincipal(aTriggeringPrincipal)
 {
@@ -13431,6 +13436,7 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
                         nsIInputStream* aPostDataStream,
                         int64_t aPostDataStreamLength,
                         nsIInputStream* aHeadersDataStream,
+                        bool aIsUserTriggered,
                         bool aIsTrusted,
                         nsIPrincipal* aTriggeringPrincipal)
 {
@@ -13477,7 +13483,7 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
     new OnLinkClickEvent(this, aContent, aURI, target.get(), aFileName,
                          aPostDataStream, aPostDataStreamLength,
                          aHeadersDataStream, noOpenerImplied,
-                         aIsTrusted, aTriggeringPrincipal);
+                         aIsUserTriggered, aIsTrusted, aTriggeringPrincipal);
   return DispatchToTabGroup(TaskCategory::UI, ev.forget());
 }
 
@@ -13500,6 +13506,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                             bool aNoOpenerImplied,
                             nsIDocShell** aDocShell,
                             nsIRequest** aRequest,
+                            bool aIsUserTriggered,
                             nsIPrincipal* aTriggeringPrincipal)
 {
   // Initialize the DocShell / Request
@@ -13637,6 +13644,10 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
   bool inOnLoadHandler = false;
   GetIsExecutingOnLoadHandler(&inOnLoadHandler);
   uint32_t loadType = inOnLoadHandler ? LOAD_NORMAL_REPLACE : LOAD_LINK;
+
+  if (aIsUserTriggered) {
+    flags |= INTERNAL_LOAD_FLAGS_IS_USER_TRIGGERED;
+  }
 
   nsresult rv = InternalLoad(clonedURI,                 // New URI
                              nullptr,                   // Original URI

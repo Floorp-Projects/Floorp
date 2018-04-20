@@ -49,6 +49,7 @@ public:
                          nsIInputStream* aPostDataStream,
                          int64_t aPostDataStreamLength,
                          nsIInputStream* aHeadersDataStream,
+                         bool aIsUserTriggered,
                          bool aIsTrusted,
                          nsIPrincipal* aTriggeringPrincipal) = 0;
 
@@ -82,6 +83,7 @@ public:
                              bool aNoOpenerImplied = false,
                              nsIDocShell** aDocShell = 0,
                              nsIRequest** aRequest = 0,
+                             bool aIsUserTriggered = false,
                              nsIPrincipal* aTriggeringPrincipal = nullptr) = 0;
 
   /**
