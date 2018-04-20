@@ -108,7 +108,7 @@ enum eEventAction {
 };
 
 static eEventAction
-GetActionForEvent(nsIDOMEvent* aEvent)
+GetActionForEvent(Event* aEvent)
 {
   WidgetKeyboardEvent* keyEvent =
     aEvent->WidgetEventPtr()->AsKeyboardEvent();
@@ -160,7 +160,7 @@ NS_IMETHODIMP
 nsPrintPreviewListener::HandleEvent(Event* aEvent)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(
-    aEvent ? aEvent->InternalDOMEvent()->GetOriginalTarget() : nullptr);
+    aEvent ? aEvent->GetOriginalTarget() : nullptr);
   if (content && !content->IsXULElement()) {
     eEventAction action = ::GetActionForEvent(aEvent);
     switch (action) {
