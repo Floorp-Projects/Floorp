@@ -2033,8 +2033,13 @@ class RTCRtpSender {
   }
 
   getStats() {
-    return this._pc._async(
-      async () => this._pc._getStats(this.track));
+    if (this.track) {
+      return this._pc._async(
+        async () => this._pc._getStats(this.track));
+    }
+    return this._pc._win.Promise.resolve().then(
+      () => this._pc._win.RTCStatsReport._create(this._pc._win, new Map())
+    );
   }
 
   checkWasCreatedByPc(pc) {

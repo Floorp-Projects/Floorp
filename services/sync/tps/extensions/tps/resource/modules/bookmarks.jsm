@@ -80,6 +80,7 @@ PlacesItem.prototype = {
     "tags": PlacesUtils.bookmarks.tagsGuid,
     "unfiled": PlacesUtils.bookmarks.unfiledGuid,
     "toolbar": PlacesUtils.bookmarks.toolbarGuid,
+    "mobile": PlacesUtils.bookmarks.mobileGuid,
   },
 
   _typeMap: new Map([

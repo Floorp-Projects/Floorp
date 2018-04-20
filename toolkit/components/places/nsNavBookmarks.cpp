@@ -157,13 +157,7 @@ NeedsTombstone(const BookmarkData& aBookmark) {
 
 
 nsNavBookmarks::nsNavBookmarks()
-  : mRoot(0)
-  , mMenuRoot(0)
-  , mTagsRoot(0)
-  , mUnfiledRoot(0)
-  , mToolbarRoot(0)
-  , mMobileRoot(0)
-  , mCanNotify(false)
+  : mCanNotify(false)
 {
   NS_ASSERTION(!gBookmarksService,
                "Attempting to create two instances of the service!");
@@ -220,61 +214,6 @@ nsNavBookmarks::Init()
   history->AddObserver(this, true);
 
   // DO NOT PUT STUFF HERE that can fail. See observer comment above.
-
-  return NS_OK;
-}
-
-nsresult
-nsNavBookmarks::EnsureRoots()
-{
-  if (mRoot)
-    return NS_OK;
-
-  nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
-  if (!conn) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsCOMPtr<mozIStorageStatement> stmt;
-  nsresult rv = conn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT guid, id FROM moz_bookmarks WHERE guid IN ( "
-      "'root________', 'menu________', 'toolbar_____', "
-      "'tags________', 'unfiled_____', 'mobile______' )"
-  ), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasResult;
-  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-    nsAutoCString guid;
-    rv = stmt->GetUTF8String(0, guid);
-    NS_ENSURE_SUCCESS(rv, rv);
-    int64_t id;
-    rv = stmt->GetInt64(1, &id);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (guid.EqualsLiteral("root________")) {
-      mRoot = id;
-    }
-    else if (guid.EqualsLiteral("menu________")) {
-      mMenuRoot = id;
-    }
-    else if (guid.EqualsLiteral("toolbar_____")) {
-      mToolbarRoot = id;
-    }
-    else if (guid.EqualsLiteral("tags________")) {
-      mTagsRoot = id;
-    }
-    else if (guid.EqualsLiteral("unfiled_____")) {
-      mUnfiledRoot = id;
-    }
-    else if (guid.EqualsLiteral("mobile______")) {
-      mMobileRoot = id;
-    }
-  }
-
-  if (!mRoot || !mMenuRoot || !mToolbarRoot || !mTagsRoot || !mUnfiledRoot ||
-      !mMobileRoot)
-    return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
@@ -349,9 +288,9 @@ nsNavBookmarks::AdjustSeparatorsSyncCounter(int64_t aFolderId,
 NS_IMETHODIMP
 nsNavBookmarks::GetPlacesRoot(int64_t* aRoot)
 {
-  nsresult rv = EnsureRoots();
-  NS_ENSURE_SUCCESS(rv, rv);
-  *aRoot = mRoot;
+  int64_t id = mDB->GetRootFolderId();
+  NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);
+  *aRoot = id;
   return NS_OK;
 }
 
@@ -359,19 +298,19 @@ nsNavBookmarks::GetPlacesRoot(int64_t* aRoot)
 NS_IMETHODIMP
 nsNavBookmarks::GetBookmarksMenuFolder(int64_t* aRoot)
 {
-  nsresult rv = EnsureRoots();
-  NS_ENSURE_SUCCESS(rv, rv);
-  *aRoot = mMenuRoot;
+  int64_t id = mDB->GetMenuFolderId();
+  NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);
+  *aRoot = id;
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsNavBookmarks::GetToolbarFolder(int64_t* aFolderId)
+nsNavBookmarks::GetToolbarFolder(int64_t* aRoot)
 {
-  nsresult rv = EnsureRoots();
-  NS_ENSURE_SUCCESS(rv, rv);
-  *aFolderId = mToolbarRoot;
+  int64_t id = mDB->GetToolbarFolderId();
+  NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);
+  *aRoot = id;
   return NS_OK;
 }
 
@@ -379,9 +318,9 @@ nsNavBookmarks::GetToolbarFolder(int64_t* aFolderId)
 NS_IMETHODIMP
 nsNavBookmarks::GetTagsFolder(int64_t* aRoot)
 {
-  nsresult rv = EnsureRoots();
-  NS_ENSURE_SUCCESS(rv, rv);
-  *aRoot = mTagsRoot;
+  int64_t id = mDB->GetTagsFolderId();
+  NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);
+  *aRoot = id;
   return NS_OK;
 }
 
@@ -389,9 +328,9 @@ nsNavBookmarks::GetTagsFolder(int64_t* aRoot)
 NS_IMETHODIMP
 nsNavBookmarks::GetUnfiledBookmarksFolder(int64_t* aRoot)
 {
-  nsresult rv = EnsureRoots();
-  NS_ENSURE_SUCCESS(rv, rv);
-  *aRoot = mUnfiledRoot;
+  int64_t id = mDB->GetUnfiledFolderId();
+  NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);
+  *aRoot = id;
   return NS_OK;
 }
 
@@ -399,9 +338,9 @@ nsNavBookmarks::GetUnfiledBookmarksFolder(int64_t* aRoot)
 NS_IMETHODIMP
 nsNavBookmarks::GetMobileFolder(int64_t* aRoot)
 {
-  nsresult rv = EnsureRoots();
-  NS_ENSURE_SUCCESS(rv, rv);
-  *aRoot = mMobileRoot;
+  int64_t id = mDB->GetMobileFolderId();
+  NS_ENSURE_TRUE(id > 0, NS_ERROR_UNEXPECTED);
+  *aRoot = id;
   return NS_OK;
 }
 
@@ -628,7 +567,7 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   NOTIFY_BOOKMARKS_OBSERVERS(mCanNotify, mObservers,
-                             SKIP_TAGS(grandParentId == mTagsRoot),
+                             SKIP_TAGS(grandParentId == mDB->GetTagsFolderId()),
                              OnItemAdded(*aNewBookmarkId, aFolder, index,
                                          TYPE_BOOKMARK, aURI, title, dateAdded,
                                          guid, folderGuid, aSource));

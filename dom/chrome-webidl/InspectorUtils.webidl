@@ -88,6 +88,8 @@ namespace InspectorUtils {
 
 dictionary PropertyNamesOptions {
   boolean includeAliases = false;
+  boolean includeShorthands = true;
+  boolean includeExperimentals = false;
 };
 
 dictionary InspectorRGBATuple {

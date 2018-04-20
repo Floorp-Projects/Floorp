@@ -368,34 +368,37 @@ InspectorUtils::GetCSSPropertyNames(GlobalObject& aGlobalObject,
                                     const PropertyNamesOptions& aOptions,
                                     nsTArray<nsString>& aResult)
 {
-#define DO_PROP(_prop)                                                      \
-  PR_BEGIN_MACRO                                                            \
-    nsCSSPropertyID cssProp = nsCSSPropertyID(_prop);                       \
-    if (nsCSSProps::IsEnabled(cssProp, CSSEnabledState::eForAllContent)) {  \
-      nsDependentCString name(kCSSRawProperties[_prop]);                    \
-      aResult.AppendElement(NS_ConvertASCIItoUTF16(name));                  \
-    }                                                                       \
-  PR_END_MACRO
+  CSSEnabledState enabledState = aOptions.mIncludeExperimentals
+    ? CSSEnabledState::eIgnoreEnabledState
+    : CSSEnabledState::eForAllContent;
+
+  auto appendProperty = [enabledState, &aResult](uint32_t prop) {
+    nsCSSPropertyID cssProp = nsCSSPropertyID(prop);
+    if (nsCSSProps::IsEnabled(cssProp, enabledState)) {
+      nsDependentCString name(kCSSRawProperties[prop]);
+      aResult.AppendElement(NS_ConvertASCIItoUTF16(name));
+    }
+  };
 
   uint32_t prop = 0;
   for ( ; prop < eCSSProperty_COUNT_no_shorthands; ++prop) {
     if (nsCSSProps::PropertyParseType(nsCSSPropertyID(prop)) !=
         CSS_PROPERTY_PARSE_INACCESSIBLE) {
-      DO_PROP(prop);
+      appendProperty(prop);
     }
   }
 
-  for ( ; prop < eCSSProperty_COUNT; ++prop) {
-    DO_PROP(prop);
+  if (aOptions.mIncludeShorthands) {
+    for ( ; prop < eCSSProperty_COUNT; ++prop) {
+      appendProperty(prop);
+    }
   }
 
   if (aOptions.mIncludeAliases) {
     for (prop = eCSSProperty_COUNT; prop < eCSSProperty_COUNT_with_aliases; ++prop) {
-      DO_PROP(prop);
+      appendProperty(prop);
     }
   }
-
-#undef DO_PROP
 }
 
 static void InsertNoDuplicates(nsTArray<nsString>& aArray,

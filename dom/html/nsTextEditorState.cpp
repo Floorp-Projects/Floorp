@@ -66,11 +66,11 @@ public:
   }
   ~ValueSetter()
   {
-    mTextEditor->SetSuppressDispatchingInputEvent(mOuterTransaction);
+    mTextEditor->SuppressDispatchingInputEvent(mOuterTransaction);
   }
   void Init()
   {
-    mTextEditor->SetSuppressDispatchingInputEvent(true);
+    mTextEditor->SuppressDispatchingInputEvent(true);
   }
 
 private:

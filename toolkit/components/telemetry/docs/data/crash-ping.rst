@@ -18,6 +18,12 @@ The environment block that is sent with this ping varies: if Firefox was running
 
 The client ID is submitted with this ping.
 
+The metadata field holds a subset of the crash annotations, all field values
+are stored as strings but some may be interpreted either as numbers or
+boolean values. Numbers are integral unless stated otherwise in the
+description. Boolean values are set to "1" when true, "0" when false. If
+they're absent then they should be interpreted as false.
+
 Structure:
 
 .. code-block:: js
@@ -45,30 +51,30 @@ Structure:
           Version: <version number>,
           BuildID: "YYYYMMDDHHMMSS",
           AsyncShutdownTimeout: <json>, // Optional, present when a shutdown blocker failed to respond within a reasonable amount of time
-          AvailablePageFile: <size>, // Windows-only, available paging file
-          AvailablePhysicalMemory: <size>, // Windows-only, available physical memory
-          AvailableVirtualMemory: <size>, // Windows-only, available virtual memory
+          AvailablePageFile: <size>, // Windows-only, available paging file in bytes
+          AvailablePhysicalMemory: <size>, // Windows-only, available physical memory in bytes
+          AvailableVirtualMemory: <size>, // Windows-only, available virtual memory in bytes
           BlockedDllList: <list>, // Windows-only, see WindowsDllBlocklist.cpp for details
-          BlocklistInitFailed: 1, // Windows-only, present only if the DLL blocklist initialization failed
+          BlocklistInitFailed: "1", // Windows-only, present only if the DLL blocklist initialization failed
           CrashTime: <time>, // Seconds since the Epoch
-          ContainsMemoryReport: 1, // Optional, if set indicates that the crash had a memory report attached
+          ContainsMemoryReport: "1", // Optional, if set indicates that the crash had a memory report attached
           EventLoopNestingLevel: <levels>, // Optional, present only if >0, indicates the nesting level of the event-loop
           ipc_channel_error: <error string>, // Optional, contains the string processing error reason for an ipc-based content crash
-          IsGarbageCollecting: 1, // Optional, if set indicates that the crash occurred while the garbage collector was running
+          IsGarbageCollecting: "1", // Optional, if set indicates that the crash occurred while the garbage collector was running
           MozCrashReason: <reason>, // Optional, contains the string passed to MOZ_CRASH()
           OOMAllocationSize: <size>, // Size of the allocation that caused an OOM
           RemoteType: <type>, // Optional, type of content process, see below for a list of types
           SecondsSinceLastCrash: <duration>, // Seconds elapsed since the last crash occurred
-          ShutdownProgress: <phase>, // Optional, contains the shutdown phase in which the crash occurred
+          ShutdownProgress: <phase>, // Optional, contains a string describing the shutdown phase in which the crash occurred
           SystemMemoryUsePercentage: <percentage>, // Windows-only, percent of memory in use
-          StartupCrash: 1, // Optional, if set indicates that Firefox crashed during startup
+          StartupCrash: "1", // Optional, if set indicates that Firefox crashed during startup
           TelemetrySessionId: <id>, // Active telemetry session ID when the crash was recorded
           TextureUsage: <usage>, // Optional, usage of texture memory in bytes
-          TotalPageFile: <size>, // Windows-only, paging file in use
-          TotalPhysicalMemory: <size>, // Windows-only, physical memory in use
-          TotalVirtualMemory: <size>, // Windows-only, virtual memory in use
-          UptimeTS: <duration>, // Seconds since Firefox was started
-          User32BeforeBlocklist: 1, // Windows-only, present only if user32.dll was loaded before the DLL blocklist has been initialized
+          TotalPageFile: <size>, // Windows-only, paging file in use expressed in bytes
+          TotalPhysicalMemory: <size>, // Windows-only, physical memory in use expressed in bytes
+          TotalVirtualMemory: <size>, // Windows-only, virtual memory in use expressed in bytes
+          UptimeTS: <duration>, // Seconds since Firefox was started, this can have a fractional component
+          User32BeforeBlocklist: "1", // Windows-only, present only if user32.dll was loaded before the DLL blocklist has been initialized
         },
         hasCrashEnvironment: bool
       }

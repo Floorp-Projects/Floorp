@@ -113,10 +113,8 @@ def lint(paths, config, fix=None, **lintargs):
                 '--skip=exclude-list.txt',
                 ]
 
-# Disabled for now because of
-# https://github.com/lucasdemarchi/codespell/issues/314
-#    if fix:
-#        cmd_args.append('--write-changes')
+    if fix:
+        cmd_args.append('--write-changes')
 
     base_command = cmd_args + paths
 

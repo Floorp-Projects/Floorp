@@ -382,9 +382,6 @@
                           command="cmd_enableUpdateSecurity"/>
                   <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
                 </hbox>
-                <spacer flex="1"/>
-                <hbox id="updates-sorters" class="sort-controls" sortby="updateDate"
-                      ascending="false"/>
               </hbox>
               <vbox id="updates-list-empty" class="alert-container"
                     flex="1" hidden="true">

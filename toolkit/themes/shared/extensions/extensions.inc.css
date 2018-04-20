@@ -286,39 +286,6 @@ button.warning {
   display: none;
 }
 
-/*** sorters ***/
-
-.sort-controls {
-  -moz-appearance: none;
-}
-
-.sorter {
-  height: 35px;
-  border: none;
-  border-radius: 0;
-  background-color: transparent;
-  color: #536680;
-  margin: 0;
-  min-width: 12px !important;
-  -moz-box-direction: reverse;
-}
-
-.sorter .button-box {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-.sorter[checkState="1"],
-.sorter[checkState="2"] {
-  background-color: var(--in-content-box-background-hover);
-  box-shadow: 0 -4px 0 0 var(--in-content-border-highlight) inset;
-}
-
-.sorter .button-icon {
-  margin-inline-start: 6px;
-}
-
-
 /*** discover view ***/
 
 .discover-spacer-before,

@@ -1165,14 +1165,18 @@ WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 void
 WebRenderBridgeParent::AdvanceAnimations()
 {
-  TimeStamp animTime = mCompositorScheduler->GetLastComposeTime();
+  Maybe<TimeStamp> testingTimeStamp;
   if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
-    animTime = cbp->GetTestingTimeStamp().valueOr(animTime);
+    testingTimeStamp = cbp->GetTestingTimeStamp();
   }
 
-  AnimationHelper::SampleAnimations(mAnimStorage,
-                                    !mPreviousFrameTimeStamp.IsNull() ?
-                                    mPreviousFrameTimeStamp : animTime);
+  TimeStamp animTime = testingTimeStamp.valueOr(
+    !mPreviousFrameTimeStamp.IsNull()
+    ? mPreviousFrameTimeStamp
+    : mCompositorScheduler->GetLastComposeTime());
+
+
+  AnimationHelper::SampleAnimations(mAnimStorage, animTime);
 
   // Reset the previous time stamp if we don't already have any running
   // animations to avoid using the time which is far behind for newly

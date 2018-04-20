@@ -1445,6 +1445,15 @@ public:
   bool IsInEditAction() const { return mIsInEditAction; }
 
   /**
+   * SuppressDispatchingInputEvent() suppresses or unsuppresses dispatching
+   * "input" event.
+   */
+  void SuppressDispatchingInputEvent(bool aSuppress)
+  {
+    mDispatchInputEvent = !aSuppress;
+  }
+
+  /**
    * IsSuppressingDispatchingInputEvent() returns true if the editor stops
    * dispatching input event.  Otherwise, false.
    */

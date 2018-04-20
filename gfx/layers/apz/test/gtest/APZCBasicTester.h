@@ -31,8 +31,8 @@ protected:
     APZThreadUtils::SetControllerThread(MessageLoop::current());
 
     tm = new TestAPZCTreeManager(mcc);
-    updater = new APZUpdater(tm);
-    sampler = new APZSampler(tm);
+    updater = new APZUpdater(tm, false);
+    sampler = new APZSampler(tm, false);
     apzc = new TestAsyncPanZoomController(LayersId{0}, mcc, tm, mGestureBehavior);
     apzc->SetFrameMetrics(TestFrameMetrics());
     apzc->GetScrollMetadata().SetIsLayersIdRoot(true);
