@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
         interpolation = {"server": "%s:%d" % httpd.httpd.server_address,
                          "OOP": "false"}
-        prefs = json.loads(json.dumps(prefs) % interpolation)
+        prefs = json.loads(json.dumps(prefs).format(**interpolation))
         for pref in prefs:
             prefs[pref] = Preferences.cast(prefs[pref])
 
