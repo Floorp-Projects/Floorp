@@ -1814,9 +1814,6 @@ TabParent::RecvSetStatus(const uint32_t& aType, const nsString& aStatus)
   }
 
   switch (aType) {
-   case nsIWebBrowserChrome::STATUS_SCRIPT:
-    xulBrowserWindow->SetJSStatus(aStatus);
-    break;
    case nsIWebBrowserChrome::STATUS_LINK:
     xulBrowserWindow->SetOverLink(aStatus, nullptr);
     break;

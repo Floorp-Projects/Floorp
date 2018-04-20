@@ -49,8 +49,6 @@
         throw Cr.NS_NOINTERFACE;
       },
 
-      setJSStatus: function() { },
-
       setOverLink: function(aStatusText, aLink) {
         gStatusText = aStatusText;
       },

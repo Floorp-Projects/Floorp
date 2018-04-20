@@ -17,7 +17,6 @@ interface nsIDocShellTreeItem;
 [scriptable, uuid(E8C414C4-DC38-4BA3-AB4E-EC4CBBE22907)]
 interface nsIWebBrowserChrome : nsISupports
 {
-    const unsigned long STATUS_SCRIPT         = 0x00000001;
     const unsigned long STATUS_LINK           = 0x00000003;
 
     /**
