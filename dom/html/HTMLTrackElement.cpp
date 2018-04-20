@@ -25,7 +25,6 @@
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIHttpChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"

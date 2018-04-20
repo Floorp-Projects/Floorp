@@ -10,7 +10,6 @@ with Files("**"):
 XPIDL_SOURCES += [
     'nsIDOMEvent.idl',
     'nsIDOMEventListener.idl',
-    'nsIDOMEventTarget.idl',
 ]
 
 XPIDL_MODULE = 'dom_events'

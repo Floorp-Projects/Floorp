@@ -35,7 +35,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollable.h"
 #include "nsFrameLoader.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsSubDocumentFrame.h"
