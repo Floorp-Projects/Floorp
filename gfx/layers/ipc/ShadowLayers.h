@@ -246,7 +246,7 @@ public:
   /**
    * Used for debugging to tell the compositor how long this frame took to paint.
    */
-  void SendPaintTime(uint64_t aId, TimeDuration aPaintTime);
+  void SendPaintTime(TransactionId aId, TimeDuration aPaintTime);
 
   /**
    * End the current transaction and forward it to LayerManagerComposite.
@@ -254,7 +254,7 @@ public:
    * caller of EndTransaction().
    */
   bool EndTransaction(const nsIntRegion& aRegionToClear,
-                      uint64_t aId,
+                      TransactionId aId,
                       bool aScheduleComposite,
                       uint32_t aPaintSequenceNumber,
                       bool aIsRepeatTransaction,

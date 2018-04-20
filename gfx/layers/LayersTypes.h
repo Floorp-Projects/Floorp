@@ -88,6 +88,57 @@ struct LayersId {
   };
 };
 
+struct TransactionId {
+  uint64_t mId;
+
+  bool IsValid() const {
+    return mId != 0;
+  }
+
+  MOZ_MUST_USE TransactionId Next() const {
+    return TransactionId{mId + 1};
+  }
+
+  MOZ_MUST_USE TransactionId Prev() const {
+    return TransactionId{mId - 1};
+  }
+
+  int64_t operator-(const TransactionId& aOther) const {
+    return mId - aOther.mId;
+  }
+
+  // Allow explicit cast to a uint64_t for now
+  explicit operator uint64_t() const
+  {
+    return mId;
+  }
+
+  bool operator<(const TransactionId& aOther) const
+  {
+    return mId < aOther.mId;
+  }
+
+  bool operator<=(const TransactionId& aOther) const
+  {
+    return mId <= aOther.mId;
+  }
+
+  bool operator>(const TransactionId& aOther) const
+  {
+    return mId > aOther.mId;
+  }
+
+  bool operator>=(const TransactionId& aOther) const
+  {
+    return mId >= aOther.mId;
+  }
+
+  bool operator==(const TransactionId& aOther) const
+  {
+    return mId == aOther.mId;
+  }
+};
+
 enum class LayersBackend : int8_t {
   LAYERS_NONE = 0,
   LAYERS_BASIC,

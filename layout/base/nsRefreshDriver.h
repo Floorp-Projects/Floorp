@@ -79,6 +79,8 @@ public:
 class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
                               public nsARefreshObserver
 {
+  using TransactionId = mozilla::layers::TransactionId;
+
 public:
   explicit nsRefreshDriver(nsPresContext *aPresContext);
   ~nsRefreshDriver();
@@ -353,12 +355,12 @@ public:
   static bool GetJankLevels(mozilla::Vector<uint64_t>& aJank);
 
   // mozilla::layers::TransactionIdAllocator
-  uint64_t GetTransactionId(bool aThrottle) override;
-  uint64_t LastTransactionId() const override;
-  void NotifyTransactionCompleted(uint64_t aTransactionId) override;
-  void RevokeTransactionId(uint64_t aTransactionId) override;
+  TransactionId GetTransactionId(bool aThrottle) override;
+  TransactionId LastTransactionId() const override;
+  void NotifyTransactionCompleted(TransactionId aTransactionId) override;
+  void RevokeTransactionId(TransactionId aTransactionId) override;
   void ClearPendingTransactions() override;
-  void ResetInitialTransactionId(uint64_t aTransactionId) override;
+  void ResetInitialTransactionId(TransactionId aTransactionId) override;
   mozilla::TimeStamp GetTransactionStart() override;
 
   bool IsWaitingForPaint(mozilla::TimeStamp aTime);
@@ -453,9 +455,9 @@ private:
   RefPtr<nsRefreshDriver> mRootRefresh;
 
   // The most recently allocated transaction id.
-  uint64_t mPendingTransaction;
+  TransactionId mPendingTransaction;
   // The most recently completed transaction id.
-  uint64_t mCompletedTransaction;
+  TransactionId mCompletedTransaction;
 
   uint32_t mFreezeCount;
 

@@ -55,6 +55,7 @@ using mozilla::layers::SimpleLayerAttributes from "mozilla/layers/LayerAttribute
 using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -563,7 +564,7 @@ struct TransactionInfo
   CompositableOperation[] paints;
   OpDestroy[] toDestroy;
   uint64_t fwdTransactionId;
-  uint64_t id;
+  TransactionId id;
   TargetConfig targetConfig;
   PluginWindowData[] plugins;
   bool isFirstPaint;
