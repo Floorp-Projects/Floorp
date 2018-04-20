@@ -142,6 +142,21 @@ typedef PlatformSpecificStateBase PlatformSpecificState;  // no extra state, jus
  * If set to true, APZ uses a fling physical model similar to Chrome's
  * on Android, rather than Android's StackScroller.
  *
+ * \li\b apz.android.chrome_fling_physics.friction
+ * A tunable parameter for Chrome fling physics on Android that governs
+ * how quickly a fling animation slows down due to friction (and therefore
+ * also how far it reaches). Should be in the range [0-1].
+ *
+ * \li\b apz.android.chrome_fling_physics.inflexion
+ * A tunable parameter for Chrome fling physics on Android that governs
+ * the shape of the fling curve. Should be in the range [0-1].
+ *
+ * \li\b apz.android.chrome_fling_physics.stop_threshold
+ * A tunable parameter for Chrome fling physics on Android that governs
+ * how close the fling animation has to get to its target destination
+ * before it stops.
+ * Units: ParentLayer pixels
+ *
  * \li\b apz.autoscroll.enabled
  * If set to true, autoscrolling is driven by APZ rather than the content
  * process main thread.
