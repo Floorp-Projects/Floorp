@@ -1399,9 +1399,10 @@ void
 CompositorBridgeParent::FlushApzRepaints(const LayersId& aLayersId)
 {
   MOZ_ASSERT(mApzcTreeManager);
+  MOZ_ASSERT(mApzUpdater);
   MOZ_ASSERT(aLayersId.IsValid());
   RefPtr<CompositorBridgeParent> self = this;
-  APZThreadUtils::RunOnControllerThread(NS_NewRunnableFunction(
+  mApzUpdater->RunOnControllerThread(aLayersId, NS_NewRunnableFunction(
     "layers::CompositorBridgeParent::FlushApzRepaints",
     [=]() { self->mApzcTreeManager->FlushApzRepaints(aLayersId); }));
 }
@@ -1421,7 +1422,7 @@ CompositorBridgeParent::SetConfirmedTargetAPZC(const LayersId& aLayersId,
                                                const uint64_t& aInputBlockId,
                                                const nsTArray<ScrollableLayerGuid>& aTargets)
 {
-  if (!mApzcTreeManager) {
+  if (!mApzcTreeManager || !mApzUpdater) {
     return;
   }
   // Need to specifically bind this since it's overloaded.
@@ -1436,7 +1437,7 @@ CompositorBridgeParent::SetConfirmedTargetAPZC(const LayersId& aLayersId,
       setTargetApzcFunc,
       aInputBlockId,
       aTargets);
-  APZThreadUtils::RunOnControllerThread(task.forget());
+  mApzUpdater->RunOnControllerThread(aLayersId, task.forget());
 }
 
 void
