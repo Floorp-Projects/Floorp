@@ -237,7 +237,7 @@ public:
                                     WidgetEvent* aEvent,
                                     nsEventStatus* aStatus) override;
   nsresult HandleDOMEventWithTarget(nsIContent* aTargetContent,
-                                    nsIDOMEvent* aEvent,
+                                    dom::Event* aEvent,
                                     nsEventStatus* aStatus) override;
   bool ShouldIgnoreInvalidation() override;
   void WillPaint() override;
