@@ -1156,8 +1156,6 @@ MBasicBlock::addPredecessorSameInputsAs(MBasicBlock* pred, MBasicBlock* existing
     MOZ_ASSERT(pred->hasLastIns());
     MOZ_ASSERT(!pred->successorWithPhis());
 
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-
     if (!phisEmpty()) {
         size_t existingPosition = indexForPredecessor(existingPred);
         for (MPhiIterator iter = phisBegin(); iter != phisEnd(); iter++) {
