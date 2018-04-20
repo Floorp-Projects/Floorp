@@ -18,6 +18,7 @@
 #include "Axis.h"                       // for AxisX, AxisY, Axis, etc
 #include "CheckerboardEvent.h"          // for CheckerboardEvent
 #include "Compositor.h"                 // for Compositor
+#include "DesktopFlingPhysics.h"        // for DesktopFlingPhysics
 #include "FrameMetrics.h"               // for FrameMetrics, etc
 #include "GenericFlingAnimation.h"      // for GenericFlingAnimation
 #include "GestureEventListener.h"       // for GestureEventListener
@@ -518,7 +519,7 @@ AsyncPanZoomAnimation*
 PlatformSpecificStateBase::CreateFlingAnimation(AsyncPanZoomController& aApzc,
                                                 const FlingHandoffState& aHandoffState)
 {
-  return new GenericFlingAnimation(aApzc,
+  return new GenericFlingAnimation<DesktopFlingPhysics>(aApzc,
       aHandoffState.mChain,
       aHandoffState.mIsHandoff,
       aHandoffState.mScrolledApzc);

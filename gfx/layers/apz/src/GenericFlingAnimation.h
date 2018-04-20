@@ -27,7 +27,29 @@
 namespace mozilla {
 namespace layers {
 
-class GenericFlingAnimation: public AsyncPanZoomAnimation {
+/**
+ * The FlingPhysics template parameter determines the physics model
+ * that the fling animation follows. It must have the following methods:
+ *
+ *   - Default constructor.
+ *
+ *   - Init(const ParentLayerPoint& aStartingVelocity).
+ *     Called at the beginning of the fling, with the fling's starting velocity.
+ *
+ *   - Sample(const TimeDuration& aDelta,
+ *            ParentLayerPoint* aOutVelocity,
+ *            ParentLayerPoint* aOutOffset);
+ *     Called on each sample of the fling.
+ *     |aDelta| is the time elapsed since the last sample.
+ *     |aOutVelocity| should be the desired velocity after the current sample,
+ *                    in ParentLayer pixels per millisecond.
+ *     |aOutOffset| should be the desired _delta_ to the scroll offset after
+ *     the current sample. |aOutOffset| should _not_ be clamped to the APZC's
+ *     scrollable bounds; the caller will do the clamping, and it needs to
+ *     know the unclamped value to handle handoff/overscroll correctly.
+ */
+template <typename FlingPhysics>
+class GenericFlingAnimation: public AsyncPanZoomAnimation, public FlingPhysics {
 public:
   GenericFlingAnimation(AsyncPanZoomController& aApzc,
                         const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
@@ -84,6 +106,8 @@ public:
 
     mApzc.mLastFlingTime = now;
     mApzc.mLastFlingVelocity = velocity;
+
+    FlingPhysics::Init(mApzc.GetVelocityVector());
   }
 
   /**
@@ -95,18 +119,9 @@ public:
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
                         const TimeDuration& aDelta) override
   {
-    float friction = gfxPrefs::APZFlingFriction();
-    float threshold = gfxPrefs::APZFlingStoppedThreshold();
-
-    // Save the velocity locally instead of just passing it directly into
-    // SetVelocityVector(), because AdjustDisplacement() (called below)
-    // zeroes out the Axis velocity if we're in overscroll, and we need to
-    // hand off the velocity to the tree manager in such a case.
-    ParentLayerPoint velocity(
-        ApplyFrictionOrCancel(mApzc.mX.GetVelocity(), aDelta, friction, threshold),
-        ApplyFrictionOrCancel(mApzc.mY.GetVelocity(), aDelta, friction, threshold));
-    FLING_LOG("%p reduced velocity to %s due to friction\n",
-      &mApzc, ToString(mApzc.GetVelocityVector()).c_str());
+    ParentLayerPoint velocity;
+    ParentLayerPoint offset;
+    FlingPhysics::Sample(aDelta, &velocity, &offset);
 
     mApzc.SetVelocityVector(velocity);
 
@@ -127,8 +142,6 @@ public:
         &mApzc));
       return false;
     }
-
-    ParentLayerPoint offset = velocity * aDelta.ToMilliseconds();
 
     // Ordinarily we might need to do a ScheduleComposite if either of
     // the following AdjustDisplacement calls returns true, but this
@@ -200,29 +213,6 @@ private:
   {
     return (aBase * gfxPrefs::APZFlingAccelBaseMultiplier())
          + (aSupplemental * gfxPrefs::APZFlingAccelSupplementalMultiplier());
-  }
-
-  /**
-   * Applies friction to the given velocity and returns the result, or
-   * returns zero if the velocity is too low.
-   * |aVelocity| is the incoming velocity.
-   * |aDelta| is the amount of time that has passed since the last time
-   * friction was applied.
-   * |aFriction| is the amount of friction to apply.
-   * |aThreshold| is the velocity below which the fling is cancelled.
-   */
-  static float ApplyFrictionOrCancel(float aVelocity, const TimeDuration& aDelta,
-                                     float aFriction, float aThreshold)
-  {
-    if (fabsf(aVelocity) <= aThreshold) {
-      // If the velocity is very low, just set it to 0 and stop the fling,
-      // otherwise we'll just asymptotically approach 0 and the user won't
-      // actually see any changes.
-      return 0.0f;
-    }
-
-    aVelocity *= pow(1.0f - aFriction, float(aDelta.ToMilliseconds()));
-    return aVelocity;
   }
 
   AsyncPanZoomController& mApzc;
