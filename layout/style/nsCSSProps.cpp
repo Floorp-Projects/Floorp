@@ -185,7 +185,7 @@ CheckServoCSSPropList()
 
   const uint32_t kServoFlags =
     CSS_PROPERTY_ENABLED_MASK | CSS_PROPERTY_INTERNAL |
-    CSS_PROPERTY_PARSE_INACCESSIBLE;
+    CSS_PROPERTY_PARSE_INACCESSIBLE | CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH;
   bool mismatch = false;
   for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; i++) {
     auto& geckoData = sGeckoProps[i];
@@ -198,7 +198,7 @@ CheckServoCSSPropList()
       continue;
     }
     if ((geckoData.mFlags & kServoFlags) != servoData.mFlags) {
-      printf_stderr("Enabled flags of %s mismatch\n", name);
+      printf_stderr("Flags of %s mismatch\n", name);
       mismatch = true;
     }
     if (strcmp(geckoData.mPref, servoData.mPref) != 0) {
