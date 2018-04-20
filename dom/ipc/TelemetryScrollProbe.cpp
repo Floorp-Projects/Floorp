@@ -54,14 +54,13 @@ TelemetryScrollProbe::GetPresShell() const
 }
 
 bool
-TelemetryScrollProbe::ShouldIgnore(nsIDOMEvent* aEvent) const
+TelemetryScrollProbe::ShouldIgnore(Event* aEvent) const
 {
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aEvent->GetTarget(getter_AddRefs(target));
-  nsCOMPtr<nsIDocument> targetDocument = do_QueryInterface(target);
   RefPtr<nsIDocument> document = GetDocument();
 
-  return !document || targetDocument != document || nsContentUtils::IsSystemPrincipal(document->NodePrincipal());
+  return !document ||
+         aEvent->GetTarget() != document ||
+         nsContentUtils::IsSystemPrincipal(document->NodePrincipal());
 }
 
 NS_IMPL_ISUPPORTS(TelemetryScrollProbe, nsIDOMEventListener)

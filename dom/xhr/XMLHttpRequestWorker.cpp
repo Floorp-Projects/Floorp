@@ -993,14 +993,8 @@ Proxy::HandleEvent(Event* aEvent)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  if (NS_FAILED(aEvent->GetTarget(getter_AddRefs(target)))) {
-    NS_WARNING("Failed to get target!");
-    return NS_ERROR_FAILURE;
-  }
-
-  bool isUploadTarget = mXHR != target;
-  ProgressEvent* progressEvent = aEvent->InternalDOMEvent()->AsProgressEvent();
+  bool isUploadTarget = mXHR != aEvent->GetTarget();
+  ProgressEvent* progressEvent = aEvent->AsProgressEvent();
 
   if (mInOpen && type.EqualsASCII(sEventStrings[STRING_readystatechange])) {
     if (mXHR->ReadyState() == 1) {

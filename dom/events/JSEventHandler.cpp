@@ -119,8 +119,7 @@ JSEventHandler::HandleEvent(Event* aEvent)
     return NS_ERROR_FAILURE;
   }
 
-  Event* event = aEvent->InternalDOMEvent();
-  bool isMainThread = event->IsMainThreadEvent();
+  bool isMainThread = aEvent->IsMainThreadEvent();
   bool isChromeHandler =
     isMainThread ?
       nsContentUtils::ObjectPrincipal(
@@ -139,7 +138,7 @@ JSEventHandler::HandleEvent(Event* aEvent)
     Optional<JS::Handle<JS::Value>> error;
 
     NS_ENSURE_TRUE(aEvent, NS_ERROR_UNEXPECTED);
-    ErrorEvent* scriptEvent = aEvent->InternalDOMEvent()->AsErrorEvent();
+    ErrorEvent* scriptEvent = aEvent->AsErrorEvent();
     if (scriptEvent) {
       scriptEvent->GetMessage(errorMsg);
       msgOrEvent.SetAsString().ShareOrDependUpon(errorMsg);
@@ -156,7 +155,7 @@ JSEventHandler::HandleEvent(Event* aEvent)
       error.Construct(RootingCx());
       scriptEvent->GetError(&error.Value());
     } else {
-      msgOrEvent.SetAsEvent() = aEvent->InternalDOMEvent();
+      msgOrEvent.SetAsEvent() = aEvent;
     }
 
     RefPtr<OnErrorEventHandlerNonNull> handler =
@@ -171,7 +170,7 @@ JSEventHandler::HandleEvent(Event* aEvent)
 
     if (retval.isBoolean() &&
         retval.toBoolean() == bool(scriptEvent)) {
-      event->PreventDefaultInternal(isChromeHandler);
+      aEvent->PreventDefaultInternal(isChromeHandler);
     }
     return NS_OK;
   }
@@ -183,16 +182,16 @@ JSEventHandler::HandleEvent(Event* aEvent)
       mTypedHandler.OnBeforeUnloadEventHandler();
     ErrorResult rv;
     nsString retval;
-    handler->Call(mTarget, *(aEvent->InternalDOMEvent()), retval, rv);
+    handler->Call(mTarget, *aEvent, retval, rv);
     if (rv.Failed()) {
       return rv.StealNSResult();
     }
 
-    BeforeUnloadEvent* beforeUnload = event->AsBeforeUnloadEvent();
+    BeforeUnloadEvent* beforeUnload = aEvent->AsBeforeUnloadEvent();
     NS_ENSURE_STATE(beforeUnload);
 
     if (!DOMStringIsNull(retval)) {
-      event->PreventDefaultInternal(isChromeHandler);
+      aEvent->PreventDefaultInternal(isChromeHandler);
 
       nsAutoString text;
       beforeUnload->GetReturnValue(text);
@@ -212,14 +211,14 @@ JSEventHandler::HandleEvent(Event* aEvent)
   ErrorResult rv;
   RefPtr<EventHandlerNonNull> handler = mTypedHandler.NormalEventHandler();
   JS::Rooted<JS::Value> retval(RootingCx());
-  handler->Call(mTarget, *(aEvent->InternalDOMEvent()), &retval, rv);
+  handler->Call(mTarget, *aEvent, &retval, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
 
   // If the handler returned false, then prevent default.
   if (retval.isBoolean() && !retval.toBoolean()) {
-    event->PreventDefaultInternal(isChromeHandler);
+    aEvent->PreventDefaultInternal(isChromeHandler);
   }
 
   return NS_OK;

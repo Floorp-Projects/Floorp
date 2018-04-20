@@ -370,9 +370,9 @@ nsSMILTimeValueSpec::HandleEvent(Event* aEvent)
 }
 
 bool
-nsSMILTimeValueSpec::CheckRepeatEventDetail(nsIDOMEvent *aEvent)
+nsSMILTimeValueSpec::CheckRepeatEventDetail(Event *aEvent)
 {
-  TimeEvent* timeEvent = aEvent->InternalDOMEvent()->AsTimeEvent();
+  TimeEvent* timeEvent = aEvent->AsTimeEvent();
   if (!timeEvent) {
     NS_WARNING("Received a repeat event that was not a DOMTimeEvent");
     return false;

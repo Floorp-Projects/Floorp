@@ -571,7 +571,7 @@ TabParent::RecvDropLinks(nsTArray<nsString>&& aLinks)
 mozilla::ipc::IPCResult
 TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
 {
-  nsCOMPtr<nsIDOMEvent> event = do_QueryInterface(aEvent.mEvent);
+  RefPtr<Event> event = aEvent.mEvent;
   NS_ENSURE_TRUE(event, IPC_OK());
 
   nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(mFrameElement);
@@ -579,7 +579,7 @@ TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
 
   event->SetOwner(target);
 
-  target->DispatchEvent(*event->InternalDOMEvent());
+  target->DispatchEvent(*event);
   return IPC_OK();
 }
 

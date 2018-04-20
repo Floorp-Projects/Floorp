@@ -102,7 +102,7 @@ nsXULPopupListener::HandleEvent(Event* aEvent)
        (eventType.EqualsLiteral("contextmenu") && mIsContext)))
     return NS_OK;
 
-  MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+  MouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
