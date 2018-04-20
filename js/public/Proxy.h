@@ -352,7 +352,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool isScripted() const { return false; }
 };
 
-extern JS_FRIEND_DATA(const js::Class* const) ProxyClassPtr;
+extern JS_FRIEND_DATA(const js::Class) ProxyClass;
 
 inline bool IsProxy(const JSObject* obj)
 {
@@ -547,13 +547,13 @@ class MOZ_STACK_CLASS ProxyOptions {
     explicit ProxyOptions(bool singletonArg, bool lazyProtoArg = false)
       : singleton_(singletonArg),
         lazyProto_(lazyProtoArg),
-        clasp_(ProxyClassPtr)
+        clasp_(&ProxyClass)
     {}
 
   public:
     ProxyOptions() : singleton_(false),
                      lazyProto_(false),
-                     clasp_(ProxyClassPtr)
+                     clasp_(&ProxyClass)
     {}
 
     bool singleton() const { return singleton_; }
