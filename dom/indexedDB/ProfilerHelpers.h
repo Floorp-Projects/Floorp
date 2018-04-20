@@ -23,9 +23,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Event.h"
 #include "nsDebug.h"
 #include "nsID.h"
-#include "nsIDOMEvent.h"
 #include "nsString.h"
 #include "mozilla/Logging.h"
 
@@ -260,7 +260,7 @@ public:
     }
   }
 
-  LoggingString(nsIDOMEvent* aEvent, const char16_t* aDefault)
+  LoggingString(Event* aEvent, const char16_t* aDefault)
     : nsAutoCString(kQuote)
   {
     MOZ_ASSERT(aDefault);
