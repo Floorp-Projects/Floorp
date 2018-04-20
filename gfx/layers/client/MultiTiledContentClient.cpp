@@ -243,11 +243,11 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
   mRetainedTiles.SetLength(newTileCount);
 
   for (size_t oldIndex = 0; oldIndex < oldTileCount; oldIndex++) {
-    const TileCoordIntPoint tilePosition = oldTiles.TilePosition(oldIndex);
-    const size_t newIndex = newTiles.TileIndex(tilePosition);
+    const TileCoordIntPoint tileCoord = oldTiles.TileCoord(oldIndex);
+    const size_t newIndex = newTiles.TileIndex(tileCoord);
     // First, get the already existing tiles to the right place in the new array.
     // Leave placeholders (default constructor) where there was no tile.
-    if (newTiles.HasTile(tilePosition)) {
+    if (newTiles.HasTile(tileCoord)) {
       mRetainedTiles[newIndex] = oldRetainedTiles[oldIndex];
     } else {
       // release tiles that we are not going to reuse before allocating new ones
@@ -263,9 +263,9 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
   if (!paintRegion.IsEmpty()) {
     MOZ_ASSERT(mPaintStates.size() == 0);
     for (size_t i = 0; i < newTileCount; ++i) {
-      const TileCoordIntPoint tilePosition = newTiles.TilePosition(i);
+      const TileCoordIntPoint tileCoord = newTiles.TileCoord(i);
 
-      IntPoint tileOffset = GetTileOffset(tilePosition);
+      IntPoint tileOffset = GetTileOffset(tileCoord);
       nsIntRegion tileDrawRegion = IntRect(tileOffset, scaledTileSize);
       tileDrawRegion.AndWith(paintRegion);
 
@@ -274,7 +274,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       }
 
       TileClient& tile = mRetainedTiles[i];
-      if (!ValidateTile(tile, GetTileOffset(tilePosition), tileDrawRegion, aFlags)) {
+      if (!ValidateTile(tile, GetTileOffset(tileCoord), tileDrawRegion, aFlags)) {
         gfxCriticalError() << "ValidateTile failed";
       }
 
@@ -336,8 +336,8 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       if (edgePaddingEnabled && mResolution == 1 &&
           tile.mFrontBuffer && tile.mFrontBuffer->IsLocked()) {
 
-        const TileCoordIntPoint tilePosition = newTiles.TilePosition(i);
-        IntPoint tileOffset = GetTileOffset(tilePosition);
+        const TileCoordIntPoint tileCoord = newTiles.TileCoord(i);
+        IntPoint tileOffset = GetTileOffset(tileCoord);
         // Strictly speakig we want the unscaled rect here, but it doesn't matter
         // because we only run this code when the resolution is equal to 1.
         IntRect tileRect = IntRect(tileOffset.x, tileOffset.y,
