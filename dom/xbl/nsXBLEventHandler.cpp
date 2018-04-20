@@ -9,7 +9,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/TextEvents.h"
@@ -29,7 +29,7 @@ nsXBLEventHandler::~nsXBLEventHandler()
 NS_IMPL_ISUPPORTS(nsXBLEventHandler, nsIDOMEventListener)
 
 NS_IMETHODIMP
-nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
+nsXBLEventHandler::HandleEvent(Event* aEvent)
 {
   if (!mProtoHandler)
     return NS_ERROR_FAILURE;
@@ -122,7 +122,7 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(
 }
 
 NS_IMETHODIMP
-nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
+nsXBLKeyEventHandler::HandleEvent(Event* aEvent)
 {
   uint32_t count = mProtoHandlers.Length();
   if (count == 0)

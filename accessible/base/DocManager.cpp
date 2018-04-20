@@ -21,7 +21,7 @@
 #endif
 
 #include "mozilla/EventListenerManager.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "nsCURILoader.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIChannel.h"
@@ -354,7 +354,7 @@ DocManager::OnSecurityChange(nsIWebProgress* aWebProgress,
 // nsIDOMEventListener
 
 NS_IMETHODIMP
-DocManager::HandleEvent(nsIDOMEvent* aEvent)
+DocManager::HandleEvent(Event* aEvent)
 {
   nsAutoString type;
   aEvent->GetType(type);

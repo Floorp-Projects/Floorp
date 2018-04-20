@@ -119,7 +119,7 @@ WebAuthnManagerBase::StopListeningForVisibilityEvents()
 }
 
 NS_IMETHODIMP
-WebAuthnManagerBase::HandleEvent(nsIDOMEvent* aEvent)
+WebAuthnManagerBase::HandleEvent(Event* aEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aEvent);

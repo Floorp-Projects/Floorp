@@ -486,7 +486,7 @@ nsXBLWindowKeyHandler::ConvertEventToDOMEventType(
 }
 
 NS_IMETHODIMP
-nsXBLWindowKeyHandler::HandleEvent(nsIDOMEvent* aEvent)
+nsXBLWindowKeyHandler::HandleEvent(Event* aEvent)
 {
   RefPtr<KeyboardEvent> keyEvent =
     aEvent->InternalDOMEvent()->AsKeyboardEvent();

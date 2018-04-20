@@ -25,7 +25,7 @@ public:
     : mListener(aListener)
   { }
 
-  NS_IMETHODIMP HandleEvent(nsIDOMEvent* aEvent) override
+  NS_IMETHODIMP HandleEvent(Event* aEvent) override
   {
     if (mListener && TargetInNonDynamicDocShell(aEvent)) {
       mListener->HandleEvent(*aEvent->InternalDOMEvent());

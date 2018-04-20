@@ -32,7 +32,7 @@ public:
 
   virtual void SetSlider(nsSliderFrame* aSlider) { mSlider = aSlider; }
 
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
+  NS_DECL_NSIDOMEVENTLISTENER
 
 protected:
   virtual ~nsSliderMediator() {}

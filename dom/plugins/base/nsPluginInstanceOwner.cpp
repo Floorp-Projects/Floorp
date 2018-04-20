@@ -1704,7 +1704,7 @@ nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
 }
 
 nsresult
-nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
+nsPluginInstanceOwner::HandleEvent(Event* aEvent)
 {
   NS_ASSERTION(mInstance, "Should have a valid plugin instance or not receive events.");
 
@@ -3386,7 +3386,7 @@ NS_IMPL_ISUPPORTS(nsPluginDOMContextMenuListener,
                   nsIDOMEventListener)
 
 NS_IMETHODIMP
-nsPluginDOMContextMenuListener::HandleEvent(nsIDOMEvent* aEvent)
+nsPluginDOMContextMenuListener::HandleEvent(Event* aEvent)
 {
   aEvent->PreventDefault(); // consume event
 

@@ -567,7 +567,7 @@ nsSplitterFrameInner::RemoveListener()
 }
 
 nsresult
-nsSplitterFrameInner::HandleEvent(nsIDOMEvent* aEvent)
+nsSplitterFrameInner::HandleEvent(dom::Event* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);

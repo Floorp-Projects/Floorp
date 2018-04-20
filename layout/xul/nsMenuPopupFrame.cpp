@@ -18,7 +18,6 @@
 #include "nsMenuBarFrame.h"
 #include "nsPopupSetFrame.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMEvent.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"
@@ -60,6 +59,7 @@
 
 using namespace mozilla;
 using mozilla::dom::KeyboardEvent;
+using mozilla::dom::Event;
 
 int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 
@@ -391,7 +391,7 @@ NS_IMETHODIMP nsXULPopupShownEvent::Run()
   return EventDispatcher::Dispatch(mPopup, mPresContext, &event);
 }
 
-NS_IMETHODIMP nsXULPopupShownEvent::HandleEvent(nsIDOMEvent* aEvent)
+NS_IMETHODIMP nsXULPopupShownEvent::HandleEvent(Event* aEvent)
 {
   nsMenuPopupFrame* popup = do_QueryFrame(mPopup->GetPrimaryFrame());
   nsCOMPtr<nsIDOMEventTarget> eventTarget;

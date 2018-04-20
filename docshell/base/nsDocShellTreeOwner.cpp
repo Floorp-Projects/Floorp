@@ -32,7 +32,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/SVGTitleElement.h"
-#include "nsIDOMEvent.h"
 #include "nsIFormControl.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIWebNavigation.h"
@@ -57,7 +56,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/DragEvent.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "mozilla/dom/File.h" // for input type=file
 #include "mozilla/dom/FileList.h" // for input type=file
 #include "mozilla/TextEvents.h"
@@ -925,7 +924,7 @@ nsDocShellTreeOwner::RemoveChromeListeners()
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
+nsDocShellTreeOwner::HandleEvent(Event* aEvent)
 {
   DragEvent* dragEvent =
     aEvent ? aEvent->InternalDOMEvent()->AsDragEvent() : nullptr;
@@ -1150,7 +1149,7 @@ ChromeTooltipListener::RemoveTooltipListener()
 }
 
 NS_IMETHODIMP
-ChromeTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
+ChromeTooltipListener::HandleEvent(Event* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);

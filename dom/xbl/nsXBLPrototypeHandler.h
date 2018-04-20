@@ -68,6 +68,7 @@ enum XBLReservedKey : uint8_t
 namespace mozilla {
 namespace dom {
 class Element;
+class Event;
 }
 }
 
@@ -131,7 +132,8 @@ public:
   nsXBLPrototypeHandler* GetNextHandler() { return mNextHandler; }
   void SetNextHandler(nsXBLPrototypeHandler* aHandler) { mNextHandler = aHandler; }
 
-  nsresult ExecuteHandler(mozilla::dom::EventTarget* aTarget, nsIDOMEvent* aEvent);
+  nsresult ExecuteHandler(mozilla::dom::EventTarget* aTarget,
+                          mozilla::dom::Event* aEvent);
 
   already_AddRefed<nsAtom> GetEventName();
   void SetEventName(nsAtom* aName) { mEventName = aName; }

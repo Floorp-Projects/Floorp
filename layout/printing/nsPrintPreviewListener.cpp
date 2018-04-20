@@ -8,7 +8,7 @@
 
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/Event.h" // for Event
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
@@ -157,7 +157,7 @@ GetActionForEvent(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsPrintPreviewListener::HandleEvent(nsIDOMEvent* aEvent)
+nsPrintPreviewListener::HandleEvent(Event* aEvent)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(
     aEvent ? aEvent->InternalDOMEvent()->GetOriginalTarget() : nullptr);

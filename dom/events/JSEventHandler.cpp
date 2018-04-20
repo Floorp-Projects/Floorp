@@ -111,7 +111,7 @@ JSEventHandler::IsBlackForCC()
 }
 
 nsresult
-JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
+JSEventHandler::HandleEvent(Event* aEvent)
 {
   nsCOMPtr<EventTarget> target = do_QueryInterface(mTarget);
   if (!target || !mTypedHandler.HasEventHandler() ||
