@@ -111,7 +111,6 @@ struct gfxFontFeatureInfo {
 class gfxFontEntry {
 public:
     typedef mozilla::FontWeight FontWeight;
-    typedef mozilla::WeightRange WeightRange;
     typedef mozilla::gfx::DrawTarget DrawTarget;
     typedef mozilla::unicode::Script Script;
 
@@ -142,7 +141,7 @@ public:
     // returns Name() if nothing better is available.
     virtual nsString RealFaceName();
 
-    WeightRange Weight() const { return mWeightRange; }
+    FontWeight Weight() const { return mWeight; }
     uint16_t Stretch() const { return mStretch; }
 
     bool IsUserFont() const { return mIsDataUserFont || mIsLocalUserFont; }
@@ -151,7 +150,7 @@ public:
     bool IsItalic() const { return mStyle == NS_FONT_STYLE_ITALIC; }
     bool IsOblique() const { return mStyle == NS_FONT_STYLE_OBLIQUE; }
     bool IsUpright() const { return mStyle == NS_FONT_STYLE_NORMAL; }
-    bool IsBold() const { return Weight().Max().IsBold(); } // bold == weights 600 and above
+    bool IsBold() const { return mWeight.IsBold(); } // bold == weights 600 and above
     bool IgnoreGDEF() const { return mIgnoreGDEF; }
     bool IgnoreGSUB() const { return mIgnoreGSUB; }
 
@@ -164,8 +163,7 @@ public:
     bool IsNormalStyle() const
     {
         return IsUpright() &&
-               Weight().Min() <= FontWeight::Normal() &&
-               Weight().Max() >= FontWeight::Normal() &&
+               Weight() == FontWeight::Normal() &&
                Stretch() == NS_FONT_STRETCH_NORMAL;
     }
 
@@ -370,16 +368,6 @@ public:
     {
     }
 
-    // Set up the entry's weight/stretch/style ranges according to axes found
-    // by GetVariationAxes (for installed fonts; do NOT call this for user
-    // fonts, where the ranges are provided by @font-face descriptors).
-    void SetupVariationRanges();
-
-    // Get variation axis settings that should be used to implement a particular
-    // font style using this resource.
-    void GetVariationsForStyle(nsTArray<gfxFontVariation>& aResult,
-                               const gfxFontStyle& aStyle);
-
     // Get the font's list of features (if any) for DevTools support.
     void GetFeatureInfo(nsTArray<gfxFontFeatureInfo>& aFeatureInfo);
 
@@ -416,7 +404,7 @@ public:
     uint32_t         mDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
     uint32_t         mNonDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
 
-    WeightRange      mWeightRange;
+    FontWeight       mWeight;
     uint16_t         mStretch;
 
     RefPtr<gfxCharacterMap> mCharacterMap;
@@ -622,14 +610,14 @@ struct GlobalFontMatch {
     GlobalFontMatch(const uint32_t aCharacter,
                     const gfxFontStyle *aStyle) :
         mCh(aCharacter), mStyle(aStyle),
-        mMatchRank(0.0f), mCount(0), mCmapsTested(0)
+        mMatchRank(0), mCount(0), mCmapsTested(0)
         {
 
         }
 
     const uint32_t         mCh;          // codepoint to be matched
     const gfxFontStyle*    mStyle;       // style to match
-    float                  mMatchRank;   // metric indicating closest match
+    int32_t                mMatchRank;   // metric indicating closest match
     RefPtr<gfxFontEntry> mBestMatch;   // current best match
     RefPtr<gfxFontFamily> mMatchedFamily; // the family it belongs to
     uint32_t               mCount;       // number of fonts matched

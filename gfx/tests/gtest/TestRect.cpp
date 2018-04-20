@@ -542,7 +542,6 @@ TestIntersectionLogical(nscoord x1, nscoord y1, nscoord w1, nscoord h1,
 
 TEST(Gfx, Logical)
 {
-  PR_Sleep(PR_SecondsToInterval(30));
   TestIntersectionLogical(578, 0, 2650, 1152, 1036, 0, 2312, 1, 1036, 0, 2192, 1, true);
   TestIntersectionLogical(0, 0, 1000, 1000, 500, 500, 1000, 1000, 500, 500, 500, 500, true);
   TestIntersectionLogical(100, 200, 300, 400, 50, 250, 100, 100, 100, 250, 50, 100, true);
