@@ -138,6 +138,8 @@ pref("dom.indexedDB.logging.enabled", true);
 pref("dom.indexedDB.logging.details", true);
 // Enable profiler marks for indexedDB events.
 pref("dom.indexedDB.logging.profiler-marks", false);
+// Enable passing the "storage" option to indexedDB.open.
+pref("dom.indexedDB.storageOption.enabled", false);
 
 // Whether or not File Handle is enabled.
 pref("dom.fileHandle.enabled", true);
@@ -854,7 +856,7 @@ pref("gfx.compositor.glcontext.opaque", false);
 #endif
 
 pref("gfx.webrender.highlight-painted-layers", false);
-pref("gfx.webrender.async-scene-build", false);
+pref("gfx.webrender.async-scene-build", 2);
 pref("gfx.webrender.blob-images", true);
 pref("gfx.webrender.blob.invalidation", true);
 pref("gfx.webrender.hit-test", true);

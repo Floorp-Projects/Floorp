@@ -136,23 +136,18 @@ endif
 	$(RM) -f $(DESTDIR)$(bindir)/$(MOZ_APP_NAME)
 	ln -s $(installdir)/$(MOZ_APP_NAME) $(DESTDIR)$(bindir)
 
-checksum:
+upload:
+	$(PYTHON) -u $(MOZILLA_DIR)/build/upload.py --base-path $(DIST) $(UPLOAD_FILES)
 	mkdir -p `dirname $(CHECKSUM_FILE)`
 	@$(PYTHON) $(MOZILLA_DIR)/build/checksums.py \
 		-o $(CHECKSUM_FILE) \
 		$(CHECKSUM_ALGORITHM_PARAM) \
-		-s $(call QUOTED_WILDCARD,$(DIST)) \
-		$(UPLOAD_FILES)
+		$(UPLOAD_PATH)
 	@echo 'CHECKSUM FILE START'
 	@cat $(CHECKSUM_FILE)
 	@echo 'CHECKSUM FILE END'
 	$(SIGN_CHECKSUM_CMD)
-
-
-upload: checksum
-	$(PYTHON) -u $(MOZILLA_DIR)/build/upload.py --base-path $(DIST) \
-		$(UPLOAD_FILES) \
-		$(CHECKSUM_FILES)
+	$(PYTHON) -u $(MOZILLA_DIR)/build/upload.py --base-path $(DIST) $(CHECKSUM_FILES)
 
 # source-package creates a source tarball from the files in MOZ_PKG_SRCDIR,
 # which is either set to a clean checkout or defaults to $topsrcdir

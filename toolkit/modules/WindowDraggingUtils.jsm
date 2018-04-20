@@ -61,26 +61,29 @@ WindowDraggingElement.prototype = {
       case "mousedown":
         if (!this.shouldDrag(aEvent))
           return;
-
-        if (/^gtk/i.test(AppConstants.MOZ_WIDGET_TOOLKIT)) {
-          // On GTK, there is a toolkit-level function which handles
-          // window dragging, which must be used.
-          this._window.beginWindowMove(aEvent, isPanel ? this._elem : null);
-          break;
-        }
-        if (isPanel) {
-          let screenRect = this._elem.getOuterScreenRect();
-          this._deltaX = aEvent.screenX - screenRect.left;
-          this._deltaY = aEvent.screenY - screenRect.top;
-        } else {
-          this._deltaX = aEvent.screenX - this._window.screenX;
-          this._deltaY = aEvent.screenY - this._window.screenY;
+        if (!/^gtk/i.test(AppConstants.MOZ_WIDGET_TOOLKIT)) {
+          if (isPanel) {
+            let screenRect = this._elem.getOuterScreenRect();
+            this._deltaX = aEvent.screenX - screenRect.left;
+            this._deltaY = aEvent.screenY - screenRect.top;
+          } else {
+            this._deltaX = aEvent.screenX - this._window.screenX;
+            this._deltaY = aEvent.screenY - this._window.screenY;
+          }
         }
         this._draggingWindow = true;
         this._window.addEventListener("mousemove", this);
         this._window.addEventListener("mouseup", this);
         break;
       case "mousemove":
+        if (/^gtk/i.test(AppConstants.MOZ_WIDGET_TOOLKIT)) {
+          // On GTK, there is a toolkit-level function which handles
+          // window dragging. We want to start moving the window
+          // on the first mousemove event after mousedown.
+          this._window.beginWindowMove(aEvent, isPanel ? this._elem : null);
+          this._window.removeEventListener("mousemove", this);
+          break;
+        }
         if (this._draggingWindow) {
           let toDrag = this.isPanel() ? this._elem : this._window;
           toDrag.moveTo(aEvent.screenX - this._deltaX, aEvent.screenY - this._deltaY);
