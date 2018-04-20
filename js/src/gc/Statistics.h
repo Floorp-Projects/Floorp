@@ -289,6 +289,11 @@ struct Statistics
     /* Most recent time when the given phase started. */
     EnumeratedArray<Phase, Phase::LIMIT, TimeStamp> phaseStartTimes;
 
+#ifdef DEBUG
+    /* Most recent time when the given phase ended. */
+    EnumeratedArray<Phase, Phase::LIMIT, TimeStamp> phaseEndTimes;
+#endif
+
     /* Bookkeeping for GC timings when timingMutator is true */
     TimeStamp timedGCStart;
     TimeDuration timedGCTime;
