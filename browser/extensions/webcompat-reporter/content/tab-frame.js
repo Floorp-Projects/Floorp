@@ -22,7 +22,13 @@ let getScreenshot = function(win) {
       ctx.scale(dpr, dpr);
       ctx.drawWindow(win, x, y, w, h, "#fff");
       canvas.toBlob(blob => {
-        resolve({url, blob});
+        resolve({
+          blob,
+          hasMixedActiveContentBlocked: docShell.hasMixedActiveContentBlocked,
+          hasMixedDisplayContentBlocked: docShell.hasMixedDisplayContentBlocked,
+          url,
+          hasTrackingContentBlocked: docShell.hasTrackingContentBlocked
+        });
       });
     } catch (ex) {
       // CanvasRenderingContext2D.drawWindow can fail depending on memory or
