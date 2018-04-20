@@ -23,7 +23,6 @@
 #include "nsIGlobalObject.h"
 
 class nsIContent;
-class nsIDOMEventTarget;
 class nsPresContext;
 
 namespace mozilla {

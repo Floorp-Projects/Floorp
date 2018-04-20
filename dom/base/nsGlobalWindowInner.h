@@ -1509,13 +1509,13 @@ protected:
 inline nsISupports*
 ToSupports(nsGlobalWindowInner *p)
 {
-    return static_cast<nsIDOMEventTarget*>(p);
+  return static_cast<mozilla::dom::EventTarget*>(p);
 }
 
 inline nsISupports*
 ToCanonicalSupports(nsGlobalWindowInner *p)
 {
-    return static_cast<nsIDOMEventTarget*>(p);
+  return static_cast<mozilla::dom::EventTarget*>(p);
 }
 
 // XXX: EWW - This is an awful hack - let's not do this

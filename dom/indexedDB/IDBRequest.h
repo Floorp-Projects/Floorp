@@ -251,7 +251,7 @@ public:
   void
   NoteComplete();
 
-  // nsIDOMEventTarget
+  // EventTarget
   virtual nsresult
   PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 

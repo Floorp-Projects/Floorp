@@ -4804,9 +4804,8 @@ HTMLEditor::NotifyRootChanged()
   // When this editor has focus, we need to reset the selection limiter to
   // new root.  Otherwise, that is going to be done when this gets focus.
   nsCOMPtr<nsINode> node = GetFocusedNode();
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(node);
-  if (target) {
-    InitializeSelection(target);
+  if (node) {
+    InitializeSelection(node);
   }
 
   SyncRealTimeSpell();
@@ -4876,7 +4875,7 @@ HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent)
     return true;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target = aGUIEvent->GetOriginalDOMEventTarget();
+  RefPtr<EventTarget> target = aGUIEvent->GetOriginalDOMEventTarget();
   nsCOMPtr<nsIContent> content = do_QueryInterface(target);
   if (content) {
     target = content->FindFirstNonChromeOnlyAccessContent();

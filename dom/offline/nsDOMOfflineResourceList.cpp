@@ -516,10 +516,6 @@ nsDOMOfflineResourceList::SwapCache()
   return NS_OK;
 }
 
-//
-// nsDOMOfflineResourceList::nsIDOMEventTarget
-//
-
 void
 nsDOMOfflineResourceList::FirePendingEvents()
 {
