@@ -30,13 +30,13 @@ makeConstant("ADDON_SIGNING", AppConstants.MOZ_ADDON_SIGNING);
 
 if (AppConstants.MOZ_REQUIRE_SIGNING && !Cu.isInAutomation) {
   makeConstant("REQUIRE_SIGNING", true);
+  makeConstant("LANGPACKS_REQUIRE_SIGNING", true);
 } else {
   XPCOMUtils.defineLazyPreferenceGetter(AddonSettings, "REQUIRE_SIGNING",
                                         PREF_SIGNATURES_REQUIRED, false);
+  XPCOMUtils.defineLazyPreferenceGetter(AddonSettings, "LANGPACKS_REQUIRE_SIGNING",
+                                        PREF_LANGPACK_SIGNATURES, false);
 }
-
-XPCOMUtils.defineLazyPreferenceGetter(AddonSettings, "LANGPACKS_REQUIRE_SIGNING",
-                                      PREF_LANGPACK_SIGNATURES, false);
 
 if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS || Cu.isInAutomation) {
   XPCOMUtils.defineLazyPreferenceGetter(AddonSettings, "ALLOW_LEGACY_EXTENSIONS",
