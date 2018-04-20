@@ -1817,6 +1817,12 @@ public:
    */
   void HideCaret(bool aHide);
 
+  /** Resyncs spellchecking state (enabled/disabled).  This should be called
+    * when anything that affects spellchecking state changes, such as the
+    * spellcheck attribute value.
+    */
+  void SyncRealTimeSpell();
+
 private:
   nsCOMPtr<nsISelectionController> mSelectionController;
   nsCOMPtr<nsIDocument> mDocument;
