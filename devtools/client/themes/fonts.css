@@ -109,7 +109,7 @@
   vertical-align: middle;
 }
 
-.font-axis {
+.font-control {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
@@ -118,16 +118,34 @@
   padding: 5px 20px;
 }
 
-.font-axis-input {
-  width: 60px;
+.font-control-input {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  flex: 3;
+  max-width: 300px;
+  min-width: 100px;
 }
 
-.font-axis-label {
-  width: 70px;
+.font-control-label {
+  display: inline-block;
+  flex: 1;
+  min-width: 80px;
+}
+
+.font-axis-input {
+  margin-left: 10px;
+  width: 60px;
 }
 
 .font-axis-slider {
   flex: 1;
+  margin: 0;
+  min-width: 50px;
+}
+
+.font-instance-select:active{
+  outline: none;
 }
 
 .font-axis-slider::-moz-focus-outer {
@@ -136,7 +154,10 @@
 
 .font-axis-slider::-moz-range-thumb {
   background: var(--grey-50);
-  border: 0;
+  border-color: rgba(0, 0, 0, 0);
+}
+.font-axis-slider::-moz-range-track {
+  background: var(--grey-30);
 }
 
 .font-axis-slider:focus::-moz-range-thumb {
