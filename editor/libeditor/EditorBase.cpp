@@ -2268,16 +2268,6 @@ EditorBase::OutputToString(const nsAString& aFormatType,
 }
 
 NS_IMETHODIMP
-EditorBase::OutputToStream(nsIOutputStream* aOutputStream,
-                           const nsAString& aFormatType,
-                           const nsACString& aCharsetOverride,
-                           uint32_t aFlags)
-{
-  // these should be implemented by derived classes.
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 EditorBase::DumpContentTree()
 {
 #ifdef DEBUG

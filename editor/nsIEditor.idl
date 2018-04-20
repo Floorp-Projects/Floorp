@@ -463,11 +463,6 @@ interface nsIEditor  : nsISupports
    */
   AString outputToString(in AString formatType,
                          in unsigned long flags);
-  void outputToStream(in nsIOutputStream aStream,
-                      in AString formatType,
-                      in ACString charsetOverride,
-                      in unsigned long flags);
-
 
   /* ------------ Various listeners methods --------------
    * nsIEditor holds strong references to the editor observers, action listeners
