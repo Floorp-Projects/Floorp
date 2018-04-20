@@ -617,7 +617,7 @@ nsXULPopupManager::MouseLocationOffset()
 }
 
 void
-nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
+nsXULPopupManager::InitTriggerEvent(Event* aEvent, nsIContent* aPopup,
                                     nsIContent** aTriggerContent)
 {
   mCachedMousePoint = LayoutDeviceIntPoint(0, 0);
@@ -626,15 +626,14 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
     *aTriggerContent = nullptr;
     if (aEvent) {
       // get the trigger content from the event
-      nsCOMPtr<nsIContent> target = do_QueryInterface(
-        aEvent->InternalDOMEvent()->GetTarget());
+      nsCOMPtr<nsIContent> target = do_QueryInterface(aEvent->GetTarget());
       target.forget(aTriggerContent);
     }
   }
 
   mCachedModifiers = 0;
 
-  UIEvent* uiEvent = aEvent ? aEvent->InternalDOMEvent()->AsUIEvent() : nullptr;
+  UIEvent* uiEvent = aEvent ? aEvent->AsUIEvent() : nullptr;
   if (uiEvent) {
     mRangeParent = uiEvent->GetRangeParent();
     mRangeOffset = uiEvent->RangeOffset();
@@ -664,7 +663,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
                event->mClass == eWheelEventClass) &&
                !event->AsGUIEvent()->mWidget) {
             // no widget, so just use the client point if available
-            MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+            MouseEvent* mouseEvent = aEvent->AsMouseEvent();
             nsIntPoint clientPt(mouseEvent->ClientX(), mouseEvent->ClientY());
 
             // XXX this doesn't handle IFRAMEs in transforms
@@ -774,7 +773,7 @@ nsXULPopupManager::ShowPopup(nsIContent* aPopup,
                              bool aIsContextMenu,
                              bool aAttributesOverride,
                              bool aSelectFirstItem,
-                             nsIDOMEvent* aTriggerEvent)
+                             Event* aTriggerEvent)
 {
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
   if (!popupFrame || !MayShowPopup(popupFrame))
@@ -793,7 +792,7 @@ void
 nsXULPopupManager::ShowPopupAtScreen(nsIContent* aPopup,
                                      int32_t aXPos, int32_t aYPos,
                                      bool aIsContextMenu,
-                                     nsIDOMEvent* aTriggerEvent)
+                                     Event* aTriggerEvent)
 {
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
   if (!popupFrame || !MayShowPopup(popupFrame))
@@ -812,7 +811,7 @@ nsXULPopupManager::ShowPopupAtScreenRect(nsIContent* aPopup,
                                          const nsIntRect& aRect,
                                          bool aIsContextMenu,
                                          bool aAttributesOverride,
-                                         nsIDOMEvent* aTriggerEvent)
+                                         Event* aTriggerEvent)
 {
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
   if (!popupFrame || !MayShowPopup(popupFrame))
@@ -1426,7 +1425,7 @@ void
 nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
                                          bool aIsContextMenu,
                                          bool aSelectFirstItem,
-                                         nsIDOMEvent* aTriggerEvent)
+                                         Event* aTriggerEvent)
 {
   nsCOMPtr<nsIContent> popup = aPopup; // keep a strong reference to the popup
 

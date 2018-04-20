@@ -22,6 +22,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 
@@ -436,7 +437,7 @@ nsMenuBarListener::KeyDown(Event* aKeyEvent)
   uint32_t theChar = keyEvent->KeyCode();
 
   uint16_t eventPhase = keyEvent->EventPhase();
-  bool capturing = (eventPhase == nsIDOMEvent::CAPTURING_PHASE);
+  bool capturing = (eventPhase == dom::EventBinding::CAPTURING_PHASE);
 
 #ifndef XP_MACOSX
   if (capturing && !mAccessKeyDown && theChar == NS_VK_F10 &&
@@ -530,7 +531,7 @@ nsMenuBarListener::MouseDown(Event* aMouseEvent)
   }
 
   // Don't do anything at capturing phase, any behavior should be cancelable.
-  if (aMouseEvent->EventPhase() == nsIDOMEvent::CAPTURING_PHASE) {
+  if (aMouseEvent->EventPhase() == dom::EventBinding::CAPTURING_PHASE) {
     return NS_OK;
   }
 

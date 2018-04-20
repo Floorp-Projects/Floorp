@@ -58,6 +58,7 @@ class nsRefreshDriver;
 
 namespace mozilla {
 namespace dom {
+class Event;
 class KeyboardEvent;
 } // namespace dom
 } // namespace mozilla
@@ -458,7 +459,7 @@ public:
                  bool aIsContextMenu,
                  bool aAttributesOverride,
                  bool aSelectFirstItem,
-                 nsIDOMEvent* aTriggerEvent);
+                 mozilla::dom::Event* aTriggerEvent);
 
   /**
    * Open a popup at a specific screen position specified by aXPos and aYPos,
@@ -473,7 +474,7 @@ public:
   void ShowPopupAtScreen(nsIContent* aPopup,
                          int32_t aXPos, int32_t aYPos,
                          bool aIsContextMenu,
-                         nsIDOMEvent* aTriggerEvent);
+                         mozilla::dom::Event* aTriggerEvent);
 
   /* Open a popup anchored at a screen rectangle specified by aRect.
    * The remaining arguments are similar to ShowPopup.
@@ -483,7 +484,7 @@ public:
                              const nsIntRect& aRect,
                              bool aIsContextMenu,
                              bool aAttributesOverride,
-                             nsIDOMEvent* aTriggerEvent);
+                             mozilla::dom::Event* aTriggerEvent);
 
   /**
    * Open a tooltip at a specific screen position specified by aXPos and aYPos,
@@ -725,7 +726,7 @@ protected:
 
   // set the event that was used to trigger the popup, or null to clear the
   // event details. aTriggerContent will be set to the target of the event.
-  void InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup, nsIContent** aTriggerContent);
+  void InitTriggerEvent(mozilla::dom::Event* aEvent, nsIContent* aPopup, nsIContent** aTriggerContent);
 
   // callbacks for ShowPopup and HidePopup as events may be done asynchronously
   void ShowPopupCallback(nsIContent* aPopup,
@@ -752,7 +753,7 @@ protected:
   void FirePopupShowingEvent(nsIContent* aPopup,
                              bool aIsContextMenu,
                              bool aSelectFirstItem,
-                             nsIDOMEvent* aTriggerEvent);
+                             mozilla::dom::Event* aTriggerEvent);
 
   /**
    * Fire a popuphiding event and then hide the popup. This will be called
