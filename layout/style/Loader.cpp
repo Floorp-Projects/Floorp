@@ -1635,16 +1635,7 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
   // Some cases, like inline style and UA stylesheets, need to be parsed
   // synchronously. The former may trigger child loads, the latter must not.
   if (aLoadData->mSyncLoad || !aAllowAsync) {
-    aSheet->ParseSheetSync(
-      this,
-      aBytes,
-      aSheet->GetSheetURI(),
-      aSheet->GetBaseURI(),
-      aSheet->Principal(),
-      aLoadData,
-      aLoadData->mLineNumber,
-      GetCompatibilityMode()
-    );
+    aSheet->ParseSheetSync(this, aBytes, aLoadData, aLoadData->mLineNumber);
     aLoadData->mIsBeingParsed = false;
 
     bool noPendingChildren = aLoadData->mPendingChildren == 0;
@@ -1664,27 +1655,18 @@ Loader::DoParseSheetServo(ServoStyleSheet* aSheet,
   BlockOnload();
   RefPtr<SheetLoadData> loadData = aLoadData;
   nsCOMPtr<nsISerialEventTarget> target = DispatchTarget();
-  aSheet->ParseSheet(
-    this,
-    aBytes,
-    aSheet->GetSheetURI(),
-    aSheet->GetBaseURI(),
-    aSheet->Principal(),
-    aLoadData,
-    aLoadData->mLineNumber,
-    GetCompatibilityMode()
-  )->Then(target, __func__,
-          [loadData](bool aDummy) {
-            MOZ_ASSERT(NS_IsMainThread());
-            loadData->mIsBeingParsed = false;
-            loadData->mLoader->UnblockOnload(/* aFireSync = */ false);
-            // If there are no child sheets outstanding, mark us as complete.
-            // Otherwise, the children are holding strong refs to the data and
-            // will call SheetComplete() on it when they complete.
-            if (loadData->mPendingChildren == 0) {
-              loadData->mLoader->SheetComplete(loadData, NS_OK);
-            }
-          }, [] { MOZ_CRASH("rejected parse promise"); }
+  aSheet->ParseSheet(this, aBytes, aLoadData)->Then(target, __func__,
+    [loadData](bool aDummy) {
+      MOZ_ASSERT(NS_IsMainThread());
+      loadData->mIsBeingParsed = false;
+      loadData->mLoader->UnblockOnload(/* aFireSync = */ false);
+      // If there are no child sheets outstanding, mark us as complete.
+      // Otherwise, the children are holding strong refs to the data and
+      // will call SheetComplete() on it when they complete.
+      if (loadData->mPendingChildren == 0) {
+        loadData->mLoader->SheetComplete(loadData, NS_OK);
+      }
+    }, [] { MOZ_CRASH("rejected parse promise"); }
   );
 
   return NS_OK;
