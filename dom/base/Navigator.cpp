@@ -705,7 +705,7 @@ NS_IMETHODIMP
 VibrateWindowListener::HandleEvent(Event* aEvent)
 {
   nsCOMPtr<nsIDocument> doc =
-    do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
+    do_QueryInterface(aEvent->GetTarget());
 
   if (!MayVibrate(doc)) {
     // It's important that we call CancelVibrate(), not Vibrate() with an

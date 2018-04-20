@@ -604,7 +604,7 @@ ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent)
 {
   // Document may have become visible, if the page is visible, run the steps
   // following the "now visible algorithm" as specified.
-  nsCOMPtr<EventTarget> target = aEvent->InternalDOMEvent()->GetCurrentTarget();
+  nsCOMPtr<EventTarget> target = aEvent->GetCurrentTarget();
   MOZ_ASSERT(target);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(target);
@@ -665,7 +665,7 @@ ScreenOrientation::FullScreenEventListener::HandleEvent(Event* aEvent)
   MOZ_ASSERT(eventType.EqualsLiteral("fullscreenchange"));
 #endif
 
-  nsCOMPtr<EventTarget> target = aEvent->InternalDOMEvent()->GetCurrentTarget();
+  nsCOMPtr<EventTarget> target = aEvent->GetCurrentTarget();
   MOZ_ASSERT(target);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(target);

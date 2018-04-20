@@ -229,8 +229,7 @@ WakeLock::HandleEvent(Event *aEvent)
   aEvent->GetType(type);
 
   if (type.EqualsLiteral("visibilitychange")) {
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aEvent->GetTarget());
     NS_ENSURE_STATE(doc);
 
     bool oldHidden = mHidden;
