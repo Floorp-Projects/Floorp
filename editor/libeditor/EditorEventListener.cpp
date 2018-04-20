@@ -381,19 +381,19 @@ EditorEventListener::HandleEvent(Event* aEvent)
   switch (internalEvent->mMessage) {
     // dragenter
     case eDragEnter: {
-      return DragEnter(aEvent->InternalDOMEvent()->AsDragEvent());
+      return DragEnter(aEvent->AsDragEvent());
     }
     // dragover
     case eDragOver: {
-      return DragOver(aEvent->InternalDOMEvent()->AsDragEvent());
+      return DragOver(aEvent->AsDragEvent());
     }
     // dragexit
     case eDragExit: {
-      return DragExit(aEvent->InternalDOMEvent()->AsDragEvent());
+      return DragExit(aEvent->AsDragEvent());
     }
     // drop
     case eDrop: {
-      return Drop(aEvent->InternalDOMEvent()->AsDragEvent());
+      return Drop(aEvent->AsDragEvent());
     }
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
     // keydown
@@ -421,7 +421,7 @@ EditorEventListener::HandleEvent(Event* aEvent)
       if (mMouseDownOrUpConsumedByIME) {
         return NS_OK;
       }
-      MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+      MouseEvent* mouseEvent = aEvent->AsMouseEvent();
       return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseDown(mouseEvent);
     }
     // mouseup
@@ -442,12 +442,12 @@ EditorEventListener::HandleEvent(Event* aEvent)
       if (mMouseDownOrUpConsumedByIME) {
         return NS_OK;
       }
-      MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+      MouseEvent* mouseEvent = aEvent->AsMouseEvent();
       return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseUp(mouseEvent);
     }
     // click
     case eMouseClick: {
-      MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
+      MouseEvent* mouseEvent = aEvent->AsMouseEvent();
       NS_ENSURE_TRUE(mouseEvent, NS_OK);
       // If the preceding mousedown event or mouseup event was consumed,
       // editor shouldn't handle this click event.
