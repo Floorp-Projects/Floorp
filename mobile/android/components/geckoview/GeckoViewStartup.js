@@ -71,6 +71,18 @@ GeckoViewStartup.prototype = {
           ],
         });
 
+        GeckoViewUtils.addLazyGetter(this, "GeckoViewRemoteDebugger", {
+          module: "resource://gre/modules/GeckoViewRemoteDebugger.jsm",
+          init: gvrd => gvrd.onInit(),
+        });
+
+        GeckoViewUtils.addLazyPrefObserver({
+          name: "devtools.debugger.remote-enabled",
+          default: false,
+        }, {
+          handler: _ => this.GeckoViewRemoteDebugger,
+        });
+
         // This initializes Telemetry for GeckoView only in the parent process.
         // The Telemetry initialization for the content process is performed in
         // ContentProcessSingleton.js for consistency with Desktop Telemetry.
