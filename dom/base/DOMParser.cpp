@@ -61,10 +61,8 @@ DOMParser::ParseFromString(const nsAString& aStr, SupportedType aType,
                            ErrorResult& aRv)
 {
   if (aType == SupportedType::Text_html) {
-    nsCOMPtr<nsIDocument> document;
-    nsresult rv = SetUpDocument(DocumentFlavorHTML, getter_AddRefs(document));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
+    nsCOMPtr<nsIDocument> document = SetUpDocument(DocumentFlavorHTML, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
 
@@ -73,7 +71,7 @@ DOMParser::ParseFromString(const nsAString& aStr, SupportedType aType,
       document->ForceEnableXULXBL();
     }
 
-    rv = nsContentUtils::ParseDocumentHTML(aStr, document, false);
+    nsresult rv = nsContentUtils::ParseDocumentHTML(aStr, document, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);
       return nullptr;
@@ -134,58 +132,40 @@ DOMParser::ParseFromStream(nsIInputStream* aStream,
                            const nsAString& aCharset,
                            int32_t aContentLength,
                            SupportedType aType,
-                           ErrorResult& rv)
+                           ErrorResult& aRv)
 {
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  rv = DOMParser::ParseFromStream(aStream,
-                                  DOMStringIsNull(aCharset) ? nullptr : NS_ConvertUTF16toUTF8(aCharset).get(),
-                                  aContentLength,
-                                  StringFromSupportedType(aType),
-                                  getter_AddRefs(domDocument));
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
-  return document.forget();
-}
-
-NS_IMETHODIMP
-DOMParser::ParseFromStream(nsIInputStream* aStream,
-                           const char* aCharset,
-                           int32_t aContentLength,
-                           const char* aContentType,
-                           nsIDOMDocument** aResult)
-{
-  NS_ENSURE_ARG(aStream);
-  NS_ENSURE_ARG(aContentType);
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nullptr;
-
-  bool svg = nsCRT::strcmp(aContentType, "image/svg+xml") == 0;
+  bool svg = (aType == SupportedType::Image_svg_xml);
 
   // For now, we can only create XML documents.
   //XXXsmaug Should we create an HTMLDocument (in XHTML mode)
   //         for "application/xhtml+xml"?
-  if ((nsCRT::strcmp(aContentType, "text/xml") != 0) &&
-      (nsCRT::strcmp(aContentType, "application/xml") != 0) &&
-      (nsCRT::strcmp(aContentType, "application/xhtml+xml") != 0) &&
-      !svg)
-    return NS_ERROR_NOT_IMPLEMENTED;
-
-  nsresult rv;
+  if (aType != SupportedType::Text_xml &&
+      aType != SupportedType::Application_xml &&
+      aType != SupportedType::Application_xhtml_xml &&
+      !svg) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return nullptr;
+  }
 
   // Put the nsCOMPtr out here so we hold a ref to the stream as needed
   nsCOMPtr<nsIInputStream> stream = aStream;
   if (!NS_InputStreamIsBuffered(stream)) {
     nsCOMPtr<nsIInputStream> bufferedStream;
-    rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+    nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
                                    stream.forget(), 4096);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
 
     stream = bufferedStream;
   }
 
-  nsCOMPtr<nsIDocument> document;
-  rv = SetUpDocument(svg ? DocumentFlavorSVG : DocumentFlavorLegacyGuess,
-                     getter_AddRefs(document));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> document =
+    SetUpDocument(svg ? DocumentFlavorSVG : DocumentFlavorLegacyGuess, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
 
   // Create a fake channel
   nsCOMPtr<nsIChannel> parserChannel;
@@ -195,11 +175,14 @@ DOMParser::ParseFromStream(nsIInputStream* aStream,
                            mPrincipal,
                            nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
                            nsIContentPolicy::TYPE_OTHER,
-                           nsDependentCString(aContentType));
-  NS_ENSURE_STATE(parserChannel);
+                           nsDependentCString(StringFromSupportedType(aType)));
+  if (NS_WARN_IF(!parserChannel)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
-  if (aCharset) {
-    parserChannel->SetContentCharset(nsDependentCString(aCharset));
+  if (!DOMStringIsNull(aCharset)) {
+    parserChannel->SetContentCharset(NS_ConvertUTF16toUTF8(aCharset));
   }
 
   // Tell the document to start loading
@@ -213,13 +196,14 @@ DOMParser::ParseFromStream(nsIInputStream* aStream,
   // Have to pass false for reset here, else the reset will remove
   // our event listener.  Should that listener addition move to later
   // than this call?
-  rv = document->StartDocumentLoad(kLoadAsData, parserChannel,
-                                   nullptr, nullptr,
-                                   getter_AddRefs(listener),
-                                   false);
+  nsresult rv = document->StartDocumentLoad(kLoadAsData, parserChannel,
+                                            nullptr, nullptr,
+                                            getter_AddRefs(listener),
+                                            false);
 
   if (NS_FAILED(rv) || !listener) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
   // Now start pumping data to the listener
@@ -243,10 +227,11 @@ DOMParser::ParseFromStream(nsIInputStream* aStream,
   // the channel, so we do not need to call Cancel(rv) as we do above.
 
   if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  return CallQueryInterface(document, aResult);
+  return document.forget();
 }
 
 nsresult
@@ -355,8 +340,8 @@ DOMParser::InitInternal(nsISupports* aOwner, nsIPrincipal* prin,
   return Init(prin, documentURI, baseURI, scriptglobal);
 }
 
-nsresult
-DOMParser::SetUpDocument(DocumentFlavor aFlavor, nsIDocument** aResult)
+already_AddRefed<nsIDocument>
+DOMParser::SetUpDocument(DocumentFlavor aFlavor, ErrorResult& aRv)
 {
   // We should really QI to nsIGlobalObject here, but nsDocument gets confused
   // if we pass it a scriptHandlingObject that doesn't QI to
@@ -367,12 +352,18 @@ DOMParser::SetUpDocument(DocumentFlavor aFlavor, nsIDocument** aResult)
     do_QueryReferent(mScriptHandlingObject);
   nsresult rv;
   if (!mPrincipal) {
-    NS_ENSURE_TRUE(!mAttemptedInit, NS_ERROR_NOT_INITIALIZED);
+    if (NS_WARN_IF(mAttemptedInit)) {
+      aRv.Throw(NS_ERROR_NOT_INITIALIZED);
+      return nullptr;
+    }
     AttemptedInitMarker marker(&mAttemptedInit);
 
     nsCOMPtr<nsIPrincipal> prin = NullPrincipal::CreateWithoutOriginAttributes();
     rv = Init(prin, nullptr, nullptr, scriptHandlingObject);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
   }
 
   // Try to inherit a style backend.
@@ -383,9 +374,11 @@ DOMParser::SetUpDocument(DocumentFlavor aFlavor, nsIDocument** aResult)
   rv = NS_NewDOMDocument(getter_AddRefs(domDoc), EmptyString(), EmptyString(),
                          nullptr, mDocumentURI, mBaseURI, mPrincipal,
                          true, scriptHandlingObject, aFlavor);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  doc.forget(aResult);
-  return NS_OK;
+  return doc.forget();
 }
