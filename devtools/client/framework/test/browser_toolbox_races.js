@@ -18,7 +18,7 @@ add_task(async function() {
   // tests select various tools, and that sets this pref.
   Services.prefs.clearUserPref("devtools.toolbox.selectedTool");
 
-  let tab = await addTab(URL);
+  await addTab(URL);
 
   let created = 0, ready = 0, destroy = 0, destroyed = 0;
   let onCreated = () => {

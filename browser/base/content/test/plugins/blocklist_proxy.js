@@ -5,6 +5,7 @@ const kBlocklistServiceContractID = "@mozilla.org/extensions/blocklist;1";
 const kBlocklistServiceFactory = Cm.getClassObject(Cc[kBlocklistServiceContractID], Ci.nsIFactory);
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 /*
  * A lightweight blocklist proxy for the testing purposes.
@@ -44,7 +45,8 @@ var BlocklistProxy = {
   observe(aSubject, aTopic, aData) {
   },
 
-  getAddonBlocklistState(aAddon, aAppVersion, aToolkitVersion) {
+  async getAddonBlocklistState(aAddon, aAppVersion, aToolkitVersion) {
+    await new Promise(r => setTimeout(r, 0));
     return 0; // STATE_NOT_BLOCKED
   },
 

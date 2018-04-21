@@ -23,7 +23,7 @@ add_task(async function() {
   let toolbox = await openToolboxForTab(tab, "storage", Toolbox.HostType.BOTTOM);
 
   info("Waiting for the window to be resized");
-  let {hostWin, originalWidth, originalHeight} = await resizeWindow(toolbox, 800);
+  let {originalWidth, originalHeight} = await resizeWindow(toolbox, 800);
 
   info("Wait until the tools menu button is available");
   await waitUntil(() => toolbox.doc.querySelector(".tools-chevron-menu"));
@@ -45,7 +45,7 @@ add_task(async function() {
   let toolbox = await openToolboxForTab(tab, "storage", Toolbox.HostType.BOTTOM);
 
   info("Resize devtools window to a width that should trigger an overflow");
-  let {hostWin, originalWidth, originalHeight} = await resizeWindow(toolbox, 800);
+  let {originalWidth, originalHeight} = await resizeWindow(toolbox, 800);
 
   info("Regist a new tab");
   let onRegistered = toolbox.once("tool-registered");

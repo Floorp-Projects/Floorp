@@ -40,8 +40,6 @@ var waitForToolInstanceDestroyed = new Promise((resolve) => {
 function toolboxRegister(aToolbox) {
   toolbox = aToolbox;
 
-  var resolveToolInstanceBuild;
-
   waitForToolInstanceBuild = new Promise((resolve) => {
     resolveToolInstanceBuild = resolve;
   });

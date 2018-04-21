@@ -65,7 +65,7 @@ add_task(async function test_update_check() {
     let updates = await checkUpdates("updatecheck1@tests.mozilla.org", file);
 
     equal(updates.length, 5);
-    let update = AddonUpdateChecker.getNewestCompatibleUpdate(updates);
+    let update = await AddonUpdateChecker.getNewestCompatibleUpdate(updates);
     notEqual(update, null);
     equal(update.version, "3.0");
     update = AddonUpdateChecker.getCompatibilityUpdate(updates, "2");

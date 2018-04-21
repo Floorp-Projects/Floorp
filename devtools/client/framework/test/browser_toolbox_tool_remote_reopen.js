@@ -61,8 +61,6 @@ function runTools(target) {
 }
 
 function getClient() {
-  let deferred = defer();
-
   DebuggerServer.init();
   DebuggerServer.registerAllActors();
 

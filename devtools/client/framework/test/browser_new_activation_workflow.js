@@ -7,8 +7,6 @@
 
 var toolbox, target;
 
-var tempScope = {};
-
 function test() {
   addTab("about:blank").then(function(aTab) {
     target = TargetFactory.forTab(gBrowser.selectedTab);

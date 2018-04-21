@@ -16,7 +16,7 @@ async function testTarget(client, target) {
   is(target.hasActor("webaudio"), true, "target.hasActor() true when actor exists.");
   is(target.hasActor("notreal"), false, "target.hasActor() false when actor does not exist.");
   // Create a front to ensure the actor is loaded
-  let front = new WebAudioFront(target.client, target.form);
+  new WebAudioFront(target.client, target.form);
 
   let desc = await target.getActorDescription("webaudio");
   is(desc.typeName, "webaudio",

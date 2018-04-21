@@ -207,13 +207,14 @@ BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
     // Such element is used by localizers for alternative shortcut key
     // definition on the locale. See bug 426501.
     nsAutoString valKey, valCharCode, valKeyCode;
-    bool attrExists =
-      keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::key, valKey) ||
+    // Hopefully at least one of the attributes is set:
+    keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::key, valKey) ||
       keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::charcode, valCharCode) ||
       keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::keycode, valKeyCode);
-    if (attrExists &&
-        valKey.IsEmpty() && valCharCode.IsEmpty() && valKeyCode.IsEmpty())
+    // If not, ignore this key element.
+    if (valKey.IsEmpty() && valCharCode.IsEmpty() && valKeyCode.IsEmpty()) {
       continue;
+    }
 
     // reserved="pref" is the default for <key> elements.
     XBLReservedKey reserved = XBLReservedKey_Unset;

@@ -39,7 +39,7 @@ add_task(async function() {
   let updates = await checkUpdates("updatecheck1@tests.mozilla.org", UPDATE_FILE);
 
   equal(updates.length, 5);
-  let update = AddonUpdateChecker.getNewestCompatibleUpdate(updates);
+  let update = await AddonUpdateChecker.getNewestCompatibleUpdate(updates);
   notEqual(update, null);
   equal(update.version, "3.0");
   update = AddonUpdateChecker.getCompatibilityUpdate(updates, "2");
@@ -159,7 +159,7 @@ add_task(async function() {
   let updates = await checkUpdates("ignore-compat@tests.mozilla.org",
                                    UPDATE_FILE);
   equal(updates.length, 3);
-  let update = AddonUpdateChecker.getNewestCompatibleUpdate(
+  let update = await AddonUpdateChecker.getNewestCompatibleUpdate(
     updates, null, null, true);
   notEqual(update, null);
   equal(update.version, 2);
@@ -184,7 +184,7 @@ add_task(async function() {
     appMinVersion: 1,
     appMaxVersion: 2
   }];
-  let update = AddonUpdateChecker.getNewestCompatibleUpdate(
+  let update = await AddonUpdateChecker.getNewestCompatibleUpdate(
     updates, null, null, true, false, overrides);
   notEqual(update, null);
   equal(update.version, 1);
@@ -194,7 +194,7 @@ add_task(async function() {
   let updates = await checkUpdates("compat-strict-optin@tests.mozilla.org",
                                    UPDATE_FILE);
   equal(updates.length, 1);
-  let update = AddonUpdateChecker.getNewestCompatibleUpdate(
+  let update = await AddonUpdateChecker.getNewestCompatibleUpdate(
     updates, null, null, true, false);
   equal(update, null);
 });

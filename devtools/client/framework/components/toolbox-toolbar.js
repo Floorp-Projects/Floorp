@@ -11,7 +11,6 @@ const {openWebLink} = require("devtools/client/shared/link");
 
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
-const ToolboxTab = createFactory(require("devtools/client/framework/components/toolbox-tab"));
 const ToolboxTabs = createFactory(require("devtools/client/framework/components/toolbox-tabs"));
 
 /**
